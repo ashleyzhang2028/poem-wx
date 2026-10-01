@@ -1,9 +1,139 @@
 .note {
   display: block;
-  padding-top: 16rpx;
-  line-height: 1.8;
+  margin-top: 16rpx;
+  line-height: 1.7;
 }
 
-.test-btn {
+.note.warn,
+.step.warn {
+  color: var(--amber);
+}
+
+.sample {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6rpx;
+  margin-top: 28rpx;
+  padding: 24rpx 12rpx;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+.sample-u {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sample-py {
+  font-size: 20rpx;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+
+.sample-ch {
+  font-family: var(--font-poem);
+  font-size: 34rpx;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.prov {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.prov:last-of-type {
+  border-bottom: none;
+}
+
+.prov-main {
+  flex: 1;
+}
+
+.prov-name {
+  display: block;
+  font-size: 29rpx;
+  color: var(--ink);
+}
+
+.prov.active .prov-name {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.prov-note {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.prov-check {
+  color: var(--green);
+  font-size: 30rpx;
+}
+
+.url-row {
+  margin-top: 24rpx;
+}
+
+.url-label {
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.url-input {
+  height: 80rpx;
+  margin-top: 12rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  font-size: 26rpx;
+  color: var(--ink);
+}
+
+.rate-row {
+  margin-top: 24rpx;
+}
+
+.rate-label {
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.tts-state {
   margin-top: 20rpx;
+  padding: 18rpx 22rpx;
+  border-radius: var(--radius-sm);
+  font-size: 25rpx;
+}
+
+.tts-state.ok {
+  color: var(--green);
+  background: var(--green-light);
+}
+
+.tts-state.no {
+  color: var(--amber);
+  background: var(--amber-light);
+}
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.actions .btn {
+  flex: 1;
+}
+
+.step {
+  display: block;
+  margin-top: 12rpx;
 }

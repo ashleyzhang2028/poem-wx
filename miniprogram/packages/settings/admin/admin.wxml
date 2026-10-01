@@ -1,0 +1,75 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">当前身份</view>
+    <view class="kv">
+      <text class="kv-k">本机层级</text>
+      <text class="kv-v">{{tier}}</text>
+    </view>
+    <view class="kv">
+      <text class="kv-k">角色</text>
+      <text class="kv-v">{{role}}</text>
+    </view>
+    <view class="kv">
+      <text class="kv-k">登录状态</text>
+      <text class="kv-v">{{signedIn ? '已登录' : '未登录（本机档案）'}}</text>
+    </view>
+    <text class="hint note">本机层级默认 Max：数据只存在这台手机上，不登录不该被卡功能。云端层级由服务端按 uid 下发。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">本机层级</view>
+    <view class="tier {{tier === item.id ? 'active' : ''}}" wx:for="{{tiers}}" wx:key="id"
+          data-t="{{item.id}}" bindtap="onTier">
+      <view class="tier-main">
+        <text class="tier-name">{{item.label}}</text>
+        <text class="tier-desc">{{item.desc}}</text>
+      </view>
+      <text class="tier-check" wx:if="{{tier === item.id}}">✓</text>
+    </view>
+    <button class="btn ghost block reset-btn" bindtap="onResetTier">恢复默认（Max）</button>
+  </view>
+
+  <view class="card">
+    <view class="card-title">这个层级开了什么</view>
+    <view wx:for="{{caps}}" wx:key="title" wx:for-item="grp">
+      <text class="cap-group">{{grp.title}}</text>
+      <view class="cap" wx:for="{{grp.rows}}" wx:key="name" wx:for-item="caprow">
+        <text class="cap-mark {{caprow.on ? 'on' : 'off'}}">{{caprow.on ? '✓' : '✕'}}</text>
+        <text class="cap-name {{caprow.on ? '' : 'dim'}}">{{caprow.name}}</text>
+        <text class="cap-note" wx:if="{{caprow.note}}">{{caprow.note}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">云端管理</view>
+    <text class="hint note" wx:if="{{!remoteReady}}">{{remoteHint}}</text>
+
+    <view class="kv">
+      <text class="kv-k">同步</text>
+      <text class="kv-v small">{{syncState}}</text>
+    </view>
+
+    <button class="btn block" bindtap="onLoadAccounts">{{loadingAccounts ? '读取中…' : '读取账号名录'}}</button>
+    <button class="btn ghost block" bindtap="onSyncNow">立即同步一次</button>
+    <button class="btn ghost block" bindtap="onResetSync">重置同步状态</button>
+
+    <view class="acct" wx:for="{{accounts}}" wx:key="uid">
+      <view class="acct-main" data-uid="{{item.uid}}" data-tier="{{item.tier}}" bindtap="onGrant">
+        <text class="acct-name">{{item.nickname || item.email || item.uid}}</text>
+        <text class="acct-sub">{{item.tierLabel}} · {{item.role}}{{item.isOwner ? '（owner）' : ''}}</text>
+      </view>
+      <text class="acct-act" wx:if="{{canManage && !item.isOwner}}" data-uid="{{item.uid}}" data-role="{{item.role}}"
+            catchtap="onRole">改角色</text>
+    </view>
+    <text class="hint note" wx:if="{{!accounts.length && !loadingAccounts}}">点上面那个按钮读名录</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">更大的后台</view>
+    <text class="hint note">名录分页、用户报告、注音勘误这些在网页版做更顺手。</text>
+    <button class="btn ghost block" bindtap="onWebAdmin">去哪儿管理</button>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

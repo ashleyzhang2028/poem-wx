@@ -168,3 +168,61 @@
   text-align: center;
   padding-top: 24rpx;
 }
+
+/* ---------- 注音 ----------
+   小程序没有 <ruby>，拼音只能自己排：一个字一个竖排单元，
+   上面拼音下面汉字。用 flex 而不是 position 绝对定位，
+   这样行高由内容顶开，字号变了不会压字。 */
+.poem-line {
+  /* 有注音时字与字之间要留缝，否则拼音挤在一起看不清 */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.poem-body.align-left .poem-line {
+  justify-content: flex-start;
+}
+
+.u {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 标点不加注音，所以只有汉字单元占宽度 */
+}
+
+.u-py {
+  font-family: var(--font-ui);
+  font-size: 20rpx;
+  line-height: 1.2;
+  color: var(--ink-3);
+  /* 拼音比字窄，缩一点更像书本上的排法 */
+  transform: scale(.92);
+  transform-origin: center bottom;
+  height: 22rpx;
+}
+
+.u-ch {
+  font-family: var(--font-poem);
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+/* 没注音的行沿用原文行距，不撑高 */
+.u:not(.has-py) .u-ch {
+  line-height: 2;
+}
+
+.pin-seg {
+  flex: 1.6;
+}
+
+.py-hint {
+  display: block;
+  text-align: center;
+  padding: 8rpx 0 16rpx;
+}
+
+.seg-item.off {
+  color: var(--line);
+}

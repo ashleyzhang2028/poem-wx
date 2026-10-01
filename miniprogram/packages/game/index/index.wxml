@@ -1,31 +1,22 @@
 <view class="page">
-  <view class="modes">
-    <view class="mode mode-{{item.color}}" wx:for="{{modes}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
-      <text class="mode-name">{{item.name}}</text>
-      <text class="mode-desc">{{item.desc}}</text>
-    </view>
+  <view class="card">
+    <view class="card-title">古诗词大会</view>
+    <text class="hint">当前层级：{{tierLabel}}</text>
   </view>
 
   <view class="card">
-    <view class="card-title">飞花令 · 挑一个字</view>
-    <view class="chips">
-      <text class="chip {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this"
-            data-c="{{item}}" bindtap="onChar">{{item}}</text>
-    </view>
-    <text class="hint">课内诗词里含「{{keyword}}」的句子 {{hitCount}} 条</text>
-  </view>
-
-  <view class="card" wx:if="{{lines.length}}">
-    <view class="row" wx:for="{{lines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
-      <view class="row-main">
-        <text class="line-seg">{{item.seg}}</text>
-        <text class="row-sub">{{item.title}} · {{item.author}}</text>
+    <view class="mode {{item.color}} {{item.locked ? 'locked' : ''}}" wx:for="{{modes}}" wx:key="key"
+          data-k="{{item.key}}" bindtap="onMode">
+      <view class="mode-main">
+        <view class="mode-line">
+          <text class="mode-name">{{item.name}}</text>
+          <text class="tag ghost" wx:if="{{item.locked}}">{{item.hint}}</text>
+        </view>
+        <text class="mode-desc">{{item.desc}}</text>
       </view>
-      <text class="row-go">›</text>
+      <text class="mode-go">{{item.locked ? '🔒' : '›'}}</text>
     </view>
   </view>
-
-  <view class="empty" wx:if="{{!lines.length}}">课内诗词里没有含这个字的句子，换个字试试</view>
 
   <view class="safe-bottom"></view>
 </view>

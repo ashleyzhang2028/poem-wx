@@ -5,13 +5,57 @@
       <view class="seg-item {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
             data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
     </view>
-    <text class="hint note">「生字」只给生僻字标音，「全文」逐字标。注音依赖读音表，接入后生效。</text>
+    <text class="hint note">「生字」只给多音字与生僻字标音，「全文」逐字标。读音表 1517 字随包下发，断网也能注音。</text>
+
+    <view class="sample" wx:if="{{pinyinReady && sampleChars.length}}">
+      <view class="sample-u" wx:for="{{sampleChars}}" wx:key="c">
+        <text class="sample-py">{{item.py}}</text>
+        <text class="sample-ch">{{item.c}}</text>
+      </view>
+    </view>
+    <text class="hint note warn" wx:else>读音表未生成。跑一次 `node scripts/build-data.js` 就能用。</text>
   </view>
 
   <view class="card">
-    <view class="card-title">朗读</view>
-    <text class="hint note">网页版用系统语音合成，零音频文件、断网可用。小程序端要接入 TTS 服务才能朗读，接入前这一项保持不可用。</text>
-    <button class="btn ghost test-btn" bindtap="onSpeakTest">试听一声</button>
+    <view class="card-title">朗读服务</view>
+
+    <view class="prov {{provider === item.id ? 'active' : ''}}" wx:for="{{providers}}" wx:key="id"
+          data-p="{{item.id}}" bindtap="onProvider">
+      <view class="prov-main">
+        <text class="prov-name">{{item.name}}</text>
+        <text class="prov-note">{{item.note}}</text>
+      </view>
+      <text class="prov-check" wx:if="{{provider === item.id}}">✓</text>
+    </view>
+
+    <view class="url-row" wx:if="{{provider === 'remote'}}">
+      <text class="url-label">TTS 服务地址</text>
+      <input class="url-input" value="{{baseUrl}}" placeholder="https://your-api.example.com"
+             bindinput="onBaseUrl" bindblur="onBaseUrlBlur" />
+      <text class="hint">后端接 POST /tts { text, rate }，返回 { url }</text>
+    </view>
+
+    <view class="rate-row">
+      <text class="rate-label">语速 {{rate}}%</text>
+      <slider min="60" max="130" step="5" value="{{rate}}" bindchange="onRate" show-value="{{false}}" />
+    </view>
+
+    <view class="tts-state {{ttsReady ? 'ok' : 'no'}}">
+      <text>{{ttsReady ? '可用 · ' + providerName : '不可用 · ' + ttsReason}}</text>
+    </view>
+
+    <view class="actions">
+      <button class="btn primary" bindtap="onSpeakTest">试听一声</button>
+      <button class="btn ghost" bindtap="onStop">停止</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">同声传译插件怎么开</view>
+    <text class="hint step">1. 微信公众平台 → 设置 → 第三方设置 → 插件管理 → 添加「微信同声传译」</text>
+    <text class="hint step">2. 把 app.json 换成带 plugins 声明的那一版（见 docs/architecture.md）</text>
+    <text class="hint step">3. 换上正式 appid，重新编译</text>
+    <text class="hint step warn">个人主体申请不下来这个插件。如果只有个人小程序，走「自建 TTS」那条路。</text>
   </view>
 
   <view class="safe-bottom"></view>

@@ -1,6 +1,8 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const S = require("../../utils/scheduler");
+const entitlement = require("../../utils/entitlement");
+const sync = require("../../utils/sync");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "加背", optional: "自选" };
 
@@ -12,11 +14,15 @@ Page({
     plan: [],
     doneCount: 0,
     total: 0,
-    percent: 0
+    percent: 0,
+    /** 加背要 Pro 起（collections.many 的同族能力用同一档位判断） */
+    canExtra: true
   },
 
   onShow() {
     this.refresh();
+    // 首页是最高频的入口，顺带把待同步的进度送出去。失败静默
+    sync.auto().catch(() => {});
   },
 
   refresh() {
@@ -65,8 +71,10 @@ Page({
       plan: rows,
       doneCount: done,
       total,
-      percent: total ? Math.round((done / total) * 100) : 0
+      percent: total ? Math.round((done / total) * 100) : 0,
+      canExtra: true
     });
+    void entitlement;
   },
 
   onOpen(e) {

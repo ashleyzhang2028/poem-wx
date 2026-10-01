@@ -1,0 +1,115 @@
+.lv-seg {
+  margin-top: 16rpx;
+}
+
+.chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 24rpx;
+}
+
+.char {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: var(--radius-sm);
+  border: 1rpx solid var(--line);
+  background: var(--bg-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.char.active {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.char-t {
+  font-family: var(--font-poem);
+  font-size: 38rpx;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.char.active .char-t {
+  color: #fff;
+}
+
+.char-n {
+  font-size: 18rpx;
+  color: var(--ink-3);
+}
+
+.char.active .char-n {
+  color: rgba(255, 255, 255, .8);
+}
+
+.fh-line {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.fh-line:last-child {
+  border-bottom: none;
+}
+
+.fh-seg {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 32rpx;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.fh-src {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.said {
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.said-t {
+  font-family: var(--font-poem);
+  font-size: 31rpx;
+  color: var(--green);
+}
+
+.lv-input {
+  margin: 24rpx 0 20rpx;
+}
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.actions .btn {
+  flex: 1;
+}
+
+.fh-msg {
+  display: block;
+  text-align: center;
+  padding-top: 20rpx;
+}
+
+.fh-msg.ok {
+  color: var(--green);
+}
+
+.fh-msg.no {
+  color: var(--red);
+}
+
+.fh-tip {
+  display: block;
+  text-align: center;
+  padding: 40rpx 0;
+}

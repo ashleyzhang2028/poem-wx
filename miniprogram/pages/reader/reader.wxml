@@ -15,14 +15,32 @@
         <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
         <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
       </view>
+    </view>
+
+    <view class="toolbar">
+      <view class="seg pin-seg">
+        <view class="seg-item {{pinyinMode === 'off' ? 'active' : ''}}" data-m="off" bindtap="onPinyin">不注音</view>
+        <view class="seg-item {{pinyinMode === 'rare' ? 'active' : ''}}" data-m="rare" bindtap="onPinyin">生字</view>
+        <view class="seg-item {{pinyinMode === 'all' ? 'active' : ''}}" data-m="all" bindtap="onPinyin">全文</view>
+      </view>
       <view class="seg read-seg">
-        <view class="seg-item" bindtap="onSpeak">朗读</view>
+        <view class="seg-item {{speaking ? 'active' : ''}} {{ttsReady ? '' : 'off'}}" bindtap="onSpeak">
+          {{speaking ? '停止' : '朗读'}}
+        </view>
       </view>
     </view>
 
     <view class="poem-body align-{{align}} size-{{fontSize}}">
-      <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item.t}}</text>
+      <view class="poem-line" wx:for="{{lines}}" wx:key="t" wx:for-item="line">
+        <view class="u {{u.on ? 'has-py' : ''}}" wx:for="{{line.units}}" wx:key="index" wx:for-item="u">
+          <text class="u-py" wx:if="{{u.on}}">{{u.py}}</text>
+          <text class="u-ch">{{u.c}}</text>
+        </view>
+      </view>
     </view>
+
+    <text class="hint py-hint" wx:if="{{!hasPinyin}}">读音表未生成，注音不可用</text>
+    <text class="hint py-hint" wx:elif="{{!ttsReady}}">{{ttsHint}}</text>
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">

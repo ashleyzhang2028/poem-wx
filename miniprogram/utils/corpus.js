@@ -15,9 +15,11 @@
  */
 const BOOKS_DIR = "data/books/";
 const MANIFEST = "data/texts/manifest.json";
+const PINYIN = "data/pinyin.json";
 
 let booksCache = null;
 let manifestCache = null;
+let pinyinCache = null;
 const bookCache = {};
 const bucketCache = {};
 
@@ -53,6 +55,15 @@ function manifest() {
 
 function bucketOf(id) {
   return (manifest().map || {})[id] || "";
+}
+
+/**
+ * 读音表。只有开了注音才读，所以是懒加载而不是启动预热 ——
+ * 21KB 的 JSON 读一次要几毫秒，不该压在没有注音需求的首屏上。
+ */
+function pinyin() {
+  if (!pinyinCache) pinyinCache = loadJson(PINYIN);
+  return pinyinCache;
 }
 
 /** 取一个正文分片 */
@@ -157,6 +168,11 @@ function grouped(list) {
   return order.map((g) => ({ group: g, items: map[g] }));
 }
 
+/** 全站倒排的清单。索引与正文一样走云，包内只有清单 */
+function fulltextManifest() {
+  return loadJson("data/fulltext/manifest.json");
+}
+
 module.exports = {
   books,
   bookById,
@@ -164,6 +180,8 @@ module.exports = {
   ofBook,
   course,
   manifest,
+  pinyin,
+  fulltextManifest,
   entry,
   entries,
   indexById,

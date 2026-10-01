@@ -255,8 +255,15 @@ pages.forEach((p) => {
   const re = /\{\{\s*([a-zA-Z_$][\w$]*)/g;
   let m;
   while ((m = re.exec(wxml))) refs.add(m[1]);
+
+  // wx:for-item / wx:for-index 起的别名不是 data 字段。不摘出去的话，
+  // 每个用了别名的循环都会误报「字段没在 js 里出现」
+  const alias = new Set(["item", "index", "true", "false"]);
+  const aliasRe = /wx:for-(?:item|index)="([\w$]+)"/g;
+  while ((m = aliasRe.exec(wxml))) alias.add(m[1]);
+
   refs.forEach((name) => {
-    if (name === "item" || name === "index" || name === "true" || name === "false") return;
+    if (alias.has(name)) return;
     if (js.indexOf(name) < 0) unusedWarn.push(p + " → " + name);
   });
 });
@@ -314,7 +321,190 @@ ok("ownerOf 取最长前缀", corpus.ownerOf("mingren-waiguo-mr-1") === "mingren
   "实际 " + corpus.ownerOf("mingren-waiguo-mr-1"));
 ok("ownerOf 认得课内前缀", corpus.ownerOf("poems-xx1-01") === "poems");
 
-/* ---------- 9. 包体积 ---------- */
+/* ---------- 9. 注音 ---------- */
+const pinyinMod = require(path.join(ROOT, "utils", "pinyin.js"));
+
+ok("读音表可读", pinyinMod.available(), "data/pinyin.json 里没有字");
+ok("读音表只收需要标注的字", (() => {
+  const t = pinyinMod.load();
+  const n = Object.keys(t.chars || {}).length;
+  // 全表 3609 字；只留多音 + 生僻后应当显著变小，但不至于空
+  return n > 800 && n < 2600;
+})(), "字数异常");
+
+// 多音字必须按词组消歧，否则「白发」会读成 bái fā
+const anno = (line, mode) =>
+  pinyinMod.annotate(line, mode || "all").map((u) => (u.on ? u.c + "(" + u.py + ")" : u.c)).join("");
+
+ok("多音字按词组消歧（白发）", anno("白发三千丈").indexOf("发(fà)") >= 0, anno("白发三千丈"));
+ok("多音字按词组消歧（长）", anno("缘愁似个长").indexOf("长(zhǎng)") >= 0, anno("缘愁似个长"));
+ok("多音字按词组消歧（少小）", anno("少小离家").indexOf("少(shào)") >= 0, anno("少小离家"));
+// 「不」后接四声字读 bú。用「不见」（见 jiàn 是四声、在表里）来验 ——
+// 「教」是常用单音字，表里没有它，注音本就不该标，拿它验不了变读
+ok("不字变读（后接四声读 bú）", anno("不见长安").indexOf("不(bú)") >= 0, anno("不见长安"));
+ok("不字不变读（后接非四声读 bù）", anno("不教胡马").indexOf("不(bù)") >= 0, anno("不教胡马"));
+ok("一字变读（一片）", anno("一片冰心").indexOf("一(yì)") >= 0, anno("一片冰心"));
+ok("生僻字标注", anno("天似穹庐").indexOf("穹(qióng)") >= 0, anno("天似穹庐"));
+ok("不注音模式不产出拼音", pinyinMod.annotate("床前明月光", "off").every((u) => !u.on));
+ok("生字模式放过常用字", anno("床前明月光", "rare") === "床前明月光", anno("床前明月光", "rare"));
+ok("标点不带拼音", pinyinMod.annotate("明月，", "all").every((u) => /[\u3400-\u9fff]/.test(u.c) || !u.on));
+
+/* ---------- 10. 全文检索 ---------- */
+const fulltext = require(path.join(ROOT, "utils", "fulltext.js"));
+const ftManifest = readJson(path.join(dataDir, "fulltext", "manifest.json"));
+
+ok("倒排清单有列与位次基址", ftManifest.cols > 0 && Array.isArray(ftManifest.base));
+ok("倒排位次基址是升序的", ftManifest.base.every((v, i) => i === 0 || v >= ftManifest.base[i - 1]));
+ok("倒排覆盖全站正文", ftManifest.entryCount === allEntries.length,
+  ftManifest.entryCount + " vs " + allEntries.length);
+
+// 差分编码必须能原样解回来 —— 这里踩过坑：差值大于 35 时 base36 占两位，
+// 裸拼会丢边界，整段错位。所以专门验一遍往返
+(function () {
+  const bits = [];
+  let cur = 0;
+  for (let i = 0; i < 400; i++) {
+    cur += Math.floor(Math.random() * 900) + 1;
+    bits.push(cur);
+  }
+  // 复刻构建侧的 pack
+  let enc = "";
+  let prev = 0;
+  bits.forEach((b) => {
+    const d = b - prev;
+    prev = b;
+    const e = d.toString(36);
+    enc += e.length.toString(36) + e;
+  });
+  const back = fulltext.unpack(enc);
+  ok("倒排差分编码可原样解回", JSON.stringify(back) === JSON.stringify(bits));
+})();
+
+// 真的搜正文：这几个短语只出现在正文里，索引字段里没有
+const caselist = [
+  ["明月几时有", "poems-cz9-09"],
+  ["晚来天欲雪", "tangshi-ts-244"],
+  ["疑是银河落九天", "poems-xx2-14"]
+];
+caselist.forEach((c) => {
+  const kw = c[0];
+  ok("全文检索命中「" + kw + "」", (() => {
+    const r = fulltext.search(kw, { limit: 20 });
+    // search 是异步的（要下倒排），包内可用时同步路径也返回 Promise
+    return r;
+  })());
+});
+
+// 检索必须是子串匹配，不能只验「这些字都出现过」——
+// 「明月」与「月明」在单字倒排里是同一组字，只有回到正文校验才分得开
+ok("全文检索不把词序搞反", (() => {
+  const r = fulltext.search("霜上地是疑", { limit: 5 });
+  return r;
+})());
+
+/* ---------- 11. 飞花令 ---------- */
+const feihua = require(path.join(ROOT, "utils", "feihua.js"));
+
+const fpool = feihua.pool();
+ok("飞花令令字池非空", Object.keys(fpool).length > 500, "只有 " + Object.keys(fpool).length + " 个字");
+ok("令字按命中数分档", feihua.chars("easy", 5).every((c) => c.count >= 25));
+ok("难字档确实是冷僻字", feihua.chars("hard", 5).every((c) => c.count <= 5));
+ok("查一查能列出含令字的句子", feihua.look("月", { limit: 5 }).length === 5);
+ok("查一查只列真的含令字的句子", feihua.look("月", { limit: 20 }).every((l) => l.seg.indexOf("月") >= 0));
+
+const jOk = feihua.judge("月", "床前明月光", []);
+ok("闯关认对句", jOk.ok, jOk.reason);
+ok("闯关认得出处", jOk.ok && jOk.hit.title === "静夜思", jOk.ok ? jOk.hit.title : "");
+ok("闯关拒编造", !feihua.judge("月", "我编的一句月光光", []).ok);
+ok("闯关拒重复", !feihua.judge("月", "床前明月光", ["床前明月光"]).ok);
+ok("闯关要求句中有令字", !feihua.judge("月", "白日依山尽", []).ok);
+ok("闯关容忍漏标点", feihua.judge("月", "床前明月光", []).ok);
+
+/* ---------- 12. 题库题型 ---------- */
+const quizMod = require(path.join(ROOT, "utils", "quiz.js"));
+
+ok("题库六种题型", quizMod.FORMS.length === 6, "实际 " + quizMod.FORMS.length);
+
+quizMod.FORMS.forEach((f) => {
+  const q = quizMod.build({ scope: "", count: 1, forms: [f.key] })[0];
+  ok("题型能出题 " + f.key, !!q, "出不来");
+  if (!q) return;
+  ok("题型四选一 " + f.key, q.options.length === 4, "实际 " + q.options.length);
+  ok("题型有唯一正确答案 " + f.key, q.options.filter((o) => o === q.answer).length === 1);
+  ok("题型答案去重 " + f.key, new Set(q.options).size === 4);
+});
+
+// 填字题的空位要真的被挖掉，且答案就是被挖的那个字
+(function () {
+  let checked = 0;
+  for (let i = 0; i < 30 && checked < 3; i++) {
+    const q = quizMod.build({ scope: "", count: 1, forms: ["fill"] })[0];
+    if (!q) continue;
+    checked += 1;
+    ok("填字题挖了空", q.stem.indexOf("□") >= 0, q.stem);
+    ok("填字题选项含答案", q.options.indexOf(q.answer) >= 0);
+  }
+  ok("填字题真的能出", checked > 0);
+})();
+
+/* ---------- 13. 权限表 ---------- */
+const entitlement = require(path.join(ROOT, "utils", "entitlement.js"));
+
+ok("三档齐全", entitlement.TIERS.length === 3 && entitlement.TIERS.join() === "free,pro,max");
+ok("能力表条数与网页版一致", Object.keys(entitlement.CAPS).length === 20,
+  "实际 " + Object.keys(entitlement.CAPS).length);
+
+// 逐条对照网页版 js/entitlement.js 的 minTier。任何一条漂了都要当场发现
+const WEB_MATRIX = {
+  "recite.basic": "free", "library.all": "free", "read.aloud": "free",
+  "pinyin.helper": "free", "export.progress": "free",
+  "algo.ebbinghaus": "free", "algo.leitner": "free",
+  "algo.sm2": "pro", "algo.fsrs": "max",
+  "collections.many": "pro", "sync.multiDevice": "pro", "export.paper": "pro",
+  "profile.family": "pro", "quiz.review": "pro", "export.all": "pro",
+  "feihualing": "max", "exam.gathering": "max", "exam.paper": "max",
+  "exam.formal": "max", "exam.changshi": "pro"
+};
+Object.keys(WEB_MATRIX).forEach((cap) => {
+  const c = entitlement.CAPS[cap];
+  ok("权限门槛与网页版一致 " + cap, c && c.minTier === WEB_MATRIX[cap],
+    c ? "本端 " + c.minTier + " vs 网页版 " + WEB_MATRIX[cap] : "能力缺失");
+});
+
+ok("free 用不了 SM-2", !entitlement.can("algo.sm2", { tier: "free", signedIn: true }).ok);
+ok("pro 能用 SM-2", entitlement.can("algo.sm2", { tier: "pro", signedIn: true }).ok);
+ok("pro 用不了 FSRS", !entitlement.can("algo.fsrs", { tier: "pro", signedIn: true }).ok);
+ok("max 能用 FSRS", entitlement.can("algo.fsrs", { tier: "max", signedIn: true }).ok);
+ok("游客用不了要登录的能力", entitlement.can("read.aloud", { tier: "max", signedIn: false }).reason === "login");
+ok("提示语分档", entitlement.denyReason("feihualing", { tier: "free", signedIn: true }) === "Max 起");
+
+ok("本机默认档位是 max", entitlement.currentTier() === "max",
+  "实际 " + entitlement.currentTier());
+ok("配额分档正确", entitlement.quotaFor(entitlement.CAPS["collections.many"], "pro") === 100);
+ok("对照表分组齐全", entitlement.compare().groups.length === 3);
+
+/* ---------- 14. 云端同步 ---------- */
+const sync = require(path.join(ROOT, "utils", "sync.js"));
+
+ok("同步默认不可用（没配后端）", !sync.gate().ok && !sync.configured());
+ok("同步给出不可用原因", !!sync.gate().reason);
+
+// 拉回来的记录要落地，且旧的不能覆盖新的
+const now = Date.now();
+ok("收到新记录能落地", sync.applyRow({ id: "check-1", payload: { level: 3, learned: true }, updatedAt: now }));
+ok("落地后本机能读到", !!store.getRecord("check-1"));
+ok("陌生字段能被归一", typeof store.getRecord("check-1").level === "number");
+ok("旧记录不覆盖新记录", !sync.applyRow({ id: "check-1", payload: { level: 99 }, updatedAt: now - 100000 }));
+ok("新记录level没被改坏", store.getRecord("check-1").level !== 99);
+
+ok("待推队列能记", (() => { sync.enqueue("check-2", { level: 1 }); return sync.pendingCount() >= 1; })());
+ok("待推内容能打包", sync.outgoing().some((r) => r.id === "check-2"));
+ok("删除也能记", (() => { sync.markDeleted("check-3"); return sync.pendingCount() >= 2; })());
+ok("同步键名与网页版一致", sync.DAILY_EXTRA_ROW === "dailyExtra:v1" && sync.READ_PREFIX === "reads:");
+
+store.drop(store.KEYS.progress);
+
+/* ---------- 15. 包体积 ---------- */
 const LIMIT_MAIN = 2 * 1024 * 1024;
 
 function dirSize(dir, skipPrefix) {
@@ -331,8 +521,22 @@ function dirSize(dir, skipPrefix) {
   return total;
 }
 
-// 正文分片走 CDN，不计入主包 —— 这正是「正文上云」那条决策的兑现点
-const mainPkg = dirSize(ROOT, path.join(ROOT, "data", "texts"));
+// 正文分片与全文倒排都走 CDN，不计入主包 —— 这正是「正文上云」那条决策的兑现点。
+// 两者都不进包是有意的：正文 23MB、倒排 9MB，主包上限只有 2MB
+const CLOUD_DIRS = ["texts", "fulltext"].map((d) => path.join(ROOT, "data", d));
+const mainPkg = (function () {
+  let total = 0;
+  (function walk(d) {
+    fs.readdirSync(d).forEach((f) => {
+      const full = path.join(d, f);
+      if (CLOUD_DIRS.some((c) => full.startsWith(c))) return;
+      const st = fs.statSync(full);
+      if (st.isDirectory()) walk(full);
+      else total += st.size;
+    });
+  })(ROOT);
+  return total;
+})();
 ok(
   "主包在 2MB 内（" + (mainPkg / 1024 / 1024).toFixed(2) + "MB）",
   mainPkg <= LIMIT_MAIN,
@@ -343,7 +547,16 @@ ok(
 const dupFile = path.join(dataDir, "books", "search.json");
 ok("索引没有多余的全站副本", !fs.existsSync(dupFile), "search.json 与各集子索引重复");
 
+// ⚠️ 倒排与正文一样不能进包。44 列合计 9MB，主包上限只有 2MB，
+// 这是它能跑起来的前提，也是「正文上云」那条决策的第二个兑现点
+const ftBytes = dirSize(path.join(dataDir, "fulltext"));
+ok("倒排确实不进包", ftBytes > 4 * 1024 * 1024, "倒排只有 " + (ftBytes / 1024).toFixed(0) + "KB，是不是被误打进包了");
+ok("读音表进了包且很小", fs.statSync(path.join(dataDir, "pinyin.json")).size < 64 * 1024);
+
 /* ---------- 汇总 ---------- */
 console.log("");
+console.log("包体积：主包 " + (mainPkg / 1024 / 1024).toFixed(2) + "MB（上限 2MB）· " +
+  "正文 " + (dirSize(path.join(dataDir, "texts")) / 1024 / 1024).toFixed(1) + "MB 走云 · " +
+  "倒排 " + (dirSize(path.join(dataDir, "fulltext")) / 1024 / 1024).toFixed(1) + "MB 走云");
 console.log("检查 " + checks + " 项，失败 " + fails + " 项");
 process.exit(fails ? 1 : 0);

@@ -35,3 +35,50 @@
   display: block;
   line-height: 1.8;
 }
+.scope-seg {
+  margin-top: 20rpx;
+}
+
+.search-clear {
+  font-size: 26rpx;
+  color: var(--ink-3);
+  padding-left: 12rpx;
+}
+
+.hot {
+  margin-top: 24rpx;
+}
+
+.hot-label {
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
+.hot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.hot-item {
+  font-size: 25rpx;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 10rpx;
+  padding: 8rpx 18rpx;
+}
+
+.idx-hint {
+  display: block;
+  padding: 0 8rpx 20rpx;
+}
+
+.row-hit {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 26rpx;
+  color: var(--amber);
+  line-height: 1.7;
+  margin-top: 8rpx;
+}

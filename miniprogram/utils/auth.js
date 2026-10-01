@@ -20,6 +20,9 @@ const REMOTE = {
   refresh: "/api/wx/refresh"
 };
 
+/** access token 提前 5 分钟换，避免「刚好在用的时候过期」 */
+const EARLY_MS = 5 * 60 * 1000;
+
 function configured() {
   const auth = store.read(store.KEYS.auth, {}) || {};
   return !!auth.baseUrl;
@@ -90,8 +93,51 @@ function token() {
   return auth.accessToken || "";
 }
 
+function authState() {
+  return store.read(store.KEYS.auth, {}) || {};
+}
+
+/**
+ * 会话要过期 / 已过期时，用 refresh token 换一枚新的。
+ *
+ * 没有后端、没有 refresh token、或者还早 —— 都直接返回，不发请求。
+ * 这是启动流程里的一个空操作，不该因为「没配后端」而抛错。
+ */
+function refreshIfNeeded() {
+  const a = authState();
+  if (!configured() || !a.refreshToken) return Promise.resolve(null);
+
+  const expiresAt = Number(a.expiresAt) || 0;
+  if (expiresAt && expiresAt - Date.now() > EARLY_MS) return Promise.resolve(null);
+
+  return request(REMOTE.refresh, { refreshToken: a.refreshToken })
+    .then((data) => {
+      wx.setStorageSync(store.KEYS.auth, {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken || a.refreshToken,
+        expiresAt: Date.now() + (data.expiresIn || 604800) * 1000
+      });
+      return data;
+    })
+    .catch(() => {
+      // 换不回来就把登录态摘掉，界面会回到「未登录」，功能一个不少
+      store.saveProfile({ logged: false });
+      return null;
+    });
+}
+
 function logged() {
   return !!store.profile().logged;
 }
 
-module.exports = { configured, baseUrl, login, logout, token, logged, REMOTE };
+module.exports = {
+  REMOTE,
+  configured,
+  baseUrl,
+  login,
+  logout,
+  token,
+  logged,
+  authState,
+  refreshIfNeeded
+};

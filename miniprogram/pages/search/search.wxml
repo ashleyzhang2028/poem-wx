@@ -1,34 +1,45 @@
-<view class="page">
-  <view class="search">
-    <text class="search-icon">⌕</text>
-    <input placeholder="搜篇名 / 作者 / 朝代 / 出处" value="{{keyword}}" bindinput="onInput"
-           confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
-    <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
-    <text class="go" bindtap="doSearch">搜索</text>
+<view class="page search-page">
+  <view class="card">
+    <view class="search">
+      <text class="search-icon">🔍</text>
+      <input value="{{keyword}}" placeholder="搜诗句 / 篇名 / 作者 / 朝代"
+             confirm-type="search" bindinput="onInput" bindconfirm="doSearch" />
+      <text class="search-clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+    </view>
+
+    <view class="seg scope-seg">
+      <view class="seg-item {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key"
+            data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
+    </view>
+
+    <view class="hot" wx:if="{{!searched}}">
+      <text class="hot-label">试试</text>
+      <view class="hot-list">
+        <text class="hot-item" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
+      </view>
+    </view>
+
+    <button class="btn primary block" bindtap="doSearch" wx:else>搜索</button>
   </view>
 
-  <view class="seg scope-seg">
-    <view class="seg-item {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key"
-          data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
-  </view>
+  <text class="hint idx-hint" wx:if="{{indexHint}}">{{indexHint}}</text>
 
-  <view class="card" wx:if="{{searched && results.length}}">
+  <view class="card" wx:if="{{results.length}}">
     <view class="row" wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
-        <text class="row-title">{{item.title}}</text>
+        <view class="row-line">
+          <text class="row-title">{{item.title}}</text>
+          <text class="tag" wx:if="{{item.inText}}">正文</text>
+        </view>
         <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.bookName}}</text>
+        <text class="row-hit" wx:if="{{item.hit}}">{{item.hit}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
   </view>
 
-  <view class="empty" wx:if="{{searched && !results.length}}">没有匹配的篇目</view>
+  <view class="empty" wx:elif="{{searched && !searching}}">没有找到，换个词试试</view>
+  <view class="empty" wx:elif="{{searching}}">正在检索…</view>
 
-  <view class="hot" wx:if="{{!searched}}">
-    <text class="hint">试试</text>
-    <view class="hot-tags">
-      <text class="tag" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
-    </view>
-    <text class="hint hot-note">搜索按篇名 / 作者 / 朝代 / 出处匹配。正文全文检索在下一版接入。</text>
-  </view>
+  <view class="safe-bottom"></view>
 </view>

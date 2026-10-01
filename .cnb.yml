@@ -6,4 +6,6 @@ $:
       script:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        # 352 项：页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
+        # 倒排往返 / 飞花令判定 / 六种题型 / 权限表对照 / 同步冲突 / 包体积
         - node scripts/check.js

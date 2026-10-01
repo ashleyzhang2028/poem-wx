@@ -1,0 +1,79 @@
+<view class="page">
+  <view class="card" wx:if="{{!allowed}}">
+    <view class="card-title">题库</view>
+    <text class="hint">{{reason}}，在「我的 → 管理层级」可以查看当前的权限。</text>
+  </view>
+
+  <block wx:elif="{{stage === 'setup'}}">
+    <view class="card">
+      <view class="card-title">题型</view>
+      <view class="forms">
+        <view class="form {{item.on ? 'on' : ''}}" wx:for="{{forms}}" wx:key="key"
+              data-k="{{item.key}}" bindtap="onToggleForm">
+          <text class="form-n">{{item.name}}</text>
+          <text class="form-d">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">范围</view>
+      <picker mode="selector" range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
+        <view class="picker">{{scopes[scopeIndex].name}}<text class="picker-go">›</text></view>
+      </picker>
+
+      <view class="card-title count-title">题量</view>
+      <view class="seg">
+        <view class="seg-item {{count === 5 ? 'active' : ''}}" data-n="5" bindtap="onCount">5 题</view>
+        <view class="seg-item {{count === 10 ? 'active' : ''}}" data-n="10" bindtap="onCount">10 题</view>
+        <view class="seg-item {{count === 20 ? 'active' : ''}}" data-n="20" bindtap="onCount">20 题</view>
+      </view>
+    </view>
+
+    <button class="btn primary block" bindtap="onStart">开始做题</button>
+  </block>
+
+  <block wx:elif="{{stage === 'running'}}">
+    <view class="card">
+      <view class="quiz-head">
+        <text class="quiz-idx">{{index + 1}} / {{questions.length}}</text>
+        <text class="quiz-right">答对 {{correct}}</text>
+      </view>
+      <text class="quiz-stem">{{current.stem}}</text>
+      <text class="quiz-ask">{{current.form === 'next' ? '下一句是？' : current.form === 'prev' ? '上一句是？' : current.form === 'author' ? '作者是？' : current.form === 'dynasty' ? '朝代是？' : current.form === 'title' ? '出自？' : '缺的是哪个字？'}}</text>
+    </view>
+
+    <view class="card">
+      <view class="opt {{picked === item ? (item === current.answer ? 'right' : 'wrong') : ''}} {{picked && item === current.answer ? 'right' : ''}}"
+            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick">
+        <text class="opt-t">{{item}}</text>
+      </view>
+    </view>
+
+    <button class="btn primary block" bindtap="onNext" wx:if="{{picked}}">
+      {{index + 1 >= questions.length ? '看结果' : '下一题'}}
+    </button>
+  </block>
+
+  <block wx:else>
+    <view class="card result-card">
+      <text class="score">{{score}}</text>
+      <text class="score-label">共 {{questions.length}} 题，答对 {{correct}} 题</text>
+    </view>
+
+    <view class="card" wx:if="{{wrong.length}}">
+      <view class="card-title">答错的 {{wrong.length}} 题</view>
+      <text class="hint wrong-note">这些篇目已排进复习，明天会再遇到</text>
+      <view class="wrong" wx:for="{{wrong}}" wx:key="index">
+        <text class="wrong-stem">{{item.stem}}</text>
+        <text class="wrong-ans">正确：{{item.answer}} · 你选了：{{item.picked}}</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button class="btn primary" bindtap="onAgain">再来一组</button>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>
