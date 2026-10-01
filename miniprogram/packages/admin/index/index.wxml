@@ -78,6 +78,21 @@
   </view>
 
   <view class="card">
+    <view class="card-title bar">后端地址</view>
+    <text class="hint note">
+      同步、微信登录、名录都走这一个地址。留空就是「没后端」—— 功能照用，
+      进度只在本机，不上传也不假装上传。
+    </text>
+    <view class="field">
+      <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
+             bindinput="onBaseUrl" />
+    </view>
+    <button class="btn ghost block" bindtap="onSaveBaseUrl">保存并重试连接</button>
+    <text class="hint note" wx:if="{{baseUrlNote}}">{{baseUrlNote}}</text>
+    <text class="hint note" wx:if="{{wxLoginNote}}">{{wxLoginNote}}</text>
+  </view>
+
+  <view class="card">
     <view class="card-title bar">要一个更高的档位</view>
     <text class="hint note">
       三档都不收费，由管理员在服务端按人发放。把邮箱发给管理员，或让他直接在

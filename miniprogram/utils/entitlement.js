@@ -34,9 +34,11 @@ const auth = require("./auth");
  * 与网页版**故意不同**的只有三处，都写在下面各自那行的注释里：
  * 网页版 read.aloud 是 free+touch 登录，小程序端放到 pro（见 speak 那行）。
  *
+ * 与网页版 `sync.multiDevice`（pro）对齐的那一条，这里的 key 叫 `sync`。
+ *
  * 网页版有、小程序端**故意不做**的：`pinyin.helper`（注音勘误审核队列，
  * 依赖后端）、`export.paper`（PDF / 打印，小程序端做不了）、
- * `profile.family`（子用户，界面没做）、`sync.multiDevice`（并进 sync 语义）、
+ * `profile.family`（子用户，界面没做）、
  * `exam.*` 里的正式考试与文学常识考试（依赖后端组卷判分）。
  * 这些不在表里，就不该在界面上留入口 —— 列一个点不动的入口比没有更糟。
  */
@@ -55,6 +57,11 @@ const CAPS = [
   { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
 
   // pro：管理员发放
+  // 云同步是 pro —— **这条是服务端定的**，不是这边客气。
+  // poem 的 syncTierGate 对 free 直接 403（E_TIER，cap: sync.multiDevice）。
+  // 所以界面必须在 free 档就把「云端同步」这件事说清楚：现在写的是本机进度，
+  // 攒着不上传。列一个点下去必然被服务端拒的入口，比不列更糟。
+  { key: "sync", name: "云端同步", desc: "换手机不丢进度；要 Pro 起", tier: "pro" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
