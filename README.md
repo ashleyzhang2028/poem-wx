@@ -56,6 +56,27 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 传到体验版有一条 tag 流水线（`.cnb.yml`），**只上传不提审** ——
 「要不要上线」不该由流水线决定。
 
+## 要联网的四条路，和「request 合法域名」
+
+小程序里 `wx.request` 只能打在**微信后台登记过的域名**上，没登记的域真机上一律
+`url not in domain list` —— 这是平台名单制，不是配置失误，它换来的是「小程序的代码
+由微信替开发者下发」这件事本身的安全。名单分 request / socket / uploadFile /
+downloadFile / 业务域名几张，**互不通用**；本项目只用到 request 这一张。
+
+本项目只有四条路要出网（`utils/remote.js` 的 `PATHS`）：微信登录、进度同步、
+TTS 合成、管理接口。**没有域名也能跑** —— 语料、算法、记音、进度全在本机，
+断网照背，丢的恰好是这四样，届时界面如实说「后端未就绪」而不是假装成功。
+
+配一个能填进名单的域名要三条：**https + 有效证书**、**已 ICP 备案**、
+**不带端口不写 IP**；`mp.weixin.qq.com` → 开发 → 开发设置 → 服务器域名 →
+「request 合法域名」里加 `https://<你的后端域名>`。同一页有每月修改次数上限，
+所以别拿临时域名先顶。联调期可在开发者工具里勾「不校验合法域名」绕过，
+`project.config.json` 里的 `urlCheck: true` 是故意的，不改配置文件。
+
+填完之后客户端只改一处：设置页里 `configure({ baseUrl })` 填同一个域名，
+`remote.request()` 拼的就是 `baseUrl + PATHS.login`。完整说明见
+[docs/architecture.md § 五点五](docs/architecture.md#五点五request-合法域名小程序唯一绕不开的一张网)。
+
 ## 谁能用
 
 | 档位 | 能力 | 怎么拿到 |
