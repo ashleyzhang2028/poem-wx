@@ -76,7 +76,7 @@ Page({
   },
 
   onChar(e) {
-    this.setData({ keyword: e.currentTarget.dataset.c }, () => this.computeLines());
+    this.setData({ keyword: e.detail.value }, () => this.computeLines());
   },
 
   onReveal() {

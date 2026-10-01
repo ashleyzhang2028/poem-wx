@@ -1,11 +1,16 @@
 <view class="page">
   <view class="card" wx:if="{{pinyinOn}}">
     <view class="card-title">注音方式</view>
-    <view class="seg">
-      <view class="seg-item {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
-            data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
-    </view>
-    <text class="hint note">「生字」只给生僻字标音，「全文」逐字标。多音字按词组取值，词组表里没有才回退单字。</text>
+    <radio-group class="native-group column" bindchange="onMode">
+      <label class="opt-row {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{pinyin === item.key}}" color="#2f6055" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.label}}</text>
+          <text class="opt-desc">{{item.desc}}</text>
+        </view>
+      </label>
+    </radio-group>
+    <text class="hint note">多音字按词组取值，词组表里没有才回退单字。</text>
   </view>
 
   <view class="card" wx:else>
@@ -18,15 +23,13 @@
     <view class="card-title">朗读</view>
 
     <block wx:if="{{speakReady}}">
-      <view class="row">
-        <view class="row-main">
-          <text class="row-title">朗读语速</text>
-        </view>
-      </view>
-      <view class="seg">
-        <view class="seg-item {{speechRate === item.key ? 'active' : ''}}" wx:for="{{rates}}" wx:key="key"
-              data-k="{{item.key}}" bindtap="onRate">{{item.label}}</view>
-      </view>
+      <view class="sub-title">朗读语速</view>
+      <radio-group class="native-group" bindchange="onRate">
+        <label class="native-label" wx:for="{{rates}}" wx:key="key">
+          <radio value="{{item.key}}" checked="{{speechRate === item.key}}" color="#2f6055" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
 
       <view class="row">
         <view class="row-main">
@@ -36,7 +39,8 @@
         <switch checked="{{speechAutoNext}}" bindchange="onAutoNext" color="#2f6055" />
       </view>
 
-      <button class="btn ghost test-btn" bindtap="onSpeakTest">试听一声</button>
+      <!-- 试听：原生 button，只是借边距与 :active 上色，不做自绘按钮 -->
+      <button class="btn ghost block test-btn" bindtap="onSpeakTest">试听一声</button>
     </block>
 
     <text class="hint note" wx:else>{{speakReason}}</text>

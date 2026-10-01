@@ -14,6 +14,22 @@ const RESULTS = [
 /** 整篇读完到自动跳下一首之间留一口气，不然会显得被赶着走 */
 const AUTO_NEXT_GAP = 900;
 
+/* 与设置页同一套档位 —— 阅读页是「当场要调一下」的地方，
+   两个页面给出不同的范围，用户会以为设置没生效 */
+const FONT_MIN = -2;
+const FONT_MAX = 4;
+
+const ALIGNS = [
+  { key: "left", label: "左对齐" },
+  { key: "center", label: "居中" }
+];
+
+const PINYIN_MODES = [
+  { key: "off", label: "不注音" },
+  { key: "rare", label: "生字" },
+  { key: "all", label: "全文" }
+];
+
 Page({
   data: {
     id: "",
@@ -28,8 +44,12 @@ Page({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
+    aligns: ALIGNS,
     align: "center",
     fontSize: 0,
+    fontMin: FONT_MIN,
+    fontMax: FONT_MAX,
+    pinyinModes: PINYIN_MODES,
     pinyinMode: "off",
     pinyinOn: false,
     stage: "新学",
@@ -136,7 +156,7 @@ Page({
   },
 
   onPinyin(e) {
-    const mode = e.currentTarget.dataset.m;
+    const mode = e.detail.value;
     if (!pinyin.setMode(mode)) {
       wx.showToast({ title: "读音表未生成", icon: "none" });
       return;
@@ -145,14 +165,14 @@ Page({
   },
 
   onAlign(e) {
-    const align = e.currentTarget.dataset.a;
+    const align = e.detail.value;
     this.setData({ align });
     store.saveSettings({ align });
   },
 
-  onFont(e) {
-    const delta = Number(e.currentTarget.dataset.d);
-    const fontSize = Math.max(-2, Math.min(4, this.data.fontSize + delta));
+  onFontSlide(e) {
+    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(e.detail.value)));
+    if (fontSize === this.data.fontSize) return;
     this.setData({ fontSize });
     store.saveSettings({ fontSize });
   },
@@ -181,15 +201,18 @@ Page({
     if (!r.visible) return;
 
     if (!r.usable) {
-      // 不静默失败：说清是哪一步没就绪
-      wx.showModal({
-        title: r.state === "denied" ? "朗读未授权" : "朗读通道待接入",
-        content: r.reason,
-        showCancel: false
-      });
+      // 按钮此时是灰的、点不动；这一句是兜住「刚好在这一刻掉线」，
+      // 所以给 toast 而不是弹窗 —— 弹窗是「要你决定」，这里只是「告诉你」
+      wx.showToast({ title: r.reason || "朗读通道没就绪", icon: "none", duration: 2500 });
       return;
     }
     this.ensurePlayer().start();
+  },
+
+  /** 拖进度条 = 指定从第几句起播 */
+  onSpeakSeek(e) {
+    if (!this.player) return;
+    this.player.seek(Number(e.detail.value));
   },
 
   onSpeakToggle(e) {
@@ -199,10 +222,6 @@ Page({
       return;
     }
     this.ensurePlayer().toggle(typeof idx === "number" ? idx : undefined);
-  },
-
-  onSpeakPause() {
-    if (this.player) this.player.pause();
   },
 
   onSpeakNext() {

@@ -9,8 +9,11 @@
 }
 
 .index-toggle {
-  font-size: 26rpx;
+  flex: none;
+  height: 56rpx;
+  line-height: 56rpx;
   color: var(--green);
+  border-color: var(--line);
 }
 
 .index-grid {
@@ -43,8 +46,25 @@
   padding-left: 12rpx;
 }
 
-.filter-seg {
+.opt-group {
+  display: flex;
+}
+
+/* 筛选行留一点上下呼吸 */
+.filter-group {
   margin: 20rpx 0;
+}
+
+.pref-item {
+  display: flex;
+  align-items: center;
+  font-size: 27rpx;
+  color: var(--ink-2);
+  padding-right: 20rpx;
+}
+
+.pref-item radio {
+  transform: scale(.8);
 }
 
 .count {

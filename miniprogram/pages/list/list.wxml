@@ -2,10 +2,11 @@
   <view class="card index-card" wx:if="{{groups.length > 1}}">
     <view class="index-head">
       <text class="card-title">索引</text>
-      <text class="index-toggle" bindtap="onToggleIndex">{{collapsed ? '展开' : '收起'}}</text>
+      <button class="btn mini index-toggle" bindtap="onToggleIndex">{{collapsed ? '展开' : '收起'}}</button>
     </view>
     <view class="index-grid" wx:if="{{!collapsed}}">
-      <view class="index-cell" wx:for="{{groups}}" wx:key="group" data-g="{{index}}" bindtap="onJump">
+      <view class="index-cell" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{groups}}" wx:key="group" data-g="{{index}}" bindtap="onJump">
         <text class="index-name">{{item.group || '未分组'}}</text>
         <text class="index-count">{{item.items.length}}</text>
       </view>
@@ -17,10 +18,13 @@
     <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
   </view>
 
-  <view class="seg filter-seg">
-    <view class="seg-item {{filter === item ? 'active' : ''}}"
-          wx:for="{{filters}}" wx:key="*this" data-f="{{item}}" bindtap="onFilter">{{item}}</view>
-  </view>
+  <!-- 已读 / 未读 这类筛选：原生 radio，占位与行为都由平台给 -->
+  <radio-group class="opt-group filter-group" bindchange="onFilter">
+    <label class="pref-item" wx:for="{{filters}}" wx:key="*this">
+      <radio value="{{item}}" checked="{{filter === item}}" color="#2f6055" />
+      <text>{{item}}</text>
+    </label>
+  </radio-group>
 
   <view class="count hint">共 {{matched}} {{unit}}</view>
 

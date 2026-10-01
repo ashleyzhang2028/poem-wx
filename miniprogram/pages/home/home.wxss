@@ -31,6 +31,10 @@
 }
 
 /* 进度环：纯 CSS 锥形渐变，省掉 canvas 与 svg 资源 */
+.ring-hover {
+  opacity: .82;
+}
+
 .ring {
   position: relative;
   width: 128rpx;

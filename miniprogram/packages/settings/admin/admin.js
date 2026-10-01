@@ -74,9 +74,30 @@ Page({
 
     admin.list().then((res) => {
       this.setData({
-        users: res.users,
+        users: this.decorate(res.users),
         rosterNote: res.rosterNote,
         generatedAt: res.generatedAt
+      });
+    });
+  },
+
+  /**
+   * 名录每一行带上「能不能改」「从哪来」。
+   *
+   * 这两件事原先是拼在模板里的三元表达式，现在挪到数据层 ——
+   * 模板里嵌套三元，读的人得在脑子里先跑一遍，改的人也不知道
+   * 哪一条分支是给谁的。放这里，一眼能看完。
+   */
+  decorate(users) {
+    const canWrite = remote.adminReady();
+    return (users || []).map((u) => {
+      let scopeText = "名录";
+      if (u.local) scopeText = "本机";
+      else if (u.remote) scopeText = "服务端";
+      return Object.assign({}, u, {
+        scopeText,
+        // 只能改本机这一行：后端没就绪时改别人的档位是个假操作
+        editable: canWrite || !!u.local
       });
     });
   },
@@ -110,8 +131,8 @@ Page({
    * 或者提前看看 Pro / Max 长什么样。真授权要服务端下发。
    */
   onTier(e) {
-    const tier = e.currentTarget.dataset.t;
-    if (!tiers.isTier(tier)) return;
+    const tier = e.detail.value;
+    if (!tiers.isTier(tier) || tier === this.data.tier) return;
 
     // 本机档位就落在提权记录里，与兑换码同一处 —— 这样 status() 只认一个来源
     store.write(store.KEYS.grant, { code: "LOCAL-" + tier.toUpperCase(), tier: tier, at: Date.now() });
@@ -155,7 +176,7 @@ Page({
     admin
       .list()
       .then((res) => {
-        this.setData({ busy: false, users: res.users, rosterNote: res.rosterNote });
+        this.setData({ busy: false, users: this.decorate(res.users), rosterNote: res.rosterNote });
         if (res.sim) wx.showToast({ title: "后端未就绪，名录只读", icon: "none", duration: 2500 });
       })
       .catch((err) => {
@@ -164,11 +185,20 @@ Page({
       });
   },
 
-  /** 改某个人的档位。服务端可写就写服务端，否则只对本机生效 */
-  onSetTier(e) {
+  /**
+   * 改某个人的档位。
+   *
+   * 三档就在那儿、还非要在页面里塞三个按钮，是为了「能少点几下」——
+   * 但那个换来的代价是所有行都长得一样热闹。这里回到原生 showActionSheet：
+   * 一次点击、一次选择，选完就落。原生组件负责了全部交互细节，
+   * 我们只把三个名字给它。
+   */
+  onEditTier(e) {
     const userId = e.currentTarget.dataset.u;
-    const current = e.currentTarget.dataset.t;
-    const local = e.currentTarget.dataset.local === "true";
+    const row = (this.data.users || []).find((u) => u.id === userId);
+    if (!row || !row.editable) return;
+    const current = row.tier;
+    const local = !!row.local;
 
     wx.showActionSheet({
       itemList: tiers.TIERS.map((t) => t.name + "（" + t.key + "）"),

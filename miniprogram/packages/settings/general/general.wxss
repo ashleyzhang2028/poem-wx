@@ -1,8 +1,31 @@
+.font-row {
+  display: flex;
+  align-items: center;
+  margin: 12rpx 0 4rpx;
+}
+
+.font-slider {
+  flex: 1;
+  margin: 0 20rpx;
+}
+
+.font-a {
+  font-family: var(--font-poem);
+  color: var(--ink-3);
+  flex: none;
+}
+
+.font-a.small {
+  font-size: 24rpx;
+}
+
+.font-a.big {
+  font-size: 36rpx;
+}
+
 .sample {
   display: block;
   font-family: var(--font-poem);
-  text-align: center;
-  padding-top: 24rpx;
-  line-height: 2;
-  color: var(--ink);
+  line-height: 1.9;
+  padding-top: 16rpx;
 }

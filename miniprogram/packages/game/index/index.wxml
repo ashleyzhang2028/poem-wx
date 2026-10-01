@@ -1,17 +1,23 @@
 <view class="page">
+  <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片 -->
   <view class="modes">
-    <view class="mode mode-{{item.color}}" wx:for="{{modes}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
+    <button class="mode mode-{{item.color}}" wx:for="{{modes}}" wx:key="key"
+            data-k="{{item.key}}" bindtap="onMode">
       <text class="mode-name">{{item.name}}</text>
       <text class="mode-desc">{{item.desc}}</text>
-    </view>
+    </button>
   </view>
 
   <view class="card">
     <view class="card-title">飞花令 · 挑一个字</view>
-    <view class="chips">
-      <text class="chip {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this"
-            data-c="{{item}}" bindtap="onChar">{{item}}</text>
-    </view>
+    <!-- 令字是「选一个」：原生 radio，选中的那个圆点由平台画，
+         字块本身仍旧是那块方方正正的宋体字 -->
+    <radio-group class="chars" bindchange="onChar">
+      <label class="char {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this">
+        <radio class="char-radio" value="{{item}}" checked="{{keyword === item}}" color="#2f6055" />
+        <text class="char-t">{{item}}</text>
+      </label>
+    </radio-group>
     <text class="hint">课内诗词里含「{{keyword}}」的句子 {{hitCount}} 条</text>
     <button class="btn primary block reveal-btn" bindtap="onReveal">
       {{revealed ? '收起来，我先说' : '想不出来了，看答案'}}
@@ -30,9 +36,9 @@
     </view>
 
     <view class="pager" wx:if="{{hitCount > pageSize}}">
-      <text class="pg {{page <= 1 ? 'off' : ''}}" bindtap="onPrevPage">上一页</text>
+      <button class="btn mini pg" disabled="{{page <= 1}}" bindtap="onPrevPage">上一页</button>
       <text class="pg-num">第 {{page}} 页</text>
-      <text class="pg" bindtap="onNextPage">下一页</text>
+      <button class="btn mini pg" bindtap="onNextPage">下一页</button>
     </view>
 
     <view class="empty" wx:if="{{!hitCount}}">课内诗词里没有含这个字的句子，换个字试试</view>

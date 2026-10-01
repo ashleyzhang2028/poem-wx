@@ -82,38 +82,28 @@ view, text, button, input, textarea {
   width: 100%;
 }
 
+/* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
+   原生 button 自带最小宽度与默认内边距，不收掉就撑得整行走形。 */
+.btn.mini {
+  display: inline-block;
+  width: auto;
+  min-width: 0;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+}
+
 .btn[disabled] {
   opacity: .5;
 }
 
-/* ---------- 分段控件 ---------- */
-.seg {
-  display: flex;
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--bg-soft);
-}
-
-.seg-item {
-  flex: 1;
-  text-align: center;
-  font-size: 26rpx;
-  color: var(--ink-2);
-  padding: 14rpx 8rpx;
-  border-right: 1rpx solid var(--line-2);
-}
-
-.seg-item:last-child {
-  border-right: none;
-}
-
-.seg-item.active {
-  background: var(--green);
-  color: #fff;
-}
-
 /* ---------- 列表行 ---------- */
+/* 行是导航不是按钮，所以用 hover-class 借原生触碰反馈，不套一层 button */
+.row-hover {
+  background: var(--green-light);
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -209,6 +199,88 @@ view, text, button, input, textarea {
   flex: 1;
   font-size: 28rpx;
   color: var(--ink);
+}
+
+/* ---------- 小程序自有控件的统一口径 ----------
+   这一节是「控件用系统的、配色用跬步的」这句话的落点。
+   开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：
+   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成宋代那套颜色。
+
+   原生控件的交互色只能通过组件属性给（color / activeColor / selected-color），
+   属性在 WXML 里写；样式表这边只统一尺寸、圆角、字体与间距 ——
+   想靠 WXSS 改原生控件的内部结构是不被支持的，所以这里一行都不敢越界。 */
+
+/* 原生的 checkbox / radio 默认 23px 见方，比正文小、点着费劲；
+   横向缩放不改它自身尺寸，只放大外观 —— 命中区仍是原生的一整行，所以点着反而更宽松 */
+.native-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx 20rpx;
+}
+
+.native-group.column {
+  flex-direction: column;
+  gap: 0;
+}
+
+.native-label {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+  font-size: 29rpx;
+  color: var(--ink);
+}
+
+/* 只给触碰反馈上色，落地仍是原生 button 的 default 态外观由 btn 类兜底 */
+.btn {
+  transition: background-color .1s;
+}
+
+/* ---------- 单选行（档位、算法这种「选一个」的选择） ----------
+   行本身是 label[for]，点整行都能选中，不用把手指对准那个小圆点。 */
+.opt-row {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.opt-row:last-of-type {
+  border-bottom: none;
+}
+
+.opt-row.locked {
+  opacity: .45;
+}
+
+.opt-row radio,
+.opt-row checkbox {
+  transform: scale(.86);
+}
+
+.opt-main {
+  flex: 1;
+  min-width: 0;
+  padding-left: 8rpx;
+}
+
+.opt-name {
+  display: block;
+  font-size: 31rpx;
+  color: var(--ink);
+}
+
+.opt-row.active .opt-name {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.opt-desc {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+  line-height: 1.6;
 }
 
 /* ---------- 底部安全区垫片 ---------- */

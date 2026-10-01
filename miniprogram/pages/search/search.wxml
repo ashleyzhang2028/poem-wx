@@ -4,19 +4,24 @@
     <input placeholder="搜篇名 / 作者 / 朝代 / 出处 / 正文" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
     <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
-    <text class="go" bindtap="doSearch">搜索</text>
+    <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <view class="seg scope-seg">
-    <view class="seg-item {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key"
-          data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
-  </view>
+  <!-- 范围与模式都是「选一个」：原生 radio，不再自绘分段控件 -->
+  <radio-group class="opt-group scope-group" bindchange="onScope">
+    <label class="pref-item" wx:for="{{scopes}}" wx:key="key">
+      <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
+      <text>{{item.label}}</text>
+    </label>
+  </radio-group>
 
   <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
-  <view class="seg mode-seg" wx:if="{{fullOn}}">
-    <view class="seg-item {{mode === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
-          data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
-  </view>
+  <radio-group class="opt-group mode-group" wx:if="{{fullOn}}" bindchange="onMode">
+    <label class="pref-item" wx:for="{{modes}}" wx:key="key">
+      <radio value="{{item.key}}" checked="{{mode === item.key}}" color="#2f6055" />
+      <text>{{item.label}}</text>
+    </label>
+  </radio-group>
 
   <text class="hint count" wx:if="{{searching}}">正在翻正文…</text>
 
@@ -38,7 +43,7 @@
   <view class="hot" wx:if="{{!searched && !searching}}">
     <text class="hint">试试</text>
     <view class="hot-tags">
-      <text class="tag" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
+      <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
     </view>
     <text class="hint hot-note">
       篇名作者搜的是索引字段；正文全文走倒排索引，先定位相关分片再精确定位，不把 23MB 正文读进内存。

@@ -18,7 +18,9 @@
 
     <view class="profile-row" wx:else>
       <button class="btn ghost" bindtap="onProfile">从微信取昵称头像</button>
-      <input class="nick-input" type="nickname" placeholder="也可以自己填一个昵称" bindblur="onNickname" />
+      <!-- type=nickname 是小程序给的「昵称填写」能力，不是普通文本框 -->
+      <input class="nick-input" type="nickname" placeholder="也可以自己填一个昵称"
+             confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
     </view>
   </view>
 
@@ -51,56 +53,56 @@
   </view>
 
   <view class="card">
-    <view class="row" bindtap="onProgress">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
       <view class="row-main"><text class="row-title">背诵进度</text></view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onGame">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onGame">
       <view class="row-main"><text class="row-title">古诗词大会</text><text class="row-sub">飞花令 · 题库 · 模拟考试</text></view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onRecite">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
       <view class="row-main"><text class="row-title">背诵设置</text></view>
       <text class="row-go">›</text>
     </view>
     <!-- 朗读与注音都不可用时，这一行没有存在的意义，直接不渲染 -->
-    <view class="row" bindtap="onReader" wx:if="{{speakVisible || pinyinVisible}}">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onReader" wx:if="{{speakVisible || pinyinVisible}}">
       <view class="row-main">
         <text class="row-title">阅读与朗读</text>
         <text class="row-sub">{{speakVisible ? '朗读 · 注音' : '注音'}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onSettings">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
       <view class="row-main"><text class="row-title">通用设置</text></view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onAbout">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
       <view class="row-main"><text class="row-title">关于与反馈</text></view>
       <text class="row-go">›</text>
     </view>
   </view>
 
   <view class="card">
-    <view class="row" bindtap="onExport">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport">
       <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON，换手机时导回去</text></view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onSync">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync">
       <view class="row-main">
         <text class="row-title">云端同步</text>
         <text class="row-sub">{{syncReady ? syncText : '后端未就绪 · 已攒 ' + syncPending + ' 条'}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onAdmin">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin">
       <view class="row-main">
         <text class="row-title">用户与权限</text>
         <text class="row-sub">分层设置 · 兑换授权</text>
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onClear">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
       <view class="row-main"><text class="row-title danger-text">清空本机数据</text></view>
       <text class="row-go">›</text>
     </view>

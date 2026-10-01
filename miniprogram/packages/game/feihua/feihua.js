@@ -42,12 +42,12 @@ Page({
   },
 
   onKind(e) {
-    const kind = e.currentTarget.dataset.k;
+    const kind = e.detail.value;
     this.setData({ kind }, () => this.refreshChars());
   },
 
   onLevel(e) {
-    const level = e.currentTarget.dataset.l;
+    const level = e.detail.value;
     this.setData({ level }, () => this.refreshChars());
   },
 
@@ -67,7 +67,7 @@ Page({
   },
 
   onChar(e) {
-    const char = e.currentTarget.dataset.c;
+    const char = e.detail.value;
     this.setData({ char, round: this.data.round + 1, said: [], finished: false, message: "" });
     if (this.data.kind === "look") {
       const lines = feihua.look(char, { limit: 80 });
@@ -110,7 +110,8 @@ Page({
       return;
     }
     const next = rest[Math.floor(Math.random() * rest.length)];
-    this.onChar({ currentTarget: { dataset: { c: next.char } } });
+    // 直接调 onChar 的取值路径：它现在只认 e.detail.value，所以这里也照那个形状给
+    this.onChar({ detail: { value: next.char } });
   },
 
   onOpen(e) {

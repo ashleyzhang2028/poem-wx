@@ -4,15 +4,33 @@
   font-size: 26rpx;
 }
 
-.go {
-  color: var(--green);
-  font-size: 28rpx;
-  padding-left: 16rpx;
-  border-left: 1rpx solid var(--line-2);
+/* 搜索键是原生 button：只压小尺寸，颜色照旧是那身雨过天青 */
+.go-btn {
+  flex: none;
 }
 
-.scope-seg {
+.opt-group {
+  display: flex;
+}
+
+.scope-group {
   margin: 20rpx 0;
+}
+
+.mode-group {
+  margin-bottom: 20rpx;
+}
+
+.pref-item {
+  display: flex;
+  align-items: center;
+  font-size: 27rpx;
+  color: var(--ink-2);
+  padding-right: 16rpx;
+}
+
+.pref-item radio {
+  transform: scale(.8);
 }
 
 .hot {
@@ -25,19 +43,25 @@
   margin: 20rpx 0;
 }
 
-.hot-tags .tag {
+/* 热搜词是对 <button> 的瘦身：原生按钮有最小宽度、有 ::after 边框、有默认内边距，
+   三样都要按跬步的样子收一遍 */
+.hot-tags .tag-btn {
+  width: auto;
+  min-width: 0;
+  display: inline-block;
   padding: 10rpx 24rpx;
   font-size: 26rpx;
+  line-height: 1.5;
   margin: 0 16rpx 16rpx 0;
+}
+
+.hot-tags .tag-btn::after {
+  border: none;
 }
 
 .hot-note {
   display: block;
   line-height: 1.8;
-}
-
-.mode-seg {
-  margin-bottom: 20rpx;
 }
 
 .count {

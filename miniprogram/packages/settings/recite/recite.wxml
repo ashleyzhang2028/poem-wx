@@ -1,43 +1,59 @@
 <view class="page">
   <view class="card">
     <view class="card-title">背诵范围</view>
-    <view class="seg">
-      <view class="seg-item {{term === 1 ? 'active' : ''}}" data-v="1" bindtap="onTerm">上学期</view>
-      <view class="seg-item {{term === 2 ? 'active' : ''}}" data-v="2" bindtap="onTerm">下学期</view>
-    </view>
-    <view class="chips">
-      <text class="chip {{grade === item.value ? 'active' : ''}}" wx:for="{{grades}}" wx:key="value"
-            data-v="{{item.value}}" bindtap="onGrade">{{item.label}}</text>
-    </view>
+
+    <radio-group class="native-group" data-k="term" bindchange="onTerm">
+      <label class="native-label" wx:for="{{terms}}" wx:key="value">
+        <radio value="{{item.value}}" checked="{{term === item.value}}" color="#2f6055" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
+
+    <radio-group class="native-group" data-k="grade" bindchange="onGrade">
+      <label class="native-label" wx:for="{{grades}}" wx:key="value">
+        <radio value="{{item.value}}" checked="{{grade === item.value}}" color="#2f6055" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
   </view>
 
   <view class="card">
     <view class="card-title">取诗范围</view>
-    <view class="opt" wx:for="{{scopes}}" wx:key="key" data-k="{{item.key}}" bindtap="onScope">
-      <text class="opt-label">{{item.label}}</text>
-      <text class="opt-check" wx:if="{{scope === item.key}}">✓</text>
-    </view>
+    <radio-group class="native-group column" bindchange="onScope">
+      <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.label}}</text>
+          <text class="opt-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+        </view>
+      </label>
+    </radio-group>
     <text class="hint pool-hint">这个范围里有 {{poolSize}} 首</text>
   </view>
 
   <view class="card">
     <view class="card-title">每日首数</view>
-    <view class="seg">
-      <view class="seg-item {{dailyCount === item ? 'active' : ''}}" wx:for="{{counts}}" wx:key="*this"
-            data-v="{{item}}" bindtap="onCount">{{item}} 首</view>
-    </view>
+    <radio-group class="native-group" bindchange="onCount">
+      <label class="native-label" wx:for="{{counts}}" wx:key="*this">
+        <radio value="{{item}}" checked="{{dailyCount === item}}" color="#2f6055" />
+        <text>{{item}} 首</text>
+      </label>
+    </radio-group>
   </view>
 
   <view class="card">
     <view class="card-title">复习算法</view>
-    <view class="algo {{algo === item.key ? 'active' : ''}}" wx:for="{{algos}}" wx:key="key"
-          data-k="{{item.key}}" bindtap="onAlgo">
-      <view class="algo-head">
-        <text class="algo-name">{{item.name}}</text>
-        <text class="algo-years">{{item.years}}</text>
-      </view>
-      <text class="algo-blurb">{{item.blurb}}</text>
-    </view>
+    <!-- 换算法不清进度：四套算法的差异只在排期，进度按新算法折算 -->
+    <radio-group class="native-group column" bindchange="onAlgo">
+      <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
+             wx:for="{{algos}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#2f6055" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.name}} · {{item.years}}</text>
+          <text class="opt-desc">{{item.allowed ? item.blurb : item.lockHint}}</text>
+        </view>
+      </label>
+    </radio-group>
     <text class="hint pool-hint">换算法不清进度，已有记录会按新算法折算。</text>
   </view>
 

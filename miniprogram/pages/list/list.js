@@ -61,7 +61,7 @@ Page({
   },
 
   onFilter(e) {
-    this.setData({ filter: e.currentTarget.dataset.f }, () => this.apply());
+    this.setData({ filter: e.detail.value }, () => this.apply());
   },
 
   onOpen(e) {

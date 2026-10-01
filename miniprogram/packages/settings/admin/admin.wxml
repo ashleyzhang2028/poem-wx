@@ -22,14 +22,16 @@
 
   <view class="card">
     <view class="card-title">改本机层级</view>
-    <view class="tier {{tier === item.key ? 'active' : ''}}" wx:for="{{tiers}}" wx:key="key"
-          data-t="{{item.key}}" bindtap="onTier">
-      <view class="tier-main">
-        <text class="tier-name">{{item.name}}</text>
-        <text class="tier-desc">{{item.sub}}</text>
-      </view>
-      <text class="tier-check" wx:if="{{tier === item.key}}">✓</text>
-    </view>
+    <!-- 选一个档位：原生 radio，点整行都能选中 -->
+    <radio-group class="native-group column" bindchange="onTier">
+      <label class="opt-row {{tier === item.key ? 'active' : ''}}" wx:for="{{tiers}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{tier === item.key}}" color="#2f6055" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.name}}</text>
+          <text class="opt-desc">{{item.sub}}</text>
+        </view>
+      </label>
+    </radio-group>
     <button class="btn ghost block reset-btn" bindtap="onResetTier">恢复默认（系统档位）</button>
     <text class="hint note" wx:if="{{blocked === 'local'}}">付费档被挡回了免费档：本机授权不能当成付费授权用。这是设计如此，不是出错。</text>
   </view>
@@ -67,10 +69,12 @@
     <view class="acct" wx:for="{{users}}" wx:key="id">
       <view class="acct-main">
         <text class="acct-name">{{item.label}}</text>
-        <text class="acct-sub">{{item.tier}}{{item.local ? ' · 本机' : (item.remote ? ' · 服务端' : ' · 名录')}}</text>
+        <text class="acct-sub">{{item.tier}} · {{item.scopeText}}</text>
       </view>
-      <text class="acct-act" data-u="{{item.id}}" data-t="{{item.tier}}" data-local="{{item.local}}"
-            bindtap="onSetTier">改档</text>
+      <!-- 改档：只对能改的人给出原生按钮，改不了的不留一个点了没反应的入口 -->
+      <button class="btn mini acct-act" wx:if="{{item.editable}}" data-u="{{item.id}}"
+              bindtap="onEditTier">改档</button>
+      <text class="acct-lock" wx:else>只读</text>
     </view>
     <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
     <text class="hint note" wx:elif="{{generatedAt}}">名录生成于 {{generatedAt}}</text>

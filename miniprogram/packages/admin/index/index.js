@@ -51,10 +51,27 @@ Page({
 
     admin.list().then((res) => {
       this.setData({
-        users: res.users,
+        users: this.decorate(res.users),
         rosterNote: res.rosterNote,
         generatedAt: res.generatedAt
       });
+    });
+  },
+
+  /**
+   * 每一行带上来源与「能不能改」。
+   *
+   * 这一页原来给每行摆三个档位小标签，点哪个就是改哪个 —— 看着直观，
+   * 但后端没就绪时那三个标签也在，点下去只会弹一句「只读」。
+   * 现在：能改的给一个原生按钮，不能改的写清是只读。
+   */
+  decorate(users) {
+    const canWrite = remote.adminReady();
+    return (users || []).map((u) => {
+      let scopeText = "名册";
+      if (u.local) scopeText = "本机";
+      else if (u.remote) scopeText = "云端";
+      return Object.assign({}, u, { scopeText, editable: canWrite || !!u.local });
     });
   },
 
@@ -84,15 +101,23 @@ Page({
     });
   },
 
-  onSetTier(e) {
+  onEditTier(e) {
     const userId = e.currentTarget.dataset.u;
-    const tier = e.currentTarget.dataset.t;
-    const local = e.currentTarget.dataset.local === "true";
+    const row = (this.data.users || []).find((u) => u.id === userId);
+    if (!row || !row.editable) return;
 
-    this.setData({ busy: true, msg: "" });
-    admin.setTier(userId, tier, local).then((res) => {
-      this.setData({ busy: false, msg: res.msg });
-      this.refresh();
+    wx.showActionSheet({
+      itemList: tiers.TIERS.map((t) => t.name + "（" + t.key + "）"),
+      success: (res) => {
+        const t = tiers.TIERS[res.tapIndex];
+        if (!t || t.key === row.tier) return;
+
+        this.setData({ busy: true, msg: "" });
+        admin.setTier(userId, t.key, !!row.local).then((r) => {
+          this.setData({ busy: false, msg: r.msg });
+          this.refresh();
+        });
+      }
     });
   },
 

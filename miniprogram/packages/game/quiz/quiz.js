@@ -40,20 +40,27 @@ Page({
     this.setData({ scopeIndex: Number(e.detail.value) || 0 });
   },
 
+  /**
+   * 题型多选。
+   *
+   * 上一版是自己算差异（list.splice / push 之后再 setData）。那个写法有个洞：
+   * 数据是「我算出来的」，不是「用户勾出来的」，一旦两边的判断错开一格，
+   * 界面上的勾与页面里的数据就再也对不上了。
+   *
+   * 现在只认 checkbox-group 交出的一份完整清单，页面不再自己算增删。
+   * 上一版还有一处：取消掉最后一个勾时只弹了个 toast 就 return，
+   * 数据没改、勾却真被用户点掉了 —— 那条路径现在被 setData 折回来。
+   */
   onToggleForm(e) {
-    const key = e.currentTarget.dataset.k;
-    const list = this.data.pickedForms.slice();
-    const i = list.indexOf(key);
-    if (i >= 0) {
-      if (list.length === 1) {
-        wx.showToast({ title: "至少留一种题型", icon: "none" });
-        return;
-      }
-      list.splice(i, 1);
-    } else {
-      list.push(key);
+    const picked = e.detail.value || [];
+    if (!picked.length) {
+      wx.showToast({ title: "至少留一种题型", icon: "none" });
+      // 原生控件已经把那个勾去掉了，而数据不许为空 —— 必须把选中态重设回去，
+      // 否则界面（全没勾）与数据（还有一项）从此对不上，下次进这个页面会「自动」多出题型。
+      this.setData({ pickedForms: this.data.pickedForms.slice() });
+      return;
     }
-    this.setData({ pickedForms: list });
+    this.setData({ pickedForms: picked });
   },
 
   onStart() {

@@ -6,23 +6,27 @@
 
   <block wx:else>
     <view class="card">
-      <view class="seg">
-        <view class="seg-item {{kind === item.key ? 'active' : ''}}" wx:for="{{kinds}}" wx:key="key"
-              data-k="{{item.key}}" bindtap="onKind">{{item.label}}</view>
-      </view>
+      <radio-group class="opt-group" bindchange="onKind">
+        <label class="pref-item" wx:for="{{kinds}}" wx:key="key">
+          <radio value="{{item.key}}" checked="{{kind === item.key}}" color="#2f6055" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
 
-      <view class="seg lv-seg">
-        <view class="seg-item {{level === item.id ? 'active' : ''}}" wx:for="{{levels}}" wx:key="id"
-              data-l="{{item.id}}" bindtap="onLevel">{{item.name}}</view>
-      </view>
+      <radio-group class="opt-group" bindchange="onLevel">
+        <label class="pref-item" wx:for="{{levels}}" wx:key="id">
+          <radio value="{{item.id}}" checked="{{level === item.id}}" color="#2f6055" />
+          <text>{{item.name}}</text>
+        </label>
+      </radio-group>
 
-      <view class="chars">
-        <view class="char {{char === item.char ? 'active' : ''}}" wx:for="{{chars}}" wx:key="char"
-              data-c="{{item.char}}" bindtap="onChar">
+      <radio-group class="chars" bindchange="onChar">
+        <label class="char {{char === item.char ? 'active' : ''}}" wx:for="{{chars}}" wx:key="char">
+          <radio class="char-radio" value="{{item.char}}" checked="{{char === item.char}}" color="#2f6055" />
           <text class="char-t">{{item.char}}</text>
           <text class="char-n">{{item.count}}</text>
-        </view>
-      </view>
+        </label>
+      </radio-group>
       <text class="hint" wx:if="{{!chars.length}}">这一档没有合适的令字</text>
     </view>
 
@@ -43,8 +47,9 @@
         <text class="said-t">{{item}}</text>
       </view>
 
-      <view class="search lv-input" wx:if="{{!finished}}">
-        <input value="{{input}}" placeholder="写一句带「{{char}}」的诗" bindinput="onInput" bindconfirm="onSubmit" />
+      <view class="lv-input" wx:if="{{!finished}}">
+        <input value="{{input}}" placeholder="写一句带「{{char}}」的诗" confirm-type="done"
+               bindinput="onInput" bindconfirm="onSubmit" />
       </view>
 
       <view class="actions" wx:if="{{!finished}}">

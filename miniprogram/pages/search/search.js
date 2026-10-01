@@ -42,14 +42,14 @@ Page({
   },
 
   onScope(e) {
-    const scope = e.currentTarget.dataset.s;
+    const scope = e.detail.value;
     this.setData({ scope }, () => {
       if (this.data.keyword) this.doSearch();
     });
   },
 
   onMode(e) {
-    const mode = e.currentTarget.dataset.k;
+    const mode = e.detail.value;
     store.saveSettings({ lastSearchMode: mode });
     this.setData({ mode }, () => {
       if (this.data.keyword) this.doSearch();

@@ -5,7 +5,8 @@
         <text class="today-title">今日背诵</text>
         <text class="today-sub">{{gradeName}} · {{scopeName}}</text>
       </view>
-      <view class="ring" bindtap="onSettings">
+      <!-- 进度环整块可点，进背诵设置；点的是「看进度」，不是「点按钮」 -->
+      <view class="ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
         <view class="ring-track"></view>
         <view class="ring-fill" style="--p:{{percent}}"></view>
         <text class="ring-text">{{doneCount}}/{{total}}</text>
