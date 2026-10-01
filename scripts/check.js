@@ -838,7 +838,10 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   ok("管理页不写本机档位（wxml 也没有改档卡片）", adminWxml.indexOf("改本机层级") < 0);
   ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
   ok("服务端没就绪时如实说改不了", adminLib.indexOf("改不了") >= 0);
-  ok("管理页区分「能改」与「只读」", adminWxml.indexOf("canWrite") >= 0);
+  // 能改的给原生按钮，改不了的写「只读」—— 判定在数据层，模板不再自己拼三元
+  ok("管理页区分「能改」与「只读」",
+    adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
+  ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
   ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
   ok("管理页把每条能力都摆出来", E.CAP_KEYS.every((k) => adminJs.indexOf('"' + k + '"') >= 0),
     E.CAP_KEYS.filter((k) => adminJs.indexOf('"' + k + '"') < 0).join(", "));
@@ -917,6 +920,32 @@ const remoteMod = require(path.join(ROOT, "utils", "remote.js"));
 ok("未配后端：configured 为假", remoteMod.configured() === false);
 ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
+
+/**
+ * adminReady() 的判据是**会话里的角色**，不是「配了 baseUrl」。
+ *
+ * 这一条曾经写错过一次：写成 `auth.isAdmin`（少一对括号）。
+ * 本文件里 `auth()` 是「读 auth 存储域」的另一个函数，于是表达式恒为 undefined；
+ * 而未配后端时被 `configured() &&` 短路掉，ReferenceError / undefined 都见不着 ——
+ * 本地全绿，一配后端就「谁都不是管理员」，管理页永久只读
+ * （反过来写成 `a.isAdmin` 就是「配了后端即成管理员」，更糟）。
+ *
+ * 所以这里必须**配了后端的那一遍也走**。只验「未配后端」等于没验。
+ */
+{
+  const authMod = require(path.join(ROOT, "utils", "auth.js"));
+  authMod.configure({ baseUrl: "https://example.invalid" });
+  ok("配了后端也不会自动成管理员", remoteMod.adminReady() === false && authMod.isAdmin() === false);
+
+  store.write(store.KEYS.auth, { baseUrl: "https://example.invalid", accessToken: "t", role: "user" });
+  ok("普通用户读不到名录", remoteMod.adminReady() === false);
+
+  store.write(store.KEYS.auth, { baseUrl: "https://example.invalid", accessToken: "t", role: "admin" });
+  ok("owner / admin 才认管理接口", remoteMod.adminReady() === true);
+
+  authMod.configure({ baseUrl: "" });
+  ok("撤掉 baseUrl 又回到不可用", remoteMod.adminReady() === false);
+}
 ok(
   "契约路径齐全",
   !!(remoteMod.PATHS.login &&

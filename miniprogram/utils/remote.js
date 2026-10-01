@@ -38,16 +38,17 @@ const PATHS = {
   me: "/api/me"
 };
 
-function auth() {
+/** 读 auth 存储域（与模块 utils/auth.js 不是一回事，这里只取会话本身） */
+function session() {
   return store.read(store.KEYS.auth, {}) || {};
 }
 
 function configured() {
-  return !!auth().baseUrl;
+  return !!session().baseUrl;
 }
 
 function baseUrl() {
-  return auth().baseUrl || "";
+  return session().baseUrl || "";
 }
 
 function request(path, data, method) {
@@ -62,7 +63,7 @@ function request(path, data, method) {
       data,
       header: {
         "content-type": "application/json",
-        authorization: auth().accessToken ? "Bearer " + auth().accessToken : ""
+        authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
@@ -136,7 +137,7 @@ function push() {
 function pull() {
   if (!configured()) return Promise.resolve({ applied: 0, sim: true });
   const device = store.deviceId();
-  return request(PATHS.pull, { device: device, since: auth().since || 0 }).then((data) => {
+  return request(PATHS.pull, { device: device, since: session().since || 0 }).then((data) => {
     const rows = (data && data.rows) || [];
     let applied = 0;
 
@@ -177,7 +178,7 @@ function sync() {
 /* ---------- TTS ---------- */
 
 function speechReady() {
-  const a = auth();
+  const a = session();
   return !!(configured() && a.speech === true);
 }
 
@@ -199,9 +200,22 @@ function speech(text) {
  *
  * 这一条与网页版 `api/_lib/core.js` 的 adminGate 同源：
  *   没登录 → 401；角色不是 owner/admin → 403。
+ *
+ * ⚠️ 判据是 auth.isAdmin()（会话里的角色），不是 baseUrl 里有没有密钥。
+ *   别写成 auth.isAdmin（少一对括号）—— 函数对象恒为真，
+ *   「配了后端就等于管理员」，这一句会一路绿灯到线上。
  */
 function adminReady() {
-  return !!(configured() && auth.isAdmin && auth.isAdmin());
+  return !!(configured() && authMod().isAdmin());
+}
+
+/**
+ * 会话里的角色。**惰性 require**：auth.js 顶层要读本模块的 PATHS，
+ * 在顶部直接 require 会绕成环（先加载谁，另一个就是空对象）。
+ * 用的时候才取一次，环就断了。
+ */
+function authMod() {
+  return require("./auth");
 }
 
 /** 名录。**走 POST**：与 poem 的 /api/admin/accounts 一致，避免 GET 带 token 被缓存 */
