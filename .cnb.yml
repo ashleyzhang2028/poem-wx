@@ -5,5 +5,6 @@ $:
       image: node:20
       script:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
         - node scripts/check.js

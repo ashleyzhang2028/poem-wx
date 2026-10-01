@@ -1,7 +1,7 @@
 <view class="page">
   <view class="search">
     <text class="search-icon">⌕</text>
-    <input placeholder="搜篇名 / 作者 / 朝代 / 出处" value="{{keyword}}" bindinput="onInput"
+    <input placeholder="搜篇名 / 作者 / 朝代 / 出处 / 正文" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
     <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
     <text class="go" bindtap="doSearch">搜索</text>
@@ -12,11 +12,22 @@
           data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
   </view>
 
+  <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
+  <view class="seg mode-seg" wx:if="{{fullOn}}">
+    <view class="seg-item {{mode === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
+          data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
+  </view>
+
+  <text class="hint count" wx:if="{{searching}}">正在翻正文…</text>
+
   <view class="card" wx:if="{{searched && results.length}}">
     <view class="row" wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
         <text class="row-title">{{item.title}}</text>
         <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.bookName}}</text>
+        <view class="hit" wx:if="{{item.lines.length}}">
+          <text class="hit-line" wx:for="{{item.lines}}" wx:for-item="l" wx:key="*this">{{l}}</text>
+        </view>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -24,11 +35,13 @@
 
   <view class="empty" wx:if="{{searched && !results.length}}">没有匹配的篇目</view>
 
-  <view class="hot" wx:if="{{!searched}}">
+  <view class="hot" wx:if="{{!searched && !searching}}">
     <text class="hint">试试</text>
     <view class="hot-tags">
       <text class="tag" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
     </view>
-    <text class="hint hot-note">搜索按篇名 / 作者 / 朝代 / 出处匹配。正文全文检索在下一版接入。</text>
+    <text class="hint hot-note">
+      篇名作者搜的是索引字段；正文全文走倒排索引，先定位相关分片再精确定位，不把 23MB 正文读进内存。
+    </text>
   </view>
 </view>

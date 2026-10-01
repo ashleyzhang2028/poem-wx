@@ -45,6 +45,11 @@
   flex: 0 0 auto;
 }
 
+/* 对齐 + 字号 + 朗读三段挤在一行，朗读那格窄一点 */
+.read-seg {
+  min-width: 138rpx;
+}
+
 .poem-body {
   padding: 36rpx 8rpx 24rpx;
   font-family: var(--font-poem);
@@ -167,4 +172,140 @@
   display: block;
   text-align: center;
   padding-top: 24rpx;
+}
+
+/* ---------- 注音 ---------- */
+.pinyin-seg {
+  margin-bottom: 8rpx;
+}
+
+.token-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 6rpx 0;
+}
+
+.poem-body.align-left .token-line {
+  justify-content: flex-start;
+}
+
+.token {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 34rpx;
+  margin: 0 2rpx;
+}
+
+.tk-py {
+  font-family: var(--font-ui);
+  font-size: 18rpx;
+  color: var(--ink-3);
+  line-height: 1.3;
+  height: 26rpx;
+  white-space: nowrap;
+}
+
+.tk-ch {
+  font-size: 36rpx;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* 注音模式下字号跟着正文走，逐档对齐 poem-body.size-* */
+.poem-body.size--2 .tk-ch { font-size: 30rpx; }
+.poem-body.size--1 .tk-ch { font-size: 33rpx; }
+.poem-body.size-1 .tk-ch { font-size: 39rpx; }
+.poem-body.size-2 .tk-ch { font-size: 42rpx; }
+.poem-body.size-3 .tk-ch { font-size: 46rpx; }
+.poem-body.size-4 .tk-ch { font-size: 52rpx; }
+
+.token-line.reading {
+  background: var(--green-light);
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- 朗读 ---------- */
+.speak-entry.off {
+  color: var(--ink-3);
+}
+
+.speak-entry.on {
+  color: var(--green);
+}
+
+.speak-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.speak-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.speak-state {
+  font-size: 22rpx;
+  color: var(--green);
+}
+
+.speak-state.off {
+  color: var(--ink-3);
+}
+
+.speak-progress {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0 4rpx;
+}
+
+.sp-text {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  flex: none;
+  padding-right: 16rpx;
+}
+
+.sp-bar {
+  flex: 1;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: var(--line-2);
+  overflow: hidden;
+}
+
+.sp-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4rpx;
+  transition: width .3s;
+}
+
+.speak-ctrl {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.sp-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.sp-btn.main {
+  flex: 1.4;
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  font-size: 28rpx;
 }

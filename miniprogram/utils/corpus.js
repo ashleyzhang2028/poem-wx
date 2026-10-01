@@ -177,6 +177,7 @@ module.exports = {
   courseTexts,
   manifest,
   bucketOf,
+  bucket,
   entry,
   entries,
   indexById,

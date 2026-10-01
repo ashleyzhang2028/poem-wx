@@ -6,6 +6,7 @@
       <text class="poem-source" wx:if="{{source}}">{{source}}</text>
     </view>
 
+    <!-- 朗读不可用时，这一整块工具栏连边框都不出现 -->
     <view class="toolbar">
       <view class="seg">
         <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
@@ -15,14 +16,57 @@
         <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
         <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
       </view>
-      <view class="seg read-seg">
-        <view class="seg-item" bindtap="onSpeak">朗读</view>
+      <view class="seg read-seg" wx:if="{{speakVisible}}">
+        <view class="seg-item speak-entry {{speakReady ? 'on' : 'off'}}" bindtap="onSpeak">{{speakLabel}}</view>
       </view>
     </view>
 
-    <view class="poem-body align-{{align}} size-{{fontSize}}">
-      <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item.t}}</text>
+    <view class="seg pinyin-seg" wx:if="{{pinyinOn}}">
+      <view class="seg-item {{pinyinMode === 'off' ? 'active' : ''}}" data-m="off" bindtap="onPinyin">不注音</view>
+      <view class="seg-item {{pinyinMode === 'rare' ? 'active' : ''}}" data-m="rare" bindtap="onPinyin">生字</view>
+      <view class="seg-item {{pinyinMode === 'all' ? 'active' : ''}}" data-m="all" bindtap="onPinyin">全文</view>
     </view>
+
+    <view class="poem-body align-{{align}} size-{{fontSize}}">
+      <block wx:if="{{!pinyinOn}}">
+        <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item}}</text>
+      </block>
+      <block wx:else>
+        <view class="poem-line token-line {{speakVisible && speakIndex === index && speakTotal ? 'reading' : ''}}"
+              wx:for="{{tokens}}" wx:key="index"
+              data-i="{{index}}" bindtap="onSpeakToggle">
+          <view class="token" wx:for="{{item}}" wx:for-item="tk" wx:key="index">
+            <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+            <text class="tk-ch">{{tk.ch}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 播放工具栏：只在朗读可见时存在 -->
+  <view class="card speak-bar" wx:if="{{speakVisible}}">
+    <view class="speak-head">
+      <text class="speak-title">朗读</text>
+      <text class="speak-state {{speakReady ? '' : 'off'}}">{{speakReady ? '就绪' : '待开通'}}</text>
+    </view>
+
+    <text class="hint note" wx:if="{{!speakReady}}">{{speakReason}}</text>
+
+    <block wx:else>
+      <view class="speak-progress" wx:if="{{speakTotal}}">
+        <text class="sp-text">第 {{speakIndex + 1}} / {{speakTotal}} 句</text>
+        <view class="sp-bar"><view class="sp-fill" style="width:{{(speakIndex + (speakPlaying ? 1 : 0)) * 100 / speakTotal}}%"></view></view>
+      </view>
+      <view class="speak-ctrl">
+        <view class="sp-btn" bindtap="onSpeakPrev">上一句</view>
+        <view class="sp-btn main" bindtap="onSpeak">
+          {{speakLoading ? '准备中' : (speakPlaying ? '暂停' : '播放')}}
+        </view>
+        <view class="sp-btn" bindtap="onSpeakNext">下一句</view>
+        <view class="sp-btn" bindtap="onSpeakStop">停止</view>
+      </view>
+    </block>
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">

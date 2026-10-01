@@ -35,3 +35,24 @@
   display: block;
   line-height: 1.8;
 }
+
+.mode-seg {
+  margin-bottom: 20rpx;
+}
+
+.count {
+  display: block;
+  padding: 0 4rpx 16rpx;
+}
+
+.hit {
+  margin-top: 8rpx;
+}
+
+.hit-line {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 25rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+}

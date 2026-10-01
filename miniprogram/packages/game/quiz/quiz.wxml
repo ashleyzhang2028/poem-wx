@@ -1,11 +1,11 @@
 <view class="page">
   <block wx:if="{{stage === 'setup'}}">
     <view class="card">
-      <view class="card-title">考试范围</view>
+      <view class="card-title">出题范围</view>
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
         <view class="picker">{{scopes[scopeIndex].name}} ›</view>
       </picker>
-      <text class="hint note">共 {{count}} 题，限时 20 分钟，交卷后统一批。题目就地取材自所选集子，不接 AI、不额外收费。</text>
+      <text class="hint note">共 {{count}} 题，就地取材自所选集子，不接 AI、不额外收费。</text>
     </view>
 
     <view class="card">
@@ -16,18 +16,20 @@
       </view>
       <text class="hint note">选中的题型随机混出。至少留一种。</text>
     </view>
-    <button class="btn primary block" bindtap="onStart">开始考试</button>
+
+    <button class="btn primary block" bindtap="onStart">开始答题</button>
   </block>
 
   <block wx:elif="{{stage === 'running'}}">
     <view class="exam-bar">
       <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
-      <text class="exam-timer">{{remainText}}</text>
+      <text class="exam-timer">答对 {{correct}}</text>
     </view>
 
     <view class="card">
+      <text class="tag {{current.color}}" wx:if="{{current.formName}}">{{current.formName}}</text>
       <text class="stem">{{current.stem}}</text>
-      <text class="hint stem-sub">出自《{{current.title}}》</text>
+      <text class="hint stem-sub" wx:if="{{current.form !== 'dynasty'}}">出自《{{current.title}}》</text>
     </view>
 
     <view class="options">
@@ -37,13 +39,23 @@
         {{item}}
       </view>
     </view>
+
+    <view class="card verdict" wx:if="{{last}}">
+      <text class="verdict-line {{last.ok ? 'ok' : 'no'}}">{{last.ok ? '答对了' : '答错了，正确答案：' + last.answer}}</text>
+      <view class="verdict-acts">
+        <text class="verdict-link" bindtap="onOpen">看全篇</text>
+        <button class="btn primary next-btn" bindtap="onNext">
+          {{index + 1 >= questions.length ? '看结果' : '下一题'}}
+        </button>
+      </view>
+    </view>
   </block>
 
   <block wx:else>
     <view class="card result">
-      <text class="score">{{score}}</text>
-      <text class="score-k">分</text>
-      <text class="hint">答对 {{correct}} / {{questions.length}} 题</text>
+      <text class="score">{{correct}}</text>
+      <text class="score-k">/ {{questions.length}} 题</text>
+      <text class="hint">正确率 {{questions.length ? (correct * 100 / questions.length).toFixed(0) : 0}}%</text>
     </view>
 
     <view class="card" wx:if="{{wrong.length}}">
@@ -55,7 +67,7 @@
       </view>
     </view>
 
-    <button class="btn primary block" bindtap="onAgain">再考一次</button>
+    <button class="btn primary block" bindtap="onAgain">再来一组</button>
   </block>
 
   <view class="safe-bottom"></view>

@@ -1,21 +1,36 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
+const textSearch = require("../../utils/text-search");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
+
+const MODES = [
+  { key: "index", label: "篇名作者" },
+  { key: "full", label: "正文全文" }
+];
 
 Page({
   data: {
     keyword: "",
     scope: "all",
     scopes: [{ key: "all", label: "全站" }, { key: "poems", label: "课内" }],
+    modes: MODES,
+    mode: "index",
+    fullOn: false,
     results: [],
     hot: HOT,
-    searched: false
+    searched: false,
+    searching: false
   },
 
   onLoad() {
-    const kw = store.read(store.KEYS.settings, {}) || {};
-    if (kw.lastSearch) this.setData({ keyword: kw.lastSearch });
+    const saved = store.settings();
+    const fr = textSearch.readiness();
+    this.setData({
+      keyword: saved.lastSearch || "",
+      fullOn: fr.usable,
+      mode: fr.usable ? saved.lastSearchMode || "index" : "index"
+    });
   },
 
   onInput(e) {
@@ -33,6 +48,14 @@ Page({
     });
   },
 
+  onMode(e) {
+    const mode = e.currentTarget.dataset.k;
+    store.saveSettings({ lastSearchMode: mode });
+    this.setData({ mode }, () => {
+      if (this.data.keyword) this.doSearch();
+    });
+  },
+
   onHot(e) {
     this.setData({ keyword: e.currentTarget.dataset.k }, () => this.doSearch());
   },
@@ -45,21 +68,53 @@ Page({
     }
     store.saveSettings({ lastSearch: kw });
 
-    const list = corpus.search(kw, {
-      book: this.data.scope === "poems" ? "poems" : "",
-      limit: 80
-    });
+    if (this.data.mode === "full" && this.data.fullOn) {
+      this.setData({ searching: true, searched: false });
+      // 分片读取是同步的（require），但界面先让出一个 tick，
+      // 免得大结果集把点击反馈吞掉 —— 让人以为没反应是最糟的体验
+      setTimeout(() => this.runFull(kw), 16);
+      return;
+    }
 
-    this.setData({
-      results: list.map((p) => ({
+    this.setData({ results: this.byIndex(kw), searched: true, searching: false });
+  },
+
+  byIndex(kw) {
+    return corpus
+      .search(kw, { book: this.data.scope === "poems" ? "poems" : "", limit: 80 })
+      .map((p) => ({
         id: p.id,
         title: p.t,
         author: p.a,
         dynasty: p.d,
         bookName: p.n,
-        group: p.g
+        lines: []
+      }));
+  },
+
+  runFull(kw) {
+    let hits = [];
+    try {
+      hits = textSearch.search(kw, {
+        book: this.data.scope === "poems" ? "poems" : "",
+        limit: 40
+      });
+    } catch (e) {
+      hits = [];
+    }
+
+    this.setData({
+      results: hits.map((h) => ({
+        id: h.entry.id,
+        title: h.entry.t,
+        author: h.entry.a,
+        dynasty: h.entry.d,
+        bookName: h.entry.n,
+        lines: h.lines,
+        where: h.where === "pack" ? "课内" : "课外"
       })),
-      searched: true
+      searched: true,
+      searching: false
     });
   },
 

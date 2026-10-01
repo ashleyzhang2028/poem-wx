@@ -9,10 +9,14 @@
 const corpus = require("./corpus");
 
 const FORMS = [
-  { key: "next", name: "接下句", desc: "给上句选下句" },
-  { key: "author", name: "认作者", desc: "给诗句选作者" },
-  { key: "dynasty", name: "填朝代", desc: "给作者选朝代" }
+  { key: "next", name: "接下句", desc: "给上句选下句", color: "green" },
+  { key: "prev", name: "接上句", desc: "给下句选上句", color: "green" },
+  { key: "author", name: "认作者", desc: "给诗句选作者", color: "amber" },
+  { key: "dynasty", name: "填朝代", desc: "给作者选朝代", color: "blue" },
+  { key: "title", name: "认篇名", desc: "给诗句选篇名", color: "amber" }
 ];
+
+const FORM_KEYS = FORMS.map((f) => f.key);
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -45,7 +49,8 @@ function linesOf(p) {
 function build(opt) {
   const pool = (opt.scope ? corpus.ofBook(opt.scope) : corpus.course()).filter((p) => p.hasT);
   const count = opt.count || 10;
-  const forms = opt.forms && opt.forms.length ? opt.forms : FORMS.map((f) => f.key);
+  const forms = opt.forms && opt.forms.length ? opt.forms : FORM_KEYS;
+  const start = opt.start || 0;
 
   const questions = [];
   const used = {};
@@ -58,10 +63,12 @@ function build(opt) {
     const lines = linesOf(p);
     if (lines.length < 2 && forms.indexOf("next") >= 0) continue;
 
-    const form = pick(forms);
+    // 顺序出题时按 forms 轮转，随机出题时抽签 —— 顺序卷更好对答案
+    const form = opt.sequential ? forms[questions.length % forms.length] : pick(forms);
     const q = makeQuestion(form, p, lines, pool);
     if (!q) continue;
     used[p.id] = true;
+    q.index = start + questions.length;
     questions.push(q);
   }
 
@@ -83,6 +90,39 @@ function makeQuestion(form, p, lines, pool) {
       title: p.t,
       answer,
       options: shuffle([answer].concat(distractors)),
+      id: p.id
+    };
+  }
+
+  if (form === "prev") {
+    if (lines.length < 2) return null;
+    const idx = Math.floor(Math.random() * (lines.length - 1)) + 1;
+    const answer = lines[idx - 1];
+    const distractors = sampleFrom(pool, p.id, 3, (q) => {
+      const ls = linesOf(q);
+      return ls.length ? pick(ls) : "";
+    });
+    return {
+      form: "prev",
+      stem: lines[idx],
+      title: p.t,
+      answer,
+      options: shuffle([answer].concat(distractors)),
+      id: p.id
+    };
+  }
+
+  if (form === "title") {
+    if (!p.t || !lines.length) return null;
+    const pool2 = pool.filter((q) => q.t && q.t !== p.t).map((q) => q.t);
+    const distractors = uniqueSample(pool2, 3);
+    if (distractors.length < 3) return null;
+    return {
+      form: "title",
+      stem: pick(lines),
+      title: p.t,
+      answer: p.t,
+      options: shuffle([p.t].concat(distractors)),
       id: p.id
     };
   }
@@ -138,4 +178,22 @@ function uniqueSample(list, n) {
   return shuffle(uniq).slice(0, n);
 }
 
-module.exports = { FORMS, build };
+/** 逐题判定，供模拟考试与题库共用，判分口径只此一处 */
+function judge(question, picked) {
+  const ok = !!question && picked === question.answer;
+  return {
+    ok: ok,
+    answer: question ? question.answer : "",
+    picked: picked,
+    form: question ? question.form : "",
+    stem: question ? question.stem : "",
+    title: question ? question.title : "",
+    id: question ? question.id : ""
+  };
+}
+
+function formOf(key) {
+  return FORMS.find((f) => f.key === key) || FORMS[0];
+}
+
+module.exports = { FORMS, FORM_KEYS, formOf, build, judge };

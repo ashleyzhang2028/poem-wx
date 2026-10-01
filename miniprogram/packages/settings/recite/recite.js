@@ -1,6 +1,7 @@
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
+const E = require("../../../utils/entitlement");
 
 const GRADES = Object.keys(S.GRADE_NAMES).map((g) => Number(g));
 
@@ -15,22 +16,41 @@ Page({
     counts: S.DAILY_COUNTS,
     algo: "ebbinghaus",
     algos: [],
-    poolSize: 0
+    poolSize: 0,
+    lockedHint: ""
   },
 
-  onLoad() {
+  onShow() {
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
-    const algos = R.list().map((m) => ({ key: m.key, name: m.name, blurb: m.blurb, years: m.years }));
 
     this.setData(
       Object.assign({}, settings, {
         grades: GRADES.map((g) => ({ value: g, label: S.gradeName(g) })),
         scopes,
-        algos
+        algos: this.algoRows(settings.algo)
       }),
       () => this.updatePool()
     );
+  },
+
+  /**
+   * 算法列表带门禁。
+   * 上一版直接列四套、点击只提示「换算法不清进度」，但门禁其实会把它挡回去 ——
+   * 那是个假按钮。这里把 allowed 提前算出来，界面照它灰掉。
+   */
+  algoRows(current) {
+    return R.list().map((m) => {
+      const allowed = E.algoAllowed(m.key);
+      return {
+        key: m.key,
+        name: m.name,
+        blurb: m.blurb,
+        years: m.years,
+        allowed,
+        active: m.key === current
+      };
+    });
   },
 
   updatePool() {
@@ -46,7 +66,9 @@ Page({
 
   save(patch) {
     store.saveSettings(patch);
-    this.setData(patch, () => this.updatePool());
+    this.setData(Object.assign(patch, { algos: this.algoRows(patch.algo || this.data.algo) }), () =>
+      this.updatePool()
+    );
   },
 
   onGrade(e) {
@@ -68,6 +90,17 @@ Page({
   onAlgo(e) {
     const algo = e.currentTarget.dataset.k;
     if (algo === this.data.algo) return;
+
+    if (!E.algoAllowed(algo)) {
+      const need = E.CAPS.find((c) => c.key === algo);
+      wx.showModal({
+        title: "这一套还没开放",
+        content: (need ? need.name : algo) + " 属于「" + E.status().label + "」以上的能力。管理页可以给自己或指定用户提权。",
+        showCancel: false
+      });
+      return;
+    }
+
     wx.showModal({
       title: "切换复习算法",
       content: "已有的背诵进度会按新算法折算，不会清空。",
