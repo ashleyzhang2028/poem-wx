@@ -99,3 +99,21 @@
   color: var(--ink-3);
   padding: 0 16rpx;
 }
+
+/* 差一档的卡片：留个灰样子，让人知道往哪走，而不是整块消失 */
+.mode-off {
+  opacity: .55;
+}
+
+.mode-off .mode-desc {
+  color: var(--ink-3);
+}
+
+.locked-card .note {
+  display: block;
+  margin-top: 16rpx;
+}
+
+.locked-btn {
+  margin-top: 32rpx;
+}

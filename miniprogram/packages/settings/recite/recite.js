@@ -2,6 +2,7 @@ const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
+const gate = require("../../../utils/gate");
 
 const GRADES = Object.keys(S.GRADE_NAMES).map((g) => Number(g));
 
@@ -17,10 +18,16 @@ Page({
     algo: "ebbinghaus",
     algos: [],
     poolSize: 0,
-    lockedHint: ""
+    lockedHint: "",
+    locked: false
   },
 
   onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData({ locked: false });
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
 
@@ -71,6 +78,10 @@ Page({
     );
   },
 
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+  },
+
   onGrade(e) {
     this.save({ grade: Number(e.currentTarget.dataset.v) });
   },
@@ -95,7 +106,7 @@ Page({
       const need = E.CAPS.find((c) => c.key === algo);
       wx.showModal({
         title: "这一套还没开放",
-        content: (need ? need.name : algo) + " 属于「" + E.status().label + "」以上的能力。管理页可以给自己或指定用户提权。",
+        content: (need ? need.name : algo) + " 需要「" + E.status().label + "」以上。档位由管理员发放，在「我的 → 用户与权限」可以看到差在哪一档。",
         showCancel: false
       });
       return;

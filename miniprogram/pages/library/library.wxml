@@ -1,5 +1,11 @@
 <view class="page">
-  <block wx:if="{{!current}}">
+  <view class="card locked-card" wx:if="{{locked}}">
+    <view class="card-title">课外阅读</view>
+    <text class="hint note">{{reason}}</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin" wx:if="{{reason === '登录后可用'}}">微信登录</button>
+  </view>
+
+  <block wx:elif="{{!current}}">
     <view class="group-card" wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
       <view class="gc-head">
         <view>

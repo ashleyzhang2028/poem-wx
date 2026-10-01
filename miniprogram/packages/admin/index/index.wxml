@@ -1,76 +1,93 @@
 <view class="page">
+  <!-- 未登录：没有什么可管的，说清楚就行 -->
+  <view class="card locked-card" wx:if="{{!logged}}">
+    <view class="card-title">登录后可用</view>
+    <text class="hint note">档位与权限挂在微信账号上，先登录才看得到自己那一档。</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
+  </view>
+
+  <block wx:else>
   <view class="card">
-    <view class="card-title">当前授权</view>
+    <view class="card-title">我的授权</view>
     <view class="kv">
       <text class="kv-k">档位</text>
       <text class="kv-v">{{status.label}}</text>
     </view>
     <view class="kv">
-      <text class="kv-k">来源</text>
-      <text class="kv-v">{{status.source}}</text>
+      <text class="kv-k">角色</text>
+      <text class="kv-v">{{roleLabel}}</text>
     </view>
     <view class="kv">
       <text class="kv-k">能力</text>
       <text class="kv-v">{{stats.enabled}} / {{stats.caps}} 项</text>
     </view>
-    <text class="hint note" wx:if="{{status.blocked === 'local'}}">
-      本机拿不到后台档位（后端未配置），付费档按未授权处理 —— 宁可少给，也不能让改一下本机存储就提档。
-    </text>
-  </view>
 
-  <view class="card">
-    <view class="card-title">兑换授权</view>
-    <text class="hint note">
-      微信不允许个人主体做虚拟支付，所以 pro / max 只能由管理员发放。输入兑换码即可在本机升档。
+    <text class="hint note" wx:if="{{status.signed}}">这一档由服务端下发，换手机跟着走。</text>
+    <text class="hint note" wx:elif="{{status.blocked === 'unsigned'}}">
+      连不上服务器，本机记着的档位暂不生效，按免费档算 —— 免得断个网就成了提权。
     </text>
-    <input class="code-input" placeholder="PRO-XXXX-XXXX" value="{{code}}" bindinput="onCode" />
-    <view class="code-acts">
-      <button class="btn primary" bindtap="onRedeem">兑换</button>
-      <button class="btn ghost" bindtap="onRevoke">退回免费档</button>
-    </view>
-    <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
+    <text class="hint note" wx:else>
+      档位由管理员按人分配，不需要你付费。要往上走，把下面那条「复制联系邮箱」发给管理员。
+    </text>
   </view>
 
   <view class="card">
     <view class="card-title">能力矩阵</view>
-    <view class="cap" wx:for="{{caps}}" wx:key="key">
-      <view class="cap-main">
-        <text class="cap-name">{{item.name}}</text>
-        <text class="cap-sub">{{item.desc}} · 需{{item.need === 'login' ? '登录' : item.need}}</text>
+    <view wx:for="{{groups}}" wx:key="title" wx:for-item="grp">
+      <text class="cap-group">{{grp.title}}</text>
+      <view class="cap" wx:for="{{grp.rows}}" wx:key="name" wx:for-item="caprow">
+        <text class="cap-mark {{caprow.on ? 'on' : 'off'}}">{{caprow.on ? '✓' : '✕'}}</text>
+        <text class="cap-name {{caprow.on ? '' : 'dim'}}">{{caprow.name}}</text>
+        <text class="cap-note" wx:if="{{caprow.note}}">{{caprow.note}}</text>
       </view>
-      <text class="cap-state {{item.ok ? 'on' : 'off'}}">{{item.ok ? '可用' : '未开'}}</text>
     </view>
+    <text class="hint note">这张表与网页版 js/entitlement.js 逐条对齐，自检里有一条专门比它，漂了当场报错。</text>
   </view>
 
   <view class="card">
     <view class="card-title">用户名录</view>
-    <text class="hint note" wx:if="{{!adminReady}}">
-      后端没就绪，这一栏是只读的。名册来自语料构建产物（不进代码库），
-      {{generatedAt ? '生成于 ' + generatedAt : '尚未生成'}}。改档位要等管理接口接通。
+    <text class="hint note" wx:if="{{!remoteReady}}">
+      后端接口还没部署，所以名录读不了、也改不了别人。下面这份是构建时导入的名册（只读），
+      {{generatedAt ? '生成于 ' + generatedAt : '尚未生成'}}。
     </text>
-    <text class="hint note" wx:else>管理员密钥已配置，改动直接写服务端。</text>
+    <text class="hint note" wx:elif="{{!adminReady}}">
+      后端已配置，但你不是管理员（当前：{{roleLabel}}），名录只读。
+    </text>
+    <text class="hint note" wx:else>管理员已就绪，改动直接写服务端，对方下次打开生效。</text>
 
-    <view class="user" wx:for="{{users}}" wx:key="id">
-      <view class="user-main">
-        <text class="user-label">{{item.label}}</text>
-        <text class="user-sub">{{item.id}} · {{item.local ? '本机' : (item.remote ? '云端' : '名册')}}</text>
+    <view class="acct" wx:for="{{users}}" wx:key="id">
+      <view class="acct-main">
+        <text class="acct-name">{{item.label}}</text>
+        <text class="acct-sub">
+          {{item.tier ? item.tier : '未分级'}} ·
+          {{item.local ? '本机' : (item.remote ? '服务端' : '名册只读')}} ·
+          {{item.role}}
+        </text>
       </view>
-      <view class="user-tiers">
-        <text class="tier-chip {{item.tier === t.key ? 'active' : ''}}"
-              wx:for="{{tiers}}" wx:for-item="t" wx:key="key"
-              data-u="{{item.id}}" data-t="{{t.key}}" data-local="{{item.local}}" bindtap="onSetTier">{{t.name}}</text>
+      <view class="acct-acts">
+        <text class="acct-act {{canWrite ? '' : 'off'}}" data-u="{{item.id}}" data-t="{{item.tier}}"
+              bindtap="onSetTier">改档</text>
+        <text class="acct-act {{canSetRole ? '' : 'off'}}" data-u="{{item.id}}" data-r="{{item.role}}"
+              bindtap="onSetRole">角色</text>
       </view>
     </view>
 
     <view class="empty" wx:if="{{!users.length}}">名录里还没有人</view>
+    <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
+    <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
   </view>
 
   <view class="card">
-    <view class="card-title">云端同步</view>
-    <text class="hint note">后端未配置时，同步只会把变化攒在队列里，不做任何“假装成功”。</text>
-    <button class="btn primary block" bindtap="onSync">立即同步</button>
-    <button class="btn ghost block feedback-btn" bindtap="onCopyFeedback">复制联系邮箱申请授权</button>
+    <view class="card-title">要一个更高的档位</view>
+    <text class="hint note">
+      三档都不收费，由管理员在服务端按人发放。把邮箱发给管理员，或让他直接在
+      网页版后台（poem 站的 /admin/）改。手机上不做名录管理 —— 分页、搜索、
+      用户报告那些在网页版顺手得多。
+    </text>
+    <button class="btn ghost block" bindtap="onCopyFeedback">复制联系邮箱</button>
+    <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
   </view>
+  </block>
 
   <view class="safe-bottom"></view>
 </view>

@@ -20,6 +20,8 @@ const KEYS = {
   device: "kb_device_v1",
   speech: "kb_speech_v1",
   sync: "kb_sync_outbox_v1",
+  /** 服务端下发的按人开关（管理页可以关掉某人的某项能力） */
+  caps: "kb_caps_v1",
   version: "kb_schema_version"
 };
 
@@ -39,7 +41,12 @@ const DEFAULTS = {
   speechAutoNext: true
 };
 
-const SCHEMA = 1;
+/**
+ * 2：撤掉「本机宿主」那条后门，档位只认服务端下发。
+ *    老档案里可能留着未登录状态下写的 profile.tier = max，
+ *    迁移时清掉它 —— 留着会被 entitlement 当成「服务端以前确认过」。
+ */
+const SCHEMA = 2;
 
 function read(key, fallback) {
   try {
@@ -74,6 +81,14 @@ function migrate() {
 
   const legacy = read("poem_recite_progress_v1", null);
   if (legacy && !read(KEYS.progress, null)) write(KEYS.progress, legacy);
+
+  // v2：清掉没有服务端签名、又高于免费档的本机档位。
+  // 它是「本机宿主」时代留下的 —— 那时未登录也会把 tier 写成 max。
+  const prof = read(KEYS.profile, {}) || {};
+  if (prof.tier && !prof.tierFromServer) {
+    delete prof.tier;
+    write(KEYS.profile, prof);
+  }
 }
 
 function settings() {
