@@ -1,4 +1,10 @@
 <view class="page">
+  <view class="card lock-card" wx:if="{{!logged}}">
+    <text class="lock-title">阅读与朗读 · 登录后可用</text>
+    <text class="lock-sub">注音与朗读都需要登录。首页的一年级诗词不受影响。</text>
+    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
+  </view>
+
   <view class="card">
     <view class="card-title">注音方式</view>
     <view class="seg">

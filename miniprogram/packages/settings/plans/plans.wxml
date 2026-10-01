@@ -1,0 +1,36 @@
+<view class="page">
+  <view class="card">
+    <view class="plans-head">
+      <text class="plans-title">能力的门槛</text>
+      <text class="plans-sub">{{signedIn ? '当前已登录，全部可用' : '当前未登录 · ' + lockedCount + '/' + total + ' 项需登录'}}</text>
+    </view>
+    <view class="plans-table">
+      <view class="plans-row plans-th">
+        <text class="plans-cap">能力</text>
+        <text class="plans-need">门槛</text>
+        <text class="plans-state">当前</text>
+      </view>
+      <view class="plans-row" wx:for="{{rows}}" wx:key="cap">
+        <text class="plans-cap">{{item.name}}</text>
+        <text class="plans-need">{{item.need}}</text>
+        <text class="plans-state {{item.state === '可用' ? 'on' : 'off'}}">{{item.state}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">不登录能做什么</view>
+    <text class="plans-note">只有首页：默认列出一（本册）诗词，看得见、点不动。点任意一篇都会引导去登录。</text>
+    <text class="plans-note">这样划线的理由不是挡人：首页是分享出去的落地页，先让人看见内容；而背诵进度、设置、导出一旦不登录就写入本机，换台设备就丢，不如先登录再说。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">登录后能做什么</view>
+    <text class="plans-note">每日背诵、课外阅读（十七部集子）、注音辅助、艾宾浩斯、莱特纳盒、语音朗读、进度导出，全部可用。没有付费档位，登录即全开。</text>
+    <text class="plans-note">进度仍然默认只存在这台手机上。登录只开一扇门，不搬走数据。</text>
+  </view>
+
+  <button class="btn primary block" bindtap="onLogin" wx:if="{{!signedIn}}">去登录</button>
+
+  <view class="safe-bottom"></view>
+</view>

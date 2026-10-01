@@ -13,8 +13,13 @@
     </view>
 
     <button class="btn primary block today-start" bindtap="onStart" wx:if="{{total}}">
-      {{doneCount >= total ? '今天背完了 · 再练一遍' : '开始背'}}
+      {{readOnly ? '登录后开始背' : (doneCount >= total ? '今天背完了 · 再练一遍' : '开始背')}}
     </button>
+  </view>
+
+  <view class="guest-bar" wx:if="{{readOnly}}" bindtap="onStart">
+    <text class="guest-title">当前是浏览模式</text>
+    <text class="guest-sub">{{lockedHint}} · 一年级诗词可看，点开与背诵需登录</text>
   </view>
 
   <view class="card">
@@ -31,5 +36,5 @@
     <view class="empty" wx:if="{{!total}}">今天的计划还没排出来，去「我的」看看背诵范围</view>
   </view>
 
-  <view class="hint foot">进度只存在这台手机上 · 断网也能背</view>
+  <view class="hint foot">{{readOnly ? '登录后进度只存在这台手机上 · 断网也能背' : '进度只存在这台手机上 · 断网也能背'}}</view>
 </view>

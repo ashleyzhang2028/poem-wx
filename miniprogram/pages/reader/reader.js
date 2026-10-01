@@ -1,6 +1,7 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
+const E = require("../../utils/entitlement");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -23,6 +24,8 @@ Page({
     showTranslation: false,
     align: "center",
     fontSize: 0,
+    locked: false,
+    lockedHint: "",
     stage: "新学",
     mastery: 0,
     hint: "",
@@ -30,6 +33,12 @@ Page({
   },
 
   onLoad(query) {
+    // 深链与分享能绕过首页直达详情，所以这里也认一次登录
+    if (!E.can("recite.basic").ok) {
+      this.setData({ locked: true, lockedHint: E.hint("recite.basic") });
+      wx.setNavigationBarTitle({ title: "需要登录" });
+      return;
+    }
     const id = query.id || "";
     const settings = store.settings();
     const entry = corpus.entry(id);
@@ -73,7 +82,12 @@ Page({
     this.setData({ showTranslation: !this.data.showTranslation });
   },
 
+  onLoginGate() {
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
+
   onPinyin(e) {
+    if (!E.block("pinyin.helper", { page: this })) return;
     const pinyin = e.currentTarget.dataset.m;
     store.saveSettings({ pinyin });
     // 注音依赖读音表，第一版只记住偏好，渲染留待读音表接入后开启
@@ -94,6 +108,7 @@ Page({
   },
 
   onSpeak() {
+    if (!E.block("read.aloud", { page: this })) return;
     if (!this.data.lines.length) return;
     // 朗读用微信同声传译插件的系统 TTS 会额外收费，这里先用小程序自带的朗读接口
     // 不可用时明确告知，不做静默失败
@@ -105,6 +120,7 @@ Page({
   },
 
   onResult(e) {
+    if (!E.block("recite.basic", { page: this })) return;
     const result = e.currentTarget.dataset.r;
     const settings = store.settings();
     const rec = R.review(store.getRecord(this.data.id), result, settings.algo);

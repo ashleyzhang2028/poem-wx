@@ -1,6 +1,7 @@
 const store = require("../../utils/store");
 const auth = require("../../utils/auth");
 const S = require("../../utils/scheduler");
+const E = require("../../utils/entitlement");
 
 Page({
   data: {
@@ -11,7 +12,10 @@ Page({
     scopeName: "",
     algoName: "",
     dailyCount: 5,
-    stats: { learned: 0, mastered: 0, readCount: 0 }
+    stats: { learned: 0, mastered: 0, readCount: 0 },
+    /** 能力矩阵：这项从同一张表来，不在模板里另抄一份 */
+    caps: [],
+    lockedCount: 0
   },
 
   onShow() {
@@ -30,7 +34,9 @@ Page({
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
       dailyCount: settings.dailyCount,
-      stats
+      stats,
+      caps: E.matrix({ signedIn: !!profile.logged }),
+      lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
     });
   },
 
@@ -97,11 +103,36 @@ Page({
     wx.navigateTo({ url: "/packages/settings/about/about" });
   },
 
+  onPlans() {
+    wx.navigateTo({ url: "/packages/settings/plans/plans" });
+  },
+
+  onLoginGate() {
+    // 已经在「我的」了，门禁的「去登录」直接调登录
+    this.onLogin();
+  },
+
   onExport() {
+    if (!E.block("export.progress", { page: this })) return;
     const data = store.exportAll();
     wx.setClipboardData({
       data: JSON.stringify(data),
       success: () => wx.showToast({ title: "备份已复制，粘贴到安全的地方保存", icon: "none", duration: 2500 })
+    });
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: "退出登录",
+      content: "退出后回到浏览模式：首页仍可看一年级诗词，其余能力要重新登录。本机进度不会被删。",
+      confirmText: "退出",
+      confirmColor: "#a83b32",
+      success: (res) => {
+        if (!res.confirm) return;
+        auth.logout();
+        this.refresh();
+        wx.showToast({ title: "已退出登录", icon: "none" });
+      }
     });
   },
 

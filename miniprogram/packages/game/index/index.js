@@ -1,4 +1,5 @@
 const corpus = require("../../../utils/corpus");
+const E = require("../../../utils/entitlement");
 
 /**
  * 古诗词大会：飞花令 + 题库 + 模拟考试。
@@ -13,6 +14,7 @@ const MODES = [
 
 Page({
   data: {
+    logged: false,
     modes: MODES,
     keyword: "月",
     chars: ["月", "春", "花", "风", "山", "水", "云", "夜"],
@@ -21,6 +23,7 @@ Page({
   },
 
   onLoad() {
+    this.setData({ logged: E.signedIn() });
     this.computeLines();
   },
 
@@ -50,7 +53,12 @@ Page({
     this.setData({ keyword: e.currentTarget.dataset.c }, () => this.computeLines());
   },
 
+  onLoginGate() {
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
+
   onMode(e) {
+    if (!E.block("recite.basic", { page: this })) return;
     const key = e.currentTarget.dataset.k;
     if (key === "exam") {
       wx.navigateTo({ url: "/packages/game/exam/exam" });

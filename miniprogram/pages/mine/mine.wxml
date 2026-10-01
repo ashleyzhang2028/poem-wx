@@ -7,18 +7,19 @@
       </button>
       <view class="identity-main">
         <text class="identity-name">{{nickname}}</text>
-        <text class="identity-sub">{{logged ? '已登录 · 进度可跨设备同步' : '点这里用微信登录'}}</text>
+        <text class="identity-sub">{{logged ? '已登录 · 能力全开' : '浏览模式 · 只能看首页'}}</text>
       </view>
     </view>
 
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
-      <text class="hint">不登录也能用全部功能，登录只为了把进度存到云端</text>
+      <text class="hint">不登录只能浏览首页。登录后每日背诵、课外阅读、注音、四套算法、朗读、进度导出全部可用</text>
     </view>
 
     <view class="profile-row" wx:else>
       <button class="btn ghost" bindtap="onProfile">从微信取昵称头像</button>
       <input class="nick-input" type="nickname" placeholder="也可以自己填一个昵称" bindblur="onNickname" />
+      <button class="btn ghost logout-btn" bindtap="onLogout">退出登录</button>
     </view>
   </view>
 
@@ -43,6 +44,21 @@
     <view class="kv">
       <text class="kv-k">已读篇目</text>
       <text class="kv-v">{{stats.readCount}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">能力</view>
+    <view class="cap-row" wx:for="{{caps}}" wx:key="cap">
+      <text class="cap-name">{{item.name}}</text>
+      <text class="cap-state {{item.ok ? 'on' : 'off'}}">{{item.hint}}</text>
+    </view>
+    <view class="row" bindtap="onPlans">
+      <view class="row-main">
+        <text class="row-title">权限说明</text>
+        <text class="row-sub">{{lockedCount ? lockedCount + ' 项未解锁' : '全部可用'}} · 逐条对照</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
   </view>
 

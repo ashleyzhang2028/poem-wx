@@ -1,5 +1,6 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
+const E = require("../../utils/entitlement");
 
 /** 网页版把十七部集子压成四张卡，这里沿用同一套分组口径 */
 const GROUPS = [
@@ -33,10 +34,17 @@ Page({
   data: {
     groups: [],
     current: null,
-    books: []
+    books: [],
+    logged: false,
+    lockedHint: ""
   },
 
   onShow() {
+    this.setData({ logged: E.signedIn(), lockedHint: E.hint("library.all") });
+    if (!E.can("library.all").ok) {
+      this.setData({ groups: [], current: null });
+      return;
+    }
     const all = corpus.books();
     const byId = {};
     all.forEach((b) => {
@@ -63,11 +71,17 @@ Page({
     this.setData({ current: e.currentTarget.dataset.k });
   },
 
+  /** 门禁上的「去登录」把用户送到「我的」——那里有唯一的登录按钮 */
+  onLoginGate() {
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
+
   onBack() {
     this.setData({ current: null });
   },
 
   onOpenBook(e) {
+    if (!E.block("library.all", { page: this })) return;
     wx.navigateTo({ url: "/pages/list/list?book=" + e.currentTarget.dataset.b });
   },
 
