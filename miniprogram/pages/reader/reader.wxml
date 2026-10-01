@@ -14,26 +14,32 @@
       <text class="poem-source" wx:if="{{source}}">{{source}}</text>
     </view>
 
-    <!-- 朗读不可用时，这一整块工具栏连边框都不出现 -->
-    <view class="toolbar">
-      <view class="seg">
-        <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
-        <view class="seg-item {{align === 'center' ? 'active' : ''}}" data-a="center" bindtap="onAlign">居中</view>
+    <!-- 阅读偏好：正文之间最不该塞一排自绘按钮，全换成原生单选 -->
+    <view class="prefs">
+      <radio-group class="pref-group" bindchange="onAlign">
+        <label class="pref-item" wx:for="{{aligns}}" wx:key="key">
+          <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+
+      <view class="pref-font">
+        <slider class="pref-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
+                block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+                bindchanging="onFontSlide" bindchange="onFontSlide" />
       </view>
-      <view class="seg font-seg">
-        <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
-        <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
-      </view>
-      <view class="seg read-seg" wx:if="{{speakVisible}}">
-        <view class="seg-item speak-entry {{speakReady ? 'on' : 'off'}}" bindtap="onSpeak">{{speakLabel}}</view>
-      </view>
+
+      <!-- 朗读不可用时这一格不出现；就绪与否只影响它灰不灰，不影响在不在 -->
+      <button class="btn mini speak-entry {{speakReady ? 'on' : 'off'}}" wx:if="{{speakVisible}}"
+              disabled="{{!speakReady}}" bindtap="onSpeak">{{speakLabel}}</button>
     </view>
 
-    <view class="seg pinyin-seg" wx:if="{{pinyinOn}}">
-      <view class="seg-item {{pinyinMode === 'off' ? 'active' : ''}}" data-m="off" bindtap="onPinyin">不注音</view>
-      <view class="seg-item {{pinyinMode === 'rare' ? 'active' : ''}}" data-m="rare" bindtap="onPinyin">生字</view>
-      <view class="seg-item {{pinyinMode === 'all' ? 'active' : ''}}" data-m="all" bindtap="onPinyin">全文</view>
-    </view>
+    <radio-group class="opt-group pinyin-group" wx:if="{{pinyinOn}}" bindchange="onPinyin">
+      <label class="pref-item" wx:for="{{pinyinModes}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="#2f6055" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
 
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
@@ -62,17 +68,20 @@
     <text class="hint note" wx:if="{{!speakReady}}">{{speakReason}}</text>
 
     <block wx:else>
+      <!-- 进度条就是原生 slider：拖到哪句就从哪句起播，比一个只读的细条多一件事可做 -->
       <view class="speak-progress" wx:if="{{speakTotal}}">
         <text class="sp-text">第 {{speakIndex + 1}} / {{speakTotal}} 句</text>
-        <view class="sp-bar"><view class="sp-fill" style="width:{{(speakIndex + (speakPlaying ? 1 : 0)) * 100 / speakTotal}}%"></view></view>
+        <slider class="sp-slider" min="0" max="{{speakTotal - 1}}" step="1" value="{{speakIndex}}"
+                block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+                bindchange="onSpeakSeek" />
       </view>
       <view class="speak-ctrl">
-        <view class="sp-btn" bindtap="onSpeakPrev">上一句</view>
-        <view class="sp-btn main" bindtap="onSpeak">
+        <button class="btn mini" bindtap="onSpeakPrev">上一句</button>
+        <button class="btn mini primary sp-main" bindtap="onSpeak">
           {{speakLoading ? '准备中' : (speakPlaying ? '暂停' : '播放')}}
-        </view>
-        <view class="sp-btn" bindtap="onSpeakNext">下一句</view>
-        <view class="sp-btn" bindtap="onSpeakStop">停止</view>
+        </button>
+        <button class="btn mini" bindtap="onSpeakNext">下一句</button>
+        <button class="btn mini" bindtap="onSpeakStop">停止</button>
       </view>
     </block>
   </view>

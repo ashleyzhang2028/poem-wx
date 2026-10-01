@@ -13,7 +13,8 @@
     </view>
 
     <view class="card">
-      <view class="row" wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <view class="row-main">
           <view class="row-line">
             <text class="row-title">{{item.title}}</text>
@@ -33,7 +34,8 @@
           <text class="today-title">今日背诵</text>
           <text class="today-sub">{{gradeName}} · {{scopeName}}</text>
         </view>
-        <view class="ring" bindtap="onSettings">
+        <!-- 进度环整块可点，进背诵设置；点的是「看进度」，不是「点按钮」 -->
+        <view class="ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
           <view class="ring-track"></view>
           <view class="ring-fill" style="--p:{{percent}}"></view>
           <text class="ring-text">{{doneCount}}/{{total}}</text>
@@ -47,7 +49,8 @@
     </view>
 
     <view class="card">
-      <view class="row" wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <view class="row-main">
           <view class="row-line">
             <text class="row-title">{{item.title}}</text>

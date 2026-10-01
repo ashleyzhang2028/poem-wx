@@ -6,9 +6,15 @@ const gate = require("../../../utils/gate");
 
 const GRADES = Object.keys(S.GRADE_NAMES).map((g) => Number(g));
 
+const TERMS = [
+  { value: 1, label: "上学期" },
+  { value: 2, label: "下学期" }
+];
+
 Page({
   data: {
     grades: [],
+    terms: TERMS,
     grade: 1,
     term: 1,
     scope: "upto",
@@ -34,7 +40,7 @@ Page({
     this.setData(
       Object.assign({}, settings, {
         grades: GRADES.map((g) => ({ value: g, label: S.gradeName(g) })),
-        scopes,
+        scopes: scopes.map((sc) => Object.assign({}, sc, { desc: S.SCOPES[sc.key].scopeName })),
         algos: this.algoRows(settings.algo)
       }),
       () => this.updatePool()
@@ -55,6 +61,8 @@ Page({
         blurb: m.blurb,
         years: m.years,
         allowed,
+        // 灰掉的那几套要说清为什么灰 —— 光一个 disabled 会让人以为是坏了
+        lockHint: allowed ? "" : E.hint(m.key),
         active: m.key === current
       };
     });
@@ -82,42 +90,41 @@ Page({
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
+  /* 单选组统一从这里取新值：radio-group 的 e.detail.value 就是选中那一项的 value */
   onGrade(e) {
-    this.save({ grade: Number(e.currentTarget.dataset.v) });
+    this.save({ grade: Number(e.detail.value) });
   },
 
   onTerm(e) {
-    this.save({ term: Number(e.currentTarget.dataset.v) });
+    this.save({ term: Number(e.detail.value) });
   },
 
   onScope(e) {
-    this.save({ scope: e.currentTarget.dataset.k });
+    this.save({ scope: e.detail.value });
   },
 
   onCount(e) {
-    this.save({ dailyCount: Number(e.currentTarget.dataset.v) });
+    this.save({ dailyCount: Number(e.detail.value) });
   },
 
+  /**
+   * 换算法。
+   *
+   * 「换算法不清进度」原来是个确认弹窗，现在也去掉了 —— 那句话是**常驻在页面上的说明**，
+   * 每次点都拦一下，等于把「我已知晓」问了四遍。真要说风险，说一次就够。
+   * 门禁照旧：不可用的那几套 radio 直接 disabled，点不动，也不会走到这儿。
+   */
+  /**
+   * 换算法。
+   *
+   * 门禁那一圈留着，但换成原生控件的写法：不可用的那几套 radio 直接 disabled，
+   * 点都点不到，也就不会再走到这儿。原来那个「这一套还没开放」的弹窗因此删了 ——
+   * 弹窗本该是「要你决定」，用来播报「你不能点」是错位的。
+   * 「换算法不清进度」也改成页面上的常驻说明，不再每次点都拦一下。
+   */
   onAlgo(e) {
-    const algo = e.currentTarget.dataset.k;
-    if (algo === this.data.algo) return;
-
-    if (!E.algoAllowed(algo)) {
-      const need = E.CAPS.find((c) => c.key === algo);
-      wx.showModal({
-        title: "这一套还没开放",
-        content: (need ? need.name : algo) + " 需要「" + E.status().label + "」以上。档位由管理员发放，在「我的 → 用户与权限」可以看到差在哪一档。",
-        showCancel: false
-      });
-      return;
-    }
-
-    wx.showModal({
-      title: "切换复习算法",
-      content: "已有的背诵进度会按新算法折算，不会清空。",
-      success: (res) => {
-        if (res.confirm) this.save({ algo });
-      }
-    });
+    const algo = e.detail.value;
+    if (algo === this.data.algo || !E.algoAllowed(algo)) return;
+    this.save({ algo });
   }
 });

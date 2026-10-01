@@ -14,7 +14,7 @@
 git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 
-# 2. 离线自检（486 项）
+# 2. 离线自检（520 项）
 node scripts/check.js
 
 # 3. 用微信开发者工具打开 miniprogram/ 目录
@@ -113,6 +113,14 @@ TTS 不可用时，详情页的朗读那格、播放工具栏、设置里的朗�
 诗词用宋体、界面用黑体。**外壳不照搬网页版**：顶栏与底栏换成原生导航栏与原生 tabBar ——
 这是小程序的推荐呈现方式，也免掉一整套状态栏与胶囊避让的计算。
 
+**控件一律用小程序自有的**：开关是 `<switch>`、单选是 `<radio>`、多选是 `<checkbox>`、
+滑动是 `<slider>`、挑一个用 `<picker>`、按钮是 `<button>`。
+自绘控件长得再像，也拿不到平台给的点击区、读屏与惯性，所以一个都不留。
+只有列表行与正文卡片仍是 `<view bindtap>`（它们是导航不是控件），触碰反馈借原生
+`hover-class`。样式表只统一尺寸字体，配色靠 `color="#2f6055"` 这类组件属性给 ——
+原生控件的外观改不到内部，这点必须写在属性上。管理页的改档改角色更进一步，
+直接用系统的 `showActionSheet`。自检里有四条断言守着这条线。
+
 ## 数据放在哪
 
 正文**不全进包，但课内那 251 首进包**。实测全部正文 24.3 MB（gzip 后 4.9 MB），
@@ -144,7 +152,7 @@ miniprogram/
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
 ├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录
-└── check.js        # 离线自检，397 项
+└── check.js        # 离线自检，520 项
 ```
 
 ## 还没做的

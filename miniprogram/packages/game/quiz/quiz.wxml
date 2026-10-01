@@ -16,10 +16,13 @@
 
     <view class="card">
       <view class="card-title">题型</view>
-      <view class="chips">
-        <text class="chip {{pickedForms.indexOf(item.key) >= 0 ? 'active' : ''}}"
-              wx:for="{{forms}}" wx:key="key" data-k="{{item.key}}" bindtap="onToggleForm">{{item.name}}</text>
-      </view>
+      <!-- 题型可多选：原生 checkbox，勾选框本身就是平台认识的那个勾选框 -->
+      <checkbox-group class="native-group" bindchange="onToggleForm">
+        <label class="native-label" wx:for="{{forms}}" wx:key="key">
+          <checkbox value="{{item.key}}" checked="{{pickedForms.indexOf(item.key) >= 0}}" color="#2f6055" />
+          <text>{{item.name}}</text>
+        </label>
+      </checkbox-group>
       <text class="hint note">选中的题型随机混出。至少留一种。</text>
     </view>
 
@@ -39,9 +42,8 @@
     </view>
 
     <view class="options">
-      <view class="option"
-            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick"
-            class="{{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}">
+      <view class="option {{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}"
+            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick">
         {{item}}
       </view>
     </view>

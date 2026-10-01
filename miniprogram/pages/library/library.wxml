@@ -26,7 +26,8 @@
       <text>返回全部集子</text>
     </view>
     <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
-      <view class="row" wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
         <view class="row-main">
           <text class="row-title">{{b.name}}</text>
           <text class="row-sub">共 {{b.count}} {{b.unit}}</text>

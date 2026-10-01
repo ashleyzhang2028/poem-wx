@@ -116,25 +116,16 @@
   margin-top: 6rpx;
 }
 
-.user-tiers {
-  display: flex;
-  gap: 12rpx;
-  margin-top: 14rpx;
-}
-
-.tier-chip {
-  padding: 8rpx 26rpx;
-  border-radius: 999rpx;
-  font-size: 24rpx;
-  color: var(--ink-2);
-  background: var(--bg-soft);
+.user-act {
+  flex: none;
+  color: var(--green);
   border: 1rpx solid var(--line);
 }
 
-.tier-chip.active {
-  background: var(--green);
-  border-color: var(--green);
-  color: #fff;
+.user-lock {
+  flex: none;
+  font-size: 24rpx;
+  color: var(--ink-3);
 }
 
 .feedback-btn {
@@ -236,17 +227,19 @@
 .acct-acts {
   display: flex;
   flex-shrink: 0;
+  gap: 8rpx;
 }
 
+/* 改档 / 改角色是原生 button，只压小尺寸与去掉原生最小宽度 */
 .acct-act {
-  font-size: 25rpx;
   color: var(--green);
-  padding: 8rpx 0 8rpx 24rpx;
+  border: 1rpx solid var(--line);
 }
 
-/* 没权限时按钮照常显示，但灰着 —— 点了会说明为什么，比直接消失清楚 */
-.acct-act.off {
-  color: var(--line);
+.acct-lock {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  padding-left: 20rpx;
 }
 
 .note {

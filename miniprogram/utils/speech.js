@@ -304,6 +304,17 @@ function create(opt) {
     prev() {
       if (state.index > 0) play(state.index - 1);
     },
+    /**
+     * 跳到第几句。与 toggle(i) 的差别在语义：toggle 是「点这一句」，
+     * 用户手指按下的那一刻就认这个目标；seek 是「拖进度条」，
+     * 拖到当前正在播的那一句上不该把音频掐了重来。
+     */
+    seek(lineIndex) {
+      if (!queued.length) return;
+      const i = Math.max(0, Math.min(queued.length - 1, Number(lineIndex) || 0));
+      if (i === state.index) return;
+      play(i);
+    },
     stop() {
       stopTimer();
       try {

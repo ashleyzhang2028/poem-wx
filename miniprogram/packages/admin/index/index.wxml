@@ -58,17 +58,16 @@
     <view class="acct" wx:for="{{users}}" wx:key="id">
       <view class="acct-main">
         <text class="acct-name">{{item.label}}</text>
-        <text class="acct-sub">
-          {{item.tier ? item.tier : '未分级'}} ·
-          {{item.local ? '本机' : (item.remote ? '服务端' : '名册只读')}} ·
-          {{item.role}}
-        </text>
+        <text class="acct-sub">{{item.tier ? item.tier : '未分级'}} · {{item.scopeText}} · {{item.role}}</text>
       </view>
+      <!-- 改档 / 改角色：只给原生按钮，选值交给原生 showActionSheet。
+           后端没就绪时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->
       <view class="acct-acts">
-        <text class="acct-act {{canWrite ? '' : 'off'}}" data-u="{{item.id}}" data-t="{{item.tier}}"
-              bindtap="onSetTier">改档</text>
-        <text class="acct-act {{canSetRole ? '' : 'off'}}" data-u="{{item.id}}" data-r="{{item.role}}"
-              bindtap="onSetRole">角色</text>
+        <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
+                bindtap="onSetTier">改档</button>
+        <button class="btn mini acct-act" wx:if="{{canSetRole && item.editable}}" data-u="{{item.id}}"
+                bindtap="onSetRole">角色</button>
+        <text class="acct-lock" wx:if="{{!canWrite && !canSetRole}}">只读</text>
       </view>
     </view>
 

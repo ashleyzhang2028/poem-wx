@@ -5,7 +5,13 @@
 }
 
 .mode {
+  /* 从 view 换成 button：原生按钮自带最小宽度与 ::after 边框，这里逐条收掉 */
   flex: 1;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  text-align: left;
+  line-height: 1.5;
   border-radius: var(--radius);
   padding: 28rpx 20rpx;
   border: 1rpx solid var(--line-2);
@@ -28,6 +34,10 @@
   color: var(--blue);
 }
 
+.mode::after {
+  border: none;
+}
+
 .mode-desc {
   display: block;
   font-size: 22rpx;
@@ -36,19 +46,20 @@
   line-height: 1.6;
 }
 
-.chips {
+/* 令字格：外框还是那块宋体方字，判定与选中交给原生 radio */
+.chars {
   display: flex;
   flex-wrap: wrap;
   margin: 16rpx 0;
 }
 
-.chip {
+.char {
+  position: relative;
   width: 88rpx;
   height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  font-family: var(--font-poem);
-  font-size: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
   border: 1rpx solid var(--line);
@@ -56,10 +67,27 @@
   margin: 0 16rpx 16rpx 0;
 }
 
-.chip.active {
-  background: var(--green);
+.char.active {
+  background: var(--green-light);
   border-color: var(--green);
-  color: #fff;
+}
+
+/* 原生圆点缩到角上：字块中心留给那个字，判定仍由平台负责 */
+.char-radio {
+  position: absolute;
+  right: -4rpx;
+  top: -4rpx;
+  transform: scale(.6);
+}
+
+.char-t {
+  font-family: var(--font-poem);
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.char.active .char-t {
+  color: var(--green);
 }
 
 .line-seg {
@@ -87,11 +115,14 @@
 .pg {
   font-size: 27rpx;
   color: var(--green);
-  padding: 12rpx 32rpx;
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
 }
 
-.pg.off {
+.pg[disabled] {
   color: var(--line);
+  opacity: 1;
 }
 
 .pg-num {

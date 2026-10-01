@@ -39,44 +39,6 @@
   line-height: 1.4;
 }
 
-.prov {
-  display: flex;
-  align-items: center;
-  padding: 22rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.prov:last-of-type {
-  border-bottom: none;
-}
-
-.prov-main {
-  flex: 1;
-}
-
-.prov-name {
-  display: block;
-  font-size: 29rpx;
-  color: var(--ink);
-}
-
-.prov.active .prov-name {
-  color: var(--green);
-  font-weight: 600;
-}
-
-.prov-note {
-  display: block;
-  font-size: 22rpx;
-  color: var(--ink-3);
-  margin-top: 6rpx;
-}
-
-.prov-check {
-  color: var(--green);
-  font-size: 30rpx;
-}
-
 .url-row {
   margin-top: 24rpx;
 }
@@ -97,13 +59,10 @@
   color: var(--ink);
 }
 
-.rate-row {
-  margin-top: 24rpx;
-}
-
-.rate-label {
+.sub-title {
   font-size: 25rpx;
   color: var(--ink-2);
+  margin-top: 24rpx;
 }
 
 .tts-state {

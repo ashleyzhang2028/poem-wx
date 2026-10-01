@@ -49,6 +49,10 @@ Page({
 
   refresh() {
     const snap = entitlement.snapshot();
+    // canWrite / canSetRole 先落到局部：decorate() 在 setData 生效之前就跑了，
+    // 从 this.data 读会读到上一轮的值
+    const canWrite = admin.canWrite();
+    const canSetRole = admin.canSetRole();
     this.setData({
       logged: snap.logged,
       status: snap,
@@ -57,17 +61,37 @@ Page({
       stats: admin.stats(),
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
-      canWrite: admin.canWrite(),
-      canSetRole: admin.canSetRole(),
+      canWrite: canWrite,
+      canSetRole: canSetRole,
       roleLabel: ROLE_NAME[auth.role()] || "普通用户"
     });
 
     if (!snap.logged) return;
     admin.list().then((res) => {
       this.setData({
-        users: res.users,
+        users: this.decorate(res.users, canWrite, canSetRole),
         rosterNote: res.note || "",
         generatedAt: admin.roster().generatedAt || ""
+      });
+    });
+  },
+
+  /**
+   * 每一行补两件事：从哪来的、这一行能不能改。
+   *
+   * 原先是把两个嵌套三元表达式摊在模板里（`item.local ? '本机' : (item.remote ? …)`），
+   * 读的人得先在脑子里跑一遍；「能不能改」更是分散在两个按钮的 wx:if 上。
+   * 挪到这里，一眼能看完。
+   */
+  decorate(users, canWrite, canSetRole) {
+    return (users || []).map((u) => {
+      let scopeText = "名册只读";
+      if (u.local) scopeText = "本机";
+      else if (u.remote) scopeText = "服务端";
+      return Object.assign({}, u, {
+        scopeText,
+        // 名册里的那批是构建产物，改不了；服务端与本机这两条才谈得上「可写」
+        editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
       });
     });
   },

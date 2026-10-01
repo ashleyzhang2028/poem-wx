@@ -7,9 +7,11 @@ $:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-        # 486 项：页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
+        # 520 项：页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
         # 倒排往返 / 飞花令判定 / 六种题型 /
         # 门禁（未登录只能看首页、点不动）与三档（含「本机写 max 不生效」）/
         # 逐页扫 WXML 确认门禁真的生效 / 管理页不许再留自助提权 /
-        # 档位与网页版对照 / 同步冲突 / 包体积
+        # 档位与网页版对照 /
+        # 控件来源（该有的原生控件必须在、自绘控件不许复活、配色对齐主色）/
+        # 同步冲突 / 包体积
         - node scripts/check.js

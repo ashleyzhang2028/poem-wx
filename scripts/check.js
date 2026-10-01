@@ -455,7 +455,13 @@ pages.forEach((p) => {
   const stack = [];
   const tagRe = /<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g;
   let m;
-  const VOID = ["image", "input", "import", "include", "wxs", "icon", "progress", "slot", "canvas"];
+  // 自闭合（无子节点）的原生标签，写不写 "/" 都不该进配平栈。
+  // checkbox / radio / switch / slider 这四个是这轮加进来的：漏一个，
+  // 后面所有闭合都会被判成不配平 —— 报错位置离真正的错处很远，极难查。
+  const VOID = [
+    "image", "input", "import", "include", "wxs", "icon",
+    "progress", "slot", "canvas", "checkbox", "radio", "switch", "slider"
+  ];
   let balanced = true;
   while ((m = tagRe.exec(wxml))) {
     const closing = m[1] === "/";
@@ -832,7 +838,10 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   ok("管理页不写本机档位（wxml 也没有改档卡片）", adminWxml.indexOf("改本机层级") < 0);
   ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
   ok("服务端没就绪时如实说改不了", adminLib.indexOf("改不了") >= 0);
-  ok("管理页区分「能改」与「只读」", adminWxml.indexOf("canWrite") >= 0);
+  // 能改的给原生按钮，改不了的写「只读」—— 判定在数据层，模板不再自己拼三元
+  ok("管理页区分「能改」与「只读」",
+    adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
+  ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
   ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
   ok("管理页把每条能力都摆出来", E.CAP_KEYS.every((k) => adminJs.indexOf('"' + k + '"') >= 0),
     E.CAP_KEYS.filter((k) => adminJs.indexOf('"' + k + '"') < 0).join(", "));
@@ -911,6 +920,32 @@ const remoteMod = require(path.join(ROOT, "utils", "remote.js"));
 ok("未配后端：configured 为假", remoteMod.configured() === false);
 ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
+
+/**
+ * adminReady() 的判据是**会话里的角色**，不是「配了 baseUrl」。
+ *
+ * 这一条曾经写错过一次：写成 `auth.isAdmin`（少一对括号）。
+ * 本文件里 `auth()` 是「读 auth 存储域」的另一个函数，于是表达式恒为 undefined；
+ * 而未配后端时被 `configured() &&` 短路掉，ReferenceError / undefined 都见不着 ——
+ * 本地全绿，一配后端就「谁都不是管理员」，管理页永久只读
+ * （反过来写成 `a.isAdmin` 就是「配了后端即成管理员」，更糟）。
+ *
+ * 所以这里必须**配了后端的那一遍也走**。只验「未配后端」等于没验。
+ */
+{
+  const authMod = require(path.join(ROOT, "utils", "auth.js"));
+  authMod.configure({ baseUrl: "https://example.invalid" });
+  ok("配了后端也不会自动成管理员", remoteMod.adminReady() === false && authMod.isAdmin() === false);
+
+  store.write(store.KEYS.auth, { baseUrl: "https://example.invalid", accessToken: "t", role: "user" });
+  ok("普通用户读不到名录", remoteMod.adminReady() === false);
+
+  store.write(store.KEYS.auth, { baseUrl: "https://example.invalid", accessToken: "t", role: "admin" });
+  ok("owner / admin 才认管理接口", remoteMod.adminReady() === true);
+
+  authMod.configure({ baseUrl: "" });
+  ok("撤掉 baseUrl 又回到不可用", remoteMod.adminReady() === false);
+}
 ok(
   "契约路径齐全",
   !!(remoteMod.PATHS.login &&
@@ -985,7 +1020,137 @@ ok("全文索引不在主包路径", !fs.existsSync(path.join(dataDir, "idx.json
 const dupFile = path.join(dataDir, "books", "search.json");
 ok("索引没有多余的全站副本", !fs.existsSync(dupFile), "search.json 与各集子索引重复");
 
+/* ---------- 7.7 交互控件必须是小程序自有的 ---------- */
+
+/**
+ * 这一节的由来，是一句要求：「所有设置、选项、输入框、按钮尽量用小程序自有控件，
+ * 顶多是色彩搭配适配跬步风格」。
+ *
+ * 要求写在 Issue 里，没人会每次改页面时回来读它，所以把它变成会红的检查。
+ *
+ * 两类哨兵：
+ *   A. 单选 / 多选 / 开关 / 滑动条 / 选择 / 输入框 必须是原生标签；
+ *   B. 曾经用来自绘这些控件的类名（seg-item / chip / opt / tier-card …）不许复活
+ *      —— 类名还在，就说明有人又把 <view bindtap> 写回来了。
+ *
+ * 只查「类名像交互控件」的那些。正文、卡片、列表行、纯展示标签不在其列：
+ * 那些不是控件，替换成原生标签只会把语义搞坏（<button> 包整首诗？）。
+ */
+const NATIVE_TAGS = ["radio", "radio-group", "checkbox", "checkbox-group", "switch", "slider", "picker"];
+
+/**
+ * 自绘交互控件的指纹：类名 + 事件的组合。
+ * 只按类名判会误伤纯展示元素（比如 .tag 是标签、.char-n 是字数），
+ * 所以这里要求它同时挂着 tap 事件才算「自绘控件」。
+ */
+const SELF_MADE = [
+  { cls: "seg-item", why: "自绘分段控件" },
+  { cls: "chip", why: "自绘可选项" },
+  { cls: "opt-check", why: "自绘勾选标记" },
+  { cls: "algo-head", why: "自绘可选项" },
+  { cls: "tier-check", why: "自绘勾选标记" },
+  { cls: "tier-chip", why: "自绘档位按钮" },
+  { cls: "prov-check", why: "自绘单选项" },
+  { cls: "sp-btn", why: "自绘播放按钮" }
+];
+
+/** 判定用：「某个会被点击的元素上，挂着自绘控件的类名」 */
+function scanSelfMadeControls(src) {
+  const hits = [];
+  const re = /<(view|text)\b([^>]*)>/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const attrs = m[2];
+    if (!/bindtap|catchtap/.test(attrs)) continue;
+    const clsM = /class="([^"]*)"/.exec(attrs);
+    if (!clsM) continue;
+    const cls = clsM[1];
+    SELF_MADE.forEach((s) => {
+      if (new RegExp("(^|[\\s{])" + s.cls + "([\\s}]|$)").test(cls)) {
+        hits.push(s.why + "（." + s.cls + "）");
+      }
+    });
+  }
+  return hits;
+}
+
+// A. 用户要选的每一件事，都得有原生控件兜着
+/**
+ * 「本页必须出现哪个原生控件」—— 缺了就是那个能力在界面上没控件可用。
+ *
+ * 管理页不在此列：它这版没有「选一个档位」的控件了 —— 改档与改角色都走原生
+ * showActionSheet（一次点击、一次选择，选完就落）。那是**系统**的控件，
+ * 比页面里摆一排按钮更原生，所以它有 B 条守着，不需要 A 条。
+ */
+const NEEDS_NATIVE = {
+  "packages/settings/recite/recite": ["radio-group"],
+  "packages/settings/general/general": ["radio-group", "slider", "switch"],
+  "packages/settings/reader/reader": ["radio-group", "switch"],
+  "pages/list/list": ["radio-group"],
+  "pages/search/search": ["radio-group"],
+  "pages/reader/reader": ["radio-group", "slider"],
+  "packages/game/quiz/quiz": ["checkbox-group", "picker"],
+  "packages/game/exam/exam": ["checkbox-group", "picker"],
+  "packages/game/feihua/feihua": ["radio-group"],
+  "packages/game/index/index": ["radio-group"]
+};
+
+Object.keys(NEEDS_NATIVE).forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  NEEDS_NATIVE[p].forEach((tag) => {
+    ok("用原生控件 " + tag + " " + p, wxml.indexOf("<" + tag) >= 0, "找不到 <" + tag + ">");
+  });
+});
+
+// B. 不许再用自绘控件
+const selfMadeHits = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  scanSelfMadeControls(wxml).forEach((h) => selfMadeHits.push(p + " → " + h));
+});
+ok("没有自绘的交互控件", selfMadeHits.length === 0, selfMadeHits.slice(0, 8).join("; "));
+
+// 自绘控件的老类名不许在样式表里复活 —— 留着就是在等下一次被用上
+const deadCostume = ["seg-item", "chip"];
+const revived = [];
+pages.forEach((p) => {
+  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+  deadCostume.forEach((c) => {
+    if (new RegExp("\\." + c + "\\s*\\{").test(wxss)) revived.push(p + " → ." + c);
+  });
+});
+ok("自绘控件的样式已清掉", revived.length === 0, revived.join("; "));
+
+// 全局样式表里也不许再留一份 .seg / .seg-item
+{
+  const globalWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  ok("全局不再提供自绘分段控件样式",
+    !/\.seg\s*\{/.test(globalWxss) && !/\.seg-item\s*\{/.test(globalWxss));
+}
+
+// 原生控件的配色：开关与滑块的 color 必须是那身雨过天青
+const COLOR_TAGS = ["switch", "slider"];
+const badColor = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  COLOR_TAGS.forEach((tag) => {
+    const re = new RegExp("<" + tag + "\\b[^>]*>", "g");
+    let m;
+    while ((m = re.exec(wxml))) {
+      const attrs = m[0];
+      const isSlider = tag === "slider";
+      const key = isSlider ? "activeColor" : "color";
+      if (attrs.indexOf(key + '="#2f6055"') < 0) badColor.push(p + " → <" + tag + "> 缺 " + key);
+      if (isSlider && attrs.indexOf('block-color="#2f6055"') < 0) {
+        badColor.push(p + " → <slider> 缺 block-color");
+      }
+    }
+  });
+});
+ok("原生控件的配色都对齐主色 #2f6055", badColor.length === 0, badColor.join("; "));
+
 /* ---------- 汇总 ---------- */
+
 console.log("");
 console.log("检查 " + checks + " 项，失败 " + fails + " 项");
 process.exit(fails ? 1 : 0);

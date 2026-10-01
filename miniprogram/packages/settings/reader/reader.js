@@ -5,9 +5,9 @@ const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 
 const MODES = [
-  { key: "off", label: "不注音" },
-  { key: "rare", label: "生字" },
-  { key: "all", label: "全文" }
+  { key: "off", label: "不注音", desc: "正文不带拼音" },
+  { key: "rare", label: "生字", desc: "只给生僻字与多音字标音" },
+  { key: "all", label: "全文", desc: "逐字标音" }
 ];
 
 const RATES = [
@@ -29,7 +29,6 @@ Page({
     speakReady: false,
     speakState: "denied",
     speakReason: "",
-    speakProvider: "",
     locked: false
   },
 
@@ -45,7 +44,6 @@ Page({
     const pr = pinyin.readiness();
     const prOn = pr.usable && entitlement.can("pinyin");
     const sr = speech.readiness();
-    const sp = speech.prefs();
 
     this.setData({
       pinyin: prOn ? settings.pinyin : "off",
@@ -61,8 +59,7 @@ Page({
       speakVisible: sr.visible,
       speakReady: sr.usable,
       speakState: sr.state,
-      speakReason: sr.reason,
-      speakProvider: sp.provider || "auto"
+      speakReason: sr.reason
     });
   },
 
@@ -71,13 +68,13 @@ Page({
   },
 
   onMode(e) {
-    const mode = e.currentTarget.dataset.k;
+    const mode = e.detail.value;
     if (!pinyin.setMode(mode)) return;
     this.setData({ pinyin: mode });
   },
 
   onRate(e) {
-    const speechRate = Number(e.currentTarget.dataset.k);
+    const speechRate = Number(e.detail.value);
     store.saveSettings({ speechRate });
     speech.savePrefs({ rate: speechRate });
     this.setData({ speechRate });
@@ -89,20 +86,12 @@ Page({
     this.setData({ speechAutoNext });
   },
 
-  onProvider(e) {
-    const provider = e.currentTarget.dataset.k;
-    speech.savePrefs({ provider });
-    this.setData({ provider }, () => this.onShow());
-  },
-
   onSpeakTest() {
     const sr = speech.readiness();
+    // 就绪判定在上游做过一遍（不就绪时这个按钮根本不渲染）。
+    // 这里只兜住「刚好在这一刻掉线」：给一句人话，不是静默失败。
     if (!sr.usable) {
-      wx.showModal({
-        title: sr.state === "denied" ? "朗读未授权" : "朗读通道待接入",
-        content: sr.reason,
-        showCancel: false
-      });
+      wx.showToast({ title: sr.reason || "朗读通道没就绪", icon: "none", duration: 2500 });
       return;
     }
 

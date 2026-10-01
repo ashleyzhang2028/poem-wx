@@ -8,17 +8,23 @@
   <block wx:else>
   <view class="card">
     <view class="card-title">正文对齐</view>
-    <view class="seg">
-      <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
-      <view class="seg-item {{align === 'center' ? 'active' : ''}}" data-a="center" bindtap="onAlign">居中</view>
-    </view>
+    <radio-group class="native-group" bindchange="onAlign">
+      <label class="native-label" wx:for="{{aligns}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
   </view>
 
   <view class="card">
     <view class="card-title">正文字号</view>
-    <view class="seg">
-      <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
-      <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
+    <!-- 字号本来就是连续的，用原生滑动条比「A－ / A＋」两个按钮更贴手感 -->
+    <view class="font-row">
+      <text class="font-a small">A</text>
+      <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
+              block-size="22" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+              bindchanging="onFontSlide" bindchange="onFontSlide" />
+      <text class="font-a big">A</text>
     </view>
     <text class="hint sample" style="font-size:{{30 + fontSize * 3}}rpx">床前明月光，疑是地上霜。</text>
   </view>
@@ -29,7 +35,7 @@
         <text class="row-title">背完自动下一首</text>
         <text class="row-sub">在详情页选完掌握程度后直接跳下一篇</text>
       </view>
-      <switch checked="{{autoNext}}" bindchange="onAutoNext" color="#2f6055" />
+      <switch checked="{{autoNext}}" color="#2f6055" bindchange="onAutoNext" />
     </view>
   </view>
 
