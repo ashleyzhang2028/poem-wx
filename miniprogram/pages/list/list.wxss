@@ -1,0 +1,85 @@
+.index-card {
+  padding: 24rpx 28rpx;
+}
+
+.index-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.index-toggle {
+  font-size: 26rpx;
+  color: var(--green);
+}
+
+.index-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+  border-top: 1rpx solid var(--line-2);
+}
+
+.index-cell {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 12rpx 16rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.index-name {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.index-count {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  padding-left: 12rpx;
+}
+
+.filter-seg {
+  margin: 20rpx 0;
+}
+
+.count {
+  padding: 0 4rpx 12rpx;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid var(--line-2);
+  margin-bottom: 4rpx;
+}
+
+.group-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.group-count {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  padding-left: 12rpx;
+}
+
+.seq {
+  width: 56rpx;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  flex: none;
+}
+
+.read-dot {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  padding-right: 12rpx;
+}

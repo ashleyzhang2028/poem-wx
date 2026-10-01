@@ -1,0 +1,52 @@
+.group-card {
+  background: var(--card);
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.gc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gc-name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.gc-desc {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.gc-books {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--line-2);
+}
+
+.gc-books .tag {
+  margin: 0 12rpx 12rpx 0;
+}
+
+.back-bar {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: var(--green);
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.back-arrow {
+  font-size: 40rpx;
+  padding-right: 8rpx;
+  line-height: 1;
+}

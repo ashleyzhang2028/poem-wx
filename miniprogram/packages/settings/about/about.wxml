@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="card brand">
+    <text class="brand-name">跬步</text>
+    <text class="brand-sub">不积跬步，无以至千里</text>
+    <text class="brand-ver">v{{version}}</text>
+  </view>
+
+  <view class="card">
+    <view class="row">
+      <text class="row-title">已学篇目</text>
+      <text class="stat">{{stats.learned}}</text>
+    </view>
+    <view class="row">
+      <text class="row-title">已掌握</text>
+      <text class="stat">{{stats.mastered}}</text>
+    </view>
+    <view class="row">
+      <text class="row-title">已读篇目</text>
+      <text class="stat">{{stats.readCount}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row" bindtap="onTerms">
+      <view class="row-main"><text class="row-title">用户协议</text></view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" bindtap="onPrivacy">
+      <view class="row-main"><text class="row-title">隐私说明</text></view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" bindtap="onCopyFeedback">
+      <view class="row-main"><text class="row-title">意见反馈</text><text class="row-sub">复制联系邮箱</text></view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <text class="hint foot">语料与界面取自 poem 网页版，同一套宋代传统色与宋体排版。</text>
+</view>

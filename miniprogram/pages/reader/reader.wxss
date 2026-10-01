@@ -1,0 +1,170 @@
+.poem-card {
+  padding-bottom: 16rpx;
+}
+
+.poem-head {
+  text-align: center;
+  padding: 8rpx 0 24rpx;
+}
+
+.poem-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 44rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.poem-meta {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  margin-top: 12rpx;
+}
+
+.poem-source {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.toolbar .seg {
+  flex: 1;
+}
+
+.font-seg,
+.read-seg {
+  flex: 0 0 auto;
+}
+
+.poem-body {
+  padding: 36rpx 8rpx 24rpx;
+  font-family: var(--font-poem);
+  line-height: 2;
+}
+
+.poem-body.align-center {
+  text-align: center;
+}
+
+.poem-body.align-left {
+  text-align: left;
+}
+
+.poem-line {
+  display: block;
+  font-size: 36rpx;
+  color: var(--ink);
+}
+
+.poem-body.size--2 .poem-line { font-size: 30rpx; }
+.poem-body.size--1 .poem-line { font-size: 33rpx; }
+.poem-body.size-1 .poem-line { font-size: 39rpx; }
+.poem-body.size-2 .poem-line { font-size: 42rpx; }
+.poem-body.size-3 .poem-line { font-size: 46rpx; }
+.poem-body.size-4 .poem-line { font-size: 52rpx; }
+
+.trans-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trans-toggle {
+  font-size: 26rpx;
+  color: var(--green);
+}
+
+.trans-text {
+  display: block;
+  font-size: 29rpx;
+  color: var(--ink-2);
+  line-height: 1.9;
+  margin-top: 16rpx;
+}
+
+.trans-src {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--line-2);
+}
+
+.recite-status {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.recite-stage {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  width: 260rpx;
+  flex: none;
+}
+
+.mastery-bar {
+  flex: 1;
+  height: 12rpx;
+  border-radius: 6rpx;
+  background: var(--line-2);
+  overflow: hidden;
+}
+
+.mastery-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 6rpx;
+  transition: width .3s;
+}
+
+.actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.act {
+  flex: 1;
+  height: 100rpx;
+  line-height: 100rpx;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  font-size: 30rpx;
+  border: 1rpx solid var(--line);
+  background: var(--bg-soft);
+  color: var(--ink-2);
+}
+
+.act.bad {
+  color: var(--red);
+  background: var(--red-light);
+  border-color: #ecd2cd;
+}
+
+.act.fuzzy {
+  color: var(--amber);
+  background: var(--amber-light);
+  border-color: #ecd9c0;
+}
+
+.act.good {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.hint-line {
+  display: block;
+  text-align: center;
+  padding-top: 24rpx;
+}

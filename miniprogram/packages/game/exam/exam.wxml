@@ -1,0 +1,53 @@
+<view class="page">
+  <block wx:if="{{stage === 'setup'}}">
+    <view class="card">
+      <view class="card-title">考试范围</view>
+      <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
+        <view class="picker">{{scopes[scopeIndex].name}} ›</view>
+      </picker>
+      <text class="hint note">共 {{count}} 题，限时 20 分钟，交卷后统一批。题目就地取材自所选集子，「接下句 / 认作者 / 填朝代」三种形态随机出。</text>
+    </view>
+    <button class="btn primary block" bindtap="onStart">开始考试</button>
+  </block>
+
+  <block wx:elif="{{stage === 'running'}}">
+    <view class="exam-bar">
+      <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
+      <text class="exam-timer">{{remainText}}</text>
+    </view>
+
+    <view class="card">
+      <text class="stem">{{current.stem}}</text>
+      <text class="hint stem-sub">出自《{{current.title}}》</text>
+    </view>
+
+    <view class="options">
+      <view class="option"
+            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick"
+            class="{{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}">
+        {{item}}
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="card result">
+      <text class="score">{{score}}</text>
+      <text class="score-k">分</text>
+      <text class="hint">答对 {{correct}} / {{questions.length}} 题</text>
+    </view>
+
+    <view class="card" wx:if="{{wrong.length}}">
+      <view class="card-title">错题</view>
+      <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
+        <text class="wrong-stem">{{item.stem}}</text>
+        <text class="wrong-line">正确答案：{{item.answer}}</text>
+        <text class="wrong-line picked-line">你选的：{{item.picked}}</text>
+      </view>
+    </view>
+
+    <button class="btn primary block" bindtap="onAgain">再考一次</button>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

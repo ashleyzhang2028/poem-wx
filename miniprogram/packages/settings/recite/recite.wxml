@@ -1,0 +1,45 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">背诵范围</view>
+    <view class="seg">
+      <view class="seg-item {{term === 1 ? 'active' : ''}}" data-v="1" bindtap="onTerm">上学期</view>
+      <view class="seg-item {{term === 2 ? 'active' : ''}}" data-v="2" bindtap="onTerm">下学期</view>
+    </view>
+    <view class="chips">
+      <text class="chip {{grade === item.value ? 'active' : ''}}" wx:for="{{grades}}" wx:key="value"
+            data-v="{{item.value}}" bindtap="onGrade">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">取诗范围</view>
+    <view class="opt" wx:for="{{scopes}}" wx:key="key" data-k="{{item.key}}" bindtap="onScope">
+      <text class="opt-label">{{item.label}}</text>
+      <text class="opt-check" wx:if="{{scope === item.key}}">✓</text>
+    </view>
+    <text class="hint pool-hint">这个范围里有 {{poolSize}} 首</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">每日首数</view>
+    <view class="seg">
+      <view class="seg-item {{dailyCount === item ? 'active' : ''}}" wx:for="{{counts}}" wx:key="*this"
+            data-v="{{item}}" bindtap="onCount">{{item}} 首</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">复习算法</view>
+    <view class="algo {{algo === item.key ? 'active' : ''}}" wx:for="{{algos}}" wx:key="key"
+          data-k="{{item.key}}" bindtap="onAlgo">
+      <view class="algo-head">
+        <text class="algo-name">{{item.name}}</text>
+        <text class="algo-years">{{item.years}}</text>
+      </view>
+      <text class="algo-blurb">{{item.blurb}}</text>
+    </view>
+    <text class="hint pool-hint">换算法不清进度，已有记录会按新算法折算。</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

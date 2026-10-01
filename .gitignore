@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.log
+
+# 微信开发者工具的本地私有配置
+miniprogram/project.private.config.json
+
+# 语料由 scripts/build-data.js 从 poem 仓库生成，不入库
+miniprogram/data/

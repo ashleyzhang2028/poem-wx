@@ -1,0 +1,47 @@
+/* 设计令牌：取自 poem 网页版 css/style.css 的 :root，宋代传统色。
+   小程序没有 CSS 变量继承问题，但 WXSS 自定义属性在 app.wxss 全局生效，
+   这里只做一处声明，页面不再各自抄一份。 */
+page {
+  --bg: #f6f1e3;            /* 素绢 */
+  --bg-soft: #fcfaf3;
+  --card: rgba(255, 254, 250, .90);
+  --card-2: #f7f1e1;
+
+  --green: #2f6055;         /* 雨过天青 · 主色 */
+  --green-dark: #234b42;
+  --green-light: rgba(47, 96, 85, .09);
+  --celadon: #4f7a6e;
+
+  --amber: #a55c19;         /* 琥珀 · 复习 */
+  --amber-light: #f7e6d0;
+  --red: #a83b32;           /* 朱砂 · 忘记 */
+  --red-light: #f7e5e1;
+  --blue: #3d6379;          /* 天水碧 */
+  --blue-light: #dee9ef;
+  --gold: #f0cd7c;          /* 缃色 · 进度环 */
+
+  --ink: #241d18;
+  --ink-2: #6b5c4d;
+  --ink-3: #8a7a68;
+  --line: #d6c8ad;
+  --line-2: #ece3d2;
+
+  --radius: 24rpx;
+  --radius-sm: 16rpx;
+  --radius-md: 20rpx;
+
+  --shadow: 0 4rpx 28rpx rgba(74, 58, 38, .10);
+  --shadow-up: 0 -4rpx 32rpx rgba(74, 58, 38, .12);
+
+  /* 宋体排正文，黑体排界面 —— 与网页版同一套字体口径。
+     小程序端中文不外挂字体文件，落到系统自带的宋/黑体。 */
+  --font-poem: "Songti SC", "STSong", "SimSun", serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 30rpx;
+  line-height: 1.6;
+}

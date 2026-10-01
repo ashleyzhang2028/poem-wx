@@ -1,0 +1,8 @@
+.sample {
+  display: block;
+  font-family: var(--font-poem);
+  text-align: center;
+  padding-top: 24rpx;
+  line-height: 2;
+  color: var(--ink);
+}

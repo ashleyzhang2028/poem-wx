@@ -1,0 +1,56 @@
+<view class="page reader">
+  <view class="card poem-card">
+    <view class="poem-head">
+      <text class="poem-title">{{title}}</text>
+      <text class="poem-meta">{{dynasty}} · {{author}}</text>
+      <text class="poem-source" wx:if="{{source}}">{{source}}</text>
+    </view>
+
+    <view class="toolbar">
+      <view class="seg">
+        <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
+        <view class="seg-item {{align === 'center' ? 'active' : ''}}" data-a="center" bindtap="onAlign">居中</view>
+      </view>
+      <view class="seg font-seg">
+        <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
+        <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
+      </view>
+      <view class="seg read-seg">
+        <view class="seg-item" bindtap="onSpeak">朗读</view>
+      </view>
+    </view>
+
+    <view class="poem-body align-{{align}} size-{{fontSize}}">
+      <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item.t}}</text>
+    </view>
+  </view>
+
+  <view class="card trans-card" wx:if="{{hasTranslation}}">
+    <view class="trans-head" bindtap="onToggleTranslation">
+      <text class="card-title">白话译文</text>
+      <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
+    </view>
+    <view wx:if="{{showTranslation}}">
+      <text class="trans-text">{{translation}}</text>
+      <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
+    </view>
+  </view>
+
+  <view class="card recite-card">
+    <view class="recite-status">
+      <text class="recite-stage">{{stage}}</text>
+      <view class="mastery-bar">
+        <view class="mastery-fill" style="width:{{mastery}}%"></view>
+      </view>
+    </view>
+
+    <view class="actions">
+      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
+            data-r="{{item.key}}" bindtap="onResult">{{item.label}}</view>
+    </view>
+
+    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

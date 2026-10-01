@@ -1,0 +1,101 @@
+.home {
+  padding-top: 24rpx;
+}
+
+.today {
+  background: linear-gradient(160deg, #fffefb 0%, var(--bg-soft) 100%);
+}
+
+.today-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.today-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.today-sub {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.today-start {
+  margin-top: 28rpx;
+}
+
+/* 进度环：纯 CSS 锥形渐变，省掉 canvas 与 svg 资源 */
+.ring {
+  position: relative;
+  width: 128rpx;
+  height: 128rpx;
+  flex: none;
+}
+
+.ring-track,
+.ring-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.ring-track {
+  background: var(--line-2);
+}
+
+.ring-fill {
+  background: conic-gradient(var(--gold) calc(var(--p) * 1%), transparent 0);
+}
+
+.ring::after {
+  content: "";
+  position: absolute;
+  inset: 14rpx;
+  border-radius: 50%;
+  background: #fffefb;
+  border: 1rpx solid var(--line-2);
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  z-index: 1;
+}
+
+.row-line {
+  display: flex;
+  align-items: center;
+}
+
+.row-line .row-title {
+  flex: 0 1 auto;
+  margin-right: 12rpx;
+}
+
+.row-state {
+  width: 48rpx;
+  text-align: right;
+  color: var(--line);
+  font-size: 36rpx;
+}
+
+.row-state.done {
+  color: var(--green);
+  font-size: 30rpx;
+}
+
+.foot {
+  text-align: center;
+  padding: 16rpx 0 40rpx;
+}

@@ -1,0 +1,121 @@
+.picker {
+  font-size: 30rpx;
+  color: var(--green);
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.note {
+  display: block;
+  padding-top: 20rpx;
+  line-height: 1.8;
+}
+
+.exam-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4rpx 20rpx;
+}
+
+.exam-progress {
+  font-size: 26rpx;
+  color: var(--ink-2);
+}
+
+.exam-timer {
+  font-size: 30rpx;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.stem {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 38rpx;
+  color: var(--ink);
+  line-height: 1.9;
+  text-align: center;
+}
+
+.stem-sub {
+  display: block;
+  text-align: center;
+  padding-top: 16rpx;
+}
+
+.options {
+  margin-top: 8rpx;
+}
+
+.option {
+  background: var(--card);
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
+  padding: 28rpx;
+  margin-bottom: 16rpx;
+  font-size: 30rpx;
+  color: var(--ink);
+  text-align: center;
+}
+
+.option.right {
+  border-color: var(--green);
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.option.wrong {
+  border-color: var(--red);
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.result {
+  text-align: center;
+  padding: 56rpx 32rpx;
+}
+
+.score {
+  font-size: 96rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.score-k {
+  font-size: 28rpx;
+  color: var(--ink-3);
+  padding-left: 8rpx;
+}
+
+.result .hint {
+  display: block;
+  margin-top: 16rpx;
+}
+
+.wrong {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.wrong:last-child {
+  border-bottom: none;
+}
+
+.wrong-stem {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 30rpx;
+  color: var(--ink);
+  margin-bottom: 10rpx;
+}
+
+.wrong-line {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.picked-line {
+  color: var(--red);
+}

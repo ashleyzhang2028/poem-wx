@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">正文对齐</view>
+    <view class="seg">
+      <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
+      <view class="seg-item {{align === 'center' ? 'active' : ''}}" data-a="center" bindtap="onAlign">居中</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">正文字号</view>
+    <view class="seg">
+      <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
+      <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
+    </view>
+    <text class="hint sample" style="font-size:{{30 + fontSize * 3}}rpx">床前明月光，疑是地上霜。</text>
+  </view>
+
+  <view class="card">
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">背完自动下一首</text>
+        <text class="row-sub">在详情页选完掌握程度后直接跳下一篇</text>
+      </view>
+      <switch checked="{{autoNext}}" bindchange="onAutoNext" color="#2f6055" />
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

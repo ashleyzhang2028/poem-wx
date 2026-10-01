@@ -1,0 +1,9 @@
+.note {
+  display: block;
+  padding-top: 16rpx;
+  line-height: 1.8;
+}
+
+.test-btn {
+  margin-top: 20rpx;
+}

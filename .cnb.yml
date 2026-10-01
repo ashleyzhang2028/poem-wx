@@ -1,0 +1,9 @@
+$:
+  # 任意分支的推送都跑一遍自检，语料在 CI 里现生成，不依赖本地临时目录
+  "**":
+    - name: 自检
+      image: node:20
+      script:
+        - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        - node scripts/check.js

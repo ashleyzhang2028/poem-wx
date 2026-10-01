@@ -1,0 +1,14 @@
+{
+  "name": "kuibu-poem-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "description": "跬步 · 古诗词背诵微信小程序（poem 网页版的小程序移植）",
+  "scripts": {
+    "build:data": "node scripts/build-data.js",
+    "check": "node scripts/check.js",
+    "test": "node scripts/check.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

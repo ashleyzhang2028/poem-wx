@@ -1,0 +1,46 @@
+<view class="page">
+  <view class="card numbers">
+    <view class="num">
+      <text class="num-v">{{overview.learned}}</text>
+      <text class="num-k">已学</text>
+    </view>
+    <view class="num">
+      <text class="num-v">{{overview.mastered}}</text>
+      <text class="num-k">已掌握</text>
+    </view>
+    <view class="num">
+      <text class="num-v">{{overview.dueToday}}</text>
+      <text class="num-k">今日到期</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{backlogCount}}">
+    <text class="hint warn">有 {{backlogCount}} 首已经逾期，今天背的时候会优先排进来。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">未来七天</view>
+    <view class="day" wx:for="{{days}}" wx:key="label">
+      <view class="day-head">
+        <text class="day-label">{{item.label}}</text>
+        <text class="day-count">{{item.count}} 首</text>
+      </view>
+      <view class="day-items" wx:if="{{item.items.length}}">
+        <text class="day-item" wx:for="{{item.items}}" wx:for-item="p" wx:key="id">{{p.title}}</text>
+      </view>
+    </view>
+    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
+  </view>
+
+  <view class="card" wx:if="{{stageRows.length}}">
+    <view class="card-title">记忆阶段</view>
+    <view class="stage" wx:for="{{stageRows}}" wx:key="name">
+      <text class="stage-name">{{item.name}}</text>
+      <text class="stage-count">{{item.count}}</text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!overview.learned}}">还没有背诵记录，去首页开始第一首</view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,18 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">注音方式</view>
+    <view class="seg">
+      <view class="seg-item {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
+            data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
+    </view>
+    <text class="hint note">「生字」只给生僻字标音，「全文」逐字标。注音依赖读音表，接入后生效。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">朗读</view>
+    <text class="hint note">网页版用系统语音合成，零音频文件、断网可用。小程序端要接入 TTS 服务才能朗读，接入前这一项保持不可用。</text>
+    <button class="btn ghost test-btn" bindtap="onSpeakTest">试听一声</button>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

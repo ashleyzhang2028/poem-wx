@@ -1,0 +1,34 @@
+<view class="page">
+  <view class="search">
+    <text class="search-icon">⌕</text>
+    <input placeholder="搜篇名 / 作者 / 朝代 / 出处" value="{{keyword}}" bindinput="onInput"
+           confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
+    <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+    <text class="go" bindtap="doSearch">搜索</text>
+  </view>
+
+  <view class="seg scope-seg">
+    <view class="seg-item {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key"
+          data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
+  </view>
+
+  <view class="card" wx:if="{{searched && results.length}}">
+    <view class="row" wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+      <view class="row-main">
+        <text class="row-title">{{item.title}}</text>
+        <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.bookName}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{searched && !results.length}}">没有匹配的篇目</view>
+
+  <view class="hot" wx:if="{{!searched}}">
+    <text class="hint">试试</text>
+    <view class="hot-tags">
+      <text class="tag" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
+    </view>
+    <text class="hint hot-note">搜索按篇名 / 作者 / 朝代 / 出处匹配。正文全文检索在下一版接入。</text>
+  </view>
+</view>

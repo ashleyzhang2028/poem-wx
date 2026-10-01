@@ -1,0 +1,217 @@
+@import "styles/tokens.wxss";
+
+/* ---------- 排版 ---------- */
+page {
+  box-sizing: border-box;
+}
+
+view, text, button, input, textarea {
+  box-sizing: border-box;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 24rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8rpx;
+}
+
+.hint {
+  font-size: 25rpx;
+  color: var(--ink-3);
+  line-height: 1.7;
+}
+
+.empty {
+  padding: 80rpx 0;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 28rpx;
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 32rpx;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+  color: var(--ink);
+  font-size: 30rpx;
+  text-align: center;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.btn.danger {
+  color: var(--red);
+  border-color: #ecd2cd;
+  background: #fbeae7;
+}
+
+.btn.block {
+  width: 100%;
+}
+
+.btn[disabled] {
+  opacity: .5;
+}
+
+/* ---------- 分段控件 ---------- */
+.seg {
+  display: flex;
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-soft);
+}
+
+.seg-item {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  padding: 14rpx 8rpx;
+  border-right: 1rpx solid var(--line-2);
+}
+
+.seg-item:last-child {
+  border-right: none;
+}
+
+.seg-item.active {
+  background: var(--green);
+  color: #fff;
+}
+
+/* ---------- 列表行 ---------- */
+.row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  font-family: var(--font-poem);
+  font-size: 32rpx;
+  color: var(--ink);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-sub {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-go {
+  color: var(--line);
+  font-size: 32rpx;
+  padding-left: 16rpx;
+}
+
+/* ---------- 标签 ---------- */
+.tag {
+  display: inline-block;
+  font-size: 22rpx;
+  line-height: 1.5;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  color: var(--green);
+  background: var(--green-light);
+  margin-right: 10rpx;
+}
+
+.tag.amber {
+  color: var(--amber);
+  background: var(--amber-light);
+}
+
+.tag.red {
+  color: var(--red);
+  background: var(--red-light);
+}
+
+.tag.blue {
+  color: var(--blue);
+  background: var(--blue-light);
+}
+
+.tag.ghost {
+  color: var(--ink-3);
+  background: var(--line-2);
+}
+
+/* ---------- 搜索框 ---------- */
+.search {
+  display: flex;
+  align-items: center;
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0 20rpx;
+  height: 76rpx;
+}
+
+.search-icon {
+  color: var(--ink-3);
+  font-size: 28rpx;
+  margin-right: 12rpx;
+}
+
+.search input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+}
+
+/* ---------- 底部安全区垫片 ---------- */
+.safe-bottom {
+  height: calc(24rpx + env(safe-area-inset-bottom));
+}

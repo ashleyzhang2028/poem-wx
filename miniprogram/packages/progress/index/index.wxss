@@ -1,0 +1,86 @@
+.numbers {
+  display: flex;
+}
+
+.num {
+  flex: 1;
+  text-align: center;
+}
+
+.num-v {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.num-k {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.warn {
+  color: var(--amber);
+}
+
+.day {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.day:last-child {
+  border-bottom: none;
+}
+
+.day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-label {
+  font-size: 28rpx;
+  color: var(--ink);
+}
+
+.day-count {
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
+.day-items {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.day-item {
+  font-family: var(--font-poem);
+  font-size: 25rpx;
+  color: var(--ink-2);
+  margin: 0 20rpx 8rpx 0;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.stage:last-child {
+  border-bottom: none;
+}
+
+.stage-name {
+  font-size: 27rpx;
+  color: var(--ink-2);
+}
+
+.stage-count {
+  font-size: 27rpx;
+  color: var(--green);
+}
