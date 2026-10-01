@@ -1,5 +1,84 @@
-.numbers {
+/* ---------- 总览 ---------- */
+.overview {
+  padding: 32rpx 28rpx 24rpx;
+}
+
+.ov-head {
   display: flex;
+  align-items: center;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+/* 掌握度环：与首页那个进度环同一套做法（纯 CSS 锥形渐变），
+   两个环放在一起要长得像，用户才会认成同一件事 */
+.ov-ring {
+  position: relative;
+  width: 112rpx;
+  height: 112rpx;
+  flex: none;
+}
+
+.ov-ring-track,
+.ov-ring-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.ov-ring-track {
+  background: var(--line-2);
+}
+
+.ov-ring-fill {
+  background: conic-gradient(var(--celadon) calc(var(--p) * 1%), transparent 0);
+  transition: background .35s ease;
+}
+
+.ov-ring::after {
+  content: "";
+  position: absolute;
+  inset: 12rpx;
+  border-radius: 50%;
+  background: #fffefb;
+  border: 1rpx solid var(--line-2);
+}
+
+.ov-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25rpx;
+  color: var(--ink-2);
+  z-index: 1;
+}
+
+.ov-main {
+  padding-left: 24rpx;
+  min-width: 0;
+}
+
+.ov-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 1rpx;
+}
+
+.ov-sub {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+.ov-row {
+  display: flex;
+  padding-top: 24rpx;
 }
 
 .num {
@@ -9,22 +88,30 @@
 
 .num-v {
   display: block;
-  font-size: 48rpx;
+  font-size: 44rpx;
   font-weight: 600;
   color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.num-v.due {
+  color: var(--amber);
 }
 
 .num-k {
   display: block;
   font-size: 24rpx;
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: 6rpx;
 }
 
 .warn {
+  display: block;
   color: var(--amber);
+  padding-top: 20rpx;
 }
 
+/* ---------- 未来七天 ---------- */
 .day {
   padding: 20rpx 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -42,12 +129,34 @@
 
 .day-label {
   font-size: 28rpx;
-  color: var(--ink);
+  color: var(--ink-2);
+}
+
+/* 「今天」那一行给主色：七天里只要一眼认得出哪行是今天 */
+.day-label.today {
+  color: var(--green);
+  font-weight: 600;
 }
 
 .day-count {
   font-size: 24rpx;
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-bar {
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: var(--line-2);
+  overflow: hidden;
+  margin-top: 12rpx;
+}
+
+.day-bar-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  background: var(--gold);
+  transition: width .3s;
 }
 
 .day-items {
@@ -63,6 +172,7 @@
   margin: 0 20rpx 8rpx 0;
 }
 
+/* ---------- 记忆阶段 ---------- */
 .stage {
   display: flex;
   align-items: center;
@@ -83,14 +193,5 @@
 .stage-count {
   font-size: 27rpx;
   color: var(--green);
-}
-
-/* 未登录时的那张卡 */
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
+  font-variant-numeric: tabular-nums;
 }

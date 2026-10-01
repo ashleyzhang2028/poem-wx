@@ -1,9 +1,5 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{locked}}">
-    <view class="card-title">登录后可用</view>
-    <text class="hint note">全站搜索要微信登录之后才能用。</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{locked}}" title="搜索要登录" note="全站搜索要微信登录之后才能用 —— 它能搜遍 5575 篇正文，是本机算力在做的事。" mark="寻" />
 
   <block wx:else>
   <view class="search">
@@ -30,7 +26,12 @@
     </label>
   </radio-group>
 
-  <text class="hint count" wx:if="{{searching}}">正在翻正文…</text>
+  <!-- 结果统计：搜完给一句「命中几条、在哪儿搜的」，
+       不然一屏结果看完也不知道是不是全量 -->
+  <view class="result-bar" wx:if="{{searched && results.length}}">
+    <text class="result-count">命中 {{results.length}} 篇</text>
+    <text class="hint result-where">{{resultWhere}}</text>
+  </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
     <view class="row" hover-class="row-hover" hover-stay-time="60"
@@ -46,10 +47,14 @@
     </view>
   </view>
 
-  <view class="empty" wx:if="{{searched && !results.length}}">没有匹配的篇目</view>
+  <view class="empty" wx:if="{{searched && !results.length}}">
+    <text class="empty-mark">无</text>
+    <text class="empty-text">「{{keyword}}」没有匹配的篇目</text>
+    <text class="hint empty-tip" wx:if="{{mode === 'index' && fullOn}}">试试切到「正文全文」，正文里的句子也搜得着</text>
+  </view>
 
-  <view class="hot" wx:if="{{!searched && !searching}}">
-    <text class="hint">试试</text>
+  <view class="hot" wx:if="{{!searched}}">
+    <text class="section-label">试试</text>
     <view class="hot-tags">
       <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
     </view>
@@ -57,5 +62,7 @@
       篇名作者搜的是索引字段；正文全文走倒排索引，先定位相关分片再精确定位，不把 23MB 正文读进内存。
     </text>
   </view>
+
+  <view class="safe-bottom"></view>
   </block>
 </view>

@@ -1,13 +1,9 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{!allowed}}">
-    <view class="card-title">题库</view>
-    <text class="hint note">{{reason}}</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{!allowed}}" title="题库" note="{{reason}}" mark="题" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
-      <view class="card-title">出题范围</view>
+      <view class="card-title bar">出题范围</view>
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
         <view class="picker">{{scopes[scopeIndex].name}} ›</view>
       </picker>
@@ -15,7 +11,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title">题型</view>
+      <view class="card-title bar">题型</view>
       <!-- 题型可多选：原生 checkbox，勾选框本身就是平台认识的那个勾选框 -->
       <checkbox-group class="native-group" bindchange="onToggleForm">
         <label class="native-label" wx:for="{{forms}}" wx:key="key">
@@ -67,7 +63,7 @@
     </view>
 
     <view class="card" wx:if="{{wrong.length}}">
-      <view class="card-title">错题</view>
+      <view class="card-title bar">错题</view>
       <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
         <text class="wrong-stem">{{item.stem}}</text>
         <text class="wrong-line">正确答案：{{item.answer}}</text>

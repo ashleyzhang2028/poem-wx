@@ -91,11 +91,14 @@ Page({
       // 用户从分享链接点进来，看到的第一句应该是为什么。
       this.setData({
         locked: true,
-        lockTitle: "登录后可用",
-        lockNote: "这篇要微信登录之后才能打开。登录只为跨设备带走进度与领取档位，不读你的隐私信息。"
+        lockTitle: "这篇要登录",
+        lockNote: "从分享链接直接点进来也一样要微信登录。登录只为两件事：把进度带走、让管理员知道档位发给谁 —— 不读你的隐私信息。"
       });
       return;
     }
+    // 登录了就把锁摘掉。这一行与上面那个分支是一对：
+    // 只设 true 不设 false，等于给所有人上锁 —— 页面永远停在那张卡上
+    if (this.data.locked) this.setData({ locked: false });
     if (!this.loaded) this.loadEntry();
     this.applyReading();
   },

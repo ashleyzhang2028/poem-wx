@@ -9,28 +9,43 @@
   flex: none;
 }
 
-.opt-group {
-  display: flex;
-}
-
 .scope-group {
-  margin: 20rpx 0;
+  margin: 24rpx 0 8rpx;
 }
 
 .mode-group {
-  margin-bottom: 20rpx;
+  margin-bottom: 16rpx;
 }
 
-.pref-item {
+/* 一行里的两组选项之间那道细线：不说「这是两个问题」，
+   用户会以为六个选项是一组 */
+.scope-group + .mode-group {
+  padding-top: 12rpx;
+  border-top: 1rpx dashed var(--line-2);
+}
+
+.result-bar {
   display: flex;
-  align-items: center;
-  font-size: 27rpx;
-  color: var(--ink-2);
-  padding-right: 16rpx;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4rpx 4rpx 16rpx;
 }
 
-.pref-item radio {
-  transform: scale(.8);
+.result-count {
+  font-size: 26rpx;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.result-where {
+  font-size: 23rpx;
+}
+
+.section-label {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink-3);
+  letter-spacing: 2rpx;
 }
 
 .hot {
@@ -64,28 +79,27 @@
   line-height: 1.8;
 }
 
-.count {
-  display: block;
-  padding: 0 4rpx 16rpx;
-}
-
 .hit {
-  margin-top: 8rpx;
+  margin-top: 10rpx;
 }
 
 .hit-line {
   display: block;
   font-family: var(--font-poem);
-  font-size: 25rpx;
+  font-size: 26rpx;
   color: var(--ink-2);
-  line-height: 1.7;
+  line-height: 1.75;
+  letter-spacing: 1rpx;
 }
 
-.locked-card .note {
+/* 命中句加一道左边线：和上方「篇名作者」那行拉开层次，
+   一眼能分出哪句是正文里捞出来的 */
+.hit-line:first-child {
+  padding-left: 14rpx;
+  border-left: 4rpx solid var(--line-2);
+}
+
+.empty-tip {
   display: block;
   margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
 }

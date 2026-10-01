@@ -1,9 +1,5 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{!allowed}}">
-    <view class="card-title">飞花令</view>
-    <text class="hint note">{{reason}}</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{!allowed}}" title="飞花令" note="{{reason}}" mark="令" />
 
   <block wx:else>
     <view class="card">
@@ -33,17 +29,21 @@
 
     <!-- 查一查 -->
     <view class="card" wx:if="{{kind === 'look' && char}}">
-      <view class="card-title">含「{{char}}」的句子 · {{hitCount}} 句</view>
-      <view class="fh-line" wx:for="{{lines}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+      <view class="card-title bar">含「{{char}}」的句子 · {{hitCount}} 句</view>
+      <view class="fh-line" hover-class="row-hover" hover-stay-time="60" wx:for="{{lines}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
         <text class="fh-seg">{{item.seg}}</text>
         <text class="fh-src">{{item.title}} · {{item.author}}</text>
       </view>
-      <view class="empty" wx:if="{{!hitCount}}">课内 251 首里没有含这个字的句子</view>
+      <view class="empty" wx:if="{{!hitCount}}">
+        <text class="empty-mark">字</text>
+        <text class="empty-text">课内 251 首里没有含「{{char}}」的句子
+换个令字试试</text>
+      </view>
     </view>
 
     <!-- 闯关 -->
     <view class="card" wx:if="{{kind === 'level' && char}}">
-      <view class="card-title">令字「{{char}}」 · 已说 {{said.length}} 句</view>
+      <view class="card-title bar">令字「{{char}}」 · 已说 {{said.length}} 句</view>
       <view class="said" wx:for="{{said}}" wx:key="index">
         <text class="said-t">{{item}}</text>
       </view>

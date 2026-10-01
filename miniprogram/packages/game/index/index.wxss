@@ -1,12 +1,36 @@
+.intro {
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.intro-t {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 2rpx;
+}
+
+.intro-s {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 三张入口卡：一行放不下三个名字（「模拟考试」四个字），
+   与其硬挤成一窄条，不如让它按两列排 —— 呼吸感比整齐更重要 */
 .modes {
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
   margin-bottom: 24rpx;
 }
 
 .mode {
   /* 从 view 换成 button：原生按钮自带最小宽度与 ::after 边框，这里逐条收掉 */
-  flex: 1;
+  flex: 1 1 calc(50% - 8rpx);
   width: auto;
   min-width: 0;
   margin: 0;
@@ -46,11 +70,29 @@
   line-height: 1.6;
 }
 
+/* 卡内第三行给出下一步动作：两面墙一样的卡，点哪张全靠猜 */
+.mode-go {
+  display: block;
+  font-size: 22rpx;
+  color: var(--green);
+  margin-top: 16rpx;
+  letter-spacing: 1rpx;
+}
+
+.mode-off .mode-go {
+  color: var(--ink-3);
+}
+
 /* 令字格：外框还是那块宋体方字，判定与选中交给原生 radio */
+.char-count {
+  display: block;
+  padding: 4rpx 0 8rpx;
+}
+
 .chars {
   display: flex;
   flex-wrap: wrap;
-  margin: 16rpx 0;
+  margin: 12rpx 0 4rpx;
 }
 
 .char {
@@ -138,13 +180,4 @@
 
 .mode-off .mode-desc {
   color: var(--ink-3);
-}
-
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
 }

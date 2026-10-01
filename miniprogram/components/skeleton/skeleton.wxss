@@ -1,0 +1,31 @@
+/* 骨架屏：一块比底色深一点点的灰，缓慢呼吸。
+   不做从左到右的扫光 —— 那在小屏上晃眼，且行数一多就显脏。 */
+.sk {
+  padding: 8rpx 0;
+}
+
+.sk-block {
+  border-radius: 10rpx;
+  background: var(--line-2);
+  animation: sk-breathe 1.6s ease-in-out infinite;
+}
+
+.sk-line {
+  height: 32rpx;
+  margin-bottom: 20rpx;
+}
+
+.sk-line.w40 { width: 40%; }
+.sk-line.w60 { width: 60%; }
+.sk-line.w80 { width: 80%; }
+
+.sk-btn {
+  height: 88rpx;
+  border-radius: var(--radius-sm);
+  margin: 28rpx 0 32rpx;
+}
+
+@keyframes sk-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}

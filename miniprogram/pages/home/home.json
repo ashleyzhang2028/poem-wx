@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "跬步 · 今日背诵",
-  "usingComponents": {}
+  "usingComponents": {},
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
 }

@@ -1,17 +1,20 @@
 <view class="page reader">
   <!-- 未登录：整页只有一句话和去登录的按钮，正文一个字都不渲染 -->
-  <view class="card locked-card" wx:if="{{locked}}">
-    <view class="card-title">{{lockTitle}}</view>
-    <text class="hint note">{{lockNote}}</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" />
 
   <block wx:else>
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
-      <text class="poem-meta">{{dynasty}} · {{author}}</text>
+      <view class="poem-meta-row">
+        <text class="poem-meta">{{dynasty}}</text>
+        <text class="poem-dot">·</text>
+        <text class="poem-meta">{{author}}</text>
+      </view>
       <text class="poem-source" wx:if="{{source}}">{{source}}</text>
+      <!-- 记忆阶段做成小签，摆在标题下面：这是「我背到哪了」，
+           属于这首诗的一部分，不该混在下面那排操作里 -->
+      <text class="tag stage-tag">{{stage}}</text>
     </view>
 
     <!-- 阅读偏好：正文之间最不该塞一排自绘按钮，全换成原生单选 -->
@@ -47,6 +50,7 @@
       </block>
       <block wx:else>
         <view class="poem-line token-line {{speakVisible && speakIndex === index && speakTotal ? 'reading' : ''}}"
+              hover-class="{{speakVisible ? 'token-line-tap' : ''}}" hover-stay-time="60"
               wx:for="{{tokens}}" wx:key="index"
               data-i="{{index}}" bindtap="onSpeakToggle">
           <view class="token" wx:for="{{item}}" wx:for-item="tk" wx:key="index">
@@ -61,7 +65,7 @@
   <!-- 播放工具栏：只在朗读可见时存在 -->
   <view class="card speak-bar" wx:if="{{speakVisible}}">
     <view class="speak-head">
-      <text class="speak-title">朗读</text>
+      <text class="card-title bar">朗读</text>
       <text class="speak-state {{speakReady ? '' : 'off'}}">{{speakReady ? '就绪' : '待开通'}}</text>
     </view>
 
@@ -87,9 +91,9 @@
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head" bindtap="onToggleTranslation">
-      <text class="card-title">白话译文</text>
-      <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
+    <view class="trans-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+      <text class="card-title bar">白话译文</text>
+      <text class="trans-toggle">{{showTranslation ? '收起 ⌃' : '展开 ⌄'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">
       <text class="trans-text">{{translation}}</text>
@@ -99,11 +103,14 @@
 
   <view class="card recite-card">
     <view class="recite-status">
-      <text class="recite-stage">{{stage}}</text>
+      <text class="recite-stage">掌握程度</text>
       <view class="mastery-bar">
         <view class="mastery-fill" style="width:{{mastery}}%"></view>
       </view>
+      <text class="mastery-num">{{mastery}}%</text>
     </view>
+
+    <text class="recite-ask">这首诗背得怎么样？</text>
 
     <view class="actions">
       <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"

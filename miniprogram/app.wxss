@@ -31,10 +31,36 @@ view, text, button, input, textarea {
   margin-bottom: 8rpx;
 }
 
+/* 卡片小标题带一道左侧短竖线：一屏几张卡时，视线有个落脚点，
+   不用靠字号比大小去猜哪一行是标题 */
+.card-title.bar {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: var(--green);
+  margin-bottom: 16rpx;
+}
+
+.card-title.bar::before {
+  content: "";
+  width: 6rpx;
+  height: 26rpx;
+  border-radius: 3rpx;
+  background: var(--green);
+  margin-right: 12rpx;
+}
+
 .hint {
   font-size: 25rpx;
   color: var(--ink-3);
   line-height: 1.7;
+}
+
+.sub-title {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  margin: 20rpx 0 8rpx;
 }
 
 .empty {
@@ -42,6 +68,27 @@ view, text, button, input, textarea {
   text-align: center;
   color: var(--ink-3);
   font-size: 28rpx;
+}
+
+/* 空状态：一枚淡印章 + 一句人话。
+   有出处的「没有」比一个孤零零的方块让人安心 —— 用户知道是真没有，不是没加载出来 */
+.empty-mark {
+  display: block;
+  width: 96rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--line-2);
+  background: var(--bg-soft);
+  font-family: var(--font-poem);
+  font-size: 44rpx;
+  color: var(--line);
+}
+
+.empty-text {
+  display: block;
+  line-height: 1.8;
 }
 
 /* ---------- 按钮 ---------- */
@@ -55,6 +102,7 @@ view, text, button, input, textarea {
   color: var(--ink);
   font-size: 30rpx;
   text-align: center;
+  transition: background-color .1s;
 }
 
 .btn::after {
@@ -65,6 +113,12 @@ view, text, button, input, textarea {
   background: var(--green);
   border-color: var(--green);
   color: #fff;
+}
+
+/* 主按钮按下时压深一档，不然同色相邻时会显得「没点着」 */
+.btn.primary.button-hover {
+  background: var(--green-dark);
+  border-color: var(--green-dark);
 }
 
 .btn.ghost {
@@ -80,6 +134,10 @@ view, text, button, input, textarea {
 
 .btn.block {
   width: 100%;
+}
+
+.btn.block + .btn.block {
+  margin-top: 16rpx;
 }
 
 /* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
@@ -231,13 +289,13 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
-/* 只给触碰反馈上色，落地仍是原生 button 的 default 态外观由 btn 类兜底 */
-.btn {
-  transition: background-color .1s;
-}
-
 /* ---------- 单选行（档位、算法这种「选一个」的选择） ----------
    行本身是 label[for]，点整行都能选中，不用把手指对准那个小圆点。 */
+.opt-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .opt-row {
   display: flex;
   align-items: center;
@@ -281,6 +339,61 @@ view, text, button, input, textarea {
   color: var(--ink-3);
   margin-top: 6rpx;
   line-height: 1.6;
+}
+
+/* 横排的单选项（范围、模式、筛选这种一行放得下的） */
+.pref-item {
+  display: flex;
+  align-items: center;
+  font-size: 27rpx;
+  color: var(--ink-2);
+  padding-right: 20rpx;
+}
+
+.pref-item radio {
+  transform: scale(.8);
+}
+
+/* ---------- 未登录的那张卡 ---------- */
+/* 门禁卡在 14 个页面里各有一份，长相必须是同一个 —— 用户才会认得出
+   「这是同一道门」，而不是每页一套说法。 */
+.lock-card {
+  text-align: center;
+  padding: 56rpx 28rpx;
+  background: linear-gradient(165deg, #fffefb 0%, var(--bg-soft) 100%);
+}
+
+.lock-mark {
+  display: block;
+  width: 108rpx;
+  height: 108rpx;
+  line-height: 104rpx;
+  margin: 0 auto 24rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--line);
+  background: #fffefb;
+  font-family: var(--font-poem);
+  font-size: 48rpx;
+  color: var(--green);
+}
+
+.lock-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--green);
+  font-family: var(--font-poem);
+}
+
+.lock-note {
+  display: block;
+  margin-top: 16rpx;
+  text-align: left;
+  line-height: 1.85;
+}
+
+.lock-btn {
+  margin-top: 32rpx;
 }
 
 /* ---------- 底部安全区垫片 ---------- */

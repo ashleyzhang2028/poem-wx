@@ -1,0 +1,6 @@
+<view class="card lock-card">
+  <text class="lock-mark">{{markText}}</text>
+  <text class="lock-title">{{title}}</text>
+  <text class="hint lock-note">{{note}}</text>
+  <button class="btn primary block lock-btn" bindtap="onLogin">微信登录</button>
+</view>

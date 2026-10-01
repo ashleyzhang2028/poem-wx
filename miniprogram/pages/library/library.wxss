@@ -1,3 +1,26 @@
+.intro {
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.intro-t {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 2rpx;
+}
+
+.intro-s {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 四张集子卡：整块可点，所以借 hover-class 给反馈 ——
+   之前它是 <view bindtap> 却没有按下态，点上去像没反应 */
 .group-card {
   background: var(--card);
   border: 1rpx solid var(--line-2);
@@ -5,19 +28,26 @@
   box-shadow: var(--shadow);
   padding: 32rpx;
   margin-bottom: 24rpx;
+  transition: border-color .15s;
 }
 
 .gc-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+}
+
+.gc-left {
+  flex: 1;
+  min-width: 0;
 }
 
 .gc-name {
   display: block;
+  font-family: var(--font-poem);
   font-size: 34rpx;
   font-weight: 600;
   color: var(--green);
+  letter-spacing: 1rpx;
 }
 
 .gc-desc {
@@ -25,6 +55,13 @@
   font-size: 24rpx;
   color: var(--ink-3);
   margin-top: 8rpx;
+}
+
+.gc-count {
+  flex: none;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  padding-left: 16rpx;
 }
 
 .gc-books {
@@ -37,25 +74,22 @@
   margin: 0 12rpx 12rpx 0;
 }
 
+/* 返回条：它是个可点元素，得给按下态 */
 .back-bar {
   display: flex;
   align-items: center;
   font-size: 28rpx;
   color: var(--green);
   padding: 8rpx 4rpx 24rpx;
+  border-radius: var(--radius-sm);
+}
+
+.back-hover {
+  background: var(--green-light);
 }
 
 .back-arrow {
   font-size: 40rpx;
   padding-right: 8rpx;
   line-height: 1;
-}
-
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
 }

@@ -92,5 +92,9 @@
   },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "usingComponents": {
+    "lock-card": "/components/lock-card/lock-card",
+    "skeleton": "/components/skeleton/skeleton"
+  }
 }

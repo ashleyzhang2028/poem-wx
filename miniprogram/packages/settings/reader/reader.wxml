@@ -1,13 +1,9 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{locked}}">
-    <view class="card-title">登录后可用</view>
-    <text class="hint note">设置项要登录之后才生效 —— 未登录时只有首页目录可看。</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{locked}}" title="阅读设置要登录" note="读音表与朗读通道都挂在账号档位上，所以要登录之后才能设。" mark="读" />
 
   <block wx:else>
   <view class="card" wx:if="{{pinyinOn}}">
-    <view class="card-title">注音方式</view>
+    <view class="card-title bar">注音方式</view>
     <radio-group class="native-group column" bindchange="onMode">
       <label class="opt-row {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key">
         <radio value="{{item.key}}" checked="{{pinyin === item.key}}" color="#2f6055" />
@@ -21,13 +17,13 @@
   </view>
 
   <view class="card" wx:else>
-    <view class="card-title">注音</view>
+    <view class="card-title bar">注音</view>
     <text class="hint note">读音表未就绪，注音能力整体关闭，阅读页不会出现注音开关。</text>
   </view>
 
   <!-- 朗读：不可用整块不渲染（可见但未就绪时显示成待开通，给一句人话） -->
   <view class="card" wx:if="{{speakVisible}}">
-    <view class="card-title">朗读</view>
+    <view class="card-title bar">朗读</view>
 
     <block wx:if="{{speakReady}}">
       <view class="sub-title">朗读语速</view>
@@ -54,7 +50,7 @@
   </view>
 
   <view class="card" wx:else>
-    <view class="card-title">朗读</view>
+    <view class="card-title bar">朗读</view>
     <text class="hint note">当前没有朗读能力，阅读页不会出现朗读按钮与播放工具栏。这通常是因为：档位不含朗读，或运行环境没有音频接口。</text>
   </view>
 

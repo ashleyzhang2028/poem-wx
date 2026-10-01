@@ -44,6 +44,18 @@
 .identity-main {
   padding-left: 24rpx;
   min-width: 0;
+  flex: 1;
+}
+
+/* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
+   放在下面的表格里要滚一屏才看得到 */
+.tier-chip {
+  flex: none;
+  font-size: 22rpx;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 999rpx;
+  padding: 6rpx 20rpx;
 }
 
 .identity-name {

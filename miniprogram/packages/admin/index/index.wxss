@@ -1,3 +1,52 @@
+/* ---------- 我的授权 ---------- */
+.grant-head {
+  padding-top: 8rpx;
+}
+
+.grant-tier {
+  display: flex;
+  align-items: baseline;
+}
+
+.grant-tier-v {
+  font-family: var(--font-poem);
+  font-size: 48rpx;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 2rpx;
+}
+
+.grant-tier-k {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  padding-left: 16rpx;
+}
+
+.grant-meter {
+  margin-top: 20rpx;
+}
+
+.grant-meter-bar {
+  height: 10rpx;
+  border-radius: 5rpx;
+  background: var(--line-2);
+  overflow: hidden;
+}
+
+.grant-meter-fill {
+  height: 100%;
+  border-radius: 5rpx;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
+  transition: width .3s;
+}
+
+.grant-meter-t {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-top: 10rpx;
+}
+
 .kv {
   display: flex;
   align-items: center;
@@ -131,17 +180,6 @@
 .feedback-btn {
   margin-top: 16rpx;
 }
-
-/* 未登录时的那张卡 */
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
-}
-
 /* 能力矩阵：一个勾 / 一个叉，加一句「差在哪」 */
 .cap-group {
   display: block;
@@ -253,5 +291,10 @@
 }
 
 .btn.block {
+  margin-top: 16rpx;
+}
+
+.empty-tip {
+  display: block;
   margin-top: 16rpx;
 }
