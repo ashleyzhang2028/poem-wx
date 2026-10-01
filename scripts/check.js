@@ -246,6 +246,73 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
 const corpus = require(path.join(ROOT, "utils", "corpus.js"));
 
+/* ---------- 5b. 能力门槛 ---------- */
+const E = require(path.join(ROOT, "utils", "entitlement.js"));
+
+// 页面脚本会调 E.signedIn()，而它读的是 profile —— 上面已经造好 wx 桩，这里直接改档
+function asGuest() {
+  wx.setStorageSync(store.KEYS.profile, { logged: false });
+}
+function asMember() {
+  wx.setStorageSync(store.KEYS.profile, { logged: true });
+}
+
+asGuest();
+ok("未登录：首页可浏览", E.can("home.browse").ok);
+ok("未登录：每日背诵不可用", !E.can("recite.basic").ok);
+ok("未登录：课外阅读不可用", !E.can("library.all").ok);
+ok("未登录：注音不可用", !E.can("pinyin.helper").ok);
+ok("未登录：艾宾浩斯不可用", !E.can("algo.ebbinghaus").ok);
+ok("未登录：朗读不可用", !E.can("read.aloud").ok);
+ok("未登录：莱特纳盒不可用", !E.can("algo.leitner").ok);
+ok("未登录：导出不可用", !E.can("export.progress").ok);
+
+asMember();
+ok("已登录：首页仍可浏览", E.can("home.browse").ok);
+ok("已登录：每日背诵可用", E.can("recite.basic").ok);
+ok("已登录：课外阅读可用", E.can("library.all").ok);
+ok("已登录：注音可用", E.can("pinyin.helper").ok);
+ok("已登录：艾宾浩斯可用", E.can("algo.ebbinghaus").ok);
+ok("已登录：朗读可用", E.can("read.aloud").ok);
+ok("已登录：莱特纳盒可用", E.can("algo.leitner").ok);
+ok("已登录：导出可用", E.can("export.progress").ok);
+
+// 除了首页，一个免登录的口子都不能留
+const FREE_KEYS = E.ORDER.filter((k) => !E.CAPS[k].login);
+ok("免登录能力只有首页浏览", FREE_KEYS.length === 1 && FREE_KEYS[0] === "home.browse",
+  "实际 " + FREE_KEYS.join(","));
+
+// 门槛文案必须真的说出「登录可用」，不能只是 ok=false 而用户不知道怎么办
+ok("拒绝时说清门槛", E.hint("read.aloud", { signedIn: false }) === "登录后可用");
+ok("放行时不喊门槛", E.hint("read.aloud", { signedIn: true }) === "可用");
+
+// 权限页矩阵要和 can() 一致，不能各算一套
+const mGuest = E.matrix({ signedIn: false });
+ok("矩阵条数与能力表一致", mGuest.length === E.ORDER.length);
+ok("矩阵逐条与 can() 一致",
+  mGuest.every((r) => r.ok === E.can(r.cap, { signedIn: false }).ok));
+const mMember = E.matrix({ signedIn: true });
+ok("登录后矩阵全开", mMember.every((r) => r.ok));
+
+// 游客范围：一年级本册、只读
+const gs = E.guestScope();
+ok("游客范围是一年级本册", gs.grade === 1 && gs.term === 1 && gs.scope === "term");
+ok("游客范围是只读", gs.readOnly === true);
+
+// 能力表覆盖 Issue 里列出的每一项
+["每日背诵", "课外阅读", "注音辅助", "艾宾浩斯", "语音朗读", "莱特纳盒", "进度导出"].forEach((n) => {
+  ok("能力表含「" + n + "」", Object.keys(E.CAPS).some((k) => E.CAPS[k].name.indexOf(n) >= 0));
+});
+
+/* ---------- 5c. 游客首页渲染 ---------- */
+const homeWxml = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+const homeJs = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+ok("首页有游客提示条", homeWxml.indexOf("readOnly") >= 0 && homeWxml.indexOf("guest-bar") >= 0);
+ok("首页游客态在 js 里算出来", homeJs.indexOf("E.guestScope()") >= 0);
+ok("首页游客不留本机进度", homeJs.indexOf("logged ? store.getRecord") >= 0);
+// 列表点击与「开始背」都必须过门禁，不能只拦一个入口
+ok("首页点击过门禁", homeJs.indexOf('E.block("recite.basic"') >= 0);
+
 /* ---------- 6. WXML 字段粗查 ---------- */
 const unusedWarn = [];
 pages.forEach((p) => {

@@ -1,4 +1,11 @@
 <view class="page reader">
+  <view class="card lock-card" wx:if="{{locked}}">
+    <text class="lock-title">篇目阅读 · {{lockedHint}}</text>
+    <text class="lock-sub">首页的一年级诗词可以看，点开阅读与背诵在「我的」里登录后打开。</text>
+    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
+  </view>
+
+  <block wx:if="{{!locked}}">
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
@@ -53,4 +60,5 @@
   </view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

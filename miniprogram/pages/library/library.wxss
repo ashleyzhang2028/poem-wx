@@ -50,3 +50,23 @@
   padding-right: 8rpx;
   line-height: 1;
 }
+
+/* 游客看到的是这张卡，不是空列表 —— 空列表会被当成页面坏了 */
+.lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lock-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.lock-sub {
+  font-size: 26rpx;
+  color: var(--ink-3);
+  margin: 12rpx 0 28rpx;
+  line-height: 1.7;
+}

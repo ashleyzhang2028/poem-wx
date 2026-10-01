@@ -109,3 +109,33 @@
 .danger-text {
   color: var(--red);
 }
+
+/* 能力一览：名称左、状态右，一眼看完差什么 */
+.cap-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.cap-name {
+  font-size: 28rpx;
+  color: var(--ink);
+}
+
+.cap-state {
+  font-size: 24rpx;
+}
+
+.cap-state.on {
+  color: var(--green);
+}
+
+.cap-state.off {
+  color: var(--amber);
+}
+
+.logout-btn {
+  margin-top: 16rpx;
+}

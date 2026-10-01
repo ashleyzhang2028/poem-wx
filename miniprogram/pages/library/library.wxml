@@ -1,5 +1,11 @@
 <view class="page">
-  <block wx:if="{{!current}}">
+  <view class="card lock-card" wx:if="{{!logged}}">
+    <text class="lock-title">课外阅读 · {{lockedHint}}</text>
+    <text class="lock-sub">十七部集子、七千余篇古文与诗词在「我的」里登录后打开。</text>
+    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
+  </view>
+
+  <block wx:if="{{logged && !current}}">
     <view class="group-card" wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
       <view class="gc-head">
         <view>
@@ -14,7 +20,7 @@
     </view>
   </block>
 
-  <block wx:else>
+  <block wx:if="{{logged && current}}">
     <view class="back-bar" bindtap="onBack">
       <text class="back-arrow">‹</text>
       <text>返回全部集子</text>

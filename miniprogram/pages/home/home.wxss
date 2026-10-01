@@ -99,3 +99,27 @@
   text-align: center;
   padding: 16rpx 0 40rpx;
 }
+
+/* 游客态的提示条：说明当前为什么点不动，顺带就是登录入口 */
+.guest-bar {
+  display: flex;
+  flex-direction: column;
+  margin: 20rpx 0;
+  padding: 24rpx 28rpx;
+  border-radius: var(--radius);
+  background: var(--amber-light);
+  border: 1rpx solid rgba(165, 92, 25, .22);
+}
+
+.guest-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--amber);
+}
+
+.guest-sub {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+  line-height: 1.6;
+}

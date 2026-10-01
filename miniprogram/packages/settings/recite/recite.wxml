@@ -30,11 +30,12 @@
 
   <view class="card">
     <view class="card-title">复习算法</view>
-    <view class="algo {{algo === item.key ? 'active' : ''}}" wx:for="{{algos}}" wx:key="key"
+    <view class="algo {{algo === item.key ? 'active' : ''}} {{item.locked ? 'locked' : ''}}"
+          wx:for="{{algos}}" wx:key="key"
           data-k="{{item.key}}" bindtap="onAlgo">
       <view class="algo-head">
         <text class="algo-name">{{item.name}}</text>
-        <text class="algo-years">{{item.years}}</text>
+        <text class="algo-years">{{item.locked ? '登录后可用' : item.years}}</text>
       </view>
       <text class="algo-blurb">{{item.blurb}}</text>
     </view>
