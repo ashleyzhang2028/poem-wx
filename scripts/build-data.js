@@ -4,11 +4,15 @@
  *
  * 输入：POEM_WEB_DIR 指向 poem 仓库根目录（默认 /tmp/poem，CI 里由 clone 步骤给出）。
  * 输出：miniprogram/data/**，其中：
- *   - index.json     全站索引（列表页、搜索、每日计划只用它，条目不含正文）
- *   - texts/<book>.json 各集子正文分片，按条目 id 的哈希稳定分桶
+ *   - books/<book>.json  各集子索引（篇名/作者/朝代/出处，不含正文）
+ *   - course.json        课内 251 首的正文与译文 —— **进主包**
+ *   - texts/<bucket>.json 其余集子的正文分片，按条目 id 的哈希稳定分桶，走云端
  *
- * 为什么不把正文塞进主包：主包上限 2MB，而全部正文（data/text-master.js）
- * 未压缩 24MB、gzip 后 4.9MB。索引只有约 600KB，正文全部落到分包按需取。
+ * 为什么不把**全部**正文塞进包：主包上限 2MB，而全部正文（data/text-master.js）
+ * 未压缩 24MB、gzip 后 4.9MB。
+ * 为什么**课内**正文要塞进包：它只有 223KB（251 首，中位 0.41KB），进包后主包
+ * 1.30MB，离 2MB 还有 0.7MB 余量；换来首页「每日背诵」与详情页在弱网/断网下不等 IO。
+ * 课内条目不再进分片，避免同一份正文在包内和 CDN 各存一份。
  */
 "use strict";
 
@@ -68,6 +72,8 @@ function main() {
 
   const index = [];
   const texts = {};
+  // 课内诗词单独走一份 course.json（进主包），不进分片
+  const courseTexts = {};
 
   siteIndex.forEach(function (p) {
     if (p.isBook) return;
@@ -91,7 +97,9 @@ function main() {
     });
 
     if (text || translation) {
-      texts[p.id] = { text: text, translation: translation, src: p.translationSource || "" };
+      const payload = { text: text, translation: translation, src: p.translationSource || "" };
+      if (p.grade || p.term) courseTexts[p.id] = payload;
+      else texts[p.id] = payload;
     }
   });
 
@@ -109,10 +117,13 @@ function main() {
 
   writeJson(path.join(OUT_DIR, "books", "books.json"), books);
 
+  writeJson(path.join(OUT_DIR, "course.json"), courseTexts);
   writeBuckets(texts);
 
   console.log("索引 " + index.length + " 条，按 " + Object.keys(byBook).length + " 部集子拆分");
-  console.log("正文 " + Object.keys(texts).length + " 条");
+  const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.json")).size / 1024);
+  console.log("课内正文 " + Object.keys(courseTexts).length + " 条进主包，course.json " + courseKb + "KB");
+  console.log("正文分片 " + Object.keys(texts).length + " 条走云端");
 }
 
 /** 按条目 id 的稳定哈希分桶，同一条永远落同一个文件，便于做增量缓存 */

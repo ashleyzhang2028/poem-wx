@@ -97,8 +97,31 @@ booksTable.forEach((b) => {
   ok("集子索引归属正确 " + b.id, perBook[b.id].every((p) => p.b === b.id));
 });
 
-const sampleMissing = allEntries.filter((p) => manifest.map[p.id] === undefined);
-ok("所有条目都有正文分片", sampleMissing.length === 0, sampleMissing.length + " 条缺分片");
+// 课内正文单独进主包；其余集子的正文才进分片 —— 两边合起来必须盖住全站，且不重叠
+const courseTexts = readJson(path.join(dataDir, "course.json"));
+const courseIds = new Set(perBook.poems.map((p) => p.id));
+
+ok("课内正文进包 251 条", Object.keys(courseTexts).length === 251, "实际 " + Object.keys(courseTexts).length);
+ok(
+  "课内正文带译文",
+  Object.keys(courseTexts).every((id) => typeof courseTexts[id].text === "string"),
+  "有条目缺 text"
+);
+ok(
+  "包内正文就是课内的那 251 条",
+  Object.keys(courseTexts).every((id) => courseIds.has(id)),
+  "混进了非课内条目"
+);
+ok(
+  "包内正文与分片不重叠",
+  Object.keys(courseTexts).every((id) => manifest.map[id] === undefined),
+  "同一份正文在包内和分片各存一份"
+);
+
+const sampleMissing = allEntries.filter(
+  (p) => manifest.map[p.id] === undefined && courseTexts[p.id] === undefined
+);
+ok("所有条目都有正文可取", sampleMissing.length === 0, sampleMissing.length + " 条取不到");
 
 // 抽查分片真的能取到正文
 let sampled = 0;
@@ -297,6 +320,14 @@ pages.forEach((p) => {
   ok("WXML 事件都有处理函数 " + p, missing.length === 0, missing.join(","));
 });
 
+// 课内正文必须能直接从包内取到（不进分片那句话在这里兑现）
+const courseEntry = corpus.entry(perBook.poems[0].id);
+ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text === "string");
+ok("课内正文不走分片", corpus.bucketOf(perBook.poems[0].id) === "");
+// 课外条目仍走分片，别把两边的分界线搞反
+const outsideId = allEntries.find((p) => p.b !== "poems" && manifest.map[p.id]).id;
+ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.entry(outsideId).text);
+
 /* ---------- 8. 详情页索引命中 ---------- */
 const sampleId = allEntries[0].id;
 ok("indexById 能命中条目", corpus.indexById(sampleId) && corpus.indexById(sampleId).t === allEntries[0].t);
@@ -331,13 +362,18 @@ function dirSize(dir, skipPrefix) {
   return total;
 }
 
-// 正文分片走 CDN，不计入主包 —— 这正是「正文上云」那条决策的兑现点
+// 正文分片走 CDN，不计入主包 —— 这正是「正文上云」那条决策的兑现点。
+// 课内正文（course.json）相反：它**在主包里**，所以这里必须把它算进去。
 const mainPkg = dirSize(ROOT, path.join(ROOT, "data", "texts"));
 ok(
   "主包在 2MB 内（" + (mainPkg / 1024 / 1024).toFixed(2) + "MB）",
   mainPkg <= LIMIT_MAIN,
   "超限 " + ((mainPkg - LIMIT_MAIN) / 1024).toFixed(0) + "KB"
 );
+
+// 课内正文进包是换「首页与详情不等网络」的，代价要看得见：超过 400KB 就该重新算账
+const courseKb = fs.statSync(path.join(dataDir, "course.json")).size / 1024;
+ok("课内正文在预算内（" + courseKb.toFixed(0) + "KB ≤ 400KB）", courseKb <= 400);
 
 // 索引不该再存第二份全站投影，那是上一版把主包顶爆的原因
 const dupFile = path.join(dataDir, "books", "search.json");
