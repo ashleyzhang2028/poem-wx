@@ -1,5 +1,7 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
+const gate = require("../../utils/gate");
+const entitlement = require("../../utils/entitlement");
 
 /** 网页版把十七部集子压成四张卡，这里沿用同一套分组口径 */
 const GROUPS = [
@@ -33,10 +35,23 @@ Page({
   data: {
     groups: [],
     current: null,
-    books: []
+    books: [],
+    locked: true,
+    reason: ""
   },
 
   onShow() {
+    // 课外阅读是 free 档的能力，但前提还是登录。
+    // 两件事分开说：没登录说「登录后可用」，登录了但档位不够说「需要免费档」。
+    if (!gate.logged() || !entitlement.can("library")) {
+      this.setData({
+        locked: true,
+        reason: gate.logged() ? entitlement.hint("library") : "登录后可用"
+      });
+      return;
+    }
+    this.setData({ locked: false, reason: "" });
+
     const all = corpus.books();
     const byId = {};
     all.forEach((b) => {
@@ -65,6 +80,10 @@ Page({
 
   onBack() {
     this.setData({ current: null });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onOpenBook(e) {

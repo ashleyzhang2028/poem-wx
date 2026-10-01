@@ -1,6 +1,8 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const textSearch = require("../../utils/text-search");
+const gate = require("../../utils/gate");
+const entitlement = require("../../utils/entitlement");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
@@ -20,17 +22,29 @@ Page({
     results: [],
     hot: HOT,
     searched: false,
-    searching: false
+    searching: false,
+    locked: true
   },
 
-  onLoad() {
+  onShow() {
+    // 搜索是 free 档能力，但同样要先登录。
+    // 搜索页在 tabBar 上，未登录点进来不该是一屏空壳。
+    if (!gate.logged() || !entitlement.can("search")) {
+      this.setData({ locked: true });
+      return;
+    }
     const saved = store.settings();
     const fr = textSearch.readiness();
     this.setData({
-      keyword: saved.lastSearch || "",
+      locked: false,
+      keyword: this.data.keyword || saved.lastSearch || "",
       fullOn: fr.usable,
       mode: fr.usable ? saved.lastSearchMode || "index" : "index"
     });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onInput(e) {
@@ -61,6 +75,10 @@ Page({
   },
 
   doSearch() {
+    if (!gate.logged()) {
+      this.onLogin();
+      return;
+    }
     const kw = this.data.keyword.trim();
     if (!kw) {
       this.setData({ results: [], searched: false });

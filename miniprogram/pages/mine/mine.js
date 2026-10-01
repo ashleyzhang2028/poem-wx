@@ -5,6 +5,8 @@ const E = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
 const speech = require("../../utils/speech");
 const pinyin = require("../../utils/pinyin");
+const gate = require("../../utils/gate");
+const tiers = require("../../utils/tiers");
 
 Page({
   data: {
@@ -24,7 +26,18 @@ Page({
     syncReady: false,
     syncText: "还没同步过",
     syncPending: 0,
-    fullTextOn: false
+    fullTextOn: false,
+
+    /** 登录页的那半张卡：从 gate.guard 或首页「微信登录」按钮跳过来时自动聚焦 */
+    focusLogin: false,
+    adminVisible: false,
+    tierNote: ""
+  },
+
+  onLoad(query) {
+    // ?login=1：别人是点「去登录」过来的，登录卡要顶到最上面，
+    // 而不是让用户自己在一个已经滚到一半的页面里找按钮
+    this.setData({ focusLogin: query && query.login === "1" });
   },
 
   onShow() {
@@ -57,8 +70,25 @@ Page({
       fullTextOn: fr.usable,
       syncReady: sy.ready,
       syncText: sy.lastText,
-      syncPending: sy.pending
+      syncPending: sy.pending,
+      adminVisible: E.can("admin"),
+      tierNote: this.tierNote(e)
     });
+  },
+
+  /**
+   * 档位那一行该说什么。
+   * 三个来源口径不同，混成一句会让人以为「断网就掉档」：
+   *   remote —— 服务端给的，可信
+   *   grant  —— 授权码，本机记着，服务端那边还没确认
+   *   其余   —— 就是免费档，别说得像出错
+   */
+  tierNote(e) {
+    if (!E.loggedIn()) return "登录后由管理员按人分配";
+    if (e.source === "remote") return "由管理员分配 · 服务端确认";
+    if (e.source === "grant") return "由授权码开启 · 服务端未确认";
+    if (e.blocked === "unsigned") return "连不上服务器，暂按免费档算";
+    return "免费档 · 登录即得";
   },
 
   /**
@@ -66,12 +96,39 @@ Page({
    * 昵称头像是用户自己的事，走 chooseAvatar / nickname 输入，不静默抓取。
    */
   onLogin() {
+    wx.showLoading({ title: "登录中" });
     auth
       .login()
-      .then(() => this.refresh())
-      .catch(() => {
-        wx.showToast({ title: "登录未完成", icon: "none" });
+      .then((res) => {
+        wx.hideLoading();
+        if (res && res.local) {
+          wx.showToast({
+            title: "已登录（本机身份）",
+            icon: "none",
+            duration: 2500
+          });
+        } else {
+          wx.showToast({ title: "已登录", icon: "success" });
+        }
+        this.refresh();
+      })
+      .catch((err) => {
+        wx.hideLoading();
+        wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
       });
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: "退出登录",
+      content: "退出后本机进度不会丢，但功能要重新登录才能用。",
+      confirmText: "退出",
+      success: (r) => {
+        if (!r.confirm) return;
+        auth.logout();
+        this.refresh();
+      }
+    });
   },
 
   onSync() {
@@ -89,6 +146,8 @@ Page({
   },
 
   onAdmin() {
+    // 管理页是 pro 起的能力。普通用户点进来看到的是「当前授权 + 能力矩阵」，
+    // 也就是「我这一档有什么」；改别人的档位要管理员。
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 

@@ -1,6 +1,8 @@
 const store = require("./utils/store");
 const corpus = require("./utils/corpus");
 const sync = require("./utils/sync");
+const entitlement = require("./utils/entitlement");
+const gate = require("./utils/gate");
 
 App({
   globalData: {
@@ -14,11 +16,14 @@ App({
     corpus.course();
     corpus.manifest();
 
-    // 上次没同步完的，启动时补一次。失败不打断 —— 不登录也能用全部功能
-    // 是这条 App 的底线，同步只是「有则更好」。
-    // 启动后 3 秒再动：让首页先渲染完，别跟语料预热抢网络
+    // 登录过的：启动时刷一次档位。管理员可能刚改过，界面得跟着变。
+    // 没登录就什么都不做 —— 未登录只能看首页目录，这条边界在 gate.js 里。
+    if (gate.logged()) entitlement.sync().catch(() => {});
+
+    // 上次没同步完的，启动时补一次。失败不打断 —— 功能不靠同步吃饭，
+    // 同步只是「有则更好」。启动后 3 秒再动：让首页先渲染完，别抢网络。
     this.syncTimer = setTimeout(() => {
-      sync.now().catch(() => {});
+      if (gate.logged()) sync.now().catch(() => {});
     }, 3000);
   },
 

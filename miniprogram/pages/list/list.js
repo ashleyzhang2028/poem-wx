@@ -1,5 +1,6 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
+const gate = require("../../utils/gate");
 
 const FILTERS = ["全部", "未读"];
 
@@ -14,13 +15,30 @@ Page({
     groups: [],
     total: 0,
     matched: 0,
-    collapsed: false
+    collapsed: false,
+
+    locked: true
   },
 
   onLoad(query) {
-    const bookId = query.book || "poems";
-    const book = corpus.bookById(bookId) || { name: "课内诗词", unit: "首" };
-    this.setData({ bookId, bookName: book.name, unit: book.unit });
+    this.setData({ bookId: query.book || "poems" });
+  },
+
+  /**
+   * 门禁放在 onShow 而不是 onLoad：从「去登录」回来时 onLoad 不会再跑，
+   * 页面就会卡在锁着的样子，用户以为登录没生效。
+   */
+  onShow() {
+    // 未登录：连书目本身都不给看 —— 「课外十七部」是 free 档的 library 能力，
+    // 不在首页那一屏里。首页那几行的目录才是唯一给未登录看的。
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData({ locked: false });
+
+    const book = corpus.bookById(this.data.bookId) || { name: "课内诗词", unit: "首" };
+    this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
   },
@@ -62,6 +80,10 @@ Page({
 
   onFilter(e) {
     this.setData({ filter: e.currentTarget.dataset.f }, () => this.apply());
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onOpen(e) {

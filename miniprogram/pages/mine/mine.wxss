@@ -134,3 +134,24 @@
   font-size: 24rpx;
   color: var(--amber);
 }
+
+/* 从「去登录」跳过来时，登录卡顶到最上面 */
+.account-lead {
+  border-color: var(--green);
+  box-shadow: 0 6rpx 28rpx rgba(47, 96, 85, .18);
+}
+
+.logout {
+  display: block;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--ink-3);
+  margin-top: 24rpx;
+  padding: 12rpx;
+}
+
+.kv-note {
+  display: block;
+  text-align: right;
+  margin: -8rpx 0 12rpx;
+}

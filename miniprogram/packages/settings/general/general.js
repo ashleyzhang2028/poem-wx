@@ -1,15 +1,25 @@
 const store = require("../../../utils/store");
+const gate = require("../../../utils/gate");
 
 Page({
   data: {
     align: "center",
     fontSize: 0,
     pinyin: "rare",
-    autoNext: false
+    autoNext: false,
+    locked: false
   },
 
-  onLoad() {
-    this.setData(store.settings());
+  onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData(Object.assign({ locked: false }, store.settings()));
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onAlign(e) {

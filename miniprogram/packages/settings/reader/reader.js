@@ -1,6 +1,8 @@
 const store = require("../../../utils/store");
 const speech = require("../../../utils/speech");
 const pinyin = require("../../../utils/pinyin");
+const entitlement = require("../../../utils/entitlement");
+const gate = require("../../../utils/gate");
 
 const MODES = [
   { key: "off", label: "不注音" },
@@ -27,22 +29,33 @@ Page({
     speakReady: false,
     speakState: "denied",
     speakReason: "",
-    speakProvider: ""
+    speakProvider: "",
+    locked: false
   },
 
   onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData({ locked: false });
     const settings = store.settings();
+    // 与阅读页同一口径：readiness 说「读音表在不在」，门禁说「这一档能不能用」。
+    // 少判后面那个，free 档点一下照样能注音。
     const pr = pinyin.readiness();
+    const prOn = pr.usable && entitlement.can("pinyin");
     const sr = speech.readiness();
     const sp = speech.prefs();
 
     this.setData({
-      pinyin: pr.usable ? settings.pinyin : "off",
-      pinyinOn: pr.usable,
-      pinyinNote: pr.usable
+      pinyin: prOn ? settings.pinyin : "off",
+      pinyinOn: prOn,
+      pinyinNote: prOn
         ? ""
-        : "读音表（data/pinyin-table.json）还没生成。跑一次 build-data.js 就会带上，"
-          + "生成前这一栏整个不显示 —— 免得留个点了没反应的开关。",
+        : pr.usable
+          ? "注音要登录并且档位够才开。"
+          : "读音表（data/pinyin-table.json）还没生成。跑一次 build-data.js 就会带上，"
+            + "生成前这一栏整个不显示 —— 免得留个点了没反应的开关。",
       speechRate: settings.speechRate,
       speechAutoNext: settings.speechAutoNext,
       speakVisible: sr.visible,
@@ -51,6 +64,10 @@ Page({
       speakReason: sr.reason,
       speakProvider: sp.provider || "auto"
     });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onMode(e) {
