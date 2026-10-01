@@ -1,34 +1,43 @@
 const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
 
-const DURATION = 20 * 60;
-const QUESTION_COUNT = 10;
+const COUNT = 10;
 
+/**
+ * 题库：抽题、逐题判对错、当场看答案。
+ * 与模拟考试共用 utils/quiz.js 那套出题器与 judge()，判分口径只此一处 ——
+ * 两个页面各写一遍判分，迟早会有一个先把「模糊」算成对。
+ */
 Page({
   data: {
     stage: "setup",
+    forms: [],
+    pickedForms: [],
     scopes: [],
     scopeIndex: 0,
-    count: QUESTION_COUNT,
+    count: COUNT,
     questions: [],
     index: 0,
     current: null,
     picked: "",
+    last: null,
     answered: 0,
     correct: 0,
-    remain: DURATION,
-    remainText: "20:00",
-    wrong: [],
-    score: 0,
-    forms: [],
-    pickedForms: [],
-    cardSet: false
+    wrong: []
   },
 
   onLoad() {
     const books = corpus.books().filter((b) => b.id !== "poems");
     const scopes = [{ id: "", name: "课内诗词" }].concat(books.map((b) => ({ id: b.id, name: b.name })));
-    this.setData({ scopes, forms: quiz.FORMS, pickedForms: quiz.FORM_KEYS.slice() });
+    this.setData({
+      scopes,
+      forms: quiz.FORMS,
+      pickedForms: quiz.FORM_KEYS.slice()
+    });
+  },
+
+  onScope(e) {
+    this.setData({ scopeIndex: Number(e.detail.value) || 0 });
   },
 
   onToggleForm(e) {
@@ -47,17 +56,14 @@ Page({
     this.setData({ pickedForms: list });
   },
 
-  onUnload() {
-    this.stopTimer();
-  },
-
-  onScope(e) {
-    this.setData({ scopeIndex: Number(e.detail.value) || 0 });
-  },
-
   onStart() {
     const scope = this.data.scopes[this.data.scopeIndex].id;
-    const questions = quiz.build({ scope, count: QUESTION_COUNT, forms: this.data.pickedForms });
+    const questions = quiz.build({
+      scope,
+      count: this.data.count,
+      forms: this.data.pickedForms,
+      sequential: false
+    });
     if (!questions.length) {
       wx.showToast({ title: "这个范围出不了题", icon: "none" });
       return;
@@ -69,48 +75,30 @@ Page({
         index: 0,
         current: questions[0],
         picked: "",
+        last: null,
         answered: 0,
         correct: 0,
-        wrong: [],
-        remain: DURATION,
-        remainText: "20:00"
+        wrong: []
       },
-      () => this.startTimer()
+      () => this.markForm()
     );
   },
 
-  startTimer() {
-    this.stopTimer();
-    this.timer = setInterval(() => {
-      const remain = this.data.remain - 1;
-      if (remain <= 0) {
-        this.stopTimer();
-        this.finish();
-        return;
-      }
-      this.setData({ remain, remainText: this.format(remain) });
-    }, 1000);
-  },
-
-  stopTimer() {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = null;
-  },
-
-  format(sec) {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  markForm() {
+    const cur = this.data.current;
+    if (!cur) return;
+    const f = quiz.formOf(cur.form);
+    this.setData({ current: Object.assign({}, cur, { formName: f.name, color: f.color }) });
   },
 
   onPick(e) {
-    if (this.data.picked) return;
+    if (this.data.picked || !this.data.current) return;
     const picked = e.currentTarget.dataset.v;
-    // 判分走 quiz.judge，与题库页同一份口径
     const res = quiz.judge(this.data.current, picked);
 
     this.setData({
       picked,
+      last: res,
       answered: this.data.answered + 1,
       correct: this.data.correct + (res.ok ? 1 : 0),
       wrong: res.ok
@@ -119,29 +107,26 @@ Page({
             { stem: res.stem, title: res.title, answer: res.answer, picked: res.picked }
           ])
     });
-
-    setTimeout(() => this.next(), 800);
   },
 
-  next() {
+  onNext() {
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
-      this.finish();
+      this.setData({ stage: "result" });
       return;
     }
-    this.setData({ index, current: this.data.questions[index], picked: "" });
-  },
-
-  finish() {
-    this.stopTimer();
-    const total = this.data.questions.length || 1;
-    this.setData({ stage: "result", score: Math.round((this.data.correct / total) * 100) });
+    this.setData({ index, current: this.data.questions[index], picked: "", last: null }, () =>
+      this.markForm()
+    );
   },
 
   onAgain() {
-    this.setData({ stage: "setup", questions: [], wrong: [], picked: "" });
+    this.setData({ stage: "setup", questions: [], wrong: [] });
   },
-  onShareAppMessage() {
-    return { title: "跬步 · 古诗词模拟考试", path: "/packages/game/exam/exam" };
+
+  onOpen(e) {
+    const q = this.data.questions[this.data.index] || {};
+    if (!q.id) return;
+    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(q.id) });
   }
 });

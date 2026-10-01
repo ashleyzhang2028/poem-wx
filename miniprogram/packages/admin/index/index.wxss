@@ -1,0 +1,142 @@
+.kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.kv:last-of-type {
+  border-bottom: none;
+}
+
+.kv-k {
+  font-size: 28rpx;
+  color: var(--ink-2);
+}
+
+.kv-v {
+  font-size: 28rpx;
+  color: var(--ink);
+}
+
+.note {
+  display: block;
+  padding-top: 16rpx;
+  line-height: 1.8;
+}
+
+.error {
+  color: var(--red);
+}
+
+.code-input {
+  margin-top: 20rpx;
+  height: 84rpx;
+  padding: 0 24rpx;
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 28rpx;
+  letter-spacing: 2rpx;
+}
+
+.code-acts {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.code-acts .btn {
+  flex: 1;
+}
+
+.cap {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.cap:last-child {
+  border-bottom: none;
+}
+
+.cap-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cap-name {
+  display: block;
+  font-size: 29rpx;
+  color: var(--ink);
+}
+
+.cap-sub {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.cap-state {
+  font-size: 26rpx;
+  flex: none;
+  padding-left: 16rpx;
+}
+
+.cap-state.on {
+  color: var(--green);
+}
+
+.cap-state.off {
+  color: var(--ink-3);
+}
+
+.user {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.user:last-child {
+  border-bottom: none;
+}
+
+.user-label {
+  display: block;
+  font-size: 29rpx;
+  color: var(--ink);
+}
+
+.user-sub {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.user-tiers {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.tier-chip {
+  padding: 8rpx 26rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--ink-2);
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+}
+
+.tier-chip.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.feedback-btn {
+  margin-top: 16rpx;
+}

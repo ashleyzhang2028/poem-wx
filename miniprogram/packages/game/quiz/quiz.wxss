@@ -120,7 +120,7 @@
   color: var(--red);
 }
 
-/* 考试页复用题库页那套题型挑选样式 */
+/* 题库页在考试页的样式上加了题型挑选与当场判定 */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -141,4 +141,44 @@
   background: var(--green);
   border-color: var(--green);
   color: #fff;
+}
+
+.note {
+  display: block;
+  line-height: 1.8;
+}
+
+.verdict {
+  margin-top: 24rpx;
+}
+
+.verdict-line {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.8;
+}
+
+.verdict-line.ok {
+  color: var(--green);
+}
+
+.verdict-line.no {
+  color: var(--red);
+}
+
+.verdict-acts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.verdict-link {
+  font-size: 27rpx;
+  color: var(--green);
+  padding: 12rpx 0;
+}
+
+.next-btn {
+  width: 320rpx;
 }

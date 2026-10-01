@@ -13,7 +13,7 @@
 
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
-      <text class="hint">不登录也能用全部功能，登录只为了把进度存到云端</text>
+      <text class="hint">不登录也能用全部功能 —— 本机数据只属于本机，登录是为了换手机不丢进度</text>
     </view>
 
     <view class="profile-row" wx:else>
@@ -31,6 +31,10 @@
     <view class="kv">
       <text class="kv-k">每日首数</text>
       <text class="kv-v">{{dailyCount}} 首</text>
+    </view>
+    <view class="kv">
+      <text class="kv-k">当前档位</text>
+      <text class="kv-v">{{tierLabel}}</text>
     </view>
     <view class="kv">
       <text class="kv-k">复习算法</text>
@@ -59,8 +63,12 @@
       <view class="row-main"><text class="row-title">背诵设置</text></view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" bindtap="onReader">
-      <view class="row-main"><text class="row-title">阅读与朗读</text></view>
+    <!-- 朗读与注音都不可用时，这一行没有存在的意义，直接不渲染 -->
+    <view class="row" bindtap="onReader" wx:if="{{speakVisible || pinyinVisible}}">
+      <view class="row-main">
+        <text class="row-title">阅读与朗读</text>
+        <text class="row-sub">{{speakVisible ? '朗读 · 注音' : '注音'}}</text>
+      </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" bindtap="onSettings">
@@ -76,6 +84,20 @@
   <view class="card">
     <view class="row" bindtap="onExport">
       <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON，换手机时导回去</text></view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" bindtap="onSync">
+      <view class="row-main">
+        <text class="row-title">云端同步</text>
+        <text class="row-sub">{{syncReady ? syncText : '后端未就绪 · 已攒 ' + syncPending + ' 条'}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" bindtap="onAdmin">
+      <view class="row-main">
+        <text class="row-title">用户与权限</text>
+        <text class="row-sub">分层设置 · 兑换授权</text>
+      </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" bindtap="onClear">

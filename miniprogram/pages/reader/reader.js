@@ -1,12 +1,18 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
+const speech = require("../../utils/speech");
+const pinyin = require("../../utils/pinyin");
+const sync = require("../../utils/sync");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
   { key: "fuzzy", label: "模糊", cls: "fuzzy" },
   { key: "good", label: "记住", cls: "good" }
 ];
+
+/** 整篇读完到自动跳下一首之间留一口气，不然会显得被赶着走 */
+const AUTO_NEXT_GAP = 900;
 
 Page({
   data: {
@@ -17,16 +23,31 @@ Page({
     dynasty: "",
     source: "",
     lines: [],
+    tokens: [],
     translation: "",
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
     align: "center",
     fontSize: 0,
+    pinyinMode: "off",
+    pinyinOn: false,
     stage: "新学",
     mastery: 0,
     hint: "",
-    results: RESULTS
+    results: RESULTS,
+
+    // 以下三项是「朗读是否出现在这个界面上」的全部依据。
+    // speakVisible 为假时，工具栏整块、设置里的朗读卡、我的页入口都不渲染。
+    speakVisible: false,
+    speakReady: false,
+    speakState: "denied",
+    speakReason: "",
+    speakLabel: "",
+    speakPlaying: false,
+    speakLoading: false,
+    speakIndex: 0,
+    speakTotal: 0
   },
 
   onLoad(query) {
@@ -42,7 +63,7 @@ Page({
     }
 
     const rec = store.getRecord(id);
-    const lines = String(entry.text || "").split("\n").map((t) => ({ t }));
+    const lines = String(entry.text || "").split("\n");
 
     this.setData({
       id,
@@ -63,6 +84,47 @@ Page({
 
     wx.setNavigationBarTitle({ title: meta.t });
     store.markRead(meta.b, id);
+
+    this.applyReading();
+    this.applySpeech();
+  },
+
+  onShow() {
+    // 从设置页回来，注音与朗读状态可能都变了，重算一次
+    this.applyReading();
+  },
+
+  onUnload() {
+    if (this.player) this.player.destroy();
+    this.player = null;
+  },
+
+  /** 注音：不可用就不渲染 tokens，正文按原样走 */
+  applyReading() {
+    const pr = pinyin.readiness();
+    const mode = pr.usable ? store.settings().pinyin : "off";
+    const tokens = pr.usable ? pinyin.render(this.data.lines, mode) : [];
+    this.setData({ pinyinOn: pr.usable, pinyinMode: mode, tokens });
+  },
+
+  /**
+   * 朗读：把「能不能用」换算成界面上的三个值。
+   *   visible=false → 整个播放界面不存在
+   *   ready=false   → 显示但灰着，点了给一句原因，不静默失败
+   */
+  applySpeech() {
+    const r = speech.readiness();
+    this.setData({
+      speakVisible: r.visible,
+      speakReady: r.usable,
+      speakState: r.state,
+      speakReason: r.reason,
+      speakLabel: r.state === "ready" ? "朗读" : "待开通"
+    });
+    if (!r.visible && this.player) {
+      this.player.destroy();
+      this.player = null;
+    }
   },
 
   findMeta(id) {
@@ -74,10 +136,12 @@ Page({
   },
 
   onPinyin(e) {
-    const pinyin = e.currentTarget.dataset.m;
-    store.saveSettings({ pinyin });
-    // 注音依赖读音表，第一版只记住偏好，渲染留待读音表接入后开启
-    wx.showToast({ title: pinyin === "off" ? "已关闭注音" : "注音将在下个版本接入", icon: "none" });
+    const mode = e.currentTarget.dataset.m;
+    if (!pinyin.setMode(mode)) {
+      wx.showToast({ title: "读音表未生成", icon: "none" });
+      return;
+    }
+    this.applyReading();
   },
 
   onAlign(e) {
@@ -93,22 +157,81 @@ Page({
     store.saveSettings({ fontSize });
   },
 
+  /* ---------- 朗读 ---------- */
+
+  ensurePlayer() {
+    if (this.player) return this.player;
+    this.player = speech.create({
+      onChange: (s) =>
+        this.setData({
+          speakPlaying: s.playing,
+          speakLoading: s.loading,
+          speakIndex: s.index,
+          speakTotal: s.total
+        }),
+      onFinish: () => this.onSpeakFinish(),
+      onError: (err) => wx.showToast({ title: err.message || "朗读失败", icon: "none" })
+    });
+    this.player.load(this.data.lines.map((t) => ({ text: t, gap: 320 })));
+    return this.player;
+  },
+
   onSpeak() {
-    if (!this.data.lines.length) return;
-    // 朗读用微信同声传译插件的系统 TTS 会额外收费，这里先用小程序自带的朗读接口
-    // 不可用时明确告知，不做静默失败
-    if (!wx.createInnerAudioContext) {
-      wx.showToast({ title: "当前环境不支持朗读", icon: "none" });
+    const r = speech.readiness();
+    if (!r.visible) return;
+
+    if (!r.usable) {
+      // 不静默失败：说清是哪一步没就绪
+      wx.showModal({
+        title: r.state === "denied" ? "朗读未授权" : "朗读通道待接入",
+        content: r.reason,
+        showCancel: false
+      });
       return;
     }
-    wx.showToast({ title: "朗读功能需要接入 TTS 服务", icon: "none" });
+    this.ensurePlayer().start();
   },
+
+  onSpeakToggle(e) {
+    const idx = e.currentTarget.dataset.i;
+    if (!speech.readiness().usable) {
+      this.onSpeak();
+      return;
+    }
+    this.ensurePlayer().toggle(typeof idx === "number" ? idx : undefined);
+  },
+
+  onSpeakPause() {
+    if (this.player) this.player.pause();
+  },
+
+  onSpeakNext() {
+    if (this.player) this.player.next();
+  },
+
+  onSpeakPrev() {
+    if (this.player) this.player.prev();
+  },
+
+  onSpeakStop() {
+    if (this.player) this.player.stop();
+  },
+
+  onSpeakFinish() {
+    if (!store.settings().speechAutoNext) return;
+    setTimeout(() => {
+      if (this.data.speakVisible) wx.showToast({ title: "读完了，自己接着背吧", icon: "none" });
+    }, AUTO_NEXT_GAP);
+  },
+
+  /* ---------- 背诵评分 ---------- */
 
   onResult(e) {
     const result = e.currentTarget.dataset.r;
     const settings = store.settings();
     const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
     store.setRecord(this.data.id, rec);
+    sync.markDirty();
 
     this.setData({
       stage: R.stageName(rec, settings.algo),

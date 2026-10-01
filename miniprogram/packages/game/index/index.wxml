@@ -13,19 +13,30 @@
             data-c="{{item}}" bindtap="onChar">{{item}}</text>
     </view>
     <text class="hint">课内诗词里含「{{keyword}}」的句子 {{hitCount}} 条</text>
+    <button class="btn primary block reveal-btn" bindtap="onReveal">
+      {{revealed ? '收起来，我先说' : '想不出来了，看答案'}}
+    </button>
   </view>
 
-  <view class="card" wx:if="{{lines.length}}">
-    <view class="row" wx:for="{{lines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
-      <view class="row-main">
-        <text class="line-seg">{{item.seg}}</text>
-        <text class="row-sub">{{item.title}} · {{item.author}}</text>
+  <block wx:if="{{revealed}}">
+    <view class="card" wx:if="{{pagedLines.length}}">
+      <view class="row" wx:for="{{pagedLines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
+        <view class="row-main">
+          <text class="line-seg">{{item.seg}}</text>
+          <text class="row-sub">{{item.title}} · {{item.author}}</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
     </view>
-  </view>
 
-  <view class="empty" wx:if="{{!lines.length}}">课内诗词里没有含这个字的句子，换个字试试</view>
+    <view class="pager" wx:if="{{hitCount > pageSize}}">
+      <text class="pg {{page <= 1 ? 'off' : ''}}" bindtap="onPrevPage">上一页</text>
+      <text class="pg-num">第 {{page}} 页</text>
+      <text class="pg" bindtap="onNextPage">下一页</text>
+    </view>
+
+    <view class="empty" wx:if="{{!hitCount}}">课内诗词里没有含这个字的句子，换个字试试</view>
+  </block>
 
   <view class="safe-bottom"></view>
 </view>

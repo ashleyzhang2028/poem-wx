@@ -72,3 +72,30 @@
 .row-sub {
   margin-top: 8rpx;
 }
+
+.reveal-btn {
+  margin-top: 20rpx;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0 24rpx;
+}
+
+.pg {
+  font-size: 27rpx;
+  color: var(--green);
+  padding: 12rpx 32rpx;
+}
+
+.pg.off {
+  color: var(--line);
+}
+
+.pg-num {
+  font-size: 25rpx;
+  color: var(--ink-3);
+  padding: 0 16rpx;
+}

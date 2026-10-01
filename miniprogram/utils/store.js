@@ -15,6 +15,11 @@ const KEYS = {
   dailyExtra: "kb_daily_extra_v1",
   profile: "kb_profile_v1",
   auth: "kb_auth_v1",
+  grant: "kb_grant_v1",
+  signed: "kb_signed_grant_v1",
+  device: "kb_device_v1",
+  speech: "kb_speech_v1",
+  sync: "kb_sync_outbox_v1",
   version: "kb_schema_version"
 };
 
@@ -28,7 +33,10 @@ const DEFAULTS = {
   align: "center",
   fontSize: 0,
   pinyin: "rare",
-  autoNext: false
+  autoNext: false,
+  // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）
+  speechRate: 1,
+  speechAutoNext: true
 };
 
 const SCHEMA = 1;
@@ -211,6 +219,15 @@ function importAll(data) {
   return true;
 }
 
+/** 本机标识：云端同步用它认回这台设备的进度，不含任何身份信息 */
+function deviceId() {
+  let id = read(KEYS.device, "");
+  if (id) return id;
+  id = "d" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  write(KEYS.device, id);
+  return id;
+}
+
 function stats() {
   const p = progress();
   let learned = 0;
@@ -228,6 +245,7 @@ function stats() {
 
 module.exports = {
   KEYS,
+  deviceId,
   DEFAULTS,
   read,
   write,

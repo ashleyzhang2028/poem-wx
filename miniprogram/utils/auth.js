@@ -15,35 +15,24 @@
  */
 const store = require("./store");
 
+// 接口路径只在 utils/remote.js 里写一份，这里引过来，免得后端改路径要改两处
+const remote = require("./remote");
+
 const REMOTE = {
-  login: "/api/wx/login",
-  refresh: "/api/wx/refresh"
+  login: remote.PATHS.login,
+  refresh: remote.PATHS.refresh
 };
 
 function configured() {
-  const auth = store.read(store.KEYS.auth, {}) || {};
-  return !!auth.baseUrl;
+  return remote.configured();
 }
 
 function baseUrl() {
-  const auth = store.read(store.KEYS.auth, {}) || {};
-  return auth.baseUrl || "";
+  return remote.baseUrl();
 }
 
 function request(path, data) {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: baseUrl() + path,
-      method: "POST",
-      data,
-      header: { "content-type": "application/json" },
-      success: (res) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
-        else reject(new Error("HTTP " + res.statusCode));
-      },
-      fail: (err) => reject(new Error(err.errMsg || "网络不可用"))
-    });
-  });
+  return remote.request(path, data);
 }
 
 function login() {
@@ -58,19 +47,34 @@ function login() {
         if (!configured()) {
           // 没接后端：先落地一个本机身份，功能照常，只是没有云端同步
           store.saveProfile({ logged: true, nickname: store.profile().nickname || "我的古诗词" });
-          wx.setStorageSync(store.KEYS.auth, { code: res.code, at: Date.now(), local: true });
+          const auth = store.read(store.KEYS.auth, {}) || {};
+          auth.code = res.code;
+          auth.at = Date.now();
+          auth.local = true;
+          store.write(store.KEYS.auth, auth);
           resolve({ local: true });
           return;
         }
 
         request(REMOTE.login, { code: res.code })
           .then((data) => {
-            wx.setStorageSync(store.KEYS.auth, {
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken,
-              expiresAt: Date.now() + (data.expiresIn || 604800) * 1000
+            const auth = store.read(store.KEYS.auth, {}) || {};
+            auth.accessToken = data.accessToken;
+            auth.refreshToken = data.refreshToken;
+            auth.expiresAt = Date.now() + (data.expiresIn || 604800) * 1000;
+            auth.local = false;
+            // 服务端下发的档位与 TTS 开关：这是唯一可信的授权来源
+            if (data.tier) auth.tier = data.tier;
+            if (data.speech === true) auth.speech = true;
+            auth.baseUrl = auth.baseUrl || baseUrl();
+            store.write(store.KEYS.auth, auth);
+            store.saveProfile({
+              logged: true,
+              nickname: store.profile().nickname || "我的古诗词",
+              tier: data.tier || store.profile().tier,
+              userId: data.userId || store.profile().userId
             });
-            store.saveProfile({ logged: true, nickname: store.profile().nickname || "我的古诗词" });
+            if (data.signedGrant) store.write(store.KEYS.signed, data.signedGrant);
             resolve(data);
           })
           .catch(reject);
@@ -82,7 +86,7 @@ function login() {
 
 function logout() {
   store.drop(store.KEYS.auth);
-  store.saveProfile({ logged: false });
+  store.saveProfile({ logged: false, tier: "free" });
 }
 
 function token() {
@@ -94,4 +98,23 @@ function logged() {
   return !!store.profile().logged;
 }
 
-module.exports = { configured, baseUrl, login, logout, token, logged, REMOTE };
+/**
+ * 配后端。baseUrl 落在 auth 域而不是 settings 域 —— settings 是要导出的（导出备份
+ * 会把整份设置复制成 JSON 给人看），把服务地址和 adminKey 混进去就等于在备份里泄密钥。
+ */
+function configure(opt) {
+  const auth = store.read(store.KEYS.auth, {}) || {};
+  if (opt && opt.baseUrl !== undefined) auth.baseUrl = String(opt.baseUrl || "");
+  if (opt && opt.adminKey !== undefined) auth.adminKey = String(opt.adminKey || "");
+  if (opt && opt.speech !== undefined) auth.speech = !!opt.speech;
+  store.write(store.KEYS.auth, auth);
+  return { baseUrl: auth.baseUrl, speech: !!auth.speech, admin: !!auth.adminKey };
+}
+
+/** 服务端下发的档位。客户端自己写的档位只影响界面，这一份才带签名。 */
+function serverTier() {
+  const auth = store.read(store.KEYS.auth, {}) || {};
+  return auth.tier || "";
+}
+
+module.exports = { configured, baseUrl, configure, login, logout, token, logged, serverTier, REMOTE };
