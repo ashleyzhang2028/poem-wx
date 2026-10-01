@@ -131,3 +131,127 @@
 .feedback-btn {
   margin-top: 16rpx;
 }
+
+/* 未登录时的那张卡 */
+.locked-card .note {
+  display: block;
+  margin-top: 16rpx;
+}
+
+.locked-btn {
+  margin-top: 32rpx;
+}
+
+/* 能力矩阵：一个勾 / 一个叉，加一句「差在哪」 */
+.cap-group {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin: 24rpx 0 10rpx;
+}
+
+.cap {
+  display: flex;
+  align-items: baseline;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.cap:last-child {
+  border-bottom: none;
+}
+
+.cap-mark {
+  width: 40rpx;
+  font-size: 26rpx;
+}
+
+.cap-mark.on {
+  color: var(--green);
+}
+
+.cap-mark.off {
+  color: var(--line);
+}
+
+.cap-name {
+  font-size: 29rpx;
+  color: var(--ink);
+  margin-right: 12rpx;
+}
+
+.cap-name.dim {
+  color: var(--ink-3);
+}
+
+.cap-note {
+  flex: 1;
+  text-align: right;
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+/* 名录一行：左边是谁，右边两个动作 */
+.acct {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.acct:last-of-type {
+  border-bottom: none;
+}
+
+.acct-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.acct-name {
+  display: block;
+  font-size: 29rpx;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acct-sub {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.acct-acts {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8rpx;
+}
+
+/* 改档 / 改角色是原生 button，只压小尺寸与去掉原生最小宽度 */
+.acct-act {
+  color: var(--green);
+  border: 1rpx solid var(--line);
+}
+
+.acct-lock {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  padding-left: 20rpx;
+}
+
+.note {
+  display: block;
+  margin-top: 16rpx;
+  line-height: 1.7;
+}
+
+.note.error {
+  color: var(--red);
+}
+
+.btn.block {
+  margin-top: 16rpx;
+}

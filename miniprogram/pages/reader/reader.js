@@ -4,6 +4,8 @@ const R = require("../../utils/review-models");
 const speech = require("../../utils/speech");
 const pinyin = require("../../utils/pinyin");
 const sync = require("../../utils/sync");
+const gate = require("../../utils/gate");
+const entitlement = require("../../utils/entitlement");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -67,11 +69,40 @@ Page({
     speakPlaying: false,
     speakLoading: false,
     speakIndex: 0,
-    speakTotal: 0
+    speakTotal: 0,
+
+    /** 未登录时整页换成一句话 —— 不从 URL 放行，也不渲染半张空壳 */
+    locked: true,
+    lockTitle: "登录后可用",
+    lockNote: ""
   },
 
   onLoad(query) {
-    const id = query.id || "";
+    this.setData({ id: query.id || "" });
+  },
+
+  /**
+   * 门禁与内容装载都在 onShow 里做，因为从「去登录」回来时 onLoad 不会再跑 ——
+   * 放在 onLoad 就会出现「登录成功了，页面还锁着」。
+   */
+  onShow() {
+    if (!gate.logged()) {
+      // 没登录就直说。不静默跳走、不渲染半页再弹窗 ——
+      // 用户从分享链接点进来，看到的第一句应该是为什么。
+      this.setData({
+        locked: true,
+        lockTitle: "登录后可用",
+        lockNote: "这篇要微信登录之后才能打开。登录只为跨设备带走进度与领取档位，不读你的隐私信息。"
+      });
+      return;
+    }
+    if (!this.loaded) this.loadEntry();
+    this.applyReading();
+  },
+
+  loadEntry() {
+    const id = this.data.id;
+
     const settings = store.settings();
     const entry = corpus.entry(id);
     const meta = this.findMeta(id);
@@ -104,14 +135,15 @@ Page({
 
     wx.setNavigationBarTitle({ title: meta.t });
     store.markRead(meta.b, id);
+    this.loaded = true;
 
+    // 从设置页回来、或刚登录完，注音与朗读状态都可能变了
     this.applyReading();
     this.applySpeech();
   },
 
-  onShow() {
-    // 从设置页回来，注音与朗读状态可能都变了，重算一次
-    this.applyReading();
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onUnload() {
@@ -119,12 +151,19 @@ Page({
     this.player = null;
   },
 
-  /** 注音：不可用就不渲染 tokens，正文按原样走 */
+  /**
+   * 注音：不可用就不渲染 tokens，正文按原样走。
+   * 门禁与 readiness 是两件事 —— readiness 说「读音表在不在」，
+   * 这里还要过一遍「这一档有没有注音」。上一版只看了前面的，
+   * 于是 free 档点一下开关照样能注音。
+   */
   applyReading() {
     const pr = pinyin.readiness();
-    const mode = pr.usable ? store.settings().pinyin : "off";
-    const tokens = pr.usable ? pinyin.render(this.data.lines, mode) : [];
-    this.setData({ pinyinOn: pr.usable, pinyinMode: mode, tokens });
+    const allowed = entitlement.can("pinyin");
+    const usable = pr.usable && allowed;
+    const mode = usable ? store.settings().pinyin : "off";
+    const tokens = usable ? pinyin.render(this.data.lines, mode) : [];
+    this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
   },
 
   /**
@@ -246,6 +285,10 @@ Page({
   /* ---------- 背诵评分 ---------- */
 
   onResult(e) {
+    if (!entitlement.can("daily")) {
+      wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
+      return;
+    }
     const result = e.currentTarget.dataset.r;
     const settings = store.settings();
     const rec = R.review(store.getRecord(this.data.id), result, settings.algo);

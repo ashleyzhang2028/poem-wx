@@ -1,4 +1,6 @@
 const corpus = require("../../../utils/corpus");
+const gate = require("../../../utils/gate");
+const entitlement = require("../../../utils/entitlement");
 
 /**
  * 古诗词大会：飞花令 + 题库 + 模拟考试。
@@ -26,11 +28,31 @@ Page({
     revealed: false,
     page: 1,
     pageSize: 12,
-    pagedLines: []
+    pagedLines: [],
+
+    /** 三张卡各自的可用性。不可用的卡照常列出，但标清差在哪一档 */
+    locked: true,
+    cards: []
   },
 
-  onLoad() {
-    this.computeLines();
+  onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true, cards: [] });
+      return;
+    }
+    // 三张卡不是一个门槛：飞花令与模拟考试是 max，题库是 pro。
+    // 所以不做「整页锁死」，而是逐卡标注 —— 让人知道要往上走一步，而不是一堵墙。
+    const cards = MODES.map((m) => {
+      const key = m.key === "feihua" ? "feihualing" : m.key === "quiz" ? "quiz" : "exam";
+      const ok = entitlement.can(key);
+      return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(key) });
+    });
+    this.setData({ locked: false, cards });
+    if (cards.some((c) => c.ok)) this.computeLines();
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   computeLines() {
@@ -80,11 +102,31 @@ Page({
   },
 
   onReveal() {
+    if (!entitlement.can("feihualing")) {
+      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
+      return;
+    }
     this.setData({ revealed: !this.data.revealed });
   },
 
   onMode(e) {
-    const key = e.currentTarget.dataset.k;
+    const key = e.currentTarget.dataset.key || e.currentTarget.dataset.k;
+    if (!gate.logged()) {
+      this.onLogin();
+      return;
+    }
+    if (key === "exam" && !entitlement.can("exam")) {
+      wx.showToast({ title: entitlement.hint("exam"), icon: "none" });
+      return;
+    }
+    if (key === "quiz" && !entitlement.can("quiz")) {
+      wx.showToast({ title: entitlement.hint("quiz"), icon: "none" });
+      return;
+    }
+    if (key === "feihua" && !entitlement.can("feihualing")) {
+      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
+      return;
+    }
     if (key === "exam") {
       wx.navigateTo({ url: "/packages/game/exam/exam" });
       return;

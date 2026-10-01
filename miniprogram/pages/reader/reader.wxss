@@ -307,3 +307,13 @@
 .speak-ctrl .sp-main {
   flex: 1.4;
 }
+
+/* 未登录时的那张卡：整页只有它 */
+.locked-card .note {
+  display: block;
+  margin-top: 16rpx;
+}
+
+.locked-btn {
+  margin-top: 32rpx;
+}

@@ -2,6 +2,7 @@ const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
+const gate = require("../../../utils/gate");
 
 const GRADES = Object.keys(S.GRADE_NAMES).map((g) => Number(g));
 
@@ -23,10 +24,16 @@ Page({
     algo: "ebbinghaus",
     algos: [],
     poolSize: 0,
-    lockedHint: ""
+    lockedHint: "",
+    locked: false
   },
 
   onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData({ locked: false });
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
 
@@ -79,6 +86,10 @@ Page({
     );
   },
 
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+  },
+
   /* 单选组统一从这里取新值：radio-group 的 e.detail.value 就是选中那一项的 value */
   onGrade(e) {
     this.save({ grade: Number(e.detail.value) });
@@ -102,6 +113,14 @@ Page({
    * 「换算法不清进度」原来是个确认弹窗，现在也去掉了 —— 那句话是**常驻在页面上的说明**，
    * 每次点都拦一下，等于把「我已知晓」问了四遍。真要说风险，说一次就够。
    * 门禁照旧：不可用的那几套 radio 直接 disabled，点不动，也不会走到这儿。
+   */
+  /**
+   * 换算法。
+   *
+   * 门禁那一圈留着，但换成原生控件的写法：不可用的那几套 radio 直接 disabled，
+   * 点都点不到，也就不会再走到这儿。原来那个「这一套还没开放」的弹窗因此删了 ——
+   * 弹窗本该是「要你决定」，用来播报「你不能点」是错位的。
+   * 「换算法不清进度」也改成页面上的常驻说明，不再每次点都拦一下。
    */
   onAlgo(e) {
     const algo = e.detail.value;

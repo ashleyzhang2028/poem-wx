@@ -2,26 +2,40 @@
  * 后端契约层。**接口都还没有**，所以这里的价值不在「实现了什么」，
  * 而在把「调什么、传什么、失败了怎么办」写死，让后端就绪后只需要填 baseUrl。
  *
- * 三组接口：
+ * 四组接口：
  *   账号   /api/wx/login       /api/wx/refresh
- *   同步   /api/progress/pull  /api/progress/push
+ *   同步   /api/sync/pull      /api/sync/push
  *   TTS    /api/tts/synth      正文合成，返回一个有时效的音频 URL
- *   管理   /api/admin/users    管理员改档位（只在服务端可写）
+ *   管理   /api/admin/accounts|grant|role   改档位与角色（只在服务端可写）
  *
  * 未配置时**一律降级**，绝不假装成功：
  *   - 同步：本机照常用，队列攒着，联网后一次推
  *   - TTS：readiness() 报 awaiting，界面把播放按钮显示成「待开通」
- *   - 管理：只展示本机授权，云端写入入口不出现
+ *   - 管理：名录只读，档位卡片点下去说明「本机标记」，不写服务端
  */
 const store = require("./store");
 
+/**
+ * 接口路径。**两套并存，不是笔误**：
+ *
+ *   微信登录   /api/wx/*      —— 新写的，后端要加（code2Session 换 openid）
+ *   同步与管理 /api/*         —— 复用 poem 已上线的那几个：
+ *                               /api/sync/pull|push、/api/admin/accounts|grant|role
+ *
+ * 同步与管理**刻意复用 poem 的路径与报文形状**，因为那边已经跑在
+ * Supabase 上了。小程序端另起一套，等于同一份进度要走两条入库逻辑，
+ * 迟早有一边先写出「旧数据覆盖新数据」。要接后端时，先接微信登录那一层。
+ */
 const PATHS = {
   login: "/api/wx/login",
   refresh: "/api/wx/refresh",
-  pull: "/api/progress/pull",
-  push: "/api/progress/push",
+  pull: "/api/sync/pull",
+  push: "/api/sync/push",
   speech: "/api/tts/synth",
-  users: "/api/admin/users"
+  accounts: "/api/admin/accounts",
+  grant: "/api/admin/grant",
+  role: "/api/admin/role",
+  me: "/api/me"
 };
 
 function auth() {
@@ -34,10 +48,6 @@ function configured() {
 
 function baseUrl() {
   return auth().baseUrl || "";
-}
-
-function adminKey() {
-  return auth().adminKey || "";
 }
 
 function request(path, data, method) {
@@ -182,23 +192,64 @@ function speech(text) {
 
 /* ---------- 管理 ---------- */
 
+/**
+ * 管理接口就绪判据。**不看本地密钥，看会话里的角色** ——
+ * 密钥是网页版后台那套（服务端 service key 由运维持有），小程序端
+ * 不该有一份。能不能改别人，由服务端按 uid + 角色判，客户端只负责显示。
+ *
+ * 这一条与网页版 `api/_lib/core.js` 的 adminGate 同源：
+ *   没登录 → 401；角色不是 owner/admin → 403。
+ */
 function adminReady() {
-  const a = auth();
-  return !!(configured() && a.adminKey);
+  return !!(configured() && auth.isAdmin && auth.isAdmin());
 }
 
+/** 名录。**走 POST**：与 poem 的 /api/admin/accounts 一致，避免 GET 带 token 被缓存 */
 function listUsers() {
   if (!adminReady()) return Promise.resolve({ users: [], sim: true });
-  return request(PATHS.users, { key: adminKey() }, "GET").then((res) => ({
-    users: (res && res.users) || [],
+  return request(PATHS.accounts, { deviceId: store.deviceId() }).then((res) => ({
+    users: (res && res.accounts) || [],
+    total: (res && res.total) || 0,
+    note: (res && res.note) || "",
     sim: false
   }));
 }
 
-function setUserTier(userId, tier) {
+/**
+ * 改档位。报文形状照抄 poem 的 /api/admin/grant：
+ *   { uid, tier, until, deviceId }  until 为毫秒时间戳，留空即永久
+ */
+function setUserTier(uid, tier, until) {
   if (!adminReady()) return Promise.resolve({ ok: false, sim: true });
-  return request(PATHS.users, { key: adminKey(), userId: userId, tier: tier }, "PATCH").then((res) => ({
-    ok: !!(res && res.ok),
+  return request(PATHS.grant, { uid: uid, tier: tier, until: until || null, deviceId: store.deviceId() }).then(
+    (res) => ({
+      ok: !!(res && (res.changed === undefined || res.changed)),
+      matched: (res && res.matched) || 0,
+      changed: !!(res && res.changed),
+      before: (res && res.before) || "",
+      note: (res && res.note) || "",
+      sim: false
+    })
+  );
+}
+
+/** 回收：降回 free。poem 那边是 DELETE /api/admin/grant */
+function revokeUserTier(uid) {
+  if (!adminReady()) return Promise.resolve({ ok: false, sim: true });
+  return request(PATHS.grant, { uid: uid, deviceId: store.deviceId() }, "DELETE").then((res) => ({
+    ok: true,
+    note: (res && res.note) || "",
+    sim: false
+  }));
+}
+
+/** 改角色。只有 owner 能改 —— 服务端会挡，客户端只做按钮显隐 */
+function setUserRole(uid, role) {
+  if (!adminReady()) return Promise.resolve({ ok: false, sim: true });
+  return request(PATHS.role, { uid: uid, role: role, deviceId: store.deviceId() }).then((res) => ({
+    ok: true,
+    changed: !!(res && res.changed),
+    note: (res && res.note) || "",
     sim: false
   }));
 }
@@ -216,5 +267,7 @@ module.exports = {
   pack,
   adminReady,
   listUsers,
-  setUserTier
+  setUserTier,
+  revokeUserTier,
+  setUserRole
 };

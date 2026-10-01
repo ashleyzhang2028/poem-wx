@@ -134,3 +134,25 @@
   font-size: 24rpx;
   color: var(--amber);
 }
+
+/* 从「去登录」跳过来时，登录卡顶到最上面 */
+.account-lead {
+  border-color: var(--green);
+  box-shadow: 0 6rpx 28rpx rgba(47, 96, 85, .18);
+}
+
+/* 退出登录：原生 button，只留一点间距与字色 */
+.logout {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--ink-3);
+  margin-top: 24rpx;
+}
+
+.kv-note {
+  display: block;
+  text-align: right;
+  margin: -8rpx 0 12rpx;
+}

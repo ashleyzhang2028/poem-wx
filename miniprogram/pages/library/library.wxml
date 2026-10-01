@@ -1,5 +1,11 @@
 <view class="page">
-  <block wx:if="{{!current}}">
+  <view class="card locked-card" wx:if="{{locked}}">
+    <view class="card-title">课外阅读</view>
+    <text class="hint note">{{reason}}</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin" wx:if="{{reason === '登录后可用'}}">微信登录</button>
+  </view>
+
+  <block wx:elif="{{!current}}">
     <view class="group-card" wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
       <view class="gc-head">
         <view>
@@ -20,7 +26,8 @@
       <text>返回全部集子</text>
     </view>
     <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
-      <view class="row" wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
         <view class="row-main">
           <text class="row-title">{{b.name}}</text>
           <text class="row-sub">共 {{b.count}} {{b.unit}}</text>

@@ -30,15 +30,27 @@ Page({
   },
 
   onLoad(query) {
-    const g = entitlement.can("feihualing");
-    this.setData({
-      allowed: g.ok,
-      reason: g.ok ? "" : entitlement.hint("feihualing")
-    });
-    if (!g.ok) return;
+    this.setData({ kind: query.kind === "level" ? "level" : "look" });
+  },
 
-    const kind = query.kind === "level" ? "level" : "look";
-    this.setData({ kind }, () => this.refreshChars());
+  /**
+   * ⚠️ can() 返回的是**布尔**，不是 { ok }。上一版这里读 g.ok，永远是 undefined ——
+   *    于是门禁形同虚设，未登录也能进闯关。
+   * 门禁放 onShow：从「去登录」回来时 onLoad 不会再跑。
+   */
+  onShow() {
+    const ok = entitlement.can("feihualing");
+    this.setData({
+      allowed: ok,
+      reason: ok ? "" : entitlement.hint("feihualing")
+    });
+    if (!ok || this.ready) return;
+    this.ready = true;
+    this.refreshChars();
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onKind(e) {

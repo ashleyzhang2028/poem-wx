@@ -1,4 +1,12 @@
 <view class="page reader">
+  <!-- 未登录：整页只有一句话和去登录的按钮，正文一个字都不渲染 -->
+  <view class="card locked-card" wx:if="{{locked}}">
+    <view class="card-title">{{lockTitle}}</view>
+    <text class="hint note">{{lockNote}}</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
+  </view>
+
+  <block wx:else>
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
@@ -106,4 +114,5 @@
   </view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

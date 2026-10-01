@@ -1,7 +1,8 @@
 <view class="page">
-  <view class="card" wx:if="{{!allowed}}">
+  <view class="card locked-card" wx:if="{{!allowed}}">
     <view class="card-title">飞花令</view>
-    <text class="hint">{{reason}}，在「我的 → 管理层级」可以查看当前的权限。</text>
+    <text class="hint note">{{reason}}</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
   </view>
 
   <block wx:else>

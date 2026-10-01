@@ -78,9 +78,10 @@ function needPlugin() {
 function readiness() {
   const e = env();
 
-  // 档位优先：未授权就是没有这项能力，跟通道无关
+  // 门禁优先：未登录 / 档位不含，就是没有这项能力，跟通道无关。
+  // 界面据此整块不渲染 —— 不是灰着，是根本不存在。
   if (!entitlement.can("speak")) {
-    return { visible: false, usable: false, state: "denied", reason: "当前档位不含朗读，向管理员申请授权后开放" };
+    return { visible: false, usable: false, state: "denied", reason: entitlement.hint("speak") };
   }
 
   if (!e.audio) {

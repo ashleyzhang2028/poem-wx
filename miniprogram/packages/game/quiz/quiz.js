@@ -1,5 +1,6 @@
 const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
+const entitlement = require("../../../utils/entitlement");
 
 const COUNT = 10;
 
@@ -23,10 +24,22 @@ Page({
     last: null,
     answered: 0,
     correct: 0,
-    wrong: []
+    wrong: [],
+
+    allowed: false,
+    reason: ""
   },
 
-  onLoad() {
+  /**
+   * 门禁放 onShow：从「去登录」回来时 onLoad 不会再跑，
+   * 页面就会卡在锁着的样子。从分享链接直接进来的也要过这一关。
+   */
+  onShow() {
+    const ok = entitlement.can("quiz");
+    this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("quiz") });
+    if (!ok || this.ready) return;
+    this.ready = true;
+
     const books = corpus.books().filter((b) => b.id !== "poems");
     const scopes = [{ id: "", name: "课内诗词" }].concat(books.map((b) => ({ id: b.id, name: b.name })));
     this.setData({
@@ -34,6 +47,10 @@ Page({
       forms: quiz.FORMS,
       pickedForms: quiz.FORM_KEYS.slice()
     });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onScope(e) {

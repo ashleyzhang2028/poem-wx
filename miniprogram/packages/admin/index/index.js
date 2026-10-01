@@ -3,31 +3,42 @@ const tiers = require("../../../utils/tiers");
 const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
 const auth = require("../../../utils/auth");
+const gate = require("../../../utils/gate");
+
+const ROLE_NAME = { owner: "所有者", admin: "管理员", user: "普通用户" };
 
 /**
  * 管理页：给微信登录用户分层设置（free / pro / max，与 poem 口径一致）。
  *
- * ⚠️ 这里必须说清楚一件事：**微信小程序不支持个人主体的虚拟支付**，
- *   付费档不能在小程序内下单。所以 pro / max 只能由管理员发放 ——
- *   兑换码，或后端名录里改档。这个页面做的就是这个。
+ * 三块，按「谁看得到」分开：
+ *   我的授权 —— 登录用户都能看（只读）。这一档开了什么，一眼看完。
+ *   用户名录 —— 登录 + 服务端就绪才能看；要 owner / admin 才能改。
+ *   能力矩阵 —— 与我的授权同一张表，逐条列出，不可用的写明差在哪一档。
  *
- * 页面分三块：
- *   本机授权  —— 一定能读能改（改的是自己）
- *   用户名录  —— 服务端就绪时能改；没就绪就说只读，不做假按钮
- *   能力矩阵  —— 当前档位下每条能力开没开
+ * ⚠️ 与上一版的差别：本机**不能自己改档位**了。上一版有个「改本机层级」的卡片，
+ *   点两下就能升到 max —— 那等于把管理页变成自助提权，「管理页给登录用户分级」
+ *   就成了摆设。现在档位只有一个来源：管理员在名录里按人发。
+ *
+ * ⚠️ 另一件要说清的：微信小程序不支持个人主体的虚拟支付，
+ *   但这一版**根本不需要支付** —— 三档都是管理员按人分的，界面不出现价格。
  */
 Page({
   data: {
+    logged: false,
     status: {},
     tiers: tiers.TIERS,
     caps: [],
-    stats: {},
+    groups: [],
+    stats: { caps: 0, enabled: 0 },
+
     users: [],
     rosterNote: "",
     generatedAt: "",
     remoteReady: false,
     adminReady: false,
-    code: "",
+    roleLabel: "",
+    canWrite: false,
+    canSetRole: false,
     busy: false,
     msg: ""
   },
@@ -38,82 +49,112 @@ Page({
 
   refresh() {
     const snap = entitlement.snapshot();
-    const caps = entitlement.CAP_KEYS.map((k) => Object.assign({ key: k }, snap.caps[k]));
-
+    // canWrite / canSetRole 先落到局部：decorate() 在 setData 生效之前就跑了，
+    // 从 this.data 读会读到上一轮的值
+    const canWrite = admin.canWrite();
+    const canSetRole = admin.canSetRole();
     this.setData({
+      logged: snap.logged,
       status: snap,
-      caps,
+      caps: entitlement.CAP_KEYS.map((k) => Object.assign({ key: k }, snap.caps[k])),
+      groups: this.groupCaps(snap),
       stats: admin.stats(),
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
-      code: auth.configured() ? "" : this.data.code
+      canWrite: canWrite,
+      canSetRole: canSetRole,
+      roleLabel: ROLE_NAME[auth.role()] || "普通用户"
     });
 
+    if (!snap.logged) return;
     admin.list().then((res) => {
       this.setData({
-        users: this.decorate(res.users),
-        rosterNote: res.rosterNote,
-        generatedAt: res.generatedAt
+        users: this.decorate(res.users, canWrite, canSetRole),
+        rosterNote: res.note || "",
+        generatedAt: admin.roster().generatedAt || ""
       });
     });
   },
 
   /**
-   * 每一行带上来源与「能不能改」。
+   * 每一行补两件事：从哪来的、这一行能不能改。
    *
-   * 这一页原来给每行摆三个档位小标签，点哪个就是改哪个 —— 看着直观，
-   * 但后端没就绪时那三个标签也在，点下去只会弹一句「只读」。
-   * 现在：能改的给一个原生按钮，不能改的写清是只读。
+   * 原先是把两个嵌套三元表达式摊在模板里（`item.local ? '本机' : (item.remote ? …)`），
+   * 读的人得先在脑子里跑一遍；「能不能改」更是分散在两个按钮的 wx:if 上。
+   * 挪到这里，一眼能看完。
    */
-  decorate(users) {
-    const canWrite = remote.adminReady();
+  decorate(users, canWrite, canSetRole) {
     return (users || []).map((u) => {
-      let scopeText = "名册";
+      let scopeText = "名册只读";
       if (u.local) scopeText = "本机";
-      else if (u.remote) scopeText = "云端";
-      return Object.assign({}, u, { scopeText, editable: canWrite || !!u.local });
+      else if (u.remote) scopeText = "服务端";
+      return Object.assign({}, u, {
+        scopeText,
+        // 名册里的那批是构建产物，改不了；服务端与本机这两条才谈得上「可写」
+        editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
+      });
     });
   },
 
-  onCode(e) {
-    this.setData({ code: e.detail.value });
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
-  onRedeem() {
-    const res = entitlement.redeem(this.data.code);
-    if (!res.ok) {
-      this.setData({ msg: res.msg });
+  /**
+   * 能力分组。与 entitlement.CAPS 同表 —— 分组只是排版，
+   * 判据一律走 snapshot().caps[key].ok，界面不自己算。
+   */
+  groupCaps(snap) {
+    const GROUPS = [
+      { title: "免费档（登录即得）", keys: ["daily", "library", "pinyin", "ebbinghaus", "progress", "search"] },
+      { title: "登录即开", keys: ["speak", "export", "leitner"] },
+      { title: "专业档起", keys: ["sm2", "quiz", "collections", "admin"] },
+      { title: "全能档起", keys: ["fsrs", "feihualing", "exam"] }
+    ];
+    return GROUPS.map((g) => ({
+      title: g.title,
+      rows: g.keys
+        .map((k) => {
+          const c = snap.caps[k];
+          return c ? { name: c.name, desc: c.desc, on: c.ok, note: c.ok ? "" : entitlement.hint(k) } : null;
+        })
+        .filter(Boolean)
+    }));
+  },
+
+  /* ---------- 改档 ---------- */
+
+  onSetTier(e) {
+    const userId = e.currentTarget.dataset.u;
+    const current = e.currentTarget.dataset.t;
+
+    if (!this.data.canWrite) {
+      wx.showModal({
+        title: "改不了别人的档位",
+        content: this.data.remoteReady
+          ? "要管理员角色才能改（当前：" + this.data.roleLabel + "）。"
+          : "后端接口还没部署，名录只读。档位由管理员在服务端发放。",
+        showCancel: false,
+        confirmText: "知道了"
+      });
       return;
     }
-    this.setData({ msg: "已升到「" + tiers.nameOf(res.tier) + "」本机授权", code: "" });
-    this.refresh();
-  },
 
-  onRevoke() {
-    wx.showModal({
-      title: "退回免费档",
-      content: "本机授权会清掉。背诵进度不受影响 —— 档位只管能力，不管数据。",
-      success: (r) => {
-        if (!r.confirm) return;
-        entitlement.revoke();
-        this.refresh();
-      }
-    });
-  },
-
-  onEditTier(e) {
-    const userId = e.currentTarget.dataset.u;
-    const row = (this.data.users || []).find((u) => u.id === userId);
-    if (!row || !row.editable) return;
+    const items = tiers.TIERS.map((t) => ({
+      key: t.key,
+      text: t.name + "（" + t.key + "）"
+    }));
+    items.unshift({ key: "", text: "收回（重置为免费）" });
 
     wx.showActionSheet({
-      itemList: tiers.TIERS.map((t) => t.name + "（" + t.key + "）"),
+      itemList: items.map((i) => i.text),
       success: (res) => {
-        const t = tiers.TIERS[res.tapIndex];
-        if (!t || t.key === row.tier) return;
+        const pick = items[res.tapIndex];
+        if (!pick || pick.key === current) return;
 
         this.setData({ busy: true, msg: "" });
-        admin.setTier(userId, t.key, !!row.local).then((r) => {
+        const job = pick.key ? admin.setTier(userId, pick.key) : admin.revokeTier(userId);
+        job.then((r) => {
           this.setData({ busy: false, msg: r.msg });
           this.refresh();
         });
@@ -121,21 +162,56 @@ Page({
     });
   },
 
-  onSync() {
-    const sync = require("../../../utils/sync");
-    sync.now(true).then((res) => {
-      let msg = "本机数据只在本机，功能不受影响";
-      if (res.error) msg = "同步失败：" + res.error;
-      else if (!res.skipped) msg = "同步完成，拉回 " + (res.pulled || 0) + " 条，推出 " + (res.pushed || 0) + " 条";
-      else if (res.skipped === "offline") msg = "后端或登录未就绪，队列已攒下 " + (res.pending || 0) + " 条";
-      this.setData({ msg });
+  onSetRole(e) {
+    const userId = e.currentTarget.dataset.u;
+    const current = e.currentTarget.dataset.r;
+
+    if (!this.data.canSetRole) {
+      wx.showToast({ title: "改角色只对 owner 开放", icon: "none" });
+      return;
+    }
+
+    const items = [
+      { text: "普通用户（user）", key: "user" },
+      { text: "管理员（admin）", key: "admin" }
+    ];
+    wx.showActionSheet({
+      itemList: items.map((i) => i.text),
+      success: (res) => {
+        const pick = items[res.tapIndex];
+        if (!pick || pick.key === current) return;
+        this.setData({ busy: true, msg: "" });
+        admin.setRole(userId, pick.key).then((r) => {
+          this.setData({ busy: false, msg: r.msg });
+          this.refresh();
+        });
+      }
     });
+  },
+
+  onLoadAccounts() {
+    if (!this.data.adminReady) {
+      wx.showModal({
+        title: "云端名录不可用",
+        content:
+          (this.data.remoteReady
+            ? "后端已配置，但你这一档不是管理员，读不到全站名录。"
+            : "后端接口还没部署。名录要服务端就绪后才有。") +
+          "\n\n下面的名单是构建时导入的名册（只读），没有它就只能看自己。",
+        showCancel: false,
+        confirmText: "知道了"
+      });
+      return;
+    }
+    this.setData({ busy: true });
+    this.refresh();
+    setTimeout(() => this.setData({ busy: false }), 600);
   },
 
   onCopyFeedback() {
     wx.setClipboardData({
       data: "belem@cnb.cool",
-      success: () => wx.showToast({ title: "邮箱已复制，可以申请授权", icon: "none" })
+      success: () => wx.showToast({ title: "邮箱已复制，可以申请档位", icon: "none" })
     });
   }
 });

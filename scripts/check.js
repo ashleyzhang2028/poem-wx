@@ -319,14 +319,20 @@ const AUDIO = {
 };
 const PLUGIN = { getPlugin: () => ({ textToSpeech: (o) => o.success({ filename: "x.mp3" }) }) };
 
+// 这一节的每个环境都先登录 —— 未登录什么都不可见，那是另一个断言（下面 d 组）。
+// 混在一起会让「通道没就绪」和「没登录」两个原因互相遮盖，分不出是哪个在挡。
+const LOGGED = { kb_profile_v1: { logged: true } };
+
 // a) 没有音频接口 —— 朗读「不可见」
 let env = bootSpeech({});
+env.box["kb_profile_v1"] = { logged: true };
 ok("无音频接口时朗读不可见", env.speech.readiness().visible === false, JSON.stringify(env.speech.readiness()));
 ok("无音频接口时朗读报 unsupported", env.speech.readiness().state === "unsupported");
 env.restore();
 
 // b) 有音频、没插件 —— 「可见但未就绪」，要显示成待开通而不是假装能用
 env = bootSpeech(AUDIO);
+env.box["kb_profile_v1"] = { logged: true };
 ok("缺少合成通道时朗读可见", env.speech.readiness().visible === true);
 ok("缺少合成通道时朗读不可用", env.speech.readiness().usable === false);
 ok("缺少合成通道时报 awaiting", env.speech.readiness().state === "awaiting");
@@ -335,34 +341,30 @@ env.restore();
 
 // c) 全部就绪
 env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
+env.box["kb_profile_v1"] = { logged: true };
 ok("通道齐备时朗读就绪", env.speech.readiness().usable === true);
 ok("通道齐备时选题用插件", env.speech.resolveProvider() === "plugin");
 env.restore();
 
-// d) 宿主模式：没登录也是全能力 —— 这是「不登录也能用全部功能」的兑现点，
-//    不是漏权。本机数据只属于本机，所以朗读在宿主下应当可用。
+void LOGGED;
+
+// d) 未登录：朗读整块不存在。这是 Issue 那条「未登录只能浏览首页」的落点 ——
+//    上一版这里走的是「本机宿主」，未登录反而拿得比 pro 多，那条口子已拆。
 env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
 env.box["kb_profile_v1"] = { logged: false };
-ok("宿主下未登录也保留朗读", env.ent.can("speak") === true);
-ok("宿主来源标得清楚", env.ent.status().source === "host", env.ent.status().source);
+ok("未登录：朗读不可见", env.speech.readiness().visible === false, JSON.stringify(env.speech.readiness()));
+ok("未登录：朗读报 denied", env.speech.readiness().state === "denied");
+ok("未登录：未授权的原因说「登录后可用」", env.speech.readiness().reason === "登录后可用", env.speech.readiness().reason);
 
-// d2) 关掉宿主后（模拟真·后端分层）：未登录不得拿朗读，登录才给
-const tmod = require(path.join(ROOT, "utils", "tiers.js"));
-const hostedFn = tmod.hosted;
-tmod.hosted = () => false;
-
-env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
-env.box["kb_profile_v1"] = { logged: false };
-ok("非宿主 + 未登录：朗读不可见", env.speech.readiness().visible === false, JSON.stringify(env.speech.readiness()));
-ok("非宿主 + 未登录：报 denied", env.speech.readiness().state === "denied");
-
+// 登录（free 档）：朗读是登录门槛的能力，通道齐备就该能用
 env.box["kb_profile_v1"] = { logged: true };
-ok("非宿主 + 已登录：朗读可见且可用", env.speech.readiness().usable === true, JSON.stringify(env.speech.readiness()));
+ok("登录后朗读可见且可用", env.speech.readiness().usable === true, JSON.stringify(env.speech.readiness()));
+ok("登录后朗读状态来自 readiness", env.speech.readiness().state === "ready");
 
-// 付费档在拿不到后台档位时必须按未授权处理，不能凭本机写个 max 就提档
+// 本机自己写一份高档位不生效：档位只认服务端下发的那一份
 env.box["kb_profile_v1"] = { logged: true, tier: "max" };
-ok("本机写 max 不生效（后台离线时降级）", env.ent.status().blocked === "local", JSON.stringify(env.ent.status()));
-tmod.hosted = hostedFn;
+ok("本机写 max 不生效（无签名，按免费算）", env.ent.status().blocked === "unsigned", JSON.stringify(env.ent.status()));
+ok("无签名档位退回免费", env.ent.status().tier === "free", env.ent.status().tier);
 env.restore();
 
 // e) 注音：读音表不在就整块关掉
@@ -437,7 +439,9 @@ pages.forEach((p) => {
   while ((m = re.exec(wxml))) refs.add(m[1]);
   refs.forEach((name) => {
     // item / index 是 wx:for 的内置名，tk / t / b / p 等是本项目自定的 wx:for-item 名
-    if (["item", "index", "tk", "t", "b", "p", "l", "true", "false"].indexOf(name) >= 0) return;
+    // item / index 是 wx:for 的内置名；其余是本项目自定的 wx:for-item 名，
+    // 它们不是 data 字段，不该被算成「js 里没出现」。
+    if (["item", "index", "tk", "t", "b", "p", "l", "grp", "caprow", "true", "false"].indexOf(name) >= 0) return;
     if (js.indexOf(name) < 0) unusedWarn.push(p + " → " + name);
   });
 });
@@ -553,6 +557,7 @@ Object.keys(SPEAK_PAGES).forEach((p) => {
 /* ---------- 7.6 权限分层 ---------- */
 const E = require(path.join(ROOT, "utils", "entitlement.js"));
 const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
+const gateMod = require(path.join(ROOT, "utils", "gate.js"));
 
 ok("三档齐备", tiersMod.TIER_KEYS.join(",") === "free,pro,max", tiersMod.TIER_KEYS.join(","));
 
@@ -591,9 +596,12 @@ ok("每条能力都有人话名字与说明", E.CAPS.every((c) => !!c.name && !!
  * 管理页的能力分组必须把表里的每一条都摆出来。
  * 分组是排版，但它同时也是「这道口子给谁看」的清单 ——
  * 漏一条就是「表里有、管理页看不见」，用户永远不知道有这个东西。
+ *
+ * 这里原来查的是 packages/settings/admin —— 那个页面这一版删掉了：
+ * 它和 packages/admin 是同一件事的两份实现，其中一份还带自助提权。
  */
 {
-  const page = fs.readFileSync(path.join(ROOT, "packages", "settings", "admin", "admin.js"), "utf8");
+  const page = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
   const listed = [];
   const blocks = page.match(/keys:\s*\[[^\]]*\]/g) || [];
   blocks.forEach((b) => {
@@ -603,9 +611,9 @@ ok("每条能力都有人话名字与说明", E.CAPS.every((c) => !!c.name && !!
   ok("管理页把每条能力都摆出来", missing.length === 0, "漏了 " + missing.join(", "));
 
   // WXML 里也得真的在渲染这个分组，光 JS 里有数据没用
-  const wxml = fs.readFileSync(path.join(ROOT, "packages", "settings", "admin", "admin.wxml"), "utf8");
-  ok("管理页渲染能力分组", wxml.indexOf("grp.rows") >= 0 && wxml.indexOf("caps") >= 0);
-  ok("管理页显示本机档位来源", wxml.indexOf("source") >= 0);
+  const wxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
+  ok("管理页渲染能力分组", wxml.indexOf("grp.rows") >= 0 && wxml.indexOf("groups") >= 0);
+  ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
 
 
@@ -615,76 +623,230 @@ const snap = E.snapshot();
 ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length);
 
 /**
- * 分层判据本身要验一遍 —— 这是自检里最容易「看起来没问题」的一块：
- * 宿主模式把所有人都放行，三档在宿主下**长得一模一样**，
- * 于是 can() 哪怕把两个操作数写反了也一路绿。
- * 所以这里必须关掉宿主，按 profile 真的走一遍三档。
+ * 分层判据本身要验一遍 —— 这是自检里最容易「看起来没问题」的一块。
+ *
+ * 上一版这里有个坑：宿主模式（未登录 = 全部放行）让三档长得一模一样，
+ * 于是 can() 哪怕把比较写反了也一路绿。现在没有宿主了，
+ * **每一档都真的走 can()**，写反了当场红。
+ *
+ * 档位的三条来源也各验一遍：服务端下发 / 授权码 / 本机自写（必须按免费算）。
  */
 {
-  const hostedFn = tiersMod.hosted;
-  tiersMod.hosted = () => false;
-
   const setProfile = (p) => store.saveProfile(Object.assign({ grant: null }, p));
   const clearGrant = () => store.drop(store.KEYS.grant);
+  const setAuth = (a) => store.write(store.KEYS.auth, Object.assign({ baseUrl: "https://example.test" }, a || {}));
+  const clearAuth = () => store.drop(store.KEYS.auth);
+  const clearCaps = () => store.drop(store.KEYS.caps);
 
-  // 免费 + 未登录：付费能力一律不可用，登录门槛的给出登录提示
+  // ---- 未登录：一条能力都不给，连 free 都不给 ----
   clearGrant();
-  setProfile({ logged: false, tier: "free" });
-  ok("免费档拿不到付费能力", E.can("sm2") === false && E.can("fsrs") === false);
-  ok("免费档拿不到飞花令", E.can("feihualing") === false);
-  ok("免费档未登录拿不到朗读", E.can("speak") === false);
+  clearAuth();
+  clearCaps();
+  setProfile({ logged: false, tier: "" });
+  ok("未登录拿不到免费能力", E.can("daily") === false && E.can("library") === false);
+  ok("未登录拿不到付费能力", E.can("sm2") === false && E.can("fsrs") === false);
+  ok("未登录拿不到飞花令", E.can("feihualing") === false);
   ok("未登录的提示是「登录后可用」", E.hint("speak") === "登录后可用", E.hint("speak"));
-  ok("付费能力给出档位提示", E.hint("feihualing").indexOf("全能") >= 0, E.hint("feihualing"));
+  ok("未登录 snapshot 不给任何能力", E.CAP_KEYS.every((k) => E.snapshot().caps[k].ok === false));
 
-  // 免费 + 已登录：登录门槛的能力打开，付费能力仍然关着。
-  // 「登录后朗读可用」这条（上面 d2 验了 readiness）根子上就是这条在管。
-  setProfile({ logged: true, tier: "free" });
+  // ---- 登录（免费档）：登录门槛的能力打开，付费能力仍然关着 ----
+  setProfile({ logged: true, tier: "" });
+  ok("登录后每日背诵打开", E.can("daily") === true);
   ok("登录后朗读打开", E.can("speak") === true);
   ok("登录后导出打开", E.can("export") === true);
+  ok("登录后莱特纳盒打开", E.can("leitner") === true);
   ok("登录不解锁付费能力", E.can("sm2") === false && E.can("feihualing") === false);
+  ok("付费能力给出档位提示", E.hint("feihualing").indexOf("全能") >= 0, E.hint("feihualing"));
 
-  // 提权码就是本机档位的载体（管理页改档、兑换码都写在这一处）
-  store.write(store.KEYS.grant, { code: "LOCAL-PRO", tier: "pro", at: Date.now() });
+  // ---- 提权码：本机档位的载体，管理页改档、兑换码都写在这一处 ----
+  store.write(store.KEYS.grant, { code: "PRO-ABCD-1234", tier: "pro", at: Date.now() });
   ok("提权码把档位提到 pro", E.status().tier === "pro", E.status().tier);
   ok("pro 解锁 SM-2", E.can("sm2") === true);
+  ok("pro 解锁题库", E.can("quiz") === true);
   ok("pro 仍拿不到飞花令（max 起）", E.can("feihualing") === false);
 
-  store.write(store.KEYS.grant, { code: "LOCAL-MAX", tier: "max", at: Date.now() });
+  store.write(store.KEYS.grant, { code: "MAX-ABCD-1234", tier: "max", at: Date.now() });
+  ok("提权码把档位提到 max", E.status().tier === "max", E.status().tier);
   ok("max 解锁飞花令", E.can("feihualing") === true);
+  ok("max 解锁模拟考试", E.can("exam") === true);
   ok("可用能力才有空提示", E.hint("feihualing") === "");
 
-  // 档位越高能用得越多，一条都不能反 —— 这就是当初写反的那个不等号
+  // ---- 档位越高能用得越多，一条都不能反 ----
   const onCount = (tier) => {
     clearGrant();
-    setProfile({ logged: true, tier });
-    if (tier !== "free") store.write(store.KEYS.grant, { code: "LOCAL-" + tier, tier, at: Date.now() });
+    setProfile({ logged: true, tier: "" });
+    if (tier !== "free") store.write(store.KEYS.grant, { code: tier.toUpperCase() + "-ABCD-1234", tier, at: Date.now() });
     let n = 0;
     E.CAP_KEYS.forEach((k) => {
       if (E.can(k)) n += 1;
     });
     return n;
   };
+  const nAnon = (() => {
+    clearGrant();
+    setProfile({ logged: false });
+    let n = 0;
+    E.CAP_KEYS.forEach((k) => {
+      if (E.can(k)) n += 1;
+    });
+    return n;
+  })();
   const nFree = onCount("free");
   const nPro = onCount("pro");
   const nMax = onCount("max");
+  ok("未登录拿不到任何能力（" + nAnon + " = 0）", nAnon === 0, nAnon + " 条");
   ok("档位越高能力越多（" + nFree + " ≤ " + nPro + " ≤ " + nMax + "）", nFree <= nPro && nPro <= nMax);
   ok("max 拿得到全部能力", nMax === E.CAP_KEYS.length, nMax + " / " + E.CAP_KEYS.length);
 
+  // ---- 服务端下发的档位最权威，且带签名 ----
   clearGrant();
-  tiersMod.hosted = hostedFn;
+  setProfile({ logged: true, tier: "" });
+  setAuth({ accessToken: "t", tier: "max" });
+  ok("服务端档位生效", E.status().tier === "max" && E.status().source === "remote", JSON.stringify(E.status()));
+  ok("服务端档位标记为带签名", E.status().signed === true);
+  ok("服务端档位解锁飞花令", E.can("feihualing") === true);
+
+  // 服务端下发的按人开关：改档位之外还有一条「单独关掉某人某项能力」
+  store.write(store.KEYS.caps, { feihualing: false });
+  ok("服务端可以把某项能力单独关掉", E.can("feihualing") === false);
+  ok("关掉后提示说清是谁关的", E.hint("feihualing").indexOf("管理员") >= 0, E.hint("feihualing"));
+  clearCaps();
+
+  // ---- 本机自己写的档位不生效（这条守的就是被拆掉的那条后门）----
+  clearAuth();
+  clearGrant();
+  setProfile({ logged: true, tier: "max" });
+  ok("本机写 max 不生效（无签名，按免费算）", E.status().blocked === "unsigned", JSON.stringify(E.status()));
+  ok("无签名的档位退回免费", E.status().tier === "free", E.status().tier);
+  ok("无签名时不放行付费能力", E.can("fsrs") === false);
+
+  clearAuth();
+  clearGrant();
+  clearCaps();
+  setProfile({ logged: true, tier: "" });
 }
 
-// 本机宿主下四套算法都能开 —— 这条是「不登录也能用全部功能」的兑现点
-ok("宿主下 FSRS 可用", E.algoAllowed("fsrs") === true);
-ok("宿主下 SM-2 可用", E.algoAllowed("sm2") === true);
+/**
+ * 门禁（gate.js）：未登录能做什么、不能做什么。
+ *
+ * 这一节守的是 Issue 那句「不登录用户只能浏览首页，首页默认列出一年级诗词，无法点击」。
+ */
+{
+  const gate = gateMod;
+  const setProfile = (p) => store.saveProfile(Object.assign({ grant: null }, p));
+
+  setProfile({ logged: false, tier: "" });
+  ok("未登录：能看首页", gate.allow("browse-home") === true);
+  ok("未登录：能切年级看目录", gate.allow("browse-grade") === true);
+  ok("未登录：能看关于页", gate.allow("about") === true);
+  ok("未登录：打不开正文", gate.canRead() === false);
+  ok("未登录：不能搜索", gate.allow("search") === false);
+  ok("未登录：不能答题", gate.allow("quiz") === false);
+  ok("未登录：不能导出", gate.allow("export") === false);
+  ok("未登录的门槛一句人话带下一步", gate.refuse("每日背诵").content.indexOf("登录") >= 0);
+  ok("未登录的年级固定为一年级", gate.grade() === 1, gate.grade());
+
+  setProfile({ logged: true, tier: "" });
+  ok("登录后：能打开正文", gate.canRead() === true);
+  ok("登录后：年级听本机设置", gate.grade() === store.settings().grade);
+  ok("登录后：什么动作都放行", gate.allow("quiz") === true && gate.allow("export") === true);
+  ok("登录后没有任何拒绝措辞", gate.refuse("随便什么").ok === true);
+
+  setProfile({ logged: false, tier: "" });
+  store.saveSettings({ grade: 9 });
+  ok("未登录不跟着本机设置跑到九年级", gate.grade() === 1);
+  store.saveSettings({ grade: 1 });
+}
+
+/**
+ * 页面级门禁：**扫 WXML 源码**，确认每个页面都真的把未登录挡在外面。
+ * 上面那些断言验的是判据，这里验的是「页面有没有照着做」——
+ * 两者差一环，就会出现「gate 说不让进、页面照样渲染」。
+ */
+{
+  const GATED = {
+    "pages/reader/reader": "locked",
+    "pages/list/list": "locked",
+    "pages/library/library": "locked",
+    "pages/search/search": "locked",
+    "pages/mine/mine": "logged",
+    "packages/game/index/index": "locked",
+    "packages/game/quiz/quiz": "allowed",
+    "packages/game/exam/exam": "allowed",
+    "packages/game/feihua/feihua": "allowed",
+    "packages/progress/index/index": "locked",
+    "packages/settings/recite/recite": "locked",
+    "packages/settings/reader/reader": "locked",
+    "packages/settings/general/general": "locked",
+    "packages/admin/index/index": "logged"
+  };
+  Object.keys(GATED).forEach((p) => {
+    const flag = GATED[p];
+    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+    ok("门禁变量在 WXML 里用上了 " + p, wxml.indexOf(flag) >= 0, "WXML 里找不到 " + flag);
+    ok("门禁变量在 js 里出现过 " + p, js.indexOf(flag) >= 0);
+  });
+
+  // 阅读页：未登录时正文一个字都不该渲染
+  const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  ok("阅读页未登录时正文在 block wx:else 里", readerWxml.indexOf("block wx:else") >= 0);
+  ok("阅读页锁定时不渲染诗句", readerWxml.indexOf("poem-line") > readerWxml.indexOf("block wx:else"));
+
+  // 设置页三项都不许在未登录时露出开关
+  ["general/general", "recite/recite", "reader/reader"].forEach((p) => {
+    const wxml = fs.readFileSync(path.join(ROOT, "packages/settings", p + ".wxml"), "utf8");
+    ok("设置页未登录时不渲染设置项 " + p, wxml.indexOf("block wx:else") >= 0);
+  });
+
+  /**
+   * 门禁必须写在 onShow 里，不能只在 onLoad。
+   *
+   * 这不是风格问题：从「去登录」跳回来时 onLoad **不会再跑**，
+   * 于是登录成功了、页面还锁着，用户以为登录没生效。
+   * 这一组断言就是钉住它 —— 凡是页面 js 里出现门禁判据的，
+   * 判据所在的那个函数必须能被 onShow 触达。
+   */
+  const GATE_MARK = /gate\.(logged|canRead)\(|entitlement\.can\(/;
+  Object.keys(GATED).forEach((p) => {
+    const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+    if (!GATE_MARK.test(js)) return;
+    // 要么有 onShow，要么 onShow 里直接调了带门禁的方法（reader 的 loadEntry 就是后者）
+    const hasOnShow = /onShow\s*\(/.test(js);
+    ok("门禁能被 onShow 触达 " + p, hasOnShow, "只有 onLoad，登录回来不会解锁");
+  });
+
+  // reader 是特例：门禁在 onShow 里，装载在 loadEntry 里，两者都在 onShow 里串起来
+  {
+    const js = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+    ok("阅读页 onShow 里查门禁", /onShow[\s\S]{0,300}gate\.logged\(\)/.test(js));
+    ok("阅读页装载只做一次", js.indexOf("this.loaded") >= 0);
+  }
+}
+
+/**
+ * 管理页不许留自助提权的口子。
+ * 上一版有个「改本机层级」的卡片，点两下就能把自己升到 max ——
+ * 那让「管理页给登录用户分级」成了摆设。这一节就是钉住它别再回来。
+ */
+{
+  const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
+  const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
+  const adminLib = fs.readFileSync(path.join(ROOT, "utils/admin.js"), "utf8");
+
+  ok("管理页不写本机档位", adminJs.indexOf("store.KEYS.grant") < 0, "管理页还在直接写 grant");
+  ok("管理页不写本机档位（wxml 也没有改档卡片）", adminWxml.indexOf("改本机层级") < 0);
+  ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
+  ok("服务端没就绪时如实说改不了", adminLib.indexOf("改不了") >= 0);
+  ok("管理页区分「能改」与「只读」", adminWxml.indexOf("canWrite") >= 0);
+  ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
+  ok("管理页把每条能力都摆出来", E.CAP_KEYS.every((k) => adminJs.indexOf('"' + k + '"') >= 0),
+    E.CAP_KEYS.filter((k) => adminJs.indexOf('"' + k + '"') < 0).join(", "));
+}
 
 // 提权码：形状不对要挡住
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
 ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
-
-// 客户端的档位不是安全边界：写死 max 也只能提到本机档，且必须留痕
-store.saveProfile({ tier: "max" });
-ok("本机写入的档位不外溢成服务端授权", E.status().source === "host" || E.status().source === "grant");
 
 /* ---------- 8. 详情页索引命中 ---------- */
 const sampleId = allEntries[0].id;
@@ -713,6 +875,8 @@ const subs = {};
 
 ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0, JSON.stringify(subs.game));
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
+// 同一件事不许有两份实现 —— settings 下那个 admin 页已并入 packages/admin
+ok("管理页只有一份实现", (subs.settings || []).indexOf("admin/admin") < 0, "settings 下还留着 admin 页");
 ok("设置分包含阅读与朗读", (subs.settings || []).indexOf("reader/reader") >= 0);
 
 // 首页那三张卡能点进去的页面都得存在
@@ -755,9 +919,20 @@ ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
 ok(
   "契约路径齐全",
-  !!(remoteMod.PATHS.login && remoteMod.PATHS.pull && remoteMod.PATHS.push && remoteMod.PATHS.speech && remoteMod.PATHS.users),
+  !!(remoteMod.PATHS.login &&
+    remoteMod.PATHS.refresh &&
+    remoteMod.PATHS.pull &&
+    remoteMod.PATHS.push &&
+    remoteMod.PATHS.speech &&
+    remoteMod.PATHS.accounts &&
+    remoteMod.PATHS.grant &&
+    remoteMod.PATHS.role),
   JSON.stringify(Object.keys(remoteMod.PATHS))
 );
+// 同步与管理刻意复用 poem 已上线的路径 —— 另起一套等于同一份进度两条入库逻辑
+ok("同步复用 poem 的路径", remoteMod.PATHS.pull === "/api/sync/pull" && remoteMod.PATHS.push === "/api/sync/push");
+ok("管理复用 poem 的路径", remoteMod.PATHS.accounts === "/api/admin/accounts" && remoteMod.PATHS.grant === "/api/admin/grant");
+ok("微信登录是新增的那一套", remoteMod.PATHS.login === "/api/wx/login");
 
 // 打包形状：进度与已读都要打得出来，id 用条目 id（服务端不必懂语料结构）
 store.markRead("poems", "probe-1");
@@ -871,12 +1046,17 @@ function scanSelfMadeControls(src) {
 }
 
 // A. 用户要选的每一件事，都得有原生控件兜着
-/** 「本页必须出现哪个原生控件」—— 缺了就是那个能力在界面上没控件可用 */
+/**
+ * 「本页必须出现哪个原生控件」—— 缺了就是那个能力在界面上没控件可用。
+ *
+ * 管理页不在此列：它这版没有「选一个档位」的控件了 —— 改档与改角色都走原生
+ * showActionSheet（一次点击、一次选择，选完就落）。那是**系统**的控件，
+ * 比页面里摆一排按钮更原生，所以它有 B 条守着，不需要 A 条。
+ */
 const NEEDS_NATIVE = {
   "packages/settings/recite/recite": ["radio-group"],
   "packages/settings/general/general": ["radio-group", "slider", "switch"],
   "packages/settings/reader/reader": ["radio-group", "switch"],
-  "packages/settings/admin/admin": ["radio-group"],
   "pages/list/list": ["radio-group"],
   "pages/search/search": ["radio-group"],
   "pages/reader/reader": ["radio-group", "slider"],

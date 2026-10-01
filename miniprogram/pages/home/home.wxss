@@ -103,3 +103,14 @@
   text-align: center;
   padding: 16rpx 0 40rpx;
 }
+
+/* 未登录时的行尾标记：› 换成一把小锁的意思，别让人以为点得动 */
+.row-state.lock {
+  color: var(--line);
+}
+
+.hint.foot {
+  display: block;
+  text-align: center;
+  margin: 8rpx 0 24rpx;
+}

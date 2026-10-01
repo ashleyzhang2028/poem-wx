@@ -1,5 +1,11 @@
 <view class="page">
-  <block wx:if="{{stage === 'setup'}}">
+  <view class="card locked-card" wx:if="{{!allowed}}">
+    <view class="card-title">模拟考试</view>
+    <text class="hint note">{{reason}}</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
+  </view>
+
+  <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
       <view class="card-title">考试范围</view>
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">

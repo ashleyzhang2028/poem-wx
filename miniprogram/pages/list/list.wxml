@@ -1,4 +1,11 @@
 <view class="page">
+  <view class="card locked-card" wx:if="{{locked}}">
+    <view class="card-title">登录后可用</view>
+    <text class="hint note">书目与正文要微信登录之后才能看。</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
+  </view>
+
+  <block wx:else>
   <view class="card index-card" wx:if="{{groups.length > 1}}">
     <view class="index-head">
       <text class="card-title">索引</text>
@@ -33,7 +40,8 @@
       <text class="group-name">{{item.group}}</text>
       <text class="group-count">{{item.items.length}}</text>
     </view>
-    <view class="row" wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
+    <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
       <text class="seq">{{p.seq}}</text>
       <view class="row-main">
         <text class="row-title">{{p.title}}</text>
@@ -45,4 +53,5 @@
   </view>
 
   <view class="empty" wx:if="{{!groups.length}}">没有匹配的篇目</view>
+  </block>
 </view>

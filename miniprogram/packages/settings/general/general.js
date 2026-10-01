@@ -1,4 +1,5 @@
 const store = require("../../../utils/store");
+const gate = require("../../../utils/gate");
 
 const ALIGNS = [
   { key: "left", label: "左对齐" },
@@ -17,11 +18,20 @@ Page({
     fontMin: FONT_MIN,
     fontMax: FONT_MAX,
     pinyin: "rare",
-    autoNext: false
+    autoNext: false,
+    locked: false
   },
 
-  onLoad() {
-    this.setData(store.settings());
+  onShow() {
+    if (!gate.logged()) {
+      this.setData({ locked: true });
+      return;
+    }
+    this.setData(Object.assign({ locked: false }, store.settings()));
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onAlign(e) {

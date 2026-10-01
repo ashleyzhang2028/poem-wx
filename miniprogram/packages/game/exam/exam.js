@@ -1,5 +1,6 @@
 const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
+const entitlement = require("../../../utils/entitlement");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -22,10 +23,18 @@ Page({
     score: 0,
     forms: [],
     pickedForms: [],
-    cardSet: false
+    cardSet: false,
+
+    allowed: false,
+    reason: ""
   },
 
-  onLoad() {
+  onShow() {
+    const ok = entitlement.can("exam");
+    this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("exam") });
+    if (!ok || this.ready) return;
+    this.ready = true;
+
     const books = corpus.books().filter((b) => b.id !== "poems");
     const scopes = [{ id: "", name: "课内诗词" }].concat(books.map((b) => ({ id: b.id, name: b.name })));
     this.setData({ scopes, forms: quiz.FORMS, pickedForms: quiz.FORM_KEYS.slice() });
@@ -52,6 +61,10 @@ Page({
       return;
     }
     this.setData({ pickedForms: picked });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onUnload() {

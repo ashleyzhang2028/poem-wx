@@ -1,10 +1,18 @@
 <view class="page">
-  <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片 -->
+  <view class="card locked-card" wx:if="{{locked}}">
+    <view class="card-title">登录后可用</view>
+    <text class="hint note">古诗词大会（飞花令 / 题库 / 模拟考试）要微信登录之后才能进。</text>
+    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
+  </view>
+
+  <block wx:else>
+  <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片。
+       不可用的卡照常列出但灰掉，desc 那行换成差在哪一档 —— 让人知道往上走一步，而不是撞一堵墙 -->
   <view class="modes">
-    <button class="mode mode-{{item.color}}" wx:for="{{modes}}" wx:key="key"
-            data-k="{{item.key}}" bindtap="onMode">
+    <button class="mode mode-{{item.color}} {{item.ok ? '' : 'mode-off'}}"
+            wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
       <text class="mode-name">{{item.name}}</text>
-      <text class="mode-desc">{{item.desc}}</text>
+      <text class="mode-desc">{{item.ok ? item.desc : item.note}}</text>
     </button>
   </view>
 
@@ -26,7 +34,8 @@
 
   <block wx:if="{{revealed}}">
     <view class="card" wx:if="{{pagedLines.length}}">
-      <view class="row" wx:for="{{pagedLines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{pagedLines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
         <view class="row-main">
           <text class="line-seg">{{item.seg}}</text>
           <text class="row-sub">{{item.title}} · {{item.author}}</text>
@@ -45,4 +54,5 @@
   </block>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>
