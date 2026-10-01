@@ -200,7 +200,10 @@ function stats() {
   Object.keys(s.caps).forEach((k) => {
     if (s.caps[k].ok) ok += 1;
   });
-  return { caps: Object.keys(s.caps).length, enabled: ok };
+  const caps = Object.keys(s.caps).length;
+  // percent 是给界面那条细进度用的 —— 让调用方各自算一次，
+  // 迟早会出现「两处算的分子不一样」
+  return { caps, enabled: ok, percent: caps ? Math.round((ok / caps) * 100) : 0 };
 }
 
 module.exports = {

@@ -763,23 +763,24 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
  * 上面那些断言验的是判据，这里验的是「页面有没有照着做」——
  * 两者差一环，就会出现「gate 说不让进、页面照样渲染」。
  */
+const GATED = {
+  "pages/reader/reader": "locked",
+  "pages/list/list": "locked",
+  "pages/library/library": "locked",
+  "pages/search/search": "locked",
+  "pages/mine/mine": "logged",
+  "packages/game/index/index": "locked",
+  "packages/game/quiz/quiz": "allowed",
+  "packages/game/exam/exam": "allowed",
+  "packages/game/feihua/feihua": "allowed",
+  "packages/progress/index/index": "locked",
+  "packages/settings/recite/recite": "locked",
+  "packages/settings/reader/reader": "locked",
+  "packages/settings/general/general": "locked",
+  "packages/admin/index/index": "logged"
+};
+
 {
-  const GATED = {
-    "pages/reader/reader": "locked",
-    "pages/list/list": "locked",
-    "pages/library/library": "locked",
-    "pages/search/search": "locked",
-    "pages/mine/mine": "logged",
-    "packages/game/index/index": "locked",
-    "packages/game/quiz/quiz": "allowed",
-    "packages/game/exam/exam": "allowed",
-    "packages/game/feihua/feihua": "allowed",
-    "packages/progress/index/index": "locked",
-    "packages/settings/recite/recite": "locked",
-    "packages/settings/reader/reader": "locked",
-    "packages/settings/general/general": "locked",
-    "packages/admin/index/index": "logged"
-  };
   Object.keys(GATED).forEach((p) => {
     const flag = GATED[p];
     const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
@@ -853,6 +854,7 @@ ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
 
 /* ---------- 8. 详情页索引命中 ---------- */
 const sampleId = allEntries[0].id;
+const freshId = corpus.course()[0].id;
 ok("indexById 能命中条目", corpus.indexById(sampleId) && corpus.indexById(sampleId).t === allEntries[0].t);
 ok("indexById 找不到时回 null", corpus.indexById("不存在的-id") === null);
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
@@ -1148,6 +1150,302 @@ pages.forEach((p) => {
   });
 });
 ok("原生控件的配色都对齐主色 #2f6055", badColor.length === 0, badColor.join("; "));
+
+/* ---------- 7.8 界面观感与交互的回归哨兵 ---------- */
+
+/**
+ * 这一节的由来是 Issue 里那句「界面和交互能美化和优化的请进行整改」。
+ * 和 7.7 一样：要求写在 Issue 里，没人会每次改页面时回来读，
+ * 所以把能定的部分变成会红的检查。
+ *
+ * 只守「有客观判据」的那些 —— 颜色、按下态、门禁卡的唯一性、组件注册。
+ * 「好不好看」本身没法断言，但「13 个页面各写一张不一样的门禁卡」可以。
+ */
+
+// V1. 门禁卡必须只有一份实现，各页一律用组件
+const lockUses = [];
+const lockInline = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  if (wxml.indexOf("<lock-card") >= 0) lockUses.push(p);
+  if (wxml.indexOf("locked-card") >= 0) lockInline.push(p);
+});
+ok("未登录的卡走同一个组件（" + lockUses.length + " 页）", lockUses.length >= 12, lockUses.join(", "));
+ok("没有页面再自绘门禁卡", lockInline.length === 0, lockInline.join(", "));
+
+// 老类名不许复活：留着一个 .locked-card 就是在等下一次被复制
+const lockRevived = [];
+pages.forEach((p) => {
+  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+  if (/\.locked-card\s*\{/.test(wxss) || /\.locked-card\s+\.note\s*\{/.test(wxss)) {
+    lockRevived.push(p);
+  }
+});
+ok("门禁卡样式不再散在各页", lockRevived.length === 0, lockRevived.join(", "));
+
+// V2. 全局组件必须注册，否则 WXML 里写了也是白写（报「组件未找到」）
+const appComponents = app.usingComponents || {};
+ok("lock-card 已全局注册", !!appComponents["lock-card"]);
+ok("skeleton 已全局注册", !!appComponents["skeleton"]);
+Object.keys(appComponents).forEach((name) => {
+  const rel = String(appComponents[name]).replace(/^\//, "");
+  ok("全局组件四件套齐全 " + name,
+    fs.existsSync(path.join(ROOT, rel + ".js")) &&
+    fs.existsSync(path.join(ROOT, rel + ".json")) &&
+    fs.existsSync(path.join(ROOT, rel + ".wxml")) &&
+    fs.existsSync(path.join(ROOT, rel + ".wxss")));
+});
+
+// V3. 每一页都要有统一的底部安全区垫片，否则 iPhone 的横条会压住最后一行
+const noSafe = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  // 锁着的时候不需要 —— 那是一屏就没有可滚动的卡
+  if (wxml.indexOf("safe-bottom") < 0) noSafe.push(p);
+});
+ok("每页都留了底部安全区", noSafe.length === 0, noSafe.join(", "));
+
+// V4. 可点元素必须有按下反馈。
+//    判据：挂着 bindtap 的 <view>，要么有 hover-class，要么有 :active 样式。
+//    没反馈的点击在手机上等于「点了没反应」—— 这是最差的一种体验。
+const noFeedback = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+  const re = /<view\b([^>]*)>/g;
+  let m;
+  while ((m = re.exec(wxml))) {
+    const attrs = m[1];
+    if (!/bindtap|catchtap/.test(attrs)) continue;
+    if (/hover-class=/.test(attrs)) continue;
+    const clsM = /class="([^"]*)"/.exec(attrs);
+    if (!clsM) continue;
+    // 逐个类名看有没有 :active 规则
+    const has = clsM[1].split(/\s+/).filter(Boolean).some((c) => {
+      const base = c.replace(/\{\{[^}]*\}\}/g, "").trim();
+      if (!base) return false;
+      return new RegExp("\\." + base.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + ":(active|hover)").test(wxss);
+    });
+    if (!has) noFeedback.push(p + " → ." + clsM[1].trim());
+  }
+});
+ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0, 6).join("; "));
+
+// V5. 空状态不许只有一句干巴巴的字 —— 一个「空」字也要给出路
+const bareEmpty = [];
+pages.forEach((p) => {
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  const re = /<view class="empty"([^>]*)>([\s\S]*?)<\/view>/g;
+  let m;
+  while ((m = re.exec(wxml))) {
+    if (m[2].indexOf("empty-mark") < 0) bareEmpty.push(p);
+  }
+});
+ok("空状态有印章与出路", bareEmpty.length === 0, bareEmpty.join(", "));
+
+// V6. 主色一致：页面样式表里凡出现主题色，必须是令牌，不许再写一遍字面量。
+//    写死一次就会漂一次 —— 网页版那次「主色从 #2f6055 漂到 #2f6056」就是这么来的。
+const colorLiteral = [];
+pages.forEach((p) => {
+  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+  const re = /#[0-9a-fA-F]{6}/g;
+  let m;
+  while ((m = re.exec(wxss))) {
+    const hex = m[0].toLowerCase();
+    if (hex === "#2f6055" || hex === "#234b42") colorLiteral.push(p + " → " + hex);
+  }
+});
+ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.slice(0, 6).join("; "));
+
+// V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
+{
+  const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");
+  ok("首页首屏有骨架屏", homeWxml.indexOf("<skeleton") >= 0);
+  const homeJs = fs.readFileSync(path.join(ROOT, "pages/home/home.js"), "utf8");
+  ok("首页 loading 会落回 false", /loading:\s*false/.test(homeJs));
+}
+
+// V8. 组件的四件套与配平也要查 —— 组件不在 pages 列表里，
+//     上面所有按页循环的检查都盖不到它，坏了要等真机才现形。
+{
+  const compDirs = [];
+  const compRoot = path.join(ROOT, "components");
+  if (fs.existsSync(compRoot)) {
+    fs.readdirSync(compRoot).forEach((d) => {
+      const full = path.join(compRoot, d);
+      if (fs.statSync(full).isDirectory()) compDirs.push(d);
+    });
+  }
+  ok("有自定义组件", compDirs.length > 0);
+
+  compDirs.forEach((d) => {
+    const rel = "components/" + d + "/" + d;
+    const four = [".js", ".json", ".wxml", ".wxss"].every((ext) =>
+      fs.existsSync(path.join(ROOT, rel + ext)));
+    ok("组件四件套齐全 " + d, four);
+
+    const cfg = readJson(path.join(ROOT, rel + ".json"));
+    ok("组件声明 component:true " + d, cfg.component === true);
+
+    // 组件里 bind 的事件也得有实现，否则点下去毫无反应
+    const wxml = fs.readFileSync(path.join(ROOT, rel + ".wxml"), "utf8");
+    const js = fs.readFileSync(path.join(ROOT, rel + ".js"), "utf8");
+    const handlers = new Set();
+    const hre = /(?:bind|catch)(?:tap|change|input|confirm|blur|chooseavatar)="([\w$]+)"/g;
+    let hm;
+    while ((hm = hre.exec(wxml))) handlers.add(hm[1]);
+    const missing = [];
+    handlers.forEach((h) => {
+      if (js.indexOf(h) < 0) missing.push(h);
+    });
+    ok("组件事件都有处理函数 " + d, missing.length === 0, missing.join(","));
+
+    // 配平
+    const stack = [];
+    const VOID2 = ["image", "input", "import", "include", "wxs", "icon", "progress", "slot", "canvas", "checkbox", "radio", "switch", "slider"];
+    const tre = /<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g;
+    let tm; let balanced = true;
+    while ((tm = tre.exec(wxml))) {
+      if (tm[1] === "/") { if (stack.pop() !== tm[2]) balanced = false; }
+      else if (tm[4] !== "/" && VOID2.indexOf(tm[2]) < 0) stack.push(tm[2]);
+    }
+    if (stack.length) balanced = false;
+    ok("组件 WXML 标签配平 " + d, balanced, stack.join(","));
+  });
+}
+
+// V9. 首页首屏那行日期要用中文数字。
+//     中文界面里「十月1日」这种半截写法很扎眼，而它是靠代码拼的，
+//     没人会每次改首页时回来数一遍 —— 逐日验一遍最省事。
+{
+  const homeJs = fs.readFileSync(path.join(ROOT, "pages/home/home.js"), "utf8");
+  const fnM = /function cnDay\(n\)\s*\{([\s\S]*?)\n\}/.exec(homeJs);
+  if (!fnM) {
+    ok("首页日期有中文数字换算", false, "找不到 cnDay()");
+  } else {
+    // 用同一个实现算一遍，逐日对
+    const CN = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+    const expect = [];
+    for (let d = 1; d <= 31; d++) {
+      expect.push(d <= 10 ? CN[d] : d < 20 ? "十" + (d % 10 ? CN[d % 10] : "")
+        : CN[Math.floor(d / 10)] + "十" + (d % 10 ? CN[d % 10] : ""));
+    }
+    const cnDay = new Function("CN_NUM", "return " + "function cnDay(n) {" + fnM[1] + "}")(
+      ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+    );
+    const got = [];
+    for (let d = 1; d <= 31; d++) got.push(cnDay(d));
+    const bad = got.map((v, i) => (v === expect[i] ? null : i + 1 + "→" + v)).filter(Boolean);
+    ok("首页日期的中文数字逐日正确", bad.length === 0, bad.slice(0, 6).join(", "));
+  }
+}
+
+/**
+ * 门禁要能开，也要能关。
+ *
+ * 上面那组断言只扫源码，看到 `locked` 在 WXML 和 js 里都出现过就放行。
+ * 但「出现过」不等于「会变 false」—— PR #6 引入阅读页门禁时就是这么错的：
+ * `data` 里写了 `locked: true`，`onShow` 的未登录分支又补一次 `locked: true`，
+ * 而**登录分支从没把它设回 false**。于是所有人都停在「登录后可用」那张卡上，
+ * 正文一个字都渲染不出来。源码扫描一路绿灯，因为两个文件里都有这个词。
+ *
+ * 所以这里换成**真跑**：用最小 Page 运行时把每个带门禁的页面挂起来，
+ * 按「已登录」跑一遍 onShow，`locked` 必须落回假。
+ * 判据从「有没有这个词」变成「门开不开」，这类 bug 才关得住。
+ */
+{
+  // 语料要先在（build-data 跑过），否则页面拿不到内容、这条会失真
+  const dataDir = path.join(ROOT, "data");
+  const hasData = fs.existsSync(path.join(dataDir, "books", "books.json"));
+
+  if (!hasData) {
+    ok("门禁开合（语料未生成，跳过真跑）", true);
+  } else {
+    /**
+     * 最小运行时。挂在 global 上，跑完就撤 —— 自检本身不该依赖小程序环境，
+     * 但这一条非真跑不可：静态扫描正是放过了这个 bug 的那种检查。
+     */
+    const savedWx = global.wx;
+    const savedPage = global.Page;
+    const savedComponent = global.Component;
+    const savedGetApp = global.getApp;
+    const savedPages = global.getCurrentPages;
+
+    const mem = {};
+    global.wx = {
+      showToast() {}, showModal() {}, showLoading() {}, hideLoading() {},
+      showActionSheet(o) { o && o.success && o.success({ tapIndex: 0 }); },
+      navigateTo() {}, switchTab() {}, redirectTo() {}, navigateBack() {},
+      pageScrollTo() {}, nextTick(f) { if (f) f(); },
+      setNavigationBarTitle() {}, vibrateShort() {}, stopPullDownRefresh() {},
+      setClipboardData(o) { o && o.success && o.success(); },
+      getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" }),
+      getStorageSync: (k) => (k in mem ? mem[k] : ""),
+      setStorageSync: (k, v) => { mem[k] = v; },
+      removeStorageSync: (k) => { delete mem[k]; },
+      getStorageInfoSync: () => ({ keys: Object.keys(mem), currentSize: 0, limitSize: 10240 }),
+      loadFontFace() {},
+      login(o) { o && o.fail && o.fail({ errMsg: "no wx" }); },
+      getUserProfile(o) { o && o.fail && o.fail({}); },
+      request(o) { o && o.fail && o.fail({ errMsg: "offline" }); },
+      downloadFile(o) { o && o.fail && o.fail({}); },
+      createInnerAudioContext: () => ({
+        play() {}, pause() {}, stop() {}, destroy() {},
+        onEnded() {}, onError() {}
+      })
+    };
+    global.Component = () => {};
+    global.getApp = () => ({ globalData: {} });
+    global.getCurrentPages = () => [];
+
+    /** 挂一个页面，按 query 跑 onLoad + onShow，返回它的 data */
+    function mount(pg, query) {
+      let opt = null;
+      global.Page = (o) => { opt = o; };
+      const file = path.join(ROOT, pg + ".js");
+      delete require.cache[require.resolve(file)];
+      require(file);
+      if (!opt) return null;
+      const page = Object.assign({}, opt);
+      page.data = JSON.parse(JSON.stringify(opt.data || {}));
+      page.setData = function (obj, cb) {
+        Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
+        if (cb) cb();
+      };
+      ["onLoad", "onShow"].forEach((fn) => {
+        if (typeof page[fn] === "function") page[fn].call(page, query || {});
+      });
+      return page.data;
+    }
+
+    // 先落一个「已登录」的本机身份 —— auth.logged() 认的就是它
+    const storeMod = require(path.join(ROOT, "utils", "store.js"));
+    const savedProfile = storeMod.profile();
+    storeMod.saveProfile({ logged: true, nickname: "自检" });
+
+    try {
+      Object.keys(GATED).forEach((pg) => {
+        const flag = GATED[pg];
+        // 管理页用 logged 而不是 locked，另有自己的判据，这里跳过
+        if (flag !== "locked") return;
+        const data = mount(pg, { id: freshId });
+        if (!data) { ok("门禁能开 " + pg, false, "页面没调用 Page()"); return; }
+        ok("登录后门禁会开 " + pg, data.locked === false,
+          "登录了还锁着（locked=" + data.locked + "）");
+      });
+    } finally {
+      // 把改过的本机身份还原，别影响后面还在跑的断言
+      if (savedProfile && savedProfile.logged) storeMod.saveProfile(savedProfile);
+      else storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });
+
+      global.wx = savedWx;
+      global.Page = savedPage;
+      global.Component = savedComponent;
+      global.getApp = savedGetApp;
+      global.getCurrentPages = savedPages;
+    }
+  }
+}
 
 /* ---------- 汇总 ---------- */
 

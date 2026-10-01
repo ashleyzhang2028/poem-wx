@@ -137,13 +137,3 @@
   text-align: center;
   padding: 40rpx 0;
 }
-
-/* 未登录 / 档位不够时的那张卡 */
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
-}

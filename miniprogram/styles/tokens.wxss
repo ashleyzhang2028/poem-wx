@@ -14,6 +14,7 @@ page {
 
   --amber: #a55c19;         /* 琥珀 · 复习 */
   --amber-light: #f7e6d0;
+  --autumn: #8a7327;        /* 秋香 · 第三组分组标题 */
   --red: #a83b32;           /* 朱砂 · 忘记 */
   --red-light: #f7e5e1;
   --blue: #3d6379;          /* 天水碧 */

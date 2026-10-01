@@ -1,32 +1,49 @@
 .poem-card {
-  padding-bottom: 16rpx;
+  padding: 36rpx 28rpx 16rpx;
 }
 
 .poem-head {
   text-align: center;
-  padding: 8rpx 0 24rpx;
+  padding: 8rpx 0 28rpx;
 }
 
 .poem-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: 44rpx;
+  font-size: 46rpx;
   font-weight: 600;
   color: var(--ink);
+  letter-spacing: 2rpx;
+  line-height: 1.5;
+}
+
+.poem-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14rpx;
 }
 
 .poem-meta {
-  display: block;
   font-size: 26rpx;
   color: var(--ink-2);
-  margin-top: 12rpx;
+}
+
+.poem-dot {
+  font-size: 26rpx;
+  color: var(--line);
+  padding: 0 12rpx;
 }
 
 .poem-source {
   display: block;
   font-size: 22rpx;
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: 10rpx;
+}
+
+.stage-tag {
+  margin: 18rpx 0 0;
 }
 
 /* 阅读偏好一行：原生 radio（对齐）+ 原生 slider（字号）+ 原生 button（朗读） */
@@ -66,9 +83,9 @@
 
 /* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度 */
 .poem-body {
-  padding: 36rpx 8rpx 24rpx;
+  padding: 40rpx 8rpx 28rpx;
   font-family: var(--font-poem);
-  line-height: 2;
+  line-height: 2.05;
 }
 
 .poem-body.align-center {
@@ -83,8 +100,11 @@
   display: block;
   font-size: 36rpx;
   color: var(--ink);
+  letter-spacing: 2rpx;
 }
 
+/* 字号七档。写作 size--2 而不是 size-2，是为了让「负档」在类名上就不会
+   与正档混淆 —— 曾经把 size--1 写成 size-1，两档撞在一起过 */
 .poem-body.size--2 .poem-line { font-size: 30rpx; }
 .poem-body.size--1 .poem-line { font-size: 33rpx; }
 .poem-body.size-1 .poem-line { font-size: 39rpx; }
@@ -101,6 +121,8 @@
 .trans-toggle {
   font-size: 26rpx;
   color: var(--green);
+  flex: none;
+  padding-left: 16rpx;
 }
 
 .trans-text {
@@ -108,7 +130,6 @@
   font-size: 29rpx;
   color: var(--ink-2);
   line-height: 1.9;
-  margin-top: 16rpx;
 }
 
 .trans-src {
@@ -120,17 +141,18 @@
   border-top: 1rpx solid var(--line-2);
 }
 
+/* ---------- 掌握程度 ---------- */
 .recite-status {
   display: flex;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 4rpx;
 }
 
 .recite-stage {
-  font-size: 26rpx;
-  color: var(--ink-2);
-  width: 260rpx;
+  font-size: 25rpx;
+  color: var(--ink-3);
   flex: none;
+  padding-right: 16rpx;
 }
 
 .mastery-bar {
@@ -143,9 +165,27 @@
 
 .mastery-fill {
   height: 100%;
-  background: var(--gold);
+  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
   border-radius: 6rpx;
-  transition: width .3s;
+  transition: width .35s ease;
+}
+
+.mastery-num {
+  flex: none;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  padding-left: 16rpx;
+  min-width: 68rpx;
+  text-align: right;
+}
+
+/* 一句问话，把那排按钮的用途说出来 —— 三个词摆在那里，
+   没人告诉用户点下去会发生什么 */
+.recite-ask {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink-3);
+  padding: 24rpx 0 16rpx;
 }
 
 .actions {
@@ -155,14 +195,20 @@
 
 .act {
   flex: 1;
-  height: 100rpx;
-  line-height: 100rpx;
+  height: 104rpx;
+  line-height: 104rpx;
   text-align: center;
   border-radius: var(--radius-sm);
-  font-size: 30rpx;
+  font-size: 31rpx;
   border: 1rpx solid var(--line);
   background: var(--bg-soft);
   color: var(--ink-2);
+  transition: transform .1s;
+}
+
+/* 三档按钮的按下反馈：只靠颜色差别太小，压一下更明确 */
+.act:active {
+  transform: scale(.97);
 }
 
 .act.bad {
@@ -201,6 +247,8 @@
   flex-wrap: wrap;
   justify-content: center;
   padding: 6rpx 0;
+  border-radius: var(--radius-sm);
+  transition: background-color .2s;
 }
 
 .poem-body.align-left .token-line {
@@ -238,9 +286,19 @@
 .poem-body.size-3 .tk-ch { font-size: 46rpx; }
 .poem-body.size-4 .tk-ch { font-size: 52rpx; }
 
+/* 正在读的那一行：底色 + 左侧一道主线，弱网下也能看出读到哪了 */
 .token-line.reading {
   background: var(--green-light);
-  border-radius: var(--radius-sm);
+}
+
+/* 注音模式下点一行就是从那一句起播，所以要有按下反馈。
+   朗读不可用时 hover-class 是空串，等于没有 —— 那时点它只是提示去开通 */
+.token-line-tap {
+  background: var(--green-light);
+}
+
+.poem-body.align-left .token-line.reading {
+  border-left: 4rpx solid var(--green);
 }
 
 /* ---------- 朗读 ---------- */
@@ -255,19 +313,15 @@
 
 .speak-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-}
-
-.speak-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--ink);
 }
 
 .speak-state {
   font-size: 22rpx;
   color: var(--green);
+  flex: none;
+  padding-left: 16rpx;
 }
 
 .speak-state.off {
@@ -277,7 +331,7 @@
 .speak-progress {
   display: flex;
   align-items: center;
-  padding: 20rpx 0 4rpx;
+  padding: 8rpx 0 4rpx;
 }
 
 /* 进度条是原生 slider：它能拖，比一条只读的细线多一个作用 */
@@ -297,23 +351,19 @@
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-top: 20rpx;
+  margin-top: 12rpx;
 }
 
 .speak-ctrl .btn {
   flex: 1;
 }
 
+/* 播放是这一排里的主操作，给它多一点宽度 */
 .speak-ctrl .sp-main {
   flex: 1.4;
 }
 
-/* 未登录时的那张卡：整页只有它 */
-.locked-card .note {
+.note {
   display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
+  padding-top: 8rpx;
 }

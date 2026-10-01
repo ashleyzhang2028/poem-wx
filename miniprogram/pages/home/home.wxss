@@ -1,44 +1,130 @@
 .home {
-  padding-top: 24rpx;
+  padding-top: 20rpx;
 }
 
-.today {
-  background: linear-gradient(160deg, #fffefb 0%, var(--bg-soft) 100%);
+/* ---------- 首屏那张卡 ----------
+   它承载「今天要做什么」，值得比别的卡多一点分量：
+   一张浅色渐变 + 一道微光，压得住下面那张列表。 */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 36rpx 32rpx 32rpx;
+  background: linear-gradient(158deg, #fffefb 0%, var(--bg-soft) 62%, #f4ecd8 100%);
 }
 
-.today-head {
+/* 斜向留白：给卡片一点「纸」的质感，比纯色块耐看，也不抢字 */
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -120rpx;
+  top: -140rpx;
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 205, 124, .34) 0%, rgba(240, 205, 124, 0) 70%);
+}
+
+.hero-head {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.today-title {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 600;
-  color: var(--green);
+.hero-left {
+  flex: 1;
+  min-width: 0;
 }
 
-.today-sub {
+.hero-eyebrow {
+  display: block;
+  font-size: 22rpx;
+  letter-spacing: 4rpx;
+  color: var(--ink-3);
+  margin-bottom: 10rpx;
+}
+
+.hero-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: 42rpx;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 2rpx;
+}
+
+.hero-sub {
   display: block;
   font-size: 24rpx;
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: 10rpx;
 }
 
-.today-start {
+.hero-btn {
+  position: relative;
+  z-index: 1;
   margin-top: 28rpx;
 }
 
-/* 进度环：纯 CSS 锥形渐变，省掉 canvas 与 svg 资源 */
+.hero-note {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+  font-family: var(--font-poem);
+  font-size: 23rpx;
+  letter-spacing: 2rpx;
+  color: var(--ink-3);
+  margin-top: 20rpx;
+}
+
+/* 细进度条：环给比例，这条给「还剩多少」 */
+.hero-bar {
+  position: relative;
+  z-index: 1;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: var(--line-2);
+  overflow: hidden;
+  margin-top: 28rpx;
+}
+
+.hero-bar-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
+  transition: width .35s ease;
+}
+
+/* 未登录那张卡的印章 */
+.seal {
+  flex: none;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 16rpx;
+  border: 3rpx solid rgba(168, 59, 50, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-4deg);
+}
+
+.seal-t {
+  font-family: var(--font-poem);
+  font-size: 52rpx;
+  color: rgba(168, 59, 50, .72);
+}
+
+/* ---------- 进度环 ---------- */
 .ring-hover {
   opacity: .82;
 }
 
 .ring {
   position: relative;
-  width: 128rpx;
-  height: 128rpx;
+  width: 132rpx;
+  height: 132rpx;
   flex: none;
 }
 
@@ -55,6 +141,7 @@
 
 .ring-fill {
   background: conic-gradient(var(--gold) calc(var(--p) * 1%), transparent 0);
+  transition: background .35s ease;
 }
 
 .ring::after {
@@ -77,6 +164,25 @@
   z-index: 1;
 }
 
+/* 未登录那张目录的统计行 */
+.toc-stat {
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid var(--line-2);
+  margin-bottom: 4rpx;
+}
+
+/* 序号：给目录一个「第几首」的秩序感，已读的换成绿字 */
+.seq {
+  width: 52rpx;
+  flex: none;
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
+.seq.done {
+  color: var(--green);
+}
+
 .row-line {
   display: flex;
   align-items: center;
@@ -92,6 +198,7 @@
   text-align: right;
   color: var(--line);
   font-size: 36rpx;
+  flex: none;
 }
 
 .row-state.done {
@@ -99,18 +206,26 @@
   font-size: 30rpx;
 }
 
+/* 未登录时的行尾：写「登录」而不是一把小锁图标 ——
+   图标要人猜，字不用 */
+.row-lock {
+  flex: none;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  padding: 2rpx 14rpx;
+  border-radius: 8rpx;
+  background: var(--line-2);
+}
+
+.empty-btn {
+  margin-top: 24rpx;
+}
+
 .foot {
   text-align: center;
-  padding: 16rpx 0 40rpx;
+  padding: 8rpx 0 40rpx;
 }
 
-/* 未登录时的行尾标记：› 换成一把小锁的意思，别让人以为点得动 */
-.row-state.lock {
-  color: var(--line);
-}
-
-.hint.foot {
-  display: block;
-  text-align: center;
-  margin: 8rpx 0 24rpx;
+.foot .hint {
+  letter-spacing: 1rpx;
 }

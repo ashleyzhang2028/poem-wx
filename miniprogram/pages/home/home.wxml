@@ -1,38 +1,51 @@
 <view class="page home">
   <!-- 未登录：一屏目录，看得到、点不进 -->
   <block wx:if="{{guest}}">
-    <view class="card today">
-      <view class="today-head">
-        <view class="today-left">
-          <text class="today-title">{{gradeName}}</text>
-          <text class="today-sub">{{scopeName}} · {{catalogCount}} 首</text>
+    <view class="card hero">
+      <view class="hero-head">
+        <view class="hero-left">
+          <text class="hero-eyebrow">今日</text>
+          <text class="hero-title">{{gradeName}}</text>
+          <text class="hero-sub">{{scopeName}} · {{catalogCount}} 首</text>
         </view>
+        <view class="seal"><text class="seal-t">跬</text></view>
       </view>
-      <button class="btn primary block today-start" bindtap="onLogin">微信登录后开始背</button>
-      <text class="hint foot">不登录只能看目录。登录之后：每日计划、注音朗读、进度跨设备</text>
+      <button class="btn primary block hero-btn" bindtap="onLogin">微信登录后开始背</button>
+      <text class="hero-note">不积跬步，无以至千里</text>
     </view>
 
     <view class="card">
+      <view class="card-title bar">课本目录</view>
+      <view class="toc-stat">
+        <text class="hint">共 {{catalogCount}} 首 · 登录后点开</text>
+      </view>
+      <!-- 行尾一律是小锁：让人一眼知道「看得见、点不开」，
+           而不是先点一下再被弹窗教训一遍 -->
       <view class="row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+        <text class="seq">{{item.seq}}</text>
         <view class="row-main">
-          <view class="row-line">
-            <text class="row-title">{{item.title}}</text>
-          </view>
+          <text class="row-title">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
-        <view class="row-state lock">›</view>
+        <text class="row-lock">登录</text>
       </view>
     </view>
+
+    <view class="foot">
+      <text class="hint">进度只存在这台手机上 · 断网也能背</text>
+    </view>
+    <view class="safe-bottom"></view>
   </block>
 
   <!-- 登录后：今日计划 -->
   <block wx:else>
-    <view class="card today">
-      <view class="today-head">
-        <view class="today-left">
-          <text class="today-title">今日背诵</text>
-          <text class="today-sub">{{gradeName}} · {{scopeName}}</text>
+    <view class="card hero">
+      <view class="hero-head">
+        <view class="hero-left">
+          <text class="hero-eyebrow">{{todayLabel}}</text>
+          <text class="hero-title">今日背诵</text>
+          <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
         </view>
         <!-- 进度环整块可点，进背诵设置；点的是「看进度」，不是「点按钮」 -->
         <view class="ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
@@ -42,27 +55,45 @@
         </view>
       </view>
 
-      <button class="btn primary block today-start" bindtap="onStart" wx:if="{{total}}">
+      <!-- 一条细进度：环上给的是「几比几」，这里给「走到哪了」 -->
+      <view class="hero-bar" wx:if="{{total}}">
+        <view class="hero-bar-fill" style="width:{{percent}}%"></view>
+      </view>
+
+      <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
         {{doneCount >= total ? '今天背完了 · 再练一遍' : '开始背'}}
       </button>
-      <button class="btn ghost block today-start" bindtap="onBrowseAll" wx:else>看看课内 251 首</button>
+      <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看看课内 251 首</button>
     </view>
 
     <view class="card">
-      <view class="row" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
-        <view class="row-main">
-          <view class="row-line">
-            <text class="row-title">{{item.title}}</text>
-            <text class="tag {{item.reasonKey === 'review' ? 'amber' : 'ghost'}}">{{item.reason}}</text>
+      <view class="card-title bar">今日安排</view>
+      <skeleton rows="3" wx:if="{{loading}}" />
+      <block wx:else>
+        <view class="row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+          <text class="seq {{item.read ? 'done' : ''}}">{{item.seq}}</text>
+          <view class="row-main">
+            <view class="row-line">
+              <text class="row-title">{{item.title}}</text>
+              <text class="tag {{item.reasonKey === 'review' ? 'amber' : 'ghost'}}">{{item.reason}}</text>
+            </view>
+            <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
           </view>
-          <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
+          <text class="row-state {{item.read ? 'done' : ''}}">{{item.read ? '✓' : '›'}}</text>
         </view>
-        <view class="row-state {{item.read ? 'done' : ''}}">{{item.read ? '✓' : '›'}}</view>
+      </block>
+
+      <view class="empty" wx:if="{{!loading && !total}}">
+        <text class="empty-mark">诗</text>
+        <text class="empty-text">今天的计划还没排出来\n去「背诵设置」挑个范围</text>
+        <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
       </view>
-      <view class="empty" wx:if="{{!total}}">今天的计划还没排出来，去「我的」看看背诵范围</view>
     </view>
 
-    <view class="hint foot">进度只存在这台手机上 · 断网也能背</view>
+    <view class="foot">
+      <text class="hint">进度只存在这台手机上 · 断网也能背</text>
+    </view>
+    <view class="safe-bottom"></view>
   </block>
 </view>

@@ -6,6 +6,23 @@ const gate = require("../../utils/gate");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "加背", optional: "自选" };
 
+const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+const CN_NUM = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+
+/** 1 → 一，17 → 十七，30 → 三十 —— 月与日都要，日期写阿拉伯数字会跟「几首」混在一起 */
+function cnDay(n) {
+  if (n <= 10) return CN_NUM[n];
+  if (n < 20) return "十" + (n % 10 ? CN_NUM[n % 10] : "");
+  return CN_NUM[Math.floor(n / 10)] + "十" + (n % 10 ? CN_NUM[n % 10] : "");
+}
+
+/** 首屏那行小字：八月十七 · 周一。不写年份 —— 今天要背哪几首，跟哪一年无关 */
+function todayLabel() {
+  const d = new Date();
+  return CN_NUM[d.getMonth() + 1] + "月" + cnDay(d.getDate()) + "日 · " + WEEKDAYS[d.getDay()];
+}
+
 Page({
   data: {
     /** 未登录时首页是「目录」而不是「今日计划」，这两个值决定整页长相 */
@@ -20,10 +37,16 @@ Page({
     percent: 0,
     /** 未登录时的书目：一年级上下册，只有篇名作者，点不动 */
     catalog: [],
-    catalogCount: 0
+    catalogCount: 0,
+
+    /** 今天是几号 —— 首屏那行小字，让人一眼知道看到的是哪一天的计划 */
+    todayLabel: "",
+    /** 首屏第一次出计划要读语料，先立个骨架，别让人对着一屏空白 */
+    loading: true
   },
 
   onShow() {
+    this.setData({ todayLabel: todayLabel() });
     this.refresh();
     // 登录之后才有东西可同步
     if (gate.logged()) sync.now().catch(() => {});
@@ -36,7 +59,13 @@ Page({
     // 访客看到的一律是一年级，这是 Issue 点名的「首页默认列出一年级诗词」。
     if (!logged) {
       const all = corpus.course().filter((p) => p.gr === gate.GUEST_GRADE);
-      const catalog = all.map((p) => ({ id: p.id, title: p.t, author: p.a, dynasty: p.d }));
+      const catalog = all.map((p, i) => ({
+        id: p.id,
+        title: p.t,
+        author: p.a,
+        dynasty: p.d,
+        seq: i + 1
+      }));
       this.setData({
         logged: false,
         guest: true,
@@ -48,7 +77,8 @@ Page({
         doneCount: 0,
         percent: 0,
         catalog,
-        catalogCount: catalog.length
+        catalogCount: catalog.length,
+        loading: false
       });
       return;
     }
@@ -72,12 +102,13 @@ Page({
 
     const reads = store.reads("poems");
     let done = 0;
-    const rows = plan.map((it) => {
+    const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
       const read = !!reads[it.poem.id];
       if (read) done += 1;
       return {
         id: it.poem.id,
+        seq: i + 1,
         title: it.poem.t,
         author: it.poem.a,
         dynasty: it.poem.d,
@@ -102,7 +133,8 @@ Page({
       total,
       percent: total ? Math.round((done / total) * 100) : 0,
       catalog: [],
-      catalogCount: 0
+      catalogCount: 0,
+      loading: false
     });
   },
 
@@ -139,7 +171,22 @@ Page({
     wx.navigateTo({ url: "/pages/list/list?book=poems" });
   },
 
+  /**
+   * 下拉换一批。
+   * 首页是「今天要背什么」，下拉是对着它最自然的动作 ——
+   * 不下拉也能用，但没这一下，用户想刷新只能切页回来。
+   */
+  onPullDownRefresh() {
+    this.refresh();
+    setTimeout(() => wx.stopPullDownRefresh(), 320);
+  },
+
   onShareAppMessage() {
+    // 分享出去的是首页，未登录的人点进来看到的是目录 —— 这正是设计好的入口
     return { title: "跬步 · 每天背一首古诗文", path: "/pages/home/home" };
+  },
+
+  onShareTimeline() {
+    return { title: "跬步 · 每天背一首古诗文" };
   }
 });

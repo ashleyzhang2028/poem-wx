@@ -57,6 +57,12 @@
   font-size: 30rpx;
   color: var(--ink);
   text-align: center;
+  /* 四个选项长得一样，按下时压一下才知道点中了哪个 */
+  transition: transform .1s;
+}
+
+.option:active {
+  transform: scale(.98);
 }
 
 .option.right {
@@ -121,12 +127,3 @@
 }
 
 /* 考试页复用题库页那套题型挑选样式 */
-/* 未登录 / 档位不够时的那张卡 */
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
-}

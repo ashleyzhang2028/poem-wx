@@ -1,25 +1,22 @@
 <view class="page">
   <!-- 未登录：没有什么可管的，说清楚就行 -->
-  <view class="card locked-card" wx:if="{{!logged}}">
-    <view class="card-title">登录后可用</view>
-    <text class="hint note">档位与权限挂在微信账号上，先登录才看得到自己那一档。</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{!logged}}" title="权限要登录" note="档位与权限挂在微信账号上，先登录才看得到自己那一档。" mark="权" />
 
   <block wx:else>
-  <view class="card">
-    <view class="card-title">我的授权</view>
-    <view class="kv">
-      <text class="kv-k">档位</text>
-      <text class="kv-v">{{status.label}}</text>
-    </view>
-    <view class="kv">
-      <text class="kv-k">角色</text>
-      <text class="kv-v">{{roleLabel}}</text>
-    </view>
-    <view class="kv">
-      <text class="kv-k">能力</text>
-      <text class="kv-v">{{stats.enabled}} / {{stats.caps}} 项</text>
+  <view class="card grant">
+    <view class="card-title bar">我的授权</view>
+    <view class="grant-head">
+      <view class="grant-tier">
+        <text class="grant-tier-v">{{status.label}}</text>
+        <text class="grant-tier-k">{{roleLabel}}</text>
+      </view>
+      <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
+      <view class="grant-meter">
+        <view class="grant-meter-bar">
+          <view class="grant-meter-fill" style="width:{{stats.percent}}%"></view>
+        </view>
+        <text class="grant-meter-t">{{stats.enabled}} / {{stats.caps}} 项能力</text>
+      </view>
     </view>
 
     <text class="hint note" wx:if="{{status.signed}}">这一档由服务端下发，换手机跟着走。</text>
@@ -32,7 +29,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">能力矩阵</view>
+    <view class="card-title bar">能力矩阵</view>
     <view wx:for="{{groups}}" wx:key="title" wx:for-item="grp">
       <text class="cap-group">{{grp.title}}</text>
       <view class="cap" wx:for="{{grp.rows}}" wx:key="name" wx:for-item="caprow">
@@ -45,7 +42,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">用户名录</view>
+    <view class="card-title bar">用户名录</view>
     <text class="hint note" wx:if="{{!remoteReady}}">
       后端接口还没部署，所以名录读不了、也改不了别人。下面这份是构建时导入的名册（只读），
       {{generatedAt ? '生成于 ' + generatedAt : '尚未生成'}}。
@@ -71,13 +68,17 @@
       </view>
     </view>
 
-    <view class="empty" wx:if="{{!users.length}}">名录里还没有人</view>
+    <view class="empty" wx:if="{{!users.length}}">
+        <text class="empty-mark">名</text>
+        <text class="empty-text">名录里还没有人</text>
+        <text class="hint empty-tip">名录走 POEM_ROSTER 环境变量导入，不进代码库</text>
+      </view>
     <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
     <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
   </view>
 
   <view class="card">
-    <view class="card-title">要一个更高的档位</view>
+    <view class="card-title bar">要一个更高的档位</view>
     <text class="hint note">
       三档都不收费，由管理员在服务端按人发放。把邮箱发给管理员，或让他直接在
       网页版后台（poem 站的 /admin/）改。手机上不做名录管理 —— 分页、搜索、

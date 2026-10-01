@@ -1,41 +1,49 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{locked}}">
-    <view class="card-title">课外阅读</view>
-    <text class="hint note">{{reason}}</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin" wx:if="{{reason === '登录后可用'}}">微信登录</button>
-  </view>
-
-  <block wx:elif="{{!current}}">
-    <view class="group-card" wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
-      <view class="gc-head">
-        <view>
-          <text class="gc-name">{{item.name}}</text>
-          <text class="gc-desc">{{item.desc}}</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
-      <view class="gc-books">
-        <text class="tag ghost" wx:for="{{item.books}}" wx:for-item="b" wx:key="id">{{b.name}} {{b.count}}</text>
-      </view>
-    </view>
-  </block>
+  <lock-card wx:if="{{locked}}" title="课外阅读" note="{{reason}}" mark="阅" />
 
   <block wx:else>
-    <view class="back-bar" bindtap="onBack">
-      <text class="back-arrow">‹</text>
-      <text>返回全部集子</text>
-    </view>
-    <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
-      <view class="row" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
-        <view class="row-main">
-          <text class="row-title">{{b.name}}</text>
-          <text class="row-sub">共 {{b.count}} {{b.unit}}</text>
-        </view>
-        <text class="row-go">›</text>
+    <!-- 第一层：四张集子卡 -->
+    <block wx:if="{{!current}}">
+      <view class="intro">
+        <text class="intro-t">课外阅读</text>
+        <text class="intro-s">十七部集子 · 诗文典籍 / 人物 / 文史常识</text>
       </view>
-    </view>
-  </block>
 
-  <view class="safe-bottom"></view>
+      <view class="group-card" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
+        <view class="gc-head">
+          <view class="gc-left">
+            <text class="gc-name">{{item.name}}</text>
+            <text class="gc-desc">{{item.desc}}</text>
+          </view>
+          <text class="gc-count">{{item.count}} 部</text>
+          <text class="row-go">›</text>
+        </view>
+        <view class="gc-books">
+          <text class="tag ghost" wx:for="{{item.books}}" wx:for-item="b" wx:key="id">{{b.name}} {{b.count}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 第二层：某一张卡里的集子清单 -->
+    <block wx:else>
+      <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBack">
+        <text class="back-arrow">‹</text>
+        <text>返回全部集子</text>
+      </view>
+      <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
+        <view class="card-title bar">{{item.name}}</view>
+        <view class="row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
+          <view class="row-main">
+            <text class="row-title">{{b.name}}</text>
+            <text class="row-sub">共 {{b.count}} {{b.unit}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="safe-bottom"></view>
+  </block>
 </view>

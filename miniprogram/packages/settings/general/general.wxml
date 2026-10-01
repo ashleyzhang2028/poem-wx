@@ -1,13 +1,9 @@
 <view class="page">
-  <view class="card locked-card" wx:if="{{locked}}">
-    <view class="card-title">登录后可用</view>
-    <text class="hint note">设置项要登录之后才生效 —— 未登录时只有首页目录可看。</text>
-    <button class="btn primary block locked-btn" bindtap="onLogin">微信登录</button>
-  </view>
+  <lock-card wx:if="{{locked}}" title="设置要登录" note="设置项要登录之后才生效 —— 未登录时只有首页目录可看。" mark="设" />
 
   <block wx:else>
   <view class="card">
-    <view class="card-title">正文对齐</view>
+    <view class="card-title bar">正文对齐</view>
     <radio-group class="native-group" bindchange="onAlign">
       <label class="native-label" wx:for="{{aligns}}" wx:key="key">
         <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
@@ -17,7 +13,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">正文字号</view>
+    <view class="card-title bar">正文字号</view>
     <!-- 字号本来就是连续的，用原生滑动条比「A－ / A＋」两个按钮更贴手感 -->
     <view class="font-row">
       <text class="font-a small">A</text>
@@ -30,6 +26,7 @@
   </view>
 
   <view class="card">
+    <view class="card-title bar">背诵</view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">背完自动下一首</text>

@@ -23,7 +23,9 @@ Page({
     hot: HOT,
     searched: false,
     searching: false,
-    locked: true
+    locked: true,
+    /** 「命中 N 篇 · 在哪儿搜的」—— 让结果范围有个交代，不至于看完不知道是不是全量 */
+    resultWhere: ""
   },
 
   onShow() {
@@ -52,7 +54,7 @@ Page({
   },
 
   onClear() {
-    this.setData({ keyword: "", results: [], searched: false });
+    this.setData({ keyword: "", results: [], searched: false, searching: false });
   },
 
   onScope(e) {
@@ -94,9 +96,16 @@ Page({
       return;
     }
 
-    this.setData({ results: this.byIndex(kw), searched: true, searching: false });
+    const results = this.byIndex(kw);
+    this.setData({
+      results,
+      searched: true,
+      searching: false,
+      resultWhere: this.data.scope === "poems" ? "篇名作者 · 只看课内" : "篇名作者 · 全站"
+    });
   },
 
+  /** 搜索栏上方那句提示：搜索中 / 落到索引字段时如实说 */
   byIndex(kw) {
     return corpus
       .search(kw, { book: this.data.scope === "poems" ? "poems" : "", limit: 80 })
@@ -132,7 +141,8 @@ Page({
         where: h.where === "pack" ? "课内" : "课外"
       })),
       searched: true,
-      searching: false
+      searching: false,
+      resultWhere: this.data.scope === "poems" ? "正文全文 · 只看课内" : "正文全文 · 全站"
     });
   },
 

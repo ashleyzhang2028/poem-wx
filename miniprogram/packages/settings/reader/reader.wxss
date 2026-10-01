@@ -96,13 +96,3 @@
   display: block;
   margin-top: 12rpx;
 }
-
-/* 未登录时的那张卡 */
-.locked-card .note {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.locked-btn {
-  margin-top: 32rpx;
-}

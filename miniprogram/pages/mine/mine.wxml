@@ -9,6 +9,7 @@
         <text class="identity-name">{{nickname}}</text>
         <text class="identity-sub">{{logged ? '已登录 · 进度可跨设备同步' : '未登录 · 只能看首页目录'}}</text>
       </view>
+      <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
 
     <view class="login-row" wx:if="{{!logged}}">
@@ -27,7 +28,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">本机数据</view>
+    <view class="card-title bar">本机数据</view>
     <view class="kv">
       <text class="kv-k">背诵范围</text>
       <text class="kv-v">{{gradeName}} · {{scopeName}}</text>
@@ -56,8 +57,9 @@
   </view>
 
   <view class="card">
+    <view class="card-title bar">学习</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">背诵进度</text></view>
+      <view class="row-main"><text class="row-title">背诵进度</text><text class="row-sub">未来七天排期 · 记忆阶段</text></view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onGame" wx:if="{{logged}}">
@@ -65,7 +67,7 @@
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">背诵设置</text></view>
+      <view class="row-main"><text class="row-title">背诵设置</text><text class="row-sub">范围 · 首数 · 复习算法</text></view>
       <text class="row-go">›</text>
     </view>
     <!-- 未登录整块不出现；朗读与注音都不可用时也不出现 —— 一个点不动的入口比没有更糟 -->
@@ -73,21 +75,18 @@
           bindtap="onReader" wx:if="{{logged && (speakVisible || pinyinVisible)}}">
       <view class="row-main">
         <text class="row-title">阅读与朗读</text>
-        <text class="row-sub">{{speakVisible ? '朗读 · 注音' : '注音'}}</text>
+        <text class="row-sub">{{speakVisible ? '注音 · 朗读语速' : '注音'}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">通用设置</text></view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
-      <view class="row-main"><text class="row-title">关于与反馈</text></view>
+      <view class="row-main"><text class="row-title">通用设置</text><text class="row-sub">正文对齐 · 字号</text></view>
       <text class="row-go">›</text>
     </view>
   </view>
 
   <view class="card">
+    <view class="card-title bar">数据与账号</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">
       <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON，换手机时导回去</text></view>
       <text class="row-go">›</text>
@@ -102,8 +101,12 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{logged}}">
       <view class="row-main">
         <text class="row-title">用户与权限</text>
-        <text class="row-sub">分层设置 · 兑换授权</text>
+        <text class="row-sub">我的档位 · 能力矩阵</text>
       </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
+      <view class="row-main"><text class="row-title">关于与反馈</text></view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
