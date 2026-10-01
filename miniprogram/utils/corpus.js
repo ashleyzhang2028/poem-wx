@@ -2,21 +2,24 @@
  * 语料读取层。
  *
  * 三层来源，从近到远：
- *   1. 包内 JSON —— 各集子索引（篇名/作者/朝代/出处，不含正文）与搜索索引
- *   2. 正文分片 —— 打包时随分包下发，按哈希桶取用
+ *   1. 包内 JSON —— 各集子索引（篇名/作者/朝代/出处，不含正文）+ 课内正文
+ *   2. 正文分片 —— 课外集子的正文，按哈希桶取用（落地后走云端）
  *   3. 腾讯云 COS + CDN —— 分片清单指向远端时的按需回源（utils/remote.js，暂未接）
  *
- * 索引里**不带正文**，正文只在真正打开某一篇 / 出一套卷子时才取，
- * 这是主包能压在 2MB 内的根本原因。
+ * 分界线是**课内 251 首的正文进主包**（course.json，223KB），因为首页「每日背诵」
+ * 与详情页都靠它，不该为一次取文等网络；其余 5300+ 条正文留在分片里，按需取。
+ * 索引里仍然**不带正文**，这是主包能压在 2MB 内的前提。
  *
- * ⚠️ 这里刻意**不做**一份全站索引缓存：5078 条攒成一个大对象会让主包多出近 1MB，
- * 而各集子索引本来就有同一份数据。全站检索靠 search.json，
- * 按 id 查条目靠 indexById()（拼装一次，用完即弃）。
+ * ⚠️ 这里刻意**不做**一份全站索引缓存：5575 条攒成一个大对象会让主包多出近 1MB，
+ * 而各集子索引本来就有同一份数据。全站检索逐集子遍历，
+ * 按 id 查条目靠 indexById()。
  */
 const BOOKS_DIR = "data/books/";
+const COURSE = "data/course.json";
 const MANIFEST = "data/texts/manifest.json";
 
 let booksCache = null;
+let courseCache = null;
 let manifestCache = null;
 const bookCache = {};
 const bucketCache = {};
@@ -46,6 +49,12 @@ function course() {
   return ofBook("poems");
 }
 
+/** 课内正文（进主包的那一份），键与分片里的 id 同构 */
+function courseTexts() {
+  if (!courseCache) courseCache = loadJson(COURSE);
+  return courseCache;
+}
+
 function manifest() {
   if (!manifestCache) manifestCache = loadJson(MANIFEST);
   return manifestCache;
@@ -62,10 +71,12 @@ function bucket(name) {
 }
 
 /**
- * 取条目正文。
+ * 取条目正文。课内先查包内那份，命中就不必碰分片。
  * @returns {{text:string, translation:string, src:string}|null}
  */
 function entry(id) {
+  const inPack = courseTexts()[id];
+  if (inPack) return inPack;
   const name = bucketOf(id);
   if (!name) return null;
   return bucket(name)[id] || null;
@@ -163,7 +174,9 @@ module.exports = {
   ownerOf,
   ofBook,
   course,
+  courseTexts,
   manifest,
+  bucketOf,
   entry,
   entries,
   indexById,
