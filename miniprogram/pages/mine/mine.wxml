@@ -94,7 +94,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
       <view class="row-main">
         <text class="row-title">云端同步</text>
-        <text class="row-sub">{{syncReady ? syncText : '后端未就绪 · 已攒 ' + syncPending + ' 条'}}</text>
+        <text class="row-sub">{{syncAllowed ? (syncReady ? syncText : syncNote) : syncNote}}</text>
       </view>
       <text class="row-go">›</text>
     </view>

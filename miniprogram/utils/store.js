@@ -178,8 +178,18 @@ function dailyExtra() {
   return raw.ids || [];
 }
 
-function setDailyExtra(ids) {
-  write(KEYS.dailyExtra, { day: dayKey(), ids: ids || [] });
+function setDailyExtra(ids, at) {
+  write(KEYS.dailyExtra, { day: dayKey(), ids: ids || [], at: Number(at) || Date.now() });
+}
+
+/**
+ * 加背这一份最后一次动的时间。
+ * 同步要拿它跟云端比新旧 —— 没有时间戳就只能「谁后写谁赢」，
+ * 而两个设备之间没有先后可言，比的是各自看到的时间。
+ */
+function dailyExtraAt() {
+  const raw = read(KEYS.dailyExtra, null);
+  return Number((raw && raw.at) || 0);
 }
 
 function touchDaily() {
@@ -204,12 +214,26 @@ function saveProfile(patch) {
 
 /** 自选集合：教材之外的额外篇目，可建多个 */
 function collections() {
-  return read(KEYS.collections, []) || [];
+  const raw = read(KEYS.collections, null);
+  if (!raw) return [];
+  // 上一版存的是裸数组，这一版加了时间戳（同步要比新旧）。两种都认。
+  if (Array.isArray(raw)) return raw;
+  return Array.isArray(raw.list) ? raw.list : [];
 }
 
-function saveCollections(list) {
-  write(KEYS.collections, list || []);
+function saveCollections(list, at) {
+  const box = { list: list || [], at: Number(at) || Date.now() };
+  write(KEYS.collections, box);
   return list || [];
+}
+
+/** 自选清单最后一次动的时间，理由同 dailyExtraAt */
+function collectionsAt() {
+  const raw = read(KEYS.collections, null);
+  if (!raw) return 0;
+  // 兼容上一版的裸数组：那时没存时间，只能当 0，让云端的新数据赢
+  if (Array.isArray(raw)) return 0;
+  return Number(raw.at || 0);
 }
 
 function exportAll() {
@@ -278,12 +302,14 @@ module.exports = {
   unreadCount,
   dailyExtra,
   setDailyExtra,
+  dailyExtraAt,
   touchDaily,
   dayKey,
   profile,
   saveProfile,
   collections,
   saveCollections,
+  collectionsAt,
   exportAll,
   importAll,
   stats

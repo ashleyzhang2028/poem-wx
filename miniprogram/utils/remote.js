@@ -14,6 +14,7 @@
  *   - 管理：名录只读，档位卡片点下去说明「本机标记」，不写服务端
  */
 const store = require("./store");
+const wire = require("./wire");
 
 /**
  * 接口路径。**两套并存，不是笔误**：
@@ -78,21 +79,18 @@ function request(path, data, method) {
 
 const CHUNK = 100;
 
-/** 本机数据打成可传的形状。id 用条目 id，服务端不必懂语料结构。 */
+/**
+ * 本机数据打成服务端认的形状。**形状由 utils/wire.js 定**，
+ * 这里只负责「分批、发出去、失败怎么办」。
+ *
+ * 上一版把本机形状直接当报文发：进度行发的是 `{ id, kind, rec, at }`，
+ * 而服务端 `api/_lib/core.js` 的 syncPushInner 读的是 `{ id, payload, updatedAt }` ——
+ * 缺 payload 的行被当成空记录，缺 updatedAt 的行被判 E_BAD_REC 整批退回来。
+ * 也就是说：**接上后端的那一刻，同步是坏的，而且报错指向服务端。**
+ * 所以这一版把报文形状收进 wire.js，并在自检里按服务端的读法反过来验一遍。
+ */
 function pack() {
-  const progress = store.progress();
-  const reads = store.reads();
-  const rows = [];
-  Object.keys(progress).forEach((id) => {
-    const r = progress[id];
-    rows.push({ id: id, kind: "p", rec: r, at: r.lastReviewAt || 0 });
-  });
-  Object.keys(reads).forEach((book) => {
-    Object.keys(reads[book] || {}).forEach((id) => {
-      rows.push({ id: id, kind: "r", book: book, at: reads[book][id] || 0 });
-    });
-  });
-  return { device: store.deviceId(), rows: rows };
+  return { device: store.deviceId(), recs: wire.packRecords() };
 }
 
 function chunked(items, size) {
@@ -101,73 +99,76 @@ function chunked(items, size) {
   return out;
 }
 
-/** 推。分批发，最后一批才带 done 标记 —— 中途断了下次从头来，服务端按 at 去重。 */
+/** 推。分批发。服务端一次最多 2000 条，这里 100 一条，留足余量给重试。 */
 function push() {
-  const outbox = store.read(store.KEYS.sync, {}) || {};
   const mem = pack();
-  const rows = mem.rows.concat(outbox.rows || []);
-  if (!rows.length) return Promise.resolve({ pushed: 0, sim: !configured() });
+  const recs = mem.recs;
+  if (!recs.length) return Promise.resolve({ pushed: 0, sim: !configured() });
 
   if (!configured()) {
-    // 没后端：把队列留着，别丢 —— 但也不能无限涨
-    store.write(store.KEYS.sync, { rows: rows.slice(-500), at: Date.now() });
-    return Promise.resolve({ pushed: 0, queued: rows.length, sim: true });
+    // 没后端：把没推上去的留着，别丢 —— 但也不能无限涨。
+    // 留的是**服务端形状**的 recs，下一批直接拼上就行，不必再转一次。
+    store.write(store.KEYS.sync, { recs: recs.slice(-500), at: Date.now() });
+    return Promise.resolve({ pushed: 0, queued: recs.length, sim: true });
   }
 
-  const batches = chunked(rows, CHUNK);
+  // 上次没推上去的先拼上。同一 id 以新的为准 —— 服务端按 updatedAt 条件 upsert，
+  // 但同一批里出现两条同 id 是浪费，也容易让日志看着像出了错。
+  const outbox = store.read(store.KEYS.sync, {}) || {};
+  const byId = {};
+  (outbox.recs || []).concat(recs).forEach((r) => {
+    if (!r || !r.id) return;
+    const prev = byId[r.id];
+    if (!prev || (r.updatedAt || 0) >= (prev.updatedAt || 0)) byId[r.id] = r;
+  });
+  const all = Object.keys(byId).map((k) => byId[k]);
+
+  const batches = chunked(all, CHUNK);
   return batches
     .reduce(
-      (chain, batch, i) =>
+      (chain, batch) =>
         chain.then(() =>
           request(PATHS.push, {
-            device: mem.device,
-            rows: batch,
-            done: i === batches.length - 1
+            deviceId: mem.device,
+            recs: batch
           })
         ),
       Promise.resolve()
     )
     .then(() => {
       store.drop(store.KEYS.sync);
-      return { pushed: rows.length, sim: false };
+      return { pushed: all.length, sim: false };
     });
 }
 
-/** 拉。服务端给 lastSyncAt 之后的变化，本机按 at 新者胜，跟换算法那套折算同口径。 */
+/**
+ * 拉。服务端从 `since` 之后的变化，回的是 `{ recs: [{ id, payload, updatedAt, deleted }] }`。
+ *
+ * 上一版读的是 `data.rows`（服务端没有这个字段），于是**拉永远拉回 0 条**：
+ * 不报错、不提示，就是「同步成功但什么也没发生」。这类 bug 最难被发现，
+ * 因为界面上写着「已同步」。
+ */
 function pull() {
   if (!configured()) return Promise.resolve({ applied: 0, sim: true });
   const device = store.deviceId();
-  return request(PATHS.pull, { device: device, since: session().since || 0 }).then((data) => {
-    const rows = (data && data.rows) || [];
-    let applied = 0;
+  const since = Number(session().since || 0);
+  return request(PATHS.pull, { deviceId: device, since: since }).then((data) => {
+    const recs = (data && (data.recs || data.rows)) || [];
+    const applied = wire.applyRecords(recs);
+    const serverTime = Number((data && data.serverTime) || 0) || Date.now();
 
-    const progress = store.progress();
-    const reads = store.reads();
-    rows.forEach((row) => {
-      if (row.device === device) return;
-      if (row.kind === "p") {
-        const old = progress[row.id];
-        if (!old || (row.at || 0) > (old.lastReviewAt || 0)) {
-          progress[row.id] = row.rec;
-          applied += 1;
-        }
-      } else if (row.kind === "r") {
-        const book = reads[row.book] || (reads[row.book] = {});
-        if ((row.at || 0) > (book[row.id] || 0)) {
-          book[row.id] = row.at;
-          applied += 1;
-        }
-      }
-    });
-
-    store.write(store.KEYS.progress, progress);
-    store.write(store.KEYS.reads, reads);
+    // since 只往前推：往后拨会让下一次拉漏掉中间的变化
+    const auth = store.read(store.KEYS.auth, {}) || {};
+    if (serverTime > since) {
+      auth.since = serverTime;
+      store.write(store.KEYS.auth, auth);
+    }
     store.saveSettings({ lastSyncAt: Date.now() });
     return { applied: applied, sim: false };
   });
 }
 
-/** 双向同步：先拉后推。本机数据永远优先，冲突按时间戳，不静默覆盖。 */
+/** 双向同步：先拉后推。顺序反了，本机的旧记录会盖掉服务端更新的一份。 */
 function sync() {
   if (!configured()) return Promise.resolve({ sim: true, pulled: 0, pushed: 0 });
   return pull()
@@ -270,6 +271,7 @@ function setUserRole(uid, role) {
 
 module.exports = {
   PATHS,
+  wire,
   configured,
   baseUrl,
   request,

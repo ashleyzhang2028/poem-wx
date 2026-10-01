@@ -26,6 +26,9 @@ Page({
     syncReady: false,
     syncText: "还没同步过",
     syncPending: 0,
+    /** 云端同步是 pro 起（服务端定的）。free 档如实说明「只在本机」 */
+    syncAllowed: false,
+    syncNote: "",
     fullTextOn: false,
 
     /** 登录页的那半张卡：从 gate.guard 或首页「微信登录」按钮跳过来时自动聚焦 */
@@ -71,6 +74,8 @@ Page({
       syncReady: sy.ready,
       syncText: sy.lastText,
       syncPending: sy.pending,
+      syncAllowed: E.can("sync"),
+      syncNote: this.syncNote(sy),
       adminVisible: E.can("admin"),
       tierNote: this.tierNote(e)
     });
@@ -131,7 +136,29 @@ Page({
     });
   },
 
+  /**
+   * 同步那一行该说什么。**先说「能不能同步」，再说「同步到哪了」** ——
+   * 上一版只说后者，于是 free 档用户看到「还没同步过」，
+   * 点了才知道服务端 403（E_TIER）。那是「按钮亮着、点下去弹 toast」的翻版。
+   */
+  syncNote(sy) {
+    if (!E.can("sync")) return "要 Pro 起才能跨设备同步；进度在本机一字不少";
+    if (!sy.ready) return "后端未就绪 · 已攒 " + sy.pending + " 条";
+    return sy.lastText;
+  },
+
   onSync() {
+    if (!E.can("sync")) {
+      wx.showModal({
+        title: "跨设备同步要 Pro 起",
+        content:
+          "进度现在只存在这台手机上，一字不少，背诵不受影响。\n\n" +
+          "要换手机不丢进度，找管理员开 Pro。",
+        showCancel: false,
+        confirmText: "知道了"
+      });
+      return;
+    }
     wx.showLoading({ title: "同步中" });
     sync.now(true).then((res) => {
       wx.hideLoading();
