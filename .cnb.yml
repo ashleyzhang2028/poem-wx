@@ -7,4 +7,7 @@ $:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        # 397 项：页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
+        # 倒排往返 / 飞花令判定 / 六种题型 / 权限分层（关掉宿主走三档）/
+        # 档位与网页版对照 / 同步冲突 / 包体积
         - node scripts/check.js

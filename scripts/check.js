@@ -66,7 +66,11 @@ jsFiles.forEach((file) => {
     if (!target.startsWith(".")) continue;
     // 小程序里 require 也能加载 json，路径写全了就不补后缀
     const base = path.resolve(path.dirname(file), target);
-    const resolved = /\.json$/.test(target) || /\.js$/.test(target) ? base : base + ".js";
+    // 目录形式：require("./utils/feihua") 在开发者工具里落到 index.js，
+    // 小程序与 node 都认，自检也得认，不然会把合法的目录引用判成断链
+    let resolved;
+    if (/\.json$/.test(target) || /\.js$/.test(target)) resolved = base;
+    else resolved = fs.existsSync(base + ".js") ? base + ".js" : path.join(base, "index.js");
     ok("require 可解析 " + path.relative(ROOT, file) + " → " + target, fs.existsSync(resolved));
   }
 });
@@ -545,10 +549,124 @@ const E = require(path.join(ROOT, "utils", "entitlement.js"));
 const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
 
 ok("三档齐备", tiersMod.TIER_KEYS.join(",") === "free,pro,max", tiersMod.TIER_KEYS.join(","));
+
+/**
+ * 档位表不许跟网页版漂 —— 同一份进度是要跨端同步的，
+ * 一端说「FSRS 是 pro」、另一端说「max」，用户看到的就是
+ * 「网页版能用、小程序不能用」。所以这里把网页版的口径钉成期望值。
+ *
+ * 只钉两端**同义**的能力；小程序端故意不做的（PDF 打印、子用户、正式考试）
+ * 不在此列，见 entitlement.js 顶上那段说明。
+ */
+const WEB_TIER = {
+  daily: "free",
+  library: "free",
+  speak: "login",
+  export: "login",
+  ebbinghaus: "free",
+  leitner: "login",
+  sm2: "pro",
+  fsrs: "max",
+  collections: "pro",
+  feihualing: "max"
+};
+Object.keys(WEB_TIER).forEach((k) => {
+  const cap = E.CAPS.find((c) => c.key === k);
+  ok("档位与网页版一致 " + k, !!cap && cap.tier === WEB_TIER[k],
+    cap ? "小程序=" + cap.tier + " 网页版=" + WEB_TIER[k] : "能力不存在");
+});
+
+// 能力表里每条的 tier 都必须是合法档位，且表里不许有重名 key
+ok("能力 key 不重复", new Set(E.CAP_KEYS).size === E.CAP_KEYS.length);
+ok("能力 tier 都合法", E.CAPS.every((c) => ["free", "login", "pro", "max"].indexOf(c.tier) >= 0));
+ok("每条能力都有人话名字与说明", E.CAPS.every((c) => !!c.name && !!c.desc));
+
+/**
+ * 管理页的能力分组必须把表里的每一条都摆出来。
+ * 分组是排版，但它同时也是「这道口子给谁看」的清单 ——
+ * 漏一条就是「表里有、管理页看不见」，用户永远不知道有这个东西。
+ */
+{
+  const page = fs.readFileSync(path.join(ROOT, "packages", "settings", "admin", "admin.js"), "utf8");
+  const listed = [];
+  const blocks = page.match(/keys:\s*\[[^\]]*\]/g) || [];
+  blocks.forEach((b) => {
+    (b.match(/"(\w+)"/g) || []).forEach((k) => listed.push(k.replace(/"/g, "")));
+  });
+  const missing = E.CAP_KEYS.filter((k) => listed.indexOf(k) < 0);
+  ok("管理页把每条能力都摆出来", missing.length === 0, "漏了 " + missing.join(", "));
+
+  // WXML 里也得真的在渲染这个分组，光 JS 里有数据没用
+  const wxml = fs.readFileSync(path.join(ROOT, "packages", "settings", "admin", "admin.wxml"), "utf8");
+  ok("管理页渲染能力分组", wxml.indexOf("grp.rows") >= 0 && wxml.indexOf("caps") >= 0);
+  ok("管理页显示本机档位来源", wxml.indexOf("source") >= 0);
+}
+
+
 ok("档位顺序单调", E.rankOf("free") < E.rankOf("pro") && E.rankOf("pro") < E.rankOf("max"));
 
 const snap = E.snapshot();
 ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length);
+
+/**
+ * 分层判据本身要验一遍 —— 这是自检里最容易「看起来没问题」的一块：
+ * 宿主模式把所有人都放行，三档在宿主下**长得一模一样**，
+ * 于是 can() 哪怕把两个操作数写反了也一路绿。
+ * 所以这里必须关掉宿主，按 profile 真的走一遍三档。
+ */
+{
+  const hostedFn = tiersMod.hosted;
+  tiersMod.hosted = () => false;
+
+  const setProfile = (p) => store.saveProfile(Object.assign({ grant: null }, p));
+  const clearGrant = () => store.drop(store.KEYS.grant);
+
+  // 免费 + 未登录：付费能力一律不可用，登录门槛的给出登录提示
+  clearGrant();
+  setProfile({ logged: false, tier: "free" });
+  ok("免费档拿不到付费能力", E.can("sm2") === false && E.can("fsrs") === false);
+  ok("免费档拿不到飞花令", E.can("feihualing") === false);
+  ok("免费档未登录拿不到朗读", E.can("speak") === false);
+  ok("未登录的提示是「登录后可用」", E.hint("speak") === "登录后可用", E.hint("speak"));
+  ok("付费能力给出档位提示", E.hint("feihualing").indexOf("全能") >= 0, E.hint("feihualing"));
+
+  // 免费 + 已登录：登录门槛的能力打开，付费能力仍然关着。
+  // 「登录后朗读可用」这条（上面 d2 验了 readiness）根子上就是这条在管。
+  setProfile({ logged: true, tier: "free" });
+  ok("登录后朗读打开", E.can("speak") === true);
+  ok("登录后导出打开", E.can("export") === true);
+  ok("登录不解锁付费能力", E.can("sm2") === false && E.can("feihualing") === false);
+
+  // 提权码就是本机档位的载体（管理页改档、兑换码都写在这一处）
+  store.write(store.KEYS.grant, { code: "LOCAL-PRO", tier: "pro", at: Date.now() });
+  ok("提权码把档位提到 pro", E.status().tier === "pro", E.status().tier);
+  ok("pro 解锁 SM-2", E.can("sm2") === true);
+  ok("pro 仍拿不到飞花令（max 起）", E.can("feihualing") === false);
+
+  store.write(store.KEYS.grant, { code: "LOCAL-MAX", tier: "max", at: Date.now() });
+  ok("max 解锁飞花令", E.can("feihualing") === true);
+  ok("可用能力才有空提示", E.hint("feihualing") === "");
+
+  // 档位越高能用得越多，一条都不能反 —— 这就是当初写反的那个不等号
+  const onCount = (tier) => {
+    clearGrant();
+    setProfile({ logged: true, tier });
+    if (tier !== "free") store.write(store.KEYS.grant, { code: "LOCAL-" + tier, tier, at: Date.now() });
+    let n = 0;
+    E.CAP_KEYS.forEach((k) => {
+      if (E.can(k)) n += 1;
+    });
+    return n;
+  };
+  const nFree = onCount("free");
+  const nPro = onCount("pro");
+  const nMax = onCount("max");
+  ok("档位越高能力越多（" + nFree + " ≤ " + nPro + " ≤ " + nMax + "）", nFree <= nPro && nPro <= nMax);
+  ok("max 拿得到全部能力", nMax === E.CAP_KEYS.length, nMax + " / " + E.CAP_KEYS.length);
+
+  clearGrant();
+  tiersMod.hosted = hostedFn;
+}
 
 // 本机宿主下四套算法都能开 —— 这条是「不登录也能用全部功能」的兑现点
 ok("宿主下 FSRS 可用", E.algoAllowed("fsrs") === true);

@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="card" wx:if="{{!allowed}}">
+    <view class="card-title">飞花令</view>
+    <text class="hint">{{reason}}，在「我的 → 管理层级」可以查看当前的权限。</text>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="seg">
+        <view class="seg-item {{kind === item.key ? 'active' : ''}}" wx:for="{{kinds}}" wx:key="key"
+              data-k="{{item.key}}" bindtap="onKind">{{item.label}}</view>
+      </view>
+
+      <view class="seg lv-seg">
+        <view class="seg-item {{level === item.id ? 'active' : ''}}" wx:for="{{levels}}" wx:key="id"
+              data-l="{{item.id}}" bindtap="onLevel">{{item.name}}</view>
+      </view>
+
+      <view class="chars">
+        <view class="char {{char === item.char ? 'active' : ''}}" wx:for="{{chars}}" wx:key="char"
+              data-c="{{item.char}}" bindtap="onChar">
+          <text class="char-t">{{item.char}}</text>
+          <text class="char-n">{{item.count}}</text>
+        </view>
+      </view>
+      <text class="hint" wx:if="{{!chars.length}}">这一档没有合适的令字</text>
+    </view>
+
+    <!-- 查一查 -->
+    <view class="card" wx:if="{{kind === 'look' && char}}">
+      <view class="card-title">含「{{char}}」的句子 · {{hitCount}} 句</view>
+      <view class="fh-line" wx:for="{{lines}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+        <text class="fh-seg">{{item.seg}}</text>
+        <text class="fh-src">{{item.title}} · {{item.author}}</text>
+      </view>
+      <view class="empty" wx:if="{{!hitCount}}">课内 251 首里没有含这个字的句子</view>
+    </view>
+
+    <!-- 闯关 -->
+    <view class="card" wx:if="{{kind === 'level' && char}}">
+      <view class="card-title">令字「{{char}}」 · 已说 {{said.length}} 句</view>
+      <view class="said" wx:for="{{said}}" wx:key="index">
+        <text class="said-t">{{item}}</text>
+      </view>
+
+      <view class="search lv-input" wx:if="{{!finished}}">
+        <input value="{{input}}" placeholder="写一句带「{{char}}」的诗" bindinput="onInput" bindconfirm="onSubmit" />
+      </view>
+
+      <view class="actions" wx:if="{{!finished}}">
+        <button class="btn primary" bindtap="onSubmit">说一句</button>
+        <button class="btn ghost" bindtap="onGiveUp">接不上了</button>
+      </view>
+
+      <view class="actions" wx:else>
+        <button class="btn primary" bindtap="onNextChar">换一个令字</button>
+      </view>
+
+      <text class="hint fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
+    </view>
+
+    <text class="hint fh-tip" wx:if="{{!char}}">挑一个令字开始</text>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>
