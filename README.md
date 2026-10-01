@@ -14,7 +14,7 @@
 git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 
-# 2. 离线自检（346 项）
+# 2. 离线自检（397 项）
 node scripts/check.js
 
 # 3. 用微信开发者工具打开 miniprogram/ 目录
@@ -124,7 +124,7 @@ miniprogram/
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
 ├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录
-└── check.js        # 离线自检，346 项
+└── check.js        # 离线自检，397 项
 ```
 
 ## 还没做的

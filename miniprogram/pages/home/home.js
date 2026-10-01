@@ -1,6 +1,7 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const S = require("../../utils/scheduler");
+const sync = require("../../utils/sync");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "加背", optional: "自选" };
 
@@ -17,6 +18,8 @@ Page({
 
   onShow() {
     this.refresh();
+    // 首页是最高频的入口，顺带把待同步的进度送出去。失败静默
+    sync.now().catch(() => {});
   },
 
   refresh() {

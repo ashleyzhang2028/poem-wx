@@ -93,6 +93,12 @@ Page({
       wx.navigateTo({ url: "/packages/game/quiz/quiz" });
       return;
     }
+    if (key === "feihua") {
+      // 「查一查」留在本页（就地翻句最快），「闯关」进独立页 ——
+      // 闯关要输入、要判句、要记轮次，塞进这个列表页就把它压塌了
+      wx.navigateTo({ url: "/packages/game/feihua/feihua?kind=level" });
+      return;
+    }
     this.setData({ page: 1 }, () => this.page(1));
   },
 
