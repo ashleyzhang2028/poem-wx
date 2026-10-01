@@ -40,7 +40,12 @@ Page({
     canWrite: false,
     canSetRole: false,
     busy: false,
-    msg: ""
+    msg: "",
+
+    /** 后端地址：同步、微信登录、名录都走它。留空 = 没后端，一切照旧降级 */
+    baseUrl: "",
+    baseUrlNote: "",
+    wxLoginNote: ""
   },
 
   onShow() {
@@ -63,7 +68,12 @@ Page({
       adminReady: remote.adminReady(),
       canWrite: canWrite,
       canSetRole: canSetRole,
-      roleLabel: ROLE_NAME[auth.role()] || "普通用户"
+      roleLabel: ROLE_NAME[auth.role()] || "普通用户",
+      baseUrl: auth.baseUrl() || "",
+      baseUrlNote: auth.configured()
+        ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"
+        : "还没配。配上前：登录降级为本机身份、档位按免费、进度只在本机。",
+      wxLoginNote: this.wxNote()
     });
 
     if (!snap.logged) return;
@@ -108,7 +118,7 @@ Page({
     const GROUPS = [
       { title: "免费档（登录即得）", keys: ["daily", "library", "pinyin", "ebbinghaus", "progress", "search"] },
       { title: "登录即开", keys: ["speak", "export", "leitner"] },
-      { title: "专业档起", keys: ["sm2", "quiz", "collections", "admin"] },
+      { title: "专业档起", keys: ["sync", "sm2", "quiz", "collections", "admin"] },
       { title: "全能档起", keys: ["fsrs", "feihualing", "exam"] }
     ];
     return GROUPS.map((g) => ({
@@ -187,6 +197,47 @@ Page({
         });
       }
     });
+  },
+
+  /**
+   * 微信登录那一层就绪没有。
+   *
+   * 判据只能是「服务端真的有 /api/wx/login」—— 而这个**探测不了**：
+   * 主动打一次会白留一条失败日志，也拿不到确定性答案。
+   * 所以这里不猜，只把「要满足哪些条件才算就绪」摆出来，让人自己核。
+   * 编一个「疑似已就绪」比不说更坏。
+   */
+  wxNote() {
+    if (!auth.configured()) return "微信登录要后端配合：/api/wx/login 做 code2Session 换 openid。见 docs/wx-login-server.md。";
+    return "配置了后端，但 /api/wx/login 是否已上线只有服务端知道。登录若一直落地成「本机身份」，就是那两条路由还没加 —— 见 docs/wx-login-server.md。";
+  },
+
+  onBaseUrl(e) {
+    this.setData({ baseUrl: e.detail.value || "" });
+  },
+
+  /**
+   * 存后端地址。**不顺手清会话**：地址换了但会话还有效时（比如从测试环境切到正式），
+   * 清掉会让用户莫名其妙地掉线一次。真连不上，下一次 request 自己会失败并如实报。
+   */
+  onSaveBaseUrl() {
+    const url = String(this.data.baseUrl || "").trim();
+    if (url && !/^https:\/\//.test(url)) {
+      wx.showToast({ title: "要 https:// 开头", icon: "none" });
+      return;
+    }
+    auth.configure({ baseUrl: url.replace(/\/+$/, "") });
+    this.setData({ busy: true });
+    entitlement
+      .sync()
+      .then(() => {
+        this.setData({ busy: false, msg: url ? "地址已保存" : "已清空后端地址" });
+        this.refresh();
+      })
+      .catch(() => {
+        this.setData({ busy: false, msg: "地址已保存，但连不上" });
+        this.refresh();
+      });
   },
 
   onLoadAccounts() {

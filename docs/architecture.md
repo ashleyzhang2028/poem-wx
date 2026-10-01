@@ -80,6 +80,7 @@ miniprogram/
 │   ├── feihua/index.js              # 飞花令（令字池 / 查一查 / 接句判定）
 │   ├── entitlement.js / tiers.js    # 权限分层
 │   ├── auth.js                      # 微信登录（含无后端时的降级）
+│   ├── wire.js                      # 报文形状（本机 ↔ poem 服务端），见 § 二点五
 │   ├── remote.js                    # 后端契约（同步 / TTS / 管理）
 │   ├── sync.js                      # 同步调度（启动 / 背完 / 手动）
 │   └── admin.js                     # 管理页数据层
@@ -94,6 +95,54 @@ scripts/
 
 `utils/` 里的模块**一律不碰 `wx` 之外的平台 API**，`wx` 只在 `store.js` 与 `auth.js` 里出现。
 这样排期与算法可以在 Node 里直接验，不必开开发者工具。
+
+## 二点五、报文一层：本机形状 ≠ 服务端形状
+
+跨端同步最容易错的地方不是算法，是**字段名**。上一版把本机形状直接当报文发：
+
+```
+本机   { id, kind: "p", rec: {...}, at }
+服务端 { id, payload: {...}, updatedAt }     ← api/_lib/core.js syncPushInner
+本机   { id, kind: "r", book, at }           ← 一篇一行
+服务端 { id: "reads:<行 id>", payload: { v, updatedAt, marks: {...} } }   ← 一集子一行
+```
+
+两边一个字段都对不上。而当时的自检问的是「本机发得出什么」：
+
+```js
+ok("打包含进度行", packed.rows.some((r) => r.kind === "p" && r.id === "probe-1"))
+```
+
+一路绿灯。也就是说：**接上后端那一刻，同步是坏的，而且报错会指向服务端。**
+拉的那一头更安静 —— `pull()` 读的是 `data.rows`，服务端根本没有这个字段，
+于是「同步成功但永远拉回 0 条」，界面上还写着「已同步」。
+
+所以另起一层 `utils/wire.js`，只做一件事：本机形状 ↔ 服务端形状。
+判据不靠文档推测，靠读 poem 的源码，并且**把这件事变成会红的检查**：
+
+| 检查 | 判据出处 |
+|---|---|
+| 每条 rec 有非空 id、正数 `updatedAt`、`payload` 对象 | `syncPushInner` 的三条前置校验 |
+| 进度行 payload 只带白名单字段 | `sanitizePayload` |
+| 已读按集子成行、载荷是 `marks` | `sanitizeReads` + `readRowKeyOf` |
+| 行 id 是 `poem_<book>_read_v1` | `js/sync-coverage.js` 与 `js/read-sync.js` |
+| 加背 / 自选清单有打包 | `sanitizeDailyExtra` / `sanitizeCollections` |
+| 拉回的行能落回本机 | `applyRecords` 往返 |
+
+最强的一条是**把报文喂给 poem 真实的 sanitize 函数**（`scripts/check.js` §8.8）：
+读到 poem 源码就直接 require 它的 `api/_lib/core.js`，用它的
+`sanitizePayload` / `sanitizeReads` / `sanitizeDailyExtra` / `sanitizeCollections`
+过一遍我们发出去的数据，**问的是「有没有字段丢了」**而不是「字符串等不等」
+—— 服务端会补齐 `deleted: 0` 这类 canonical 字段，那不算错。
+读不到 poem 时跳过并说明，不假装验过。
+
+三处具体修掉的错，各自都值得记一笔：
+
+1. **进度行字段全错**：`kind/rec/at` → `payload/updatedAt`
+2. **已读行 id 张冠李戴**：本机集子 id 与网页版的存储行 id 是两套命名
+   （`poems` ↔ `poem_poems_read_v1`，`dwang` ↔ `poem_dwang_cn_read_v1`），
+   写错一个字服务端就**静默丢掉这一行**，不报错
+3. **加背与自选清单压根没打包**：服务端那两行永远收不到，换台机器这两样就没了
 
 ## 三、数据存哪：冷热分离，正文一律上云
 
@@ -228,6 +277,9 @@ wx.login() 拿 code
   → 后端下发 access（7 天）+ refresh（30 天）双 token + 档位 + 角色
   → 客户端只存 token，不落 openid 明文
 ```
+
+要补的东西（路由、报文、建表、部署顺序）单独写在 **[`docs/wx-login-server.md`](wx-login-server.md)** ——
+那是接手的人唯一需要读的一份。
 
 **接口契约**（`utils/remote.js` 里的 `PATHS`，两边都在这一份里）：
 
@@ -440,13 +492,21 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
 - **正文全站搜索**：倒排索引只记「字 → 分片」，**不记行号偏移**。
   行号能把索引撑到 2-3 倍，而一片才 200KB，读进来再定位一次的开销远小于把索引做大。
   课内正文不进索引 —— 它已经在主包里，现场扫比查索引还快
-- **云端同步**：`utils/remote.js` 把契约写死（pull / push / 增量按时间戳），
-  本机离线队列攒着，联网后一次推。**没后端时不上报成功**，如实说「已攒 N 条」
+- **云端同步**：报文形状收在 `utils/wire.js`（见 § 二点五），本机离线队列攒着，
+  联网后一次推。**没后端时不上报成功**，如实说「已攒 N 条」。
+  仍待外的一条：**它是 pro 起**，这是服务端 `syncTierGate` 定的
+  （free 档直接 403，`cap: sync.multiDevice`）。所以能力表里补了 `sync` 这一条，
+  free 档那一行写的是「进度在本机一字不少」，而不是让用户点下去才发现被拒
 - **管理页**：见 § 四
-- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` **还没写**。poem 那边的
-  `/api/*` 是邮箱那套（注册 / 确认 / 密码 / 随机码），小程序端要的是 openid 那套，
-  得新加两条路由 + 一张 `wx_accounts` 表（uid ↔ openid ↔ unionid）。
+- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` **还没写** ——
+  **这是上线前唯一的硬阻塞**。poem 那边的 `/api/*` 是邮箱那套（注册 / 确认 /
+  密码 / 随机码），小程序端要的是 openid 那套，得新加两条路由 + 一张
+  `wx_accounts` 表（uid ↔ openid ↔ unionid）。
+  要补什么、报文长什么样、表怎么建、部署顺序，都写在 **`docs/wx-login-server.md`**。
   在它就绪之前，登录降级成「本机身份 + free 档」，见 § 五
+- **第一个 owner 怎么来**：poem 那边走 `OWNER_EMAILS` 环境变量
+  （`api/_lib/core.js` 的 `claimOwnerRole`），**小程序端刻意没有这条口** ——
+  一个能在客户端点出来的「把自己设成 owner」就是权限漏洞
 - **真·按人开关**：服务端可以在会话里下发 `caps: { speak: false }` 把某人的某项能力
   单独关掉（`entitlement.switchedOff()` 读它），但**目前没有后端会发它** ——
   这条通道留着，等管理后台那侧接上
@@ -472,3 +532,7 @@ node scripts/check.js                                    # 离线自检
 首页有骨架屏 / 自定义组件四件套齐全）**、同步冲突、包体积。
 
 跑之前得先生成语料 —— 数据不入库，见 § 三。
+
+**自检会「借」poem 的源码来验自己**（`POEM_WEB_DIR` 指过去）：报文喂给它的
+sanitize 函数、已读行 id 对照它的同步表、同步路径对照它的路由表。
+读不到 poem 时这几条跳过并说明，不假装验过 —— 但 CI 里一定读得到。

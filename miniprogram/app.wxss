@@ -259,6 +259,26 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
+/* ---------- 文本输入（后端地址这类）---------- */
+/* 输入框一律用原生 <input>，样式只统一尺寸与配色 —— 外观改不到它内部，
+   这点必须承认，所以只给边框与圆角 */
+.field {
+  display: flex;
+  align-items: center;
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0 20rpx;
+  height: 76rpx;
+  margin: 12rpx 0;
+}
+
+.field-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--ink);
+}
+
 /* ---------- 小程序自有控件的统一口径 ----------
    这一节是「控件用系统的、配色用跬步的」这句话的落点。
    开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：

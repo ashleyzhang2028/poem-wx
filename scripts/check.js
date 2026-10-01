@@ -965,18 +965,229 @@ ok("同步复用 poem 的路径", remoteMod.PATHS.pull === "/api/sync/pull" && r
 ok("管理复用 poem 的路径", remoteMod.PATHS.accounts === "/api/admin/accounts" && remoteMod.PATHS.grant === "/api/admin/grant");
 ok("微信登录是新增的那一套", remoteMod.PATHS.login === "/api/wx/login");
 
-// 打包形状：进度与已读都要打得出来，id 用条目 id（服务端不必懂语料结构）
+/**
+ * 打包形状：**按服务端的读法反过来验**。
+ *
+ * 这一节原来是这么写的：
+ *     ok("打包含进度行", packed.rows.some((r) => r.kind === "p" && r.id === "probe-1"))
+ * 它验的是「我们自己发得出来」，而服务端 `api/_lib/core.js` 的 syncPushInner 读的是
+ * `{ id, payload, updatedAt }` —— 本机发的是 `{ id, kind, rec, at }`。
+ * 两边字段名一个都对不上：缺 payload 的行被当成空记录，缺 updatedAt 的行
+ * 直接 E_BAD_REC 整批退回来。而这条自检一路绿灯，因为它只问本机发得出什么，
+ * 不问服务端认不认。
+ *
+ * 所以现在改成：**照服务端的校验逻辑重写一遍判据**，逐字段对。
+ * 判据的出处不是文档推测，是 poem 的源码：
+ *   - api/_lib/core.js  syncPushInner / sanitizePayload / sanitizeReads
+ *   - js/read-sync.js   PREFIX = "reads:"、行 id = poem_<book>_read_v1
+ *   - js/sync-coverage.js  daily_extra:v1 / collections:v1
+ */
 store.markRead("poems", "probe-1");
+store.markRead("dwang", "probe-dw");
+store.setDailyExtra(["probe-1"]);
+store.saveCollections([{ id: "c1", name: "自检" }]);
+
 const packed = remoteMod.pack();
 ok("打包带本机标识", !!packed.device);
-ok("打包含进度行", packed.rows.some((r) => r.kind === "p" && r.id === "probe-1"));
-ok("打包含已读行", packed.rows.some((r) => r.kind === "r" && r.id === "probe-1"));
+ok("打包发的是 recs", Array.isArray(packed.recs));
+
+// 服务端要求：每条 rec 必须有 id（非空）+ updatedAt（正数），否则整批 400
+ok(
+  "每条 rec 都有非空 id",
+  packed.recs.every((r) => typeof r.id === "string" && r.id.length > 0 && r.id.length <= 80),
+  packed.recs.filter((r) => !r.id).length + " 条缺 id"
+);
+ok(
+  "每条 rec 都有正数 updatedAt",
+  packed.recs.every((r) => Number(r.updatedAt) > 0 && isFinite(r.updatedAt)),
+  packed.recs.filter((r) => !(Number(r.updatedAt) > 0)).length + " 条时间戳不合法"
+);
+ok(
+  "每条 rec 都带 payload 对象",
+  packed.recs.every((r) => r.payload && typeof r.payload === "object" && !Array.isArray(r.payload)),
+  "服务端 sanitizePayload 读的就是它，没有就等于发了一条空记录"
+);
+
+// 进度行：sanitizePayload 的白名单只留 level / nextReviewAt / learned / reps / history。
+// 多发字段不算错（服务端会丢），但会白白撑大报文；漏发 payload 才是真错。
+const pRow = packed.recs.find((r) => r.id === "probe-1");
+ok("进度行在包里", !!pRow);
+ok(
+  "进度行的 payload 只带服务端认的字段",
+  !!pRow && Object.keys(pRow.payload).every((k) => ["level", "nextReviewAt", "learned", "reps", "history"].indexOf(k) >= 0),
+  pRow ? Object.keys(pRow.payload).join(",") : ""
+);
+
+// 已读行：服务端要 `reads:<行 id>` 一行一个集子，载荷是 `{ v, updatedAt, marks }`。
+// 上一版发的是「一篇一行、kind=r」——服务端 readRowKeyOf() 认不出，整批静默丢掉。
+const readRows = packed.recs.filter((r) => r.id.indexOf("reads:") === 0);
+ok("已读按集子成行", readRows.length >= 2, "实际 " + readRows.length + " 行");
+ok(
+  "已读行 id 是网页版那边的存储 key",
+  readRows.some((r) => r.id === "reads:poem_poems_read_v1"),
+  readRows.map((r) => r.id).join(",")
+);
+ok(
+  "已读行是 marks 形状",
+  readRows.every((r) => r.payload && r.payload.marks && typeof r.payload.marks === "object"),
+  "服务端 sanitizeReads 读 payload.marks，不是 payload 本身"
+);
+ok(
+  "已读 marks 每篇带 at",
+  readRows.every((r) => Object.keys(r.payload.marks).every((k) => Number(r.payload.marks[k].at) > 0))
+);
+
+// 加背与自选清单：上一版**完全没打包**，服务端那两行永远收不到，换台机器这两样就没了
+ok("加背有打包", packed.recs.some((r) => r.id === "daily_extra:v1"));
+ok(
+  "加背按服务端形状",
+  packed.recs.some((r) => r.id === "daily_extra:v1" && r.payload.date && Array.isArray(r.payload.items)),
+  "服务端要 { date, items: [{ id }] }"
+);
+ok("自选清单有打包", packed.recs.some((r) => r.id === "collections:v1" && Array.isArray(r.payload.collections)));
+
+// 反向：拉回来的也能落回本机。服务端给的是 recs，本机形状不一样，得转
+{
+  const before = Object.keys(store.progress()).length;
+  const applied = remoteMod.wire.applyRecords([
+    { id: "probe-2", payload: { level: 5, learned: true }, updatedAt: 4102444800000, deleted: false },
+    { id: "reads:poem_poems_read_v1", payload: { v: 1, updatedAt: 4102444800000, marks: { "probe-9": { at: 4102444800000, times: 1 } } }, updatedAt: 4102444800000 },
+    { id: "缺了时间戳", payload: {}, updatedAt: 0 }
+  ]);
+  ok("云端记录能落回本机", !!store.getRecord("probe-2") && store.getRecord("probe-2").level === 5);
+  ok("云端的已读能落回本机", !!store.reads("poems")["probe-9"]);
+  ok("无时间戳的行不乱写", applied >= 0);
+  ok("拉回后本机条数只增不减", Object.keys(store.progress()).length >= before);
+  // 比本机旧的不许覆盖
+  remoteMod.wire.applyRecords([
+    { id: "probe-2", payload: { level: 1, learned: false }, updatedAt: 1, deleted: false }
+  ]);
+  ok("比本机旧的不覆盖", store.getRecord("probe-2").level === 5);
+}
 
 // 管理名录：没配 POEM_ROSTER 时是空名册，不许凭空编人出来
 const roster = readJson(path.join(dataDir, "roster.json"));
 ok("名录文件存在（空也要在）", !!roster);
 ok("名录不含完整标识泄漏（标签截断）", (roster.users || []).every((u) => String(u.label).length <= 8));
 ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"].indexOf(u.tier) >= 0));
+
+/**
+ * 最强的一条：**把我们发出去的报文喂给 poem 服务端真实的 sanitize 函数**。
+ *
+ * 上面那些断言是「按服务端的读法重写一遍判据」—— 判据是我写的，
+ * 就有可能仍是我以为的服务端。这一条不同：它直接 require poem 的
+ * `api/_lib/core.js`，用它自己的 sanitizePayload / sanitizeReads /
+ * sanitizeDailyExtra / sanitizeCollections 过一遍。
+ *
+ * 判据也不能是「字符串相等」：服务端会**补齐** canonical 字段
+ * （`deleted: 0`、snapshot 的默认值），那不是错误。要问的是
+ * 「我们发的字段，服务端读到了没有」—— 少一个字段就是真丢数据。
+ *
+ * 读不到 poem 时跳过并说明，不假装验过。
+ */
+{
+  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+  const corePath = path.join(webDir, "api", "_lib", "core.js");
+  if (!fs.existsSync(corePath)) {
+    ok("报文过一遍服务端 sanitize（读不到 poem，跳过）", true);
+  } else {
+    let core = null;
+    try {
+      core = require(corePath);
+    } catch (e) {
+      core = null;
+    }
+    if (!core || typeof core.sanitizePayload !== "function") {
+      ok("报文过一遍服务端 sanitize（poem 版本对不上，跳过）", true, "没有 sanitizePayload");
+    } else {
+      const wireMod3 = require(path.join(ROOT, "utils", "wire.js"));
+      const rows3 = wireMod3.packRecords();
+
+      function lostFields(sent, got) {
+        const out = [];
+        (function walk(a, b, p) {
+          Object.keys(a || {}).forEach((k) => {
+            const bv = b ? b[k] : undefined;
+            if (bv === undefined) {
+              out.push(p + k);
+              return;
+            }
+            if (a[k] && typeof a[k] === "object" && !Array.isArray(a[k])) walk(a[k], bv, p + k + ".");
+          });
+        })(sent, got, "");
+        return out;
+      }
+
+      let worst = "";
+      rows3.forEach((r) => {
+        const got = core.sanitizePayload(r.payload, r.id);
+        const lose = lostFields(r.payload, got);
+        if (lose.length && !worst) worst = r.id + " → " + lose.join(",");
+      });
+      ok("报文过一遍服务端 sanitize，一个字段都不丢", worst === "", worst);
+
+      // 反向：服务端造出来的行，我们能落回本机
+      const applied3 = wireMod3.applyRecords([
+        { id: "probe-srv", payload: { level: 4, learned: true }, updatedAt: Date.now() },
+        { id: "reads:poem_poems_read_v1", payload: { v: 1, updatedAt: Date.now(), marks: { "probe-srv": { at: Date.now(), times: 1 } } }, updatedAt: Date.now() }
+      ]);
+      ok("服务端形状的行能落回本机", applied3 >= 2 && !!store.getRecord("probe-srv"));
+    }
+  }
+}
+
+/**
+ * 已读行 id 的映射表不许凭记忆写。
+ *
+ * `utils/wire.js` 里那张 READ_ROW 表（本机集子 id → `poem_<x>_read_v1`）是
+ * 跨端同步能对上的前提：写错一个字，服务端就认不出这是哪个集子的已读，
+ * **而且不会报错** —— 它只是静静地把这一行丢掉。
+ *
+ * 所以这张表要在能读到 poem 源码时**照着源码验一遍**：
+ *   js/sync-coverage.js 里每行 `key: "poem_x_read_v1"` 都是一条真实存在的行。
+ * 读不到 poem（本地没 clone）时跳过并说明，不假装验过。
+ */
+{
+  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+  const coverage = path.join(webDir, "js", "sync-coverage.js");
+  const wireMod = require(path.join(ROOT, "utils", "wire.js"));
+
+  if (!fs.existsSync(coverage)) {
+    ok("已读行 id 对照 poem 源码（读不到 poem，跳过）", true);
+  } else {
+    const src = fs.readFileSync(coverage, "utf8");
+    const declared = new Set();
+    const re = /key:\s*"(poem_[a-z0-9_]*_read_v1)"/g;
+    let m;
+    while ((m = re.exec(src))) declared.add(m[1]);
+
+    const ours = Object.keys(wireMod.READ_ROW).map((k) => wireMod.READ_ROW[k]);
+    const unknown = ours.filter((k) => declared.size > 0 && !declared.has(k));
+    ok("已读行 id 都在 poem 的同步表里", unknown.length === 0,
+      unknown.length + " 个对不上：" + unknown.slice(0, 4).join(", "));
+
+    // 反过来：poem 有而小程序没有的集子，是「两端覆盖不一致」——
+    // 不算错（小程序端十七部集子是语料决定的），但要让这件事看得见
+    const oursSet = new Set(ours);
+    const missing = Array.from(declared).filter((k) => !oursSet.has(k));
+    ok("poem 的已读行小程序都有对应（" + missing.length + " 条在网页版有、这边无）", true,
+      missing.slice(0, 6).join(", "));
+  }
+
+  // 同步与管理的路径，也要跟 poem 的路由表对得上 —— 少一个前缀就是 404
+  const routes = path.join(webDir, "api", "_lib", "routes.js");
+  if (!fs.existsSync(routes)) {
+    ok("同步路径对照 poem 路由表（读不到 poem，跳过）", true);
+  } else {
+    const rsrc = fs.readFileSync(routes, "utf8");
+    const remoteMod2 = require(path.join(ROOT, "utils", "remote.js"));
+    ["pull", "push", "accounts", "grant", "role"].forEach((k) => {
+      const p2 = remoteMod2.PATHS[k].replace(/^\/api\//, "/");
+      ok("路径在 poem 路由表里 " + remoteMod2.PATHS[k], rsrc.indexOf(p2) > -1,
+        "poem 的 routes.js 里没有这个路由");
+    });
+  }
+}
 
 /* ---------- 9. 包体积 ---------- */
 const LIMIT_MAIN = 2 * 1024 * 1024;
@@ -1445,6 +1656,57 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
       global.getCurrentPages = savedPages;
     }
   }
+}
+
+/* ---------- 10. 上线前的那几道闸 ---------- */
+
+/**
+ * 这一节守的不是功能，是**「能不能提审」**。
+ * 前面 578 项全绿也拦不住「appid 还是游客模式就点上传」这种事故。
+ */
+{
+  // W1. appid 仍是游客模式时，自检要说出来 —— 但不拦。
+  //     拦了会让本地开发没法跑；不说不说，则会有人拿游客号去提审。
+  const cfg = readJson(path.join(ROOT, "project.config.json"));
+  const tourist = !cfg.appid || cfg.appid === "touristappid";
+  ok(
+    "appid " + (tourist ? "还是游客模式（正式上传前必须换）" : "已替换"),
+    true,
+    tourist ? "游客模式下「上传」按钮不可用，插件（同声传译）也无法申请" : ""
+  );
+  if (tourist) {
+    console.log("  · 提醒：project.config.json 里 appid 仍是 touristappid，正式上传前换成自己的。");
+  }
+
+  // W2. 提审要的两件东西必须在：隐私说明入口、账号注销入口。微信卡这两条。
+  const aboutWxml = fs.readFileSync(path.join(ROOT, "packages/settings/about/about.wxml"), "utf8");
+  const aboutJs = fs.readFileSync(path.join(ROOT, "packages/settings/about/about.js"), "utf8");
+  ok("有隐私说明入口", aboutWxml.indexOf("onPrivacy") >= 0 && aboutJs.indexOf("onPrivacy") >= 0);
+  ok("有用户协议入口", aboutWxml.indexOf("onTerms") >= 0 && aboutJs.indexOf("onTerms") >= 0);
+
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages/mine/mine.js"), "utf8");
+  ok("有退出登录入口", mineJs.indexOf("onLogout") >= 0);
+  ok("有清空本机数据入口（微信要求可注销）", mineJs.indexOf("onClear") >= 0);
+
+  // W3. 后端地址必须能在界面上配 —— 没有入口的话，「接后端」这件事只能改代码
+  const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
+  const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
+  ok("后端地址有配置入口", adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0);
+
+  // W4. 服务端没配时，不许有任何界面说「已同步」这种假话。
+  //     判据：说「已同步」的地方，那一行的可见性必须挂在 sync 判据上。
+  const syncReadyUses = mineJs.indexOf("syncAllowed") >= 0;
+  ok("同步那一行按能力判据显示", syncReadyUses);
+
+  // W5. 同步是 pro（服务端 syncTierGate 定的）。这条口子必须在能力表里，
+  //     否则 free 档会看到一个点下去必被 403 的入口。
+  const capSync = E.CAPS.find((c) => c.key === "sync");
+  ok("云端同步在能力表里且是 pro", !!capSync && capSync.tier === "pro",
+    capSync ? "当前 tier=" + capSync.tier : "能力不存在");
+
+  // W6. 微信登录那一层的说明书要在 —— 它是唯一的硬阻塞，
+  //     没有它接手的人只能从头猜接口形状。
+  ok("有微信登录服务端说明", fs.existsSync(path.join(__dirname, "..", "docs", "wx-login-server.md")));
 }
 
 /* ---------- 汇总 ---------- */
