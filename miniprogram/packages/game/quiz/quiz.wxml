@@ -1,10 +1,9 @@
 <view class="page">
-  <lock-card wx:if="{{!allowed}}" title="题库" note="{{reason}}" mark="题" />
+  <lock-card wx:if="{{!allowed}}" title="题库" note="登录后才能用" mark="题" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="page-head">
       <text class="head-title">出一组题</text>
-      <text class="head-sub">选范围与题型 · 答完当场判 · 错题留到最后</text>
     </view>
 
     <view class="card">
@@ -12,16 +11,13 @@
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
         <view class="picker">{{scopes[scopeIndex].name}} ›</view>
       </picker>
-      <text class="hint note">共 {{count}} 题，就地取材自所选集子，不接 AI、不额外收费。</text>
+      <text class="count-line">共 {{count}} 题</text>
     </view>
 
     <view class="card">
       <view class="card-title bar">题型</view>
-      <!-- 题型可多选。原来是一排原生方框：每个方框吃掉一格横向空间，
-           五个题型就折成两行、第二行还挂着一个孤零零的「认篇名」。
-           改成格子排：等宽、整齐、一行放得下，选中的填色 + 右上角一个勾
-           （那一勾是「可以多选」的唯一线索，单选那些格子没有）。
-           checkbox 仍在 label 里，点格子任何一处都选中。 -->
+      <!-- 题型可多选：选中的填色 + 右上角一个勾（那一勾是「可多选」的唯一线索）。
+           checkbox 仍在 label 里，点格子任何一处都选中 -->
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
                wx:for="{{forms}}" wx:key="key">
@@ -30,10 +26,10 @@
           <text class="chip-t">{{item.name}}</text>
         </label>
       </checkbox-group>
-      <text class="hint note">题型可多选（右上角带方框的格子）：选中的随机混出，至少留一种。</text>
+
     </view>
 
-    <button class="btn primary block" bindtap="onStart">开始答题</button>
+    <button class="btn primary block" bindtap="onStart">开始</button>
   </block>
 
   <block wx:elif="{{stage === 'running'}}">
@@ -56,7 +52,7 @@
     </view>
 
     <view class="card verdict" wx:if="{{last}}">
-      <text class="verdict-line {{last.ok ? 'ok' : 'no'}}">{{last.ok ? '答对了' : '答错了，正确答案：' + last.answer}}</text>
+      <text class="verdict-line {{last.ok ? 'ok' : 'no'}}">{{last.ok ? '答对了' : '答错了 · 正确：' + last.answer}}</text>
       <view class="verdict-acts">
         <text class="verdict-link" bindtap="onOpen">看全篇</text>
         <button class="btn primary next-btn" bindtap="onNext">

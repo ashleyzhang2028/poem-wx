@@ -82,7 +82,7 @@
   },
   "settings-reader": {
     "page": "packages/settings/reader/reader",
-    "title": "阅读与朗读",
+    "title": "阅读设置",
     "back": true,
     "logged": true
   },

@@ -1,7 +1,6 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
-const speech = require("../../utils/speech");
 const pinyin = require("../../utils/pinyin");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
@@ -12,9 +11,6 @@ const RESULTS = [
   { key: "fuzzy", label: "模糊", cls: "fuzzy" },
   { key: "good", label: "记住", cls: "good" }
 ];
-
-/** 整篇读完到自动跳下一首之间留一口气，不然会显得被赶着走 */
-const AUTO_NEXT_GAP = 900;
 
 /* 与设置页同一套档位 —— 阅读页是「当场要调一下」的地方，
    两个页面给出不同的范围，用户会以为设置没生效 */
@@ -62,17 +58,9 @@ Page({
     hint: "",
     results: RESULTS,
 
-    // 以下三项是「朗读是否出现在这个界面上」的全部依据。
-    // speakVisible 为假时，工具栏整块、设置里的朗读卡、我的页入口都不渲染。
-    speakVisible: false,
-    speakReady: false,
-    speakState: "denied",
-    speakReason: "",
-    speakLabel: "",
-    speakPlaying: false,
-    speakLoading: false,
-    speakIndex: 0,
-    speakTotal: 0,
+    // 这一页**没有任何朗读元素**：TTS 通道个人主体申请不下来，
+    // 用户 2026-10-02 明确裁决不做。见 docs/todo.md 第 1 条。
+    // 留一个「待开通」的灰按钮等于每次进来都杵着一块死内容 —— 没有比没有更糟。
 
     /** 未登录时整页换成一句话 —— 不从 URL 放行，也不渲染半张空壳 */
     locked: true,
@@ -95,7 +83,7 @@ Page({
       this.setData({
         locked: true,
         lockTitle: "这篇要登录",
-        lockNote: "从分享链接直接点进来也一样要微信登录。登录只为两件事：把进度带走、让管理员知道档位发给谁 —— 不读你的隐私信息。"
+        lockNote: "登录后才能看正文与进度"
       });
       return;
     }
@@ -122,7 +110,7 @@ Page({
     const rec = store.getRecord(id);
     // 版式（段落 / 折行 / 断句）只此一份，在 corpus.layout()。
     // 七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句折开之后
-    // 一句一行才读得下去 —— 整行当一个块排，居中是一坨、朗读整段一起合成。
+    // 一句一行才读得下去 —— 整行当一个块排，居中是一坨、断句也无从谈起。
     const laid = corpus.layout(entry.text);
 
     this.setData({
@@ -146,19 +134,14 @@ Page({
     store.markRead(meta.b, id);
     this.loaded = true;
 
-    // 从设置页回来、或刚登录完，注音与朗读状态都可能变了
+    // 从设置页回来、或刚登录完，注音状态可能变了
     this.applyReading();
-    this.applySpeech();
   },
 
   onLogin() {
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
-  onUnload() {
-    if (this.player) this.player.destroy();
-    this.player = null;
-  },
 
   /**
    * 注音：不可用就不渲染 tokens，正文按原样走。
@@ -175,26 +158,6 @@ Page({
     // 标音时消歧窗口是**整行** —— 分组的事交给它，不在这重复。
     const tokens = usable ? pinyin.render(this.data.paras, mode) : [];
     this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
-  },
-
-  /**
-   * 朗读：把「能不能用」换算成界面上的三个值。
-   *   visible=false → 整个播放界面不存在
-   *   ready=false   → 显示但灰着，点了给一句原因，不静默失败
-   */
-  applySpeech() {
-    const r = speech.readiness();
-    this.setData({
-      speakVisible: r.visible,
-      speakReady: r.usable,
-      speakState: r.state,
-      speakReason: r.reason,
-      speakLabel: r.state === "ready" ? "朗读" : "待开通"
-    });
-    if (!r.visible && this.player) {
-      this.player.destroy();
-      this.player = null;
-    }
   },
 
   findMeta(id) {
@@ -225,93 +188,6 @@ Page({
     if (fontSize === this.data.fontSize) return;
     this.setData({ fontSize });
     store.saveSettings({ fontSize });
-  },
-
-  /* ---------- 朗读 ---------- */
-
-  ensurePlayer() {
-    if (this.player) return this.player;
-    this.player = speech.create({
-      onChange: (s) =>
-        this.setData({
-          speakPlaying: s.playing,
-          speakLoading: s.loading,
-          speakIndex: s.index,
-          speakTotal: s.total
-        }),
-      onFinish: () => this.onSpeakFinish(),
-      onError: (err) => wx.showToast({ title: err.message || "朗读失败", icon: "none" })
-    });
-    // 按**句**合成：整行交给 TTS，长一段听下来断不开，也没法「只听这一句」。
-    // 顺序取自 segments()，与注音里的 `cl.i` 同序 —— 朗读报「第 5 句」，
-    // 正文凭它找到那一行；两处各数一遍，早晚会差一句。
-    // 标点交给通道自己断 —— 少了标点，`，` 与 `。` 的停顿差别就没了。
-    this.player.load(this.segments().map((sg) => ({ text: sg.text, gap: 320 })));
-    return this.player;
-  },
-
-  /**
-   * 拍平的句子表，**与注音 tokens 同序**。
-   * 版式只有一份（corpus.layout），顺序也只有这一处算 ——
-   * 朗读按它合成、注音按同一份编号，界面才可能对得上。
-   */
-  segments() {
-    const out = [];
-    (this.data.paras || []).forEach((para) => {
-      (para || []).forEach((row) => {
-        (row || []).forEach((clause) => {
-          if (clause.trim()) out.push({ text: clause.trim() });
-        });
-      });
-    });
-    return out;
-  },
-
-  onSpeak() {
-    const r = speech.readiness();
-    if (!r.visible) return;
-
-    if (!r.usable) {
-      // 按钮此时是灰的、点不动；这一句是兜住「刚好在这一刻掉线」，
-      // 所以给 toast 而不是弹窗 —— 弹窗是「要你决定」，这里只是「告诉你」
-      wx.showToast({ title: r.reason || "朗读通道没就绪", icon: "none", duration: 2500 });
-      return;
-    }
-    this.ensurePlayer().start();
-  },
-
-  /** 拖进度条 = 指定从第几句起播 */
-  onSpeakSeek(e) {
-    if (!this.player) return;
-    this.player.seek(Number(e.detail.value));
-  },
-
-  onSpeakToggle(e) {
-    const idx = e.currentTarget.dataset.i;
-    if (!speech.readiness().usable) {
-      this.onSpeak();
-      return;
-    }
-    this.ensurePlayer().toggle(typeof idx === "number" ? idx : undefined);
-  },
-
-  onSpeakNext() {
-    if (this.player) this.player.next();
-  },
-
-  onSpeakPrev() {
-    if (this.player) this.player.prev();
-  },
-
-  onSpeakStop() {
-    if (this.player) this.player.stop();
-  },
-
-  onSpeakFinish() {
-    if (!store.settings().speechAutoNext) return;
-    setTimeout(() => {
-      if (this.data.speakVisible) wx.showToast({ title: "读完了，自己接着背吧", icon: "none" });
-    }, AUTO_NEXT_GAP);
   },
 
   /* ---------- 背诵评分 ---------- */

@@ -1,12 +1,11 @@
 <view class="page">
-  <lock-card wx:if="{{locked}}" title="课外阅读" note="{{reason}}" mark="阅" />
+  <lock-card wx:if="{{locked}}" title="课外阅读" note="登录后才能看" mark="阅" />
 
   <block wx:else>
     <!-- 第一层：四张集子卡 -->
     <block wx:if="{{!current}}">
       <view class="page-head">
         <text class="head-title">十七部集子</text>
-        <text class="head-sub">诗文典籍 / 人物 / 文史常识</text>
       </view>
 
       <view class="group-card" hover-class="group-hover" hover-stay-time="60"
@@ -29,7 +28,7 @@
     <block wx:else>
       <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBack">
         <text class="back-arrow">‹</text>
-        <text>返回全部集子</text>
+        <text>返回</text>
       </view>
       <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
         <view class="card-title bar">{{item.name}}</view>

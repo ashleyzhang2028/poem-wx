@@ -1,6 +1,6 @@
 /* ============================================================
    详情页：整屏只服务一件事 —— 读这首诗，然后告诉系统背得怎么样。
-   所以顺序是：标题区 → 正文 → 背诵 → 朗读 → 译文。
+   所以顺序是：标题区 → 正文 → 背诵 → 译文。
    操作条排在正文后面，不在正文中间插一排按钮。
    ============================================================ */
 
@@ -81,44 +81,16 @@
 }
 
 /* ---------- 阅读偏好 ----------
-   一行两格：注音（图标分段）+ 字号（原生 slider）+ 朗读（原生 button）。
-   三者高度不一样（分段 56rpx、slider 的拇指块 44rpx、button 60rpx），
-   靠 align-items:center 对齐的是**盒子**，看着还是会「一个高一个低」——
-   所以这里统一给一条最小高度，让三格的**内容**落在同一条横线上。 */
+   注音（图标分段）与字号（原生 slider）各占一行。
+   注音分段在两页共用同一条分段规则，这里只给它内边距。 */
 .prefs {
   padding: var(--sp-1) 0 var(--sp-2);
-}
-
-/* 第一排：注音分段 + 朗读按钮。
-   两者高度不一样（分段 56rpx、按钮 60rpx），align-items:center 对齐的是
-   **盒子**，看着还是会「一个高一个低」—— 统一给一条最小高度，
-   让两格的**内容**落在同一条横线上。 */
-.prefs-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 72rpx;
 }
 
 /* 字号那一排：滑块与两头的「A」收在 app.wxss（.font-row / .font-slider / .font-a），
    这里只给它一个与上面那排分开的间距 —— 它独占一行，所以不必挤。 */
 .pref-font {
   margin-top: var(--sp-1);
-}
-
-/* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度。
-   它是这一排里唯一「会说话」的那格，所以按下态要能看出来（.btn 自带） */
-.speak-entry.off,
-.speak-entry[disabled] {
-  color: var(--ink-3);
-}
-
-.speak-entry {
-  flex: none;
-}
-
-.speak-entry.on {
-  color: var(--green);
 }
 
 /* ---------- 正文 ----------
@@ -333,79 +305,6 @@
 .poem-body.size-2 .tk-ch { font-size: 42rpx; }
 .poem-body.size-3 .tk-ch { font-size: 46rpx; }
 .poem-body.size-4 .tk-ch { font-size: 52rpx; }
-
-/* 正在读的那一行：底色 + 左侧一道主线，弱网下也能看出读到哪了 */
-.token-line.reading {
-  background: var(--green-light);
-}
-
-/* 注音模式下点一行就是从那一句起播，所以要有按下反馈。
-   朗读不可用时 hover-class 是空串，等于没有 —— 那时点它只是提示去开通 */
-.token-line-tap {
-  background: var(--green-light);
-}
-
-.poem-body.align-left .token-line.reading {
-  border-left: 4rpx solid var(--ink);
-}
-
-/* ---------- 朗读 ---------- */
-.speak-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--sp-1);
-}
-
-.speak-head .card-title {
-  margin-bottom: 0;
-}
-
-.speak-state {
-  font-size: var(--fs-caption);
-  color: var(--green);
-  flex: none;
-  padding-left: var(--sp-2);
-}
-
-.speak-state.off {
-  color: var(--ink-3);
-}
-
-.speak-progress {
-  display: flex;
-  align-items: center;
-  padding: var(--sp-1) 0;
-}
-
-/* 进度条是原生 slider：它能拖，比一条只读的细线多一个作用 */
-.sp-slider {
-  flex: 1;
-  margin: 0 var(--sp-1) 0 4rpx;
-}
-
-.sp-text {
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  flex: none;
-  padding-right: 12rpx;
-}
-
-.speak-ctrl {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-top: var(--sp-1);
-}
-
-.speak-ctrl .btn {
-  flex: 1;
-}
-
-/* 播放是这一排里的主操作，给它多一点宽度 */
-.speak-ctrl .sp-main {
-  flex: 1.4;
-}
 
 /* ---------- 译文 ---------- */
 .trans-head {

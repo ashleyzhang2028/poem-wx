@@ -102,6 +102,13 @@ view, text, button, input, textarea {
   line-height: var(--lh-body);
 }
 
+.count-line {
+  display: block;
+  padding-top: var(--sp-2);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
 .sub-title {
   display: block;
   font-size: var(--fs-hint);
@@ -114,7 +121,7 @@ view, text, button, input, textarea {
    比正文小，因为它不是内容，是标签。
 
    之前散成四份：搜索页的 .opt-label、飞花令的 .opt-label、
-   搜索页的 .section-label、朗读设置里裸写的 .sub-title ——
+   搜索页的 .section-label、阅读设置里裸写的 .sub-title ——
    四份的字号差 3rpx、颜色一个 ink-2 一个 ink-3，一页里同时出现就露馅。
    现在只有这一处。 */
 .field-label {
@@ -863,24 +870,8 @@ view, text, button, input, textarea {
   letter-spacing: var(--ls-title);
 }
 
-.lock-note {
-  display: block;
-  margin-top: var(--sp-2);
-  text-align: left;
-  line-height: var(--lh-loose);
-}
-
 .lock-btn {
   margin-top: var(--sp-4);
-}
-
-.lock-foot {
-  display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
-  margin-top: var(--sp-3);
 }
 
 /* ---------- 方字格（飞花令的令字）----------

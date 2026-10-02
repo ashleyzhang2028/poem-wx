@@ -108,11 +108,6 @@
   border: none;
 }
 
-.hot-note {
-  display: block;
-  line-height: var(--lh-loose);
-}
-
 /* 命中句：从正文里捞出来的那一句，用宋体 + 左引线单独起一行。
    一行列表里出现两种字体，眼睛立刻分得清「哪句是我搜的」 */
 .hit {

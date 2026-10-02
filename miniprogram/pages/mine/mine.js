@@ -3,7 +3,6 @@ const auth = require("../../utils/auth");
 const S = require("../../utils/scheduler");
 const E = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
-const speech = require("../../utils/speech");
 const pinyin = require("../../utils/pinyin");
 const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
@@ -20,8 +19,6 @@ Page({
     stats: { learned: 0, mastered: 0, readCount: 0 },
     tierLabel: "免费",
     tierSource: "",
-    // 表格里这一行「阅读与朗读」在朗读不可用时整个不出现
-    speakVisible: false,
     pinyinVisible: false,
     syncReady: false,
     syncText: "还没同步过",
@@ -33,8 +30,7 @@ Page({
 
     /** 登录页的那半张卡：从 gate.guard 或首页「微信登录」按钮跳过来时自动聚焦 */
     focusLogin: false,
-    adminVisible: false,
-    tierNote: ""
+    adminVisible: false
   },
 
   onLoad(query) {
@@ -53,7 +49,6 @@ Page({
     const stats = store.stats();
     const e = E.status();
     const sy = sync.state();
-    const sr = speech.readiness();
     const pr = pinyin.readiness();
     const fr = require("../../utils/text-search").readiness();
 
@@ -68,7 +63,6 @@ Page({
       stats,
       tierLabel: e.label,
       tierSource: e.source,
-      speakVisible: sr.visible,
       pinyinVisible: pr.visible,
       fullTextOn: fr.usable,
       syncReady: sy.ready,
@@ -76,24 +70,8 @@ Page({
       syncPending: sy.pending,
       syncAllowed: E.can("sync"),
       syncNote: this.syncNote(sy),
-      adminVisible: E.can("admin"),
-      tierNote: this.tierNote(e)
+      adminVisible: E.can("admin")
     });
-  },
-
-  /**
-   * 档位那一行该说什么。
-   * 三个来源口径不同，混成一句会让人以为「断网就掉档」：
-   *   remote —— 服务端给的，可信
-   *   grant  —— 授权码，本机记着，服务端那边还没确认
-   *   其余   —— 就是免费档，别说得像出错
-   */
-  tierNote(e) {
-    if (!E.loggedIn()) return "登录后由管理员按人分配";
-    if (e.source === "remote") return "由管理员分配 · 服务端确认";
-    if (e.source === "grant") return "由授权码开启 · 服务端未确认";
-    if (e.blocked === "unsigned") return "连不上服务器，暂按免费档算";
-    return "免费档 · 登录即得";
   },
 
   /**

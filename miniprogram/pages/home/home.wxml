@@ -10,17 +10,14 @@
         </view>
         <view class="seal"><text class="seal-t">跬</text></view>
       </view>
-      <button class="btn primary block hero-btn" bindtap="onLogin">微信登录后开始背</button>
-      <text class="hero-note">不积跬步，无以至千里</text>
+      <button class="btn primary block hero-btn" bindtap="onLogin">微信登录</button>
     </view>
 
     <view class="card toc">
       <view class="toc-head">
         <text class="card-title bar">课本目录</text>
-        <text class="toc-hint">登录后点开</text>
       </view>
-      <!-- 行尾一律写「登录」而不是一把小锁：图标要人猜，字不用。
-           让人一眼知道「看得见、点不开」，而不是先点一下再被弹窗教训一遍 -->
+      <!-- 行尾一律写「登录」而不是一把小锁：图标要人猜，字不用 -->
       <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <text class="seq">{{item.seq}}</text>
@@ -35,9 +32,6 @@
       </view>
     </view>
 
-    <view class="foot">
-      <text class="hint">进度只存在这台手机上 · 断网也能背</text>
-    </view>
     <view class="safe-bottom"></view>
   </block>
 
@@ -74,14 +68,13 @@
       </view>
 
       <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
-        {{doneCount >= total ? '今天背完了 · 再练一遍' : '开始背'}}
+        {{doneCount >= total ? '再练一遍' : '开始背'}}
       </button>
-      <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看看课内 251 首</button>
+      <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看课内 251 首</button>
 
-      <!-- 「怎么排的」这件事不能藏起来：它决定明天背什么，用户得找得到入口。
-           参考图里「档位定义 / 4 个档位」那行说明就是这个位置、这个长相 -->
+      <!-- 「怎么排的」这件事不能藏起来：它决定明天背什么，用户得找得到入口 -->
       <view class="hero-foot" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
-        <text class="hero-foot-t">按艾宾浩斯曲线排的 · 点这里改范围与首数</text>
+        <text class="hero-foot-t">背诵设置</text>
         <text class="hero-foot-go">›</text>
       </view>
     </view>
@@ -98,7 +91,7 @@
               <text class="row-title row-poem">{{item.title}}</text>
               <text class="tag {{item.reasonKey === 'review' ? 'amber' : (item.reasonKey === 'new' ? 'blue' : 'ghost')}}">{{item.reason}}</text>
             </view>
-            <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
+            <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
           <view class="row-end">
             <view class="tick {{item.read ? 'on' : ''}}">
@@ -110,15 +103,11 @@
 
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">今天的计划还没排出来</text>
-        <text class="hint empty-tip">去「背诵设置」挑个范围</text>
+        <text class="empty-text">今天还没排计划</text>
         <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
       </view>
     </view>
 
-    <view class="foot">
-      <text class="hint">进度只存在这台手机上 · 断网也能背</text>
-    </view>
     <view class="safe-bottom"></view>
   </block>
 </view>

@@ -126,7 +126,13 @@ Page({
       rows: g.keys
         .map((k) => {
           const c = snap.caps[k];
-          return c ? { name: c.name, desc: c.desc, on: c.ok, note: c.ok ? "" : entitlement.hint(k) } : null;
+          if (!c) return null;
+          // 朗读：能力键留着（与网页版对齐，服务端那边也还在），
+          // 但界面上**一处都调不到** —— 所以这一行不能只是打个勾，
+          // 得如实写「界面没做」。否则这张表在说假话：
+          // 「语音朗读 ✓」看起来像点一下就能用。
+          const noUi = k === "speak";
+          return { name: c.name, on: c.ok && !noUi, noUi: noUi, note: noUi ? "能力键留着 · 界面未做" : c.ok ? "" : entitlement.hint(k) };
         })
         .filter(Boolean)
     }));

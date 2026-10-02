@@ -1,40 +1,36 @@
 <view class="page">
-  <lock-card wx:if="{{locked}}" title="大会要登录" note="古诗词大会（飞花令 / 题库 / 模拟考试）要微信登录之后才能进。" mark="会" />
+  <lock-card wx:if="{{locked}}" title="大会要登录" note="登录后才能进" mark="会" />
 
   <block wx:else>
   <view class="page-head">
     <text class="head-title">三样玩法</text>
-    <text class="head-sub">飞花令 · 题库 · 模拟考试</text>
   </view>
 
   <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片。
-       不可用的卡照常列出但灰掉，desc 那行换成差在哪一档 —— 让人知道往上走一步，而不是撞一堵墙 -->
+       不可用的卡照常列出但灰掉，desc 那行换成差在哪一档 -->
   <view class="modes">
     <button class="mode mode-{{item.color}} {{item.ok ? '' : 'mode-off'}}"
             wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
       <text class="mode-name">{{item.name}}</text>
-      <text class="mode-desc">{{item.ok ? item.desc : item.note}}</text>
+      <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
       <text class="mode-go">{{item.ok ? '开始 ›' : '未开放'}}</text>
     </button>
   </view>
 
   <view class="card">
     <view class="card-title bar">飞花令 · 挑一个字</view>
-    <!-- 令字是「选一个」：原生 radio，选中的那个圆点由平台画，
-         字块本身仍旧是那块方方正正的宋体字 -->
+    <!-- 令字是「选一个」：原生 radio 视觉隐藏，点格子即选中 -->
     <radio-group class="chars" bindchange="onChar">
-      <!-- 圆点去掉了：一个缩到 0.56 的原生圆点怼在格子右上角，
-           看不出是能点的，还压在字的笔画上。选中态由格子自己的
-           底色 + 描边来说明白；radio 留着（视觉隐藏），点格子就选中 -->
+      <!-- 圆点去掉：一个缩到 0.56 的原生圆点怼在格子右上角看不出能点，
+           还压在字的笔画上。选中态由格子自己的底色 + 描边说清楚 -->
       <label class="char {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this">
         <radio class="seg-radio" value="{{item}}" checked="{{keyword === item}}" color="#1c1c1e" />
         <text class="char-t">{{item}}</text>
       </label>
     </radio-group>
-    <text class="hint char-count" wx:if="{{keyword}}">课内诗词里含「{{keyword}}」的句子 {{hitCount}} 条</text>
-    <text class="hint char-count" wx:else>选一个字，看看课内 251 首里有多少句写过它</text>
+    <text class="hint char-count" wx:if="{{keyword}}">含「{{keyword}}」的句子 {{hitCount}} 条</text>
     <button class="btn primary block reveal-btn" bindtap="onReveal">
-      {{revealed ? '收起来，我先说' : '想不出来了，看答案'}}
+      {{revealed ? '收起' : '看答案'}}
     </button>
   </view>
 
@@ -58,8 +54,7 @@
 
     <view class="empty" wx:if="{{!hitCount}}">
         <text class="empty-mark">字</text>
-        <text class="empty-text">课内诗词里没有含「{{keyword}}」的句子
-换个字试试</text>
+        <text class="empty-text">没有含「{{keyword}}」的句子</text>
       </view>
   </block>
 
