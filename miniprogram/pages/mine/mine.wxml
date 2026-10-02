@@ -30,8 +30,6 @@
 
   <!-- 学习：登录后是入口清单；未登录整块不出现 ——
        一张只有一句「登录后会出现…」的卡，占位置不办事 -->
-  <!-- 学习：登录后是入口清单；未登录整块不出现 ——
-       一张只有一句「登录后会出现…」的卡，占位置不办事 -->
   <view class="card" wx:if="{{logged}}">
     <view class="card-title bar">学习</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">

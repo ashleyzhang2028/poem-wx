@@ -83,53 +83,27 @@
   color: var(--ink-3);
 }
 
-/* 令字格：外框还是那块宋体方字，判定与选中交给原生 radio */
+/* 令字格：外框与圆点在 app.wxss 里定一次（.char / .char-radio），
+   这里只管这一页的排布 —— 令字比飞花令页少一格小字，所以格子矮一点 */
 .char-count {
   display: block;
-  padding: 4rpx 0 8rpx;
+  padding: var(--sp-1) 0;
 }
 
 .chars {
   display: flex;
   flex-wrap: wrap;
-  margin: 12rpx 0 4rpx;
+  /* gap 一视同仁：上一版是「右 16 + 下 16」的 margin，横向与纵向各自累加，
+     行与行之间的缝看着比列与列宽 */
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 var(--sp-1);
 }
 
+/* 这一页的令字格没有下面那行小字，所以矮一点、字大一点 */
 .char {
-  position: relative;
   width: 88rpx;
   height: 88rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  color: var(--ink);
-  margin: 0 16rpx 16rpx 0;
-}
-
-.char.active {
-  background: var(--green-light);
-  border-color: var(--green);
-}
-
-/* 原生圆点缩到角上：字块中心留给那个字，判定仍由平台负责 */
-.char-radio {
-  position: absolute;
-  right: -4rpx;
-  top: -4rpx;
-  transform: scale(.6);
-}
-
-.char-t {
-  font-family: var(--font-poem);
-  font-size: var(--fs-lead);
-  line-height: 1;
-}
-
-.char.active .char-t {
-  color: var(--green);
+  padding: 0;
 }
 
 .line-seg {

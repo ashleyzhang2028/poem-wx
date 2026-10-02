@@ -701,6 +701,74 @@ view, text, button, input, textarea {
   margin-top: var(--sp-3);
 }
 
+/* ---------- 方字格（飞花令的令字）----------
+   一个方格 + 一个字 + 一个原生 radio。两处用到（大会首页、飞花令页），
+   所以收在这里定一次。
+
+   ⚠️ 上一版把圆点 absolute 到 `right:-6rpx; top:-6rpx`，理由是「中心留给字」——
+   结果圆点**压在字的右上一笔上**：「而」「者」「有」的右上角被盖住半个，
+   而且缩到 0.6 之后命中区也移了位，点上去要先对准那个偏出去的小圈。
+
+   现在的做法：格子右上角**留出一块空**（padding-top 让字整体下移一点），
+   圆点就落在那块空里，不压任何笔画；命中区仍是整个 label（原生 radio
+   在 label 里，点格子任何一处都能选中）。 */
+.char {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: var(--radius-sm);
+  border: 1rpx solid var(--line);
+  background: var(--bg-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 上下各留一口气：上一版是「整块居中」，
+     字 + 小字两行合起来比格子高，贴到了上下边框上 */
+  padding: 10rpx 0;
+  box-sizing: border-box;
+}
+
+.char.active {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+.char-radio {
+  position: absolute;
+  right: 2rpx;
+  top: 2rpx;
+  transform: scale(.56);
+  transform-origin: right top;
+}
+
+.char-t {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hero);
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+/* 那一行小字（命中数）：它比字低一档，且不许把格子撑高 ——
+   给一条固定行高，格子高度才不会随数字位数变 */
+.char-n {
+  display: block;
+  height: 26rpx;
+  font-size: var(--fs-pinyin);
+  line-height: 26rpx;
+  color: var(--ink-3);
+}
+
+.char.active .char-t {
+  color: var(--green);
+}
+
+.char.active .char-n {
+  color: var(--green);
+  opacity: .75;
+}
+
 /* ============================================================
    垂直居中的一条总口径
    ============================================================ */

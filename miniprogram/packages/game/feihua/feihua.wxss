@@ -1,73 +1,10 @@
-.opt-group {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 16rpx 0 0;
-}
-
-.pref-item {
-  display: flex;
-  align-items: center;
-  font-size: var(--fs-body);
-  color: var(--ink-2);
-  padding-right: 20rpx;
-}
-
-.pref-item radio {
-  transform: scale(.8);
-}
-
+/* .opt-group / .pref-item 的排布在 app.wxss 里定一次，这里不再重复；
+   这一页只留「令字格比上一行多留一口气」这件事 */
 .chars {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
-  margin-top: 24rpx;
-}
-
-.char {
-  position: relative;
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: var(--radius-sm);
-  border: 1rpx solid var(--line);
-  background: var(--bg-soft);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.char.active {
-  background: var(--green-light);
-  border-color: var(--green);
-}
-
-/* 原生圆点收到右上角，96rpx 的字块中心留给那个字 */
-.char-radio {
-  position: absolute;
-  right: -6rpx;
-  top: -6rpx;
-  transform: scale(.6);
-}
-
-.char-t {
-  font-family: var(--font-poem);
-  font-size: var(--fs-hero);
-  color: var(--ink);
-  line-height: 1.1;
-}
-
-.char.active .char-t {
-  color: var(--green);
-}
-
-.char-n {
-  font-size: var(--fs-pinyin);
-  color: var(--ink-3);
-}
-
-.char.active .char-n {
-  color: var(--green);
-  opacity: .75;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
 }
 
 .fh-line {
