@@ -202,8 +202,16 @@
 推倒重来时，有两件事是**项目真正立得住**的，保留了：
 
 1. **篇名一律宋体** —— 内容需求，与配色无关。
-2. **能力不可用时不显示** —— 朗读 / 注音 / 全文检索 / 云端同步，
-   通道没就绪就整块不渲染，不留灰着的假状态。见 README「能力不可用时不显示」。
+2. **能力不可用时不显示** —— 朗读 / 注音 / 全文检索 / 云端同步。
+   这一条有**两档**，别混起来（混起来就会做出「按钮亮着、点下去弹 toast」的假存活）：
+
+   | 情形 | 界面 |
+   |---|---|
+   | **压根没这个能力**（档位不含、读音表/索引没生成、环境没音频接口） | **整块不渲染**，连位置都不占 |
+   | **已授权但通道没就绪**（后端 TTS 还没配） | 在，但显示「待开通」，点了给一句人话原因 |
+
+   判定一律走 `readiness()`，它返回 `visible` / `usable` / `state` 三个值。
+   见 README「能力不可用时不显示」。
 
 ---
 
@@ -218,8 +226,8 @@ POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 node scripts/shots/render.js
 
 # 3. 逐屏截图到 scripts/shots/out/shots/
-node scripts/shots/out/all.js          # 全部 26 屏
-node scripts/shots/out/all.js reader   # 只截名字里含 reader 的
+node scripts/shots/shoot.js            # 全部 26 屏
+node scripts/shots/shoot.js reader     # 只截名字里含 reader 的
 
 # 4. 自检
 node scripts/check.js

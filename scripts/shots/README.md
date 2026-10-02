@@ -3,9 +3,14 @@
 改界面时能「看见」自己改了什么，不必每轮都开微信开发者工具。
 
 ```bash
-node scripts/shots/render.js       # 跑 19 个页面 → 编译 WXML → out/preview.html
-node scripts/shots/out/all.js      # 逐屏截图到 out/shots/
+node scripts/shots/render.js       # 跑全部页面 → 编译 WXML → out/preview.html
+node scripts/shots/shoot.js        # 逐屏截图到 out/shots/shots/
+node scripts/shots/shoot.js reader # 只截名字里含 reader 的
 ```
+
+截图要 `puppeteer-core` 与本机 chromium（`npm i -D puppeteer-core`，
+chromium 路径可用 `CHROME_PATH` 指）。装不上时它**明说装不上**，
+不静默退化成「截个整页」—— 半张图被当成一整屏看，比没有图更糟。
 
 ## 它是什么
 
@@ -29,6 +34,23 @@ node scripts/shots/render.js   # 会打印「预览已注入篇名宋体」
 
 没有这两个文件也能跑，只是标题的字形不真 —— 布局仍然是真的。
 文件在 `.gitignore` 里，不入库。
+
+## ⚠️ 预览自己也会骗人，两处已经栽过
+
+预览是「看界面用的工具」，工具说假话比界面写错更难发现 —— 因为照着改会改坏真机。
+两件真发生过的事记在这儿：
+
+1. **`.page` 的规则被整条丢掉。** 预览把 `page{}` 改写成 `.screen{}`，用的是
+   `\bpage\s*\{`；而 `\b` 判断的是「前一个字符是词字符」，`.page {` 的点不是 ——
+   于是 `.page {` 被改成 `..screen{`，非法选择器，浏览器整条丢弃。
+   后果：预览里页面左右内边距与底色从来没生效过，卡片通栏铺满屏（真机是左右各留
+   `--page-x`），而「通栏 + 卡缝露出灰底」看着就是一条条横带 ——
+   **一个假问题把真问题盖住了**。现在用 `(?<![\w.-])` 开头，`check.js` V15 守着。
+2. **镜像与页面不同步。** 页面里 `.opt-row.active radio` 的 `margin-left` 已改成 0，
+   `NATIVE_CSS` 里还是 6rpx，于是预览里圆点照旧横跳 —— 改完了看截图，问题「还在」。
+   现在 `check.js` 有一条逐条比对两边 `margin-left` / `margin-right`。
+
+**结论**：改界面之前，先确认预览自己是对的。`check.js` 跑在 `render.js` 之后会多验两条。
 
 ## 它不是什么
 

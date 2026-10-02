@@ -181,7 +181,7 @@ TTS 不可用时，详情页的朗读那格、播放工具栏、设置里的朗�
 
 | | 上一版 | 这一版 |
 |---|---|---|
-| 分层 | 纸纹 + 底色差 + 卡片投影 | 只靠**留白**与一道极淡的描边 |
+| 分层 | 纸纹 + 底色差 + 卡片投影 | 只靠**留白**与一道极淡的描边（**卡片不带投影**） |
 | 主色 | 八种身份色（背诵墨绿 / 复习琥珀 / 忘记朱砂 / 大会青碧……） | **一种**：墨黑 `#1c1c1e` |
 | 表达重点 | 主色卡 + 金边 + 印章，一屏好几处在喊 | **大数字**，一屏只有一组 |
 | 圆角 | 四档 | 三档 |
@@ -364,8 +364,8 @@ corpus.layout(text) → {
 
 ```bash
 node scripts/shots/render.js          # 跑页面 → 编译 WXML → 出 preview.html
-node scripts/shots/out/all.js         # 逐屏截图到 out/shots/（26 屏）
-node scripts/shots/out/all.js reader  # 只截名字里含 reader 的
+node scripts/shots/shoot.js           # 逐屏截图到 shots/out/shots/（26 屏）
+node scripts/shots/shoot.js reader    # 只截名字里含 reader 的
 ```
 
 它把每个页面**真跑一遍**（真实的 `onShow`、代理过的 `setData`），拿到最终 data，

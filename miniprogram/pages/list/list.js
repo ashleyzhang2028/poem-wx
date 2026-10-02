@@ -14,6 +14,9 @@ Page({
     bookId: "",
     bookName: "",
     unit: "篇",
+    // 页头那行小字说「按什么排的」—— 语料的原始次序（集子自己的顺序），
+    // 不是字母序也不是热度，这件事得让人知道，否则会以为排错了
+    sortLabel: "按原书次序",
     keyword: "",
     filter: "全部",
     filters: FILTERS,

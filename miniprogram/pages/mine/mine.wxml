@@ -15,10 +15,19 @@
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
 
+    <!-- 档位是从哪来的 —— 只说一次，且就贴在档位胶囊下面。
+         上一版它被放在「每日首数 / 复习算法」两张偏好行的下面，
+         那两行讲的是「本机怎么排期」，与档位来源不是一件事；
+         而同一屏的上半部分又写着「档位由管理员按人分配」——
+         两处都在解释档位，读者会以为是两句不同的话。 -->
+    <text class="hint tier-note" wx:if="{{logged}}">{{tierNote}}</text>
+
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
+      <!-- 这一段只回答一件事：「登录能换来什么」。档位那句话不写在这里 ——
+           它属于档位本身，唯一的出处是档位胶囊下面那行（tierNote）。 -->
       <text class="hint login-note">登录之后才能用「每日背诵 / 课外阅读 / 注音 / 朗读 / 题库」，也能把进度带走。
-      档位（免费 / 专业 / 全能）由管理员按人分配，不需要你付费。</text>
+      不收费，档位由管理员按人分配。</text>
     </view>
 
     <view class="profile-row" wx:else>
@@ -63,7 +72,6 @@
       <text class="kv-k">复习算法</text>
       <text class="kv-v">{{algoName}}</text>
     </view>
-    <text class="hint kv-note">{{tierNote}}</text>
   </view>
 
   <!-- 学习：登录后是入口清单；未登录整块不出现 ——
