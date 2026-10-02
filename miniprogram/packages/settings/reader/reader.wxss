@@ -1,7 +1,7 @@
 .note {
   display: block;
-  margin-top: 16rpx;
-  line-height: 1.7;
+  margin-top: var(--sp-2);
+  line-height: var(--lh-body);
 }
 
 .note.warn,
@@ -9,13 +9,14 @@
   color: var(--amber);
 }
 
+/* 试听那一声的示例：拼音在上、汉字在下，与阅读页的注音排法一致 */
 .sample {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 6rpx;
-  margin-top: 28rpx;
-  padding: 24rpx 12rpx;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
 }
@@ -27,49 +28,51 @@
 }
 
 .sample-py {
-  font-size: 20rpx;
+  font-size: var(--fs-pinyin);
   color: var(--ink-3);
   line-height: 1.3;
 }
 
 .sample-ch {
   font-family: var(--font-poem);
-  font-size: 34rpx;
+  font-size: var(--fs-poem);
   color: var(--ink);
   line-height: 1.4;
 }
 
 .url-row {
-  margin-top: 24rpx;
+  margin-top: var(--sp-3);
 }
 
 .url-label {
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
 }
 
 .url-input {
-  height: 80rpx;
+  height: 84rpx;
   margin-top: 12rpx;
-  padding: 0 20rpx;
+  padding: 0 var(--sp-3);
   border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
-  font-size: 26rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
 }
 
 .sub-title {
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
-  margin-top: 24rpx;
+  margin-top: var(--sp-3);
 }
 
+/* 通道状态那块：一句结论加一个底色，比一行灰字好用 */
 .tts-state {
-  margin-top: 20rpx;
-  padding: 18rpx 22rpx;
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-sm);
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
+  line-height: var(--lh-body);
 }
 
 .tts-state.ok {
@@ -84,8 +87,8 @@
 
 .actions {
   display: flex;
-  gap: 16rpx;
-  margin-top: 24rpx;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 
 .actions .btn {
@@ -95,4 +98,8 @@
 .step {
   display: block;
   margin-top: 12rpx;
+}
+
+.test-btn {
+  margin-top: var(--sp-3);
 }

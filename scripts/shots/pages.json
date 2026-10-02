@@ -1,0 +1,125 @@
+{
+  "home-guest": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": false
+  },
+  "home": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true
+  },
+  "reader": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    }
+  },
+  "reader-guest": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": false,
+    "query": {
+      "id": "poems-xx1-01"
+    }
+  },
+  "list": {
+    "page": "pages/list/list",
+    "title": "课内诗词",
+    "back": true,
+    "logged": true,
+    "query": {
+      "book": "poems"
+    }
+  },
+  "library": {
+    "page": "pages/library/library",
+    "title": "课外阅读",
+    "tab": 2,
+    "logged": true
+  },
+  "search": {
+    "page": "pages/search/search",
+    "title": "搜索",
+    "tab": 3,
+    "logged": true
+  },
+  "mine-guest": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": false
+  },
+  "mine": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true
+  },
+  "progress": {
+    "page": "packages/progress/index/index",
+    "title": "背诵进度",
+    "back": true,
+    "logged": true
+  },
+  "settings-recite": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true
+  },
+  "settings-general": {
+    "page": "packages/settings/general/general",
+    "title": "通用设置",
+    "back": true,
+    "logged": true
+  },
+  "settings-reader": {
+    "page": "packages/settings/reader/reader",
+    "title": "阅读与朗读",
+    "back": true,
+    "logged": true
+  },
+  "settings-about": {
+    "page": "packages/settings/about/about",
+    "title": "关于与反馈",
+    "back": true,
+    "logged": true
+  },
+  "game": {
+    "page": "packages/game/index/index",
+    "title": "古诗词大会",
+    "back": true,
+    "logged": true
+  },
+  "game-feihua": {
+    "page": "packages/game/feihua/feihua",
+    "title": "飞花令",
+    "back": true,
+    "logged": true
+  },
+  "game-quiz": {
+    "page": "packages/game/quiz/quiz",
+    "title": "题库",
+    "back": true,
+    "logged": true
+  },
+  "game-exam": {
+    "page": "packages/game/exam/exam",
+    "title": "模拟考试",
+    "back": true,
+    "logged": true
+  },
+  "admin": {
+    "page": "packages/admin/index/index",
+    "title": "用户与权限",
+    "back": true,
+    "logged": true
+  }
+}

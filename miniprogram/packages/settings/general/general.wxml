@@ -1,4 +1,9 @@
 <view class="page">
+  <view class="page-head">
+    <text class="head-title">怎么排好看</text>
+    <text class="head-sub">正文对齐 · 字号 · 背完往哪走</text>
+  </view>
+
   <lock-card wx:if="{{locked}}" title="设置要登录" note="设置项要登录之后才生效 —— 未登录时只有首页目录可看。" mark="设" />
 
   <block wx:else>

@@ -2,7 +2,13 @@
   <lock-card wx:if="{{!allowed}}" title="飞花令" note="{{reason}}" mark="令" />
 
   <block wx:else>
+    <view class="page-head">
+      <text class="head-title">挑一个令字</text>
+      <text class="head-sub">课内 251 首里，有多少句写过它</text>
+    </view>
+
     <view class="card">
+      <text class="opt-label">玩法</text>
       <radio-group class="opt-group" bindchange="onKind">
         <label class="pref-item" wx:for="{{kinds}}" wx:key="key">
           <radio value="{{item.key}}" checked="{{kind === item.key}}" color="#2f6055" />
@@ -24,7 +30,7 @@
           <text class="char-n">{{item.count}}</text>
         </label>
       </radio-group>
-      <text class="hint" wx:if="{{!chars.length}}">这一档没有合适的令字</text>
+      <text class="hint char-empty" wx:if="{{!chars.length}}">这一档没有合适的令字</text>
     </view>
 
     <!-- 查一查 -->

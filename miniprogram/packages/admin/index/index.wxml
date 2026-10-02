@@ -3,6 +3,11 @@
   <lock-card wx:if="{{!logged}}" title="权限要登录" note="档位与权限挂在微信账号上，先登录才看得到自己那一档。" mark="权" />
 
   <block wx:else>
+  <view class="page-head">
+    <text class="head-title">我这一档</text>
+    <text class="head-sub">能力矩阵 · 名录与后端</text>
+  </view>
+
   <view class="card grant">
     <view class="card-title bar">我的授权</view>
     <view class="grant-head">
@@ -12,8 +17,8 @@
       </view>
       <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
       <view class="grant-meter">
-        <view class="grant-meter-bar">
-          <view class="grant-meter-fill" style="width:{{stats.percent}}%"></view>
+        <view class="meter">
+          <view class="meter-fill" style="width:{{stats.percent}}%"></view>
         </view>
         <text class="grant-meter-t">{{stats.enabled}} / {{stats.caps}} 项能力</text>
       </view>

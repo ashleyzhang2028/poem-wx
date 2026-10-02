@@ -2,6 +2,11 @@
   <lock-card wx:if="{{!allowed}}" title="模拟考试" note="{{reason}}" mark="考" />
 
   <block wx:elif="{{stage === 'setup'}}">
+    <view class="page-head">
+      <text class="head-title">限时一卷</text>
+      <text class="head-sub">20 分钟 · 交卷后统一批</text>
+    </view>
+
     <view class="card">
       <view class="card-title bar">考试范围</view>
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">

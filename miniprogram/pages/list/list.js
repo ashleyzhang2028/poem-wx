@@ -15,6 +15,7 @@ Page({
     groups: [],
     total: 0,
     matched: 0,
+    groupCount: 0,
     collapsed: false,
 
     locked: true
@@ -70,7 +71,9 @@ Page({
     this.setData({
       groups,
       matched: list.length,
-      total: corpus.ofBook(bookId).length
+      total: corpus.ofBook(bookId).length,
+      // 页头那行小字要报「几组」—— 分组数得等 apply 完才知道
+      groupCount: groups.length
     });
   },
 

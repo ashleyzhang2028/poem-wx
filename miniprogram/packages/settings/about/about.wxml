@@ -6,17 +6,18 @@
   </view>
 
   <view class="card">
-    <view class="row">
-      <text class="row-title">已学篇目</text>
-      <text class="stat">{{stats.learned}}</text>
+    <view class="card-title bar">这台手机上的记录</view>
+    <view class="kv">
+      <text class="kv-k">已学篇目</text>
+      <text class="kv-v">{{stats.learned}}</text>
     </view>
-    <view class="row">
-      <text class="row-title">已掌握</text>
-      <text class="stat">{{stats.mastered}}</text>
+    <view class="kv">
+      <text class="kv-k">已掌握</text>
+      <text class="kv-v">{{stats.mastered}}</text>
     </view>
-    <view class="row">
-      <text class="row-title">已读篇目</text>
-      <text class="stat">{{stats.readCount}}</text>
+    <view class="kv">
+      <text class="kv-k">已读篇目</text>
+      <text class="kv-v">{{stats.readCount}}</text>
     </view>
   </view>
 

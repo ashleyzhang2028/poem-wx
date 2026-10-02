@@ -7,7 +7,7 @@
 .pref-item {
   display: flex;
   align-items: center;
-  font-size: 27rpx;
+  font-size: var(--fs-body);
   color: var(--ink-2);
   padding-right: 20rpx;
 }
@@ -51,7 +51,7 @@
 
 .char-t {
   font-family: var(--font-poem);
-  font-size: 38rpx;
+  font-size: var(--fs-hero);
   color: var(--ink);
   line-height: 1.1;
 }
@@ -61,7 +61,7 @@
 }
 
 .char-n {
-  font-size: 18rpx;
+  font-size: var(--fs-pinyin);
   color: var(--ink-3);
 }
 
@@ -82,14 +82,14 @@
 .fh-seg {
   display: block;
   font-family: var(--font-poem);
-  font-size: 32rpx;
+  font-size: var(--fs-title);
   color: var(--ink);
   line-height: 1.7;
 }
 
 .fh-src {
   display: block;
-  font-size: 23rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 8rpx;
 }
@@ -101,7 +101,7 @@
 
 .said-t {
   font-family: var(--font-poem);
-  font-size: 31rpx;
+  font-size: var(--fs-title);
   color: var(--green);
 }
 
@@ -136,4 +136,20 @@
   display: block;
   text-align: center;
   padding: 40rpx 0;
+}
+
+/* 令字那一档是空的（生僻档常见）：给一句话，不留一块空白 */
+.char-empty {
+  display: block;
+  padding: var(--sp-3) 0;
+  text-align: center;
+}
+
+/* 分组小标题（玩法 / 档位）：压低一档，它是目录不是内容 */
+.opt-label {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  padding: var(--sp-1) 0 2rpx;
 }

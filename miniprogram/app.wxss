@@ -1,9 +1,11 @@
 @import "styles/tokens.wxss";
 
-/* ---------- 排版 ---------- */
-page {
-  box-sizing: border-box;
-}
+/* ============================================================
+   基座
+   页面样式表只管「这一页长什么样」，凡是两页以上都要写的东西，
+   一律收在这里。收不住的后果不是难看，是**不一致** ——
+   用户说不清哪里别扭，只觉得「一塌糊涂」。
+   ============================================================ */
 
 view, text, button, input, textarea {
   box-sizing: border-box;
@@ -11,7 +13,45 @@ view, text, button, input, textarea {
 
 .page {
   min-height: 100vh;
-  padding: 24rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  padding: 20rpx var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
+}
+
+/* 底纹：素绢上压一道极淡的竖纹，屏幕大时不会显得空得发飘。
+   只给页面最外层，卡片不参与，免得两层纹理打架 */
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 254, 250, .85) 0%, rgba(255, 254, 250, 0) 60%),
+    repeating-linear-gradient(90deg, rgba(74, 58, 38, .022) 0 2rpx, transparent 2rpx 14rpx);
+  pointer-events: none;
+}
+
+/* ---------- 页头 ----------
+   一屏的入口。它回答「我在哪、这里有什么」，
+   标题用宋体、副题用黑体小字，一眼分得开层级。 */
+.page-head {
+  padding: var(--sp-1) var(--sp-1) var(--sp-3);
+}
+
+.head-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
+}
+
+.head-sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  margin-top: var(--sp-1);
 }
 
 /* ---------- 卡片 ---------- */
@@ -20,15 +60,20 @@ view, text, button, input, textarea {
   border: 1rpx solid var(--line-2);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 28rpx;
-  margin-bottom: 24rpx;
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+
+/* 带页头的一屏：第一张卡与页头贴紧一点，不然顶部空一块 */
+.page-head + .card {
+  margin-top: 0;
 }
 
 .card-title {
-  font-size: 30rpx;
+  font-size: var(--fs-title);
   font-weight: 600;
   color: var(--ink);
-  margin-bottom: 8rpx;
+  margin-bottom: var(--sp-1);
 }
 
 /* 卡片小标题带一道左侧短竖线：一屏几张卡时，视线有个落脚点，
@@ -36,9 +81,9 @@ view, text, button, input, textarea {
 .card-title.bar {
   display: flex;
   align-items: center;
-  font-size: 28rpx;
+  font-size: var(--fs-body);
   color: var(--green);
-  margin-bottom: 16rpx;
+  margin-bottom: var(--sp-2);
 }
 
 .card-title.bar::before {
@@ -51,58 +96,74 @@ view, text, button, input, textarea {
 }
 
 .hint {
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  line-height: 1.7;
+  line-height: var(--lh-body);
 }
 
 .sub-title {
   display: block;
-  font-size: 26rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
-  margin: 20rpx 0 8rpx;
+  margin: var(--sp-3) 0 var(--sp-1);
 }
 
+/* 一条淡分隔，比 border 更轻，用在「同一张卡里换话题」的地方 */
+.divider {
+  height: 1rpx;
+  background: var(--line-2);
+  margin: var(--sp-3) 0;
+}
+
+/* ---------- 空状态 ----------
+   一枚淡印章 + 一句人话 + 一个下一步。
+   有出处的「没有」比一个孤零零的方块让人安心 —— 用户知道是真没有，
+   不是没加载出来。 */
 .empty {
-  padding: 80rpx 0;
+  padding: var(--sp-6) var(--sp-3) var(--sp-5);
   text-align: center;
-  color: var(--ink-3);
-  font-size: 28rpx;
 }
 
-/* 空状态：一枚淡印章 + 一句人话。
-   有出处的「没有」比一个孤零零的方块让人安心 —— 用户知道是真没有，不是没加载出来 */
 .empty-mark {
   display: block;
-  width: 96rpx;
-  height: 96rpx;
-  line-height: 96rpx;
-  margin: 0 auto 20rpx;
+  width: 104rpx;
+  height: 104rpx;
+  line-height: 100rpx;
+  margin: 0 auto var(--sp-2);
   border-radius: 50%;
-  border: 2rpx solid var(--line-2);
+  border: 2rpx dashed var(--line);
   background: var(--bg-soft);
   font-family: var(--font-poem);
-  font-size: 44rpx;
+  font-size: 46rpx;
   color: var(--line);
 }
 
 .empty-text {
   display: block;
-  line-height: 1.8;
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  line-height: var(--lh-loose);
+}
+
+.empty-tip {
+  display: block;
+  margin-top: var(--sp-1);
 }
 
 /* ---------- 按钮 ---------- */
 .btn {
   height: 88rpx;
-  line-height: 88rpx;
-  padding: 0 32rpx;
+  line-height: 84rpx;
+  padding: 0 var(--sp-4);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
   border: 1rpx solid var(--line);
   color: var(--ink);
-  font-size: 30rpx;
+  font-size: var(--fs-title);
+  font-weight: 500;
+  letter-spacing: var(--ls-title);
   text-align: center;
-  transition: background-color .1s;
+  transition: background-color var(--t-press), transform var(--t-press), opacity var(--t-press);
 }
 
 .btn::after {
@@ -113,12 +174,15 @@ view, text, button, input, textarea {
   background: var(--green);
   border-color: var(--green);
   color: #fff;
+  box-shadow: 0 6rpx 20rpx rgba(47, 96, 85, .22);
 }
 
-/* 主按钮按下时压深一档，不然同色相邻时会显得「没点着」 */
+/* 主按钮按下时压深一档、再缩一点，不然同色相邻时会显得「没点着」 */
 .btn.primary.button-hover {
   background: var(--green-dark);
   border-color: var(--green-dark);
+  box-shadow: var(--shadow-press);
+  transform: scale(.985);
 }
 
 .btn.ghost {
@@ -128,8 +192,8 @@ view, text, button, input, textarea {
 
 .btn.danger {
   color: var(--red);
-  border-color: #ecd2cd;
-  background: #fbeae7;
+  border-color: var(--red-edge);
+  background: var(--red-light);
 }
 
 .btn.block {
@@ -137,7 +201,7 @@ view, text, button, input, textarea {
 }
 
 .btn.block + .btn.block {
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
 }
 
 /* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
@@ -147,13 +211,20 @@ view, text, button, input, textarea {
   width: auto;
   min-width: 0;
   height: 60rpx;
-  line-height: 60rpx;
-  padding: 0 24rpx;
-  font-size: 26rpx;
+  line-height: 56rpx;
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-hint);
+  border-radius: var(--radius-sm);
 }
 
 .btn[disabled] {
   opacity: .5;
+  box-shadow: none;
+}
+
+.btn.button-hover {
+  opacity: .86;
+  transform: scale(.985);
 }
 
 /* ---------- 列表行 ---------- */
@@ -165,8 +236,10 @@ view, text, button, input, textarea {
 .row {
   display: flex;
   align-items: center;
-  padding: 24rpx 0;
+  padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
+  border-radius: 8rpx;
+  transition: background-color var(--t-press);
 }
 
 .row:last-child {
@@ -180,7 +253,7 @@ view, text, button, input, textarea {
 
 .row-title {
   font-family: var(--font-poem);
-  font-size: 32rpx;
+  font-size: var(--fs-title);
   color: var(--ink);
   display: block;
   overflow: hidden;
@@ -189,7 +262,7 @@ view, text, button, input, textarea {
 }
 
 .row-sub {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 6rpx;
   display: block;
@@ -198,16 +271,19 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
+/* 行尾那个 ›：压低饱和度，它是提示不是内容 */
 .row-go {
   color: var(--line);
   font-size: 32rpx;
-  padding-left: 16rpx;
+  padding-left: var(--sp-2);
+  line-height: 1;
+  flex: none;
 }
 
 /* ---------- 标签 ---------- */
 .tag {
   display: inline-block;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   line-height: 1.5;
   padding: 2rpx 12rpx;
   border-radius: 8rpx;
@@ -241,21 +317,23 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 0 20rpx;
-  height: 76rpx;
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius-pill);
+  padding: 0 var(--sp-3);
+  height: 84rpx;
+  margin-bottom: var(--sp-2);
+  box-shadow: inset 0 1rpx 3rpx rgba(74, 58, 38, .05);
 }
 
 .search-icon {
   color: var(--ink-3);
-  font-size: 28rpx;
+  font-size: var(--fs-body);
   margin-right: 12rpx;
 }
 
 .search input {
   flex: 1;
-  font-size: 28rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
 }
 
@@ -268,14 +346,14 @@ view, text, button, input, textarea {
   background: var(--bg-soft);
   border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 0 20rpx;
-  height: 76rpx;
-  margin: 12rpx 0;
+  padding: 0 var(--sp-3);
+  height: 84rpx;
+  margin: var(--sp-2) 0;
 }
 
 .field-input {
   flex: 1;
-  font-size: 26rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
 }
 
@@ -293,7 +371,24 @@ view, text, button, input, textarea {
 .native-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx 20rpx;
+  gap: 4rpx var(--sp-3);
+}
+
+/* 选项多且等长时（年级、学期），排成等宽网格 ——
+   靠字宽决定占位会排得参差不齐 */
+.native-group.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.native-group.grid .native-label {
+  justify-content: flex-start;
+}
+
+/* 三列的（学期、每首数） */
+.native-group.grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .native-group.column {
@@ -304,13 +399,15 @@ view, text, button, input, textarea {
 .native-label {
   display: flex;
   align-items: center;
-  padding: 12rpx 0;
-  font-size: 29rpx;
+  min-height: 64rpx;
+  padding: 10rpx 0;
+  font-size: var(--fs-body);
   color: var(--ink);
 }
 
-/* ---------- 单选行（档位、算法这种「选一个」的选择） ----------
-   行本身是 label[for]，点整行都能选中，不用把手指对准那个小圆点。 */
+/* ---------- 选项行 ----------
+   「选一个」的统一长相。行本身是 label[for]，点整行都能选中，
+   不用把手指对准那个小圆点。 */
 .opt-group {
   display: flex;
   flex-wrap: wrap;
@@ -319,12 +416,27 @@ view, text, button, input, textarea {
 .opt-row {
   display: flex;
   align-items: center;
-  padding: 22rpx 0;
+  min-height: 84rpx;
+  padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
+  border-radius: 8rpx;
+  transition: background-color var(--t-press);
 }
 
 .opt-row:last-of-type {
   border-bottom: none;
+}
+
+/* 选中：整行左移一道竖线 + 主色字。
+   只把字变色太轻，在长列表里扫不出来 */
+.opt-row.active {
+  background: var(--green-light);
+  box-shadow: inset 6rpx 0 0 var(--green);
+}
+
+.opt-row.active .opt-name {
+  color: var(--green);
+  font-weight: 600;
 }
 
 .opt-row.locked {
@@ -334,28 +446,27 @@ view, text, button, input, textarea {
 .opt-row radio,
 .opt-row checkbox {
   transform: scale(.86);
+  /* 两行文字的行，圆点要跟着第一行 —— 默认居中会飘到中间 */
+  align-self: flex-start;
+  margin-top: 10rpx;
 }
 
 .opt-main {
   flex: 1;
   min-width: 0;
-  padding-left: 8rpx;
+  padding-left: var(--sp-1);
 }
 
 .opt-name {
   display: block;
-  font-size: 31rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
   color: var(--ink);
-}
-
-.opt-row.active .opt-name {
-  color: var(--green);
-  font-weight: 600;
 }
 
 .opt-desc {
   display: block;
-  font-size: 23rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 6rpx;
   line-height: 1.6;
@@ -365,13 +476,112 @@ view, text, button, input, textarea {
 .pref-item {
   display: flex;
   align-items: center;
-  font-size: 27rpx;
+  min-height: 60rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
-  padding-right: 20rpx;
+  padding-right: var(--sp-3);
 }
 
-.pref-item radio {
+.pref-item radio,
+.pref-item checkbox {
   transform: scale(.8);
+}
+
+/* 横排筛选条：内容多时横向滚，不折成两行把版式撑乱 */
+.chip-row {
+  white-space: nowrap;
+  margin-bottom: var(--sp-2);
+}
+
+.chip-row .pref-item {
+  display: inline-flex;
+  padding-right: var(--sp-2);
+}
+
+/* ---------- 字段行（键值对）---------- */
+.kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80rpx;
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.kv:last-child,
+.kv:last-of-type {
+  border-bottom: none;
+}
+
+.kv-k {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  flex: none;
+  padding-right: var(--sp-2);
+}
+
+.kv-v {
+  font-size: var(--fs-body);
+  color: var(--ink);
+  text-align: right;
+}
+
+/* ---------- 进度：一横一竖两个共同件 ---------- */
+/* 横条说「走到哪了」，环说「几比几」。两个都做，别只做一个 */
+.meter {
+  height: 10rpx;
+  border-radius: 5rpx;
+  background: var(--line-2);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: 5rpx;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
+  transition: width var(--t-move) var(--ease);
+}
+
+/* 环：纯 CSS 锥形渐变，不引 canvas、不带图片资源 */
+.ring {
+  position: relative;
+  flex: none;
+}
+
+.ring-track,
+.ring-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.ring-track {
+  background: var(--line-2);
+}
+
+.ring-fill {
+  background: conic-gradient(var(--green) calc(var(--p) * 1%), transparent 0);
+  transition: background var(--t-move) var(--ease);
+}
+
+.ring::after {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border-radius: 50%;
+  background: var(--bg-soft);
+  border: 1rpx solid var(--line-2);
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-poem);
+  color: var(--ink-2);
+  z-index: 1;
 }
 
 /* ---------- 未登录的那张卡 ---------- */
@@ -379,44 +589,67 @@ view, text, button, input, textarea {
    「这是同一道门」，而不是每页一套说法。 */
 .lock-card {
   text-align: center;
-  padding: 56rpx 28rpx;
-  background: linear-gradient(165deg, #fffefb 0%, var(--bg-soft) 100%);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 58%, #f4ecd8 100%);
+  overflow: hidden;
+  position: relative;
 }
 
 .lock-mark {
   display: block;
-  width: 108rpx;
-  height: 108rpx;
-  line-height: 104rpx;
-  margin: 0 auto 24rpx;
-  border-radius: 50%;
-  border: 2rpx solid var(--line);
-  background: #fffefb;
+  width: 116rpx;
+  height: 116rpx;
+  line-height: 112rpx;
+  margin: 0 auto var(--sp-3);
+  border-radius: 22rpx;
+  border: 3rpx solid rgba(168, 59, 50, .5);
+  background: rgba(255, 254, 251, .9);
   font-family: var(--font-poem);
-  font-size: 48rpx;
-  color: var(--green);
+  font-size: 54rpx;
+  color: rgba(168, 59, 50, .68);
+  transform: rotate(-4deg);
 }
 
 .lock-title {
   display: block;
-  font-size: 34rpx;
+  font-size: var(--fs-lead);
   font-weight: 600;
   color: var(--green);
   font-family: var(--font-poem);
+  letter-spacing: var(--ls-title);
 }
 
 .lock-note {
   display: block;
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
   text-align: left;
-  line-height: 1.85;
+  line-height: var(--lh-loose);
 }
 
 .lock-btn {
-  margin-top: 32rpx;
+  margin-top: var(--sp-4);
+}
+
+.lock-foot {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  margin-top: var(--sp-3);
 }
 
 /* ---------- 底部安全区垫片 ---------- */
 .safe-bottom {
   height: calc(24rpx + env(safe-area-inset-bottom));
+}
+
+/* 页脚一句：给整屏一个收束，不然最后一张卡下面像被切断 */
+.foot {
+  text-align: center;
+  padding: var(--sp-1) 0 var(--sp-5);
+}
+
+.foot .hint {
+  letter-spacing: 1rpx;
 }

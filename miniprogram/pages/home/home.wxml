@@ -6,7 +6,7 @@
         <view class="hero-left">
           <text class="hero-eyebrow">今日</text>
           <text class="hero-title">{{gradeName}}</text>
-          <text class="hero-sub">{{scopeName}} · {{catalogCount}} 首</text>
+          <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
         </view>
         <view class="seal"><text class="seal-t">跬</text></view>
       </view>
@@ -14,14 +14,14 @@
       <text class="hero-note">不积跬步，无以至千里</text>
     </view>
 
-    <view class="card">
-      <view class="card-title bar">课本目录</view>
-      <view class="toc-stat">
-        <text class="hint">共 {{catalogCount}} 首 · 登录后点开</text>
+    <view class="card toc">
+      <view class="toc-head">
+        <text class="card-title bar">课本目录</text>
+        <text class="toc-hint">登录后点开</text>
       </view>
-      <!-- 行尾一律是小锁：让人一眼知道「看得见、点不开」，
-           而不是先点一下再被弹窗教训一遍 -->
-      <view class="row" hover-class="row-hover" hover-stay-time="60"
+      <!-- 行尾一律写「登录」而不是一把小锁：图标要人猜，字不用。
+           让人一眼知道「看得见、点不开」，而不是先点一下再被弹窗教训一遍 -->
+      <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <text class="seq">{{item.seq}}</text>
         <view class="row-main">
@@ -40,6 +40,8 @@
 
   <!-- 登录后：今日计划 -->
   <block wx:else>
+    <!-- 一屏一件事：这张卡只回答「今天背什么」。
+         一道微光渐变打底 + 一个进度环 + 一条细进度 + 一个开始键 -->
     <view class="card hero">
       <view class="hero-head">
         <view class="hero-left">
@@ -48,7 +50,7 @@
           <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
         </view>
         <!-- 进度环整块可点，进背诵设置；点的是「看进度」，不是「点按钮」 -->
-        <view class="ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
+        <view class="ring hero-ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
           <view class="ring-track"></view>
           <view class="ring-fill" style="--p:{{percent}}"></view>
           <text class="ring-text">{{doneCount}}/{{total}}</text>
@@ -56,9 +58,12 @@
       </view>
 
       <!-- 一条细进度：环上给的是「几比几」，这里给「走到哪了」 -->
-      <view class="hero-bar" wx:if="{{total}}">
-        <view class="hero-bar-fill" style="width:{{percent}}%"></view>
+      <view class="meter hero-meter" wx:if="{{total}}">
+        <view class="meter-fill" style="width:{{percent}}%"></view>
       </view>
+      <text class="hero-meter-t" wx:if="{{total}}">
+        {{doneCount >= total ? '今天的都背完了' : '还剩 ' + (total - doneCount) + ' 首要背'}}
+      </text>
 
       <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
         {{doneCount >= total ? '今天背完了 · 再练一遍' : '开始背'}}
@@ -70,23 +75,26 @@
       <view class="card-title bar">今日安排</view>
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
-        <view class="row" hover-class="row-hover" hover-stay-time="60"
+        <view class="plan-row" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
           <text class="seq {{item.read ? 'done' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <view class="row-line">
               <text class="row-title">{{item.title}}</text>
-              <text class="tag {{item.reasonKey === 'review' ? 'amber' : 'ghost'}}">{{item.reason}}</text>
+              <text class="tag {{item.reasonKey === 'review' ? 'amber' : (item.reasonKey === 'new' ? 'blue' : 'ghost')}}">{{item.reason}}</text>
             </view>
             <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
           </view>
-          <text class="row-state {{item.read ? 'done' : ''}}">{{item.read ? '✓' : '›'}}</text>
+          <view class="tick {{item.read ? 'on' : ''}}">
+            <text class="tick-t">{{item.read ? '✓' : ''}}</text>
+          </view>
         </view>
       </block>
 
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">今天的计划还没排出来\n去「背诵设置」挑个范围</text>
+        <text class="empty-text">今天的计划还没排出来</text>
+        <text class="hint empty-tip">去「背诵设置」挑个范围</text>
         <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
       </view>
     </view>

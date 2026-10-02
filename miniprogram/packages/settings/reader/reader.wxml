@@ -1,4 +1,9 @@
 <view class="page">
+  <view class="page-head">
+    <text class="head-title">怎么读</text>
+    <text class="head-sub">注音方式 · 朗读语速 · 读完是否自动翻篇</text>
+  </view>
+
   <lock-card wx:if="{{locked}}" title="阅读设置要登录" note="读音表与朗读通道都挂在账号档位上，所以要登录之后才能设。" mark="读" />
 
   <block wx:else>
@@ -13,6 +18,14 @@
         </view>
       </label>
     </radio-group>
+
+    <!-- 试样：改完就看得见效果，不用退回阅读页才知道 -->
+    <view class="sample" wx:if="{{pinyin !== 'off'}}">
+      <view class="sample-u" wx:for="{{sample}}" wx:key="ch">
+        <text class="sample-py">{{item.py}}</text>
+        <text class="sample-ch">{{item.ch}}</text>
+      </view>
+    </view>
     <text class="hint note">多音字按词组取值，词组表里没有才回退单字。</text>
   </view>
 

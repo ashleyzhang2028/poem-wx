@@ -1,6 +1,15 @@
-/* ---------- 我的授权 ---------- */
+/* ============================================================
+   权限页：它是一张「我有什么」的对账单，不是收银台。
+   所以第一张卡只说清当前档位与能力覆盖，其余都是证据。
+   ============================================================ */
+
+.grant {
+  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 62%, #eef4f0 100%);
+  border-color: var(--green-edge);
+}
+
 .grant-head {
-  padding-top: 8rpx;
+  padding-top: var(--sp-1);
 }
 
 .grant-tier {
@@ -10,182 +19,48 @@
 
 .grant-tier-v {
   font-family: var(--font-poem);
-  font-size: 48rpx;
+  font-size: var(--fs-mark);
   font-weight: 600;
   color: var(--green);
-  letter-spacing: 2rpx;
+  letter-spacing: var(--ls-title);
 }
 
 .grant-tier-k {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding-left: 16rpx;
+  padding-left: var(--sp-2);
 }
 
 .grant-meter {
-  margin-top: 20rpx;
-}
-
-.grant-meter-bar {
-  height: 10rpx;
-  border-radius: 5rpx;
-  background: var(--line-2);
-  overflow: hidden;
-}
-
-.grant-meter-fill {
-  height: 100%;
-  border-radius: 5rpx;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
-  transition: width .3s;
+  margin-top: var(--sp-3);
 }
 
 .grant-meter-t {
   display: block;
-  font-size: 23rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 10rpx;
 }
 
-.kv {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.kv:last-of-type {
-  border-bottom: none;
-}
-
-.kv-k {
-  font-size: 28rpx;
-  color: var(--ink-2);
-}
-
-.kv-v {
-  font-size: 28rpx;
-  color: var(--ink);
-}
-
 .note {
   display: block;
-  padding-top: 16rpx;
-  line-height: 1.8;
+  padding-top: var(--sp-2);
+  line-height: var(--lh-body);
 }
 
 .error {
   color: var(--red);
 }
 
-.code-input {
-  margin-top: 20rpx;
-  height: 84rpx;
-  padding: 0 24rpx;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  font-size: 28rpx;
-  letter-spacing: 2rpx;
-}
-
-.code-acts {
-  display: flex;
-  gap: 16rpx;
-  margin-top: 20rpx;
-}
-
-.code-acts .btn {
-  flex: 1;
-}
-
-.cap {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.cap:last-child {
-  border-bottom: none;
-}
-
-.cap-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.cap-name {
-  display: block;
-  font-size: 29rpx;
-  color: var(--ink);
-}
-
-.cap-sub {
-  display: block;
-  font-size: 23rpx;
-  color: var(--ink-3);
-  margin-top: 6rpx;
-}
-
-.cap-state {
-  font-size: 26rpx;
-  flex: none;
-  padding-left: 16rpx;
-}
-
-.cap-state.on {
-  color: var(--green);
-}
-
-.cap-state.off {
-  color: var(--ink-3);
-}
-
-.user {
-  padding: 22rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.user:last-child {
-  border-bottom: none;
-}
-
-.user-label {
-  display: block;
-  font-size: 29rpx;
-  color: var(--ink);
-}
-
-.user-sub {
-  display: block;
-  font-size: 22rpx;
-  color: var(--ink-3);
-  margin-top: 6rpx;
-}
-
-.user-act {
-  flex: none;
-  color: var(--green);
-  border: 1rpx solid var(--line);
-}
-
-.user-lock {
-  flex: none;
-  font-size: 24rpx;
-  color: var(--ink-3);
-}
-
-.feedback-btn {
-  margin-top: 16rpx;
-}
-/* 能力矩阵：一个勾 / 一个叉，加一句「差在哪」 */
+/* ---------- 能力矩阵 ----------
+   一行一项：勾 / 叉 + 名字 + 「差在哪」。
+   分组标题压低一档，它不是内容，是目录 */
 .cap-group {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin: 24rpx 0 10rpx;
+  letter-spacing: var(--ls-caption);
+  margin: var(--sp-3) 0 var(--sp-1);
 }
 
 .cap {
@@ -200,8 +75,9 @@
 }
 
 .cap-mark {
-  width: 40rpx;
-  font-size: 26rpx;
+  width: 44rpx;
+  flex: none;
+  font-size: var(--fs-body);
 }
 
 .cap-mark.on {
@@ -213,9 +89,9 @@
 }
 
 .cap-name {
-  font-size: 29rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
-  margin-right: 12rpx;
+  margin-right: var(--sp-2);
 }
 
 .cap-name.dim {
@@ -225,15 +101,16 @@
 .cap-note {
   flex: 1;
   text-align: right;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
 }
 
-/* 名录一行：左边是谁，右边两个动作 */
+/* ---------- 名录 ----------
+   一行一个人：左边身份，右边两个动作 */
 .acct {
   display: flex;
   align-items: center;
-  padding: 22rpx 0;
+  padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
@@ -248,7 +125,7 @@
 
 .acct-name {
   display: block;
-  font-size: 29rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,7 +134,7 @@
 
 .acct-sub {
   display: block;
-  font-size: 23rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 6rpx;
 }
@@ -265,36 +142,22 @@
 .acct-acts {
   display: flex;
   flex-shrink: 0;
-  gap: 8rpx;
+  gap: var(--sp-1);
 }
 
 /* 改档 / 改角色是原生 button，只压小尺寸与去掉原生最小宽度 */
 .acct-act {
   color: var(--green);
-  border: 1rpx solid var(--line);
+  border-color: var(--line);
 }
 
 .acct-lock {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding-left: 20rpx;
-}
-
-.note {
-  display: block;
-  margin-top: 16rpx;
-  line-height: 1.7;
-}
-
-.note.error {
-  color: var(--red);
-}
-
-.btn.block {
-  margin-top: 16rpx;
+  padding-left: var(--sp-3);
 }
 
 .empty-tip {
   display: block;
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
 }
