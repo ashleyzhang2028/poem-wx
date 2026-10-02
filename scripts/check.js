@@ -1649,6 +1649,58 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("同级文字的字号颜色只在全局定一次", rewrites.length === 0, rewrites.slice(0, 6).join("; "));
 }
 
+/**
+ * V6.11 离线预览不许「比真机好看」。
+ *
+ * 预览把 `<radio>` 编译成 `<div class="n-radio">`，于是页面样式表里按
+ * **标签名**写的规则（`radio { transform: scale(.86) }`）一条都匹配不到 ——
+ * 预览里的圆点与文字之间没间距、缩放也没生效，而真机上是有间距、有缩放的。
+ * 这一丁点差异恰好是「圆点压在笔画上」「圆点被竖线切一半」这类问题的藏身处：
+ * 照着预览改，就会把真机改坏（或者反过来，看不出真机的毛病）。
+ *
+ * 所以守一条：**页面样式表里给 radio / checkbox 写的关键属性，
+ * 预览的 NATIVE_CSS 里必须有一份按 class 的等价项**。
+ */
+{
+  const renderJs = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "utf8");
+  const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderJs);
+  ok("预览里有原生控件的等价样式", !!nativeBlock);
+
+  const mirror = nativeBlock ? nativeBlock[1] : "";
+
+  /**
+   * 页面样式表里每条「按标签名给 radio / checkbox」的规则，预览都得有等价项。
+   * 判据取形状而不是关键词：把标签名换成 .n-radio 之后，**样式声明本身
+   * 必须能在 NATIVE_CSS 里原样找到**（归一化空白后比对）。
+   * 只查关键词的话，「别处也写了 margin-right」就会把漏掉的那条遮住 ——
+   * 这条断言就是被这么骗过一次，才改成比对整条声明。
+   */
+  const normalize = (x) => x.replace(/\s+/g, "").replace(/;+$/, "");
+  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    + pages.map((p) => fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")).join("\n");
+
+  const decls = [];
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(pageCssAll))) {
+    const sel = m[1];
+    if (!/(^|[\s,>])(radio|checkbox)([\s,{:.]|$)/.test(sel)) continue;
+    if (sel.indexOf(".n-") >= 0) continue;
+    // 取声明里真正影响观感的那几样
+    const body = m[2];
+    const keep = body.split(";").map((d) => d.trim()).filter((d) =>
+      /^(margin-right|margin-left|transform|transform-origin|align-self|margin-top|flex)\s*:/.test(d));
+    keep.forEach((d) => decls.push(normalize(d)));
+  }
+  const unique = Array.from(new Set(decls));
+  // 两边都要归一化再比：镜像里写的是 `left top`、页面里可能写 `lefttop`，
+  // 它们其实是同一条。只归一化一边会把这类等价写法误报成漏项。
+  const mirrorNorm = normalize(mirror);
+  const missing = unique.filter((d) => mirrorNorm.indexOf(d) < 0);
+  ok("预览镜像了原生控件的全部关键声明（" + unique.length + " 条）",
+    missing.length === 0, "NATIVE_CSS 里缺：" + missing.join(" / "));
+}
+
 // V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
 {
   const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");

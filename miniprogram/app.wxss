@@ -487,10 +487,21 @@ view, text, button, input, textarea {
 }
 
 /* 选中：整行左移一道竖线 + 主色字。
-   只把字变色太轻，在长列表里扫不出来 */
+   只把字变色太轻，在长列表里扫不出来。
+
+   竖线走 inset box-shadow 而不是 border-left —— 加边框会把整行内容
+   往右推 6rpx，选中与未选中之间就出现了**横向跳动**：一行内容在
+   两种状态下的起点不一样，看着像整页在抖。inset 画在行内，不占位。 */
 .opt-row.active {
   background: var(--green-light);
   box-shadow: inset 6rpx 0 0 var(--green);
+}
+
+/* 选中行的圆点不要贴着那道竖线 —— 贴上去之后圆点左半圈被压在竖线底下，
+   看着像被切了一刀。给选中行补一道与竖线等宽的内边距。 */
+.opt-row.active radio,
+.opt-row.active checkbox {
+  margin-left: 6rpx;
 }
 
 .opt-row.active .opt-name {
@@ -502,12 +513,26 @@ view, text, button, input, textarea {
   opacity: .45;
 }
 
+/* opt-row 是「两行文字 + 一个圆点」。两件事要一起办对：
+
+   1. **圆点跟着第一行文字**，不是整行的垂直中心 —— 一行的中心在第一行与
+      第二行之间，圆点落在那儿看着像「选了下面那行」。用 align-self 顶到
+      行首 + 一点上边距让它与第一行文字的视觉中线齐平。
+   2. **缩放要固定原点**。原生圆点在未缩放时是一块 23px 的方框，`scale(.86)`
+      默认以中心为原点，那 3px 的溢出**是往左边去的** —— 被卡片的 padding
+      裁掉一半，看着就像圆点被切了。`transform-origin: left top` 把它压回框内。 */
+/* 圆点与第一行字的中线：这两个数不是拍的，是量出来的。
+   `.opt-name` 是 --fs-title（31rpx）、行高 1.4 → 行盒 43.4rpx；
+   原生圆点 23px ≈ 44rpx，缩到 .86 → 38rpx。
+   圆心要落在行盒中线上（43.4 / 2 ≈ 21.7），圆点顶边 = 21.7 - 19 ≈ 2.7rpx。
+   字号或行高改了就一起改这两个数 —— 它们成对出现，不许只调一个。 */
 .opt-row radio,
 .opt-row checkbox {
-  transform: scale(.86);
-  /* 两行文字的行，圆点要跟着第一行 —— 默认居中会飘到中间 */
+  flex: none;
   align-self: flex-start;
-  margin-top: 10rpx;
+  transform: scale(.86);
+  transform-origin: left top;
+  margin-top: 2rpx;
 }
 
 /* 间距由控件自己给（见上面那组规则），这里不再补，
