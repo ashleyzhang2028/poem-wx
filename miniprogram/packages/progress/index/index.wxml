@@ -20,18 +20,18 @@
       </view>
     </view>
 
-    <view class="ov-row">
-      <view class="num">
-        <text class="num-v">{{overview.learned}}</text>
-        <text class="num-k">已学</text>
+    <view class="stats ov-row">
+      <view class="stat">
+        <text class="stat-v">{{overview.learned}}</text>
+        <text class="stat-k">已学</text>
       </view>
-      <view class="num">
-        <text class="num-v">{{overview.mastered}}</text>
-        <text class="num-k">已掌握</text>
+      <view class="stat">
+        <text class="stat-v">{{overview.mastered}}</text>
+        <text class="stat-k">已掌握</text>
       </view>
-      <view class="num">
-        <text class="num-v {{overview.dueToday ? 'due' : ''}}">{{overview.dueToday}}</text>
-        <text class="num-k">今日到期</text>
+      <view class="stat">
+        <text class="stat-v {{overview.dueToday ? 'due' : ''}}">{{overview.dueToday}}</text>
+        <text class="stat-k">今日到期</text>
       </view>
     </view>
 
@@ -40,7 +40,7 @@
 
   <view class="card">
     <view class="card-title bar">未来七天</view>
-    <view class="day {{item.count ? '' : 'zero'}}" wx:for="{{days}}" wx:key="label">
+    <view class="day {{item.count ? '' : 'zero'}} {{item.today ? 'today' : ''}}" wx:for="{{days}}" wx:key="label">
       <view class="day-head">
         <text class="day-label {{item.today ? 'today' : ''}}">{{item.label}}</text>
         <text class="day-count">{{item.count}} 首</text>

@@ -6,17 +6,18 @@
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
-  font-weight: 600;
-  color: var(--green);
-  letter-spacing: 2rpx;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
 }
 
 .intro-s {
   display: block;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-hint);
   color: var(--ink-3);
   margin-top: 8rpx;
-  letter-spacing: 1rpx;
+  letter-spacing: var(--ls-caption);
 }
 
 /* 三张入口卡：一行放不下三个名字（「模拟考试」四个字），
@@ -31,6 +32,15 @@
 .mode {
   /* 从 view 换成 button：原生按钮自带最小宽度与 ::after 边框，这里逐条收掉 */
   flex: 1 1 calc(50% - 8rpx);
+  /* 卡内三行要能被 .mode-desc 撑开 —— button 默认 display:block，
+     里面的 text 是行内元素，flex:1 对它无效。所以这里把卡本身改成 flex 列。
+     高度不再给 min-height：一排两张卡由 flex 的 stretch 拉平，
+     第三张（整行一张）自己按内容高 —— 硬给一个最小高度，
+     它就会比上面两张还高出一截。 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
   width: auto;
   min-width: 0;
   margin: 0;
@@ -47,23 +57,20 @@
   display: block;
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--green);
+  color: var(--ink);
 }
 
-.mode-amber .mode-name {
-  color: var(--amber);
-}
-
-.mode-blue .mode-name {
-  color: var(--blue);
-}
+/* 三张卡的标题不再各给一个颜色 —— 名字本身说明它是哪一张；
+   颜色留给状态，不留给身份。 */
 
 .mode::after {
   border: none;
 }
 
 .mode-desc {
+  flex: 1;
   display: block;
+  width: 100%;
   font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 10rpx;
@@ -74,7 +81,7 @@
 .mode-go {
   display: block;
   font-size: var(--fs-caption);
-  color: var(--green);
+  color: var(--ink-2);
   margin-top: 16rpx;
   letter-spacing: 1rpx;
 }
@@ -135,13 +142,14 @@
 }
 
 .pg[disabled] {
-  color: var(--line);
+  color: var(--ink-4);
   opacity: 1;
 }
 
 .pg-num {
   font-size: var(--fs-hint);
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
   padding: 0 16rpx;
 }
 

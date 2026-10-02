@@ -41,34 +41,46 @@
   <!-- 登录后：今日计划 -->
   <block wx:else>
     <!-- 一屏一件事：这张卡只回答「今天背什么」。
-         一道微光渐变打底 + 一个进度环 + 一条细进度 + 一个开始键 -->
+         上面一行日期小字，中间一个大标题，下面是三个大数字，
+         最后是这一屏唯一的一颗墨黑按钮 —— 与参考图同一套层次。 -->
     <view class="card hero">
-      <view class="hero-head">
-        <view class="hero-left">
-          <text class="hero-eyebrow">{{todayLabel}}</text>
-          <text class="hero-title">今日背诵</text>
-          <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
+      <text class="hero-eyebrow">{{todayLabel}}</text>
+      <text class="hero-title">今日背诵</text>
+      <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
+
+      <!-- 三个大数字：今日要背几首、已经背了几首、还剩几首。
+           中间一道细竖线分开 —— 它就是「这一屏的第一眼」 -->
+      <view class="stats hero-stats">
+        <view class="stat">
+          <text class="stat-v">{{stats.today}}</text>
+          <text class="stat-k">今日</text>
         </view>
-        <!-- 进度环整块可点，进背诵设置；点的是「看进度」，不是「点按钮」 -->
-        <view class="ring hero-ring" hover-class="ring-hover" hover-stay-time="80" bindtap="onSettings">
-          <view class="ring-track"></view>
-          <view class="ring-fill" style="--p:{{percent}}"></view>
-          <text class="ring-text">{{doneCount}}/{{total}}</text>
+        <view class="stat">
+          <text class="stat-v">{{stats.done}}</text>
+          <text class="stat-k">已背</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{stats.left}}</text>
+          <text class="stat-k">还剩</text>
         </view>
       </view>
 
-      <!-- 一条细进度：环上给的是「几比几」，这里给「走到哪了」 -->
+      <!-- 一条细进度：数字说「几首」，这条说「走到哪了」 -->
       <view class="meter hero-meter" wx:if="{{total}}">
         <view class="meter-fill" style="width:{{percent}}%"></view>
       </view>
-      <text class="hero-meter-t" wx:if="{{total}}">
-        {{doneCount >= total ? '今天的都背完了' : '还剩 ' + (total - doneCount) + ' 首要背'}}
-      </text>
 
       <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
         {{doneCount >= total ? '今天背完了 · 再练一遍' : '开始背'}}
       </button>
       <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看看课内 251 首</button>
+
+      <!-- 「怎么排的」这件事不能藏起来：它决定明天背什么，用户得找得到入口。
+           参考图里「档位定义 / 4 个档位」那行说明就是这个位置、这个长相 -->
+      <view class="hero-foot" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
+        <text class="hero-foot-t">按艾宾浩斯曲线排的 · 点这里改范围与首数</text>
+        <text class="hero-foot-go">›</text>
+      </view>
     </view>
 
     <view class="card">

@@ -29,7 +29,7 @@
           <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
                  wx:for="{{pinyinModes}}" wx:key="key">
             <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
-                   color="#2f6055" />
+                   color="#1c1c1e" />
             <view class="seg-icon ic-{{item.key}}"></view>
             <text class="seg-text">{{item.label}}</text>
           </label>
@@ -39,7 +39,7 @@
       <!-- 字号：连续量，滑块比「A－/A＋」两粒按钮更贴手感 -->
       <view class="pref-font">
         <slider class="pref-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-                block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+                block-size="20" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
                 bindchanging="onFontSlide" bindchange="onFontSlide" />
       </view>
 
@@ -52,7 +52,7 @@
     <view class="seg seg-align">
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
+          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" color="#1c1c1e" />
           <view class="seg-icon ic-{{item.key}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -133,7 +133,7 @@
       <view class="speak-progress" wx:if="{{speakTotal}}">
         <text class="sp-text">{{speakIndex + 1}} / {{speakTotal}} 句</text>
         <slider class="sp-slider" min="0" max="{{speakTotal - 1}}" step="1" value="{{speakIndex}}"
-                block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+                block-size="20" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
                 bindchange="onSpeakSeek" />
       </view>
       <view class="speak-ctrl">

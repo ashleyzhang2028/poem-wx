@@ -4,8 +4,7 @@
    ============================================================ */
 
 .grant {
-  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 62%, #eef4f0 100%);
-  border-color: var(--green-edge);
+  background: var(--surface);
 }
 
 .grant-head {
@@ -17,12 +16,13 @@
   align-items: baseline;
 }
 
-.grant-tier-v {
+.grant-tier-name {
   font-family: var(--font-poem);
-  font-size: var(--fs-mark);
-  font-weight: 600;
-  color: var(--green);
+  font-size: var(--fs-hero);
+  font-weight: 700;
+  color: var(--ink);
   letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
 }
 
 .grant-tier-k {
@@ -162,8 +162,8 @@
 
 /* 改档 / 改角色是原生 button，只压小尺寸与去掉原生最小宽度 */
 .acct-act {
-  color: var(--green);
-  border-color: var(--line);
+  color: var(--ink-2);
+  border-color: var(--line-strong);
 }
 
 .acct-lock {

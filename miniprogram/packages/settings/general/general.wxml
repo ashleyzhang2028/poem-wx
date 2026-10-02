@@ -13,7 +13,7 @@
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
-                 color="#2f6055" />
+                 color="#1c1c1e" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -27,7 +27,7 @@
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="22" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
+              block-size="22" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
               bindchanging="onFontSlide" bindchange="onFontSlide" />
       <text class="font-a big">A</text>
     </view>
@@ -41,7 +41,7 @@
         <text class="row-title">背完自动下一首</text>
         <text class="row-sub">在详情页选完掌握程度后直接跳下一篇</text>
       </view>
-      <switch checked="{{autoNext}}" color="#2f6055" bindchange="onAutoNext" />
+      <switch checked="{{autoNext}}" color="#1c1c1e" bindchange="onAutoNext" />
     </view>
   </view>
 

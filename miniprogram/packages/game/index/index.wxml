@@ -27,7 +27,7 @@
            看不出是能点的，还压在字的笔画上。选中态由格子自己的
            底色 + 描边来说明白；radio 留着（视觉隐藏），点格子就选中 -->
       <label class="char {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this">
-        <radio class="seg-radio" value="{{item}}" checked="{{keyword === item}}" color="#2f6055" />
+        <radio class="seg-radio" value="{{item}}" checked="{{keyword === item}}" color="#1c1c1e" />
         <text class="char-t">{{item}}</text>
       </label>
     </radio-group>

@@ -1,35 +1,19 @@
 .home {
-  padding-top: var(--sp-2);
+  padding-top: var(--sp-1);
 }
 
 /* ---------- 首屏那张卡 ----------
-   它承载「今天做什么」，值得比别的卡多一点分量：
-   一道纵向微光打底，右上角一枚缃色光晕，压得住下面那张列表。 */
-.hero {
-  position: relative;
-  overflow: hidden;
-  padding: var(--sp-4) var(--sp-4) var(--sp-4);
-  margin-bottom: var(--sp-3);
-  background: linear-gradient(160deg, #fffefb 0%, var(--bg-soft) 58%, #f4ecd8 100%);
-  border-color: rgba(240, 205, 124, .5);
-  box-shadow: var(--shadow-lift);
-}
+   一屏一件事：上面一行日期，中间一个大标题，下面三个大数字，
+   最后是这一屏唯一的一颗墨黑按钮。
 
-/* 光晕：给卡面一点「纸背透光」的意思，比纯色块耐看，也不抢字 */
-.hero::after {
-  content: "";
-  position: absolute;
-  right: -120rpx;
-  top: -140rpx;
-  width: 340rpx;
-  height: 340rpx;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--gold-soft) 0%, rgba(240, 205, 124, 0) 70%);
+   上一版这张卡是一道金色微光渐变 + 一枚缃色光晕 + 一个进度环 ——
+   三样东西都在说「我很重要」，谁也没说清「今天背几首」。
+   这一版把「重要」交给三件事：留白、字号差、唯一性。 */
+.hero {
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
 .hero-head {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -41,44 +25,43 @@
   padding-right: var(--sp-2);
 }
 
+/* 小字在上、大字在下 —— 参考图里「9:41 / 我的 / 当前积分余额」就是这个次第 */
 .hero-eyebrow {
   display: block;
   font-size: var(--fs-caption);
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
-  margin-bottom: 10rpx;
+  margin-bottom: var(--sp-2);
 }
 
 .hero-title {
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
-  font-weight: 600;
-  color: var(--green);
+  font-weight: 700;
+  color: var(--ink);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
 
 .hero-sub {
   display: block;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  margin-top: 10rpx;
+  margin-top: var(--sp-2);
 }
 
-.hero-metric {
-  margin-top: var(--sp-3);
+/* 三个大数字之间留得很松 —— 它是这一屏唯一的「大」，
+   抠着留白就白做了 */
+.hero-stats {
+  margin-top: var(--sp-4);
 }
 
 .hero-btn {
-  position: relative;
-  z-index: 1;
   margin-top: var(--sp-4);
 }
 
 .hero-note {
-  position: relative;
-  z-index: 1;
   display: block;
   text-align: center;
   font-family: var(--font-poem);
@@ -88,54 +71,64 @@
   margin-top: var(--sp-3);
 }
 
-/* 细进度条：环给比例，这条给「还剩多少」 */
+/* 细进度条：数字给「几首」，这条给「走到哪了」 */
 .hero-meter {
-  position: relative;
-  z-index: 1;
   margin-top: var(--sp-3);
 }
 
-.hero-meter-t {
-  position: relative;
-  z-index: 1;
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  margin-top: 10rpx;
+/* 「按什么排的」那行说明 —— 参考图里「档位定义 / 4 个档位 · 颜色用于月历标记」
+   就在卡片底部这个位置：一行灰字，右边一个箭头，说明「这里还能点进去」。 */
+.hero-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 76rpx;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
 }
 
-/* 未登录那张卡的印章 */
+.hero-foot-t {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-foot-go {
+  flex: none;
+  color: var(--ink-4);
+  font-size: var(--fs-title);
+  line-height: 1;
+  padding-left: var(--sp-2);
+}
+
+/* 未登录那张卡的印章：一枚墨黑圆标。
+   上一版是朱砂方印旋转 4 度 —— 那是网页版的语言，不是参考图的。 */
 .seal {
   flex: none;
-  width: 104rpx;
-  height: 104rpx;
-  border-radius: 18rpx;
-  border: 3rpx solid rgba(168, 59, 50, .5);
-  background: rgba(255, 254, 251, .8);
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: rotate(-4deg);
 }
 
 .seal-t {
   font-family: var(--font-poem);
   font-size: var(--fs-mark);
-  color: rgba(168, 59, 50, .68);
+  color: var(--on-ink);
 }
 
-/* ---------- 进度环 ---------- */
+/* ---------- 进度环（复习设置等处仍用）---------- */
 .ring-hover {
   opacity: .82;
-}
-
-.hero-ring {
-  width: 136rpx;
-  height: 136rpx;
-}
-
-.hero-ring .ring-text {
-  font-size: var(--fs-body);
 }
 
 /* ---------- 今日安排 ---------- */
@@ -143,9 +136,10 @@
 .plan-row {
   display: flex;
   align-items: center;
+  min-height: var(--h-row);
   padding: var(--sp-2) var(--sp-1);
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: 10rpx;
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -182,11 +176,11 @@
    用「有没有」而不是「一个勾两个颜色」——扫一眼就分得清哪几首还没动 */
 .tick {
   flex: none;
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   margin-left: var(--sp-2);
   border-radius: 50%;
-  border: 2rpx solid var(--line);
+  border: 2rpx solid var(--line-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,13 +188,13 @@
 }
 
 .tick.on {
-  background: var(--green);
-  border-color: var(--green);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 .tick-t {
   font-size: var(--fs-caption);
-  color: #fff;
+  color: var(--on-ink);
   line-height: 1;
 }
 
@@ -224,9 +218,10 @@
 .toc-row {
   display: flex;
   align-items: center;
+  min-height: var(--h-row);
   padding: var(--sp-2) var(--sp-1);
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: 10rpx;
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -240,9 +235,9 @@
   flex: none;
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding: 4rpx 14rpx;
+  padding: 4rpx 16rpx;
   border-radius: var(--radius-pill);
-  background: var(--line-2);
+  background: var(--sink);
 }
 
 .empty-btn {

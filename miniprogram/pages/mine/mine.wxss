@@ -2,12 +2,12 @@
   padding: var(--sp-4);
 }
 
-/* 首屏那张身份卡：给一层很淡的主色渐变，
-   与首页的今日卡同一套语言 —— 一屏里最该先看的那张，都会亮一点 */
+/* 首屏那张身份卡：它是这一屏的第一眼，但它**不靠颜色**说这句话 ——
+   靠的是它下面那块留白（.login-row / .profile-row 的 margin-top）。
+   上一版给这张卡加了一层主色渐变 + 一圈主色描边，那是「用颜色说重要」；
+   一块白卡夹在两段留白里，一样是第一眼，而且不必抢后面的颜色。 */
 .account-lead {
-  background: linear-gradient(160deg, #fffefb 0%, var(--bg-soft) 60%, #eef4f0 100%);
-  border-color: var(--green-edge);
-  box-shadow: var(--shadow-lift);
+  background: var(--surface);
 }
 
 /* ---------- 身份行 ---------- */
@@ -27,7 +27,7 @@
   line-height: normal;
   flex: none;
   overflow: hidden;
-  box-shadow: 0 0 0 2rpx var(--line-2);
+  box-shadow: 0 0 0 2rpx var(--line);
 }
 
 .avatar-btn::after {
@@ -39,16 +39,18 @@
   height: 112rpx;
   border-radius: 50%;
   flex: none;
-  background: var(--green-light);
+  background: var(--sink);
 }
 
+/* 没有头像时：一枚浅灰圆底 + 一个字。
+   参考图里的头像底就是一整块浅灰 —— 它不强调「缺图」，只是先占住位置 */
 .avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-poem);
   font-size: var(--fs-mark);
-  color: var(--green);
+  color: var(--ink-2);
 }
 
 .identity-main {
@@ -60,9 +62,9 @@
 .identity-name {
   display: block;
   font-size: var(--fs-lead);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
-  letter-spacing: 1rpx;
+  letter-spacing: var(--ls-title);
 }
 
 .identity-sub {
@@ -73,13 +75,14 @@
 }
 
 /* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
-   放在下面的表格里要滚一屏才看得到 */
+   放在下面的表格里要滚一屏才看得到。
+   长相照参考图右上那枚编号（WFA381）：白底、一道细边、一颗胶囊。 */
 .tier-chip {
   flex: none;
   font-size: var(--fs-caption);
-  color: var(--green);
-  background: var(--green-light);
-  border: 1rpx solid var(--green-edge);
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line-strong);
   border-radius: var(--radius-pill);
   padding: 6rpx 20rpx;
   letter-spacing: 1rpx;
@@ -92,7 +95,7 @@
 .login-note {
   display: block;
   text-align: left;
-  margin-top: var(--sp-2);
+  margin-top: var(--sp-3);
   line-height: var(--lh-loose);
 }
 
@@ -102,11 +105,11 @@
 
 .nick-input {
   margin-top: var(--sp-2);
-  height: 84rpx;
-  padding: 0 var(--sp-3);
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
+  height: var(--h-field);
+  padding: 0 var(--sp-4);
+  background: var(--sink);
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-block);
   font-size: var(--fs-body);
 }
 
@@ -114,13 +117,11 @@
   color: var(--red);
 }
 
-/* 退出登录：原生 button，只留一点间距与字色 */
+/* 退出登录：一档最轻的按钮，满宽但不着色 */
 .logout {
-  display: block;
+  display: flex;
   width: 100%;
   text-align: center;
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
   margin-top: var(--sp-3);
 }
 
@@ -129,4 +130,9 @@
   text-align: right;
   padding-top: var(--sp-1);
   line-height: var(--lh-body);
+}
+
+/* 清空数据那行：图标底也跟着变淡，别让它看着像个普通入口 */
+.row-icon.danger {
+  color: var(--red);
 }

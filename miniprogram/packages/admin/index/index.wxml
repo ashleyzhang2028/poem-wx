@@ -12,7 +12,7 @@
     <view class="card-title bar">我的授权</view>
     <view class="grant-head">
       <view class="grant-tier">
-        <text class="grant-tier-v">{{status.label}}</text>
+        <text class="grant-tier-name">{{status.label}}</text>
         <text class="grant-tier-k">{{roleLabel}}</text>
       </view>
       <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->

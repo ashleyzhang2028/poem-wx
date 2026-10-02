@@ -59,17 +59,17 @@
     }
   },
   "window": {
-    "navigationBarBackgroundColor": "#2f6055",
-    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "跬步",
-    "backgroundColor": "#f6f1e3",
+    "backgroundColor": "#f5f5f7",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false
   },
   "tabBar": {
-    "color": "#8a7a68",
-    "selectedColor": "#2f6055",
-    "backgroundColor": "#fcfaf3",
+    "color": "#9ca3af",
+    "selectedColor": "#1c1c1e",
+    "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
