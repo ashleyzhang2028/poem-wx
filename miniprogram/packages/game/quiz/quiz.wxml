@@ -17,14 +17,20 @@
 
     <view class="card">
       <view class="card-title bar">题型</view>
-      <!-- 题型可多选：原生 checkbox，勾选框本身就是平台认识的那个勾选框 -->
-      <checkbox-group class="native-group" bindchange="onToggleForm">
-        <label class="native-label" wx:for="{{forms}}" wx:key="key">
-          <checkbox value="{{item.key}}" checked="{{pickedForms.indexOf(item.key) >= 0}}" color="#2f6055" />
-          <text>{{item.name}}</text>
+      <!-- 题型可多选。原来是一排原生方框：每个方框吃掉一格横向空间，
+           五个题型就折成两行、第二行还挂着一个孤零零的「认篇名」。
+           改成格子排：等宽、整齐、一行放得下，选中的填色 + 右上角一个勾
+           （那一勾是「可以多选」的唯一线索，单选那些格子没有）。
+           checkbox 仍在 label 里，点格子任何一处都选中。 -->
+      <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
+        <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
+               wx:for="{{forms}}" wx:key="key">
+          <checkbox class="seg-radio" value="{{item.key}}"
+                    checked="{{pickedForms.indexOf(item.key) >= 0}}" color="#2f6055" />
+          <text class="chip-t">{{item.name}}</text>
         </label>
       </checkbox-group>
-      <text class="hint note">选中的题型随机混出。至少留一种。</text>
+      <text class="hint note">题型可多选（右上角带方框的格子）：选中的随机混出，至少留一种。</text>
     </view>
 
     <button class="btn primary block" bindtap="onStart">开始答题</button>

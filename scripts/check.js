@@ -400,28 +400,43 @@ if (fs.existsSync(pinyinTable)) {
   ok("一字变调（一行→yì）", pinyin.readOf("一", "一行", 0) === "yì", pinyin.readOf("一", "一行", 0));
   ok("关掉注音就不切词", pinyin.annotate("床前明月光", "off").every((c) => !c.mark));
 
-  /* 逐句：行 → 句 → 字 三层。中间那层不是摆设 ——
+  /* 逐句：段落 → 行 → 句 → 字。这几层都不是摆设 ——
      语料里一行往往承好几个句子（《琵琶行》整段诗序就是一行），
      少了它，正文居中时是一坨、朗读把整段一起合成、注音的消歧窗口也跟着错。 */
   const csplit = require(path.join(ROOT, "utils", "corpus.js")).splitLines;
-  const t3 = pinyin.render(csplit("鹅，鹅，鹅，\n\n曲项向天歌。"), "rare");
-  ok("注音三层：行数不丢", t3.length === 3, JSON.stringify(t3.length));
-  ok("注音三层：一行切得出多句", t3[0].length === 3, JSON.stringify(t3[0].length));
-  ok("注音三层：空行留成空数组", Array.isArray(t3[1]) && t3[1].length === 0);
-  // 6 个格子 = 曲项向天歌 + 句号
-  ok("注音三层：每句是字数组", t3[2][0].length === 6 && t3[2][0][0].ch === "曲",
-    JSON.stringify(t3[2][0].map((x) => x.ch)));
+  const cmod = require(path.join(ROOT, "utils", "corpus.js"));
+  // 形状是 corpus.layout() 的「段落 → 行 → 句」：空行留成空段
+  const t3 = cmod.layout("鹅，鹅，鹅，\n\n曲项向天歌。").paras;
+  const t3r = pinyin.render(t3, "rare");
+  ok("注音形状：段数不丢", t3r.length === 2, JSON.stringify(t3r.length));
+  // `鹅，鹅，鹅，` 一行三句、每句一个「字 + 标点」格子；
+  // 每句挂 `i`（第几句）—— 朗读报「第 5 句」，正文凭它找到那一行
+  ok("注音形状：一行切得出多句", t3r[0][0].length === 3, JSON.stringify(t3r[0][0].length));
+  ok("注音形状：每句带序号", t3r[0][0][0].i === 0 && t3r[1][0][0].i === 3,
+    JSON.stringify(t3r.map((p) => p.map((r) => r.map((c) => c.i)))));
+  const t3first = t3r[0][0][0].tokens;
+  ok("注音形状：每句是字数组", t3first.length === 2 && t3first[0].ch === "鹅",
+    JSON.stringify(t3first.map((x) => x.ch)));
   // render 不许自己再切一遍 —— 它会连标点一起切掉，正文就成了「鹅鹅鹅」
-  ok("注音不重切句子（逗号还在）", t3[0][0].some((c) => c.ch === "，"),
-    JSON.stringify(t3[0][0]));
-  ok("注音不重切句子（句号还在）", t3[2][0][t3[2][0].length - 1].ch === "。",
-    JSON.stringify(t3[2][0]));
+  ok("注音不重切句子（逗号还在）", t3first.some((c) => c.ch === "，"),
+    JSON.stringify(t3first));
+  const t3last = t3r[1][0][0].tokens;
+  ok("注音不重切句子（句号还在）", t3last[t3last.length - 1].ch === "。",
+    JSON.stringify(t3last));
 
   // 消歧窗口仍是**整行**：词组「白发」不能因为切句而丢
-  const t4 = pinyin.render(csplit("白发三千丈"), "rare");
+  const t4 = pinyin.render(cmod.layout("白发三千丈").paras, "rare");
   ok("切句后消歧窗口仍是整行（白发→fà）",
-    t4[0][0].filter((c) => c.ch === "发")[0].py === "fà",
-    JSON.stringify(t4[0][0].filter((c) => c.ch === "发")));
+    t4[0][0][0].tokens.filter((c) => c.ch === "发")[0].py === "fà",
+    JSON.stringify(t4[0][0][0].tokens.filter((c) => c.ch === "发")));
+  // 跨句的消歧：`高堂明镜悲白发，` 里「白发」在同一句就够了；
+  // 这里守的是**折叠之后同一行里**的相邻句还在同一个窗口里
+  const t5 = pinyin.render(cmod.layout("君不见，高堂明镜悲白发，朝如青丝暮成雪。").paras, "rare");
+  const f5 = t5[0]
+    .map((row) => row.map((cl) => cl.tokens.filter((c) => c.ch === "发")).reduce((a, c) => a.concat(c), []))
+    .reduce((a, c) => a.concat(c), []);
+  ok("折叠后同行的相邻句不丢消歧窗口（白发→fà）", f5.length && f5[0].py === "fà",
+    JSON.stringify(f5));
 } else {
   ok("读音表未生成时注音整块关闭", pinyin.readiness().visible === false);
 }
@@ -450,15 +465,16 @@ ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null)
 // 它若自己再切一遍句子，标点就当场没了 —— 预览里真的出现过「鹅鹅鹅」。
 {
   const pj = fs.readFileSync(path.join(ROOT, "utils", "pinyin.js"), "utf8");
-  const renderBody = /function render\(lines, mode\)\s*\{([\s\S]*?)\n\}/.exec(pj);
-  ok("pinyin.render 只吃 splitLines 的输出（含 .s）",
-    !!renderBody && renderBody[1].indexOf(".s") >= 0,
-    renderBody ? renderBody[1].slice(0, 60) : "找不到 render");
+  const renderBody = /function render\(paras, mode\)\s*\{([\s\S]*?)\n\}/.exec(pj);
+  // render 只吃 corpus.layout() 的「段落 → 行 → 句」，自己不再切
+  ok("pinyin.render 只吃 corpus.layout() 的形状（段落 → 行 → 句）",
+    !!renderBody && renderBody[1].indexOf("row") >= 0 && renderBody[1].indexOf("para") >= 0,
+    renderBody ? renderBody[1].slice(0, 80) : "找不到 render");
   ok("pinyin.render 不再自己按标点切句",
     !/split\(\s*\/\[. *[，。！？]/.test(pj));
   const rwxml = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
   ok("阅读页正文与注音两条路都按句渲染",
-    rwxml.indexOf("ln.s") >= 0 && rwxml.indexOf("wx:for=\"{{cl}}\"") >= 0);
+    rwxml.indexOf("wx:for=\"{{row}}\"") >= 0 && rwxml.indexOf("wx:for=\"{{cl.tokens}}\"") >= 0);
 }
 // 语料里真有这种行 —— 上面那句注释不是假设
 const longLine = corpus.courseTexts();
@@ -1362,37 +1378,42 @@ ok("索引没有多余的全站副本", !fs.existsSync(dupFile), "search.json �
 const NATIVE_TAGS = ["radio", "radio-group", "checkbox", "checkbox-group", "switch", "slider", "picker"];
 
 /**
- * 自绘交互控件的指纹：类名 + 事件的组合。
- * 只按类名判会误伤纯展示元素（比如 .tag 是标签、.char-n 是字数），
- * 所以这里要求它同时挂着 tap 事件才算「自绘控件」。
+ * 自绘交互控件的指纹：一个**自称是控件**的类名，直接挂在可点元素上。
+ *
+ * 判据为什么仍是类名？因为「这个 view 该不该是控件」从标签上看不出来 ——
+ * 列表行、卡片、整段译文都是 `view + bindtap`，它们**本来就该**是 view
+ * （拿 <button> 包一首诗是把语义搞坏）。所以只能靠名字：
+ * 名字里带 check / chip / seg / tier / opt / radio 这类「控件词」的，
+ * 就是有人打算手搓一个控件。
+ *
+ * 只看挂着 tap 的 `<view>`：`<button>` 有自己的语义，不在此列。
+ * 命中之后**再看事实**：真包着原生控件就放行（`.seg-item` 里
+ * 一个 `<label><radio>`，行为已经全是平台的了），没包才算自绘。
  */
-const SELF_MADE = [
-  { cls: "seg-item", why: "自绘分段控件" },
-  { cls: "chip", why: "自绘可选项" },
-  { cls: "opt-check", why: "自绘勾选标记" },
-  { cls: "algo-head", why: "自绘可选项" },
-  { cls: "tier-check", why: "自绘勾选标记" },
-  { cls: "tier-chip", why: "自绘档位按钮" },
-  { cls: "prov-check", why: "自绘单选项" },
-  { cls: "sp-btn", why: "自绘播放按钮" }
-];
+const CONTROL_WORD = /(^|[-_\s])(check|chip|seg|tier|opt|radio|toggle|switch|pick|tab)([-_\s]|$)/i;
 
-/** 判定用：「某个会被点击的元素上，挂着自绘控件的类名」 */
+function isSelfMade(cls, scope) {
+  if (!CONTROL_WORD.test(cls)) return false;
+  // 事实优先：里面真有原生控件，那它就是原生控件的一层皮，不算自绘
+  return !/<(radio|checkbox|switch|picker|slider)\b/.test(scope);
+}
+
 function scanSelfMadeControls(src) {
   const hits = [];
-  const re = /<(view|text)\b([^>]*)>/g;
+  const re = /<view\b([^>]*)>/g;
   let m;
   while ((m = re.exec(src))) {
-    const attrs = m[2];
+    const attrs = m[1];
     if (!/bindtap|catchtap/.test(attrs)) continue;
     const clsM = /class="([^"]*)"/.exec(attrs);
     if (!clsM) continue;
     const cls = clsM[1];
-    SELF_MADE.forEach((s) => {
-      if (new RegExp("(^|[\\s{])" + s.cls + "([\\s}]|$)").test(cls)) {
-        hits.push(s.why + "（." + s.cls + "）");
-      }
-    });
+    // 可点元素的整个子树 —— 自绘控件把选中态画在自己身上，
+    // 原生控件的写法则一定有 <radio>/<checkbox> 在里头
+    const body = src.slice(m.index);
+    const close = body.search(/<\/view>\s*<\/label>/);
+    const scope = body.slice(0, close >= 0 ? close : 500);
+    if (isSelfMade(cls, scope)) hits.push(cls.split(/\s+/)[0]);
   }
   return hits;
 }
@@ -1429,27 +1450,27 @@ Object.keys(NEEDS_NATIVE).forEach((p) => {
 const selfMadeHits = [];
 pages.forEach((p) => {
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  scanSelfMadeControls(wxml).forEach((h) => selfMadeHits.push(p + " → " + h));
+  scanSelfMadeControls(wxml).forEach((h) => selfMadeHits.push(p + " → ." + h));
 });
 ok("没有自绘的交互控件", selfMadeHits.length === 0, selfMadeHits.slice(0, 8).join("; "));
 
-// 自绘控件的老类名不许在样式表里复活 —— 留着就是在等下一次被用上
-const deadCostume = ["seg-item", "chip"];
-const revived = [];
+/**
+ * 分段控件（阅读页的「对齐」「注音」）的写法必须成对：
+ * 一组 `.seg` 里至少一个原生 `<radio>`，而且**每一段都包在 `<label>` 里**
+ * —— 少一个 label，点整段就不选中，那段就成了纯粹的装饰。
+ */
 pages.forEach((p) => {
-  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
-  deadCostume.forEach((c) => {
-    if (new RegExp("\\." + c + "\\s*\\{").test(wxss)) revived.push(p + " → ." + c);
-  });
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  if (wxml.indexOf("seg-group") < 0) return;
+  const labels = (wxml.match(/class="seg-item/g) || []).length;
+  const radios = (wxml.match(/<radio\b/g) || []).length;
+  ok("分段控件的每一段都是原生 radio：" + p, labels > 0 && radios >= labels,
+    "段 " + labels + " 个、radio " + radios + " 个");
+  // 每一段都由 <label> 包着 —— 点段内任何一处都能选中
+  const labelWrapped = (wxml.match(/<label\b[^>]*class="seg-item/g) || []).length;
+  ok("分段控件的每一段都点得到（label 包裹）：" + p, labelWrapped === labels,
+    "label " + labelWrapped + " / 段 " + labels);
 });
-ok("自绘控件的样式已清掉", revived.length === 0, revived.join("; "));
-
-// 全局样式表里也不许再留一份 .seg / .seg-item
-{
-  const globalWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-  ok("全局不再提供自绘分段控件样式",
-    !/\.seg\s*\{/.test(globalWxss) && !/\.seg-item\s*\{/.test(globalWxss));
-}
 
 // 原生控件的配色：开关与滑块的 color 必须是那身雨过天青
 const COLOR_TAGS = ["switch", "slider"];
@@ -2039,6 +2060,210 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
       global.getCurrentPages = savedPages;
     }
   }
+}
+
+/* ---------- 9.5 版式：正文怎么排 ---------- */
+
+/**
+ * 这一节的由来是 Issue 里那句「五言绝句可以一句一行，琵琶行怎么也能一句一行」。
+ *
+ * 说得对：**「一行」对绝句和对长诗不是同一件事**。
+ * 七绝律诗一句一行是作者排的版；《琵琶行》的序、《左传》的长篇对白
+ * 一行里承着几十个句子，整行一个块排出来就是一堵墙。
+ * 所以版式要在语料层算（corpus.layout），页面照排。
+ *
+ * 这里守三件事：
+ *   1. layout 不丢字（折叠只是重排，不是重写）
+ *   2. 绝句律诗的短句**不被折**（七言拆成两行是反的）
+ *   3. 长句真的被折了（《琵琶行》的序不许再是一行）
+ */
+{
+  const cmod = require(path.join(ROOT, "utils", "corpus.js"));
+
+  /* 1) 不丢字：rows 拼回去 = 各行 splitClauses 拼回去；paras 展开 = rows。
+     跑**全站 5575 条**（不只是课内的 251 首）——
+     折叠逻辑一旦多切一个字符，只有那几篇会露馅，抽一篇试是试不出来的。
+     （这里踩过一次：先只跑了课内，把收行点砍掉一个，检查照样全绿。） */
+  const allIds = [];
+  cmod.books().forEach((b) => {
+    let list = [];
+    try { list = cmod.ofBook(b.id); } catch (e) { return; }
+    list.forEach((it) => allIds.push(it.id));
+  });
+  let lost = 0, unflat = 0, checked = 0, exLost = "", exFlat = "";
+  allIds.forEach((id) => {
+    let e = null;
+    try { e = cmod.entry(id); } catch (err) { return; }
+    if (!e || !e.text) return;
+    checked++;
+    const L = cmod.layout(e.text);
+    const rows = L.rows.join("");
+    const flat = L.paras.reduce((a, pr) => a.concat(pr), []).map((g) => g.join("")).join("");
+    const norm = String(e.text).split("\n").map((x) => cmod.splitClauses(x).join("")).join("");
+    if (rows !== norm) { lost++; if (!exLost) exLost = id; }
+    if (flat !== rows) { unflat++; if (!exFlat) exFlat = id; }
+  });
+  ok("版式折叠不丢字（全站 " + checked + " 篇）", lost === 0, lost + " 篇拼不回，例如 " + exLost);
+  ok("版式的段落与行是同一份切分", unflat === 0, unflat + " 篇对不上，例如 " + exFlat);
+
+  // 2) 绝句律诗的短句不折。七言拆成「杨柳青青江水」+「平，」是反的
+  const qi = cmod.layout("杨柳青青江水平，\n闻郎江上唱歌声。\n东边日出西边雨，\n道是无晴却有晴。");
+  ok("七绝一句一行（短句不被折）",
+    qi.rows.length === 4 && qi.rows[0] === "杨柳青青江水平，",
+    JSON.stringify(qi.rows));
+  const wu = cmod.layout("空山不见人，\n但闻人语响。");
+  ok("五绝一句一行", wu.rows.length === 2 && wu.rows[1] === "但闻人语响。", JSON.stringify(wu.rows));
+
+  // 3) 长句真的被折。
+  //    《琵琶行并序》第一行是整段诗序（27 句）——「元和十年，」必须自己一行
+  const pipa = cmod.entry("poems-gz10-06");
+  ok("《琵琶行并序》取得到正文", !!(pipa && pipa.text));
+  if (pipa && pipa.text) {
+    const L = cmod.layout(pipa.text);
+    ok("《琵琶行》的诗序被折开（不再是一整行）",
+      L.rows.length > cmod.splitLines(pipa.text).length,
+      "行 " + L.rows.length + " vs 语料行 " + cmod.splitLines(pipa.text).length);
+    ok("《琵琶行》的序与诗分成两段",
+      L.paras.length > 2, "段数 " + L.paras.length);
+  }
+
+  /* 3.5) **折出来的行一律收在句读上。**
+     这一条才是「一句一行」看着像诗的原因，也是折叠逻辑唯一会错的地方：
+     收行点少判一个标点，两行就会并回去 ——
+     「元和十年，」+「予左迁九江郡司马。」并回一行，不再是「丢了字」，
+     而是**版式退回了上一版**，而且拼回去照样等于原文，前面那些不变式一条都抓不到。
+     （踩过：只拿《琵琶行》试是不够的，它一行里恰好没有连着两个逗号收尾的句。） */
+  {
+    /* 判据：**折出来的行要停在句读上**。
+       折出来的 = 一行里塞了好几句、被我们切开的那些。
+       作者一行一句排下来的（《乡愁》的「我在这头」）不在此列 ——
+       那种行不带标点本来就是作者的版式，不是我们折坏的。
+       中间行漏了标点 → 两行会并回去 → 版式退回上一版，
+       而且拼回去照样等于原文，前面那些不变式一条都抓不到。 */
+    /* 判据落到**看得见的东西**上：折出来的行不许是个孤字。
+       语料里有 15000 多行的末句是不带标点的（`」」`、`——烟波画船——`、
+       `……月承幌而通晖`）。这些句子要是自己占一行，屏幕上就是一行孤零零的
+       一两个字 —— 这跟「版式退回上一版」是同一件事的两面：
+       收行点漏判 → 行被切碎；尾巴不并回 → 行只剩一两个字。
+       所以不查「标点在不在」，直接查「这一行长不长得像一行」。 */
+    const bareRows = [];
+    let scanned = 0;
+    allIds.forEach((id) => {
+      let e = null;
+      try { e = cmod.entry(id); } catch (err) { return; }
+      if (!e || !e.text) return;
+      scanned++;
+      cmod.layout(e.text).rows.forEach((r) => {
+        const t = r.trim();
+        if (!t) return;
+        /* 孤字成行 = 去标点后只剩 1 个字，**而且这一行没有标点收尾**。
+           带标点的单字行是作者写的（《爱莲说》的「莲，」、《论语》的「噫！」），
+           不带标点的单字行只可能是折坏了（`」」` 自己占一行）。 */
+        if (/[，。！？；：」』）】”’—-]$/.test(t)) return;
+        const core = t.replace(/[，。！？；：」』）】”’—-]/g, "");
+        if (core.length <= 1 && bareRows.length < 4) bareRows.push(id + " 「" + t + "」");
+      });
+    });
+    ok("折出来的行不许出现孤字成行（全站 " + scanned + " 篇）",
+      bareRows.length === 0, bareRows.join(" / "));
+  }
+
+  // 4) 页面不许自己按行切 —— 版式只此一份
+  const rjs = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  ok("阅读页走 corpus.layout()", rjs.indexOf("corpus.layout(") >= 0);
+  ok("阅读页不再按 splitLines 的行渲染", rjs.indexOf("splitLines(entry.text)") < 0);
+
+  /* 5) 朗读那一句「第几句」与注音的序号必须同序。
+        两处各数一遍，读到第 5 句就会去高亮第 4 行 —— 是看不见的错位。 */
+  const pj = require(path.join(ROOT, "utils", "pinyin.js"));
+  const L2 = cmod.layout("君不见，黄河之水天上来，\n奔流到海不复回。");
+  const tk = pj.render(L2.paras, "rare");
+  // 把 tokens 里所有 cl.i 按出现顺序排出来，应当是 0..N-1 连续
+  const seq = [];
+  tk.forEach((pr) => pr.forEach((row) => row.forEach((cl) => seq.push(cl.i))));
+  ok("注音给每一句编了号（与朗读同序）",
+    seq.length > 0 && seq.every((v, i) => v === i), JSON.stringify(seq));
+}
+
+/* ---------- 9.6 「选一个」的控件：分段与格子 ---------- */
+
+/**
+ * 这一节的由来是 Issue 里那句「单选按钮的形式非常丑陋，有图标的表达形式吗」。
+ *
+ * 「丑」不在圆点本身（它是原生控件），在于**用错了场合**：
+ *   - 两三个互斥选项（对齐 / 注音 / 在哪儿搜）排一排圆圈 + 文字，占半屏；
+ *   - 一等长的十来个选项（年级）排成网格，每格还配个圆点，
+ *     圆点吃掉横向空间、还只跟第一行对齐，12 个年级硬生生多出一列。
+ *
+ * 现在这两类各有专属写法（分段 / 格子），共用一套图标。下面守三件事：
+ *   1. 图标**只画一次**（各页各画一遍，同一条线迟早粗细不一）
+ *   2. 分段与格子的每一段都能点（label 包着原生控件）
+ *   3. 单选与多选分得开（多选那格多一个方框/勾）
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  // 图标定义只许有一份
+  ["ic-left", "ic-center", "ic-off", "ic-rare", "ic-all", "ic-all-site", "ic-course", "ic-title", "ic-full"]
+    .forEach((ic) => {
+      ok("共用图标 ." + ic + " 在 app.wxss 里定义", new RegExp("\\." + ic + "::?before").test(appWxss));
+    });
+  // 分段与格子的底盘也只许有一份
+  ok("分段控件底盘只定义一次", (appWxss.match(/^\.seg-group\s*\{/gm) || []).length === 1);
+  ok("格子控件底盘只定义一次", (appWxss.match(/^\.chip\s*\{/gm) || []).length === 1);
+  /* 页面里不许再各画一遍 —— 判据是**同一个选择器在页面样式表里又出现了**。
+     各页各画一遍图标，同一条线的粗细、位置迟早不一；用户看到的是
+     「阅读页那个图标比设置页瘦一点」，说不清哪里别扭。
+     所以：凡是 app.wxss 里定义过的这一类（.seg-* / .ic-* / .chip*），
+     页面样式表里不许再出现同名定义。 */
+  const redefined = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const hit = wxss.match(/^\.(seg-[\w-]+|ic-[\w-]+|chip[\w-]*)\s*(::?[a-z-]+)?\s*\{/gm) || [];
+    hit.forEach((h) => redefined.push(p + " → " + h.replace(/\s*\{$/, "")));
+  });
+  ok("分段 / 图标 / 格子的样式没有在页面里各写一遍",
+    redefined.length === 0, redefined.slice(0, 5).join("; "));
+
+  // 每一段都能点：label 包着原生控件
+  const notWrapped = [];
+  pages.forEach((p) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    /* 判据是**每一段都包在 label 里**，不是「label 数与段数相等」：
+       `<label wx:for>` 一处源码渲染出 N 段，两边的计数单位本来就不一样。
+       所以要查的是位置 —— `class="seg-item` 前面那个标签是不是 `<label>`。 */
+    const re = /<(label|view)\b[^>]*class="(seg-item|chip)\b[^"]*"/g;
+    let m, hits = 0;
+    while ((m = re.exec(wxml))) {
+      hits++;
+      if (m[1] !== "label") notWrapped.push(p + " → <" + m[1] + ' class="' + m[2] + '">');
+    }
+    // 本页根本没这类控件就跳过；有的话，里面必须真有原生控件 ——
+    // 少了它，点一下什么都不发生
+    if (hits && !/<(radio|checkbox)\b/.test(wxml)) notWrapped.push(p + " 缺原生控件");
+  });
+  ok("分段与格子的每一段都点得到（label + 原生控件）", notWrapped.length === 0, notWrapped.join("; "));
+
+  // 单选与多选要分得开：多选那格必须有 .multi（多一个方框/勾）
+  const multiGroups = [];
+  pages.forEach((p) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    // 有多选组的页面，chip 上必须带 multi
+    if (/<checkbox-group[^>]*class="chip-group/.test(wxml)) {
+      // 多选的每一格都要带 multi：两个数都按 label 算
+      const chips = (wxml.match(/<label\b[^>]*class="chip\b/g) || []).length;
+      const multi = (wxml.match(/<label\b[^>]*class="chip multi\b/g) || []).length;
+      if (chips !== multi || chips === 0) multiGroups.push(p + " (" + multi + "/" + chips + ")");
+    }
+  });
+  ok("多选的格子带 multi（与单选分得开）", multiGroups.length === 0, multiGroups.join("; "));
+
+  // 令字格里不许再塞一个缩小的圆点 —— 它压在笔画上，还小到看不出能点
+  pages.forEach((p) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    if (wxml.indexOf('class="char ') < 0 && wxml.indexOf('class="char {{') < 0) return;
+    ok("令字格不再塞一个缩小的圆点：" + p, wxss.indexOf("char-radio") < 0 && wxml.indexOf("char-radio") < 0);
+  });
 }
 
 /* ---------- 10. 上线前的那几道闸 ---------- */

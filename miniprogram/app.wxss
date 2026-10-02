@@ -775,13 +775,11 @@ view, text, button, input, textarea {
   border-color: var(--green);
 }
 
-.char-radio {
-  position: absolute;
-  right: 2rpx;
-  top: 2rpx;
-  transform: scale(.56);
-  transform-origin: right top;
-}
+/* 令字格里**不再画一个圆点**。
+   上一版是 absolute 到右上角、缩到 0.56 的原生圆点：小到看不出能点、
+   还压在「而」「者」「有」的笔画上，缩过头之后命中区也跟着偏出格子。
+   选中态由格子自己的「底色 + 描边 + 字变主色」来说明白，够了。
+   radio 仍在 label 里（.seg-radio 视觉隐藏），点格子任何一处都选中。 */
 
 .char-t {
   display: block;
@@ -860,4 +858,359 @@ view, text, button, input, textarea {
 
 .foot .hint {
   letter-spacing: 1rpx;
+}
+
+/* ============================================================
+   分段控件（「二选一 / 三选一」的统一长相）
+   ============================================================ */
+/* 为什么要有这一节：
+   「在哪儿搜」「怎么搜」「左对齐还是居中」「注不注音」——这些都是**互斥的
+   少数几个选项**。原来的写法是一排原生单选框：一个空心圆圈 + 两个字。
+   圆圈本身没问题（它确实是原生控件），问题是**它不适合这种场合**：
+
+   1. 圆圈与文字挤在一行，两个选项就占掉半屏，一行放不下三个；
+   2. 选中态只有「圈里多一个点」，在米色纸面上对比度很低，扫不出来；
+   3. 「范围」与「方式」两组各排一行圆点，看着像同一组里的六个选项。
+
+   分段控件把「选一个」画成一块连着的外框：选中的那段填主色。
+   一眼看得出「这组里有几个选项、我选了第几个」。
+
+   底层**仍是原生 radio**：包在 <label> 里、被视觉隐藏。
+   点整段就能选中、读屏读得到、键盘走得了 —— 行为全是平台的，
+   我们只是换了一张脸。 */
+.seg {
+  display: flex;
+  align-items: center;
+}
+
+.seg-group {
+  display: flex;
+  align-items: stretch;
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--bg-soft);
+  padding: 3rpx;
+  overflow: hidden;
+}
+
+/* 一排里只有两段时给它撑满，不然两小段并排看着像被挤在角落 */
+.seg.fill .seg-group {
+  flex: 1;
+}
+
+.seg.fill .seg-item {
+  flex: 1;
+  justify-content: center;
+}
+
+.seg-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 0 20rpx;
+  height: 56rpx;
+  border-radius: var(--radius-pill);
+  transition: background-color var(--t-press), color var(--t-press);
+}
+
+/* 选中态**填成主色**。只把字变色太轻 —— 一圈米色纸面上扫不出选中了哪一段 */
+.seg-item.on {
+  background: var(--green);
+}
+
+.seg-item.on .seg-text {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 图标靠 --ic 取色，选中时整块换成白色 */
+.seg-item.on .seg-icon,
+.seg-item.on .seg-icon::before,
+.seg-item.on .seg-icon::after {
+  --ic: #fff;
+}
+
+/* 原生 radio 只留行为、不留外观。
+   不用 display:none —— 那会让部分机型的读屏也读不到这一项 */
+.seg-radio {
+  position: absolute;
+  width: 1rpx;
+  height: 1rpx;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.seg-text {
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  letter-spacing: 1rpx;
+  white-space: nowrap;
+}
+
+/* ---------- 等长选项的格子 ----------
+   年级（12 个）、学期（2 个）、每日首数（5 个）、题型（5 个）这类：
+   选项等长、数量不少，排成网格比排成一列省一半高度。
+   每一格是一个胶囊 —— 形状本身说「这是个能点的选项」，填主色说「选的是它」。
+
+   为什么不给每格配一个原生圆点/方框：它吃掉横向空间（12 个年级就得多一列），
+   还跟第一行文字对齐、第二行缩进，看着像它只管辖半格。
+   格子排成矩阵这件事，已经把「一组、选一个（或几个）」说清楚了。 */
+.chip-group {
+  display: grid;
+  gap: var(--sp-1) var(--sp-1);
+}
+
+.chip-group.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chip-group.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chip-group.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68rpx;
+  padding: 0 var(--sp-1);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  transition: background-color var(--t-press), border-color var(--t-press);
+}
+
+.chip.on {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.chip-t {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.chip.on .chip-t {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 多选的格子：形状与单选的一样，但**选中态多一个勾** ——
+   单选和多选在一屏里同时出现时（题库：范围是单选、题型是多选），
+   光看填色分不出来哪个是哪个。那一勾就是「可以多选」的唯一线索，
+   所以它必须画出来，不能省。
+
+   勾用两条边框拼（右下角一道 45° 的短折线），不引图标字体。 */
+/* 一勾两态：**没选中也要看得见**，否则「这里可以多选」就只在选中后才存在。
+   未选中给一个空心方框，选中换成实心的勾 —— 与原生复选框的语义一致，
+   只是不再站到选项前面去占地方。 */
+.chip.multi::after {
+  content: "";
+  position: absolute;
+  right: 12rpx;
+  top: 12rpx;
+  width: 14rpx;
+  height: 14rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 3rpx;
+}
+
+.chip.multi.on::after {
+  width: 16rpx;
+  height: 9rpx;
+  border: none;
+  border-left: 4rpx solid #fff;
+  border-bottom: 4rpx solid #fff;
+  border-radius: 0;
+  transform: rotate(-45deg);
+}
+
+.chip.multi.on::after {
+  border-color: #fff;
+}
+
+/* 小号：一章里连着两组（搜索页）时用，别把卡片撑高 */
+.seg-item.mini {
+  height: 48rpx;
+  padding: 0 16rpx;
+}
+
+.seg + .field-label,
+.field-label + .seg {
+  margin-top: var(--sp-1);
+}
+
+/* ---------- 图标：全用 CSS 画 ----------
+   一组图标只是为了说「这是哪一个选项」，不值得引图片资源 ——
+   主包只剩 0.7MB 余量。三种笔画足够画出这几个意思。 */
+.seg-icon {
+  position: relative;
+  flex: none;
+  width: 26rpx;
+  height: 26rpx;
+  --ic: var(--ink-2);
+}
+
+.seg-icon::before,
+.seg-icon::after {
+  content: "";
+  position: absolute;
+  background: var(--ic);
+}
+
+/* 左对齐：三道线左端齐、长短不一 */
+.ic-left::before {
+  left: 0;
+  top: 3rpx;
+  width: 26rpx;
+  height: 3rpx;
+  box-shadow: 0 8rpx 0 var(--ic), 0 16rpx 0 var(--ic);
+}
+
+.ic-left::after {
+  left: 0;
+  top: 3rpx;
+  width: 15rpx;
+  height: 3rpx;
+}
+
+/* 居中：三道线都居中、长短不一 */
+.ic-center::before {
+  left: 0;
+  top: 3rpx;
+  width: 26rpx;
+  height: 3rpx;
+  box-shadow: 0 8rpx 0 var(--ic), 0 16rpx 0 var(--ic);
+}
+
+.ic-center::after {
+  left: 5rpx;
+  top: 3rpx;
+  width: 15rpx;
+  height: 3rpx;
+}
+
+/* 不注音：一道斜杠划掉一个圆 */
+.ic-off::before {
+  left: 3rpx;
+  top: 3rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: transparent;
+  border: 3rpx solid var(--ic);
+}
+
+.ic-off::after {
+  left: 1rpx;
+  top: 11rpx;
+  width: 24rpx;
+  height: 3rpx;
+  transform: rotate(-45deg);
+}
+
+/* 生字：一个字 + 头上一点（「只标几个字」，那一点就是标记） */
+.ic-rare::before {
+  left: 8rpx;
+  top: 9rpx;
+  width: 15rpx;
+  height: 15rpx;
+  border: 3rpx solid var(--ic);
+  background: transparent;
+}
+
+.ic-rare::after {
+  left: 11rpx;
+  top: 2rpx;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  background: var(--ic);
+}
+
+/* 全文：三组「字 + 小点」横着排 */
+.ic-all::before {
+  left: 0;
+  top: 4rpx;
+  width: 7rpx;
+  height: 7rpx;
+  background: var(--ic);
+  box-shadow: 10rpx 0 0 var(--ic), 20rpx 0 0 var(--ic);
+}
+
+.ic-all::after {
+  left: 0;
+  top: 14rpx;
+  width: 26rpx;
+  height: 3rpx;
+  background: var(--ic);
+}
+
+/* 全站 / 课内：地球（圆 + 一道纬线）与 一册书（两页） */
+.ic-all-site::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 22rpx;
+  height: 22rpx;
+  border-radius: 50%;
+  background: transparent;
+  border: 3rpx solid var(--ic);
+}
+
+.ic-all-site::after {
+  left: 2rpx;
+  top: 11rpx;
+  width: 22rpx;
+  height: 3rpx;
+}
+
+.ic-course::before {
+  left: 1rpx;
+  top: 3rpx;
+  width: 24rpx;
+  height: 20rpx;
+  border: 3rpx solid var(--ic);
+  background: transparent;
+  border-radius: 2rpx;
+}
+
+.ic-course::after {
+  left: 12rpx;
+  top: 4rpx;
+  width: 3rpx;
+  height: 18rpx;
+}
+
+/* 篇名作者 / 正文全文：一行字 与 一整页字 */
+.ic-title::before {
+  left: 0;
+  top: 5rpx;
+  width: 26rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  box-shadow: 0 9rpx 0 var(--ic), 0 18rpx 0 var(--ic);
+}
+
+.ic-full::before {
+  left: 0;
+  top: 4rpx;
+  width: 12rpx;
+  height: 3rpx;
+  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic), 0 21rpx 0 var(--ic);
+}
+
+.ic-full::after {
+  left: 15rpx;
+  top: 4rpx;
+  width: 11rpx;
+  height: 3rpx;
+  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic), 0 21rpx 0 var(--ic);
 }

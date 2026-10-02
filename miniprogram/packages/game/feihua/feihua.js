@@ -6,7 +6,11 @@ const store = require("../../../utils/store");
 Page({
   data: {
     kind: "look",
-    kinds: [{ key: "look", label: "查一查" }, { key: "level", label: "闯关" }],
+    // 图标名按 key 取（.ic-* 画法在 app.wxss「分段控件」一节）
+    kinds: [
+      { key: "look", label: "查一查", icon: "title" },
+      { key: "level", label: "闯关", icon: "full" }
+    ],
 
     levels: feihua.LEVELS,
     level: "normal",

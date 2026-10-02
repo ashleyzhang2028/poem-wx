@@ -35,26 +35,208 @@ const CLAUSE_SPLIT = /[\n，。！？；：、]/;
  * @param {string} text 一份正文
  * @returns {{line: string, s: string[]}[]}
  */
+function splitClauses(line) {
+  // 切句时把标点**留在上一句的尾巴上**：`鹅，鹅，鹅，` 切成
+  // `鹅，` `鹅，` `鹅，`，而不是三个光秃秃的 `鹅`。
+  // 丢标点会当场露馅 —— 正文里「鹅鹅鹅」读起来就是缺了一个字。
+  const s = [];
+  let buf = "";
+  for (const ch of String(line)) {
+    if (CLAUSE_SPLIT.test(ch)) {
+      if (buf.trim()) s.push(buf.trim() + ch);
+      buf = "";
+    } else {
+      buf += ch;
+    }
+  }
+  if (buf.trim()) s.push(buf.trim());
+  return s;
+}
+
+/**
+ * 把一段正文切成「行 → 句」。
+ *
+ * 拿它直接 `split("\n")` 是不等价的：语料里一行往往承好几个句子
+ * （《琵琶行》一整段诗序就是一行、《长恨歌》两句一行）。
+ *
+ * 空行**保留成空数组**：那是语料里的一道真换行，不是「什么都没写」。
+ *
+ * `s` 里的每一句**带尾标点**（`鹅，` 而不是 `鹅`），拼回去就等于 `line`。
+ * 想按裸句判定（比如「这两句是不是同一句」），自己去标点，别在这另切一遍。
+ *
+ * @param {string} text 一份正文
+ * @returns {{line: string, s: string[]}[]}
+ */
 function splitLines(text) {
   return String(text == null ? "" : text)
     .split("\n")
-    .map((line) => {
-      // 切句时把标点**留在上一句的尾巴上**：`鹅，鹅，鹅，` 切成
-      // `鹅，` `鹅，` `鹅，`，而不是三个光秃秃的 `鹅`。
-      // 丢标点会当场露馅 —— 正文里「鹅鹅鹅」读起来就是缺了一个字。
-      const s = [];
-      let buf = "";
-      for (const ch of String(line)) {
-        if (CLAUSE_SPLIT.test(ch)) {
-          if (buf.trim()) s.push(buf.trim() + ch);
-          buf = "";
-        } else {
-          buf += ch;
-        }
-      }
-      if (buf.trim()) s.push(buf.trim());
-      return { line: line, s: s };
-    });
+    .map((line) => ({ line: line, s: splitClauses(line) }));
+}
+
+/* ============================================================
+   版式：正文怎么排。
+   ============================================================ */
+
+/**
+ * 句读标点。与 CLAUSE_SPLIT 的分别：那个**包含换行**，用来切分；
+ * 这个只判「一句念完了没有」，所以不含换行。
+ *
+ * 顿号 `、` 不在里面 —— 它连的是并列的字词（`五花马、千金裘`），
+ * 不是句子；整段古文若按它断，会碎成一地词。
+ */
+const PUNCT_END = /[，。！？；：]/;
+const PUNCT_SOFT = /[，、：；]/;
+
+/** 短句搁在一行里不像「一句」，像被切了一半；凑够两行才另起一行 */
+const MIN_VERSE = 4;
+
+/** 一行两块是排版的常态（`床前明月光，疑是地上霜。`），不是长诗 */
+const MAX_STANZA_BLOCK = 2;
+/** 连着的短句超过这个数，再不分段就是一面墙 */
+const WALL_RUN = 6;
+/** 一段里块数够多却一句也没收尾（整段没有句号），也该分段 */
+const RUN_LIMIT = 16;
+
+/**
+ * 按句读把一行折开，**行尾必定收在句读上**。
+ *
+ * 为什么不按「，。！」断：那样《琵琶行》的序会碎成 27 行墙上贴 ——
+ * 一行一句读着像诗，句式全然不是。折开之后
+ * 「元和十年，」「予左迁九江郡司马。」各占一行，仍是散文的读法。
+ *
+ * @param {string} line 语料里的一行
+ * @returns {string[]} 若干行；拼起来逐字等于 line
+ */
+function foldClauses(clauses) {
+  const out = [];
+  let buf = [];
+  clauses.forEach((cl) => {
+    buf.push(cl);
+    // `，` 与 `。` 收行；`！？；：` 也要收 —— 「岂无山歌与村笛，呕哑嘲哳难为听！」
+    // 的叹号本来就在句尾。收行点只看**最后一个字**，不看它在行里第几个
+    const last = cl[cl.length - 1] || "";
+    if (/[，。！？；：]/.test(last)) {
+      out.push(buf);
+      buf = [];
+    }
+  });
+  if (!buf.length) return out;
+
+  /* 尾巴上那一句没有标点（语料里很常见：`……月承幌而通晖` 就断在那儿）。
+     它若自己占一行，读起来像句子被切断了 —— 而且这一行**既不是作者排的、
+     也不是我们折的**，是「折到一半停了」。并回上一行，让它跟着前一句走。 */
+  if (out.length) {
+    out[out.length - 1] = out[out.length - 1].concat(buf);
+    return out;
+  }
+  // 整行都没标点（《乡愁》的「我在这头」）：那它本来就该原样留着
+  out.push(buf);
+  return out;
+}
+
+/**
+ * 整行都是短句就不折。
+ *
+ * `杨柳青青江水平，` 单占一行是七绝的排法，折成
+ * `杨柳青青江水` / `平，` 才是真难看。长句才折 ——
+ * `元和十年，予左迁九江郡司马。` 是散文的长短句，折开才读得下去。
+ */
+function shortAll(clauses) {
+  return clauses.every((cl) => !verseLike(cl));
+}
+
+/** 这一行「看着像不像一句」（不含尾标点） */
+function verseLike(seg) {
+  return String(seg || "").replace(PUNCT_SOFT, "").length >= MIN_VERSE;
+}
+
+/** 一行里有没有「念完了」的落点。分段要按它判，不是按字数 */
+function hasStop(rows) {
+  return rows.some((seg) => PUNCT_END.test(seg[seg.length - 1] || ""));
+}
+
+/**
+ * 攒到这儿要不要分段。
+ *
+ * 两处要分段：一句一行连着排了六行以上（《琵琶行》的序）；
+ * 或者这一段里横竖没有落点（《左传》那种对白连段）。
+ * **散文的分段是作者的，语料里没有** —— 所以这里只是别让它糊成一片，
+ * 不假装还原了原文的段落。
+ *
+ * @param {string[][][]} cur 这一段已经攒下的行
+ * @param {string[][]} next 这一行折出来的行
+ * @returns {boolean} 攒完这一行是否要收段
+ */
+function wallAfter(cur, next) {
+  if (!next.length) return false;
+  const all = cur.concat(next);
+  // 连着几句一行一行排下来
+  let run = 0;
+  for (let i = all.length - 1; i >= 0; i--) {
+    const row = all[i];
+    if (row.length === 1 && verseLike(row[0]) && hasStop(row)) run++;
+    else break;
+  }
+  if (run >= WALL_RUN) return true;
+  if (all.length >= RUN_LIMIT && hasStop(all[all.length - 1])) return true;
+  return false;
+}
+
+/**
+ * 正文排版。**阅读页的正文 / 注音 / 朗读、飞花令的句子全走它**。
+ *
+ * 返回值里两个字段各管一件事：
+ *   `paras` 段落 → 行 → 句，给**注音与朗读**用（逐字标音、逐句合成都要到句）；
+ *   `rows`  拍平的行，给**正文**用（一行一个块，才排得出版式）。
+ * 两者都是同一份切分，不会两边对不上。
+ *
+ * 散文行**保持原样、不折**：折开等于替作者决定句子在哪收，
+ * 《左传》《世说新语》那种语料本来就是照原文的句读排的。
+ *
+ * @param {string} text 一份正文
+ * @returns {{rows: string[], paras: string[][][], verse: boolean}}
+ */
+function layout(text) {
+  const lines = splitLines(text);
+  const rows = [];
+  const paras = [];
+
+  /* 攒一段：把**连续的几行**拼成一段，直到遇上一道空行、或者
+     一句一行一路排下去排成了一道墙（长诗的序、长篇对白就这样分段）。
+     上一版是「一行一段」—— 四句的绝句会变成四段，每段一行，
+     行距叠上段距，一屏排不下四句话。 */
+  let cur = [];
+
+  const flush = () => {
+    if (cur.length) paras.push(cur);
+    cur = [];
+  };
+
+  lines.forEach((ln) => {
+    if (!ln.s.length) {
+      // 空行**保留成空数组**：那是语料里的一道真换行，不是「什么都没写」。
+      // 它是作者分的段，段落到此为止
+      flush();
+      rows.push("");
+      return;
+    }
+    // 一行只有一句、而且这一句够长 —— 作者本来就是这么排的，别动它。
+    // 判据用句子而不是原文行：原文行尾可能带空白，拿它判会忽长忽短。
+    // 短句（`白毛浮绿水，`）不折：七言拆成两行是反的，它自己就是一行
+    const verse = ln.s.length === 1 || shortAll(ln.s);
+    const cut = verse ? [ln.s] : foldClauses(ln.s);
+    cut.forEach((g) => rows.push(g.join("")));
+
+    // 这一行与上一行之间要不要分段
+    const closeHere = wallAfter(cur, cut);
+    cur = cur.concat(cut);
+    if (closeHere) flush();
+  });
+  flush();
+
+  // 段落收尾：去掉空段落，也去掉空行留下的尾巴
+  while (paras.length && !paras[paras.length - 1].length) paras.pop();
+  return { rows: rows, paras: paras, verse: rows.length > lines.length };
 }
 
 const BOOKS_DIR = "data/books/";
@@ -223,6 +405,8 @@ function grouped(list) {
 module.exports = {
   CLAUSE_SPLIT,
   splitLines,
+  splitClauses,
+  layout,
   books,
   bookById,
   ownerOf,

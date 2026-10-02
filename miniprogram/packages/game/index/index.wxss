@@ -83,7 +83,7 @@
   color: var(--ink-3);
 }
 
-/* 令字格：外框与圆点在 app.wxss 里定一次（.char / .char-radio），
+/* 令字格：外框在 app.wxss 里定一次（.char），
    这里只管这一页的排布 —— 令字比飞花令页少一格小字，所以格子矮一点 */
 .char-count {
   display: block;
