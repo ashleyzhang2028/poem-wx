@@ -19,6 +19,7 @@
 
     <!-- 阅读偏好：正文之间最不该塞一排自绘按钮，全换成原生单选 -->
     <view class="prefs">
+      <!-- 对齐：原生 radio，两个值横向排 —— 单选项，不改版式 -->
       <radio-group class="pref-group" bindchange="onAlign">
         <label class="pref-item" wx:for="{{aligns}}" wx:key="key">
           <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
@@ -26,6 +27,7 @@
         </label>
       </radio-group>
 
+      <!-- 字号：原生 slider。它是连续量，用滑块比「A－/A＋」两粒按钮更贴手感 -->
       <view class="pref-font">
         <slider class="pref-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
                 block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"

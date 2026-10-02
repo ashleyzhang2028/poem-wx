@@ -8,7 +8,7 @@
     </view>
 
     <view class="card">
-      <text class="opt-label">玩法</text>
+      <text class="field-label">玩法</text>
       <radio-group class="opt-group" bindchange="onKind">
         <label class="pref-item" wx:for="{{kinds}}" wx:key="key">
           <radio value="{{item.key}}" checked="{{kind === item.key}}" color="#2f6055" />

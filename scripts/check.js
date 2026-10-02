@@ -1549,6 +1549,106 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("页头不与导航栏标题重复", dupes.length === 0, dupes.join("; "));
 }
 
+/**
+ * V6.8 控件与它的文字之间要有默认间距。
+ *
+ * Issue #12 的原话：「复选框单选框和右侧文字之间应该有默认间距」。
+ * 这不是审美，是**原生控件不带外边距**这件事 —— 紧贴是浏览器的排法，
+ * 不是控件的排法，而每一页都有人会忘记补，所以补在控件自己身上：
+ * 只要页面上出现裸的 <radio> / <checkbox>，它就一定已经被全局规则照顾到。
+ *
+ * 判据两条：
+ *   1. app.wxss 里必须有一条规则，按控件标签给 margin-right
+ *   2. 页面不许再给 .opt-main 补 padding-left 之类的**第二份**间距
+ *      ——两处叠加会变成 24rpx，比目的多出一倍
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+
+  // 1) 控件标签级的间距规则
+  const rule = /\.native-label\s+radio[\s\S]{0,400}?margin-right\s*:/.test(appWxss);
+  ok("原生选项与文字之间有全局默认间距", rule,
+    "app.wxss 里找不到给 radio/checkbox 的 margin-right");
+
+  // 2) 页面不许再叠一份：opt-main / pref-main 上的左内边距是重复间距
+  const doubled = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const re = /\.[\w-]*(opt-main|pref-main|opt-text)[^{]*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      if (/padding-left\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
+    }
+  });
+  ok("选项文字没有第二份间距", doubled.length === 0, doubled.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.9 按钮文字必须垂直居中，且**不许靠「height 比 line-height 大几 rpx」去凑**。
+ *
+ * 这一条是 Issue #12 点名的：「按钮文字应该垂直居中」。
+ * 网页版那套写法（height:88rpx + line-height:84rpx）在小程序里会偏 ——
+ * 原生 button 的默认行高、字重、系统字体三者任一变了，偏的方向还不一样。
+ * 居中的正解是 flex，所以这里守两件事：
+ *   1. .btn 必须是 flex + align-items:center
+ *   2. 页面样式表里不许再出现「按钮类的 height 与 line-height 差几 rpx」那种写法
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const btnBlock = /\.btn\s*\{([^}]*)\}/.exec(appWxss);
+  ok("按钮是 flex 居中", !!btnBlock && /display\s*:\s*flex/.test(btnBlock[1]) && /align-items\s*:\s*center/.test(btnBlock[1]),
+    btnBlock ? "当前 .btn 不是 flex 居中" : "app.wxss 里找不到 .btn");
+
+  // 页面里写按钮时不许再用 line-height 凑居中
+  const cheapCentering = [];
+  const pageFiles = pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]);
+  // 全局样式表也算一份 —— 它自己就会漂
+  pageFiles.push(["app.wxss", appWxss]);
+  pageFiles.forEach((pair) => {
+    const p = pair[0];
+    const wxss = pair[1];
+    // 找「同一块里既有 height 又有 line-height，且两者差 1~8rpx」的写法
+    const re = /\{([^{}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const body = m[1];
+      const h = /(^|[^-])height\s*:\s*([\d.]+)rpx/.exec(body);
+      const lh = /line-height\s*:\s*([\d.]+)rpx/.exec(body);
+      if (!h || !lh) continue;
+      const diff = Math.abs(Number(h[2]) - Number(lh[1]));
+      if (diff > 0 && diff <= 8) cheapCentering.push(p + " → h=" + h[2] + " lh=" + lh[1]);
+    }
+  });
+  ok("没有用 line-height 凑按钮居中", cheapCentering.length === 0, cheapCentering.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.10 同级文字只有一套字号与颜色。
+ *
+ * 「同级文字字体大小颜色的统一」这条没法全自动断言，但**同一类标签**可以：
+ * 字段名、卡片标题、说明文字、脚注这几类各自只该有一种样子。
+ * 判据：这些类名不许在页面样式表里被重写 font-size / color。
+ */
+{
+  const SHARED = ["field-label", "card-title", "hint", "empty-text", "empty-mark", "tag"];
+  const rewrites = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    SHARED.forEach((cls) => {
+      // 只看单独成块的 .cls{...}，不算后代选择器（.card-title.bar 这种是修饰，允许）
+      const re = new RegExp("(^|\\})\\s*\\." + cls + "\\s*\\{([^}]*)\\}", "g");
+      let m;
+      while ((m = re.exec(wxss))) {
+        const body = m[2];
+        // empty-mark 的直径本来就是每页自己定的（印章大小），只管字号
+        const hit = /font-size\s*:/.test(body) || /\.(empty-text|hint|field-label|card-title)\s*\{[^}]*color\s*:/.test(body);
+        if (hit) rewrites.push(p + " → ." + cls);
+      }
+    });
+  });
+  ok("同级文字的字号颜色只在全局定一次", rewrites.length === 0, rewrites.slice(0, 6).join("; "));
+}
+
 // V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
 {
   const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");

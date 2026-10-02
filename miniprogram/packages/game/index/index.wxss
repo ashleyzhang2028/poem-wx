@@ -154,12 +154,10 @@
   padding: 8rpx 0 24rpx;
 }
 
+/* 翻页键：它同时挂着 .btn.mini，居中的事由 .btn 管；
+   这里只把左右衬得宽一点，翻页这种连续动作手要放得下 */
 .pg {
-  font-size: var(--fs-body);
-  color: var(--green);
-  padding: 0 32rpx;
-  height: 64rpx;
-  line-height: 64rpx;
+  padding: 0 var(--sp-4);
 }
 
 .pg[disabled] {
