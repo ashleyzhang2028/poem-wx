@@ -173,7 +173,11 @@
 
 /* ---------- 背诵 ----------
    三个动作按「记住程度」从低到高排，配色也按这个顺序给：
-   忘记是朱砂、模糊是琥珀、记得是主色。 */
+   忘记是朱砂、模糊是琥珀、记得是主色。
+
+   高度用 --h-act，与主按钮同高（88rpx）。上一版是 112rpx —— 三个并排
+   像三块砖，而每块里只有两个字，一屏被它们吃掉一大截。
+   「点着舒服」的最低标准是不小于 88rpx，往上是浪费，不是体贴。 */
 .recite-head {
   display: flex;
   align-items: center;
@@ -196,12 +200,13 @@
 
 .actions {
   display: flex;
+  align-items: center;
   gap: var(--sp-2);
 }
 
 .act {
   flex: 1;
-  height: 112rpx;
+  height: var(--h-act);
   display: flex;
   align-items: center;
   justify-content: center;

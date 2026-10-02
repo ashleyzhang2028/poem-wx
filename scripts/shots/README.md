@@ -13,6 +13,23 @@ node scripts/shots/out/all.js      # 逐屏截图到 out/shots/
 拿到最终 `data`；再按 `wx:if` / `wx:elif` / `wx:else` / `wx:for` 把 WXML 编译成
 HTML，套进一个 390×844 的手机壳。`rpx → px` 按 390/750 换算。
 
+## 篇名宋体：预览要看得见
+
+`--font-poem` 的第一位是外挂名 `Kuibu Serif`，真机上由 `wx.loadFontFace`
+注册（见 `miniprogram/utils/font.js`）。**这个容器里没有中文宋体**，
+`render.js` 若不做处理，标题会退回文泉驿黑体 —— 那样看截图就分不清
+「标题到底是不是宋体」。
+
+所以预览会把本机的 Noto Serif SC 注册成同名：
+
+```bash
+cp <poem 仓库>/fonts/NotoSerifSC-{400,600}.woff2 scripts/shots/out/serif-{400,600}.woff2
+node scripts/shots/render.js   # 会打印「预览已注入篇名宋体」
+```
+
+没有这两个文件也能跑，只是标题的字形不真 —— 布局仍然是真的。
+文件在 `.gitignore` 里，不入库。
+
 ## 它不是什么
 
 **不替代真机。** 布局、配色、文案、显隐口径是真的；原生控件的外观、字体回退、
