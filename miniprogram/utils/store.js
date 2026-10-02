@@ -215,6 +215,32 @@ function saveProfile(patch) {
   return next;
 }
 
+/**
+ * 头像取哪一张。**规矩只有一句：自己传的那张最优先。**
+ *
+ *   avatarLocal  用户在本机传/裁过的图（chooseAvatar 或相册）—— 排第一
+ *   avatarUrl    微信身份给的那张（登录时下发 / 用户从微信取）—— 兜底
+ *   都没有       页面显首字印（不引默认头像图，一个字最省）
+ *
+ * 为什么分开存而不是共用一个字段：**它们是两个来源，来源不同、优先级不同**。
+ * 挤进一个字段，就分不清「这张是微信的、用户只是没换」还是「这张是用户
+ * 特意换的」—— 前者该在下次登录时被微信的新头像刷新，后者绝不能被动。
+ * 网页版那边是一模一样的口径（js/avatar.js：本机那张优先于账号那张）。
+ *
+ * 用户说的「子用户上传头像再用子用户头像」就是这个意思：本机那份**盖过**
+ * 微信那份。小程序端没有家庭子用户（见 docs/todo.md #8），
+ * 所以「子用户」在这里落成「本机该用户自己传的那张」。
+ */
+function avatarSrc() {
+  const p = profile();
+  return p.avatarLocal || p.avatarUrl || "";
+}
+
+/** 有没有自己传过头像 —— 决定设置里「移除头像」那一项显不显示 */
+function hasLocalAvatar() {
+  return !!profile().avatarLocal;
+}
+
 /** 自选集合：教材之外的额外篇目，可建多个 */
 function collections() {
   const raw = read(KEYS.collections, null);
@@ -310,6 +336,8 @@ module.exports = {
   dayKey,
   profile,
   saveProfile,
+  avatarSrc,
+  hasLocalAvatar,
   collections,
   saveCollections,
   collectionsAt,

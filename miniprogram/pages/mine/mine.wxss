@@ -92,12 +92,32 @@
   margin-top: var(--sp-4);
 }
 
-.profile-row {
+/* 头像那一行：左边说「现在这张是哪来的」，右边两个小按钮（换 / 用微信）。
+   与 .row 同一口径（一行一件可操作的事），但不带「›」——
+   它不是一个跳转入口，而是就地操作。 */
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1rpx solid var(--line-2);
+}
+
+.avatar-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar-src {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: 2rpx;
 }
 
 .nick-input {
-  margin-top: var(--sp-2);
+  margin-top: 6rpx;
   height: var(--h-field);
   padding: 0 var(--sp-4);
   background: var(--sink);

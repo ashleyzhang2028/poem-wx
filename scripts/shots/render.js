@@ -89,7 +89,10 @@ function flattenCss(file, seen) {
 const TOKENS = flattenCss(path.join(ROOT, "styles/tokens.wxss"));
 const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g, "");
 const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
-  + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"));
+  + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
+  // 自绘底栏也是组件，样式同样要进预览 —— 它要是漏了，底栏在截图里
+  // 就是个没有图标的灰条，看图的人会以为「图标没做」
+  + flattenCss(path.join(ROOT, "custom-tab-bar/index.wxss"));
 
 /**
  * ⚠️ 预览把 <radio> 编译成 <div class="n-radio">：页面样式表里按**标签名**
@@ -107,17 +110,14 @@ const NATIVE_CSS = `
 .n-checkbox.on{background:#1c1c1e;border-color:#1c1c1e}
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
 /* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
-   少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
-.native-label .n-radio,.native-label .n-checkbox,
-.pref-item .n-radio,.pref-item .n-checkbox,
-.opt-row .n-radio,.opt-row .n-checkbox{margin-right:var(--sp-2)}
-.native-group.grid .native-label .n-radio,.native-group.grid .native-label .n-checkbox{margin-right:var(--sp-1)}
-.opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:3rpx;transform:scale(.86);transform-origin:left top}
-/* .opt-row.active 的圆点不再右移：页面样式表已经不挪它了（挪了会横跳），
-   镜像里也必须不挪 —— 这一条正是 V15「镜像逐条对齐」要守的那类
-   漏改：页面改了、镜像没改，预览就继续骗人。 */
-.opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:0}
-.pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
+   少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。
+
+   Issue #12 之后全站「选一个」都收成了胶囊：原生 radio / checkbox 一律
+   视觉隐藏（.seg-radio），整段/整格才是点击目标。所以这里第一件事是
+   **把镜像里的圆点也藏起来** —— 不藏的话预览里会多出一圈圆点，
+   看着比真机「多一个控件」，又变成另一种说谎。 */
+.seg-radio{position:absolute;width:1rpx;height:1rpx;opacity:0;pointer-events:none}
+.seg-radio.n-radio,.seg-radio.n-checkbox,.seg-radio .n-radio,.seg-radio .n-checkbox{display:none}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
 .n-switch.on{background:#1c1c1e}
@@ -147,9 +147,9 @@ body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei
 .navbar .menu{position:absolute;right:12px;top:8px;width:78px;height:28px;border-radius:14px;border:1px solid rgba(28,28,30,.2);display:flex;align-items:center;justify-content:space-around;opacity:.6}
 .navbar .menu i{width:4px;height:4px;border-radius:50%;background:#1c1c1e;display:block}
 .screen{height:760px;overflow-y:auto;overflow-x:hidden}
-.tabbar{height:52px;background:#ffffff;border-top:1px solid #ececef;display:flex;align-items:center;font-size:11px;color:#9ca3af}
-.tabbar div{flex:1;text-align:center}
-.tabbar .on{color:#1c1c1e;font-weight:600}
+/* 预览里的底栏直接用组件自己的样式（custom-tab-bar/index.wxss 已并进 COMP_CSS），
+   这里只把它的定位改成「随流」—— 真机是 fixed，预览里让它落在屏幕块的最下面 */
+.device .tabbar{position:static;height:56px}
 .caption{font-size:12px;color:#5a5a5a;text-align:center;margin-top:8px}
 `;
 
@@ -170,6 +170,27 @@ function screenCss(cfg, pageCss) {
 }
 
 function expandComponents(node, data, P) { return node; }
+
+/**
+ * 底栏预览：照 custom-tab-bar/index.wxml 的**结构**生成同一份标记。
+ *
+ * 这里刻意手写而不是去解析组件 wxml —— 组件里的图标是 CSS 画的
+ * （.tab-ico-book 这些类来自 custom-tab-bar/index.wxss，已并进 COMP_CSS），
+ * 只要类名对得上，形状就是真的。V 组断言守着两边类名一致。
+ */
+function tabBarHtml(active) {
+  const list = [
+    { text: "背诵", icon: "book" },
+    { text: "课外", icon: "stack" },
+    { text: "搜索", icon: "search" },
+    { text: "我的", icon: "person" }
+  ];
+  const items = list.map((it, i) =>
+    `<div class="tab ${i === active - 1 ? "on" : ""}">`
+    + `<div class="tab-ico tab-ico-${it.icon}"></div>`
+    + `<div class="tab-text">${it.text}</div></div>`).join("");
+  return `<div class="tabbar">${items}</div>`;
+}
 
 function pageHtml(cfg, data) {
   const wxmlPath = path.join(ROOT, cfg.page + ".wxml");
@@ -209,7 +230,7 @@ function pageHtml(cfg, data) {
   <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>
   <div class="screen"><style>${screenCssStr}</style>${body}</div>
   <div class="caption">${cfg.key}</div>
-  ${cfg.tab ? `<div class="tabbar">${["背诵", "课外", "搜索", "我的"].map((t, i) => `<div class="${i === cfg.tab - 1 ? "on" : ""}">${t}</div>`).join("")}</div>` : ""}
+  ${cfg.tab ? tabBarHtml(cfg.tab) : ""}
   </div>`;
 }
 

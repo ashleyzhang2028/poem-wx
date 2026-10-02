@@ -34,12 +34,13 @@
 
   <view class="card">
     <view class="card-title bar">取诗范围</view>
-    <radio-group class="native-group column" bindchange="onScope">
-      <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
-        <view class="opt-main">
-          <text class="opt-name">{{item.label}}</text>
-        </view>
+    <!-- 与上面的「背诵范围」用同一零件：一格一颗胶囊，只是竖排。
+         上一版这里是原生圆点行 —— 同一页里两种长相，用户说的
+         「很多选项是胶囊样式了，但背诵范围又不是」就是这一处。 -->
+    <radio-group class="chip-group list" bindchange="onScope">
+      <label class="chip {{scope === item.key ? 'on' : ''}}" wx:for="{{scopes}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
+        <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
     <text class="hint pool-hint">{{poolSize}} 首</text>
@@ -57,15 +58,15 @@
 
   <view class="card">
     <view class="card-title bar">复习算法</view>
-    <!-- 换算法不清进度：四套算法的差异只在排期，进度按新算法折算 -->
-    <radio-group class="native-group column" bindchange="onAlgo">
-      <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
+    <!-- 换算法不清进度：四套算法的差异只在排期，进度按新算法折算。
+         与「取诗范围」同一零件；锁住的那格压暗、并写明差在哪一档 -->
+    <radio-group class="chip-group list" bindchange="onAlgo">
+      <label class="chip {{item.active ? 'on' : ''}} {{item.allowed ? '' : 'locked'}}"
              wx:for="{{algos}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#1c1c1e" />
-        <view class="opt-main">
-          <text class="opt-name">{{item.name}}</text>
-          <text class="opt-desc" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
-        </view>
+        <radio class="seg-radio" value="{{item.key}}" checked="{{item.active}}"
+               disabled="{{!item.allowed}}" color="#1c1c1e" />
+        <text class="chip-t">{{item.name}}</text>
+        <text class="chip-sub" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
       </label>
     </radio-group>
 

@@ -19,6 +19,21 @@ view, text, button, input, textarea {
   padding: var(--sp-3) var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
 }
 
+/* 有底栏的那四页（背诵 / 课外 / 搜索 / 我的）：底部要多留一截 ——
+   自绘底栏是 fixed 的，不参与文档流，不留这一截最后一行会被它压住。
+   底栏高 112rpx + 安全区（见 custom-tab-bar/index.wxss），
+   这里垫同样的一截；`.safe-bottom` 那 24rpx 仍在，两者相加正好。 */
+.page.has-tabbar {
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+/* 有底栏的页面上，页内那个 .safe-bottom 垫片是**多余的** ——
+   .has-tabbar 的底部内边距已经含了安全区与底栏高度，
+   再垫一层就是 24rpx 的空白，最后一行离底栏远了半指。 */
+.page.has-tabbar .safe-bottom {
+  display: none;
+}
+
 /* ---------- 页头 ----------
    一屏的入口，回答「我在哪、这里有什么」。
    参考图里那一屏最上面是一行小字标签 + 一个标题，没有别的装饰 ——
@@ -498,83 +513,6 @@ view, text, button, input, textarea {
   letter-spacing: var(--ls-caption);
 }
 
-/* ============================================================
-   小程序自有控件的统一口径
-   ============================================================ */
-/* 这一节是「控件用系统的、配色用这一版的」这句话的落点。
-   开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：
-   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成这一版的样子。
-
-   原生控件的交互色只能通过组件属性给（color / activeColor / selected-color），
-   属性在 WXML 里写；样式表这边只统一尺寸、圆角、字体与间距 ——
-   想靠 WXSS 改原生控件的内部结构是不被支持的，所以这里一行都不敢越界。 */
-
-.native-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4rpx var(--sp-3);
-}
-
-/* 选项多且等长时（年级、学期），排成等宽网格 ——
-   靠字宽决定占位会排得参差不齐 */
-.native-group.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
-
-.native-group.grid .native-label {
-  justify-content: flex-start;
-}
-
-/* 三列的（学期、每首数） */
-.native-group.grid.cols-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.native-group.column {
-  flex-direction: column;
-  gap: 0;
-}
-
-/* 选项与它的文字之间**要有默认间距**。
-   原生 checkbox / radio 不自带外边距 —— 它只是一块 23px 的方框，
-   紧贴文字是浏览器的排法，不是控件的排法。上一版靠 .opt-main 的
-   padding-left 兜，只兜住了「两行文字」那一种，单行的那几页就贴在一起了。
-   所以间距定在**控件自己**身上：一处生效，十三个页面都跟着对。
-
-   顺手把行高收成一条：原生控件被 transform 缩放后，行盒仍按原尺寸算高度，
-   不给 line-height 的话文字基线会跟着控件对齐跑偏。 */
-.native-label,
-.pref-item,
-.opt-row {
-  line-height: 1.4;
-}
-
-.native-label radio,
-.native-label checkbox,
-.pref-item radio,
-.pref-item checkbox,
-.opt-row radio,
-.opt-row checkbox {
-  margin-right: var(--sp-2);
-}
-
-/* 网格里最后那列不留右边距，否则整行会被顶宽 16rpx */
-.native-group.grid .native-label radio,
-.native-group.grid .native-label checkbox {
-  margin-right: var(--sp-1);
-}
-
-.native-label {
-  display: flex;
-  align-items: center;
-  min-height: 64rpx;
-  padding: 10rpx 0;
-  font-size: var(--fs-body);
-  color: var(--ink);
-}
-
 /* ---------- 字号滑块 ----------
    「A —— A」这一排。两处用到：阅读页的偏好条、通用设置的正文字号。
 
@@ -608,141 +546,6 @@ view, text, button, input, textarea {
 
 .font-a.big {
   font-size: var(--fs-lead);
-}
-
-/* ---------- 选项行 ----------
-   「选一个」的统一长相。行本身是 label[for]，点整行都能选中，
-   不用把手指对准那个小圆点。 */
-.opt-group {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.opt-row {
-  display: flex;
-  align-items: center;
-  min-height: var(--h-row);
-  /* 选中态是**一块填色的底**，所以左右要留出内边距 ——
-     不留的话这块底色与左边那道墨色竖线会一直顶到卡片的圆角上：
-     直角的色块和圆角互相裁切，露出一个豁口，看着像色块溢出了卡片。
-     这两处 padding 是给「填色的底」留的呼吸，不是排版缩进。 */
-  /* 选中态是**一块填色的底 + 左边一道墨色竖线**，两者都由行自己的盒子画。
-     盒子若顶到卡片内容区的边缘，就会与卡片的圆角互相裁切 ——
-     直角的色块被圆角切掉一角，看着像色块溢出了卡片。
-     所以每一行都让出同样的左右边距（**所有行一致**，不是只让选中的那行：
-     只让选中行的话，它一被选中，整行内容就左右横跳）。 */
-  margin: 0 var(--sp-1);
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-2);
-  border-bottom: 1rpx solid var(--line-2);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--t-press);
-}
-
-.opt-row:last-of-type {
-  border-bottom: none;
-}
-
-/* 选中：整行左移一道竖线 + 主色字。
-   只把字变色太轻，在长列表里扫不出来。
-
-   竖线走 inset box-shadow 而不是 border-left —— 加边框会把整行内容
-   往右推 6rpx，选中与未选中之间就出现了**横向跳动**：一行内容在
-   两种状态下的起点不一样，看着像整页在抖。inset 画在行内，不占位。 */
-.opt-row.active {
-  background: var(--sink);
-  box-shadow: inset 6rpx 0 0 var(--ink);
-}
-
-/* 选中行的圆点**不许移动**。
-   上一版这里写的是 `.opt-row.active radio { margin-left: 6rpx }`，
-   本意是「别让圆点被那道竖线压住」，结果是：选中行里圆点右移 6rpx、
-   它右边的标题跟着右移 6rpx —— 一列选项点来点去，整行内容在左右横跳
-   （实测 474.17 → 477.28 px），看着像整页在抖。
-   圆点与竖线的关系不靠挪圆点解决，靠给行留内边距（见 .opt-row 的 padding）——
-   竖线画在 padding 的外侧，圆点排在 padding 的内侧，天然不相交，
-   且选中与未选中**圆点位置完全一致**。 */
-.opt-row.active radio,
-.opt-row.active checkbox {
-  margin-left: 0;
-}
-
-.opt-row.active .opt-name {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.opt-row.locked {
-  opacity: .45;
-}
-
-/* opt-row 是「两行文字 + 一个圆点」。两件事要一起办对：
-
-   1. **圆点跟着第一行文字**，不是整行的垂直中心 —— 一行的中心在第一行与
-      第二行之间，圆点落在那儿看着像「选了下面那行」。用 align-self 顶到
-      行首 + 一点上边距让它与第一行文字的视觉中线齐平。
-   2. **缩放要固定原点**。原生圆点在未缩放时是一块 23px 的方框，`scale(.86)`
-      默认以中心为原点，那 3px 的溢出**是往左边去的** —— 被卡片的 padding
-      裁掉一半，看着就像圆点被切了。`transform-origin: left top` 把它压回框内。 */
-/* 圆点与第一行字的中线：这两个数不是拍的，是量出来的。
-   `.opt-name` 是 --fs-title、行高 1.4 → 行盒 ≈45rpx；
-   原生圆点 23px ≈ 44rpx，缩到 .86 → 38rpx。
-   圆心要落在行盒中线上（45 / 2 ≈ 22.5），圆点顶边 = 22.5 - 19 ≈ 3rpx。
-   字号或行高改了就一起改这两个数 —— 它们成对出现，不许只调一个。 */
-.opt-row radio,
-.opt-row checkbox {
-  flex: none;
-  align-self: flex-start;
-  transform: scale(.86);
-  transform-origin: left top;
-  margin-top: 3rpx;
-}
-
-/* 间距由控件自己给（见上面那组规则），这里不再补，
-   否则两处叠加会变成 24rpx —— 「一处生效」才是能守住的那种写法 */
-.opt-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.opt-name {
-  display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-title);
-  color: var(--ink);
-}
-
-.opt-desc {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  margin-top: 6rpx;
-  line-height: 1.6;
-}
-
-/* 横排的单选项（范围、模式、筛选这种一行放得下的） */
-.pref-item {
-  display: flex;
-  align-items: center;
-  min-height: 60rpx;
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  margin-right: var(--sp-3);
-}
-
-.pref-item radio,
-.pref-item checkbox {
-  transform: scale(.8);
-}
-
-/* 横排筛选条：内容多时横向滚，不折成两行把版式撑乱 */
-.chip-row {
-  white-space: nowrap;
-  margin-bottom: var(--sp-2);
-}
-
-.chip-row .pref-item {
-  display: inline-flex;
-  margin-right: var(--sp-2);
 }
 
 /* ---------- 字段行（键值对）---------- */
@@ -955,9 +758,6 @@ view, text, button, input, textarea {
 
 .row,
 .kv,
-.native-label,
-.pref-item,
-.opt-row,
 .field,
 .search,
 .pager {
@@ -1041,7 +841,7 @@ view, text, button, input, textarea {
   align-items: center;
   gap: 8rpx;
   padding: 0 22rpx;
-  height: 56rpx;
+  height: var(--h-opt-seg);
   border-radius: var(--radius-pill);
   transition: background-color var(--t-press), color var(--t-press);
 }
@@ -1124,7 +924,7 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 76rpx;
+  min-height: var(--h-opt);
   padding: 0 var(--sp-1);
   border: 1rpx solid transparent;
   border-radius: var(--radius-sm);
@@ -1149,6 +949,59 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
+/* ---------- 竖排的胶囊格（一格一行、占满宽度）----------
+   「取诗范围」「复习算法」这两组：选项比学期/年级长（「小学+初中随机」
+   「艾宾浩斯遗忘曲线」），排成网格会挤成两行、每格宽度不一。
+   但它们**仍然是同一件事**（选一个），所以形状不能变 ——
+   仍旧是一格一颗胶囊，只是这一组竖着排、每格占满一行。
+
+   为什么不留原生圆点那一版：它和上面的胶囊格是**两种长相**，
+   同一页里「背诵范围」是胶囊、「取诗范围」是圆点，用户说的
+   「很多选项是胶囊样式了，但背诵范围和题型等等选项又不是胶囊样式」
+   就是这一处。现在一页里只有一种零件，只是排法不同。 */
+.chip-group.list {
+  grid-template-columns: 1fr;
+  gap: var(--sp-1);
+}
+
+/* 竖排格：文字靠左，高度**与网格格一模一样**（同为 --h-opt）。
+   它做成 column 是为了能带一行小字（锁住的算法写「差在哪一档」）；
+   不带小字时，column + center 排出来仍是垂直居中、与网格格等高。
+
+   ⚠️ 上下**不加内边距** —— 只靠 min-height 撑。加了内边距它就比网格格
+   高出一截，同一页里两种高度（用户问的「高度、大小、padding 是不是一致」
+   正是这一处）。带小字那格让它自然长高，这是唯一允许的例外。 */
+.chip-group.list .chip {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 var(--sp-4);
+  min-height: var(--h-opt);
+}
+
+/* 竖排格里文字靠左；选中态同样填墨黑，与网格格一致 */
+.chip-group.list .chip-t {
+  text-align: left;
+}
+
+.chip-sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: 4rpx;
+  line-height: 1.4;
+}
+
+.chip.on .chip-sub {
+  color: var(--on-ink);
+  opacity: .7;
+}
+
+/* 锁住的那一格（能力不够，点了也没用）：整格压暗，且**不给按下反馈** */
+.chip.locked {
+  opacity: .45;
+}
+
 /* 多选的格子：形状与单选的一样，但**选中态多一个勾** ——
    单选和多选在一屏里同时出现时（题库：范围是单选、题型是多选），
    光看填色分不出来哪个是哪个。那一勾就是「可以多选」的唯一线索，
@@ -1161,26 +1014,28 @@ view, text, button, input, textarea {
 .chip.multi::after {
   content: "";
   position: absolute;
-  right: 12rpx;
-  top: 12rpx;
-  width: 14rpx;
-  height: 14rpx;
+  right: 10rpx;
+  top: 10rpx;
+  width: 12rpx;
+  height: 12rpx;
   border: 2rpx solid var(--ink-4);
   border-radius: 3rpx;
 }
 
+/* 选中：空心方框换成实心勾。
+   勾由两条边拼出来（左 + 下，再转 -45°），所以它的**尺寸要比方框小一点**、
+   位置也要往右下挪一点 —— 旋转是绕中心转的，不挪的话勾尖会翘出格子角。
+   它是「这一格可多选」的唯一线索，所以未选中时那个方框也必须画出来。 */
 .chip.multi.on::after {
-  width: 16rpx;
-  height: 9rpx;
+  right: 12rpx;
+  top: 13rpx;
+  width: 15rpx;
+  height: 8rpx;
   border: none;
-  border-left: 4rpx solid var(--on-ink);
-  border-bottom: 4rpx solid var(--on-ink);
+  border-left: 3rpx solid var(--on-ink);
+  border-bottom: 3rpx solid var(--on-ink);
   border-radius: 0;
   transform: rotate(-45deg);
-}
-
-.chip.multi.on::after {
-  border-color: var(--on-ink);
 }
 
 /* 小号：一章里连着两组（搜索页）时用，别把卡片撑高 */

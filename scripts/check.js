@@ -1753,29 +1753,33 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
  * 只要页面上出现裸的 <radio> / <checkbox>，它就一定已经被全局规则照顾到。
  *
  * 判据两条：
- *   1. app.wxss 里必须有一条规则，按控件标签给 margin-right
- *   2. 页面不许再给 .opt-main 补 padding-left 之类的**第二份**间距
- *      ——两处叠加会变成 24rpx，比目的多出一倍
+ *   1. 选项里的原生控件一律视觉隐藏（.seg-radio）—— 整格才是点击目标，
+ *      「圆点紧贴文字」这件事因此不存在
+ *   2. 页面不许再给 .chip / .seg-item 补一份左右内边距
+ *      ——两处叠加会比目的多出一倍
  */
 {
-  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
-  // 1) 控件标签级的间距规则
-  const rule = /\.native-label\s+radio[\s\S]{0,400}?margin-right\s*:/.test(appWxss);
-  ok("原生选项与文字之间有全局默认间距", rule,
-    "app.wxss 里找不到给 radio/checkbox 的 margin-right");
+  // 1) 选项里的原生控件一律视觉隐藏 —— 间距问题因此**不再存在**：
+  //    整格（整段）都是点击目标，文字与边框之间的间距由 .chip / .seg-item 的
+  //    padding 一处给，不再有「圆点紧贴文字」这回事。
+  const hidden = /\.seg-radio\s*\{[^}]*opacity\s*:\s*0/.test(appWxss);
+  ok("选项里的原生控件是视觉隐藏的（不再有圆点紧贴文字）", hidden,
+    "app.wxss 里 .seg-radio 没把原生控件藏起来");
 
-  // 2) 页面不许再叠一份：opt-main / pref-main 上的左内边距是重复间距
+  // 2) 全站只有一套胶囊内边距：.chip / .chip-group.list .chip / .seg-item。
+  //    页面不许再给选项补一份左右内边距 —— 两处叠加就比目的多一倍。
   const doubled = [];
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
-    const re = /\.[\w-]*(opt-main|pref-main|opt-text)[^{]*\{([^}]*)\}/g;
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const re = /\.(chip|seg-item)[^{]*\{([^}]*)\}/g;
     let m;
     while ((m = re.exec(wxss))) {
-      if (/padding-left\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
+      if (/padding(-left|-right)?\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
     }
   });
-  ok("选项文字没有第二份间距", doubled.length === 0, doubled.slice(0, 6).join("; "));
+  ok("选项的内边距只在 app.wxss 定一次（页面不叠第二份）", doubled.length === 0, doubled.slice(0, 6).join("; "));
 }
 
 /**
@@ -2721,38 +2725,42 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
-// 3) 镜像与页面逐条对齐：margin-left / margin-right 两边必须一样
+// 3) 镜像与页面逐条对齐：分段/胶囊里的原生控件一律视觉隐藏，两边说同一件事。
+//
+//    Issue #12 之后，全站「选一个」都收成了胶囊（分段 / 格子），
+//    原来那套裸的圆点行（.opt-row）整组撤掉了。现在页面里出现原生
+//    radio / checkbox 的地方，无一例外都是 .seg-radio —— 只留行为、不留外观。
+//    所以这一条改成守「视觉隐藏」这件事：它一旦丢了，原生圆点会重新冒出来，
+//    和胶囊并排 —— 那正是用户说「选项也不统一」的样子。
 {
-  const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
-  ok("预览里有原生控件的等价样式（V5 那条的老素材，这里再取一次）", !!nativeBlock);
-  const mirror = nativeBlock ? nativeBlock[1] : "";
   const mirrorRules = {};
-  (mirror.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
-    const i = blk.indexOf("{");
-    const sel = blk.slice(0, i).replace(/\s+/g, "");
-    const body = blk.slice(i + 1, blk.lastIndexOf("}"));
-    const ml = /margin-left\s*:\s*([^;]+)/.exec(body);
-    const mr = /margin-right\s*:\s*([^;]+)/.exec(body);
-    if (!ml && !mr) return;
-    mirrorRules[sel] = { ml: ml && ml[1].trim(), mr: mr && mr[1].trim() };
+  const nativeBlock2 = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
+  const mirror2 = nativeBlock2 ? nativeBlock2[1] : "";
+  (mirror2.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
+    const i2 = blk.indexOf("{");
+    const sel = blk.slice(0, i2).replace(/\s+/g, "");
+    const body = blk.slice(i2 + 1, blk.lastIndexOf("}"));
+    mirrorRules[sel] = body;
   });
 
-  // 页面里针对 .opt-row.active 的圆点规则：镜像必须说同一件事
-  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+  const appCss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "");
-  const actRadio = /\.opt-row\.active\s+radio[^{}]*\{([^}]*)\}/.exec(pageCssAll);
-  ok("页面里说明了「选中行的圆点不移动」", !!actRadio);
-  if (actRadio) {
-    const pageMl = (/margin-left\s*:\s*([^;]+)/.exec(actRadio[1]) || [])[1];
-    const pageMlNorm = pageMl ? pageMl.trim() : null;
-    const mirrorMl = (mirrorRules[".opt-row.active.n-radio,.opt-row.active.n-checkbox"]
-      || mirrorRules[".opt-row.active.n-radio"] || {}).ml;
-    ok("选中行圆点的 margin-left：页面与预览镜像说的是同一个数",
-      String(mirrorMl).replace(/\s+/g, "") === String(pageMlNorm).replace(/\s+/g, ""),
-      "页面 " + pageMlNorm + " / 镜像 " + mirrorMl);
-    ok("选中行圆点不许右移（右移会让整行内容横跳）",
-      pageMlNorm === "0", String(pageMlNorm));
+  const segRadio = /\.seg-radio\s*\{([^}]*)\}/.exec(appCss);
+  ok("原生控件在选项里只留行为、不留外观（.seg-radio 视觉隐藏）", !!segRadio);
+  if (segRadio) {
+    const body = segRadio[1];
+    ok("隐藏的 radio 不许用 display:none（部分机型读屏会读不到）",
+      !/display\s*:\s*none/.test(body), body.trim());
+    ok("隐藏的 radio 尺寸收成 1rpx", /width\s*:\s*1rpx/.test(body) && /height\s*:\s*1rpx/.test(body));
   }
+
+  // 镜像里也要有同一份 —— 否则预览里的原生圆点会显出来，看着比真机「多一圈」
+  const mirrorSeg = mirrorRules[".seg-radio"];
+  ok("预览镜像里也有 .seg-radio 的隐藏规则", !!mirrorSeg);
+
+  // 页面里不许再有裸的圆点行（.opt-row 是这一版撤掉的长相）
+  const pagesCss = pages.map((p2) => fs.readFileSync(path.join(ROOT, p2 + ".wxss"), "utf8")).join("\n");
+  ok("页面样式表里不再有 .opt-row（圆点行已并入胶囊）", !/\.opt-row\b/.test(appCss + pagesCss));
 }
 
 /**
@@ -2898,6 +2906,168 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     }
   });
   ok("按钮文案是短句（不超过 12 个可见字）", longBtn.length === 0, longBtn.slice(0, 5).join(" | "));
+}
+
+/**
+ * V19. 自绘底栏（Issue #12 第三次追问：导航栏图标）。
+ *
+ * 用户原话：「导航栏几何按钮明明文字上面有图标的，现在好像没有，例如 我的」。
+ * 原生 tabBar 只认**图片**（iconPath / selectedIconPath），而本项目一条图片
+ * 资源都不引（主包余量，也免多套倍图）—— 图标一律 CSS 画。所以底栏整条自绘。
+ *
+ * 自绘的代价是「高亮不再由平台管」：每个 tab 页 onShow 必须自己 setActive 一次。
+ * 漏一个，那一页的底栏就亮着上一栏 —— 这种错在预览里看不出来（预览手画了
+ * 当前项），只有真机切过去才现形。所以这里按事实守三件事：
+ *   1. custom-tab-bar 四件套齐全、app.json 里开了 custom
+ *   2. 四个 tab 页各调一次 tabbar.sync，且序号各不相同（一页一格）
+ *   3. 底栏四项都有图标类（.tab-ico-xxx），且 index.wxss 里真的画了它
+ */
+{
+  const tabRoot = path.join(ROOT, "custom-tab-bar");
+  const four = [".js", ".json", ".wxml", ".wxss"].every((ext) =>
+    fs.existsSync(path.join(tabRoot, "index" + ext)));
+  ok("自绘底栏四件套齐全", four);
+
+  const appCfg = readJson(path.join(ROOT, "app.json"));
+  ok("app.json 开启了自定义 tabBar", appCfg.tabBar && appCfg.tabBar.custom === true);
+
+  // 图标：组件里每个 icon 名，wxss 里要有一条 .tab-ico-<name> 规则
+  const barJs = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
+  const barCss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
+  const icons = [];
+  const ire = /icon:\s*"([\w-]+)"/g;
+  let im;
+  while ((im = ire.exec(barJs))) icons.push(im[1]);
+  ok("底栏每一项都配了图标", icons.length >= 4, "找到 " + icons.length + " 个");
+  const noIcon = icons.filter((n) => barCss.indexOf(".tab-ico-" + n) < 0);
+  ok("底栏图标都有画法（.tab-ico-* 在 index.wxss 里）", noIcon.length === 0, noIcon.join(","));
+
+  // 每个 tab 页 onShow 里 setActive 一次
+  const TABS = [
+    ["pages/home/home", 0],
+    ["pages/library/library", 1],
+    ["pages/search/search", 2],
+    ["pages/mine/mine", 3]
+  ];
+  const missing = [];
+  const seen = new Set();
+  TABS.forEach(([p2, idx]) => {
+    const js = fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8");
+    const m = /tabbar\.sync\(this,\s*(\d+)\)/.exec(js);
+    if (!m) missing.push(p2 + " 没调 tabbar.sync");
+    else if (Number(m[1]) !== idx) missing.push(p2 + " 序号 " + m[1] + " ≠ " + idx);
+    else seen.add(Number(m[1]));
+  });
+  ok("四个 tab 页都把底栏点亮（序号各不相同）", missing.length === 0 && seen.size === 4,
+    missing.join("; ") || ("序号数 " + seen.size));
+
+  // 有底栏的页面要多留一截，否则内容被压住
+  const padded = [];
+  TABS.forEach(([p2]) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p2 + ".wxml"), "utf8");
+    if (wxml.indexOf("has-tabbar") < 0) padded.push(p2);
+  });
+  ok("四个 tab 页都留了底栏高度的垫片（.has-tabbar）", padded.length === 0, padded.join(", "));
+  const appCss2 = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  ok("app.wxss 里有 .has-tabbar 的底部留白规则", /\.page\.has-tabbar\s*\{[^}]*padding-bottom/.test(appCss2));
+}
+
+/**
+ * V20.「选一个」只有两种长相，且不重样（Issue #12 第三次追问：选项不统一）。
+ *
+ * 用户原话：「很多选项是胶囊样式了，但背诵范围和题型等等选项又不是胶囊样式
+ * 而且他们的高度，大小 padding 是否一致？能不能确保所有页面相同元素界面的一致性」。
+ *
+ * 这一版把三种长相收成两种，且**都走同一枚胶囊形状**：
+ *   · 分段 .seg（一颗胶囊里分几段）—— 少数几个互斥项，带图标
+ *   · 格子 .chip（一格一颗胶囊）—— 等长的多个选项（竖排就是一组）
+ * 撤掉的是原生圆点行（.opt-row）—— 它就是「不是胶囊」的那一种。
+ *
+ * 守三件事：
+ *   1. 页面里不许再出现把选项排成「裸圆点 + 文字」的写法
+ *   2. 两种长相的高度都走令牌（--h-opt / --h-opt-seg），不许各写死一个 rpx
+ *   3. 两种长相的选中态都必须填墨黑（--ink），不许各染一种颜色
+ */
+{
+  const appCss3 = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+
+  const pagesWxss = pages.map((p2) => [p2, fs.readFileSync(path.join(ROOT, p2 + ".wxss"), "utf8")]);
+  const rawDot = [];
+  pagesWxss.forEach(([p2, css]) => {
+    if (/\.opt-row\b/.test(css)) rawDot.push(p2);
+  });
+  ok("页面里不再有原生圆点行（选项一律胶囊）", rawDot.length === 0, rawDot.join(", "));
+
+  // 高度走令牌
+  const segH = /\.seg-item\s*\{[^}]*height\s*:\s*var\(--h-opt-seg\)/.test(appCss3);
+  const chipH = /\.chip\s*\{[^}]*min-height\s*:\s*var\(--h-opt\)/.test(appCss3);
+  ok("分段高度走 --h-opt-seg 令牌", segH);
+  ok("格子高度走 --h-opt 令牌", chipH);
+
+  // 竖排格与网格格同高：list 那一组不许再加纵向内边距
+  const listChip = /\.chip-group\.list\s+\.chip\s*\{([^}]*)\}/.exec(appCss3);
+  ok("竖排格与网格格同高（不加纵向内边距）",
+    !!listChip && !/padding\s*:\s*[^;]*\brpx/.test(listChip[1]) || (!!listChip && /padding\s*:\s*0\s/.test(listChip[1])),
+    listChip ? listChip[1].trim() : "找不到 .chip-group.list .chip");
+
+  // 选中态都填墨黑
+  ok("分段的选中态填墨黑", /\.seg-item\.on\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(appCss3));
+  ok("格子的选中态填墨黑", /\.chip\.on\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(appCss3));
+}
+
+/**
+ * V21. 头像：本机那张压过微信那张（Issue #12 第三次追问）。
+ *
+ * 用户原话：「她应该要支持在设置里设置头像功能的，登录后默认使用微信头像的，
+ * 子用户上传头像再用子用户头像」。
+ *
+ * 落成一条优先级：avatarLocal（自己传的）→ avatarUrl（微信那张）→ 首字印。
+ * 网页版是同一套（js/avatar.js 的 localRaw：名下没有就回自己的首字印，
+ * 绝不回落到设备域那张 —— 一旦回落，切了子用户头像不变，顶着别人的脸）。
+ *
+ * 守四件事：
+ *   1. store 里有两个字段，且 avatarSrc 按 local 优先排序
+ *   2. 登录写的是 avatarUrl（微信那张），**不许碰 avatarLocal**
+ *      —— 碰了就会把用户自己传的图冲掉，正是「切了子用户头像不变」那个 bug
+ *   3. 页面不许直接读 profile.avatarUrl 当显示图，一律走 store.avatarSrc()
+ *   4. 不许再出现 wx.getUserProfile（2022 起只返回匿名灰头像，调用=糊一张假图）
+ */
+{
+  const storeJs = fs.readFileSync(path.join(ROOT, "utils/store.js"), "utf8");
+  const srcFn = /function avatarSrc\(\)\s*\{([\s\S]*?)\n\}/.exec(storeJs);
+  ok("store 有 avatarSrc（头像取哪一张的唯一出处）", !!srcFn);
+  if (srcFn) {
+    const body = srcFn[1];
+    const iLocal = body.indexOf("avatarLocal");
+    const iUrl = body.indexOf("avatarUrl");
+    ok("头像优先用本机那张（avatarLocal 排在 avatarUrl 前面）",
+      iLocal >= 0 && iUrl > iLocal, body.replace(/\s+/g, " ").trim().slice(0, 120));
+  }
+
+  // 登录只写 avatarUrl
+  const authJs = fs.readFileSync(path.join(ROOT, "utils/auth.js"), "utf8");
+  const loginWrite = /store\.saveProfile\(\{([\s\S]*?)\}\)/.exec(authJs);
+  ok("登录时写的是微信那张（avatarUrl）", !!loginWrite && /avatarUrl\s*:/.test(loginWrite[1]));
+  ok("登录时不碰本机那张（不写 avatarLocal）",
+    !!loginWrite && !/avatarLocal\s*:/.test(loginWrite[1]),
+    "登录会冲掉用户自己传的头像");
+
+  // 页面显示一律走 store.avatarSrc()
+  const direct = [];
+  pages.forEach((p2) => {
+    const js = fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8");
+    if (/profile\(\)\.avatarUrl|\.avatarUrl\s*\|\|\s*"/.test(js) && js.indexOf("avatarSrc") < 0) {
+      direct.push(p2);
+    }
+  });
+  ok("页面显示头像走 store.avatarSrc()，不直接读 profile.avatarUrl", direct.length === 0, direct.join(", "));
+
+  // getUserProfile 已废弃。⚠️ 先摘注释再扫 —— 一段解释「这里不调 getUserProfile」
+  // 的注释不该被当成真的在调它（断言读错文档，会逼人删掉一段正确的说明）。
+  const stripJs = (x) => x.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const legacy = pages.filter((p2) =>
+    stripJs(fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8")).indexOf("getUserProfile") >= 0);
+  ok("不再调用 wx.getUserProfile（只返回匿名灰头像）", legacy.length === 0, legacy.join(", "));
 }
 
 /* ---------- 汇总 ---------- */

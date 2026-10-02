@@ -54,6 +54,9 @@ function applySession(data) {
   // 服务端下发的按人开关：管理页可以关掉某人的朗读而不必改档位
   if (data.caps && typeof data.caps === "object") store.write(store.KEYS.caps, data.caps);
 
+  // 服务端下发的微信头像落进 avatarUrl（**不是** avatarLocal）：
+  // 它是「微信那张」，优先级在本机那张之下。用户自己传过的图（avatarLocal）
+  // 一点都不会被这里碰到 —— 登录刷新微信头像，不该盖掉用户的图。
   store.saveProfile({
     logged: true,
     nickname: data.nickname || store.profile().nickname || "我的古诗词",
