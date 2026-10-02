@@ -117,7 +117,10 @@ Page({
     }
 
     const rec = store.getRecord(id);
-    const lines = String(entry.text || "").split("\n");
+    // 行 → 句。语料里一行往往承好几个句子（《琵琶行》整段诗序就是一行），
+    // 整行当一个块排，居中时是一坨、朗读时整段一起合成 —— 三种呈现就对不上了。
+    // 切句只此一份，在 corpus.splitLines()。
+    const lines = corpus.splitLines(entry.text);
 
     this.setData({
       id,
@@ -165,6 +168,8 @@ Page({
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
     const mode = usable ? store.settings().pinyin : "off";
+    // 句子由 corpus.splitLines 给（含标点），这里只管标音。
+    // 标音时消歧窗口是**整行** —— 分组的事交给它，不在这重复。
     const tokens = usable ? pinyin.render(this.data.lines, mode) : [];
     this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
   },
@@ -234,7 +239,13 @@ Page({
       onFinish: () => this.onSpeakFinish(),
       onError: (err) => wx.showToast({ title: err.message || "朗读失败", icon: "none" })
     });
-    this.player.load(this.data.lines.map((t) => ({ text: t, gap: 320 })));
+    // 按句合成：整行交给 TTS，长一段听下来断不开，也没法「只听这一句」。
+    // 标点交给通道自己断 —— 少了标点，`，` 与 `。` 的停顿差别就没了。
+    this.player.load(
+      this.data.lines
+        .filter((ln) => ln.s.length)
+        .map((ln) => ({ text: ln.line.trim(), gap: 320 }))
+    );
     return this.player;
   },
 

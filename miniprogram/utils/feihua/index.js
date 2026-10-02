@@ -24,8 +24,8 @@ const LEVELS = [
   { id: "hard", name: "难字", min: 1, max: 5 }
 ];
 
-/** 断句用的标点。与 utils/quiz.js 同一套 */
-const SPLIT = /[\n，。！？；：、]/;
+/* 断句口径只有一份，在 utils/corpus.js 的 CLAUSE_SPLIT / splitLines ——
+   抄第二份出来，计数与实际列出的句子早晚会对不上。 */
 
 /**
  * 攒候选令字池。
@@ -35,6 +35,34 @@ const SPLIT = /[\n，。！？；：、]/;
  *
  * @returns {Object} { [char]: { char, count, level } }
  */
+/**
+ * 取一份正文里的句子。**全模块只有这一条路**。
+ *
+ * 上一版 pool() 自己 split 一遍、look() 又 split 一遍，两处口径看不出差别，
+ * 直到有人发现令字格上写着 346、点进去却列出 477 句 —— 差的正是
+ * pool 里那道 `长度 5–20` 的门。计数与列表必须走同一个函数，才有「一致」可言。
+ *
+ * @param {string} text 一份正文
+ * @param {boolean} [gated] 是否套用令字池的长度门槛（默认套用）
+ * @returns {string[]} 句子，去标点、去空白
+ */
+function segsOf(text, gated) {
+  const out = [];
+  // 同一首里同一句可能出现两次（《蜀道难》「难于上青天」就叠了两回）。
+  // 去重要在**篇**这一级做 —— 收进函数里，两边就不会再各漏一次。
+  const seen = {};
+  corpus.splitLines(text).forEach((ln) => {
+    ln.s.forEach((seg) => {
+      // 令字池的门槛：太短的没有令字价值，太长的（一段诗序）看着不像「一句」
+      if (gated !== false && (seg.length < 5 || seg.length > 20)) return;
+      if (seen[seg]) return;
+      seen[seg] = 1;
+      out.push(seg);
+    });
+  });
+  return out;
+}
+
 let poolCache = null;
 
 function pool() {
@@ -44,19 +72,17 @@ function pool() {
   corpus.course().forEach((p) => {
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    const seen = {};
-    String(e.text)
-      .split(SPLIT)
-      .forEach((seg) => {
-        const s = seg.trim();
-        if (s.length < 5 || s.length > 20) return;
-        Array.from(s).forEach((ch) => {
-          // 只收汉字，且一个字每句只算一次
-          if (!/[\u3400-\u9fff]/.test(ch) || seen[ch] === s) return;
-          seen[ch] = s;
-          counts[ch] = (counts[ch] || 0) + 1;
-        });
+    segsOf(e.text).forEach((s) => {
+      // 一句里同一个字只算一次：「莲叶何田田」里「田」是一个令字，不是两个。
+      // 按出现次数累加的话，「天」会算成 99 而查一查只列 97 行 —— 格上的数字
+      // 就是「点进去能看到几行」，这个等式不能破。
+      const counted = {};
+      Array.from(s).forEach((ch) => {
+        if (!/[\u3400-\u9fff]/.test(ch) || counted[ch]) return;
+        counted[ch] = 1;
+        counts[ch] = (counts[ch] || 0) + 1;
       });
+    });
   });
 
   const out = {};
@@ -100,19 +126,17 @@ function look(char, opt) {
     if (out.length >= limit) return;
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    String(e.text)
-      .split(SPLIT)
-      .forEach((seg) => {
-        const s = seg.trim();
-        if (out.length >= limit || s.indexOf(ch) < 0) return;
-        out.push({
-          id: p.id,
-          title: p.t,
-          author: p.a,
-          dynasty: p.d,
-          seg: s
-        });
+    // 去重已在 segsOf 里按「篇」做过，这里不必再来一遍
+    segsOf(e.text).forEach((s) => {
+      if (out.length >= limit || s.indexOf(ch) < 0) return;
+      out.push({
+        id: p.id,
+        title: p.t,
+        author: p.a,
+        dynasty: p.d,
+        seg: s
       });
+    });
   });
 
   return out;
@@ -152,12 +176,10 @@ function judge(char, input, said) {
     if (hit) return;
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    String(e.text)
-      .split(SPLIT)
-      .forEach((seg) => {
-        if (hit) return;
-        if (strip(seg) === mine) hit = { id: p.id, title: p.t, author: p.a, seg: seg.trim() };
-      });
+    segsOf(e.text, false).forEach((seg) => {
+      if (hit) return;
+      if (strip(seg) === mine) hit = { id: p.id, title: p.t, author: p.a, seg: seg };
+    });
   });
 
   if (!hit) {

@@ -47,7 +47,9 @@ Page({
   apply() {
     const { bookId, keyword, filter } = this.data;
     let list = corpus.ofBook(bookId);
-    if (keyword) list = corpus.search(keyword, { book: bookId, limit: 2000 });
+    // 2000 比任何一部集子都大（最大的昭明文选 480 篇），所以这里拿到的是全量，
+    // search() 返回 { items, total } 之后要取 .items —— 直接遍历对象会静默得到空列表
+    if (keyword) list = corpus.search(keyword, { book: bookId, limit: 2000 }).items;
 
     const reads = store.reads(bookId);
     if (filter === "未读") list = list.filter((p) => !reads[p.id]);

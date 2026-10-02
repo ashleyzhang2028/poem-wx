@@ -50,18 +50,26 @@
       <text class="rule-t">正文</text>
     </view>
 
+    <!-- 语料里一行可能承好几个句子：《琵琶行》那样的长诗，一行就是「序」的
+         一整段。整行当一个 block 排，居中时看着像一坨；左对齐时全靠让它自己
+         折行；连朗读也按整行合成，一句一句听不清。所以这里把行再切成句。
+         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。 -->
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
-        <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item}}</text>
+        <text class="poem-line" wx:for="{{lines}}" wx:key="index" wx:for-item="ln">
+          <text class="poem-clause" wx:for="{{ln.s}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+        </text>
       </block>
       <block wx:else>
         <view class="poem-line token-line {{speakVisible && speakIndex === index && speakTotal ? 'reading' : ''}}"
               hover-class="{{speakVisible ? 'token-line-tap' : ''}}" hover-stay-time="60"
               wx:for="{{tokens}}" wx:key="index"
               data-i="{{index}}" bindtap="onSpeakToggle">
-          <view class="token" wx:for="{{item}}" wx:for-item="tk" wx:key="index">
-            <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-            <text class="tk-ch">{{tk.ch}}</text>
+          <view class="poem-clause" wx:for="{{item}}" wx:for-item="cl" wx:key="index">
+            <view class="token" wx:for="{{cl}}" wx:for-item="tk" wx:key="index">
+              <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+              <text class="tk-ch">{{tk.ch}}</text>
+            </view>
           </view>
         </view>
       </block>

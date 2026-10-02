@@ -163,9 +163,22 @@ function annotate(line, mode) {
   });
 }
 
+/**
+ * 行 → 句 → 字。
+ *
+ * **自己不再切句** —— 句子由 corpus.splitLines 给，那里把标点留在句尾
+ * （`鹅，` 而不是 `鹅`）。这里若再切一遍，标点就当场没了，正文读起来少一个字。
+ * 消歧窗口仍是整行：读「发」靠的是词组「白发」，跨句也要看得见。
+ *
+ * @param {Array<{line: string, s: string[]}>} lines corpus.splitLines() 的输出
+ * @param {string} mode off / rare / all
+ * @returns {Array<Array<Array<{ch,py,mark}>>>}
+ */
 function render(lines, mode) {
-  if (mode === "off" || !available()) return (lines || []).map(() => []);
-  return (lines || []).map((l) => annotate(l, mode));
+  const probe = mode === "off" || !available() ? null : table();
+  return (lines || []).map((ln) =>
+    (ln && ln.s ? ln.s : []).map((clause) => (probe ? annotate(clause, mode) : []))
+  );
 }
 
 /* ---------- 偏好 ---------- */
