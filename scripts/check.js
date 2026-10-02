@@ -1745,27 +1745,62 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 }
 
 /**
- * V6.8 控件与它的文字之间要有默认间距。
+ * V6.8 「选一个」只有一套长相，且控件与文字之间要有默认间距。
  *
- * Issue #12 的原话：「复选框单选框和右侧文字之间应该有默认间距」。
+ * 两条来自 Issue #12 的合并需求。
+ *
+ * **一、控件与文字之间要有默认间距。**
+ * 原话是「复选框单选框和右侧文字之间应该有默认间距」。
  * 这不是审美，是**原生控件不带外边距**这件事 —— 紧贴是浏览器的排法，
- * 不是控件的排法，而每一页都有人会忘记补，所以补在控件自己身上：
- * 只要页面上出现裸的 <radio> / <checkbox>，它就一定已经被全局规则照顾到。
+ * 不是控件的排法。剩下还在用裸 radio 的地方（.pref-item），
+ * 间距定在控件自己身上。
  *
- * 判据两条：
- *   1. app.wxss 里必须有一条规则，按控件标签给 margin-right
- *   2. 页面不许再给 .opt-main 补 padding-left 之类的**第二份**间距
- *      ——两处叠加会变成 24rpx，比目的多出一倍
+ * **二、选中态只许有一种说法。**
+ * 用户第二轮的原话：「取诗范围我看不出还包括单选框的必要性」、
+ * 「选项也不统一」。项目里并存过四种「选一个」的说法 ——
+ * 圆点、左侧竖线、填色的底、填色的格子。现在收敛成一套：
+ * **选中的那一块填墨黑**。
+ *
+ * 判据：
+ *   1. 页面里出现裸 <radio> / <checkbox>（没有类名）时必须已被全局规则照顾到
+ *   2. `.seg-item.on` / `.chip.on` / `.opt-row.active` 三者的底色必须是同一个令牌
+ *   3. 竖排选项行不许再用「左侧竖线」表达选中（inset box-shadow）
  */
 {
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const noComment = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
 
-  // 1) 控件标签级的间距规则
-  const rule = /\.native-label\s+radio[\s\S]{0,400}?margin-right\s*:/.test(appWxss);
+  // 1) 裸控件的默认间距仍在
+  const rule = /\.pref-item\s+radio[\s\S]{0,200}?margin-right\s*:/.test(appWxss);
   ok("原生选项与文字之间有全局默认间距", rule,
     "app.wxss 里找不到给 radio/checkbox 的 margin-right");
 
-  // 2) 页面不许再叠一份：opt-main / pref-main 上的左内边距是重复间距
+  // 2) 三种排布的选中态必须是同一块填色
+  const body = noComment(appWxss);
+  const sel = (cls) => {
+    const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = new RegExp(esc + "\\s*\\{([^}]*)\\}").exec(body);
+    if (!m) return null;
+    const bg = /background\s*:\s*([^;]+);/.exec(m[1]);
+    return bg ? bg[1].trim() : null;
+  };
+  const fills = {
+    ".seg-item.on": sel(".seg-item.on"),
+    ".chip.on": sel(".chip.on"),
+    ".opt-row.active": sel(".opt-row.active")
+  };
+  const missing = Object.entries(fills).filter(([, v]) => v === null).map(([k]) => k);
+  ok("三种「选一个」的选中态都存在", missing.length === 0, missing.join("; "));
+  const vals = Object.values(fills).filter((v) => v !== null);
+  ok("三种「选一个」的选中态是同一块填色", vals.length > 0 && new Set(vals).size === 1,
+    "取到的底色：" + JSON.stringify(fills));
+
+  // 3) 竖排选项行不许再画左侧竖线
+  const inset = /\.opt-row\.active\s*\{[^}]*box-shadow\s*:\s*inset/.test(body);
+  ok("选项行不再用「左侧竖线」表达选中", !inset,
+    "inset 竖线与行的圆角互相裁切，会破相 —— 选中态靠填色说");
+
+  // 4) 页面不许再给 .opt-main 补第二份横向间距
   const doubled = [];
   pages.forEach((p) => {
     const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
@@ -2726,8 +2761,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
   ok("预览里有原生控件的等价样式（V5 那条的老素材，这里再取一次）", !!nativeBlock);
   const mirror = nativeBlock ? nativeBlock[1] : "";
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
   const mirrorRules = {};
-  (mirror.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
+  (strip(mirror).match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
     const i = blk.indexOf("{");
     const sel = blk.slice(0, i).replace(/\s+/g, "");
     const body = blk.slice(i + 1, blk.lastIndexOf("}"));
@@ -2737,22 +2773,39 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     mirrorRules[sel] = { ml: ml && ml[1].trim(), mr: mr && mr[1].trim() };
   });
 
-  // 页面里针对 .opt-row.active 的圆点规则：镜像必须说同一件事
-  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
-  const actRadio = /\.opt-row\.active\s+radio[^{}]*\{([^}]*)\}/.exec(pageCssAll);
-  ok("页面里说明了「选中行的圆点不移动」", !!actRadio);
-  if (actRadio) {
-    const pageMl = (/margin-left\s*:\s*([^;]+)/.exec(actRadio[1]) || [])[1];
-    const pageMlNorm = pageMl ? pageMl.trim() : null;
-    const mirrorMl = (mirrorRules[".opt-row.active.n-radio,.opt-row.active.n-checkbox"]
-      || mirrorRules[".opt-row.active.n-radio"] || {}).ml;
-    ok("选中行圆点的 margin-left：页面与预览镜像说的是同一个数",
-      String(mirrorMl).replace(/\s+/g, "") === String(pageMlNorm).replace(/\s+/g, ""),
-      "页面 " + pageMlNorm + " / 镜像 " + mirrorMl);
-    ok("选中行圆点不许右移（右移会让整行内容横跳）",
-      pageMlNorm === "0", String(pageMlNorm));
+  const pageCssAll = strip(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"));
+  const pageSrcAll = pages.map((p) => [p, strip(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"))]);
+
+  // 页面里凡按**标签名**给 radio / checkbox 写的横距规则，
+  // 镜像里必须有一条按 class 写的等价项 —— 少一条，预览就比真机好看一点。
+  //
+  // 这条原来是专门盯 `.opt-row.active radio` 的（那时候选项行里还露着圆点）。
+  // 现在选项行的原生控件是视觉隐藏的（.opt-radio），不再需要外观镜像，
+  // 所以判据从「列举那些规则」换成**按事实判**：页面里还在露脸的裸控件，
+  // 它的横距必须在镜像里有对应的一条。
+  const visibleTagRules = [];
+  const tagRe = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = tagRe.exec(pageCssAll))) {
+    const sel = m[1];
+    const body = m[2];
+    if (!/\b(radio|checkbox)\b/.test(sel)) continue;
+    if (/\.opt-radio|\.seg-radio/.test(sel)) continue;   // 视觉隐藏的，不需要外观
+    const mr = /margin-right\s*:\s*([^;]+)/.exec(body);
+    if (mr) visibleTagRules.push({ sel: sel.replace(/\s+/g, " ").trim(), mr: mr[1].trim() });
   }
+  const missingMirror = visibleTagRules.filter((r) => {
+    const cls = r.sel.split(/[,\s]+/).filter((x) => x.startsWith("."));
+    return cls.length > 0 && !Object.keys(mirrorRules).some((k) =>
+      cls.every((c) => k.includes(c)));
+  });
+  ok("露脸的原生控件的横距在镜像里都有等价项", missingMirror.length === 0,
+    missingMirror.map((r) => r.sel).join(" | "));
+
+  // 选项行的原生控件必须是视觉隐藏的：露着就又是「第二种选中标志」
+  const optRadioVisible = /\.opt-row\s+radio[^{}]*\{[^}]*margin-right/.test(pageCssAll);
+  ok("选项行里的原生控件是视觉隐藏的（不再另起一个圆点）", !optRadioVisible,
+    "还能找到给 .opt-row radio 的横距规则 —— 说明它又露脸了");
 }
 
 /**
@@ -2898,6 +2951,94 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     }
   });
   ok("按钮文案是短句（不超过 12 个可见字）", longBtn.length === 0, longBtn.slice(0, 5).join(" | "));
+}
+
+/**
+ * V19. 尺寸只有一个旋钮（Issue #12 的「小一号的全局配置」）。
+ *
+ * 用户要的是「用一套组件体系，并且能从一处整体调小」。
+ * 换个说法：**全站的尺寸必须是可推导的**，不能散在二十六个页面里各写各的。
+ *
+ * 判据三条：
+ *   1. tokens.wxss 里必须有 `--ui-scale`
+ *   2. 字阶 / 间距 / 圆角 / 高度这几组令牌必须由它算出来（calc）
+ *   3. 页面样式表里不许再出现**裸的 rpx 尺寸** —— 出现就是漏了令牌，
+ *      将来调小的时候一定会漏掉它
+ *
+ * ⚠️ 第 3 条有例外名单：1rpx 的描边、百分比、以及确实只属于这一页的
+ * 装饰尺寸（例如阅读页的行距倍数）。名单要短，每进一条都得说清为什么。
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  ok("令牌表里有 --ui-scale", /--ui-scale\s*:/.test(tokens));
+
+  // 这几组必须乘 --ui-scale
+  const mustScale = ["--fs-body", "--fs-title", "--sp-2", "--sp-3", "--page-x",
+    "--radius-sm", "--radius", "--h-btn", "--h-row"];
+  const notScaled = mustScale.filter((t) => {
+    const m = new RegExp("\\" + t + "\\s*:\\s*([^;]+);").exec(tokens);
+    return !m || !/var\(--ui-scale\)/.test(m[1]);
+  });
+  ok("字阶/间距/圆角/高度都由 --ui-scale 算出来", notScaled.length === 0,
+    notScaled.join("; "));
+
+  // 3) 页面不许**重复定义**共享令牌 —— 那一层才是「调不动」的真正来源。
+  //
+  // 不去查「页面里有没有裸的 rpx」：页面本来就有只属于这一页的装饰尺寸
+  // （头像圆 112rpx、钩子 22rpx……），把它们全赶进令牌表只会让令牌表变成
+  // 第二个页面样式表，反而更乱。真正要守的是**同一个东西不许有第二个数**：
+  // 页面上凡是写了字阶 / 间距 / 行高这类共享令牌的地方，必须用 var() 取，
+  // 不许在页面里重新赋一个值。
+  const SHARED = ["--fs-", "--sp-", "--lh-", "--radius", "--h-btn", "--h-row",
+    "--h-field", "--h-act", "--page-x", "--ui-scale", "--ink", "--bg", "--surface", "--sink", "--line"];
+  const redefined = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    const re = /(--[\w-]+)\s*:\s*([^;}]+)/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const name = m[1];
+      if (SHARED.some((s2) => name.startsWith(s2))) {
+        // 允许页面里定义**自己新增的**变体（如 --fs-poem-hero），
+        // 但名字正好等于共享令牌时，就是在覆盖它
+        if (SHARED.includes(name) || SHARED.some((s2) => name === s2)) {
+          redefined.push(p + " → " + name);
+        }
+      }
+    }
+  });
+  ok("页面没有重新定义共享令牌", redefined.length === 0, redefined.slice(0, 6).join(" | "));
+}
+
+/**
+ * V20. 全局样式表的括号必须配平。
+ *
+ * 这一条是**被自己坑出来的**：改 Issue #12 的选项行时，
+ * 一次文本替换漏掉一个 `}`，于是一大段规则（`.opt-row` / `.chip-group`）
+ * 被浏览器整个丢弃 —— 预览截图里所有选项变成一列光秃秃的文字。
+ * 界面「坏了」，但自检 742 项**全绿** —— 因为没有一条断言看的是
+ * 「样式表本身还立不立得住」。
+ *
+ * 判据：去掉注释后，`{` 与 `}` 数目相等，且不许出现负数深度（提前闭合）。
+ */
+{
+  const bad = [];
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const files = [["app.wxss", appWxss], ["styles/tokens.wxss",
+    fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8")]];
+  pages.forEach((p) => files.push([p + ".wxss", fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]));
+  files.forEach(([name, src]) => {
+    const t = src.replace(/\/\*[\s\S]*?\*\//g, "");
+    let d = 0;
+    let broke = false;
+    for (const ch of t) {
+      if (ch === "{") d++;
+      if (ch === "}") { d--; if (d < 0) { broke = true; break; } }
+    }
+    if (broke || d !== 0) bad.push(name + "（" + (broke ? "提前闭合" : "差 " + d + " 个 }") + "）");
+  });
+  ok("样式表的括号是配平的", bad.length === 0, bad.join("; "));
 }
 
 /* ---------- 汇总 ---------- */
