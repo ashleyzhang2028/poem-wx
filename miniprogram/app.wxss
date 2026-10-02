@@ -108,6 +108,23 @@ view, text, button, input, textarea {
   margin: var(--sp-3) 0 var(--sp-1);
 }
 
+/* ---------- 字段名 ----------
+   一张卡里「这一行是什么」那半截字的统一样子。它比 card-title 轻、
+   比正文小，因为它不是内容，是标签。
+
+   之前散成四份：搜索页的 .opt-label、飞花令的 .opt-label、
+   搜索页的 .section-label、朗读设置里裸写的 .sub-title ——
+   四份的字号差 3rpx、颜色一个 ink-2 一个 ink-3，一页里同时出现就露馅。
+   现在只有这一处。 */
+.field-label {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  line-height: 1.4;
+  margin-bottom: 4rpx;
+}
+
 /* 一条淡分隔，比 border 更轻，用在「同一张卡里换话题」的地方 */
 .divider {
   height: 1rpx;
@@ -124,17 +141,21 @@ view, text, button, input, textarea {
   text-align: center;
 }
 
+/* 印章：一枚圆里放一个字。居中也走 flex —— 用「line-height 比 height
+   小 4rpx」去凑是同一个坏习惯，圆环一粗就偏，且偏在哪一侧每台机子不一样 */
 .empty-mark {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 104rpx;
   height: 104rpx;
-  line-height: 100rpx;
   margin: 0 auto var(--sp-2);
   border-radius: 50%;
   border: 2rpx dashed var(--line);
   background: var(--bg-soft);
   font-family: var(--font-poem);
   font-size: 46rpx;
+  line-height: 1;
   color: var(--line);
 }
 
@@ -151,9 +172,15 @@ view, text, button, input, textarea {
 }
 
 /* ---------- 按钮 ---------- */
+/* 按钮：文字**垂直居中**靠的是「内容盒 + align-items」，
+   不是把 line-height 调成比 height 小几 rpx 去凑 —— 那种写法在字重、
+   字号、系统字体任意一个变了之后就会偏，且各页偏的方向还不一样。
+   原生 button 默认是 inline-block + 默认行高，这里统一改成 flex 居中。 */
 .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 88rpx;
-  line-height: 84rpx;
   padding: 0 var(--sp-4);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
@@ -161,6 +188,7 @@ view, text, button, input, textarea {
   color: var(--ink);
   font-size: var(--fs-title);
   font-weight: 500;
+  line-height: 1.2;
   letter-spacing: var(--ls-title);
   text-align: center;
   transition: background-color var(--t-press), transform var(--t-press), opacity var(--t-press);
@@ -204,16 +232,34 @@ view, text, button, input, textarea {
   margin-top: var(--sp-2);
 }
 
+/* 一排并列的按钮（「说一句 / 接不上了」「试听 / 保存」这种）。
+   两件事必须一起写：**flex 平分宽度** 与 **align-items: center**。
+   少了后者，flex 的默认 stretch 遇上 .btn 的固定 height 会退化成基线对齐 ——
+   同一排里主按钮与次要按钮**顶部齐、底部不齐**，看着像一个大一个小。
+   两个页面各写过一份，现在收在这里。 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.actions .btn {
+  flex: 1;
+}
+
 /* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
    原生 button 自带最小宽度与默认内边距，不收掉就撑得整行走形。 */
 .btn.mini {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: auto;
   min-width: 0;
   height: 60rpx;
-  line-height: 56rpx;
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
+  line-height: 1.2;
   border-radius: var(--radius-sm);
 }
 
@@ -396,6 +442,35 @@ view, text, button, input, textarea {
   gap: 0;
 }
 
+/* 选项与它的文字之间**要有默认间距**。
+   原生 checkbox / radio 不自带外边距 —— 它只是一块 23px 的方框，
+   紧贴文字是浏览器的排法，不是控件的排法。上一版靠 .opt-main 的
+   padding-left 兜，只兜住了「两行文字」那一种，单行的那几页就贴在一起了。
+   所以间距定在**控件自己**身上：一处生效，十三个页面都跟着对。
+
+   顺手把行高收成一条：原生控件被 transform 缩放后，行盒仍按原尺寸算高度，
+   不给 line-height 的话文字基线会跟着控件对齐跑偏。 */
+.native-label,
+.pref-item,
+.opt-row {
+  line-height: 1.4;
+}
+
+.native-label radio,
+.native-label checkbox,
+.pref-item radio,
+.pref-item checkbox,
+.opt-row radio,
+.opt-row checkbox {
+  margin-right: var(--sp-2);
+}
+
+/* 网格里最后那列不留右边距，否则整行会被顶宽 16rpx */
+.native-group.grid .native-label radio,
+.native-group.grid .native-label checkbox {
+  margin-right: var(--sp-1);
+}
+
 .native-label {
   display: flex;
   align-items: center;
@@ -428,10 +503,21 @@ view, text, button, input, textarea {
 }
 
 /* 选中：整行左移一道竖线 + 主色字。
-   只把字变色太轻，在长列表里扫不出来 */
+   只把字变色太轻，在长列表里扫不出来。
+
+   竖线走 inset box-shadow 而不是 border-left —— 加边框会把整行内容
+   往右推 6rpx，选中与未选中之间就出现了**横向跳动**：一行内容在
+   两种状态下的起点不一样，看着像整页在抖。inset 画在行内，不占位。 */
 .opt-row.active {
   background: var(--green-light);
   box-shadow: inset 6rpx 0 0 var(--green);
+}
+
+/* 选中行的圆点不要贴着那道竖线 —— 贴上去之后圆点左半圈被压在竖线底下，
+   看着像被切了一刀。给选中行补一道与竖线等宽的内边距。 */
+.opt-row.active radio,
+.opt-row.active checkbox {
+  margin-left: 6rpx;
 }
 
 .opt-row.active .opt-name {
@@ -443,18 +529,33 @@ view, text, button, input, textarea {
   opacity: .45;
 }
 
+/* opt-row 是「两行文字 + 一个圆点」。两件事要一起办对：
+
+   1. **圆点跟着第一行文字**，不是整行的垂直中心 —— 一行的中心在第一行与
+      第二行之间，圆点落在那儿看着像「选了下面那行」。用 align-self 顶到
+      行首 + 一点上边距让它与第一行文字的视觉中线齐平。
+   2. **缩放要固定原点**。原生圆点在未缩放时是一块 23px 的方框，`scale(.86)`
+      默认以中心为原点，那 3px 的溢出**是往左边去的** —— 被卡片的 padding
+      裁掉一半，看着就像圆点被切了。`transform-origin: left top` 把它压回框内。 */
+/* 圆点与第一行字的中线：这两个数不是拍的，是量出来的。
+   `.opt-name` 是 --fs-title（31rpx）、行高 1.4 → 行盒 43.4rpx；
+   原生圆点 23px ≈ 44rpx，缩到 .86 → 38rpx。
+   圆心要落在行盒中线上（43.4 / 2 ≈ 21.7），圆点顶边 = 21.7 - 19 ≈ 2.7rpx。
+   字号或行高改了就一起改这两个数 —— 它们成对出现，不许只调一个。 */
 .opt-row radio,
 .opt-row checkbox {
-  transform: scale(.86);
-  /* 两行文字的行，圆点要跟着第一行 —— 默认居中会飘到中间 */
+  flex: none;
   align-self: flex-start;
-  margin-top: 10rpx;
+  transform: scale(.86);
+  transform-origin: left top;
+  margin-top: 2rpx;
 }
 
+/* 间距由控件自己给（见上面那组规则），这里不再补，
+   否则两处叠加会变成 24rpx —— 「一处生效」才是能守住的那种写法 */
 .opt-main {
   flex: 1;
   min-width: 0;
-  padding-left: var(--sp-1);
 }
 
 .opt-name {
@@ -479,7 +580,7 @@ view, text, button, input, textarea {
   min-height: 60rpx;
   font-size: var(--fs-hint);
   color: var(--ink-2);
-  padding-right: var(--sp-3);
+  margin-right: var(--sp-3);
 }
 
 .pref-item radio,
@@ -495,7 +596,7 @@ view, text, button, input, textarea {
 
 .chip-row .pref-item {
   display: inline-flex;
-  padding-right: var(--sp-2);
+  margin-right: var(--sp-2);
 }
 
 /* ---------- 字段行（键值对）---------- */
@@ -596,10 +697,12 @@ view, text, button, input, textarea {
 }
 
 .lock-mark {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 116rpx;
   height: 116rpx;
-  line-height: 112rpx;
+  line-height: 1;
   margin: 0 auto var(--sp-3);
   border-radius: 22rpx;
   border: 3rpx solid rgba(168, 59, 50, .5);
@@ -637,6 +740,111 @@ view, text, button, input, textarea {
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
   margin-top: var(--sp-3);
+}
+
+/* ---------- 方字格（飞花令的令字）----------
+   一个方格 + 一个字 + 一个原生 radio。两处用到（大会首页、飞花令页），
+   所以收在这里定一次。
+
+   ⚠️ 上一版把圆点 absolute 到 `right:-6rpx; top:-6rpx`，理由是「中心留给字」——
+   结果圆点**压在字的右上一笔上**：「而」「者」「有」的右上角被盖住半个，
+   而且缩到 0.6 之后命中区也移了位，点上去要先对准那个偏出去的小圈。
+
+   现在的做法：格子右上角**留出一块空**（padding-top 让字整体下移一点），
+   圆点就落在那块空里，不压任何笔画；命中区仍是整个 label（原生 radio
+   在 label 里，点格子任何一处都能选中）。 */
+.char {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: var(--radius-sm);
+  border: 1rpx solid var(--line);
+  background: var(--bg-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 上下各留一口气：上一版是「整块居中」，
+     字 + 小字两行合起来比格子高，贴到了上下边框上 */
+  padding: 10rpx 0;
+  box-sizing: border-box;
+}
+
+.char.active {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+.char-radio {
+  position: absolute;
+  right: 2rpx;
+  top: 2rpx;
+  transform: scale(.56);
+  transform-origin: right top;
+}
+
+.char-t {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hero);
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+/* 那一行小字（命中数）：它比字低一档，且不许把格子撑高 ——
+   给一条固定行高，格子高度才不会随数字位数变 */
+.char-n {
+  display: block;
+  height: 26rpx;
+  font-size: var(--fs-pinyin);
+  line-height: 26rpx;
+  color: var(--ink-3);
+}
+
+.char.active .char-t {
+  color: var(--green);
+}
+
+.char.active .char-n {
+  color: var(--green);
+  opacity: .75;
+}
+
+/* ============================================================
+   垂直居中的一条总口径
+   ============================================================ */
+/* 小程序里「一行里的东西对不齐」几乎只有两个原因：
+
+   1. 用了 `line-height: <比 height 小几 rpx>` 去凑居中 —— 那不是居中，
+      是把偏差摊到每一行文字上，字号一换就露
+   2. 靠 `align-items: baseline` 排「文字 + 控件」那一行 ——
+      缩放过的原生控件基线不在视觉中心，字就跟着偏
+
+   所以这里只给一件事：**行内元素一律走 flex + center**。
+   下面这两个选择器覆盖了「一行文字 + 一个原生控件」的全部场景，页面不用再写。 */
+
+.row,
+.kv,
+.native-label,
+.pref-item,
+.opt-row,
+.field,
+.search,
+.pager {
+  align-items: center;
+}
+
+/* 数字与计数的字宽统一：等宽数字让「几比几」不会随数字变化左右跳 */
+.count-num,
+.mastery-num,
+.ring-text,
+.num-v,
+.grant-meter-t,
+.day-count,
+.stage-count,
+.exam-progress,
+.exam-timer {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- 底部安全区垫片 ---------- */

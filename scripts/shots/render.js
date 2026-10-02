@@ -91,6 +91,14 @@ const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g
 const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"));
 
+/**
+ * ⚠️ 预览把 <radio> 编译成 <div class="n-radio">：页面样式表里按**标签名**
+ * 写的规则（`radio { transform: scale(.86) }`）在这里一律匹配不到，
+ * 预览就比真机「好看一点点」—— 而这一丁点差异，恰好是圆点被压到笔画上、
+ * 被竖线切一半这类问题的藏身处。所以下面按 class 补一份等价规则。
+ *
+ * 加规则时记住：**这里只是让预览不发假消息**，真机的观感仍由页面样式表决定。
+ */
 const NATIVE_CSS = `
 /* 原生控件的近似外观 —— 只为预览看得出「这里是个开关」 */
 .n-radio,.n-checkbox{width:23px;height:23px;border-radius:50%;border:1px solid #d6c8ad;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:none}
@@ -98,6 +106,16 @@ const NATIVE_CSS = `
 .n-radio.on{border-color:#2f6055;border-width:7px}
 .n-checkbox.on{background:#2f6055;border-color:#2f6055}
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
+/* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
+   少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
+.native-label .n-radio,.native-label .n-checkbox,
+.pref-item .n-radio,.pref-item .n-checkbox,
+.opt-row .n-radio,.opt-row .n-checkbox{margin-right:var(--sp-2)}
+.native-group.grid .native-label .n-radio,.native-group.grid .native-label .n-checkbox{margin-right:var(--sp-1)}
+.opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:2rpx;transform:scale(.86);transform-origin:left top}
+.opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:6rpx}
+.pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
+.char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
 .n-switch.on{background:#2f6055}
 .n-switch-k{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s}

@@ -89,10 +89,12 @@
 }
 
 .seq {
-  width: 52rpx;
+  width: 56rpx;
   flex: none;
   font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
   color: var(--ink-3);
+  text-align: center;
 }
 
 .read-dot {

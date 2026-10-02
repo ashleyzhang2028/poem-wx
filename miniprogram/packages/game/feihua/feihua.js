@@ -1,5 +1,6 @@
 const feihua = require("../../../utils/feihua/index");
 const entitlement = require("../../../utils/entitlement");
+const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
 
 Page({
@@ -98,9 +99,11 @@ Page({
   onSubmit() {
     const r = feihua.judge(this.data.char, this.data.input, this.data.said);
     if (!r.ok) {
+      sfx.answer(false);
       this.setData({ message: r.reason, messageOk: false });
       return;
     }
+    sfx.answer(true);
     const said = this.data.said.concat([r.seg]);
     this.setData({
       said,
@@ -112,6 +115,8 @@ Page({
   },
 
   onGiveUp() {
+    // 接不上了算过关：这一关的成绩是「说出几句」，不是「没输」
+    sfx.pass();
     this.setData({ finished: true, message: "这一关过了 " + this.data.said.length + " 句" });
   },
 

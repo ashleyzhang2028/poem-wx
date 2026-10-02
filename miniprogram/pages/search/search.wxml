@@ -12,7 +12,7 @@
 
   <!-- 范围与模式都是「选一个」：原生 radio，不再自绘分段控件 -->
   <view class="opt-block">
-    <text class="opt-label">范围</text>
+    <text class="field-label">范围</text>
     <radio-group class="opt-group scope-group" bindchange="onScope">
       <label class="pref-item" wx:for="{{scopes}}" wx:key="key">
         <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
@@ -22,7 +22,7 @@
 
     <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
     <block wx:if="{{fullOn}}">
-      <text class="opt-label">方式</text>
+      <text class="field-label">方式</text>
       <radio-group class="opt-group mode-group" bindchange="onMode">
         <label class="pref-item" wx:for="{{modes}}" wx:key="key">
           <radio value="{{item.key}}" checked="{{mode === item.key}}" color="#2f6055" />
@@ -60,7 +60,7 @@
   </view>
 
   <view class="hot" wx:if="{{!searched}}">
-    <text class="section-label">试试</text>
+    <text class="field-label">试试</text>
     <view class="hot-tags">
       <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
     </view>

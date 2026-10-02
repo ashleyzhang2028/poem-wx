@@ -38,7 +38,10 @@ const DEFAULTS = {
   autoNext: false,
   // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）
   speechRate: 1,
-  speechAutoNext: true
+  speechAutoNext: true,
+  // 答题音效（现场合成，零音频文件）。它不依赖任何外部通道，
+  // 所以默认是**开**的 —— 与朗读那条不同，那边「没通道」等于没功能
+  sfx: true
 };
 
 /**

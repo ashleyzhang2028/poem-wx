@@ -65,8 +65,12 @@
 
 .cap {
   display: flex;
-  align-items: baseline;
-  padding: 14rpx 0;
+  /* 基线对齐配「勾 / 叉 + 名字」会歪：✓ 与 ✕ 的字形高度不一样，
+     一个坐得高一个坐得低，看着像两行没对齐。改成居中，勾和名字
+     在同一条中轴上。 */
+  align-items: center;
+  min-height: 64rpx;
+  padding: 10rpx 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
@@ -78,6 +82,9 @@
   width: 44rpx;
   flex: none;
   font-size: var(--fs-body);
+  /* 勾与叉都居中占满那一格，两行之间的勾才对得上一条竖线 */
+  text-align: center;
+  line-height: 1.4;
 }
 
 .cap-mark.on {
@@ -91,7 +98,14 @@
 .cap-name {
   font-size: var(--fs-body);
   color: var(--ink);
+  line-height: 1.4;
+  margin-left: var(--sp-2);
   margin-right: var(--sp-2);
+}
+
+/* 名字与「差在哪」之间总要有个缝：右边那句是说明，不是名字的一部分 */
+.cap-note {
+  padding-left: var(--sp-2);
 }
 
 .cap-name.dim {
@@ -103,6 +117,7 @@
   text-align: right;
   font-size: var(--fs-caption);
   color: var(--ink-3);
+  line-height: 1.4;
 }
 
 /* ---------- 名录 ----------

@@ -2,6 +2,7 @@ const store = require("../../../utils/store");
 const speech = require("../../../utils/speech");
 const pinyin = require("../../../utils/pinyin");
 const entitlement = require("../../../utils/entitlement");
+const sfx = require("../../../utils/sfx");
 const gate = require("../../../utils/gate");
 
 const MODES = [
@@ -36,6 +37,8 @@ Page({
     speakReady: false,
     speakState: "denied",
     speakReason: "",
+    sfxVisible: false,
+    sfxOn: true,
     locked: false
   },
 
@@ -51,6 +54,7 @@ Page({
     const pr = pinyin.readiness();
     const prOn = pr.usable && entitlement.can("pinyin");
     const sr = speech.readiness();
+    const fx = sfx.readiness();
 
     this.setData({
       pinyin: prOn ? settings.pinyin : "off",
@@ -66,7 +70,10 @@ Page({
       speakVisible: sr.visible,
       speakReady: sr.usable,
       speakState: sr.state,
-      speakReason: sr.reason
+      speakReason: sr.reason,
+      // 音效这一格与朗读同规矩：环境没有音频接口时整块不渲染
+      sfxVisible: fx.visible,
+      sfxOn: sfx.enabled()
     });
   },
 
@@ -91,6 +98,17 @@ Page({
     const speechAutoNext = e.detail.value;
     store.saveSettings({ speechAutoNext });
     this.setData({ speechAutoNext });
+  },
+
+  onSfx(e) {
+    this.setData({ sfxOn: sfx.setEnabled(e.detail.value) });
+  },
+
+  /** 试听一声：把开关摆在旁边却不给听见的机会，等于让人盲选 */
+  onSfxTest() {
+    if (!sfx.preview()) {
+      wx.showToast({ title: "这台设备出不了声", icon: "none" });
+    }
   },
 
   onSpeakTest() {

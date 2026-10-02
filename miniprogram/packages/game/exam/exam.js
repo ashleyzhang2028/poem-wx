@@ -1,6 +1,7 @@
 const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
+const sfx = require("../../../utils/sfx");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -129,6 +130,10 @@ Page({
     // 判分走 quiz.judge，与题库页同一份口径
     const res = quiz.judge(this.data.current, picked);
 
+    // 考试页逐题不给对错（要统一批），但**该响一声** —— 没有反馈的话
+    // 用户不知道这一下点没点着，会连点两次
+    sfx.answer(res.ok);
+
     this.setData({
       picked,
       answered: this.data.answered + 1,
@@ -155,6 +160,7 @@ Page({
   finish() {
     this.stopTimer();
     const total = this.data.questions.length || 1;
+    sfx.rank(this.data.correct, total);
     this.setData({ stage: "result", score: Math.round((this.data.correct / total) * 100) });
   },
 

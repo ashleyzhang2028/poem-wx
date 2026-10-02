@@ -153,10 +153,13 @@
   border-bottom: none;
 }
 
+/* 序号：等宽字 + 固定槽。序号是「第几首」，它旁边是会换行的标题，
+   所以它必须是那条不动的竖线 —— 位数变了也占同一格 */
 .seq {
-  width: 46rpx;
+  width: 52rpx;
   flex: none;
   font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
   color: var(--ink-3);
   text-align: center;
 }

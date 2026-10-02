@@ -1,6 +1,7 @@
 const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
+const sfx = require("../../../utils/sfx");
 
 const COUNT = 10;
 
@@ -120,6 +121,9 @@ Page({
     const picked = e.currentTarget.dataset.v;
     const res = quiz.judge(this.data.current, picked);
 
+    // 对错当场给一声：眼睛在看下一题的题干，耳朵负责说「刚才那下算数」
+    sfx.answer(res.ok);
+
     this.setData({
       picked,
       last: res,
@@ -136,6 +140,8 @@ Page({
   onNext() {
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
+      // 出分那一刻给一声；按正确率分音景，满分与及格听起来不是一件事
+      sfx.rank(this.data.correct, this.data.questions.length);
       this.setData({ stage: "result" });
       return;
     }

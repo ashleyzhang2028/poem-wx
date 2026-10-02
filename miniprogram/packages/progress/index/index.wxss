@@ -81,9 +81,20 @@
   border-bottom: 1rpx solid var(--line-2);
 }
 
-/* 没有排期的那几天不占版面：一行高度 + 一个零 */
+/* 没有排期的那几天不占版面：一行高度 + 一个零。
+   两行都是「0 首」，字却按「今天」那一行的大小排，扫下来像是五天都有内容 ——
+   所以整行压低一档：字号降、颜色推远，让它读起来就是「空」 */
 .day.zero {
   padding: 10rpx 0;
+}
+
+.day.zero .day-label {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.day.zero .day-count {
+  opacity: .7;
 }
 
 .day:last-child {
@@ -96,10 +107,13 @@
   justify-content: space-between;
 }
 
+/* 日期那一行的字：与「几首」同一档 —— 同一行里两个字号的差不能超过一档，
+   否则「10/6」会比它右边的「0 首」大出一截，看着像标题配脚注 */
 .day-label {
   font-family: var(--font-poem);
-  font-size: var(--fs-title);
+  font-size: var(--fs-body);
   color: var(--ink-2);
+  line-height: 1.4;
 }
 
 /* 「今天」那一行给主色：七天里只要一眼认得出哪行是今天 */
@@ -159,4 +173,9 @@
   font-size: var(--fs-body);
   color: var(--green);
   font-variant-numeric: tabular-nums;
+}
+
+/* 记忆阶段里那几行：名字是说明、数字是结论，两者同档同高 */
+.stage {
+  min-height: 64rpx;
 }

@@ -1549,6 +1549,198 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("页头不与导航栏标题重复", dupes.length === 0, dupes.join("; "));
 }
 
+/**
+ * V6.8 控件与它的文字之间要有默认间距。
+ *
+ * Issue #12 的原话：「复选框单选框和右侧文字之间应该有默认间距」。
+ * 这不是审美，是**原生控件不带外边距**这件事 —— 紧贴是浏览器的排法，
+ * 不是控件的排法，而每一页都有人会忘记补，所以补在控件自己身上：
+ * 只要页面上出现裸的 <radio> / <checkbox>，它就一定已经被全局规则照顾到。
+ *
+ * 判据两条：
+ *   1. app.wxss 里必须有一条规则，按控件标签给 margin-right
+ *   2. 页面不许再给 .opt-main 补 padding-left 之类的**第二份**间距
+ *      ——两处叠加会变成 24rpx，比目的多出一倍
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+
+  // 1) 控件标签级的间距规则
+  const rule = /\.native-label\s+radio[\s\S]{0,400}?margin-right\s*:/.test(appWxss);
+  ok("原生选项与文字之间有全局默认间距", rule,
+    "app.wxss 里找不到给 radio/checkbox 的 margin-right");
+
+  // 2) 页面不许再叠一份：opt-main / pref-main 上的左内边距是重复间距
+  const doubled = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const re = /\.[\w-]*(opt-main|pref-main|opt-text)[^{]*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      if (/padding-left\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
+    }
+  });
+  ok("选项文字没有第二份间距", doubled.length === 0, doubled.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.9 按钮文字必须垂直居中，且**不许靠「height 比 line-height 大几 rpx」去凑**。
+ *
+ * 这一条是 Issue #12 点名的：「按钮文字应该垂直居中」。
+ * 网页版那套写法（height:88rpx + line-height:84rpx）在小程序里会偏 ——
+ * 原生 button 的默认行高、字重、系统字体三者任一变了，偏的方向还不一样。
+ * 居中的正解是 flex，所以这里守两件事：
+ *   1. .btn 必须是 flex + align-items:center
+ *   2. 页面样式表里不许再出现「按钮类的 height 与 line-height 差几 rpx」那种写法
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const btnBlock = /\.btn\s*\{([^}]*)\}/.exec(appWxss);
+  ok("按钮是 flex 居中", !!btnBlock && /display\s*:\s*flex/.test(btnBlock[1]) && /align-items\s*:\s*center/.test(btnBlock[1]),
+    btnBlock ? "当前 .btn 不是 flex 居中" : "app.wxss 里找不到 .btn");
+
+  // 页面里写按钮时不许再用 line-height 凑居中
+  const cheapCentering = [];
+  const pageFiles = pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]);
+  // 全局样式表也算一份 —— 它自己就会漂
+  pageFiles.push(["app.wxss", appWxss]);
+  pageFiles.forEach((pair) => {
+    const p = pair[0];
+    const wxss = pair[1];
+    // 找「同一块里既有 height 又有 line-height，且两者差 1~8rpx」的写法
+    const re = /\{([^{}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const body = m[1];
+      const h = /(^|[^-])height\s*:\s*([\d.]+)rpx/.exec(body);
+      const lh = /line-height\s*:\s*([\d.]+)rpx/.exec(body);
+      if (!h || !lh) continue;
+      const diff = Math.abs(Number(h[2]) - Number(lh[1]));
+      if (diff > 0 && diff <= 8) cheapCentering.push(p + " → h=" + h[2] + " lh=" + lh[1]);
+    }
+  });
+  ok("没有用 line-height 凑按钮居中", cheapCentering.length === 0, cheapCentering.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.10 同级文字只有一套字号与颜色。
+ *
+ * 「同级文字字体大小颜色的统一」这条没法全自动断言，但**同一类标签**可以：
+ * 字段名、卡片标题、说明文字、脚注这几类各自只该有一种样子。
+ * 判据：这些类名不许在页面样式表里被重写 font-size / color。
+ */
+{
+  const SHARED = ["field-label", "card-title", "hint", "empty-text", "empty-mark", "tag"];
+  const rewrites = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    SHARED.forEach((cls) => {
+      // 只看单独成块的 .cls{...}，不算后代选择器（.card-title.bar 这种是修饰，允许）
+      const re = new RegExp("(^|\\})\\s*\\." + cls + "\\s*\\{([^}]*)\\}", "g");
+      let m;
+      while ((m = re.exec(wxss))) {
+        const body = m[2];
+        // empty-mark 的直径本来就是每页自己定的（印章大小），只管字号
+        const hit = /font-size\s*:/.test(body) || /\.(empty-text|hint|field-label|card-title)\s*\{[^}]*color\s*:/.test(body);
+        if (hit) rewrites.push(p + " → ." + cls);
+      }
+    });
+  });
+  ok("同级文字的字号颜色只在全局定一次", rewrites.length === 0, rewrites.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.11 离线预览不许「比真机好看」。
+ *
+ * 预览把 `<radio>` 编译成 `<div class="n-radio">`，于是页面样式表里按
+ * **标签名**写的规则（`radio { transform: scale(.86) }`）一条都匹配不到 ——
+ * 预览里的圆点与文字之间没间距、缩放也没生效，而真机上是有间距、有缩放的。
+ * 这一丁点差异恰好是「圆点压在笔画上」「圆点被竖线切一半」这类问题的藏身处：
+ * 照着预览改，就会把真机改坏（或者反过来，看不出真机的毛病）。
+ *
+ * 所以守一条：**页面样式表里给 radio / checkbox 写的关键属性，
+ * 预览的 NATIVE_CSS 里必须有一份按 class 的等价项**。
+ */
+{
+  const renderJs = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "utf8");
+  const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderJs);
+  ok("预览里有原生控件的等价样式", !!nativeBlock);
+
+  const mirror = nativeBlock ? nativeBlock[1] : "";
+
+  /**
+   * 页面样式表里每条「按标签名给 radio / checkbox」的规则，预览都得有等价项。
+   * 判据取形状而不是关键词：把标签名换成 .n-radio 之后，**样式声明本身
+   * 必须能在 NATIVE_CSS 里原样找到**（归一化空白后比对）。
+   * 只查关键词的话，「别处也写了 margin-right」就会把漏掉的那条遮住 ——
+   * 这条断言就是被这么骗过一次，才改成比对整条声明。
+   */
+  const normalize = (x) => x.replace(/\s+/g, "").replace(/;+$/, "");
+  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    + pages.map((p) => fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")).join("\n");
+
+  const decls = [];
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(pageCssAll))) {
+    const sel = m[1];
+    if (!/(^|[\s,>])(radio|checkbox)([\s,{:.]|$)/.test(sel)) continue;
+    if (sel.indexOf(".n-") >= 0) continue;
+    // 取声明里真正影响观感的那几样
+    const body = m[2];
+    const keep = body.split(";").map((d) => d.trim()).filter((d) =>
+      /^(margin-right|margin-left|transform|transform-origin|align-self|margin-top|flex)\s*:/.test(d));
+    keep.forEach((d) => decls.push(normalize(d)));
+  }
+  const unique = Array.from(new Set(decls));
+  // 两边都要归一化再比：镜像里写的是 `left top`、页面里可能写 `lefttop`，
+  // 它们其实是同一条。只归一化一边会把这类等价写法误报成漏项。
+  const mirrorNorm = normalize(mirror);
+  const missing = unique.filter((d) => mirrorNorm.indexOf(d) < 0);
+  ok("预览镜像了原生控件的全部关键声明（" + unique.length + " 条）",
+    missing.length === 0, "NATIVE_CSS 里缺：" + missing.join(" / "));
+}
+
+/**
+ * V6.12 一排并列的按钮必须一样高。
+ *
+ * flex 的默认 `align-items: stretch` 遇上 `.btn` 的固定 `height` 会退化成
+ * **基线对齐**：同一排里主按钮与次要按钮顶部齐、底部不齐，看着像一大一小。
+ * 判据：凡 `.actions` 这一族（放一排按钮的容器），必须显式写 align-items。
+ */
+{
+  const selectors = [];
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const files = [["app.wxss", appWxss]].concat(
+    pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")])
+  );
+  files.forEach((pair) => {
+    const p = pair[0];
+    const wxss = pair[1];
+    const re = /\.(actions|btn-row|btn-pair)\s*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      if (!/display\s*:\s*flex/.test(m[2])) continue;
+      // 只看这一族：里面装的是 .btn（固定 height + 投影，才会出现「一大一小」）。
+      // 读者页的 .act 是自绘的等高块，不需要这条 —— 断言不该管它。
+      const family = m[1];
+      const child = new RegExp("\\." + family + "\\s+\\.btn\\s*\\{").test(wxss) || p === "app.wxss";
+      if (child && !/align-items\s*:/.test(m[2])) selectors.push(p + " → ." + family);
+    }
+  });
+  ok("并列按钮的行有统一对齐", selectors.length === 0, selectors.join("; "));
+
+  // 装 .btn 的那一族容器只许有一份实现：各页各写一份，就一定会有一份忘了对齐
+  const dupes = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    if (/\.actions\s+\.[\w-]+\s*\{[^}]*flex\s*:\s*1/.test(wxss) && /\.actions\s*\{/.test(wxss)) {
+      dupes.push(p);
+    }
+  });
+  ok("并列按钮的容器只在全局定一次", dupes.length === 0, dupes.join(", "));
+}
+
 // V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
 {
   const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");

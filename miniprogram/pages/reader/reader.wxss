@@ -79,12 +79,16 @@
   padding: 0 var(--sp-2);
 }
 
-/* ---------- 阅读偏好 ---------- */
-/* 原生 radio（对齐）+ 原生 slider（字号）+ 原生 button（朗读），一行放不下就换行 */
+/* ---------- 阅读偏好 ----------
+   一行三格：对齐（原生 radio）+ 字号（原生 slider）+ 朗读（原生 button）。
+   三者高度不一样（radio 行 60rpx、slider 的拇指块 44rpx、button 60rpx），
+   靠 align-items:center 对齐的是**盒子**，看着还是会「一个高一个低」——
+   所以这里统一给一条最小高度，让三格的**内容**落在同一条横线上。 */
 .prefs {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  min-height: 72rpx;
   padding: var(--sp-1) 0 var(--sp-2);
 }
 
@@ -96,16 +100,24 @@
 .pref-font {
   flex: 1;
   min-width: 0;
+  /* slider 自带上下留白，压掉一点才和三格里的另外两格同高 */
+  display: flex;
+  align-items: center;
 }
 
 .pref-slider {
-  margin: 0 var(--sp-1);
+  margin: 0;
 }
 
-/* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度 */
+/* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度。
+   它是这一排里唯一「会说话」的那格，所以按下态要能看出来（.btn 自带） */
 .speak-entry.off,
 .speak-entry[disabled] {
   color: var(--ink-3);
+}
+
+.speak-entry {
+  flex: none;
 }
 
 .speak-entry.on {
@@ -266,12 +278,17 @@
   vertical-align: bottom;
 }
 
+/* 注音那一行：固定高度是为了「有拼音的字」和「没拼音的字」底边对齐。
+   这里的高度是**槽**不是居中手段 —— 里面的拼音靠 flex 居中，不靠行高凑 */
 .tk-py {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 26rpx;
   font-family: var(--font-ui);
   font-size: var(--fs-pinyin);
   color: var(--celadon);
-  line-height: 26rpx;
-  height: 26rpx;
+  line-height: 1;
   white-space: nowrap;
 }
 
