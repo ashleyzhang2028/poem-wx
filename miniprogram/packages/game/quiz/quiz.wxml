@@ -2,6 +2,11 @@
   <lock-card wx:if="{{!allowed}}" title="题库" note="{{reason}}" mark="题" />
 
   <block wx:elif="{{stage === 'setup'}}">
+    <view class="page-head">
+      <text class="head-title">出一组题</text>
+      <text class="head-sub">选范围与题型 · 答完当场判 · 错题留到最后</text>
+    </view>
+
     <view class="card">
       <view class="card-title bar">出题范围</view>
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">

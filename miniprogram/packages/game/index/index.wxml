@@ -2,9 +2,9 @@
   <lock-card wx:if="{{locked}}" title="大会要登录" note="古诗词大会（飞花令 / 题库 / 模拟考试）要微信登录之后才能进。" mark="会" />
 
   <block wx:else>
-  <view class="intro">
-    <text class="intro-t">古诗词大会</text>
-    <text class="intro-s">飞花令 · 题库 · 模拟考试</text>
+  <view class="page-head">
+    <text class="head-title">三样玩法</text>
+    <text class="head-sub">飞花令 · 题库 · 模拟考试</text>
   </view>
 
   <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片。

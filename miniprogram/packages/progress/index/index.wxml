@@ -2,12 +2,17 @@
   <lock-card wx:if="{{locked}}" title="进度要登录" note="背诵进度要登录之后才看得到。本机数据不会因为登录被上传，同步是你主动点的事。" mark="进" />
 
   <block wx:else>
+  <view class="page-head">
+    <text class="head-title">走到哪了</text>
+    <text class="head-sub">未来七天排期 · 记忆阶段分布</text>
+  </view>
+
   <view class="card overview">
     <view class="ov-head">
-      <view class="ov-ring">
-        <view class="ov-ring-track"></view>
-        <view class="ov-ring-fill" style="--p:{{masteryPercent}}"></view>
-        <text class="ov-ring-text">{{masteryPercent}}%</text>
+      <view class="ring ov-ring">
+        <view class="ring-track"></view>
+        <view class="ring-fill" style="--p:{{masteryPercent}}"></view>
+        <text class="ring-text">{{masteryPercent}}%</text>
       </view>
       <view class="ov-main">
         <text class="ov-title">掌握度</text>
@@ -35,13 +40,13 @@
 
   <view class="card">
     <view class="card-title bar">未来七天</view>
-    <view class="day" wx:for="{{days}}" wx:key="label">
+    <view class="day {{item.count ? '' : 'zero'}}" wx:for="{{days}}" wx:key="label">
       <view class="day-head">
         <text class="day-label {{item.today ? 'today' : ''}}">{{item.label}}</text>
         <text class="day-count">{{item.count}} 首</text>
       </view>
-      <view class="day-bar" wx:if="{{item.count}}">
-        <view class="day-bar-fill" style="width:{{item.percent}}%"></view>
+      <view class="meter day-bar" wx:if="{{item.count}}">
+        <view class="meter-fill day-bar-fill" style="width:{{item.percent}}%"></view>
       </view>
       <view class="day-items" wx:if="{{item.items.length}}">
         <text class="day-item" wx:for="{{item.items}}" wx:for-item="p" wx:key="id">{{p.title}}</text>

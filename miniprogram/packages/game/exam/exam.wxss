@@ -1,64 +1,86 @@
+/* ============================================================
+   题库与模拟考试共用的一套样式。
+   两个页面同源：出题范围 → 挑题型 → 答题 → 看结果，
+   所以长相也共用一份 —— 各写一遍迟早会漂。
+   ============================================================ */
+
+/* picker 是原生选择器，只统一尺寸与配色 */
 .picker {
-  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-body);
   color: var(--green);
-  padding: 24rpx 0;
+  padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
+/* picker 右边那个 › 是 WXML 里写的，样式表不再补一个 —— 会变成两个 */
+
 .note {
   display: block;
-  padding-top: 20rpx;
-  line-height: 1.8;
+  padding-top: var(--sp-2);
+  line-height: var(--lh-body);
 }
 
+/* ---------- 答题进度条 ----------
+   一行两件事：走到第几题、已经对了几道。
+   不用再加进度环 —— 答题时眼睛只在题干上。 */
 .exam-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4rpx 20rpx;
+  padding: 0 var(--sp-1) var(--sp-3);
 }
 
 .exam-progress {
-  font-size: 26rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
   color: var(--ink-2);
-}
-
-.exam-timer {
-  font-size: 30rpx;
-  color: var(--red);
   font-variant-numeric: tabular-nums;
 }
 
+.exam-timer {
+  font-size: var(--fs-body);
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 题干 ----------
+   题干是这一屏唯一要读的东西，居中、放大、行距放开 */
 .stem {
   display: block;
   font-family: var(--font-poem);
-  font-size: 38rpx;
+  font-size: var(--fs-hero);
   color: var(--ink);
   line-height: 1.9;
   text-align: center;
+  padding: var(--sp-2) 0;
 }
 
 .stem-sub {
   display: block;
   text-align: center;
-  padding-top: 16rpx;
+  padding-top: var(--sp-2);
 }
 
+/* ---------- 选项 ----------
+   四个选项长得一样，随手点一下必须看得出点中了哪个，
+   所以按下就压一下；对错再由颜色通知。 */
 .options {
-  margin-top: 8rpx;
+  margin-top: var(--sp-1);
 }
 
 .option {
   background: var(--card);
   border: 1rpx solid var(--line-2);
   border-radius: var(--radius-sm);
-  padding: 28rpx;
-  margin-bottom: 16rpx;
-  font-size: 30rpx;
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-body);
   color: var(--ink);
   text-align: center;
-  /* 四个选项长得一样，按下时压一下才知道点中了哪个 */
-  transition: transform .1s;
+  transition: transform var(--t-press), background-color var(--t-press), border-color var(--t-press);
 }
 
 .option:active {
@@ -69,38 +91,46 @@
   border-color: var(--green);
   background: var(--green-light);
   color: var(--green);
+  font-weight: 600;
 }
 
 .option.wrong {
-  border-color: var(--red);
+  border-color: var(--red-edge);
   background: var(--red-light);
   color: var(--red);
 }
 
+/* ---------- 结果 ----------
+   分数是这一屏的主角，下面挂一行小字说清「答对几道」 */
 .result {
   text-align: center;
-  padding: 56rpx 32rpx;
+  padding: var(--sp-6) var(--sp-4) var(--sp-5);
+  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 62%, #f4ecd8 100%);
 }
 
 .score {
-  font-size: 96rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-score);
   font-weight: 600;
   color: var(--green);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-k {
-  font-size: 28rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  padding-left: 8rpx;
+  padding-left: var(--sp-1);
 }
 
 .result .hint {
   display: block;
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
 }
 
+/* ---------- 错题 ---------- */
 .wrong {
-  padding: 20rpx 0;
+  padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
@@ -111,19 +141,18 @@
 .wrong-stem {
   display: block;
   font-family: var(--font-poem);
-  font-size: 30rpx;
+  font-size: var(--fs-title);
   color: var(--ink);
   margin-bottom: 10rpx;
+  line-height: 1.7;
 }
 
 .wrong-line {
   display: block;
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
 }
 
 .picked-line {
   color: var(--red);
 }
-
-/* 考试页复用题库页那套题型挑选样式 */

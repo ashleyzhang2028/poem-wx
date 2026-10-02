@@ -1,18 +1,23 @@
 <view class="page">
+  <view class="page-head">
+    <text class="head-title">今天背什么</text>
+    <text class="head-sub">背哪一册 · 每天几首 · 按哪套算法排期</text>
+  </view>
+
   <lock-card wx:if="{{locked}}" title="背诵范围要登录" note="背诵范围要登录之后才生效 —— 未登录时只有首页目录可看。" mark="范" />
 
   <block wx:else>
   <view class="card">
     <view class="card-title bar">背诵范围</view>
 
-    <radio-group class="native-group" data-k="term" bindchange="onTerm">
+    <radio-group class="native-group grid cols-3" data-k="term" bindchange="onTerm">
       <label class="native-label" wx:for="{{terms}}" wx:key="value">
         <radio value="{{item.value}}" checked="{{term === item.value}}" color="#2f6055" />
         <text>{{item.label}}</text>
       </label>
     </radio-group>
 
-    <radio-group class="native-group" data-k="grade" bindchange="onGrade">
+    <radio-group class="native-group grid" data-k="grade" bindchange="onGrade">
       <label class="native-label" wx:for="{{grades}}" wx:key="value">
         <radio value="{{item.value}}" checked="{{grade === item.value}}" color="#2f6055" />
         <text>{{item.label}}</text>

@@ -16,9 +16,16 @@ const RATES = [
   { key: 1.2, label: "快" }
 ];
 
+/** 试样那六个字：挑的是一句里最容易被读错的几类 —— 多音、变调、生僻 */
+const SAMPLE = [
+  { ch: "床", py: "chuáng" }, { ch: "前", py: "qián" }, { ch: "明", py: "míng" },
+  { ch: "月", py: "yuè" }, { ch: "光", py: "guāng" }
+];
+
 Page({
   data: {
     modes: MODES,
+    sample: SAMPLE,
     pinyin: "rare",
     pinyinOn: false,
     pinyinNote: "",

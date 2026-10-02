@@ -1468,6 +1468,87 @@ pages.forEach((p) => {
 });
 ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.slice(0, 6).join("; "));
 
+/**
+ * V6.5 字号与间距必须走令牌。
+ *
+ * 这一节的由来是 Issue 里那句「很多页面一塌糊涂，从 UI 到交互到体验都不行」。
+ * 「好不好看」断言不了，但**「同一件事各页各写一个数值」**可以 ——
+ * 那不是审美问题，是没人管出来的漂移。
+ * 判据：页面样式表里出现裸字号（如 font-size: 27rpx）就是漏了令牌。
+ */
+{
+  // 令牌自己当然要写字面量，页面样式表才查
+  const TOKEN_FILES = /tokens\.wxss$/;
+  const ALLOWED_FONT = [
+    // 正文诗行这类「跟着字号档位走」的，逐档写死是故意的（见 reader.wxss）
+  ];
+  const bareFont = [];
+  const TOKEN_FONT = /var\(--fs-[a-z]+\)/;
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    if (TOKEN_FILES.test(p)) return;
+    // 只看 font-size 声明
+    const re = /font-size\s*:\s*([^;]+);/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const val = m[1].trim();
+      if (TOKEN_FONT.test(val)) continue;
+      if (/^calc\(/.test(val)) continue;             // 跟着档位算的
+      if (/^\$/.test(val)) continue;
+      // 诗行字号档位（size-* 那一组）是「按档给值」的，允许
+      const line = wxss.slice(0, m.index).split("\n").pop() + val;
+      if (/\.poem-body\s*\.size-|\bsize--?\d/.test(line)) continue;
+      bareFont.push(p + " → font-size:" + val);
+    }
+  });
+  ok("字号一律走令牌", bareFont.length === 0, bareFont.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.6 卡片间距只允许一种。
+ *
+ * 卡片之间的缝隙一眼就能看出来不均匀 —— 它不刺眼，但整页会「说不上哪里不对」。
+ * 判据：app.wxss 里 .card 的下边距是唯一出处，页面样式表不许再给卡片加 margin-bottom。
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  ok("卡片间距收在全局一处", /\.card\s*\{[^}]*margin-bottom/.test(appWxss));
+
+  const strayCardGap = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    // 只看「本身就是一张卡片」的选择器：.xxx-card，且不是 .card 的后代/修饰
+    const re = /(^|\})\s*\.([\w-]+-card)\s*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      if (/margin-bottom\s*:\s*(?!0)/.test(m[3])) strayCardGap.push(p + " → ." + m[2]);
+    }
+  });
+  ok("卡片间距没有各页各写一份", strayCardGap.length === 0, strayCardGap.slice(0, 6).join("; "));
+}
+
+/**
+ * V6.7 一屏的主标题只有一处。
+ *
+ * 页头那句大标题与导航栏标题重复，是这次整改里最扎眼的一类：
+ * 同屏上下两行一模一样的字，等于什么都没说。
+ * 判据：page-head 里的 head-title 不许等于该页 json 里的导航栏标题。
+ */
+{
+  const dupes = [];
+  pages.forEach((p) => {
+    const wxmlPath = path.join(ROOT, p + ".wxml");
+    const wxml = fs.readFileSync(wxmlPath, "utf8");
+    const t = /<text class="head-title">([^<]*)<\/text>/.exec(wxml);
+    if (!t) return;
+    const cfgPath = path.join(ROOT, p + ".json");
+    const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+    const nav = cfg.navigationBarTitleText;
+    if (nav && nav === t[1]) dupes.push(p + " → " + nav);
+  });
+  ok("页头不与导航栏标题重复", dupes.length === 0, dupes.join("; "));
+}
+
 // V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
 {
   const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");

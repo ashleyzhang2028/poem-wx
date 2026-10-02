@@ -1,75 +1,96 @@
+/* ============================================================
+   详情页：整屏只服务一件事 —— 读这首诗，然后告诉系统背得怎么样。
+   所以顺序是：标题区 → 正文 → 背诵 → 朗读 → 译文。
+   操作条排在正文后面，不在正文中间插一排按钮。
+   ============================================================ */
+
 .poem-card {
-  padding: 36rpx 28rpx 16rpx;
+  padding: var(--sp-4) var(--sp-3) var(--sp-3);
 }
 
+/* ---------- 标题区 ----------
+   居中、留白、克制。诗歌标题是这一屏的身份，
+   给它四周留够空，比给它加粗加大更有分量。 */
 .poem-head {
   text-align: center;
-  padding: 8rpx 0 28rpx;
+  padding: var(--sp-2) 0 var(--sp-3);
 }
 
 .poem-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: 46rpx;
+  font-size: var(--fs-hero);
   font-weight: 600;
   color: var(--ink);
-  letter-spacing: 2rpx;
-  line-height: 1.5;
+  letter-spacing: var(--ls-title);
+  line-height: 1.45;
 }
 
 .poem-meta-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 14rpx;
+  margin-top: var(--sp-2);
 }
 
 .poem-meta {
-  font-size: 26rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
 }
 
 .poem-dot {
-  font-size: 26rpx;
+  font-size: var(--fs-hint);
   color: var(--line);
   padding: 0 12rpx;
 }
 
 .poem-source {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 10rpx;
 }
 
 .stage-tag {
-  margin: 18rpx 0 0;
+  margin: var(--sp-2) 0 0;
 }
 
-/* 阅读偏好一行：原生 radio（对齐）+ 原生 slider（字号）+ 原生 button（朗读） */
+/* 正文与上方信息之间的一道题签式分隔：一条线 + 两个字，
+   比一条光秃秃的线更像一本书 */
+.rule {
+  display: flex;
+  align-items: center;
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+
+.rule::before,
+.rule::after {
+  content: "";
+  flex: 1;
+  height: 1rpx;
+  background: var(--line-2);
+}
+
+.rule-t {
+  font-family: var(--font-poem);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  padding: 0 var(--sp-2);
+}
+
+/* ---------- 阅读偏好 ---------- */
+/* 原生 radio（对齐）+ 原生 slider（字号）+ 原生 button（朗读），一行放不下就换行 */
 .prefs {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding-bottom: 20rpx;
-  border-bottom: 1rpx solid var(--line-2);
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0 var(--sp-2);
 }
 
 .pref-group {
   display: flex;
   flex: none;
-}
-
-.pref-item {
-  display: flex;
-  align-items: center;
-  font-size: 27rpx;
-  color: var(--ink-2);
-  padding-right: 12rpx;
-}
-
-.pref-item radio {
-  transform: scale(.8);
 }
 
 .pref-font {
@@ -78,12 +99,24 @@
 }
 
 .pref-slider {
-  margin: 0 8rpx;
+  margin: 0 var(--sp-1);
 }
 
 /* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度 */
+.speak-entry.off,
+.speak-entry[disabled] {
+  color: var(--ink-3);
+}
+
+.speak-entry.on {
+  color: var(--green);
+}
+
+/* ---------- 正文 ----------
+   行距给到 2.05：古诗文一行一意，行距紧了就成了密电码。
+   字距也放开一点，宋体在屏幕上本来就偏瘦。 */
 .poem-body {
-  padding: 40rpx 8rpx 28rpx;
+  padding: 0 var(--sp-1) var(--sp-2);
   font-family: var(--font-poem);
   line-height: 2.05;
 }
@@ -98,7 +131,7 @@
 
 .poem-line {
   display: block;
-  font-size: 36rpx;
+  font-size: var(--fs-poem);
   color: var(--ink);
   letter-spacing: 2rpx;
 }
@@ -112,98 +145,57 @@
 .poem-body.size-3 .poem-line { font-size: 46rpx; }
 .poem-body.size-4 .poem-line { font-size: 52rpx; }
 
-.trans-head {
+/* 左对齐时给每行一道极淡的引导线：不齐的行更需要「从哪开始」的锚 */
+.poem-body.align-left .poem-line {
+  padding-left: var(--sp-2);
+  border-left: 3rpx solid transparent;
+}
+
+.note {
+  display: block;
+  padding-top: var(--sp-1);
+}
+
+/* ---------- 背诵 ----------
+   三个动作按「记住程度」从低到高排，配色也按这个顺序给：
+   忘记是朱砂、模糊是琥珀、记得是主色。 */
+.recite-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: var(--sp-2);
 }
 
-.trans-toggle {
-  font-size: 26rpx;
-  color: var(--green);
-  flex: none;
-  padding-left: 16rpx;
-}
-
-.trans-text {
-  display: block;
-  font-size: 29rpx;
-  color: var(--ink-2);
-  line-height: 1.9;
-}
-
-.trans-src {
-  display: block;
-  font-size: 22rpx;
-  color: var(--ink-3);
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 1rpx solid var(--line-2);
-}
-
-/* ---------- 掌握程度 ---------- */
-.recite-status {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4rpx;
-}
-
-.recite-stage {
-  font-size: 25rpx;
-  color: var(--ink-3);
-  flex: none;
-  padding-right: 16rpx;
+.recite-head .card-title {
+  margin-bottom: 0;
 }
 
 .mastery-bar {
-  flex: 1;
-  height: 12rpx;
-  border-radius: 6rpx;
-  background: var(--line-2);
-  overflow: hidden;
-}
-
-.mastery-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
-  border-radius: 6rpx;
-  transition: width .35s ease;
+  margin-bottom: var(--sp-3);
 }
 
 .mastery-num {
-  flex: none;
-  font-size: 23rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  padding-left: 16rpx;
-  min-width: 68rpx;
-  text-align: right;
-}
-
-/* 一句问话，把那排按钮的用途说出来 —— 三个词摆在那里，
-   没人告诉用户点下去会发生什么 */
-.recite-ask {
-  display: block;
-  font-size: 25rpx;
-  color: var(--ink-3);
-  padding: 24rpx 0 16rpx;
 }
 
 .actions {
   display: flex;
-  gap: 16rpx;
+  gap: var(--sp-2);
 }
 
 .act {
   flex: 1;
-  height: 104rpx;
-  line-height: 104rpx;
-  text-align: center;
+  height: 112rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
-  font-size: 31rpx;
+  font-size: var(--fs-title);
   border: 1rpx solid var(--line);
   background: var(--bg-soft);
   color: var(--ink-2);
-  transition: transform .1s;
+  transition: transform var(--t-press), background-color var(--t-press);
 }
 
 /* 三档按钮的按下反馈：只靠颜色差别太小，压一下更明确 */
@@ -214,7 +206,7 @@
 .act.bad {
   color: var(--red);
   background: var(--red-light);
-  border-color: #ecd2cd;
+  border-color: var(--red-edge);
 }
 
 .act.fuzzy {
@@ -227,28 +219,36 @@
   color: #fff;
   background: var(--green);
   border-color: var(--green);
+  box-shadow: 0 6rpx 18rpx rgba(47, 96, 85, .2);
+}
+
+.act-label {
+  letter-spacing: var(--ls-title);
 }
 
 .hint-line {
   display: block;
   text-align: center;
-  padding-top: 24rpx;
+  padding-top: var(--sp-3);
 }
 
 /* ---------- 注音 ---------- */
 /* 注音模式：原生 radio 排一行 */
 .pinyin-group {
   display: flex;
-  padding: 16rpx 0 8rpx;
+  flex-wrap: wrap;
+  padding: 0 0 var(--sp-1);
 }
 
 .token-line {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: flex-end;
+  width: 100%;
   padding: 6rpx 0;
   border-radius: var(--radius-sm);
-  transition: background-color .2s;
+  transition: background-color var(--t-move);
 }
 
 .poem-body.align-left .token-line {
@@ -259,21 +259,24 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   min-width: 34rpx;
   margin: 0 2rpx;
+  /* 有拼音与没拼音的字混在一行时，底边对齐才不会高低跳 */
+  vertical-align: bottom;
 }
 
 .tk-py {
   font-family: var(--font-ui);
-  font-size: 18rpx;
-  color: var(--ink-3);
-  line-height: 1.3;
+  font-size: var(--fs-pinyin);
+  color: var(--celadon);
+  line-height: 26rpx;
   height: 26rpx;
   white-space: nowrap;
 }
 
 .tk-ch {
-  font-size: 36rpx;
+  font-size: var(--fs-poem);
   color: var(--ink);
   line-height: 1.5;
 }
@@ -302,26 +305,22 @@
 }
 
 /* ---------- 朗读 ---------- */
-.speak-entry.off,
-.speak-entry[disabled] {
-  color: var(--ink-3);
-}
-
-.speak-entry.on {
-  color: var(--green);
-}
-
 .speak-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: var(--sp-1);
+}
+
+.speak-head .card-title {
+  margin-bottom: 0;
 }
 
 .speak-state {
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--green);
   flex: none;
-  padding-left: 16rpx;
+  padding-left: var(--sp-2);
 }
 
 .speak-state.off {
@@ -331,17 +330,17 @@
 .speak-progress {
   display: flex;
   align-items: center;
-  padding: 8rpx 0 4rpx;
+  padding: var(--sp-1) 0;
 }
 
 /* 进度条是原生 slider：它能拖，比一条只读的细线多一个作用 */
 .sp-slider {
   flex: 1;
-  margin: 0 8rpx 0 4rpx;
+  margin: 0 var(--sp-1) 0 4rpx;
 }
 
 .sp-text {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   flex: none;
   padding-right: 12rpx;
@@ -351,7 +350,7 @@
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-top: 12rpx;
+  margin-top: var(--sp-1);
 }
 
 .speak-ctrl .btn {
@@ -363,7 +362,45 @@
   flex: 1.4;
 }
 
-.note {
+/* ---------- 译文 ---------- */
+.trans-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-1);
+  margin: calc(var(--sp-1) * -1);
+  border-radius: 10rpx;
+  transition: background-color var(--t-press);
+}
+
+.trans-hover {
+  background: var(--green-light);
+}
+
+.trans-head .card-title {
+  margin-bottom: 0;
+}
+
+.trans-toggle {
+  font-size: var(--fs-hint);
+  color: var(--green);
+  flex: none;
+  padding-left: var(--sp-2);
+}
+
+.trans-text {
   display: block;
-  padding-top: 8rpx;
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: var(--lh-loose);
+  padding-top: var(--sp-2);
+}
+
+.trans-src {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1rpx solid var(--line-2);
 }

@@ -1,12 +1,14 @@
+/* 字号那一行：两头各一个大小的 A，中间是原生 slider。
+   试样例就摆在下面，改完不用退回阅读页才知道什么样 */
 .font-row {
   display: flex;
   align-items: center;
-  margin: 12rpx 0 4rpx;
+  margin: var(--sp-2) 0 4rpx;
 }
 
 .font-slider {
   flex: 1;
-  margin: 0 20rpx;
+  margin: 0 var(--sp-3);
 }
 
 .font-a {
@@ -16,16 +18,18 @@
 }
 
 .font-a.small {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
 }
 
 .font-a.big {
-  font-size: 36rpx;
+  font-size: var(--fs-lead);
 }
 
 .sample {
   display: block;
   font-family: var(--font-poem);
-  line-height: 1.9;
-  padding-top: 16rpx;
+  line-height: var(--lh-loose);
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-top: 1rpx dashed var(--line-2);
+  margin-top: var(--sp-2);
 }

@@ -5,7 +5,7 @@
 .intro-t {
   display: block;
   font-family: var(--font-poem);
-  font-size: 40rpx;
+  font-size: var(--fs-hero);
   font-weight: 600;
   color: var(--green);
   letter-spacing: 2rpx;
@@ -13,7 +13,7 @@
 
 .intro-s {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 8rpx;
   letter-spacing: 1rpx;
@@ -45,7 +45,7 @@
 
 .mode-name {
   display: block;
-  font-size: 30rpx;
+  font-size: var(--fs-title);
   font-weight: 600;
   color: var(--green);
 }
@@ -64,7 +64,7 @@
 
 .mode-desc {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 10rpx;
   line-height: 1.6;
@@ -73,7 +73,7 @@
 /* 卡内第三行给出下一步动作：两面墙一样的卡，点哪张全靠猜 */
 .mode-go {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--green);
   margin-top: 16rpx;
   letter-spacing: 1rpx;
@@ -124,7 +124,7 @@
 
 .char-t {
   font-family: var(--font-poem);
-  font-size: 36rpx;
+  font-size: var(--fs-lead);
   line-height: 1;
 }
 
@@ -135,7 +135,7 @@
 .line-seg {
   display: block;
   font-family: var(--font-poem);
-  font-size: 32rpx;
+  font-size: var(--fs-poem);
   color: var(--ink);
 }
 
@@ -155,7 +155,7 @@
 }
 
 .pg {
-  font-size: 27rpx;
+  font-size: var(--fs-body);
   color: var(--green);
   padding: 0 32rpx;
   height: 64rpx;
@@ -168,7 +168,7 @@
 }
 
 .pg-num {
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-3);
   padding: 0 16rpx;
 }

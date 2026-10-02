@@ -1,4 +1,8 @@
+/* 取诗范围下面那句话：报一下这个范围里有多少首，
+   不然选完不知道「随机」到底随机自哪个池子 */
 .pool-hint {
   display: block;
-  margin-top: 20rpx;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1rpx dashed var(--line-2);
 }

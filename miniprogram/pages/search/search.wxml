@@ -11,20 +11,26 @@
   </view>
 
   <!-- 范围与模式都是「选一个」：原生 radio，不再自绘分段控件 -->
-  <radio-group class="opt-group scope-group" bindchange="onScope">
-    <label class="pref-item" wx:for="{{scopes}}" wx:key="key">
-      <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
-      <text>{{item.label}}</text>
-    </label>
-  </radio-group>
+  <view class="opt-block">
+    <text class="opt-label">范围</text>
+    <radio-group class="opt-group scope-group" bindchange="onScope">
+      <label class="pref-item" wx:for="{{scopes}}" wx:key="key">
+        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
 
-  <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
-  <radio-group class="opt-group mode-group" wx:if="{{fullOn}}" bindchange="onMode">
-    <label class="pref-item" wx:for="{{modes}}" wx:key="key">
-      <radio value="{{item.key}}" checked="{{mode === item.key}}" color="#2f6055" />
-      <text>{{item.label}}</text>
-    </label>
-  </radio-group>
+    <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
+    <block wx:if="{{fullOn}}">
+      <text class="opt-label">方式</text>
+      <radio-group class="opt-group mode-group" bindchange="onMode">
+        <label class="pref-item" wx:for="{{modes}}" wx:key="key">
+          <radio value="{{item.key}}" checked="{{mode === item.key}}" color="#2f6055" />
+          <text>{{item.label}}</text>
+        </label>
+      </radio-group>
+    </block>
+  </view>
 
   <!-- 结果统计：搜完给一句「命中几条、在哪儿搜的」，
        不然一屏结果看完也不知道是不是全量 -->
@@ -34,7 +40,7 @@
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
-    <view class="row" hover-class="row-hover" hover-stay-time="60"
+    <view class="row hit-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
         <text class="row-title">{{item.title}}</text>

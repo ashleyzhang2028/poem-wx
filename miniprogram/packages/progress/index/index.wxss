@@ -1,69 +1,32 @@
 /* ---------- 总览 ---------- */
 .overview {
-  padding: 32rpx 28rpx 24rpx;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
 }
 
 .ov-head {
   display: flex;
   align-items: center;
-  padding-bottom: 24rpx;
+  padding-bottom: var(--sp-3);
   border-bottom: 1rpx solid var(--line-2);
 }
 
-/* 掌握度环：与首页那个进度环同一套做法（纯 CSS 锥形渐变），
+/* 掌握度环：与首页那个进度环共用全局 .ring ——
    两个环放在一起要长得像，用户才会认成同一件事 */
 .ov-ring {
-  position: relative;
-  width: 112rpx;
-  height: 112rpx;
+  width: 116rpx;
+  height: 116rpx;
   flex: none;
 }
 
-.ov-ring-track,
-.ov-ring-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-}
-
-.ov-ring-track {
-  background: var(--line-2);
-}
-
-.ov-ring-fill {
-  background: conic-gradient(var(--celadon) calc(var(--p) * 1%), transparent 0);
-  transition: background .35s ease;
-}
-
-.ov-ring::after {
-  content: "";
-  position: absolute;
-  inset: 12rpx;
-  border-radius: 50%;
-  background: #fffefb;
-  border: 1rpx solid var(--line-2);
-}
-
-.ov-ring-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 25rpx;
-  color: var(--ink-2);
-  z-index: 1;
-}
-
 .ov-main {
-  padding-left: 24rpx;
+  padding-left: var(--sp-3);
   min-width: 0;
 }
 
 .ov-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: 34rpx;
+  font-size: var(--fs-lead);
   font-weight: 600;
   color: var(--green);
   letter-spacing: 1rpx;
@@ -71,14 +34,14 @@
 
 .ov-sub {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: var(--sp-1);
 }
 
 .ov-row {
   display: flex;
-  padding-top: 24rpx;
+  padding-top: var(--sp-3);
 }
 
 .num {
@@ -88,7 +51,8 @@
 
 .num-v {
   display: block;
-  font-size: 44rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hero);
   font-weight: 600;
   color: var(--green);
   font-variant-numeric: tabular-nums;
@@ -100,7 +64,7 @@
 
 .num-k {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 6rpx;
 }
@@ -108,13 +72,18 @@
 .warn {
   display: block;
   color: var(--amber);
-  padding-top: 20rpx;
+  padding-top: var(--sp-3);
 }
 
 /* ---------- 未来七天 ---------- */
 .day {
-  padding: 20rpx 0;
+  padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
+}
+
+/* 没有排期的那几天不占版面：一行高度 + 一个零 */
+.day.zero {
+  padding: 10rpx 0;
 }
 
 .day:last-child {
@@ -128,7 +97,8 @@
 }
 
 .day-label {
-  font-size: 28rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
   color: var(--ink-2);
 }
 
@@ -139,24 +109,18 @@
 }
 
 .day-count {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 
 .day-bar {
-  height: 8rpx;
-  border-radius: 4rpx;
-  background: var(--line-2);
-  overflow: hidden;
   margin-top: 12rpx;
 }
 
-.day-bar-fill {
-  height: 100%;
-  border-radius: 4rpx;
-  background: var(--gold);
-  transition: width .3s;
+/* 未来七天里，今天那一条用琥珀色 —— 七天里只要一眼认出哪条是今天 */
+.day-label.today + .day-count {
+  color: var(--green);
 }
 
 .day-items {
@@ -167,9 +131,9 @@
 
 .day-item {
   font-family: var(--font-poem);
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
-  margin: 0 20rpx 8rpx 0;
+  margin: 0 var(--sp-3) var(--sp-1) 0;
 }
 
 /* ---------- 记忆阶段 ---------- */
@@ -177,7 +141,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18rpx 0;
+  padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
@@ -186,12 +150,13 @@
 }
 
 .stage-name {
-  font-size: 27rpx;
+  font-size: var(--fs-body);
   color: var(--ink-2);
 }
 
 .stage-count {
-  font-size: 27rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }

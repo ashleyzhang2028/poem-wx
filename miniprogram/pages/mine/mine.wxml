@@ -1,4 +1,5 @@
 <view class="page">
+  <!-- 身份卡：整页最上面，回答「我是谁、我这一档能做什么」 -->
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
       <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">
@@ -14,7 +15,7 @@
 
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
-      <text class="hint">登录之后才能用「每日背诵 / 课外阅读 / 注音 / 朗读 / 题库」，也能把进度带走。
+      <text class="hint login-note">登录之后才能用「每日背诵 / 课外阅读 / 注音 / 朗读 / 题库」，也能把进度带走。
       档位（免费 / 专业 / 全能）由管理员按人分配，不需要你付费。</text>
     </view>
 
@@ -24,6 +25,51 @@
       <input class="nick-input" type="nickname" placeholder="也可以自己填一个昵称"
              confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
       <button class="btn ghost mini logout" bindtap="onLogout">退出登录</button>
+    </view>
+  </view>
+
+  <!-- 学习：登录后是入口清单；未登录整块不出现 ——
+       一张只有一句「登录后会出现…」的卡，占位置不办事 -->
+  <!-- 学习：登录后是入口清单；未登录整块不出现 ——
+       一张只有一句「登录后会出现…」的卡，占位置不办事 -->
+  <view class="card" wx:if="{{logged}}">
+    <view class="card-title bar">学习</view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
+      <view class="row-main">
+        <text class="row-title">背诵进度</text>
+        <text class="row-sub">未来七天排期 · 记忆阶段</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onGame">
+      <view class="row-main">
+        <text class="row-title">古诗词大会</text>
+        <text class="row-sub">飞花令 · 题库 · 模拟考试</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
+      <view class="row-main">
+        <text class="row-title">背诵设置</text>
+        <text class="row-sub">范围 · 首数 · 复习算法</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <!-- 朗读与注音都不可用时也不出现 —— 一个点不动的入口比没有更糟 -->
+    <view class="row" hover-class="row-hover" hover-stay-time="60"
+          bindtap="onReader" wx:if="{{speakVisible || pinyinVisible}}">
+      <view class="row-main">
+        <text class="row-title">阅读与朗读</text>
+        <text class="row-sub">{{speakVisible ? '注音 · 朗读语速' : '注音'}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
+      <view class="row-main">
+        <text class="row-title">通用设置</text>
+        <text class="row-sub">正文对齐 · 字号</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
   </view>
 
@@ -38,11 +84,6 @@
       <text class="kv-v">{{dailyCount}} 首</text>
     </view>
     <view class="kv">
-      <text class="kv-k">当前档位</text>
-      <text class="kv-v">{{tierLabel}}</text>
-    </view>
-    <text class="hint kv-note">{{tierNote}}</text>
-    <view class="kv">
       <text class="kv-k">复习算法</text>
       <text class="kv-v">{{algoName}}</text>
     </view>
@@ -54,35 +95,7 @@
       <text class="kv-k">已读篇目</text>
       <text class="kv-v">{{stats.readCount}}</text>
     </view>
-  </view>
-
-  <view class="card">
-    <view class="card-title bar">学习</view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">背诵进度</text><text class="row-sub">未来七天排期 · 记忆阶段</text></view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onGame" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">古诗词大会</text><text class="row-sub">飞花令 · 题库 · 模拟考试</text></view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">背诵设置</text><text class="row-sub">范围 · 首数 · 复习算法</text></view>
-      <text class="row-go">›</text>
-    </view>
-    <!-- 未登录整块不出现；朗读与注音都不可用时也不出现 —— 一个点不动的入口比没有更糟 -->
-    <view class="row" hover-class="row-hover" hover-stay-time="60"
-          bindtap="onReader" wx:if="{{logged && (speakVisible || pinyinVisible)}}">
-      <view class="row-main">
-        <text class="row-title">阅读与朗读</text>
-        <text class="row-sub">{{speakVisible ? '注音 · 朗读语速' : '注音'}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings" wx:if="{{logged}}">
-      <view class="row-main"><text class="row-title">通用设置</text><text class="row-sub">正文对齐 · 字号</text></view>
-      <text class="row-go">›</text>
-    </view>
+    <text class="hint kv-note">{{tierNote}}</text>
   </view>
 
   <view class="card">
@@ -113,6 +126,10 @@
       <view class="row-main"><text class="row-title danger-text">清空本机数据</text></view>
       <text class="row-go">›</text>
     </view>
+  </view>
+
+  <view class="foot">
+    <text class="hint">不积跬步，无以至千里</text>
   </view>
 
   <view class="safe-bottom"></view>

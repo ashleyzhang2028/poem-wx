@@ -44,6 +44,10 @@
       </label>
     </radio-group>
 
+    <view class="rule">
+      <text class="rule-t">正文</text>
+    </view>
+
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
         <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item}}</text>
@@ -62,6 +66,26 @@
     </view>
   </view>
 
+  <!-- 背诵：把「读」和「记」分开，两件事不该挤在一张卡里 -->
+  <view class="card recite-card">
+    <view class="recite-head">
+      <text class="card-title bar">背得怎么样</text>
+      <text class="mastery-num">{{mastery}}%</text>
+    </view>
+    <view class="meter mastery-bar">
+      <view class="meter-fill" style="width:{{mastery}}%"></view>
+    </view>
+
+    <view class="actions">
+      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
+            data-r="{{item.key}}" bindtap="onResult">
+        <text class="act-label">{{item.label}}</text>
+      </view>
+    </view>
+
+    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
+  </view>
+
   <!-- 播放工具栏：只在朗读可见时存在 -->
   <view class="card speak-bar" wx:if="{{speakVisible}}">
     <view class="speak-head">
@@ -74,7 +98,7 @@
     <block wx:else>
       <!-- 进度条就是原生 slider：拖到哪句就从哪句起播，比一个只读的细条多一件事可做 -->
       <view class="speak-progress" wx:if="{{speakTotal}}">
-        <text class="sp-text">第 {{speakIndex + 1}} / {{speakTotal}} 句</text>
+        <text class="sp-text">{{speakIndex + 1}} / {{speakTotal}} 句</text>
         <slider class="sp-slider" min="0" max="{{speakTotal - 1}}" step="1" value="{{speakIndex}}"
                 block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
                 bindchange="onSpeakSeek" />
@@ -91,33 +115,14 @@
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+    <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
       <text class="card-title bar">白话译文</text>
-      <text class="trans-toggle">{{showTranslation ? '收起 ⌃' : '展开 ⌄'}}</text>
+      <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">
       <text class="trans-text">{{translation}}</text>
       <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
     </view>
-  </view>
-
-  <view class="card recite-card">
-    <view class="recite-status">
-      <text class="recite-stage">掌握程度</text>
-      <view class="mastery-bar">
-        <view class="mastery-fill" style="width:{{mastery}}%"></view>
-      </view>
-      <text class="mastery-num">{{mastery}}%</text>
-    </view>
-
-    <text class="recite-ask">这首诗背得怎么样？</text>
-
-    <view class="actions">
-      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
-            data-r="{{item.key}}" bindtap="onResult">{{item.label}}</view>
-    </view>
-
-    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
   </view>
 
   <view class="safe-bottom"></view>

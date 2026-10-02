@@ -4,12 +4,12 @@
   <block wx:else>
     <!-- 第一层：四张集子卡 -->
     <block wx:if="{{!current}}">
-      <view class="intro">
-        <text class="intro-t">课外阅读</text>
-        <text class="intro-s">十七部集子 · 诗文典籍 / 人物 / 文史常识</text>
+      <view class="page-head">
+        <text class="head-title">十七部集子</text>
+        <text class="head-sub">诗文典籍 / 人物 / 文史常识</text>
       </view>
 
-      <view class="group-card" hover-class="row-hover" hover-stay-time="60"
+      <view class="group-card" hover-class="group-hover" hover-stay-time="60"
             wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
         <view class="gc-head">
           <view class="gc-left">

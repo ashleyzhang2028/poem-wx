@@ -1,7 +1,7 @@
 .clear {
   color: var(--ink-3);
-  padding: 0 16rpx;
-  font-size: 26rpx;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-hint);
 }
 
 /* 搜索键是原生 button：只压小尺寸，颜色照旧是那身雨过天青 */
@@ -9,53 +9,70 @@
   flex: none;
 }
 
-.scope-group {
-  margin: 24rpx 0 8rpx;
+/* ---------- 搜索条件 ----------
+   两个问题（在哪儿搜 / 怎么搜）摆在一张浅底上，
+   带小标题分开 —— 否则六个圆点排两行，用户会当成一组。 */
+.opt-block {
+  background: var(--card);
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.opt-label {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  padding: var(--sp-1) 0 4rpx;
+}
+
+.scope-group,
+.mode-group {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .mode-group {
-  margin-bottom: 16rpx;
-}
-
-/* 一行里的两组选项之间那道细线：不说「这是两个问题」，
-   用户会以为六个选项是一组 */
-.scope-group + .mode-group {
-  padding-top: 12rpx;
+  padding-top: 4rpx;
   border-top: 1rpx dashed var(--line-2);
+  margin-top: var(--sp-1);
 }
 
 .result-bar {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 4rpx 4rpx 16rpx;
+  padding: 4rpx var(--sp-1) var(--sp-2);
 }
 
 .result-count {
-  font-size: 26rpx;
+  font-size: var(--fs-body);
   color: var(--green);
   font-weight: 600;
 }
 
 .result-where {
-  font-size: 23rpx;
+  font-size: var(--fs-caption);
 }
 
 .section-label {
   display: block;
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  letter-spacing: 2rpx;
+  letter-spacing: var(--ls-caption);
 }
 
 .hot {
-  padding: 32rpx 4rpx;
+  padding: var(--sp-4) var(--sp-1);
 }
 
 .hot-tags {
   display: flex;
   flex-wrap: wrap;
-  margin: 20rpx 0;
+  margin: var(--sp-2) 0;
 }
 
 /* 热搜词是对 <button> 的瘦身：原生按钮有最小宽度、有 ::after 边框、有默认内边距，
@@ -64,10 +81,11 @@
   width: auto;
   min-width: 0;
   display: inline-block;
-  padding: 10rpx 24rpx;
-  font-size: 26rpx;
+  padding: 12rpx var(--sp-3);
+  font-size: var(--fs-hint);
   line-height: 1.5;
-  margin: 0 16rpx 16rpx 0;
+  margin: 0 var(--sp-2) var(--sp-2) 0;
+  font-family: var(--font-poem);
 }
 
 .hot-tags .tag-btn::after {
@@ -76,9 +94,11 @@
 
 .hot-note {
   display: block;
-  line-height: 1.8;
+  line-height: var(--lh-loose);
 }
 
+/* 命中句：从正文里捞出来的那一句，用宋体 + 左引线单独起一行。
+   一行列表里出现两种字体，眼睛立刻分得清「哪句是我搜的」 */
 .hit {
   margin-top: 10rpx;
 }
@@ -86,20 +106,24 @@
 .hit-line {
   display: block;
   font-family: var(--font-poem);
-  font-size: 26rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
   line-height: 1.75;
   letter-spacing: 1rpx;
 }
 
-/* 命中句加一道左边线：和上方「篇名作者」那行拉开层次，
-   一眼能分出哪句是正文里捞出来的 */
 .hit-line:first-child {
   padding-left: 14rpx;
-  border-left: 4rpx solid var(--line-2);
+  border-left: 4rpx solid var(--line);
 }
 
 .empty-tip {
   display: block;
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
+}
+
+/* 命中行：比普通列表行多一口气，因为里面还带着正文那一句 */
+.hit-row {
+  align-items: flex-start;
+  padding: var(--sp-3) var(--sp-1);
 }

@@ -1,7 +1,7 @@
 /* 骨架屏：一块比底色深一点点的灰，缓慢呼吸。
    不做从左到右的扫光 —— 那在小屏上晃眼，且行数一多就显脏。 */
 .sk {
-  padding: 8rpx 0;
+  padding: var(--sp-1) 0;
 }
 
 .sk-block {
@@ -11,8 +11,8 @@
 }
 
 .sk-line {
-  height: 32rpx;
-  margin-bottom: 20rpx;
+  height: 30rpx;
+  margin-bottom: 22rpx;
 }
 
 .sk-line.w40 { width: 40%; }
@@ -22,7 +22,7 @@
 .sk-btn {
   height: 88rpx;
   border-radius: var(--radius-sm);
-  margin: 28rpx 0 32rpx;
+  margin: var(--sp-3) 0 var(--sp-4);
 }
 
 @keyframes sk-breathe {

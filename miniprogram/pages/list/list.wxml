@@ -2,6 +2,11 @@
   <lock-card wx:if="{{locked}}" note="书目与正文要微信登录之后才能看。登录只为跨设备带走进度与领取档位。" mark="目" />
 
   <block wx:else>
+  <view class="page-head">
+    <text class="head-title">{{groupCount}} 组</text>
+    <text class="head-sub">共 {{total}} {{unit}}{{matched < total ? ' · 筛出 ' + matched + ' ' + unit : ''}}</text>
+  </view>
+
   <view class="card index-card" wx:if="{{groups.length > 1}}">
     <view class="index-head">
       <text class="card-title bar">索引</text>
@@ -49,10 +54,10 @@
   </view>
 
   <view class="empty" wx:if="{{!groups.length}}">
-      <text class="empty-mark">空</text>
-      <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集子里还没有篇目'}}</text>
-      <text class="hint empty-tip" wx:if="{{keyword}}">换个词试试，或把筛选调回「全部」</text>
-    </view>
+    <text class="empty-mark">空</text>
+    <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集子里还没有篇目'}}</text>
+    <text class="hint empty-tip" wx:if="{{keyword}}">换个词试试，或把筛选调回「全部」</text>
+  </view>
 
   <view class="safe-bottom"></view>
   </block>
