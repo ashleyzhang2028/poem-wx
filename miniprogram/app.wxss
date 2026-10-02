@@ -180,7 +180,7 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 88rpx;
+  height: var(--h-btn);
   padding: 0 var(--sp-4);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
@@ -256,7 +256,7 @@ view, text, button, input, textarea {
   justify-content: center;
   width: auto;
   min-width: 0;
-  height: 60rpx;
+  height: var(--h-btn-mini);
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
   line-height: 1.2;

@@ -7,3 +7,4 @@ miniprogram/project.private.config.json
 
 # 语料由 scripts/build-data.js 从 poem 仓库生成，不入库
 miniprogram/data/
+dist/

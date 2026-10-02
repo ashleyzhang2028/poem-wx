@@ -240,6 +240,23 @@ cases.forEach((cfg) => {
 });
 rt.done();
 
+/* 篇名宋体的预览注入。
+   预览环境（Linux 容器）里没有中文宋体，--font-poem 会整串落空、
+   退回文泉驿黑体 —— 那样看截图就看不出「标题是不是宋体」。
+   所以若本机有 Noto Serif SC（与网页版同一套），在预览页里注册成
+   "Kuibu Serif"（就是 --font-poem 的第一个名字），让截图说真话。
+   真机上这条路是 wx.loadFontFace 走的，见 utils/font.js。 */
+function fontFaceCss() {
+  const dir = path.join(__dirname, "out");
+  const faces = [[400, "serif-400.woff2"], [600, "serif-600.woff2"]]
+    .filter((f) => fs.existsSync(path.join(dir, f[1])))
+    .map((f) => `@font-face{font-family:"Kuibu Serif";src:url("${f[1]}") format("woff2");font-weight:${f[0]};font-display:block}`);
+  return faces.length ? faces.join("\n") : "";
+}
+
+const FONT_CSS = fontFaceCss();
+if (FONT_CSS) console.log("预览已注入篇名宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
+
 fs.writeFileSync(path.join(__dirname, "out", "preview.html"),
-  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style></head><body>${html.join("\n")}</body></html>`);
+  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
 console.log("写出 " + html.length + " 屏 → scripts/shots/out/preview.html");

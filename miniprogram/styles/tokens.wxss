@@ -52,8 +52,27 @@ page {
 
   /* ---------- 字 ---------- */
   /* 宋体排正文，黑体排界面 —— 与网页版同一套字体口径。
-     小程序端中文不外挂字体文件，落到系统自带的宋/黑体。 */
-  --font-poem: "Songti SC", "STSong", "SimSun", serif;
+
+     小程序端不外挂整套字体文件（一套中文字库 1MB+，主包只剩几百 KB），
+     所以「宋体」这件事分两步办：
+
+     1. **先把系统里那个宋体找准**。--font-poem 按平台深浅排一串名字：
+        iOS / macOS 有 Songti SC，Windows 有 SimSun，Android 各家 ROM
+        把华文宋体、思源宋体、Noto Serif CJK 分别叫 STSong / Source Han Serif /
+        Noto Serif CJK SC。名字一个都不能少 —— 少一个，那台机上就
+        悄悄退回黑体，而「字体没生效」这件事在界面上看不出来。
+        最后兜到 serif（通用族），Android 上通常落 Noto Serif。
+
+     2. **兜不住时用外挂子集补**。真机上若整串名字都没命中（少数
+        定制 ROM），app.js 会 wx.loadFontFace 拉一份「篇名子集」的
+        思源宋体，注册成 "Kuibu Serif"。它排在系统名字之后、
+        通用族之前 —— 系统有就不下载，没有才有一次网络。
+
+     口径与网页版一致：网页版 css/style.css 也是 NotoSerifSC 外挂 +
+     系统宋体兜底，这里只是把「先系统、后外挂」的顺序钉死在令牌里。 */
+  --font-poem: "Kuibu Serif", "Songti SC", "STSong", "STZhongsong", "Source Han Serif SC",
+    "Source Han Serif CN", "Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB",
+    "FangSong", serif;
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", sans-serif;
 
@@ -87,6 +106,19 @@ page {
   --sp-5: 48rpx;
   --sp-6: 64rpx;
   --page-x: 28rpx;
+
+  /* ---------- 高 ----------
+     一屏里「能点的那一块」只有三种高度，取这三档就够：
+       主按钮 88  —— 一屏最多一两个，是这一屏的正事
+       小按钮 60  —— 一行里的小动作（搜索键、开关）
+       动作块 88  —— 「忘记 / 模糊 / 记住」这类平铺的动作，
+                     与主按钮同高才不会显得笨重
+
+     上一版动作块是 112rpx，比主按钮高出一头半：三个并排像三块砖，
+     而它承载的只是两个字。高度一旦各页各写，就会这么漂。 */
+  --h-btn: 88rpx;
+  --h-btn-mini: 60rpx;
+  --h-act: 88rpx;
 
   /* ---------- 动 ---------- */
   /* 按下就用这个时间：慢了像卡，快了像没反应 */

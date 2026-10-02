@@ -8,7 +8,8 @@
     "check": "node scripts/check.js",
     "parity": "node scripts/parity.js",
     "shots": "node scripts/shots/render.js",
-    "test": "node scripts/check.js && node scripts/parity.js"
+    "test": "node scripts/check.js && node scripts/parity.js",
+    "font:subset": "node scripts/font-subset.js"
   },
   "engines": {
     "node": ">=18"

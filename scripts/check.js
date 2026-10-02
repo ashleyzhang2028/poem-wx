@@ -348,6 +348,77 @@ env.restore();
 
 void LOGGED;
 
+/* ---------- 篇名宋体：与朗读同一条「没就绪就别动」的口径 ----------
+   字体是观感增强，不是功能 —— 正因为如此，它更不该在网络不通时
+   留下一个半截的状态。这里真的把两种环境摆出来跑一遍。
+
+   ⚠️ 断言必须**同步**跑完：这个脚本结尾是 process.exit()，
+   挂在 .then() 里的断言根本轮不到执行 —— 那样「检查 N 项全绿」
+   就是一句假话。所以下面全程用**同步的桩**：桩里不调 success/fail 也行，
+   我们只关心「load() 有没有去碰 wx.loadFontFace、拿什么参数碰的」。 */
+{
+  function bootFont(auth, extra) {
+    const box = { kb_auth_v1: auth };
+    const saved = global.wx;
+    global.wx = Object.assign(
+      {
+        getStorageSync: (k) => (k in box ? box[k] : ""),
+        setStorageSync: (k, v) => { box[k] = v; },
+        removeStorageSync: (k) => { delete box[k]; }
+      },
+      extra || {}
+    );
+    delete require.cache[require.resolve(path.join(ROOT, "utils", "font.js"))];
+    return { font: require(path.join(ROOT, "utils", "font.js")), restore: () => (global.wx = saved) };
+  }
+
+  // a) 没配 CDN：判据说 unsupported（不是 awaiting），且一笔都不发起
+  let called = 0;
+  let e = bootFont({}, { loadFontFace: (o) => { called++; o.success && o.success(); } });
+  ok("未配 CDN 时篇名字体不可用", e.font.readiness().usable === false);
+  ok("未配 CDN 时报 unsupported（不是 awaiting）", e.font.readiness().state === "unsupported");
+  ok("未配 CDN 时给出原因", !!e.font.readiness().reason);
+  e.font.load();
+  ok("未配 CDN 时一次都不碰 wx.loadFontFace", called === 0, "被调了 " + called + " 次");
+  e.restore();
+
+  // b) 配了：判据就绪，注册名 / source / global 都要对 ——
+  //    注册名与令牌里那串字写在两处，对不上就等于「注册了一个没人叫的名字」
+  let seen = null;
+  e = bootFont(
+    { fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2" },
+    { loadFontFace: (o) => { seen = o; o.success && o.success(); } }
+  );
+  ok("配了 CDN 时篇名字体就绪", e.font.readiness().usable === true);
+  e.font.load();
+  ok("注册名与 --font-poem 首位一致", !!seen && seen.family === "Kuibu Serif",
+    seen ? seen.family : "loadFontFace 没被调用");
+  ok("source 用的是配置地址", !!seen && seen.source.indexOf("cdn.example.com") >= 0,
+    seen ? seen.source : "");
+  ok("注册时声明 global（所有页面共用一份）", !!seen && seen.global === true);
+  e.restore();
+
+  // c) 老基础库没有 loadFontFace —— 不许抛，安静跳过
+  e = bootFont({ fontUrl: "https://cdn.example.com/x.woff2" }, {});
+  let threw = false;
+  try { e.font.load(); } catch (err) { threw = true; }
+  ok("宿主没有 loadFontFace 时不抛", !threw);
+  e.restore();
+
+  // d) 加载失败不许把异常抛出去（桩不调 fail，Promise 悬着也不该崩）
+  e = bootFont({ fontUrl: "https://cdn.example.com/x.woff2" },
+    { loadFontFace: () => { /* 既不 success 也不 fail */ } });
+  threw = false;
+  try { e.font.load(); } catch (err) { threw = true; }
+  ok("loadFontFace 不回调时不抛", !threw);
+  e.restore();
+
+  // e) 令牌里的注册名必须与 font.js 的 FAMILY 是同一个
+  const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
+  ok("字体链首位与 font.js 的 FAMILY 同名", !!stackNow && stackNow[1].indexOf("Kuibu Serif") >= 0);
+}
+
 // d) 未登录：朗读整块不存在。这是 Issue 那条「未登录只能浏览首页」的落点 ——
 //    上一版这里走的是「本机宿主」，未登录反而拿得比 pro 多，那条口子已拆。
 env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
@@ -2315,6 +2386,88 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   // W6. 微信登录那一层的说明书要在 —— 它是唯一的硬阻塞，
   //     没有它接手的人只能从头猜接口形状。
   ok("有微信登录服务端说明", fs.existsSync(path.join(__dirname, "..", "docs", "wx-login-server.md")));
+}
+
+/**
+ * V11.「能点的那一块」只有三种高度，且必须走令牌。
+ *
+ * Issue #12 点名：「忘记 / 模糊 / 记住 三个按钮的高度过高」。
+ * 实测是 112rpx —— 比主按钮（88rpx）高出一头半，三个并排像三块砖，
+ * 而每块里只有两个字。高度这件事一页一个数值，就会这么漂。
+ *
+ * 判据分两条：
+ *   1. 三种高度在 tokens.wxss 里各定一次（--h-btn / --h-btn-mini / --h-act）
+ *   2. 页面样式表里不许再出现「按钮类选择器 + 裸 rpx 高度」的写法
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  ["--h-btn", "--h-btn-mini", "--h-act"].forEach((t) => {
+    ok("高度令牌 " + t + " 已定", new RegExp(t.replace("-", "\\-") + "\\s*:").test(tokens));
+  });
+
+  // .btn / .btn.mini / .act 必须取令牌，不许再写死
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const btn = /\.btn\s*\{([^}]*)\}/.exec(appWxss);
+  ok("主按钮取高度令牌", !!btn && /height\s*:\s*var\(--h-btn\)/.test(btn[1]),
+    btn ? "当前 " + (/height\s*:\s*([^;]+)/.exec(btn[1]) || [])[1] : "找不到 .btn");
+  const mini = /\.btn\.mini\s*\{([^}]*)\}/.exec(appWxss);
+  ok("小按钮取高度令牌", !!mini && /height\s*:\s*var\(--h-btn-mini\)/.test(mini[1]));
+
+  // 页面里的按钮类不许写死高度 —— 「过高」这种事只会在这种地方发生
+  const BUTTONISH = /\.(btn|act|option|action)[\w-]*(\s*,[^{]*)?\s*\{/g;
+  const strayHeight = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    let m;
+    while ((m = BUTTONISH.exec(wxss))) {
+      const body = wxss.slice(m.index, wxss.indexOf("}", m.index));
+      const h = /(^|[^-])height\s*:\s*([\d.]+)rpx/.exec(body);
+      if (h) strayHeight.push(p + " → " + m[1].trim() + " height:" + h[2] + "rpx");
+    }
+  });
+  ok("按钮高度不再各页写死", strayHeight.length === 0, strayHeight.slice(0, 6).join("; "));
+}
+
+/**
+ * V12. 古诗词标题一律宋体。
+ *
+ * 用户的第二句要求。这里断言的是**口径**，不是观感：
+ *   - 令牌里 --font-poem 存在，且第一位是外挂子集名（Kuibu Serif）
+ *   - 一串系统宋体名都在（少一个，那台机上就静默退回黑体）
+ *   - 承载「篇名」的那几个类必须取 --font-poem
+ *
+ * 具体的类名会变，但「篇名用宋体」这条口径不该变 ——
+ * 所以这里盯的是那几个 class，而不是某个页面的写法。
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const stack = /--font-poem\s*:\s*([^;]+);/.exec(tokens);
+  ok("字体令牌 --font-poem 存在", !!stack);
+  if (stack) {
+    const fams = stack[1];
+    // 外挂在链首：系统名命中时它根本用不到，没命中才有一次网络
+    ok("篇名宋体外挂名在字体链首位", /^\s*"Kuibu Serif"/.test(fams));
+    // 这几个平台名一个都不能少 —— 每个名字代表一类机器的宋体
+    ["Songti SC", "STSong", "SimSun", "Source Han Serif SC", "Noto Serif CJK SC"].forEach((n) => {
+      ok("字体链含 " + n, fams.indexOf(n) >= 0);
+    });
+    ok("字体链兜到通用 serif", /serif\s*$/.test(fams.trim()));
+  }
+
+  // 篇名类：全局 .row-title 与阅读页 .poem-title 必须宋体
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const rowTitle = /\.row-title\s*\{([^}]*)\}/.exec(appWxss);
+  ok("列表篇名用宋体", !!rowTitle && /font-family\s*:\s*var\(--font-poem\)/.test(rowTitle[1]));
+  const readerWxss = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8");
+  const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(readerWxss);
+  ok("详情页篇名用宋体", !!poemTitle && /font-family\s*:\s*var\(--font-poem\)/.test(poemTitle[1]));
+
+  // 外挂字体这条路必须「没配就不发起」—— 与朗读那条口径一致
+  const fontJs = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
+  ok("外挂字体有就绪判据", /function readiness\s*\(/.test(fontJs));
+  ok("未配置时一笔网络都不发起", /unsupported/.test(fontJs) && /return Promise\.resolve\(false\)/.test(fontJs));
+  const appJs = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
+  ok("启动时不阻塞地注册篇名宋体", /font\.load\(\)/.test(appJs));
 }
 
 /* ---------- 汇总 ---------- */
