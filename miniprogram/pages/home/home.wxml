@@ -28,7 +28,10 @@
           <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
-        <text class="row-lock">登录</text>
+        <!-- 行尾这一格是**共用槽**：未登录放「登录」胶囊，登录后放勾。
+             槽宽固定，两态下列表标题栏的右端才落在同一条竖线上 ——
+             否则同一份目录，登录前登录后标题宽度不一样，一登录整列字都挪位。 -->
+        <view class="row-end"><text class="row-lock">登录</text></view>
       </view>
     </view>
 
@@ -97,8 +100,10 @@
             </view>
             <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
           </view>
-          <view class="tick {{item.read ? 'on' : ''}}">
-            <text class="tick-t">{{item.read ? '✓' : ''}}</text>
+          <view class="row-end">
+            <view class="tick {{item.read ? 'on' : ''}}">
+              <text class="tick-t">{{item.read ? '✓' : ''}}</text>
+            </view>
           </view>
         </view>
       </block>

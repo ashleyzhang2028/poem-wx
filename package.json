@@ -9,9 +9,13 @@
     "parity": "node scripts/parity.js",
     "shots": "node scripts/shots/render.js",
     "test": "node scripts/check.js && node scripts/parity.js",
-    "font:subset": "node scripts/font-subset.js"
+    "font:subset": "node scripts/font-subset.js",
+    "shots:shoot": "node scripts/shots/shoot.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.12.0"
   }
 }

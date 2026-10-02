@@ -86,23 +86,24 @@
    靠 align-items:center 对齐的是**盒子**，看着还是会「一个高一个低」——
    所以这里统一给一条最小高度，让三格的**内容**落在同一条横线上。 */
 .prefs {
+  padding: var(--sp-1) 0 var(--sp-2);
+}
+
+/* 第一排：注音分段 + 朗读按钮。
+   两者高度不一样（分段 56rpx、按钮 60rpx），align-items:center 对齐的是
+   **盒子**，看着还是会「一个高一个低」—— 统一给一条最小高度，
+   让两格的**内容**落在同一条横线上。 */
+.prefs-row {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   min-height: 72rpx;
-  padding: var(--sp-1) 0 var(--sp-2);
 }
 
+/* 字号那一排：滑块与两头的「A」收在 app.wxss（.font-row / .font-slider / .font-a），
+   这里只给它一个与上面那排分开的间距 —— 它独占一行，所以不必挤。 */
 .pref-font {
-  flex: 1;
-  min-width: 0;
-  /* slider 自带上下留白，压掉一点才和三格里的另外两格同高 */
-  display: flex;
-  align-items: center;
-}
-
-.pref-slider {
-  margin: 0;
+  margin-top: var(--sp-1);
 }
 
 /* 朗读那格借的是原生 button，只压小尺寸与去掉原生最小宽度。
@@ -225,13 +226,18 @@
 }
 
 /* 三个动作块只留一处「填色」：**记住**。
-   忘记与模糊仍是白底 —— 它们的意思是「我没记住」，
-   把它俩也填成彩色，就等于说「按哪个都行」。
-   与参考图同一套取舍：一屏里填黑的地方只该有一处。 */
+   忘记与模糊仍是浅底 —— 它们的意思是「我没记住」，
+   把它俩也填成墨黑，就等于说「按哪个都行」。
+   与参考图同一套取舍：一屏里填黑的地方只该有一处。
+
+   三块的**边框必须同一套写法**。上一版「忘记」给了 border-color: var(--red-edge)、
+   「模糊」给的却是 transparent —— 同一排里两块同职责的按钮，
+   一块有描边一块没有，看着像「忘记」被选中了。边框要么都给、要么都不给，
+   这里选「都不给」：浅底已经说明这是一块可点的东西了。 */
 .act.bad {
   color: var(--red);
   background: var(--red-soft);
-  border-color: var(--red-edge);
+  border-color: transparent;
 }
 
 .act.fuzzy {

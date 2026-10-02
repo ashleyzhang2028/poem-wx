@@ -1,28 +1,9 @@
 /* 字号那一行：两头各一个大小的 A，中间是原生 slider。
    试样例就摆在下面，改完不用退回阅读页才知道什么样 */
+/* 「A —— A」那排滑块收在 app.wxss（两页共用，见那里的注释）。
+   这一页只留它自己那点间距。 */
 .font-row {
-  display: flex;
-  align-items: center;
   margin: var(--sp-2) 0 4rpx;
-}
-
-.font-slider {
-  flex: 1;
-  margin: 0 var(--sp-3);
-}
-
-.font-a {
-  font-family: var(--font-poem);
-  color: var(--ink-3);
-  flex: none;
-}
-
-.font-a.small {
-  font-size: var(--fs-caption);
-}
-
-.font-a.big {
-  font-size: var(--fs-lead);
 }
 
 .sample {

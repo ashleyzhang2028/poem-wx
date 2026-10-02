@@ -113,7 +113,10 @@ const NATIVE_CSS = `
 .opt-row .n-radio,.opt-row .n-checkbox{margin-right:var(--sp-2)}
 .native-group.grid .native-label .n-radio,.native-group.grid .native-label .n-checkbox{margin-right:var(--sp-1)}
 .opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:3rpx;transform:scale(.86);transform-origin:left top}
-.opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:6rpx}
+/* .opt-row.active 的圆点不再右移：页面样式表已经不挪它了（挪了会横跳），
+   镜像里也必须不挪 —— 这一条正是 V15「镜像逐条对齐」要守的那类
+   漏改：页面改了、镜像没改，预览就继续骗人。 */
+.opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:0}
 .pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
@@ -153,8 +156,16 @@ body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei
 /** page{} 那套变量与底色，得挂到 .screen 上才生效 */
 function screenCss(cfg, pageCss) {
   const raw = TOKENS + APP_CSS + COMP_CSS + NATIVE_CSS + pageCss;
-  // page{} 是小程序的根选择器，预览里对应 .screen
-  const scoped = raw.replace(/\bpage\s*\{/g, ".screen{");
+  // page{} 是小程序的根选择器，预览里对应 .screen。
+  //
+  // ⚠️ 这里用 (?<![\w.-]) 而不是 \b 开头，是被一个真 bug 教会的：
+  // \bpage\s*\{ 里的 \b 判断的是「前一个是词字符」，而 `.page {` 的前一个字符是
+  // 点，不是词字符 —— 所以 \b 成立，`.page {` 被一起改成了 `..screen{`。
+  // 那是个非法选择器，浏览器整条丢掉：**预览里 .page 的 padding 与底色从来没有生效过**。
+  // 后果是卡片在预览里通栏（真机是左右各留 --page-x），
+  // 而「卡片通栏 + 卡缝露出灰底」看着就是一条条灰带 —— 一个假问题盖着真问题。
+  // 断言 V15 守着这一类：预览里页面根选择器必须真的匹配得上。
+  const scoped = raw.replace(/(?<![\w.-])page\s*\{/g, ".screen{");
   return rpx2px(scoped);
 }
 

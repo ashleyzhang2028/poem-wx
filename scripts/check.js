@@ -1889,8 +1889,14 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
    * 这条断言就是被这么骗过一次，才改成比对整条声明。
    */
   const normalize = (x) => x.replace(/\s+/g, "").replace(/;+$/, "");
-  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
-    + pages.map((p) => fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")).join("\n");
+  // ⚠️ 先把注释摘掉再扫。
+  // 不摘会把**注释里提到的选择器**当成真规则：这条断言就误报过一次 ——
+  // 一段解释「上一版写的是 .opt-row.active radio { margin-left: 6rpx }」的注释，
+  // 被当成页面真的还有这条声明，于是报「镜像里缺 margin-left:6rpx」。
+  // 断言自己读错文档，就会逼着人去改一段正确的代码 —— 比不报还坏。
+  const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const pageCssAll = stripComments(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"))
+    + stripComments(pages.map((p) => fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")).join("\n"));
 
   const decls = [];
   const re = /([^{}]+)\{([^{}]*)\}/g;
@@ -1908,7 +1914,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const unique = Array.from(new Set(decls));
   // 两边都要归一化再比：镜像里写的是 `left top`、页面里可能写 `lefttop`，
   // 它们其实是同一条。只归一化一边会把这类等价写法误报成漏项。
-  const mirrorNorm = normalize(mirror);
+  const mirrorNorm = normalize(stripComments(mirror));
   const missing = unique.filter((d) => mirrorNorm.indexOf(d) < 0);
   ok("预览镜像了原生控件的全部关键声明（" + unique.length + " 条）",
     missing.length === 0, "NATIVE_CSS 里缺：" + missing.join(" / "));
@@ -2653,6 +2659,175 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     && /var\(--font-poem\)/.test(/\.hero-title\s*\{([^}]*)\}/.exec(homeWxss)[1]));
   ok("首页 hero 的字号走令牌，不是裸 46rpx",
     !/font-size\s*:\s*46rpx/.test(homeWxss));
+}
+
+/**
+ * V15. 预览不许自己骗自己（Issue #12 收尾时撞见的一类）。
+ *
+ * 这一组从两个**真发生过**的假消息里来，两条都不是界面写错，是
+ * 「看界面用的工具」在说谎 —— 比界面写错更难发现，因为照着改会改坏真机。
+ *
+ *   1. **页面根规则被整条丢掉。** 预览把 `page{}` 改写成 `.screen{}`，
+ *      用的是 `\bpage\s*\{`；而 `\b` 判断的是「前一个字符是词字符」，
+ *      `.page {` 的点不是词字符，于是 `\b` 成立，`.page {` 被改成了
+ *      `..screen{` —— 非法选择器，浏览器整条丢弃。后果：预览里 `.page`
+ *      的 padding 与底色从来没有生效过，卡片通栏铺满屏（真机是左右各留
+ *      --page-x），而「通栏 + 卡缝露灰底」看着就是一条条横带，
+ *      一个假问题把真问题盖住了。
+ *   2. **镜像与页面不同步。** 页面里 `.opt-row.active radio` 的
+ *      `margin-left` 已经改成 0，NATIVE_CSS 里还是 6rpx，
+ *      于是预览里圆点照旧横跳 —— 改完了看截图，问题「还在」。
+ *
+ * 所以这一组守两件事：
+ *   · 预览 CSS 里**不许出现非法选择器**（`..`、`>.` 这类改写事故）
+ *   · 页面根规则 `page{}` 必须在预览里存在，且真的挂在 `.screen` 上
+ *   · NATIVE_CSS 里**每一条** `margin-left` / `margin-right` 都与页面一致
+ */
+
+// 上面两条断言的原素材都来自这两个文件，读不到就直接失败，不静默跳过
+const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "utf8");
+
+// 1) `page{}` → `.screen{}` 的改写不许伤到 `.page`
+{
+  const scopedRe = /raw\.replace\((\/.*?\/g),\s*"\.screen\{"\)/s.exec(renderSrc);
+  ok("预览在把 page{} 改写成 .screen{}（找得到那条 replace）", !!scopedRe);
+  if (scopedRe) {
+    // 把源文件里那个正则原样取出来跑，验它对 `.page {` 不匹配、对 `page {` 匹配
+    const src = scopedRe[1];
+    let re;
+    try { re = eval(src); } catch (e) { re = null; }   // eslint-disable-line no-eval
+    // ⚠️ 一律去掉 g 标志再用。
+    // 带 g 的正则 .test() 是有状态的（记住 lastIndex），连测几次会一次真一次假 ——
+    // 这条断言最初就栽在这儿：反证时把正则改回旧的 \b 写法，它照样全绿。
+    // 断言自己会「轮流说谎」，比断言缺失更难发现。
+    const t = re ? (x) => new RegExp(re.source, re.flags.replace("g", "")).test(x) : () => false;
+    ok("预览的根选择器改写正则可以求值", !!re && re.source === re.source);
+    if (re) {
+      ok("page { 会被改写成 .screen{（根规则要留着）", t("page {"));
+      ok(".page { 不会被改写（改了就是非法选择器 ..screen{）", !t(".page {"));
+      ok(".page-head { 不受影响", !t(".page-head {"));
+      // 这条是断言的来由，也是反证：旧写法确实会误伤 .page
+      ok("旧写法（\\bpage）确实会误伤 .page",
+        new RegExp("\\bpage\\s*\\{").test(".page {"));
+    }
+  }
+}
+
+// 2) 预览 CSS 里不许有 `..` 这种被改写坏的复合选择器
+//
+// ⚠️ 这一条读的是 render.js 的**产物**（preview.html）。CI 里只跑 check.js、
+// 不跑 render.js —— 产物不在是正常的。所以这里必须**分清「没跑」与「跑挂了」**：
+// 产物不在就出声跳过（输出一行提示），绝不静默放行，也绝不因为文件不在就崩 ——
+// 一个因为缺输入而崩溃的自检，会让人把整条 `node scripts/check.js` 从流水线里摘掉，
+// 那比少一条断言糟得多。
+{
+  const previewPath = path.join(__dirname, "shots", "out", "preview.html");
+  if (!fs.existsSync(previewPath)) {
+    console.log("· 预览产物不在（没跑 node scripts/shots/render.js）——"
+      + " 跳过两条「预览自身是否可信」的断言；跑过之后再跑一次 check.js 就会验");
+  } else {
+    const html = fs.readFileSync(previewPath, "utf8");
+    // 只看选择器位置上的 `..`（属性值里出现两个点不算，例如 ../assets/x.png）
+    const badSel = [];
+    const re = /(^|[},;{])\s*([^{}@]*?\.\.[^{}]*?)\s*\{/g;
+    let m;
+    while ((m = re.exec(html))) badSel.push(m[2].trim().slice(0, 60));
+    ok("预览 CSS 里没有 .. 这类非法选择器", badSel.length === 0, badSel.slice(0, 4).join(" | "));
+
+    // 页面根规则必须真的在：缺了它卡片会通栏
+    ok("预览里 .page 的规则在（padding 与底色才有出处）", /\.page\s*\{[^}]*padding\s*:/.test(html));
+  }
+}
+
+// 3) 镜像与页面逐条对齐：margin-left / margin-right 两边必须一样
+{
+  const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
+  ok("预览里有原生控件的等价样式（V5 那条的老素材，这里再取一次）", !!nativeBlock);
+  const mirror = nativeBlock ? nativeBlock[1] : "";
+  const mirrorRules = {};
+  (mirror.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
+    const i = blk.indexOf("{");
+    const sel = blk.slice(0, i).replace(/\s+/g, "");
+    const body = blk.slice(i + 1, blk.lastIndexOf("}"));
+    const ml = /margin-left\s*:\s*([^;]+)/.exec(body);
+    const mr = /margin-right\s*:\s*([^;]+)/.exec(body);
+    if (!ml && !mr) return;
+    mirrorRules[sel] = { ml: ml && ml[1].trim(), mr: mr && mr[1].trim() };
+  });
+
+  // 页面里针对 .opt-row.active 的圆点规则：镜像必须说同一件事
+  const pageCssAll = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const actRadio = /\.opt-row\.active\s+radio[^{}]*\{([^}]*)\}/.exec(pageCssAll);
+  ok("页面里说明了「选中行的圆点不移动」", !!actRadio);
+  if (actRadio) {
+    const pageMl = (/margin-left\s*:\s*([^;]+)/.exec(actRadio[1]) || [])[1];
+    const pageMlNorm = pageMl ? pageMl.trim() : null;
+    const mirrorMl = (mirrorRules[".opt-row.active.n-radio,.opt-row.active.n-checkbox"]
+      || mirrorRules[".opt-row.active.n-radio"] || {}).ml;
+    ok("选中行圆点的 margin-left：页面与预览镜像说的是同一个数",
+      String(mirrorMl).replace(/\s+/g, "") === String(pageMlNorm).replace(/\s+/g, ""),
+      "页面 " + pageMlNorm + " / 镜像 " + mirrorMl);
+    ok("选中行圆点不许右移（右移会让整行内容横跳）",
+      pageMlNorm === "0", String(pageMlNorm));
+  }
+}
+
+/**
+ * V16. 卡片的层次不靠投影（Issue #12 收尾时从截图上量出来的）。
+ *
+ * 卡与卡之间只有 --sp-3（24rpx）的缝，而上一版的投影模糊半径就有 6rpx ——
+ * 一条缝被两侧的投影共同铺满，在浅灰底上显成一条两头深、中间浅的横带
+ * （实测 236 → 245 → 236）。首页自上而下七八条，看着像渲染坏了。
+ *
+ * 「白卡 + 浅灰底 + 窄缝」这套版式里，投影不表达任何东西，只制造噪声。
+ * 所以：卡片一律不带投影；要表达「这张更重要」，用留白和字号差。
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+
+  ok("卡片自身不写投影", !/\.card\s*\{[^}]*box-shadow/.test(appWxss));
+  ok("投影令牌是 none（万一别处引了也不出效果）",
+    /--shadow\s*:\s*none\s*;/.test(tokens) && /--shadow-lift\s*:\s*none\s*;/.test(tokens));
+
+  // 页面样式表里也不许给卡片补一层投影
+  const stray = [];
+  pages.forEach((p) => {
+    const f = path.join(ROOT, p + ".wxss");
+    if (!fs.existsSync(f)) return;
+    const css = fs.readFileSync(f, "utf8");
+    const re = /\.card[^{}]*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(css))) {
+      if (/box-shadow\s*:\s*(?!none)/.test(m[1])) stray.push(p + " → " + m[1].replace(/\s+/g, " ").slice(0, 70));
+    }
+  });
+  ok("页面样式表里没有给卡片补投影", stray.length === 0, stray.slice(0, 4).join("; "));
+}
+
+/**
+ * V17. 行尾那一格，两种状态共用一个宽度（Issue #12 收尾时量出来的）。
+ *
+ * 首页目录：未登录时行尾写「登录」胶囊（约 40px），登录后放完成勾（约 23px）。
+ * 两者宽度差一圈，而它们都是 flex 里的 flex:none 项 —— 于是**标题栏的宽度
+ * 在两态下不一样**（实测差 8.3px），同一份目录登录前后右端参差，
+ * 一登录整列字都往右挪了位。
+ *
+ * 判据：包一层固定宽度的槽，两态共用同一个槽。
+ */
+{
+  const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");
+  const homeWxss = fs.readFileSync(path.join(ROOT, "pages/home/home.wxss"), "utf8");
+
+  ok("首页行尾包了共用的槽", (homeWxml.match(/class="row-end"/g) || []).length >= 2);
+  ok("「登录」胶囊与完成勾都在槽里",
+    /<view class="row-end"><text class="row-lock">登录<\/text><\/view>/.test(homeWxml.replace(/\s+/g, " ")
+      .replace(/> </g, "><")) || /row-end"[^>]*>\s*<text class="row-lock"/.test(homeWxml));
+  const slot = /\.row-end\s*\{([^}]*)\}/.exec(homeWxss);
+  ok("槽有固定宽度", !!slot && /width\s*:\s*\d+rpx/.test(slot[1]), slot && slot[1].replace(/\s+/g, " "));
+  ok("槽宽不小于「登录」胶囊的实际宽度（88rpx 两个字 + 内边距）",
+    !!slot && Number((/width\s*:\s*(\d+)rpx/.exec(slot[1]) || [])[1] || 0) >= 88);
 }
 
 /* ---------- 汇总 ---------- */

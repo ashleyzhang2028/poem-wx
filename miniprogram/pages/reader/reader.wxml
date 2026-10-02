@@ -24,28 +24,39 @@
          现在换成图标分段控件：图标说「是什么」，按下态说「选没选」。
          底层仍是原生 <radio>，行为、无障碍、键盘都是平台的，只是不再露面。 -->
     <view class="prefs">
-      <view class="seg" wx:if="{{pinyinOn}}">
-        <radio-group class="seg-group" bindchange="onPinyin">
-          <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
-                 wx:for="{{pinyinModes}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
-                   color="#1c1c1e" />
-            <view class="seg-icon ic-{{item.key}}"></view>
-            <text class="seg-text">{{item.label}}</text>
-          </label>
-        </radio-group>
+      <!-- 第一排：注音（图标分段）+ 朗读（原生 button）。
+           两件都是「选一个」，且都短 —— 并排一行放得下。 -->
+      <view class="prefs-row">
+        <view class="seg" wx:if="{{pinyinOn}}">
+          <radio-group class="seg-group" bindchange="onPinyin">
+            <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
+                   wx:for="{{pinyinModes}}" wx:key="key">
+              <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
+                     color="#1c1c1e" />
+              <view class="seg-icon ic-{{item.key}}"></view>
+              <text class="seg-text">{{item.label}}</text>
+            </label>
+          </radio-group>
+        </view>
+
+        <!-- 朗读不可用时这一格不出现；就绪与否只影响它灰不灰，不影响在不在 -->
+        <button class="btn mini speak-entry {{speakReady ? 'on' : 'off'}}" wx:if="{{speakVisible}}"
+                disabled="{{!speakReady}}" bindtap="onSpeak">{{speakLabel}}</button>
       </view>
 
-      <!-- 字号：连续量，滑块比「A－/A＋」两粒按钮更贴手感 -->
-      <view class="pref-font">
-        <slider class="pref-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
+      <!-- 第二排：字号。**必须独占一整行** ——
+           滑块要有横向量程才操作得准，挤在图标分段旁边只剩四十来像素，
+           滑起来一步跨过半个区间。它也不跟别人并排，所以不需要「挤得下」。
+           滑块两头各一个「A」：小的是下限、大的是上限 ——
+           光一根滑轨加一颗圆钮，在一排图标里看着就是个孤零零的圆圈，
+           既不知道调什么，也不知道往哪边变大。 -->
+      <view class="pref-font font-row">
+        <text class="font-a small">A</text>
+        <slider class="pref-slider font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
                 block-size="20" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
                 bindchanging="onFontSlide" bindchange="onFontSlide" />
+        <text class="font-a big">A</text>
       </view>
-
-      <!-- 朗读不可用时这一格不出现；就绪与否只影响它灰不灰，不影响在不在 -->
-      <button class="btn mini speak-entry {{speakReady ? 'on' : 'off'}}" wx:if="{{speakVisible}}"
-              disabled="{{!speakReady}}" bindtap="onSpeak">{{speakLabel}}</button>
     </view>
 
     <!-- 对齐：两个图标，边距本身就是答案（左对齐 = 左边齐的排线，居中 = 两边齐） -->

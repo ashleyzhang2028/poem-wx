@@ -2,9 +2,12 @@
   <lock-card wx:if="{{locked}}" note="书目与正文要微信登录之后才能看。登录只为跨设备带走进度与领取档位。" mark="目" />
 
   <block wx:else>
+  <!-- 页头只说「这一页是什么」，不报数字 ——
+       报数字的那一行在筛选条下面（.count），是全页唯一的出处。
+       两处都写「共 251 首」的时候，同一屏里会并排出现两句一模一样的话。 -->
   <view class="page-head">
-    <text class="head-title">{{groupCount}} 组</text>
-    <text class="head-sub">共 {{total}} {{unit}}{{matched < total ? ' · 筛出 ' + matched + ' ' + unit : ''}}</text>
+    <text class="head-title">{{bookName}}</text>
+    <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
   </view>
 
   <view class="card index-card" wx:if="{{groups.length > 1}}">
@@ -38,7 +41,9 @@
     </radio-group>
   </view>
 
-  <view class="count hint">共 {{matched}} {{unit}}</view>
+  <!-- 筛选结果的唯一出处。截断了才多一句「只到前几条」，
+       「报的数」与「列出的行」必须对得上（同一天在飞花令上吃过这个亏）。 -->
+  <view class="count hint">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>
 
   <view class="card" wx:for="{{groups}}" wx:key="group" id="g-{{index}}">
     <view class="group-head" wx:if="{{item.group}}">

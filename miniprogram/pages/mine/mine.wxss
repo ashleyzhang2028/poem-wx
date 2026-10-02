@@ -125,10 +125,12 @@
   margin-top: var(--sp-3);
 }
 
-.kv-note {
+/* 档位来源：贴在档位胶囊下面，右对齐 —— 它是那句胶囊的注解，
+   所以跟着胶囊走，而不是跟着偏好行。 */
+.tier-note {
   display: block;
   text-align: right;
-  padding-top: var(--sp-1);
+  padding-top: var(--sp-2);
   line-height: var(--lh-body);
 }
 

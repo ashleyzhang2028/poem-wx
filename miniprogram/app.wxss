@@ -57,14 +57,18 @@ view, text, button, input, textarea {
 }
 
 /* ---------- 卡片 ----------
-   白底、一道极淡的描边、一层几乎看不见的投影。
-   投影只为了在米白页底上把「这是一张卡」说清楚，
-   不再承担「这张卡更重要」这个职责 —— 那是留白的活。 */
+   白底 + 一道极淡的描边，**没有投影**。
+   分层靠「描边 + 留白」这两样，够用了。
+
+   投影是刻意去掉的，不是漏了：卡与卡之间只有 --sp-3（24rpx）的缝，
+   而投影的模糊半径就有 6rpx，一条缝被两侧的投影共同铺满，
+   在浅灰底上会显成一条两头深、中间浅的横带（实测 236 → 245 → 236）。
+   首页自上而下七八张卡，就是七八条这样的带子 —— 看着像渲染坏了。
+   详见 tokens.wxss 里 --shadow 的注释。 */
 .card {
   background: var(--surface);
   border: 1rpx solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: var(--sp-4);
   margin-bottom: var(--sp-3);
 }
@@ -564,6 +568,41 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
+/* ---------- 字号滑块 ----------
+   「A —— A」这一排。两处用到：阅读页的偏好条、通用设置的正文字号。
+
+   左边一个小 A、右边一个大 A —— 它们说的不是「两个选项」，是**量程的两头**：
+   字号是连续量，光一根滑轨加一颗圆钮，在一排图标里看着就是个孤零零的圆圈，
+   既不知道调什么，也不知道往哪边变大。
+
+   两处必须长得一样，所以定在这里一处。上一版各写一份，一边用 ink-4、
+   一边用 ink-3，小 A 一边 22rpx、一边 24rpx —— 同一样东西两个样子，
+   用户说不清哪里别扭，只觉得「不一样」。 */
+.font-row {
+  display: flex;
+  align-items: center;
+}
+
+.font-slider {
+  flex: 1;
+  min-width: 0;
+  margin: 0 var(--sp-3);
+}
+
+.font-a {
+  flex: none;
+  font-family: var(--font-poem);
+  color: var(--ink-3);
+}
+
+.font-a.small {
+  font-size: var(--fs-hint);
+}
+
+.font-a.big {
+  font-size: var(--fs-lead);
+}
+
 /* ---------- 选项行 ----------
    「选一个」的统一长相。行本身是 label[for]，点整行都能选中，
    不用把手指对准那个小圆点。 */
@@ -576,7 +615,17 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   min-height: var(--h-row);
-  padding: var(--sp-2) 0;
+  /* 选中态是**一块填色的底**，所以左右要留出内边距 ——
+     不留的话这块底色与左边那道墨色竖线会一直顶到卡片的圆角上：
+     直角的色块和圆角互相裁切，露出一个豁口，看着像色块溢出了卡片。
+     这两处 padding 是给「填色的底」留的呼吸，不是排版缩进。 */
+  /* 选中态是**一块填色的底 + 左边一道墨色竖线**，两者都由行自己的盒子画。
+     盒子若顶到卡片内容区的边缘，就会与卡片的圆角互相裁切 ——
+     直角的色块被圆角切掉一角，看着像色块溢出了卡片。
+     所以每一行都让出同样的左右边距（**所有行一致**，不是只让选中的那行：
+     只让选中行的话，它一被选中，整行内容就左右横跳）。 */
+  margin: 0 var(--sp-1);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-2);
   border-bottom: 1rpx solid var(--line-2);
   border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
@@ -597,11 +646,17 @@ view, text, button, input, textarea {
   box-shadow: inset 6rpx 0 0 var(--ink);
 }
 
-/* 选中行的圆点不要贴着那道竖线 —— 贴上去之后圆点左半圈被压在竖线底下，
-   看着像被切了一刀。给选中行补一道与竖线等宽的内边距。 */
+/* 选中行的圆点**不许移动**。
+   上一版这里写的是 `.opt-row.active radio { margin-left: 6rpx }`，
+   本意是「别让圆点被那道竖线压住」，结果是：选中行里圆点右移 6rpx、
+   它右边的标题跟着右移 6rpx —— 一列选项点来点去，整行内容在左右横跳
+   （实测 474.17 → 477.28 px），看着像整页在抖。
+   圆点与竖线的关系不靠挪圆点解决，靠给行留内边距（见 .opt-row 的 padding）——
+   竖线画在 padding 的外侧，圆点排在 padding 的内侧，天然不相交，
+   且选中与未选中**圆点位置完全一致**。 */
 .opt-row.active radio,
 .opt-row.active checkbox {
-  margin-left: 6rpx;
+  margin-left: 0;
 }
 
 .opt-row.active .opt-name {
@@ -1048,7 +1103,17 @@ view, text, button, input, textarea {
    格子排成矩阵这件事，已经把「一组、选一个（或几个）」说清楚了。 */
 .chip-group {
   display: grid;
+  /* 行内与行间都是 8rpx —— 格子之间要看着是「一组里的几格」，
+     所以缝要小。但**两组之间**必须比组内更松（见下面的 chip-group + chip-group）：
+     否则上一组的末格与下一组的首格贴在一起，两格都选中时
+     会连成一块竖着的黑条，看着像一个被拉长的格子。 */
   gap: var(--sp-1) var(--sp-1);
+}
+
+/* 相邻两组格子之间的间距，要比组内大一档 ——
+   「学期」与「年级」本来是两组不同的东西，缝太小就看不出分组。 */
+.chip-group + .chip-group {
+  margin-top: var(--sp-3);
 }
 
 .chip-group.cols-2 {
