@@ -14,6 +14,49 @@
  * 而各集子索引本来就有同一份数据。全站检索逐集子遍历，
  * 按 id 查条目靠 indexById()。
  */
+/**
+ * 断句用的标点 —— **全 app 只此一份**。
+ * 飞花令的令字池、逐句朗读、阅读页的分行都用它。抄第二份，两边迟早会对不上。
+ */
+const CLAUSE_SPLIT = /[\n，。！？；：、]/;
+
+/**
+ * 把一段正文切成「行 → 句」。
+ *
+ * 拿它直接 `split("\n")` 是不等价的：语料里一行往往承好几个句子
+ * （《琵琶行》一整段诗序就是一行），整行当一个块排，居中时是一坨、
+ * 朗读时整段一起合成。切句之后三种呈现（正文 / 注音 / 朗读）才对齐。
+ *
+ * 空行**保留成空数组**：那是语料里的一道真换行，不是「什么都没写」。
+ *
+ * `s` 里的每一句**带尾标点**（`鹅，` 而不是 `鹅`），拼回去就等于 `line`。
+ * 想按裸句判定（比如「这两句是不是同一句」），自己去标点，别在这另切一遍。
+ *
+ * @param {string} text 一份正文
+ * @returns {{line: string, s: string[]}[]}
+ */
+function splitLines(text) {
+  return String(text == null ? "" : text)
+    .split("\n")
+    .map((line) => {
+      // 切句时把标点**留在上一句的尾巴上**：`鹅，鹅，鹅，` 切成
+      // `鹅，` `鹅，` `鹅，`，而不是三个光秃秃的 `鹅`。
+      // 丢标点会当场露馅 —— 正文里「鹅鹅鹅」读起来就是缺了一个字。
+      const s = [];
+      let buf = "";
+      for (const ch of String(line)) {
+        if (CLAUSE_SPLIT.test(ch)) {
+          if (buf.trim()) s.push(buf.trim() + ch);
+          buf = "";
+        } else {
+          buf += ch;
+        }
+      }
+      if (buf.trim()) s.push(buf.trim());
+      return { line: line, s: s };
+    });
+}
+
 const BOOKS_DIR = "data/books/";
 const COURSE = "data/course.json";
 const MANIFEST = "data/texts/manifest.json";
@@ -124,23 +167,32 @@ function ownerOf(id) {
  * 逐部集子遍历而不是在内存里攒一份全站索引：索引按集子拆开正是为了让
  * 「搜一次」的成本跟命中集子的数量走，而不是跟全站条数走。
  *
- * @param {Object} [opt] book（限定集子）/ limit
+ * `total` 是**截断前的命中总数**：界面写「命中 528 篇 · 列出前 80 篇」要靠它，
+ * 只报 `items.length` 就是把「我只给你 80 条」说成「全站只有 80 条」。
+ * 计数与列举在同一次遍历里做完，为这一个数字多走一遍 5575 条不值当。
+ *
+ * @param {string} keyword
+ * @param {Object} [opt] book（集子 id，空为全站）/ limit
+ * @returns {{items: Array, total: number}} total 为截断前总数
  */
 function search(keyword, opt) {
   const kw = String(keyword || "").trim().toLowerCase();
-  if (!kw) return [];
+  if (!kw) return { items: [], total: 0 };
   const bookId = opt && opt.book;
   const limit = (opt && opt.limit) || 60;
   const sources = bookId ? [bookId] : books().map((b) => b.id);
-  const hit = [];
+  const items = [];
+  let total = 0;
 
-  for (let s = 0; s < sources.length && hit.length < limit; s++) {
+  for (let s = 0; s < sources.length; s++) {
     const pool = ofBook(sources[s]);
-    for (let i = 0; i < pool.length && hit.length < limit; i++) {
-      if (matchEntry(pool[i], kw)) hit.push(pool[i]);
+    for (let i = 0; i < pool.length; i++) {
+      if (!matchEntry(pool[i], kw)) continue;
+      total += 1;
+      if (items.length < limit) items.push(pool[i]);
     }
   }
-  return hit;
+  return { items: items, total: total };
 }
 
 function matchEntry(p, kw) {
@@ -169,6 +221,8 @@ function grouped(list) {
 }
 
 module.exports = {
+  CLAUSE_SPLIT,
+  splitLines,
   books,
   bookById,
   ownerOf,

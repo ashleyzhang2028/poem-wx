@@ -11,6 +11,18 @@ const MODES = [
   { key: "full", label: "正文全文" }
 ];
 
+/**
+ * 一次列出多少条。
+ *
+ * 上一版写死 80 却不说 —— 搜「春」全站命中 528 篇，界面照样只写「命中 80 篇」，
+ * 剩下 448 篇像是不存在。这一版把上限摆到明面上：先拿到**总数**，
+ * 界面写「命中 528 篇 · 列出前 80 篇」，没截断就不提这一句。
+ *
+ * 为什么不做「加载更多」：全站索引只能逐集子现遍历（主包 2MB 的线不能碰），
+ * 5575 条遍历一次在真机上已经要等一拍。先如实交代，不做假分页。
+ */
+const PAGE_MAX = 80;
+
 Page({
   data: {
     keyword: "",
@@ -20,6 +32,8 @@ Page({
     mode: "index",
     fullOn: false,
     results: [],
+    /** 截断前的命中总数 —— 「命中 N 篇」说的是它，不是 results.length */
+    total: 0,
     hot: HOT,
     searched: false,
     searching: false,
@@ -54,7 +68,7 @@ Page({
   },
 
   onClear() {
-    this.setData({ keyword: "", results: [], searched: false, searching: false });
+    this.setData({ keyword: "", results: [], total: 0, searched: false, searching: false });
   },
 
   onScope(e) {
@@ -83,7 +97,7 @@ Page({
     }
     const kw = this.data.keyword.trim();
     if (!kw) {
-      this.setData({ results: [], searched: false });
+      this.setData({ results: [], total: 0, searched: false });
       return;
     }
     store.saveSettings({ lastSearch: kw });
@@ -96,9 +110,10 @@ Page({
       return;
     }
 
-    const results = this.byIndex(kw);
+    const r = this.byIndex(kw);
     this.setData({
-      results,
+      results: r.items,
+      total: r.total,
       searched: true,
       searching: false,
       resultWhere: this.data.scope === "poems" ? "篇名作者 · 只看课内" : "篇名作者 · 全站"
@@ -107,30 +122,42 @@ Page({
 
   /** 搜索栏上方那句提示：搜索中 / 落到索引字段时如实说 */
   byIndex(kw) {
-    return corpus
-      .search(kw, { book: this.data.scope === "poems" ? "poems" : "", limit: 80 })
-      .map((p) => ({
+    const r = corpus.search(kw, {
+      book: this.data.scope === "poems" ? "poems" : "",
+      limit: PAGE_MAX
+    });
+    return {
+      total: r.total,
+      items: r.items.map((p) => ({
         id: p.id,
         title: p.t,
         author: p.a,
         dynasty: p.d,
         bookName: p.n,
         lines: []
-      }));
+      }))
+    };
   },
 
   runFull(kw) {
     let hits = [];
+    // 全文检索走倒排索引，命中动辄几千条，比索引字段更容易截断 ——
+    // 上限同样摆在明面上（「命中 N 篇 · 列出前 40 篇」），不闷声砍掉
+    const fullMax = 40;
     try {
       hits = textSearch.search(kw, {
         book: this.data.scope === "poems" ? "poems" : "",
-        limit: 40
+        limit: fullMax + 1
       });
     } catch (e) {
       hits = [];
     }
+    // 多要一条只是为了知道「有没有第 41 条」；索引层报不出总数，就用它当界
+    const truncated = hits.length > fullMax;
+    if (truncated) hits = hits.slice(0, fullMax);
 
     this.setData({
+      total: truncated ? fullMax + 1 : hits.length,
       results: hits.map((h) => ({
         id: h.entry.id,
         title: h.entry.t,

@@ -44,10 +44,23 @@
    它被切了就等于没写。 */
 .result-bar {
   display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  padding: 4rpx var(--sp-4) var(--sp-2);
+}
+
+/* 「命中 N 篇」与「在哪儿搜的」同处一行：一个是结论、一个是出处，
+   读的时候是一口气，拆成两行反而断了 */
+.result-head {
+  display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sp-2);
-  padding: 4rpx var(--sp-4) var(--sp-2);
+}
+
+/* 截断提示自成一行，压在结论下面 —— 它是补充说明，不该跟出处抢位置 */
+.result-more {
+  font-size: var(--fs-caption);
 }
 
 .result-count {

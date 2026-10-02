@@ -35,8 +35,13 @@
   <!-- 结果统计：搜完给一句「命中几条、在哪儿搜的」，
        不然一屏结果看完也不知道是不是全量 -->
   <view class="result-bar" wx:if="{{searched && results.length}}">
-    <text class="result-count">命中 {{results.length}} 篇</text>
-    <text class="hint result-where">{{resultWhere}}</text>
+    <view class="result-head">
+      <text class="result-count">命中 {{total}} 篇</text>
+      <text class="hint result-where">{{resultWhere}}</text>
+    </view>
+    <!-- 截断了就直说。上一版这里永远等于列出的条数，
+         「只给你 80 条」被写成了「全站只有 80 条」 -->
+    <text class="hint result-more" wx:if="{{total > results.length}}">列表只到前 {{results.length}} 篇 · 缩小范围或换个词能看得更细</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">

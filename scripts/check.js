@@ -399,9 +399,75 @@ if (fs.existsSync(pinyinTable)) {
   ok("不字变调（不是→bú）", pinyin.readOf("不", "不是", 0) === "bú", pinyin.readOf("不", "不是", 0));
   ok("一字变调（一行→yì）", pinyin.readOf("一", "一行", 0) === "yì", pinyin.readOf("一", "一行", 0));
   ok("关掉注音就不切词", pinyin.annotate("床前明月光", "off").every((c) => !c.mark));
+
+  /* 逐句：行 → 句 → 字 三层。中间那层不是摆设 ——
+     语料里一行往往承好几个句子（《琵琶行》整段诗序就是一行），
+     少了它，正文居中时是一坨、朗读把整段一起合成、注音的消歧窗口也跟着错。 */
+  const csplit = require(path.join(ROOT, "utils", "corpus.js")).splitLines;
+  const t3 = pinyin.render(csplit("鹅，鹅，鹅，\n\n曲项向天歌。"), "rare");
+  ok("注音三层：行数不丢", t3.length === 3, JSON.stringify(t3.length));
+  ok("注音三层：一行切得出多句", t3[0].length === 3, JSON.stringify(t3[0].length));
+  ok("注音三层：空行留成空数组", Array.isArray(t3[1]) && t3[1].length === 0);
+  // 6 个格子 = 曲项向天歌 + 句号
+  ok("注音三层：每句是字数组", t3[2][0].length === 6 && t3[2][0][0].ch === "曲",
+    JSON.stringify(t3[2][0].map((x) => x.ch)));
+  // render 不许自己再切一遍 —— 它会连标点一起切掉，正文就成了「鹅鹅鹅」
+  ok("注音不重切句子（逗号还在）", t3[0][0].some((c) => c.ch === "，"),
+    JSON.stringify(t3[0][0]));
+  ok("注音不重切句子（句号还在）", t3[2][0][t3[2][0].length - 1].ch === "。",
+    JSON.stringify(t3[2][0]));
+
+  // 消歧窗口仍是**整行**：词组「白发」不能因为切句而丢
+  const t4 = pinyin.render(csplit("白发三千丈"), "rare");
+  ok("切句后消歧窗口仍是整行（白发→fà）",
+    t4[0][0].filter((c) => c.ch === "发")[0].py === "fà",
+    JSON.stringify(t4[0][0].filter((c) => c.ch === "发")));
 } else {
   ok("读音表未生成时注音整块关闭", pinyin.readiness().visible === false);
 }
+
+// e2) 断句：口径只有一份（corpus.splitLines），阅读页 / 飞花令 / 朗读都走它
+const splitLines = require(path.join(ROOT, "utils", "corpus.js")).splitLines;
+ok("splitLines 一行切多句", splitLines("鹅，鹅，鹅，\n曲项向天歌。")[0].s.length === 3);
+// 标点必须留在句尾。丢掉的话正文会变成「鹅鹅鹅」—— 缺一个字，一眼能看出来，
+// 而且只在「不注音」路径之外的所有渲染里都错，很难第一时间联想到断句
+const clausePunct = splitLines("鹅，鹅，鹅，\n曲项向天歌。");
+ok("splitLines 标点留在句尾", clausePunct[0].s.join("") === "鹅，鹅，鹅，",
+  JSON.stringify(clausePunct[0].s));
+ok("splitLines 切句后拼回 = 原行", clausePunct.map((ln) => ln.s.join("")).join("") === "鹅，鹅，鹅，曲项向天歌。",
+  JSON.stringify(clausePunct.map((ln) => ln.s.join("")).join("")));
+// 整篇拼回去必须与原文只差换行 —— 断句是「重新切」，不是「重新写」
+const rebuild = Object.keys(corpus.courseTexts()).every((k) => {
+  const raw = (corpus.courseTexts()[k] || {}).text;
+  if (!raw) return true;
+  return splitLines(raw).map((ln) => ln.s.join("")).join("") ===
+    String(raw).split("\n").map((l) => l.split(/[\s]/).join("")).join("");
+});
+ok("全部课内正文切句后拼得回原文", rebuild);
+ok("splitLines 保留空行", splitLines("a\n\nb").length === 3 && splitLines("a\n\nb")[1].s.length === 0);
+ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null).length === 1);
+// 标点不能只在「不注音」那条路上活着。注音那条路渲染的是 tokens，
+// 它若自己再切一遍句子，标点就当场没了 —— 预览里真的出现过「鹅鹅鹅」。
+{
+  const pj = fs.readFileSync(path.join(ROOT, "utils", "pinyin.js"), "utf8");
+  const renderBody = /function render\(lines, mode\)\s*\{([\s\S]*?)\n\}/.exec(pj);
+  ok("pinyin.render 只吃 splitLines 的输出（含 .s）",
+    !!renderBody && renderBody[1].indexOf(".s") >= 0,
+    renderBody ? renderBody[1].slice(0, 60) : "找不到 render");
+  ok("pinyin.render 不再自己按标点切句",
+    !/split\(\s*\/\[. *[，。！？]/.test(pj));
+  const rwxml = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+  ok("阅读页正文与注音两条路都按句渲染",
+    rwxml.indexOf("ln.s") >= 0 && rwxml.indexOf("wx:for=\"{{cl}}\"") >= 0);
+}
+// 语料里真有这种行 —— 上面那句注释不是假设
+const longLine = corpus.courseTexts();
+const hasMulti = Object.keys(longLine).some((k) => {
+  const t = longLine[k] && longLine[k].text;
+  if (!t) return false;
+  return splitLines(t).some((ln) => ln.s.length > 1);
+});
+ok("语料里确实有一行多句的篇目（切句不是白做）", hasMulti === true);
 
 // f) 全文检索：索引不在就退回索引字段，不假装搜过正文
 const tsearch = require(path.join(ROOT, "utils", "text-search.js"));
@@ -858,12 +924,23 @@ const freshId = corpus.course()[0].id;
 ok("indexById 能命中条目", corpus.indexById(sampleId) && corpus.indexById(sampleId).t === allEntries[0].t);
 ok("indexById 找不到时回 null", corpus.indexById("不存在的-id") === null);
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
-ok("全站搜索能跨集子", corpus.search("李白", { limit: 5 }).length === 5);
+ok("全站搜索能跨集子", corpus.search("李白", { limit: 5 }).items.length === 5);
 // 搜索要真的跨集子：拿一个只在课外集子里出现的条目来验
 const outside = allEntries.find((p) => p.b === "zhaoming" && p.t.length > 2);
-ok("搜索能命中课外集子", corpus.search(outside.t, { limit: 200 }).some((p) => p.id === outside.id),
+ok("搜索能命中课外集子", corpus.search(outside.t, { limit: 200 }).items.some((p) => p.id === outside.id),
   "查不到 " + outside.t);
-ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).every((p) => p.b === "poems"));
+ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).items.every((p) => p.b === "poems"));
+
+// search() 必须同时给出「列了几条」与「一共几条」——后者是截断前的事实。
+// 上一版只有前者，界面把「只给你 80 条」写成了「全站只有 80 条」。
+const sw = corpus.search("春", { limit: 80 });
+ok("search 报出截断前总数", sw.total > sw.items.length,
+  "「春」全站命中 " + sw.total + "，列出 " + sw.items.length);
+const swAll = corpus.search("春", { limit: 99999 });
+ok("search 总数与不做限流时一致", sw.total === swAll.items.length,
+  sw.total + " vs " + swAll.items.length);
+ok("search 没命中时总数是 0", corpus.search("这几个字不会有", { limit: 80 }).total === 0);
+ok("search 空关键词给空结果", corpus.search("  ", { limit: 80 }).total === 0);
 
 // 集子 id 带连字符时，前缀定位不能被短前缀抢走
 ok("ownerOf 取最长前缀", corpus.ownerOf("mingren-waiguo-mr-1") === "mingren-waiguo",
@@ -1186,6 +1263,39 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
       ok("路径在 poem 路由表里 " + remoteMod2.PATHS[k], rsrc.indexOf(p2) > -1,
         "poem 的 routes.js 里没有这个路由");
     });
+  }
+}
+
+/* ---------- 8.8 令字池的计数必须等于「点进去能看到的行数」 ---------- */
+{
+  const feihua = require(path.join(ROOT, "utils", "feihua", "index.js"));
+  const all = feihua.pool();
+  ok("令字池非空", Object.keys(all).length > 500, "只有 " + Object.keys(all).length + " 个令字");
+
+  // 这一条是这次修出来的：池子按「每个汉字每次出现都 +1」累加，查一查按「一句一行」
+  // 列出，于是格上写 346、点进去 477 行 —— 数字当场露馅。
+  // 抽一批字逐一对账，比钉死某几个字的数字更耐改。
+  const chs = Object.keys(all).sort((a, b) => all[b].count - all[a].count).slice(0, 40);
+  const mismatch = chs.filter((ch) => all[ch].count !== feihua.look(ch, { limit: 99999 }).length);
+  ok("令字格上的数字 = 点进去的行数", mismatch.length === 0,
+    mismatch.slice(0, 6).map((ch) => ch + " " + all[ch].count + "≠" + feihua.look(ch, { limit: 99999 }).length).join("; "));
+
+  // 计数与列举必须走同一个断句口径。分成两处写，早晚有一处忘了门槛
+  const feihuaJs = fs.readFileSync(path.join(ROOT, "utils", "feihua", "index.js"), "utf8");
+  ok("飞花令不再自己写一份断句标点", feihuaJs.indexOf("const SPLIT") < 0);
+  ok("飞花令断句走 corpus.splitLines", feihuaJs.indexOf("corpus.splitLines") >= 0);
+
+  // 令字档位：常见 / 一般 / 难 三档都得有人，不然有一档点开是空的
+  ["easy", "normal", "hard"].forEach((lv) => {
+    ok("令字档 " + lv + " 取得到", feihua.chars(lv, 24).length === 24);
+  });
+
+  // 单字重复的诗句（「莲叶何田田」）不能让计数虚高
+  const heTian = all["田"];
+  if (heTian) {
+    ok("一句里重复的字只算一次（田）",
+      heTian.count === feihua.look("田", { limit: 99999 }).length,
+      heTian.count + " vs " + feihua.look("田", { limit: 99999 }).length);
   }
 }
 
