@@ -232,6 +232,22 @@ view, text, button, input, textarea {
   margin-top: var(--sp-2);
 }
 
+/* 一排并列的按钮（「说一句 / 接不上了」「试听 / 保存」这种）。
+   两件事必须一起写：**flex 平分宽度** 与 **align-items: center**。
+   少了后者，flex 的默认 stretch 遇上 .btn 的固定 height 会退化成基线对齐 ——
+   同一排里主按钮与次要按钮**顶部齐、底部不齐**，看着像一个大一个小。
+   两个页面各写过一份，现在收在这里。 */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.actions .btn {
+  flex: 1;
+}
+
 /* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
    原生 button 自带最小宽度与默认内边距，不收掉就撑得整行走形。 */
 .btn.mini {

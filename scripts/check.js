@@ -1701,6 +1701,46 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     missing.length === 0, "NATIVE_CSS 里缺：" + missing.join(" / "));
 }
 
+/**
+ * V6.12 一排并列的按钮必须一样高。
+ *
+ * flex 的默认 `align-items: stretch` 遇上 `.btn` 的固定 `height` 会退化成
+ * **基线对齐**：同一排里主按钮与次要按钮顶部齐、底部不齐，看着像一大一小。
+ * 判据：凡 `.actions` 这一族（放一排按钮的容器），必须显式写 align-items。
+ */
+{
+  const selectors = [];
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const files = [["app.wxss", appWxss]].concat(
+    pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")])
+  );
+  files.forEach((pair) => {
+    const p = pair[0];
+    const wxss = pair[1];
+    const re = /\.(actions|btn-row|btn-pair)\s*\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      if (!/display\s*:\s*flex/.test(m[2])) continue;
+      // 只看这一族：里面装的是 .btn（固定 height + 投影，才会出现「一大一小」）。
+      // 读者页的 .act 是自绘的等高块，不需要这条 —— 断言不该管它。
+      const family = m[1];
+      const child = new RegExp("\\." + family + "\\s+\\.btn\\s*\\{").test(wxss) || p === "app.wxss";
+      if (child && !/align-items\s*:/.test(m[2])) selectors.push(p + " → ." + family);
+    }
+  });
+  ok("并列按钮的行有统一对齐", selectors.length === 0, selectors.join("; "));
+
+  // 装 .btn 的那一族容器只许有一份实现：各页各写一份，就一定会有一份忘了对齐
+  const dupes = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    if (/\.actions\s+\.[\w-]+\s*\{[^}]*flex\s*:\s*1/.test(wxss) && /\.actions\s*\{/.test(wxss)) {
+      dupes.push(p);
+    }
+  });
+  ok("并列按钮的容器只在全局定一次", dupes.length === 0, dupes.join(", "));
+}
+
 // V7. 首页首屏要有骨架：语料读得慢时，先立版式再换内容
 {
   const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");

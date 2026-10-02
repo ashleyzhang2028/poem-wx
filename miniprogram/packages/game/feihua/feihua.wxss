@@ -46,15 +46,6 @@
   margin: 24rpx 0 20rpx;
 }
 
-.actions {
-  display: flex;
-  gap: 16rpx;
-}
-
-.actions .btn {
-  flex: 1;
-}
-
 .fh-msg {
   display: block;
   text-align: center;

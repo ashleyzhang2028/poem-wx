@@ -85,16 +85,6 @@
   background: var(--amber-light);
 }
 
-.actions {
-  display: flex;
-  gap: var(--sp-2);
-  margin-top: var(--sp-3);
-}
-
-.actions .btn {
-  flex: 1;
-}
-
 .step {
   display: block;
   margin-top: 12rpx;
