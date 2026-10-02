@@ -1,4 +1,4 @@
-/* 选项的排布（分段 / 胶囊格）在 app.wxss 里定一次，这里不再重复；
+/* .opt-group / .pref-item 的排布在 app.wxss 里定一次，这里不再重复；
    这一页只留「令字格比上一行多留一口气」这件事 */
 .chars {
   display: flex;

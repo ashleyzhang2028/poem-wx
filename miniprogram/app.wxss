@@ -19,10 +19,9 @@ view, text, button, input, textarea {
   padding: var(--sp-3) var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
 }
 
-/* 有底栏的那四页（背诵 / 课外 / 搜索 / 我的）：底部要多留一截 ——
-   自绘底栏是 fixed 的，不参与文档流，不留这一截最后一行会被它压住。
-   底栏高 112rpx + 安全区（见 custom-tab-bar/index.wxss），
-   这里垫同样的一截；`.safe-bottom` 那 24rpx 仍在，两者相加正好。 */
+/* 自绘底栏是 fixed 的，不吃平台的安全区与点击区 —— 有底栏的页面
+   要自己留出「底栏高度 + 安全区」，否则最后一行被压在底栏下面。
+   （原生 tabBar 会由平台自动避让，自绘就得自己来，V21 守着。） */
 .page.has-tabbar {
   padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
@@ -513,6 +512,50 @@ view, text, button, input, textarea {
   letter-spacing: var(--ls-caption);
 }
 
+/* ============================================================
+   小程序自有控件的统一口径
+   ============================================================ */
+/* 这一节是「控件用系统的、配色用这一版的」这句话的落点。
+   开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：
+   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成这一版的样子。
+
+   原生控件的交互色只能通过组件属性给（color / activeColor / selected-color），
+   属性在 WXML 里写；样式表这边只统一尺寸、圆角、字体与间距 ——
+   想靠 WXSS 改原生控件的内部结构是不被支持的，所以这里一行都不敢越界。
+
+   ## 「选一个」只有一套长相
+
+   Issue #12 前后反复栽在这里：同一屏里并存过**四种**说法 ——
+   圆点（原生 radio）、一道左侧竖线、填色的底、填色的格子。
+   四种都在说「这几个里选一个」，用户的原话是「选项也不统一」。
+
+   现在收敛成一套，只有两种排布：
+
+   | 排布 | 用在哪 | 类 |
+   |---|---|---|
+   | **横排分段**：合成一颗胶囊，选中的那段填墨黑 | 两三个互斥项（对齐 / 注音 / 在哪儿搜 / 怎么搜） | `.seg` / `.seg-item` |
+   | **等宽格子**：一格一个方块，选中的填墨黑 | 等长的一堆（学期 / 年级 / 每日首数 / 题型） | `.chip-group` / `.chip` |
+   | **竖排选项行**：一行一个，选中的填墨黑 | 名字较长、要一行一个（取诗范围 / 复习算法） | `.opt-group` / `.opt-row` |
+
+   三者的**选中态完全一致**：一块墨黑的底 + 白字。
+   差的是排布（横向排布 / 等宽网格 / 竖排），不是「长相」。
+   底层一律是原生 `<radio>` / `<checkbox>`，视觉隐藏。
+
+   ## 几毫米的规矩
+
+   · 选项与它的文字之间要有默认间距 —— 原生控件不自带外边距，
+     紧贴文字是浏览器的排法，不是控件的排法。这条定在控件自己身上。
+   · 行高收成一条：原生控件被 transform 缩放后，行盒仍按原尺寸算高度，
+     不给 line-height 的话文字基线会跟着控件对齐跑偏。 */
+.pref-item {
+  line-height: 1.4;
+}
+
+.pref-item radio,
+.pref-item checkbox {
+  margin-right: var(--sp-2);
+}
+
 /* ---------- 字号滑块 ----------
    「A —— A」这一排。两处用到：阅读页的偏好条、通用设置的正文字号。
 
@@ -546,6 +589,146 @@ view, text, button, input, textarea {
 
 .font-a.big {
   font-size: var(--fs-lead);
+}
+
+/* ---------- 选项行（竖排、多个选项、每个带名字）----------
+   「取诗范围」「复习算法」用的是它：一列 4~7 个选项。
+
+   ## 它为什么不该有圆点
+
+   用户 2026-10-02 的原话是「取诗范围我看不出还包括单选框的必要性」。
+   对的 —— 圆点在这里是**多余的第二遍**：
+   这几种控件（分段、格子、选项行）说的都是同一件事「这几个里选一个」，
+   而圆点只在**没有别的选中标志**时才需要。
+   格子用「填色」说，分段用「填色」说，选项行却另起一个圆点说 ——
+   同一个界面上三种说法，这就是「选项不统一」的来源。
+
+   所以选项行跟格子走同一套：**未选中是白底 + 一道极淡的描边，
+   选中是墨底白字 + 右侧一个勾**。勾是给多选留的位子，
+   单选这里画的是「已选」——同一枚图形，形状说「这是个控件」，
+   填色说「选的是它」。
+
+   ## 破相是怎么来的（上一版在这里栽过两次）
+
+   1. **那道竖线**。上一版选中态是 `inset 6rpx 0 0 var(--ink)` ——
+      一条贴左的竖线。inset 阴影**不参与圆角裁切的外沿**，
+      而这一行的 `border-radius` 是 14rpx：圆角把竖线的上端切掉一个斜口，
+      下端也被切 —— 屏幕上就是一根上不接顶、下不接底、左上还有豁口的黑条。
+      现在不画竖线了：整块填色本身就说明了「这一行」，
+      不需要再叠一道线。
+   2. **选中与未选中的左右起点不一样**。上一版给行加了
+      `margin: 0 var(--sp-1)`，而同一张卡里的格子（`.chip-group`）没有 ——
+      于是「学期/年级」和「取诗范围」的左边缝差 8rpx，
+      竖着扫下来就看得出错位。现在两者都归零：
+      卡片自己有 `--page-x` 的呼吸，行不需要再让一次。
+
+   ## 虚线框不画了
+
+   这几行原来还有 `border-bottom` 当行分隔。有了「填色的底」之后
+   分隔线是重复的：未选中的行是白底，靠行与行之间的空隙就能分。
+   线条越少，选中那块填色越显眼。 */
+.opt-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 竖排的一组：缝与格子一致，看着才是「一组里的几行」 */
+.opt-group.column {
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.opt-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: 0 var(--sp-3);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: background-color var(--t-press), border-color var(--t-press);
+}
+
+/* 选中：填墨黑、白字、边同色。与 .chip.on 一字不差 —— 
+   它们本来就该长得一样，各写一遍迟早会漂。 */
+.opt-row.active {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.opt-row.active .opt-name {
+  color: var(--on-ink);
+  font-weight: 600;
+}
+
+.opt-row.active .opt-desc {
+  color: var(--on-ink-soft);
+}
+
+/* 锁住的那几行（权限不够）：透明度压下去，但仍可读 —— 
+   整块隐藏会让人以为「这儿本来就没有」，压暗才说的是「有，但你现在用不了」。 */
+.opt-row.locked {
+  opacity: .45;
+}
+
+/* 原生控件只留行为、不留外观：
+   点整行都选中、读屏读得到、键盘走得了 —— 换的只是一张脸。
+   与 .seg-radio 同一套写法。 */
+.opt-radio {
+  position: absolute;
+  width: 1rpx;
+  height: 1rpx;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opt-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-2) 0;
+}
+
+.opt-name {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.opt-desc {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: 6rpx;
+  line-height: 1.6;
+}
+
+/* 横排的单选项（范围、模式、筛选这种一行放得下的） */
+.pref-item {
+  display: flex;
+  align-items: center;
+  min-height: 60rpx;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  margin-right: var(--sp-3);
+}
+
+.pref-item radio,
+.pref-item checkbox {
+  transform: scale(.8);
+}
+
+/* 横排筛选条：内容多时横向滚，不折成两行把版式撑乱 */
+.chip-row {
+  white-space: nowrap;
+  margin-bottom: var(--sp-2);
+}
+
+.chip-row .pref-item {
+  display: inline-flex;
+  margin-right: var(--sp-2);
 }
 
 /* ---------- 字段行（键值对）---------- */
@@ -758,6 +941,8 @@ view, text, button, input, textarea {
 
 .row,
 .kv,
+.pref-item,
+.opt-row,
 .field,
 .search,
 .pager {
@@ -810,6 +995,11 @@ view, text, button, input, textarea {
    底层**仍是原生 radio**：包在 <label> 里、被视觉隐藏。
    点整段就能选中、读屏读得到、键盘走得了 —— 行为全是平台的，
    我们只是换了一张脸。 */
+/* 分段控件：**一律撑满可用宽度**。
+   上一版只有加了 .fill 的才撑满 —— 于是列表页那条「全部 / 未读」
+   缩成一小撮挤在左边，而搜索页的「全站 / 课内」撑满整行，
+   同一屏两种宽窄。分段就是一个「二选一」的控件，
+   宽窄不该随页面变：撑满时两段的**可点面积**才一样大。 */
 .seg {
   display: flex;
   align-items: center;
@@ -818,6 +1008,7 @@ view, text, button, input, textarea {
 .seg-group {
   display: flex;
   align-items: stretch;
+  flex: 1;
   border: 1rpx solid transparent;
   border-radius: var(--radius-pill);
   background: var(--sink);
@@ -825,23 +1016,15 @@ view, text, button, input, textarea {
   overflow: hidden;
 }
 
-/* 一排里只有两段时给它撑满，不然两小段并排看着像被挤在角落 */
-.seg.fill .seg-group {
-  flex: 1;
-}
-
-.seg.fill .seg-item {
-  flex: 1;
-  justify-content: center;
-}
-
 .seg-item {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1;
   gap: 8rpx;
-  padding: 0 22rpx;
-  height: var(--h-opt-seg);
+  padding: 0 var(--sp-2);
+  height: 60rpx;
   border-radius: var(--radius-pill);
   transition: background-color var(--t-press), color var(--t-press);
 }
@@ -856,11 +1039,12 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* 图标靠 --ic 取色，选中时整块换成白色 */
-.seg-item.on .seg-icon,
-.seg-item.on .seg-icon::before,
-.seg-item.on .seg-icon::after {
-  --ic: var(--on-ink);
+/* 图标跟着文字走：段被选中时整段文字变白，图标跟着变白。
+   用 currentColor 而不是再写一个 --ic 变量 ——
+   变量要在三处（自己 + 两个伪元素）各改一遍，漏一处就出现
+   「文字白了、图标还是灰的」。currentColor 只需改父级一处。 */
+.seg-item.on .seg-icon {
+  color: var(--on-ink);
 }
 
 /* 原生 radio 只留行为、不留外观。
@@ -873,9 +1057,13 @@ view, text, button, input, textarea {
   pointer-events: none;
 }
 
+/* 分段的文字：**与格子、选项行同档**（--fs-hint）。
+   上一版这里是 --fs-caption（22rpx），比格子小一档 ——
+   同一屏里「左对齐」比「一年级」小 3rpx，用户说不出，
+   但会觉得「这几个东西不是一套的」。 */
 .seg-text {
-  font-size: var(--fs-caption);
-  color: var(--ink-2);
+  font-size: var(--fs-hint);
+  color: var(--ink);
   letter-spacing: 1rpx;
   white-space: nowrap;
 }
@@ -919,16 +1107,24 @@ view, text, button, input, textarea {
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* 格子与「选项行」是同一套长相：未选中的样子、选中的样子、
+   圆角、描边的粗细，全都一样。上一版格子是「浅灰底 + 无描边」、
+   选项行是「白底 + 一道描边」—— 同一屏里两种底，用户说的
+   「选项也不统一」就是它。
+
+   现在只留一档：**未选中 = 白底 + 一道极淡描边**。
+   灰底是留给「凹槽」（输入框、图标底）的，不该占选项的位置 ——
+   浅灰底 + 浅灰底，一眼看不出哪块能点。 */
 .chip {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: var(--h-opt);
+  min-height: 76rpx;
   padding: 0 var(--sp-1);
-  border: 1rpx solid transparent;
+  border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
-  background: var(--sink);
+  background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
 
@@ -937,9 +1133,13 @@ view, text, button, input, textarea {
   border-color: var(--ink);
 }
 
+/* 未选中的文字用**正文色**，不用次级灰。
+   「未选中」这件事由**底色**说（白底 / 墨底），不需要文字再灰一次 ——
+   灰字 + 灰底会让人以为「这一项不能用」。次级灰留给「说明」，
+   不留给「选项的名字」。 */
 .chip-t {
   font-size: var(--fs-hint);
-  color: var(--ink-2);
+  color: var(--ink);
   line-height: 1.3;
   text-align: center;
 }
@@ -947,59 +1147,6 @@ view, text, button, input, textarea {
 .chip.on .chip-t {
   color: var(--on-ink);
   font-weight: 600;
-}
-
-/* ---------- 竖排的胶囊格（一格一行、占满宽度）----------
-   「取诗范围」「复习算法」这两组：选项比学期/年级长（「小学+初中随机」
-   「艾宾浩斯遗忘曲线」），排成网格会挤成两行、每格宽度不一。
-   但它们**仍然是同一件事**（选一个），所以形状不能变 ——
-   仍旧是一格一颗胶囊，只是这一组竖着排、每格占满一行。
-
-   为什么不留原生圆点那一版：它和上面的胶囊格是**两种长相**，
-   同一页里「背诵范围」是胶囊、「取诗范围」是圆点，用户说的
-   「很多选项是胶囊样式了，但背诵范围和题型等等选项又不是胶囊样式」
-   就是这一处。现在一页里只有一种零件，只是排法不同。 */
-.chip-group.list {
-  grid-template-columns: 1fr;
-  gap: var(--sp-1);
-}
-
-/* 竖排格：文字靠左，高度**与网格格一模一样**（同为 --h-opt）。
-   它做成 column 是为了能带一行小字（锁住的算法写「差在哪一档」）；
-   不带小字时，column + center 排出来仍是垂直居中、与网格格等高。
-
-   ⚠️ 上下**不加内边距** —— 只靠 min-height 撑。加了内边距它就比网格格
-   高出一截，同一页里两种高度（用户问的「高度、大小、padding 是不是一致」
-   正是这一处）。带小字那格让它自然长高，这是唯一允许的例外。 */
-.chip-group.list .chip {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 var(--sp-4);
-  min-height: var(--h-opt);
-}
-
-/* 竖排格里文字靠左；选中态同样填墨黑，与网格格一致 */
-.chip-group.list .chip-t {
-  text-align: left;
-}
-
-.chip-sub {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  margin-top: 4rpx;
-  line-height: 1.4;
-}
-
-.chip.on .chip-sub {
-  color: var(--on-ink);
-  opacity: .7;
-}
-
-/* 锁住的那一格（能力不够，点了也没用）：整格压暗，且**不给按下反馈** */
-.chip.locked {
-  opacity: .45;
 }
 
 /* 多选的格子：形状与单选的一样，但**选中态多一个勾** ——
@@ -1014,28 +1161,26 @@ view, text, button, input, textarea {
 .chip.multi::after {
   content: "";
   position: absolute;
-  right: 10rpx;
-  top: 10rpx;
-  width: 12rpx;
-  height: 12rpx;
+  right: 12rpx;
+  top: 12rpx;
+  width: 14rpx;
+  height: 14rpx;
   border: 2rpx solid var(--ink-4);
   border-radius: 3rpx;
 }
 
-/* 选中：空心方框换成实心勾。
-   勾由两条边拼出来（左 + 下，再转 -45°），所以它的**尺寸要比方框小一点**、
-   位置也要往右下挪一点 —— 旋转是绕中心转的，不挪的话勾尖会翘出格子角。
-   它是「这一格可多选」的唯一线索，所以未选中时那个方框也必须画出来。 */
 .chip.multi.on::after {
-  right: 12rpx;
-  top: 13rpx;
-  width: 15rpx;
-  height: 8rpx;
+  width: 16rpx;
+  height: 9rpx;
   border: none;
-  border-left: 3rpx solid var(--on-ink);
-  border-bottom: 3rpx solid var(--on-ink);
+  border-left: 4rpx solid var(--on-ink);
+  border-bottom: 4rpx solid var(--on-ink);
   border-radius: 0;
   transform: rotate(-45deg);
+}
+
+.chip.multi.on::after {
+  border-color: var(--on-ink);
 }
 
 /* 小号：一章里连着两组（搜索页）时用，别把卡片撑高 */
@@ -1050,14 +1195,37 @@ view, text, button, input, textarea {
 }
 
 /* ---------- 图标：全用 CSS 画 ----------
-   一组图标只是为了说「这是哪一个选项」，不值得引图片资源 ——
-   主包余量不多。三种笔画足够画出这几个意思。 */
+   这一组图标要说清「这一档是什么」，所以它得像图标的样子：
+   **同一个网格、同一根线宽、同一个视觉重量**。
+
+   上一版不是这样：三个图标各画各的 ——
+   「不注音」是 20rpx 的圆圈加一道斜杠（还戳出圈外），
+   「生字」是 15rpx 的小方框顶着一个点，「全文」是一排 6rpx 的实心小方块。
+   它们并排出现时：粗的粗、细的细、大的大、小的小，
+   连**光学中心**都不在一条线上（圆的溢出比方的多，视觉上会显得更低）。
+   用户的原话是「瞎画、不对齐」，说的就是这个。
+
+   这一版定一份网格，所有图标都长在它上面：
+
+     · **画布 24×24rpx**，图形一律内缩 2rpx —— 留出的那一圈是
+       「光学边距」：描边图形若顶到画布边缘，会比实心图形看着大一圈。
+     · **线宽 2.5rpx**。圆角端点。线宽只有这一种，
+       不许某个图标为了「看得清」偷偷加粗。
+     · **描边类与实心类不混用**：一个图标要么全描边、要么全实心。
+       混着画就会出现「有的深有的浅」，一眼就乱。
+     · 需要「这里有个东西」时用**描边**，需要「这里被填满」时用**实心**。
+
+   为什么仍不引图标字体 / 图片：主包余量只剩几百 KB，
+   而这组图标只在分段的选项里出现，一共九枚 —— 用 CSS 画得下来。
+   代价是每加一枚都要照着网格写，那就照着写。 */
 .seg-icon {
   position: relative;
   flex: none;
-  width: 26rpx;
-  height: 26rpx;
-  --ic: var(--ink-2);
+  width: 24rpx;
+  height: 24rpx;
+  --ic: currentColor;
+  color: var(--ink-2);
+  /* 图标与文字同色系：选中时整段变白字，图标跟着白 —— 见 .seg-item.on 那组规则 */
 }
 
 .seg-icon::before,
@@ -1065,155 +1233,192 @@ view, text, button, input, textarea {
   content: "";
   position: absolute;
   background: var(--ic);
+  border-radius: 2rpx;
 }
 
-/* 左对齐：三道线左端齐、长短不一 */
+/* ---------- 对齐（三道线）----------
+   左对齐：三行都从左边起，长度递减 —— 「长短不一样」才是对齐的标志，
+   三行一样长就只是「三行」。
+   居中：三行都居中对齐，长度递减。 */
 .ic-left::before {
-  left: 0;
-  top: 3rpx;
-  width: 26rpx;
-  height: 3rpx;
-  box-shadow: 0 8rpx 0 var(--ic), 0 16rpx 0 var(--ic);
+  left: 2rpx;
+  top: 4rpx;
+  width: 20rpx;
+  height: 2.5rpx;
+  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic);
 }
 
 .ic-left::after {
-  left: 0;
-  top: 3rpx;
-  width: 15rpx;
-  height: 3rpx;
+  left: 2rpx;
+  top: 11rpx;
+  width: 13rpx;
+  height: 2.5rpx;
 }
 
-/* 居中：三道线都居中、长短不一 */
 .ic-center::before {
-  left: 0;
-  top: 3rpx;
-  width: 26rpx;
-  height: 3rpx;
-  box-shadow: 0 8rpx 0 var(--ic), 0 16rpx 0 var(--ic);
+  left: 2rpx;
+  top: 4rpx;
+  width: 20rpx;
+  height: 2.5rpx;
+  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic);
 }
 
 .ic-center::after {
-  left: 5rpx;
-  top: 3rpx;
-  width: 15rpx;
-  height: 3rpx;
+  left: 5.5rpx;
+  top: 11rpx;
+  width: 13rpx;
+  height: 2.5rpx;
 }
 
-/* 不注音：一道斜杠划掉一个圆 */
+/* ---------- 注音三档 ----------
+   这三枚要一眼分得开，而且**不能跟「对齐」那两枚撞脸**。
+   第一版我给「全文」画了三道横线 —— 那正是 `.ic-left` 的样子，
+   同一屏里并排出现就是「瞎画、不对齐」的观感来源。
+
+   换一个母题：**「一个字 + 它头上的拼音」**。
+   这个母题本身就是注音这件事，三档的差别就落在「有几个」上：
+
+     · **不注音** —— 一个「字 + 拼音」被划掉（圆圈加斜杠，全世界都读「关掉它」）
+     · **生字**   —— 只有**一个**：一个字，头上一点拼音
+     · **全文**   —— 铺满：两个字并排，各自头上都有拼音
+
+   三点区别同时存在（有没有被划掉 / 一个还是两个 / 头上有没有点），
+   任意两点都足以分辨，所以不会看错。 */
 .ic-off::before {
-  left: 3rpx;
-  top: 3rpx;
+  left: 2rpx;
+  top: 2rpx;
   width: 20rpx;
   height: 20rpx;
+  border: 2.5rpx solid var(--ic);
   border-radius: 50%;
   background: transparent;
-  border: 3rpx solid var(--ic);
+  box-sizing: border-box;
 }
 
 .ic-off::after {
-  left: 1rpx;
-  top: 11rpx;
-  width: 24rpx;
-  height: 3rpx;
+  left: 4rpx;
+  top: 10.5rpx;
+  width: 16rpx;
+  height: 2.5rpx;
   transform: rotate(-45deg);
 }
 
-/* 生字：一个字 + 头上一点（「只标几个字」，那一点就是标记） */
+/* 生字：**一个**「字 + 头上一点」，占不满整行 —— 右边空着一大块，
+   「只标几个」这件事由「空着的那块」说，比数点更直观。
+   （两个字各顶一个点，和「全文」在 24rpx 里几乎分不出来 —— 那是废图。） */
 .ic-rare::before {
-  left: 8rpx;
-  top: 9rpx;
-  width: 15rpx;
-  height: 15rpx;
-  border: 3rpx solid var(--ic);
-  background: transparent;
+  left: 2rpx;
+  top: 6rpx;
+  width: 8rpx;
+  height: 2.5rpx;
 }
 
 .ic-rare::after {
-  left: 11rpx;
-  top: 2rpx;
-  width: 6rpx;
-  height: 6rpx;
-  border-radius: 50%;
-  background: var(--ic);
+  left: 2rpx;
+  top: 12rpx;
+  width: 8rpx;
+  height: 2.5rpx;
 }
 
-/* 全文：三组「字 + 小点」横着排 */
+/* 全文：**三个**「字 + 头上一点」一路排到底，一点都不空 ——
+   「全都标了」由「排满」说。 */
 .ic-all::before {
-  left: 0;
-  top: 4rpx;
-  width: 7rpx;
-  height: 7rpx;
-  background: var(--ic);
-  box-shadow: 10rpx 0 0 var(--ic), 20rpx 0 0 var(--ic);
+  left: 2rpx;
+  top: 5rpx;
+  width: 5rpx;
+  height: 2.5rpx;
+  box-shadow: 7.5rpx 0 0 var(--ic), 15rpx 0 0 var(--ic);
 }
 
 .ic-all::after {
-  left: 0;
-  top: 14rpx;
-  width: 26rpx;
-  height: 3rpx;
-  background: var(--ic);
+  left: 2rpx;
+  top: 11rpx;
+  width: 18rpx;
+  height: 2.5rpx;
 }
 
-/* 全站 / 课内：地球（圆 + 一道纬线）与 一册书（两页） */
+/* ---------- 搜索范围 ----------
+   全站：一个**地球** —— 一个圆 + 一道纬线 + 一道经线。
+   只画圆加一道横线会读成「⊖（禁止/减号）」，所以必须把**经线**也画出来：
+   有经纬两线才像球。上一版就是只画了赤道，和「不注音」的圈几乎是一个东西。
+   课内：**一册书** —— 一个长方形 + 中缝。
+
+   两枚都是「描边 + 细线」同一套笔法，线宽同为 2.5rpx。 */
 .ic-all-site::before {
   left: 2rpx;
   top: 2rpx;
-  width: 22rpx;
-  height: 22rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border: 2.5rpx solid var(--ic);
   border-radius: 50%;
   background: transparent;
-  border: 3rpx solid var(--ic);
+  box-sizing: border-box;
 }
 
+/* 经线：一道竖着的椭圆（用 border-radius 把一个小方压成椭圆看得见）
+   纬线：中间一道横线 */
 .ic-all-site::after {
-  left: 2rpx;
-  top: 11rpx;
-  width: 22rpx;
-  height: 3rpx;
+  left: 7rpx;
+  top: 5rpx;
+  width: 10rpx;
+  height: 14rpx;
+  border: 2rpx solid var(--ic);
+  border-radius: 50%;
+  background: transparent;
+  box-sizing: border-box;
 }
 
+/* 课内的书：外框在此，中缝靠 ::after */
 .ic-course::before {
-  left: 1rpx;
-  top: 3rpx;
-  width: 24rpx;
-  height: 20rpx;
-  border: 3rpx solid var(--ic);
-  background: transparent;
+  left: 2rpx;
+  top: 3.5rpx;
+  width: 20rpx;
+  height: 17rpx;
+  border: 2.5rpx solid var(--ic);
   border-radius: 2rpx;
+  background: transparent;
+  box-sizing: border-box;
 }
 
 .ic-course::after {
   left: 12rpx;
-  top: 4rpx;
-  width: 3rpx;
-  height: 18rpx;
+  top: 5rpx;
+  width: 2rpx;
+  height: 14rpx;
 }
 
-/* 篇名作者 / 正文全文：一行字 与 一整页字 */
+/* ---------- 搜索字段 ----------
+   篇名作者：一行字 + 下面一小段（「短，是标题」）。
+   正文全文：一整页密排的短行（「密，是正文」）。 */
 .ic-title::before {
-  left: 0;
+  left: 2rpx;
   top: 5rpx;
-  width: 26rpx;
-  height: 4rpx;
-  border-radius: 2rpx;
-  box-shadow: 0 9rpx 0 var(--ic), 0 18rpx 0 var(--ic);
+  width: 20rpx;
+  height: 2.5rpx;
+  box-shadow: 0 6rpx 0 var(--ic);
+}
+
+.ic-title::after {
+  left: 2rpx;
+  top: 14rpx;
+  width: 11rpx;
+  height: 2.5rpx;
 }
 
 .ic-full::before {
-  left: 0;
-  top: 4rpx;
-  width: 12rpx;
-  height: 3rpx;
-  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic), 0 21rpx 0 var(--ic);
+  left: 2rpx;
+  top: 3rpx;
+  width: 8.5rpx;
+  height: 2.5rpx;
+  box-shadow: 0 5.5rpx 0 var(--ic), 0 11rpx 0 var(--ic), 0 16.5rpx 0 var(--ic);
 }
 
 .ic-full::after {
-  left: 15rpx;
-  top: 4rpx;
-  width: 11rpx;
-  height: 3rpx;
-  box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic), 0 21rpx 0 var(--ic);
+  left: 13.5rpx;
+  top: 3rpx;
+  width: 8.5rpx;
+  height: 2.5rpx;
+  box-shadow: 0 5.5rpx 0 var(--ic), 0 11rpx 0 var(--ic), 0 16.5rpx 0 var(--ic);
 }
 
 /* ============================================================

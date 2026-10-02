@@ -1745,41 +1745,72 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 }
 
 /**
- * V6.8 控件与它的文字之间要有默认间距。
+ * V6.8 「选一个」只有一套长相，且控件与文字之间要有默认间距。
  *
- * Issue #12 的原话：「复选框单选框和右侧文字之间应该有默认间距」。
+ * 两条来自 Issue #12 的合并需求。
+ *
+ * **一、控件与文字之间要有默认间距。**
+ * 原话是「复选框单选框和右侧文字之间应该有默认间距」。
  * 这不是审美，是**原生控件不带外边距**这件事 —— 紧贴是浏览器的排法，
- * 不是控件的排法，而每一页都有人会忘记补，所以补在控件自己身上：
- * 只要页面上出现裸的 <radio> / <checkbox>，它就一定已经被全局规则照顾到。
+ * 不是控件的排法。剩下还在用裸 radio 的地方（.pref-item），
+ * 间距定在控件自己身上。
  *
- * 判据两条：
- *   1. 选项里的原生控件一律视觉隐藏（.seg-radio）—— 整格才是点击目标，
- *      「圆点紧贴文字」这件事因此不存在
- *   2. 页面不许再给 .chip / .seg-item 补一份左右内边距
- *      ——两处叠加会比目的多出一倍
+ * **二、选中态只许有一种说法。**
+ * 用户第二轮的原话：「取诗范围我看不出还包括单选框的必要性」、
+ * 「选项也不统一」。项目里并存过四种「选一个」的说法 ——
+ * 圆点、左侧竖线、填色的底、填色的格子。现在收敛成一套：
+ * **选中的那一块填墨黑**。
+ *
+ * 判据：
+ *   1. 页面里出现裸 <radio> / <checkbox>（没有类名）时必须已被全局规则照顾到
+ *   2. `.seg-item.on` / `.chip.on` / `.opt-row.active` 三者的底色必须是同一个令牌
+ *   3. 竖排选项行不许再用「左侧竖线」表达选中（inset box-shadow）
  */
 {
-  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const noComment = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
 
-  // 1) 选项里的原生控件一律视觉隐藏 —— 间距问题因此**不再存在**：
-  //    整格（整段）都是点击目标，文字与边框之间的间距由 .chip / .seg-item 的
-  //    padding 一处给，不再有「圆点紧贴文字」这回事。
-  const hidden = /\.seg-radio\s*\{[^}]*opacity\s*:\s*0/.test(appWxss);
-  ok("选项里的原生控件是视觉隐藏的（不再有圆点紧贴文字）", hidden,
-    "app.wxss 里 .seg-radio 没把原生控件藏起来");
+  // 1) 裸控件的默认间距仍在
+  const rule = /\.pref-item\s+radio[\s\S]{0,200}?margin-right\s*:/.test(appWxss);
+  ok("原生选项与文字之间有全局默认间距", rule,
+    "app.wxss 里找不到给 radio/checkbox 的 margin-right");
 
-  // 2) 全站只有一套胶囊内边距：.chip / .chip-group.list .chip / .seg-item。
-  //    页面不许再给选项补一份左右内边距 —— 两处叠加就比目的多一倍。
+  // 2) 三种排布的选中态必须是同一块填色
+  const body = noComment(appWxss);
+  const sel = (cls) => {
+    const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = new RegExp(esc + "\\s*\\{([^}]*)\\}").exec(body);
+    if (!m) return null;
+    const bg = /background\s*:\s*([^;]+);/.exec(m[1]);
+    return bg ? bg[1].trim() : null;
+  };
+  const fills = {
+    ".seg-item.on": sel(".seg-item.on"),
+    ".chip.on": sel(".chip.on"),
+    ".opt-row.active": sel(".opt-row.active")
+  };
+  const missing = Object.entries(fills).filter(([, v]) => v === null).map(([k]) => k);
+  ok("三种「选一个」的选中态都存在", missing.length === 0, missing.join("; "));
+  const vals = Object.values(fills).filter((v) => v !== null);
+  ok("三种「选一个」的选中态是同一块填色", vals.length > 0 && new Set(vals).size === 1,
+    "取到的底色：" + JSON.stringify(fills));
+
+  // 3) 竖排选项行不许再画左侧竖线
+  const inset = /\.opt-row\.active\s*\{[^}]*box-shadow\s*:\s*inset/.test(body);
+  ok("选项行不再用「左侧竖线」表达选中", !inset,
+    "inset 竖线与行的圆角互相裁切，会破相 —— 选中态靠填色说");
+
+  // 4) 页面不许再给 .opt-main 补第二份横向间距
   const doubled = [];
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-    const re = /\.(chip|seg-item)[^{]*\{([^}]*)\}/g;
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const re = /\.[\w-]*(opt-main|pref-main|opt-text)[^{]*\{([^}]*)\}/g;
     let m;
     while ((m = re.exec(wxss))) {
-      if (/padding(-left|-right)?\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
+      if (/padding-left\s*:\s*(?!0)/.test(m[2])) doubled.push(p + " → ." + m[1]);
     }
   });
-  ok("选项的内边距只在 app.wxss 定一次（页面不叠第二份）", doubled.length === 0, doubled.slice(0, 6).join("; "));
+  ok("选项文字没有第二份间距", doubled.length === 0, doubled.slice(0, 6).join("; "));
 }
 
 /**
@@ -2725,42 +2756,56 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
-// 3) 镜像与页面逐条对齐：分段/胶囊里的原生控件一律视觉隐藏，两边说同一件事。
-//
-//    Issue #12 之后，全站「选一个」都收成了胶囊（分段 / 格子），
-//    原来那套裸的圆点行（.opt-row）整组撤掉了。现在页面里出现原生
-//    radio / checkbox 的地方，无一例外都是 .seg-radio —— 只留行为、不留外观。
-//    所以这一条改成守「视觉隐藏」这件事：它一旦丢了，原生圆点会重新冒出来，
-//    和胶囊并排 —— 那正是用户说「选项也不统一」的样子。
+// 3) 镜像与页面逐条对齐：margin-left / margin-right 两边必须一样
 {
+  const nativeBlock = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
+  ok("预览里有原生控件的等价样式（V5 那条的老素材，这里再取一次）", !!nativeBlock);
+  const mirror = nativeBlock ? nativeBlock[1] : "";
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
   const mirrorRules = {};
-  const nativeBlock2 = /const NATIVE_CSS = `([\s\S]*?)`;/.exec(renderSrc);
-  const mirror2 = nativeBlock2 ? nativeBlock2[1] : "";
-  (mirror2.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
-    const i2 = blk.indexOf("{");
-    const sel = blk.slice(0, i2).replace(/\s+/g, "");
-    const body = blk.slice(i2 + 1, blk.lastIndexOf("}"));
-    mirrorRules[sel] = body;
+  (strip(mirror).match(/[^{}]+\{[^{}]*\}/g) || []).forEach((blk) => {
+    const i = blk.indexOf("{");
+    const sel = blk.slice(0, i).replace(/\s+/g, "");
+    const body = blk.slice(i + 1, blk.lastIndexOf("}"));
+    const ml = /margin-left\s*:\s*([^;]+)/.exec(body);
+    const mr = /margin-right\s*:\s*([^;]+)/.exec(body);
+    if (!ml && !mr) return;
+    mirrorRules[sel] = { ml: ml && ml[1].trim(), mr: mr && mr[1].trim() };
   });
 
-  const appCss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
-  const segRadio = /\.seg-radio\s*\{([^}]*)\}/.exec(appCss);
-  ok("原生控件在选项里只留行为、不留外观（.seg-radio 视觉隐藏）", !!segRadio);
-  if (segRadio) {
-    const body = segRadio[1];
-    ok("隐藏的 radio 不许用 display:none（部分机型读屏会读不到）",
-      !/display\s*:\s*none/.test(body), body.trim());
-    ok("隐藏的 radio 尺寸收成 1rpx", /width\s*:\s*1rpx/.test(body) && /height\s*:\s*1rpx/.test(body));
+  const pageCssAll = strip(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"));
+  const pageSrcAll = pages.map((p) => [p, strip(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"))]);
+
+  // 页面里凡按**标签名**给 radio / checkbox 写的横距规则，
+  // 镜像里必须有一条按 class 写的等价项 —— 少一条，预览就比真机好看一点。
+  //
+  // 这条原来是专门盯 `.opt-row.active radio` 的（那时候选项行里还露着圆点）。
+  // 现在选项行的原生控件是视觉隐藏的（.opt-radio），不再需要外观镜像，
+  // 所以判据从「列举那些规则」换成**按事实判**：页面里还在露脸的裸控件，
+  // 它的横距必须在镜像里有对应的一条。
+  const visibleTagRules = [];
+  const tagRe = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = tagRe.exec(pageCssAll))) {
+    const sel = m[1];
+    const body = m[2];
+    if (!/\b(radio|checkbox)\b/.test(sel)) continue;
+    if (/\.opt-radio|\.seg-radio/.test(sel)) continue;   // 视觉隐藏的，不需要外观
+    const mr = /margin-right\s*:\s*([^;]+)/.exec(body);
+    if (mr) visibleTagRules.push({ sel: sel.replace(/\s+/g, " ").trim(), mr: mr[1].trim() });
   }
+  const missingMirror = visibleTagRules.filter((r) => {
+    const cls = r.sel.split(/[,\s]+/).filter((x) => x.startsWith("."));
+    return cls.length > 0 && !Object.keys(mirrorRules).some((k) =>
+      cls.every((c) => k.includes(c)));
+  });
+  ok("露脸的原生控件的横距在镜像里都有等价项", missingMirror.length === 0,
+    missingMirror.map((r) => r.sel).join(" | "));
 
-  // 镜像里也要有同一份 —— 否则预览里的原生圆点会显出来，看着比真机「多一圈」
-  const mirrorSeg = mirrorRules[".seg-radio"];
-  ok("预览镜像里也有 .seg-radio 的隐藏规则", !!mirrorSeg);
-
-  // 页面里不许再有裸的圆点行（.opt-row 是这一版撤掉的长相）
-  const pagesCss = pages.map((p2) => fs.readFileSync(path.join(ROOT, p2 + ".wxss"), "utf8")).join("\n");
-  ok("页面样式表里不再有 .opt-row（圆点行已并入胶囊）", !/\.opt-row\b/.test(appCss + pagesCss));
+  // 选项行的原生控件必须是视觉隐藏的：露着就又是「第二种选中标志」
+  const optRadioVisible = /\.opt-row\s+radio[^{}]*\{[^}]*margin-right/.test(pageCssAll);
+  ok("选项行里的原生控件是视觉隐藏的（不再另起一个圆点）", !optRadioVisible,
+    "还能找到给 .opt-row radio 的横距规则 —— 说明它又露脸了");
 }
 
 /**
@@ -2909,7 +2954,95 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 }
 
 /**
- * V19. 自绘底栏（Issue #12 第三次追问：导航栏图标）。
+ * V19. 尺寸只有一个旋钮（Issue #12 的「小一号的全局配置」）。
+ *
+ * 用户要的是「用一套组件体系，并且能从一处整体调小」。
+ * 换个说法：**全站的尺寸必须是可推导的**，不能散在二十六个页面里各写各的。
+ *
+ * 判据三条：
+ *   1. tokens.wxss 里必须有 `--ui-scale`
+ *   2. 字阶 / 间距 / 圆角 / 高度这几组令牌必须由它算出来（calc）
+ *   3. 页面样式表里不许再出现**裸的 rpx 尺寸** —— 出现就是漏了令牌，
+ *      将来调小的时候一定会漏掉它
+ *
+ * ⚠️ 第 3 条有例外名单：1rpx 的描边、百分比、以及确实只属于这一页的
+ * 装饰尺寸（例如阅读页的行距倍数）。名单要短，每进一条都得说清为什么。
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  ok("令牌表里有 --ui-scale", /--ui-scale\s*:/.test(tokens));
+
+  // 这几组必须乘 --ui-scale
+  const mustScale = ["--fs-body", "--fs-title", "--sp-2", "--sp-3", "--page-x",
+    "--radius-sm", "--radius", "--h-btn", "--h-row"];
+  const notScaled = mustScale.filter((t) => {
+    const m = new RegExp("\\" + t + "\\s*:\\s*([^;]+);").exec(tokens);
+    return !m || !/var\(--ui-scale\)/.test(m[1]);
+  });
+  ok("字阶/间距/圆角/高度都由 --ui-scale 算出来", notScaled.length === 0,
+    notScaled.join("; "));
+
+  // 3) 页面不许**重复定义**共享令牌 —— 那一层才是「调不动」的真正来源。
+  //
+  // 不去查「页面里有没有裸的 rpx」：页面本来就有只属于这一页的装饰尺寸
+  // （头像圆 112rpx、钩子 22rpx……），把它们全赶进令牌表只会让令牌表变成
+  // 第二个页面样式表，反而更乱。真正要守的是**同一个东西不许有第二个数**：
+  // 页面上凡是写了字阶 / 间距 / 行高这类共享令牌的地方，必须用 var() 取，
+  // 不许在页面里重新赋一个值。
+  const SHARED = ["--fs-", "--sp-", "--lh-", "--radius", "--h-btn", "--h-row",
+    "--h-field", "--h-act", "--page-x", "--ui-scale", "--ink", "--bg", "--surface", "--sink", "--line"];
+  const redefined = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    const re = /(--[\w-]+)\s*:\s*([^;}]+)/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const name = m[1];
+      if (SHARED.some((s2) => name.startsWith(s2))) {
+        // 允许页面里定义**自己新增的**变体（如 --fs-poem-hero），
+        // 但名字正好等于共享令牌时，就是在覆盖它
+        if (SHARED.includes(name) || SHARED.some((s2) => name === s2)) {
+          redefined.push(p + " → " + name);
+        }
+      }
+    }
+  });
+  ok("页面没有重新定义共享令牌", redefined.length === 0, redefined.slice(0, 6).join(" | "));
+}
+
+/**
+ * V20. 全局样式表的括号必须配平。
+ *
+ * 这一条是**被自己坑出来的**：改 Issue #12 的选项行时，
+ * 一次文本替换漏掉一个 `}`，于是一大段规则（`.opt-row` / `.chip-group`）
+ * 被浏览器整个丢弃 —— 预览截图里所有选项变成一列光秃秃的文字。
+ * 界面「坏了」，但自检 742 项**全绿** —— 因为没有一条断言看的是
+ * 「样式表本身还立不立得住」。
+ *
+ * 判据：去掉注释后，`{` 与 `}` 数目相等，且不许出现负数深度（提前闭合）。
+ */
+{
+  const bad = [];
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const files = [["app.wxss", appWxss], ["styles/tokens.wxss",
+    fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8")]];
+  pages.forEach((p) => files.push([p + ".wxss", fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]));
+  files.forEach(([name, src]) => {
+    const t = src.replace(/\/\*[\s\S]*?\*\//g, "");
+    let d = 0;
+    let broke = false;
+    for (const ch of t) {
+      if (ch === "{") d++;
+      if (ch === "}") { d--; if (d < 0) { broke = true; break; } }
+    }
+    if (broke || d !== 0) bad.push(name + "（" + (broke ? "提前闭合" : "差 " + d + " 个 }") + "）");
+  });
+  ok("样式表的括号是配平的", bad.length === 0, bad.join("; "));
+}
+
+/**
+ * V21. 自绘底栏（Issue #12 第三次追问：导航栏图标）。
  *
  * 用户原话：「导航栏几何按钮明明文字上面有图标的，现在好像没有，例如 我的」。
  * 原生 tabBar 只认**图片**（iconPath / selectedIconPath），而本项目一条图片
@@ -2973,50 +3106,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 }
 
 /**
- * V20.「选一个」只有两种长相，且不重样（Issue #12 第三次追问：选项不统一）。
- *
- * 用户原话：「很多选项是胶囊样式了，但背诵范围和题型等等选项又不是胶囊样式
- * 而且他们的高度，大小 padding 是否一致？能不能确保所有页面相同元素界面的一致性」。
- *
- * 这一版把三种长相收成两种，且**都走同一枚胶囊形状**：
- *   · 分段 .seg（一颗胶囊里分几段）—— 少数几个互斥项，带图标
- *   · 格子 .chip（一格一颗胶囊）—— 等长的多个选项（竖排就是一组）
- * 撤掉的是原生圆点行（.opt-row）—— 它就是「不是胶囊」的那一种。
- *
- * 守三件事：
- *   1. 页面里不许再出现把选项排成「裸圆点 + 文字」的写法
- *   2. 两种长相的高度都走令牌（--h-opt / --h-opt-seg），不许各写死一个 rpx
- *   3. 两种长相的选中态都必须填墨黑（--ink），不许各染一种颜色
- */
-{
-  const appCss3 = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-
-  const pagesWxss = pages.map((p2) => [p2, fs.readFileSync(path.join(ROOT, p2 + ".wxss"), "utf8")]);
-  const rawDot = [];
-  pagesWxss.forEach(([p2, css]) => {
-    if (/\.opt-row\b/.test(css)) rawDot.push(p2);
-  });
-  ok("页面里不再有原生圆点行（选项一律胶囊）", rawDot.length === 0, rawDot.join(", "));
-
-  // 高度走令牌
-  const segH = /\.seg-item\s*\{[^}]*height\s*:\s*var\(--h-opt-seg\)/.test(appCss3);
-  const chipH = /\.chip\s*\{[^}]*min-height\s*:\s*var\(--h-opt\)/.test(appCss3);
-  ok("分段高度走 --h-opt-seg 令牌", segH);
-  ok("格子高度走 --h-opt 令牌", chipH);
-
-  // 竖排格与网格格同高：list 那一组不许再加纵向内边距
-  const listChip = /\.chip-group\.list\s+\.chip\s*\{([^}]*)\}/.exec(appCss3);
-  ok("竖排格与网格格同高（不加纵向内边距）",
-    !!listChip && !/padding\s*:\s*[^;]*\brpx/.test(listChip[1]) || (!!listChip && /padding\s*:\s*0\s/.test(listChip[1])),
-    listChip ? listChip[1].trim() : "找不到 .chip-group.list .chip");
-
-  // 选中态都填墨黑
-  ok("分段的选中态填墨黑", /\.seg-item\.on\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(appCss3));
-  ok("格子的选中态填墨黑", /\.chip\.on\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(appCss3));
-}
-
-/**
- * V21. 头像：本机那张压过微信那张（Issue #12 第三次追问）。
+ * V22. 头像：本机那张压过微信那张（Issue #12 第三次追问）。
  *
  * 用户原话：「她应该要支持在设置里设置头像功能的，登录后默认使用微信头像的，
  * 子用户上传头像再用子用户头像」。

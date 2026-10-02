@@ -110,14 +110,13 @@ const NATIVE_CSS = `
 .n-checkbox.on{background:#1c1c1e;border-color:#1c1c1e}
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
 /* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
-   少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。
-
-   Issue #12 之后全站「选一个」都收成了胶囊：原生 radio / checkbox 一律
-   视觉隐藏（.seg-radio），整段/整格才是点击目标。所以这里第一件事是
-   **把镜像里的圆点也藏起来** —— 不藏的话预览里会多出一圈圆点，
-   看着比真机「多一个控件」，又变成另一种说谎。 */
-.seg-radio{position:absolute;width:1rpx;height:1rpx;opacity:0;pointer-events:none}
-.seg-radio.n-radio,.seg-radio.n-checkbox,.seg-radio .n-radio,.seg-radio .n-checkbox{display:none}
+   少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
+.pref-item .n-radio,.pref-item .n-checkbox{margin-right:var(--sp-2)}
+/* 选项行（.opt-row）里的原生控件现在是**视觉隐藏**的（.opt-radio）——
+   它不露脸，所以镜像里也不需要它的外观。原来那三条给
+   .opt-row radio 的规则（margin-right / align-self / scale）
+   到这里就失效了：再留着，守的是已经不存在的东西。 */
+.pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
 .n-switch.on{background:#1c1c1e}
