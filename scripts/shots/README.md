@@ -46,9 +46,11 @@ node scripts/shots/render.js   # 会打印「预览已注入篇名宋体」
    后果：预览里页面左右内边距与底色从来没生效过，卡片通栏铺满屏（真机是左右各留
    `--page-x`），而「通栏 + 卡缝露出灰底」看着就是一条条横带 ——
    **一个假问题把真问题盖住了**。现在用 `(?<![\w.-])` 开头，`check.js` V15 守着。
-2. **镜像与页面不同步。** 页面里 `.opt-row.active radio` 的 `margin-left` 已改成 0，
-   `NATIVE_CSS` 里还是 6rpx，于是预览里圆点照旧横跳 —— 改完了看截图，问题「还在」。
-   现在 `check.js` 有一条逐条比对两边 `margin-left` / `margin-right`。
+2. **镜像与页面不同步。** 页面里 `.pref-item` 那几处的原生控件仍露脸、按**标签名**
+   给着 `margin-right` / `transform`，而预览把 `<radio>` 编译成 `<div class="n-radio">`，
+   标签名一条都匹配不到 —— 预览里的圆点与文字贴在一起、缩放也没生效，看着比真机
+   「干净」。现在 `NATIVE_CSS` 里按 class 补了等价项，`check.js` 有一条逐条比对
+   两边关键声明（`margin-right` / `transform`）。
 
 **结论**：改界面之前，先确认预览自己是对的。`check.js` 跑在 `render.js` 之后会多验两条。
 

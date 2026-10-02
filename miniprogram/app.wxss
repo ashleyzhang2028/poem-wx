@@ -19,6 +19,20 @@ view, text, button, input, textarea {
   padding: var(--sp-3) var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
 }
 
+/* 自绘底栏是 fixed 的，不吃平台的安全区与点击区 —— 有底栏的页面
+   要自己留出「底栏高度 + 安全区」，否则最后一行被压在底栏下面。
+   （原生 tabBar 会由平台自动避让，自绘就得自己来，V21 守着。） */
+.page.has-tabbar {
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+/* 有底栏的页面上，页内那个 .safe-bottom 垫片是**多余的** ——
+   .has-tabbar 的底部内边距已经含了安全区与底栏高度，
+   再垫一层就是 24rpx 的空白，最后一行离底栏远了半指。 */
+.page.has-tabbar .safe-bottom {
+  display: none;
+}
+
 /* ---------- 页头 ----------
    一屏的入口，回答「我在哪、这里有什么」。
    参考图里那一屏最上面是一行小字标签 + 一个标题，没有别的装饰 ——

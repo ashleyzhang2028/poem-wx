@@ -3,6 +3,7 @@ const store = require("../../utils/store");
 const textSearch = require("../../utils/text-search");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
+const tabbar = require("../../utils/tabbar");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
@@ -48,6 +49,8 @@ Page({
   },
 
   onShow() {
+    // 自绘底栏：切到本页时把自己那一格点亮
+    tabbar.sync(this, 2);
     // 搜索是 free 档能力，但同样要先登录。
     // 搜索页在 tabBar 上，未登录点进来不该是一屏空壳。
     if (!gate.logged() || !entitlement.can("search")) {

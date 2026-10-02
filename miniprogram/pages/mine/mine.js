@@ -6,12 +6,19 @@ const sync = require("../../utils/sync");
 const pinyin = require("../../utils/pinyin");
 const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
+const tabbar = require("../../utils/tabbar");
 
 Page({
   data: {
     logged: false,
     nickname: "未登录",
     avatarUrl: "",
+    /** 没头像时圆的那个字：昵称首字，昵称也没有就用「诗」 */
+    avatarChar: "诗",
+    /** 这张头像哪来的（自己传的 / 微信的 / 还没有） */
+    avatarFromText: "还没有头像",
+    hasLocalAvatar: false,
+    identitySub: "未登录",
     gradeName: "",
     scopeName: "",
     algoName: "",
@@ -40,6 +47,8 @@ Page({
   },
 
   onShow() {
+    // 自绘底栏：切到本页时把自己那一格点亮
+    tabbar.sync(this, 3);
     this.refresh();
   },
 
@@ -52,10 +61,19 @@ Page({
     const pr = pinyin.readiness();
     const fr = require("../../utils/text-search").readiness();
 
+    const nick = profile.nickname || "我的古诗词";
+    const src = store.avatarSrc();
+    const local = store.hasLocalAvatar();
+
     this.setData({
       logged: !!profile.logged,
-      nickname: profile.nickname || "未登录",
-      avatarUrl: profile.avatarUrl || "",
+      nickname: profile.logged ? nick : "未登录",
+      avatarUrl: src,
+      avatarChar: (nick || "诗").slice(0, 1),
+      hasLocalAvatar: local,
+      // 说清这张是哪来的：自己传的排第一（与 store.avatarSrc 同一口径）
+      avatarFromText: !src ? "还没有头像" : local ? "本机设置的头像" : "微信头像",
+      identitySub: profile.logged ? (local ? "已登录 · 本机头像" : "已登录") : "未登录",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
@@ -156,22 +174,28 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
-  onProfile() {
-    wx.getUserProfile({
-      desc: "用于展示你的昵称与头像",
-      success: (res) => {
-        const info = res.userInfo || {};
-        store.saveProfile({ nickname: info.nickName, avatarUrl: info.avatarUrl });
-        this.refresh();
-      },
-      fail: () => {}
-    });
-  },
-
+  /**
+   * 换头像。chooseAvatar 是平台给的入口 —— 它一次给两条路：
+   * **微信头像**（用当前微信那张）与**从相册选 / 拍照**（自己传一张）。
+   *
+   * 结果一律落到 profile.avatarLocal（本机那张），而不是 avatarUrl：
+   *   · 用户点了这个按钮，就是「我要换头像」——无论选的是哪条路，
+   *     结果都是他刚挑的那张，**该压过微信默认那张**；
+   *   · 存成分开的两份，登录时刷新微信那张才不会把用户的图冲掉。
+   *
+   * ⚠️ 这里**不调 wx.getUserProfile** —— 它自 2022 年起只返回匿名
+   * 「微信用户 + 灰头像」，调用它等于把一张假图盖到用户脸上。
+   */
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;
-    store.saveProfile({ avatarUrl: url });
+    store.saveProfile({ avatarLocal: url });
+    this.refresh();
+  },
+
+  /** 回到微信那张：去掉本机那张，优先级自然回落到 avatarUrl */
+  onAvatarClear() {
+    store.saveProfile({ avatarLocal: "" });
     this.refresh();
   },
 

@@ -3041,6 +3041,125 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("样式表的括号是配平的", bad.length === 0, bad.join("; "));
 }
 
+/**
+ * V21. 自绘底栏（Issue #12 第三次追问：导航栏图标）。
+ *
+ * 用户原话：「导航栏几何按钮明明文字上面有图标的，现在好像没有，例如 我的」。
+ * 原生 tabBar 只认**图片**（iconPath / selectedIconPath），而本项目一条图片
+ * 资源都不引（主包余量，也免多套倍图）—— 图标一律 CSS 画。所以底栏整条自绘。
+ *
+ * 自绘的代价是「高亮不再由平台管」：每个 tab 页 onShow 必须自己 setActive 一次。
+ * 漏一个，那一页的底栏就亮着上一栏 —— 这种错在预览里看不出来（预览手画了
+ * 当前项），只有真机切过去才现形。所以这里按事实守三件事：
+ *   1. custom-tab-bar 四件套齐全、app.json 里开了 custom
+ *   2. 四个 tab 页各调一次 tabbar.sync，且序号各不相同（一页一格）
+ *   3. 底栏四项都有图标类（.tab-ico-xxx），且 index.wxss 里真的画了它
+ */
+{
+  const tabRoot = path.join(ROOT, "custom-tab-bar");
+  const four = [".js", ".json", ".wxml", ".wxss"].every((ext) =>
+    fs.existsSync(path.join(tabRoot, "index" + ext)));
+  ok("自绘底栏四件套齐全", four);
+
+  const appCfg = readJson(path.join(ROOT, "app.json"));
+  ok("app.json 开启了自定义 tabBar", appCfg.tabBar && appCfg.tabBar.custom === true);
+
+  // 图标：组件里每个 icon 名，wxss 里要有一条 .tab-ico-<name> 规则
+  const barJs = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
+  const barCss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
+  const icons = [];
+  const ire = /icon:\s*"([\w-]+)"/g;
+  let im;
+  while ((im = ire.exec(barJs))) icons.push(im[1]);
+  ok("底栏每一项都配了图标", icons.length >= 4, "找到 " + icons.length + " 个");
+  const noIcon = icons.filter((n) => barCss.indexOf(".tab-ico-" + n) < 0);
+  ok("底栏图标都有画法（.tab-ico-* 在 index.wxss 里）", noIcon.length === 0, noIcon.join(","));
+
+  // 每个 tab 页 onShow 里 setActive 一次
+  const TABS = [
+    ["pages/home/home", 0],
+    ["pages/library/library", 1],
+    ["pages/search/search", 2],
+    ["pages/mine/mine", 3]
+  ];
+  const missing = [];
+  const seen = new Set();
+  TABS.forEach(([p2, idx]) => {
+    const js = fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8");
+    const m = /tabbar\.sync\(this,\s*(\d+)\)/.exec(js);
+    if (!m) missing.push(p2 + " 没调 tabbar.sync");
+    else if (Number(m[1]) !== idx) missing.push(p2 + " 序号 " + m[1] + " ≠ " + idx);
+    else seen.add(Number(m[1]));
+  });
+  ok("四个 tab 页都把底栏点亮（序号各不相同）", missing.length === 0 && seen.size === 4,
+    missing.join("; ") || ("序号数 " + seen.size));
+
+  // 有底栏的页面要多留一截，否则内容被压住
+  const padded = [];
+  TABS.forEach(([p2]) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p2 + ".wxml"), "utf8");
+    if (wxml.indexOf("has-tabbar") < 0) padded.push(p2);
+  });
+  ok("四个 tab 页都留了底栏高度的垫片（.has-tabbar）", padded.length === 0, padded.join(", "));
+  const appCss2 = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  ok("app.wxss 里有 .has-tabbar 的底部留白规则", /\.page\.has-tabbar\s*\{[^}]*padding-bottom/.test(appCss2));
+}
+
+/**
+ * V22. 头像：本机那张压过微信那张（Issue #12 第三次追问）。
+ *
+ * 用户原话：「她应该要支持在设置里设置头像功能的，登录后默认使用微信头像的，
+ * 子用户上传头像再用子用户头像」。
+ *
+ * 落成一条优先级：avatarLocal（自己传的）→ avatarUrl（微信那张）→ 首字印。
+ * 网页版是同一套（js/avatar.js 的 localRaw：名下没有就回自己的首字印，
+ * 绝不回落到设备域那张 —— 一旦回落，切了子用户头像不变，顶着别人的脸）。
+ *
+ * 守四件事：
+ *   1. store 里有两个字段，且 avatarSrc 按 local 优先排序
+ *   2. 登录写的是 avatarUrl（微信那张），**不许碰 avatarLocal**
+ *      —— 碰了就会把用户自己传的图冲掉，正是「切了子用户头像不变」那个 bug
+ *   3. 页面不许直接读 profile.avatarUrl 当显示图，一律走 store.avatarSrc()
+ *   4. 不许再出现 wx.getUserProfile（2022 起只返回匿名灰头像，调用=糊一张假图）
+ */
+{
+  const storeJs = fs.readFileSync(path.join(ROOT, "utils/store.js"), "utf8");
+  const srcFn = /function avatarSrc\(\)\s*\{([\s\S]*?)\n\}/.exec(storeJs);
+  ok("store 有 avatarSrc（头像取哪一张的唯一出处）", !!srcFn);
+  if (srcFn) {
+    const body = srcFn[1];
+    const iLocal = body.indexOf("avatarLocal");
+    const iUrl = body.indexOf("avatarUrl");
+    ok("头像优先用本机那张（avatarLocal 排在 avatarUrl 前面）",
+      iLocal >= 0 && iUrl > iLocal, body.replace(/\s+/g, " ").trim().slice(0, 120));
+  }
+
+  // 登录只写 avatarUrl
+  const authJs = fs.readFileSync(path.join(ROOT, "utils/auth.js"), "utf8");
+  const loginWrite = /store\.saveProfile\(\{([\s\S]*?)\}\)/.exec(authJs);
+  ok("登录时写的是微信那张（avatarUrl）", !!loginWrite && /avatarUrl\s*:/.test(loginWrite[1]));
+  ok("登录时不碰本机那张（不写 avatarLocal）",
+    !!loginWrite && !/avatarLocal\s*:/.test(loginWrite[1]),
+    "登录会冲掉用户自己传的头像");
+
+  // 页面显示一律走 store.avatarSrc()
+  const direct = [];
+  pages.forEach((p2) => {
+    const js = fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8");
+    if (/profile\(\)\.avatarUrl|\.avatarUrl\s*\|\|\s*"/.test(js) && js.indexOf("avatarSrc") < 0) {
+      direct.push(p2);
+    }
+  });
+  ok("页面显示头像走 store.avatarSrc()，不直接读 profile.avatarUrl", direct.length === 0, direct.join(", "));
+
+  // getUserProfile 已废弃。⚠️ 先摘注释再扫 —— 一段解释「这里不调 getUserProfile」
+  // 的注释不该被当成真的在调它（断言读错文档，会逼人删掉一段正确的说明）。
+  const stripJs = (x) => x.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const legacy = pages.filter((p2) =>
+    stripJs(fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8")).indexOf("getUserProfile") >= 0);
+  ok("不再调用 wx.getUserProfile（只返回匿名灰头像）", legacy.length === 0, legacy.join(", "));
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");

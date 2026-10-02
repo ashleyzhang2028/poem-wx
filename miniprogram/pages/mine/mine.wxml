@@ -1,31 +1,55 @@
-<view class="page">
-  <!-- 身份卡：回答「我是谁、我这一档能做什么」 -->
+<view class="page has-tabbar">
+  <!-- 身份卡：回答「我是谁、我这一档能做什么」。
+       头像点一下就换 —— chooseAvatar 是平台给的「换头像」能力，
+       它同时给了微信头像与相册两条路，所以这一个入口两件事都办了。 -->
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
+              wx:if="{{logged}}">
         <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
-        <view class="avatar avatar-fallback" wx:else>{{nickname[0]}}</view>
+        <view class="avatar avatar-fallback" wx:else>{{avatarChar}}</view>
       </button>
+      <view class="avatar-btn" wx:else>
+        <view class="avatar avatar-fallback">{{avatarChar}}</view>
+      </view>
       <view class="identity-main">
         <text class="identity-name">{{nickname}}</text>
-        <text class="identity-sub">{{logged ? '已登录' : '未登录'}}</text>
+        <text class="identity-sub">{{identitySub}}</text>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
-
-
 
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
     </view>
 
-    <view class="profile-row" wx:else>
-      <button class="btn ghost block" bindtap="onProfile">从微信取昵称头像</button>
-      <!-- type=nickname 是小程序给的「昵称填写」能力，不是普通文本框 -->
-      <input class="nick-input" type="nickname" placeholder="也可以自己填一个昵称"
-             confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+    <block wx:else>
+      <!-- 头像那一行：说清现在这张是哪来的，并把「换 / 移除」摆出来。
+           上一版只有一个「从微信取昵称头像」，点它到底换的是昵称还是头像，
+           从字面上看不出来，而且 getUserProfile 早已拿不到真实头像。 -->
+      <view class="avatar-row">
+        <view class="avatar-row-main">
+          <text class="field-label">头像</text>
+          <text class="avatar-src">{{avatarFromText}}</text>
+        </view>
+        <button class="btn mini" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">换头像</button>
+        <button class="btn mini" wx:if="{{hasLocalAvatar}}" bindtap="onAvatarClear">用微信头像</button>
+      </view>
+
+      <!-- 昵称那一行：与头像行同一长相（标签 + 就地编辑），
+           不再是一个没头没脑的输入框 -->
+      <view class="avatar-row">
+        <view class="avatar-row-main">
+          <text class="field-label">昵称</text>
+          <!-- type=nickname 是小程序给的「昵称填写」能力，不是普通文本框 -->
+          <input class="nick-input" type="nickname" value="{{nickname}}"
+                 placeholder="填一个昵称" confirm-type="done"
+                 bindblur="onNickname" bindconfirm="onNickname" />
+        </view>
+      </view>
+
       <button class="btn ghost mini logout" bindtap="onLogout">退出登录</button>
-    </view>
+    </block>
   </view>
 
   <!-- 本机数据：三个大数字。一屏最容易被扫到的地方，放三个能一眼比出大小的数 -->
