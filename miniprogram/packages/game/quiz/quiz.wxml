@@ -26,7 +26,7 @@
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
                wx:for="{{forms}}" wx:key="key">
           <checkbox class="seg-radio" value="{{item.key}}"
-                    checked="{{pickedForms.indexOf(item.key) >= 0}}" color="#2f6055" />
+                    checked="{{pickedForms.indexOf(item.key) >= 0}}" color="#1c1c1e" />
           <text class="chip-t">{{item.name}}</text>
         </label>
       </checkbox-group>

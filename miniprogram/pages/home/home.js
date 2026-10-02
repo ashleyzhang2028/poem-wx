@@ -41,6 +41,10 @@ Page({
 
     /** 今天是几号 —— 首屏那行小字，让人一眼知道看到的是哪一天的计划 */
     todayLabel: "",
+    /** 首屏那组大数字（参考图里最抓眼的一处）：今日 / 已背 / 待学。
+        为什么放三个而不是一个进度环：环只说得清「几比几」，
+        说得清「还剩几首」的是数字，而「还剩几首」才是打开这一屏要问的事。 */
+    stats: { today: 0, done: 0, left: 0 },
     /** 首屏第一次出计划要读语料，先立个骨架，别让人对着一屏空白 */
     loading: true
   },
@@ -78,6 +82,7 @@ Page({
         percent: 0,
         catalog,
         catalogCount: catalog.length,
+        stats: { today: 0, done: 0, left: 0 },
         loading: false
       });
       return;
@@ -134,6 +139,7 @@ Page({
       percent: total ? Math.round((done / total) * 100) : 0,
       catalog: [],
       catalogCount: 0,
+      stats: { today: total, done, left: Math.max(0, total - done) },
       loading: false
     });
   },

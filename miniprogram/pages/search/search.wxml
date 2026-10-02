@@ -20,7 +20,7 @@
         <label class="seg-item mini {{scope === item.key ? 'on' : ''}}"
                wx:for="{{scopes}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{scope === item.key}}"
-                 color="#2f6055" />
+                 color="#1c1c1e" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -35,7 +35,7 @@
           <label class="seg-item mini {{mode === item.key ? 'on' : ''}}"
                  wx:for="{{modes}}" wx:key="key">
             <radio class="seg-radio" value="{{item.key}}" checked="{{mode === item.key}}"
-                   color="#2f6055" />
+                   color="#1c1c1e" />
             <view class="seg-icon ic-{{item.icon}}"></view>
             <text class="seg-text">{{item.label}}</text>
           </label>

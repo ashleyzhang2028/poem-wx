@@ -16,7 +16,7 @@
       <radio-group class="seg-group" bindchange="onMode">
         <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}"
-                 color="#2f6055" />
+                 color="#1c1c1e" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -47,7 +47,7 @@
       <view class="sub-title">朗读语速</view>
       <radio-group class="native-group" bindchange="onRate">
         <label class="native-label" wx:for="{{rates}}" wx:key="key">
-          <radio value="{{item.key}}" checked="{{speechRate === item.key}}" color="#2f6055" />
+          <radio value="{{item.key}}" checked="{{speechRate === item.key}}" color="#1c1c1e" />
           <text>{{item.label}}</text>
         </label>
       </radio-group>
@@ -57,7 +57,7 @@
           <text class="row-title">整篇读完停一下</text>
           <text class="row-sub">读完不自作主张跳页，背完自己点下一首</text>
         </view>
-        <switch checked="{{speechAutoNext}}" bindchange="onAutoNext" color="#2f6055" />
+        <switch checked="{{speechAutoNext}}" bindchange="onAutoNext" color="#1c1c1e" />
       </view>
 
       <!-- 试听：原生 button，只是借边距与 :active 上色，不做自绘按钮 -->
@@ -80,7 +80,7 @@
         <text class="row-title">答对答错出声</text>
         <text class="row-sub">题库、考试与飞花令共用一套；四声，零音频文件</text>
       </view>
-      <switch checked="{{sfxOn}}" bindchange="onSfx" color="#2f6055" />
+      <switch checked="{{sfxOn}}" bindchange="onSfx" color="#1c1c1e" />
     </view>
     <button class="btn ghost block test-btn" bindtap="onSfxTest">试听一声</button>
   </view>

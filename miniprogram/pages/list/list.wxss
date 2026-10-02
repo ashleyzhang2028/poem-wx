@@ -17,8 +17,8 @@
 
 .index-toggle {
   flex: none;
-  color: var(--green);
-  border-color: var(--line);
+  color: var(--ink-2);
+  border-color: var(--line-strong);
 }
 
 .index-grid {
@@ -30,12 +30,13 @@
 
 .index-cell {
   width: 50%;
+  min-height: 76rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-2) 12rpx var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: 8rpx;
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -48,7 +49,7 @@
 }
 
 .index-count {
-  font-family: var(--font-poem);
+  font-family: var(--font-num);
   font-size: var(--fs-caption);
   color: var(--ink-3);
   padding-left: 12rpx;
@@ -65,7 +66,10 @@
 }
 
 /* ---------- 分组标题 ----------
-   组名用宋体、左边一道短竖线，和「卡片标题」是同一套语言 */
+   组名用宋体 —— 它是集子里的一「部」，和篇名同属内容；
+   颜色不另给，靠字号与宋体跟下面的行分开。
+   上一版组名是主色 + 一道短竖线，那是「用颜色说层次」；
+   这一版层次由字本身承担。 */
 .group-head {
   display: flex;
   align-items: baseline;
@@ -78,14 +82,15 @@
   font-family: var(--font-poem);
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--green);
-  letter-spacing: 1rpx;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
 }
 
 .group-count {
   font-size: var(--fs-caption);
   color: var(--ink-3);
   padding-left: 12rpx;
+  font-variant-numeric: tabular-nums;
 }
 
 .seq {
@@ -97,12 +102,14 @@
   text-align: center;
 }
 
+/* 已读：一枚极小的浅色胶囊。它是个状态，不该跟篇名抢眼 ——
+   所以不用主色填底，只用浅灰底 + 次级字色。 */
 .read-dot {
   flex: none;
   font-size: var(--fs-caption);
   color: var(--green);
-  padding: 2rpx 12rpx;
+  padding: 2rpx 14rpx;
   border-radius: var(--radius-pill);
-  background: var(--green-light);
+  background: var(--green-soft);
   margin-right: var(--sp-1);
 }

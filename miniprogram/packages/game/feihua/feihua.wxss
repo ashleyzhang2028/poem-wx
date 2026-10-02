@@ -39,7 +39,7 @@
 .said-t {
   font-family: var(--font-poem);
   font-size: var(--fs-title);
-  color: var(--green);
+  color: var(--ink);
 }
 
 .lv-input {

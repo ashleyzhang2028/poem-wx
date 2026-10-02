@@ -19,7 +19,7 @@
     <radio-group class="chip-group cols-2" data-k="term" bindchange="onTerm">
       <label class="chip {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
         <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
-               color="#2f6055" />
+               color="#1c1c1e" />
         <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
@@ -27,7 +27,7 @@
     <radio-group class="chip-group cols-4" data-k="grade" bindchange="onGrade">
       <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
         <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
-               color="#2f6055" />
+               color="#1c1c1e" />
         <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
@@ -37,7 +37,7 @@
     <view class="card-title bar">取诗范围</view>
     <radio-group class="native-group column" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
+        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
         <view class="opt-main">
           <text class="opt-name">{{item.label}}</text>
           <text class="opt-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
@@ -51,7 +51,7 @@
     <view class="card-title bar">每日首数</view>
     <radio-group class="chip-group cols-4" bindchange="onCount">
       <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
-        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="#2f6055" />
+        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="#1c1c1e" />
         <text class="chip-t">{{item}} 首</text>
       </label>
     </radio-group>
@@ -63,7 +63,7 @@
     <radio-group class="native-group column" bindchange="onAlgo">
       <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
              wx:for="{{algos}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#2f6055" />
+        <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#1c1c1e" />
         <view class="opt-main">
           <text class="opt-name">{{item.name}} · {{item.years}}</text>
           <text class="opt-desc">{{item.allowed ? item.blurb : item.lockHint}}</text>

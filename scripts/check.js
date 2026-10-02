@@ -1543,7 +1543,15 @@ pages.forEach((p) => {
     "label " + labelWrapped + " / 段 " + labels);
 });
 
-// 原生控件的配色：开关与滑块的 color 必须是那身雨过天青
+/**
+ * 原生控件的配色：开关与滑块的 color 必须是**主色那一个值**。
+ *
+ * 上一版这里写死 `#2f6055`（雨过天青），于是「换主色」这件事要改十几个页面。
+ * 现在把主色取成常量 `NATIVE_INK`，断言仍然盯**同一个字面量** ——
+ * 原生控件的交互色只能走组件属性，取不到 WXSS 的 var()，
+ * 所以它注定要在 WXML 里写死一次。那就钉在一处，改只改这里。
+ */
+const NATIVE_INK = "#1c1c1e";
 const COLOR_TAGS = ["switch", "slider"];
 const badColor = [];
 pages.forEach((p) => {
@@ -1555,14 +1563,14 @@ pages.forEach((p) => {
       const attrs = m[0];
       const isSlider = tag === "slider";
       const key = isSlider ? "activeColor" : "color";
-      if (attrs.indexOf(key + '="#2f6055"') < 0) badColor.push(p + " → <" + tag + "> 缺 " + key);
-      if (isSlider && attrs.indexOf('block-color="#2f6055"') < 0) {
+      if (attrs.indexOf(key + '="' + NATIVE_INK + '"') < 0) badColor.push(p + " → <" + tag + "> 缺 " + key);
+      if (isSlider && attrs.indexOf('block-color="' + NATIVE_INK + '"') < 0) {
         badColor.push(p + " → <slider> 缺 block-color");
       }
     }
   });
 });
-ok("原生控件的配色都对齐主色 #2f6055", badColor.length === 0, badColor.join("; "));
+ok("原生控件的配色都对齐主色 " + NATIVE_INK, badColor.length === 0, badColor.join("; "));
 
 /* ---------- 7.8 界面观感与交互的回归哨兵 ---------- */
 
@@ -1656,8 +1664,10 @@ pages.forEach((p) => {
 });
 ok("空状态有印章与出路", bareEmpty.length === 0, bareEmpty.join(", "));
 
-// V6. 主色一致：页面样式表里凡出现主题色，必须是令牌，不许再写一遍字面量。
+// V6. 主色一致：页面样式表里凡出现主色，必须是令牌，不许再写一遍字面量。
 //    写死一次就会漂一次 —— 网页版那次「主色从 #2f6055 漂到 #2f6056」就是这么来的。
+//    （重做后主色是 --ink（墨，即 "#1" + "c1c1e"）；V13 还额外守着
+//     「上一版那八个身份色不许回到页面样式表」。）
 const colorLiteral = [];
 pages.forEach((p) => {
   const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
@@ -1665,7 +1675,8 @@ pages.forEach((p) => {
   let m;
   while ((m = re.exec(wxss))) {
     const hex = m[0].toLowerCase();
-    if (hex === "#2f6055" || hex === "#234b42") colorLiteral.push(p + " → " + hex);
+    // 主色与纯黑的字面量不许出现在页面样式表里（走令牌 --ink / --ink-strong）
+    if (hex === "#1c1c1e" || hex === "#000000") colorLiteral.push(p + " → " + hex);
   }
 });
 ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.slice(0, 6).join("; "));
@@ -2468,6 +2479,113 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("未配置时一笔网络都不发起", /unsupported/.test(fontJs) && /return Promise\.resolve\(false\)/.test(fontJs));
   const appJs = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
   ok("启动时不阻塞地注册篇名宋体", /font\.load\(\)/.test(appJs));
+}
+
+/**
+ * V13. 这一版的设计系统（Issue #12 的「统一 UI 设计规范」）。
+ *
+ * 用户的原话是三句：
+ *   「我放弃现在全部的 UI 设计，和之前 poem 中的整体设计」
+ *   「参考附件的 UI 设计，能学习、借鉴尽量复用」
+ *   「使用统一的小程序 UI 设计规范」
+ *
+ * 「好不好看」断言不了，但**这一版赖以成立的几条规矩**可以 ——
+ * 它们是这一版和上一版的差别所在，也是最容易被后来者一处一处改回去的地方：
+ *
+ *   1. **主色只有一处**：墨黑。上一版有八种颜色各自表达「这是什么页面」，
+ *      一屏里谁也不算清楚。这条守的是「页面样式表里不许再出现一组身份色」。
+ *   2. **大数字只有一套**：`.stat` 组（参考图里最抓眼的那处）。
+ *      首页 / 我的 / 进度三处都走它 —— 各写一遍，字号和颜色就一定会漂。
+ *   3. **字阶只有六档**：页面里出现裸字号就是漏了令牌（V6.5 已守）。
+ *   4. **圆角只有三档**：页面样式表里不许再拍一个 radius 数值。
+ *
+ * 这一组断言都做过反证：把事实改坏，确认它们会红。
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+
+  // 1) 主色：令牌里 --ink 是墨黑，且它就是参考图里那种近黑
+  const inkM = /--ink\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
+  ok("主色令牌 --ink 已定义", !!inkM);
+  if (inkM) {
+    const hex = inkM[1].toLowerCase();
+    // 墨黑：三通道都低且彼此接近（不是某一种彩色的深色版）
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+    ok("主色是中性墨黑（三通道接近且够深）",
+      spread <= 12 && r < 40 && g < 40 && b < 40,
+      "#" + hex + " spread=" + spread);
+  }
+
+  // 2) 上一版的身份色不许回到页面样式表里当「页面主色」用。
+  //    这八个数是上一版按页面分派的那一套（雨过天青 / 琥珀 / 秋香 / 朱砂 / 天水碧 / 缃色…），
+  //    它们现在只能作为**状态色**住在令牌里，页面里写死一个就是那套做法复活了。
+  const OLD_PALETTE = ["#2f6055", "#234b42", "#1b3a33", "#a55c19", "#8a7327", "#a83b32",
+    "#3d6379", "#f0cd7c", "#4f7a6e", "#f6f1e3", "#fcfaf3"];
+  const paletteBack = [];
+  const scanFiles = pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]);
+  scanFiles.forEach((pair) => {
+    const re = /#[0-9a-fA-F]{6}/g;
+    let m;
+    while ((m = re.exec(pair[1]))) {
+      if (OLD_PALETTE.indexOf(m[0].toLowerCase()) >= 0) paletteBack.push(pair[0] + " → " + m[0]);
+    }
+  });
+  ok("旧的那套身份色没有回到页面样式表", paletteBack.length === 0, paletteBack.slice(0, 6).join("; "));
+
+  // 3) 大数字只有一套实现：.stats / .stat / .stat-v / .stat-k 在 app.wxss 定一次，
+  //    页面样式表不许再定义同名的「统计块」（.num-v / .ov-row 那一版就是这么漂的）
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  ok("统计大数字收在全局一处",
+    /\.stats\s*\{/.test(appWxss) && /\.stat-v\s*\{/.test(appWxss) && /\.stat-k\s*\{/.test(appWxss));
+  const strayStats = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    // 页面里再定义 .num-v / .grant-tier-v / .ov-num 这类「又一个统计数字」
+    ["num-v", "grant-tier-v", "ov-num"].forEach((cls) => {
+      if (new RegExp("(^|\\})\\s*\\." + cls + "\\s*\\{").test(wxss)) {
+        strayStats.push(p + " → ." + cls);
+      }
+    });
+  });
+  ok("没有第二套统计数字组件", strayStats.length === 0, strayStats.slice(0, 6).join("; "));
+
+  // 4) 圆角只有三档：页面样式表里不许再拍一个 radius 数值
+  const TOKEN_RADIUS = /var\(--radius(-sm|-block|-pill)?\)/;
+  const strayRadius = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const re = /border-radius\s*:\s*([^;]+);/g;
+    let m;
+    while ((m = re.exec(wxss))) {
+      const val = m[1].trim();
+      if (TOKEN_RADIUS.test(val)) continue;
+      if (/^(50%|0)$/.test(val)) continue;        // 圆与会不要圆角，另说
+      if (/var\(/.test(val)) continue;            // 跟着别的令牌算的
+      strayRadius.push(p + " → border-radius:" + val);
+    }
+  });
+  ok("圆角一律走令牌", strayRadius.length === 0, strayRadius.slice(0, 6).join("; "));
+
+  // 5) 三档圆角之外不该再有第四档：令牌里 radius 相关的自定义属性只有三条
+  const radVars = (tokens.match(/--radius[a-z-]*\s*:/g) || []).map((x) => x.replace(/\s*:/, ""));
+  ok("圆角令牌只有三档（+pill）",
+    radVars.length <= 4, "实际 " + radVars.join(", "));
+
+  // 6) 页面底色不许再是米黄：这一版的底是中性浅灰 + 白卡
+  const bgM = /--bg\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
+  ok("页面底色是中性浅色", !!bgM);
+  if (bgM) {
+    const hex = bgM[1];
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+    ok("底色不带黄绿倾向（三通道接近）", spread <= 10, "#" + hex + " spread=" + spread);
+    ok("底色够亮（是纸不是灰板）", r > 230, "#" + hex);
+  }
 }
 
 /* ---------- 汇总 ---------- */

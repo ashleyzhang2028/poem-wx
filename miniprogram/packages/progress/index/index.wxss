@@ -28,8 +28,8 @@
   font-family: var(--font-poem);
   font-size: var(--fs-lead);
   font-weight: 600;
-  color: var(--green);
-  letter-spacing: 1rpx;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
 }
 
 .ov-sub {
@@ -42,20 +42,6 @@
 .ov-row {
   display: flex;
   padding-top: var(--sp-3);
-}
-
-.num {
-  flex: 1;
-  text-align: center;
-}
-
-.num-v {
-  display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-hero);
-  font-weight: 600;
-  color: var(--green);
-  font-variant-numeric: tabular-nums;
 }
 
 .num-v.due {
@@ -116,9 +102,19 @@
   line-height: 1.4;
 }
 
-/* 「今天」那一行给主色：七天里只要一眼认得出哪行是今天 */
+/* 「今天」那一行：左侧一道墨线 + 加重字色。
+   上一版只把字染成主色 —— 七天里有六天都是灰的，唯一那点绿确实显眼，
+   但「显眼」和「看得出一行是一行」不是一件事：零排期那几天字号更小、
+   整行更矮，今天这一行不加一道线，跟它们排在一起还是容易看串。 */
+.day.today {
+  box-shadow: inset 6rpx 0 0 var(--ink);
+  padding-left: var(--sp-3);
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+}
+
 .day-label.today {
-  color: var(--green);
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -132,9 +128,8 @@
   margin-top: 12rpx;
 }
 
-/* 未来七天里，今天那一条用琥珀色 —— 七天里只要一眼认出哪条是今天 */
 .day-label.today + .day-count {
-  color: var(--green);
+  color: var(--ink-2);
 }
 
 .day-items {
@@ -169,9 +164,9 @@
 }
 
 .stage-count {
-  font-family: var(--font-poem);
+  font-family: var(--font-num);
   font-size: var(--fs-body);
-  color: var(--green);
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 

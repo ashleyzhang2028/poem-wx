@@ -5,6 +5,9 @@
    页面样式表只管「这一页长什么样」，凡是两页以上都要写的东西，
    一律收在这里。收不住的后果不是难看，是**不一致** ——
    用户说不清哪里别扭，只觉得「一塌糊涂」。
+
+   这一版的层次只有三样：**留白、字重、一道极淡的线**。
+   底色是白的、卡片也是白的，靠间隙与描边分开。
    ============================================================ */
 
 view, text, button, input, textarea {
@@ -13,51 +16,44 @@ view, text, button, input, textarea {
 
 .page {
   min-height: 100vh;
-  padding: 20rpx var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
-}
-
-/* 底纹：素绢上压一道极淡的竖纹，屏幕大时不会显得空得发飘。
-   只给页面最外层，卡片不参与，免得两层纹理打架 */
-.page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(120% 60% at 50% 0%, rgba(255, 254, 250, .85) 0%, rgba(255, 254, 250, 0) 60%),
-    repeating-linear-gradient(90deg, rgba(74, 58, 38, .022) 0 2rpx, transparent 2rpx 14rpx);
-  pointer-events: none;
+  padding: var(--sp-3) var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 页头 ----------
-   一屏的入口。它回答「我在哪、这里有什么」，
-   标题用宋体、副题用黑体小字，一眼分得开层级。 */
+   一屏的入口，回答「我在哪、这里有什么」。
+   参考图里那一屏最上面是一行小字标签 + 一个标题，没有别的装饰 ——
+   所以这里也不留底色、不留横线，只有字。
+
+   ⚠️ 页头的大标题不许等于导航栏标题（同屏两行一样的字等于没说）——
+   自检里有断言守着。 */
 .page-head {
-  padding: var(--sp-1) var(--sp-1) var(--sp-3);
+  padding: var(--sp-2) var(--sp-1) var(--sp-4);
 }
 
 .head-title {
   display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-lead);
-  font-weight: 600;
-  color: var(--green);
+  font-size: var(--fs-hero);
+  font-weight: 700;
+  color: var(--ink);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
 
 .head-sub {
   display: block;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-hint);
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-2);
 }
 
-/* ---------- 卡片 ---------- */
+/* ---------- 卡片 ----------
+   白底、一道极淡的描边、一层几乎看不见的投影。
+   投影只为了在米白页底上把「这是一张卡」说清楚，
+   不再承担「这张卡更重要」这个职责 —— 那是留白的活。 */
 .card {
-  background: var(--card);
-  border: 1rpx solid var(--line-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--sp-4);
@@ -76,23 +72,15 @@ view, text, button, input, textarea {
   margin-bottom: var(--sp-1);
 }
 
-/* 卡片小标题带一道左侧短竖线：一屏几张卡时，视线有个落脚点，
-   不用靠字号比大小去猜哪一行是标题 */
+/* 卡片小标题：不加竖线、不加色 —— 参考图里的小标题就是一行黑字，
+   它靠位置（在卡片最上面）和字重说明自己是标题，不靠装饰。 */
 .card-title.bar {
   display: flex;
   align-items: center;
-  font-size: var(--fs-body);
-  color: var(--green);
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--ink);
   margin-bottom: var(--sp-2);
-}
-
-.card-title.bar::before {
-  content: "";
-  width: 6rpx;
-  height: 26rpx;
-  border-radius: 3rpx;
-  background: var(--green);
-  margin-right: 12rpx;
 }
 
 .hint {
@@ -151,12 +139,11 @@ view, text, button, input, textarea {
   height: 104rpx;
   margin: 0 auto var(--sp-2);
   border-radius: 50%;
-  border: 2rpx dashed var(--line);
-  background: var(--bg-soft);
+  background: var(--sink);
   font-family: var(--font-poem);
   font-size: 46rpx;
   line-height: 1;
-  color: var(--line);
+  color: var(--ink-4);
 }
 
 .empty-text {
@@ -171,8 +158,11 @@ view, text, button, input, textarea {
   margin-top: var(--sp-1);
 }
 
-/* ---------- 按钮 ---------- */
-/* 按钮：文字**垂直居中**靠的是「内容盒 + align-items」，
+/* ---------- 按钮 ----------
+   三种：**实心墨黑**（一屏的正事）、**白底描边**（并列的另一件事）、
+   **纯文字**（最轻的一档，用于行内小动作）。
+
+   按钮文字**垂直居中**靠的是「内容盒 + align-items」，
    不是把 line-height 调成比 height 小几 rpx 去凑 —— 那种写法在字重、
    字号、系统字体任意一个变了之后就会偏，且各页偏的方向还不一样。
    原生 button 默认是 inline-block + 默认行高，这里统一改成 flex 居中。 */
@@ -182,9 +172,9 @@ view, text, button, input, textarea {
   justify-content: center;
   height: var(--h-btn);
   padding: 0 var(--sp-4);
-  border-radius: var(--radius-sm);
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1rpx solid var(--line-strong);
   color: var(--ink);
   font-size: var(--fs-title);
   font-weight: 500;
@@ -198,30 +188,33 @@ view, text, button, input, textarea {
   border: none;
 }
 
+/* 一屏的正事：一块干净的墨黑。
+   参考图里「手机号快捷注册 / 新增档期」就是这一块 —— 全屏只有它一个。 */
 .btn.primary {
-  background: var(--green);
-  border-color: var(--green);
-  color: #fff;
-  box-shadow: 0 6rpx 20rpx rgba(47, 96, 85, .22);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+  font-weight: 600;
 }
 
 /* 主按钮按下时压深一档、再缩一点，不然同色相邻时会显得「没点着」 */
 .btn.primary.button-hover {
-  background: var(--green-dark);
-  border-color: var(--green-dark);
-  box-shadow: var(--shadow-press);
+  background: var(--ink-strong);
+  border-color: var(--ink-strong);
+  opacity: .92;
   transform: scale(.985);
 }
 
 .btn.ghost {
   background: transparent;
   color: var(--ink-2);
+  border-color: var(--line-strong);
 }
 
 .btn.danger {
   color: var(--red);
   border-color: var(--red-edge);
-  background: var(--red-light);
+  background: var(--red-soft);
 }
 
 .btn.block {
@@ -260,11 +253,11 @@ view, text, button, input, textarea {
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
   line-height: 1.2;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
 }
 
 .btn[disabled] {
-  opacity: .5;
+  opacity: .4;
   box-shadow: none;
 }
 
@@ -273,18 +266,21 @@ view, text, button, input, textarea {
   transform: scale(.985);
 }
 
-/* ---------- 列表行 ---------- */
-/* 行是导航不是按钮，所以用 hover-class 借原生触碰反馈，不套一层 button */
+/* ---------- 列表行 ----------
+   行是导航不是按钮，所以用 hover-class 借原生触碰反馈，不套一层 button。
+   参考图的列表行是「左图标 + 标题/副题 + 右箭头」，行高很松 ——
+   一屏五六行就排满了，这是刻意的：手机上一行认不出是什么，点错比点慢更糟。 */
 .row-hover {
-  background: var(--green-light);
+  background: var(--sink);
 }
 
 .row {
   display: flex;
   align-items: center;
-  padding: var(--sp-3) 0;
+  min-height: var(--h-row);
+  padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: 8rpx;
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -319,56 +315,81 @@ view, text, button, input, textarea {
 
 /* 行尾那个 ›：压低饱和度，它是提示不是内容 */
 .row-go {
-  color: var(--line);
+  color: var(--ink-4);
   font-size: 32rpx;
   padding-left: var(--sp-2);
   line-height: 1;
   flex: none;
 }
 
-/* ---------- 标签 ---------- */
+/* 行首图标底：参考图里每行左边有一个浅色小方块（一个 emoji / 一个符号）。
+   用 CSS 画一个圆角浅底，里面放一个字 —— 不引图片资源。 */
+.row-icon {
+  flex: none;
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: var(--sp-3);
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  line-height: 1;
+  color: var(--ink-2);
+}
+
+/* ---------- 标签 ----------
+   胶囊，浅底，小字。参考图里的「成功 / 提醒 / 错误」三个圆点标签就是这个尺寸。 */
 .tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: var(--fs-caption);
   line-height: 1.5;
-  padding: 2rpx 12rpx;
-  border-radius: 8rpx;
-  color: var(--green);
-  background: var(--green-light);
+  padding: 3rpx 14rpx;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  background: var(--sink);
   margin-right: 10rpx;
 }
 
 .tag.amber {
   color: var(--amber);
-  background: var(--amber-light);
+  background: var(--amber-soft);
 }
 
 .tag.red {
   color: var(--red);
-  background: var(--red-light);
+  background: var(--red-soft);
 }
 
 .tag.blue {
   color: var(--blue);
-  background: var(--blue-light);
+  background: var(--blue-soft);
+}
+
+.tag.green {
+  color: var(--green);
+  background: var(--green-soft);
 }
 
 .tag.ghost {
   color: var(--ink-3);
-  background: var(--line-2);
+  background: var(--sink);
 }
 
-/* ---------- 搜索框 ---------- */
+/* ---------- 搜索框 ----------
+   参考图的输入框是「浅底 + 无描边 + 胶囊」：它比页面底深一点点，
+   所以看得出是可输入的，又不会因为一道黑边而抢戏。 */
 .search {
   display: flex;
   align-items: center;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line-2);
+  background: var(--sink);
+  border: 1rpx solid transparent;
   border-radius: var(--radius-pill);
-  padding: 0 var(--sp-3);
-  height: 84rpx;
+  padding: 0 var(--sp-4);
+  height: var(--h-field);
   margin-bottom: var(--sp-2);
-  box-shadow: inset 0 1rpx 3rpx rgba(74, 58, 38, .05);
 }
 
 .search-icon {
@@ -389,11 +410,11 @@ view, text, button, input, textarea {
 .field {
   display: flex;
   align-items: center;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--sp-3);
-  height: 84rpx;
+  background: var(--sink);
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-block);
+  padding: 0 var(--sp-4);
+  height: var(--h-field);
   margin: var(--sp-2) 0;
 }
 
@@ -403,17 +424,62 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
-/* ---------- 小程序自有控件的统一口径 ----------
-   这一节是「控件用系统的、配色用跬步的」这句话的落点。
+/* ============================================================
+   统计大数字（参考图里最抓眼的一组）
+   ============================================================ */
+/* 三列并排，每列一个很大的数字 + 一行小标签，中间一道细竖线。
+
+   为什么值得做成共用件：它是参考图里**唯一**一处靠「大」来表达重点的地方。
+   上一版表达重点靠的是颜色（主色卡、金边、印章），一屏里好几处在喊，
+   结果谁也没被听见。大数字不一样 —— 一屏只有一组，且不用颜色。 */
+.stats {
+  display: flex;
+  align-items: stretch;
+}
+
+.stat {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2) 0;
+}
+
+.stat + .stat {
+  border-left: 1rpx solid var(--line);
+}
+
+.stat-v {
+  font-family: var(--font-num);
+  font-size: var(--fs-stat);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1rpx;
+}
+
+.stat-k {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: var(--sp-1);
+  letter-spacing: var(--ls-caption);
+}
+
+/* ============================================================
+   小程序自有控件的统一口径
+   ============================================================ */
+/* 这一节是「控件用系统的、配色用这一版的」这句话的落点。
    开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：
-   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成宋代那套颜色。
+   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成这一版的样子。
 
    原生控件的交互色只能通过组件属性给（color / activeColor / selected-color），
    属性在 WXML 里写；样式表这边只统一尺寸、圆角、字体与间距 ——
    想靠 WXSS 改原生控件的内部结构是不被支持的，所以这里一行都不敢越界。 */
 
-/* 原生的 checkbox / radio 默认 23px 见方，比正文小、点着费劲；
-   横向缩放不改它自身尺寸，只放大外观 —— 命中区仍是原生的一整行，所以点着反而更宽松 */
 .native-group {
   display: flex;
   flex-wrap: wrap;
@@ -491,10 +557,10 @@ view, text, button, input, textarea {
 .opt-row {
   display: flex;
   align-items: center;
-  min-height: 84rpx;
+  min-height: var(--h-row);
   padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: 8rpx;
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -509,8 +575,8 @@ view, text, button, input, textarea {
    往右推 6rpx，选中与未选中之间就出现了**横向跳动**：一行内容在
    两种状态下的起点不一样，看着像整页在抖。inset 画在行内，不占位。 */
 .opt-row.active {
-  background: var(--green-light);
-  box-shadow: inset 6rpx 0 0 var(--green);
+  background: var(--sink);
+  box-shadow: inset 6rpx 0 0 var(--ink);
 }
 
 /* 选中行的圆点不要贴着那道竖线 —— 贴上去之后圆点左半圈被压在竖线底下，
@@ -521,7 +587,7 @@ view, text, button, input, textarea {
 }
 
 .opt-row.active .opt-name {
-  color: var(--green);
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -538,9 +604,9 @@ view, text, button, input, textarea {
       默认以中心为原点，那 3px 的溢出**是往左边去的** —— 被卡片的 padding
       裁掉一半，看着就像圆点被切了。`transform-origin: left top` 把它压回框内。 */
 /* 圆点与第一行字的中线：这两个数不是拍的，是量出来的。
-   `.opt-name` 是 --fs-title（31rpx）、行高 1.4 → 行盒 43.4rpx；
+   `.opt-name` 是 --fs-title、行高 1.4 → 行盒 ≈45rpx；
    原生圆点 23px ≈ 44rpx，缩到 .86 → 38rpx。
-   圆心要落在行盒中线上（43.4 / 2 ≈ 21.7），圆点顶边 = 21.7 - 19 ≈ 2.7rpx。
+   圆心要落在行盒中线上（45 / 2 ≈ 22.5），圆点顶边 = 22.5 - 19 ≈ 3rpx。
    字号或行高改了就一起改这两个数 —— 它们成对出现，不许只调一个。 */
 .opt-row radio,
 .opt-row checkbox {
@@ -548,7 +614,7 @@ view, text, button, input, textarea {
   align-self: flex-start;
   transform: scale(.86);
   transform-origin: left top;
-  margin-top: 2rpx;
+  margin-top: 3rpx;
 }
 
 /* 间距由控件自己给（见上面那组规则），这里不再补，
@@ -630,16 +696,16 @@ view, text, button, input, textarea {
 /* ---------- 进度：一横一竖两个共同件 ---------- */
 /* 横条说「走到哪了」，环说「几比几」。两个都做，别只做一个 */
 .meter {
-  height: 10rpx;
-  border-radius: 5rpx;
-  background: var(--line-2);
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: var(--line);
   overflow: hidden;
 }
 
 .meter-fill {
   height: 100%;
-  border-radius: 5rpx;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--celadon) 100%);
+  border-radius: 4rpx;
+  background: var(--ink);
   transition: width var(--t-move) var(--ease);
 }
 
@@ -657,11 +723,11 @@ view, text, button, input, textarea {
 }
 
 .ring-track {
-  background: var(--line-2);
+  background: var(--line);
 }
 
 .ring-fill {
-  background: conic-gradient(var(--green) calc(var(--p) * 1%), transparent 0);
+  background: conic-gradient(var(--ink) calc(var(--p) * 1%), transparent 0);
   transition: background var(--t-move) var(--ease);
 }
 
@@ -670,8 +736,8 @@ view, text, button, input, textarea {
   position: absolute;
   inset: 13%;
   border-radius: 50%;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
 }
 
 .ring-text {
@@ -680,18 +746,22 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-poem);
-  color: var(--ink-2);
+  font-family: var(--font-num);
+  font-weight: 600;
+  color: var(--ink);
   z-index: 1;
 }
 
 /* ---------- 未登录的那张卡 ---------- */
 /* 门禁卡在 14 个页面里各有一份，长相必须是同一个 —— 用户才会认得出
-   「这是同一道门」，而不是每页一套说法。 */
+   「这是同一道门」，而不是每页一套说法。
+
+   参考图里没有这种卡，但它的语言是有的：一块白底、一枚圆标、
+   一句人话、一个墨黑的主按钮。这一版就按这个来 —— 去掉渐变与印泥色。 */
 .lock-card {
   text-align: center;
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
-  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 58%, #f4ecd8 100%);
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+  background: var(--surface);
   overflow: hidden;
   position: relative;
 }
@@ -700,24 +770,22 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 116rpx;
-  height: 116rpx;
+  width: 120rpx;
+  height: 120rpx;
   line-height: 1;
   margin: 0 auto var(--sp-3);
-  border-radius: 22rpx;
-  border: 3rpx solid rgba(168, 59, 50, .5);
-  background: rgba(255, 254, 251, .9);
+  border-radius: 50%;
+  background: var(--ink);
   font-family: var(--font-poem);
   font-size: 54rpx;
-  color: rgba(168, 59, 50, .68);
-  transform: rotate(-4deg);
+  color: var(--on-ink);
 }
 
 .lock-title {
   display: block;
   font-size: var(--fs-lead);
-  font-weight: 600;
-  color: var(--green);
+  font-weight: 700;
+  color: var(--ink);
   font-family: var(--font-poem);
   letter-spacing: var(--ls-title);
 }
@@ -758,8 +826,8 @@ view, text, button, input, textarea {
   width: 96rpx;
   height: 96rpx;
   border-radius: var(--radius-sm);
-  border: 1rpx solid var(--line);
-  background: var(--bg-soft);
+  border: 1rpx solid var(--line-strong);
+  background: var(--surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -771,14 +839,14 @@ view, text, button, input, textarea {
 }
 
 .char.active {
-  background: var(--green-light);
-  border-color: var(--green);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 /* 令字格里**不再画一个圆点**。
    上一版是 absolute 到右上角、缩到 0.56 的原生圆点：小到看不出能点、
    还压在「而」「者」「有」的笔画上，缩过头之后命中区也跟着偏出格子。
-   选中态由格子自己的「底色 + 描边 + 字变主色」来说明白，够了。
+   选中态由格子自己的「底色 + 描边 + 字变色」来说明白，够了。
    radio 仍在 label 里（.seg-radio 视觉隐藏），点格子任何一处都选中。 */
 
 .char-t {
@@ -796,16 +864,16 @@ view, text, button, input, textarea {
   height: 26rpx;
   font-size: var(--fs-pinyin);
   line-height: 26rpx;
-  color: var(--ink-3);
+  color: var(--ink-4);
 }
 
 .char.active .char-t {
-  color: var(--green);
+  color: var(--on-ink);
 }
 
 .char.active .char-n {
-  color: var(--green);
-  opacity: .75;
+  color: var(--on-ink);
+  opacity: .6;
 }
 
 /* ============================================================
@@ -841,7 +909,8 @@ view, text, button, input, textarea {
 .day-count,
 .stage-count,
 .exam-progress,
-.exam-timer {
+.exam-timer,
+.stat-v {
   font-variant-numeric: tabular-nums;
 }
 
@@ -863,16 +932,15 @@ view, text, button, input, textarea {
 /* ============================================================
    分段控件（「二选一 / 三选一」的统一长相）
    ============================================================ */
-/* 为什么要有这一节：
-   「在哪儿搜」「怎么搜」「左对齐还是居中」「注不注音」——这些都是**互斥的
+/* 「在哪儿搜」「怎么搜」「左对齐还是居中」「注不注音」——这些都是**互斥的
    少数几个选项**。原来的写法是一排原生单选框：一个空心圆圈 + 两个字。
    圆圈本身没问题（它确实是原生控件），问题是**它不适合这种场合**：
 
    1. 圆圈与文字挤在一行，两个选项就占掉半屏，一行放不下三个；
-   2. 选中态只有「圈里多一个点」，在米色纸面上对比度很低，扫不出来；
+   2. 选中态只有「圈里多一个点」，对比度很低，扫不出来；
    3. 「范围」与「方式」两组各排一行圆点，看着像同一组里的六个选项。
 
-   分段控件把「选一个」画成一块连着的外框：选中的那段填主色。
+   分段控件把「选一个」画成一颗胶囊：选中的那段填墨黑。
    一眼看得出「这组里有几个选项、我选了第几个」。
 
    底层**仍是原生 radio**：包在 <label> 里、被视觉隐藏。
@@ -886,10 +954,10 @@ view, text, button, input, textarea {
 .seg-group {
   display: flex;
   align-items: stretch;
-  border: 1rpx solid var(--line);
+  border: 1rpx solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--bg-soft);
-  padding: 3rpx;
+  background: var(--sink);
+  padding: 4rpx;
   overflow: hidden;
 }
 
@@ -908,19 +976,19 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   gap: 8rpx;
-  padding: 0 20rpx;
+  padding: 0 22rpx;
   height: 56rpx;
   border-radius: var(--radius-pill);
   transition: background-color var(--t-press), color var(--t-press);
 }
 
-/* 选中态**填成主色**。只把字变色太轻 —— 一圈米色纸面上扫不出选中了哪一段 */
+/* 选中态**填成墨黑**。只把字变色太轻 —— 一层浅灰底上扫不出选中了哪一段 */
 .seg-item.on {
-  background: var(--green);
+  background: var(--ink);
 }
 
 .seg-item.on .seg-text {
-  color: #fff;
+  color: var(--on-ink);
   font-weight: 600;
 }
 
@@ -928,7 +996,7 @@ view, text, button, input, textarea {
 .seg-item.on .seg-icon,
 .seg-item.on .seg-icon::before,
 .seg-item.on .seg-icon::after {
-  --ic: #fff;
+  --ic: var(--on-ink);
 }
 
 /* 原生 radio 只留行为、不留外观。
@@ -948,10 +1016,14 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
+.seg-item.on .seg-text {
+  letter-spacing: 1rpx;
+}
+
 /* ---------- 等长选项的格子 ----------
    年级（12 个）、学期（2 个）、每日首数（5 个）、题型（5 个）这类：
    选项等长、数量不少，排成网格比排成一列省一半高度。
-   每一格是一个胶囊 —— 形状本身说「这是个能点的选项」，填主色说「选的是它」。
+   每一格是一个胶囊 —— 形状本身说「这是个能点的选项」，填色说「选的是它」。
 
    为什么不给每格配一个原生圆点/方框：它吃掉横向空间（12 个年级就得多一列），
    还跟第一行文字对齐、第二行缩进，看着像它只管辖半格。
@@ -978,17 +1050,17 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 68rpx;
+  min-height: 76rpx;
   padding: 0 var(--sp-1);
-  border: 1rpx solid var(--line);
+  border: 1rpx solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--bg-soft);
+  background: var(--sink);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
 
 .chip.on {
-  background: var(--green);
-  border-color: var(--green);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 .chip-t {
@@ -999,7 +1071,7 @@ view, text, button, input, textarea {
 }
 
 .chip.on .chip-t {
-  color: #fff;
+  color: var(--on-ink);
   font-weight: 600;
 }
 
@@ -1019,7 +1091,7 @@ view, text, button, input, textarea {
   top: 12rpx;
   width: 14rpx;
   height: 14rpx;
-  border: 2rpx solid var(--line);
+  border: 2rpx solid var(--ink-4);
   border-radius: 3rpx;
 }
 
@@ -1027,14 +1099,14 @@ view, text, button, input, textarea {
   width: 16rpx;
   height: 9rpx;
   border: none;
-  border-left: 4rpx solid #fff;
-  border-bottom: 4rpx solid #fff;
+  border-left: 4rpx solid var(--on-ink);
+  border-bottom: 4rpx solid var(--on-ink);
   border-radius: 0;
   transform: rotate(-45deg);
 }
 
 .chip.multi.on::after {
-  border-color: #fff;
+  border-color: var(--on-ink);
 }
 
 /* 小号：一章里连着两组（搜索页）时用，别把卡片撑高 */
@@ -1050,7 +1122,7 @@ view, text, button, input, textarea {
 
 /* ---------- 图标：全用 CSS 画 ----------
    一组图标只是为了说「这是哪一个选项」，不值得引图片资源 ——
-   主包只剩 0.7MB 余量。三种笔画足够画出这几个意思。 */
+   主包余量不多。三种笔画足够画出这几个意思。 */
 .seg-icon {
   position: relative;
   flex: none;
@@ -1213,4 +1285,21 @@ view, text, button, input, textarea {
   width: 11rpx;
   height: 3rpx;
   box-shadow: 0 7rpx 0 var(--ic), 0 14rpx 0 var(--ic), 0 21rpx 0 var(--ic);
+}
+
+/* ============================================================
+   分段标题（一屏里分隔两组卡片的那行小字）
+   ============================================================ */
+/* 参考图里「卡片与数据 / 按钮与页签 / 输入、标签与状态」各是一枚浅灰胶囊，
+   独立于上下卡片，说明「下面这组是什么」。它比 card-title 轻，且不占卡片。 */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-caption);
+  background: var(--sink);
+  border-radius: var(--radius-pill);
+  padding: 8rpx 22rpx;
+  margin: var(--sp-2) 0 var(--sp-2);
 }

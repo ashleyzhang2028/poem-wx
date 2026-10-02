@@ -1,8 +1,8 @@
 /* 四张集子卡：整块可点，所以给整卡反馈 ——
    之前它是 <view bindtap> 却没有按下态，点上去像没反应 */
 .group-card {
-  background: var(--card);
-  border: 1rpx solid var(--line-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--sp-4);
@@ -11,8 +11,7 @@
 }
 
 .group-hover {
-  background: var(--green-light);
-  border-color: var(--green-edge);
+  background: var(--sink);
   transform: scale(.992);
 }
 
@@ -31,8 +30,8 @@
   font-family: var(--font-poem);
   font-size: var(--fs-lead);
   font-weight: 600;
-  color: var(--green);
-  letter-spacing: 1rpx;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
 }
 
 .gc-desc {
@@ -47,6 +46,7 @@
   font-size: var(--fs-caption);
   color: var(--ink-3);
   padding-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .gc-books {
@@ -63,15 +63,16 @@
 .back-bar {
   display: flex;
   align-items: center;
+  min-height: 76rpx;
   font-size: var(--fs-body);
-  color: var(--green);
-  padding: var(--sp-1) var(--sp-1) var(--sp-3);
+  color: var(--ink-2);
+  padding: var(--sp-1) var(--sp-1);
   border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
 .back-hover {
-  background: var(--green-light);
+  background: var(--sink);
 }
 
 .back-arrow {

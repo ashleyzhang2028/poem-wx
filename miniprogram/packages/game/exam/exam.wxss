@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: var(--fs-body);
-  color: var(--green);
+  color: var(--ink);
   padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
@@ -34,7 +34,7 @@
 }
 
 .exam-progress {
-  font-family: var(--font-poem);
+  font-family: var(--font-num);
   font-size: var(--fs-title);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
@@ -105,14 +105,14 @@
 .result {
   text-align: center;
   padding: var(--sp-6) var(--sp-4) var(--sp-5);
-  background: linear-gradient(168deg, #fffefb 0%, var(--bg-soft) 62%, #f4ecd8 100%);
+  background: var(--surface);
 }
 
 .score {
-  font-family: var(--font-poem);
+  font-family: var(--font-num);
   font-size: var(--fs-score);
   font-weight: 600;
-  color: var(--green);
+  color: var(--ink);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }

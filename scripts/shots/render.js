@@ -101,10 +101,10 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss
  */
 const NATIVE_CSS = `
 /* 原生控件的近似外观 —— 只为预览看得出「这里是个开关」 */
-.n-radio,.n-checkbox{width:23px;height:23px;border-radius:50%;border:1px solid #d6c8ad;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:none}
+.n-radio,.n-checkbox{width:23px;height:23px;border-radius:50%;border:1px solid #c7c9cd;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:none}
 .n-checkbox{border-radius:4px}
-.n-radio.on{border-color:#2f6055;border-width:7px}
-.n-checkbox.on{background:#2f6055;border-color:#2f6055}
+.n-radio.on{border-color:#1c1c1e;border-width:7px}
+.n-checkbox.on{background:#1c1c1e;border-color:#1c1c1e}
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
 /* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
    少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
@@ -112,21 +112,21 @@ const NATIVE_CSS = `
 .pref-item .n-radio,.pref-item .n-checkbox,
 .opt-row .n-radio,.opt-row .n-checkbox{margin-right:var(--sp-2)}
 .native-group.grid .native-label .n-radio,.native-group.grid .native-label .n-checkbox{margin-right:var(--sp-1)}
-.opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:2rpx;transform:scale(.86);transform-origin:left top}
+.opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:3rpx;transform:scale(.86);transform-origin:left top}
 .opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:6rpx}
 .pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
-.n-switch.on{background:#2f6055}
+.n-switch.on{background:#1c1c1e}
 .n-switch-k{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s}
 .n-switch.on .n-switch-k{left:22px}
 .n-slider{position:relative;height:28px;display:flex;align-items:center;width:100%}
-.n-slider::before{content:"";position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#ece3d2}
-.n-slider-fill{position:absolute;left:0;height:4px;border-radius:2px;background:#2f6055}
+.n-slider::before{content:"";position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#ececef}
+.n-slider-fill{position:absolute;left:0;height:4px;border-radius:2px;background:#1c1c1e}
 .n-slider-knob{position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translateX(-50%)}
-.n-ph{color:#b3a795}
-.n-input{display:flex;align-items:center;font-size:14px;color:#241d18;min-height:22px;width:100%}
-.n-image{width:56px;height:56px;border-radius:50%;background:#e6efe9}
+.n-ph{color:#9ca3af}
+.n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
+.n-image{width:56px;height:56px;border-radius:50%;background:#f2f2f4}
 /* WXML 标签 → HTML div 之后，默认块级；但页面样式里的 display:flex
    要能压过它，所以这里用最低优先级的选择器 */
 /* 文本节点没有自己的盒子，行高靠父级给 —— 预览里补一条，
@@ -138,15 +138,15 @@ const NATIVE_CSS = `
 const SHELL_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:24px;display:flex;flex-wrap:wrap;gap:20px}
-.device{width:390px;background:#f6f1e3;border-radius:38px;box-shadow:0 10px 40px rgba(0,0,0,.18);overflow:hidden;border:8px solid #1b1b1d;position:relative}
-.navbar{background:#2f6055;color:#fff;height:64px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;letter-spacing:1px;position:relative}
+.device{width:390px;background:#f5f5f7;border-radius:38px;box-shadow:0 10px 40px rgba(0,0,0,.18);overflow:hidden;border:8px solid #1b1b1d;position:relative}
+.navbar{background:#ffffff;color:#1c1c1e;height:64px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;letter-spacing:1px;position:relative}
 .navbar .back{position:absolute;left:14px;font-size:22px;opacity:.9}
-.navbar .menu{position:absolute;right:12px;top:8px;width:78px;height:28px;border-radius:14px;border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:space-around;opacity:.6}
-.navbar .menu i{width:4px;height:4px;border-radius:50%;background:#fff;display:block}
+.navbar .menu{position:absolute;right:12px;top:8px;width:78px;height:28px;border-radius:14px;border:1px solid rgba(28,28,30,.2);display:flex;align-items:center;justify-content:space-around;opacity:.6}
+.navbar .menu i{width:4px;height:4px;border-radius:50%;background:#1c1c1e;display:block}
 .screen{height:760px;overflow-y:auto;overflow-x:hidden}
-.tabbar{height:52px;background:#fcfaf3;border-top:1px solid #ece3d2;display:flex;align-items:center;font-size:11px;color:#8a7a68}
+.tabbar{height:52px;background:#ffffff;border-top:1px solid #ececef;display:flex;align-items:center;font-size:11px;color:#9ca3af}
 .tabbar div{flex:1;text-align:center}
-.tabbar .on{color:#2f6055;font-weight:600}
+.tabbar .on{color:#1c1c1e;font-weight:600}
 .caption{font-size:12px;color:#5a5a5a;text-align:center;margin-top:8px}
 `;
 
@@ -194,9 +194,10 @@ function pageHtml(cfg, data) {
   const body = compile(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
   const screenCssStr = screenCss(cfg, pageCss);
-  return `<div class="device">
+  return `<div class="device" data-screen="${cfg.key}">
   <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>
   <div class="screen"><style>${screenCssStr}</style>${body}</div>
+  <div class="caption">${cfg.key}</div>
   ${cfg.tab ? `<div class="tabbar">${["背诵", "课外", "搜索", "我的"].map((t, i) => `<div class="${i === cfg.tab - 1 ? "on" : ""}">${t}</div>`).join("")}</div>` : ""}
   </div>`;
 }
@@ -211,6 +212,7 @@ const cases = [];
 Object.keys(PAGE_TITLES).forEach((key) => {
   if (only && key.indexOf(only) < 0) return;
   const cfg = PAGE_TITLES[key];
+  cfg.key = key;
   cases.push(cfg);
 });
 
