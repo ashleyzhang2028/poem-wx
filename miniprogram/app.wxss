@@ -206,7 +206,12 @@ view, text, button, input, textarea {
   justify-content: center;
   height: var(--h-btn);
   padding: 0 var(--sp-4);
-  border-radius: var(--radius-pill);
+  /* 按钮与选项格**同一档圆角**。上一版这里写的是 --radius-pill（999rpx）——
+     高 96rpx 的按钮配 999rpx，渲染出来就是一根胶囊；
+     而同一屏里 76rpx 的选项格是 16rpx 的近直角。
+     两种圆角、两种「是不是控件」的说法，用户看到的「不统一」就是它。
+     现在全站只有两种控件长相（见文件末「两条长相」一节）。 */
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
   color: var(--ink);
@@ -389,7 +394,11 @@ view, text, button, input, textarea {
   align-items: center;
   font-size: var(--fs-caption);
   line-height: 1.5;
-  padding: 3rpx 14rpx;
+  /* 与选项格同一套内边距口径：上下 --pad-opt-y、左右 --pad-opt-x。
+     标签比格子小一号（它没 min-height，是给文字当底），
+     但那两条边的比例是一样的 —— 一屏里标签与格子挨着时，
+     这一条决定它们是「同一套东西的两个尺寸」还是「两家人的东西」。 */
+  padding: var(--pad-opt-y) var(--pad-opt-x);
   border-radius: var(--radius-pill);
   color: var(--ink-2);
   background: var(--sink);
@@ -630,22 +639,61 @@ view, text, button, input, textarea {
 .opt-group {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--pad-opt-x);
 }
 
-/* 竖排的一组：缝与格子一致，看着才是「一组里的几行」 */
+/* 竖排：一行一条，各占满整行。
+   仍在用它的只剩「复习算法」—— 那几行名字后面还带着一句「锁住了」的说明，
+   一句话折行是常事，横排会挤。 */
 .opt-group.column {
   flex-direction: column;
-  gap: var(--sp-1);
+  gap: var(--pad-opt-y);
+}
+
+/* 横排：**一样的格子，一样的缝，只差排法**。
+   一行的宽度 = 卡片内容宽（100%）减掉格子之间的缝，除以格数 ——
+   所以格数变了不用改任何别的数。
+
+   为什么取诗范围从竖排改回横排：Issue #12 的原话是
+   「取诗范围选项 inline 显示 而不是一行一条」。六个选项竖排要吃掉
+   六行的高度，一屏里只看得见「取诗范围」这一个设置项，
+   而它上面那两组（学期 / 年级）本来就是横排的 —— 同一张卡里两种排法。 */
+.opt-group.inline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.opt-group.inline .opt-row {
+  justify-content: center;
+  /* 横排时宽度由格子定，文字跟着居中 —— 竖排那种「左对齐、右边留白」在这里
+     会看着像没排满。 */
+  text-align: center;
+}
+
+.opt-group.inline .opt-main {
+  flex: none;
+  min-width: 0;
+  padding: 0;
+}
+
+.opt-group.inline .opt-name {
+  line-height: 1.25;
+}
+
+/* 每多一格就多一列。三格以下用不着写（比如「两个选项」）
+   —— 三格是这里的默认，也是取诗范围最窄的那一档。 */
+.opt-group.inline.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .opt-row {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: var(--h-row);
-  padding: 0 var(--sp-3);
+  min-height: var(--h-opt);
+  padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -686,7 +734,6 @@ view, text, button, input, textarea {
 .opt-main {
   flex: 1;
   min-width: 0;
-  padding: var(--sp-2) 0;
 }
 
 .opt-name {
@@ -695,6 +742,13 @@ view, text, button, input, textarea {
   font-size: var(--fs-title);
   color: var(--ink);
   line-height: 1.4;
+}
+
+/* 横排时字号收一档 —— 三列里塞两个字，--fs-title（32rpx）会顶到边框上。
+   收到 --fs-hint 后与格子（.chip-t）**同档同色同字重**：
+   这才是「inline 的选项行长成了格子」这件事的最后一块拼图。 */
+.opt-group.inline .opt-name {
+  font-size: var(--fs-hint);
 }
 
 .opt-desc {
@@ -1120,10 +1174,13 @@ view, text, button, input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 76rpx;
-  padding: 0 var(--sp-1);
+  min-height: var(--h-opt);
+  /* 上下左右各留一口气：纵向由 --pad-opt-y 给（不再是 0），
+     横向--pad-opt-x（比原来的 --sp-1 宽一档，两字选项不再顶到边框）。
+     两者都走 --ui-scale，整体收放时跟着一起收。 */
+  padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1437,3 +1494,33 @@ view, text, button, input, textarea {
   padding: 8rpx 22rpx;
   margin: var(--sp-2) 0 var(--sp-2);
 }
+
+/* ============================================================
+   两条长相，不是三条（Issue #12 的收尾）
+   ============================================================
+   用户连着三轮问的都是同一件事：「选项也不统一」「能不能确保所有页面
+   相同元素界面的一致性」「和这两处的按钮要不要都和课外阅读列表页
+   那些集子的选项样式保持一致」。
+
+   查下来，全站的可点块当时有**三种**圆角：格子/选项行 16rpx 的近直角、
+   按钮 999rpx 的胶囊、标签 999rpx 的胶囊。三档里前两档都是「能点、能选中」，
+   却是两种长相 —— 这就是「不统一」的出处，而且它不在一页里，跨页才看得见。
+
+   现在收成两条：
+
+   ┌────────────────┬──────────────────┬────────────┬──────────┐
+   │ 长相            │ 用在哪            │ 圆角        │ 高度      │
+   ├────────────────┼──────────────────┼────────────┼──────────┤
+   │ **控件**        │ 选项格、选项行、按钮 │ --radius-ctl│ 76 / 96  │
+   │ **胶囊**        │ 标签、分段、搜索框   │ 999rpx      │ 56 / 60  │
+   └────────────────┴──────────────────┴────────────┴──────────┘
+
+   分界不是「大小」，是**它是什么**：
+   · 控件 —— 一格一个选项、一颗按钮。矩形，四个角看得见，填色说中没选中。
+   · 胶囊 —— 一行里的一段、一个标记。细长，两端的圆就是它的形状。
+   分段（.seg-item）留在胶囊那一档是刻意的：它本来就在一根轨道里，
+   一段的圆角等于轨道的圆角才咬得上；把它改成矩形反而像两个按钮。
+
+   守这件事的是 check.js V23：`.btn` / `.chip` / `.opt-row` 的圆角必须
+   同为 --radius-ctl，且都不许再写裸值。
+   ============================================================ */

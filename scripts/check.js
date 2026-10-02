@@ -2594,10 +2594,16 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   });
   ok("圆角一律走令牌", strayRadius.length === 0, strayRadius.slice(0, 6).join("; "));
 
-  // 5) 三档圆角之外不该再有第四档：令牌里 radius 相关的自定义属性只有三条
+  // 5) 圆角档数封顶。
+  //
+  // 这一版从 14/20/24/999 四档收成 16/20/20/24/999 —— 多出来的
+  // --radius-ctl 不是「又拍了一个数」，而是**控件与按钮共用同一个值**：
+  // 用户连着三轮问的就是「按钮和集子那些选项为什么不一致」，
+  // 根子是按钮 999rpx、格子 16rpx，两种圆角两种长相。
+  // 所以这里放行到五条，但值本身由 V23 逐条钉住（.btn/.chip/.opt-row 必须同值）。
   const radVars = (tokens.match(/--radius[a-z-]*\s*:/g) || []).map((x) => x.replace(/\s*:/, ""));
-  ok("圆角令牌只有三档（+pill）",
-    radVars.length <= 4, "实际 " + radVars.join(", "));
+  ok("圆角令牌不超过五档（多出来的一档是控件与按钮共用的那一个）",
+    radVars.length <= 5, "实际 " + radVars.join(", "));
 
   // 6) 页面底色不许再是米黄：这一版的底是中性浅灰 + 白卡
   const bgM = /--bg\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
@@ -3158,6 +3164,88 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const legacy = pages.filter((p2) =>
     stripJs(fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8")).indexOf("getUserProfile") >= 0);
   ok("不再调用 wx.getUserProfile（只返回匿名灰头像）", legacy.length === 0, legacy.join(", "));
+}
+
+/**
+ * V23. 两条长相、一条内边距（Issue #12 的收尾四问）。
+ *
+ * 用户这次问的四件事，其实是同一个问题的四个切面：
+ *
+ *   1. 「课外阅读集子的选项垂直 padding 上下需要加 2px，左右需要加 4px」
+ *   2. 「学期显示在年级下面」
+ *   3. 「取诗范围选项 inline 显示，而不是一行一条」
+ *   4. 「所有按钮加大 radius，和这两处的按钮要不要都和课外阅读列表页
+ *       那些集子的选项样式保持一致？」
+ *
+ * 第 4 问的答案是**要**，而且查下来当时不止「不一致」，是三套圆角：
+ * 格子 16rpx 的近直角、按钮 999rpx 的胶囊、标签 999rpx 的胶囊。
+ * 前两套都是「能点、能选中」的东西，却是两种长相 —— 这就是不统一的出处。
+ *
+ * 所以这里守四件事（每条都做过反证：把事实改坏，确认它会红）：
+ *   a. 选项格的纵向内边距**不是 0**，且上下 / 左右分开取了令牌
+ *   b. 年级排在学期**前面**（先粗后细）
+ *   c. 取诗范围是横排（`opt-group inline`），不是一行一条
+ *   d. `.btn` / `.chip` / `.opt-row` 圆角同为 --radius-ctl
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
+  const body = strip(appWxss);
+
+  const rule = (cls) => {
+    const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = new RegExp("(^|\})\\s*" + esc + "\\s*\\{([^}]*)\\}").exec(body);
+    return m ? m[2] : null;
+  };
+
+  // a) 选项格的内边距：纵向不许是 0，且上下 / 左右各取令牌
+  ok("选项格的内边距令牌已定（上下 / 左右分开）",
+    /--pad-opt-y\s*:/.test(tokens) && /--pad-opt-x\s*:/.test(tokens));
+  ok("内边距令牌由 --ui-scale 算出来（整体收放时跟着走）",
+    /--pad-opt-y\s*:[^;]*var\(--ui-scale\)/.test(tokens)
+    && /--pad-opt-x\s*:[^;]*var\(--ui-scale\)/.test(tokens));
+  const chipBody = rule(".chip") || "";
+  ok("选项格上下真的留了内边距（不是 0）",
+    /padding\s*:\s*var\(--pad-opt-y\)\s+var\(--pad-opt-x\)/.test(chipBody),
+    chipBody.replace(/\s+/g, " ").trim().slice(0, 80));
+  const optRowBody = rule(".opt-row") || "";
+  ok("选项行与格子同一套内边距",
+    /padding\s*:\s*var\(--pad-opt-y\)\s+var\(--pad-opt-x\)/.test(optRowBody));
+  // 纵向内边距不许在别处被抵消：`.opt-main` 再补一层就是两层。
+  // 判据只盯**选项里的那两个容器**，不扫全表 —— `.kv` 那种键值行本来
+  // 就有自己的上下呼吸，跟选项无关（一条扫全表的规则会误伤它）。
+  const noDouble = [".opt-main", ".chip-t", ".opt-name"].filter((cls) => {
+    const b = rule(cls) || "";
+    return /padding(-top|-bottom)?\s*:/.test(b);
+  });
+  ok("选项文字没有第二层纵向内边距", noDouble.length === 0, noDouble.join(", "));
+
+  // b) 年级在学期前面
+  const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
+  const iGrade = recite.indexOf('data-k="grade"');
+  const iTerm = recite.indexOf('data-k="term"');
+  ok("背诵设置里年级与学期两组都在", iGrade >= 0 && iTerm >= 0);
+  ok("学期排在年级下面（先粗后细）", iGrade >= 0 && iTerm > iGrade,
+    "年级 @" + iGrade + " 学期 @" + iTerm);
+
+  // c) 取诗范围是横排
+  ok("取诗范围是横排的选项行（opt-group inline）",
+    /<radio-group class="opt-group inline"/.test(recite));
+  ok("横排的选项行有排法（grid，不是一行一条）",
+    /\.opt-group\.inline\s*\{[^}]*grid-template-columns/.test(body));
+
+  // d) 控件与按钮同一档圆角
+  const fills = {
+    ".btn": rule(".btn"),
+    ".chip": rule(".chip"),
+    ".opt-row": rule(".opt-row")
+  };
+  const noRadius = Object.entries(fills).filter(([, v]) => !v || !/border-radius\s*:\s*var\(--radius-ctl\)/.test(v));
+  ok("按钮与两种选项格取同一档圆角（--radius-ctl）",
+    noRadius.length === 0, noRadius.map(([k]) => k).join(", "));
+  ok("控件圆角不是胶囊（上一版 .btn 是 999rpx）",
+    !/\.btn\s*\{[^}]*border-radius\s*:\s*var\(--radius-pill\)/.test(body));
 }
 
 /* ---------- 汇总 ---------- */
