@@ -38,20 +38,29 @@
   margin-top: var(--sp-1);
 }
 
+/* 命中统计那一条：左右各留一道与卡片同宽的边距。
+   上一版只给了 sp-1 的左侧内边距，右边那句「篇名作者 · 全站」贴到屏幕边，
+   在窄屏上直接被切掉半截 —— 一行里右边那半截是「在哪儿搜的」，
+   它被切了就等于没写。 */
 .result-bar {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 4rpx var(--sp-1) var(--sp-2);
+  gap: var(--sp-2);
+  padding: 4rpx var(--sp-4) var(--sp-2);
 }
 
 .result-count {
+  flex: none;
   font-size: var(--fs-body);
   color: var(--green);
   font-weight: 600;
 }
 
 .result-where {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
   font-size: var(--fs-caption);
 }
 
