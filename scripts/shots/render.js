@@ -108,15 +108,11 @@ const NATIVE_CSS = `
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
 /* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
    少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
-.native-label .n-radio,.native-label .n-checkbox,
-.pref-item .n-radio,.pref-item .n-checkbox,
-.opt-row .n-radio,.opt-row .n-checkbox{margin-right:var(--sp-2)}
-.native-group.grid .native-label .n-radio,.native-group.grid .native-label .n-checkbox{margin-right:var(--sp-1)}
-.opt-row .n-radio,.opt-row .n-checkbox{flex:none;align-self:flex-start;margin-top:3rpx;transform:scale(.86);transform-origin:left top}
-/* .opt-row.active 的圆点不再右移：页面样式表已经不挪它了（挪了会横跳），
-   镜像里也必须不挪 —— 这一条正是 V15「镜像逐条对齐」要守的那类
-   漏改：页面改了、镜像没改，预览就继续骗人。 */
-.opt-row.active .n-radio,.opt-row.active .n-checkbox{margin-left:0}
+.pref-item .n-radio,.pref-item .n-checkbox{margin-right:var(--sp-2)}
+/* 选项行（.opt-row）里的原生控件现在是**视觉隐藏**的（.opt-radio）——
+   它不露脸，所以镜像里也不需要它的外观。原来那三条给
+   .opt-row radio 的规则（margin-right / align-self / scale）
+   到这里就失效了：再留着，守的是已经不存在的东西。 */
 .pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}

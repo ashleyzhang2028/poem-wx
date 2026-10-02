@@ -34,9 +34,13 @@
 
   <view class="card">
     <view class="card-title bar">取诗范围</view>
-    <radio-group class="native-group column" bindchange="onScope">
+    <!-- 六个范围是**同一种东西的六个取值**（从「本册」到「全部随机」），
+         所以跟上面两组、跟对齐/注音走同一套长相：选中的那块填墨黑。
+         圆点在这儿是重复的 —— 填色已经说了「选的是这一行」，
+         再站一个圆点在行首，只是多占 16rpx 的横向空间。 -->
+    <radio-group class="opt-group column" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
+        <radio class="opt-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
         <view class="opt-main">
           <text class="opt-name">{{item.label}}</text>
         </view>
@@ -58,10 +62,11 @@
   <view class="card">
     <view class="card-title bar">复习算法</view>
     <!-- 换算法不清进度：四套算法的差异只在排期，进度按新算法折算 -->
-    <radio-group class="native-group column" bindchange="onAlgo">
+    <radio-group class="opt-group column" bindchange="onAlgo">
       <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
              wx:for="{{algos}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#1c1c1e" />
+        <radio class="opt-radio" value="{{item.key}}" checked="{{item.active}}"
+               disabled="{{!item.allowed}}" color="#1c1c1e" />
         <view class="opt-main">
           <text class="opt-name">{{item.name}}</text>
           <text class="opt-desc" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
