@@ -1,7 +1,7 @@
 <view class="page">
   <view class="page-head">
     <text class="head-title">怎么读</text>
-    <text class="head-sub">注音方式 · 朗读语速 · 读完是否自动翻篇</text>
+    <text class="head-sub">注音方式 · 朗读语速 · 答题音效</text>
   </view>
 
   <lock-card wx:if="{{locked}}" title="阅读设置要登录" note="读音表与朗读通道都挂在账号档位上，所以要登录之后才能设。" mark="读" />
@@ -65,6 +65,19 @@
   <view class="card" wx:else>
     <view class="card-title bar">朗读</view>
     <text class="hint note">当前没有朗读能力，阅读页不会出现朗读按钮与播放工具栏。这通常是因为：档位不含朗读，或运行环境没有音频接口。</text>
+  </view>
+
+  <!-- 答题音效：与朗读同规矩 —— 环境出不了声，这一整块不渲染 -->
+  <view class="card" wx:if="{{sfxVisible}}">
+    <view class="card-title bar">答题音效</view>
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">答对答错出声</text>
+        <text class="row-sub">题库、考试与飞花令共用一套；四声，零音频文件</text>
+      </view>
+      <switch checked="{{sfxOn}}" bindchange="onSfx" color="#2f6055" />
+    </view>
+    <button class="btn ghost block test-btn" bindtap="onSfxTest">试听一声</button>
   </view>
 
   <view class="safe-bottom"></view>

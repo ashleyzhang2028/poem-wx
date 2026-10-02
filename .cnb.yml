@@ -20,6 +20,9 @@ $:
         # 这一条抓出过阅读页「所有人永远停在登录卡上」的 bug）/
         # 同步冲突 / 包体积
         - node scripts/check.js
+        # 与网页版的逐项对照：网页版能力表里每一项，小程序端都得有交代
+        # （已实现 / 换个做法 / 明确不做并记账），漏一项就红
+        - node scripts/parity.js
 
 # 打 tag 就传一版体验版。**只上传，不提审** ——
 # 「要不要上线」不该由流水线决定。传完在公众平台设成体验版，真机走一遍再提审。
@@ -30,6 +33,7 @@ $:
       - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
       - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
       - node scripts/check.js
+      - node scripts/parity.js
       # WX_APPID / WX_PRIVATE_KEY 从 Secret 仓库读，不落明文
       - npm i -D miniprogram-ci --no-audit --no-fund
       - node scripts/upload.js "${CNB_BRANCH#v}" "tag ${CNB_BRANCH}"
