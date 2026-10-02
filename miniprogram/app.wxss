@@ -32,12 +32,21 @@ view, text, button, input, textarea {
 
 .head-title {
   display: block;
-  font-size: var(--fs-hero);
+  font-size: var(--fs-head);
   font-weight: 700;
   color: var(--ink);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
+
+/* 页头这里**是界面在说话**：「今天背什么」「课外阅读」「十七部集子」——
+   它和卡片里的篇名（咏鹅 / 将进酒）会同时出现在一屏里。
+   篇名走宋体是内容需求，页头若也走宋体，两处就会撞成同一种「雅」，
+   反而分不出哪个是书、哪个是书架。所以页头一律黑体，宋体只给诗文。 */
+.head-title.poem {
+  font-family: var(--font-poem);
+}
+
 
 .head-sub {
   display: block;
@@ -293,14 +302,23 @@ view, text, button, input, textarea {
   min-width: 0;
 }
 
+/* 列表行的标题。**它不一定是篇名** —— 我的页的「背诵设置」、
+   关于页的「用户协议」走的也是这个类，这些是界面功能名，不是诗词名。
+   所以这里取 UI 字体；篇名另走 .row-poem（见下），别让宋体漫出来。 */
 .row-title {
-  font-family: var(--font-poem);
+  font-family: var(--font-ui);
   font-size: var(--fs-title);
   color: var(--ink);
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 列表里的**篇名**：宋体只给这一类。咏鹅 / 江南 / 画 是诗词名，
+   「意见反馈」「清空本机数据」不是 —— 同一张卡上两种字混排是最扎眼的那种不一致。 */
+.row-poem {
+  font-family: var(--font-poem);
 }
 
 .row-sub {
