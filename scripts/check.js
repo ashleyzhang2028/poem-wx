@@ -2465,10 +2465,12 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     ok("字体链兜到通用 serif", /serif\s*$/.test(fams.trim()));
   }
 
-  // 篇名类：全局 .row-title 与阅读页 .poem-title 必须宋体
+  // 篇名类：全局 .row-poem 与阅读页 .poem-title 必须宋体。
+  // （早先这条盯的是 .row-title，后来发现那个类也管着设置页的功能名，
+  //   「意见反馈」就这么被染成了宋体 —— 篇名另开了 .row-poem，见 V14。）
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-  const rowTitle = /\.row-title\s*\{([^}]*)\}/.exec(appWxss);
-  ok("列表篇名用宋体", !!rowTitle && /font-family\s*:\s*var\(--font-poem\)/.test(rowTitle[1]));
+  const rowPoem = /\.row-poem\s*\{([^}]*)\}/.exec(appWxss);
+  ok("列表篇名用宋体", !!rowPoem && /font-family\s*:\s*var\(--font-poem\)/.test(rowPoem[1]));
   const readerWxss = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8");
   const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(readerWxss);
   ok("详情页篇名用宋体", !!poemTitle && /font-family\s*:\s*var\(--font-poem\)/.test(poemTitle[1]));
@@ -2586,6 +2588,71 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     ok("底色不带黄绿倾向（三通道接近）", spread <= 10, "#" + hex + " spread=" + spread);
     ok("底色够亮（是纸不是灰板）", r > 230, "#" + hex);
   }
+}
+
+/**
+ * V14. 宋体只给诗文，界面一律黑体。
+ *
+ * 这一条从一次真事里来：Issue #12 的截图里，「意见反馈」是宋体，
+ * 同卡同款的「用户协议 / 隐私说明」是黑体 —— 看着像漏了一个字重，
+ * 其实是 .row-title 这半个类同时管着两件事：列表里的**篇名**
+ * （咏鹅 / 江南 / 画）和设置页的**功能名**（意见反馈 / 清空本机数据）。
+ *
+ * 「篇名用宋体」是内容需求（诗词要像诗词），绝不是「标题用宋体」。
+ * 这两件事长得像，代价却不一样：前者只在几百条篇名上生效，
+ * 后者会漫到设置项、按钮、卡片标题，一屏里同时出现宋体与黑体两种「标题」，
+ * 比全用黑体更乱。
+ *
+ * 判据（三条，都是把事实改坏就会红的）：
+ *   1. 全局 .row-title 取 UI 字体 —— 它默认是列表行的通用标题
+ *   2. 篇名的宋体走 .row-poem 这个**附加类**，附在 .row-title 后面
+ *   3. 页头大标题（.head-title）取 UI 字体；首页 hero 是唯一的例外，
+ *      它写的是「今日背诵 / 一年级」，是正文内容那一侧的
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const blockOf = (sel) => {
+    const m = new RegExp("\\." + sel.replace(/^\./, "").replace(/\./g, "\\.") + "\\s*\\{([^}]*)\\}").exec(appWxss);
+    return m ? m[1] : "";
+  };
+
+  const rowTitle = blockOf(".row-title");
+  ok("列表通用标题不取宋体", !!rowTitle && rowTitle.indexOf("font-family") >= 0
+    && /var\(--font-ui\)/.test(rowTitle), rowTitle.replace(/\s+/g, " "));
+  ok("列表通用标题没有偷偷取宋体",
+    rowTitle.indexOf("--font-poem") < 0, rowTitle);
+
+  const rowPoem = blockOf(".row-poem");
+  ok("篇名有一个专门的附加类 .row-poem", !!rowPoem && /var\(--font-poem\)/.test(rowPoem));
+
+  const headTitle = blockOf(".head-title");
+  ok("页头大标题不取宋体", !!headTitle && headTitle.indexOf("--font-poem") < 0);
+
+  // 页面里：.row-poem 只许出现在「确实是篇名」的行上。
+  // 判据是这条行里必须绑定 title —— 设置项、按钮绑的是死文案，绑不出 {{...title}}。
+  const stray = [];
+  (function walkWxml(dir) {
+    fs.readdirSync(dir).forEach((f) => {
+      const full = path.join(dir, f);
+      if (fs.statSync(full).isDirectory()) return walkWxml(full);
+      if (!f.endsWith(".wxml")) return;
+      const rel = path.relative(ROOT, full);
+      const src = fs.readFileSync(full, "utf8");
+      const re = /<text class="row-title row-poem">([^<]*)<\/text>/g;
+      let m;
+      while ((m = re.exec(src))) {
+        if (!/\{\{[^}]*title[^}]*\}\}/.test(m[1])) stray.push(rel + " → " + m[1]);
+      }
+    });
+  })(ROOT);
+  ok("row-poem 只挂在篇名上（设置项不许借位）", stray.length === 0, stray.slice(0, 6).join("; "));
+
+  // 页头上的那两处：首页 hero 走宋体（正文一侧），其余页头一律黑体
+  const homeWxss = fs.readFileSync(path.join(ROOT, "pages/home/home.wxss"), "utf8");
+  ok("首页 hero 是宋体", /\.hero-title\s*\{([^}]*)\}/.test(homeWxss)
+    && /var\(--font-poem\)/.test(/\.hero-title\s*\{([^}]*)\}/.exec(homeWxss)[1]));
+  ok("首页 hero 的字号走令牌，不是裸 46rpx",
+    !/font-size\s*:\s*46rpx/.test(homeWxss));
 }
 
 /* ---------- 汇总 ---------- */

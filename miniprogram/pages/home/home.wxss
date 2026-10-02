@@ -37,7 +37,7 @@
 .hero-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-hero);
+  font-size: var(--fs-head);
   font-weight: 700;
   color: var(--ink);
   letter-spacing: var(--ls-title);

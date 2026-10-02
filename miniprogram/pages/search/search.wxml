@@ -60,7 +60,7 @@
     <view class="row hit-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
-        <text class="row-title">{{item.title}}</text>
+        <text class="row-title row-poem">{{item.title}}</text>
         <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.bookName}}</text>
         <view class="hit" wx:if="{{item.lines.length}}">
           <text class="hit-line" wx:for="{{item.lines}}" wx:for-item="l" wx:key="*this">{{l}}</text>

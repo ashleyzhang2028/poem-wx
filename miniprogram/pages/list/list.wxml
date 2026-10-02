@@ -49,7 +49,7 @@
             wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
       <text class="seq">{{p.seq}}</text>
       <view class="row-main">
-        <text class="row-title">{{p.title}}</text>
+        <text class="row-title row-poem">{{p.title}}</text>
         <text class="row-sub">{{p.dynasty}} · {{p.author}}</text>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>

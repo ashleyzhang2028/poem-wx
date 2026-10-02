@@ -25,7 +25,7 @@
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <text class="seq">{{item.seq}}</text>
         <view class="row-main">
-          <text class="row-title">{{item.title}}</text>
+          <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
         <text class="row-lock">登录</text>
@@ -92,7 +92,7 @@
           <text class="seq {{item.read ? 'done' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <view class="row-line">
-              <text class="row-title">{{item.title}}</text>
+              <text class="row-title row-poem">{{item.title}}</text>
               <text class="tag {{item.reasonKey === 'review' ? 'amber' : (item.reasonKey === 'new' ? 'blue' : 'ghost')}}">{{item.reason}}</text>
             </view>
             <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.stage}}</text>
