@@ -2,7 +2,12 @@ const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const gate = require("../../utils/gate");
 
-const FILTERS = ["全部", "未读"];
+/* 筛选只有两个值，做成图标分段（样式见 app.wxss「分段控件」）——
+   一排两个圆圈加两个字，在列表页顶上是白占一行。 */
+const FILTERS = [
+  { key: "全部", label: "全部", icon: "all-site" },
+  { key: "未读", label: "未读", icon: "title" }
+];
 
 Page({
   data: {

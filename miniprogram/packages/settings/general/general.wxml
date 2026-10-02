@@ -9,12 +9,16 @@
   <block wx:else>
   <view class="card">
     <view class="card-title bar">正文对齐</view>
-    <radio-group class="native-group" bindchange="onAlign">
-      <label class="native-label" wx:for="{{aligns}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
-        <text>{{item.label}}</text>
-      </label>
-    </radio-group>
+    <view class="seg fill">
+      <radio-group class="seg-group" bindchange="onAlign">
+        <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
+                 color="#2f6055" />
+          <view class="seg-icon ic-{{item.icon}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
   </view>
 
   <view class="card">

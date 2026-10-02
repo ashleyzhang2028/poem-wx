@@ -146,11 +146,22 @@ function needAnnotate(ch) {
 }
 
 /**
- * 把一行正文切成 [{ ch, py, mark }]。
+ * 把一句正文切成 [{ ch, py, mark }]。
  * mark 为真表示这个字要显示注音 —— 界面照着渲染即可，不必再判模式。
+ *
+ * `line` / `at` 是这一句在**整行**里的位置：多音字消歧要看得到词组，
+ * 而词组往往跨句（「白发」在 `高堂明镜悲白发，` 这一句里就够了，
+ * 但「无为」这种可能一半在上一句尾上）。
+ *
+ * @param {string} clause 这一句（带尾标点）
+ * @param {string} mode off / rare / all
+ * @param {string} [line] 整行文字；不传就按这一句自己判
+ * @param {number} [at] 这一句在 line 里的起点
  */
-function annotate(line, mode) {
-  const text = String(line || "");
+function annotate(clause, mode, line, at) {
+  const text = String(clause || "");
+  const context = line === undefined ? text : String(line || "");
+  const offset = line === undefined ? 0 : Number(at) || 0;
   if (mode === "off" || !available()) {
     return text.split("").map((ch) => ({ ch: ch, py: "", mark: false }));
   }
@@ -159,25 +170,39 @@ function annotate(line, mode) {
     if (!isHan(ch)) return { ch: ch, py: "", mark: false };
     const mark = mode === "all" ? !!readings(ch).length : needAnnotate(ch);
     if (!mark) return { ch: ch, py: "", mark: false };
-    return { ch: ch, py: readOf(ch, text, i), mark: true };
+    return { ch: ch, py: readOf(ch, context, offset + i), mark: true };
   });
 }
 
 /**
- * 行 → 句 → 字。
+ * 段落 → 行 → 句 → 字。**版式由 corpus.layout() 给，这里只负责标音。**
  *
- * **自己不再切句** —— 句子由 corpus.splitLines 给，那里把标点留在句尾
- * （`鹅，` 而不是 `鹅`）。这里若再切一遍，标点就当场没了，正文读起来少一个字。
- * 消歧窗口仍是整行：读「发」靠的是词组「白发」，跨句也要看得见。
+ * 自己切句是不行的 —— 句子由语料层切、标点留在句尾（`鹅，` 而不是 `鹅`），
+ * 这里再切一遍标点就没了，正文读起来少一个字。
+ * 消歧窗口仍是**同一行里的整段文字**：读「发」靠的是词组「白发」，
+ * 跨句也要看得见；而折叠过的行里，本来相邻的两个短句就不会被拆开。
  *
- * @param {Array<{line: string, s: string[]}>} lines corpus.splitLines() 的输出
+ * @param {string[][][]} paras corpus.layout().paras
  * @param {string} mode off / rare / all
- * @returns {Array<Array<Array<{ch,py,mark}>>>}
+ * @returns {Array<Array<Array<{ch,py,mark}>>>} 与 paras 同形
  */
-function render(lines, mode) {
+function render(paras, mode) {
   const probe = mode === "off" || !available() ? null : table();
-  return (lines || []).map((ln) =>
-    (ln && ln.s ? ln.s : []).map((clause) => (probe ? annotate(clause, mode) : []))
+  // 句子上挂 `i`：朗读是**按句合成**的（speech.load 吃一个拍平的列表），
+  // 界面按句号高亮那一行就得知道「这一句是第几句」。序号在这里一次算清，
+  // 页面不再自己数 —— 数错一次，读到第 5 句会高亮第 4 行。
+  let seq = 0;
+  return (paras || []).map((para) =>
+    (para || []).map((row) => {
+      // 消歧要看见整行：先把行里所有句拼成一行文字，再逐句标
+      const line = (row || []).join("");
+      let at = 0;
+      return (row || []).map((clause) => {
+        const out = probe ? annotate(clause, mode, line, at) : [];
+        at += clause.length;
+        return { i: seq++, tokens: out };
+      });
+    })
   );
 }
 

@@ -5,10 +5,12 @@ const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const gate = require("../../../utils/gate");
 
+/* 注音三档带图标（.ic-off / .ic-rare / .ic-all，画法在 app.wxss）。
+   图标与阅读页那一排同一个 —— 同一件事两个页面图标不一样，用户会以为是两件事。 */
 const MODES = [
-  { key: "off", label: "不注音", desc: "正文不带拼音" },
-  { key: "rare", label: "生字", desc: "只给生僻字与多音字标音" },
-  { key: "all", label: "全文", desc: "逐字标音" }
+  { key: "off", label: "不注音", icon: "off", desc: "正文不带拼音" },
+  { key: "rare", label: "生字", icon: "rare", desc: "只给生僻字与多音字标音" },
+  { key: "all", label: "全文", icon: "all", desc: "逐字标音" }
 ];
 
 const RATES = [
@@ -23,11 +25,19 @@ const SAMPLE = [
   { ch: "月", py: "yuè" }, { ch: "光", py: "guāng" }
 ];
 
+/** 这一档在做什么。与阅读页同一个说法，不另起一套 */
+function descOf(key) {
+  const hit = MODES.filter((m) => m.key === key)[0];
+  return hit ? hit.desc : "";
+}
+
 Page({
   data: {
     modes: MODES,
     sample: SAMPLE,
     pinyin: "rare",
+    /** 选中那一档的说明 —— 三档各一行说明摆成三行，看不出「只选了一个」 */
+    modeDesc: "",
     pinyinOn: false,
     pinyinNote: "",
     rates: RATES,
@@ -58,6 +68,7 @@ Page({
 
     this.setData({
       pinyin: prOn ? settings.pinyin : "off",
+      modeDesc: prOn ? descOf(settings.pinyin) : "",
       pinyinOn: prOn,
       pinyinNote: prOn
         ? ""
@@ -84,7 +95,7 @@ Page({
   onMode(e) {
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) return;
-    this.setData({ pinyin: mode });
+    this.setData({ pinyin: mode, modeDesc: descOf(mode) });
   },
 
   onRate(e) {

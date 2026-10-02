@@ -218,6 +218,8 @@ const html = [];
 cases.forEach((cfg) => {
   try {
     saveProfile(cfg.saveProfile || { logged: !!cfg.logged, nickname: cfg.logged ? "张敏" : "", avatarUrl: "" });
+    // 预览要能看「注音开着 / 左对齐」这些状态：settings 直接写进本机存储
+    if (cfg.settings) storeMod.saveSettings(cfg.settings); else storeMod.saveSettings({});
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {

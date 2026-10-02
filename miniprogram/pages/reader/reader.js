@@ -21,6 +21,9 @@ const AUTO_NEXT_GAP = 900;
 const FONT_MIN = -2;
 const FONT_MAX = 4;
 
+/* 对齐与注音都做成图标分段控件：图标说「是什么」，文字只是补充。
+   key 同时是图标的类名后缀（.ic-left / .ic-rare …），纯 CSS 画的，
+   不引图片 —— 主包只有 0.7MB 余量，拿体积换几个方块不划算。 */
 const ALIGNS = [
   { key: "left", label: "左对齐" },
   { key: "center", label: "居中" }
@@ -40,7 +43,7 @@ Page({
     author: "",
     dynasty: "",
     source: "",
-    lines: [],
+    paras: [],
     tokens: [],
     translation: "",
     translationSource: "",
@@ -117,10 +120,10 @@ Page({
     }
 
     const rec = store.getRecord(id);
-    // 行 → 句。语料里一行往往承好几个句子（《琵琶行》整段诗序就是一行），
-    // 整行当一个块排，居中时是一坨、朗读时整段一起合成 —— 三种呈现就对不上了。
-    // 切句只此一份，在 corpus.splitLines()。
-    const lines = corpus.splitLines(entry.text);
+    // 版式（段落 / 折行 / 断句）只此一份，在 corpus.layout()。
+    // 七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句折开之后
+    // 一句一行才读得下去 —— 整行当一个块排，居中是一坨、朗读整段一起合成。
+    const laid = corpus.layout(entry.text);
 
     this.setData({
       id,
@@ -129,7 +132,7 @@ Page({
       author: meta.a,
       dynasty: meta.d,
       source: meta.s || meta.n,
-      lines,
+      paras: laid.paras,
       translation: entry.translation || "",
       translationSource: entry.src || "",
       hasTranslation: !!entry.translation,
@@ -168,9 +171,9 @@ Page({
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
     const mode = usable ? store.settings().pinyin : "off";
-    // 句子由 corpus.splitLines 给（含标点），这里只管标音。
+    // 段落由 corpus.layout() 给（含标点），这里只管标音。
     // 标音时消歧窗口是**整行** —— 分组的事交给它，不在这重复。
-    const tokens = usable ? pinyin.render(this.data.lines, mode) : [];
+    const tokens = usable ? pinyin.render(this.data.paras, mode) : [];
     this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
   },
 
@@ -239,14 +242,29 @@ Page({
       onFinish: () => this.onSpeakFinish(),
       onError: (err) => wx.showToast({ title: err.message || "朗读失败", icon: "none" })
     });
-    // 按句合成：整行交给 TTS，长一段听下来断不开，也没法「只听这一句」。
+    // 按**句**合成：整行交给 TTS，长一段听下来断不开，也没法「只听这一句」。
+    // 顺序取自 segments()，与注音里的 `cl.i` 同序 —— 朗读报「第 5 句」，
+    // 正文凭它找到那一行；两处各数一遍，早晚会差一句。
     // 标点交给通道自己断 —— 少了标点，`，` 与 `。` 的停顿差别就没了。
-    this.player.load(
-      this.data.lines
-        .filter((ln) => ln.s.length)
-        .map((ln) => ({ text: ln.line.trim(), gap: 320 }))
-    );
+    this.player.load(this.segments().map((sg) => ({ text: sg.text, gap: 320 })));
     return this.player;
+  },
+
+  /**
+   * 拍平的句子表，**与注音 tokens 同序**。
+   * 版式只有一份（corpus.layout），顺序也只有这一处算 ——
+   * 朗读按它合成、注音按同一份编号，界面才可能对得上。
+   */
+  segments() {
+    const out = [];
+    (this.data.paras || []).forEach((para) => {
+      (para || []).forEach((row) => {
+        (row || []).forEach((clause) => {
+          if (clause.trim()) out.push({ text: clause.trim() });
+        });
+      });
+    });
+    return out;
   },
 
   onSpeak() {

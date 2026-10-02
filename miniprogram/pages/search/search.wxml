@@ -10,25 +10,37 @@
     <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <!-- 范围与模式都是「选一个」：原生 radio，不再自绘分段控件 -->
+  <!-- 范围与模式都是「二选一」。原来各排一行原生单选框 ——
+       四个圆圈上下挤着，看着像同一组里的四个选项。
+       现在两组各有外框，一组两段、图标不同，一眼就分得开。 -->
   <view class="opt-block">
     <text class="field-label">范围</text>
-    <radio-group class="opt-group scope-group" bindchange="onScope">
-      <label class="pref-item" wx:for="{{scopes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#2f6055" />
-        <text>{{item.label}}</text>
-      </label>
-    </radio-group>
+    <view class="seg fill">
+      <radio-group class="seg-group" bindchange="onScope">
+        <label class="seg-item mini {{scope === item.key ? 'on' : ''}}"
+               wx:for="{{scopes}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{scope === item.key}}"
+                 color="#2f6055" />
+          <view class="seg-icon ic-{{item.icon}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
 
     <!-- 全文索引没生成时，模式切换整块不显示，搜索退回索引字段 -->
     <block wx:if="{{fullOn}}">
       <text class="field-label">方式</text>
-      <radio-group class="opt-group mode-group" bindchange="onMode">
-        <label class="pref-item" wx:for="{{modes}}" wx:key="key">
-          <radio value="{{item.key}}" checked="{{mode === item.key}}" color="#2f6055" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
+      <view class="seg fill">
+        <radio-group class="seg-group" bindchange="onMode">
+          <label class="seg-item mini {{mode === item.key ? 'on' : ''}}"
+                 wx:for="{{modes}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{mode === item.key}}"
+                   color="#2f6055" />
+            <view class="seg-icon ic-{{item.icon}}"></view>
+            <text class="seg-text">{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
     </block>
   </view>
 

@@ -80,8 +80,8 @@
 }
 
 /* ---------- 阅读偏好 ----------
-   一行三格：对齐（原生 radio）+ 字号（原生 slider）+ 朗读（原生 button）。
-   三者高度不一样（radio 行 60rpx、slider 的拇指块 44rpx、button 60rpx），
+   一行两格：注音（图标分段）+ 字号（原生 slider）+ 朗读（原生 button）。
+   三者高度不一样（分段 56rpx、slider 的拇指块 44rpx、button 60rpx），
    靠 align-items:center 对齐的是**盒子**，看着还是会「一个高一个低」——
    所以这里统一给一条最小高度，让三格的**内容**落在同一条横线上。 */
 .prefs {
@@ -90,11 +90,6 @@
   gap: var(--sp-2);
   min-height: 72rpx;
   padding: var(--sp-1) 0 var(--sp-2);
-}
-
-.pref-group {
-  display: flex;
-  flex: none;
 }
 
 .pref-font {
@@ -130,7 +125,9 @@
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
   font-family: var(--font-poem);
-  line-height: 2.05;
+  /* 行距 1.95：一句一行的排法本身就留了空，再给到 2.05 就成了散架 ——
+       一句一行时行距要收，一行两句时行距要放，两件事不能同一把尺子 */
+  line-height: 1.95;
 }
 
 .poem-body.align-center {
@@ -139,6 +136,12 @@
 
 .poem-body.align-left {
   text-align: left;
+}
+
+/* 段落：语料里的一道空行 = 作者分的一段。段与段之间空一档，
+   《琵琶行》的「序」与「诗」才是两段东西，而不是四十几行连着的一堵墙 */
+.poem-stanza + .poem-stanza {
+  margin-top: var(--sp-3);
 }
 
 .poem-line {
@@ -263,6 +266,12 @@
   transition: background-color var(--t-move);
 }
 
+/* 注音那条路的行距由「拼音槽 + 字」自己撑起来，不能再叠 .poem-body 的行距 ——
+   两个一起算，行与行之间会有半行空白。 */
+.poem-line.token-line {
+  line-height: 1.15;
+}
+
 .poem-body.align-left .token-line {
   justify-content: flex-start;
 }
@@ -284,7 +293,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 26rpx;
+  height: 28rpx;
   font-family: var(--font-ui);
   font-size: var(--fs-pinyin);
   color: var(--celadon);
@@ -292,10 +301,14 @@
   white-space: nowrap;
 }
 
+/* 字高收进 1.32：注音那条路的行距由「拼音槽 + 字」自己撑起来，
+   `.poem-body` 的 line-height 在这儿只加了一层看不见的空 ——
+   一句一行时两处一起算，行与行之间会多出小半行。
+   字号的七档在下面，收的是行高不是字号。 */
 .tk-ch {
   font-size: var(--fs-poem);
   color: var(--ink);
-  line-height: 1.5;
+  line-height: 1.32;
 }
 
 /* 注音模式下字号跟着正文走，逐档对齐 poem-body.size-* */
@@ -421,3 +434,4 @@
   padding-top: var(--sp-2);
   border-top: 1rpx solid var(--line-2);
 }
+

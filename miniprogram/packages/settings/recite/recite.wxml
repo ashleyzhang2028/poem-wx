@@ -10,17 +10,25 @@
   <view class="card">
     <view class="card-title bar">背诵范围</view>
 
-    <radio-group class="native-group grid cols-3" data-k="term" bindchange="onTerm">
-      <label class="native-label" wx:for="{{terms}}" wx:key="value">
-        <radio value="{{item.value}}" checked="{{term === item.value}}" color="#2f6055" />
-        <text>{{item.label}}</text>
+    <!-- 学期与年级都是**等长的一格一个选项**，格子本身已经把「这是一组、
+         只能选一个」说清楚了。再给每格塞一个圆点，就出现两个毛病：
+         圆点吃掉了横向空间（12 个年级从 3 列涨到 4 列才放得下），
+         而且它跟第一行文字对齐、第二行文字缩进 —— 看着像圆点管着半格。
+         这里改成「格子 = 一个胶囊」：形状说是控件，填色说选中，
+         圆点不再重复这件事。radio 仍在 label 里，点格子就选中。 -->
+    <radio-group class="chip-group cols-2" data-k="term" bindchange="onTerm">
+      <label class="chip {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
+               color="#2f6055" />
+        <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
 
-    <radio-group class="native-group grid" data-k="grade" bindchange="onGrade">
-      <label class="native-label" wx:for="{{grades}}" wx:key="value">
-        <radio value="{{item.value}}" checked="{{grade === item.value}}" color="#2f6055" />
-        <text>{{item.label}}</text>
+    <radio-group class="chip-group cols-4" data-k="grade" bindchange="onGrade">
+      <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
+               color="#2f6055" />
+        <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
   </view>
@@ -41,10 +49,10 @@
 
   <view class="card">
     <view class="card-title bar">每日首数</view>
-    <radio-group class="native-group" bindchange="onCount">
-      <label class="native-label" wx:for="{{counts}}" wx:key="*this">
-        <radio value="{{item}}" checked="{{dailyCount === item}}" color="#2f6055" />
-        <text>{{item}} 首</text>
+    <radio-group class="chip-group cols-4" bindchange="onCount">
+      <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
+        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="#2f6055" />
+        <text class="chip-t">{{item}} 首</text>
       </label>
     </radio-group>
   </view>

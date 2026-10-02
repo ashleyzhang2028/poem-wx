@@ -17,17 +17,26 @@
       <text class="tag stage-tag">{{stage}}</text>
     </view>
 
-    <!-- 阅读偏好：正文之间最不该塞一排自绘按钮，全换成原生单选 -->
+    <!-- 阅读偏好。
+         「对齐」「注音」原来是一排原生单选框：一个空心圆圈 + 两个字，
+         三个选项并排占掉半屏，而两件事都是**看一眼图标就懂的开关** ——
+         文字在这里是多余的负担。
+         现在换成图标分段控件：图标说「是什么」，按下态说「选没选」。
+         底层仍是原生 <radio>，行为、无障碍、键盘都是平台的，只是不再露面。 -->
     <view class="prefs">
-      <!-- 对齐：原生 radio，两个值横向排 —— 单选项，不改版式 -->
-      <radio-group class="pref-group" bindchange="onAlign">
-        <label class="pref-item" wx:for="{{aligns}}" wx:key="key">
-          <radio value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
+      <view class="seg" wx:if="{{pinyinOn}}">
+        <radio-group class="seg-group" bindchange="onPinyin">
+          <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
+                 wx:for="{{pinyinModes}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
+                   color="#2f6055" />
+            <view class="seg-icon ic-{{item.key}}"></view>
+            <text class="seg-text">{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
 
-      <!-- 字号：原生 slider。它是连续量，用滑块比「A－/A＋」两粒按钮更贴手感 -->
+      <!-- 字号：连续量，滑块比「A－/A＋」两粒按钮更贴手感 -->
       <view class="pref-font">
         <slider class="pref-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
                 block-size="20" block-color="#2f6055" activeColor="#2f6055" backgroundColor="#ece3d2"
@@ -39,36 +48,50 @@
               disabled="{{!speakReady}}" bindtap="onSpeak">{{speakLabel}}</button>
     </view>
 
-    <radio-group class="opt-group pinyin-group" wx:if="{{pinyinOn}}" bindchange="onPinyin">
-      <label class="pref-item" wx:for="{{pinyinModes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="#2f6055" />
-        <text>{{item.label}}</text>
-      </label>
-    </radio-group>
+    <!-- 对齐：两个图标，边距本身就是答案（左对齐 = 左边齐的排线，居中 = 两边齐） -->
+    <view class="seg seg-align">
+      <radio-group class="seg-group" bindchange="onAlign">
+        <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" color="#2f6055" />
+          <view class="seg-icon ic-{{item.key}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
 
     <view class="rule">
       <text class="rule-t">正文</text>
     </view>
 
-    <!-- 语料里一行可能承好几个句子：《琵琶行》那样的长诗，一行就是「序」的
-         一整段。整行当一个 block 排，居中时看着像一坨；左对齐时全靠让它自己
-         折行；连朗读也按整行合成，一句一句听不清。所以这里把行再切成句。
+    <!-- 正文。
+         版式（哪一句单占一行、哪几句连着一行、段落断在哪）由语料层
+         `corpus.layout()` 决定 —— 页面只管照着排。理由写在那儿：
+         七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句
+         折开之后一句一行才读得下去。
+
+         注音与正文同形同序（「段落 → 行 → 句」），所以换模式不会跳版。
          标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。 -->
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
-        <text class="poem-line" wx:for="{{lines}}" wx:key="index" wx:for-item="ln">
-          <text class="poem-clause" wx:for="{{ln.s}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
-        </text>
+        <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
+          <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+            <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+          </text>
+        </view>
       </block>
       <block wx:else>
-        <view class="poem-line token-line {{speakVisible && speakIndex === index && speakTotal ? 'reading' : ''}}"
-              hover-class="{{speakVisible ? 'token-line-tap' : ''}}" hover-stay-time="60"
-              wx:for="{{tokens}}" wx:key="index"
-              data-i="{{index}}" bindtap="onSpeakToggle">
-          <view class="poem-clause" wx:for="{{item}}" wx:for-item="cl" wx:key="index">
-            <view class="token" wx:for="{{cl}}" wx:for-item="tk" wx:key="index">
-              <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-              <text class="tk-ch">{{tk.ch}}</text>
+        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段。
+             每一句带 `i`（第几句）—— 正在读的那行按它高亮；点行也是从这句起播 -->
+        <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
+          <view class="poem-line token-line {{speakVisible && speakTotal && speakLoop[speakIndex] === row[0].i ? 'reading' : ''}}"
+                hover-class="{{speakVisible ? 'token-line-tap' : ''}}" hover-stay-time="60"
+                wx:for="{{para}}" wx:key="index" wx:for-item="row"
+                data-i="{{row[0].i}}" bindtap="onSpeakToggle">
+            <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+              <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+                <text class="tk-ch">{{tk.ch}}</text>
+              </view>
             </view>
           </view>
         </view>

@@ -7,8 +7,8 @@ const entitlement = require("../../utils/entitlement");
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
 const MODES = [
-  { key: "index", label: "篇名作者" },
-  { key: "full", label: "正文全文" }
+  { key: "index", label: "篇名作者", icon: "title" },
+  { key: "full", label: "正文全文", icon: "full" }
 ];
 
 /**
@@ -27,7 +27,12 @@ Page({
   data: {
     keyword: "",
     scope: "all",
-    scopes: [{ key: "all", label: "全站" }, { key: "poems", label: "课内" }],
+    // 图标按 key 取（.ic-all-site / .ic-course / .ic-title / .ic-full），
+    // 样式在 app.wxss 的「分段控件」一节 —— 全 app 只有那一处画图标
+    scopes: [
+      { key: "all", label: "全站", icon: "all-site" },
+      { key: "poems", label: "课内", icon: "course" }
+    ],
     modes: MODES,
     mode: "index",
     fullOn: false,

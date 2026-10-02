@@ -121,5 +121,73 @@
     "title": "用户与权限",
     "back": true,
     "logged": true
+  },
+  "reader-changshi": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz10-06"
+    },
+    "settings": {
+      "pinyin": "all",
+      "align": "left"
+    }
+  },
+  "reader-songci": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz11-06"
+    }
+  },
+  "reader-pinyin": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    },
+    "saveProfile": {}
+  },
+  "reader-jiangjinjiu": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz11-06"
+    },
+    "settings": {
+      "pinyin": "rare"
+    }
+  },
+  "reader-shijing": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "guwen-gwj-1"
+    }
+  },
+  "reader-songci-k": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "songci-sc-1"
+    }
+  },
+  "feihua-run": {
+    "page": "packages/game/feihua/feihua",
+    "title": "飞花令",
+    "back": true,
+    "logged": true
   }
 }

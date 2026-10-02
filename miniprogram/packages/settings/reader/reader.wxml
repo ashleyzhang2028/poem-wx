@@ -9,15 +9,20 @@
   <block wx:else>
   <view class="card" wx:if="{{pinyinOn}}">
     <view class="card-title bar">注音方式</view>
-    <radio-group class="native-group column" bindchange="onMode">
-      <label class="opt-row {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key">
-        <radio value="{{item.key}}" checked="{{pinyin === item.key}}" color="#2f6055" />
-        <view class="opt-main">
-          <text class="opt-name">{{item.label}}</text>
-          <text class="opt-desc">{{item.desc}}</text>
-        </view>
-      </label>
-    </radio-group>
+    <!-- 三选一：图标分段。原来是一列三个圆圈 + 两行说明 ——
+         选项本身只有三个字，说明却各占一行，扫下来像是三件事而不是一件事。
+         现在图标说「是哪一档」，选中那一段的小字说清楚「这一档管什么」。 -->
+    <view class="seg">
+      <radio-group class="seg-group" bindchange="onMode">
+        <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}"
+                 color="#2f6055" />
+          <view class="seg-icon ic-{{item.icon}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+    <text class="hint mode-desc">{{modeDesc}}</text>
 
     <!-- 试样：改完就看得见效果，不用退回阅读页才知道 -->
     <view class="sample" wx:if="{{pinyin !== 'off'}}">
