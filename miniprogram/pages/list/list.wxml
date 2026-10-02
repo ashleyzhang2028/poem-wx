@@ -1,10 +1,9 @@
 <view class="page">
-  <lock-card wx:if="{{locked}}" note="书目与正文要微信登录之后才能看。登录只为跨设备带走进度与领取档位。" mark="目" />
+  <lock-card wx:if="{{locked}}" note="登录后才能看" mark="目" />
 
   <block wx:else>
   <!-- 页头只说「这一页是什么」，不报数字 ——
-       报数字的那一行在筛选条下面（.count），是全页唯一的出处。
-       两处都写「共 251 首」的时候，同一屏里会并排出现两句一模一样的话。 -->
+       报数字的那一行在筛选条下面（.count），是全页唯一的出处 -->
   <view class="page-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
@@ -65,7 +64,7 @@
   <view class="empty" wx:if="{{!groups.length}}">
     <text class="empty-mark">空</text>
     <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集子里还没有篇目'}}</text>
-    <text class="hint empty-tip" wx:if="{{keyword}}">换个词试试，或把筛选调回「全部」</text>
+    <text class="hint empty-tip" wx:if="{{keyword}}">换个词或切到「全部」</text>
   </view>
 
   <view class="safe-bottom"></view>

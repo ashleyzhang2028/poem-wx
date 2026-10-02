@@ -92,13 +92,6 @@
   margin-top: var(--sp-4);
 }
 
-.login-note {
-  display: block;
-  text-align: left;
-  margin-top: var(--sp-3);
-  line-height: var(--lh-loose);
-}
-
 .profile-row {
   margin-top: var(--sp-4);
 }
@@ -123,15 +116,6 @@
   width: 100%;
   text-align: center;
   margin-top: var(--sp-3);
-}
-
-/* 档位来源：贴在档位胶囊下面，右对齐 —— 它是那句胶囊的注解，
-   所以跟着胶囊走，而不是跟着偏好行。 */
-.tier-note {
-  display: block;
-  text-align: right;
-  padding-top: var(--sp-2);
-  line-height: var(--lh-body);
 }
 
 /* 清空数据那行：图标底也跟着变淡，别让它看着像个普通入口 */

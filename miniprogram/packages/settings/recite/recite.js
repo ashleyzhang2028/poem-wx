@@ -40,7 +40,7 @@ Page({
     this.setData(
       Object.assign({}, settings, {
         grades: GRADES.map((g) => ({ value: g, label: S.gradeName(g) })),
-        scopes: scopes.map((sc) => Object.assign({}, sc, { desc: S.SCOPES[sc.key].scopeName })),
+        scopes: scopes,
         algos: this.algoRows(settings.algo)
       }),
       () => this.updatePool()

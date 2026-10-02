@@ -8,6 +8,11 @@ const store = require("./store");
 
 const DAY = R.DAY;
 
+/* 取诗范围。每一项只有**一个**标签 ——
+   上一版还配了一句 scopeName 副标题，而它就是标签的同义改写
+   （「本册」→「本学期」、「小学随机」→「小学阶段」），
+   六个选项下面吊着六行废话。副标题撤了，scopeName 只留给需要
+   把范围写成一句话的地方（首页、我的页里那句「一年级上 · 本学期及之前」）。 */
 const SCOPES = {
   term: { label: "本册", scopeName: "本学期", random: false, stages: ["current"] },
   upto: { label: "本册及之前", scopeName: "本学期及之前", random: false, stages: ["upto"] },

@@ -61,16 +61,6 @@
   margin-top: var(--sp-4);
 }
 
-.hero-note {
-  display: block;
-  text-align: center;
-  font-family: var(--font-poem);
-  font-size: var(--fs-caption);
-  letter-spacing: var(--ls-title);
-  color: var(--ink-3);
-  margin-top: var(--sp-3);
-}
-
 /* 细进度条：数字给「几首」，这条给「走到哪了」 */
 .hero-meter {
   margin-top: var(--sp-3);
@@ -208,11 +198,6 @@
 
 .toc-head .card-title {
   margin-bottom: 0;
-}
-
-.toc-hint {
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
 }
 
 .toc-row {

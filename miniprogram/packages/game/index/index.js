@@ -11,9 +11,9 @@ const entitlement = require("../../../utils/entitlement");
  * 才配叫飞花令，否则只是高级搜索。
  */
 const MODES = [
-  { key: "feihua", name: "飞花令", desc: "给一个字，轮流说出含这个字的诗句", color: "green" },
-  { key: "quiz", name: "题库", desc: "按范围抽题，逐题给对错", color: "amber" },
-  { key: "exam", name: "模拟考试", desc: "限时 20 分钟，交卷后统一批", color: "blue" }
+  { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
+  { key: "quiz", name: "题库", desc: "抽题逐题判", color: "amber" },
+  { key: "exam", name: "模拟考试", desc: "20 分钟一卷", color: "blue" }
 ];
 
 const CHARS = ["月", "春", "花", "风", "山", "水", "云", "夜", "江", "秋", "天", "人"];

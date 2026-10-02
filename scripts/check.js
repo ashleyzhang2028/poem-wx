@@ -594,7 +594,7 @@ pages.forEach((p) => {
     // item / index 是 wx:for 的内置名，tk / t / b / p 等是本项目自定的 wx:for-item 名
     // item / index 是 wx:for 的内置名；其余是本项目自定的 wx:for-item 名，
     // 它们不是 data 字段，不该被算成「js 里没出现」。
-    if (["item", "index", "tk", "t", "b", "p", "l", "grp", "caprow", "true", "false"].indexOf(name) >= 0) return;
+    if (["item", "index", "tk", "t", "b", "p", "l", "grp", "caprow", "row", "true", "false"].indexOf(name) >= 0) return;
     if (js.indexOf(name) < 0) unusedWarn.push(p + " → " + name);
   });
 });
@@ -652,59 +652,41 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
 /* ---------- 7.5 界面按能力显隐：扫 WXML 源码 ---------- */
 
 /**
- * 7.4 验的是「readiness 报什么」，这里验的是「页面有没有照着做」。
- * 朗读相关的每个元素都必须挂在 speakVisible / speakReady 上，
- * 否则就会出现「readiness 说不可用、按钮却还在」——正是 Issue 要消掉的东西。
+ * 7.5 验的是「界面里有没有朗读」。
+ *
+ * 这条曾经是反过来的：上一版要求朗读元素必须挂在 speakVisible 上 ——
+ * 于是「授权了但通道没就绪」会被渲染成一张写着「待开通」的卡，
+ * 每次进详情页都杵在那儿。用户 2026-10-02 明确裁决：
+ * **朗读卡不显示，更别显示待开通**（TTS 通道个人主体申请不下来，不做）。
+ *
+ * 所以现在守的是反面：任何页面都不许再冒出朗读元素或「待开通」这类字眼。
+ * 谁哪天要接 TTS，先改这条断言 —— 它挡的是「悄悄回来」，
+ * 不是「不许做」。
  */
-const SPEAK_PAGES = {
-  "pages/reader/reader": ["speakVisible"]
-};
-
-Object.keys(SPEAK_PAGES).forEach((p) => {
-  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
-
-  const guards = SPEAK_PAGES[p];
-  ok("朗读门禁变量有被用 " + p, guards.every((g) => wxml.indexOf(g) >= 0), "WXML 里找不到门禁");
-
-  // 播放相关元素必须只在门禁之内出现
-  const lines = wxml.split("\n");
-  const loose = [];
-  lines.forEach((line, i) => {
-    if (/class="[^"]*(speak-bar|speak-ctrl|sp-btn|speak-entry)/.test(line)) {
-      // 往上找 30 行，必须撞到门禁 —— WXML 里 wx:if + block 会嵌套好几层，
-      // 窗口给小了会把合法的嵌套判成泄漏
-      let guarded = false;
-      for (let j = i; j >= Math.max(0, i - 30); j--) {
-        if (guards.some((g) => lines[j].indexOf(g) >= 0)) {
-          guarded = true;
-          break;
-        }
-      }
-      if (!guarded) loose.push(line.trim().slice(0, 60));
-    }
-  });
-  ok("朗读元素都在门禁内 " + p, loose.length === 0, loose.join(" | "));
-
-  // 页面必须从 readiness() 拿状态，不能自己拍脑袋写死
-  ok("朗读状态来自 readiness " + p, js.indexOf("speech.readiness") >= 0, "页面没查 readiness");
-  ok("朗读不可用时销毁播放器 " + p, js.indexOf("destroy") >= 0);
-});
-
-// 设置页：朗读卡片也得挂门禁
 {
-  const p = "packages/settings/reader/reader";
-  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  ok("朗读设置挂在 speakVisible 上", wxml.indexOf("speakVisible") >= 0);
-  ok("朗读设置区分就绪与未就绪", wxml.indexOf("speakReady") >= 0);
-  ok("未就绪时给出原因", wxml.indexOf("speakReason") >= 0);
+  const FORBIDDEN = /待开通|朗读|speakVisible|speakReady|speakReason|speak-bar|speak-ctrl/;
+  const stray = [];
+  pages.forEach((p) => {
+    [".wxml", ".js"].forEach((ext) => {
+      const f = path.join(ROOT, p + ext);
+      if (!fs.existsSync(f)) return;
+      fs.readFileSync(f, "utf8").split("\n").forEach((line, i) => {
+        // 注释里说明「为什么不做」是允许的，也应当被允许 —— 不然下一个人
+        // 只会把注释删掉，而不是把事实弄清楚
+        const code = line.replace(/<!--[\s\S]*?-->|\/\*.*?\*\/|\/\/.*$/, "").trim();
+        if (!code) return;
+        if (FORBIDDEN.test(code)) stray.push(p + ext + ":" + (i + 1) + " → " + code.slice(0, 50));
+      });
+    });
+  });
+  ok("界面里没有朗读元素（用户裁决不做，见 docs/todo.md 第 1 条）", stray.length === 0, stray.slice(0, 6).join(" | "));
 }
 
-// 我的页：入口在朗读不可用时不该出现
+// 我的页：阅读设置的入口只挂注音
 {
   const p = "pages/mine/mine";
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  ok("「阅读与朗读」入口挂门禁", wxml.indexOf("speakVisible || pinyinVisible") >= 0);
+  ok("「阅读设置」入口挂注音门禁", wxml.indexOf("wx:if=\"{{pinyinVisible}}\"") >= 0);
 }
 
 /* ---------- 7.6 权限分层 ---------- */
@@ -1046,7 +1028,7 @@ ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
 // 同一件事不许有两份实现 —— settings 下那个 admin 页已并入 packages/admin
 ok("管理页只有一份实现", (subs.settings || []).indexOf("admin/admin") < 0, "settings 下还留着 admin 页");
-ok("设置分包含阅读与朗读", (subs.settings || []).indexOf("reader/reader") >= 0);
+ok("设置分包含阅读设置", (subs.settings || []).indexOf("reader/reader") >= 0);
 
 // 首页那三张卡能点进去的页面都得存在
 ["packages/game/quiz/quiz", "packages/admin/index/index", "packages/settings/reader/reader"].forEach((p) => {
@@ -2828,6 +2810,94 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("槽有固定宽度", !!slot && /width\s*:\s*\d+rpx/.test(slot[1]), slot && slot[1].replace(/\s+/g, " "));
   ok("槽宽不小于「登录」胶囊的实际宽度（88rpx 两个字 + 内边距）",
     !!slot && Number((/width\s*:\s*(\d+)rpx/.exec(slot[1]) || [])[1] || 0) >= 88);
+}
+
+
+/**
+ * V18. 选项、按钮、卡片下面不许挂「解释性提示」。
+ *
+ * 用户 2026-10-02 的原话：
+ *   「所有选项，所有按钮，尽量使用精简语言」
+ *   「更不要在各个选项，设置，卡片下面显示各种婆婆妈妈的解释性提示」
+ *
+ * 这一版之前，几乎每张卡下面都吊着一行小字：搜索页解释倒排索引怎么走、
+ * 题型下面解释哪个格子能多选、朗读卡解释档位与通道的关系……
+ * 单看每一句都是在「如实交代」，合起来是把界面读成一篇说明书 ——
+ * 而用户要的是「看得懂就点」。
+ *
+ * 判据是**位置**，不是字数：卡片/选项/按钮的容器下方，除了
+ *   · 事实读数（数量、进度、日期这类数字）
+ *   · 空状态与出错说明（没有它，「没有」和「没加载出来」分不清）
+ * 之外，不许再出现解释性文案。
+ *
+ * 靠人自觉守不住 —— 这种小字是「顺手加上去」的，一次一句，回看时看不出来。
+ */
+{
+  // 白名单的那些类：它们不是「解释」，是读数或兜底。
+  // **白名单不等于免检** —— 它只免掉「位置」这一层，长度照样要过。
+  // 上一版的写法只按类名放行，于是 `.hint pool-hint` 底下写一整段
+  // 算法说明也照样全绿（反证时撞见的）。读数天生短，所以长度这一关
+  // 对所有类一视同仁。
+  const OK_CLASS = /(empty-|warn|result-count|result-where|result-more|pool-hint|char-count|count|stage-|kv-|sample|mastery|verdict|wrong-|score|stem-sub|day-|stat-|hero-|tier-|identity-|acct-|cap-|fh-|trans-|meta|note error)/;
+  // 长句判据：一句中文说明超过这个长度，基本就是「解释」而不是「标签」
+  const MAX_LABEL = 24;
+  // 读数类：位置免检，长度仍要过 —— 这类该是「N 首」「3 / 7」
+  // 「共 10 题 · 限时 20 分钟」这种带一个限定词的也算读数，所以放到 18。
+  // 一段算法说明（三四十字）过不去，一条读数过得去，这条线在那儿。
+  const MAX_READING = 18;
+
+  const stray = [];
+  const files = pages.map((p) => [p, path.join(ROOT, p + ".wxml"), path.join(ROOT, p + ".wxss")]);
+  files.forEach(([p, wxmlPath, wxssPath]) => {
+    const wxml = fs.readFileSync(wxmlPath, "utf8");
+    // 把 WXML 里带 class 的文本节点扫一遍。
+    //
+    // 分两步：先摘掉所有 `{{ … }}`（里面是表达式，不是给人看的句子），
+    // 再切 `<text class="…">正文</text>`。一起切会在
+    // `wx:if="{{a > b}}"` 的 `>` 上提前收尾 —— 上一版就这么把一段属性
+    // 当成正文，长度永远超标，成了一条永远红的断言（反证时撞见的）。
+    const flat = wxml.replace(/\{\{[\s\S]*?\}\}/g, "＃");
+    const re = /<text[^>]*class="([^"]*)"[^>]*>([^<]*)<\/text>/g;
+    let m;
+    while ((m = re.exec(flat))) {
+      const cls = m[1];
+      const body = m[2].replace(/\s+/g, " ").trim();
+      if (!body) continue;
+      // 纯读数（只剩标点与占位）放过
+      if (/^[＃\s·—\-：:／\/，。！？、（）()]*$/.test(body)) continue;
+      // 读数类：位置免检，长度不免
+      if (OK_CLASS.test(cls)) {
+        if (body.length > MAX_READING) stray.push(p + " → ." + cls + "（读数类却写了长句）「" + body.slice(0, 30) + "…」");
+        continue;
+      }
+      if (body.length <= MAX_LABEL) continue;
+      stray.push(p + " → ." + cls + " 「" + body.slice(0, 30) + "…」");
+    }
+  });
+  ok("卡片/选项/按钮下没有长篇解释性提示", stray.length === 0, stray.slice(0, 5).join(" | "));
+
+  // 按钮文案也要短：一条按钮上写十几个字，扫不下来
+  const longBtn = [];
+  files.forEach(([p, wxmlPath]) => {
+    const wxml = fs.readFileSync(wxmlPath, "utf8");
+    const re = /<button[^>]*>([\s\S]*?)<\/button>/g;
+    let m;
+    while ((m = re.exec(wxml))) {
+      if (m[1].indexOf("<") >= 0) continue;      // 按钮里嵌了别的元素，不是纯文案
+      const raw = m[1].replace(/\s+/g, " ").trim();
+      if (!raw) continue;
+      // 三元表达式要把**两个分支分别量**：整段压成一个「＃」量不出长度，
+      // 反证的时候就撞见了 —— 一条十七个字的按钮照样全绿。
+      const branches = [raw];
+      const tern = /'([^']*)'\s*:\s*'([^']*)'/.exec(raw);
+      if (tern) { branches.length = 0; branches.push(tern[1], tern[2]); }
+      branches.forEach((body) => {
+        const visible = body.replace(/\{\{[^}]*\}\}/g, "").replace(/[·—\-：:／\/，。！？、（）()\s]/g, "");
+        if (visible.length > 12) longBtn.push(p + " → 「" + body.slice(0, 24) + "」");
+      });
+    }
+  });
+  ok("按钮文案是短句（不超过 12 个可见字）", longBtn.length === 0, longBtn.slice(0, 5).join(" | "));
 }
 
 /* ---------- 汇总 ---------- */

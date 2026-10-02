@@ -1,7 +1,5 @@
 <view class="page">
-  <!-- 身份卡：整页最上面，回答「我是谁、我这一档能做什么」。
-       参考图的「我的」页头就是这一块：左边一枚圆头像，右边名字 + 一行小字，
-       最右一枚编号胶囊 —— 一行解决「我是谁」，不占第二行。 -->
+  <!-- 身份卡：回答「我是谁、我这一档能做什么」 -->
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
       <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">
@@ -10,24 +8,15 @@
       </button>
       <view class="identity-main">
         <text class="identity-name">{{nickname}}</text>
-        <text class="identity-sub">{{logged ? '已登录 · 进度可跨设备同步' : '未登录 · 只能看首页目录'}}</text>
+        <text class="identity-sub">{{logged ? '已登录' : '未登录'}}</text>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
 
-    <!-- 档位是从哪来的 —— 只说一次，且就贴在档位胶囊下面。
-         上一版它被放在「每日首数 / 复习算法」两张偏好行的下面，
-         那两行讲的是「本机怎么排期」，与档位来源不是一件事；
-         而同一屏的上半部分又写着「档位由管理员按人分配」——
-         两处都在解释档位，读者会以为是两句不同的话。 -->
-    <text class="hint tier-note" wx:if="{{logged}}">{{tierNote}}</text>
+
 
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">微信登录</button>
-      <!-- 这一段只回答一件事：「登录能换来什么」。档位那句话不写在这里 ——
-           它属于档位本身，唯一的出处是档位胶囊下面那行（tierNote）。 -->
-      <text class="hint login-note">登录之后才能用「每日背诵 / 课外阅读 / 注音 / 朗读 / 题库」，也能把进度带走。
-      不收费，档位由管理员按人分配。</text>
     </view>
 
     <view class="profile-row" wx:else>
@@ -39,10 +28,7 @@
     </view>
   </view>
 
-  <!-- 本机数据：三个大数字。
-       参考图里「24 作品 / 3 作品集 / 58 访问」就是这个位置 ——
-       一屏最容易被扫到的地方，放三个能一眼比出大小的数。
-       上一版这里是五行「字段名 …… 值」的表格，五行里找一行要念一遍。 -->
+  <!-- 本机数据：三个大数字。一屏最容易被扫到的地方，放三个能一眼比出大小的数 -->
   <view class="card">
     <view class="card-title bar">本机数据</view>
     <view class="stats">
@@ -75,15 +61,14 @@
   </view>
 
   <!-- 学习：登录后是入口清单；未登录整块不出现 ——
-       一张只有一句「登录后会出现…」的卡，占位置不办事。
-       参考图的「跟进与团队」就是这一块：行首一个浅底图标，行尾一个箭头。 -->
+       一张只有一句「登录后会出现…」的卡，占位置不办事 -->
   <view class="card" wx:if="{{logged}}">
     <view class="card-title bar">学习</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
       <view class="row-icon">进</view>
       <view class="row-main">
         <text class="row-title">背诵进度</text>
-        <text class="row-sub">未来七天排期 · 记忆阶段</text>
+        <text class="row-sub">七天排期 · 记忆阶段</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -99,17 +84,17 @@
       <view class="row-icon">背</view>
       <view class="row-main">
         <text class="row-title">背诵设置</text>
-        <text class="row-sub">范围 · 首数 · 复习算法</text>
+        <text class="row-sub">范围 · 首数 · 算法</text>
       </view>
       <text class="row-go">›</text>
     </view>
-    <!-- 朗读与注音都不可用时也不出现 —— 一个点不动的入口比没有更糟 -->
+    <!-- 注音不可用时整行不出现 —— 一个点不动的入口比没有更糟 -->
     <view class="row" hover-class="row-hover" hover-stay-time="60"
-          bindtap="onReader" wx:if="{{speakVisible || pinyinVisible}}">
+          bindtap="onReader" wx:if="{{pinyinVisible}}">
       <view class="row-icon">读</view>
       <view class="row-main">
-        <text class="row-title">阅读与朗读</text>
-        <text class="row-sub">{{speakVisible ? '注音 · 朗读语速' : '注音'}}</text>
+        <text class="row-title">阅读设置</text>
+        <text class="row-sub">注音</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -117,7 +102,7 @@
       <view class="row-icon">设</view>
       <view class="row-main">
         <text class="row-title">通用设置</text>
-        <text class="row-sub">正文对齐 · 字号</text>
+        <text class="row-sub">对齐 · 字号</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -127,7 +112,7 @@
     <view class="card-title bar">数据与账号</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">
       <view class="row-icon">出</view>
-      <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON，换手机时导回去</text></view>
+      <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON</text></view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
@@ -142,7 +127,7 @@
       <view class="row-icon">权</view>
       <view class="row-main">
         <text class="row-title">用户与权限</text>
-        <text class="row-sub">我的档位 · 能力矩阵</text>
+        <text class="row-sub">档位 · 能力</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -156,10 +141,6 @@
       <view class="row-main"><text class="row-title danger-text">清空本机数据</text></view>
       <text class="row-go">›</text>
     </view>
-  </view>
-
-  <view class="foot">
-    <text class="hint">不积跬步，无以至千里</text>
   </view>
 
   <view class="safe-bottom"></view>

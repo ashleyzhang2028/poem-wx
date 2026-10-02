@@ -1,10 +1,9 @@
 <view class="page">
   <view class="page-head">
     <text class="head-title">今天背什么</text>
-    <text class="head-sub">背哪一册 · 每天几首 · 按哪套算法排期</text>
   </view>
 
-  <lock-card wx:if="{{locked}}" title="背诵范围要登录" note="背诵范围要登录之后才生效 —— 未登录时只有首页目录可看。" mark="范" />
+  <lock-card wx:if="{{locked}}" title="背诵范围要登录" note="登录后才能改" mark="范" />
 
   <block wx:else>
   <view class="card">
@@ -40,11 +39,10 @@
         <radio value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
         <view class="opt-main">
           <text class="opt-name">{{item.label}}</text>
-          <text class="opt-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
         </view>
       </label>
     </radio-group>
-    <text class="hint pool-hint">这个范围里有 {{poolSize}} 首</text>
+    <text class="hint pool-hint">{{poolSize}} 首</text>
   </view>
 
   <view class="card">
@@ -65,12 +63,12 @@
              wx:for="{{algos}}" wx:key="key">
         <radio value="{{item.key}}" checked="{{item.active}}" disabled="{{!item.allowed}}" color="#1c1c1e" />
         <view class="opt-main">
-          <text class="opt-name">{{item.name}} · {{item.years}}</text>
-          <text class="opt-desc">{{item.allowed ? item.blurb : item.lockHint}}</text>
+          <text class="opt-name">{{item.name}}</text>
+          <text class="opt-desc" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
         </view>
       </label>
     </radio-group>
-    <text class="hint pool-hint">换算法不清进度，已有记录会按新算法折算。</text>
+
   </view>
 
   <view class="safe-bottom"></view>

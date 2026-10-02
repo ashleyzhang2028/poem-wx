@@ -119,7 +119,9 @@ Page({
         dynasty: it.poem.d,
         reason: REASON_TEXT[it.reason] || "",
         reasonKey: it.reason,
-        stage: S.stageName(rec),
+        // 阶段名与「新学 / 复习」那个标签常常是同一个词（刚学的那几首都是「新学」）
+        // —— 同一行里说两遍，等于没说。只在与标签不同的时候才附上
+        stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
         reviewed: !!(rec && rec.learned),
         read

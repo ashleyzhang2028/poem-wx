@@ -47,7 +47,8 @@ function ok(name, cond, detail) {
 const DECIDED = {
   "recite.basic": { kind: "cap", to: "daily" },
   "library.all": { kind: "cap", to: "library" },
-  "read.aloud": { kind: "cap", to: "speak" },
+  // 朗读：能力键还在表里（与网页版对齐），界面一处不接 —— 落 todo.md 第 1 条
+  "read.aloud": { kind: "none", to: "todo-1" },
   // 注音本身做了，但「勘误审核队列」那一半没做 —— 落在 todo.md
   "pinyin.helper": { kind: "none", to: "todo-3" },
   "export.progress": { kind: "cap", to: "export" },

@@ -9,11 +9,11 @@
 const corpus = require("./corpus");
 
 const FORMS = [
-  { key: "next", name: "接下句", desc: "给上句选下句", color: "green" },
-  { key: "prev", name: "接上句", desc: "给下句选上句", color: "green" },
-  { key: "author", name: "认作者", desc: "给诗句选作者", color: "amber" },
-  { key: "dynasty", name: "填朝代", desc: "给作者选朝代", color: "blue" },
-  { key: "title", name: "认篇名", desc: "给诗句选篇名", color: "amber" }
+  { key: "next", name: "接下句", color: "green" },
+  { key: "prev", name: "接上句", color: "green" },
+  { key: "author", name: "认作者", color: "amber" },
+  { key: "dynasty", name: "填朝代", color: "blue" },
+  { key: "title", name: "认篇名", color: "amber" }
 ];
 
 const FORM_KEYS = FORMS.map((f) => f.key);

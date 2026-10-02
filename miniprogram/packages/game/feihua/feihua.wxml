@@ -1,10 +1,9 @@
 <view class="page">
-  <lock-card wx:if="{{!allowed}}" title="飞花令" note="{{reason}}" mark="令" />
+  <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能用" mark="令" />
 
   <block wx:else>
     <view class="page-head">
       <text class="head-title">挑一个令字</text>
-      <text class="head-sub">课内 251 首里，有多少句写过它</text>
     </view>
 
     <view class="card">
@@ -31,10 +30,9 @@
         </radio-group>
       </view>
 
-      <!-- 令字格：原来每格里塞一个原生 radio 圆点（缩到 0.56 怼在右上角），
-           小到看不出、还压在「而」「者」的笔画上。格子本身已经用
-           「选中 = 换底色 + 描边变色」说清楚了选中态，那个圆点只添乱。
-           radio 仍在 label 里（下面被视觉隐藏），点格子任何一处都选中。 -->
+      <!-- 令字格：格子本身用「选中 = 换底色 + 描边变色」说清选中态，
+           不再塞一个缩到 0.56、压在笔画上的原生圆点。
+           radio 仍在 label 里（视觉隐藏），点格子任何一处都选中 -->
       <radio-group class="chars" bindchange="onChar">
         <label class="char {{char === item.char ? 'active' : ''}}" wx:for="{{chars}}" wx:key="char">
           <radio class="seg-radio" value="{{item.char}}" checked="{{char === item.char}}"
@@ -43,7 +41,7 @@
           <text class="char-n">{{item.count}}</text>
         </label>
       </radio-group>
-      <text class="hint char-empty" wx:if="{{!chars.length}}">这一档没有合适的令字</text>
+
     </view>
 
     <!-- 查一查 -->
@@ -55,8 +53,7 @@
       </view>
       <view class="empty" wx:if="{{!hitCount}}">
         <text class="empty-mark">字</text>
-        <text class="empty-text">课内 251 首里没有含「{{char}}」的句子
-换个令字试试</text>
+        <text class="empty-text">没有含「{{char}}」的句子</text>
       </view>
     </view>
 
@@ -74,7 +71,7 @@
 
       <view class="actions" wx:if="{{!finished}}">
         <button class="btn primary" bindtap="onSubmit">说一句</button>
-        <button class="btn ghost" bindtap="onGiveUp">接不上了</button>
+        <button class="btn ghost" bindtap="onGiveUp">放弃</button>
       </view>
 
       <view class="actions" wx:else>
@@ -84,7 +81,6 @@
       <text class="hint fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
     </view>
 
-    <text class="hint fh-tip" wx:if="{{!char}}">挑一个令字开始</text>
   </block>
 
   <view class="safe-bottom"></view>

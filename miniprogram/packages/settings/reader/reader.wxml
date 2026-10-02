@@ -1,17 +1,14 @@
 <view class="page">
   <view class="page-head">
     <text class="head-title">怎么读</text>
-    <text class="head-sub">注音方式 · 朗读语速 · 答题音效</text>
   </view>
 
-  <lock-card wx:if="{{locked}}" title="阅读设置要登录" note="读音表与朗读通道都挂在账号档位上，所以要登录之后才能设。" mark="读" />
+  <lock-card wx:if="{{locked}}" title="阅读设置要登录" note="登录后才能改" mark="读" />
 
   <block wx:else>
   <view class="card" wx:if="{{pinyinOn}}">
     <view class="card-title bar">注音方式</view>
-    <!-- 三选一：图标分段。原来是一列三个圆圈 + 两行说明 ——
-         选项本身只有三个字，说明却各占一行，扫下来像是三件事而不是一件事。
-         现在图标说「是哪一档」，选中那一段的小字说清楚「这一档管什么」。 -->
+    <!-- 三选一：图标分段。图标说「是哪一档」，选中的那段填墨黑。 -->
     <view class="seg">
       <radio-group class="seg-group" bindchange="onMode">
         <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{modes}}" wx:key="key">
@@ -22,8 +19,6 @@
         </label>
       </radio-group>
     </view>
-    <text class="hint mode-desc">{{modeDesc}}</text>
-
     <!-- 试样：改完就看得见效果，不用退回阅读页才知道 -->
     <view class="sample" wx:if="{{pinyin !== 'off'}}">
       <view class="sample-u" wx:for="{{sample}}" wx:key="ch">
@@ -31,54 +26,20 @@
         <text class="sample-ch">{{item.ch}}</text>
       </view>
     </view>
-    <text class="hint note">多音字按词组取值，词组表里没有才回退单字。</text>
   </view>
 
   <view class="card" wx:else>
     <view class="card-title bar">注音</view>
-    <text class="hint note">读音表未就绪，注音能力整体关闭，阅读页不会出现注音开关。</text>
+    <text class="hint note">读音表未就绪</text>
   </view>
 
-  <!-- 朗读：不可用整块不渲染（可见但未就绪时显示成待开通，给一句人话） -->
-  <view class="card" wx:if="{{speakVisible}}">
-    <view class="card-title bar">朗读</view>
-
-    <block wx:if="{{speakReady}}">
-      <view class="sub-title">朗读语速</view>
-      <radio-group class="native-group" bindchange="onRate">
-        <label class="native-label" wx:for="{{rates}}" wx:key="key">
-          <radio value="{{item.key}}" checked="{{speechRate === item.key}}" color="#1c1c1e" />
-          <text>{{item.label}}</text>
-        </label>
-      </radio-group>
-
-      <view class="row">
-        <view class="row-main">
-          <text class="row-title">整篇读完停一下</text>
-          <text class="row-sub">读完不自作主张跳页，背完自己点下一首</text>
-        </view>
-        <switch checked="{{speechAutoNext}}" bindchange="onAutoNext" color="#1c1c1e" />
-      </view>
-
-      <!-- 试听：原生 button，只是借边距与 :active 上色，不做自绘按钮 -->
-      <button class="btn ghost block test-btn" bindtap="onSpeakTest">试听一声</button>
-    </block>
-
-    <text class="hint note" wx:else>{{speakReason}}</text>
-  </view>
-
-  <view class="card" wx:else>
-    <view class="card-title bar">朗读</view>
-    <text class="hint note">当前没有朗读能力，阅读页不会出现朗读按钮与播放工具栏。这通常是因为：档位不含朗读，或运行环境没有音频接口。</text>
-  </view>
-
-  <!-- 答题音效：与朗读同规矩 —— 环境出不了声，这一整块不渲染 -->
+  <!-- 答题音效：环境出不了声，这一整块不渲染 -->
   <view class="card" wx:if="{{sfxVisible}}">
     <view class="card-title bar">答题音效</view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">答对答错出声</text>
-        <text class="row-sub">题库、考试与飞花令共用一套；四声，零音频文件</text>
+        <text class="row-sub">题库 · 考试 · 飞花令共用</text>
       </view>
       <switch checked="{{sfxOn}}" bindchange="onSfx" color="#1c1c1e" />
     </view>

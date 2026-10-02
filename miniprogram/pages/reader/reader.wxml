@@ -24,24 +24,16 @@
          现在换成图标分段控件：图标说「是什么」，按下态说「选没选」。
          底层仍是原生 <radio>，行为、无障碍、键盘都是平台的，只是不再露面。 -->
     <view class="prefs">
-      <!-- 第一排：注音（图标分段）+ 朗读（原生 button）。
-           两件都是「选一个」，且都短 —— 并排一行放得下。 -->
-      <view class="prefs-row">
-        <view class="seg" wx:if="{{pinyinOn}}">
-          <radio-group class="seg-group" bindchange="onPinyin">
-            <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
-                   wx:for="{{pinyinModes}}" wx:key="key">
-              <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
-                     color="#1c1c1e" />
-              <view class="seg-icon ic-{{item.key}}"></view>
-              <text class="seg-text">{{item.label}}</text>
-            </label>
-          </radio-group>
-        </view>
-
-        <!-- 朗读不可用时这一格不出现；就绪与否只影响它灰不灰，不影响在不在 -->
-        <button class="btn mini speak-entry {{speakReady ? 'on' : 'off'}}" wx:if="{{speakVisible}}"
-                disabled="{{!speakReady}}" bindtap="onSpeak">{{speakLabel}}</button>
+      <view class="seg" wx:if="{{pinyinOn}}">
+        <radio-group class="seg-group" bindchange="onPinyin">
+          <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
+                 wx:for="{{pinyinModes}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
+                   color="#1c1c1e" />
+            <view class="seg-icon ic-{{item.key}}"></view>
+            <text class="seg-text">{{item.label}}</text>
+          </label>
+        </radio-group>
       </view>
 
       <!-- 第二排：字号。**必须独占一整行** ——
@@ -91,13 +83,9 @@
         </view>
       </block>
       <block wx:else>
-        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段。
-             每一句带 `i`（第几句）—— 正在读的那行按它高亮；点行也是从这句起播 -->
+        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段 -->
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
-          <view class="poem-line token-line {{speakVisible && speakTotal && speakLoop[speakIndex] === row[0].i ? 'reading' : ''}}"
-                hover-class="{{speakVisible ? 'token-line-tap' : ''}}" hover-stay-time="60"
-                wx:for="{{para}}" wx:key="index" wx:for-item="row"
-                data-i="{{row[0].i}}" bindtap="onSpeakToggle">
+          <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
             <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
               <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
                 <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
@@ -128,34 +116,6 @@
     </view>
 
     <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
-  </view>
-
-  <!-- 播放工具栏：只在朗读可见时存在 -->
-  <view class="card speak-bar" wx:if="{{speakVisible}}">
-    <view class="speak-head">
-      <text class="card-title bar">朗读</text>
-      <text class="speak-state {{speakReady ? '' : 'off'}}">{{speakReady ? '就绪' : '待开通'}}</text>
-    </view>
-
-    <text class="hint note" wx:if="{{!speakReady}}">{{speakReason}}</text>
-
-    <block wx:else>
-      <!-- 进度条就是原生 slider：拖到哪句就从哪句起播，比一个只读的细条多一件事可做 -->
-      <view class="speak-progress" wx:if="{{speakTotal}}">
-        <text class="sp-text">{{speakIndex + 1}} / {{speakTotal}} 句</text>
-        <slider class="sp-slider" min="0" max="{{speakTotal - 1}}" step="1" value="{{speakIndex}}"
-                block-size="20" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
-                bindchange="onSpeakSeek" />
-      </view>
-      <view class="speak-ctrl">
-        <button class="btn mini" bindtap="onSpeakPrev">上一句</button>
-        <button class="btn mini primary sp-main" bindtap="onSpeak">
-          {{speakLoading ? '准备中' : (speakPlaying ? '暂停' : '播放')}}
-        </button>
-        <button class="btn mini" bindtap="onSpeakNext">下一句</button>
-        <button class="btn mini" bindtap="onSpeakStop">停止</button>
-      </view>
-    </block>
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">

@@ -6,7 +6,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">这台手机上的记录</view>
+    <view class="card-title bar">本机记录</view>
     <view class="kv">
       <text class="kv-k">已学篇目</text>
       <text class="kv-v">{{stats.learned}}</text>
@@ -35,8 +35,6 @@
       <text class="row-go">›</text>
     </view>
   </view>
-
-  <text class="hint foot">语料与界面取自 poem 网页版，同一套宋代传统色与宋体排版。</text>
 
   <view class="safe-bottom"></view>
 </view>

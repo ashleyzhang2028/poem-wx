@@ -1,10 +1,9 @@
 <view class="page">
   <view class="page-head">
     <text class="head-title">怎么排好看</text>
-    <text class="head-sub">正文对齐 · 字号 · 背完往哪走</text>
   </view>
 
-  <lock-card wx:if="{{locked}}" title="设置要登录" note="设置项要登录之后才生效 —— 未登录时只有首页目录可看。" mark="设" />
+  <lock-card wx:if="{{locked}}" title="设置要登录" note="登录后才能改" mark="设" />
 
   <block wx:else>
   <view class="card">
@@ -23,7 +22,7 @@
 
   <view class="card">
     <view class="card-title bar">正文字号</view>
-    <!-- 字号本来就是连续的，用原生滑动条比「A－ / A＋」两个按钮更贴手感 -->
+    <!-- 字号本来就是连续的，用原生滑动条比两个按钮更贴手感 -->
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
@@ -39,7 +38,6 @@
     <view class="row">
       <view class="row-main">
         <text class="row-title">背完自动下一首</text>
-        <text class="row-sub">在详情页选完掌握程度后直接跳下一篇</text>
       </view>
       <switch checked="{{autoNext}}" color="#1c1c1e" bindchange="onAutoNext" />
     </view>

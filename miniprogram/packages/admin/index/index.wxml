@@ -1,11 +1,10 @@
 <view class="page">
   <!-- 未登录：没有什么可管的，说清楚就行 -->
-  <lock-card wx:if="{{!logged}}" title="权限要登录" note="档位与权限挂在微信账号上，先登录才看得到自己那一档。" mark="权" />
+  <lock-card wx:if="{{!logged}}" title="权限要登录" note="登录后才能看" mark="权" />
 
   <block wx:else>
   <view class="page-head">
     <text class="head-title">我这一档</text>
-    <text class="head-sub">能力矩阵 · 名录与后端</text>
   </view>
 
   <view class="card grant">
@@ -24,13 +23,7 @@
       </view>
     </view>
 
-    <text class="hint note" wx:if="{{status.signed}}">这一档由服务端下发，换手机跟着走。</text>
-    <text class="hint note" wx:elif="{{status.blocked === 'unsigned'}}">
-      连不上服务器，本机记着的档位暂不生效，按免费档算 —— 免得断个网就成了提权。
-    </text>
-    <text class="hint note" wx:else>
-      档位由管理员按人分配，不需要你付费。要往上走，把下面那条「复制联系邮箱」发给管理员。
-    </text>
+    <text class="hint note" wx:if="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按免费档</text>
   </view>
 
   <view class="card">
@@ -43,19 +36,13 @@
         <text class="cap-note" wx:if="{{caprow.note}}">{{caprow.note}}</text>
       </view>
     </view>
-    <text class="hint note">这张表与网页版 js/entitlement.js 逐条对齐，自检里有一条专门比它，漂了当场报错。</text>
+
   </view>
 
   <view class="card">
     <view class="card-title bar">用户名录</view>
-    <text class="hint note" wx:if="{{!remoteReady}}">
-      后端接口还没部署，所以名录读不了、也改不了别人。下面这份是构建时导入的名册（只读），
-      {{generatedAt ? '生成于 ' + generatedAt : '尚未生成'}}。
-    </text>
-    <text class="hint note" wx:elif="{{!adminReady}}">
-      后端已配置，但你不是管理员（当前：{{roleLabel}}），名录只读。
-    </text>
-    <text class="hint note" wx:else>管理员已就绪，改动直接写服务端，对方下次打开生效。</text>
+    <text class="hint note" wx:if="{{!remoteReady}}">只读 · 后端未就绪{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
+    <text class="hint note" wx:elif="{{!adminReady}}">只读 · 当前 {{roleLabel}}</text>
 
     <view class="acct" wx:for="{{users}}" wx:key="id">
       <view class="acct-main">
@@ -76,7 +63,7 @@
     <view class="empty" wx:if="{{!users.length}}">
         <text class="empty-mark">名</text>
         <text class="empty-text">名录里还没有人</text>
-        <text class="hint empty-tip">名录走 POEM_ROSTER 环境变量导入，不进代码库</text>
+
       </view>
     <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
     <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
@@ -84,26 +71,19 @@
 
   <view class="card">
     <view class="card-title bar">后端地址</view>
-    <text class="hint note">
-      同步、微信登录、名录都走这一个地址。留空就是「没后端」—— 功能照用，
-      进度只在本机，不上传也不假装上传。
-    </text>
+    <text class="hint note">同步与登录都走这一个地址</text>
     <view class="field">
       <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
              bindinput="onBaseUrl" />
     </view>
-    <button class="btn ghost block" bindtap="onSaveBaseUrl">保存并重试连接</button>
+    <button class="btn ghost block" bindtap="onSaveBaseUrl">保存并重试</button>
     <text class="hint note" wx:if="{{baseUrlNote}}">{{baseUrlNote}}</text>
     <text class="hint note" wx:if="{{wxLoginNote}}">{{wxLoginNote}}</text>
   </view>
 
   <view class="card">
     <view class="card-title bar">要一个更高的档位</view>
-    <text class="hint note">
-      三档都不收费，由管理员在服务端按人发放。把邮箱发给管理员，或让他直接在
-      网页版后台（poem 站的 /admin/）改。手机上不做名录管理 —— 分页、搜索、
-      用户报告那些在网页版顺手得多。
-    </text>
+    <text class="hint note">三档都不收费，由管理员发放</text>
     <button class="btn ghost block" bindtap="onCopyFeedback">复制联系邮箱</button>
     <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
   </view>
