@@ -9,6 +9,7 @@ node scripts/shots/shoot.js reader # 只截名字里含 reader 的
 node scripts/shots/measure.js      # 量每一格「两侧还剩多少」—— 挤不挤，说数字
 node scripts/shots/measure.js --metrics   # 从真字体导出 font-metrics.json
 node scripts/shots/prefs-width.js  # 量详情页那一行（对齐 ｜ 注音 ｜ 字号）多宽
+node scripts/shots/measure-pinyin.js  # 量注音那一路：行高齐不齐、字距稳不稳
 THEME=tianqing node scripts/shots/render.js   # 换主题色渲染预览（默认那支墨）
 ```
 
@@ -27,6 +28,18 @@ THEME=tianqing node scripts/shots/render.js   # 换主题色渲染预览（默�
 它按**真机比例**量（注入 `--ui-scale` 与 `--layout-w`）：预览把 rpx 按 390 宽折算，
 而浏览器给 15px 以下的字兜着最小字号，25rpx 在预览里量出来比真机宽 ——
 不注入的话，一个真机放得下的算式在预览里会「装不下」。见本文件第 3 条。
+
+`measure-pinyin.js` 量**注音那条路**：逐档量「有拼音的行盒 / 没拼音的行盒 /
+字与字的步进 / 上一行字底到下一行字顶」。它是用户 2026-10-03 那两句的尺子 ——
+「有一行有注音、有一行没注音，行间距应该一样」与「每个汉字在 A－ A＋
+所有字号下字间距保持一致」。上一版实测：有拼音的行 81rpx、没拼音的 53rpx；
+一行之内字距会从 37.9 跳到 34。这两个数不量出来，眼睛只会说「有点怪」。
+
+```bash
+node scripts/shots/measure-pinyin.js
+UI_SCALE=.9 node scripts/shots/measure-pinyin.js   # 顺带看全局缩放那一档
+```
+齐了才绿：有音无音的行盒相等、一档之内步进与空隙处处相等、行距为正。
 
 `prefs-width.js` 是「**一行显示，你做到了吗**」这句话的另一个答案（Issue #26）。
 它量的不是 `.prefs` 的盒子宽 —— 那一层是 `justify-content: center`，被甩出来的

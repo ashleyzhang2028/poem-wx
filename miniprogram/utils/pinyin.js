@@ -162,15 +162,18 @@ function annotate(clause, mode, line, at) {
   const text = String(clause || "");
   const context = line === undefined ? text : String(line || "");
   const offset = line === undefined ? 0 : Number(at) || 0;
+  /* `han` 是给界面用的：它说「这一格该按一个汉字算宽」。
+     标点在逐字排的那条路上只占半格，界面不该自己再判一次
+     （判两次就会有两套口径，拆行时一行的宽按汉字算、另一行按标点算）。 */
   if (mode === "off" || !available()) {
-    return text.split("").map((ch) => ({ ch: ch, py: "", mark: false }));
+    return text.split("").map((ch) => ({ ch: ch, py: "", mark: false, han: isHan(ch) }));
   }
 
   return text.split("").map((ch, i) => {
-    if (!isHan(ch)) return { ch: ch, py: "", mark: false };
+    if (!isHan(ch)) return { ch: ch, py: "", mark: false, han: false };
     const mark = mode === "all" ? !!readings(ch).length : needAnnotate(ch);
-    if (!mark) return { ch: ch, py: "", mark: false };
-    return { ch: ch, py: readOf(ch, context, offset + i), mark: true };
+    if (!mark) return { ch: ch, py: "", mark: false, han: true };
+    return { ch: ch, py: readOf(ch, context, offset + i), mark: true, han: true };
   });
 }
 

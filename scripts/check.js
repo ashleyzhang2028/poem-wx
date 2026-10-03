@@ -3773,13 +3773,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
      「一行到底装不装得下」是 V25 那套算式的事，两边各管一头。 */
   {
     const readerWxml = read("pages/reader/reader.wxml");
-    // 这一行的样式住在 app.wxss 的「阅读面」一节 —— 详情页与首页弹层共用一份
+    // 这一行的样式住在 app.wxss 的「阅读面」一节 —— 详情页与首页弹层共用一份。
+    // 分隔条现在**不存在**了（2026-10-03 用户说删掉），所以断言改成「没有它」：
+    // 上一版拿 .rule 当右边界，删掉之后那条恰恰会「把它加回来才绿」，
+    // 与用户要的正相反。
     const surfaceWxss = read("app.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
-    // 三组在同一个 .prefs 里。判据取「从 .prefs 到它自己那个 </view>」这一段，
-    // 上一版拿 .rule（正文那行小标题）当右边界 —— 正文现在紧跟其后，
-    // 于是它没法再当边界（首页那张卡里也没有 .rule）。
+    const readerWxss = read("pages/reader/reader.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
+    // 三组在同一个 .prefs 里，且这一行在正文**之前**。
     const prefsAt = readerWxml.indexOf('class="prefs"');
-    ok("详情页有一个 .prefs 容器，三组都在里面", prefsAt >= 0);
+    ok("详情页有一个 .prefs 容器，三组都在里面（在正文之前）", prefsAt >= 0);
+    ok("A－ A＋ 与古诗内容之间不再有「--正文--」那一行",
+      !/class="rule"/.test(readerWxml) && !/\.rule\s*\{/.test(readerWxss));
     // 右边界取 .prefs 那个容器的收尾 —— 它后面紧跟的是正文。
     // 数 `</view>` 是不行的：这一行里还嵌着两层，那个 `</view>` 先撞上的是
     // 字号的壳（上一版就是这么把 onFontUp 切掉的）。
@@ -4772,6 +4776,106 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("预览里有「首页弹层开着」那一屏",
     Object.keys(pagesCfg).some((k) => /sheet/.test(k)),
     "pages.json 里没有名字带 sheet 的那一屏");
+}
+
+/**
+ * V30. 详情页注音那一路（2026-10-03 用户的两句话）。
+ *
+ * 用户原话：
+ *
+ *   「关于所有详情页的注音，如果有一行有注音，而有一行没注音，那么没有注音的
+ *     那一行的行间距也应该和有注音的行间距一样，否则隔行间距不一，不好看」
+ *   「但凡有生字注音或者全文注音，需要确保每个汉字在 A－ A＋ 所有字号下的
+ *     汉字字间距保持一致，否则一会宽一会窄，也特别难看」
+ *
+ * 这两句是**同一件事的两面**：注音那条路的尺寸必须由常数定死，不能由
+ * 「字号乘倍数」或「min-width」这种会跟着内容走的东西撑起来。改成那样之后
+ * 它坏起来是静默的 —— 页面上看着「有点怪」，量出来才知道差多少。
+ *
+ * 所以这里守四条（每一条都做过反证，把事实改坏确认会红）：
+ *
+ *   1. **行高不叠倍数**。`.token-line` 不许有「字号 × 倍数」的 line-height；
+ *      它的高度取自 `--py-line`。上一版有 `line-height: 1.15`，
+ *      有拼音的行被「槽 + 字」再撑一次 —— 有音 81rpx、无音 53rpx。
+ *   2. **行盒是「槽 + 字身」**。--py-line = --py-slot + --py-box + 4rpx，
+ *      七档都要对得上。行里有没有拼音都撑到这个数，所以两种行一样高。
+ *   3. **拼音槽要装得下拼音**（槽 ≥ --fs-pinyin）。槽低于拼音的行高，
+ *      拼音会被 flex 对齐挤出去压到上一行的字上 —— 这一条量过，
+ *      比「行高一致」更容易被漏掉，因为它只在有拼音的行上显形。
+ *   4. **字距与字号无关**。字与字之间的空隙只能来自 `--py-gap`
+ *      （页面里不许再给 `.token` 写 margin 的左右值），
+ *      而 `--py-gap` 一档都不许跟着字号动 —— 用户要的「所有字号下
+ *      字间距保持一致」就是这一条。
+ *
+ * 与 V29 并存：V29 管的是「首页那张弹层在不在、盖不盖得住底栏」，
+ * 这一节管的是**注音那一路的数**。两者都盯着阅读面，但一个是结构、
+ * 一个是尺寸 —— 合到一处会让人以为删掉一边就等于撤掉整件事。
+ */
+{
+  /* 注音这一路的样式住在 **app.wxss** 的「阅读面」一节 —— 详情页与首页
+     那张背诵弹层共用一份（V29 第 4 条守着「别写第二份」）。所以量它的
+     尺子也要落在那一份上：量 pages/reader 只会读到一片空，然后红着报
+     「读到 0 档」—— 而真正的问题并不在那儿。 */
+  const wxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 1) 注音那条路不许有「字号乘倍数」的行高
+  const tokenLine = /\.token-line\s*\{([^}]*)\}/.exec(wxss);
+  ok("注音行的高度取自 --py-line（不是长出来的）",
+    !!tokenLine && /height\s*:\s*var\(--py-line\)/.test(tokenLine[1]),
+    tokenLine && tokenLine[1].replace(/\s+/g, " ").trim());
+  const tokenLineLH = /\.poem-line\.token-line\s*\{([^}]*)\}/.exec(wxss);
+  ok("注音那条路的行高不叠倍数（有音无音才不会差半行）",
+    !!tokenLineLH && /line-height\s*:\s*1\s*;/.test(tokenLineLH[1])
+    && !/line-height\s*:\s*[\d.]+\s*;/.test(tokenLineLH[1].replace("line-height: 1;", "")),
+    tokenLineLH && tokenLineLH[1].replace(/\s+/g, " ").trim());
+
+  // 2) 逐档：行盒 = 槽 + 字身 + 4rpx
+  const steps = [...wxss.matchAll(
+    /\.poem-body\.size(--?\d)\s*\{\s*--py-box:\s*([\d.]+)rpx;\s*--py-slot:\s*([\d.]+)rpx;\s*--py-line:\s*([\d.]+)rpx;\s*font-size:\s*([\d.]+)rpx;\s*\}/g
+  )].map((m) => ({ size: m[1], box: +m[2], slot: +m[3], line: +m[4], font: +m[5] }));
+  ok("注音七档的四个数（字身盒 / 拼音槽 / 行盒 / 字号）都在",
+    steps.length === 7, "读到 " + steps.length + " 档");
+
+  const badLine = steps.filter((s2) => s2.line !== s2.slot + s2.box + 4)
+    .map((s2) => "size" + s2.size + " " + s2.slot + "+" + s2.box + "+4≠" + s2.line);
+  ok("每一档「行盒 = 拼音槽 + 字身盒 + 上下 2rpx 呼吸」", badLine.length === 0, badLine.join(" | "));
+
+  // 3) 拼音槽要装得下拼音（槽 ≥ 2 × 注音字号）
+  const pinyinToken = /--fs-pinyin:\s*calc\(([\d.]+)rpx/.exec(
+    fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8"));
+  const pySize = pinyinToken ? +pinyinToken[1] : 0;
+  const tightSlot = steps.filter((s2) => s2.slot < pySize)
+    .map((s2) => "size" + s2.size + " 槽 " + s2.slot + "rpx < " + pySize + "rpx");
+  ok("拼音槽装得下拼音（槽 ≥ 注音字号 " + pySize + "rpx）",
+    tightSlot.length === 0, tightSlot.join(" | "));
+
+  // 4) 字距只由 --py-gap 出，且不跟字号走
+  const gap = /--py-gap:\s*([^;]+);/.exec(
+    fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8"));
+  ok("字身外的空隙由 --py-gap 一处给出", !!gap, gap ? gap[1].trim() : "找不到 --py-gap");
+  /* 字距只跟着**全局缩放**走（--ui-scale），不许跟字号档位走 ——
+     所以它的算式里只能有 ui-scale 这一个变量。 */
+  ok("--py-gap 不跟字号档位走（A－ A＋ 全程字距一致）",
+    !!gap && /^calc\([\d.]+rpx \* var\(--ui-scale\)\)$/.test(gap[1].trim()),
+    gap && gap[1].trim());
+  const tokenBlock = /\.token\s*\{([^}]*)\}/.exec(wxss);
+  ok("token 的左右空隙取自 --py-gap",
+    !!tokenBlock && /margin\s*:\s*0\s+var\(--py-gap\)/.test(tokenBlock[1]),
+    tokenBlock && tokenBlock[1].replace(/\s+/g, " ").trim());
+  ok("token 不再用 min-width 撑字宽（那会随字号跳）",
+    !!tokenBlock && !/min-width/.test(tokenBlock[1]));
+
+  // 5) 注音行的字号逐档与正文同值 —— 上一版少了这一条，
+  //    表现是「A－ A＋ 在注音模式下没有任何反应」（.tk-ch 取了基准档 --fs-poem）
+  const lineSteps = [...wxss.matchAll(/\.poem-body\.size(--?\d)\s+\.poem-line\s*\{\s*font-size:\s*([\d.]+)rpx;\s*\}/g)]
+    .map((m) => ({ size: m[1], font: +m[2] }));
+  const mismatch = steps.filter((s2) => {
+    const p = lineSteps.find((l) => l.size === s2.size);
+    return !p || p.font !== s2.font;
+  }).map((s2) => "size" + s2.size);
+  ok("注音那条路的字号逐档与正文同值（切模式不跳字号）",
+    mismatch.length === 0, mismatch.join(" | "));
 }
 
 /* ---------- 汇总 ---------- */
