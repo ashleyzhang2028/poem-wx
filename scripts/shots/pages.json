@@ -311,5 +311,14 @@
         "call": "onReveal"
       }
     ]
+  },
+  "home-minghuang": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "minghuang"
+    }
   }
 }
