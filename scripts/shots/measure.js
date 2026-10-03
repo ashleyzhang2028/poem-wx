@@ -42,6 +42,29 @@ if (!fs.existsSync(PREVIEW)) {
  * 导出的是**字体自己的度量**（advance width / em），不是某一次的渲染结果，
  * 所以能跟 --ui-scale 一起缩放，也不会因为换字号而失效。
  */
+/**
+ * 让预览按**真机的比例**量长度。
+ *
+ * 预览把 rpx 按 390 宽折算（1rpx = 0.52px），而浏览器给 15px 以下的字兜着最小字号 ——
+ * 25rpx 在预览里量出来比真机宽。注入 `html{font-size:100px;--ui-scale:1}` 之后，
+ * 1rpx 就是 0.5 × --ui-scale px，跟真机同一把尺子（容器边框再吃掉几十像素，
+ * 与 rpx 折算无关）。--layout-w 用同一比例反推，于是「一行放不放得下」量的是真机。
+ */
+async function injectRealScale(page) {
+  const uiScale = Number(process.env.UI_SCALE || 1);
+  await page.evaluate((scale) => {
+    const html = document.documentElement;
+    html.style.fontSize = "100px";
+    html.style.setProperty("--ui-scale", String(scale));
+    const w = (600 * scale) + "px";
+    document.querySelectorAll(".device").forEach((d) => {
+      d.style.setProperty("--layout-w", w);
+      const scr = d.querySelector(".screen");
+      if (scr) scr.style.setProperty("--layout-w", w);
+    });
+  }, uiScale);
+}
+
 async function dumpMetrics(page) {
   // 按**样式组合**分别导出，不是一个字体一把尺。
   //
@@ -97,6 +120,7 @@ async function dumpMetrics(page) {
     const page = await browser.newPage();
     await page.setViewport({ width: 900, height: 1200 });
     await page.goto("file://" + PREVIEW);
+    await injectRealScale(page);
     const m = await dumpMetrics(page);
     await browser.close();
     const out = path.join(__dirname, "font-metrics.json");
@@ -113,6 +137,7 @@ async function dumpMetrics(page) {
   const page = await browser.newPage();
   await page.setViewport({ width: 900, height: 1200 });
   await page.goto("file://" + PREVIEW);
+  await injectRealScale(page);
 
   const rows = await page.evaluate(() => {
     const out = [];
@@ -138,7 +163,6 @@ async function dumpMetrics(page) {
     });
     return out;
   });
-  await browser.close();
 
   const hit = rows.filter((r) => !only || r.text.includes(only));
   console.log("屏 / 类 / 文字          格宽  文字宽  左  右  圆角  折行");
@@ -156,4 +180,63 @@ async function dumpMetrics(page) {
     console.log("");
     console.log("最紧的一处：" + worst.screen + " 「" + worst.text + "」两侧各 " + worst.gapL + "px");
   }
+
+  /* ---------- 详情页那一行：注音 ｜ 对齐 ｜ 字号 ----------
+     用户这一轮的话是「详情页一行显示」。一行放不放得下**必须量** ——
+     上一版就是凭估的（把字号当 1em 宽，按 25rpx 算），排出来顶出卡片 46rpx。
+     这里把这一行的可用宽度与实际内容宽度一起打出来，溢出会标 ⚠。 */
+  await page.evaluate(() => {}).catch(() => {});
+  const rows2 = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll(".prefs").forEach((el) => {
+      const scr = el.closest("[data-screen]");
+      const cs = getComputedStyle(el);
+      const kids = [...el.children].map((c) => {
+        const r = c.getBoundingClientRect();
+        return {
+          cls: c.className.split(" ").slice(0, 2).join(" "),
+          text: (c.textContent || "").trim().slice(0, 12),
+          w: +r.width.toFixed(1),
+          h: +r.height.toFixed(1),
+        };
+      });
+      const inner = kids.reduce((a, b) => a + b.w, 0)
+        + (kids.length - 1) * (parseFloat(cs.columnGap) || 0);
+      // 内容宽度按**每个孩子自己的外框**加起来量：不在 flex 里靠 scrollWidth
+      // （写了 overflow 的容器 scrollWidth 会等于 clientWidth，漏报）
+      const contentW = kids.length ? Math.max(
+        kids.reduce((a, b) => a + b.w, 0),
+        el.scrollWidth
+      ) : 0;
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      out.push({
+        screen: scr ? scr.getAttribute("data-screen") : "?",
+        availW: +(el.clientWidth - padX).toFixed(1),
+        sumW: +(kids.reduce((a, b) => a + b.w, 0)).toFixed(1),
+        scrollW: el.scrollWidth,
+        clientW: el.clientWidth,
+        // 溢出：孩子的右边界有没有越过容器的右边界（各自量，不看 scrollWidth）
+        overflow: kids.length
+          ? +(Math.max(...[...el.children].map((c) => c.getBoundingClientRect().right))
+              - el.getBoundingClientRect().right).toFixed(1)
+          : 0,
+        minSegH: Math.min(...kids.filter((k) => k.cls.indexOf("seg") >= 0).map((k) => k.h), 99),
+        kids,
+      });
+    });
+    return out;
+  });
+
+  console.log("");
+  console.log("详情页那一行（.prefs）：可用宽 / 内容宽 / 溢出");
+  rows2.forEach((r) => {
+    console.log("  " + r.screen.padEnd(20)
+      + "可用 " + String(r.availW).padStart(6)
+      + " · 内容 " + String(r.sumW).padStart(6)
+      + " · 右边界超出 " + String(r.overflow).padStart(5) + "px"
+      + (r.overflow > 0.5 ? "  ⚠ 溢出一行" : "  ✓ 一行放得下"));
+    console.log("    " + r.kids.map((k) => k.cls + "(" + k.w + ")").join(" | "));
+  });
+
+  await browser.close();
 })();

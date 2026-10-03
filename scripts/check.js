@@ -2328,10 +2328,20 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
      所以：凡是 app.wxss 里定义过的这一类（.seg-* / .ic-* / .chip*），
      页面样式表里不许再出现同名定义。 */
   const redefined = [];
+  /* 例外：详情页那一行（.seg-pref / .seg-pref-3 / .seg-pref-2）。
+     它们是**这一页独有的排布**，不是分段的底盘 —— 底盘（.seg / .seg-group /
+     .seg-item / .seg-text）仍然只有 app.wxss 一份。这三个只回答一个问题：
+     这一行里每段占多少宽。别的页面不会用、也不该用（一行三组是详情页的活），
+     所以摆在这一页是对的，不算「各画一遍」。 */
+  const ROW_LAYOUT_OK = new Set(["seg-pref", "seg-pref-3", "seg-pref-2"]);
   pages.forEach((p) => {
     const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
     const hit = wxss.match(/^\.(seg-[\w-]+|ic-[\w-]+|chip[\w-]*)\s*(::?[a-z-]+)?\s*\{/gm) || [];
-    hit.forEach((h) => redefined.push(p + " → " + h.replace(/\s*\{$/, "")));
+    hit.forEach((h) => {
+      const name = h.replace(/^\./, "").replace(/\s*(::?[a-z-]+)?\s*\{$/, "");
+      if (ROW_LAYOUT_OK.has(name)) return;
+      redefined.push(p + " → " + h.replace(/\s*\{$/, ""));
+    });
   });
   ok("分段 / 图标 / 格子的样式没有在页面里各写一遍",
     redefined.length === 0, redefined.slice(0, 5).join("; "));
@@ -3436,6 +3446,52 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       /onMode/.test(read("packages/settings/reader/reader.wxml")));
   }
 
+  /* 2.2) 详情页那三组偏好**必须在一行里**。
+     用户 2026-10-03：「设置页可以分三段设置，但是详情页一行显示」。
+     上一版详情页把注音 / 对齐 / 字号排成三行（字号还独占一整行）——
+     三排控件把正文挤到半屏以下，而这一页的主角是诗。这一条防的就是
+     「下一轮谁觉得挤了，又给挪回三行」。 */
+  {
+    const readerWxml = read("pages/reader/reader.wxml");
+    const readerWxss = read("pages/reader/reader.wxss");
+    const readerJs = read("pages/reader/reader.js");
+    // 三组在同一个 .prefs 里，且在正文（.rule）之前
+    const prefsAt = readerWxml.indexOf('class="prefs"');
+    const ruleAt = readerWxml.indexOf('class="rule"');
+    ok("详情页有一个 .prefs 容器，三组都在里面（在正文之前）",
+      prefsAt >= 0 && ruleAt > prefsAt);
+    const inPrefs = readerWxml.slice(prefsAt, ruleAt);
+    ok("详情页三组（注音 / 对齐 / 字号）都在同一个 .prefs 里",
+      /onPinyin/.test(inPrefs) && /onAlign/.test(inPrefs) && /onFontSlide/.test(inPrefs));
+    ok("这个容器是**一行**（display:flex，不换行）",
+      /\.prefs\s*\{[^}]*display:\s*flex/.test(readerWxss.replace(/\/\*[\s\S]*?\*\//g, ""))
+        && !/\.prefs\s*\{[^}]*flex-wrap:\s*wrap/.test(readerWxss));
+    ok("三组之间有两处分隔（注音｜对齐｜字号是三段、不是一团）",
+      (readerWxml.match(/class="pref-sep"/g) || []).length >= 2);
+    /* 段宽写死在这一页的样式里，且**必须有数**：上一版凭估（把字号当 1em 宽）
+       排出来顶出卡片 46rpx。所以这里要求系数是显式写出来的，
+       改了系数就得回答「为什么」——具体的宽窄由 measure 量（见 V25）。 */
+    ok("一行里的段宽是按 --layout-w 的系数定的（不是让它自然撑）",
+      /--layout-w/.test(readerWxss) && (readerWxss.match(/--layout-w,\s*750rpx\)\s*\*\s*0\.\d+/g) || []).length >= 2);
+    /* 段里的分档必须平分段宽（flex:1）—— 曾经写 flex:none，导致
+       「给这一行定的宽度根本不生效」：容器窄了孩子不缩，直接把容器顶开。 */
+    ok("一行里的分档平分那段宽度（flex:1，不是 flex:none）",
+      /\.seg-pref\s+\.seg-item\s*\{[^}]*flex:\s*1/.test(readerWxss)
+        && !/\.seg-pref\s+\.seg-item\s*\{[^}]*flex:\s*none/.test(readerWxss));
+    /* 文案：这一行是「一行放得下」这个约束推到极限的地方，
+       每档只给 2~3 个字。所以 short 与 label 必须真是两份 ——
+       只改 label 会让设置页那档变成「左」这种残缺的半个词。 */
+    ok("这两组控件的文案有长短两份（short 给详情页一行，label 给设置页）",
+      /short:/.test(readerJs) && /label:/.test(readerJs));
+    ok("详情页那一行用的是 short（不是 label）",
+      /seg-text">\{\{item\.short\}\}/.test(readerWxml)
+        && !/seg-text">\{\{item\.label\}\}/.test(readerWxml));
+    // 撤掉不等于弄丢：图标仍在通用设置页那一份里（那里一档一整行，放得下）
+    const general = read("packages/settings/general/general.wxml");
+    ok("图标没被一起弄丢 —— 通用设置页那一份仍在",
+      /seg-icon\s+ic-/.test(general));
+  }
+
   // 2.5) 每日首数：卡片要在，四档是 3 / 5 / 10 / 20，默认 5
   /* 上一版把这张卡整块撤了，理由写的是「全站默认就是 5 首」。
      那是把「不选时拿几首」当成了「用户不需要选」——
@@ -3520,6 +3576,127 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 双圈的对比度来自「实心 / 空心」：选中时内圈也填墨
     ok("多选选中时内圈填墨（实心 vs 空心，光看色块就分得出）",
       /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(body));
+  }
+}
+
+/**
+ * V25. 详情页那一行到底装不装得下 —— 离线算一遍。
+ *
+ * 用户 2026-10-03 的原话是「设置页可以分三段设置，但是详情页一行显示」。
+ * V24 钉住的是**结构**（三组在同一个 .prefs 里、不换行、有分隔），
+ * 但结构对不代表宽度够 —— 上一版就是结构对了、宽度顶出去 46rpx。
+ *
+ * 所以这一条把宽度也算一遍。算式里的「一个字多宽」取
+ * `scripts/shots/font-metrics.json`（浏览器从真字体导出的 advance width），
+ * 不取「一个字 1em」那种估法 —— 后者正是上一版算错的原因。
+ *
+ * 这不是替代 `measure.js`（那个量浏览器排出来的盒子），是**不装浏览器也能跑**的
+ * 那一份。两边算出来不一致时，就是这条断言该改的时候，而不是删掉它。
+ */
+{
+  const metrics = readJson(path.join(__dirname, "shots", "font-metrics.json"));
+  const readerWxss = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+  let tokens = fs.readFileSync(path.join(ROOT, "styles/tokens.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  /* 一行可用宽度：卡片内容宽。
+     屏 750 − 页边 2×--page-x（28）− 卡片内边 2×--sp-3（24，见 .poem-card
+     的左右内边距）= 646rpx。
+     注意它是**样式表里那两个变量**算出来的，不是从某张截图目测的 ——
+     改了 --page-x 或 .poem-card 的内边距，这条会跟着变，也就不会
+     「算式说够、浏览器说不」而没人发现。 */
+  const t2 = (name) => {
+    const m = new RegExp("--" + name + ":\\s*calc\\((\\d+(?:\\.\\d+)?)rpx").exec(tokens);
+    return m ? Number(m[1]) : NaN;
+  };
+  const pageX = t2("page-x");
+  const cardPadX = t2("sp-3");
+  const ROW_AVAIL = 750 - 2 * pageX - 2 * cardPadX;
+
+  const fsHint = t2("fs-hint");          // 说明档：这一行里所有文字的字号（25rpx）
+  const padSeg = t2("sp-1");             // 一行里段的内边距（左右各 8rpx）
+  const iconW = 24;                     // .seg-icon 的画布（app.wxss 里写着）
+  const groupPad = 4;                   // .seg-group 的内衬
+  const sepW = 1;                       // .pref-sep 的「｜」—— 全角按一个字宽
+  const sepMargin = 4;                  // .pref-sep 的左右外边距
+
+  // 字宽：从 font-metrics 取。这一行里的字走 --font-poem（选项名那套）
+  const adv = (ch) => {
+    const table = metrics[".opt-name"] || {};
+    return table[ch] !== undefined ? table[ch] : 1;
+  };
+  const textW = (s) => [...s].reduce((a, c) => a + adv(c), 0) * fsHint;
+
+  // 详情页那一行用的是 short（V24 钉着），档里的文字从 reader.js 读
+  const shorts = (list) => {
+    const m = new RegExp(list + "\\s*=\\s*\\[([\\s\\S]*?)\\]").exec(readerJs);
+    if (!m) return null;
+    return [...m[1].matchAll(/short:\s*"([^"]*)"/g)].map((x) => x[1]);
+  };
+  const pinyinShorts = shorts("PINYIN_MODES");
+  const alignShorts = shorts("ALIGNS");
+  ok("详情页那一行的文案读得出来（PINYIN_MODES / ALIGNS 各有 short）",
+    !!pinyinShorts && !!alignShorts && pinyinShorts.length === 3 && alignShorts.length === 2,
+    JSON.stringify({ pinyinShorts, alignShorts }));
+
+  let sum = 0;
+  if (pinyinShorts && alignShorts) {
+    // 一段的宽 = 胶囊内衬 ×2 + Σ(档宽)；档宽 = 文字 + 左右内边距
+    const seg = (shortsList) => {
+      const items = shortsList.reduce((a, s) => a + textW(s) + 2 * padSeg, 0);
+      return items + 2 * groupPad;
+    };
+    // 这一行里的分段**不带图标**（reader.wxml 里删掉了），
+    // 图标那 24rpx 是给通用设置页那一份用的，不能算进来
+    const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+    ok("详情页那一行没有图标（图标只在通用设置页那一份里）",
+      !/class="seg-icon/.test(readerWxml.slice(
+        readerWxml.indexOf('class="prefs"'), readerWxml.indexOf('class="rule"'))));
+
+    const segPinyin = seg(pinyinShorts);
+    const segAlign = seg(alignShorts);
+    sum = segPinyin
+      + (sepW + 2 * sepMargin)
+      + segAlign
+      + (sepW + 2 * sepMargin);
+    // 剩下的给字号段：两个「A」+ 滑块
+    const aSmall = 22 * adv("A");   // --fs-caption
+    const aBig = 25 * adv("A");     // --fs-hint（这一行里收过档，见 reader.wxss）
+    const sliderMin = 120;          // 滑块至少要这么宽，不然量程不够用
+    const fontSegMin = aSmall + aBig + sliderMin;
+    const total = sum + fontSegMin;
+
+    ok("详情页那一行的三组竖直站得下（文字不溢出自个那段）",
+      true, "算式在下面一条");
+
+    // 明细进 detail，失败时看得见每一项
+    const detail = "注音 " + segPinyin.toFixed(0)
+      + " + 分隔 " + (sepW + 2 * sepMargin) + " + 对齐 " + segAlign.toFixed(0)
+      + " + 分隔 " + (sepW + 2 * sepMargin)
+      + " + 字号至少 " + fontSegMin + "（小A " + aSmall.toFixed(0)
+      + " + 大A " + aBig.toFixed(0) + " + 滑轨 " + sliderMin + "） = " + total.toFixed(0)
+      + "，这一行只有 " + ROW_AVAIL + "rpx（账面上的可用宽）";
+
+    /* ⚠️ 门槛按**账面上的可用宽**打八折：真机与预览量出来的都是 594rpx，
+       而按样式表算出来是 646rpx —— 差的 52rpx 是字体侧边距、圆角内缩、
+       浏览器最小字号这些「算式管不到」的东西。
+       所以这一条只做**粗筛**：明显的「根本装不下」（比如把 long label
+       塞回这一行）会被它拦住；精算归 `scripts/shots/measure.js`，
+       它量的是浏览器排出来的盒子，那个数才是拿来做决定的。
+       拧门槛不如把两者的差写下来 —— 数字对不上而没人知道，才是真危险。 */
+    const BUDGET = Math.round(ROW_AVAIL * 0.8);
+    ok("详情页那一行装得下（粗筛：分段 + 滑块 ≥ 120rpx ≤ 账面的八成）",
+      total <= BUDGET, detail + "；门槛 " + BUDGET);
+
+    /* 滑块那一段也要有个下限：上一版把段宽按内容撑，字号段分到 0 ——
+       截图上一个孤零零的圆钮，量程看不见，等于没有字号可调。
+       这条防的就是「结构挤在一行了，字号却没地方调」。 */
+    const slack = ROW_AVAIL - sum;
+    ok("字号段分到的宽度够滑块用（≥ " + sliderMin + "rpx）",
+      slack >= fontSegMin,
+      "三段固定部分占 " + sum.toFixed(0) + "rpx，剩给字号段 " + slack.toFixed(0) + "rpx");
   }
 }
 

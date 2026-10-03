@@ -127,10 +127,10 @@ const NATIVE_CSS = `
 .n-switch.on{background:#1c1c1e}
 .n-switch-k{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s}
 .n-switch.on .n-switch-k{left:22px}
-.n-slider{position:relative;height:28px;display:flex;align-items:center;width:100%}
-.n-slider::before{content:"";position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#ececef}
-.n-slider-fill{position:absolute;left:0;height:4px;border-radius:2px;background:#1c1c1e}
-.n-slider-knob{position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translateX(-50%)}
+.n-slider{position:relative;height:28px;display:flex;align-items:center;width:100%;--n-slider-inset:10px}
+.n-slider-track{position:relative;height:4px;border-radius:2px;background:#ececef;width:100%;margin:0 var(--n-slider-inset)}
+.n-slider-fill{position:absolute;left:0;top:0;height:4px;border-radius:2px;background:#1c1c1e}
+.n-slider-knob{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
 .n-ph{color:#9ca3af}
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
 .n-image{width:56px;height:56px;border-radius:50%;background:#f2f2f4}
@@ -159,7 +159,9 @@ body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei
 
 /** page{} 那套变量与底色，得挂到 .screen 上才生效 */
 function screenCss(cfg, pageCss) {
-  const raw = TOKENS + APP_CSS + COMP_CSS + NATIVE_CSS + pageCss;
+  const raw = TOKENS + APP_CSS + COMP_CSS + NATIVE_CSS + pageCss
+    // 供 shoot.js / measure.js 覆盖的排版宽度（见 README「预览自己也会骗人」第 3 条）
+    + "\n.screen{--layout-w:100%;}";
   // page{} 是小程序的根选择器，预览里对应 .screen。
   //
   // ⚠️ 这里用 (?<![\w.-]) 而不是 \b 开头，是被一个真 bug 教会的：
