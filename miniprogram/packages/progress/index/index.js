@@ -2,6 +2,7 @@ const corpus = require("../../../utils/corpus");
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const gate = require("../../../utils/gate");
+const theme = require("../../../utils/theme");
 
 const SPAN = 7;
 
@@ -26,6 +27,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

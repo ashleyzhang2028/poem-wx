@@ -1,4 +1,4 @@
-<view class="page has-tabbar">
+<view class="page has-tabbar" style="{{themeStyle}}">
   <!-- 身份卡：回答「我是谁、我这一档能做什么」。
        头像点一下就换 —— chooseAvatar 是平台给的「换头像」能力，
        它同时给了微信头像与相册两条路，所以这一个入口两件事都办了。 -->
@@ -127,6 +127,14 @@
       <view class="row-main">
         <text class="row-title">通用设置</text>
         <text class="row-sub">对齐 · 字号</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+      <view class="row-icon">色</view>
+      <view class="row-main">
+        <text class="row-title">主题色</text>
+        <text class="row-sub">{{themeName}}</text>
       </view>
       <text class="row-go">›</text>
     </view>

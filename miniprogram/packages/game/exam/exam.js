@@ -2,6 +2,7 @@ const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
+const theme = require("../../../utils/theme");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -44,6 +45,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     const ok = entitlement.can("exam");
     this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("exam") });
     if (!ok || this.ready) return;

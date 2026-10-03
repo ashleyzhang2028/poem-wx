@@ -1,5 +1,6 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
+const theme = require("../../../utils/theme");
 
 /**
  * 古诗词大会 —— 这一屏是**目录**，只列三张入口卡，不在这里出题。
@@ -33,6 +34,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       this.setData({ locked: true, cards: [] });
       return;

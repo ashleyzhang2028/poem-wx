@@ -2,6 +2,7 @@ const quiz = require("../../../utils/quiz");
 const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
+const theme = require("../../../utils/theme");
 
 const COUNT = 10;
 
@@ -36,6 +37,7 @@ Page({
    * 页面就会卡在锁着的样子。从分享链接直接进来的也要过这一关。
    */
   onShow() {
+    theme.apply(this);
     const ok = entitlement.can("quiz");
     this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("quiz") });
     if (!ok || this.ready) return;

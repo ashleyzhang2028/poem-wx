@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="{{themeStyle}}">
   <view class="page-head">
     <text class="head-title">版式</text>
   </view>
@@ -12,7 +12,7 @@
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
-                 color="#1c1c1e" />
+                 color="{{themeHex}}" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -26,7 +26,7 @@
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="22" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
+              block-size="22" block-color="{{themeHex}}" activeColor="{{themeHex}}" backgroundColor="#ececef"
               bindchanging="onFontSlide" bindchange="onFontSlide" />
       <text class="font-a big">A</text>
     </view>
@@ -39,7 +39,7 @@
       <view class="row-main">
         <text class="row-title">背完自动下一首</text>
       </view>
-      <switch checked="{{autoNext}}" color="#1c1c1e" bindchange="onAutoNext" />
+      <switch checked="{{autoNext}}" color="{{themeHex}}" bindchange="onAutoNext" />
     </view>
   </view>
 

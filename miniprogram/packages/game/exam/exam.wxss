@@ -106,8 +106,8 @@
    但**不说是对是错** —— 对错要等交卷。用的是与「选一个」同一块填色，
    于是「我选了它」这件事在整个 app 里只有一种说法。 */
 .option.picked {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
   color: var(--on-ink);
   font-weight: 600;
 }
@@ -137,7 +137,7 @@
   font-family: var(--font-num);
   font-size: var(--fs-score);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -210,7 +210,7 @@
   min-width: 0;
   font-family: var(--font-poem);
   font-size: var(--fs-title);
-  color: var(--ink);
+  color: var(--strong-text);
   line-height: 1.7;
 }
 

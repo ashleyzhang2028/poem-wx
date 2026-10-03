@@ -1,4 +1,4 @@
-<view class="page reader">
+<view class="page reader" style="{{themeStyle}}">
   <!-- 未登录：整页只有一句话和去登录的按钮，正文一个字都不渲染 -->
   <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" />
 
@@ -47,7 +47,7 @@
     <view class="prefs">
       <radio-group class="pref-seg" bindchange="onAlign">
         <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="#1c1c1e" />
+          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="{{themeHex}}" />
           <text class="pref-t">{{item.label}}</text>
         </label>
       </radio-group>
@@ -56,7 +56,7 @@
 
       <radio-group class="pref-seg" bindchange="onPinyin">
         <label class="pref-opt {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="#1c1c1e" />
+          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="{{themeHex}}" />
           <text class="pref-t">{{item.label}}</text>
         </label>
       </radio-group>

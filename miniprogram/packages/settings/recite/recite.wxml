@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="{{themeStyle}}">
   <!-- 领读词与别页同一长相：一句「这一屏管什么」的短话，**不重复导航栏标题**
        （导航栏已经写着「背诵设置」，页头再写一遍就是同一句话说两次）。
        上一版这里是「背诵范围」，那时这一屏只有范围那一张卡；
@@ -22,7 +22,7 @@
     <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">
       <label class="chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key">
         <radio class="seg-radio" value="{{item.key}}" checked="{{stage === item.key}}"
-               color="#1c1c1e" />
+               color="{{themeHex}}" />
         <text class="chip-t">{{item.name}}</text>
       </label>
     </radio-group>
@@ -56,7 +56,7 @@
     <radio-group class="chip-group cols-3" data-k="grade" bindchange="onGrade">
       <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
         <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
-               color="#1c1c1e" />
+               color="{{themeHex}}" />
         <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
@@ -64,7 +64,7 @@
     <radio-group class="chip-group cols-2" data-k="term" bindchange="onTerm">
       <label class="chip {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
         <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
-               color="#1c1c1e" />
+               color="{{themeHex}}" />
         <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>
@@ -104,7 +104,7 @@
          前几行占满了，奇数项在两列里必然留一个孤格（Issue 记一笔）。 -->
     <radio-group class="opt-group inline cols-2" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
-        <radio class="opt-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
+        <radio class="opt-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="{{themeHex}}" />
         <view class="opt-main">
           <text class="opt-name">{{item.label}}</text>
         </view>
@@ -121,7 +121,7 @@
          不选的时候拿几首，不等于用户不需要选。选项是 3 / 5 / 10 / 20。 -->
     <radio-group class="chip-group cols-4" bindchange="onCount">
       <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
-        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="#1c1c1e" />
+        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="{{themeHex}}" />
         <text class="chip-t">{{item}} 首</text>
       </label>
     </radio-group>
@@ -134,7 +134,7 @@
       <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
              wx:for="{{algos}}" wx:key="key">
         <radio class="opt-radio" value="{{item.key}}" checked="{{item.active}}"
-               disabled="{{!item.allowed}}" color="#1c1c1e" />
+               disabled="{{!item.allowed}}" color="{{themeHex}}" />
         <view class="opt-main">
           <text class="opt-name">{{item.name}}</text>
           <text class="opt-desc" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>

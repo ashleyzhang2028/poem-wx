@@ -112,7 +112,7 @@
   font-family: var(--font-num);
   font-size: var(--fs-score);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -132,7 +132,7 @@
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-title);
-  color: var(--ink);
+  color: var(--strong-text);
   margin-bottom: 10rpx;
   line-height: 1.7;
 }

@@ -43,7 +43,7 @@
 }
 
 .tab.on {
-  color: #1c1c1e;
+  color: var(--strong-text);
 }
 
 .tab.on .tab-text {
@@ -62,8 +62,11 @@
 }
 
 .tab.on .tab-ico {
-  background: #1c1c1e;
-  --ic: #ffffff;
+  background: var(--strong);
+  /* 压在圆底上的图标色**跟着主题给**（--on-ink）——
+     写死白色的话，月白 / 明黄 / 藕荷这几个浅色主题上
+     白图标会糊在浅色圆底里，等于看不出选中。 */
+  --ic: var(--on-ink);
 }
 
 /* 图标画在圆底**内**：给圆底留出内边距，选中时笔画才不会贴到圆边上 */

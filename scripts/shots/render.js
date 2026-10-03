@@ -190,7 +190,7 @@ function expandComponents(node, data, P) { return node; }
  * （.tab-ico-book 这些类来自 custom-tab-bar/index.wxss，已并进 COMP_CSS），
  * 只要类名对得上，形状就是真的。V 组断言守着两边类名一致。
  */
-function tabBarHtml(active) {
+function tabBarHtml(active, themeStyle) {
   const list = [
     { text: "背诵", icon: "book" },
     { text: "课外", icon: "stack" },
@@ -201,7 +201,15 @@ function tabBarHtml(active) {
     `<div class="tab ${i === active - 1 ? "on" : ""}">`
     + `<div class="tab-ico tab-ico-${it.icon}"></div>`
     + `<div class="tab-text">${it.text}</div></div>`).join("");
-  return `<div class="tabbar">${items}</div>`;
+  // 真机上底栏组件自己在 attached/setActive 里读主题（见 custom-tab-bar/index.js）。
+  // 预览这一份是照结构手写的，所以主题也得手写传进来 —— 少传一次，
+  // 截图里底栏就永远是墨黑，「换了主题底栏跟不跟」这件事看不见。
+  return `<div class="tabbar" style="${themeStyle || ""}">${items}</div>`;
+}
+
+/** 页面 data 里那份主题内联样式（theme.js 的 apply 塞进去的），预览底栏照抄一份 */
+function themeStyleOf(data) {
+  return (data && data.themeStyle) || "";
 }
 
 function pageHtml(cfg, data) {
@@ -242,7 +250,7 @@ function pageHtml(cfg, data) {
   <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>
   <div class="screen"><style>${screenCssStr}</style>${body}</div>
   <div class="caption">${cfg.key}</div>
-  ${cfg.tab ? tabBarHtml(cfg.tab) : ""}
+  ${cfg.tab ? tabBarHtml(cfg.tab, themeStyleOf(data)) : ""}
   </div>`;
 }
 

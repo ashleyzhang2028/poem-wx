@@ -1,6 +1,7 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const gate = require("../../utils/gate");
+const theme = require("../../utils/theme");
 
 /* 筛选只有两个值，做成图标分段（样式见 app.wxss「分段控件」）——
    一排两个圆圈加两个字，在列表页顶上是白占一行。 */
@@ -38,6 +39,7 @@ Page({
    * 页面就会卡在锁着的样子，用户以为登录没生效。
    */
   onShow() {
+    theme.apply(this);
     // 未登录：连书目本身都不给看 —— 「课外十七部」是 free 档的 library 能力，
     // 不在首页那一屏里。首页那几行的目录才是唯一给未登录看的。
     if (!gate.logged()) {

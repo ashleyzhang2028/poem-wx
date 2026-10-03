@@ -1,0 +1,116 @@
+/* 九宫格色卡。
+   三列，一格一个色 —— 与背诵设置页那些「一格一个选项」同一条口径
+   （--radius-ctl + 一道描边），只是这里的「色」本身就是内容。 */
+.swatch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding-top: var(--sp-1);
+}
+
+.swatch {
+  width: calc((100% - var(--sp-3) * 2) / 3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* 按下反馈：色块缩一点。V4 要求每个可点的东西都有——色卡也不例外 */
+.swatch-hover {
+  opacity: .84;
+}
+
+.swatch-hover .swatch-chip {
+  transform: scale(.96);
+}
+
+/* 色块：一枚方块，里面就是对勾。
+   选中与否不靠外圈那一道边说 —— 靠对这枚方块的加重 + 对勾，
+   与 .chip.on 同一条「选中 = 有明确标记」的规矩。 */
+.swatch-chip {
+  width: 100%;
+  height: 96rpx;
+  border-radius: var(--radius-ctl);
+  background: var(--sw);
+  border: 1rpx solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--t-press), box-shadow var(--t-press);
+}
+
+/* 选中的那枚：套一圈对比色描边。
+   用 box-shadow 画，不吃盒模型 —— 内描边会把 96rpx 的色块啃掉一圈，
+   色差肉眼看得出来。描边色取「压在这个色上的字色」：
+   墨黑上画白圈、明黄上画深圈，九种色下都看得见。 */
+.swatch.on .swatch-chip {
+  box-shadow: 0 0 0 4rpx var(--sw-on);
+}
+
+.swatch-tick {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--sw-on);
+  line-height: 1;
+}
+
+.swatch-name {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+/* 选中的那个名字压深一档并加重 —— 它是当前值，不是「又一项」 */
+.swatch.on .swatch-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- 样例区 ----------
+   这三块是**展示**，不是控件：它们不可点，所以不套 .btn / .seg-item
+   （套了就变成「看着能点、其实点不动」的假控件 —— 比没有更糟）。
+   造型照着真控件来，配色只取主题那一支。 */
+.demo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+}
+
+.demo-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--h-btn);
+  border-radius: var(--radius-ctl);
+  background: var(--strong);
+  color: var(--on-ink);
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: var(--ls-title);
+}
+
+.demo-btn.ghost {
+  background: var(--surface);
+  color: var(--ink-2);
+  border: 1rpx solid var(--line-strong);
+  font-weight: 500;
+}
+
+.demo-pill {
+  width: 96rpx;
+  height: 56rpx;
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+}
+
+.demo-pill.on {
+  background: var(--strong);
+}
+
+.demo-note {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}

@@ -4,6 +4,7 @@ const S = require("../../utils/scheduler");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
+const theme = require("../../utils/theme");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "加背", optional: "自选" };
 
@@ -51,6 +52,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     // 自绘底栏：切到本页时把自己那一格点亮
     tabbar.sync(this, 0);
     this.setData({ todayLabel: todayLabel() });

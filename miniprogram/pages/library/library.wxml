@@ -1,4 +1,4 @@
-<view class="page has-tabbar">
+<view class="page has-tabbar" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="课外阅读" note="登录后才能看" mark="阅" />
 
   <block wx:else>

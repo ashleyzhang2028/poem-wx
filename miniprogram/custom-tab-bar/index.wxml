@@ -1,7 +1,7 @@
 <!-- 自绘底栏：图标在上、文字在下。图标全用 CSS 画（见 index.wxss）。
      选中的那一项：图标嵌进一块墨黑圆底 + 文字加重 —— 与页面里
      「选中 = 填墨黑」同一条规矩，一眼扫得出当前在哪一栏。 -->
-<view class="tabbar">
+<view class="tabbar" style="{{themeStyle}}">
   <view class="tab {{active === index ? 'on' : ''}}"
         wx:for="{{list}}" wx:key="pagePath"
         data-index="{{index}}" bindtap="onTap">

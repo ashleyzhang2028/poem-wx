@@ -34,6 +34,8 @@ const DEFAULTS = {
   // 阅读器偏好
   align: "center",
   fontSize: 0,
+  // 主题色（Issue #26）。默认那一支墨 —— utils/theme.js 是这份清单的出处
+  theme: "ink",
   pinyin: "rare",
   autoNext: false,
   // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）

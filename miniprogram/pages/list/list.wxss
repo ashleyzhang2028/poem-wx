@@ -82,7 +82,7 @@
   font-family: var(--font-poem);
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }
 

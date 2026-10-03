@@ -1,0 +1,53 @@
+<view class="page" style="{{themeStyle}}">
+  <view class="page-head">
+    <text class="head-title">外观</text>
+    <text class="head-sub">{{currentName}}</text>
+  </view>
+
+  <lock-card wx:if="{{locked}}" title="设置要登录" note="登录后才能改" mark="设" />
+
+  <block wx:else>
+  <view class="card">
+    <view class="card-title bar">主色</view>
+    <!-- 九宫格色卡。一格一个色，选中的那格套一圈对比色描边 + 一枚对勾。
+         色块自己就是「选中会变成什么样」的预览，不用另写说明。 -->
+    <view class="swatch-grid">
+      <view class="swatch {{theme === item.key ? 'on' : ''}}"
+            wx:for="{{items}}" wx:key="key"
+            style="--sw:{{item.hex}};--sw-on:{{item.on}}"
+            hover-class="swatch-hover" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onPick">
+        <view class="swatch-chip">
+          <text class="swatch-tick" wx:if="{{theme === item.key}}">✓</text>
+        </view>
+        <text class="swatch-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">效果</view>
+    <!-- 三个样例，就地看主色落在哪儿：按钮底、选中块、列表标题。
+         它们是展示用的，不可点 —— 所以用 .demo-* 而不是 .btn / .seg-item，
+         免得它们是「看起来能点其实点不动」的假控件。 -->
+    <view class="demo-row">
+      <view class="demo-btn">开始背</view>
+      <view class="demo-btn ghost">稍后</view>
+    </view>
+    <view class="demo-row">
+      <view class="demo-pill on"></view>
+      <view class="demo-pill"></view>
+      <text class="demo-note">选中态</text>
+    </view>
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">列表主标题</text>
+        <text class="row-sub">副题不动，仍是灰的</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  </block>
+</view>

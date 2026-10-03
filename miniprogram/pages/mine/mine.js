@@ -7,6 +7,7 @@ const pinyin = require("../../utils/pinyin");
 const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
+const theme = require("../../utils/theme");
 
 Page({
   data: {
@@ -47,6 +48,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     // 自绘底栏：切到本页时把自己那一格点亮
     tabbar.sync(this, 3);
     this.refresh();
@@ -77,6 +79,8 @@ Page({
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
+      // 主题色那一行的副题就是当前色的名字（「天青」这类），当场知道选的是哪个
+      themeName: theme.currentTheme().name,
       dailyCount: settings.dailyCount,
       stats,
       tierLabel: e.label,
@@ -208,6 +212,10 @@ Page({
 
   onSettings() {
     wx.navigateTo({ url: "/packages/settings/general/general" });
+  },
+
+  onTheme() {
+    wx.navigateTo({ url: "/packages/settings/theme/theme" });
   },
 
   onRecite() {

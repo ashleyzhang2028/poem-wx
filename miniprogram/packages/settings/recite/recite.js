@@ -3,6 +3,7 @@ const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
+const theme = require("../../../utils/theme");
 
 /* 学段三格。顺序由 scheduler 给（小学 → 初中 → 高中）。
    （这里原来还有一份「十二个年级」的常量 —— 学段那一格补上之后，
@@ -56,6 +57,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

@@ -167,7 +167,7 @@
 }
 
 .pref-opt.on {
-  background: var(--ink);
+  background: var(--strong);
 }
 
 .pref-t {
@@ -332,8 +332,8 @@
 
 .act.good {
   color: var(--on-ink);
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
 .act-label {
