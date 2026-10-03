@@ -7,7 +7,9 @@ Page({
     theme: theme.DEFAULT,
     themeStyle: "",
     currentName: "",
-    locked: false
+    locked: false,
+    /** 「效果预览」那一块默认收起来 —— 见 theme.wxml 里那段注释 */
+    showPreview: false
   },
 
   onShow() {
@@ -18,6 +20,10 @@ Page({
       locked: !gate.logged()
     });
     theme.apply(this);
+  },
+
+  onTogglePreview() {
+    this.setData({ showPreview: !this.data.showPreview });
   },
 
   onPick(e) {

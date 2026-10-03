@@ -55,17 +55,25 @@
 
     <view class="card">
       <text class="stem">{{current.stem}}</text>
-      <text class="hint stem-sub">出自《{{current.title}}》</text>
+      <!-- 一行读数：题型 · 出自《…》（见 exam.js 的 metaLineOf）。
+           上一版这里是两行两样式 —— 题干上方一枚彩色题型标签，
+           下面一行灰字出处。它们说的是同一件事，颜色也不是读数。 -->
+      <text class="hint stem-sub">{{metaLine}}</text>
     </view>
 
     <!-- 答题途中**不告诉对错**：选项只有「没选 / 选了」两态。
          用户原话是「所有题目答完后再给分给对错」——
          当场判对错会让人一边答一边改心态，而考试的用法恰恰是先答完再看。
-         选中的当下要看得见（不然不知道点着没有），所以留了 .picked。 -->
+         选中的当下要看得见（不然不知道点着没有），所以留了 .picked。
+
+         选项左边一枚 A B C D 的脚标字母：四个选项长得一样，
+         没有序号时「第三个」这种指法在两边指的不是同一条。
+         `data-v` 传的仍是**没有字母的原文** —— 判分比的是原文。 -->
     <view class="options">
-      <view class="option {{item === picked ? 'picked' : ''}}"
-            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick">
-        {{item}}
+      <view class="option {{item.text === picked ? 'picked' : ''}}"
+            wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
+        <text class="option-k">{{item.key}}</text>
+        <text class="option-t">{{item.text}}</text>
       </view>
     </view>
 

@@ -83,10 +83,14 @@
   margin-top: var(--sp-1);
 }
 
+/* 一格选项 = 一枚 A B C D 的脚标 + 正文。左对齐 ——
+   四个选项的字数差得很远（「秦观」两个字 vs 一句七言），居中排时
+   每一格的起点都不一样，扫下来是锯齿。左对齐之后字母齐成一条竖线，
+   读的是「A 是什么、B 是什么」。 */
 .option {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--sp-2);
   min-height: var(--h-act);
   background: var(--card);
   border: 1rpx solid var(--line-2);
@@ -94,8 +98,25 @@
   padding: var(--sp-3);
   font-size: var(--fs-body);
   color: var(--ink);
-  text-align: center;
+  text-align: left;
   transition: transform var(--t-press), background-color var(--t-press), border-color var(--t-press);
+}
+
+/* 脚标字母：它是**序号**，不是内容 —— 比正文小一档、浅一档。
+   它跟着选项一起被打乱（见 utils/quiz.js 的 lettered）——
+   字母是选项自带的，不是模板按下标画上去的，所以「看着是 B = 选中的是 B」。 */
+.option-k {
+  flex: none;
+  width: 32rpx;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.option-t {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
 }
 
 .option:active {
@@ -112,11 +133,23 @@
   font-weight: 600;
 }
 
+/* 选中时那枚字母跟着翻白。它原来是 --ink-3（灰），压在墨底上就糊了 ——
+   「选中了哪一条」这件事在字母上也要看得见。 */
+.option.picked .option-k {
+  color: var(--on-ink-soft);
+}
+
 .option.right {
   border-color: var(--green);
   background: var(--green-light);
   color: var(--green);
   font-weight: 600;
+}
+
+.option.right .option-k,
+.option.wrong .option-k {
+  color: inherit;
+  opacity: .72;
 }
 
 .option.wrong {

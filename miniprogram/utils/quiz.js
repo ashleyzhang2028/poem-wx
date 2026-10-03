@@ -8,12 +8,25 @@
  */
 const corpus = require("./corpus");
 
+/* 题型清单。**没有颜色这一栏** —— 上一版每个题型配了一个色
+   （接下句 / 接上句绿、认作者 / 认篇名琥珀、填朝代蓝），显示成答题屏上
+   题干上方那枚小标签。用户 2026-10-03 的要求是「标题、选项、设置、内容
+   都专业精简」，而一枚彩色标签既不是读数也不是选择，只是一句广告词：
+
+     · 它与题干下面那行「出自《春晓》」说的是**同一件事**（这道题在问什么），
+       两行合成一行就够 —— 像详情页的身份行那样，用「·」断开。
+     · 颜色在别处是**状态**（绿=对、红=错、琥珀=待办），借给题型用，
+       同一屏里就多出三种「不说话的颜色」。
+     · 五个题型里三个撞色（绿×2、琥珀×2），本来也分不开谁是谁。
+
+   所以标签撤掉，读数并进出处那一行；`color` 这个字段一并删掉，
+   免得后来的人再照抄一份。 */
 const FORMS = [
-  { key: "next", name: "接下句", color: "green" },
-  { key: "prev", name: "接上句", color: "green" },
-  { key: "author", name: "认作者", color: "amber" },
-  { key: "dynasty", name: "填朝代", color: "blue" },
-  { key: "title", name: "认篇名", color: "amber" }
+  { key: "next", name: "接下句" },
+  { key: "prev", name: "接上句" },
+  { key: "author", name: "认作者" },
+  { key: "dynasty", name: "填朝代" },
+  { key: "title", name: "认篇名" }
 ];
 
 const FORM_KEYS = FORMS.map((f) => f.key);
@@ -89,7 +102,7 @@ function makeQuestion(form, p, lines, pool) {
       stem: lines[idx],
       title: p.t,
       answer,
-      options: shuffle([answer].concat(distractors)),
+      options: lettered(shuffle([answer].concat(distractors))),
       id: p.id
     };
   }
@@ -107,7 +120,7 @@ function makeQuestion(form, p, lines, pool) {
       stem: lines[idx],
       title: p.t,
       answer,
-      options: shuffle([answer].concat(distractors)),
+      options: lettered(shuffle([answer].concat(distractors))),
       id: p.id
     };
   }
@@ -122,7 +135,7 @@ function makeQuestion(form, p, lines, pool) {
       stem: pick(lines),
       title: p.t,
       answer: p.t,
-      options: shuffle([p.t].concat(distractors)),
+      options: lettered(shuffle([p.t].concat(distractors))),
       id: p.id
     };
   }
@@ -137,7 +150,7 @@ function makeQuestion(form, p, lines, pool) {
       stem: pick(lines),
       title: p.t,
       answer: p.a,
-      options: shuffle([p.a].concat(distractors)),
+      options: lettered(shuffle([p.a].concat(distractors))),
       id: p.id
     };
   }
@@ -151,9 +164,36 @@ function makeQuestion(form, p, lines, pool) {
     stem: p.a,
     title: p.t,
     answer: p.d,
-    options: shuffle([p.d].concat(distractors)),
+    options: lettered(shuffle([p.d].concat(distractors))),
     id: p.id
   };
+}
+
+/**
+ * 四个选项配上脚标字母 A B C D。
+ *
+ * 为什么要有：选项之间**没有任何序号**时，用户指着屏幕说「第三个」、
+ * 我们回一句「你选的那个」，两边说的不是同一个东西；四个选项还长得
+ * 一模一样（都是白底描边的一条），扫一遍才知道要找的是哪个。
+ *
+ * 为什么字母是**选项自带的**、而不是渲染时按下标画上去的：
+ * `options` 是判分用的那一份数据（`judge` 拿 `picked === answer` 比），
+ * 下标一挪，判分就错位。字母随选项一起生成、一起被打乱，
+ * 就永远是「看着是 B 的那一条 = 选中的是 B」。
+ *
+ * 字母也**不写进 `answer`**：判分比的是原文，不是印在屏幕上的那三个字。
+ * 传字母只传到 `optionRows`（给模板遍历用的那一份）。
+ */
+function lettered(options) {
+  return options.map((v, i) => ({ key: "ABCD"[i] || String(i + 1), text: v }));
+}
+
+/**
+ * 选项 ⇒ 模板要的那一份。字母是**看着的那个**，text 是**判分用的那个**。
+ */
+function optionRows(list) {
+  return (list || []).map((v) =>
+    typeof v === "string" ? { key: "", text: v } : { key: v.key || "", text: v.text });
 }
 
 function sampleFrom(pool, excludeId, n, project) {
@@ -196,4 +236,4 @@ function formOf(key) {
   return FORMS.find((f) => f.key === key) || FORMS[0];
 }
 
-module.exports = { FORMS, FORM_KEYS, formOf, build, judge };
+module.exports = { FORMS, FORM_KEYS, formOf, build, judge, optionRows };
