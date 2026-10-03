@@ -123,6 +123,12 @@ const NATIVE_CSS = `
    到这里就失效了：再留着，守的是已经不存在的东西。 */
 .pref-item .n-radio,.pref-item .n-checkbox{transform:scale(.8)}
 .char .n-radio{position:absolute;right:2rpx;top:2rpx;transform:scale(.56);transform-origin:right top;margin-right:0}
+/* 视觉隐藏的原生控件（.opt-radio / .seg-radio）在预览里也得**真的不占位**：
+   真机上它们的宽高是 1rpx，页面的 flex 排布里等于「不存在」。
+   这里如果漏了这条，预览里的每个选项都会多出 23px 的圆圈 ——
+   于是「详情页那一行到底放不放得下」在预览里永远量不准
+   （Issue #26 花了三次才找到这里：算式说 502、浏览器说 626）。 */
+.opt-radio,.seg-radio{position:absolute;width:1rpx;height:1rpx;opacity:0;pointer-events:none}
 .n-switch{width:51px;height:31px;border-radius:31px;background:#e5e5e5;position:relative;flex:none}
 .n-switch.on{background:#1c1c1e}
 .n-switch-k{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s}
