@@ -384,8 +384,16 @@ cases.forEach((cfg) => {
     saveProfile(cfg.saveProfile || { logged: !!cfg.logged, nickname: cfg.logged ? "张敏" : "", avatarUrl: "" });
     // 预览要能看「注音开着 / 左对齐」这些状态：settings 直接写进本机存储
     if (cfg.settings) storeMod.saveSettings(cfg.settings); else storeMod.saveSettings({});
-    // 预览主题：THEME 指定时把它写进设置，页面 onShow 里读到、跟着换
-    if (THEME) storeMod.saveSettings({ theme: THEME });
+    /* 预览主题，**两处来源，屏幕自己那份优先**：
+       · pages.json 里某一屏写了 settings.theme（例如 home-tianqing）—— 那一屏就那个色
+       · THEME 环境变量是**没写 theme 的那些屏**的默认值
+       踩过的一个坑：原来这里是无条件 `if (THEME) saveSettings({theme: THEME})`，
+       于是只要外面带上 THEME，pages.json 里那几屏**各自指定的主题全被盖掉** ——
+       `THEME=zhuhong node render.js` 之后，home-minghuang 那屏其实画的是朱红。
+       图还照样出得来、caption 也写着 minghuang，只有颜色是错的 ——
+       这种「图在、名字对、内容是别的」比没有图更糟，所以这里按屏判一次。 */
+    const screenTheme = (cfg.settings && cfg.settings.theme) || THEME;
+    storeMod.saveSettings({ theme: screenTheme });
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {
