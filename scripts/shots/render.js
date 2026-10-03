@@ -25,6 +25,8 @@ global.wx = {
 };
 
 /* ---------- 1. 跑页面 ---------- */
+let CURRENT = null;
+
 function runtime() {
   const saved = { Page: global.Page, Component: global.Component, getApp: global.getApp, getCurrentPages: global.getCurrentPages };
   Object.assign(global.wx, {
@@ -59,8 +61,11 @@ function runtime() {
         if (cb) cb();
       };
       ["onLoad", "onShow"].forEach((fn) => { if (typeof page[fn] === "function") page[fn].call(page, query || {}); });
+      CURRENT = page;
       return page.data;
     },
+    /* 让预览能接着页面往下走一步（拍「答题中 / 交卷后」这类状态） */
+    current() { return CURRENT; },
     done() { Object.assign(global, { Page: saved.Page, Component: saved.Component, getApp: saved.getApp, getCurrentPages: saved.getCurrentPages }); }
   };
 }
@@ -266,6 +271,17 @@ cases.forEach((cfg) => {
     }
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
+    /* 「答题中」这类**中途状态**得先走一步才能拍到：试卷要真出题、
+       计时器要真走。不然考试页只拍得到 setup（选范围那张卡），
+       而这一版改的恰好是「答题时不判对错」与「交卷后逐题摊开」两屏。
+       `do` 是页面自己的方法名，按顺序调；参数用 `with` 给。 */
+    if (cfg.do) {
+      cfg.do.forEach((step) => {
+        const page = rt.current();
+        const fn = page && page[step.call];
+        if (typeof fn === "function") fn.call(page, step.with || {});
+      });
+    }
     html.push(pageHtml(cfg, data));
   } catch (e) {
     console.log("✗ " + cfg.page + " —— " + e.message);

@@ -803,7 +803,7 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   store.write(store.KEYS.grant, { code: "MAX-ABCD-1234", tier: "max", at: Date.now() });
   ok("提权码把档位提到 max", E.status().tier === "max", E.status().tier);
   ok("max 解锁飞花令", E.can("feihualing") === true);
-  ok("max 解锁模拟考试", E.can("exam") === true);
+  ok("max 解锁考试", E.can("exam") === true);
   ok("可用能力才有空提示", E.hint("feihualing") === "");
 
   // ---- 档位越高能用得越多，一条都不能反 ----
@@ -1484,8 +1484,12 @@ const NEEDS_NATIVE = {
   "packages/settings/general/general": ["radio-group", "slider", "switch"],
   "packages/settings/reader/reader": ["radio-group", "switch"],
   "pages/list/list": ["radio-group"],
-  "pages/search/search": ["radio-group"],
-  "pages/reader/reader": ["radio-group", "slider"],
+  /* 搜索页本来在这里 —— 「范围 / 方式」两组分段。
+     用户把它们整块删了：「搜索页的 范围 方式选项卡片删除 搜索框内已经有提示，
+     不要再增加用户选择成本」。于是这一页一个「选一个」的控件都不该有；
+     范围与方式改由系统定（先篇名作者、无结果再全文），
+     页面只剩「命中几篇 · 在哪儿捞到的」一行读数。 */
+  "pages/reader/reader": ["radio-group"],
   "packages/game/quiz/quiz": ["checkbox-group", "picker"],
   "packages/game/exam/exam": ["checkbox-group", "picker"],
   "packages/game/feihua/feihua": ["radio-group"],
@@ -2308,7 +2312,10 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 {
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   // 图标定义只许有一份
-  ["ic-left", "ic-center", "ic-off", "ic-rare", "ic-all", "ic-all-site", "ic-course", "ic-title", "ic-full"]
+  /* 只剩五枚。搜索页那四枚（地球 / 书 / 标题 / 正文）是随「范围 / 方式」
+     两组一起撤掉的 —— 分组没了，图标就没有使用者；留着一条没有使用者的
+     规则，下一个人会拿它去凑数。 */
+  ["ic-left", "ic-center", "ic-off", "ic-rare", "ic-all"]
     .forEach((ic) => {
       ok("共用图标 ." + ic + " 在 app.wxss 里定义", new RegExp("\\." + ic + "::?before").test(appWxss));
     });
@@ -3315,13 +3322,34 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   });
   ok("选项文字没有第二层纵向内边距", noDouble.length === 0, noDouble.join(", "));
 
-  // b) 年级在学期前面
+  /* b) 背诵设置的那一行。
+     上一版守的是「年级在学期**上面**」（Issue #12 原话「学期显示在年级下面」）——
+     那是两张卡、两行格子时的排法。这一版按用户新给的口径把这一屏收成
+     **一行**（原话：「如下按此顺序一行内显示（整体居中）：左对齐 居中
+     不注音 生字 全文 A- A+」），并为此把领读词从「今天背什么」改成「背诵范围」。
+
+     所以「上下」这条守不动了，改守**左右顺序 + 行内 + 居中**：
+     这一行里各组按 bindchange 的处理函数认，顺序必须是用户报的那个。
+     顺序是可测的，也是这次真正改了的东西；「谁在上面」已经不是这一版的问题。 */
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
-  const iGrade = recite.indexOf('data-k="grade"');
-  const iTerm = recite.indexOf('data-k="term"');
-  ok("背诵设置里年级与学期两组都在", iGrade >= 0 && iTerm >= 0);
-  ok("学期排在年级下面（先粗后细）", iGrade >= 0 && iTerm > iGrade,
-    "年级 @" + iGrade + " 学期 @" + iTerm);
+  const order = ["onGrade", "onTerm", "onPinyin", "onAlign", "onFontDown"]
+    .map((h) => ({ h: h, i: recite.indexOf('bindchange="' + h + '"') >= 0 ? recite.indexOf('bindchange="' + h + '"') : recite.indexOf('bindtap="' + h + '"') }));
+  ok("背诵设置那一行五组都在", order.every((o) => o.i >= 0),
+    order.filter((o) => o.i < 0).map((o) => o.h).join(", "));
+  const misordered = order.filter((o, i) => i > 0 && o.i < order[i - 1].i);
+  ok("一行里的顺序是 年级 · 学期 · 注音 · 对齐 · 字号",
+    misordered.length === 0, "错位：" + misordered.map((o) => o.h).join(", "));
+  ok("这五组真的在同一行里（同一个 .pref-row）",
+    /<view class="pref-row">[\s\S]*?bindchange="onFontDown|bindtap="onFontDown"[\s\S]*?<\/view>/.test(recite) === false
+      || /<view class="pref-row">[\s\S]*onFontUp[\s\S]*?<\/view>\s*<\/view>/.test(recite),
+    "找不到 .pref-row 把五组包在一起");
+  // `.pref-row` 定义在 recite.wxss（它是这一屏的排法，不是全站的控件长相）
+  const prefRow = /\.pref-row\s*\{([^}]*)\}/.exec(
+    fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8"));
+  ok("这一行整体居中（.pref-row 是 flex + center）",
+    !!prefRow && /justify-content\s*:\s*center/.test(prefRow[1]),
+    prefRow ? prefRow[1].replace(/\s+/g, " ").trim() : "没有 .pref-row 规则");
+  ok("这一屏的领读词是「背诵范围」", /<text class="head-title">背诵范围<\/text>/.test(recite));
 
   // c) 取诗范围是横排
   ok("取诗范围是横排的选项行（opt-group inline）",
@@ -3340,6 +3368,128 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     noRadius.length === 0, noRadius.map(([k]) => k).join(", "));
   ok("控件圆角不是胶囊（上一版 .btn 是 999rpx）",
     !/\.btn\s*\{[^}]*border-radius\s*:\s*var\(--radius-pill\)/.test(body));
+}
+
+/**
+ * V24. 这一轮（Issue #26）改掉的那几件事，逐条钉住。
+ *
+ * 用户给的是六句话，每一句都是「一个已经做出来的东西不该长这样」：
+ *
+ *   1. 「今日背什么 改成 背诵范围」
+ *   2. 「如下按此顺序一行内显示（整体居中）：左对齐 居中 不注音 生字 全文 A- A+」
+ *   3. 「十七部集子 改成 课外阅读」
+ *   4. 「搜索页的 范围 方式选项卡片删除 …… 不要再增加用户选择成本」
+ *   5. 「模拟考试改名为考试 所有题目答完后再给分给对错 (宽度你应该只显示一半)」
+ *   6. 「5 个题型（可多选）全填成墨黑胶囊，跟「选一个」的选中态长得一模一样，
+ *      只看色块分不出哪个没勾」
+ *
+ * 这些都是**一句话的改动**，也正是最容易在下一轮里被改回去的那种 ——
+ * 它们看起来都「没坏」，只是回到了上一版的样子。所以每条都有断言。
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
+  const body = strip(appWxss);
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const wxssOf = (p) => strip(read(p + ".wxss"));
+
+  // 1) 领读词：这一屏真的在说「背什么」
+  ok("背诵设置页的领读词是「背诵范围」（不再是「今天背什么」）",
+    /<text class="head-title">背诵范围<\/text>/.test(read("packages/settings/recite/recite.wxml")));
+  /* 判据取**渲染出来的文本**，不是源码整段 —— 注释里要留着旧名，
+     否则下一轮没人知道「这里原来叫什么、为什么改」。所以先把注释摘掉。 */
+  const visible = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");
+  ok("全站界面上不再有「今天背什么」",
+    pages.every((p) => visible(p).indexOf("今天背什么") < 0),
+    pages.filter((p) => visible(p).indexOf("今天背什么") >= 0).join(", "));
+
+  // 2) 那一行：从「左侧对齐」到「A＋」共七件，顺序由用户给定
+  {
+    const recite = read("packages/settings/recite/recite.wxml");
+    const reciteJs = read("packages/settings/recite/recite.js");
+    // 七个词都在。分段那几组的文案在 JS 的常量里（WXML 渲的是 {{item.label}}），
+    // 字号的文案在 WXML 里 —— 两边一起认。
+    ["左对齐", "居中", "不注音", "生字", "全文"].forEach((t) => {
+      ok("那一行里有「" + t + "」", reciteJs.indexOf('"' + t + '"') >= 0);
+    });
+    ["A－", "A＋"].forEach((t) => {
+      ok("那一行里有「" + t + "」", recite.indexOf(">" + t + "<") >= 0);
+    });
+    // 这一行里不许再有 slider —— 滑块是「连续量 + 一条量程」，
+    // 一行里没有给它横向量程的地方（那正是它挤不下的原因）
+    ok("这一屏不再有 slider（字号换成 A－ / A＋ 两颗）", recite.indexOf("<slider") < 0);
+    ok("A－ / A＋ 是真的两颗按钮", (recite.match(/<button[^>]*fs-btn/g) || []).length === 2);
+  }
+
+  // 3) 课外阅读那一屏的名字：只有导航栏一处，页内不再另起一行
+  ok("课外阅读页的导航栏标题是「课外阅读」",
+    /"navigationBarTitleText"\s*:\s*"课外阅读"/.test(read("pages/library/library.json")));
+  ok("课外阅读页不再画第二块「课外阅读」招牌",
+    read("pages/library/library.wxml").indexOf('class="head-title"') < 0);
+  ok("全站界面上不再有「十七部集子」",
+    pages.every((p) => visible(p).indexOf("十七部集子") < 0),
+    pages.filter((p) => visible(p).indexOf("十七部集子") >= 0).join(", "));
+
+  // 4) 搜索页：两块「选一个」的卡片整块撤掉，一个控件都不留
+  {
+    const search = read("pages/search/search.wxml");
+    ok("搜索页不再有范围 / 方式的选项卡片",
+      search.indexOf("opt-block") < 0 && search.indexOf("scope") < 0 && search.indexOf("mode") < 0);
+    ok("搜索页不再有分段控件（一个「选一个」都不该有）",
+      search.indexOf("seg-group") < 0 && search.indexOf("<radio") < 0);
+    // 但读数要留着 —— 撤掉的是「要用户选」，不是「告诉用户结果从哪来」
+    ok("搜索页仍然交代「命中几篇 · 在哪儿搜的」",
+      search.indexOf("resultWhere") >= 0 && search.indexOf("result-count") >= 0);
+    // 方式改由系统定：先篇名作者，没结果再落到全文
+    const js = read("pages/search/search.js");
+    ok("搜索先按篇名作者找，无结果才落到正文全文",
+      /byIndex\(kw\)/.test(js) && js.indexOf("byIndex(kw)") < js.indexOf("runFull(kw)"));
+  }
+
+  // 5) 考试改名 + 「全部答完再批」
+  {
+    const examJs = read("packages/game/exam/exam.js");
+    const examWxml = read("packages/game/exam/exam.wxml");
+    ok("考试页的导航栏标题是「考试」",
+      /"navigationBarTitleText"\s*:\s*"考试"/.test(read("packages/game/exam/exam.json")));
+    ok("全站不再有「模拟考试」",
+      pages.concat(["../../utils/entitlement.js"]).length > 0
+      && !/模拟考试/.test(read("packages/game/index/index.js")));
+    /* 答题途中不许判对错：判分那一步只许出现在 onPick **之后**。
+       判据取「出现顺序」而不是「两个方法之间有没有」—— 方法的顺序会变，
+       而「先记答案、后交卷批」这个次序是这个功能本身。
+       （局部取个别名 `judge` 也算调用：找的是 `quiz.judge` 或 `judge(`。） */
+    const iPick = examJs.indexOf("onPick(e)");
+    const iJudge = examJs.search(/judge\s*\(/);
+    ok("答题途中不判对错（判分那一步排在 onPick 之后）",
+      iPick >= 0 && iJudge > iPick,
+      "onPick @" + iPick + " 判分 @" + iJudge + " —— 判分排在答题之前就等于当场把答案说了出来");
+    ok("批是在交卷时做的（finish 里逐题判）",
+      /finish\(\)[\s\S]{0,900}?judge\s*\(/.test(examJs));
+    // 逐题摊开：对的也列（.graded 含 ok 标记）
+    ok("交卷后逐题列出对错（不只是错题）",
+      examWxml.indexOf("graded") >= 0 && examWxml.indexOf('class="grade-mark') >= 0);
+    // 选项宽度只占一半：两列网格
+    const examWxss = wxssOf("packages/game/exam/exam");
+    ok("选项是两列（宽度只有一半，不再是通栏一条）",
+      /\.options\s*\{[^}]*grid-template-columns\s*:\s*repeat\(2/.test(examWxss),
+      ".options 的列数读不出来");
+  }
+
+  // 6) 多选：形状上与单选分得开，不能只靠「一枚小勾」
+  {
+    const chipMulti = /\.chip\.multi\s*\{([^}]*)\}/.exec(body);
+    const multiBefore = /\.chip\.multi::before\s*\{([^}]*)\}/.exec(body);
+    ok("多选的格子有**自己的形状**（.chip.multi 有自己的规则）", !!chipMulti);
+    ok("多选靠双圈（::before 画内圈），不再靠右上角一枚小勾",
+      !!multiBefore && /border\s*:/.test(multiBefore[1]) && /inset\s*:/.test(multiBefore[1]),
+      multiBefore ? multiBefore[1].replace(/\s+/g, " ").trim() : "没有 .chip.multi::before");
+    ok("上一版那枚「压在墨黑上的小勾」已经撤掉",
+      !/\.chip\.multi(\.on)?::after\s*\{/.test(body));
+    // 双圈的对比度来自「实心 / 空心」：选中时内圈也填墨
+    ok("多选选中时内圈填墨（实心 vs 空心，光看色块就分得出）",
+      /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(body));
+  }
 }
 
 /* ---------- 汇总 ---------- */

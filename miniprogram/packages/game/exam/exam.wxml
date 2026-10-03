@@ -1,5 +1,5 @@
 <view class="page">
-  <lock-card wx:if="{{!allowed}}" title="模拟考试" note="登录后才能用" mark="考" />
+  <lock-card wx:if="{{!allowed}}" title="考试" note="登录后才能用" mark="考" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="page-head">
@@ -8,6 +8,8 @@
 
     <view class="card">
       <view class="card-title bar">考试范围</view>
+      <!-- 读数只留「几题、多久」两件。上一版在这句后面还缀了「交卷后统一批」——
+           那是流程说明，不是读数；按钮上写「交卷」已经说清了。 -->
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
         <view class="picker">{{scopes[scopeIndex].name}} ›</view>
       </picker>
@@ -16,8 +18,22 @@
 
     <view class="card">
       <view class="card-title bar">题型</view>
-      <!-- 题型可多选：选中的填色 + 右上角一个勾（那一勾是「可多选」的唯一线索）。
-           checkbox 仍在 label 里，点格子任何一处都选中 -->
+      <!-- 题型可多选。
+
+           上一版把可多选写成「跟单选一模一样的墨黑胶囊 + 右上角一个小勾」，
+           用户的原话是「全填成墨黑胶囊，跟「选一个」的选中态长得一模一样，
+           只看色块分不出哪个没勾。设计上靠右上角一个小勾当「可多选」的线索，
+           但那勾在填色上很不显眼」。
+
+           所以这里把「多选」这件事挪到**形状**上，不再靠一枚小勾：
+
+             单选（别处）  墨黑胶囊         —— 一块实心的色
+             多选·选中     墨黑 + 两道描边   —— 双层框：胶囊里再套一颗胶囊
+             多选·未选中   白底 + 两道描边
+
+           双圈是「可以多选」的通用长相（原生复选框是同源的说法），
+           而它**只看色块也分得开**：实心 vs 空心，与勾在不在无关。
+           选中与未选中的差别仍是填色 —— 只有一格选中时也一眼看得出。 -->
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
                wx:for="{{forms}}" wx:key="key">
@@ -42,12 +58,20 @@
       <text class="hint stem-sub">出自《{{current.title}}》</text>
     </view>
 
+    <!-- 答题途中**不告诉对错**：选项只有「没选 / 选了」两态。
+         用户原话是「所有题目答完后再给分给对错」——
+         当场判对错会让人一边答一边改心态，而考试的用法恰恰是先答完再看。
+         选中的当下要看得见（不然不知道点着没有），所以留了 .picked。 -->
     <view class="options">
-      <view class="option {{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}"
+      <view class="option {{item === picked ? 'picked' : ''}}"
             wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick">
         {{item}}
       </view>
     </view>
+
+    <button class="btn primary block next-btn" bindtap="onNext">
+      {{index + 1 >= questions.length ? '交卷' : '下一题'}}
+    </button>
   </block>
 
   <block wx:else>
@@ -57,12 +81,18 @@
       <text class="hint">答对 {{correct}} / {{questions.length}}</text>
     </view>
 
-    <view class="card" wx:if="{{wrong.length}}">
-      <view class="card-title bar">错题</view>
-      <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
-        <text class="wrong-stem">{{item.stem}}</text>
-        <text class="wrong-line">正确答案：{{item.answer}}</text>
-        <text class="wrong-line picked-line">你选的：{{item.picked}}</text>
+    <!-- 批完的卷子逐题摊开：答对答错都列，不只是错题。
+         考试的价值一半在「我哪几道是对的」——只列错题的话，
+         对的那几道就只剩一个数字。 -->
+    <view class="card">
+      <view class="card-title bar">逐题</view>
+      <view class="grade" wx:for="{{graded}}" wx:key="stem">
+        <view class="grade-head">
+          <text class="grade-mark {{item.ok ? 'ok' : 'no'}}">{{item.ok ? '对' : '错'}}</text>
+          <text class="grade-stem">{{item.stem}}</text>
+        </view>
+        <text class="grade-line">正确答案：{{item.answer}}</text>
+        <text class="grade-line picked-line" wx:if="{{!item.ok}}">你选的：{{item.picked}}</text>
       </view>
     </view>
 

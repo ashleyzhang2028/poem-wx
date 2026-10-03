@@ -112,9 +112,65 @@
   },
   "game-exam": {
     "page": "packages/game/exam/exam",
-    "title": "模拟考试",
+    "title": "考试",
     "back": true,
     "logged": true
+  },
+  "game-exam-running": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "v": "A"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "game-exam-done": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "finish"
+      }
+    ]
+  },
+  "game-quiz-running": {
+    "page": "packages/game/quiz/quiz",
+    "title": "题库",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "v": "A"
+            }
+          }
+        }
+      }
+    ]
   },
   "admin": {
     "page": "packages/admin/index/index",

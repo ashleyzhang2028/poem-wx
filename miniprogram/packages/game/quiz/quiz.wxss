@@ -128,16 +128,6 @@
   margin-top: var(--sp-2);
 }
 
-/* ---------- 错题 ---------- */
-.wrong {
-  padding: var(--sp-3) 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.wrong:last-child {
-  border-bottom: none;
-}
-
 .wrong-stem {
   display: block;
   font-family: var(--font-poem);

@@ -6,6 +6,16 @@ const sfx = require("../../../utils/sfx");
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
 
+/* 卷子每道题一份「答卷」—— 判分不再边答边做，而是交卷时统一批。
+   用户原话是「所有题目答完后再给分给对错」，所以答题途中页面拿不到
+   `answer` 这个东西：选项上只有「没选 / 选了」两态（见 exam.wxml）。
+   留的是 picked，每道题一个格子，答完停在原地也能回头改。 */
+function blankAnswers(n) {
+  const a = [];
+  for (let i = 0; i < n; i++) a.push("");
+  return a;
+}
+
 Page({
   data: {
     stage: "setup",
@@ -15,12 +25,15 @@ Page({
     questions: [],
     index: 0,
     current: null,
+    /** 当前这道题选了什么（= answers[index] 的镜像，WXML 里要它判高亮） */
     picked: "",
-    answered: 0,
+    /** 逐题的作答。顺序与 questions 一一对应 —— 交卷时按它批 */
+    answers: [],
+    /** 批完之后逐题的结果（含对的，不只是错题） */
+    graded: [],
     correct: 0,
     remain: DURATION,
     remainText: "20:00",
-    wrong: [],
     score: 0,
     forms: [],
     pickedForms: [],
@@ -90,9 +103,9 @@ Page({
         index: 0,
         current: questions[0],
         picked: "",
-        answered: 0,
+        answers: blankAnswers(questions.length),
+        graded: [],
         correct: 0,
-        wrong: [],
         remain: DURATION,
         remainText: "20:00"
       },
@@ -124,50 +137,84 @@ Page({
     return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
   },
 
+  /**
+   * 选一个答案。
+   *
+   * 这里**不判对错**（用户原话「所有题目答完后再给分给对错」）——
+   * 只是把这一格记下来，并且**可以改**：答完了想回头换一题是常事，
+   * 上一版点一下就锁死、0.8 秒后自动翻页，等于不给回头。
+   *
+   * 但该响一声还是响 —— 没有反馈的话用户不知道这一下点没点着。
+   * 上一版这里用的是「答对 / 答错」两种音效，而它等于当场把答案说了出来；
+   * 现在一律走 sfx.answer(true)：那是「记下了」的一声，不是「对了」的一声。
+   */
   onPick(e) {
-    if (this.data.picked) return;
     const picked = e.currentTarget.dataset.v;
-    // 判分走 quiz.judge，与题库页同一份口径
-    const res = quiz.judge(this.data.current, picked);
+    if (picked === this.data.picked) return;
+    sfx.answer(true);
 
-    // 考试页逐题不给对错（要统一批），但**该响一声** —— 没有反馈的话
-    // 用户不知道这一下点没点着，会连点两次
-    sfx.answer(res.ok);
-
-    this.setData({
-      picked,
-      answered: this.data.answered + 1,
-      correct: this.data.correct + (res.ok ? 1 : 0),
-      wrong: res.ok
-        ? this.data.wrong
-        : this.data.wrong.concat([
-            { stem: res.stem, title: res.title, answer: res.answer, picked: res.picked }
-          ])
-    });
-
-    setTimeout(() => this.next(), 800);
+    const answers = this.data.answers.slice();
+    answers[this.data.index] = picked;
+    this.setData({ picked, answers });
   },
 
-  next() {
+  onNext() {
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
       this.finish();
       return;
     }
-    this.setData({ index, current: this.data.questions[index], picked: "" });
+    // 回头改过的答案要恢复：下一题的高亮取的是它自己的那一格
+    this.setData({ index, current: this.data.questions[index], picked: this.data.answers[index] || "" });
   },
 
+  /**
+   * 交卷：从这里开始才有对错。
+   *
+   * 判分仍走 utils/quiz.js 的 judge（与题库页同一份口径，只此一处），
+   * 但**批的是整份答卷**：逐题摊开，对的也列 ——
+   * 「我哪几道是对的」和「我哪几道错了」一样是这场考试的信息。
+   *
+   * 时间到与主动交卷走同一条路，所以「没答完」这件事是在这里被如实交代的：
+   * 空白格判为答错（judge 对空答案返回 false），不假装没这回事。
+   */
   finish() {
     this.stopTimer();
-    const total = this.data.questions.length || 1;
-    sfx.rank(this.data.correct, total);
-    this.setData({ stage: "result", score: Math.round((this.data.correct / total) * 100) });
+    const questions = this.data.questions;
+    const answers = this.data.answers;
+    const judge = quiz.judge;   // 与题库页同一份判分口径，只此一处
+    const graded = questions.map((q, i) => judge(q, answers[i] || ""));
+    const correct = graded.filter((g) => g.ok).length;
+
+    const total = questions.length || 1;
+    sfx.rank(correct, total);
+    this.setData({
+      stage: "result",
+      graded: graded.map((g) => ({
+        stem: g.stem,
+        title: g.title,
+        answer: g.answer,
+        picked: g.picked || "未作答",
+        ok: g.ok
+      })),
+      correct,
+      score: Math.round((correct / total) * 100)
+    });
   },
 
   onAgain() {
-    this.setData({ stage: "setup", questions: [], wrong: [], picked: "" });
+    this.setData({
+      stage: "setup",
+      questions: [],
+      answers: [],
+      graded: [],
+      picked: "",
+      correct: 0,
+      remain: DURATION,
+      remainText: "20:00"
+    });
   },
   onShareAppMessage() {
-    return { title: "跬步 · 古诗词模拟考试", path: "/packages/game/exam/exam" };
+    return { title: "跬步 · 古诗词考试", path: "/packages/game/exam/exam" };
   }
 });

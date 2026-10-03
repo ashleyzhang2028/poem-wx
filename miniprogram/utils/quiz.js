@@ -178,7 +178,7 @@ function uniqueSample(list, n) {
   return shuffle(uniq).slice(0, n);
 }
 
-/** 逐题判定，供模拟考试与题库共用，判分口径只此一处 */
+/** 逐题判定，供考试与题库共用，判分口径只此一处 */
 function judge(question, picked) {
   const ok = !!question && picked === question.answer;
   return {
