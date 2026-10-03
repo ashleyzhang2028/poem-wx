@@ -3433,9 +3433,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
   /* 领读词换了口径：范围那一张卡自己叫「背诵范围」之后，
      页头不能再叫同名（同一句话在一屏里说两次，见页头那条断言）。
-     页头改成一句管整屏的短话 —— 与「怎么读」「怎么排好看」同一长相。 */
+     页头改成一句管整屏的短话 —— 与「阅读」「版式」同一长相。
+     2026-10-03 用户又说「所有页面的标题…都专业，精简」，
+     于是量词式的「怎么背」也收成一个名词「背诵」。 */
   ok("这一屏的页头是一句管整屏的短话，不与任何卡片同名",
-    /<text class="head-title">怎么背<\/text>/.test(recite));
+    /<text class="head-title">背诵<\/text>/.test(recite));
 
   // c) 取诗范围是横排
   ok("取诗范围是横排的选项行（opt-group inline）",
@@ -3884,6 +3886,121 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "读到 " + prefRadios + " 个");
   const visiblePrefRadio = /\.pref-opt\s+radio[^{}]*\{[^}]*margin-right/.test(readerWxss);
   ok("这一行没有露脸的原生控件（不再出现第二个选中标志）", !visiblePrefRadio);
+}
+
+/**
+ * V26. 详情页的身份行是**一行**，且全站文案里不留口语化的垫话。
+ *
+ * 两条都来自用户 2026-10-03 的原话：
+ *
+ *   「唐 骆宾王 课内诗词 新学 这些一定一行显示，注意样式的统一与协调」
+ *   「背得怎么样是什么不专业的词汇？我需要所有页面的标题，选项，设置，
+ *     内容都专业，精简，不需要背得怎么样 这种口语化的啰嗦的词汇」
+ *   「白话译文改成译文」
+ *   「其他类似问题一并修复」
+ *
+ * 一、身份行必须是一行。
+ *    判据不是「看着像一行」（截图会骗人），而是**这一行的容器不许折**：
+ *    `.poem-meta-row` 有 `flex-wrap: nowrap`，且四段（朝代 / 作者 / 出处 /
+ *    学段）用的都是同一个字号令牌 —— 上一版是三行三样式，这一条会红。
+ *
+ * 二、全站不许再出现那几个词。
+ *    这是一条**否定断言**，写起来有点笨：把整站文案扫一遍，撞见就红。
+ *    但它正是用户要的那件事 —— 这种词是「顺手写上去」的，一次一个，
+ *    回看时看不出来。列在 BANNED 里的每一句都记着它为什么不该在。
+ */
+{
+  const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  const readerWxss2 = fs
+    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 1) 身份行：四段同字号、同容器、不许折
+  const metaRow = /\.poem-meta-row\s*\{([^}]*)\}/.exec(readerWxss2);
+  ok("身份行是一个 flex 容器", !!metaRow && /display\s*:\s*flex/.test(metaRow[1]));
+  ok("身份行**不许折行**（折了「一行显示」这件事就破了）",
+    !!metaRow && /flex-wrap\s*:\s*nowrap/.test(metaRow[1]),
+    metaRow && metaRow[1].replace(/\s+/g, " ").trim());
+  ok("身份行整行居中", !!metaRow && /justify-content\s*:\s*center/.test(metaRow[1]));
+
+  const metaFont = /\.poem-meta\s*\{([^}]*)\}/.exec(readerWxss2);
+  ok("身份行四段同一档字号（样式统一）",
+    !!metaFont && /font-size\s*:\s*var\(--fs-caption\)/.test(metaFont[1]),
+    metaFont && metaFont[1].replace(/\s+/g, " ").trim());
+  ok("身份行四段同一个色（样式统一）",
+    !!metaFont && /color\s*:\s*var\(--ink-2\)/.test(metaFont[1]));
+
+  // 四段都在同一个容器里 —— 上一版朝代作者在 .poem-meta-row、
+  // 出处与学段各自跑到了容器外面，所以这条按**位置**判。
+  //
+  // 判据取「`<view class="poem-meta-row">` 到它自己那个 `</view>` 之间的正文」：
+  // 先摘注释再切（注释里带 `</view>` 字样，不摘会提前收尾 —— 上一版就
+  // 红在这个假问题上），然后只认这一段里出现过的占位。
+  const metaNoComment = readerWxml2.replace(/<\!--[\s\S]*?-->/g, " ");
+  const metaStart = metaNoComment.indexOf('<view class="poem-meta-row">');
+  const metaEnd = metaNoComment.indexOf("</view>", metaStart);
+  const metaInner = metaStart < 0 ? "" : metaNoComment.slice(metaStart, metaEnd);
+  ok("朝代 / 作者 / 出处 / 学段四段都在同一个容器里",
+    /\{\{dynasty\}\}/.test(metaInner)
+      && /\{\{author\}\}/.test(metaInner)
+      && /\{\{source\}\}/.test(metaInner)
+      && /\{\{stage\}\}/.test(metaInner)
+      && !/class="poem-source"/.test(metaNoComment)
+      && !/class="tag stage-tag"/.test(metaNoComment),
+    "读到的这一段：「" + metaInner.replace(/\s+/g, " ").trim().slice(0, 120) + "」");
+
+  // 2) 全站文案：口语化的垫话一个都不留
+  //
+  // BANNED 里每一条都写清「为什么」——不是「不好看」，是它把一个**读数**
+  // 说成了一句聊天。用户要的是翻开就像一本正经的书，不是像在跟朋友说。
+  const BANNED = [
+    ["背得怎么样", "「掌握度」——用户点的那三格是在给掌握程度打分，不是让系统问一句感受"],
+    ["白话译文", "「译文」——「白话」是相对文言的说法，标题上不必交代"],
+    ["三样玩法", "「玩法」——列三张入口卡，不必自己数一遍"],
+    ["限时一卷", "「考试设置」——这一屏是设置，不是卷子的名字"],
+    ["走到哪了", "「背诵概览」——页头是这一页的名字，不是一句问话"],
+    ["我这一档", "「我的权限」——「档」是内部口径，界面上说「权限」"],
+    ["出一组题", "「练习设置」——这一屏是设置，不是出题的动词"],
+    ["挑一个令字", "「选择令字」——「挑」是口语"],
+    ["怎么背", "「背诵」——短语式页头与「阅读」「版式」不同长相"],
+    ["怎么读", "「阅读」——同上"],
+    ["怎么排好看", "「版式」——同上"],
+    ["有点模糊", "「N 小时后再复习」——提示语里只留下一个时刻，不留情绪垫话"],
+    ["没关系", "同上：删掉垫话，留读数"],
+    ["记住了！", "同上：感叹号与情绪都不进读数"],
+  ];
+  // 只扫**给人看的字符串**。注释里可以提这些词（讲清楚它们为什么被删掉，
+  // 正是给下一个人看的），所以先把注释摘掉再扫 —— 上一版没摘，
+  // 于是「本文件注释里写着『背得怎么样』」也算命中，断言红在一个假问题上。
+  const stripComments = (src) =>
+    src
+      .replace(/<\!--[\s\S]*?-->/g, " ")     // WXML 注释
+      .replace(/\/\*[\s\S]*?\*\//g, " ")            // 块注释
+      .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")          // 行注释（避开 http://）
+      ;
+  const hit = [];
+  const walk = (dir) => {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((d) => {
+      const full = path.join(dir, d.name);
+      if (d.isDirectory()) return walk(full);
+      if (!/\.(wxml|js|json)$/.test(d.name)) return;
+      const src = stripComments(fs.readFileSync(full, "utf8"));
+      BANNED.forEach(([word, why]) => {
+        if (src.indexOf(word) >= 0) {
+          hit.push(path.relative(ROOT, full) + " → 「" + word + "」（该是" + why + "）");
+        }
+      });
+    });
+  };
+  walk(path.join(ROOT, "pages"));
+  walk(path.join(ROOT, "packages"));
+  walk(path.join(ROOT, "utils"));
+  ok("全站文案里没有口语化的垫话（14 个词，撞见就红）", hit.length === 0, hit.slice(0, 4).join(" | "));
+
+  // 3) 读数类提示语必须还在（删垫话不等于把提示删了 —— 撤掉 ≠ 弄丢）
+  const rmsrc = fs.readFileSync(path.join(ROOT, "utils", "review-models.js"), "utf8");
+  ok("结果提示语还在，且只说时刻",
+    /小时后再复习/.test(rmsrc) && /分钟后再复习/.test(rmsrc) && /下次复习/.test(rmsrc));
 }
 
 /* ---------- 汇总 ---------- */

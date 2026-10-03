@@ -6,15 +6,30 @@
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
+
+      <!-- 这首诗的「身份」：朝代 · 作者 · 出处 · 学段，**一行装完**。
+
+           用户原话：「唐 骆宾王 课内诗词 新学 这些一定一行显示」。
+           上一版这三件事分三行、三种字号（朝代作者一行、出处一行、
+           学段一枚胶囊），排下来是一小摞 —— 而它们说的是同一件事
+           （「这是哪首、谁的、什么来路、背到哪了」），本就该读成一句。
+
+           顺序照用户给的：朝代 · 作者 · 出处 · 学段。
+           中间的点由 WXML 按「有没有」自己决定出不出现：出处与学段是
+           可缺的（课外篇目没有出处，未学篇目停在「新学」照样有），
+           写死两个点会在缺项时留下孤零零一个「·」。
+           数量写在 reader.wxss 的 .poem-meta-row 一节，check.js V26 守着。 -->
       <view class="poem-meta-row">
         <text class="poem-meta">{{dynasty}}</text>
         <text class="poem-dot">·</text>
         <text class="poem-meta">{{author}}</text>
+        <block wx:if="{{source}}">
+          <text class="poem-dot">·</text>
+          <text class="poem-meta">{{source}}</text>
+        </block>
+        <text class="poem-dot">·</text>
+        <text class="poem-meta stage">{{stage}}</text>
       </view>
-      <text class="poem-source" wx:if="{{source}}">{{source}}</text>
-      <!-- 记忆阶段做成小签，摆在标题下面：这是「我背到哪了」，
-           属于这首诗的一部分，不该混在下面那排操作里 -->
-      <text class="tag stage-tag">{{stage}}</text>
     </view>
 
     <!-- 阅读偏好：**一行装完**（对齐 · 注音 · 字号），整行居中。
@@ -102,7 +117,7 @@
   <!-- 背诵：把「读」和「记」分开，两件事不该挤在一张卡里 -->
   <view class="card recite-card">
     <view class="recite-head">
-      <text class="card-title bar">背得怎么样</text>
+      <text class="card-title bar">掌握度</text>
       <text class="mastery-num">{{mastery}}%</text>
     </view>
     <view class="meter mastery-bar">
@@ -121,7 +136,7 @@
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
     <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-      <text class="card-title bar">白话译文</text>
+      <text class="card-title bar">译文</text>
       <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">

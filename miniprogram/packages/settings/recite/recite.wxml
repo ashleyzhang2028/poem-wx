@@ -5,7 +5,7 @@
        现在卡片分成了「当前学段」与「背诵范围」两张，
        页头再叫「背诵范围」，一屏里就有两句同样的话。 -->
   <view class="page-head">
-    <text class="head-title">怎么背</text>
+    <text class="head-title">背诵</text>
   </view>
 
   <lock-card wx:if="{{locked}}" title="背诵设置要登录" note="登录后才能改" mark="背" />

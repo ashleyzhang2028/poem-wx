@@ -278,13 +278,17 @@ function pushHistory(r, result, t) {
   if (r.history.length > 20) r.history = r.history.slice(-20);
 }
 
-/** 结果提示语，让用户知道下一次什么时候来 */
+/** 结果提示语：只说一件事 —— 下一次什么时候复习。
+    用户 2026-10-03 的原话：「背得怎么样是什么不专业的词汇？我需要所有页面
+    的标题，选项，设置，内容都专业，精简」。这三句原来是「有点模糊，…」
+    「没关系，…」「记住了！下次复习：…」—— 每条前面都挂着一句情绪垫话，
+    而用户真正要看的是那个时刻。删掉垫话，留读数。 */
 function resultHint(key, result, rec) {
-  if (result === "fuzzy") return "有点模糊，" + FUZZY_HOURS + " 小时后再复习一次";
-  if (result === "bad") return "没关系，" + BAD_MINUTES + " 分钟后再复习一次";
-  if (!rec || !rec.nextReviewAt) return "记住了！";
+  if (result === "fuzzy") return FUZZY_HOURS + " 小时后再复习";
+  if (result === "bad") return BAD_MINUTES + " 分钟后再复习";
+  if (!rec || !rec.nextReviewAt) return "已记录";
   const d = new Date(rec.nextReviewAt);
-  return "记住了！下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
+  return "下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
 }
 
 /** 可见算法列表：小程序端不做付费分层，四套全开放 */
