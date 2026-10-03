@@ -320,5 +320,68 @@
     "settings": {
       "theme": "minghuang"
     }
+  },
+  "home-ink": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "ink"
+    }
+  },
+  "home-zhuhong": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "zhuhong"
+    }
+  },
+  "home-zhuqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "zhuqing"
+    }
+  },
+  "home-yanzhi": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "yanzhi"
+    }
+  },
+  "home-xuanse": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "xuanse"
+    }
+  },
+  "home-yaqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "yaqing"
+    }
+  },
+  "home-tianshuibi": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "tianshuibi"
+    }
   }
 }

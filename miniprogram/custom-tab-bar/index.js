@@ -9,8 +9,9 @@
  * 要调一次 this.getTabBar().setActive(n)，否则高亮不跟着走。
  * 这一步写在 pages/home · library · search · mine 四个页面的 onShow 里。
  *
- * 形状照参考图：一枚图标在上、一行小字在下；选中的那一项图标嵌进一块
- * 墨黑圆底（填色说「当前在这」），与页面里「选中 = 填墨黑」同一条规矩。
+ * 形状照参考图：一枚图标在上、一行小字在下；选中的那一项**整格填一块
+ * 主题色圆角方块**（填色说「当前在这」），与页面里「选中 = 一块填色的
+ * 圆角方块」（.chip.on / .opt-row）同一条规矩。具体见 index.wxss 开头。
  */
 const theme = require("../utils/theme");
 
