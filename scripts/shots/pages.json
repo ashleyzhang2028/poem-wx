@@ -320,5 +320,24 @@
     "settings": {
       "theme": "minghuang"
     }
+  },
+  "game-exam-partial": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onToggleForm",
+        "with": {
+          "detail": {
+            "value": [
+              "next",
+              "title"
+            ]
+          }
+        }
+      }
+    ]
   }
 }
