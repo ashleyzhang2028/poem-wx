@@ -7,37 +7,56 @@
 
   <block wx:else>
   <view class="card">
-    <!-- 学期、年级、注音、对齐、字号，五件事**一行**。
-         用户原话：「如下按此顺序一行内显示（整体居中）：左对齐 居中 不注音 生字 全文 A- A+」，
-         并为此把这一屏的领读词从「今天背什么」改成「背诵范围」——
-         它现在真的是「背什么」，而不是「今天干什么」。
+    <view class="card-title bar">背诵范围</view>
 
-         为什么能挤进一行：五件事各自只要两三个字，而这一屏原来的排法是
-         三行分成三档（学期一年、年级十二格、注音三档）+ 字号的滑块。
-         一行放不下，恰是因为字号那个滑块 —— 它当量程用，横着吃掉半屏。
-         所以字号换成「A-  A+」两颗，量程交给「A-」到「A+」这两头本身。
+    <!-- 学期与年级都是**等长的一格一个选项**，格子本身已经把「这是一组、
+         只能选一个」说清楚了。再给每格塞一个圆点，就出现两个毛病：
+         圆点吃掉了横向空间（12 个年级从 3 列涨到 4 列才放得下），
+         而且它跟第一行文字对齐、第二行文字缩进 —— 看着像圆点管着半格。
+         这里改成「格子 = 一个胶囊」：形状说是控件，填色说选中，
+         圆点不再重复这件事。radio 仍在 label 里，点格子就选中。
+
+         顺序是**年级在上、学期在下**（Issue #12 原话「学期显示在年级下面」）：
+         年级是大类，学期只是它下面的二选一，先粗后细。
+
+         年级**十二格全列，一个不收**（Issue #26 原话「年级从十二格收到六格
+         （取最近六年）- 谁让你这么瞎搞的，这能收吗」）：一至高三是一个学制，
+         砍掉哪一段都会有人选不到自己。这条与下面那行（注音/对齐/字号）无关，
+         两处别再混着改。 -->
+    <radio-group class="chip-group cols-4" data-k="grade" bindchange="onGrade">
+      <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
+               color="#1c1c1e" />
+        <text class="chip-t">{{item.label}}</text>
+      </label>
+    </radio-group>
+
+    <radio-group class="chip-group cols-2" data-k="term" bindchange="onTerm">
+      <label class="chip {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
+               color="#1c1c1e" />
+        <text class="chip-t">{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+
+  <view class="card">
+    <!-- 注音、对齐、字号，三件事**一行**（Issue #26 原话：
+         「我只说过要把下面变成一行：不注音 生字 全文 ｜ 左对齐 居中 ｜ A－ A＋」）。
+         这一行原本就是三组竖排 + 字号滑块，收成一行之后连成一排、整体居中。
+
+         只有这三组进这一行：年级与学期是**另一种东西**（选背哪一册），
+         留在上面那张卡的格子里，没有跟着一起塞进来 ——
+         上一版把它们也塞进这一行，是把两件事按同一个「一行放下」处理了。
+
+         为什么挤得下：三组各自只要两三个字，而字号原来是一根原生 slider，
+         它要一根横着的轨才立得住，那正好是这一行最缺的。换成 A－ / A＋ 两颗，
+         量程由这两头自己说。
 
          整体居中：`.pref-row` 是 flex + center，几组之间靠 gap 分缝 ——
          不是靠负外边距去抵消分组自己的左右内边距。 -->
     <view class="pref-row">
-      <!-- 第 1~2 组：年级 · 学期。段内两字，一共只占几个字的宽度。 -->
-      <radio-group class="seg-group" bindchange="onGrade">
-        <label class="seg-item {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
-          <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
-                 color="#1c1c1e" />
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-
-      <radio-group class="seg-group" bindchange="onTerm">
-        <label class="seg-item {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
-          <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
-                 color="#1c1c1e" />
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-
-      <!-- 第 3 组：注音三档。图标去掉两个 —— 一行里七个段，
+      <!-- 注音三档。图标去掉两个 —— 一行里三个段，
            每段再顶一枚 24rpx 的图标就挤不下了；而「不注音 / 生字 / 全文」
            这三个词本身就是这件事最准的说法。 -->
       <radio-group class="seg-group" bindchange="onPinyin">
@@ -48,7 +67,7 @@
         </label>
       </radio-group>
 
-      <!-- 第 4 组：对齐二选一。 -->
+      <!-- 对齐二选一。 -->
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
@@ -57,12 +76,12 @@
         </label>
       </radio-group>
 
-      <!-- 第 5 组：字号。**两颗按钮，不是滑块**。
+      <!-- 字号。**两颗按钮，不是滑块**。
            滑块是「连续量 + 一条量程」的长相，得有一根横着的轨才成立 ——
            而这一行最缺的正是横向空间。换成 A－ / A＋ 两颗之后，
            量程由这两头自己说。
            （详情页那边是反过来收敛的：一排自绘按钮换成原生单选。
-           这一屏要的恰好相反，因为这一屏要的是「一行放下五件事」。）
+           这一屏要的恰好相反，因为这一屏要的是「一行放下三件事」。）
            按钮到临界档直接 disabled，不让点了个寂寞。 -->
       <view class="font-step">
         <button class="fs-btn" hover-class="fs-btn-hover" bindtap="onFontDown" disabled="{{fontCanDown}}">A－</button>
@@ -80,8 +99,8 @@
 
          排法是**横排两列**（Issue #12 原话「取诗范围选项 inline 显示，
          而不是一行一条」）：七个选项竖排要吃掉七行的高度，
-         一屏里就只看得见这一个设置项了，而上面那两组本来就是横排的。
-
+         一屏里就只看得见这一个设置项了（七项是这么来的：网页版把「本册」
+         与「本册及之前」合成一项，小程序拆成了两个，见 scheduler.js）。
          为什么是两列不是三列：这七格里最长的是旧名「小学+初中随机」
          （7 个字宽，现已按 Issue #26 收成「小初随机」）。名字短了，
          但**结论不变** —— 现在最长的是「本册及之前」（5 个字宽，
@@ -102,6 +121,20 @@
       </label>
     </radio-group>
     <text class="hint pool-hint">{{poolSize}} 首</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">每日首数</view>
+    <!-- 全站默认就是 5 首，但**选多少是用户的事**（Issue #26 原话：
+         「「每日首数」全站默认就是 5 首，那需要在设置里添加设置 3 5 10 20」）。
+         上一版把这张卡整块撤了 —— 那个「撤」是自作主张：默认 5 首说的是
+         不选的时候拿几首，不等于用户不需要选。选项是 3 / 5 / 10 / 20。 -->
+    <radio-group class="chip-group cols-4" bindchange="onCount">
+      <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
+        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="#1c1c1e" />
+        <text class="chip-t">{{item}} 首</text>
+      </label>
+    </radio-group>
   </view>
 
   <view class="card">

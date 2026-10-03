@@ -16,10 +16,6 @@ const TERMS = [
 const FONT_MIN = -2;
 const FONT_MAX = 4;
 
-/* 十二个年级一行放不下，取最近六年。**这一屏只用来调背诵范围**，
-   年份的余数不必年年换；等真的有人抱怨「我只能背一年级」再补一条横滑。 */
-const RECENT = 6;
-
 /* 注音三档。与阅读页同一套 key，图标这一屏不要（见 WXML 里的注释）。 */
 const PINYIN_MODES = [
   { key: "off", label: "不注音" },
@@ -69,11 +65,9 @@ Page({
     this.setData({ locked: false });
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
-    const grades = GRADES.filter((g) => g >= settings.grade && g < settings.grade + RECENT);
-
     this.setData(
       Object.assign({}, settings, {
-        grades: grades.map((g) => ({ value: g, label: S.gradeName(g) })),
+        grades: GRADES.map((g) => ({ value: g, label: S.gradeName(g) })),
         scopes: scopes,
         algos: this.algoRows(settings.algo)
       }),
@@ -138,6 +132,10 @@ Page({
 
   onScope(e) {
     this.save({ scope: e.detail.value });
+  },
+
+  onCount(e) {
+    this.save({ dailyCount: Number(e.detail.value) });
   },
 
   onPinyin(e) {
