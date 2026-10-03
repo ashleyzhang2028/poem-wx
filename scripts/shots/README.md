@@ -6,7 +6,19 @@
 node scripts/shots/render.js       # 跑全部页面 → 编译 WXML → out/preview.html
 node scripts/shots/shoot.js        # 逐屏截图到 out/shots/shots/
 node scripts/shots/shoot.js reader # 只截名字里含 reader 的
+node scripts/shots/measure.js      # 量每一格「两侧还剩多少」—— 挤不挤，说数字
+node scripts/shots/measure.js --metrics   # 从真字体导出 font-metrics.json
 ```
+
+**`measure.js` 是「挤」这个字的尺子。** 用户说「选项内文字左右 padding
+和它自己的边界太近了」，眼睛只能看出「有点紧」；它把每一格的
+格宽 / 文字宽 / 两侧余量打出来，才知道紧到 4.8px。改完再量一次，
+31.6px。「多留白」这件事有数字之后才好争。
+
+`--metrics` 导出的是**字体自己的度量**（advance width / em），按
+`.chip-t` / `.opt-name` / `.tag` 分别导 —— 选项名走宋体、格子文字走黑体，
+「+」在两边宽度不同（0.564 vs 0.584em），一把尺量不了两家人。
+`check.js` V23 拿这张表算「最长的选项名两侧还余多少」，不装浏览器也能验。
 
 截图要 `puppeteer-core` 与本机 chromium（`npm i -D puppeteer-core`，
 chromium 路径可用 `CHROME_PATH` 指）。装不上时它**明说装不上**，

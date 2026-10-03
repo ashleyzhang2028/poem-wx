@@ -3209,6 +3209,100 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("选项格上下真的留了内边距（不是 0）",
     /padding\s*:\s*var\(--pad-opt-y\)\s+var\(--pad-opt-x\)/.test(chipBody),
     chipBody.replace(/\s+/g, " ").trim().slice(0, 80));
+
+  // a2) 横向这一档要「够厚」——只为「不为零」是不够的。
+  //
+  // 用户的原话是「选项内文字左右 padding 和它自己的边界太近了，太挤了」。
+  // 上一轮把 --pad-opt-x 定成 8rpx，量出来最紧的一格两侧各只剩 4.8px，
+  // 比同一格的 10.4px 圆角还小 —— 文字压在圆弧上。
+  // 所以钉一个下限：不小于圆角本身（20rpx）。
+  //
+  // ⚠️ 但这一条**不是**用户那处的解药：他指的是取诗范围里那个长名字，
+  // 而长名字挤不挤由**列数**决定（内边距加得越大、文字到边越近）。
+  // 真正兜住它的是下面 a3 ——那一条会读 WXML 上的列数，退步就红。
+  const padX = /--pad-opt-x\s*:\s*calc\((\d+(?:\.\d+)?)rpx\s*\*\s*var\(--ui-scale\)\)/.exec(tokens);
+  ok("选项格横向内边距由 rpx 写出（能算宽度）", !!padX);
+  const padXVal = padX ? Number(padX[1]) : 0;
+  ok("选项格横向内边距不小于圆角（文字不会顶在圆角上）",
+    padXVal >= 20, "实际 " + padXVal + "rpx");
+
+  // a3) 最窄的格子两侧还剩多少 —— 这一条才是用户那处的答案。
+  //
+  // 算式全用设计值，一个数都不手抄：
+  //   内容宽 = 750 − 2·page-x − 2·cardPad（卡片内边距是 .card 的 --sp-4）
+  //   格子宽 = (内容宽 − (列数−1)·pad-x) / 列数
+  //   两侧余 = (格子宽 − 文字宽) / 2 − 描边
+  // 列数取 WXML 上的类、选项名取 scheduler 的 SCOPES、字号与内边距取令牌、
+  // 文字宽度取 font-metrics.json（真字体）。改文案、改列数，这条跟着动。
+  const tok = (name, dflt) =>
+    Number(new RegExp(name + "\\s*:\\s*calc\\((\\d+(?:\\.\\d+)?)rpx").exec(tokens)?.[1] ?? dflt);
+  const pageX = tok("--page-x", 28);
+  // 卡片内边距是 .card 的 --sp-4（不是 --sp-3 —— 那是卡与卡之间的缝）。
+  // 这一条一开始抄错了，算式凭空少 16rpx，差点得出「三列根本放不下」的假结论。
+  const cardPad = tok("--sp-4", 32);
+  const hintFs = tok("--fs-hint", 25);
+  const ctlR = tok("--radius-ctl", 20);
+  const cornerCut = Math.round(ctlR * 0.3);
+  const chrome = 2;
+
+  const reciteSrc = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
+  const inlineTag = /<radio-group class="[^"]*opt-group inline[^"]*"/.exec(reciteSrc)?.[0] || "";
+  const gridCols = Number(/repeat\((\d+)/.exec(rule(".opt-group.inline") || "")?.[1] ?? 0);
+  const perRow = Number(/(^|\s)cols-(\d)/.exec(inlineTag)?.[2] ?? gridCols);
+  ok("横排选项行的每行格数读得出来", perRow >= 2,
+    "tag=" + JSON.stringify(inlineTag) + " grid=" + gridCols + " perRow=" + perRow);
+
+  const sched = fs.readFileSync(path.join(ROOT, "utils", "scheduler.js"), "utf8");
+  const labels = [...sched.matchAll(/label\s*:\s*"([^"]*)"/g)].map((m) => m[1]).filter(Boolean);
+  const longestName = labels.length
+    ? labels.reduce((a, b) => (b.length > a.length ? b : a))
+    : "小学+初中随机";
+
+  // 文字宽度得**量真字体**，不能按「一个字 1em」猜。
+  //
+  // 这里栽过两层：先按 1em 估，7 个字的选项名算成 175rpx，而格子内容盒
+  // 只有 144rpx —— 算式说「放不下」，可预览里那格明明放着，只是**挤**。
+  // 换成真字体度量之后又多错一次：量的是 .chip-t，而选项名走 --font-poem
+  // （宋体），「+」在两边宽度不同（0.564 vs 0.584em）。
+  // 度量表因此按**样式组合**分着导（.chip-t / .opt-name / .tag）。
+  //
+  // 表是 shots/measure.js --metrics 从浏览器里量出来的字体度量
+  // （advance width / em）—— 不是渲染快照，与字号、--ui-scale 无关。
+  const metricsPath = path.join(__dirname, "shots", "font-metrics.json");
+  let adv = {};
+  try { adv = JSON.parse(fs.readFileSync(metricsPath, "utf8")); } catch (e) { adv = {}; }
+  const advFor = adv[".opt-name"] || {};
+  ok("字体度量表在（按样式组合，由 shots/measure.js --metrics 从真字体导出）",
+    Object.keys(advFor).length > 20,
+    "组合：" + Object.keys(adv).join("/") + "，.opt-name " + Object.keys(advFor).length + " 个字符");
+  const isWide = (c) => /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(c);
+  const charW = (c) => (isWide(c) ? 1 : (typeof advFor[c] === "number" ? advFor[c] : 0.6));
+  const textW = [...longestName].reduce((sum, c) => sum + charW(c) * hintFs, 0);
+
+  const contentW = 750 - 2 * pageX - 2 * cardPad;
+  const cellW = (contentW - (perRow - 1) * padXVal) / perRow;
+  // 「两侧还剩多少」要按**格宽**算，不能按内容盒算 ——
+  // 格子里的文字是居中的：内容盒比文字窄时，文字会**溢出到内边距上**，
+  // 真机上照样居中、不一定折行。所以真正决定「挤不挤」的是
+  // 文字到格子边框还剩多少（再减描边）。
+  //
+  // 一开始这里拿内容盒比，得出「溢出了 13rpx」，说得像 bug；
+  // 而浏览器里那一格明明摆着，只是两侧各 9.6rpx 的窄。
+  // 判据必须对着「看得见的东西」——两侧各剩多少，就是这么来的。
+  const room = (cellW - textW) / 2 - chrome;
+  const withRadius = room - cornerCut;
+  // minGap 的出处是实测：取诗范围改两列之后，最紧的那一格
+  // （「小学+初中随机」，2 列里最长的一个）两侧各 31.6px ≈ 63rpx。
+  // 门槛定 24rpx —— 比现况松，但足够挡住「又加回一列」这种退步：
+  // 三列时这里算出来是 11.5rpx，会当场红。
+  const minGap = 24;
+  ok("最窄的选项格两侧留得住空（" + perRow + " 列 · " + longestName + "）",
+    room >= minGap && withRadius > 0,
+    "格宽 " + cellW.toFixed(1) + "，文字 " + textW.toFixed(1)
+    + "（按 .opt-name 真字体度量）→ 两侧各余 " + room.toFixed(1)
+    + "，再减圆角吃掉的 " + cornerCut + " = " + withRadius.toFixed(1)
+    + "（须 ≥ " + minGap + "）");
+
   const optRowBody = rule(".opt-row") || "";
   ok("选项行与格子同一套内边距",
     /padding\s*:\s*var\(--pad-opt-y\)\s+var\(--pad-opt-x\)/.test(optRowBody));
@@ -3231,7 +3325,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   // c) 取诗范围是横排
   ok("取诗范围是横排的选项行（opt-group inline）",
-    /<radio-group class="opt-group inline"/.test(recite));
+    /<radio-group class="opt-group inline/.test(recite));
   ok("横排的选项行有排法（grid，不是一行一条）",
     /\.opt-group\.inline\s*\{[^}]*grid-template-columns/.test(body));
 
