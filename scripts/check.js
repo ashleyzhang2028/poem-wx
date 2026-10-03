@@ -3256,7 +3256,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const labels = [...sched.matchAll(/label\s*:\s*"([^"]*)"/g)].map((m) => m[1]).filter(Boolean);
   const longestName = labels.length
     ? labels.reduce((a, b) => (b.length > a.length ? b : a))
-    : "小学+初中随机";
+    : "本册及之前";
 
   // 文字宽度得**量真字体**，不能按「一个字 1em」猜。
   //
@@ -3291,10 +3291,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   // 判据必须对着「看得见的东西」——两侧各剩多少，就是这么来的。
   const room = (cellW - textW) / 2 - chrome;
   const withRadius = room - cornerCut;
-  // minGap 的出处是实测：取诗范围改两列之后，最紧的那一格
-  // （「小学+初中随机」，2 列里最长的一个）两侧各 31.6px ≈ 63rpx。
-  // 门槛定 24rpx —— 比现况松，但足够挡住「又加回一列」这种退步：
-  // 三列时这里算出来是 11.5rpx，会当场红。
+  // minGap 的出处是实测：取诗范围改两列之后，最紧的那一格两侧曾各 31.6px ≈ 63rpx
+  // （当时最长的是 7 字名「小学+初中随机」，Issue #26 已收成「小初随机」）。
+  //
+  // ⚠️ 门槛 24rpx 是**跟着旧名定的**：旧名 7 字，三列时这里算出 11.5rpx，红。
+  // 名字收短后最长的是「本册及之前」（5 字 125rpx），三列算出 32.5rpx ——
+  // **仍过得了 24rpx 这道门槛**，也就是说这条断言从此不再挡「又加回一列」。
+  // 不把门槛抬到 40 去补：那会把「列数」写进一条本来只管「文字两侧留白」的断言里，
+  // 两件事混成一件。列数是设计决定（recite.wxml 里那段「为什么两列」），
+  // 名字的长度是内容，不该由一条留白断言替内容背书。
+  // 这里如实量、如实报：它量的是「当下最长的名字两侧还剩多少」，仅此而已。
   const minGap = 24;
   ok("最窄的选项格两侧留得住空（" + perRow + " 列 · " + longestName + "）",
     room >= minGap && withRadius > 0,
