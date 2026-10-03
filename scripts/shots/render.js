@@ -13,6 +13,13 @@ const { execFileSync } = require("child_process");
 const { compile } = require("./wxml.js");
 const ROOT = path.join(__dirname, "..", "..", "miniprogram");
 
+/* 预览用哪个主题色。
+   Issue #26 里用户说「选个天青色看看页面效果」—— 主题是运行时设置，
+   预览得能换着看，所以给一个环境变量入口：
+     THEME=tianqing node scripts/shots/render.js
+   不设就是默认那支墨，观感与平时一致。 */
+const THEME = process.env.THEME || "";
+
 /* ---------- 0. 先把本机存储装上 ----------
    必须在 require 任何页面之前装：store.js 在模块加载时就认了 wx，
    晚一步装，页面读到的永远是空。 */
@@ -274,6 +281,8 @@ cases.forEach((cfg) => {
     saveProfile(cfg.saveProfile || { logged: !!cfg.logged, nickname: cfg.logged ? "张敏" : "", avatarUrl: "" });
     // 预览要能看「注音开着 / 左对齐」这些状态：settings 直接写进本机存储
     if (cfg.settings) storeMod.saveSettings(cfg.settings); else storeMod.saveSettings({});
+    // 预览主题：THEME 指定时把它写进设置，页面 onShow 里读到、跟着换
+    if (THEME) storeMod.saveSettings({ theme: THEME });
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {

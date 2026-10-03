@@ -174,18 +174,30 @@ function renderNode(n, a, bodyNodes, data, out) {
     // 量出来的「滑轨宽」就是容器宽，比真机多半颗钮 —— measure 会算错一行放不放得下。
     // 两端内缩用 CSS 变量 --n-slider-inset（默认 10px = 半颗钮），
     // 由 shoot/measure 按 block-size 覆盖。
-    out.push(`<div data-tag="slider" class="n-slider ${cls}"><div class="n-slider-track"><div class="n-slider-fill" style="width:${pc}%"></div><div class="n-slider-knob" style="left:${pc}%"></div></div></div>`);
+    // 原生控件的 color / activeColor / block-color 取不到 WXSS 变量，
+    // 页面只能从 WXML 给字面量（主题色就是这么传的）。
+    // 预览若忽略它们，滑条永远画成墨黑 —— 截图会说谎：
+    // 「选了天青但滑条还是黑的」会被当成 bug，其实是这把尺子没跟上。
+    const active = a.activeColor ? interp(a.activeColor, v) : "";
+    const blockC = a["block-color"] ? interp(a["block-color"], v) : "";
+    const fillStyle = active ? `background:${active};` : "";
+    const knobStyle = blockC ? `background:${blockC};` : "";
+    out.push(`<div data-tag="slider" class="n-slider ${cls}"><div class="n-slider-track"><div class="n-slider-fill" style="width:${pc}%;${fillStyle}"></div><div class="n-slider-knob" style="left:${pc}%;${knobStyle}"></div></div></div>`);
     return;
   }
   if (n.tag === "switch") {
     const on = interp(a.checked || "false", v) === "true";
-    out.push(`<div data-tag="switch" class="n-switch ${on ? "on" : ""} ${cls}"><div class="n-switch-k"></div></div>`);
+    const c = a.color ? interp(a.color, v) : "";
+    const onStyle = c ? `background:${c};` : "";
+    out.push(`<div data-tag="switch" class="n-switch ${on ? "on" : ""} ${cls}" style="${onStyle}"><div class="n-switch-k"></div></div>`);
     return;
   }
   if (n.tag === "radio" || n.tag === "checkbox") {
     const on = interp(a.checked || "false", v) === "true";
     const dis = interp(a.disabled || "false", v) === "true";
-    out.push(`<div data-tag="${n.tag}" class="n-${n.tag} ${on ? "on" : ""} ${dis ? "dis" : ""} ${cls}">${on && n.tag === "checkbox" ? "✓" : ""}</div>`);
+    const c = a.color ? interp(a.color, v) : "";
+    const cStyle = c && on ? (n.tag === "checkbox" ? `background:${c};border-color:${c};` : `border-color:${c};`) : "";
+    out.push(`<div data-tag="${n.tag}" class="n-${n.tag} ${on ? "on" : ""} ${dis ? "dis" : ""} ${cls}" style="${cStyle}">${on && n.tag === "checkbox" ? "✓" : ""}</div>`);
     return;
   }
 
