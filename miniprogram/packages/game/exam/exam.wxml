@@ -22,8 +22,8 @@
            这里只交代模板这一层：原生勾选框藏在 label 里（走 .seg-radio
            那套视觉隐藏），点格子任何一处都算勾上 —— 行为是平台的。
 
-           那枚方框画在**右侧**（伪元素，见 .chip.multi::after）：
-           名字保持在格子正中，与上面那组单选格子的名字落在同一条中线上。 -->
+           格子上**不画方框**：未选中灰底、选中主色底，与别处那些选项一字不差，
+           「选没选」只由底色说。 -->
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
                wx:for="{{forms}}" wx:key="key">
