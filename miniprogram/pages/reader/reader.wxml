@@ -18,7 +18,7 @@
            中间的点由 WXML 按「有没有」自己决定出不出现：出处与学段是
            可缺的（课外篇目没有出处，未学篇目停在「新学」照样有），
            写死两个点会在缺项时留下孤零零一个「·」。
-           数量写在 reader.wxss 的 .poem-meta-row 一节，check.js V26 守着。 -->
+           数量写在 app.wxss 的「阅读面 · 身份行」一节，check.js V26 守着。 -->
       <view class="poem-meta-row">
         <text class="poem-meta">{{dynasty}}</text>
         <text class="poem-dot">·</text>
@@ -42,8 +42,8 @@
          两个选项就吃掉半屏；这里全部走 .opt-radio（视觉隐藏的原生控件，
          行为还在 label 上），量出来才放得下 —— 七个段加起来 499rpx，
          卡片内容宽 596rpx 里还余 96rpx。
-         数字与算式写在 reader.wxss 的 .prefs 一节，check.js V25 按同一份
-         度量盯着「放得下」这件事，改文案或改档位就红。 -->
+         数字与算式写在 app.wxss 的「阅读面 · 偏好行」一节，
+         check.js V25 按同一份度量盯着「放得下」这件事，改文案或改档位就红。 -->
     <view class="prefs">
       <radio-group class="pref-seg" bindchange="onAlign">
         <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
@@ -78,18 +78,22 @@
       </view>
     </view>
 
-    <view class="rule">
-      <text class="rule-t">正文</text>
-    </view>
-
     <!-- 正文。
+         上面那一排「对齐 · 注音 · 字号」下面是**直接接正文**：曾经这里还有
+         一道「正文」分隔条，2026-10-03 用户说「删除 A－ A＋ 和古诗内容中间
+         的 --正文-- 这一行」。它本来也没说清任何事 —— 这一屏除了正文没有
+         第二样东西，标注它等于给「这里是内容」加一句废话。
+
          版式（哪一句单占一行、哪几句连着一行、段落断在哪）由语料层
          `corpus.layout()` 决定 —— 页面只管照着排。理由写在那儿：
          七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句
          折开之后一句一行才读得下去。
 
          注音与正文同形同序（「段落 → 行 → 句」），所以换模式不会跳版。
-         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。 -->
+         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。
+
+         这一段的样式与首页那张背诵弹层共用一份，收在 app.wxss 的
+         「阅读面」一节 —— 两处是同一张卡，不该各排一遍。 -->
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
         <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
@@ -99,11 +103,16 @@
         </view>
       </block>
       <block wx:else>
-        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段 -->
+        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段。
+
+             每个字占一格（.token），格宽 = 格高 = 这一档的 --py-box：
+             汉字与汉字之间的空隙因此是常数，A－ A＋ 全程不变；
+             标点虽然是「半格字身」，也归进格子里（.token.punc 收窄半格），
+             不然「有音的行」比「没音的行」多出半格，两种排法对不上。 -->
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
           <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
             <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-              <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+              <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
                 <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
                 <text class="tk-ch">{{tk.ch}}</text>
               </view>
@@ -135,7 +144,7 @@
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+    <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
       <text class="card-title bar">译文</text>
       <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>

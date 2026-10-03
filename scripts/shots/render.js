@@ -44,6 +44,11 @@ function runtime() {
     setNavigationBarTitle() {}, vibrateShort() {}, stopPullDownRefresh() {},
     setClipboardData(o) { o && o.success && o.success(); },
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" }),
+    /* 页面根字号：预览把 rpx 折成 rem，而 rem 的根字号在真机上来自
+       wx.getAppBaseInfo().fontSizeScaleFactor（微信跟随系统的「字体大小」）。
+       不接这一段它就是个空值 —— 页面根字号落回默认，所有 rpx 都小一档半，
+       「一行多宽、字距多少」跟着错。真机上它是个常数，预览也得是个常数。 */
+    getAppBaseInfo: () => ({ SDKVersion: "3.5.0", language: "zh_CN", fontSizeScaleFactor: 1 }),
     loadFontFace() {}, login(o) { o && o.fail && o.fail({ errMsg: "no wx" }); },
     getUserProfile(o) { o && o.fail && o.fail({}); },
     request(o) { o && o.fail && o.fail({ errMsg: "offline" }); },
@@ -66,6 +71,23 @@ function runtime() {
       page.setData = function (obj, cb) {
         Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
         if (cb) cb();
+      };
+      /* 组件：预览认不得自定义组件的运行时，所以 selectComponent 给一个
+         **最小替身** —— 它只回答「这一页确实拿到了那个组件」，
+         再把 open() 记进 page.data.sheetOpen，供 expandReciteSheet() 摆开。
+         真机走的仍是组件自己那一份；这里只是让截图能拍到那张卡。 */
+      page.selectComponent = function (sel) {
+        if (sel !== "#sheet") return null;
+        const self = this;
+        return {
+          open(queue, id) {
+            const list = Array.isArray(queue) ? queue : [];
+            const idx = Math.max(0, list.findIndex((it) => it && it.id === id));
+            self.data.sheetOpen = true;
+            self.data.sheetIndex = idx;
+          },
+          onClose() { self.data.sheetOpen = false; }
+        };
       };
       ["onLoad", "onShow"].forEach((fn) => { if (typeof page[fn] === "function") page[fn].call(page, query || {}); });
       CURRENT = page;
@@ -102,6 +124,9 @@ const TOKENS = flattenCss(path.join(ROOT, "styles/tokens.wxss"));
 const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g, "");
 const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
+  // 背诵弹层是首页那张浮层，样式同样要进预览 —— 漏了它，截图里就只剩一屏
+  // 「点了没反应」的列表，而这一轮改的恰好就是它
+  + flattenCss(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"))
   // 自绘底栏也是组件，样式同样要进预览 —— 它要是漏了，底栏在截图里
   // 就是个没有图标的灰条，看图的人会以为「图标没做」
   + flattenCss(path.join(ROOT, "custom-tab-bar/index.wxss"));
@@ -159,6 +184,13 @@ const SHELL_CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:24px;display:flex;flex-wrap:wrap;gap:20px}
 .device{width:390px;background:#f5f5f7;border-radius:38px;box-shadow:0 10px 40px rgba(0,0,0,.18);overflow:hidden;border:8px solid #1b1b1d;position:relative}
+/* 浮层（弹层 / 遮罩 / 自绘底栏）在真机上都是 position:fixed，而在预览里
+   一个 .device 只是页面流里的一张「手机壳」—— fixed 会以**浏览器视口**为参照，
+   于是首页那张弹层会盖到旁边每一屏上（截图里所有屏都蒙了一层灰）。
+   所以把 .device 变成 fixed 的包含块。
+   ⚠️ 用 transform 而不是 contain:paint —— transform 一定会建包含块，
+   而 contain 在各版本浏览器上的行为不一致，预览的尺子不能靠它。 */
+.device{transform:translateZ(0)}
 .navbar{background:#ffffff;color:#1c1c1e;height:64px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;letter-spacing:1px;position:relative}
 .navbar .back{position:absolute;left:14px;font-size:22px;opacity:.9}
 .navbar .menu{position:absolute;right:12px;top:8px;width:78px;height:28px;border-radius:14px;border:1px solid rgba(28,28,30,.2);display:flex;align-items:center;justify-content:space-around;opacity:.6}
@@ -187,6 +219,14 @@ function screenCss(cfg, pageCss) {
   const scoped = raw.replace(/(?<![\w.-])page\s*\{/g, ".screen{");
   return rpx2px(scoped);
 }
+
+/* 预览里那条「已知的继承字号」。
+   它不是设计值：page{} 里定了字号令牌、页面样式表也各自给自己的字号，
+   真正靠**继承**的只有 `.poem-clause`（字在 .tk-ch 上）。而它一旦继承到
+   浏览器/系统给的字号（这一台是 18.72px），量字号、量字距读到的就是
+   一台机器一个数 —— 曾经差点把 18.72px 当成一条规格写进样式表。
+   挂在机壳那一层，页面样式表谁也压不到它。 */
+const DEVICE_FONT_SIZE = ".device{font-size:16px}";
 
 function expandComponents(node, data, P) { return node; }
 
@@ -217,6 +257,81 @@ function tabBarHtml(active, themeStyle) {
 /** 页面 data 里那份主题内联样式（theme.js 的 apply 塞进去的），预览底栏照抄一份 */
 function themeStyleOf(data) {
   return (data && data.themeStyle) || "";
+}
+
+/**
+ * 把 <recite-sheet> 展开成组件自己的 WXML。
+ *
+ * 预览的编译器不认自定义组件（README「它不是什么」第 2 条），而这一轮
+ * 改的恰好是首页那张弹层 —— 不展开，截图里就只有一屏「点了没反应」的列表。
+ *
+ * 展开时要带三样：
+ *   1. 组件自己的 data（`sheet` 在下面现算一份），与页面 data 合成一个作用域
+ *   2. queue 这个 property 绑的是页面 data 里的 plan —— 组件读它
+ *   3. wx:if="{{open}}" 那一层要能按 `do` 里调的 openSheet 决定显不显
+ *
+ * ⚠️ 这里刻意**不**模拟组件的完整生命周期：预览只回答「长什么样」，
+ * 所以它把组件最外层那个 wx:if 直接按「要不要摆开」写死，内部字段照抄
+ * recite-sheet.js 的 data 默认值。改组件 data 时这一份不会自动跟 ——
+ * 但真机看到的是组件自己那一份，截图只是看一眼版式。
+ */
+function expandReciteSheet(wxml, data) {
+  if (wxml.indexOf("<recite-sheet") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
+  // 组件的作用域：页面 data 之上压一层组件自己的字段
+  const merged = Object.assign({}, data, {
+    open: !!data.sheetOpen,
+    index: data.sheetIndex || 0,
+    total: (data.plan || []).length,
+    navText: ((data.sheetIndex || 0) + 1) + " / " + ((data.plan || []).length || 1),
+    queue: data.plan || [],
+    master: (data.sheetMastery === undefined ? 0 : data.sheetMastery),
+    hint: data.sheetHint || "",
+    align: "center",
+    fontSize: 0,
+    fontMin: -2,
+    fontMax: 4,
+    aligns: [{ key: "left", label: "左对齐" }, { key: "center", label: "居中" }],
+    pinyinModes: [{ key: "off", label: "不注音" }, { key: "rare", label: "生字" }, { key: "all", label: "全文" }],
+    pinyinMode: "off",
+    pinyinOn: false,
+    results: [
+      { key: "bad", label: "忘记", cls: "bad" },
+      { key: "fuzzy", label: "模糊", cls: "fuzzy" },
+      { key: "good", label: "记住", cls: "good" }
+    ],
+    themeHex: data.themeHex || "",
+    themeStyle: data.themeStyle || ""
+  });
+  // 组件自己的字段名与页面撞车时（title / author / id…），组件那一份优先 ——
+  // 弹层里排的是「当前这一首」，页面 data 里那一份是首页自己的
+  const cur = pickSheetPoem(data);
+  Object.keys(cur).forEach((k) => { merged[k] = cur[k]; });
+  Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
+  return wxml.replace(/<recite-sheet[^>]*\/>/g, comp);
+}
+
+/** 预览里弹层排哪一首。
+ *
+ * 刻意**不**去跑组件的 loadCurrent()：那需要一套组件运行时，而这一份
+ * 替身只回答「版式对不对」。所以正文用一个固定的四行绝句 ——
+ * `paras` 的**形状必须是真的**：`[[行, 行], …]`，行是「句」的数组。
+ * 形状错了（比如少一层）预览会静默什么都不渲染，看着像「正文没做」。
+ */
+function pickSheetPoem(data) {
+  return {
+    title: "咏鹅",
+    author: "骆宾王",
+    dynasty: "唐",
+    source: "课内诗词",
+    stage: "新学",
+    hasTranslation: true,
+    showTranslation: false,
+    translation: "",
+    translationSource: "",
+    paras: [[["鹅，鹅，鹅，"], ["曲项向天歌。"]], [["白毛浮绿水，"], ["红掌拨清波。"]]],
+    tokens: []
+  };
 }
 
 function pageHtml(cfg, data) {
@@ -250,6 +365,7 @@ function pageHtml(cfg, data) {
     for (let i = 0; i < n; i++) s += '<view class="sk-block sk-line w80"></view>';
     return s + "</view>";
   });
+  wxml = expandReciteSheet(wxml, data);
   const body = compile(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
   const screenCssStr = screenCss(cfg, pageCss);
@@ -281,8 +397,16 @@ cases.forEach((cfg) => {
     saveProfile(cfg.saveProfile || { logged: !!cfg.logged, nickname: cfg.logged ? "张敏" : "", avatarUrl: "" });
     // 预览要能看「注音开着 / 左对齐」这些状态：settings 直接写进本机存储
     if (cfg.settings) storeMod.saveSettings(cfg.settings); else storeMod.saveSettings({});
-    // 预览主题：THEME 指定时把它写进设置，页面 onShow 里读到、跟着换
-    if (THEME) storeMod.saveSettings({ theme: THEME });
+    /* 预览主题，**两处来源，屏幕自己那份优先**：
+       · pages.json 里某一屏写了 settings.theme（例如 home-tianqing）—— 那一屏就那个色
+       · THEME 环境变量是**没写 theme 的那些屏**的默认值
+       踩过的一个坑：原来这里是无条件 `if (THEME) saveSettings({theme: THEME})`，
+       于是只要外面带上 THEME，pages.json 里那几屏**各自指定的主题全被盖掉** ——
+       `THEME=zhuhong node render.js` 之后，home-minghuang 那屏其实画的是朱红。
+       图还照样出得来、caption 也写着 minghuang，只有颜色是错的 ——
+       这种「图在、名字对、内容是别的」比没有图更糟，所以这里按屏判一次。 */
+    const screenTheme = (cfg.settings && cfg.settings.theme) || THEME;
+    storeMod.saveSettings({ theme: screenTheme });
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {
@@ -332,5 +456,5 @@ const FONT_CSS = fontFaceCss();
 if (FONT_CSS) console.log("预览已注入篇名宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
 
 fs.writeFileSync(path.join(__dirname, "out", "preview.html"),
-  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
+  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${DEVICE_FONT_SIZE}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
 console.log("写出 " + html.length + " 屏 → scripts/shots/out/preview.html");

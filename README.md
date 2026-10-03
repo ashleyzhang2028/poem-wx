@@ -446,6 +446,47 @@ corpus.layout(text) → {
 工具层的**给人看的字符串**（注释先摘掉 —— 讲清楚这些词为什么被删掉，
 正是给下一个人看的），撞见任何一个就红。
 
+### 背一首诗是一张弹层，不是一次跳页
+
+> 首页的今日古诗背诵，当用户点击古诗，他不是从页面底部弹出详情页去背诵吗？
+> 请参考 /poem 代码库。这种弹出卡片式方便用户背完随即进入下一首，
+> 而不需要页面之间的切换。
+
+网页版（`/poem`）本来就是这么做的：`js/app.js` 的 `openPoem()` 把
+`#modal` 摆开（`css/style.css` 里 `.modal` 是 `position:fixed; inset:0;
+align-items:flex-end`，`.modal-box` 只圆上面两角、从底部滑上来），
+`handleResult()` 评完分就 `closeModal()` + `renderToday()` ——
+**一件跳页都没有**。
+
+小程序这边原来走的是 `navigateTo` 详情页，背完再 `redirectTo` 下一首：
+每首一次整页重建，用户看见的是一屏空白接着一屏空白。现在首页点篇目、
+点「开始背」都从底部弹同一张卡上来：
+
+| | 网页版 | 这里 |
+|---|---|---|
+| 打开 | `openPoem(p, planItem)` → `#modal` | `recite-sheet` 组件的 `open(queue, id)` |
+| 评分 | 三格 · 关弹层 · 就地重排列表 | 三格 · 顺势进下一首 · 回调首页重排 |
+| 走完 | 回列表 | 队列到头，弹层自己收掉 |
+
+**队列由首页给**（`queue="{{plan}}"`）：下一首是什么，只有排过计划的那个人知道
+（复习轮次、今日加背都排在那一列里）。组件不自己排计划，只照着往下走。
+门禁也仍由首页把着 —— 组件不发网络、不查门禁，那两样是页面的事，
+组件替页面做决定，页面就没法统一口径。
+
+**阅读面因此有了两个住处**，所以它被收进了 `app.wxss` 的「阅读面」一节：
+标题区 / 身份行 / 偏好行 / 正文 / 注音 / 译文，一处定义、两处使用。
+这不是顺手抽个公共类 —— 抽走的每一段都带着原来那份理由（为什么身份行是一行、
+为什么偏好行不许折、为什么注音那条路行距要收），搬过来时一条都没丢。
+各自只留各自的壳：详情页是 `.poem-card` 的内边距与背诵卡，
+弹层是底部滑上来的动画、把手、钉在卡底的评分区。
+
+`check.js` V28 守着五件事：首页点篇目不许再 `navigateTo` 详情页、
+弹层靠底且只在顶部两角是圆角、压得过自绘底栏、阅读面只此一份（两处都不许再写）、
+三档评分与「顺次进下一首」都在组件里。每一条都做过反证。
+
+> **详情页那一页仍然在**：列表页、搜索页、飞花令还要跳它 ——
+> 那是「查一首诗」，与首页「今天这一趟」是两件事。
+
 ### 尺寸只有一个旋钮
 
 > 使用他们默认的但是**小一号**的全局配置，例如 colorUI。
@@ -525,7 +566,7 @@ corpus.layout(text) → {
 自检里有六条断言守着这一节（字号走令牌 / 卡片间距只一处 / 页头不重复 /
 门禁卡唯一 / 可点有反馈 / 空状态给出路），加上控件来源、门禁开合、
 控件间距与按钮居中、「选一个」只有一套长相、图标与缩放令牌、
-以及 V13 / V23 / V23.9 / V24 / V25 / V26 / V27 那几组共 **924 项**；
+以及 V13 / V23 / V23.9 / V24 / V25 / V26 / V27 / V28 那几组共 **963 项**；
 另有 `scripts/parity.js` 的 **28 项**守「网页版每一项能力都有交代」。
 
 ### 改界面时怎么「看见」
@@ -534,7 +575,7 @@ corpus.layout(text) → {
 
 ```bash
 node scripts/shots/render.js          # 跑页面 → 编译 WXML → 出 preview.html
-node scripts/shots/shoot.js           # 逐屏截图到 shots/out/shots/（29 屏）
+node scripts/shots/shoot.js           # 逐屏截图到 shots/out/shots/（38 屏）
 node scripts/shots/shoot.js reader    # 只截名字里含 reader 的
 ```
 
@@ -572,7 +613,8 @@ node scripts/shots/shoot.js reader    # 只截名字里含 reader 的
 miniprogram/
 ├── pages/          # 主包：home / list / reader / library / search / mine
 ├── packages/       # 分包：settings / game（含题库）/ progress / admin
-├── components/     # 全局组件：lock-card（未登录那张卡）/ skeleton（骨架屏）
+├── components/     # 全局组件：lock-card（未登录那张卡）/ skeleton（骨架屏）/
+│                    #   recite-sheet（首页底部弹出来的背诵卡）
 ├── utils/          # 纯逻辑
 │   ├── corpus / store / review-models / scheduler / quiz
 │   ├── wire                        # 报文形状（本机 ↔ poem 服务端）

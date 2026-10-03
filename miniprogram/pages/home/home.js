@@ -152,22 +152,51 @@ Page({
   },
 
   /**
-   * 点开一篇。
-   * 未登录时**不跳转也不静默吞掉** —— 弹一句人话，把人送去登录页。
-   * 直接 navigateTo 到详情页由那边拦也行，但那会让用户先看到一屏空白再被弹窗，
-   * 不如在首页就把话说清。
+   * 点开一篇：从**页面底部弹出来背**，不跳页。
+   *
+   * 用户 2026-10-03 的原话：
+   *   「首页的今日古诗背诵，当用户点击古诗，他不是从页面底部弹出详情页去背诵吗？
+   *     请参考 /poem 代码库。这种弹出卡片式方便用户背完随即进入下一首，
+   *     而不需要页面之间的切换。」
+   *
+   * 网页版就是这么做的（js/app.js 的 openPoem → `#modal`）：点一首诗弹层推上来，
+   * 评完分弹层关掉、列表就地重排，全程一次页面跳转都没有。
+   * 上一版是 navigateTo 详情页，背完再 redirectTo 下一首 —— 每首一次整页重建，
+   * 用户看见的是一屏空白接着一屏空白。
+   *
+   * 未登录时**不弹也不静默吞掉** —— 弹一句人话，把人送去登录页。
+   * 这条没变：门禁仍由首页把着，弹层自己不查（它只管读与评分）。
    */
   onOpen(e) {
     const id = e.currentTarget.dataset.id;
+    this.openSheet(id);
+  },
+
+  /** 开始背：从今天第一首没背过的弹起 —— 「开始」在哪儿都一样是这一件事 */
+  onStart() {
+    const first = this.data.plan.find((r) => !r.read) || this.data.plan[0];
+    if (!first) return;
+    this.openSheet(first.id);
+  },
+
+  openSheet(id) {
     gate.guard("背诵", () => {
-      wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(id) });
+      const sheet = this.selectComponent("#sheet");
+      // 「今日安排」那一列就是队列：复习轮次、加背这些都排在里面，
+      // 弹层照着往下走即可 —— 队列由首页给，是刻意的（下一首是什么，
+      // 只有排过计划的人知道）。
+      if (sheet) sheet.open(this.data.plan, id);
     });
   },
 
-  onStart() {
-    if (!gate.guard("每日背诵")) return;
-    const first = this.data.plan.find((r) => !r.read) || this.data.plan[0];
-    if (first) wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(first.id) });
+  /** 弹层里翻到新的一首：列表要把勾点亮、进度条要跟着走 */
+  onSheetOpen() {
+    this.refresh();
+  },
+
+  /** 今日这一趟走完了 —— 回列表，勾都在 */
+  onSheetFinish() {
+    this.refresh();
   },
 
   onSettings() {
