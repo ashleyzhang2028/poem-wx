@@ -4,6 +4,7 @@ const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
 const auth = require("../../../utils/auth");
 const gate = require("../../../utils/gate");
+const theme = require("../../../utils/theme");
 
 const ROLE_NAME = { owner: "所有者", admin: "管理员", user: "普通用户" };
 
@@ -49,6 +50,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     this.refresh();
   },
 

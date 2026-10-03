@@ -28,7 +28,7 @@
   font-family: var(--font-poem);
   font-size: var(--fs-lead);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }
 
@@ -121,7 +121,7 @@
 }
 
 .day-label.today {
-  color: var(--ink);
+  color: var(--strong-text);
   font-weight: 600;
 }
 
@@ -173,7 +173,7 @@
 .stage-count {
   font-family: var(--font-num);
   font-size: var(--fs-body);
-  color: var(--ink);
+  color: var(--strong-text);
   font-variant-numeric: tabular-nums;
 }
 

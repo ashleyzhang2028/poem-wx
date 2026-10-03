@@ -39,7 +39,7 @@
   font-family: var(--font-poem);
   font-size: var(--fs-head);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
@@ -104,7 +104,7 @@
   width: 112rpx;
   height: 112rpx;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -178,8 +178,8 @@
 }
 
 .tick.on {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
 .tick-t {

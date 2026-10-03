@@ -3,6 +3,7 @@ const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
+const theme = require("../../../utils/theme");
 
 /**
  * 飞花令。
@@ -54,6 +55,7 @@ Page({
    * 门禁放 onShow：从「去登录」回来时 onLoad 不会再跑。
    */
   onShow() {
+    theme.apply(this);
     const ok = entitlement.can("feihualing");
     this.setData({
       allowed: ok,

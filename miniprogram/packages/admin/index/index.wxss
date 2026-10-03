@@ -20,7 +20,7 @@
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
@@ -97,7 +97,7 @@
 
 .cap-name {
   font-size: var(--fs-body);
-  color: var(--ink);
+  color: var(--strong-text);
   line-height: 1.4;
   margin-left: var(--sp-2);
   margin-right: var(--sp-2);
@@ -141,7 +141,7 @@
 .acct-name {
   display: block;
   font-size: var(--fs-body);
-  color: var(--ink);
+  color: var(--strong-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

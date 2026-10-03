@@ -1,4 +1,4 @@
-<view class="page has-tabbar">
+<view class="page has-tabbar" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="搜索要登录" note="登录后才能搜" mark="寻" />
 
   <block wx:else>

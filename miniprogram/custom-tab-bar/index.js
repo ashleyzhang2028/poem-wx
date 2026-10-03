@@ -12,10 +12,16 @@
  * 形状照参考图：一枚图标在上、一行小字在下；选中的那一项图标嵌进一块
  * 墨黑圆底（填色说「当前在这」），与页面里「选中 = 填墨黑」同一条规矩。
  */
+const theme = require("../utils/theme");
+
 Component({
   data: {
     /** 当前选中项（0 起） */
     active: 0,
+    /** 主题内联样式。底栏虽然在页面树里（CSS 变量会继承），
+        但自定义 tabBar 的挂载位置由平台决定 —— 与其赌它一定继承得到，
+        不如自己读一次。多读一次的成本是一件本机存储。 */
+    themeStyle: "",
     list: [
       { pagePath: "/pages/home/home", text: "背诵", icon: "book" },
       { pagePath: "/pages/library/library", text: "课外", icon: "stack" },
@@ -24,9 +30,18 @@ Component({
     ]
   },
 
+  attached() {
+    this.setData({ themeStyle: theme.style() });
+  },
+
   methods: {
     setActive(index) {
-      if (this.data.active !== index) this.setData({ active: index });
+      // 顺手刷一次主题：用户可能在设置页换了色，回来时底栏要跟上。
+      // setActive 是每个 tab 页 onShow 都会调的那一拍，正好。
+      const themeStyle = theme.style();
+      const patch = { themeStyle };
+      if (this.data.active !== index) patch.active = index;
+      this.setData(patch);
     },
 
     onTap(e) {

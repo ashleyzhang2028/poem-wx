@@ -594,7 +594,11 @@ pages.forEach((p) => {
     // item / index 是 wx:for 的内置名，tk / t / b / p 等是本项目自定的 wx:for-item 名
     // item / index 是 wx:for 的内置名；其余是本项目自定的 wx:for-item 名，
     // 它们不是 data 字段，不该被算成「js 里没出现」。
-    if (["item", "index", "tk", "t", "b", "p", "l", "grp", "caprow", "row", "true", "false"].indexOf(name) >= 0) return;
+    // themeStyle / themeHex 不在这份白名单里，但也不是「写漏了」：
+    // 它们由 utils/theme.js 的 apply(page) 在 onShow 里一次性 setData 进去，
+    // 页面 js 里当然不出现这两个名字 —— 每个页面各写一遍才是上一版那种漂移。
+    if (["item", "index", "tk", "t", "b", "p", "l", "grp", "caprow", "row", "true", "false",
+         "themeStyle", "themeHex"].indexOf(name) >= 0) return;
     if (js.indexOf(name) < 0) unusedWarn.push(p + " → " + name);
   });
 });
@@ -1677,14 +1681,19 @@ pages.forEach((p) => {
 });
 
 /**
- * 原生控件的配色：开关与滑块的 color 必须是**主色那一个值**。
+ * 原生控件的配色：开关与滑块的 color 必须**跟着主题走**。
  *
  * 上一版这里写死 `#2f6055`（雨过天青），于是「换主色」这件事要改十几个页面。
- * 现在把主色取成常量 `NATIVE_INK`，断言仍然盯**同一个字面量** ——
+ * 当时把主色取成常量 `NATIVE_INK` 钉在一处 —— 而 Issue #26 加了主题色之后，
+ * 「一处」也变了：它不再是某个字面量，而是页面 data 里那份 `themeHex`
+ * （由 utils/theme.js 的 apply() 给）。
+ *
  * 原生控件的交互色只能走组件属性，取不到 WXSS 的 var()，
- * 所以它注定要在 WXML 里写死一次。那就钉在一处，改只改这里。
+ * 所以它注定要在 WXML 里写**一次**。既然它跟着主题走，
+ * 那就绑到 `{{themeHex}}` —— 断言盯的仍是「同一处」，
+ * 只是那一处从常量变成了绑定。
  */
-const NATIVE_INK = "#1c1c1e";
+const NATIVE_INK = "{{themeHex}}";
 const COLOR_TAGS = ["switch", "slider"];
 const badColor = [];
 pages.forEach((p) => {
@@ -1706,7 +1715,7 @@ pages.forEach((p) => {
     }
   });
 });
-ok("原生控件的配色都对齐主色 " + NATIVE_INK, badColor.length === 0, badColor.join("; "));
+ok("原生控件的配色都跟着主题走 " + NATIVE_INK, badColor.length === 0, badColor.join("; "));
 
 /* ---------- 7.8 界面观感与交互的回归哨兵 ---------- */
 
@@ -2696,9 +2705,13 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 {
   const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
 
-  // 1) 主色：令牌里 --ink 是墨黑，且它就是参考图里那种近黑
+  // 1) 主色：Issue #26 之后，「墨」拆成了两支 ——
+  //      --ink    说的是「这是字」（正文 / 诗词 / 输入的字）：仍是中性近黑
+  //      --strong 说的是「这里是重点」（标题 / 按钮底 / 选中态）：跟主题色走
+  //    这条断言原来守的是「--ink 必须是中性墨黑」—— 口径没变，
+  //    只是现在它守的是**那支管字的墨**；主题色能变，字色不能变。
   const inkM = /--ink\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
-  ok("主色令牌 --ink 已定义", !!inkM);
+  ok("字色令牌 --ink 已定义", !!inkM);
   if (inkM) {
     const hex = inkM[1].toLowerCase();
     // 墨黑：三通道都低且彼此接近（不是某一种彩色的深色版）
@@ -2706,10 +2719,14 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     const g = parseInt(hex.slice(2, 4), 16);
     const b = parseInt(hex.slice(4, 6), 16);
     const spread = Math.max(r, g, b) - Math.min(r, g, b);
-    ok("主色是中性墨黑（三通道接近且够深）",
+    ok("字色仍是中性墨黑（三通道接近且够深）—— 正文不上主题色",
       spread <= 12 && r < 40 && g < 40 && b < 40,
       "#" + hex + " spread=" + spread);
   }
+  // --strong 必须转发到 --theme：这样才能「换一处、全站跟」。
+  // （页面根节点上覆盖的是最终变量，见 utils/theme.js 的 style()）
+  ok("强调色 --strong 由 --theme 给", /--strong\s*:\s*var\(--theme\)\s*;/.test(tokens));
+  ok("主题色 --theme 已定义", /--theme\s*:\s*#([0-9a-fA-F]{6})\s*;/.test(tokens));
 
   // 2) 上一版的身份色不许回到页面样式表里当「页面主色」用。
   //    这八个数是上一版按页面分派的那一套（雨过天青 / 琥珀 / 秋香 / 朱砂 / 天水碧 / 缃色…），
@@ -3852,9 +3869,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       multiBefore ? multiBefore[1].replace(/\s+/g, " ").trim() : "没有 .chip.multi::before");
     ok("上一版那枚「压在墨黑上的小勾」已经撤掉",
       !/\.chip\.multi(\.on)?::after\s*\{/.test(body));
-    // 双圈的对比度来自「实心 / 空心」：选中时内圈也填墨
+    // 双圈的对比度来自「实心 / 空心」：选中时内圈也填主色
+    // （Issue #26 之后「主色」有两支：--ink 是字，--strong 是重点/选中态。
+    //   选中态那一支是 --strong，所以这里认它。）
     ok("多选选中时内圈填墨（实心 vs 空心，光看色块就分得出）",
-      /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(body));
+      /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--strong\)/.test(body));
   }
 }
 
@@ -4044,10 +4063,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "算式 " + Math.round(rowW) + "rpx / 浏览器 " + BROWSER_ROW + "rpx —— "
     + "差得太多说明有一边的尺子坏了（preview 里 .opt-radio 又占位了？）");
 
-  // 4) 选中态与全站一致：填墨黑 + 白字
+  // 4) 选中态与全站一致：填主色 + 对比字
+  //    （主色那一支是 --strong，见 tokens.wxss「墨拆成两支」的注释）
   const onBody = ruleBody(".pref-opt.on");
-  ok("这一段选中的样子就是全站那一条（填墨黑）",
-    /background\s*:\s*var\(--ink\)/.test(onBody),
+  ok("这一段选中的样子就是全站那一条（填主色）",
+    /background\s*:\s*var\(--strong\)/.test(onBody),
     onBody.replace(/\s+/g, " ").trim());
   ok("选中时文字变白", /color\s*:\s*var\(--on-ink\)/.test(ruleBody(".pref-opt.on .pref-t")));
 
@@ -4173,6 +4193,135 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const rmsrc = fs.readFileSync(path.join(ROOT, "utils", "review-models.js"), "utf8");
   ok("结果提示语还在，且只说时刻",
     /小时后再复习/.test(rmsrc) && /分钟后再复习/.test(rmsrc) && /下次复习/.test(rmsrc));
+}
+
+/**
+ * V27. 主题色（Issue #26）。
+ *
+ * 用户要的是「设置里给九种中华传统色，选了之后按钮、选中项、列表主标题
+ * 都跟着变」。这一节的来历就是这一句 —— 但真正要守的不是「有九个色」，
+ * 而是**这次改造最容易在后来被改回去的几件事**：
+ *
+ *   1. **九色清单只有一个出处**（utils/theme.js），tokens.wxss 里的默认值
+ *      必须与它的默认那一项一致 —— 两处各写一遍，迟早漂。
+ *   2. **每个色都要有「压在它上面的字色」**。朱红、明黄、月白这几个明度
+ *      差得远，一律压白字会看不清 —— 这是这个功能里唯一一个「不做就出错」
+ *      的地方，所以要守。
+ *   3. **每个页面根节点都挂了 themeStyle**。漏一个页面，那一页就永远停在
+ *      默认墨色，而且是**用户走过去才发现**（截图里看不出来的那种漏）。
+ *   4. **正文与诗词不上主题色**。--ink 仍是中性近黑 —— 用户要的是
+ *      「按钮 / 选中 / 标题」变色，不是「整页染成朱红」。
+ *      朱红主题下正文还是黑的，这一条才是对的。
+ *
+ * 这一组都做过反证（把事实改坏，确认会红）。
+ */
+{
+  const themePath = path.join(ROOT, "utils", "theme.js");
+  const themeSrc = fs.readFileSync(themePath, "utf8");
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+
+  // 1) 用户点名的那九种中华传统色一个都不少，另有「墨」作为回到默认的那一格。
+  //    清单里因此是 10 项 —— 多出来的那一项不是「又凑了一个色」，
+  //    而是**必须有**：选了朱红之后要能回得去，否则用户只能删小程序重来。
+  const entries = (themeSrc.match(/\{\s*key:\s*"[a-z]+",[^}]*\}/g) || []);
+  ok("主题色清单里有 10 项（用户点名的 9 种 + 回到默认的那一格「墨」）",
+    entries.length === 10, "实际 " + entries.length);
+  // 用户点名的那九种，色值一个都不许漂
+  const WANTED = [
+    ["朱红", "FF4C00"], ["明黄", "FAD069"], ["天青", "228FBD"], ["月白", "D6ECF0"],
+    ["胭脂", "9D2933"], ["竹青", "789262"], ["玄色", "622A1D"], ["鸦青", "424C50"],
+    ["藕荷", "E4C6D0"]
+  ];
+  const missing = WANTED.filter((w) =>
+    themeSrc.indexOf('name: "' + w[0] + '"') < 0
+    || !new RegExp('name:\\s*"' + w[0] + '",\\s*hex:\\s*"#' + w[1] + '"', "i").test(themeSrc));
+  ok("用户给的九个色值原样在清单里（一个都不许漂）", missing.length === 0,
+    missing.map((w) => w[0] + " " + w[1]).join(", "));
+  const badEntry = entries.filter((e) =>
+    !/hex:\s*"#[0-9A-Fa-f]{6}"/.test(e) || !/deep:\s*"#[0-9A-Fa-f]{6}"/.test(e)
+    || !/on:\s*"#[0-9A-Fa-f]{6}"/.test(e) || !/text:\s*"#[0-9A-Fa-f]{6}"/.test(e));
+  ok("每个主题色都带 hex / deep / on / text（四个值一个都不能少）",
+    badEntry.length === 0, badEntry.slice(0, 3).join(" | "));
+
+  // 1.5) **文字色必须读得出来**。这是这个功能里唯一一个「不做就出错」的地方：
+  //      月白 / 明黄 / 藕荷 这几个本色压在白底上只有 1.2~1.6:1，当标题等于隐形。
+  //      门槛 4.5:1（WCAG AA 正文标准）。底色（按钮、选中块）不受这条管 ——
+  //      底色只要压在上面的字读得出就行，那由 on 管。
+  const contrast = (a, b) => {
+    const lum = (hex) => {
+      const h = hex.replace("#", "");
+      const v = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+        .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+      return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+    };
+    const la = lum(a), lb = lum(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  };
+  const textPairs = [...themeSrc.matchAll(/name:\s*"([^"]+)"[^}]*?text:\s*"(#[0-9A-Fa-f]{6})"/g)]
+    .map((m) => [m[1], m[2]]);
+  const lowContrast = textPairs.filter(([, c]) => contrast(c, "#f5f5f7") < 4.5)
+    .map(([n, c]) => n + " " + c + " " + contrast(c, "#f5f5f7").toFixed(2) + ":1");
+  ok("每个主题色的文字版对浅灰底都 ≥ 4.5:1（浅色主题当标题也读得清）",
+    lowContrast.length === 0, lowContrast.join(" | "));
+
+  // 1.6) 标题走 --strong-text、底色走 --strong —— 两支不许互相串。
+  //      （串了的后果：月白主题里标题看不见，或者按钮底成了深墨绿。）
+  const appW = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const headTitle = /\.head-title\s*\{([^}]*)\}/.exec(appW);
+  ok("页头标题用 --strong-text（文字那一支）",
+    !!headTitle && /var\(--strong-text\)/.test(headTitle[1]));
+  const btnPrimary = /\.btn\.primary\s*\{([^}]*)\}/.exec(appW);
+  ok("主按钮的底用 --strong（底色那一支）",
+    !!btnPrimary && /background\s*:\s*var\(--strong\)/.test(btnPrimary[1]));
+
+  // 2) tokens 里的 --theme 默认值 == 清单里默认那一项
+  const tM = /--theme\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
+  const inkM = /--ink\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
+  const defM = /\{\s*key:\s*"(\w+)",\s*name:\s*"墨",\s*hex:\s*"(#[0-9A-Fa-f]{6})"/.exec(themeSrc);
+  ok("默认那一项是「墨」", !!defM, defM ? defM[1] : "读不到");
+  if (tM && defM) {
+    ok("tokens 的 --theme 默认值 == 清单里默认那一项（两处不许各写一遍）",
+      "#" + tM[1].toLowerCase() === defM[2].toLowerCase(),
+      "tokens 里 #" + tM[1] + " vs theme.js " + defM[2]);
+  }
+  if (inkM && tM) {
+    // --ink 是字色，它必须仍是墨黑；--theme 的默认也应当是墨黑（改造前观感不变）
+    const isNearBlack = (hex) => {
+      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      return Math.max(r, g, b) - Math.min(r, g, b) <= 12 && r < 40;
+    };
+    ok("默认主题下观感不变：--theme 默认是墨黑", isNearBlack("#" + tM[1]));
+    ok("字色 --ink 也是墨黑（正文不跟主题）", isNearBlack("#" + inkM[1]));
+  }
+
+  // 3) 每个页面根节点都挂了 themeStyle，且 js 里调了 theme.apply
+  const missWxml = [], missJs = [];
+  pages.forEach((pg) => {
+    const wxml = fs.readFileSync(path.join(ROOT, pg + ".wxml"), "utf8");
+    const js = fs.readFileSync(path.join(ROOT, pg + ".js"), "utf8");
+    // 根节点那个 .page 的 <view> 上要有 style="{{themeStyle}}"
+    if (!/<view class="page[^"]*"\s+style="\{\{themeStyle\}\}"/.test(wxml)) missWxml.push(pg);
+    if (!/theme\.apply\(this\)/.test(js)) missJs.push(pg);
+  });
+  ok("每个页面的根节点都挂了 themeStyle", missWxml.length === 0, missWxml.join(", "));
+  ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
+
+  // 4) 正文与诗词不上主题色：.char-t / .poem-line / .row-poem 仍是 --ink
+  const mustStayInk = [".row-poem", ".char-t"];
+  const leaked = mustStayInk.filter((cls) => {
+    const m = new RegExp("\\" + cls + "\\s*\\{([^}]*)\\}").exec(appWxss);
+    return !m || /var\(--strong\)/.test(m[1]);
+  });
+  ok("篇名与诗字仍是中性墨（不上主题色）", leaked.length === 0, leaked.join(", "));
+
+  // 5) 原生控件（radio/switch/slider）的交互色绑到 themeHex，不再写死字面量
+  const hardcoded = [];
+  pages.forEach((pg) => {
+    const wxml = fs.readFileSync(path.join(ROOT, pg + ".wxml"), "utf8");
+    if (/color="#1c1c1e"/.test(wxml)) hardcoded.push(pg);
+  });
+  ok("原生控件的颜色不再写死 #1c1c1e（绑 themeHex）", hardcoded.length === 0, hardcoded.join(", "));
 }
 
 /* ---------- 汇总 ---------- */

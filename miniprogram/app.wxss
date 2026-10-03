@@ -48,7 +48,7 @@ view, text, button, input, textarea {
   display: block;
   font-size: var(--fs-head);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
@@ -95,7 +95,7 @@ view, text, button, input, textarea {
 .card-title {
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   margin-bottom: var(--sp-1);
 }
 
@@ -106,7 +106,7 @@ view, text, button, input, textarea {
   align-items: center;
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   margin-bottom: var(--sp-2);
 }
 
@@ -230,8 +230,8 @@ view, text, button, input, textarea {
 /* 一屏的正事：一块干净的墨黑。
    参考图里「手机号快捷注册 / 新增档期」就是这一块 —— 全屏只有它一个。 */
 .btn.primary {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
   color: var(--on-ink);
   font-weight: 600;
 }
@@ -338,7 +338,7 @@ view, text, button, input, textarea {
 .row-title {
   font-family: var(--font-ui);
   font-size: var(--fs-title);
-  color: var(--ink);
+  color: var(--strong-text);
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -349,6 +349,12 @@ view, text, button, input, textarea {
    「意见反馈」「清空本机数据」不是 —— 同一张卡上两种字混排是最扎眼的那种不一致。 */
 .row-poem {
   font-family: var(--font-poem);
+  /* 篇名是**内容**，不是「重点」—— 所以它不跟主题色走。
+     （Issue #26 加主题色时最容易多染的一处：.row-title 成了 --strong，
+       篇名挂在它后面，颜色就跟着变了。诗词名字上色，
+       与「篇名宋体是内容需求」那条是同一个道理：它是书，不是书架。）
+     正文里的诗字（.char-t / .poem-line）同理，都留在 --ink。 */
+  color: var(--ink);
 }
 
 .row-sub {
@@ -507,7 +513,7 @@ view, text, button, input, textarea {
   font-family: var(--font-num);
   font-size: var(--fs-stat);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
   letter-spacing: -1rpx;
@@ -719,8 +725,8 @@ view, text, button, input, textarea {
 /* 选中：填墨黑、白字、边同色。与 .chip.on 一字不差 —— 
    它们本来就该长得一样，各写一遍迟早会漂。 */
 .opt-row.active {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
 .opt-row.active .opt-name {
@@ -832,6 +838,8 @@ view, text, button, input, textarea {
 
 .kv-v {
   font-size: var(--fs-body);
+  /* 值不跟主题 —— 它是**读数**（「七年级上」「5 首」），不是重点。
+     跟主题的只有标题与按钮，这条边界见 tokens.wxss「墨拆成两支」。 */
   color: var(--ink);
   text-align: right;
 }
@@ -848,7 +856,7 @@ view, text, button, input, textarea {
 .meter-fill {
   height: 100%;
   border-radius: 4rpx;
-  background: var(--ink);
+  background: var(--strong);
   transition: width var(--t-move) var(--ease);
 }
 
@@ -870,7 +878,7 @@ view, text, button, input, textarea {
 }
 
 .ring-fill {
-  background: conic-gradient(var(--ink) calc(var(--p) * 1%), transparent 0);
+  background: conic-gradient(var(--strong) calc(var(--p) * 1%), transparent 0);
   transition: background var(--t-move) var(--ease);
 }
 
@@ -891,7 +899,7 @@ view, text, button, input, textarea {
   justify-content: center;
   font-family: var(--font-num);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
   z-index: 1;
 }
 
@@ -918,7 +926,7 @@ view, text, button, input, textarea {
   line-height: 1;
   margin: 0 auto var(--sp-3);
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--strong);
   font-family: var(--font-poem);
   font-size: 54rpx;
   color: var(--on-ink);
@@ -966,8 +974,8 @@ view, text, button, input, textarea {
 }
 
 .char.active {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
 /* 令字格里**不再画一个圆点**。
@@ -1108,7 +1116,7 @@ view, text, button, input, textarea {
 
 /* 选中态**填成墨黑**。只把字变色太轻 —— 一层浅灰底上扫不出选中了哪一段 */
 .seg-item.on {
-  background: var(--ink);
+  background: var(--strong);
 }
 
 .seg-item.on .seg-text {
@@ -1211,8 +1219,8 @@ view, text, button, input, textarea {
 }
 
 .chip.on {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
 /* 未选中的文字用**正文色**，不用次级灰。
@@ -1273,7 +1281,7 @@ view, text, button, input, textarea {
 
 /* 选中：内圈也填墨黑，两道描边跟着走同色 —— 空心变实心，一眼分得出 */
 .chip.multi.on::before {
-  background: var(--ink);
+  background: var(--strong);
   border-color: var(--on-ink-soft);
 }
 

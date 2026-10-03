@@ -39,7 +39,7 @@
   display: block;
   font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--ink);
+  color: var(--strong-text);
 }
 
 /* 三张卡的标题不再各给一个颜色 —— 名字本身说明它是哪一张；

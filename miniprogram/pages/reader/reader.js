@@ -5,6 +5,7 @@ const pinyin = require("../../utils/pinyin");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
+const theme = require("../../utils/theme");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -86,6 +87,7 @@ Page({
    * 放在 onLoad 就会出现「登录成功了，页面还锁着」。
    */
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       // 没登录就直说。不静默跳走、不渲染半页再弹窗 ——
       // 用户从分享链接点进来，看到的第一句应该是为什么。

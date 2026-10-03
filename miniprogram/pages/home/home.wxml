@@ -1,4 +1,4 @@
-<view class="page home has-tabbar">
+<view class="page home has-tabbar" style="{{themeStyle}}">
   <!-- 未登录：一屏目录，看得到、点不进 -->
   <block wx:if="{{guest}}">
     <view class="card hero">

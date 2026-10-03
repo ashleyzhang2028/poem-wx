@@ -1,5 +1,6 @@
 const store = require("../../../utils/store");
 const gate = require("../../../utils/gate");
+const theme = require("../../../utils/theme");
 
 /* 图标名按 key 取（.ic-left / .ic-center），画法在 app.wxss「分段控件」一节。
    与阅读页共用同一套 —— 同一件事在两个页面图标不一样，用户会以为是两件事。 */
@@ -25,6 +26,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

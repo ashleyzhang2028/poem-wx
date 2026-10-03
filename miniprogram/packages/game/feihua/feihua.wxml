@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="{{themeStyle}}">
   <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能用" mark="令" />
 
   <block wx:else>
@@ -33,7 +33,7 @@
         <radio-group class="seg-group" bindchange="onLevel">
           <label class="seg-item mini {{level === item.id ? 'on' : ''}}" wx:for="{{levels}}" wx:key="id">
             <radio class="seg-radio" value="{{item.id}}" checked="{{level === item.id}}"
-                   color="#1c1c1e" />
+                   color="{{themeHex}}" />
             <text class="seg-text">{{item.name}}</text>
           </label>
         </radio-group>

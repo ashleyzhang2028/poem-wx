@@ -3,6 +3,7 @@ const pinyin = require("../../../utils/pinyin");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const gate = require("../../../utils/gate");
+const theme = require("../../../utils/theme");
 
 /* 注音三档带图标（.ic-off / .ic-rare / .ic-all，画法在 app.wxss）。
    图标与阅读页那一排同一个 —— 同一件事两个页面图标不一样，用户会以为是两件事。 */
@@ -39,6 +40,7 @@ Page({
   },
 
   onShow() {
+    theme.apply(this);
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;
