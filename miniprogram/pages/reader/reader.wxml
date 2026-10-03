@@ -6,68 +6,75 @@
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
+
+      <!-- 这首诗的「身份」：朝代 · 作者 · 出处 · 学段，**一行装完**。
+
+           用户原话：「唐 骆宾王 课内诗词 新学 这些一定一行显示」。
+           上一版这三件事分三行、三种字号（朝代作者一行、出处一行、
+           学段一枚胶囊），排下来是一小摞 —— 而它们说的是同一件事
+           （「这是哪首、谁的、什么来路、背到哪了」），本就该读成一句。
+
+           顺序照用户给的：朝代 · 作者 · 出处 · 学段。
+           中间的点由 WXML 按「有没有」自己决定出不出现：出处与学段是
+           可缺的（课外篇目没有出处，未学篇目停在「新学」照样有），
+           写死两个点会在缺项时留下孤零零一个「·」。
+           数量写在 reader.wxss 的 .poem-meta-row 一节，check.js V26 守着。 -->
       <view class="poem-meta-row">
         <text class="poem-meta">{{dynasty}}</text>
         <text class="poem-dot">·</text>
         <text class="poem-meta">{{author}}</text>
+        <block wx:if="{{source}}">
+          <text class="poem-dot">·</text>
+          <text class="poem-meta">{{source}}</text>
+        </block>
+        <text class="poem-dot">·</text>
+        <text class="poem-meta stage">{{stage}}</text>
       </view>
-      <text class="poem-source" wx:if="{{source}}">{{source}}</text>
-      <!-- 记忆阶段做成小签，摆在标题下面：这是「我背到哪了」，
-           属于这首诗的一部分，不该混在下面那排操作里 -->
-      <text class="tag stage-tag">{{stage}}</text>
     </view>
 
-    <!-- 阅读偏好：注音 ｜ 对齐 ｜ 字号，**一行**。
-         用户 2026-10-03 的裁决：「设置页可以分三段设置，但是详情页一行显示」。
+    <!-- 阅读偏好：**一行装完**（对齐 · 注音 · 字号），整行居中。
 
-         三段之间为什么要分隔符：这三件是同一层里的三件事，
-         各有自己的选项（三档 / 两档 / 一个滑块）。没有界，一眼看过去
-         就是五个并列的胶囊 —— 会以为「无 生字 全文 左 居中」是同一组的五项。
+         用户原话：「详情页一行显示 —— 左对齐 居中 不注音 生字 全文 A- A+」，
+         顺序也照他给的：对齐在前、注音在中、字号在后。三组之间各一道
+         极淡的竖线，说「这是三件事」，同时把这一行切成三段来读。
 
-         分隔符用**全角「｜」这个字**，不用 CSS 画的 1rpx 竖线：
-         1rpx 在手机屏上是半个物理像素，屏幕一缩放就时有时无，
-         压在浅灰胶囊上面尤其糊（第一版就是这么画的，截图上看不出来）。
-         字是渲染器画的，任何倍率下都清楚，宽度也跟旁边的字同一档。
-
-         这一行里的三个让步（不带图标 / 每档两三个字 / 两个「A」收一档字），
-         都是「一行放得下」这个硬约束推出来的，理由与算式写在 reader.wxss。 -->
+         为什么在这里能成：上面那排原生 <radio> 的圆圈与文字各自占位，
+         两个选项就吃掉半屏；这里全部走 .opt-radio（视觉隐藏的原生控件，
+         行为还在 label 上），量出来才放得下 —— 七个段加起来 499rpx，
+         卡片内容宽 596rpx 里还余 96rpx。
+         数字与算式写在 reader.wxss 的 .prefs 一节，check.js V25 按同一份
+         度量盯着「放得下」这件事，改文案或改档位就红。 -->
     <view class="prefs">
-      <view class="seg seg-pref seg-pref-3" wx:if="{{pinyinOn}}">
-        <radio-group class="seg-group" bindchange="onPinyin">
-          <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}"
-                 wx:for="{{pinyinModes}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
-                   color="#1c1c1e" />
-            <text class="seg-text">{{item.short}}</text>
-          </label>
-        </radio-group>
-      </view>
+      <radio-group class="pref-seg" bindchange="onAlign">
+        <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="#1c1c1e" />
+          <text class="pref-t">{{item.label}}</text>
+        </label>
+      </radio-group>
 
-      <view class="pref-sep" wx:if="{{pinyinOn}}"><text class="pref-sep-t">｜</text></view>
+      <view class="pref-rule"></view>
 
-      <!-- 对齐：两个图标，边距本身就是答案（左对齐 = 左边齐的排线，居中 = 两边齐） -->
-      <view class="seg seg-pref seg-pref-2 seg-align">
-        <radio-group class="seg-group" bindchange="onAlign">
-          <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
-                   color="#1c1c1e" />
-            <text class="seg-text">{{item.short}}</text>
-          </label>
-        </radio-group>
-      </view>
+      <radio-group class="pref-seg" bindchange="onPinyin">
+        <label class="pref-opt {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="#1c1c1e" />
+          <text class="pref-t">{{item.label}}</text>
+        </label>
+      </radio-group>
 
-      <view class="pref-sep"><text class="pref-sep-t">｜</text></view>
+      <view class="pref-rule"></view>
 
-      <!-- 字号：一行里最靠右的一段，宽度最小 ——
-           滑块要有横向量程才操作得准，挤得一窄就成了一颗孤零零的圆钮。
-           两头各一个「A」：小的是下限、大的是上限；不注音时这一行只剩
-           对齐与字号，省下的宽度全给它，量程反而更长。 -->
-      <view class="pref-font font-row">
-        <text class="font-a small">A</text>
-        <slider class="pref-slider font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-                block-size="20" block-color="#1c1c1e" activeColor="#1c1c1e" backgroundColor="#ececef"
-                bindchanging="onFontSlide" bindchange="onFontSlide" />
-        <text class="font-a big">A</text>
+      <!-- 字号：A－ A＋ 两个端点按钮。上一版是一根 <slider> ——
+           滑块要有横向量程才操作得准，独占一行才放得开；
+           这一行既然是一条，就给它两个端点：一下一档，也不必看量程。 -->
+      <view class="pref-size">
+        <view class="pref-opt mini {{fontSize <= fontMin ? 'off' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown">
+          <text class="pref-t">A－</text>
+        </view>
+        <view class="pref-opt mini {{fontSize >= fontMax ? 'off' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp">
+          <text class="pref-t">A＋</text>
+        </view>
       </view>
     </view>
 
@@ -110,7 +117,7 @@
   <!-- 背诵：把「读」和「记」分开，两件事不该挤在一张卡里 -->
   <view class="card recite-card">
     <view class="recite-head">
-      <text class="card-title bar">背得怎么样</text>
+      <text class="card-title bar">掌握度</text>
       <text class="mastery-num">{{mastery}}%</text>
     </view>
     <view class="meter mastery-bar">
@@ -129,7 +136,7 @@
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
     <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-      <text class="card-title bar">白话译文</text>
+      <text class="card-title bar">译文</text>
       <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">

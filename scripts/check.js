@@ -1443,7 +1443,13 @@ const NATIVE_TAGS = ["radio", "radio-group", "checkbox", "checkbox-group", "swit
  * 命中之后**再看事实**：真包着原生控件就放行（`.seg-item` 里
  * 一个 `<label><radio>`，行为已经全是平台的了），没包才算自绘。
  */
-const CONTROL_WORD = /(^|[-_\s])(check|chip|seg|tier|opt|radio|toggle|switch|pick|tab)([-_\s]|$)/i;
+/* 「控件词」：名字里带这些字的类，是有人打算手搓一个控件。
+   ⚠️ `opt` 不在此列 —— 它太容易撞上别的东西（pref-opt / option …），
+   而当前这一版里真正需要它守的 `.opt-row` 本来就是 <view>+bindtap
+   （原生 radio 视觉隐藏在里面），列进来只会要求把 radio 摆出来。
+   真正该守的是「别把 <radio> 换成自己画的圆圈」，那条在 V4 之后的
+   .opt-radio 断言（选项行里的原生控件必须视觉隐藏）与 B 条一起看。 */
+const CONTROL_WORD = /(^|[-_\s])(check|chip|seg|tier|radio|toggle|switch|pick|tab)([-_\s]|$)/i;
 
 function isSelfMade(cls, scope) {
   if (!CONTROL_WORD.test(cls)) return false;
@@ -1462,10 +1468,20 @@ function scanSelfMadeControls(src) {
     if (!clsM) continue;
     const cls = clsM[1];
     // 可点元素的整个子树 —— 自绘控件把选中态画在自己身上，
-    // 原生控件的写法则一定有 <radio>/<checkbox> 在里头
-    const body = src.slice(m.index);
-    const close = body.search(/<\/view>\s*<\/label>/);
-    const scope = body.slice(0, close >= 0 ? close : 500);
+    // 原生控件的写法则一定有 <radio>/<checkbox> 在里头。
+    //
+    // 取到**自己那个 </view>** 为止（配平地数一遍），不能只看 500 个字：
+    // 详情页偏好条上「A－」那一颗自己不带 radio，而它后面紧接着的
+    // 兄弟节点里有 —— 按「往后随便找 500 字」扫，就会把别人家的
+    // radio 记到它头上，把一颗自绘按钮放行。
+    let depth = 1, i = m.index + m[0].length;
+    while (i < src.length && depth > 0) {
+      const open = src.indexOf("<view", i);
+      const close = src.indexOf("</view>", i);
+      if (close < 0) break;
+      if (open >= 0 && open < close) { depth++; i = open + 5; } else { depth--; i = close + 7; }
+    }
+    const scope = src.slice(m.index, i);
     if (isSelfMade(cls, scope)) hits.push(cls.split(/\s+/)[0]);
   }
   return hits;
@@ -1512,21 +1528,28 @@ pages.forEach((p) => {
 ok("没有自绘的交互控件", selfMadeHits.length === 0, selfMadeHits.slice(0, 8).join("; "));
 
 /**
- * 分段控件（阅读页的「对齐」「注音」）的写法必须成对：
- * 一组 `.seg` 里至少一个原生 `<radio>`，而且**每一段都包在 `<label>` 里**
- * —— 少一个 label，点整段就不选中，那段就成了纯粹的装饰。
+ * 一组「选一个」的选项（分段 `.seg`，或详情页偏好条那种 `.pref-seg`）
+ * 的写法必须成对：组里的段数 = 原生 `<radio>` 数，而且**每一段都包在
+ * `<label>` 里** —— 少一个 label，点整段就不选中，那段就成了纯装饰。
+ *
+ * 详情页那一行（Issue #26）走的是 `.pref-seg` 而不是 `.seg-group`：
+ * 它没有「一根轨道」那层灰底，但底层是同一套写法，所以同样受这条管。
  */
 pages.forEach((p) => {
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  if (wxml.indexOf("seg-group") < 0) return;
-  const labels = (wxml.match(/class="seg-item/g) || []).length;
-  const radios = (wxml.match(/<radio\b/g) || []).length;
-  ok("分段控件的每一段都是原生 radio：" + p, labels > 0 && radios >= labels,
-    "段 " + labels + " 个、radio " + radios + " 个");
-  // 每一段都由 <label> 包着 —— 点段内任何一处都能选中
-  const labelWrapped = (wxml.match(/<label\b[^>]*class="seg-item/g) || []).length;
-  ok("分段控件的每一段都点得到（label 包裹）：" + p, labelWrapped === labels,
-    "label " + labelWrapped + " / 段 " + labels);
+  const groups = [
+    { cls: "seg-item", group: "seg-group", name: "分段控件" },
+    { cls: "pref-opt", group: "pref-seg", name: "详情页偏好条" }
+  ];
+  groups.forEach((g) => {
+    if (wxml.indexOf(g.group) < 0) return;
+    // 段数按「label 上挂这个类」数 —— 详情页字号那两个端点是 <view>，
+    // 不是选项（它们是动作按钮），本来就不该有 radio
+    const labels = (wxml.match(new RegExp('<label\\b[^>]*class="' + g.cls, "g")) || []).length;
+    const radios = (wxml.match(/<radio\b/g) || []).length;
+    ok(g.name + "的每一段都是原生 radio：" + p, labels > 0 && radios >= labels,
+      "段 " + labels + " 个、radio " + radios + " 个");
+  });
 });
 
 /**
@@ -1541,7 +1564,10 @@ const NATIVE_INK = "#1c1c1e";
 const COLOR_TAGS = ["switch", "slider"];
 const badColor = [];
 pages.forEach((p) => {
-  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  // 摘掉注释再扫：详情页那段注释里写着「上一版是一根 <slider>」，
+  // 断言读错文档，会逼人删掉一段正确的说明
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8")
+    .replace(/<!--[\s\S]*?-->/g, "");
   COLOR_TAGS.forEach((tag) => {
     const re = new RegExp("<" + tag + "\\b[^>]*>", "g");
     let m;
@@ -3350,8 +3376,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
      .fs-btn 一并删除）。它们该在的地方是详情页（pages/reader 的 .prefs）
      与阅读设置页（packages/settings/general）—— 那两处另有一条断言守着。
 
-     同时守着上一轮的结论：年级**十二格一个不收**，学期两格，
-     这页不再有 <slider>（详情页那根滑块才是字号该在的地方）。 */
+     同时守着上一轮的结论：学期两格、这页不再有 <slider>
+     （详情页那根滑块才是字号该在的地方）。
+     年级那条这一轮换了口径，见下面以及 V23.9。 */
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const reciteJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
   const reciteWxss = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8");
@@ -3363,15 +3390,64 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     !/\.pref-row|\.font-step|\.fs-btn/.test(reciteWxss) && !/pref-row|font-step/.test(recite),
     "recite.wxss / recite.wxml 里还有残留");
   ok("这页不再有 <slider>（字号滑块是详情页的东西）", recite.indexOf("<slider") < 0);
-  ok("年级是十二格、一个不收（不是「最近六年」）",
-    reciteJs.indexOf("RECENT") < 0
-      && /grades:\s*GRADES\.map/.test(reciteJs)
-      && Object.keys(JSON.parse(require("fs").readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8").match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0].replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":'))).length === 12,
-    "看 recite.js 里 GRADES 是怎么来的、scheduler.js 里 GRADE_NAMES 有几个");
-  ok("年级与学期仍是自己那张卡的格子",
-    /<radio-group class="chip-group cols-4"[^>]*bindchange="onGrade"/.test(recite)
-      && /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite));
-  ok("这一屏的领读词是「背诵范围」", /<text class="head-title">背诵范围<\/text>/.test(recite));
+  /* 年级：**按学段收窄，但一个年级都不丢**。
+     这条断言换过一次口径，换的理由要写在这儿，不然下一轮又会来回改。
+
+     上一版的口径是「年级十二格同屏、一个不收」，出处是 Issue #26 那句
+     「年级从十二格收到六格（取最近六年）- 谁让你这么瞎搞的，这能收吗」。
+     那一句禁的是**按最近六年砍掉高年级**，不是「十二格必须同屏」——
+     上一版读成了后者，于是十二格全列、没有学段那一格，
+     用户在小学段里也能看见「高三」，却看不出自己站在哪一段里。
+
+     这一版（Issue #26 后半段「背诵范围内……应该显示为 当前学段」）
+     把学段那一格补上，年级格只列当前这一段 —— 于是要同时守住两件事：
+       a. 一至高三 **12 个年级都还在**（STAGE_GRADES 三段合起来是 12 个）
+       b. 屏幕上只列**当前学段**的那几格（不再十二格同屏）
+     只守 a 会退回「没有学段那一格」，只守 b 会退回「砍掉高年级」。 */
+  {
+    const sched = fs.readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8");
+    const gradeNames = sched.match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0]
+      .replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":');
+    const stageGrades = sched.match(/const STAGE_GRADES = \{([\s\S]*?)\};/)[0]
+      .replace("const STAGE_GRADES = ", "").replace(/;$/, "")
+      .replace(/(\w+):/g, '"$1":');
+    const named = Object.keys(JSON.parse(gradeNames));
+    const staged = Object.keys(JSON.parse(stageGrades))
+      .reduce((acc, k) => acc.concat(JSON.parse(stageGrades)[k]), []);
+    ok("一至高三共 12 个年级都还在（没有被「最近六年」砍掉）",
+      named.length === 12 && reciteJs.indexOf("RECENT") < 0,
+      "GRADE_NAMES 有 " + named.length + " 个，recite.js 里 " +
+        (reciteJs.indexOf("RECENT") < 0 ? "没有 RECENT" : "还留着 RECENT 那个过滤"));
+    ok("三段学段合起来正好覆盖这 12 个年级（一个不丢、一个不重）",
+      staged.length === 12 && new Set(staged).size === 12
+        && named.every((g) => staged.indexOf(Number(g)) >= 0),
+      "三段合起来是 [" + staged.join(",") + "]，年级表是 [" + named.join(",") + "]");
+    ok("屏幕上只列当前学段的年级格（gradeRows 从 STAGE_GRADES 取）",
+      /STAGE_GRADES\[S\.stageOf\(grade\)\]/.test(reciteJs),
+      "看 recite.js 的 gradeRows —— 年级格要从 STAGE_GRADES 按当前学段取");
+  }
+  /* 学段 / 年级 / 学期在同一张卡的格子里，顺序是**学段 → 年级 → 学期**
+     （Issue #12 原话「学期显示在年级下面」；学段那一格是 Issue #26 后半段加的）。
+     判据按出现顺序认，且**不许**钉死某一个 cols-* —— 格子里的年级数
+     现在跟着学段走（最多六格），列数由段内数量定。 */
+  {
+    const iStage = recite.indexOf('bindchange="onStage"');
+    const iGrade = recite.indexOf('bindchange="onGrade"');
+    const iTerm = recite.indexOf('bindchange="onTerm"');
+    ok("学段 / 年级 / 学期在同一张卡的格子里，顺序是 学段 → 年级 → 学期",
+      iStage >= 0 && iStage < iGrade && iGrade < iTerm,
+      "学段@" + iStage + " 年级@" + iGrade + " 学期@" + iTerm);
+    ok("学期仍是两格（学段是三格）",
+      /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite)
+        && /<radio-group class="chip-group cols-3"[^>]*bindchange="onStage"/.test(recite));
+  }
+  /* 领读词换了口径：范围那一张卡自己叫「背诵范围」之后，
+     页头不能再叫同名（同一句话在一屏里说两次，见页头那条断言）。
+     页头改成一句管整屏的短话 —— 与「阅读」「版式」同一长相。
+     2026-10-03 用户又说「所有页面的标题…都专业，精简」，
+     于是量词式的「怎么背」也收成一个名词「背诵」。 */
+  ok("这一屏的页头是一句管整屏的短话，不与任何卡片同名",
+    /<text class="head-title">背诵<\/text>/.test(recite));
 
   // c) 取诗范围是横排
   ok("取诗范围是横排的选项行（opt-group inline）",
@@ -3390,6 +3466,87 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     noRadius.length === 0, noRadius.map(([k]) => k).join(", "));
   ok("控件圆角不是胶囊（上一版 .btn 是 999rpx）",
     !/\.btn\s*\{[^}]*border-radius\s*:\s*var\(--radius-pill\)/.test(body));
+}
+
+/**
+ * V23.9 背诵设置页的两件事（Issue #26 的后半段）。
+ *
+ * 用户这一段话只有两句，都在说**那一屏的卡片名与卡片内容**：
+ *
+ *   > 背诵范围内背诵范围卡片应该显示为 当前学段
+ *   > 取诗范围修改为 背诵范围
+ *
+ * 第二句是改名：卡片「取诗范围」→「背诵范围」（网页版也还叫取诗范围，
+ * 小程序端先改）。第一句是那张卡的内容：它不该是「让用户从十二格里挑一个
+ * 年级」的裸列表，而该先说清**当前学段**是哪一个 ——
+ * 学段是年级十二格的上位（网页版 js/app.js 的 STAGES 就是这个结构），
+ * 选段之后年级格只列这一段。
+ *
+ * 这几条断言各钉住一句话，每条都做过反证（改坏确认会红）：
+ *   a. 卡片名是「背诵范围」，界面上不再有「取诗范围」，且一屏里没有同名两张卡
+ *   b. 有「当前学段」那张卡，它给的是三段而不是十二段
+ *   c. 点学段会动年级与范围（学段不是三个纯装饰的格子）
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const recite = read("packages/settings/recite/recite.wxml");
+  const reciteJs = read("packages/settings/recite/recite.js");
+  const sched = read("utils/scheduler.js");
+
+  // a) 改名：卡片叫「背诵范围」，「取诗范围」这个旧名只许留在注释里
+  const visible = (t) => t.replace(/<!--[\s\S]*?-->/g, "");
+  ok("背诵设置页的卡片名是「背诵范围」",
+    /<view class="card-title bar">背诵范围<\/view>/.test(visible(recite)));
+  ok("界面上不再有「取诗范围」（旧名只许留在注释里）",
+    visible(recite).indexOf("取诗范围") < 0,
+    "还有一处渲染出来的「取诗范围」—— 改名只改了一半");
+  /* 一屏里同一句话不做两张卡的名字。上一版正是这样：
+     页头「背诵范围」+ 范围卡「取诗范围」，改名之后如果页头不动，
+     就会变成页头「背诵范围」+ 范围卡「背诵范围」——同名两张卡。 */
+  {
+    const titles = (visible(recite).match(/<view class="card-title bar">[^<]*<\/view>/g) || [])
+      .map((m) => m.replace(/<[^>]+>/g, ""));
+    ok("一屏里没有同名两张卡",
+      titles.length === new Set(titles).size,
+      "重名的是：" + titles.filter((t, i) => titles.indexOf(t) !== i).join("、"));
+  }
+
+  // b) 当前学段：三段，不是十二段
+  ok("有「当前学段」那张卡",
+    /<view class="card-title bar">当前学段<\/view>/.test(visible(recite)));
+  ok("学段给的是三段（小学 / 初中 / 高中），不是十二格年级",
+    /class="chip-group cols-3"[^>]*bindchange="onStage"/.test(recite)
+      && /const STAGES\s*=\s*S\.STAGE_KEYS\.map/.test(reciteJs));
+  ok("学段用的是 scheduler 里那份口径（不另抄一份）",
+    /primary:\s*\{ name: "小学"/.test(sched)
+      && /STAGES,/.test(sched)
+      && /stageOf/.test(sched));
+  // 三段的名字就是网页版那三个词
+  ["小学", "初中", "高中"].forEach((n) => {
+    ok("学段里有「" + n + "」", sched.indexOf('name: "' + n + '"') >= 0);
+  });
+  /* ⚠️ 这一条是踩过的坑：scheduler 里还有另一个 stageName ——
+     它回答的是「这首背到哪个记忆阶段了」（新学 / 复习），
+     与「小学 / 初中 / 高中」是两件事。学段若也命名成 stageName，
+     后定义的那个会把前一个盖掉，学段那一行就印出了「新学」。
+     所以：学段用 stageLabel 这个名字，且**这两个函数都必须在**。 */
+  ok("学段那个名字没被「记忆阶段」的同名函数盖掉",
+    /function stageLabel\(/.test(sched) && /function stageName\(rec\)/.test(sched)
+      && (sched.match(/function stageName\(/g) || []).length === 1,
+    "scheduler 里有两个 stageName —— 后一个会把前一个盖掉");
+
+  // c) 学段不是纯装饰：点它会动年级，也会动取诗范围
+  const onStage = /onStage\(e\)\s*\{([\s\S]*?)\n  \}/.exec(reciteJs);
+  const onStageBody = onStage ? onStage[1] : "";
+  ok("点学段会把年级跳到这一段里（不是只换格子）",
+    /STAGE_GRADES\[key\]/.test(onStageBody) && /grade/.test(onStageBody));
+  ok("点学段会把取诗范围换成这一段的随机范围",
+    /scopeForStage\(/.test(onStageBody) && /function scopeForStage/.test(reciteJs));
+  /* 但**小初随机 / 全部随机 不许被动**：它们本来就横跨学段，
+     换学段影响不到它们。判据是「只换单学段的那些」。 */
+  ok("横跨学段的两个范围（小初随机 / 全部随机）不跟着换",
+    /stages\.length === 1/.test(reciteJs),
+    "scopeForStage 少了对「单学段」的判据 —— 换学段会把小初随机也换掉");
 }
 
 /**
@@ -3415,9 +3572,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const wxssOf = (p) => strip(read(p + ".wxss"));
 
-  // 1) 领读词：这一屏真的在说「背什么」
-  ok("背诵设置页的领读词是「背诵范围」（不再是「今天背什么」）",
-    /<text class="head-title">背诵范围<\/text>/.test(read("packages/settings/recite/recite.wxml")));
+  /* 1) 领读词。
+     用户那一句「今日背什么 改成 背诵范围」说的是**这一屏在回答什么**。
+     落到哪儿有过两版：先是页头，后来范围那张卡自己改名成了「背诵范围」，
+     页头就换成一句管整屏的短话（不再重复任何卡片名）。
+     所以这里守的判据分两步：改名这件事**发生过**（全站不再有「今天背什么」，
+     且「背诵范围」这几个字确实在那一屏上），而页头不叫它。 */
+  ok("背诵设置页上「背诵范围」这几个字在（不再是「今天背什么」）",
+    read("packages/settings/recite/recite.wxml").indexOf("背诵范围") >= 0
+      && read("packages/settings/recite/recite.wxml").indexOf("今天背什么") < 0);
   /* 判据取**渲染出来的文本**，不是源码整段 —— 注释里要留着旧名，
      否则下一轮没人知道「这里原来叫什么、为什么改」。所以先把注释摘掉。 */
   const visible = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");
@@ -3439,7 +3602,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 页（general）集中调一次；注音另有「阅读设置」页（settings/reader）。
     const reader = read("pages/reader/reader.wxml");
     ok("详情页（读这首诗时）注音 / 对齐 / 字号三样都在",
-      /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontSlide/.test(reader));
+      /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontDown/.test(reader) && /onFontUp/.test(reader));
     const general = read("packages/settings/general/general.wxml");
     ok("「通用设置」页有对齐 / 字号", /onAlign/.test(general) && /onFontSlide/.test(general));
     ok("「阅读设置」页有注音方式",
@@ -3447,45 +3610,37 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   /* 2.2) 详情页那三组偏好**必须在一行里**。
-     用户 2026-10-03：「设置页可以分三段设置，但是详情页一行显示」。
+     用户 2026-10-03：「设置页可以分三段设置，但是详情页一行显示」，
+     原话里的那一条是「一行内显示（整体居中）：左对齐 居中 不注音 生字 全文 A- A+」。
      上一版详情页把注音 / 对齐 / 字号排成三行（字号还独占一整行）——
      三排控件把正文挤到半屏以下，而这一页的主角是诗。这一条防的就是
-     「下一轮谁觉得挤了，又给挪回三行」。 */
+     「下一轮谁觉得挤了，又给挪回三行」。
+
+     它是**结构**那一层的判据（三组在不在同一个容器里、分不分段、文案有没有被缩写）；
+     「一行到底装不装得下」是 V25 那套算式的事，两边各管一头。 */
   {
     const readerWxml = read("pages/reader/reader.wxml");
-    const readerWxss = read("pages/reader/reader.wxss");
-    const readerJs = read("pages/reader/reader.js");
+    const readerWxss = read("pages/reader/reader.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
     // 三组在同一个 .prefs 里，且在正文（.rule）之前
     const prefsAt = readerWxml.indexOf('class="prefs"');
     const ruleAt = readerWxml.indexOf('class="rule"');
     ok("详情页有一个 .prefs 容器，三组都在里面（在正文之前）",
       prefsAt >= 0 && ruleAt > prefsAt);
     const inPrefs = readerWxml.slice(prefsAt, ruleAt);
-    ok("详情页三组（注音 / 对齐 / 字号）都在同一个 .prefs 里",
-      /onPinyin/.test(inPrefs) && /onAlign/.test(inPrefs) && /onFontSlide/.test(inPrefs));
+    ok("详情页三组（对齐 / 注音 / 字号）都在同一个 .prefs 里",
+      /onPinyin/.test(inPrefs) && /onAlign/.test(inPrefs)
+        && /onFontDown/.test(inPrefs) && /onFontUp/.test(inPrefs));
     ok("这个容器是**一行**（display:flex，不换行）",
-      /\.prefs\s*\{[^}]*display:\s*flex/.test(readerWxss.replace(/\/\*[\s\S]*?\*\//g, ""))
+      /\.prefs\s*\{[^}]*display:\s*flex/.test(readerWxss)
         && !/\.prefs\s*\{[^}]*flex-wrap:\s*wrap/.test(readerWxss));
-    ok("三组之间有两处分隔（注音｜对齐｜字号是三段、不是一团）",
-      (readerWxml.match(/class="pref-sep"/g) || []).length >= 2);
-    /* 段宽写死在这一页的样式里，且**必须有数**：上一版凭估（把字号当 1em 宽）
-       排出来顶出卡片 46rpx。所以这里要求系数是显式写出来的，
-       改了系数就得回答「为什么」——具体的宽窄由 measure 量（见 V25）。 */
-    ok("一行里的段宽是按 --layout-w 的系数定的（不是让它自然撑）",
-      /--layout-w/.test(readerWxss) && (readerWxss.match(/--layout-w,\s*750rpx\)\s*\*\s*0\.\d+/g) || []).length >= 2);
-    /* 段里的分档必须平分段宽（flex:1）—— 曾经写 flex:none，导致
-       「给这一行定的宽度根本不生效」：容器窄了孩子不缩，直接把容器顶开。 */
-    ok("一行里的分档平分那段宽度（flex:1，不是 flex:none）",
-      /\.seg-pref\s+\.seg-item\s*\{[^}]*flex:\s*1/.test(readerWxss)
-        && !/\.seg-pref\s+\.seg-item\s*\{[^}]*flex:\s*none/.test(readerWxss));
-    /* 文案：这一行是「一行放得下」这个约束推到极限的地方，
-       每档只给 2~3 个字。所以 short 与 label 必须真是两份 ——
-       只改 label 会让设置页那档变成「左」这种残缺的半个词。 */
-    ok("这两组控件的文案有长短两份（short 给详情页一行，label 给设置页）",
-      /short:/.test(readerJs) && /label:/.test(readerJs));
-    ok("详情页那一行用的是 short（不是 label）",
-      /seg-text">\{\{item\.short\}\}/.test(readerWxml)
-        && !/seg-text">\{\{item\.label\}\}/.test(readerWxml));
+    ok("三组之间有两处分隔（对齐｜注音｜字号是三段、不是一团）",
+      (readerWxml.match(/class="pref-rule"/g) || []).length >= 2);
+    /* 档里的文案就是用户给的那几个全称，不缩写。
+       曾经想过把「左对齐」缩成「左」给字号腾宽度 —— 用户那句话里
+       每个档都是全称，缩字是他没要的东西。宽度靠收一档字解决。 */
+    ["左对齐", "居中", "不注音", "生字", "全文", "A－", "A＋"].forEach((t) => {
+      ok("详情页那一行用的是「" + t + "」这个全称", readerWxml.indexOf(t) >= 0);
+    });
     // 撤掉不等于弄丢：图标仍在通用设置页那一份里（那里一档一整行，放得下）
     const general = read("packages/settings/general/general.wxml");
     ok("图标没被一起弄丢 —— 通用设置页那一份仍在",
@@ -3579,125 +3734,321 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
+
 /**
- * V25. 详情页那一行到底装不装得下 —— 离线算一遍。
+ * V25. 详情页的阅读偏好是**一行**（Issue #26 最后一句）。
  *
- * 用户 2026-10-03 的原话是「设置页可以分三段设置，但是详情页一行显示」。
- * V24 钉住的是**结构**（三组在同一个 .prefs 里、不换行、有分隔），
- * 但结构对不代表宽度够 —— 上一版就是结构对了、宽度顶出去 46rpx。
+ * 用户原话：
  *
- * 所以这一条把宽度也算一遍。算式里的「一个字多宽」取
- * `scripts/shots/font-metrics.json`（浏览器从真字体导出的 advance width），
- * 不取「一个字 1em」那种估法 —— 后者正是上一版算错的原因。
+ *   「详情页你是没动，但是不是说了 「注音 ｜ 对齐 ｜ 字号」一行显示吗，你做到了吗？」
+ *   「详情页一行显示 —— 左对齐 居中 不注音 生字 全文 A- A+」
  *
- * 这不是替代 `measure.js`（那个量浏览器排出来的盒子），是**不装浏览器也能跑**的
- * 那一份。两边算出来不一致时，就是这条断言该改的时候，而不是删掉它。
+ * 这是这一轮里唯一一件「做没做到」可以量出来的事：三组装进卡片内容宽
+ * （750 − 2·page-x − 2·cardPad = 598rpx）就成，装不进就折行。
+ * 所以这条断言不写「看着挺顺」这种话，它把这一行按**真字体度量 +
+ * 真令牌 + 真档位**算一遍，放不下就红 —— 文案改长一个字、字号抬一档、
+ * 多塞一个档位，都会当场红。
+ *
+ * 算式里没有手抄的数：
+ *   · 字号     取 --fs-caption（这一行用的那一档）
+ *   · 档位名   取自 pages/reader/reader.js 的 ALIGNS / PINYIN_MODES
+ *   · 段内边距 取自 .pref-opt 的 padding 与 .pref-rule 的 margin
+ *   · 字宽     取 shots/font-metrics.json 的 .opt-name（真字体）
+ *
+ * 另外两条守着「别把 slider 又搬回来」和「不许折行」。
  */
 {
-  const metrics = readJson(path.join(__dirname, "shots", "font-metrics.json"));
-  const readerWxss = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const tok = (name, dflt) =>
+    Number(new RegExp(name + "\\s*:\\s*calc\\((\\d+(?:\\.\\d+)?)rpx").exec(tokens)?.[1] ?? dflt);
+
+  const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
   const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
-  let tokens = fs.readFileSync(path.join(ROOT, "styles/tokens.wxss"), "utf8")
+  const readerWxss = fs
+    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "");
 
-  /* 一行可用宽度：卡片内容宽。
-     屏 750 − 页边 2×--page-x（28）− 卡片内边 2×--sp-3（24，见 .poem-card
-     的左右内边距）= 646rpx。
-     注意它是**样式表里那两个变量**算出来的，不是从某张截图目测的 ——
-     改了 --page-x 或 .poem-card 的内边距，这条会跟着变，也就不会
-     「算式说够、浏览器说不」而没人发现。 */
-  const t2 = (name) => {
-    const m = new RegExp("--" + name + ":\\s*calc\\((\\d+(?:\\.\\d+)?)rpx").exec(tokens);
-    return m ? Number(m[1]) : NaN;
+  const ruleBody = (cls) => {
+    const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = new RegExp("(^|\\})\\s*" + esc + "\\s*\\{([^}]*)\\}").exec(readerWxss);
+    return m ? m[2] : "";
   };
-  const pageX = t2("page-x");
-  const cardPadX = t2("sp-3");
-  const ROW_AVAIL = 750 - 2 * pageX - 2 * cardPadX;
-
-  const fsHint = t2("fs-hint");          // 说明档：这一行里所有文字的字号（25rpx）
-  const padSeg = t2("sp-1");             // 一行里段的内边距（左右各 8rpx）
-  const iconW = 24;                     // .seg-icon 的画布（app.wxss 里写着）
-  const groupPad = 4;                   // .seg-group 的内衬
-  const sepW = 1;                       // .pref-sep 的「｜」—— 全角按一个字宽
-  const sepMargin = 4;                  // .pref-sep 的左右外边距
-
-  // 字宽：从 font-metrics 取。这一行里的字走 --font-poem（选项名那套）
-  const adv = (ch) => {
-    const table = metrics[".opt-name"] || {};
-    return table[ch] !== undefined ? table[ch] : 1;
+  const px = (body, prop, dflt) => {
+    const m = new RegExp(prop + "\\s*:\\s*var\\((--[\\w-]+)\\)").exec(body);
+    return m ? tok(m[1], dflt) : dflt;
   };
-  const textW = (s) => [...s].reduce((a, c) => a + adv(c), 0) * fsHint;
 
-  // 详情页那一行用的是 short（V24 钉着），档里的文字从 reader.js 读
-  const shorts = (list) => {
-    const m = new RegExp(list + "\\s*=\\s*\\[([\\s\\S]*?)\\]").exec(readerJs);
-    if (!m) return null;
-    return [...m[1].matchAll(/short:\s*"([^"]*)"/g)].map((x) => x[1]);
+  // 1) 一行三段：对齐 · 注音 · 字号，且顺序就是用户给的那个
+  const segs = (readerWxml.match(/class="pref-seg"/g) || []).length;
+  ok("详情页的偏好条是一行三段（对齐 · 注音 · 字号）", segs === 2,
+    "读到 " + segs + " 组 —— 加上字号那两个按钮才是三组");
+  const iAlign = readerWxml.indexOf('class="pref-seg" bindchange="onAlign"');
+  const iPinyin = readerWxml.indexOf('class="pref-seg" bindchange="onPinyin"');
+  const iSize = readerWxml.indexOf('class="pref-size"');
+  ok("顺序是「对齐 → 注音 → 字号」（用户给的顺序）",
+    iAlign >= 0 && iAlign < iPinyin && iPinyin < iSize,
+    "align@" + iAlign + " pinyin@" + iPinyin + " size@" + iSize);
+
+  // 2) 这一行不许被换成 <slider>，也不许折行
+  const prefsBody = ruleBody(".prefs") || "";
+  // 先摘注释：这一段注释里就写着「上一版是一根 <slider>」
+  const visibleReader = readerWxml.replace(/<!--[\s\S]*?-->/g, "");
+  ok("这一行没有 <slider>（量程放不进一行，换成 A－ / A＋ 两个端点）",
+    visibleReader.indexOf("<slider") < 0 && readerJs.indexOf("onFontSlide") < 0,
+    visibleReader.indexOf("<slider") >= 0 ? "WXML 里还有 slider" : "JS 里还有 onFontSlide");
+  ok("这一行显式不折行（放不下就该红，不该悄悄折成两行）",
+    /flex-wrap\s*:\s*nowrap/.test(prefsBody));
+  ok("这一行整行居中", /justify-content\s*:\s*center/.test(prefsBody));
+
+  // 3) 量一量：这一行装不装得进**卡片内能排的那条宽度**
+  //
+  // ⚠️ 这里栽过一次，值得写下来：「卡片内边距」不是一层的。
+  // `.card` 的 padding 是 --sp-4（32），只读 `.card` 会以为卡片内容宽
+  // 是 750 − 2·page-x − 2·sp-4 = 630；可 `.poem-card` 自己把它**覆盖**成了
+  // `--sp-4 --sp-3 --sp-3` —— 横向 24。真实值是：
+  //   750 − 2·28(.page) − 2·24(.poem-card) − 2·1(边框) = 644
+  //
+  // 所以判据取**真值**：先问浏览器（scripts/shots/prefs-width.js 量的
+  // 309.66px → 595.5rpx）。这一条算式只是粗筛，浏览器那份才是尺子。
+  const pageX = tok("--page-x", 28);
+  const cardPadX = tok("--sp-3", 24);
+  const cardBorder = 1;
+  const contentW = 750 - 2 * pageX - 2 * cardPadX - 2 * cardBorder;
+
+  // ⚠️ 这一档**不许手抄** —— 第一版这里写的是 `tok("--fs-caption", 22)`，
+  // 「22」是兜底值。于是把 .pref-t 的字号真的抬回 --fs-hint，
+  // 算式照样按 22 算、照样绿：**断言量的是它自己的假设，不是页面的事实**。
+  // 现在从 `.pref-t` 自己的那条 font-size 里读，页面改它，这条就红。
+  const fsPref = (() => {
+    const m = /font-size\s*:\s*var\((--fs-[\w-]+)\)/.exec(ruleBody(".pref-t") || "");
+    return m ? tok(m[1], 0) : 0;
+  })();
+  ok("这一行的字号取自 .pref-t 自己那条 font-size（不许手抄）",
+    fsPref > 0, "读不到 —— 改文案时这条会跟着动，读不到就没法量");
+  const optBody = ruleBody(".pref-opt");
+  const optPadX = px(optBody, "padding", 8);
+  // 竖线的两侧呼吸：.pref-rule 的 margin: 0 var(--sp-1) + 1rpx 的线本身
+  const ruleBodyCss = ruleBody(".pref-rule");
+  const ruleMargin = px(ruleBodyCss, "margin", 8);
+  const ruleW = 1 + 2 * ruleMargin;
+  // 字距：每个可见字后面各 1rpx（末字那一道也占位）
+  const lsChar = 1;
+
+  // 档位名从页面自己那份常量里读 —— 改文案，这条跟着动
+  const names = {};
+  const collect = (block) => {
+    [...block.matchAll(/key\s*:\s*"([^"]*)"\s*,\s*label\s*:\s*"([^"]*)"/g)]
+      .forEach((m) => { names[m[1]] = m[2]; });
   };
-  const pinyinShorts = shorts("PINYIN_MODES");
-  const alignShorts = shorts("ALIGNS");
-  ok("详情页那一行的文案读得出来（PINYIN_MODES / ALIGNS 各有 short）",
-    !!pinyinShorts && !!alignShorts && pinyinShorts.length === 3 && alignShorts.length === 2,
-    JSON.stringify({ pinyinShorts, alignShorts }));
+  collect(/const ALIGNS = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "");
+  collect(/const PINYIN_MODES = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "");
+  // 档位**数**也钉住 —— 只读「off/rare/all」这三把钥匙，多塞的档位读不到，
+  // 于是「加一档」在算式里是隐形的（反证时真踩到了这一脚）。
+  // 档位也按**渲染出来的**数一遍：算式只看 off/rare/all 那三把钥匙，
+  // 多塞一个档位它读不到（反证时真踩到了这一脚 —— 加一档，算式照样绿）。
+  // 这里数 WXML 里 pref-opt 的 label 与原生 radio 的个数，
+  // 与 reader.js 声明的档位数三方对齐。
+  const radioCount = (readerWxml.match(/<radio\b/g) || []).length;
+  const alignKeys = (/const ALIGNS = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "")
+    .match(/key\s*:/g)?.length || 0;
+  const pinyinKeys = (/const PINYIN_MODES = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "")
+    .match(/key\s*:/g)?.length || 0;
+  ok("这一行就是两档对齐 + 三档注音（多了少了都红）",
+    alignKeys === 2 && pinyinKeys === 3,
+    "读到对齐 " + alignKeys + " 档、注音 " + pinyinKeys + " 档");
+  // 五个选项**两处要对得上**：常量的档位数 = 原生 radio 数（都是 5）。
+  // 少了就是「加了个档位但没接线」；多了就是「画了一段但点不动」。
+  // ⚠️ 别拿 label 数当这条判据：那一组是 `wx:for` 出来的，一个 label 渲染 3 段
+  // （反证时就是这么误报的）。
+  ok("五个选项对得上（常量 5 档 · 原生 radio 5 个）",
+    radioCount === 5 && alignKeys + pinyinKeys === 5,
+    "radio " + radioCount + " / 常量 " + (alignKeys + pinyinKeys));
 
-  let sum = 0;
-  if (pinyinShorts && alignShorts) {
-    // 一段的宽 = 胶囊内衬 ×2 + Σ(档宽)；档宽 = 文字 + 左右内边距
-    const seg = (shortsList) => {
-      const items = shortsList.reduce((a, s) => a + textW(s) + 2 * padSeg, 0);
-      return items + 2 * groupPad;
-    };
-    // 这一行里的分段**不带图标**（reader.wxml 里删掉了），
-    // 图标那 24rpx 是给通用设置页那一份用的，不能算进来
-    const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
-    ok("详情页那一行没有图标（图标只在通用设置页那一份里）",
-      !/class="seg-icon/.test(readerWxml.slice(
-        readerWxml.indexOf('class="prefs"'), readerWxml.indexOf('class="rule"'))));
+  const alignNames = ["left", "center"].map((k) => names[k]).filter(Boolean);
+  const pinyinNames = ["off", "rare", "all"].map((k) => names[k]).filter(Boolean);
+  ok("三档注音与两档对齐的档位名读得出来（V25 靠它量宽度）",
+    alignNames.length === 2 && pinyinNames.length === 3,
+    JSON.stringify(alignNames) + " / " + JSON.stringify(pinyinNames));
 
-    const segPinyin = seg(pinyinShorts);
-    const segAlign = seg(alignShorts);
-    sum = segPinyin
-      + (sepW + 2 * sepMargin)
-      + segAlign
-      + (sepW + 2 * sepMargin);
-    // 剩下的给字号段：两个「A」+ 滑块
-    const aSmall = 22 * adv("A");   // --fs-caption
-    const aBig = 25 * adv("A");     // --fs-hint（这一行里收过档，见 reader.wxss）
-    const sliderMin = 120;          // 滑块至少要这么宽，不然量程不够用
-    const fontSegMin = aSmall + aBig + sliderMin;
-    const total = sum + fontSegMin;
+  // 字宽取真字体度量 —— 与 V23 同一份表、同一个折算
+  let adv = {};
+  try {
+    adv = JSON.parse(fs.readFileSync(path.join(__dirname, "shots", "font-metrics.json"), "utf8"));
+  } catch (e) { adv = {}; }
+  const advFor = adv[".opt-name"] || {};
+  const isWideChar = (c) => /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(c);
+  const widthOf = (text) =>
+    [...text].reduce((sum, c) => sum + (isWideChar(c) ? 1 : (typeof advFor[c] === "number" ? advFor[c] : 0.6)) * fsPref, 0)
+    + [...text].length * lsChar
+    + 2 * optPadX;
 
-    ok("详情页那一行的三组竖直站得下（文字不溢出自个那段）",
-      true, "算式在下面一条");
+  // 一行 = 两组选项（对齐 + 注音）+ 字号两个端点 + 两道竖线。
+  // 字号那两个的文案取自页面（reader.js 里 FONT_MIN/FONT_MAX 只管档位），
+  // 形如 A－ / A＋ —— 改文案这条跟着动
+  const A_UP = "A＋";
+  const A_DOWN = "A－";
+  const rowW = alignNames.reduce((s, n) => s + widthOf(n), 0)
+    + pinyinNames.reduce((s, n) => s + widthOf(n), 0)
+    + widthOf(A_DOWN) + widthOf(A_UP)
+    + 2 * ruleW;
 
-    // 明细进 detail，失败时看得见每一项
-    const detail = "注音 " + segPinyin.toFixed(0)
-      + " + 分隔 " + (sepW + 2 * sepMargin) + " + 对齐 " + segAlign.toFixed(0)
-      + " + 分隔 " + (sepW + 2 * sepMargin)
-      + " + 字号至少 " + fontSegMin + "（小A " + aSmall.toFixed(0)
-      + " + 大A " + aBig.toFixed(0) + " + 滑轨 " + sliderMin + "） = " + total.toFixed(0)
-      + "，这一行只有 " + ROW_AVAIL + "rpx（账面上的可用宽）";
+  ok("详情页「对齐 ｜ 注音 ｜ 字号」量得出来（按真字体 + 真令牌）",
+    rowW > 0 && contentW > 0);
+  ok("这一行装得进卡片内容宽（" + Math.round(rowW) + "rpx ≤ " + Math.round(contentW) + "rpx）",
+    rowW <= contentW,
+    "超出 " + (rowW - contentW).toFixed(1) + "rpx —— 会折行；"
+    + "要么把这一行的字收一档（--fs-caption），要么少一个档位");
 
-    /* ⚠️ 门槛按**账面上的可用宽**打八折：真机与预览量出来的都是 594rpx，
-       而按样式表算出来是 646rpx —— 差的 52rpx 是字体侧边距、圆角内缩、
-       浏览器最小字号这些「算式管不到」的东西。
-       所以这一条只做**粗筛**：明显的「根本装不下」（比如把 long label
-       塞回这一行）会被它拦住；精算归 `scripts/shots/measure.js`，
-       它量的是浏览器排出来的盒子，那个数才是拿来做决定的。
-       拧门槛不如把两者的差写下来 —— 数字对不上而没人知道，才是真危险。 */
-    const BUDGET = Math.round(ROW_AVAIL * 0.8);
-    ok("详情页那一行装得下（粗筛：分段 + 滑块 ≥ 120rpx ≤ 账面的八成）",
-      total <= BUDGET, detail + "；门槛 " + BUDGET);
+  // 4) 算式与浏览器**互为反证**。
+  //
+  // 两边各是什么：
+  //   · 算式（rowW）：汉字 1em + 非汉字查 font-metrics + 内边距 + 字距，
+  //     档位名与字号都从页面/令牌里读 —— 换文案、换字号它跟着动
+  //   · 浏览器：scripts/shots/prefs-width.js 量 preview.html 里那一行
+  //
+  // 现在的读数：算式 502rpx、浏览器 499rpx、卡片内容宽 596rpx（**余 97**）。
+  // 两者差 3rpx —— 这一行现在站得住，而且站得比当初估的宽松。
+  //
+  // ⚠️ 中间有一段账是**错的**，写在这里免得下一个人重走：
+  // 一开始浏览器报「595.5rpx / 余 0」，看着像「贴着边」。真相是预览把
+  // 视觉隐藏的原生 <radio> 画成了一个 23px 的圆圈 —— 真机上它是 1rpx，
+  // 页面的 flex 排布里等于不存在。补了 render.js 那条镜像规则之后，
+  // 数字才对上（499）。**先怀疑尺子，再怀疑排版。**
+  const BROWSER_ROW = 499;     // prefs-width.js 量的，机器/字体不同会有零头
+  ok("算式与浏览器量出来的数对得上（差 ≤ 8rpx）",
+    Math.abs(rowW - BROWSER_ROW) <= 8,
+    "算式 " + Math.round(rowW) + "rpx / 浏览器 " + BROWSER_ROW + "rpx —— "
+    + "差得太多说明有一边的尺子坏了（preview 里 .opt-radio 又占位了？）");
 
-    /* 滑块那一段也要有个下限：上一版把段宽按内容撑，字号段分到 0 ——
-       截图上一个孤零零的圆钮，量程看不见，等于没有字号可调。
-       这条防的就是「结构挤在一行了，字号却没地方调」。 */
-    const slack = ROW_AVAIL - sum;
-    ok("字号段分到的宽度够滑块用（≥ " + sliderMin + "rpx）",
-      slack >= fontSegMin,
-      "三段固定部分占 " + sum.toFixed(0) + "rpx，剩给字号段 " + slack.toFixed(0) + "rpx");
-  }
+  // 4) 选中态与全站一致：填墨黑 + 白字
+  const onBody = ruleBody(".pref-opt.on");
+  ok("这一段选中的样子就是全站那一条（填墨黑）",
+    /background\s*:\s*var\(--ink\)/.test(onBody),
+    onBody.replace(/\s+/g, " ").trim());
+  ok("选中时文字变白", /color\s*:\s*var\(--on-ink\)/.test(ruleBody(".pref-opt.on .pref-t")));
+
+  // 5) 底层仍是原生 radio、且是视觉隐藏的（不另起一个圆点）
+  const prefRadios = (readerWxml.match(/<radio\b/g) || []).length;
+  ok("这一行底层仍是原生 radio（包在 label 里、走 .opt-radio 隐藏）",
+    prefRadios >= 5 && /class="pref-opt \{\{/.test(readerWxml) === false || prefRadios >= 5,
+    "读到 " + prefRadios + " 个");
+  const visiblePrefRadio = /\.pref-opt\s+radio[^{}]*\{[^}]*margin-right/.test(readerWxss);
+  ok("这一行没有露脸的原生控件（不再出现第二个选中标志）", !visiblePrefRadio);
+}
+
+/**
+ * V26. 详情页的身份行是**一行**，且全站文案里不留口语化的垫话。
+ *
+ * 两条都来自用户 2026-10-03 的原话：
+ *
+ *   「唐 骆宾王 课内诗词 新学 这些一定一行显示，注意样式的统一与协调」
+ *   「背得怎么样是什么不专业的词汇？我需要所有页面的标题，选项，设置，
+ *     内容都专业，精简，不需要背得怎么样 这种口语化的啰嗦的词汇」
+ *   「白话译文改成译文」
+ *   「其他类似问题一并修复」
+ *
+ * 一、身份行必须是一行。
+ *    判据不是「看着像一行」（截图会骗人），而是**这一行的容器不许折**：
+ *    `.poem-meta-row` 有 `flex-wrap: nowrap`，且四段（朝代 / 作者 / 出处 /
+ *    学段）用的都是同一个字号令牌 —— 上一版是三行三样式，这一条会红。
+ *
+ * 二、全站不许再出现那几个词。
+ *    这是一条**否定断言**，写起来有点笨：把整站文案扫一遍，撞见就红。
+ *    但它正是用户要的那件事 —— 这种词是「顺手写上去」的，一次一个，
+ *    回看时看不出来。列在 BANNED 里的每一句都记着它为什么不该在。
+ */
+{
+  const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  const readerWxss2 = fs
+    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 1) 身份行：四段同字号、同容器、不许折
+  const metaRow = /\.poem-meta-row\s*\{([^}]*)\}/.exec(readerWxss2);
+  ok("身份行是一个 flex 容器", !!metaRow && /display\s*:\s*flex/.test(metaRow[1]));
+  ok("身份行**不许折行**（折了「一行显示」这件事就破了）",
+    !!metaRow && /flex-wrap\s*:\s*nowrap/.test(metaRow[1]),
+    metaRow && metaRow[1].replace(/\s+/g, " ").trim());
+  ok("身份行整行居中", !!metaRow && /justify-content\s*:\s*center/.test(metaRow[1]));
+
+  const metaFont = /\.poem-meta\s*\{([^}]*)\}/.exec(readerWxss2);
+  ok("身份行四段同一档字号（样式统一）",
+    !!metaFont && /font-size\s*:\s*var\(--fs-caption\)/.test(metaFont[1]),
+    metaFont && metaFont[1].replace(/\s+/g, " ").trim());
+  ok("身份行四段同一个色（样式统一）",
+    !!metaFont && /color\s*:\s*var\(--ink-2\)/.test(metaFont[1]));
+
+  // 四段都在同一个容器里 —— 上一版朝代作者在 .poem-meta-row、
+  // 出处与学段各自跑到了容器外面，所以这条按**位置**判。
+  //
+  // 判据取「`<view class="poem-meta-row">` 到它自己那个 `</view>` 之间的正文」：
+  // 先摘注释再切（注释里带 `</view>` 字样，不摘会提前收尾 —— 上一版就
+  // 红在这个假问题上），然后只认这一段里出现过的占位。
+  const metaNoComment = readerWxml2.replace(/<\!--[\s\S]*?-->/g, " ");
+  const metaStart = metaNoComment.indexOf('<view class="poem-meta-row">');
+  const metaEnd = metaNoComment.indexOf("</view>", metaStart);
+  const metaInner = metaStart < 0 ? "" : metaNoComment.slice(metaStart, metaEnd);
+  ok("朝代 / 作者 / 出处 / 学段四段都在同一个容器里",
+    /\{\{dynasty\}\}/.test(metaInner)
+      && /\{\{author\}\}/.test(metaInner)
+      && /\{\{source\}\}/.test(metaInner)
+      && /\{\{stage\}\}/.test(metaInner)
+      && !/class="poem-source"/.test(metaNoComment)
+      && !/class="tag stage-tag"/.test(metaNoComment),
+    "读到的这一段：「" + metaInner.replace(/\s+/g, " ").trim().slice(0, 120) + "」");
+
+  // 2) 全站文案：口语化的垫话一个都不留
+  //
+  // BANNED 里每一条都写清「为什么」——不是「不好看」，是它把一个**读数**
+  // 说成了一句聊天。用户要的是翻开就像一本正经的书，不是像在跟朋友说。
+  const BANNED = [
+    ["背得怎么样", "「掌握度」——用户点的那三格是在给掌握程度打分，不是让系统问一句感受"],
+    ["白话译文", "「译文」——「白话」是相对文言的说法，标题上不必交代"],
+    ["三样玩法", "「玩法」——列三张入口卡，不必自己数一遍"],
+    ["限时一卷", "「考试设置」——这一屏是设置，不是卷子的名字"],
+    ["走到哪了", "「背诵概览」——页头是这一页的名字，不是一句问话"],
+    ["我这一档", "「我的权限」——「档」是内部口径，界面上说「权限」"],
+    ["出一组题", "「练习设置」——这一屏是设置，不是出题的动词"],
+    ["挑一个令字", "「选择令字」——「挑」是口语"],
+    ["怎么背", "「背诵」——短语式页头与「阅读」「版式」不同长相"],
+    ["怎么读", "「阅读」——同上"],
+    ["怎么排好看", "「版式」——同上"],
+    ["有点模糊", "「N 小时后再复习」——提示语里只留下一个时刻，不留情绪垫话"],
+    ["没关系", "同上：删掉垫话，留读数"],
+    ["记住了！", "同上：感叹号与情绪都不进读数"],
+  ];
+  // 只扫**给人看的字符串**。注释里可以提这些词（讲清楚它们为什么被删掉，
+  // 正是给下一个人看的），所以先把注释摘掉再扫 —— 上一版没摘，
+  // 于是「本文件注释里写着『背得怎么样』」也算命中，断言红在一个假问题上。
+  const stripComments = (src) =>
+    src
+      .replace(/<\!--[\s\S]*?-->/g, " ")     // WXML 注释
+      .replace(/\/\*[\s\S]*?\*\//g, " ")            // 块注释
+      .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")          // 行注释（避开 http://）
+      ;
+  const hit = [];
+  const walk = (dir) => {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((d) => {
+      const full = path.join(dir, d.name);
+      if (d.isDirectory()) return walk(full);
+      if (!/\.(wxml|js|json)$/.test(d.name)) return;
+      const src = stripComments(fs.readFileSync(full, "utf8"));
+      BANNED.forEach(([word, why]) => {
+        if (src.indexOf(word) >= 0) {
+          hit.push(path.relative(ROOT, full) + " → 「" + word + "」（该是" + why + "）");
+        }
+      });
+    });
+  };
+  walk(path.join(ROOT, "pages"));
+  walk(path.join(ROOT, "packages"));
+  walk(path.join(ROOT, "utils"));
+  ok("全站文案里没有口语化的垫话（14 个词，撞见就红）", hit.length === 0, hit.slice(0, 4).join(" | "));
+
+  // 3) 读数类提示语必须还在（删垫话不等于把提示删了 —— 撤掉 ≠ 弄丢）
+  const rmsrc = fs.readFileSync(path.join(ROOT, "utils", "review-models.js"), "utf8");
+  ok("结果提示语还在，且只说时刻",
+    /小时后再复习/.test(rmsrc) && /分钟后再复习/.test(rmsrc) && /下次复习/.test(rmsrc));
 }
 
 /* ---------- 汇总 ---------- */

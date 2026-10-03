@@ -8,12 +8,27 @@ node scripts/shots/shoot.js        # 逐屏截图到 out/shots/shots/
 node scripts/shots/shoot.js reader # 只截名字里含 reader 的
 node scripts/shots/measure.js      # 量每一格「两侧还剩多少」—— 挤不挤，说数字
 node scripts/shots/measure.js --metrics   # 从真字体导出 font-metrics.json
+node scripts/shots/prefs-width.js  # 量详情页那一行（对齐 ｜ 注音 ｜ 字号）多宽
 ```
 
 **`measure.js` 还会打印**详情页那一行**（.prefs）的可用宽 / 内容宽 / 溢出 ——
 用户那句「详情页一行显示」是硬约束，装不装得下不该靠眼睛。
+它按**真机比例**量（注入 `--ui-scale` 与 `--layout-w`）：预览把 rpx 按 390 宽折算，
+而浏览器给 15px 以下的字兜着最小字号，25rpx 在预览里量出来比真机宽 ——
+不注入的话，一个真机放得下的算式在预览里会「装不下」。见本文件第 3 条。
 
-`measure.js` 是「挤」这个字的尺子。** 用户说「选项内文字左右 padding
+`prefs-width.js` 是「**一行显示，你做到了吗**」这句话的另一个答案（Issue #26）。
+它量的不是 `.prefs` 的盒子宽 —— 那一层是 `justify-content: center`，被甩出来的
+空白不算进这一行 —— 而是**两端之间的距离**：
+七个段加起来 499rpx，卡片内容宽 596rpx，余 96rpx。
+`check.js` V25 那套算式只是粗筛（它算 502），真值以这两份读数为准。
+
+> 写这条时踩过两个坑，都留在脚本的注释里：一是预览把**视觉隐藏的原生
+> `<radio>`** 画成了 23px 的圆圈（真机上它是 1rpx，等于不存在），
+> 于是量出来多了一整圈；二是拿 `.prefs` 的盒子宽当行宽。
+> **先怀疑尺子，再怀疑排版。**
+
+**`measure.js` 是「挤」这个字的尺子。** 用户说「选项内文字左右 padding
 和它自己的边界太近了」，眼睛只能看出「有点紧」；它把每一格的
 格宽 / 文字宽 / 两侧余量打出来，才知道紧到 4.8px。改完再量一次，
 31.6px。「多留白」这件事有数字之后才好争。

@@ -87,8 +87,11 @@ async function dumpMetrics(page) {
     return seen;
   });
 
+  // 要量的字符：既有选项名里那些字，也有别的样式的标签会用到的
+  // （「A－ / A＋」里那个全角减号是 Issue #26 详情页那一行加的 ——
+  //  少了它，check.js V25 只能按一个汉字猜，算出来比真值窄 6rpx）。
   const chars = [...new Set(
-    "一二三四五六七八九十年级上下学期本册及之前小初中高全部随机＋+·-0123456789ABCDFGIKLMNPRSy"
+    "一二三四五六七八九十年级上下学期本册及之前小初中高全部随机＋－+·-0123456789ABCDFGIKLMNPRSy"
       .split("")
   )];
   const out = {};

@@ -21,29 +21,23 @@ const FONT_MAX = 4;
    key 同时是图标的类名后缀（.ic-left / .ic-rare …），纯 CSS 画的，
    不引图片 —— 主包只有 0.7MB 余量，拿体积换几个方块不划算。
 
-   ## short 与 label 是两份，不是一份
+   ## 文案取全称，不缩写
 
-   这两组控件出现在两个地方，两处对宽度的要求不一样：
-
-   · **详情页**把它们和字号挤在**一行**里（用户 2026-10-03：「详情页一行显示」）。
-     一行 594rpx，抠到每个字：注音 3 档、对齐 2 档，每档写 3 个字
-     （「左对齐」「不注音」）比 2 个字（「左」「不注音」）多出 31rpx，
-     而这一行给完字号就没余量了 —— 所以详情页用 short。
-   · **通用设置页**一档一整行，宽度不紧张，用 label 说清楚。
-     那里一个「左」字反而是残缺的：「左」什么？左对齐？左缩进？
-
-   一份文字两处复用（比如都把 label 改成单字），等于让详情页的宽度预算
-   去决定设置页的文案 —— 那是两件事。所以拆成两个字段，
-   由页面各取所需。宽度这件事有数字：见 reader.wxss 里那张表。 */
+   这两组控件也出现在详情页那一行里（用户 2026-10-03：
+   「一行内显示（整体居中）：左对齐 居中 不注音 生字 全文 A- A+」）。
+   一度想过在详情页把档名缩成单字给字号腾宽度，但用户那句话里每个档
+   都是全称 —— 缩字是他没要的东西。宽度靠别处省：这一行把字收一档
+   （--fs-caption），七段量出来 499rpx，卡片内容宽 596rpx，够。
+   算式与读数写在 reader.wxss 的 .prefs 一节。 */
 const ALIGNS = [
-  { key: "left", label: "左对齐", short: "左" },
-  { key: "center", label: "居中", short: "居中" }
+  { key: "left", label: "左对齐" },
+  { key: "center", label: "居中" }
 ];
 
 const PINYIN_MODES = [
-  { key: "off", label: "不注音", short: "无" },
-  { key: "rare", label: "生字", short: "生字" },
-  { key: "all", label: "全文", short: "全文" }
+  { key: "off", label: "不注音" },
+  { key: "rare", label: "生字" },
+  { key: "all", label: "全文" }
 ];
 
 Page({
@@ -198,8 +192,21 @@ Page({
     store.saveSettings({ align });
   },
 
-  onFontSlide(e) {
-    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(e.detail.value)));
+  /* 字号：这一行装的是两个端点按钮，不是滑块。
+     滑块要有横向量程才操作得准（原来那一版给它整行），而这一行要装
+     对齐 / 注音 / 字号三组，量程放不下 —— 一步一档的按钮反而正好。
+     到头了就不动（界面上那一头退成灰，见 .pref-opt.off），
+     不做「到头了还存一次」这种事。 */
+  onFontDown() {
+    this.stepFont(-1);
+  },
+
+  onFontUp() {
+    this.stepFont(1);
+  },
+
+  stepFont(delta) {
+    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
     if (fontSize === this.data.fontSize) return;
     this.setData({ fontSize });
     store.saveSettings({ fontSize });
