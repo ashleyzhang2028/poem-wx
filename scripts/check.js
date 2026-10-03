@@ -4373,6 +4373,62 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     if (/color="#1c1c1e"/.test(wxml)) hardcoded.push(pg);
   });
   ok("原生控件的颜色不再写死 #1c1c1e（绑 themeHex）", hardcoded.length === 0, hardcoded.join(", "));
+
+  /* ---------- 6) 换色之后，两处「以这个色为底」的记号还看不看得见 ----------
+     这一节是这一轮补的。上面那些守的都是「色对不对、字读不读得出」，
+     而换色之后有两处是**色块自己**要去跟另一个底比 —— 它们没有字，
+     所以前一节那几条一条都管不到：
+
+       a. **底栏选中的那枚圆底**。它压着的不是页面浅灰而是**底栏白底**
+          （rgba(255,255,255,.94) 铺出来近乎纯白）。明黄 #FAD069 与它
+          只有 1.42:1 —— 圆底等于没画，选中的那一栏跟没选中长得一样。
+          修法是给圆底补一圈「压在圆底上的字色」描边（`.tab.on .tab-ico`
+          的 box-shadow）：明黄时那圈是深褐 #3D2E00，与白底 12.78:1。
+          判据取两条里**较好的那条** ≥3 —— 有些主题靠圆底、有些靠那圈边，
+          有一条读得出来就够。
+
+       b. **按钮按下的那一档**（`deep` 与本色 `hex` 的距离）。位移小于
+          1.2 时，屏幕上就是「按了没反应」。玄色那个 1.20、明黄 1.25
+          是这一列里最紧的两个，所以这条线不是拍的是量出来的。 */
+  const lum2 = (hex) => {
+    const h = hex.replace("#", "");
+    const v = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  };
+  const ratio = (a, b) => {
+    const la = lum2(a), lb = lum2(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  };
+  const pairs2 = [...themeSrc.matchAll(
+    /name:\s*"([^"]+)"[^}]*?hex:\s*"(#[0-9A-Fa-f]{6})"[^}]*?deep:\s*"(#[0-9A-Fa-f]{6})"[^}]*?on:\s*"(#[0-9A-Fa-f]{6})"/g
+  )].map((m) => ({ name: m[1], hex: m[2], deep: m[3], on: m[4] }));
+  ok("每个主题色都读得出 hex / deep / on 三个值（下面两条要用）",
+    pairs2.length === 10, "读到 " + pairs2.length + " 项");
+
+  // a. 底栏选中：圆底与「压在圆底上的字色」两条里，至少一条跟栏底分得开
+  const BAR_BG = "#fbfbfc";   // rgba(255,255,255,.94) 铺在浅灰页底上的实测值
+  const invisibleSel = pairs2
+    .map((t) => ({ n: t.name, m: Math.max(ratio(t.hex, BAR_BG), ratio(t.on, BAR_BG)) }))
+    .filter((x) => x.m < 3)
+    .map((x) => x.n + " 只有 " + x.m.toFixed(2) + ":1");
+  ok("底栏「当前在哪一栏」的记号，每个主题下都看得出来（圆底或它那圈边 ≥3:1）",
+    invisibleSel.length === 0, invisibleSel.join(" | "));
+
+  // b. 按下：底色与本色要拉开，不然「按了没反应」
+  const flatPress = pairs2
+    .map((t) => ({ n: t.name, d: ratio(t.hex, t.deep) }))
+    .filter((x) => x.d < 1.2)
+    .map((x) => x.n + " 位移 " + x.d.toFixed(2));
+  ok("每个主题按下去都看得出来（底色与本色 ≥1.2:1）",
+    flatPress.length === 0, flatPress.join(" | "));
+
+  // 那条描边要真的在样式里 —— 否则上面第一条是「纸面上过」的
+  const barWxss = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxss"), "utf8");
+  const selBlock = /\.tab\.on\s+\.tab-ico\s*\{([^}]*)\}/.exec(barWxss);
+  ok("底栏选中的圆底真的补了那圈描边",
+    !!selBlock && /box-shadow\s*:\s*0 0 0 [\d.]+rpx\s+var\(--on-ink\)/.test(selBlock[1]),
+    selBlock ? selBlock[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on .tab-ico");
 }
 
 /* ---------- 汇总 ---------- */

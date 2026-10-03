@@ -14,7 +14,7 @@
 git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 
-# 2. 离线自检（824 项）+ 与网页版对照（28 项）
+# 2. 离线自检（924 项）+ 与网页版对照（28 项）
 node scripts/check.js
 node scripts/parity.js
 
@@ -525,7 +525,7 @@ corpus.layout(text) → {
 自检里有六条断言守着这一节（字号走令牌 / 卡片间距只一处 / 页头不重复 /
 门禁卡唯一 / 可点有反馈 / 空状态给出路），加上控件来源、门禁开合、
 控件间距与按钮居中、「选一个」只有一套长相、图标与缩放令牌、
-以及 V13 / V23 / V23.9 / V24 那几组共 **824 项**；
+以及 V13 / V23 / V23.9 / V24 / V25 / V26 / V27 那几组共 **924 项**；
 另有 `scripts/parity.js` 的 **28 项**守「网页版每一项能力都有交代」。
 
 ### 改界面时怎么「看见」
