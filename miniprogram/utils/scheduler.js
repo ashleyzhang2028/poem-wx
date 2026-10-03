@@ -11,14 +11,14 @@ const DAY = R.DAY;
 /* 取诗范围。每一项只有**一个**标签 ——
    上一版还配了一句 scopeName 副标题，而它就是标签的同义改写
    （「本册」→「本学期」、「小学随机」→「小学阶段」），
-   六个选项下面吊着六行废话。副标题撤了，scopeName 只留给需要
+   七个选项下面吊着七行废话。副标题撤了，scopeName 只留给需要
    把范围写成一句话的地方（首页、我的页里那句「一年级上 · 本学期及之前」）。 */
 const SCOPES = {
   term: { label: "本册", scopeName: "本学期", random: false, stages: ["current"] },
   upto: { label: "本册及之前", scopeName: "本学期及之前", random: false, stages: ["upto"] },
   primary: { label: "小学随机", scopeName: "小学阶段", random: true, stages: ["primary"] },
   middle: { label: "初中随机", scopeName: "初中阶段", random: true, stages: ["middle"] },
-  primary_middle: { label: "小学+初中随机", scopeName: "小学及初中阶段", random: true, stages: ["primary", "middle"] },
+  primary_middle: { label: "小初随机", scopeName: "小学及初中阶段", random: true, stages: ["primary", "middle"] },
   high: { label: "高中随机", scopeName: "高中阶段", random: true, stages: ["high"] },
   all: { label: "全部随机", scopeName: "全部阶段", random: true, stages: ["primary", "middle", "high"] }
 };
