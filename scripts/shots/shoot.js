@@ -48,11 +48,34 @@ if (!fs.existsSync(PREVIEW)) fail("没有预览页，先跑 node scripts/shots/r
     args: ["--no-sandbox", "--disable-gpu", "--hide-scrollbars"],
   });
   const page = await browser.newPage();
+  /* 字号修正：预览把 rpx 按 390 宽折算（1rpx = 0.52px），而浏览器给 15px 以下的字
+     兜着最小字号 —— 25rpx 在预览里量出来比真机宽，一条能装下的算式在这里会「装不下」。
+     注入 `html{font-size:100px;--ui-scale:1}` 之后，1rpx 就是 0.5×--ui-scale px，
+     跟真机同一把尺子（改字号档位时连 --ui-scale 一起改）。
+     注入之后浏览器按「物理像素」算长度：320rpx 的卡片就是 160px —— 所有长度等比缩放，
+     排得下/排不下、哪一段分到多少宽度，量与真机一致，只是屏幕上的绝对大小小一档。 */
+  const uiScale = Number(process.env.UI_SCALE || 1);
+  const inject = async () => {
+    await page.evaluate((scale) => {
+      const html = document.documentElement;
+      html.style.fontSize = "100px";
+      html.style.setProperty("--ui-scale", String(scale));
+      // 屏幕宽按「真机 390px · rpx 0.5px」反推，--layout-w 用它替掉 390px 那套折算
+      const w = (600 * scale) + "px";
+      document.querySelectorAll(".device").forEach((d) => {
+        d.style.setProperty("--layout-w", w);
+        const scr = d.querySelector(".screen");
+        if (scr) scr.style.setProperty("--layout-w", w);
+      });
+      return document.fonts.ready;
+    }, uiScale);
+  };
   // 2 倍图：小字（注音 18rpx）在 1 倍下会糊，看不清是不是真的对上了
   await page.setViewport({ width: 1600, height: 1200, deviceScaleFactor: 2 });
   await page.goto("file://" + PREVIEW, { waitUntil: "networkidle0" });
   // 等字体就位：篇名宋体是 @font-face 注入的，不等就会截到回退字形
   await page.evaluate(() => document.fonts.ready);
+  await inject();
 
   const screens = await page.$$eval(".device", (els) => els.map((el) => {
     const r = el.getBoundingClientRect();

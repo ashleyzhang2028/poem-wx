@@ -168,7 +168,13 @@ function renderNode(n, a, bodyNodes, data, out) {
     const mx = Number(interp(a.max || "100", v)) || 100;
     const val = Number(interp(a.value || "0", v)) || 0;
     const pc = mx > mn ? Math.max(0, Math.min(100, ((val - mn) / (mx - mn)) * 100)) : 0;
-    out.push(`<div data-tag="slider" class="n-slider ${cls}"><div class="n-slider-fill" style="width:${pc}%"></div><div class="n-slider-knob" style="left:${pc}%"></div></div>`);
+    // 滑条把「滑轨本体」单独包一层（.n-slider-track）：
+    // 真机上 <slider> 的宽度由 flex 分配，而滑轨两端还要给圆钮留半颗身位
+    // （否则最左/最右那半颗钮会戳出容器）。预览若把滑轨直接画在 .n-slider 上，
+    // 量出来的「滑轨宽」就是容器宽，比真机多半颗钮 —— measure 会算错一行放不放得下。
+    // 两端内缩用 CSS 变量 --n-slider-inset（默认 10px = 半颗钮），
+    // 由 shoot/measure 按 block-size 覆盖。
+    out.push(`<div data-tag="slider" class="n-slider ${cls}"><div class="n-slider-track"><div class="n-slider-fill" style="width:${pc}%"></div><div class="n-slider-knob" style="left:${pc}%"></div></div></div>`);
     return;
   }
   if (n.tag === "switch") {

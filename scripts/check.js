@@ -2354,10 +2354,20 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
      所以：凡是 app.wxss 里定义过的这一类（.seg-* / .ic-* / .chip*），
      页面样式表里不许再出现同名定义。 */
   const redefined = [];
+  /* 例外：详情页那一行（.seg-pref / .seg-pref-3 / .seg-pref-2）。
+     它们是**这一页独有的排布**，不是分段的底盘 —— 底盘（.seg / .seg-group /
+     .seg-item / .seg-text）仍然只有 app.wxss 一份。这三个只回答一个问题：
+     这一行里每段占多少宽。别的页面不会用、也不该用（一行三组是详情页的活），
+     所以摆在这一页是对的，不算「各画一遍」。 */
+  const ROW_LAYOUT_OK = new Set(["seg-pref", "seg-pref-3", "seg-pref-2"]);
   pages.forEach((p) => {
     const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
     const hit = wxss.match(/^\.(seg-[\w-]+|ic-[\w-]+|chip[\w-]*)\s*(::?[a-z-]+)?\s*\{/gm) || [];
-    hit.forEach((h) => redefined.push(p + " → " + h.replace(/\s*\{$/, "")));
+    hit.forEach((h) => {
+      const name = h.replace(/^\./, "").replace(/\s*(::?[a-z-]+)?\s*\{$/, "");
+      if (ROW_LAYOUT_OK.has(name)) return;
+      redefined.push(p + " → " + h.replace(/\s*\{$/, ""));
+    });
   });
   ok("分段 / 图标 / 格子的样式没有在页面里各写一遍",
     redefined.length === 0, redefined.slice(0, 5).join("; "));
@@ -3597,6 +3607,44 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("「通用设置」页有对齐 / 字号", /onAlign/.test(general) && /onFontSlide/.test(general));
     ok("「阅读设置」页有注音方式",
       /onMode/.test(read("packages/settings/reader/reader.wxml")));
+  }
+
+  /* 2.2) 详情页那三组偏好**必须在一行里**。
+     用户 2026-10-03：「设置页可以分三段设置，但是详情页一行显示」，
+     原话里的那一条是「一行内显示（整体居中）：左对齐 居中 不注音 生字 全文 A- A+」。
+     上一版详情页把注音 / 对齐 / 字号排成三行（字号还独占一整行）——
+     三排控件把正文挤到半屏以下，而这一页的主角是诗。这一条防的就是
+     「下一轮谁觉得挤了，又给挪回三行」。
+
+     它是**结构**那一层的判据（三组在不在同一个容器里、分不分段、文案有没有被缩写）；
+     「一行到底装不装得下」是 V25 那套算式的事，两边各管一头。 */
+  {
+    const readerWxml = read("pages/reader/reader.wxml");
+    const readerWxss = read("pages/reader/reader.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
+    // 三组在同一个 .prefs 里，且在正文（.rule）之前
+    const prefsAt = readerWxml.indexOf('class="prefs"');
+    const ruleAt = readerWxml.indexOf('class="rule"');
+    ok("详情页有一个 .prefs 容器，三组都在里面（在正文之前）",
+      prefsAt >= 0 && ruleAt > prefsAt);
+    const inPrefs = readerWxml.slice(prefsAt, ruleAt);
+    ok("详情页三组（对齐 / 注音 / 字号）都在同一个 .prefs 里",
+      /onPinyin/.test(inPrefs) && /onAlign/.test(inPrefs)
+        && /onFontDown/.test(inPrefs) && /onFontUp/.test(inPrefs));
+    ok("这个容器是**一行**（display:flex，不换行）",
+      /\.prefs\s*\{[^}]*display:\s*flex/.test(readerWxss)
+        && !/\.prefs\s*\{[^}]*flex-wrap:\s*wrap/.test(readerWxss));
+    ok("三组之间有两处分隔（对齐｜注音｜字号是三段、不是一团）",
+      (readerWxml.match(/class="pref-rule"/g) || []).length >= 2);
+    /* 档里的文案就是用户给的那几个全称，不缩写。
+       曾经想过把「左对齐」缩成「左」给字号腾宽度 —— 用户那句话里
+       每个档都是全称，缩字是他没要的东西。宽度靠收一档字解决。 */
+    ["左对齐", "居中", "不注音", "生字", "全文", "A－", "A＋"].forEach((t) => {
+      ok("详情页那一行用的是「" + t + "」这个全称", readerWxml.indexOf(t) >= 0);
+    });
+    // 撤掉不等于弄丢：图标仍在通用设置页那一份里（那里一档一整行，放得下）
+    const general = read("packages/settings/general/general.wxml");
+    ok("图标没被一起弄丢 —— 通用设置页那一份仍在",
+      /seg-icon\s+ic-/.test(general));
   }
 
   // 2.5) 每日首数：卡片要在，四档是 3 / 5 / 10 / 20，默认 5
