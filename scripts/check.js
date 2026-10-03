@@ -2670,9 +2670,15 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   const rowPoem = /\.row-poem\s*\{([^}]*)\}/.exec(appWxss);
   ok("列表篇名用宋体", !!rowPoem && /font-family\s*:\s*var\(--font-poem\)/.test(rowPoem[1]));
-  const readerWxss = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8");
-  const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(readerWxss);
-  ok("详情页篇名用宋体", !!poemTitle && /font-family\s*:\s*var\(--font-poem\)/.test(poemTitle[1]));
+  // 阅读面（标题 / 身份行 / 偏好行 / 正文 / 注音 / 译文）自 2026-10-03 起
+  // 收在 app.wxss —— 详情页与首页那张背诵弹层是同一张卡，两处各排一遍就会漂。
+  // 所以这一条读的是**那唯一一份**，不是某一页的那一份。
+  const surfaceWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(surfaceWxss);
+  ok("篇名用宋体（阅读面那份）", !!poemTitle && /font-family\s*:\s*var\(--font-poem\)/.test(poemTitle[1]));
+  ok("篇名的样式只此一处（页面里不许再写一遍）",
+    !/\.poem-title\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8"))
+      && !/\.poem-title\s*\{/.test(fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"), "utf8")));
 
   // 外挂字体这条路必须「没配就不发起」—— 与朗读那条口径一致
   const fontJs = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
@@ -3767,19 +3773,24 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
      「一行到底装不装得下」是 V25 那套算式的事，两边各管一头。 */
   {
     const readerWxml = read("pages/reader/reader.wxml");
-    const readerWxss = read("pages/reader/reader.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
-    // 三组在同一个 .prefs 里，且在正文（.rule）之前
+    // 这一行的样式住在 app.wxss 的「阅读面」一节 —— 详情页与首页弹层共用一份
+    const surfaceWxss = read("app.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
+    // 三组在同一个 .prefs 里。判据取「从 .prefs 到它自己那个 </view>」这一段，
+    // 上一版拿 .rule（正文那行小标题）当右边界 —— 正文现在紧跟其后，
+    // 于是它没法再当边界（首页那张卡里也没有 .rule）。
     const prefsAt = readerWxml.indexOf('class="prefs"');
-    const ruleAt = readerWxml.indexOf('class="rule"');
-    ok("详情页有一个 .prefs 容器，三组都在里面（在正文之前）",
-      prefsAt >= 0 && ruleAt > prefsAt);
-    const inPrefs = readerWxml.slice(prefsAt, ruleAt);
+    ok("详情页有一个 .prefs 容器，三组都在里面", prefsAt >= 0);
+    // 右边界取 .prefs 那个容器的收尾 —— 它后面紧跟的是正文。
+    // 数 `</view>` 是不行的：这一行里还嵌着两层，那个 `</view>` 先撞上的是
+    // 字号的壳（上一版就是这么把 onFontUp 切掉的）。
+    const prefsEnd = readerWxml.indexOf('class="poem-body', prefsAt);
+    const inPrefs = readerWxml.slice(prefsAt, prefsEnd > prefsAt ? prefsEnd : readerWxml.length);
     ok("详情页三组（对齐 / 注音 / 字号）都在同一个 .prefs 里",
       /onPinyin/.test(inPrefs) && /onAlign/.test(inPrefs)
         && /onFontDown/.test(inPrefs) && /onFontUp/.test(inPrefs));
     ok("这个容器是**一行**（display:flex，不换行）",
-      /\.prefs\s*\{[^}]*display:\s*flex/.test(readerWxss)
-        && !/\.prefs\s*\{[^}]*flex-wrap:\s*wrap/.test(readerWxss));
+      /\.prefs\s*\{[^}]*display:\s*flex/.test(surfaceWxss)
+        && !/\.prefs\s*\{[^}]*flex-wrap:\s*wrap/.test(surfaceWxss));
     ok("三组之间有两处分隔（对齐｜注音｜字号是三段、不是一团）",
       (readerWxml.match(/class="pref-rule"/g) || []).length >= 2);
     /* 档里的文案就是用户给的那几个全称，不缩写。
@@ -3940,8 +3951,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
   const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+  // ⚠️ 这一节量的那一行自 2026-10-03 起住在 app.wxss 的「阅读面」一节
+  // （详情页与首页弹层共用一份），所以读它，不读某一页的样式表。
   const readerWxss = fs
-    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .readFileSync(path.join(ROOT, "app.wxss"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "");
 
   const ruleBody = (cls) => {
@@ -4136,8 +4149,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
  */
 {
   const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  // 身份行与它上面那些规则同样收在 app.wxss 的「阅读面」一节
   const readerWxss2 = fs
-    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .readFileSync(path.join(ROOT, "app.wxss"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "");
 
   // 1) 身份行：四段同字号、同容器、不许折
@@ -4571,6 +4585,138 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   /* 撤掉的是那张卡，不是这个读数 —— 打卡时的提示语仍在（V26 第 3 条守着），
      未来七天里每一首的排期也仍在。 */
   ok("未来七天那张卡还在（撤的不是排期）", progWxml.indexOf("未来七天") >= 0);
+}
+
+/**
+ * V29. 首页的背诵是**弹层**，不是跳页（用户 2026-10-03）。
+ *
+ * 用户原话：
+ *   「首页的今日古诗背诵，当用户点击古诗，他不是从页面底部弹出详情页去背诵吗？
+ *     请参考 /poem 代码库。这种弹出卡片式方便用户背完随即进入下一首，
+ *     而不需要页面之间的切换。」
+ *
+ * 这一节的每一句都对着网页版（`/poem` 的 `#modal`）：
+ *   · js/app.js   openPoem() → `$("#modal").hidden = false`（不跳页）
+ *   · js/app.js   handleResult() → 评分后 closeModal() + renderToday()（就地重排）
+ *   · css/style.css  `.modal{position:fixed;inset:0;align-items:flex-end}`
+ *                    `.modal-box{border-radius:22px 22px 0 0}`（底部推上来）
+ *
+ * 这里守的不是「有没有一张卡」，而是**这件事里最容易在下一轮被改回去的几条**：
+ *
+ *   1. **首页点篇目不许再 navigateTo 详情页。** 改回去只需要一行，
+ *      而后果是「每背一首整页重建一次」—— 这正是用户要消掉的东西。
+ *      （详情页那一页**仍然在**：列表页 / 搜索页 / 飞花令还要跳它。）
+ *   2. **弹层从底部起、只在顶部两角是圆角。** 四点圆角就成了「居中的对话框」，
+ *      与「从下面推上来」是两件事，用户认得出。
+ *   3. **弹层要盖住底栏。** 底栏是「换一页」的入口，而弹层正占着这一页做事；
+ *      压不住的话，背到一半还能点走。
+ *   4. **阅读面只此一份。** 弹层与详情页的标题 / 身份行 / 偏好行 / 正文 / 注音 /
+ *      译文必须住在同一份样式里 —— 各写一遍，第二份迟早跟第一份漂开
+ *      （用户说的是「同一个东西换个方式打开」，不是「两个页面各有各的排版」）。
+ *   5. **三档评分与「顺次进下一首」都在组件里。** 少一样，那张卡就白做了。
+ */
+{
+  const sheetDir = path.join(ROOT, "components", "recite-sheet");
+  const four = [".js", ".json", ".wxml", ".wxss"].every((ext) =>
+    fs.existsSync(path.join(sheetDir, "recite-sheet" + ext)));
+  ok("背诵弹层四件套齐全", four);
+
+  const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");
+  const homeJs = fs.readFileSync(path.join(ROOT, "pages/home/home.js"), "utf8");
+  const sheetWxml = fs.readFileSync(path.join(sheetDir, "recite-sheet.wxml"), "utf8");
+  const sheetJs = fs.readFileSync(path.join(sheetDir, "recite-sheet.js"), "utf8");
+  const sheetWxss = fs.readFileSync(path.join(sheetDir, "recite-sheet.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 1) 首页挂了这个组件，且点篇目 / 开始背都走它
+  ok("首页挂上了背诵弹层", homeWxml.indexOf("<recite-sheet") >= 0);
+  const homeCfg = readJson(path.join(ROOT, "pages/home/home.json"));
+  ok("首页注册了这个组件",
+    (homeCfg.usingComponents || {})["recite-sheet"] === "/components/recite-sheet/recite-sheet");
+  ok("点篇目走弹层（不再 navigateTo 详情页）",
+    /onOpen[\s\S]{0,400}?openSheet\(/.test(homeJs)
+      && !/onOpen[\s\S]{0,400}?pages\/reader\/reader/.test(homeJs),
+    "onOpen 里还在跳详情页");
+  ok("「开始背」也走弹层（同一件事，不该两条路）",
+    /onStart[\s\S]{0,300}?openSheet\(/.test(homeJs));
+  const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id) {"));
+  ok("弹层由首页把门禁，组件自己不查",
+    /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
+      && sheetJs.replace(/\/\*[\s\S]*?\*\//g, "").indexOf("gate") < 0,
+    "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
+
+  // 2) 从底部起、只在顶部两角是圆角
+  const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
+  ok("弹层是整屏浮层（fixed）", !!rootBody && /position\s*:\s*fixed/.test(rootBody[1]));
+  ok("弹层靠底（从下面推上来，不是居中的对话框）",
+    !!rootBody && /align-items\s*:\s*flex-end/.test(rootBody[1]));
+  const sheetBody = /\.sheet\s*\{([^}]*)\}/.exec(sheetWxss);
+  const radius = sheetBody ? (/border-radius\s*:\s*([^;]+);/.exec(sheetBody[1]) || [])[1] || "" : "";
+  ok("只在顶部两角是圆角（下沿与屏幕同宽）",
+    /var\(--radius-block\)\s+var\(--radius-block\)\s+0\s+0/.test(radius), "读到 " + radius);
+  // 遮罩与卡本身都真的画了（少一层，弹层就是「浮在页面上」而不是「压上来」）
+  ok("有遮罩层", /\.sheet-mask\s*\{/.test(sheetWxss) && sheetWxml.indexOf("sheet-mask") >= 0);
+
+  // 3) 压得住自绘底栏（底栏 z-index 是 100，见 custom-tab-bar）
+  const z = sheetBody ? Number((/z-index\s*:\s*(\d+)/.exec(rootBody[1]) || [])[1] || 0) : 0;
+  const barCss = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxss"), "utf8");
+  const barZ = Number((/z-index\s*:\s*(\d+)/.exec(barCss) || [])[1] || 0);
+  ok("弹层压得过自绘底栏（" + z + " < " + barZ + "？不对，要压得住）",
+    z > 0 && z < barZ, "弹层 z=" + z + " 底栏 z=" + barZ);
+  ok("弹层自己在底栏之上、在样式弹层之上",
+    z >= 50, "z-index 读到 " + z);
+
+  // 4) 阅读面只此一份
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const surface = [".poem-head", ".poem-title", ".poem-meta-row", ".prefs", ".poem-body", ".tk-py", ".trans-head"];
+  const hasRule = (css, cls) =>
+    new RegExp(cls.replace(".", "\\.") + "\\s*\\{").test(css);
+  const missing = surface.filter((cls) => !hasRule(appWxss, cls));
+  ok("阅读面收在 app.wxss 一处（" + surface.length + " 个类）", missing.length === 0, missing.join(", "));
+  const readerWxssOnly = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8");
+  const dup = surface.filter((cls) => hasRule(sheetWxss, cls) || hasRule(readerWxssOnly, cls));
+  ok("两处都不许再写一份（写了就是第二份会漂）", dup.length === 0, dup.join(", "));
+  // 弹层与详情页取的是同一套档位常量、同一套页面字段名
+  [".pref-opt", ".pref-t", ".pref-rule", ".token", ".tk-ch"].forEach((cls) => {
+    ok("弹层用了共用的 " + cls, hasRule(appWxss, cls));
+  });
+
+  // 5) 三档评分 + 顺次进下一首
+  ok("三档评分在组件里（忘记 / 模糊 / 记住）",
+    sheetJs.indexOf("忘记") >= 0 && sheetJs.indexOf("模糊") >= 0 && sheetJs.indexOf("记住") >= 0);
+  ok("评分后顺势进下一首（不是「关掉再去找」）",
+    /goNext\(/.test(sheetJs) && /this\.setData\(\{\s*index:\s*next/.test(sheetJs));
+  ok("队列走完就把弹层收掉（人回到列表，勾都在）",
+    /next\s*>=\s*this\.data\.queue\.length[\s\S]{0,120}?onClose\(\)/.test(sheetJs));
+  // 队列由首页给 —— 下一首是什么只有排过计划的人知道
+  ok("队列从首页传进来（组件不自己排计划）",
+    sheetWxml.indexOf("queue=") < 0 && homeWxml.indexOf('queue="{{plan}}"') >= 0);
+  // 弹层里翻页时要让首页重排列表
+  ok("翻页会回调首页（列表的勾要跟着动）",
+    /triggerEvent\("open"/.test(sheetJs) && /bind:open="onSheetOpen"/.test(homeWxml));
+
+  // 6) 弹层里排的就是首页那一列：状态字段（read / done）不传进去，
+  //    组件自己去 store 取 —— 免得两份「背到哪了」各说各话
+  ok("弹层不靠页面传「背没背过」（自己取 store）",
+    /store\.getRecord\(/.test(sheetJs) && sheetJs.indexOf("markRead") >= 0);
+
+  // 6.5) 主题色：组件读不到页面根节点那份内联变量，必须显式接一份。
+  //      漏了这一道，换主题之后这张卡永远是默认那支墨（截图里看不出）。
+  ok("弹层显式接了页面那份主题变量",
+    homeWxml.indexOf('theme-style="{{themeStyle}}"') >= 0
+      && /themeStyle:\s*\{\s*type:\s*String/.test(sheetJs)
+      && /style="\{\{themeStyle\}\}"/.test(sheetWxml),
+    "首页没传 theme-style，或组件没把它挂在根节点上");
+
+  // 7) 组件自己不许发网络 —— 同步是页面的事（口径一处，不两处）
+  ok("组件不发网络（同步由页面统一管）",
+    sheetJs.indexOf("wx.request") < 0 && sheetJs.indexOf("remote") < 0);
+
+  // 8) 预览得拍得到它 —— 拍不到的那一屏等于没改
+  const pagesCfg = readJson(path.join(__dirname, "shots", "pages.json"));
+  ok("预览里有「首页弹层开着」那一屏",
+    Object.keys(pagesCfg).some((k) => /sheet/.test(k)),
+    "pages.json 里没有名字带 sheet 的那一屏");
 }
 
 /* ---------- 汇总 ---------- */

@@ -18,7 +18,7 @@
            中间的点由 WXML 按「有没有」自己决定出不出现：出处与学段是
            可缺的（课外篇目没有出处，未学篇目停在「新学」照样有），
            写死两个点会在缺项时留下孤零零一个「·」。
-           数量写在 reader.wxss 的 .poem-meta-row 一节，check.js V26 守着。 -->
+           数量写在 app.wxss 的「阅读面 · 身份行」一节，check.js V26 守着。 -->
       <view class="poem-meta-row">
         <text class="poem-meta">{{dynasty}}</text>
         <text class="poem-dot">·</text>
@@ -42,8 +42,8 @@
          两个选项就吃掉半屏；这里全部走 .opt-radio（视觉隐藏的原生控件，
          行为还在 label 上），量出来才放得下 —— 七个段加起来 499rpx，
          卡片内容宽 596rpx 里还余 96rpx。
-         数字与算式写在 reader.wxss 的 .prefs 一节，check.js V25 按同一份
-         度量盯着「放得下」这件事，改文案或改档位就红。 -->
+         数字与算式写在 app.wxss 的「阅读面 · 偏好行」一节，
+         check.js V25 按同一份度量盯着「放得下」这件事，改文案或改档位就红。 -->
     <view class="prefs">
       <radio-group class="pref-seg" bindchange="onAlign">
         <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
@@ -89,7 +89,10 @@
          折开之后一句一行才读得下去。
 
          注音与正文同形同序（「段落 → 行 → 句」），所以换模式不会跳版。
-         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。 -->
+         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。
+
+         这一段的样式与首页那张背诵弹层共用一份，收在 app.wxss 的
+         「阅读面」一节 —— 两处是同一张卡，不该各排一遍。 -->
     <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{!pinyinOn}}">
         <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
@@ -135,7 +138,7 @@
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+    <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
       <text class="card-title bar">译文</text>
       <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>

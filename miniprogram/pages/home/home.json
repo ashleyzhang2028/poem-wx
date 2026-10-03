@@ -1,6 +1,8 @@
 {
   "navigationBarTitleText": "跬步 · 今日背诵",
-  "usingComponents": {},
+  "usingComponents": {
+    "recite-sheet": "/components/recite-sheet/recite-sheet"
+  },
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark"
 }
