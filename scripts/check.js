@@ -4402,19 +4402,21 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("原生控件的颜色不再写死 #1c1c1e（绑 themeHex）", hardcoded.length === 0, hardcoded.join(", "));
 
   /* ---------- 6) 换色之后，两处「以这个色为底」的记号还看不看得见 ----------
-     这一节是这一轮补的。上面那些守的都是「色对不对、字读不读得出」，
+     这一节守的是：上面那些断言管的都是「色对不对、字读不读得出」，
      而换色之后有两处是**色块自己**要去跟另一个底比 —— 它们没有字，
      所以前一节那几条一条都管不到：
 
-       a. **底栏选中的那一格**。B2 方案（Issue #26）把它从「一枚 56rpx
-          圆底 + 一圈描边」改成**整格填 `deep` 的圆角方块**，字与图标
-          压在块上。于是要守两件事，一件都不能少：
-            · **块自己跟栏底分得开**（≥3:1）—— 否则「选中了哪一栏」看不出来
-            · **字压在块上读得出**（≥4.5:1）—— 22rpx 是小字，门槛按正文算
-          为什么底取 `deep` 而不是本色 `hex`：本色压白字的朱红 3.34、
-          天青 3.66、竹青 3.45，三档都够不上 4.5；换 deep 后
-          4.59 / 5.10 / 4.74，全部过线。所以这一条是**从色表复算的**，
-          不是写死常数 —— 以后谁再调色，这条会跟着动。
+       a. **底栏选中的那枚圆底**（方案 A，Issue #26 用户选定）。它压着的
+          不是页面浅灰而是**底栏白底**（rgba(255,255,255,.94) 铺出来近乎
+          纯白）。明黄 #FAD069 与它只有 1.42:1 —— 圆底等于没画，选中的
+          那一栏跟没选中长得一样。修法是给圆底补一圈「压在圆底上的字色」
+          描边（`.tab.on .tab-ico` 的 box-shadow）：明黄时那圈是深褐
+          #3D2E00，与白底 12.78:1。判据取两条里**较好的那条** ≥3 ——
+          有些主题靠圆底、有些靠那圈边，有一条读得出来就够。
+
+          注：曾经试过 B 方案（选中整格填 `deep`、字走 --on-sel），
+          对比度算术也过了，但用户看过之后选了 A，于是整块撤掉。
+          下面 c 里留了一条「不许整格填色漂回来」的反向断言。
 
        b. **按钮按下的那一档**（`deep` 与本色 `hex` 的距离）。位移小于
           1.2 时，屏幕上就是「按了没反应」。玄色那个 1.20、明黄 1.25
@@ -4430,38 +4432,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
   };
   const pairs2 = [...themeSrc.matchAll(
-    /name:\s*"([^"]+)"[^}]*?hex:\s*"(#[0-9A-Fa-f]{6})"[^}]*?deep:\s*"(#[0-9A-Fa-f]{6})"[^}]*?on:\s*"(#[0-9A-Fa-f]{6})"[^}]*?sel:\s*"(#[0-9A-Fa-f]{6})"/g
-  )].map((m) => ({ name: m[1], hex: m[2], deep: m[3], on: m[4], sel: m[5] }));
-  ok("每个主题色都读得出 hex / deep / on / sel 四个值（下面两条要用）",
+    /name:\s*"([^"]+)"[^}]*?hex:\s*"(#[0-9A-Fa-f]{6})"[^}]*?deep:\s*"(#[0-9A-Fa-f]{6})"[^}]*?on:\s*"(#[0-9A-Fa-f]{6})"/g
+  )].map((m) => ({ name: m[1], hex: m[2], deep: m[3], on: m[4] }));
+  ok("每个主题色都读得出 hex / deep / on 三个值（下面两条要用）",
     pairs2.length === 10, "读到 " + pairs2.length + " 项");
 
-  // a-1. 字压在「整格填 deep」的选中块上，要 ≥4.5:1
+  // a. 底栏选中：圆底与「压在圆底上的字色」两条里，至少一条跟栏底分得开
   const BAR_BG = "#fbfbfc";   // rgba(255,255,255,.94) 铺在浅灰页底上的实测值
-  const dimSelText = pairs2
-    .map((t) => ({ n: t.name, r: ratio(t.deep, t.sel) }))
-    .filter((x) => x.r < 4.5)
-    .map((x) => x.n + " 只有 " + x.r.toFixed(2) + ":1");
-  ok("选中块上的字读得出来（字色压 deep 块 ≥4.5:1）",
-    dimSelText.length === 0, dimSelText.join(" | "));
-
-  // a-2. 选中块自己（或块上的字）至少一条跟栏底分得开 ——
-  //      明黄 dp 块对白底只有 1.77:1，靠它那块深褐字 12.78:1 站住。
   const invisibleSel = pairs2
-    .map((t) => ({ n: t.name, m: Math.max(ratio(t.deep, BAR_BG), ratio(t.sel, BAR_BG)) }))
+    .map((t) => ({ n: t.name, m: Math.max(ratio(t.hex, BAR_BG), ratio(t.on, BAR_BG)) }))
     .filter((x) => x.m < 3)
     .map((x) => x.n + " 只有 " + x.m.toFixed(2) + ":1");
-  ok("底栏「当前在哪一栏」的记号，每个主题下都看得出来（填充块或块上的字 ≥3:1）",
+  ok("底栏「当前在哪一栏」的记号，每个主题下都看得出来（圆底或它那圈边 ≥3:1）",
     invisibleSel.length === 0, invisibleSel.join(" | "));
-
-  // a-3. **本色压白字过不了 4.5 的那三档，正是必须走 deep 的理由**。
-  //      留着当反证的靶子：谁把选中块的底改回本色 hex，这三档当场红。
-  const needDeep = pairs2
-    .filter((t) => ratio(t.hex, t.sel) < 4.5)
-    .map((t) => t.name);
-  ok("确有主题「本色压字」过不了 4.5:1（证明选中块必须取 deep 而非 hex）",
-    needDeep.length >= 3 && needDeep.indexOf("朱红") >= 0
-    && needDeep.indexOf("天青") >= 0 && needDeep.indexOf("竹青") >= 0,
-    "过不了的：" + needDeep.join(", "));
 
   // b. 按下：底色与本色要拉开，不然「按了没反应」
   const flatPress = pairs2
@@ -4471,46 +4454,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("每个主题按下去都看得出来（底色与本色 ≥1.2:1）",
     flatPress.length === 0, flatPress.join(" | "));
 
-  // c. 上面那几条是「色表上算得出来」的 —— 但样式里得真的那么画。
-  //    这一条守「选中块真的落在样式里，且用的是 deep 那支色与块上的字色」，
-  //    否则前几条都是纸面上过的。
+  // c. 上面那几条是「色表上算得出来」的 —— 但样式里得真的那么画，
+  //    否则前几条都是纸面上过的。方案 A：圆底 + 那圈描边。
   const barWxss = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxss"), "utf8");
-  // 填充块分两条规则：形状（几何）在 .tab::before，只有选中时才上色
-  // （.tab.on::before）—— 这样未选中那三格也共用一个占位，改形状只改一处。
-  const fillGeom = /\.tab::before\s*\{([^}]*)\}/.exec(barWxss);
-  const fillPaint = /\.tab\.on::before\s*\{([^}]*)\}/.exec(barWxss);
-  ok("选中格真的画了填充块（.tab.on::before 上了色）",
-    !!fillPaint, fillPaint ? fillPaint[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on::before");
-  ok("填充块用的是 deep 那一支（--ink-strong）",
-    !!fillPaint && /background\s*:\s*var\(--ink-strong\)/.test(fillPaint[1]));
-  ok("填充块是圆角方块、四角留白（不碰底栏顶线）",
-    !!fillGeom && /border-radius\s*:\s*16rpx/.test(fillGeom[1])
-    && /top\s*:\s*8rpx/.test(fillGeom[1]) && /bottom\s*:\s*8rpx/.test(fillGeom[1]),
-    fillGeom ? fillGeom[1].replace(/\s+/g, " ").trim() : "找不到 .tab::before");
-  const selColor = /\.tab\.on\s*\{([^}]*)\}/.exec(barWxss);
-  ok("选中格的字色走 --on-sel（不是 --strong-text、也不是 --on-ink）",
-    !!selColor && /color\s*:\s*var\(--on-sel\)/.test(selColor[1]),
-    selColor ? selColor[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on");
-  const selIco = /\.tab\.on\s+\.tab-ico\s*\{([^}]*)\}/.exec(barWxss);
-  ok("选中格的图标笔画也走 --on-sel",
-    !!selIco && /--ic\s*:\s*var\(--on-sel\)/.test(selIco[1]),
-    selIco ? selIco[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on .tab-ico");
-  // 补丁撤了：圆底那圈描边不该还留着 —— 留着说明「改了半截」
-  ok("圆底时代的补丁（描边）已撤掉 —— 选中是整格填充，不再靠描边",
-    !/\.tab\.on\s+\.tab-ico\s*\{[^}]*box-shadow/.test(barWxss));
-  // 底栏的选中记号不再依赖「圆底 + 描边」，也就不该再画圆底
-  ok("选中不再画圆底（background 不落在 .tab.on .tab-ico 上）",
-    !/\.tab\.on\s+\.tab-ico\s*\{[^}]*background\s*:/.test(barWxss));
+  const selBlock = /\.tab\.on\s+\.tab-ico\s*\{([^}]*)\}/.exec(barWxss);
+  ok("底栏选中的圆底真的补了那圈描边",
+    !!selBlock && /box-shadow\s*:\s*0 0 0 [\d.]+rpx\s+var\(--on-ink\)/.test(selBlock[1]),
+    selBlock ? selBlock[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on .tab-ico");
+  ok("选中的圆底画在 .tab.on .tab-ico 上（background 走 --strong）",
+    !!selBlock && /background\s*:\s*var\(--strong\)/.test(selBlock[1]),
+    selBlock ? selBlock[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on .tab-ico");
+  // 反向断言：B 方案（整格填色）不许漂回来 —— 它连同 --on-sel 令牌都已撤掉。
+  // 没有这一条，将来谁把整格填色又接回底栏，方案 A 那两条仍是绿的。
+  ok("底栏没有漂回整格填色（.tab.on::before 不该再上色）",
+    !/\.tab\.on::before\s*\{[^}]*background\s*:\s*var\(--ink-strong\)/.test(barWxss));
+  ok("--on-sel 令牌已随 B 方案撤掉（tokens / theme.js 里都不该再有它）",
+    !/--on-sel/.test(tokens) && !/sel:\s*"#/.test(themeSrc));
 
-  // d. tokens 里要有 --on-sel 的默认值，否则不设主题时底栏选中就是个空值
-  ok("tokens 里给了 --on-sel 的默认值",
-    /--on-sel\s*:\s*var\(--on-theme\)/.test(tokens));
-
-  // e. 预览那份手写的底栏标记也得跟上（它是照组件结构手抄的）——
-  //    预览里少一个 --on-sel，截图就跟真机不一样，而截图是给人看的证据
-  const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "utf8");
-  ok("预览的底栏预览跟着组件走（tabBarHtml 还在，类名对得上）",
-    /function tabBarHtml/.test(renderSrc) && /tab-ico-\$\{it\.icon\}/.test(renderSrc));
 }
 
 /**
