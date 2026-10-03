@@ -3328,53 +3328,39 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   });
   ok("选项文字没有第二层纵向内边距", noDouble.length === 0, noDouble.join(", "));
 
-  /* b) 背诵设置那一行。
-     上一版守的是「年级在学期**上面**」（Issue #12 原话「学期显示在年级下面」）——
-     那是两张卡、两行格子时的排法。
+  /* b) 背诵设置页里**没有**阅读偏好（注音 / 对齐 / 字号）。
+     这一页前后出过两版错：先是被塞成「一行七个段」（年级、学期、注音、对齐、
+     字号全挤一行），再是被收成「一行三段」（只留注音/对齐/字号）。两版都把
+     **阅读偏好**搬到了「选背哪些」的设置页里。用户这轮把方向定死了：
 
-     再上一版（Issue #26 第一轮）把这五组全塞进一行，连年级和学期一起收了。
-     用户原话把这笔账算清了：
-     「我只说过要把下面变成一行：不注音 生字 全文 ｜ 左对齐 居中 ｜ A－ A＋
-       我从未说过把 一年级 … 六年级 ｜ 上学期 下学期 放到一行，这些全部恢复原样」
+     「「注音 ｜ 对齐 ｜ 字号」只应该出现在详情页和具体古诗背诵卡片里，
+      怎么显示在了背诵范围这里」
 
-     所以这一行**只有三组**：注音 · 对齐 · 字号。年级与学期退回上面的格子，
-     且**年级十二格一个不收**（同一个 Issue：「年级从十二格收到六格
-     （取最近六年）- 谁让你这么瞎搞的」）。
+     所以这一页不该再出现这三组（连同它们的排法 .pref-row / .font-step /
+     .fs-btn 一并删除）。它们该在的地方是详情页（pages/reader 的 .prefs）
+     与阅读设置页（packages/settings/general）—— 那两处另有一条断言守着。
 
-     断言就按这个口径拆成两组：
-       · 有 .pref-row 的那张卡里，只许出现注音 / 对齐 / 字号三组
-       · 年级与学期在**另一张卡**的格子里，且是 12 格与 2 格
-     顺序仍按 bindchange 的处理函数认，只认这三组的顺序。 */
+     同时守着上一轮的结论：年级**十二格一个不收**，学期两格，
+     这页不再有 <slider>（详情页那根滑块才是字号该在的地方）。 */
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const reciteJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
-  const prefCard = /<view class="pref-row">([\s\S]*?)<!--\s*字号/s.exec(recite);
-  const prefCardAll = /<view class="pref-row">([\s\S]*?)<\/view>\s*<\/view>/.exec(recite);
-  const prefBody = prefCardAll ? prefCardAll[1] : "";
-  ok("有 .pref-row 的那张卡里只有三组（注音 · 对齐 · 字号）",
-    ["onPinyin", "onAlign", "onFontDown"].every((h) => prefBody.indexOf(h) >= 0)
-      && !/onGrade|onTerm/.test(prefBody),
-    "这一行里混进了年级/学期：见 .pref-row 那段");
-  {
-    const order = ["onPinyin", "onAlign", "onFontDown"]
-      .map((h) => ({ h: h, i: prefBody.indexOf('bindchange="' + h + '"') >= 0 ? prefBody.indexOf('bindchange="' + h + '"') : prefBody.indexOf('bindtap="' + h + '"') }));
-    ok("这三组的顺序是 注音 · 对齐 · 字号",
-      order.every((o) => o.i >= 0) && order.every((o, i) => i === 0 || o.i > order[i - 1].i),
-      order.map((o) => o.h + "@" + o.i).join(", "));
-  }
-  ok("年级与学期不在这一行里（退回上面那张卡的格子）",
-    /<radio-group class="chip-group cols-4"[^>]*bindchange="onGrade"/.test(recite)
-      && /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite));
+  const reciteWxss = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8");
+  const strayHandlers = ["onPinyin", "onAlign", "onFontDown", "onFontUp"].filter(
+    (h) => recite.indexOf(h) >= 0 || reciteJs.indexOf(h) >= 0);
+  ok("背诵设置页里没有注音 / 对齐 / 字号（详情页与阅读设置页才该有）",
+    strayHandlers.length === 0, "这页混进了：" + strayHandlers.join(", "));
+  ok("那一行的排法（.pref-row / .font-step / .fs-btn）整块删掉了",
+    !/\.pref-row|\.font-step|\.fs-btn/.test(reciteWxss) && !/pref-row|font-step/.test(recite),
+    "recite.wxss / recite.wxml 里还有残留");
+  ok("这页不再有 <slider>（字号滑块是详情页的东西）", recite.indexOf("<slider") < 0);
   ok("年级是十二格、一个不收（不是「最近六年」）",
     reciteJs.indexOf("RECENT") < 0
       && /grades:\s*GRADES\.map/.test(reciteJs)
       && Object.keys(JSON.parse(require("fs").readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8").match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0].replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":'))).length === 12,
     "看 recite.js 里 GRADES 是怎么来的、scheduler.js 里 GRADE_NAMES 有几个");
-  // `.pref-row` 定义在 recite.wxss（它是这一屏的排法，不是全站的控件长相）
-  const prefRow = /\.pref-row\s*\{([^}]*)\}/.exec(
-    fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8"));
-  ok("这一行整体居中（.pref-row 是 flex + center）",
-    !!prefRow && /justify-content\s*:\s*center/.test(prefRow[1]),
-    prefRow ? prefRow[1].replace(/\s+/g, " ").trim() : "没有 .pref-row 规则");
+  ok("年级与学期仍是自己那张卡的格子",
+    /<radio-group class="chip-group cols-4"[^>]*bindchange="onGrade"/.test(recite)
+      && /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite));
   ok("这一屏的领读词是「背诵范围」", /<text class="head-title">背诵范围<\/text>/.test(recite));
 
   // c) 取诗范围是横排
@@ -3429,22 +3415,25 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     pages.every((p) => visible(p).indexOf("今天背什么") < 0),
     pages.filter((p) => visible(p).indexOf("今天背什么") >= 0).join(", "));
 
-  // 2) 那一行：注音 · 对齐 · 字号三组，顺序由用户给定
+  // 2) 背诵设置页里不该有注音 / 对齐 / 字号 —— 它们只在详情页与阅读设置页
   {
     const recite = read("packages/settings/recite/recite.wxml");
     const reciteJs = read("packages/settings/recite/recite.js");
-    // 七个词都在。分段那几组的文案在 JS 的常量里（WXML 渲的是 {{item.label}}），
-    // 字号的文案在 WXML 里 —— 两边一起认。
-    ["左对齐", "居中", "不注音", "生字", "全文"].forEach((t) => {
-      ok("那一行里有「" + t + "」", reciteJs.indexOf('"' + t + '"') >= 0);
+    ["左对齐", "居中", "不注音", "生字", "全文", "A－", "A＋"].forEach((t) => {
+      ok("背诵设置页里没有「" + t + "」（这三组在详情页与阅读/通用设置页）",
+        recite.indexOf(t) < 0 && reciteJs.indexOf(t) < 0);
     });
-    ["A－", "A＋"].forEach((t) => {
-      ok("那一行里有「" + t + "」", recite.indexOf(">" + t + "<") >= 0);
-    });
-    // 这一行里不许再有 slider —— 滑块是「连续量 + 一条量程」，
-    // 一行里没有给它横向量程的地方（那正是它挤不下的原因）
-    ok("这一屏不再有 slider（字号换成 A－ / A＋ 两颗）", recite.indexOf("<slider") < 0);
-    ok("A－ / A＋ 是真的两颗按钮", (recite.match(/<button[^>]*fs-btn/g) || []).length === 2);
+    ok("这一页也没有 slider", recite.indexOf("<slider") < 0);
+    // 它们该在的地方**得真有** —— 不然「撤掉」就成了「弄丢」。
+    // 三件事现在的位置：详情页全有（读这首诗时调）；对齐与字号另有「通用设置」
+    // 页（general）集中调一次；注音另有「阅读设置」页（settings/reader）。
+    const reader = read("pages/reader/reader.wxml");
+    ok("详情页（读这首诗时）注音 / 对齐 / 字号三样都在",
+      /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontSlide/.test(reader));
+    const general = read("packages/settings/general/general.wxml");
+    ok("「通用设置」页有对齐 / 字号", /onAlign/.test(general) && /onFontSlide/.test(general));
+    ok("「阅读设置」页有注音方式",
+      /onMode/.test(read("packages/settings/reader/reader.wxml")));
   }
 
   // 2.5) 每日首数：卡片要在，四档是 3 / 5 / 10 / 20，默认 5
