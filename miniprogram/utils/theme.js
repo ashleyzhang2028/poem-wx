@@ -25,16 +25,8 @@ const store = require("./store");
  * 天青这几个的明度差得很远，一律压白字会让明黄上的字看不清。
  * 判据是相对亮度：亮色配深字，暗色配白字。
  *
- * `deep` 是「比它再深一档」，给按钮按下态用（原来那是 --ink-strong）。
+ * `deep` 是「比它再深一档」，只给按钮按下态用（原来那是 --ink-strong）。
  * 深色系自己就是那一档，所以多数直接取本色。
- *
- * `sel` 是「底栏选中那一格的字色」。这一栏是 B2 方案（Issue #26）才有的：
- * 选中不再画一枚小圆底，而是**整格填 `deep`**，字与图标压在它上面。
- * 所以它跟 `on` 不是一回事 —— `on` 压的是本色 `hex`，`sel` 压的是 `deep`：
- *   朱红 本色压白 3.34 ✗ / 深一档压白 4.59 ✓
- *   天青 本色压白 3.66 ✗ / 深一档压白 5.10 ✓
- *   竹青 本色压白 3.45 ✗ / 深一档压白 4.74 ✓
- * 三档本色压白都够不上 4.5:1，所以选中块的底取 `deep`、字取 `sel`。
  */
 const THEMES = [
   // text 是「当文字用」的那一档。深色主题它就是本色；明黄太亮，
@@ -49,16 +41,16 @@ const THEMES = [
   //   · 月白对页面底 ΔE 8.9  —— 按钮底是月白时，在白页里几乎看不见
   //   · 藕荷对页面底 ΔE 18.3 —— 偏弱；且与月白互相只差 ΔE 21，两个浅色挤在一起
   // 换成两个沉色之后，这一列从「三浅」变成「一浅」，一屏里辨识度拉开。
-  { key: "ink",    name: "墨",   hex: "#1C1C1E", deep: "#000000", on: "#FFFFFF", text: "#1C1C1E", sel: "#FFFFFF" },
-  { key: "zhuhong", name: "朱红", hex: "#FF4C00", deep: "#D63F00", on: "#FFFFFF", text: "#C93A00", sel: "#FFFFFF" },
-  { key: "minghuang", name: "明黄", hex: "#FAD069", deep: "#E8B93F", on: "#3D2E00", text: "#8A6B00", sel: "#3D2E00" },
-  { key: "tianqing", name: "天青", hex: "#228FBD", deep: "#1B769C", on: "#FFFFFF", text: "#1A7397", sel: "#FFFFFF" },
-  { key: "yuguotianqing", name: "雨过天青", hex: "#2F6055", deep: "#264F46", on: "#FFFFFF", text: "#2F6055", sel: "#FFFFFF" },
-  { key: "yanzhi", name: "胭脂", hex: "#9D2933", deep: "#82212A", on: "#FFFFFF", text: "#9D2933", sel: "#FFFFFF" },
-  { key: "zhuqing", name: "竹青", hex: "#789262", deep: "#637A51", on: "#FFFFFF", text: "#5E7649", sel: "#FFFFFF" },
-  { key: "xuanse", name: "玄色", hex: "#622A1D", deep: "#4E2117", on: "#FFFFFF", text: "#622A1D", sel: "#FFFFFF" },
-  { key: "yaqing", name: "鸦青", hex: "#424C50", deep: "#333B3E", on: "#FFFFFF", text: "#424C50", sel: "#FFFFFF" },
-  { key: "tianshuibi", name: "天水碧", hex: "#3D6379", deep: "#325266", on: "#FFFFFF", text: "#3D6379", sel: "#FFFFFF" }
+  { key: "ink",    name: "墨",   hex: "#1C1C1E", deep: "#000000", on: "#FFFFFF", text: "#1C1C1E" },
+  { key: "zhuhong", name: "朱红", hex: "#FF4C00", deep: "#D63F00", on: "#FFFFFF", text: "#C93A00" },
+  { key: "minghuang", name: "明黄", hex: "#FAD069", deep: "#E8B93F", on: "#3D2E00", text: "#8A6B00" },
+  { key: "tianqing", name: "天青", hex: "#228FBD", deep: "#1B769C", on: "#FFFFFF", text: "#1A7397" },
+  { key: "yuguotianqing", name: "雨过天青", hex: "#2F6055", deep: "#264F46", on: "#FFFFFF", text: "#2F6055" },
+  { key: "yanzhi", name: "胭脂", hex: "#9D2933", deep: "#82212A", on: "#FFFFFF", text: "#9D2933" },
+  { key: "zhuqing", name: "竹青", hex: "#789262", deep: "#637A51", on: "#FFFFFF", text: "#5E7649" },
+  { key: "xuanse", name: "玄色", hex: "#622A1D", deep: "#4E2117", on: "#FFFFFF", text: "#622A1D" },
+  { key: "yaqing", name: "鸦青", hex: "#424C50", deep: "#333B3E", on: "#FFFFFF", text: "#424C50" },
+  { key: "tianshuibi", name: "天水碧", hex: "#3D6379", deep: "#325266", on: "#FFFFFF", text: "#3D6379" }
 ];
 
 /** 默认那一支墨 —— 与 tokens.wxss 里 --theme 的默认值必须一致（V27 守着） */
@@ -88,10 +80,9 @@ function currentTheme() {
 /**
  * 页面根节点那一行 style。
  *
- * 几个变量一起给：主色、按下更深的一档、压在主色本色上的字、淡一档的软色
- * （给标签底这类用），以及压在主色深一档上的字（--on-sel，B2 选中块用）。
- * 只覆盖这几个，别的不动 —— 页底、卡片、线依旧是中性灰，
- * 主题色不该漫到那些地方去。
+ * 四个变量一起给：主色、按下更深的一档、压在主色上的字、淡一档的软色
+ * （给标签底这类用）。只覆盖这四个，别的不动 ——
+ * 页底、卡片、线依旧是中性灰，主题色不该漫到那些地方去。
  */
 function style(key) {
   const t = get(key || current());
@@ -101,8 +92,8 @@ function style(key) {
   const soft = "rgba(" + parseInt(on.slice(0, 2), 16) + "," +
     parseInt(on.slice(2, 4), 16) + "," + parseInt(on.slice(4, 6), 16) + ",.7)";
 
-  // ⚠️ 这里覆盖的是**最终使用的那些变量**（--strong / --ink-strong /
-  // --on-ink / --on-ink-soft / --on-sel），不是那个中间层 --theme。
+  // ⚠️ 这里覆盖的是**最终使用的那四个变量**（--strong / --ink-strong /
+  // --on-ink / --on-ink-soft），不是那个中间层 --theme。
   //
   // 为什么必须这样 —— 踩过一次：
   // 一开始只覆盖 --theme，指望 tokens 里的 `--strong: var(--theme)` 转一手。
@@ -113,8 +104,7 @@ function style(key) {
   return "--theme:" + t.hex + ";--theme-deep:" + t.deep +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + soft +
     ";--strong:" + t.hex + ";--strong-text:" + t.text + ";--ink-strong:" + t.deep +
-    ";--on-ink:" + t.on + ";--on-ink-soft:" + soft +
-    ";--on-sel:" + t.sel;
+    ";--on-ink:" + t.on + ";--on-ink-soft:" + soft;
 }
 
 /** 选一个主题并落盘，返回它。页面调完自己 setData 重渲染 */
