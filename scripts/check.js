@@ -1812,7 +1812,7 @@ ok("空状态有印章与出路", bareEmpty.length === 0, bareEmpty.join(", "));
 // V6. 主色一致：页面样式表里凡出现主色，必须是令牌，不许再写一遍字面量。
 //    写死一次就会漂一次 —— 网页版那次「主色从 #2f6055 漂到 #2f6056」就是这么来的。
 //    （重做后主色是 --ink（墨，即 "#1" + "c1c1e"）；V13 还额外守着
-//     「上一版那八个身份色不许回到页面样式表」。）
+//     「页面样式表里一个色值都不许写死」—— 那条原先附带一张旧色黑名单，已撤。）
 const colorLiteral = [];
 pages.forEach((p) => {
   const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
@@ -2693,8 +2693,11 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
  * 「好不好看」断言不了，但**这一版赖以成立的几条规矩**可以 ——
  * 它们是这一版和上一版的差别所在，也是最容易被后来者一处一处改回去的地方：
  *
- *   1. **主色只有一处**：墨黑。上一版有八种颜色各自表达「这是什么页面」，
- *      一屏里谁也不算清楚。这条守的是「页面样式表里不许再出现一组身份色」。
+ *   1. **颜色只有一处**：页面样式表里一个色值都不许写死，全走令牌。
+ *      上一版是「复习用琥珀、大会用青碧」那种按页面分派的身份色，
+ *      一屏里七八种颜色同时说话 —— 那是「写死」写出来的。
+ *      （原先还额外禁了一张「上一版八个身份色的黑名单」。**那条撤了**：
+ *      用户已明确「这些颜色可以使用」，禁的是写死，不是某几个色值。）
  *   2. **大数字只有一套**：`.stat` 组（参考图里最抓眼的那处）。
  *      首页 / 我的 / 进度三处都走它 —— 各写一遍，字号和颜色就一定会漂。
  *   3. **字阶只有六档**：页面里出现裸字号就是漏了令牌（V6.5 已守）。
@@ -2728,21 +2731,24 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("强调色 --strong 由 --theme 给", /--strong\s*:\s*var\(--theme\)\s*;/.test(tokens));
   ok("主题色 --theme 已定义", /--theme\s*:\s*#([0-9a-fA-F]{6})\s*;/.test(tokens));
 
-  // 2) 上一版的身份色不许回到页面样式表里当「页面主色」用。
-  //    这八个数是上一版按页面分派的那一套（雨过天青 / 琥珀 / 秋香 / 朱砂 / 天水碧 / 缃色…），
-  //    它们现在只能作为**状态色**住在令牌里，页面里写死一个就是那套做法复活了。
-  const OLD_PALETTE = ["#2f6055", "#234b42", "#1b3a33", "#a55c19", "#8a7327", "#a83b32",
-    "#3d6379", "#f0cd7c", "#4f7a6e", "#f6f1e3", "#fcfaf3"];
-  const paletteBack = [];
-  const scanFiles = pages.map((p) => [p, fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8")]);
-  scanFiles.forEach((pair) => {
-    const re = /#[0-9a-fA-F]{6}/g;
+  // 2) 页面样式表里一个色值都不许写死 —— 全走令牌。
+  //    这一条原先只是「上一版八个身份色」的黑名单，用户已明确那些颜色可以使用，
+  //    所以黑名单撤了。但黑名单底下那件真事没撤：**写死就会漂**。
+  //    色值是令牌要回答的问题，不是页面各自要回答的问题 ——
+  //    任何 #rgb / #rrggbb / #rrggbbaa 或 rgba()/rgb() 出现在页面样式表里都算漏。
+  const hardCodedColor = [];
+  pages.forEach((p) => {
+    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const re = /#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(/g;
     let m;
-    while ((m = re.exec(pair[1]))) {
-      if (OLD_PALETTE.indexOf(m[0].toLowerCase()) >= 0) paletteBack.push(pair[0] + " → " + m[0]);
+    while ((m = re.exec(wxss))) {
+      hardCodedColor.push(p + " → " + m[0]);
     }
   });
-  ok("旧的那套身份色没有回到页面样式表", paletteBack.length === 0, paletteBack.slice(0, 6).join("; "));
+  ok("页面样式表里没有写死的色值（全走令牌）",
+    hardCodedColor.length === 0, hardCodedColor.slice(0, 6).join("; "));
+  // 有令牌可走，才有上面那条 —— 令牌本身当然要写色值，这里确认它确实定义着色
+  ok("色值住在令牌里", /--ink\s*:\s*#[0-9a-fA-F]{6}\s*;/.test(tokens));
 
   // 3) 大数字只有一套实现：.stats / .stat / .stat-v / .stat-k 在 app.wxss 定一次，
   //    页面样式表不许再定义同名的「统计块」（.num-v / .ov-row 那一版就是这么漂的）
