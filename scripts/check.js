@@ -3340,8 +3340,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
      .fs-btn 一并删除）。它们该在的地方是详情页（pages/reader 的 .prefs）
      与阅读设置页（packages/settings/general）—— 那两处另有一条断言守着。
 
-     同时守着上一轮的结论：年级**十二格一个不收**，学期两格，
-     这页不再有 <slider>（详情页那根滑块才是字号该在的地方）。 */
+     同时守着上一轮的结论：学期两格、这页不再有 <slider>
+     （详情页那根滑块才是字号该在的地方）。
+     年级那条这一轮换了口径，见下面以及 V23.9。 */
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const reciteJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
   const reciteWxss = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8");
@@ -3353,15 +3354,62 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     !/\.pref-row|\.font-step|\.fs-btn/.test(reciteWxss) && !/pref-row|font-step/.test(recite),
     "recite.wxss / recite.wxml 里还有残留");
   ok("这页不再有 <slider>（字号滑块是详情页的东西）", recite.indexOf("<slider") < 0);
-  ok("年级是十二格、一个不收（不是「最近六年」）",
-    reciteJs.indexOf("RECENT") < 0
-      && /grades:\s*GRADES\.map/.test(reciteJs)
-      && Object.keys(JSON.parse(require("fs").readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8").match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0].replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":'))).length === 12,
-    "看 recite.js 里 GRADES 是怎么来的、scheduler.js 里 GRADE_NAMES 有几个");
-  ok("年级与学期仍是自己那张卡的格子",
-    /<radio-group class="chip-group cols-4"[^>]*bindchange="onGrade"/.test(recite)
-      && /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite));
-  ok("这一屏的领读词是「背诵范围」", /<text class="head-title">背诵范围<\/text>/.test(recite));
+  /* 年级：**按学段收窄，但一个年级都不丢**。
+     这条断言换过一次口径，换的理由要写在这儿，不然下一轮又会来回改。
+
+     上一版的口径是「年级十二格同屏、一个不收」，出处是 Issue #26 那句
+     「年级从十二格收到六格（取最近六年）- 谁让你这么瞎搞的，这能收吗」。
+     那一句禁的是**按最近六年砍掉高年级**，不是「十二格必须同屏」——
+     上一版读成了后者，于是十二格全列、没有学段那一格，
+     用户在小学段里也能看见「高三」，却看不出自己站在哪一段里。
+
+     这一版（Issue #26 后半段「背诵范围内……应该显示为 当前学段」）
+     把学段那一格补上，年级格只列当前这一段 —— 于是要同时守住两件事：
+       a. 一至高三 **12 个年级都还在**（STAGE_GRADES 三段合起来是 12 个）
+       b. 屏幕上只列**当前学段**的那几格（不再十二格同屏）
+     只守 a 会退回「没有学段那一格」，只守 b 会退回「砍掉高年级」。 */
+  {
+    const sched = fs.readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8");
+    const gradeNames = sched.match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0]
+      .replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":');
+    const stageGrades = sched.match(/const STAGE_GRADES = \{([\s\S]*?)\};/)[0]
+      .replace("const STAGE_GRADES = ", "").replace(/;$/, "")
+      .replace(/(\w+):/g, '"$1":');
+    const named = Object.keys(JSON.parse(gradeNames));
+    const staged = Object.keys(JSON.parse(stageGrades))
+      .reduce((acc, k) => acc.concat(JSON.parse(stageGrades)[k]), []);
+    ok("一至高三共 12 个年级都还在（没有被「最近六年」砍掉）",
+      named.length === 12 && reciteJs.indexOf("RECENT") < 0,
+      "GRADE_NAMES 有 " + named.length + " 个，recite.js 里 " +
+        (reciteJs.indexOf("RECENT") < 0 ? "没有 RECENT" : "还留着 RECENT 那个过滤"));
+    ok("三段学段合起来正好覆盖这 12 个年级（一个不丢、一个不重）",
+      staged.length === 12 && new Set(staged).size === 12
+        && named.every((g) => staged.indexOf(Number(g)) >= 0),
+      "三段合起来是 [" + staged.join(",") + "]，年级表是 [" + named.join(",") + "]");
+    ok("屏幕上只列当前学段的年级格（gradeRows 从 STAGE_GRADES 取）",
+      /STAGE_GRADES\[S\.stageOf\(grade\)\]/.test(reciteJs),
+      "看 recite.js 的 gradeRows —— 年级格要从 STAGE_GRADES 按当前学段取");
+  }
+  /* 学段 / 年级 / 学期在同一张卡的格子里，顺序是**学段 → 年级 → 学期**
+     （Issue #12 原话「学期显示在年级下面」；学段那一格是 Issue #26 后半段加的）。
+     判据按出现顺序认，且**不许**钉死某一个 cols-* —— 格子里的年级数
+     现在跟着学段走（最多六格），列数由段内数量定。 */
+  {
+    const iStage = recite.indexOf('bindchange="onStage"');
+    const iGrade = recite.indexOf('bindchange="onGrade"');
+    const iTerm = recite.indexOf('bindchange="onTerm"');
+    ok("学段 / 年级 / 学期在同一张卡的格子里，顺序是 学段 → 年级 → 学期",
+      iStage >= 0 && iStage < iGrade && iGrade < iTerm,
+      "学段@" + iStage + " 年级@" + iGrade + " 学期@" + iTerm);
+    ok("学期仍是两格（学段是三格）",
+      /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite)
+        && /<radio-group class="chip-group cols-3"[^>]*bindchange="onStage"/.test(recite));
+  }
+  /* 领读词换了口径：范围那一张卡自己叫「背诵范围」之后，
+     页头不能再叫同名（同一句话在一屏里说两次，见页头那条断言）。
+     页头改成一句管整屏的短话 —— 与「怎么读」「怎么排好看」同一长相。 */
+  ok("这一屏的页头是一句管整屏的短话，不与任何卡片同名",
+    /<text class="head-title">怎么背<\/text>/.test(recite));
 
   // c) 取诗范围是横排
   ok("取诗范围是横排的选项行（opt-group inline）",
@@ -3380,6 +3428,87 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     noRadius.length === 0, noRadius.map(([k]) => k).join(", "));
   ok("控件圆角不是胶囊（上一版 .btn 是 999rpx）",
     !/\.btn\s*\{[^}]*border-radius\s*:\s*var\(--radius-pill\)/.test(body));
+}
+
+/**
+ * V23.9 背诵设置页的两件事（Issue #26 的后半段）。
+ *
+ * 用户这一段话只有两句，都在说**那一屏的卡片名与卡片内容**：
+ *
+ *   > 背诵范围内背诵范围卡片应该显示为 当前学段
+ *   > 取诗范围修改为 背诵范围
+ *
+ * 第二句是改名：卡片「取诗范围」→「背诵范围」（网页版也还叫取诗范围，
+ * 小程序端先改）。第一句是那张卡的内容：它不该是「让用户从十二格里挑一个
+ * 年级」的裸列表，而该先说清**当前学段**是哪一个 ——
+ * 学段是年级十二格的上位（网页版 js/app.js 的 STAGES 就是这个结构），
+ * 选段之后年级格只列这一段。
+ *
+ * 这几条断言各钉住一句话，每条都做过反证（改坏确认会红）：
+ *   a. 卡片名是「背诵范围」，界面上不再有「取诗范围」，且一屏里没有同名两张卡
+ *   b. 有「当前学段」那张卡，它给的是三段而不是十二段
+ *   c. 点学段会动年级与范围（学段不是三个纯装饰的格子）
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const recite = read("packages/settings/recite/recite.wxml");
+  const reciteJs = read("packages/settings/recite/recite.js");
+  const sched = read("utils/scheduler.js");
+
+  // a) 改名：卡片叫「背诵范围」，「取诗范围」这个旧名只许留在注释里
+  const visible = (t) => t.replace(/<!--[\s\S]*?-->/g, "");
+  ok("背诵设置页的卡片名是「背诵范围」",
+    /<view class="card-title bar">背诵范围<\/view>/.test(visible(recite)));
+  ok("界面上不再有「取诗范围」（旧名只许留在注释里）",
+    visible(recite).indexOf("取诗范围") < 0,
+    "还有一处渲染出来的「取诗范围」—— 改名只改了一半");
+  /* 一屏里同一句话不做两张卡的名字。上一版正是这样：
+     页头「背诵范围」+ 范围卡「取诗范围」，改名之后如果页头不动，
+     就会变成页头「背诵范围」+ 范围卡「背诵范围」——同名两张卡。 */
+  {
+    const titles = (visible(recite).match(/<view class="card-title bar">[^<]*<\/view>/g) || [])
+      .map((m) => m.replace(/<[^>]+>/g, ""));
+    ok("一屏里没有同名两张卡",
+      titles.length === new Set(titles).size,
+      "重名的是：" + titles.filter((t, i) => titles.indexOf(t) !== i).join("、"));
+  }
+
+  // b) 当前学段：三段，不是十二段
+  ok("有「当前学段」那张卡",
+    /<view class="card-title bar">当前学段<\/view>/.test(visible(recite)));
+  ok("学段给的是三段（小学 / 初中 / 高中），不是十二格年级",
+    /class="chip-group cols-3"[^>]*bindchange="onStage"/.test(recite)
+      && /const STAGES\s*=\s*S\.STAGE_KEYS\.map/.test(reciteJs));
+  ok("学段用的是 scheduler 里那份口径（不另抄一份）",
+    /primary:\s*\{ name: "小学"/.test(sched)
+      && /STAGES,/.test(sched)
+      && /stageOf/.test(sched));
+  // 三段的名字就是网页版那三个词
+  ["小学", "初中", "高中"].forEach((n) => {
+    ok("学段里有「" + n + "」", sched.indexOf('name: "' + n + '"') >= 0);
+  });
+  /* ⚠️ 这一条是踩过的坑：scheduler 里还有另一个 stageName ——
+     它回答的是「这首背到哪个记忆阶段了」（新学 / 复习），
+     与「小学 / 初中 / 高中」是两件事。学段若也命名成 stageName，
+     后定义的那个会把前一个盖掉，学段那一行就印出了「新学」。
+     所以：学段用 stageLabel 这个名字，且**这两个函数都必须在**。 */
+  ok("学段那个名字没被「记忆阶段」的同名函数盖掉",
+    /function stageLabel\(/.test(sched) && /function stageName\(rec\)/.test(sched)
+      && (sched.match(/function stageName\(/g) || []).length === 1,
+    "scheduler 里有两个 stageName —— 后一个会把前一个盖掉");
+
+  // c) 学段不是纯装饰：点它会动年级，也会动取诗范围
+  const onStage = /onStage\(e\)\s*\{([\s\S]*?)\n  \}/.exec(reciteJs);
+  const onStageBody = onStage ? onStage[1] : "";
+  ok("点学段会把年级跳到这一段里（不是只换格子）",
+    /STAGE_GRADES\[key\]/.test(onStageBody) && /grade/.test(onStageBody));
+  ok("点学段会把取诗范围换成这一段的随机范围",
+    /scopeForStage\(/.test(onStageBody) && /function scopeForStage/.test(reciteJs));
+  /* 但**小初随机 / 全部随机 不许被动**：它们本来就横跨学段，
+     换学段影响不到它们。判据是「只换单学段的那些」。 */
+  ok("横跨学段的两个范围（小初随机 / 全部随机）不跟着换",
+    /stages\.length === 1/.test(reciteJs),
+    "scopeForStage 少了对「单学段」的判据 —— 换学段会把小初随机也换掉");
 }
 
 /**
@@ -3405,9 +3534,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const wxssOf = (p) => strip(read(p + ".wxss"));
 
-  // 1) 领读词：这一屏真的在说「背什么」
-  ok("背诵设置页的领读词是「背诵范围」（不再是「今天背什么」）",
-    /<text class="head-title">背诵范围<\/text>/.test(read("packages/settings/recite/recite.wxml")));
+  /* 1) 领读词。
+     用户那一句「今日背什么 改成 背诵范围」说的是**这一屏在回答什么**。
+     落到哪儿有过两版：先是页头，后来范围那张卡自己改名成了「背诵范围」，
+     页头就换成一句管整屏的短话（不再重复任何卡片名）。
+     所以这里守的判据分两步：改名这件事**发生过**（全站不再有「今天背什么」，
+     且「背诵范围」这几个字确实在那一屏上），而页头不叫它。 */
+  ok("背诵设置页上「背诵范围」这几个字在（不再是「今天背什么」）",
+    read("packages/settings/recite/recite.wxml").indexOf("背诵范围") >= 0
+      && read("packages/settings/recite/recite.wxml").indexOf("今天背什么") < 0);
   /* 判据取**渲染出来的文本**，不是源码整段 —— 注释里要留着旧名，
      否则下一轮没人知道「这里原来叫什么、为什么改」。所以先把注释摘掉。 */
   const visible = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");

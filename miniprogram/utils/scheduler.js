@@ -44,8 +44,36 @@ const STAGE_GRADES = {
   high: [10, 11, 12]
 };
 
+/* 三学段的名字。网页版（js/app.js 的 STAGES）就叫这三个词，
+   小程序端上一版没有 —— 背诵设置页上一版只有十二个年级格子，
+   用户看不出自己这一屏落在哪个学段里。 */
+const STAGES = {
+  primary: { name: "小学", grades: STAGE_GRADES.primary },
+  middle: { name: "初中", grades: STAGE_GRADES.middle },
+  high: { name: "高中", grades: STAGE_GRADES.high }
+};
+
+/* 学段顺序固定：小学 → 初中 → 高中。对象键序在 JS 里是排序过的，
+   而「高中」排在「初中」前头是件没人想要的事 —— 所以顺序写死在这里。 */
+const STAGE_KEYS = ["primary", "middle", "high"];
+
 function scopeOf(key) {
   return SCOPES[key] || SCOPES[DEFAULT_SCOPE];
+}
+
+/** 年级落在哪个学段：一至六小学、七至九初中、十至十二高中 */
+function stageOf(grade) {
+  const g = Number(grade);
+  return STAGE_KEYS.filter((k) => STAGE_GRADES[k].indexOf(g) >= 0)[0] || "primary";
+}
+
+/* 学段的名字。
+   ⚠️ 这里**不能**叫 stageName —— 下面那个同名的函数是这个模块里更老、
+   更常用的那个（回答「这首背到哪个记忆阶段了」，返回「新学 / 复习」）。
+   两个都叫 stageName 的结果是后者把前者盖掉，学段那一行会印出「新学」。
+   所以这个叫 stageLabel：说的是**学段**（小学/初中/高中）那一件事。 */
+function stageLabel(key) {
+  return (STAGES[key] || STAGES.primary).name;
 }
 
 function algoKey() {
@@ -280,6 +308,10 @@ module.exports = {
   DAILY_COUNTS,
   GRADE_NAMES,
   STAGE_GRADES,
+  STAGES,
+  STAGE_KEYS,
+  stageOf,
+  stageLabel,
   scopeOf,
   algoKey,
   isDue,
