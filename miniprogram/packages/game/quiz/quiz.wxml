@@ -16,7 +16,8 @@
 
     <view class="card">
       <view class="card-title bar">题型</view>
-      <!-- 题型可多选：选中的填色 + 右上角一个勾（那一勾是「可多选」的唯一线索）。
+      <!-- 题型可多选 —— 但「能不能多选」不画在格子上：格子只有两档，
+           未选中灰底、选中主色底，与别处那些选项一字不差。
            checkbox 仍在 label 里，点格子任何一处都选中 -->
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"

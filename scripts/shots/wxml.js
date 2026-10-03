@@ -135,7 +135,71 @@ function render(nodes, data, out) {
   }
 }
 
-function renderNode(n, a, bodyNodes, data, out) {
+/**
+ * 可多选的一组（`<checkbox-group>`）在预览里补上真机的语义。
+ *
+ * 页面把一个格子写成
+ *     <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}">
+ *       <checkbox checked="{{pickedForms.indexOf(item.key) >= 0}}" />
+ * 而 attrsOf 收进来的是一整串带三元与两个引号的值，这层极简求值算不出它
+ * （interp 只会去 new Function 那条路，一失败就 undefined），于是每个格子
+ * 都拿到 undefined → **一律画成勾上的**。截图里就是「五格全是选中的重色」，
+ * 而真机上明明只勾了三格 —— 用户连着两轮问的就是这件事
+ * （「怎么全部都是选中的重色」），**一半是产品，一半是这把尺子**。
+ *
+ * 与其在极简求值里堆语法支持，不如按平台语义补这一层：可多选的那一组里，
+ * 被 bindchange 换出来的那份清单（`X.indexOf(item.key)` 里的 X）就是
+ * 「勾了哪几个」的唯一出处，组内每格拿自己的 key 去比。
+ *
+ * 只认 `indexOf(<item>.<key|id>)` 这一种写法 —— 它是「这组里勾了我没有」
+ * 在本项目里唯一的说法，认得窄一点反而不会误判别处的表达式。
+ */
+function multiPicker(checkedExpr, v) {
+  if (!checkedExpr) return null;
+  const src = String(checkedExpr).replace(/^\{\{|\}\}$/g, "").trim();
+  // 两个都要：接收者是清单，参数是这一格的身份 —— `X.indexOf(item.key)`
+  const m = /([A-Za-z_$][\w$.]*)\s*\.\s*indexOf\s*\(\s*[\w$.]*\b(key|id)\b/.exec(src);
+  if (!m) return null;
+  const list = v(m[1]);
+  if (!Array.isArray(list)) return null;
+  const prop = m[2];
+  return (it) => !!it && list.indexOf(it[prop]) >= 0;
+}
+
+/** 在这一组子树里找多选清单写在哪 —— 也就是那处 checked="{{...}}" */
+function findCheckedAttr(nodes) {
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (n.kind !== "tag") continue;
+    const a = attrsOf(holeRestore(n.raw));
+    if (a.checked) return a.checked;
+    const deeper = findCheckedAttr(nodes.slice(i + 1, matchEnd(nodes, i)));
+    if (deeper) return deeper;
+  }
+  return null;
+}
+
+/**
+ * 渲染一组多选的成员。
+ *
+ * pickOf 是「这组清单 → 这一格勾没勾」的判据（multiPicker 给的）。
+ * 往下传的是**函数**，不是某一格算好的结果：wx:for 要逐项去问它，
+ * 每问一次才算那一格的勾。把某一格的结果沿调用链带下去会串味 ——
+ * 组里第一格的勾会盖住后面几格。
+ */
+function renderMembers(nodes, data, out, pickOf) {
+  let k = 0;
+  while (k < nodes.length) {
+    const n = nodes[k];
+    if (n.kind === "text") { out.push(interp(holeRestore(n.text), makeVal(data))); k++; continue; }
+    if (n.close) { k++; continue; }
+    const end = matchEnd(nodes, k);
+    renderNode(n, attrsOf(holeRestore(n.raw)), nodes.slice(k + 1, end), data, out, pickOf);
+    k = end + 1;
+  }
+}
+
+function renderNode(n, a, bodyNodes, data, out, pickOf) {
   // ---------- 列表 ----------
   if (a["wx:for"] !== undefined) {
     const v0 = makeVal(data);
@@ -147,7 +211,9 @@ function renderNode(n, a, bodyNodes, data, out) {
       d[itemName] = it; d[idxName] = idx;
       renderNode(Object.assign({}, n, { raw: n.raw.replace(/\swx:for(?:-item|-index)?="[^"]*"/g, "") }),
         (() => { const c = Object.assign({}, a); delete c["wx:for"]; delete c["wx:for-item"]; delete c["wx:for-index"]; return c; })(),
-        bodyNodes, d, out);
+        bodyNodes, d, out,
+        // 一组多选里，「我勾上没有」由自己的 key 定 —— 见 multiPicker
+        pickOf ? pickOf(it) : undefined);
     });
     return;
   }
@@ -193,7 +259,11 @@ function renderNode(n, a, bodyNodes, data, out) {
     return;
   }
   if (n.tag === "radio" || n.tag === "checkbox") {
-    const on = interp(a.checked || "false", v) === "true";
+    // 多选组里的勾以组给的那份清单为准（见 multiPicker）；
+    // 别处仍照页面写的表达式算 —— 那些都是直接的比较。
+    const on = typeof pickOf === "boolean"
+      ? pickOf
+      : interp(a.checked || "false", v) === "true";
     const dis = interp(a.disabled || "false", v) === "true";
     const c = a.color ? interp(a.color, v) : "";
     const cStyle = c && on ? (n.tag === "checkbox" ? `background:${c};border-color:${c};` : `border-color:${c};`) : "";
@@ -204,7 +274,12 @@ function renderNode(n, a, bodyNodes, data, out) {
   let inner = "";
   if (!n.self && !VOID.has(n.tag)) {
     const buf = [];
-    render(bodyNodes, data, buf);
+    if (n.tag === "checkbox-group") {
+      // 进了这一组：把那份清单先认出来，换成「这个 key 勾没勾」的判据往下带
+      renderMembers(bodyNodes, data, buf, multiPicker(findCheckedAttr(bodyNodes), v));
+    } else {
+      render(bodyNodes, data, buf);
+    }
     inner = buf.join("");
   }
   // 带 hover-class 的元素，预览里标记一下，截图时能看出可点区

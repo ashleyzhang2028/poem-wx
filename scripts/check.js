@@ -3880,48 +3880,149 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       ".options 的列数读不出来");
   }
 
-  // 6) 多选：与单选看得出区别，而且**未选中的格子不许是重色**。
+  // 6) 多选：与单选看得出区别，而那区别**只在底色上**。
   //
-  //    这一节前后有三版，每一版都栽在同一个地方 —— 用户看截图能一眼看出不对，
+  //    这一节前后有五版，前四版都栽在同一个地方 —— 用户看截图能一眼看出不对，
   //    而当时的断言看不出：
   //
-  //      第一版  「墨黑胶囊 + 右上角一枚小勾」→ 用户：「全填成墨黑胶囊，
-  //               跟『选一个』的选中态长得一模一样，只看色块分不出哪个没勾」
-  //      第二版  「人人一颗双圈，内圈都填实」→ 用户：
-  //               「选项怎么全部都是选中的重色？难道不是只有选中了才是重色吗？」
-  //      现在    「白底 + 一枚空心勾选框」；选中才填主色、才画勾
+  //      一版  「墨黑胶囊 + 右上角一枚小勾」→「只看色块分不出哪个没勾」
+  //      二版  「人人一颗双圈，内圈都填实」→「难道不是只有选中了才是重色吗？」
+  //      三版  「白底 + 左侧空心框」→「为什么不是未选中用灰色背景(和其他一样)」
+  //      四版  「灰底 + 右侧空心框 + 勾」→「还有空心框？…为啥还有空心框」
   //
-  //    所以判据分两条，一条都不许少：
-  //      a. 多选有**自己的形状**（可多选这件事不能只由填色说）
-  //      b. **未选中 = 白底**（.chip.multi 自己不许有 background；
-  //         也不必再给内圈填色 —— 那条「人人实心」正是第二版的错）
+  //    三版和四版是同一根上的两次拐弯：用户那句
+  //    「我不喜欢右侧方形选框，为什么不是未选中用灰色背景」被读成了
+  //    「方框挪到右边」，而他要的是**把框整个拿掉** —— 他连着四遍都在说
+  //    「靠颜色区分」。所以这一节的判据不再问「框画在哪边」，改问
+  //    「除了底色之外，还有没有别的东西」。
   {
     const chipMulti = /\.chip\.multi\s*\{([^}]*)\}/.exec(body);
-    const multiMark = /\.chip\.multi::after\s*\{([^}]*)\}/.exec(body);
+    const multiOff = /\.chip\.multi:not\(\.on\)\s*\{([^}]*)\}/.exec(body);
+    const markOff = /\.chip\.multi::after\s*\{([^}]*)\}/.exec(body);
+    const checkOff = /\.chip\.multi::before\s*\{([^}]*)\}/.exec(body);
+    const toStr = (m, g) => (m ? (g ? m[g] : m[1]).replace(/\s+/g, " ").trim() : "");
+
     ok("多选的格子有**自己的形状**（.chip.multi 有自己的规则）", !!chipMulti);
-    ok("多选有一枚勾选框（::after 画的方框），不靠右上角一枚小勾",
-      !!multiMark && /border\s*:/.test(multiMark[1]) && /width\s*:/.test(multiMark[1]),
-      multiMark ? multiMark[1].replace(/\s+/g, " ").trim() : "没有 .chip.multi::after");
 
-    /* a) **未选中的格子不许有底色**。这一条是这次改动本身：
-          .chip.multi 的规则里只要出现 background，就是在说「没选也是重点」。
-          （.chip.on 那条填色是共享的，不在此列 —— 它只管选中的那一个。） */
-    ok("多选的格子未选中是白底（.chip.multi 自己不许有 background）",
-      !!chipMulti && !/background\s*:/.test(chipMulti[1]),
-      chipMulti ? chipMulti[1].replace(/\s+/g, " ").trim() : "");
+    /* a) **未选中 = 灰底**，且那底色是全站「能按的槽」那一档（--sink）。
+          「和其他一样」这一句就在这儿：别处那些选项未选中也各有一档底色。 */
+    ok("未选中的多选格子有底色（.chip.multi:not(.on) 有 background）",
+      !!multiOff && /background\s*:/.test(multiOff[1]), toStr(multiOff));
+    ok("那底色是全站「能按的槽」那一档（--sink），不是另造一层灰",
+      !!multiOff && /var\(--sink\)/.test(multiOff[1]), toStr(multiOff));
 
-    /* b) 那枚勾选框也不许在未选中时填色 —— 第二版就是把「内圈」填实了。
-          未选中态只给它一道描边。 */
-    ok("那枚勾选框未选中时是空心的（只有描边，没有填色）",
-      !!multiMark && /border\s*:/.test(multiMark[1]) && !/background\s*:/.test(multiMark[1]),
-      multiMark ? multiMark[1].replace(/\s+/g, " ").trim() : "");
+    /* b) **只有选中才是重的**。这条守的是「不许把主色写进 .chip.multi 本体」——
+          它排在 .chip.on 之后，写在那里会把选中态那一块主色盖回成灰的；
+          所以灰底必须写在 :not(.on) 上。 */
+    ok("多选格子的主色底不写在 .chip.multi 本体上（否则会盖掉选中态）",
+      !!chipMulti && !/background\s*:/.test(chipMulti[1]), toStr(chipMulti));
 
-    /* c) 选中才填主色 —— 与全站同一条。
+    /* c) **除了底色之外的记号，一律不许有**（用户四版的原话拦在这里）。
+          守四条：方框不画、勾不画、不给它们留位、也不许换个伪元素偷偷画回来。
+          ④ 是刻意写死「一个都不许」，而不是「::after / ::before 都不许」——
+          换个名字（::before 改 ::after、或再加一个 ::marker）就能绕过的判据
+          等于没有；这一处已经绕过一次了。 */
+    ok("多选格子不再画方框（.chip.multi::after 不许存在）", !markOff, toStr(markOff));
+    ok("多选格子不再画勾（.chip.multi::before 不许存在）", !checkOff, toStr(checkOff));
+    ok("多选格子不许再挂任何伪元素（不给方框留后门）",
+      !/\.chip\.multi[^{}]*::/.test(body),
+      ((/\.chip\.multi[^{}]*::[a-z-]+/g).exec(body) || [""])[0]);
+    /* 名字两侧不再为那枚方框让宽 —— 四版让出的那两块正是名字被挤换行的原因。
+       判据取「两侧内边距与 .chip 本体一字不差」，不写死 rpx 数：
+       改 --pad-opt-x 时两边一起改，不会误红。 */
+    {
+      const chip = /\.chip\s*\{([^}]*)\}/.exec(body);
+      /* 别处的格子用**简写** `padding: var(--pad-opt-y) var(--pad-opt-x)`，
+         多选那一档为了把「不留位」写明白用了两条长写 —— 取值相等即可，
+         不比写法。 */
+      const pad = (src) => {
+        const short = /padding\s*:\s*([^;]+);/.exec(src);
+        /* 只取**左右**两档（纵向上下一律不管）：简写是「上 下 右 左」的
+           四值写法时取后两位，两值写法时取第一位。 */
+        if (short) {
+          const p = short[1].replace(/\s+/g, " ").trim().split(" ");
+          return (p.length === 3 ? p[2] + "|" + p[2] : p.length >= 4 ? p[2] + "|" + p[3] : p[p.length - 1] + "|" + p[p.length - 1]);
+        }
+        const l = /padding-left\s*:([^;]+);/.exec(src);
+        const r = /padding-right\s*:([^;]+);/.exec(src);
+        return l && r ? l[1].replace(/\s+/g, "") + "|" + r[1].replace(/\s+/g, "") : "";
+      };
+      const chipPad = pad(chip ? chip[1] : "");
+      ok("多选格子不为方框留位（两侧内边距与别处格子一字不差）",
+        !!chipPad && pad(chipMulti ? chipMulti[1] : "") === chipPad,
+        "多选 " + pad(chipMulti ? chipMulti[1] : "") + " ／ 别处 " + chipPad);
+    }
+
+    /* d) 选中态与别处一字不差：填主色、白字。
           （Issue #26 之后「主色」有两支：--ink 是字，--strong 是重点/选中态。
-            选中态那一支是 --strong，所以这里认它。） */
-    ok("多选选中时勾选框填色 + 画出勾（只有选中才是重色）",
-      /\.chip\.multi\.on::after\s*\{[^}]*background\s*:\s*var\(--on-ink\)/.test(body)
-        && /\.chip\.multi\.on::before\s*\{[^}]*transform\s*:\s*rotate\(45deg\)\s*scale\(1\)/.test(body));
+            选中态那一支是 --strong，所以这里认它。）
+          选中那一档本来就来自 `.chip.on`，多选这一组没有自己的选中规则 ——
+          这正是「选中了就是主题色背景色」那句话的字面实现，也顺手守住了
+          「别给多选再写一条选中态」。 */
+    ok("多选的选中态就是全站那一条（.chip.multi.on 不另写规则）",
+      !/\.chip\.multi\.on\b(?![\(-])/.test(body),
+      ((/\.chip\.multi\.on[^{]*/g).exec(body) || [""])[0]);
+
+    /* e) **预览也认得出「哪几格勾上了」**。这条守的不是界面，是那把尺子 ——
+          而它骗过人：页面写的是 `{{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}`，
+          wxml.js 那层极简求值算不了 `indexOf` 这种成员调用，一失败就 undefined，
+          于是每格都拿到 `on`、每格都画成勾上的。用户连着两轮问的
+          「怎么全部都是选中的重色」，一半是产品、一半是这张截图。
+          判据取**源码里有那段组语义**，且它是按平台语义写的（取 indexOf 的接收者）。 */
+    {
+      const shotSrc = fs.readFileSync(path.join(__dirname, "shots", "wxml.js"), "utf8");
+      ok("预览认得可多选那一组（checkbox-group 有那段组语义）",
+        /n\.tag === "checkbox-group"/.test(shotSrc) && /function multiPicker/.test(shotSrc));
+      /* 取的是 indexOf 的**接收者**（那份清单），不是它的参数 ——
+         写成参数就会去 v("item.key")，永远拿不到数组、判据恒为 null，
+         界面照旧全勾上。所以这条**真跑一遍** multiParser，不读正则源码：
+         喂一份三项的清单，看它认不认得出第一、三项勾上、第二项没勾。 */
+      {
+        const mod = { exports: {} };
+        const dir = path.join(__dirname, "shots");
+        const src2 = shotSrc.replace(
+          /module\.exports\s*=\s*\{[^}]*\};/,
+          "module.exports = { multiPicker, findCheckedAttr, tokenize, attrsOf, holeRestore };"
+        );
+        let picked = null;
+        try {
+          // 借 wxml.js 自己的那套：在一个隔离作用域里跑它的源码
+          const fn = new Function("module", "exports", "require", "__dirname", src2);
+          fn(mod, mod.exports, require, dir);
+          const data = { pickedForms: ["next", "title"] };
+          const keys = Object.keys(data), vals = keys.map((k) => data[k]);
+          const v = (e) => {
+            const x = String(e).replace(/^\{\{|\}\}$/g, "").trim();
+            try { return new Function(...keys, "return (" + x + ")")(...vals); }
+            catch (err) { return undefined; }
+          };
+          const pick = mod.exports.multiPicker("{{pickedForms.indexOf(item.key) >= 0}}", v);
+          picked = pick && [
+            pick({ key: "next" }),      // 勾了 → 真
+            pick({ key: "prev" }),      // 没勾 → 假
+            pick({ key: "title" })      // 勾了 → 真
+          ];
+        } catch (e) {
+          picked = null;
+        }
+        ok("预览的组语义算得对（勾了的那两格真、没勾的假）",
+          !!picked && picked[0] === true && picked[1] === false && picked[2] === true,
+          picked ? JSON.stringify(picked) : "跑不起来");
+      }
+      /* 组里那一格勾没勾，要在 wx:for 逐项时算 —— 不能把第一格的结果
+         沿调用链带下去（那会串味：第一格的勾盖住后面几格）。 */
+      ok("勾没勾是在逐项时算的（pickOf(it)，不是一次算好往下带）",
+        /pickOf\s*\?\s*pickOf\(it\)/.test(shotSrc));
+    }
+
+    /* h) 题型名收成两个字 —— 见 utils/quiz.js 的 FORMS。
+          它是嵌在「题型 · 出自《…》」那一行读数里的，四个字会把那一行顶到折行。 */
+    const forms = /const FORMS = \[([\s\S]*?)\];/.exec(read("utils/quiz.js"));
+    const names = forms ? [...forms[1].matchAll(/name:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
+    ok("五个题型名都是两个字（下句 / 上句 / 作者 / 朝代 / 篇名）",
+      names.length === 5 && names.every((n) => n.length === 2), names.join(" / "));
+    ok("题型名里不再带动词（接下句 / 认作者 / 填朝代 那一版不许回来）",
+      names.every((n) => ["接", "认", "填"].indexOf(n[0]) < 0), names.join(" / "));
   }
 }
 
