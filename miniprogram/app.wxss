@@ -639,7 +639,10 @@ view, text, button, input, textarea {
 .opt-group {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--pad-opt-x);
+  /* 一行之内格子之间的横缝。跟着 --pad-opt-x 走：内边距有多厚，缝就有多宽
+     —— 两者同源，「一格一个」的节奏才不会被缝挤乱。 */
+  column-gap: var(--pad-opt-x);
+  row-gap: var(--pad-opt-y);
 }
 
 /* 竖排：一行一条，各占满整行。
@@ -680,8 +683,22 @@ view, text, button, input, textarea {
   line-height: 1.25;
 }
 
-/* 每多一格就多一列。三格以下用不着写（比如「两个选项」）
-   —— 三格是这里的默认，也是取诗范围最窄的那一档。 */
+/* 列数：默认三列，页面上按内容长短挑 `cols-2` / `cols-4`。
+
+   为什么要有 `cols-2`：「取诗范围」那六个选项里有一个
+   「小学+初中随机」（6.6 个字宽）。三列时格宽只有 190rpx、
+   文字要 171rpx —— 文字之外统共 19rpx，两侧各不到 10rpx，
+   就是用户说的「文字和它自己的边界太近了」。而**内边距救不了它**：
+   格子宽是均分定死的，padding 越大、文字到边的距离越小。
+
+   所以这一屏按**最长的那个选项名**选列数，不是按好看：
+   列数越少 → 格子越宽 → 两侧留白越多，代价是行数变多。
+   取诗范围六项排两列 = 三行，比原来的两行只多一行，
+   但每一格从 190rpx 宽到 303rpx，两侧各留 66rpx。 */
+.opt-group.inline.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .opt-group.inline.cols-4 {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -746,7 +763,12 @@ view, text, button, input, textarea {
 
 /* 横排时字号收一档 —— 三列里塞两个字，--fs-title（32rpx）会顶到边框上。
    收到 --fs-hint 后与格子（.chip-t）**同档同色同字重**：
-   这才是「inline 的选项行长成了格子」这件事的最后一块拼图。 */
+   这才是「inline 的选项行长成了格子」这件事的最后一块拼图。
+
+   注意 `.opt-main` 的 `padding: 0` 只在**横排**下成立：
+   横排时盒子宽 100%，文字居中，横向的呼吸交给格子的 --pad-opt-x；
+   竖排一行一条时盒子是 flex:1 自适应，更不能有横向内边距 —— 
+   否则左边的 radio 与文字之间会多出一段说不清来历的空。 */
 .opt-group.inline .opt-name {
   font-size: var(--fs-hint);
 }
@@ -1175,8 +1197,10 @@ view, text, button, input, textarea {
   align-items: center;
   justify-content: center;
   min-height: var(--h-opt);
-  /* 上下左右各留一口气：纵向由 --pad-opt-y 给（不再是 0），
-     横向--pad-opt-x（比原来的 --sp-1 宽一档，两字选项不再顶到边框）。
+  /* 上下左右各留一口气：纵向 --pad-opt-y（不再是 0），横向 --pad-opt-x。
+     横向这一档是**用户裁决过的**：他连着说「选项内文字左右 padding 和它自己的
+     边界太近了」，而上一轮只给了 8rpx —— 文字两侧各剩 8rpx，比格子自己的
+     20rpx 圆角还小，看着就是顶在边上。现在与按钮同一档的厚（24rpx）。
      两者都走 --ui-scale，整体收放时跟着一起收。 */
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);

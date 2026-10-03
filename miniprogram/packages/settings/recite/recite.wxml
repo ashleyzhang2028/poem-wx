@@ -42,11 +42,18 @@
          圆点在这儿是重复的 —— 填色已经说了「选的是这一行」，
          再站一个圆点在行首，只是多占 16rpx 的横向空间。
 
-         排法是**横排三列**（Issue #12 原话「取诗范围选项 inline 显示，
+         排法是**横排两列**（Issue #12 原话「取诗范围选项 inline 显示，
          而不是一行一条」）：六个选项竖排要吃掉六行的高度，
          一屏里就只看得见这一个设置项了，而上面那两组本来就是横排的。
-         最长的那个名字（小学+初中随机）在 750rpx 的三列里刚好放得下。 -->
-    <radio-group class="opt-group inline" bindchange="onScope">
+
+         为什么是两列不是三列：六个名字里最长的是「小学+初中随机」，
+         6.6 个字宽。三列时格宽只有 190rpx、文字要 171rpx，
+         文字之外统共 19rpx —— 两侧各不到 10rpx，用户说的
+         「选项内文字左右 padding 和它自己的边界太近了」就是这一格。
+         而 padding 加不救它（格子宽是均分定死的，padding 越大、
+         文字到边越近），只能少一列：两列格宽 303rpx，两侧各留 66rpx。
+         六项排两列是三行，只比原来的两行多一行。 -->
+    <radio-group class="opt-group inline cols-2" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
         <radio class="opt-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="#1c1c1e" />
         <view class="opt-main">
