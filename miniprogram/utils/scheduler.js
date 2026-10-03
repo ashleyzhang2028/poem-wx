@@ -25,7 +25,12 @@ const SCOPES = {
 
 const DEFAULT_SCOPE = "upto";
 
-const DAILY_COUNTS = [3, 5, 8, 10];
+/* 每日首数四档。**5 是不选时的默认**（store 里 dailyCount: 5），
+   所以 5 必须在档里；3 / 10 / 20 是另外三个量级。
+   上一版是 3/5/8/10（照搬网页版），按 Issue #26 改为 3/5/10/20 ——
+   8 与 10 只差两首，档位踩得太密，而 20 首是「今天想多背」的那一档，
+   原来根本没有。 */
+const DAILY_COUNTS = [3, 5, 10, 20];
 
 const GRADE_NAMES = {
   1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级",

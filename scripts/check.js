@@ -3322,27 +3322,47 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   });
   ok("选项文字没有第二层纵向内边距", noDouble.length === 0, noDouble.join(", "));
 
-  /* b) 背诵设置的那一行。
+  /* b) 背诵设置那一行。
      上一版守的是「年级在学期**上面**」（Issue #12 原话「学期显示在年级下面」）——
-     那是两张卡、两行格子时的排法。这一版按用户新给的口径把这一屏收成
-     **一行**（原话：「如下按此顺序一行内显示（整体居中）：左对齐 居中
-     不注音 生字 全文 A- A+」），并为此把领读词从「今天背什么」改成「背诵范围」。
+     那是两张卡、两行格子时的排法。
 
-     所以「上下」这条守不动了，改守**左右顺序 + 行内 + 居中**：
-     这一行里各组按 bindchange 的处理函数认，顺序必须是用户报的那个。
-     顺序是可测的，也是这次真正改了的东西；「谁在上面」已经不是这一版的问题。 */
+     再上一版（Issue #26 第一轮）把这五组全塞进一行，连年级和学期一起收了。
+     用户原话把这笔账算清了：
+     「我只说过要把下面变成一行：不注音 生字 全文 ｜ 左对齐 居中 ｜ A－ A＋
+       我从未说过把 一年级 … 六年级 ｜ 上学期 下学期 放到一行，这些全部恢复原样」
+
+     所以这一行**只有三组**：注音 · 对齐 · 字号。年级与学期退回上面的格子，
+     且**年级十二格一个不收**（同一个 Issue：「年级从十二格收到六格
+     （取最近六年）- 谁让你这么瞎搞的」）。
+
+     断言就按这个口径拆成两组：
+       · 有 .pref-row 的那张卡里，只许出现注音 / 对齐 / 字号三组
+       · 年级与学期在**另一张卡**的格子里，且是 12 格与 2 格
+     顺序仍按 bindchange 的处理函数认，只认这三组的顺序。 */
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
-  const order = ["onGrade", "onTerm", "onPinyin", "onAlign", "onFontDown"]
-    .map((h) => ({ h: h, i: recite.indexOf('bindchange="' + h + '"') >= 0 ? recite.indexOf('bindchange="' + h + '"') : recite.indexOf('bindtap="' + h + '"') }));
-  ok("背诵设置那一行五组都在", order.every((o) => o.i >= 0),
-    order.filter((o) => o.i < 0).map((o) => o.h).join(", "));
-  const misordered = order.filter((o, i) => i > 0 && o.i < order[i - 1].i);
-  ok("一行里的顺序是 年级 · 学期 · 注音 · 对齐 · 字号",
-    misordered.length === 0, "错位：" + misordered.map((o) => o.h).join(", "));
-  ok("这五组真的在同一行里（同一个 .pref-row）",
-    /<view class="pref-row">[\s\S]*?bindchange="onFontDown|bindtap="onFontDown"[\s\S]*?<\/view>/.test(recite) === false
-      || /<view class="pref-row">[\s\S]*onFontUp[\s\S]*?<\/view>\s*<\/view>/.test(recite),
-    "找不到 .pref-row 把五组包在一起");
+  const reciteJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
+  const prefCard = /<view class="pref-row">([\s\S]*?)<!--\s*字号/s.exec(recite);
+  const prefCardAll = /<view class="pref-row">([\s\S]*?)<\/view>\s*<\/view>/.exec(recite);
+  const prefBody = prefCardAll ? prefCardAll[1] : "";
+  ok("有 .pref-row 的那张卡里只有三组（注音 · 对齐 · 字号）",
+    ["onPinyin", "onAlign", "onFontDown"].every((h) => prefBody.indexOf(h) >= 0)
+      && !/onGrade|onTerm/.test(prefBody),
+    "这一行里混进了年级/学期：见 .pref-row 那段");
+  {
+    const order = ["onPinyin", "onAlign", "onFontDown"]
+      .map((h) => ({ h: h, i: prefBody.indexOf('bindchange="' + h + '"') >= 0 ? prefBody.indexOf('bindchange="' + h + '"') : prefBody.indexOf('bindtap="' + h + '"') }));
+    ok("这三组的顺序是 注音 · 对齐 · 字号",
+      order.every((o) => o.i >= 0) && order.every((o, i) => i === 0 || o.i > order[i - 1].i),
+      order.map((o) => o.h + "@" + o.i).join(", "));
+  }
+  ok("年级与学期不在这一行里（退回上面那张卡的格子）",
+    /<radio-group class="chip-group cols-4"[^>]*bindchange="onGrade"/.test(recite)
+      && /<radio-group class="chip-group cols-2"[^>]*bindchange="onTerm"/.test(recite));
+  ok("年级是十二格、一个不收（不是「最近六年」）",
+    reciteJs.indexOf("RECENT") < 0
+      && /grades:\s*GRADES\.map/.test(reciteJs)
+      && Object.keys(JSON.parse(require("fs").readFileSync(path.join(ROOT, "utils/scheduler.js"), "utf8").match(/const GRADE_NAMES = \{([\s\S]*?)\};/)[0].replace("const GRADE_NAMES = ", "").replace(/;$/, "").replace(/(\d+):/g, '"$1":'))).length === 12,
+    "看 recite.js 里 GRADES 是怎么来的、scheduler.js 里 GRADE_NAMES 有几个");
   // `.pref-row` 定义在 recite.wxss（它是这一屏的排法，不是全站的控件长相）
   const prefRow = /\.pref-row\s*\{([^}]*)\}/.exec(
     fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxss"), "utf8"));
@@ -3403,7 +3423,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     pages.every((p) => visible(p).indexOf("今天背什么") < 0),
     pages.filter((p) => visible(p).indexOf("今天背什么") >= 0).join(", "));
 
-  // 2) 那一行：从「左侧对齐」到「A＋」共七件，顺序由用户给定
+  // 2) 那一行：注音 · 对齐 · 字号三组，顺序由用户给定
   {
     const recite = read("packages/settings/recite/recite.wxml");
     const reciteJs = read("packages/settings/recite/recite.js");
@@ -3419,6 +3439,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 一行里没有给它横向量程的地方（那正是它挤不下的原因）
     ok("这一屏不再有 slider（字号换成 A－ / A＋ 两颗）", recite.indexOf("<slider") < 0);
     ok("A－ / A＋ 是真的两颗按钮", (recite.match(/<button[^>]*fs-btn/g) || []).length === 2);
+  }
+
+  // 2.5) 每日首数：卡片要在，四档是 3 / 5 / 10 / 20，默认 5
+  /* 上一版把这张卡整块撤了，理由写的是「全站默认就是 5 首」。
+     那是把「不选时拿几首」当成了「用户不需要选」——
+     用户的账本不是这么记的：「那需要在设置里添加设置 3 5 10 20」。 */
+  {
+    const recite = read("packages/settings/recite/recite.wxml");
+    ok("「每日首数」这张卡还在",
+      /class="card-title bar">每日首数<\/view>/.test(recite));
+    const counts = /const DAILY_COUNTS = \[([^\]]*)\];/.exec(read("utils/scheduler.js"));
+    const list = (counts ? counts[1] : "").split(",").map((t) => t.trim()).filter(Boolean);
+    ok("四档是 3 / 5 / 10 / 20",
+      list.join(",") === "3,5,10,20", "读到的是 [" + list.join(", ") + "]");
+    ok("默认档 5 命中了这四档里的一个（否则打开设置页没有一格是亮的）",
+      list.indexOf("5") >= 0 && /dailyCount:\s*5/.test(read("utils/store.js")));
   }
 
   // 3) 课外阅读那一屏的名字：只有导航栏一处，页内不再另起一行
