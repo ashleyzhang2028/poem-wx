@@ -44,6 +44,11 @@ function runtime() {
     setNavigationBarTitle() {}, vibrateShort() {}, stopPullDownRefresh() {},
     setClipboardData(o) { o && o.success && o.success(); },
     getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" }),
+    /* 页面根字号：预览把 rpx 折成 rem，而 rem 的根字号在真机上来自
+       wx.getAppBaseInfo().fontSizeScaleFactor（微信跟随系统的「字体大小」）。
+       不接这一段它就是个空值 —— 页面根字号落回默认，所有 rpx 都小一档半，
+       「一行多宽、字距多少」跟着错。真机上它是个常数，预览也得是个常数。 */
+    getAppBaseInfo: () => ({ SDKVersion: "3.5.0", language: "zh_CN", fontSizeScaleFactor: 1 }),
     loadFontFace() {}, login(o) { o && o.fail && o.fail({ errMsg: "no wx" }); },
     getUserProfile(o) { o && o.fail && o.fail({}); },
     request(o) { o && o.fail && o.fail({ errMsg: "offline" }); },
@@ -187,6 +192,14 @@ function screenCss(cfg, pageCss) {
   const scoped = raw.replace(/(?<![\w.-])page\s*\{/g, ".screen{");
   return rpx2px(scoped);
 }
+
+/* 预览里那条「已知的继承字号」。
+   它不是设计值：page{} 里定了字号令牌、页面样式表也各自给自己的字号，
+   真正靠**继承**的只有 `.poem-clause`（字在 .tk-ch 上）。而它一旦继承到
+   浏览器/系统给的字号（这一台是 18.72px），量字号、量字距读到的就是
+   一台机器一个数 —— 曾经差点把 18.72px 当成一条规格写进样式表。
+   挂在机壳那一层，页面样式表谁也压不到它。 */
+const DEVICE_FONT_SIZE = ".device{font-size:16px}";
 
 function expandComponents(node, data, P) { return node; }
 
@@ -340,5 +353,5 @@ const FONT_CSS = fontFaceCss();
 if (FONT_CSS) console.log("预览已注入篇名宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
 
 fs.writeFileSync(path.join(__dirname, "out", "preview.html"),
-  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
+  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${DEVICE_FONT_SIZE}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
 console.log("写出 " + html.length + " 屏 → scripts/shots/out/preview.html");

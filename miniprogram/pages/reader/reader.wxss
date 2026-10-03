@@ -1,7 +1,11 @@
 /* ============================================================
    详情页：整屏只服务一件事 —— 读这首诗，然后告诉系统掌握到什么程度。
-   所以顺序是：标题区 → 正文 → 背诵 → 译文。
+   所以顺序是：标题区 → 阅读偏好（对齐 · 注音 · 字号）→ 正文 → 背诵 → 译文。
    操作条排在正文后面，不在正文中间插一排按钮。
+
+   偏好那一行下面**直接就是正文**：曾经中间还有一条「--正文--」分隔条，
+   2026-10-03 用户说删掉 —— 这一屏除了正文没有第二样东西，
+   标注它等于给「这里是内容」加一句废话。
    ============================================================ */
 
 .poem-card {
@@ -73,31 +77,6 @@
   font-size: var(--fs-caption);
   color: var(--ink-4);
   padding: 0 12rpx;
-}
-
-/* 正文与上方信息之间一道淡分隔：一条细线，中间两个字。
-   上一版是「线 + 两端出头的长横」，那是纸本书的题签语言；
-   这一版把它收成一条普通分隔线 —— 层次靠留白，不靠仿古。 */
-.rule {
-  display: flex;
-  align-items: center;
-  margin: var(--sp-2) 0 var(--sp-3);
-}
-
-.rule::before,
-.rule::after {
-  content: "";
-  flex: 1;
-  height: 1rpx;
-  background: var(--line-2);
-}
-
-.rule-t {
-  font-family: var(--font-poem);
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
-  padding: 0 var(--sp-2);
 }
 
 /* ---------- 阅读偏好：一行装完 ----------
@@ -206,13 +185,15 @@
 }
 
 /* ---------- 正文 ----------
-   行距给到 2.05：古诗文一行一意，行距紧了就成了密电码。
-   字距也放开一点，宋体在屏幕上本来就偏瘦。 */
+   行距 1.95：古诗文一行一意，行距紧了就成了密电码；
+   而一句一行的排法本身就留了空，再给到 2.05 就成了散架。
+
+   ⚠️ 这一条**只管没有注音的那条路**。注音那条路的行高由
+   `.token-line` 自己撑（见下面「注音」一节）——
+   两处一起算，有拼音的行会比没拼音的高出小半行。 */
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
   font-family: var(--font-poem);
-  /* 行距 1.95：一句一行的排法本身就留了空，再给到 2.05 就成了散架 ——
-       一句一行时行距要收，一行两句时行距要放，两件事不能同一把尺子 */
   line-height: 1.95;
 }
 
@@ -230,6 +211,13 @@
   margin-top: var(--sp-3);
 }
 
+/* 字距 2rpx：宋体在屏幕上本来就偏瘦，放开一点才站得住。
+
+   ⚠️ 这个字距只在**没有注音**的那条路上生效。注音那条路是逐字排的
+   （一个字一个 flex 盒），而 letter-spacing 在 flex 子项之间也加一遍 ——
+   同一个 2rpx 在那边会把字与字推开成 4rpx + 字距，两种排法的字距就差了
+   3rpx（2rpx 的字距 + 它自己那一份）。所以那边由 --py-gap 出这一档，
+   且与字号无关（见「注音」一节）。 */
 .poem-line {
   display: block;
   font-size: var(--fs-poem);
@@ -238,13 +226,19 @@
 }
 
 /* 字号七档。写作 size--2 而不是 size-2，是为了让「负档」在类名上就不会
-   与正档混淆 —— 曾经把 size--1 写成 size-1，两档撞在一起过 */
+   与正档混淆 —— 曾经把 size--1 写成 size-1，两档撞在一起过。
+
+   **默认档 0 也要显式写出来**：上一版只写了两负三正，size-0 落在
+   `.poem-line` 的 `--fs-poem`（36rpx）上 —— 数是对的，但「七档」这件事
+   在样式表里只看得见六档，改字号的人得回头找令牌。
+   现在七个数排在一起，一眼能数清。 */
 .poem-body.size--2 .poem-line { font-size: 30rpx; }
 .poem-body.size--1 .poem-line { font-size: 33rpx; }
-.poem-body.size-1 .poem-line { font-size: 39rpx; }
-.poem-body.size-2 .poem-line { font-size: 42rpx; }
-.poem-body.size-3 .poem-line { font-size: 46rpx; }
-.poem-body.size-4 .poem-line { font-size: 52rpx; }
+.poem-body.size-0  .poem-line { font-size: 36rpx; }
+.poem-body.size-1  .poem-line { font-size: 39rpx; }
+.poem-body.size-2  .poem-line { font-size: 42rpx; }
+.poem-body.size-3  .poem-line { font-size: 46rpx; }
+.poem-body.size-4  .poem-line { font-size: 52rpx; }
 
 /* 左对齐时给每行一道极淡的引导线：不齐的行更需要「从哪开始」的锚 */
 .poem-body.align-left .poem-line {
@@ -354,45 +348,90 @@
   padding: 0 0 var(--sp-1);
 }
 
+/* ## 一行的高度是**算出来的**，不是长出来的
+
+   用户 2026-10-03 点出的两句话，都落在这里：
+
+     1. 「有一行有注音、有一行没注音，没注音的那一行的行间距也应该和有
+        注音的行间距一样，否则隔行间距不一」
+        —— 上一版量出来：有拼音的行 81.3rpx，没拼音的行 53.3rpx，
+        一屏里两种高度交替。而现在「生字」档下混排是常态
+        （《将进酒》一页里就有五行没音），所以那不是边角，是主路。
+
+     2. 「有生字注音或者全文注音，要确保每个汉字在 A－ A＋ 所有字号下的
+        汉字字间距保持一致」
+        —— 上一版字宽取 min-width 34rpx，字号过了 34rpx 就顶不住，
+        字与字之间的空隙在 34rpx 档一行之内会从 4rpx 跳到 0
+        （37.9、37.9、34、34…），换个字号又是另一套。
+
+   所以注音这条路改成**逐档定死**：
+     · 一行 = 拼音槽(--py-slot) + 字身盒(--py-box) + 行的上下内边距
+       （两个各 2rpx），三个数都是这一档的常数 ——
+       **行里有没有拼音，算出来的高度一样**（没有拼音的字也占着那个槽）；
+     · 字宽 = 字高 = --py-box，格子方正；字身之外的间隙只剩 --py-gap（2rpx），
+       与字号无关，所以 A－ A＋ 全程字距不变；
+     · 标点只占半格（--py-box / 2）—— 全角标点的字身本来就只有汉字一半，
+       照一格占会白出半格，一句七言后面缀个逗号，这一行就顶出去。
+
+   ⚠️ 这一条**不许加行高倍数**：倍数遇到有拼音的那一行，会被拼音槽再撑
+   一次（「槽 + 字」本来就已经比倍数高），有音与无音的行高就差了半行。
+   行高就在这里定死，`.poem-body` 的 line-height 在这条路上不参与。
+   check.js V30 守着这条与上面两个不变量。 */
+
 .token-line {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
   width: 100%;
-  padding: 6rpx 0;
   border-radius: var(--radius-sm);
   transition: background-color var(--t-move);
+  height: var(--py-line);
+  line-height: 1;
 }
 
-/* 注音那条路的行距由「拼音槽 + 字」自己撑起来，不能再叠 .poem-body 的行距 ——
+/* 注音那条路的行距就是 --py-line 这个盒子，不能再叠 .poem-body 的行距 ——
    两个一起算，行与行之间会有半行空白。 */
 .poem-line.token-line {
-  line-height: 1.15;
+  line-height: 1;
 }
 
 .poem-body.align-left .token-line {
   justify-content: flex-start;
 }
 
+/* 一个字一格。`--py-box` 既是宽也是高：宽高同数，格子才稳得住。 */
 .token {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-width: 34rpx;
-  margin: 0 2rpx;
+  width: var(--py-box);
+  height: var(--py-box);
+  margin: 0 var(--py-gap);
   /* 有拼音与没拼音的字混在一行时，底边对齐才不会高低跳 */
   vertical-align: bottom;
 }
 
-/* 注音那一行：固定高度是为了「有拼音的字」和「没拼音的字」底边对齐。
-   这里的高度是**槽**不是居中手段 —— 里面的拼音靠 flex 居中，不靠行高凑 */
+/* 标点：它的字身本来就只有汉字的一半（全角标点是「半格字身 + 半格空白」），
+   照 --py-box 占一格会白出半格 —— 一句七言后面缀个逗号，这一行就顶出去。
+   只给它汉字一半的宽，剩下半格由 flex 的底对齐管。 */
+.token.punc {
+  width: calc(var(--py-box) / 2);
+}
+
+/* 拼音槽：给拼音留的那一格。里面的拼音靠底对齐贴住字，不靠 line-height 凑。
+
+   ⚠️ 拼音是**逐字一个 flex 子项**排的，槽低于拼音的行高时，flex 会把拼音
+   挤出去压到上一行的字上（量过：14rpx 的槽配 18rpx 的注音，拼音和上一行的
+   字叠在一起）。七档的槽恒定在 34rpx —— 注音字号 18rpx 不跟字号档位走，
+   槽也就没有理由跟着涨；槽一涨，小档里拼音反而离字越来越远。 */
 .tk-py {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 28rpx;
+  width: 100%;
+  height: var(--py-slot);
   font-family: var(--font-ui);
   font-size: var(--fs-pinyin);
   color: var(--celadon);
@@ -400,23 +439,47 @@
   white-space: nowrap;
 }
 
-/* 字高收进 1.32：注音那条路的行距由「拼音槽 + 字」自己撑起来，
-   `.poem-body` 的 line-height 在这儿只加了一层看不见的空 ——
-   一句一行时两处一起算，行与行之间会多出小半行。
-   字号的七档在下面，收的是行高不是字号。 */
+/* 字身行高锁在 1：格子高度已经是这一档的常数，行高再乘一次就把格子撑高了。
+   字号逐档跟正文走 —— 这一条**由下面的 size-* 给**，不在这里取 --fs-poem：
+   --fs-poem 是**基准档**，取它就等于把 A－ A＋ 在注音这条路上关掉。 */
 .tk-ch {
-  font-size: var(--fs-poem);
   color: var(--ink);
-  line-height: 1.32;
+  line-height: 1;
 }
 
-/* 注音模式下字号跟着正文走，逐档对齐 poem-body.size-* */
-.poem-body.size--2 .tk-ch { font-size: 30rpx; }
-.poem-body.size--1 .tk-ch { font-size: 33rpx; }
-.poem-body.size-1 .tk-ch { font-size: 39rpx; }
-.poem-body.size-2 .tk-ch { font-size: 42rpx; }
-.poem-body.size-3 .tk-ch { font-size: 46rpx; }
-.poem-body.size-4 .tk-ch { font-size: 52rpx; }
+/* 字号七档：字身盒、拼音槽、行盒、字号**四个数在这一条里配齐**。
+   字身盒取到「字号 + 4rpx」：汉字占满一个字身，而**行距要留在字身之外** ——
+   盒子小于字号，笔画就顶出去压在上一行上（量过：盒子 34rpx、字 36rpx 时
+   行与行的空隙是负的 2rpx，中间那行字挤成一坨）。
+
+   拼音槽 34rpx 七档同值：注音字号不跟正文档位走（--fs-pinyin 恒为 18rpx），
+   槽跟着它定才合理 —— 槽随字号涨，小档里拼音会离字越来越远。
+
+   行盒 --py-line = 槽 + 字身盒 + 上下各 2rpx 呼吸。它是**这一行的高度**，
+   有拼音的字与没拼音的字都撑到这个数。
+
+   `font-size` 直接定在 .poem-body 上，`.tk-ch` 只是继承：
+   这样「字身盒」「字号」是同一档的一对数，量尺子的人一眼能对上，
+   也不会再出现上面那种「字号取了个基准值、档位白设」的事。
+   注音那条路的字号与无注音那条路（.poem-line）逐档同值 —— 切模式不跳字号。 */
+.poem-body.size--2 { --py-box: 34rpx; --py-slot: 34rpx; --py-line: 72rpx; font-size: 30rpx; }
+.poem-body.size--1 { --py-box: 37rpx; --py-slot: 34rpx; --py-line: 75rpx; font-size: 33rpx; }
+.poem-body.size-0  { --py-box: 40rpx; --py-slot: 34rpx; --py-line: 78rpx; font-size: 36rpx; }
+.poem-body.size-1  { --py-box: 44rpx; --py-slot: 34rpx; --py-line: 82rpx; font-size: 39rpx; }
+.poem-body.size-2  { --py-box: 47rpx; --py-slot: 34rpx; --py-line: 85rpx; font-size: 42rpx; }
+.poem-body.size-3  { --py-box: 51rpx; --py-slot: 34rpx; --py-line: 89rpx; font-size: 46rpx; }
+.poem-body.size-4  { --py-box: 58rpx; --py-slot: 34rpx; --py-line: 96rpx; font-size: 52rpx; }
+
+/* 字身盒的负半边：拼音行里那一行 3rpx 的 `letter-spacing` 在逐字排的
+   行里按**每个 token** 加一遍（flex 子项之间也吃字距），
+   于是字与字的空隙比无拼音的行宽出 3rpx —— 两种排法又对不上了。
+   让 token 收回半个字距，两种排法的**步进**都落回「字宽 + 2·间隙」。 */
+.token {
+  letter-spacing: 0;
+}
+.poem-body .token-line {
+  letter-spacing: 0;
+}
 
 /* ---------- 译文 ---------- */
 .trans-head {

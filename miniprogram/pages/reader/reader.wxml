@@ -78,11 +78,12 @@
       </view>
     </view>
 
-    <view class="rule">
-      <text class="rule-t">正文</text>
-    </view>
-
     <!-- 正文。
+         上面那一排「对齐 · 注音 · 字号」下面是**直接接正文**：曾经这里还有
+         一道「正文」分隔条，2026-10-03 用户说「删除 A－ A＋ 和古诗内容中间
+         的 --正文-- 这一行」。它本来也没说清任何事 —— 这一屏除了正文没有
+         第二样东西，标注它等于给「这里是内容」加一句废话。
+
          版式（哪一句单占一行、哪几句连着一行、段落断在哪）由语料层
          `corpus.layout()` 决定 —— 页面只管照着排。理由写在那儿：
          七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句
@@ -99,11 +100,16 @@
         </view>
       </block>
       <block wx:else>
-        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段 -->
+        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段。
+
+             每个字占一格（.token），格宽 = 格高 = 这一档的 --py-box：
+             汉字与汉字之间的空隙因此是常数，A－ A＋ 全程不变；
+             标点虽然是「半格字身」，也归进格子里（.token.punc 收窄半格），
+             不然「有音的行」比「没音的行」多出半格，两种排法对不上。 -->
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
           <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
             <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-              <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+              <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
                 <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
                 <text class="tk-ch">{{tk.ch}}</text>
               </view>
