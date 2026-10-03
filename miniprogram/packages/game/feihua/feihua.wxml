@@ -2,23 +2,32 @@
   <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能用" mark="令" />
 
   <block wx:else>
-    <view class="page-head">
-      <text class="head-title">选择令字</text>
-    </view>
+    <!-- 令字：一屏的主角，居中一个大字 -->
+    <view class="card fh-stage">
+      <text class="fh-scope">{{scopeName}} · 第 {{done.length + 1}} 题</text>
+      <view class="fh-char">
+        <text class="fh-char-t">{{char}}</text>
+      </view>
+      <text class="fh-ask">写一句带「{{char}}」的诗词</text>
 
-    <view class="card">
-      <text class="field-label">玩法</text>
-      <view class="seg">
-        <radio-group class="seg-group" bindchange="onKind">
-          <label class="seg-item {{kind === item.key ? 'on' : ''}}" wx:for="{{kinds}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{kind === item.key}}"
-                   color="#1c1c1e" />
-            <view class="seg-icon ic-{{item.icon}}"></view>
-            <text class="seg-text">{{item.label}}</text>
-          </label>
-        </radio-group>
+      <view class="field fh-field">
+        <input class="field-input" value="{{input}}" placeholder="例如：云深不知处"
+               confirm-type="done" focus="{{!locked}}"
+               bindinput="onInput" bindconfirm="onSubmit" />
       </view>
 
+      <view class="fh-actions">
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">交这一句</button>
+        <button class="btn ghost" bindtap="onSkip">换一个字</button>
+      </view>
+
+      <text class="fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
+
+      <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
+    </view>
+
+    <!-- 难度 -->
+    <view class="card">
       <text class="field-label">难度</text>
       <view class="seg">
         <radio-group class="seg-group" bindchange="onLevel">
@@ -29,58 +38,35 @@
           </label>
         </radio-group>
       </view>
-
-      <!-- 令字格：格子本身用「选中 = 换底色 + 描边变色」说清选中态，
-           不再塞一个缩到 0.56、压在笔画上的原生圆点。
-           radio 仍在 label 里（视觉隐藏），点格子任何一处都选中 -->
-      <radio-group class="chars" bindchange="onChar">
-        <label class="char {{char === item.char ? 'active' : ''}}" wx:for="{{chars}}" wx:key="char">
-          <radio class="seg-radio" value="{{item.char}}" checked="{{char === item.char}}"
-                 color="#1c1c1e" />
-          <text class="char-t">{{item.char}}</text>
-          <text class="char-n">{{item.count}}</text>
-        </label>
-      </radio-group>
-
     </view>
 
-    <!-- 查一查 -->
-    <view class="card" wx:if="{{kind === 'look' && char}}">
-      <view class="card-title bar">含「{{char}}」的句子 · {{hitCount}} 句</view>
-      <view class="fh-line" hover-class="row-hover" hover-stay-time="60" wx:for="{{lines}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+    <!-- 正确答案：范围里含这个字的所有句子 -->
+    <view class="card">
+      <view class="card-title bar">正确答案</view>
+      <view wx:if="{{revealed}}">
+        <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+          <text class="fh-seg">{{item.seg}}</text>
+          <text class="fh-src">{{item.title}} · {{item.author}}</text>
+        </view>
+        <view class="empty" wx:if="{{!answers.length}}">
+          <text class="empty-mark">字</text>
+          <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
+        </view>
+      </view>
+      <button class="btn ghost block fh-reveal" bindtap="onReveal">
+        {{revealed ? '收起答案' : '看答案'}}
+      </button>
+    </view>
+
+    <!-- 这一轮答对的句子 -->
+    <view class="card" wx:if="{{done.length}}">
+      <view class="card-title bar">这一轮答对的</view>
+      <view class="fh-line" wx:for="{{done}}" wx:key="index">
         <text class="fh-seg">{{item.seg}}</text>
-        <text class="fh-src">{{item.title}} · {{item.author}}</text>
-      </view>
-      <view class="empty" wx:if="{{!hitCount}}">
-        <text class="empty-mark">字</text>
-        <text class="empty-text">没有含「{{char}}」的句子</text>
+        <text class="fh-src" wx:if="{{item.title}}">{{item.title}}</text>
       </view>
     </view>
-
-    <!-- 闯关 -->
-    <view class="card" wx:if="{{kind === 'level' && char}}">
-      <view class="card-title bar">令字「{{char}}」 · 已说 {{said.length}} 句</view>
-      <view class="said" wx:for="{{said}}" wx:key="index">
-        <text class="said-t">{{item}}</text>
-      </view>
-
-      <view class="lv-input" wx:if="{{!finished}}">
-        <input value="{{input}}" placeholder="写一句带「{{char}}」的诗" confirm-type="done"
-               bindinput="onInput" bindconfirm="onSubmit" />
-      </view>
-
-      <view class="actions" wx:if="{{!finished}}">
-        <button class="btn primary" bindtap="onSubmit">说一句</button>
-        <button class="btn ghost" bindtap="onGiveUp">放弃</button>
-      </view>
-
-      <view class="actions" wx:else>
-        <button class="btn primary" bindtap="onNextChar">换一个令字</button>
-      </view>
-
-      <text class="hint fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
-    </view>
-
   </block>
 
   <view class="safe-bottom"></view>

@@ -1,12 +1,80 @@
-/* .opt-group / .pref-item 的排布在 app.wxss 里定一次，这里不再重复；
-   这一页只留「令字格比上一行多留一口气」这件事 */
-.chars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
-  margin-top: var(--sp-2);
+/* 飞花令：一屏一题。
+   主角是那个令字 —— 大字、居中、独一份。别的都是配角，
+   字号依次低下去，别跟它抢。 */
+
+.fh-stage {
+  text-align: center;
 }
 
+/* 范围 · 第 N 题：一行读数，压到最低一档 */
+.fh-scope {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+/* 令字：**居中一个大字**。上下留白给它，别让输入框贴上来。
+   字用宋体（--font-poem），与正文一个长相 —— 这是诗的字，不是 UI 的字。 */
+.fh-char {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+.fh-char-t {
+  font-family: var(--font-poem);
+  font-size: var(--fs-glyph);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.fh-ask {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  margin-bottom: var(--sp-2);
+}
+
+/* 输入框：占满一行。.field 的底色与圆角在 app.wxss 里定一次，这里不重复 */
+.fh-field {
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+
+.fh-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.fh-actions .btn {
+  flex: 1;
+}
+
+/* 判语：对绿错红，就一句话 */
+.fh-msg {
+  display: block;
+  font-size: var(--fs-body);
+  padding-top: var(--sp-3);
+  line-height: var(--lh-loose);
+}
+
+.fh-msg.ok {
+  color: var(--green);
+}
+
+.fh-msg.no {
+  color: var(--red);
+}
+
+.fh-note {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-top: var(--sp-2);
+}
+
+/* 答案清单 / 这一轮答对的：一行一句，诗 + 出处 */
 .fh-line {
   padding: 22rpx 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -31,53 +99,7 @@
   margin-top: 8rpx;
 }
 
-.said {
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.said-t {
-  font-family: var(--font-poem);
-  font-size: var(--fs-title);
-  color: var(--ink);
-}
-
-.lv-input {
-  margin: 24rpx 0 20rpx;
-}
-
-.fh-msg {
-  display: block;
-  text-align: center;
-  padding-top: 20rpx;
-}
-
-.fh-msg.ok {
-  color: var(--green);
-}
-
-.fh-msg.no {
-  color: var(--red);
-}
-
-.fh-tip {
-  display: block;
-  text-align: center;
-  padding: 40rpx 0;
-}
-
-/* 令字那一档是空的（生僻档常见）：给一句话，不留一块空白 */
-.char-empty {
-  display: block;
-  padding: var(--sp-3) 0;
-  text-align: center;
-}
-
-/* 分组小标题（玩法 / 档位）：压低一档，它是目录不是内容 */
-.opt-label {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
-  padding: var(--sp-1) 0 2rpx;
+/* 「看答案」：卡片底部那颗按钮，与上面的清单之间隔一道留白 */
+.fh-reveal {
+  margin-top: var(--sp-3);
 }

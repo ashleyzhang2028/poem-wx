@@ -1,27 +1,9 @@
-.intro {
-  padding: 8rpx 4rpx 24rpx;
-}
+/* 这一屏是目录：只排三张入口卡，没有别的控件。
+   （曾经这里还有半屏飞花令的令字格与答案列表 —— 那些随「列表页不直接玩」
+     一起撤了，相关样式也一并收走，不留死规则。） */
 
-.intro-t {
-  display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-hero);
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: var(--ls-title);
-  line-height: var(--lh-tight);
-}
-
-.intro-s {
-  display: block;
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
-  margin-top: 8rpx;
-  letter-spacing: var(--ls-caption);
-}
-
-/* 三张入口卡：一行放不下三个名字（「模拟考试」四个字），
-   与其硬挤成一窄条，不如让它按两列排 —— 呼吸感比整齐更重要 */
+/* 三张入口卡：一行放不下三个名字，与其硬挤成一窄条，
+   不如让它按两列排 —— 呼吸感比整齐更重要 */
 .modes {
   display: flex;
   flex-wrap: wrap;
@@ -88,69 +70,6 @@
 
 .mode-off .mode-go {
   color: var(--ink-3);
-}
-
-/* 令字格：外框在 app.wxss 里定一次（.char），
-   这里只管这一页的排布 —— 令字比飞花令页少一格小字，所以格子矮一点 */
-.char-count {
-  display: block;
-  padding: var(--sp-1) 0;
-}
-
-.chars {
-  display: flex;
-  flex-wrap: wrap;
-  /* gap 一视同仁：上一版是「右 16 + 下 16」的 margin，横向与纵向各自累加，
-     行与行之间的缝看着比列与列宽 */
-  gap: var(--sp-2);
-  margin: var(--sp-2) 0 var(--sp-1);
-}
-
-/* 这一页的令字格没有下面那行小字，所以矮一点、字大一点 */
-.char {
-  width: 88rpx;
-  height: 88rpx;
-  padding: 0;
-}
-
-.line-seg {
-  display: block;
-  font-family: var(--font-poem);
-  font-size: var(--fs-poem);
-  color: var(--ink);
-}
-
-.row-sub {
-  margin-top: 8rpx;
-}
-
-.reveal-btn {
-  margin-top: 20rpx;
-}
-
-.pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8rpx 0 24rpx;
-}
-
-/* 翻页键：它同时挂着 .btn.mini，居中的事由 .btn 管；
-   这里只把左右衬得宽一点，翻页这种连续动作手要放得下 */
-.pg {
-  padding: 0 var(--sp-4);
-}
-
-.pg[disabled] {
-  color: var(--ink-4);
-  opacity: 1;
-}
-
-.pg-num {
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-  padding: 0 16rpx;
 }
 
 /* 差一档的卡片：留个灰样子，让人知道往哪走，而不是整块消失 */

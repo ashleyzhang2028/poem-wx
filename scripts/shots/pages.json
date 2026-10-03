@@ -256,12 +256,6 @@
       "id": "songci-sc-1"
     }
   },
-  "feihua-run": {
-    "page": "packages/game/feihua/feihua",
-    "title": "飞花令",
-    "back": true,
-    "logged": true
-  },
   "reader-trans": {
     "page": "pages/reader/reader",
     "title": "详情",
@@ -274,6 +268,17 @@
       {
         "call": "onToggleTranslation",
         "with": {}
+      }
+    ]
+  },
+  "game-feihua-reveal": {
+    "page": "packages/game/feihua/feihua",
+    "title": "飞花令",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onReveal"
       }
     ]
   }
