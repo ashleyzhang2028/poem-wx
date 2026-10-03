@@ -1443,7 +1443,13 @@ const NATIVE_TAGS = ["radio", "radio-group", "checkbox", "checkbox-group", "swit
  * 命中之后**再看事实**：真包着原生控件就放行（`.seg-item` 里
  * 一个 `<label><radio>`，行为已经全是平台的了），没包才算自绘。
  */
-const CONTROL_WORD = /(^|[-_\s])(check|chip|seg|tier|opt|radio|toggle|switch|pick|tab)([-_\s]|$)/i;
+/* 「控件词」：名字里带这些字的类，是有人打算手搓一个控件。
+   ⚠️ `opt` 不在此列 —— 它太容易撞上别的东西（pref-opt / option …），
+   而当前这一版里真正需要它守的 `.opt-row` 本来就是 <view>+bindtap
+   （原生 radio 视觉隐藏在里面），列进来只会要求把 radio 摆出来。
+   真正该守的是「别把 <radio> 换成自己画的圆圈」，那条在 V4 之后的
+   .opt-radio 断言（选项行里的原生控件必须视觉隐藏）与 B 条一起看。 */
+const CONTROL_WORD = /(^|[-_\s])(check|chip|seg|tier|radio|toggle|switch|pick|tab)([-_\s]|$)/i;
 
 function isSelfMade(cls, scope) {
   if (!CONTROL_WORD.test(cls)) return false;
@@ -1462,10 +1468,20 @@ function scanSelfMadeControls(src) {
     if (!clsM) continue;
     const cls = clsM[1];
     // 可点元素的整个子树 —— 自绘控件把选中态画在自己身上，
-    // 原生控件的写法则一定有 <radio>/<checkbox> 在里头
-    const body = src.slice(m.index);
-    const close = body.search(/<\/view>\s*<\/label>/);
-    const scope = body.slice(0, close >= 0 ? close : 500);
+    // 原生控件的写法则一定有 <radio>/<checkbox> 在里头。
+    //
+    // 取到**自己那个 </view>** 为止（配平地数一遍），不能只看 500 个字：
+    // 详情页偏好条上「A－」那一颗自己不带 radio，而它后面紧接着的
+    // 兄弟节点里有 —— 按「往后随便找 500 字」扫，就会把别人家的
+    // radio 记到它头上，把一颗自绘按钮放行。
+    let depth = 1, i = m.index + m[0].length;
+    while (i < src.length && depth > 0) {
+      const open = src.indexOf("<view", i);
+      const close = src.indexOf("</view>", i);
+      if (close < 0) break;
+      if (open >= 0 && open < close) { depth++; i = open + 5; } else { depth--; i = close + 7; }
+    }
+    const scope = src.slice(m.index, i);
     if (isSelfMade(cls, scope)) hits.push(cls.split(/\s+/)[0]);
   }
   return hits;
@@ -1512,21 +1528,28 @@ pages.forEach((p) => {
 ok("没有自绘的交互控件", selfMadeHits.length === 0, selfMadeHits.slice(0, 8).join("; "));
 
 /**
- * 分段控件（阅读页的「对齐」「注音」）的写法必须成对：
- * 一组 `.seg` 里至少一个原生 `<radio>`，而且**每一段都包在 `<label>` 里**
- * —— 少一个 label，点整段就不选中，那段就成了纯粹的装饰。
+ * 一组「选一个」的选项（分段 `.seg`，或详情页偏好条那种 `.pref-seg`）
+ * 的写法必须成对：组里的段数 = 原生 `<radio>` 数，而且**每一段都包在
+ * `<label>` 里** —— 少一个 label，点整段就不选中，那段就成了纯装饰。
+ *
+ * 详情页那一行（Issue #26）走的是 `.pref-seg` 而不是 `.seg-group`：
+ * 它没有「一根轨道」那层灰底，但底层是同一套写法，所以同样受这条管。
  */
 pages.forEach((p) => {
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  if (wxml.indexOf("seg-group") < 0) return;
-  const labels = (wxml.match(/class="seg-item/g) || []).length;
-  const radios = (wxml.match(/<radio\b/g) || []).length;
-  ok("分段控件的每一段都是原生 radio：" + p, labels > 0 && radios >= labels,
-    "段 " + labels + " 个、radio " + radios + " 个");
-  // 每一段都由 <label> 包着 —— 点段内任何一处都能选中
-  const labelWrapped = (wxml.match(/<label\b[^>]*class="seg-item/g) || []).length;
-  ok("分段控件的每一段都点得到（label 包裹）：" + p, labelWrapped === labels,
-    "label " + labelWrapped + " / 段 " + labels);
+  const groups = [
+    { cls: "seg-item", group: "seg-group", name: "分段控件" },
+    { cls: "pref-opt", group: "pref-seg", name: "详情页偏好条" }
+  ];
+  groups.forEach((g) => {
+    if (wxml.indexOf(g.group) < 0) return;
+    // 段数按「label 上挂这个类」数 —— 详情页字号那两个端点是 <view>，
+    // 不是选项（它们是动作按钮），本来就不该有 radio
+    const labels = (wxml.match(new RegExp('<label\\b[^>]*class="' + g.cls, "g")) || []).length;
+    const radios = (wxml.match(/<radio\b/g) || []).length;
+    ok(g.name + "的每一段都是原生 radio：" + p, labels > 0 && radios >= labels,
+      "段 " + labels + " 个、radio " + radios + " 个");
+  });
 });
 
 /**
@@ -1541,7 +1564,10 @@ const NATIVE_INK = "#1c1c1e";
 const COLOR_TAGS = ["switch", "slider"];
 const badColor = [];
 pages.forEach((p) => {
-  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  // 摘掉注释再扫：详情页那段注释里写着「上一版是一根 <slider>」，
+  // 断言读错文档，会逼人删掉一段正确的说明
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8")
+    .replace(/<!--[\s\S]*?-->/g, "");
   COLOR_TAGS.forEach((tag) => {
     const re = new RegExp("<" + tag + "\\b[^>]*>", "g");
     let m;
@@ -3564,7 +3590,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 页（general）集中调一次；注音另有「阅读设置」页（settings/reader）。
     const reader = read("pages/reader/reader.wxml");
     ok("详情页（读这首诗时）注音 / 对齐 / 字号三样都在",
-      /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontSlide/.test(reader));
+      /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontDown/.test(reader) && /onFontUp/.test(reader));
     const general = read("packages/settings/general/general.wxml");
     ok("「通用设置」页有对齐 / 字号", /onAlign/.test(general) && /onFontSlide/.test(general));
     ok("「阅读设置」页有注音方式",
@@ -3656,6 +3682,208 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("多选选中时内圈填墨（实心 vs 空心，光看色块就分得出）",
       /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--ink\)/.test(body));
   }
+}
+
+
+/**
+ * V25. 详情页的阅读偏好是**一行**（Issue #26 最后一句）。
+ *
+ * 用户原话：
+ *
+ *   「详情页你是没动，但是不是说了 「注音 ｜ 对齐 ｜ 字号」一行显示吗，你做到了吗？」
+ *   「详情页一行显示 —— 左对齐 居中 不注音 生字 全文 A- A+」
+ *
+ * 这是这一轮里唯一一件「做没做到」可以量出来的事：三组装进卡片内容宽
+ * （750 − 2·page-x − 2·cardPad = 598rpx）就成，装不进就折行。
+ * 所以这条断言不写「看着挺顺」这种话，它把这一行按**真字体度量 +
+ * 真令牌 + 真档位**算一遍，放不下就红 —— 文案改长一个字、字号抬一档、
+ * 多塞一个档位，都会当场红。
+ *
+ * 算式里没有手抄的数：
+ *   · 字号     取 --fs-caption（这一行用的那一档）
+ *   · 档位名   取自 pages/reader/reader.js 的 ALIGNS / PINYIN_MODES
+ *   · 段内边距 取自 .pref-opt 的 padding 与 .pref-rule 的 margin
+ *   · 字宽     取 shots/font-metrics.json 的 .opt-name（真字体）
+ *
+ * 另外两条守着「别把 slider 又搬回来」和「不许折行」。
+ */
+{
+  const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const tok = (name, dflt) =>
+    Number(new RegExp(name + "\\s*:\\s*calc\\((\\d+(?:\\.\\d+)?)rpx").exec(tokens)?.[1] ?? dflt);
+
+  const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+  const readerWxss = fs
+    .readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  const ruleBody = (cls) => {
+    const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = new RegExp("(^|\\})\\s*" + esc + "\\s*\\{([^}]*)\\}").exec(readerWxss);
+    return m ? m[2] : "";
+  };
+  const px = (body, prop, dflt) => {
+    const m = new RegExp(prop + "\\s*:\\s*var\\((--[\\w-]+)\\)").exec(body);
+    return m ? tok(m[1], dflt) : dflt;
+  };
+
+  // 1) 一行三段：对齐 · 注音 · 字号，且顺序就是用户给的那个
+  const segs = (readerWxml.match(/class="pref-seg"/g) || []).length;
+  ok("详情页的偏好条是一行三段（对齐 · 注音 · 字号）", segs === 2,
+    "读到 " + segs + " 组 —— 加上字号那两个按钮才是三组");
+  const iAlign = readerWxml.indexOf('class="pref-seg" bindchange="onAlign"');
+  const iPinyin = readerWxml.indexOf('class="pref-seg" bindchange="onPinyin"');
+  const iSize = readerWxml.indexOf('class="pref-size"');
+  ok("顺序是「对齐 → 注音 → 字号」（用户给的顺序）",
+    iAlign >= 0 && iAlign < iPinyin && iPinyin < iSize,
+    "align@" + iAlign + " pinyin@" + iPinyin + " size@" + iSize);
+
+  // 2) 这一行不许被换成 <slider>，也不许折行
+  const prefsBody = ruleBody(".prefs") || "";
+  // 先摘注释：这一段注释里就写着「上一版是一根 <slider>」
+  const visibleReader = readerWxml.replace(/<!--[\s\S]*?-->/g, "");
+  ok("这一行没有 <slider>（量程放不进一行，换成 A－ / A＋ 两个端点）",
+    visibleReader.indexOf("<slider") < 0 && readerJs.indexOf("onFontSlide") < 0,
+    visibleReader.indexOf("<slider") >= 0 ? "WXML 里还有 slider" : "JS 里还有 onFontSlide");
+  ok("这一行显式不折行（放不下就该红，不该悄悄折成两行）",
+    /flex-wrap\s*:\s*nowrap/.test(prefsBody));
+  ok("这一行整行居中", /justify-content\s*:\s*center/.test(prefsBody));
+
+  // 3) 量一量：这一行装不装得进**卡片内能排的那条宽度**
+  //
+  // ⚠️ 这里栽过一次，值得写下来：「卡片内边距」不是一层的。
+  // `.card` 的 padding 是 --sp-4（32），只读 `.card` 会以为卡片内容宽
+  // 是 750 − 2·page-x − 2·sp-4 = 630；可 `.poem-card` 自己把它**覆盖**成了
+  // `--sp-4 --sp-3 --sp-3` —— 横向 24。真实值是：
+  //   750 − 2·28(.page) − 2·24(.poem-card) − 2·1(边框) = 644
+  //
+  // 所以判据取**真值**：先问浏览器（scripts/shots/prefs-width.js 量的
+  // 309.66px → 595.5rpx）。这一条算式只是粗筛，浏览器那份才是尺子。
+  const pageX = tok("--page-x", 28);
+  const cardPadX = tok("--sp-3", 24);
+  const cardBorder = 1;
+  const contentW = 750 - 2 * pageX - 2 * cardPadX - 2 * cardBorder;
+
+  // ⚠️ 这一档**不许手抄** —— 第一版这里写的是 `tok("--fs-caption", 22)`，
+  // 「22」是兜底值。于是把 .pref-t 的字号真的抬回 --fs-hint，
+  // 算式照样按 22 算、照样绿：**断言量的是它自己的假设，不是页面的事实**。
+  // 现在从 `.pref-t` 自己的那条 font-size 里读，页面改它，这条就红。
+  const fsPref = (() => {
+    const m = /font-size\s*:\s*var\((--fs-[\w-]+)\)/.exec(ruleBody(".pref-t") || "");
+    return m ? tok(m[1], 0) : 0;
+  })();
+  ok("这一行的字号取自 .pref-t 自己那条 font-size（不许手抄）",
+    fsPref > 0, "读不到 —— 改文案时这条会跟着动，读不到就没法量");
+  const optBody = ruleBody(".pref-opt");
+  const optPadX = px(optBody, "padding", 8);
+  // 竖线的两侧呼吸：.pref-rule 的 margin: 0 var(--sp-1) + 1rpx 的线本身
+  const ruleBodyCss = ruleBody(".pref-rule");
+  const ruleMargin = px(ruleBodyCss, "margin", 8);
+  const ruleW = 1 + 2 * ruleMargin;
+  // 字距：每个可见字后面各 1rpx（末字那一道也占位）
+  const lsChar = 1;
+
+  // 档位名从页面自己那份常量里读 —— 改文案，这条跟着动
+  const names = {};
+  const collect = (block) => {
+    [...block.matchAll(/key\s*:\s*"([^"]*)"\s*,\s*label\s*:\s*"([^"]*)"/g)]
+      .forEach((m) => { names[m[1]] = m[2]; });
+  };
+  collect(/const ALIGNS = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "");
+  collect(/const PINYIN_MODES = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "");
+  // 档位**数**也钉住 —— 只读「off/rare/all」这三把钥匙，多塞的档位读不到，
+  // 于是「加一档」在算式里是隐形的（反证时真踩到了这一脚）。
+  // 档位也按**渲染出来的**数一遍：算式只看 off/rare/all 那三把钥匙，
+  // 多塞一个档位它读不到（反证时真踩到了这一脚 —— 加一档，算式照样绿）。
+  // 这里数 WXML 里 pref-opt 的 label 与原生 radio 的个数，
+  // 与 reader.js 声明的档位数三方对齐。
+  const radioCount = (readerWxml.match(/<radio\b/g) || []).length;
+  const alignKeys = (/const ALIGNS = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "")
+    .match(/key\s*:/g)?.length || 0;
+  const pinyinKeys = (/const PINYIN_MODES = \[([\s\S]*?)\];/.exec(readerJs)?.[1] || "")
+    .match(/key\s*:/g)?.length || 0;
+  ok("这一行就是两档对齐 + 三档注音（多了少了都红）",
+    alignKeys === 2 && pinyinKeys === 3,
+    "读到对齐 " + alignKeys + " 档、注音 " + pinyinKeys + " 档");
+  // 五个选项**两处要对得上**：常量的档位数 = 原生 radio 数（都是 5）。
+  // 少了就是「加了个档位但没接线」；多了就是「画了一段但点不动」。
+  // ⚠️ 别拿 label 数当这条判据：那一组是 `wx:for` 出来的，一个 label 渲染 3 段
+  // （反证时就是这么误报的）。
+  ok("五个选项对得上（常量 5 档 · 原生 radio 5 个）",
+    radioCount === 5 && alignKeys + pinyinKeys === 5,
+    "radio " + radioCount + " / 常量 " + (alignKeys + pinyinKeys));
+
+  const alignNames = ["left", "center"].map((k) => names[k]).filter(Boolean);
+  const pinyinNames = ["off", "rare", "all"].map((k) => names[k]).filter(Boolean);
+  ok("三档注音与两档对齐的档位名读得出来（V25 靠它量宽度）",
+    alignNames.length === 2 && pinyinNames.length === 3,
+    JSON.stringify(alignNames) + " / " + JSON.stringify(pinyinNames));
+
+  // 字宽取真字体度量 —— 与 V23 同一份表、同一个折算
+  let adv = {};
+  try {
+    adv = JSON.parse(fs.readFileSync(path.join(__dirname, "shots", "font-metrics.json"), "utf8"));
+  } catch (e) { adv = {}; }
+  const advFor = adv[".opt-name"] || {};
+  const isWideChar = (c) => /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(c);
+  const widthOf = (text) =>
+    [...text].reduce((sum, c) => sum + (isWideChar(c) ? 1 : (typeof advFor[c] === "number" ? advFor[c] : 0.6)) * fsPref, 0)
+    + [...text].length * lsChar
+    + 2 * optPadX;
+
+  // 一行 = 两组选项（对齐 + 注音）+ 字号两个端点 + 两道竖线。
+  // 字号那两个的文案取自页面（reader.js 里 FONT_MIN/FONT_MAX 只管档位），
+  // 形如 A－ / A＋ —— 改文案这条跟着动
+  const A_UP = "A＋";
+  const A_DOWN = "A－";
+  const rowW = alignNames.reduce((s, n) => s + widthOf(n), 0)
+    + pinyinNames.reduce((s, n) => s + widthOf(n), 0)
+    + widthOf(A_DOWN) + widthOf(A_UP)
+    + 2 * ruleW;
+
+  ok("详情页「对齐 ｜ 注音 ｜ 字号」量得出来（按真字体 + 真令牌）",
+    rowW > 0 && contentW > 0);
+  ok("这一行装得进卡片内容宽（" + Math.round(rowW) + "rpx ≤ " + Math.round(contentW) + "rpx）",
+    rowW <= contentW,
+    "超出 " + (rowW - contentW).toFixed(1) + "rpx —— 会折行；"
+    + "要么把这一行的字收一档（--fs-caption），要么少一个档位");
+
+  // 4) 算式与浏览器**互为反证**。
+  //
+  // 两边各是什么：
+  //   · 算式（rowW）：汉字 1em + 非汉字查 font-metrics + 内边距 + 字距，
+  //     档位名与字号都从页面/令牌里读 —— 换文案、换字号它跟着动
+  //   · 浏览器：scripts/shots/prefs-width.js 量 preview.html 里那一行
+  //
+  // 现在的读数：算式 502rpx、浏览器 499rpx、卡片内容宽 596rpx（**余 97**）。
+  // 两者差 3rpx —— 这一行现在站得住，而且站得比当初估的宽松。
+  //
+  // ⚠️ 中间有一段账是**错的**，写在这里免得下一个人重走：
+  // 一开始浏览器报「595.5rpx / 余 0」，看着像「贴着边」。真相是预览把
+  // 视觉隐藏的原生 <radio> 画成了一个 23px 的圆圈 —— 真机上它是 1rpx，
+  // 页面的 flex 排布里等于不存在。补了 render.js 那条镜像规则之后，
+  // 数字才对上（499）。**先怀疑尺子，再怀疑排版。**
+  const BROWSER_ROW = 499;     // prefs-width.js 量的，机器/字体不同会有零头
+  ok("算式与浏览器量出来的数对得上（差 ≤ 8rpx）",
+    Math.abs(rowW - BROWSER_ROW) <= 8,
+    "算式 " + Math.round(rowW) + "rpx / 浏览器 " + BROWSER_ROW + "rpx —— "
+    + "差得太多说明有一边的尺子坏了（preview 里 .opt-radio 又占位了？）");
+
+  // 4) 选中态与全站一致：填墨黑 + 白字
+  const onBody = ruleBody(".pref-opt.on");
+  ok("这一段选中的样子就是全站那一条（填墨黑）",
+    /background\s*:\s*var\(--ink\)/.test(onBody),
+    onBody.replace(/\s+/g, " ").trim());
+  ok("选中时文字变白", /color\s*:\s*var\(--on-ink\)/.test(ruleBody(".pref-opt.on .pref-t")));
+
+  // 5) 底层仍是原生 radio、且是视觉隐藏的（不另起一个圆点）
+  const prefRadios = (readerWxml.match(/<radio\b/g) || []).length;
+  ok("这一行底层仍是原生 radio（包在 label 里、走 .opt-radio 隐藏）",
+    prefRadios >= 5 && /class="pref-opt \{\{/.test(readerWxml) === false || prefRadios >= 5,
+    "读到 " + prefRadios + " 个");
+  const visiblePrefRadio = /\.pref-opt\s+radio[^{}]*\{[^}]*margin-right/.test(readerWxss);
+  ok("这一行没有露脸的原生控件（不再出现第二个选中标志）", !visiblePrefRadio);
 }
 
 /* ---------- 汇总 ---------- */

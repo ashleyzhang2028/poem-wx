@@ -80,17 +80,109 @@
   padding: 0 var(--sp-2);
 }
 
-/* ---------- 阅读偏好 ----------
-   注音（图标分段）与字号（原生 slider）各占一行。
-   注音分段在两页共用同一条分段规则，这里只给它内边距。 */
+/* ---------- 阅读偏好：一行装完 ----------
+   对齐 · 注音 · 字号，按用户给的顺序排成一条，整行居中。
+   三组之间各一道极淡的竖线 —— 它不是装饰，是把这一行切成三段的那个
+   「顿」：没有它，「居中生字」会读成一个选项名。
+
+   ## 为什么能挤进一行（这些数不是拍出来的）
+
+   卡片内容宽：750 − 2·page-x(28) − 2·.poem-card 的横向内边距(24) − 2·边框(1)
+             = 596rpx
+   这一行的七个段（.pref-opt / .pref-size 里的两颗）：
+     左对齐 85 + 居中 62 + 不注音 85 + 生字 62 + 全文 62 + A－ 55 + A＋ 55 = 465
+   两道竖线（1rpx 的线 + 两侧各 --sp-1）              2 × 17 = 34
+                 ─────────────────────────────────────────
+                 合计                                    499
+
+   两份读数互相对账：算式 502rpx、浏览器（scripts/shots/prefs-width.js）
+   499rpx、卡片内容宽 596rpx —— **余 96rpx**。
+   check.js V25 拿算式看守（换文案、加档位它跟着动），
+   真值以那条命令打出来的读数为准。
+
+   ⚠️ 这一行是**这一屏里唯一把字收一档**的地方：字形取 --fs-caption（22rpx），
+   而全站的 --fs-hint 是 25rpx。按 25 算七个段要到 528rpx —— 其实也放得下，
+   但余量只剩 68；22rpx 与 25rpx 差 3rpx，手机屏上看不出来，
+   而这一行装的是三组七段，松一点更像「一行字」而不是「一堵字」。
+   这一行没有「一字一格」的整齐需求，所以收这一档不欠谁。 */
 .prefs {
+  display: flex;
+  align-items: center;
+  /* 一行，**不许折**。放不下就该当场红（V25），而不是悄悄折成两行 ——
+     折了以后「一行显示」这件事就没人知道它已经破了。 */
+  flex-wrap: nowrap;
+  justify-content: center;
   padding: var(--sp-1) 0 var(--sp-2);
 }
 
-/* 字号那一排：滑块与两头的「A」收在 app.wxss（.font-row / .font-slider / .font-a），
-   这里只给它一个与上面那排分开的间距 —— 它独占一行，所以不必挤。 */
-.pref-font {
-  margin-top: var(--sp-1);
+/* 一组选项：贴在一起的两三段，段与段之间不留缝（缝由短的那档 padding 顶着） */
+.pref-seg {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+/* 组与组之间那道竖线。高度 20rpx：比字高一点，才像「分隔」而不是「顿号」 */
+.pref-rule {
+  flex: none;
+  width: 1rpx;
+  height: 20rpx;
+  margin: 0 var(--sp-1);
+  background: var(--line-strong);
+}
+
+/* 一行里的一段。**不是** .seg-item：分段控件是「一根轨道里的几段」，
+   而那根轨道（.seg-group 的浅灰底）在五行十栏里是多余的一层底色 ——
+   这一行要的是「几个词，选中的那个填墨」，所以未选中就是裸字。
+   选中态与全站一致：填墨黑、白字（.seg-item.on / .chip.on / .opt-row.active 同一条）。 */
+.pref-opt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  height: 40rpx;
+  padding: 0 var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.pref-opt.on {
+  background: var(--ink);
+}
+
+.pref-t {
+  font-size: var(--fs-caption);
+  color: var(--ink);
+  letter-spacing: 1rpx;
+  white-space: nowrap;
+}
+
+.pref-opt.on .pref-t {
+  color: var(--on-ink);
+  font-weight: 600;
+}
+
+/* 字号那两个端点。它俩是**动作**（一下一档），不是「选一个」，
+   所以没有被选中态 —— 只有「到头了」那一头退成灰（.off），
+   否则用户会一直点一个按下去什么也不发生的按钮。 */
+.pref-size {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.pref-opt.mini {
+  padding: 0 var(--sp-1);
+}
+
+.pref-opt.off .pref-t {
+  color: var(--ink-4);
+}
+
+/* 按下反馈：这一行里的三组都是「填墨黑」的选中态，
+   而字号那两个端点是动作、没有选中态 —— 不给反馈就成了「点了没反应」。 */
+.pref-opt-hover {
+  background: var(--sink);
 }
 
 /* ---------- 正文 ----------

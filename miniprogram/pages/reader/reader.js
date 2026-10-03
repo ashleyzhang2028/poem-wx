@@ -183,8 +183,21 @@ Page({
     store.saveSettings({ align });
   },
 
-  onFontSlide(e) {
-    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(e.detail.value)));
+  /* 字号：这一行装的是两个端点按钮，不是滑块。
+     滑块要有横向量程才操作得准（原来那一版给它整行），而这一行要装
+     对齐 / 注音 / 字号三组，量程放不下 —— 一步一档的按钮反而正好。
+     到头了就不动（界面上那一头退成灰，见 .pref-opt.off），
+     不做「到头了还存一次」这种事。 */
+  onFontDown() {
+    this.stepFont(-1);
+  },
+
+  onFontUp() {
+    this.stepFont(1);
+  },
+
+  stepFont(delta) {
+    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
     if (fontSize === this.data.fontSize) return;
     this.setData({ fontSize });
     store.saveSettings({ fontSize });

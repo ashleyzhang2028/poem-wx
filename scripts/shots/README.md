@@ -8,7 +8,19 @@ node scripts/shots/shoot.js        # 逐屏截图到 out/shots/shots/
 node scripts/shots/shoot.js reader # 只截名字里含 reader 的
 node scripts/shots/measure.js      # 量每一格「两侧还剩多少」—— 挤不挤，说数字
 node scripts/shots/measure.js --metrics   # 从真字体导出 font-metrics.json
+node scripts/shots/prefs-width.js  # 量详情页那一行（对齐 ｜ 注音 ｜ 字号）多宽
 ```
+
+`prefs-width.js` 是「**一行显示，你做到了吗**」这句话的答案（Issue #26）。
+它量的不是 `.prefs` 的盒子宽 —— 那一层是 `flex:center`，被 `justify-content`
+甩出来的空白不算进这一行 —— 而是**两端之间的距离**：
+七个段加起来 499rpx，卡片内容宽 596rpx，余 96rpx。
+`check.js` V25 那套算式只是粗筛（它算 502），真值以这份读数为准。
+
+> 写这条时踩过两个坑，都留在脚本的注释里：一是预览把**视觉隐藏的原生
+> `<radio>`** 画成了 23px 的圆圈（真机上它是 1rpx，等于不存在），
+> 于是量出来多了一整圈；二是拿 `.prefs` 的盒子宽当行宽。
+> **先怀疑尺子，再怀疑排版。**
 
 **`measure.js` 是「挤」这个字的尺子。** 用户说「选项内文字左右 padding
 和它自己的边界太近了」，眼睛只能看出「有点紧」；它把每一格的
