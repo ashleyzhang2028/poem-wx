@@ -1,17 +1,39 @@
 <view class="page">
+  <!-- 领读词与别页同一长相：一句「这一屏管什么」的短话，**不重复导航栏标题**
+       （导航栏已经写着「背诵设置」，页头再写一遍就是同一句话说两次）。
+       上一版这里是「背诵范围」，那时这一屏只有范围那一张卡；
+       现在卡片分成了「当前学段」与「背诵范围」两张，
+       页头再叫「背诵范围」，一屏里就有两句同样的话。 -->
   <view class="page-head">
-    <text class="head-title">背诵范围</text>
+    <text class="head-title">怎么背</text>
   </view>
 
-  <lock-card wx:if="{{locked}}" title="背诵范围要登录" note="登录后才能改" mark="范" />
+  <lock-card wx:if="{{locked}}" title="背诵设置要登录" note="登录后才能改" mark="背" />
 
   <block wx:else>
   <view class="card">
-    <view class="card-title bar">背诵范围</view>
+    <view class="card-title bar">当前学段</view>
+
+    <!-- 学段三格：小学 / 初中 / 高中（Issue #26 原话「背诵范围内背诵范围卡片
+         应该显示为 当前学段」）。
+         它不是第四个设置项，而是**年级格怎么排**的旋钮 —— 点「初中」，
+         下面那排格子就只剩七八九年级，取诗范围也跟着换成「初中随机」
+         （见 recite.js 的 onStage 与 gradeRows）。 -->
+    <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">
+      <label class="chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{stage === item.key}}"
+               color="#1c1c1e" />
+        <text class="chip-t">{{item.name}}</text>
+      </label>
+    </radio-group>
+
+    <!-- 年级那一行的读数：格子只剩这一段的了，这一句说清「收窄到了哪一段」。
+         它不让人多选一件事，只是把事实说出来。 -->
+    <text class="hint stage-note">{{gradeNote}}</text>
 
     <!-- 学期与年级都是**等长的一格一个选项**，格子本身已经把「这是一组、
          只能选一个」说清楚了。再给每格塞一个圆点，就出现两个毛病：
-         圆点吃掉了横向空间（12 个年级从 3 列涨到 4 列才放得下），
+         圆点吃掉了横向空间（格子要多一列才放得下），
          而且它跟第一行文字对齐、第二行文字缩进 —— 看着像圆点管着半格。
          这里改成「格子 = 一个胶囊」：形状说是控件，填色说选中，
          圆点不再重复这件事。radio 仍在 label 里，点格子就选中。
@@ -19,11 +41,19 @@
          顺序是**年级在上、学期在下**（Issue #12 原话「学期显示在年级下面」）：
          年级是大类，学期只是它下面的二选一，先粗后细。
 
-         年级**十二格全列，一个不收**（Issue #26 原话「年级从十二格收到六格
-         （取最近六年）- 谁让你这么瞎搞的，这能收吗」）：一至高三是一个学制，
-         砍掉哪一段都会有人选不到自己。这条与下面那行（注音/对齐/字号）无关，
-         两处别再混着改。 -->
-    <radio-group class="chip-group cols-4" data-k="grade" bindchange="onGrade">
+         年级只在**当前学段内**列（见 recite.js 的 gradeRows）。
+         这里有一个坑要绕着走：Issue #26 原话是「年级从十二格收到六格
+         （取最近六年）- 谁让你这么瞎搞的，这能收吗」—— 那句禁的是
+         「按最近六年砍掉高年级」，不是「十二格必须同屏」。
+         上一版读成了后者，于是十二格全列、没有学段那一格，
+         用户看不出自己站在哪一段里。
+         这一版把学段那一格补上，年级格只列这一段：**一个年级都没丢**，
+         点「初中」就换到七八九，点「高中」就换到十、十一、十二。
+
+         列数跟着段内年级数走：最多的一段（小学）六个，三列两行 ——
+         上一版是四列，那是给十二格排的；现在格子里最多六格，
+         四列会排出「四 + 二」那种半截行。 -->
+    <radio-group class="chip-group cols-3" data-k="grade" bindchange="onGrade">
       <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
         <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
                color="#1c1c1e" />
@@ -48,9 +78,12 @@
        （详情页 .prefs、阅读设置页 general 各有一套）。
        背诵范围只管「背哪些、每天几首、怎么复习」。 -->
   <view class="card">
-    <view class="card-title bar">取诗范围</view>
+    <!-- 这一张卡原来叫「取诗范围」（网页版也还这么叫）。Issue #26 改名的原话是
+         「取诗范围修改为 背诵范围」。名字换掉之后它与上一张卡不再撞名 ——
+         上一张现在叫「当前学段」，这一屏唯一的「背诵范围」就是它。 -->
+    <view class="card-title bar">背诵范围</view>
     <!-- 七个范围是**同一种东西的七个取值**（从「本册」到「全部随机」），
-         所以跟上面三组（年级 / 学期 / 每日首数）走同一套长相：选中的填墨黑。
+         所以跟上面那几组（学段 / 年级 / 学期 / 每日首数）走同一套长相：选中的填墨黑。
          圆点在这儿是重复的 —— 填色已经说了「选的是这一行」，
          再站一个圆点在行首，只是多占 16rpx 的横向空间。
 

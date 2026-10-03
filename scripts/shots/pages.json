@@ -74,6 +74,22 @@
     "back": true,
     "logged": true
   },
+  "settings-recite-middle": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStage",
+        "with": {
+          "detail": {
+            "value": "middle"
+          }
+        }
+      }
+    ]
+  },
   "settings-general": {
     "page": "packages/settings/general/general",
     "title": "通用设置",
