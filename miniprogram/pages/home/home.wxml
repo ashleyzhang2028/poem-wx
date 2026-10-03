@@ -108,6 +108,12 @@
       </view>
     </view>
 
+    <!-- 背诵弹层：点篇名、点「开始背」都从底部弹这张卡上来。
+         它挂在页面根节点上而不是某张卡里 —— 它是 fixed 的整屏浮层，
+         放进卡片会被卡片的层叠上下文裁掉。 -->
+    <recite-sheet id="sheet" queue="{{plan}}" theme-style="{{themeStyle}}"
+                    bind:open="onSheetOpen" bind:finish="onSheetFinish" />
+
     <view class="safe-bottom"></view>
   </block>
 </view>

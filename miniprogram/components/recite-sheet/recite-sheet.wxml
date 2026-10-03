@@ -1,0 +1,129 @@
+<!-- 背到这里 -->
+<view class="sheet-root" wx:if="{{open}}">
+  <view class="sheet-mask" bindtap="onClose"></view>
+
+  <view class="sheet" style="{{themeStyle}}">
+    <!-- 把手：一根短横。它说「这张卡是拉上来的」，也是页面与卡之间的那道边 -->
+    <view class="sheet-grip"></view>
+
+    <!-- 队列里的位置。放这儿而不是标题里 ——
+         标题是这首诗自己的事，「第几首」是今天这一趟的事 -->
+    <view class="sheet-head">
+      <text class="sheet-step">{{navText}}</text>
+      <view class="sheet-close" hover-class="sheet-close-hover" hover-stay-time="60" bindtap="onClose">
+        <text class="sheet-close-t">✕</text>
+      </view>
+    </view>
+
+    <view class="sheet-body">
+      <view class="poem-head">
+        <text class="poem-title">{{title}}</text>
+        <!-- 身份行：朝代 · 作者 · 出处 · 学段，一行装完（与详情页同一套） -->
+        <view class="poem-meta-row">
+          <text class="poem-meta">{{dynasty}}</text>
+          <text class="poem-dot">·</text>
+          <text class="poem-meta">{{author}}</text>
+          <block wx:if="{{source}}">
+            <text class="poem-dot">·</text>
+            <text class="poem-meta">{{source}}</text>
+          </block>
+          <text class="poem-dot">·</text>
+          <text class="poem-meta stage">{{stage}}</text>
+        </view>
+      </view>
+
+      <!-- 阅读偏好：一行三段（对齐 · 注音 · 字号），与详情页同一套写法 -->
+      <view class="prefs">
+        <radio-group class="pref-seg" bindchange="onAlign">
+          <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+            <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="{{themeHex}}" />
+            <text class="pref-t">{{item.label}}</text>
+          </label>
+        </radio-group>
+
+        <view class="pref-rule"></view>
+
+        <radio-group class="pref-seg" bindchange="onPinyin">
+          <label class="pref-opt {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
+            <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="{{themeHex}}" />
+            <text class="pref-t">{{item.label}}</text>
+          </label>
+        </radio-group>
+
+        <view class="pref-rule"></view>
+
+        <view class="pref-size">
+          <view class="pref-opt mini {{fontSize <= fontMin ? 'off' : ''}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown">
+            <text class="pref-t">A－</text>
+          </view>
+          <view class="pref-opt mini {{fontSize >= fontMax ? 'off' : ''}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp">
+            <text class="pref-t">A＋</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 正文：版式由 corpus.layout() 决定，注音与正文同形同序 -->
+      <view class="poem-body align-{{align}} size-{{fontSize}}">
+        <block wx:if="{{!pinyinOn}}">
+          <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
+            <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+              <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+            </text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
+            <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+              <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+                <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                  <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+                  <text class="tk-ch">{{tk.ch}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <view class="trans-card" wx:if="{{hasTranslation}}">
+        <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+          <text class="card-title bar">译文</text>
+          <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
+        </view>
+        <view wx:if="{{showTranslation}}">
+          <text class="trans-text">{{translation}}</text>
+          <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评分：钉在卡底，滚到哪儿都够得着。
+         这一块是「背完了」唯一要做的事，不该跟着正文滚走 -->
+    <view class="sheet-foot">
+      <view class="recite-head">
+        <text class="card-title bar">掌握度</text>
+        <text class="mastery-num">{{mastery}}%</text>
+      </view>
+      <view class="meter mastery-bar">
+        <view class="meter-fill" style="width:{{mastery}}%"></view>
+      </view>
+
+      <view class="actions">
+        <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
+              data-r="{{item.key}}" bindtap="onResult">
+          <text class="act-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
+
+      <!-- 上一首：只在有上一首时露脸。它是「翻回去看一眼」，
+           不是第二个评分入口 —— 所以压成一行灰字，不占一颗按钮 -->
+      <view class="sheet-prev" wx:if="{{index > 0}}" hover-class="sheet-prev-hover" hover-stay-time="60" bindtap="onPrev">
+        <text class="sheet-prev-t">上一首</text>
+      </view>
+    </view>
+  </view>
+</view>
