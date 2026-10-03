@@ -71,7 +71,13 @@
   margin-top: var(--sp-1);
 }
 
+/* 与考试页共用同一套选项长相（见 exam.wxss 的同名规则）：
+   一枚 A B C D 的脚标 + 左对齐的正文。上一版是居中一条 ——
+   一句七言和两个字并排居中时，每格的起点都不一样，扫下来是锯齿。 */
 .option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   background: var(--card);
   border: 1rpx solid var(--line-2);
   border-radius: var(--radius-sm);
@@ -79,8 +85,29 @@
   margin-bottom: var(--sp-2);
   font-size: var(--fs-body);
   color: var(--ink);
-  text-align: center;
+  text-align: left;
   transition: transform var(--t-press), background-color var(--t-press), border-color var(--t-press);
+}
+
+.option-k {
+  flex: none;
+  width: 32rpx;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.option-t {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+}
+
+/* 判定之后字母跟着走：对了绿、错了红，与正文同一个色 */
+.option.right .option-k,
+.option.wrong .option-k {
+  color: inherit;
+  opacity: .72;
 }
 
 .option:active {

@@ -26,6 +26,10 @@ Page({
     questions: [],
     index: 0,
     current: null,
+    /** 当前这道题的选项（带 A B C D 脚标字母）—— 字母只到这一层 */
+    optionRows: [],
+    /** 题干下面那一行读数：题型 · 出自《…》。缺哪一段就不印哪一段 */
+    metaLine: "",
     /** 当前这道题选了什么（= answers[index] 的镜像，WXML 里要它判高亮） */
     picked: "",
     /** 逐题的作答。顺序与 questions 一一对应 —— 交卷时按它批 */
@@ -104,6 +108,8 @@ Page({
         questions,
         index: 0,
         current: questions[0],
+        optionRows: quiz.optionRows(questions[0].options),
+        metaLine: this.metaLineOf(questions[0]),
         picked: "",
         answers: blankAnswers(questions.length),
         graded: [],
@@ -167,7 +173,32 @@ Page({
       return;
     }
     // 回头改过的答案要恢复：下一题的高亮取的是它自己的那一格
-    this.setData({ index, current: this.data.questions[index], picked: this.data.answers[index] || "" });
+    const next = this.data.questions[index];
+    this.setData({
+      index,
+      current: next,
+      optionRows: quiz.optionRows(next.options),
+      metaLine: this.metaLineOf(next),
+      picked: this.data.answers[index] || ""
+    });
+  },
+
+  /**
+   * 题干下面那一行：**题型 · 出自《…》**。
+   *
+   * 上一版这是两行两样式 —— 题干上面一枚彩色题型标签，题干下面一行灰字
+   * 「出自《…》」。它们回答的是同一件事（这道题在问什么、问的是哪一首），
+   * 所以并成一行，用「·」断开，与详情页身份行同一长相。
+   *
+   * 「填朝代」那道题的题干就是作者名，没有「出自哪首」这一说 ——
+   * 上一版用 `wx:if` 在模板里判掉，现在这一层自己判，模板只管印。
+   */
+  metaLineOf(q) {
+    if (!q) return "";
+    const name = quiz.formOf(q.form).name;
+    // 「填朝代」的题干是作者，不必再交代出处 —— 与上一版模板里那条 wx:if 同一口径
+    if (q.form === "dynasty" || !q.title) return name;
+    return name + " · 出自《" + q.title + "》";
   },
 
   /**

@@ -23,6 +23,10 @@ Page({
     index: 0,
     current: null,
     picked: "",
+    /** 当前这道题的选项（带 A B C D 脚标字母）—— 字母只到这一层 */
+    optionRows: [],
+    /** 题干下面那一行读数：题型 · 出自《…》。缺哪一段就不印哪一段 */
+    metaLine: "",
     last: null,
     answered: 0,
     correct: 0,
@@ -101,21 +105,28 @@ Page({
         questions,
         index: 0,
         current: questions[0],
+        optionRows: quiz.optionRows(questions[0].options),
+        metaLine: this.metaLineOf(questions[0]),
         picked: "",
         last: null,
         answered: 0,
         correct: 0,
         wrong: []
-      },
-      () => this.markForm()
+      }
     );
   },
 
-  markForm() {
-    const cur = this.data.current;
-    if (!cur) return;
-    const f = quiz.formOf(cur.form);
-    this.setData({ current: Object.assign({}, cur, { formName: f.name, color: f.color }) });
+  /**
+   * 题干下面那一行：**题型 · 出自《…》**。
+   *
+   * 与考试页同一套写法（Quiz/metaLineOf）：题型与出处并成一行，
+   * 用「·」断开。「填朝代」的题干就是作者名，不必再交代出处。
+   */
+  metaLineOf(q) {
+    if (!q) return "";
+    const name = quiz.formOf(q.form).name;
+    if (q.form === "dynasty" || !q.title) return name;
+    return name + " · 出自《" + q.title + "》";
   },
 
   onPick(e) {
@@ -147,9 +158,18 @@ Page({
       this.setData({ stage: "result" });
       return;
     }
-    this.setData({ index, current: this.data.questions[index], picked: "", last: null }, () =>
-      this.markForm()
-    );
+    // 翻页要把这一题的三个读数一起换掉：选项（带 ABC 字母）、
+    // 题干下面那一行、以及本题作答。上一版只换 current，
+    // 字母与读数就会停在上一条题上。
+    const next = this.data.questions[index];
+    this.setData({
+      index,
+      current: next,
+      optionRows: quiz.optionRows(next.options),
+      metaLine: this.metaLineOf(next),
+      picked: "",
+      last: null
+    });
   },
 
   onAgain() {

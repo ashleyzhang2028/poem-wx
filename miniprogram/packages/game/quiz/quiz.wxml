@@ -39,15 +39,21 @@
     </view>
 
     <view class="card">
-      <text class="tag {{current.color}}" wx:if="{{current.formName}}">{{current.formName}}</text>
       <text class="stem">{{current.stem}}</text>
-      <text class="hint stem-sub" wx:if="{{current.form !== 'dynasty'}}">出自《{{current.title}}》</text>
+      <!-- 一行读数：题型 · 出自《…》（见 quiz.js 的 metaLineOf）。
+           上一版这里是两行两样式 —— 题干上方一枚彩色题型标签、
+           下面一行灰字出处，而颜色在别处是状态色（绿=对 / 红=错 /
+           琥珀=待办），借给题型用只多出三种不说话的颜色。 -->
+      <text class="hint stem-sub">{{metaLine}}</text>
     </view>
 
+    <!-- 选项带 A B C D 脚标。`data-v` 传的仍是**没有字母的原文**：
+         判分比的是原文，字母只是印在屏幕上的那个序号（utils/quiz.js）。 -->
     <view class="options">
-      <view class="option {{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}"
-            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick">
-        {{item}}
+      <view class="option {{picked ? (item.text === current.answer ? 'right' : (item.text === picked ? 'wrong' : '')) : ''}}"
+            wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
+        <text class="option-k">{{item.key}}</text>
+        <text class="option-t">{{item.text}}</text>
       </view>
     </view>
 

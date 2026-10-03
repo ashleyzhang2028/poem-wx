@@ -3865,21 +3865,48 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       ".options 的列数读不出来");
   }
 
-  // 6) 多选：形状上与单选分得开，不能只靠「一枚小勾」
+  // 6) 多选：与单选看得出区别，而且**未选中的格子不许是重色**。
+  //
+  //    这一节前后有三版，每一版都栽在同一个地方 —— 用户看截图能一眼看出不对，
+  //    而当时的断言看不出：
+  //
+  //      第一版  「墨黑胶囊 + 右上角一枚小勾」→ 用户：「全填成墨黑胶囊，
+  //               跟『选一个』的选中态长得一模一样，只看色块分不出哪个没勾」
+  //      第二版  「人人一颗双圈，内圈都填实」→ 用户：
+  //               「选项怎么全部都是选中的重色？难道不是只有选中了才是重色吗？」
+  //      现在    「白底 + 一枚空心勾选框」；选中才填主色、才画勾
+  //
+  //    所以判据分两条，一条都不许少：
+  //      a. 多选有**自己的形状**（可多选这件事不能只由填色说）
+  //      b. **未选中 = 白底**（.chip.multi 自己不许有 background；
+  //         也不必再给内圈填色 —— 那条「人人实心」正是第二版的错）
   {
     const chipMulti = /\.chip\.multi\s*\{([^}]*)\}/.exec(body);
-    const multiBefore = /\.chip\.multi::before\s*\{([^}]*)\}/.exec(body);
+    const multiMark = /\.chip\.multi::after\s*\{([^}]*)\}/.exec(body);
     ok("多选的格子有**自己的形状**（.chip.multi 有自己的规则）", !!chipMulti);
-    ok("多选靠双圈（::before 画内圈），不再靠右上角一枚小勾",
-      !!multiBefore && /border\s*:/.test(multiBefore[1]) && /inset\s*:/.test(multiBefore[1]),
-      multiBefore ? multiBefore[1].replace(/\s+/g, " ").trim() : "没有 .chip.multi::before");
-    ok("上一版那枚「压在墨黑上的小勾」已经撤掉",
-      !/\.chip\.multi(\.on)?::after\s*\{/.test(body));
-    // 双圈的对比度来自「实心 / 空心」：选中时内圈也填主色
-    // （Issue #26 之后「主色」有两支：--ink 是字，--strong 是重点/选中态。
-    //   选中态那一支是 --strong，所以这里认它。）
-    ok("多选选中时内圈填墨（实心 vs 空心，光看色块就分得出）",
-      /\.chip\.multi\.on::before\s*\{[^}]*background\s*:\s*var\(--strong\)/.test(body));
+    ok("多选有一枚勾选框（::after 画的方框），不靠右上角一枚小勾",
+      !!multiMark && /border\s*:/.test(multiMark[1]) && /width\s*:/.test(multiMark[1]),
+      multiMark ? multiMark[1].replace(/\s+/g, " ").trim() : "没有 .chip.multi::after");
+
+    /* a) **未选中的格子不许有底色**。这一条是这次改动本身：
+          .chip.multi 的规则里只要出现 background，就是在说「没选也是重点」。
+          （.chip.on 那条填色是共享的，不在此列 —— 它只管选中的那一个。） */
+    ok("多选的格子未选中是白底（.chip.multi 自己不许有 background）",
+      !!chipMulti && !/background\s*:/.test(chipMulti[1]),
+      chipMulti ? chipMulti[1].replace(/\s+/g, " ").trim() : "");
+
+    /* b) 那枚勾选框也不许在未选中时填色 —— 第二版就是把「内圈」填实了。
+          未选中态只给它一道描边。 */
+    ok("那枚勾选框未选中时是空心的（只有描边，没有填色）",
+      !!multiMark && /border\s*:/.test(multiMark[1]) && !/background\s*:/.test(multiMark[1]),
+      multiMark ? multiMark[1].replace(/\s+/g, " ").trim() : "");
+
+    /* c) 选中才填主色 —— 与全站同一条。
+          （Issue #26 之后「主色」有两支：--ink 是字，--strong 是重点/选中态。
+            选中态那一支是 --strong，所以这里认它。） */
+    ok("多选选中时勾选框填色 + 画出勾（只有选中才是重色）",
+      /\.chip\.multi\.on::after\s*\{[^}]*background\s*:\s*var\(--on-ink\)/.test(body)
+        && /\.chip\.multi\.on::before\s*\{[^}]*transform\s*:\s*rotate\(45deg\)\s*scale\(1\)/.test(body));
   }
 }
 
@@ -4429,6 +4456,121 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("底栏选中的圆底真的补了那圈描边",
     !!selBlock && /box-shadow\s*:\s*0 0 0 [\d.]+rpx\s+var\(--on-ink\)/.test(selBlock[1]),
     selBlock ? selBlock[1].replace(/\s+/g, " ").trim() : "找不到 .tab.on .tab-ico");
+}
+
+/**
+ * V28. 题型选项、选项序号、色样、以及「读数必须有限」（Issue #26）。
+ *
+ * 用户这一轮的六句话，逐条钉住：
+ *
+ *   > 考试设置和题型设置里面的选项怎么全部都是选中的重色？难道不是只有选中了才是重色吗？
+ *   > 外观主色选择界面，每个颜色都是很大的圆角长方形，不美观，建议使用小一点的圆形
+ *   > 或者你想想有没有更好的界面显示方案
+ *
+ * 第一句是**填色的语义**被做坏了：单选格子的「选了才填主色」在
+ * `utils/quiz.js` 生成的题目里没坏，坏在题型那一组 —— 上一版给可多选的格子
+ * 每人画了一颗**实心**双圈，于是未选中的也是重色。这一条守的就是
+ * 「未选中 = 白底」，写在 V24 第 6 节。
+ *
+ * 本节管剩下三件：
+ *   1. **题型的颜色撤了**。五种题型原来各配一个色（绿 / 琥珀 / 蓝），
+ *      那是「按页面分派颜色」那套老路；而颜色在别处是**状态**
+ *      （绿=对、红=错、琥珀=待办）。题型与出处现在并成一行读数。
+ *   2. **选项有 A B C D**。字母是选项自带的（`lettered`），不是模板按下标
+ *      画上去的 —— 下标一挪，判分就错位。所以断言查的是数据层：
+ *      `options` 的每一项都带 `key`，且 `key` 与顺序一致。
+ *   3. **色样是圆的小的**，且颜色数量与 `utils/theme.js` 的清单一致 ——
+ *      色卡不再是 96rpx 的圆角长方形。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const quizSrc = read("utils/quiz.js");
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/<\!--[\s\S]*?-->/g, "");
+
+  // 1) 题型不带颜色，且「题型 · 出自《…》」是**一行**
+  const formsBlock = /const FORMS = \[([\s\S]*?)\];/.exec(quizSrc);
+  ok("题型清单读得出来", !!formsBlock);
+  ok("题型不再配颜色（color 这个字段撤了）",
+    !!formsBlock && !/color\s*:/.test(formsBlock[1]),
+    formsBlock ? formsBlock[1].replace(/\s+/g, " ").slice(0, 90) : "");
+  ok("五个题型还在（撤的是颜色，不是题型）",
+    !!formsBlock && (formsBlock[1].match(/key\s*:/g) || []).length === 5);
+
+  // 答题页：题型与出处并成一行；原来那枚 .tag 不许回来
+  const examWxml = strip(read("packages/game/exam/exam.wxml"));
+  const quizWxml = strip(read("packages/game/quiz/quiz.wxml"));
+  ["packages/game/exam/exam.wxml", "packages/game/quiz/quiz.wxml"].forEach((f) => {
+    const src = strip(read(f));
+    ok(f + " 里不再有题型色的标签（.tag）", src.indexOf('class="tag') < 0);
+    ok(f + " 的题干下面是一行读数（metaLine）", src.indexOf("{{metaLine}}") >= 0);
+    ok(f + " 的选项带字母（optionRows / option-k）",
+      src.indexOf("{{optionRows}}") >= 0 && src.indexOf("option-k") >= 0);
+  });
+  const examJs = read("packages/game/exam/exam.js");
+  const quizJs = read("packages/game/quiz/quiz.js");
+  ok("考试页与题库页各有一份 metaLineOf（题型 · 出自《…》）",
+    /metaLineOf\s*\(/.test(examJs) && /metaLineOf\s*\(/.test(quizJs));
+  ok("模板里不再手判「填朝代」有没有出处（那个判据搬进了 metaLineOf）",
+    examWxml.indexOf("current.form !== 'dynasty'") < 0
+      && quizWxml.indexOf("current.form !== 'dynasty'") < 0);
+
+  /* 2) 字母是选项自带的。
+        判据取**数据层**：build 出来的每个选项都带 key，且 key 与它在数组里的
+        位置对得上（A B C D）。这条比「模板里画了字母」结实 ——
+        模板按下标画字母时，选项一洗牌就会「看着是 B、判的是 C」。 */
+  const lettered = /function lettered\([\s\S]*?\n\}/.exec(quizSrc);
+  ok("选项字母在数据层生成（lettered 函数在）", !!lettered);
+  ok("四个字母取自 ABCD，且与顺序绑在一起",
+    !!lettered && /"ABCD"\[i\]/.test(lettered[0]));
+  /* 每个题型都要走 lettered —— 漏一个，那一类题就没有字母。
+     数一遍 shuffle([...]) 外面套 lettered 的处数。 */
+  const optionSites = (quizSrc.match(/options:\s*lettered\(/g) || []).length
+    + (quizSrc.match(/options:\s*lettered\(shuffle/g) || []).length;
+  ok("五个题型的 options 都套了 lettered（一处都不许漏）",
+    (quizSrc.match(/lettered\(/g) || []).length >= 6,
+    "出现 " + (quizSrc.match(/lettered\(/g) || []).length + " 次（1 处定义 + 5 处调用）");
+  /* 判分比的是**原文**，不是印在屏幕上的「A 骆宾王」——
+     所以 data-v 传的一定是 item.text，不能是 item。 */
+  [["packages/game/exam/exam.wxml", examWxml], ["packages/game/quiz/quiz.wxml", quizWxml]]
+    .forEach(([f, src]) => {
+      ok(f + " 的 data-v 传的是选项原文（不是带字母的那一项）",
+        /data-v="\{\{item\.text\}\}"/.test(src),
+        "读到的是：" + (/data-v="[^"]*"/.exec(src) || ["无"])[0]);
+    });
+
+  /* 3) 色样：圆的、小的、五列。
+        判据取**形状**，不取「好不好看」：圆是 border-radius 50%、
+        直径有上限（不许再是 96rpx 的方块）、栅格是 5 列。 */
+  const themeWxss = strip(read("packages/settings/theme/theme.wxss"));
+  // ⚠️ 先摘注释再取规则：这一段注释里写着 `.swatch-hover .swatch-dot { transform: scale(.92) }`，
+  // 不摘的话第一条 `.swatch-dot {` 匹配到的是注释里那一句（V26 踩过同一个坑）。
+  const dot = /(?:^|\})\s*\.swatch-dot\s*\{([^}]*)\}/.exec(themeWxss);
+  ok("色样是圆点（.swatch-dot 存在）", !!dot);
+  ok("色样是正圆（border-radius: 50%）", !!dot && /border-radius\s*:\s*50%/.test(dot[1]),
+    dot ? dot[1].replace(/\s+/g, " ").trim() : "");
+  const dotW = dot ? Number(/width\s*:\s*(\d+)rpx/.exec(dot[1])?.[1] ?? 0) : 0;
+  ok("色样比原来那枚 96rpx 的方块小（≤ 64rpx）", dotW > 0 && dotW <= 64,
+    "读到 " + dotW + "rpx");
+  const grid = /(?:^|\})\s*\.swatch-grid\s*\{([^}]*)\}/.exec(themeWxss);
+  const cols = grid ? Number(/repeat\((\d+)/.exec(grid[1])?.[1] ?? 0) : 0;
+  ok("色样栅格是 5 列（十个色两行装完，一屏不必滚）", cols === 5, "读到 " + cols + " 列");
+  /* 色样的**热区**不许跟着缩到 44rpx 以下 —— 圆点小了，格子还得能点中。
+     判据是 .swatch 的 min-height（有它才有 88rpx 的触控下限）。 */
+  const sw = /(?:^|\})\s*\.swatch\s*\{([^}]*)\}/.exec(themeWxss);
+  const minH = sw ? Number(/min-height\s*:\s*(\d+)rpx/.exec(sw[1])?.[1] ?? 0) : 0;
+  ok("色样的热区仍有触控下限（.swatch 的 min-height ≥ 88rpx）", minH >= 88,
+    "读到 " + minH + "rpx");
+
+  /* 4) 读数必须有限：进度页那张「记忆阶段」卡撤了。
+        它摊的是算法**内部**的刻度（「4 天后」「3 号盒 · 8 天后」），
+        而「我背得怎么样」由掌握度环与三个大数字答完了。 */
+  const progWxml = strip(read("packages/progress/index/index.wxml"));
+  const progJs = strip(read("packages/progress/index/index.js"));
+  ok("进度页不再有「记忆阶段」那张卡",
+    progWxml.indexOf("记忆阶段") < 0 && progJs.indexOf("stageRows") < 0);
+  /* 撤掉的是那张卡，不是这个读数 —— 打卡时的提示语仍在（V26 第 3 条守着），
+     未来七天里每一首的排期也仍在。 */
+  ok("未来七天那张卡还在（撤的不是排期）", progWxml.indexOf("未来七天") >= 0);
 }
 
 /* ---------- 汇总 ---------- */

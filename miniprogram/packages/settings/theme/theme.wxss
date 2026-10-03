@@ -1,67 +1,77 @@
-/* 九宫格色卡。
-   三列，一格一个色 —— 与背诵设置页那些「一格一个选项」同一条口径
-   （--radius-ctl + 一道描边），只是这里的「色」本身就是内容。 */
+/* 色点栅格。
+   五列 —— 十个色正好两行，一屏装得下，不必滚。
+   grid 的格子天然等宽等高，热区（.swatch）因此是 108rpx 见方的一整块：
+   圆点只有 56rpx，而手指点到格子里的任何一处都算选中它。 */
 .swatch-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-  padding-top: var(--sp-1);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-2) var(--sp-1);
+  padding-top: var(--sp-2);
 }
 
 .swatch {
-  width: calc((100% - var(--sp-3) * 2) / 3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-1);
+  justify-content: center;
+  gap: 6rpx;
+  padding: 6rpx 0;
+  min-height: 108rpx;
 }
 
-/* 按下反馈：色块缩一点。V4 要求每个可点的东西都有——色卡也不例外 */
+/* 按下反馈：色点缩一点。V4 要求每个可点的东西都有 —— 色点也不例外 */
 .swatch-hover {
   opacity: .84;
 }
 
-.swatch-hover .swatch-chip {
-  transform: scale(.96);
+.swatch-hover .swatch-dot {
+  transform: scale(.92);
 }
 
-/* 色块：一枚方块，里面就是对勾。
-   选中与否不靠外圈那一道边说 —— 靠对这枚方块的加重 + 对勾，
-   与 .chip.on 同一条「选中 = 有明确标记」的规矩。 */
-.swatch-chip {
-  width: 100%;
-  height: 96rpx;
-  border-radius: var(--radius-ctl);
+/* 色点：一枚正圆。
+   它**不是**控件，是色样 —— 所以不走全站那两种「能点的一块」的圆角
+   （20rpx 的胶囊格 / 999rpx 的分段），就是 50%。
+   56rpx 是有来历的：它比全站最小的可点高度（--h-opt-seg 56rpx）同档，
+   看着是一枚「点得中」的点；再小就成了一粒芝麻。 */
+.swatch-dot {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
   background: var(--sw);
-  border: 1rpx solid var(--line-strong);
+  /* 一圈极淡的里描边：白卡上「墨」与「玄色」这两个深色点不需要它，
+     但明黄、竹青这些浅色点在白底上会有点飘 —— 一道 1rpx 的灰圈把它们钉住。
+     走令牌而不是写 rgba：页面样式表里一个色值都不许写死（check.js V13）。 */
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform var(--t-press), box-shadow var(--t-press);
 }
 
-/* 选中的那枚：套一圈对比色描边。
-   用 box-shadow 画，不吃盒模型 —— 内描边会把 96rpx 的色块啃掉一圈，
+/* 选中的那枚：圆点外一圈本色描边 + 里面一枚勾。
+   描边用 box-shadow 画，不吃盒模型 —— inset 描边会把 56rpx 的色点啃掉一圈，
    色差肉眼看得出来。描边色取「压在这个色上的字色」：
-   墨黑上画白圈、明黄上画深圈，九种色下都看得见。 */
-.swatch.on .swatch-chip {
-  box-shadow: 0 0 0 4rpx var(--sw-on);
+   墨黑上画白圈、明黄上画深圈，十个色下都看得见。 */
+.swatch.on .swatch-dot {
+  box-shadow: 0 0 0 4rpx var(--sw-on), inset 0 0 0 1rpx var(--line-strong);
 }
 
 .swatch-tick {
-  font-size: var(--fs-title);
+  font-size: var(--fs-hint);
   font-weight: 700;
   color: var(--sw-on);
   line-height: 1;
 }
 
+/* 色名：脚注档。它在圆点下面，是这一格的说明 ——
+   选中时压深一档并加重，因为它是**当前值**，不是「又一项」。 */
 .swatch-name {
-  font-size: var(--fs-hint);
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
+  letter-spacing: 1rpx;
+  line-height: 1.2;
 }
 
-/* 选中的那个名字压深一档并加重 —— 它是当前值，不是「又一项」 */
 .swatch.on .swatch-name {
   color: var(--ink);
   font-weight: 600;
