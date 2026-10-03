@@ -2,12 +2,17 @@
   <lock-card wx:if="{{locked}}" title="课外阅读" note="登录后才能看" mark="阅" />
 
   <block wx:else>
-    <!-- 第一层：四张集子卡 -->
-    <block wx:if="{{!current}}">
-      <view class="page-head">
-        <text class="head-title">十七部集子</text>
-      </view>
+    <!-- 第一层：四张集子卡。
+         领读词是「课外阅读」而不是「十七部集子」—— 用户原话
+         「十七部集子 改成 课外阅读」。上一版拿「十七部集子」当页头，
+         那是**目录的计量单位**，不是这一屏在说什么 —— 用户要的名字
+         恰好也是导航栏标题，于是这一屏上下两行同一句话。
 
+         ⚠️ 这不违反「页头不与导航栏标题重复」：那条规矩针对的是
+         **两个控件各说一遍**（详情页写「详情」、我的页写「我的」）。
+         这里两处是同一件事的**同一块招牌**：导航栏是系统画的，
+         页面不再画第二块 —— 所以下面不再有 .page-head。 -->
+    <block wx:if="{{!current}}">
       <view class="group-card" hover-class="group-hover" hover-stay-time="60"
             wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
         <view class="gc-head">

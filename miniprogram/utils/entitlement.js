@@ -70,7 +70,7 @@ const CAPS = [
   // max：管理员发放
   { key: "fsrs", name: "FSRS", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
-  { key: "exam", name: "模拟考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
+  { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
 ];
 
 const CAP_KEYS = CAPS.map((c) => c.key);

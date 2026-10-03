@@ -10,38 +10,6 @@
     <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <!-- 范围与模式都是「二选一」，各给一个外框，一眼分得开 -->
-  <view class="opt-block">
-    <text class="field-label">范围</text>
-    <view class="seg fill">
-      <radio-group class="seg-group" bindchange="onScope">
-        <label class="seg-item mini {{scope === item.key ? 'on' : ''}}"
-               wx:for="{{scopes}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{scope === item.key}}"
-                 color="#1c1c1e" />
-          <view class="seg-icon ic-{{item.icon}}"></view>
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
-
-    <!-- 全文索引没生成时，模式切换整块不显示 -->
-    <block wx:if="{{fullOn}}">
-      <text class="field-label">方式</text>
-      <view class="seg fill">
-        <radio-group class="seg-group" bindchange="onMode">
-          <label class="seg-item mini {{mode === item.key ? 'on' : ''}}"
-                 wx:for="{{modes}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{mode === item.key}}"
-                   color="#1c1c1e" />
-            <view class="seg-icon ic-{{item.icon}}"></view>
-            <text class="seg-text">{{item.label}}</text>
-          </label>
-        </radio-group>
-      </view>
-    </block>
-  </view>
-
   <!-- 结果统计：命中几条、在哪儿搜的。截断了直说 ——
        「只给你 80 条」不能写成「全站只有 80 条」 -->
   <view class="result-bar" wx:if="{{searched && results.length}}">
@@ -69,7 +37,7 @@
   <view class="empty" wx:if="{{searched && !results.length}}">
     <text class="empty-mark">无</text>
     <text class="empty-text">「{{keyword}}」没有匹配的篇目</text>
-    <text class="hint empty-tip" wx:if="{{mode === 'index' && fullOn}}">试试切到「正文全文」</text>
+    <text class="hint empty-tip">正文里也没有这一句</text>
   </view>
 
   <view class="hot" wx:if="{{!searched}}">

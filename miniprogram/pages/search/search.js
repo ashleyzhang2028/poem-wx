@@ -7,10 +7,20 @@ const tabbar = require("../../utils/tabbar");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
-const MODES = [
-  { key: "index", label: "篇名作者", icon: "title" },
-  { key: "full", label: "正文全文", icon: "full" }
-];
+/* 「怎么搜」不再是用户选的一件事。
+   用户原话是「搜索页的 范围 方式选项卡片删除 搜索框内已经有提示，
+   不要再增加用户选择成本」。
+
+   按这个口径，两件事都从界面上撤掉，改成**由系统定**：
+
+   · 方式 —— 一律先按篇名作者匹配，没结果再自动落到正文全文。
+     两条路都不花钱、都在本机，没有「该走哪条」需要用户判断。
+     上一版把它做成二选一，用户得先猜「我想搜的这句在标题里还是在正文里」，
+     而那恰好是他不知道的事。
+   · 范围 —— 一律搜全站（课内 251 首 + 课外十七部集子）。也一视同仁地列出。
+
+   留下的只有「命中几篇 · 在哪儿捞到的」这一行读数：它不要求用户做任何事，
+   只说清这次结果是哪来的。 */
 
 /**
  * 一次列出多少条。
@@ -27,15 +37,7 @@ const PAGE_MAX = 80;
 Page({
   data: {
     keyword: "",
-    scope: "all",
-    // 图标按 key 取（.ic-all-site / .ic-course / .ic-title / .ic-full），
-    // 样式在 app.wxss 的「分段控件」一节 —— 全 app 只有那一处画图标
-    scopes: [
-      { key: "all", label: "全站", icon: "all-site" },
-      { key: "poems", label: "课内", icon: "course" }
-    ],
-    modes: MODES,
-    mode: "index",
+    // 范围与方式都由系统定（见 MODES 上面的注释），页面上只剩读数
     fullOn: false,
     results: [],
     /** 截断前的命中总数 —— 「命中 N 篇」说的是它，不是 results.length */
@@ -45,7 +47,9 @@ Page({
     searching: false,
     locked: true,
     /** 「命中 N 篇 · 在哪儿搜的」—— 让结果范围有个交代，不至于看完不知道是不是全量 */
-    resultWhere: ""
+    resultWhere: "",
+    /** 命中的篇目落在正文里的哪一句 —— 只在落到全文那一步时才有 */
+    fromFull: false
   },
 
   onShow() {
@@ -62,8 +66,7 @@ Page({
     this.setData({
       locked: false,
       keyword: this.data.keyword || saved.lastSearch || "",
-      fullOn: fr.usable,
-      mode: fr.usable ? saved.lastSearchMode || "index" : "index"
+      fullOn: fr.usable
     });
   },
 
@@ -77,21 +80,6 @@ Page({
 
   onClear() {
     this.setData({ keyword: "", results: [], total: 0, searched: false, searching: false });
-  },
-
-  onScope(e) {
-    const scope = e.detail.value;
-    this.setData({ scope }, () => {
-      if (this.data.keyword) this.doSearch();
-    });
-  },
-
-  onMode(e) {
-    const mode = e.detail.value;
-    store.saveSettings({ lastSearchMode: mode });
-    this.setData({ mode }, () => {
-      if (this.data.keyword) this.doSearch();
-    });
   },
 
   onHot(e) {
@@ -110,30 +98,44 @@ Page({
     }
     store.saveSettings({ lastSearch: kw });
 
-    if (this.data.mode === "full" && this.data.fullOn) {
-      this.setData({ searching: true, searched: false });
-      // 分片读取是同步的（require），但界面先让出一个 tick，
-      // 免得大结果集把点击反馈吞掉 —— 让人以为没反应是最糟的体验
-      setTimeout(() => this.runFull(kw), 16);
+    /* 先按篇名作者找。找得到就到此为止 —— 名儿都对上了，
+       再翻一遍正文只是把同一批篇目换个理由列一次。 */
+    const r = this.byIndex(kw);
+    if (r.total) {
+      this.setData({
+        results: r.items,
+        total: r.total,
+        searched: true,
+        searching: false,
+        fromFull: false,
+        resultWhere: "篇名作者 · 全站"
+      });
       return;
     }
 
-    const r = this.byIndex(kw);
-    this.setData({
-      results: r.items,
-      total: r.total,
-      searched: true,
-      searching: false,
-      resultWhere: this.data.scope === "poems" ? "篇名作者 · 只看课内" : "篇名作者 · 全站"
-    });
+    /* 一篇都没对上（或者根本没有正文索引），才落到正文全文 ——
+       「春」「月」这种词就在正文里，用户不该先去猜「在哪儿搜」。 */
+    if (!this.data.fullOn) {
+      this.setData({
+        results: [],
+        total: 0,
+        searched: true,
+        searching: false,
+        fromFull: false,
+        resultWhere: "篇名作者 · 全站"
+      });
+      return;
+    }
+
+    this.setData({ searching: true, searched: false });
+    // 分片读取是同步的（require），但界面先让出一个 tick，
+    // 免得大结果集把点击反馈吞掉 —— 让人以为没反应是最糟的体验
+    setTimeout(() => this.runFull(kw), 16);
   },
 
-  /** 搜索栏上方那句提示：搜索中 / 落到索引字段时如实说 */
+  /** 命中统计那行小字：如实说这次是拿什么比出来的 */
   byIndex(kw) {
-    const r = corpus.search(kw, {
-      book: this.data.scope === "poems" ? "poems" : "",
-      limit: PAGE_MAX
-    });
+    const r = corpus.search(kw, { limit: PAGE_MAX });
     return {
       total: r.total,
       items: r.items.map((p) => ({
@@ -153,10 +155,7 @@ Page({
     // 上限同样摆在明面上（「命中 N 篇 · 列出前 40 篇」），不闷声砍掉
     const fullMax = 40;
     try {
-      hits = textSearch.search(kw, {
-        book: this.data.scope === "poems" ? "poems" : "",
-        limit: fullMax + 1
-      });
+      hits = textSearch.search(kw, { limit: fullMax + 1 });
     } catch (e) {
       hits = [];
     }
@@ -177,7 +176,8 @@ Page({
       })),
       searched: true,
       searching: false,
-      resultWhere: this.data.scope === "poems" ? "正文全文 · 只看课内" : "正文全文 · 全站"
+      fromFull: true,
+      resultWhere: "正文全文 · 全站"
     });
   },
 

@@ -1,3 +1,8 @@
+/* 搜索页的样式表很短，这是刻意的。
+   原来这里有一整块 `.opt-block`（范围 / 方式两组分段 + 两个字段名 + 一圈外框），
+   用户的原话是「搜索页的 范围 方式选项卡片删除 搜索框内已经有提示，
+   不要再增加用户选择成本」—— 于是整块撤掉，样式也跟着撤，不留空规则。 */
+
 .clear {
   color: var(--ink-3);
   padding: 0 var(--sp-2);
@@ -9,35 +14,11 @@
   flex: none;
 }
 
-/* ---------- 搜索条件 ----------
-   两个问题（在哪儿搜 / 怎么搜）摆在同一张卡上，
-   带小标题分开 —— 否则四个选项排两行（两组各两个），用户会当成一组。 */
-.opt-block {
-  background: var(--surface);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--sp-2) var(--sp-4) var(--sp-3);
-  margin-bottom: var(--sp-3);
-}
-
-/* .field-label 在 app.wxss 里定一次；这里只补这张卡自己的上边距 */
-.opt-block .field-label {
-  padding-top: var(--sp-1);
-}
-
-.scope-group,
-.mode-group {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.mode-group {
-  padding-top: 4rpx;
-  border-top: 1rpx dashed var(--line-2);
-  margin-top: var(--sp-1);
-}
-
+/* 搜索条件那两块卡（在哪儿搜 / 怎么搜）在 Issue #26 里整块撤掉了 ——
+   搜索范围与方式改由系统定，这一页不再有「选一个」的控件。
+   所以 .opt-block / .scope-group / .mode-group 这几条规则也没了主人。
+   留在这里会变成「占着同一个名字的第二种长相」——
+   下次谁再要一张选项卡，就会顺手用回它。 */
 /* 命中统计那一条：左右各留一道与卡片同宽的边距。
    上一版只给了 sp-1 的左侧内边距，右边那句「篇名作者 · 全站」贴到屏幕边，
    在窄屏上直接被切掉半截 —— 一行里右边那半截是「在哪儿搜的」，

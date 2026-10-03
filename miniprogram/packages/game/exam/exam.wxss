@@ -1,7 +1,11 @@
 /* ============================================================
-   题库与模拟考试共用的一套样式。
+   题库与考试共用的一套样式。
    两个页面同源：出题范围 → 挑题型 → 答题 → 看结果，
    所以长相也共用一份 —— 各写一遍迟早会漂。
+
+   两页在**答题**这一步上只有一处不同：
+   题库逐题判、当场看答案（.option 的 right / wrong），
+   考试全部答完再批（.option 的 picked）。两套类都在这里。
    ============================================================ */
 
 /* picker 是原生选择器，只统一尺寸与配色 */
@@ -66,17 +70,28 @@
 
 /* ---------- 选项 ----------
    四个选项长得一样，随手点一下必须看得出点中了哪个，
-   所以按下就压一下；对错再由颜色通知。 */
+   所以按下就压一下；对错再由颜色通知。
+
+   ⚠️ `.option` 的**宽度**是用户点名过的一件事：
+   「模拟考试改名为考试 所有题目答完后再给分给对错 (宽度你应该只显示一半)」。
+   四个选项原来是整屏通栏的一条，字却只有两三个 —— 一行里九成的宽度是空的，
+   看着像没排完。所以选项收成两列：一列一个选项，四个恰好两行。 */
 .options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
   margin-top: var(--sp-1);
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--h-act);
   background: var(--card);
   border: 1rpx solid var(--line-2);
   border-radius: var(--radius-sm);
   padding: var(--sp-3);
-  margin-bottom: var(--sp-2);
   font-size: var(--fs-body);
   color: var(--ink);
   text-align: center;
@@ -85,6 +100,16 @@
 
 .option:active {
   transform: scale(.98);
+}
+
+/* 考试：选中的那一个当场给个「记下了」的样子（填墨黑、白字），
+   但**不说是对是错** —— 对错要等交卷。用的是与「选一个」同一块填色，
+   于是「我选了它」这件事在整个 app 里只有一种说法。 */
+.option.picked {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+  font-weight: 600;
 }
 
 .option.right {
@@ -138,21 +163,70 @@
   border-bottom: none;
 }
 
-.wrong-stem {
-  display: block;
+/* ---------- 交卷后的逐题 ----------
+   考试这一屏不再只列错题：一道一行，行首一枚「对 / 错」的小签。
+   小签是这一屏唯一带颜色的东西 —— 对了绿、错了朱砂，
+   扫一眼就知道哪几道要回头看。 */
+.grade {
+  padding: var(--sp-3) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.grade:last-child {
+  border-bottom: none;
+}
+
+.grade-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.grade-mark {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-hint);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.grade-mark.ok {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.grade-mark.no {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.grade-stem {
+  flex: 1;
+  min-width: 0;
   font-family: var(--font-poem);
   font-size: var(--fs-title);
   color: var(--ink);
-  margin-bottom: 10rpx;
   line-height: 1.7;
 }
 
-.wrong-line {
+.grade-line {
   display: block;
   font-size: var(--fs-hint);
   color: var(--ink-2);
+  padding-left: calc(44rpx + var(--sp-2));
+  margin-top: 4rpx;
 }
 
 .picked-line {
   color: var(--red);
+}
+
+/* 「交卷 / 下一题」那一颗：答题屏只有它一个按钮，跟在四个选项下面 */
+.next-btn {
+  margin-top: var(--sp-3);
 }

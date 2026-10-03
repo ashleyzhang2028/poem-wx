@@ -1,3 +1,85 @@
+/* ============================================================
+   背诵范围：**上面那一行**。
+   ============================================================
+   用户原话是「如下按此顺序一行内显示（整体居中）：左对齐 居中 不注音 生字
+   全文 A- A+」，并为此把这一屏的领读词从「今天背什么」改成「背诵范围」。
+
+   一行五个分段，各自只要两三个字；`.seg-group` 那套（一颗浅色轨道 + 选中的
+   一段填墨黑）本来就在别处定死了，这里只负责**这一行怎么排**：
+
+   · 居中：flex + justify-content: center。五组的宽度是它们自己的内容宽，
+     所以「居中」是整行的居中，不是哪一组的居中。
+   · 组间分缝走 gap，不是给某个 .seg-group 加 margin-left ——
+     加 margin 的话，第一组左边会多出一份，整行就偏了半格。
+   · 段内两字，段高 48rpx：一行里七个段 + 两颗按钮，
+     用 60rpx 的默认高会顶掉这一行与下面卡片之间的那道呼吸。 */
+.pref-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1) 10rpx;
+  padding: var(--sp-2) 0;
+}
+
+/* 分段在**这一行**里不撑满 —— 撑满的那个默认（`.seg-group` 的 flex: 1）
+   是给「一行一段、二选一」用的，这里五段并排，各占自己的内容宽。 */
+.pref-row .seg-group {
+  flex: none;
+  padding: 2rpx;
+}
+
+.pref-row .seg-item {
+  height: 48rpx;
+  padding: 0 14rpx;
+}
+
+/* 字号：两颗按钮。形状与分段同一档（胶囊），高度也同 48rpx ——
+   它旁边就是分段，高度不一样会看成两种控件。 */
+.font-step {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex: none;
+}
+
+.fs-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 74rpx;
+  height: 48rpx;
+  padding: 0;
+  margin: 0;
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-size: var(--fs-hint);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 1rpx;
+}
+
+.fs-btn::after {
+  border: none;
+}
+
+.fs-btn-hover {
+  background: var(--line);
+}
+
+/* 到头的那个压暗。原生 button 的 disabled 会自带一层半透明，
+   但各机型给的量不一样，这里压到固定值 ——
+   「点不动」这件事必须一眼看得出，不能靠运气。 */
+.fs-btn[disabled] {
+  opacity: .38;
+  background: var(--sink);
+  color: var(--ink-3);
+}
+
 /* 取诗范围下面那句话：报一下这个范围里有多少首，
    不然选完不知道「随机」到底随机自哪个池子 */
 .pool-hint {

@@ -1231,41 +1231,60 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* 多选的格子：形状与单选的一样，但**选中态多一个勾** ——
-   单选和多选在一屏里同时出现时（题库：范围是单选、题型是多选），
-   光看填色分不出来哪个是哪个。那一勾就是「可以多选」的唯一线索，
-   所以它必须画出来，不能省。
+/* ---------- 多选的格子：双圈 ----------
+   「题型」这一类是**可多选**，而它旁边（别处的范围 / 学期 / 年级）是单选。
+   两者如果都只是一块填色，就分不出哪个是哪个 —— 用户的原话：
 
-   勾用两条边框拼（右下角一道 45° 的短折线），不引图标字体。 */
-/* 一勾两态：**没选中也要看得见**，否则「这里可以多选」就只在选中后才存在。
-   未选中给一个空心方框，选中换成实心的勾 —— 与原生复选框的语义一致，
-   只是不再站到选项前面去占地方。 */
-.chip.multi::after {
+   > 5 个题型（可多选）全填成墨黑胶囊，跟「选一个」的选中态长得一模一样，
+   > 只看色块分不出哪个没勾。设计上靠右上角一个小勾当「可多选」的线索，
+   > 但那勾在填色上很不显眼。
+
+   上一版正是「墨黑胶囊 + 右上角一枚 14rpx 的小勾」。那枚勾只在**选中时**
+   才出现，而且压在墨黑上只有 2rpx 的线 —— 于是「没勾的」和「勾了的」
+   色块一样黑，「能多选」这件事只在选中之后才存在。
+
+   这一版把线索从「一枚小勾」换成**形状本身**：
+
+     单选（别处）   墨黑胶囊            —— 一块实心的色
+     多选·选中      墨黑 + 两道描边      —— 双层框：胶囊里再套一颗胶囊
+     多选·未选中    白底 + 两道描边
+
+   双圈是「可以多选」的通用长相（原生复选框说的是同一件事），
+   而它**只看色块就分得开**：实心 vs 空心，与勾在不在无关。
+   选中与否仍旧由填色说 —— 一屏里只有一格选中时也一眼看得出。
+
+   两圈都靠伪元素画，不引图标字体：
+   ::before 是内圈的底（未选中透明 / 选中墨黑），::after 是内圈的边。
+   内缩 6rpx，于是外层那圈「框」的厚度就是 6rpx —— 与格子自己的
+   1rpx 描边、20rpx 圆角是一套算法，缩到哪一档都不走形。 */
+.chip.multi {
+  padding: 0 var(--pad-opt-x);
+}
+
+.chip.multi::before {
   content: "";
   position: absolute;
-  right: 12rpx;
-  top: 12rpx;
-  width: 14rpx;
-  height: 14rpx;
-  border: 2rpx solid var(--ink-4);
-  border-radius: 3rpx;
+  inset: 6rpx;
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-ctl);
+  background: var(--surface);
+  transition: background-color var(--t-press), border-color var(--t-press);
 }
 
-.chip.multi.on::after {
-  width: 16rpx;
-  height: 9rpx;
-  border: none;
-  border-left: 4rpx solid var(--on-ink);
-  border-bottom: 4rpx solid var(--on-ink);
-  border-radius: 0;
-  transform: rotate(-45deg);
+/* 选中：内圈也填墨黑，两道描边跟着走同色 —— 空心变实心，一眼分得出 */
+.chip.multi.on::before {
+  background: var(--ink);
+  border-color: var(--on-ink-soft);
 }
 
-.chip.multi.on::after {
-  border-color: var(--on-ink);
+/* 文字压在内圈之上：伪元素的 z-index 默认在文字之下，
+   但为了不让「内圈的底」盖住字，这里把文字显式抬一层 */
+.chip.multi .chip-t {
+  position: relative;
 }
 
-/* 小号：一章里连着两组（搜索页）时用，别把卡片撑高 */
+/* 小号分段：给「同一张卡里连着两组」的场景，别把卡片撑高。
+   搜索页撤掉之后只剩飞花令的难度那一组在用。 */
 .seg-item.mini {
   height: 48rpx;
   padding: 0 16rpx;
@@ -1417,90 +1436,6 @@ view, text, button, input, textarea {
   top: 11rpx;
   width: 18rpx;
   height: 2.5rpx;
-}
-
-/* ---------- 搜索范围 ----------
-   全站：一个**地球** —— 一个圆 + 一道纬线 + 一道经线。
-   只画圆加一道横线会读成「⊖（禁止/减号）」，所以必须把**经线**也画出来：
-   有经纬两线才像球。上一版就是只画了赤道，和「不注音」的圈几乎是一个东西。
-   课内：**一册书** —— 一个长方形 + 中缝。
-
-   两枚都是「描边 + 细线」同一套笔法，线宽同为 2.5rpx。 */
-.ic-all-site::before {
-  left: 2rpx;
-  top: 2rpx;
-  width: 20rpx;
-  height: 20rpx;
-  border: 2.5rpx solid var(--ic);
-  border-radius: 50%;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-/* 经线：一道竖着的椭圆（用 border-radius 把一个小方压成椭圆看得见）
-   纬线：中间一道横线 */
-.ic-all-site::after {
-  left: 7rpx;
-  top: 5rpx;
-  width: 10rpx;
-  height: 14rpx;
-  border: 2rpx solid var(--ic);
-  border-radius: 50%;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-/* 课内的书：外框在此，中缝靠 ::after */
-.ic-course::before {
-  left: 2rpx;
-  top: 3.5rpx;
-  width: 20rpx;
-  height: 17rpx;
-  border: 2.5rpx solid var(--ic);
-  border-radius: 2rpx;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-.ic-course::after {
-  left: 12rpx;
-  top: 5rpx;
-  width: 2rpx;
-  height: 14rpx;
-}
-
-/* ---------- 搜索字段 ----------
-   篇名作者：一行字 + 下面一小段（「短，是标题」）。
-   正文全文：一整页密排的短行（「密，是正文」）。 */
-.ic-title::before {
-  left: 2rpx;
-  top: 5rpx;
-  width: 20rpx;
-  height: 2.5rpx;
-  box-shadow: 0 6rpx 0 var(--ic);
-}
-
-.ic-title::after {
-  left: 2rpx;
-  top: 14rpx;
-  width: 11rpx;
-  height: 2.5rpx;
-}
-
-.ic-full::before {
-  left: 2rpx;
-  top: 3rpx;
-  width: 8.5rpx;
-  height: 2.5rpx;
-  box-shadow: 0 5.5rpx 0 var(--ic), 0 11rpx 0 var(--ic), 0 16.5rpx 0 var(--ic);
-}
-
-.ic-full::after {
-  left: 13.5rpx;
-  top: 3rpx;
-  width: 8.5rpx;
-  height: 2.5rpx;
-  box-shadow: 0 5.5rpx 0 var(--ic), 0 11rpx 0 var(--ic), 0 16.5rpx 0 var(--ic);
 }
 
 /* ============================================================

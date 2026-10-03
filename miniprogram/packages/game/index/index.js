@@ -3,7 +3,7 @@ const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 
 /**
- * 古诗词大会：飞花令 + 题库 + 模拟考试。
+ * 古诗词大会：飞花令 + 题库 + 考试。
  * 判分内核在 utils/quiz.js（就地取材，不接 AI、不花钱），考试页复用同一份。
  *
  * 飞花令这一版补齐了「轮」：给一个字，从课内 251 首里挑句，
@@ -13,7 +13,7 @@ const entitlement = require("../../../utils/entitlement");
 const MODES = [
   { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
   { key: "quiz", name: "题库", desc: "抽题逐题判", color: "amber" },
-  { key: "exam", name: "模拟考试", desc: "20 分钟一卷", color: "blue" }
+  { key: "exam", name: "考试", desc: "20 分钟一卷", color: "blue" }
 ];
 
 const CHARS = ["月", "春", "花", "风", "山", "水", "云", "夜", "江", "秋", "天", "人"];
@@ -40,7 +40,7 @@ Page({
       this.setData({ locked: true, cards: [] });
       return;
     }
-    // 三张卡不是一个门槛：飞花令与模拟考试是 max，题库是 pro。
+    // 三张卡不是一个门槛：飞花令与考试是 max，题库是 pro。
     // 所以不做「整页锁死」，而是逐卡标注 —— 让人知道要往上走一步，而不是一堵墙。
     const cards = MODES.map((m) => {
       const key = m.key === "feihua" ? "feihualing" : m.key === "quiz" ? "quiz" : "exam";

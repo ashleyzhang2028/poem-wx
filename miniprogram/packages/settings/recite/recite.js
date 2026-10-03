@@ -11,12 +11,45 @@ const TERMS = [
   { value: 2, label: "下学期" }
 ];
 
+/* 字号两档与阅读页同源：阅读页是「当场要调一下」的地方，
+   两个页面给出不同的范围，用户会以为设置没生效。 */
+const FONT_MIN = -2;
+const FONT_MAX = 4;
+
+/* 十二个年级一行放不下，取最近六年。**这一屏只用来调背诵范围**，
+   年份的余数不必年年换；等真的有人抱怨「我只能背一年级」再补一条横滑。 */
+const RECENT = 6;
+
+/* 注音三档。与阅读页同一套 key，图标这一屏不要（见 WXML 里的注释）。 */
+const PINYIN_MODES = [
+  { key: "off", label: "不注音" },
+  { key: "rare", label: "生字" },
+  { key: "all", label: "全文" }
+];
+
+const ALIGNS = [
+  { key: "left", label: "左对齐" },
+  { key: "center", label: "居中" }
+];
+
 Page({
   data: {
     grades: [],
     terms: TERMS,
     grade: 1,
     term: 1,
+    pinyinModes: PINYIN_MODES,
+    pinyinMode: "off",
+    aligns: ALIGNS,
+    align: "center",
+    fontSize: 0,
+    fontMin: FONT_MIN,
+    fontMax: FONT_MAX,
+    /* 两颗字号按钮到没到头。判据在页面里算，不写进 WXML ——
+       WXML 的 `{{fontSize >= fontMax}}` 里那个 `>` 会把标签提前截断，
+       按钮文案的断言就量不准（一条两个字的按钮被判成十九个字）。 */
+    fontCanDown: true,
+    fontCanUp: true,
     scope: "upto",
     scopes: [],
     dailyCount: 5,
@@ -36,14 +69,18 @@ Page({
     this.setData({ locked: false });
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
+    const grades = GRADES.filter((g) => g >= settings.grade && g < settings.grade + RECENT);
 
     this.setData(
       Object.assign({}, settings, {
-        grades: GRADES.map((g) => ({ value: g, label: S.gradeName(g) })),
+        grades: grades.map((g) => ({ value: g, label: S.gradeName(g) })),
         scopes: scopes,
         algos: this.algoRows(settings.algo)
       }),
-      () => this.updatePool()
+      () => {
+        this.updatePool();
+        this.syncFontBtns(settings.fontSize);
+      }
     );
   },
 
@@ -103,8 +140,43 @@ Page({
     this.save({ scope: e.detail.value });
   },
 
-  onCount(e) {
-    this.save({ dailyCount: Number(e.detail.value) });
+  onPinyin(e) {
+    this.save({ pinyinMode: e.detail.value });
+  },
+
+  onAlign(e) {
+    this.save({ align: e.detail.value });
+  },
+
+  /**
+   * 字号两档。
+   *
+   * 上一版这里是详情页那根原生 slider 的镜像 —— 一屏里两颗圆钮、两条轨道，
+   * 而两边共用同一份 settings.fontSize，改哪边都一样。
+   * 这一版把这一屏的滑块换成 A- / A+ 两颗：一行七个段，横向量程是最缺的东西。
+   *
+   * 边界不再靠滑块的轨道端点提示，所以点不动时就无声 —— 两颗按钮在临界档上
+   * 直接 disabled（见 WXML），按下什么都不会发生，也就不会出现
+   * 「点了没反应」那种最差的体验。
+   */
+  onFontDown() {
+    this.stepFont(-1);
+  },
+
+  onFontUp() {
+    this.stepFont(1);
+  },
+
+  stepFont(delta) {
+    const next = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
+    if (next === this.data.fontSize) return;
+    this.save({ fontSize: next });
+    this.syncFontBtns(next);
+  },
+
+  /** 到临界档就把那颗按钮压暗 —— 点不动的一颗不该看着能点 */
+  syncFontBtns(size) {
+    this.setData({ fontCanDown: size > FONT_MIN, fontCanUp: size < FONT_MAX });
   },
 
   /**
