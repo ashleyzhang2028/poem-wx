@@ -4227,23 +4227,37 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
 
-  // 1) 用户点名的那九种中华传统色一个都不少，另有「墨」作为回到默认的那一格。
-  //    清单里因此是 10 项 —— 多出来的那一项不是「又凑了一个色」，
+  // 1) 十格：墨 + 九色（用户点名的九色里，有两个换成了上一版的身份色）。
+  //    清单里因此是 10 项 —— 多出来那一项不是「又凑了一个色」，
   //    而是**必须有**：选了朱红之后要能回得去，否则用户只能删小程序重来。
+  //
+  //    两个被换掉的（月白 #D6ECF0 → 雨过天青 #2F6055、藕荷 #E4C6D0 → 天水碧 #3D6379）
+  //    是用户点名要换的：判据见下面 1.7 —— 它们对页面白底几乎看不见。
+  //    换进来的两个是**上一版的身份色原值**，也不是新调出来的颜色。
   const entries = (themeSrc.match(/\{\s*key:\s*"[a-z]+",[^}]*\}/g) || []);
-  ok("主题色清单里有 10 项（用户点名的 9 种 + 回到默认的那一格「墨」）",
+  ok("主题色清单里有 10 项（9 色 + 回到默认的那一格「墨」）",
     entries.length === 10, "实际 " + entries.length);
-  // 用户点名的那九种，色值一个都不许漂
+  // 用户点名的九色里，保留的七个，色值一个都不许漂
   const WANTED = [
-    ["朱红", "FF4C00"], ["明黄", "FAD069"], ["天青", "228FBD"], ["月白", "D6ECF0"],
-    ["胭脂", "9D2933"], ["竹青", "789262"], ["玄色", "622A1D"], ["鸦青", "424C50"],
-    ["藕荷", "E4C6D0"]
+    ["朱红", "FF4C00"], ["明黄", "FAD069"], ["天青", "228FBD"],
+    ["胭脂", "9D2933"], ["竹青", "789262"], ["玄色", "622A1D"], ["鸦青", "424C50"]
   ];
   const missing = WANTED.filter((w) =>
     themeSrc.indexOf('name: "' + w[0] + '"') < 0
     || !new RegExp('name:\\s*"' + w[0] + '",\\s*hex:\\s*"#' + w[1] + '"', "i").test(themeSrc));
-  ok("用户给的九个色值原样在清单里（一个都不许漂）", missing.length === 0,
+  ok("保留下来的七个色值原样在清单里（一个都不许漂）", missing.length === 0,
     missing.map((w) => w[0] + " " + w[1]).join(", "));
+  // 换进来的两个必须是上一版的身份色原值，不许自己调一个近似的
+  const SWAPPED = [["雨过天青", "2F6055"], ["天水碧", "3D6379"]];
+  const swappedBad = SWAPPED.filter((w) =>
+    !new RegExp('name:\\s*"' + w[0] + '",\\s*hex:\\s*"#' + w[1] + '"', "i").test(themeSrc));
+  ok("换进来的两个色是上一版身份色原值（雨过天青 / 天水碧）", swappedBad.length === 0,
+    swappedBad.map((w) => w[0] + " " + w[1]).join(", "));
+  // 上一版那套身份色里「太接近」的数，不许偷偷混回来：
+  //   朱砂 #a83b32 vs 胭脂 #9D2933 只差 ΔE 9（用户说的「太接近就不必换」）
+  //   缃色 #f0cd7c vs 明黄 #FAD069 只差 ΔE 11
+  ok("朱砂 / 缃色没有被塞进清单（它们与胭脂 / 明黄太接近）",
+    !/#a83b32/i.test(themeSrc) && !/#f0cd7c/i.test(themeSrc));
   const badEntry = entries.filter((e) =>
     !/hex:\s*"#[0-9A-Fa-f]{6}"/.test(e) || !/deep:\s*"#[0-9A-Fa-f]{6}"/.test(e)
     || !/on:\s*"#[0-9A-Fa-f]{6}"/.test(e) || !/text:\s*"#[0-9A-Fa-f]{6}"/.test(e));
@@ -4251,9 +4265,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     badEntry.length === 0, badEntry.slice(0, 3).join(" | "));
 
   // 1.5) **文字色必须读得出来**。这是这个功能里唯一一个「不做就出错」的地方：
-  //      月白 / 明黄 / 藕荷 这几个本色压在白底上只有 1.2~1.6:1，当标题等于隐形。
-  //      门槛 4.5:1（WCAG AA 正文标准）。底色（按钮、选中块）不受这条管 ——
-  //      底色只要压在上面的字读得出就行，那由 on 管。
+  //      明黄本色压在白底上只有 1.35:1，当标题等于隐形。门槛 4.5:1（WCAG AA
+  //      正文标准）。底色（按钮、选中块）不受这条管 —— 底色只要压在上面的
+  //      字读得出就行，那由 on 管。
   const contrast = (a, b) => {
     const lum = (hex) => {
       const h = hex.replace("#", "");
@@ -4272,7 +4286,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     lowContrast.length === 0, lowContrast.join(" | "));
 
   // 1.6) 标题走 --strong-text、底色走 --strong —— 两支不许互相串。
-  //      （串了的后果：月白主题里标题看不见，或者按钮底成了深墨绿。）
+  //      （串了的后果：明黄主题里标题看不见，或者按钮底成了深墨绿。）
   const appW = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   const headTitle = /\.head-title\s*\{([^}]*)\}/.exec(appW);
   ok("页头标题用 --strong-text（文字那一支）",
@@ -4280,6 +4294,37 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const btnPrimary = /\.btn\.primary\s*\{([^}]*)\}/.exec(appW);
   ok("主按钮的底用 --strong（底色那一支）",
     !!btnPrimary && /background\s*:\s*var\(--strong\)/.test(btnPrimary[1]));
+
+  // 1.7) **主色落在白页面上必须看得见**。这是这一轮换色（Issue #26）的判据：
+  //      主色要铺在按钮底、选中块上，而页面底是 #f5f5f7。
+  //      月白 ΔE 8.9、藕荷 ΔE 18.3 —— 就是栽在这条上才被换掉；
+  //      换进来两个沉色，这一列全都过门槛（最小的是明黄 57.9）。
+  //      用具色差 ΔE（CIE76，Lab 空间欧氏距离）。阈值 25：低于它，
+  //      「换上去」和「没换」在白底上分不出来 —— 那才是用户说的「太接近」。
+  const rgb2lab = (hex) => {
+    const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const h = hex.replace("#", "");
+    const r = lin(parseInt(h.slice(0, 2), 16)), g = lin(parseInt(h.slice(2, 4), 16)), b = lin(parseInt(h.slice(4, 6), 16));
+    const X = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+    const Y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1;
+    const Z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+    const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const [fx, fy, fz] = [f(X), f(Y), f(Z)];
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  };
+  const deltaE = (a, b) => {
+    const A = rgb2lab(a), B = rgb2lab(b);
+    return Math.sqrt(A.reduce((s2, v, i) => s2 + Math.pow(v - B[i], 2), 0));
+  };
+  const colorPairs = [...themeSrc.matchAll(/name:\s*"([^"]+)"[^}]*?hex:\s*"(#[0-9A-Fa-f]{6})"/g)]
+    .map((m) => [m[1], m[2]]);
+  const invisible = colorPairs.filter(([, c]) => deltaE(c, "#f5f5f7") < 25)
+    .map(([n, c]) => n + " " + c + " ΔE " + deltaE(c, "#f5f5f7").toFixed(1));
+  ok("每个主色对页面白底 ΔE ≥ 25（按钮底在白页上看得见）",
+    invisible.length === 0, invisible.join(" | "));
+  // 两个被换掉的色，正是踩在这条底下 —— 留着当反证的靶子
+  ok("被换掉的月白 / 藕荷确实过不了这条（ΔE 8.9 / 18.3）",
+    deltaE("#D6ECF0", "#f5f5f7") < 25 && deltaE("#E4C6D0", "#f5f5f7") < 25);
 
   // 2) tokens 里的 --theme 默认值 == 清单里默认那一项
   const tM = /--theme\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);

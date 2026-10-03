@@ -19,30 +19,38 @@
 const store = require("./store");
 
 /**
- * 九种中华传统色。
+ * 九种中华传统色（+「墨」共十格）。
  *
  * `on` 是「压在这个色上的字色」。这一栏非有不可 —— 朱红、明黄、
- * 月白这几个的明度差得很远，一律压白字会让明黄/月白上的字看不清。
+ * 天青这几个的明度差得很远，一律压白字会让明黄上的字看不清。
  * 判据是相对亮度：亮色配深字，暗色配白字。
  *
  * `deep` 是「比它再深一档」，只给按钮按下态用（原来那是 --ink-strong）。
  * 深色系自己就是那一档，所以多数直接取本色。
  */
 const THEMES = [
-  // text 是「当文字用」的那一档。深色主题它就是本色；
-  // 明黄 / 月白 / 藕荷 这几个太亮，本色压在白底上根本读不出来
-  // （月白对白底 1.23:1），所以另给一个同色系压深的版本，全部过 4.5:1。
+  // text 是「当文字用」的那一档。深色主题它就是本色；明黄太亮，
+  // 本色压在白底上读不出来，所以另给一个同色系压深的版本，过 4.5:1。
   // 底色（按钮、选中块）仍用本色 —— 换个底色好看，换行字看不清。
+  //
+  // 这一版把用户点名的九色里的两个换了（Issue #26）：
+  //   · 月白 #D6ECF0 → 雨过天青 #2F6055
+  //   · 藕荷 #E4C6D0 → 天水碧   #3D6379
+  // 判据不是「好不好看」，是**在白页面上看不看得见**：
+  // 主色要落在按钮底、选中块、标题上，而页面底是 #f5f5f7。
+  //   · 月白对页面底 ΔE 8.9  —— 按钮底是月白时，在白页里几乎看不见
+  //   · 藕荷对页面底 ΔE 18.3 —— 偏弱；且与月白互相只差 ΔE 21，两个浅色挤在一起
+  // 换成两个沉色之后，这一列从「三浅」变成「一浅」，一屏里辨识度拉开。
   { key: "ink",    name: "墨",   hex: "#1C1C1E", deep: "#000000", on: "#FFFFFF", text: "#1C1C1E" },
   { key: "zhuhong", name: "朱红", hex: "#FF4C00", deep: "#D63F00", on: "#FFFFFF", text: "#C93A00" },
   { key: "minghuang", name: "明黄", hex: "#FAD069", deep: "#E8B93F", on: "#3D2E00", text: "#8A6B00" },
   { key: "tianqing", name: "天青", hex: "#228FBD", deep: "#1B769C", on: "#FFFFFF", text: "#1A7397" },
-  { key: "yuebai", name: "月白", hex: "#D6ECF0", deep: "#B3D8E0", on: "#1C3A44", text: "#3A6B78" },
+  { key: "yuguotianqing", name: "雨过天青", hex: "#2F6055", deep: "#264F46", on: "#FFFFFF", text: "#2F6055" },
   { key: "yanzhi", name: "胭脂", hex: "#9D2933", deep: "#82212A", on: "#FFFFFF", text: "#9D2933" },
   { key: "zhuqing", name: "竹青", hex: "#789262", deep: "#637A51", on: "#FFFFFF", text: "#5E7649" },
   { key: "xuanse", name: "玄色", hex: "#622A1D", deep: "#4E2117", on: "#FFFFFF", text: "#622A1D" },
   { key: "yaqing", name: "鸦青", hex: "#424C50", deep: "#333B3E", on: "#FFFFFF", text: "#424C50" },
-  { key: "ouhe",   name: "藕荷", hex: "#E4C6D0", deep: "#D2AEBB", on: "#4A2A35", text: "#9B5F73" }
+  { key: "tianshuibi", name: "天水碧", hex: "#3D6379", deep: "#325266", on: "#FFFFFF", text: "#3D6379" }
 ];
 
 /** 默认那一支墨 —— 与 tokens.wxss 里 --theme 的默认值必须一致（V27 守着） */

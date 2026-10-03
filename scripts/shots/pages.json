@@ -117,13 +117,13 @@
       "theme": "tianqing"
     }
   },
-  "home-yuebai": {
+  "home-yuguotianqing": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "yuebai"
+      "theme": "yuguotianqing"
     }
   },
   "settings-reader": {
