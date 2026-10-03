@@ -1,6 +1,6 @@
 <view class="page">
   <view class="page-head">
-    <text class="head-title">怎么排好看</text>
+    <text class="head-title">版式</text>
   </view>
 
   <lock-card wx:if="{{locked}}" title="设置要登录" note="登录后才能改" mark="设" />

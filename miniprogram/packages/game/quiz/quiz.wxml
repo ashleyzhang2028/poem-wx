@@ -3,7 +3,7 @@
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="page-head">
-      <text class="head-title">出一组题</text>
+      <text class="head-title">练习设置</text>
     </view>
 
     <view class="card">

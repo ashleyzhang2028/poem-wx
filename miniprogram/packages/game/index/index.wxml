@@ -3,7 +3,7 @@
 
   <block wx:else>
   <view class="page-head">
-    <text class="head-title">三样玩法</text>
+    <text class="head-title">玩法</text>
   </view>
 
   <!-- 三张卡是入口不是选择：用原生 button，只是把外观压成卡片。

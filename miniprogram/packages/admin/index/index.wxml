@@ -4,7 +4,7 @@
 
   <block wx:else>
   <view class="page-head">
-    <text class="head-title">我这一档</text>
+    <text class="head-title">我的权限</text>
   </view>
 
   <view class="card grant">
