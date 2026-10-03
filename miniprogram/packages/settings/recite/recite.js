@@ -11,22 +11,9 @@ const TERMS = [
   { value: 2, label: "下学期" }
 ];
 
-/* 字号两档与阅读页同源：阅读页是「当场要调一下」的地方，
-   两个页面给出不同的范围，用户会以为设置没生效。 */
-const FONT_MIN = -2;
-const FONT_MAX = 4;
-
-/* 注音三档。与阅读页同一套 key，图标这一屏不要（见 WXML 里的注释）。 */
-const PINYIN_MODES = [
-  { key: "off", label: "不注音" },
-  { key: "rare", label: "生字" },
-  { key: "all", label: "全文" }
-];
-
-const ALIGNS = [
-  { key: "left", label: "左对齐" },
-  { key: "center", label: "居中" }
-];
+/* 注音 / 对齐 / 字号不在这页。它们是读一首诗时的临场偏好，
+   该待在详情页（pages/reader 的 .prefs）与阅读设置页（packages/settings/general），
+   在诗句旁边当场调、当场看见效果。详见 recite.wxml 里的说明。 */
 
 Page({
   data: {
@@ -34,18 +21,6 @@ Page({
     terms: TERMS,
     grade: 1,
     term: 1,
-    pinyinModes: PINYIN_MODES,
-    pinyinMode: "off",
-    aligns: ALIGNS,
-    align: "center",
-    fontSize: 0,
-    fontMin: FONT_MIN,
-    fontMax: FONT_MAX,
-    /* 两颗字号按钮到没到头。判据在页面里算，不写进 WXML ——
-       WXML 的 `{{fontSize >= fontMax}}` 里那个 `>` 会把标签提前截断，
-       按钮文案的断言就量不准（一条两个字的按钮被判成十九个字）。 */
-    fontCanDown: true,
-    fontCanUp: true,
     scope: "upto",
     scopes: [],
     dailyCount: 5,
@@ -71,10 +46,7 @@ Page({
         scopes: scopes,
         algos: this.algoRows(settings.algo)
       }),
-      () => {
-        this.updatePool();
-        this.syncFontBtns(settings.fontSize);
-      }
+      () => this.updatePool()
     );
   },
 
@@ -138,52 +110,6 @@ Page({
     this.save({ dailyCount: Number(e.detail.value) });
   },
 
-  onPinyin(e) {
-    this.save({ pinyinMode: e.detail.value });
-  },
-
-  onAlign(e) {
-    this.save({ align: e.detail.value });
-  },
-
-  /**
-   * 字号两档。
-   *
-   * 上一版这里是详情页那根原生 slider 的镜像 —— 一屏里两颗圆钮、两条轨道，
-   * 而两边共用同一份 settings.fontSize，改哪边都一样。
-   * 这一版把这一屏的滑块换成 A- / A+ 两颗：一行七个段，横向量程是最缺的东西。
-   *
-   * 边界不再靠滑块的轨道端点提示，所以点不动时就无声 —— 两颗按钮在临界档上
-   * 直接 disabled（见 WXML），按下什么都不会发生，也就不会出现
-   * 「点了没反应」那种最差的体验。
-   */
-  onFontDown() {
-    this.stepFont(-1);
-  },
-
-  onFontUp() {
-    this.stepFont(1);
-  },
-
-  stepFont(delta) {
-    const next = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
-    if (next === this.data.fontSize) return;
-    this.save({ fontSize: next });
-    this.syncFontBtns(next);
-  },
-
-  /** 到临界档就把那颗按钮压暗 —— 点不动的一颗不该看着能点 */
-  syncFontBtns(size) {
-    this.setData({ fontCanDown: size > FONT_MIN, fontCanUp: size < FONT_MAX });
-  },
-
-  /**
-   * 换算法。
-   *
-   * 「换算法不清进度」原来是个确认弹窗，现在也去掉了 —— 那句话是**常驻在页面上的说明**，
-   * 每次点都拦一下，等于把「我已知晓」问了四遍。真要说风险，说一次就够。
-   * 门禁照旧：不可用的那几套 radio 直接 disabled，点不动，也不会走到这儿。
-   */
   /**
    * 换算法。
    *

@@ -40,60 +40,17 @@
     </radio-group>
   </view>
 
-  <view class="card">
-    <!-- 注音、对齐、字号，三件事**一行**（Issue #26 原话：
-         「我只说过要把下面变成一行：不注音 生字 全文 ｜ 左对齐 居中 ｜ A－ A＋」）。
-         这一行原本就是三组竖排 + 字号滑块，收成一行之后连成一排、整体居中。
-
-         只有这三组进这一行：年级与学期是**另一种东西**（选背哪一册），
-         留在上面那张卡的格子里，没有跟着一起塞进来 ——
-         上一版把它们也塞进这一行，是把两件事按同一个「一行放下」处理了。
-
-         为什么挤得下：三组各自只要两三个字，而字号原来是一根原生 slider，
-         它要一根横着的轨才立得住，那正好是这一行最缺的。换成 A－ / A＋ 两颗，
-         量程由这两头自己说。
-
-         整体居中：`.pref-row` 是 flex + center，几组之间靠 gap 分缝 ——
-         不是靠负外边距去抵消分组自己的左右内边距。 -->
-    <view class="pref-row">
-      <!-- 注音三档。图标去掉两个 —— 一行里三个段，
-           每段再顶一枚 24rpx 的图标就挤不下了；而「不注音 / 生字 / 全文」
-           这三个词本身就是这件事最准的说法。 -->
-      <radio-group class="seg-group" bindchange="onPinyin">
-        <label class="seg-item {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}"
-                 color="#1c1c1e" />
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-
-      <!-- 对齐二选一。 -->
-      <radio-group class="seg-group" bindchange="onAlign">
-        <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
-                 color="#1c1c1e" />
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-
-      <!-- 字号。**两颗按钮，不是滑块**。
-           滑块是「连续量 + 一条量程」的长相，得有一根横着的轨才成立 ——
-           而这一行最缺的正是横向空间。换成 A－ / A＋ 两颗之后，
-           量程由这两头自己说。
-           （详情页那边是反过来收敛的：一排自绘按钮换成原生单选。
-           这一屏要的恰好相反，因为这一屏要的是「一行放下三件事」。）
-           按钮到临界档直接 disabled，不让点了个寂寞。 -->
-      <view class="font-step">
-        <button class="fs-btn" hover-class="fs-btn-hover" bindtap="onFontDown" disabled="{{fontCanDown}}">A－</button>
-        <button class="fs-btn" hover-class="fs-btn-hover" bindtap="onFontUp" disabled="{{fontCanUp}}">A＋</button>
-      </view>
-    </view>
-  </view>
-
+  <!-- 这一屏**没有**注音 / 对齐 / 字号那三组（Issue #26 原话：
+       「「注音 ｜ 对齐 ｜ 字号」只应该出现在详情页和具体古诗背诵卡片里，
+       怎么显示在了背诵范围这里」）。
+       它们是**读一首诗时的临场偏好**，要在诗句旁边当场调、当场看见效果；
+       摆到「选背哪些诗」的设置页里，既看不到效果，也是同一件事的第二个入口
+       （详情页 .prefs、阅读设置页 general 各有一套）。
+       背诵范围只管「背哪些、每天几首、怎么复习」。 -->
   <view class="card">
     <view class="card-title bar">取诗范围</view>
     <!-- 七个范围是**同一种东西的七个取值**（从「本册」到「全部随机」），
-         所以跟上面两组、跟对齐/注音走同一套长相：选中的那块填墨黑。
+         所以跟上面三组（年级 / 学期 / 每日首数）走同一套长相：选中的填墨黑。
          圆点在这儿是重复的 —— 填色已经说了「选的是这一行」，
          再站一个圆点在行首，只是多占 16rpx 的横向空间。
 
