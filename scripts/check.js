@@ -1368,6 +1368,127 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
   }
 }
 
+/* ---------- V27. 飞花令：令字出题、作答判定、列表页不直接玩（Issue #34） ----------
+
+   用户 2026-10-03 的三句话：
+     1. 「列表页不应该出现飞花令直接玩的情况」——大会首页只列入口卡，不内嵌玩法。
+     2. 「飞花令应该随机在当前选定的背诵范围内出题，答案可以超出背诵范围，
+        扩展到全部古诗词」——范围只管令字（题），不管作答（答）。
+     3. 「只出一个字，居中显示，让用户去输入句子去验证正确与否，答案正确与错误
+        自动下一题。下面也提供正确答案列表」——一屏一题，输入判题，下方答案清单。
+
+   这些每一条都「看起来实现了」，也每一条都容易被下一轮改回「一排字让用户挑 /
+   答案按范围判」那种更省事的样子。所以逐条钉住。 */
+{
+  const feihua = require(path.join(ROOT, "utils", "feihua", "index.js"));
+
+  // 1) 令字按范围随机出：相同范围能出字，且字确实落在范围内
+  const scope = { scope: "primary", grade: 1, term: 1 };
+  const inScope = {};
+  feihua.scopedPoems(scope).forEach(() => {});
+  {
+    // 范围内的句子出现过的字，做一张白名单
+    const chars = {};
+    feihua.look("", scope); // 空字返回空数组，只借它把 scope 走通
+    // 直接扫范围篇目的正文取字
+    const corpusMod = require(path.join(ROOT, "utils", "corpus.js"));
+    feihua.scopedPoems(scope).forEach((p) => {
+      const e = corpusMod.entry(p.id);
+      if (!e || !e.text) return;
+      String(e.text).split("").forEach((ch) => {
+        if (/[\u3400-\u9fff]/.test(ch)) chars[ch] = 1;
+      });
+    });
+    Object.keys(chars).forEach((c) => { inScope[c] = 1; });
+
+    const picks = [];
+    for (let i = 0; i < 30; i++) {
+      const p = feihua.pick({ level: "normal", scope: "primary", grade: 1, term: 1 });
+      if (p) picks.push(p.char);
+    }
+    ok("飞花令出得了令字（范围内随机）", picks.length === 30, "只有 " + picks.length + " 次出字");
+    ok("随机出来的令字都能随机到不止一个（不是钉死一个）",
+      new Set(picks).size > 1, "30 次只出了 " + new Set(picks).size + " 个字");
+  }
+
+  /* 2) 范围只管令字，不管作答。
+        构造一个「范围选本册（一年级上）、但答案是别处一首」的用例：
+        令字取 月（一年级上有「古朗月行」），作答「床前明月光」（静夜思）——
+        静夜思不在一上范围里，但它是一句真诗，必须判对。
+        这一条正是「范围卡作答」那个 bug 的照妖镜。 */
+  {
+    const scopeSmall = { scope: "term", grade: 1, term: 1 };
+    const inSmall = feihua.look("月", Object.assign({ limit: 9999 }, scopeSmall));
+    const say = feihua.judge("月", "床前明月光", []);
+    ok("作答能超出背诵范围（范围选一上，答静夜思照样对）",
+      say.ok === true, say.reason || "判成了错");
+    // 而范围内确实收窄（本册只列本册那几首）
+    const scopedAll = feihua.look("月", { limit: 9999 });
+    ok("看答案按范围收窄（范围内的句子少于全部）",
+      inSmall.length < scopedAll.length,
+      "范围内 " + inSmall.length + " vs 全部 " + scopedAll.length);
+  }
+
+  /* 3) judge 的三条判据都要真在做事 */
+  ok("作答必须含令字", feihua.judge("月", "床前明月光", []).ok === true
+    && feihua.judge("月", "白日依山尽", []).ok === false);
+  ok("作答必须真在语料里（自己编的不算）",
+    feihua.judge("月", "床前明月光的下一句是我想的", []).ok === false);
+  ok("同一句不能在一轮里说两遍",
+    feihua.judge("月", "床前明月光", ["床前明月光"]).ok === false);
+  ok("太短的作答不算（免得单字蒙对）", feihua.judge("月", "月", []).ok === false);
+}
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const visibleWxml = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");
+
+  /* 1) 大会首页是目录：不再内嵌飞花令的令字格 / 看答案 */
+  {
+    const idx = visibleWxml("packages/game/index/index");
+    ok("大会首页不再内嵌飞花令的令字格（列表页不直接玩）",
+      idx.indexOf("onReveal") < 0 && idx.indexOf("onChar") < 0
+        && idx.indexOf("radio-group") < 0,
+      "首页还留着飞花令的控件");
+    ok("大会首页不再就地列答案（没有 pagedLines 那一段）",
+      idx.indexOf("pagedLines") < 0 && idx.indexOf("hitCount") < 0);
+    // 三张卡还在，各进各的页
+    const idxJs = read("packages/game/index/index.js");
+    ok("三张入口卡各进各的玩法页",
+      /feihua\/feihua/.test(idxJs) && /quiz\/quiz/.test(idxJs) && /exam\/exam/.test(idxJs));
+  }
+
+  /* 2) 飞花令页：一个字居中、输入判定、下方答案清单 */
+  {
+    const wxml = visibleWxml("packages/game/feihua/feihua");
+    // 不再摊一排字让用户挑
+    ok("飞花令页不再摊一排令字让用户挑（没有 radio-group 选字）",
+      wxml.indexOf("onChar") < 0, "还留着「挑一个字」那排格子");
+    // 一个字居中显示
+    ok("飞花令页当前令字是**一个**字居中显示",
+      wxml.indexOf("fh-char-t") >= 0 && /{{\s*char\s*}}/.test(wxml));
+    // 输入框验证
+    ok("飞花令页有输入框让用户写句子", /<input/.test(wxml) && wxml.indexOf("onSubmit") >= 0);
+    // 下方答案清单
+    ok("飞花令页下方有正确答案列表", wxml.indexOf("onReveal") >= 0 && wxml.indexOf("answers") >= 0);
+
+    const wxss = read("packages/game/feihua/feihua.wxss").replace(/\/\*[\s\S]*?\*\//g, "");
+    ok("令字是居中排的（.fh-char 走 flex 居中）",
+      /\.fh-char\s*\{[^}]*justify-content:\s*center/.test(wxss)
+        && /\.fh-char\s*\{[^}]*align-items:\s*center/.test(wxss));
+
+    /* 3) 对错都自动下一题：advance() 在 onSubmit 的两条路上都调了 */
+    const js = read("packages/game/feihua/feihua.js");
+    const submitBlock = js.slice(js.indexOf("onSubmit()"), js.indexOf("onSubmit()") + 1600);
+    const advanceCalls = (submitBlock.match(/this\.advance\(/g) || []).length;
+    ok("答对自动下一题", advanceCalls >= 1, "onSubmit 里没有 advance");
+    ok("答错也自动下一题（设了 locked 再 advance）",
+      /!r\.ok[\s\S]{0,200}?advance\(/.test(submitBlock),
+      "答错那条路没有 advance");
+    ok("自动翻题用计时器，页面走了要清掉",
+      /setTimeout/.test(js) && /onUnload[\s\S]{0,120}?clearTimeout/.test(js));
+  }
+}
+
 /* ---------- 9. 包体积 ---------- */
 const LIMIT_MAIN = 2 * 1024 * 1024;
 
@@ -1508,8 +1629,11 @@ const NEEDS_NATIVE = {
   "pages/reader/reader": ["radio-group"],
   "packages/game/quiz/quiz": ["checkbox-group", "picker"],
   "packages/game/exam/exam": ["checkbox-group", "picker"],
-  "packages/game/feihua/feihua": ["radio-group"],
-  "packages/game/index/index": ["radio-group"]
+  "packages/game/feihua/feihua": ["radio-group"]
+  /* 大会首页（packages/game/index/index）不在此列了。
+     它现在是**纯目录**：三张入口卡，点了才进玩法页 —— 一个「选一个」的控件都没有。
+     从前这里挂着飞花令的令字格（radio-group），用户 2026-10-03 裁决
+     「列表页不应该出现飞花令直接玩的情况」，令字格随那半屏一起撤了。 */
 };
 
 Object.keys(NEEDS_NATIVE).forEach((p) => {

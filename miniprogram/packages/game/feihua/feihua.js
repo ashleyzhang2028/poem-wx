@@ -2,45 +2,55 @@ const feihua = require("../../../utils/feihua/index");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
+const S = require("../../../utils/scheduler");
+
+/**
+ * 飞花令。
+ *
+ * 一屏只做一件事：**出一个字，你写一句带这个字的诗。**
+ *   - 令字随机从当前背诵范围里出（不再摊一排字让用户挑）；
+ *   - 一个字居中显示，底下是输入框 + 判对错；
+ *   - 对错都自动翻下一题（答对、答错各留一句提示，一秒多之后走）；
+ *   - 页面下方挂「看答案」：列出范围内该字的所有句子。
+ *
+ * 作答判定扫**全部课内语料**（utils/feihua 的 judge）—— 范围只管令字、
+ * 不管作答。所以「范围选小学」时，令字是小学的诗、答案可以是别的学段的诗。
+ */
+const ANSWER_LIMIT = 80;
 
 Page({
   data: {
-    kind: "look",
-    // 图标名按 key 取（.ic-* 画法在 app.wxss「分段控件」一节）
-    kinds: [
-      { key: "look", label: "查一查", icon: "title" },
-      { key: "level", label: "闯关", icon: "full" }
-    ],
-
     levels: feihua.LEVELS,
     level: "normal",
-    chars: [],
+
+    /** 当前令字 */
     char: "",
 
-    /** 查一查：命中句列表 */
-    lines: [],
-    hitCount: 0,
+    /** 这一轮已经答对的说过的句子 */
+    done: [],
+    /** 连对 / 最好 */
+    streak: 0,
+    best: 0,
 
-    /** 闯关 */
-    said: [],
     input: "",
-    round: 0,
     message: "",
     messageOk: false,
-    finished: false,
+    /** 判过之后短暂锁住输入，等自动翻题 */
+    locked: false,
 
-    /** 权限 */
+    /** 看答案 */
+    revealed: false,
+    answers: [],
+
+    /** 范围（取自背诵设置，只读展示） */
+    scopeName: "",
+
     allowed: true,
     reason: ""
   },
 
-  onLoad(query) {
-    this.setData({ kind: query.kind === "level" ? "level" : "look" });
-  },
-
   /**
-   * ⚠️ can() 返回的是**布尔**，不是 { ok }。上一版这里读 g.ok，永远是 undefined ——
-   *    于是门禁形同虚设，未登录也能进闯关。
+   * ⚠️ can() 返回的是**布尔**，不是 { ok }。
    * 门禁放 onShow：从「去登录」回来时 onLoad 不会再跑。
    */
   onShow() {
@@ -51,45 +61,66 @@ Page({
     });
     if (!ok || this.ready) return;
     this.ready = true;
-    this.refreshChars();
+    this.next();
+  },
+
+  /** 从背诵设置里读当前范围 —— 令字就在这个范围里随机出 */
+  scopeOpt() {
+    const s = store.settings();
+    return { scope: s.scope, grade: s.grade, term: s.term };
+  },
+
+  refreshScopeName() {
+    const s = store.settings();
+    const scope = S.scopeOf(s.scope);
+    this.setData({
+      scopeName: S.gradeName(s.grade) + S.termName(s.term) + " · " + scope.scopeName
+    });
   },
 
   onLogin() {
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
-  onKind(e) {
-    const kind = e.detail.value;
-    this.setData({ kind }, () => this.refreshChars());
-  },
-
   onLevel(e) {
-    const level = e.detail.value;
-    this.setData({ level }, () => this.refreshChars());
-  },
-
-  refreshChars() {
-    const list = feihua.chars(this.data.level, 24);
-    this.setData({
-      chars: list,
-      char: "",
-      lines: [],
-      hitCount: 0,
-      said: [],
-      round: 0,
-      finished: false,
-      message: "",
-      input: ""
+    this.setData({ level: e.detail.value }, () => {
+      this.done = [];
+      this.setData({ done: [], streak: 0, best: 0 });
+      this.next();
     });
   },
 
-  onChar(e) {
-    const char = e.detail.value;
-    this.setData({ char, round: this.data.round + 1, said: [], finished: false, message: "" });
-    if (this.data.kind === "look") {
-      const lines = feihua.look(char, { limit: 80 });
-      this.setData({ lines, hitCount: lines.length });
+  /**
+   * 出新题：随机一个令字（范围 + 档位），清空输入与提示。
+   * 说过的字不再出 —— prev 传进去 exclude。
+   */
+  next() {
+    this.refreshScopeName();
+    const opt = this.scopeOpt();
+    const exclude = this.data.done.map((d) => d.char);
+    let p = feihua.pick({
+      level: this.data.level,
+      scope: opt.scope,
+      grade: opt.grade,
+      term: opt.term,
+      exclude: exclude
+    });
+    // 一轮都说完了（或挑不出）：清掉 exclude 重来
+    if (!p && exclude.length) {
+      p = feihua.pick({ level: this.data.level, scope: opt.scope, grade: opt.grade, term: opt.term });
     }
+    const char = p ? p.char : "";
+    this.setData(
+      {
+        char: char,
+        input: "",
+        message: "",
+        messageOk: false,
+        locked: false,
+        revealed: false,
+        answers: []
+      }
+    );
   },
 
   onInput(e) {
@@ -97,42 +128,65 @@ Page({
   },
 
   /**
-   * 闯关判定：写一句带令字的诗。
-   * 三条件缺一不可 —— 有令字、在语料里、没说过。判据见 utils/feihua.js。
+   * 交一句：判对错 —— 对错都自动翻下一题。
+   * 判据见 utils/feihua 的 judge（带令字 / 在语料里 / 没说过）。
    */
   onSubmit() {
-    const r = feihua.judge(this.data.char, this.data.input, this.data.said);
+    if (this.data.locked || !this.data.char) return;
+    const r = feihua.judge(this.data.char, this.data.input, this.data.done.map((d) => d.seg));
+    sfx.answer(r.ok);
+    wx.vibrateShort({ type: r.ok ? "light" : "medium" });
+
     if (!r.ok) {
-      sfx.answer(false);
-      this.setData({ message: r.reason, messageOk: false });
+      // 答错：亮一句为什么，然后照样翻题（用户要的是「对错都自动下一题」）
+      this.setData({ message: r.reason, messageOk: false, locked: true });
+      this.advance(1400);
       return;
     }
-    sfx.answer(true);
-    const said = this.data.said.concat([r.seg]);
+
+    // 答对：把这一句收进连对，回显它在哪一篇
+    const row = { char: this.data.char, seg: r.seg, title: r.hit ? r.hit.title : "" };
+    const done = this.data.done.concat([row]);
+    const streak = this.data.streak + 1;
     this.setData({
-      said,
-      input: "",
-      message: "对上了：" + r.hit.title + " · " + r.hit.author,
-      messageOk: true
+      done,
+      streak,
+      best: Math.max(this.data.best, streak),
+      message: "对上了" + (r.hit ? "：" + r.hit.title : ""),
+      messageOk: true,
+      locked: true
     });
-    wx.vibrateShort({ type: "light" });
+    this.advance(900);
   },
 
-  onGiveUp() {
-    // 接不上了算过关：这一关的成绩是「说出几句」，不是「没输」
-    sfx.pass();
-    this.setData({ finished: true, message: "这一关过了 " + this.data.said.length + " 句" });
+  /** 等一会儿自动翻下一题。计时器存起来，页面走了要清掉 */
+  advance(ms) {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.next();
+    }, ms);
   },
 
-  onNextChar() {
-    const rest = this.data.chars.filter((c) => c.char !== this.data.char);
-    if (!rest.length) {
-      this.refreshChars();
+  onUnload() {
+    if (this.timer) clearTimeout(this.timer);
+  },
+
+  /** 看答案：列出当前范围里含这个字的所有句子 */
+  onReveal() {
+    if (this.data.revealed) {
+      this.setData({ revealed: false, answers: [] });
       return;
     }
-    const next = rest[Math.floor(Math.random() * rest.length)];
-    // 直接调 onChar 的取值路径：它现在只认 e.detail.value，所以这里也照那个形状给
-    this.onChar({ detail: { value: next.char } });
+    const opt = this.scopeOpt();
+    const answers = feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt));
+    this.setData({ revealed: true, answers });
+  },
+
+  /** 换一个字（不记连对） */
+  onSkip() {
+    if (this.timer) clearTimeout(this.timer);
+    this.next();
   },
 
   onOpen(e) {

@@ -1,14 +1,13 @@
-const corpus = require("../../../utils/corpus");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 
 /**
- * 古诗词大会：飞花令 + 题库 + 考试。
- * 判分内核在 utils/quiz.js（就地取材，不接 AI、不花钱），考试页复用同一份。
+ * 古诗词大会 —— 这一屏是**目录**，只列三张入口卡，不在这里出题。
  *
- * 飞花令这一版补齐了「轮」：给一个字，从课内 251 首里挑句，
- * 玩家先说一句再翻答案 —— 网页版是纯浏览，小程序端多做一步「接句」，
- * 才配叫飞花令，否则只是高级搜索。
+ * 三张卡各进各的玩法页：飞花令、题库、考试。目录页不内嵌任何一个玩法：
+ * 上一版把飞花令的「挑一个字 + 看答案」就地摊进这一屏，于是列表页混进了一段
+ * 可玩的东西 —— 点一个字就出答案，与「先选玩法再进游戏」是两回事，
+ * 也与题库 / 考试两张卡的处理对不上（那两件事都进独立页）。
  */
 const MODES = [
   { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
@@ -16,20 +15,18 @@ const MODES = [
   { key: "exam", name: "考试", desc: "20 分钟一卷", color: "blue" }
 ];
 
-const CHARS = ["月", "春", "花", "风", "山", "水", "云", "夜", "江", "秋", "天", "人"];
+/** 三张卡各自的能力键：飞花令 / 题库 / 考试 */
+const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
+
+/** 玩法页 */
+const PAGE = {
+  feihua: "/packages/game/feihua/feihua",
+  quiz: "/packages/game/quiz/quiz",
+  exam: "/packages/game/exam/exam"
+};
 
 Page({
   data: {
-    modes: MODES,
-    keyword: "月",
-    chars: CHARS,
-    lines: [],
-    hitCount: 0,
-    revealed: false,
-    page: 1,
-    pageSize: 12,
-    pagedLines: [],
-
     /** 三张卡各自的可用性。不可用的卡照常列出，但标清差在哪一档 */
     locked: true,
     cards: []
@@ -43,108 +40,30 @@ Page({
     // 三张卡不是一个门槛：飞花令与考试是 max，题库是 pro。
     // 所以不做「整页锁死」，而是逐卡标注 —— 让人知道要往上走一步，而不是一堵墙。
     const cards = MODES.map((m) => {
-      const key = m.key === "feihua" ? "feihualing" : m.key === "quiz" ? "quiz" : "exam";
-      const ok = entitlement.can(key);
-      return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(key) });
+      const ok = entitlement.can(CAP[m.key]);
+      return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(CAP[m.key]) });
     });
     this.setData({ locked: false, cards });
-    if (cards.some((c) => c.ok)) this.computeLines();
   },
 
   onLogin() {
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
-  computeLines() {
-    const kw = this.data.keyword;
-    const hits = [];
-    const all = corpus.course();
-
-    for (let i = 0; i < all.length && hits.length < 60; i++) {
-      const p = all[i];
-      const text = corpus.entry(p.id);
-      if (!text || !text.text) continue;
-      if (text.text.indexOf(kw) < 0) continue;
-      String(text.text)
-        .split(/[\n，。！？；：、]/)
-        .forEach((seg) => {
-          const s = seg.trim();
-          if (s.indexOf(kw) >= 0 && hits.length < 60) {
-            hits.push({ id: p.id, title: p.t, author: p.a, seg: s });
-          }
-        });
-    }
-
-    this.hits = hits;
-    this.setData({ lines: hits, hitCount: hits.length, revealed: false, page: 1 }, () => this.page(1));
-  },
-
-  page(n) {
-    const { pageSize } = this.data;
-    const start = (n - 1) * pageSize;
-    this.setData({
-      page: n,
-      pagedLines: (this.hits || []).slice(start, start + pageSize)
-    });
-  },
-
-  onPrevPage() {
-    if (this.data.page > 1) this.page(this.data.page - 1);
-  },
-
-  onNextPage() {
-    const max = Math.ceil(this.data.hitCount / this.data.pageSize);
-    if (this.data.page < max) this.page(this.data.page + 1);
-  },
-
-  onChar(e) {
-    this.setData({ keyword: e.detail.value }, () => this.computeLines());
-  },
-
-  onReveal() {
-    if (!entitlement.can("feihualing")) {
-      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
-      return;
-    }
-    this.setData({ revealed: !this.data.revealed });
-  },
-
   onMode(e) {
-    const key = e.currentTarget.dataset.key || e.currentTarget.dataset.k;
+    const key = e.currentTarget.dataset.k;
     if (!gate.logged()) {
       this.onLogin();
       return;
     }
-    if (key === "exam" && !entitlement.can("exam")) {
-      wx.showToast({ title: entitlement.hint("exam"), icon: "none" });
+    const cap = CAP[key];
+    if (!cap) return;
+    // 差一档的卡点了不给进，但要说话 —— 不列一个点下去必然被拒的入口，
+    // 也不让用户对着灰卡猜自己差在哪。
+    if (!entitlement.can(cap)) {
+      wx.showToast({ title: entitlement.hint(cap), icon: "none" });
       return;
     }
-    if (key === "quiz" && !entitlement.can("quiz")) {
-      wx.showToast({ title: entitlement.hint("quiz"), icon: "none" });
-      return;
-    }
-    if (key === "feihua" && !entitlement.can("feihualing")) {
-      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
-      return;
-    }
-    if (key === "exam") {
-      wx.navigateTo({ url: "/packages/game/exam/exam" });
-      return;
-    }
-    if (key === "quiz") {
-      wx.navigateTo({ url: "/packages/game/quiz/quiz" });
-      return;
-    }
-    if (key === "feihua") {
-      // 「查一查」留在本页（就地翻句最快），「闯关」进独立页 ——
-      // 闯关要输入、要判句、要记轮次，塞进这个列表页就把它压塌了
-      wx.navigateTo({ url: "/packages/game/feihua/feihua?kind=level" });
-      return;
-    }
-    this.setData({ page: 1 }, () => this.page(1));
-  },
-
-  onOpen(e) {
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) });
+    wx.navigateTo({ url: PAGE[key] });
   }
 });

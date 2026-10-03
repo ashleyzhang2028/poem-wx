@@ -165,6 +165,8 @@ page {
                                共存于一屏，所以它用黑体、hero 那一档留给宋体内容 */
   --fs-stat: calc(64rpx * var(--ui-scale));         /* 统计大数字（24 / 3 / 58）*/
   --fs-score: calc(104rpx * var(--ui-scale));       /* 考试分数，一屏只有它一个 */
+  --fs-glyph: calc(200rpx * var(--ui-scale));       /* 飞花令的令字：一屏只有一个字，
+                               它是这一题本身，比分数还大一号 */
   --fs-mark: calc(52rpx * var(--ui-scale));         /* 头像 / 印章里的那个字 */
   --fs-poem: calc(36rpx * var(--ui-scale));         /* 诗行基准字号，各档在它上下浮动 */
   --fs-pinyin: calc(18rpx * var(--ui-scale));       /* 注音的小字 */
