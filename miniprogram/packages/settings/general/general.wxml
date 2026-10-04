@@ -57,16 +57,6 @@
     <text class="hint note" wx:else>{{pinyinNote}}</text>
   </view>
 
-  <view class="card">
-    <view class="card-title bar">背诵</view>
-    <view class="row">
-      <view class="row-main">
-        <text class="row-title">背完自动下一首</text>
-      </view>
-      <switch checked="{{autoNext}}" color="{{themeHex}}" bindchange="onAutoNext" />
-    </view>
-  </view>
-
   <view class="safe-bottom"></view>
   </block>
 </view>

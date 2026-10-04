@@ -12,8 +12,21 @@
       <view class="avatar-btn" wx:else>
         <view class="avatar avatar-fallback">{{avatarChar}}</view>
       </view>
+      <!-- 名字**就地可改**：这一格就是输入框，改完立刻显示。
+           它原来是只显示的一行字，能改的那处在下面「昵称」那一行里 ——
+           同一个值摆两处，一能改、一只显示，看着像两个身份。
+           现在收成一处，下面那一行整个撤了（V37 守着「只有一处」）。
+           ⚠️ 不许把「子」什么的那类词写进界面文案：家庭成员是小程序端
+           刻意不做的能力，parity.js 会把它当成界面上多了个入口。 -->
       <view class="identity-main">
-        <text class="identity-name">{{nickname}}</text>
+        <block wx:if="{{logged}}">
+          <!-- maxlength 取 12：这一行右边还挂着档位芯片，再长的名字会把它挤走 -->
+          <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
+                 placeholder="填一个昵称" placeholder-class="identity-ph"
+                 confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+        </block>
+        <!-- 未登录时这里仍是只显示的字：没登录，也就没有名字可改 -->
+        <text class="identity-name" wx:else>{{nickname}}</text>
         <text class="identity-sub">{{identitySub}}</text>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
@@ -34,24 +47,6 @@
         </view>
         <button class="btn mini" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">换头像</button>
         <button class="btn mini" wx:if="{{hasLocalAvatar}}" bindtap="onAvatarClear">用微信头像</button>
-      </view>
-
-      <!-- 昵称那一行：与头像行同一长相（标签 + 就地编辑）。
-           ⚠️ 输入框里的值就是头顶那个名字（同一个 store.profile().nickname），
-           不是另一个身份 —— 上一版这里没有说明，看起来像第二个昵称。
-           加一行小字把它与顶部那一格的关系点破，免得再猜。
-           （本条不许写「子」什么的那类词：那是小程序端刻意不做的能力，
-             parity.js 会把它当成界面上多了个入口。） -->
-      <view class="avatar-row">
-        <view class="avatar-row-main">
-          <text class="field-label">昵称</text>
-          <!-- type=nickname 是小程序给的「昵称填写」能力，不是普通文本框。
-               maxlength 取 12 —— 顶部那一行只有一行，太长的名字会把档位芯片挤走 -->
-          <input class="nick-input" type="nickname" value="{{nickname}}" maxlength="12"
-                 placeholder="填一个昵称" confirm-type="done"
-                 bindblur="onNickname" bindconfirm="onNickname" />
-          <text class="avatar-src">就是上面那个名字，改完立刻改</text>
-        </view>
       </view>
 
       <button class="btn ghost mini logout" bindtap="onLogout">退出登录</button>

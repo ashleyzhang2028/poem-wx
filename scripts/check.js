@@ -1682,7 +1682,10 @@ function scanSelfMadeControls(src) {
  */
 const NEEDS_NATIVE = {
   "packages/settings/recite/recite": ["radio-group"],
-  "packages/settings/general/general": ["radio-group", "slider", "switch"],
+  /* 通用设置这一页 2026-10-04 之后**只剩「选一个」和「连续值」**：
+     它唯一的 switch（背完自动下一首）删了 —— 那枚开关写的键没人读，
+     一个按了不动的开关比没有更糟。页面现在一个开关都不该有。 */
+  "packages/settings/general/general": ["radio-group", "slider"],
   /* 「阅读设置」页 2026-10-04 起只管问答音效 —— 注音搬去了通用设置。
      所以这一页只剩一个 switch，不再有「选一个」的控件。 */
   "packages/settings/reader/reader": ["switch"],
@@ -5518,7 +5521,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const DIRTY = [
     ["通用设置", "packages/settings/general/general.js", /onAlign[\s\S]{0,200}?markDirty/],
     ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
-    ["通用设置-自动翻篇", "packages/settings/general/general.js", /onAutoNext[\s\S]{0,200}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题色", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
@@ -5741,8 +5743,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   //    不是。它和顶部那个名字是**同一个值**，上一版没说清
   {
     const mineWxml = read("pages/mine/mine.wxml");
-    ok("「我的」页的昵称行说清了它与顶部那个名字是同一个",
-      /就是上面那个名字/.test(mineWxml), "没说清，看起来像第二个身份");
+    // 用户 2026-10-04 复查这一条时给了结论：既然是一个值，就只留一处 ——
+    // 顶部的名字改成行内可编辑，下面那一行删掉（V37 守着）
+    ok("「我的」页的昵称只有一处：顶部那个名字本身（下面那一行已撤）",
+      mineWxml.indexOf("nick-input") < 0 && /class="identity-input"[^>]*type="nickname"/.test(mineWxml),
+      "同一个值还摆两处，或者顶部那格还是只显示的字");
     ok("昵称输入框有长度上限（顶部那一行只有一行）",
       /maxlength="12"/.test(mineWxml));
   }
@@ -5778,6 +5783,64 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("「开始背」挑的是第一首**没背过的**（不是第一首）",
     /find\(\(r\) => !r\.reviewed\)/.test(homeJs),
     "用的还是 read，与「背过」是两件事");
+}
+
+/* ---------- V37. 昵称收成一处（仅顶部、就地可改）+ 删掉那枚按了不动的开关 ----------
+ *
+ * 用户 2026-10-04 的两句话：
+ *   「昵称 —— 仅保留顶部 -> 后面能改的地方删掉，让顶部显示的地方能同时行内编辑，
+ *     改完直接显示」
+ *   「背完自动下一首删掉」
+ *
+ * 两条都是**删**。删对了没人夸，删漏了没人报错 —— 所以每条都得有个断言守着：
+ * 「同一个值只在一处」是静态可判的；「那枚开关不再出现」也是。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const mineWxml = read("pages/mine/mine.wxml");
+  const mineWxss = read("pages/mine/mine.wxss");
+  const mineJs = read("pages/mine/mine.js");
+  const generalWxml = read("packages/settings/general/general.wxml");
+  const generalJs = read("packages/settings/general/general.js");
+  const storeJs = read("utils/store.js");
+
+  // 1) 昵称只剩顶上一处：那一行下面不再有第二个「昵称」输入框
+  ok("「我的」页不再有第二个昵称输入框（原 .nick-input 那行已撤）",
+    mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0,
+    "下面那一行还在，同一个值仍摆两处");
+  ok("顶部那个名字本身就是输入框（行内编辑）",
+    /class="identity-input"[^>]*type="nickname"/.test(mineWxml) && /onNickname/.test(mineWxml),
+    "顶部还是只显示的一行字");
+  ok("行内编辑有长度上限（顶部那一行只有一行，档位芯片还在它右边）",
+    /class="identity-input"[^>]*maxlength="12"/.test(mineWxml));
+  ok("改完当场重画（不 refresh 就只改了存储，屏上那个名字不变）",
+    /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,200}this\.refresh\(\)/.test(mineJs));
+  // 未登录时那一格是「未登录」三个字，不是输入框 —— 没登录哪来的昵称可改
+  ok("未登录时名字那一格仍是只显示的字（不是输入框）",
+    /<text class="identity-name" wx:else>\{\{nickname\}\}<\/text>/.test(mineWxml));
+  ok("就地编辑没被画成一张表单（不铺灰底、不描边框）",
+    /\.identity-input\s*\{([^}]*)\}/.test(mineWxss)
+      && !/background/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
+    "名字那一格铺了底色 / 描了边框，身份卡看着像张表单");
+
+  // 2) 「背完自动下一首」删掉 —— 页面、处理器、以及那个没人读的默认键
+  ok("通用设置里不再有「背完自动下一首」",
+    generalWxml.indexOf("背完自动下一首") < 0 && generalWxml.indexOf("onAutoNext") < 0);
+  ok("它的处理器也删了（不留没人调的 onAutoNext）", !/onAutoNext/.test(generalJs));
+  ok("设置里的 autoNext 默认键也撤了（没人会再读它）",
+    !/^\s*autoNext:/m.test(storeJs), "默认值还留着，等于给下一个来读它的人递了个空承诺");
+  ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
+    /setTimeout\(\(\) => this\.goNext\(\), 700\)/.test(read("components/recite-sheet/recite-sheet.js")));
+
+  // 3) 预览那张替身也得跟：它手抄了通用设置页的版式，
+  //    漏改就是「演示里还有一枚开关、真机上没有」—— 反过来的假消息
+  const previewPath = path.join(__dirname, "shots", "out", "preview.html");
+  if (fs.existsSync(previewPath)) {
+    const preview = fs.readFileSync(previewPath, "utf8");
+    ok("预览页里那枚开关也没了（预览不是另一份真机）",
+      preview.indexOf("背完自动下一首") < 0,
+      "预览是旧的那一份，重跑一次 node scripts/shots/render.js");
+  }
 }
 
 /* ---------- 汇总 ---------- */

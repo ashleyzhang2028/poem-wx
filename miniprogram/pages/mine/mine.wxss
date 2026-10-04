@@ -67,6 +67,30 @@
   letter-spacing: var(--ls-title);
 }
 
+/* 名字就地可改。**不给输入框画底线 / 灰底** —— 它顶着的是「我是谁」那一行，
+   加一枚框会把身份卡画成一张表单。字与 .identity-name 同一副长相，
+   只是多了一道很淡的虚线下划线：它是「这里能点」的唯一提示，
+   也是这一行与下面「已登录」之间的分界。 */
+.identity-input {
+  display: block;
+  width: 100%;
+  height: calc(46rpx * var(--ui-scale));
+  min-height: 0;
+  padding: 0;
+  font-size: var(--fs-lead);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+  border-bottom: 1rpx dashed var(--line-strong);
+  border-radius: 0;
+}
+
+/* 空昵称时那句 placeholder 不装成名字：它说的是一件待办，不是身份 */
+.identity-ph {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 .identity-sub {
   display: block;
   font-size: var(--fs-caption);
@@ -114,16 +138,6 @@
   font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 2rpx;
-}
-
-.nick-input {
-  margin-top: 6rpx;
-  height: var(--h-field);
-  padding: 0 var(--sp-4);
-  background: var(--sink);
-  border: 1rpx solid transparent;
-  border-radius: var(--radius-block);
-  font-size: var(--fs-body);
 }
 
 .danger-text {
