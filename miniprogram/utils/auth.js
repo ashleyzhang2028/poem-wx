@@ -17,6 +17,24 @@
 const store = require("./store");
 const remote = require("./remote");
 
+/**
+ * 登录成功之后**立刻认回云端数据**。
+ *
+ * 用户 2026-10-04 的话：
+ *   「同步功能只要用户登录就全部提供，确保用户数据不丢失，背诵进度换设备也能得到」
+ *
+ * 所以这件事不能等下一个触发点（启动 3 秒、背完一首、用户手动点）——
+ * 新机器上登录完，用户第一眼看的是首页，而那一刻进度还在云上。
+ * 惰性 require 是为了断开 auth ↔ sync 的环（sync 要读 auth.logged()）。
+ */
+function pullAfterLogin() {
+  try {
+    return require("./sync").now(true) || Promise.resolve({ skipped: "offline" });
+  } catch (e) {
+    return Promise.resolve({ skipped: "offline" });
+  }
+}
+
 const REMOTE = {
   login: remote.PATHS.login,
   refresh: remote.PATHS.refresh
@@ -57,14 +75,24 @@ function applySession(data) {
   // 服务端下发的微信头像落进 avatarUrl（**不是** avatarLocal）：
   // 它是「微信那张」，优先级在本机那张之下。用户自己传过的图（avatarLocal）
   // 一点都不会被这里碰到 —— 登录刷新微信头像，不该盖掉用户的图。
-  store.saveProfile({
+  //
+  // ⚠️ **昵称只在真的变了的时候才写**。不这么写会踩到一个很难找的坑：
+  // 昵称是「跨设备那几个字段」之一（它进 profile:v1 那一行），
+  // 于是登录时无条件写一次昵称 = 给档案盖一个新时间戳 = 本机成了
+  // 「更新的那一份」= **云端那份头像被判成旧的，永远认不回来**。
+  // 新机器上登一次顶掉一次，用户看到的是「换台手机头像没了」，
+  // 而进度、设置全都在 —— 最难往这上面想。
+  const patch = {
     logged: true,
-    nickname: data.nickname || store.profile().nickname || "我的古诗词",
     avatarUrl: data.avatarUrl || store.profile().avatarUrl || "",
     tier: data.tier || "",
     tierFromServer: !!data.tier,
     userId: data.userId || store.profile().userId || ""
-  });
+  };
+  const nick = data.nickname || store.profile().nickname;
+  if (nick && nick !== store.profile().nickname) patch.nickname = nick;
+  if (!store.profile().nickname && !nick) patch.nickname = "我的古诗词";
+  store.saveSession(patch);
   return data;
 }
 
@@ -80,12 +108,10 @@ function login() {
         if (!configured()) {
           // 没接后端：只落地一个本机身份 —— 登录过的标记要有，
           // 档位不要有。没签名的高档位等于白送，那是上一版被撤掉的口子。
-          store.saveProfile({
-            logged: true,
-            nickname: store.profile().nickname || "我的古诗词",
-            tier: "",
-            tierFromServer: false
-          });
+          // 本机身份：登录过的标记要有，档位不要有（见上）。
+          // 走 saveSession 而不是 saveProfile —— 会话字段不参与
+          // 「哪一份更新」的比较（见 store.js 的 PROFILE_SYNCED）
+          store.saveSession({ logged: true, tier: "", tierFromServer: false });
           const auth = store.read(store.KEYS.auth, {}) || {};
           auth.code = res.code;
           auth.at = Date.now();
@@ -96,7 +122,12 @@ function login() {
         }
 
         request(REMOTE.login, { code: res.code, device: store.deviceId() })
+          // 先认回云端，再返回：调用方拿到 resolve 时，首页要的东西已经在本机了。
+          // synced 如实回传 —— 界面靠它区分「认回来了」与「这条通道没开」
           .then(applySession)
+          .then((data) =>
+            pullAfterLogin().then((r) => Object.assign({}, data, { synced: !(r && r.skipped) }))
+          )
           .then(resolve)
           .catch(reject);
       },
@@ -116,7 +147,7 @@ function refresh() {
 function logout() {
   store.drop(store.KEYS.auth);
   store.drop(store.KEYS.caps);
-  store.saveProfile({ logged: false, tier: "", tierFromServer: false });
+  store.saveSession({ logged: false, tier: "", tierFromServer: false });
 }
 
 function token() {
@@ -173,5 +204,6 @@ module.exports = {
   isAdmin,
   serverTier,
   applySession,
+  pullAfterLogin,
   REMOTE
 };

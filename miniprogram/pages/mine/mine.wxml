@@ -151,7 +151,7 @@
       <view class="row-icon">云</view>
       <view class="row-main">
         <text class="row-title">云端同步</text>
-        <text class="row-sub">{{syncAllowed ? (syncReady ? syncText : syncNote) : syncNote}}</text>
+        <text class="row-sub">{{syncSub}}</text>
       </view>
       <text class="row-go">›</text>
     </view>

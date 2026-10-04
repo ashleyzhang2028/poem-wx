@@ -21,6 +21,10 @@
  *      一个集子一行；本机是 `{ [集子]: { [篇目]: ts } }`。
  *   3. 加背与自选清单上一版**根本没打包** —— 服务端的 `daily_extra:v1` /
  *      `collections:v1` 两行永远收不到，用户换台机器这两样就没了。
+ *   4. **设置与头像也没打包**（用户 2026-10-04：「同步功能只要用户登录就全部提供，
+ *      确保用户数据不丢失」）。上一版换台手机之后主题回到「墨」、每日计划回到 5 首、
+ *      算法回到艾宾浩斯、头像没了 —— 而它们全是**用户自己选过的东西**。
+ *      现在两样各占一行（`settings:v1` / `profile:v1`），整份快照进出。
  */
 const store = require("./store");
 
@@ -54,10 +58,37 @@ Object.keys(READ_ROW).forEach((k) => {
 const DAILY_EXTRA_ROW = "daily_extra:v1";
 const COLLECTIONS_ROW = "collections:v1";
 
+/**
+ * 设置与头像各占一行。
+ *
+ * 为什么用**快照行**而不是「一个设置项一行」：
+ * 设置是「一台机器上的全部选择」，用户要的是「换台手机还是我那一套」，
+ * 不是「把 12 个键分别对齐」。一行意味着整份进、整份出，按时间戳比新旧 ——
+ * 而逐键合并会出现「年级是我的、算法是他的」这种**谁都没选过的中间态**。
+ *
+ * 行 id 带 `v1`：将来设置结构真变了，靠前缀就能议出迁移，
+ * 不至于让一台老版本机器把新结构读写坏。
+ */
+const SETTINGS_ROW = "settings:v1";
+const PROFILE_ROW = "profile:v1";
+
 /** 网页版 sync-coverage.js 里 `row: "每篇一行"` 的那一批 */
 const RECORD_ROW = "progress";
 
 const READ_PREFIX = "reads:";
+
+/**
+ * 深拷一份。JSON 能表达的这里都够用（设置全是数字 / 字符串 / 布尔）。
+ * 为什么需要它：本机存储里那些对象是**活引用**（`wx.getStorageSync` 在
+ * 开发者工具里也返回同一份），直接放进报文就等于把报文钉在本机存储上。
+ */
+function clone(v) {
+  try {
+    return JSON.parse(JSON.stringify(v === undefined ? null : v));
+  } catch (e) {
+    return null;
+  }
+}
 
 /** 服务端 sanitizePayload 只认这几个字段，多传的会被丢掉 —— 但先裁掉更省流量 */
 function slimRecord(rec) {
@@ -130,7 +161,7 @@ function packRecords() {
   });
 
   // 今日加背：上一版漏了，换台机器就没了
-  const extra = store.dailyExtra();
+  const extra = store.dailyExtra().slice();
   if (extra.length) {
     const at = store.dailyExtraAt() || Date.now();
     rows.push({
@@ -147,13 +178,45 @@ function packRecords() {
   }
 
   // 自选清单：同上
-  const cols = store.collections();
+  const cols = clone(store.collections());
   if (cols.length) {
     const at = store.collectionsAt() || Date.now();
     rows.push({
       id: COLLECTIONS_ROW,
       payload: { v: 1, collections: cols, updatedAt: at },
       updatedAt: at,
+      deleted: false
+    });
+  }
+
+  // 设置：整份快照一行。云端更新的那份整份覆盖本机（见 applyRecords）
+  //
+  // ⚠️ **必须深拷一份**，不能把 store 里那个对象直接放进报文。
+  // 这一条是量出来的：本机接着改了设置（同名 key 被覆盖），
+  // 排队那一行里的 settings 会跟着一起变 —— 于是「发出去的内容」与
+  // 「这一行的 updatedAt」对不上：时间戳还是老的，内容是新的。
+  // 在离线队列里躺一会儿再推，推上去的就是一份**时间戳说不清来历**的数据。
+  // 这类错不会报错，只会让某一台设备的选择静默地盖掉另一台。
+  const sAt = store.settingsAt();
+  if (sAt) {
+    rows.push({
+      id: SETTINGS_ROW,
+      payload: { v: 1, settings: clone(store.cloudSettings()), updatedAt: sAt },
+      updatedAt: sAt,
+      deleted: false
+    });
+  }
+
+  // 头像：一行。**只带用户自己传的那张**（avatarLocal）——
+  // 微信给的那张（avatarUrl）登录时服务端就会重新下发，同步它是多余的；
+  // 而本机那张是用户自己裁的，丢了就真没了。
+  const pAt = store.profileAt();
+  const local = store.profile().avatarLocal;
+  if (local && pAt) {
+    rows.push({
+      id: PROFILE_ROW,
+      payload: { v: 1, avatar: local, updatedAt: pAt },
+      updatedAt: pAt,
       deleted: false
     });
   }
@@ -207,6 +270,31 @@ function applyRecords(recs) {
       return;
     }
 
+    if (id === SETTINGS_ROW) {
+      const payload = row.payload || {};
+      const localAt = store.settingsAt() || 0;
+      // 整份覆盖，不逐键合并 —— 逐键会造出「谁都没选过」的中间态。
+      // 本机更新的那份留着，等下一次推上去（新者胜）。
+      if (at > localAt && payload.settings && typeof payload.settings === "object") {
+        store.replaceSettings(payload.settings);
+        store.touchSettings(at);
+        applied += 1;
+      }
+      return;
+    }
+
+    if (id === PROFILE_ROW) {
+      const payload = row.payload || {};
+      const localAt = store.profileAt() || 0;
+      if (at > localAt && payload.avatar) {
+        // 落到 avatarLocal：本机那份（用户自己传的）优先级最高，
+        // 与 store.avatarSrc() 同一口径 —— 认回来的就是他挑的那张
+        store.saveProfile({ avatarLocal: payload.avatar }, at);
+        applied += 1;
+      }
+      return;
+    }
+
     if (id === COLLECTIONS_ROW) {
       const payload = row.payload || {};
       const localAt = store.collectionsAt() || 0;
@@ -246,6 +334,8 @@ module.exports = {
   READ_PREFIX,
   DAILY_EXTRA_ROW,
   COLLECTIONS_ROW,
+  SETTINGS_ROW,
+  PROFILE_ROW,
   RECORD_ROW,
   slimRecord,
   recordStamp,

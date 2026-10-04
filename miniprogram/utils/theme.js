@@ -111,6 +111,13 @@ function style(key) {
 function set(key) {
   if (!BY_KEY[key]) return currentTheme();
   store.saveSettings({ theme: key });
+  // 主题色是最该跨设备的一项 —— 用户挑过的那支墨，换台手机还该是它。
+  // 惰性 require：sync 会读 entitlement / auth，顶部直接引容易绕成环
+  try {
+    require("./sync").markDirty();
+  } catch (e) {
+    /* 记账失败不影响这次设置本身 */
+  }
   return get(key);
 }
 

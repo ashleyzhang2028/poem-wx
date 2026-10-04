@@ -219,6 +219,13 @@ function getMode() {
 function setMode(mode) {
   if (!available()) return false;
   store.saveSettings({ pinyin: mode });
+  // 注音口径跟着账号走（用户 2026-10-04：登录之后一切跟着账号）。
+  // 惰性 require：sync 那一层会读 entitlement / auth，顶部直接引容易绕成环
+  try {
+    require("./sync").markDirty();
+  } catch (e) {
+    /* 记账失败不影响这次设置本身 */
+  }
   return true;
 }
 

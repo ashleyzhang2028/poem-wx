@@ -31,9 +31,13 @@ Page({
     syncReady: false,
     syncText: "还没同步过",
     syncPending: 0,
-    /** 云端同步是 pro 起（服务端定的）。free 档如实说明「只在本机」 */
+    /** 登录即得（2026-10-04 起不再分档）。留着这个字段是因为界面
+        仍要区分「渠道没就绪」（后端没配）与「档位不给」，只是后者已不存在 */
     syncAllowed: false,
     syncNote: "",
+    /** 同步那一行的副标题。数据层给的是「已攒 N 条」这类事实，
+        这里把它和「能不能同步」拼成一句人话 */
+    syncSub: "",
     fullTextOn: false,
 
     /** 登录页的那半张卡：从 gate.guard 或首页「微信登录」按钮跳过来时自动聚焦 */
@@ -92,6 +96,7 @@ Page({
       syncPending: sy.pending,
       syncAllowed: E.can("sync"),
       syncNote: this.syncNote(sy),
+      syncSub: this.syncNote(sy),
       adminVisible: E.can("admin")
     });
   },
@@ -113,7 +118,14 @@ Page({
             duration: 2500
           });
         } else {
-          wx.showToast({ title: "已登录", icon: "success" });
+          // 登录顺带把云端那份认回来（auth.login 里做的）。
+          // 这里说清「认回来了」还是「这条通道没开」——
+          // 新机器上这两种情况长得一模一样：都是「我刚登录，进度呢？」
+          wx.showToast({
+            title: res && res.synced ? "已登录 · 进度已认回" : "已登录 · 后端未就绪",
+            icon: "none",
+            duration: 2500
+          });
         }
         this.refresh();
       })
@@ -137,28 +149,18 @@ Page({
   },
 
   /**
-   * 同步那一行该说什么。**先说「能不能同步」，再说「同步到哪了」** ——
-   * 上一版只说后者，于是 free 档用户看到「还没同步过」，
-   * 点了才知道服务端 403（E_TIER）。那是「按钮亮着、点下去弹 toast」的翻版。
+   * 同步那一行该说什么。**先说「能不能同步」，再说「同步到哪了」**。
+   *
+   * 上一版第一句是不必要的：同步当时挂在 Pro 档上 —— 用户 2026-10-04
+   * 裁决把这条边界撤了，登录就全部提供。现在只剩两种状态：
+   * 后端就绪（说清同步到哪了）/ 后端没就绪（说清攒了多少条）。
    */
   syncNote(sy) {
-    if (!E.can("sync")) return "要 Pro 起才能跨设备同步；进度在本机一字不少";
     if (!sy.ready) return "后端未就绪 · 已攒 " + sy.pending + " 条";
     return sy.lastText;
   },
 
   onSync() {
-    if (!E.can("sync")) {
-      wx.showModal({
-        title: "跨设备同步要 Pro 起",
-        content:
-          "进度现在只存在这台手机上，一字不少，背诵不受影响。\n\n" +
-          "要换手机不丢进度，找管理员开 Pro。",
-        showCancel: false,
-        confirmText: "知道了"
-      });
-      return;
-    }
     wx.showLoading({ title: "同步中" });
     sync.now(true).then((res) => {
       wx.hideLoading();
@@ -194,12 +196,16 @@ Page({
     const url = e.detail.avatarUrl;
     if (!url) return;
     store.saveProfile({ avatarLocal: url });
+    // 头像也要跨设备（用户 2026-10-04）。微信那张登录时会重新下发，
+    // **用户自己挑的这张不会** —— 不推上去，换台手机就没了。
+    sync.markDirty();
     this.refresh();
   },
 
   /** 回到微信那张：去掉本机那张，优先级自然回落到 avatarUrl */
   onAvatarClear() {
     store.saveProfile({ avatarLocal: "" });
+    sync.markDirty();
     this.refresh();
   },
 
@@ -207,6 +213,9 @@ Page({
     const nickname = (e.detail.value || "").trim();
     if (!nickname) return;
     store.saveProfile({ nickname });
+    // 昵称留在本机也够用（微信不重新下发它），但既然要「换机还是我那一套」，
+    // 就一起走这一趟 —— 它不占报文体积，也不必单独设计一条通道
+    sync.markDirty();
     this.refresh();
   },
 

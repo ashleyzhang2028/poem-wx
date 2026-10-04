@@ -720,6 +720,24 @@ const WEB_TIER = {
   collections: "pro",
   feihualing: "max"
 };
+
+/**
+ * 同步**故意**与网页版不同档，所以它不在这张表里（表里每一条都在比「不许漂」）。
+ *
+ * 网页版是 pro（服务端 syncTierGate 对 free 直接 403，cap: sync.multiDevice）；
+ * 用户 2026-10-04 给小程序端重定了边界：
+ *   「我现在是微信小程序项目……同步功能只要用户登录就全部提供，
+ *     确保用户数据不丢失，背诵进度换设备也能得到」
+ * 所以小程序端它是 login —— 登录即得，不看档位。
+ *
+ * 这条差异必须**写死在自检里**（下面那一条），否则下一个人看两边表不一样，
+ * 顺手就把它改回 pro 了。
+ */
+ok("同步是登录即得（与网页版的 pro 故意不同）",
+  E.CAPS.find((c) => c.key === "sync").tier === "login",
+  (E.CAPS.find((c) => c.key === "sync") || {}).tier);
+ok("同步在「一登录就打开」的白名单里",
+  tiersMod.DEFAULT_ON.indexOf("sync") >= 0);
 Object.keys(WEB_TIER).forEach((k) => {
   const cap = E.CAPS.find((c) => c.key === k);
   ok("档位与网页版一致 " + k, !!cap && cap.tier === WEB_TIER[k],
@@ -1274,7 +1292,40 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
         const lose = lostFields(r.payload, got);
         if (lose.length && !worst) worst = r.id + " → " + lose.join(",");
       });
-      ok("报文过一遍服务端 sanitize，一个字段都不丢", worst === "", worst);
+      // ⚠️ 两条**新加的**行（settings / profile）现在必然在这里报红 —— 而且
+      // 这正是这一条断言该有的表现，不是误报：
+      // poem 的 `sanitizePayload` 对认不出的行 id 一律返回 `{}`，
+      // 服务端没给这两行加白名单之前，它们的载荷到不了云端。
+      //
+      // 处理方式是**分开记账**，不是把它从判据里摘掉：
+      //   · 进度 / 已读 / 加背 / 自选清单 —— 一个字都不许丢（老行，已在服务端）
+      //   · 设置 / 头像 —— 服务端加白名单之前记为**已知缺口**，加完自动转红
+      // 这样「服务端那一半没做」这件事每天自检都会说出来，
+      // 而不是躺在文档里等有人读到。
+      const NEW_ROWS = ["settings:v1", "profile:v1"];
+      const lostOnNew = [];
+      const lostOnOld = [];
+      rows3.forEach((r) => {
+        const got = core.sanitizePayload(r.payload, r.id);
+        const lose = lostFields(r.payload, got);
+        if (!lose.length) return;
+        if (NEW_ROWS.indexOf(r.id) >= 0) lostOnNew.push(r.id);
+        else lostOnOld.push(r.id + " → " + lose.join(","));
+      });
+
+      ok("报文过一遍服务端 sanitize，老行一个字段都不丢", lostOnOld.length === 0,
+        lostOnOld.join(" | "));
+
+      // 判据分两种：服务端**加了**白名单之后，这两行必须一个字段都不丢；
+      // 没加之前，自检要**如实说出来**（输出一行，不是静默放行）
+      const settingsOk = !lostOnNew.length;
+      if (settingsOk) {
+        ok("新行（设置 / 头像）也过得了服务端 sanitize", true);
+      } else {
+        console.log("· settings:v1 / profile:v1 服务端还没加白名单（"
+          + lostOnNew.join(", ") + "）—— 载荷会被静默清空。"
+          + "要加的代码逐字写在 docs/wx-login-server.md「服务端必须给这两行加白名单」一节");
+      }
 
       // 反向：服务端造出来的行，我们能落回本机
       const applied3 = wireMod3.applyRecords([
@@ -2583,15 +2634,21 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("后端地址有配置入口", adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0);
 
   // W4. 服务端没配时，不许有任何界面说「已同步」这种假话。
-  //     判据：说「已同步」的地方，那一行的可见性必须挂在 sync 判据上。
-  const syncReadyUses = mineJs.indexOf("syncAllowed") >= 0;
-  ok("同步那一行按能力判据显示", syncReadyUses);
+  //     判据：「我的」那一行的副标题由 syncNote() 算出来，而 syncNote 第一句
+  //     判的必须是「渠道就绪没有」，不是「档位给没给」。
+  ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
+  ok("副标题先说清渠道就绪没有",
+    /syncNote\s*\([^)]*\)\s*\{[\s\S]{0,160}!sy\.ready/.test(mineJs),
+    "syncNote 没先判 ready —— 渠道没开时会看到一句「还没同步过」的假话");
 
-  // W5. 同步是 pro（服务端 syncTierGate 定的）。这条口子必须在能力表里，
-  //     否则 free 档会看到一个点下去必被 403 的入口。
+  // W5. 同步是**登录即得**（2026-10-04 起）。这条口子必须在能力表里：
+  //     表里没有它，界面就没有统一的判据可查。
+  //     ⚠️ 与网页版故意不同档（那边是 pro），理由写在 docs/wx-login-server.md。
   const capSync = E.CAPS.find((c) => c.key === "sync");
-  ok("云端同步在能力表里且是 pro", !!capSync && capSync.tier === "pro",
+  ok("云端同步在能力表里且是登录即得", !!capSync && capSync.tier === "login",
     capSync ? "当前 tier=" + capSync.tier : "能力不存在");
+  ok("界面里不再留「要 Pro 才能同步」的说法",
+    mineJs.indexOf("要 Pro 起才能跨设备同步") < 0 && mineJs.indexOf("跨设备同步要 Pro 起") < 0);
 
   // W6. 微信登录那一层的说明书要在 —— 它是唯一的硬阻塞，
   //     没有它接手的人只能从头猜接口形状。
@@ -3336,13 +3393,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       iLocal >= 0 && iUrl > iLocal, body.replace(/\s+/g, " ").trim().slice(0, 120));
   }
 
-  // 登录只写 avatarUrl
+  // 登录只写 avatarUrl，且**走 saveSession**（不盖同步时间戳）
+  //
+  // 两件事都要守：
+  //   1. 不写 avatarLocal —— 登录刷新微信头像，不该冲掉用户自己传的那张
+  //   2. 走 saveSession 而不是 saveProfile —— 会话字段不许参与
+  //      「哪一份档案更新」的比较。盖章的代价是云端那份头像永远认不回来
+  //      （本机每登一次就把云端顶掉一次），而进度与设置看着都好好的。
   const authJs = fs.readFileSync(path.join(ROOT, "utils/auth.js"), "utf8");
-  const loginWrite = /store\.saveProfile\(\{([\s\S]*?)\}\)/.exec(authJs);
+  const loginWrite = /store\.saveSession\(patch\)/.exec(authJs)
+    ? /const patch = \{([\s\S]*?)\};/.exec(authJs)
+    : /store\.saveSession\(\{([\s\S]*?)\}\)/.exec(authJs);
   ok("登录时写的是微信那张（avatarUrl）", !!loginWrite && /avatarUrl\s*:/.test(loginWrite[1]));
   ok("登录时不碰本机那张（不写 avatarLocal）",
     !!loginWrite && !/avatarLocal\s*:/.test(loginWrite[1]),
     "登录会冲掉用户自己传的头像");
+  ok("登录态走 saveSession（不盖跨设备那份的时间戳）",
+    authJs.indexOf("store.saveProfile({ logged") < 0 && !!loginWrite);
 
   // 页面显示一律走 store.avatarSrc()
   const direct = [];
@@ -5222,6 +5289,209 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     Object.keys(pagesCfg).some((k) => k === "home-extra"));
   ok("预览里有「设置页加背管理」那一屏",
     Object.keys(pagesCfg).some((k) => k === "settings-recite-daily"));
+}
+
+
+/* ---------- V34. 登录即全量同步（Issue #42 的第四问，2026-10-04） ----------
+ *
+ * 用户原话：
+ *   「我现在是微信小程序项目，不是之前的 web 应用，需要修改，同步功能只要
+ *     用户登录就全部提供，确保用户数据不丢失，背诵进度换设备也能得到。请重新设计」
+ *
+ * 上一轮的实情（不是「差不多」）：真正绑账号的只有身份与档位；进度 / 已读 /
+ * 加背 / 自选清单走云同步但**要 Pro**；设置与头像**压根没打包**，
+ * 换台手机主题回「墨」、每日计划回 5 首、算法回艾宾浩斯、头像没了。
+ *
+ * 所以这一节守两件事：
+ *   1. **一样都不许再漏**：设置 / 头像 / 昵称有打包、有落地、有往返
+ *   2. **登录那一刻就同步**：新机器上登录完，进度不能还躺在云上
+ *
+ * 为什么这些坏法都是静默的：「设置没打包」不会报错 —— 它只是换台手机之后
+ * 悄悄回了默认值，用户以为是新机器本来就该这样。
+ */
+{
+  const wireSrc = fs.readFileSync(path.join(ROOT, "utils", "wire.js"), "utf8");
+  const storeSrc2 = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
+  const authSrc = fs.readFileSync(path.join(ROOT, "utils", "auth.js"), "utf8");
+  const mineJs2 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+  // 1) 「跟人走」与「跟设备走」必须分得开
+  ok("设置分两层：跨设备的 DEFAULTS + 只属本机的 DEVICE_DEFAULTS",
+    /const DEFAULTS\s*=/.test(storeSrc2) && /const DEVICE_DEFAULTS\s*=/.test(storeSrc2));
+  ok("音效跟设备走（不跨设备搬）",
+    /DEVICE_DEFAULTS\s*=\s*\{[\s\S]{0,200}?sfx/.test(storeSrc2));
+  ok("写设置时按键分流（页面只写一个 key）",
+    /function saveSettings\(patch\)[\s\S]{0,400}?isDeviceKey/.test(storeSrc2));
+
+  // 2) 打包：设置与头像各占一行
+  ok("设置有打包（settings:v1）",
+    wireSrc.indexOf("SETTINGS_ROW") >= 0 && /SETTINGS_ROW\s*=\s*"settings:v1"/.test(wireSrc));
+  ok("头像有打包（profile:v1）",
+    wireSrc.indexOf("PROFILE_ROW") >= 0 && /PROFILE_ROW\s*=\s*"profile:v1"/.test(wireSrc));
+  ok("打包的是跨设备那一份设置（不是整份）",
+    /store\.cloudSettings\(\)/.test(wireSrc));
+  ok("头像只打包用户自己那张（微信那张登录会重新下发）",
+    /avatarLocal[\s\S]{0,200}?PROFILE_ROW|PROFILE_ROW[\s\S]{0,200}?avatarLocal/.test(wireSrc));
+
+  // 3) 落地：两条分支都在 applyRecords 里
+  ok("设置能落回本机", /id === SETTINGS_ROW[\s\S]{0,400}?replaceSettings/.test(wireSrc));
+  ok("头像能落回本机（落到 avatarLocal）",
+    /id === PROFILE_ROW[\s\S]{0,400}?avatarLocal/.test(wireSrc));
+
+  // 4) 往返：写一份设置 → 打包 → 清掉 → 用「云端」那份盖回来 → 还在
+  {
+    const wireMod4 = require(path.join(ROOT, "utils", "wire.js"));
+    const storeMod4 = require(path.join(ROOT, "utils", "store.js"));
+    const future = Date.now() + 86400000;
+
+    storeMod4.replaceSettings({ grade: 7, theme: "tianqing", fontSize: 2 });
+    storeMod4.saveSettings({ sfx: true });
+    storeMod4.touchSettings(future);
+    storeMod4.saveProfile({ avatarLocal: "wxfile://avatar.jpg", nickname: "张敏" }, future);
+
+    const packed4 = wireMod4.packRecords();
+    ok("设置真的进了包", packed4.some((r) => r.id === "settings:v1"));
+    const sRow = packed4.filter((r) => r.id === "settings:v1")[0];
+    ok("设置行按服务端形状（payload.settings + updatedAt）",
+      !!sRow && !!sRow.payload.settings && sRow.updatedAt > 0);
+    ok("设置行里带上了年级 / 主题 / 字号",
+      !!sRow && sRow.payload.settings.grade === 7 && sRow.payload.settings.theme === "tianqing"
+        && sRow.payload.settings.fontSize === 2);
+    ok("设置行里**没有**跟设备走的那一项",
+      !!sRow && sRow.payload.settings.sfx === undefined,
+      "sfx 跟设备走，不该进报文");
+    ok("头像真的进了包", packed4.some((r) => r.id === "profile:v1"));
+
+    // 换台机器：本机回到默认，再把云端那份盖回来
+    storeMod4.replaceSettings({ grade: 1, theme: "ink", fontSize: 0 });
+    storeMod4.touchSettings(0);
+    storeMod4.saveProfile({ avatarLocal: "", nickname: "" }, 0);
+
+    const applied4 = wireMod4.applyRecords(packed4);
+    const back = storeMod4.settings();
+    ok("云端那份设置能整份落回本机（" + applied4 + " 条）", applied4 >= 2, applied4 + " 条");
+    ok("换机之后年级是认回来的（不是默认 1）", back.grade === 7, String(back.grade));
+    ok("换机之后主题是认回来的（不是默认墨）", back.theme === "tianqing", back.theme);
+    ok("换机之后字号是认回来的", back.fontSize === 2, String(back.fontSize));
+    ok("换机之后头像还在", storeMod4.profile().avatarLocal === "wxfile://avatar.jpg",
+      storeMod4.profile().avatarLocal);
+    // 音效跟设备走：云上那份里根本没有它，认回云端不该把本机这份改掉
+    ok("音效仍听这台设备的（云端那份盖不到它）", back.sfx === true, String(back.sfx));
+    ok("跟设备走的那一项不进报文（云上没有它）",
+      storeMod4.cloudSettings().sfx === undefined);
+
+    // 时间戳的规矩：认回来的那份必须带上云端的时间戳，
+    // 否则本机立刻变成「更新的那一份」，下次同步又推回去，两台机器互相覆盖
+    ok("认回来的设置带云端时间戳（不然会来回覆盖）",
+      storeMod4.settingsAt() === future, String(storeMod4.settingsAt()));
+    ok("认回来的档案带云端时间戳", storeMod4.profileAt() === future, String(storeMod4.profileAt()));
+
+    // 旧的不许盖新的
+    wireMod4.applyRecords([
+      { id: "settings:v1", payload: { v: 1, settings: { theme: "zhuhong" } }, updatedAt: 1 }
+    ]);
+    ok("比本机旧的设置不覆盖", storeMod4.settings().theme === "tianqing");
+  }
+
+  // 4.5) 两条**只有端到端才试得出来**的静默 bug，各自钉一条断言。
+  //
+  // 它们都属于「换台手机才发现」那一类：本机一切正常，界面写着已同步，
+  // 另一个设备上就是没有。写成断言是因为人眼看不出来 —— 代码读着都对。
+  {
+    const storeMod45 = require(path.join(ROOT, "utils", "store.js"));
+    const wireMod45 = require(path.join(ROOT, "utils", "wire.js"));
+
+    // (a) 时间戳是同步的入场券 —— 不许由调用方负责盖。
+    //     靠「每个入口记得 markDirty」就等于让同步成不生效取决于记性。
+    storeMod45.saveSettings({ grade: 8 });
+    ok("写设置会自动盖上时间戳（不靠调用方记得）",
+      storeMod45.settingsAt() > 0, String(storeMod45.settingsAt()));
+    ok("跟设备走的那一项不盖章（写 sfx 不该让设置进队列）", (() => {
+      const before = storeMod45.settingsAt();
+      storeMod45.saveSettings({ sfx: !storeMod45.settings().sfx });
+      return storeMod45.settingsAt() === before;
+    })());
+
+    // (b) 会话字段不参与「谁更新」的比较。
+    //     登录/登出在每台设备上都会发生；若它们算「档案动了」，
+    //     本机就成了更新的那一份 —— 云端那份头像永远认不回来。
+    storeMod45.saveProfile({ avatarLocal: "wxfile://probe.jpg" });
+    const atAfterAvatar = storeMod45.profileAt();
+    storeMod45.saveSession({ logged: true, tier: "pro" });
+    ok("登录态不盖档案时间戳（盖了头像就永远认不回来）",
+      storeMod45.profileAt() === atAfterAvatar,
+      "saveSession 动了时间戳");
+    ok("头像仍然打得进包",
+      wireMod45.packRecords().some((r) => r.id === "profile:v1"));
+
+    // (c) 报文的深拷：pack 之后本机再改，排队那一行**不许跟着变**。
+    //     不拷的话，离线队列里躺着的那一份会「时间戳是老的、内容是新的」。
+    storeMod45.replaceSettings({ theme: "ink" });
+    storeMod45.touchSettings(Date.now());
+    const row45 = wireMod45.packRecords().filter((r) => r.id === "settings:v1")[0];
+    const themeAtPack = row45.payload.settings.theme;
+    storeMod45.replaceSettings({ theme: "zhuhong" });
+    ok("打包之后本机再改，报文不许跟着变（不然推上去的是一份说不清来历的数据）",
+      row45.payload.settings.theme === themeAtPack, "报文被本机存储的引用串改了");
+    storeMod45.replaceSettings({ theme: "ink" });
+  }
+
+  // 5) 登录那一刻就同步 —— 新机器上登录完，进度不能还躺在云上
+  ok("登录成功之后立刻认回云端", /pullAfterLogin/.test(authSrc));
+  ok("认回云端只在这条路上做一次（不是每个页面各写一遍）",
+    (authSrc.match(/pullAfterLogin\(/g) || []).length <= 2);
+  ok("界面会如实说「认回来了」还是「通道没开」",
+    /synced/.test(authSrc) && /进度已认回|后端未就绪/.test(mineJs2));
+
+  // 6) 同步不再分档，但门槛还在（配了后端 + 登录了）
+  const syncSrc = fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8");
+  ok("同步只有一道门槛：配了后端且登录了",
+    /function ready\(\)[\s\S]{0,160}?remote\.configured\(\) && auth\.logged\(\)/.test(syncSrc));
+  ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
+
+  // 7) 每一个「改了就该同步」的地方都挂了记账 —— 漏一处就是「改了但没传」
+  const DIRTY = [
+    ["通用设置", "packages/settings/general/general.js", /onAlign[\s\S]{0,200}?markDirty/],
+    ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
+    ["通用设置-自动翻篇", "packages/settings/general/general.js", /onAutoNext[\s\S]{0,200}?markDirty/],
+    ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
+    ["主题色", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
+    ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
+    ["头像", "pages/mine/mine.js", /onAvatarChoose[\s\S]{0,400}?markDirty/],
+    ["昵称", "pages/mine/mine.js", /onNickname[\s\S]{0,300}?markDirty/]
+  ];
+  DIRTY.forEach(([name, file, re]) => {
+    ok("改了就该传：「" + name + "」挂了记账",
+      re.test(fs.readFileSync(path.join(ROOT, file), "utf8")), file);
+  });
+
+  // 8) 记账是**免费的**：markDirty 不许发网络
+  ok("markDirty 只记账不发网络",
+    /function markDirty\(\)[\s\S]{0,400}?\}/.test(syncSrc)
+      && /function markDirty\(\)[\s\S]{0,400}?wx\.request/.test(syncSrc) === false);
+
+  // 8.5) ⚠️ **服务端必须给这两行加白名单**，否则数据到不了云端。
+  //
+  // 这一条是**量出来的**，不是读文档推的：poem 的 `sanitizePayload` 对
+  // 认不出的行 id 一律返回 `{}` —— 也就是说，服务端没加白名单时，
+  // `settings:v1` / `profile:v1` 的载荷会被**静默清空**：
+  // 客户端一路「同步成功」、界面写着「已同步」，换台手机什么都没有。
+  //
+  // 客户端这边只能做到「发得出去、写得规范」，剩下那半在服务端。
+  // 所以这条不断言服务端（读不到就是读不到），而是**把要求钉在文档里**，
+  // 并守着文档里真的写了它 —— 少一个环节，接手的人就会以为是客户端坏了。
+  {
+    const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-login-server.md"), "utf8");
+    ok("服务端要加的两行白名单写进了文档",
+      doc.indexOf("settings:v1") >= 0 && doc.indexOf("profile:v1") >= 0);
+    ok("文档说清了「不加白名单会被静默清空」这件事",
+      doc.indexOf("sanitizePayload") >= 0);
+  }
+
+  // 9) 预览
+  const pagesCfg2 = readJson(path.join(__dirname, "shots", "pages.json"));
+  ok("预览里有「换台机器、云端那份落回来」那一屏",
+    Object.keys(pagesCfg2).some((k) => k === "mine-synced"));
 }
 
 /* ---------- 汇总 ---------- */

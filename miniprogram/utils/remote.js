@@ -68,7 +68,15 @@ function request(path, data, method) {
       },
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
-        else reject(new Error("HTTP " + res.statusCode));
+        else {
+          // 429：同设备同步太频繁。界面要为此说一句人话
+          // （「刚同步过，过会儿再来」），所以把状态码挂在 error 上 ——
+          // 只留一句 "HTTP 429" 的话，调用方只能靠字符串匹配去猜。
+          const err = new Error("HTTP " + res.statusCode);
+          err.statusCode = res.statusCode;
+          err.code = (res.data && res.data.error) || "";
+          reject(err);
+        }
       },
       fail: (err) => reject(new Error((err && err.errMsg) || "网络不可用"))
     });

@@ -225,12 +225,17 @@ Page({
       return;
     }
     this.applyReading();
+    // 注音口径也是「我这一套」的一部分，换部手机该还是这个
+    sync.markDirty();
   },
 
   onAlign(e) {
     const align = e.detail.value;
     this.setData({ align });
     store.saveSettings({ align });
+    // 对齐方式也要跨设备（用户 2026-10-04：登录之后一切跟着账号走）。
+    // markDirty 只记账、不发网络，随写随调不心疼。
+    sync.markDirty();
   },
 
   /* 字号：这一行装的是两个端点按钮，不是滑块。
@@ -251,6 +256,7 @@ Page({
     if (fontSize === this.data.fontSize) return;
     this.setData({ fontSize });
     store.saveSettings({ fontSize });
+    sync.markDirty();
   },
 
   /* ---------- 背诵评分 ---------- */

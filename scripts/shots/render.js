@@ -475,6 +475,10 @@ cases.forEach((cfg) => {
        会漏到下一屏的今日安排里，而那张图的 caption 还写着自己那个名字。 */
     if (cfg.dailyExtra) storeMod.setDailyExtra(cfg.dailyExtra);
     else storeMod.clearDailyExtra();
+    /* 同步状态：预览里没有网，所以「已经同步过」这件事得显式摆进去 ——
+       靠 data 里那个 lastSyncAt。不清的话，上一屏同步过的状态会漏到下一屏。 */
+    if (cfg.syncedAt) storeMod.saveSettings({ lastSyncAt: cfg.syncedAt });
+    else storeMod.saveSettings({ lastSyncAt: 0 });
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {
