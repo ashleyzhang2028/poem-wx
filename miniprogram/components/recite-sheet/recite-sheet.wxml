@@ -64,6 +64,17 @@
         </view>
       </view>
 
+      <!-- 今日加背：与详情页同一枚、同一套样式（见 app.wxss 阅读面）。
+           在弹层里加背是**正当的一刻** —— 背到一半想「这首明天还得再来」，
+           当场就能加，不必退出去回首页。 -->
+      <view class="daily-row">
+        <view class="daily-btn {{dailyOn ? 'on' : ''}}" hover-class="daily-btn-hover" hover-stay-time="60"
+              bindtap="onToggleDaily">
+          <text class="daily-glyph">{{dailyOn ? '✓' : '＋'}}</text>
+          <text>{{dailyOn ? '已加入今日背诵' : '加入今日背诵'}}</text>
+        </view>
+      </view>
+
       <!-- 正文：版式由 corpus.layout() 决定，注音与正文同形同序 -->
       <view class="poem-body align-{{align}} size-{{fontSize}}">
         <block wx:if="{{!pinyinOn}}">

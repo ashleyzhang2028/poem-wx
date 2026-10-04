@@ -77,6 +77,30 @@ function runtime() {
          再把 open() 记进 page.data.sheetOpen，供 expandReciteSheet() 摆开。
          真机走的仍是组件自己那一份；这里只是让截图能拍到那张卡。 */
       page.selectComponent = function (sel) {
+        /* 「今日加背」那张卡：给它一个**真会算的**替身 —— 它调的是真组件
+           那一份 onInput / paint，所以预览里的建议列表与真机同源。
+           （recite-sheet 那个替身不一样：弹层只需要「摆不摆开」，版式
+           由 pickSheetPoem() 现拼一句诗，不必真跑组件。） */
+        if (sel === "#extra") {
+          const mod = path.join(ROOT, "components/daily-extra/daily-extra.js");
+          let opt = null;
+          const savedComp = global.Component;
+          global.Component = (o) => { opt = o; };
+          delete require.cache[require.resolve(mod)];
+          require(mod);
+          global.Component = savedComp;
+          if (!opt) return null;
+          const comp = Object.assign({}, opt.methods);
+          comp.data = JSON.parse(JSON.stringify(opt.data || {}));
+          // 回调要真调：组件里 onInput 是「setData(keyword, () => paint())」，
+          // 吞掉回调，那一屏就是「搜了没反应」—— 而截图里看不出是替身的错
+          comp.setData = function (obj, cb) {
+            Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
+            if (typeof cb === "function") cb.call(this);
+          };
+          comp.triggerEvent = function () {};
+          return comp;
+        }
         if (sel !== "#sheet") return null;
         const self = this;
         return {
@@ -127,6 +151,8 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss
   // 背诵弹层是首页那张浮层，样式同样要进预览 —— 漏了它，截图里就只剩一屏
   // 「点了没反应」的列表，而这一轮改的恰好就是它
   + flattenCss(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"))
+  // 首页那张「今日加背」卡同样是组件，漏了它就是一条没样式的搜索框
+  + flattenCss(path.join(ROOT, "components/daily-extra/daily-extra.wxss"))
   // 自绘底栏也是组件，样式同样要进预览 —— 它要是漏了，底栏在截图里
   // 就是个没有图标的灰条，看图的人会以为「图标没做」
   + flattenCss(path.join(ROOT, "custom-tab-bar/index.wxss"));
@@ -280,6 +306,10 @@ function expandReciteSheet(wxml, data) {
   const comp = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
   // 组件的作用域：页面 data 之上压一层组件自己的字段
   const merged = Object.assign({}, data, {
+    // 组件里这一格来自 store（首页那一份 data 里没有它）——
+    // 不给默认值，弹层里那枚加背按钮就会画成一个**空圆圈**：
+    // 图还在、位置也对，只有字没了，看着像「按钮做坏了」。
+    dailyOn: !!data.sheetDailyOn,
     open: !!data.sheetOpen,
     index: data.sheetIndex || 0,
     total: (data.plan || []).length,
@@ -334,6 +364,32 @@ function pickSheetPoem(data) {
   };
 }
 
+/**
+ * 展开「今日加背」那张卡。
+ *
+ * 与 recite-sheet 同一个理由：预览的编译器不认自定义组件，不展开的话
+ * 首页上只剩一张写着「今日加背」的空卡 —— 而这一轮改的就是它。
+ *
+ * 组件自己的字段（keyword / rows / count / searched）现算一份：
+ * `rows` **按页面 data 里那份 `extraRows` 取**（预览里没有组件运行时，
+ * 真实的搜索结果是页面那一步 do 调出来的，见 home.js 的 onExtraInput）。
+ * 没给就按空列表画 —— 空列表是首页的常态（还没搜），不是异常。
+ */
+function expandDailyExtra(wxml, data) {
+  if (wxml.indexOf("<daily-extra") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/daily-extra/daily-extra.wxml"), "utf8");
+  const merged = Object.assign({}, data, {
+    keyword: data.extraKeyword || "",
+    searched: !!data.extraRows && !!data.extraRows.length,
+    rows: data.extraRows || [],
+    count: data.extraCount || 0,
+    max: 20,
+    themeStyle: data.themeStyle || ""
+  });
+  Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
+  return wxml.replace(/<daily-extra[^>]*\/>/g, comp);
+}
+
 function pageHtml(cfg, data) {
   const wxmlPath = path.join(ROOT, cfg.page + ".wxml");
   let wxml = fs.readFileSync(wxmlPath, "utf8");
@@ -371,6 +427,7 @@ function pageHtml(cfg, data) {
     for (let i = 0; i < n; i++) s += '<view class="sk-block sk-line w80"></view>';
     return s + "</view>";
   });
+  wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);
   const body = compile(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
@@ -413,6 +470,11 @@ cases.forEach((cfg) => {
        这种「图在、名字对、内容是别的」比没有图更糟，所以这里按屏判一次。 */
     const screenTheme = (cfg.settings && cfg.settings.theme) || THEME;
     storeMod.saveSettings({ theme: screenTheme });
+    /* 今日加背：预览要能拍到「已经加了几首」的样子（首页那张卡的读数、
+       设置页的管理列表）。别的屏一律清空 —— 不清的话，上一屏加的几首
+       会漏到下一屏的今日安排里，而那张图的 caption 还写着自己那个名字。 */
+    if (cfg.dailyExtra) storeMod.setDailyExtra(cfg.dailyExtra);
+    else storeMod.clearDailyExtra();
     // 档位走服务端那一份（本机的会被降级），默认给 max 才看得到全部页面
     const store2 = require(path.join(ROOT, "utils", "store.js"));
     if (cfg.logged) {

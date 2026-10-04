@@ -1,0 +1,43 @@
+<!-- 今日加背：首页那一枚搜索框 + 它下面的一张建议列表。
+     它是「今天想多背一首」的唯一入口 —— 加进去的篇目当场排进首页的今日安排，
+     跨过 0 点自动归零。
+
+     这里只管**搜索与增删**，加完发一次 change 让页面自己去重排计划：
+     组件自己没有计划可言，替页面判断「这一首排进去会挤掉谁」一定会慢半拍。 -->
+<view class="de" style="{{themeStyle}}">
+  <view class="search de-search">
+    <text class="search-icon">⌕</text>
+    <input placeholder="今日加背" value="{{keyword}}" bindinput="onInput"
+           confirm-type="search" bindconfirm="onSearch" />
+    <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+  </view>
+
+  <view class="de-limit hint" wx:if="{{count}}">今天已加 {{count}} / {{max}} 首</view>
+
+  <view class="de-suggest" wx:if="{{rows.length}}">
+    <view class="de-row" wx:for="{{rows}}" wx:key="id"
+          hover-class="row-hover" hover-stay-time="60"
+          data-id="{{item.id}}" bindtap="onOpen">
+      <!-- 行首这颗圆钮是「加没加进去」的唯一判据，两态来回切。
+           点钮只加 / 移，不跳详情 —— 行本身才是「去看看这一首」。
+           用 catchtap：不 catch 的话点钮会连带触发整行的打开。 -->
+      <view class="de-btn {{item.on ? 'on' : ''}}"
+            hover-class="de-btn-hover" hover-stay-time="60"
+            data-id="{{item.id}}" catchtap="onToggle">
+        <text class="de-glyph">{{item.on ? '✓' : '＋'}}</text>
+      </view>
+      <view class="row-main">
+        <text class="row-title row-poem">{{item.title}}</text>
+        <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}} · {{item.bookName}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <!-- 搜过了、但一篇都没对上：如实说没找到，
+       不用「已加入今日背诵」这种说了等于没说的话糊过去 -->
+  <view class="empty de-empty" wx:if="{{searched && !rows.length}}">
+    <text class="empty-text">没找到「{{keyword}}」</text>
+    <text class="hint empty-tip">换个篇名、作者或朝代试试</text>
+  </view>
+</view>

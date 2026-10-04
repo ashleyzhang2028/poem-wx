@@ -68,6 +68,9 @@ Page({
     hint: "",
     results: RESULTS,
 
+    /** 这一首是不是今天的加背。与偏好那几项分开存 —— 它不是版式偏好 */
+    dailyOn: false,
+
     // 这一页**没有任何朗读元素**：TTS 通道个人主体申请不下来，
     // 用户 2026-10-02 明确裁决不做。见 docs/todo.md 第 1 条。
     // 留一个「待开通」的灰按钮等于每次进来都杵着一块死内容 —— 没有比没有更糟。
@@ -103,6 +106,41 @@ Page({
     if (this.data.locked) this.setData({ locked: false });
     if (!this.loaded) this.loadEntry();
     this.applyReading();
+    // 从设置页回来时，这一首可能已被移出今日加背 —— 按钮得跟着变
+    this.syncDaily();
+  },
+
+  /**
+   * 这一首在不在今天的加背里。
+   * 存的是 id 列表，不是每首一个标志位 —— 真相只有一处（store），
+   * 页面这一格只是它的一次投影。
+   */
+  syncDaily() {
+    const on = store.dailyExtra().indexOf(this.data.id) >= 0;
+    if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
+  },
+
+  /**
+   * 加 / 移这一首。
+   * 判断（上限、去重、两态）全在 store.toggleDailyExtra()，
+   * 页面只把 code 翻成人话 —— 措辞散在十几处，口径早晚不一致。
+   */
+  onToggleDaily() {
+    const r = store.toggleDailyExtra(this.data.id);
+    if (!r.ok) {
+      wx.showToast({ title: this.dailyMsg(r), icon: "none" });
+      return;
+    }
+    this.setData({ dailyOn: r.on });
+    wx.showToast({ title: r.on ? "已加入今日背诵" : "已移出今日背诵", icon: "none" });
+    sync.markDirty();
+  },
+
+  /** 加背失败时那句话。四种 code 各有各的下场，不说清等于没说 */
+  dailyMsg(r) {
+    if (r.code === "E_LIMIT") return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，先背完再加";
+    if (r.code === "E_STORAGE") return "加不进去：本机存储用不了";
+    return "加不进去";
   },
 
   loadEntry() {
@@ -144,6 +182,7 @@ Page({
     wx.setNavigationBarTitle({ title: meta.t });
     store.markRead(meta.b, id);
     this.loaded = true;
+    this.syncDaily();
 
     // 从设置页回来、或刚登录完，注音状态可能变了
     this.applyReading();

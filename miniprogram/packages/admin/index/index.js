@@ -118,7 +118,7 @@ Page({
    */
   groupCaps(snap) {
     const GROUPS = [
-      { title: "免费档（登录即得）", keys: ["daily", "library", "pinyin", "ebbinghaus", "progress", "search"] },
+      { title: "免费档（登录即得）", keys: ["daily", "extra", "library", "pinyin", "ebbinghaus", "progress", "search"] },
       { title: "登录即开", keys: ["speak", "export", "leitner"] },
       { title: "专业档起", keys: ["sync", "sm2", "quiz", "collections", "admin"] },
       { title: "全能档起", keys: ["fsrs", "feihualing", "exam"] }

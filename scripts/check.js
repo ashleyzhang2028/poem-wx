@@ -5102,6 +5102,128 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
+/**
+ * V33. 今日加背（Issue #42 的追加题，2026-10-04）。
+ *
+ * 用户原话：
+ *   「本项目添加 今日加背 功能了吗？可参考 /poem 代码库」
+ *   「请完整实现，不要丢这个缺什么」
+ *
+ * 上一轮盘出来的实情是：**数据层全通了，缺的只有界面** ——
+ * store.dailyExtra()/setDailyExtra() 有当日域与跨天归零，排期器认加背，
+ * 云同步真打包了 `daily_extra:v1`，自检也有覆盖；只是全项目**没有任何
+ * 界面能往里加**（setDailyExtra 只被同步回写调过一次）。
+ * 网页版是一整套（js/daily-extra.js + js/daily-extra-ui.js + 首页那枚
+ * 搜索框 + settings/recite 的管理面板），所以这一节按那份清单逐项守。
+ *
+ * 为什么这一节重要：加背这条路的坏法全是**静默**的 ——
+ * 「能加但排不进计划」「加了却看不见」「上限失效再加一首」
+ * 三样都不会报错，只会让人觉得「这个功能有点怪」。
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const storeSrc = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
+  const schedSrc = fs.readFileSync(path.join(ROOT, "utils", "scheduler.js"), "utf8");
+  const homeJs = fs.readFileSync(path.join(ROOT, "pages/home/home.js"), "utf8");
+  const homeWxml = fs.readFileSync(path.join(ROOT, "pages/home/home.wxml"), "utf8");
+  const compDir = path.join(ROOT, "components", "daily-extra");
+  const compJs = fs.readFileSync(path.join(compDir, "daily-extra.js"), "utf8");
+  const compWxml = fs.readFileSync(path.join(compDir, "daily-extra.wxml"), "utf8");
+
+  // 1) 入口真的存在：首页挂上了那张卡，且它就是这个组件
+  ok("今日加背四件套齐全",
+    [".js", ".json", ".wxml", ".wxss"].every((e) => fs.existsSync(path.join(compDir, "daily-extra" + e))));
+  ok("首页挂上了今日加背", homeWxml.indexOf("<daily-extra") >= 0);
+  const homeCfg = readJson(path.join(ROOT, "pages/home/home.json"));
+  ok("首页注册了这个组件",
+    (homeCfg.usingComponents || {})["daily-extra"] === "/components/daily-extra/daily-extra");
+  // 加完要当场重排 —— 攒着等下次 onShow，用户会以为没加上，然后再点一次（那时点的是移出）
+  // 加完要当场重排 —— 攒着等下次 onShow，用户会以为没加上，然后再点一次
+  // （那时点的是「移出」）。两处都要挂：加背卡那张、以及弹层那一枚
+  // （背到一半加完，这一列也该跟着动）。
+  ok("加完当场重排今日安排（不是等下次进页面）",
+    /onExtraChange\s*\([\s\S]{0,200}?this\.refresh\(\)/.test(homeJs));
+  ok("加背卡 + 背诵弹层两处都挂了 change",
+    /<daily-extra[^>]*bind:change="onExtraChange"/.test(homeWxml)
+      && /<recite-sheet[^>]*bind:change="onExtraChange"/.test(homeWxml),
+    "有一处没挂 change，那一处加完不会重排");
+
+  // 2) 上限与两态：与网页版同数，且判断收在 store 一处
+  ok("上限与网页版同数（20）",
+    /DAILY_EXTRA_MAX\s*=\s*20\b/.test(storeSrc));
+  ok("加 / 移是同一个动作的两态（不是两个函数）",
+    /function toggleDailyExtra\(/.test(storeSrc));
+  ok("满了就拒绝，不静默丢弃",
+    /E_LIMIT/.test(storeSrc) && /E_LIMIT/.test(compJs));
+  ok("写存储失败要如实返回（不能「点了没反应」）",
+    /E_STORAGE/.test(storeSrc) && /E_STORAGE/.test(compJs)
+      && /return write\(KEYS\.dailyExtra/.test(storeSrc));
+  ok("上限只在 store 里判一次（组件用 DAILY_EXTRA_MAX，不自己写数）",
+    compJs.indexOf("store.DAILY_EXTRA_MAX") >= 0
+      && !/>=\s*20\b|===\s*20\b|:\s*20\b/.test(compJs),
+    "组件里又写了一个字面的 20");
+
+  // 3) 排期层真的认它 —— 光能加、排不进计划，这个功能就是死的
+  ok("排期器真的把加背排进计划",
+    /extraPoems/.test(schedSrc) && /extraList/.test(schedSrc));
+  ok("首页把加背交给排期器（不是自己拼一份）",
+    /extraPoems:\s*store\.dailyExtraPoems\(\)/.test(homeJs));
+
+  // 4) 计划行上的小签：用户加的 vs 系统凑的，**必须分得开**
+  //    两个概念共用一个词，界面上就分不清「这首是我加的」还是「系统补的」
+  ok("今日加背在计划行上有一枚小签",
+    /pinned:\s*"今日加背"/.test(homeJs));
+  ok("「系统凑数」与「用户加背」不再共用一个词",
+    /extra:\s*"补充"/.test(homeJs) && /pinned:\s*"今日加背"/.test(homeJs));
+  ok("小签按类型给色（加背金、复习琥珀、新学青）",
+    /REASON_CLS/.test(homeJs) && /\.tag\.gold\s*\{/.test(appWxss));
+
+  // 5) 详情页与弹层里也要能加 —— 背到一半想「这首明天还得再来」是常事
+  const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
+  const sheetWxml = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
+  ok("详情页有「加入今日背诵」", readerWxml.indexOf("onToggleDaily") >= 0);
+  ok("背诵弹层里也有（同一枚、同一套样式）", sheetWxml.indexOf("onToggleDaily") >= 0);
+  ok("两处共用一份样式（阅读面在 app.wxss）",
+    /\.daily-btn\s*\{/.test(appWxss) && /\.daily-row\s*\{/.test(appWxss));
+  // 一处定义两处用：页面样式表里不许再写第二份
+  [path.join(ROOT, "pages/reader/reader.wxss"),
+   path.join(ROOT, "components/recite-sheet/recite-sheet.wxss")].forEach((f) => {
+    const css = fs.readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    ok("不写第二份加背按钮样式 " + path.basename(path.dirname(f)) + "/" + path.basename(f),
+      !/\.daily-btn\s*\{/.test(css));
+  });
+
+  // 6) 设置页那半页：网页版的 daily-panel 是「全选 / 取消 / 移出选中 / 全部清空」
+  const setWxml = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
+  const setJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
+  ok("设置页有今日加背的管理面板", setWxml.indexOf("今日加背") >= 0 && setWxml.indexOf("daily-tools") >= 0);
+  [["onDailyAll", "全选"], ["onDailyNone", "取消全选"],
+   ["onDailyRemove", "移出选中的"], ["onDailyClear", "全部清空"]].forEach(([fn, label]) => {
+    ok("管理面板有「" + label + "」",
+      setWxml.indexOf(label) >= 0 && new RegExp(fn + "\\(\\)").test(setJs));
+  });
+  ok("「全部清空」先问一句（不可逆的动作不许一键完成）",
+    /wx\.showModal/.test(setJs) && /清空今日加背/.test(setJs));
+  ok("清空的是今日暂存，不动已背的进度",
+    /function clearDailyExtra\(/.test(storeSrc) && /drop\(KEYS\.dailyExtra\)/.test(storeSrc));
+
+  // 7) 读数与列举同源 —— 不许「说 3 首、列 2 行」
+  ok("管理面板的读数与列表同一次算出",
+    /refreshDaily[\s\S]{0,300}?dailyRows\(\)/.test(setJs));
+  ok("认不出来的 id 如实丢掉（不编一条空标题）",
+    /dailyExtraPoems[\s\S]{0,300}?\.filter\(Boolean\)/.test(storeSrc));
+
+  // 8) 能力键：加背是 free 档的，界面上的入口归它管
+  ok("能力表里有 extra（与网页版对齐）", E.CAP_KEYS.indexOf("extra") >= 0);
+
+  // 9) 预览：拍不到的那一屏等于没改
+  const pagesCfg = readJson(path.join(__dirname, "shots", "pages.json"));
+  ok("预览里有「首页加背搜出结果」那一屏",
+    Object.keys(pagesCfg).some((k) => k === "home-extra"));
+  ok("预览里有「设置页加背管理」那一屏",
+    Object.keys(pagesCfg).some((k) => k === "settings-recite-daily"));
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");

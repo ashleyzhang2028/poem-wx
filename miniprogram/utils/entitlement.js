@@ -50,6 +50,7 @@ const CAPS = [
   { key: "ebbinghaus", name: "艾宾浩斯", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
   { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处 / 正文", tier: "free" },
+  { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "free" },
 
   // login：免费档登录即得，不必等管理员发放
   { key: "speak", name: "语音朗读", desc: "正文朗读；需要 TTS 通道就绪", tier: "login" },

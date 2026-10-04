@@ -78,6 +78,21 @@
       </view>
     </view>
 
+    <!-- 今日加背：这一枚说的是「今天多背它一首」，不是这一首诗的事。
+         网页版把它放在详情页那一行工具按钮里（gw-daily）；小程序端那一行
+         装的是对齐 / 注音 / 字号（Issue #26 明令它们只在这两处），
+         再塞第三组就挤破了，所以它自己占一行、居中。
+
+         两态共用一个按钮（加过了 → 填色 + 「已加入」）——
+         「移出」是同一个动作的另一半，不做成第二颗按钮。 -->
+    <view class="daily-row">
+      <view class="daily-btn {{dailyOn ? 'on' : ''}}" hover-class="daily-btn-hover" hover-stay-time="60"
+            bindtap="onToggleDaily">
+        <text class="daily-glyph">{{dailyOn ? '✓' : '＋'}}</text>
+        <text>{{dailyOn ? '已加入今日背诵' : '加入今日背诵'}}</text>
+      </view>
+    </view>
+
     <!-- 正文。
          上面那一排「对齐 · 注音 · 字号」下面是**直接接正文**：曾经这里还有
          一道「正文」分隔条，2026-10-03 用户说「删除 A－ A＋ 和古诗内容中间
