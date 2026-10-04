@@ -91,11 +91,30 @@
   font-weight: 400;
 }
 
+/* 副题那一行：「我是谁 + 这张头像哪来的」，右边可能挂一个退回微信头像的动作。
+   头像行撤掉之后（用户 2026-10-04），换头像只走「点头像」一条路，
+   但「从自己那张退回微信那张」得留在屏上 —— 它是一句附注，不是一行操作。 */
+.identity-sub-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+
 .identity-sub {
-  display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: var(--sp-1);
+}
+
+/* 「用微信头像」：一枚最轻的文字动作，压在副题右端。
+   它不铺底、不加框 —— 只是副题后面一句可点的话，不抢名字与头像那两处。 */
+.identity-revert {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--line-strong);
 }
 
 /* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
@@ -116,40 +135,18 @@
   margin-top: var(--sp-4);
 }
 
-/* 头像那一行：左边说「现在这张是哪来的」，右边两个小按钮（换 / 用微信）。
-   与 .row 同一口径（一行一件可操作的事），但不带「›」——
-   它不是一个跳转入口，而是就地操作。 */
-.avatar-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-4);
-  padding-top: var(--sp-4);
-  border-top: 1rpx solid var(--line-2);
-}
-
-.avatar-row-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.avatar-src {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  margin-top: 2rpx;
-}
-
 .danger-text {
   color: var(--red);
 }
 
-/* 退出登录：一档最轻的按钮，满宽但不着色 */
+/* 退出登录：一档最轻的按钮，满宽但不着色。
+   头像行撤掉之后（用户 2026-10-04），它上面就是身份那两行 ——
+   留白给到 sp-4，别让「退出登录」贴着「已登录」 */
 .logout {
   display: flex;
   width: 100%;
   text-align: center;
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-4);
 }
 
 /* 清空数据那行：图标底也跟着变淡，别让它看着像个普通入口 */

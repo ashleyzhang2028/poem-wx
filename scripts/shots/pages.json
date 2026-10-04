@@ -474,5 +474,13 @@
       }
     ],
     "dailyExtra": ["poems-xx1-01", "poems-cz7-01", "poems-xx1-03"]
+  },
+  "mine-avatar-local": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true,
+    "_note": "自己传过头像的「我的」：副题右边那枚「用微信头像」是退回微信那张的唯一入口。见 check.js V38",
+    "saveProfile": { "logged": true, "nickname": "张敏", "avatarLocal": "wxfile://demo.jpg" }
   }
 }

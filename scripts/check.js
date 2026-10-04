@@ -5843,6 +5843,65 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
+/* ---------- V38. 「头像」那一行撤掉（点头像就换）+ 退回微信那张留在副题上 ----------
+ *
+ * 用户 2026-10-04：
+ *   「换头像那一行也是多余，需要删除，用户直接点击上面的头像就可以编辑或者更换头像不行吗？」
+ *
+ * 行。头像那个圆本来就挂着 open-type="chooseAvatar" —— 它就是换头像的入口，
+ * 弹出来的第一项就是「用微信头像」，下面一项是「从相册选 / 拍照」。
+ * 所以「头像 ｜ 本机设置的头像 ｜ [换头像] [用微信头像]」这一行是把同一件事
+ * 又说了一遍，而且把「我是谁」那张卡撑高了半屏。
+ *
+ * 唯一不能跟着一起删的是「用微信头像」—— 它是**从自己传的那张退回微信那张**
+ * 的动作，头像圆里没有（chooseAvatar 只会给你一张新的，不会清掉旧的）。
+ * 它挪到副题右端，只有自己传过一张时才出现。
+ *
+ * ⚠️ 这类「删对了没人夸」的改动同样得有断言守着：一行是删是留静态可判，
+ * 「退回微信那张」还在不在也静态可判。逐条都做过反证（把改动逐个改回去当场红）。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const mineWxml = read("pages/mine/mine.wxml");
+  const mineWxss = read("pages/mine/mine.wxss");
+  const mineJs = read("pages/mine/mine.js");
+
+  // 1) 那一行整个撤掉：WXML 里不再有 .avatar-row，样式也不留孤儿
+  ok("「我的」页不再有「头像」那一行（.avatar-row 已撤）",
+    mineWxml.indexOf("avatar-row") < 0 && mineWxss.indexOf(".avatar-row") < 0,
+    "那一行还在，或者样式留下了孤儿");
+  // 原来贴在那行里的三样：标签「头像」「换头像」按钮、说明「本机设置的头像」
+  //   先摘掉 WXML 注释：里面的说明正引着「换头像」这个词（V26 踩过同一个坑）
+  const mineWxmlBare = mineWxml.replace(/<!--[\s\S]*?-->/g, "");
+  ok("那一行里的「换头像」按钮也没了（它点的是同一件事）",
+    mineWxmlBare.indexOf("换头像") < 0, "换头像按钮还在，与头像圆重复");
+  ok("原来那行只说一句的 .avatar-src 也撤了",
+    mineWxss.indexOf(".avatar-src") < 0 && mineJs.indexOf("avatarFromText") < 0,
+    "avatarFromText / .avatar-src 还留着，没人再读它");
+
+  // 2) 头像圆仍是换头像的入口：chooseAvatar 挂在它身上，不是挪到别处去了
+  ok("头像圆本身就是 chooseAvatar 的入口（点它就换）",
+    /class="avatar-btn"\s+open-type="chooseAvatar"/.test(mineWxml)
+      && /bindchooseavatar="onAvatarChoose"/.test(mineWxml),
+    "头像圆不再是入口了，换头像无处可点");
+
+  // 3) 退回微信那张：挪到副题右端，只在有本机头像时出现
+  ok("「用微信头像」还在（它是退回微信那张的唯一入口）",
+    /class="identity-revert"[^>]*bindtap="onAvatarClear"/.test(mineWxml)
+      && /onAvatarClear/.test(mineJs),
+    "退回微信那张的动作丢了，用户换过一次就回不去");
+  ok("它只在自己传过一张时才出现（没传过就没有可退的）",
+    /wx:if="\{\{logged && hasLocalAvatar\}\}"/.test(mineWxml),
+    "没传过头像也挂着一枚点了没用的「用微信头像」");
+
+  // 4) 「这张哪来的」这条信息没跟着那行一起丢 —— 副题仍如实说
+  ok("副题仍说清「这张头像哪来的」（本机 / 微信 / 还没有）",
+    /本机头像/.test(mineJs) && /微信头像/.test(mineJs) && /还没有头像/.test(mineJs),
+    "头像行删了，副题又没接上，用户看不出现在顶着的是哪一张");
+  ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
+    /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
