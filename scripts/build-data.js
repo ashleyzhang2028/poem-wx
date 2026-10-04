@@ -28,6 +28,20 @@ const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 /** 每个正文分片的目标量（压缩前 KB），控制单次下载体积 */
 const BUCKET_KB = 200;
 
+/**
+ * 译文的来源说明。poem 网页版把 `translationSource` 当键、拿
+ * `window.translationSourceText()` 翻成人话，小程序移植时只搬了键 ——
+ * 于是详情页把 `school` / `academic` / `modern` 这几个英文 token 原样
+ * 印在译文下面（Issue #49 走查 reader-trans 屏时看见的）。
+ * 口径与 poem 的 `data/index.js` 同一份，改这边记得对那边。
+ */
+const TRANSLATION_SOURCES = {
+  academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
+  school: "依据统编版教材与教师用书课后释义",
+  "public-domain": "原文属公有领域，依据公认注本与通行译注",
+  modern: "依据现行通用选本与通行讲法"
+};
+
 /** 语料脚本都是 IIFE 挂 window.XXX 的老式写法，按顺序丢进同一个沙箱执行 */
 function loadCorpus(rels) {
   const sandbox = { window: {}, console: console, Date: Date, JSON: JSON };
@@ -101,7 +115,13 @@ function main() {
     });
 
     if (text || translation) {
-      const payload = { text: text, translation: translation, src: p.translationSource || "" };
+      // 存的是**说明**不是 token —— 认不得的 token 一律留空，
+      // 界面上少一行灰字，好过印一串英文
+      const payload = {
+        text: text,
+        translation: translation,
+        src: TRANSLATION_SOURCES[p.translationSource] || ""
+      };
       if (p.grade || p.term) courseTexts[p.id] = payload;
       else texts[p.id] = payload;
     }

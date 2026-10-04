@@ -351,9 +351,15 @@ function pageHtml(cfg, data) {
     const mark = v(attrs.mark || title.charAt(0));
     // wx:if 挂在 lock-card 自己身上，展开时要带过去
     const cond = attrs["wx:if"] ? ` wx:if="${attrs["wx:if"]}"` : "";
+    /* 这里手抄了一份组件结构 —— 抄错就会「预览里有、真机没有」。
+       上一版凭空多拼了一行 <text class="lock-foot">不积跬步…</text>，
+       真机组件里从来没有这个元素，于是门禁卡的间距在预览里看着挤成一团
+       （Issue #49 走查时差点当 bug 报）。现在与 components/lock-card/lock-card.wxml
+       逐元素对齐：mark / title / note（有才出）/ 按钮。
+       check.js V32 有一条守着两边的元素清单一致。 */
     return `<view${cond} class="card lock-card"><text class="lock-mark">${mark}</text><text class="lock-title">${title}</text>`
-      + `<text class="hint lock-note">${note}</text><button class="btn primary block lock-btn">微信登录</button>`
-      + `<text class="lock-foot">不积跬步，无以至千里</text></view>`;
+      + (note ? `<text class="lock-note">${note}</text>` : "")
+      + `<button class="btn primary block lock-btn">微信登录</button></view>`;
   });
   wxml = wxml.replace(/<skeleton\b([^>]*)\/>/g, (_, a) => {
     const rows = /rows\s*=\s*"(\d+)"/.exec(a);
