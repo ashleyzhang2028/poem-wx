@@ -96,7 +96,7 @@ function readiness() {
   if (provider === "remote") {
     const remote = require("./remote");
     if (!remote.speechReady()) {
-      return { visible: true, usable: false, state: "awaiting", reason: "后端 TTS 未配置，朗读暂不可用" };
+      return { visible: true, usable: false, state: "awaiting", reason: "朗读服务未开通，暂时只能看字" };
     }
   }
 

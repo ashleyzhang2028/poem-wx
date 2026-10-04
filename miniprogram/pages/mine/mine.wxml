@@ -53,9 +53,13 @@
     </block>
   </view>
 
-  <!-- 本机数据：三个大数字。一屏最容易被扫到的地方，放三个能一眼比出大小的数 -->
+  <!-- 背诵概况：三个大数字。一屏最容易被扫到的地方，放三个能一眼比出大小的数。
+
+       标题原来叫「本机数据」—— 用户 2026-10-04 的话是「没有人关心或者需要知道
+       这个数据在本机还是云端」。他说得对：这个位置写的是「我背得怎么样」，
+       数据存在哪儿是系统的内务，不该上屏。见 docs/design-system.md「文案」一节。 -->
   <view class="card">
-    <view class="card-title bar">本机数据</view>
+    <view class="card-title bar">背诵概况</view>
     <view class="stats">
       <view class="stat">
         <text class="stat-v">{{stats.learned}}</text>
@@ -155,7 +159,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
       <view class="row-icon">云</view>
       <view class="row-main">
-        <text class="row-title">云端同步</text>
+        <text class="row-title">同步进度</text>
         <text class="row-sub">{{syncSub}}</text>
       </view>
       <text class="row-go">›</text>
@@ -175,7 +179,7 @@
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
       <view class="row-icon">删</view>
-      <view class="row-main"><text class="row-title danger-text">清空本机数据</text></view>
+      <view class="row-main"><text class="row-title danger-text">清空背诵数据</text></view>
       <text class="row-go">›</text>
     </view>
   </view>

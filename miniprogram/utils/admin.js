@@ -55,7 +55,7 @@ function localUsers() {
   return [
     {
       id: profile.userId || store.deviceId(),
-      label: profile.nickname || "本机",
+      label: profile.nickname || "这台手机",
       tier: s.signed ? s.tier : "",
       tierLabel: s.label,
       role: auth.role() || "user",
@@ -91,7 +91,7 @@ function list() {
     return Promise.resolve({
       users: merge(rosterUsers(), localUsers(), []),
       sim: true,
-      note: roster().note || "服务端未就绪，名录只读"
+      note: roster().note || "服务器未接上，名录只读"
     });
   }
 
@@ -156,7 +156,7 @@ function setTier(userId, tier) {
   if (!canWrite()) {
     return Promise.resolve({
       ok: false,
-      msg: "改不了：要么后端没就绪，要么你这一档不是管理员"
+      msg: "改不了：要么服务器没接上，要么你不是管理员"
     });
   }
   return remote.setUserTier(userId, tier).then((res) => ({
@@ -166,13 +166,13 @@ function setTier(userId, tier) {
       ? res.changed === false
         ? "本来就是「" + tiers.nameOf(tier) + "」，没改动"
         : "已把「" + userId.slice(0, 8) + "」改成「" + tiers.nameOf(tier) + "」，对方下次打开生效"
-      : "服务端拒绝，权限不足"
+      : "服务器拒绝，权限不足"
   }));
 }
 
 /** 收回档位（降回 free） */
 function revokeTier(userId) {
-  if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：后端未就绪或权限不足" });
+  if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：服务器未接上或权限不足" });
   return remote.revokeUserTier(userId).then((res) => ({
     ok: true,
     msg: (res && res.note) || "已收回，重置为免费档"

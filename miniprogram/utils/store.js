@@ -62,6 +62,22 @@ const DEFAULTS = {
   // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）
   speechRate: 1,
   speechAutoNext: true,
+  /* 上次同步成功的时间。**「我的」页那一行的读数全靠它**（sync.state() 读
+     的就是这个键），所以它必须在 DEFAULTS 里 —— 不在的话，`settings()` 这个
+     只投影已知键的函数会把它整个丢掉。
+
+     ⚠️ 这里曾经真的漏了，而且**漏得很安静**（Issue #49 走查，2026-10-04）：
+     `saveSettings({ lastSyncAt })` 写进了原始存储（sync.js 的成功分支），
+     `store.read(KEYS.settings).lastSyncAt` 也读得到，可 `settings().lastSyncAt`
+     恒为 undefined —— 于是「我的」页那一行**永远**说「还没同步过」，
+     同步成功多少次都一样。没有任何报错，因为两个函数各自都对。
+
+     预览那边也一直在打配合的假：pages.json 的 `syncedAt` 就是往这个键写的，
+     而那屏拍出来照样是「还没同步过」，谁也没觉得不对（图在、字对、状态是错的）。
+
+     它跟着账号走（不进 DEVICE_DEFAULTS）：换台手机也知道「我这份进度到过别处」，
+     而 DEVICE_DEFAULTS 的定义是「换台手机就不成立的东西」—— 这个显然不是。 */
+  lastSyncAt: 0,
   // 音效**不在**这里 —— 它跟设备走，见 DEVICE_DEFAULTS
 };
 

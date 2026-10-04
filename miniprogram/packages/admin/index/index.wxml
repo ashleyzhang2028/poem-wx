@@ -45,7 +45,7 @@
 
   <view class="card">
     <view class="card-title bar">用户名录</view>
-    <text class="hint note" wx:if="{{!remoteReady}}">只读 · 后端未就绪{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
+    <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
     <text class="hint note" wx:elif="{{!adminReady}}">只读 · 当前 {{roleLabel}}</text>
 
     <view class="acct" wx:for="{{users}}" wx:key="id">
@@ -54,7 +54,7 @@
         <text class="acct-sub">{{item.tier ? item.tier : '未分级'}} · {{item.scopeText}} · {{item.role}}</text>
       </view>
       <!-- 改档 / 改角色：只给原生按钮，选值交给原生 showActionSheet。
-           后端没就绪时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->
+           服务器没接上时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->
       <view class="acct-acts">
         <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
                 bindtap="onSetTier">改档</button>
@@ -74,7 +74,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">后端地址</view>
+    <view class="card-title bar">同步服务器</view>
     <text class="hint note">同步与登录都走这一个地址</text>
     <view class="field">
       <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
