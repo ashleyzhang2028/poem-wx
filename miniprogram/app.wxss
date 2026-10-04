@@ -398,6 +398,14 @@ view, text, button, input, textarea {
 .tag {
   display: inline-flex;
   align-items: center;
+  /* 标签**不折行、不被压窄**。
+     它是「一个新学 / 复习」的量词胶囊，两个字的固定小块，
+     没有「装不下就换行」这种状态。少了这两条，它在 .row-line 那样
+     一行排开的容器里会被 flex 压缩：长一点的篇名（定风波·莫听穿林打叶声）
+     把标签挤到 46rpx 宽，「新学」于是折成上下两行 —— 实测标签高度
+     从 23px 涨到 42px，整行跟着变形，看着像一枚竖起来的圆点。 */
+  flex: none;
+  white-space: nowrap;
   font-size: var(--fs-caption);
   line-height: 1.5;
   /* 与选项格同一套内边距口径：上下 --pad-opt-y、左右 --pad-opt-x。
