@@ -62,6 +62,18 @@
     "tab": 4,
     "logged": true
   },
+  "mine-synced": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true,
+    "_note": "换台机器、云端那份落回来之后的「我的」。拍的是同步那一行的话术：登录即得、已经同步过、三件事都认回来了。见 check.js V34 第 9 条",
+    "syncedAt": 4102444800000,
+    "settings": {
+      "grade": 7,
+      "theme": "tianqing"
+    }
+  },
   "progress": {
     "page": "packages/progress/index/index",
     "title": "背诵进度",

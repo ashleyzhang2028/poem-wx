@@ -24,12 +24,15 @@ const TIER_KEYS = TIERS.map((t) => t.key);
 /**
  * 一登录就默认打开的能力。
  *
- * 这三样是「免费档也要有」的那部分（Issue 里点名的：语音朗读 / 莱特纳盒 / 进度导出），
- * 所以它们不是 pro，而是「登录门槛」—— 登录之后不必等管理员点头就能用。
+ * 这几样是「免费档也要有」的那部分（Issue 里点名的：语音朗读 / 莱特纳盒 /
+ * 进度导出），所以它们不是 pro，而是「登录门槛」—— 登录之后不必等管理员点头
+ * 就能用。**云端同步**在 2026-10-04 也进了这一组（用户裁决：「只要用户登录
+ * 就全部提供，确保用户数据不丢失」），此前它是 pro。
+ *
  * 管理页可以按人关掉（见 entitlement.can()），关掉时走的是服务端下发的
  * 能力表，而不是本地这份默认值。
  */
-const DEFAULT_ON = ["speak", "export", "leitner"];
+const DEFAULT_ON = ["speak", "export", "leitner", "sync"];
 
 function isTier(key) {
   return TIER_KEYS.indexOf(key) >= 0;

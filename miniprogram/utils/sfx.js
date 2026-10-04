@@ -27,6 +27,12 @@ function enabled() {
   return s.sfx !== false;
 }
 
+/**
+ * 音效**跟设备走，不跨设备同步**（见 store.js 的 DEVICE_DEFAULTS）：
+ * 这台机器有没有扬声器、用户在这台机器上看题时想不想出声，
+ * 换个手机重新判一次才对。所以这里不调 sync.markDirty() ——
+ * 调了也只是让同步跑一趟空活。
+ */
 function setEnabled(on) {
   store.saveSettings({ sfx: !!on });
   return enabled();

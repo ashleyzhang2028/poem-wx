@@ -1,6 +1,7 @@
 const store = require("../../../utils/store");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const sync = require("../../../utils/sync");
 
 /* 图标名按 key 取（.ic-left / .ic-center），画法在 app.wxss「分段控件」一节。
    与阅读页共用同一套 —— 同一件事在两个页面图标不一样，用户会以为是两件事。 */
@@ -42,6 +43,7 @@ Page({
     const align = e.detail.value;
     store.saveSettings({ align });
     this.setData({ align });
+    sync.markDirty();
   },
 
   /**
@@ -54,11 +56,13 @@ Page({
     if (fontSize === this.data.fontSize) return;
     store.saveSettings({ fontSize });
     this.setData({ fontSize });
+    sync.markDirty();
   },
 
   onAutoNext(e) {
     const autoNext = e.detail.value;
     store.saveSettings({ autoNext });
     this.setData({ autoNext });
+    sync.markDirty();
   }
 });

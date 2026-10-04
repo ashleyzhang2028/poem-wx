@@ -12,6 +12,9 @@ const corpus = require("./corpus");
 const KEYS = {
   progress: "kb_progress_v1",
   settings: "kb_settings_v1",
+  /* 「只有这台设备说了算」的设置（网速 / 音效这类跟设备走的东西）。
+     与 settings 分开存：那一份是跨设备同步的，这一份进来就是脏数据 */
+  deviceSettings: "kb_device_settings_v1",
   reads: "kb_reads_v1",
   collections: "kb_collections_v1",
   dailyExtra: "kb_daily_extra_v1",
@@ -22,11 +25,23 @@ const KEYS = {
   device: "kb_device_v1",
   speech: "kb_speech_v1",
   sync: "kb_sync_outbox_v1",
+  /** 设置这一份最后一次动的时间（同步比新旧用） */
+  settingsAt: "kb_settings_at_v1",
   /** 服务端下发的按人开关（管理页可以关掉某人的某项能力） */
   caps: "kb_caps_v1",
   version: "kb_schema_version"
 };
 
+/**
+ * 设置默认值。**这份清单就是「换台手机之后会被认回来的东西」**——
+ * 用户 2026-10-04 的话：「同步功能只要用户登录就全部提供，确保用户数据不丢失」。
+ *
+ * 所以分两层：
+ *   DEFAULTS        跨设备同步（年级、范围、算法、主题色、注音、字号、对齐…）
+ *   DEVICE_DEFAULTS 只有这台设备说了算（网速、音效）
+ * 判据不是「这个设置重不重要」，而是**「它在另一台手机上还成不成立」**：
+ * 音效取决于这台机器的扬声器，网速取决于当时的网络，搬过去只会互相打脸。
+ */
 const DEFAULTS = {
   grade: 1,
   term: 1,
@@ -43,6 +58,11 @@ const DEFAULTS = {
   // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）
   speechRate: 1,
   speechAutoNext: true,
+  // 音效**不在**这里 —— 它跟设备走，见 DEVICE_DEFAULTS
+};
+
+/** 只有这台设备说了算的设置。不进报文，换机回默认 */
+const DEVICE_DEFAULTS = {
   // 答题音效（现场合成，零音频文件）。它不依赖任何外部通道，
   // 所以默认是**开**的 —— 与朗读那条不同，那边「没通道」等于没功能
   sfx: true
@@ -98,11 +118,21 @@ function migrate() {
   }
 }
 
+/**
+ * 投影两份原始存储：跨设备的那份（KEYS.settings）与只属本机的那份。
+ * 认不出来的键一律保留在**原始**存储里（见 rawSettings），只是不投影出来。
+ */
 function settings() {
   const out = {};
+  const raw = rawSettings();
+  const dev = read(KEYS.deviceSettings, {}) || {};
   Object.keys(DEFAULTS).forEach((k) => {
-    const v = rawSettings()[k];
+    const v = raw[k];
     out[k] = v === undefined || v === null || v === "" ? DEFAULTS[k] : v;
+  });
+  Object.keys(DEVICE_DEFAULTS).forEach((k) => {
+    const v = dev[k];
+    out[k] = v === undefined || v === null || v === "" ? DEVICE_DEFAULTS[k] : v;
   });
   return out;
 }
@@ -111,11 +141,77 @@ function rawSettings() {
   return read(KEYS.settings, {}) || {};
 }
 
-/** 写回时在原始数据上合并：settings() 只投影已知键，拿它当底会抹掉别的键 */
+/** 只属本机的那份原始存储 */
+function rawDeviceSettings() {
+  return read(KEYS.deviceSettings, {}) || {};
+}
+
+/** 这个键是不是「跟设备走」的 */
+function isDeviceKey(key) {
+  return Object.prototype.hasOwnProperty.call(DEVICE_DEFAULTS, key);
+}
+
+/**
+ * 写回时在原始数据上合并：settings() 只投影已知键，拿它当底会抹掉别的键。
+ *
+ * 键落哪一份由 DEVICE_DEFAULTS 决定 —— 页面照旧只写一个 key，
+ * 「这个键跟不跟人走」的判断收在这里一处，不散到十几个调用点上。
+ */
 function saveSettings(patch) {
-  const next = Object.assign(rawSettings(), patch || {});
-  write(KEYS.settings, next);
+  const p = patch || {};
+  const cloud = {};
+  const local = {};
+  Object.keys(p).forEach((k) => {
+    if (isDeviceKey(k)) local[k] = p[k];
+    else cloud[k] = p[k];
+  });
+  if (Object.keys(cloud).length) {
+    write(KEYS.settings, Object.assign(rawSettings(), cloud));
+    // 写跨设备那一份就顺手盖章 —— **时间戳不许由调用方负责**。
+    // 这一条是被一次端到端试出来的：设置页每个入口都挂了 markDirty，
+    // 看着毫无破绽；可只要有**一处**漏挂（或者将来新加一个入口忘了挂），
+    // 数据就永远进不了报文 —— 因为 packRecords 只收「有时间戳的」。
+    // 那种漏不会报错，只会「改了设置、换台手机还是默认」。
+    // 所以盖章收在这里：写下去的那一刻就是它的时间。
+    touchSettings();
+  }
+  if (Object.keys(local).length) write(KEYS.deviceSettings, Object.assign(rawDeviceSettings(), local));
   return settings();
+}
+
+/**
+ * 整份设置写回，**给同步用**。
+ *
+ * 与 saveSettings 的区别：它是「按时间戳整份覆盖」，走的是云端的设置行。
+ * 键还得分流 —— 云端那份可能带着别的设备写的 sfx，落进本机时不能让它
+ * 盖掉这台机器的；反过来也不该把本机的 sfx 带到云上去。
+ */
+function replaceSettings(all) {
+  const src = all || {};
+  const cloud = {};
+  const local = {};
+  Object.keys(src).forEach((k) => {
+    if (isDeviceKey(k)) local[k] = src[k];
+    else cloud[k] = src[k];
+  });
+  if (Object.keys(cloud).length) write(KEYS.settings, Object.assign(rawSettings(), cloud));
+  return settings();
+}
+
+/** 设置里**跨设备**的那一份原始数据（同步打包用） */
+function cloudSettings() {
+  return rawSettings();
+}
+
+/** 设置最后一次动的时间 —— 同步拿它比新旧 */
+function settingsAt() {
+  return Number(read(KEYS.settingsAt, 0)) || 0;
+}
+
+function touchSettings(at) {
+  const t = Number(at) || Date.now();
+  write(KEYS.settingsAt, t);
+  return t;
 }
 
 function progress() {
@@ -299,10 +395,73 @@ function profile() {
   return read(KEYS.profile, {}) || {};
 }
 
-function saveProfile(patch) {
+/**
+ * 档案里**跨设备**的那几个字段。
+ *
+ * `at` 只跟这几个走，**不跟会话走** —— 这条边界是被一次端到端试出来的：
+ * 新机器上登录会写一次 `{ logged: true, nickname }`，如果那一下也算
+ * 「档案动了」，本机就成了「更新的那一份」，而云端那份头像被判成旧的 ——
+ * 于是头像永远认不回来（本机每登一次就把云端那份顶掉一次）。
+ * 表现是「换台手机头像没了」，而进度、设置都好好的，最难往这上面想。
+ *
+ * 所以把「会话字段」与「跟着人走的字段」拆成两个入口：
+ *   saveSession()  登录态 / 档位 —— 只在本机用，不参与同步的时间比大小
+ *   saveProfile()  头像 / 昵称   —— 跨设备，写它就等于「这份档案是我的新版本」
+ */
+const PROFILE_SYNCED = ["avatarLocal", "nickname"];
+
+/**
+ * 写档案。**只给跨设备的那几个字段用**（头像 / 昵称）。
+ *
+ * @param {object} patch
+ * @param {number} [at] **跨设备同步用**：按云端下发的行覆盖时，把云端那个
+ *   时间戳一并落下。不传就取本机当下 —— 也就是「这份档案是我刚改的」。
+ *   两件事必须分开：认回云端那份时若写成本机时间，下一次同步本机就成了
+ *   「更新的那一份」，把云端自己的数据再推回去，两台机器永远在互相覆盖。
+ */
+function saveProfile(patch, at) {
+  const next = Object.assign(profile(), patch || {});
+  const keys = Object.keys(patch || {});
+  if (at !== undefined) {
+    next.at = Number(at) || 0;
+  } else if (keys.some((k) => PROFILE_SYNCED.indexOf(k) >= 0)) {
+    // 只有「跨设备的那几个字段」被写到时才盖章，别的键（logged / tier…）
+    // 从不经这条路 —— 真从这儿过了，说明有调用点用错了函数，也不该改语义
+    next.at = Date.now();
+  }
+  write(KEYS.profile, next);
+  return next;
+}
+
+/**
+ * 写会话字段（登录态 / 档位 / 微信头像地址）。
+ *
+ * 与 saveProfile 分家的唯一理由，就是**不盖同步时间戳**：
+ * 登录这件事在两台机器上都会发生，它不该参与「谁的那一份更新」。
+ * 合在一起写的代价是一个静默的、只有换机器才看得见的 bug（见上）。
+ */
+function saveSession(patch) {
   const next = Object.assign(profile(), patch || {});
   write(KEYS.profile, next);
   return next;
+}
+
+/**
+ * 上面那两条「盖时间戳」为什么不能交给调用方：
+ *
+ * 时间戳是**同步的入场券** —— `packRecords()` 只打包「有时间戳的那一份」。
+ * 靠每个调用点自己记得盖，就等于让「同步能不能生效」取决于
+ * 「有没有人在新加的入口上记得调一下」。漏一处，那一处的改动就永远上不了云，
+ * 而界面一切正常 —— 这类错只有换台手机才看得见。
+ *
+ * 所以收口：`saveSettings()` 写跨设备那份时顺手 `touchSettings()`，
+ * `saveProfile()` 带 patch 时顺手盖 `at`。`markDirty()` 退化成
+ * 「队列里记一笔」的提示（它还有别的活儿：让 sync.state() 知道该动一动了）。
+ */
+
+/** 档案最后一次动的时间（同步比新旧用）。老档案没有这个字段，当 0 */
+function profileAt() {
+  return Number(profile().at) || 0;
 }
 
 /**
@@ -369,7 +528,9 @@ function exportAll() {
 
 function importAll(data) {
   if (!data || typeof data !== "object") throw new Error("备份文件格式不正确");
-  if (data.settings) write(KEYS.settings, data.settings);
+  // 分流：导入的 settings 里那些「跟设备走」的键落本机那一份，
+  // 别把别人机器的音效开关搬到这台机器上
+  if (data.settings) replaceSettings(data.settings);
   if (data.progress) write(KEYS.progress, data.progress);
   if (data.reads) write(KEYS.reads, data.reads);
   if (data.collections) write(KEYS.collections, data.collections);
@@ -405,12 +566,17 @@ module.exports = {
   KEYS,
   deviceId,
   DEFAULTS,
+  DEVICE_DEFAULTS,
   read,
   write,
   drop,
   migrate,
   settings,
   saveSettings,
+  replaceSettings,
+  cloudSettings,
+  settingsAt,
+  touchSettings,
   progress,
   getRecord,
   setRecord,
@@ -431,6 +597,8 @@ module.exports = {
   dayKey,
   profile,
   saveProfile,
+  saveSession,
+  profileAt,
   avatarSrc,
   hasLocalAvatar,
   collections,

@@ -57,12 +57,12 @@ const CAPS = [
   { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "login" },
   { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
 
-  // pro：管理员发放
-  // 云同步是 pro —— **这条是服务端定的**，不是这边客气。
-  // poem 的 syncTierGate 对 free 直接 403（E_TIER，cap: sync.multiDevice）。
-  // 所以界面必须在 free 档就把「云端同步」这件事说清楚：现在写的是本机进度，
-  // 攒着不上传。列一个点下去必然被服务端拒的入口，比不列更糟。
-  { key: "sync", name: "云端同步", desc: "换手机不丢进度；要 Pro 起", tier: "pro" },
+  // 云端同步也在这一档。上一版它是 pro（服务端 syncTierGate 对 free 直接 403）。
+  // 用户 2026-10-04 裁决改了这条边界：「同步功能只要用户登录就全部提供，
+  // 确保用户数据不丢失，背诵进度换设备也能得到」。服务端那道闸要一起放开
+  // （见 docs/wx-login-server.md「同步不再分档」）—— 只改一边，界面就会
+  // 列出一个点下去必然被拒的入口，或者把能用的功能藏起来。
+  { key: "sync", name: "云端同步", desc: "登录即得；换手机进度一字不少", tier: "login" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
@@ -170,6 +170,14 @@ function can(key) {
   if (switchedOff(key)) return false;
 
   // login 不是一档档位，是「免费 + 登录」：它比 free 高一点，但不用等管理员。
+  //
+  // 同步就在这一类里。上一版它是 pro —— 因为服务端 `syncTierGate` 对 free
+  // 直接 403（E_TIER，cap: sync.multiDevice）。用户 2026-10-04 裁决改了这条边界：
+  //   「我现在是微信小程序项目……同步功能只要用户登录就全部提供，
+  //     确保用户数据不丢失，背诵进度换设备也能得到」
+  // 所以服务端那道闸要一起放开（见 docs/wx-login-server.md「同步不再分档」），
+  // 客户端这里跟着改。两处必须同时改：只改一边，界面就会列出
+  // 一个点下去必然被服务端拒的入口，或者反过来把能用的功能藏起来。
   // 所以先从门槛里把它摘出来单独判 —— 直接拿去跟 s.tier 比大小会把
   // 免费已登录的人挡掉（free 的 rank 是 1、login 是 2），而那正是自检里
   // 「登录后朗读可用」那条断言要守的东西。
