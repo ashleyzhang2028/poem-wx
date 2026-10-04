@@ -6,7 +6,30 @@ const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 
-const REASON_TEXT = { review: "复习", new: "新学", extra: "加背", optional: "自选" };
+/**
+ * 计划行上那枚小签的文案。
+ *
+ * ⚠️ `extra` 这里原来是「加背」，而它说的其实是**排期凑数** ——
+ * 排期器在自己排完 5 首之后还没凑够时，会从剩余池子里拣一首补上，
+ * 理由是 `extra`（见 scheduler.js 最后那一段）。那件事与「用户今天主动
+ * 多加了一首」是两回事，而后者在网页版里叫 `pinned`（js/app.js 的
+ * withTodayExtra）。两个概念共用一个词，界面上就分不清这一首是我加的
+ * 还是系统凑的 —— 所以这一版把它们拆开：
+ *
+ *   pinned  今天的加背 —— 用户自己加的，排在最前
+ *   extra   系统凑数的 —— 排位不够时补的
+ *
+ * 小签的**颜色**也跟着这件事走：加背是金色（它是用户自己的选择，
+ * 与全站「选中填色」同一套语言），凑数是灰的（它什么都不表示）。
+ */
+const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", optional: "自选", pinned: "今日加背" };
+
+/** 小签的配色：复习琥珀、新学青、加背金、其余灰 */
+const REASON_CLS = { review: "amber", new: "blue", pinned: "gold" };
+
+function reasonCls(key) {
+  return REASON_CLS[key] || "ghost";
+}
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
@@ -94,11 +117,7 @@ Page({
     }
 
     const settings = store.settings();
-    const byId = {};
     const all = corpus.course();
-    all.forEach((p) => {
-      byId[p.id] = p;
-    });
 
     const plan = S.generateDailyPlan({
       grade: settings.grade,
@@ -106,7 +125,8 @@ Page({
       count: settings.dailyCount,
       scope: settings.scope,
       allPoems: all,
-      extraPoems: store.dailyExtra().map((id) => byId[id]).filter(Boolean),
+      // 今日加背的条目由 store 翻好（认不出来的 id 会如实丢掉，见 store.dailyExtraPoems）
+      extraPoems: store.dailyExtraPoems(),
       getRecord: store.getRecord
     });
 
@@ -124,6 +144,7 @@ Page({
         dynasty: it.poem.d,
         reason: REASON_TEXT[it.reason] || "",
         reasonKey: it.reason,
+        tagCls: reasonCls(it.reason),
         // 阶段名与「新学 / 复习」那个标签常常是同一个词（刚学的那几首都是「新学」）
         // —— 同一行里说两遍，等于没说。只在与标签不同的时候才附上
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
@@ -192,6 +213,35 @@ Page({
   /** 弹层里翻到新的一首：列表要把勾点亮、进度条要跟着走 */
   onSheetOpen() {
     this.refresh();
+  },
+
+  /**
+   * 今日加背动过了：立刻重排今日安排。
+   *
+   * **这一下是整个功能的落点** —— 加背的价值就在于「加完当场看见它排进去了」。
+   * 攒着不重排（等下次 onShow）的话，用户加完盯着列表看了半天没动静，
+   * 只会以为没加上，然后再点一次 —— 而第二次点的是「移出」。
+   */
+  onExtraChange() {
+    this.refresh();
+  },
+
+  /**
+   * 预览用：把首页那张加背卡里的搜索词灌进去。
+   *
+   * scripts/shots 认不得自定义组件的运行时，组件里的 onInput 它点不到 ——
+   * 留这一个口子，截图上才看得到建议列表长什么样。
+   * 它只做一件真事：调组件那一份 onInput，别的什么都不改。
+   */
+  onExtraInput(e) {
+    const box = this.selectComponent("#extra");
+    if (box) box.onInput(e);
+    // 预览里组件的 setData 落不到页面 data 上（替身没有 setData），
+    // 所以把结果再抄一份到 extraRows —— 展开那张卡时读的就是它
+    this.setData({
+      extraKeyword: (e && e.detail && e.detail.value) || "",
+      extraRows: (box && box.data && box.data.rows) || []
+    });
   },
 
   /** 今日这一趟走完了 —— 回列表，勾都在 */

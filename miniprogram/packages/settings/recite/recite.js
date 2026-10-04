@@ -1,4 +1,6 @@
 const store = require("../../../utils/store");
+const corpus = require("../../../utils/corpus");
+const sync = require("../../../utils/sync");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
@@ -51,6 +53,11 @@ Page({
     counts: S.DAILY_COUNTS,
     algo: "ebbinghaus",
     algos: [],
+    /** 今日加背：`[{ id, title, meta, picked }]` —— 管理页要的是「选没选中」，
+        而 store 里那份只存 id 列表，「选中」是**这一屏的临时状态**，
+        不该写回存储（退出这一屏再进来，勾应该都清掉） */
+    daily: [],
+    dailyMax: 20,
     poolSize: 0,
     lockedHint: "",
     locked: false
@@ -71,10 +78,95 @@ Page({
         grades: this.gradeRows(settings.grade),
         gradeNote: this.gradeNote(settings.grade),
         scopes: scopes,
-        algos: this.algoRows(settings.algo)
+        algos: this.algoRows(settings.algo),
+        daily: this.dailyRows(),
+        dailyMax: store.DAILY_EXTRA_MAX
       }),
       () => this.updatePool()
     );
+  },
+
+  /* ---------- 今日加背 ---------- */
+
+  /**
+   * 今天加背的那几首。
+   *
+   * 认不出来的 id（语料更新后条目没了）**如实丢掉** —— 与首页同一个口径
+   * （store.dailyExtraPoems 也是这么做的）。这里走 indexById 而不是那份
+   * 投影，是因为还要拿 meta（朝代 · 作者 · 出处）拼那一行副题。
+   */
+  dailyRows() {
+    return store
+      .dailyExtra()
+      .map((id) => corpus.indexById(id))
+      .filter(Boolean)
+      .map((p) => ({
+        id: p.id,
+        title: p.t,
+        meta: [p.d, p.a, p.n].filter(Boolean).join(" · "),
+        picked: false
+      }));
+  },
+
+  /** 勾选变了。整行重算 picked —— checkbox-group 给的是「当前选中的那些」 */
+  onDailyPick(e) {
+    const picked = {};
+    (e.detail.value || []).forEach((id) => {
+      picked[id] = true;
+    });
+    this.setData({
+      daily: this.data.daily.map((it) => Object.assign({}, it, { picked: !!picked[it.id] }))
+    });
+  },
+
+  /** 全选 / 取消全选。两个动作共用一处，picked 只有一个判据 */
+  setDailyPicked(on) {
+    this.setData({ daily: this.data.daily.map((it) => Object.assign({}, it, { picked: on })) });
+  },
+
+  onDailyAll() {
+    this.setDailyPicked(true);
+  },
+
+  onDailyNone() {
+    this.setDailyPicked(false);
+  },
+
+  /** 移出选中的。一首都没选就说清 —— 不静默什么都不做 */
+  onDailyRemove() {
+    const ids = this.data.daily.filter((it) => it.picked).map((it) => it.id);
+    if (!ids.length) {
+      wx.showToast({ title: "还没选中任何一篇", icon: "none" });
+      return;
+    }
+    const n = store.removeDailyExtra(ids);
+    this.refreshDaily();
+    wx.showToast({ title: n ? "已移出 " + n + " 首" : "这几首已经不在今天的加背里了", icon: "none" });
+    sync.markDirty();
+  },
+
+  /** 全部清空 —— 这是**清掉今天暂存的那一份**，已背的进度一个字不动 */
+  onDailyClear() {
+    const n = store.dailyExtra().length;
+    if (!n) return;
+    wx.showModal({
+      title: "清空今日加背",
+      content: "把今天加背的 " + n + " 首全部移出？已经背过的进度与掌握度一个字都不动。",
+      confirmText: "清空",
+      cancelText: "算了",
+      success: (res) => {
+        if (!res.confirm) return;
+        const gone = store.clearDailyExtra();
+        this.refreshDaily();
+        wx.showToast({ title: "今天的加背已清空 " + gone + " 首", icon: "none" });
+        sync.markDirty();
+      }
+    });
+  },
+
+  /** 列表与读数一起重算 —— 计数与列举必须同一次算出，否则会「说 5 首、列 3 行」 */
+  refreshDaily() {
+    this.setData({ daily: this.dailyRows(), dailyMax: store.DAILY_EXTRA_MAX });
   },
 
   /**

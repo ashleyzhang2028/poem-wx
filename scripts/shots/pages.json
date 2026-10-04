@@ -432,5 +432,35 @@
     "settings": {
       "pinyin": "rare"
     }
+  },
+  "home-extra": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "onExtraInput",
+        "with": {
+          "detail": {
+            "value": "月"
+          }
+        }
+      }
+    ],
+    "dailyExtra": ["poems-xx1-05"]
+  },
+  "settings-recite-daily": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onDailyAll",
+        "with": {}
+      }
+    ],
+    "dailyExtra": ["poems-xx1-01", "poems-cz7-01", "poems-xx1-03"]
   }
 }

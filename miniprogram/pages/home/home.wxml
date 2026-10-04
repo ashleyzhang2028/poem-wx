@@ -79,6 +79,17 @@
       </view>
     </view>
 
+    <!-- 今日加背：网页版 index.html L67 那一整块（搜索框 + 建议列表）。
+         位置也一样 —— 顶在「今日安排」上面：它是「今天这一趟」的入口，
+         加进去的篇目当场排进下面那一列。
+
+         挂在这里而不是做成一个页面：用户加完要立刻看见它落进了今日安排，
+         弹一个页面出去加、加完再回来，那一下的因果就断了。 -->
+    <view class="card">
+      <view class="card-title bar">今日加背</view>
+      <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
+    </view>
+
     <view class="card">
       <view class="card-title bar">今日安排</view>
       <skeleton rows="3" wx:if="{{loading}}" />
@@ -89,7 +100,7 @@
           <view class="row-main">
             <view class="row-line">
               <text class="row-title row-poem">{{item.title}}</text>
-              <text class="tag {{item.reasonKey === 'review' ? 'amber' : (item.reasonKey === 'new' ? 'blue' : 'ghost')}}">{{item.reason}}</text>
+              <text class="tag {{item.tagCls}}">{{item.reason}}</text>
             </view>
             <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
@@ -111,8 +122,12 @@
     <!-- 背诵弹层：点篇名、点「开始背」都从底部弹这张卡上来。
          它挂在页面根节点上而不是某张卡里 —— 它是 fixed 的整屏浮层，
          放进卡片会被卡片的层叠上下文裁掉。 -->
+    <!-- 弹层里也能加背（背到一半想「这首明天还得再来」）——
+         加完让首页重排：队列是从首页这一列来的，编不编得进由它说了算。
+         所以弹层只发 change，队列本身由首页刷新后重新灌进去。 -->
     <recite-sheet id="sheet" queue="{{plan}}" theme-style="{{themeStyle}}"
-                    bind:open="onSheetOpen" bind:finish="onSheetFinish" />
+                    bind:open="onSheetOpen" bind:finish="onSheetFinish"
+                    bind:change="onExtraChange" />
 
     <view class="safe-bottom"></view>
   </block>

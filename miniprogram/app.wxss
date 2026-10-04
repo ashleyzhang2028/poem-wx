@@ -444,6 +444,14 @@ view, text, button, input, textarea {
   background: var(--sink);
 }
 
+/* 金色：**用户自己做的选择**（今日加背）。
+   与琥珀（复习）分得开 —— 琥珀说的是「系统排的，到期了」，
+   金说的是「我自己要加的」。同一个浅底上两句话，颜色不能一样。 */
+.tag.gold {
+  color: var(--amber);
+  background: var(--gold-soft);
+}
+
 /* ---------- 搜索框 ----------
    参考图的输入框是「浅底 + 无描边 + 胶囊」：它比页面底深一点点，
    所以看得出是可输入的，又不会因为一道黑边而抢戏。 */
@@ -1723,6 +1731,56 @@ view, text, button, input, textarea {
   height: 1rpx;
   opacity: 0;
   pointer-events: none;
+}
+
+/* ---------- 今日加背：那一枚「加入今日背诵」 ----------
+   位置照网页版：详情页那一行工具按钮里的一格（gw-daily），
+   以及列表行行首的那颗圆钮。小程序端只在阅读面里放这一枚 ——
+   列表页的「＋」是另一件事（那是「浏览到一半顺手加」），
+   而加背的入口首页已经有一张完整的卡了（components/daily-extra）。
+
+   ⚠️ 它**不是**这一首诗的事，是「今天这一趟」的事，所以它与
+   偏好行是分开的两块 —— 混进偏好那一行会让「不注音 / 居中」和
+   「今天要不要多背它」读成同一组选项。 */
+.daily-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 var(--sp-2);
+}
+
+.daily-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  height: var(--h-btn-mini);
+  padding: 0 var(--sp-4);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: var(--fs-hint);
+  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
+}
+
+/* 加进去了：填主题色 —— 与全站「选中填色」同一套语言，不必另发明一个记号 */
+.daily-btn.on {
+  background: var(--strong);
+  border-color: var(--strong);
+  color: var(--on-ink);
+}
+
+.daily-btn-hover {
+  background: var(--sink);
+}
+
+.daily-btn.on.daily-btn-hover {
+  background: var(--ink-strong);
+}
+
+.daily-glyph {
+  font-size: var(--fs-hint);
+  line-height: 1;
 }
 
 /* ---------- 正文 ----------

@@ -14,3 +14,61 @@
   padding-top: var(--sp-2);
   border-top: 1rpx dashed var(--line-2);
 }
+
+/* ---------- 今日加背的管理 ----------
+   首页那张卡负责**加**，这里负责**看与清**。两处的列表长相不同是刻意的：
+   首页那张是「搜索结果」（要跳详情、要能加），这里的是「我已经加过的」
+   （要勾、要一起移出），动作不一样。 */
+.daily-count {
+  display: block;
+  margin-bottom: var(--sp-2);
+}
+
+.daily-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+/* 一行一首。行首那枚方框是勾选的样子，底层是原生 checkbox（视觉隐藏）——
+   与全站「选一个 / 选几个」同一套：行为走平台，脸走我们这层。 */
+.daily-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.daily-row:last-child {
+  border-bottom: none;
+}
+
+.daily-box {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: var(--sp-3);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 选中填主题色。与首页那颗圆钮是同一句话（「这一首在里面」），
+   只是这里说的是「这一首被勾上了」—— 两者都用填色，不另发明记号。
+   判据走 .on 类而不是 :has(checkbox[checked]) —— 小程序对 :has() 支持
+   不稳，而「选了没选」这件事不值得赌一个选择器。 */
+.daily-box.on {
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.daily-tick {
+  font-size: var(--fs-caption);
+  line-height: 1;
+}

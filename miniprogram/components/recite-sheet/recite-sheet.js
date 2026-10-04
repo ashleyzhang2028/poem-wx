@@ -109,7 +109,10 @@ Component({
 
     mastery: 0,
     hint: "",
-    results: RESULTS
+    results: RESULTS,
+
+    /** 这一首是不是今天的加背（与详情页同一个判据：store） */
+    dailyOn: false
   },
 
   attached() {
@@ -176,6 +179,7 @@ Component({
       });
 
       store.markRead(meta.b, item.id);
+      this.syncDaily();
       this.applyReading();
       // 翻页时把这一首的「身份」也说给首页听：它要重排列表、点亮勾
       this.triggerEvent("open", { id: item.id });
@@ -193,6 +197,31 @@ Component({
       const mode = usable ? store.settings().pinyin : "off";
       const tokens = usable ? pinyin.render(this.data.paras, mode) : [];
       this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
+    },
+
+    /** 翻到哪一首，那一首的加背状态就重算一次 —— 翻页不刷新它就会串味 */
+    syncDaily() {
+      const on = store.dailyExtra().indexOf(this.data.id) >= 0;
+      if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
+    },
+
+    /** 加 / 移当前这一首。判断在 store.toggleDailyExtra()，这里只翻人话 */
+    onToggleDaily() {
+      const r = store.toggleDailyExtra(this.data.id);
+      if (!r.ok) {
+        wx.showToast({ title: this.dailyMsg(r), icon: "none" });
+        return;
+      }
+      this.setData({ dailyOn: r.on });
+      wx.showToast({ title: r.on ? "已加入今日背诵" : "已移出今日背诵", icon: "none" });
+      // 加背变了，队列也跟着变（首页要重排，可能就从这一列里多出 / 少掉一首）
+      this.triggerEvent("change", { count: store.dailyExtra().length });
+    },
+
+    dailyMsg(r) {
+      if (r.code === "E_LIMIT") return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，先背完再加";
+      if (r.code === "E_STORAGE") return "加不进去：本机存储用不了";
+      return "加不进去";
     },
 
     onToggleTranslation() {

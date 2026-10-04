@@ -7,6 +7,8 @@
  * 小程序 storage 单 key 上限 1MB、总量 10MB（官方限制），
  * 这里把进度按「集子」拆 key，避免一边背一边涨到写不进去。
  */
+const corpus = require("./corpus");
+
 const KEYS = {
   progress: "kb_progress_v1",
   settings: "kb_settings_v1",
@@ -175,6 +177,11 @@ function unreadCount(book, ids) {
   return (ids || []).filter((id) => !m[id]).length;
 }
 
+/* 今日加背一次能加几首。与网页版 `js/daily-extra.js` 的 MAX 同数 ——
+   两端同步同一份数据，一边收 20 一边收 30，换端之后就会看到「多了几首
+   我加不进去的」。 */
+const DAILY_EXTRA_MAX = 20;
+
 /** 今日加背：只属于当天，跨 0 点自动归零 */
 function dailyExtra() {
   const raw = read(KEYS.dailyExtra, null);
@@ -183,8 +190,89 @@ function dailyExtra() {
   return raw.ids || [];
 }
 
+/**
+ * 写回今日加背。
+ *
+ * @returns {boolean} **写成功没有** —— 上一版没有返回值，界面把「写进去了」
+ *   当成必然。而 storage 写失败（超限）是真会发生的：加背一次加一首，
+ *   攒到 20 首也只是 20 个 id，本不该超，但同一次会话里别处写满了 quota
+ *   一样会连累到这里。默默失败的表现是「点了没反应」，界面据此说一句人话。
+ */
 function setDailyExtra(ids, at) {
-  write(KEYS.dailyExtra, { day: dayKey(), ids: ids || [], at: Number(at) || Date.now() });
+  return write(KEYS.dailyExtra, { day: dayKey(), ids: ids || [], at: Number(at) || Date.now() });
+}
+
+/**
+ * 加一首 / 移一首。**领域判断收在这里，不散在界面**。
+ *
+ * 判据只有三条，但它们决定「加背」这件事成不成立：
+ *   · 已在里面 → 移出（同一个动作两态，网页版也是这么做的）
+ *   · 已满 20  → 拒绝，并把话说死（「先背完再加」）—— 加背的意思是
+ *                今天多背几首，攒到 20 首还往里塞，明天一到全归零
+ *   · 其余     → 追加
+ *
+ * 界面只负责把 code 翻成人话，不自己数数、不自己排顺序。
+ *
+ * @returns {{ok:boolean, on:boolean, count:number, code?:string}}
+ */
+function toggleDailyExtra(id) {
+  if (!id) return { ok: false, on: false, count: dailyExtra().length, code: "E_NO_ID" };
+  const ids = dailyExtra();
+  const at = ids.indexOf(id);
+
+  if (at >= 0) {
+    const next = ids.slice();
+    next.splice(at, 1);
+    if (!setDailyExtra(next)) {
+      return { ok: false, on: true, count: ids.length, code: "E_STORAGE" };
+    }
+    return { ok: true, on: false, count: next.length };
+  }
+
+  if (ids.length >= DAILY_EXTRA_MAX) {
+    return { ok: false, on: false, count: ids.length, code: "E_LIMIT" };
+  }
+  const next = ids.concat([id]);
+  if (!setDailyExtra(next)) {
+    return { ok: false, on: false, count: ids.length, code: "E_STORAGE" };
+  }
+  return { ok: true, on: true, count: next.length };
+}
+
+/** 一次移出好几首（设置页的「移出选中的」）。返回真移掉了几首 */
+function removeDailyExtra(list) {
+  const gone = (list || []).filter(Boolean);
+  if (!gone.length) return 0;
+  const ids = dailyExtra();
+  const left = ids.filter((id) => gone.indexOf(id) < 0);
+  const n = ids.length - left.length;
+  if (n) setDailyExtra(left);
+  return n;
+}
+
+/** 把今天的加背清空。返回清掉了几首 —— 界面要拿这个数说「已清空 N 首」 */
+function clearDailyExtra() {
+  const n = dailyExtra().length;
+  if (!n) return 0;
+  drop(KEYS.dailyExtra);
+  return n;
+}
+
+/**
+ * 今日加背的**条目快照**：`[{ id, t, a, d, n }]`。
+ *
+ * 排期器要的是条目，而 dailyExtra() 给的只是一串 id —— 补一次「id → 条目」
+ * 的翻译。它不返回正文：加背的正文在云端分片里，首页只是排出来，
+ * 真正读到正文是弹层 / 详情页的事（那儿按 id 现取）。
+ *
+ * 认不出来的 id（语料更新后条目没了）**如实丢掉**，不编一条空标题出来 ——
+ * 一个点开是白的行比少一行更糟。
+ */
+function dailyExtraPoems() {
+  return dailyExtra()
+    .map((id) => corpus.indexById(id))
+    .filter(Boolean)
+    .map((p) => ({ id: p.id, t: p.t, a: p.a, d: p.d, n: p.n }));
 }
 
 /**
@@ -331,8 +419,13 @@ module.exports = {
   reads,
   markRead,
   unreadCount,
+  DAILY_EXTRA_MAX,
   dailyExtra,
   setDailyExtra,
+  toggleDailyExtra,
+  removeDailyExtra,
+  clearDailyExtra,
+  dailyExtraPoems,
   dailyExtraAt,
   touchDaily,
   dayKey,

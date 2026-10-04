@@ -11,6 +11,50 @@
   <lock-card wx:if="{{locked}}" title="背诵设置要登录" note="登录后才能改" mark="背" />
 
   <block wx:else>
+  <!-- 今日加背放在最前面：它是**当天**的东西（跨 0 点自动归零），
+       而下面几张（学段 / 范围 / 首数 / 算法）都是长期设置。
+       把一次性的排在上面，是为了「今天不想多背了，来清一下」这一步
+       一进这一屏就够得着 —— 与网页版把它放在
+       settings/recite 里同一个道理（那边它也在前几张卡里）。 -->
+  <!-- 今日加背的管理（网页版在 settings/recite 同一处，`#daily-panel`）。
+       首页那张卡负责**加**，这里负责**看与清** —— 加了七八首之后想
+       「今天不加了」，逐首去首页点一遍「✓」是没有出路的事。
+
+       全选 / 取消全选 / 移出选中的 / 全部清空 —— 四个动作与网页版一字不差。
+       为什么不做「删单首」的按钮：点行即选中、选中再一起移出，
+       比给每行配一颗小叉少一半的误触。 -->
+  <view class="card">
+    <view class="card-title bar">今日加背</view>
+
+    <view wx:if="{{!daily.length}}" class="hint">今天还没加背 —— 在首页「今日加背」里搜一篇加进来。</view>
+
+    <block wx:else>
+      <!-- 读数先说清有几首：下面的勾是「选中待处理」，
+           与「一共有几首」是两件事，不给读数就会把后者当成前者 -->
+      <text class="hint daily-count">今天加了 {{daily.length}} / {{dailyMax}} 首</text>
+
+      <view class="daily-tools">
+        <button class="btn mini" bindtap="onDailyAll">全选</button>
+        <button class="btn mini" bindtap="onDailyNone">取消全选</button>
+        <button class="btn mini danger" bindtap="onDailyRemove">移出选中的</button>
+        <button class="btn mini danger" bindtap="onDailyClear">全部清空</button>
+      </view>
+
+      <!-- 一行一首，行首一枚方框说「选没选中」。底层是原生 checkbox，
+           行为（读屏、点击区）都是平台的，勾框是我们画的那一层。 -->
+      <checkbox-group bindchange="onDailyPick">
+        <label class="daily-row" wx:for="{{daily}}" wx:key="id">
+          <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" color="{{themeHex}}" />
+          <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
+          <view class="row-main">
+            <text class="row-title row-poem">{{item.title}}</text>
+            <text class="row-sub">{{item.meta}}</text>
+          </view>
+        </label>
+      </checkbox-group>
+    </block>
+  </view>
+
   <view class="card">
     <view class="card-title bar">当前学段</view>
 
