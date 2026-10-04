@@ -33,7 +33,7 @@ const TERMS = [
 ];
 
 /* 注音 / 对齐 / 字号不在这页。它们是读一首诗时的临场偏好，
-   该待在详情页（pages/reader 的 .prefs）与阅读设置页（packages/settings/general），
+   该待在详情页（pages/reader 的 .prefs）与通用设置页（packages/settings/general），
    在诗句旁边当场调、当场看见效果。详见 recite.wxml 里的说明。 */
 
 Page({

@@ -70,6 +70,8 @@ Page({
         为什么放三个而不是一个进度环：环只说得清「几比几」，
         说得清「还剩几首」的是数字，而「还剩几首」才是打开这一屏要问的事。 */
     stats: { today: 0, done: 0, left: 0 },
+    /** 计划里还有几首没背过 —— 决定首屏那颗按钮说「开始背」还是「再练一遍」 */
+    todoCount: 0,
     /** 首屏第一次出计划要读语料，先立个骨架，别让人对着一屏空白 */
     loading: true
   },
@@ -111,6 +113,7 @@ Page({
         catalog,
         catalogCount: catalog.length,
         stats: { today: 0, done: 0, left: 0 },
+        todoCount: 0,
         loading: false
       });
       return;
@@ -168,6 +171,10 @@ Page({
       catalog: [],
       catalogCount: 0,
       stats: { today: total, done, left: Math.max(0, total - done) },
+      // 「开始背」与「再练一遍」的区别在于**还有没有没背过的**。
+      // 判据用 doneCount 不行 —— 那是「读过」，而计划里的勾是「背过」，
+      // 两者在「读了没背」的篇目上会打架：一个勾都没有，按钮却说再练一遍。
+      todoCount: rows.filter((r) => !r.reviewed).length,
       loading: false
     });
   },
@@ -193,12 +200,25 @@ Page({
     this.openSheet(id);
   },
 
-  /** 开始背：从今天第一首没背过的弹起 —— 「开始」在哪儿都一样是这一件事 */
+  /**
+   * 开始背：从今天第一首**没背过的**弹起，弹的是首页那张背诵卡。
+   *
+   * 「开始」在哪儿都一样是这一件事：接着今天这一趟往下走。挑第一首没背过的
+   * 而不是第一首 —— 从头再来一遍会让人以为刚才那几首白背了。
+   * 全背过了才退回第一首，这时按钮上写的是「再练一遍」，从头来过正是它要说的话。
+   *
+   * 判据用 `reviewed`（背过）不是 `read`（读过）：这两件事在
+   * 「点开看了但没评分」的篇目上是分开的，而这里要的是前者。
+   * 上一版用的 `read` —— 于是背完整个计划后再进首页，按钮照样说「开始背」，
+   * 点下去却从第一首开始，像是把刚背的抹了（见 data.todoCount 的同一处口径）。
+   */
   onStart() {
-    const first = this.data.plan.find((r) => !r.read) || this.data.plan[0];
+    const first = this.data.plan.find((r) => !r.reviewed) || this.data.plan[0];
     if (!first) return;
     this.openSheet(first.id);
   },
+
+  /** 点篇名 / 点「开始背」都是这一件事 —— 弹层收着队列，翻页由它自己走 */
 
   openSheet(id) {
     gate.guard("背诵", () => {

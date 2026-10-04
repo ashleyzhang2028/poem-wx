@@ -14,3 +14,11 @@
   border-top: 1rpx dashed var(--line-2);
   margin-top: var(--sp-2);
 }
+
+/* 注音那一栏的说明（读音表没就绪 / 档位不够时才出现）——
+   与「阅读设置」里同一条口径：.note 是块级，自己占一行 */
+.note {
+  display: block;
+  margin-top: var(--sp-2);
+  line-height: var(--lh-body);
+}

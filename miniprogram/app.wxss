@@ -1733,54 +1733,34 @@ view, text, button, input, textarea {
   pointer-events: none;
 }
 
-/* ---------- 今日加背：那一枚「加入今日背诵」 ----------
-   位置照网页版：详情页那一行工具按钮里的一格（gw-daily），
-   以及列表行行首的那颗圆钮。小程序端只在阅读面里放这一枚 ——
-   列表页的「＋」是另一件事（那是「浏览到一半顺手加」），
-   而加背的入口首页已经有一张完整的卡了（components/daily-extra）。
+/* ---------- 今日加背：那一枚加号 ----------
+   位置两次改过。网页版在详情页那一行工具按钮里（gw-daily）；小程序端
+   先做成自己一行居中的胶囊，2026-10-04 用户说：
 
-   ⚠️ 它**不是**这一首诗的事，是「今天这一趟」的事，所以它与
-   偏好行是分开的两块 —— 混进偏好那一行会让「不注音 / 居中」和
-   「今天要不要多背它」读成同一组选项。 */
-.daily-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 var(--sp-2);
-}
+     「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」
 
-.daily-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10rpx;
-  height: var(--h-btn-mini);
-  padding: 0 var(--sp-4);
+   于是它就是偏好行末尾的一格 —— 与 A－ A＋ 同一副长相、同一个高度，
+   只换了字形（＋ / ✓）。**这是这一格唯一的身份**：一枚加号，
+   加进去以后变成一枚勾。不做「已加入今日背诵」那种长文案 ——
+   它会把这一行撑破（七个段 499rpx，卡片内容宽 596rpx，只剩 96rpx）。
+
+   ⚠️ 它左边没有那道竖线：竖线分的是三组**偏好**（对齐 / 注音 / 字号），
+   而加号是对这一首做的事，不是偏好 —— 给它也加一道线，等于说
+   它是第四组偏好。与 A＋ 之间留一段空白就够分清。 */
+.pref-plus {
+  margin-left: var(--sp-3);
+  min-width: 44rpx;
   border: 1rpx solid var(--line-strong);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--ink-2);
-  font-size: var(--fs-hint);
-  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
 }
 
-/* 加进去了：填主题色 —— 与全站「选中填色」同一套语言，不必另发明一个记号 */
-.daily-btn.on {
+/* 加进去了：填主题色，与全站「选中填色」同一套语言 —— 不必另发明一个记号 */
+.pref-plus.on {
   background: var(--strong);
   border-color: var(--strong);
+}
+
+.pref-plus.on .pref-t {
   color: var(--on-ink);
-}
-
-.daily-btn-hover {
-  background: var(--sink);
-}
-
-.daily-btn.on.daily-btn-hover {
-  background: var(--ink-strong);
-}
-
-.daily-glyph {
-  font-size: var(--fs-hint);
-  line-height: 1;
 }
 
 /* ---------- 正文 ----------

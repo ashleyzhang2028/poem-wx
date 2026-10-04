@@ -120,7 +120,12 @@ function status() {
     return {
       tier: server,
       source: "remote",
-      label: tiers.nameOf(server) + "（服务端）",
+      // 「（服务端）」括号里那三个字，用户 2026-10-04 问的是什么意思 ——
+      // 它原本想说「这一档不是本机自己填的，是后端发的」，但读者只看到
+      // 一个「全能（服务端）」，既不像档名也不像角色。
+      // 档名与来源拆成两格：这里只留档名，来源由管理页的 roleLabel 与
+      // `blocked` 那句人话去说（见 packages/admin/index 的「我的授权」）。
+      label: tiers.nameOf(server),
       blocked: "",
       signed: true
     };
@@ -129,7 +134,7 @@ function status() {
   // 提权码次之：它比本机档案明确，但没有服务端签名
   const g = grant();
   if (g) {
-    return { tier: g.tier, source: "grant", label: tiers.nameOf(g.tier) + "（授权码）", blocked: "", signed: false };
+    return { tier: g.tier, source: "grant", label: tiers.nameOf(g.tier), blocked: "", signed: false };
   }
 
   // 到这里只剩本机档案。它有 tier 也只说明「服务端以前确认过」，

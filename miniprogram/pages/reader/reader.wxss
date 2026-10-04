@@ -28,27 +28,10 @@
 
    高度用 --h-act，与主按钮同高（96rpx）。上一版是 112rpx —— 三个并排
    像三块砖，而每块里只有两个字，一屏被它们吃掉一大截。
-   「点着舒服」的最低标准是不小于 88rpx，往上是浪费，不是体贴。 */
-.recite-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--sp-2);
-}
+   「点着舒服」的最低标准是不小于 88rpx，往上是浪费，不是体贴。
 
-.recite-head .card-title {
-  margin-bottom: 0;
-}
-
-.mastery-bar {
-  margin-bottom: var(--sp-3);
-}
-
-.mastery-num {
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
-}
-
+   三颗按钮**不包卡片**：它们是一排并排的块，外面再套一张卡，
+   卡边与块边之间那圈空白什么都不说，只是把这一屏切碎。 */
 .actions {
   display: flex;
   align-items: center;
@@ -103,6 +86,30 @@
 
 .act-label {
   letter-spacing: var(--ls-title);
+}
+
+/* 掌握度：评完分**往下一看**就是它。
+   标题不带那道 `bar` 竖线了 —— 那张卡里现在只有这一件事，
+   而三颗按钮在上面已经把这屏的主角占住了。 */
+.recite-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+
+.recite-head .card-title {
+  margin-bottom: 0;
+}
+
+.mastery-bar {
+  margin-bottom: 0;
+}
+
+.mastery-num {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
 }
 
 .hint-line {

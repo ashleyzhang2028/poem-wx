@@ -12,7 +12,11 @@
     <view class="grant-head">
       <view class="grant-tier">
         <text class="grant-tier-name">{{status.label}}</text>
-        <text class="grant-tier-k">{{roleLabel}}</text>
+        <!-- 副题回答两个问题：「这一档从哪来」与「我在这个系统里算谁」。
+             用户 2026-10-04 看到旧的「全能（服务端） 所有者」问这是什么意思 ——
+             把来源塞进档名的括号里，再在旁边杵一个角色名，两行都不是人话。
+             现在档名单独一行，副题是一句：档位来源 + 角色。 -->
+        <text class="grant-tier-k">{{sourceText}} · {{roleLabel}}</text>
       </view>
       <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
       <view class="grant-meter">

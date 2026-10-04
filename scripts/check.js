@@ -686,11 +686,20 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   ok("界面里没有朗读元素（用户裁决不做，见 docs/todo.md 第 1 条）", stray.length === 0, stray.slice(0, 6).join(" | "));
 }
 
-// 我的页：阅读设置的入口只挂注音
+// 我的页：「声音」那个入口只挂音效门禁，且版式三件事合成一条入口
+//
+// 2026-10-04 之前是两条：「阅读设置（注音）」+「通用设置（对齐 · 字号）」。
+// 注音搬进通用设置之后，剩下这一页管的是答题音效 —— 它的门禁也跟着换：
+// 上一版挂的是 pinyinVisible，注音不可用时连音效那一页都进不去。
 {
   const p = "pages/mine/mine";
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  ok("「阅读设置」入口挂注音门禁", wxml.indexOf("wx:if=\"{{pinyinVisible}}\"") >= 0);
+  const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+  ok("「声音」入口挂音效门禁（不是注音那一个）",
+    wxml.indexOf("wx:if=\"{{sfxVisible}}\"") >= 0 && !/pinyinVisible/.test(wxml + js));
+  ok("版式三件事只有一条入口（对齐 · 注音 · 字号）",
+    (wxml.match(/onSettings/g) || []).length === 1
+      && wxml.indexOf("对齐 · 注音 · 字号") >= 0);
 }
 
 /* ---------- 7.6 权限分层 ---------- */
@@ -1674,7 +1683,9 @@ function scanSelfMadeControls(src) {
 const NEEDS_NATIVE = {
   "packages/settings/recite/recite": ["radio-group"],
   "packages/settings/general/general": ["radio-group", "slider", "switch"],
-  "packages/settings/reader/reader": ["radio-group", "switch"],
+  /* 「阅读设置」页 2026-10-04 起只管问答音效 —— 注音搬去了通用设置。
+     所以这一页只剩一个 switch，不再有「选一个」的控件。 */
+  "packages/settings/reader/reader": ["switch"],
   "pages/list/list": ["radio-group"],
   /* 搜索页本来在这里 —— 「范围 / 方式」两组分段。
      用户把它们整块删了：「搜索页的 范围 方式选项卡片删除 搜索框内已经有提示，
@@ -3818,15 +3829,25 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     });
     ok("这一页也没有 slider", recite.indexOf("<slider") < 0);
     // 它们该在的地方**得真有** —— 不然「撤掉」就成了「弄丢」。
-    // 三件事现在的位置：详情页全有（读这首诗时调）；对齐与字号另有「通用设置」
-    // 页（general）集中调一次；注音另有「阅读设置」页（settings/reader）。
+    // 三件事现在的位置：详情页全有（读这首诗时当场调）；
+    // 集中调一次的地方是「通用设置」页（general）的「版式」那一节，
+    //   ⚠️ 2026-10-04 之前注音被单关在 settings/reader 里，与对齐 / 字号分家。
+    //   用户那天问「通用设置版式里有对齐和字号，怎么没有注音的设置？」
+    //   —— 三件事现在都在这两处，没有第三个地方。
     const reader = read("pages/reader/reader.wxml");
     ok("详情页（读这首诗时）注音 / 对齐 / 字号三样都在",
       /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontDown/.test(reader) && /onFontUp/.test(reader));
     const general = read("packages/settings/general/general.wxml");
-    ok("「通用设置」页有对齐 / 字号", /onAlign/.test(general) && /onFontSlide/.test(general));
-    ok("「阅读设置」页有注音方式",
-      /onMode/.test(read("packages/settings/reader/reader.wxml")));
+    ok("「通用设置」页三样都在（对齐 / 注音 / 字号）",
+      /onAlign/.test(general) && /onFontSlide/.test(general) && /onPinyin/.test(general));
+    const generalJs2 = read("packages/settings/general/general.js");
+    ok("通用设置里的注音走 pinyin.setMode()（不自己写一份 store）",
+      /pinyin\.setMode\(/.test(generalJs2));
+    // 注音不许在第三个地方再留一份副本
+    ok("「阅读设置」页不再有注音（它现在只管声音）",
+      !/onMode/.test(read("packages/settings/reader/reader.wxml"))
+        && !/onMode\s*\(/.test(read("packages/settings/reader/reader.js"))
+        && !/PINYIN_MODES/.test(read("packages/settings/reader/reader.js")));
   }
 
   /* 2.2) 详情页那三组偏好**必须在一行里**。
@@ -4248,9 +4269,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   // 形如 A－ / A＋ —— 改文案这条跟着动
   const A_UP = "A＋";
   const A_DOWN = "A－";
+  // 末尾还挂着「今日加背」那一枚加号（用户 2026-10-04：
+  // 「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」）。
+  // 它不在 .pref-opt 那一档里量 —— 自己一道左边距 + 一枚字。
+  // 那一枚的左边距（--sp-3）与字形（＋）都从页面读，改文案这条跟着动。
+  const plusBody = ruleBody(".pref-plus");
+  const plusGap = px(plusBody, "margin-left", 0);
+  const PLUS_GLYPH = "＋";
   const rowW = alignNames.reduce((s, n) => s + widthOf(n), 0)
     + pinyinNames.reduce((s, n) => s + widthOf(n), 0)
     + widthOf(A_DOWN) + widthOf(A_UP)
+    + plusGap + widthOf(PLUS_GLYPH)
     + 2 * ruleW;
 
   ok("详情页「对齐 ｜ 注音 ｜ 字号」量得出来（按真字体 + 真令牌）",
@@ -4267,15 +4296,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   //     档位名与字号都从页面/令牌里读 —— 换文案、换字号它跟着动
   //   · 浏览器：scripts/shots/prefs-width.js 量 preview.html 里那一行
   //
-  // 现在的读数：算式 502rpx、浏览器 499rpx、卡片内容宽 596rpx（**余 97**）。
-  // 两者差 3rpx —— 这一行现在站得住，而且站得比当初估的宽松。
+  // 现在的读数：算式 570rpx、浏览器 567rpx、卡片内容宽 596rpx（**余 28**）。
+  // 两者差 3rpx —— 这一行现在还站得住，但余量已经从 97 收到 28：
+  // 加进来的是末尾那枚加号（44rpx + 24rpx 的左边距）。
+  // 再往这一行塞东西就会折 —— 所以「不许悄悄折成两行」那条是硬约束。
   //
   // ⚠️ 中间有一段账是**错的**，写在这里免得下一个人重走：
   // 一开始浏览器报「595.5rpx / 余 0」，看着像「贴着边」。真相是预览把
   // 视觉隐藏的原生 <radio> 画成了一个 23px 的圆圈 —— 真机上它是 1rpx，
   // 页面的 flex 排布里等于不存在。补了 render.js 那条镜像规则之后，
   // 数字才对上（499）。**先怀疑尺子，再怀疑排版。**
-  const BROWSER_ROW = 499;     // prefs-width.js 量的，机器/字体不同会有零头
+  const BROWSER_ROW = 567;     // prefs-width.js 量的，机器/字体不同会有零头
   ok("算式与浏览器量出来的数对得上（差 ≤ 8rpx）",
     Math.abs(rowW - BROWSER_ROW) <= 8,
     "算式 " + Math.round(rowW) + "rpx / 浏览器 " + BROWSER_ROW + "rpx —— "
@@ -5271,14 +5302,27 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const sheetWxml = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
   ok("详情页有「加入今日背诵」", readerWxml.indexOf("onToggleDaily") >= 0);
   ok("背诵弹层里也有（同一枚、同一套样式）", sheetWxml.indexOf("onToggleDaily") >= 0);
+  // 用户 2026-10-04：「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」
+  // —— 这一枚必须真的长在 .prefs 这一行里，而不是另起一行；并且不能带长文案
+  [["详情页", readerWxml], ["背诵弹层", sheetWxml]].forEach(([name, src]) => {
+    ok(name + "的加号长在偏好那一行里（与 A－ A＋ 同一行）",
+      src.indexOf("pref-plus") > src.indexOf('class="prefs"')
+        && src.indexOf("pref-size") < src.indexOf("pref-plus"),
+      "加号没在这一行里，或者不在 A＋ 之后");
+    // 判据只看**模板**里的文案：注释里写着用户那句话，不算「界面上有」
+    const markup = src.replace(/<!--[\s\S]*?-->/g, "");
+    ok(name + "的加号只有一枚字形（没有「加入今日背诵」那种长文案）",
+      !/已加入今日背诵|>加入今日背诵/.test(markup),
+      "长文案会把这一行撑破（七个段 499rpx，卡片内容宽 596rpx）");
+  });
   ok("两处共用一份样式（阅读面在 app.wxss）",
-    /\.daily-btn\s*\{/.test(appWxss) && /\.daily-row\s*\{/.test(appWxss));
+    /\.pref-plus\s*\{/.test(appWxss));
   // 一处定义两处用：页面样式表里不许再写第二份
   [path.join(ROOT, "pages/reader/reader.wxss"),
    path.join(ROOT, "components/recite-sheet/recite-sheet.wxss")].forEach((f) => {
     const css = fs.readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
     ok("不写第二份加背按钮样式 " + path.basename(path.dirname(f)) + "/" + path.basename(f),
-      !/\.daily-btn\s*\{/.test(css));
+      !/\.pref-plus\s*\{/.test(css));
   });
 
   // 6) 设置页那半页：网页版的 daily-panel 是「全选 / 取消 / 移出选中 / 全部清空」
@@ -5603,6 +5647,137 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const proseIds = courseIds.filter((id) => String(course[id].text).length > 100);
   ok("课内确实有长文（这一条不是空转）", proseIds.length > 10,
     "只找到 " + proseIds.length + " 篇长文");
+}
+
+/* ---------- V36. Issue #49 的第二轮走查（2026-10-04，用户逐条问） ----------
+ *
+ * 用户把 14 个界面问题一次列了出来，每条都是一句大白话，没有一条提代码。
+ * 这一节按他问的顺序守 —— 那些坏法全是**静默**的：横线留着、圆圈留着、
+ * 卡片多一层、按钮永远说「开始背」，都不会报错，只会让人觉得「有点怪」。
+ *
+ * 只守「改了什么」里能自动判的那几条；颜色、间距一类以截图为准（见 #49 里的图）。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const homeWxml = read("pages/home/home.wxml");
+  const homeWxss = read("pages/home/home.wxss");
+  const homeJs = read("pages/home/home.js");
+  const sheetWxml = read("components/recite-sheet/recite-sheet.wxml");
+  const appWxss = read("app.wxss");
+  const quizWxml = read("packages/game/quiz/quiz.wxml");
+  const dayWxss = read("packages/progress/index/index.wxss");
+  const generalWxml = read("packages/settings/general/general.wxml");
+  const generalJs = read("packages/settings/general/general.js");
+  const adminWxml = read("packages/admin/index/index.wxml");
+  const adminJs = read("packages/admin/index/index.js");
+  const entJs = read("utils/entitlement.js");
+
+  // 1) 「开始背诵上面是横线还是进度条？如果是横线，直接删除」
+  //    答案是进度条，但零进度时它是一根灰尺子 —— 与「横线」同形。既然开始前
+  //    没进度可说，这条就整个不渲染；数字已经把「几首」说完了。
+  ok("首页那条进度条在零进度时不渲染（不再是一根灰尺子）",
+    /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="hero-meter"/.test(homeWxml),
+    "零进度时还画着一条空槽，与「横线」同形");
+  ok("进度条没被整块删掉（有进度时它还在）", /\.hero-meter\s*\{/.test(homeWxss));
+  ok("进度条把「走到哪了」写成一行字（不然读不出这条量的是什么）",
+    /已背/.test(homeWxml) && /\{\{doneCount\}\} \/ \{\{total\}\}/.test(homeWxml));
+
+  // 2) 「下面有个背诵设置的链接……这里不需要链接」
+  //    入口在「我的 → 背诵设置」本来就有，首页这一行是第三条路
+  ok("首页不再有「背诵设置」那一行",
+    !/\.hero-foot/.test(homeWxss) && !/hero-foot/.test(homeWxml),
+    "那一行还在");
+  // 撤的是那一行**链接**，不是这个入口本身：空态里那颗「去设置」还得留着，
+  // 否则一首都没排出来时这一屏是个死胡同
+  ok("首页「今日安排」卡里不再有那一行链接",
+    !/hero-foot/.test(homeWxml) && homeWxml.indexOf("onSettings") > homeWxml.indexOf("empty"));
+  ok("背诵设置仍有去处（我的 → 背诵设置）",
+    /背诵设置/.test(read("pages/mine/mine.wxml")) && /onRecite/.test(read("pages/mine/mine.js")));
+
+  // 3) 「今日安排卡片里右边的那些圆圈是做什么用的？」
+  //    答不出来就是答案 —— 换成两个字，不用猜也不用点
+  ok("今日安排的圆圈换成了「已背 / 未背」两个字",
+    /row-state/.test(homeWxml) && /item\.read \? '已背' : '未背'/.test(homeWxml),
+    "圆圈还在，或者状态没写成字");
+  ok("圆圈那套样式已撤（不留孤儿样式）", !/\.tick\s*\{/.test(homeWxss));
+
+  // 4) 「忘记 模糊 记住三个按钮不需要用卡片包裹，单独一行；
+  //     掌握度卡片放在这三个按钮下面」
+  //    reader 与背诵弹层是同一张卡，两处都要按这个顺序
+  {
+    const readerWxml = read("pages/reader/reader.wxml");
+    [["详情页", readerWxml], ["背诵弹层", sheetWxml]].forEach(([name, src]) => {
+      const acts = src.indexOf('class="actions"');
+      const head = src.indexOf('class="recite-head"');
+      ok(name + "：三颗按钮在掌握度**上面**（先评、再看读数）",
+        acts >= 0 && head > acts, "顺序还是掌握度在前");
+      ok(name + "：三颗按钮不再包一张卡（.actions 是裸的一行）",
+        /<view class="actions">/.test(src));
+    });
+  }
+
+  // 5) 「答错了。正确 看全篇 下一题按钮 你觉得他们放在一个卡片里合适吗？」
+  //    不合适：它上面那张卡装的是题干，判定是同一件事的另一半。
+  //    撤掉卡边，留一道细线做分隔（否则会读成第四个选项）。
+  {
+    const quizWxss = read("packages/game/quiz/quiz.wxss");
+    const verdictBlock = /\.verdict\s*\{([^}]*)\}/.exec(quizWxss);
+    ok("题库的判定区不再包卡片",
+      /<view class="verdict" wx:if="\{\{last\}\}">/.test(quizWxml),
+      "判定区还套着 .card");
+    ok("撤了卡边之后补了一道细线（否则会读成第四个选项）",
+      !!verdictBlock && /border-top/.test(verdictBlock[1]));
+  }
+
+  // 6) 「通用设置版式里有对齐和字号，怎么没有注音的设置？」
+  //    版式三件事在正文里共用一行，设置里却把注音关进另一页
+  ok("通用设置有注音那一栏", /注音/.test(generalWxml) && /onPinyin/.test(generalWxml));
+  ok("通用设置的注音读的是同一份设置（走 pinyin.setMode）",
+    /pinyin\.setMode\(/.test(generalJs), "自己写了一份 store.saveSettings，两页会分叉");
+  ok("注音与阅读设置同一档位表（三档，不是另起一套）",
+    /不注音/.test(generalJs) && /生字/.test(generalJs) && /全文/.test(generalJs));
+
+  // 7) 「我的 页面有个专门的昵称在换头像下面一行，它是子用户吗？」
+  //    不是。它和顶部那个名字是**同一个值**，上一版没说清
+  {
+    const mineWxml = read("pages/mine/mine.wxml");
+    ok("「我的」页的昵称行说清了它与顶部那个名字是同一个",
+      /就是上面那个名字/.test(mineWxml), "没说清，看起来像第二个身份");
+    ok("昵称输入框有长度上限（顶部那一行只有一行）",
+      /maxlength="12"/.test(mineWxml));
+  }
+
+  // 8) 「全能(服务端) 所有者 这是什么意思，完全看不懂」
+  //    档名、来源、角色是三件事，挤成两个词谁都不像人话
+  // 先摘掉注释：那段注释里正引着旧文案（V26 踩过同一个坑）
+  ok("档位名的括号里不再塞来源（档名就是档名）",
+    !/（服务端）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, ""))
+      && !/（授权码）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")),
+    "又把来源塞回档名里了");
+  ok("「我的授权」把来源说成一句人话（由服务端发放）",
+    /由服务端发放/.test(adminJs) && /sourceText/.test(adminWxml));
+
+  // 9) 「未来七天 没选中的文字不需要和选中的一样最左最右有 padding 吗」
+  //    要：同一列字，一行一个起点扫下来是锯齿
+  {
+    const day = /\.day\s*\{([^}]*)\}/.exec(dayWxss);
+    ok("未来七天每一行都有左右两道 padding（含没排期的）",
+      !!day && /padding:\s*var\(--sp-2\)\s+var\(--sp-3\)/.test(day[1]),
+      "右侧那道没给，选中行那两道内边距就成了错位");
+    const zero = /\.day\.zero\s*\{([^}]*)\}/.exec(dayWxss);
+    ok("零排期那几天的左右 padding 也在（只有纵向压一档）",
+      !!zero && /var\(--sp-3\)/.test(zero[1]), "零排期那几天被落下，起点又不一样了");
+    ok("「今天」那行自己不再重复给 padding（一处定义）",
+      !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
+  }
+
+  // 10) 「开始背按钮是做什么用的」—— 它说「接着今天往下走」，
+  //     而旧版背完整个计划后按钮照样说「开始背」，点下去却从第一首开始
+  ok("「开始背 / 再练一遍」按「还有没有没背过的」切",
+    /todoCount/.test(homeJs) && /todoCount \? '开始背' : '再练一遍'/.test(homeWxml));
+  ok("「开始背」挑的是第一首**没背过的**（不是第一首）",
+    /find\(\(r\) => !r\.reviewed\)/.test(homeJs),
+    "用的还是 read，与「背过」是两件事");
 }
 
 /* ---------- 汇总 ---------- */

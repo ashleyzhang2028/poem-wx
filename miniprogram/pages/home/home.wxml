@@ -62,21 +62,25 @@
         </view>
       </view>
 
-      <!-- 一条细进度：数字说「几首」，这条说「走到哪了」 -->
-      <view class="meter hero-meter" wx:if="{{total}}">
-        <view class="meter-fill" style="width:{{percent}}%"></view>
+      <!-- 进度条：数字说「几首」，这一条说「走到哪了」。
+           ⚠️ **只在真的有进度时出现**（percent > 0）。零进度时它是一根
+           灰尺子 —— 用户 2026-10-04 问「开始背诵上面是横线还是进度条？
+           如果是横线，直接删除」，问的就是它零进度时长的那副样子：
+           一条空槽与一道分隔线在屏幕上是同一样东西。既然此刻没进度可说，
+           就整个不画；右边那行字把读数负责到底。 -->
+      <view class="hero-meter" wx:if="{{percent}}">
+        <view class="meter">
+          <view class="meter-fill" style="width:{{percent}}%"></view>
+        </view>
+        <text class="hero-meter-t">已背 {{doneCount}} / {{total}}</text>
       </view>
 
+      <!-- 开始背：末首评完分再点它说「再练一遍」，其余时候说「开始背」。
+           点下去就是弹出今天这一趟的背诵卡（首屏唯一那颗墨黑按钮）。 -->
       <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
-        {{doneCount >= total ? '再练一遍' : '开始背'}}
+        {{todoCount ? '开始背' : '再练一遍'}}
       </button>
       <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看课内 251 首</button>
-
-      <!-- 「怎么排的」这件事不能藏起来：它决定明天背什么，用户得找得到入口 -->
-      <view class="hero-foot" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
-        <text class="hero-foot-t">背诵设置</text>
-        <text class="hero-foot-go">›</text>
-      </view>
     </view>
 
     <!-- 今日加背：网页版 index.html L67 那一整块（搜索框 + 建议列表）。
@@ -105,9 +109,7 @@
             <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
           <view class="row-end">
-            <view class="tick {{item.read ? 'on' : ''}}">
-              <text class="tick-t">{{item.read ? '✓' : ''}}</text>
-            </view>
+            <text class="row-state {{item.read ? 'on' : ''}}">{{item.read ? '已背' : '未背'}}</text>
           </view>
         </view>
       </block>
@@ -115,6 +117,9 @@
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
         <text class="empty-text">今天还没排计划</text>
+        <!-- 「去设置」走的仍是 onSettings —— 首页那一行链接撤了，
+             但空态里这一颗得留着：一个计划都没排出来时，人得有条路
+             去把学段 / 范围调好，否则这一屏是个死胡同。 -->
         <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
       </view>
     </view>
