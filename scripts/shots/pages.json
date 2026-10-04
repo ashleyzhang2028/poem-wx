@@ -140,7 +140,7 @@
   },
   "settings-reader": {
     "page": "packages/settings/reader/reader",
-    "title": "阅读设置",
+    "title": "声音设置",
     "back": true,
     "logged": true
   },

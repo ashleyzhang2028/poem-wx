@@ -9,6 +9,22 @@ const theme = require("../../../utils/theme");
 const ROLE_NAME = { owner: "所有者", admin: "管理员", user: "普通用户" };
 
 /**
+ * 这一档是从哪儿发下来的。
+ *
+ * 用户 2026-10-04 对着旧界面上那句「全能（服务端） 所有者」问：
+ * 「这是什么意思，完全看不懂」—— 三个词挤在一起，没一个是人话：
+ *   全能     —— 档位的名字，唯一看得懂那个
+ *   （服务端）—— 想说「不是本机自己填的，是后端发的」，可读起来像另一个维度
+ *   所有者   —— 角色名，但没说清「所有者」是对谁而言
+ * 现在拆开：档名一行，来源与角色一行。来源是一句人话，不是括号里的技术词。
+ */
+const SOURCE_NAME = {
+  remote: "由服务端发放",
+  grant: "由授权码兑换",
+  none: "本机默认"
+};
+
+/**
  * 管理页：给微信登录用户分层设置（free / pro / max，与 poem 口径一致）。
  *
  * 三块，按「谁看得到」分开：
@@ -38,6 +54,7 @@ Page({
     remoteReady: false,
     adminReady: false,
     roleLabel: "",
+    sourceText: "",
     canWrite: false,
     canSetRole: false,
     busy: false,
@@ -71,6 +88,7 @@ Page({
       canWrite: canWrite,
       canSetRole: canSetRole,
       roleLabel: ROLE_NAME[auth.role()] || "普通用户",
+      sourceText: SOURCE_NAME[snap.source] || SOURCE_NAME.none,
       baseUrl: auth.baseUrl() || "",
       baseUrlNote: auth.configured()
         ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"

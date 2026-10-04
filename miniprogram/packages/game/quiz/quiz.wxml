@@ -58,7 +58,13 @@
       </view>
     </view>
 
-    <view class="card verdict" wx:if="{{last}}">
+    <!-- 判定：**不包卡片**（用户 2026-10-04）。
+         上一版是一张白卡：里面一句话 + 一颗文字按钮 + 一颗主按钮，
+         而它上面那张卡装的是题干，下面这一张是「刚才那一下的结果」——
+         三张同宽的卡摞着，读起来像三件事，其实是「题目 → 结果」两件。
+         撤掉卡边之后，判定条与选项是同一条缝里的东西：
+         选完，结果就在选项下面接上。 -->
+    <view class="verdict" wx:if="{{last}}">
       <text class="verdict-line {{last.ok ? 'ok' : 'no'}}">{{last.ok ? '答对了' : '答错了 · 正确：' + last.answer}}</text>
       <view class="verdict-acts">
         <text class="verdict-link" bindtap="onOpen">看全篇</text>

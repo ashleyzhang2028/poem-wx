@@ -62,16 +62,15 @@
             <text class="pref-t">A＋</text>
           </view>
         </view>
-      </view>
 
-      <!-- 今日加背：与详情页同一枚、同一套样式（见 app.wxss 阅读面）。
-           在弹层里加背是**正当的一刻** —— 背到一半想「这首明天还得再来」，
-           当场就能加，不必退出去回首页。 -->
-      <view class="daily-row">
-        <view class="daily-btn {{dailyOn ? 'on' : ''}}" hover-class="daily-btn-hover" hover-stay-time="60"
-              bindtap="onToggleDaily">
-          <text class="daily-glyph">{{dailyOn ? '✓' : '＋'}}</text>
-          <text>{{dailyOn ? '已加入今日背诵' : '加入今日背诵'}}</text>
+        <!-- 今日加背：一枚加号，与 A－ A＋ 同在一行。
+             在弹层里加背是**正当的一刻** —— 背到一半想「这首明天还得再来」，
+             当场就能加，不必退出去回首页。
+             它俩共用同一格样式（app.wxss 阅读面「今日加背」一节）：
+             详情页与这张卡是同一张卡，不该各排一遍。 -->
+        <view class="pref-opt mini pref-plus {{dailyOn ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily">
+          <text class="pref-t">{{dailyOn ? '✓' : '＋'}}</text>
         </view>
       </view>
 
@@ -111,21 +110,26 @@
     </view>
 
     <!-- 评分：钉在卡底，滚到哪儿都够得着。
-         这一块是「背完了」唯一要做的事，不该跟着正文滚走 -->
-    <view class="sheet-foot">
-      <view class="recite-head">
-        <text class="card-title bar">掌握度</text>
-        <text class="mastery-num">{{mastery}}%</text>
-      </view>
-      <view class="meter mastery-bar">
-        <view class="meter-fill" style="width:{{mastery}}%"></view>
-      </view>
+         这一块是「背完了」唯一要做的事，不该跟着正文滚走。
 
+         顺序与详情页同一套（用户 2026-10-04：「忘记 模糊 记住三个按钮
+         不需要用卡片包裹，单独一行；掌握度卡片放在这三个按钮下面」）：
+         先评、再看读数。评完眼睛往下走一格就看见掌握度涨了没有 ——
+         上一版读数在上、按钮在下，正好反着。 -->
+    <view class="sheet-foot">
       <view class="actions">
         <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
               data-r="{{item.key}}" bindtap="onResult">
           <text class="act-label">{{item.label}}</text>
         </view>
+      </view>
+
+      <view class="recite-head">
+        <text class="card-title">掌握度</text>
+        <text class="mastery-num">{{mastery}}%</text>
+      </view>
+      <view class="meter mastery-bar">
+        <view class="meter-fill" style="width:{{mastery}}%"></view>
       </view>
 
       <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>

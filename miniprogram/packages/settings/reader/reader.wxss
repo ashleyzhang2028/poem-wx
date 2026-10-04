@@ -9,37 +9,6 @@
   color: var(--amber);
 }
 
-/* 试听那一声的示例：拼音在上、汉字在下，与阅读页的注音排法一致 */
-.sample {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6rpx;
-  margin-top: var(--sp-3);
-  padding: var(--sp-3) var(--sp-2);
-  border-radius: var(--radius-sm);
-  background: var(--bg-soft);
-}
-
-.sample-u {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.sample-py {
-  font-size: var(--fs-pinyin);
-  color: var(--ink-3);
-  line-height: 1.3;
-}
-
-.sample-ch {
-  font-family: var(--font-poem);
-  font-size: var(--fs-poem);
-  color: var(--ink);
-  line-height: 1.4;
-}
-
 .url-row {
   margin-top: var(--sp-3);
 }

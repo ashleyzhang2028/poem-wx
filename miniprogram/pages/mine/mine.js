@@ -3,7 +3,7 @@ const auth = require("../../utils/auth");
 const S = require("../../utils/scheduler");
 const E = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
-const pinyin = require("../../utils/pinyin");
+const sfx = require("../../utils/sfx");
 const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
@@ -27,7 +27,8 @@ Page({
     stats: { learned: 0, mastered: 0, readCount: 0 },
     tierLabel: "免费",
     tierSource: "",
-    pinyinVisible: false,
+    /** 答题音效那一页的入口：环境没有 Web Audio 时整行不出现 */
+    sfxVisible: false,
     syncReady: false,
     syncText: "还没同步过",
     syncPending: 0,
@@ -64,7 +65,6 @@ Page({
     const stats = store.stats();
     const e = E.status();
     const sy = sync.state();
-    const pr = pinyin.readiness();
     const fr = require("../../utils/text-search").readiness();
 
     const nick = profile.nickname || "我的古诗词";
@@ -89,7 +89,7 @@ Page({
       stats,
       tierLabel: e.label,
       tierSource: e.source,
-      pinyinVisible: pr.visible,
+      sfxVisible: sfx.readiness().visible,
       fullTextOn: fr.usable,
       syncReady: sy.ready,
       syncText: sy.lastText,

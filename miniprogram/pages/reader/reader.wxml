@@ -76,20 +76,15 @@
           <text class="pref-t">A＋</text>
         </view>
       </view>
-    </view>
 
-    <!-- 今日加背：这一枚说的是「今天多背它一首」，不是这一首诗的事。
-         网页版把它放在详情页那一行工具按钮里（gw-daily）；小程序端那一行
-         装的是对齐 / 注音 / 字号（Issue #26 明令它们只在这两处），
-         再塞第三组就挤破了，所以它自己占一行、居中。
-
-         两态共用一个按钮（加过了 → 填色 + 「已加入」）——
-         「移出」是同一个动作的另一半，不做成第二颗按钮。 -->
-    <view class="daily-row">
-      <view class="daily-btn {{dailyOn ? 'on' : ''}}" hover-class="daily-btn-hover" hover-stay-time="60"
-            bindtap="onToggleDaily">
-        <text class="daily-glyph">{{dailyOn ? '✓' : '＋'}}</text>
-        <text>{{dailyOn ? '已加入今日背诵' : '加入今日背诵'}}</text>
+      <!-- 今日加背：**一枚加号**，与 A－ A＋ 同在一行（用户 2026-10-04）。
+           上一版是一颗带文字的胶囊、自己占一行居中 —— 用户的话是
+           「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」。
+           它加的还是它自己那一首诗，所以加号左边那道竖线一起撤掉：
+           竖线分的是三组**偏好**，而加号是对这一首做的事，不是偏好。 -->
+      <view class="pref-opt mini pref-plus {{dailyOn ? 'on' : ''}}"
+            hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily">
+        <text class="pref-t">{{dailyOn ? '✓' : '＋'}}</text>
       </view>
     </view>
 
@@ -138,21 +133,30 @@
     </view>
   </view>
 
-  <!-- 背诵：把「读」和「记」分开，两件事不该挤在一张卡里 -->
-  <view class="card recite-card">
-    <view class="recite-head">
-      <text class="card-title bar">掌握度</text>
-      <text class="mastery-num">{{mastery}}%</text>
-    </view>
-    <view class="meter mastery-bar">
-      <view class="meter-fill" style="width:{{mastery}}%"></view>
-    </view>
+  <!-- 背诵：**先评、再看读数**，一张卡装完（用户 2026-10-04）。
 
+       用户原话：「忘记 模糊 记住三个按钮不需要用卡片包裹，单独一行；
+       掌握度卡片放在这三个按钮下面」。三颗按钮是这一屏唯一要做的事，
+       单独一行摊开、谁也不框着它；评完分那一刻要看的读数（掌握度 + 提示）
+       跟在它后面同一张卡里 —— 评完往下一看就是，不用在两张卡之间找。
+
+       上一版是两张卡：掌握度在上、三颗按钮在下，而且按钮自己还包在
+       一张会填色的卡里。评完分眼睛要往下走一屏才看得见读数涨了没有，
+       顺序正好反着。 -->
+  <view class="card recite-card">
     <view class="actions">
       <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
             data-r="{{item.key}}" bindtap="onResult">
         <text class="act-label">{{item.label}}</text>
       </view>
+    </view>
+
+    <view class="recite-head">
+      <text class="card-title">掌握度</text>
+      <text class="mastery-num">{{mastery}}%</text>
+    </view>
+    <view class="meter mastery-bar">
+      <view class="meter-fill" style="width:{{mastery}}%"></view>
     </view>
 
     <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
