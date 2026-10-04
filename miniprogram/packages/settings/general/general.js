@@ -43,7 +43,6 @@ Page({
     /** 读音表在不在、这一档能不能注音 —— 与阅读设置同一口径 */
     pinyinOn: false,
     pinyinNote: "",
-    autoNext: false,
     locked: false
   },
 
@@ -105,10 +104,8 @@ Page({
     this.setData({ pinyin: mode });
   },
 
-  onAutoNext(e) {
-    const autoNext = e.detail.value;
-    store.saveSettings({ autoNext });
-    this.setData({ autoNext });
-    sync.markDirty();
-  }
+  /* 「背完自动下一首」那枚开关 2026-10-04 删掉了（用户裁决）。
+     它不是「先留着、以后再接上」—— 它写的那个键全项目没有第二个地方读，
+     翻页照走 recite-sheet 里那 700ms。一枚按了不动的开关，
+     比没有这个开关更糟：它承诺了一件不做的事。 */
 });

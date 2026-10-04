@@ -54,7 +54,11 @@ const DEFAULTS = {
   // 主题色（Issue #26）。默认那一支墨 —— utils/theme.js 是这份清单的出处
   theme: "ink",
   pinyin: "rare",
-  autoNext: false,
+  // ⚠️ 这里**没有** autoNext —— 它 2026-10-04 随那枚开关一起删了。
+  // 删一个「跨设备」的键要动两处：DEFAULTS 这一行，以及**云端那份报文**里的
+  // 同名键。旧客户端推上来的报文里可能还带着它，wire.js 的 replaceSettings
+  // 是整份落盘（不裁剪），所以老数据那边还留着 —— 那是历史，不是活设置：
+  // store.settings() 只投影 DEFAULTS 里有的键，读不到它，也就没人会再信它。
   // 朗读偏好（TTS 不可用时这些设置项整个不显示，见 utils/entitlement.js）
   speechRate: 1,
   speechAutoNext: true,
