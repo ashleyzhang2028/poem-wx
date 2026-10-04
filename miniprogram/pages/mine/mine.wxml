@@ -27,7 +27,15 @@
         </block>
         <!-- 未登录时这里仍是只显示的字：没登录，也就没有名字可改 -->
         <text class="identity-name" wx:else>{{nickname}}</text>
-        <text class="identity-sub">{{identitySub}}</text>
+        <!-- 副题说清「我是谁、这张头像哪来的」。
+             自己传过一张时，右边多一个「用微信头像」的原地动作 ——
+             它是**从自己那张退回微信那张**的唯一入口，不能跟着头像行一起删。
+             平常它就藏在头像里：点头像，chooseAvatar 弹出来的第一项就是微信那张。 -->
+        <view class="identity-sub-row">
+          <text class="identity-sub">{{identitySub}}</text>
+          <text class="identity-revert" wx:if="{{logged && hasLocalAvatar}}"
+                bindtap="onAvatarClear">用微信头像</text>
+        </view>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
@@ -37,18 +45,6 @@
     </view>
 
     <block wx:else>
-      <!-- 头像那一行：说清现在这张是哪来的，并把「换 / 移除」摆出来。
-           上一版只有一个「从微信取昵称头像」，点它到底换的是昵称还是头像，
-           从字面上看不出来，而且 getUserProfile 早已拿不到真实头像。 -->
-      <view class="avatar-row">
-        <view class="avatar-row-main">
-          <text class="field-label">头像</text>
-          <text class="avatar-src">{{avatarFromText}}</text>
-        </view>
-        <button class="btn mini" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose">换头像</button>
-        <button class="btn mini" wx:if="{{hasLocalAvatar}}" bindtap="onAvatarClear">用微信头像</button>
-      </view>
-
       <button class="btn ghost mini logout" bindtap="onLogout">退出登录</button>
     </block>
   </view>

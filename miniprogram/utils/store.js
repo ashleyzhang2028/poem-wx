@@ -489,7 +489,7 @@ function avatarSrc() {
   return p.avatarLocal || p.avatarUrl || "";
 }
 
-/** 有没有自己传过头像 —— 决定设置里「移除头像」那一项显不显示 */
+/** 有没有自己传过头像 —— 决定「用微信头像」（退回微信那张）这一枚出不出现 */
 function hasLocalAvatar() {
   return !!profile().avatarLocal;
 }
