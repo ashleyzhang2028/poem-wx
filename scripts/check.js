@@ -5886,7 +5886,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
-/* ---------- V38. 用户可见的文案不许提「数据存在哪」（Issue #49，2026-10-04） ----------
+/* ---------- V38. 用户可见的文案不许提「数据存在哪」（Issue #49 → PR #58，2026-10-04） ----------
  *
  * 用户原话：
  *   「为什么叫 本机数据，没有人关心或者需要知道这个数据在本机还是云端，
@@ -5978,8 +5978,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       aboutWxml.indexOf("本机记录") < 0 && /背诵记录/.test(aboutWxml));
     ok("登录成功不再提「本机身份」（用户看不懂，也不必懂）",
       mineJs.indexOf("本机身份") < 0 || !/title: *"[^"]*本机身份/.test(mineJs));
-    ok("头像来源不再说「本机设置的头像」（说「自己设的」就够）",
-      mineJs.indexOf("本机设置的头像") < 0);
+    ok("头像来源不再说「本机设置的头像」/「本机头像」（说「自己设的」就够）",
+      mineJs.indexOf("本机设置的头像") < 0 && mineJs.indexOf("本机头像") < 0);
 
     // 隐私说明那一句要留着 —— 上面把它放进白名单，这里确认它没被顺手删掉，
     // 否则「不登录不会外发」这件事就没处说了
@@ -5987,6 +5987,65 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("隐私/协议里那句「默认只存在这台手机上」还在（用户有权知道）",
       /只存在这台手机上/.test(aboutJs));
   }
+}
+
+/* ---------- V39. 「头像」那一行撤掉（点头像就换）+ 退回微信那张留在副题上 ----------
+ *
+ * 用户 2026-10-04：
+ *   「换头像那一行也是多余，需要删除，用户直接点击上面的头像就可以编辑或者更换头像不行吗？」
+ *
+ * 行。头像那个圆本来就挂着 open-type="chooseAvatar" —— 它就是换头像的入口，
+ * 弹出来的第一项就是「用微信头像」，下面一项是「从相册选 / 拍照」。
+ * 所以「头像 ｜ 本机设置的头像 ｜ [换头像] [用微信头像]」这一行是把同一件事
+ * 又说了一遍，而且把「我是谁」那张卡撑高了半屏。
+ *
+ * 唯一不能跟着一起删的是「用微信头像」—— 它是**从自己传的那张退回微信那张**
+ * 的动作，头像圆里没有（chooseAvatar 只会给你一张新的，不会清掉旧的）。
+ * 它挪到副题右端，只有自己传过一张时才出现。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const mineWxml = read("pages/mine/mine.wxml");
+  const mineWxss = read("pages/mine/mine.wxss");
+  const mineJs = read("pages/mine/mine.js");
+
+  // 1) 那一行整个撤掉：WXML 里不再有 .avatar-row，样式也不留孤儿
+  ok("「我的」页不再有「头像」那一行（.avatar-row 已撤）",
+    mineWxml.indexOf("avatar-row") < 0 && mineWxss.indexOf(".avatar-row") < 0,
+    "那一行还在，或者样式留下了孤儿");
+  // 原来贴在那行里的三样：标签「头像」「换头像」按钮、说明「本机设置的头像」
+  //   先摘掉 WXML 注释：里面的说明正引着「换头像」这个词（V26 踩过同一个坑）
+  const mineWxmlBare = mineWxml.replace(/<!--[\s\S]*?-->/g, "");
+  ok("那一行里的「换头像」按钮也没了（它点的是同一件事）",
+    mineWxmlBare.indexOf("换头像") < 0, "换头像按钮还在，与头像圆重复");
+  ok("原来那行只说一句的 .avatar-src 也撤了",
+    mineWxss.indexOf(".avatar-src") < 0 && mineJs.indexOf("avatarFromText") < 0,
+    "avatarFromText / .avatar-src 还留着，没人再读它");
+
+  // 2) 头像圆仍是换头像的入口：chooseAvatar 挂在它身上，不是挪到别处去了
+  ok("头像圆本身就是 chooseAvatar 的入口（点它就换）",
+    /class="avatar-btn"\s+open-type="chooseAvatar"/.test(mineWxml)
+      && /bindchooseavatar="onAvatarChoose"/.test(mineWxml),
+    "头像圆不再是入口了，换头像无处可点");
+
+  // 3) 退回微信那张：挪到副题右端，只在有自己设的那张时出现
+  ok("「用微信头像」还在（它是退回微信那张的唯一入口）",
+    /class="identity-revert"[^>]*bindtap="onAvatarClear"/.test(mineWxml)
+      && /onAvatarClear/.test(mineJs),
+    "退回微信那张的动作丢了，用户换过一次就回不去");
+  ok("它只在自己传过一张时才出现（没传过就没有可退的）",
+    /wx:if="\{\{logged && hasLocalAvatar\}\}"/.test(mineWxml),
+    "没传过头像也挂着一枚点了没用的「用微信头像」");
+
+  // 4) 「这张哪来的」这条信息没跟着那行一起丢 —— 副题仍如实说。
+  //    ⚠️ 说法必须是「自己设的」，不是「本机头像」：那句在 V38 里是违禁词
+  //    （Issue #49 → PR #58：界面不说数据存在哪）。这条判据原来钉着旧文案，
+  //    两处改动在同一行上撞了，冲突的解法就是这一句。
+  ok("副题仍说清「这张头像哪来的」（自己设的 / 微信 / 还没有）",
+    /已登录 · 自己设的/.test(mineJs) && /微信头像/.test(mineJs) && /还没有头像/.test(mineJs),
+    "头像行删了，副题又没接上，用户看不出现在顶着的是哪一张");
+  ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
+    /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
 }
 
 /* ---------- 汇总 ---------- */

@@ -16,8 +16,6 @@ Page({
     avatarUrl: "",
     /** 没头像时圆的那个字：昵称首字，昵称也没有就用「诗」 */
     avatarChar: "诗",
-    /** 这张头像哪来的（自己传的 / 微信的 / 还没有） */
-    avatarFromText: "还没有头像",
     hasLocalAvatar: false,
     identitySub: "未登录",
     gradeName: "",
@@ -77,9 +75,20 @@ Page({
       avatarUrl: src,
       avatarChar: (nick || "诗").slice(0, 1),
       hasLocalAvatar: local,
-      // 说清这张是哪来的：自己传的排第一（与 store.avatarSrc 同一口径）
-      avatarFromText: !src ? "还没有头像" : local ? "自己设的" : "微信头像",
-      identitySub: profile.logged ? "已登录" : "未登录",
+      // 副题一句话说清「我是谁 + 这张头像哪来的」。
+      // 头像行撤掉之后（用户 2026-10-04），「哪来的」这条信息只剩这里能说：
+      // 自己传的排第一（与 store.avatarSrc 同一口径），没换过就如实说没有。
+      //
+      // ⚠️ 这里不许出现「本机 / 云端 / 后端」这类实现词汇（Issue #49 → PR #58）：
+      // 用户问的是「我这张是哪来的」，不是「它存在哪」。所以自己传的那张
+      // 叫「自己设的」，见 docs/design-system.md「别跟用户说数据存在哪」。
+      identitySub: !profile.logged
+        ? "未登录"
+        : local
+          ? "已登录 · 自己设的"
+          : src
+            ? "已登录 · 微信头像"
+            : "已登录 · 还没有头像",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
