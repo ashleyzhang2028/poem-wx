@@ -949,6 +949,14 @@ view, text, button, input, textarea {
   letter-spacing: var(--ls-title);
 }
 
+.lock-note {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-hint);
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
 .lock-btn {
   margin-top: var(--sp-4);
 }

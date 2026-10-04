@@ -5010,6 +5010,98 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     lineTitle && lineTitle[1].replace(/\s+/g, " ").trim().slice(0, 90));
 }
 
+/* ---------- V32. 三处「搬过来一半」的漏（Issue #49 走查 46 屏时看见的） ----------
+
+ * 这一轮的问题有一个共同形状：**上游有的东西，移植时只搬了一半**。
+ * 网页版把英文字段翻成人话再上屏，小程序搬了字段没搬翻译；
+ * 组件的 note 属性声明了、wxml 却没渲染；离线预览的替身与真组件
+ * 各写一份结构，于是同一个东西在截图里和在真机上是两副样子。
+ * 三件都不报错 —— 不写判据就只能靠下次再走一遍截图撞见。
+ */
+{
+  // 1) 译文来源不许是英文 token
+  //    poem 的 data/index.js 有 TRANSLATION_SOURCES 映射，小程序这边
+  //    得在 build-data.js 里做同一件事。判据看的是**编译产物**：
+  //    course.json 里的 src 必须全是中文说明，一个 ascii 字母都不许剩。
+  const coursePath = path.join(ROOT, "data", "course.json");
+  if (fs.existsSync(coursePath)) {
+    const course = JSON.parse(fs.readFileSync(coursePath, "utf8"));
+    const badSrc = [];
+    Object.keys(course).forEach(function (id) {
+      const src = course[id] && course[id].src;
+      if (src && /[A-Za-z]/.test(src)) badSrc.push(id + "=" + src);
+    });
+    ok("译文来源是给人看的说明，不是英文 token（course.json 的 src）",
+      badSrc.length === 0, badSrc.slice(0, 3).join(" | "));
+
+    // 有映射表就不该有认不得的 token —— 语料里出现新键时要当场红
+    const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
+    ok("build-data.js 里有一份译文来源映射表",
+      /TRANSLATION_SOURCES\s*=\s*\{/.test(buildSrc));
+    const known = ["school", "academic", "modern", "public-domain"];
+    const missing = known.filter(function (k) {
+      return buildSrc.indexOf(k + ":") < 0 && buildSrc.indexOf('"' + k + '"') < 0;
+    });
+    ok("译文来源的四个键都认得（school / academic / modern / public-domain）",
+      missing.length === 0, missing.join(", "));
+  }
+
+  // 2) lock-card：note 属性必须真被渲染出来，且预览替身与真组件同构
+  const lockWxml = fs.readFileSync(
+    path.join(ROOT, "components", "lock-card", "lock-card.wxml"), "utf8");
+  const lockJs = fs.readFileSync(
+    path.join(ROOT, "components", "lock-card", "lock-card.js"), "utf8");
+
+  ok("lock-card 声明了 note 属性", /note\s*:\s*\{/.test(lockJs));
+  ok("lock-card 真把 note 渲染出来了（wxml 里有 lock-note）",
+    /lock-note/.test(lockWxml));
+  ok("lock-card 渲染 note 时带 wx:if（空 note 不留一行空白）",
+    /lock-note[^>]*wx:if|<text[^>]*wx:if[^>]*lock-note/.test(lockWxml));
+
+  // note 的样式得有出处 —— 上一版属性声明着、wxml 不渲染、wxss 也没这条，
+  // 三处一起漏，真机上这句人话从来没出现过
+  const appWxssLock = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  ok("lock-note 有样式（.lock-note 定义在 app.wxss）", /\.lock-note\s*\{/.test(appWxssLock));
+
+  // 预览替身与真组件同构：替身里出现的 lock-* 类名，真组件里也得有；
+  // 反过来真组件里的 lock-* 类名，替身也得画出来 —— 否则就是
+  // 「预览里有、真机没有」或反过来的第二遍
+  // ！先剥注释再匹配 —— 替身的注释里就写着 lock-foot 这个名字（正是在说
+  //   「上一版多画了它」），不剥的话判据抓到的是那句注释，红得毫无道理。
+  const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  // 取「展开 lock-card 的那一段」：从 class="card lock-card" 起，
+  // 到这一条 return 语句结束（分号）。不拿 `</view>` 当结束符 ——
+  // 替身里多画一个元素就会把那个锚点挪走，判据自己先瞎。
+  const fakeBlock = /class="card lock-card"[\s\S]{0,1200}?;\n/.exec(renderSrc);
+  if (fakeBlock) {
+    const fake = fakeBlock[0];
+    const classesOf = function (str) {
+      return (str.match(/class="[^"]*\block-[a-z-]+/g) || [])
+        .map(function (x) { return x.replace(/.*class="[^"]*?/, "").trim(); })
+        .filter(Boolean);
+    };
+    // 真组件里 lock-* 的类名
+    const realClasses = (lockWxml.match(/\block-[a-z-]+/g) || [])
+      .map(function (x) { return x.trim(); })
+      .filter(function (x, i, a) { return a.indexOf(x) === i; });
+    const fakeClasses = (fake.match(/\block-[a-z-]+/g) || [])
+      .map(function (x) { return x.trim(); })
+      .filter(function (x, i, a) { return a.indexOf(x) === i; });
+
+    const onlyReal = realClasses.filter(function (c) { return fakeClasses.indexOf(c) < 0; });
+    const onlyFake = fakeClasses.filter(function (c) { return realClasses.indexOf(c) < 0; });
+    ok("预览替身画出了真组件的每一个 lock-* 元素",
+      onlyReal.length === 0, onlyReal.join(", "));
+    ok("预览替身不再凭空多画 lock-* 元素（多一行字就能把间距看错）",
+      onlyFake.length === 0, onlyFake.join(", "));
+  } else {
+    ok("预览里能找到 lock-card 的替身展开", false, "没匹配到展开片段");
+  }
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
