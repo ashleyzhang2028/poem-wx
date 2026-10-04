@@ -4939,6 +4939,77 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     mismatch.length === 0, mismatch.join(" | "));
 }
 
+/**
+ * V31. 两条「只有量出来才看得见」的版式毛病（Issue #49 走查截图时量的）。
+ *
+ * 这两条的共同点是：截图里看着「有点怪」，但说不出怪在哪 ——
+ * 一条是圆角把只有上边的分隔线收成了方框，一条是 flex 把标签压得折了行。
+ * 都不影响功能，所以靠人眼回看守不住（改完就更看不出来了），
+ * 得把判据写死在样式上。
+ *
+ *   1. **只有一条 border-top 的盒子不许带 border-radius。**
+ *      圆角会把「只有上边没有左右下」的那条边一起收圆，渲染出来
+ *      是左上 / 右上两个圆角 + 两侧向下的短弧，活像一个空的小方框。
+ *      首页那行「背诵设置」就栽在这儿（`.hero-foot`）。同一类毛病
+ *      V15 记过一版（inset 阴影被圆角切掉两端）—— 都是「圆角去裁
+ *      一条边」的错。
+ *
+ *   2. **标签（.tag）不许被压窄、不许折行。**
+ *      它是「新学 / 复习」这种两个字的量词胶囊，没有「装不下就换行」
+ *      这一态。上一版它跟一篇长篇名并排（定风波·莫听穿林打叶声），
+ *      篇名是 white-space: nowrap 且没给 min-width: 0，于是缩不动、
+ *      压力全落到标签上：「新学」折成上下两行，标签高度 23px → 42px。
+ *      修法两处 —— 标签 flex: none + nowrap；篇名给 min-width: 0
+ *      好让它自己走省略号。
+ */
+{
+  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 1) 只有 border-top 的盒子不许有圆角（否则那条边被收成方框）
+  const badTopBorder = [];
+  const files = [];
+  [path.join(ROOT, "app.wxss")].concat(
+    pages.map((p) => path.join(ROOT, p + ".wxss"))
+  ).forEach((f) => { if (fs.existsSync(f)) files.push(f); });
+  files.forEach((f) => {
+    const css = fs.readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const re = /([^{}]+)\{([^}]*)\}/g;
+    let m;
+    while ((m = re.exec(css))) {
+      const sel = m[1].trim().replace(/\s+/g, " ");
+      const body = m[2];
+      if (!/border-top\s*:/.test(body)) continue;
+      // 有左右下任意一条实边时，圆角才是有意义的（画的是完整框）
+      const hasOther =
+        /border-(left|right|bottom)\s*:/.test(body) ||
+        /(^|[^-])border\s*:/.test(body) ||
+        /border-width\s*:/.test(body);
+      if (hasOther) continue;
+      if (/border-radius\s*:/.test(body)) badTopBorder.push(sel);
+    }
+  });
+  ok("只画 border-top 的盒子不带 border-radius（圆角会把那条边收成方框）",
+    badTopBorder.length === 0, badTopBorder.slice(0, 4).join(" | "));
+
+  // 2) 标签不折行、不被压窄
+  const tagBlock = /\.tag\s*\{([^}]*)\}/.exec(appWxss);
+  ok("标签不被压窄（.tag 有 flex: none）",
+    !!tagBlock && /flex\s*:\s*none/.test(tagBlock[1]),
+    tagBlock && tagBlock[1].replace(/\s+/g, " ").trim().slice(0, 90));
+  ok("标签不折行（.tag 有 white-space: nowrap）",
+    !!tagBlock && /white-space\s*:\s*nowrap/.test(tagBlock[1]),
+    tagBlock && tagBlock[1].replace(/\s+/g, " ").trim().slice(0, 90));
+
+  // 与标签并排的篇名：得能缩，否则压力转嫁给标签
+  const homeWxss = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxss"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+  const lineTitle = /\.row-line\s+\.row-title\s*\{([^}]*)\}/.exec(homeWxss);
+  ok("与标签并排的篇名能缩（.row-line .row-title 有 min-width: 0）",
+    !!lineTitle && /min-width\s*:\s*0/.test(lineTitle[1]),
+    lineTitle && lineTitle[1].replace(/\s+/g, " ").trim().slice(0, 90));
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");

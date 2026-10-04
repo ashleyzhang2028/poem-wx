@@ -67,7 +67,13 @@
 }
 
 /* 「按什么排的」那行说明 —— 参考图里「档位定义 / 4 个档位 · 颜色用于月历标记」
-   就在卡片底部这个位置：一行灰字，右边一个箭头，说明「这里还能点进去」。 */
+   就在卡片底部这个位置：一行灰字，右边一个箭头，说明「这里还能点进去」。
+
+   **没有 border-radius**：这一行只画一条 border-top，而圆角会连
+   「只有上边没有左右下」的那条边一起收圆 —— 渲染出来是左上、右上两个
+   圆角 + 两侧向下的短弧，看着像一个空着的小方框（与 V15 那条
+   「inset 阴影被圆角切掉两端」同一类毛病）。这一行不需要圆角，
+   去掉就干净了。 */
 .hero-foot {
   display: flex;
   align-items: center;
@@ -76,7 +82,6 @@
   margin-top: var(--sp-3);
   padding-top: var(--sp-3);
   border-top: 1rpx solid var(--line-2);
-  border-radius: var(--radius-sm);
 }
 
 .hero-foot-t {
@@ -159,6 +164,13 @@
 
 .row-line .row-title {
   flex: 0 1 auto;
+  /* min-width: 0 是这一行能不能**真的**省略号的开关。
+     标题是 white-space: nowrap，flex 项在 `min-width: auto` 下的自动最小
+     尺寸等于它的 min-content —— 对不换行的文字就是整句的宽度。
+     于是标题根本缩不动，压力全落到右边那枚 .tag 上：tag 被压窄、
+     「新学」折成两行（实测 23px → 42px），整行跟着长高。
+     min-width: 0 把这道地板撤掉，标题才轮到 text-overflow 出手。 */
+  min-width: 0;
   margin-right: 12rpx;
 }
 
