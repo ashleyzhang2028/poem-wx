@@ -54,13 +54,45 @@ function shuffle(arr) {
   return a;
 }
 
+/* 一句的边界：到什么长度、在哪里断。
+
+   起因是一道真的出了洋相的题：语料里《六国论》整段是**一行 223 字**，
+   「给诗句认篇名」抽到它，答题卡上只剩题干、选项被顶到下一页；
+   交卷后的逐题回顾里，这道题一个人吃掉两屏。而它问的只是
+   「这首诗叫什么名字」—— 两百字的题干对答题毫无帮助。
+
+   数据面的规模：5324 篇里 3384 篇的「行」超过 40 字，29 篇课内文言文
+   （《核舟记》158 字、《赤壁赋》整段一段一行）都在其中。
+
+   所以「一句」不再等于「一行」：
+     1. 先按行切开（诗词本来就是这个粒度）；
+     2. 行内再按**句读**切 —— 文言文用 `，。！？；` 断句，
+        《无衣》的「岂曰无衣？与子同袍。」因此得到两个八字的句子，
+        而不是被整行丢掉；
+     3. 切完仍超过 MAX_LINE 的（长复句、引文）不算一句，不要了。
+
+   24 字这一档：七言律诗一联 14 字，加上「。 」与序言余量，
+   24 字是一眼读得完、一屏放得下的上限。 */
+const MAX_LINE = 24;
+const SENTENCE_END = /[，。！？；、]/;
+
 function linesOf(p) {
   const e = corpus.entry(p.id);
   if (!e || !e.text) return [];
-  return String(e.text)
+  const raw = String(e.text)
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
+  // 短行直接用（诗词的正路）；长行按句读再切一刀，切不动才丢
+  const out = [];
+  raw.forEach((line) => {
+    if (line.length <= MAX_LINE) { out.push(line); return; }
+    line.split(SENTENCE_END).forEach((seg) => {
+      const t = seg.trim();
+      if (t && t.length <= MAX_LINE) out.push(t);
+    });
+  });
+  return out;
 }
 
 /**

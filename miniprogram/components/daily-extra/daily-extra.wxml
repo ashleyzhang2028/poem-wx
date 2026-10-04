@@ -7,7 +7,13 @@
 <view class="de" style="{{themeStyle}}">
   <view class="search de-search">
     <text class="search-icon">⌕</text>
-    <input placeholder="今日加背" value="{{keyword}}" bindinput="onInput"
+    <!-- placeholder 说的是「这里能搜什么」，不是「这是哪张卡」。
+         上一版照搬网页版的「今日加背」—— 网页版那个搜索框上方**没有标题**，
+         这四个字是它唯一的身份；小程序把它挪进卡片之后，
+         上面刚有一行标题写着「今日加背」，框里再写一遍，就成了
+         「标题 + 同名的搜索框」，看的人分不清哪个是能点的。
+         换成与搜索页 / 列表页同一句话术：查什么（篇名 / 作者 / 朝代）。 -->
+    <input placeholder="搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="onSearch" />
     <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
   </view>

@@ -5077,7 +5077,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     lineTitle && lineTitle[1].replace(/\s+/g, " ").trim().slice(0, 90));
 }
 
-/* ---------- V32. 三处「搬过来一半」的漏（Issue #49 走查 46 屏时看见的） ----------
+/* ---------- V32. 四处「搬过来一半」的漏（Issue #49 走查截图时看见的） ----------
 
  * 这一轮的问题有一个共同形状：**上游有的东西，移植时只搬了一半**。
  * 网页版把英文字段翻成人话再上屏，小程序搬了字段没搬翻译；
@@ -5167,6 +5167,27 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   } else {
     ok("预览里能找到 lock-card 的替身展开", false, "没匹配到展开片段");
   }
+
+  /* 3) 搜索框的 placeholder 不许和它头顶那张卡的标题重名。
+     这一条也是「搬了一半」：网页版首页那枚搜索框**上方没有标题**，
+     「今日加背」四个字就是它的身份；小程序把它挪进一张卡之后，
+     上面刚有一行标题写着「今日加背」，框里再写一遍，
+     看的人就分不清「哪个是标题、哪个能点」。
+     判据取**同一张卡里**两个字符串：卡片标题（首页 wxml 的 card-title）
+     与组件 placeholder，不许相等。 */
+  const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+  const compWxml = fs.readFileSync(
+    path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
+  const dailyTitle = /card-title[^>]*>\s*今日加背/.test(homeWxmlDaily) ? "今日加背" : "";
+  const ph = /placeholder="([^"]*)"/.exec(compWxml);
+  ok("今日加背那张卡有标题", !!dailyTitle);
+  ok("搜索框 placeholder 不与卡片标题重名",
+    !!ph && ph[1] !== dailyTitle,
+    ph ? "placeholder = 「" + ph[1] + "」，标题 = 「" + dailyTitle + "」" : "没读到 placeholder");
+  /* placeholder 说的是「能搜什么」，不是「这是哪张卡」——
+     与别的搜索框同一套话术，读得出字段。 */
+  ok("placeholder 说明搜索字段（含「搜」字）",
+    !!ph && ph[1].indexOf("搜") >= 0, ph ? ph[1] : "");
 }
 
 /**
@@ -5492,6 +5513,96 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const pagesCfg2 = readJson(path.join(__dirname, "shots", "pages.json"));
   ok("预览里有「换台机器、云端那份落回来」那一屏",
     Object.keys(pagesCfg2).some((k) => k === "mine-synced"));
+}
+
+/**
+ * V35. 题干的「一句」有长度上限（Issue #49 走查截图引出的题，2026-10-04）。
+ *
+ * 起因是截图走查里翻出来的一道真题：题库抽到《六国论》，
+ * 而语料把整篇**一段一行**存着 —— 那一行 223 个字。
+ * 「给诗句认篇名」的题干于是变成两百字的文言文，
+ * 答题卡上只剩题干、四个选项被顶到下一页；交卷后的逐题回顾里，
+ * 一道题一个人吃掉两屏。而它问的只是「这首诗叫什么名字」。
+ *
+ * 数据面的规模（量出来的，不是估的）：
+ *   · 5324 篇里 3384 篇的「行」超过 40 字；
+ *   · 251 篇课内里 29 篇最长行超过 30 字，
+ *     《六国论》223 字、《核舟记》158 字、《赤壁赋》整段一段一行。
+ *
+ * 所以「一句」不再等于「一行」：先按行切，行内再按句读（，。！？；、）切，
+ * 切完仍超过上限的不要。这样《无衣》的「岂曰无衣？与子同袍。」
+ * 得到两个八字的句子（而不是被整行丢掉），
+ * 《六国论》得到 98 个短句、最长 12 字 —— 251 篇一篇都不废。
+ *
+ * 守两条：上限这个常量在，且**取句口子只有一处**（linesOf）——
+ * 多开一处取句，那道口子就不会过这个筛，题型又会漏长句进来。
+ */
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const quizSrc = read("utils/quiz.js");
+  const stripped = quizSrc.replace(/\/\*[\s\S]*?\*\//g, "");
+
+  const cap = /const MAX_LINE = (\d+);/.exec(stripped);
+  ok("题干有长度上限（MAX_LINE 在）", !!cap);
+  const capN = cap ? Number(cap[1]) : 0;
+  ok("上限落在「一联十四字 + 余量」这一档（16 ~ 32 字）", capN >= 16 && capN <= 32,
+    "读到 " + capN);
+
+  /* 句读切分：只按 \n 切的话，文言文一段一行照样是两百字。
+     断言查的是「真的按标点又切了一刀」——查 SENTENCE_END 里
+     至少含，。！？；这四个断句符。 */
+  /* ⚠️ 取的是方括号**里面**那一串：正则写成 \/([^/]+)\/ 会把 `[，。！？；、]`
+     连括号一起捕获，拼成 new RegExp("[[，。！？；、]]") —— 那是一个
+     「含 [ 的字符类」，一个句读都切不动，数据面那条断言立刻假红。 */
+  const se = /const SENTENCE_END = \/\[([^\]]+)\]\//.exec(stripped);
+  ok("行内还会按句读再切（SENTENCE_END 在）", !!se);
+  ok("切分符含中文句读（，。！？；至少四个）",
+    !!se && "，。！？；".split("").filter((c) => se[1].indexOf(c) >= 0).length >= 4,
+    se ? se[1] : "");
+
+  /* 取句只有一处口子：linesOf。
+     `split("\n")` 除了 linesOf 里那一处，别的地方不许再直接切行取句 ——
+     正文引用的每一处（含干扰项取样）都从这里走。 */
+  const splits = (stripped.match(/\.split\("\\n"\)/g) || []).length;
+  ok("按 \\n 取句只有一处（linesOf 收口）", splits === 1, "读到 " + splits + " 处");
+
+  /* ⚠️ 这一条**真的去调 quiz.build**，而不是在这里照抄一遍切句逻辑。
+     照抄的那版踩过坑：抄的时候把 SENTENCE_END 整串（连方括号）拼进
+     new RegExp，切不动一个句读，于是断言在代码明明正确时假红；
+     而它同时也就**测不到** quiz.js 真改坏的样子 —— 尺子自己造的，
+     量谁都说合格。
+     调真模块还多守一件事：出题这条路真的把长句挡在外面了。 */
+  const quizMod = require(path.join(ROOT, "utils", "quiz.js"));
+  const course = JSON.parse(read("data/course.json"));
+  const courseIds = Object.keys(course);
+  /* 把课内那 251 篇喂给出题器：`course()` 返回的名录没有正文，
+     而 quiz 的正文从 corpus.entry 取（读的是同一份 course.json），
+     所以这里只挑一条真的属性来断言 —— **题干与答案的长度**。 */
+  let maxStem = 0, maxAnswer = 0, asked = 0, longOne = null;
+  /* 出 300 轮，题型全开 —— 单轮样本太小，「篇名」抽到长句是概率事件。 */
+  for (let round = 0; round < 300; round++) {
+    const qs = quizMod.build({ count: 10, forms: ["next", "prev", "author", "title"] });
+    qs.forEach((q) => {
+      asked++;
+      if ((q.stem || "").length > maxStem) maxStem = (q.stem || "").length;
+      if ((q.answer || "").length > maxAnswer) {
+        maxAnswer = (q.answer || "").length;
+        longOne = { form: q.form, stem: (q.stem || "").slice(0, 20), answer: q.answer.slice(0, 20) };
+      }
+    });
+  }
+  ok("出题器真的产题了（300 轮里没全空）", asked > 0, "出了 " + asked + " 题");
+  ok("题干不超过上限（真的调 build 量的）", maxStem > 0 && maxStem <= capN,
+    "最长题干 " + maxStem + " 字");
+  ok("答案不超过上限", maxAnswer > 0 && maxAnswer <= capN,
+    "最长答案 " + maxAnswer + " 字" + (longOne ? "（" + longOne.form + "）" : ""));
+
+  /* 课内那 29 篇文言文（一段一行）是这一条要挡的正主 ——
+     断言它们**仍然出得了题**：切句切得太狠会把整篇切空，
+     那就从「题干太长」换成了「这几篇没题」。 */
+  const proseIds = courseIds.filter((id) => String(course[id].text).length > 100);
+  ok("课内确实有长文（这一条不是空转）", proseIds.length > 10,
+    "只找到 " + proseIds.length + " 篇长文");
 }
 
 /* ---------- 汇总 ---------- */
