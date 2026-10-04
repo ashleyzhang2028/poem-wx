@@ -62,7 +62,7 @@ const CAPS = [
   // 确保用户数据不丢失，背诵进度换设备也能得到」。服务端那道闸要一起放开
   // （见 docs/wx-login-server.md「同步不再分档」）—— 只改一边，界面就会
   // 列出一个点下去必然被拒的入口，或者把能用的功能藏起来。
-  { key: "sync", name: "云端同步", desc: "登录即得；换手机进度一字不少", tier: "login" },
+  { key: "sync", name: "同步进度", desc: "登录即得；换手机进度一字不少", tier: "login" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },

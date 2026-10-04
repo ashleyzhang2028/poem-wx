@@ -2647,13 +2647,56 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   ok("后端地址有配置入口", adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0);
 
-  // W4. 服务端没配时，不许有任何界面说「已同步」这种假话。
-  //     判据：「我的」那一行的副标题由 syncNote() 算出来，而 syncNote 第一句
-  //     判的必须是「渠道就绪没有」，不是「档位给没给」。
+  // W4. 不许有任何界面说「已同步」这种假话。
+  //
+  //     这条判据原先写的是「syncNote 第一句必须判 sy.ready」—— 那是**按写法**
+  //     判，不是按事实判，2026-10-04 露了馅：`ready` 说的是**此刻通道通不通**
+  //     （地址配没配、登录在不在），而这一行要答的是「我这份进度到没到别处」。
+  //     于是「已经同步过、现在断网」这一屏被说成「没同步过」，正好说反。
+  //
+  //     现在按事实判：**「已同步」这句话只能出自真同步过**那一支。
+  //     `lastSyncAt` 只在 sync.js 的成功分支里写（失败/跳过一律不写），
+  //     所以拿它当证据是可靠的 —— 而它也正是那次改动之后 syncNote 认的凭据。
   ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
-  ok("副标题先说清渠道就绪没有",
-    /syncNote\s*\([^)]*\)\s*\{[\s\S]{0,160}!sy\.ready/.test(mineJs),
-    "syncNote 没先判 ready —— 渠道没开时会看到一句「还没同步过」的假话");
+  ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
+    /if \(sy\.lastSyncAt\) return sy\.lastText/.test(mineJs),
+    "没同步过也敢说「上次同步」，那是假话");
+  ok("没同步过时要如实说，且说得出一句「能不能换手机」",
+    /还没同步过/.test(mineJs) && /换手机进度不跟随/.test(mineJs));
+  // lastSyncAt 只有成功那一支写 —— 这是上面那条判据的前提，逐字查一遍
+  {
+    const syncJs = fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8");
+    ok("lastSyncAt 只在同步成功那一支落盘（失败/跳过不写）",
+      /if \(!res\.error\) \{[\s\S]{0,200}saveSettings\(\{ lastSyncAt/.test(syncJs),
+      "失败也写 lastSyncAt 的话，上面那条「凭据可靠」就不成立了");
+
+    /* lastSyncAt 还必须在 DEFAULTS 里 —— `settings()` **只投影已知键**，
+       漏一个键的后果不是报错，是那个键恒定读成 undefined。这条踩过：
+       （2026-10-04）lastSyncAt 写进了原始存储、read() 也读得到，
+       settings().lastSyncAt 却恒为 undefined —— 「我的」页那一行于是
+       **永远**说「还没同步过」，同步成功多少次都一样。
+       所以这里不只查「字符串在不在」，而是**真跑一遍存取**：
+       存进去、投影出来，读不到就红。 */
+    const storeJsSrc = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
+    ok("lastSyncAt 在 DEFAULTS 里（settings() 只投影已知键，漏了就恒 undefined）",
+      /^\s*lastSyncAt:\s*0,/m.test(storeJsSrc),
+      "不在 DEFAULTS 里 —— settings().lastSyncAt 会恒为 undefined，读数永远是「还没同步过」");
+
+    const saved = global.wx;
+    const box = {};
+    global.wx = {
+      getStorageSync: (k) => (k in box ? box[k] : ""),
+      setStorageSync: (k, v) => { box[k] = v; },
+      removeStorageSync: (k) => { delete box[k]; }
+    };
+    const st = require(path.join(ROOT, "utils", "store.js"));
+    const at = Date.now();
+    st.saveSettings({ lastSyncAt: at });
+    ok("存进去的 lastSyncAt 真的投影得出来（端到端走一遍）",
+      st.settings().lastSyncAt === at,
+      "写进去了却投影不出来 —— 界面读到的永远是 0");
+    global.wx = saved;
+  }
 
   // W5. 同步是**登录即得**（2026-10-04 起）。这条口子必须在能力表里：
   //     表里没有它，界面就没有统一的判据可查。
@@ -5759,8 +5802,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     !/（服务端）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, ""))
       && !/（授权码）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")),
     "又把来源塞回档名里了");
-  ok("「我的授权」把来源说成一句人话（由服务端发放）",
-    /由服务端发放/.test(adminJs) && /sourceText/.test(adminWxml));
+  ok("「我的授权」把来源说成一句人话（管理员发放）",
+    /管理员发放/.test(adminJs) && /sourceText/.test(adminWxml));
 
   // 9) 「未来七天 没选中的文字不需要和选中的一样最左最右有 padding 吗」
   //    要：同一列字，一行一个起点扫下来是锯齿
@@ -5843,7 +5886,110 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
-/* ---------- V38. 「头像」那一行撤掉（点头像就换）+ 退回微信那张留在副题上 ----------
+/* ---------- V38. 用户可见的文案不许提「数据存在哪」（Issue #49 → PR #58，2026-10-04） ----------
+ *
+ * 用户原话：
+ *   「为什么叫 本机数据，没有人关心或者需要知道这个数据在本机还是云端，
+ *     你显示这个对用户来说完全不可理解。排查所有类似的问题，这是微信小程序场景。」
+ *
+ * 他说的是文案，不是某个页：`本机 / 云端 / 服务端 / 后端 / 离线缓存` 这类词
+ * 是**实现词汇**——它们描述数据放在哪，而用户的问题是「我背得怎么样、
+ * 换手机还在不在」。把实现词汇写进界面，等于要求用户先懂这套架构再看懂自己的屏。
+ *
+ * 守法是全站扫一遍**用户可见的字符串**：
+ *   · wxml 里的文本节点（注释先摘掉 —— 注释里正引着旧文案，V26 踩过这个坑）
+ *   · js 里的字符串字面量（同样先摘注释）
+ * 命中这几个词就红。它们仍然可以出现在注释、文档、以及 `utils/` 的实现里 ——
+ * 那是给我们自己看的，用户看不到。
+ *
+ * 允许的例外只有一处：**隐私说明里如实交代数据只在这台手机上**。
+ * 那不是实现词汇，是用户有权知道的事实（不登录不会外发），所以白名单放行。
+ */
+{
+  const BAD = ["本机", "云端", "服务端", "后端", "离线"];
+  // 隐私说明那一句是「用户有权知道的事实」，不是实现词汇 —— 单独放行
+  const ALLOW = ["背诵进度与设置默认只存在这台手机上"];
+
+  /** 摘掉注释：块注释、行注释、wxml 注释 */
+  const strip = (src) =>
+    src
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+
+  /** wxml：所有标签之间的文本节点 */
+  const wxmlText = (src) =>
+    strip(src)
+      .replace(/<[^>]*>/g, "\u0000")
+      .split("\u0000")
+      .join(" ");
+
+  /** js：单引号与双引号字符串字面量（粗取，够用 —— 命中后人工再看一眼） */
+  const jsStrings = (src) => {
+    const out = [];
+    const re = /"([^"\\\n]*)"|'([^'\\\n]*)'/g;
+    let m;
+    while ((m = re.exec(strip(src)))) out.push(m[1] !== undefined ? m[1] : m[2]);
+    return out;
+  };
+
+  const hits = [];
+  (function walk(dir) {
+    fs.readdirSync(dir).forEach((f) => {
+      const full = path.join(dir, f);
+      if (fs.statSync(full).isDirectory()) return walk(full);
+      const rel = path.relative(ROOT, full);
+      let texts = [];
+      if (f.endsWith(".wxml")) texts = [wxmlText(fs.readFileSync(full, "utf8"))];
+      else if (f.endsWith(".js")) texts = jsStrings(fs.readFileSync(full, "utf8"));
+      else return;
+      texts.forEach((t) => {
+        if (ALLOW.some((a) => t.indexOf(a) >= 0)) return;
+        BAD.forEach((w) => {
+          if (t.indexOf(w) >= 0) hits.push(rel + " · " + w + " · " + t.slice(0, 40));
+        });
+      });
+    });
+  })(ROOT);
+
+  ok("界面文案里不再出现「本机 / 云端 / 服务端 / 后端 / 离线」这些实现词汇",
+    hits.length === 0,
+    "命中：" + hits.slice(0, 5).join(" | "));
+
+  // 逐条点名那几处用户直接问到的位置，免得哪天被「挪到别处」绕过
+  {
+    const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+    const mineWxml = read("pages/mine/mine.wxml");
+    const mineJs = read("pages/mine/mine.js");
+    const aboutWxml = read("packages/settings/about/about.wxml");
+
+    ok("「我的」页那张卡的标题不再叫「本机数据」（它答的是「我背得怎么样」）",
+      /class="card-title bar">背诵概况</.test(mineWxml) || mineWxml.indexOf("本机数据") < 0);
+    ok("「我的」页那一行不再叫「云端同步」（用户要的是「换手机还在不在」）",
+      mineWxml.indexOf("云端同步") < 0 && /同步进度/.test(mineWxml));
+    ok("「清空本机数据」改口成「清空背诵数据」（清的是内容，不是存储位置）",
+      /清空背诵数据/.test(mineWxml) && mineWxml.indexOf("清空本机数据") < 0);
+    // 注释里正引着旧文案，先摘掉再判（V26 踩过同一个坑）
+    const mineJsCode = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*/g, "");
+    ok("同步那一行的副标题说的是「换手机跟不跟随」，不是「后端就绪没」",
+      /换手机进度不跟随/.test(mineJsCode) && mineJsCode.indexOf("后端未就绪") < 0,
+      "又把「后端未就绪」写回界面了");
+    ok("「关于」页那一段标题不再叫「本机记录」",
+      aboutWxml.indexOf("本机记录") < 0 && /背诵记录/.test(aboutWxml));
+    ok("登录成功不再提「本机身份」（用户看不懂，也不必懂）",
+      mineJs.indexOf("本机身份") < 0 || !/title: *"[^"]*本机身份/.test(mineJs));
+    ok("头像来源不再说「本机设置的头像」/「本机头像」（说「自己设的」就够）",
+      mineJs.indexOf("本机设置的头像") < 0 && mineJs.indexOf("本机头像") < 0);
+
+    // 隐私说明那一句要留着 —— 上面把它放进白名单，这里确认它没被顺手删掉，
+    // 否则「不登录不会外发」这件事就没处说了
+    const aboutJs = read("packages/settings/about/about.js");
+    ok("隐私/协议里那句「默认只存在这台手机上」还在（用户有权知道）",
+      /只存在这台手机上/.test(aboutJs));
+  }
+}
+
+/* ---------- V39. 「头像」那一行撤掉（点头像就换）+ 退回微信那张留在副题上 ----------
  *
  * 用户 2026-10-04：
  *   「换头像那一行也是多余，需要删除，用户直接点击上面的头像就可以编辑或者更换头像不行吗？」
@@ -5856,9 +6002,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
  * 唯一不能跟着一起删的是「用微信头像」—— 它是**从自己传的那张退回微信那张**
  * 的动作，头像圆里没有（chooseAvatar 只会给你一张新的，不会清掉旧的）。
  * 它挪到副题右端，只有自己传过一张时才出现。
- *
- * ⚠️ 这类「删对了没人夸」的改动同样得有断言守着：一行是删是留静态可判，
- * 「退回微信那张」还在不在也静态可判。逐条都做过反证（把改动逐个改回去当场红）。
  */
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -5885,7 +6028,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /bindchooseavatar="onAvatarChoose"/.test(mineWxml),
     "头像圆不再是入口了，换头像无处可点");
 
-  // 3) 退回微信那张：挪到副题右端，只在有本机头像时出现
+  // 3) 退回微信那张：挪到副题右端，只在有自己设的那张时出现
   ok("「用微信头像」还在（它是退回微信那张的唯一入口）",
     /class="identity-revert"[^>]*bindtap="onAvatarClear"/.test(mineWxml)
       && /onAvatarClear/.test(mineJs),
@@ -5894,9 +6037,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /wx:if="\{\{logged && hasLocalAvatar\}\}"/.test(mineWxml),
     "没传过头像也挂着一枚点了没用的「用微信头像」");
 
-  // 4) 「这张哪来的」这条信息没跟着那行一起丢 —— 副题仍如实说
-  ok("副题仍说清「这张头像哪来的」（本机 / 微信 / 还没有）",
-    /本机头像/.test(mineJs) && /微信头像/.test(mineJs) && /还没有头像/.test(mineJs),
+  // 4) 「这张哪来的」这条信息没跟着那行一起丢 —— 副题仍如实说。
+  //    ⚠️ 说法必须是「自己设的」，不是「本机头像」：那句在 V38 里是违禁词
+  //    （Issue #49 → PR #58：界面不说数据存在哪）。这条判据原来钉着旧文案，
+  //    两处改动在同一行上撞了，冲突的解法就是这一句。
+  ok("副题仍说清「这张头像哪来的」（自己设的 / 微信 / 还没有）",
+    /已登录 · 自己设的/.test(mineJs) && /微信头像/.test(mineJs) && /还没有头像/.test(mineJs),
     "头像行删了，副题又没接上，用户看不出现在顶着的是哪一张");
   ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
     /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));

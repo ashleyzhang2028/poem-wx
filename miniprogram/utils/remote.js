@@ -55,7 +55,7 @@ function baseUrl() {
 function request(path, data, method) {
   return new Promise((resolve, reject) => {
     if (!configured()) {
-      reject(new Error("后端未配置"));
+      reject(new Error("同步服务未开通"));
       return;
     }
     wx.request({
@@ -88,7 +88,7 @@ function request(path, data, method) {
 const CHUNK = 100;
 
 /**
- * 本机数据打成服务端认的形状。**形状由 utils/wire.js 定**，
+ * 本机数据打成服务器认的形状。**形状由 utils/wire.js 定**，
  * 这里只负责「分批、发出去、失败怎么办」。
  *
  * 上一版把本机形状直接当报文发：进度行发的是 `{ id, kind, rec, at }`，
@@ -193,7 +193,7 @@ function speechReady() {
 
 /** 合成一段文本，服务端返回 { url, expiresAt } */
 function speech(text) {
-  if (!speechReady()) return Promise.reject(new Error("后端 TTS 未启用"));
+  if (!speechReady()) return Promise.reject(new Error("朗读服务未开通"));
   return request(PATHS.speech, { text: text }).then((res) => {
     if (!res || !res.url) throw new Error("合成没返回音频");
     return res;

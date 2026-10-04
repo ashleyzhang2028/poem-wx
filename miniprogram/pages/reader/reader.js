@@ -139,7 +139,7 @@ Page({
   /** 加背失败时那句话。四种 code 各有各的下场，不说清等于没说 */
   dailyMsg(r) {
     if (r.code === "E_LIMIT") return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，先背完再加";
-    if (r.code === "E_STORAGE") return "加不进去：本机存储用不了";
+    if (r.code === "E_STORAGE") return "加不进去：这台手机存不下（空间不足或未开启存储）";
     return "加不进去";
   },
 

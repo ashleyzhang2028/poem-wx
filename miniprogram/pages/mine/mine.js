@@ -31,11 +31,11 @@ Page({
     syncText: "还没同步过",
     syncPending: 0,
     /** 登录即得（2026-10-04 起不再分档）。留着这个字段是因为界面
-        仍要区分「渠道没就绪」（后端没配）与「档位不给」，只是后者已不存在 */
+        仍要区分「同步通道没开」（后端没配）与「档位不给」，只是后者已不存在 */
     syncAllowed: false,
     syncNote: "",
-    /** 同步那一行的副标题。数据层给的是「已攒 N 条」这类事实，
-        这里把它和「能不能同步」拼成一句人话 */
+    /** 同步那一行的副标题。数据层给的是「ready / 已攒 N 条」这类事实，
+        这里把它译成用户看得懂的那句话（能不能换手机） */
     syncSub: "",
     fullTextOn: false,
 
@@ -78,10 +78,14 @@ Page({
       // 副题一句话说清「我是谁 + 这张头像哪来的」。
       // 头像行撤掉之后（用户 2026-10-04），「哪来的」这条信息只剩这里能说：
       // 自己传的排第一（与 store.avatarSrc 同一口径），没换过就如实说没有。
+      //
+      // ⚠️ 这里不许出现「本机 / 云端 / 后端」这类实现词汇（Issue #49 → PR #58）：
+      // 用户问的是「我这张是哪来的」，不是「它存在哪」。所以自己传的那张
+      // 叫「自己设的」，见 docs/design-system.md「别跟用户说数据存在哪」。
       identitySub: !profile.logged
         ? "未登录"
         : local
-          ? "已登录 · 本机头像"
+          ? "已登录 · 自己设的"
           : src
             ? "已登录 · 微信头像"
             : "已登录 · 还没有头像",
@@ -116,22 +120,18 @@ Page({
       .login()
       .then((res) => {
         wx.hideLoading();
-        if (res && res.local) {
-          wx.showToast({
-            title: "已登录（本机身份）",
-            icon: "none",
-            duration: 2500
-          });
-        } else {
-          // 登录顺带把云端那份认回来（auth.login 里做的）。
-          // 这里说清「认回来了」还是「这条通道没开」——
-          // 新机器上这两种情况长得一模一样：都是「我刚登录，进度呢？」
-          wx.showToast({
-            title: res && res.synced ? "已登录 · 进度已认回" : "已登录 · 后端未就绪",
-            icon: "none",
-            duration: 2500
-          });
-        }
+        /* 登录顺带把别处那份认回来（auth.login 里做的）。这里只说**用户能感觉到
+           的那个差别**：进度取回来了没有 —— 新机器上「刚登录」最想知道的就是这件。
+
+           ⚠️ 别在这里说「本机身份 / 后端未就绪」：前者是内部状态的两档，
+           后者是实现词汇（用户 2026-10-04：「没有人关心或者需要知道这个数据
+           在本机还是云端」）。取不回来时只说「已登录」—— 那一行的副标题
+           会把「换手机进度不跟随」如实写清楚，不必在这儿喊一句。 */
+        wx.showToast({
+          title: res && res.synced ? "已登录 · 进度已取回" : "已登录",
+          icon: "none",
+          duration: 2500
+        });
         this.refresh();
       })
       .catch((err) => {
@@ -143,7 +143,7 @@ Page({
   onLogout() {
     wx.showModal({
       title: "退出登录",
-      content: "退出后本机进度不会丢，但功能要重新登录才能用。",
+      content: "退出后背诵数据不会丢，但功能要重新登录才能用。",
       confirmText: "退出",
       success: (r) => {
         if (!r.confirm) return;
@@ -157,22 +157,31 @@ Page({
    * 同步那一行该说什么。**先说「能不能同步」，再说「同步到哪了」**。
    *
    * 上一版第一句是不必要的：同步当时挂在 Pro 档上 —— 用户 2026-10-04
-   * 裁决把这条边界撤了，登录就全部提供。现在只剩两种状态：
-   * 后端就绪（说清同步到哪了）/ 后端没就绪（说清攒了多少条）。
+   * 裁决把这条边界撤了，登录就全部提供。
+   *
+   * ⚠️ 「后端未就绪」这种词不许出现在用户看得见的地方（用户 2026-10-04
+   * 的原话：「没有人关心或者需要知道这个数据在本机还是云端」）。
+   * 对用户而言只有两种事实：**别处也存了一份**，还是**只在这台手机上**。
+   * 后者要如实说 —— 换手机进度会丢，这是他该知道、也能自己补救的事。
    */
   syncNote(sy) {
-    if (!sy.ready) return "后端未就绪 · 已攒 " + sy.pending + " 条";
-    return sy.lastText;
+    // 同步过就以「上次同步」为准：`ready` 说的是**此刻通道通不通**
+    // （后端地址配没配、登录在不在），而这里要答的是「我这份进度到没到别处」。
+    // 同步过一次就永远算数 —— 断网、换回没配后端的包，都不该把它说回「没同步过」。
+    // 预览里那屏「已经同步过」（mine-synced）正是靠这条读出来的：
+    // 预览没有网，ready 恒 false，只认 lastSyncAt。
+    if (sy.lastSyncAt) return sy.lastText;
+    if (!sy.ready) return "换手机进度不跟随 · 点一下重试";
+    return "还没同步过 · 点一下同步";
   },
 
   onSync() {
     wx.showLoading({ title: "同步中" });
     sync.now(true).then((res) => {
       wx.hideLoading();
-      let title = "本机数据只在本机";
+      let title = "已同步";
       if (res.error) title = "同步失败：" + res.error;
-      else if (!res.skipped) title = "已同步";
-      else if (res.skipped === "offline") title = "后端或登录未就绪";
+      else if (res.skipped === "offline") title = "同步通道未开 · 进度只在这台手机";
       else if (res.skipped === "throttled") title = "刚同步过，过会儿再来";
       wx.showToast({ title, icon: "none" });
       this.refresh();
@@ -207,7 +216,7 @@ Page({
     this.refresh();
   },
 
-  /** 回到微信那张：去掉本机那张，优先级自然回落到 avatarUrl */
+  /** 回到微信那张：去掉自己设的那张，优先级自然回落到 avatarUrl */
   onAvatarClear() {
     store.saveProfile({ avatarLocal: "" });
     sync.markDirty();
@@ -262,7 +271,7 @@ Page({
 
   onClear() {
     wx.showModal({
-      title: "清空本机数据",
+      title: "清空背诵数据",
       content: "背诵进度、已读标记、自选集合都会删掉，且无法恢复。",
       confirmText: "清空",
       confirmColor: "#a83b32",

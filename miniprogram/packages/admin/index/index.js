@@ -19,9 +19,9 @@ const ROLE_NAME = { owner: "所有者", admin: "管理员", user: "普通用户"
  * 现在拆开：档名一行，来源与角色一行。来源是一句人话，不是括号里的技术词。
  */
 const SOURCE_NAME = {
-  remote: "由服务端发放",
-  grant: "由授权码兑换",
-  none: "本机默认"
+  remote: "管理员发放",
+  grant: "授权码兑换",
+  none: "默认档位"
 };
 
 /**
@@ -60,7 +60,7 @@ Page({
     busy: false,
     msg: "",
 
-    /** 后端地址：同步、微信登录、名录都走它。留空 = 没后端，一切照旧降级 */
+    /** 同步服务器地址：同步、微信登录、名录都走它。留空 = 没配置，功能按本机降级 */
     baseUrl: "",
     baseUrlNote: "",
     wxLoginNote: ""
@@ -92,7 +92,7 @@ Page({
       baseUrl: auth.baseUrl() || "",
       baseUrlNote: auth.configured()
         ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"
-        : "还没配。配上前：登录降级为本机身份、档位按免费、进度只在本机。",
+        : "还没配。没配之前：登录只记在这台手机、档位按免费、换手机进度不跟随。",
       wxLoginNote: this.wxNote()
     });
 
@@ -112,15 +112,18 @@ Page({
    * 原先是把两个嵌套三元表达式摊在模板里（`item.local ? '本机' : (item.remote ? …)`），
    * 读的人得先在脑子里跑一遍；「能不能改」更是分散在两个按钮的 wx:if 上。
    * 挪到这里，一眼能看完。
+   *
+   * scopeText 说「这一档谁定的」—— 管理员看的是一份**操作台账**，
+   * 「本机 / 服务端」是数据从哪来，「自建 / 发放」才是他关心的那件事。
    */
   decorate(users, canWrite, canSetRole) {
     return (users || []).map((u) => {
       let scopeText = "名册只读";
-      if (u.local) scopeText = "本机";
-      else if (u.remote) scopeText = "服务端";
+      if (u.local) scopeText = "自己设的";
+      else if (u.remote) scopeText = "管理员发放";
       return Object.assign({}, u, {
         scopeText,
-        // 名册里的那批是构建产物，改不了；服务端与本机这两条才谈得上「可写」
+        // 名册里的那批是构建产物，改不了；服务器下发与自己设的这两条才谈得上「可写」
         editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
       });
     });
@@ -169,7 +172,7 @@ Page({
         title: "改不了别人的档位",
         content: this.data.remoteReady
           ? "要管理员角色才能改（当前：" + this.data.roleLabel + "）。"
-          : "后端接口还没部署，名录只读。档位由管理员在服务端发放。",
+          : "同步服务器还没接上，名录只读。档位由管理员发放。",
         showCancel: false,
         confirmText: "知道了"
       });
@@ -234,8 +237,8 @@ Page({
    * 编一个「疑似已就绪」比不说更坏。
    */
   wxNote() {
-    if (!auth.configured()) return "微信登录要后端配合：/api/wx/login 做 code2Session 换 openid。见 docs/wx-login-server.md。";
-    return "配置了后端，但 /api/wx/login 是否已上线只有服务端知道。登录若一直落地成「本机身份」，就是那两条路由还没加 —— 见 docs/wx-login-server.md。";
+    if (!auth.configured()) return "微信登录要服务器配合：/api/wx/login 做 code2Session 换 openid。见 docs/wx-login-server.md。";
+    return "地址配好了，但服务器上的 /api/wx/login 是否已上线，客户端无从探测。登录若一直只记在这台手机，就是那两条路由还没加 —— 见 docs/wx-login-server.md。";
   },
 
   onBaseUrl(e) {
@@ -257,7 +260,7 @@ Page({
     entitlement
       .sync()
       .then(() => {
-        this.setData({ busy: false, msg: url ? "地址已保存" : "已清空后端地址" });
+        this.setData({ busy: false, msg: url ? "地址已保存" : "已清空地址" });
         this.refresh();
       })
       .catch(() => {
@@ -269,11 +272,11 @@ Page({
   onLoadAccounts() {
     if (!this.data.adminReady) {
       wx.showModal({
-        title: "云端名录不可用",
+        title: "名录不可用",
         content:
           (this.data.remoteReady
-            ? "后端已配置，但你这一档不是管理员，读不到全站名录。"
-            : "后端接口还没部署。名录要服务端就绪后才有。") +
+            ? "服务器已接上，但你不是管理员，读不到全站名录。"
+            : "服务器还没接上。名录要接上之后才有。") +
           "\n\n下面的名单是构建时导入的名册（只读），没有它就只能看自己。",
         showCancel: false,
         confirmText: "知道了"
