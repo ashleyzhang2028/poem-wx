@@ -11,24 +11,14 @@
   padding-top: var(--sp-1);
 }
 
-.grant-tier {
-  display: flex;
-  align-items: baseline;
-}
-
 .grant-tier-name {
+  display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
   font-weight: 700;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
-}
-
-.grant-tier-k {
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  padding-left: var(--sp-2);
 }
 
 .grant-meter {

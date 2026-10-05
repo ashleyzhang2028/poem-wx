@@ -6,24 +6,6 @@ const auth = require("../../../utils/auth");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 
-const ROLE_NAME = { owner: "所有者", admin: "管理员", user: "普通用户" };
-
-/**
- * 这一档是从哪儿发下来的。
- *
- * 用户 2026-10-04 对着旧界面上那句「全能（服务端） 所有者」问：
- * 「这是什么意思，完全看不懂」—— 三个词挤在一起，没一个是人话：
- *   全能     —— 档位的名字，唯一看得懂那个
- *   （服务端）—— 想说「不是本机自己填的，是后端发的」，可读起来像另一个维度
- *   所有者   —— 角色名，但没说清「所有者」是对谁而言
- * 现在拆开：档名一行，来源与角色一行。来源是一句人话，不是括号里的技术词。
- */
-const SOURCE_NAME = {
-  remote: "管理员发放",
-  grant: "授权码兑换",
-  none: "默认档位"
-};
-
 /**
  * 管理页：给微信登录用户分层设置（free / pro / max，与 poem 口径一致）。
  *
@@ -53,8 +35,6 @@ Page({
     generatedAt: "",
     remoteReady: false,
     adminReady: false,
-    roleLabel: "",
-    sourceText: "",
     canWrite: false,
     canSetRole: false,
     busy: false,
@@ -87,8 +67,6 @@ Page({
       adminReady: remote.adminReady(),
       canWrite: canWrite,
       canSetRole: canSetRole,
-      roleLabel: ROLE_NAME[auth.role()] || "普通用户",
-      sourceText: SOURCE_NAME[snap.source] || SOURCE_NAME.none,
       baseUrl: auth.baseUrl() || "",
       baseUrlNote: auth.configured()
         ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"
@@ -107,26 +85,22 @@ Page({
   },
 
   /**
-   * 每一行补两件事：从哪来的、这一行能不能改。
+   * 每一行只补一件事：这一行能不能改。
    *
-   * 原先是把两个嵌套三元表达式摊在模板里（`item.local ? '本机' : (item.remote ? …)`），
-   * 读的人得先在脑子里跑一遍；「能不能改」更是分散在两个按钮的 wx:if 上。
-   * 挪到这里，一眼能看完。
+   * 「能不能改」原先分散在两个按钮的 wx:if 上，挪到这里，一眼能看完。
    *
-   * scopeText 说「这一档谁定的」—— 管理员看的是一份**操作台账**，
-   * 「本机 / 服务端」是数据从哪来，「自建 / 发放」才是他关心的那件事。
+   * 这里曾经还补过一格来源（管理员发放 / 自己设的 / 名册只读）。用户 2026-10-05
+   * 说不要「管理员发放」五个字，干脆整格撤掉，而不是换句措辞 ——
+   * 名录本身就是管理页，站在这里的人不是来收档位的；真要说清「谁还能改」，
+   * 右边那两个按钮（改档 / 角色）和那枚「只读」比一句话准。
    */
   decorate(users, canWrite, canSetRole) {
-    return (users || []).map((u) => {
-      let scopeText = "名册只读";
-      if (u.local) scopeText = "自己设的";
-      else if (u.remote) scopeText = "管理员发放";
-      return Object.assign({}, u, {
-        scopeText,
+    return (users || []).map((u) =>
+      Object.assign({}, u, {
         // 名册里的那批是构建产物，改不了；服务器下发与自己设的这两条才谈得上「可写」
         editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
-      });
-    });
+      })
+    );
   },
 
   onLogin() {
@@ -139,10 +113,10 @@ Page({
    */
   groupCaps(snap) {
     const GROUPS = [
-      { title: "免费档（登录即得）", keys: ["daily", "extra", "library", "pinyin", "ebbinghaus", "progress", "search"] },
+      { title: "Free（登录即得）", keys: ["daily", "extra", "library", "pinyin", "ebbinghaus", "progress", "search"] },
       { title: "登录即开", keys: ["speak", "export", "leitner"] },
-      { title: "专业档起", keys: ["sync", "sm2", "quiz", "collections", "admin"] },
-      { title: "全能档起", keys: ["fsrs", "feihualing", "exam"] }
+      { title: "Pro 起", keys: ["sync", "sm2", "quiz", "collections", "admin"] },
+      { title: "Max 起", keys: ["fsrs", "feihualing", "exam"] }
     ];
     return GROUPS.map((g) => ({
       title: g.title,
@@ -171,19 +145,20 @@ Page({
       wx.showModal({
         title: "改不了别人的档位",
         content: this.data.remoteReady
-          ? "要管理员角色才能改（当前：" + this.data.roleLabel + "）。"
-          : "同步服务器还没接上，名录只读。档位由管理员发放。",
+          ? "你的账号没有改档位的权限。"
+          : "同步服务器还没接上，名录只读。",
         showCancel: false,
         confirmText: "知道了"
       });
       return;
     }
 
+    // 档名就是 Free / Pro / Max —— 不再拼「全能（max）」那种一档两名
     const items = tiers.TIERS.map((t) => ({
       key: t.key,
-      text: t.name + "（" + t.key + "）"
+      text: t.name
     }));
-    items.unshift({ key: "", text: "收回（重置为免费）" });
+    items.unshift({ key: "", text: "收回（重置为 Free）" });
 
     wx.showActionSheet({
       itemList: items.map((i) => i.text),
@@ -206,13 +181,13 @@ Page({
     const current = e.currentTarget.dataset.r;
 
     if (!this.data.canSetRole) {
-      wx.showToast({ title: "改角色只对 owner 开放", icon: "none" });
+      wx.showToast({ title: "没有改角色的权限", icon: "none" });
       return;
     }
 
     const items = [
-      { text: "普通用户（user）", key: "user" },
-      { text: "管理员（admin）", key: "admin" }
+      { text: "user", key: "user" },
+      { text: "admin", key: "admin" }
     ];
     wx.showActionSheet({
       itemList: items.map((i) => i.text),
@@ -275,7 +250,7 @@ Page({
         title: "名录不可用",
         content:
           (this.data.remoteReady
-            ? "服务器已接上，但你不是管理员，读不到全站名录。"
+            ? "服务器已接上，但你的账号读不到全站名录。"
             : "服务器还没接上。名录要接上之后才有。") +
           "\n\n下面的名单是构建时导入的名册（只读），没有它就只能看自己。",
         showCancel: false,
