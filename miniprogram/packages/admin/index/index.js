@@ -7,26 +7,6 @@ const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 
 /**
- * 这一档是从哪儿发下来的。
- *
- * 用户 2026-10-04 对着旧界面上那句「全能（服务端） 所有者」问：
- * 「这是什么意思，完全看不懂」—— 三个词挤在一起，没一个是人话。
- * 2026-10-05 他又收了一次口：
- *   「有服务端发放删除，所有者是什么意思，是普通用户和管理员的意思吗，
- *     也不要了，删除。只保留 Free, Pro 或者 Max」。
- *
- * 所以「我的授权」这张卡上现在只有两样：**档名**（Free / Pro / Max）
- * 与**这一档开了几项能力**。来源不再单独成句，角色名整个撤掉 ——
- * 「所有者 / 管理员 / 普通用户」这套词是我们内部的分工，不是给用户看的标签：
- * 他要知道的是「我能不能改别人」，而这件事由按钮在不在说，不用一个名词预告。
- */
-const SOURCE_NAME = {
-  remote: "管理员发放",
-  grant: "授权码兑换",
-  none: "默认档位"
-};
-
-/**
  * 管理页：给微信登录用户分层设置（free / pro / max，与 poem 口径一致）。
  *
  * 三块，按「谁看得到」分开：
@@ -55,7 +35,6 @@ Page({
     generatedAt: "",
     remoteReady: false,
     adminReady: false,
-    sourceText: "",
     canWrite: false,
     canSetRole: false,
     busy: false,
@@ -88,7 +67,6 @@ Page({
       adminReady: remote.adminReady(),
       canWrite: canWrite,
       canSetRole: canSetRole,
-      sourceText: SOURCE_NAME[snap.source] || SOURCE_NAME.none,
       baseUrl: auth.baseUrl() || "",
       baseUrlNote: auth.configured()
         ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"
@@ -107,26 +85,22 @@ Page({
   },
 
   /**
-   * 每一行补两件事：从哪来的、这一行能不能改。
+   * 每一行只补一件事：这一行能不能改。
    *
-   * 原先是把两个嵌套三元表达式摊在模板里（`item.local ? '本机' : (item.remote ? …)`），
-   * 读的人得先在脑子里跑一遍；「能不能改」更是分散在两个按钮的 wx:if 上。
-   * 挪到这里，一眼能看完。
+   * 「能不能改」原先分散在两个按钮的 wx:if 上，挪到这里，一眼能看完。
    *
-   * scopeText 说「这一档谁定的」—— 管理员看的是一份**操作台账**，
-   * 「本机 / 服务端」是数据从哪来，「自建 / 发放」才是他关心的那件事。
+   * 这里曾经还补过一格来源（管理员发放 / 自己设的 / 名册只读）。用户 2026-10-05
+   * 说不要「管理员发放」五个字，干脆整格撤掉，而不是换句措辞 ——
+   * 名录本身就是管理页，站在这里的人不是来收档位的；真要说清「谁还能改」，
+   * 右边那两个按钮（改档 / 角色）和那枚「只读」比一句话准。
    */
   decorate(users, canWrite, canSetRole) {
-    return (users || []).map((u) => {
-      let scopeText = "名册只读";
-      if (u.local) scopeText = "自己设的";
-      else if (u.remote) scopeText = "管理员发放";
-      return Object.assign({}, u, {
-        scopeText,
+    return (users || []).map((u) =>
+      Object.assign({}, u, {
         // 名册里的那批是构建产物，改不了；服务器下发与自己设的这两条才谈得上「可写」
         editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
-      });
-    });
+      })
+    );
   },
 
   onLogin() {
@@ -171,8 +145,8 @@ Page({
       wx.showModal({
         title: "改不了别人的档位",
         content: this.data.remoteReady
-          ? "你的账号没有改档位的权限。档位由管理员发放。"
-          : "同步服务器还没接上，名录只读。档位由管理员发放。",
+          ? "你的账号没有改档位的权限。"
+          : "同步服务器还没接上，名录只读。",
         showCancel: false,
         confirmText: "知道了"
       });

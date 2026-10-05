@@ -5810,8 +5810,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const entBare = bare(entJs);
     ok("档位名的括号里不再塞来源（档名就是档名）",
       !/（服务端）/.test(entBare) && !/（授权码）/.test(entBare), "又把来源塞回档名里了");
-    ok("「我的授权」把来源说成一句人话（管理员发放）",
-      /管理员发放/.test(adminJs) && /sourceText/.test(adminWxml));
 
     // Free / Pro / Max 是**不翻译**的：档位表里那三个 name 与 key 同形
     const tiersJs = read("utils/tiers.js");
@@ -5840,6 +5838,30 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 界面文案里不再出现角色名 —— 「所有者」是用户点名删掉的那个词
     // wxml 也先摘注释：注释里正引着旧文案「全能（服务端） 所有者」（V26 踩过这个坑）
     const bareWxml = (src) => src.replace(/<!--[\s\S]*?-->/g, "");
+    /* 来源这一格当天就被用户收走了：「不要显示 管理员发放 五个字」（2026-10-05）。
+       他连说了三句 —— 档名别译、角色别露、来源别印 —— 落到最后就是
+       「我的授权」这张卡上只剩档名与能力覆盖。所以这一格是**整格撤掉**，
+       不是换句措辞：sourceText / scopeText 两个字段连同它们的样式一起删，
+       界面上一个小样都不留。 */
+    ok("界面上不再出现「管理员发放」（管理页 wxml）",
+      bareWxml(adminWxml).indexOf("管理员发放") < 0, "这五个字还在卡片上");
+    ok("界面上不再出现「管理员发放」（管理页 js 拼的串）",
+      bare(adminJs).indexOf("管理员发放") < 0, "别在 js 里拼这句话");
+    ok("来源那一格已撤，不是换了句措辞（sourceText / scopeText 一并删）",
+      bare(adminJs).indexOf("sourceText") < 0 && bareWxml(adminWxml).indexOf("sourceText") < 0
+        && bare(adminJs).indexOf("scopeText") < 0 && bareWxml(adminWxml).indexOf("scopeText") < 0,
+      "留一个没人用的字段，下一个人会以为它还挂在界面上");
+    ok("授权卡只剩档名（没有副题那一行）",
+      adminWxml.indexOf("grant-tier-k") < 0
+        && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(bareWxml(adminWxml)),
+      "副题那一行还在，或者档名换写法了");
+    // 档位副题（tiers 的 sub）：Pro / Max 说得出的话也只有「管理员发放」这一句，
+    // 所以留空 —— 写一句重复的不如不写。Free 那句留着，它是唯一说得清来源的一格
+    ok("Pro / Max 的副题留空（不写一句重复的来源）",
+      tiersMod.tierOf("pro").sub === "" && tiersMod.tierOf("max").sub === "",
+      "又把来源写回副题里了");
+    ok("Free 的副题还在（登录即得要说得清）",
+      /微信登录即得/.test(tiersMod.tierOf("free").sub));
     [["管理页 js", bare(adminJs)], ["管理页 wxml", bareWxml(adminWxml)],
      ["我的 js", bare(read("pages/mine/mine.js"))],
      ["我的 wxml", bareWxml(read("pages/mine/mine.wxml"))]].forEach(([name, src]) => {

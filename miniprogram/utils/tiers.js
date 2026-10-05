@@ -20,10 +20,14 @@
  *   比 pro 还多。现在的边界只有一条：**能进门，不能白用**。
  */
 
+/* sub 是这一档的副题。Pro / Max 原来写的是「管理员发放」——
+   用户 2026-10-05 说不要这五个字，而这两档说得出的话也只有这一句来源，
+   于是留空：**不写比写一句重复的强**。Free 那句留着，它是唯一说得清
+   「为什么我登录就有」的一格。 */
 const TIERS = [
   { key: "free", name: "Free", sub: "微信登录即得", rank: 1 },
-  { key: "pro", name: "Pro", sub: "管理员发放", rank: 2 },
-  { key: "max", name: "Max", sub: "管理员发放", rank: 3 }
+  { key: "pro", name: "Pro", sub: "", rank: 2 },
+  { key: "max", name: "Max", sub: "", rank: 3 }
 ];
 
 const DEFAULT_TIER = "free";

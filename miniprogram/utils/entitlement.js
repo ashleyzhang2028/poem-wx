@@ -217,7 +217,7 @@ function hint(key) {
   if (can(key)) return "";
   if (!loggedIn()) return "登录后可用";
   if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
-  if (cap.tier === "login") return "「" + cap.name + "」要管理员发放授权后开放";
+  if (cap.tier === "login") return "「" + cap.name + "」要登录后才有";
   const s = status();
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
