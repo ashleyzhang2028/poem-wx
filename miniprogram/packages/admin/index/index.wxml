@@ -12,11 +12,11 @@
     <view class="grant-head">
       <view class="grant-tier">
         <text class="grant-tier-name">{{status.label}}</text>
-        <!-- 副题回答两个问题：「这一档从哪来」与「我在这个系统里算谁」。
-             用户 2026-10-04 看到旧的「全能（服务端） 所有者」问这是什么意思 ——
-             把来源塞进档名的括号里，再在旁边杵一个角色名，两行都不是人话。
-             现在档名单独一行，副题是一句：档位来源 + 角色。 -->
-        <text class="grant-tier-k">{{sourceText}} · {{roleLabel}}</text>
+        <!-- 副题只说一件事：这一档是从哪来的（管理员发放 / 授权码兑换 / 默认）。
+             用户 2026-10-04 看到旧的「全能（服务端） 所有者」问这是什么意思；
+             2026-10-05 又追了一句：来源与角色都删了，「只保留 Free, Pro 或者 Max」。
+             所以这里没有角色名 —— 能不能改别人的档位，由按钮在不在说。 -->
+        <text class="grant-tier-k">{{sourceText}}</text>
       </view>
       <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
       <view class="grant-meter">
@@ -27,7 +27,7 @@
       </view>
     </view>
 
-    <text class="hint note" wx:if="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按免费档</text>
+    <text class="hint note" wx:if="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
   </view>
 
   <view class="card">
@@ -46,12 +46,12 @@
   <view class="card">
     <view class="card-title bar">用户名录</view>
     <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
-    <text class="hint note" wx:elif="{{!adminReady}}">只读 · 当前 {{roleLabel}}</text>
+    <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
 
     <view class="acct" wx:for="{{users}}" wx:key="id">
       <view class="acct-main">
         <text class="acct-name">{{item.label}}</text>
-        <text class="acct-sub">{{item.tier ? item.tier : '未分级'}} · {{item.scopeText}} · {{item.role}}</text>
+        <text class="acct-sub">{{item.tierLabel ? item.tierLabel : '未分级'}} · {{item.scopeText}}</text>
       </view>
       <!-- 改档 / 改角色：只给原生按钮，选值交给原生 showActionSheet。
            服务器没接上时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->

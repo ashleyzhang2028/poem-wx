@@ -23,7 +23,8 @@ Page({
     algoName: "",
     dailyCount: 5,
     stats: { learned: 0, mastered: 0, readCount: 0 },
-    tierLabel: "免费",
+    // 档名就是 Free / Pro / Max，不译（用户 2026-10-05：不要翻译）
+    tierLabel: "Free",
     tierSource: "",
     /** 答题音效那一页的入口：环境没有 Web Audio 时整行不出现 */
     sfxVisible: false,

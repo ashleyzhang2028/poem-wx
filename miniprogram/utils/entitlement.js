@@ -13,6 +13,9 @@
  *   但本期 Issue 已经把话说死：**free / pro / max 不需要用户支付**，
  *   三档都是管理员在管理页里按人分的。所以「付费」两个字在界面上一律不出现。
  *
+ * ⚠️ 档位的名字就是 Free / Pro / Max，不译成「免费 / 专业 / 全能」
+ *   （见 tiers.js 顶上那段：用户 2026-10-05 要求「不要翻译」）。
+ *
  * ⚠️ 客户端档位**不是安全边界**：改本机存储就能提档。它管的是「界面给谁看」，
  *   真正扣配额必须在服务端做。
  *   这一条曾经被写成一个后门：未登录时把所有人当 max（叫「本机宿主」），
@@ -120,11 +123,12 @@ function status() {
     return {
       tier: server,
       source: "remote",
-      // 「（服务端）」括号里那三个字，用户 2026-10-04 问的是什么意思 ——
-      // 它原本想说「这一档不是本机自己填的，是后端发的」，但读者只看到
-      // 一个「全能（服务端）」，既不像档名也不像角色。
-      // 档名与来源拆成两格：这里只留档名，来源由管理页的 roleLabel 与
-      // `blocked` 那句人话去说（见 packages/admin/index 的「我的授权」）。
+      // label 只有档名一个词（Free / Pro / Max）。
+      // 曾经它写成「全能（服务端）」—— 档名、来源、角色挤成一串，
+      // 用户 2026-10-04 原话是「这是什么意思，完全看不懂」；
+      // 2026-10-05 又追了一句：来源与角色干脆都不要了。
+      // 于是这里只剩档名，来源由管理页的 grant-tier-k 那句人话说，
+      // 角色名不再进界面（谁能改档位，点下去的服务端判据说了算）。
       label: tiers.nameOf(server),
       blocked: "",
       signed: true
@@ -215,8 +219,8 @@ function hint(key) {
   if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
   if (cap.tier === "login") return "「" + cap.name + "」要管理员发放授权后开放";
   const s = status();
-  if (s.blocked === "unsigned") return "连不上服务器，档位暂按免费算，稍后再试";
-  return "「" + cap.name + "」需要「" + tiers.nameOf(cap.tier) + "」档";
+  if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
+  return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
 }
 
 function snapshot() {

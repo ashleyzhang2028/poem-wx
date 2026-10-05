@@ -36,16 +36,20 @@ function roster() {
 }
 
 function rosterUsers() {
-  return (roster().users || []).map((u) => ({
-    id: u.id,
-    label: u.label || u.id.slice(0, 6),
-    tier: tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER,
-    role: "user",
-    source: "roster",
-    local: false,
-    remote: false,
-    writable: false
-  }));
+  return (roster().users || []).map((u) => {
+    const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
+    return {
+      id: u.id,
+      label: u.label || u.id.slice(0, 6),
+      tier: t,
+      // 显示名与档位名同一处出：Free / Pro / Max（不译，见 tiers.js）
+      tierLabel: tiers.nameOf(t),
+      source: "roster",
+      local: false,
+      remote: false,
+      writable: false
+    };
+  });
 }
 
 /** 当前这台设备上的自己 */
@@ -57,8 +61,7 @@ function localUsers() {
       id: profile.userId || store.deviceId(),
       label: profile.nickname || "这台手机",
       tier: s.signed ? s.tier : "",
-      tierLabel: s.label,
-      role: auth.role() || "user",
+      tierLabel: s.signed ? tiers.nameOf(s.tier) : "未分级",
       source: "local",
       local: true,
       remote: false,
@@ -112,18 +115,21 @@ function list() {
 }
 
 function normalizeRemote(rows) {
-  return (rows || []).map((u) => ({
-    id: u.uid || u.id,
-    label: u.nickname || u.email || String(u.uid || "").slice(0, 8),
-    tier: tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER,
-    until: u.until || null,
-    role: u.role || "user",
-    status: u.status || "active",
-    source: "remote",
-    local: false,
-    remote: true,
-    writable: true
-  }));
+  return (rows || []).map((u) => {
+    const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
+    return {
+      id: u.uid || u.id,
+      label: u.nickname || u.email || String(u.uid || "").slice(0, 8),
+      tier: t,
+      tierLabel: tiers.nameOf(t),
+      until: u.until || null,
+      status: u.status || "active",
+      source: "remote",
+      local: false,
+      remote: true,
+      writable: true
+    };
+  });
 }
 
 function merge(a, b, c) {
@@ -164,8 +170,8 @@ function setTier(userId, tier) {
     remote: true,
     msg: res.ok
       ? res.changed === false
-        ? "本来就是「" + tiers.nameOf(tier) + "」，没改动"
-        : "已把「" + userId.slice(0, 8) + "」改成「" + tiers.nameOf(tier) + "」，对方下次打开生效"
+        ? "本来就是 " + tiers.nameOf(tier) + "，没改动"
+        : "已把「" + userId.slice(0, 8) + "」改成 " + tiers.nameOf(tier) + "，对方下次打开生效"
       : "服务器拒绝，权限不足"
   }));
 }
@@ -175,7 +181,7 @@ function revokeTier(userId) {
   if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：服务器未接上或权限不足" });
   return remote.revokeUserTier(userId).then((res) => ({
     ok: true,
-    msg: (res && res.note) || "已收回，重置为免费档"
+    msg: (res && res.note) || "已收回，重置为 Free"
   }));
 }
 
@@ -185,7 +191,7 @@ function setRole(userId, role) {
     return Promise.resolve({ ok: false, msg: "角色只认 user / admin" });
   }
   if (!canSetRole()) {
-    return Promise.resolve({ ok: false, msg: "改角色只对 owner 开放" });
+    return Promise.resolve({ ok: false, msg: "没有改角色的权限" });
   }
   return remote.setUserRole(userId, role).then((res) => ({
     ok: true,

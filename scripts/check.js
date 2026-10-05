@@ -822,7 +822,7 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   ok("登录后导出打开", E.can("export") === true);
   ok("登录后莱特纳盒打开", E.can("leitner") === true);
   ok("登录不解锁付费能力", E.can("sm2") === false && E.can("feihualing") === false);
-  ok("付费能力给出档位提示", E.hint("feihualing").indexOf("全能") >= 0, E.hint("feihualing"));
+  ok("付费能力给出档位提示（档名是 Max，不是译名）", E.hint("feihualing").indexOf("Max") >= 0, E.hint("feihualing"));
 
   // ---- 提权码：本机档位的载体，管理页改档、兑换码都写在这一处 ----
   store.write(store.KEYS.grant, { code: "PRO-ABCD-1234", tier: "pro", at: Date.now() });
@@ -5796,14 +5796,67 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   // 8) 「全能(服务端) 所有者 这是什么意思，完全看不懂」
-  //    档名、来源、角色是三件事，挤成两个词谁都不像人话
+  //    档名、来源、角色是三件事，挤成两个词谁都不像人话。
+  //    用户 2026-10-05 把这件事说到了底：
+  //      「你这是把 Max 翻译成全能了吗？能不能不要翻译 Free, Pro 和 Max，
+  //        翻译完了谁能看懂什么意思……只保留 Free, Pro 或者 Max」
+  //      「有服务端发放删除，所有者是什么意思……也不要了 删除」
+  //    所以这一条从「拆开摆」升级成「只留三个词」：
+  //      · 档名就是 Free / Pro / Max，一个译名都不许有；
+  //      · 界面上不再出现角色名（所有者 / 管理员 / 普通用户）。
   // 先摘掉注释：那段注释里正引着旧文案（V26 踩过同一个坑）
-  ok("档位名的括号里不再塞来源（档名就是档名）",
-    !/（服务端）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, ""))
-      && !/（授权码）/.test(entJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")),
-    "又把来源塞回档名里了");
-  ok("「我的授权」把来源说成一句人话（管理员发放）",
-    /管理员发放/.test(adminJs) && /sourceText/.test(adminWxml));
+  {
+    const bare = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const entBare = bare(entJs);
+    ok("档位名的括号里不再塞来源（档名就是档名）",
+      !/（服务端）/.test(entBare) && !/（授权码）/.test(entBare), "又把来源塞回档名里了");
+    ok("「我的授权」把来源说成一句人话（管理员发放）",
+      /管理员发放/.test(adminJs) && /sourceText/.test(adminWxml));
+
+    // Free / Pro / Max 是**不翻译**的：档位表里那三个 name 与 key 同形
+    const tiersJs = read("utils/tiers.js");
+    const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
+    const tierRows = [...bare(tiersJs).matchAll(/\{\s*key:\s*"(\w+)",\s*name:\s*"([^"]+)"/g)];
+    ok("档位表三行齐全（free / pro / max 都在）", tierRows.length === 3,
+      "读到 " + tierRows.length + " 行");
+    const wanted = { free: "Free", pro: "Pro", max: "Max" };
+    ok("档位名就是 Free / Pro / Max，没有译名",
+      tierRows.length === 3 && tierRows.every((m) => wanted[m[1]] === m[2]),
+      tierRows.map((m) => m[1] + "→" + m[2]).join(" "));
+    ok("「全能 / 专业 / 免费」这三个译名一个都不留（tiers.js）",
+      !/全能/.test(bare(tiersJs)) && !/专业/.test(bare(tiersJs)) && !/免费/.test(bare(tiersJs)));
+    /* nameOf 是界面唯一拿档名的地方，所以**真的调它**量一遍 ——
+       而不是在这里照抄 wanted 表（尺子自己造的，量谁都说合格）。
+       不认识的档位一律回 "Free"：拿不到的档位，宁可少给。 */
+    ok("nameOf 三档都回 Free / Pro / Max（与 key 同形）",
+      ["free", "pro", "max"].every((k) => tiersMod.nameOf(k) === wanted[k]),
+      ["free", "pro", "max"].map((k) => k + "→" + tiersMod.nameOf(k)).join(" "));
+    ok("认不出的档位按 Free 显示（宁可少给）",
+      tiersMod.nameOf("vip") === "Free" && tiersMod.nameOf("") === "Free",
+      tiersMod.nameOf("vip"));
+    ok("档位读不出来时回退也是 Free（TIERS[0] 就是 free）",
+      tiersMod.tierOf("nope").key === "free" && tiersMod.DEFAULT_TIER === "free");
+
+    // 界面文案里不再出现角色名 —— 「所有者」是用户点名删掉的那个词
+    // wxml 也先摘注释：注释里正引着旧文案「全能（服务端） 所有者」（V26 踩过这个坑）
+    const bareWxml = (src) => src.replace(/<!--[\s\S]*?-->/g, "");
+    [["管理页 js", bare(adminJs)], ["管理页 wxml", bareWxml(adminWxml)],
+     ["我的 js", bare(read("pages/mine/mine.js"))],
+     ["我的 wxml", bareWxml(read("pages/mine/mine.wxml"))]].forEach(([name, src]) => {
+      ok(name + "：界面里不再有「所有者」这个词",
+        src.indexOf("所有者") < 0, "角色名还在，用户点名要删的就是它");
+    });
+    ok("管理页不再把角色当标签渲染（roleLabel 已撤）",
+      bareWxml(adminWxml).indexOf("roleLabel") < 0 && bare(adminJs).indexOf("roleLabel") < 0,
+      "roleLabel 还在模板里");
+    ok("名录那一行只说档位与来源（角色名已撤）",
+      /item\.tierLabel/.test(adminWxml) && !/item\.role/.test(bareWxml(adminWxml)),
+      "名册里还挂着 role");
+    // 改角色那个动作还在（它改的是服务端的 user/admin，不是给用户看的标签）——
+    // 撤的是「把角色印在界面上」，不是「能不能改角色」
+    ok("改角色这个动作没跟着一起删（撤的是标签，不是功能）",
+      /onSetRole/.test(adminWxml) && /setRole/.test(bare(adminJs)));
+  }
 
   // 9) 「未来七天 没选中的文字不需要和选中的一样最左最右有 padding 吗」
   //    要：同一列字，一行一个起点扫下来是锯齿
