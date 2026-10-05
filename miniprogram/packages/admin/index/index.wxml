@@ -85,7 +85,6 @@
 
   <view class="card">
     <view class="card-title bar">要一个更高的档位</view>
-    <text class="hint note">三档都不收费 · Free 登录即得</text>
     <button class="btn ghost block" bindtap="onCopyFeedback">复制联系邮箱</button>
     <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
   </view>
