@@ -82,12 +82,12 @@ const manifest = readJson(path.join(dataDir, "texts", "manifest.json"));
 
 ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
 
-// 全部集子索引拼起来应当覆盖全站 5575 条，且一条不重
+// 全部集子索引拼起来应当覆盖全站 5599 条，且一条不重
 const perBook = {};
 booksTable.forEach((b) => {
   perBook[b.id] = readJson(path.join(dataDir, "books", b.id + ".json"));
 });
-const allEntries = Object.keys(perBook).reduce((acc, k) => acc.concat(perBook[k]), []);
+const allEntries = booksTable.reduce((acc, b) => acc.concat(perBook[b.id]), []);
 const allIds = new Set(allEntries.map((p) => p.id));
 ok("集子索引合计覆盖全站", allIds.size === allEntries.length, "有重复 id");
 ok("课内诗词 251 首", perBook.poems.length === 251, "实际 " + perBook.poems.length);
@@ -2414,7 +2414,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const cmod = require(path.join(ROOT, "utils", "corpus.js"));
 
   /* 1) 不丢字：rows 拼回去 = 各行 splitClauses 拼回去；paras 展开 = rows。
-     跑**全站 5575 条**（不只是课内的 251 首）——
+     跑**全站 5599 条**（不只是课内的 251 首）——
      折叠逻辑一旦多切一个字符，只有那几篇会露馅，抽一篇试是试不出来的。
      （这里踩过一次：先只跑了课内，把收行点砍掉一个，检查照样全绿。） */
   const allIds = [];
@@ -6121,6 +6121,233 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "头像行删了，副题又没接上，用户看不出现在顶着的是哪一张");
   ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
     /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
+}
+
+/* ---------- V40. 内容口径与网页版对账（Issue #61，2026-10-06） ----------
+ *
+ * 用户原话：
+ *   「最近一周内，在 /poem 代码库中，我添加了一些宋词和古诗，也把一些内容
+ *     分类错误，还有缺失朝代问题进行了修复，请查看代码库的 PR, commits，
+ *     将这个小程序应用中的内容也进行同样的更新」
+ *
+ * 语料一直是从 poem 仓库现编译的（scripts/build-data.js），所以「同样的更新」
+ * 不是搬数据、而是**把口径钉死**。这一节守的就是那几件离开语料就看不见的事：
+ * 号段、篇数、归位、朝代。
+ *
+ * ## 对的是哪几个提交
+ *
+ * Issue #461 / #471 的六轮补录（宋词 10 + 词 3 + 古诗 10 + 唐诗 11 + 词 5），
+ * Issue #480 的三处修：曹植《七步诗》从《唐诗》归位《古诗「非唐代」》、
+ * 《昭明文选》145 条空朝代回填、作者索引从搜索页进。
+ * 两端 `author-index.js` 的 ERAS 表放一起比，对不上就报红。
+ *
+ * ## 为什么这里是一张会过期的快照，而不是「跟着语料走」
+ *
+ * 篇数写在下面这张 K 里。它**一定会过期** —— 下次补录就得来改。这正是要的：
+ * 网页版补了十篇、这边一声不响地也冒出十篇，没人知道这一轮到底同步了没有；
+ * 而写死之后，语料变了这边立刻红，逼着人回来对一次。
+ * 所以判据分三段：
+ *   1. 篇数与 K 对得上（**要跟着语料改的**）
+ *   2. 号段不出现空洞（**补录时最容易断的那根线**）
+ *   3. 归位 / 朝代是一组语义不变量（**这几轮修的就是它们**）
+ */
+
+const K = {
+  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数。 */
+  counts: {
+    poems: 251, classic: 156, yuefu: 103, tangshi: 377, gushi: 47, songci: 330,
+    yuanqu: 31, guwen: 231, jinxiandai: 24, zhaoming: 480
+  },
+  /* 课外十二部合计（含词条类的成语 / 常识 / 名著 / 名家 / 帝王） */
+  cards: 5348,
+  /* 带正文的条目数 —— 词条类集子里有「有壳无文」的条目，所以比 cards 少 */
+  withText: 5599,
+  /* 号段：集内编号从 1 连到 max，不允许断号。
+     gushi / songci 的号是四处补录接出来的（gs-54 / sc-331），断一处就是漏一篇。 */
+  seqMax: { gushi: 54, songci: 331, tangshi: 387 },
+  /* 分片与包内的分配 */
+  course: 251,
+  buckets: 119
+};
+
+/* 拿 1..max 与集内实际编号比一比。
+   条目 id 是 `<集子>-<号段前缀><号>`：`gushi-gs-54`、`songci-sc-331`、
+   `tangshi-ts-387`，也有零填充的 `gushi-gs-01`。取**最后一段数字**即可 ——
+   集子 id 自己也可能带数字（`poems-cz8-13`），所以不能从头取。 */
+function gapped(items, max) {
+  const have = {};
+  items.forEach((p) => {
+    const m = /(\d+)$/.exec(String(p.id));
+    if (m) have[Number(m[1])] = 1;
+  });
+  const miss = [];
+  for (let i = 1; i <= max; i++) if (!have[i]) miss.push(i);
+  return miss;
+}
+
+{
+  // 1) 篇数。这一张表会过期，过期就红 —— 见本节开头
+  Object.keys(K.counts).forEach((id) => {
+    ok("篇数对得上网页版 · " + id, perBook[id].length === K.counts[id],
+      "语料 " + perBook[id].length + "，表里写 " + K.counts[id] + "（补录之后回来对一次）");
+  });
+
+  ok("课外十二部合计 " + K.cards + " 条",
+    allEntries.length - perBook.poems.length === K.cards,
+    "实际 " + (allEntries.length - perBook.poems.length) + " 条，表里写 " + K.cards);
+
+  const withText = allEntries.filter((p) => courseTexts[p.id] || manifest.map[p.id]).length;
+  ok("带正文的条目 " + K.withText + " 条", withText === K.withText, "实际 " + withText);
+  ok("课内正文进包 " + K.course + " 条", Object.keys(courseTexts).length === K.course,
+    "实际 " + Object.keys(courseTexts).length);
+  ok("正文分片 " + K.buckets + " 个", manifest.buckets.length === K.buckets,
+    "实际 " + manifest.buckets.length);
+
+  // 2) 号段不许出现**新的**空洞。
+  //
+  //    先别把「连号」当判据 —— 语料里本来就有洞，而且是有理由的：
+  //    gs-02/03/04 是《诗经》里与课内重了的篇目、sc-127 并进了别的号、
+  //    ts-306/307 是搬家留下的空位、ts-360–365 是《唐诗三百首》原本就没收的几首。
+  //    这一段能判的是**补录时最容易断的那根线**：接号接到一半漏一篇，
+  //    列表页只按次序铺，少一篇根本看不出来 —— 只有号会露馅。
+  //    ⚠️ 新补录会往后加号（不填空洞），所以要改的是下面这张表：
+  //    这一轮真的把某个洞补上了，就把它从表里删掉。
+  const KNOWN_HOLES = {
+    gushi: [2, 3, 4, 9, 12, 23, 33],
+    songci: [127],
+    tangshi: [306, 307, 360, 361, 362, 363, 364, 365, 366, 367]
+  };
+  Object.keys(K.seqMax).forEach((book) => {
+    const miss = gapped(perBook[book], K.seqMax[book]);
+    const known = KNOWN_HOLES[book] || [];
+    const fresh = miss.filter((n) => known.indexOf(n) < 0);
+    ok(book + " 号段 1–" + K.seqMax[book] + " 没有新空洞", fresh.length === 0,
+      "新缺 " + fresh.slice(0, 8).join(",") + " —— 补录接号时漏了？断了页面上看不出来");
+    // 反过来也要守：原来记着的洞真被补上，就把表里那一格删掉，
+    // 不然这张表会越攒越大，最后没人敢动
+    const patched = known.filter((n) => miss.indexOf(n) < 0);
+    ok(book + " 记着的空洞没有悄悄补上（补上了就回来删）", patched.length === 0,
+      "已补上 " + patched.join(",") + " —— 从 KNOWN_HOLES 里删掉");
+  });
+
+  // 3) 归位：曹植《七步诗》是三国魏人，古今任何一部《唐诗三百首》都没有它。
+  //    这一条 2026-10-06 之前是错的（挂在《唐诗》卷七），修完之后两头都不能再出现
+  const qb = allEntries.filter((p) => p.t === "七步诗");
+  ok("《七步诗》只此一条", qb.length === 1, "实际 " + qb.length + " 条 —— " +
+    qb.map((p) => p.id).join("、"));
+  ok("《七步诗》在《古诗「非唐代」》", qb.length === 1 && qb[0].b === "gushi");
+  ok("《七步诗》朝代是三国·魏（不是唐）", qb.length === 1 && qb[0].d === "三国·魏",
+    "实际「" + (qb[0] || {}).d + "」");
+  ok("《唐诗》里再没有三国魏人",
+    perBook.tangshi.every((p) => p.d === "唐"),
+    "混进了 " + perBook.tangshi.filter((p) => p.d !== "唐").map((p) => p.t + "(" + p.d + ")").join("、"));
+
+  /* 收**作品**的十部。判据与网页版 data/author-index.js 的 LIT_BOOKS 同一条：
+     其余五部（名家 / 帝王 / 文学常识 / 名著 / 成语）里「作者」是词条本身，
+     「朝代」常是文明名而不是王朝，两栏都不走这条口径。 */
+  const litBooks = ["poems", "classic", "guwen", "yuefu", "tangshi", "gushi",
+    "songci", "yuanqu", "jinxiandai", "zhaoming"];
+
+  // 4) 朝代：全站不许有空朝代。《昭明文选》那 145 条曾经是空串，
+  //    列表页会少一段元信息（「· 谢灵运 · 《文选》」），搜索也筛不出来
+  const emptyDyn = [];
+  litBooks.forEach((id) => {
+    perBook[id].forEach((p) => {
+      if (!String(p.d || "").trim()) emptyDyn.push(p.id + " " + p.t);
+    });
+  });
+  ok("收作品的十部集子里没有空朝代", emptyDyn.length === 0,
+    emptyDyn.length + " 条 —— " + emptyDyn.slice(0, 5).join("；"));
+
+  // 《文选》那 145 条一位作者只能落一个朝代，否则同一个人在作者索引里会
+  // 散成两段。这条钉的是「按作者裁定」这个做法本身
+  const zmByAuthor = {};
+  let collided = 0;
+  perBook.zhaoming.forEach((p) => {
+    if (!p.a) return;
+    if (zmByAuthor[p.a] === undefined) zmByAuthor[p.a] = p.d;
+    else if (zmByAuthor[p.a] !== p.d) collided += 1;
+  });
+  ok("《昭明文选》同一位作者只落一个朝代", collided === 0, collided + " 处冲突");
+
+  // 5) 两端作者索引的朝代时间轴
+  //
+  //    这一条查的是**这个仓库之外**的文件：poem 那边改了 ERAS（多一朝 / 改一段），
+  //    这边会悄悄摆错顺序 —— 而 CI 里刚 clone 了一份 poem，正好能拿来比。
+  //    拿不到就跳过（本地没设 POEM_WEB_DIR 的时候），别把「比不了」说成「比过了」。
+  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+  const webAuthor = path.join(webDir, "data", "author-index.js");
+  const miniAuthor = path.join(ROOT, "utils", "author-index.js");
+
+  if (!fs.existsSync(webAuthor) || !fs.existsSync(miniAuthor)) {
+    console.log("· 作者索引时间轴没得比（" +
+      (fs.existsSync(webAuthor) ? "小程序端" : "poem 那边") +
+      "的 author-index.js 不在，或还没设 POEM_WEB_DIR）—— 跳过两条");
+  } else {
+    const erasOf = (src) => {
+      // 网页版是 IIFE 里的 `  var ERAS = [`（两格缩进收尾），小程序端是模块级
+      // 的 `const`。两种都认 —— 只认一种，另一半就静默变「抠不出来」
+      const m = /(?:var|const) ERAS = \[([\s\S]*?)\n\s*\];/.exec(src);
+      if (!m) return null;
+      const out = [];
+      const re = /\{\s*at:\s*(\d+)\s*,\s*name:\s*"([^"]+)"/g;
+      let g;
+      while ((g = re.exec(m[1]))) out.push(g[1] + ":" + g[2]);
+      return out;
+    };
+    const a = erasOf(fs.readFileSync(webAuthor, "utf8"));
+    const b = erasOf(fs.readFileSync(miniAuthor, "utf8"));
+    ok("两端的朝代时间轴抠得出来", !!a && !!b, "ERAS 表没匹配上，正则要跟着改");
+    if (a && b) {
+      ok("朝代时间轴与网页版逐段一致（" + a.length + " 段）",
+        a.join("|") === b.join("|"),
+        "网页版 " + a.join(" ") + " ／ 小程序 " + b.join(" "));
+    }
+  }
+
+  // 6) 归一的表得认得全：收作品的十部里每一个朝代写法都要落在那条时间轴上。
+  //    **认不出的写法不会报错** —— 它只是悄悄排到最后一页（「其他」）去，
+  //    那种错没人看得见，所以要在这儿拦一次
+  const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  ok("认不得的朝代写法回落到最末一段（不静默丢掉）",
+    AI.eraOf("__探针__") === AI.TAIL,
+    "eraOf 对表外写法返回了 " + AI.eraOf("__探针__"));
+  // 只查**收作品的那十部**：词条类集子的「朝代」是「古罗马」「两河」「古埃及」
+  // 这种文明名，本来就不在王朝时间轴上（网页版作者索引也只收这十部，
+  // 见 data/author-index.js 的 LIT_BOOKS）。拿它们来判，红一片红得没道理
+  const unknown = [];
+  const seenD = {};
+  litBooks.forEach((id) => {
+    perBook[id].forEach((p) => {
+      const d = String(p.d || "").trim();
+      if (!d || seenD[d]) return;
+      seenD[d] = 1;
+      if (AI.eraOf(d) === 18) unknown.push(d);
+    });
+  });
+  ok("收作品的十部里 " + Object.keys(seenD).length + " 种朝代写法都在时间轴上", unknown.length === 0,
+    "认不得：" + unknown.slice(0, 8).join("、") +
+    (unknown.length > 8 ? " …共 " + unknown.length + " 种" : "") + "（去 utils/author-index.js 的 ERAS 里补）");
+
+  // 7) 结集那一条：作者一格填书名的四条不许被当成「一位作者」。
+  //    并在人名册里就变成「《礼记》写了《大学之道》」——那是编
+  //    这四条**本来就该在语料里**（各自集子的列表页读得到，一个字不丢），
+  //    要守的是「它们别被当成一位作者」—— 网页版作者索引把它们剔出人名册，
+  //    `isCollective()` 就是这道判据。所以断言写成「认得出」，不是「不许有」
+  //    判据是**书名号包着整个作者名**（`《礼记》`），不是「名字里带书名号」——
+  //    帝王卷有「传说时代（《山海经》至上神）」这种，书名号只在括号里
+  const named = [];
+  allEntries.forEach((p) => {
+    const a = String(p.a || "").trim();
+    const wrap = /^《.+》$/.test(a);
+    if ((wrap || a === "国语" || a === "战国策") && !AI.isCollective(a)) {
+      named.push(a + "（" + p.id + "）");
+    }
+  });
+  ok("作者一格填书名的四条都认得出是结集", named.length === 0,
+    "认成了一位作者：" + named.join("、") + " —— 它们会变成「《礼记》写了《大学之道》」");
+  ok("isCollective 对真作者返回假（李白 / 曹植 / 佚名）",
+    !AI.isCollective("李白") && !AI.isCollective("曹植") && !AI.isCollective("佚名"));
 }
 
 /* ---------- 汇总 ---------- */
