@@ -42,6 +42,13 @@
       "pages": [
         "index/index"
       ]
+    },
+    {
+      "root": "packages/authors",
+      "name": "authors",
+      "pages": [
+        "index/index"
+      ]
     }
   ],
   "preloadRule": {
@@ -56,6 +63,12 @@
       "network": "all",
       "packages": [
         "game"
+      ]
+    },
+    "pages/search/search": {
+      "network": "all",
+      "packages": [
+        "authors"
       ]
     }
   },

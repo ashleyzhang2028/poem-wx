@@ -943,7 +943,12 @@ const GATED = {
   "packages/settings/recite/recite": "locked",
   "packages/settings/reader/reader": "locked",
   "packages/settings/general/general": "locked",
-  "packages/admin/index/index": "logged"
+  "packages/admin/index/index": "logged",
+  /* 作者索引：free 档的搜索能力之一，但同样要先登录。
+     进 GATED 这一张表不只是「扫一眼 locked 在不在」—— 下面有一组断言
+     会用最小运行时**真跑** onShow，验「登录后 locked 必须落回 false」。
+     没登录时它是一张门禁卡，登录后必须真出内容。 */
+  "packages/authors/index/index": "locked"
 };
 
 {
@@ -6303,6 +6308,37 @@ function gapped(items, max) {
         a.join("|") === b.join("|"),
         "网页版 " + a.join(" ") + " ／ 小程序 " + b.join(" "));
     }
+
+    /* ⚠️ ALIAS 也得比 —— 这一段是**补来的**。
+       V40 第一版只比了 ERAS，理由写在注释里：「ALIAS 是一串人名字符串，
+       抠它的正则比它要守的东西还脆」。可代价立刻出现：poem 那边给《文选》
+       补了十条异名（`桓元子 → 桓温`、`任彦升 → 任昉`……），这边一声不响地
+       落后了十条 —— 名册上于是有两位「桓温」和「桓元子」、「任昉」和
+       「任彦升」，各自挂着一半作品。
+       正则其实不难写：值那一栏也是 quoted string。所以补上。 */
+    const aliasOf = (src) => {
+      const m = /(?:var|const) ALIAS = \{([\s\S]*?)\n\s*\};/.exec(src);
+      if (!m) return null;
+      const out = {};
+      const re = /"([^"]+)":\s*"([^"]+)"/g;
+      let g;
+      while ((g = re.exec(m[1]))) out[g[1]] = g[2];
+      return out;
+    };
+    const wa = aliasOf(fs.readFileSync(webAuthor, "utf8"));
+    const ma = aliasOf(fs.readFileSync(miniAuthor, "utf8"));
+    ok("两端的异名表抠得出来", !!wa && !!ma, "ALIAS 表没匹配上，正则要跟着改");
+    if (wa && ma) {
+      /* 判据是**双向差集都空**，不是「条数相等」——
+         一条改错、一条漏掉时总数可能正好一样，只看条数会一路绿灯 */
+      const miss = Object.keys(wa).filter((k) => !(k in ma));
+      const extra = Object.keys(ma).filter((k) => !(k in wa));
+      const diff = Object.keys(wa).filter((k) => k in ma && wa[k] !== ma[k])
+        .map((k) => k + "：网页版→" + wa[k] + "／小程序→" + ma[k]);
+      ok("异名表与网页版逐条一致（" + Object.keys(wa).length + " 条）",
+        miss.length === 0 && extra.length === 0 && diff.length === 0,
+        "网页版多：" + miss.join("、") + "；小程序多：" + extra.join("、") + "；对不上：" + diff.join("、"));
+    }
   }
 
   // 6) 归一的表得认得全：收作品的十部里每一个朝代写法都要落在那条时间轴上。
@@ -6348,6 +6384,354 @@ function gapped(items, max) {
     "认成了一位作者：" + named.join("、") + " —— 它们会变成「《礼记》写了《大学之道》」");
   ok("isCollective 对真作者返回假（李白 / 曹植 / 佚名）",
     !AI.isCollective("李白") && !AI.isCollective("曹植") && !AI.isCollective("佚名"));
+}
+
+/* ---------- V41. 作者索引（Issue #480 / #61，2026-10-06） ----------
+ *
+ * 用户原话：
+ *   「搜索大类功能，增加作者作品索引页，按时间朝代顺序，将中国所有作品的
+ *     作者列在一页，上面是朝代索引列表，点击朝代可以下面的具体朝代，
+ *     朝代下面是各个作者，例如唐代 李白，点击李白，显示李白所有作品列表，
+ *     再点击列表，进入详情页，详情页的上一页下一页都是该作者的作品。
+ *     返回就回到李白列表。」
+ *
+ * 上一轮（V40）钉的是**内容口径**：语料跟网页版对不对得上。
+ * 这一轮钉的是**这一页本身**——名册从语料里现算，算错了没人看得见：
+ * 一个作者被拆成两处、一位作者的作品数少了几条、名册里混进一本书的名字，
+ * 三条都不会报错，只是摆得不对。所以逐条守：
+ *
+ *   1. 名册的**总量**（488 位 / 2019 条）—— 与网页版 `AuthorIndex.people()` 同量级
+ *   2. 收的是哪十部（LIT_BOOKS）—— 多收一部，名册就从 488 涨到 2300
+ *   3. 异名归一真的合并了（曹子建 → 曹植、班孟坚 → 班固）
+ *   4. 结集不进名册（《礼记》《论语》《国语》《战国策》）
+ *   5. 判重：课内背过的，在《唐诗》里那条壳不进名册
+ *   6. 「下一篇只在这一位作者里走」—— 这一条真跑阅读页
+ */
+{
+  const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  const lit = AI.LIT_BOOKS;
+
+  // 1) 收哪十部。与网页版 data/author-index.js 的 LIT_BOOKS 同一份名单 ——
+  //    多一部（例如 mingren），名册里就会冒出「李白」这个**词条**
+  const wantLit = ["poems", "classic", "guwen", "yuefu", "tangshi",
+    "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"];
+  ok("作者索引收作品的十部（与网页版同一份名单）",
+    lit.slice().sort().join(",") === wantLit.slice().sort().join(","),
+    "实际 " + lit.join("、"));
+
+  // 名册现算：把十部摊平喂给 AI.build()
+  const litEntries = [];
+  lit.forEach((b) => { if (perBook[b]) litEntries.push.apply(litEntries, perBook[b]); });
+  const roster = AI.build(litEntries);
+
+  // 2) 总量。这两个数是**会过期的**（与 V40 那张篇数表同一性质）：
+  //    下次补录就得来改，改了跑绿才算真同步过。
+  ok("名册收下 488 位作者", roster.total === 488,
+    "实际 " + roster.total + " —— 补录之后回来对一次（名册是现算的，语料一变就变）");
+
+  // 2.5) 与**网页版**的名册比一位。两端判重口径不同（那边按作品 id、
+  //      这边只认课内），差的是**一位**：崔护 —— 他名下那首《题都城南庄》
+  //      在《乐府集》《唐诗》《成语故事》三处各有一条，正文一字不差；
+  //      那边并成一组后由《成语故事》胜出，而成语故事不在收作品的十部里，
+  //      于是崔护整个人从名册上掉了。这边只判课内重复，他留下一首。
+  //
+  //      ⚠️ 这一条是**跨仓库**的（读 poem 那边现算的 AuthorIndex），
+  //      拿不到就跳过 —— 不能把「比不了」说成「比过了」。
+  {
+    const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+    const webAuthor = path.join(webDir, "data", "author-index.js");
+    if (!fs.existsSync(webAuthor)) {
+      console.log("· 作者名册没得比（poem 那边 data/author-index.js 不在，或还没设 POEM_WEB_DIR）—— 跳过一条");
+    } else {
+      let webPeople = null;
+      try {
+        const vm = require("vm");
+        /* 与 poem 自己的 scripts/build-works-map.js 同一份加载清单 ——
+           少一个文件，AuthorIndex 拿到的 SITE_INDEX 就是缺的，
+           算出来的名册会**安静地少几百位**，比出错更糟 */
+        const loader = fs.readFileSync(path.join(webDir, "scripts", "build-works-map.js"), "utf8");
+        const m = /const LOAD = \[([\s\S]*?)\];/.exec(loader);
+        const list = m ? eval("[" + m[1] + "]") : [];
+        const sb = { window: {}, console: console };
+        sb.window = sb;
+        vm.createContext(sb);
+        list.forEach((f) => {
+          try { vm.runInContext(fs.readFileSync(path.join(webDir, f), "utf8"), sb, { filename: f }); } catch (e) { /* 有的文件互有依赖，缺一个不影响名册 */ }
+        });
+        ["data/zhaoming-dynasty.js", "data/author-index.js"].forEach((f) => {
+          try { vm.runInContext(fs.readFileSync(path.join(webDir, f), "utf8"), sb, { filename: f }); } catch (e) { /* 缺它就只有那几个数对不上，下面的断言会红 */ }
+        });
+        if (sb.window.AuthorIndex) webPeople = sb.window.AuthorIndex.people().map((p) => p.name);
+      } catch (e) {
+        webPeople = null;
+      }
+
+      if (!webPeople || webPeople.length < 400) {
+        console.log("· 作者名册没得比（poem 那边的 AuthorIndex 挂不上）—— 跳过一条");
+      } else {
+        const mine = Object.keys(roster.people);
+        const webSet = new Set(webPeople);
+        const mineSet = new Set(mine);
+        const onlyWeb = webPeople.filter((n) => !mineSet.has(n));
+        const onlyMine = mine.filter((n) => !webSet.has(n));
+        /* 判据写成**两边的差集各自都认得出**，不是「总数相等」——
+           总数相等而差的是两个人（一个多一个少）时，
+           只看总数会一路绿灯，而名册上已经错位了 */
+        ok("两端名册只差崔护一位（多出来的那一位）",
+          onlyMine.length === 1 && onlyMine[0] === "崔护",
+          "小程序多出：" + onlyMine.join("、"));
+        ok("两端名册只差崔护一位（网页版那边一位都不多）",
+          onlyWeb.length === 0,
+          "网页版多出：" + onlyWeb.join("、") +
+          " —— 多半是小程序端的 ALIAS 表落后了（去 utils/author-index.js 补）");
+      }
+    }
+  }
+
+  // 3) 异名归一：这几位在两处选本里写法不同，必须并成一位
+  const mergePairs = [
+    ["曹子建", "曹植"], ["班孟坚", "班固"], ["屈平", "屈原"],
+    ["谢玄晖", "谢朓"], ["诸葛孔明", "诸葛亮"], ["左太冲", "左思"]
+  ];
+  mergePairs.forEach((p) => {
+    const w = roster.people[p[1]];
+    ok("异名归一 · " + p[0] + " 并在 " + p[1] + " 名下", !!w,
+      "名册里找不到「" + p[1] + "」—— 异名没并，或被拆成两位");
+    // 并了之后这一位名下应当有《文选》里的条目 —— 那正是用异名的地方
+    if (w) {
+      const fromZm = w.items.filter((it) => it.b === "zhaoming");
+      ok("异名归一 · " + p[1] + " 名下有《文选》条目", fromZm.length > 0,
+        "0 条 —— 异名没并过来");
+    }
+  });
+  // 反向：异名自己不许再单独立一位
+  mergePairs.forEach((p) => {
+    ok("异名不单独立位 · " + p[0], !roster.people[p[0]],
+      "「" + p[0] + "」自己占了一格 —— 归一没生效");
+  });
+
+  // 4) 结集不进名册。作者一格填的是书名，挂上去就是「《礼记》写了《大学之道》」
+  ["礼记", "论语", "国语", "战国策"].forEach((n) => {
+    ok("结集不进名册 · " + n, !roster.people[n]);
+  });
+  // 这四条**本来就在语料里**，一个字都不丢 —— 守的是「还在」
+  ["礼记", "论语"].forEach((n) => {
+    const raw = litEntries.filter((p) => AI.aliasOf(p.a) === n);
+    ok("结集条目仍在语料里 · " + n, raw.length > 0, "语料里一条都没有了");
+  });
+
+  // 5) 判重：课内背过的篇目，在选集里的那条壳不进名册。
+  //    《静夜思》课内一首 + 《唐诗》一条 —— 名册上李白名下只该有一次
+  {
+    const jing = roster.people["李白"];
+    if (jing) {
+      const same = jing.items.filter((p) => p.t === "静夜思");
+      ok("同一首跨集只算一次 · 《静夜思》", same.length === 1,
+        "李白名下 " + same.length + " 条《静夜思》—— 判重没生效");
+      ok("判重留下的是课内那条 · 《静夜思》",
+        same.length === 1 && same[0].b === "poems",
+        "留下的不是课内那条（" + (same[0] || {}).b + "）");
+    } else {
+      ok("李白在名册里", false, "488 位里没有李白");
+    }
+  }
+  // 反过来也守：课内没有的篇目**不许**被误判成重复。
+  // 《乌夜啼》在《词》里有，课内没有 —— 它必须留下
+  {
+    const li = roster.people["李煜"];
+    if (li) {
+      ok("课内没有的篇目不被误判重复 · 李煜有作品", li.items.length > 0);
+    } else {
+      ok("李煜在名册里", false, "《词》里 30 余首的作者不在名册里");
+    }
+  }
+
+  // 6) 朝代：名册上每一位都得落在一个**段**里，不能悬空。
+  //    落不进去（eraOf 返回 TAIL 而 eras 里没有「其他」）的会静默消失 ——
+  //    488 位里少几位，没人会数
+  {
+    const placed = roster.eras.reduce((n, e) => n + e.people.length, 0);
+    ok("名册上每一位都落在某一段里", placed === roster.total,
+      "摊开 " + placed + " 位，名册有 " + roster.total + " 位 —— 有人悬空");
+    // 段名是归并后的（「宋」不是「北宋」），段里不许出现原写法当段名
+    const rawNames = ["北宋", "南宋", "南朝宋", "东晋", "盛唐"];
+    const bad = roster.eras.filter((e) => rawNames.indexOf(e.name) >= 0).map((e) => e.name);
+    ok("段的标题是归并后的朝名（不是原写法）", bad.length === 0,
+      "出现了原写法：" + bad.join("、"));
+  }
+
+  // 7)「上一篇 / 下一篇只在这一位作者里走」—— **真跑阅读页**。
+  //    这一条是用户原话里最具体的一句（「详情页的上一页下一页都是该作者的作品」），
+  //    而它跨了三个文件（搜索页 → 作者索引 → 阅读页），静态扫描看不出来。
+  //    判据：同一位作者连翻五首，翻出来的每一首作者都是他；翻到头会回到
+  //    作者列表（不跳到别的集子、不跨作者）。
+  {
+    const savedWx = global.wx;
+    const savedPage = global.Page;
+    const savedGetApp = global.getApp;
+    const savedPages = global.getCurrentPages;
+
+    const mem = {};
+    global.wx = {
+      showToast() {}, showModal() {}, showLoading() {}, hideLoading() {},
+      showActionSheet(o) { o && o.success && o.success({ tapIndex: 0 }); },
+      navigateTo() {}, switchTab() {}, redirectTo() {}, navigateBack() {},
+      pageScrollTo() {}, nextTick(f) { if (f) f(); },
+      setNavigationBarTitle() {}, vibrateShort() {}, stopPullDownRefresh() {},
+      getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" }),
+      getStorageSync: (k) => (k in mem ? mem[k] : ""),
+      setStorageSync: (k, v) => { mem[k] = v; },
+      removeStorageSync: (k) => { delete mem[k]; },
+      getStorageInfoSync: () => ({ keys: Object.keys(mem), currentSize: 0, limitSize: 10240 }),
+      login(o) { o && o.fail && o.fail({}); },
+      getUserProfile(o) { o && o.fail && o.fail({}); },
+      request(o) { o && o.fail && o.fail({ errmsg: "offline" }); }
+    };
+    global.Component = () => {};
+    global.getApp = () => ({ globalData: {} });
+    global.getCurrentPages = () => [];
+
+    const storeMod = require(path.join(ROOT, "utils", "store.js"));
+    storeMod.saveProfile({ logged: true, nickname: "自检" });
+
+    function mountReader(query) {
+      let opt = null;
+      global.Page = (o) => { opt = o; };
+      const file = path.join(ROOT, "pages", "reader", "reader.js");
+      delete require.cache[require.resolve(file)];
+      require(file);
+      if (!opt) return null;
+      const page = Object.assign({}, opt);
+      page.data = JSON.parse(JSON.stringify(opt.data || {}));
+      page.setData = function (o, cb) {
+        Object.keys(o).forEach((k) => { this.data[k] = o[k]; });
+        if (cb) cb();
+      };
+      page.onLoad(query || {});
+      page.onShow();
+      return page;
+    }
+
+    try {
+      // 李白的第一首（作者索引里排在最前的那条）
+      const libai = roster.people["李白"];
+      if (libai) {
+        let cur = mountReader({ id: libai.items[0].id, from: "李白" });
+        ok("从作者索引进来时带上作者", cur && cur.data.creator === "李白",
+          "creator=" + (cur ? cur.data.creator : "页面没挂上"));
+
+        let hops = 0;
+        const seen = {};
+        let offAuthor = null;
+        let offBook = null;
+        while (hops < 5 && cur) {
+          seen[cur.data.id] = 1;
+          /* 判据有**两条**，缺一条就会漏：
+             ① 作者还是他（`author` 对得上）
+             ② 那一首属于**收作品的十部**之一
+
+             只判①是不够的 —— 名册不收词条，但词条也有作者：
+             《名家「中国」》里「李白」这一条、三条《成语故事》里的「李白」，
+             作者一格都写着「李白」。所以下一首要是跳进了词条，
+             ①照样绿。这一版真踩过：那一版扫的是 `corpus.books()`
+             （全站十七部），李白第 77 首跳进了「chengyu-cy-458」，
+             而断言一路放行。 */
+          const authorOk = AI.aliasOf(cur.data.author) === "李白";
+          const bookOk = lit.indexOf(cur.data.bookId) >= 0;
+          ok("同一位作者的作品 · " + (hops + 1) + " 跳作者是李白",
+            authorOk, "跳到了「" + cur.data.author + "」—— 跨作者了");
+          ok("同一位作者的作品 · " + (hops + 1) + " 跳的是作品不是词条",
+            bookOk, "跳进了「" + cur.data.bookId + "」—— 那不是收作品的十部");
+          if (!authorOk) { offAuthor = cur.data.author; break; }
+          if (!bookOk) { offBook = cur.data.bookId; break; }
+          const next = cur.siblingInAuthor(1);
+          if (!next) break;
+          ok("同一位作者的作品 · 第 " + (hops + 1) + " 跳不回头",
+            !seen[next], "又跳回了 " + next + " —— 上一篇 / 下一篇原地打转");
+          cur = mountReader({ id: next, from: "李白" });
+          hops += 1;
+        }
+        ok("同一位作者的作品 · 连翻五首不跨作者", !offAuthor,
+          "第 " + (hops + 1) + " 首跑到了「" + offAuthor + "」");
+        ok("同一位作者的作品 · 连翻五首不跳进词条", !offBook,
+          "跳进了「" + offBook + "」");
+        ok("同一位作者的作品 · 真的翻动了", hops > 0, "一次都没跳 —— 下一篇是空的");
+
+        /* 「下一篇」的整条链必须与名册上这一位的作品**逐条同序**。
+           只查五跳是不够的 —— 这一段真踩过：阅读页自己去十部里筛
+           「作者名对得上」的条目，筛出 77 条；名册判重之后只收 60 条。
+           前 35 条恰好一样，第 36 条起就错位了：用户翻着翻着，
+           返回列表发现自己在列表里的位置很陌生。
+           所以判据是**整条链**与名册逐条对齐，不是「翻五首没出事」。 */
+        const rosterIds = libai.items.map((p) => p.id);
+        const chain = [];
+        const seenChain = {};
+        let cursor = rosterIds[0];
+        while (cursor && !seenChain[cursor]) {
+          chain.push(cursor);
+          seenChain[cursor] = 1;
+          const pg = mountReader({ id: cursor, from: "李白" });
+          if (!pg) break;
+          cursor = pg.siblingInAuthor(1);
+        }
+        ok("同一位作者的作品 · 下一篇的整条链与名册同序（" + rosterIds.length + " 条）",
+          chain.length === rosterIds.length && chain.every((id, i) => id === rosterIds[i]),
+          "链条 " + chain.length + " 条，与名册对不上（名册 " + rosterIds.length + " 条）—— " +
+          "多半是阅读页自己筛了一遍，没走名册那份判重");
+
+        /* 阅读页把名册缓起来（`this.rosterCache`）—— 同一位作者连翻十首
+           不该算十遍。缓存安全的前提是：**作品的 id 列表不随已读状态变**
+           （判重看的是「课内有没有这一篇」，与读没读过无关）。
+           不成立的话，用户读完一首再翻，下一篇就会跳到别处。 */
+        {
+          const rosterWithReads = AI.build(litEntries, { readIds: { [rosterIds[0]]: 1 } });
+          const a = AI.worksOf(roster, "李白").join(",");
+          const b = AI.worksOf(rosterWithReads, "李白").join(",");
+          ok("作品的 id 列表不随已读状态变（阅读页的缓存靠这条）", a === b,
+            "已读前后列表不一样 —— 缓存会让「下一篇」跳错");
+        }
+
+        // 反方向也要对（「上一篇」）
+        const backChain = [];
+        const seenBack = {};
+        let bcur = rosterIds[rosterIds.length - 1];
+        while (bcur && !seenBack[bcur]) {
+          backChain.unshift(bcur);
+          seenBack[bcur] = 1;
+          const pg = mountReader({ id: bcur, from: "李白" });
+          if (!pg) break;
+          bcur = pg.siblingInAuthor(-1);
+        }
+        ok("同一位作者的作品 · 上一篇的整条链与名册同序",
+          JSON.stringify(backChain) === JSON.stringify(rosterIds),
+          "逆序链条与名册对不上");
+
+        // 不带 from 的：还是原来那一条（同集子的下一首未读），不许串味
+        const plain = mountReader({ id: libai.items[0].id });
+        ok("从集子列表进来时不带作者", plain && plain.data.creator === "",
+          "creator=" + (plain ? plain.data.creator : "?"));
+      } else {
+        ok("李白在名册里（阅读页那一组的前提）", false);
+      }
+    } finally {
+      storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });
+      global.wx = savedWx;
+      global.Page = savedPage;
+      global.getApp = savedGetApp;
+      global.getCurrentPages = savedPages;
+    }
+  }
+
+  // 8) 入口在搜索页，不在课外阅读 —— 网页版第二轮的裁决（Issue #480）
+  {
+    const searchWxml = fs.readFileSync(path.join(ROOT, "pages", "search", "search.wxml"), "utf8");
+    const searchJs = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
+    ok("搜索页有作者索引入口", searchWxml.indexOf("onAuthors") >= 0);
+    ok("作者索引入口指向分包", /\/packages\/authors\/index\/index/.test(searchJs));
+    const libWxml = fs.readFileSync(path.join(ROOT, "pages", "library", "library.wxml"), "utf8");
+    ok("课外阅读页不放作者索引入口", libWxml.indexOf("authors") < 0,
+      "入口两边都有，用户会不知道从哪进（网页版裁过这一条）");
+  }
 }
 
 /* ---------- 汇总 ---------- */

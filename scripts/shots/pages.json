@@ -482,5 +482,20 @@
     "logged": true,
     "_note": "自己传过头像的「我的」：副题右边那枚「用微信头像」是退回微信那张的唯一入口。见 check.js V38",
     "saveProfile": { "logged": true, "nickname": "张敏", "avatarLocal": "wxfile://demo.jpg" }
+  },
+  "authors-roster": {
+    "page": "packages/authors/index/index",
+    "title": "作者索引",
+    "back": true,
+    "logged": true,
+    "_note": "作者索引①层：朝代表 + 一段一段的作者。488 位 / 15 段，见 check.js V41"
+  },
+  "authors-author": {
+    "page": "packages/authors/index/index",
+    "title": "作者索引",
+    "back": true,
+    "logged": true,
+    "do": [{ "call": "onAuthor", "with": { "currentTarget": { "dataset": { "name": "李白" } } } }],
+    "_note": "作者索引②层：李白名下 60 条。点进去的那一位由 do 调 onAuthor 摆好"
   }
 }
