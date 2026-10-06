@@ -1,7 +1,9 @@
 /**
- * 朝代归一 + 作者异名归一。**只有这两个函数，没有界面。**
+ * 作者索引：朝代归一 + 作者异名归一 + 名册构建。
  *
- * 为什么会有一份「没有界面」的模块：
+ * 这一页（`packages/authors/index`，Issue #480 / #61）做三件事：
+ * 按朝代铺开作者、点作者看他的全部作品、详情页的上一篇 / 下一篇**只在这位作者里走**。
+ * 它靠两张表撑着：
  *
  * 网页版有一条「作者索引」（`/authors/`，Issue #480）—— 按朝代先后把作者铺在
  * 一页，点一位作者读他的全部作品。它靠两张表撑着：
@@ -12,8 +14,7 @@
  *   2. `ALIAS` —— 同一个人在不同选本里的写法（`班孟坚` / `班固`、`曹子建` / `曹植`、
  *      `谢玄晖` / `谢朓`）并到通行名上，否则一个人的作品会拆到两处
  *
- * 小程序端这一页**还没做**（见 `docs/todo.md` 第 15 条：要一套新的列表会话），
- * 但这两张表不该等到做界面那天才写 —— 它们同时是**内容口径**：
+ * 这两张表同时是**内容口径**，不只是「这一页怎么摆」：
  *
  *   · 《昭明文选》那 145 条的朝代在网页版是按作者一人一行补的（Issue #480），
  *     补的口径就是 `ERAS` 里认得的那些写法。这边同步到位之后，
@@ -22,11 +23,37 @@
  *     是那种**各自看都对、放一起才发现**的漂移。V40 直接拿这份表和网页版的
  *     `data/author-index.js` 逐段比，漂了当场红
  *
- * 所以：表在这儿，界面没来。表变了，V40 会拦。
- *
  * ⚠️ 这份表与网页版 `data/author-index.js` 的 `ERAS` / `ALIAS` **必须一致**，
  * 改一边记得改另一边（V40 只比 ERAS —— ALIAS 是一串人名字符串，
  * 抠它的正则比它要守的东西还脆）。
+ *
+ * ## 收哪些集子
+ *
+ * 只收「作品」那十部（`LIT_BOOKS`），与网页版同一条判据。其余七部里
+ * 「作者」是**词条本身**（李白既是《唐诗》的作者、也是《名家「中国」》的一条词条），
+ * 收进来就变成「自己给自己当作品」，几千条词条灌进名册，成一锅粥。
+ *
+ * ## 判重
+ *
+ * 同一篇跨集重复只算第一次出场的那一条。网页版靠 `WorksIndex.widOf()`
+ * 现算「作品 id」，小程序端没有那份表，也不该为它多背一张 ——
+ * 做法是**只认课内**：一篇在课内背过，它在《唐诗》里的那条壳就不进名册。
+ * 这正好也是网页版 `repOf()` 的裁定（课内优先，同一篇只留一份正文）。
+ * 代价是课外两部选集之间的重复（《乌夜啼》在《词》与别处各一条）现不出来 ——
+ * 那种重复在语料里本来就少，而多背一张跨集对照表要 8KB，不划算。
+ *
+ * 这个差别**精确到一位作者**：网页版 487 位，这边 488 位。
+ * 差的这位是**崔护** —— 他名下的《题都城南庄》同时收在《乐府集》
+ * (`yuefu-yf-96`)、《唐诗》(`tangshi-ts-313`) 与《成语故事》
+ * (`chengyu-cy-440`，题为《人面桃花》) 三处，正文一字不差。网页版按作品 id
+ * 把三条并成一组，而它的裁定是「课内优先，其余按集子排位」——
+ * 《成语故事》那一版胜出，可成语故事**不在收作品的十部里**，于是崔护
+ * 名下一条不剩，整个人从名册上掉了。
+ * 这边只判「课内重复」，三条壳各归各的集子，崔护留下一首。
+ *
+ * 两种都对，但**这一边是想要的那个**：一位有作品可读的作者不该因为
+ * 判重的连带效应从名册上消失。这个差值是**钉住的** ——
+ * `scripts/check.js` V41 拿它当判据，哪天变成两位就该回来对一次。
  */
 "use strict";
 
@@ -130,6 +157,16 @@ const ALIAS = {
   "谢宣远": "谢瞻",
   "张士然": "张悛",
   "庾元规": "庾亮",
+  "桓元子": "桓温",
+  "繁休伯": "繁钦",
+  "东方曼倩": "东方朔",
+  "皇甫士安": "皇甫谧",
+  "夏侯孝若": "夏侯湛",
+  "袁彦伯": "袁宏",
+  "干令升": "干宝",
+  "崔子玉": "崔瑗",
+  "陆佐公": "陆倕",
+  "任彦升": "任昉",
   "贾长沙": "贾谊",
   "祢正平": "祢衡",
   "荆卿": "荆轲",
@@ -161,11 +198,216 @@ function isCollective(name) {
   return !!COLLECTIVE[aliasOf(name)];
 }
 
+
+/* ── 3. 收哪些集子 ────────────────────────────────────────────────────
+   与网页版 `data/author-index.js` 的 LIT_BOOKS **同一份名单**：
+   只收「作品」十部。其余七部（成语 / 文学常识 / 名著 / 名家中国·外国 /
+   帝王中国·外国）里「作者」是词条本身 —— 收了名册就从 491 位涨到 2300 多位，
+   多出来的全是词条。
+
+   判据认**集子**，不认「这条有没有作者」：帝王卷每一条也有作者，
+   但它讲的是人、不是作品。 */
+const LIT_BOOKS = [
+  "poems", "classic", "guwen", "yuefu", "tangshi",
+  "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"
+];
+
+/**
+ * 名册：朝代 → 作者 → 作品。
+ *
+ * 输入是**已经摊平的条目数组**（每一条 `{id, t, a, d, g, b, n}`）——
+ * 这一层不认识 corpus，也不 require 任何东西：自检要在没有小程序运行时的
+ * 环境里跑它，页面要在有小程序运行时的环境里跑它。给它数据，它还你名册。
+ *
+ * @param {Array} entries 全站条目
+ * @param {Object} [opt] readIds：已读的条目 id → 任意真值（决定「未读」那一筛）
+ * @returns {{eras: Array, people: Object, total: number, unread: number}}
+ */
+function build(entries, opt) {
+  const readIds = (opt && opt.readIds) || {};
+  const byBook = {};
+  (LIT_BOOKS || []).forEach(function (b) { byBook[b] = true; });
+
+  const byPerson = {};
+  const order = [];
+  /* 课内那 251 首的 id —— 判重只认它们（见文件头「判重」那一节） */
+  const courseWid = {};
+
+  (entries || []).forEach(function (p) {
+    if (!p || byBook[p.b] !== true) return;
+    const name = aliasOf(p.a);
+    /* 结集不进名册：作者一格填的是书名（《礼记》《论语》《国语》《战国策》），
+       硬挂上去就是「《礼记》写了《大学之道》」—— 那是编。 */
+    if (!name || isCollective(name)) return;
+    /* 课内的先登记：后面的同篇壳条都按它判重 */
+    if (p.b === "poems" && p.t) courseWid[dedupKey(p.t, name)] = p;
+  });
+
+  (entries || []).forEach(function (p) {
+    if (!p || byBook[p.b] !== true) return;
+    const name = aliasOf(p.a);
+    if (!name || isCollective(name)) return;
+    if (p.b !== "poems" && courseWid[dedupKey(p.t, name)]) return;
+
+    if (!byPerson[name]) {
+      byPerson[name] = { name: name, at: 0, items: [], dynasties: {} };
+      order.push(name);
+    }
+    const w = byPerson[name];
+    /* 一位作者名下可能挂着好几处朝代写法（同一个人在不同选本里写法不同，
+       例如一位唐代诗人被某处误标成「先秦」）。取**最早**那一朝 ——
+       与网页版 `data/author-index.js` 的 `build()` 同一条：那里是
+       `if (at > 0 && at < 18 && at < w.at) w.at = at`。
+       不取最早的话，名册上会出现「先秦 · 骆宾王」，而名册自己把他摆在唐。
+
+       `at` 初值 0 = 「还没有朝代」：
+         · 认得出的写法（1–17）一律收下，取最小的那个
+         · 表外的写法（TAIL=18）**不参与** —— 它不该把一位唐代人拉到「其他」
+         · 一条朝代都没有的，`at` 留在 0，出循环后摆到最末一段 */
+    const at = eraOf(p.d);
+    if (at > 0 && at < TAIL && (w.at === 0 || at < w.at)) w.at = at;
+    w.items.push(p);
+    const d = String(p.d || "").trim();
+    if (d) w.dynasties[d] = true;
+  });
+
+  const people = {};
+  order.forEach(function (n) {
+    const w = byPerson[n];
+    w.items = orderItems(w.items);
+    w.count = w.items.length;
+    w.unread = w.items.filter(function (p) { return !readIds[p.id]; }).length;
+    w.dynasty = firstDynasty(w);
+    people[n] = w;
+  });
+
+
+  /* 索引卡的段：**只要有作者**就有段，哪怕这一朝只有一位 ——
+     这一页的存在理由就是那张朝代表。两个数分开算：一张朝代表上
+     「唐 105 家」比「唐 596 条」有用，段头把两件事一起说清。 */
+  const rows = ERAS.map(function (e) {
+    return { at: e.at, name: e.name, count: 0, works: 0 };
+  });
+  const tail = { at: TAIL, name: "其他", count: 0, works: 0 };
+  order.forEach(function (n) {
+    const w = people[n];
+    /* `at === 0` 是「一条朝代都没有的」—— 摆到最末的「其他」段，
+       与网页版 `build()` 末尾那句 `if (w.at === 99) w.at = 0` 同一个去处。
+       不落段的话这个人会从名册上**静默消失**（488 位里少几位，没人会数）。 */
+    let row = tail;
+    for (let i = 0; i < rows.length; i++) if (rows[i].at === w.at) row = rows[i];
+    row.count += 1;
+    row.works += w.count;
+  });
+  const eras = rows.filter(function (r) { return r.count > 0; });
+  if (tail.count) eras.push(tail);
+
+  /* 名册里的作者按「朝代 → 拼音」排开（同一朝内按拼音）。
+     段名取 `name` 不是原写法 —— 读者找的是「宋代的作者」，不是「北宋」。 */
+  const byEra = {};
+  eras.forEach(function (r) { byEra[r.at] = []; });
+  order.forEach(function (n) {
+    const w = people[n];
+    const at = w.at || TAIL;
+    if (!byEra[at]) byEra[at] = [];
+    byEra[at].push(w);
+  });
+  Object.keys(byEra).forEach(function (at) {
+    byEra[at].sort(function (a, b) { return byPinyin(a.name, b.name); });
+  });
+
+  const all = [];
+  eras.forEach(function (r) {
+    all.push({ at: r.at, name: r.name, count: r.count, works: r.works, people: byEra[r.at] || [] });
+  });
+
+  return {
+    eras: all,
+    people: people,
+    byEra: byEra,
+    total: order.length,
+    unread: order.reduce(function (n, k) { return n + (people[k].unread ? 1 : 0); }, 0)
+  };
+}
+
+/**
+ * 一位作者名下作品的顺序：**集子 → 组 → id**。
+ *
+ * 与网页版 `data/author-index.js` 的口径同一条：不重排，按集子自己的
+ * 卷次 / 册次走（那是书的顺序，不是编出来的「李白先背哪首」）。
+ *
+ * ⚠️ 这一段排序**只有一个出处**：作者索引那②层与阅读页的「下一篇」
+ * 都走它。曾经在两处各写一遍（一模一样的两行），而它们必须始终一致 ——
+ * 「列表里看到的顺序」与「下一篇跳到的顺序」一旦对不上，用户当成 bug。
+ * 所以摆成导出函数，谁要谁调。
+ */
+function orderItems(items) {
+  return (items || []).slice().sort(function (a, b) {
+    const ka = String(a.b) + "|" + String(a.g || "") + "|" + String(a.id);
+    const kb = String(b.b) + "|" + String(b.g || "") + "|" + String(b.id);
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  });
+}
+
+/**
+ * 一位作者名下作品的 id 列表 —— **顺序就是②层列出来的那一个**。
+ *
+ * 为什么要单开一个函数，而不是让阅读页自己去筛：那样筛出来的是
+ * 「语料里写着这位作者的全部条目」，而**名册收下的是判重之后的**
+ * （课内背过的，在选集里那条壳不算）。两者差 17 条（李白 77 vs 60），
+ * 于是「列表里看到的顺序」与「下一篇跳到的顺序」对不上 ——
+ * 用户翻到第 36 首，返回列表一看，自己在列表里的位置很陌生。
+ *
+ * 所以「这位作者有哪些作品」只能从**名册那一份**里取。
+ * 名册是现算的（60ms），这个函数也就现算 —— 调用方把名册给它。
+ *
+ * @param {Object} roster `build()` 的返回值
+ * @param {string} author 通行名
+ * @returns {string[]} 条目 id，顺序与②层一致
+ */
+function worksOf(roster, author) {
+  const w = roster && roster.people && roster.people[author];
+  if (!w) return [];
+  return w.items.map(function (p) { return p.id; });
+}
+
+/** 判重用的键：篇名（去掉标点与空白）+ 作者。语料里同一篇跨集重复时题名一字不差 */
+function dedupKey(title, author) {
+  return String(title || "").replace(/[\s，。！？；：、,.!?;:"'“”‘’「」『』《》〈〉（）()\[\]【】—－\-…·~～]/g, "") +
+    "|" + String(author || "");
+}
+
+/** 一位作者「是哪一朝人」：取他名下**最早**那一朝的原写法。段头与名册都拿它 */
+function firstDynasty(w) {
+  let best = "";
+  let bestAt = TAIL + 1;
+  Object.keys(w.dynasties || {}).forEach(function (d) {
+    const at = eraOf(d);
+    const v = at === 0 ? TAIL : at;
+    if (v < bestAt) { bestAt = v; best = d; }
+  });
+  return best;
+}
+
+/** 拼音序。名字是中文，装 `localeCompare` 认它 —— 认不得就退回码点序 */
+function byPinyin(a, b) {
+  try {
+    return String(a).localeCompare(String(b), "zh-Hans-CN", { sensitivity: "base" });
+  } catch (e) {
+    return String(a) < String(b) ? -1 : 1;
+  }
+}
+
 module.exports = {
   ERAS: ERAS,
   TAIL: TAIL,
+  LIT_BOOKS: LIT_BOOKS,
   eraOf: eraOf,
   eraName: eraName,
   aliasOf: aliasOf,
-  isCollective: isCollective
+  isCollective: isCollective,
+  build: build,
+  orderItems: orderItems,
+  worksOf: worksOf
 };
+

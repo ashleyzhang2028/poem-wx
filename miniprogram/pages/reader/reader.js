@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
 const pinyin = require("../../utils/pinyin");
@@ -78,11 +79,25 @@ Page({
     /** 未登录时整页换成一句话 —— 不从 URL 放行，也不渲染半张空壳 */
     locked: true,
     lockTitle: "登录后可用",
-    lockNote: ""
+    lockNote: "",
+
+    /**
+     * 这位作者的名字 —— 作者索引进来时才有（`?from=李白`）。
+     *
+     * 它带来的只有一件事：**评完分往下的那一首不跨作者**。
+     * 用户对作者索引的原话是「详情页的上一页下一页都是该作者的作品」——
+     * 小程序端的「下一页」只有一处，就是评完分自动跳的那一首
+     * （`goNext()`），所以这一条落在那儿。
+     *
+     * 存成 `creator`（不是 `from`）：`from` 是 URL 上的参数名，
+     * 存进 data 会让「这一页自己认不认得出来源」与「URL 怎么写」
+     * 变成同一个词 —— 改 URL 就改了语义。
+     */
+    creator: ""
   },
 
   onLoad(query) {
-    this.setData({ id: query.id || "" });
+    this.setData({ id: query.id || "", from: query.from || "" });
   },
 
   /**
@@ -182,6 +197,7 @@ Page({
     wx.setNavigationBarTitle({ title: meta.t });
     store.markRead(meta.b, id);
     this.loaded = true;
+    this.setData({ creator: this.data.from || "" });
     this.syncDaily();
 
     // 从设置页回来、或刚登录完，注音状态可能变了
@@ -282,8 +298,26 @@ Page({
     setTimeout(() => this.goNext(), 700);
   },
 
-  /** 背完一首直接跳今日下一首，省得退回列表再点 */
+  /**
+   * 背完一首往下一首走。**下一首在哪，取决于从哪进来的。**
+   *
+   * 从作者索引进来的（`?from=李白`）：下一首是**这一位作者名下**的下一首 ——
+   * 用户对作者索引的原话是「详情页的上一页下一页都是该作者的作品」。
+   * 走到头就退回**这位作者的作品列表**（不是退回集子，也不是回默认的
+   * 今日计划）—— 那才是「返回就回到李白列表」。
+   *
+   * 从集子列表进来的：还是原来那一条（同一部集子里的下一首未读），
+   * 走完退回列表页。这一条一个字没改，作者索引只是**多了一个入口**。
+   *
+   * ⚠️ 作者的作品顺序取的是 `author-index` 摆好的那一份（按集子 + 组 + id），
+   *    与②层列出来的一模一样 —— 两处各自排一遍，早晚对不上，
+   *    而且「列表里看到的顺序」与「下一篇的顺序」不一致，用户会当成 bug。
+   */
   goNext() {
+    if (this.data.creator) {
+      this.goNextInAuthor();
+      return;
+    }
     const recs = store.reads(this.data.bookId);
     const list = corpus.ofBook(this.data.bookId);
     const idx = list.findIndex((p) => p.id === this.data.id);
@@ -294,6 +328,54 @@ Page({
       }
     }
     wx.navigateBack();
+  },
+
+  /** 作者名下的下一首。走到头就回到**这位作者的列表**（返回栈上那一层） */
+  goNextInAuthor() {
+    const next = this.siblingInAuthor(1);
+    if (!next) {
+      // 到头了：退回作者索引那一页（它就在返回栈上一层，②层还记得是哪位）
+      wx.navigateBack();
+      return;
+    }
+    wx.redirectTo({
+      url: "/pages/reader/reader?id=" + encodeURIComponent(next) +
+        "&from=" + encodeURIComponent(this.data.creator)
+    });
+  },
+
+  /**
+   * 同一位作者名下的邻居（`delta` = ±1）。没有就返回空串 ——
+   * **不跨作者**：跨了就不是「该作者的作品」了。
+   *
+   * ⚠️ 名单**必须**与作者索引②层列出来的是同一份，否则「列表里看到的
+   *    顺序」与「下一篇跳到的顺序」对不上（李白那儿差 17 条：写作里
+   *    写着「李白」的 77 条，名册判重之后只收 60 条）。
+   *
+   *    所以这里不自己筛，而是**现算一遍名册**（`AI.build`，488 位 60ms），
+   *    再从里面取这一位 —— 与作者索引那一页走的是同一个函数、同一份判重。
+   *    现算而不是把那 60 个 id 顺着 URL 传过来：一条 URL 塞 60 个 id
+   *    又长又脆（上一个页面改判重口径、这边就拿到一份过期名单），
+   *    而 60ms 是一次点击的量级，不是每帧。
+   *
+   *    第一次算完缓起来（`this.rosterCache`）—— 同一位作者连翻十首，
+   *    不该算十遍。
+   */
+  siblingInAuthor(delta) {
+    const who = this.data.creator;
+    if (!who) return "";
+    if (!this.rosterCache) {
+      const entries = [];
+      AI.LIT_BOOKS.forEach((b) => {
+        corpus.ofBook(b).forEach((p) => entries.push(p));
+      });
+      this.rosterCache = AI.build(entries);
+    }
+    const ids = AI.worksOf(this.rosterCache, who);
+    const idx = ids.indexOf(this.data.id);
+    if (idx < 0) return "";
+    const at = idx + delta;
+    return at >= 0 && at < ids.length ? ids[at] : "";
   },
 
   onShareAppMessage() {

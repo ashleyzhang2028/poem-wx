@@ -187,6 +187,16 @@ Page({
     wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) });
   },
 
+  /**
+   * 作者索引。它在分包里（`packages/authors`），主包不为它多背一行。
+   *
+   * 入口放在搜索页而不是课外阅读集子页，是网页版第二轮的裁决
+   * （Issue #480），这边跟着走 —— 两端的入口位置不一样，用户换端会找不到。
+   */
+  onAuthors() {
+    wx.navigateTo({ url: "/packages/authors/index/index" });
+  },
+
   onShareAppMessage() {
     return { title: "跬步 · 全站搜索", path: "/pages/search/search" };
   }
