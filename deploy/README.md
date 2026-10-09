@@ -19,6 +19,9 @@
 
 正路是**镜像**：让 CNB 流水线构建、推镜像，云托管按镜像部署。
 
+⚠️ **顺序**：先打一个 `v*` tag 触发流水线把镜像构建出来（否则下面那栏没得填），
+再去控制台建服务。
+
 | 字段 | 填什么 |
 |---|---|
 | 部署方式 | **镜像** |
@@ -26,29 +29,40 @@
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
 
+探活打 `/healthz`（回 `ok`）—— 这份镜像**没有静态站**，`/` 就是 404，
+别拿它当判据。
+
+**要人做的动作不止这几栏**（建 `wx_accounts` 表、配环境变量、加 request 域名……），
+整份清单在 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) 的
+「§ 一点五 运维动作清单」。
+
 ⚠️ 镜像槽位的路径是按**这个仓库**的 slug 给的，即使源码来自 `poem` ——
 流水线在这个仓库里跑，镜像就推在这个仓库名下。所以云托管那边填的是
 `poem-wechat-mini-program/wx-api`，不是 `poem/xxx`。
 
 ### 流水线怎么构建（关键形状）
 
-CNB 允许**源码上下文**与**代码仓库**不是同一处的组合，`.cnb.yml` 里那一节长这样：
+CNB 允许**源码上下文**与**Dockerfile 来源**不是同一处的组合。真实的
+`.cnb.yml`（「构建云托管镜像（源码 = poem）」那一节）分三步：
 
-```yaml
-build:wx-api:
-  docker:
-    image:
-      name: docker.cnb.cool/${CNB_ROOT_SLUG}/wx-api:latest
-      dockerfile: deploy/Dockerfile
-      target: .
+1. **clone `poem`** —— 取后端源码（唯一一份）
+2. **摊构建上下文** —— `poem/api/` + 本仓库的 `deploy/Dockerfile` 与
+   `deploy-api-serve/serve-api.js`、`deploy-api-serve/.dockerignore`，
+   平铺进同一个临时目录（Dockerfile 是按 `./api` 与 `./serve-api.js` 拷的）
+3. **`docker build` + push** —— 推两个 tag：`<tag 名>` 与 `latest`
+
+镜像名按**本仓库**的 slug 展开，不是 `poem` 的：
+
+```
+docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>
 ```
 
-- 源码上下文 = **`poem` 仓库**（那个仓库的 `.cnb.yml` 触发，或这边引用）
-- `dockerfile` 指到本仓库 `deploy/Dockerfile`
-- `serve-api.js` 与 `.dockerignore` 由流水线摆进上下文（见
-  `deploy-api-serve/.dockerignore` 顶上那张归属表）
+⚠️ **别把它写成 `${CNB_ROOT_SLUG}`** —— 那个变量在流水线里指 `poem`
+（被 clone 的源码仓库），而镜像要推在**跑流水线的这个仓库**名下。
+真实 `.cnb.yml` 用的是 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。
+这一处写反了，云托管那栏就拉不到镜像。
 
-⚠️ 具体的流水线语法以 CNB 文档为准（`cnb-docs` 技能 / 平台文档）。
+⚠️ 具体的 CI 语法以 CNB 文档为准（`cnb-docs` 技能 / 平台文档）。
 这一节写的是**形状**：后端代码只有 `poem` 一处，镜像的构建上下文也直接取它，
 中间不再落一份副本。
 
