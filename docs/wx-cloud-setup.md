@@ -182,6 +182,20 @@ curl -s -X POST https://<域>/api/sync/pull \
    `registries list-packages` 或 CNB「制品库」页，`wx-api` 槽位下有那个短 sha 吗？
 2. 制品库里确实有那个 tag，但**对云托管是私有、没配拉取凭据** —— 这时才去配凭据。
 
+**流水线红在 `clone poem` 那一步、报 `Repository Not Found. / 仓库不存在。`** ——
+那不是路径写错，是**凭据不被接受**。流水线里的 `CNB_TOKEN` 范围跟触发事件走，
+未必覆盖到第二个仓库（`poem`）；而带一个不被接受的凭据去 clone，
+**连匿名可读的仓库也会被拒成「不存在」**。
+
+判据很好分：同一个地址，**去掉凭据能 clone 下来**，就是这个原因。
+
+```
+$ git clone --depth 1 "https://x:y@cnb.cool/npu-gpu-cpu/poem.git" /tmp/t   # → Not Found
+$ git clone --depth 1 "https://cnb.cool/npu-gpu-cpu/poem.git" /tmp/t       # → 成功
+```
+
+`.cnb.yml` 里已经按这个写死了退路：带令牌试一次，不成就不带凭据再来。
+
 ---
 
 ## 三、P.S.：还有两条没走的路
