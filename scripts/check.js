@@ -7456,46 +7456,104 @@ function gapped(items, max) {
   }
 }
 
-/* ---------- V46. WXML 里不许写嵌套三元（Issue #71 的构建失败） ----------
+/* ---------- V46. WXML 插值里那几种「构建时整个包传不上去」的写法 ----------
  *
- * 现场：真机包传不上去，`miniprogram-ci` 回
- *     ./packages/game/quiz/quiz.wxml:1:2154:
+ * 现场（两轮，同一个报错，两个不同的原因）：
+ *     ./packages/game/quiz/quiz.wxml:1:2154:   ← 第一轮
+ *     ./packages/game/quiz/quiz.wxml:1:2084:   ← 第二轮
  *     Bad value with message: unexpected token `.`
- * 也就是**整个体验版都发不出去**，而 `allow_failure: true` 让它不挡流水线 ——
- * 得自己翻日志才看得见。
+ * 后果是**整个体验版都发不出去**（`-80054`），而这步 `allow_failure: true`，
+ * 不挡流水线 —— 得自己翻日志才看得见。
  *
- * 原因：`quiz.wxml` 那格 `class` 写了**三层嵌套三元**，内层还带字符串字面量：
- *     class="option {{picked ? (item.text === current.answer ? 'right'
- *             : (item.text === picked ? 'wrong' : '')) : ''}}"
- * WXML 的 `{{ }}` 吃不下这种嵌套引号。
+ * ⚠️ 这一节最值得记的是：**第一轮修完，包照样传不上去。**
+ *    第一轮认的是「三层嵌套三元」，改完报错仅仅从 2154 挪到 2084 ——
+ *    挪动的那 70 个字符，正好是我加进注释的那段字。也就是说当时的判据
+ *    （数 `?` 的个数）**没认住真正的那一处**，它守的是同一格里的另一个毛病。
  *
- * 本仓库别处（exam / feihua / index）一律只用**一层**三元 —— 这一处是例外，
- * 所以判据可以收得很紧：`{{ }}` 里出现两个以上 `?` 就是错。
+ * 真正在卡的那两处，是 WXML 插值里**不属于它文法**的两类东西：
+ *
+ *   ① 嵌套三元 + 字符串字面量（第一轮，选项那格 `class`）
+ *      WXML 的插值只吃**一层**三元。本仓库别处（exam / feihua / index）
+ *      一律只用一层 —— 所以判据可以收得很紧：一个插值里两个以上 `?` 就是错。
+ *
+ *   ② 方法调用（第二轮，结果页那行正确率）
+ *          {{questions.length ? (correct * 100 / questions.length).toFixed(0) : 0}}
+ *      括号表达式后面跟一个 `.`，解析器在那儿报 `unexpected token `.``。
+ *      错的是 `.toFixed` 那个点，而**它不在选项那格、也不在同一个原因里** ——
+ *      这就是为什么第一轮改完仍然是红的。
+ *
+ * 还有一条是这一轮踩出来的：**注释里的花括号同样会被解析**。
+ *     <!-- ... WXML 的 {{ }} 吃不下 ... -->
+ *     <!-- ... 认 `) .` 这种方法调用 ... -->
+ * 这两行注释本身就让上一轮的修法原地复发（第二行还会正中判据②）。
+ * 所以注释里**不许出现那对花括号**，判据也照着这个收。
  */
 {
-  const bad = [];
+  const issues = [];
   const walk = (dir) => {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, ent.name);
       if (ent.isDirectory()) { walk(full); continue; }
       if (!ent.name.endsWith(".wxml")) continue;
+      const rel = path.relative(ROOT, full);
       const text = fs.readFileSync(full, "utf8");
+
+      // ── ① 插值里有嵌套三元（两个以上 `?`）
       text.split("\n").forEach((line, i) => {
         for (const m of line.matchAll(/\{\{(.*?)\}\}/g)) {
-          const inner = m[1];
-          if ((inner.match(/\?/g) || []).length >= 2) {
-            bad.push(path.relative(ROOT, full) + ":" + (i + 1) + "  " + inner.trim().slice(0, 70));
+          if ((m[1].match(/\?/g) || []).length >= 2) {
+            issues.push({ kind: "嵌套三元", at: rel + ":" + (i + 1), what: m[1].trim().slice(0, 70) });
           }
         }
       });
+
+      // ── ② 插值里对括号表达式调方法：`)` 之后跟 `.` 再跟标识符
+      text.split("\n").forEach((line, i) => {
+        for (const m of line.matchAll(/\{\{(.*?)\}\}/g)) {
+          const hit = /\)\s*\.\s*[A-Za-z_$]/.exec(m[1]);
+          if (hit) {
+            issues.push({
+              kind: "方法调用",
+              at: rel + ":" + (i + 1),
+              what: m[1].trim().slice(0, 70) + "   ← 报错点在 " + JSON.stringify(hit[0].trim())
+            });
+          }
+        }
+      });
+
+      // ── ③ 注释里出现插值花括号（它同样会被解析，等于把错留在原地）
+      for (const m of text.matchAll(/<!--[\s\S]*?-->/g)) {
+        if (m[0].indexOf("{{") >= 0 || m[0].indexOf("}}") >= 0) {
+          const line = text.slice(0, m.index).split("\n").length;
+          issues.push({
+            kind: "注释里写插值",
+            at: rel + ":" + line,
+            what: m[0].replace(/\s+/g, " ").trim().slice(0, 70)
+          });
+        }
+      }
     }
   };
   walk(ROOT);
-  ok("WXML 里没有嵌套三元（WXML 的 {{ }} 解析不了，构建时整个包传不上去）",
-    bad.length === 0,
-    "这些地方 `{{ }}` 里有两个以上 `?`：" + JSON.stringify(bad.slice(0, 3)) +
-      " —— 真机包会回 `unexpected token`（-80054），而且这步 allow_failure，" +
-      "不挡流水线，只静默失败");
+
+  const byKind = (k) => issues.filter((x) => x.kind === k);
+  const fmt = (list) => JSON.stringify(list.slice(0, 3).map((x) => x.at + "  " + x.what));
+
+  ok("WXML 插值里没有嵌套三元（只吃一层，构建时整个包传不上去）",
+    byKind("嵌套三元").length === 0,
+    "插值里有两个以上 `?`：" + fmt(byKind("嵌套三元")) +
+      " —— 真机包会回 `unexpected token`（-80054），而这步 allow_failure，不挡流水线");
+
+  ok("WXML 插值里没有方法调用（括号表达式后面不能跟 `.`）",
+    byKind("方法调用").length === 0,
+    "这些插值对括号表达式调了方法：" + fmt(byKind("方法调用")) +
+      " —— 解析器就报在这个点上（`unexpected token `.``），包传不上去。" +
+      "算好再传进模板（见 quiz.js 的 pctOf）");
+
+  ok("WXML 注释里没有插值花括号（注释同样会被解析）",
+    byKind("注释里写插值").length === 0,
+    "这些注释里出现了 `{{` 或 `}}`：" + fmt(byKind("注释里写插值")) +
+      " —— 注释里的插值一样会被解析，上一轮就是这么让同一个错原地复发的");
 }
 
 /* ---------- V46b. 「上传体验版」那步：成了/没成都得能看见 ----------
