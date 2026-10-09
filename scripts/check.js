@@ -7617,6 +7617,24 @@ function sectionOf(text, heading) {
   ok(".cnb.yml 里那份镜像的流水线去 clone poem（源码上下文 = 后端那一边）",
     /clone poem[\s\S]{0,600}?clone[\s\S]{0,200}?poem\.git/.test(cnb),
     "没去取 poem 就只能靠副本，而副本正是这一版撤掉的东西");
+  /* ⚠️ 取 poem 那一步必须**留一条不带凭据的路**（Issue #71 的真现场）。
+     流水线里的 `CNB_TOKEN` 范围跟触发事件走，`repo-code` 未必覆盖到第二个仓库；
+     带一个不被接受的凭据去 clone，连**匿名可读**的仓库都会被 CNB 拒成
+     `Repository Not Found. / 仓库不存在。` —— 看着像路径写错，其实是凭据问题。
+     实测：`git clone https://x:y@cnb.cool/...` → Not Found；同一仓库去掉凭据 → 成功。
+     所以判据是「那一行里得有一个不带 CNB_TOKEN 的 fallback」。 */
+  /* 判据落在「**每一处** clone 都有不带凭据的退路」上。
+     ⚠️ 不能只查「存在一条 fallback」—— `.cnb.yml` 里有**两处** clone poem
+     （`$."**"` 那条自检、`main` 那条发布），松着写的话改坏一处、另一处照样让它绿。
+     这条第一版就是这么写的，试出来才改紧的。 */
+  {
+    const clones = cnb.match(/git clone --depth 1 "https:\/\/\$\{CNB_TOKEN\}@cnb\.cool\/\$\{CNB_ROOT_SLUG\}\/poem\.git"/g) || [];
+    const fallbacks = cnb.match(/\|\|\s*git clone --depth 1 "https:\/\/cnb\.cool\/\$\{CNB_ROOT_SLUG\}\/poem\.git"/g) || [];
+    ok("取 poem 的每一处都留了不带凭据的退路（带了令牌被拒不等于仓库不存在）",
+      clones.length > 0 && fallbacks.length >= clones.length,
+      `带凭据的 clone ${clones.length} 处、退路 ${fallbacks.length} 处 —— ` +
+        "不一致就有一处会因令牌范围不覆盖 poem 而回 128，报错却是「仓库不存在」");
+  }
   ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
