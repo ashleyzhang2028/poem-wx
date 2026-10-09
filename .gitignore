@@ -8,3 +8,6 @@ miniprogram/project.private.config.json
 # 语料由 scripts/build-data.js 从 poem 仓库生成，不入库
 miniprogram/data/
 dist/
+
+# deploy/ 是部署描述（跨仓库构建的壳）；本机构建会摊一份上下文，别提交
+deploy/.build/
