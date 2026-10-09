@@ -482,10 +482,10 @@ Issue #1 问：「小程序怎么还要域名？做什么用的，怎么申请�
 
 ### 本项目现在填什么
 
-`appid` 还是 `touristappid`（README 已注明「正式上传前换成自己的」），
-`project.config.json` 里 `setting.urlCheck: true` 也是**故意的** ——
+`appid` 已换成正式号（`wx200a0c667fc67fcb`），
+`project.config.json` 里 `setting.urlCheck: true` 是**故意的** ——
 本地关掉校验只是联调时的开关，配置文件里不许关，免得把「真机上必然失败」
-当成「跑通了」。所以现在**没有可填的域名**，等后端就绪后：
+当成「跑通了」。所以**域名这一格仍然空着**，等后端就绪后：
 
 - 名单：填 `https://<后端域名>`，一条
 - 客户端：`utils/auth.js` 的 `configure({ baseUrl })`（设置页里配）填同一个，
