@@ -1,0 +1,94 @@
+<view class="page" style="{{themeStyle}}">
+  <!-- 未登录：没有什么可管的，说清楚就行 -->
+  <lock-card wx:if="{{!logged}}" title="权限要登录" note="登录后才能看" mark="权" />
+
+  <block wx:else>
+  <view class="page-head">
+    <text class="head-title">我的权限</text>
+  </view>
+
+  <view class="card grant">
+    <view class="card-title bar">我的授权</view>
+    <view class="grant-head">
+      <!-- 档名下面原来还有一行来源（管理员发放 / 授权码兑换 / 默认档位）：
+           2026-10-04 拆自那句「全能（服务端） 所有者」，2026-10-05 又追了一句
+           「有服务端发放删除……只保留 Free, Pro 或者 Max」。用户要的那条线很清楚 ——
+           这一栏只留档名。所以来源整格撤掉，不是换句措辞：留一行「管理员发放」
+           在档名底下，它回答的仍是「谁给你的」，而站在这一页的人本来就是来管这件事的。 -->
+      <text class="grant-tier-name">{{status.label}}</text>
+      <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
+      <view class="grant-meter">
+        <view class="meter">
+          <view class="meter-fill" style="width:{{stats.percent}}%"></view>
+        </view>
+        <text class="grant-meter-t">{{stats.enabled}} / {{stats.caps}} 项能力</text>
+      </view>
+    </view>
+
+    <text class="hint note" wx:if="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">能力矩阵</view>
+    <view wx:for="{{groups}}" wx:key="title" wx:for-item="grp">
+      <text class="cap-group">{{grp.title}}</text>
+      <view class="cap" wx:for="{{grp.rows}}" wx:key="name" wx:for-item="caprow">
+        <text class="cap-mark {{caprow.on ? 'on' : 'off'}}">{{caprow.on ? '✓' : '✕'}}</text>
+        <text class="cap-name {{caprow.on ? '' : 'dim'}}">{{caprow.name}}</text>
+        <text class="cap-note" wx:if="{{caprow.note}}">{{caprow.note}}</text>
+      </view>
+    </view>
+
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">用户名录</view>
+    <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
+    <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
+
+    <view class="acct" wx:for="{{users}}" wx:key="id">
+      <view class="acct-main">
+        <text class="acct-name">{{item.label}}</text>
+        <text class="acct-sub">{{item.tierLabel ? item.tierLabel : '未分级'}}</text>
+      </view>
+      <!-- 改档 / 改角色：只给原生按钮，选值交给原生 showActionSheet。
+           服务器没接上时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->
+      <view class="acct-acts">
+        <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
+                bindtap="onSetTier">改档</button>
+        <button class="btn mini acct-act" wx:if="{{canSetRole && item.editable}}" data-u="{{item.id}}"
+                bindtap="onSetRole">角色</button>
+        <text class="acct-lock" wx:if="{{!canWrite && !canSetRole}}">只读</text>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!users.length}}">
+        <text class="empty-mark">名</text>
+        <text class="empty-text">名录里还没有人</text>
+
+      </view>
+    <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
+    <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">同步服务器</view>
+    <text class="hint note">同步与登录都走这一个地址</text>
+    <view class="field">
+      <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
+             bindinput="onBaseUrl" />
+    </view>
+    <button class="btn ghost block" bindtap="onSaveBaseUrl">保存并重试</button>
+    <text class="hint note" wx:if="{{baseUrlNote}}">{{baseUrlNote}}</text>
+    <text class="hint note" wx:if="{{wxLoginNote}}">{{wxLoginNote}}</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">要一个更高的档位</view>
+    <button class="btn ghost block" bindtap="onCopyFeedback">复制联系邮箱</button>
+    <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
+  </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

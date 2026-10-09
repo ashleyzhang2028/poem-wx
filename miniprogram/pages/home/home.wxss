@@ -1,76 +1,141 @@
 .home {
-  padding-top: 24rpx;
+  padding-top: var(--sp-1);
 }
 
-.today {
-  background: linear-gradient(160deg, #fffefb 0%, var(--bg-soft) 100%);
+/* ---------- 首屏那张卡 ----------
+   一屏一件事：上面一行日期，中间一个大标题，下面三个大数字，
+   最后是这一屏唯一的一颗墨黑按钮。
+
+   上一版这张卡是一道金色微光渐变 + 一枚缃色光晕 + 一个进度环 ——
+   三样东西都在说「我很重要」，谁也没说清「今天背几首」。
+   这一版把「重要」交给三件事：留白、字号差、唯一性。 */
+.hero {
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
-.today-head {
+.hero-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.today-title {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 600;
-  color: var(--green);
+.hero-left {
+  flex: 1;
+  min-width: 0;
+  padding-right: var(--sp-2);
 }
 
-.today-sub {
+/* 小字在上、大字在下 —— 参考图里「9:41 / 我的 / 当前积分余额」就是这个次第 */
+.hero-eyebrow {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--ls-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-bottom: var(--sp-2);
 }
 
-.today-start {
-  margin-top: 28rpx;
+.hero-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-head);
+  font-weight: 700;
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
 }
 
-/* 进度环：纯 CSS 锥形渐变，省掉 canvas 与 svg 资源 */
-.ring {
-  position: relative;
-  width: 128rpx;
-  height: 128rpx;
+.hero-sub {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  margin-top: var(--sp-2);
+}
+
+/* 三个大数字之间留得很松 —— 它是这一屏唯一的「大」，
+   抠着留白就白做了 */
+.hero-stats {
+  margin-top: var(--sp-4);
+}
+
+/* 细进度条 + 右边一行读数。
+   **零进度时整块不渲染**（见 wxml 那里的由来）—— 所以这一块不需要
+   一个「空槽」的样子，它出现的时候一定已经有进度。 */
+.hero-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.hero-meter .meter {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-meter-t {
   flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 
-.ring-track,
-.ring-fill {
-  position: absolute;
-  inset: 0;
+.hero-btn {
+  margin-top: var(--sp-4);
+}
+
+/* 未登录那张卡的印章：一枚墨黑圆标。
+   上一版是朱砂方印旋转 4 度 —— 那是网页版的语言，不是参考图的。 */
+.seal {
+  flex: none;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-}
-
-.ring-track {
-  background: var(--line-2);
-}
-
-.ring-fill {
-  background: conic-gradient(var(--gold) calc(var(--p) * 1%), transparent 0);
-}
-
-.ring::after {
-  content: "";
-  position: absolute;
-  inset: 14rpx;
-  border-radius: 50%;
-  background: #fffefb;
-  border: 1rpx solid var(--line-2);
-}
-
-.ring-text {
-  position: absolute;
-  inset: 0;
+  background: var(--strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26rpx;
-  color: var(--ink-2);
-  z-index: 1;
+}
+
+.seal-t {
+  font-family: var(--font-poem);
+  font-size: var(--fs-mark);
+  color: var(--on-ink);
+}
+
+/* ---------- 进度环（复习设置等处仍用）---------- */
+.ring-hover {
+  opacity: .82;
+}
+
+/* ---------- 今日安排 ---------- */
+/* 每行前面留一道状态槽：序号与勾共用一格，行首就对齐了 */
+.plan-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
+  border-bottom: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.plan-row:last-child {
+  border-bottom: none;
+}
+
+/* 序号：等宽字 + 固定槽。序号是「第几首」，它旁边是会换行的标题，
+   所以它必须是那条不动的竖线 —— 位数变了也占同一格 */
+.seq {
+  width: 52rpx;
+  flex: none;
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.seq.done {
+  color: var(--green);
 }
 
 .row-line {
@@ -80,45 +145,117 @@
 
 .row-line .row-title {
   flex: 0 1 auto;
+  /* min-width: 0 是这一行能不能**真的**省略号的开关。
+     标题是 white-space: nowrap，flex 项在 `min-width: auto` 下的自动最小
+     尺寸等于它的 min-content —— 对不换行的文字就是整句的宽度。
+     于是标题根本缩不动，压力全落到右边那枚 .tag 上：tag 被压窄、
+     「新学」折成两行（实测 23px → 42px），整行跟着长高。
+     min-width: 0 把这道地板撤掉，标题才轮到 text-overflow 出手。 */
+  min-width: 0;
   margin-right: 12rpx;
 }
 
+/* 行尾状态：两个字，不是一枚圆圈。
+   上一版是一个空圆圈，背过的填墨黑 —— 用户问「右边的那些圆圈是做什么用的？
+   需要吗」，这句话本身就是答案：**它什么都没说**。
+   一枚形状要靠猜（圆=没背？可点？），而这一列本来就有一个「序号」、
+   一枚「新学 / 复习」标签在说事，第三枚形状只会再加一次猜谜。
+   改成字：「已背」加重，「未背」推远 —— 不用猜，也不用点。 */
 .row-state {
-  width: 48rpx;
-  text-align: right;
-  color: var(--line);
-  font-size: 36rpx;
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-4);
+  white-space: nowrap;
 }
 
-.row-state.done {
-  color: var(--green);
-  font-size: 30rpx;
+.row-state.on {
+  color: var(--strong-text);
+  font-weight: 600;
 }
 
-.foot {
-  text-align: center;
-  padding: 16rpx 0 40rpx;
+/* ---------- 未登录那张目录 ---------- */
+.toc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-1);
 }
 
-/* 游客态的提示条：说明当前为什么点不动，顺带就是登录入口 */
+.toc-head .card-title {
+  margin-bottom: 0;
+}
+
+.toc-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
+  border-bottom: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.toc-row:last-child {
+  border-bottom: none;
+}
+
+/* ---------- 行尾槽 ----------
+   一行最后那一格。未登录时放「登录」胶囊，登录后放完成勾 ——
+   两者一个宽一个窄，**但槽本身的宽度是固定的**。
+
+   不固定会怎样：未登录的胶囊比勾宽一圈，于是标题栏被挤窄一截，
+   同一份目录在两态下右端参差，一登录整列字都往右挪了位。
+   宽度按宽的那个（「登录」胶囊）取，两种状态共用。 */
+.row-end {
+  flex: none;
+  width: 112rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 未登录时的行尾：写「登录」而不是一把小锁图标 ——
+   图标要人猜，字不用 */
+.row-lock {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+}
+
+.empty-btn {
+  margin-top: var(--sp-3);
+}
+
+/* 游客态的提示条：说明当前为什么点不动，顺带就是登录入口。
+   整条都可点（bindtap=onLogin），所以按下时整块退一档 ——
+   见 .guest-bar-hover。 */
 .guest-bar {
   display: flex;
   flex-direction: column;
-  margin: 20rpx 0;
-  padding: 24rpx 28rpx;
+  margin: var(--sp-3) 0;
+  padding: var(--sp-3) var(--sp-4);
   border-radius: var(--radius);
   background: var(--amber-light);
-  border: 1rpx solid rgba(165, 92, 25, .22);
+  border: 1rpx solid var(--amber-edge);
+}
+
+.guest-bar-hover {
+  opacity: .88;
 }
 
 .guest-title {
-  font-size: 28rpx;
+  font-size: var(--fs-hint);
   font-weight: 600;
   color: var(--amber);
 }
 
 .guest-sub {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 8rpx;
   line-height: 1.6;

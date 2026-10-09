@@ -1,37 +1,25 @@
-<view class="page">
-  <view class="card lock-card" wx:if="{{!logged}}">
-    <text class="lock-title">古诗词大会 · 登录后可用</text>
-    <text class="lock-sub">飞花令、题库、模拟考试都要登录。首页的一年级诗词不受影响。</text>
-    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="大会要登录" note="登录后才能进" mark="会" />
+
+  <block wx:else>
+  <view class="page-head">
+    <text class="head-title">题型</text>
   </view>
+
+  <!-- 这一屏是**列表**，不是考题：三张卡是入口，各进各的页。
+       飞花令曾经在这里就地摊开一个「挑一个字 + 看答案」——
+       那等于把游戏搬进了目录，与题库 / 考试两张卡的处理也对不上
+       （那两件事都进独立页）。现在三张卡一个待遇：点了才进玩法页。 -->
 
   <view class="modes">
-    <view class="mode mode-{{item.color}}" wx:for="{{modes}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
+    <button class="mode mode-{{item.color}} {{item.ok ? '' : 'mode-off'}}"
+            wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
       <text class="mode-name">{{item.name}}</text>
-      <text class="mode-desc">{{item.desc}}</text>
-    </view>
+      <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
+      <text class="mode-go">{{item.ok ? '开始 ›' : '未开放'}}</text>
+    </button>
   </view>
-
-  <view class="card">
-    <view class="card-title">飞花令 · 挑一个字</view>
-    <view class="chips">
-      <text class="chip {{keyword === item ? 'active' : ''}}" wx:for="{{chars}}" wx:key="*this"
-            data-c="{{item}}" bindtap="onChar">{{item}}</text>
-    </view>
-    <text class="hint">课内诗词里含「{{keyword}}」的句子 {{hitCount}} 条</text>
-  </view>
-
-  <view class="card" wx:if="{{lines.length}}">
-    <view class="row" wx:for="{{lines}}" wx:key="seg" data-id="{{item.id}}" bindtap="onOpen">
-      <view class="row-main">
-        <text class="line-seg">{{item.seg}}</text>
-        <text class="row-sub">{{item.title}} · {{item.author}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-  </view>
-
-  <view class="empty" wx:if="{{!lines.length}}">课内诗词里没有含这个字的句子，换个字试试</view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

@@ -1,6 +1,9 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
-const E = require("../../utils/entitlement");
+const gate = require("../../utils/gate");
+const entitlement = require("../../utils/entitlement");
+const tabbar = require("../../utils/tabbar");
+const theme = require("../../utils/theme");
 
 /** 网页版把十七部集子压成四张卡，这里沿用同一套分组口径 */
 const GROUPS = [
@@ -35,16 +38,21 @@ Page({
     groups: [],
     current: null,
     books: [],
-    logged: false,
-    lockedHint: ""
+    locked: true,
+    reason: ""
   },
 
   onShow() {
-    this.setData({ logged: E.signedIn(), lockedHint: E.hint("library.all") });
-    if (!E.can("library.all").ok) {
-      this.setData({ groups: [], current: null });
+    theme.apply(this);
+    // 自绘底栏：切到本页时把自己那一格点亮
+    tabbar.sync(this, 1);
+    // 课外阅读是 free 档的能力，但前提还是登录。
+    // hint() 自己会把「没登录」与「登录了但档位不够」分开说，页面不自己拼措辞。
+    if (!gate.logged() || !entitlement.can("library")) {
+      this.setData({ locked: true, reason: entitlement.hint("library") });
       return;
     }
+    this.setData({ locked: false, reason: "" });
     const all = corpus.books();
     const byId = {};
     all.forEach((b) => {
@@ -78,6 +86,10 @@ Page({
 
   onBack() {
     this.setData({ current: null });
+  },
+
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onOpenBook(e) {

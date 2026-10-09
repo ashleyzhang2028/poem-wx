@@ -1,88 +1,76 @@
-.chips {
+/* 年级那一行的读数（「小学（1—6 年级）」）。
+   它是**读数**，不是第二个控件 —— 所以用 .hint 那一档，不描边，
+   只在学段三格与年级格子之间站一句话，把「格子为什么只剩这几格」说出来。 */
+.stage-note {
+  display: block;
+  margin-top: var(--sp-2);
+}
+
+/* 背诵范围下面那句话：报一下这个范围里有多少首，
+   不然选完不知道「随机」到底随机自哪个池子 */
+.pool-hint {
+  display: block;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1rpx dashed var(--line-2);
+}
+
+/* ---------- 今日加背的管理 ----------
+   首页那张卡负责**加**，这里负责**看与清**。两处的列表长相不同是刻意的：
+   首页那张是「搜索结果」（要跳详情、要能加），这里的是「我已经加过的」
+   （要勾、要一起移出），动作不一样。 */
+.daily-count {
+  display: block;
+  margin-bottom: var(--sp-2);
+}
+
+.daily-tools {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 20rpx;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
-.chip {
-  padding: 12rpx 28rpx;
-  border-radius: 999rpx;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  font-size: 26rpx;
-  color: var(--ink-2);
-  margin: 0 16rpx 16rpx 0;
-}
-
-.chip.active {
-  background: var(--green);
-  border-color: var(--green);
-  color: #fff;
-}
-
-.opt {
+/* 一行一首。行首那枚方框是勾选的样子，底层是原生 checkbox（视觉隐藏）——
+   与全站「选一个 / 选几个」同一套：行为走平台，脸走我们这层。 */
+.daily-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 22rpx 0;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
   border-bottom: 1rpx solid var(--line-2);
 }
 
-.opt:last-of-type {
+.daily-row:last-child {
   border-bottom: none;
 }
 
-.opt-label {
-  font-size: 29rpx;
-  color: var(--ink);
-}
-
-.opt-check {
-  color: var(--green);
-  font-size: 32rpx;
-}
-
-.pool-hint {
-  display: block;
-  padding-top: 12rpx;
-}
-
-.algo {
-  border: 1rpx solid var(--line-2);
+.daily-box {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: var(--sp-3);
+  border: 1rpx solid var(--line-strong);
   border-radius: var(--radius-sm);
-  padding: 22rpx;
-  margin-bottom: 16rpx;
-  background: var(--bg-soft);
-}
-
-.algo.active {
-  border-color: var(--green);
-  background: var(--green-light);
-}
-
-.algo-head {
+  background: var(--surface);
+  color: var(--on-ink);
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
 }
 
-.algo-name {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--ink);
+/* 选中填主题色。与首页那颗圆钮是同一句话（「这一首在里面」），
+   只是这里说的是「这一首被勾上了」—— 两者都用填色，不另发明记号。
+   判据走 .on 类而不是 :has(checkbox[checked]) —— 小程序对 :has() 支持
+   不稳，而「选了没选」这件事不值得赌一个选择器。 */
+.daily-box.on {
+  background: var(--strong);
+  border-color: var(--strong);
 }
 
-.algo-years {
-  font-size: 22rpx;
-  color: var(--ink-3);
-}
-
-.algo-blurb {
-  display: block;
-  font-size: 25rpx;
-  color: var(--ink-2);
-  margin-top: 8rpx;
-  line-height: 1.7;
+.daily-tick {
+  font-size: var(--fs-caption);
+  line-height: 1;
 }
 
 /* 未登录时算法卡置灰：看得出来是「登录才能用」，而不是坏了 */

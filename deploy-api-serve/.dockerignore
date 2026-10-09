@@ -1,0 +1,23 @@
+# CNB 流水线构建「只跑 /api/*」那份镜像时的构建上下文白名单（Issue #71）。
+#
+# ⚠️ 这条流水线的源码上下文是 **poem 仓库根**（后端在那儿），所以这一份要放在
+#    **poem 那棵树里**生效。CNB 的「Dockerfile 与构建上下文可以来自不同处」
+#    这件事，把 .dockerignore 的归属变得不明显 —— 记在这儿，别绕晕：
+#
+#      源码上下文 = poem 根     ← .dockerignore 在这儿生效
+#      Dockerfile  = 本仓库 deploy/Dockerfile
+#      服务壳      = 本仓库 deploy-api-serve/serve-api.js（由流水线摆进上下文）
+#
+# ⚠️ 这一份**不是**「排除什么」，是「只留什么」。常规写法（排掉 .git / test / docs）
+#    挡不住 poem 的 data/ —— 它不在排除名单里，于是 26MB 语料照样每次上传一遍，
+#    运行时一次都不读。所以先排掉一切，再逐条放行。
+**
+*
+
+# Dockerfile 本身（流水线从这边拷进上下文，COPY 指令才会落到实际文件上）
+!Dockerfile
+
+# 后端本体 + 只挂 /api/* 的服务壳
+!api
+!api/**
+!serve-api.js

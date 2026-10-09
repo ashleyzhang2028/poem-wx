@@ -8,19 +8,29 @@ const store = require("./store");
 
 const DAY = R.DAY;
 
+/* 取诗范围。每一项只有**一个**标签 ——
+   上一版还配了一句 scopeName 副标题，而它就是标签的同义改写
+   （「本册」→「本学期」、「小学随机」→「小学阶段」），
+   七个选项下面吊着七行废话。副标题撤了，scopeName 只留给需要
+   把范围写成一句话的地方（首页、我的页里那句「一年级上 · 本学期及之前」）。 */
 const SCOPES = {
   term: { label: "本册", scopeName: "本学期", random: false, stages: ["current"] },
   upto: { label: "本册及之前", scopeName: "本学期及之前", random: false, stages: ["upto"] },
   primary: { label: "小学随机", scopeName: "小学阶段", random: true, stages: ["primary"] },
   middle: { label: "初中随机", scopeName: "初中阶段", random: true, stages: ["middle"] },
-  primary_middle: { label: "小学+初中随机", scopeName: "小学及初中阶段", random: true, stages: ["primary", "middle"] },
+  primary_middle: { label: "小初随机", scopeName: "小学及初中阶段", random: true, stages: ["primary", "middle"] },
   high: { label: "高中随机", scopeName: "高中阶段", random: true, stages: ["high"] },
   all: { label: "全部随机", scopeName: "全部阶段", random: true, stages: ["primary", "middle", "high"] }
 };
 
 const DEFAULT_SCOPE = "upto";
 
-const DAILY_COUNTS = [3, 5, 8, 10];
+/* 每日首数四档。**5 是不选时的默认**（store 里 dailyCount: 5），
+   所以 5 必须在档里；3 / 10 / 20 是另外三个量级。
+   上一版是 3/5/8/10（照搬网页版），按 Issue #26 改为 3/5/10/20 ——
+   8 与 10 只差两首，档位踩得太密，而 20 首是「今天想多背」的那一档，
+   原来根本没有。 */
+const DAILY_COUNTS = [3, 5, 10, 20];
 
 const GRADE_NAMES = {
   1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级",
@@ -34,8 +44,36 @@ const STAGE_GRADES = {
   high: [10, 11, 12]
 };
 
+/* 三学段的名字。网页版（js/app.js 的 STAGES）就叫这三个词，
+   小程序端上一版没有 —— 背诵设置页上一版只有十二个年级格子，
+   用户看不出自己这一屏落在哪个学段里。 */
+const STAGES = {
+  primary: { name: "小学", grades: STAGE_GRADES.primary },
+  middle: { name: "初中", grades: STAGE_GRADES.middle },
+  high: { name: "高中", grades: STAGE_GRADES.high }
+};
+
+/* 学段顺序固定：小学 → 初中 → 高中。对象键序在 JS 里是排序过的，
+   而「高中」排在「初中」前头是件没人想要的事 —— 所以顺序写死在这里。 */
+const STAGE_KEYS = ["primary", "middle", "high"];
+
 function scopeOf(key) {
   return SCOPES[key] || SCOPES[DEFAULT_SCOPE];
+}
+
+/** 年级落在哪个学段：一至六小学、七至九初中、十至十二高中 */
+function stageOf(grade) {
+  const g = Number(grade);
+  return STAGE_KEYS.filter((k) => STAGE_GRADES[k].indexOf(g) >= 0)[0] || "primary";
+}
+
+/* 学段的名字。
+   ⚠️ 这里**不能**叫 stageName —— 下面那个同名的函数是这个模块里更老、
+   更常用的那个（回答「这首背到哪个记忆阶段了」，返回「新学 / 复习」）。
+   两个都叫 stageName 的结果是后者把前者盖掉，学段那一行会印出「新学」。
+   所以这个叫 stageLabel：说的是**学段**（小学/初中/高中）那一件事。 */
+function stageLabel(key) {
+  return (STAGES[key] || STAGES.primary).name;
 }
 
 function algoKey() {
@@ -270,6 +308,10 @@ module.exports = {
   DAILY_COUNTS,
   GRADE_NAMES,
   STAGE_GRADES,
+  STAGES,
+  STAGE_KEYS,
+  stageOf,
+  stageLabel,
   scopeOf,
   algoKey,
   isDue,

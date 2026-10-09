@@ -4,14 +4,14 @@
 
 .plans-title {
   display: block;
-  font-size: 32rpx;
+  font-size: var(--fs-title);
   font-weight: 600;
   color: var(--green);
 }
 
 .plans-sub {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: 8rpx;
 }
@@ -29,25 +29,25 @@
 }
 
 .plans-th {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
 }
 
 .plans-cap {
   flex: 1 1 auto;
-  font-size: 28rpx;
+  font-size: var(--fs-body);
 }
 
 .plans-need {
   flex: 0 0 180rpx;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
 }
 
 .plans-state {
   flex: 0 0 140rpx;
   text-align: right;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
 }
 
 .plans-state.on {
@@ -56,12 +56,4 @@
 
 .plans-state.off {
   color: var(--amber);
-}
-
-.plans-note {
-  display: block;
-  font-size: 26rpx;
-  color: var(--ink-2);
-  line-height: 1.75;
-  margin-top: 12rpx;
 }

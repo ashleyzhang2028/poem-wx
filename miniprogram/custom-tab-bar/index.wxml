@@ -1,0 +1,11 @@
+<!-- 自绘底栏：图标在上、文字在下。图标全用 CSS 画（见 index.wxss）。
+     选中的那一项：图标嵌进一枚主题色圆底（+ 一圈描边）+ 文字加重 ——
+     一眼扫得出当前在哪一栏。方案 A，详见 index.wxss 开头。 -->
+<view class="tabbar" style="{{themeStyle}}">
+  <view class="tab {{active === index ? 'on' : ''}}"
+        wx:for="{{list}}" wx:key="pagePath"
+        data-index="{{index}}" bindtap="onTap">
+    <view class="tab-ico tab-ico-{{item.icon}}"></view>
+    <text class="tab-text">{{item.text}}</text>
+  </view>
+</view>

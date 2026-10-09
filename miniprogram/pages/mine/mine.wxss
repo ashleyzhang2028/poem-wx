@@ -1,7 +1,16 @@
 .account {
-  padding: 32rpx;
+  padding: var(--sp-4);
 }
 
+/* 首屏那张身份卡：它是这一屏的第一眼，但它**不靠颜色**说这句话 ——
+   靠的是它下面那块留白（.login-row / .profile-row 的 margin-top）。
+   上一版给这张卡加了一层主色渐变 + 一圈主色描边，那是「用颜色说重要」；
+   一块白卡夹在两段留白里，一样是第一眼，而且不必抢后面的颜色。 */
+.account-lead {
+  background: var(--surface);
+}
+
+/* ---------- 身份行 ---------- */
 .identity {
   display: flex;
   align-items: center;
@@ -18,6 +27,7 @@
   line-height: normal;
   flex: none;
   overflow: hidden;
+  box-shadow: 0 0 0 2rpx var(--line);
 }
 
 .avatar-btn::after {
@@ -29,84 +39,118 @@
   height: 112rpx;
   border-radius: 50%;
   flex: none;
-  background: var(--green-light);
+  background: var(--sink);
 }
 
+/* 没有头像时：一枚浅灰圆底 + 一个字。
+   参考图里的头像底就是一整块浅灰 —— 它不强调「缺图」，只是先占住位置 */
 .avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-poem);
-  font-size: 48rpx;
-  color: var(--green);
+  font-size: var(--fs-mark);
+  color: var(--ink-2);
 }
 
 .identity-main {
-  padding-left: 24rpx;
+  padding-left: var(--sp-3);
   min-width: 0;
+  flex: 1;
 }
 
 .identity-name {
   display: block;
-  font-size: 34rpx;
-  font-weight: 600;
+  font-size: var(--fs-lead);
+  font-weight: 700;
   color: var(--ink);
+  letter-spacing: var(--ls-title);
+}
+
+/* 名字就地可改。**不给输入框画底线 / 灰底** —— 它顶着的是「我是谁」那一行，
+   加一枚框会把身份卡画成一张表单。字与 .identity-name 同一副长相，
+   只是多了一道很淡的虚线下划线：它是「这里能点」的唯一提示，
+   也是这一行与下面「已登录」之间的分界。 */
+.identity-input {
+  display: block;
+  width: 100%;
+  height: calc(46rpx * var(--ui-scale));
+  min-height: 0;
+  padding: 0;
+  font-size: var(--fs-lead);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+  border-bottom: 1rpx dashed var(--line-strong);
+  border-radius: 0;
+}
+
+/* 空昵称时那句 placeholder 不装成名字：它说的是一件待办，不是身份 */
+.identity-ph {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+/* 副题那一行：「我是谁 + 这张头像哪来的」，右边可能挂一个退回微信头像的动作。
+   头像行撤掉之后（用户 2026-10-04），换头像只走「点头像」一条路，
+   但「从自己那张退回微信那张」得留在屏上 —— 它是一句附注，不是一行操作。 */
+.identity-sub-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
 }
 
 .identity-sub {
-  display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+}
+
+/* 「用微信头像」：一枚最轻的文字动作，压在副题右端。
+   它不铺底、不加框 —— 只是副题后面一句可点的话，不抢名字与头像那两处。 */
+.identity-revert {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--line-strong);
+}
+
+/* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
+   放在下面的表格里要滚一屏才看得到。
+   长相照参考图右上那枚编号（WFA381）：白底、一道细边、一颗胶囊。 */
+.tier-chip {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  padding: 6rpx 20rpx;
+  letter-spacing: 1rpx;
 }
 
 .login-row {
-  margin-top: 28rpx;
-}
-
-.login-row .hint {
-  display: block;
-  text-align: center;
-  margin-top: 16rpx;
-}
-
-.profile-row {
-  margin-top: 28rpx;
-}
-
-.nick-input {
-  margin-top: 16rpx;
-  height: 80rpx;
-  padding: 0 24rpx;
-  background: var(--bg-soft);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  font-size: 28rpx;
-}
-
-.kv {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.kv:last-child {
-  border-bottom: none;
-}
-
-.kv-k {
-  font-size: 28rpx;
-  color: var(--ink-2);
-}
-
-.kv-v {
-  font-size: 28rpx;
-  color: var(--ink);
+  margin-top: var(--sp-4);
 }
 
 .danger-text {
+  color: var(--red);
+}
+
+/* 退出登录：一档最轻的按钮，满宽但不着色。
+   头像行撤掉之后（用户 2026-10-04），它上面就是身份那两行 ——
+   留白给到 sp-4，别让「退出登录」贴着「已登录」 */
+.logout {
+  display: flex;
+  width: 100%;
+  text-align: center;
+  margin-top: var(--sp-4);
+}
+
+/* 清空数据那行：图标底也跟着变淡，别让它看着像个普通入口 */
+.row-icon.danger {
   color: var(--red);
 }
 
@@ -120,12 +164,12 @@
 }
 
 .cap-name {
-  font-size: 28rpx;
+  font-size: var(--fs-body);
   color: var(--ink);
 }
 
 .cap-state {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
 }
 
 .cap-state.on {
@@ -134,8 +178,4 @@
 
 .cap-state.off {
   color: var(--amber);
-}
-
-.logout-btn {
-  margin-top: 16rpx;
 }

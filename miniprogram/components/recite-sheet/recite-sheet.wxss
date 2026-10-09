@@ -1,0 +1,160 @@
+/* ============================================================
+   背诵弹层：从底部推上来的那张卡。
+
+   用户 2026-10-03 的原话是「当用户点击古诗，他不是从页面底部弹出详情页去
+   背诵吗？请参考 /poem 代码库。这种弹出卡片式方便用户背完随即进入下一首，
+   而不需要页面之间的切换」。
+
+   网页版那一套的壳（css/style.css 的 `.modal`）：
+     .modal     fixed inset:0，flex，align-items:flex-end，z-index:80
+     .modal-mask  半透明底 + 2px 模糊
+     .modal-box   圆角 22px 22px 0 0，从底部滑上来（slideUp .26s）
+   这里照同一套比例做：遮罩压暗、卡从底部起、只在顶部两角是圆角 ——
+   下沿与屏幕同宽，那两角圆了就是在说「下面还有东西」，而下面没有了。
+
+   为什么 z-index 是 60 而不是 80：
+     自绘底栏（custom-tab-bar）是 100。弹层要**盖住底栏** ——
+     底栏是「换一页」的入口，而弹层正占着这一页做一件事。
+     但也不能比底栏低，否则背到一半还能点走。60 这个数在
+     样式弹层（50）之上、底栏（100）之下，是这里唯一说得通的一档。
+   ⚠️ 自定义组件里的 var(--theme) **读不到页面根节点上那一份内联变量** ——
+   page{} 上的默认值够得着，主题（utils/theme.js 塞在页面 data 里、挂在
+   页面根节点 style 上的那一串）够不着。所以页面把 themeStyle 当属性传进来
+   （见 home.wxml 的 theme-style），组件再把它挂在 .sheet 上。
+   漏了这一道，换主题之后这张卡永远是默认那支墨 ——
+   而这是**用户走过去才发现**的那类漏：截图里看不出，它只是「没换色」。
+   ============================================================ */
+
+.sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 21, 15, .38);
+  animation: sheet-fade .2s var(--ease);
+}
+
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* 高度按内容走（max-height 封顶 88vh），不写死 88vh ——
+     写死时一首绝句下面会空出一大块，那空白什么都不说。
+     88vh 这个上限的来历：再高就顶到屏幕最上面，一张铺满屏的卡
+     与「跳了个新页面」就没有分别了；顶上留出那一截是刻意的，
+     人还要看得见「这是从首页弹上来的」。 */
+  max-height: 88vh;
+  background: var(--surface);
+  border-radius: var(--radius-block) var(--radius-block) 0 0;
+  padding: 0 var(--sp-3);
+  animation: sheet-up .26s var(--ease);
+}
+
+@keyframes sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(40rpx); opacity: .4; }
+  to { transform: none; opacity: 1; }
+}
+
+/* 把手：一根短横。拉到 48rpx 就够 —— 再长就不像把手，像一道分隔线 */
+.sheet-grip {
+  width: 48rpx;
+  height: 6rpx;
+  flex: none;
+  margin: var(--sp-2) auto var(--sp-1);
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+}
+
+/* ---------- 卡头：左边「第几首」，右边关闭 ---------- */
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  min-height: var(--h-btn-mini);
+}
+
+.sheet-step {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 关闭是一个 60rpx 的圆底 —— 与其它「一行里的小动作」同高（--h-btn-mini） */
+.sheet-close {
+  width: var(--h-btn-mini);
+  height: var(--h-btn-mini);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--sink);
+  transition: background-color var(--t-press);
+}
+
+.sheet-close-hover {
+  background: var(--line);
+}
+
+.sheet-close-t {
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  line-height: 1;
+}
+
+/* ---------- 正文区 ----------
+   这一块**不滚** —— 卡的高度按内容走（.sheet 的 max-height 封顶）。
+
+   为什么不给它 overflow 滚：一张「一次只背一首」的卡，滚起来就丢了一半
+   上下文（标题滚出去了，读的是中间几句）。绝句、律诗、词都装得下；
+   真正长的那几篇（《琵琶行》那种）在小程序里有整页的详情页兜着 ——
+   首页这张卡管的是「今天这一趟」，不是「读完整本」。 */
+.sheet-body {
+  flex: none;
+  width: 100%;
+}
+
+/* ---------- 评分区：钉在卡底 ---------- */
+.sheet-foot {
+  flex: none;
+  /* 内容短的时候别把评分区顶到屏幕最下面 —— 它紧跟着正文，
+     中间那段空白留给「这张卡是从下面推上来的」这件事 */
+  margin-top: auto;
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-top: 1rpx solid var(--line-2);
+  /* 卡底还要吃一道安全区，否则 iPhone 的横条会压在那三格上 */
+  padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+}
+
+.sheet-prev {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--h-btn-mini);
+  margin-top: var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.sheet-prev-hover {
+  background: var(--sink);
+}
+
+.sheet-prev-t {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}

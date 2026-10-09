@@ -1,0 +1,73 @@
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能用" mark="令" />
+
+  <block wx:else>
+    <!-- 令字：一屏的主角，居中一个大字 -->
+    <view class="card fh-stage">
+      <text class="fh-scope">{{scopeName}} · 第 {{done.length + 1}} 题</text>
+      <view class="fh-char">
+        <text class="fh-char-t">{{char}}</text>
+      </view>
+      <text class="fh-ask">写一句带「{{char}}」的诗词</text>
+
+      <view class="field fh-field">
+        <input class="field-input" value="{{input}}" placeholder="例如：云深不知处"
+               confirm-type="done" focus="{{!locked}}"
+               bindinput="onInput" bindconfirm="onSubmit" />
+      </view>
+
+      <view class="fh-actions">
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">交这一句</button>
+        <button class="btn ghost" bindtap="onSkip">换一个字</button>
+      </view>
+
+      <text class="fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
+
+      <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
+    </view>
+
+    <!-- 难度 -->
+    <view class="card">
+      <text class="field-label">难度</text>
+      <view class="seg">
+        <radio-group class="seg-group" bindchange="onLevel">
+          <label class="seg-item mini {{level === item.id ? 'on' : ''}}" wx:for="{{levels}}" wx:key="id">
+            <radio class="seg-radio" value="{{item.id}}" checked="{{level === item.id}}"
+                   color="{{themeHex}}" />
+            <text class="seg-text">{{item.name}}</text>
+          </label>
+        </radio-group>
+      </view>
+    </view>
+
+    <!-- 正确答案：范围里含这个字的所有句子 -->
+    <view class="card">
+      <view class="card-title bar">正确答案</view>
+      <view wx:if="{{revealed}}">
+        <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+          <text class="fh-seg">{{item.seg}}</text>
+          <text class="fh-src">{{item.title}} · {{item.author}}</text>
+        </view>
+        <view class="empty" wx:if="{{!answers.length}}">
+          <text class="empty-mark">字</text>
+          <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
+        </view>
+      </view>
+      <button class="btn ghost block fh-reveal" bindtap="onReveal">
+        {{revealed ? '收起答案' : '看答案'}}
+      </button>
+    </view>
+
+    <!-- 这一轮答对的句子 -->
+    <view class="card" wx:if="{{done.length}}">
+      <view class="card-title bar">这一轮答对的</view>
+      <view class="fh-line" wx:for="{{done}}" wx:key="index">
+        <text class="fh-seg">{{item.seg}}</text>
+        <text class="fh-src" wx:if="{{item.title}}">{{item.title}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

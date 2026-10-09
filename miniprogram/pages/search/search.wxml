@@ -1,34 +1,69 @@
-<view class="page">
+<view class="page has-tabbar" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="搜索要登录" note="登录后才能搜" mark="寻" />
+
+  <block wx:else>
   <view class="search">
     <text class="search-icon">⌕</text>
-    <input placeholder="搜篇名 / 作者 / 朝代 / 出处" value="{{keyword}}" bindinput="onInput"
+    <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
     <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
-    <text class="go" bindtap="doSearch">搜索</text>
+    <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <view class="seg scope-seg">
-    <view class="seg-item {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key"
-          data-s="{{item.key}}" bindtap="onScope">{{item.label}}</view>
+  <!-- 结果统计：命中几条、在哪儿搜的。截断了直说 ——
+       「只给你 80 条」不能写成「全站只有 80 条」 -->
+  <view class="result-bar" wx:if="{{searched && results.length}}">
+    <view class="result-head">
+      <text class="result-count">命中 {{total}} 篇</text>
+      <text class="hint result-where">{{resultWhere}}</text>
+    </view>
+    <text class="hint result-more" wx:if="{{total > results.length}}">只列出前 {{results.length}} 篇</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
-    <view class="row" wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+    <view class="row hit-row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
-        <text class="row-title">{{item.title}}</text>
+        <text class="row-title row-poem">{{item.title}}</text>
         <text class="row-sub">{{item.dynasty}} · {{item.author}} · {{item.bookName}}</text>
+        <view class="hit" wx:if="{{item.lines.length}}">
+          <text class="hit-line" wx:for="{{item.lines}}" wx:for-item="l" wx:key="*this">{{l}}</text>
+        </view>
       </view>
       <text class="row-go">›</text>
     </view>
   </view>
 
-  <view class="empty" wx:if="{{searched && !results.length}}">没有匹配的篇目</view>
+  <view class="empty" wx:if="{{searched && !results.length}}">
+    <text class="empty-mark">无</text>
+    <text class="empty-text">「{{keyword}}」没有匹配的篇目</text>
+    <text class="hint empty-tip">正文里也没有这一句</text>
+  </view>
 
   <view class="hot" wx:if="{{!searched}}">
-    <text class="hint">试试</text>
+    <text class="field-label">试试</text>
     <view class="hot-tags">
-      <text class="tag" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</text>
+      <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
     </view>
-    <text class="hint hot-note">搜索按篇名 / 作者 / 朝代 / 出处匹配。正文全文检索在下一版接入。</text>
+
   </view>
+
+  <!-- 作者索引：搜索之外的另一条路。网页版第二轮用户点名「从搜索页进，
+       不是从课外阅读集子页进」—— 这边同一处。它是**第二层入口**，
+       所以排在热搜词下面，不跟搜索框抢位置。
+
+       一行一行尾带箭头：它进的是另一个页面（不是就地展开），
+       所以长相取列表行，不取胶囊 —— 胶囊是「就地选一个」的东西。 -->
+  <view class="card author-entry">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAuthors">
+      <view class="row-main">
+        <text class="row-title">作者索引</text>
+        <text class="row-sub">按朝代排，点一位读他的全部作品</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  </block>
 </view>

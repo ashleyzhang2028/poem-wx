@@ -1,46 +1,82 @@
-<view class="page">
-  <view class="card numbers">
-    <view class="num">
-      <text class="num-v">{{overview.learned}}</text>
-      <text class="num-k">已学</text>
-    </view>
-    <view class="num">
-      <text class="num-v">{{overview.mastered}}</text>
-      <text class="num-k">已掌握</text>
-    </view>
-    <view class="num">
-      <text class="num-v">{{overview.dueToday}}</text>
-      <text class="num-k">今日到期</text>
-    </view>
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="进度要登录" note="登录后才能看" mark="进" />
+
+  <block wx:else>
+  <view class="page-head">
+    <text class="head-title">背诵概览</text>
   </view>
 
-  <view class="card" wx:if="{{backlogCount}}">
-    <text class="hint warn">有 {{backlogCount}} 首已经逾期，今天背的时候会优先排进来。</text>
+  <view class="card overview">
+    <view class="ov-head">
+      <view class="ring ov-ring">
+        <view class="ring-track"></view>
+        <view class="ring-fill" style="--p:{{masteryPercent}}"></view>
+        <text class="ring-text">{{masteryPercent}}%</text>
+      </view>
+      <view class="ov-main">
+        <text class="ov-title">掌握度</text>
+        <text class="ov-sub">已掌握 {{overview.mastered}} / 已学 {{overview.learned}}</text>
+      </view>
+    </view>
+
+    <view class="stats ov-row">
+      <view class="stat">
+        <text class="stat-v">{{overview.learned}}</text>
+        <text class="stat-k">已学</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v">{{overview.mastered}}</text>
+        <text class="stat-k">已掌握</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v {{overview.dueToday ? 'due' : ''}}">{{overview.dueToday}}</text>
+        <text class="stat-k">今日到期</text>
+      </view>
+    </view>
+
+    <text class="hint warn" wx:if="{{backlogCount}}">逾期 {{backlogCount}} 首 · 会优先排进今天</text>
   </view>
 
   <view class="card">
-    <view class="card-title">未来七天</view>
-    <view class="day" wx:for="{{days}}" wx:key="label">
+    <view class="card-title bar">未来七天</view>
+    <view class="day {{item.count ? '' : 'zero'}} {{item.today ? 'today' : ''}}" wx:for="{{days}}" wx:key="label">
       <view class="day-head">
-        <text class="day-label">{{item.label}}</text>
+        <text class="day-label {{item.today ? 'today' : ''}}">{{item.label}}</text>
         <text class="day-count">{{item.count}} 首</text>
+      </view>
+      <view class="meter day-bar" wx:if="{{item.count}}">
+        <view class="meter-fill day-bar-fill" style="width:{{item.percent}}%"></view>
       </view>
       <view class="day-items" wx:if="{{item.items.length}}">
         <text class="day-item" wx:for="{{item.items}}" wx:for-item="p" wx:key="id">{{p.title}}</text>
       </view>
     </view>
-    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
-  </view>
-
-  <view class="card" wx:if="{{stageRows.length}}">
-    <view class="card-title">记忆阶段</view>
-    <view class="stage" wx:for="{{stageRows}}" wx:key="name">
-      <text class="stage-name">{{item.name}}</text>
-      <text class="stage-count">{{item.count}}</text>
+    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首在七天外</text>
+    <view class="empty" wx:if="{{!days.length}}">
+      <text class="empty-mark">空</text>
+      <text class="empty-text">还没有排期</text>
     </view>
   </view>
 
-  <view class="empty" wx:if="{{!overview.learned}}">还没有背诵记录，去首页开始第一首</view>
+  <!-- 这里原来有一张「记忆阶段」卡：把每条记录折算到当前算法的档位名上
+       （艾宾浩斯是「1 天后 / 2 天后…」、莱特纳是「3 号盒 · 8 天后」、
+       SM-2 是「间隔 3 天 · 简易度 2.5」），一行一个档位配一个条数。
+
+       Issue #26 之后有一条清楚的口径：**读数必须有限**。
+       这套算法的档位是它**内部**的一把尺子（「4 天后」说的是排期，
+       不是用户能做什么），把它摊成一张卡，用户读到的是一串
+       与自己无关的刻度；而它想回答的那个问题（我背得怎么样）
+       上面那张「掌握度」环与三个大数字已经答完了。
+       所以整卡撤掉 —— 不是收窄，是不再需要。
+
+       撤掉的是**这张卡**，不是这个读数：打卡时那句「12 小时后再复习」
+       与未来七天里每一首排在第几天，都还在。 -->
+
+  <view class="empty" wx:if="{{!overview.learned}}">
+    <text class="empty-mark">始</text>
+    <text class="empty-text">还没有背诵记录</text>
+  </view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

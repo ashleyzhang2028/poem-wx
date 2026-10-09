@@ -1,0 +1,219 @@
+/* ============================================================
+   题库与模拟考试共用的一套样式。
+   两个页面同源：出题范围 → 挑题型 → 答题 → 看结果，
+   所以长相也共用一份 —— 各写一遍迟早会漂。
+   ============================================================ */
+
+/* picker 是原生选择器，只统一尺寸与配色 */
+.picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-body);
+  color: var(--ink);
+  padding: var(--sp-3) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+/* picker 右边那个 › 是 WXML 里写的，样式表不再补一个 —— 会变成两个 */
+
+.note {
+  display: block;
+  padding-top: var(--sp-2);
+  line-height: var(--lh-body);
+}
+
+/* ---------- 答题进度条 ----------
+   一行两件事：走到第几题、已经对了几道。
+   不用再加进度环 —— 答题时眼睛只在题干上。 */
+.exam-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-1) var(--sp-3);
+}
+
+.exam-progress {
+  font-family: var(--font-num);
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.exam-timer {
+  font-size: var(--fs-body);
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 题干 ----------
+   题干是这一屏唯一要读的东西，居中、放大、行距放开 */
+.stem {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hero);
+  color: var(--ink);
+  line-height: 1.9;
+  text-align: center;
+  padding: var(--sp-2) 0;
+}
+
+.stem-sub {
+  display: block;
+  text-align: center;
+  padding-top: var(--sp-2);
+}
+
+/* ---------- 选项 ----------
+   四个选项长得一样，随手点一下必须看得出点中了哪个，
+   所以按下就压一下；对错再由颜色通知。 */
+.options {
+  margin-top: var(--sp-1);
+}
+
+/* 与考试页共用同一套选项长相（见 exam.wxss 的同名规则）：
+   一枚 A B C D 的脚标 + 左对齐的正文。上一版是居中一条 ——
+   一句七言和两个字并排居中时，每格的起点都不一样，扫下来是锯齿。 */
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--card);
+  border: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  text-align: left;
+  transition: transform var(--t-press), background-color var(--t-press), border-color var(--t-press);
+}
+
+.option-k {
+  flex: none;
+  width: 32rpx;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.option-t {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+}
+
+/* 判定之后字母跟着走：对了绿、错了红，与正文同一个色 */
+.option.right .option-k,
+.option.wrong .option-k {
+  color: inherit;
+  opacity: .72;
+}
+
+.option:active {
+  transform: scale(.98);
+}
+
+.option.right {
+  border-color: var(--green);
+  background: var(--green-light);
+  color: var(--green);
+  font-weight: 600;
+}
+
+.option.wrong {
+  border-color: var(--red-edge);
+  background: var(--red-light);
+  color: var(--red);
+}
+
+/* ---------- 结果 ----------
+   分数是这一屏的主角，下面挂一行小字说清「答对几道」 */
+.result {
+  text-align: center;
+  padding: var(--sp-6) var(--sp-4) var(--sp-5);
+  background: var(--surface);
+}
+
+.score {
+  font-family: var(--font-num);
+  font-size: var(--fs-score);
+  font-weight: 600;
+  color: var(--strong-text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-k {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  padding-left: var(--sp-1);
+}
+
+.result .hint {
+  display: block;
+  margin-top: var(--sp-2);
+}
+
+.wrong-stem {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--strong-text);
+  margin-bottom: 10rpx;
+  line-height: 1.7;
+}
+
+.wrong-line {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.picked-line {
+  color: var(--red);
+}
+
+/* ---------- 题库另有：当场判定 ----------
+   答一道判一道，判定条贴着选项下面出现，不等到最后。
+
+   **不包卡片**：它上面那张卡装的是题干，判定是「刚才那一下的结果」，
+   与题干同一件事的两半。夹一张同宽的白卡在中间，读起来像三件事。
+   拉开的分隔仍要在 —— 否则「答错了 · 正确：李白」会读成第四个选项 ——
+   靠的是一道细线加一段间距（颜色借 --line-2，与选项的边同一档）。 */
+.verdict {
+  margin-top: var(--sp-1);
+  padding-top: var(--sp-3);
+  border-top: 1rpx solid var(--line-2);
+}
+
+.verdict-line {
+  display: block;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.verdict-line.ok {
+  color: var(--green);
+}
+
+.verdict-line.no {
+  color: var(--red);
+}
+
+.verdict-acts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-2);
+}
+
+.verdict-link {
+  font-size: var(--fs-hint);
+  color: var(--green);
+  padding: var(--sp-1) 0;
+}
+
+.next-btn {
+  width: 320rpx;
+}

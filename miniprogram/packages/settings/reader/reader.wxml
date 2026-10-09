@@ -1,24 +1,32 @@
-<view class="page">
-  <view class="card lock-card" wx:if="{{!logged}}">
-    <text class="lock-title">阅读与朗读 · 登录后可用</text>
-    <text class="lock-sub">注音与朗读都需要登录。首页的一年级诗词不受影响。</text>
-    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
+<view class="page" style="{{themeStyle}}">
+  <view class="page-head">
+    <text class="head-title">声音</text>
   </view>
 
-  <view class="card">
-    <view class="card-title">注音方式</view>
-    <view class="seg">
-      <view class="seg-item {{pinyin === item.key ? 'active' : ''}}" wx:for="{{modes}}" wx:key="key"
-            data-k="{{item.key}}" bindtap="onMode">{{item.label}}</view>
+  <lock-card wx:if="{{locked}}" title="声音" note="登录后才能改" mark="声" />
+
+  <block wx:else>
+  <!-- 注音那一栏 2026-10-04 搬到了通用设置的「版式」页。
+       对齐 / 注音 / 字号是同一组版式偏好（正文里它们本来就共用一行），
+       分在两页改一处要跑两趟 —— 用户那天问：「通用设置版式里有对齐和字号，
+       怎么没有注音的设置？」。
+
+       这一页只留**答题音效**：它不是版式，是「答对答错出不出现那一声」，
+       题库 / 考试 / 飞花令三处共用。所以这一页的页头也从「阅读」改成
+       「声音」——页头说的是这一页装什么，不是它原来装过什么。 -->
+  <!-- 答题音效：环境出不了声，这一整块不渲染 -->
+  <view class="card" wx:if="{{sfxVisible}}">
+    <view class="card-title bar">答题音效</view>
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">答对答错出声</text>
+        <text class="row-sub">题库 · 考试 · 飞花令共用</text>
+      </view>
+      <switch checked="{{sfxOn}}" bindchange="onSfx" color="{{themeHex}}" />
     </view>
-    <text class="hint note">「生字」只给生僻字标音，「全文」逐字标。注音依赖读音表，接入后生效。</text>
-  </view>
-
-  <view class="card">
-    <view class="card-title">朗读</view>
-    <text class="hint note">网页版用系统语音合成，零音频文件、断网可用。小程序端要接入 TTS 服务才能朗读，接入前这一项保持不可用。</text>
-    <button class="btn ghost test-btn" bindtap="onSpeakTest">试听一声</button>
+    <button class="btn ghost block test-btn" bindtap="onSfxTest">试听一声</button>
   </view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

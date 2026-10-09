@@ -1,62 +1,199 @@
-<view class="page reader">
-  <view class="card lock-card" wx:if="{{locked}}">
-    <text class="lock-title">篇目阅读 · {{lockedHint}}</text>
-    <text class="lock-sub">首页的一年级诗词可以看，点开阅读与背诵在「我的」里登录后打开。</text>
-    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
-  </view>
+<view class="page reader" style="{{themeStyle}}">
+  <!-- 未登录：整页只有一句话和去登录的按钮，正文一个字都不渲染 -->
+  <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" />
 
-  <block wx:if="{{!locked}}">
+  <block wx:else>
   <view class="card poem-card">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
-      <text class="poem-meta">{{dynasty}} · {{author}}</text>
-      <text class="poem-source" wx:if="{{source}}">{{source}}</text>
+
+      <!-- 这首诗的「身份」：朝代 · 作者 · 出处 · 学段，**一行装完**。
+
+           用户原话：「唐 骆宾王 课内诗词 新学 这些一定一行显示」。
+           上一版这三件事分三行、三种字号（朝代作者一行、出处一行、
+           学段一枚胶囊），排下来是一小摞 —— 而它们说的是同一件事
+           （「这是哪首、谁的、什么来路、背到哪了」），本就该读成一句。
+
+           顺序照用户给的：朝代 · 作者 · 出处 · 学段。
+           中间的点由 WXML 按「有没有」自己决定出不出现：出处与学段是
+           可缺的（课外篇目没有出处，未学篇目停在「新学」照样有），
+           写死两个点会在缺项时留下孤零零一个「·」。
+           数量写在 app.wxss 的「阅读面 · 身份行」一节，check.js V26 守着。 -->
+      <view class="poem-meta-row">
+        <text class="poem-meta">{{dynasty}}</text>
+        <text class="poem-dot">·</text>
+        <text class="poem-meta">{{author}}</text>
+        <block wx:if="{{source}}">
+          <text class="poem-dot">·</text>
+          <text class="poem-meta">{{source}}</text>
+        </block>
+        <text class="poem-dot">·</text>
+        <text class="poem-meta stage">{{stage}}</text>
+      </view>
+
+      <!-- 题名异写与选本出处（Issue #516 / #512）——标题下面的一行小字。
+
+           两件事都**不进上面那条身份行**，各有各的理由：
+
+           · 「又名」是题名的注（《秋登万山寄张五》又名《秋登兰山寄张五》），
+             它说的不是这首诗的身份，是「你可能在别处见过另一个名字」。
+             与网页版 reader-core.js 的 renderAliases 同一处、同一句话。
+           · 「选自《唐诗三百首》」是**第二重出处**（#512）：身份行上的
+             `source` 已经写了这首诗所出之书（《杜工部集》），`selection`
+             记的是「收它的那部选本」。两件事都真实，但把它们并进身份行
+             会把那一行撑破 —— 量过：`朝代·作者·出处·选本·学段` 在
+             《唐诗》里 37 条超宽、《词》48 条，而这一行是 nowrap 的。
+             所以身份行只留 `source`（哪首诗的身份），选本另起一行小字。
+
+           两件事凑一起时用 `·` 断开，各缺各的就不出现。 -->
+      <view class="poem-note" wx:if="{{aliasText || selection}}">
+        <text class="poem-note-t" wx:if="{{aliasText}}">{{aliasText}}</text>
+        <!-- 断开的那一枚点由 CSS 给两侧留白，不写「 · 」——
+             两端空白会被 WXML 编译器吃掉，两段就会粘成一句 -->
+        <text class="poem-note-dot" wx:if="{{aliasText && selection}}">·</text>
+        <text class="poem-note-t" wx:if="{{selection}}">选自{{selection}}</text>
+      </view>
     </view>
 
-    <view class="toolbar">
-      <view class="seg">
-        <view class="seg-item {{align === 'left' ? 'active' : ''}}" data-a="left" bindtap="onAlign">左对齐</view>
-        <view class="seg-item {{align === 'center' ? 'active' : ''}}" data-a="center" bindtap="onAlign">居中</view>
+    <!-- 阅读偏好：**一行装完**（对齐 · 注音 · 字号），整行居中。
+
+         用户原话：「详情页一行显示 —— 左对齐 居中 不注音 生字 全文 A- A+」，
+         顺序也照他给的：对齐在前、注音在中、字号在后。三组之间各一道
+         极淡的竖线，说「这是三件事」，同时把这一行切成三段来读。
+
+         为什么在这里能成：上面那排原生 <radio> 的圆圈与文字各自占位，
+         两个选项就吃掉半屏；这里全部走 .opt-radio（视觉隐藏的原生控件，
+         行为还在 label 上），量出来才放得下 —— 七个段加起来 499rpx，
+         卡片内容宽 596rpx 里还余 96rpx。
+         数字与算式写在 app.wxss 的「阅读面 · 偏好行」一节，
+         check.js V25 按同一份度量盯着「放得下」这件事，改文案或改档位就红。 -->
+    <view class="prefs">
+      <radio-group class="pref-seg" bindchange="onAlign">
+        <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="{{themeHex}}" />
+          <text class="pref-t">{{item.label}}</text>
+        </label>
+      </radio-group>
+
+      <view class="pref-rule"></view>
+
+      <radio-group class="pref-seg" bindchange="onPinyin">
+        <label class="pref-opt {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="{{themeHex}}" />
+          <text class="pref-t">{{item.label}}</text>
+        </label>
+      </radio-group>
+
+      <view class="pref-rule"></view>
+
+      <!-- 字号：A－ A＋ 两个端点按钮。上一版是一根 <slider> ——
+           滑块要有横向量程才操作得准，独占一行才放得开；
+           这一行既然是一条，就给它两个端点：一下一档，也不必看量程。 -->
+      <view class="pref-size">
+        <view class="pref-opt mini {{fontSize <= fontMin ? 'off' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown">
+          <text class="pref-t">A－</text>
+        </view>
+        <view class="pref-opt mini {{fontSize >= fontMax ? 'off' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp">
+          <text class="pref-t">A＋</text>
+        </view>
       </view>
-      <view class="seg font-seg">
-        <view class="seg-item" data-d="-1" bindtap="onFont">A－</view>
-        <view class="seg-item" data-d="1" bindtap="onFont">A＋</view>
-      </view>
-      <view class="seg read-seg">
-        <view class="seg-item" bindtap="onSpeak">朗读</view>
+
+      <!-- 今日加背：**一枚加号**，与 A－ A＋ 同在一行（用户 2026-10-04）。
+           上一版是一颗带文字的胶囊、自己占一行居中 —— 用户的话是
+           「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」。
+           它加的还是它自己那一首诗，所以加号左边那道竖线一起撤掉：
+           竖线分的是三组**偏好**，而加号是对这一首做的事，不是偏好。 -->
+      <view class="pref-opt mini pref-plus {{dailyOn ? 'on' : ''}}"
+            hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily">
+        <text class="pref-t">{{dailyOn ? '✓' : '＋'}}</text>
       </view>
     </view>
 
+    <!-- 正文。
+         上面那一排「对齐 · 注音 · 字号」下面是**直接接正文**：曾经这里还有
+         一道「正文」分隔条，2026-10-03 用户说「删除 A－ A＋ 和古诗内容中间
+         的 --正文-- 这一行」。它本来也没说清任何事 —— 这一屏除了正文没有
+         第二样东西，标注它等于给「这里是内容」加一句废话。
+
+         版式（哪一句单占一行、哪几句连着一行、段落断在哪）由语料层
+         `corpus.layout()` 决定 —— 页面只管照着排。理由写在那儿：
+         七绝律诗一句一行是作者排的；《琵琶行》的序、《左传》的长句
+         折开之后一句一行才读得下去。
+
+         注音与正文同形同序（「段落 → 行 → 句」），所以换模式不会跳版。
+         标点留在句尾 —— 排版本该把它挤出去，inline 块做不到，只能容忍。
+
+         这一段的样式与首页那张背诵弹层共用一份，收在 app.wxss 的
+         「阅读面」一节 —— 两处是同一张卡，不该各排一遍。 -->
     <view class="poem-body align-{{align}} size-{{fontSize}}">
-      <text class="poem-line" wx:for="{{lines}}" wx:key="index">{{item.t}}</text>
+      <block wx:if="{{!pinyinOn}}">
+        <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
+          <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+            <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+          </text>
+        </view>
+      </block>
+      <block wx:else>
+        <!-- 注音这条路要逐字排，所以「行」是 flex 容器、「句」是它中间的一段。
+
+             每个字占一格（.token），格宽 = 格高 = 这一档的 --py-box：
+             汉字与汉字之间的空隙因此是常数，A－ A＋ 全程不变；
+             标点虽然是「半格字身」，也归进格子里（.token.punc 收窄半格），
+             不然「有音的行」比「没音的行」多出半格，两种排法对不上。 -->
+        <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
+          <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+            <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+              <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+                <text class="tk-ch">{{tk.ch}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
     </view>
   </view>
 
+  <!-- 背诵：**先评、再看读数**，一张卡装完（用户 2026-10-04）。
+
+       用户原话：「忘记 模糊 记住三个按钮不需要用卡片包裹，单独一行；
+       掌握度卡片放在这三个按钮下面」。三颗按钮是这一屏唯一要做的事，
+       单独一行摊开、谁也不框着它；评完分那一刻要看的读数（掌握度 + 提示）
+       跟在它后面同一张卡里 —— 评完往下一看就是，不用在两张卡之间找。
+
+       上一版是两张卡：掌握度在上、三颗按钮在下，而且按钮自己还包在
+       一张会填色的卡里。评完分眼睛要往下走一屏才看得见读数涨了没有，
+       顺序正好反着。 -->
+  <view class="card recite-card">
+    <view class="actions">
+      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
+            data-r="{{item.key}}" bindtap="onResult">
+        <text class="act-label">{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="recite-head">
+      <text class="card-title">掌握度</text>
+      <text class="mastery-num">{{mastery}}%</text>
+    </view>
+    <view class="meter mastery-bar">
+      <view class="meter-fill" style="width:{{mastery}}%"></view>
+    </view>
+
+    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
+  </view>
+
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head" bindtap="onToggleTranslation">
-      <text class="card-title">白话译文</text>
+    <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+      <text class="card-title bar">译文</text>
       <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">
       <text class="trans-text">{{translation}}</text>
       <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
     </view>
-  </view>
-
-  <view class="card recite-card">
-    <view class="recite-status">
-      <text class="recite-stage">{{stage}}</text>
-      <view class="mastery-bar">
-        <view class="mastery-fill" style="width:{{mastery}}%"></view>
-      </view>
-    </view>
-
-    <view class="actions">
-      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
-            data-r="{{item.key}}" bindtap="onResult">{{item.label}}</view>
-    </view>
-
-    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
   </view>
 
   <view class="safe-bottom"></view>

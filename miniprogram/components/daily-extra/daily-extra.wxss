@@ -1,0 +1,74 @@
+/* 今日加背。控件本身（搜索框 / 列表行 / 空状态）走 app.wxss 的共用件，
+   这里只写它自己那几处：那枚搜索框与它下面那张列表的贴合、
+   以及行首那颗「＋ / ✓」圆钮。 */
+
+.de-search {
+  /* 建议列表紧贴在搜索框下沿 —— 卡片自己的 --sp-2 间距在上面那张列表
+     与搜索框之间就断开了，看着像两块不相干的东西 */
+  margin-bottom: 0;
+}
+
+.de-limit {
+  display: block;
+  padding: var(--sp-2) 0 0;
+}
+
+/* 建议列表：一张浅底的盘。它与搜索框之间不留缝 ——
+   留缝就成了「搜索框 + 另一张卡」，而这个组件是一件事。 */
+.de-suggest {
+  margin-top: var(--sp-2);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.de-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
+}
+
+.de-row:last-child {
+  border-bottom: none;
+}
+
+/* 行首那颗圆钮。形状与列表页的 `.tick` 是一路的（圆的、可点的、两个态），
+   但**尺寸取触控下限** —— 它是这一行里唯一的动作，不能只有勾那么小。
+   未加时白底描边，加过了填主题色 —— 与全站「选中填色」同一套语言。 */
+.de-btn {
+  flex: none;
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: var(--sp-3);
+  border: 1rpx solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--strong-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
+}
+
+.de-btn.on {
+  background: var(--strong);
+  border-color: var(--strong);
+  color: var(--on-ink);
+}
+
+.de-btn-hover {
+  transform: scale(.94);
+}
+
+.de-glyph {
+  font-size: var(--fs-hint);
+  line-height: 1;
+}
+
+.de-empty {
+  padding: var(--sp-4) 0 var(--sp-2);
+}

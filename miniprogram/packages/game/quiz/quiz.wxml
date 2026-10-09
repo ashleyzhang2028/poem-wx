@@ -1,0 +1,98 @@
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{!allowed}}" title="题库" note="登录后才能用" mark="题" />
+
+  <block wx:elif="{{stage === 'setup'}}">
+    <view class="page-head">
+      <text class="head-title">练习设置</text>
+    </view>
+
+    <view class="card">
+      <view class="card-title bar">出题范围</view>
+      <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
+        <view class="picker">{{scopes[scopeIndex].name}} ›</view>
+      </picker>
+      <text class="count-line">共 {{count}} 题</text>
+    </view>
+
+    <view class="card">
+      <view class="card-title bar">题型</view>
+      <!-- 题型可多选 —— 但「能不能多选」不画在格子上：格子只有两档，
+           未选中灰底、选中主色底，与别处那些选项一字不差。
+           checkbox 仍在 label 里，点格子任何一处都选中 -->
+      <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
+        <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
+               wx:for="{{forms}}" wx:key="key">
+          <checkbox class="seg-radio" value="{{item.key}}"
+                    checked="{{pickedForms.indexOf(item.key) >= 0}}" color="{{themeHex}}" />
+          <text class="chip-t">{{item.name}}</text>
+        </label>
+      </checkbox-group>
+
+    </view>
+
+    <button class="btn primary block" bindtap="onStart">开始</button>
+  </block>
+
+  <block wx:elif="{{stage === 'running'}}">
+    <view class="exam-bar">
+      <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
+      <text class="exam-timer">答对 {{correct}}</text>
+    </view>
+
+    <view class="card">
+      <text class="stem">{{current.stem}}</text>
+      <!-- 一行读数：题型 · 出自《…》（见 quiz.js 的 metaLineOf）。
+           上一版这里是两行两样式 —— 题干上方一枚彩色题型标签、
+           下面一行灰字出处，而颜色在别处是状态色（绿=对 / 红=错 /
+           琥珀=待办），借给题型用只多出三种不说话的颜色。 -->
+      <text class="hint stem-sub">{{metaLine}}</text>
+    </view>
+
+    <!-- 选项带 A B C D 脚标。`data-v` 传的仍是**没有字母的原文**：
+         判分比的是原文，字母只是印在屏幕上的那个序号（utils/quiz.js）。 -->
+    <view class="options">
+      <view class="option {{picked ? (item.text === current.answer ? 'right' : (item.text === picked ? 'wrong' : '')) : ''}}"
+            wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
+        <text class="option-k">{{item.key}}</text>
+        <text class="option-t">{{item.text}}</text>
+      </view>
+    </view>
+
+    <!-- 判定：**不包卡片**（用户 2026-10-04）。
+         上一版是一张白卡：里面一句话 + 一颗文字按钮 + 一颗主按钮，
+         而它上面那张卡装的是题干，下面这一张是「刚才那一下的结果」——
+         三张同宽的卡摞着，读起来像三件事，其实是「题目 → 结果」两件。
+         撤掉卡边之后，判定条与选项是同一条缝里的东西：
+         选完，结果就在选项下面接上。 -->
+    <view class="verdict" wx:if="{{last}}">
+      <text class="verdict-line {{last.ok ? 'ok' : 'no'}}">{{last.ok ? '答对了' : '答错了 · 正确：' + last.answer}}</text>
+      <view class="verdict-acts">
+        <text class="verdict-link" bindtap="onOpen">看全篇</text>
+        <button class="btn primary next-btn" bindtap="onNext">
+          {{index + 1 >= questions.length ? '看结果' : '下一题'}}
+        </button>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="card result">
+      <text class="score">{{correct}}</text>
+      <text class="score-k">/ {{questions.length}} 题</text>
+      <text class="hint">正确率 {{questions.length ? (correct * 100 / questions.length).toFixed(0) : 0}}%</text>
+    </view>
+
+    <view class="card" wx:if="{{wrong.length}}">
+      <view class="card-title bar">错题</view>
+      <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
+        <text class="wrong-stem">{{item.stem}}</text>
+        <text class="wrong-line">正确答案：{{item.answer}}</text>
+        <text class="wrong-line picked-line">你选的：{{item.picked}}</text>
+      </view>
+    </view>
+
+    <button class="btn primary block" bindtap="onAgain">再来一组</button>
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,46 +1,193 @@
-<view class="page">
-  <view class="card">
-    <view class="card-title">背诵范围</view>
-    <view class="seg">
-      <view class="seg-item {{term === 1 ? 'active' : ''}}" data-v="1" bindtap="onTerm">上学期</view>
-      <view class="seg-item {{term === 2 ? 'active' : ''}}" data-v="2" bindtap="onTerm">下学期</view>
-    </view>
-    <view class="chips">
-      <text class="chip {{grade === item.value ? 'active' : ''}}" wx:for="{{grades}}" wx:key="value"
-            data-v="{{item.value}}" bindtap="onGrade">{{item.label}}</text>
-    </view>
+<view class="page" style="{{themeStyle}}">
+  <!-- 领读词与别页同一长相：一句「这一屏管什么」的短话，**不重复导航栏标题**
+       （导航栏已经写着「背诵设置」，页头再写一遍就是同一句话说两次）。
+       上一版这里是「背诵范围」，那时这一屏只有范围那一张卡；
+       现在卡片分成了「当前学段」与「背诵范围」两张，
+       页头再叫「背诵范围」，一屏里就有两句同样的话。 -->
+  <view class="page-head">
+    <text class="head-title">背诵</text>
   </view>
 
-  <view class="card">
-    <view class="card-title">取诗范围</view>
-    <view class="opt" wx:for="{{scopes}}" wx:key="key" data-k="{{item.key}}" bindtap="onScope">
-      <text class="opt-label">{{item.label}}</text>
-      <text class="opt-check" wx:if="{{scope === item.key}}">✓</text>
-    </view>
-    <text class="hint pool-hint">这个范围里有 {{poolSize}} 首</text>
-  </view>
+  <lock-card wx:if="{{locked}}" title="背诵设置要登录" note="登录后才能改" mark="背" />
 
-  <view class="card">
-    <view class="card-title">每日首数</view>
-    <view class="seg">
-      <view class="seg-item {{dailyCount === item ? 'active' : ''}}" wx:for="{{counts}}" wx:key="*this"
-            data-v="{{item}}" bindtap="onCount">{{item}} 首</view>
-    </view>
-  </view>
+  <block wx:else>
+  <!-- 今日加背放在最前面：它是**当天**的东西（跨 0 点自动归零），
+       而下面几张（学段 / 范围 / 首数 / 算法）都是长期设置。
+       把一次性的排在上面，是为了「今天不想多背了，来清一下」这一步
+       一进这一屏就够得着 —— 与网页版把它放在
+       settings/recite 里同一个道理（那边它也在前几张卡里）。 -->
+  <!-- 今日加背的管理（网页版在 settings/recite 同一处，`#daily-panel`）。
+       首页那张卡负责**加**，这里负责**看与清** —— 加了七八首之后想
+       「今天不加了」，逐首去首页点一遍「✓」是没有出路的事。
 
+       全选 / 取消全选 / 移出选中的 / 全部清空 —— 四个动作与网页版一字不差。
+       为什么不做「删单首」的按钮：点行即选中、选中再一起移出，
+       比给每行配一颗小叉少一半的误触。 -->
   <view class="card">
-    <view class="card-title">复习算法</view>
-    <view class="algo {{algo === item.key ? 'active' : ''}} {{item.locked ? 'locked' : ''}}"
-          wx:for="{{algos}}" wx:key="key"
-          data-k="{{item.key}}" bindtap="onAlgo">
-      <view class="algo-head">
-        <text class="algo-name">{{item.name}}</text>
-        <text class="algo-years">{{item.locked ? '登录后可用' : item.years}}</text>
+    <view class="card-title bar">今日加背</view>
+
+    <view wx:if="{{!daily.length}}" class="hint">今天还没加背 —— 在首页「今日加背」里搜一篇加进来。</view>
+
+    <block wx:else>
+      <!-- 读数先说清有几首：下面的勾是「选中待处理」，
+           与「一共有几首」是两件事，不给读数就会把后者当成前者 -->
+      <text class="hint daily-count">今天加了 {{daily.length}} / {{dailyMax}} 首</text>
+
+      <view class="daily-tools">
+        <button class="btn mini" bindtap="onDailyAll">全选</button>
+        <button class="btn mini" bindtap="onDailyNone">取消全选</button>
+        <button class="btn mini danger" bindtap="onDailyRemove">移出选中的</button>
+        <button class="btn mini danger" bindtap="onDailyClear">全部清空</button>
       </view>
-      <text class="algo-blurb">{{item.blurb}}</text>
-    </view>
-    <text class="hint pool-hint">换算法不清进度，已有记录会按新算法折算。</text>
+
+      <!-- 一行一首，行首一枚方框说「选没选中」。底层是原生 checkbox，
+           行为（读屏、点击区）都是平台的，勾框是我们画的那一层。 -->
+      <checkbox-group bindchange="onDailyPick">
+        <label class="daily-row" wx:for="{{daily}}" wx:key="id">
+          <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" color="{{themeHex}}" />
+          <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
+          <view class="row-main">
+            <text class="row-title row-poem">{{item.title}}</text>
+            <text class="row-sub">{{item.meta}}</text>
+          </view>
+        </label>
+      </checkbox-group>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">当前学段</view>
+
+    <!-- 学段三格：小学 / 初中 / 高中（Issue #26 原话「背诵范围内背诵范围卡片
+         应该显示为 当前学段」）。
+         它不是第四个设置项，而是**年级格怎么排**的旋钮 —— 点「初中」，
+         下面那排格子就只剩七八九年级，取诗范围也跟着换成「初中随机」
+         （见 recite.js 的 onStage 与 gradeRows）。 -->
+    <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">
+      <label class="chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{stage === item.key}}"
+               color="{{themeHex}}" />
+        <text class="chip-t">{{item.name}}</text>
+      </label>
+    </radio-group>
+
+    <!-- 年级那一行的读数：格子只剩这一段的了，这一句说清「收窄到了哪一段」。
+         它不让人多选一件事，只是把事实说出来。 -->
+    <text class="hint stage-note">{{gradeNote}}</text>
+
+    <!-- 学期与年级都是**等长的一格一个选项**，格子本身已经把「这是一组、
+         只能选一个」说清楚了。再给每格塞一个圆点，就出现两个毛病：
+         圆点吃掉了横向空间（格子要多一列才放得下），
+         而且它跟第一行文字对齐、第二行文字缩进 —— 看着像圆点管着半格。
+         这里改成「格子 = 一个胶囊」：形状说是控件，填色说选中，
+         圆点不再重复这件事。radio 仍在 label 里，点格子就选中。
+
+         顺序是**年级在上、学期在下**（Issue #12 原话「学期显示在年级下面」）：
+         年级是大类，学期只是它下面的二选一，先粗后细。
+
+         年级只在**当前学段内**列（见 recite.js 的 gradeRows）。
+         这里有一个坑要绕着走：Issue #26 原话是「年级从十二格收到六格
+         （取最近六年）- 谁让你这么瞎搞的，这能收吗」—— 那句禁的是
+         「按最近六年砍掉高年级」，不是「十二格必须同屏」。
+         上一版读成了后者，于是十二格全列、没有学段那一格，
+         用户看不出自己站在哪一段里。
+         这一版把学段那一格补上，年级格只列这一段：**一个年级都没丢**，
+         点「初中」就换到七八九，点「高中」就换到十、十一、十二。
+
+         列数跟着段内年级数走：最多的一段（小学）六个，三列两行 ——
+         上一版是四列，那是给十二格排的；现在格子里最多六格，
+         四列会排出「四 + 二」那种半截行。 -->
+    <radio-group class="chip-group cols-3" data-k="grade" bindchange="onGrade">
+      <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{grade === item.value}}"
+               color="{{themeHex}}" />
+        <text class="chip-t">{{item.label}}</text>
+      </label>
+    </radio-group>
+
+    <radio-group class="chip-group cols-2" data-k="term" bindchange="onTerm">
+      <label class="chip {{term === item.value ? 'on' : ''}}" wx:for="{{terms}}" wx:key="value">
+        <radio class="seg-radio" value="{{item.value}}" checked="{{term === item.value}}"
+               color="{{themeHex}}" />
+        <text class="chip-t">{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+
+  <!-- 这一屏**没有**注音 / 对齐 / 字号那三组（Issue #26 原话：
+       「「注音 ｜ 对齐 ｜ 字号」只应该出现在详情页和具体古诗背诵卡片里，
+       怎么显示在了背诵范围这里」）。
+       它们是**读一首诗时的临场偏好**，要在诗句旁边当场调、当场看见效果；
+       摆到「选背哪些诗」的设置页里，既看不到效果，也是同一件事的第二个入口
+       （详情页 .prefs、通用设置页 general 各有一套）。
+       背诵范围只管「背哪些、每天几首、怎么复习」。 -->
+  <view class="card">
+    <!-- 这一张卡原来叫「取诗范围」（网页版也还这么叫）。Issue #26 改名的原话是
+         「取诗范围修改为 背诵范围」。名字换掉之后它与上一张卡不再撞名 ——
+         上一张现在叫「当前学段」，这一屏唯一的「背诵范围」就是它。 -->
+    <view class="card-title bar">背诵范围</view>
+    <!-- 七个范围是**同一种东西的七个取值**（从「本册」到「全部随机」），
+         所以跟上面那几组（学段 / 年级 / 学期 / 每日首数）走同一套长相：选中的填墨黑。
+         圆点在这儿是重复的 —— 填色已经说了「选的是这一行」，
+         再站一个圆点在行首，只是多占 16rpx 的横向空间。
+
+         排法是**横排两列**（Issue #12 原话「取诗范围选项 inline 显示，
+         而不是一行一条」）：七个选项竖排要吃掉七行的高度，
+         一屏里就只看得见这一个设置项了（七项是这么来的：网页版把「本册」
+         与「本册及之前」合成一项，小程序拆成了两个，见 scheduler.js）。
+         为什么是两列不是三列：这七格里最长的是旧名「小学+初中随机」
+         （7 个字宽，现已按 Issue #26 收成「小初随机」）。名字短了，
+         但**结论不变** —— 现在最长的是「本册及之前」（5 个字宽，
+         真字体量 125rpx）。三列时格宽 194rpx、两侧各 32.5rpx，
+         仍不如两列的 303rpx 格宽、两侧各 87rpx 松快。
+         用户那句「选项内文字左右 padding 和它自己的边界太近了」说的是
+         旧的 7 字名（三列里两侧不到 10rpx）；padding 救不了它
+         （格子宽是均分定死的，padding 越大、文字到边越近），
+         只能少一列。七项排两列是四行，末行单吊一个「全部随机」——
+         这一格空着不是坏，是两个「非随机」项（本册 / 本册及之前）把
+         前几行占满了，奇数项在两列里必然留一个孤格（Issue 记一笔）。 -->
+    <radio-group class="opt-group inline cols-2" bindchange="onScope">
+      <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
+        <radio class="opt-radio" value="{{item.key}}" checked="{{scope === item.key}}" color="{{themeHex}}" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.label}}</text>
+        </view>
+      </label>
+    </radio-group>
+    <text class="hint pool-hint">{{poolSize}} 首</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">每日首数</view>
+    <!-- 全站默认就是 5 首，但**选多少是用户的事**（Issue #26 原话：
+         「「每日首数」全站默认就是 5 首，那需要在设置里添加设置 3 5 10 20」）。
+         上一版把这张卡整块撤了 —— 那个「撤」是自作主张：默认 5 首说的是
+         不选的时候拿几首，不等于用户不需要选。选项是 3 / 5 / 10 / 20。 -->
+    <radio-group class="chip-group cols-4" bindchange="onCount">
+      <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
+        <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" color="{{themeHex}}" />
+        <text class="chip-t">{{item}} 首</text>
+      </label>
+    </radio-group>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">复习算法</view>
+    <!-- 换算法不清进度：四套算法的差异只在排期，进度按新算法折算 -->
+    <radio-group class="opt-group column" bindchange="onAlgo">
+      <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
+             wx:for="{{algos}}" wx:key="key">
+        <radio class="opt-radio" value="{{item.key}}" checked="{{item.active}}"
+               disabled="{{!item.allowed}}" color="{{themeHex}}" />
+        <view class="opt-main">
+          <text class="opt-name">{{item.name}}</text>
+          <text class="opt-desc" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
+        </view>
+      </label>
+    </radio-group>
+
   </view>
 
   <view class="safe-bottom"></view>
+  </block>
 </view>

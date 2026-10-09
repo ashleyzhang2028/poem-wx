@@ -1,9 +1,13 @@
-<view class="page">
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{!signedIn}}" title="权限说明" note="登录后能力全开" mark="权" />
+
+  <block wx:else>
+  <!-- 一张表答一件事：我这一档，逐条能不能用。
+       表格用 flex 而不是 table —— 小程序的 table 布局不可靠。
+       文案一律不解释「为什么这么划线」：那是文档的事，
+       界面上多一段理由，就是把设置页写成了散文。 -->
   <view class="card">
-    <view class="plans-head">
-      <text class="plans-title">能力的门槛</text>
-      <text class="plans-sub">{{signedIn ? '当前已登录，全部可用' : '当前未登录 · ' + lockedCount + '/' + total + ' 项需登录'}}</text>
-    </view>
+    <view class="card-title bar">能力的门槛</view>
     <view class="plans-table">
       <view class="plans-row plans-th">
         <text class="plans-cap">能力</text>
@@ -18,19 +22,6 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="card-title">不登录能做什么</view>
-    <text class="plans-note">只有首页：默认列出一（本册）诗词，看得见、点不动。点任意一篇都会引导去登录。</text>
-    <text class="plans-note">这样划线的理由不是挡人：首页是分享出去的落地页，先让人看见内容；而背诵进度、设置、导出一旦不登录就写入本机，换台设备就丢，不如先登录再说。</text>
-  </view>
-
-  <view class="card">
-    <view class="card-title">登录后能做什么</view>
-    <text class="plans-note">每日背诵、课外阅读（十七部集子）、注音辅助、艾宾浩斯、莱特纳盒、语音朗读、进度导出，全部可用。没有付费档位，登录即全开。</text>
-    <text class="plans-note">进度仍然默认只存在这台手机上。登录只开一扇门，不搬走数据。</text>
-  </view>
-
-  <button class="btn primary block" bindtap="onLogin" wx:if="{{!signedIn}}">去登录</button>
-
   <view class="safe-bottom"></view>
+  </block>
 </view>

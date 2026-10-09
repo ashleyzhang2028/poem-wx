@@ -1,0 +1,510 @@
+{
+  "home-guest": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": false
+  },
+  "home": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true
+  },
+  "reader": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    }
+  },
+  "reader-guest": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": false,
+    "query": {
+      "id": "poems-xx1-01"
+    }
+  },
+  "list": {
+    "page": "pages/list/list",
+    "title": "课内诗词",
+    "back": true,
+    "logged": true,
+    "query": {
+      "book": "poems"
+    }
+  },
+  "library": {
+    "page": "pages/library/library",
+    "title": "课外阅读",
+    "tab": 2,
+    "logged": true
+  },
+  "search": {
+    "page": "pages/search/search",
+    "title": "搜索",
+    "tab": 3,
+    "logged": true
+  },
+  "mine-guest": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": false
+  },
+  "mine": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true
+  },
+  "mine-synced": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true,
+    "_note": "换台手机、进度取回来之后的「我的」。拍的是同步那一行的话术：登录即得、上次同步、三件事都认回来了。见 check.js V34 第 9 条。⚠️ 这屏的前提是 lastSyncAt 真的投影得出来 —— 此前它在 DEFAULTS 里漏了键，这屏拍出来一直是「还没同步过」（PR #58）",
+    "syncedAt": 4102444800000,
+    "settings": {
+      "grade": 7,
+      "theme": "tianqing"
+    }
+  },
+  "progress": {
+    "page": "packages/progress/index/index",
+    "title": "背诵进度",
+    "back": true,
+    "logged": true
+  },
+  "settings-recite": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true
+  },
+  "settings-recite-middle": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStage",
+        "with": {
+          "detail": {
+            "value": "middle"
+          }
+        }
+      }
+    ]
+  },
+  "settings-general": {
+    "page": "packages/settings/general/general",
+    "title": "通用设置",
+    "back": true,
+    "logged": true
+  },
+  "settings-theme": {
+    "page": "packages/settings/theme/theme",
+    "title": "主题色",
+    "back": true,
+    "logged": true
+  },
+  "settings-theme-guest": {
+    "page": "packages/settings/theme/theme",
+    "title": "主题色",
+    "back": true,
+    "logged": false
+  },
+  "home-tianqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "tianqing"
+    }
+  },
+  "home-yuguotianqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "yuguotianqing"
+    }
+  },
+  "settings-reader": {
+    "page": "packages/settings/reader/reader",
+    "title": "声音设置",
+    "back": true,
+    "logged": true
+  },
+  "settings-about": {
+    "page": "packages/settings/about/about",
+    "title": "关于与反馈",
+    "back": true,
+    "logged": true
+  },
+  "game": {
+    "page": "packages/game/index/index",
+    "title": "古诗词大会",
+    "back": true,
+    "logged": true
+  },
+  "game-feihua": {
+    "page": "packages/game/feihua/feihua",
+    "title": "飞花令",
+    "back": true,
+    "logged": true
+  },
+  "game-quiz": {
+    "page": "packages/game/quiz/quiz",
+    "title": "题库",
+    "back": true,
+    "logged": true
+  },
+  "game-exam": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true
+  },
+  "game-exam-running": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "v": "A"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "game-exam-done": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "finish"
+      }
+    ]
+  },
+  "game-quiz-running": {
+    "page": "packages/game/quiz/quiz",
+    "title": "题库",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStart"
+      },
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "v": "A"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "admin": {
+    "page": "packages/admin/index/index",
+    "title": "用户与权限",
+    "back": true,
+    "logged": true
+  },
+  "reader-tangshi-2fold": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "tangshi-ts-16"
+    }
+  },
+  "reader-changshi": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz10-06"
+    },
+    "settings": {
+      "pinyin": "all",
+      "align": "left"
+    }
+  },
+  "reader-songci": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz11-06"
+    }
+  },
+  "reader-pinyin": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    },
+    "saveProfile": {}
+  },
+  "reader-jiangjinjiu": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-gz11-06"
+    },
+    "settings": {
+      "pinyin": "rare"
+    }
+  },
+  "reader-shijing": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "guwen-gwj-1"
+    }
+  },
+  "reader-songci-k": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "songci-sc-1"
+    }
+  },
+  "reader-trans": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    },
+    "do": [
+      {
+        "call": "onToggleTranslation",
+        "with": {}
+      }
+    ]
+  },
+  "game-feihua-reveal": {
+    "page": "packages/game/feihua/feihua",
+    "title": "飞花令",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onReveal"
+      }
+    ]
+  },
+  "home-minghuang": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "minghuang"
+    }
+  },
+  "game-exam-partial": {
+    "page": "packages/game/exam/exam",
+    "title": "考试",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onToggleForm",
+        "with": {
+          "detail": {
+            "value": [
+              "next",
+              "title"
+            ]
+          }
+        }
+      }
+    ]
+          },
+  "home-ink": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "ink"
+    }
+  },
+  "home-zhuhong": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "zhuhong"
+    }
+  },
+  "home-zhuqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "zhuqing"
+    }
+  },
+  "home-yanzhi": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "yanzhi"
+    }
+  },
+  "home-xuanse": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "xuanse"
+    }
+  },
+  "home-yaqing": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "yaqing"
+    }
+  },
+  "home-tianshuibi": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": {
+      "theme": "tianshuibi"
+    }
+  },
+  "home-sheet": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "onOpen",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "id": "poems-xx1-01"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "reader-pinyin2": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "poems-xx1-01"
+    },
+    "settings": {
+      "pinyin": "rare"
+    }
+  },
+  "home-extra": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "onExtraInput",
+        "with": {
+          "detail": {
+            "value": "月"
+          }
+        }
+      }
+    ],
+    "dailyExtra": ["poems-xx1-05"]
+  },
+  "settings-recite-daily": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onDailyAll",
+        "with": {}
+      }
+    ],
+    "dailyExtra": ["poems-xx1-01", "poems-cz7-01", "poems-xx1-03"]
+  },
+  "mine-avatar-local": {
+    "page": "pages/mine/mine",
+    "title": "我的",
+    "tab": 4,
+    "logged": true,
+    "_note": "自己传过头像的「我的」：副题右边那枚「用微信头像」是退回微信那张的唯一入口。见 check.js V38",
+    "saveProfile": { "logged": true, "nickname": "张敏", "avatarLocal": "wxfile://demo.jpg" }
+  },
+  "authors-roster": {
+    "page": "packages/authors/index/index",
+    "title": "作者索引",
+    "back": true,
+    "logged": true,
+    "_note": "作者索引①层：朝代表 + 一段一段的作者。488 位 / 15 段，见 check.js V41"
+  },
+  "authors-author": {
+    "page": "packages/authors/index/index",
+    "title": "作者索引",
+    "back": true,
+    "logged": true,
+    "do": [{ "call": "onAuthor", "with": { "currentTarget": { "dataset": { "name": "李白" } } } }],
+    "_note": "作者索引②层：李白名下 60 条。点进去的那一位由 do 调 onAuthor 摆好"
+  }
+}

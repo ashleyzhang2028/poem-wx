@@ -1,40 +1,53 @@
-<view class="page">
-  <view class="card lock-card" wx:if="{{!logged}}">
-    <text class="lock-title">课外阅读 · {{lockedHint}}</text>
-    <text class="lock-sub">十七部集子、七千余篇古文与诗词在「我的」里登录后打开。</text>
-    <button class="btn primary block" bindtap="onLoginGate">去登录</button>
-  </view>
+<view class="page has-tabbar" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="课外阅读" note="登录后才能看" mark="阅" />
 
-  <block wx:if="{{logged && !current}}">
-    <view class="group-card" wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
-      <view class="gc-head">
-        <view>
-          <text class="gc-name">{{item.name}}</text>
-          <text class="gc-desc">{{item.desc}}</text>
+  <block wx:else>
+    <!-- 第一层：四张集子卡。
+         领读词是「课外阅读」而不是「十七部集子」—— 用户原话
+         「十七部集子 改成 课外阅读」。上一版拿「十七部集子」当页头，
+         那是**目录的计量单位**，不是这一屏在说什么 —— 用户要的名字
+         恰好也是导航栏标题，于是这一屏上下两行同一句话。
+
+         ⚠️ 这不违反「页头不与导航栏标题重复」：那条规矩针对的是
+         **两个控件各说一遍**（详情页写「详情」、我的页写「我的」）。
+         这里两处是同一件事的**同一块招牌**：导航栏是系统画的，
+         页面不再画第二块 —— 所以下面不再有 .page-head。 -->
+    <block wx:if="{{!current}}">
+      <view class="group-card" hover-class="group-hover" hover-stay-time="60"
+            wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
+        <view class="gc-head">
+          <view class="gc-left">
+            <text class="gc-name">{{item.name}}</text>
+            <text class="gc-desc">{{item.desc}}</text>
+          </view>
+          <text class="gc-count">{{item.count}} 部</text>
+          <text class="row-go">›</text>
         </view>
-        <text class="row-go">›</text>
-      </view>
-      <view class="gc-books">
-        <text class="tag ghost" wx:for="{{item.books}}" wx:for-item="b" wx:key="id">{{b.name}} {{b.count}}</text>
-      </view>
-    </view>
-  </block>
-
-  <block wx:if="{{logged && current}}">
-    <view class="back-bar" bindtap="onBack">
-      <text class="back-arrow">‹</text>
-      <text>返回全部集子</text>
-    </view>
-    <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
-      <view class="row" wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
-        <view class="row-main">
-          <text class="row-title">{{b.name}}</text>
-          <text class="row-sub">共 {{b.count}} {{b.unit}}</text>
+        <view class="gc-books">
+          <text class="tag ghost" wx:for="{{item.books}}" wx:for-item="b" wx:key="id">{{b.name}} {{b.count}}</text>
         </view>
-        <text class="row-go">›</text>
       </view>
-    </view>
-  </block>
+    </block>
 
-  <view class="safe-bottom"></view>
+    <!-- 第二层：某一张卡里的集子清单 -->
+    <block wx:else>
+      <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBack">
+        <text class="back-arrow">‹</text>
+        <text>返回</text>
+      </view>
+      <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
+        <view class="card-title bar">{{item.name}}</view>
+        <view class="row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
+          <view class="row-main">
+            <text class="row-title">{{b.name}}</text>
+            <text class="row-sub">共 {{b.count}} {{b.unit}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="safe-bottom"></view>
+  </block>
 </view>

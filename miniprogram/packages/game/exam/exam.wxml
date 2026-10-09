@@ -1,11 +1,38 @@
-<view class="page">
-  <block wx:if="{{stage === 'setup'}}">
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{!allowed}}" title="考试" note="登录后才能用" mark="考" />
+
+  <block wx:elif="{{stage === 'setup'}}">
+    <view class="page-head">
+      <text class="head-title">考试设置</text>
+    </view>
+
     <view class="card">
-      <view class="card-title">考试范围</view>
+      <view class="card-title bar">考试范围</view>
+      <!-- 读数只留「几题、多久」两件。上一版在这句后面还缀了「交卷后统一批」——
+           那是流程说明，不是读数；按钮上写「交卷」已经说清了。 -->
       <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
         <view class="picker">{{scopes[scopeIndex].name}} ›</view>
       </picker>
-      <text class="hint note">共 {{count}} 题，限时 20 分钟，交卷后统一批。题目就地取材自所选集子，「接下句 / 认作者 / 填朝代」三种形态随机出。</text>
+      <text class="count-line">共 {{count}} 题 · 限时 20 分钟</text>
+    </view>
+
+    <view class="card">
+      <view class="card-title bar">题型</view>
+      <!-- 题型可多选。长相的唯一出处是 app.wxss 的「多选的格子」那一节，
+           这里只交代模板这一层：原生勾选框藏在 label 里（走 .seg-radio
+           那套视觉隐藏），点格子任何一处都算勾上 —— 行为是平台的。
+
+           格子上**不画方框**：未选中灰底、选中主色底，与别处那些选项一字不差，
+           「选没选」只由底色说。 -->
+      <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
+        <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
+               wx:for="{{forms}}" wx:key="key">
+          <checkbox class="seg-radio" value="{{item.key}}"
+                    checked="{{pickedForms.indexOf(item.key) >= 0}}" color="{{themeHex}}" />
+          <text class="chip-t">{{item.name}}</text>
+        </label>
+      </checkbox-group>
+
     </view>
     <button class="btn primary block" bindtap="onStart">开始考试</button>
   </block>
@@ -18,31 +45,52 @@
 
     <view class="card">
       <text class="stem">{{current.stem}}</text>
-      <text class="hint stem-sub">出自《{{current.title}}》</text>
+      <!-- 一行读数：题型 · 出自《…》（见 exam.js 的 metaLineOf）。
+           上一版这里是两行两样式 —— 题干上方一枚彩色题型标签，
+           下面一行灰字出处。它们说的是同一件事，颜色也不是读数。 -->
+      <text class="hint stem-sub">{{metaLine}}</text>
     </view>
 
+    <!-- 答题途中**不告诉对错**：选项只有「没选 / 选了」两态。
+         用户原话是「所有题目答完后再给分给对错」——
+         当场判对错会让人一边答一边改心态，而考试的用法恰恰是先答完再看。
+         选中的当下要看得见（不然不知道点着没有），所以留了 .picked。
+
+         选项左边一枚 A B C D 的脚标字母：四个选项长得一样，
+         没有序号时「第三个」这种指法在两边指的不是同一条。
+         `data-v` 传的仍是**没有字母的原文** —— 判分比的是原文。 -->
     <view class="options">
-      <view class="option"
-            wx:for="{{current.options}}" wx:key="*this" data-v="{{item}}" bindtap="onPick"
-            class="{{picked ? (item === current.answer ? 'right' : (item === picked ? 'wrong' : '')) : ''}}">
-        {{item}}
+      <view class="option {{item.text === picked ? 'picked' : ''}}"
+            wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
+        <text class="option-k">{{item.key}}</text>
+        <text class="option-t">{{item.text}}</text>
       </view>
     </view>
+
+    <button class="btn primary block next-btn" bindtap="onNext">
+      {{index + 1 >= questions.length ? '交卷' : '下一题'}}
+    </button>
   </block>
 
   <block wx:else>
     <view class="card result">
       <text class="score">{{score}}</text>
       <text class="score-k">分</text>
-      <text class="hint">答对 {{correct}} / {{questions.length}} 题</text>
+      <text class="hint">答对 {{correct}} / {{questions.length}}</text>
     </view>
 
-    <view class="card" wx:if="{{wrong.length}}">
-      <view class="card-title">错题</view>
-      <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
-        <text class="wrong-stem">{{item.stem}}</text>
-        <text class="wrong-line">正确答案：{{item.answer}}</text>
-        <text class="wrong-line picked-line">你选的：{{item.picked}}</text>
+    <!-- 批完的卷子逐题摊开：答对答错都列，不只是错题。
+         考试的价值一半在「我哪几道是对的」——只列错题的话，
+         对的那几道就只剩一个数字。 -->
+    <view class="card">
+      <view class="card-title bar">逐题</view>
+      <view class="grade" wx:for="{{graded}}" wx:key="stem">
+        <view class="grade-head">
+          <text class="grade-mark {{item.ok ? 'ok' : 'no'}}">{{item.ok ? '对' : '错'}}</text>
+          <text class="grade-stem">{{item.stem}}</text>
+        </view>
+        <text class="grade-line">正确答案：{{item.answer}}</text>
+        <text class="grade-line picked-line" wx:if="{{!item.ok}}">你选的：{{item.picked}}</text>
       </view>
     </view>
 

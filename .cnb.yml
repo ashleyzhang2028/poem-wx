@@ -1,9 +1,179 @@
 $:
-  # 任意分支的推送都跑一遍自检，语料在 CI 里现生成，不依赖本地临时目录
+  # main 之外的任意分支：只跑自检（语料在 CI 里现生成，不依赖本地临时目录）。
+  #
+  # 「以后所有的提交都进 main」—— main 是**默认分支**，所以它自己那条写在
+  # 文件末尾（`main:`），跑自检 + 出镜像 + 传体验版；其余分支只自检，
+  # 而且**不出镜像**：出了也没人用，只是往制品库堆垃圾。
   "**":
     - name: 自检
       image: node:20
       script:
+        # 语料现编译：poem 那边补一篇宋词，这里下一次跑就跟着有。
+        # 「跟的是什么」由 scripts/check.js 的 V40 记着 —— 篇数 / 号段 / 归位 /
+        # 朝代四组判据（Issue #61）。那边一改，这边不是静默跟上，而是**红**，
+        # 由人回来对一次再动。之所以不把 clone 钉在 sha 上：钉住之后
+        # 「同步没同步」就没人问了 —— 反正永远同步不了。
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        # 云托管那份镜像（deploy/Dockerfile）的源码上下文是 **poem 仓库** ——
+        # 构建链在下面 `build:wx-api` 那一节，不在这条自检里。
+        # 原先这里有一条 `deploy/api.synced` 的 sha 对账，它守的是「往本仓库拷了一份
+        # api/ 副本、改完 poem 忘了同步」这个税。副本已经撤掉（后端只有 poem 一处），
+        # 那条对账也就随之退场 —— **不是不守了，是它要守的东西不存在了**。
+        # 页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
+        # 版式（折叠不丢字、折出来的行不孤字、短句不被折，跑全站 5599 篇）/
+        # 「选一个」的控件（三种排布同一块填色、选项行不许画竖线、
+        # 分段每段都 label 包着原生控件、多选与单选分得开（多选未选中是
+        # --sink 灰底 + 右侧一枚空心勾选框、选中才填主色，不是「墨黑胶囊 +
+        # 右上角一枚小勾」、也不是「人人一颗双圈」）、令字格不再塞圆点）/
+        # 这一轮的六句话（背诵范围那一行七段、搜索页不再让人选范围与方式、
+        # 考试改名且交卷前不判对错、选项两列）/
+        # 背诵设置的两句（范围卡改名「背诵范围」、加「当前学段」一格
+        # 且年级只列这一段、换学段连范围一起换）/
+        # 外壳（自绘底栏四页都点亮当前项、图标都有画法）与头像（本机那张压过微信那张）/
+        #
+        # 倒排往返 / 飞花令判定 / 六种题型 /
+        # 门禁（未登录只能看首页、点不动）与三档（含「本机写 max 不生效」）/
+        # 逐页扫 WXML 确认门禁真的生效 / 管理页不许再留自助提权 /
+        # 档位与网页版对照 /
+        # 控件来源（该有的原生控件必须在、自绘控件不许复活、配色对齐主色）/
+        # 观感口径（门禁卡收在一处、可点就有按下反馈、空状态给出路、
+        # 主题色只定一次、首页有骨架屏、日期用中文数字）/
+        # 设计令牌（字号一律走令牌、卡片间距只定一次、页头不与导航栏重复）/
+        # 门禁开合（真挂页面跑一遍，登录后 locked 必须落回 false ——
+        # 这一条抓出过阅读页「所有人永远停在登录卡上」的 bug）/
+        # 同步冲突 / 包体积
+        #
+        # V40 内容口径与网页版对账（Issue #61 两轮：2026-10-06 / 2026-10-09）：
+        # 篇数 / 号段 / 归位 / 朝代 / **出处两重** / 题名异写，
+        # 外加两端 author-index.js 的朝代时间轴与异名表、合编归属表逐条比。
+        # 这一节**会过期** —— poem 补录之后这边就红，红的意思是「回来对一次」，
+        # 不是「坏了」。第二轮对的是 #505 / #510 / #512 / #516 / #517：
+        # 补录 255 条（5599 → 5854）、出处勘正（唐诗 318 + 文选 480 + 词 288 +
+        # 曲 31 的两重出处）、成语 138 条朝代归位、11 条题名异写
+        #
+        # V41 作者索引（Issue #61）：名册收哪十部、异名归一真的合并了、
+        # 合编归属（《古人谈读书》挂朱熹）、结集不进名册、同一首跨集只算一次，
+        # 以及**真跑阅读页**验「下一篇只在这一位作者里走」（连翻五首不跨作者、
+        # 不跳进词条）
         - node scripts/check.js
+        # 与网页版的逐项对照：网页版能力表里每一项，小程序端都得有交代
+        # （已实现 / 换个做法 / 明确不做并记账），漏一项就红
+        - node scripts/parity.js
+        # 端到端：把**小程序端 utils** 与 **poem 服务端**接起来真跑一遍
+        # （登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
+        # 上面那两条是静态 + 单元，验得了「报文形状对不对」；
+        # 而这一轮所有的坑（登录通但同步 401、字段被服务端裁掉、换机认不回来）
+        # 全都是**两边合起来**才显形的 —— 那一类只有真跑一遍才抓得住。
+        # poem 已经在上面 clone 到 /tmp/poem 了，直接指过去。
+        - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
+
+# ---------------------------------------------------------------------------
+# main —— 唯一的分支。推这里就是发一次版。
+#
+# 三件事：自检 → 构建云托管镜像 → 上传体验版。都在同一个 job 里，因为
+# **镜像 tag 按本仓库这一版给**，跑完就是「一版代码 = 一个版本号」。
+#
+# 为什么不是 tag：
+#   打 tag 要仓库管理员（`Only administrators are allowed push refs/tags/*`，
+#   实测过），而日常提交的人不该为了发版去找管理员。改成「推 main 即发布」，
+#   镜像 tag 用 CNB_COMMIT_SHORT（本仓库这一版的 commit 前 8 位），
+#   一样能回滚 —— 云托管那栏想回哪版，就把那个 sha 填回去。
+#
+#   注意镜像 tag **不是** CNB_BRANCH：那在 push 触发下等于分支名，永远是
+#   `main`，回滚时等于没有版本号。
+main:
+  push:
+    - name: 发布（自检 → 镜像 → 体验版）
+      image: node:20
+      services:
+        - docker
+      imports:
+        # 密钥走**密钥仓库**（Issue #64）。⚠️ 只声明「读哪个文件」，
+        # **不要**试图 clone 那个仓库：它禁止 Git Clone（本地也不行），
+        # `git clone` 一律回 `Repository Not Found`，看着像路径写错。
+        # 取密钥只有 imports 这一条路。
+        #
+        # ⚠️ 密钥仓库那份 wechat-ci.yml 里**必须**有这两个字段：
+        #      allow_slugs: npu-gpu-cpu/poem-wechat-mini-program
+        #      allow_events: push            ← 触发事件从 tag_push 改成了 push，
+        #                                      那两行不改的话这里读不到密钥，必被拒
+        - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
+      env:
+        # 镜像推在**本仓库**的 slug 下（流水线在这儿跑），即使源码来自 poem。
+        # 写成 ${CNB_ROOT_SLUG} 会推到 poem 的槽位，云托管按下面那个地址就拉不到。
+        IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
+        # 本仓库这一版的短 sha —— 镜像的版本号，回滚就靠它。
+        TAG: ${CNB_COMMIT_SHORT}
+      stages:
+        # 1. 取后端源码。这一份是**唯一一份** —— 不往本仓库落副本，
+        #    所以「poem 改了这个没跟上」这件事根本不会发生。
+        - name: clone poem
+          script: git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        # 2. 自检。语料在 CI 里现编译，「跟的是什么」由 check.js 的 V40 记着
+        #    （篇数 / 号段 / 归位 / 朝代）：poem 那边一改，这边不是静默跟上，
+        #    而是**红**，由人回来对一次再动。
+        - name: 自检
+          script:
+            - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+            - node scripts/check.js
+            - node scripts/parity.js
+            # 端到端：把小程序端 utils 与 poem 服务端接起来真跑一遍
+            # （登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
+            # 静态自检验得了「报文形状对不对」，验不了「合起来通不通」——
+            # 这一轮所有的坑（登录通但同步 401、字段被服务端裁掉）全是后者。
+            - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
+        # 3. 摊构建上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳。
+        #    平铺在**同一层**里，因为 deploy/Dockerfile 按 ./api 与
+        #    ./serve-api.js 拷；.dockerignore 也摆在上下文根 —— 只在那儿生效。
+        #    上下文里没有 data/ 26MB、fonts/ 11MB、js/ 1MB，白名单挡着，
+        #    运行时一条都不读。
+        - name: stage context
+          script: |
+            set -euo pipefail
+            mkdir -p /tmp/ctx
+            cp -R /tmp/poem/api /tmp/ctx/api
+            cp deploy/Dockerfile /tmp/ctx/Dockerfile
+            cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
+            cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
+            du -sh /tmp/ctx
+        # 4. 构建 + 推。REV 记的是**后端的 commit**（不是本仓库的 sha）——
+        #    「线上跑的是哪一版 poem」这个问题只有它能答。
+        - name: build & push
+          script: |
+            set -euo pipefail
+            REV="$(git -C /tmp/poem rev-parse --short HEAD)"
+            docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
+            docker build \
+              --build-arg "API_REV=${REV}" \
+              --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" \
+              -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" /tmp/ctx
+            docker push "${IMAGE}:${TAG}"
+            docker push "${IMAGE}:latest"
+            echo "✓ ${IMAGE}:${TAG}（后端 poem ${REV}）"
+        # 5. 上传体验版。**只上传，不提审** —— 「要不要上线」不该由流水线决定。
+        #    传完去公众平台设成体验版，真机走一遍再提审。
+        - name: 上传体验版
+          script:
+            # 密钥读来了但名字对不上时**当场说清楚是哪个名字空着**：
+            # 空着往下走的话，miniprogram-ci 抛的是「密钥无效 / appid 不一致」，
+            # 会把人引去查公众平台，而真正的问题只是密钥仓库里少写了一个键。
+            - |
+              for v in WX_APPID WX_PRIVATE_KEY_B64; do
+                eval "val=\$$v"
+                if [ -z "$val" ]; then
+                  echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+                  echo "  已注入的变量名（只列名字，不列值）：" >&2
+                  env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
+                  exit 1
+                fi
+              done
+            - npm i -D miniprogram-ci --no-audit --no-fund
+            # 版本号用「本仓库 sha 前 8 位」：公众平台那边一版一个号，
+            # 拿 sha 当号，回滚时能对上镜像的 tag。
+            - node scripts/upload.js "${TAG}" "main ${TAG}"
+          # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
+          # 不会让整条流水线红，得主动翻一眼日志。
+          allow_failure: true

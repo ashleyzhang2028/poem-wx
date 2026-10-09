@@ -1,39 +1,46 @@
+/* 品牌卡：名字放大、字距放开，下面坠一句出处。
+   一屏只有这一处能这么「空」—— 它是这页的脸 */
 .brand {
   text-align: center;
-  padding: 56rpx 32rpx;
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--surface);
 }
 
 .brand-name {
   display: block;
   font-family: var(--font-poem);
-  font-size: 64rpx;
-  font-weight: 600;
-  color: var(--green);
-  letter-spacing: 8rpx;
+  font-size: var(--fs-brand);
+  font-weight: 700;
+  color: var(--strong-text);
+  letter-spacing: 10rpx;
 }
 
 .brand-sub {
   display: block;
-  font-size: 25rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hint);
   color: var(--ink-3);
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
+  letter-spacing: var(--ls-caption);
 }
 
 .brand-ver {
   display: block;
-  font-size: 22rpx;
+  font-size: var(--fs-caption);
   color: var(--line);
-  margin-top: 24rpx;
+  margin-top: var(--sp-3);
 }
 
-.stat {
-  font-size: 30rpx;
-  color: var(--green);
+/* 计数用等宽数字 —— 与页面里其它「计数」同一口径 */
+.kv-v {
+  font-family: var(--font-num);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .foot {
   display: block;
   text-align: center;
-  padding: 24rpx 32rpx 40rpx;
-  line-height: 1.8;
+  padding: var(--sp-3) var(--sp-4) var(--sp-5);
+  line-height: var(--lh-loose);
 }

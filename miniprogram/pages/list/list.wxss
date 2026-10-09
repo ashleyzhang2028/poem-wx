@@ -1,5 +1,8 @@
+/* ---------- 索引卡 ----------
+   长集子的第一屏往往不知道从哪看起，所以索引摆在最上面：
+   按组跳，比一直往下滚省事。 */
 .index-card {
-  padding: 24rpx 28rpx;
+  padding: var(--sp-3) var(--sp-4);
 }
 
 .index-head {
@@ -8,29 +11,37 @@
   justify-content: space-between;
 }
 
+.index-head .card-title {
+  margin-bottom: 0;
+}
+
 .index-toggle {
-  font-size: 26rpx;
-  color: var(--green);
+  flex: none;
+  color: var(--ink-2);
+  border-color: var(--line-strong);
 }
 
 .index-grid {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 16rpx;
+  margin-top: var(--sp-2);
   border-top: 1rpx solid var(--line-2);
 }
 
 .index-cell {
   width: 50%;
+  min-height: 76rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16rpx 12rpx 16rpx 0;
+  padding: var(--sp-2) 12rpx var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
 }
 
 .index-name {
-  font-size: 26rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -38,48 +49,67 @@
 }
 
 .index-count {
-  font-size: 24rpx;
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   padding-left: 12rpx;
+  flex: none;
 }
 
-.filter-seg {
-  margin: 20rpx 0;
+/* 筛选行留一点上下呼吸 */
+.filter-group {
+  margin: 0 0 var(--sp-2);
 }
 
 .count {
-  padding: 0 4rpx 12rpx;
+  padding: 0 var(--sp-1) var(--sp-2);
 }
 
+/* ---------- 分组标题 ----------
+   组名用宋体 —— 它是集子里的一「部」，和篇名同属内容；
+   颜色不另给，靠字号与宋体跟下面的行分开。
+   上一版组名是主色 + 一道短竖线，那是「用颜色说层次」；
+   这一版层次由字本身承担。 */
 .group-head {
   display: flex;
   align-items: baseline;
-  padding-bottom: 12rpx;
+  padding-bottom: var(--sp-2);
   border-bottom: 1rpx solid var(--line-2);
   margin-bottom: 4rpx;
 }
 
 .group-name {
-  font-size: 28rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
   font-weight: 600;
-  color: var(--green);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
 }
 
 .group-count {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   padding-left: 12rpx;
+  font-variant-numeric: tabular-nums;
 }
 
 .seq {
   width: 56rpx;
-  font-size: 24rpx;
-  color: var(--ink-3);
   flex: none;
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  text-align: center;
 }
 
+/* 已读：一枚极小的浅色胶囊。它是个状态，不该跟篇名抢眼 ——
+   所以不用主色填底，只用浅灰底 + 次级字色。 */
 .read-dot {
-  font-size: 22rpx;
-  color: var(--ink-3);
-  padding-right: 12rpx;
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--green);
+  padding: 2rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: var(--green-soft);
+  margin-right: var(--sp-1);
 }

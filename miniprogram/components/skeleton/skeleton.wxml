@@ -1,0 +1,6 @@
+<view class="sk">
+  <view class="sk-block sk-line w60"></view>
+  <view class="sk-block sk-line w40"></view>
+  <view class="sk-block sk-btn"></view>
+  <view class="sk-block sk-line w80" wx:for="{{rows}}" wx:key="index"></view>
+</view>

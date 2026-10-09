@@ -1,0 +1,44 @@
+<view class="page" style="{{themeStyle}}">
+  <view class="page-head">
+    <text class="head-title">外观</text>
+    <text class="head-sub">{{currentName}}</text>
+  </view>
+
+  <lock-card wx:if="{{locked}}" title="设置要登录" note="登录后才能改" mark="设" />
+
+  <block wx:else>
+  <view class="card">
+    <view class="card-title bar">主色</view>
+    <!-- 十枚色点。**圆的、小的**，一枚就是一个色 —— 不再是 96rpx 的圆角长方形。
+
+         为什么改：用户原话是「每个颜色都是很大的圆角长方形，不美观，
+         建议使用小一点的圆形」。原来的大方块在这一屏里还和别处撞了脸 ——
+         全站的「能点的一块」都是 20rpx 圆角 + 填色的胶囊格（.chip / .opt-row），
+         色卡长成那样，看着像「一组可点的选项」，而它其实是「一个颜色」。
+
+         圆形是**色样**（swatch）该有的长相：颜色本身是内容，
+         形状不必再替它说「这是个控件」。点中不了小圆点的顾虑也解掉了 ——
+         热区是 108rpx 见方的整格（.swatch），圆点只是画在格子中间的那一枚。
+
+         选中态：圆点里一枚白勾 + 圆点外一圈本色描边（box-shadow 画，
+         不吃盒模型）。描边色取「压在这个色上的字色」：墨黑上画白圈、
+         明黄上画深圈，十个色下都看得见。
+
+         名字放在圆点**下面**（一格一个），所以不必猜哪个是哪个。 -->
+    <view class="swatch-grid">
+      <view class="swatch {{theme === item.key ? 'on' : ''}}"
+            wx:for="{{items}}" wx:key="key"
+            style="--sw:{{item.hex}};--sw-on:{{item.on}}"
+            hover-class="swatch-hover" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onPick">
+        <view class="swatch-dot">
+          <text class="swatch-tick" wx:if="{{theme === item.key}}">✓</text>
+        </view>
+        <text class="swatch-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  </block>
+</view>

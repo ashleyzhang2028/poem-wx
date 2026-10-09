@@ -1,37 +1,121 @@
+/* 搜索页的样式表很短，这是刻意的。
+   原来这里有一整块 `.opt-block`（范围 / 方式两组分段 + 两个字段名 + 一圈外框），
+   用户的原话是「搜索页的 范围 方式选项卡片删除 搜索框内已经有提示，
+   不要再增加用户选择成本」—— 于是整块撤掉，样式也跟着撤，不留空规则。 */
+
 .clear {
   color: var(--ink-3);
-  padding: 0 16rpx;
-  font-size: 26rpx;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-hint);
 }
 
-.go {
-  color: var(--green);
-  font-size: 28rpx;
-  padding-left: 16rpx;
-  border-left: 1rpx solid var(--line-2);
+/* 搜索键是原生 button：只压小尺寸，配色照旧走令牌 */
+.go-btn {
+  flex: none;
 }
 
-.scope-seg {
-  margin: 20rpx 0;
+/* 搜索条件那两块卡（在哪儿搜 / 怎么搜）在 Issue #26 里整块撤掉了 ——
+   搜索范围与方式改由系统定，这一页不再有「选一个」的控件。
+   所以 .opt-block / .scope-group / .mode-group 这几条规则也没了主人。
+   留在这里会变成「占着同一个名字的第二种长相」——
+   下次谁再要一张选项卡，就会顺手用回它。 */
+/* 命中统计那一条：左右各留一道与卡片同宽的边距。
+   上一版只给了 sp-1 的左侧内边距，右边那句「篇名作者 · 全站」贴到屏幕边，
+   在窄屏上直接被切掉半截 —— 一行里右边那半截是「在哪儿搜的」，
+   它被切了就等于没写。 */
+.result-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  padding: 4rpx var(--sp-4) var(--sp-2);
+}
+
+/* 「命中 N 篇」与「在哪儿搜的」同处一行：一个是结论、一个是出处，
+   读的时候是一口气，拆成两行反而断了 */
+.result-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+/* 截断提示自成一行，压在结论下面 —— 它是补充说明，不该跟出处抢位置 */
+.result-more {
+  font-size: var(--fs-caption);
+}
+
+.result-count {
+  flex: none;
+  font-size: var(--fs-body);
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-where {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--fs-caption);
+}
+
+.hot .field-label {
+  padding-bottom: var(--sp-1);
 }
 
 .hot {
-  padding: 32rpx 4rpx;
+  padding: var(--sp-4) var(--sp-1);
 }
 
 .hot-tags {
   display: flex;
   flex-wrap: wrap;
-  margin: 20rpx 0;
+  margin: var(--sp-2) 0;
 }
 
-.hot-tags .tag {
-  padding: 10rpx 24rpx;
-  font-size: 26rpx;
-  margin: 0 16rpx 16rpx 0;
+/* 热搜词是对 <button> 的瘦身：原生按钮有最小宽度、有 ::after 边框、有默认内边距，
+   三样都要按跬步的样子收一遍 */
+.hot-tags .tag-btn {
+  width: auto;
+  min-width: 0;
+  display: inline-block;
+  padding: 12rpx var(--sp-4);
+  font-size: var(--fs-hint);
+  line-height: 1.5;
+  margin: 0 var(--sp-2) var(--sp-2) 0;
 }
 
-.hot-note {
+.hot-tags .tag-btn::after {
+  border: none;
+}
+
+/* 命中句：从正文里捞出来的那一句，用宋体 + 左引线单独起一行。
+   一行列表里出现两种字体，眼睛立刻分得清「哪句是我搜的」 */
+.hit {
+  margin-top: 10rpx;
+}
+
+.hit-line {
   display: block;
-  line-height: 1.8;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: 1.75;
+  letter-spacing: 1rpx;
+}
+
+.hit-line:first-child {
+  padding-left: 14rpx;
+  border-left: 4rpx solid var(--line-strong);
+}
+
+.empty-tip {
+  display: block;
+  margin-top: var(--sp-2);
+}
+
+/* 命中行：比普通列表行多一口气，因为里面还带着正文那一句 */
+.hit-row {
+  align-items: flex-start;
+  padding: var(--sp-3) var(--sp-1);
 }

@@ -1,35 +1,57 @@
+/* 四张集子卡：整块可点，所以给整卡反馈 ——
+   之前它是 <view bindtap> 却没有按下态，点上去像没反应 */
 .group-card {
-  background: var(--card);
-  border: 1rpx solid var(--line-2);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 32rpx;
-  margin-bottom: 24rpx;
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  transition: background-color var(--t-press), border-color var(--t-press), transform var(--t-press);
+}
+
+.group-hover {
+  background: var(--sink);
+  transform: scale(.992);
 }
 
 .gc-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+}
+
+.gc-left {
+  flex: 1;
+  min-width: 0;
 }
 
 .gc-name {
   display: block;
-  font-size: 34rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
   font-weight: 600;
-  color: var(--green);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
 }
 
 .gc-desc {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: var(--sp-1);
+}
+
+.gc-count {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .gc-books {
-  margin-top: 20rpx;
-  padding-top: 20rpx;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
   border-top: 1rpx solid var(--line-2);
 }
 
@@ -37,36 +59,26 @@
   margin: 0 12rpx 12rpx 0;
 }
 
+/* 返回条：它是个可点元素，得给按下态 */
 .back-bar {
   display: flex;
   align-items: center;
-  font-size: 28rpx;
-  color: var(--green);
-  padding: 8rpx 4rpx 24rpx;
+  min-height: 76rpx;
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  padding: var(--sp-1) var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.back-hover {
+  background: var(--sink);
 }
 
 .back-arrow {
-  font-size: 40rpx;
-  padding-right: 8rpx;
+  font-size: var(--fs-hero);
+  padding-right: var(--sp-1);
   line-height: 1;
 }
 
 /* 游客看到的是这张卡，不是空列表 —— 空列表会被当成页面坏了 */
-.lock-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.lock-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--green);
-}
-
-.lock-sub {
-  font-size: 26rpx;
-  color: var(--ink-3);
-  margin: 12rpx 0 28rpx;
-  line-height: 1.7;
-}

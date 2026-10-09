@@ -1,73 +1,72 @@
-const corpus = require("../../../utils/corpus");
-const E = require("../../../utils/entitlement");
+const gate = require("../../../utils/gate");
+const entitlement = require("../../../utils/entitlement");
+const theme = require("../../../utils/theme");
 
 /**
- * 古诗词大会：飞花令 + 题库 + 模拟考试。
- * 网页版整套判分内核在 js/quiz.js（不接 AI、不花钱），
- * 小程序端先落地最有辨识度的飞花令与题库入口，题目内核见 utils/quiz.js。
+ * 古诗词大会 —— 这一屏是**目录**，只列三张入口卡，不在这里出题。
+ *
+ * 三张卡各进各的玩法页：飞花令、题库、考试。目录页不内嵌任何一个玩法：
+ * 上一版把飞花令的「挑一个字 + 看答案」就地摊进这一屏，于是列表页混进了一段
+ * 可玩的东西 —— 点一个字就出答案，与「先选玩法再进游戏」是两回事，
+ * 也与题库 / 考试两张卡的处理对不上（那两件事都进独立页）。
  */
 const MODES = [
-  { key: "feihua", name: "飞花令", desc: "给一个字，轮流说出含这个字的诗句", color: "green" },
-  { key: "quiz", name: "题库", desc: "按范围抽题，逐题给对错", color: "amber" },
-  { key: "exam", name: "模拟考试", desc: "限时 20 分钟，交卷后统一批", color: "blue" }
+  { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
+  { key: "quiz", name: "题库", desc: "抽题逐题判", color: "amber" },
+  { key: "exam", name: "考试", desc: "20 分钟一卷", color: "blue" }
 ];
+
+/** 三张卡各自的能力键：飞花令 / 题库 / 考试 */
+const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
+
+/** 玩法页 */
+const PAGE = {
+  feihua: "/packages/game/feihua/feihua",
+  quiz: "/packages/game/quiz/quiz",
+  exam: "/packages/game/exam/exam"
+};
 
 Page({
   data: {
-    logged: false,
-    modes: MODES,
-    keyword: "月",
-    chars: ["月", "春", "花", "风", "山", "水", "云", "夜"],
-    lines: [],
-    hitCount: 0
+    /** 三张卡各自的可用性。不可用的卡照常列出，但标清差在哪一档 */
+    locked: true,
+    cards: []
   },
 
-  onLoad() {
-    this.setData({ logged: E.signedIn() });
-    this.computeLines();
-  },
-
-  computeLines() {
-    const kw = this.data.keyword;
-    const hits = [];
-    const all = corpus.course();
-
-    for (let i = 0; i < all.length && hits.length < 30; i++) {
-      const p = all[i];
-      const text = corpus.entry(p.id);
-      if (!text || !text.text) continue;
-      if (text.text.indexOf(kw) < 0) continue;
-      String(text.text)
-        .split(/[\n，。！？；：、]/)
-        .forEach((seg) => {
-          if (seg.indexOf(kw) >= 0 && hits.length < 30) {
-            hits.push({ id: p.id, title: p.t, author: p.a, seg });
-          }
-        });
+  onShow() {
+    theme.apply(this);
+    if (!gate.logged()) {
+      this.setData({ locked: true, cards: [] });
+      return;
     }
-
-    this.setData({ lines: hits, hitCount: hits.length });
+    // 三张卡不是一个门槛：飞花令与考试是 max，题库是 pro。
+    // 所以不做「整页锁死」，而是逐卡标注 —— 让人知道要往上走一步，而不是一堵墙。
+    const cards = MODES.map((m) => {
+      const ok = entitlement.can(CAP[m.key]);
+      return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(CAP[m.key]) });
+    });
+    this.setData({ locked: false, cards });
   },
 
-  onChar(e) {
-    this.setData({ keyword: e.currentTarget.dataset.c }, () => this.computeLines());
-  },
-
-  onLoginGate() {
-    wx.switchTab({ url: "/pages/mine/mine" });
+  onLogin() {
+    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
   onMode(e) {
-    if (!E.block("recite.basic", { page: this })) return;
-    const key = e.currentTarget.dataset.k;
-    if (key === "exam") {
-      wx.navigateTo({ url: "/packages/game/exam/exam" });
+    // 登录这道门在最前：未登录连玩法页都不用进
+    if (!gate.logged()) {
+      if (!entitlement.block("feihualing", { page: this })) return;
       return;
     }
-    wx.showToast({ title: key === "feihua" ? "在上面挑个字试试" : "题库内核正在接入", icon: "none" });
-  },
-
-  onOpen(e) {
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) });
+    const key = e.currentTarget.dataset.k;
+    const cap = CAP[key];
+    if (!cap) return;
+    // 差一档的卡点了不给进，但要说话 —— 不列一个点下去必然被拒的入口，
+    // 也不让用户对着灰卡猜自己差在哪。
+    if (!entitlement.can(cap)) {
+      wx.showToast({ title: entitlement.hint(cap), icon: "none" });
+      return;
+    }
+    wx.navigateTo({ url: PAGE[key] });
   }
 });

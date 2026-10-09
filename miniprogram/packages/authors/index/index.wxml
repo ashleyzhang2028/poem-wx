@@ -1,0 +1,117 @@
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="作者索引要登录" note="登录后才能看" mark="人" />
+
+  <block wx:else>
+  <!-- ① 名册这一层 -->
+  <block wx:if="{{!author}}">
+    <!-- 页头只说这一页**有多少东西**，不再写一遍「作者索引」——
+         导航栏上已经是这四个字，同屏上下两行一样的字等于什么都没说
+         （check.js V6.7 守着这一条）。所以这里换成**读数**：
+         488 位 / 2030 条 / 15 朝，这才是打开这一屏要知道的事。 -->
+    <view class="page-head">
+      <text class="head-title">{{totalPeople}} 位作者</text>
+      <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
+    </view>
+
+    <!-- 朝代表。与集子列表页顶上那张索引卡同一份长相、同一份交互
+         （左名右数、点一格就地滚到那一段）—— 两项读数分开写，
+         「唐 105 家」比「唐 596 条」有用，但两个都想知道 -->
+    <view class="card index-card">
+      <view class="index-head">
+        <text class="card-title bar">朝代</text>
+        <text class="index-total">{{eras.length}} 朝</text>
+      </view>
+      <view class="index-grid">
+        <view class="index-cell" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{eras}}" wx:key="at" data-at="{{item.at}}" bindtap="onJump">
+          <text class="index-name">{{item.name}}</text>
+          <text class="index-count">{{item.count}} 家</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 一段一朝。段里**只有**「名字 + 条数」两件事，排成一行行的胶囊。
+         为什么不排成一行一位作者（右边一颗箭头一把小字）：手机上那是
+         一个作者一行，一部《唐诗》就摆出上百行，读者要点着滚动条把一整朝
+         滤一遍。名册要的是「扫一眼有谁」，不是「读一行的详情」——
+         点哪一颗进哪一位的作品列表，该有的信息在②层里一条不少。 -->
+    <view class="card era-card" wx:for="{{sections}}" wx:key="at" id="era-{{item.at}}">
+      <view class="group-head">
+        <text class="group-name">{{item.name}}</text>
+        <text class="group-count">{{item.count}} 家 · {{item.works}} 条</text>
+      </view>
+      <!-- 名册这一排排小块**不叫 .chip**，也不带原生 radio —— 它不是「选一个」。
+           全站的 `.chip` 是「一组互斥项里选一个」，样式与行为都绑在
+           原生控件上（`.chip-group` 里必有 `<radio>`，check.js V22/V23 守着）。
+           名册是**一行行的入口**，点了就进另一位作者的作品列表，
+           与「年级」「学期」那种选中态是两回事 —— 所以另起一个名字，
+           长相自己画，也就不受那套约束（写 V22 的时候正是这么定的：
+           「不是同类控件就别用同名类」）。
+
+           一行几颗由名字长短自己决定：一格里是「名字 + 一个数字」，
+           宽度差得远（「卢照邻」3 字、「司马相如」4 字、「苏武」2 字），
+           等宽栅格会把长的挤成两行、短的留一大片空。 -->
+      <view class="a-grid">
+        <view class="a-cell" wx:for="{{item.people}}" wx:for-item="a" wx:key="name"
+              hover-class="a-cell-hover" hover-stay-time="60"
+              data-name="{{a.name}}" bindtap="onAuthor">
+          <text class="a-name">{{a.name}}</text>
+          <text class="a-num">{{a.count}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </block>
+
+  <!-- ② 一位作者的作品这一层 -->
+  <block wx:else>
+    <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBackRoster">
+      <text class="back-arrow">‹</text>
+      <text>返回作者索引</text>
+    </view>
+
+    <!-- 名字下面是**读数**不是重复一遍名字（导航栏已经是它了）：
+         还剩几条没读 —— 打开一位作者，要知道的正是这件事 -->
+    <view class="page-head">
+      <text class="head-title">{{author}}</text>
+      <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+    </view>
+
+    <!-- 已读 / 未读：与列表页同一套分段（底层仍是原生 radio，点整段都选中）——
+         这一页的「未读」说的还是本机那份已读标记，所以长相与口径都该一致 -->
+    <view class="seg filter-group">
+      <radio-group class="seg-group" bindchange="onFilter">
+        <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}"
+                 color="{{themeHex}}" />
+          <view class="seg-icon ic-{{item.icon}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="count hint">共 {{matched}} 条</view>
+
+    <view class="card">
+      <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+        <view class="row-main">
+          <text class="row-title row-poem">{{item.title}}</text>
+          <text class="row-sub">{{item.dynasty}} · {{item.bookName}}</text>
+        </view>
+        <text class="read-dot" wx:if="{{item.read}}">已读</text>
+        <text class="row-go">›</text>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!works.length}}">
+      <text class="empty-mark">空</text>
+      <text class="empty-text">{{filter === '未读' ? '这一位的作品都读过了' : '这一位还没有收作品'}}</text>
+      <text class="hint empty-tip" wx:if="{{filter === '未读'}}">切到「全部」看看</text>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </block>
+  </block>
+</view>

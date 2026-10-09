@@ -1,33 +1,96 @@
-.numbers {
+/* ---------- 总览 ---------- */
+.overview {
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+}
+
+.ov-head {
   display: flex;
+  align-items: center;
+  padding-bottom: var(--sp-3);
+  border-bottom: 1rpx solid var(--line-2);
 }
 
-.num {
-  flex: 1;
-  text-align: center;
+/* 掌握度环：与首页那个进度环共用全局 .ring ——
+   两个环放在一起要长得像，用户才会认成同一件事 */
+.ov-ring {
+  width: 116rpx;
+  height: 116rpx;
+  flex: none;
 }
 
-.num-v {
+.ov-main {
+  padding-left: var(--sp-3);
+  min-width: 0;
+}
+
+.ov-title {
   display: block;
-  font-size: 48rpx;
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
   font-weight: 600;
-  color: var(--green);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
+}
+
+.ov-sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: var(--sp-1);
+}
+
+.ov-row {
+  display: flex;
+  padding-top: var(--sp-3);
+}
+
+.num-v.due {
+  color: var(--amber);
 }
 
 .num-k {
   display: block;
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: 6rpx;
 }
 
 .warn {
+  display: block;
   color: var(--amber);
+  padding-top: var(--sp-3);
 }
 
+/* ---------- 未来七天 ----------
+   每一行都有左右两道 padding，**包括没排期的那几天**。
+
+   用户 2026-10-04：「未来七天 没选中的文字不需要和选中的一样最左最右
+   有 padding 吗」—— 上一版只有 `.day.today` 那行给了左右 padding（因为
+   它有灰底，字不能贴着底边），其余六行是 0。于是「今天」的「明天」缩进
+   16rpx，下面几天的日期与「0 首」反而顶到卡片最边上：同一列字，一行一个
+   起点，扫下来是锯齿，而且「今天」看着像被挤在中间。
+   灰底那行需要 padding 是因为它有「面」，其余几天需要 padding 是因为
+   它们与它同属一列 —— 后者不写，前者那两道内边距就成了错位。
+   横向的两道边改在这里统一给，纵向仍由下面的档位管。 */
 .day {
-  padding: 20rpx 0;
+  padding: var(--sp-2) var(--sp-3);
   border-bottom: 1rpx solid var(--line-2);
+}
+
+/* 没有排期的那几天不占版面：一行高度 + 一个零。
+   两行都是「0 首」，字却按「今天」那一行的大小排，扫下来像是五天都有内容 ——
+   所以整行压低一档：字号降、颜色推远，让它读起来就是「空」 */
+.day.zero {
+  padding: 10rpx var(--sp-3);
+}
+
+.day.zero .day-label {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.day.zero .day-count {
+  opacity: .7;
 }
 
 .day:last-child {
@@ -40,14 +103,44 @@
   justify-content: space-between;
 }
 
+/* 日期那一行的字：与「几首」同一档 —— 同一行里两个字号的差不能超过一档，
+   否则「10/6」会比它右边的「0 首」大出一截，看着像标题配脚注 */
 .day-label {
-  font-size: 28rpx;
-  color: var(--ink);
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+/* 「今天」那一行：一块浅灰底 + 加重字色。
+   曾经还在左边压一道墨线（inset box-shadow），上一版撤掉了 ——
+   一是那道线跟圆角互相裁切，上不接顶、下不接底（详见 design-system.md
+   里「破相是怎么来的」那一节）；二是整块灰底本身已经把这行圈出来了，
+   再加一道线是同一件事说两遍，用户原话是「不需要这个设计」。
+
+   左右 padding 已由 .day 统一给（见上面那一段）—— 这里只管灰底本身。 */
+.day.today {
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+}
+
+.day-label.today {
+  color: var(--strong-text);
+  font-weight: 600;
 }
 
 .day-count {
-  font-size: 24rpx;
+  font-size: var(--fs-caption);
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-bar {
+  margin-top: 12rpx;
+}
+
+.day-label.today + .day-count {
+  color: var(--ink-2);
 }
 
 .day-items {
@@ -58,16 +151,17 @@
 
 .day-item {
   font-family: var(--font-poem);
-  font-size: 25rpx;
+  font-size: var(--fs-hint);
   color: var(--ink-2);
-  margin: 0 20rpx 8rpx 0;
+  margin: 0 var(--sp-3) var(--sp-1) 0;
 }
 
+/* ---------- 记忆阶段 ---------- */
 .stage {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18rpx 0;
+  padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
@@ -76,11 +170,18 @@
 }
 
 .stage-name {
-  font-size: 27rpx;
+  font-size: var(--fs-body);
   color: var(--ink-2);
 }
 
 .stage-count {
-  font-size: 27rpx;
-  color: var(--green);
+  font-family: var(--font-num);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 记忆阶段里那几行：名字是说明、数字是结论，两者同档同高 */
+.stage {
+  min-height: 64rpx;
 }

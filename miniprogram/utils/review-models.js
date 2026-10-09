@@ -39,7 +39,7 @@ const MODELS = {
     short: "艾宾浩斯",
     sub: "按艾宾浩斯遗忘曲线复习",
     years: "1885 · 固定间隔",
-    blurb: "固定间隔表，记住就往下走一格，短篇最省心",
+    blurb: "固定间隔，短篇最省心",
     free: true,
     init: () => ({ level: 0 }),
     intervalDays: (level) => EBBINGHAUS_INTERVALS[clampLevel(level)],
@@ -56,7 +56,7 @@ const MODELS = {
     short: "Leitner",
     sub: "按 Leitner 盒复习",
     years: "1972 · 分级盒子",
-    blurb: "答对往后挪一盒，答错退回第一盒，像纸质卡片",
+    blurb: "答对往后挪一盒",
     free: true,
     boxes: [1, 2, 4, 8, 16],
     init: () => ({ box: 0 }),
@@ -75,7 +75,7 @@ const MODELS = {
     short: "SM-2",
     sub: "按 SM-2 复习",
     years: "1987 · 间隔 × 简易度",
-    blurb: "记住就按简易度拉长间隔，长篇更贴合",
+    blurb: "按简易度拉长间隔",
     free: false,
     firstIntervals: [1, 3, 7],
     DEFAULT_EF: 2.5,
@@ -108,7 +108,7 @@ const MODELS = {
     short: "FSRS",
     sub: "按 FSRS 复习",
     years: "2022 · 难度 / 稳定性",
-    blurb: "按难度与稳定天数排期，快忘光了就早复习",
+    blurb: "按难度与稳定天数排期",
     free: false,
     params: {
       initS: { bad: 1, fuzzy: 3, good: 6 },
@@ -278,13 +278,17 @@ function pushHistory(r, result, t) {
   if (r.history.length > 20) r.history = r.history.slice(-20);
 }
 
-/** 结果提示语，让用户知道下一次什么时候来 */
+/** 结果提示语：只说一件事 —— 下一次什么时候复习。
+    用户 2026-10-03 的原话：「背得怎么样是什么不专业的词汇？我需要所有页面
+    的标题，选项，设置，内容都专业，精简」。这三句原来是「有点模糊，…」
+    「没关系，…」「记住了！下次复习：…」—— 每条前面都挂着一句情绪垫话，
+    而用户真正要看的是那个时刻。删掉垫话，留读数。 */
 function resultHint(key, result, rec) {
-  if (result === "fuzzy") return "有点模糊，" + FUZZY_HOURS + " 小时后再复习一次";
-  if (result === "bad") return "没关系，" + BAD_MINUTES + " 分钟后再复习一次";
-  if (!rec || !rec.nextReviewAt) return "记住了！";
+  if (result === "fuzzy") return FUZZY_HOURS + " 小时后再复习";
+  if (result === "bad") return BAD_MINUTES + " 分钟后再复习";
+  if (!rec || !rec.nextReviewAt) return "已记录";
   const d = new Date(rec.nextReviewAt);
-  return "记住了！下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
+  return "下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
 }
 
 /** 可见算法列表：小程序端不做付费分层，四套全开放 */

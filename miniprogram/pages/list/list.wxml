@@ -1,11 +1,22 @@
-<view class="page">
+<view class="page" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" note="登录后才能看" mark="目" />
+
+  <block wx:else>
+  <!-- 页头只说「这一页是什么」，不报数字 ——
+       报数字的那一行在筛选条下面（.count），是全页唯一的出处 -->
+  <view class="page-head">
+    <text class="head-title">{{bookName}}</text>
+    <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
+  </view>
+
   <view class="card index-card" wx:if="{{groups.length > 1}}">
     <view class="index-head">
-      <text class="card-title">索引</text>
-      <text class="index-toggle" bindtap="onToggleIndex">{{collapsed ? '展开' : '收起'}}</text>
+      <text class="card-title bar">索引</text>
+      <button class="btn mini index-toggle" bindtap="onToggleIndex">{{collapsed ? '展开' : '收起'}}</button>
     </view>
     <view class="index-grid" wx:if="{{!collapsed}}">
-      <view class="index-cell" wx:for="{{groups}}" wx:key="group" data-g="{{index}}" bindtap="onJump">
+      <view class="index-cell" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{groups}}" wx:key="group" data-g="{{index}}" bindtap="onJump">
         <text class="index-name">{{item.group || '未分组'}}</text>
         <text class="index-count">{{item.items.length}}</text>
       </view>
@@ -17,22 +28,32 @@
     <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
   </view>
 
-  <view class="seg filter-seg">
-    <view class="seg-item {{filter === item ? 'active' : ''}}"
-          wx:for="{{filters}}" wx:key="*this" data-f="{{item}}" bindtap="onFilter">{{item}}</view>
+  <!-- 已读 / 未读：二选一，图标分段。底层仍是原生 radio，点整段都选中 -->
+  <view class="seg filter-group">
+    <radio-group class="seg-group" bindchange="onFilter">
+      <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}"
+               color="{{themeHex}}" />
+        <view class="seg-icon ic-{{item.icon}}"></view>
+        <text class="seg-text">{{item.label}}</text>
+      </label>
+    </radio-group>
   </view>
 
-  <view class="count hint">共 {{matched}} {{unit}}</view>
+  <!-- 筛选结果的唯一出处。截断了才多一句「只到前几条」，
+       「报的数」与「列出的行」必须对得上（同一天在飞花令上吃过这个亏）。 -->
+  <view class="count hint">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>
 
   <view class="card" wx:for="{{groups}}" wx:key="group" id="g-{{index}}">
     <view class="group-head" wx:if="{{item.group}}">
       <text class="group-name">{{item.group}}</text>
       <text class="group-count">{{item.items.length}}</text>
     </view>
-    <view class="row" wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
+    <view class="row" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
       <text class="seq">{{p.seq}}</text>
       <view class="row-main">
-        <text class="row-title">{{p.title}}</text>
+        <text class="row-title row-poem">{{p.title}}</text>
         <text class="row-sub">{{p.dynasty}} · {{p.author}}</text>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
@@ -40,5 +61,12 @@
     </view>
   </view>
 
-  <view class="empty" wx:if="{{!groups.length}}">没有匹配的篇目</view>
+  <view class="empty" wx:if="{{!groups.length}}">
+    <text class="empty-mark">空</text>
+    <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集子里还没有篇目'}}</text>
+    <text class="hint empty-tip" wx:if="{{keyword}}">换个词或切到「全部」</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+  </block>
 </view>

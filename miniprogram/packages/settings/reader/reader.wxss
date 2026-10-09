@@ -1,28 +1,71 @@
 .note {
   display: block;
-  padding-top: 16rpx;
-  line-height: 1.8;
+  margin-top: var(--sp-2);
+  line-height: var(--lh-body);
+}
+
+.note.warn,
+.step.warn {
+  color: var(--amber);
+}
+
+.url-row {
+  margin-top: var(--sp-3);
+}
+
+.url-label {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.url-input {
+  height: 84rpx;
+  margin-top: 12rpx;
+  padding: 0 var(--sp-3);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  font-size: var(--fs-body);
+  color: var(--ink);
+}
+
+.sub-title {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  margin-top: var(--sp-3);
+}
+
+/* 通道状态那块：一句结论加一个底色，比一行灰字好用 */
+.tts-state {
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-hint);
+  line-height: var(--lh-body);
+}
+
+.tts-state.ok {
+  color: var(--green);
+  background: var(--green-light);
+}
+
+.tts-state.no {
+  color: var(--amber);
+  background: var(--amber-light);
+}
+
+.step {
+  display: block;
+  margin-top: 12rpx;
 }
 
 .test-btn {
-  margin-top: 20rpx;
+  margin-top: var(--sp-3);
 }
 
-.lock-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.lock-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--green);
-}
-
-.lock-sub {
-  font-size: 26rpx;
-  color: var(--ink-3);
-  margin: 12rpx 0 28rpx;
-  line-height: 1.7;
+/* 选中那一档的说明：贴在分段下面一行 —— 三档各带一行说明摆成三行，
+   看不出「这三个里只选了一个」。挪到下面，说清楚的就是「当前这一档」。 */
+.mode-desc {
+  display: block;
+  padding: 0 var(--sp-1) var(--sp-1);
 }
