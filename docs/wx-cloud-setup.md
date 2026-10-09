@@ -28,6 +28,11 @@ docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库 commit �
 短 sha 就是版本号，回滚时把旧的那个填回云托管那栏即可。构建日志在仓库的
 「流水线」页 —— **没看到镜像槽位新增，就是这一步没跑过**，下一步那栏没得填。
 
+⚠️ 这条流水线的第 1 步是 `git clone` 取 `poem` 的 `api/`，**不带凭据**。
+`poem` 匿名可读，去掉凭据才通；带上 ${CNB_TOKEN} 反而回
+`remote: Repository Not Found.`（退出码 128），而**镜像槽位不会有任何变化** ——
+看着就像「流水线没跑」，实际是第 1 步就断了。
+
 ### 2. 建服务，按镜像部署
 
 [cloud.weixin.qq.com](https://cloud.weixin.qq.com) → **云托管 → 服务管理 → 新建服务**。
@@ -131,6 +136,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 
 | # | 原因 | 判据 / 处理 |
 |---|---|---|
+| 0 | 流水线第 1 步 `git clone poem` 就断了 | 镜像槽位**一直不新增**。带上 `${CNB_TOKEN}` 会回 `Repository Not Found.`（128）—— 去掉凭据即可（`poem` 匿名可读）。判据：看该次构建里 `clone poem` 这一步 |
 | 1 | 免费档缩容到 0 实例（最像「失效」的一条） | 冷启动期间外部访问全失败，而控制台还写着「运行中」。给个定时探活打 `/healthz`，5 分钟以上一次 |
 | 2 | 「公网访问」被关回去了 | 重建服务 / 换环境会把它关掉。关着是**解析不到**，不是 404 |
 | 3 | 域名没进 request 合法域名 | curl 通、**真机不通**就是这条（开发者工具勾着「不校验合法域名」看不出来） |
@@ -139,6 +145,10 @@ curl -s -X POST https://<域>/api/sync/pull \
 
 **登录通但同步一律 401** —— 服务端没认 `Authorization: Bearer`，见
 [`wx-login-server.md`](wx-login-server.md)。
+
+**云托管从地址拉镜像报 401 Unauthorized** —— 那栏填的镜像**还没构建出来**，
+或者 CNB 制品库对云托管是私有、没配拉取凭据。先确认镜像槽位里真有那个短 sha
+（`registries list-packages` 或 CNB「制品库」页），再确认拉取凭据。
 
 ---
 
