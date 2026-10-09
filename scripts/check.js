@@ -7498,6 +7498,46 @@ function gapped(items, max) {
       "不挡流水线，只静默失败");
 }
 
+/* ---------- V46b. 「上传体验版」那步：成了/没成都得能看见 ----------
+ *
+ * 这一步 `allow_failure: true`，于是它有两种静默：
+ *   失败 → 流水线照样绿，得自己翻日志（`-80054` 那次就是这么漏过去的）
+ *   成功 → 没有任何信号，你以为没跑
+ * 所以 `script` 必须成对出现两块横幅，而且要**原样透传退出码** ——
+ * `exit $?` 写在别处就是 0，这步就永远「成功」。
+ *
+ * 还有一条实的：默认的 npm 会吐 40 行 warn，真错被埋在中间。
+ */
+{
+  const yml = fs.readFileSync(path.join(path.dirname(__dirname), ".cnb.yml"), "utf8");
+  // ⚠️ 不能直接 `indexOf("上传体验版")` —— 上面 `$."**"` 那条自检的注释里也提到了
+  //    这个名字（讲「list 混多行块」时举的例子），会更早命中。要按**任务名行**找。
+  const at = yml.indexOf("- name: 上传体验版");
+  const body = at < 0 ? "" : yml.slice(at);
+  // 这一步的 script 是一整块（字符串），不是 list 混多行块 ——
+  // 所以只需确认「最后是 allow_failure」，不需要再切一次块。
+  const isOneBlock = /allow_failure:\s*true/.test(body);
+
+  ok("`上传体验版` 那步还在（它被删掉的话，体验版不会再更新，而流水线是绿的）",
+    at >= 0, "`.cnb.yml` 里找不到「上传体验版」这个任务名");
+
+  ok("上传失败时会打一块能搜到的横幅（这步 allow_failure，红了流水线也是绿的）",
+    /✗✗✗/.test(body), "失败横幅没了 —— 失败会静默，只能靠人肉眼翻 50 秒日志");
+
+  ok("上传成功时也会打一句（allow_failure 的成功同样没信号）",
+    /✓✓✓/.test(body), "成功没有回执 —— 传没传上去没有任何线索");
+
+  ok("失败横幅里写的退出码是 `$?` 当场取的，不是硬编码的 0",
+    /code=\$\?/.test(body) && /exit "\$\{code\}"/.test(body),
+    "退出码没原样透传 —— 这一步会永远「成功」");
+
+  ok("npm 装包收掉 warn（默认 40 行 deprecated 会把真错埋掉）",
+    /--loglevel=error/.test(body), "没加 --loglevel=error，真错会被 40 行 npm warn 盖住");
+
+  ok("上传那步仍然只声明 name/script/allow_failure（script 一整块，不是 list）",
+    isOneBlock, "这一步的 script 结构变了 —— 混成 list 会被 CNB 用 `&&` 串崩");
+}
+
 /* ---------- V43. 部署件：云托管那份镜像（Issue #71） ----------
  *
  * 这一节的判据换过两次，值得写清为什么。

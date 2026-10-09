@@ -196,6 +196,9 @@ main:
           #      sh: 10: Syntax error: "&&" unexpected     （退出码 2）
           #    而这步是 `allow_failure: true` —— **不会让流水线红**，
           #    得自己翻日志才看得见（这一轮就是这么漏过去的）。
+          #
+          # ⚠️ 还有一层：**它成了也不会告诉你成了**（`allow_failure: true` 的
+          #    成功同样静默）。传完去公众平台得自己确认。所以下面成败都打横幅。
           script: |
             # 密钥读来了但名字对不上时**当场说清楚是哪个名字空着**：
             # 空着往下走的话，miniprogram-ci 抛的是「密钥无效 / appid 不一致」，
@@ -209,10 +212,27 @@ main:
                 exit 1
               fi
             done
-            npm i -D miniprogram-ci --no-audit --no-fund
+            # `--loglevel=error`：默认那档会吐 **40 行 npm warn**（deprecated /
+            # EBADENGINE 混着），真错被埋在中间 —— `-80054` 那次就在倒数第 12 行。
+            # WXML 里的 `unexpected token` 这种错，**一份日志只出现一次**，
+            # 被 40 行 warn 盖住等于没有。
+            npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             # 版本号用「本仓库 sha 前 8 位」：公众平台那边一版一个号，
             # 拿 sha 当号，回滚时能对上镜像的 tag。
-            node scripts/upload.js "${TAG}" "main ${TAG}"
+            #
+            # 失败时打一块横幅再原样退出：这一步 `allow_failure`，红了流水线也是绿的，
+            # 横幅是为了让「传没传上去」在**日志里有个能搜到的锚点** ——
+            # 否则它和前面 50 秒的编译输出糊成一团，只能靠人肉眼翻。
+            node scripts/upload.js "${TAG}" "main ${TAG}" || {
+              code=$?
+              echo "" >&2
+              echo "✗✗✗ 上传体验版没成功（退出码 ${code}） ✗✗✗" >&2
+              echo "  这步是 allow_failure：**流水线不会红**，别以为绿了就传上去了。" >&2
+              echo "  真错在上面那块 [error] 里，搜 'unexpected token' / '-80054'。" >&2
+              echo "  本版号 ${TAG}（镜像 tag 是同一个，回滚时对得上）。" >&2
+              exit "${code}"
+            }
+            echo "✓✓✓ 体验版已上传 ${TAG} —— 去公众平台设成体验版，真机走一遍再提审 ✓✓✓"
           # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
           # 不会让整条流水线红，得主动翻一眼日志。
           allow_failure: true
