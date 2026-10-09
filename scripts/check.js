@@ -7765,6 +7765,47 @@ function sectionOf(text, heading) {
     "busybox sh 会回 `sh: 1: set: Illegal option -o pipefail`，" +
       "整个 stage 在第一行就退出 —— 而它前面刚跑完的检查全是绿的，特别像「检查过了但没生效」");
 
+  /* ⚠️ 一个 stage 的 `script` **要么全是 list、要么一个块**，别混：
+     「一个多行块（`- |`）+ 后面几个普通 list 项」时，CNB 会把 list 各项用
+     `&&` 串到前一块的**末尾**，busybox sh 撞上就成了
+         sh: 10: Syntax error: "&&" unexpected     （退出码 2）
+     现场是 `上传体验版` 那步（`cnb-to6-1k4gaj155`）—— 而它 `allow_failure: true`，
+     **不会让流水线红**，得自己翻日志才看得见，这一轮就是这么漏过去的。
+
+     ⚠️ 不用 yaml 库（本仓库没这个依赖）：按缩进做一个够用的判据 ——
+     在同一个 `script:` 底下，如果出现过 `- |`（块标量项），后面就不该再出现
+     平级的 `- xxx` 普通项。 */
+  {
+    const lines = cnb.split("\n");
+    const offenders = [];
+    for (let i = 0; i < lines.length; i += 1) {
+      if (!/^\s*script:\s*$/.test(lines[i])) continue;
+      const indent = lines[i].search(/\S/);
+      let sawBlock = false;
+      let name = "";
+      for (let k = i - 1; k >= 0 && k > i - 12; k -= 1) {
+        const m = lines[k].match(/^\s*- name:\s*(.+)$/);
+        if (m) { name = m[1].trim(); break; }
+      }
+      for (let j2 = i + 1; j2 < lines.length; j2 += 1) {
+        const l = lines[j2];
+        const ind = l.search(/\S/);
+        if (l.trim() && ind <= indent) break; // 出了这个 script 块
+        if (/^\s*- \|\s*$/.test(l)) sawBlock = true;
+        else if (sawBlock && /^\s*- \S/.test(l) && ind <= indent + 2) {
+          offenders.push(name || "(无名 stage)");
+          break;
+        }
+      }
+    }
+    ok(".cnb.yml 里没有「script list 混着多行块」（会被串成 && 而语法报错）",
+      offenders.length === 0,
+      "这些 stage 的 script 是 list、且 `- |` 块后面还有普通项：" +
+        JSON.stringify(offenders) +
+        " —— CNB 会把各项用 `&&` 接上去，Alpine 的 sh 直接 `Syntax error`");
+  }
+
+
   /* 文档与流水线必须指同一个触发方式。这一条抓的是「改了配置忘了改文档」——
      上一轮的病就是这样：同一份 README 写着打 tag，配置里却已经换了。 */
   const deployDocs =

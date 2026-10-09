@@ -18,9 +18,12 @@ $:
         #    于是 `git clone` 回 128，而 CNB 的原话是 `Repository Not Found. / 仓库不存在。`，
         #    **看着像路径写错，其实是凭据不被接受**（带无效凭据时，连匿名可读的仓库也会被拒）。
         #    所以：带令牌试一次，不成就不带凭据再来（poem 匿名可读，实测过）。
-        - |
-          git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem 2>/dev/null \
-            || git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        #   写成一行（`||` 展开），别用 `- |` 多行块 —— 这条 script 是 **list**，
+        #   混了多行块的话 CNB 会把后面的项用 `&&` 串到块末尾、语法就崩：
+        #     sh: 10: Syntax error: "&&" unexpected     （退出码 2）
+        #   同一个毛病刚在 `上传体验版` 那步炸过（`cnb-to6-1k4gaj155`），
+        #   别再留一处 —— 自检里有一条断言守着「list 不许混多行块」。
+        - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem 2>/dev/null || git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
         # 云托管那份镜像（deploy/Dockerfile）的源码上下文是 **poem 仓库** ——
@@ -187,24 +190,29 @@ main:
         # 5. 上传体验版。**只上传，不提审** —— 「要不要上线」不该由流水线决定。
         #    传完去公众平台设成体验版，真机走一遍再提审。
         - name: 上传体验版
-          script:
+          # ⚠️ 整步**用一个 `script: |` 块**，别写成「一个多行块 + 后面几个 list 项」。
+          #    混着写时 CNB 会把 list 各项用 `&&` 串到前一块的**末尾**，
+          #    busybox sh 撞上就成了：
+          #      sh: 10: Syntax error: "&&" unexpected     （退出码 2）
+          #    而这步是 `allow_failure: true` —— **不会让流水线红**，
+          #    得自己翻日志才看得见（这一轮就是这么漏过去的）。
+          script: |
             # 密钥读来了但名字对不上时**当场说清楚是哪个名字空着**：
             # 空着往下走的话，miniprogram-ci 抛的是「密钥无效 / appid 不一致」，
             # 会把人引去查公众平台，而真正的问题只是密钥仓库里少写了一个键。
-            - |
-              for v in WX_APPID WX_PRIVATE_KEY_B64; do
-                eval "val=\$$v"
-                if [ -z "$val" ]; then
-                  echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
-                  echo "  已注入的变量名（只列名字，不列值）：" >&2
-                  env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
-                  exit 1
-                fi
-              done
-            - npm i -D miniprogram-ci --no-audit --no-fund
+            for v in WX_APPID WX_PRIVATE_KEY_B64; do
+              eval "val=\$$v"
+              if [ -z "$val" ]; then
+                echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+                echo "  已注入的变量名（只列名字，不列值）：" >&2
+                env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
+                exit 1
+              fi
+            done
+            npm i -D miniprogram-ci --no-audit --no-fund
             # 版本号用「本仓库 sha 前 8 位」：公众平台那边一版一个号，
             # 拿 sha 当号，回滚时能对上镜像的 tag。
-            - node scripts/upload.js "${TAG}" "main ${TAG}"
+            node scripts/upload.js "${TAG}" "main ${TAG}"
           # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
           # 不会让整条流水线红，得主动翻一眼日志。
           allow_failure: true
