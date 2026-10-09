@@ -13,7 +13,12 @@ $:
         # 朝代四组判据（Issue #61）。那边一改，这边不是静默跟上，而是**红**，
         # 由人回来对一次再动。之所以不把 clone 钉在 sha 上：钉住之后
         # 「同步没同步」就没人问了 —— 反正永远同步不了。
-        - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+        # ⚠️ **不带凭据**（Issue #71）。写成 https://${CNB_TOKEN}@... 不通：
+        #   注入的 CNB_TOKEN 对本仓库之外的私有仓库无效，实测服务端回
+        #     remote: Repository Not Found.
+        #     fatal: repository '...' not found     （退出码 128）
+        #   而 poem 匿名可读（不带凭据 `git clone` 实测成功），去掉凭据立刻通。
+        - git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
         # 云托管那份镜像（deploy/Dockerfile）的源码上下文是 **poem 仓库** ——
@@ -110,7 +115,7 @@ main:
         # 1. 取后端源码。这一份是**唯一一份** —— 不往本仓库落副本，
         #    所以「poem 改了这个没跟上」这件事根本不会发生。
         - name: clone poem
-          script: git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+          script: git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem   # 不带凭据，见上面那条注释
         # 2. 自检。语料在 CI 里现编译，「跟的是什么」由 check.js 的 V40 记着
         #    （篇数 / 号段 / 归位 / 朝代）：poem 那边一改，这边不是静默跟上，
         #    而是**红**，由人回来对一次再动。
