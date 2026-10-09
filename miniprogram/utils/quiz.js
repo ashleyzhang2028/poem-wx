@@ -276,4 +276,27 @@ function formOf(key) {
   return FORMS.find((f) => f.key === key) || FORMS[0];
 }
 
-module.exports = { FORMS, FORM_KEYS, formOf, build, judge, optionRows };
+/**
+ * 选项那一格该有的**状态类**：作答前空着，作答后标出对（`right`）与
+ * 自己选错的那条（`wrong`）。
+ *
+ * ⚠️ 为什么在 js 里拼，而不是像原先那样写在 wxml 的 `class` 里：
+ * 原来的写法是**三层嵌套三元**，内层还带字符串字面量：
+ *
+ *     class="option {{picked ? (item.text === current.answer ? 'right'
+ *             : (item.text === picked ? 'wrong' : '')) : ''}}"
+ *
+ * WXML 的 `{{ }}` 解析不了这种嵌套引号，构建时直接报：
+ *     ./packages/game/quiz/quiz.wxml:1:2154:
+ *     Bad value with message: unexpected token `.`
+ * 也就是**真机包传不上去**（`-80054`）。本仓库别处（exam / feihua / index）
+ * 一律只用**一层**三元，这一处是唯一的例外 —— 挪到 js 里就回到同一套写法。
+ */
+function optionClass(row, picked, answer) {
+  if (!picked || !row) return "";
+  if (row.text === answer) return "right";
+  if (row.text === picked) return "wrong";
+  return "";
+}
+
+module.exports = { FORMS, FORM_KEYS, formOf, build, judge, optionRows, optionClass };

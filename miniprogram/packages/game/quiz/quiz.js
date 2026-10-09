@@ -105,7 +105,8 @@ Page({
         questions,
         index: 0,
         current: questions[0],
-        optionRows: quiz.optionRows(questions[0].options),
+        // 还没作答：picked 为空，cls 一律是空串
+        optionRows: this.rowsWithCls(questions[0].options, "", questions[0].answer),
         metaLine: this.metaLineOf(questions[0]),
         picked: "",
         last: null,
@@ -114,6 +115,19 @@ Page({
         wrong: []
       }
     );
+  },
+
+  /**
+   * 选项那一列，每格**带上状态类** `cls`。
+   *
+   * 为什么要多这一层：wxml 原先在 `class` 里写了三层嵌套三元 + 字符串字面量，
+   * 而 WXML 的 `{{ }}` 解析不了 —— 构建时报
+   * `quiz.wxml:1:2154: unexpected token '.'`，真机包直接传不上去。
+   * 本仓库别处一律只用一层三元，这里跟着回同一套写法（见 `quiz.optionClass`）。
+   */
+  rowsWithCls(options, picked, answer) {
+    return quiz.optionRows(options).map((r) =>
+      Object.assign({}, r, { cls: quiz.optionClass(r, picked, answer) }));
   },
 
   /**
@@ -139,6 +153,9 @@ Page({
 
     this.setData({
       picked,
+      // ⚠️ 必须**一起重算**：以前高亮是靠模板里 `{{picked ? ... }}` 在数据变化时
+      //    自己重求值；现在类名在 data 里，不重算就永远不会亮。
+      optionRows: this.rowsWithCls(this.data.current.options, picked, this.data.current.answer),
       last: res,
       answered: this.data.answered + 1,
       correct: this.data.correct + (res.ok ? 1 : 0),
@@ -165,7 +182,7 @@ Page({
     this.setData({
       index,
       current: next,
-      optionRows: quiz.optionRows(next.options),
+      optionRows: this.rowsWithCls(next.options, "", next.answer),
       metaLine: this.metaLineOf(next),
       picked: "",
       last: null
