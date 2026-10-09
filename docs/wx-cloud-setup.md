@@ -123,22 +123,31 @@ Supabase 每 5 天探活，见其 `.cnb.yml` 的 `crontab: 0 3 */5 * *`）。
 
 #### 想再瘦一圈：只跑 `/api/` 的那份镜像
 
-上面那份是「一个进程跑全」——顺手把整个网页版也搬进了容器。小程序其实**一条静态资源都不取**，
-所以本仓库 `deploy/` 下另放了一份**只跑 API** 的部署描述（Issue #71 选的 B 方案）：
+上面那份是「一个进程跑全」——顺手把整个网页版也搬进了容器（构建上下文 49MB，
+其中 26MB 语料 + 11MB 字体是小程序一条都不取的）。所以本仓库 `deploy/` 下另放了
+一份**只跑 API** 的部署描述（Issue #71 选的 B 方案）：上下文 **436KB**。
 
-```bash
-git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
-POEM_DIR=/tmp/poem bash deploy/build.sh
-```
+云托管那几栏这么填（**关键是「容器目录」**）：
 
-构建上下文 **52MB → 456KB**（只放 `api/`）。省掉的是部署时要上传、运行时一次都不读的东西：
-`data/` 26MB、`fonts/` 11MB、`scripts/data/` 11MB、`.git` 22MB。
+| 字段 | 填什么 |
+|---|---|
+| 代码仓库 | `https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program.git` |
+| **容器目录** | **`deploy`** |
+| Dockerfile | `Dockerfile`（不填默认也是它） |
+| 端口 | `8080` |
 
-⚠️ 代价写在 [`../deploy/README.md`](../deploy/README.md) 里，先看那一条再决定：
-砍掉 `data/` 与 `js/` 之后，`/api/game/answer`、`/api/exam/records` 会回 **500**。
-小程序端两条都不打，所以默认这样；要补就加 `--with-corpus`。
+⚠️ **别指望在这里填 `poem` 的地址**：云托管是按**上面的仓库根**取容器目录的，
+而 `poem` 是另一个仓库 —— 填进去只会看到「没有 Dockerfile」。
+这也是这份东西放在**本仓库** `deploy/` 而不是 `poem` 里的原因。
+代价是 `deploy/api/` 是 `poem/api/` 的一份副本，靠 `deploy/sync-api.sh` 同步，
+自检拿 sha 对账（对不上就红）。详见 [`../deploy/README.md`](../deploy/README.md)。
 
-选哪份都行 —— `deploy/Dockerfile.api`（瘦）与 `poem` 根的 `Dockerfile`（全）
+⚠️ 代价第二条，先看再定：砍掉 `data/` 与 `js/` 之后，
+`/api/game/answer`、`/api/exam/records` 会回 **500**。小程序端两条都不打，
+所以默认这样；**要语料就别用这份**（那两条要 `data/` 26MB 加 `js/` 1MB，
+一起加回来只剩「省个字体」，不如直接用 `poem` 根那份）。
+
+选哪份都行 —— `deploy/Dockerfile`（瘦）与 `poem` 根的 `Dockerfile`（全）
 在**账号、进度、会话**上没有任何区别，差别只在容器里有没有静态站。
 
 ### 1.3 配环境变量

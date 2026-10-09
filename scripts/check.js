@@ -7220,6 +7220,53 @@ function gapped(items, max) {
       "刷新那条报文少一个字段，限流就形同虚设，而没人看得出来");
   }
 
+  /* ---------- 11. 部署件：deploy/ 得是能部署的样子（Issue #71 的 B 方案） ---------- */
+  {
+    const deploy = path.join(ROOT, "..", "deploy");
+    const dockerfile = path.join(deploy, "Dockerfile");
+    const dockerignore = path.join(deploy, ".dockerignore");
+    const stamp = path.join(deploy, "api.synced");
+
+    ok("deploy/Dockerfile 在（名字必须正好是 Dockerfile —— 云托管默认就找它）",
+      fs.existsSync(dockerfile));
+
+    const df = fs.readFileSync(dockerfile, "utf8");
+    // 只看**指令行**（注释里为了讲清道理会提 data/、fonts/，那不是指令）
+    const dfLines = df
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"));
+    const copied = dfLines.filter((l) => l.startsWith("COPY")).join("\n");
+    ok("deploy/Dockerfile 只 COPY api/ 与 serve-api.js，不 COPY 语料 / 字体 / 前端",
+      /COPY --chown=node:node api \.\/api/.test(copied) &&
+        /COPY --chown=node:node serve-api\.js \.\//.test(copied) &&
+        !/\b(data|fonts|css|icons)\b/.test(copied),
+      "把 data/ 之类 COPY 进来，构建会报 no source files（白名单挡着）；" +
+        "真 COPY 到了，就是把 26MB 请回了上下文。实际 COPY：" + JSON.stringify(copied));
+    ok("deploy/Dockerfile 声明了 API_REV（构建参数参与缓存键，改了才真的重建）",
+      /ARG API_REV/.test(df));
+
+    const di = fs.readFileSync(dockerignore, "utf8");
+    ok("deploy/.dockerignore 是白名单（先 ** 全排，再 !api/** 放行）",
+      /^\*\*$/m.test(di) && /^!api\/\*\*$/m.test(di),
+      "写成常规排除名单的话，deckor 的体积会整个漏进上下文");
+
+    ok("deploy/api/handler.js 在（构建上下文里的就是它）",
+      fs.existsSync(path.join(deploy, "api", "handler.js")));
+    ok("deploy/api.synced 记着来源 commit（对账靠它）",
+      fs.existsSync(stamp) && /^commit=[0-9a-f]{7,}/m.test(fs.readFileSync(stamp, "utf8")),
+      "没有 api.synced，就无法判断这份 api/ 是哪一版 —— 线上跑旧代码没人知道");
+
+    // 云端要填的那几栏，文档必须写全 —— 少一栏就是「点不通」
+    const setup = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-cloud-setup.md"), "utf8");
+    ok("云托管设置文档写了「容器目录」填 deploy",
+      /容器目录[\s\S]{0,200}?deploy/.test(setup),
+      "容器目录不写，云托管会去仓库根找 Dockerfile —— 那边没有");
+    ok("云托管设置文档点明了上下文只能在【本仓库】deploy/",
+      /别指望[\s\S]{0,200}?poem/.test(setup),
+      "不说这句，人会去填 poem 的地址，然后卡在「没有 Dockerfile」");
+  }
+
   void remoteSrc;
   void authSrc;
 

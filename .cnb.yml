@@ -12,6 +12,11 @@ $:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        # deploy/api/ 是 poem 的 api/ 的**一份副本**（云托管不会去 clone 另一个
+        # 仓库，代码必须已经在部署上下文里 —— 见 deploy/README.md）。所以这里
+        # 对一次账：poem 的 HEAD 与 deploy/api.synced 里记的 sha 不一致就红。
+        # 红的含义同 V40：**回来同步一次**（bash deploy/sync-api.sh），不是坏了。
+        - bash deploy/sync-api.sh --check
         # 页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
         # 版式（折叠不丢字、折出来的行不孤字、短句不被折，跑全站 5599 篇）/
         # 「选一个」的控件（三种排布同一块填色、选项行不许画竖线、
