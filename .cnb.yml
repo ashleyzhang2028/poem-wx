@@ -91,7 +91,18 @@ $:
 main:
   push:
     - name: 发布（自检 → 镜像 → 体验版）
-      image: node:20
+      # ⚠️ **必须是 `docker.image`，不能写 `image`。**
+      #    流水线级没有 `image` 这个字段（语法手册里是 `docker.image` / `docker.build`），
+      #    写在 `image:` 会被**静默忽略**，整条 job 退回缺省镜像
+      #    `cnbcool/default-build-env` —— 而那个镜像里**没有 node**。
+      #    现场（`cnb-si8-1k4g9c8rp`，13 秒就红）：
+      #      $ POEM_WEB_DIR=/tmp/poem node scripts/build-data.js && node scripts/check.js ...
+      #      sh: line 1: node: command not found     （退出码 127）
+      #    报错像「命令写错了」，其实跟命令、跟令牌、跟路径都无关。
+      #    （`$."**"` 那条自检写的是 `image: node:20` —— 那是**任务级**，
+      #      `image` 在任务级是合法字段，那条没问题，别一起改。）
+      docker:
+        image: node:20
       services:
         - docker
       imports:
