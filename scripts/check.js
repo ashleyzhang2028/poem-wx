@@ -7502,19 +7502,49 @@ function sectionOf(text, heading) {
     corpses.length === 0,
     "发现：" + JSON.stringify(corpses.slice(0, 2)));
 
-  /* 流水线那一节：源码上下文必须是 poem。
+  /* 流水线：源码上下文必须是 poem。
      写成「本仓库 + 容器目录」就又回到那份副本上了（云托管不 clone 第二个仓库，
      流水线可以 —— 所以流水线必须真的去 clone poem）。 */
   const cnb = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8");
   ok(".cnb.yml 里那份镜像的流水线去 clone poem（源码上下文 = 后端那一边）",
-    /构建云托管镜像（源码 = poem）[\s\S]{0,900}?clone[\s\S]{0,200}?poem\.git/.test(cnb),
+    /clone poem[\s\S]{0,600}?clone[\s\S]{0,200}?poem\.git/.test(cnb),
     "没去取 poem 就只能靠副本，而副本正是这一版撤掉的东西");
   ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
-  ok(".cnb.yml 里那节镜像用一个**独立 job**（不与上传体验版挤在同一个 job 里）",
-    /- name: 构建云托管镜像（源码 = poem）/.test(cnb) && /- name: 上传体验版/.test(cnb),
-    "挤在一起的话，镜像构建失败会把体验版上传一起挡下");
+
+  /* 「以后所有的提交都进 main」—— 这句得落在配置里，不能只是口头约定。
+     两件事一起守：
+       ① 发布流水线挂在 `main:` 上，不是 `"v*":`（打 tag 要管理员，日常没人打得动）
+       ② 镜像的 tag 跟 commit 走。⚠️ 这条是那份配置最容易写错的地方：
+          用 CNB_BRANCH 的话，push 触发下它等于分支名，永远是 `main` ——
+          看着有 tag，回滚时却没有版本号可填（实测过）。
+     ③ `main` 之外的推送**不出镜像**：出了没人用，只往制品库堆垃圾。 */
+  const deployJob = (() => {
+    const i = cnb.indexOf("\nmain:");
+    return i < 0 ? "" : cnb.slice(i);
+  })();
+  ok(".cnb.yml 里发布流水线挂在 main 上（不是 tag）",
+    !!deployJob.trim(),
+    "打 tag 要仓库管理员，日常提交的人不该为发版去找管理员");
+  ok("main 那条流水线的镜像 tag 是 commit 短 sha，不是分支名",
+    /TAG:\s*\$\{CNB_COMMIT_SHORT\}/.test(deployJob) &&
+      !/-t "\$\{IMAGE\}:\$\{CNB_BRANCH\}"/.test(deployJob),
+    "用 CNB_BRANCH 的话 push 触发下它等于 `main`，那不是版本号，回不去");
+  ok("只有 main 出镜像（其余分支只自检）",
+    /^\$:/m.test(cnb) && !/^"v\*":/m.test(cnb) &&
+      /\$:[\s\S]*?"\*\*":[\s\S]*?- name: 自检/.test(cnb),
+    "分支推送也出镜像只会往制品库堆垃圾，而没人会去用那些 tag");
+
+  /* 文档与流水线必须指同一个触发方式。这一条抓的是「改了配置忘了改文档」——
+     上一轮的病就是这样：同一份 README 写着打 tag，配置里却已经换了。 */
+  const deployDocs =
+    setup + fs.readFileSync(path.join(repo, "README.md"), "utf8") +
+    fs.readFileSync(path.join(deploy, "README.md"), "utf8");
+  ok("部署文档不再教人打 tag 出镜像（触发方式已改为推 main）",
+    !/git tag v\d/.test(deployDocs) && !/打 v\* tag/.test(deployDocs) &&
+      !/微信小程序云托管\/wx-api:<tag>/.test(deployDocs),
+    "文档里还留着打 tag，人会照着做一遍然后发现推不上去（要管理员）");
 }
 
 /* ---------- 汇总 ---------- */

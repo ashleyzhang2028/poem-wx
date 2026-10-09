@@ -11,12 +11,12 @@
 
 ## 云托管那几栏
 
-先打一个 `v*` tag 触发流水线把镜像构建出来，再去控制台建服务。
+推一版 `main` 触发流水线把镜像构建出来，再去控制台建服务。
 
 | 字段 | 填什么 |
 |---|---|
 | 部署方式 | **镜像** |
-| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>` |
+| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>` |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
 
@@ -33,7 +33,8 @@
 
 `poem` 的 `api/` + 本仓库的 `deploy/Dockerfile` 与 `deploy-api-serve/`，
 平铺进同一层临时目录再 `docker build`（Dockerfile 按 `./api` 与 `./serve-api.js` 拷）。
-见 `.cnb.yml` 的「构建云托管镜像（源码 = poem）」。
+见 `.cnb.yml` 的「发布（自检 → 镜像 → 体验版）」—— 推 `main` 触发，镜像 tag 是
+本仓库这一版的短 sha（`${CNB_COMMIT_SHORT}`），不是分支名。
 
 镜像名用 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。**别写成 `${CNB_ROOT_SLUG}`** ——
 那个变量在流水线里指被 clone 的 `poem`。

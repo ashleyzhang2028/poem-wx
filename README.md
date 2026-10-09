@@ -32,7 +32,7 @@ POEM_ROSTER='[{"id":"...","label":"belem","tier":"max"}]' node scripts/build-dat
 不设也能跑 —— 管理页如实显示「名录未导入」，只列出本机授权，不凭空编人。
 CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，自检有断言守着这一点。
 
-`appid` 已换成正式号（`wx200a0c667fc67fcb`），上传体验版走 tag 流水线；
+`appid` 已换成正式号（`wx200a0c667fc67fcb`），上传体验版跟着 `main` 流水线走；
 `upload.js` 会把它与密钥仓库里的 `WX_APPID` 逐字比对，不一致直接拒绝上传。
 
 ## 现在到什么程度了（别看成「可以提审了」）
@@ -57,7 +57,7 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 3. **真机走一遍**。上面所有验证都是离线跑的；安全区、原生控件外观、字体回退、
    分片下载超时各有一摊事，开发者工具的真机预览才是准的
 
-传到体验版有一条 tag 流水线（`.cnb.yml`），**只上传不提审** ——
+传到体验版跟着 `main` 那条流水线（`.cnb.yml`），**只上传不提审** ——
 「要不要上线」不该由流水线决定。
 
 ## 要联网的四条路，和「request 合法域名」
@@ -797,11 +797,11 @@ scripts/
 （源码取 `poem`，Dockerfile 从这边取），云托管按**镜像**部署。
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0   # 先出镜像
+git checkout main && git pull   # 推 main 就出镜像
 ```
 
 然后照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做：建服务（填镜像
-`docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>`，端口 8080）→
+`docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>`，端口 8080）→
 配环境变量 → 建 `wx_accounts` 表 → 加 request 合法域名 → 填 `baseUrl` → 验。
 
 ⚠️ **别选「部署方式 = 代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿没有

@@ -6,26 +6,27 @@
 照着做就行，只有一条路：
 
 ```
-打 v* tag 构建镜像 → 云托管按镜像部署 → 配环境变量 → 建 wx_accounts 表 → 加 request 域名 → 填 baseUrl → 验
+把代码合进 main（镜像自动构建） → 云托管按镜像部署 → 配环境变量 → 建 wx_accounts 表 → 加 request 域名 → 填 baseUrl → 验
 ```
 
 ---
 
 ## 一、部署
 
-### 1. 打一个 `v*` tag，把镜像构建出来
+### 1. 把代码合进 `main`，镜像自动构建
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
+git checkout main && git pull
 ```
 
-流水线：`.cnb.yml` 的「构建云托管镜像（源码 = poem）」。产出的镜像地址：
+推 `main` 就触发流水线 `.cnb.yml` 的「发布（自检 → 镜像 → 体验版）」，跑完出镜像：
 
 ```
-docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>
+docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库 commit 前 8 位>
 ```
 
-没打 tag 就没有镜像，下一步那栏没得填。
+短 sha 就是版本号，回滚时把旧的那个填回云托管那栏即可。构建日志在仓库的
+「流水线」页 —— **没看到镜像槽位新增，就是这一步没跑过**，下一步那栏没得填。
 
 ### 2. 建服务，按镜像部署
 
@@ -36,11 +37,13 @@ docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>
 | 归属环境 | 没有就这一步新建（地域就近，如上海） |
 | 服务名称 | 随便，如 `poem-api` |
 | 部署方式 | **镜像** |
-| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:v1.0.0` |
+| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>` |
 | 端口 | `8080` |
 
 首次进入如果看到一排框架模板（Express / Spring Boot…），那是「无门槛部署」的脚手架页，
 **不要选**，走「新建服务」这条路。
+
+镜像那一栏要填**具体版本号**，别填 `latest` —— 回滚时才知道该填回哪个。
 
 ⚠️ **别选「部署方式 = 代码仓库」**，两条都走不通：
 
