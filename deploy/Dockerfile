@@ -12,9 +12,30 @@
 #    仓库，CNB 流水线可以 —— 于是那份副本连同「改完 poem 忘了同步」这个税一起没了。
 #    代价是本仓库多一个镜像槽位（见 README），换来的是**后端只有一份代码**。
 #
-# 这份的构建上下文是 poem 仓库根，瘦身靠上面的 `.dockerignore`（白名单入镜）。
+# ⚠️ **旁边那份 `.dockerignore`（`deploy-api-serve/` 里）不生效 —— 位置不对。**
 #
-# 基础镜像走 `BASE_IMAGE`，**默认还是 Docker Hub 的 node:20-alpine**。
+#    忽略文件跟**构建上下文**走，跟 Dockerfile 放哪儿无关。这条流水线的上下文是
+#    摊出来的 `/tmp/ctx`，所以唯一生效的位置是 **`/tmp/ctx/.dockerignore`** ——
+#    流水线那一步现在就在往那儿拷（`cp deploy-api-serve/.dockerignore /tmp/ctx/…`）。
+#
+#    三个位置里只有一个是对的，另外两个都**最像对的**：
+#
+#      ✅ `/tmp/ctx/.dockerignore`        ← 有效。`docker build -f <ctx>/Dockerfile <ctx>`
+#      ❌ `deploy-api-serve/.dockerignore` ← 原样躺在本仓库里，从来没进过上下文
+#      ❌ `/tmp/ctx/api/.dockerignore`     ← **嵌套的不生效**，Docker 一个字节都不读
+#
+#    第二、三个的共同点是**不报错**：构建绿、部署绿，只是上下文从 0.3MB 变成 38MB ——
+#    poem 的 `data/`（26MB 语料）与 `fonts/`（11MB）照传，而这个小程序一条都不读那几条
+#    路由要的东西。所以工程里要在 `build & push` 之前当场断掉，别留给体积去说。
+#
+#    ⚠️ 顺带记一条 CNB 的文档坑：它写「忽略文件按 **repo 根**取」。本条流水线的 repo 根
+#    是 poem，那么写下来就该用 poem 根那份 `poem/.dockerignore` —— 而那份**不是**白名单，
+#    它只排掉 `.git` / `test` / `docs`，poem 的 `data/` 不在排除名单里，26MB 照进。
+#    也就是说：照文档做也能「不报错地错」，只是错的方向换了。
+#
+#    所以别再把白名单挪走 —— 判据在自检 V43 里钉着（摆错位置会红）。
+#
+# 基础镜像走 `BASE_IMAGE`，**默认是 Docker Hub 的 node:20-alpine**。
 # 多这一层不是为了好看：国内构建机上 Docker Hub 慢／不通时，命令行加
 #     --build-arg BASE_IMAGE=<你的镜像源>/library/node:20-alpine
 # 就能换源，不用改这个文件。

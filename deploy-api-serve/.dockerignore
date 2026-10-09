@@ -8,6 +8,10 @@
 #      Dockerfile  = 本仓库 deploy/Dockerfile
 #      服务壳      = 本仓库 deploy-api-serve/serve-api.js（由流水线摆进上下文）
 #
+#      （这份是**给流水线拷的源文件** —— 它躺在哪不重要，重要的是被拷到
+#        `/tmp/ctx/.dockerignore`。忽略文件跟**构建上下文**走、跟 Dockerfile
+#        放哪儿无关；一句话：挪走就不生效，且不报错。全文见 deploy/Dockerfile。）
+#
 # ⚠️ 这一份**不是**「排除什么」，是「只留什么」。常规写法（排掉 .git / test / docs）
 #    挡不住 poem 的 data/ —— 它不在排除名单里，于是 26MB 语料照样每次上传一遍，
 #    运行时一次都不读。所以先排掉一切，再逐条放行。
