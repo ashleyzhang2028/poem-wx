@@ -803,15 +803,21 @@ deploy/             Dockerfile + build.sh（云托管那份镜像怎么构建）
 deploy-api-serve/   只挂 /api/* 的服务壳 + .dockerignore（进的是 poem 那个上下文）
 ```
 
-镜像由 CNB 流水线构建（`.cnb.yml` 的「构建云托管镜像」一节）：
+镜像由 CNB 流水线构建（`.cnb.yml` 的「构建云托管镜像（源码 = poem）」一节）：
 **源码上下文 = poem**，Dockerfile 从这边取。所以后端只有一份代码，
 不存在「改完 poem 忘了同步」这种漂。云托管那边按**镜像**部署 ——
-怎么填见 [`deploy/README.md`](deploy/README.md) 与
-[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) §1.2。
+先打一个 `v*` tag 把镜像构建出来，再在控制台填那几栏
+（见 [`deploy/README.md`](deploy/README.md) 与
+[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) §1.2）。
 
-⚠️ **别在云托管控制台里指这个仓库**：那儿的「容器目录」是按被部署仓库的根取的，
-而那儿没有 `api/`。按那条路走，就只剩「把 poem 的 `api/` 拷一份进来」这个选择，
-而那份副本正是要撤掉的东西。
+⚠️ **两条都不通的路，别去试**：
+- **别在云托管控制台里指这个仓库** —— 它按「被部署仓库的根」找 Dockerfile，
+  而那儿没有 `api/`。按那条路走，就只剩「把 poem 的 `api/` 拷一份进来」这个选择，
+  而那份副本正是要撤掉的东西。
+- **也别指 `poem` 仓库** —— 那份是全量镜像（构建上下文 49MB），不是小程序的瘦后端。
+
+**要人做的全部动作**（建表、配环境变量、加 request 域名……）收在
+[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 的「§ 一点五 运维动作清单」。
 
 ## 还没做的
 

@@ -354,14 +354,25 @@ select … on conflict (uid, child_id, poem_id) do update
 
 ## 部署顺序
 
+> 完整清单（含云托管控制台怎么点）在
+> [`wx-cloud-setup.md` § 一点五 运维动作清单](wx-cloud-setup.md#一点五运维动作清单人要做的事照这个顺序做)。
+> 这里只列**跟后端这一层直接相关**的那几步。
+
 **第 1～2 步的代码已经在了**（`poem#532` 合并后即可）。剩下的是运维动作。
 
-1. **配两个环境变量**：`WX_APPID` / `WX_SECRET`
-   —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`（不是 500，也不是「你 code 不对」）
-2. **建上面那张表**（`wx_accounts`）
-   —— 没建回 `503 E_WX_TABLE` 并指路。**这张表不在 `poem` 的
-   `api/_lib/schema.sql` 里**：那份是网页版的，网页版一行都不该动
-3. 部署那份镜像（见 `docs/wx-cloud-setup.md` §1.2 / `deploy/README.md`）
+1. **先构建出镜像**：打一个 `v*` tag 触发 `.cnb.yml` 的「构建云托管镜像」，
+   拿到 `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>`
+   —— 没有这一步，云托管那栏没得填（**别指 `poem` 仓库，也别填「容器目录 deploy」**，
+   理由见 `wx-cloud-setup.md` § 1.1 末与 § 1.2）
+2. **配环境变量**（云托管 → 服务设置 → 环境变量）：
+   - `SESSION_SECRET`（`openssl rand -hex 32`）—— 缺了 `/api/*` 一律 `503 E_NOT_CONFIGURED`
+   - `SUPABASE_URL` / `SUPABASE_SERVICE_KEY`（**service_role，不是 anon**）
+   - **`WX_APPID` / `WX_SECRET`** —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`
+     （不是 500，也不是「你 code 不对」）
+3. **建上面那张表**（`wx_accounts`，在 Supabase → SQL Editor 跑）
+   —— 没建回 `503 E_WX_TABLE` 并指路，**那句话会原样显示给用户看**。
+   ⚠️ 这张表不在 `poem` 的 `api/_lib/schema.sql` 里：那份是网页版的，
+   网页版一行都不该动，所以它是小程序这一层单独建的
 4. **验三步**，每一步的判据都不是「客户端说成功」：
    - 会话认得出来 —— 带一枚自签的 token 直接打同步口：
      ```
@@ -375,7 +386,8 @@ select … on conflict (uid, child_id, poem_id) do update
      `select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1')`
    - 刷新那条带得动会话 —— `POST /api/wx/refresh` 带上 `refreshToken` 与 `device`，
      并确认**旧令牌当场作废**（再拿它打一次同步口，应当 401）
-5. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`）
+5. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`），
+   并把云托管默认域加进微信「request 合法域名」
 6. 把第一个管理员扶成 `owner`：直接在库里改 `accounts.role`。
    **小程序端没有这条口，也不该有** —— 一个能在客户端点出来的
    「把自己设成 owner」就是权限漏洞。网页版那条 `OWNER_EMAILS` 走的是邮箱，
