@@ -105,13 +105,33 @@ function main() {
       a: p.author || p.authorName || "",
       d: p.dynasty || "",
       s: p.source || "",
+      /* 题名异写（「又名 xxxx」，Issue #516）：只有少数篇目有，数组或字符串,
+         没有就是 undefined（判定处一律用真值判断，不设空数组）。
+         详情页标题底下取用，与网页版 reader-core.js 的 renderAliases 同口径 */
+      aka: p.aliases || null,
+      /* 第二重出处（Issue #512）：`source` 写这首诗所出之书（《杜工部集》），
+         `selection` 记收它的选本（《唐诗三百首》）。两者在详情页并列，
+         `source` 在前 —— 与网页版 reader-core.js 那个 <span class="tag"> 一致。
+         只有《唐诗》《词》《曲》《昭明文选》四部的选本条目有 */
+      sel: p.selection || "",
       g: p.group || p.gradeGroup || "",
-      b: p.book,
-      n: p.bookName,
+      book: p.book,
+      bookName: p.bookName,
       // 年级学期只有课内诗词有，其余集子按分组走；0 表示不适用
       gr: p.grade || 0,
-      tm: p.term || 0,
-      hasT: !!text
+      tm: p.term || 0
+      /* ⚠️ `b`（集子 id）/ `n`（集子名）/ `hasT` 三个字段**故意不落盘** ——
+         它们各自占 76KB / 60KB / 63KB，而前两个在每个文件里是**同一个常数**
+         （书籍已经按集子拆文件了），`hasT` 更是 5854 条全是 true。
+
+         2026-10-09 这一轮把主包顶过了 2MB（1.90 → 2.05MB）：补录进来 255 条
+         （5599 → 5854）、出处勘正又给 337+288+480 条加了 `sel`。三者合计
+         199KB，去掉就回到预算里，且**一个字的正文都没动**。
+
+         补回来的地方只有一处：`utils/corpus.js` 的 `ofBook()` ——
+         它读文件时按文件名把 `b` / `n` 填回去（`hasT` 直接给 true）。
+         语料的每一层都走 `ofBook()`（列表 / 检索 / 阅读 / 作者索引 / 试题），
+         所以外面看到的形状**与从前一模一样**。 */
     });
 
     if (text || translation) {
@@ -132,11 +152,28 @@ function main() {
   // 而它与各集子索引是同一份数据。搜索与按 id 查条目时按需拼装。
   const byBook = {};
   index.forEach(function (p) {
-    (byBook[p.b] = byBook[p.b] || []).push(p);
+    (byBook[p.book] = byBook[p.book] || []).push(p);
   });
 
   Object.keys(byBook).forEach(function (b) {
-    writeJson(path.join(OUT_DIR, "books", b + ".json"), byBook[b]);
+    /* 落盘时把 `book` / `bookName` 摘掉 —— 它们在每个文件里是同一个常数
+       （见上面写入注释里那段账）。`books.json` 里已经有一份 id → 名字的表，
+       `utils/corpus.js` 的 `ofBook()` 读文件时按文件名填回去。 */
+    const rows = byBook[b].map(function (p) {
+      const copy = {};
+      Object.keys(p).forEach(function (k) {
+        /* `book` / `bookName` 摘掉（见下）；空的字段也摘掉 ——
+           `aka: null` / `sel: ""` / `gr: 0` / `g: ""` 在 JSON 里各自占
+           十几个字节，5854 条累起来是几十 KB 的纯空。读的人一律用
+           真值判断（`if (p.sel)`），缺字段与空值在那边是同一件事。 */
+        if (k === "book" || k === "bookName") return;
+        const v = p[k];
+        if (v === null || v === undefined || v === "" || v === 0) return;
+        copy[k] = v;
+      });
+      return copy;
+    });
+    writeJson(path.join(OUT_DIR, "books", b + ".json"), rows);
   });
 
   writeJson(path.join(OUT_DIR, "books", "books.json"), books);

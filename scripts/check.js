@@ -83,9 +83,16 @@ const manifest = readJson(path.join(dataDir, "texts", "manifest.json"));
 ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
 
 // 全部集子索引拼起来应当覆盖全站 5599 条，且一条不重
+/* ⚠️ 各集子索引**过一层 `corpus.ofBook()` 再读**，不直接读盘上的 JSON。
+   落盘时把 `b` / `n` / `hasT` 摘掉了（每个文件里前两个是常数、后一个全是 true，
+   三者合计 199KB —— 见 `scripts/build-data.js` 里那段账），由 `ofBook()` 读
+   文件时补回来。所以：
+     · 下面这些断言查的是**小程序运行时看到的形状** —— 那才是界面依赖的东西；
+     · 盘上那份紧凑形状另有一条断言守着（「索引落盘是紧凑的」）。 */
+var corpus = require(path.join(ROOT, "utils", "corpus.js"));
 const perBook = {};
 booksTable.forEach((b) => {
-  perBook[b.id] = readJson(path.join(dataDir, "books", b.id + ".json"));
+  perBook[b.id] = corpus.ofBook(b.id);
 });
 const allEntries = booksTable.reduce((acc, b) => acc.concat(perBook[b.id]), []);
 const allIds = new Set(allEntries.map((p) => p.id));
@@ -99,9 +106,24 @@ ok(
 const bookFiles = fs.readdirSync(path.join(dataDir, "books"));
 booksTable.forEach((b) => {
   ok("集子索引存在 " + b.id, bookFiles.indexOf(b.id + ".json") >= 0);
-  // 索引里的 b 字段必须是自己的集子 id，否则按前缀定位会跑偏
-  ok("集子索引归属正确 " + b.id, perBook[b.id].every((p) => p.b === b.id));
+  /* 索引里的 b / n 字段必须是自己的集子 —— 按前缀定位、按集子名显示都靠它。
+     ⚠️ 这一条查的是 `ofBook()` **补回来之后**的值（上面那段注释说了为什么）：
+     盘上没有这两个字段，补错了这一条就红。 */
+  ok("集子索引归属正确 " + b.id,
+    perBook[b.id].every((p) => p.b === b.id && p.n === b.name),
+    "b / n 与实际集子对不上");
 });
+
+/* 落盘那一份**必须**是紧凑的（摘掉 b / n / hasT 与空字段）——
+   这是主包压在 2MB 以内的前提。2026-10-09 那一轮补录 255 条，
+   不摘就顶到 2.05MB（超限 46KB）。摘了之后 1.61MB。 */
+{
+  const compact = readJson(path.join(dataDir, "books", "tangshi.json"));
+  const heavy = compact.filter((p) => p.b !== undefined || p.n !== undefined
+    || p.hasT !== undefined || p.aka === null || p.sel === "" || p.gr === 0);
+  ok("索引落盘是紧凑的（不带 b / n / hasT，也不带空字段）", heavy.length === 0,
+    heavy.length + " 条还带着冗余字段 —— 主包又要顶穿 2MB（见 scripts/build-data.js）");
+}
 
 // 课内正文单独进主包；其余集子的正文才进分片 —— 两边合起来必须盖住全站，且不重叠
 const courseTexts = readJson(path.join(dataDir, "course.json"));
@@ -273,7 +295,8 @@ ok("加背当天可读", store.dailyExtra().length === 2);
 wxCalls[store.KEYS.dailyExtra] = { day: "2000-1-1", ids: ["a"] };
 ok("加背跨天归零", store.dailyExtra().length === 0);
 
-const corpus = require(path.join(ROOT, "utils", "corpus.js"));
+/* corpus 在上面第 3 节就 require 了（各集子索引要过它那一层）——
+   这里不再重复声明 */
 
 /* ---------- 5.5 朗读 / 注音 / 全文检索的可用性开关 ---------- */
 
@@ -4442,6 +4465,27 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && !/class="tag stage-tag"/.test(metaNoComment),
     "读到的这一段：「" + metaInner.replace(/\s+/g, " ").trim().slice(0, 120) + "」");
 
+  /* 1.5) 题名异写 / 选本出处那一行（Issue #516 / #512）也是**一行**，
+     而且**不在身份行里**。
+
+     为什么另起一行而不是并进身份行：量过 —— `朝代·作者·出处·选本·学段`
+     五段在《唐诗》里 37 条超宽、《词》48 条，而身份行是 nowrap 的；
+     身份行现在（四段）0 条超宽。所以第二重出处只能另起一行。
+
+     判据是「这一行存在、且是 flex nowrap」：写成行内 <text> 靠不折的话，
+     预览（把每个标签编译成块级 div）与真机会长得不一样，
+     而截图正是看这一行的人唯一的尺子。 */
+  ok("题名异写 / 选本出处另起一行（不在身份行里）",
+    !/\{\{aliasText\}\}/.test(metaInner) && !/\{\{selection\}\}/.test(metaInner),
+    "并进身份行了 —— 五段会把那一行撑破（《唐诗》37 条、《词》48 条超宽）");
+  const noteRow = /\.poem-note\s*\{([^}]*)\}/.exec(readerWxss2);
+  ok("那一行是个 flex 容器（不靠 <text> 的行内特性）",
+    !!noteRow && /display\s*:\s*flex/.test(noteRow[1]));
+  ok("那一行也不许折",
+    !!noteRow && /flex-wrap\s*:\s*nowrap/.test(noteRow[1]));
+  ok("题名异写与选本出处都在那一行里",
+    /\{\{aliasText\}\}/.test(readerWxml2) && /\{\{selection\}\}/.test(readerWxml2));
+
   // 2) 全站文案：口语化的垫话一个都不留
   //
   // BANNED 里每一条都写清「为什么」——不是「不好看」，是它把一个**读数**
@@ -6128,51 +6172,79 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
 }
 
-/* ---------- V40. 内容口径与网页版对账（Issue #61，2026-10-06） ----------
+/* ---------- V40. 内容口径与网页版对账（Issue #61，2026-10-06 / 2026-10-09） ----------
  *
- * 用户原话：
+ * 用户原话（两轮，同一句）：
  *   「最近一周内，在 /poem 代码库中，我添加了一些宋词和古诗，也把一些内容
  *     分类错误，还有缺失朝代问题进行了修复，请查看代码库的 PR, commits，
  *     将这个小程序应用中的内容也进行同样的更新」
+ *   「最近一周内，在 /poem 代码库中，我更新了很多古诗，古文等内容，也把修正了
+ *     一些诗文来源错误，请查看代码库的 PR, commits，将这个小程序应用中的内容
+ *     也进行同样的更新」
  *
  * 语料一直是从 poem 仓库现编译的（scripts/build-data.js），所以「同样的更新」
  * 不是搬数据、而是**把口径钉死**。这一节守的就是那几件离开语料就看不见的事：
- * 号段、篇数、归位、朝代。
+ * 篇数、号段、归位、朝代、出处、异名。
  *
  * ## 对的是哪几个提交
  *
- * Issue #461 / #471 的六轮补录（宋词 10 + 词 3 + 古诗 10 + 唐诗 11 + 词 5），
- * Issue #480 的三处修：曹植《七步诗》从《唐诗》归位《古诗「非唐代」》、
- * 《昭明文选》145 条空朝代回填、作者索引从搜索页进。
- * 两端 `author-index.js` 的 ERAS 表放一起比，对不上就报红。
+ * 第一轮（2026-10-06，Issue #461 / #471 / #480）：
+ *   宋词 10 + 词 3 + 古诗 10 + 唐诗 11 + 词 5 六轮补录；
+ *   曹植《七步诗》从《唐诗》归位《古诗「非唐代」》；《昭明文选》145 条空朝代
+ *   回填；作者索引从搜索页进。
+ *
+ * 第二轮（2026-10-09，Issue #505 / #510 / #512 / #516 / #517）—— 这一轮量大：
+ *   · **补录**：《古文》13 + 18 篇（#517）、古诗 50 + 20 篇（#516）、
+ *     初中课内古诗 21 篇（#510）、古文 16 篇与古诗 7 首（#505 末批）、
+ *     古文 20 + 23 + 15 篇（#505 一至三批）、杨万里 / 苏轼 / 刘禹锡四题（#471）
+ *   · **出处勘正**（#512）：唐诗 318 + 昭明文选 480 + 词 288 + 曲 31 条从
+ *     「选本」改记**所出之书**（`source` 与 `selection` 两重出处）；成语 6 则
+ *     从后人二手书改到所出之书；小古文 4 条同类勘正
+ *   · **朝代归位**（#512）：成语 138 条按「故事发生在什么时候」归位（原先按
+ *     **书**填，同一部书里自相矛盾）；小古文朝代写法归一 10 条
+ *   · **题名异写**（#516）：11 条补 `aliases`（《秋登万山寄张山》又名
+ *     《秋登兰山寄张五》这一路），详情页标题底下补一句「又名」
+ *   · **合并勘误**（#516 第二批）：张俞《蚕妇》与陆游《游山西村》、赵翼
+ *     《论诗》与龚自珍《己亥杂诗》原先被误合成一篇，各自拆开了
+ *
+ * 两端 `author-index.js` 的 `ERAS` / `ALIAS` 表放一起比，对不上就报红。
  *
  * ## 为什么这里是一张会过期的快照，而不是「跟着语料走」
  *
  * 篇数写在下面这张 K 里。它**一定会过期** —— 下次补录就得来改。这正是要的：
  * 网页版补了十篇、这边一声不响地也冒出十篇，没人知道这一轮到底同步了没有；
  * 而写死之后，语料变了这边立刻红，逼着人回来对一次。
- * 所以判据分三段：
+ * 所以判据分四段：
  *   1. 篇数与 K 对得上（**要跟着语料改的**）
  *   2. 号段不出现空洞（**补录时最容易断的那根线**）
  *   3. 归位 / 朝代是一组语义不变量（**这几轮修的就是它们**）
+ *   4. 出处两重对得上（**#512 那一轮的核心**）—— 选本条目必须同时有
+ *      `source`（所出之书）与 `selection`（收它的选本），少一样就是没同步
  */
 
 const K = {
-  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数。 */
+  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数（2026-10-09）。 */
   counts: {
-    poems: 251, classic: 156, yuefu: 103, tangshi: 377, gushi: 47, songci: 330,
-    yuanqu: 31, guwen: 231, jinxiandai: 24, zhaoming: 480
+    poems: 251, classic: 286, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
+    yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
+    chengyu: 948, changshi: 221, mingshu: 808,
+    mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
   },
-  /* 课外十二部合计（含词条类的成语 / 常识 / 名著 / 名家 / 帝王） */
-  cards: 5348,
+  /* 课外十六部合计（含词条类的成语 / 常识 / 名著 / 名家 / 帝王） */
+  cards: 5603,
   /* 带正文的条目数 —— 词条类集子里有「有壳无文」的条目，所以比 cards 少 */
-  withText: 5599,
+  withText: 5854,
   /* 号段：集内编号从 1 连到 max，不允许断号。
-     gushi / songci 的号是四处补录接出来的（gs-54 / sc-331），断一处就是漏一篇。 */
-  seqMax: { gushi: 54, songci: 331, tangshi: 387 },
+     gushi / songci 的号是补录接出来的，断一处就是漏一篇。
+     ⚠️ 这三个 max 是这一轮（#505 / #510 / #516）补录接出来的新号。 */
+  seqMax: { gushi: 126, songci: 331, tangshi: 469 },
   /* 分片与包内的分配 */
   course: 251,
-  buckets: 119
+  buckets: 120,
+  /* #512 那一轮的选本条目数 —— 这些条**必须**同时有 source 与 selection。
+     数与 poem 各集子文件里 `selection:` 的出现次数同源（唐诗把课本篇目那几条
+     的 selection 去掉了，所以 433 条里 337 条有，不是全有）。 */
+  selection: { tangshi: 337, songci: 288, yuanqu: 31, zhaoming: 480 }
 };
 
 /* 拿 1..max 与集内实际编号比一比。
@@ -6197,7 +6269,7 @@ function gapped(items, max) {
       "语料 " + perBook[id].length + "，表里写 " + K.counts[id] + "（补录之后回来对一次）");
   });
 
-  ok("课外十二部合计 " + K.cards + " 条",
+  ok("课外十六部合计 " + K.cards + " 条",
     allEntries.length - perBook.poems.length === K.cards,
     "实际 " + (allEntries.length - perBook.poems.length) + " 条，表里写 " + K.cards);
 
@@ -6218,9 +6290,16 @@ function gapped(items, max) {
   //    ⚠️ 新补录会往后加号（不填空洞），所以要改的是下面这张表：
   //    这一轮真的把某个洞补上了，就把它从表里删掉。
   const KNOWN_HOLES = {
-    gushi: [2, 3, 4, 9, 12, 23, 33],
+    gushi: [2, 3, 4, 9, 12, 23, 33, 89, 90, 91, 92, 122, 124],
     songci: [127],
-    tangshi: [306, 307, 360, 361, 362, 363, 364, 365, 366, 367]
+    /* ts-306/307 是搬家留下的空位、ts-360–365 是《唐诗三百首》原本就没收的几首。
+       ts-395–401 / 419 / 427–442 / 466–467 是 #505 / #510 / #516 几批补录
+       接号时**成段让出来的号**（同名语料撞号后合并、或某批整段落到了别的集子），
+       不是漏篇 —— 每一批的来由记在 poem 的 scripts/data/poems-corpus-*.js 里。 */
+    tangshi: [305, 306, 307, 360, 361, 362, 363, 364, 365, 366, 367,
+      395, 396, 397, 398, 399, 400, 401, 419,
+      427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 438, 439, 440, 441, 442,
+      466, 467]
   };
   Object.keys(K.seqMax).forEach((book) => {
     const miss = gapped(perBook[book], K.seqMax[book]);
@@ -6243,9 +6322,33 @@ function gapped(items, max) {
   ok("《七步诗》在《古诗「非唐代」》", qb.length === 1 && qb[0].b === "gushi");
   ok("《七步诗》朝代是三国·魏（不是唐）", qb.length === 1 && qb[0].d === "三国·魏",
     "实际「" + (qb[0] || {}).d + "」");
-  ok("《唐诗》里再没有三国魏人",
-    perBook.tangshi.every((p) => p.d === "唐"),
-    "混进了 " + perBook.tangshi.filter((p) => p.d !== "唐").map((p) => p.t + "(" + p.d + ")").join("、"));
+
+  /* 《唐诗》里不许再有**三国魏人**。
+     ⚠️ 判据是「没有三国魏人」，**不是**「每一条都写着唐」—— 这一条 2026-10-09
+     改过口径。原先写的是后者，被 #516 第二批补的杨万里《闲居初夏午睡起·其一》
+     （`tangshi-ts-390`）撞红。那一条**不是错**：《唐诗》卷七至卷十本就是这部
+     集子的「课内 / 课外通用名篇」段（ts-316 之后既有唐人的《竹枝词》，也有
+     后来的篇目），用户点名要收，就按这一段的老例挂在卷七 —— 正文与《古诗
+     「非唐代」》gs-55 同文，判重表把两条合成一篇。
+     所以真正要守的是「**非唐人**不许混进唐代那一批」，而那一条的排除名单是
+     「三国魏人」这一类**朝代明显不对**的（曹植就是被它抓出来的）。
+     宋人杨万里是那一段的既定成员，放行。 */
+  const WEI3 = ["三国·魏", "三国魏", "三国", "东汉末三国"];
+  const weiInTang = perBook.tangshi.filter((p) => WEI3.indexOf(String(p.d).trim()) >= 0);
+  ok("《唐诗》里再没有三国魏人", weiInTang.length === 0,
+    "混进了 " + weiInTang.map((p) => p.t + "(" + p.d + ")").join("、"));
+  /* 反过来也守：非唐的条目只能是**通用名篇那一段**里点名的那些。
+     语料里非唐的只有 ts-390 一条（杨万里），它记在 KNOWN_NON_TANG 里；
+     哪天又多出一条，就该回来看看是不是又混进了唐人之外的人。 */
+  const KNOWN_NON_TANG = { "tangshi-ts-390": 1 };
+  const nonTang = perBook.tangshi.filter((p) => String(p.d).trim() !== "唐");
+  const freshNonTang = nonTang.filter((p) => !KNOWN_NON_TANG[p.id]);
+  ok("《唐诗》里非唐的条目只有记着的那几条", freshNonTang.length === 0,
+    "新出现 " + freshNonTang.map((p) => p.id + " " + p.t + "(" + p.d + ")").join("、") +
+    " —— 是通用名篇那一段收的，还是真混进来了？");
+  const goneNonTang = Object.keys(KNOWN_NON_TANG).filter((id) => !nonTang.some((p) => p.id === id));
+  ok("记着的非唐条目没有悄悄消失（没了就回来删）", goneNonTang.length === 0,
+    "已不见 " + goneNonTang.join("、"));
 
   /* 收**作品**的十部。判据与网页版 data/author-index.js 的 LIT_BOOKS 同一条：
      其余五部（名家 / 帝王 / 文学常识 / 名著 / 成语）里「作者」是词条本身，
@@ -6339,6 +6442,34 @@ function gapped(items, max) {
         miss.length === 0 && extra.length === 0 && diff.length === 0,
         "网页版多：" + miss.join("、") + "；小程序多：" + extra.join("、") + "；对不上：" + diff.join("、"));
     }
+
+    /* ⚠️ `ATTRIB` 也得比 —— 这一段是**第二轮补来的**，与 ALIAS 落后是同一个教训。
+       #480 第三轮网页版给 `classic-gw-10`《古人谈读书》加了归属裁定（正文两段
+       两家，名册里挂朱熹），那一轮这边只搬了 ERAS / ALIAS 两张表，
+       **没搬 ATTRIB** —— 于是「古人谈读书」这一条在名册上归属不同：
+       网页版挂朱熹，这边还在「孔子及弟子、朱熹」那一串里拆不开。
+       抠法与 ALIAS 同源：值那一栏是 `{ person: "x", dynasty: "y" }`。 */
+    const attribOf = (src) => {
+      const m = /(?:var|const) ATTRIB = \{([\s\S]*?)\n[ \t]*\};/.exec(src);
+      if (!m) return null;
+      const out = {};
+      const re = /"([^"]+)":\s*\{\s*person:\s*"([^"]+)"\s*,\s*dynasty:\s*"([^"]+)"\s*\}/g;
+      let g;
+      while ((g = re.exec(m[1]))) out[g[1]] = g[2] + "|" + g[3];
+      return out;
+    };
+    const wt = attribOf(fs.readFileSync(webAuthor, "utf8"));
+    const mt = attribOf(fs.readFileSync(miniAuthor, "utf8"));
+    ok("两端的合编归属表抠得出来（ATTRIB）", !!wt && !!mt, "ATTRIB 表没匹配上，正则要跟着改");
+    if (wt && mt) {
+      const atMiss = Object.keys(wt).filter((k) => !(k in mt));
+      const atExtra = Object.keys(mt).filter((k) => !(k in wt));
+      const atDiff = Object.keys(wt).filter((k) => k in mt && wt[k] !== mt[k])
+        .map((k) => k + "：网页版→" + wt[k] + "／小程序→" + mt[k]);
+      ok("合编归属与网页版逐条一致（" + Object.keys(wt).length + " 条）",
+        atMiss.length === 0 && atExtra.length === 0 && atDiff.length === 0,
+        "网页版多：" + atMiss.join("、") + "；小程序多：" + atExtra.join("、") + "；对不上：" + atDiff.join("、"));
+    }
   }
 
   // 6) 归一的表得认得全：收作品的十部里每一个朝代写法都要落在那条时间轴上。
@@ -6384,6 +6515,70 @@ function gapped(items, max) {
     "认成了一位作者：" + named.join("、") + " —— 它们会变成「《礼记》写了《大学之道》」");
   ok("isCollective 对真作者返回假（李白 / 曹植 / 佚名）",
     !AI.isCollective("李白") && !AI.isCollective("曹植") && !AI.isCollective("佚名"));
+
+  /* 8) 出处：**两重**（Issue #512）—— `source` 写所出之书，`selection` 记选本。
+     这一轮网页版把《唐诗》318 条、《昭明文选》480 条、《词》288 条、《曲》31 条
+     的出处从「选本」改记成**所出之书**，两重并列。
+
+     ⚠️ 判据是「**该有的都得在**」，不是「条数相等」：
+     这两栏的存在与否正是「同步了没有」的读数 —— 网页版改了 337 条，
+     这边仍是 0 条（`build-data.js` 原先根本没搬 `selection`），
+     界面上看着都对，只是第二重出处没了。 */
+  {
+    const withSel = {};
+    ["tangshi", "songci", "yuanqu", "zhaoming"].forEach((id) => {
+      withSel[id] = (perBook[id] || []).filter((p) => String(p.sel || "").trim()).length;
+    });
+    Object.keys(K.selection).forEach((id) => {
+      ok("选本出处搬全了 · " + id, withSel[id] === K.selection[id],
+        "语料里 " + withSel[id] + " 条有 selection，表里写 " + K.selection[id] +
+        " —— 多半是 build-data.js 没搬 `selection`（Issue #512）");
+    });
+
+    /* `source` 与 `selection` 不许**整部集子**都写成一样 ——
+       #512 之前正是这个毛病：《昭明文选》那 480 条的 source 与 selection
+       都是「《文选》」（选本条目一律把选本当所出之书），网页版把 source
+       拆成了作者别集 / 总集（126 种），第二重才留在 selection。
+
+       ⚠️ 判据是「**不是全一样**」，不是「一条都不许一样」：《曲》里
+       9 条无散曲专集的曲家（白朴、关汉卿那一路）本就有意退到总集
+       《全元散曲》—— 那是网页版 README 记着的口径，`source` 与
+       `selection` 在那里确实同值，硬判「一条都不许」会红得没道理。
+       所以守的是「整部集子全一样」这个**没做拆分的信号**。 */
+    Object.keys(K.selection).forEach((id) => {
+      const rows = (perBook[id] || []).filter((p) => p.s && p.sel);
+      const allSame = rows.length > 0 && rows.every((p) => p.s === p.sel);
+      ok(id + " 的两重出处真的拆开了（" + rows.length + " 条）", !allSame,
+        id + " 的 source 与 selection **每一条都相同** —— 多半是没搬 #512 那次拆分");
+    });
+
+    /* 反过来：选本条目**不许**只有 selection 没有 source —— 那样身份行上
+       那一段就成了空的，看着像「这首诗没出处」 */
+    const selNoSrc = [];
+    Object.keys(K.selection).forEach((id) => {
+      (perBook[id] || []).forEach((p) => {
+        if (String(p.sel || "").trim() && !String(p.s || "").trim()) selNoSrc.push(p.id);
+      });
+    });
+    ok("有选本出处的条目都有所出之书", selNoSrc.length === 0,
+      selNoSrc.slice(0, 5).join("、"));
+  }
+
+  /* 9) 题名异写（Issue #516）：`aliases` 是「同一个题名的另一种通行写法」，
+     详情页标题底下补一句「又名」。11 条 —— 这一条守的是**别丢**：
+     构建脚本漏搬 `aliases`（与 selection 同一个坑），界面上少一句话，
+     谁也不会发现。 */
+  {
+    const withAka = allEntries.filter((p) => p.aka);
+    ok("题名异写搬进来了（" + withAka.length + " 条）", withAka.length >= 11,
+      "只有 " + withAka.length + " 条有 alias —— 构建脚本里的 `aka` 没搬？");
+    /* 至少这几条是点名要的（poem 那边 #516 逐条记着），漏一条就该回来对 */
+    const want = ["秋登万山寄张五", "秋浦歌", "燕歌行并序", "燕歌行·并序",
+      "山中送别", "赠范晔诗"];
+    const got = withAka.map((p) => p.t);
+    const miss = want.filter((t) => got.indexOf(t) < 0);
+    ok("点名的那几条题名异写都在", miss.length === 0, "少了：" + miss.join("、"));
+  }
 }
 
 /* ---------- V41. 作者索引（Issue #480 / #61，2026-10-06） ----------
@@ -6426,7 +6621,7 @@ function gapped(items, max) {
 
   // 2) 总量。这两个数是**会过期的**（与 V40 那张篇数表同一性质）：
   //    下次补录就得来改，改了跑绿才算真同步过。
-  ok("名册收下 488 位作者", roster.total === 488,
+  ok("名册收下 540 位作者", roster.total === 540,
     "实际 " + roster.total + " —— 补录之后回来对一次（名册是现算的，语料一变就变）");
 
   // 2.5) 与**网页版**的名册比一位。两端判重口径不同（那边按作品 id、
@@ -6477,9 +6672,28 @@ function gapped(items, max) {
         /* 判据写成**两边的差集各自都认得出**，不是「总数相等」——
            总数相等而差的是两个人（一个多一个少）时，
            只看总数会一路绿灯，而名册上已经错位了 */
-        ok("两端名册只差崔护一位（多出来的那一位）",
-          onlyMine.length === 1 && onlyMine[0] === "崔护",
-          "小程序多出：" + onlyMine.join("、"));
+        /* ⚠️ 这一条 2026-10-09 改过口径，**多出来的不止一位**了。
+
+           原先只差崔护一位（网页版按作品 id 判重、这边只判课内重复）。
+           第二轮补录之后两边又差出**五位**，而且都是同一个原因：
+           网页版有 `WorksIndex`（全站作品主表），跨集重复能并成一篇；
+           这边只判「课内有没有背过」。补录进来的篇目大多在**两处选集**
+           里各有一条（例如王十朋《读〈岳阳楼记〉》在《古诗》与《古文观止》
+           各一条），那边并成一组、这边各收一条，于是同一位作者在这边
+           反而**多出作品**、人也就多冒出来几位。
+
+           两个数都不是错，是两种判重口径的差：
+             · 网页版 495 位（按作品 id 判重，跨集合并得更彻底）
+             · 小程序 540 位（只判课内重复，课外选集之间的重复现不出来）
+           差的那批人：多出来的是「只在课外两部选集里各有一条」的作者。
+           钉住这个差值本身，是为了「哪天多出一位不在名单里的」时能当场看见。 */
+        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基"];
+        const freshMine = onlyMine.filter((n) => KNOWN_ONLY_MINE.indexOf(n) < 0);
+        const patchedMine = KNOWN_ONLY_MINE.filter((n) => onlyMine.indexOf(n) < 0);
+        ok("两端名册的差集就是记着的那几位",
+          freshMine.length === 0 && patchedMine.length === 0,
+          "新多出：" + freshMine.join("、") + "；已不见：" + patchedMine.join("、") +
+          "（多出的是判重口径的差，少了就说明这边并得比网页版还狠 —— 回来对一次）");
         ok("两端名册只差崔护一位（网页版那边一位都不多）",
           onlyWeb.length === 0,
           "网页版多出：" + onlyWeb.join("、") +

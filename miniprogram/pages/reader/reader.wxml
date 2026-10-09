@@ -30,6 +30,29 @@
         <text class="poem-dot">·</text>
         <text class="poem-meta stage">{{stage}}</text>
       </view>
+
+      <!-- 题名异写与选本出处（Issue #516 / #512）——标题下面的一行小字。
+
+           两件事都**不进上面那条身份行**，各有各的理由：
+
+           · 「又名」是题名的注（《秋登万山寄张五》又名《秋登兰山寄张五》），
+             它说的不是这首诗的身份，是「你可能在别处见过另一个名字」。
+             与网页版 reader-core.js 的 renderAliases 同一处、同一句话。
+           · 「选自《唐诗三百首》」是**第二重出处**（#512）：身份行上的
+             `source` 已经写了这首诗所出之书（《杜工部集》），`selection`
+             记的是「收它的那部选本」。两件事都真实，但把它们并进身份行
+             会把那一行撑破 —— 量过：`朝代·作者·出处·选本·学段` 在
+             《唐诗》里 37 条超宽、《词》48 条，而这一行是 nowrap 的。
+             所以身份行只留 `source`（哪首诗的身份），选本另起一行小字。
+
+           两件事凑一起时用 `·` 断开，各缺各的就不出现。 -->
+      <view class="poem-note" wx:if="{{aliasText || selection}}">
+        <text class="poem-note-t" wx:if="{{aliasText}}">{{aliasText}}</text>
+        <!-- 断开的那一枚点由 CSS 给两侧留白，不写「 · 」——
+             两端空白会被 WXML 编译器吃掉，两段就会粘成一句 -->
+        <text class="poem-note-dot" wx:if="{{aliasText && selection}}">·</text>
+        <text class="poem-note-t" wx:if="{{selection}}">选自{{selection}}</text>
+      </view>
     </view>
 
     <!-- 阅读偏好：**一行装完**（对齐 · 注音 · 字号），整行居中。

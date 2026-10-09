@@ -263,9 +263,28 @@ function bookById(id) {
   return books().find((b) => b.id === id) || null;
 }
 
-/** 单部集子的完整索引 */
+/**
+ * 单部集子的完整索引。
+ *
+ * ⚠️ **这里是 `b` / `n` / `hasT` 三个字段的补回处，只此一处。**
+ * 落盘时把它们摘掉了（每个文件里 `b` / `n` 是同一个常数、`hasT` 5854 条
+ * 全是 true，三者合计 199KB —— 见 `scripts/build-data.js` 里那段账）。
+ * 从这一层往上，条目的形状与从前**一模一样**：列表、检索、阅读、
+ * 作者索引、试题，全都走 `ofBook()` / `indexById()`，谁都不必知道这件事。
+ *
+ * 补的是 `books.json` 里那份 id → 名字的表，不另编一份。
+ */
 function ofBook(bookId) {
-  if (!bookCache[bookId]) bookCache[bookId] = loadJson(BOOKS_DIR + bookId + ".json");
+  if (!bookCache[bookId]) {
+    const meta = bookById(bookId);
+    const rows = loadJson(BOOKS_DIR + bookId + ".json");
+    bookCache[bookId] = rows.map(function (p) {
+      p.b = bookId;
+      p.n = meta ? meta.name : bookId;
+      p.hasT = true;
+      return p;
+    });
+  }
   return bookCache[bookId];
 }
 

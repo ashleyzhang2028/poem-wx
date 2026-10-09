@@ -42,6 +42,27 @@ const PINYIN_MODES = [
   { key: "all", label: "全文" }
 ];
 
+/**
+ * 题名异写那句「又名：xxx」（Issue #516）。
+ *
+ * 与网页版 `js/reader-core.js` 的 `aliasTextOf()` **同一句话、同一份判据**：
+ * 语料里 `aliases` 给的是「同一个题名的另一种通行写法」（《秋登万山寄张五》
+ * 又名《秋登兰山寄张五》），在哪一个题名下读到，都在标题底下补出另一个。
+ *
+ * 去重与自指的过滤照抄那边：等于本题名的不列、重复的不列 ——
+ * 语料里 `aliases` 可能是字符串也可能是数组（只有少数篇目有），两种都认。
+ */
+function aliasTextOf(meta) {
+  const raw = meta && meta.aka;
+  if (!raw) return "";
+  const list = (Array.isArray(raw) ? raw : [raw])
+    .map((x) => String(x == null ? "" : x).trim())
+    .filter((x) => x && x !== meta.t);
+  const uniq = [];
+  list.forEach((x) => { if (uniq.indexOf(x) < 0) uniq.push(x); });
+  return uniq.length ? "又名：" + uniq.join("、") : "";
+}
+
 Page({
   data: {
     id: "",
@@ -50,6 +71,10 @@ Page({
     author: "",
     dynasty: "",
     source: "",
+    /** 第二重出处（选本，Issue #512）：身份行装不下，另起一行小字 */
+    selection: "",
+    /** 题名异写那句「又名：xxx」（Issue #516）：同样在标题底下那行小字里 */
+    aliasText: "",
     paras: [],
     tokens: [],
     translation: "",
@@ -184,6 +209,8 @@ Page({
       author: meta.a,
       dynasty: meta.d,
       source: meta.s || meta.n,
+      selection: meta.sel || "",
+      aliasText: aliasTextOf(meta),
       paras: laid.paras,
       translation: entry.translation || "",
       translationSource: entry.src || "",
