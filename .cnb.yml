@@ -153,7 +153,12 @@ main:
         #    运行时一条都不读。
         - name: stage context
           script: |
-            set -euo pipefail
+            # ⚠️ 别写 `set -euo pipefail`：job 跑在 `node:20`（Alpine），
+            #    那里是 busybox sh，`-o pipefail` **不认** ——
+            #      sh: 1: set: Illegal option -o pipefail     （退出码 2）
+            #    这条 stage 里没有管道，`set -eu` 就够（`-u` 是「用未定义变量就退出」，
+            #    那才是这里真正要的那条）。
+            set -eu
             mkdir -p /tmp/ctx
             cp -R /tmp/poem/api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
@@ -164,7 +169,8 @@ main:
         #    「线上跑的是哪一版 poem」这个问题只有它能答。
         - name: build & push
           script: |
-            set -euo pipefail
+            # 同上：Alpine 的 sh 不认 `-o pipefail`。这一节也没有管道。
+            set -eu
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             # BASE_IMAGE：基础镜像从哪来。默认在 deploy/Dockerfile 里
