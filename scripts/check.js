@@ -7662,6 +7662,30 @@ function sectionOf(text, heading) {
       /\$:[\s\S]*?"\*\*":[\s\S]*?- name: 自检/.test(cnb),
     "分支推送也出镜像只会往制品库堆垃圾，而没人会去用那些 tag");
 
+  /* ⚠️ `main` 那条发布流水线必须真的拿到 node（Issue #71 的第二个现场）。
+     **流水线级没有 `image` 这个字段**（语法手册里是 `docker.image` / `docker.build`），
+     写在 `image:` 会被**静默忽略**，整条 job 退回缺省镜像
+     `cnbcool/default-build-env` —— 而那个镜像里没有 node：
+         $ node scripts/build-data.js && node scripts/check.js ...
+         sh: line 1: node: command not found     （退出码 127）
+     报错像「命令写错了」，跟命令、跟令牌、跟路径都无关。
+
+     ⚠️ 判据**只管流水线级**：任务级（`- name: xxx` 底下）的 `image:` 是合法字段，
+     `$."**"` 那条自检写的就是它，不能一起要求 —— 第一版这条断言写成了
+     「凡是跑 node 的 job 都要有 docker.image」，把那条对的也判红了。 */
+  {
+    const mainSel = (() => {
+      const i = cnb.indexOf("\nmain:");
+      return i < 0 ? "" : cnb.slice(i);
+    })();
+    const pipelineHead = mainSel.split("stages:")[0];
+    ok("main 那条发布流水线用 docker.image 指定 node（流水线级写 image: 会被静默忽略）",
+      /docker:\s*\n\s*image:\s*node:/.test(pipelineHead) &&
+        !/^\s{6}image:/m.test(pipelineHead),
+      "写 `image: node:20` 的话，job 退回没有 node 的缺省镜像，" +
+        "红在 `node: command not found` —— 看着像命令写错了");
+  }
+
   /* 文档与流水线必须指同一个触发方式。这一条抓的是「改了配置忘了改文档」——
      上一轮的病就是这样：同一份 README 写着打 tag，配置里却已经换了。 */
   const deployDocs =
