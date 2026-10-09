@@ -7456,6 +7456,48 @@ function gapped(items, max) {
   }
 }
 
+/* ---------- V46. WXML 里不许写嵌套三元（Issue #71 的构建失败） ----------
+ *
+ * 现场：真机包传不上去，`miniprogram-ci` 回
+ *     ./packages/game/quiz/quiz.wxml:1:2154:
+ *     Bad value with message: unexpected token `.`
+ * 也就是**整个体验版都发不出去**，而 `allow_failure: true` 让它不挡流水线 ——
+ * 得自己翻日志才看得见。
+ *
+ * 原因：`quiz.wxml` 那格 `class` 写了**三层嵌套三元**，内层还带字符串字面量：
+ *     class="option {{picked ? (item.text === current.answer ? 'right'
+ *             : (item.text === picked ? 'wrong' : '')) : ''}}"
+ * WXML 的 `{{ }}` 吃不下这种嵌套引号。
+ *
+ * 本仓库别处（exam / feihai / index）一律只用**一层**三元 —— 这一处是例外，
+ * 所以判据可以收得很紧：`{{ }}` 里出现两个以上 `?` 就是错。
+ */
+{
+  const bad = [];
+  const walk = (dir) => {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) { walk(full); continue; }
+      if (!ent.name.endsWith(".wxml")) continue;
+      const text = fs.readFileSync(full, "utf8");
+      text.split("\n").forEach((line, i) => {
+        for (const m of line.matchAll(/\{\{(.*?)\}\}/g)) {
+          const inner = m[1];
+          if ((inner.match(/\?/g) || []).length >= 2) {
+            bad.push(path.relative(ROOT, full) + ":" + (i + 1) + "  " + inner.trim().slice(0, 70));
+          }
+        }
+      });
+    }
+  };
+  walk(ROOT);
+  ok("WXML 里没有嵌套三元（WXML 的 {{ }} 解析不了，构建时整个包传不上去）",
+    bad.length === 0,
+    "这些地方 `{{ }}` 里有两个以上 `?`：" + JSON.stringify(bad.slice(0, 3)) +
+      " —— 真机包会回 `unexpected token`（-80054），而且这步 allow_failure，" +
+      "不挡流水线，只静默失败");
+}
+
 /* ---------- V43. 部署件：云托管那份镜像（Issue #71） ----------
  *
  * 这一节的判据换过两次，值得写清为什么。
