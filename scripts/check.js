@@ -8039,6 +8039,122 @@ function sectionOf(text, heading) {
     "文档里还留着打 tag，人会照着做一遍然后发现推不上去（要管理员）");
 }
 
+/* ---------- V47. 同步到 GitHub（Issue #71） ----------
+ *
+ * 这一节守的是「同步真的会跑起来」这件事。它值得单独一节，是因为失败的
+ * 每一层都**不像它自己**：
+ *
+ *   ① 浅克隆 → 报 `remote unpack failed: index-pack failed`
+ *      CI 的勾是 `--depth 1`（实测 `git rev-parse --is-shallow-repository` = true）。
+ *      浅仓库直接 push，远端回的是
+ *          remote: fatal: did not receive expected object 3fb7c19...
+ *      看着像「push 太大被拒」或网络问题，其实是**推的那份历史本身不完整**。
+ *      现场：621KB 的 pack —— 对一个小程序仓库明显偏小，那才是判据。
+ *      所以脚本必须先 `fetch --unshallow`。
+ *
+ *   ② 凭据形状 → 三种写法里只有一种通
+ *      `https://<token>@…`             → git 当用户名，还要问密码（CI 里干等到超时）
+ *      `https://x-access-token:<token>@…` → `Invalid username or token`（401，
+ *                                          看着像 token 过期，而同一枚打 API 是 200）
+ *      `https://<token>:x-oauth-basic@…`  → ✅
+ *
+ *   ③ 密钥名字对不上 → 与上传体验版同款处理，缺哪个当场说哪个
+ *
+ * ⚠️ 判据只查**真命令行**，不查注释 —— V46b 那儿踩过：注释里也写着同样的字，
+ *    整块搜的话把实现删掉照样绿。
+ */
+{
+  const yml = fs.readFileSync(path.join(path.dirname(__dirname), ".cnb.yml"), "utf8");
+  const at = yml.indexOf("- name: 同步到 GitHub");
+  ok("`同步到 GitHub` 那步还在", at >= 0, "`.cnb.yml` 里找不到这一步 —— GitHub 那份不会更新");
+
+  const body = at < 0 ? "" : yml.slice(at);
+  // 只看真命令行：剥掉行尾注释、丢掉整行注释与空行
+  const lines = body.split("\n")
+    .map((l) => l.replace(/\s+#.*$/, ""))
+    .filter((l) => !/^\s*(#|$)/.test(l));
+  const scriptLine = lines.find((l) => /node scripts\/sync-github\.js/.test(l)) || "";
+
+  ok("那步真在跑 scripts/sync-github.js（不是写了段注释摆着）",
+    scriptLine.length > 0,
+    "真命令行里没调这个脚本（注释里写着不算）");
+
+  // 脚本本体
+  const scriptPath = path.join(path.dirname(__dirname), "scripts", "sync-github.js");
+  ok("scripts/sync-github.js 在", fs.existsSync(scriptPath));
+  const js = fs.existsSync(scriptPath) ? fs.readFileSync(scriptPath, "utf8") : "";
+
+  // 剥注释：**整行**注释与 `/** ... */` 块。
+  // ⚠️ 只剥整行，不剥行尾 —— 行尾那刀会切进代码里的字符串：
+  //    这一行是 `const url = \`https://${pat}:x-oauth-basic@…\``，
+  //    行尾 `//` 一剥就变成 `const url = \`https:`，断言于是永远红。
+  //    （「会不会误伤」这件事没法靠眼睛看出来，上面就是一次实测。）
+  // ⚠️ 块注释要**跟着状态走**，不能只按每行长相筛：块里不含 `*` 的行会被漏掉，
+  //    而那正是这次踩的地方 —— `git(["fetch", "--unshallow"...])` 删掉之后，
+  //    注释里那句「`fetch --unshallow` 在已经完整的仓库上会报错」仍在文件里，
+  //    断言照样绿。
+  const jsCode = (() => {
+    let inBlock = false;
+    return js.split("\n")
+      .map((l) => {
+        if (inBlock) {
+          if (/\*\//.test(l)) inBlock = false;
+          return "";
+        }
+        if (/\/\*/.test(l)) {
+          if (!/\*\//.test(l)) inBlock = true;
+          return l.replace(/\/\*.*$/, "");
+        }
+        return /^\s*\//.test(l) ? "" : l;
+      })
+      .join("\n");
+  })();
+
+  /* ⚠️ 这条是这一节最要紧的一条：**必须先 unshallow**。
+     少了它，CI 里每一次都会死在 `remote unpack failed`，而报错长得像网络问题。
+
+     ⚠️ 判据必须打在 `jsCode` 上，不能打整份 `js`：这条的注释里正举着
+     `fetch --unshallow` 讲道理（「已经完整的仓库上会报错」），整份搜的话
+     把调用删掉它照样绿 —— 实测过，第一版就是这么写的。 */
+  ok("同步前会 unshallow（CI 是 --depth 1，浅仓库直接 push 会 `remote unpack failed`）",
+    /--unshallow/.test(jsCode) && /is-shallow-repository/.test(jsCode),
+    "脚本里没有 unshallow —— CI 的浅克隆推不上去，且报错像网络问题：" +
+      "`remote: fatal: did not receive expected object ...` / `remote unpack failed`");
+
+  /* ⚠️ 只看**真代码行**：上面注释里正举着 `x-access-token:` 与 `--mirror`
+     当反例讲（「别这么写」）。整份文件搜的话，把实现删掉它照样绿 ——
+     V46b 那儿就是这么踩过一次的，这里是同一个坑的第二处。 */
+  ok("凭据形状是 `<token>:x-oauth-basic@`（另两种实测一种问密码、一种回 401）",
+    /\$\{pat\}:x-oauth-basic@github\.com/.test(jsCode) && !/x-access-token/.test(jsCode),
+    "凭据形状变了 —— 只写 token 会被当成用户名问密码；`x-access-token` 实测回 401");
+
+  ok("关掉了 git 的交互式询问（凭据不对时不能干等到超时）",
+    /GIT_TERMINAL_PROMPT/.test(js),
+    "没关询问：凭据不对时 git 会卡在等输入，CI 里报出来的是「超时」而不是「凭据不对」");
+
+  ok("缺 GH_PAT / GH_REPO 时当场说清是哪个空着",
+    /缺 GH_PAT/.test(js) && /缺 GH_REPO/.test(js),
+    "名字对不上会走到 `could not read Username`，看着像网络问题");
+
+  /* ⚠️ 别用 `push --mirror`。它**带删除**：GitHub 上本地没有的引用会被抹掉。
+     而 checkout 只给一条分支 —— 全量镜像得先把 80 多个分支 fetch 下来。
+     这里守住「没走 mirror」，免得后人觉得「镜像」听着更对就改回去。 */
+  ok("没有用 `push --mirror`（它带删除，而 checkout 只给一条分支）",
+    !/--mirror/.test(jsCode),
+    "改回 --mirror 了：GitHub 上本地没有的分支会被删掉，而 CI 里本地只有一条");
+
+  /* 文档得跟配置对上。这一条抓的是「改了配置忘了改文档」——
+     而这里还有一层：**「别在 GitHub 那份上直接提交」这条不写下来，
+     人会真的去那边改**，然后下一次同步把改动抹掉，且没有任何提示。 */
+  {
+    const readme = fs.readFileSync(path.join(path.dirname(__dirname), "README.md"), "utf8");
+    ok("README 里写了 GitHub 那份是只读镜像、别在上面直接提交",
+      /github\.com\/ashleyzhang2028\/poem-wx/.test(readme) &&
+        /别在 GitHub 那份上直接提交/.test(readme),
+      "README 没交代这件事 —— 人会去 GitHub 上改，下次同步静默抹掉");
+  }
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");

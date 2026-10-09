@@ -60,6 +60,32 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 传到体验版跟着 `main` 那条流水线（`.cnb.yml`），**只上传不提审** ——
 「要不要上线」不该由流水线决定。
 
+## GitHub 上的只读镜像
+
+[`ashleyzhang2028/poem-wx`](https://github.com/ashleyzhang2028/poem-wx) 是本仓库
+`main` 的一份**只读镜像**，每次推 `main` 由流水线最后一步同步过去。给它是为了
+在 GitHub 上看代码方便（CNB 这份是私有的）。
+
+**只同步 `main`，不同步分支** —— 本仓库有 80 多个分支，大半是合完就没用的
+`auto/*`。想让某个分支也上去，先合回 `main`。
+
+⚠️ **别在 GitHub 那份上直接提交。** 它是单向的，下一次同步会覆盖掉你的提交。
+要改代码在这边改。
+
+同步那步用到一对密钥，走**密钥仓库**（`poem-wechat-mini-program-secrets` 的
+`wechat-ci.yml`），不进代码：
+
+```
+GH_PAT    fine-grained PAT，对 poem-wx 有 Contents: Read and write
+GH_REPO   ashleyzhang2028/poem-wx
+```
+
+那两份密钥仓库的配置里，`allow_slugs` 要覆盖本仓库、`allow_events` 要含 `push`，
+不然流水线读不到它们（同现有那几个键的规矩）。
+
+同步失败会让整条流水线**红** —— 它排在最后，前面几步成不成都不影响
+「GitHub 上有没有这一版」这件事本身。
+
 ## 要联网的四条路，和「request 合法域名」
 
 小程序里 `wx.request` 只能打在**微信后台登记过的域名**上，没登记的域真机上一律

@@ -82,8 +82,8 @@ $:
 # ---------------------------------------------------------------------------
 # main —— 唯一的分支。推这里就是发一次版。
 #
-# 三件事：自检 → 构建云托管镜像 → 上传体验版。都在同一个 job 里，因为
-# **镜像 tag 按本仓库这一版给**，跑完就是「一版代码 = 一个版本号」。
+# 四件事：自检 → 构建云托管镜像 → 上传体验版 → 同步到 GitHub。都在同一个 job 里，
+# 因为**镜像 tag 按本仓库这一版给**，跑完就是「一版代码 = 一个版本号」。
 #
 # 为什么不是 tag：
 #   打 tag 要仓库管理员（`Only administrators are allowed push refs/tags/*`，
@@ -259,3 +259,27 @@ main:
           # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
           # 不会让整条流水线红，得主动翻一眼日志。
           allow_failure: true
+        # 6. 同步到 GitHub。Issue #71：仓库是私有的，但人要在 GitHub 上看代码；
+        #    云托管那次误配也是想绑它，所以给一份只读的镜像。
+        #
+        #    ⚠️ **只同步 main，不同步分支**。这个仓库有 80 多个分支，大半是
+        #    合完就没用的 `auto/*`；checkout 又只给一条，要全量得先把 88 个
+        #    分支 fetch 下来。对「让人上 GitHub 看代码」来说这笔换不来好处。
+        #    代价说清楚：想让某个分支也上去，先合回 main。
+        #
+        #    ⚠️ 推的是 `HEAD:refs/heads/main` 且带 `--force`：GitHub 那份是
+        #    只读镜像，**别在它上面直接提交** —— 下一次同步会覆盖掉。
+        #
+        #    密钥（GH_PAT / GH_REPO）照 Issue #64 那套走密钥仓库，**不进代码**。
+        #    ⚠️ 密钥仓库 wechat-ci.yml 里要加这两行，且 `allow_events` 得含 push ——
+        #    触发事件是 push，那行不改的话这里读不到密钥，必被拒。
+        #    另外那两行 allow_slugs 也得覆盖本仓库，同现有 imports 的规矩。
+        #
+        #    这条**不 allow_failure**：同步是这一版交付的一部分，断了就该红。
+        #    它排在最后：前面几步（自检 / 镜像 / 体验版）成不成，都不挡
+        #    「GitHub 上有没有这一版」这件事本身。
+        - name: 同步到 GitHub
+          imports:
+            - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
+          script:
+            - node scripts/sync-github.js
