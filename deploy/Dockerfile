@@ -43,8 +43,18 @@ LABEL org.opencontainers.image.revision=$API_REV \
 # 语料（data/ 26MB）、字体（fonts/ 11MB）、网页版前端（js/ 1MB）一律不进 ——
 # 小程序一条都不打那几条要它们的路由。上面 .dockerignore 已经把构建上下文
 # 挡到这几MB，这里再逐条点明。
+#
+# ⚠️ COPY 的**源**是「构建上下文根」，不是本仓库的目录树 —— 这一点这里踩过一次：
+#    上下文是流水线摊出来的（poem 的 api/ + 本仓库那两样，**平铺在同一层**），
+#    所以服务壳在这一层叫 `./serve-api.js`，而**不是** `deploy-api-serve/serve-api.js`
+#    —— `deploy-api-serve/` 只存在于本仓库里，构建上下文里根本没有这个目录。
+#    写成带前缀那版，docker 报的是
+#      failed to calculate checksum ... "/deploy-api-serve/serve-api.js": not found
+#    看着像「文件没提交 / 路径写错」，其实是**源路径按错的那棵树上找**。
+#    （同一份文件在本仓库里的名字仍是 deploy-api-serve/serve-api.js，
+#      流水线 stage context 那一步把它拷进来并更名 —— 两边名字不同是故意的。）
 COPY --chown=node:node api ./api
-COPY --chown=node:node deploy-api-serve/serve-api.js ./
+COPY --chown=node:node serve-api.js ./
 
 ENV NODE_ENV=production
 ENV PORT=8080
