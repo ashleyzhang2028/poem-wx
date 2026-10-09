@@ -31,6 +31,8 @@ Page({
     answered: 0,
     correct: 0,
     wrong: [],
+    /** 正确率那一行读数（`%` 前面的整数）。见 `pctOf` —— 不写在 wxml 里 */
+    pct: 0,
 
     allowed: false,
     reason: ""
@@ -131,6 +133,32 @@ Page({
   },
 
   /**
+   * 结果页那一行读数：正确率的整数（`%` 前面的那个数）。
+   *
+   * ⚠️ 为什么在 js 里算，而不是像原先那样写在 wxml 的 `{{ }}` 里：
+   * 原来的写法是对**括号表达式调用方法**：
+   *
+   *     {{questions.length ? (correct * 100 / questions.length).toFixed(0) : 0}}
+   *
+   * WXML 的表达式解析器不认 `)` 后面紧跟的 `.` —— 也就是**方法调用**，
+   * 服务端直接回：
+   *     ./packages/game/quiz/quiz.wxml:1:2084:
+   *     Bad value with message: unexpected token `.`
+   * 报的正是 `.toFixed` 那个点，而它让**整个体验版传不上去**（`-80054`）。
+   *
+   * ⚠️ 别以为「把嵌套三元拆开就好了」：上一轮修掉选项那格的三层嵌套三元
+   * （`quiz.optionClass`）之后，包**照样传不上去** —— 因为这一处是另一类错，
+   * 不在同一格、也不在同一个原因里。WXML 的 `{{ }}` 只能写
+   * 「取值 + 运算 + 一层三元」，凡是**方法调用**都得挪到 js。
+   *
+   * 除零也不用在外面兜：题数为 0 时这个页面根本到不了（`onStart` 就拦了）。
+   */
+  pctOf(correct, total) {
+    if (!total) return 0;
+    return Math.round((correct * 100) / total);
+  },
+
+  /**
    * 题干下面那一行：**题型 · 出自《…》**。
    *
    * 与考试页同一套写法（Quiz/metaLineOf）：题型与出处并成一行，
@@ -172,7 +200,8 @@ Page({
     if (index >= this.data.questions.length) {
       // 出分那一刻给一声；按正确率分音景，满分与及格听起来不是一件事
       sfx.rank(this.data.correct, this.data.questions.length);
-      this.setData({ stage: "result" });
+      // 正确率在**这里**算好（`pctOf`），不出现在 wxml —— 见 `pctOf` 的注释
+      this.setData({ stage: "result", pct: this.pctOf(this.data.correct, this.data.questions.length) });
       return;
     }
     // 翻页要把这一题的三个读数一起换掉：选项（带 ABC 字母）、

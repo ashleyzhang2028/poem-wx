@@ -51,8 +51,9 @@
     <!-- 选项带 A B C D 脚标。`data-v` 传的仍是**没有字母的原文**：
          判分比的是原文，字母只是印在屏幕上的那个序号（utils/quiz.js）。 -->
     <view class="options">
-      <!-- 状态类由 js 拼好（`quiz.optionClass`）：WXML 的 {{ }} 吃不下
-           嵌套三元 + 字符串字面量，构建时会报 `unexpected token`。 -->
+      <!-- 状态类由 js 拼好（`quiz.optionClass`）：WXML 的插值语法吃不下
+           嵌套三元 + 字符串字面量，构建时会报 `unexpected token`。
+           （别在这里把那对花括号写出来 —— 注释里的插值同样会被解析。） -->
       <view class="option {{item.cls}}"
             wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
         <text class="option-k">{{item.key}}</text>
@@ -81,7 +82,11 @@
     <view class="card result">
       <text class="score">{{correct}}</text>
       <text class="score-k">/ {{questions.length}} 题</text>
-      <text class="hint">正确率 {{questions.length ? (correct * 100 / questions.length).toFixed(0) : 0}}%</text>
+      <!-- 正确率由 js 算好（`pctOf`）：WXML 的插值里**不能写方法调用**
+           —— 括号表达式后面跟一个点，构建时会报 `unexpected token`（-80054），
+           整个包传不上去。注释里也**别写插值本身**（上一轮的教训：注释里那对
+           空花括号会被当成一次插值解析，等于把同一个错留在原地）。 -->
+      <text class="hint">正确率 {{pct}}%</text>
     </view>
 
     <view class="card" wx:if="{{wrong.length}}">
