@@ -42,7 +42,7 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 | | 状态 |
 |---|---|
 | **能跑** | 16 个页面、四套算法、注音、题库、飞花令、全文检索、进度总览 —— 全部离线可用，断网也能背 |
-| **要配置** | 微信登录与跨设备同步。**代码已经齐了**（服务端在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），剩下的全是运维动作：配 `WX_APPID` / `WX_SECRET`、建 `wx_accounts` 表、小程序里填 `baseUrl` —— 见 [`docs/wx-login-server.md`](docs/wx-login-server.md) 的「部署顺序」与 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) |
+| **要配置** | 微信登录与跨设备同步。**代码已经齐了**（服务端在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），剩下的全是运维动作 —— 照着 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做 |
 | **不做** | 语音朗读：同声传译插件要企业/个体户主体，自家 TTS 要付费 + 后端签名。用户裁决不做，界面里一个朗读元素都没有 |
 
 所以「一切就好了吗」的答案是**没有**，但**没有的是外部依赖，不是代码**：
@@ -72,13 +72,11 @@ TTS 合成、管理接口。**没有域名也能跑** —— 语料、算法、�
 断网照背，丢的恰好是这四样，届时界面如实说「后端未就绪」而不是假装成功。
 
 配一个能填进名单的域名要三条：**https + 有效证书**、**已 ICP 备案**、
-**不带端口不写 IP**；`mp.weixin.qq.com` → 开发 → 开发设置 → 服务器域名 →
-「request 合法域名」里加 `https://<你的后端域名>`。同一页有每月修改次数上限，
-所以别拿临时域名先顶。联调期可在开发者工具里勾「不校验合法域名」绕过，
-`project.config.json` 里的 `urlCheck: true` 是故意的，不改配置文件。
+**不带端口不写 IP**。本项目用云托管给的默认域（腾讯的、已备案），
+照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 第 6、7 步加进去就行。
 
-填完之后客户端只改一处：设置页里 `configure({ baseUrl })` 填同一个域名，
-`remote.request()` 拼的就是 `baseUrl + PATHS.login`。完整说明见
+填完之后客户端只改一处：设置页里 `configure({ baseUrl })` 填同一个域名。
+完整说明见
 [docs/architecture.md § 五点五](docs/architecture.md#五点五request-合法域名小程序唯一绕不开的一张网)。
 
 ## 谁能用
@@ -794,30 +792,24 @@ scripts/
 
 ## 后端怎么部署
 
-小程序要的后端在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) ——
-账号、进度、会话、`code2Session` 全在它的 `api/` 里。**这个仓库里没有后端代码**，
-只有部署描述：
+后端在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) 的 `api/` 里 ——
+**本仓库没有后端代码**，只有部署描述（`deploy/`）。镜像由 CNB 流水线构建
+（源码取 `poem`，Dockerfile 从这边取），云托管按**镜像**部署。
 
+```bash
+git tag v1.0.0 && git push origin v1.0.0   # 先出镜像
 ```
-deploy/             Dockerfile + build.sh（云托管那份镜像怎么构建）
-deploy-api-serve/   只挂 /api/* 的服务壳 + .dockerignore（进的是 poem 那个上下文）
-```
 
-镜像由 CNB 流水线构建（`.cnb.yml` 的「构建云托管镜像（源码 = poem）」一节）：
-**源码上下文 = poem**，Dockerfile 从这边取。所以后端只有一份代码，
-不存在「改完 poem 忘了同步」这种漂。云托管那边按**镜像**部署 ——
-先打一个 `v*` tag 把镜像构建出来，再在控制台填那几栏
-（见 [`deploy/README.md`](deploy/README.md) 与
-[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) §1.2）。
+然后照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做：建服务（填镜像
+`docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>`，端口 8080）→
+配环境变量 → 建 `wx_accounts` 表 → 加 request 合法域名 → 填 `baseUrl` → 验。
 
-⚠️ **两条都不通的路，别去试**：
-- **别在云托管控制台里指这个仓库** —— 它按「被部署仓库的根」找 Dockerfile，
-  而那儿没有 `api/`。按那条路走，就只剩「把 poem 的 `api/` 拷一份进来」这个选择，
-  而那份副本正是要撤掉的东西。
-- **也别指 `poem` 仓库** —— 那份是全量镜像（构建上下文 49MB），不是小程序的瘦后端。
+⚠️ **别选「部署方式 = 代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿没有
+`api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
+流水线为什么这么构建，见 [`deploy/README.md`](deploy/README.md)。
 
-**要人做的全部动作**（建表、配环境变量、加 request 域名……）收在
-[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 的「§ 一点五 运维动作清单」。
+消息契约在 [`docs/wx-login-server.md`](docs/wx-login-server.md)（含
+`device` vs `deviceId` 那个静默坑）。
 
 ## 还没做的
 

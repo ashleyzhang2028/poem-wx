@@ -477,15 +477,17 @@ Issue #1 问：「小程序怎么还要域名？做什么用的，怎么申请�
 云厂商托管（Vercel / Cloudflare 绑自己的域，或直接用它的域；注意 Vercel 的
 `*.vercel.app` **不能**填进微信名单，必须绑自有域）、
 或者用国内云函数 / 云托管的默认域（已备案的那些，但可控性差）。poem 网页版
-那边后端跑在 Vercel、站点是 `kuibu.app`（见 § 五），小程序端接的就是同一套
-`/api/*`，所以第一批要填的名单里，就是那个域名。
+跑在 Vercel、站点是 `kuibu.app`，但**小程序端不接它** —— `kuibu.app` 备不了案，
+填不进微信名单。小程序打的是一份单独部署的后端，见
+[`wx-cloud-setup.md`](wx-cloud-setup.md)。
 
 ### 本项目现在填什么
 
 `appid` 已换成正式号（`wx200a0c667fc67fcb`），
 `project.config.json` 里 `setting.urlCheck: true` 是**故意的** ——
 本地关掉校验只是联调时的开关，配置文件里不许关，免得把「真机上必然失败」
-当成「跑通了」。所以**域名这一格仍然空着**，等后端就绪后：
+当成「跑通了」。所以**域名这一格现在填云托管那个默认域**（见
+[`wx-cloud-setup.md`](wx-cloud-setup.md)）：
 
 - 名单：填 `https://<后端域名>`，一条
 - 客户端：`utils/auth.js` 的 `configure({ baseUrl })`（设置页里配）填同一个，
@@ -743,12 +745,11 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
   [`wx-login-server.md`](wx-login-server.md)「同步不再分档」）；四个触发点：
   **登录成功那一刻**、启动后 3 秒、背完一首、用户手动点
 - **管理页**：见 § 四
-- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` **还没写** ——
-  **这是上线前唯一的硬阻塞**。poem 那边的 `/api/*` 是邮箱那套（注册 / 确认 /
-  密码 / 随机码），小程序端要的是 openid 那套，得新加两条路由 + 一张
-  `wx_accounts` 表（uid ↔ openid ↔ unionid）。
-  要补什么、报文长什么样、表怎么建、部署顺序，都写在 **`docs/wx-login-server.md`**。
-  在它就绪之前，登录降级成「本机身份 + free 档」，见 § 五
+- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` 已在 `poem#532` 落地，
+  连同会话认 `Authorization: Bearer`、`syncTierGate` 放开、两条新行的服务端白名单。
+  剩下的只是运维（配密钥、建 `wx_accounts` 表）—— 照
+  [`wx-cloud-setup.md`](wx-cloud-setup.md) 一步步做。契约、报文、表结构在
+  [`wx-login-server.md`](wx-login-server.md)。没配之前登录降级成「本机身份 + free 档」，见 § 五
 - **第一个 owner 怎么来**：poem 那边走 `OWNER_EMAILS` 环境变量
   （`api/_lib/core.js` 的 `claimOwnerRole`），**小程序端刻意没有这条口** ——
   一个能在客户端点出来的「把自己设成 owner」就是权限漏洞
