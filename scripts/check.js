@@ -7686,6 +7686,25 @@ function sectionOf(text, heading) {
         "红在 `node: command not found` —— 看着像命令写错了");
   }
 
+  /* ⚠️ 这个 job 跑在 `node:20` = **Alpine**，`sh` 是 busybox 的，
+     **不认 `set -o pipefail`**：
+         sh: 1: set: Illegal option -o pipefail     （退出码 2）
+     现场 `cnb-h46-1k4g9mjsd` —— 前面自检全绿（1426 项），就卡在摊上下文那步的
+     第一行。`set -eu` 里的 `-u`（用未定义变量就退出）才是这里真正要的；
+     `pipefail` 在没管道的脚本里本来也是空转。
+     （这条跟「用 alpine 当构建镜像」是绑在一起的：哪天换回 Debian 系，
+       这个断言仍然成立 —— `set -eu` 在哪儿都能用。） */
+  /* 只看**真指令行** —— 上面那段注释里就写着 `set -o pipefail` 这几个字，
+     直接搜全文会把讲解判成违规（这条第一版就这么红了一次）。 */
+  const shellLines = cnb
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+  ok(".cnb.yml 的脚本不用 `set -o pipefail`（Alpine 的 sh 不认，会 exit 2）",
+    !shellLines.some((l) => /set\s+-\S*o\s+pipefail/.test(l)),
+    "busybox sh 会回 `sh: 1: set: Illegal option -o pipefail`，" +
+      "整个 stage 在第一行就退出 —— 而它前面刚跑完的检查全是绿的，特别像「检查过了但没生效」");
+
   /* 文档与流水线必须指同一个触发方式。这一条抓的是「改了配置忘了改文档」——
      上一轮的病就是这样：同一份 README 写着打 tag，配置里却已经换了。 */
   const deployDocs =
