@@ -7506,11 +7506,32 @@ function sectionOf(text, heading) {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("#"));
   const copied = dfLines.filter((l) => l.startsWith("COPY")).join("\n");
+  /* ⚠️ 服务壳那行必须是**平铺的** `./serve-api.js`。
+     构建上下文是 **poem 根**，服务壳由流水线摆进去 —— 摆的位置是平的
+     （`.cnb.yml` stage context、`deploy/build.sh`、`.dockerignore` 的
+     `!serve-api.js` 三处都是这么写的）。
+     写成 `deploy-api-serve/serve-api.js` 在**本仓库**里看着对（那个路径确实存在），
+     但上下文里没有这个目录 —— 真跑一次 docker build 才会红：
+       #9 ERROR: failed to calculate checksum ...: not found     （Dockerfile:47）
+     这条判据以前写的就是错的那个路径，所以它守着错的实现、一直是绿的。 */
   ok("deploy/Dockerfile 只 COPY api/ 与服务壳，不 COPY 语料 / 字体 / 前端",
     /COPY --chown=node:node api \.\/api/.test(copied) &&
-      /COPY --chown=node:node deploy-api-serve\/serve-api\.js \.\//.test(copied) &&
+      /COPY --chown=node:node serve-api\.js \.\//.test(copied) &&
       !/\b(data|fonts|css|icons)\b/.test(copied),
     "真 COPY 到了，就是把 26MB 请回了上下文。实际 COPY：" + JSON.stringify(copied));
+
+  /* Dockerfile 那行 COPY 的路径，必须跟流水线**实际摆进上下文**的路径一致。
+     两边各写各的、都「看着对」，只有在真跑 docker build 时才撞出来。 */
+  {
+    const cnbText = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8").replace(/\s+/g, " ");
+    const placesShellAtRoot = /cp deploy-api-serve\/serve-api\.js \/tmp\/ctx\/serve-api\.js/.test(cnbText);
+    const copiesFromRoot = /COPY --chown=node:node serve-api\.js \.\//.test(copied);
+    ok("Dockerfile 里服务壳的路径与流水线摊进上下文的路径一致（都在上下文根）",
+      placesShellAtRoot && copiesFromRoot,
+      `流水线摆到根=${placesShellAtRoot}、Dockerfile 从根拷=${copiesFromRoot} —— ` +
+        "不一致的话，docker build 会在 COPY 那行报 `not found`；" +
+        "而写成本仓库路径（deploy-api-serve/...）在本仓库里看着是对的，特别容易漏");
+  }
   ok("deploy/Dockerfile 声明了 API_REV（构建参数钉住「这一版 api/ 是哪来的」）",
     /ARG API_REV/.test(df));
 
