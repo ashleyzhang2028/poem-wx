@@ -236,6 +236,15 @@
     "back": true,
     "logged": true
   },
+  "reader-tangshi-2fold": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "tangshi-ts-16"
+    }
+  },
   "reader-changshi": {
     "page": "pages/reader/reader",
     "title": "详情",

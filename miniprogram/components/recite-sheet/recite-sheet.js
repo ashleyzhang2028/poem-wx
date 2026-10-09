@@ -50,6 +50,22 @@ const PINYIN_MODES = [
   { key: "all", label: "全文" }
 ];
 
+/**
+ * 题名异写那句「又名：xxx」（Issue #516）。
+ * 与 `pages/reader/reader.js` 的 `aliasTextOf()` 同一份判据 ——
+ * 弹层与详情页是同一张卡，两处不许各写一遍。改一边记得改另一边。
+ */
+function aliasTextOf(meta) {
+  const raw = meta && meta.aka;
+  if (!raw) return "";
+  const list = (Array.isArray(raw) ? raw : [raw])
+    .map((x) => String(x == null ? "" : x).trim())
+    .filter((x) => x && x !== meta.t);
+  const uniq = [];
+  list.forEach((x) => { if (uniq.indexOf(x) < 0) uniq.push(x); });
+  return uniq.length ? "又名：" + uniq.join("、") : "";
+}
+
 Component({
   options: {
     // 弹层内的 fixed 定位要罩住整屏，不能被组件的 shadow 根裁掉
@@ -90,6 +106,9 @@ Component({
     author: "",
     dynasty: "",
     source: "",
+    /** 第二重出处（选本）与「又名」那一句 —— 与详情页同一套（见 reader.wxml） */
+    selection: "",
+    aliasText: "",
     stage: "",
     paras: [],
     tokens: [],
@@ -163,6 +182,8 @@ Component({
         author: meta.a,
         dynasty: meta.d,
         source: meta.s || meta.n,
+        selection: meta.sel || "",
+        aliasText: aliasTextOf(meta),
         paras: laid.paras,
         translation: entry.translation || "",
         translationSource: entry.src || "",

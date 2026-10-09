@@ -1616,6 +1616,36 @@ view, text, button, input, textarea {
   padding: 0 12rpx;
 }
 
+/* 题名异写与选本出处：标题底下的一行小字（Issue #516 / #512）。
+   `--ink-3` 比身份行的 `--ink-2` 再退一档 —— 它是「关于这首诗的注」，
+   不是这首诗的身份；字号仍取 --fs-caption，与身份行同档（两行叠在
+   标题下面，字号不齐会看成两种东西）。 */
+.poem-note {
+  /* 一行，不许折 —— 与身份行同一条理由。写成 flex 而不是靠 <text> 的
+     行内特性：预览把每个 WXML 标签都当成块级 div 编译（render.js），
+     只有 flex 能让这两段真排在一行里；写成行内的话，截图与真机不一样，
+     而截图正是看这一行的人唯一的尺子。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  margin-top: var(--sp-1);
+}
+
+.poem-note-t {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* 两段之间那一枚点：两侧留白由它自己出，WXML 里写「 · 」两端的空白
+   会被编译器吃掉，两段会粘成「…张五·选自《唐诗三百首》」 */
+.poem-note-dot {
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  padding: 0 12rpx;
+}
+
 /* ---------- 阅读偏好：一行装完 ----------
    对齐 · 注音 · 字号，按用户给的顺序排成一条，整行居中。
    三组之间各一道极淡的竖线 —— 它不是装饰，是把这一行切成三段的那个

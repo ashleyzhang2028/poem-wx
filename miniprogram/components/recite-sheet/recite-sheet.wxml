@@ -30,6 +30,13 @@
           <text class="poem-dot">·</text>
           <text class="poem-meta stage">{{stage}}</text>
         </view>
+        <!-- 题名异写与选本出处（Issue #516 / #512）——与详情页同一行小字，
+             理由写在 reader.wxml 那一处（身份行装不下第二重出处） -->
+        <view class="poem-note" wx:if="{{aliasText || selection}}">
+          <text class="poem-note-t" wx:if="{{aliasText}}">{{aliasText}}</text>
+          <text class="poem-note-dot" wx:if="{{aliasText && selection}}">·</text>
+          <text class="poem-note-t" wx:if="{{selection}}">选自{{selection}}</text>
+        </view>
       </view>
 
       <!-- 阅读偏好：一行三段（对齐 · 注音 · 字号），与详情页同一套写法 -->
