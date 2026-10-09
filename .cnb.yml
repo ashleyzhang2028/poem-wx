@@ -166,7 +166,19 @@ main:
             cp -R /tmp/poem/api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
+            # ⚠️ 摆在**上下文根**，不是 `deploy-api-serve/`。
+            #
+            #    忽略文件跟**构建上下文**走，跟 Dockerfile 放哪儿无关 ——
+            #    三个位置里只有一个对，另两个**最像对的**且都不报错：
+            #      ✅ 这里（上下文根）
+            #      ❌ 原样留在本仓库 `deploy-api-serve/` 里（从来没进过上下文）
+            #      ❌ 拷到 `/tmp/ctx/api/.dockerignore`（**嵌套的不生效**）
+            #    摆错位置不会报错，只会让上下文从 0.3MB 变成 38MB：26MB 语料 +
+            #    11MB 字体照上传，而这个小程序一条都不读。全文见 deploy/Dockerfile。
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
+            # 体积要**当场报**：0.3MB 与 38MB 的差别在这条链上不以任何报错的形式出现，
+            # 只以「每次部署白传 37MB」的形式慢慢出现（Issue #71）。
+            echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
             du -sh /tmp/ctx
         # 4. 构建 + 推。REV 记的是**后端的 commit**（不是本仓库的 sha）——
         #    「线上跑的是哪一版 poem」这个问题只有它能答。
@@ -174,6 +186,17 @@ main:
           script: |
             # 同上：Alpine 的 sh 不认 `-o pipefail`。这一节也没有管道。
             set -eu
+            # ⚠️ 忽略文件没摆到上下文根，构建**照样成功** —— 只是每次白传 37MB
+            #    （poem 的 data/ 26MB + fonts/ 11MB），运行时一次都不读。
+            #    这一条属于「绿着出错」那一类，所以当场断掉，不留给体积去说。
+            if [ ! -f /tmp/ctx/.dockerignore ]; then
+              echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
+              echo "  照这样构建，上下文会从 0.3MB 变成 38MB（poem 的 data/ 26MB +" >&2
+              echo "  fonts/ 11MB 一并上传），而运行时一次都不读，且**不会报任何错**：" >&2
+              echo "  构建绿、部署绿，只是每次白传 37MB。" >&2
+              echo "  要修的是 stage context 那一步；判据是 /tmp/ctx/.dockerignore 在不在。" >&2
+              exit 1
+            fi
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             # BASE_IMAGE：基础镜像从哪来。默认在 deploy/Dockerfile 里
