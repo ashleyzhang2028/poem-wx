@@ -19,13 +19,42 @@
 "POST /wx/refresh": "./../_routes/wx/refresh.js"
 ```
 
+两条 route 照 `api/_routes/auth/login.js` 的样子写就行 —— 用同一个
+`api/_lib/handler.js` 的 `make()` 包一层，会话就自动管住了：
+
+```js
+"use strict";
+var handler = require("../../_lib/handler");
+
+module.exports = handler.make("wx.login", ["POST"], function (d, body) {
+  if (!d.cfg.hasSession()) {
+    return { status: 503, body: { code: "E_NOT_CONFIGURED", message: "服务端还没配置好（缺 SESSION_SECRET）。当前仍可完全离线使用本站。" } };
+  }
+  return handler.core.wxLogin(d, {
+    code: body.code,
+    device: body.device || d.deviceId
+  }).then(function (r) { return handler.settleSession(d, r); });
+});
+```
+
+`handler.settleSession()` 那一句别省 —— 它是「把 Cookie 剥掉、只留 body」
+的那一步（`api/_lib/handler.js` 里 `settleSession` 只在 `r._session` 在时才动）。
+小程序端**不接 Cookie**，少写这一句也不报错，只是白带一个没用的头。
+
 ### `POST /api/wx/login`
 
 请求：
 
 ```json
-{ "code": "<wx.login 拿到的 code>", "deviceId": "dxxxxxx" }
+{ "code": "<wx.login 拿到的 code>", "device": "dxxxxxx" }
 ```
+
+⚠️ **字段名是 `device`，不是 `deviceId`。** 小程序端
+`utils/remote.js` 的 `credentialBody()` 发出去的就是这个键，
+`/api/sync/pull|push` 那两条用的是 `deviceId` —— 两套报文在本仓库里并存，
+照抄别的接口会在此处静默对不上：服务端读不到设备号，服务端按它签会话
+（`sessions.device`）也按它限流，拿到空串的结果是「同一台设备的限流被拆成
+无数个互不相干的桶」——限流形同虚设，而没有任何一处会报错。
 
 服务端做三件事：
 
@@ -59,7 +88,81 @@
 
 ### `POST /api/wx/refresh`
 
-请求 `{ "refreshToken": "..." }`，响应同上。
+请求 `{ "refreshToken": "...", "device": "dxxxxxx" }` —— **`device` 同样不能少**
+（理由同上：签会话与限流都要它）。响应同上。
+
+⚠️ 这一条**容易漏**：登录时记得带、刷新时忘了带，服务端拿到空串也不报错，
+于是「同一台设备」这个概念在刷新那条路上整个消失。
+
+刷新不回话（401）时，客户端会**自己清掉本机会话**（见 `utils/auth.js`
+`refresh()`）—— 因为 refreshToken 不认了意味着本机举着一份服务端不认的档位，
+留着比清掉更糟。清掉会话不影响本机进度与设置，一个字都不丢。
+
+## ⚠️ 会话从哪儿取：Cookie **或** `Authorization: Bearer`
+
+**这是 Issue #71 点出来的第二件事，也是「登录成功了但 `/api/sync/*` 一律 401」
+的成因。** 两条路由加对了、登录一路绿灯，跟着每一个同步接口都回
+`{"code":"E_NO_SESSION","message":"还没有登录"}` —— 而用户明明刚登录完。
+
+成因一句话：`api/_lib/handler.js` 的 `withSession()` 只从一个地方取会话：
+
+```js
+var token = session.fromCookieHeader((req.headers || {}).cookie, CONFIG.cookieName);
+```
+
+**网页版带 Cookie，小程序不带。** 小程序把 token 放在
+`Authorization: Bearer <accessToken>`（见 `miniprogram/utils/remote.js` 的
+`send()`）—— 那是小程序端唯一能放长凭证的地方：`wx.request` 不共享浏览器的
+Cookie 罐，`session.setCookieHeader()` 里还有个 `SameSite=Lax` + `Secure`，
+本来也不是给小程序准备的。
+
+所以 `withSession()` 要**两处都认**，cookie 优先（网页版那条路一个字不改）：
+
+```js
+function tokenOf(req) {
+  var h = (req.headers || {});
+
+  // ① 网页版：Cookie。先看这一处，网页版的行为一个字节都不变
+  var fromCookie = session.fromCookieHeader(h.cookie, CONFIG.cookieName);
+  if (fromCookie) return fromCookie;
+
+  // ② 小程序：Authorization: Bearer <token>
+  //    ⚠️ 这一条是 Issue #71 那次「登录成功了但同步一律 401」的根因。
+  //    不补它，网页版一切正常，小程序端除登录以外每一条都 401。
+  var raw = String(h.authorization || h.Authorization || "").trim();
+  var m = /^Bearer\s+(\S+)$/i.exec(raw);
+  return m ? m[1] : null;
+}
+```
+
+然后把 `withSession()` 里那一行换成 `session.read(CONFIG, tokenOf(req), Date.now())`。
+
+### 三条容易踩的边界
+
+1. **别在这儿 `decodeURIComponent`**。`fromCookieHeader()` 里面替 Cookie
+   做了一次（Cookie 里 `=`、`;` 都是保留字）；Bearer 那一枚是
+   base64url + 一个点，原样用就是对的 —— 多解一次，令牌里恰好出现 `%`
+   时会被改掉，签名对不上，回一个彻底的 401，而你看着代码怎么都对。
+2. **认出来之后走的是同一套校验**，别给 Bearer 开小门：`session.read()` 验签
+   与过期、再查 `sessions` 那一行（`revoked` / `uid` 对得上）——这两步一步都不能省。
+   一个只有签名的令牌是不够的：账号注销之后那一行就没了，
+   而令牌还能验过去（`api/_lib/handler.js` 里原本那句注释说的就是这件事）。
+3. **`Authorization` 头的大小写**：HTTP 头名不区分大小写，Node 会把它归一成
+   小写 `authorization`，但在别处（比如自己写的 `http` 包装、某些代理）
+   拿到的可能是原样那个 `Authorization`。两个都读，一行的事。
+
+### 顺带一句：`/api/me` 也在这条路上
+
+小程序端启动时会调一次 `GET /api/me`（`utils/auth.js` 的 `refresh()`）——
+**它就是「网页版与小程序同号」那条路的兜底**：用户在浏览器里登录过，
+手机上就有 Cookie，而小程序手里一枚 token 都没有；这时
+`/api/wx/refresh` 无从发起（没 refreshToken），只有 `/api/me` 能问出
+「服务端认不认得这台」。补了上面的 `tokenOf()` 之后这条也一起通了。
+
+⚠️ 它必须是 **GET**（`api/_routes/me.js` 就是这么注册的）。小程序端
+`auth.request()` 少传 `method` 会以 POST 打过去 —— 服务端回 405，
+而客户端看见的只是「叫不通」，于是「网页版同号的人拿不到档位」这条
+又悄悄回来了（自检里钉着这一个）。
 
 ## 要用到的那张表
 
@@ -236,16 +339,33 @@ select … on conflict (uid, child_id, poem_id) do update
 ## 部署顺序
 
 1. 服务端加 `WX_APPID` / `WX_SECRET` 两个环境变量，加上面那张表
-2. 加两条路由，部署；**同时放开 `syncTierGate` 的档位判定**（见「同步不再分档」），
+2. 加两条路由，**`withSession()` 同时认 Cookie 与 Bearer**（见「会话从哪儿取」），
+   部署；**同时放开 `syncTierGate` 的档位判定**（见「同步不再分档」），
    并给 `settings:v1` / `profile:v1` 加白名单（见上一节）
-3. 部署完**真机验一遍这两条新行** —— 判据不是「客户端说成功」，
-   而是直接查库：
-   `select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1')`
+3. 部署完**验三步**，每一步的判据都不是「客户端说成功」：
+   - 会话认得出来 —— 带一枚自签的 token 直接打同步口：
+     ```
+     curl -s -X POST https://<域>/api/sync/pull \
+       -H 'Authorization: Bearer <accessToken>' \
+       -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
+     ```
+     **回 `E_NO_SESSION`（401）就是第 2 步的 `tokenOf()` 没补上。**
+     这是最容易「以为补了」的一步：路由加了、登录通了、这条还是 401。
+   - 两条新行真的落库 —— 直接查库：
+     `select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1')`
+   - 刷新那条带得动会话 —— `POST /api/wx/refresh` 带上 `refreshToken` 与 `device`
 4. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`）
 5. 把第一个管理员扶成 `owner`：poem 那边走 `OWNER_EMAILS` 环境变量
    （`api/_lib/core.js` 的 `claimOwnerRole`）。**小程序端没有这条口**，
    也不该有 —— 一个能在客户端点出来的「把自己设成 owner」就是权限漏洞
 6. 其余人的档位由这个 owner 在管理页里发
+
+### 第 3 步那条 curl 为什么值得单独列出来
+
+因为这是本 Issue 反复出现的那类错：**「补了一半」看起来像全对**。
+路由加了、登录通了、界面写着「已同步」，而每一条同步都是 401 ——
+用户看到的是「进度没丢，只是没上云」，工程师看到的是「客户端说登录了」。
+两端都没有一句话是错的，所以谁也定位不到。一条 curl 就能把它钉死。
 
 ## 现在没接上时是什么样
 

@@ -23,6 +23,13 @@ const wire = require("./wire");
  *   同步与管理 /api/*         —— 复用 poem 已上线的那几个：
  *                               /api/sync/pull|push、/api/admin/accounts|grant|role
  *
+ * ⚠️ 复用不是「路径一样」就算完，**会话得认得出小程序这一端**：
+ *   poem 的 `api/_lib/handler.js` 里会话只从 Cookie 头里取
+ *   （`session.fromCookieHeader`），而小程序不带 Cookie —— 它把 token 放在
+ *   `Authorization: Bearer`。少这一步的现网现象是「登录一路绿灯，
+ *   跟着每一个 /api/sync/* 都回 401」，而报错看着像「没登录」。
+ *   要服务端补什么，见 docs/wx-login-server.md「会话从哪儿取」那一节。
+ *
  * 同步与管理**刻意复用 poem 的路径与报文形状**，因为那边已经跑在
  * Supabase 上了。小程序端另起一套，等于同一份进度要走两条入库逻辑，
  * 迟早有一边先写出「旧数据覆盖新数据」。要接后端时，先接微信登录那一层。
@@ -44,6 +51,17 @@ function session() {
   return store.read(store.KEYS.auth, {}) || {};
 }
 
+/**
+ * 登录 / 刷新两条路由共用的报文体。
+ *
+ * `device` **不是可选项**：服务端按它签会话（sessions.device）、也按它做限流。
+ * 刷新的那条最容易漏 —— 登录时记得带、刷新时忘了带，服务端拿到空字符串，
+ * 于是同一台设备的刷新被拆成无数个互不相干的限流桶，限流形同虚设。
+ */
+function credentialBody(extra) {
+  return Object.assign({ device: store.deviceId() }, extra || {});
+}
+
 function configured() {
   return !!session().baseUrl;
 }
@@ -52,12 +70,9 @@ function baseUrl() {
   return session().baseUrl || "";
 }
 
-function request(path, data, method) {
+/** 一条请求。**不重试、不认路**，重试那层在下面 request() 里 */
+function send(path, data, method) {
   return new Promise((resolve, reject) => {
-    if (!configured()) {
-      reject(new Error("同步服务未开通"));
-      return;
-    }
     wx.request({
       url: baseUrl() + path,
       method: method || "POST",
@@ -74,11 +89,75 @@ function request(path, data, method) {
           // 只留一句 "HTTP 429" 的话，调用方只能靠字符串匹配去猜。
           const err = new Error("HTTP " + res.statusCode);
           err.statusCode = res.statusCode;
-          err.code = (res.data && res.data.error) || "";
+          // 服务端的码在 body.code 里（`{ code: "E_NO_SESSION" }`），
+          // 不是 body.error —— 取错了这一位，401 就只剩一句话可读，
+          // 调用方无法把「会话过期」与「服务端抽风」分开。
+          err.code = (res.data && (res.data.code || res.data.error)) || "";
           reject(err);
         }
       },
       fail: (err) => reject(new Error((err && err.errMsg) || "网络不可用"))
+    });
+  });
+}
+
+/** 会话过期 / 没带会话 —— 服务端那两种码，都值得换一枚 token 再试一次 */
+const SESSION_GONE = ["E_NO_SESSION", "E_SESSION"];
+
+let refreshing = null;
+
+/** 同一时刻只刷一次：五个请求一起 401，不该换五枚 token */
+function refreshOnce() {
+  if (!refreshing) {
+    refreshing = Promise.resolve()
+      .then(() => authMod().refresh())
+      ["catch"](() => null)
+      .then((r) => {
+        refreshing = null;
+        return r;
+      });
+  }
+  return refreshing;
+}
+
+/**
+ * 发一条请求，**带一次「会话过期就换一枚再来」**。
+ *
+ * 为什么要有这一层：`/api/wx/refresh` 平时只在启动时调一次，而用户
+ * 把小程序挂在后台过夜是常事 —— 第二天点「同步」，手里那枚
+ * accessToken 早就过期了，服务端回 401。上一版的写法是**如实报错**：
+ * 界面写「同步失败」，用户唯一的出路是重新登录一次。
+ * 而正确的做法是先用 refreshToken 换一枚，再原样重发 ——
+ * 这是双 token 这套东西存在的全部理由。
+ *
+ * 四条边界，缺一条就会写出「越刷越糟」的那种代码：
+ *   1. **两条登录路由自己不许走这条路**：登录回 401 是「code 不对」，
+ *      刷新回 401 是「refreshToken 也不能用了」，两条都不是会话过期，
+ *      拿它们自己去触发刷新就是死循环。
+ *   2. **只重试一次**：新 token 还 401，说明不是过期，是服务端不认
+ *      这一端（比如服务端还没学会读 Bearer）—— 这时候报错比假装重试好。
+ *   3. **本机没有 refreshToken 就不刷**：没有可换的东西，刷也刷不出结果，
+ *      白等一轮网络。`/api/me` 那条兜底是 auth.refresh() 内部的事，
+ *      不该由这里代劳（见 auth.js 的 refresh()）。
+ *   4. **只认 401 + 服务端的会话码**：429（同步太频繁）与 403（档位不够）
+ *      都不是会话问题，重试只会把限流撞得更狠。E_NO_SESSION 之外
+ *      一律原样报上去 —— 假的重试会把「服务端抽风」盖成「登录过期」。
+ */
+function request(path, data, method, retried) {
+  if (!configured()) return Promise.reject(new Error("同步服务未开通"));
+  const isCredential = path === PATHS.login || path === PATHS.refresh;
+
+  return send(path, data, method)["catch"]((err) => {
+    if (retried || isCredential) throw err;
+    if (err.statusCode !== 401) throw err;
+    if (SESSION_GONE.indexOf(err.code) < 0) throw err;
+    if (!session().refreshToken) throw err;
+
+    return refreshOnce().then((fresh) => {
+      // 刷新也没成（refreshToken 也过期了）：把原来那条 401 报出去 ——
+      // 界面据此说「登录过期了，重新登一次」，那是用户能自己做的一件事。
+      if (!fresh || fresh.local || !session().accessToken) throw err;
+      return request(path, data, method, true);
     });
   });
 }
@@ -222,6 +301,9 @@ function adminReady() {
  * 会话里的角色。**惰性 require**：auth.js 顶层要读本模块的 PATHS，
  * 在顶部直接 require 会绕成环（先加载谁，另一个就是空对象）。
  * 用的时候才取一次，环就断了。
+ *
+ * 上面那条 401 重试（request → refreshOnce）也走这个口子 ——
+ * 它要的同样是「auth 模块，但不是现在」。
  */
 function authMod() {
   return require("./auth");
@@ -279,6 +361,7 @@ function setUserRole(uid, role) {
 
 module.exports = {
   PATHS,
+  credentialBody,
   wire,
   configured,
   baseUrl,
