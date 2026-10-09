@@ -289,7 +289,7 @@ function formOf(key) {
  * WXML 的 `{{ }}` 解析不了这种嵌套引号，构建时直接报：
  *     ./packages/game/quiz/quiz.wxml:1:2154:
  *     Bad value with message: unexpected token `.`
- * 也就是**真机包传不上去**（`-80054`）。本仓库别处（exam / feihai / index）
+ * 也就是**真机包传不上去**（`-80054`）。本仓库别处（exam / feihua / index）
  * 一律只用**一层**三元，这一处是唯一的例外 —— 挪到 js 里就回到同一套写法。
  */
 function optionClass(row, picked, answer) {
