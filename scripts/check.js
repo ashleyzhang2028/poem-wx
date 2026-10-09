@@ -7531,8 +7531,17 @@ function gapped(items, max) {
     /code=\$\?/.test(body) && /exit "\$\{code\}"/.test(body),
     "退出码没原样透传 —— 这一步会永远「成功」");
 
-  ok("npm 装包收掉 warn（默认 40 行 deprecated 会把真错埋掉）",
-    /--loglevel=error/.test(body), "没加 --loglevel=error，真错会被 40 行 npm warn 盖住");
+  // ⚠️ 必须只看**真命令行**，不能拿整块 body 去搜 —— 上面那三行注释里也写着
+  //    `--loglevel=error`，整块搜的话把命令行里的 flag 删掉它照样绿（反向验过）。
+  //    这跟 V46 要防的是同一类错：「文案还在」不等于「行为还在」。
+  const lines = body.split("\n")
+    .map((l) => l.replace(/\s+#.*$/, ""))     // 剥掉行尾注释
+    .filter((l) => !/^\s*(#|$)/.test(l));      // 丢掉整行注释与空行
+  const npmLine = lines.find((l) => /npm i .*miniprogram-ci/.test(l)) || "";
+  ok("npm 装包那行真收掉了 warn（默认 40 行 deprecated 会把真错埋掉）",
+    /--loglevel=error/.test(npmLine),
+    "真命令行里没加 --loglevel=error（注释里写着不算），真错会被 40 行 npm warn 盖住：" +
+      JSON.stringify(npmLine.trim().slice(0, 80)));
 
   ok("上传那步仍然只声明 name/script/allow_failure（script 一整块，不是 list）",
     isOneBlock, "这一步的 script 结构变了 —— 混成 list 会被 CNB 用 `&&` 串崩");
