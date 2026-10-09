@@ -1,0 +1,41 @@
+# 云托管运行时 —— **只跑 /api/** 的那一份（Issue #71 的 B 方案）
+#
+# 与 poem 仓库根那份 Dockerfile 的区别只有一个：这一份的构建上下文里
+# **没有** data/ fonts/ js/ 各页面目录与 test/，因此镜像小得多、
+# 每次部署要上传的东西也少得多。
+#
+# ⚠️ 瘦下来省的是**部署与镜像**，不是「少跑一个后端」：
+#    容器里跑的仍是 poem 那份 api/，账号、进度、会话、code2Session 一处不漏。
+#    抄一份后端出来才是真代价（同一份进度两条入库逻辑），那份不划算。
+#
+# ⚠️ 这份 Dockerfile 的构建上下文由 dockerignore.api 决定 —— 它**不是**
+#    常规的「排除名单」，而是「只留这些」：多留一条就是多上传一坨运行时读不到的东西。
+FROM node:20-alpine
+
+WORKDIR /app
+RUN chown node:node /app
+USER node
+
+# 依赖清单照旧先拷、先装 —— 这一步进 Docker 缓存层，改代码不会连带重装。
+# poem 的运行时依赖只有 dotenv 一个（api/ 全用内置模块）。
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
+
+# ⚠️ 这里**不写** `COPY data ./data`：默认构建的上下文里没有 data/，
+#    写了那一行会直接 `COPY failed: no source files`（不是「跳过」）。
+#    需要语料的构建由 build.sh 显式拼一段 `COPY data ./data` 进来 ——
+#    见那边 `--with-corpus` 那一段，不在这里用通配符糊过去。
+COPY --chown=node:node serve-api.js ./
+COPY --chown=node:node api ./api
+
+ENV NODE_ENV=production
+ENV PORT=8080
+EXPOSE 8080
+
+# 探活打 /healthz：只判「进程还在不在应答」，不拿 /api/* 的状态码当判据 ——
+# 缺 SESSION_SECRET 时 /api/* 回 503，而进程是好的，那种情况报成「不健康」
+# 会让平台一直重启一个本来在用的容器（poem 根那份 Dockerfile 里同一处坑）。
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:'+(process.env.PORT||8080)+'/healthz',r=>{r.resume();process.exit(r.statusCode<500?0:1)}).on('error',()=>process.exit(1))"
+
+CMD ["node", "serve-api.js"]
