@@ -42,7 +42,7 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 | | 状态 |
 |---|---|
 | **能跑** | 16 个页面、四套算法、注音、题库、飞花令、全文检索、进度总览 —— 全部离线可用，断网也能背 |
-| **等后端** | 微信登录换取真实身份、**登录即得**的跨设备同步、按人开关能力。服务端要补四件事：`/api/wx/*` 两条路由、**会话同时认 Cookie 与 `Authorization: Bearer`**（少这一步的现象是「登录一路绿灯、跟着每条同步都 401」，见 Issue #71）、放开档位闸、给 `settings:v1` / `profile:v1` 加白名单 —— 逐条落在 [`docs/wx-login-server.md`](docs/wx-login-server.md) |
+| **要配置** | 微信登录与跨设备同步。**代码已经齐了**（服务端在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），剩下的全是运维动作：配 `WX_APPID` / `WX_SECRET`、建 `wx_accounts` 表、小程序里填 `baseUrl` —— 见 [`docs/wx-login-server.md`](docs/wx-login-server.md) 的「部署顺序」与 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) |
 | **不做** | 语音朗读：同声传译插件要企业/个体户主体，自家 TTS 要付费 + 后端签名。用户裁决不做，界面里一个朗读元素都没有 |
 
 所以「一切就好了吗」的答案是**没有**，但**没有的是外部依赖，不是代码**：
@@ -167,7 +167,8 @@ TTS 合成、管理接口。**没有域名也能跑** —— 语料、算法、�
 | 平台形态 | ⚠️ | 外壳 / 控件 / 离线 / 部署全按小程序最佳实践换掉，不是缺口 |
 
 **一处刻意的反向补充**：微信登录是小程序有、网页版没有的一层 ——
-它得服务端加两条路由才通，见 [`docs/wx-login-server.md`](docs/wx-login-server.md)。
+服务端那两条路由在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)，
+契约见 [`docs/wx-login-server.md`](docs/wx-login-server.md)。
 
 这张表由 `node scripts/parity.js` 守着：网页版 `js/entitlement.js` 里
 每一个能力键，都必须在小程序端落成「已实现的能力 / 页面」或
@@ -786,9 +787,31 @@ miniprogram/
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
 ├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录（语料现从 poem 编译）
-├── check.js        # 离线自检，1349 项（含 V40 内容口径 / 出处两重、V41 作者索引）
-└── parity.js       # 与网页版逐项对照，能力表每一项都要有交代
+├── check.js        # 离线自检（含 V40 内容口径 / V41 作者索引 / V43 部署件 / V44 设置报文）
+├── parity.js       # 与网页版逐项对照，能力表每一项都要有交代
+└── e2e-wx-sync.js  # 端到端：小程序端 utils ↔ poem 服务端真跑一遍（登录 → 同步 → 换机）
 ```
+
+## 后端怎么部署
+
+小程序要的后端在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) ——
+账号、进度、会话、`code2Session` 全在它的 `api/` 里。**这个仓库里没有后端代码**，
+只有部署描述：
+
+```
+deploy/             Dockerfile + build.sh（云托管那份镜像怎么构建）
+deploy-api-serve/   只挂 /api/* 的服务壳 + .dockerignore（进的是 poem 那个上下文）
+```
+
+镜像由 CNB 流水线构建（`.cnb.yml` 的「构建云托管镜像」一节）：
+**源码上下文 = poem**，Dockerfile 从这边取。所以后端只有一份代码，
+不存在「改完 poem 忘了同步」这种漂。云托管那边按**镜像**部署 ——
+怎么填见 [`deploy/README.md`](deploy/README.md) 与
+[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) §1.2。
+
+⚠️ **别在云托管控制台里指这个仓库**：那儿的「容器目录」是按被部署仓库的根取的，
+而那儿没有 `api/`。按那条路走，就只剩「把 poem 的 `api/` 拷一份进来」这个选择，
+而那份副本正是要撤掉的东西。
 
 ## 还没做的
 
@@ -805,10 +828,16 @@ scripts/
   [`docs/todo.md`](docs/todo.md) 第 1 条，以及上面「朗读：不做，界面上也没有」一节）
 - **付费档不能小程序内下单**：微信不允许个人主体做虚拟支付，
   `pro` / `max` 只能由管理员发兑换码，或后端名录里改档
-- **后端未就绪**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
-  接上后端要补的是两条微信登录路由（`docs/wx-login-server.md`），
+- **后端要配一遍**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
+  服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在
+  [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），
   同步与管理复用 poem 已上线的那几个。管理页里可以直接填 `baseUrl`。
   没配之前一律降级，不做任何「假装成功」
+- **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与
+  poem 服务端接起来真跑一遍（登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
+  上面那些静态自检验得了「报文形状对不对」，验不了「两边合起来通不通」——
+  而这一轮的坑（**登录通但同步一律 401**、字段被服务端裁掉、换机认不回来）
+  全都是合起来才显形的
 - **跨端同步要服务端配合一次核对**：小程序发的报文已经按 poem 的
   `sanitize*` 逐字段对齐并写进自检（自检会直接 require poem 的源码来验），
   但**「同一个人在两端的 uid 是同一个」这件事只有服务端能保证** —— 见文档末节

@@ -1,7 +1,12 @@
-# 微信登录：服务端要加的那一层
+# 微信登录：服务端那一层
 
-> 这份文档只写一件事：**后端要补什么，小程序才能真的用上微信登录**。
-> 上线前的唯一硬阻塞就是它。
+> 这份文档写**小程序后端要什么形状**：报文契约、会话从哪儿取、两张新行、
+> 那张 `wx_accounts` 表，以及部署顺序。
+>
+> **⏹ 状态：服务端已实现**（[`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)，
+> 2026-10-11）。下面「要加」的写法保留着 —— 它们是**契约**，不是待办：
+> 哪天又冒出一条新的小程序路由，照着这份的形状写就不会歪。
+> 只剩两件要运维做的：配 `WX_APPID` / `WX_SECRET`，建 `wx_accounts` 表。
 
 ## 为什么必须在服务端
 
@@ -10,7 +15,7 @@
 
 同理，`openid` 也不该落到客户端存储里：客户端只拿 token，`openid` 只活在服务端。
 
-## 要加的两条路由
+## 两条路由（已在 `poem#532`）
 
 写在 poem 那边（`api/_lib/routes.js`）：
 
@@ -151,6 +156,11 @@ function tokenOf(req) {
    小写 `authorization`，但在别处（比如自己写的 `http` 包装、某些代理）
    拿到的可能是原样那个 `Authorization`。两个都读，一行的事。
 
+### 这一节已经在 poem 里实现了
+
+`api/_lib/handler.js` 的 `tokenOf()`，加在 `withSession()` 之前，Cookie 优先。
+上面这三条边界都写进了注释 —— 它们各自对应一个踩过的坑，不是理论。
+
 ### 顺带一句：`/api/me` 也在这条路上
 
 小程序端启动时会调一次 `GET /api/me`（`utils/auth.js` 的 `refresh()`）——
@@ -209,6 +219,9 @@ create index wx_accounts_unionid_idx on wx_accounts (unionid);
 
 ## 同步不再分档（2026-10-04）
 
+> ✅ 服务端那一半已在 `poem#532` 落地（`syncTierGate` 改成只判有没有会话）。
+> 客户端那一半在自检里（W5 + V34）。下面这段是这条边界的出处。
+
 **这条改了服务端的一道闸，必须先说。**
 
 poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
@@ -250,6 +263,9 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
    客户端在 `store.js` 的 `DEVICE_DEFAULTS` 里分流，云端那份里根本没有它。
 
 ### ⚠️ 服务端必须给这两行加白名单，否则数据会被静默清空
+
+> ✅ 已在 `poem#532` 落地（`SETTINGS_KEYS` + `sanitizeSettings` / `sanitizeProfile`，
+> 插在 `readRowKeyOf` **之前**）。下面这段是要加的形状，也是「为什么必须加」的出处。
 
 这是**实测**出来的，不是推的：poem 的 `sanitizePayload(p, poemId)` 对认不出的
 行 id **一律返回 `{}`** ——
@@ -338,29 +354,35 @@ select … on conflict (uid, child_id, poem_id) do update
 
 ## 部署顺序
 
-1. 服务端加 `WX_APPID` / `WX_SECRET` 两个环境变量，加上面那张表
-2. 加两条路由，**`withSession()` 同时认 Cookie 与 Bearer**（见「会话从哪儿取」），
-   部署；**同时放开 `syncTierGate` 的档位判定**（见「同步不再分档」），
-   并给 `settings:v1` / `profile:v1` 加白名单（见上一节）
-3. 部署完**验三步**，每一步的判据都不是「客户端说成功」：
+**第 1～2 步的代码已经在了**（`poem#532` 合并后即可）。剩下的是运维动作。
+
+1. **配两个环境变量**：`WX_APPID` / `WX_SECRET`
+   —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`（不是 500，也不是「你 code 不对」）
+2. **建上面那张表**（`wx_accounts`）
+   —— 没建回 `503 E_WX_TABLE` 并指路。**这张表不在 `poem` 的
+   `api/_lib/schema.sql` 里**：那份是网页版的，网页版一行都不该动
+3. 部署那份镜像（见 `docs/wx-cloud-setup.md` §1.2 / `deploy/README.md`）
+4. **验三步**，每一步的判据都不是「客户端说成功」：
    - 会话认得出来 —— 带一枚自签的 token 直接打同步口：
      ```
      curl -s -X POST https://<域>/api/sync/pull \
        -H 'Authorization: Bearer <accessToken>' \
        -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
      ```
-     **回 `E_NO_SESSION`（401）就是第 2 步的 `tokenOf()` 没补上。**
+     **回 `E_NO_SESSION`（401）就是服务端的 `tokenOf()` 没上。**
      这是最容易「以为补了」的一步：路由加了、登录通了、这条还是 401。
    - 两条新行真的落库 —— 直接查库：
      `select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1')`
-   - 刷新那条带得动会话 —— `POST /api/wx/refresh` 带上 `refreshToken` 与 `device`
-4. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`）
-5. 把第一个管理员扶成 `owner`：poem 那边走 `OWNER_EMAILS` 环境变量
-   （`api/_lib/core.js` 的 `claimOwnerRole`）。**小程序端没有这条口**，
-   也不该有 —— 一个能在客户端点出来的「把自己设成 owner」就是权限漏洞
-6. 其余人的档位由这个 owner 在管理页里发
+   - 刷新那条带得动会话 —— `POST /api/wx/refresh` 带上 `refreshToken` 与 `device`，
+     并确认**旧令牌当场作废**（再拿它打一次同步口，应当 401）
+5. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`）
+6. 把第一个管理员扶成 `owner`：直接在库里改 `accounts.role`。
+   **小程序端没有这条口，也不该有** —— 一个能在客户端点出来的
+   「把自己设成 owner」就是权限漏洞。网页版那条 `OWNER_EMAILS` 走的是邮箱，
+   而微信账号没有邮箱，所以**不要**指望它
+7. 其余人的档位由这个 owner 在管理页里发
 
-### 第 3 步那条 curl 为什么值得单独列出来
+### 第 4 步那条 curl 为什么值得单独列出来
 
 因为这是本 Issue 反复出现的那类错：**「补了一半」看起来像全对**。
 路由加了、登录通了、界面写着「已同步」，而每一条同步都是 401 ——

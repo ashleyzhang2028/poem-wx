@@ -1,5 +1,0 @@
-# 这一份是给 deploy/Dockerfile 用的构建上下文，由 sync-api.sh 生成，**别手改**。
-# 改后端的唯一入口是 poem 仓库；这里只跟着走。
-commit=897498556d9a918808f8023fb51c0841e4f1ac90
-synced_at=2026-10-09T09:46:59Z
-source=https://cnb.cool/npu-gpu-cpu/poem.git

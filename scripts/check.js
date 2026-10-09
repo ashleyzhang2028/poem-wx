@@ -7220,59 +7220,260 @@ function gapped(items, max) {
       "刷新那条报文少一个字段，限流就形同虚设，而没人看得出来");
   }
 
-  /* ---------- 11. 部署件：deploy/ 得是能部署的样子（Issue #71 的 B 方案） ---------- */
-  {
-    const deploy = path.join(ROOT, "..", "deploy");
-    const dockerfile = path.join(deploy, "Dockerfile");
-    const dockerignore = path.join(deploy, ".dockerignore");
-    const stamp = path.join(deploy, "api.synced");
-
-    ok("deploy/Dockerfile 在（名字必须正好是 Dockerfile —— 云托管默认就找它）",
-      fs.existsSync(dockerfile));
-
-    const df = fs.readFileSync(dockerfile, "utf8");
-    // 只看**指令行**（注释里为了讲清道理会提 data/、fonts/，那不是指令）
-    const dfLines = df
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith("#"));
-    const copied = dfLines.filter((l) => l.startsWith("COPY")).join("\n");
-    ok("deploy/Dockerfile 只 COPY api/ 与 serve-api.js，不 COPY 语料 / 字体 / 前端",
-      /COPY --chown=node:node api \.\/api/.test(copied) &&
-        /COPY --chown=node:node serve-api\.js \.\//.test(copied) &&
-        !/\b(data|fonts|css|icons)\b/.test(copied),
-      "把 data/ 之类 COPY 进来，构建会报 no source files（白名单挡着）；" +
-        "真 COPY 到了，就是把 26MB 请回了上下文。实际 COPY：" + JSON.stringify(copied));
-    ok("deploy/Dockerfile 声明了 API_REV（构建参数参与缓存键，改了才真的重建）",
-      /ARG API_REV/.test(df));
-
-    const di = fs.readFileSync(dockerignore, "utf8");
-    ok("deploy/.dockerignore 是白名单（先 ** 全排，再 !api/** 放行）",
-      /^\*\*$/m.test(di) && /^!api\/\*\*$/m.test(di),
-      "写成常规排除名单的话，deckor 的体积会整个漏进上下文");
-
-    ok("deploy/api/handler.js 在（构建上下文里的就是它）",
-      fs.existsSync(path.join(deploy, "api", "handler.js")));
-    ok("deploy/api.synced 记着来源 commit（对账靠它）",
-      fs.existsSync(stamp) && /^commit=[0-9a-f]{7,}/m.test(fs.readFileSync(stamp, "utf8")),
-      "没有 api.synced，就无法判断这份 api/ 是哪一版 —— 线上跑旧代码没人知道");
-
-    // 云端要填的那几栏，文档必须写全 —— 少一栏就是「点不通」
-    const setup = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-cloud-setup.md"), "utf8");
-    ok("云托管设置文档写了「容器目录」填 deploy",
-      /容器目录[\s\S]{0,200}?deploy/.test(setup),
-      "容器目录不写，云托管会去仓库根找 Dockerfile —— 那边没有");
-    ok("云托管设置文档点明了上下文只能在【本仓库】deploy/",
-      /别指望[\s\S]{0,200}?poem/.test(setup),
-      "不说这句，人会去填 poem 的地址，然后卡在「没有 Dockerfile」");
-  }
-
   void remoteSrc;
   void authSrc;
-
-  /* ---------- 汇总 ---------- */
-
-  console.log("");
-  console.log("检查 " + checks + " 项，失败 " + fails + " 项");
-  process.exit(fails ? 1 : 0);
 })();
+
+/* ---------- V45. 服务端写的话，用户得看得到（Issue #71） ----------
+ *
+ * 服务端那几条错误是**为用户写的**：
+ *
+ *   503 E_WX_NOT_CONFIGURED  「服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。」
+ *   503 E_WX_TABLE           「数据库里没有 wx_accounts 这张表。建表语句见 ……」
+ *   401 E_WX_CODE            「这次登录用的 code 已经失效了，请重新点一次登录。」
+ *   503 E_WX_CONFIG          「小程序 appid / appsecret 配得不对，登录走不通。」
+ *   502 E_WX_UPSTREAM        「微信登录服务没能应答，稍后再试。」
+ *
+ * 而客户端这边（`utils/remote.js` 的 `send()`）原先拼的是 `"HTTP " + 状态码`，
+ * 于是**用户看到的就是 "HTTP 503"** —— 服务端那句话白写了。
+ * 更糟的是 `pages/mine/mine.js` 的登录失败提示读的正是 `err.message`，
+ * 它没有任何别的来源。
+ *
+ * 这一节钉住这条：**服务端给了 message，就用它**。
+ * 是端到端试出来的 —— 单看两边各自的代码都不会觉得有问题。
+ */
+{
+  const remoteSrc = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  ok("send() 优先用服务端那句 message（不是只拼状态码）",
+    /body\.message\s*\|\|/.test(remoteSrc) && /new Error\(say \|\|/.test(remoteSrc),
+    "拼成 'HTTP 503' 的话，服务端为用户写的那几句一句都到不了用户眼前");
+  ok("服务端没给 message 时才退回状态码那句（别让 message 是空的）",
+    /"HTTP " \+ res\.statusCode/.test(remoteSrc));
+
+  // 真的喂一条 503 进去，看抛出来的 message 是哪句
+  const mem = {};
+  const savedWx = global.wx;
+  global.wx = {
+    getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+    setStorageSync: (k, v) => { mem[k] = v; },
+    removeStorageSync: (k) => { delete mem[k]; },
+    login: (o) => o.success({ code: "C" }),
+    request: (opt) => opt.success({
+      statusCode: 503,
+      data: { code: "E_WX_NOT_CONFIGURED", message: "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。" }
+    })
+  };
+  Object.keys(require.cache).forEach((k) => {
+    if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+  });
+  const auth = require(path.join(ROOT, "utils", "auth.js"));
+  auth.configure({ baseUrl: "https://probe.test" });
+  auth.login().then(
+    () => { ok("服务端回 503 时登录该失败", false, "居然成功了"); },
+    (e) => {
+      ok("用户看到的是服务端那句话，不是 'HTTP 503'",
+        e.message === "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。",
+        "实际 " + JSON.stringify(e.message));
+      ok("码还是 retained（调用方要能按码分支）", e.code === "E_WX_NOT_CONFIGURED", String(e.code));
+    }
+  ).then(() => { global.wx = savedWx; });
+}
+
+/* ---------- V44. 设置那一行的报文 → 服务端白名单（Issue #71） ----------
+ *
+ * 抓出来的是一个**两边都不报错**的错：小程序端把 `lastSyncAt` 也打包进了
+ * `settings:v1`，而服务端的白名单里没有它 —— 于是它被服务端裁掉。
+ * 发过去的那一份**在服务端被改过**，而客户端那边一路绿灯。
+ *
+ * `lastSyncAt` 是「我这份进度到过别处」的读数，不是「用户选过的东西」：
+ *   · 它是本机时钟写下的时刻，跟着人走毫无意义
+ *   · 它每次同步成功都会变 → 每次都盖一个新时间戳 → 这一行永远显得「刚改过」，
+ *     服务端那份设置会被本机反复顶掉
+ * 所以正确做法是**客户端就不发它**（wire.js 打包时按 DEFAULTS 投影，跳过这个键）。
+ *
+ * 这一节钉的就是这条：**发出去的每一个键，服务端要么收下、要么我们本来就不该发**。
+ * 读不到 poem（那个仓库不在本地）时跳过并说明 —— 不假装验过。
+ */
+{
+  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+  const corePath = path.join(webDir, "api", "_lib", "core.js");
+  if (!fs.existsSync(corePath)) {
+    ok("设置那一行的报文对得上服务端白名单（读不到 poem，跳过）", true);
+  } else {
+    const core = require(corePath);
+    const mem = {};
+    global.wx = {
+      getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+      setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+      removeStorageSync: (k) => { delete mem[k]; }
+    };
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+    const store = require(path.join(ROOT, "utils", "store.js"));
+    const wire = require(path.join(ROOT, "utils", "wire.js"));
+
+    if (typeof core.SETTINGS_KEYS !== "object" || !core.SETTINGS_KEYS) {
+      console.log("· 读到的 poem 还没有设置白名单（比 poem#532 老）—— V44 这一节跳过");
+    } else {
+      // 用户把每一项都改一遍（改到跟默认值不同，才看得见「有没有被裁」）
+      store.saveSettings({
+        grade: 3, term: 2, dailyCount: 7, scope: "all", algo: "sm2",
+        align: "left", fontSize: 2, theme: "ink", pinyin: "all",
+        speechRate: 1.5, speechAutoNext: false
+      });
+      // 顺手做两件真实世界里一定会发生的事：
+      //   · 同步成功会写一次 lastSyncAt（它不该跟着人走）
+      //   · 音效跟设备走，不该进报文
+      store.saveSettings({ lastSyncAt: Date.now(), sfx: false });
+
+      const row = wire.packRecords().filter((r) => r.id === "settings:v1")[0];
+      ok("打包时报文里有 settings:v1 这一行", !!row, "没打包出来，后面两条就无从谈起");
+
+      if (row) {
+        const keys = Object.keys(row.payload.settings || {});
+        const mine = Object.keys(core.SETTINGS_KEYS);
+        const extra = keys.filter((k) => mine.indexOf(k) < 0);
+
+        ok("报文里不含服务端白名单之外的键（本就不该发的，我们自己不发）",
+          extra.length === 0,
+          "多出来的是 " + JSON.stringify(extra) +
+          " —— 服务端会把它裁掉，而两边都不报错：发过去的那一份在服务端被改过。");
+
+        ok("lastSyncAt 不进报文（它是读数不是选择，而且每次同步都变）",
+          keys.indexOf("lastSyncAt") < 0,
+          "带上它 = 每次同步都盖一个新时间戳 = 服务端那份设置被本机反复顶掉");
+
+        ok("跟设备走的 sfx 也不进报文",
+          keys.indexOf("sfx") < 0,
+          "音效取决于这台机器的扬声器，换台手机就不成立了");
+
+        // 反向：客户端认的每一个键，服务端都得收 —— 少一个就是「改了设置、
+        // 换台手机还是默认」，而且到处都不报错。
+        const clientKeys = Object.keys(store.DEFAULTS).filter((k) => k !== "lastSyncAt");
+        const notOnServer = clientKeys.filter((k) => mine.indexOf(k) < 0);
+        ok("小程序端每个跨设备的设置键都在服务端白名单里",
+          notOnServer.length === 0,
+          "缺 " + JSON.stringify(notOnServer) +
+          " —— 这个键推上去会被服务端裁掉，「改了设置、换台手机还是默认」");
+
+        // 白名单里的类型标注：写错一个（int 写成 str）不会报错，
+        // 只会让某个键静默变成字符串。这里只做形状检查。
+        const badType = Object.keys(core.SETTINGS_KEYS)
+          .filter((k) => ["int", "str", "bool", "num"].indexOf(core.SETTINGS_KEYS[k]) < 0);
+        ok("服务端白名单的类型标注都在 {int,str,bool,num} 里",
+          badType.length === 0, "认不出的类型：" + JSON.stringify(badType));
+
+        // 真过一遍服务端 sanitize：发出去的字段一个都不许丢
+        const got = core.sanitizePayload(row.payload, "settings:v1");
+        const lost = keys.filter((k) => !(k in (got.settings || {})));
+        ok("报文过一遍服务端 sanitize，设置一个字段都不丢",
+          lost.length === 0, "丢了 " + JSON.stringify(lost) + " —— 实际 " + JSON.stringify(got.settings));
+      }
+    }
+  }
+}
+
+/* ---------- V43. 部署件：云托管那份镜像（Issue #71） ----------
+ *
+ * 这一节的判据换过一次，值得写清为什么。
+ *
+ * 上一版（B 方案）是「把 poem 的 api/ 拷一份进 deploy/api/，云托管按
+ * **容器目录 deploy** 构建」，自检盯着 `deploy/api.synced` 的 sha 对账。
+ * 那一份对账守的其实是一个**税**：改完 poem 忘了跑同步脚本，线上就是旧代码，
+ * 而且不报错。
+ *
+ * 现在改成：**源码上下文 = poem 仓库**，镜像由 CNB 流水线构建 ——
+ * 那份副本没了，那个税也没了，所以那条对账随之退场（它要守的东西不存在了）。
+ * 这一节于是改成盯那件新的事：**别再把副本请回来**。
+ *
+ * 「别再把副本请回来」为什么值得盯：它是这一整轮里唯一一处
+ * 「看着像解决了、其实把同一个问题搬到另一个地方」的诱惑 ——
+ * 搬一份代码过来立刻就能部署，代价要等三个月后才显形（两边各自漂）。
+ */
+{
+  const repo = path.join(ROOT, "..");
+  const deploy = path.join(repo, "deploy");
+  const dockerfile = path.join(deploy, "Dockerfile");
+  const serveDir = path.join(repo, "deploy-api-serve");
+
+  ok("deploy/Dockerfile 在（流水线按路径取它）", fs.existsSync(dockerfile));
+
+  const df = fs.readFileSync(dockerfile, "utf8");
+  // 只看**指令行**（注释里为了讲清道理会提 data/、fonts/，那不是指令）
+  const dfLines = df
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+  const copied = dfLines.filter((l) => l.startsWith("COPY")).join("\n");
+  ok("deploy/Dockerfile 只 COPY api/ 与服务壳，不 COPY 语料 / 字体 / 前端",
+    /COPY --chown=node:node api \.\/api/.test(copied) &&
+      /COPY --chown=node:node deploy-api-serve\/serve-api\.js \.\//.test(copied) &&
+      !/\b(data|fonts|css|icons)\b/.test(copied),
+    "真 COPY 到了，就是把 26MB 请回了上下文。实际 COPY：" + JSON.stringify(copied));
+  ok("deploy/Dockerfile 声明了 API_REV（构建参数钉住「这一版 api/ 是哪来的」）",
+    /ARG API_REV/.test(df));
+
+  /* 服务壳与白名单都放在 deploy-api-serve/ 而不是 deploy/：
+     Dockerfile 那行 COPY 是按**上下文根**取的，而上下文根是 poem ——
+     摆在一个不属于「容器目录」的目录里，是让「谁在哪个上下文里生效」这件事显形。 */
+  ok("服务壳在 deploy-api-serve/（不在 deploy/ —— 它进的是 poem 那个上下文）",
+    fs.existsSync(path.join(serveDir, "serve-api.js")));
+  const di = fs.readFileSync(path.join(serveDir, ".dockerignore"), "utf8");
+  ok("deploy-api-serve/.dockerignore 是白名单（先 ** 全排，再逐条 ! 放行）",
+    /^\*\*$/m.test(di) && /^!api\/\*\*$/m.test(di) && /^!serve-api\.js$/m.test(di),
+    "写成常规排除名单的话，poem 的 data/ 26MB 会整个漏进上下文");
+
+  /* ⚠️ 这一条是这一节真正在挡的东西：**不许再往本仓库拷一份 api/**。
+     `deploy/api/` 或仓库根出现 `api/_lib/core.js`，就说明有人在重走老路 ——
+     那意味着「改完 poem 忘了同步、线上跑旧代码而不报错」这个税又回来了。 */
+  const strays = [
+    path.join(deploy, "api"),
+    path.join(repo, "api"),
+    path.join(deploy, "api.synced"),
+    path.join(deploy, "sync-api.sh")
+  ].filter((p) => fs.existsSync(p));
+  ok("本仓库里没有 poem 的 api/ 副本（后端的唯一住处是 poem）",
+    strays.length === 0,
+    "发现：" + strays.join(", ") +
+    " —— 这一份副本就是「两份代码」那个税的来源：改完 poem 忘了同步，" +
+    "线上跑旧代码而且不报错。要它的话，请先想清楚谁负责发现漂移。");
+
+  const build = fs.readFileSync(path.join(deploy, "build.sh"), "utf8");
+  ok("deploy/build.sh 是从 poem 摊上下文，不往仓库里落副本",
+    /cp -R "\$POEM_DIR\/api"/.test(build),
+    "落副本就又是「两份」了");
+
+  // 云端要填的那几栏，文档必须写全 —— 少一栏就是「点不通」
+  const setup = fs.readFileSync(path.join(repo, "docs", "wx-cloud-setup.md"), "utf8");
+  ok("云托管设置文档写的是「按镜像部署」",
+    /部署方式[\s\S]{0,80}?镜像/.test(setup),
+    "写「代码仓库 + 容器目录」就是老路：那个仓库根上没有 api/，走不通");
+  ok("云托管设置文档点明了**别**在控制台里指本仓库",
+    /别在云托管控制台里指这个仓库|别在控制台里填这个仓库/.test(setup),
+    "不说这句，人会去填容器目录，然后卡在「没有 Dockerfile」——或者更糟，" +
+      "转而把 poem 的 api/ 拷一份进来");
+  ok("云托管设置文档写清了镜像地址的 slug 是**本仓库**的",
+    /docker\.cnb\.cool\/npu-gpu-cpu\/poem-wechat-mini-program\/wx-api/.test(setup),
+    "填成 poem 名下那个槽位，云托管拉不到");
+
+  /* 流水线那一节：源码上下文必须是 poem。
+     写成「本仓库 + 容器目录」就又回到那份副本上了（云托管不 clone 第二个仓库，
+     流水线可以 —— 所以流水线必须真的去 clone poem）。 */
+  const cnb = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8");
+  ok(".cnb.yml 里那份镜像的流水线去 clone poem（源码上下文 = 后端那一边）",
+    /构建云托管镜像（源码 = poem）[\s\S]{0,900}?clone[\s\S]{0,200}?poem\.git/.test(cnb),
+    "没去取 poem 就只能靠副本，而副本正是这一版撤掉的东西");
+  ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
+    /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
+    "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
+  ok(".cnb.yml 里那节镜像用一个**独立 job**（不与上传体验版挤在同一个 job 里）",
+    /- name: 构建云托管镜像（源码 = poem）/.test(cnb) && /- name: 上传体验版/.test(cnb),
+    "挤在一起的话，镜像构建失败会把体验版上传一起挡下");
+}
+
+/* ---------- 汇总 ---------- */
+
+console.log("");
+console.log("检查 " + checks + " 项，失败 " + fails + " 项");
+process.exit(fails ? 1 : 0);

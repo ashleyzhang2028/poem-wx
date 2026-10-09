@@ -1,39 +1,56 @@
 # 云托管后端：只跑 API 的那一份
 
-> Issue #71 选定 **B 方案**在代码上的落点。放的是**部署描述**，不是后端代码本体。
-> 后端本体在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) 里。
+> Issue #71。**这里放的是部署描述，不是后端代码。** 后端一行都不在这个仓库里 ——
+> 它在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) 的 `api/`。
 
 ## 这里有什么
 
 | 文件 | 干什么 |
 |---|---|
-| `Dockerfile` | 只 COPY `api/` 的运行时镜像，端口 8080 |
-| `serve-api.js` | 只挂 `/api/*` 的薄壳（不伺服静态站） |
-| `.dockerignore` | 构建上下文**白名单**：只放 `api/` 与 `serve-api.js` |
-| `sync-api.sh` | 从 `poem` 同步 `api/` 过来 / `--check` 对账 |
-| `api/` | ← 同步产物，**别手改**；改后端去 `poem` |
-| `api.synced` | 记着这份 `api/` 来自 poem 的哪个 commit |
-| `build.sh` | 本机构建 + 报体积（云托管那边不跑它） |
+| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080 |
+| `build.sh` | 本机构建 + 报体积（**部署链上不跑它**，见下） |
+| `../deploy-api-serve/` | 只挂 `/api/*` 的服务壳（构建时摆进上下文） |
 
 ## 云托管怎么填
 
+**别在控制台里指这个仓库。** 那儿的「容器目录」是按**被部署仓库的根**取的，
+而这个仓库根上没有 `api/` —— 小程序前端不是后端。按控制台那条路，就只剩
+「把 `poem/api/` 拷一份进来」这一个选择，而那正是这一版要撤掉的东西。
+
+正路是**镜像**：让 CNB 流水线构建、推镜像，云托管按镜像部署。
+
 | 字段 | 填什么 |
 |---|---|
-| 部署方式 | **代码仓库** |
-| 代码仓库 | `https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program.git` |
-| 分支 | 你要上线的那条（如 `feat/wechat-mini-program-893d`） |
-| **容器目录** | **`deploy`** |
-| **Dockerfile** | **`Dockerfile`**（就是本目录这份；不填时默认也是文件名 `Dockerfile`） |
+| 部署方式 | **镜像** |
+| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>`（见下） |
 | 端口 | `8080` |
-| 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET`，见 [`../docs/wx-login-server.md`](../docs/wx-login-server.md) |
+| 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
 
-⚠️ **「容器目录」这一栏是这件事的全部机关。** 云托管是按**上面那个仓库的根**去取
-这个目录的，取不到就退回仓库根。所以：
+⚠️ 镜像槽位的路径是按**这个仓库**的 slug 给的，即使源码来自 `poem` ——
+流水线在这个仓库里跑，镜像就推在这个仓库名下。所以云托管那边填的是
+`poem-wechat-mini-program/wx-api`，不是 `poem/xxx`。
 
-- 填 `deploy` → 上下文是 `deploy/`，Dockerfile 用 `deploy/Dockerfile` ✅ 本文这条路
-- 留空（或填仓库根）→ 云托管的构建就只看见小程序前端，**没有 Dockerfile 可构建** ❌
-  （那个仓库里没有后端代码 —— 这也是早先「新建一个仓库」那个直觉真正的落点）
-- 想不填容器目录直接用 poem？**做不到**：`poem` 是另一个仓库，云托管不会去那儿找。
+### 流水线怎么构建（关键形状）
+
+CNB 允许**源码上下文**与**代码仓库**不是同一处的组合，`.cnb.yml` 里那一节长这样：
+
+```yaml
+build:wx-api:
+  docker:
+    image:
+      name: docker.cnb.cool/${CNB_ROOT_SLUG}/wx-api:latest
+      dockerfile: deploy/Dockerfile
+      target: .
+```
+
+- 源码上下文 = **`poem` 仓库**（那个仓库的 `.cnb.yml` 触发，或这边引用）
+- `dockerfile` 指到本仓库 `deploy/Dockerfile`
+- `serve-api.js` 与 `.dockerignore` 由流水线摆进上下文（见
+  `deploy-api-serve/.dockerignore` 顶上那张归属表）
+
+⚠️ 具体的流水线语法以 CNB 文档为准（`cnb-docs` 技能 / 平台文档）。
+这一节写的是**形状**：后端代码只有 `poem` 一处，镜像的构建上下文也直接取它，
+中间不再落一份副本。
 
 ## 为什么是「瘦身」而不是「第二份后端」
 
@@ -41,65 +58,39 @@
 `api/_lib/` 里。抄一份出来等于同一份进度走两条入库逻辑（`miniprogram/utils/remote.js`
 顶上那段注释写的正是这件事）。所以这里**只改部署形状**：同一份 `api/`，一份不同的 Dockerfile。
 
-省掉的是**每次部署都要上传、而运行时一次都不读**的东西：
+省掉的只是**每次部署都要上传、而运行时一次都不读**的东西：
 
 | 挡在构建上下文外 | 体积 | 谁在用 |
 |---|---|---|
 | `data/` | 26 MB | 只有 `/api/game/*`、`/api/exam/*` —— 小程序一条都不打 |
 | `fonts/` | 11 MB | 网页版的宋体子集字体 |
-| `js/` | 1 MB | 网页版前端（但 `/api/game/*` 要它，见下） |
+| `js/`、各页面目录、`css/`、`icons/` | ~2.5 MB | 浏览器 |
 | `.git` | 22 MB | 谁都不用 |
-| 各页面目录 / `css/` / `icons/` | ~1.5 MB | 浏览器 |
 
-**构建上下文 = `deploy/` 只有 436KB**（47 个文件，全是 `api/`）。
-`poem` 整仓（含 `.git`）是 50.5MB，仓库根那份 `.dockerignore` 挡完还剩 49MB。
+**构建上下文 ≈ 300KB**（`api/` 加服务壳）。
 
 ## ⚠️ 真代价，放最显眼处
 
-**① `deploy/api/` 是 `poem/api/` 的一份副本。** 这不是笔误，是这份方案的形状：
-云托管不会去 clone 另一个仓库，代码必须已经在上下文里。所以：
-
-- 改后端的唯一入口是 `poem`。在 `poem` 合并之后，跑一次 `bash deploy/sync-api.sh`，
-  这边跟着走。**不跑，线上就是旧代码** —— 而且不报错，只是「怎么改都没反应」。
-- 防这条的自检在 `.cnb.yml`：`sync-api.sh --check` 会拿 `poem` 的 HEAD 与
-  `api.synced` 里的 sha 对，对不上就**红**。红的意思是「回来同步一次」，不是坏了。
-  （同款先例：`scripts/build-data.js` 那边也是「poem 改了这边就红，由人对一次」。）
-
-**② `/api/game/answer`、`/api/exam/records` 会回 500**（`E_INTERNAL`）。
-不是「语料没读到」这种带说明的错 —— 是 `api/_lib/game.js` 第 78 行
+**① `/api/game/answer`、`/api/exam/records` 会回 500**（`E_INTERNAL`）。
+不是「语料没读到」这种带说明的错 —— 是 `api/_lib/game.js` 里
 `require(ROOT + "/js/quiz.js")` 加载不到，被 handler 的兜底 catch 接住。
 小程序端两条都不打（`miniprogram/utils/remote.js` 的 `PATHS` 里没有），所以默认这样。
 
-**③ 要语料就别用这份。** 上面那两条要 `data/` **和** `js/quiz.js`、`js/exam.js`：
-`data/` 26MB，`js/` 1MB，一起加回来就只剩「省个字体」了。真有这需求，用 `poem`
-仓库根那份 `Dockerfile` 更省事 —— 它本来就带着全部资源。（旧版 `--with-corpus`
-只把 `data/` 放回来，那是个**不通**的组合：`quiz.js` 仍旧加载不到。所以这个参数
-已经改成如实拒绝，不再假装支持。）
+要语料就别用这份：上面那两条要 `data/` **和** `js/quiz.js`、`js/exam.js`，
+`data/` 26MB + `js/` 1MB 一起加回来就只剩「省个字体」了 ——
+真有这需求，用 `poem` 仓库根那份 `Dockerfile` 更省事，它本来就带着全部资源。
+
+**② 镜像槽位**：这份镜像推在**本仓库**名下（流水线在这儿跑），
+而 `poem` 自己那份部署也在用它自己的槽位。两个仓库各占一个，
+这是「后端只有一份代码」换来的唯一额外成本。
 
 ## 本机怎么构建
 
 ```bash
-bash deploy/sync-api.sh          # 从 CNB 拉 poem，把 api/ 同步进来
-bash deploy/build.sh             # 就地构建 deploy/
-bash deploy/build.sh --dry-run   # 只报体积
+git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
+POEM_DIR=/tmp/poem bash deploy/build.sh            # 构建并报体积
+POEM_DIR=/tmp/poem bash deploy/build.sh --dry-run  # 只看上下文，不构建
 ```
 
-`POEM_DIR=/path/to/poem` 可以指本地已有的 poem 源码。构建时会把来源 commit
-写进镜像标签（`org.opencontainers.image.revision`），上线后能对出「这一版是哪来的」。
-
-试跑：
-
-```bash
-docker run -p 8080:8080 \
-  -e SESSION_SECRET=$(openssl rand -hex 32) \
-  -e SUPABASE_URL=... -e SUPABASE_SERVICE_KEY=... \
-  poem-api
-curl -s localhost:8080/healthz
-```
-
-## 会话还没通的那一半
-
-这份镜像只是**部署形状**。`poem` 侧的 `withSession()` 目前只认 Cookie，
-而小程序发的是 `Authorization: Bearer` —— 不补这半边，现象是
-「`/wx/login` 一路绿灯、`/api/sync/*` 一律 401」。逐条在
-[`../docs/wx-login-server.md`](../docs/wx-login-server.md)。
+`build.sh` 在**本机**摊上下文（把 `serve-api.js` 与 `.dockerignore` 摆进去），
+跑真 `docker build`。部署链上不走它 —— 那边是流水线按上面的形状直接构建。
