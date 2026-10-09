@@ -87,12 +87,25 @@ function send(path, data, method) {
           // 429：同设备同步太频繁。界面要为此说一句人话
           // （「刚同步过，过会儿再来」），所以把状态码挂在 error 上 ——
           // 只留一句 "HTTP 429" 的话，调用方只能靠字符串匹配去猜。
-          const err = new Error("HTTP " + res.statusCode);
+          //
+          // ⚠️ `message` 用**服务端那句话**，不是 `"HTTP " + 状态码`。
+          // 这条是端到端试出来的：服务端把「缺 WX_APPID / WX_SECRET」
+          // 写成了一句很长很清楚的人话（`503 E_WX_NOT_CONFIGURED`），
+          // 而这里拼的是 "HTTP 503" —— 于是用户看到的就是 "HTTP 503"，
+          // 服务端写那句话白写了。而 `mine.js` 的登录失败提示读的正是
+          // `err.message`，它没有任何别的来源。
+          //
+          // 服务端那些话是**为用户写的**（「小程序 appid / appsecret 配得不对，
+          // 登录走不通」这种），不是给日志看的 —— 它们本来就是要露给用户的。
+          // 真没有 message 时才退回状态码那句，别让 message 是空的。
+          const body = res.data || {};
+          const say = body.message || body.error_description || "";
+          const err = new Error(say || "HTTP " + res.statusCode);
           err.statusCode = res.statusCode;
           // 服务端的码在 body.code 里（`{ code: "E_NO_SESSION" }`），
           // 不是 body.error —— 取错了这一位，401 就只剩一句话可读，
           // 调用方无法把「会话过期」与「服务端抽风」分开。
-          err.code = (res.data && (res.data.code || res.data.error)) || "";
+          err.code = body.code || body.error || "";
           reject(err);
         }
       },

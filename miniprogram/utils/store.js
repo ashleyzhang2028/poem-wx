@@ -218,9 +218,35 @@ function replaceSettings(all) {
   return settings();
 }
 
-/** 设置里**跨设备**的那一份原始数据（同步打包用） */
+/**
+ * 设置里**跨设备**的那一份原始数据（同步打包用）。
+ *
+ * ⚠️ 得**按 DEFAULTS 投影一遍**，不能把原始存储整个交出去。原始那份里躺着
+ * `lastSyncAt` —— 它是「我这份进度到过别处」的读数，**不是选择**：
+ *   · 它是本机时钟写下的时刻，跟着人走毫无意义（换台手机读到的只会是另一台的钟）
+ *   · 它每次同步成功都会变 → 每次都盖一个新时间戳 → 这一行永远显得「刚改过」，
+ *     服务端那份设置会被本机反复顶掉
+ *
+ * 投影之后剩下的正好是 DEFAULTS 里那些真选择（`sfx` 本来就在
+ * DEVICE_DEFAULTS 里，不是 DEFAULTS 的键，所以它压根不在这儿）。
+ *
+ * 这条是 `scripts/check.js` 把报文喂给服务端 `sanitizePayload` 之后抓出来的：
+ * 服务端的 `SETTINGS_KEYS` 白名单里没有 `lastSyncAt`，于是它被服务端裁掉 ——
+ * 也就是说，发过去的那一份**在服务端被改过**，而两边谁都不报错。
+ * 与其让服务端替我们吞一个本就不该发的键，不如在这儿就不发。
+ */
 function cloudSettings() {
-  return rawSettings();
+  const raw = rawSettings();
+  const out = {};
+  Object.keys(DEFAULTS).forEach((k) => {
+    // lastSyncAt 在 DEFAULTS 里（settings() 要投影出它给「我的」页那一行看），
+    // 但它**不上云** —— 理由见上。
+    if (k === "lastSyncAt") return;
+    const v = raw[k];
+    if (v === undefined || v === null || v === "") return;
+    out[k] = v;
+  });
+  return out;
 }
 
 /** 设置最后一次动的时间 —— 同步拿它比新旧 */

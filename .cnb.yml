@@ -12,11 +12,11 @@ $:
         - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
         # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-        # deploy/api/ 是 poem 的 api/ 的**一份副本**（云托管不会去 clone 另一个
-        # 仓库，代码必须已经在部署上下文里 —— 见 deploy/README.md）。所以这里
-        # 对一次账：poem 的 HEAD 与 deploy/api.synced 里记的 sha 不一致就红。
-        # 红的含义同 V40：**回来同步一次**（bash deploy/sync-api.sh），不是坏了。
-        - bash deploy/sync-api.sh --check
+        # 云托管那份镜像（deploy/Dockerfile）的源码上下文是 **poem 仓库** ——
+        # 构建链在下面 `build:wx-api` 那一节，不在这条自检里。
+        # 原先这里有一条 `deploy/api.synced` 的 sha 对账，它守的是「往本仓库拷了一份
+        # api/ 副本、改完 poem 忘了同步」这个税。副本已经撤掉（后端只有 poem 一处），
+        # 那条对账也就随之退场 —— **不是不守了，是它要守的东西不存在了**。
         # 页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
         # 版式（折叠不丢字、折出来的行不孤字、短句不被折，跑全站 5599 篇）/
         # 「选一个」的控件（三种排布同一块填色、选项行不许画竖线、
@@ -57,6 +57,13 @@ $:
         # 与网页版的逐项对照：网页版能力表里每一项，小程序端都得有交代
         # （已实现 / 换个做法 / 明确不做并记账），漏一项就红
         - node scripts/parity.js
+        # 端到端：把**小程序端 utils** 与 **poem 服务端**接起来真跑一遍
+        # （登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
+        # 上面那两条是静态 + 单元，验得了「报文形状对不对」；
+        # 而这一轮所有的坑（登录通但同步 401、字段被服务端裁掉、换机认不回来）
+        # 全都是**两边合起来**才显形的 —— 那一类只有真跑一遍才抓得住。
+        # poem 已经在上面 clone 到 /tmp/poem 了，直接指过去。
+        - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
 
 # 打 tag 就传一版体验版。**只上传，不提审** ——
 # 「要不要上线」不该由流水线决定。传完在公众平台设成体验版，真机走一遍再提审。
@@ -72,6 +79,106 @@ $:
 #      allow_events: tag_push          ← tag 触发属不可信事件，少了它必被拒
 #    没声明 allow_slugs 时走的是「触发者要是密钥仓库的开发者/管理员」，
 #    即日常打 tag 的那个账号得先被加进密钥仓库 —— 不如写死 allow_slugs 稳。
+# 打 tag 就传一版体验版。**只上传，不提审** ——
+# 「要不要上线」不该由流水线决定。传完在公众平台设成体验版，真机走一遍再提审。
+#
+# 密钥走**密钥仓库**（npu-gpu-cpu/poem-wechat-mini-program-secrets，Issue #64）。
+# ⚠️ 这里只声明「读哪个文件」，**不要**试图 clone 那个仓库：
+#    密钥仓库禁止 Git Clone（本地也不行，何况流水线），
+#    `git clone` 它一律回 `Repository Not Found` —— 看着像路径写错 / 仓库没建，
+#    其实是被安全策略挡的。取密钥只有 imports 这一条路。
+#
+# ⚠️ 密钥仓库那份 wechat-ci.yml 里**必须**声明这两个字段，否则红线不生效：
+#      allow_slugs: npu-gpu-cpu/poem-wechat-mini-program
+#      allow_events: tag_push          ← tag 触发属不可信事件，少了它必被拒
+#    没声明 allow_slugs 时走的是「触发者要是密钥仓库的开发者/管理员」，
+#    即日常打 tag 的那个账号得先被加进密钥仓库 —— 不如写死 allow_slugs 稳。
+"v*":
+  - name: 上传体验版
+    image: node:20
+    imports:
+      - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
+    script:
+      - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+      - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+      - node scripts/check.js
+      - node scripts/parity.js
+      # 密钥读来了，但名字对不上时**当场说清楚是哪个名字空着**：
+      # 空着往下走的话，miniprogram-ci 抛的是「密钥无效 / appid 不一致」，
+      # 会把人引去查公众平台，而真正的问题只是密钥仓库里少写了一个键。
+      - |
+        for v in WX_APPID WX_PRIVATE_KEY_B64; do
+          eval "val=\$$v"
+          if [ -z "$val" ]; then
+            echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+            echo "  已注入的变量名（只列名字，不列值）：" >&2
+            env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
+            exit 1
+          fi
+        done
+      - npm i -D miniprogram-ci --no-audit --no-fund
+      - node scripts/upload.js "${CNB_BRANCH#v}" "tag ${CNB_BRANCH}"
+    allow_failure: true
+
+# ---------------------------------------------------------------------------
+# 云托管那份「只跑 /api/*」的镜像（Issue #71）
+#
+# **源码上下文是 poem 仓库，不是这个仓库** —— 后端在那边，这个仓库里只有
+# 小程序前端与部署描述。云托管控制台的「容器目录」是按被部署仓库的根取的，
+# 它够不着第二个仓库；CNB 流水线可以。所以镜像在这儿构建、推制品库，
+# 云托管那边按**镜像**部署（填法见 deploy/README.md）。
+#
+# ⚠️ 这一节与上面「往本仓库拷一份 api/」是两条路，后者已经撤掉：
+#    `deploy/api/` 那份副本连同「改完 poem 忘了同步、线上跑旧代码而且不报错」
+#    这个税一起没了。代价是本仓库多一个镜像槽位。
+#
+# 推送的镜像路径按**本仓库**的 slug（流水线在这儿跑）：
+#   docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:latest
+#
+# 触发：打 tag 时构建（要回滚时把那个 tag 填进云托管那一栏）。要是想每次
+# push 都出镜像，把这一节挪到 `$` 下面那条 —— 但那时镜像 tag 得跟着 commit 走，
+# 否则「哪一版在线上」说不清。
+"v*":
+  - name: 构建云托管镜像（源码 = poem）
+    services:
+      - docker
+    env:
+      IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
+    stages:
+      # 1. 取后端源码。**这一份是唯一一份** —— 不往本仓库落副本，
+      #    所以「poem 改了这个没跟上」这件事根本不会发生。
+      - name: clone poem
+        script: git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
+      # 2. 摊构建上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳。
+      #    三样都摊在**平铺的一层**里，因为 deploy/Dockerfile 按 ./api 与
+      #    ./serve-api.js 拷。.dockerignore 也摆到上下文根 —— 它只在那儿生效。
+      - name: stage context
+        script: |
+          set -euo pipefail
+          mkdir -p /tmp/ctx
+          cp -R /tmp/poem/api /tmp/ctx/api
+          cp deploy/Dockerfile /tmp/ctx/Dockerfile
+          cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
+          cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
+          # 上下文里没有 data/ 26MB、fonts/ 11MB、js/ 1MB —— 白名单挡着，
+          # 运行时一条都不读。真把语料请回来，就是每次部署多传 37MB。
+          du -sh /tmp/ctx
+      # 3. 构建 + 推。REV 记的是**后端的 commit**（不是本仓库的 tag）——
+      #    「线上跑的是哪一版 poem」这个问题只有它能答。
+      - name: build & push
+        script: |
+          set -euo pipefail
+          REV="$(git -C /tmp/poem rev-parse --short HEAD)"
+          docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
+          docker build \
+            --build-arg "API_REV=${REV}" \
+            --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" \
+            -t "${IMAGE}:${CNB_BRANCH}" -t "${IMAGE}:latest" /tmp/ctx
+          docker push "${IMAGE}:${CNB_BRANCH}"
+          docker push "${IMAGE}:latest"
+          echo "✓ ${IMAGE}:${CNB_BRANCH}（后端 poem ${REV}）"
+
 "v*":
   - name: 上传体验版
     image: node:20

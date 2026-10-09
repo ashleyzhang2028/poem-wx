@@ -124,31 +124,47 @@ Supabase 每 5 天探活，见其 `.cnb.yml` 的 `crontab: 0 3 */5 * *`）。
 #### 想再瘦一圈：只跑 `/api/` 的那份镜像
 
 上面那份是「一个进程跑全」——顺手把整个网页版也搬进了容器（构建上下文 49MB，
-其中 26MB 语料 + 11MB 字体是小程序一条都不取的）。所以本仓库 `deploy/` 下另放了
-一份**只跑 API** 的部署描述（Issue #71 选的 B 方案）：上下文 **436KB**。
+其中 26MB 语料 + 11MB 字体是小程序一条都不取的）。所以另有一份**只跑 API** 的
+部署描述（Issue #71）：上下文 ≈300KB。
 
-云托管那几栏这么填（**关键是「容器目录」**）：
+它长这样（**别在云托管控制台里指这个仓库**）：
+
+```
+小程序仓库    部署描述（Dockerfile / serve-api.js / .dockerignore）
+poem 仓库     后端本体（api/、serve.js）
+        ↓
+CNB 流水线    源码上下文 = poem，Dockerfile 从上面那份取
+        ↓
+镜像           docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>
+        ↓
+云托管        部署方式 = 镜像
+```
+
+云托管那几栏这么填：
 
 | 字段 | 填什么 |
 |---|---|
-| 代码仓库 | `https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program.git` |
-| **容器目录** | **`deploy`** |
-| Dockerfile | `Dockerfile`（不填默认也是它） |
+| 部署方式 | **镜像**（不是「代码仓库」） |
+| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>` |
 | 端口 | `8080` |
 
-⚠️ **别指望在这里填 `poem` 的地址**：云托管是按**上面的仓库根**取容器目录的，
-而 `poem` 是另一个仓库 —— 填进去只会看到「没有 Dockerfile」。
-这也是这份东西放在**本仓库** `deploy/` 而不是 `poem` 里的原因。
-代价是 `deploy/api/` 是 `poem/api/` 的一份副本，靠 `deploy/sync-api.sh` 同步，
-自检拿 sha 对账（对不上就红）。详见 [`../deploy/README.md`](../deploy/README.md)。
+⚠️ **别在控制台里填这个仓库 + `容器目录 deploy`。** 那儿的「容器目录」是按
+**被部署仓库的根**取的，而这个仓库根上没有 `api/` —— 小程序前端不是后端。
+按那条路走，就只剩「把 `poem/api/` 拷一份进来」这一个选择，而那份副本正是
+要撤掉的东西（改完 `poem` 忘了同步 = 线上跑旧代码、而且不报错）。
 
-⚠️ 代价第二条，先看再定：砍掉 `data/` 与 `js/` 之后，
+⚠️ 镜像名里那个 slug 是**本仓库**的：流水线在这个仓库里跑，镜像就推在这个
+仓库名下，即使源码来自 `poem`。云托管那边照抄上面那个地址即可。
+构建在打 tag 时触发（`.cnb.yml` 的「构建云托管镜像」那一节）。
+
+⚠️ 代价一条，先看再定：砍掉 `data/` 与 `js/` 之后，
 `/api/game/answer`、`/api/exam/records` 会回 **500**。小程序端两条都不打，
 所以默认这样；**要语料就别用这份**（那两条要 `data/` 26MB 加 `js/` 1MB，
 一起加回来只剩「省个字体」，不如直接用 `poem` 根那份）。
 
-选哪份都行 —— `deploy/Dockerfile`（瘦）与 `poem` 根的 `Dockerfile`（全）
+选哪份都行 —— 那份瘦镜像与 `poem` 根的 `Dockerfile`（全）
 在**账号、进度、会话**上没有任何区别，差别只在容器里有没有静态站。
+详见 [`../deploy/README.md`](../deploy/README.md)。
 
 ### 1.3 配环境变量
 
@@ -177,39 +193,39 @@ WX_SECRET=<小程序 appsecret>
 3. 触发一次部署，等状态变「运行中」
 4. 点默认域名根路径，应能看到 `poem` 静态首页 → **服务通了**
 
-### 1.5 补那两条路由（**代码打通的关键，现在还没有**）
+### 1.5 那两条路由与 Bearer 会话（**已经做完了**）
 
-`poem` 的 `api/_lib/routes.js` 现在**没有** `/wx/login`。要加：
+原先这一节写的是「代码打通的关键，现在还没有」，列了三件待办。**三件都做完了**，
+在 [`npu-gpu-cpu/poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)：
 
-```js
-// api/_lib/routes.js
-"POST /wx/login":   "./../_routes/wx/login.js",
-"POST /wx/refresh": "./../_routes/wx/refresh.js",
+1. `/api/wx/login`、`/api/wx/refresh` 两条路由（`api/_routes/wx/`）
+2. 会话同时认 Cookie 与 `Authorization: Bearer`（`api/_lib/handler.js` 的 `tokenOf()`）
+3. 同步那道闸放开档位 + `settings:v1` / `profile:v1` 的服务端白名单
+
+你要做的只是**配环境变量**（见 1.3 的 `WX_APPID` / `WX_SECRET`）与
+**建那张表**（`wx_accounts`，建表语句在 `docs/wx-login-server.md`）。
+缺哪个都会如实回一句人话：缺密钥 `503 E_WX_NOT_CONFIGURED`、
+缺表 `503 E_WX_TABLE`、`code` 失效 `401 E_WX_CODE` —— 都不是 500。
+
+**1.5.1 为什么当初会「登录成功但同步一律 401」**
+
+`poem` 原先的会话只从 Cookie 取（`fromCookieHeader`，cookie 名 `kbsid`），
+而小程序发的是 `Authorization: Bearer` —— 小程序里没有 Cookie 这回事。
+两端都没有一句话是错的，所以谁也定位不到。现在两处都认，Cookie 优先，
+走同一套校验（验签 + 查 `sessions` 行）。
+
+**1.5.2 反过来验一次**（别只看界面说「登录成功」）
+
+部署完带一枚自签 token 直接打同步口：
+
+```
+curl -s -X POST https://<域>/api/sync/pull \
+  -H 'Authorization: Bearer <accessToken>' \
+  -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
 ```
 
-新增 `api/_routes/wx/login.js`，要点三条：
-
-1. `code` 换 `openid`：云托管走内部渠道可直接拿，自建则打
-   `https://api.weixin.qq.com/sns/jscode2session`
-2. 按 `unionid`（没有按 `openid`）在 `wx_accounts` 表认回或新建账号
-3. 签发会话，**字段名必须是小程序 `utils/auth.js` 的 `applySession()` 读的那几个**：
-   `accessToken / refreshToken / expiresIn / tier / role / caps / signedGrant / nickname / avatarUrl / userId`
-
-⚠️ **这里有第二个待补的代码坑，比路由更隐蔽**：
-
-`poem` 现在的会话是 **Cookie**（`api/_lib/session.js` 的 `fromCookieHeader`，cookie 名 `kbsid`），
-而小程序 `utils/remote.js` 发的是 **`Authorization: Bearer <token>`** —— 小程序里没有 Cookie 这回事。
-
-所以 `withSession()` 要**同时认两条**（`api/_lib/handler.js`）：
-
-```js
-// 先 Cookie（网页版），再 Bearer（小程序）
-var token = session.fromCookieHeader((req.headers || {}).cookie, CONFIG.cookieName)
-         || bearerOf(req.headers && req.headers.authorization);
-```
-
-不补这一步，现象是：**`/wx/login` 返回了 token、小程序显示登录成功，但 `/api/sync/*` 一律 401** ——
-报错指向「没登录」，而登录明明成功了。这是本项目反复在修的那类「假成功」，先说在前面。
+**回 `E_NO_SESSION`（401）就是服务端那一半没上**。这条路最容易「以为通了」：
+登录回 token、界面写着登录成功，而每一条同步都 401。
 
 ### 1.6 微信后台加域名
 
@@ -236,8 +252,8 @@ mp.weixin.qq.com → 开发 → 开发管理 → 开发设置 → 服务器域�
    select poem_id, payload, updated_at from progress
    where poem_id in ('settings:v1','profile:v1');
    ```
-   两条都在 → 代码和设置真打通了。界面写「已同步」而库里没有，就是白名单没加
-   （见 `wx-login-server.md` 的「服务端必须给这两行加白名单」）。
+   两条都在 → 代码和设置真打通了。界面写「已同步」而库里没有，就是服务端的
+   白名单没上（那份在 `poem#532` 里，见 `wx-login-server.md` 的同名一节）。
 4. 换一台手机登同一个微信，进度/设置/头像认回来 → 同步真通了
 
 ---
