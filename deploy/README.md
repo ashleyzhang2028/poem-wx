@@ -19,6 +19,11 @@
 | 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>` |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
+| 镜像拉取凭据 | 仓库是 Private → 制品也是私有，**必须带**：用户名 `cnb`、密码一枚 CNB 访问令牌 |
+
+镜像拉取凭据填在**镜像地址那一屏**，**不是环境变量** —— 这两件事不是一回事：
+环境变量给容器里的进程用，凭据给平台拉镜像用。详见
+[`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 2.5「拉镜像的凭据」。
 
 探活打 `/healthz`（回 `ok`）—— 这份镜像没有静态站，`/` 就是 404。
 
