@@ -44,7 +44,16 @@ LABEL org.opencontainers.image.revision=$API_REV \
 # 小程序一条都不打那几条要它们的路由。上面 .dockerignore 已经把构建上下文
 # 挡到这几MB，这里再逐条点明。
 COPY --chown=node:node api ./api
-COPY --chown=node:node deploy-api-serve/serve-api.js ./
+# ⚠️ 服务壳在上下文里是**平铺的** `./serve-api.js`，不是 `deploy-api-serve/...`。
+#    三处都是这么摊的：`.cnb.yml` 的 stage context、`deploy/build.sh`、
+#    `deploy-api-serve/.dockerignore` 的 `!serve-api.js`。
+#    这行原来写的是 `deploy-api-serve/serve-api.js` —— 在**本仓库**里那个路径
+#    确实存在，但构建上下文是 **poem 根**，那儿没有 `deploy-api-serve/`：
+#      #9 [5/5] COPY --chown=node:node deploy-api-serve/serve-api.js ./
+#      #9 ERROR: failed to calculate checksum ...: not found
+#      Dockerfile:47
+#    只有在真跑一次 `docker build` 时才显形（前几层修完才轮到它）。
+COPY --chown=node:node serve-api.js ./
 
 ENV NODE_ENV=production
 ENV PORT=8080
