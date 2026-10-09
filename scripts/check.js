@@ -6948,8 +6948,284 @@ function gapped(items, max) {
   }
 }
 
-/* ---------- 汇总 ---------- */
+/* ---------- V42. 会话契约（Issue #71，2026-10-09） ----------
+ *
+ * Issue #71 把「真打通微信登录还差的两步」写成了两条服务端待办 ——
+ * 补 `/wx/login`、`/wx/refresh` 两条路由，会话解析同时认 Cookie 与 Bearer。
+ * 但那两条只是**路由**，真正会让人查半天的是**契约**：报文形状、会话从哪儿
+ * 取、过期了怎么办。契约写歪在半边，另一半改对了也不通。
+ *
+ * 这一节钉住客户端这半边，起因是四个各自静默的坏法 —— 都不会报错，
+ * 只会让人在「我明明登录了」和「服务端说没登录」之间来回问：
+ *
+ *   1. **刷新时忘了带 device**。登录那一枚认得出是哪台机器，刷新换回来的
+ *      不带 —— 服务端按 device 签会话、也按它限流，拿到空串就把同一台设备的
+ *      刷新拆成无数个桶，限流形同虚设。报文少一个字段，没人看得出来。
+ *   2. **401 直接报错**。`/api/wx/refresh` 平时只在启动时调一次，而用户把
+ *      小程序挂在后台过夜是常事；第二天一点同步就是 401，界面写「同步失败」，
+ *      用户唯一的出路是重新登录 —— 而双 token 这套东西存在的全部理由，
+ *      就是不该这么干。
+ *   3. **五个请求一起 401 就换五枚 token**。得有一个「同一时刻只刷一次」的口。
+ *   4. **网页版同号的人永远拿不到档位**。本项目允许网页版与小程序同号，
+ *      那人在浏览器里登录过、手机上有 Cookie，而小程序手里一枚 token 都没有 ——
+ *      上一版 refresh() 第二行就 return 了，档位于是永远 free，
+ *      而界面上没有任何一句话解释得清（见 wx-login-server.md「会话从哪儿取」）。
+ *
+ * ⚠️ 这一节**真的把 utils 跑起来**（造一个假 wx、手摇它的 request 回调），
+ * 不是读源码数关键字。报文对不对、刷了几次、档位读不读得到，
+ * 只有跑一遍才知道 —— 静态扫描会把「字段名写错一个字母」这类错全放过去。
+ */
+(async () => {
+  const readSrc = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const remoteSrc = readSrc("utils/remote.js");
+  const authSrc = readSrc("utils/auth.js");
 
-console.log("");
-console.log("检查 " + checks + " 项，失败 " + fails + " 项");
-process.exit(fails ? 1 : 0);
+  // 0) 两条路由的路径写死在这儿 —— 文档、服务端、客户端三处要对得上
+  ok("登录路由与文档一致（/api/wx/login）", /login:\s*"\/api\/wx\/login"/.test(remoteSrc));
+  ok("刷新路由与文档一致（/api/wx/refresh）", /refresh:\s*"\/api\/wx\/refresh"/.test(remoteSrc));
+
+  /**
+   * 造一台假机器：内存存储 + 可编程的 request。
+   * `spec(opt)` 拿到请求，**同步**返回 `{ statusCode, data }` ——
+   * 同步是为了让这一节能像其余断言一样一行行读下来，不必套回调。
+   */
+  function machine(spec) {
+    const mem = {};
+    const sent = [];
+    const saved = { wx: global.wx };
+    global.wx = {
+      getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+      setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+      removeStorageSync: (k) => { delete mem[k]; },
+      request: (opt) => {
+        sent.push(opt);
+        const res = spec(opt) || { statusCode: 404, data: {} };
+        if (opt.success) opt.success(res);
+        else if (opt.fail) opt.fail({ errMsg: "offline" });
+      },
+      login: (opt) => opt.success({ code: "CODE-" + sent.length })
+    };
+    // utils 那几层是模块级单例（会话、队列都在闭包外），换一台就得重载
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+    const m = {
+      mem, sent,
+      store: require(path.join(ROOT, "utils", "store.js")),
+      remote: require(path.join(ROOT, "utils", "remote.js")),
+      auth: require(path.join(ROOT, "utils", "auth.js")),
+      restore: () => { global.wx = saved.wx; }
+    };
+    m.auth.configure({ baseUrl: "https://probe.test" });
+    return m;
+  }
+
+  const settled = [];
+  function drain(p) {
+    // request 那几层是 Promise 链，回调排在微任务里 —— 只 await 一次不够，
+    // 要多转一圈才把「401 → 刷新 → 重发」整条链走完。
+    return p.then(
+      (v) => settled.push({ ok: v }),
+      (e) => settled.push({ err: e })
+    ).then(() => new Promise((r) => setTimeout(r, 0)));
+  }
+
+  /* ---------- 1. 登录报文：code + device，一样都不能少 ---------- */
+  {
+    const m = machine((opt) => {
+      if (/\/wx\/login$/.test(opt.url)) {
+        return {
+          statusCode: 200,
+          data: { accessToken: "A1", refreshToken: "R1", expiresIn: 600, tier: "pro", role: "user", userId: "wx_1" }
+        };
+      }
+      if (/\/sync\/pull$/.test(opt.url)) return { statusCode: 200, data: { recs: [], serverTime: 1 } };
+      return { statusCode: 404, data: {} };
+    });
+    await drain(m.auth.login());
+    const req = m.sent.filter((o) => /\/wx\/login$/.test(o.url))[0];
+    ok("登录报文带 code", !!req && !!req.data.code);
+    ok("登录报文带 device（服务端按它签会话 + 限流）", !!req && !!req.data.device);
+    ok("登录那一条不带 token（本来就还没有），但请求照发",
+      !!req && req.header.authorization === "");
+    const after = m.sent.filter((o) => /\/sync\/pull$/.test(o.url))[0];
+    ok("拿到 token 之后的每一条都带 Authorization: Bearer（服务端要认这个头）",
+      !!after && /^Bearer /.test(after.header.authorization || ""),
+      after ? JSON.stringify(after.header.authorization) : "登录之后没有跟着的请求");
+    ok("服务端下发的档位落进了会话（serverTier 读得到）",
+      m.auth.serverTier() === "pro", "读到 " + JSON.stringify(m.auth.serverTier()));
+    ok("服务端下发的角色也落了（管理页据此放行）",
+      m.auth.role() === "user", "读到 " + JSON.stringify(m.auth.role()));
+    ok("登录那一刻就把队列推出去（不是只写本机）",
+      m.sent.some((o) => /\/wx\/login$/.test(o.url)));
+    m.restore();
+  }
+
+  /* ---------- 2. 刷新报文也带 device ---------- */
+  {
+    const m = machine((opt) => {
+      if (/\/wx\/refresh$/.test(opt.url)) {
+        return { statusCode: 200, data: { accessToken: "A2", refreshToken: "R2", expiresIn: 600, tier: "max", role: "user" } };
+      }
+      return { statusCode: 404, data: {} };
+    });
+    m.auth.applySession({ accessToken: "A1", refreshToken: "R1", tier: "pro" });
+    await drain(m.auth.refresh());
+    const rq = m.sent.filter((o) => /\/wx\/refresh$/.test(o.url))[0];
+    ok("刷新报文带 refreshToken", !!rq && rq.data.refreshToken === "R1");
+    ok("刷新报文**也**带 device（漏这一处 = 同一台设备的限流被拆成无数桶）",
+      !!rq && !!rq.data.device, rq ? JSON.stringify(rq.data) : "没发出去");
+    ok("刷新回来的新档位盖掉旧档位", m.auth.serverTier() === "max", m.auth.serverTier());
+    m.restore();
+  }
+
+  /* ---------- 3. 过期了要自己换一枚再来（而不是报错了事） ---------- */
+  {
+    let n = 0;
+    const m = machine((opt) => {
+      if (/\/wx\/refresh$/.test(opt.url)) {
+        n += 1;
+        return { statusCode: 200, data: { accessToken: "NEW", refreshToken: "R2", expiresIn: 600, tier: "pro" } };
+      }
+      if (/\/sync\/pull$/.test(opt.url)) {
+        // 服务端认 Bearer，但旧那枚已经过期
+        return opt.header.authorization === "Bearer NEW"
+          ? { statusCode: 200, data: { recs: [], serverTime: 12345 } }
+          : { statusCode: 401, data: { code: "E_NO_SESSION" } };
+      }
+      return { statusCode: 404, data: {} };
+    });
+    m.auth.applySession({ accessToken: "OLD", refreshToken: "R1", tier: "pro" });
+    await drain(m.remote.pull());
+    const urls = m.sent.map((o) => o.url.replace("https://probe.test", ""));
+    ok("401 之后自己换了一枚 token 再发（不是把 401 直接报给用户）",
+      urls.join(",") === "/api/sync/pull,/api/wx/refresh,/api/sync/pull", urls.join(","));
+    ok("refreshed 之后带着**新** token 重发，不是旧那枚",
+      m.sent[2] && m.sent[2].header.authorization === "Bearer NEW",
+      m.sent[2] ? m.sent[2].header.authorization : "?");
+    ok("重发成功（链没在中间断掉）",
+      !!settled[settled.length - 1] && !!settled[settled.length - 1].ok,
+      JSON.stringify(settled[settled.length - 1]));
+    m.restore();
+  }
+
+  /* ---------- 4. 只重试一次：服务端压根不认 Bearer 时不许死循环 ---------- */
+  {
+    let n = 0;
+    const m = machine(() => {
+      n += 1;
+      return { statusCode: 401, data: { code: "E_NO_SESSION" } };
+    });
+    m.auth.applySession({ accessToken: "OLD", refreshToken: "R1", tier: "pro" });
+    await drain(m.remote.pull());
+    ok("服务端一条都不认时，只重试一次就罢手（共两条请求）", n === 2, "实际发了 " + n + " 条");
+    ok("最终还是如实报错（不假装成功）",
+      !!settled[settled.length - 1] && !!settled[settled.length - 1].err
+        && settled[settled.length - 1].err.statusCode === 401,
+      JSON.stringify(settled[settled.length - 1]));
+    m.restore();
+  }
+
+  /* ---------- 5. 五个请求一起 401：refresh 只发一次 ---------- */
+  {
+    let refreshes = 0;
+    const m = machine((opt) => {
+      if (/\/wx\/refresh$/.test(opt.url)) {
+        refreshes += 1;
+        return { statusCode: 200, data: { accessToken: "NEW", refreshToken: "R2", expiresIn: 600, tier: "pro" } };
+      }
+      return { statusCode: 401, data: { code: "E_NO_SESSION" } };
+    });
+    m.auth.applySession({ accessToken: "OLD", refreshToken: "R1", tier: "pro" });
+    /* ⚠️ 要**真的并发**：`await` 一条再发下一条等于五个请求排着队，
+       第一个走到刷新完、refreshing 已经清掉了，第二个才轮到 ——
+       那样就算实现是错的，这条断言也会绿。这正是它第一版的样子。 */
+    await drain(Promise.all([m.remote.pull(), m.remote.pull(), m.remote.pull(), m.remote.pull(), m.remote.pull()]));
+    ok("五个请求一起 401，refresh 只发一次（不是五枚 token）", refreshes === 1, "实际 " + refreshes + " 次");
+    m.restore();
+  }
+
+  /* ---------- 6. 两条登录路由不许自己触发刷新（那是死循环） ---------- */
+  {
+    const m = machine(() => ({ statusCode: 401, data: { code: "E_LOGIN_FAIL" } }));
+    m.auth.applySession({ accessToken: "OLD", refreshToken: "R1", tier: "pro" });
+    await drain(m.remote.request(m.remote.PATHS.login, { code: "x" }));
+    ok("登录那条路回了 401 不会去刷 token（刷了就是死循环）",
+      m.sent.length === 1 && /\/wx\/login$/.test(m.sent[0].url),
+      m.sent.map((o) => o.url).join(","));
+    m.restore();
+  }
+
+  /* ---------- 7. 没有 refreshToken：先问 /api/me（网页版同号那条路） ---------- */
+  {
+    const m = machine((opt) => {
+      if (/\/api\/me$/.test(opt.url)) {
+        return {
+          statusCode: 200,
+          data: { uid: "u_abcdef", nickname: "张敏", plan: { tier: "pro", until: null }, role: "admin" }
+        };
+      }
+      return { statusCode: 401, data: { code: "E_NO_SESSION" } };
+    });
+    await drain(m.auth.refresh());
+    ok("本机没 token 时去问 /api/me（不直接放弃）",
+      m.sent.some((o) => /\/api\/me$/.test(o.url)),
+      m.sent.map((o) => o.method + " " + o.url).join(","));
+    ok("/api/me 走 GET（poem 那边就是 GET，写成 POST 会 405）",
+      m.sent[0].method === "GET",
+      m.sent[0] ? String(m.sent[0].method) : "没发出去");
+    ok("认回来的档位读得到（写错域就会「看着登录成功、档位还是 free」）",
+      m.auth.serverTier() === "pro", "读到 " + JSON.stringify(m.auth.serverTier()));
+    ok("认回来的角色也读得到（管理页据此放行）", m.auth.isAdmin() === true);
+    ok("认回来的是「已登录」", m.auth.logged() === true);
+    m.restore();
+  }
+
+  /* ---------- 8. 没人登录时 /api/me 回 401：安静，不当错误 ─ ---------- */
+  {
+    const m = machine(() => ({ statusCode: 401, data: { code: "E_NO_SESSION" } }));
+    await drain(m.auth.refresh());
+    ok("没有会话时安静地什么都不做（没登录的人启动一次也会走到这儿）",
+      !!settled[settled.length - 1] && !!settled[settled.length - 1].ok,
+      JSON.stringify(settled[settled.length - 1]));
+    m.restore();
+  }
+
+  /* ---------- 9. 会话字段不许盖同步时间戳（V34 那条的老规矩，换个口再守一遍） ---------- */
+  {
+    const m = machine((opt) => {
+      if (/\/api\/me$/.test(opt.url)) {
+        return { statusCode: 200, data: { uid: "u_x", nickname: "", plan: { tier: "pro" }, role: "user" } };
+      }
+      return { statusCode: 401, data: {} };
+    });
+    const before = m.store.profileAt();
+    await drain(m.auth.refresh());
+    ok("「认回会话」不该把本机档案判成更新的那一份（头像会永远认不回来）",
+      m.store.profileAt() === before,
+      "profileAt " + before + " → " + m.store.profileAt());
+    m.restore();
+  }
+
+  /* ---------- 10. 服务端那半边：文档里真的写了 ---------- */
+  {
+    const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-login-server.md"), "utf8");
+    ok("文档写了「会话要同时认 Cookie 与 Authorization: Bearer」",
+      doc.indexOf("Authorization") >= 0 && doc.indexOf("Bearer") >= 0,
+      "文档里没有这一节，服务端就不知道该补哪一步");
+    ok("文档说清了不补这一步的现象（登录成功、/api/sync/* 一律 401）",
+      doc.indexOf("401") >= 0);
+    ok("文档写了刷新报文要带 device",
+      /wx\/refresh[\s\S]{0,600}?device/.test(doc),
+      "刷新那条报文少一个字段，限流就形同虚设，而没人看得出来");
+  }
+
+  void remoteSrc;
+  void authSrc;
+
+  /* ---------- 汇总 ---------- */
+
+  console.log("");
+  console.log("检查 " + checks + " 项，失败 " + fails + " 项");
+  process.exit(fails ? 1 : 0);
+})();
