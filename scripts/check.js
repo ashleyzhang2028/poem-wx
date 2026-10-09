@@ -11,6 +11,7 @@
 "use strict";
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const ROOT = path.join(__dirname, "..", "miniprogram");
@@ -7520,18 +7521,46 @@ function sectionOf(text, heading) {
       !/\b(data|fonts|css|icons)\b/.test(copied),
     "真 COPY 到了，就是把 26MB 请回了上下文。实际 COPY：" + JSON.stringify(copied));
 
-  /* Dockerfile 那行 COPY 的路径，必须跟流水线**实际摆进上下文**的路径一致。
-     两边各写各的、都「看着对」，只有在真跑 docker build 时才撞出来。 */
+  /* ⚠️ COPY 的**源**是在构建上下文根上取的，而上下文是流水线摊出来的
+     （`.cnb.yml` 的 stage context 与 `deploy/build.sh` 做的是同一件事：
+      poem 的 api/ + 本仓库那两样，**平铺进同一个临时目录**）。
+     这一条按那一层**真摊一遍**再逐条找，而不是拿正则猜路径：
+       · 服务壳在上下文里叫 `serve-api.js` —— 本仓库里的 `deploy-api-serve/`
+         那个前缀在上下文里**不存在**。写成带前缀那版，docker 只回一句
+         `failed to calculate checksum ... "/deploy-api-serve/serve-api.js": not found`
+         （Issue #71 现场，看着像文件没提交，其实是源路径按错的目录树在找）。
+       · 上面那条「只 COPY api/ 与服务壳」里的正则也是照这一层写的 ——
+         两处一起改，别只改一处。 */
   {
-    const cnbText = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8").replace(/\s+/g, " ");
-    const placesShellAtRoot = /cp deploy-api-serve\/serve-api\.js \/tmp\/ctx\/serve-api\.js/.test(cnbText);
-    const copiesFromRoot = /COPY --chown=node:node serve-api\.js \.\//.test(copied);
-    ok("Dockerfile 里服务壳的路径与流水线摊进上下文的路径一致（都在上下文根）",
-      placesShellAtRoot && copiesFromRoot,
-      `流水线摆到根=${placesShellAtRoot}、Dockerfile 从根拷=${copiesFromRoot} —— ` +
-        "不一致的话，docker build 会在 COPY 那行报 `not found`；" +
-        "而写成本仓库路径（deploy-api-serve/...）在本仓库里看着是对的，特别容易漏");
+    const ctxRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ctx-check-"));
+    try {
+      // 与流水线同样的摊法：本仓库那几样摆到上下文根（poem 的 api/ 由 clone 提供，
+      // 这里只验本仓库摆进去的那部分）。
+      fs.copyFileSync(dockerfile, path.join(ctxRoot, "Dockerfile"));
+      fs.copyFileSync(path.join(serveDir, "serve-api.js"), path.join(ctxRoot, "serve-api.js"));
+      fs.copyFileSync(path.join(serveDir, ".dockerignore"), path.join(ctxRoot, ".dockerignore"));
+
+      const copySrcs = (copied.match(/^COPY[^\n]+/gm) || [])
+        .map((l) => l.trim().split(/\s+/).filter((w) => !w.startsWith("--")))
+        // COPY <src> <dst>：取 src，`--chown=node:node` 已经被上面滤掉了
+        .map((parts) => parts[1])
+        .filter(Boolean);
+      // api/ 由 poem 提供（本仓库里不许有，见下面那条），单独放过
+      const fromPoem = new Set(["api", "./api"]);
+      const missing = copySrcs.filter(
+        (src) => !fromPoem.has(src) && !fs.existsSync(path.join(ctxRoot, src.replace(/^\.\//, "")))
+      );
+      ok("deploy/Dockerfile 里每个 COPY 的源都能在**摊出来的上下文**里找到",
+        copySrcs.length > 0 && missing.length === 0,
+        "在上下文里找不到：" + JSON.stringify(missing) +
+          "。COPY 的源按构建上下文根取，而上下文是摊出来的那一层 —— " +
+          "`deploy-api-serve/` 只存在于本仓库的目录树里，上下文里没有那个目录。" +
+          "实际 COPY 源：" + JSON.stringify(copySrcs));
+    } finally {
+      fs.rmSync(ctxRoot, { recursive: true, force: true });
+    }
   }
+
   ok("deploy/Dockerfile 声明了 API_REV（构建参数钉住「这一版 api/ 是哪来的」）",
     /ARG API_REV/.test(df));
 
