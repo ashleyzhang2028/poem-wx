@@ -7731,6 +7731,54 @@ function sectionOf(text, heading) {
     /--build-arg "BASE_IMAGE=/.test(fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8")),
     "没传的话，换镜像源就得改 Dockerfile —— 而 Dockerfile 是共用的那份");
 
+  /* ---------- 忽略文件到底归谁（Issue #71 云托管 401 那一轮） ----------
+   *
+   * 这一节是照着一句**听起来很顺、实际相反**的话写的。CNB 文档说
+   * 「.dockerignore 在**源码上下文根**生效」，于是这一轮之前的注释都这么写。
+   * 但实测不是：CNB 把 Dockerfile 从另一个仓库取过来时会**单独取**
+   * （构建命令只有 `-f <路径>`），取的时候不带任何忽略文件 ——
+   * 挂在它旁边的那份也不会被用到。
+   *
+   * 后果很实际：`deploy-api-serve/.dockerignore` 一直躺在那儿、看着像在干活，
+   * 实际上一个字节都没上传；真正定住镜像体积的是上下文里那份
+   * `api/.dockerignore`（poem 根的白名单）。3.2MB 与 46MB 就是它定的。
+   *
+   * 这条错属于「绿着出错」：构建绿、部署绿，只是每次多传 43MB。
+   * 所以判据必须落在「文件在不在**生效的那个位置**」上，而不是「写没写进注释」。
+   */
+  const cnbYml = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8");
+  ok("stage context 把白名单摆到**上下文根**（忽略文件跟上下文走，不跟 Dockerfile 走）",
+    /cp\s+deploy-api-serve\/\.dockerignore\s+\/tmp\/ctx\/\.dockerignore/.test(cnbYml),
+    "摆到 /tmp/ctx 根才生效。摆回 deploy-api-serve/ 旁边、或 /tmp/ctx/api/ 下面，" +
+      "一份都不生效 —— 上下文从 0.3MB 变 38MB，而且不报错");
+
+  /* ⚠️ 只看**真指令行** —— 上面那段注释里就写着 `/tmp/ctx/api/.dockerignore`
+     这个反面例子，搜全文会把讲解判成违规（这条第一版就这么红了一次，
+     跟 V43 里 `set -o pipefail` 那条踩的是同一个坑）。 */
+  const cnbCmds = cnbYml
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+  ok("没有任何一份 .dockerignore 被摆到 /tmp/ctx/api/ 下（嵌套的不生效）",
+    !cnbCmds.some((l) => l.includes("/tmp/ctx/api/.dockerignore")),
+    "Docker 不认嵌套的忽略文件 —— 摆在那儿最像「放对了」，实际一个字节都不上传");
+
+  ok("build & push 在构建前确认白名单就位（缺了当场断，不留给体积去说）",
+    /\[\s*!\s*-f\s+\/tmp\/ctx\/\.dockerignore\s*\]/.test(cnbYml),
+    "这是「绿着出错」那一类：构建会成功、部署会成功，只是每次白传 37MB，没人会去查");
+
+  /* 这一条守的不是代码，是**判断**。忽略文件的归属本来就绕：
+     它跟**构建上下文**走、跟 Dockerfile 放哪儿无关，所以生效的位置只有一个
+     （`/tmp/ctx/.dockerignore`），而「最像对的」那两个（藏在本仓库的
+     `deploy-api-serve/` 里、或者摆到 `/tmp/ctx/api/` 下面）都不生效且不报错。
+     不把这个写进 Dockerfile 顶上，下一个人就会按「与 Dockerfile 同目录」改回去。 */
+  ok("deploy/Dockerfile 讲清了 .dockerignore 该摆在哪（并点明嵌套的那份不生效）",
+    /\.dockerignore[\s\S]{0,900}?跟\*\*构建上下文\*\*走/.test(df) &&
+      /\/tmp\/ctx\/\.dockerignore[\s\S]{0,200}?有效/.test(df) &&
+      /嵌套的不生效|嵌套的忽略文件/.test(df),
+    "三个位置只有一个对，另两个最像对的且**都不报错** —— 不写清就等着被改回去");
+
+
   /* 服务壳与白名单都放在 deploy-api-serve/ 而不是 deploy/：
      Dockerfile 那行 COPY 是按**上下文根**取的，而上下文根是 poem ——
      摆在一个不属于「容器目录」的目录里，是让「谁在哪个上下文里生效」这件事显形。 */
@@ -7766,6 +7814,31 @@ function sectionOf(text, heading) {
   /* 判据要落在**表格那一格**里，不能只搜「部署方式」附近出现过「镜像」——
      下面紧挨着就是「镜像地址」那一行，松着写的话把它改成「代码仓库」也不会红
      （这条是刻意这么试过一遍的）。 */
+  /* 云托管拉私有槽位要有凭据。这条判据来自一次真实的 401：
+     —— 制品库里 `6fd88860` **确实在**（2026-10-09 21:18 推的），
+        而云托管 21:19 拉它还是 401。所以「有 tag 还是 401」= 没配凭据。
+     文档里少了这一步，人就会一直怀疑「是不是镜像没构建出来」。 */
+  const setupStep = setup.match(/###\s*2\.5[\s\S]*?(?=\n###\s)/);
+  ok("云托管文档有「配镜像拉取凭据」这一步（私有槽位不配就是 401）",
+    !!setupStep && /docker\.cnb\.cool/.test(setupStep[0]) && /访问令牌|access token/i.test(setupStep[0]),
+    "私有槽位：地址填对了不等于拉得动。缺这一步，401 会一直被当成「tag 不存在」查");
+  /* 两种 401 报的字一模一样，所以判据得是「怎么分开」而不是「有几种」：
+     · 快路 —— 一条命令查 tag 在不在（这是**主动**的那条，必须先给）
+     · 旁证 —— 流水线日志里 `[auth] ... DONE` 说明匿名令牌那步是通的
+     两条都要：只有快路时，人可能已经跳过第 1 种直接去配凭据了。 */
+  ok("云托管文档把 401 的两种情形分开给了判据（查 tag 那条快路）",
+    /list-package-tags/.test(setup) && /没有\s*→|没有\s*→\s*是/.test(setup),
+    "「tag 不存在」和「没配凭据」报的字一模一样，得先有条快路能分开");
+  /* 旁证要落在**这一节**里，不能靠 § 2.5 里那句同义的话替它绿 ——
+     两处都提到 `[auth]` 时，删掉「怎么分开」这节的旁证，断言仍然会绿
+     （第一版就是这么写的，试出来才改紧的）。 */
+  {
+    const triage = sectionOf(setup, "## 二、出问题了先看这里");
+    ok("云托管文档的排错节里给了 401 的旁证（`[auth]` 那步成了才是凭据问题）",
+      /\[auth\][\s\S]{0,200}DONE/.test(triage),
+      "只给快路不够 —— 人可能已经跳过第 1 种直接去配凭据，那条旁证能把他拉回来");
+  }
+
   ok("云托管设置文档写的是「按镜像部署」",
     /^\|\s*部署方式\s*\|\s*\*\*镜像\*\*\s*\|/m.test(setup),
     "写「代码仓库 + 容器目录」就是老路：那个仓库根上没有 api/，走不通");

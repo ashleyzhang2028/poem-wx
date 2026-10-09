@@ -23,7 +23,7 @@
 
 镜像拉取凭据填在**镜像地址那一屏**，**不是环境变量** —— 这两件事不是一回事：
 环境变量给容器里的进程用，凭据给平台拉镜像用。详见
-[`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 2「拉取凭据」。
+[`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 2.5「拉镜像的凭据」。
 
 探活打 `/healthz`（回 `ok`）—— 这份镜像没有静态站，`/` 就是 404。
 
