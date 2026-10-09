@@ -25,8 +25,12 @@ git checkout main && git pull
 docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库 commit 前 8 位>
 ```
 
-短 sha 就是版本号，回滚时把旧的那个填回云托管那栏即可。构建日志在仓库的
-「流水线」页 —— **没看到镜像槽位新增，就是这一步没跑过**，下一步那栏没得填。
+短 sha 就是版本号，回滚时把旧的那个填回云托管那栏即可。
+
+**先确认镜像真的构建出来了**，再去控制台建服务 —— 这一步漏了，下一步那栏填什么都是白填：
+
+- 仓库「流水线」页：`main` 那条「发布（自检 → 镜像 → 体验版）」得有**绿的**记录
+- 制品库页：`wx-api` 槽位下得有那个 `<短 sha>` 的 tag
 
 ⚠️ 这条流水线的第 1 步是 `git clone` 取 `poem` 的 `api/`，**不带凭据**。
 `poem` 匿名可读，去掉凭据才通；带上 ${CNB_TOKEN} 反而回
@@ -49,6 +53,16 @@ docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库 commit �
 **不要选**，走「新建服务」这条路。
 
 镜像那一栏要填**具体版本号**，别填 `latest` —— 回滚时才知道该填回哪个。
+
+⚠️ **镜像地址写对了，不等于镜像存在。** 云托管拉一个不存在的私有地址，回的不是「找不到」
+而是 `401 Unauthorized`（CNB 制品库对匿名请求统一如此，不区分「没权限」和「不存在」）。
+于是现象很像凭据问题，其实只是**那个 tag 还没构建出来**。
+
+看到这行就去查上面第一步，别去翻云托管的凭据设置：
+
+```
+unexpected status from HEAD request to https://docker.cnb.cool/v2/.../manifests/<tag>: 401 Unauthorized
+```
 
 ⚠️ **别选「部署方式 = 代码仓库」**，两条都走不通：
 
@@ -146,9 +160,13 @@ curl -s -X POST https://<域>/api/sync/pull \
 **登录通但同步一律 401** —— 服务端没认 `Authorization: Bearer`，见
 [`wx-login-server.md`](wx-login-server.md)。
 
-**云托管从地址拉镜像报 401 Unauthorized** —— 那栏填的镜像**还没构建出来**，
-或者 CNB 制品库对云托管是私有、没配拉取凭据。先确认镜像槽位里真有那个短 sha
-（`registries list-packages` 或 CNB「制品库」页），再确认拉取凭据。
+**云托管从地址拉镜像报 401 Unauthorized** —— 两种可能，别只看一种：
+
+1. 那栏填的镜像**还没构建出来**（`manifests/<tag>: 401 Unauthorized` 就是这条）。
+   CNB 制品库对匿名请求一律回 401，不区分「没权限」和「不存在」，
+   所以别急着翻凭据 —— 先回 § 1 第一步：`main` 的发布流水线跑绿了吗？
+   `registries list-packages` 或 CNB「制品库」页，`wx-api` 槽位下有那个短 sha 吗？
+2. 制品库里确实有那个 tag，但**对云托管是私有、没配拉取凭据** —— 这时才去配凭据。
 
 ---
 

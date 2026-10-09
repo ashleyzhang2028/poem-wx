@@ -150,8 +150,11 @@ main:
             set -euo pipefail
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
+            # BASE_IMAGE：基础镜像从哪来。默认在 deploy/Dockerfile 里
+            # （公开的 node:20-alpine）；要换镜像源在这儿加一行 build-arg 就行。
             docker build \
               --build-arg "API_REV=${REV}" \
+              --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
               --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
               --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" \
               -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" /tmp/ctx

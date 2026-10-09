@@ -7514,6 +7514,24 @@ function sectionOf(text, heading) {
   ok("deploy/Dockerfile 声明了 API_REV（构建参数钉住「这一版 api/ 是哪来的」）",
     /ARG API_REV/.test(df));
 
+  /* 基础镜像那一行。Issue #71 的现场是云托管报
+     `manifests/<tag>: 401 Unauthorized` —— 查下来是**镜像从来没构建过**
+     （制品库那个仓库下 total: 0），而 CNB 制品库对「不存在」和「没权限」都回 401，
+     于是现场看着像凭据问题。这一节守两件跟那次相邻的事：
+       ① 基础镜像得是个**公开地址**，别写成一个要凭据才能拉的 registry ——
+          构建机上没那份凭据时，pull 就拒，而报错指向 Dockerfile 第 1 行
+       ② 换个镜像源要能在**流水线里覆盖**（BASE_IMAGE），不用改文件
+     判据落在 `FROM ${BASE_IMAGE}` 这个形状上：写死一个真实地址就会红。 */
+  const fromLine = dfLines.find((l) => /^FROM\s/i.test(l)) || "";
+  ok("deploy/Dockerfile 的基础镜像走 BASE_IMAGE（可在流水线里换源，不写死 registry）",
+    /^FROM\s+\$\{BASE_IMAGE\}$/.test(fromLine) && /ARG BASE_IMAGE=/.test(df),
+    "实际那一行：" + JSON.stringify(fromLine) +
+      " —— 写死一个地址，构建机上拉不动时只能改这个文件；" +
+      "写成需要凭据的私有地址，错误还会伪装成「Dockerfile 第 1 行有问题」");
+  ok(".cnb.yml 把 BASE_IMAGE 传给 docker build（流水线上换源不用改 Dockerfile）",
+    /--build-arg "BASE_IMAGE=/.test(fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8")),
+    "没传的话，换镜像源就得改 Dockerfile —— 而 Dockerfile 是共用的那份");
+
   /* 服务壳与白名单都放在 deploy-api-serve/ 而不是 deploy/：
      Dockerfile 那行 COPY 是按**上下文根**取的，而上下文根是 poem ——
      摆在一个不属于「容器目录」的目录里，是让「谁在哪个上下文里生效」这件事显形。 */

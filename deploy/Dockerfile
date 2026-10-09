@@ -13,7 +13,17 @@
 #    代价是本仓库多一个镜像槽位（见 README），换来的是**后端只有一份代码**。
 #
 # 这份的构建上下文是 poem 仓库根，瘦身靠上面的 `.dockerignore`（白名单入镜）。
-FROM node:20-alpine
+#
+# 基础镜像走 `BASE_IMAGE`，**默认还是 Docker Hub 的 node:20-alpine**。
+# 多这一层不是为了好看：国内构建机上 Docker Hub 慢／不通时，命令行加
+#     --build-arg BASE_IMAGE=<你的镜像源>/library/node:20-alpine
+# 就能换源，不用改这个文件。
+#
+# 另一条同样重要：**这一行必须写「一个公开的、谁都能拉的基础镜像」**。
+# 写成一个需要凭据才能拉的私有地址，构建机没那份凭据时一 pull 就拒 ——
+# 而报错会指向 Dockerfile 第 1 行，看着像 Dockerfile 写错了。
+ARG BASE_IMAGE=node:20-alpine
+FROM ${BASE_IMAGE}
 
 WORKDIR /app
 RUN chown node:node /app
