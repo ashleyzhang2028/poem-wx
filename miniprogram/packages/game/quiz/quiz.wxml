@@ -51,7 +51,9 @@
     <!-- 选项带 A B C D 脚标。`data-v` 传的仍是**没有字母的原文**：
          判分比的是原文，字母只是印在屏幕上的那个序号（utils/quiz.js）。 -->
     <view class="options">
-      <view class="option {{picked ? (item.text === current.answer ? 'right' : (item.text === picked ? 'wrong' : '')) : ''}}"
+      <!-- 状态类由 js 拼好（`quiz.optionClass`）：WXML 的 {{ }} 吃不下
+           嵌套三元 + 字符串字面量，构建时会报 `unexpected token`。 -->
+      <view class="option {{item.cls}}"
             wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
         <text class="option-k">{{item.key}}</text>
         <text class="option-t">{{item.text}}</text>
