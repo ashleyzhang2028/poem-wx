@@ -47,16 +47,12 @@ Page({
     // 自绘底栏：切到本页时把自己那一格点亮
     tabbar.sync(this, 1);
     // 课外阅读是 free 档的能力，但前提还是登录。
-    // 两件事分开说：没登录说「登录后可用」，登录了但档位不够说「需要免费档」。
+    // hint() 自己会把「没登录」与「登录了但档位不够」分开说，页面不自己拼措辞。
     if (!gate.logged() || !entitlement.can("library")) {
-      this.setData({
-        locked: true,
-        reason: gate.logged() ? entitlement.hint("library") : "登录后可用"
-      });
+      this.setData({ locked: true, reason: entitlement.hint("library") });
       return;
     }
     this.setData({ locked: false, reason: "" });
-
     const all = corpus.books();
     const byId = {};
     all.forEach((b) => {
@@ -83,6 +79,11 @@ Page({
     this.setData({ current: e.currentTarget.dataset.k });
   },
 
+  /** 门禁上的「去登录」把用户送到「我的」——那里有唯一的登录按钮 */
+  onLoginGate() {
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
+
   onBack() {
     this.setData({ current: null });
   },
@@ -92,6 +93,7 @@ Page({
   },
 
   onOpenBook(e) {
+    if (!E.block("library.all", { page: this })) return;
     wx.navigateTo({ url: "/pages/list/list?book=" + e.currentTarget.dataset.b });
   },
 

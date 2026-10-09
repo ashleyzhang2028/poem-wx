@@ -10,6 +10,7 @@
        飞花令曾经在这里就地摊开一个「挑一个字 + 看答案」——
        那等于把游戏搬进了目录，与题库 / 考试两张卡的处理也对不上
        （那两件事都进独立页）。现在三张卡一个待遇：点了才进玩法页。 -->
+
   <view class="modes">
     <button class="mode mode-{{item.color}} {{item.ok ? '' : 'mode-off'}}"
             wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">

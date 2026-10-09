@@ -40,6 +40,10 @@ Page({
     syncSub: "",
     fullTextOn: false,
 
+    /** 能力矩阵：与权限说明页同一张表，不在模板里另抄一份 */
+    caps: [],
+    lockedCount: 0,
+
     /** 登录页的那半张卡：从 gate.guard 或首页「微信登录」按钮跳过来时自动聚焦 */
     focusLogin: false,
     adminVisible: false
@@ -107,7 +111,10 @@ Page({
       syncAllowed: E.can("sync"),
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
-      adminVisible: E.can("admin")
+      adminVisible: E.can("admin"),
+      // 能力矩阵与权限说明页同一来源（E.matrix），不在这儿另抄一份表
+      caps: E.matrix({ signedIn: !!profile.logged }),
+      lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
     });
   },
 
@@ -262,11 +269,36 @@ Page({
     wx.navigateTo({ url: "/packages/settings/about/about" });
   },
 
+  onPlans() {
+    wx.navigateTo({ url: "/packages/settings/plans/plans" });
+  },
+
+  onLoginGate() {
+    // 已经在「我的」了，门禁的「去登录」直接调登录
+    this.onLogin();
+  },
+
   onExport() {
+    if (!E.block("export.progress", { page: this })) return;
     const data = store.exportAll();
     wx.setClipboardData({
       data: JSON.stringify(data),
       success: () => wx.showToast({ title: "备份已复制，粘贴到安全的地方保存", icon: "none", duration: 2500 })
+    });
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: "退出登录",
+      content: "退出后回到浏览模式：首页仍可看一年级诗词，其余能力要重新登录。已背的进度不会被删。",
+      confirmText: "退出",
+      confirmColor: "#a83b32",
+      success: (res) => {
+        if (!res.confirm) return;
+        auth.logout();
+        this.refresh();
+        wx.showToast({ title: "已退出登录", icon: "none" });
+      }
     });
   },
 

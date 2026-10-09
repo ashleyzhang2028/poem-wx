@@ -3,7 +3,7 @@
     <text class="head-title">声音</text>
   </view>
 
-  <lock-card wx:if="{{locked}}" title="声音设置要登录" note="登录后才能改" mark="声" />
+  <lock-card wx:if="{{locked}}" title="声音" note="登录后才能改" mark="声" />
 
   <block wx:else>
   <!-- 注音那一栏 2026-10-04 搬到了通用设置的「版式」页。

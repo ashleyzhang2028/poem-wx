@@ -131,6 +131,7 @@ page {
   --card: var(--surface);
   --card-2: var(--sink);
   --amber-light: var(--amber-soft);
+  --amber-edge: rgba(178, 106, 0, .22);
   --red-light: var(--red-soft);
   --red-edge: rgba(192, 57, 43, .22);
   --blue-light: var(--blue-soft);

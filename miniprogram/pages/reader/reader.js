@@ -261,6 +261,10 @@ Page({
     this.setData({ showTranslation: !this.data.showTranslation });
   },
 
+  onLoginGate() {
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
+
   onPinyin(e) {
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) {
@@ -305,6 +309,7 @@ Page({
   /* ---------- 背诵评分 ---------- */
 
   onResult(e) {
+    // 深链能绕过首页直达这一页，所以评分这一下也认一次门
     if (!entitlement.can("daily")) {
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
       return;

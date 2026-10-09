@@ -13,6 +13,12 @@
       <button class="btn primary block hero-btn" bindtap="onLogin">微信登录</button>
     </view>
 
+    <!-- 游客态的提示条：说明当前为什么点不动，顺带就是登录入口（样式见 home.wxss） -->
+    <view class="guest-bar" hover-class="guest-bar-hover" hover-stay-time="60" bindtap="onLogin">
+      <text class="guest-title">当前是浏览模式</text>
+      <text class="guest-sub">登录后可用 · 一年级诗词可看，点开与背诵需登录</text>
+    </view>
+
     <view class="card toc">
       <view class="toc-head">
         <text class="card-title bar">课本目录</text>

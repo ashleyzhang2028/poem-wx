@@ -22,6 +22,12 @@
  *   理由是「本机数据只属于本机」。它让「管理页给登录用户分级」变成空话 ——
  *   未登录反而拿得比 pro 多。现在付裆位只认服务端下发的档位（auth.serverTier()），
  *   拿不到就是 free，宁可少给。
+ *
+ * 另有一道**更低的门**：登录。未登录连 CAPS 里的表都不看 ——
+ * 只能浏览首页列出的本册诗词（见 GUEST_GRADE / guestScope），
+ * 点任何一篇都落到 block("recite.basic")，弹「去登录」。
+ * 判定入口是 can()，它是唯一入口：界面不许自己拼「能不能用」，
+ * 措辞也归 hint() —— 否则「为什么不能用」会散在十几个地方，口径早晚不一致。
  */
 const store = require("./store");
 const tiers = require("./tiers");
@@ -211,11 +217,18 @@ function can(key) {
  * 与 can() 的判据同源 —— 界面只负责显示，不自己拼措辞，
  * 否则「为什么不能用」会散在十几处，口径早晚不一致。
  */
-function hint(key) {
+function hint(key, ctx) {
+  const in2 = ctx && ctx.signedIn !== undefined ? !!ctx.signedIn : loggedIn();
+
+  // 免登录的那一条永远放行，它不跟着登录状态走
+  if (isGuestOk(key)) return "";
+
+  // 未登录时，不管是哪一条，答案都一样：先登录
+  if (!in2) return "登录后可用";
+
   const cap = CAPS.find((c) => c.key === key);
   if (!cap) return "这个功能不存在";
   if (can(key)) return "";
-  if (!loggedIn()) return "登录后可用";
   if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
   if (cap.tier === "login") return "「" + cap.name + "」要登录后才有";
   const s = status();
@@ -278,6 +291,154 @@ function algoAllowed(key) {
   return can(key);
 }
 
+/* ============================================================
+   登录这道门：未登录只能浏览首页。
+   ============================================================
+
+   上面那一整套（free / pro / max）说的是「登录之后能给到哪一档」。
+   这一段说的是**更前面的一件事**：连门都没进的时候给什么。
+
+   口径来自 Issue：**不登录用户只能浏览首页，首页默认列出一年级诗词，
+   无法点击**。所以游客唯一能做的是「看首页列出的那些」，
+   其余每一个入口都要落到 block() 上 —— 分享卡片与深链能绕过首页直达
+   详情页，所以没有哪个入口能靠「用户不会那么点」守住。
+
+   与网页版的差异：那边能力表带 `minTier`（游客 / Free / Pro / Max 四列），
+   小程序端**下限不是档位，是登录**。`CAN_GUEST` 就是那张「免登录清单」，
+   有且只有一项 —— 自检按它断言，谁想悄悄开个口子会当场红。
+*/
+
+/** 游客在首页唯一能看的范围：本册，即一年级 */
+const GUEST_GRADE = 1;
+
+/** 免登录的能力，一条不多 */
+const CAN_GUEST = ["home.browse"];
+
+/**
+ * 权限说明页的展示顺序：免登录那一项在最前，其余按「背诵 → 读 → 记」排。
+ * 每一项都对应 CAPS 里的一条 key —— 两处对不上，自检会红。
+ */
+const ORDER = [
+  { key: "home.browse", cap: "home.browse", name: "首页浏览" },
+  { key: "daily", cap: "daily", name: "每日背诵" },
+  { key: "library", cap: "library", name: "课外阅读" },
+  { key: "pinyin", cap: "pinyin", name: "注音辅助" },
+  { key: "ebbinghaus", cap: "ebbinghaus", name: "艾宾浩斯" },
+  { key: "leitner", cap: "leitner", name: "莱特纳盒" },
+  { key: "speak", cap: "speak", name: "语音朗读" },
+  { key: "export", cap: "export", name: "进度导出" }
+];
+
+/** 当前登录状态。页面里一律走这个，不各自 require auth */
+function signedIn() {
+  return auth.logged();
+}
+
+/** 这一条是不是免登录的 */
+function isGuestOk(name) {
+  return CAN_GUEST.indexOf(name) >= 0;
+}
+
+/**
+ * 一条能力此刻能不能用。
+ *
+ * 入参可以是 CAPS 里的短 key（`daily`），也可以是 `home.browse` 这种
+ * 带点的名字 —— 后者是「游客也能用的那一项」的写法，它不在档位表里。
+ * 两种写法都从这里进，是因为调用方不该关心「这条能力在不在档位表里」：
+ * 它要问的是「能不能用」，而这是一件事。
+ *
+ * @returns {{ok:boolean, reason:string, name:string, login:boolean}}
+ *   reason: "ok" | "login" | "unknown" | "tier" | "switched-off" | "unsigned"
+ */
+function decide(name, ctx) {
+  const in2 = ctx && ctx.signedIn !== undefined ? !!ctx.signedIn : signedIn();
+
+  // 免登录的那一条：不管登没登录都给
+  if (isGuestOk(name)) {
+    return { ok: true, reason: "ok", name: "首页浏览", login: false };
+  }
+
+  // 第一道闸：没登录什么都没有
+  if (!in2) {
+    const cap = CAPS.find((c) => c.key === name);
+    return { ok: false, reason: "login", name: cap ? cap.name : name, login: true };
+  }
+
+  if (!CAPS.some((c) => c.key === name)) {
+    return { ok: false, reason: "unknown", name: name, login: false };
+  }
+
+  return can(name) ? { ok: true, reason: "ok", name: capName(name), login: false }
+                   : { ok: false, reason: "tier", name: capName(name), login: false };
+}
+
+/** 能力名。找不到就给 key 本身，界面至少不会空着 */
+function capName(key) {
+  const cap = CAPS.find((c) => c.key === key);
+  return cap ? cap.name : key;
+}
+
+/**
+ * 一条能力的门槛。权限说明页据此写「登录可用 / 不需登录」那一列。
+ *
+ * 返回 `{ name, login, tier }`：`login` 说的是「这条要登录」，
+ * 免登录的那一条（home.browse）它是 false —— 两个字面量都用得上，
+ * 所以这里不返回布尔，返回整条记录，免得调用方各拼一次。
+ */
+function cap(key) {
+  if (isGuestOk(key)) return { name: "首页浏览", login: false, tier: "guest" };
+  const c = CAPS.find((x) => x.key === key);
+  if (!c) return { name: key, login: true, tier: "free" };
+  return { name: c.name, login: true, tier: c.tier };
+}
+
+/**
+ * 门禁。放行返回 true；挡下返回 false 并提示。
+ *
+ *   if (!E.block("recite.basic", { page: this })) return;
+ *
+ * 页面实现 onLoginGate(name) 就能接上「去登录」；
+ * 没实现时只给一句 toast，不弹空窗 —— 一个点了没反应的确认框比什么都没有更糟。
+ */
+function block(name, opt) {
+  const o = opt || {};
+  const r = decide(name, o);
+  if (r.ok) return true;
+  if (o.silent) return false;
+
+  const text = hint(name, o);
+
+  // 首页是游客唯一能落脚的地方，弹「去登录」反而挡住了唯一的路
+  if (o.loginPrompt === false || !o.page || typeof o.page.onLoginGate !== "function") {
+    wx.showToast({ title: text, icon: "none" });
+    return false;
+  }
+
+  wx.showModal({
+    title: r.name + " · " + text,
+    content: o.content || "登录只是开个门。进度仍然只存在这台手机上。",
+    confirmText: "去登录",
+    cancelText: "再看看",
+    success: (res) => {
+      if (res.confirm) o.page.onLoginGate(name);
+    }
+  });
+  return false;
+}
+
+/** 权限页：一条条列「这项此刻能不能用」 */
+function matrix(ctx) {
+  return ORDER.map((row) => {
+    const r = decide(row.key, ctx);
+    return { cap: row.cap, name: row.name, ok: r.ok, hint: hint(row.key, ctx) };
+  });
+}
+
+/** 游客首页的范围：本册、只读。首页据此决定排什么、能不能点 */
+function guestScope() {
+  return { grade: GUEST_GRADE, term: 1, scope: "term", readOnly: true, title: "一年级诗词" };
+}
+
 module.exports = {
   CAPS,
   CAP_KEYS,
@@ -293,5 +454,16 @@ module.exports = {
   redeem,
   revoke,
   sync,
-  algoAllowed
+  algoAllowed,
+  // 登录这道门
+  GUEST_GRADE,
+  CAN_GUEST,
+  ORDER,
+  signedIn,
+  decide,
+  capName,
+  cap,
+  block,
+  matrix,
+  guestScope
 };

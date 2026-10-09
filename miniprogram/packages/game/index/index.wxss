@@ -80,3 +80,4 @@
 .mode-off .mode-desc {
   color: var(--ink-3);
 }
+

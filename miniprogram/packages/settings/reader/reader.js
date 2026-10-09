@@ -22,8 +22,9 @@ Page({
 
   onShow() {
     theme.apply(this);
+    // 未登录：整页换成一张门禁卡。与别页同一道门、同一句话。
     if (!gate.logged()) {
-      this.setData({ locked: true });
+      this.setData({ locked: true, sfxVisible: false });
       return;
     }
     const fx = sfx.readiness();

@@ -1,0 +1,59 @@
+.plans-head {
+  margin-bottom: 20rpx;
+}
+
+.plans-title {
+  display: block;
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--green);
+}
+
+.plans-sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: 8rpx;
+}
+
+/* 三列固定宽度，用 flex 而不是 table —— 小程序的 table 布局不可靠 */
+.plans-table {
+  border-top: 1rpx solid var(--line-2);
+}
+
+.plans-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.plans-th {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.plans-cap {
+  flex: 1 1 auto;
+  font-size: var(--fs-body);
+}
+
+.plans-need {
+  flex: 0 0 180rpx;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.plans-state {
+  flex: 0 0 140rpx;
+  text-align: right;
+  font-size: var(--fs-caption);
+}
+
+.plans-state.on {
+  color: var(--green);
+}
+
+.plans-state.off {
+  color: var(--amber);
+}

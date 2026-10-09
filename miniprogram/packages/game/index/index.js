@@ -53,11 +53,12 @@ Page({
   },
 
   onMode(e) {
-    const key = e.currentTarget.dataset.k;
+    // 登录这道门在最前：未登录连玩法页都不用进
     if (!gate.logged()) {
-      this.onLogin();
+      if (!entitlement.block("feihualing", { page: this })) return;
       return;
     }
+    const key = e.currentTarget.dataset.k;
     const cap = CAP[key];
     if (!cap) return;
     // 差一档的卡点了不给进，但要说话 —— 不列一个点下去必然被拒的入口，

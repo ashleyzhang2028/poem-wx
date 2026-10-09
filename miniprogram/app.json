@@ -16,7 +16,8 @@
         "theme/theme",
         "recite/recite",
         "reader/reader",
-        "about/about"
+        "about/about",
+        "plans/plans"
       ]
     },
     {

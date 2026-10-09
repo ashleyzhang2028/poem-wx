@@ -145,6 +145,23 @@
     </view>
   </view>
 
+  <!-- 权限说明：与「能力」那张卡同一张表（E.matrix），逐条对照。
+       登录后那五项设置入口都在上面的「学习」卡里，这一张只管「我能用什么」。 -->
+  <view class="card" wx:if="{{logged}}">
+    <view class="card-title bar">能力</view>
+    <view class="cap-row" wx:for="{{caps}}" wx:key="cap">
+      <text class="cap-name">{{item.name}}</text>
+      <text class="cap-state {{item.ok ? 'on' : 'off'}}">{{item.hint}}</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onPlans">
+      <view class="row-main">
+        <text class="row-title">权限说明</text>
+        <text class="row-sub">{{lockedCount ? lockedCount + ' 项未解锁' : '全部可用'}} · 逐条对照</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
   <view class="card">
     <view class="card-title bar">数据与账号</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">

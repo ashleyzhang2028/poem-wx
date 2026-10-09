@@ -230,3 +230,33 @@
 .empty-btn {
   margin-top: var(--sp-3);
 }
+
+/* 游客态的提示条：说明当前为什么点不动，顺带就是登录入口。
+   整条都可点（bindtap=onLogin），所以按下时整块退一档 ——
+   见 .guest-bar-hover。 */
+.guest-bar {
+  display: flex;
+  flex-direction: column;
+  margin: var(--sp-3) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--amber-light);
+  border: 1rpx solid var(--amber-edge);
+}
+
+.guest-bar-hover {
+  opacity: .88;
+}
+
+.guest-title {
+  font-size: var(--fs-hint);
+  font-weight: 600;
+  color: var(--amber);
+}
+
+.guest-sub {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: 8rpx;
+  line-height: 1.6;
+}

@@ -59,7 +59,6 @@ Page({
     daily: [],
     dailyMax: 20,
     poolSize: 0,
-    lockedHint: "",
     locked: false
   },
 

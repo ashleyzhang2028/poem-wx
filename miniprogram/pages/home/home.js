@@ -123,17 +123,18 @@ Page({
     const all = corpus.course();
 
     const plan = S.generateDailyPlan({
-      grade: settings.grade,
-      term: settings.term,
+      grade: view.grade,
+      term: view.term,
       count: settings.dailyCount,
-      scope: settings.scope,
+      scope: view.scope,
       allPoems: all,
       // 今日加背的条目由 store 翻好（认不出来的 id 会如实丢掉，见 store.dailyExtraPoems）
       extraPoems: store.dailyExtraPoems(),
       getRecord: store.getRecord
     });
 
-    const reads = store.reads("poems");
+    // 游客没有本机进度可谈：环与「已背」状态一律归零，不拿别人的数据充数
+    const reads = logged ? store.reads("poems") : {};
     let done = 0;
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
@@ -193,7 +194,8 @@ Page({
    * 用户看见的是一屏空白接着一屏空白。
    *
    * 未登录时**不弹也不静默吞掉** —— 弹一句人话，把人送去登录页。
-   * 这条没变：门禁仍由首页把着，弹层自己不查（它只管读与评分）。
+   * 这条没变：门禁仍由首页把着（见 openSheet 里的 gate.guard），
+   * 弹层自己不查（它只管读与评分）。
    */
   onOpen(e) {
     const id = e.currentTarget.dataset.id;

@@ -604,6 +604,89 @@ sync.now(true).then((res) => {
   ok("未配置后端时同步报 offline", res.skipped === "offline", JSON.stringify(res));
 });
 
+/* ---------- 5b. 登录这道门 + 三档 ----------
+ * 两件事必须一起验：
+ *   1. **登录门** —— 未登录只有首页浏览，其余一条都不给；
+ *   2. **三档** —— 登录之后按 free / pro / max 分层。
+ * 只说其一，界面就会「登录了却什么都点不动」或者「未登录也能点进正文」。
+ */
+const E = require(path.join(ROOT, "utils", "entitlement.js"));
+const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
+
+// 页面脚本会调 E.signedIn()，而它读的是 profile —— 上面已经造好 wx 桩，这里直接改档
+function asGuest() {
+  wx.setStorageSync(store.KEYS.profile, { logged: false });
+}
+function asMember() {
+  wx.setStorageSync(store.KEYS.profile, { logged: true, tier: "pro" });
+}
+
+asGuest();
+ok("未登录：首页可浏览", E.decide("home.browse").ok);
+ok("未登录：每日背诵不可用", !E.decide("daily").ok);
+ok("未登录：课外阅读不可用", !E.decide("library").ok);
+ok("未登录：注音不可用", !E.decide("pinyin").ok);
+ok("未登录：艾宾浩斯不可用", !E.decide("ebbinghaus").ok);
+ok("未登录：朗读不可用", !E.decide("speak").ok);
+ok("未登录：莱特纳盒不可用", !E.decide("leitner").ok);
+ok("未登录：导出不可用", !E.decide("export").ok);
+
+// 免登录清单：有且只有首页浏览一条。谁想悄悄开口子，这里当场红。
+ok("免登录能力只有首页浏览",
+  E.CAN_GUEST.length === 1 && E.CAN_GUEST[0] === "home.browse", E.CAN_GUEST.join(","));
+
+// 门槛文案必须真的说出「登录后可用」，不能只是 ok=false 而用户不知道怎么办
+ok("拒绝时说清门槛", E.hint("speak", { signedIn: false }) === "登录后可用");
+ok("免登录那条永远放行（hint 为空）", E.hint("home.browse", { signedIn: false }) === "");
+
+// 权限页矩阵要和 decide() 一致，不能各算一套
+const mGuest = E.matrix({ signedIn: false });
+ok("矩阵条数与展示顺序一致", mGuest.length === E.ORDER.length);
+ok("矩阵逐条与 decide() 一致",
+  mGuest.every((r) => r.ok === E.decide(r.cap, { signedIn: false }).ok));
+ok("未登录矩阵只有首页一条 ok",
+  mGuest.filter((r) => r.ok).length === 1 && mGuest[0].ok);
+
+// 游客范围：一年级本册、只读
+const gs = E.guestScope();
+ok("游客范围是一年级本册", gs.grade === 1 && gs.term === 1 && gs.scope === "term");
+ok("游客范围是只读", gs.readOnly === true);
+
+// 能力表覆盖 Issue 里列出的每一项
+["每日背诵", "课外阅读", "注音辅助", "艾宾浩斯", "语音朗读", "莱特纳盒", "进度导出"].forEach((n) => {
+  ok("能力表含「" + n + "」", E.ORDER.some((r) => r.name.indexOf(n) >= 0));
+});
+
+// 登录之后：三档逐条验（free / pro / max）。
+// 档位走的是 auth.serverTier()（服务端下发），所以这里写进 auth 那一格，
+// 而不是 profile.tier —— 后者无签名，会被降级（见 entitlement.status 的 unsigned）。
+function asTier(t) {
+  wx.setStorageSync(store.KEYS.profile, { logged: true });
+  wx.setStorageSync(store.KEYS.auth, { token: "t", tier: t, at: Date.now() });
+}
+asTier("free");
+ok("已登录：首页仍可浏览", E.decide("home.browse").ok);
+ok("free 会员：每日背诵可用", E.decide("daily").ok);
+ok("free 会员：朗读（登录即得）可用", E.decide("speak").ok);
+ok("free 会员：FSRS（max）不可用", !E.decide("fsrs").ok);
+
+asTier("pro");
+ok("pro 会员：SM-2 可用", E.decide("sm2").ok);
+ok("pro 会员：题库可用", E.decide("quiz").ok);
+ok("pro 会员：FSRS（max）仍不可用", !E.decide("fsrs").ok);
+
+asTier("max");
+ok("max 会员：FSRS 可用", E.decide("fsrs").ok);
+ok("max 会员：飞花令可用", E.decide("feihualing").ok);
+
+/* ---------- 5c. 游客首页渲染 ---------- */
+const homeWxml = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+const homeJs = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+ok("首页有游客提示条", homeWxml.indexOf("guest-bar") >= 0);
+ok("首页游客态在 js 里算出来", homeJs.indexOf("gate.GUEST_GRADE") >= 0);
+// 列表点击与「开始背」都必须过门禁，不能只拦一个入口
+ok("首页点击过门禁", homeJs.indexOf('gate.guard("背诵"') >= 0);
+
 /* ---------- 6. WXML 字段粗查 ---------- */
 const unusedWarn = [];
 pages.forEach((p) => {
@@ -726,8 +809,6 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
 }
 
 /* ---------- 7.6 权限分层 ---------- */
-const E = require(path.join(ROOT, "utils", "entitlement.js"));
-const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
 const gateMod = require(path.join(ROOT, "utils", "gate.js"));
 
 ok("三档齐备", tiersMod.TIER_KEYS.join(",") === "free,pro,max", tiersMod.TIER_KEYS.join(","));

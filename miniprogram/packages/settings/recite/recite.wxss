@@ -72,3 +72,12 @@
   font-size: var(--fs-caption);
   line-height: 1;
 }
+
+/* 未登录时算法卡置灰：看得出来是「登录才能用」，而不是坏了 */
+.algo.locked {
+  opacity: .55;
+}
+
+.algo.locked .algo-years {
+  color: var(--amber);
+}
