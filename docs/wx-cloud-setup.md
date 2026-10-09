@@ -82,20 +82,19 @@ Django / Koa / Flask …），看不到地域、环境、域名 —— 那是 **
 
 ### 1.2 让仓库能部署（云托管要镜像）
 
-云托管跑的是容器，`poem` 侧要加一个 `Dockerfile`（**这件事还没做**，是本节第一个待补的代码）：
-
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev || npm i --omit=dev
-COPY . .
-ENV PORT=80
-EXPOSE 80
-CMD ["node", "scripts/serve.js"]
-```
+云托管跑的是容器，`poem` 侧的 `Dockerfile` **已经落进仓库了**
+（[npu-gpu-cpu/poem#531](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/531)），
+这一节从「待补的代码」变成「照做就行」。
 
 `poem` 的 `scripts/serve.js` 本来就同时伺服静态站 + `api/`（Vercel 那套 handler 收在同一个进程里），所以一个容器就能全跑，不用拆。
+
+部署时**不需要填任何构建参数**，仓库根的 `Dockerfile` 会被云托管直接认。实际那份里有三处和早先草稿不同，看到时别以为是写错了：
+
+- **端口是 8080，不是 80** —— 容器全程用非 root 的 `node` 用户跑，而监听 80 要 root。绑定 80 那步交给云托管 / 外层反代，你只填域名。
+- **健康检查打 `/api/diag`** —— 本站是「密钥没配也能离线用」的设计：缺 `SESSION_SECRET` 时服务照跑，`/api/*` 回 503 但 `/api/diag` 仍 200 并写清缺哪个密钥。所以重启探活只判「进程还在不在应答」。
+- **`.dockerignore` 挡掉了 `.git` / `test/` / `docs/`** —— 只为减小每次部署上传的体积，运行时要用的 `data/`、`js/`、`fonts/` 一个没少。
+
+想本机先看一眼：`docker build -t poem . && docker run -p 8080:8080 poem`，然后开 `http://localhost:8080`。
 
 ### 1.3 配环境变量
 
