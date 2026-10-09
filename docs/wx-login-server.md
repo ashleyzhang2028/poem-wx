@@ -354,136 +354,21 @@ select … on conflict (uid, child_id, poem_id) do update
 
 ## 部署顺序
 
-> 完整清单（含云托管控制台怎么点）在
-> [`wx-cloud-setup.md` § 一点五 运维动作清单](wx-cloud-setup.md#一点五运维动作清单人要做的事照这个顺序做)。
-> 这里只列**跟后端这一层直接相关**的那几步。
+代码已经在了（`poem#532`）。剩下全是运维动作，完整清单在
+[`wx-cloud-setup.md`](wx-cloud-setup.md)（控制台怎么点、镜像怎么来、域名怎么加）。
 
-**第 1～2 步的代码已经在了**（`poem#532` 合并后即可）。剩下的是运维动作。
+跟后端这一层直接相关的只有两步：
 
-1. **先构建出镜像**：打一个 `v*` tag 触发 `.cnb.yml` 的「构建云托管镜像」，
-   拿到 `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<tag>`
-   —— 没有这一步，云托管那栏没得填（**别指 `poem` 仓库，也别填「容器目录 deploy」**，
-   理由见 `wx-cloud-setup.md` § 1.1 末与 § 1.2）
-2. **配环境变量**（云托管 → 服务设置 → 环境变量）：
-   - `SESSION_SECRET`（`openssl rand -hex 32`）—— 缺了 `/api/*` 一律 `503 E_NOT_CONFIGURED`
-   - `SUPABASE_URL` / `SUPABASE_SERVICE_KEY`（**service_role，不是 anon**）
-   - **`WX_APPID` / `WX_SECRET`** —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`
-     （不是 500，也不是「你 code 不对」）
-3. **建上面那张表**（`wx_accounts`，在 Supabase → SQL Editor 跑）
-   —— 没建回 `503 E_WX_TABLE` 并指路，**那句话会原样显示给用户看**。
-   ⚠️ 这张表不在 `poem` 的 `api/_lib/schema.sql` 里：那份是网页版的，
-   网页版一行都不该动，所以它是小程序这一层单独建的
-4. **验三步**，每一步的判据都不是「客户端说成功」：
-   - 会话认得出来 —— 带一枚自签的 token 直接打同步口：
-     ```
-     curl -s -X POST https://<域>/api/sync/pull \
-       -H 'Authorization: Bearer <accessToken>' \
-       -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
-     ```
-     **回 `E_NO_SESSION`（401）就是服务端的 `tokenOf()` 没上。**
-     这是最容易「以为补了」的一步：路由加了、登录通了、这条还是 401。
-   - 两条新行真的落库 —— 直接查库：
-     `select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1')`
-   - 刷新那条带得动会话 —— `POST /api/wx/refresh` 带上 `refreshToken` 与 `device`，
-     并确认**旧令牌当场作废**（再拿它打一次同步口，应当 401）
-5. 小程序端把 `baseUrl` 填上（管理页或 `auth.configure({ baseUrl })`），
-   并把云托管默认域加进微信「request 合法域名」
-6. 把第一个管理员扶成 `owner`：直接在库里改 `accounts.role`。
-   **小程序端没有这条口，也不该有** —— 一个能在客户端点出来的
-   「把自己设成 owner」就是权限漏洞。网页版那条 `OWNER_EMAILS` 走的是邮箱，
-   而微信账号没有邮箱，所以**不要**指望它
-7. 其余人的档位由这个 owner 在管理页里发
+1. 配 `WX_APPID` / `WX_SECRET` —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`
+2. 建 `wx_accounts` 表 —— 缺了回 `503 E_WX_TABLE` 并指路
 
-### 第 4 步那条 curl 为什么值得单独列出来
-
-因为这是本 Issue 反复出现的那类错：**「补了一半」看起来像全对**。
-路由加了、登录通了、界面写着「已同步」，而每一条同步都是 401 ——
-用户看到的是「进度没丢，只是没上云」，工程师看到的是「客户端说登录了」。
-两端都没有一句话是错的，所以谁也定位不到。一条 curl 就能把它钉死。
+验的时候别只看客户端说成功，见 `wx-cloud-setup.md` 第 8 步那两条（带 token 打 `/api/sync/pull`、直接查库）。
 
 ## 现在没接上时是什么样
 
 **如实降级，不假装成功**：
 
 - 登录点得动，落地的是本机身份，档位按 `free`
-- 同步攒着，界面写「后端未就绪 · 已攒 N 条」；
-  **登录那一刻会试一次**，成功了就在提示里说「进度已认回」
+- 同步攒着，界面写「后端未就绪 · 已攒 N 条」；登录那一刻会试一次，成功了就说「进度已认回」
 - 管理页名录只读，写明「服务端未就绪」；改档按钮点了给人话，不静默失败
-- 朗读三条通道都不就绪时，**界面里根本不出现播放元素**（见 README「能力不可用时不显示」）
-
-## 一件事得说在前面
-
-`baseUrl` 配好之后，**微信公众平台还要把这个域名加进「request 合法域名」**，
-否则真机上 `wx.request` 一律失败（开发者工具里勾了「不校验合法域名」能绕过，
-真机绕不过）。这是最容易在提审后才发现的一条，所以写在这里。
-
-## 附：能不能用微信云开发 / 云托管当后端
-
-Issue #64 问的就是这个，答案是**能，而且云托管比我前面写的「自备域名」更省事**。
-但两者路数完全不同，先说结论：
-
-| 方案 | `baseUrl` 填什么 | request 合法域名 | 现成代码能不能跑 |
-|---|---|---|---|
-| **云托管**（含微信云托管） | 它给的默认域名 | **要** | 能 —— 它就是个普通 https 服务 |
-| **云开发 · 云函数** | `https://<env>.service.tcb.qcloud.la` | **要**（按调用方式） | 要改 —— `utils/remote.js` 走的是 `wx.request` |
-| **云开发 · 云调用**（`wx.cloud.callContainer` / `cloud.callFunction`） | 不需要 baseUrl | **不需要** | 要改 —— 得把 `request()` 换成 call 系列 |
-| **自建域名**（我原先写的） | 自己的域 | 要，且要备案 | 能 |
-
-### 云托管：照现在这套写法，一个字不用改
-
-云托管给你一个域名，形如 `https://<env>.ap-shanghai.run.tcloudbase.com`，
-它就是**一个标准的 https 服务**。所以：
-
-1. `baseUrl` 填这个域名 —— 管理页那个输入框，或者 `auth.configure({ baseUrl })`
-2. 公众平台「request 合法域名」加同一个域名 —— **这一步不能省**
-3. 后端把 `/api/wx/login`、`/api/wx/refresh`、`/api/sync/*` 部署上去即可
-
-**只有一条真差异**：它是平台默认域，**不受自己控制，也备不了自己的案**。
-微信名单里能填（已备案），但哪天平台换域、回收环境，名字就没了。
-真要长期用，还是绑自有域 —— 云托管支持绑自定义域名，那时三条（https / 备案 / 不带端口）
-一样要满足。
-
-### 云开发：能，但得改客户端
-
-云开发是「env + 云函数」的模型，它自带的出口是 `wx.cloud.*`：
-
-- **云调用**（`wx.cloud.callFunction` / `wx.cloud.callContainer`）
-  免域名、免白名单，最省事。代价是与 `wx.request` **不是同一套 API**，
-  `utils/remote.js` 里的 `request()` 得整个换掉，`PATHS` 那套拼 URL 的写法作废。
-  也就是——**「后端就绪后只改 baseUrl」这句承诺不再成立**。
-- **HTTP 直连**（云开发给的 `https://<env>.service.tcb.qcloud.la`，或用 HTTP 访问服务）
-  那它又变回「一个普通域名」，回到云托管那条路：填 `baseUrl` + 加 request 名单。
-
-### 关于 appsecret 和云调用
-
-有个省事的地方值得说：云开发 / 云托管里，**可以不用 appsecret 换 openid**。
-
-- 云函数里 `cloud.getWXContext()` 直接给 `OPENID` / `UNIONID`
-- 云托管里走内部调用渠道，也是服务端直接拿到
-
-也就是说前面「为什么必须在服务端」那一节的前提（`appsecret` 不能进小程序包）
-依然成立 —— 只是你连 `appsecret` 都不用管了，平台替你做了。
-这比自建后端少一个要命的运维项。
-
-### 但有一件事，云开发**不适合**干
-
-本项目要**分发的不是接口，是 5300+ 条正文分片整整 23MB 的静态文件**。
-这一块早定了走 **COS + CDN**（见 `docs/architecture.md` § 三）：
-
-- 云开发数据库：几万条级查询，性能与成本都不划算，而这里要的只是**静态分发**
-- 那就只剩对象存储。云开发的存储也能放，但它是存储桶不是 CDN，
-  域还不一定给绑 —— 分片这块**继续走 COS + CDN**，别为了「统一在腾讯」搬过去
-- 那个域是 `downloadFile` 白名单的活（`wx.loadFontFace` 走 downloadFile，
-  不是 request），跟本文这两条域名互不干扰
-
-### 所以怎么选
-
-- **只想尽快把后端跑起来**：微信云托管（或云开发 HTTP 版）→ 拿默认域，
-  填 baseUrl + 加 request 名单，客户端零改动。先用起来，之后再绑自有域。
-- **想少运维、连 appsecret 都不想碰**：云开发 + 云调用，
-  但接受 `remote.js` 要改一次。
-- **分片**：不动，继续 COS + CDN。
-
-一句总结：**「合法域名」这件事只和「你用没用 `wx.request` 打 http 域」有关。**
-用 `wx.cloud.*` 就没有域名这回事；用 `wx.request`，那不管背后是云托管、
-云函数还是自建服务器，**域名都要进 request 名单**——名单看的是域名，不是后端是谁。
+- 朗读三条通道都不就绪时，界面里根本不出现播放元素
