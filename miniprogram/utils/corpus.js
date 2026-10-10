@@ -229,9 +229,89 @@ function bucketOf(id) {
   return (manifest().map || {})[id] || "";
 }
 
+/* 分片不是「包内文件」那一类：它先从本机取（跑过 build:data 的开发者工具里有），
+   取不到再走云端那条分片路由（Issue #121 方案 A —— 容器下发，**不用备案**）。
+
+   同步的 bucket() 只答「本机有没有」—— 它是被 entry() 之类同步调用的，
+   没网络就如实答「没有」；异步那条在 ensureBucket() 里。 */
 function bucket(name) {
   if (!bucketCache[name]) bucketCache[name] = readJson("data/texts/" + name + ".json", {});
   return bucketCache[name];
+}
+
+/* 拉过的分片记在本机存储里，第二次不再请求 —— 与 store.KEYS 的用法一致，
+   但**只放分片**：它可有可无，清掉也不影响进度。 */
+const SHARD_CACHE_KEY = "shards";
+const SHARD_CACHE_MAX = 40;
+
+function shardCache() {
+  const store = require("./store");
+  return store.read(SHARD_CACHE_KEY, {}) || {};
+}
+
+function saveShard(name, payload) {
+  const store = require("./store");
+  const all = shardCache();
+  const keys = Object.keys(all);
+  /* 满了就丢最早写进来的那份（记着 at）—— 40 片约 8MB 原文，
+     够覆盖「最近在背的那几部集子」，再多就不该占用户手机了。 */
+  if (keys.length >= SHARD_CACHE_MAX) {
+    keys.sort((a, b) => (all[a].at || 0) - (all[b].at || 0));
+    keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
+  }
+  all[name] = { at: Date.now(), data: payload };
+  store.write(SHARD_CACHE_KEY, all);
+}
+
+/**
+ * 异步取一片：本机 → 云端。
+ *
+ * 返回 `{ data, from }`，`from` 是 `local` / `remote` 之一；两边都没有就
+ * reject 一个带 `code` 的错 —— 调用方据此**如实说没就绪**，不许伪装成空语料。
+ */
+function ensureBucket(name) {
+  if (!name) return Promise.reject(shardError("E_NO_BUCKET", "没有这一片的名字"));
+  const local = bucket(name);
+  if (Object.keys(local).length) return Promise.resolve({ data: local, from: "local" });
+
+  const cached = shardCache()[name];
+  if (cached && cached.data) {
+    bucketCache[name] = cached.data;
+    return Promise.resolve({ data: cached.data, from: "local" });
+  }
+
+  const remote = require("./remote");
+  if (!remote.shardReady()) return Promise.reject(shardError("E_NO_SHARD_SERVICE", "分片服务没接上"));
+
+  return remote.shard(name).then(function (data) {
+    const payload = (data && data.t) || data || {};
+    if (!payload || !Object.keys(payload).length) throw shardError("E_EMPTY_SHARD", "这一片是空的");
+    bucketCache[name] = payload;
+    saveShard(name, payload);
+    return { data: payload, from: "remote" };
+  });
+}
+
+/** 异步取一条正文：课内 → 本机分片 → 云端分片。 */
+function ensureEntry(id) {
+  const inPack = courseTexts()[id];
+  if (inPack) return Promise.resolve(inPack);
+
+  const name = bucketOf(id);
+  if (!name) return Promise.resolve(null);
+
+  return ensureBucket(name).then(function (r) {
+    const hit = r.data[id] || null;
+    if (!hit) throw shardError("E_NO_ENTRY", "这一片里没有这一条：" + id);
+    return hit;
+  });
+}
+
+function shardError(code, message) {
+  const e = new Error(message);
+  e.code = code;
+  e.expected = true;
+  return e;
 }
 
 function entry(id) {
@@ -329,6 +409,8 @@ module.exports = {
   manifest,
   bucketOf,
   bucket,
+  ensureBucket,
+  ensureEntry,
   entry,
   entries,
   indexById,

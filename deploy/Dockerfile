@@ -82,6 +82,35 @@ COPY --chown=node:node serve-api.js ./
 # 与 serve-api.js 同一层、同一个名字（COPY 的源按上下文根取）。
 COPY --chown=node:node store-mysql.js ./
 
+# 正文分片（Issue #121 方案 A）：分片跟主包一起走云托管容器下发，**仍然免备案**。
+#
+# 为什么可以这样：云调用（wx.cloud.callContainer）走微信内网，不经过
+# request / downloadFile 合法域名那张名单 —— 而那张名单**只收已备案的域**，
+# 所以「分片走公网」这条路绕不开备案；走容器则域名、证书、备案三样一起免。
+#
+# 代价（两条，都要认）：
+#   1) 节点到节点的公网/内网流量同样计费；而 CDN 那条是从边缘下发，
+#      同量下通常更便宜 —— 换来的是「不办备案」与「不养一套 CDN」；
+#   2) 容器是唯一缓存层，冷启动后第一波请求要现压一次 gzip。
+#
+# ⚠️ 默认**不拷**：给 `--build-arg COPY_SHREDS=1` 才拷。
+#    没拷时 /api/shard/* 回 404 E_NO_SHARDS（出声，不静默回空语料）。
+#    25MB 分片压缩后 5.6MB（22.5%），是刻意不摊进每次构建上下文的：
+#    绝大多数调试构建用不到它，带上只会让每次部署多传 5.6MB。
+# ⚠️ 上下文里那层叫 `shard-src/`，**且每个文件都是 .gz** —— 流水线摊的时候
+#    只摊压缩后那份（22.5%）。容器里发的就是这些 gz 字节，一个都不用解。
+ARG COPY_SHREDS=
+COPY --chown=node:node shard-src /tmp/shard-src
+RUN if [ "$COPY_SHREDS" = "1" ]; then \
+      mkdir -p /app/shards \
+      && cp /tmp/shard-src/*.json /app/shards/ \
+      && cp /tmp/shard-src/*.json.gz /app/shards/ \
+      && rm -rf /tmp/shard-src \
+      && du -sh /app/shards; \
+    else \
+      rm -rf /tmp/shard-src; \
+    fi
+
 # mysql2 是**唯一**多出来的运行时依赖（上面那份实现只用它的连接池，不引 ORM）。
 # 装在 /app 里，让 serve-api.js 的 require("./store-mysql.js") → require("mysql2/promise")
 # 找得到。npm 缓存与本层的内容一起沉在镜像里，不必每次重装。

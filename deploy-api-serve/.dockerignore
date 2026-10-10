@@ -21,8 +21,16 @@
 # Dockerfile 本身（流水线从这边拷进上下文，COPY 指令才会落到实际文件上）
 !Dockerfile
 
-# 后端本体 + 只挂 /api/* 的服务壳 + 存储层那份 MySQL 实现
+# 后端本体 + 只挂 /api/* 的服务壳 + 存储层那份 MySQL 实现 + 分片路由
 !api
 !api/**
 !serve-api.js
 !store-mysql.js
+!shard-api.js
+
+# 正文分片（Issue #121 方案 A）：流水线在**打了 COPY_SHREDS=1** 时才摊进上下文，
+# 走的是 shard-src/ 这一层（构建时 COPY 到 /app/shards）。
+# ⚠️ 这一条放行**不代表**每次构建都传 25MB —— 流水线没打那面旗时不 mkdir
+#    这一层，白名单再放行也没东西可传；打了才摊，摊的是**压缩后 5.6MB**。
+!shard-src
+!shard-src/**

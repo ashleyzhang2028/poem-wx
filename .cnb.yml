@@ -55,6 +55,26 @@ main:
             #   failed to calculate checksum ... "/store-mysql.js": not found
             # 而那看着像「文件没提交」，其实是上下文少摊了一样东西。
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
+            # 分片路由那份（Issue #121 方案 A）：与 serve-api.js 同层同名。
+            cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
+            # 正文分片：**只在 COPY_SHREDS=1 时摊进上下文**，且摊的是压缩后那份。
+            # 为什么在这儿摊而不是在 Dockerfile 里现取：Dockerfile 的 COPY 源只能来自
+            # 构建上下文，而分片是**构建产物**（.gitignore 里 miniprogram/data/），
+            # checkout 里本来就没有 —— 得先在这里生成。
+            #
+            # 为什么默认**不摊**：25MB 分片压缩后 5.6MB，是刻意不摊进每次构建的
+            # —— 绝大多数调试构建用不到它。要分片时在流水线的 env 里加
+            # `COPY_SHREDS: "1"`（见 wx-cloud-setup.md § 二点五）。
+            if [ "${COPY_SHREDS:-}" = "1" ]; then
+              echo "摊分片进上下文（COPY_SHREDS=1）"
+              bash scripts/clone-poem.sh /tmp/poem >/dev/null 2>&1 || true
+              POEM_WEB_DIR=/tmp/poem node scripts/build-data.js >/dev/null
+              mkdir -p /tmp/ctx/shard-src
+              for f in miniprogram/data/texts/*.json; do
+                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f").gz"
+              done
+              du -sh /tmp/ctx/shard-src
+            fi
             # ⚠️ 忽略文件跟**构建上下文**走：摆错位置不报错，只让上下文从 0.3MB 变成 38MB。
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
@@ -74,6 +94,7 @@ main:
             # CNB 那行 login 不能删：基础镜像与构建缓存仍从 CNB 拉。
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
+              --build-arg "COPY_SHREDS=${COPY_SHREDS:-}" \
               --build-arg "API_REV=${REV}" \
               --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
               --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

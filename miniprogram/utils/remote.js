@@ -1,6 +1,12 @@
 const store = require("./store");
 const wire = require("./wire");
 
+/* 分片走的是「下载文件」这件事 —— 但通道是云调用，不是 wx.downloadFile：
+   后者要求域名先进 **downloadFile 合法域名** 名单，而那张名单**只收已备案的域**。
+   云调用走微信内网、不过那张名单，域名 / 证书 / 备案三样一起免 —— 这是
+   「分片跟主包一起走云托管容器下发」能成立的全部理由（Issue #121 方案 A）。 */
+const SHARD_PATH = "/api/shard/";
+
 const PATHS = {
   login: "/api/wx/login",
   refresh: "/api/wx/refresh",
@@ -33,6 +39,24 @@ function cloudConfig() {
 
 function baseUrl() {
   return session().baseUrl || "";
+}
+
+/* 分片能不能走云端：与别的接口同一个判据（configured），
+   但**另开一个名字** —— 「后端通了」与「分片服务开了」是两件事，
+   后者还要镜像里真拷了分片（serve 那边回 E_NO_SHARDS）。 */
+function shardReady() {
+  return configured();
+}
+
+/**
+ * 取一片正文分片（约 200KB）。
+ *
+ * ⚠️ **不写进 outbox**：`push()` 那条队列是给「进度」用的，分片是只读的大块，
+ *    混进去会把队列撑爆。分片自己那份缓存由 corpus.saveShard 管。
+ */
+function shard(name) {
+  if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
+  return send(SHARD_PATH + name, {}, "GET");
 }
 
 function useCloud() {
@@ -276,6 +300,8 @@ module.exports = {
   configured,
   baseUrl,
   useCloud,
+  shard,
+  shardReady,
   cloudConfig,
   request,
   speechReady,

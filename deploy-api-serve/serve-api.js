@@ -96,7 +96,26 @@ function wireMysqlStore() {
 
 wireMysqlStore();
 
-// 只做一件事：把 /api/* 交给 poem 那套 Vercel 风格 handler。
+/* 分片路由：`/api/shard/*`（Issue #121 方案 A）。
+ *
+ * 它只加一条前缀，poem 的 `/api/*` 一个字节都没动。为什么要有它：正文分片
+ * 25MB 塞不进主包，而走 CDN 就得备案（downloadFile 合法域名只收已备案的域）。
+ * 云调用走微信内网、不过那张名单，于是「分片跟主包一起走这个容器下发」
+ * 是唯一一条免备案的路。展开见 `docs/shard-delivery.md`。
+ *
+ * ⚠️ 它必须夹在 wireMysqlStore() 与 apiHandler 之间：两个都是模块级副作用
+ *    （handler 在 require 时就取单例），顺序错了都看不出来。
+ *
+ * ⚠️ 这段注释里**故意不写那两个带引号的文件路径**：scripts/check.js 是
+ *    「摘掉块注释再 indexOf」来判先后的，块注释里写一行以星号开头的
+ *    「带引号路径」会被那一摘连后半段一起吃掉 —— V49 与 V53 都踩过这个坑。
+ *    写成普通行注释（//）最稳：摘注释那一步按行摘，摘得干净。
+ */
+// ⚠️ 上面只说不写路径，所以这一行按行注释写：`api/handler.js` 与
+//    `shard-api.js` 两个名字不许出现在块注释里。
+const shardApi = require("./shard-api.js");
+
+// 只做一件事：把 /api/ 交给 poem 那套 Vercel 风格 handler。
 // 其余路径由下面如实回 404 —— 这份进程没有静态站可伺服。
 // ⚠️ 这一行必须在上面的 wireMysqlStore() **之后** —— 它在 require 时就取单例。
 const apiHandler = require("./api/handler.js");
@@ -115,6 +134,10 @@ function createServer() {
         res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }).end("ok\n");
         return;
       }
+      // 分片先接 —— 它在 /api/ 前缀下另开一格 /api/shard/，
+      // poem 那边没有这个路径，不会撞。
+      if (shardApi.handle(req, res, urlPath)) return;
+
       apiHandler(req, res);
       return;
     }
