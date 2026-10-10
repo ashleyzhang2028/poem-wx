@@ -6305,17 +6305,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
  */
 
 const K = {
-  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数（2026-10-09）。 */
+  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数（2026-10-10）。 */
   counts: {
-    poems: 251, classic: 286, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
+    poems: 251, classic: 287, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
     yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
     chengyu: 948, changshi: 221, mingshu: 808,
     mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
   },
   /* 课外十六部合计（含词条类的成语 / 常识 / 名著 / 名家 / 帝王） */
-  cards: 5603,
+  cards: 5604,
   /* 带正文的条目数 —— 词条类集子里有「有壳无文」的条目，所以比 cards 少 */
-  withText: 5854,
+  withText: 5855,
   /* 号段：集内编号从 1 连到 max，不允许断号。
      gushi / songci 的号是补录接出来的，断一处就是漏一篇。
      ⚠️ 这三个 max 是这一轮（#505 / #510 / #516）补录接出来的新号。 */
