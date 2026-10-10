@@ -122,6 +122,11 @@ WX_SECRET=<小程序 appsecret>
 
 键的完整定义在 `poem` 的 `api/_lib/config.js`。
 
+> **`SUPABASE_URL` / `SUPABASE_SERVICE_KEY` 这两个不是绑死的。**
+> 它们是「服务端存储层」那个插槽的缺省实现 —— 换成腾讯云 MySQL 只加一个同形状的
+> store 实现，**小程序端与管理页一个字都不用改**。三条路各自的代价、
+> 以及「换库不是审核的要求」那句话，见 [`data-backend.md`](data-backend.md) § 三。
+
 ## 四、建 `wx_accounts` 表
 
 Supabase 控制台 → SQL Editor → 跑 [`wx-login-server.md`](wx-login-server.md#要用到的那张表)

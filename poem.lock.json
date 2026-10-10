@@ -1,0 +1,26 @@
+{
+  "repo": "npu-gpu-cpu/poem",
+  "ref": "09bf124c114d04f5bc158014e7e027db3e37f3cb",
+  "short": "09bf124",
+  "syncedAt": "2026-10-11",
+  "counts": {
+    "poems": 251,
+    "classic": 287,
+    "yuefu": 103,
+    "tangshi": 433,
+    "gushi": 113,
+    "songci": 330,
+    "yuanqu": 31,
+    "guwen": 234,
+    "jinxiandai": 24,
+    "zhaoming": 480,
+    "chengyu": 948,
+    "changshi": 221,
+    "mingshu": 808,
+    "mingren": 392,
+    "mingren-waiguo": 523,
+    "dwang": 609,
+    "dwang-waiguo": 68
+  },
+  "note": "锁住上游 poem 的那一版。推 main 用这一版，上游动了由定时任务开 PR 前进。见 docs/data-backend.md § 四。"
+}
