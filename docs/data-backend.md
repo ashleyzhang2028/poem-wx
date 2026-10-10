@@ -209,21 +209,31 @@ CI 运行时刻 → 决定用哪一版语料 → 决定自检对不对
 现在 `.cnb.yml` 里多了一条 **`poem-watch` 定时流水线**，每 6 小时跑一次：
 
 ```yaml
+main:
+  "crontab: 0 */6 * * *":      # 与 push: 并列在同一个 main: 之下（见下）
+    - name: 跟上游语料（poem-watch）
+      script:
+        - bash scripts/poem-watch.sh
+# 脚本里：
 # 取 upstream/main 的头
 # 与 poem.lock.json 里比：
-#   same  → 退出码 0，什么都不做
-#   newer → 用 POEM_REF=<新 sha> 跑 build-data + check
-#            过 → 用 CNB 的 cnb 命令行开 PR（只动 poem.lock.json，附语料读数）
-#            红 → 在 Issue #111 上留一条评论，把 check.js 的几句话原样贴过去
+#   same    上游没动      → 什么都不做
+#   ahead   上游动了      → 用 POEM_REF=<新 sha> 跑一次 build-data + check
+#              过（绿）→ 用 CNB 的 cnb 命令行开 PR（只动 poem.lock.json，附语料读数）
+#              不过（红）→ 在 Issue #111 上留一条评论，把 check.js 的几句话原样贴过去
+#   unknown 拿不到上游的头 → 出声（「没跟成」不是「跟过了」）
 ```
 
 读锁 / 写锁在 `scripts/poem-lock.sh`，跟上游在 `scripts/poem-watch.sh`，
 两个脚本都能在本机干跑（`WATCH_DRY=1` 只判断、不开 PR、不写文件）：
 
 ```bash
-bash scripts/poem-lock.sh                 # 看锁里钉的是哪一版
-POEM_REF=<sha> bash scripts/poem-lock.sh --verify   # 用某版跑一次语料 + 自检校验
-bash scripts/poem-watch.sh                # 手动跟一次上游（CI 里由定时任务跑）
+bash scripts/poem-lock.sh                              # 看锁里钉的是哪一版
+bash scripts/poem-lock.sh --ref                        # 只打印那个 sha（给脚本拼命令用）
+bash scripts/poem-lock.sh --verdict <sha>              # 回 same / ahead / behind / unknown
+bash scripts/poem-lock.sh --write <sha> [日期]          # 把锁前进到某一版
+WATCH_DRY=1 bash scripts/poem-watch.sh                 # 手动跟一次上游（只判断，不写文件、不开 PR）
+bash scripts/poem-watch.sh                             # 真跟一次（CI 里由定时任务跑）
 ```
 
 ---

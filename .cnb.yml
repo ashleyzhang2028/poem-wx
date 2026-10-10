@@ -133,20 +133,30 @@ main:
           script:
             - node scripts/sync-github.js
 
-# ---------------------------------------------------------------------------
 # 跟上游：**不做发布链的一步**，是定时的、独立的、红了也不拦谁的那一步。
 #
 # 为什么单开一条：发布链里 clone 的是 poem.lock.json 钉住的那一版，
-# 上游动与不动都影响不到「我们推 main」。上游真动了，由这条流水线第二天
-# 自己冒出来 —— 自检绿就开 PR 把锁前进一位，自检红就在 Issue 上留一条。
+# 上游动与不动都影响不到「我们推 main」。上游真动了，由这条流水线自己冒出来
+# —— 自检绿就开 PR 把锁前进一位，自检红就在 Issue 上留一条。
 # 口径与四种出口见 docs/data-backend.md § 四。
+#
+# ⚠️ 语法是 `main: { "crontab: <POSIX cron>": [...] }`，与 `push:` **并列**
+#    在同一个 `main:` 之下 —— **不是**顶格另起一个 `crontab:` 键，
+#    也不是第二个 `main:`。两种情况都解析得出 YAML，但流水线会不见：
+#      顶格 `crontab:`   → 平台报 `CONFIG_EVENT_EMPTY / $ 下无 api_trigger 事件配置`
+#                          （看着像 `$` 段写坏了，与真正的原因差着十万八千里）
+#      第二个 `main:`    → YAML 的键重复，**后面那个把前面那个整个盖掉**，
+#                          发布链就此消失，而文件本身看着完全正常
+#    两种都实测踩过。见 https://docs.cnb.cool/zh/build/crontab.md
+#
+#    表达式是五段 POSIX cron，时区 Asia/Shanghai，最小间隔 5 分钟。
+#    `0 */6 * * *` = 每 6 小时一次：语料是「几天改一次」的量级，够用；
+#    又不至于让一次红了的跟随拖到第二天才被人看见。
 #
 # ⚠️ 这条**不 import 密钥仓库**：它只读上游那个公开仓库。
 #    要开 PR / 留评论才需要 CNB 令牌，那由平台注入的 CNB_TOKEN 顶着。
-crontab:
-  # 每 6 小时一次。上游的语料是「几天改一次」的量级，一天四次足够，
-  # 又不至于让一次红了的跟随拖到第二天才被人看见。
-  - name: 跟上游语料（poem-watch）
-    image: node:20
-    script:
-      - bash scripts/poem-watch.sh
+  "crontab: 0 */6 * * *":
+    - name: 跟上游语料（poem-watch）
+      image: node:20
+      script:
+        - bash scripts/poem-watch.sh
