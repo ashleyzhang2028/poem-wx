@@ -3532,50 +3532,51 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 }
 
 /**
- * V22. 头像：本机那张压过微信那张（Issue #12 第三次追问）。
+ * V22. 头像：**只有微信一个来源，且只落本机**（Issue #111，2026-10-10）。
  *
- * 用户原话：「她应该要支持在设置里设置头像功能的，登录后默认使用微信头像的，
- * 子用户上传头像再用子用户头像」。
+ * 这一节的前身守的是「本机那张压过微信那张」——那是 Issue #12 那一轮的做法：
+ * 用户能自己传一张，传了就用它，没传就回落微信那张。
  *
- * 落成一条优先级：avatarLocal（自己传的）→ avatarUrl（微信那张）→ 首字印。
- * 网页版是同一套（js/avatar.js 的 localRaw：名下没有就回自己的首字印，
- * 绝不回落到设备域那张 —— 一旦回落，切了子用户头像不变，顶着别人的脸）。
+ * Issue #111 把这件事收掉了。用户原话：
+ *   「当用户登录后，直接使用小程序微信账号的头像吧，不要再提供用户自己上传头像的
+ *     功能了，也许能节省对象存储或者静态资源存储」。
  *
- * 守四件事：
- *   1. store 里有两个字段，且 avatarSrc 按 local 优先排序
- *   2. 登录写的是 avatarUrl（微信那张），**不许碰 avatarLocal**
- *      —— 碰了就会把用户自己传的图冲掉，正是「切了子用户头像不变」那个 bug
- *   3. 页面不许直接读 profile.avatarUrl 当显示图，一律走 store.avatarSrc()
- *   4. 不许再出现 wx.getUserProfile（2022 起只返回匿名灰头像，调用=糊一张假图）
+ * 收掉之后剩一个来源，而且它**不上传** —— 平台没有任何一条「静默拿微信头像」的
+ * API（2022 起 getUserProfile 只回匿名灰头像），唯一合规的路是
+ * `open-type="chooseAvatar"`，而它给回来的是一枚**临时文件路径**（`wxfile://…`）。
+ * 那是这台机器上的东西：上传它既没地方存（要为此养一个对象存储），
+ * 换台手机也没有意义。所以头像 = 本机存储里那一枚，不进同步报文。
+ *
+ * 守四件事（每一条都对着上面那句「不上传」）：
+ *   1. `avatarSrc()` 只认本机那一张，**没有**第二处可回落
+ *   2. 登录**不写**头像（服务端那一栏从来不回值，写它等于把用户选的抹掉）
+ *   3. 头像**不进同步报文**（没有 profile:v1 那一行），也**不落对象存储**
+ *   4. 选头像的入口仍是头像圆（`chooseAvatar`），不再有「换头像」按钮那一行
  */
 {
-  const storeJs = fs.readFileSync(path.join(ROOT, "utils/store.js"), "utf8");
+  const storeJs = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
   const srcFn = /function avatarSrc\(\)\s*\{([\s\S]*?)\n\}/.exec(storeJs);
   ok("store 有 avatarSrc（头像取哪一张的唯一出处）", !!srcFn);
   if (srcFn) {
     const body = srcFn[1];
-    const iLocal = body.indexOf("avatarLocal");
-    const iUrl = body.indexOf("avatarUrl");
-    ok("头像优先用本机那张（avatarLocal 排在 avatarUrl 前面）",
-      iLocal >= 0 && iUrl > iLocal, body.replace(/\s+/g, " ").trim().slice(0, 120));
+    ok("头像只认本机那一张（不再回落微信那张 —— 没有第二处可回落）",
+      body.indexOf("avatarLocal") >= 0 && body.indexOf("avatarUrl") < 0,
+      body.replace(/\s+/g, " ").trim().slice(0, 140));
   }
+  /* ⚠️ `avatarUrl` 这个字段要**整个退场**，不只是「排在后面」。
+     留着它，下一个人就会以为「服务端会给一张微信头像」——
+     而服务端的 `wx_accounts.avatar_url` 一直是空串，那是一条永远不来的回落。 */
+  ok("store 里不再有 avatarUrl 那个字段（服务端从来不回头像）",
+    !/avatarUrl\s*[:|]/.test(storeJs.replace(/\/\*[\s\S]*?\*\//g, "")),
+    "avatarUrl 还在 —— 它是一条永远不来的回落，留着只会让下一个人以为服务端会给");
 
-  // 登录只写 avatarUrl，且**走 saveSession**（不盖同步时间戳）
-  //
-  // 两件事都要守：
-  //   1. 不写 avatarLocal —— 登录刷新微信头像，不该冲掉用户自己传的那张
-  //   2. 走 saveSession 而不是 saveProfile —— 会话字段不许参与
-  //      「哪一份档案更新」的比较。盖章的代价是云端那份头像永远认不回来
-  //      （本机每登一次就把云端顶掉一次），而进度与设置看着都好好的。
-  const authJs = fs.readFileSync(path.join(ROOT, "utils/auth.js"), "utf8");
-  const loginWrite = /store\.saveSession\(patch\)/.exec(authJs)
-    ? /const patch = \{([\s\S]*?)\};/.exec(authJs)
-    : /store\.saveSession\(\{([\s\S]*?)\}\)/.exec(authJs);
-  ok("登录时写的是微信那张（avatarUrl）", !!loginWrite && /avatarUrl\s*:/.test(loginWrite[1]));
-  ok("登录时不碰本机那张（不写 avatarLocal）",
-    !!loginWrite && !/avatarLocal\s*:/.test(loginWrite[1]),
-    "登录会冲掉用户自己传的头像");
-  ok("登录态走 saveSession（不盖跨设备那份的时间戳）",
+  // 登录不许写头像
+  const authJs = fs.readFileSync(path.join(ROOT, "utils", "auth.js"), "utf8");
+  const loginWrite = /const patch = \{([\s\S]*?)\};/.exec(authJs);
+  ok("登录时**不写**头像（服务端那一栏是空的，写它等于把用户选的抹掉）",
+    !!loginWrite && !/avatarUrl\s*:/.test(loginWrite[1]) && !/avatarLocal\s*:/.test(loginWrite[1]),
+    loginWrite ? loginWrite[1].replace(/\s+/g, " ").slice(0, 140) : "没找到那段 patch");
+  ok("登录态走 saveSession（会话字段与本机档案分得开）",
     authJs.indexOf("store.saveProfile({ logged") < 0 && !!loginWrite);
 
   // 页面显示一律走 store.avatarSrc()
@@ -3588,8 +3589,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   });
   ok("页面显示头像走 store.avatarSrc()，不直接读 profile.avatarUrl", direct.length === 0, direct.join(", "));
 
-  // getUserProfile 已废弃。⚠️ 先摘注释再扫 —— 一段解释「这里不调 getUserProfile」
-  // 的注释不该被当成真的在调它（断言读错文档，会逼人删掉一段正确的说明）。
+  // getUserProfile 已废弃
   const stripJs = (x) => x.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const legacy = pages.filter((p2) =>
     stripJs(fs.readFileSync(path.join(ROOT, p2 + ".js"), "utf8")).indexOf("getUserProfile") >= 0);
@@ -5568,17 +5568,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   // 2) 打包：设置与头像各占一行
   ok("设置有打包（settings:v1）",
     wireSrc.indexOf("SETTINGS_ROW") >= 0 && /SETTINGS_ROW\s*=\s*"settings:v1"/.test(wireSrc));
-  ok("头像有打包（profile:v1）",
-    wireSrc.indexOf("PROFILE_ROW") >= 0 && /PROFILE_ROW\s*=\s*"profile:v1"/.test(wireSrc));
+  /* ⚠️ **头像不该有打包**（Issue #111）。它只有一个来源（微信那张）且只落本机，
+     进报文既没意义（临时路径换台手机打不开），又要为它养一个对象存储。
+     这一条是**反向断言**：真冒出一个 profile:v1，就得先回答「它存的是谁的东西」。 */
+  {
+    // ⚠️ 先摘注释：上面那段解释「这里没有 profile:v1」的注释里正引着这个词，
+    //    直接搜全文会把自己的讲解判成违规（V46b / V43 都踩过同一个坑）。
+    const bare = wireSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    ok("头像**不**进同步报文（没有 profile:v1 那一行）",
+      bare.indexOf("PROFILE_ROW") < 0 && bare.indexOf("profile:v1") < 0,
+      "报文里还有 profile:v1 —— 头像只落本机，推上去既没地方存也没意义（Issue #111）");
+  }
   ok("打包的是跨设备那一份设置（不是整份）",
     /store\.cloudSettings\(\)/.test(wireSrc));
-  ok("头像只打包用户自己那张（微信那张登录会重新下发）",
-    /avatarLocal[\s\S]{0,200}?PROFILE_ROW|PROFILE_ROW[\s\S]{0,200}?avatarLocal/.test(wireSrc));
 
-  // 3) 落地：两条分支都在 applyRecords 里
+  // 3) 落地：设置那条分支在 applyRecords 里
   ok("设置能落回本机", /id === SETTINGS_ROW[\s\S]{0,400}?replaceSettings/.test(wireSrc));
-  ok("头像能落回本机（落到 avatarLocal）",
-    /id === PROFILE_ROW[\s\S]{0,400}?avatarLocal/.test(wireSrc));
 
   // 4) 往返：写一份设置 → 打包 → 清掉 → 用「云端」那份盖回来 → 还在
   {
@@ -5602,21 +5607,26 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("设置行里**没有**跟设备走的那一项",
       !!sRow && sRow.payload.settings.sfx === undefined,
       "sfx 跟设备走，不该进报文");
-    ok("头像真的进了包", packed4.some((r) => r.id === "profile:v1"));
+    ok("头像**没有**进包（它只落本机）",
+      !packed4.some((r) => r.id === "profile:v1"),
+      "打包里出现了 profile:v1");
 
     // 换台机器：本机回到默认，再把云端那份盖回来
     storeMod4.replaceSettings({ grade: 1, theme: "ink", fontSize: 0 });
     storeMod4.touchSettings(0);
-    storeMod4.saveProfile({ avatarLocal: "", nickname: "" }, 0);
+    storeMod4.saveProfile({ avatarLocal: "", nickname: "" });
 
     const applied4 = wireMod4.applyRecords(packed4);
     const back = storeMod4.settings();
-    ok("云端那份设置能整份落回本机（" + applied4 + " 条）", applied4 >= 2, applied4 + " 条");
+    ok("云端那份设置能整份落回本机（" + applied4 + " 条）", applied4 >= 1, applied4 + " 条");
     ok("换机之后年级是认回来的（不是默认 1）", back.grade === 7, String(back.grade));
     ok("换机之后主题是认回来的（不是默认墨）", back.theme === "tianqing", back.theme);
     ok("换机之后字号是认回来的", back.fontSize === 2, String(back.fontSize));
-    ok("换机之后头像还在", storeMod4.profile().avatarLocal === "wxfile://avatar.jpg",
-      storeMod4.profile().avatarLocal);
+    /* ⚠️ 这一条是**反着**断言的（Issue #111）：头像不跨设备。
+       它是这台手机上的东西（微信头像的临时路径），换台手机本来就该没有。 */
+    ok("换机之后头像**不**在（头像只落本机，这是刻意的）",
+      storeMod4.profile().avatarLocal === "",
+      "居然还在：" + String(storeMod4.profile().avatarLocal));
     // 音效跟设备走：云上那份里根本没有它，认回云端不该把本机这份改掉
     ok("音效仍听这台设备的（云端那份盖不到它）", back.sfx === true, String(back.sfx));
     ok("跟设备走的那一项不进报文（云上没有它）",
@@ -5626,7 +5636,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     // 否则本机立刻变成「更新的那一份」，下次同步又推回去，两台机器互相覆盖
     ok("认回来的设置带云端时间戳（不然会来回覆盖）",
       storeMod4.settingsAt() === future, String(storeMod4.settingsAt()));
-    ok("认回来的档案带云端时间戳", storeMod4.profileAt() === future, String(storeMod4.profileAt()));
 
     // 旧的不许盖新的
     wireMod4.applyRecords([
@@ -5654,17 +5663,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       return storeMod45.settingsAt() === before;
     })());
 
-    // (b) 会话字段不参与「谁更新」的比较。
-    //     登录/登出在每台设备上都会发生；若它们算「档案动了」，
-    //     本机就成了更新的那一份 —— 云端那份头像永远认不回来。
-    storeMod45.saveProfile({ avatarLocal: "wxfile://probe.jpg" });
-    const atAfterAvatar = storeMod45.profileAt();
-    storeMod45.saveSession({ logged: true, tier: "pro" });
-    ok("登录态不盖档案时间戳（盖了头像就永远认不回来）",
-      storeMod45.profileAt() === atAfterAvatar,
-      "saveSession 动了时间戳");
-    ok("头像仍然打得进包",
-      wireMod45.packRecords().some((r) => r.id === "profile:v1"));
+    // (b) 档案（昵称 + 头像）是**本机**那一份，没有跨设备比较这回事了。
+    //     Issue #111 把头像收成「只落本机、不上传」，`profileAt` 这个读数
+    //     随之退场 —— 留着它只会让下一个人以为还有一份在云上比新旧。
+    ok("store 里不再有 profileAt（档案不再参与「谁更新」的比较）",
+      typeof storeMod45.profileAt !== "function",
+      "profileAt 还在 —— 它对应的那份云端档案已经没有了");
 
     // (c) 报文的深拷：pack 之后本机再改，排队那一行**不许跟着变**。
     //     不拷的话，离线队列里躺着的那一份会「时间戳是老的、内容是新的」。
@@ -5691,20 +5695,34 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /function ready\(\)[\s\S]{0,160}?remote\.configured\(\) && auth\.logged\(\)/.test(syncSrc));
   ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
 
-  // 7) 每一个「改了就该同步」的地方都挂了记账 —— 漏一处就是「改了但没传」
+  /* 7) 每一个「改了就该同步」的地方都挂了记账 —— 漏一处就是「改了但没传」。
+     ⚠️ **头像不在这一张表里**（Issue #111）：它只落本机、不上传，本来就不该记账。
+     它原来在这里，且判据是 `onAvatarChoose[\s\S]{0,400}?markDirty` —— 那个窗口
+     会**越过 `onAvatarChoose` 的函数体**够到紧跟着的 `onNickname` 里的 markDirty，
+     所以把 `onAvatarChoose` 里的记账删掉之后，这条断言照样是绿的。
+     这是个假绿，顺手改成「按函数体取」。 */
   const DIRTY = [
     ["通用设置", "packages/settings/general/general.js", /onAlign[\s\S]{0,200}?markDirty/],
     ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题色", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
-    ["头像", "pages/mine/mine.js", /onAvatarChoose[\s\S]{0,400}?markDirty/],
-    ["昵称", "pages/mine/mine.js", /onNickname[\s\S]{0,300}?markDirty/]
+    ["昵称", "pages/mine/mine.js", /onNickname(?:\([^)]*\))[\s\S]{0,400}?markDirty/]
   ];
   DIRTY.forEach(([name, file, re]) => {
     ok("改了就该传：「" + name + "」挂了记账",
       re.test(fs.readFileSync(path.join(ROOT, file), "utf8")), file);
   });
+  /* 反向：头像**不许**挂记账 —— 挂了就等于它进了同步队列（Issue #111）。 */
+  {
+    const mineSrc7 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    const i = mineSrc7.indexOf("onAvatarChoose(");
+    const j = i < 0 ? -1 : mineSrc7.indexOf("\n  },", i);
+    const body = (i < 0 || j < 0) ? "" : mineSrc7.slice(i, j);
+    ok("头像**不**挂记账（挂了就等于它进了同步队列，而上传它要养一个存储桶）",
+      !!body && body.indexOf("markDirty") < 0,
+      "头像函数体里出现了 markDirty：" + body.replace(/\s+/g, " ").slice(0, 140));
+  }
 
   // 8) 记账是**免费的**：markDirty 不许发网络
   ok("markDirty 只记账不发网络",
@@ -6196,19 +6214,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 }
 
-/* ---------- V39. 「头像」那一行撤掉（点头像就换）+ 退回微信那张留在副题上 ----------
+/* ---------- V39. 头像只有一个来源、一处入口（Issue #12 → #111） ----------
  *
- * 用户 2026-10-04：
- *   「换头像那一行也是多余，需要删除，用户直接点击上面的头像就可以编辑或者更换头像不行吗？」
+ * 这一节的前身守的是「那条『头像 ｜ … ｜ [换头像] [用微信头像]』的行撤掉」，
+ * 以及「退回微信那张」那个动作还在副题上（自己传过一张的人才看得到）。
  *
- * 行。头像那个圆本来就挂着 open-type="chooseAvatar" —— 它就是换头像的入口，
- * 弹出来的第一项就是「用微信头像」，下面一项是「从相册选 / 拍照」。
- * 所以「头像 ｜ 本机设置的头像 ｜ [换头像] [用微信头像]」这一行是把同一件事
- * 又说了一遍，而且把「我是谁」那张卡撑高了半屏。
+ * Issue #111 之后**没有「自己传的那张」这回事了** —— 用户原话：
+ *   「直接使用小程序微信账号的头像吧，不要再提供用户自己上传头像的功能了」。
+ * 于是：
+ *   · 「退回微信那张」这个动作**随之退场**：没有可退的东西了
+ *   · 副题不再解释「这张哪来的」：只有一个来源，说来源等于说一句用户不必懂的话
+ *   · 头像圆仍是唯一的入口（`chooseAvatar`），但它现在给的就是微信那张
  *
- * 唯一不能跟着一起删的是「用微信头像」—— 它是**从自己传的那张退回微信那张**
- * 的动作，头像圆里没有（chooseAvatar 只会给你一张新的，不会清掉旧的）。
- * 它挪到副题右端，只有自己传过一张时才出现。
+ * 这一节守的就是这三件，外加「别把上传通道偷偷加回来」。
  */
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
@@ -6220,39 +6238,59 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("「我的」页不再有「头像」那一行（.avatar-row 已撤）",
     mineWxml.indexOf("avatar-row") < 0 && mineWxss.indexOf(".avatar-row") < 0,
     "那一行还在，或者样式留下了孤儿");
-  // 原来贴在那行里的三样：标签「头像」「换头像」按钮、说明「本机设置的头像」
-  //   先摘掉 WXML 注释：里面的说明正引着「换头像」这个词（V26 踩过同一个坑）
+  // 先摘掉 WXML 注释：里面的说明正引着「换头像」这个词（V26 踩过同一个坑）
   const mineWxmlBare = mineWxml.replace(/<!--[\s\S]*?-->/g, "");
   ok("那一行里的「换头像」按钮也没了（它点的是同一件事）",
     mineWxmlBare.indexOf("换头像") < 0, "换头像按钮还在，与头像圆重复");
-  ok("原来那行只说一句的 .avatar-src 也撤了",
-    mineWxss.indexOf(".avatar-src") < 0 && mineJs.indexOf("avatarFromText") < 0,
-    "avatarFromText / .avatar-src 还留着，没人再读它");
 
-  // 2) 头像圆仍是换头像的入口：chooseAvatar 挂在它身上，不是挪到别处去了
-  ok("头像圆本身就是 chooseAvatar 的入口（点它就换）",
+  // 2) 头像圆是唯一的入口：chooseAvatar 挂在它身上
+  ok("头像圆就是选头像的入口（chooseAvatar 挂在它身上）",
     /class="avatar-btn"\s+open-type="chooseAvatar"/.test(mineWxml)
       && /bindchooseavatar="onAvatarChoose"/.test(mineWxml),
-    "头像圆不再是入口了，换头像无处可点");
+    "头像圆不再是入口了，头像无处可点");
 
-  // 3) 退回微信那张：挪到副题右端，只在有自己设的那张时出现
-  ok("「用微信头像」还在（它是退回微信那张的唯一入口）",
-    /class="identity-revert"[^>]*bindtap="onAvatarClear"/.test(mineWxml)
-      && /onAvatarClear/.test(mineJs),
-    "退回微信那张的动作丢了，用户换过一次就回不去");
-  ok("它只在自己传过一张时才出现（没传过就没有可退的）",
-    /wx:if="\{\{logged && hasLocalAvatar\}\}"/.test(mineWxml),
-    "没传过头像也挂着一枚点了没用的「用微信头像」");
+  /* 3) 「退回微信那张」整个退场。它原来存在的理由是「用户自己传过一张，
+     现在想换回微信那张」—— 没有「自己传的那张」，这个动作就没有对象。
+     留着它，用户点下去会发现什么都不变（本来就已经是微信那张）。 */
+  ok("「用微信头像」那个动作已撤（没有可退的东西了）",
+    mineWxml.indexOf("identity-revert") < 0 && mineWxss.indexOf(".identity-revert") < 0
+      && mineJs.indexOf("onAvatarClear") < 0,
+    "「用微信头像」还在 —— Issue #111 之后没有「自己传的那张」，它点了不会有任何变化");
 
-  // 4) 「这张哪来的」这条信息没跟着那行一起丢 —— 副题仍如实说。
-  //    ⚠️ 说法必须是「自己设的」，不是「本机头像」：那句在 V38 里是违禁词
-  //    （Issue #49 → PR #58：界面不说数据存在哪）。这条判据原来钉着旧文案，
-  //    两处改动在同一行上撞了，冲突的解法就是这一句。
-  ok("副题仍说清「这张头像哪来的」（自己设的 / 微信 / 还没有）",
-    /已登录 · 自己设的/.test(mineJs) && /微信头像/.test(mineJs) && /还没有头像/.test(mineJs),
-    "头像行删了，副题又没接上，用户看不出现在顶着的是哪一张");
+  /* 4) 副题不再解释「这张头像哪来的」。
+     ⚠️ 说法要落在「已登录」上，不是「微信头像」那句解释 ——
+     后者在 V38 里是「实现词汇」的近亲（说的是这张图从哪个系统来的，
+     而不是「我是谁」）。副题答的只有一件事：我登录了没有。 */
+  ok("副题只说「我是谁」（不再解释这张头像哪来的）",
+    /已登录 · 微信账号/.test(mineJs) && mineJs.indexOf("还没有头像") < 0,
+    "副题还在解释头像来源 —— 只有一个来源，说来源是用户不必懂的话");
   ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
     /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
+
+  /* 5) **反向**：别把上传通道偷偷加回来。
+     这一条是这个节里最重要的一条 —— Issue #111 的得失全在这儿：
+     一旦有人重新引入「上传到某个地方」，就又要养一份对象存储。 */
+  {
+    /* ⚠️ 判据要**按函数体**取，不能从 `onAvatarChoose` 往后数 N 个字符 ——
+       后面紧跟着的 `onNickname` 里就有 `markDirty`（昵称该同步），
+       数长了会把它算到头像头上（这条第一版就是这么假红的）。 */
+    const body = (() => {
+      const i = mineJs.indexOf("onAvatarChoose(");
+      if (i < 0) return "";
+      const j = mineJs.indexOf("\n  },", i);
+      return j < 0 ? mineJs.slice(i) : mineJs.slice(i, j);
+    })();
+    ok("头像的入口函数在（点它选微信那张）", !!body, "没找到 onAvatarChoose");
+    ok("头像不上传（选完不调 markDirty，也不走任何上传接口）",
+      !!body && body.indexOf("markDirty") < 0 && !/uploadFile|\/api\/avatar/.test(body),
+      "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +
+        "函数体：" + body.replace(/\s+/g, " ").slice(0, 160));
+    // 摘注释：上面那段解释里正引着 `/api/avatar/` 这个反面例子
+    const bareJs = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    ok("整个小程序端没有上传头像的接口调用",
+      !/wx\.uploadFile|\/api\/avatar/.test(bareJs),
+      "还留着上传头像的路 —— 那就是又回到「要一份对象存储」");
+  }
 }
 
 /* ---------- V40. 内容口径与网页版对账（Issue #61，2026-10-06 / 2026-10-09） ----------
@@ -7811,11 +7849,26 @@ function gapped(items, max) {
   {
     const ctxRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ctx-check-"));
     try {
-      // 与流水线同样的摊法：本仓库那几样摆到上下文根（poem 的 api/ 由 clone 提供，
-      // 这里只验本仓库摆进去的那部分）。
-      fs.copyFileSync(dockerfile, path.join(ctxRoot, "Dockerfile"));
-      fs.copyFileSync(path.join(serveDir, "serve-api.js"), path.join(ctxRoot, "serve-api.js"));
-      fs.copyFileSync(path.join(serveDir, ".dockerignore"), path.join(ctxRoot, ".dockerignore"));
+      /* ⚠️ 摊法**从 `.cnb.yml` 里读**，不在这里手抄一遍。
+         手抄的那一版守不住真正要守的东西：流水线里漏了 `cp`，而这里照抄的还是
+         「都摆过来了」—— 于是断言绿着，构建在 CI 上才红。
+         判据：`cp <源> /tmp/ctx/<目标>`（也认 `cp <源> /tmp/ctx/` 这个变体）。 */
+      const stageCmds = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8")
+        .split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+      const stagedNames = [];
+      stageCmds.forEach((l) => {
+        const m = /^cp\s+(\S+)\s+\/tmp\/ctx\/(\S+)$/.exec(l);
+        if (!m) return;
+        const src = m[1], dstName = m[2];
+        const srcAbs = path.join(repo, src);
+        if (!fs.existsSync(srcAbs)) return;
+        fs.copyFileSync(srcAbs, path.join(ctxRoot, dstName));
+        stagedNames.push(dstName);
+      });
+      ok("流水线真的把本仓库那几样摊进了上下文（摊法从 .cnb.yml 里读）",
+        stagedNames.length >= 4,
+        "从 .cnb.yml 里只读到 " + stagedNames.length + " 条 `cp … /tmp/ctx/…`：" +
+          JSON.stringify(stagedNames));
 
       const copySrcs = (copied.match(/^COPY[^\n]+/gm) || [])
         .map((l) => l.trim().split(/\s+/).filter((w) => !w.startsWith("--")))
@@ -8635,9 +8688,34 @@ function gapped(items, max) {
       ok("文档回答了「数据在哪」（分层说清，不是一句「在云端」）",
         /build-data\.js|miniprogram\/data/.test(d) && /progress/.test(d),
         "用户问的是「现在数据怎么管的、放在哪里」，得逐层答");
-      ok("文档回答了「Supabase 在哪、能不能换」（存储层是插槽，不是长在代码里）",
-        /store\.js/.test(d) && /supabaseStore/.test(d),
-        "不点出那三处，读者会以为「换掉 Supabase = 重写后端」");
+      /* ⚠️ Issue #111 的硬要求：**这个仓库里不再涉及任何第三方托管数据库**。
+         这一条是全文扫描 —— 不是「文档里别提」，是**代码与文档都不许有**。
+         留着它，下一个人就会照着旧文档把那份配置装回去。 */
+      {
+        /* ⚠️ 这个名字**不能在源码里整串出现** —— 这一条扫的是全仓库，
+           而 check.js 自己就在仓库里。拼出来既能守住「不许有」，也不会自伤。 */
+        const banned = new RegExp("supa" + "base", "i");
+        const hits2 = [];
+        (function walk2(dir) {
+          fs.readdirSync(dir).forEach((f) => {
+            if (f === ".git" || f === "node_modules") return;
+            const full = path.join(dir, f);
+            if (fs.statSync(full).isDirectory()) return walk2(full);
+            if (!/\.(js|json|md|yml|yaml|sh|sql|wxml|wxss)$/.test(f)) return;
+            const t = fs.readFileSync(full, "utf8");
+            if (banned.test(t)) hits2.push(path.relative(repo2, full));
+          });
+        })(repo2);
+        ok("这个仓库里不再出现那个第三方托管数据库的名字（代码与文档都不许有）",
+          hits2.length === 0,
+          "发现：" + JSON.stringify(hits2.slice(0, 5)) +
+            " —— Issue #111 要求全仓库不再涉及它。换数据库这件事已经落到 " +
+            "deploy/store-mysql.js + deploy/sql/mysql-schema.sql，旧名字不该再留");
+      }
+      ok("文档回答了「存储层在哪、换库要动什么」（接口是一个插槽，不是长在代码里）",
+        /store\.js/.test(d) && /mysqlStore/.test(d) && /deploy\/store-mysql\.js/.test(d),
+        "不点出「接口是 getX/putX 那组、实现就在 deploy/store-mysql.js」，" +
+          "读者会以为「换掉数据库 = 重写后端」");
       ok("文档给出了腾讯那条路的三个方案与各自代价",
         /云托管/.test(d) && /云开发/.test(d) && /MySQL/.test(d),
         "只说「可以换成腾讯云」没有用，得把三条路摆开、把代价写下来");
@@ -8661,10 +8739,253 @@ function gapped(items, max) {
     ok("architecture.md 指向 docs/data-backend.md",
       /data-backend\.md/.test(arch),
       "架构文档里那节「数据存哪」是这个问题最自然的入口");
+    /* 换库这条**不再是「按需」**了 —— 它已经做完了（Issue #111）。
+       所以这里反着守：todo 里不许再把它列成一件「以后要做」的事，
+       那份口径在 data-backend.md § 六 里（状态 ✅ 已做）。 */
     const todo2 = fs.readFileSync(path.join(repo2, "docs", "todo.md"), "utf8");
-    ok("docs/todo.md 里记着「换存储层」是**按需**不是待办（免得被误读成以后要换）",
-      /存储层|Supabase/.test(todo2),
-      "不记的话，下一个人会把「可以换」读成「即将换」");
+    ok("docs/todo.md 里不再把「换存储层」列成待办（它已经做完了）",
+      !/换存储层/.test(todo2),
+      "还列在待办里 —— 那件事已随 Issue #111 落地（见 data-backend.md § 六），" +
+        "留在「以后要做」里会让下一个人以为线上还跑着旧的");
+    ok("data-backend.md 记着换库这条的状态是「已做」",
+      /store-mysql\.js/.test(fs.readFileSync(doc, "utf8")),
+      "换库落了地，但文档里没写它落在哪两个文件上 —— 运维会找不到建表语句");
+  }
+}
+
+/* ---------- V49. 存储层换到腾讯云 MySQL（Issue #111） ----------
+ *
+ * 用户的诉求：「我希望这个仓库的所有代码和文档中不要再涉及（那个第三方托管
+ * 数据库）」—— 名字本身也不许留，所以下面那条全仓库扫描是**拼字符串**跑的。
+ *
+ * 换库这件事落在两处：`deploy/store-mysql.js`（那组 getX/putX 的 MySQL 实现）
+ * 与 `deploy/sql/mysql-schema.sql`（建表语句）。这一节守的是**它们真的能替上**，
+ * 而不是「文件在」。
+ *
+ * 四层判据，缺一层这一节就只是「文件存在性检查」：
+ *   ① **形状对**：mysqlStore 把 memoryStore 的每一个方法都实现了
+ *      （少一个 = 运行到那条路由才炸，而那条路由可能几周才走一次）
+ *   ② **条件 upsert 没被写成读-比-写**：这是整个存储层唯一一条不能「等价改写」
+ *      的地方（换库时最容易踩，而且踩了不报错）
+ *   ③ **真跑一遍语义**：把那条 ON DUPLICATE KEY UPDATE 的赋值逻辑抽出来，
+ *      拿「旧的补发 / 新的 / 同一毫秒」三种输入走一遍，看「新的赢」还在不在
+ *   ④ **建表语句覆盖 store 用到的每一张表**：少一张就是运行时报
+ *      `ER_NO_SUCH_TABLE`，而那可能发生在登录之后很久
+ */
+{
+  const repo4 = path.join(ROOT, "..");
+  const storePath = path.join(repo4, "deploy", "store-mysql.js");
+  const sqlPath = path.join(repo4, "deploy", "sql", "mysql-schema.sql");
+
+  ok("deploy/store-mysql.js 在（腾讯云 MySQL 那份实现）", fs.existsSync(storePath));
+  ok("deploy/sql/mysql-schema.sql 在（建表语句）", fs.existsSync(sqlPath));
+
+  const st = fs.existsSync(storePath) ? fs.readFileSync(storePath, "utf8") : "";
+  const sql = fs.existsSync(sqlPath) ? fs.readFileSync(sqlPath, "utf8") : "";
+
+  /* ① 形状：与 memoryStore 逐方法对齐。
+     ⚠️ 拿得到的 memoryStore 源码来对 —— 这是「同一组方法名」的唯一权威出处。
+     poem 不在本地时跳过并说明，不假装验过。 */
+  {
+    const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
+    const poemStore = path.join(webDir, "api", "_lib", "store.js");
+    if (!fs.existsSync(poemStore)) {
+      console.log("· 读不到 poem 的 store.js（" + poemStore + "）—— V49 的形状那几条跳过。");
+    } else {
+      const src = fs.readFileSync(poemStore, "utf8");
+      const mem = /function memoryStore\(\)[\s\S]*?\n}\n/.exec(src);
+      const names = mem ? [...mem[0].matchAll(/^    ([A-Za-z_$][\w$]*): function/gm)].map((m) => m[1]) : [];
+      // attach* 那几组（报告 / 勘误 / 反馈 / 考试）是挂上去的
+      const attached = [...src.matchAll(/api\.([A-Za-z_$][\w$]*) = function/g)].map((m) => m[1]);
+      const want = [...new Set(names.concat(attached))].filter((n) => n !== "_db").sort();
+      const mine = [...st.matchAll(/^    ([A-Za-z_$][\w$]*): function/gm)].map((m) => m[1]);
+      const missing = want.filter((n) => mine.indexOf(n) < 0);
+
+      ok("mysqlStore 实现了 memoryStore 的每一个方法（少一个 = 某条路由运行时才炸）",
+        want.length > 20 && missing.length === 0,
+        "memory 那边有、mysql 这边没有：" + JSON.stringify(missing) +
+          "（memory 共 " + want.length + " 个，mysql 共 " + mine.length + " 个）");
+    }
+  }
+
+  /* ② 条件 upsert：不许写成读-比-写。
+     ⚠️ 这一条抓的是**最容易被「等价改写」掉的那一处**：
+     Postgres 的条件写在 `WHERE` 上，MySQL 没有 `WHERE`，于是有人会想
+     「那我先 SELECT 一下比较再 UPDATE 不就行了」—— 那有竞态，而且不报错。
+     判据：那一句里 `IF(VALUES(updated_at)` 与 `GREATEST(updated_at` 都在，
+     且**没有** `SELECT` 掺进 putProgress 里。 */
+  {
+    const i = st.indexOf("putProgress: function");
+    const j = st.indexOf("deleteProgress: function");
+    const body = i < 0 ? "" : st.slice(i, j < 0 ? i + 2400 : j);
+    ok("putProgress 里是**一句**条件 upsert（不是读-比-写）",
+      /ON DUPLICATE KEY UPDATE/.test(body) && body.indexOf("SELECT") < 0,
+      "putProgress 里出现了 SELECT —— 「先读、比一下、再写」不是原子的，正是" +
+        "当初把「新的赢」下沉到数据库的原因（见 data-backend.md § 三.3）");
+    ok("条件 upsert 逐列都写了 IF / GREATEST（少一列 = 一半新一半旧的坏行）",
+      /`?payload`?\s*=\s*IF\(VALUES\(`?updated_at`?\)\s*>=\s*`?updated_at`?/.test(body) &&
+        /`?updated_at`?\s*=\s*GREATEST\(`?updated_at`?,\s*VALUES\(`?updated_at`?\)\)/.test(body) &&
+        /`?deleted`?\s*=\s*IF\(VALUES\(`?updated_at`?\)\s*>=\s*`?updated_at`?/.test(body),
+      "三列里有一列没写条件 —— 只给 payload 加 IF、把 updated_at 无条件盖上去，" +
+        "会造出「payload 是旧的、updated_at 是新的」这种行，它下一次还会顶掉真正的新值");
+    ok("建表语句里也留了一份同口径的 kb_upsert_progress（给 DBA 手动核对用）",
+      /kb_upsert_progress/.test(sql) &&
+        /IF\(VALUES\(`?updated_at`?\)\s*>=\s*`?updated_at`?/.test(sql),
+      "建表语句里那份丢了 —— 冷启动补数据 / DBA 核对时会用错口径");
+  }
+
+  /* ③ **真跑一遍语义**。把那一句 SQL 的赋值逻辑抽出来，喂三种输入：
+        · 旧的补发（断网重连）→ 不许覆盖
+        · 新的             → 赢
+        · 同一毫秒         → 按 >= 也算赢（与 Postgres 那句一致）
+     这不是「假装跑了 MySQL」，而是把**那一句的语义**单独验 ——
+     真的 MySQL 要等部署到云托管才跑得到。上面 ② 验形状，这里验行为。 */
+  {
+    const IF = (c, a, b) => (c ? a : b);
+    const upsert = (row, vals) => {
+      const accepted = vals.updated_at >= row.updated_at;
+      return {
+        payload: IF(accepted, vals.payload, row.payload),
+        updated_at: Math.max(row.updated_at, vals.updated_at),
+        deleted: IF(accepted, vals.deleted, row.deleted)
+      };
+    };
+    const base = { payload: { level: 5 }, updated_at: 100, deleted: 0 };
+    const older = upsert(base, { payload: { level: 2 }, updated_at: 50, deleted: 0 });
+    ok("「新的赢」：旧的补发不覆盖（payload 与 updated_at 都不许被顶）",
+      older.payload.level === 5 && older.updated_at === 100,
+      "旧值盖掉了新值 —— 断网重连后一批旧数据补发时就是这个症状");
+    const newer = upsert(base, { payload: { level: 9 }, updated_at: 150, deleted: 0 });
+    ok("「新的赢」：更新的一份赢",
+      newer.payload.level === 9 && newer.updated_at === 150, JSON.stringify(newer));
+    const same = upsert(base, { payload: { level: 7 }, updated_at: 100, deleted: 0 });
+    ok("同一毫秒按 `>=` 接受（与 Postgres 那句口径一致）", same.payload.level === 7);
+  }
+
+  /* ③.5 接线：这份实现**得真的被接上**，否则文件写得再对也不生效。
+     接线在 `serve-api.js`（这份镜像的入口）里 —— poem 的 `store.js` 是网页版的，
+     不该认识 MySQL；「小程序的库是腾讯云 MySQL」是这份部署自己的事。
+
+     三件事一起守（每一件漏了都是「能登录、能同步，一重启全没了」那一类）：
+       · 接在 require handler **之前**（handler 在 require 时就取单例）
+       · 认 `MYSQL_HOST` 才接，没配就如实退回（「配一半」最难查）
+       · 没装 mysql2 时**出声**，不静默退回内存档 */
+  {
+    const servePath = path.join(repo4, "deploy-api-serve", "serve-api.js");
+    const serve = fs.existsSync(servePath) ? fs.readFileSync(servePath, "utf8") : "";
+    ok("serve-api.js 里接了存储层（不接的话那份实现只是个没人读的文件）",
+      /wireMysqlStore/.test(serve) && /store-mysql\.js/.test(serve),
+      "serve-api.js 里没有接线 —— poem 的 store.js 是网页版那份，" +
+        "MySQL 这个选择必须落在这份部署的入口上");
+    {
+      /* ⚠️ 先摘注释：上面那段「这一行必须在 wireMysqlStore() 之后」的注释里
+         正引着这个名字，直接 indexOf 会拿到注释那处的位置（这条第一版就这么
+         假绿过 —— 接线挪到 handler 后面，断言照样是绿的）。 */
+      const bareServe = serve.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      const callAt = bareServe.indexOf("\nwireMysqlStore();");
+      const handlerAt = bareServe.indexOf('require("./api/handler.js")');
+      ok("接线在 require handler **之前**（handler 在 require 时就取单例）",
+        callAt >= 0 && handlerAt >= 0 && callAt < handlerAt,
+        "接在 handler 后面（callAt=" + callAt + " handlerAt=" + handlerAt + "）—— " +
+          "那时单例已经建好了，接上去也不生效。摘掉注释之后再判，别被注释里的名字骗过");
+    }
+    ok("没配 MYSQL_HOST 时如实退回，不硬接（「配一半」最难查）",
+      /if\s*\(!host\)/.test(serve) && /退回/.test(serve),
+      "没配也硬接 —— 会得到一个连不上的池，而症状是「全都 500」，指向完全无关的地方");
+    ok("镜像里没有 mysql2 时**出声**（不静默退回内存档）",
+      /没有 mysql2/.test(serve),
+      "静默退回的样子是「能登录、能同步，但一重启全没了」—— 那是最难查的一类");
+    /* ⚠️ 镜像里必须真的装了 mysql2，否则上面那句「出声」就是常态。
+       判据落在 Dockerfile 的 `npm install ... mysql2` 上。 */
+    const df2 = fs.readFileSync(path.join(repo4, "deploy", "Dockerfile"), "utf8");
+    ok("Dockerfile 里装了 mysql2（不装的话上面那句「出声」就是常态）",
+      /npm install[^\n]*mysql2/.test(df2),
+      "镜像里没有 mysql2 → 配了 MYSQL_HOST 也只能退回内存档，每次重启丢数据");
+
+    /* ⚠️ **行为层那一条必须真的在跑**。
+       V49 上面这些验的是「形状」（方法齐、语句对、接线在前）——
+       而形状对、语义错是可能的（`>=` 写成 `>`、`GREATEST` 写成 `VALUES`）。
+       语义只有 `scripts/e2e-mysql.js` 验得了，所以它得挂进 CI，
+       且 CI 里跑的是**它自己**，不是「一个同名的别的东西」。 */
+    const cnb3 = fs.readFileSync(path.join(repo4, ".cnb.yml"), "utf8");
+    ok("CI 里真的跑了 e2e-mysql（形状那几条验不了语义）",
+      /e2e-mysql\.js/.test(cnb3),
+      "流水线里没有 e2e-mysql —— 那条「新的赢」在换库后还在不在，就没人验了");
+    ok("scripts/e2e-mysql.js 与它的假 MySQL 都在",
+      fs.existsSync(path.join(repo4, "scripts", "e2e-mysql.js")) &&
+        fs.existsSync(path.join(repo4, "scripts", "mysql-facade.js")),
+      "脚本在，但那个内存替身没了 —— 跑起来会 require 不到 mysql2/promise");
+
+    /* ⚠️ **列名拼进 SQL 是一道真的注入面**。
+       MySQL 的 `?` 只管值，表名与列名只能拼字符串 —— 所以那些名字必须过闸。
+       原来那个实现（走 PostgREST）没有这个问题：列名放在 URL 上、由那边解析。
+       换库时这一步是**新出现**的风险，而它默认不报错（拼错了才发现）。
+
+       ⚠️ 判据落在**「有没有机会出现在那句 SQL 里」**上，不落在「抛没抛」上 ——
+       两道闸是叠加的：白名单（`pickCols`）先滤掉不该写的列，标识符闸
+       （`assertIdent`）再兜住剩下那些。所以「抛出来」与「被滤掉」都算过，
+       只有「拼进去了」才算错。这样断言不绑死在某一层实现上。
+
+       ⚠️ 这一节是**同步**跑的（check.js 是一路读下来 + `process.exit`），
+       而 `query` 回来的是 promise。所以假 query **在调用那一刻就记下 SQL**
+       （不在 then 里）—— 同步记录，就不需要等微任务。
+       （第一版用 `beforeExit` 收尾，而 check.js 结尾是 `process.exit`，
+        那个回调**从来没跑过**，断言静默消失。两处都实测过。） */
+    try {
+      const { mysqlStore } = require(path.join(repo4, "deploy", "store-mysql.js"));
+      const sent = [];
+      // 关键：`query` 里**同步** push（不是在 .then 里），所以下面读得到
+      const fake = { query: (sql) => { sent.push(String(sql)); return Promise.resolve([[], []]); } };
+      const s2 = mysqlStore({ mysql: fake });
+      const EVIL = '" ; DROP TABLE accounts; --';
+      const safeCall = (fn) => { try { fn(); } catch (e) { /* 抛出来也算过，见上 */ } };
+
+      safeCall(() => s2.patchAccount("u", { [EVIL]: "x", role: "admin" }));
+      ok("update（有白名单那条）：恶意列名进不了 SQL",
+        !/DROP/i.test(sent.join(" | ")),
+        "SQL 是：" + (sent.join(" | ") || "(这条 SQL 压根没发出去 —— 白名单与标识符闸" +
+          "两道都失守时，恶意列名就会拼进那句 SQL)"));
+
+      let threw = false;
+      try { s2.patchCode("c", { [EVIL]: "x" }); } catch (e) { threw = true; }
+      ok("update（通用那条）：非法列名当场抛，不拼进 SQL",
+        threw,
+        "非法列名没被拦住 —— MySQL 的 `?` 只管值，列名拼进去就是注入面");
+
+      sent.length = 0;
+      safeCall(() => s2.putAccount({ uid: "u", [EVIL]: "x", nickname: "n" }));
+      ok("insert（有白名单那条）：恶意列名进不了 SQL",
+        !/DROP/i.test(sent.join(" | ")),
+        "SQL 是：" + (sent.join(" | ") || "(这条 SQL 压根没发出去 —— 白名单与标识符闸" +
+          "两道都失守时，恶意列名就会拼进那句 INSERT)"));
+
+      let threw2 = false;
+      try { s2.putCode({ code_id: "c", [EVIL]: "x" }); } catch (e) { threw2 = true; }
+      ok("insert（通用那条）：非法列名当场抛，不拼进 SQL",
+        threw2, "putCode 会把非法列名拼进 INSERT 的列表里");
+    } catch (e) {
+      ok("能 require 到 deploy/store-mysql.js（上面几条注入断言的前提）", false, String(e && e.message));
+    }
+  }
+
+  /* ④ 建表语句覆盖 store 用到的每一张表。少一张就是 `ER_NO_SUCH_TABLE`，
+     而那可能发生在登录之后很久（比如用户第一次提交反馈）。 */
+  {
+    const tables = ["accounts", "wx_accounts", "codes", "sessions", "progress",
+      "verifications", "resets", "reports", "pinyin_proposals",
+      "feedback_threads", "feedback_comments", "exam_records"];
+    const missingTables = tables.filter((t) => sql.indexOf("CREATE TABLE IF NOT EXISTS `" + t + "`") < 0);
+    ok("建表语句里有 store 用到的每一张表（少一张 = 某条路由 ER_NO_SUCH_TABLE）",
+      missingTables.length === 0, "缺：" + JSON.stringify(missingTables));
+    /* 「新的赢」那条约束靠主键 (uid, child_id, poem_id) —— 主键列写错一位，
+       条件 upsert 就成了「每来一条都插一行新的」，而数据看着还在。 */
+    ok("progress 的主键是 (uid, child_id, poem_id)（条件 upsert 的 on-conflict 靠它）",
+      /PRIMARY KEY \(`uid`, `child_id`, `poem_id`\)/.test(sql),
+      "主键列不对 —— 条件 upsert 会变成「每来一条插一行」，而数据看着还在");
+    /* 会话那一列：微信登录刷新那条路要按 refreshToken 找回这一行。 */
+    ok("sessions 表有 refresh_token 那一列（刷新那条路要靠它找回会话行）",
+      /`refresh_token`/.test(sql),
+      "没有这一列，刷新永远验不过 —— 而客户端只会看到「登录过期了」");
   }
 }
 

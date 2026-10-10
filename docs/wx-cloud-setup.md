@@ -114,25 +114,53 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
 
 ```
 SESSION_SECRET=<openssl rand -hex 32>        # 缺了 /api/* 一律 503 E_NOT_CONFIGURED
-SUPABASE_URL=https://xxxx.supabase.co        # 缺了降级内存存储，重启即丢
-SUPABASE_SERVICE_KEY=<service_role key>      # 要 service_role，不是 anon
+MYSQL_HOST=<MySQL 内网地址>                   # 与云托管在同一个 VPC
+MYSQL_PORT=3306
+MYSQL_USER=poem
+MYSQL_PASSWORD=<口令>
+MYSQL_DATABASE=poem                           # 缺了降级内存存储，重启即丢
 WX_APPID=wx200a0c667fc67fcb                  # 缺了登录回 503 E_WX_NOT_CONFIGURED
 WX_SECRET=<小程序 appsecret>
 ```
 
-键的完整定义在 `poem` 的 `api/_lib/config.js`。
+`SESSION_SECRET` / `WX_*` 的完整定义在 `poem` 的 `api/_lib/config.js`；
+`MYSQL_*` 那几项由这份部署自己读（`deploy-api-serve/serve-api.js`），
+`poem` 那边**不认识**它们 —— 后端代码在那儿，而「用哪台数据库」是这份部署的选择。
 
-> **`SUPABASE_URL` / `SUPABASE_SERVICE_KEY` 这两个不是绑死的。**
-> 它们是「服务端存储层」那个插槽的缺省实现 —— 换成腾讯云 MySQL 只加一个同形状的
-> store 实现，**小程序端与管理页一个字都不用改**。三条路各自的代价、
-> 以及「换库不是审核的要求」那句话，见 [`data-backend.md`](data-backend.md) § 三。
+### 3.1 MySQL 怎么建、地址从哪儿来
 
-## 四、建 `wx_accounts` 表
+云托管控制台 → **服务所属环境** → 左侧「MySQL」→ 建实例（或选一个已有的）。
+建好之后在「数据库连接」里能看到**内网地址**：
 
-Supabase 控制台 → SQL Editor → 跑 [`wx-login-server.md`](wx-login-server.md#要用到的那张表)
-的建表语句。
+| 那一栏 | 填进哪个环境变量 |
+|---|---|
+| 内网地址 | `MYSQL_HOST` |
+| 端口（一般 3306） | `MYSQL_PORT` |
+| 用户名 / 密码 | `MYSQL_USER` / `MYSQL_PASSWORD` |
+| 已建的库名（没有就先建一个 `poem`） | `MYSQL_DATABASE` |
 
-这张表**不在 `poem` 的 `api/_lib/schema.sql`** 里（那份是网页版的），要单独建一次。
+⚠️ **填内网地址，不填公网地址。** 云托管与 MySQL 在同一个 VPC 里，
+走内网既不用开公网访问、也不用配白名单与 TLS。填公网地址能通，
+但那是把数据库挂到了公网上 —— 没必要。
+
+⚠️ **`MYSQL_HOST` 不填 = 退回内存档**（poem 原本那个实现），
+表现是「能登录、能同步，但服务一重启全没了」。所以配完要按 § 七 查一次库。
+
+> **这几个 `MYSQL_*` 不是绑死的。**
+> 它们是「服务端存储层」那个插槽的**一个**实现 —— 存储层是一组
+> `getX / putX / listX` 的接口（`poem/api/_lib/store.js`），线上这份实现就在本仓库的
+> `deploy/store-mysql.js`。换别的实现，**小程序端与管理页一个字都不用改**。
+> 条件 upsert 那条不变式换库时该怎么落地、以及「换库不是审核的要求」那句话，
+> 见 [`data-backend.md`](data-backend.md) § 三。
+
+## 四、建表
+
+云托管控制台 → 服务所属环境 → **MySQL** → 数据管理 / SQL 窗口，
+把本仓库的 [`deploy/sql/mysql-schema.sql`](../deploy/sql/mysql-schema.sql)
+整段粘贴执行（幂等，可重复跑）。
+
+它建的是**全部**表（账号 / 微信账号 / 会话 / 进度 / 报告 / 勘误 / 反馈 / 考试），
+不只是 `wx_accounts` —— 一次性建齐，省得后面一条条补。
 
 ## 五、探活
 
@@ -181,13 +209,22 @@ curl -s -X POST https://<域>/api/sync/pull \
   -H 'Authorization: Bearer <accessToken>' \
   -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
 
-# ② 两条新行真落库
-# select poem_id, payload from progress where poem_id in ('settings:v1','profile:v1');
+# ② 那一行真的落库了
+# select poem_id, payload from progress where poem_id = 'settings:v1';
 ```
 
-③ 换台手机登同一个微信，进度 / 设置 / 头像都认回来。
+③ 换台手机登同一个微信，进度与设置认回来。
 
 判据是**查库**，不是界面写「已同步」。
+
+⚠️ **`select` 得到空 = `MYSQL_HOST` 那几项没生效**（服务端退回了内存档，
+数据只活在进程里、一重启就没）。这一条要单独排一次，因为它的症状是
+「界面一切正常、换台手机也有，但服务一重启数据全没了」—— 而那时候
+你已经在怀疑别的东西了。
+
+⚠️ **头像查不到是正常的**：它只有一个来源（微信那张 `chooseAvatar` 的临时路径）
+且**只落本机、不上传**（Issue #111）。所以 `progress` 里**没有** `profile:v1` 那一行，
+换台手机头像就是没有 —— 这是刻意的，不是没同步成功。
 
 ## 八、发档位
 
@@ -209,6 +246,11 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 流水线红在 `clone poem`，报 `Repository Not Found.` | 凭据不被接受，不是路径错 | `.cnb.yml` 里已留了不带凭据的退路（`poem` 匿名可读） |
 | 流水线红在 `build & push`，报 `invalid reference format` | `.cnb.yml` 的 `env:` 里写了 `${VAR:-default}` | CNB 只替换 `$VAR`，`env:` 的值只能写字面量 |
 | 云托管拉镜像报 401 Unauthorized | ① tag 根本没构建出来（CNB 对匿名请求一律回 401，不区分「没权限」和「不存在」）；② tag 在，但槽位私有、没配凭据 | 先查 tag：`cnb registries list-package-tags --slug npu-gpu-cpu/poem-wechat-mini-program --type docker --name npu-gpu-cpu/poem-wechat-mini-program/wx-api`。没有 → 回 § 1；在、还是 401 → § 2.5 |
+| **服务一重启，用户数据全没了** | `MYSQL_HOST` 那几项没配 / 配错 → 服务端退回了内存档 | § 3.1。看服务日志里那句话：`[store] 没配 MYSQL_HOST —— 退回 poem 默认的存储层`。配好了它会打 `[store] 存储层 = 腾讯云 MySQL <host>:<port>/<db>` |
+| 服务日志报 `配了 MYSQL_HOST 但镜像里没有 mysql2` | 镜像里那个依赖没装上 | 那是 `deploy/Dockerfile` 的 `npm install … mysql2` 那步；重推一次 `main` 出镜像 |
+| 服务日志报 `ER_NO_SUCH_TABLE` | 建表语句没跑（或只跑了一半） | § 四，把 `deploy/sql/mysql-schema.sql` 整段重跑一遍（幂等） |
+| 服务日志里没有 `[store]` 那两行中的任何一行 | 镜像太老（接线那版还没上） | 回 § 1 重出镜像 —— 接线在 `serve-api.js` 里，那是随镜像走的 |
+| 换台手机头像没了 | **正常**（Issue #111）：头像只落本机、不上传 | 不为它养对象存储。要头像跨设备就得先接受「养一个存储桶」这个代价 |
 
 **一句话区分**：curl 也不通 → 看服务和公网访问；curl 通、真机不通 → 看云调用两栏。
 

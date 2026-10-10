@@ -1,7 +1,8 @@
 <view class="page has-tabbar" style="{{themeStyle}}">
   <!-- 身份卡：回答「我是谁、我这一档能做什么」。
-       头像点一下就换 —— chooseAvatar 是平台给的「换头像」能力，
-       它同时给了微信头像与相册两条路，所以这一个入口两件事都办了。 -->
+       头像就是微信头像 —— 点头像走 chooseAvatar，弹出来的第一项就是当前微信头像。
+       它**只存在这台手机上**，不上传、不落对象存储：
+       平台没有任何一条「静默拿微信头像」的 API，而头像又不值得为它养一个存储桶。 -->
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
       <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
@@ -27,14 +28,10 @@
         </block>
         <!-- 未登录时这里仍是只显示的字：没登录，也就没有名字可改 -->
         <text class="identity-name" wx:else>{{nickname}}</text>
-        <!-- 副题说清「我是谁、这张头像哪来的」。
-             自己传过一张时，右边多一个「用微信头像」的原地动作 ——
-             它是**从自己那张退回微信那张**的唯一入口，不能跟着头像行一起删。
-             平常它就藏在头像里：点头像，chooseAvatar 弹出来的第一项就是微信那张。 -->
+        <!-- 副题只说一件事：「我是谁」。不再解释这张头像哪来的 ——
+             它现在只有一个来源（微信那张），说来源等于说一句用户不需要懂的话。 -->
         <view class="identity-sub-row">
           <text class="identity-sub">{{identitySub}}</text>
-          <text class="identity-revert" wx:if="{{logged && hasLocalAvatar}}"
-                bindtap="onAvatarClear">用微信头像</text>
         </view>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>

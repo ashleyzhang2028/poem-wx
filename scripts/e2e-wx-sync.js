@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
  * 端到端：假 wx（内存存储 + 真 http 打本地 poem 的 handler）跑一遍
- * 「本机设置/头像/进度 → 登录同步 → 换台手机认回来」。
+ * 「本机设置/进度 → 登录同步 → 换台手机认回来」。
+ *
+ * 头像**刻意不在这一条链里**：它只有一个来源（微信那张 `chooseAvatar` 的临时路径），
+ * 且只落本机、不上传 —— 所以「换台手机头像还在吗」的正确答案是**不在**，
+ * 这里就照这个断言（Issue #111）。
  *
  * check.js 是静态 + 单元那一层，验得了报文形状、验不了两边合起来通不通 ——
  * 这一轮的坑（401、字段被裁、进度认不回来）全是合起来才显形的。
@@ -84,7 +88,7 @@ function makeWx(port, mem) {
 
   // 用户先在本机选了一堆东西
   store.saveSettings({ grade: 3, dailyCount: 7, theme: "ink", sfx: false });
-  store.saveProfile({ avatarLocal: "https://cdn.test/me.png" });
+  store.saveProfile({ avatarLocal: "wxfile://avatar-from-wechat.jpg" });
   store.setRecord("poem_x", { level: 4, reviewCount: 9, updatedAt: Date.now() });
 
   await auth.login();
@@ -109,9 +113,10 @@ function makeWx(port, mem) {
     JSON.stringify(byId["settings:v1"] && byId["settings:v1"].settings));
   ok("sfx 没被推上去（跟设备走）", byId["settings:v1"] && !("sfx" in byId["settings:v1"].settings),
     JSON.stringify(byId["settings:v1"] && byId["settings:v1"].settings));
-  ok("服务端收到了 profile:v1（用户自己传的那张头像）",
-    byId["profile:v1"] && byId["profile:v1"].avatar === "https://cdn.test/me.png",
-    JSON.stringify(byId["profile:v1"]));
+  ok("服务端**没有**收到 profile:v1（头像只落本机，不上传）",
+    !byId["profile:v1"],
+    "推上去了：" + JSON.stringify(byId["profile:v1"]) +
+      " —— 头像现在是微信那张的临时路径（wxfile://），上传它既没地方存也没意义");
   ok("服务端收到了那篇进度", byId["poem_x"] && byId["poem_x"].level === 4, JSON.stringify(byId["poem_x"]));
 
   // 换一台手机：清空本机，用同一个微信登进来，应该认回同一份
@@ -129,8 +134,11 @@ function makeWx(port, mem) {
   ok("新手机同步成功", !sync2.error, JSON.stringify(sync2));
   ok("新手机上 grade 认回来了（3）", store2.settings().grade === 3, String(store2.settings().grade));
   ok("新手机上 dailyCount 认回来了（7）", store2.settings().dailyCount === 7, String(store2.settings().dailyCount));
-  ok("新手机上头像认回来了",
-    store2.profile().avatarLocal === "https://cdn.test/me.png", String(store2.profile().avatarLocal));
+  /* ⚠️ 这一条是**反着**断言的：头像不跨设备。
+     它是这台手机上的东西（微信头像的临时路径），换台手机本来就该没有 ——
+     真要跨设备，就得养一个对象存储，而 Issue #111 要的正是别养。 */
+  ok("新手机上头像**不**认回来（头像只落本机，这是刻意的）",
+    !store2.profile().avatarLocal, "居然认回来了：" + String(store2.profile().avatarLocal));
   ok("新手机上那篇进度认回来了（level 4）",
     (store2.getRecord("poem_x") || {}).level === 4, JSON.stringify(store2.getRecord("poem_x")));
 

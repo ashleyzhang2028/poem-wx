@@ -38,12 +38,14 @@ REV="$(git -C "$POEM_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 CTX="$(mktemp -d)"
 trap 'rm -rf "$CTX"' EXIT
 
-# 摊上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳。
-# 三样都必须落在**平铺的一层**里，因为 Dockerfile 是按 ./api 与 ./serve-api.js 拷的。
+# 摊上下文：poem 的 api/ + 本仓库的 Dockerfile、服务壳、存储层实现。
+# 几样都必须落在**平铺的一层**里，因为 Dockerfile 是按 ./api、./serve-api.js、
+# ./store-mysql.js 拷的。
 mkdir -p "$CTX"
 cp -R "$POEM_DIR/api" "$CTX/api"
 cp "$HERE/Dockerfile" "$CTX/Dockerfile"
 cp "$REPO/deploy-api-serve/serve-api.js" "$CTX/serve-api.js"
+cp "$REPO/deploy/store-mysql.js" "$CTX/store-mysql.js"
 # .dockerignore 放到上下文根（那是它生效的位置）
 cp "$REPO/deploy-api-serve/.dockerignore" "$CTX/.dockerignore"
 
@@ -69,5 +71,5 @@ echo ""
 echo "构建完成：$IMAGE（api/ 来自 poem $REV）"
 echo "试跑：docker run -p 8080:8080 \\"
 echo "        -e SESSION_SECRET=\$(openssl rand -hex 32) \\"
-echo "        -e SUPABASE_URL=... -e SUPABASE_SERVICE_KEY=... \\"
+echo "        -e MYSQL_HOST=... -e MYSQL_USER=... -e MYSQL_PASSWORD=... -e MYSQL_DATABASE=poem \\"
 echo "        -e WX_APPID=... -e WX_SECRET=... $IMAGE"

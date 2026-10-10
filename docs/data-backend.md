@@ -2,8 +2,8 @@
 
 > 这份文件回答 Issue #111 的三个问题：
 >
-> 1. **现在小程序的数据库服务（Supabase）是什么？**
-> 2. **能不能不用它，换成腾讯云 / 微信云开发 / 云托管，免得审核出问题、也少一层依赖？**
+> 1. **现在小程序的数据库服务是什么？**
+> 2. **后端存储怎么解耦、换库要动什么？**
 > 3. **小程序的数据是怎么管的、放在哪里？上游 poem 改数据集导致这边 CI 出故障，有没有办法？**
 >
 > 先给结论，再给账。凡是要动代码的地方，都标了「已做 / 待做 / 不做」。
@@ -12,130 +12,149 @@
 
 ## 一、先分清五样东西，它们的归属完全不同
 
-「依赖 Supabase」这句话，在这份工程里对应的其实是**五件互不相干的事**。
-把它们混成一件，就会得出「换掉 Supabase 要重写一遍」这个错结论。
+「后端依赖」这四个字，在这份工程里对应的其实是**五件互不相干的事**。
+把它们混成一件，就会得出「换掉数据库要重写一遍」这个错结论。
 
 | # | 是什么 | 现在在哪 | 属于谁 | 用户能不能感觉到 |
 |---|---|---|---|---|
 | ① | **运行时代码**（登录 / 同步 / 管理那几条路由） | poem 的 `api/`，跑在我们自己的容器里（微信云托管，走**云调用**） | **这个项目** | 能（登录、换手机还在不在） |
-| ② | **数据存储**（账号 / 进度 / 设置 / 头像） | 代码里是**可替换**的存储层，接口是一组 `getX / putX / listX` | 运营选择 | 能（数据在不在） |
+| ② | **数据存储**（账号 / 会话 / 进度 / 设置） | 代码里是**可替换**的存储层，接口是一组 `getX / putX / listX`；线上实现 = 腾讯云 MySQL | 运营选择 | 能（数据在不在） |
 | ③ | **静态资产**（5604 条课外正文分片 + 倒排索引） | 现在是**构建产物，跟包走**（`miniprogram/data/`） | **这个项目** | 基本感觉不到（除非你打算上 CDN） |
-| ④ | **构建输入**（语料从哪来） | `scripts/build-data.js` 在 CI 里 `git clone` **poem 的 `main`** | **这个项目**（但**钉不住上游**，见 § 四） | 不能，但能让 CI 红 |
+| ④ | **构建输入**（语料从哪来） | `scripts/build-data.js` 在 CI 里 `git clone` **poem 的锁定版本** | **这个项目** | 不能，但能让 CI 红 |
 | ⑤ | **代码镜像**（GitHub 只读镜像） | 推 `main` 时同步过去 | 这个项目 | 不能 |
 
-**①②③④⑤ 里，只有 ② 是 Supabase，而且它本来就是一个可替换件。**
-所以「减少对 Supabase 的依赖」这件事，成本不在小程序前端（那边一行都不用改），
-而在**要不要换掉服务端存储层的实现**。
+**①②③④⑤ 里，只有 ② 是「数据库」这件事，而且它本来就是一个可替换件。**
+所以「减少对外部服务的依赖」这件事，成本不在小程序前端（那边一行都不用改），
+而在**服务端存储层的实现**。
 
 ### 一句话结论
 
 - 小程序**不需要备案**已经做到了：出网走**云调用**（`wx.cloud.callContainer`），
-  不经过 request 合法域名那张名单。这一条与 Supabase 无关，早就落地了。
-- Supabase 只是**容器里那台数据库的一个驱动**。容器是我们自己的（云托管），
-  Supabase 是外部托管商 —— 这是唯一一处「跑在境外、且不受我们控制」的东西。
-  想换就换，换的是**存储层**，不是重写后端。
+  不经过 request 合法域名那张名单。这一条与数据库无关，早就落地了。
+- **线上那台库是腾讯云 MySQL**，跑在云托管同一个 VPC 里 —— 数据不出境、
+  也不受第三方托管商的可用性影响。要换别的（比如云开发数据库）就是再写一个
+  store 实现，**不是重写后端**。
 - 用户对「上游改数据集 → 这边 CI 红」的顾虑是**对的，而且已经真的红过**。
   这一条的根治办法只有一个：**把「上游改了什么」和「推我们的 main」拆开**（见 § 四）。
 
 ---
 
-## 二、Supabase 到底在哪：三处，不是一处
+## 二、存储层到底在哪：一个接口，两个实现
 
-按「谁读它」分，只有三处碰到 Supabase：
+`poem/api/_lib/store.js` 里那组 `getX / putX / listX` 是**契约**：
+`api` 对象上的方法名就是全部约定，路由层只认这些名字，**不认底下是谁**。
 
-| 位置 | 读的是什么 | 换掉的代价 |
+```
+                     ┌─ memoryStore()   ← 本地自检 / e2e（进程内存）
+getStore(cfg) ───────┤
+                     └─ mysqlStore()    ← 线上（腾讯云 MySQL）
+```
+
+- **`memoryStore()`** 是 poem 里现成的内存档，本地自检与 `e2e-wx-sync.js` 跑的
+  就是它 —— 换句话说，「换库」这件事**有两份实现同时在跑**，插槽是活的。
+- **`mysqlStore()`** 是本仓库新加的那份：代码在 **`deploy/store-mysql.js`**，
+  建表语句在 **`deploy/sql/mysql-schema.sql`**。
+
+### 它在哪儿接上去：`serve-api.js`，不是 poem
+
+这一点值得单独说清，因为它决定了「改 poem 吗」这个问题的答案。
+
+`poem` 同时伺服**网页版**（跑在 Vercel 上、用它自己那台库）与小程序这份镜像。
+两边共用同一套 `api/`，但**数据库选择本来就该分开** —— 所以：
+
+```
+serve-api.js（这份镜像的入口）
+  ├─ 认 MYSQL_HOST  → 建连接池 → 把 poem 的 getStore() 换成 mysqlStore（并 _reset 单例）
+  └─ 不认            → 什么都不做，poem 原样（内存档）
+  ↓
+require("./api/handler.js")   ← ⚠️ 必须在上面那步**之后**：handler 在 require 时就取单例
+```
+
+于是 **`poem` 一行都不用改**，它压根不认识 MySQL。接线、建池、`mysql2` 依赖
+全落在 `deploy/` 与 `deploy-api-serve/` 这两处（自检 V49 钉着这一段）。
+
+### 「换库」这件事实际动到的四处
+
+| 动哪 | 做什么 | 已经做完的 |
 |---|---|---|
-| `poem/api/_lib/store.js` 的 `supabaseStore(cfg)` | 走 PostgREST 的 HTTP 调用，把「账号 / 会话 / 进度 / 微信账号」四张表读写包成一组方法 | **中等**：另写一个同形状的 store 实现即可，路由层一个字不用动 |
-| `poem/api/_lib/schema.sql` | 建表与那个条件 upsert 函数 `kb_upsert_progress`（`on conflict ... where excluded.updated_at >= ...`） | **小**：换成 MySQL 的 `INSERT ... ON DUPLICATE KEY UPDATE`，条件那半段要挪到应用层（见 § 三.3） |
-| `poem/api/_lib/avatar-store.js` | 头像图片走 Supabase Storage | **小**：换对象存储（COS / 云开发的存储） |
-
-其余全在 `api/_lib/core.js` 那一层，**它只认 store 的方法名，不认 Supabase**。
-`api/_lib/config.js` 里的 `hasDb()` 就是「这两个环境变量在不在」，
-`getStore()` 里一句 `cfg.hasDb() ? supabaseStore(cfg) : memoryStore()` —— 内存档是现成的
-（本地自检、`e2e-wx-sync.js` 跑的就是它）。
-
-也就是说：**存储层是一个已经把接口定死的插槽，不是一个长在代码里的东西。**
-
----
-
-## 三、换成腾讯那条路：三个方案，各自的代价
-
-### 3.1 方案 T1 · 云托管 + 腾讯云 MySQL（推荐，与现状的最短路径）
-
-云托管**已经在这里跑着了**（`deploy/Dockerfile` + `deploy-api-serve/serve-api.js`）。
-所以这个方案只换「容器里那台数据库」，不换平台、不换部署链路：
-
-```
-微信小程序
-  → wx.cloud.callContainer（微信内网，免域名免备案）
-  → 云托管容器（我们的 Dockerfile，我们的 api/ 代码）
-  → 腾讯云 MySQL / TDSQL-C / 云开发数据库
-```
-
-要动的只有：
-
-| 动哪 | 做什么 |
-|---|---|
-| 新增 `poem/api/_lib/store-mysql.js` | 按 `store.js` 里 `api` 对象**同一个形状**实现一遍（方法名逐字相同） |
-| `getStore()` | 加一条分支：`MYSQL_URL`（或云开发）在 → 用新实现，否则退回现在的 |
-| 建表语句 | 照 `schema.sql` 译一份 MySQL 版；条件 upsert 见 3.3 |
-| 头像 | 换 COS 或云开发存储；不想动就先让头像退回「只存本机」（现状**已经**是「存储桶没建就退回本机」，不是硬失败） |
-| 环境变量 | 云托管控制台把 `SUPABASE_*` 换成新的那几个 |
+| `deploy/store-mysql.js`（新增） | 按 `store.js` 里 `api` 对象**同一个形状**实现一遍（方法名逐字相同） | ✅ |
+| `deploy/sql/mysql-schema.sql`（新增） | 建表语句；条件 upsert 见 § 三.3 | ✅ |
+| `serve-api.js` 里接线 | `MYSQL_HOST` 在 → 建池、换 `getStore()`、`_reset()`；不在 → 原样 | ✅ |
+| `Dockerfile` / `.cnb.yml` / `build.sh` | 装 `mysql2`；把 `store-mysql.js` 摊进构建上下文 | ✅ |
 
 **小程序前端一行都不用改。** 登录、同步、管理的报文与路径都不动 ——
 客户端只认 `PATHS` 与报文形状，不认对面是谁。
 
-### 3.2 方案 T2 · 微信云开发数据库（直连，不要容器）
+---
 
-云开发自带一个 JSON 文档数据库（`wx.cloud.database()`），云函数 / 云托管里
-也能用 admin 权限读写。听上去最省事，实际上有两个坎：
+## 三、腾讯云 MySQL 这条路：三处最容易踩的坑
 
-1. **它没有这个项目要的那种「按时间戳比新旧」的条件写入**。
-   现在的核心不变式是「**新的赢，旧的到了也不许覆盖**」（断网重连后一批旧数据补发），
-   而这条约束是**下沉在数据库层**的（`kb_upsert_progress` 的 `where`），
-   不是靠 JS 里的比较。挪到云开发就得自己写一段「读 → 比 → 写」，
-   而**读-比-写不是原子的**：两条请求并发时，仍然可能用旧值盖新值 ——
-   这正是当初把它放进数据库的原因（`schema.sql` 里那段注释写得很直白）。
-2. 云开发的数据库**按读次数计费**，而进度同步是「每次启动拉一次增量」。
-   现在这台库里 `progress` 是按 `(uid, child_id, poem_id)` 主键 +
-   `(uid, child_id, updated_at)` 索引拉的，一次增量是一发 SQL；
-   换成文档库是一堆查询。
+### 3.1 环境变量
 
-**结论**：T2 能跑，但它把一条**已经下沉到数据库的正确性约束**又捞回了应用层。
-除非有别的理由（比如整个后端想改成云函数直连、不要容器），否则不划算。
+云托管控制台 → 服务设置 → **环境变量**：
 
-### 3.3 方案 T3 · 腾讯云 MySQL / TDSQL-C（`mysql2`）
+```
+SESSION_SECRET=<openssl rand -hex 32>
+MYSQL_HOST=<内网地址>            # 云托管与 MySQL 在同一个 VPC
+MYSQL_PORT=3306
+MYSQL_USER=poem
+MYSQL_PASSWORD=<口令>
+MYSQL_DATABASE=poem
+WX_APPID=wx200a0c667fc67fcb
+WX_SECRET=<小程序 appsecret>
+```
 
-与 T1 的差别只在「数据库跑在哪」：云托管的容器要连它，**必须在同一个 VPC 内网**，
-否则就要公网 + 白名单 + TLS。这一条是运维动作，不是代码动作。
+### 3.2 `jsonb` → `json`
 
-**三条要知道的差别**（从 Postgres 迁到 MySQL 时最容易踩的三个）：
+MySQL 的 `json` 不做 GIN 索引，也不做规范化。这里 `payload` 一直是**整取整存**
+（没有行内 JSON 查询），所以没影响 —— 但**别顺手加**「按 payload 里某个键筛选」
+的新查询：MySQL 上那条会全表扫。
 
-1. **`jsonb` → `json`**。MySQL 的 `json` 不做 GIN 索引，也不做规范化。
-   这里没用到行内的 JSON 查询（`payload` 一直是整取整存），所以没影响 ——
-   但**别顺手加**「按 payload 里某个键筛选」的新查询，MySQL 上那条会全表扫。
-2. **没有 `where` 子句的 `ON DUPLICATE KEY UPDATE`**。
-   Postgres 的 `on conflict ... do update ... where excluded.updated_at >= t.updated_at`
-   在 MySQL 里**没有等价写法**。两条路：
-   - `INSERT ... ON DUPLICATE KEY UPDATE payload = IF(VALUES(updated_at) >= updated_at, VALUES(payload), payload), updated_at = GREATEST(updated_at, VALUES(updated_at))`
-     —— 用 `IF` 把「更新新旧」写进赋值表达式。**行锁在，所以这一句是原子的**，
-     保持了原来那条不变式。
-   - 或者干脆加一列 `updated_at` 的生成列/索引，用乐观锁（多一次往返）。
-   推荐前者：它在语义上最接近原来那句，且不改调用方。
-3. **`bigint` 的时间戳**。这里存的是 `Date.now()` 毫秒（`bigint`）。
-   MySQL 的 `bigint` 没问题，但**驱动默认会把超过 2^53 的整数转成字符串** ——
-   `Date.now()` 现在远没到那个量级，**但代码里要么显式 `CAST`，要么在 JS 里 `Number()` 一次**，
-   否则将来某一天会得到「时间戳是字符串」这种要查半天的错。
+### 3.3 「新的赢」是下沉在数据库层的原子约束
 
-### 3.4 三条路的共同结论
+现在的核心不变式是「**新的赢，旧的到了也不许覆盖**」——
+断网重连后一批旧数据补发时，晚到的旧值不许盖掉新值。它**不是**靠 JS 里的比较，
+而是下沉在数据库层的那一句里（`deploy/sql/mysql-schema.sql` 的 `kb_upsert_progress`）。
 
-| | T1 云托管 + MySQL | T2 云开发数据库 | T3 直接连云 MySQL |
-|---|---|---|---|
-| 小程序前端要改吗 | 不用 | 不用 | 不用 |
-| 服务端要改吗 | 加一个 store 实现 | 加一个 store 实现 + 自己实现条件写入 | 加一个 store 实现 |
-| 能保住「新的赢」吗 | **能**（数据库层） | **打折**（应用层，有竞态） | **能**（`IF` 表达式） |
-| 要不要在同一个 VPC | 不要 | 不要 | **要** |
-| 推荐度 | ⭐️ **首选** | 只在「不要容器」时才考虑 | 已经在用云主机时 |
+**为什么不能「等价改写」成应用层的读-比-写**：两条请求并发时，读到的
+`updated_at` 可能已经过时 —— 那就又用旧值盖了新值。这正是当初把它放进数据库的原因。
+
+MySQL 里写法是这样（`ON DUPLICATE KEY UPDATE` **没有 `WHERE`**，
+条件只能塞进赋值表达式，而且**每一列都要写**）：
+
+```sql
+INSERT INTO progress (uid, child_id, poem_id, payload, updated_at, deleted)
+VALUES (?,?,?,?,?,?)
+ON DUPLICATE KEY UPDATE
+  payload    = IF(VALUES(updated_at) >= updated_at, VALUES(payload), payload),
+  updated_at = GREATEST(updated_at, VALUES(updated_at)),   -- 只增不减
+  deleted    = IF(VALUES(updated_at) >= updated_at, VALUES(deleted), deleted)
+```
+
+只给 `payload` 加 `IF(...)`、把 `updated_at` 无条件盖上去，就会造出
+「payload 是旧的、updated_at 是新的」这种**一半新一半旧**的行 ——
+它下一次还会把真正的新值顶掉，而且**到处都不报错**。InnoDB 的行锁在，
+所以这一句仍然是原子的。
+
+### 3.4 `bigint` 的时间戳
+
+这里存的是 `Date.now()` 毫秒（`bigint`）。MySQL 的 `bigint` 没问题，
+但**驱动默认会把超过 2^53 的整数转成字符串** —— `Date.now()` 现在远没到那个量级，
+**但 `deploy/store-mysql.js` 里每一处读出来的数都过一遍 `Number()`**，
+否则将来某一天会得到「时间戳是字符串」这种要查半天的错。
+
+### 3.5 建表与操作入口
+
+```
+cloud.weixin.qq.com → 云托管 → 服务所属环境 → MySQL
+  → 数据管理 / SQL 窗口 → 粘贴 deploy/sql/mysql-schema.sql 整段执行
+```
+
+建完表之后，第一个管理员直接在库里改：
+
+```sql
+UPDATE accounts SET role = 'owner' WHERE uid = '<你的 uid>';
+```
 
 ---
 
@@ -146,12 +165,12 @@
 `.cnb.yml` 里，**每一个任务的第一步**都是：
 
 ```bash
-bash scripts/clone-poem.sh /tmp/poem      # 取 poem 的 main
+bash scripts/clone-poem.sh /tmp/poem      # 取 poem 的锁定版本
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 node scripts/check.js
 ```
 
-`clone-poem.sh` 取的是 **poem 的 `main` 头**，也就是**上游随时在动的那一条**。
+`clone-poem.sh` 检出的是 **`poem.lock.json` 里钉住的那一版**。
 于是 poem 那边补录几十条、改一版译文、动一个朝代归类，
 这边的自检（`check.js` 里的 `K.counts` / `seqMax` / `KNOWN_HOLES` 那张表）
 就会当场红 —— **推 ours 的 main 的时候红，改 ours 的代码的人是受害者，而错在上游。**
@@ -189,7 +208,7 @@ CI 运行时刻 → 决定用哪一版语料 → 决定自检对不对
 
 #### 第二步：上游更新，不出红，出 PR（已做）
 
-- 新增 `.cnb.yml` 的定时任务：**每天**取一次 poem 的 `main` 头。
+- 新增 `.cnb.yml` 的定时任务：**每 6 小时**取一次 poem 的 `main` 头。
   - 头 **== 锁里那个** → 什么都不做（绿）。
   - 头 **!=** 锁里那个 → 自动跑一次 `build-data.js` + `check.js`：
     - 自检**过** → 自动开一个 PR：**只改 `poem.lock.json`**（把新 sha 写进去），
@@ -201,7 +220,7 @@ CI 运行时刻 → 决定用哪一版语料 → 决定自检对不对
 
 | 事件 | 谁受影响 | 结果 |
 |---|---|---|
-| 上游 poem 改了语料 | **没人**（我们推 main 仍旧用锁定版） | 定时任务第二天开出 PR 或 Issue |
+| 上游 poem 改了语料 | **没人**（我们推 main 仍旧用锁定版） | 定时任务自己开出 PR 或 Issue |
 | 我们推 main | 只有我们的代码 | 自检判的只有这一件事 |
 
 #### 第三步（已做）：锁定 + 自动跟进
@@ -244,20 +263,20 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
 ① 内容（诗、译文、索引、注音表）
    poem 仓库（上游语料）
      └─ CI 里 build-data.js 编译 → miniprogram/data/**（打包进小程序包）
-          · data/books/<集子>.json   各集子索引（不含正文）       ~784KB
-          · data/course.json         课内 251 首正文 + 译文       ~236KB
-          · data/pinyin-table.json   读音表（离线注音）           ~72KB
-          · data/texts/**            其余 5604 条正文 + 倒排索引  ~26MB
+          · data/books/<集子>.json   各集子索引（不含正文）
+          · data/course.json         课内 251 首正文 + 译文（进主包）
+          · data/pinyin-table.json   读音表（离线注音）
+          · data/texts/**            其余 5604 条正文 + 倒排索引
                                      ⚠️ project.config.json 里被 ignore，不进包
-          · data/texts/t*.json       120 个分片，按需进本机缓存（见「待做」）
 
 ② 本机（每台手机自己一份，不上云）
    wx.setStorageSync 存：背诵进度、设置、已读标记、今日加背、自选清单、离线队列
 
 ③ 云端（跟账号走，登录即可用）
    我们的后端（云托管容器，走微信云调用）
-     + 服务端存储层（现在 = Supabase；可换腾讯云 MySQL）
-     存：账号 / 会话 / 进度（含设置与头像两个快照行）
+     + 服务端存储层（腾讯云 MySQL，同一个 VPC 内网）
+     存：账号 / 会话 / 进度（含 settings:v1 那个快照行）
+     ⚠️ 头像**不在这儿** —— 它只落本机、不上传（见 design-system.md「头像」一节）
 ```
 
 **用户能感觉到的差别只有一处**：换手机时数据在不在。这也是为什么界面文案
@@ -269,25 +288,25 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
 
 | # | 做什么 | 为什么 | 状态 |
 |---|---|---|---|
-| 1 | 钉住上游 + 定时跟踪（§ 四） | **解掉 CI 被上游绊住这条**，也解掉用户那个顾虑 | ✅ 已做 |
+| 1 | 钉住上游 + 定时跟踪（§ 四） | **解掉 CI 被上游绊住这条** | ✅ 已做 |
 | 2 | 这份文档 | 把「数据在哪」一次说清，省下每一次重问 | ✅ 已做 |
-| 3 | 中文 CDN（把 `data/texts/**` 挪出包） | 现在 26MB 分片虽被 ignore，但没进 CDN 就等于「没缓存的条目要联网」这条还没真正兑现。**要走这一步，必须办备案** | ⏸️ 未办备案，见 `todo.md` 第 13 条 |
-| 4 | 换存储层（§ 三） | 只在这条真的变成痛点时才做 | ⏸️ 按需 |
+| 3 | 换到腾讯云 MySQL（§ 三） | 数据主权：不依赖境外托管商 | ✅ 已做（`deploy/store-mysql.js` + 建表语句） |
+| 4 | 中文 CDN（把 `data/texts/**` 挪出包） | 现在 26MB 分片虽被 ignore，但没进 CDN 就等于「没缓存的条目要联网」这条还没真正兑现。**要走这一步，必须办备案** | ⏸️ 未办备案，见 `todo.md` 第 13 条 |
 
-**关于第 4 条的一句实话**：换存储层**不是**审核的要求。小程序审核看的是
-「你的内容合规不合规、功能是不是真的」，不看你的数据库跑在哪。
+**关于「怕小程序审核出问题」的一句实话**：**换数据库不是审核的要求**。
+小程序审核看的是「你的内容合规不合规、功能是不是真的」，不看你的数据库跑在哪。
 真正会踩线的只有一件事：**`wx.request` 打到一个未备案的域名上** ——
 而云调用这条路根本不经过那张名单（`wx-cloud-setup.md` § 6）。
 
-所以「防小程序审核出问题」这个目的，**现在就已经达到了**；
-换数据库是「减少外部依赖 / 数据主权」的考虑，是一件更慢、更该按需做的事。
+所以「防小程序审核出问题」这个目的，**在换库之前就已经达到了**；
+换库是「数据主权 / 少一层外部依赖」的考虑。
 
 ---
 
 ## 七、不改的那几条（免得被误读成「以后要换」）
 
 - **不换后端语言 / 不拆服务**。现在是「一个容器跑全 `api/`」，够用。
-- **不上自建数据库**。云托管的容器不做持久化，自建 Postgres/MySQL 只会多一份运维。
+- **不上自建数据库**。云托管的容器不做持久化，自建只会多一份运维。
 - **不把语料搬进数据库**。语料是**静态资产**，它的正确形态是文件 + CDN，
   不是数据库里的行 —— 这一条在 `architecture.md` § 三已经算过账（几万条级查询的性能与成本都不划算）。
-- **小程序前端不动**。它一行都不认识 Supabase，只认识 `PATHS` 与报文。
+- **小程序前端不动**。它只认识 `PATHS` 与报文。
