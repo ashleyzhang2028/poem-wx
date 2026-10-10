@@ -245,15 +245,25 @@ main:
         #    云托管拉它照样要凭据 —— 那这一整步就白做了。
         #
         #    ⚠️ 凭据：**用户名必须是 GitHub 账号名**，密码是 PAT —— 这里和 CNB
-        #    恰好相反（CNB 那边用户名是写死的 `cnb`）。PAT 需要 write:packages。
+        #    恰好相反（CNB 那边用户名是写死的 `cnb`）。
+        #
+        #    ⚠️ 而且这枚 PAT **必须是 classic，fine-grained 建不出来**：GitHub
+        #    官方文档原话「GitHub Packages only supports authentication using a
+        #    personal access token (classic)」，所以 fine-grained 的 Permissions
+        #    里**根本没有 Packages 那一栏**（不是藏在哪个二级菜单里）。别在这儿
+        #    找 —— 要的是 classic 的 `write:packages` scope：
+        #    https://github.com/settings/tokens/new?scopes=write:packages
+        #    （直接用这个链接建，只勾这一个 scope；UI 上手动勾 write:packages 会
+        #     顺手把范围过宽的 `repo` 也勾上。）
+        #
         #    密钥仓库 wechat-ci.yml 里加 GHCR_USER / GHCR_TOKEN 两行；
         #    同一个文件已经给「同步到 GitHub」提供了 GH_PAT / GH_REPO ——
-        #    GH_PAT 若含 write:packages 也可以直接复用，但**分开两个名字更清楚**：
-        #    同步用 contents、推包用 packages，混着用以后没人知道谁在授权什么。
+        #    **那两个是两种 token**，别互相复用：GH_PAT 可以是 fine-grained
+        #    （要 contents），GHCR_TOKEN 只能是 classic（要 packages）。
         #
         #    ⚠️ **先别 allow_failure**。这一条是新链路的判据：它红了（最常见是
-        #    PAT 少了 write:packages），说明云托管那儿也拉不到 —— 红在流水线上，
-        #    比绿着然后在云托管里查半天便宜。
+        #    PAT 类型不对 —— 拿了 fine-grained 来，或 classic 但没勾 write:packages），
+        #    说明云托管那儿也拉不到 —— 红在流水线上，比绿着然后在云托管里查半天便宜。
         - name: 推 GHCR（云托管那份镜像地址）
           imports:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
@@ -266,7 +276,8 @@ main:
               eval "val=\${$v:-}"
               if [ -z "$val" ]; then
                 echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
-                echo "  需要 GHCR_USER=GitHub 账号名、GHCR_TOKEN=带 write:packages 的 PAT。" >&2
+                echo "  需要 GHCR_USER=GitHub 账号名；GHCR_TOKEN 是**带 write:packages 的" >&2
+                echo "  classic PAT**（fine-grained 没有 Packages 这一栏，建不出来）。" >&2
                 exit 1
               fi
             done

@@ -8153,6 +8153,57 @@ function sectionOf(text, heading) {
         /别在 GitHub 那份上直接提交/.test(readme),
       "README 没交代这件事 —— 人会去 GitHub 上改，下次同步静默抹掉");
   }
+
+  /* ---------- 推 GHCR 那步要的是 classic PAT（Issue #71 第二轮） ----------
+   *
+   * 现场是这样的：人去 GitHub 建 fine-grained PAT，在 Permissions 里
+   * **翻遍也找不到 Packages 那一栏**，于是不知道该建什么。
+   *
+   * 答案不是「菜单藏得深」，是**那一栏根本不存在**：GitHub 官方文档原话
+   * 「GitHub Packages only supports authentication using a personal access
+   * token (classic)」—— `write:packages` 是 classic 的老式 scope。
+   *
+   * ⚠️ 判据同样只看**真命令行**（剥注释），理由同本节的 ① ②：
+   *    这三处的新说明本身就写着 `write:packages`，整份搜的话把实现删掉照样绿。
+   */
+  {
+    const ghcrAt = yml.indexOf("- name: 推 GHCR");
+    ok("`推 GHCR` 那步还在（云托管那份公开镜像地址），#96",
+      ghcrAt >= 0, "`.cnb.yml` 里找不到这一步 —— 云托管只能填私有地址 + 配凭据");
+
+    const ghcrBody = ghcrAt < 0 ? "" : yml.slice(ghcrAt);
+    const ghcrLines = ghcrBody.split("\n")
+      .map((l) => l.replace(/\s+#.*$/, ""))
+      .filter((l) => !/^\s*(#|$)/.test(l));
+    const ghcrCode = ghcrLines.join("\n");
+
+    ok("真命令行里 docker login ghcr.io 用的是 GHCR_USER / GHCR_TOKEN",
+      /docker login ghcr\.io -u "\$\{GHCR_USER\}"/.test(ghcrCode) &&
+        /GHCR_TOKEN/.test(ghcrCode),
+      "凭据名字变了 —— 文档里让人填 GHCR_USER / GHCR_TOKEN 就填不上了");
+
+    /* ⚠️ 这一条守的是「error message 要把 token 类型说出来」。
+       少了它，人只会看到「读不到 GHCR_TOKEN」，然后接着去建 fine-grained。 */
+    ok("缺 GHCR_TOKEN 时的提示点名「classic」与 `write:packages`",
+      /classic/.test(ghcrCode) && /write:packages/.test(ghcrCode),
+      "提示里没说 token 类型 —— 人会拿着 fine-grained 一直找不到 Packages 那一栏");
+
+    /* 三份文档都得把这件事写下来，因为它们各自是不同入口：
+       README 是总览、wx-cloud-setup 是照着做、deploy/README 是部署那一栏。
+       哪一份漏了，从那个入口进来的人就还是会去建 fine-grained。 */
+    const docs = {
+      "README.md": fs.readFileSync(path.join(path.dirname(__dirname), "README.md"), "utf8"),
+      "docs/wx-cloud-setup.md": fs.readFileSync(
+        path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8"),
+      "deploy/README.md": fs.readFileSync(
+        path.join(path.dirname(__dirname), "deploy", "README.md"), "utf8"),
+    };
+    for (const [name, text] of Object.entries(docs)) {
+      ok(`${name} 说明了 GHCR_TOKEN 要 classic PAT（fine-grained 没有 Packages 这一栏）`,
+        /classic/.test(text) && /write:packages/.test(text),
+        "这份文档没写 token 类型 —— 从这个入口进来的人还会去找 fine-grained 的 Packages");
+    }
+  }
 }
 
 /* ---------- 汇总 ---------- */

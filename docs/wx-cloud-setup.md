@@ -70,6 +70,22 @@ ghcr.io/ashleyzhang2028/poem-wx/wx-api:<上游 poem 的 commit 前 8 位>       
 - GitHub 的包页：`ghcr.io/ashleyzhang2028/poem-wx/wx-api` 下有那个 `<poem 短 sha>`，
   且 Package settings 那页把它设成 **Public**（第一次推完要手动点一下，之后不用管）
 
+⚠️ **推 GHCR 那一步要的两个密钥，其中 `GHCR_TOKEN` 必须是 classic PAT。**
+GitHub 官方原话是 *GitHub Packages only supports authentication using a personal
+access token (classic)*，所以**在 fine-grained token 的 Permissions 里找不到
+Packages 那一栏 —— 它不在那儿，不是菜单藏得深**。`write:packages` 是 classic 的
+老式 scope，走这个链接建（只勾它一个）：
+<https://github.com/settings/tokens/new?scopes=write:packages>。
+
+| 用途 | 密钥名 | 哪种 token | 权限 |
+|---|---|---|---|
+| 推 `ghcr.io` 镜像 | `GHCR_USER` / `GHCR_TOKEN` | **classic** | `write:packages` |
+| 同步代码到 `poem-wx` | `GH_PAT` / `GH_REPO` | fine-grained | `Contents: Read and write` |
+
+这两组是**两种不同的 token**，不能互相顶替：同步要的 `contents` 与推包要的
+`packages` 在两个体系里是分开的。顺带一句 classic 的坑：UI 上勾 `write:packages`
+会顺手把范围过宽的 `repo` 一起勾上，用上面那个带 `?scopes=` 的链接就没这问题。
+
 ⚠️ 这条流水线的第 1 步是 `git clone` 取 `poem` 的 `api/`，**不带凭据**。
 `poem` 匿名可读，去掉凭据才通；带上 ${CNB_TOKEN} 反而回
 `remote: Repository Not Found.`（退出码 128），而**镜像槽位不会有任何变化** ——

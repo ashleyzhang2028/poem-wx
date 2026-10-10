@@ -846,6 +846,15 @@ git checkout main && git pull   # 推 main 就出镜像
 所以流水线一次推两份：GHCR 那份是**公开包**，云托管直接拉，**不用配凭据**。
 CNB 那份留着当回滚路（私有，要凭据才拉得动）。两份是同一棵树。
 
+⚠️ **推 GHCR 那两个密钥里，`GHCR_TOKEN` 必须是 classic PAT**（密钥仓库
+`wechat-ci.yml` 的 `GHCR_USER` / `GHCR_TOKEN`）。GitHub 原话是 *GitHub Packages
+only supports authentication using a personal access token (classic)* —— 所以
+**fine-grained token 的 Permissions 里没有 Packages 那一栏，不是藏得深，是不存在**。
+`write:packages` 是 classic 的 scope，走这个链接建：
+<https://github.com/settings/tokens/new?scopes=write:packages>。
+（同文件里的 `GH_PAT` 是另一码事 —— 同步代码用的，fine-grained 的
+`Contents: Read and write` 就够。两个别互相顶替。）
+
 ⚠️ **别选「部署方式 = 代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿没有
 `api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
 流水线为什么这么构建，见 [`deploy/README.md`](deploy/README.md)。

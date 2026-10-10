@@ -52,7 +52,24 @@
 `docker login ghcr.io -u <GitHub 账号名> --password-stdin`）。密钥是两个新名字
 `GHCR_USER` / `GHCR_TOKEN`，同在 `poem-wechat-mini-program-secrets` 的
 `wechat-ci.yml` 里 —— 与同步到 GitHub 用的 `GH_PAT` 分开写，因为授权范围不同
-（那个要 `contents`，这个要 `write:packages`）。
+（那个要 `contents`，这个要 `packages`）。
+
+⚠️ **`GHCR_TOKEN` 必须是 classic PAT，fine-grained 建不出来。** GitHub 官方文档原话：
+*GitHub Packages only supports authentication using a personal access token (classic)*
+（[权限说明](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages)）。
+所以 fine-grained token 的 Permissions 里**根本没有 Packages 那一栏** ——
+`write:packages` 只存在于 classic 的老式 scope，不是「藏在哪个二级菜单里」。
+
+两个 token 对不上号这件事：
+
+| 用途 | 密钥名 | 该用哪种 token | 该有的权限 |
+|---|---|---|---|
+| 推 `ghcr.io` 镜像 | `GHCR_TOKEN` | **classic** | `write:packages`（[直接建这个 scope](https://github.com/settings/tokens/new?scopes=write:packages)） |
+| 同步代码到 `poem-wx` | `GH_PAT` | fine-grained | `Contents: Read and write` |
+
+顺手记一条 classic 的坑：UI 上勾 `write:packages` 会**自动把 `repo` 一起勾上**，
+而 `repo` 范围过宽。官方给的绕法是走上面那个带 `?scopes=write:packages` 的链接，
+它就只勾这一个 scope。
 
 ## 流水线怎么构建
 
