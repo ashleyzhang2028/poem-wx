@@ -6,11 +6,13 @@
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
       <!-- 头像那一圈**定尺寸的壳**（.avatar-wrap）。
-           ⚠️ 里面那个带 open-type="chooseAvatar" 的是原生 button，而原生 button
-           自带 display:block 与 width:100%，真机上这一条**盖过**页面样式表里的
-           width:112rpx —— 于是头像被撑成整行宽，配上 border-radius:50% 就是一枚
-           又扁又长的椭圆（用户 2026-10-04 报的那个）。尺寸只能定在**壳**上，
-           按钮去填满壳，与原生默认怎么算无关。游客态那个 view 同理。 -->
+           ⚠️ 里面那个带 open-type="chooseAvatar" 的是原生 button：
+           它自带 display:block 与 width:100%，真机上盖过页面样式表给的 width；
+           而它里面的东西又**解析不了 `height:100%`** —— 两条都踩过，
+           都会把头像变成一枚扁椭圆（用户 2026-10-04 报了两次）。
+           所以：尺寸只定在**壳**上，壳 `position:relative`，
+           按钮与头像本体一律 `position:absolute` 贴满它、尺寸写字面量。
+           游客态那个 view 走同一套样式。 -->
       <view class="avatar-wrap">
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
                 wx:if="{{logged}}">

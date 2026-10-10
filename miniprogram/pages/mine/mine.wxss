@@ -18,9 +18,13 @@
 
 /* 头像那一圈**定尺寸的壳**。
    chooseAvatar 必须挂在原生 button 上，而原生 button 自带 display:block + width:100%，
-   真机上盖过页面样式表给的 width —— 头像会被撑成整行宽的扁椭圆（见 WXML 里的长注）。
-   所以尺寸定在壳上，按钮只负责填满它。 */
+   真机上盖过页面样式表给的 width —— 所以尺寸定在壳上，不在按钮上。
+
+   ⚠️ 壳还要是 `position:relative`：里面那两样（原生 button 与头像本身）
+   一律 `position:absolute` 贴满它。**不许再走 `height:100%` 那条链** ——
+   见下面 .avatar 那一段的长注，真机上它会在原生 button 那一环断掉。 */
 .avatar-wrap {
+  position: relative;
   width: 112rpx;
   height: 112rpx;
   flex: none;
@@ -29,8 +33,11 @@
   box-shadow: 0 0 0 2rpx var(--line);
 }
 
+/* 按钮只负责「铺满壳、且能点」，它自己不参与定尺寸。 */
 .avatar-btn {
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   padding: 0;
@@ -45,11 +52,23 @@
   border: none;
 }
 
+/* 头像本体。
+   ⚠️ 尺寸写**字面量**，不写 `100%` —— 用户 2026-10-04 报的「合并 #122 之后
+   头像又变成椭圆、只看得见左侧一点」就是这里：上一版给 `.avatar` 写的
+   `height:100%`，真机上这条**在原生 button 那一环解析不出来**
+   （width:100% 生效了 —— 所以宽度正好；height:100% 没生效），
+   于是 `<image>` 回落到按自己那张图的**固有比例**排高度：一张横构图
+   头像就排成 164×约 124 的横条，再套 `border-radius:50%`，
+   就是一枚又扁又长的椭圆；`aspectFill` 又从这条横条里取中段，
+   看着就是「只显示了左侧一点」。
+   绝对定位 + 字面量尺寸不给它任何回落到固有比例的机会。 */
 .avatar {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  flex: none;
   background: var(--sink);
 }
 
