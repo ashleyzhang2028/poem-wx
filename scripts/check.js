@@ -7926,6 +7926,76 @@ function sectionOf(text, heading) {
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
 
+  /* ⚠️ **`${IMAGE}` 被引用之前必须有人定义它**（Issue #100 的真现场）。
+     报错长这样，只有一行：
+         sh: 18: IMAGE: parameter not set        （退出码 2）
+     不说是哪条命令、不说是哪个变量该有值；而 `docker login` 的
+     `Login Succeeded` 就在它上面一行 —— 于是人会先去查 docker、查凭据、
+     查上下文体积，全都不无辜。
+
+     ⚠️ 这一条**必须按「定义」查，不能按「出现过」查**：这份配置里
+     `${IMAGE}` 出现六次，只要有**一次**在注释或字符串里出现
+     `IMAGE:` 字样（比如回滚说明里写的 `CNB_IMAGE: ...`），
+     松着写的前缀匹配就会放行。判据落在 `env:` 段里的键名上。
+
+     ⚠️ 为什么值得单开一条：Issue #71 把槽位换到 GHCR 时，`IMAGE` 的定义
+     跟着被删了、引用留在原地 —— 定义与引用从此对不上，而**要等 push main
+     才会显形**（分支推送那条自检根本不跑 build & push）。也就是说这类错
+     会安安静静地攒到发版那一刻。 */
+  {
+    // env 段：`main:` 之下、`stages:` 之上，缩进 8 空格的 `KEY: value` 行
+    const mainSel2 = (() => {
+      const i = cnb.indexOf("\nmain:");
+      return i < 0 ? "" : cnb.slice(i);
+    })();
+    const envSection = mainSel2.split("stages:")[0];
+    const defined = new Set(
+      envSection
+        .split("\n")
+        .map((l) => l.match(/^\s{8}([A-Z][A-Z0-9_]*):\s*\S/))
+        .filter(Boolean)
+        .map((m) => m[1])
+    );
+    // ⚠️ 只抓**不带默认值**的引用（`${VAR}`）—— 带 `:-` 的（`${VAR:-x}`）
+    //    本来就写明了「没有就用 x」，没有它反而是设计的一部分，
+    //    一起要求会把我自己的 `IMAGE: ${GHCR_IMAGE:-...}` 判红。
+    //    反过来说：想省掉 env 里的定义，就得在引用处把 `:-` 写上 ——
+    //    这正是「推 GHCR」那步注释里说的那条规矩。
+    const referenced = new Set();
+    for (const l of shellLines) {
+      for (const m of l.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)) {
+        referenced.add(m[1]);
+      }
+    }
+    // ⚠️ 判据要收到最小：只抓「`env:` 里没有、脚本里也没赋值」的那一类。
+    //    排掉的两类各有各的正当来源，混进来只会让这条断言变成噪音：
+    //      ① CNB 注入：CNB_TOKEN / CNB_ROOT_SLUG / CNB_DOCKER_REGISTRY /
+    //         CNB_COMMIT_SHORT / CNB_REPO_SLUG_LOWERCASE —— 流水线自己给的
+    //      ② 密钥仓库 imports 注入：CNB_TOKEN_USER_NAME / GHCR_USER / GHCR_TOKEN 等
+    //         （README「密钥」一节列了名字，这里不再抄一份）
+    const injected = new Set([
+      "CNB_TOKEN", "CNB_ROOT_SLUG", "CNB_DOCKER_REGISTRY", "CNB_COMMIT_SHORT",
+      "CNB_REPO_SLUG_LOWERCASE", "CNB_BRANCH", "CNB_TOKEN_USER_NAME",
+      "GHCR_USER", "GHCR_TOKEN", "GH_PAT", "GH_REPO", "WX_APPID",
+      "WX_PRIVATE_KEY_B64",
+    ]);
+    // 脚本内赋值的：整行以 `VAR=` 起头（`REV="$(...)"`、`GHCR="${IMAGE}"` 这种）
+    const assigned = new Set(
+      shellLines
+        .map((l) => l.match(/^([A-Z][A-Z0-9_]*)=/))
+        .filter(Boolean)
+        .map((m) => m[1])
+    );
+    const missing = [...referenced].filter(
+      (v) => !defined.has(v) && !injected.has(v) && !assigned.has(v)
+    );
+    ok(".cnb.yml 的 `main` 里引用的变量都在 `env:` 里有定义（否则 busybox sh 直接 exit 2）",
+      missing.length === 0,
+      "这些变量只在脚本里被引用、`env:` 里没有定义：" + JSON.stringify(missing) +
+        " —— job 跑在 Alpine，`set -eu` 之下撞上未定义变量是当场退出，" +
+        "报错只有 `sh: N: VAR: parameter not set` 一行，不说是哪条命令");
+  }
+
   /* 「以后所有的提交都进 main」—— 这句得落在配置里，不能只是口头约定。
      两件事一起守：
        ① 发布流水线挂在 `main:` 上，不是 `"v*":`（打 tag 要管理员，日常没人打得动）

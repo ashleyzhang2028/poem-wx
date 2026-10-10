@@ -123,10 +123,28 @@ main:
         #                                      那两行不改的话这里读不到密钥，必被拒
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
-        # ⚠️ **镜像的槽位在 GitHub 那份**（Issue #71）：见下面 IMAGE 上面那段。
-        # 下面这行留着 = 一行回滚：把 IMAGE 换回它就回到 CNB 私有槽位，
+        # ⚠️ **IMAGE 必须在这儿定义**（Issue #100）：build & push 那步是
+        #    `set -eu`，而 busybox sh 在 `-u` 之下撞上没定义的变量是**当场退出**：
+        #      sh: 18: IMAGE: parameter not set        （退出码 2）
+        #    报错只有这一行 —— 不说是哪条命令、也不说是哪个变量该有值，
+        #    而 `docker login` 的 `Login Succeeded` 就在它上面一行，
+        #    于是人会先去查 docker、查凭据、查上下文体积，全都不无辜。
+        #
+        #    ⚠️ 这不是新病：Issue #71 把槽位从 CNB 换到 GHCR 时，`IMAGE` 的定义
+        #    跟着被删了，而 build & push 那步的 `${IMAGE}` 留在原地 ——
+        #    于是「定义」与「引用」从此对不上，只是要等 push main 才会显形。
+        #    同一个毛病在 `推 GHCR` 那步的注释里已经写过一遍（`:-` 不能省），
+        #    别再留第三处。
+        #
+        # 镜像槽位在 GitHub 那份（GHCR）—— 理由见下面「推 GHCR」那步的长注释：
+        # CNB 的 Docker 制品库可见性跟着代码仓库走，仓库私有 → 制品私有 →
+        # 云托管要拉就得配一对拉取凭据；GHCR 那份是公开包，从地址拉不用配。
+        #
+        # 回滚：把 IMAGE 换成下面那行 CNB_IMAGE 的**值**，就回到 CNB 私有槽位，
         # 代价是云托管那栏要重新配镜像拉取凭据。
-        # CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
+        IMAGE: ${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}
+        # 备份槽位（CNB 私有）—— 留着只为回滚时能照抄，不参与默认路径。
+        CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         # 本仓库这一版的短 sha —— 镜像的版本号，回滚就靠它。
         TAG: ${CNB_COMMIT_SHORT}
       stages:
@@ -282,7 +300,11 @@ main:
               fi
             done
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
-            GHCR="ghcr.io/${GHCR_NAMESPACE:-ashleyzhang2028}/poem-wx/wx-api"
+            # ⚠️ 这里**不另算一遍路径**：GHCR 就是 job env 里的 `IMAGE`。
+            #    两处各写一遍 ghcr.io/... 的话，哪天换命名空间就只改得动一处，
+            #    另一半静默留在老地址上 —— build & push 往 A 推、这里从 B 拉，
+            #    报错会是 `image not found`，看着像推失败了，其实是地址对不上。
+            GHCR="${IMAGE}"
             # 与 CNB 那份是**同一棵树**：build & push 那步刚打的 tag，
             # 这里只补两个新 tag 再推，不重新构建（重建会白等一次 npm ci）。
             docker tag "${IMAGE}:${TAG}" "${GHCR}:${REV}"
