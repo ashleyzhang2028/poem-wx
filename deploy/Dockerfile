@@ -88,8 +88,24 @@ COPY --chown=node:node store-mysql.js ./
 #
 # ⚠️ `--omit=dev` 之外**不要**做成 `npm ci`：上下文是摊出来的，没有 package.json。
 #    这里就装这一个包，装完把清单删掉（镜像里少两个文件，也少一处会漂的东西）。
+#
+# ⚠️ 缓存目录必须**显式**指到 /app 下（Issue #115）。这一行原先在末尾 `rm -rf /root/.npm`，
+#    而这一步是**以 node 身份**跑的（上面那个 USER），失败长这样：
+#      added 12 packages in 2s
+#      rm: can't stat '/root/.npm': Permission denied   ← 构建红在这儿，看着像 rm 写错
+#      ERROR: ... did not complete successfully: exit code: 1
+#    根因是两层叠出来的，任一层单独看都不明显：
+#      1) node:20-alpine **没有** HOME 环境变量（镜像 config 里就没有这一条），
+#         于是 HOME 由构建机/运行时给 —— 在这儿是 /root，npm 的缓存默认就去 /root/.npm。
+#      2) /root 是 0700 root:root。node 既读不了也删不掉它底下的东西，
+#         所以那句 rm 不是「删了个多余目录」，而是一次必然的 EACCES。
+#    顺带记两个坑：`rm -rf` 的 `-f` **不吞**这个错（EACCES 不是「不存在」），
+#    `2>/dev/null` 也只改输出、不改退出码 —— 两种「看着能过」的写法都还是红。
+#    所以别在 rm 上加掩饰，直接把缓存放对地方：--cache 落在 /app 里，node 写得进、
+#    也删得掉，整条链不再碰 /root。这样即使上游哪天给镜像补了 HOME，行为也不变。
 RUN npm install --no-audit --no-fund --omit=dev mysql2@3 --no-package-lock \
- && rm -rf /app/package.json /app/package-lock.json /root/.npm
+      --cache /app/.npm-cache \
+ && rm -rf /app/package.json /app/package-lock.json /app/.npm-cache
 
 ENV NODE_ENV=production
 ENV PORT=8080
