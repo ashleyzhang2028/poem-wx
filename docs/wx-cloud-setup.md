@@ -296,6 +296,26 @@ curl -s -X POST https://<域>/api/sync/pull \
 **登录通但同步一律 401** —— 服务端没认 `Authorization: Bearer`，见
 [`wx-login-server.md`](wx-login-server.md)。
 
+**流水线红在 `build & push`、报 `invalid reference format`** —— 报错里那串
+tag **原样带着 `${...:-...}`**，就是这条（Issue #100）：
+
+```
+ERROR: failed to build: invalid tag
+"${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}:36ad9fe":
+invalid reference format
+```
+
+值没被展开，直接拼进了镜像 tag。根子在 `.cnb.yml` 的 `env:` 那一栏：
+**CNB 的环境变量替换只认 `$VAR`**（文档「环境变量 → 变量替换」），
+`${VAR}`、`${VAR:-default}` 都**不在它的语法里** —— 不认的形态既不报错
+也不清空，**原样当普通字符串留下**。而变量值**不会再被二次展开**，于是
+一直留到 docker 才炸。
+
+⚠️ 这和 `script:` 里的 `${VAR:-x}` **不是一回事**（那是 shell 的，是对的）——
+同一个写法在两个地方含义相反，别一起改。药方是 `env:` 的值只写**字面量**、
+想换槽位就改那一行；自检里有一条专门守这个（`env:` 的值里不许出现
+`${VAR:-...}`）。
+
 **云托管从地址拉镜像报 401 Unauthorized** —— 两种可能，别只看一种：
 
 1. 那栏填的镜像**还没构建出来**（`manifests/<tag>: 401 Unauthorized` 就是这条）。

@@ -130,11 +130,27 @@ main:
         #    而 `docker login` 的 `Login Succeeded` 就在它上面一行，
         #    于是人会先去查 docker、查凭据、查上下文体积，全都不无辜。
         #
-        #    ⚠️ 这不是新病：Issue #71 把槽位从 CNB 换到 GHCR 时，`IMAGE` 的定义
-        #    跟着被删了，而 build & push 那步的 `${IMAGE}` 留在原地 ——
-        #    于是「定义」与「引用」从此对不上，只是要等 push main 才会显形。
-        #    同一个毛病在 `推 GHCR` 那步的注释里已经写过一遍（`:-` 不能省），
-        #    别再留第三处。
+        #    ⚠️ 但「定义了」不等于「定义对了」—— 上一版就是**定义成了**
+        #    `${GHCR_IMAGE:-ghcr.io/...}` 才红的（Issue #100 第二次现场）：
+        #      ERROR: failed to build: invalid tag
+        #      "${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}:36ad9fe":
+        #      invalid reference format
+        #    注意报错里那串引号**原样带着 `${...:-...}`** —— 也就是这个值
+        #    一路没被展开，直接拼进了镜像 tag。
+        #
+        #    ⚠️ 为什么没展开：`env:` 里的变量替换是 **CNB 自己那套**，不是 shell
+        #    的。文档（云原生构建 → 环境变量 → 变量替换）只说两件事：
+        #      「属性值中的 `$env_name` 会被替换为 `env_value`；
+        #        若 `env_name` 无值，则替换为空字符串。」
+        #    只认 `$VAR` 这一种写法，**不认 `${VAR}`、更不认 `${VAR:-default}`**。
+        #    不认的形态既不报错也不清空，**原样留下** —— 于是 IMAGE 的值成了
+        #    那串字面量，再由 shell 拼成 tag，直到 docker 才炸。
+        #
+        #    ⚠️ 更坑的是它**躲过了自检**：check.js 那条「引用的变量都在 env 里
+        #    有定义」只抓不带默认值的 `${VAR}`，注释里还特意写着「带 `:-` 的
+        #    一起要求会把我自己的 `IMAGE: ${GHCR_IMAGE:-...}` 判红」——
+        #    等于是给这个写法开了后门，而它本身就是错的。现在两条并作一条：
+        #    env 的值只写**字面量**，想换槽位就改这一行。
         #
         # 镜像槽位在 GitHub 那份（GHCR）—— 理由见下面「推 GHCR」那步的长注释：
         # CNB 的 Docker 制品库可见性跟着代码仓库走，仓库私有 → 制品私有 →
@@ -142,7 +158,7 @@ main:
         #
         # 回滚：把 IMAGE 换成下面那行 CNB_IMAGE 的**值**，就回到 CNB 私有槽位，
         # 代价是云托管那栏要重新配镜像拉取凭据。
-        IMAGE: ${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}
+        IMAGE: ghcr.io/ashleyzhang2028/poem-wx/wx-api
         # 备份槽位（CNB 私有）—— 留着只为回滚时能照抄，不参与默认路径。
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         # 本仓库这一版的短 sha —— 镜像的版本号，回滚就靠它。
@@ -288,9 +304,16 @@ main:
           script: |
             set -eu
             for v in GHCR_USER GHCR_TOKEN; do
-              # `:-` 不能省：job 跑在 Alpine（busybox sh），`set -u` 之下
-              # `eval "val=$$v"` 撞上没定义的变量是**直接退出**（`parameter not set`），
-              # 那句给人看的横幅根本打不出来 —— 报错只剩一行 sh 内部的话。
+              # ⚠️ 这里的 `:-` 是 **shell 的** `${VAR:-}`（`eval` 展开后由
+              #    busybox sh 处理），它**不能省**：job 跑在 Alpine（busybox sh），
+              #    `set -u` 之下 `eval "val=$$v"` 撞上没定义的变量是**直接退出**
+              #    （`parameter not set`），那句给人看的横幅根本打不出来 ——
+              #    报错只剩一行 sh 内部的话。
+              #
+              # ⚠️ 别把这条推给 `env:` 那一栏：**`env:` 里没有 `:-` 这回事**
+              #    （Issue #100 第二次现场）。那边是 CNB 自己的变量替换，只认
+              #    `$VAR`，`${VAR:-default}` 会**原样**留下、还不报错。同一个
+              #    `:-` 在两个地方含义完全不同，区别见上面 `IMAGE:` 的注释。
               eval "val=\${$v:-}"
               if [ -z "$val" ]; then
                 echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
