@@ -1,18 +1,8 @@
-/**
- * 每日计划的排期内核。与网页版 js/scheduler.js 同一套口径：
- * 先排到期的（复习），再从范围内补新学的，最后拿教材外/邻近年级的凑数，
- * 凑不齐才从池子里拣 —— 保证「今日 5 首」不会因为没到期的就空着。
- */
 const R = require("./review-models");
 const store = require("./store");
 
 const DAY = R.DAY;
 
-/* 取诗范围。每一项只有**一个**标签 ——
-   上一版还配了一句 scopeName 副标题，而它就是标签的同义改写
-   （「本册」→「本学期」、「小学随机」→「小学阶段」），
-   七个选项下面吊着七行废话。副标题撤了，scopeName 只留给需要
-   把范围写成一句话的地方（首页、我的页里那句「一年级上 · 本学期及之前」）。 */
 const SCOPES = {
   term: { label: "本册", scopeName: "本学期", random: false, stages: ["current"] },
   upto: { label: "本册及之前", scopeName: "本学期及之前", random: false, stages: ["upto"] },
@@ -25,11 +15,6 @@ const SCOPES = {
 
 const DEFAULT_SCOPE = "upto";
 
-/* 每日首数四档。**5 是不选时的默认**（store 里 dailyCount: 5），
-   所以 5 必须在档里；3 / 10 / 20 是另外三个量级。
-   上一版是 3/5/8/10（照搬网页版），按 Issue #26 改为 3/5/10/20 ——
-   8 与 10 只差两首，档位踩得太密，而 20 首是「今天想多背」的那一档，
-   原来根本没有。 */
 const DAILY_COUNTS = [3, 5, 10, 20];
 
 const GRADE_NAMES = {
@@ -44,34 +29,23 @@ const STAGE_GRADES = {
   high: [10, 11, 12]
 };
 
-/* 三学段的名字。网页版（js/app.js 的 STAGES）就叫这三个词，
-   小程序端上一版没有 —— 背诵设置页上一版只有十二个年级格子，
-   用户看不出自己这一屏落在哪个学段里。 */
 const STAGES = {
   primary: { name: "小学", grades: STAGE_GRADES.primary },
   middle: { name: "初中", grades: STAGE_GRADES.middle },
   high: { name: "高中", grades: STAGE_GRADES.high }
 };
 
-/* 学段顺序固定：小学 → 初中 → 高中。对象键序在 JS 里是排序过的，
-   而「高中」排在「初中」前头是件没人想要的事 —— 所以顺序写死在这里。 */
 const STAGE_KEYS = ["primary", "middle", "high"];
 
 function scopeOf(key) {
   return SCOPES[key] || SCOPES[DEFAULT_SCOPE];
 }
 
-/** 年级落在哪个学段：一至六小学、七至九初中、十至十二高中 */
 function stageOf(grade) {
   const g = Number(grade);
   return STAGE_KEYS.filter((k) => STAGE_GRADES[k].indexOf(g) >= 0)[0] || "primary";
 }
 
-/* 学段的名字。
-   ⚠️ 这里**不能**叫 stageName —— 下面那个同名的函数是这个模块里更老、
-   更常用的那个（回答「这首背到哪个记忆阶段了」，返回「新学 / 复习」）。
-   两个都叫 stageName 的结果是后者把前者盖掉，学段那一行会印出「新学」。
-   所以这个叫 stageLabel：说的是**学段**（小学/初中/高中）那一件事。 */
 function stageLabel(key) {
   return (STAGES[key] || STAGES.primary).name;
 }
@@ -80,7 +54,6 @@ function algoKey() {
   return store.settings().algo || R.DEFAULT_KEY;
 }
 
-/** 没见过、或还没开始学的，都不算「到期」—— 那些走新学那条路 */
 function isDue(rec, now) {
   if (!rec || !(rec.attempted || rec.learned)) return false;
   return rec.nextReviewAt <= (now === undefined ? Date.now() : now);
@@ -138,10 +111,6 @@ function gradeDistance(a, b) {
   return Math.abs(Number(a) - Number(b));
 }
 
-/**
- * 生成今日计划。
- * @param {Object} opt grade / term / count / scope / allPoems / extraPoems / getRecord
- */
 function generateDailyPlan(opt) {
   const grade = Number(opt.grade);
   const term = Number(opt.term);
@@ -247,7 +216,6 @@ function generateDailyPlan(opt) {
   return plan;
 }
 
-/** 全库总览：已学 / 已掌握 / 今日到期 */
 function overview(allPoems) {
   const getRecord = (id) => store.getRecord(id);
   const now = Date.now();
@@ -266,7 +234,6 @@ function overview(allPoems) {
   return { total: allPoems.length, learned, mastered, dueToday: due };
 }
 
-/** 未来 N 天的排期预览，用于进度总览页 */
 function forecast(allPoems, days) {
   const getRecord = (id) => store.getRecord(id);
   const today = R.startOfDay(Date.now());

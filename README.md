@@ -53,8 +53,8 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 
 1. ~~换掉 `appid`~~（已换，见上）
 2. **接上后端**：走云调用就在管理页填两栏（免域名、免备案）；走 `wx.request`
-   就得配 `baseUrl` 并把域名加进「request 合法域名」—— 开发者工具里勾了
-   「不校验合法域名」能绕过，**真机绕不过**，这条最容易在提审后才发现
+   就得配 `baseUrl` 并把域名加进「request 合法域名」——
+   开发者工具里勾「不校验合法域名」能绕过，**真机绕不过**，这条最容易在提审后才发现
 3. **真机走一遍**。上面所有验证都是离线跑的；安全区、原生控件外观、字体回退、
    分片下载超时各有一摊事，开发者工具的真机预览才是准的
 
@@ -100,18 +100,18 @@ TTS 合成、管理接口。**没有后端也能跑** —— 语料、算法、�
 | **云调用（推荐）** | `wx.cloud.callContainer` | **都不要** | 只有小程序 |
 | request 合法域名 | `wx.request` + 域名 | 要域，且**域名必须已备案**（3–20 个工作日） | 小程序 + 网页版 |
 
-**第二条路的门槛不在配置，在备案。** 小程序里 `wx.request` 只能打在微信后台登记过的
-域上（没登记的真机一律 `url not in domain list`），而那张名单**只收已备案的域名** ——
-域名要 **https + 有效证书**、**已 ICP 备案**、**不带端口不写 IP**，三条都满足才填得进去。
-云托管给的默认域填不进去（微信提示「云托管域名仅用作测试使用，不可用在正式环境下」）。
-所以想上线又不想等备案，就走云调用：它走微信内网，不经过那张名单。
+**第二条路的门槛不在配置，在备案。** `wx.request` 只能打在微信后台登记过的域上
+（没登记的真机一律 `url not in domain list`），而那张名单**只收已备案的域名** ——
+https + 有效证书、ICP 备案、不带端口不写 IP，三条都满足才填得进去。
+云托管的默认域填不进去（微信提示「云托管域名仅用作测试使用」）。
+想上线又不想等备案，就走云调用：它走微信内网，不经过那张名单。
 
-云调用的代价只有一条：**只有小程序能调**（浏览器拿不到调用方身份），
-所以网页版那条路仍是 `wx.request` + 域名 —— 本项目两端本来就是两份部署，这条不落到任何一处。
+云调用的代价只有一条：**只有小程序能调**（浏览器拿不到调用方身份）。
+本项目两端本来就是两份部署，这条不落到任何一处。
 
-两条路在客户端只差一层分派，`PATHS` / 报文 / 重试全共用。怎么填见
-[`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) § 6，完整说明见
-[docs/architecture.md § 五点五](docs/architecture.md#五点五出网两条路一张名单和一个免掉它的办法)。
+两条路在客户端只差一层分派，`PATHS` / 报文 / 重试全共用。
+怎么填见 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) § 6，
+两条路的说明见 [docs/architecture.md § 五点五](docs/architecture.md#五点五出网两条路一张名单和一个免掉它的办法)。
 
 ## 谁能用
 
@@ -849,7 +849,7 @@ git checkout main && git pull   # 推 main 就出镜像
 
 然后照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做：建服务（填镜像
 `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`，端口 8080）→
-配环境变量 → 建 `wx_accounts` 表 → 加 request 合法域名 → 填 `baseUrl` → 验。
+配环境变量 → 建 `wx_accounts` 表 → 管理页填云调用两栏 → 验。
 
 ⚠️ **镜像地址填 GHCR 那份，不要填 CNB 制品库那份**（Issue #71）：CNB 的 Docker
 制品库可见性跟着代码仓库走，本仓库 Private → 制品私有 → 云托管「从地址拉镜像」
@@ -866,8 +866,8 @@ only supports authentication using a personal access token (classic)* —— 所
 （同文件里的 `GH_PAT` 是另一码事 —— 同步代码用的，fine-grained 的
 `Contents: Read and write` 就够。两个别互相顶替。）
 
-⚠️ **别选「部署方式 = 代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿没有
-`api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
+⚠️ **部署方式选「镜像」，不选「代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿
+没有 `api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
 流水线为什么这么构建，见 [`deploy/README.md`](deploy/README.md)。
 
 消息契约在 [`docs/wx-login-server.md`](docs/wx-login-server.md)（含
@@ -891,7 +891,7 @@ only supports authentication using a personal access token (classic)* —— 所
 - **后端要配一遍**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
   服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在
   [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），
-  同步与管理复用 poem 已上线的那几个。管理页里可以直接填 `baseUrl`。
+  同步与管理复用 poem 已上线的那几个。管理页里可以直接填云调用两栏（或 `baseUrl`）。
   没配之前一律降级，不做任何「假装成功」
 - **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与
   poem 服务端接起来真跑一遍（登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。

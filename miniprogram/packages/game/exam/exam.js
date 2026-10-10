@@ -7,10 +7,6 @@ const theme = require("../../../utils/theme");
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
 
-/* 卷子每道题一份「答卷」—— 判分不再边答边做，而是交卷时统一批。
-   用户原话是「所有题目答完后再给分给对错」，所以答题途中页面拿不到
-   `answer` 这个东西：选项上只有「没选 / 选了」两态（见 exam.wxml）。
-   留的是 picked，每道题一个格子，答完停在原地也能回头改。 */
 function blankAnswers(n) {
   const a = [];
   for (let i = 0; i < n; i++) a.push("");
@@ -26,15 +22,15 @@ Page({
     questions: [],
     index: 0,
     current: null,
-    /** 当前这道题的选项（带 A B C D 脚标字母）—— 字母只到这一层 */
+
     optionRows: [],
-    /** 题干下面那一行读数：题型 · 出自《…》。缺哪一段就不印哪一段 */
+
     metaLine: "",
-    /** 当前这道题选了什么（= answers[index] 的镜像，WXML 里要它判高亮） */
+
     picked: "",
-    /** 逐题的作答。顺序与 questions 一一对应 —— 交卷时按它批 */
+
     answers: [],
-    /** 批完之后逐题的结果（含对的，不只是错题） */
+
     graded: [],
     correct: 0,
     remain: DURATION,
@@ -60,23 +56,11 @@ Page({
     this.setData({ scopes, forms: quiz.FORMS, pickedForms: quiz.FORM_KEYS.slice() });
   },
 
-  /**
-   * 题型多选。
-   *
-   * 上一版是自己算差异（list.splice / push 之后再 setData）。那个写法有个洞：
-   * 数据是「我算出来的」，不是「用户勾出来的」，一旦两边的判断错开一格，
-   * 界面上的勾与页面里的数据就再也对不上了。
-   *
-   * 现在只认 checkbox-group 交出的一份完整清单，页面不再自己算增删。
-   * 上一版还有一处：取消掉最后一个勾时只弹了个 toast 就 return，
-   * 数据没改、勾却真被用户点掉了 —— 那条路径现在被 setData 折回来。
-   */
   onToggleForm(e) {
     const picked = e.detail.value || [];
     if (!picked.length) {
       wx.showToast({ title: "至少留一种题型", icon: "none" });
-      // 原生控件已经把那个勾去掉了，而数据不许为空 —— 必须把选中态重设回去，
-      // 否则界面（全没勾）与数据（还有一项）从此对不上，下次进这个页面会「自动」多出题型。
+
       this.setData({ pickedForms: this.data.pickedForms.slice() });
       return;
     }
@@ -145,17 +129,6 @@ Page({
     return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
   },
 
-  /**
-   * 选一个答案。
-   *
-   * 这里**不判对错**（用户原话「所有题目答完后再给分给对错」）——
-   * 只是把这一格记下来，并且**可以改**：答完了想回头换一题是常事，
-   * 上一版点一下就锁死、0.8 秒后自动翻页，等于不给回头。
-   *
-   * 但该响一声还是响 —— 没有反馈的话用户不知道这一下点没点着。
-   * 上一版这里用的是「答对 / 答错」两种音效，而它等于当场把答案说了出来；
-   * 现在一律走 sfx.answer(true)：那是「记下了」的一声，不是「对了」的一声。
-   */
   onPick(e) {
     const picked = e.currentTarget.dataset.v;
     if (picked === this.data.picked) return;
@@ -172,7 +145,7 @@ Page({
       this.finish();
       return;
     }
-    // 回头改过的答案要恢复：下一题的高亮取的是它自己的那一格
+
     const next = this.data.questions[index];
     this.setData({
       index,
@@ -183,39 +156,19 @@ Page({
     });
   },
 
-  /**
-   * 题干下面那一行：**题型 · 出自《…》**。
-   *
-   * 上一版这是两行两样式 —— 题干上面一枚彩色题型标签，题干下面一行灰字
-   * 「出自《…》」。它们回答的是同一件事（这道题在问什么、问的是哪一首），
-   * 所以并成一行，用「·」断开，与详情页身份行同一长相。
-   *
-   * 「朝代」那道题的题干就是作者名，没有「出自哪首」这一说 ——
-   * 上一版用 `wx:if` 在模板里判掉，现在这一层自己判，模板只管印。
-   */
   metaLineOf(q) {
     if (!q) return "";
     const name = quiz.formOf(q.form).name;
-    // 「朝代」的题干是作者，不必再交代出处 —— 与上一版模板里那条 wx:if 同一口径
+
     if (q.form === "dynasty" || !q.title) return name;
     return name + " · 出自《" + q.title + "》";
   },
 
-  /**
-   * 交卷：从这里开始才有对错。
-   *
-   * 判分仍走 utils/quiz.js 的 judge（与题库页同一份口径，只此一处），
-   * 但**批的是整份答卷**：逐题摊开，对的也列 ——
-   * 「我哪几道是对的」和「我哪几道错了」一样是这场考试的信息。
-   *
-   * 时间到与主动交卷走同一条路，所以「没答完」这件事是在这里被如实交代的：
-   * 空白格判为答错（judge 对空答案返回 false），不假装没这回事。
-   */
   finish() {
     this.stopTimer();
     const questions = this.data.questions;
     const answers = this.data.answers;
-    const judge = quiz.judge;   // 与题库页同一份判分口径，只此一处
+    const judge = quiz.judge;
     const graded = questions.map((q, i) => judge(q, answers[i] || ""));
     const correct = graded.filter((g) => g.ok).length;
 

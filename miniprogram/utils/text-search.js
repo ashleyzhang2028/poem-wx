@@ -1,20 +1,3 @@
-/**
- * 正文全文检索。
- *
- * 语料分两处放：课内正文在主包（course.json），课外正文在分片（走 CDN）。
- * 检索要覆盖全站，但**不能把分片全量读进内存** —— 那是 23MB。
- * 分两条路：
- *
- *   1. 课内（251 首，223KB，已在包里）：现场扫，逐字匹配，零成本
- *   2. 课外：用构建时生成的倒排索引。键是单字，值是这个字出现在哪些分片、
- *      出现几次 —— 查一次先算出「相关分片」，只把这几片读进来精确定位。
- *
- * 倒排只记「字 → 分片」，不记行号和偏移：记偏移要额外 2-3 倍体积，
- * 而一片才 200KB，读进来再定位一次的花费远小于把索引撑大。
- *
- * 索引生成不出来时**整个全文检索关掉**，搜索页退回索引字段，
- * 不会静默降级成「假装搜过正文」。
- */
 const corpus = require("./corpus");
 
 const INDEX = "data/texts/idx.json";
@@ -46,7 +29,6 @@ function readiness() {
   return { visible: true, usable: true, state: "ready", reason: "" };
 }
 
-/** 查询切成单字。中文不分词：语料全是古诗文，单字足够，还省一张词表 */
 function termsOf(keyword) {
   return String(keyword || "")
     .replace(/\s+/g, "")
@@ -54,10 +36,6 @@ function termsOf(keyword) {
     .filter((c) => /[\u4e00-\u9fff]/.test(c));
 }
 
-/**
- * 候选分片：取命中字最少的那一片集合打底，再逐步取交集。
- * 顺序有讲究 —— 从最挑剔的字开始，交集收敛最快。
- */
 function candidateBuckets(terms) {
   const idx = index();
   if (!idx) return [];
@@ -77,7 +55,6 @@ function candidateBuckets(terms) {
   return acc;
 }
 
-/** 在一段正文里按整串找，返回命中的句子（按标点切） */
 function hitLines(text, keyword) {
   const kw = String(keyword || "");
   if (!kw) return [];
@@ -127,11 +104,6 @@ function scanBuckets(keyword, buckets, limit) {
   return out;
 }
 
-/**
- * 全文检索。
- * @param {string} keyword
- * @param {Object} [opt] book（限定集子）/ limit
- */
 function search(keyword, opt) {
   const kw = String(keyword || "").trim();
   const limit = (opt && opt.limit) || 20;
@@ -139,7 +111,7 @@ function search(keyword, opt) {
   if (!kw) return [];
 
   if (book && book !== "poems") {
-    // 限单部课外集子：直接扫该集子涉及的分片，不必过倒排
+
     const manifest = corpus.manifest();
     const buckets = [];
     corpus.ofBook(book).forEach((p) => {

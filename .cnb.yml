@@ -1,256 +1,68 @@
 $:
-  # main 之外的任意分支：只跑自检（语料在 CI 里现生成，不依赖本地临时目录）。
-  #
-  # 「以后所有的提交都进 main」—— main 是**默认分支**，所以它自己那条写在
-  # 文件末尾（`main:`），跑自检 + 出镜像 + 传体验版；其余分支只自检，
-  # 而且**不出镜像**：出了也没人用，只是往制品库堆垃圾。
+  # 任意分支：只跑自检，不出镜像（出了也没人用，只往制品库堆垃圾）。
   "**":
     - name: 自检
       image: node:20
       script:
-        # 语料现编译：poem 那边补一篇宋词，这里下一次跑就跟着有。
-        # 「跟的是什么」由 scripts/check.js 的 V40 记着 —— 篇数 / 号段 / 归位 /
-        # 朝代四组判据（Issue #61）。那边一改，这边不是静默跟上，而是**红**，
-        # 由人回来对一次再动。之所以不把 clone 钉在 sha 上：钉住之后
-        # 「同步没同步」就没人问了 —— 反正永远同步不了。
-        # ⚠️ 取 poem 这一步**不能只靠 CNB_TOKEN**（Issue #71 的现场）：
-        #    流水线里的令牌范围跟触发事件走，`repo-code` 这条未必覆盖到第二个仓库 ——
-        #    于是 `git clone` 回 128，而 CNB 的原话是 `Repository Not Found. / 仓库不存在。`，
-        #    **看着像路径写错，其实是凭据不被接受**（带无效凭据时，连匿名可读的仓库也会被拒）。
-        #    所以：带令牌试一次，不成就不带凭据再来（poem 匿名可读，实测过）。
-        #   写成一行（`||` 展开），别用 `- |` 多行块 —— 这条 script 是 **list**，
-        #   混了多行块的话 CNB 会把后面的项用 `&&` 串到块末尾、语法就崩：
-        #     sh: 10: Syntax error: "&&" unexpected     （退出码 2）
-        #   同一个毛病刚在 `上传体验版` 那步炸过（`cnb-to6-1k4gaj155`），
-        #   别再留一处 —— 自检里有一条断言守着「list 不许混多行块」。
-        - git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem 2>/dev/null || git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
-        # POEM_ROSTER 没配就是空名册 —— 自检里有一条断言守着「名录不许凭空编人」
+        - bash scripts/clone-poem.sh /tmp/poem
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-        # 云托管那份镜像（deploy/Dockerfile）的源码上下文是 **poem 仓库** ——
-        # 构建链在下面 `build:wx-api` 那一节，不在这条自检里。
-        # 原先这里有一条 `deploy/api.synced` 的 sha 对账，它守的是「往本仓库拷了一份
-        # api/ 副本、改完 poem 忘了同步」这个税。副本已经撤掉（后端只有 poem 一处），
-        # 那条对账也就随之退场 —— **不是不守了，是它要守的东西不存在了**。
-        # 页面齐全 / 语料完整 / 四套算法 / 排期 / 注音消歧 /
-        # 版式（折叠不丢字、折出来的行不孤字、短句不被折，跑全站 5599 篇）/
-        # 「选一个」的控件（三种排布同一块填色、选项行不许画竖线、
-        # 分段每段都 label 包着原生控件、多选与单选分得开（多选未选中是
-        # --sink 灰底 + 右侧一枚空心勾选框、选中才填主色，不是「墨黑胶囊 +
-        # 右上角一枚小勾」、也不是「人人一颗双圈」）、令字格不再塞圆点）/
-        # 这一轮的六句话（背诵范围那一行七段、搜索页不再让人选范围与方式、
-        # 考试改名且交卷前不判对错、选项两列）/
-        # 背诵设置的两句（范围卡改名「背诵范围」、加「当前学段」一格
-        # 且年级只列这一段、换学段连范围一起换）/
-        # 外壳（自绘底栏四页都点亮当前项、图标都有画法）与头像（本机那张压过微信那张）/
-        #
-        # 倒排往返 / 飞花令判定 / 六种题型 /
-        # 门禁（未登录只能看首页、点不动）与三档（含「本机写 max 不生效」）/
-        # 逐页扫 WXML 确认门禁真的生效 / 管理页不许再留自助提权 /
-        # 档位与网页版对照 /
-        # 控件来源（该有的原生控件必须在、自绘控件不许复活、配色对齐主色）/
-        # 观感口径（门禁卡收在一处、可点就有按下反馈、空状态给出路、
-        # 主题色只定一次、首页有骨架屏、日期用中文数字）/
-        # 设计令牌（字号一律走令牌、卡片间距只定一次、页头不与导航栏重复）/
-        # 门禁开合（真挂页面跑一遍，登录后 locked 必须落回 false ——
-        # 这一条抓出过阅读页「所有人永远停在登录卡上」的 bug）/
-        # 同步冲突 / 包体积
-        #
-        # V40 内容口径与网页版对账（Issue #61 两轮：2026-10-06 / 2026-10-09）：
-        # 篇数 / 号段 / 归位 / 朝代 / **出处两重** / 题名异写，
-        # 外加两端 author-index.js 的朝代时间轴与异名表、合编归属表逐条比。
-        # 这一节**会过期** —— poem 补录之后这边就红，红的意思是「回来对一次」，
-        # 不是「坏了」。第二轮对的是 #505 / #510 / #512 / #516 / #517：
-        # 补录 255 条（5599 → 5854）、出处勘正（唐诗 318 + 文选 480 + 词 288 +
-        # 曲 31 的两重出处）、成语 138 条朝代归位、11 条题名异写
-        #
-        # V41 作者索引（Issue #61）：名册收哪十部、异名归一真的合并了、
-        # 合编归属（《古人谈读书》挂朱熹）、结集不进名册、同一首跨集只算一次，
-        # 以及**真跑阅读页**验「下一篇只在这一位作者里走」（连翻五首不跨作者、
-        # 不跳进词条）
         - node scripts/check.js
-        # 与网页版的逐项对照：网页版能力表里每一项，小程序端都得有交代
-        # （已实现 / 换个做法 / 明确不做并记账），漏一项就红
         - node scripts/parity.js
-        # 端到端：把**小程序端 utils** 与 **poem 服务端**接起来真跑一遍
-        # （登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
-        # 上面那两条是静态 + 单元，验得了「报文形状对不对」；
-        # 而这一轮所有的坑（登录通但同步 401、字段被服务端裁掉、换机认不回来）
-        # 全都是**两边合起来**才显形的 —— 那一类只有真跑一遍才抓得住。
-        # poem 已经在上面 clone 到 /tmp/poem 了，直接指过去。
+        # 端到端：小程序端 utils ↔ poem 服务端真跑一遍（登录 → 同步 → 换机）。
         - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
 
-# ---------------------------------------------------------------------------
-# main —— 唯一的分支。推这里就是发一次版。
-#
-# 五件事：自检 → 构建云托管镜像 → 推一份到 GHCR（云托管那份地址）→ 上传体验版 →
-# 同步到 GitHub。都在同一个 job 里，
-# 因为**镜像 tag 按本仓库这一版给**，跑完就是「一版代码 = 一个版本号」。
-#
-# 为什么不是 tag：
-#   打 tag 要仓库管理员（`Only administrators are allowed push refs/tags/*`，
-#   实测过），而日常提交的人不该为了发版去找管理员。改成「推 main 即发布」，
-#   镜像 tag 用 CNB_COMMIT_SHORT（本仓库这一版的 commit 前 8 位），
-#   一样能回滚 —— 云托管那栏想回哪版，就把那个 sha 填回去。
-#
-#   注意镜像 tag **不是** CNB_BRANCH：那在 push 触发下等于分支名，永远是
-#   `main`，回滚时等于没有版本号。
+# main —— 唯一的分支。推这里就是发一次版：自检 → 镜像 → GHCR → 体验版 → 同步 GitHub。
 main:
   push:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
-      # ⚠️ **必须是 `docker.image`，不能写 `image`。**
-      #    流水线级没有 `image` 这个字段（语法手册里是 `docker.image` / `docker.build`），
-      #    写在 `image:` 会被**静默忽略**，整条 job 退回缺省镜像
-      #    `cnbcool/default-build-env` —— 而那个镜像里**没有 node**。
-      #    现场（`cnb-si8-1k4g9c8rp`，13 秒就红）：
-      #      $ POEM_WEB_DIR=/tmp/poem node scripts/build-data.js && node scripts/check.js ...
-      #      sh: line 1: node: command not found     （退出码 127）
-      #    报错像「命令写错了」，其实跟命令、跟令牌、跟路径都无关。
-      #    （`$."**"` 那条自检写的是 `image: node:20` —— 那是**任务级**，
-      #      `image` 在任务级是合法字段，那条没问题，别一起改。）
+      # 必须是 `docker.image`，不是 `image`（流水线级没有 `image` 这个字段，写错会被静默忽略，
+      # 退回的缺省镜像里没有 node）。任务级写 `image` 是合法的，别一起改。
       docker:
         image: node:20
       services:
         - docker
       imports:
-        # 密钥走**密钥仓库**（Issue #64）。⚠️ 只声明「读哪个文件」，
-        # **不要**试图 clone 那个仓库：它禁止 Git Clone（本地也不行），
-        # `git clone` 一律回 `Repository Not Found`，看着像路径写错。
-        # 取密钥只有 imports 这一条路。
-        #
-        # ⚠️ 密钥仓库那份 wechat-ci.yml 里**必须**有这两个字段：
-        #      allow_slugs: npu-gpu-cpu/poem-wechat-mini-program
-        #      allow_events: push            ← 触发事件从 tag_push 改成了 push，
-        #                                      那两行不改的话这里读不到密钥，必被拒
+        # 密钥只从密钥仓库读（那个仓库禁止 clone，git clone 一律回 Repository Not Found）。
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
-        # ⚠️ **IMAGE 必须在这儿定义**（Issue #100）：build & push 那步是
-        #    `set -eu`，而 busybox sh 在 `-u` 之下撞上没定义的变量是**当场退出**：
-        #      sh: 18: IMAGE: parameter not set        （退出码 2）
-        #    报错只有这一行 —— 不说是哪条命令、也不说是哪个变量该有值，
-        #    而 `docker login` 的 `Login Succeeded` 就在它上面一行，
-        #    于是人会先去查 docker、查凭据、查上下文体积，全都不无辜。
-        #
-        #    ⚠️ 但「定义了」不等于「定义对了」—— 上一版就是**定义成了**
-        #    `${GHCR_IMAGE:-ghcr.io/...}` 才红的（Issue #100 第二次现场）：
-        #      ERROR: failed to build: invalid tag
-        #      "${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}:36ad9fe":
-        #      invalid reference format
-        #    注意报错里那串引号**原样带着 `${...:-...}`** —— 也就是这个值
-        #    一路没被展开，直接拼进了镜像 tag。
-        #
-        #    ⚠️ 为什么没展开：`env:` 里的变量替换是 **CNB 自己那套**，不是 shell
-        #    的。文档（云原生构建 → 环境变量 → 变量替换）只说两件事：
-        #      「属性值中的 `$env_name` 会被替换为 `env_value`；
-        #        若 `env_name` 无值，则替换为空字符串。」
-        #    只认 `$VAR` 这一种写法，**不认 `${VAR}`、更不认 `${VAR:-default}`**。
-        #    不认的形态既不报错也不清空，**原样留下** —— 于是 IMAGE 的值成了
-        #    那串字面量，再由 shell 拼成 tag，直到 docker 才炸。
-        #
-        #    ⚠️ 更坑的是它**躲过了自检**：check.js 那条「引用的变量都在 env 里
-        #    有定义」只抓不带默认值的 `${VAR}`，注释里还特意写着「带 `:-` 的
-        #    一起要求会把我自己的 `IMAGE: ${GHCR_IMAGE:-...}` 判红」——
-        #    等于是给这个写法开了后门，而它本身就是错的。现在两条并作一条：
-        #    env 的值只写**字面量**，想换槽位就改这一行。
-        #
-        # 镜像槽位在 GitHub 那份（GHCR）—— 理由见下面「推 GHCR」那步的长注释：
-        # CNB 的 Docker 制品库可见性跟着代码仓库走，仓库私有 → 制品私有 →
-        # 云托管要拉就得配一对拉取凭据；GHCR 那份是公开包，从地址拉不用配。
-        #
-        # 回滚：把 IMAGE 换成下面那行 CNB_IMAGE 的**值**，就回到 CNB 私有槽位，
-        # 代价是云托管那栏要重新配镜像拉取凭据。
+        # ⚠️ IMAGE 必须在这儿定义：build & push 那步是 `set -eu`，撞上未定义变量当场退出。
+        # ⚠️ 值只写**字面量** —— CNB 的变量替换只认 `$VAR`，`${VAR}` / `${VAR:-default}`
+        #    既不报错也不清空，原样拼进镜像 tag，直到 docker 才炸。
+        # 回滚：把 IMAGE 换成下面 CNB_IMAGE 的值（代价是云托管要重配拉取凭据）。
         IMAGE: ghcr.io/ashleyzhang2028/poem-wx/wx-api
-        # 备份槽位（CNB 私有）—— 留着只为回滚时能照抄，不参与默认路径。
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
-        # 本仓库这一版的短 sha —— 镜像的版本号，回滚就靠它。
         TAG: ${CNB_COMMIT_SHORT}
       stages:
-        # 1. 取后端源码。这一份是**唯一一份** —— 不往本仓库落副本，
-        #    所以「poem 改了这个没跟上」这件事根本不会发生。
         - name: clone poem
-          # 同上面 `$."**"` 那条：令牌不一定覆盖到第二个仓库，带了反而被拒。
-          # 带令牌试一次，不成就不带凭据再来（poem 匿名可读，实测过）。
-          script: |
-            git clone --depth 1 "https://${CNB_TOKEN}@cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem 2>/dev/null \
-              || git clone --depth 1 "https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" /tmp/poem
-        # 2. 自检。语料在 CI 里现编译，「跟的是什么」由 check.js 的 V40 记着
-        #    （篇数 / 号段 / 归位 / 朝代）：poem 那边一改，这边不是静默跟上，
-        #    而是**红**，由人回来对一次再动。
-        - name: 自检
-          script:
-            - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-            - node scripts/check.js
-            - node scripts/parity.js
-            # 端到端：把小程序端 utils 与 poem 服务端接起来真跑一遍
-            # （登录 → 同步 → 设置/头像/进度真落库 → 换台手机认回来）。
-            # 静态自检验得了「报文形状对不对」，验不了「合起来通不通」——
-            # 这一轮所有的坑（登录通但同步 401、字段被服务端裁掉）全是后者。
-            - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
-        # 3. 摊构建上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳。
-        #    平铺在**同一层**里，因为 deploy/Dockerfile 按 ./api 与
-        #    ./serve-api.js 拷；.dockerignore 也摆在上下文根 —— 只在那儿生效。
-        #    上下文里没有 data/ 26MB、fonts/ 11MB、js/ 1MB，白名单挡着，
-        #    运行时一条都不读。
+          script: bash scripts/clone-poem.sh /tmp/poem
+        # 自检不在这儿重复：同一次 push 里 $."**" 那条已经跑过完全一样的三条。
+        # 摊构建上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳，平铺在同一层，
+        # 因为 Dockerfile 按 ./api 与 ./serve-api.js 拷，.dockerignore 也只认上下文根。
         - name: stage context
           script: |
-            # ⚠️ 别写 `set -euo pipefail`：job 跑在 `node:20`（Alpine），
-            #    那里是 busybox sh，`-o pipefail` **不认** ——
-            #      sh: 1: set: Illegal option -o pipefail     （退出码 2）
-            #    这条 stage 里没有管道，`set -eu` 就够（`-u` 是「用未定义变量就退出」，
-            #    那才是这里真正要的那条）。
+            # 别写 `set -euo pipefail`：Alpine 的 busybox sh 不认 `-o pipefail`。
             set -eu
             mkdir -p /tmp/ctx
             cp -R /tmp/poem/api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
-            # ⚠️ 摆在**上下文根**，不是 `deploy-api-serve/`。
-            #
-            #    忽略文件跟**构建上下文**走，跟 Dockerfile 放哪儿无关 ——
-            #    三个位置里只有一个对，另两个**最像对的**且都不报错：
-            #      ✅ 这里（上下文根）
-            #      ❌ 原样留在本仓库 `deploy-api-serve/` 里（从来没进过上下文）
-            #      ❌ 拷到 `/tmp/ctx/api/.dockerignore`（**嵌套的不生效**）
-            #    摆错位置不会报错，只会让上下文从 0.3MB 变成 38MB：26MB 语料 +
-            #    11MB 字体照上传，而这个小程序一条都不读。全文见 deploy/Dockerfile。
+            # ⚠️ 忽略文件跟**构建上下文**走：摆错位置不报错，只让上下文从 0.3MB 变成 38MB。
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
-            # 体积要**当场报**：0.3MB 与 38MB 的差别在这条链上不以任何报错的形式出现，
-            # 只以「每次部署白传 37MB」的形式慢慢出现（Issue #71）。
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
             du -sh /tmp/ctx
-        # 4. 构建 + 推。REV 记的是**后端的 commit**（不是本仓库的 sha）——
-        #    「线上跑的是哪一版 poem」这个问题只有它能答。
         - name: build & push
           script: |
-            # 同上：Alpine 的 sh 不认 `-o pipefail`。这一节也没有管道。
             set -eu
-            # ⚠️ 忽略文件没摆到上下文根，构建**照样成功** —— 只是每次白传 37MB
-            #    （poem 的 data/ 26MB + fonts/ 11MB），运行时一次都不读。
-            #    这一条属于「绿着出错」那一类，所以当场断掉，不留给体积去说。
+            # 忽略文件没摆到上下文根，构建照样成功，只是每次白传 37MB —— 绿着出错，当场断掉。
             if [ ! -f /tmp/ctx/.dockerignore ]; then
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
-              echo "  照这样构建，上下文会从 0.3MB 变成 38MB（poem 的 data/ 26MB +" >&2
-              echo "  fonts/ 11MB 一并上传），而运行时一次都不读，且**不会报任何错**：" >&2
-              echo "  构建绿、部署绿，只是每次白传 37MB。" >&2
-              echo "  要修的是 stage context 那一步；判据是 /tmp/ctx/.dockerignore 在不在。" >&2
               exit 1
             fi
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
-            # ⚠️ **这里要登的就是 `IMAGE` 那个 registry，不是 CNB 那个**（Issue #100
-            #    第三次现场）。`IMAGE` 从 Issue #71 起指向 GHCR，而这一步的
-            #    `docker push "${IMAGE}"` 跟着往 GHCR 推 —— 可 login 还留在 CNB
-            #    制品库上，于是必被拒：
-            #      error from registry: denied
-            #    报错只有 `denied` 一行，不说是「没登这个 registry」，看着像
-            #    PAT 没权限 / 包名被人占了 —— 其实压根没出示 GHCR 的凭据。
-            #    （之前 `IMAGE` 指 CNB 时，这行 login 恰好是对的，换槽位时漏改了。）
-            #
-            #    ⚠️ 凭据从**流水线级 imports** 来（GHCR_USER / GHCR_TOKEN 与别的
-            #    密钥同在 wechat-ci.yml），这一步不用再写一遍 imports。
-            #    ⚠️ 用户名是 **GitHub 账号名**，跟 CNB 那边写死 `cnb` 相反。
+            # 要登的就是 IMAGE 那个 registry（GHCR），不是 CNB —— 推哪儿就得先登哪儿，
+            # 否则回 `error from registry: denied`，看着像 PAT 没权限。
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-            # BASE_IMAGE：基础镜像从哪来。默认在 deploy/Dockerfile 里
-            # （公开的 node:20-alpine）；要换镜像源在这儿加一行 build-arg 就行。
-            # ⚠️ CNB 制品库那行 login **不能删**：基础镜像/构建缓存仍从
-            #    CNB 拉（`CNB_DOCKER_REGISTRY`），删了拉基础镜像会回 denied。
+            # CNB 那行 login 不能删：基础镜像与构建缓存仍从 CNB 拉。
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
               --build-arg "API_REV=${REV}" \
@@ -261,164 +73,56 @@ main:
             docker push "${IMAGE}:${TAG}"
             docker push "${IMAGE}:latest"
             echo "✓ ${IMAGE}:${TAG}（后端 poem ${REV}）"
-        # 5. 把刚构建的镜像**同一棵树**再推一份到 GitHub 容器镜像库（GHCR）。
-        #    云托管「从地址拉镜像」那一栏填 ghcr.io/... 走的就是这一份。
-        #
-        #    ⚠️ **为什么要多这一份**（Issue #71 的第二问）：CNB 的
-        #    Docker 制品库可见性**跟着代码仓库走**（官方文档「权限管控」：
-        #    Docker/Helm/Docker Model 制品的可见性与所托管的代码仓库一致），
-        #    代码仓库私有 → 制品私有 → 云托管要拉就得配一对镜像拉取凭据
-        #    （§ 2.5）。GHCR 这份是公开包：**从地址拉镜像那一栏不用配凭据**。
-        #    代价：基础镜像 node:20-alpine 与后端的依赖会公开可拉（本仓库本就
-        #    在 GitHub 上是 public 只读镜像，没有多泄什么）；备份那条回滚路
-        #    仍在 CNB 槽位上。
-        #
-        #    ⚠️ **别想着「单独把 CNB 制品库设成公开」** —— 没有这个开关，文档
-        #    原话说的是「与所托管的代码仓库可见性一致」。要么整仓公开（Issue #71
-        #    那一问的答案：可以，但就是**把整个仓库连同全部历史公开**），要么
-        #    镜像换一个公开的槽位，就是这里。
-        #
-        #    ⚠️ tag 用**上游 poem 的短 sha**（`${REV}`，与上面 --build-arg 同一个值），
-        #    不用本仓库的 `${TAG}`：「线上跑的这版后端来自 poem 的哪一次提交」
-        #    只有 REV 答得了，两个 tag 各说各的会更糊涂。
-        #
-        #    ⚠️ 推送目标是**包名空间，不是 GitHub 仓库**：GitHub 的
-        #    ghcr.io/<owner>/<repo> 永远落到 `<owner>/<repo>` 这个**仓库**的包目录下。
-        #    `ashleyzhang2028/poem-wx` 恰好既是那个公开只读镜像仓库、又是我们要的
-        #    包名，于是 `ghcr.io/ashleyzhang2028/poem-wx/wx-api` 落点正合。
-        #    （别想成「顺手建个名叫 xxx 的 GitHub 仓库来装包」—— 那得真有这个仓库，
-        #      否则推的时候 GHCR 回 denied。）
-        #
-        #    ⚠️ 推完第一次要去 GitHub 把这个包的可见性设成 **Public**
-        #    （包页 → Package settings → Change visibility）。否则它默认 Private，
-        #    云托管拉它照样要凭据 —— 那这一整步就白做了。
-        #
-        #    ⚠️ 凭据：**用户名必须是 GitHub 账号名**，密码是 PAT —— 这里和 CNB
-        #    恰好相反（CNB 那边用户名是写死的 `cnb`）。
-        #
-        #    ⚠️ 而且这枚 PAT **必须是 classic，fine-grained 建不出来**：GitHub
-        #    官方文档原话「GitHub Packages only supports authentication using a
-        #    personal access token (classic)」，所以 fine-grained 的 Permissions
-        #    里**根本没有 Packages 那一栏**（不是藏在哪个二级菜单里）。别在这儿
-        #    找 —— 要的是 classic 的 `write:packages` scope：
-        #    https://github.com/settings/tokens/new?scopes=write:packages
-        #    （直接用这个链接建，只勾这一个 scope；UI 上手动勾 write:packages 会
-        #     顺手把范围过宽的 `repo` 也勾上。）
-        #
-        #    密钥仓库 wechat-ci.yml 里加 GHCR_USER / GHCR_TOKEN 两行；
-        #    同一个文件已经给「同步到 GitHub」提供了 GH_PAT / GH_REPO ——
-        #    **那两个是两种 token**，别互相复用：GH_PAT 可以是 fine-grained
-        #    （要 contents），GHCR_TOKEN 只能是 classic（要 packages）。
-        #
-        #    ⚠️ **先别 allow_failure**。这一条是新链路的判据：它红了（最常见是
-        #    PAT 类型不对 —— 拿了 fine-grained 来，或 classic 但没勾 write:packages），
-        #    说明云托管那儿也拉不到 —— 红在流水线上，比绿着然后在云托管里查半天便宜。
+        # 再推一份到 GHCR：CNB 制品库可见性跟着代码仓库走（仓库私有 → 制品私有 →
+        # 云托管要拉就得配凭据），GHCR 那份是公开包，不用配。tag 用上游 poem 的短 sha
+        # ——「线上跑的是哪一版 poem」只有它答得了。第一次推完要去 GitHub 把包设成 Public。
+        # ⚠️ GHCR_TOKEN 必须是 classic PAT（fine-grained 的 Permissions 里没有 Packages 那一栏）。
         - name: 推 GHCR（云托管那份镜像地址）
-          imports:
-            - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
           script: |
             set -eu
             for v in GHCR_USER GHCR_TOKEN; do
-              # ⚠️ 这里的 `:-` 是 **shell 的** `${VAR:-}`（`eval` 展开后由
-              #    busybox sh 处理），它**不能省**：job 跑在 Alpine（busybox sh），
-              #    `set -u` 之下 `eval "val=$$v"` 撞上没定义的变量是**直接退出**
-              #    （`parameter not set`），那句给人看的横幅根本打不出来 ——
-              #    报错只剩一行 sh 内部的话。
-              #
-              # ⚠️ 别把这条推给 `env:` 那一栏：**`env:` 里没有 `:-` 这回事**
-              #    （Issue #100 第二次现场）。那边是 CNB 自己的变量替换，只认
-              #    `$VAR`，`${VAR:-default}` 会**原样**留下、还不报错。同一个
-              #    `:-` 在两个地方含义完全不同，区别见上面 `IMAGE:` 的注释。
+              # 这里的 `:-` 是 shell 的（`env:` 里没有这回事）：`set -u` 之下撞上未定义
+              # 变量直接退出，那句给人看的横幅根本打不出来。
               eval "val=\${$v:-}"
               if [ -z "$val" ]; then
                 echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
-                echo "  需要 GHCR_USER=GitHub 账号名；GHCR_TOKEN 是**带 write:packages 的" >&2
-                echo "  classic PAT**（fine-grained 没有 Packages 这一栏，建不出来）。" >&2
+                echo "  GHCR_USER=GitHub 账号名；GHCR_TOKEN 是带 write:packages 的 classic PAT。" >&2
                 exit 1
               fi
             done
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
-            # ⚠️ 这里**不另算一遍路径**：GHCR 就是 job env 里的 `IMAGE`。
-            #    两处各写一遍 ghcr.io/... 的话，哪天换命名空间就只改得动一处，
-            #    另一半静默留在老地址上 —— build & push 往 A 推、这里从 B 拉，
-            #    报错会是 `image not found`，看着像推失败了，其实是地址对不上。
-            GHCR="${IMAGE}"
-            # 与 CNB 那份是**同一棵树**：build & push 那步刚打的 tag，
-            # 这里只补两个新 tag 再推，不重新构建（重建会白等一次 npm ci）。
-            docker tag "${IMAGE}:${TAG}" "${GHCR}:${REV}"
-            docker tag "${IMAGE}:${TAG}" "${GHCR}:latest"
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-            docker push "${GHCR}:${REV}"
-            docker push "${GHCR}:latest"
-            echo "✓ ${GHCR}:${REV}（公开包 —— 云托管从地址拉镜像不用配凭据）"
-        # 6. 上传体验版。**只上传，不提审** —— 「要不要上线」不该由流水线决定。
-        #    传完去公众平台设成体验版，真机走一遍再提审。
+            docker tag "${IMAGE}:${TAG}" "${IMAGE}:${REV}"
+            docker push "${IMAGE}:${REV}"
+            echo "✓ ${IMAGE}:${REV}（公开包 —— 云托管从地址拉镜像不用配凭据）"
+        # 上传体验版：只上传，不提审 ——「要不要上线」不该由流水线决定。
+        # 整步用一个 script 块：list 混多行块会被 CNB 串成 &&，busybox sh 报语法错，
+        # 而这步 allow_failure，红了流水线也是绿的 —— 得自己翻日志才看得见。
         - name: 上传体验版
-          # ⚠️ 整步**用一个 `script: |` 块**，别写成「一个多行块 + 后面几个 list 项」。
-          #    混着写时 CNB 会把 list 各项用 `&&` 串到前一块的**末尾**，
-          #    busybox sh 撞上就成了：
-          #      sh: 10: Syntax error: "&&" unexpected     （退出码 2）
-          #    而这步是 `allow_failure: true` —— **不会让流水线红**，
-          #    得自己翻日志才看得见（这一轮就是这么漏过去的）。
-          #
-          # ⚠️ 还有一层：**它成了也不会告诉你成了**（`allow_failure: true` 的
-          #    成功同样静默）。传完去公众平台得自己确认。所以下面成败都打横幅。
           script: |
-            # 密钥读来了但名字对不上时**当场说清楚是哪个名字空着**：
-            # 空着往下走的话，miniprogram-ci 抛的是「密钥无效 / appid 不一致」，
-            # 会把人引去查公众平台，而真正的问题只是密钥仓库里少写了一个键。
             for v in WX_APPID WX_PRIVATE_KEY_B64; do
               eval "val=\$$v"
               if [ -z "$val" ]; then
                 echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
-                echo "  已注入的变量名（只列名字，不列值）：" >&2
+                echo "  已注入的变量名（只列名字）：" >&2
                 env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
                 exit 1
               fi
             done
-            # `--loglevel=error`：默认那档会吐 **40 行 npm warn**（deprecated /
-            # EBADENGINE 混着），真错被埋在中间 —— `-80054` 那次就在倒数第 12 行。
-            # WXML 里的 `unexpected token` 这种错，**一份日志只出现一次**，
-            # 被 40 行 warn 盖住等于没有。
+            # --loglevel=error：默认那档会吐 40 行 npm warn，真错被埋在中间。
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
-            # 版本号用「本仓库 sha 前 8 位」：公众平台那边一版一个号，
-            # 拿 sha 当号，回滚时能对上镜像的 tag。
-            #
-            # 失败时打一块横幅再原样退出：这一步 `allow_failure`，红了流水线也是绿的，
-            # 横幅是为了让「传没传上去」在**日志里有个能搜到的锚点** ——
-            # 否则它和前面 50 秒的编译输出糊成一团，只能靠人肉眼翻。
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
               echo "" >&2
               echo "✗✗✗ 上传体验版没成功（退出码 ${code}） ✗✗✗" >&2
-              echo "  这步是 allow_failure：**流水线不会红**，别以为绿了就传上去了。" >&2
-              echo "  真错在上面那块 [error] 里，搜 'unexpected token' / '-80054'。" >&2
-              echo "  本版号 ${TAG}（镜像 tag 是同一个，回滚时对得上）。" >&2
+              echo "  这步是 allow_failure：流水线不会红，别以为绿了就传上去了。" >&2
               exit "${code}"
             }
-            echo "✓✓✓ 体验版已上传 ${TAG} —— 去公众平台设成体验版，真机走一遍再提审 ✓✓✓"
-          # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
-          # 不会让整条流水线红，得主动翻一眼日志。
+            echo "✓✓✓ 体验版已上传 ${TAG} ✓✓✓"
           allow_failure: true
-        # 7. 同步到 GitHub。Issue #71：仓库是私有的，但人要在 GitHub 上看代码；
-        #    云托管那次误配也是想绑它，所以给一份只读的镜像。
-        #
-        #    ⚠️ **只同步 main，不同步分支**。这个仓库有 80 多个分支，大半是
-        #    合完就没用的 `auto/*`；checkout 又只给一条，要全量得先把 88 个
-        #    分支 fetch 下来。对「让人上 GitHub 看代码」来说这笔换不来好处。
-        #    代价说清楚：想让某个分支也上去，先合回 main。
-        #
-        #    ⚠️ 推的是 `HEAD:refs/heads/main` 且带 `--force`：GitHub 那份是
-        #    只读镜像，**别在它上面直接提交** —— 下一次同步会覆盖掉。
-        #
-        #    密钥（GH_PAT / GH_REPO）照 Issue #64 那套走密钥仓库，**不进代码**。
-        #    ⚠️ 密钥仓库 wechat-ci.yml 里要加这两行，且 `allow_events` 得含 push ——
-        #    触发事件是 push，那行不改的话这里读不到密钥，必被拒。
-        #    另外那两行 allow_slugs 也得覆盖本仓库，同现有 imports 的规矩。
-        #
-        #    这条**不 allow_failure**：同步是这一版交付的一部分，断了就该红。
-        #    它排在最后：前面几步（自检 / 镜像 / 体验版）成不成，都不挡
-        #    「GitHub 上有没有这一版」这件事本身。
+        # 同步到 GitHub：只同步 main（仓库有 80 多个分支，大半是合完就没用的 auto/*）。
+        # 推的是 HEAD:refs/heads/main 且带 --force —— GitHub 那份是只读镜像，别在它上面提交。
+        # 这条不 allow_failure：同步是这一版交付的一部分，断了就该红。
         - name: 同步到 GitHub
           imports:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
