@@ -106,6 +106,15 @@ Page({
       .then((res) => {
         wx.hideLoading();
 
+        /* ⚠️ `res.local` 是**没打到服务端**那一支（云调用两栏没填 / 没配）。
+           以前这里一律报「已登录」—— 而库里一个字节都没落，用户以为登上了
+           （Issue #121）。现在如实说「还没接上服务器」，并指出去填那两栏。 */
+        if (res && res.local) {
+          this.tellOffline();
+          this.refresh();
+          return;
+        }
+
         wx.showToast({
           title: res && res.synced ? "已登录 · 进度已认回" : "已登录",
           icon: "none",
@@ -115,8 +124,35 @@ Page({
       })
       .catch((err) => {
         wx.hideLoading();
-        wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
+        const code = (err && err.code) || "";
+        if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
+          wx.showModal({
+            title: "登录没打通",
+            content: (err.message || "") + "\n\n这是服务端/部署那一侧的事，先看「关于与反馈」里的联系方式。",
+            showCancel: false
+          });
+        } else {
+          wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
+        }
+        this.refresh();
       });
+  },
+
+  /* 「没接上服务器」怎么讲，只讲一处。
+     两栏没填是**运维配置**，用户填不了 —— 所以这里只说会发生什么，
+     不指路去点哪个按钮（那两格在管理页里、普通用户看不到）。 */
+  tellOffline() {
+    const why = auth.offline();
+    wx.showModal({
+      title: "还没接上同步服务器",
+      content: why === "cloud"
+        ? "这台手机连不上同步服务器（云调用那两栏没填、或填错了）。\n\n"
+          + "登录本身没问题 —— 但**账号与进度不会存到服务端**，换台手机就没了。\n\n"
+          + "填一次「我的 → 用户与权限 → 云调用」两张框（要 admin/owner 才看得到）就好。"
+        : "这个包还没配同步服务器，账号与进度只在这台手机上。\n\n"
+          + "配上之后，登录会把进度与设置跨设备带过去。",
+      showCancel: false
+    });
   },
 
   onLogout() {
@@ -134,7 +170,15 @@ Page({
 
   syncNote(sy) {
     if (sy.lastSyncAt) return sy.lastText;
-    if (!sy.ready) return "换手机进度不跟随 · 点一下重试";
+    if (!sy.ready) {
+      /* ⚠️ 原来是「换手机进度不跟随 · 点一下重试」—— 读起来像**点一下就能好**，
+         而没接上服务器时点多少下都不会好（Issue #121）。分开说：没登录是没登录，
+         没接服务器是没接服务器。 */
+      if (!auth.logged()) return "先登录 · 登录后进度跨设备跟随";
+      const why = auth.offline();
+      if (why === "cloud") return "同步服务器没接上（云调用两栏）";
+      return "同步通道未开 · 进度只在这台手机";
+    }
     return "还没同步过 · 点一下同步";
   },
 

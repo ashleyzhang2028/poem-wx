@@ -81,7 +81,18 @@ function status() {
     };
   }
 
-  return { tier: "free", source: "none", label: tiers.nameOf("free"), blocked: "", signed: false };
+  /* 没登录、而「为什么没登录」是**本机看得懂的一句话**时，如实说出来。
+     这一句原来只在前一档（`profile.tier` 是服务端发过的档）才填，于是最常见的
+     那种情况 —— 云调用两栏没填、登录压根没打到服务端 —— 落回 blocked: ""，
+     「我的」页与能力矩阵都当作「一切都好」（Issue #121）。 */
+  const why = auth.offline();
+  return {
+    tier: "free",
+    source: "none",
+    label: tiers.nameOf("free"),
+    blocked: why === "cloud" ? "cloud" : why === "off" ? "unsigned" : "",
+    signed: false
+  };
 }
 
 function loggedIn() {
@@ -127,6 +138,7 @@ function hint(key, ctx) {
   if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
   if (cap.tier === "login") return "「" + cap.name + "」要登录后才有";
   const s = status();
+  if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
 }

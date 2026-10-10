@@ -173,8 +173,17 @@ Page({
   },
 
   wxNote() {
-    if (!auth.configured()) return "微信登录要服务器配合：/api/wx/login 做 code2Session 换 openid。见 docs/wx-login-server.md。";
-    return "地址配好了，但服务器上的 /api/wx/login 是否已上线，客户端无从探测。登录若一直只记在这台手机，就是那两条路由还没加 —— 见 docs/wx-login-server.md。";
+    if (!auth.configured()) {
+      return "微信登录要服务器配合（code2Session 换 openid）。"
+        + "两格空着时点登录**不算登录成功** —— 账号与进度都还留在这台手机上。"
+        + "见 docs/wx-login-server.md。";
+    }
+    /* ⚠️ 「那两条路由上没上」客户端探测不了，所以这句只能是**可能**，
+       而且要说清「怎么验」—— Issue #121 的痛点正是「界面说成功、而库里什么都没有」，
+       用户只能自己去翻数据库。 */
+    return "这两格只是「往哪儿连」，通信本身通不通这里看不出来："
+      + "填好后点一次登录，去库里看 accounts / wx_accounts 有没有新行 "
+      + "（查法见 docs/wx-cloud-setup.md § 七）。一直没有就是那两条路由还没上。";
   },
 
   baseNote() {
@@ -239,11 +248,18 @@ Page({
 
   afterConfigure(okMsg) {
     this.setData({ busy: true });
-    entitlement
-      .sync()
-      .then(() => {
+    /* 配置好之后顺手把「刚才那次没接上服务器的登录」补上 ——
+       没配时 `auth.login()` 把 code 留在 `loginCode` 里就是为了这一下
+       （见 utils/auth.js）。不补的话，用户得自己去「我的」页再点一次登录，
+       而他会以为「配好了就该自己连上」（Issue #121）。 */
+    const resume = auth.localCode() ? auth.login() : Promise.resolve(null);
+    resume
+      .catch(() => null)
+      .then(() => entitlement.sync())
+      .then((snap) => {
         this.setData({ busy: false, msg: okMsg });
         this.refresh();
+        return snap;
       })
       .catch(() => {
         this.setData({ busy: false, msg: okMsg + "，但连不上" });
