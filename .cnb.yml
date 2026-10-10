@@ -109,6 +109,10 @@ main:
                 exit 1
               fi
             done
+            # 语料是构建产物（.gitignore 里有 miniprogram/data/），checkout 里本来就没有；
+            # 上传的是整个 miniprogram，缺了它 upload.js 只会回一句「语料还没生成」。
+            # 自检那三条跑在同一次 push 的另一个任务里，工作区不共享，得在这儿重跑一遍。
+            POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
             # --loglevel=error：默认那档会吐 40 行 npm warn，真错被埋在中间。
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
