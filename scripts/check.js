@@ -8398,6 +8398,38 @@ function sectionOf(text, heading) {
       "其实是没登）。凭据在流水线级 imports 的 GHCR_USER / GHCR_TOKEN 里，本步直接可用");
 }
 
+/* ⚠️ **默认域的那个占位符指不出来一个真域**（Issue #100 第四次现场）。
+   `wx-cloud-setup.md` 原先写的是 `https://<env>.ap-shanghai.run.tcloudbase.com` ——
+   形状不对：云托管默认域是 **服务名 + 环境 ID** 拼的（`<服务名>-<环境ID>.sh.`），
+   而 `<env>` 会被人当成「环境名」去填；`.sh.` 还是上海的地域段。照抄那一条，
+   拼出来的是个解析不了、也填不进名单的域。
+
+   判据落在**能不能照抄**上：那两步的代码块里不许出现 `<env>` / `<后端域名>` 这类占位符，
+   且必须出现真域（`.sh.run.tcloudbase.com`）。⚠️ 判据只收这两步的代码块，不收全文 ——
+   别处（README、architecture）写 `<服务名>-<环境ID>` 这种**讲清楚组成**的占位符是对的，
+   收宽了会把它们判红，那是在罚「把话说清楚」。
+
+   ⚠️ 顺带守住第二条：默认域只能联调。光写「填默认域」而不写「正式环境要换」，
+   人会一路填到提审 —— 而公众平台那句提示（云托管域名仅用作测试使用）是**警告不是拦截**，
+   不会当场把人拦下来，只会在他准备上线时回来。 */
+{
+  const setup = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8");
+  const copyable = ["### 6. 加 request 合法域名", "### 5. 探活"]
+    .map((h) => sectionOf(setup, h))
+    .join("\n");
+  const fenced = (copyable.match(/```[\s\S]*?```/g) || []).join("\n");
+  const placeholders = fenced.match(/<(env|后端域名|服务名|环境ID)>/g) || [];
+  ok("云托管文档第 5、6 步给的域是**能照抄**的（不出现 `<env>` 这类占位符）",
+    placeholders.length === 0 && /\.sh\.run\.tcloudbase\.com/.test(fenced),
+    "照抄的代码块里出现了占位符 " + JSON.stringify(placeholders) +
+      " —— 默认域是 `<服务名>-<环境ID>.sh.run.tcloudbase.com`（`<env>` 会被当成环境名去填，" +
+      "`.sh.` 是上海地域段）。这两步是人要照着敲的，要么给真域，要么把组成写清");
+  ok("云托管文档写明了默认域只能联调、正式环境要换自有已备案域名",
+    /仅用作测试/.test(setup) && /正式环境/.test(setup) && /备案/.test(setup),
+    "默认域底下所有用户的子域是同一张泛域名证书，微信认不出后端归谁 —— 平台明说只能测试用。" +
+      "文档只说「填默认域」，人会一路填到提审才被那句提示拦回来");
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
