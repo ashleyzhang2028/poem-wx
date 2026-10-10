@@ -100,7 +100,7 @@
 
   <view class="card">
     <view class="card-title bar">要一个更高的档位</view>
-    <button class="btn ghost block" bindtap="onCopyFeedback">复制联系邮箱</button>
+    <button class="btn ghost block" bindtap="onCopyFeedback">联系邮箱</button>
     <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
   </view>
   </block>

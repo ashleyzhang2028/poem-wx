@@ -288,7 +288,7 @@ Page({
 
   onCopyFeedback() {
     wx.setClipboardData({
-      data: "belem@cnb.cool",
+      data: "kuibuapp@163.com",
       success: () => wx.showToast({ title: "邮箱已复制，可以申请档位", icon: "none" })
     });
   }
