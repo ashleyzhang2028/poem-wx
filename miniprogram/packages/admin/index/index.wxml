@@ -73,7 +73,7 @@
 
   <view class="card">
     <view class="card-title bar">同步服务器</view>
-    <text class="hint note">同步与登录都走这一个地址</text>
+    <text class="hint note">同步与登录走下面两条通道之一；都填时以地址为准</text>
     <view class="field">
       <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
              bindinput="onBaseUrl" />
@@ -81,6 +81,21 @@
     <button class="btn ghost block" bindtap="onSaveBaseUrl">保存并重试</button>
     <text class="hint note" wx:if="{{baseUrlNote}}">{{baseUrlNote}}</text>
     <text class="hint note" wx:if="{{wxLoginNote}}">{{wxLoginNote}}</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">云调用（不用域名，也不用备案）</view>
+    <text class="hint note">直连云托管，免域名、免备案；两栏都要填</text>
+    <view class="field">
+      <input class="field-input" type="text" value="{{cloudEnv}}" placeholder="云开发环境 ID，如 poem-xxxxxxxx"
+             bindinput="onCloudEnv" />
+    </view>
+    <view class="field">
+      <input class="field-input" type="text" value="{{cloudService}}" placeholder="云托管服务名，如 poem-api"
+             bindinput="onCloudService" />
+    </view>
+    <button class="btn ghost block" bindtap="onSaveCloud">保存云调用配置</button>
+    <text class="hint note" wx:if="{{cloudNote}}">{{cloudNote}}</text>
   </view>
 
   <view class="card">

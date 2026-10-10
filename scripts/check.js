@@ -7334,8 +7334,14 @@ function gapped(items, max) {
   ok("send() 优先用服务端那句 message（不是只拼状态码）",
     /body\.message\s*\|\|/.test(remoteSrc) && /new Error\(say \|\|/.test(remoteSrc),
     "拼成 'HTTP 503' 的话，服务端为用户写的那几句一句都到不了用户眼前");
+  /* ⚠️ 判据跟着实现走，但**不许放松**：这两条的真身是「服务端给了 message 就用它、
+     没给才退回状态码」。原来写的是 `"HTTP " + res.statusCode`，而那一句后来
+     抽进 `httpError(statusCode, data)`（两条通道共用，见 remote.js）——
+     参数名跟着变了，判据也得跟着变，否则它红在参数改名上，
+     而真正要守的「message 不许是空的」反倒没人看。
+     所以改成两头都查：**退化那一句在**，且**它带的是传进来的状态码**。 */
   ok("服务端没给 message 时才退回状态码那句（别让 message 是空的）",
-    /"HTTP " \+ res\.statusCode/.test(remoteSrc));
+    /"HTTP " \+\s*statusCode/.test(remoteSrc) && /function httpError\s*\(/.test(remoteSrc));
 
   // 真的喂一条 503 进去，看抛出来的 message 是哪句
   const mem = {};
@@ -7364,6 +7370,152 @@ function gapped(items, max) {
       ok("码还是 retained（调用方要能按码分支）", e.code === "E_WX_NOT_CONFIGURED", String(e.code));
     }
   ).then(() => { global.wx = savedWx; });
+}
+
+/* ---------- V48. 免备案那条路：云调用（Issue #100） ----------
+ *
+ * 用户的诉求只有一句：「走完全不需要备案的路」。而这里的约束是硬的 ——
+ * 云托管的默认域（`*.sh.run.tcloudbase.com`）**填不进 request 合法域名名单**，
+ * 微信当场回「云托管域名仅用作测试使用，不可用在正式环境下」；要填进去就得
+ * 自有域 + ICP 备案（3–20 个工作日）。也就是说：
+ *
+ *   只要客户端还用 `wx.request`，备案这一关就绕不过去。
+ *
+ * 绕得过去的那条路只有一条 —— **云调用**（`wx.cloud.callContainer`）。
+ * 它走微信内网，不经过那张名单，所以既不用域名也不用备案。
+ *
+ * 这一节守的是「这条路真的接上了」，而**不是「文档里提过它」**。
+ * 理由是 § 三 P.S. 里一直写着「B. 云开发 / 云调用」这段 —— 写了很久，
+ * 但客户端一行都没实现，等于把一条路记成了「已经有了」。
+ *
+ * 判据分三层，缺一层这节就只是文案检查：
+ *   ① 客户端真有这条通道（`send()` 会按配置分派，不是只有注释）
+ *   ② 它发出去的报文与 http 那条**一模一样**（头 / 路径 / 方法都要对得上，
+ *      少一个 `X-WX-SERVICE` 平台就回 service not found）
+ *   ③ **真跑一遍**：假 wx 提供 `cloud.callContainer`，验登录 → 同步整条路
+ *      在只有云调用、没有 baseUrl 时也能通 —— ② 是形状，③ 是行为
+ */
+{
+  const remoteSrc = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  const authSrc = fs.readFileSync(path.join(ROOT, "utils", "auth.js"), "utf8");
+
+  /* ① 通道真的在，且**分派**写得出来。
+     ⚠️ 只搜 `callContainer` 会被注释骗过（这一节的注释里就写着它），
+     所以判据落在「`send()` 里有 if 分派」与「`wx.cloud.callContainer(` 是真调用」两处。 */
+  ok("客户端有云调用那条通道（`send()` 按配置分派，不是只有文档）",
+    /function send\([\s\S]{0,200}?useCloud\(\)\)\s*return sendCloud\(/.test(remoteSrc) &&
+      /wx\.cloud\.callContainer\(/.test(remoteSrc),
+    "`send()` 里没有按 `useCloud()` 分派，或压根没调 `wx.cloud.callContainer` —— " +
+      "那样就只剩 `wx.request` 一条路，而它必须备案");
+
+  /* ② 两条通道的报文必须一致。逐项查，因为这里每一种漏法都**不报错**：
+        · 少 `X-WX-SERVICE` → 平台回 `service not found`（看着像服务没部署）
+        · 少 `authorization`  → 服务端当没登录（401，看着像 token 过期）
+        · 少 `config.env`     → 平台回 `env not exists`（看着像环境没建） */
+  ok("云调用带齐 X-WX-SERVICE / config.env / authorization（少一个都是平台错或静默 401）",
+    /"X-WX-SERVICE":\s*conf\.service/.test(remoteSrc) &&
+      /config:\s*\{\s*env:\s*conf\.env/.test(remoteSrc) &&
+      /sendCloud\(path, data, method\)[\s\S]{0,900}?authorization:/.test(remoteSrc),
+    "云调用的头/配置少了东西：`X-WX-SERVICE` 少了回 service not found，" +
+      "`config.env` 少了回 env not exists，`authorization` 少了服务端认不出人（401）");
+
+  /* 云调用的**就绪判据**与 http 那条是两种：一个要地址，一个要 env+service。
+     ⚠️ 上一版 `configured()` 只认 `baseUrl`，于是「云调用配好了却仍被判成没后端」——
+     界面如实说「后端未就绪」，而它其实早就通了。这条守的就是这一半。 */
+  ok("`configured()` 两条通道都认（只认 baseUrl 会把配好的云调用判成没后端）",
+    /function configured\(\)\s*\{[\s\S]{0,200}?a\.baseUrl[\s\S]{0,160}?a\.cloud/.test(remoteSrc),
+    "`configured()` 只看 `baseUrl` —— 只配云调用的人会被判成「后端未就绪」，" +
+      "而那条路其实是通的");
+
+  /* ③ **真跑**。上面两条是形状，这一条是行为 —— 「报文形状对」与
+     「合起来能通」是两件事（§ 二点五 就是被这一条教过的）。
+     假 wx 只给 `cloud.callContainer`、**不给可用的 `wx.request`**：
+     于是任何一处漏改、任何一处仍走 http，都会当场失败。 */
+  {
+    const mem = {};
+    const savedWx = global.wx;
+    let sawRequest = false;
+    global.wx = {
+      getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+      setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+      removeStorageSync: (k) => { delete mem[k]; },
+      login: (o) => o.success({ code: "C-CLOUD" }),
+      // http 那条**故意不给**：走了它就该红，而不是悄悄换条路也能过
+      request: () => { sawRequest = true; throw new Error("这条测试里不该走 wx.request"); },
+      cloud: {
+        callContainer: (opt) => {
+          calls.push(opt);
+          // 真去打服务端的形状没法在离线自检里造，所以只验「请求发对了」，
+          // 业务语义那半边由 e2e-wx-sync.js 真接服务端验。
+          opt.success({ statusCode: 200, data: { accessToken: "T", refreshToken: "T", expiresIn: 604800, tier: "free", role: "user", userId: "u_1" } });
+        }
+      }
+    };
+    const calls = [];
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+    const auth = require(path.join(ROOT, "utils", "auth.js"));
+    const remote = require(path.join(ROOT, "utils", "remote.js"));
+
+    // 只配云调用，**不配 baseUrl** —— 这正是「完全不需要备案」那种配法
+    auth.configure({ cloud: { env: "poem-d9g1bqeq978682c58", service: "poem-api" } });
+
+    ok("只配云调用（不填地址）也算「后端已就绪」",
+      remote.configured() === true && remote.useCloud() === true,
+      "configured=" + remote.configured() + " useCloud=" + remote.useCloud() +
+        " —— 只认 baseUrl 的话这里就是「没后端」，免备案那条路等于白配");
+
+    auth.login().then(
+      () => {
+        const c = calls[0] || {};
+        ok("云调用发出的路径与方法对（/api/wx/login + POST）",
+          c.path === "/api/wx/login" && (c.method || "POST") === "POST",
+          JSON.stringify({ path: c.path, method: c.method }));
+        ok("云调用把服务名与环境 ID 都带上了",
+          (c.header || {})["X-WX-SERVICE"] === "poem-api" && (c.config || {}).env === "poem-d9g1bqeq978682c58",
+          JSON.stringify({ header: c.header, config: c.config }));
+        ok("整条登录路径一次都没走 wx.request（走了就说明分派漏了一处）",
+          sawRequest === false, "有请求走了 wx.request —— 那条要备案");
+      },
+      (e) => ok("只配云调用时登录能走通", false, String(e && e.message))
+    ).then(() => { global.wx = savedWx; });
+  }
+
+  /* 配置入口得让人在界面上就能选，而不是让运维去改代码。
+     判据落在「两栏都在 + 存的时候两栏一起要」：
+     只填一栏存下去的话，平台回的是 `env not exists` / `service not found`。 */
+  const adminSrc = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const adminWxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
+  ok("管理页能在界面上配云调用（env + service 两栏都在）",
+    /cloudEnv/.test(adminWxml) && /cloudService/.test(adminWxml) && /onSaveCloud/.test(adminWxml),
+    "只能改代码配云调用的话，这条路就落不到用户手上");
+  ok("云调用两栏缺一个就不许存（存下去只会得到 env not exists）",
+    /if\s*\(!env\s*\|\|\s*!service\)/.test(adminSrc),
+    "允许只填一栏：平台那边回 env not exists / service not found，" +
+      "看着像服务没部署，其实是少了一栏");
+  /* 文档里那条路得**能照着走**。这一条只问一件事：免备案那条路有没有写下来，
+     以及**它为什么免**有没有写下来 —— 只写「用云调用就行」不写为什么，
+     下一个人看到「request 合法域名」那节还会以为备案绕不过去
+     （这一节原来的标题就是「唯一绕不开的一张网」）。 */
+  {
+    const setup = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8");
+    const arch = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "architecture.md"), "utf8");
+    ok("云托管文档写了「云调用免域名免备案」这条路（含它为什么免）",
+      /callContainer/.test(setup) && /不经过|不走|免掉/.test(setup) &&
+        /免备案|不需要备案|不用备案/.test(setup),
+      "只讲 `wx.request` + 名单的话，「要备案」就成了唯一读得到的结论 —— " +
+        "而那条路本身就问「有没有完全不用备案的走法」");
+    ok("架构文档不再说那张网「绕不开」（它只绑 wx.request）",
+      !/唯一绕不开的一张网/.test(arch) && /callContainer/.test(arch),
+      "标题写着「唯一绕不开」，正文就得靠读者自己推翻它 —— 那是把人往" +
+        "「先去备案」上推");
+  }
+
+  ok("云开发环境 ID 填成云托管那个时当场说清（两个是不同的环境）",
+    /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
+    "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +
+      "与「调不通」之间来回");
 }
 
 /* ---------- V44. 设置那一行的报文 → 服务端白名单（Issue #71） ----------
