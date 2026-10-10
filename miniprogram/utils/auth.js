@@ -261,18 +261,50 @@ function isAdmin() {
 }
 
 /**
- * 配后端。baseUrl 落在 auth 域而不是 settings 域 —— settings 是要导出的（导出备份
+ * 配后端。落在 auth 域而不是 settings 域 —— settings 是要导出的（导出备份
  * 会把整份设置复制成 JSON 给人看），把服务地址混进去就等于在备份里泄运维信息。
  *
  * 这里**没有管理员密钥**：能不能改别人的档位由服务端的角色判（owner/admin），
  * 客户端带一份密钥反而多一个泄漏面。网页版后台需要密钥是因为它跑在浏览器里
  * 打的是一套运维接口；小程序端复用同一套会话即够。
+ *
+ * **两种配法，二选一**（判据见 `remote.useCloud()`）：
+ *
+ *   baseUrl          自有域 / 云托管默认域。要能填进 request 合法域名 ——
+ *                    即「已备案」这个硬门槛（见 docs/wx-cloud-setup.md）
+ *   cloud.env        云开发环境 ID
+ *   cloud.service    云托管服务名
+ *
+ * 云调用那条**不需要域名、也不需要备案**，代价是只能小程序调
+ * （网页版走不了），以及要先把云开发环境与云托管对起来。
+ * 两个都填时**以 baseUrl 优先**：那是显式地址，比走环境去找更直白。
  */
 function configure(opt) {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  if (opt && opt.baseUrl !== undefined) auth.baseUrl = String(opt.baseUrl || "");
+  const o = opt || {};
+  if (o.baseUrl !== undefined) auth.baseUrl = String(o.baseUrl || "");
+  if (o.cloud !== undefined) {
+    const c = o.cloud || {};
+    // 键一个都不留时把整块删掉，而不是留个 {} —— remote 那边按「有没有 env+service」
+    // 判通道，留空对象会让「配过又清空」和「从没配过」长得不一样
+    if (String(c.env || "").trim() || String(c.service || "").trim()) {
+      auth.cloud = { env: String(c.env || "").trim(), service: String(c.service || "").trim() };
+    } else {
+      delete auth.cloud;
+    }
+  }
   store.write(store.KEYS.auth, auth);
-  return { baseUrl: auth.baseUrl, speech: !!auth.speech };
+  return { baseUrl: auth.baseUrl, cloud: auth.cloud || null, speech: !!auth.speech };
+}
+
+/** 走云调用那条吗。**与 remote.useCloud() 同源**，界面问的是同一件事 */
+function useCloud() {
+  return remote.useCloud();
+}
+
+/** 云调用那条要的三个东西（env / service） */
+function cloudConfig() {
+  return remote.cloudConfig();
 }
 
 /** 服务端下发的档位。客户端自己写的档位只影响界面，这一份才带签名。 */
@@ -285,6 +317,8 @@ module.exports = {
   configured,
   baseUrl,
   configure,
+  useCloud,
+  cloudConfig,
   applyMe,
   login,
   refresh,

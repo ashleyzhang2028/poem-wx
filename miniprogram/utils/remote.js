@@ -12,6 +12,11 @@
  *   - 同步：本机照常用，队列攒着，联网后一次推
  *   - TTS：readiness() 报 awaiting，界面把播放按钮显示成「待开通」
  *   - 管理：名录只读，档位卡片点下去说明「本机标记」，不写服务端
+ *
+ * **两条通道，同一套契约**（见下面 `send()`）：
+ *   http    `wx.request`  + baseUrl        —— 后端挂在自有 / 云托管默认域上
+ *   cloud   `wx.cloud.callContainer`       —— 云调用，免域名、免备案
+ * 选哪条不改变任何一个接口的形状，所以 PATHS / 报文 / 重试逻辑一处都不用动。
  */
 const store = require("./store");
 const wire = require("./wire");
@@ -62,16 +67,116 @@ function credentialBody(extra) {
   return Object.assign({ device: store.deviceId() }, extra || {});
 }
 
+/**
+ * 后端就绪没有。
+ *
+ * ⚠️ **两条通道各有各的判据，别只看 baseUrl**：云调用那条压根不需要地址
+ * （环境 ID 与出口都在平台侧），只填 baseUrl 的人走 http，只选云调用的人走 cloud。
+ * 上一版这里只认 `baseUrl`，于是「云调用配好了却仍被判成没后端」——
+ * 界面会如实说「后端未就绪」，而它其实早就通了。
+ */
 function configured() {
-  return !!session().baseUrl;
+  const a = session();
+  return !!(a.baseUrl || (a.cloud && a.cloud.env && a.cloud.service));
+}
+
+/**
+ * 云调用那条通道要的三个东西。
+ *
+ * `env` 是**云开发**环境 ID（`poem-d9g1bqeq978682c58` 那种），`service` 是
+ * 云托管的服务名 —— 两个都在配置里给，因为**它们是两个不同的环境**，
+ * 拼不到一起：`X-WX-SERVICE` 认服务名，`config.env` 认云开发环境。
+ * 少一个、或者把云托管那个环境 ID 填进 `env`，平台回的是
+ * `env not exists` / `service not found` —— 看着像服务没部署，其实是填错了栏。
+ */
+function cloudConfig() {
+  const c = session().cloud || {};
+  return { env: String(c.env || ""), service: String(c.service || "") };
 }
 
 function baseUrl() {
   return session().baseUrl || "";
 }
 
-/** 一条请求。**不重试、不认路**，重试那层在下面 request() 里 */
+/** 云调用那条通道的判据。**与 configured() 分开**：一个是「有没有后端」，一个是「走哪条」 */
+function useCloud() {
+  return !session().baseUrl && !!session().cloud;
+}
+
+/**
+ * 一条请求。**不重试、不认路**，重试那层在下面 request() 里。
+ *
+ * 走哪条通道由会话决定（`useCloud()`）：两条通道**只换传输**，报文、头、
+ * 错误形状三者完全一致 —— 这样上层（以及 `request()` 的 401 重试）
+ * 一行都不用知道请求是从哪条路出去的。
+ */
 function send(path, data, method) {
+  if (useCloud()) return sendCloud(path, data, method);
+  return sendHttp(path, data, method);
+}
+
+/**
+ * 云调用通道：`wx.cloud.callContainer`。
+ *
+ * **这是唯一一条「免域名、免备案」的路**，也是它存在的全部理由：
+ * 云调用走微信内网，不经过 request 合法域名那张名单，所以不用备案、
+ * 不用配证书、不用顶三个月的等待期。
+ *
+ * 三条要注意的：
+ *
+ * ① `header` 里必须带 `X-WX-SERVICE`（服务名），并且要配上
+ *    `config.env`（**云开发**环境 ID，不是云托管那个）—— 两者缺一，
+ *    调用会回 `env not exists` / `service not found` 这类平台错。
+ * ② 微信**只让小程序调**，调用方身份由平台注入，这是「天然免疫 DDoS」的来源；
+ *    代价是它没法给浏览器用，网页版那条路仍是 wx.request + 域名。
+ * ③ 云调用**不省掉登录**：平台只保证「这个请求来自本小程序」，不告诉后端
+ *    「这是谁」。所以我们的 access token 照旧装在 `authorization` 头里，
+ *    服务端那套会话认的还是同一枚。
+ */
+function sendCloud(path, data, method) {
+  const conf = cloudConfig();
+  return new Promise((resolve, reject) => {
+    wx.cloud.callContainer({
+      config: { env: conf.env },
+      path: path,
+      method: method || "POST",
+      header: {
+        "content-type": "application/json",
+        "X-WX-SERVICE": conf.service,
+        authorization: session().accessToken ? "Bearer " + session().accessToken : ""
+      },
+      data: data,
+      success: (res) => (res.statusCode >= 200 && res.statusCode < 300
+        ? resolve(res.data)
+        : reject(httpError(res.statusCode, res.data))),
+      fail: (err) => reject(new Error((err && err.errMsg) || "云调用不通"))
+    });
+  });
+}
+
+/**
+ * 服务端回的那一句话。**两条通道共用这一处**。
+ *
+ * `message` 用**服务端那句话**，不是 `"HTTP " + 状态码`。这条是端到端试出来的：
+ * 服务端把「缺 WX_APPID / WX_SECRET」写成了一句很长很清楚的人话
+ * （`503 E_WX_NOT_CONFIGURED`），而这里拼的是 "HTTP 503" —— 于是用户看到的
+ * 就是 "HTTP 503"，服务端写那句话白写了。而 `mine.js` 的登录失败提示读的
+ * 正是 `err.message`，它没有任何别的来源。
+ *
+ * `code` 取 `body.code`，不是 `body.error` —— 取错了这一位，401 就只剩一句话
+ * 可读，调用方无法把「会话过期」与「服务端抽风」分开（见 `SESSION_GONE`）。
+ */
+function httpError(statusCode, data) {
+  const body = data || {};
+  const say = body.message || body.error_description || "";
+  const err = new Error(say || "HTTP " + statusCode);
+  err.statusCode = statusCode;
+  err.code = body.code || body.error || "";
+  return err;
+}
+
+/** http 那条通道。域名要先进 request 合法域名名单 —— 不想应付这件事就走云调用 */
+function sendHttp(path, data, method) {
   return new Promise((resolve, reject) => {
     wx.request({
       url: baseUrl() + path,
@@ -83,31 +188,10 @@ function send(path, data, method) {
       },
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
-        else {
-          // 429：同设备同步太频繁。界面要为此说一句人话
-          // （「刚同步过，过会儿再来」），所以把状态码挂在 error 上 ——
-          // 只留一句 "HTTP 429" 的话，调用方只能靠字符串匹配去猜。
-          //
-          // ⚠️ `message` 用**服务端那句话**，不是 `"HTTP " + 状态码`。
-          // 这条是端到端试出来的：服务端把「缺 WX_APPID / WX_SECRET」
-          // 写成了一句很长很清楚的人话（`503 E_WX_NOT_CONFIGURED`），
-          // 而这里拼的是 "HTTP 503" —— 于是用户看到的就是 "HTTP 503"，
-          // 服务端写那句话白写了。而 `mine.js` 的登录失败提示读的正是
-          // `err.message`，它没有任何别的来源。
-          //
-          // 服务端那些话是**为用户写的**（「小程序 appid / appsecret 配得不对，
-          // 登录走不通」这种），不是给日志看的 —— 它们本来就是要露给用户的。
-          // 真没有 message 时才退回状态码那句，别让 message 是空的。
-          const body = res.data || {};
-          const say = body.message || body.error_description || "";
-          const err = new Error(say || "HTTP " + res.statusCode);
-          err.statusCode = res.statusCode;
-          // 服务端的码在 body.code 里（`{ code: "E_NO_SESSION" }`），
-          // 不是 body.error —— 取错了这一位，401 就只剩一句话可读，
-          // 调用方无法把「会话过期」与「服务端抽风」分开。
-          err.code = body.code || body.error || "";
-          reject(err);
-        }
+        // 429：同设备同步太频繁，界面要为此说一句人话（「刚同步过，过会儿再来」），
+        // 所以状态码与 code 都挂在 error 上 —— 只留一句 "HTTP 429" 的话，
+        // 调用方只能靠字符串匹配去猜。
+        else reject(httpError(res.statusCode, res.data));
       },
       fail: (err) => reject(new Error((err && err.errMsg) || "网络不可用"))
     });
@@ -378,6 +462,8 @@ module.exports = {
   wire,
   configured,
   baseUrl,
+  useCloud,
+  cloudConfig,
   request,
   speechReady,
   speech,

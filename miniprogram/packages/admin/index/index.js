@@ -40,9 +40,20 @@ Page({
     busy: false,
     msg: "",
 
-    /** 同步服务器地址：同步、微信登录、名录都走它。留空 = 没配置，功能按本机降级 */
+    /**
+     * 后端地址。同步、微信登录、名录都走它。
+     *
+     * **两条通道二选一**：填地址（`baseUrl`）走 `wx.request`，那条要域名
+     * 能进 request 合法域名名单 —— 即**必须已备案**；填云调用那两个格子
+     * （`cloudEnv` + `cloudService`）走 `wx.cloud.callContainer`，免域名免备案。
+     * 留空 = 没配置，功能按本机降级。
+     */
     baseUrl: "",
     baseUrlNote: "",
+    cloudEnv: "",
+    cloudService: "",
+    cloudNote: "",
+    useCloud: false,
     wxLoginNote: ""
   },
 
@@ -68,9 +79,11 @@ Page({
       canWrite: canWrite,
       canSetRole: canSetRole,
       baseUrl: auth.baseUrl() || "",
-      baseUrlNote: auth.configured()
-        ? "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。"
-        : "还没配。没配之前：登录只记在这台手机、档位按免费、换手机进度不跟随。",
+      baseUrlNote: this.baseNote(),
+      cloudEnv: auth.cloudConfig().env || "",
+      cloudService: auth.cloudConfig().service || "",
+      cloudNote: this.cloudNote(),
+      useCloud: auth.useCloud(),
       wxLoginNote: this.wxNote()
     });
 
@@ -216,8 +229,70 @@ Page({
     return "地址配好了，但服务器上的 /api/wx/login 是否已上线，客户端无从探测。登录若一直只记在这台手机，就是那两条路由还没加 —— 见 docs/wx-login-server.md。";
   },
 
+  /** 地址那条路的现状。**措辞里必须点出「已备案」**——那是它真正的门槛 */
+  baseNote() {
+    if (!auth.configured()) return "还没配。没配之前：登录只记在这台手机、档位按免费、换手机进度不跟随。";
+    if (auth.useCloud()) return "当前走的是下面的云调用，这格留空即可。";
+    return "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。而这个名单只收**已备案**的域名：云托管默认域填不进去（微信会提示「仅用作测试使用」），所以要这条路就先备好域名。";
+  },
+
+  /**
+   * 云调用那条路的现状。
+   *
+   * 两句话要分开说：**能免掉什么**（域名 / 备案 / 白名单），
+   * **代价是什么**（只能小程序调；两个格子是两种环境 ID，填错栏会报 env not exists）。
+   * 少了后半句，人会拿云托管的环境 ID 去填 `env`，然后在
+   * 「服务明明部署了」和「调不通」之间来回。
+   */
+  cloudNote() {
+    if (!auth.configured()) return "";
+    if (auth.useCloud()) return "已配置，当前走这条。免域名、免备案、免 request 合法域名名单。";
+    return "填了就改走云调用（会盖过上面的地址）。免域名、免备案。";
+  },
+
   onBaseUrl(e) {
     this.setData({ baseUrl: e.detail.value || "" });
+  },
+
+  onCloudEnv(e) {
+    this.setData({ cloudEnv: e.detail.value || "" });
+  },
+
+  onCloudService(e) {
+    this.setData({ cloudService: e.detail.value || "" });
+  },
+
+  /**
+   * 存云调用配置。
+   *
+   * 两格**同时**要：只填一个的话平台那边回的是 `env not exists` / `service not found`，
+   * 看着像服务没部署，其实是少了一栏。所以这里不许「填一半先存着」——
+   * 存不下去比存下一个调不通的强。
+   */
+  onSaveCloud() {
+    const env = String(this.data.cloudEnv || "").trim();
+    const service = String(this.data.cloudService || "").trim();
+    if (!env && !service) {
+      auth.configure({ cloud: null });
+      this.afterConfigure("已清空云调用配置");
+      return;
+    }
+    if (!env || !service) {
+      wx.showToast({ title: "两个都要填", icon: "none" });
+      return;
+    }
+    // 云开发环境 ID 形如 `poem-d9g1bqeq978682c58`；把云托管那个填进来是最常见的一种错
+    if (/^\d+-\d+-\d+$/.test(env)) {
+      wx.showModal({
+        title: "env 填错了",
+        content: "这一格要**云开发**环境 ID（形如 poem-xxxxxxxx），不是云托管那个数字环境 ID。两个是不同的环境，平台按这一格找云开发，找不到会回 env not exists。",
+        showCancel: false,
+        confirmText: "知道了"
+      });
+      return;
+    }
+    auth.configure({ cloud: { env: env, service: service } });
+    this.afterConfigure("云调用配置已保存");
   },
 
   /**
@@ -231,15 +306,20 @@ Page({
       return;
     }
     auth.configure({ baseUrl: url.replace(/\/+$/, "") });
+    this.afterConfigure(url ? "地址已保存" : "已清空地址");
+  },
+
+  /** 存完之后试一次，把「配好了」与「配了但连不上」分开 —— 两句话不一样 */
+  afterConfigure(okMsg) {
     this.setData({ busy: true });
     entitlement
       .sync()
       .then(() => {
-        this.setData({ busy: false, msg: url ? "地址已保存" : "已清空地址" });
+        this.setData({ busy: false, msg: okMsg });
         this.refresh();
       })
       .catch(() => {
-        this.setData({ busy: false, msg: "地址已保存，但连不上" });
+        this.setData({ busy: false, msg: okMsg + "，但连不上" });
         this.refresh();
       });
   },
