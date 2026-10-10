@@ -75,7 +75,7 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
 | 字段 | 填什么 |
 |---|---|
 | 归属环境 | 没有就新建（地域就近） |
-| 服务名称 | 如 `poem-api` |
+| 服务名称 | 自己起一个，**记住它** —— 后面 § 6.1 要填进 `X-WX-SERVICE`。本套部署用的是 `poem-wx` |
 | 部署方式 | **镜像** |
 | 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>` |
 | 端口 | `8080` |
@@ -254,10 +254,17 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 | 填在哪 | 是什么 | 从哪儿拿 |
 |---|---|---|
 | `config.env` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` | 微信开发者工具 → 云开发控制台 → 设置 → 环境 ID |
-| `X-WX-SERVICE` | 云托管的**服务名**，如 `poem-api` | 云托管控制台 → 服务管理 → 服务名 |
+| `X-WX-SERVICE` | 云托管的**服务名**，如 `poem-wx` | 云托管控制台 → 服务管理 → 服务名 |
 
 ⚠️ 把云托管那个数字环境 ID（`326045-4-1502724481`）填进 `config.env` 是最常见的错，
 平台回 `env not exists`，看着像环境没建。
+
+**服务名不是固定值，以你实际建的那个为准。** 上面 `poem-wx` 是**本仓库当前那套部署**用的名字
+（云托管 → 服务列表里那一行），文档早先举例写的是 `poem-api`，那只是形状示例 ——
+照抄示例而服务叫别的名字，平台回 `service not found`，看着像服务没部署。
+
+**环境 ≠ 服务**：`poem` 是**环境**名（`poem-d9g1bqeq978682c58` 那个前缀就是从它来的），
+`poem-wx` 才是**服务**名。这两格一个要环境、一个要服务，别互相填串。
 
 ### 6.2 在小程序里配
 
@@ -268,6 +275,16 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 微信公众平台那个 [`/wxamp/cloudservice/`](https://mp.weixin.qq.com/wxamp/cloudservice/) 是
 **云开发 / 云托管服务**的开通与配额页，没有这个表单 —— 指路指错了地方。
 入口要**先登录**：未登录时「数据与账号」那张卡不整块显示，「用户与权限」那一行也就不在。
+
+**谁看得到这一页**：「用户与权限」那一行所有登录用户都看得见，但**里面那张「云调用」卡
+不是所有用户的**。管理页整块裹在 `wx:if="{{!logged}}"` 的 else 里，普通用户（Free 档）
+看到的只有「我的授权」与「能力矩阵」，没有同步服务器、也没有云调用那两格。
+能拉到两格的人 = 至少 admin；写不进也不影响别人，见下条。
+
+**这两格不是平台配置项，是本机设置**：值存在**这台手机的本地存储**里
+（`store.KEYS.auth` → `auth.cloud`），只是借「云调用」来称呼 `wx.cloud.callContainer` 这条路。
+所以它不经过微信后台任何一个配置项（在 mp 后台找不到是正常的），
+也不影响线上服务或别的用户 —— 换台手机要重填一次。
 
 **`baseUrl` 留空，request 合法域名也空着** —— 两个都填时以 `baseUrl` 为准。
 
@@ -311,7 +328,9 @@ curl -s -X POST https://<域>/api/sync/pull \
 | curl 也不通 | 服务没起来 / 公网访问关着 | 看服务日志与实例数 |
 | curl 通、真机不通 | 云调用两栏填错，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空 |
 | 平台回 `env not exists` | `config.env` 填了云托管的数字环境 ID | 换成云开发环境 ID（§ 6.1） |
-| 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID | 填云托管**服务名** |
+| 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
+| 管理页只剩「我的授权」，找不到云调用那两格 | 当前档位不是 admin/owner（那两格只在管理页里） | 先按 § 八 发档位；云调用是运维配置，本就不该给所有用户 |
+| 填完云调用，换台手机要重填 | **正常**：那两格存在本机存储，不是服务端配置 | 它只影响这台手机怎么连后端，不是线上服务的设置项 |
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 流水线红在 `clone poem`，报 `Repository Not Found.` | 凭据不被接受，不是路径错 | `.cnb.yml` 里已留了不带凭据的退路（`poem` 匿名可读） |
 | 流水线红在 `build & push`，报 `invalid reference format` | `.cnb.yml` 的 `env:` 里写了 `${VAR:-default}` | CNB 只替换 `$VAR`，`env:` 的值只能写字面量 |
