@@ -21,6 +21,7 @@ const PINYIN_MODES = [
 
 Page({
   data: {
+    themeStyle: "",
     aligns: ALIGNS,
     align: "center",
     fontSize: 0,

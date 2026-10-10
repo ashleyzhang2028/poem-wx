@@ -8,6 +8,7 @@ const COUNT = 10;
 
 Page({
   data: {
+    themeStyle: "",
     stage: "setup",
     forms: [],
     pickedForms: [],

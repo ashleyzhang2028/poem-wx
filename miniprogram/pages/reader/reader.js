@@ -41,6 +41,7 @@ function aliasTextOf(meta) {
 
 Page({
   data: {
+    themeStyle: "",
     id: "",
     bookId: "",
     title: "",

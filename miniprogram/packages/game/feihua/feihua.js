@@ -9,6 +9,7 @@ const ANSWER_LIMIT = 80;
 
 Page({
   data: {
+    themeStyle: "",
     levels: feihua.LEVELS,
     level: "normal",
 

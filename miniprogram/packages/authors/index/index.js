@@ -7,6 +7,7 @@ const theme = require("../../../utils/theme");
 
 Page({
   data: {
+    themeStyle: "",
     locked: true,
 
     eras: [],

@@ -19,6 +19,7 @@ const PAGE = {
 Page({
   data: {
 
+    themeStyle: "",
     locked: true,
     cards: []
   },

@@ -34,6 +34,7 @@ const GROUPS = [
 
 Page({
   data: {
+    themeStyle: "",
     groups: [],
     current: null,
     books: [],

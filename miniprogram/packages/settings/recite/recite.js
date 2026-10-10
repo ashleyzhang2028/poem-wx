@@ -26,6 +26,7 @@ const TERMS = [
 
 Page({
   data: {
+    themeStyle: "",
     grades: [],
     terms: TERMS,
     stages: STAGES,

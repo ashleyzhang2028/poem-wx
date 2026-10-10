@@ -5,6 +5,7 @@ const theme = require("../../../utils/theme");
 
 Page({
   data: {
+    themeStyle: "",
     sfxVisible: false,
     sfxOn: true,
     locked: false

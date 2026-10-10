@@ -3,6 +3,7 @@ const theme = require("../../../utils/theme");
 
 Page({
   data: {
+    themeStyle: "",
     signedIn: false,
     rows: [],
     lockedCount: 0,
