@@ -234,9 +234,24 @@ main:
               exit 1
             fi
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
-            docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
+            # ⚠️ **这里要登的就是 `IMAGE` 那个 registry，不是 CNB 那个**（Issue #100
+            #    第三次现场）。`IMAGE` 从 Issue #71 起指向 GHCR，而这一步的
+            #    `docker push "${IMAGE}"` 跟着往 GHCR 推 —— 可 login 还留在 CNB
+            #    制品库上，于是必被拒：
+            #      error from registry: denied
+            #    报错只有 `denied` 一行，不说是「没登这个 registry」，看着像
+            #    PAT 没权限 / 包名被人占了 —— 其实压根没出示 GHCR 的凭据。
+            #    （之前 `IMAGE` 指 CNB 时，这行 login 恰好是对的，换槽位时漏改了。）
+            #
+            #    ⚠️ 凭据从**流水线级 imports** 来（GHCR_USER / GHCR_TOKEN 与别的
+            #    密钥同在 wechat-ci.yml），这一步不用再写一遍 imports。
+            #    ⚠️ 用户名是 **GitHub 账号名**，跟 CNB 那边写死 `cnb` 相反。
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             # BASE_IMAGE：基础镜像从哪来。默认在 deploy/Dockerfile 里
             # （公开的 node:20-alpine）；要换镜像源在这儿加一行 build-arg 就行。
+            # ⚠️ CNB 制品库那行 login **不能删**：基础镜像/构建缓存仍从
+            #    CNB 拉（`CNB_DOCKER_REGISTRY`），删了拉基础镜像会回 denied。
+            docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
               --build-arg "API_REV=${REV}" \
               --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \

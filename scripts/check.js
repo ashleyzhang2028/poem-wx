@@ -8338,6 +8338,50 @@ function sectionOf(text, heading) {
   }
 }
 
+/* ⚠️ **往哪个 registry 推，就得先登哪个 registry**（Issue #100 第三次现场）。
+   现场：`IMAGE` 从 Issue #71 起指向 GHCR，`build & push` 那步的
+   `docker push "${IMAGE}"` 跟着往 GHCR 推 —— 可 login 还留在 CNB 制品库上，
+   于是必被拒：
+       error from registry: denied
+   报错只有 `denied` 一行，看着像 PAT 没权限 / 包名被占，**其实压根没登 GHCR**。
+   之前 `IMAGE` 指 CNB 时这行 login 恰好是对的，换槽位时漏改了。
+
+   ⚠️ 判据拆成两半，缺一不可：
+     ① 有 `docker push` 指向 ghcr.io（URL 或 `${IMAGE}`/`${GHCR}` 这种变量）
+     ② 同一个 script 块里在**第一条 push 之前**出现 `docker login ghcr.io`
+   只看「全文有没有 login ghcr.io」会被 `推 GHCR` 那步放行 —— 而红的是
+   `build & push`（它排在前面，先炸，后面那步根本轮不到跑）。
+   所以按**每个 script 块**分别判：块里推了 ghcr 就必须在本块 login。
+
+   ⚠️ 为什么值得单开：这类错有个共同点 —— **推的目标换了、登的目标没换**，
+   改一处漏一处，且只在 push main 时才显形（分支推送不跑 build & push）。 */
+{
+  const yml = fs.readFileSync(path.join(path.dirname(__dirname), ".cnb.yml"), "utf8");
+  const jobChunks = yml.split(/\n(?=        - name: )/);
+  const bad = [];
+  for (const chunk of jobChunks) {
+    const name = (chunk.match(/^\s*- name:\s*(.+)$/m) || [])[1] || "(未命名)";
+    // 剥掉整行注释与行尾注释，避免说明文字里的 docker login/push 骗过判据
+    const code = chunk
+      .split("\n")
+      .map((l) => l.replace(/\s+#.*$/, ""))
+      .filter((l) => !/^\s*#/.test(l));
+    const pushIdx = code.findIndex((l) => /docker push\b/.test(l));
+    if (pushIdx < 0) continue;
+    const pushesGhcr = code.some(
+      (l) => /docker push\b/.test(l) && /(ghcr\.io|\$\{GHCR\}|\$\{IMAGE\})/.test(l)
+    );
+    if (!pushesGhcr) continue;
+    const loggedIn = code.slice(0, pushIdx).some((l) => /docker login\s+ghcr\.io/.test(l));
+    if (!loggedIn) bad.push(name);
+  }
+  ok("`docker push` 到 ghcr.io 的每一步都先 `docker login ghcr.io`（否则回 `denied`）",
+    bad.length === 0,
+    "这些步骤往 ghcr.io 推却没在本步登录：" + JSON.stringify(bad) +
+      " —— GHCR 会回 `error from registry: denied`（只有这一行，看着像 PAT 没权限，" +
+      "其实是没登）。凭据在流水线级 imports 的 GHCR_USER / GHCR_TOKEN 里，本步直接可用");
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
