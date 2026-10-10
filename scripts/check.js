@@ -8557,17 +8557,39 @@ function gapped(items, max) {
       try { return require("js-yaml"); } catch (e) { return null; }
     })();
     void py;
-    // 不引 yaml 解析（这个仓库的 devDeps 里没有它），按缩进粗看：
-    // 顶层键各自顶格，`crontab:` 必须顶格出现，`poem-watch.sh` 必须在它下面。
+    /* ⚠️ 这一段的判据**必须按缩进写**，因为这条配置踩过两次：
+       ① 顶格另起一个 `crontab:` 键 → 平台报 `CONFIG_EVENT_EMPTY /
+          $ 下无 api_trigger 事件配置`（看着像 `$` 段写坏了，其实不是）；
+       ② 另起第二个 `main:` → YAML 键重复，**后面那个把前面那个整个盖掉**，
+          发布链就此消失，而文件本身看着完全正常。
+       两种都解析得出 YAML，所以「能 parse」不是判据，**位置**才是。
+       见 https://docs.cnb.cool/zh/build/crontab.md */
     const lines = cnb2.split("\n");
-    const cronAt = lines.findIndex((l) => /^crontab:/.test(l));
-    ok(".cnb.yml 里有顶格的 `crontab:`（跟上游是定时任务，不是发布链的一步）",
+    // 缩进 2 空格的 `"crontab: <表达式>":`，且在 `main:` 之下
+    const cronAt = lines.findIndex((l) => /^\s{2}"crontab:\s*\S/.test(l));
+    ok("定时任务写在 `main:` 之下（`main: { \"crontab: …\": […] }`）",
       cronAt >= 0,
-      "没有定时任务的话，上游动了（或没动）这边都不知道");
+      "没找到缩进 2 空格的 `\"crontab: <cron>\":` —— 顶格另起一个 `crontab:` 的话，" +
+        "平台报的是「$ 下无 api_trigger 事件配置」，与真正的原因差很远");
+    // 表达式要是五段 POSIX cron（时区 Asia/Shanghai，最小间隔 5 分钟）
+    ok("定时任务的 cron 表达式是五段",
+      /^\s{2}"crontab:\s*\S+\s+\S+\s+\S+\s+\S+\s+\S+"\s*:/.test(lines[cronAt] || ""),
+      "表达式不是五段 —— CNB 用的是 POSIX cron（分 时 日 月 周）");
     const cronBody = cronAt < 0 ? "" : lines.slice(cronAt).join("\n");
     ok("定时任务跑的就是 poem-watch.sh",
       /poem-watch\.sh/.test(cronBody),
-      "crontab 段里没有跟上游那个脚本");
+      "crontab 那条里没有跟上游那个脚本");
+    /* ⚠️ 顶层键**只能有一个 `main:`**。写成两个，YAML 后者覆盖前者，
+       发布链静默消失 —— 而文件本身、`yaml.safe_load`、肉眼，全都看不出问题。 */
+    const mainKeys = lines.filter((l) => /^main:/.test(l));
+    ok(".cnb.yml 里只有一个 `main:`（重复的话后者会盖掉前者，发布链静默消失）",
+      mainKeys.length === 1,
+      "找到 " + mainKeys.length + " 处顶格 `main:`");
+    const topKeys = lines.filter((l) => /^[A-Za-z$][\w$-]*:/.test(l)).map((l) => l.split(":")[0]);
+    ok(".cnb.yml 里没有顶格的 `crontab:`（那个键位置不对，平台解析不到）",
+      topKeys.indexOf("crontab") < 0,
+      "顶格 `crontab:` 是无效写法 —— 得写成 `main:` 之下缩进 2 空格的 " +
+        "`\"crontab: <表达式>\":`");
     /* ⚠️ 反向也要守：**发布链里不许出现跟上游的动作**。
        在发布链里跟一下，就等于又回到「上游一改、我们推 main 就红」那条路上 ——
        治法白做。判据：`main:` 之后、`crontab:` 之前那段里不许有 poem-watch。 */
