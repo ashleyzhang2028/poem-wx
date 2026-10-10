@@ -7972,11 +7972,11 @@ function sectionOf(text, heading) {
         .filter(Boolean)
         .map((m) => m[1])
     );
-    // ⚠️ 只抓**不带默认值**的引用（`${VAR}`）—— 带 `:-` 的（`${VAR:-x}`）
-    //    本来就写明了「没有就用 x」，没有它反而是设计的一部分，
-    //    一起要求会把我自己的 `IMAGE: ${GHCR_IMAGE:-...}` 判红。
-    //    反过来说：想省掉 env 里的定义，就得在引用处把 `:-` 写上 ——
-    //    这正是「推 GHCR」那步注释里说的那条规矩。
+    // ⚠️ 只抓**不带默认值**的引用（`${VAR}`）。带 `:-` 的（`${VAR:-x}`）在这条
+    //    断言里**不算定义**，也不在这里管 —— 它属于下一条断言的范围
+    //    （`env:` 的值只能写字面量）。上一版这里是放行的，还写了句
+    //    「带 `:-` 的一起要求会把我自己的 `IMAGE: ${GHCR_IMAGE:-...}` 判红」——
+    //    等于给那个写法开了后门，而它本身就是错的（Issue #100 第二次现场）。
     const referenced = new Set();
     for (const l of shellLines) {
       for (const m of l.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)) {
@@ -8010,6 +8010,53 @@ function sectionOf(text, heading) {
       "这些变量只在脚本里被引用、`env:` 里没有定义：" + JSON.stringify(missing) +
         " —— job 跑在 Alpine，`set -eu` 之下撞上未定义变量是当场退出，" +
         "报错只有 `sh: N: VAR: parameter not set` 一行，不说是哪条命令");
+
+    /* ⚠️ **`env:` 的值只能是字面量，不能写 shell 的 `${VAR:-default}`**
+       （Issue #100 第二次现场，也是这条断言存在的唯一理由）。
+
+       两个「变量替换」长得很像，但不是一回事：
+
+         env: 里        CNB 自己的替换，文档只说 `$env_name` 会被替换成值、
+                        无值时替换成**空字符串**。`${VAR}` 与 `${VAR:-x}`
+                        都**不在它的语法里** —— 于是既不报错、也不清空，
+                        **原样**当成普通字符串留下。
+         script: 里     shell 的替换，`${VAR:-x}` 是对的 —— 6 步里
+                        `eval "val=\${$v:-}"` 用的就是它，**那条别动**。
+
+       现场（IMAGE 的值被原样拼进 tag，直到 docker 才炸）：
+         ERROR: failed to build: invalid tag
+         "${GHCR_IMAGE:-ghcr.io/ashleyzhang2028/poem-wx/wx-api}:36ad9fe":
+         invalid reference format
+
+       ⚠️ 为什么单开一条而不是折进上面：上面按「变量名有没有定义」查，
+       而这里**变量在不在 `env:` 里都是错的** —— `GHCR_IMAGE` 恰好没定义，
+       于是上面那条的 `assigned`/`injected` 名单里也没有它，看着像「无关的
+       变量」；真问题是这个**写法**。判据落在 `env:` 段每一行的**值**上。
+
+       ⚠️ 判据只收 `:-`/`:+` 这一类 **shell 专属**的修饰，不收光秃秃的
+       `${VAR}`：后者就算 CNB 不替换，脚本里引用到的也是同名环境变量，
+       shell 会自己展开（`${CNB_DOCKER_REGISTRY}` / `${TAG}` 就是这么活的）。
+       而 `${VAR:-x}` 一旦 CNB 不认，值里的那串字面量就永久留在变量里 ——
+       后面**谁引用都不会再展开**，实测：
+         IMAGE='${GHCR_IMAGE:-ghcr.io/x}'; echo "${IMAGE}:$TAG"
+         → ${GHCR_IMAGE:-ghcr.io/x}:36ad9fe        ← 原样进 tag
+       这正是 `invalid reference format` 的来源，也是两者唯一的分别。 */
+    const envLines = envSection
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"));
+    const badEnvValues = envLines.filter((l) => {
+      const m = l.match(/^[A-Z][A-Z0-9_]*:\s*(.+)$/);
+      return m && /\$\{[A-Z_][A-Z0-9_]*:-/.test(m[1]);
+    });
+    ok(".cnb.yml 的 `env:` 的值里不写 `${VAR:-default}` —— CNB 不替换它，会原样进命令",
+      badEnvValues.length === 0,
+      "这些 `env:` 的值里有 `${VAR:-...}`：" + JSON.stringify(badEnvValues) +
+        " —— CNB 的 env 变量替换只认 `$VAR`，`${VAR:-default}` 会**原样**留下，" +
+        "既不报错也不清空，而变量值不会再被二次展开，最后由 shell 拼进命令" +
+        "（典型是 docker tag → invalid reference format）；" +
+        "真要默认值就把字面量直接写在这儿" +
+        "（script: 里的 `${VAR:-x}` 是 shell 的，不受影响，别一起改）");
   }
 
   /* 「以后所有的提交都进 main」—— 这句得落在配置里，不能只是口头约定。
