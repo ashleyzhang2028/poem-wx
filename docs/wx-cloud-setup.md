@@ -137,7 +137,50 @@ WX_SECRET=<小程序 appsecret>
 | 内网地址 | `MYSQL_HOST` |
 | 端口（一般 3306） | `MYSQL_PORT` |
 | 用户名 / 密码 | `MYSQL_USER` / `MYSQL_PASSWORD` |
-| 已建的库名（没有就先建一个 `poem`） | `MYSQL_DATABASE` |
+| 已建的库名 —— **先建一个 `poem`**，别照抄界面默认那个 | `MYSQL_DATABASE` |
+
+#### 先搞清「库」和「表」是两件事：实例自带的那几个库一个都不能用
+
+控制台建的**实例**里只有 MySQL 自己的库，而**库要自己建** —— 建表语句
+（§ 四）建的是**表**，它得先有个库可落。这两步顺序颠倒，症状就是下一节那样。
+
+⚠️ **DMS（[dms.cloud.tencent.com](https://dms.cloud.tencent.com)）里只列得出系统库，
+不是选错了、也不是权限不够，是库里真没有你自己建的库。** 它列出来的那五个：
+
+| 列出来的库 | 是什么 |
+|---|---|
+| `information_schema` | 元数据视图，只读 |
+| `performance_schema` | 性能计数器 |
+| `mysql` | 账号与权限字典 |
+| `sys` | 前两个的易读视图 |
+| `__cdb_recycle_bin__` | 回收站 |
+
+**这五个都是 MySQL 自己的，一个都不能拿来建表。** 在 `mysql` 库里建
+`accounts` / `progress`，看着能跑，实际是在改账号字典 —— 那台实例迟早出事。
+
+**先建库**（两种办法，任选）：
+
+命令行：
+
+```sql
+CREATE DATABASE IF NOT EXISTS `poem` DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- 顺手确认建上了（下面这条要能列出 poem）
+SHOW DATABASES;
+```
+
+⚠️ **`CREATE DATABASE` 不能带 `USE`** —— 库还不存在，`USE poem` 会先报
+`Unknown database 'poem'`。列系统库的那个下拉里也就没有 `poem` 可勾。
+
+DMS 界面：**实例 → 数据库管理 → 新建数据库**，库名 `poem`、字符集 `utf8mb4`。
+建完回到 SQL 窗口，**先把当前库切到 `poem`**（顶部那个库下拉，或者写一句
+`USE \`poem\`;`），再往下走 § 四。
+
+⚠️ **`MYSQL_DATABASE` 要和你建的库名逐字对上。** 建了 `poem` 而环境变量写
+`poem-db`，驱动会在建库那一刻报 `ER_BAD_DB_ERROR: Unknown database`，
+而**服务本身照起** —— 症状是「服务日志里那行 `[store] 存储层 = 腾讯云 MySQL
+<host>:<port>/poem` 看着挺好，但登录一律 500」，一种要查半天的错。
+（自检 V49 钉着这一条：`deploy/store-mysql.js` 里那个默认库名必须和本文件
+写的是同一个。）
 
 ⚠️ **填内网地址，不填公网地址。** 云托管与 MySQL 在同一个 VPC 里，
 走内网既不用开公网访问、也不用配白名单与 TLS。填公网地址能通，
@@ -153,14 +196,35 @@ WX_SECRET=<小程序 appsecret>
 > 条件 upsert 那条不变式换库时该怎么落地、以及「换库不是审核的要求」那句话，
 > 见 [`data-backend.md`](data-backend.md) § 三。
 
-## 四、建表
+## 四、建表（**先切库，再执行**）
 
-云托管控制台 → 服务所属环境 → **MySQL** → 数据管理 / SQL 窗口，
+⚠️ **执行前那一步：当前库必须是 § 3.1 建的那个 `poem`。** SQL 窗口默认的当前库
+多半是空的 —— 顶上那个库下拉里只有系统库可勾（库还没建完），这时整段粘进去
+会得到一片 `No database selected`。不是建表语句的问题，是没告诉它往哪个库建。
+
+```sql
+USE `poem`;        -- ← 少了这一句，下面整段都会红
+SELECT DATABASE(); -- 回 poem 才算切上了
+```
+
+（其实也可以不切 —— 建表语句里的 `CREATE TABLE` 没写库名，纯粹靠当前库。
+所以这一步没有替代写法。）
+
+切好之后：云托管控制台 → 服务所属环境 → **MySQL** → 数据管理 / SQL 窗口，
 把本仓库的 [`deploy/sql/mysql-schema.sql`](../deploy/sql/mysql-schema.sql)
 整段粘贴执行（幂等，可重复跑）。
 
 它建的是**全部**表（账号 / 微信账号 / 会话 / 进度 / 报告 / 勘误 / 反馈 / 考试），
 不只是 `wx_accounts` —— 一次性建齐，省得后面一条条补。
+
+建完当场确认一句，**这一步是真判据**：
+
+```sql
+SHOW TABLES;   -- 要看到 accounts / wx_accounts / progress / sessions …
+```
+
+只剩系统库那四张（`character_sets` / `collations` 之类）= 上面 `USE` 没生效，
+或 § 3.1 的库压根没建。
 
 ## 五、探活
 
@@ -209,7 +273,7 @@ curl -s -X POST https://<域>/api/sync/pull \
   -H 'Authorization: Bearer <accessToken>' \
   -H 'content-type: application/json' -d '{"deviceId":"d1","since":0}'
 
-# ② 那一行真的落库了
+# ② 那一行真的落库了（DMS 里查的话，别忘了 `USE \`poem\`;` —— 同 § 四）
 # select poem_id, payload from progress where poem_id = 'settings:v1';
 ```
 
@@ -249,6 +313,9 @@ curl -s -X POST https://<域>/api/sync/pull \
 | **服务一重启，用户数据全没了** | `MYSQL_HOST` 那几项没配 / 配错 → 服务端退回了内存档 | § 3.1。看服务日志里那句话：`[store] 没配 MYSQL_HOST —— 退回 poem 默认的存储层`。配好了它会打 `[store] 存储层 = 腾讯云 MySQL <host>:<port>/<db>` |
 | 服务日志报 `配了 MYSQL_HOST 但镜像里没有 mysql2` | 镜像里那个依赖没装上 | 那是 `deploy/Dockerfile` 的 `npm install … mysql2` 那步；重推一次 `main` 出镜像 |
 | 服务日志报 `ER_NO_SUCH_TABLE` | 建表语句没跑（或只跑了一半） | § 四，把 `deploy/sql/mysql-schema.sql` 整段重跑一遍（幂等） |
+| **DMS 里只能选系统库**（`information_schema` / `mysql` / `sys` / `performance_schema` / `__cdb_recycle_bin__`） | 库压根没建 —— 那五个是 MySQL 自己的 | § 3.1，先 `CREATE DATABASE \`poem\``。**别将就在 `mysql` 库里建表** |
+| SQL 窗口报 `No database selected` | 没切当前库 | § 四：执行前 `USE \`poem\`;`（`SELECT DATABASE();` 确认） |
+| 服务日志报 `ER_BAD_DB_ERROR` | `MYSQL_DATABASE` 与真建的库名不是同一个 | § 3.1：建的库名与环境变量逐字对上，然后**重部署**让新变量生效 |
 | 服务日志里没有 `[store]` 那两行中的任何一行 | 镜像太老（接线那版还没上） | 回 § 1 重出镜像 —— 接线在 `serve-api.js` 里，那是随镜像走的 |
 | 换台手机头像没了 | **正常**（Issue #111）：头像只落本机、不上传 | 不为它养对象存储。要头像跨设备就得先接受「养一个存储桶」这个代价 |
 

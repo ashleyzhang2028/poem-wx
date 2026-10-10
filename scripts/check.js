@@ -8987,6 +8987,45 @@ function gapped(items, max) {
       /`refresh_token`/.test(sql),
       "没有这一列，刷新永远验不过 —— 而客户端只会看到「登录过期了」");
   }
+
+  /* ⑤ 「库」与「表」是两件事，而**库不在任何一条建表语句里**。
+     实例自带的只有 MySQL 自己的那几个库（`information_schema` /
+     `performance_schema` / `mysql` / `sys` / `__cdb_recycle_bin__`），
+     所以照文档走的人在 DMS 里只看得见系统库 —— 卡住的不是建表语句，
+     是文档少说了「先建库、执行前切库」这一步。
+
+     这一条守的是**那条命令与代码里的默认库名是同一个**：
+     文档写 `CREATE DATABASE poem` 而 `serve-api.js` 里默认回落 `poem-db`，
+     两份文件各自看都对，合起来是 `ER_BAD_DB_ERROR` —— 而进程照起、
+     `[store] 存储层 = …` 那行照打，症状是「看着配好了但登录一律 500」。
+     钉住名字 + 钉住两句命令都在，缺一不可：只钉名字，文档里那两句命令被人
+     删掉时没人知道；只钉命令，名字改歪了也没人知道。 */
+  {
+    const setup = fs.readFileSync(path.join(repo4, "docs", "wx-cloud-setup.md"), "utf8");
+    const serveSrc = fs.readFileSync(path.join(repo4, "deploy-api-serve", "serve-api.js"), "utf8");
+
+    const created = /CREATE DATABASE IF NOT EXISTS `([A-Za-z_][\w$]*)`/.exec(setup);
+    const fellThrough = /database:\s*process\.env\.MYSQL_DATABASE\s*\|\|\s*"([^"]+)"/.exec(serveSrc);
+    const dbFromEnv = /MYSQL_DATABASE=([A-Za-z_][\w$]*)/.exec(setup);
+
+    ok("文档写了「先建库」那条命令（实例里没有这个库，DMS 只列得出系统库）",
+      !!created,
+      "wx-cloud-setup.md 里没有 `CREATE DATABASE IF NOT EXISTS `poem`` —— 照文档走的人" +
+        "会在 DMS 里只看到那五个系统库，然后卡在那儿，而文档一个字都没提");
+    ok("文档写了「执行前切库」那条命令（建表语句不带库名，靠当前库）",
+      /USE\s+`(?:[A-Za-z_][\w$]*)`\s*;/.test(setup),
+      "建表语句里的 CREATE TABLE 不带库名 —— 没切库就是一片 `No database selected`，" +
+        "而那句错看着像建表语句写错了");
+    ok("建库那条命令用的库名，就是代码里 MYSQL_DATABASE 的默认值",
+      !!created && !!fellThrough && created[1] === fellThrough[1],
+      "文档建的是「" + (created ? created[1] : "?") + "」，而 serve-api.js 的默认回落是「" +
+        (fellThrough ? fellThrough[1] : "?") + "」—— 对不上时驱动抛 ER_BAD_DB_ERROR，" +
+        "而进程照起、`[store] 存储层 = …` 照打，症状是「看着配好了但登录一律 500」");
+    ok("环境变量那一栏写的库名与建库那条是同一个",
+      !dbFromEnv || !created || dbFromEnv[1] === created[1],
+      "同一份文档里 `MYSQL_DATABASE=` 写「" + (dbFromEnv ? dbFromEnv[1] : "?") +
+        "」、建库却建「" + (created ? created[1] : "?") + "」");
+  }
 }
 
 /* ---------- 汇总 ---------- */
