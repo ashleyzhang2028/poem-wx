@@ -7847,6 +7847,22 @@ function sectionOf(text, heading) {
   ok("云托管设置文档写的是「按镜像部署」",
     /^\|\s*部署方式\s*\|\s*\*\*镜像\*\*\s*\|/m.test(setup),
     "写「代码仓库 + 容器目录」就是老路：那个仓库根上没有 api/，走不通");
+  /* 被问过一次（这条 Issue 的原话是「wx-cloud-setup.md 没找到这些步骤」）：
+     GHCR 的包**默认是 Private**，而整条主路之所以绕开 CNB 制品库，图的就是
+     「公开包、免凭据」。那一栏要人去 GitHub 点一下 —— 而这一下**不在 repo 的
+     Settings 里**（包在 `github.com/users/<owner>/packages/...` 下，不在仓库
+     目录下），所以光写「把包设成 Public」等于让人去翻半天。判据落在
+     **能照抄的地址**上，不是「提过 Public 这个词」。 */
+  ok("云托管文档给了「把 GHCR 包设成 Public」的可照抄地址（不在 repo Settings 里）",
+    /github\.com\/users\/[\w.-]+\/packages\/container\//.test(setup) &&
+      /Package settings/.test(setup) &&
+      /Change visibility/i.test(setup),
+    "GHCR 新包默认 Private，不设 Public 就得配凭据 —— 走 GHCR 省凭据这一步就白做了。" +
+      "而这页挂在 user 下、不在 repo 的 Settings 里，只写一句话人会找不到");
+  /* 同一个坑的另一半：包页 404 = 包还没推上去。不说这句，人会以为地址抄错了。 */
+  ok("云托管文档点明了「包页 404 = 包还没推上去」",
+    /404[\s\S]{0,60}(包还没推|还没推上|先回|查流水线)/.test(setup),
+    "包页找不到时最自然的怀疑是「地址写错了」，而实际是流水线没推到 —— 得把这句先说掉");
   /* 镜像地址是照抄的那一栏，必须逐字给出；slug 是本仓库的 ——
      填成 poem 名下那个槽位，云托管拉不到。 */
   ok("云托管设置文档给出了完整的镜像地址（slug 是本仓库）",
