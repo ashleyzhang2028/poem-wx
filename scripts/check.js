@@ -83,7 +83,7 @@ const manifest = readJson(path.join(dataDir, "texts", "manifest.json"));
 
 ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
 
-// 全部集子索引拼起来应当覆盖全站 5599 条，且一条不重
+// 全部集子索引拼起来应当覆盖全站 5855 条，且一条不重
 /* ⚠️ 各集子索引**过一层 `corpus.ofBook()` 再读**，不直接读盘上的 JSON。
    落盘时把 `b` / `n` / `hasT` 摘掉了（每个文件里前两个是常数、后一个全是 true，
    三者合计 199KB —— 见 `scripts/build-data.js` 里那段账），由 `ofBook()` 读
@@ -2524,7 +2524,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const cmod = require(path.join(ROOT, "utils", "corpus.js"));
 
   /* 1) 不丢字：rows 拼回去 = 各行 splitClauses 拼回去；paras 展开 = rows。
-     跑**全站 5599 条**（不只是课内的 251 首）——
+     跑**全站 5855 条**（不只是课内的 251 首）——
      折叠逻辑一旦多切一个字符，只有那几篇会露馅，抽一篇试是试不出来的。
      （这里踩过一次：先只跑了课内，把收行点砍掉一个，检查照样全绿。） */
   const allIds = [];
