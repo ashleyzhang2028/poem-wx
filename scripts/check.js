@@ -8483,6 +8483,169 @@ function gapped(items, max) {
     "云调用这条路的全部价值就是免掉备案，不写下来等于没有");
 }
 
+/* ---------- V47. 上游语料：**钉住**，别让别人的发布绊住我们（Issue #111） ----------
+ *
+ * 现场：`.cnb.yml` 里每个任务第一步都取 poem 的 `main` 头。于是 poem 那边
+ * 补录几十条 / 改一版归类，这边 check.js 那张篇数表（K.counts / K.seqMax /
+ * KNOWN_HOLES）就当场红 —— **推我们的 main 的时候红，改我们代码的人是受害者，
+ * 而错在上游**。那张表的注释里写着「补录之后回来对一次」，就是承认了这件事。
+ *
+ * 治法（`docs/data-backend.md` § 四）：发布链用 `poem.lock.json` 钉住的那一版；
+ * 上游动了由**定时的、独立的**那条流水线自己冒出来（自检绿开 PR 前进锁，
+ * 自检红留一条 Issue）。
+ *
+ * 这一节守的就是这条治法，四条，每条都能单独被改坏：
+ *   ① 锁文件在，且形状对（ref 是全 sha / counts 与 K 表逐条一致）
+ *   ② 取语料那一步**真的用锁**（不然锁只是个摆设）
+ *   ③ 定时任务在，且**不在发布链里**（在发布链里就又回到原来那条路）
+ *   ④ 跟上游那个脚本还在（没把它删成一个空的 crontab）
+ */
+{
+  const repo2 = path.join(ROOT, "..");
+  const lockPath = path.join(repo2, "poem.lock.json");
+  ok("poem.lock.json 在（发布链按它钉住上游）", fs.existsSync(lockPath));
+
+  let lock = null;
+  if (fs.existsSync(lockPath)) {
+    try { lock = JSON.parse(fs.readFileSync(lockPath, "utf8")); } catch (e) { lock = null; }
+  }
+  ok("poem.lock.json 是合法 JSON", !!lock);
+  ok("锁里记的是全 sha（短 sha 钉不住：40 位才唯一）",
+    !!lock && /^[0-9a-f]{40}$/.test(String(lock.ref || "")),
+    lock ? "ref=" + lock.ref : "");
+  ok("锁里写明上游是哪个仓库",
+    !!lock && /^[\w.-]+\/[\w.-]+$/.test(String(lock.repo || "")),
+    lock ? "repo=" + lock.repo : "");
+
+  /* ⚠️ 锁里的篇数**必须与 check.js 的 K 表逐条一致**。
+     这一条不是形式主义：锁与 K 表是同一件事的两处写法 —— 锁说「我钉的是
+     哪一版」，K 表说「那一版应该有多少条」。两边对不上，就说明锁前进了而
+     K 表没跟上（或者反过来），而**那种状态下自检会是红的**，
+     下一次有人推 main 就又踩进原来那个坑。 */
+  if (lock && lock.counts) {
+    const mismatch = Object.keys(K.counts).filter((k) => Number(lock.counts[k]) !== K.counts[k]);
+    ok("锁里的篇数与自检的 K 表逐条一致", mismatch.length === 0,
+      "对不上的是：" + JSON.stringify(mismatch.map((k) => k + ": 锁 " + lock.counts[k] + " / K " + K.counts[k])) +
+        " —— 锁前进了就回来把 K 表跟着改（见 docs/data-backend.md § 四）");
+  }
+
+  // ② 取语料那一步真的用锁
+  {
+    const sh = fs.readFileSync(path.join(repo2, "scripts", "clone-poem.sh"), "utf8");
+    ok("clone-poem.sh 会读 poem.lock.json 并检出那一版",
+      /poem\.lock\.json/.test(sh) && /checkout/.test(sh) && /POEM_REF/.test(sh),
+      "没读锁的话，锁就是个摆设 —— 取回来的还是上游的头");
+    /* 读完锁**要检验**：拿到的 sha 与要的不是同一个时得当场断掉。
+       少这一条，锁写错一个字符的结果是「安静地用着别的一版」——
+       而那种状态与「锁生效了」在日志里长得一模一样。
+
+       ⚠️ 判据不能只看「`HEAD_SHA` 与 `exit 1` 这两个词都在」：把它们之间的
+       那个条件改成 `if false`（或把比较挪到别处），文件里照样有这两个词，
+       而锁已经形同虚设 —— 第一版就是这么写的，实测放过去了。
+       所以要求那一行的**条件本身**里同时出现比较与 `exit`：
+       比较的是 `HEAD_SHA` 与 `REF`，且要在同一个 `if` 里换行到 `exit`。 */
+    ok("clone-poem.sh 在拿到的 sha 与锁不一致时当场失败",
+      /if\s+\[\s+"?\$\{?REF\}?"?\s*!=\s*"?main"?\s*\][\s\S]{0,120}?HEAD_SHA[\s\S]{0,160}?exit\s+1/.test(sh),
+      "那条「要的是 A、拿到的是 B → 退出」的判据不在 —— 锁写错一个字符的结果是" +
+        "安静地用着别的一版，而日志里与「锁生效了」一模一样");
+  }
+
+  // ③ 定时任务在，且不在发布链里
+  {
+    const cnb2 = fs.readFileSync(path.join(repo2, ".cnb.yml"), "utf8");
+    const py = (() => {
+      try { return require("js-yaml"); } catch (e) { return null; }
+    })();
+    void py;
+    // 不引 yaml 解析（这个仓库的 devDeps 里没有它），按缩进粗看：
+    // 顶层键各自顶格，`crontab:` 必须顶格出现，`poem-watch.sh` 必须在它下面。
+    const lines = cnb2.split("\n");
+    const cronAt = lines.findIndex((l) => /^crontab:/.test(l));
+    ok(".cnb.yml 里有顶格的 `crontab:`（跟上游是定时任务，不是发布链的一步）",
+      cronAt >= 0,
+      "没有定时任务的话，上游动了（或没动）这边都不知道");
+    const cronBody = cronAt < 0 ? "" : lines.slice(cronAt).join("\n");
+    ok("定时任务跑的就是 poem-watch.sh",
+      /poem-watch\.sh/.test(cronBody),
+      "crontab 段里没有跟上游那个脚本");
+    /* ⚠️ 反向也要守：**发布链里不许出现跟上游的动作**。
+       在发布链里跟一下，就等于又回到「上游一改、我们推 main 就红」那条路上 ——
+       治法白做。判据：`main:` 之后、`crontab:` 之前那段里不许有 poem-watch。 */
+    const mainAt = lines.findIndex((l) => /^main:/.test(l));
+    const publishBody = (mainAt < 0 || cronAt < 0) ? "" : lines.slice(mainAt, cronAt).join("\n");
+    ok("发布链（`main:`）里**不**跑跟上游（跑了就又回到原来那条路上）",
+      !/poem-watch/.test(publishBody),
+      "发布链里出现 poem-watch —— 上游一改，我们推 main 就红，治法白做");
+
+    /* 发布链那几处 clone **必须都走 clone-poem.sh**（它才读锁）。
+       直接写 `git clone ... poem.git` 会绕过锁 —— 而那条命令在这里看着也对。 */
+    const cloneRaw = publishBody.split("\n")
+      .map((l) => l.replace(/\s+#.*$/, ""))
+      .filter((l) => /git clone .*poem\.git/.test(l) && !/clone-poem\.sh/.test(l));
+    ok("发布链里取 poem 都走 clone-poem.sh（直写 git clone 会绕过锁）",
+      cloneRaw.length === 0,
+      "这几行绕过了锁：" + JSON.stringify(cloneRaw.slice(0, 2)));
+  }
+
+  // ④ 跟上游那个脚本还在，且把四种出口都写在明处
+  {
+    const w = path.join(repo2, "scripts", "poem-watch.sh");
+    ok("scripts/poem-watch.sh 在", fs.existsSync(w));
+    if (fs.existsSync(w)) {
+      const js = fs.readFileSync(w, "utf8");
+      ["same", "ahead", "broke", "unknown"].forEach((v) => {
+        ok("跟上游有「" + v + "」这一种出口", js.indexOf(v) >= 0,
+          "四种出口各自是一个决定：「没动 / 前进 / 红了要人改 / 没跟成」——" +
+            "少一种就会把两件事混成一件");
+      });
+      ok("红了不合并、不改锁（改的是这边的表，不是上游）",
+        /别去改上游|要改的是/.test(js),
+        "红了还前进锁，等于把上游的改动直接吃进发布链");
+    }
+  }
+
+  // ⑤ 文档：这份口径得有人能读到
+  {
+    const doc = path.join(repo2, "docs", "data-backend.md");
+    ok("docs/data-backend.md 在（Issue #111 那三个问题的答案）", fs.existsSync(doc));
+    if (fs.existsSync(doc)) {
+      const d = fs.readFileSync(doc, "utf8");
+      ok("文档回答了「数据在哪」（分层说清，不是一句「在云端」）",
+        /build-data\.js|miniprogram\/data/.test(d) && /progress/.test(d),
+        "用户问的是「现在数据怎么管的、放在哪里」，得逐层答");
+      ok("文档回答了「Supabase 在哪、能不能换」（存储层是插槽，不是长在代码里）",
+        /store\.js/.test(d) && /supabaseStore/.test(d),
+        "不点出那三处，读者会以为「换掉 Supabase = 重写后端」");
+      ok("文档给出了腾讯那条路的三个方案与各自代价",
+        /云托管/.test(d) && /云开发/.test(d) && /MySQL/.test(d),
+        "只说「可以换成腾讯云」没有用，得把三条路摆开、把代价写下来");
+      /* 条件写入这条**必须**写下来：它是这个项目唯一一条下沉到数据库的正确性约束，
+         换库时最容易被「等价改写」成应用层的读-比-写，而那有竞态。 */
+      ok("文档点明了条件 upsert（新的赢）这条不变式在换库时该怎么保",
+        /kb_upsert_progress/.test(d) && /ON DUPLICATE KEY|条件/.test(d),
+        "换库时把「新的赢」捞到应用层，等于把一条原子约束换成有竞态的读-比-写");
+      ok("文档写明了「换数据库不是审核的要求」",
+        /审核/.test(d) && /备案/.test(d),
+        "用户提这件事的动机是「怕审核出问题」，那句话得如实回答");
+    }
+
+    /* README 与架构文档得有路标 —— 三份文档各自是不同入口，
+       哪一份漏了，从那个入口进来的人就还是会重问一遍。 */
+    const readme2 = fs.readFileSync(path.join(repo2, "README.md"), "utf8");
+    ok("README 指向 docs/data-backend.md（数据在哪、CI 为什么会被上游绊住）",
+      /data-backend\.md/.test(readme2),
+      "README 是总览入口，不指过去就等于没有这份文档");
+    const arch = fs.readFileSync(path.join(repo2, "docs", "architecture.md"), "utf8");
+    ok("architecture.md 指向 docs/data-backend.md",
+      /data-backend\.md/.test(arch),
+      "架构文档里那节「数据存哪」是这个问题最自然的入口");
+    const todo2 = fs.readFileSync(path.join(repo2, "docs", "todo.md"), "utf8");
+    ok("docs/todo.md 里记着「换存储层」是**按需**不是待办（免得被误读成以后要换）",
+      /存储层|Supabase/.test(todo2),
+      "不记的话，下一个人会把「可以换」读成「即将换」");
+  }
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
