@@ -638,7 +638,7 @@ V24 守着「未选中那格有 `--sink` 灰底」「主色底不许写进 `.chi
 | 选项与文字的间距 | `app.wxss` 给 `<radio>` / `<checkbox>` 自己上 `margin-right` | 原生控件不带外边距 —— 紧贴是浏览器的排法，不是控件的排法 |
 | 按钮文字垂直居中 | `.btn` 用 `flex + align-items:center` | 原生 button 的默认行高由平台按字号算，和页面给的 `height` 对不上就偏 |
 | 并列按钮一样高 | `.actions` 显式 `align-items:center` | flex 默认 `stretch` 遇上固定 `height` 会退化成基线对齐 |
-| **要定尺寸的原生 button（头像那枚）** | 尺寸定在**外层的壳**上（`.avatar-wrap`，带 `overflow:hidden`），button 只填满壳 | 原生 button 自带 `display:block` 与 `width:100%`，真机上盖过页面样式表给的 `width` —— 头像是 `<button open-type="chooseAvatar">`，写 `width:112rpx` 在真机上不生效，被撑成一行宽，叠上 `border-radius:50%` 就是一枚扁椭圆。V50 守着 |
+| **要定尺寸的原生 button（头像那枚）** | 尺寸只定在**外层的壳**上（`.avatar-wrap`，`position:relative` + `overflow:hidden`），壳里那两样（button 与头像本体）一律 `position:absolute` 贴满它、尺寸写**字面量** | 原生 button 有两条自作主张的默认，2026-10-04 各踩了一次：① 自带 `display:block` 与 `width:100%`，真机上盖过页面样式表给的 `width` —— 写 `width:112rpx` 不生效，被撑成一行宽，叠上 `border-radius:50%` 就是一枚扁椭圆；② 它里面**解析不了 `height:100%`** —— 把尺寸挪到壳上之后，宽度那条链活着、高度那条断在 button 上，里面的 `<image>` 于是按**自己那张图的固有比例**排高度（横构图排成一根横条），又是一枚扁椭圆，`aspectFill` 再取中段，看着就是「只显示了左侧一点」。绝对定位 + 字面量把两条默认一起绕开。V50 守着 |
 ### 底栏：自绘，因为原生只认图片
 
 用户原话：「导航栏几何按钮明明文字上面有图标的，现在好像没有，例如 我的」。

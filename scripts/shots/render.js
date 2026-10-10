@@ -10,7 +10,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { compile } = require("./wxml.js");
+const { compile, setImageIntrinsic } = require("./wxml.js");
 const ROOT = path.join(__dirname, "..", "..", "miniprogram");
 
 /* 预览用哪个主题色。
@@ -197,7 +197,7 @@ const NATIVE_CSS = `
 .n-slider-knob{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
 .n-ph{color:#9ca3af}
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
-.n-image{width:56px;height:56px;border-radius:50%;background:#f2f2f4}
+.n-image{border-radius:50%;background:#f2f2f4}
 /* WXML 标签 → HTML div 之后，默认块级；但页面样式里的 display:flex
    要能压过它，所以这里用最低优先级的选择器 */
 /* 文本节点没有自己的盒子，行高靠父级给 —— 预览里补一条，
@@ -390,6 +390,27 @@ function expandDailyExtra(wxml, data) {
   return wxml.replace(/<daily-extra[^>]*\/>/g, comp);
 }
 
+/**
+ * 给编译器一个「这个类集合在真机上高度会不会落空」的判断器。
+ *
+ * 判据：类集合里任何一条规则（页面样式表 or 全局）给出的 height 是百分比，
+ * 就算落空 —— 真机 <image> 不认百分比高度，会回落到按图的固有比例。
+ * 这是**近似**（真机上还取决于是不是在原生 button 里），但它已经能把
+ * 2026-10-04 那类「预览正圆、真机扁椭圆」的落差照出来。
+ * 拿不准时宁可判「落空」：预览宁可比真机难看，不可比真机好看。
+ */
+function imageIntrinsicResolver(pageCss) {
+  const appCss = flattenCss(path.join(ROOT, "app.wxss"));
+  const ruleOf = (css, cls) => {
+    const m = new RegExp("\\." + cls.replace(/[-]/g, "\\-") + "\\s*\\{([^}]*)\\}").exec(css);
+    return m ? m[1] : "";
+  };
+  return (cls) => cls.split(/\s+/).filter(Boolean).some((c) => {
+    const body = ruleOf(pageCss, c) || ruleOf(appCss, c);
+    return /[^-]height\s*:\s*[\d.]+%\s*;/.test(body);
+  });
+}
+
 function pageHtml(cfg, data) {
   const wxmlPath = path.join(ROOT, cfg.page + ".wxml");
   let wxml = fs.readFileSync(wxmlPath, "utf8");
@@ -429,8 +450,11 @@ function pageHtml(cfg, data) {
   });
   wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);
-  const body = compile(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
+  /* 编译前把「这一页的样式表」交给编译器：<image> 如果被页面样式表给了
+     百分比高度，就按真机的口径当成「解析不出来」处理（见 wxml.js 那段长注）。 */
+  setImageIntrinsic(imageIntrinsicResolver(pageCss));
+  const body = compile(wxml, data);
   const screenCssStr = screenCss(cfg, pageCss);
   return `<div class="device" data-screen="${cfg.key}">
   <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>

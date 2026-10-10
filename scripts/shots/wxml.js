@@ -199,6 +199,23 @@ function renderMembers(nodes, data, out, pickOf) {
   }
 }
 
+/* 真机 <image> 的口径替身：**图像不认百分比高度**。
+ *
+ * 带 `open-type="chooseAvatar"` 的头像是原生 button 里的 <image>，而原生
+ * button 里 height:100% 解析不出来 —— 图于是按**自己那张图的固有比例**排高度。
+ * 用户 2026-10-04 报的那枚扁椭圆就是这么来的（见 check.js V50 的长注）。
+ *
+ * 预览里的 <image> 是个 div，百分比它照算 —— 不补这一条，预览就比真机好看：
+ * 真机上那枚扁椭圆在截图里是一枚正圆，改坏了自己也看不出来。
+ * 所以编译 <image> 时，**凡页面样式表给它的高度是百分比，就换成按固有比例排**
+ * （4:3 横构图），并把它内联到元素上（内联压得过页面样式表）。
+ * 高度是字面量的（112rpx 这种）不动 —— 那正是修好之后的样子。
+ *
+ * `intrinsic` 由调用方注入（render.js 传入页面样式表），没有就不改。
+ */
+let IMAGE_INTRINSIC = null;
+function setImageIntrinsic(fn) { IMAGE_INTRINSIC = fn; }
+
 function renderNode(n, a, bodyNodes, data, out, pickOf) {
   // ---------- 列表 ----------
   if (a["wx:for"] !== undefined) {
@@ -221,7 +238,12 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   const cls = a.class ? interp(a.class, v).replace(/\s+/g, " ").trim() : "";
   const style = a.style ? interp(a.style, v) : "";
 
-  if (n.tag === "image") { out.push(`<div data-tag="image" class="n-image ${cls}" style="${style}"></div>`); return; }
+  if (n.tag === "image") {
+    let extra = "";
+    if (IMAGE_INTRINSIC && IMAGE_INTRINSIC(cls)) extra = "height:auto;aspect-ratio:4/3;";
+    out.push(`<div data-tag="image" class="n-image ${cls}" style="${extra}${style}"></div>`);
+    return;
+  }
   if (n.tag === "input") {
     const ph = a.placeholder ? interp(a.placeholder, v) : "";
     const val = a.value ? interp(a.value, v) : "";
@@ -295,4 +317,4 @@ function compile(wxml, data) {
   return out.join("");
 }
 
-module.exports = { compile };
+module.exports = { compile, setImageIntrinsic };

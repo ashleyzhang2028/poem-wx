@@ -3000,9 +3000,12 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   //    所以黑名单撤了。但黑名单底下那件真事没撤：**写死就会漂**。
   //    色值是令牌要回答的问题，不是页面各自要回答的问题 ——
   //    任何 #rgb / #rrggbb / #rrggbbaa 或 rgba()/rgb() 出现在页面样式表里都算漏。
+  /* ⚠️ 先摘掉注释再扫：注释是散文，里面正引着「上一版写的是 border-radius:50%」
+     这类原话。不摘，一句说明就会被当成一处违规 —— 于是没人敢把话说清楚。 */
+  const stripCss = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "");
   const hardCodedColor = [];
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const wxss = stripCss(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"));
     const re = /#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(/g;
     let m;
     while ((m = re.exec(wxss))) {
@@ -3035,7 +3038,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const TOKEN_RADIUS = /var\(--radius(-sm|-block|-pill)?\)/;
   const strayRadius = [];
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const wxss = stripCss(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"));
     const re = /border-radius\s*:\s*([^;]+);/g;
     let m;
     while ((m = re.exec(wxss))) {
@@ -9311,27 +9314,35 @@ function gapped(items, max) {
   }
 }
 
-/* ---------- V50. 原生 button 的尺寸要定在「壳」上，不定在它自己身上 ----------
+/* ---------- V50. 头像那枚原生 button：尺寸不许从它身上过 ----------------------
  *
- * 用户 2026-10-04 的报障：登录进去后，「我的」页身份卡里那枚头像被撑成
- * 一整枚又扁又长的椭圆。
+ * 用户 2026-10-04 报了**两次**，「我的」页身份卡里那枚头像都成了一枚扁椭圆。
+ * 两次的根子是同一个 —— 带 `open-type="chooseAvatar"` 的头像必须是原生
+ * `<button>`，而原生 button 有两条自作主张的默认：
  *
- * 成因是原生 button 与页面样式表的优先级：带 `open-type="chooseAvatar"` 的
- * 头像**必须是原生 `<button>`**，而原生 button 自带 `display:block` 与
- * `width:100%` —— 真机上这一条会盖过页面样式表给的 `width:112rpx`。
- * 于是 height 生效（112rpx）、width 不生效（铺满一行），再叠上
- * `border-radius:50%`，就是一枚扁椭圆。同一个类名点在 `<view>` 上没事
- * （游客态那枚就是圆的），只有登录态那枚（button）会变形。
+ *   ① 它自带 `display:block` 与 `width:100%`，**盖过**页面样式表给的固定宽。
+ *      第一次的报障就是它：height 生效、width 被撑满一行 → 扁椭圆。
+ *   ② 它里面**解析不了 `height:100%`**。第二次（合并 #122 之后）就是它：
+ *      页面把尺寸挪到了 `.avatar-wrap`、button 改成 `height:100%`，
+ *      宽度那条链活了下来（量出来正好 112rpx 宽），高度那条断在 button 上，
+ *      里面的 `<image>` 于是按**自己那张图的固有比例**排高度 ——
+ *      一张横构图头像排成 164×约 124 的横条，配上 `border-radius:50%`
+ *      又是一枚扁椭圆；`aspectFill` 再从横条里取中段，用户看着就是
+ *      「只显示了左侧一点」。（现场截图逐像素量过：壳是正圆 164×164，
+ *      里面的灰底是 164×约 126 的椭圆 —— 高度少了约 38px。）
  *
- * 治法一层：**尺寸定在定尺寸的壳上，button 去填满壳**（壳带 overflow:hidden，
- * 于是无论 button 自己的 width 怎么算，视觉上都被裁进那个圆）。
+ * 治法一层，两条默认一起绕开：**尺寸只定在壳上（`.avatar-wrap`，position:relative
+ * + overflow:hidden），按钮与头像本体一律 position:absolute 贴满壳、
+ * 尺寸写字面量**。绝对定位 + 字面量之后，高度既不吃 button 的百分比解析，
+ * 也回不到「按图固有比例」那条路 —— 与原生怎么算无关。
  *
- * 这一节守的是「以后别再有人把固定尺寸写回 button 身上」：
- * 判据 —— 凡 `<button>` 用到的类里写了固定 width（rpx/px，非 100%/auto），
- * 那么这个 button 的**类集合里必须有一个声明了 flex/inline-flex**，
- * 否则它在真机上会被原生 width:100% 撑开。
- * （`.btn` 就是靠 `display:flex` 这一条过关的：flex 项按内容定宽，不吃 block 的 100%。）
- */
+ * 这一节守两件：
+ *   A. 全站凡 `<button>` 用到的类里写了固定 width（rpx/px，非 100%/auto），
+ *      那么它的类集合里必须有一个声明了 flex/inline-flex，否则真机上会被
+ *      原生 width:100% 撑开。（`.btn` 靠 `display:flex` 过关：flex 项按内容定宽。）
+ *   B. 头像那一坨里，`.avatar` 的 height **不许**再写百分比 —— 它会在
+ *      原生 button 那一环断掉；同时壳要 position:relative、头像要
+ *      position:absolute 且尺寸是字面量。少了任何一条，椭圆就会回来。 */
 {
   const walkWxml = (dir) => {
     const out = [];
@@ -9380,19 +9391,29 @@ function gapped(items, max) {
     offenders.slice(0, 6).join("; ") +
       " —— 真机上原生 button 的 width:100% 会盖过页面给的固定宽，把它撑成一行宽");
 
-  /* 反向确认那条治法还在：头像的壳带 overflow:hidden（裁进圆），
-     尺寸在壳上、不在 button 上 —— 少了任何一条，椭圆就会回来。 */
+  /* 反向确认治法还在。三样缺一不可：
+     ① 壳定尺寸 + relative + 裁进圆；② 头像本体 absolute + 尺寸写字面量；
+     ③ 头像本体的 height 不是百分比（老写法就是在这儿断的）。 */
   const mineWxss = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxss"), "utf8");
   const wrap = ruleOf(mineWxss, "avatar-wrap");
   const btn = ruleOf(mineWxss, "avatar-btn");
-  ok("头像那枚 button 的尺寸定在壳上、且壳把溢出裁进圆（.avatar-wrap）",
+  const av = ruleOf(mineWxss, "avatar");
+  ok("头像的壳自己定尺寸、当包含块、且把溢出裁进圆（.avatar-wrap）",
     !!wrap && /width\s*:\s*112rpx/.test(wrap) && /height\s*:\s*112rpx/.test(wrap) &&
-      /overflow\s*:\s*hidden/.test(wrap) && /border-radius\s*:\s*50%/.test(wrap),
-    "壳上少了定尺寸 / 裁剪中的哪一条 —— 椭圆就会回来");
-  ok("头像 button 自己不再写死尺寸（只填满壳）",
-    !!btn && /width\s*:\s*100%/.test(btn) && /height\s*:\s*100%/.test(btn) &&
+      /overflow\s*:\s*hidden/.test(wrap) && /border-radius\s*:\s*50%/.test(wrap) &&
+      /position\s*:\s*relative/.test(wrap),
+    "壳上少了定尺寸 / 裁剪 / position:relative 中的哪一条 —— 椭圆就会回来");
+  ok("头像 button 自己不定尺寸，只贴满壳（absolute）",
+    !!btn && /position\s*:\s*absolute/.test(btn) &&
+      /width\s*:\s*100%/.test(btn) && /height\s*:\s*100%/.test(btn) &&
       !/[^-]width\s*:\s*112rpx/.test(btn),
-    "button 自己又写死了尺寸 —— 它在真机上不生效，看着像改了其实没改");
+    "button 又自己定死尺寸了 —— 它在真机上盖过页面样式表，看着像改了其实没改");
+  ok("头像本体的尺寸写字面量、且不写 height 百分比（真机上那条链会断）",
+    !!av && /position\s*:\s*absolute/.test(av) &&
+      /width\s*:\s*112rpx/.test(av) && /height\s*:\s*112rpx/.test(av) &&
+      !/[^-]height\s*:\s*100%/.test(av) && !/[^-]width\s*:\s*100%/.test(av),
+    "头像本体又回到「100% 尺寸」那一套 —— 原生 button 里 height:100% 解析不出来，" +
+      "图片会按自己的固有比例排成一根横条，就是那枚扁椭圆");
 }
 
 /* ---------- V51. 登录态的首页得真的渲染出今日计划（不是「不报错就行」）----------
