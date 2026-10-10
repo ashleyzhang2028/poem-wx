@@ -143,12 +143,36 @@ ON DUPLICATE KEY UPDATE
 **但 `deploy/store-mysql.js` 里每一处读出来的数都过一遍 `Number()`**，
 否则将来某一天会得到「时间戳是字符串」这种要查半天的错。
 
-### 3.5 建表与操作入口
+### 3.5 建库 → 建表 → 操作入口（顺序别颠倒）
 
+⚠️ **实例自带的库只有 MySQL 自己的那几个**（`information_schema` /
+`performance_schema` / `mysql` / `sys` / `__cdb_recycle_bin__`）。
+DMS 里只列出它们，**不是选错了，是 `poem` 这个库还没建** —— 建表语句建的是
+**表**，它得先有个库可落；那五个一个都不能当落点（在 `mysql` 库里建
+`accounts`，是在改账号字典）。
+
+```sql
+-- ① 先建库（实例里只有系统库时，这是缺的那一步）
+CREATE DATABASE IF NOT EXISTS `poem` DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SHOW DATABASES;          -- 要能列出 poem
+
+-- ② 再切库：建表语句里的 CREATE TABLE 不带库名，靠的就是当前库
+USE `poem`;
+SELECT DATABASE();       -- 回 poem 才算切上了；没切会是一片 No database selected
+
+-- ③ 整段执行 deploy/sql/mysql-schema.sql（幂等）
+-- ④ 确认建上了
+SHOW TABLES;             -- 要看到 accounts / wx_accounts / progress / sessions …
 ```
-cloud.weixin.qq.com → 云托管 → 服务所属环境 → MySQL
-  → 数据管理 / SQL 窗口 → 粘贴 deploy/sql/mysql-schema.sql 整段执行
-```
+
+入口：`cloud.weixin.qq.com → 云托管 → 服务所属环境 → MySQL → 数据管理 / SQL 窗口`
+（DMS 也是同一个窗口）。操作步骤与排错表见
+[`wx-cloud-setup.md`](wx-cloud-setup.md) § 3.1 与 § 四。
+
+⚠️ **`MYSQL_DATABASE` 要和你建的库名逐字对上。** 对不上时驱动在建池那一刻抛
+`ER_BAD_DB_ERROR`，而进程照起、日志里那行 `[store] 存储层 = 腾讯云 MySQL …`
+照打 —— 症状是「看着配好了，但登录一律 500」。自检 V49 钉着这一条：
+`deploy/store-mysql.js` 里那个默认库名必须和 `wx-cloud-setup.md` 写的是同一个。
 
 建完表之后，第一个管理员直接在库里改：
 

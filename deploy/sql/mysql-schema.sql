@@ -6,6 +6,25 @@
 --   cloud.weixin.qq.com → 云托管 → 服务 poetry 的那个环境 → MySQL
 --   → 数据管理 / SQL 窗口 → 粘贴执行
 --
+-- ⚠️ 两份**先决条件**，少一样整段都会红，而且红法看着像建表语句写错了：
+--
+--   ① **库要先建**：实例自带的只有 MySQL 自己的那几个库
+--      （information_schema / performance_schema / mysql / sys / __cdb_recycle_bin__），
+--      DMS 里只列得出它们 —— 不是选错了，是 `poem` 这个库还没建。那五个
+--      一个都不能当落点（在 `mysql` 库里建 accounts，是在改账号字典）：
+--
+--        CREATE DATABASE IF NOT EXISTS `poem`
+--          DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
+--
+--   ② **执行前要切库**：下面每一条 `CREATE TABLE` 都**不带库名**，靠的就是当前库。
+--      没切会得到一片 `No database selected`：
+--
+--        USE `poem`;
+--        SELECT DATABASE();   -- 回 poem 才算切上了；结尾再 SHOW TABLES; 确认
+--
+--   库名必须与云托管那栏 `MYSQL_DATABASE` 逐字相同，否则驱动抛
+--   `ER_BAD_DB_ERROR`，而进程照起 —— 见 docs/wx-cloud-setup.md § 3.1。
+--
 -- 与 Postgres 版的三处差别（换库时最容易踩的三个，逐条写在这儿）：
 --
 --   ① **`jsonb` → `json`**。MySQL 的 `json` 不做 GIN 索引、也不做规范化。
