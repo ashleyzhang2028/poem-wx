@@ -837,8 +837,14 @@ git checkout main && git pull   # 推 main 就出镜像
 ```
 
 然后照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做：建服务（填镜像
-`docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>`，端口 8080）→
+`ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`，端口 8080）→
 配环境变量 → 建 `wx_accounts` 表 → 加 request 合法域名 → 填 `baseUrl` → 验。
+
+⚠️ **镜像地址填 GHCR 那份，不要填 CNB 制品库那份**（Issue #71）：CNB 的 Docker
+制品库可见性跟着代码仓库走，本仓库 Private → 制品私有 → 云托管「从地址拉镜像」
+那一栏拉不动（它只收公开镜像），要么配拉取凭据、要么把整个仓库改 public。
+所以流水线一次推两份：GHCR 那份是**公开包**，云托管直接拉，**不用配凭据**。
+CNB 那份留着当回滚路（私有，要凭据才拉得动）。两份是同一棵树。
 
 ⚠️ **别选「部署方式 = 代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿没有
 `api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。

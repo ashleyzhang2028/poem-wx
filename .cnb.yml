@@ -82,7 +82,8 @@ $:
 # ---------------------------------------------------------------------------
 # main —— 唯一的分支。推这里就是发一次版。
 #
-# 四件事：自检 → 构建云托管镜像 → 上传体验版 → 同步到 GitHub。都在同一个 job 里，
+# 五件事：自检 → 构建云托管镜像 → 推一份到 GHCR（云托管那份地址）→ 上传体验版 →
+# 同步到 GitHub。都在同一个 job 里，
 # 因为**镜像 tag 按本仓库这一版给**，跑完就是「一版代码 = 一个版本号」。
 #
 # 为什么不是 tag：
@@ -95,7 +96,7 @@ $:
 #   `main`，回滚时等于没有版本号。
 main:
   push:
-    - name: 发布（自检 → 镜像 → 体验版）
+    - name: 发布（自检 → 镜像 → GHCR → 体验版）
       # ⚠️ **必须是 `docker.image`，不能写 `image`。**
       #    流水线级没有 `image` 这个字段（语法手册里是 `docker.image` / `docker.build`），
       #    写在 `image:` 会被**静默忽略**，整条 job 退回缺省镜像
@@ -122,9 +123,10 @@ main:
         #                                      那两行不改的话这里读不到密钥，必被拒
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
-        # 镜像推在**本仓库**的 slug 下（流水线在这儿跑），即使源码来自 poem。
-        # 写成 ${CNB_ROOT_SLUG} 会推到 poem 的槽位，云托管按下面那个地址就拉不到。
-        IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
+        # ⚠️ **镜像的槽位在 GitHub 那份**（Issue #71）：见下面 IMAGE 上面那段。
+        # 下面这行留着 = 一行回滚：把 IMAGE 换回它就回到 CNB 私有槽位，
+        # 代价是云托管那栏要重新配镜像拉取凭据。
+        # CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         # 本仓库这一版的短 sha —— 镜像的版本号，回滚就靠它。
         TAG: ${CNB_COMMIT_SHORT}
       stages:
@@ -210,7 +212,75 @@ main:
             docker push "${IMAGE}:${TAG}"
             docker push "${IMAGE}:latest"
             echo "✓ ${IMAGE}:${TAG}（后端 poem ${REV}）"
-        # 5. 上传体验版。**只上传，不提审** —— 「要不要上线」不该由流水线决定。
+        # 5. 把刚构建的镜像**同一棵树**再推一份到 GitHub 容器镜像库（GHCR）。
+        #    云托管「从地址拉镜像」那一栏填 ghcr.io/... 走的就是这一份。
+        #
+        #    ⚠️ **为什么要多这一份**（Issue #71 的第二问）：CNB 的
+        #    Docker 制品库可见性**跟着代码仓库走**（官方文档「权限管控」：
+        #    Docker/Helm/Docker Model 制品的可见性与所托管的代码仓库一致），
+        #    代码仓库私有 → 制品私有 → 云托管要拉就得配一对镜像拉取凭据
+        #    （§ 2.5）。GHCR 这份是公开包：**从地址拉镜像那一栏不用配凭据**。
+        #    代价：基础镜像 node:20-alpine 与后端的依赖会公开可拉（本仓库本就
+        #    在 GitHub 上是 public 只读镜像，没有多泄什么）；备份那条回滚路
+        #    仍在 CNB 槽位上。
+        #
+        #    ⚠️ **别想着「单独把 CNB 制品库设成公开」** —— 没有这个开关，文档
+        #    原话说的是「与所托管的代码仓库可见性一致」。要么整仓公开（Issue #71
+        #    那一问的答案：可以，但就是**把整个仓库连同全部历史公开**），要么
+        #    镜像换一个公开的槽位，就是这里。
+        #
+        #    ⚠️ tag 用**上游 poem 的短 sha**（`${REV}`，与上面 --build-arg 同一个值），
+        #    不用本仓库的 `${TAG}`：「线上跑的这版后端来自 poem 的哪一次提交」
+        #    只有 REV 答得了，两个 tag 各说各的会更糊涂。
+        #
+        #    ⚠️ 推送目标是**包名空间，不是 GitHub 仓库**：GitHub 的
+        #    ghcr.io/<owner>/<repo> 永远落到 `<owner>/<repo>` 这个**仓库**的包目录下。
+        #    `ashleyzhang2028/poem-wx` 恰好既是那个公开只读镜像仓库、又是我们要的
+        #    包名，于是 `ghcr.io/ashleyzhang2028/poem-wx/wx-api` 落点正合。
+        #    （别想成「顺手建个名叫 xxx 的 GitHub 仓库来装包」—— 那得真有这个仓库，
+        #      否则推的时候 GHCR 回 denied。）
+        #
+        #    ⚠️ 推完第一次要去 GitHub 把这个包的可见性设成 **Public**
+        #    （包页 → Package settings → Change visibility）。否则它默认 Private，
+        #    云托管拉它照样要凭据 —— 那这一整步就白做了。
+        #
+        #    ⚠️ 凭据：**用户名必须是 GitHub 账号名**，密码是 PAT —— 这里和 CNB
+        #    恰好相反（CNB 那边用户名是写死的 `cnb`）。PAT 需要 write:packages。
+        #    密钥仓库 wechat-ci.yml 里加 GHCR_USER / GHCR_TOKEN 两行；
+        #    同一个文件已经给「同步到 GitHub」提供了 GH_PAT / GH_REPO ——
+        #    GH_PAT 若含 write:packages 也可以直接复用，但**分开两个名字更清楚**：
+        #    同步用 contents、推包用 packages，混着用以后没人知道谁在授权什么。
+        #
+        #    ⚠️ **先别 allow_failure**。这一条是新链路的判据：它红了（最常见是
+        #    PAT 少了 write:packages），说明云托管那儿也拉不到 —— 红在流水线上，
+        #    比绿着然后在云托管里查半天便宜。
+        - name: 推 GHCR（云托管那份镜像地址）
+          imports:
+            - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
+          script: |
+            set -eu
+            for v in GHCR_USER GHCR_TOKEN; do
+              # `:-` 不能省：job 跑在 Alpine（busybox sh），`set -u` 之下
+              # `eval "val=$$v"` 撞上没定义的变量是**直接退出**（`parameter not set`），
+              # 那句给人看的横幅根本打不出来 —— 报错只剩一行 sh 内部的话。
+              eval "val=\${$v:-}"
+              if [ -z "$val" ]; then
+                echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+                echo "  需要 GHCR_USER=GitHub 账号名、GHCR_TOKEN=带 write:packages 的 PAT。" >&2
+                exit 1
+              fi
+            done
+            REV="$(git -C /tmp/poem rev-parse --short HEAD)"
+            GHCR="ghcr.io/${GHCR_NAMESPACE:-ashleyzhang2028}/poem-wx/wx-api"
+            # 与 CNB 那份是**同一棵树**：build & push 那步刚打的 tag，
+            # 这里只补两个新 tag 再推，不重新构建（重建会白等一次 npm ci）。
+            docker tag "${IMAGE}:${TAG}" "${GHCR}:${REV}"
+            docker tag "${IMAGE}:${TAG}" "${GHCR}:latest"
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+            docker push "${GHCR}:${REV}"
+            docker push "${GHCR}:latest"
+            echo "✓ ${GHCR}:${REV}（公开包 —— 云托管从地址拉镜像不用配凭据）"
+        # 6. 上传体验版。**只上传，不提审** —— 「要不要上线」不该由流水线决定。
         #    传完去公众平台设成体验版，真机走一遍再提审。
         - name: 上传体验版
           # ⚠️ 整步**用一个 `script: |` 块**，别写成「一个多行块 + 后面几个 list 项」。
@@ -259,7 +329,7 @@ main:
           # 上传失败不挡这一版其余成果（镜像已经推上去了）。代价是它红了
           # 不会让整条流水线红，得主动翻一眼日志。
           allow_failure: true
-        # 6. 同步到 GitHub。Issue #71：仓库是私有的，但人要在 GitHub 上看代码；
+        # 7. 同步到 GitHub。Issue #71：仓库是私有的，但人要在 GitHub 上看代码；
         #    云托管那次误配也是想绑它，所以给一份只读的镜像。
         #
         #    ⚠️ **只同步 main，不同步分支**。这个仓库有 80 多个分支，大半是

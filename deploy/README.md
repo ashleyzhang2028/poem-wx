@@ -11,15 +11,15 @@
 
 ## 云托管那几栏
 
-推一版 `main` 触发流水线把镜像构建出来，再去控制台建服务。
+推一版 `main` 触发流水线把镜像构建出来（CNB + GHCR 各一份），再去控制台建服务。
 
 | 字段 | 填什么 |
 |---|---|
 | 部署方式 | **镜像** |
-| 镜像地址 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<短 sha>` |
+| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
-| 镜像拉取凭据 | 仓库是 Private → 制品也是私有，**必须带**：用户名 `cnb`、密码一枚 CNB 访问令牌 |
+| 镜像拉取凭据 | **填 ghcr.io 那份地址就不用配**。走 CNB 槽位才要：仓库是 Private → 制品也是私有，用户名 `cnb`、密码一枚 CNB 访问令牌 |
 
 镜像拉取凭据填在**镜像地址那一屏**，**不是环境变量** —— 这两件事不是一回事：
 环境变量给容器里的进程用，凭据给平台拉镜像用。详见
@@ -33,6 +33,26 @@
 
 镜像槽位按**本仓库**的 slug，即使源码来自 `poem` —— 流水线在这儿跑。
 写成 `poem/xxx` 云托管就拉不到。
+
+## 两份镜像地址（Issue #71）
+
+流水线一次出**两份**，同一棵树，功能没差别，差别在「谁拉得动」与「tag 是谁的 sha」：
+
+| | 地址 | 可见性 | tag |
+|---|---|---|---|
+| GHCR（**云托管填这份**） | `ghcr.io/ashleyzhang2028/poem-wx/wx-api` | 公开包 | 上游 **poem** 的短 sha |
+| CNB 制品库（备用 / 回滚） | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api` | 私有 | **本仓库**的短 sha |
+
+为什么要有 GHCR 那份：CNB 的 Docker 制品库可见性**跟着代码仓库走**，
+本仓库是 Private → 制品私有 → 云托管「从地址拉镜像」那一栏（写着「仅支持拉取
+公开镜像」）拉不动，要么配凭据（§ 2.5），要么把整个仓库改 public。
+多推一份到 GHCR 是**第三条路**：公开包，不用凭据，也不用公开代码仓库。
+
+⚠️ 推 GHCR 那步的**用户名是 GitHub 账号名**（对照：CNB 那边用户名写死是 `cnb`，
+`docker login ghcr.io -u <GitHub 账号名> --password-stdin`）。密钥是两个新名字
+`GHCR_USER` / `GHCR_TOKEN`，同在 `poem-wechat-mini-program-secrets` 的
+`wechat-ci.yml` 里 —— 与同步到 GitHub 用的 `GH_PAT` 分开写，因为授权范围不同
+（那个要 `contents`，这个要 `write:packages`）。
 
 ## 流水线怎么构建
 
