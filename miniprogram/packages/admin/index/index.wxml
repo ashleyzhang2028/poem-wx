@@ -91,7 +91,7 @@
              bindinput="onCloudEnv" />
     </view>
     <view class="field">
-      <input class="field-input" type="text" value="{{cloudService}}" placeholder="云托管服务名，如 poem-api"
+      <input class="field-input" type="text" value="{{cloudService}}" placeholder="云托管服务名，本部署是 poem-wx"
              bindinput="onCloudService" />
     </view>
     <button class="btn ghost block" bindtap="onSaveCloud">保存云调用配置</button>
