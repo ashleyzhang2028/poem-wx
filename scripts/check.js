@@ -6305,7 +6305,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
  */
 
 const K = {
-  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数（2026-10-10）。 */
+  /* 十七部集子的篇数。与 poem 网页版 README「内容」那一节同一份读数。
+     ⚠️ 这一轮（2026-10-10）对的是 Issue #539：poem 按用户点名补录
+     `gw-288` 王安石《答司马谏议书》（有正文、非课内、非词条壳），
+     于是 classic / cards / withText 三个数**一起 +1**（286→287、
+     5603→5604、5854→5855）。号段与出处两重不受影响（它不记 `selection`，
+     正文也没有新接号）。 */
   counts: {
     poems: 251, classic: 287, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
     yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
