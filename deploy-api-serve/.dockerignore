@@ -21,7 +21,8 @@
 # Dockerfile 本身（流水线从这边拷进上下文，COPY 指令才会落到实际文件上）
 !Dockerfile
 
-# 后端本体 + 只挂 /api/* 的服务壳
+# 后端本体 + 只挂 /api/* 的服务壳 + 存储层那份 MySQL 实现
 !api
 !api/**
 !serve-api.js
+!store-mysql.js

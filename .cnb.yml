@@ -10,6 +10,10 @@ $:
         - node scripts/parity.js
         # 端到端：小程序端 utils ↔ poem 服务端真跑一遍（登录 → 同步 → 换机）。
         - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
+        # 端到端（换库那条）：摊一个构建上下文出来，按线上那份容器的启动路径
+        # （serve-api.js 接线 → require handler）接上 MySQL，跑登录 → 同步，
+        # 并验「新的赢」这条不变式换库之后还在（Issue #111）。
+        - POEM_DIR=/tmp/poem node scripts/e2e-mysql.js
 
 # main —— 唯一的分支。推这里就是发一次版：自检 → 镜像 → GHCR → 体验版 → 同步 GitHub。
 main:
@@ -46,6 +50,11 @@ main:
             cp -R /tmp/poem/api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
+            # 存储层那份 MySQL 实现（Issue #111）：它跟着服务壳走，同一层、同一个名字。
+            # 漏了这一行 → Dockerfile 那句 COPY 找不到源，构建回
+            #   failed to calculate checksum ... "/store-mysql.js": not found
+            # 而那看着像「文件没提交」，其实是上下文少摊了一样东西。
+            cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             # ⚠️ 忽略文件跟**构建上下文**走：摆错位置不报错，只让上下文从 0.3MB 变成 38MB。
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："

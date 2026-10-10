@@ -16,7 +16,6 @@ Page({
     avatarUrl: "",
 
     avatarChar: "诗",
-    hasLocalAvatar: false,
     identitySub: "未登录",
     gradeName: "",
     scopeName: "",
@@ -67,22 +66,15 @@ Page({
 
     const nick = profile.nickname || "我的古诗词";
     const src = store.avatarSrc();
-    const local = store.hasLocalAvatar();
 
     this.setData({
       logged: !!profile.logged,
       nickname: profile.logged ? nick : "未登录",
       avatarUrl: src,
       avatarChar: (nick || "诗").slice(0, 1),
-      hasLocalAvatar: local,
 
-      identitySub: !profile.logged
-        ? "未登录"
-        : local
-          ? "已登录 · 自己设的"
-          : src
-            ? "已登录 · 微信头像"
-            : "已登录 · 还没有头像",
+      // 副题只说「我是谁」——「这张头像哪来的」不再是用户需要懂的事
+      identitySub: !profile.logged ? "未登录" : "已登录 · 微信账号",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
@@ -164,18 +156,16 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
+  /* 头像就是微信头像，**只落本机、不上传**。
+     平台没有「静默拿微信头像」的 API（2022 起 getUserProfile 只回匿名灰头像），
+     唯一合规的路就是这一下 chooseAvatar。而它给回来的是一枚临时文件路径
+     （wxfile://…）—— 那是这台机器上的东西，换台手机没有意义，
+     服务端的 sanitizeImgUrl 也只收 https 与 /api/avatar/。
+     所以这一格**不进同步报文**：不上传，也就不需要对象存储。 */
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;
     store.saveProfile({ avatarLocal: url });
-
-    sync.markDirty();
-    this.refresh();
-  },
-
-  onAvatarClear() {
-    store.saveProfile({ avatarLocal: "" });
-    sync.markDirty();
     this.refresh();
   },
 

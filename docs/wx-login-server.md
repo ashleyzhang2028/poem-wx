@@ -244,16 +244,15 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 自检里钉着客户端这一半（`check.js` W5 + V34 第 6 条）；
 服务端那一半改完，poem 那边 `sync.multiDevice` 这条能力键可以直接从表里退场。
 
-## 两条新的行 id：`settings:v1` 与 `profile:v1`
+## 一条新的行 id：`settings:v1`
 
-**设置与头像原来是压根不上云的**，换台手机主题回「墨」、每日计划回 5 首、
-算法回艾宾浩斯、头像没了。现在各占一行，走同一张 `progress` 表、
-同一套时间戳规则（新者胜），不加表、不加字段。
+**设置原来是压根不上云的**，换台手机主题回「墨」、每日计划回 5 首、
+算法回艾宾浩斯。现在它占一行，走那张 `progress` 表、
+那套时间戳规则（新者胜），不加表、不加字段。
 
 | 行 id | 载荷 | 谁写 |
 |---|---|---|
 | `settings:v1` | `{ v:1, settings:{ grade, term, dailyCount, scope, algo, align, fontSize, theme, pinyin, autoNext, speechRate, speechAutoNext }, updatedAt }` | 两端 |
-| `profile:v1` | `{ v:1, avatar, updatedAt }` —— `avatar` 是**用户自己传的那张**的地址 | 小程序端 |
 
 两条设计口径：
 
@@ -262,9 +261,28 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 2. **跟设备走的那几项不进报文**（当前只有「答题音效」：它取决于这台机器的扬声器）。
    客户端在 `store.js` 的 `DEVICE_DEFAULTS` 里分流，云端那份里根本没有它。
 
-### ⚠️ 服务端必须给这两行加白名单，否则数据会被静默清空
+### ⚠️ **头像不再有那一行**（Issue #111）
 
-> ✅ 已在 `poem#532` 落地（`SETTINGS_KEYS` + `sanitizeSettings` / `sanitizeProfile`，
+曾经有过一行 `profile:v1`，装的是「用户自己传的那张头像」。Issue #111 收掉了
+「用户自己上传头像」这条路（用户原话：*不要再提供用户自己上传头像的功能了，
+也许能节省对象存储或者静态资源存储*），于是：
+
+- 头像只认微信那一张，而它是 `chooseAvatar` 给回的一枚**临时文件路径**
+  （`wxfile://…`）—— 那是**这台机器上的**东西，进报文没有意义。
+- 所以 `profile:v1` 这一行**整个退场**：客户端不再打包它，
+  服务端那条 `sanitizeProfile` 白名单也就没有对象了。
+- **不上传 = 不需要对象存储**，`/api/avatar` 那条路由与存储桶一并从这份契约里去掉。
+- 昵称不靠这一行 —— 它在 `accounts.nickname` 上，登录时随会话下发
+  （`nicknameSet` 那条路没动）。
+
+> 服务端那一半（`sanitizePayload` 里去掉 `PROFILE_ROW_ID` 那条分支、
+> 去掉 `/api/avatar` 路由）在 `poem` 仓库。**留着它不会出错**
+> （客户端不发那行了，它永远收不到），但它是一条没人走的岔路 ——
+> 下一轮清 `poem` 时一并去掉。
+
+### ⚠️ 服务端必须给 `settings:v1` 加白名单，否则数据会被静默清空
+
+> ✅ 已在 `poem#532` 落地（`SETTINGS_KEYS` + `sanitizeSettings`，
 > 插在 `readRowKeyOf` **之前**）。下面这段是要加的形状，也是「为什么必须加」的出处。
 
 这是**实测**出来的，不是推的：poem 的 `sanitizePayload(p, poemId)` 对认不出的
@@ -289,7 +307,6 @@ if (readRowKeyOf(poemId))             return sanitizeReads(p);
 
 ```js
 var SETTINGS_ROW_ID = "settings:v1";
-var PROFILE_ROW_ID  = "profile:v1";
 
 // 设置里的白名单。**列出来，不用 Object.keys(p) 照单全收** ——
 // 这一层的作用就是「服务端说了算」，照单全收等于把客户端的话当真理。
@@ -316,26 +333,22 @@ function sanitizeSettings(p) {
   return out;
 }
 
-function sanitizeProfile(p) {
-  var out = { v: 1, avatar: "", updatedAt: 0 };
-  out.avatar = refText(p && p.avatar, 512);   // 与 sanitizeImgUrl 同口径即可
-  var t = Number((p && p.updatedAt) || 0);
-  out.updatedAt = isFinite(t) && t > 0 ? Math.round(t) : 0;
-  return out;
-}
 ```
 
-再把两条分支插进 `sanitizePayload`（放在 `readRowKeyOf` **之前**）：
+再把那条分支插进 `sanitizePayload`（放在 `readRowKeyOf` **之前**）：
 
 ```js
 if (poemId === SETTINGS_ROW_ID) return sanitizeSettings(p);
-if (poemId === PROFILE_ROW_ID)  return sanitizeProfile(p);
 ```
+
+（原来这里还有一条 `PROFILE_ROW_ID` —— Issue #111 之后没有 `profile:v1`
+这一行了，那条分支随之没有对象。见上一节。）
 
 ### 还有一件事：`updated_at` 与 `created_at` 被同一条 upsert 揉在一起
 
 poem 的 `kb_upsert_progress` 是「按 `updated_at` 比新旧的条件覆盖」，
-而 Supabase 版里 `progress` 表还有一列 `created_at`：
+而线上那份建表语句里 `progress` 表还有一列 `created_at`（Postgres 版有，
+MySQL 译版里已按这里说的口径去掉）：
 
 ```sql
 insert into public.progress (uid, child_id, poem_id, payload, updated_at, deleted)

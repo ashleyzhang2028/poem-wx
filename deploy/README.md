@@ -5,9 +5,25 @@
 
 | 文件 | 干什么 |
 |---|---|
-| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080 |
+| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080；里面装一个 `mysql2` |
+| `store-mysql.js` | **服务端存储层的 MySQL 实现**（Issue #111）：那组 `getX/putX` 的另一种落地 |
+| `sql/mysql-schema.sql` | 建表语句（全部表，幂等） |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
 | `../deploy-api-serve/` | 只挂 `/api/*` 的服务壳 + 白名单（构建时摆进上下文） |
+
+## 存储层：为什么这份实现放在这儿
+
+后端代码在 `poem`，但「用哪台数据库」是**这份部署**的选择 ——
+`poem` 同时伺服网页版（跑在 Vercel 上、用它自己的那台库），
+小程序这份镜像只是同一套 `api/` 的另一个部署。两边分开，`poem` 一行都不用动。
+
+接线在 `serve-api.js`（这份镜像的入口）：它在 require poem 的 handler **之前**
+把 `store.getStore()` 换成「认 `MYSQL_HOST` 就用 MySQL，否则退回原样」。
+poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次 —— 这两步
+（先接、后 require）的顺序写在自检里（V49），挪了会红。
+
+换库要动的地方、那条「新的赢」不变式为什么必须留在数据库层，
+见 [`../docs/data-backend.md`](../docs/data-backend.md) § 二、§ 三。
 
 ## 云托管那几栏
 
@@ -18,7 +34,7 @@
 | 部署方式 | **镜像** |
 | 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
 | 端口 | `8080` |
-| 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
+| 环境变量 | `SESSION_SECRET` / `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` / `WX_APPID` / `WX_SECRET` |
 | 镜像拉取凭据 | 填 ghcr.io 那份就不用配。走 CNB 槽位才要：用户名 `cnb`、密码一枚 CNB 访问令牌 |
 
 镜像拉取凭据填在**镜像地址那一屏**，不是环境变量 —— 环境变量给容器里的进程用，

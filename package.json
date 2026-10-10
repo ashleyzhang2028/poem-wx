@@ -8,10 +8,11 @@
     "check": "node scripts/check.js",
     "parity": "node scripts/parity.js",
     "shots": "node scripts/shots/render.js",
-    "test": "node scripts/check.js && node scripts/parity.js && node scripts/e2e-wx-sync.js",
+    "test": "node scripts/check.js && node scripts/parity.js && node scripts/e2e-wx-sync.js && node scripts/e2e-mysql.js",
     "font:subset": "node scripts/font-subset.js",
     "shots:shoot": "node scripts/shots/shoot.js",
-    "e2e:wx": "node scripts/e2e-wx-sync.js"
+    "e2e:wx": "node scripts/e2e-wx-sync.js",
+    "e2e:mysql": "node scripts/e2e-mysql.js"
   },
   "engines": {
     "node": ">=18"

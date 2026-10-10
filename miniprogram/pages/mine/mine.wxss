@@ -106,17 +106,6 @@
   color: var(--ink-3);
 }
 
-/* 「用微信头像」：一枚最轻的文字动作，压在副题右端。
-   它不铺底、不加框 —— 只是副题后面一句可点的话，不抢名字与头像那两处。 */
-.identity-revert {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--ink-2);
-  text-decoration: underline;
-  text-decoration-style: dashed;
-  text-decoration-color: var(--line-strong);
-}
-
 /* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
    放在下面的表格里要滚一屏才看得到。
    长相照参考图右上那枚编号（WFA381）：白底、一道细边、一颗胶囊。 */

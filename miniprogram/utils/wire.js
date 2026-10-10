@@ -29,7 +29,6 @@ const DAILY_EXTRA_ROW = "daily_extra:v1";
 const COLLECTIONS_ROW = "collections:v1";
 
 const SETTINGS_ROW = "settings:v1";
-const PROFILE_ROW = "profile:v1";
 
 const RECORD_ROW = "progress";
 
@@ -142,17 +141,12 @@ function packRecords() {
     });
   }
 
-  const pAt = store.profileAt();
-  const local = store.profile().avatarLocal;
-  if (local && pAt) {
-    rows.push({
-      id: PROFILE_ROW,
-      payload: { v: 1, avatar: local, updatedAt: pAt },
-      updatedAt: pAt,
-      deleted: false
-    });
-  }
-
+  /* ⚠️ 这里**没有** `profile:v1` 那一行了。
+     它原来装的是「用户自己传的那张头像」，而头像现在只有一个来源：微信那张，
+     且**只落本机、不上传**（见 pages/mine/mine.js 的 onAvatarChoose）。
+     留着一个只有空 `avatar` 的行，等于每次同步都推一条没有内容的东西上去，
+     还会让它跟真正有内容的行争「谁更新」。
+     昵称不靠这一行 —— 它在服务端的 `accounts.nickname` 上，登录时随会话下发。 */
   return rows;
 }
 
@@ -207,17 +201,6 @@ function applyRecords(recs) {
       return;
     }
 
-    if (id === PROFILE_ROW) {
-      const payload = row.payload || {};
-      const localAt = store.profileAt() || 0;
-      if (at > localAt && payload.avatar) {
-
-        store.saveProfile({ avatarLocal: payload.avatar }, at);
-        applied += 1;
-      }
-      return;
-    }
-
     if (id === COLLECTIONS_ROW) {
       const payload = row.payload || {};
       const localAt = store.collectionsAt() || 0;
@@ -257,7 +240,6 @@ module.exports = {
   DAILY_EXTRA_ROW,
   COLLECTIONS_ROW,
   SETTINGS_ROW,
-  PROFILE_ROW,
   RECORD_ROW,
   slimRecord,
   recordStamp,

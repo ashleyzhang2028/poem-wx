@@ -41,9 +41,11 @@ function applySession(data) {
 
   if (data.caps && typeof data.caps === "object") store.write(store.KEYS.caps, data.caps);
 
+  /* ⚠️ 这里**不写头像**。头像只认本机存储里那一张（微信头像的临时路径），
+     服务端的 `wx_accounts.avatar_url` 从来不回值 —— 写它等于每次登录
+     都用一个空串把用户刚选的那张抹掉。 */
   const patch = {
     logged: true,
-    avatarUrl: data.avatarUrl || store.profile().avatarUrl || "",
     tier: data.tier || "",
     tierFromServer: !!data.tier,
     userId: data.userId || store.profile().userId || ""

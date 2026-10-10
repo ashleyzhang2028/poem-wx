@@ -77,6 +77,20 @@ LABEL org.opencontainers.image.revision=$API_REV \
 COPY --chown=node:node api ./api
 COPY --chown=node:node serve-api.js ./
 
+# 存储层那份 MySQL 实现（Issue #111）。它**不在 poem 里** —— 后端代码在 poem，
+# 而「用哪台数据库」是这份部署自己的选择。放本仓库、由流水线摆进上下文，
+# 与 serve-api.js 同一层、同一个名字（COPY 的源按上下文根取）。
+COPY --chown=node:node store-mysql.js ./
+
+# mysql2 是**唯一**多出来的运行时依赖（上面那份实现只用它的连接池，不引 ORM）。
+# 装在 /app 里，让 serve-api.js 的 require("./store-mysql.js") → require("mysql2/promise")
+# 找得到。npm 缓存与本层的内容一起沉在镜像里，不必每次重装。
+#
+# ⚠️ `--omit=dev` 之外**不要**做成 `npm ci`：上下文是摊出来的，没有 package.json。
+#    这里就装这一个包，装完把清单删掉（镜像里少两个文件，也少一处会漂的东西）。
+RUN npm install --no-audit --no-fund --omit=dev mysql2@3 --no-package-lock \
+ && rm -rf /app/package.json /app/package-lock.json /root/.npm
+
 ENV NODE_ENV=production
 ENV PORT=8080
 EXPOSE 8080
