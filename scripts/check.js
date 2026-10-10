@@ -7926,6 +7926,22 @@ function sectionOf(text, heading) {
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
 
+  /* ⚠️ 脚本的「真指令行」。@ 这一层有两个用处，都跟注释有关：
+     ① 「不用 pipefail」那条的判据要看指令行 —— 上面那段注释里就写着
+        `set -o pipefail` 这几个字，直接搜全文会把讲解判成违规；
+     ② 「引用过的变量都有定义」那条也要看指令行，同样不能被注释里的
+        `CNB_IMAGE: ...` 之类字样放行。
+     ⚠️ 它必须**定义在用到它的第一条断言之前**（`const` 有 TDZ）：
+     第一版就把它写在两条用途中间，于是最先用到它的那条当场
+        ReferenceError: Cannot access 'shellLines' before initialization
+     —— 报错在 check.js 自己身上，跟被检查的 .cnb.yml 一点关系都没有。
+     （这类「检查脚本自己崩了」的错要单独认出来：它看着像配置有问题，
+       其实一行代码都没跑。） */
+  const shellLines = cnb
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#"));
+
   /* ⚠️ **`${IMAGE}` 被引用之前必须有人定义它**（Issue #100 的真现场）。
      报错长这样，只有一行：
          sh: 18: IMAGE: parameter not set        （退出码 2）
@@ -8051,12 +8067,6 @@ function sectionOf(text, heading) {
      `pipefail` 在没管道的脚本里本来也是空转。
      （这条跟「用 alpine 当构建镜像」是绑在一起的：哪天换回 Debian 系，
        这个断言仍然成立 —— `set -eu` 在哪儿都能用。） */
-  /* 只看**真指令行** —— 上面那段注释里就写着 `set -o pipefail` 这几个字，
-     直接搜全文会把讲解判成违规（这条第一版就这么红了一次）。 */
-  const shellLines = cnb
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
   ok(".cnb.yml 的脚本不用 `set -o pipefail`（Alpine 的 sh 不认，会 exit 2）",
     !shellLines.some((l) => /set\s+-\S*o\s+pipefail/.test(l)),
     "busybox sh 会回 `sh: 1: set: Illegal option -o pipefail`，" +
