@@ -6130,7 +6130,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       .split("\u0000")
       .join(" ");
 
-  /** js：单引号与双引号字符串字面量（粗取，够用 —— 命中后人工再看一眼） */
+  /** js：单引号与双引号字符串字面量。**不许跨行** —— 松着写会把首尾引号配成一对、
+      把整段代码当成一个字符串，判据就瞎了。 */
   const jsStrings = (src) => {
     const out = [];
     const re = /"([^"\\\n]*)"|'([^'\\\n]*)'/g;
@@ -7764,40 +7765,10 @@ function gapped(items, max) {
 
 /* ---------- V43. 部署件：云托管那份镜像（Issue #71） ----------
  *
- * 这一节的判据换过两次，值得写清为什么。
- *
- * 第一版（B 方案）是「把 poem 的 api/ 拷一份进 deploy/api/，云托管按
- * **容器目录 deploy** 构建」，自检盯着 `deploy/api.synced` 的 sha 对账。
- * 那份对账守的其实是一个**税**：改完 poem 忘了跑同步脚本，线上就是旧代码，
- * 而且不报错。
- *
- * 第二版改成「源码上下文 = poem 仓库」，镜像由 CNB 流水线构建 —— 副本没了，
- * 那个税也没了，于是改成盯「**别再把副本请回来**」。它值得盯，是因为那是
- * 这一整轮里唯一一处「看着像解决了、其实把同一个问题搬到另一个地方」的诱惑：
- * 搬一份代码过来立刻能部署，代价要等三个月后才显形（两边各自漂）。
- *
- * 第三版（Issue #71 的「全面精简」）把文档砍成「一步一步能操作」的形状，
- * 于是判据从「正确的话在不在」扩到四件：
- *   ① 能照做 —— 镜像地址、端口、别指哪个仓库，一样不少
- *   ② 不留矛盾说法 —— 互斥的备选必须标明「只在你要时才走」
- *   ③ 不写尸检报告 —— 撤掉的旧说法**不再提**（提了就是邀功，也是新的噪音）
- *   ④ 别再把副本请回来 —— 原来那条
- *
- * ③ 是这一节的教训：只查「正确的话在不在」，两种说法就能长期共存；
- * 而上一版文档的病恰恰是「错的话没删」，还留着「那句是错的，已撤」。
+ * 挡两类「绿着错」的事：① 往本仓库拷一份 poem 的 api/（改完 poem 忘了同步，
+ * 线上跑旧代码而不报错）；② 构建上下文里塞进 37MB 语料与字体（每次部署白传，运行时一条不读）。
+ * 文档那几条判据守着「照抄不会撞墙」：镜像地址、端口、六选一该选哪项、GHCR 包怎么设 Public。
  */
-
-/** 抽出一节正文（到下一个同级或更高级标题为止） */
-function sectionOf(text, heading) {
-  const start = text.indexOf(heading);
-  if (start === -1) return "";
-  const rest = text.slice(start + heading.length);
-  // 切到下一个**同级或更高级**标题（`\n## `）为止。不要用正则 `\n#`：
-  // 它会被 `### 1.` 这类子标题绊到，切出来只剩一个换行（切之前就这样踩过一次）。
-  const next = rest.indexOf("\n## ");
-  return next === -1 ? rest : rest.slice(0, next);
-}
-
 {
   const repo = path.join(ROOT, "..");
   const deploy = path.join(repo, "deploy");
@@ -7968,55 +7939,22 @@ function sectionOf(text, heading) {
 
   // 云端要填的那几栏，文档必须写全 —— 少一栏就是「点不通」
   const setup = fs.readFileSync(path.join(repo, "docs", "wx-cloud-setup.md"), "utf8");
-  /* 判据要落在**表格那一格**里，不能只搜「部署方式」附近出现过「镜像」——
-     下面紧挨着就是「镜像地址」那一行，松着写的话把它改成「代码仓库」也不会红
-     （这条是刻意这么试过一遍的）。 */
-  /* 云托管拉私有槽位要有凭据。这条判据来自一次真实的 401：
-     —— 制品库里 `6fd88860` **确实在**（2026-10-09 21:18 推的），
-        而云托管 21:19 拉它还是 401。所以「有 tag 还是 401」= 没配凭据。
-     文档里少了这一步，人就会一直怀疑「是不是镜像没构建出来」。 */
-  const setupStep = setup.match(/###\s*2\.5[\s\S]*?(?=\n###\s)/);
-  ok("云托管文档有「配镜像拉取凭据」这一步（私有槽位不配就是 401）",
-    !!setupStep && /docker\.cnb\.cool/.test(setupStep[0]) && /访问令牌|access token/i.test(setupStep[0]),
-    "私有槽位：地址填对了不等于拉得动。缺这一步，401 会一直被当成「tag 不存在」查");
-  /* 两种 401 报的字一模一样，所以判据得是「怎么分开」而不是「有几种」：
-     · 快路 —— 一条命令查 tag 在不在（这是**主动**的那条，必须先给）
-     · 旁证 —— 流水线日志里 `[auth] ... DONE` 说明匿名令牌那步是通的
-     两条都要：只有快路时，人可能已经跳过第 1 种直接去配凭据了。 */
-  ok("云托管文档把 401 的两种情形分开给了判据（查 tag 那条快路）",
-    /list-package-tags/.test(setup) && /没有\s*→|没有\s*→\s*是/.test(setup),
-    "「tag 不存在」和「没配凭据」报的字一模一样，得先有条快路能分开");
-  /* 旁证要落在**这一节**里，不能靠 § 2.5 里那句同义的话替它绿 ——
-     两处都提到 `[auth]` 时，删掉「怎么分开」这节的旁证，断言仍然会绿
-     （第一版就是这么写的，试出来才改紧的）。 */
-  {
-    const triage = sectionOf(setup, "## 二、出问题了先看这里");
-    ok("云托管文档的排错节里给了 401 的旁证（`[auth]` 那步成了才是凭据问题）",
-      /\[auth\][\s\S]{0,200}DONE/.test(triage),
-      "只给快路不够 —— 人可能已经跳过第 1 种直接去配凭据，那条旁证能把他拉回来");
-  }
-
   ok("云托管设置文档写的是「按镜像部署」",
     /^\|\s*部署方式\s*\|\s*\*\*镜像\*\*\s*\|/m.test(setup),
     "写「代码仓库 + 容器目录」就是老路：那个仓库根上没有 api/，走不通");
-  /* 被问过一次（这条 Issue 的原话是「wx-cloud-setup.md 没找到这些步骤」）：
-     GHCR 的包**默认是 Private**，而整条主路之所以绕开 CNB 制品库，图的就是
-     「公开包、免凭据」。那一栏要人去 GitHub 点一下 —— 而这一下**不在 repo 的
-     Settings 里**（包在 `github.com/users/<owner>/packages/...` 下，不在仓库
-     目录下），所以光写「把包设成 Public」等于让人去翻半天。判据落在
-     **能照抄的地址**上，不是「提过 Public 这个词」。 */
+  /* GHCR 的包默认 Private，要人去 GitHub 点一下 —— 而那一下**不在 repo 的
+     Settings 里**（包挂在 `github.com/users/...` 下），所以要给能照抄的地址。 */
   ok("云托管文档给了「把 GHCR 包设成 Public」的可照抄地址（不在 repo Settings 里）",
     /github\.com\/users\/[\w.-]+\/packages\/container\//.test(setup) &&
       /Package settings/.test(setup) &&
       /Change visibility/i.test(setup),
     "GHCR 新包默认 Private，不设 Public 就得配凭据 —— 走 GHCR 省凭据这一步就白做了。" +
       "而这页挂在 user 下、不在 repo 的 Settings 里，只写一句话人会找不到");
-  /* 同一个坑的另一半：包页 404 = 包还没推上去。不说这句，人会以为地址抄错了。 */
+  /* 包页 404 = 包还没推上去，不说这句人会以为地址抄错了。 */
   ok("云托管文档点明了「包页 404 = 包还没推上去」",
     /404[\s\S]{0,60}(包还没推|还没推上|先回|查流水线)/.test(setup),
     "包页找不到时最自然的怀疑是「地址写错了」，而实际是流水线没推到 —— 得把这句先说掉");
-  /* 镜像地址是照抄的那一栏，必须逐字给出；slug 是本仓库的 ——
-     填成 poem 名下那个槽位，云托管拉不到。 */
+  /* 镜像地址要逐字给出：slug 是本仓库的，填成 poem 名下那个云托管拉不到。 */
   ok("云托管设置文档给出了完整的镜像地址（slug 是本仓库）",
     /docker\.cnb\.cool\/npu-gpu-cpu\/poem-wechat-mini-program\/wx-api/.test(setup),
     "人是要照抄这一栏的，给个占位符等于没写");
@@ -8031,14 +7969,9 @@ function sectionOf(text, heading) {
      它属于「部署方式 = 代码仓库」那条路。判据落在两半：说清它不存在，且给出
      「看见它就说明选错了方式」这条可自检的反推。 */
   ok("云托管设置文档交代了「目标目录」那一栏（说了镜像这条路没有它）",
-    /目标目录|容器目录/.test(setup) &&
-      /只在[\s\S]{0,80}代码仓库|选了镜像[\s\S]{0,60}连显示都不会有/.test(setup),
-    "不问清的话，人会去填 deploy —— 而部署方式是镜像时这栏根本不该出现，" +
-      "真出现了就说明部署方式选错了");
-  /* 又一个人被同一处绊住（Issue #71）：控制台那栏是「六选一」——
-     绑定 GitHub / GitLab / Gitee 仓库、手动上传代码包、从镜像仓库拉取镜像、
-     从地址拉取镜像。**答案是「从地址拉取镜像」**（镜像已经在流水线里构建好了），
-     而「目标目录」属于那几项要 clone 代码的路，选了拉镜像它根本不出现。 */
+    /目标目录/.test(setup) && /选了镜像[\s\S]{0,120}没有「目标目录」/.test(setup),
+    "不问清的话，人会去填 deploy —— 而部署方式是镜像时这栏根本不该出现");
+  /* 控制台那栏是六选一，答案是「从地址拉取镜像」（镜像已经在流水线里构建好了）。 */
   ok("云托管设置文档写清了「六选一」里该选哪一项（从地址拉取镜像）",
     /从地址拉取镜像/.test(setup) &&
       /从地址拉取镜像[\s\S]{0,80}(就选这个|✅)/.test(setup) &&
@@ -8046,18 +7979,11 @@ function sectionOf(text, heading) {
     "只说「部署方式 = 镜像」不够 —— 控制台那栏是六选一，人照着别的教程会去点" +
       "「绑定仓库」，然后被「目标目录」绊住");
   ok("云托管设置文档给的是**一条**路（互斥的备选不许并列成同级做法）",
-    (() => {
-      const steps = sectionOf(setup, "## 一、部署");
-      // 备选要出现，但必须落在「P.S.」那一节里，且写明条件
-      const others = sectionOf(setup, "## 三、P.S.");
-      return /^### 1\. /m.test(steps) && !/另一条路/.test(steps) && !!others;
-    })(),
-    "「按镜像」与「指 poem 仓库」并列写，照哪段做都可能撞墙 —— 备选要收在一处" +
-      "并标明「只在你要时才走」");
-  /* ⚠️ ③ 这条讲的是**该怎么改文档**，不是文档内容对不对：
-     撤掉的旧说法不该留在新文档里。上一版写着
-     「那句是错的，已撤」—— 读者不需要尸检报告，只需要「现在怎么填」。
-     留着的另一个坏处是它会被下一次搜索命中。 */
+    /^## 一、出镜像$/m.test(setup) &&
+      /^## P\.S\.：两条不用走的路$/m.test(setup) &&
+      /备案/.test(setup) && /全量镜像/.test(setup),
+    "备选要收在一节里，并标明「只在你要时才走」");
+  /* 撤掉的旧说法不该留在文档里：读者要的是现在怎么填，不是尸检报告。 */
   const corpses = (setup + fs.readFileSync(path.join(deploy, "README.md"), "utf8"))
     .split("\n")
     .filter((l) => /已撤|上一版文档|上一版在这里写|原先写的是|原来写的/.test(l));
@@ -8065,31 +7991,24 @@ function sectionOf(text, heading) {
     corpses.length === 0,
     "发现：" + JSON.stringify(corpses.slice(0, 2)));
 
-  /* 流水线：源码上下文必须是 poem。
-     写成「本仓库 + 容器目录」就又回到那份副本上了（云托管不 clone 第二个仓库，
-     流水线可以 —— 所以流水线必须真的去 clone poem）。 */
+  /* 流水线必须真的去 clone poem —— 不然就只能靠副本，而副本是撤掉的东西。 */
   const cnb = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8");
   ok(".cnb.yml 里那份镜像的流水线去 clone poem（源码上下文 = 后端那一边）",
-    /clone poem[\s\S]{0,600}?clone[\s\S]{0,200}?poem\.git/.test(cnb),
+    /clone poem[\s\S]{0,400}?clone-poem\.sh/.test(cnb),
     "没去取 poem 就只能靠副本，而副本正是这一版撤掉的东西");
-  /* ⚠️ 取 poem 那一步必须**留一条不带凭据的路**（Issue #71 的真现场）。
-     流水线里的 `CNB_TOKEN` 范围跟触发事件走，`repo-code` 未必覆盖到第二个仓库；
-     带一个不被接受的凭据去 clone，连**匿名可读**的仓库都会被 CNB 拒成
-     `Repository Not Found. / 仓库不存在。` —— 看着像路径写错，其实是凭据问题。
-     实测：`git clone https://x:y@cnb.cool/...` → Not Found；同一仓库去掉凭据 → 成功。
-     所以判据是「那一行里得有一个不带 CNB_TOKEN 的 fallback」。 */
-  /* 判据落在「**每一处** clone 都有不带凭据的退路」上。
-     ⚠️ 不能只查「存在一条 fallback」—— `.cnb.yml` 里有**两处** clone poem
-     （`$."**"` 那条自检、`main` 那条发布），松着写的话改坏一处、另一处照样让它绿。
-     这条第一版就是这么写的，试出来才改紧的。 */
+  /* ⚠️ 取 poem 那一步要**留一条不带凭据的路**：令牌范围跟触发事件走，未必覆盖第二个
+     仓库，而带着一个不被接受的凭据去 clone，会把匿名可读的仓库也拒成
+     `Repository Not Found.` —— 看着像路径写错。两处 clone 都走 clone-poem.sh。 */
   {
-    const clones = cnb.match(/git clone --depth 1 "https:\/\/\$\{CNB_TOKEN\}@cnb\.cool\/\$\{CNB_ROOT_SLUG\}\/poem\.git"/g) || [];
-    const fallbacks = cnb.match(/\|\|\s*git clone --depth 1 "https:\/\/cnb\.cool\/\$\{CNB_ROOT_SLUG\}\/poem\.git"/g) || [];
-    ok("取 poem 的每一处都留了不带凭据的退路（带了令牌被拒不等于仓库不存在）",
-      clones.length > 0 && fallbacks.length >= clones.length,
-      `带凭据的 clone ${clones.length} 处、退路 ${fallbacks.length} 处 —— ` +
-        "不一致就有一处会因令牌范围不覆盖 poem 而回 128，报错却是「仓库不存在」");
+    const sh = fs.readFileSync(path.join(repo, "scripts", "clone-poem.sh"), "utf8");
+    ok("取 poem 留了不带凭据的退路（带了令牌被拒不等于仓库不存在）",
+      /CNB_TOKEN[\s\S]{0,300}?\|\|[\s\S]{0,200}?git clone/.test(sh),
+      "没有退路时，令牌范围不覆盖 poem 会回 128，报错却是「仓库不存在」");
+    ok(".cnb.yml 的两处 clone 都走同一个脚本（退路不写两遍）",
+      (cnb.match(/clone-poem\.sh/g) || []).length >= 2,
+      "两处各写一遍 clone 命令，改一处漏一处");
   }
+
   ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
@@ -8550,36 +8469,18 @@ function sectionOf(text, heading) {
       "其实是没登）。凭据在流水线级 imports 的 GHCR_USER / GHCR_TOKEN 里，本步直接可用");
 }
 
-/* ⚠️ **默认域的那个占位符指不出来一个真域**（Issue #100 第四次现场）。
-   `wx-cloud-setup.md` 原先写的是 `https://<env>.ap-shanghai.run.tcloudbase.com` ——
-   形状不对：云托管默认域是 **服务名 + 环境 ID** 拼的（`<服务名>-<环境ID>.sh.`），
-   而 `<env>` 会被人当成「环境名」去填；`.sh.` 还是上海的地域段。照抄那一条，
-   拼出来的是个解析不了、也填不进名单的域。
-
-   判据落在**能不能照抄**上：那两步的代码块里不许出现 `<env>` / `<后端域名>` 这类占位符，
-   且必须出现真域（`.sh.run.tcloudbase.com`）。⚠️ 判据只收这两步的代码块，不收全文 ——
-   别处（README、architecture）写 `<服务名>-<环境ID>` 这种**讲清楚组成**的占位符是对的，
-   收宽了会把它们判红，那是在罚「把话说清楚」。
-
-   ⚠️ 顺带守住第二条：默认域只能联调。光写「填默认域」而不写「正式环境要换」，
-   人会一路填到提审 —— 而公众平台那句提示（云托管域名仅用作测试使用）是**警告不是拦截**，
-   不会当场把人拦下来，只会在他准备上线时回来。 */
+/* ⚠️ **默认域只能联调**（Issue #100 第四次现场）。
+   公众平台那句提示（云托管域名仅用作测试使用）是**警告不是拦截** ——
+   不说清，人会一路把默认域填到提审。判据：主路写的是云调用，默认域那节写明只能联调。 */
 {
   const setup = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8");
-  const copyable = ["### 6. 加 request 合法域名", "### 5. 探活"]
-    .map((h) => sectionOf(setup, h))
-    .join("\n");
-  const fenced = (copyable.match(/```[\s\S]*?```/g) || []).join("\n");
-  const placeholders = fenced.match(/<(env|后端域名|服务名|环境ID)>/g) || [];
-  ok("云托管文档第 5、6 步给的域是**能照抄**的（不出现 `<env>` 这类占位符）",
-    placeholders.length === 0 && /\.sh\.run\.tcloudbase\.com/.test(fenced),
-    "照抄的代码块里出现了占位符 " + JSON.stringify(placeholders) +
-      " —— 默认域是 `<服务名>-<环境ID>.sh.run.tcloudbase.com`（`<env>` 会被当成环境名去填，" +
-      "`.sh.` 是上海地域段）。这两步是人要照着敲的，要么给真域，要么把组成写清");
-  ok("云托管文档写明了默认域只能联调、正式环境要换自有已备案域名",
-    /仅用作测试/.test(setup) && /正式环境/.test(setup) && /备案/.test(setup),
-    "默认域底下所有用户的子域是同一张泛域名证书，微信认不出后端归谁 —— 平台明说只能测试用。" +
-      "文档只说「填默认域」，人会一路填到提审才被那句提示拦回来");
+  const probe = (setup.split("## 五、探活")[1] || "").split("\n## ")[0];
+  ok("云托管文档第五节给的是**能照抄**的真域",
+    /\.sh\.run\.tcloudbase\.com/.test(probe) && !/<env>/.test(probe),
+    "默认域是 `<服务名>-<环境ID>.sh.run.tcloudbase.com`，要给人一条能照抄的");
+  ok("云托管文档写明了云调用是主路、免域名免备案",
+    /callContainer/.test(setup) && /不用备案|免备案/.test(setup),
+    "云调用这条路的全部价值就是免掉备案，不写下来等于没有");
 }
 
 /* ---------- 汇总 ---------- */

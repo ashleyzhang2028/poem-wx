@@ -355,14 +355,14 @@ select … on conflict (uid, child_id, poem_id) do update
 ## 部署顺序
 
 代码已经在了（`poem#532`）。剩下全是运维动作，完整清单在
-[`wx-cloud-setup.md`](wx-cloud-setup.md)（控制台怎么点、镜像怎么来、域名怎么加）。
+[`wx-cloud-setup.md`](wx-cloud-setup.md)（控制台怎么点、镜像怎么来、云调用怎么填）。
 
 跟后端这一层直接相关的只有两步：
 
 1. 配 `WX_APPID` / `WX_SECRET` —— 缺了登录回 `503 E_WX_NOT_CONFIGURED`
 2. 建 `wx_accounts` 表 —— 缺了回 `503 E_WX_TABLE` 并指路
 
-验的时候别只看客户端说成功，见 `wx-cloud-setup.md` 第 8 步那两条（带 token 打 `/api/sync/pull`、直接查库）。
+验的时候别只看客户端说成功，见 `wx-cloud-setup.md` 第七节那两条（带 token 打 `/api/sync/pull`、直接查库）。
 
 ## 现在没接上时是什么样
 

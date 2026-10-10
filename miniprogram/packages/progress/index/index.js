@@ -6,7 +6,6 @@ const theme = require("../../../utils/theme");
 
 const SPAN = 7;
 
-/** 那七行怎么称呼：头两天说「今天 / 明天」，再往后给日期 */
 function dayLabel(d) {
   if (d.offset === 0) return "今天";
   if (d.offset === 1) return "明天";
@@ -17,7 +16,7 @@ function dayLabel(d) {
 Page({
   data: {
     overview: {},
-    /** 掌握度环里的百分数 */
+
     masteryPercent: 0,
     days: [],
     backlogCount: 0,
@@ -37,7 +36,6 @@ Page({
     const overview = S.overview(all);
     const fc = S.forecast(all, SPAN);
 
-    // 那几条细条要按当天计划数的峰值归一，否则每天都是满条，看不出轻重
     const peak = Math.max(1, ...fc.days.map((d) => d.items.length));
     const days = fc.days.map((d) => ({
       label: dayLabel(d),

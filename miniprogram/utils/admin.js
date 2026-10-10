@@ -1,28 +1,9 @@
-/**
- * 管理页的数据层：给微信登录用户分层设置。
- *
- * 三层来源，按可信度排：
- *   1. 服务端名录（/api/admin/accounts）—— 唯一真实来源。要登录 + owner/admin 角色。
- *      没就绪时不假装能读。
- *   2. 本机档案 —— 当前这台设备上的自己（谁都能看，只能看自己）
- *   3. 构建时导入的名册 —— 语料里本来就有的一批 id（来源仓库：npu-gpu-cpu/poem-secrets）
- *
- * 第 3 条是**种子**：管理页总得有人可管，但名册不进代码库（那是别人的账号标识）。
- * 构建时把它抽出来、跟着语料一起生成，后端就绪后直接当导入种子。
- * 没有生成物时页面就说清楚，不编人。
- *
- * ⚠️ 与上一版的差别：本机**不再能改自己的档位**。上一版留了个「改本机层级」的
- *   卡片，理由是「验权限分支」—— 但那东西点两下就能把自己升到 max，
- *   等于把管理页变成了自助提权。现在本机只有一张只读的能力矩阵，
- *   要档位就找管理员。
- */
 const store = require("./store");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 const remote = require("./remote");
 const auth = require("./auth");
 
-/** 名册是构建产物（miniprogram/data/roster.json），不进代码库；没有就返回空 */
 let rosterCache = null;
 
 function roster() {
@@ -42,7 +23,7 @@ function rosterUsers() {
       id: u.id,
       label: u.label || u.id.slice(0, 6),
       tier: t,
-      // 显示名与档位名同一处出：Free / Pro / Max（不译，见 tiers.js）
+
       tierLabel: tiers.nameOf(t),
       source: "roster",
       local: false,
@@ -52,7 +33,6 @@ function rosterUsers() {
   });
 }
 
-/** 当前这台设备上的自己 */
 function localUsers() {
   const profile = store.profile();
   const s = entitlement.status();
@@ -70,27 +50,21 @@ function localUsers() {
   ];
 }
 
-/** 能不能改别人的档位 */
 function canWrite() {
   return remote.adminReady();
 }
 
-/** 能不能改角色（只有 owner） */
 function canSetRole() {
   return remote.adminReady() && auth.role() === "owner";
 }
 
-/**
- * 名录。合并顺序即优先级：名册 → 本机 → 服务端。
- * 同 id 时后面的覆盖前面的，所以服务端那一份永远赢。
- */
 function list() {
   if (!entitlement.loggedIn()) {
     return Promise.resolve({ users: [], sim: true, note: "登录后才能看名录" });
   }
 
   if (!remote.adminReady()) {
-    // 没服务端：本机 + 名册。说清这是只读的
+
     return Promise.resolve({
       users: merge(rosterUsers(), localUsers(), []),
       sim: true,
@@ -149,10 +123,6 @@ function merge(a, b, c) {
   return users;
 }
 
-/**
- * 改档位。**只走服务端** —— 本机改不了档位，这是这一版的核心改动。
- * 服务端没就绪时如实说，不给「已改本机档位」这种假成功。
- */
 function setTier(userId, tier) {
   if (!tiers.isTier(tier)) return Promise.resolve({ ok: false, msg: "档位不合法" });
 
@@ -176,7 +146,6 @@ function setTier(userId, tier) {
   }));
 }
 
-/** 收回档位（降回 free） */
 function revokeTier(userId) {
   if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：服务器未接上或权限不足" });
   return remote.revokeUserTier(userId).then((res) => ({
@@ -185,7 +154,6 @@ function revokeTier(userId) {
   }));
 }
 
-/** 改角色。只有 owner 能改，服务端也会再挡一层 */
 function setRole(userId, role) {
   if (role !== "user" && role !== "admin") {
     return Promise.resolve({ ok: false, msg: "角色只认 user / admin" });
@@ -199,7 +167,6 @@ function setRole(userId, role) {
   }));
 }
 
-/** 能力统计：这一档下开了几条 */
 function stats() {
   const s = entitlement.snapshot();
   let ok = 0;
@@ -207,8 +174,7 @@ function stats() {
     if (s.caps[k].ok) ok += 1;
   });
   const caps = Object.keys(s.caps).length;
-  // percent 是给界面那条细进度用的 —— 让调用方各自算一次，
-  // 迟早会出现「两处算的分子不一样」
+
   return { caps, enabled: ok, percent: caps ? Math.round((ok / caps) * 100) : 0 };
 }
 

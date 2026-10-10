@@ -19,17 +19,15 @@
 | 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `WX_APPID` / `WX_SECRET` |
-| 镜像拉取凭据 | **填 ghcr.io 那份地址就不用配**。走 CNB 槽位才要：仓库是 Private → 制品也是私有，用户名 `cnb`、密码一枚 CNB 访问令牌 |
+| 镜像拉取凭据 | 填 ghcr.io 那份就不用配。走 CNB 槽位才要：用户名 `cnb`、密码一枚 CNB 访问令牌 |
 
-镜像拉取凭据填在**镜像地址那一屏**，**不是环境变量** —— 这两件事不是一回事：
-环境变量给容器里的进程用，凭据给平台拉镜像用。详见
-[`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 2.5「拉镜像的凭据」。
+镜像拉取凭据填在**镜像地址那一屏**，不是环境变量 —— 环境变量给容器里的进程用，
+凭据给平台拉镜像用。见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 2.5。
 
 探活打 `/healthz`（回 `ok`）—— 这份镜像没有静态站，`/` 就是 404。
 
-**别在控制台里选「部署方式 = 代码仓库」**：它按被部署仓库的根找 Dockerfile，
-而本仓库根上没有 `api/`。要人做的全部动作（建表、加域名……）见
-[`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md)。
+**别选「部署方式 = 代码仓库」**：它按被部署仓库的根找 Dockerfile，而本仓库根上没有 `api/`。
+要人做的全部动作见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md)。
 
 镜像槽位按**本仓库**的 slug，即使源码来自 `poem` —— 流水线在这儿跑。
 写成 `poem/xxx` 云托管就拉不到。
@@ -44,32 +42,22 @@
 | CNB 制品库（备用 / 回滚） | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api` | 私有 | **本仓库**的短 sha |
 
 为什么要有 GHCR 那份：CNB 的 Docker 制品库可见性**跟着代码仓库走**，
-本仓库是 Private → 制品私有 → 云托管「从地址拉镜像」那一栏（写着「仅支持拉取
-公开镜像」）拉不动，要么配凭据（§ 2.5），要么把整个仓库改 public。
-多推一份到 GHCR 是**第三条路**：公开包，不用凭据，也不用公开代码仓库。
-
-⚠️ 推 GHCR 那步的**用户名是 GitHub 账号名**（对照：CNB 那边用户名写死是 `cnb`，
-`docker login ghcr.io -u <GitHub 账号名> --password-stdin`）。密钥是两个新名字
-`GHCR_USER` / `GHCR_TOKEN`，同在 `poem-wechat-mini-program-secrets` 的
-`wechat-ci.yml` 里 —— 与同步到 GitHub 用的 `GH_PAT` 分开写，因为授权范围不同
-（那个要 `contents`，这个要 `packages`）。
+本仓库是 Private → 制品私有 → 云托管「从地址拉镜像」那一栏拉不动，
+要么配凭据（§ 2.5），要么把整个仓库改 public。
+多推一份到 GHCR 是第三条路：公开包，不用凭据，也不用公开代码仓库。
 
 ⚠️ **`GHCR_TOKEN` 必须是 classic PAT，fine-grained 建不出来。** GitHub 官方文档原话：
-*GitHub Packages only supports authentication using a personal access token (classic)*
-（[权限说明](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages)）。
+*GitHub Packages only supports authentication using a personal access token (classic)*。
 所以 fine-grained token 的 Permissions 里**根本没有 Packages 那一栏** ——
-`write:packages` 只存在于 classic 的老式 scope，不是「藏在哪个二级菜单里」。
-
-两个 token 对不上号这件事：
+`write:packages` 只存在于 classic 的老式 scope。
 
 | 用途 | 密钥名 | 该用哪种 token | 该有的权限 |
 |---|---|---|---|
-| 推 `ghcr.io` 镜像 | `GHCR_TOKEN` | **classic** | `write:packages`（[直接建这个 scope](https://github.com/settings/tokens/new?scopes=write:packages)） |
+| 推 `ghcr.io` 镜像 | `GHCR_USER` / `GHCR_TOKEN` | **classic** | `write:packages`（[直接建这个 scope](https://github.com/settings/tokens/new?scopes=write:packages)） |
 | 同步代码到 `poem-wx` | `GH_PAT` | fine-grained | `Contents: Read and write` |
 
-顺手记一条 classic 的坑：UI 上勾 `write:packages` 会**自动把 `repo` 一起勾上**，
-而 `repo` 范围过宽。官方给的绕法是走上面那个带 `?scopes=write:packages` 的链接，
-它就只勾这一个 scope。
+推 GHCR 时**用户名是 GitHub 账号名**（CNB 那边写死是 `cnb`）。两个 token 别互相顶替：
+`contents` 与 `packages` 在两个体系里分开。
 
 ## 流水线怎么构建
 

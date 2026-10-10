@@ -1,20 +1,16 @@
 #!/usr/bin/env node
 /**
- * 把 poem 网页应用的语料编译成小程序可用的分包数据。
+ * 把 poem 的语料编译成 miniprogram/data/**：
+ *   books/<book>.json     各集子索引（不含正文）
+ *   course.json           课内 251 首正文与译文（进主包）
+ *   texts/<bucket>.json   其余正文分片，按条目 id 哈希稳定分桶，走云端
+ *   texts/idx.json        正文倒排索引（字 → 分片），走 CDN
+ *   pinyin-table.json     读音表（进主包，离线注音用）
  *
- * 输入：POEM_WEB_DIR 指向 poem 仓库根目录（默认 /tmp/poem，CI 里由 clone 步骤给出）。
- * 输出：miniprogram/data/**，其中：
- *   - books/<book>.json  各集子索引（篇名/作者/朝代/出处，不含正文）
- *   - course.json        课内 251 首的正文与译文 —— **进主包**
- *   - texts/<bucket>.json 其余集子的正文分片，按条目 id 的哈希稳定分桶，走云端
- *   - pinyin-table.json  读音表（进主包，离线注音用）
- *   - texts/idx.json     正文全文的倒排索引（字 → 分片），走 CDN
+ * 全部正文 24MB 塞不进 2MB 的主包；课内那 251 首只有 223KB，进包换掉一次云端往返，
+ * 且不再进分片，避免同一份正文两处各存一份。
  *
- * 为什么不把**全部**正文塞进包：主包上限 2MB，而全部正文（data/text-master.js）
- * 未压缩 24MB、gzip 后 4.9MB。
- * 为什么**课内**正文要塞进包：它只有 223KB（251 首，中位 0.41KB），进包后主包
- * 1.30MB，离 2MB 还有 0.7MB 余量；换来首页「每日背诵」与详情页在弱网/断网下不等 IO。
- * 课内条目不再进分片，避免同一份正文在包内和 CDN 各存一份。
+ * 输入：POEM_WEB_DIR 指向 poem 仓库根（默认 /tmp/poem）。
  */
 "use strict";
 
