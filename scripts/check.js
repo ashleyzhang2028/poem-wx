@@ -25,6 +25,29 @@ function ok(name, cond, detail) {
   console.log("✗ " + name + (detail ? " —— " + detail : ""));
 }
 
+/* ---------------------------------------------------------------------------
+ * 异步断言**必须**被收进 pending，最后一起等。
+ *
+ * ⚠️ 这份自检是一路读下来、结尾 `process.exit(fails ? 1 : 0)` 的，而
+ * `process.exit()` 会**切掉还没跑的微任务** —— 同一个 tick 里排上的 `.then`
+ * 一个都不执行。于是 `auth.login().then(() => ok(...))` 这种写法是**假绿**：
+ * 断言从来没跑过，而计数里连它那一项都没有（V45 的 `用户看到的是服务端那句话`
+ * 就是这么空跑了一整个版本的 —— 直到 Issue #121 在这附近加断言时才被发现）。
+ *
+ * 所以：任何 `ok()` 放在 `.then` / 回调里，就得把那个 promise 交给 `pending`；
+ * 结尾的汇总会先 `await` 它们，等齐了再判、再 exit。
+ * ------------------------------------------------------------------------- */
+const pending = [];
+
+function track(p) {
+  pending.push(Promise.resolve(p).catch((e) => {
+    checks += 1;
+    fails += 1;
+    console.log("✗ 异步断言自身抛了：" + (e && e.message));
+  }));
+  return p;
+}
+
 function readJson(p) {
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
@@ -920,7 +943,18 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   ok("未登录的提示是「登录后可用」", E.hint("speak") === "登录后可用", E.hint("speak"));
   ok("未登录 snapshot 不给任何能力", E.CAP_KEYS.every((k) => E.snapshot().caps[k].ok === false));
 
-  // ---- 登录（免费档）：登录门槛的能力打开，付费能力仍然关着 ----
+  /* ---- 登录（免费档）：登录门槛的能力打开，付费能力仍然关着 ----
+
+     ⚠️ 这里**必须先清掉 auth 那两条 `offline` 字段**（Issue #121）。
+     它们原先由上面那句 `clearAuth()` 顺手清掉，而 `auth.offline()` 现在会读它们 ——
+     不清就会把「没接上服务器」这个 blocked 带进下面这几条，红在
+     「付费能力给出档位提示」上（拿到的是那句 blocked 提示，不是档名）。
+     判据与它被读的那个字段对齐：要的是「登录但没接服务器」，
+     所以得先站进「登录、且没标记过离线」那个状态。 */
+  const authStore = require(path.join(ROOT, "utils", "auth.js"));
+  store.write(store.KEYS.auth, Object.assign(store.read(store.KEYS.auth, {}) || {},
+    { baseUrl: "https://example.test", offline: "", offlineAt: 0, loginCode: "", codeAt: 0 }));
+  void authStore;
   setProfile({ logged: true, tier: "" });
   ok("登录后每日背诵打开", E.can("daily") === true);
   ok("登录后朗读打开", E.can("speak") === true);
@@ -3596,6 +3630,177 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("不再调用 wx.getUserProfile（只返回匿名灰头像）", legacy.length === 0, legacy.join(", "));
 }
 
+/* ---------- V22.5 「本机不冒充登录」（Issue #121） ----------
+ *
+ * 用户原话：「登录过程非常快，一点就登录了，但数据库 mysql 里没有任何新的记录」。
+ *
+ * 病灶是一句谎话：`auth.login()` 在没有接上服务器时（`remote.configured()` 为假 ——
+ * 云调用两栏没填、或压根没配）写 `store.saveSession({ logged: true })` 并回
+ * `{ local: true }`。于是：
+ *
+ *   · `mine.js` 收下那个 resolve 就报「已登录」—— 点一下、闪一下，成功的样子全有；
+ *   · `logged: true` 是**服务端会话**的判据，从那一秒起 `gate.guard()` 不再拦、
+ *     每个要登录的入口都当用户已经登录 —— 而服务端一个字节都不知道有这个人；
+ *   · 一个没连后台的包因此长得跟正常的包一模一样，用户只能靠**去数据库里翻**
+ *     才发现「一条记录都没有」。
+ *
+ * 「进门容易、用起来要求登录」这条产品判断没变（打开即强制登录做不到，
+ * 见 docs/todo.md），变的是：**本机不冒充登录**。没接上服务器时
+ * `profile.logged` 保持 false、`loginCode` 只作下次真接上时的敲门砖。
+ *
+ * 这一节守四件事（前两件是**行为**，拿假 wx 真跑一遍；后两件是**文案**）：
+ *   ① 没接上服务器时 login() 不写 logged: true，且把 code 留下
+ *   ② 接上服务器时（服务端回了 accessToken），logged 照旧为真
+ *   ③ 界面不再把「没接上服务器」说成「已登录」
+ *   ④ 「没接上」与「没登录」是两种提示，不许混成一句「点一下重试」
+ */
+{
+  const authSrc = fs.readFileSync(path.join(ROOT, "utils", "auth.js"), "utf8");
+  const mineSrc = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+  ok("没接上服务器时不再写 `logged: true`（本机不冒充登录）",
+    !/if \(!configured\(\)\) \{[\s\S]{0,600}?saveSession\(\{ logged: true/.test(authSrc),
+    "offline 那一支又写上了 logged: true —— 用户点一下就「已登录」，而库里一条记录都没有");
+  ok("没接上服务器时把 wx.login 的 code 留下来（下次真接上时不用再点）",
+    /loginCode/.test(authSrc) && /delete auth\.code/.test(authSrc),
+    "code 没留下、或在两处各存一份 —— 留着的唯一用途是下次真接上时省一次点击");
+
+  /** 一套够用的假 wx：只给 store/auth 真正用到的四件事。
+      ⚠️ 探针是**同步**收结果的，见下面那段「process.exit 会切掉微任务队列」。 */
+  const fakeWx = (mem) => ({
+    getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+    setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+    removeStorageSync: (k) => { delete mem[k]; },
+    request: () => { mem.__requested = (mem.__requested || 0) + 1; }
+  });
+
+  /* ⚠️ **这一段必须同步收结果。**
+     check.js 是一路读下来、结尾 `process.exit`（见文件末尾），而
+     `process.exit()` **会切掉还没跑的微任务** —— 同一个 tick 里排上的 `.then`
+     一个都不执行。第一版这里写成 `auth.login().then(() => ok(...))`，
+     1540 项全绿、而这几条断言**从来没跑过**；把 `logged: false` 改回
+     `logged: true`（就是 Issue #121 那个 bug）也照样绿。
+
+     所以探针换成：假 wx 把所有回调**就地**调掉，再用 `queueMicrotask` 之前的
+     那一步 —— 干脆只读「同步就能读到的那些状态」。
+     `auth.login()` 的外层 `new Promise` 本来就同步跑到 `wx.login`；
+     `wx.login` 成功回调里那一支（没配服务器）**整条是同步的**：
+     写 storage、写 loginCode、resolve。于是 `login()` 一返回，状态已经落定。 */
+  {
+    const mem = {};
+    const savedWx = global.wx;
+    global.wx = fakeWx(mem);
+    global.wx.login = (o) => o.success({ code: "C-OFFLINE" });
+    global.wx.request = (o) => { mem.__requested = (mem.__requested || 0) + 1; };
+
+    /* 清掉 check.js 顶上 require 进来的那一份 `utils/store.js` ——
+       `login()` 里写的和这里读的必须是同一个模块，否则断言的是一份没人写的副本。 */
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+    const auth2 = require(path.join(ROOT, "utils", "auth.js"));
+    const store2 = require(path.join(ROOT, "utils", "store.js"));
+
+    /* 干净起点：前面那些用例可能留下过 `offline` / `loginCode` 标记。
+       ⚠️ 必须**在** `login()` 之前清 —— `wx.login` 的成功回调是就地调的，
+       `login()` 一调用就把标记写下了；清在后面等于把刚写的抹掉。 */
+    store2.drop(store2.KEYS.auth);
+    store2.saveSession({ logged: false, tier: "", tierFromServer: false });
+
+    /* ⚠️ **这一段（`login()` 里同步跑完的那部分）在同步上下文里拍快照。**
+       `utils/store.js` 的 `read()` 是运行时读全局 `wx` 的，而 check.js 后面
+       还有别的区块会换 `global.wx` —— 等到微任务里再读，读到的可能已经是
+       别人的存储盒（实测过：断言里 `global.wx` 已经不是这支探针的了）。
+       没配服务器时 `login()` 整条是同步的：写 storage、写 loginCode、resolve。 */
+    const loginPromise = auth2.login();
+    const snapAuth = store2.read(store2.KEYS.auth, {}) || {};
+    const snapProf = store2.profile();
+    const snapOffline = auth2.offline();
+    const snapRequested = mem.__requested;
+
+    ok("没接上服务器时 profile.logged **不**为 true（这才是「库里没有记录」的正解）",
+      snapProf.logged !== true,
+      "又写成已登录了 —— 界面会报「已登录」，而服务端连这个人都不知道；实际 " + JSON.stringify(snapProf));
+    ok("code 存在 loginCode 里（不是旧的那个 code 字段）",
+      !!snapAuth.loginCode && !snapAuth.code,
+      JSON.stringify(snapAuth));
+    ok("离线这件事被记下来了（界面与能力矩阵要据此说清为什么）",
+      snapOffline === "off", snapOffline);
+    ok("没接上服务器时一次网络请求都不发（没配就没有可打的地方）",
+      !snapRequested, "发了 " + (snapRequested || 0) + " 次请求");
+
+    /* ⚠️ **两条探针串成一条 promise 链，假 wx 只在整条链的末尾还原。**
+       提前还原，链上后面几步（`applySession`、`wx.request`）就打到别人的
+       存储盒上 —— 日志里看到的是「一次请求都没发」「profile 是空的」
+       这种莫名其妙的红（第一版还原了三次、红了三次，都是这个原因）。 */
+    track(
+      loginPromise
+        .then((r) => {
+          ok("没接上服务器时 login() 回的是 local（调用方据此说真话）",
+            !!(r && r.local === true),
+            "mine.js 的 onLogin 就是读这个字段决定说不说「已登录」；实际 " + JSON.stringify(r));
+        }, (e) => ok("没接上服务器时 login() 不该 reject", false, String(e && e.message)))
+
+        /* ② 接上服务器时（服务端回了 accessToken），logged 照旧为真 ——
+           ① 那条改的是「本机不冒充」，不是「本机不给登录」。 */
+        .then(() => {
+          /* ⚠️ **每一步都要把假 wx 重新装上。**
+             `utils/store.js` 的 `read()` 是运行时读 `global.wx` 的，而 check.js
+             后面那些区块（V45、V48…）一进来就同步把 `global.wx` 换成自己的
+             —— 它们只在自己的 `.then` 里还原。所以「这一支还在跑」这件事，
+             `global.wx` 完全不知道；上一条 `.then` 与这一条之间，它已经被换掉了。
+             第一版栽在这儿：日志是「profile 是空的」「一次请求都没发」。
+             这是**同步重装**，不是「还原」—— 探针之间不该互相踩。 */
+          global.wx = fakeWx(mem);
+          global.wx.login = (o) => o.success({ code: "C-ONLINE" });
+          global.wx.request = (o) => {
+            mem.__requested = (mem.__requested || 0) + 1;
+            o.success({
+              statusCode: 200,
+              data: {
+                accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
+                tier: "free", role: "user", userId: "wx_probe"
+              }
+            });
+          };
+          delete mem[store2.KEYS.profile];
+          delete mem[store2.KEYS.auth];
+          store2.saveSession({ logged: false, tier: "", tierFromServer: false });
+          auth2.configure({ baseUrl: "https://probe.test" });
+          ok("配了服务器之后 configured() 为真（②那条断言的前提）",
+            auth2.configured() === true, JSON.stringify(auth2.baseUrl()));
+          return auth2.login();
+        })
+        .then(() => {
+          global.wx = fakeWx(mem);
+          const prof = mem[store2.KEYS.profile] || {};
+          const box = mem[store2.KEYS.auth] || {};
+          ok("接上服务器时 profile.logged 为 true（①那条改的是「本机不冒充」，不是「本机不给登录」）",
+            prof.logged === true, JSON.stringify(prof));
+          ok("接上服务器时离线标记被清掉", !box.loginCode, JSON.stringify(box));
+          ok("配了服务器之后真的往服务端打了一次登录（不再走本机那一支）",
+            !!mem.__requested, "一次请求都没发");
+          global.wx = savedWx;
+        }, (e) => {
+          global.wx = savedWx;
+          ok("接上服务器时 login() 不该失败", false, String(e && e.message));
+        })
+    );
+  }
+
+  /* ③④ 界面上那两句话 —— 判据落在「说的是事实」，不落在某个具体措辞上。 */
+  {
+    const mineCode = mineSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const loginFn = /onLogin\(\)\s*\{([\s\S]*?)\n  \},/.exec(mineCode);
+    ok("登录成功那句判定先看 `res.local`（没接上服务器时不说「已登录」）",
+      !!loginFn && /res\.local/.test(loginFn[1]),
+      "onLogin 里没有 res.local 这一支 —— 没接上服务器时照样报「已登录」");
+    ok("有告诉用户「还没接上同步服务器」的那一步",
+      /tellOffline/.test(mineCode) && mineCode.indexOf("还没接上同步服务器") >= 0,
+      "空壳登录没有任何一句解释，用户只能自己去数据库里查");
+  }
+}
+
 /**
  * V23. 两条长相、一条内边距（Issue #12 的收尾四问）。
  *
@@ -6195,10 +6400,27 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("「清空本机数据」改口成「清空背诵数据」（清的是内容，不是存储位置）",
       /清空背诵数据/.test(mineWxml) && mineWxml.indexOf("清空本机数据") < 0);
     // 注释里正引着旧文案，先摘掉再判（V26 踩过同一个坑）
-    const mineJsCode = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*/g, "");
-    ok("同步那一行的副标题说的是「换手机跟不跟随」，不是「后端就绪没」",
-      /换手机进度不跟随/.test(mineJsCode) && mineJsCode.indexOf("后端未就绪") < 0,
-      "又把「后端未就绪」写回界面了");
+    /* ⚠️ 这一段守的是「副标题答的是用户的问题：换手机还在不在」。
+       判据两次跟着实现走，两次都没放松：
+
+         · 最早它只认 `换手机进度不跟随` 这一句 —— 而 Issue #121 之后，
+           没接上服务器与没登录是**两句话**（点多少下都不会好的那种，
+           写在「换手机进度不跟随 · 点一下重试」里就是骗人）。
+         · 于是判据换成「答的是跟随与否」这层意思：副标题里必须有
+           `换手机` 或 `跨设备`，`点一下重试` 不许出现在**没接上服务器**那一支里。
+
+       实现那一半在 `mine.js` 的 `syncNote()`：`!sy.ready` 时按
+       「没登录 / 云调用没填 / 压根没配」分开说，正常时才说「还没同步过 · 点一下同步」。 */
+    const mineJsCode = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+    const syncNoteFn = /syncNote\(sy\)\s*\{([\s\S]*?)\n  \},/.exec(mineJsCode);
+    ok("同步那一行的副标题答的是「换手机还跟不跟随」（不是「后端就绪没」）",
+      !!syncNoteFn && /跨设备|换手机/.test(syncNoteFn[1]) && mineJsCode.indexOf("后端未就绪") < 0,
+      "副标题里既没有「换手机」也没有「跨设备」，用户读不到自己真正关心的那件事");
+    /* 没接上服务器时那句**不许**暗示「点一下就能好」—— Issue #121 的痛点
+       正是「点一下就提示已登录、而库里什么都没有」。 */
+    ok("没接上服务器时，副标题不许写成「点一下重试」",
+      !!syncNoteFn && /没接上同步服务器|同步服务器没接上|同步通道未开/.test(syncNoteFn[1]),
+      "那一支还在说「点一下重试」—— 没接上服务器时点多少下都不会好");
     ok("「关于」页那一段标题不再叫「本机记录」",
       aboutWxml.indexOf("本机记录") < 0 && /背诵记录/.test(aboutWxml));
     ok("登录成功不再提「本机身份」（用户看不懂，也不必懂）",
@@ -7395,20 +7617,31 @@ function gapped(items, max) {
       data: { code: "E_WX_NOT_CONFIGURED", message: "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。" }
     })
   };
+  /* 服务端那句话的唯一定义处：假 request 回它、断言也读它 —— 两处各抄一遍就会
+     在某次改文案时只改一处，而断言红在「文案变了」上，看着像功能坏了。 */
+  const SVC_503_MSG = "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。";
+
   Object.keys(require.cache).forEach((k) => {
     if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
   });
   const auth = require(path.join(ROOT, "utils", "auth.js"));
   auth.configure({ baseUrl: "https://probe.test" });
-  auth.login().then(
-    () => { ok("服务端回 503 时登录该失败", false, "居然成功了"); },
-    (e) => {
-      ok("用户看到的是服务端那句话，不是 'HTTP 503'",
-        e.message === "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。",
-        "实际 " + JSON.stringify(e.message));
-      ok("码还是 retained（调用方要能按码分支）", e.code === "E_WX_NOT_CONFIGURED", String(e.code));
-    }
-  ).then(() => { global.wx = savedWx; });
+  /* ⚠️ 这一条**必须**交给 `track()`（见文件头上那段）：`check.js` 结尾是
+     `process.exit`，而它会切掉微任务 —— 没收进 pending 的异步断言一条都不会跑，
+     而计数里也看不出来（它就是这么空跑了一整个版本的）。
+     顺带：假 wx 只在 `global.wx` 是**这一支的**时候读得到东西，
+     所以下面几处链上都要重装一次（后面那些区块会同步把它换掉）。 */
+  track(
+    auth.login().then(
+      () => { ok("服务端回 503 时登录该失败", false, "居然成功了"); },
+      (e) => {
+        ok("用户看到的是服务端那句话，不是 'HTTP 503'",
+          e.message === SVC_503_MSG,
+          "实际 " + JSON.stringify(e.message));
+        ok("码还是 retained（调用方要能按码分支）", e.code === "E_WX_NOT_CONFIGURED", String(e.code));
+      }
+    ).then(() => { global.wx = savedWx; })
+  );
 }
 
 /* ---------- V48. 免备案那条路：云调用（Issue #100） ----------
@@ -9256,6 +9489,9 @@ function gapped(items, max) {
 
 /* ---------- 汇总 ---------- */
 
-console.log("");
-console.log("检查 " + checks + " 项，失败 " + fails + " 项");
-process.exit(fails ? 1 : 0);
+/* 先等所有异步断言跑完 —— 不等就会像 `process.exit` 那样把它们一起切掉（见文件头上 `track`）。 */
+Promise.all(pending).then(() => {
+  console.log("");
+  console.log("检查 " + checks + " 项，失败 " + fails + " 项");
+  process.exit(fails ? 1 : 0);
+});
