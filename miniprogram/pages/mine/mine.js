@@ -11,6 +11,7 @@ const theme = require("../../utils/theme");
 
 Page({
   data: {
+    themeStyle: "",
     logged: false,
     nickname: "未登录",
     avatarUrl: "",

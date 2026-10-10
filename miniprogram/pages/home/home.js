@@ -32,6 +32,11 @@ function todayLabel() {
 Page({
   data: {
 
+    themeStyle: "",
+
+    /* 语料没生成时的空态：data/ 是构建产物（不进仓库），
+       没跑 build:data 就打开，页面给一句人话，而不是白屏（Issue #121）。 */
+    noData: false,
     logged: false,
     guest: false,
     gradeName: "",
@@ -65,6 +70,27 @@ Page({
   },
 
   refresh() {
+
+    /* 语料是构建产物。没生成时后面的 corpus.course() 都会回空，
+       页面会是一片「没有诗词」—— 那看着像坏了。这里显式说清是哪一步没跑。 */
+    if (!corpus.hasData()) {
+      this.setData({
+        noData: true,
+        guest: false,
+        logged: false,
+        plan: [],
+        catalog: [],
+        catalogCount: 0,
+        total: 0,
+        doneCount: 0,
+        percent: 0,
+        stats: { today: 0, done: 0, left: 0 },
+        todoCount: 0,
+        loading: false
+      });
+      return;
+    }
+
     const logged = gate.logged();
 
     if (!logged) {

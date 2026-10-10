@@ -10,6 +10,7 @@ const FILTERS = [
 
 Page({
   data: {
+    themeStyle: "",
     bookId: "",
     bookName: "",
     unit: "篇",

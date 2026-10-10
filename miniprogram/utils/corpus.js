@@ -127,12 +127,69 @@ let manifestCache = null;
 const bookCache = {};
 const bucketCache = {};
 
+/* 语料是构建产物，不进仓库（见 .gitignore 的 miniprogram/data/）。
+   第一次在开发者工具里打开、又没跑过 `npm run build:data` 时，data/ 整个目录不存在，
+   于是 require 抛的是 node 那句 `Cannot find module '../data/books/books.json'`
+   （小程序运行时更绕：「module 'data/books/books.json.js' is not defined」）——
+   看着像断链，其实是**少跑了一步构建**。
+
+   这里把它翻译成人话：数据没生成就当作空语料，页面渲染空态而不是白屏。
+   判据只认「目录在不在」，不吞别的错误 —— 数据生成了却读到坏文件，那还是要炸出来。 */
+let dataReady = null;
+
+function hasData() {
+  if (dataReady === null) {
+    try {
+
+      /* 同步探测：data/ 目录本身就是判据。
+         用 require 探一次 books.json 也行，但小程序的 require 报错信息不可读，
+         而这里只需要一个布尔。 */
+      const fs = require("fs");
+      const path = require("path");
+      dataReady = fs.existsSync(path.join(__dirname, "..", "data"));
+    } catch (e) {
+
+      /* 小程序里没有 fs —— 那就退回到「试着 require 一次」 */
+      try {
+        require("../" + BOOKS_DIR + "books.json");
+        dataReady = true;
+      } catch (e2) {
+        dataReady = false;
+      }
+    }
+  }
+  return dataReady;
+}
+
 function loadJson(rel) {
+  if (!hasData()) {
+    const err = new Error(
+      "语料未生成：miniprogram/data/ 不存在。\n" +
+      "先在仓库根跑 `npm run build:data`（需要 POEM_WEB_DIR 指向 poem 仓库），" +
+      "再用开发者工具打开 miniprogram/。见 README「快速开始」。"
+    );
+    err.code = "E_NO_DATA";
+
+    /* 标记成可预期的一类，调用方据此走空态，不当成崩溃 */
+    err.expected = true;
+    throw err;
+  }
   return require("../" + rel);
 }
 
+/* 读语料统一从这儿过：数据没生成就回默认值，让页面渲染空态。
+   真生成的语料读坏了（结构不对）不在此列，照旧抛。 */
+function readJson(rel, fallback) {
+  try {
+    return loadJson(rel);
+  } catch (e) {
+    if (e && e.code === "E_NO_DATA") return fallback;
+    throw e;
+  }
+}
+
 function books() {
-  if (!booksCache) booksCache = loadJson(BOOKS_DIR + "books.json");
+  if (!booksCache) booksCache = readJson(BOOKS_DIR + "books.json", []);
   return booksCache;
 }
 
@@ -143,7 +200,7 @@ function bookById(id) {
 function ofBook(bookId) {
   if (!bookCache[bookId]) {
     const meta = bookById(bookId);
-    const rows = loadJson(BOOKS_DIR + bookId + ".json");
+    const rows = readJson(BOOKS_DIR + bookId + ".json", []);
     bookCache[bookId] = rows.map(function (p) {
       p.b = bookId;
       p.n = meta ? meta.name : bookId;
@@ -159,12 +216,12 @@ function course() {
 }
 
 function courseTexts() {
-  if (!courseCache) courseCache = loadJson(COURSE);
+  if (!courseCache) courseCache = readJson(COURSE, {});
   return courseCache;
 }
 
 function manifest() {
-  if (!manifestCache) manifestCache = loadJson(MANIFEST);
+  if (!manifestCache) manifestCache = readJson(MANIFEST, { map: {}, buckets: [] });
   return manifestCache;
 }
 
@@ -173,7 +230,7 @@ function bucketOf(id) {
 }
 
 function bucket(name) {
-  if (!bucketCache[name]) bucketCache[name] = loadJson("data/texts/" + name + ".json");
+  if (!bucketCache[name]) bucketCache[name] = readJson("data/texts/" + name + ".json", {});
   return bucketCache[name];
 }
 
@@ -277,5 +334,6 @@ module.exports = {
   indexById,
   search,
   grouped,
-  matchEntry
+  matchEntry,
+  hasData
 };

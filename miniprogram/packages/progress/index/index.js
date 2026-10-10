@@ -15,6 +15,7 @@ function dayLabel(d) {
 
 Page({
   data: {
+    themeStyle: "",
     overview: {},
 
     masteryPercent: 0,

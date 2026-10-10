@@ -8,6 +8,7 @@ const theme = require("../../../utils/theme");
 
 Page({
   data: {
+    themeStyle: "",
     logged: false,
     status: {},
     tiers: tiers.TIERS,

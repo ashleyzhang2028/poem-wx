@@ -12,6 +12,7 @@ const PAGE_MAX = 80;
 
 Page({
   data: {
+    themeStyle: "",
     keyword: "",
 
     fullOn: false,

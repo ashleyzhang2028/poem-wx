@@ -9508,6 +9508,109 @@ function gapped(items, max) {
   }
 }
 
+/* ---------- V52. 语料没生成时不许白屏（Issue #121，2026-10-11） ----------
+ *
+ * 用户报的原话是三行：
+ *   `module 'data/books/books.json.js' is not defined, require args is '../data/books/books.json'`
+ *   `property "themeStyle" ... received type-uncompatible value: expected <String> but get null`
+ *   「页面不显示任何诗词」
+ *
+ * 前两行的根都是**同一件事**：`miniprogram/data/` 是构建产物、不进仓库
+ * （.gitignore 里明明白白写着）。第一次在开发者工具里打开、又没跑过
+ * `npm run build:data`，app.js 的 onLaunch 里 `corpus.course()` 就当场抛 ——
+ * 抛在启动路径上，于是整页空白，而报错信息是 node 的模块解析话术，
+ * 看不出「少跑了一步构建」。这不是数据坏了，是**没生成数据**。
+ *
+ * 所以这一节守两件事：
+ *   1）数据不在时，corpus 的每个入口都回空值（页面渲染空态），不抛；
+ *   2）每个绑了 `theme-style="{{themeStyle}}"` 的页面，data 里都得**先声明**
+ *       `themeStyle: ""` —— 不声明的话首帧传的是 undefined（组件收到 null），
+ *       控制台那条警告就来自这里。
+ */
+{
+  const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
+
+  // 1) 兜底机制在：hasData 探针 + readJson 兜底
+  ok("corpus 有「数据在不在」的探针", /function hasData\s*\(/.test(corpusSrc));
+  ok("corpus 暴露了 hasData（页面据此走空态）",
+    /hasData\s*,?\s*\n?\}/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
+  ok("语料读取统一过 readJson（拿不到就回默认值，不当崩溃）",
+    /function readJson\s*\(/.test(corpusSrc));
+
+  // 各入口都得用 readJson，不许裸 loadJson —— 裸一个就够白屏
+  const rawLoads = corpusSrc.match(/=\s*loadJson\(/g) || [];
+  ok("没有裸用 loadJson 的入口（都走 readJson 兜底）",
+    rawLoads.length === 0,
+    rawLoads.length + " 处还在裸 loadJson：" + (corpusSrc.match(/[^\n]*loadJson\([^\n]*/g) || []).join(" / "));
+
+  // 2) 真跑一遍「数据不在」：把 corpus 拷到没有 data/ 的地方，逐个入口确认不抛
+  {
+    const os = require("os");
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "kb-nodata-"));
+    try {
+      fs.mkdirSync(path.join(tmp, "utils"), { recursive: true });
+      fs.writeFileSync(path.join(tmp, "utils", "corpus.js"), corpusSrc);
+      const savedWx = global.wx;
+      delete global.wx;
+      // 清掉 require 缓存，让它在「没有 data/」的目录里重新解析
+      const modPath = path.join(tmp, "utils", "corpus.js");
+      let bare = null;
+      try {
+        bare = require(modPath);
+      } catch (e) {
+        bare = null;
+      }
+      ok("没有 data/ 时 corpus 仍能被 require（不是一上来就炸）", !!bare);
+      if (bare) {
+        let blew = "";
+        try {
+          bare.books(); bare.course(); bare.courseTexts(); bare.manifest();
+          bare.bucketOf("x"); bare.entry("x"); bare.search("李白");
+        } catch (e) {
+          blew = (e && e.message) || String(e);
+        }
+        ok("没有 data/ 时各入口都回空值、不抛异常", blew === "",
+          "炸在：" + blew + " —— 这正是 Issue #121 的白屏");
+        ok("没有 data/ 时 course() 回空（首页渲染空态）", bare.course().length === 0);
+        ok("没有 data/ 时 books() 回空", bare.books().length === 0);
+        ok("没有 data/ 时 hasData() 说真话", bare.hasData() === false);
+      }
+      global.wx = savedWx;
+      delete require.cache[require.resolve(modPath)];
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  // 3) 首页显式给了空态那一屏 —— 不写的话用户看到的是「一首诗词都没有」
+  const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+  ok("首页有「语料未生成」的空态",
+    /noData/.test(homeWxmlNoData) && /build:data/.test(homeWxmlNoData),
+    "没跑构建时首页只有空白目录，看不出少跑了哪一步");
+  const homeJsNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+  ok("首页在 refresh 里读 hasData 决定走空态",
+    /corpus\.hasData\(\)/.test(homeJsNoData));
+
+  // 4) themeStyle：绑了它的页面，data 里必须先声明
+  const wxmlFiles = [];
+  (function walk(d) {
+    fs.readdirSync(d).forEach((f) => {
+      const full = path.join(d, f);
+      if (fs.statSync(full).isDirectory()) walk(full);
+      else if (f.endsWith(".wxml")) wxmlFiles.push(full);
+    });
+  })(ROOT);
+
+  const binders = wxmlFiles.filter((f) => /themeStyle/.test(fs.readFileSync(f, "utf8")));
+  const undeclared = binders.filter((f) => {
+    const js = fs.readFileSync(f.replace(/\.wxml$/, ".js"), "utf8");
+    return !/themeStyle\s*:/.test(js);
+  });
+  ok("绑了 theme-style 的页面都在 data 里声明了 themeStyle（" + binders.length + " 个）",
+    undeclared.length === 0,
+    "这些页面首帧会传 null：" + undeclared.map((f) => path.relative(ROOT, f)).join("、"));
+}
+
 /* ---------- 汇总 ---------- */
 
 /* 先等所有异步断言跑完 —— 不等就会像 `process.exit` 那样把它们一起切掉（见文件头上 `track`）。 */
