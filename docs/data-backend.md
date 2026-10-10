@@ -286,12 +286,19 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
 ```
 ① 内容（诗、译文、索引、注音表）
    poem 仓库（上游语料）
-     └─ CI 里 build-data.js 编译 → miniprogram/data/**（打包进小程序包）
-          · data/books/<集子>.json   各集子索引（不含正文）
-          · data/course.json         课内 251 首正文 + 译文（进主包）
-          · data/pinyin-table.json   读音表（离线注音）
+     └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
+          · data/books/<集子>.json   各集子索引（不含正文）       → 进包
+          · data/course.json         课内 251 首正文 + 译文       → 进主包
+          · data/pinyin-table.json   读音表（离线注音）           → 进包
           · data/texts/**            其余 5604 条正文 + 倒排索引
-                                     ⚠️ project.config.json 里被 ignore，不进包
+                                     ⚠️ project.config.json 里被 ignore，**不进包**；
+                                        而 CDN 那条路还没铺（等备案，见 todo.md 第 13 条）
+                                        —— 今天这份分片既不在包里、也没处下载
+
+     ⚠️ 编译这一步**不在 checkout 里**：语料是构建产物，CI 上传体验版之前会重跑一次
+     （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑
+     `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem node scripts/build-data.js`，
+     见 README「快速开始」。
 
 ② 本机（每台手机自己一份，不上云）
    wx.setStorageSync 存：背诵进度、设置、已读标记、今日加背、自选清单、离线队列

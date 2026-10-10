@@ -16,12 +16,28 @@
 git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 
-# 2. 离线自检（1349 项）+ 与网页版对照（28 项）
+# 2. 离线自检（1574 项）+ 与网页版对照（28 项）
 node scripts/check.js
 node scripts/parity.js
 
 # 3. 用微信开发者工具打开 miniprogram/ 目录
 ```
+
+⚠️ **`build:data` 之前必须先有 poem 的源码。** 两个入口是一回事：
+
+```bash
+npm run build:data                                   # = node scripts/build-data.js
+bash scripts/clone-poem.sh /tmp/poem                 # 取语料，并检出 poem.lock.json 钉的那一版
+```
+
+直接 `node scripts/build-data.js` 而没 clone 过 poem，报的是 `TEXT_MASTER 为空`
+——**看着像脚本坏了，其实是少给了它语料**（脚本默认去 `/tmp/poem` 找）。
+这一条命令只需要 node（≥18），`package.json` 里那些 devDependency 与它无关，**不必 `npm install`**。
+
+**语料是构建产物，永远不在 git 里**（`.gitignore` 挡着 `miniprogram/data/`）。
+所以「clone 下来直接打开开发者工具」必然是白屏 —— 首页会给出「语料未生成」的空态，
+那不是在报错，是在提醒你少跑了这一步。CI 上传体验版之前会**自己重跑一遍**
+`build-data.js`（见 `.cnb.yml`），所以体验版里有数据、你本地没有，两件事不矛盾。
 
 管理名录是别人的账号标识，**不进代码库**。要导入就设环境变量：
 
@@ -827,12 +843,19 @@ reader 认它：下一首在这位作者名下找，走到头退回**他的作�
 所以分三层：
 
 - **包内**：各集子索引（1.0 MB）+ **课内 251 首的正文与译文**（223 KB）；主包合计 **1.30 MB**
-- **云端**：其余 5348 条正文切成 119 个约 200 KB 的分片（合计 23 MB），放腾讯云 COS + CDN 按需取
+- **云端**：其余 5604 条正文切成 120 个约 200 KB 的分片（合计 25 MB），放腾讯云 COS + CDN 按需取
 - **本机**：背诵进度、设置、已读标记
 
 课内正文进包是刻意的：首页「每日背诵」与详情页都靠它，223 KB 换掉一次云端往返，
 省下的是每天真正被打开的那两个页面的等待。边界由自检验着 —— 课内进包、课外走分片，
 同一份正文不许两边各存一份。
+
+⚠️ **「云端」这一层现在还没落地，别读成已经好了。** `project.config.json` 里
+`packOptions.ignore` 把 `data/texts` 挡在包外，而那份分片**还没有 CDN 上的公开地址**
+（等备案，见 [`docs/todo.md`](docs/todo.md) 第 13 条）。所以今天的状态是：
+**课内 251 首完整可用（在主包里，断网也能背），课外的 5604 首正文取不到** ——
+它们既不在包里，也没有能下载的地方。要把它变成真的，走的是 CDN，不是改代码。
+**「构建出来 27MB」不等于「包里有 27MB」**：进包的是索引 + 课内正文，分片被 ignore 掉了。
 
 上面那三层说的是**内容**。**账号那一份**（账号 / 进度 / 设置 / 昵称）另有一层，
 它跑在微信云托管的容器里、走**云调用**（免域名免备案），
