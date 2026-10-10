@@ -154,10 +154,14 @@ Supabase 控制台 → SQL Editor → 跑建表语句（在 [`wx-login-server.md
 
 ### 5. 探活
 
+形态是 `<服务名>-<环境id>.<地域>.run.tcloudbase.com`，**地域段固定是 `sh.run`**：
+
 ```
-https://<env>.ap-shanghai.run.tcloudbase.com/healthz   →   回 ok
+https://<svc>-<env>.<appid>.sh.run.tcloudbase.com/healthz   →   回 ok
 ```
 
+- **`sh.run` 不是 `ap-shanghai.run`**。地域段就这一种，写成 `ap-shanghai.run` 回的是 `INVALID_HOST`（云托管看不懂 Host 头时的统一回话），跟环境名对不对无关 —— 别照着错域名反复换环境名试
+- 域名以控制台「服务设置 → 基础信息 → 公网访问」里显示的那条为准，本文只给形状
 - 别拿 `/` 当判据：这份镜像没有静态站，`/` 就是 404
 - 「公网访问」默认可能是关的（服务设置 → 基础信息），关着是域名解析不到，先去打开
 
@@ -165,7 +169,7 @@ https://<env>.ap-shanghai.run.tcloudbase.com/healthz   →   回 ok
 
 ```
 mp.weixin.qq.com → 开发 → 开发管理 → 开发设置 → 服务器域名
-→ request 合法域名 → 加 https://<env>.ap-shanghai.run.tcloudbase.com
+→ request 合法域名 → 加 https://<svc>-<env>.<appid>.sh.run.tcloudbase.com
 ```
 
 默认域是腾讯的、已备案，直接填。（每月修改次数有上限。）
