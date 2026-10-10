@@ -5,13 +5,21 @@
        平台没有任何一条「静默拿微信头像」的 API，而头像又不值得为它养一个存储桶。 -->
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
-      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
-              wx:if="{{logged}}">
-        <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
-        <view class="avatar avatar-fallback" wx:else>{{avatarChar}}</view>
-      </button>
-      <view class="avatar-btn" wx:else>
-        <view class="avatar avatar-fallback">{{avatarChar}}</view>
+      <!-- 头像那一圈**定尺寸的壳**（.avatar-wrap）。
+           ⚠️ 里面那个带 open-type="chooseAvatar" 的是原生 button，而原生 button
+           自带 display:block 与 width:100%，真机上这一条**盖过**页面样式表里的
+           width:112rpx —— 于是头像被撑成整行宽，配上 border-radius:50% 就是一枚
+           又扁又长的椭圆（用户 2026-10-04 报的那个）。尺寸只能定在**壳**上，
+           按钮去填满壳，与原生默认怎么算无关。游客态那个 view 同理。 -->
+      <view class="avatar-wrap">
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
+                wx:if="{{logged}}">
+          <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
+          <view class="avatar avatar-fallback" wx:else>{{avatarChar}}</view>
+        </button>
+        <view class="avatar-btn" wx:else>
+          <view class="avatar avatar-fallback">{{avatarChar}}</view>
+        </view>
       </view>
       <!-- 名字**就地可改**：这一格就是输入框，改完立刻显示。
            它原来是只显示的一行字，能改的那处在下面「昵称」那一行里 ——

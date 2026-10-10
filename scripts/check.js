@@ -9078,6 +9078,182 @@ function gapped(items, max) {
   }
 }
 
+/* ---------- V50. 原生 button 的尺寸要定在「壳」上，不定在它自己身上 ----------
+ *
+ * 用户 2026-10-04 的报障：登录进去后，「我的」页身份卡里那枚头像被撑成
+ * 一整枚又扁又长的椭圆。
+ *
+ * 成因是原生 button 与页面样式表的优先级：带 `open-type="chooseAvatar"` 的
+ * 头像**必须是原生 `<button>`**，而原生 button 自带 `display:block` 与
+ * `width:100%` —— 真机上这一条会盖过页面样式表给的 `width:112rpx`。
+ * 于是 height 生效（112rpx）、width 不生效（铺满一行），再叠上
+ * `border-radius:50%`，就是一枚扁椭圆。同一个类名点在 `<view>` 上没事
+ * （游客态那枚就是圆的），只有登录态那枚（button）会变形。
+ *
+ * 治法一层：**尺寸定在定尺寸的壳上，button 去填满壳**（壳带 overflow:hidden，
+ * 于是无论 button 自己的 width 怎么算，视觉上都被裁进那个圆）。
+ *
+ * 这一节守的是「以后别再有人把固定尺寸写回 button 身上」：
+ * 判据 —— 凡 `<button>` 用到的类里写了固定 width（rpx/px，非 100%/auto），
+ * 那么这个 button 的**类集合里必须有一个声明了 flex/inline-flex**，
+ * 否则它在真机上会被原生 width:100% 撑开。
+ * （`.btn` 就是靠 `display:flex` 这一条过关的：flex 项按内容定宽，不吃 block 的 100%。）
+ */
+{
+  const walkWxml = (dir) => {
+    const out = [];
+    for (const f of fs.readdirSync(dir)) {
+      const p = path.join(dir, f);
+      const st = fs.statSync(p);
+      if (st.isDirectory()) out.push(...walkWxml(p));
+      else if (f.endsWith(".wxml")) out.push(p);
+    }
+    return out;
+  };
+  /* 同一个类可能在 app.wxss 或页面样式表里定义 —— 两处都要认 */
+  const appWxssSrc = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
+  const ruleOf = (css, cls) => {
+    const m = new RegExp("\\." + cls.replace(/[-]/g, "\\-") + "\\s*\\{([^}]*)\\}").exec(css);
+    return m ? m[1] : null;
+  };
+
+  const offenders = [];
+  walkWxml(ROOT).forEach((file) => {
+    const rel = path.relative(ROOT, file);
+    const wxml = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, "");
+    const wxssPath = file.replace(/\.wxml$/, ".wxss");
+    const pageCss = fs.existsSync(wxssPath) ? fs.readFileSync(wxssPath, "utf8") : "";
+    const re = /<button\b[^>]*class="([^"]+)"[^>]*>/g;
+    let m;
+    while ((m = re.exec(wxml))) {
+      const classes = m[1].split(/\s+/).filter(Boolean);
+      /* 只要类集合里有任何一个声明了 flex，原生 block 的 100% 就管不着了 */
+      const hasFlex = classes.some((c) => {
+        const body = ruleOf(pageCss, c) || ruleOf(appWxssSrc, c) || "";
+        return /display\s*:\s*(inline-)?flex/.test(body);
+      });
+      if (hasFlex) continue;
+      const fixed = classes.filter((c) => {
+        const body = ruleOf(pageCss, c) || ruleOf(appWxssSrc, c) || "";
+        const w = /[^-]width\s*:\s*([^;]+);/.exec(body);
+        return w && /rpx|px/.test(w[1]) && !/100%|auto/.test(w[1]);
+      });
+      if (fixed.length) offenders.push(rel + " → ." + fixed.join(" / ."));
+    }
+  });
+
+  ok("原生 button 的固定尺寸不定在它自己身上（不吃原生 width:100%）",
+    offenders.length === 0,
+    offenders.slice(0, 6).join("; ") +
+      " —— 真机上原生 button 的 width:100% 会盖过页面给的固定宽，把它撑成一行宽");
+
+  /* 反向确认那条治法还在：头像的壳带 overflow:hidden（裁进圆），
+     尺寸在壳上、不在 button 上 —— 少了任何一条，椭圆就会回来。 */
+  const mineWxss = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxss"), "utf8");
+  const wrap = ruleOf(mineWxss, "avatar-wrap");
+  const btn = ruleOf(mineWxss, "avatar-btn");
+  ok("头像那枚 button 的尺寸定在壳上、且壳把溢出裁进圆（.avatar-wrap）",
+    !!wrap && /width\s*:\s*112rpx/.test(wrap) && /height\s*:\s*112rpx/.test(wrap) &&
+      /overflow\s*:\s*hidden/.test(wrap) && /border-radius\s*:\s*50%/.test(wrap),
+    "壳上少了定尺寸 / 裁剪中的哪一条 —— 椭圆就会回来");
+  ok("头像 button 自己不再写死尺寸（只填满壳）",
+    !!btn && /width\s*:\s*100%/.test(btn) && /height\s*:\s*100%/.test(btn) &&
+      !/[^-]width\s*:\s*112rpx/.test(btn),
+    "button 自己又写死了尺寸 —— 它在真机上不生效，看着像改了其实没改");
+}
+
+/* ---------- V51. 登录态的首页得真的渲染出今日计划（不是「不报错就行」）----------
+ *
+ * 用户 2026-10-04 的第二条报障：「没有任何诗词数据显示在小程序中」。
+ *
+ * 成因是一处解冲突留下的烂尾：`pages/home/home.js` 的 `refresh()` 里被删掉了
+ * `const view = {...}`，却留下 `view.grade / view.term / view.scope` 三处引用。
+ * 登录用户一进首页就 `ReferenceError: view is not defined` —— 整个 `refresh()`
+ * 在那三行上炸掉，`setData` 到不了，于是今日安排、三个大数字、进度条全都不渲染，
+ * 看着就是「没有数据」。（游客那一支在 method 开头就 return 了，不碰 `view`，
+ * 所以只有**登录后**才看得出来 —— 用户原话正是「登录进去了，但是…」。）
+ *
+ * 为什么现有的检查都没拦住：它们问的是「这个词出现过没有」——
+ * `view` 在页面里出现过 ✅、`refresh` 被 `onShow` 调过 ✅。**「出现过」与
+ * 「跑起来会不会炸」是两回事**（与 V10 那条教训同源）。
+ * 而 V10 那张 GATED 表里没有首页（首页的开关叫 `logged`/`guest`，不叫 `locked`），
+ * 所以它连真跑都没真跑到首页。
+ *
+ * 这一节换成**真跑**：按「已登录」挂起首页，跑 onLoad + onShow，
+ * 断言 ① 没抛 ② 今日计划非空。判据落在「有没有内容」上，不落在「有没有那个词」上。
+ */
+{
+  const savedWx = global.wx;
+  const savedPage = global.Page;
+  const savedComponent = global.Component;
+  const savedGetApp = global.getApp;
+  const savedGetCurrentPages = global.getCurrentPages;
+  const storeMod = require(path.join(ROOT, "utils", "store.js"));
+
+  global.wx = {
+    getStorageSync: (k) => (k in wxCalls ? wxCalls[k] : ""),
+    setStorageSync: (k, v) => { wxCalls[k] = v; },
+    removeStorageSync: (k) => { delete wxCalls[k]; },
+    showToast() {}, showModal() {}, showLoading() {}, hideLoading() {},
+    switchTab() {}, navigateTo() {}, redirectTo() {}, navigateBack() {},
+    nextTick(f) { if (f) f(); },
+    getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" })
+  };
+  global.Component = () => {};
+  global.getApp = () => ({ globalData: {} });
+  global.getCurrentPages = () => [];
+
+  const mountHome = () => {
+    let opt = null;
+    global.Page = (o) => { opt = o; };
+    const file = path.join(ROOT, "pages/home/home.js");
+    delete require.cache[require.resolve(file)];
+    require(file);
+    const page = Object.assign({}, opt);
+    page.data = JSON.parse(JSON.stringify(opt.data || {}));
+    page.setData = function (obj, cb) {
+      Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
+      if (cb) cb();
+    };
+    page.selectComponent = () => null;
+    return page;
+  };
+
+  const savedProfile = storeMod.profile();
+  try {
+    storeMod.saveProfile({ logged: true, nickname: "自检" });
+
+    let page = null;
+    let crashed = "";
+    try {
+      page = mountHome();
+      page.onLoad && page.onLoad({});
+      page.onShow && page.onShow({});
+    } catch (e) {
+      crashed = (e && e.message) || String(e);
+    }
+
+    ok("登录态首页跑 onLoad + onShow 不抛异常", crashed === "",
+      "首页炸在这里：" + crashed + " —— 登录用户一进来就是「没有诗词数据」");
+
+    const data = (page && page.data) || {};
+    ok("登录态首页真的排出了今日计划（plan 非空）",
+      Array.isArray(data.plan) && data.plan.length > 0,
+      "plan 是空的（或没有 plan）—— 首页渲染不出任何篇目");
+    ok("登录态首页不是游客态（guest 落回 false）",
+      data.guest === false && data.logged === true,
+      "guest=" + data.guest + " logged=" + data.logged + " —— 登录进去还被当成游客");
+  } finally {
+    if (savedProfile && savedProfile.logged) storeMod.saveProfile(savedProfile);
+    else storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });
+    global.wx = savedWx;
+    global.Page = savedPage;
+    global.Component = savedComponent;
+    global.getApp = savedGetApp;
+    global.getCurrentPages = savedGetCurrentPages;
+  }
+}
+
 /* ---------- 汇总 ---------- */
 
 console.log("");
