@@ -15,7 +15,38 @@ if (!fs.existsSync(path.join(POEM, "api", "handler.js"))) {
 }
 
 const CTX = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-mysql-"));
-fs.cpSync(path.join(POEM, "api"), path.join(CTX, "api"), { recursive: true });
+
+{
+  const apiSrc = path.join(POEM, "api");
+  const apiDst = path.join(CTX, "api");
+  fs.mkdirSync(apiDst, { recursive: true });
+
+  const routesSrc = fs.readFileSync(path.join(apiSrc, "_lib", "routes.js"), "utf8");
+  const wanted = new Set(["handler.js", "_lib/routes.js", "_lib/http.js"]);
+
+  for (const ref of routesSrc.matchAll(/"(\.[^"]+\.js)"/g)) {
+    wanted.add(path.posix.normalize(path.posix.join("_lib", ref[1])));
+  }
+
+  const walk = (dir, rel) => {
+    for (const f of fs.readdirSync(dir)) {
+      const full = path.join(dir, f);
+      const r = rel ? rel + "/" + f : f;
+      if (fs.statSync(full).isDirectory()) walk(full, r);
+      else if (f.endsWith(".js")) wanted.add(r);
+    }
+  };
+  walk(path.join(apiSrc, "_lib"), "_lib");
+  walk(path.join(apiSrc, "_routes"), "_routes");
+
+  for (const rel of wanted) {
+    const from = path.join(apiSrc, rel);
+    if (!fs.existsSync(from)) continue;
+    const to = path.join(apiDst, rel);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.copyFileSync(from, to);
+  }
+}
 fs.copyFileSync(path.join(REPO, "deploy-api-serve", "serve-api.js"), path.join(CTX, "serve-api.js"));
 fs.copyFileSync(path.join(REPO, "deploy", "store-mysql.js"), path.join(CTX, "store-mysql.js"));
 

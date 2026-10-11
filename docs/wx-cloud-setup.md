@@ -428,6 +428,8 @@ curl -s -X POST https://<域>/api/sync/pull \
 | **服务一重启，用户数据全没了** | `MYSQL_HOST` 那几项没配 / 配错 → 服务端退回了内存档 | § 3.1。看服务日志里那句话：`[store] 没配 MYSQL_HOST —— 退回 poem 默认的存储层`。配好了它会打 `[store] 存储层 = 腾讯云 MySQL <host>:<port>/<db>` |
 | 服务日志报 `配了 MYSQL_HOST 但镜像里没有 mysql2` | 镜像里那个依赖没装上 | 那是 `deploy/Dockerfile` 的 `npm install … mysql2` 那步；重推一次 `main` 出镜像 |
 | 服务日志报 `ER_NO_SUCH_TABLE` | 建表语句没跑（或只跑了一半） | § 四，把 `deploy/sql/mysql-schema.sql` 整段重跑一遍（幂等） |
+| 容器起不来，报 `Back-off restarting failed container`，日志里是 `Cannot find module './_lib/…'` 或 `'./_routes/…'` | 镜像里的 `api/` 是**空壳** —— 构建上下文的白名单只放行了 `api/` 根那层（`!api/**` 不跨层），底下没进去 | 这一版已修（白名单逐条放行 `api/_lib/**` 与 `api/_routes/**`，`.cnb.yml` 在 build 前按 `api/_lib/routes.js` 那张表核一遍）。旧镜像要**重推一次 `main`** 取新的；别去改容器的启动命令，它救不了缺文件 |
+| 同上，但报的是 `Cannot find module './shard-api.js'` | 白名单没放行那一个文件（Issue #115） | 同上，重推 `main`。`shard-api.js` 是 `serve-api.js` 在**启动那一刻** require 的，`/healthz` 探活看不到这一份 |
 | **DMS 里只能选系统库**（`information_schema` / `mysql` / `sys` / `performance_schema` / `__cdb_recycle_bin__`） | 库压根没建 —— 那五个是 MySQL 自己的 | § 3.1，先 `CREATE DATABASE \`poem\``。**别将就在 `mysql` 库里建表** |
 | SQL 窗口报 `No database selected` | 没切当前库 | § 四：执行前 `USE \`poem\`;`（`SELECT DATABASE();` 确认） |
 | 服务日志报 `ER_BAD_DB_ERROR` | `MYSQL_DATABASE` 与真建的库名不是同一个 | § 3.1：建的库名与环境变量逐字对上，然后**重部署**让新变量生效 |

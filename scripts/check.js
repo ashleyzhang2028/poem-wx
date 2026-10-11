@@ -5869,7 +5869,7 @@ function gapped(items, max) {
     fs.existsSync(path.join(serveDir, "serve-api.js")));
   const di = fs.readFileSync(path.join(serveDir, ".dockerignore"), "utf8");
   ok("deploy-api-serve/.dockerignore 是白名单（先 ** 全排，再逐条 ! 放行）",
-    /^\*\*$/m.test(di) && /^!api\/\*\*$/m.test(di) && /^!serve-api\.js$/m.test(di),
+    /^\*\*$/m.test(di) && /^!api\/_lib\/\*\*$/m.test(di) && /^!serve-api\.js$/m.test(di),
     "写成常规排除名单的话，poem 的 data/ 26MB 会整个漏进上下文");
 
   const strays = [
@@ -6890,6 +6890,76 @@ function gapped(items, max) {
     /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
   ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
   ok("白名单放行了 shard-src/", /!shard-src/.test(dockerignore));
+
+  {
+    const rules = dockerignore.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+
+    const covers = (rel) => {
+      const parts = rel.split("/");
+      let keep = false;
+      for (const r of rules) {
+        if (r === "**") { keep = false; continue; }
+        if (r.charAt(0) !== "!") continue;
+        const g = r.slice(1);
+        if (g === rel || g === parts[0]) keep = true;
+        else if (g.endsWith("/**") && rel.indexOf(g.slice(0, -3) + "/") === 0) keep = true;
+      }
+      return keep;
+    };
+
+    ok("白名单逐条放行 api/ 下要的每一样（`!api/**` 不跨层，别用它当万金油）",
+      ["api/handler.js", "api/_lib/routes.js", "api/_lib/http.js", "api/_routes/me.js"]
+        .every(covers),
+      "`!api` + `!api/**` 只放行 api/ 根那层，api/_lib/ 与 api/_routes/ 底下是空的 —— " +
+        "镜像里 api/ 进了、内容没进，容器一被调到就是 `Cannot find module './_lib/routes.js'`" +
+        "（Issue #134）。实际规则：" + JSON.stringify(rules.filter((r) => r.charAt(0) === "!")));
+  }
+
+  {
+    const apiSrc = path.join(process.env.POEM_WEB_DIR || "/tmp/poem", "api");
+
+    if (!fs.existsSync(path.join(apiSrc, "_lib", "routes.js"))) {
+      console.log("· 读不到 poem（" + apiSrc + "）—— 镜像里该有哪些后端文件那几条跳过。");
+    } else {
+      const need = new Set(["handler.js"]);
+      const routesSrc = fs.readFileSync(path.join(apiSrc, "_lib", "routes.js"), "utf8");
+      for (const m of routesSrc.matchAll(/"(\.[^"]+\.js)"/g)) {
+        need.add(path.posix.normalize(path.posix.join("_lib", m[1])));
+      }
+      const walk = (dir, rel) => {
+        for (const f of fs.readdirSync(dir)) {
+          const full = path.join(dir, f);
+          const r = rel + "/" + f;
+          if (fs.statSync(full).isDirectory()) walk(full, r);
+          else if (f.endsWith(".js")) need.add(r);
+        }
+      };
+      walk(path.join(apiSrc, "_lib"), "_lib");
+      walk(path.join(apiSrc, "_routes"), "_routes");
+
+      const sh = fs.readFileSync(path.join(ROOT, "..", "scripts", "e2e-mysql.js"), "utf8");
+      const e2eStage = sh.slice(sh.indexOf("const wanted"), sh.indexOf('fs.copyFileSync(path.join(REPO'));
+      ok("e2e 摊上下文时逐条拷了 api 的每一层（`cpSync` 整棵树会把这条判据糊掉）",
+        /_lib\/routes\.js/.test(e2eStage) && /_lib\/http\.js/.test(e2eStage) &&
+          /"_lib"\)/.test(e2eStage) && /"_routes"\)/.test(e2eStage),
+        "e2e 没按 routes.js 逐条拷出 `_lib/` 与 `_routes/` —— " +
+          "摊得比镜像全时，Issue #134 那类「镜像里少了文件」它抓不到");
+
+      ok("Dockerfile 整棵拷 api/（缺的文件在镜像里不补，所以在上下文那一关就得拦下）",
+        /COPY --chown=node:node api \.\/api/.test(dockerfile));
+
+      const piped = fs.readFileSync(path.join(ROOT, "..", ".cnb.yml"), "utf8");
+      const finder = fs.readFileSync(path.join(ROOT, "..", "scripts", "find-poem-api-files.py"), "utf8");
+      ok("清单是从 routes.js 那张表读的，不是「扫一遍上下文里有什么」",
+        /ROUTE_REF/.test(finder) && /routes\.js/.test(finder),
+        "扫上下文那种写法在漏文件时只会少列几个名字，照样报「都在」—— " +
+          "那正是 Issue #134 的形态，判据等于没有");
+      ok("流水线在 build 前跑它（构建机上 poem 整棵树都在，只有镜像里会缺）",
+        /find-poem-api-files\.py/.test(piped),
+        "没跑的话就会回到 Issue #134：构建绿、部署绿、" +
+          "容器起来之后 `Cannot find module './_lib/routes.js'`");
+    }
+  }
 
   {
     const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
