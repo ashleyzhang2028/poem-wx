@@ -28,6 +28,20 @@ function loadCorpus(rels) {
   return sandbox.window;
 }
 
+/* 正文按集子分片在 data/text-master/，data/text-master.js 只剩取数入口 ——
+   只引入口的话 window.TEXT_MASTER 是空的，片得在入口之后补进来。
+   片没铺开的上游版本没有这个目录，退回空表即可。 */
+function masterShards() {
+  const dir = path.join(WEB_DIR, "data", "text-master");
+  let names = [];
+  try {
+    names = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); });
+  } catch (e) {
+    return [];
+  }
+  return names.sort().map(function (f) { return "data/text-master/" + f; });
+}
+
 function main() {
 
   const W = loadCorpus([
@@ -35,6 +49,7 @@ function main() {
     "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
     "data/poems-9.js", "data/poems-10.js", "data/poems-11.js", "data/poems-12.js",
     "data/text-master.js",
+  ].concat(masterShards()).concat([
     "data/poems-classic.js", "data/poems-yuefu.js", "data/poems-tangshi.js",
     "data/poems-gushi.js", "data/poems-songci.js", "data/poems-yuanqu.js",
     "data/poems-guwen.js", "data/poems-jinxiandai.js", "data/poems-zhaoming.js",
@@ -47,7 +62,7 @@ function main() {
     "data/site-index.js",
     "data/common-chars.js",
     "data/pinyin-table.js"
-  ]);
+  ]));
 
   const master = W.TEXT_MASTER || [];
   if (!master.length) throw new Error("TEXT_MASTER 为空，检查 POEM_WEB_DIR");
