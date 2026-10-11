@@ -6133,6 +6133,17 @@ function gapped(items, max) {
         " —— job 跑在 Alpine，`set -eu` 之下撞上未定义变量是当场退出，" +
         "报错只有 `sh: N: VAR: parameter not set` 一行，不说是哪条命令");
 
+    const bashisms = shellLines.filter((l) =>
+      /\$\{[A-Za-z_][A-Za-z0-9_]*\/\/|\$\{[A-Za-z_][A-Za-z0-9_]*\^\^|\$\{[A-Za-z_][A-Za-z0-9_]*,,\}|\[\[/.test(l)
+    );
+    ok(".cnb.yml 的脚本里不写 bash 专有的参数展开（stage 跑在 sh/dash 上）",
+      bashisms.length === 0,
+      "这些行里有 bash-only 写法：" + JSON.stringify(bashisms) +
+        " —— 任务脚本由 sh（Alpine 上是 dash/busybox）执行，" +
+        "`${var//a/b}` 这类替换会报 `Bad substitution` 并**当场 exit 2**，" +
+        "报错只有一行、不说是哪条命令（Issue #134 的 CI 现场）；" +
+        "要按字面匹配就 `grep -F`，别拿替换去拼正则");
+
     const envLines = envSection
       .split("\n")
       .map((l) => l.trim())
