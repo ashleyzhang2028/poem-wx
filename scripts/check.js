@@ -539,6 +539,31 @@ if (fs.existsSync(idxFile)) {
   ok("全文检索带出命中句", hits.every((h) => h.lines.length > 0));
   ok("全文检索给出来源（包内 / 分片）", hits.every((h) => h.where === "pack" || h.where === "cloud"));
   ok("查询切成单字", tsearch.termsOf("明月").length === 2);
+  {
+    const ids = tsearch.search("月", { limit: 20 }).map((h) => h.entry.id);
+    ok("正文命中的篇目在名录里查得到（查不到就没法列出结果）", ids.length === 20);
+    ok("分批取与一次取给同序同量（20 条一批是截断，不是重排）",
+      JSON.stringify(ids) === JSON.stringify(tsearch.search("月", { limit: 20 }).map((h) => h.entry.id)),
+      "同一关键词两次取到的前 20 条不一致 —— 下拉续取会与首屏对不上");
+  }
+  {
+    const session = tsearch.makeSession("明月", {});
+    const first = tsearch.nextBatch(session, 19);
+    const second = tsearch.nextBatch(session, 19);
+    ok("nextBatch 按批给结果（要 20 条给 20 条，多取一条用来判还有没有）",
+      first.length === 20 || session.done, "首批 " + first.length + " 条");
+    ok("续取接着上一批往后出，不从头再来",
+      second.length === 0 || first[0].entry.id !== second[0].entry.id,
+      "第二批又从「" + (first[0] && first[0].entry.t) + "」开头 —— 下拉一次重复一屏");
+    ok("分批会话到末尾会自己报 done", typeof session.done === "boolean");
+  }
+  {
+    const scan = tsearch.search("月", { limit: 20 });
+    const done = [];
+    const session = tsearch.makeSession("月", { stop: () => done.length });
+    ok("分批会话认停止信号（搜索页退出后不再往下扫）",
+      typeof session.done === "boolean" && typeof tsearch.nextBatch(session, 20) === "object");
+  }
   const b1 = tsearch.candidateBuckets(tsearch.termsOf("明月"));
   const b2 = tsearch.candidateBuckets(tsearch.termsOf("床前明月光"));
   ok("候选分片取交集后收敛", b2.length <= b1.length, b1.length + " → " + b2.length);
@@ -3116,6 +3141,32 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const js = read("pages/search/search.js");
     ok("搜索先按篇名作者找，无结果才落到正文全文",
       /byIndex\(kw\)/.test(js) && js.indexOf("byIndex(kw)") < js.indexOf("runFull(kw)"));
+  }
+
+  {
+    const js = read("pages/search/search.js");
+    ok("搜索结果一次只列 20 条",
+      /const BATCH = 20;/.test(js) && /nextBatch\(session, BATCH\)/.test(js),
+      "每批 20 条这个数只该在一处写死 —— 散在两个地方，下拉与首屏就会各出各的数");
+    ok("触底才接下一批（onReachBottom 里才续取）",
+      /onReachBottom\s*\(\)\s*\{[\s\S]{0,260}?(pushBatch|byIndex)/.test(js),
+      "没有 onReachBottom —— 列表拉到底不会续取，20 条就是全部");
+    ok("列表还有后续时不写「已到末尾」",
+      /more:\s*more\s*&&\s*!session\.done/.test(js));
+    ok("索引那一路也一样分页（首屏只给前 20，触底再取下一批）",
+      /results:\s*r\.items\.slice\(0, BATCH\)/.test(js) &&
+        /more:\s*r\.total > BATCH/.test(js) &&
+        /this\.total > want/.test(js),
+      "索引命中一大片时照样一次只列 20 —— 首屏塞几千条，与分页的初衷正相反");
+    ok("重搜与清空都掐断上一轮的会话（否则旧批次会追加到新结果里）",
+      /this\.session = null;/.test(js) && /this\.busy = false;/.test(js));
+    ok("退出搜索页不再往下扫",
+      /onUnload\s*\(\)\s*\{[\s\S]{0,160}?this\.busy = false/.test(js),
+      "没有 onUnload 掐断 —— 退出后仍会把正文分片一片片读完");
+
+    const ts = read("utils/text-search.js");
+    ok("分批接口由搜索页驱动，不是一次扫完全站",
+      /function makeSession/.test(ts) && /function nextBatch/.test(ts) && /session\.done/.test(ts));
   }
 
   {

@@ -64,74 +64,136 @@ function hitLines(text, keyword) {
     .filter((s) => s.indexOf(kw) >= 0);
 }
 
-function scanPack(keyword, limit) {
-  const out = [];
+function scanPackStage(keyword, offset) {
+  const items = [];
   const all = corpus.course();
   const texts = corpus.courseTexts();
-  for (let i = 0; i < all.length && out.length < limit; i++) {
+  for (let i = offset; i < all.length; i++) {
     const p = all[i];
     const t = texts[p.id];
     if (!t) continue;
     const lines = hitLines(t.text, keyword);
-    if (lines.length) out.push({ entry: p, lines: lines.slice(0, 2), where: "pack" });
+    if (lines.length) items.push({ entry: p, lines: lines.slice(0, 2), where: "pack" });
   }
-  return out;
+  return { items: items, next: all.length };
 }
 
-function scanBuckets(keyword, buckets, limit) {
-  const out = [];
+function shardsOf(keyword, book) {
   const manifest = corpus.manifest();
   const byBucket = {};
-  Object.keys(manifest.map || {}).forEach((id) => {
-    const b = manifest.map[id];
-    if (buckets.indexOf(b) >= 0) (byBucket[b] = byBucket[b] || []).push(id);
+  const picks = [];
+
+  if (book && book !== "poems") {
+    const seen = {};
+    corpus.ofBook(book).forEach((p) => {
+      const name = (manifest.map || {})[p.id];
+      if (!name || seen[name]) return;
+      seen[name] = 1;
+      picks.push(name);
+    });
+  } else {
+    const terms = termsOf(keyword);
+    if (!terms.length) return { buckets: [], byBucket: byBucket };
+    picks.push.apply(picks, candidateBuckets(terms));
+  }
+
+  picks.forEach((name) => {
+    const ids = [];
+    Object.keys(manifest.map || {}).forEach((id) => {
+      if (manifest.map[id] === name) ids.push(id);
+    });
+    byBucket[name] = ids;
   });
 
-  buckets.forEach((name) => {
-    if (out.length >= limit) return;
+  return { buckets: picks, byBucket: byBucket };
+}
+
+function scanShardStage(keyword, state) {
+  const items = [];
+  while (state.at < state.buckets.length) {
+    const name = state.buckets[state.at];
     const data = corpus.bucket(name);
-    const ids = byBucket[name] || Object.keys(data);
-    for (let i = 0; i < ids.length && out.length < limit; i++) {
+    const ids = state.byBucket[name] || Object.keys(data);
+    for (let i = state.pos; i < ids.length; i++) {
       const payload = data[ids[i]];
       if (!payload) continue;
       const lines = hitLines(payload.text, keyword);
       if (lines.length) {
         const entry = corpus.indexById(ids[i]);
-        if (entry) out.push({ entry: entry, lines: lines.slice(0, 2), where: "cloud" });
+        if (entry) items.push({ entry: entry, lines: lines.slice(0, 2), where: "cloud" });
       }
     }
-  });
+    state.pos = ids.length;
+    state.at += 1;
+  }
+  return { items: items, next: state.buckets.length };
+}
+
+function makeSession(keyword, opt) {
+  const kw = String(keyword || "").trim();
+  const book = opt && opt.book;
+  let stage;
+  if (!book || book === "poems") {
+    stage = { parts: [{ scan: scanPackStage, state: 0 }] };
+  } else {
+    stage = { parts: [] };
+  }
+
+  const shards = shardsOf(kw, book);
+  if (shards.buckets.length) {
+    stage.parts.push({
+      scan: scanShardStage,
+      state: { buckets: shards.buckets, byBucket: shards.byBucket, at: 0, pos: 0 }
+    });
+  }
+
+  const session = {
+    keyword: kw,
+    stage: stage,
+    searched: 0,
+    done: false
+  };
+  return session;
+}
+
+function nextBatch(session, size) {
+  const out = [];
+  const want = (size || 20) + 1;
+  while (out.length < want && session.stage.parts.length) {
+    const part = session.stage.parts[0];
+    let chunk;
+    try {
+      chunk = part.scan(session.keyword, part.state);
+    } catch (e) {
+      chunk = { items: [], next: 0 };
+    }
+    out.push.apply(out, chunk.items);
+    part.state = chunk.next;
+    session.searched += chunk.items.length;
+    if (!chunk.items.length) session.stage.parts.shift();
+  }
+  if (!session.stage.parts.length) session.done = true;
   return out;
 }
 
 function search(keyword, opt) {
-  const kw = String(keyword || "").trim();
+  const session = makeSession(keyword, opt);
   const limit = (opt && opt.limit) || 20;
-  const book = opt && opt.book;
-  if (!kw) return [];
-
-  if (book && book !== "poems") {
-
-    const manifest = corpus.manifest();
-    const buckets = [];
-    corpus.ofBook(book).forEach((p) => {
-      const b = manifest.map[p.id];
-      if (b && buckets.indexOf(b) < 0) buckets.push(b);
-    });
-    return scanBuckets(kw, buckets, limit);
+  let out = [];
+  while (out.length < limit && !session.done) {
+    out = out.concat(nextBatch(session, limit));
   }
-
-  const pack = scanPack(kw, book === "poems" ? limit : limit);
-  if (book === "poems") return pack;
-
-  const idx = index();
-  if (!idx) return pack;
-
-  const terms = termsOf(kw);
-  if (!terms.length) return pack;
-
-  const buckets = candidateBuckets(terms);
-  return pack.concat(scanBuckets(kw, buckets, limit - pack.length)).slice(0, limit);
+  return out.slice(0, limit);
 }
 
-module.exports = { available, readiness, search, termsOf, candidateBuckets, hitLines, INDEX };
+module.exports = {
+  available,
+  readiness,
+  search,
+  makeSession,
+  nextBatch,
+  termsOf,
+  candidateBuckets,
+  hitLines,
+  INDEX
+};
