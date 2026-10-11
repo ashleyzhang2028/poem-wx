@@ -6979,6 +6979,39 @@ function gapped(items, max) {
     /E_NO_SHARD_SERVICE/.test(readerSrc) && /E_NO_SHARDS/.test(readerSrc));
 }
 
+{
+  const settingsPath = path.join(ROOT, "..", ".cnb", "settings.yml");
+  const hasSettings = fs.existsSync(settingsPath);
+  const settings = hasSettings ? fs.readFileSync(settingsPath, "utf8") : "";
+  const agentsPath = path.join(ROOT, "..", "AGENTS.md");
+  const agents = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, "utf8") : "";
+
+  ok(".cnb/settings.yml 在（仓库专属 NPC 角色的正门）",
+    hasSettings,
+    "没有这个文件时 @ 到的是平台通用 CodeBuddy —— 那份 prompt 只管通用风格，" +
+      "不知道本仓库跑在云托管、也不知道 AGENTS.md 里的规矩");
+
+  const role = /roles:\s*\n\s*-\s*name:\s*(\S+)/.exec(settings);
+  ok("settings.yml 里定义了角色，且有 name 与 prompt",
+    !!role && /\n\s*prompt:\s*\|/.test(settings),
+    "只有 name 没有 prompt（或反过来）—— 角色立不起来，@ 它等于还是通用助手");
+
+  ok("角色 prompt 里指了 AGENTS.md（规范只有一处，不在这里再抄一遍）",
+    /AGENTS\.md/.test(settings) && /代码规范/.test(agents),
+    "prompt 里没提 AGENTS.md：以后改规范要改两个地方，迟早各说各的 —— " +
+      "要么 prompt 指过去，要么把 AGENTS.md 删掉");
+
+  ok("prompt 里点名了要跑的四条自检",
+    ["check.js", "parity.js", "e2e-wx-sync.js", "e2e-mysql.js"].every((f) => settings.indexOf(f) >= 0),
+    "没写清跑哪几条 —— 助手会挑一条跑完就说「绿了」，而 e2e-mysql 那条要 MySQL" +
+      "在场才跑得起来，最容易漏");
+
+  ok("prompt 里写了「不写注释」与「改代码走 PR」",
+    /注释/.test(settings) && /PR/.test(settings),
+    "用户这一轮要的两件事（自己说的「再说一次 删除代码中的所有注释」、" +
+      "「提 PR」）没落进角色设定，下一个人还得再说一次");
+}
+
 Promise.all(pending).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");
