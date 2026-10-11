@@ -4,7 +4,15 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-const WEB_DIR = process.env.POEM_WEB_DIR || "/tmp/poem";
+/* set POEM_WEB_DIR=C:\poem && npm run build:data —— cmd 会把末尾的空格一起塞进
+   变量里，路径没引号时那空格就成了路径的一部分，报错里的路径因此像多了一个空格。 */
+function corpusDir(v) {
+  let d = String(v || "").trim();
+  if (d.length >= 2 && d[0] === '"' && d[d.length - 1] === '"') d = d.slice(1, -1).trim();
+  return d || "/tmp/poem";
+}
+
+const WEB_DIR = corpusDir(process.env.POEM_WEB_DIR);
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
 const BUCKET_KB = 200;

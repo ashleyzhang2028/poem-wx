@@ -845,7 +845,8 @@ node scripts/check.js                                    # 离线自检
 ```
 
 （sh 的写法。PowerShell 是 `$env:POEM_WEB_DIR="/path/to/poem"; npm run build:data`，
-cmd 是 `set POEM_WEB_DIR=/path/to/poem && npm run build:data`，见 README「快速开始」。）
+cmd 是 `set POEM_WEB_DIR=/path/to/poem && npm run build:data`，见 README「快速开始」。
+`build-data.js` 会去掉路径末尾的空格与成对的双引号，好让 cmd 那种不带引号的写法能用。）
 
 自检覆盖：页面四件套齐全、require 可解析、语料完整性（含分片抽查）、
 **包内/分片的边界**（课内正文进包且不与分片重复、课外仍走分片、主包体积与课内正文预算、
