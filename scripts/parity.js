@@ -60,7 +60,10 @@ const capKeys = E.CAP_KEYS;
 const todoDoc = fs.readFileSync(path.join(ROOT, "docs", "todo.md"), "utf8");
 
 if (!webCaps) {
-  console.log("  · 跳过能力表对照：拿不到 " + WEB + "/js/entitlement.js（设 POEM_WEB_DIR 指过去）");
+  console.log("  · 跳过能力表对照：拿不到 " + WEB + "/js/entitlement.js");
+  console.log("    先取语料再跑：bash scripts/clone-poem.sh /tmp/poem（Windows 上用 Git Bash），");
+  console.log("    或让 POEM_WEB_DIR 指向已有的 poem 仓库 —— PowerShell 里是");
+  console.log('    $env:POEM_WEB_DIR="<poem 仓库的路径>"。');
 } else {
   const missing = webCaps.filter((k) => !DECIDED[k]);
   ok("网页版能力表逐项都有交代（" + webCaps.length + " 项）", missing.length === 0, missing.join(", "));

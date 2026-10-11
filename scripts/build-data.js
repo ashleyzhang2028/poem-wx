@@ -16,6 +16,17 @@ const TRANSLATION_SOURCES = {
   modern: "依据现行通用选本与通行讲法"
 };
 
+function noCorpus(file) {
+  return new Error(
+    "读不到 " + file + " —— 语料要先从 poem 仓库取下来，" +
+    "POEM_WEB_DIR 指向那个仓库的根（现在是 " + WEB_DIR + "）。\n" +
+    "Windows（PowerShell）：$env:POEM_WEB_DIR=\"<poem 仓库的路径>\"; npm run build:data\n" +
+    "macOS / Linux：POEM_WEB_DIR=<poem 仓库的路径> npm run build:data\n" +
+    "还没取过语料：bash scripts/clone-poem.sh /tmp/poem（Windows 上用 Git Bash）\n" +
+    "见 README「快速开始」。"
+  );
+}
+
 function loadCorpus(rels) {
   const sandbox = { window: {}, console: console, Date: Date, JSON: JSON };
   sandbox.window.window = sandbox.window;
@@ -23,7 +34,13 @@ function loadCorpus(rels) {
   vm.createContext(sandbox);
   rels.forEach(function (rel) {
     const file = path.join(WEB_DIR, rel);
-    vm.runInContext(fs.readFileSync(file, "utf8"), sandbox, { filename: rel });
+    let src;
+    try {
+      src = fs.readFileSync(file, "utf8");
+    } catch (e) {
+      throw noCorpus(file);
+    }
+    vm.runInContext(src, sandbox, { filename: rel });
   });
   return sandbox.window;
 }
@@ -65,7 +82,7 @@ function main() {
   ]));
 
   const master = W.TEXT_MASTER || [];
-  if (!master.length) throw new Error("TEXT_MASTER 为空，检查 POEM_WEB_DIR");
+  if (!master.length) throw noCorpus(path.join(WEB_DIR, "data", "text-master"));
 
   const byId = {};
   master.forEach(function (m) {

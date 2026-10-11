@@ -15,7 +15,7 @@
         <text class="guest-sub">npm run build:data</text>
       </view>
       <view class="guest-bar">
-        <text class="guest-title">需要指向 poem 仓库</text>
+        <text class="guest-title">POEM_WEB_DIR 指向 poem</text>
         <text class="guest-sub">见 README「快速开始」</text>
       </view>
     </view>

@@ -194,6 +194,9 @@ POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 node scripts/check.js
 ```
 
+（这是 sh 的写法：`POEM_WEB_DIR=… npm run build:data`。Windows 上的对应写法见
+README「Windows 上怎么设 `POEM_WEB_DIR`」—— PowerShell 与 cmd 都不认这种前缀。）
+
 `clone-poem.sh` 检出的是 **`poem.lock.json` 里钉住的那一版**。
 于是 poem 那边补录几十条、改一版译文、动一个朝代归类，
 这边的自检（`check.js` 里的 `K.counts` / `seqMax` / `KNOWN_HOLES` 那张表）
@@ -297,7 +300,8 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
 
      ⚠️ 编译这一步**不在 checkout 里**：语料是构建产物，CI 上传体验版之前会重跑一次
      （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑
-     `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem node scripts/build-data.js`，
+     `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem node scripts/build-data.js`
+     （Windows 见 README「Windows 上怎么设 `POEM_WEB_DIR`」），
      见 README「快速开始」。
 
 ② 本机（每台手机自己一份，不上云）
