@@ -132,23 +132,29 @@ let manifestCache = null;
 const bookCache = {};
 const bucketCache = {};
 
+/* 路径必须是字面量：打包器只按静态字符串决定进不进包，而 data/texts 被
+   packOptions.ignore 排掉后整个 data/ 都不进包，真机上 require 一律 MODULE_NOT_FOUND。 */
+const PACKED = {
+  books: function () {
+    return require("../data/books/books.json");
+  },
+  course: function () {
+    return require("../data/course.json");
+  },
+  manifest: function () {
+    return require("../data/shards.json");
+  }
+};
+
 let dataReady = null;
 
 function hasData() {
   if (dataReady === null) {
     try {
-
-      const fs = require("fs");
-      const path = require("path");
-      dataReady = fs.existsSync(path.join(__dirname, "..", "data"));
+      PACKED.books();
+      dataReady = true;
     } catch (e) {
-
-      try {
-        require("../" + BOOKS_DIR + "books.json");
-        dataReady = true;
-      } catch (e2) {
-        dataReady = false;
-      }
+      dataReady = false;
     }
   }
   return dataReady;
@@ -157,9 +163,10 @@ function hasData() {
 function loadJson(rel) {
   if (!hasData()) {
     const err = new Error(
-      "语料未生成：miniprogram/data/ 不存在。\n" +
+      "语料未生成：包里没有 data/books/books.json。\n" +
       "先在仓库根跑 `npm run build:data`（POEM_WEB_DIR 指向 poem 仓库），" +
-      "再用开发者工具打开 miniprogram/。见 README「快速开始」。"
+      "再用开发者工具打开 miniprogram/，重新编译一次（改的是打包结果，不是磁盘上的目录）。\n" +
+      "见 README「快速开始」。"
     );
     err.code = "E_NO_DATA";
 
@@ -167,6 +174,14 @@ function loadJson(rel) {
     throw err;
   }
   return require("../" + rel);
+}
+
+function packed(name) {
+  try {
+    return PACKED[name]();
+  } catch (e) {
+    return null;
+  }
 }
 
 function readJson(rel, fallback) {
@@ -181,7 +196,7 @@ function readJson(rel, fallback) {
 }
 
 function books() {
-  if (!booksCache) booksCache = readJson(BOOKS_DIR + "books.json", []);
+  if (!booksCache) booksCache = packed("books") || [];
   return booksCache;
 }
 
@@ -208,12 +223,15 @@ function course() {
 }
 
 function courseTexts() {
-  if (!courseCache) courseCache = readJson(COURSE, {});
+  if (!courseCache) courseCache = packed("course") || readJson(COURSE, {});
   return courseCache;
 }
 
 function manifest() {
-  if (!manifestCache) manifestCache = readJson(MANIFEST, { map: {}, buckets: [] });
+  if (!manifestCache) {
+    const m = packed("manifest");
+    manifestCache = m && m.map ? m : readJson(MANIFEST, { map: {}, buckets: [] });
+  }
   return manifestCache;
 }
 

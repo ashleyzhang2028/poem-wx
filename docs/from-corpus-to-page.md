@@ -13,7 +13,7 @@
 | ④ 真机 | 云调用两栏在**每台手机**的本机存储里，换机要重填 | 真机 | 同上，且开发者工具里正常 |
 
 **「语料未生成」只属于第 ① 段。** 它不是说服务器没起、也不是说后端没配 ——
-是工具打开的那一刻，`miniprogram/data/` 这个目录在磁盘上不存在。
+是**这个包里的 `data/books/books.json` 取不到**：本地没编过，或者编过但没随包上传。
 
 ## 二、① 段：文件是怎么编出来的
 
@@ -51,7 +51,13 @@ POEM_WEB_DIR=/tmp/poem npm run build:data
 ## 三、② 段：为什么文件在手，课内就能读
 
 `utils/corpus.js` 是唯一读语料的地方，它先问一句 `hasData()` ——
-**`miniprogram/data/` 这个目录在不在**。不在就抛 `E_NO_DATA`，首页据此渲染空态。
+**包内 `data/books/books.json` 取不取得到**。取不到就抛 `E_NO_DATA`，首页据此渲染空态。
+
+判据必须是「包内 require 得中」，不能是「`fs.existsSync(miniprogram/data)` 目录在不在」：
+`data/texts/` 被 `packOptions.ignore` 排掉，打包器据此判定整个 `data/` 不是独立文件、**不打包**。
+目录判据量到的是开发者工具那一列（目录就在磁盘上，恒为真），与体验版真机那一列（整个目录不在包里）相反。
+同理，`books.json` / `course.json` / `shards.json` 的 `require` 路径都写成字面量 —— 打包器只认静态字符串，
+拼出来的路径它看不见，包内一样取不到。`check.js` 钉着这两条。
 
 在的话，读的顺序是：
 
@@ -128,7 +134,7 @@ git checkout main && git push                → 流水线出镜像
 
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
-| 首页整块「语料未生成」 | ① | `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem npm run build:data` |
+| 首页整块「语料未生成」 | ① | `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem npm run build:data`，然后在开发者工具里重新编译；体验版要重新上传包 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
 | 点课外诗：「这个版本里没有课外正文」 | ③ | 这个镜像构建时 `COPY_SHREDS=0`，取新镜像 |
@@ -141,6 +147,7 @@ git checkout main && git push                → 流水线出镜像
 `check.js` 里与这一段相关的断言：
 
 - `data/shards.json` 不在 `packOptions.ignore` 名下（读 `corpus.js` 的 `MANIFEST` 常量比）
+- `books.json` / `course.json` / `shards.json` 都是字面量 `require`，`hasData()` 里没有 `fs` 判据
 - 包内正文就是课内那 251 条，且包内与分片不重叠
 - 课内正文单列 400 KB 预算，超了报红
 - 首页有「语料未生成」的空态
