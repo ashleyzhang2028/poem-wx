@@ -22,8 +22,26 @@
 !Dockerfile
 
 # 后端本体 + 只挂 /api/* 的服务壳 + 存储层那份 MySQL 实现 + 分片路由
-!api
-!api/**
+#
+# ⚠️ **别写成 `!api` + `!api/**`。** 那两条看着是「放行 api 整个目录」，实际只
+#    放行了 `api/` **根上**的文件与目录**本身** —— `**` 不跨目录层，`api/_lib/**`
+#    得自己有名字才行。漏掉的后果是 api/ 进了镜像而**底下两条都空着**（Issue #134）：
+#      · 构建绿、部署绿 —— 构建机上 `require("./_lib/routes.js")` 找得到（poem
+#        整棵树都在），只有镜像里没有
+#      · 容器起来之后 handler 一被调到就死：`Cannot find module './_lib/routes.js'`
+#        （`_routes/` 那半是惰性 require —— 走 `/healthz` 验的人看不到这一份）
+#      · 云托管报的是「Back-off restarting failed container」，看着像服务在重启
+#    所以下面**逐条**放行 api/ 里要的那三样，一条不少。判断依据是 poem 的
+#    `api/_lib/routes.js`：它的 ROUTES 表每条都指向 `_routes/…`，`handler.js`
+#    与 `_lib/` 是入口的兄弟 —— 这就是全部要的东西，语料 / 字体 / 前端一样不要。
+#
+# ⚠️ `_routes/` 里**只有路由实现**，没有语料：poem 那边它也是独立的六层目录，
+#    不进这个小程序镜像。
+!api/handler.js
+!api/_lib
+!api/_lib/**
+!api/_routes
+!api/_routes/**
 !serve-api.js
 !store-mysql.js
 

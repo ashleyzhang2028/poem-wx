@@ -10,6 +10,7 @@
 | `sql/mysql-schema.sql` | 建表语句（全部表，幂等）。⚠️ 它建的是**表**，落点那个**库要自己建**（`CREATE DATABASE \`poem\``），且执行前要 `USE \`poem\`;` —— 见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 3.1 / § 四 |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
 | `../deploy-api-serve/` | 只挂 `/api/*` 的服务壳 + 白名单（构建时摆进上下文） |
+| `../scripts/find-poem-api-files.py` | 按 `api/_lib/routes.js` 那张表核一遍上下文里的 `api/`（**部署链上跑，拦在 build 之前**） |
 
 ## 存储层：为什么这份实现放在这儿
 
@@ -81,6 +82,12 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 平铺进同一层临时目录再 `docker build`（Dockerfile 按 `./api` 与 `./serve-api.js` 拷）。
 见 `.cnb.yml` 的「发布（自检 → 镜像 → 体验版）」—— 推 `main` 触发，镜像 tag 是
 本仓库这一版的短 sha（`${CNB_COMMIT_SHORT}`），不是分支名。
+
+⚠️ **`api/` 是整棵拷的，但只剩白名单放行的那几条。** 白名单写错时「构建绿、部署绿、
+容器起来才报 `Cannot find module`」（Issue #134）—— 所以 build & push 那步在
+`docker build` **之前**先跑 `scripts/find-poem-api-files.py`：清单从 `api/_lib/routes.js`
+的 ROUTES 表里读（不是扫一遍上下文里有什么 —— 那种写法在漏文件时照样报「都在」），
+缺一个当场退出。
 
 镜像名用 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。**别写成 `${CNB_ROOT_SLUG}`** ——
 那个变量在流水线里指被 clone 的 `poem`。

@@ -65,7 +65,7 @@ main:
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            for need in "!shard-api.js" "!shard-src/**"; do
+            for need in "!shard-api.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
                 echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
@@ -77,6 +77,11 @@ main:
               echo "✗ 上下文里没有 shard-api.js —— serve-api.js require 它，容器起不来" >&2
               exit 1
             fi
+            if [ ! -f /tmp/ctx/api/handler.js ]; then
+              echo "✗ 上下文里没有 api/handler.js —— 入口就是它，容器起不来" >&2
+              exit 1
+            fi
+            python3 scripts/find-poem-api-files.py /tmp/ctx/api || exit 1
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
