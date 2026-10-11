@@ -57,19 +57,30 @@ main:
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             # 分片路由那份（Issue #121 方案 A）：与 serve-api.js 同层同名。
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            # 正文分片：**只在 COPY_SHREDS=1 时摊进上下文**，且摊的是压缩后那份。
+            # 正文分片（Issue #121 方案 A）：这一层**必须每次都在上下文里出现**，
+            # 只是打了 COPY_SHREDS=1 才有内容。为什么不能「不打旗就不 mkdir」：
+            # Dockerfile 那句 `COPY shard-src /tmp/shard-src` 是**无条件**的 ——
+            # 它前面没有 if，只有后面那句 RUN 才看旗。于是上下文里没有这一层时，
+            # 构建在 COPY 上就红（Issue #115）：
+            #   COPY --chown=node:node shard-src /tmp/shard-src
+            #   ERROR: failed to calculate checksum ... "/shard-src": not found
+            # 看着像路径写错，其实是**源目录压根不在上下文里**。空目录是 COPY 的
+            # 合法来源（拷过去就是个空目录），所以这里永远 mkdir，内容才按旗摊。
+            # 这样「不打旗 → 构建绿 + /api/shard/* 回 404 E_NO_SHARDS」才成立
+            # —— 文档一直是这么写的，只是代码原先做不到。
+            #
             # 为什么在这儿摊而不是在 Dockerfile 里现取：Dockerfile 的 COPY 源只能来自
             # 构建上下文，而分片是**构建产物**（.gitignore 里 miniprogram/data/），
             # checkout 里本来就没有 —— 得先在这里生成。
             #
-            # 为什么默认**不摊**：25MB 分片压缩后 5.6MB，是刻意不摊进每次构建的
+            # 为什么默认**不摊内容**：25MB 分片压缩后 5.6MB，是刻意不摊进每次构建的
             # —— 绝大多数调试构建用不到它。要分片时在流水线的 env 里加
             # `COPY_SHREDS: "1"`（见 wx-cloud-setup.md § 二点五）。
+            mkdir -p /tmp/ctx/shard-src
             if [ "${COPY_SHREDS:-}" = "1" ]; then
               echo "摊分片进上下文（COPY_SHREDS=1）"
               bash scripts/clone-poem.sh /tmp/poem >/dev/null 2>&1 || true
               POEM_WEB_DIR=/tmp/poem node scripts/build-data.js >/dev/null
-              mkdir -p /tmp/ctx/shard-src
               for f in miniprogram/data/texts/*.json; do
                 gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f").gz"
               done

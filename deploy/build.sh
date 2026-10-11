@@ -46,6 +46,13 @@ cp -R "$POEM_DIR/api" "$CTX/api"
 cp "$HERE/Dockerfile" "$CTX/Dockerfile"
 cp "$REPO/deploy-api-serve/serve-api.js" "$CTX/serve-api.js"
 cp "$REPO/deploy/store-mysql.js" "$CTX/store-mysql.js"
+# ⚠️ shard-src/ **每次都摊，只是默认空的**。Dockerfile 那句
+#    `COPY shard-src /tmp/shard-src` 是无条件的，上下文里没有这一层就红在 COPY 上
+#    （Issue #115：`failed to calculate checksum ... "/shard-src": not found`）。
+#    空目录是 COPY 的合法来源，于是不打 COPY_SHREDS 时构建照样绿，
+#    /api/shard/* 回 404 E_NO_SHARDS —— 与文档一致。要看带分片的构建，
+#    自己把这层填上 .gz 再 `COPY_SHREDS=1` 构建（见 deploy/README.md）。
+mkdir -p "$CTX/shard-src"
 # .dockerignore 放到上下文根（那是它生效的位置）
 cp "$REPO/deploy-api-serve/.dockerignore" "$CTX/.dockerignore"
 
@@ -62,6 +69,7 @@ if [ "$DRY_RUN" = "1" ]; then
 fi
 
 docker build \
+  --build-arg "COPY_SHREDS=${COPY_SHREDS:-}" \
   --build-arg "API_REV=$REV" \
   --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --build-arg "API_SOURCE=https://cnb.cool/npu-gpu-cpu/poem.git" \
