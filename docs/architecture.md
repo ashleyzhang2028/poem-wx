@@ -73,21 +73,19 @@ miniprogram/
 │   ├── store.js                     # 本机存储与设置
 │   ├── review-models.js             # 四套复习算法
 │   ├── scheduler.js                 # 每日计划与进度总览
-│   ├── quiz.js                      # 出题与判分内核
 │   ├── pinyin.js                    # 注音（多音字消歧，与网页版同口径）
 │   ├── speech.js                    # 朗读（三通道 + 可用性判定）
 │   ├── sfx.js                       # 答题音效（Web Audio 现场合成，零音频文件）
 │   ├── text-search.js               # 正文全文检索（倒排索引）
-│   ├── feihua/index.js              # 飞花令（令字池 / 随机出题 / 作答判定）
 │   ├── entitlement.js / tiers.js    # 门禁：登录门（block / matrix）+ 三档分层
 │   ├── author-index.js              # 作者索引：朝代归一 / 异名归一 / 名册构建
 │   ├── auth.js                      # 微信登录（含无后端时的降级）
 │   ├── wire.js                      # 报文形状（本机 ↔ poem 服务端），见 § 二点五
 │   ├── remote.js                    # 后端契约（同步 / TTS / 管理）
-│   ├── sync.js                      # 同步调度（启动 / 背完 / 手动）
-│   └── admin.js                     # 管理页数据层
+│   └── sync.js                      # 同步调度（启动 / 背完 / 手动）
 ├── pages/                           # 主包：四个 tab + 列表 + 详情
 ├── packages/                        # 分包：设置 / 大会 / 进度 / 管理 / 作者索引
+│   └── <分包>/<页>/lib.js            # 只有本分包用的内核（出题 / 飞花令 / 管理数据层）
 └── data/                            # 由 scripts/build-data.js 生成，不入库
 
 scripts/
@@ -95,6 +93,10 @@ scripts/
 ├── check.js                         # 离线自检
 └── parity.js                        # 与网页版能力表逐项对照，见 § 三点五
 ```
+
+`utils/` 只放**主包与多个分包共用**的模块：每个文件都要被入口链（页面 / 组件 / `app.js`）
+引用到，只有单个分包用的内核放在那个分包的页目录里（`packages/<包>/<页>/lib.js`），
+否则它会随主包下发却没有主包页面用它。这一条由 `scripts/check.js` 的可达性断言钉住。
 
 `utils/` 里的模块**一律不碰 `wx` 之外的平台 API**，`wx` 只在 `store.js` 与 `auth.js` 里出现。
 这样排期与算法可以在 Node 里直接验，不必开开发者工具。

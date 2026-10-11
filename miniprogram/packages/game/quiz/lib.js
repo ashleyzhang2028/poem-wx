@@ -1,4 +1,4 @@
-const corpus = require("./corpus");
+const corpus = require("../../../utils/corpus");
 
 const FORMS = [
   { key: "next", name: "下句" },
@@ -10,11 +10,11 @@ const FORMS = [
 
 const FORM_KEYS = FORMS.map((f) => f.key);
 
-function pick(arr) {
+function _quiz_pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function shuffle(arr) {
+function _quiz_shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -28,7 +28,7 @@ function shuffle(arr) {
 const MAX_LINE = 24;
 const SENTENCE_END = /[，。！？；、]/;
 
-function linesOf(p) {
+function _quiz_linesOf(p) {
   const e = corpus.entry(p.id);
   if (!e || !e.text) return [];
   const raw = String(e.text)
@@ -59,13 +59,13 @@ function build(opt) {
 
   while (questions.length < count && guard < count * 40) {
     guard += 1;
-    const p = pick(pool);
+    const p = _quiz_pick(pool);
     if (!p || used[p.id]) continue;
-    const lines = linesOf(p);
+    const lines = _quiz_linesOf(p);
     if (lines.length < 2 && forms.indexOf("next") >= 0) continue;
 
-    const form = opt.sequential ? forms[questions.length % forms.length] : pick(forms);
-    const q = makeQuestion(form, p, lines, pool);
+    const form = opt.sequential ? forms[questions.length % forms.length] : _quiz_pick(forms);
+    const q = _quiz_makeQuestion(form, p, lines, pool);
     if (!q) continue;
     used[p.id] = true;
     q.index = start + questions.length;
@@ -75,13 +75,13 @@ function build(opt) {
   return questions;
 }
 
-function makeQuestion(form, p, lines, pool) {
+function _quiz_makeQuestion(form, p, lines, pool) {
   if (form === "next") {
     const idx = Math.floor(Math.random() * (lines.length - 1));
     const answer = lines[idx + 1];
-    const distractors = sampleFrom(pool, p.id, 3, (q) => {
-      const ls = linesOf(q);
-      return ls.length ? pick(ls) : "";
+    const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
+      const ls = _quiz_linesOf(q);
+      return ls.length ? _quiz_pick(ls) : "";
     });
     if (!answer) return null;
     return {
@@ -89,7 +89,7 @@ function makeQuestion(form, p, lines, pool) {
       stem: lines[idx],
       title: p.t,
       answer,
-      options: lettered(shuffle([answer].concat(distractors))),
+      options: _quiz_lettered(_quiz_shuffle([answer].concat(distractors))),
       id: p.id
     };
   }
@@ -98,16 +98,16 @@ function makeQuestion(form, p, lines, pool) {
     if (lines.length < 2) return null;
     const idx = Math.floor(Math.random() * (lines.length - 1)) + 1;
     const answer = lines[idx - 1];
-    const distractors = sampleFrom(pool, p.id, 3, (q) => {
-      const ls = linesOf(q);
-      return ls.length ? pick(ls) : "";
+    const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
+      const ls = _quiz_linesOf(q);
+      return ls.length ? _quiz_pick(ls) : "";
     });
     return {
       form: "prev",
       stem: lines[idx],
       title: p.t,
       answer,
-      options: lettered(shuffle([answer].concat(distractors))),
+      options: _quiz_lettered(_quiz_shuffle([answer].concat(distractors))),
       id: p.id
     };
   }
@@ -115,14 +115,14 @@ function makeQuestion(form, p, lines, pool) {
   if (form === "title") {
     if (!p.t || !lines.length) return null;
     const pool2 = pool.filter((q) => q.t && q.t !== p.t).map((q) => q.t);
-    const distractors = uniqueSample(pool2, 3);
+    const distractors = _quiz_uniqueSample(pool2, 3);
     if (distractors.length < 3) return null;
     return {
       form: "title",
-      stem: pick(lines),
+      stem: _quiz_pick(lines),
       title: p.t,
       answer: p.t,
-      options: lettered(shuffle([p.t].concat(distractors))),
+      options: _quiz_lettered(_quiz_shuffle([p.t].concat(distractors))),
       id: p.id
     };
   }
@@ -130,33 +130,33 @@ function makeQuestion(form, p, lines, pool) {
   if (form === "author") {
     if (!p.a || !lines.length) return null;
     const distractorPool = pool.filter((q) => q.a && q.a !== p.a).map((q) => q.a);
-    const distractors = uniqueSample(distractorPool, 3);
+    const distractors = _quiz_uniqueSample(distractorPool, 3);
     if (distractors.length < 3) return null;
     return {
       form: "author",
-      stem: pick(lines),
+      stem: _quiz_pick(lines),
       title: p.t,
       answer: p.a,
-      options: lettered(shuffle([p.a].concat(distractors))),
+      options: _quiz_lettered(_quiz_shuffle([p.a].concat(distractors))),
       id: p.id
     };
   }
 
   if (!p.d || !p.a) return null;
   const dynastyPool = pool.filter((q) => q.d && q.d !== p.d).map((q) => q.d);
-  const distractors = uniqueSample(dynastyPool, 3);
+  const distractors = _quiz_uniqueSample(dynastyPool, 3);
   if (distractors.length < 3) return null;
   return {
     form: "dynasty",
     stem: p.a,
     title: p.t,
     answer: p.d,
-    options: lettered(shuffle([p.d].concat(distractors))),
+    options: _quiz_lettered(_quiz_shuffle([p.d].concat(distractors))),
     id: p.id
   };
 }
 
-function lettered(options) {
+function _quiz_lettered(options) {
   return options.map((v, i) => ({ key: "ABCD"[i] || String(i + 1), text: v }));
 }
 
@@ -165,12 +165,12 @@ function optionRows(list) {
     typeof v === "string" ? { key: "", text: v } : { key: v.key || "", text: v.text });
 }
 
-function sampleFrom(pool, excludeId, n, project) {
+function _quiz_sampleFrom(pool, excludeId, n, project) {
   const out = [];
   let guard = 0;
   while (out.length < n && guard < 200) {
     guard += 1;
-    const p = pick(pool);
+    const p = _quiz_pick(pool);
     if (!p || p.id === excludeId) continue;
     const v = project(p);
     if (!v || out.indexOf(v) >= 0) continue;
@@ -179,12 +179,12 @@ function sampleFrom(pool, excludeId, n, project) {
   return out;
 }
 
-function uniqueSample(list, n) {
+function _quiz_uniqueSample(list, n) {
   const uniq = [];
   list.forEach((v) => {
     if (uniq.indexOf(v) < 0) uniq.push(v);
   });
-  return shuffle(uniq).slice(0, n);
+  return _quiz_shuffle(uniq).slice(0, n);
 }
 
 function judge(question, picked) {

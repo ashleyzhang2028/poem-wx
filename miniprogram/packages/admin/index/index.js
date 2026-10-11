@@ -1,4 +1,4 @@
-const admin = require("../../../utils/admin");
+const admin = require("./lib");
 const tiers = require("../../../utils/tiers");
 const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");

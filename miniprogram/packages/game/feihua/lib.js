@@ -1,4 +1,4 @@
-const corpus = require("../corpus");
+const corpus = require("../../../utils/corpus");
 
 const LEVELS = [
   { id: "easy", name: "常见字", min: 25 },
@@ -6,7 +6,7 @@ const LEVELS = [
   { id: "hard", name: "难字", min: 1, max: 5 }
 ];
 
-function segsOf(text, gated) {
+function _feihua_segsOf(text, gated) {
   const out = [];
 
   const seen = {};
@@ -22,26 +22,26 @@ function segsOf(text, gated) {
   return out;
 }
 
-function allPoems() {
+function _feihua_allPoems() {
   return corpus.course();
 }
 
-function scopedPoems(opt) {
+function _feihua_scopedPoems(opt) {
   const o = opt || {};
-  if (!o.scope) return allPoems();
+  if (!o.scope) return _feihua_allPoems();
   let S;
   try {
-    S = require("../scheduler");
+    S = require("../../../utils/scheduler");
   } catch (e) {
-    return allPoems();
+    return _feihua_allPoems();
   }
   const out = S.poolForScope({
     grade: o.grade,
     term: o.term,
     scope: o.scope,
-    allPoems: allPoems()
+    allPoems: _feihua_allPoems()
   });
-  return out && out.length ? out : allPoems();
+  return out && out.length ? out : _feihua_allPoems();
 }
 
 let poolCache = null;
@@ -50,10 +50,10 @@ function pool() {
   if (poolCache) return poolCache;
 
   const counts = {};
-  allPoems().forEach((p) => {
+  _feihua_allPoems().forEach((p) => {
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    segsOf(e.text).forEach((s) => {
+    _feihua_segsOf(e.text).forEach((s) => {
 
       const counted = {};
       Array.from(s).forEach((ch) => {
@@ -74,7 +74,7 @@ function pool() {
   return out;
 }
 
-function chars(levelId, limit) {
+function _feihua_chars(levelId, limit) {
   const all = pool();
   const lv = LEVELS.find((l) => l.id === levelId) || LEVELS[1];
   const list = Object.keys(all)
@@ -95,11 +95,11 @@ function look(char, opt) {
   const limit = o.limit || 60;
   const out = [];
 
-  scopedPoems(o).forEach((p) => {
+  _feihua_scopedPoems(o).forEach((p) => {
     if (out.length >= limit) return;
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    segsOf(e.text).forEach((s) => {
+    _feihua_segsOf(e.text).forEach((s) => {
       if (out.length >= limit || s.indexOf(ch) < 0) return;
       out.push({
         id: p.id,
@@ -114,7 +114,7 @@ function look(char, opt) {
   return out;
 }
 
-function strip(s) {
+function _feihua_strip(s) {
   return String(s).replace(/[^\u3400-\u9fff]/g, "");
 }
 
@@ -125,23 +125,23 @@ function judge(char, input, said) {
   if (!raw) return { ok: false, reason: "写一句带这个字的诗" };
   if (raw.indexOf(ch) < 0) return { ok: false, reason: "这句里没有「" + ch + "」" };
 
-  const mine = strip(raw);
+  const mine = _feihua_strip(raw);
   if (mine.length < 4) return { ok: false, reason: "太短了，至少写四字" };
 
   const used = {};
   (said || []).forEach((s) => {
-    used[strip(s)] = 1;
+    used[_feihua_strip(s)] = 1;
   });
   if (used[mine]) return { ok: false, reason: "这一句说过了" };
 
   let hit = null;
-  allPoems().forEach((p) => {
+  _feihua_allPoems().forEach((p) => {
     if (hit) return;
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    segsOf(e.text, false).forEach((seg) => {
+    _feihua_segsOf(e.text, false).forEach((seg) => {
       if (hit) return;
-      if (strip(seg) === mine) hit = { id: p.id, title: p.t, author: p.a, seg: seg };
+      if (_feihua_strip(seg) === mine) hit = { id: p.id, title: p.t, author: p.a, seg: seg };
     });
   });
 
@@ -153,7 +153,7 @@ function judge(char, input, said) {
 
 function pick(opt) {
   const o = opt || {};
-  const inScope = scopedPoems(o);
+  const inScope = _feihua_scopedPoems(o);
   const excl = {};
   (o.exclude || []).forEach((c) => {
     excl[c] = 1;
@@ -163,7 +163,7 @@ function pick(opt) {
   inScope.forEach((p) => {
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    segsOf(e.text).forEach((s) => {
+    _feihua_segsOf(e.text).forEach((s) => {
       Array.from(new Set(Array.from(s))).forEach((ch) => {
         if (/[\u3400-\u9fff]/.test(ch)) inScopeChars[ch] = 1;
       });
@@ -200,13 +200,4 @@ function pick(opt) {
   return { char: it.char, count: it.count, level: it.level };
 }
 
-module.exports = {
-  LEVELS,
-  pool,
-  chars,
-  levelOf,
-  pick,
-  scopedPoems,
-  look,
-  judge
-};
+module.exports = { LEVELS, pool, levelOf, pick, look, judge, charsOf: _feihua_chars, scopedPoems: _feihua_scopedPoems };

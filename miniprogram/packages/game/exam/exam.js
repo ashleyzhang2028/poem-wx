@@ -1,4 +1,4 @@
-const quiz = require("../../../utils/quiz");
+const quiz = require("../quiz/lib");
 const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
