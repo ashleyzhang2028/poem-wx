@@ -35,8 +35,7 @@ const DEFAULTS = {
   theme: "ink",
   pinyin: "rare",
 
-  speechRate: 1,
-  speechAutoNext: true,
+  lastSearch: "",
 
   lastSyncAt: 0,
 

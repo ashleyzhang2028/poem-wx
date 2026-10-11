@@ -252,7 +252,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 
 | 行 id | 载荷 | 谁写 |
 |---|---|---|
-| `settings:v1` | `{ v:1, settings:{ grade, term, dailyCount, scope, algo, align, fontSize, theme, pinyin, autoNext, speechRate, speechAutoNext }, updatedAt }` | 两端 |
+| `settings:v1` | `{ v:1, settings:{ grade, term, dailyCount, scope, algo, align, fontSize, theme, pinyin, lastSearch }, updatedAt }` | 两端 |
 
 两条设计口径：
 
@@ -313,7 +313,7 @@ var SETTINGS_ROW_ID = "settings:v1";
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str",
-  autoNext: "bool", speechRate: "num", speechAutoNext: "bool"
+  lastSearch: "str"
 };
 
 function sanitizeSettings(p) {

@@ -122,6 +122,8 @@ const COURSE = "data/course.json";
 
 const MANIFEST = "data/shards.json";
 
+const BUCKET_DIR = "data/texts/";
+
 let booksCache = null;
 let courseCache = null;
 let manifestCache = null;
@@ -170,6 +172,8 @@ function readJson(rel, fallback) {
     return loadJson(rel);
   } catch (e) {
     if (e && e.code === "E_NO_DATA") return fallback;
+
+    if (e && e.code === "MODULE_NOT_FOUND") return fallback;
     throw e;
   }
 }
@@ -216,7 +220,7 @@ function bucketOf(id) {
 }
 
 function bucket(name) {
-  if (!bucketCache[name]) bucketCache[name] = readJson("data/texts/" + name + ".json", {});
+  if (!bucketCache[name]) bucketCache[name] = readJson(BUCKET_DIR + name + ".json", {});
   return bucketCache[name];
 }
 
