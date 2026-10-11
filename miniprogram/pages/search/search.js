@@ -10,6 +10,8 @@ const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
 const PAGE_MAX = 80;
 
+const FULL_MAX = 40;
+
 Page({
   data: {
     themeStyle: "",
@@ -26,7 +28,8 @@ Page({
 
     resultWhere: "",
 
-    fromFull: false
+    fromFull: false,
+    partial: false
   },
 
   onShow() {
@@ -56,7 +59,8 @@ Page({
   },
 
   onClear() {
-    this.setData({ keyword: "", results: [], total: 0, searched: false, searching: false });
+    clearTimeout(this.fullTimer);
+    this.setData({ keyword: "", results: [], total: 0, searched: false, searching: false, partial: false });
   },
 
   onHot(e) {
@@ -100,9 +104,10 @@ Page({
       return;
     }
 
-    this.setData({ searching: true, searched: false });
+    this.setData({ searching: true, searched: false, partial: false });
 
-    setTimeout(() => this.runFull(kw), 16);
+    clearTimeout(this.fullTimer);
+    this.fullTimer = setTimeout(() => this.runFull(kw), 16);
   },
 
   byIndex(kw) {
@@ -120,21 +125,26 @@ Page({
     };
   },
 
+  onUnload() {
+    clearTimeout(this.fullTimer);
+    this.fullTimer = null;
+  },
+
   runFull(kw) {
     let hits = [];
 
-    const fullMax = 40;
     try {
-      hits = textSearch.search(kw, { limit: fullMax + 1 });
+      hits = textSearch.search(kw, { limit: FULL_MAX + 1 });
     } catch (e) {
       hits = [];
     }
-
-    const truncated = hits.length > fullMax;
-    if (truncated) hits = hits.slice(0, fullMax);
+    const partial = !!hits.partial;
+    const truncated = hits.length > FULL_MAX;
+    if (truncated) hits = hits.slice(0, FULL_MAX);
 
     this.setData({
-      total: truncated ? fullMax + 1 : hits.length,
+      partial: partial,
+      total: truncated ? FULL_MAX + 1 : hits.length,
       results: hits.map((h) => ({
         id: h.entry.id,
         title: h.entry.t,
@@ -147,7 +157,7 @@ Page({
       searched: true,
       searching: false,
       fromFull: true,
-      resultWhere: "正文全文 · 全站"
+      resultWhere: partial ? "正文全文 · 命中片较多，只扫了部分" : "正文全文 · 全站"
     });
   },
 

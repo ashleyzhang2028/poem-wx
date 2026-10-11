@@ -2,6 +2,8 @@ const corpus = require("./corpus");
 
 const INDEX = "data/texts/idx.json";
 
+const SCAN_CAP = 12;
+
 let indexCache = null;
 let missing = false;
 
@@ -40,19 +42,27 @@ function candidateBuckets(terms) {
   const idx = index();
   if (!idx) return [];
   const lists = terms
-    .map((t) => idx.postings[t] || null)
-    .filter(Boolean)
-    .sort((a, b) => Object.keys(a).length - Object.keys(b).length);
+    .map((t) => ({ t: t, row: idx.postings[t] || null }))
+    .filter((x) => x.row)
+    .sort((a, b) => Object.keys(a.row).length - Object.keys(b.row).length);
 
   if (!lists.length) return [];
 
-  let acc = Object.keys(lists[0]);
-  for (let i = 1; i < lists.length; i++) {
-    const next = lists[i];
-    acc = acc.filter((b) => next[b] !== undefined);
-    if (!acc.length) break;
-  }
-  return acc;
+  const hit = Object.keys(lists[0].row).filter((b) =>
+    lists.slice(1).every((l) => l.row[b] !== undefined)
+  );
+  if (!hit.length) return [];
+
+  const score = {};
+  hit.forEach((b) => {
+    score[b] = lists.reduce((n, l) => n + l.row[b], 0);
+  });
+
+  hit.sort((a, b) => score[a] - score[b]);
+  const out = hit.slice(0, SCAN_CAP);
+  out.total = hit.length;
+  out.capped = hit.length > SCAN_CAP;
+  return out;
 }
 
 function hitLines(text, keyword) {
@@ -131,7 +141,11 @@ function search(keyword, opt) {
   if (!terms.length) return pack;
 
   const buckets = candidateBuckets(terms);
-  return pack.concat(scanBuckets(kw, buckets, limit - pack.length)).slice(0, limit);
+  const rest = limit - pack.length;
+  const out = rest <= 0 ? pack : pack.concat(scanBuckets(kw, buckets, rest)).slice(0, limit);
+  out.scanned = rest <= 0 ? 0 : buckets.length;
+  out.partial = !!buckets.capped;
+  return out;
 }
 
-module.exports = { available, readiness, search, termsOf, candidateBuckets, hitLines, INDEX };
+module.exports = { available, readiness, search, termsOf, candidateBuckets, hitLines, INDEX, SCAN_CAP };

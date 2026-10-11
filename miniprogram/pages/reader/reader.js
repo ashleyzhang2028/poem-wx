@@ -137,7 +137,12 @@ Page({
       return;
     }
 
-    const hit = corpus.entry(id);
+    let hit = null;
+    try {
+      hit = corpus.entry(id);
+    } catch (e) {
+      hit = null;
+    }
     if (hit) return this.renderEntry(id, hit, meta);
 
     this.setData({ id, loadingText: true });
