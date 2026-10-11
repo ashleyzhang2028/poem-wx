@@ -4,7 +4,9 @@
  *   books/<book>.json     各集子索引（不含正文）
  *   course.json           课内 251 首正文与译文（进主包）
  *   texts/<bucket>.json   其余正文分片，按条目 id 哈希稳定分桶，走云端
- *   texts/idx.json        正文倒排索引（字 → 分片），走 CDN
+ *   texts/idx.json        正文倒排索引（字 → 分片），走云端
+ *   shards.json           分片清单（id → 片名），**进主包** —— 它在 texts/ 里会被
+ *                         packOptions.ignore 挡掉，真机上 bucketOf() 就查不到片名
  *   pinyin-table.json     读音表（进主包，离线注音用）
  *
  * 全部正文 24MB 塞不进 2MB 的主包；课内那 251 首只有 223KB，进包换掉一次云端往返，
@@ -230,7 +232,13 @@ function writeBuckets(texts) {
     manifest.push({ n: name, c: ids.length, kb: Math.round(fs.statSync(file).size / 1024) });
   });
 
-  writeJson(path.join(dir, "manifest.json"), { buckets: manifest, map: map });
+  /* ⚠️ 清单**不写在 texts/ 里**，写在它外面（OUT_DIR/shards.json）。
+     `project.config.json` 的 `packOptions.ignore` 排掉的是**整个 texts/ 目录**，
+     清单落在里面真机上就直接没了 —— 而 bucketOf(id) 全靠它，缺了它
+     「课外 5604 首点开取正文」这条路一步都走不通（连片名都算不出来）。
+     它只有约 137KB（gzip 17KB），进主包毫无压力；正文那 120 片才是不能进的。
+     这与 docs/architecture.md「包内 / 走云 / 本机」那三层的口径一致。 */
+  writeJson(path.join(OUT_DIR, "shards.json"), { buckets: manifest, map: map });
 
   const total = manifest.reduce(function (a, b) { return a + b.kb; }, 0);
   console.log("正文分片 " + manifest.length + " 个，" + total + "KB（未压缩）");
@@ -334,8 +342,8 @@ function extractWords(file, W) {
  * 课内正文不进索引：它已经在主包里，现场扫比查索引还快。
  */
 function writeTextIndex(courseTexts, texts, W) {
-  // writeBuckets 已经把映射写在 manifest 里，这里读回来，免得再算一遍哈希
-  const manifest = JSON.parse(fs.readFileSync(path.join(OUT_DIR, "texts", "manifest.json"), "utf8"));
+  // writeBuckets 已经把映射写在 shards.json 里，这里读回来，免得再算一遍哈希
+  const manifest = JSON.parse(fs.readFileSync(path.join(OUT_DIR, "shards.json"), "utf8"));
   const postings = {};
 
   Object.keys(texts).forEach(function (id) {
