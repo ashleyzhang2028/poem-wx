@@ -55,6 +55,12 @@ set POEM_WEB_DIR=C:\poem && npm run build:data
 那不是在报错，是在提醒你少跑了这一步。CI 上传体验版之前会**自己重跑一遍**
 `build-data.js`（见 `.cnb.yml`），所以体验版里有数据、你本地没有，两件事不矛盾。
 
+### `build:data` 之后还有哪几步
+
+这条命令只产出**文件**。文件到页面隔四段，断在哪一段的症状不同：
+课内 251 首靠包内语料，开工具就能背；课外 5604 首与登录同步要接后端。
+四段、症状与对应修法见 [`docs/from-corpus-to-page.md`](docs/from-corpus-to-page.md)。
+
 管理名录是别人的账号标识，**不进代码库**。要导入就设环境变量：
 
 ```bash
