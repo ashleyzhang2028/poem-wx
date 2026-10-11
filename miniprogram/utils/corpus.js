@@ -119,7 +119,11 @@ function layout(text) {
 
 const BOOKS_DIR = "data/books/";
 const COURSE = "data/course.json";
-const MANIFEST = "data/texts/manifest.json";
+/* 分片清单（id → 片名）：**在主包里**（`data/shards.json`，约 137KB）。
+   ⚠️ 它**不能**放进 `data/texts/` —— 那个目录整块被 `packOptions.ignore` 排掉
+   （正文 24MB 不能进包），清单一进去真机上就没了，`bucketOf()` 一律回空，
+   课外 5604 首连「该取哪一片」都算不出来，点开只会说取不到正文。 */
+const MANIFEST = "data/shards.json";
 
 let booksCache = null;
 let courseCache = null;

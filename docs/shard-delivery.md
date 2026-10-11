@@ -58,6 +58,26 @@
 
 台账详见 [`deploy/README.md`](../deploy/README.md) 的「成本」一节。
 
+### 清单进包，正文走云 —— 两者不能混
+
+`bucketOf(id)`（「这一条在哪一片」）靠的是**分片清单**。它在**主包里**
+（`data/shards.json`，约 137KB，gzip 17KB），**不在** `data/texts/` ——
+因为 `project.config.json` 的 `packOptions.ignore` 排掉的是**整个 `texts/` 目录**
+（正文 24MB 进不去，这是对的），清单一落进去真机上就没了。
+
+这条是「按需取正文」能不能成立的**前提**，不是细节：
+
+| 缺了它 | 表现 |
+|---|---|
+| 清单在包里 ✅ | 点开课外诗 → 算出片名 `t0xx` → 走 `/api/shard/t0xx` 取那一片（44KB） |
+| 清单被 ignore ❌ | `bucketOf()` 一律回空 → `ensureEntry()` 直接回 `null` → **连请求都不会发**，界面说「这一篇取不到正文」 |
+
+所以：**清单（路由表）进包，正文（大块）走云**。这条边界由 `scripts/check.js` 钉着
+（读 `corpus.js` 里那个 `MANIFEST` 常量，断言它不在 `packOptions.ignore` 名下）——
+Node 里怎么跑都是绿的，只有真机会撞，所以判据只能是静态的。
+`texts/idx.json`（全文倒排 2MB）是**另一回事**：它太大进不了包，
+`text-search.js` 读不到时降级为「按篇名作者检索」，有兜底，故允许它留在 `texts/`。
+
 ## 三、分片默认**不进**镜像
 
 镜像里有没有分片，由构建参数 `COPY_SHREDS` 决定：
@@ -206,6 +226,7 @@ env:
 | `e2e-mysql` 报 `Cannot find module './shard-api.js'` | 同一条：那条 e2e 自己摊一遍上下文，漏摊了这一样 |
 | 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS` 没开）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
 | 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 poem 的日志 —— 要单独看 |
+| 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.json`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.json`）——见 § 二「清单进包」 |
 | 自检 V49「接线在 require handler 之前」无故变红 | 块注释里写了 `/api/*` 之类的**带星号的路径**，`/*` 把注释后半段吃掉了。写成行注释，或在块注释里别写 `/xxx/*` |
 
 ## 七、相关文件
@@ -216,7 +237,8 @@ env:
 | `deploy-api-serve/serve-api.js` | 把路由挂在 `/api/shard/` 上 |
 | `deploy/Dockerfile` | `COPY_SHREDS=1` 时把分片拷进 `/app/shards/` |
 | `.cnb.yml` | 那一面旗；摊上下文时只摊 `.gz` |
-| `miniprogram/utils/corpus.js` | `ensureEntry` / `ensureBucket`（本机 → 云端） |
+| `scripts/build-data.js` | 产出 `data/shards.json`（清单，**进包**）与 `data/texts/*`（正文分片，走云） |
+| `miniprogram/utils/corpus.js` | `ensureEntry` / `ensureBucket`（本机 → 云端）；`MANIFEST` 常量指 `data/shards.json` |
 | `miniprogram/utils/remote.js` | `shard()`（走云调用，不写 outbox） |
 | `miniprogram/pages/reader/reader.js` | 取不到时的三句人话 |
 | `scripts/check.js` V53 | 守着上面这一整条链 |

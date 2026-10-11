@@ -198,7 +198,11 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 1. **包内（免网络）**
    - 各集子索引 `data/books/<book>.json`（篇名/作者/朝代/出处/分组，不含正文）
    - **课内 251 首的正文与译文 `data/course.json`**
-   - 集子表 `data/books/books.json`、分片清单 `data/texts/manifest.json`
+   - 集子表 `data/books/books.json`、分片清单 `data/shards.json`
+     ⚠️ 清单**不在** `data/texts/` 里 —— 那个目录整块被 `packOptions.ignore` 排掉
+     （正文 24MB 不能进包）。清单是「按需取正文」那条路的路由表（`bucketOf(id)`
+     全靠它算出片名），落进 `texts/` 真机上就直接没了，课外 5604 首连该取哪一片
+     都算不出来。它只有约 137KB，进主包毫无压力。
    - 索引里**不带正文**，这是主包能压住的前提
 
    ⚠️ 索引**只按集子存一份**，不另存全站投影。第一版曾同时产出

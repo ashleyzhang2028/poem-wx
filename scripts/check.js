@@ -102,7 +102,8 @@ jsFiles.forEach((file) => {
 /* ---------- 3. 语料完整性 ---------- */
 const dataDir = path.join(ROOT, "data");
 const booksTable = readJson(path.join(dataDir, "books", "books.json"));
-const manifest = readJson(path.join(dataDir, "texts", "manifest.json"));
+/* 分片清单在主包里（不在 texts/ —— 那个目录整块被 packOptions.ignore 排掉）。 */
+const manifest = readJson(path.join(dataDir, "shards.json"));
 
 ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
 
@@ -185,6 +186,52 @@ Object.keys(manifest.map).slice(0, 60).forEach((id) => {
   if (!bucket[id] || typeof bucket[id].text !== "string") bad += 1;
 });
 ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条取不到");
+
+/* 「按需取正文」这条路要的两样，必须真的进得去包」—— 一条**静态**断言。
+
+   `packOptions.ignore` 排掉的是整个 `data/texts/`（正文 24MB 进不去，这是对的）。
+   但**分片清单**以前就写在里面：真机上它直接没了，`bucketOf()` 一律回空，
+   课外 5604 首连「该取哪一片」都算不出来 —— 这条只有真机会撞，
+   Node 里怎么跑都是绿的（`data/` 在盘上）。所以判据不是「跑一遍」，
+   而是「**但凡会走分片那条路的，require 的东西必须在包里**」。
+
+   ⚠️ 不是「所有 data/ 都不能被 ignore」：`texts/idx.json`（全文倒排 2MB）
+   就该被 ignore —— `text-search.js` 读不到时 `available()=false`，
+   界面退回「篇名作者」检索，是**有兜底**的。有兜底的不拦，
+   没兜底（清单、集子索引）的必须进包。 */
+{
+  const pcfg = readJson(path.join(ROOT, "project.config.json")) || {};
+  const ignored = ((pcfg.packOptions || {}).ignore || []).map((r) => String(r.value || ""));
+
+  /* ① 分片清单**必须**在主包里 —— 它是「按需取正文」那条路的路由表，缺了没兜底。
+     判据取 `corpus.js` 里那个**真常量**（不是盘上文件在不在）：盘上有、但客户端
+     require 的是 ignore 目录里的路径，真机上照样读不到。 */
+  const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
+  const manPath = (corpusSrc.match(/const\s+MANIFEST\s*=\s*["']([^"']+)["']/) || [])[1] || "";
+  ok("分片清单在主包里（corpus 指向的路径未被 packOptions.ignore 排掉）",
+    !!manPath
+      && !ignored.some((ig) => manPath.indexOf(ig) === 0)
+      && fs.existsSync(path.join(dataDir, manPath.replace(/^data\//, ""))),
+    "corpus 读的是 " + (manPath || "(没找到 MANIFEST 常量)") +
+      " —— 它落在 ignore 名单里或不存在，真机上 bucketOf() 会回空，课外正文一律取不到");
+
+  /* ② 集子索引（列表页 / 篇名作者检索的底座）也必须在包里。 */
+  booksTable.forEach((b) => {
+    const rel = "data/books/" + b.id + ".json";
+    ok("集子索引在包里 " + rel,
+      fs.existsSync(path.join(ROOT, rel)) && !ignored.some((ig) => rel.indexOf(ig) === 0),
+      rel + " 被 ignore 了 —— 列表页与按题名检索会空");
+  });
+
+  /* ③ 反向：真进了 ignore 的那份，读它的人得**有兜底**（不能一读不到就炸）。
+     现在只有 `texts/idx.json` 这一份，读它的是 text-search.readiness()。 */
+  const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
+  ok("被 ignore 的 texts/idx.json 有兜底（读不到 = 全文检索不可用，不炸）",
+    /INDEX\s*=\s*["']data\/texts\/idx\.json["']/.test(tsSrc)
+      && /function\s+index\(\)[\s\S]{0,400}try\s*{[\s\S]{0,200}require/.test(tsSrc)
+      && /function\s+readiness/.test(tsSrc) && /usable/.test(tsSrc),
+    "text-search 读不到 idx.json 时必须走 readiness() 降级，不能抛");
+}
 
 /* ---------- 4. 排期内核 ---------- */
 const R = require(path.join(ROOT, "utils", "review-models.js"));
