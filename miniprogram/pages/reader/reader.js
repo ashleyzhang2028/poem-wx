@@ -282,7 +282,11 @@ Page({
     });
 
     wx.vibrateShort({ type: "light" });
-    setTimeout(() => this.goNext(), 700);
+    this.advance = setTimeout(() => this.goNext(), 700);
+  },
+
+  onUnload() {
+    if (this.advance) clearTimeout(this.advance);
   },
 
   goNext() {

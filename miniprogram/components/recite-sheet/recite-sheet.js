@@ -100,6 +100,10 @@ Component({
     this.loaded = false;
   },
 
+  detached() {
+    if (this.advance) clearTimeout(this.advance);
+  },
+
   methods: {
 
     open(queue, id) {
@@ -252,7 +256,7 @@ Component({
 
       wx.vibrateShort({ type: "light" });
 
-      setTimeout(() => this.goNext(), 700);
+      this.advance = setTimeout(() => this.goNext(), 700);
     },
 
     goNext() {
