@@ -106,16 +106,21 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 两档的语义要分清：`COPY_SHREDS` **没定义** → 走默认；`COPY_SHREDS: "0"` → 显式关。
 写成空串（`""`）是第三档，别用 —— 那既不是「没定义」也不是「明确不要」。
 
-三件事一起改才算接上，缺一样都是**不报错地坏**：
+四件事一起改才算接上，缺一样都是**不报错地坏**：
 
 1. `deploy-api-serve/shard-api.js` —— 路由本体（名字白名单 + gzip 下发）
-2. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
+2. `deploy/Dockerfile` 里 `COPY --chown=node:node shard-api.js ./` —— 把它从
+   上下文根拷进 `/app`。**放行 ≠ 进镜像**：少了这条 COPY 时上下文里有它、
+   构建与部署都是绿的，容器起来才 `Cannot find module './shard-api.js'`
+   （Issue #134）。它是 `serve-api.js` 启动期 require 的，与 `store-mysql.js`
+   一样得有一条自己的 COPY —— 另两句 COPY 不会顺手把它带上。
+3. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
    以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）
-3. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src/**`
+4. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src/**`
    —— 白名单那一行少了，构建与部署照样绿，而容器起不来（Issue #115）。
-   `.cnb.yml` 的 build & push 现在会 grep 这两条放行，缺了当场退出
 
-`scripts/check.js` V53 逐条守着上面这三点 + 客户端那一半；
+`.cnb.yml` 的 build & push 在 build 前逐条断上面 2 / 3 / 4（缺了当场退出）；
+`scripts/check.js` V53 逐条守着上面四点 + 客户端那一半；
 `scripts/e2e-mysql.js` 也摊一遍上下文（它曾经因为少摊 `shard-api.js` 而炸过）。
 
 **为什么分片只摊 gzip 那份**：上下文里 5.6MB vs 25MB。容器发的就是这些字节，
