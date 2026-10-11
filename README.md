@@ -51,6 +51,11 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 `appid` 已换成正式号（`wx200a0c667fc67fcb`），上传体验版跟着 `main` 流水线走；
 `upload.js` 会把它与密钥仓库里的 `WX_APPID` 逐字比对，不一致直接拒绝上传。
 
+⚠️ **那一步是 `allow_failure: true`** —— 上传失败时**流水线照样是绿的**，得自己翻
+那一步的日志找 `✗✗✗`。碰见平台回 `20003 … appIdToAppuin failed`（Issue #133）：
+那**不是** IP 白名单的问题，是**上传密钥不是这个 appid 名下的** ——
+逐条排查见 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) § 八点五。
+
 ## 现在到什么程度了（别看成「可以提审了」）
 
 功能是齐的，**卡在后端**。老实分三档：

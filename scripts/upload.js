@@ -83,6 +83,39 @@ const project = new ci.Project({
   ignores: ["node_modules/**/*", "data/texts/**/*"]
 });
 
+/* 平台回的那几句话**不像它自己**：这里逐条翻成人话，并说清「谁能改」。
+   这条分岔不是为了好看 —— 现场 `cnb-hat-1k4k8oanv` 回的是
+       〘20003〙 checkIpInWhiteList Failed: "appIdToAppuin failed"
+   而按字面理解会去查「IP 白名单」、查 appid 拼错 —— 两条都不对症：
+   错在**那枚上传密钥不是这个 appid 名下的**（密钥换过、appid 换过、
+   或密钥下到了别的小程序），平台连 appid→企微号 的映射都建不起来，
+   白名单这关自然过不去。
+   翻译放在这儿（而不是只写进文档），是因为踩的人只看得见流水线日志。 */
+function explain(msg) {
+  const m = String(msg || "");
+  if (/appIdToAppuin/.test(m)) {
+    return "上传密钥与 appid 对不上号：公众平台查不到这个 appid。\n" +
+      "   大概率是【密钥不是这个 appid 名下的】—— 密钥换过 / appid 换过 /\n" +
+      "   密钥下到了别的小程序。它**不是** IP 白名单的问题，也不是 appid 拼错。\n" +
+      "   怎么修：见 docs/wx-cloud-setup.md § 八点五。要点是\n" +
+      "   ① appid（wx200a0c667fc67fcb）要在 mp.weixin.qq.com 的「成员管理 →\n" +
+      "      开发成员」里看得到（个人主体下拿不到就不是这枚）；\n" +
+      "   ② 密钥要在「开发管理 → 开发设置 → 小程序代码上传」现生成一枚；\n" +
+      "   ③ 两样一起换，换完重跑这条流水线。";
+  }
+  if (/checkIpInWhiteList/.test(m) && !/appIdToAppuin/.test(m)) {
+    return "上传密钥设了 IP 白名单，而构建机的出口 IP 不在名单里。\n" +
+      "   两条路任选：把白名单关掉（密钥那一栏留空），或把构建机出口 IP 加进去。";
+  }
+  if (/invalid ip|ip is not in/i.test(m)) {
+    return "出口 IP 没被密钥的白名单收下 —— 同上一类，去密钥那一栏放行或关掉白名单。";
+  }
+  if (/40001|invalid credential|invalid appid/i.test(m)) {
+    return "密钥无效或 appid 与它不配对 —— 回公众平台重新生成一枚代码上传密钥。";
+  }
+  return "";
+}
+
 ci
   .upload({
     project,
@@ -95,4 +128,8 @@ ci
     console.log("\\n✓ 已上传体验版 " + version + "：" + JSON.stringify(res && res.subPackageInfo || {}));
     console.log("  下一步去公众平台把它设为体验版，真机走一遍再提审。");
   })
-  .catch((err) => die("上传失败：" + (err && err.message)));
+  .catch((err) => {
+    const raw = (err && err.message) || "";
+    const hint = explain(raw);
+    die("上传失败：" + raw + (hint ? "\n\n  怎么读这句话：\n   " + hint : ""));
+  });

@@ -8084,6 +8084,60 @@ function gapped(items, max) {
     isOneBlock, "这一步的 script 结构变了 —— 混成 list 会被 CNB 用 `&&` 串崩");
 }
 
+/* ---------- V46c. 上传失败时那句话得是人话（Issue #133，2026-10-11） ----------
+ *
+ * 现场 `cnb-hat-1k4k8oanv`：那一步回的是
+ *     〘20003〙 checkIpInWhiteList Failed: "appIdToAppuin failed"
+ * 按字面去查「IP 白名单」与「appid 拼错」都不对症 —— 真因是**上传密钥不是这个
+ * appid 名下的**（平台连 appid→主体的映射都建不起来，白名单那关只是最后露出来
+ * 的那一层）。这一步又 `allow_failure: true`，红了流水线也是绿的：踩的人手里
+ * 只有那半句英文。
+ *
+ * 所以要求 `upload.js` 认这几个码，并把「怎么办」直接打出来。判据落在
+ * **代码**上（剥注释），不看文案 —— V46b 那儿踩过「注释里也有这几个字」。
+ */
+{
+  const src = fs.readFileSync(path.join(ROOT, "..", "scripts", "upload.js"), "utf8");
+  /* ⚠️ 这里**必须**先整块剥掉 `/* … *\/` 注释，再逐行剥 `//`。
+     第一版只按行处理（丢掉以 `/*` 开头的行、丢掉以 `*` 开头的行），
+     而块注释**中间那些行**既不以 `/*` 也不以 `*` 开头
+     （`   〘20003〙 checkIpInWhiteList … appIdToAppuin …` 就是一行），
+     于是注释里的码把判据喂饱了 —— 反向验过：把 `explain()` 整个删掉，
+     四条断言全绿。判据落在**代码**上这件事不能只是句注释。 */
+  const code = src
+    .replace(/\/\*[\s\S]*?\*\//g, "")        // 整块注释（含中间那些行）
+    .split("\n")
+    .map((l) => l.replace(/\s*\/\/.*$/, ""))    // 行尾注释
+    .filter((l) => l.trim())
+    .join("\n");
+  /* ⚠️ 判据不能搜整块源码：上面那段注释里正引着 `appIdToAppuin` 与
+     `checkIpInWhiteList` 两个词（讲为什么值得单开一节），整块搜的话，
+     把 explain() 整个删掉它照样绿 —— 反向验过。 */
+
+  /* ⚠️ 判据要落在**那个分支本身**（`if (/appIdToAppuin/.test(m)) {`），
+     不能只搜 `appIdToAppuin` 这个词：下面那条 `checkIpInWhiteList` 分支的
+     guard 里也写着 `!/appIdToAppuin/.test(m)` —— 只搜词的话，把识别这条
+     整个删掉、另一条还在，它照样绿（第一版就是这么写的，反向验过）。 */
+  ok("上传失败时会认出 `appIdToAppuin`（它不是 IP 白名单的问题，指错方向会白查半天）",
+    /if\s*\(\s*\/appIdToAppuin\/\.test\(m\)\s*\)/.test(code),
+    "`upload.js` 没认这个码 —— 现场只有那半句英文，人会去查 IP 白名单与 appid 拼写");
+
+  ok("这条提示说清了「密钥不是这个 appid 名下的」并指向文档",
+    /密钥/.test(code) && /wx-cloud-setup\.md/.test(code),
+    "提示没点名真因、也没给文档落点 —— 等于只是把英文抄了一遍");
+
+  ok("`checkIpInWhiteList` 的**另一**半（真·IP 白名单）也分开说",
+    /if\s*\(\s*\/checkIpInWhiteList\/\.test\(m\)\s*&&\s*!\/appIdToAppuin\//.test(code),
+    "两个 `checkIpInWhiteList Failed:` 混成一条 —— 看后半句才分得清是哪一种");
+
+  /* 反面：光「认得出」不够，得真把 hint 拼进 die 的那句话里。
+     这一条与 V46b 的「失败横幅里写的退出码是当场取的」是同一类错：
+     「函数在」不等于「函数被调用」。 */
+  ok("那个 hint 真的被拼进了失败信息（写在旁边不算）",
+    /const\s+hint\s*=\s*explain\(/.test(code) && /hint\s*\?/.test(code),
+    "explain() 认出来了，却没往 die() 的那句话里拼 —— 日志里还是只有原文");
+}
+
 /* ---------- V43. 部署件：云托管那份镜像（Issue #71） ----------
  *
  * 挡两类「绿着错」的事：① 往本仓库拷一份 poem 的 api/（改完 poem 忘了同步，
