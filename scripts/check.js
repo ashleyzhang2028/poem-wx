@@ -70,7 +70,9 @@ jsFiles.forEach((file) => {
 
     let resolved;
     if (/\.json$/.test(target) || /\.js$/.test(target)) resolved = base;
-    else resolved = fs.existsSync(base + ".js") ? base + ".js" : path.join(base, "index.js");
+
+    else if (fs.existsSync(base + ".js")) resolved = base + ".js";
+    else resolved = path.join(base, "index.js");
     ok("require 可解析 " + path.relative(ROOT, file) + " → " + target, fs.existsSync(resolved));
   }
 });
@@ -1030,7 +1032,7 @@ const GATED = {
 {
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
-  const adminLib = fs.readFileSync(path.join(ROOT, "utils/admin.js"), "utf8");
+  const adminLib = fs.readFileSync(path.join(ROOT, "packages/admin/index/lib.js"), "utf8");
 
   ok("管理页不写本机档位", adminJs.indexOf("store.KEYS.grant") < 0, "管理页还在直接写 grant");
   ok("管理页不写本机档位（wxml 也没有改档卡片）", adminWxml.indexOf("改本机层级") < 0);
@@ -1080,6 +1082,107 @@ const subs = {};
 
 ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0, JSON.stringify(subs.game));
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
+
+{
+  const subs2 = {};
+  (app.subPackages || []).forEach((sp) => {
+    subs2[sp.root] = sp.pages.map((p) => sp.root + "/" + p);
+  });
+
+  const MAIN_DIRS = [path.join(ROOT, "pages"), path.join(ROOT, "components"), path.join(ROOT, "custom-tab-bar")];
+  const inMainDir = (f) => MAIN_DIRS.some((d) => f.startsWith(d + path.sep));
+
+  const entryOf = (file) => {
+    if (inMainDir(file)) return "";
+    let hit = "";
+    Object.keys(subs2).forEach((root) => {
+      if (file.startsWith(path.join(ROOT, root) + path.sep)) hit = root;
+    });
+    return hit;
+  };
+
+  const resolveReq = (from, target) => {
+    const base = path.resolve(path.dirname(from), target);
+    if (/\.js$/.test(target)) return base;
+    if (/\.json$/.test(target)) return base;
+    if (fs.existsSync(base + ".js")) return base + ".js";
+    if (fs.existsSync(path.join(base, "index.js"))) return path.join(base, "index.js");
+    return base;
+  };
+
+  const roots = [path.join(ROOT, "app.js"), path.join(ROOT, "custom-tab-bar", "index.js")];
+  pages.forEach((p) => roots.push(path.join(ROOT, p + ".js")));
+  Object.keys(app.subPackages || {}).forEach(() => {});
+  (app.subPackages || []).forEach((sp) => {
+    sp.pages.forEach((p) => roots.push(path.join(ROOT, sp.root, p + ".js")));
+  });
+  const addComponents = (jsonPath) => {
+    if (!fs.existsSync(jsonPath)) return;
+    let cfg;
+    try { cfg = JSON.parse(fs.readFileSync(jsonPath, "utf8")); } catch (e) { return; }
+    Object.keys(cfg.usingComponents || {}).forEach((key) => {
+      const rel = String(cfg.usingComponents[key]).replace(/^\//, "");
+      roots.push(path.join(ROOT, rel + ".js"));
+    });
+  };
+  addComponents(path.join(ROOT, "app.json"));
+  pages.forEach((p) => addComponents(path.join(ROOT, p + ".json")));
+  (app.subPackages || []).forEach((sp) => {
+    sp.pages.forEach((p) => addComponents(path.join(ROOT, sp.root, p + ".json")));
+  });
+
+  const canUse = {};
+  jsFiles.forEach((f) => {
+    if (f.startsWith(path.join(ROOT, "data") + path.sep)) return;
+    canUse[f] = true;
+  });
+
+  const reachable = {};
+  const stack = [];
+  roots.forEach((f) => {
+    if (!canUse[f] || reachable[f]) return;
+    reachable[f] = true;
+    stack.push(f);
+  });
+
+  const leaked = [];
+  while (stack.length) {
+    const file = stack.pop();
+    const src = fs.readFileSync(file, "utf8");
+    const re = /require\(["']([^"']+)["']\)/g;
+    let m;
+    while ((m = re.exec(src))) {
+      if (m[1].charAt(0) !== ".") continue;
+      const dep = resolveReq(file, m[1]);
+      const to = entryOf(dep);
+      if (to && to !== entryOf(file)) {
+        leaked.push(path.relative(ROOT, file) + " → " + path.relative(ROOT, dep));
+      }
+      if (!canUse[dep] || reachable[dep]) continue;
+      reachable[dep] = true;
+      stack.push(dep);
+    }
+  }
+
+  ok("没有跨包 require（分包模块不许被别的包引用）", leaked.length === 0, leaked.join("；"));
+
+  const LAZY = [
+    path.join(ROOT, "utils", "font.js"),
+    path.join(ROOT, "utils", "speech.js")
+  ];
+  const orphans = jsFiles
+    .filter((f) => !reachable[f] && LAZY.indexOf(f) < 0)
+    .map((f) => path.relative(ROOT, f))
+    .sort();
+  ok("每个 .js 都被入口链引用到（不留没人 require 的孤儿）",
+    orphans.length === 0, orphans.join(", "));
+
+  ok("utils/ 里不再有只有分包用的模块",
+    !fs.existsSync(path.join(ROOT, "utils", "quiz.js"))
+      && !fs.existsSync(path.join(ROOT, "utils", "admin.js"))
+      && !fs.existsSync(path.join(ROOT, "utils", "feihua")),
+    "题库 / 管理 / 飞花令的内核还在主包 utils/ 下");
+}
 
 ok("管理页只有一份实现", (subs.settings || []).indexOf("admin/admin") < 0, "settings 下还留着 admin 页");
 ok("设置分包含阅读设置", (subs.settings || []).indexOf("reader/reader") >= 0);
@@ -1339,7 +1442,7 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
 }
 
 {
-  const feihua = require(path.join(ROOT, "utils", "feihua", "index.js"));
+  const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
   const all = feihua.pool();
   ok("令字池非空", Object.keys(all).length > 500, "只有 " + Object.keys(all).length + " 个令字");
 
@@ -1348,12 +1451,12 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
   ok("令字格上的数字 = 点进去的行数", mismatch.length === 0,
     mismatch.slice(0, 6).map((ch) => ch + " " + all[ch].count + "≠" + feihua.look(ch, { limit: 99999 }).length).join("; "));
 
-  const feihuaJs = fs.readFileSync(path.join(ROOT, "utils", "feihua", "index.js"), "utf8");
+  const feihuaJs = fs.readFileSync(path.join(ROOT, "packages", "game", "feihua", "lib.js"), "utf8");
   ok("飞花令不再自己写一份断句标点", feihuaJs.indexOf("const SPLIT") < 0);
   ok("飞花令断句走 corpus.splitLines", feihuaJs.indexOf("corpus.splitLines") >= 0);
 
   ["easy", "normal", "hard"].forEach((lv) => {
-    ok("令字档 " + lv + " 取得到", feihua.chars(lv, 24).length === 24);
+    ok("令字档 " + lv + " 取得到", feihua.charsOf(lv, 24).length === 24);
   });
 
   const heTian = all["田"];
@@ -1365,7 +1468,7 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
 }
 
 {
-  const feihua = require(path.join(ROOT, "utils", "feihua", "index.js"));
+  const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
 
   const scope = { scope: "primary", grade: 1, term: 1 };
   const inScope = {};
@@ -3353,7 +3456,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         /pickOf\s*\?\s*pickOf\(it\)/.test(shotSrc));
     }
 
-    const forms = /const FORMS = \[([\s\S]*?)\];/.exec(read("utils/quiz.js"));
+    const forms = /const FORMS = \[([\s\S]*?)\];/.exec(read("packages/game/quiz/lib.js"));
     const names = forms ? [...forms[1].matchAll(/name:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
     ok("五个题型名都是两个字（下句 / 上句 / 作者 / 朝代 / 篇名）",
       names.length === 5 && names.every((n) => n.length === 2), names.join(" / "));
@@ -3774,7 +3877,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const quizSrc = read("utils/quiz.js");
+  const quizSrc = read("packages/game/quiz/lib.js");
   const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/<\!--[\s\S]*?-->/g, "");
 
   const formsBlock = /const FORMS = \[([\s\S]*?)\];/.exec(quizSrc);
@@ -3802,13 +3905,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     examWxml.indexOf("current.form !== 'dynasty'") < 0
       && quizWxml.indexOf("current.form !== 'dynasty'") < 0);
 
-  const lettered = /function lettered\([\s\S]*?\n\}/.exec(quizSrc);
+  const lettered = /function _quiz_lettered\([\s\S]*?\n\}/.exec(quizSrc);
   ok("选项字母在数据层生成（lettered 函数在）", !!lettered);
   ok("四个字母取自 ABCD，且与顺序绑在一起",
     !!lettered && /"ABCD"\[i\]/.test(lettered[0]));
 
-  const optionSites = (quizSrc.match(/options:\s*lettered\(/g) || []).length
-    + (quizSrc.match(/options:\s*lettered\(shuffle/g) || []).length;
+  const optionSites = (quizSrc.match(/options:\s*_quiz_lettered\(/g) || []).length
+    + (quizSrc.match(/options:\s*_quiz_lettered\(_quiz_shuffle/g) || []).length;
   ok("五个题型的 options 都套了 lettered（一处都不许漏）",
     (quizSrc.match(/lettered\(/g) || []).length >= 6,
     "出现 " + (quizSrc.match(/lettered\(/g) || []).length + " 次（1 处定义 + 5 处调用）");
@@ -4388,7 +4491,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const quizSrc = read("utils/quiz.js");
+  const quizSrc = read("packages/game/quiz/lib.js");
   const stripped = quizSrc.replace(/\/\*[\s\S]*?\*\//g, "");
 
   const cap = /const MAX_LINE = (\d+);/.exec(stripped);
@@ -4406,7 +4509,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const splits = (stripped.match(/\.split\("\\n"\)/g) || []).length;
   ok("按 \\n 取句只有一处（linesOf 收口）", splits === 1, "读到 " + splits + " 处");
 
-  const quizMod = require(path.join(ROOT, "utils", "quiz.js"));
+  const quizMod = require(path.join(ROOT, "packages/game/quiz/lib.js"));
   const course = JSON.parse(read("data/course.json"));
   const courseIds = Object.keys(course);
 

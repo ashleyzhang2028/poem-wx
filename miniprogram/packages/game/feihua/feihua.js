@@ -1,4 +1,4 @@
-const feihua = require("../../../utils/feihua/index");
+const feihua = require("./lib");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");

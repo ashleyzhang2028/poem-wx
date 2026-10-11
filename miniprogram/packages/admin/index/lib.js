@@ -1,22 +1,22 @@
-const store = require("./store");
-const tiers = require("./tiers");
-const entitlement = require("./entitlement");
-const remote = require("./remote");
-const auth = require("./auth");
+const store = require("../../../utils/store");
+const tiers = require("../../../utils/tiers");
+const entitlement = require("../../../utils/entitlement");
+const remote = require("../../../utils/remote");
+const auth = require("../../../utils/auth");
 
 let rosterCache = null;
 
 function roster() {
   if (rosterCache) return rosterCache;
   try {
-    rosterCache = require("../data/roster.json");
+    rosterCache = require("../../../data/roster.json");
   } catch (e) {
     rosterCache = { users: [], note: "名册未生成" };
   }
   return rosterCache;
 }
 
-function rosterUsers() {
+function _rosterUsers() {
   return (roster().users || []).map((u) => {
     const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
     return {
@@ -33,7 +33,7 @@ function rosterUsers() {
   });
 }
 
-function localUsers() {
+function _localUsers() {
   const profile = store.profile();
   const s = entitlement.status();
   return [
@@ -66,7 +66,7 @@ function list() {
   if (!remote.adminReady()) {
 
     return Promise.resolve({
-      users: merge(rosterUsers(), localUsers(), []),
+      users: _merge(_rosterUsers(), _localUsers(), []),
       sim: true,
       note: roster().note || "服务器未接上，名录只读"
     });
@@ -75,20 +75,20 @@ function list() {
   return remote
     .listUsers()
     .then((res) => ({
-      users: merge(rosterUsers(), localUsers(), normalizeRemote(res.users)),
+      users: _merge(_rosterUsers(), _localUsers(), _normalizeRemote(res.users)),
       sim: false,
       note: res.note || "",
       total: res.total
     }))
     .catch((err) => ({
-      users: merge(rosterUsers(), localUsers(), []),
+      users: _merge(_rosterUsers(), _localUsers(), []),
       sim: true,
       error: err.message,
       note: "读取名录失败：" + err.message
     }));
 }
 
-function normalizeRemote(rows) {
+function _normalizeRemote(rows) {
   return (rows || []).map((u) => {
     const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
     return {
@@ -106,7 +106,7 @@ function normalizeRemote(rows) {
   });
 }
 
-function merge(a, b, c) {
+function _merge(a, b, c) {
   const byId = {};
   [a, b, c].forEach((rows) => {
     (rows || []).forEach((u) => {
@@ -186,7 +186,5 @@ module.exports = {
   stats,
   canWrite,
   canSetRole,
-  roster,
-  localUsers,
-  rosterUsers
+  roster
 };
