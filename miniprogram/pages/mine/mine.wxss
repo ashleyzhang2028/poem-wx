@@ -2,27 +2,15 @@
   padding: var(--sp-4);
 }
 
-/* 首屏那张身份卡：它是这一屏的第一眼，但它**不靠颜色**说这句话 ——
-   靠的是它下面那块留白（.login-row / .profile-row 的 margin-top）。
-   上一版给这张卡加了一层主色渐变 + 一圈主色描边，那是「用颜色说重要」；
-   一块白卡夹在两段留白里，一样是第一眼，而且不必抢后面的颜色。 */
 .account-lead {
   background: var(--surface);
 }
 
-/* ---------- 身份行 ---------- */
 .identity {
   display: flex;
   align-items: center;
 }
 
-/* 头像那一圈**定尺寸的壳**。
-   chooseAvatar 必须挂在原生 button 上，而原生 button 自带 display:block + width:100%，
-   真机上盖过页面样式表给的 width —— 所以尺寸定在壳上，不在按钮上。
-
-   ⚠️ 壳还要是 `position:relative`：里面那两样（原生 button 与头像本身）
-   一律 `position:absolute` 贴满它。**不许再走 `height:100%` 那条链** ——
-   见下面 .avatar 那一段的长注，真机上它会在原生 button 那一环断掉。 */
 .avatar-wrap {
   position: relative;
   width: 112rpx;
@@ -33,7 +21,6 @@
   box-shadow: 0 0 0 2rpx var(--line);
 }
 
-/* 按钮只负责「铺满壳、且能点」，它自己不参与定尺寸。 */
 .avatar-btn {
   position: absolute;
   top: 0;
@@ -52,16 +39,6 @@
   border: none;
 }
 
-/* 头像本体。
-   ⚠️ 尺寸写**字面量**，不写 `100%` —— 用户 2026-10-04 报的「合并 #122 之后
-   头像又变成椭圆、只看得见左侧一点」就是这里：上一版给 `.avatar` 写的
-   `height:100%`，真机上这条**在原生 button 那一环解析不出来**
-   （width:100% 生效了 —— 所以宽度正好；height:100% 没生效），
-   于是 `<image>` 回落到按自己那张图的**固有比例**排高度：一张横构图
-   头像就排成 164×约 124 的横条，再套 `border-radius:50%`，
-   就是一枚又扁又长的椭圆；`aspectFill` 又从这条横条里取中段，
-   看着就是「只显示了左侧一点」。
-   绝对定位 + 字面量尺寸不给它任何回落到固有比例的机会。 */
 .avatar {
   position: absolute;
   top: 0;
@@ -72,8 +49,6 @@
   background: var(--sink);
 }
 
-/* 没有头像时：一枚浅灰圆底 + 一个字。
-   参考图里的头像底就是一整块浅灰 —— 它不强调「缺图」，只是先占住位置 */
 .avatar-fallback {
   display: flex;
   align-items: center;
@@ -97,10 +72,6 @@
   letter-spacing: var(--ls-title);
 }
 
-/* 名字就地可改。**不给输入框画底线 / 灰底** —— 它顶着的是「我是谁」那一行，
-   加一枚框会把身份卡画成一张表单。字与 .identity-name 同一副长相，
-   只是多了一道很淡的虚线下划线：它是「这里能点」的唯一提示，
-   也是这一行与下面「已登录」之间的分界。 */
 .identity-input {
   display: block;
   width: 100%;
@@ -115,15 +86,11 @@
   border-radius: 0;
 }
 
-/* 空昵称时那句 placeholder 不装成名字：它说的是一件待办，不是身份 */
 .identity-ph {
   color: var(--ink-3);
   font-weight: 400;
 }
 
-/* 副题那一行：「我是谁 + 这张头像哪来的」，右边可能挂一个退回微信头像的动作。
-   头像行撤掉之后（用户 2026-10-04），换头像只走「点头像」一条路，
-   但「从自己那张退回微信那张」得留在屏上 —— 它是一句附注，不是一行操作。 */
 .identity-sub-row {
   display: flex;
   align-items: baseline;
@@ -136,9 +103,6 @@
   color: var(--ink-3);
 }
 
-/* 档位芯片挂在头像行右端：这是「我是谁」的一部分，
-   放在下面的表格里要滚一屏才看得到。
-   长相照参考图右上那枚编号（WFA381）：白底、一道细边、一颗胶囊。 */
 .tier-chip {
   flex: none;
   font-size: var(--fs-caption);
@@ -158,9 +122,6 @@
   color: var(--red);
 }
 
-/* 退出登录：一档最轻的按钮，满宽但不着色。
-   头像行撤掉之后（用户 2026-10-04），它上面就是身份那两行 ——
-   留白给到 sp-4，别让「退出登录」贴着「已登录」 */
 .logout {
   display: flex;
   width: 100%;
@@ -168,12 +129,10 @@
   margin-top: var(--sp-4);
 }
 
-/* 清空数据那行：图标底也跟着变淡，别让它看着像个普通入口 */
 .row-icon.danger {
   color: var(--red);
 }
 
-/* 能力一览：名称左、状态右，一眼看完差什么 */
 .cap-row {
   display: flex;
   align-items: center;

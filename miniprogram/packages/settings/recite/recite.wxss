@@ -1,13 +1,8 @@
-/* 年级那一行的读数（「小学（1—6 年级）」）。
-   它是**读数**，不是第二个控件 —— 所以用 .hint 那一档，不描边，
-   只在学段三格与年级格子之间站一句话，把「格子为什么只剩这几格」说出来。 */
 .stage-note {
   display: block;
   margin-top: var(--sp-2);
 }
 
-/* 背诵范围下面那句话：报一下这个范围里有多少首，
-   不然选完不知道「随机」到底随机自哪个池子 */
 .pool-hint {
   display: block;
   margin-top: var(--sp-3);
@@ -15,10 +10,6 @@
   border-top: 1rpx dashed var(--line-2);
 }
 
-/* ---------- 今日加背的管理 ----------
-   首页那张卡负责**加**，这里负责**看与清**。两处的列表长相不同是刻意的：
-   首页那张是「搜索结果」（要跳详情、要能加），这里的是「我已经加过的」
-   （要勾、要一起移出），动作不一样。 */
 .daily-count {
   display: block;
   margin-bottom: var(--sp-2);
@@ -31,8 +22,6 @@
   margin-bottom: var(--sp-3);
 }
 
-/* 一行一首。行首那枚方框是勾选的样子，底层是原生 checkbox（视觉隐藏）——
-   与全站「选一个 / 选几个」同一套：行为走平台，脸走我们这层。 */
 .daily-row {
   display: flex;
   align-items: center;
@@ -59,10 +48,6 @@
   justify-content: center;
 }
 
-/* 选中填主题色。与首页那颗圆钮是同一句话（「这一首在里面」），
-   只是这里说的是「这一首被勾上了」—— 两者都用填色，不另发明记号。
-   判据走 .on 类而不是 :has(checkbox[checked]) —— 小程序对 :has() 支持
-   不稳，而「选了没选」这件事不值得赌一个选择器。 */
 .daily-box.on {
   background: var(--strong);
   border-color: var(--strong);
@@ -73,7 +58,6 @@
   line-height: 1;
 }
 
-/* 未登录时算法卡置灰：看得出来是「登录才能用」，而不是坏了 */
 .algo.locked {
   opacity: .55;
 }

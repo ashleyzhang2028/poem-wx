@@ -10,8 +10,6 @@
     <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
   </view>
 
-  <!-- 结果统计：命中几条、在哪儿搜的。截断了直说 ——
-       「只给你 80 条」不能写成「全站只有 80 条」 -->
   <view class="result-bar" wx:if="{{searched && results.length}}">
     <view class="result-head">
       <text class="result-count">命中 {{total}} 篇</text>
@@ -48,12 +46,6 @@
 
   </view>
 
-  <!-- 作者索引：搜索之外的另一条路。网页版第二轮用户点名「从搜索页进，
-       不是从课外阅读集子页进」—— 这边同一处。它是**第二层入口**，
-       所以排在热搜词下面，不跟搜索框抢位置。
-
-       一行一行尾带箭头：它进的是另一个页面（不是就地展开），
-       所以长相取列表行，不取胶囊 —— 胶囊是「就地选一个」的东西。 -->
   <view class="card author-entry">
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAuthors">
       <view class="row-main">

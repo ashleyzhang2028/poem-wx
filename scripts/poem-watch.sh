@@ -1,24 +1,4 @@
 #!/usr/bin/env bash
-# 跟一次上游：poem 的 main 头 vs poem.lock.json 里钉的那一版。
-#
-# 这是**定时任务**跑的那一步（.cnb.yml 的 poem-watch），不是发布链上的一步 ——
-# 发布链用锁定版，上游动了**不许**影响任何人的发布。口径见 docs/data-backend.md § 四。
-#
-# 四种出口，各自都有明确的意思：
-#
-#   same      上游没动。退出 0，什么都不做。
-#   ahead     上游动了，且**我们的自检在那一版上也是绿的** → 开 PR，只改 poem.lock.json。
-#   broke     上游动了，但自检在那一版上**红** → 不合并、不改锁，把自检那几句话开成 Issue 评论。
-#             （这才是「上游改数据集把我们绊住」那条痛点的正面处理：它变成一条待办，
-#               不再拦别人的发布。）
-#   unknown   拿不到上游的头（网络 / 权限）。退出 0 但要出声 —— 「没跟成」不是「跟过了」。
-#
-# 依赖：git、node（build-data/check 与发布链同一条）、cnb（CNB 容器里现成有）。
-# 环境变量（都在 CNB 里现成有）：
-#   CNB_ROOT_SLUG   上游所属 slug（缺省 npu-gpu-cpu）
-#   CNB_REPO_SLUG   本仓库（开 PR / 留评论要它）
-#   POEM_WATCH_ISSUE  红的时候把结论留在哪个 Issue（缺省 111，就是这份口径的出处）
-#   WATCH_DRY=1     只判断、不开 PR、不写文件（本机干跑用）
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,8 +6,6 @@ DRY="${WATCH_DRY:-0}"
 REPO_SLUG="${CNB_REPO_SLUG:-}"
 ISSUE_NO="${POEM_WATCH_ISSUE:-111}"
 
-# 把一段话贴到 Issue 上。没有 cnb / 没有 slug 时**出声跳过** ——
-# 「没贴上去」和「贴过了」是两件事，静默跳过会让下一个人以为上游没人跟。
 post_issue_comment() {
   body="$1"
   if [ -z "$REPO_SLUG" ]; then
@@ -44,9 +22,6 @@ post_issue_comment() {
     || echo "✗ 贴到 Issue 失败（令牌范围不够？）—— 结论在上面的输出里"
 }
 
-# 开一个只动 poem.lock.json 的 PR。
-# ⚠️ 分支名带 sha，同一个上游版本重复跑不会互相撞车；已经存在的分支会被
-#    `git push` 拒掉，这里换个名字再推一次（`-<epoch>` 后缀）。
 open_lock_pr() {
   body="$1"
   [ "$DRY" = "1" ] && { echo "（WATCH_DRY=1：不开 PR）报告在 $body"; return 0; }
@@ -80,8 +55,6 @@ trap 'rm -rf "$TMP"' EXIT
 have_lock="$(bash "$ROOT/scripts/poem-lock.sh" --ref)"
 echo "锁：${have_lock:-（无）}"
 
-# 上游的头。带令牌试一次、不成就不带凭据再来（同 clone-poem.sh 那条道理：
-# 带着一个不被接受的凭据，连匿名可读的仓库也会被拒）。两次都拿不到就 unknown。
 head_sha=""
 if upstream_out="$(git ls-remote "https://${CNB_TOKEN:-x}@cnb.cool/${SLUG}/poem.git" refs/heads/main 2>/dev/null)" \
    && [ -n "$upstream_out" ]; then
@@ -108,14 +81,12 @@ fi
 echo "ahead？上游动了：$(echo "$have_lock" | cut -c1-8) → $(echo "$head_sha" | cut -c1-8)"
 echo "用上游这一版跑一次语料 + 自检，看锁能不能安全前进……"
 
-# 拿上游那一版：整棵 clone 到临时目录（别动工作区 —— 这一步可能会红）
 mkdir -p "$TMP"
 POEM_REF="$head_sha" bash "$ROOT/scripts/clone-poem.sh" "$TMP/poem" || {
   echo "unknown：上游那一版取不下来，这一轮没跟成。"
   exit 0
 }
 
-# 在**临时工作区**里跑，不污染当前工作区：语料是构建产物，红的时候要能干净地丢掉
 mkdir -p "$TMP/work"
 ( cd "$ROOT" && git archive HEAD ) | tar -x -C "$TMP/work"
 ( cd "$TMP/work" && ln -s "$TMP/poem" poem ) 2>/dev/null || true

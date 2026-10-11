@@ -2,13 +2,6 @@
   padding-top: var(--sp-1);
 }
 
-/* ---------- 首屏那张卡 ----------
-   一屏一件事：上面一行日期，中间一个大标题，下面三个大数字，
-   最后是这一屏唯一的一颗墨黑按钮。
-
-   上一版这张卡是一道金色微光渐变 + 一枚缃色光晕 + 一个进度环 ——
-   三样东西都在说「我很重要」，谁也没说清「今天背几首」。
-   这一版把「重要」交给三件事：留白、字号差、唯一性。 */
 .hero {
   padding: var(--sp-5) var(--sp-4) var(--sp-4);
 }
@@ -25,7 +18,6 @@
   padding-right: var(--sp-2);
 }
 
-/* 小字在上、大字在下 —— 参考图里「9:41 / 我的 / 当前积分余额」就是这个次第 */
 .hero-eyebrow {
   display: block;
   font-size: var(--fs-caption);
@@ -51,15 +43,10 @@
   margin-top: var(--sp-2);
 }
 
-/* 三个大数字之间留得很松 —— 它是这一屏唯一的「大」，
-   抠着留白就白做了 */
 .hero-stats {
   margin-top: var(--sp-4);
 }
 
-/* 细进度条 + 右边一行读数。
-   **零进度时整块不渲染**（见 wxml 那里的由来）—— 所以这一块不需要
-   一个「空槽」的样子，它出现的时候一定已经有进度。 */
 .hero-meter {
   display: flex;
   align-items: center;
@@ -83,8 +70,6 @@
   margin-top: var(--sp-4);
 }
 
-/* 未登录那张卡的印章：一枚墨黑圆标。
-   上一版是朱砂方印旋转 4 度 —— 那是网页版的语言，不是参考图的。 */
 .seal {
   flex: none;
   width: 112rpx;
@@ -102,13 +87,10 @@
   color: var(--on-ink);
 }
 
-/* ---------- 进度环（复习设置等处仍用）---------- */
 .ring-hover {
   opacity: .82;
 }
 
-/* ---------- 今日安排 ---------- */
-/* 每行前面留一道状态槽：序号与勾共用一格，行首就对齐了 */
 .plan-row {
   display: flex;
   align-items: center;
@@ -123,8 +105,6 @@
   border-bottom: none;
 }
 
-/* 序号：等宽字 + 固定槽。序号是「第几首」，它旁边是会换行的标题，
-   所以它必须是那条不动的竖线 —— 位数变了也占同一格 */
 .seq {
   width: 52rpx;
   flex: none;
@@ -145,22 +125,11 @@
 
 .row-line .row-title {
   flex: 0 1 auto;
-  /* min-width: 0 是这一行能不能**真的**省略号的开关。
-     标题是 white-space: nowrap，flex 项在 `min-width: auto` 下的自动最小
-     尺寸等于它的 min-content —— 对不换行的文字就是整句的宽度。
-     于是标题根本缩不动，压力全落到右边那枚 .tag 上：tag 被压窄、
-     「新学」折成两行（实测 23px → 42px），整行跟着长高。
-     min-width: 0 把这道地板撤掉，标题才轮到 text-overflow 出手。 */
+
   min-width: 0;
   margin-right: 12rpx;
 }
 
-/* 行尾状态：两个字，不是一枚圆圈。
-   上一版是一个空圆圈，背过的填墨黑 —— 用户问「右边的那些圆圈是做什么用的？
-   需要吗」，这句话本身就是答案：**它什么都没说**。
-   一枚形状要靠猜（圆=没背？可点？），而这一列本来就有一个「序号」、
-   一枚「新学 / 复习」标签在说事，第三枚形状只会再加一次猜谜。
-   改成字：「已背」加重，「未背」推远 —— 不用猜，也不用点。 */
 .row-state {
   flex: none;
   margin-left: var(--sp-2);
@@ -175,7 +144,6 @@
   font-weight: 600;
 }
 
-/* ---------- 未登录那张目录 ---------- */
 .toc-head {
   display: flex;
   align-items: center;
@@ -201,13 +169,6 @@
   border-bottom: none;
 }
 
-/* ---------- 行尾槽 ----------
-   一行最后那一格。未登录时放「登录」胶囊，登录后放完成勾 ——
-   两者一个宽一个窄，**但槽本身的宽度是固定的**。
-
-   不固定会怎样：未登录的胶囊比勾宽一圈，于是标题栏被挤窄一截，
-   同一份目录在两态下右端参差，一登录整列字都往右挪了位。
-   宽度按宽的那个（「登录」胶囊）取，两种状态共用。 */
 .row-end {
   flex: none;
   width: 112rpx;
@@ -216,8 +177,6 @@
   justify-content: flex-end;
 }
 
-/* 未登录时的行尾：写「登录」而不是一把小锁图标 ——
-   图标要人猜，字不用 */
 .row-lock {
   flex: none;
   font-size: var(--fs-caption);
@@ -231,9 +190,6 @@
   margin-top: var(--sp-3);
 }
 
-/* 游客态的提示条：说明当前为什么点不动，顺带就是登录入口。
-   整条都可点（bindtap=onLogin），所以按下时整块退一档 ——
-   见 .guest-bar-hover。 */
 .guest-bar {
   display: flex;
   flex-direction: column;

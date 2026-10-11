@@ -119,10 +119,7 @@ function layout(text) {
 
 const BOOKS_DIR = "data/books/";
 const COURSE = "data/course.json";
-/* 分片清单（id → 片名）：**在主包里**（`data/shards.json`，约 137KB）。
-   ⚠️ 它**不能**放进 `data/texts/` —— 那个目录整块被 `packOptions.ignore` 排掉
-   （正文 24MB 不能进包），清单一进去真机上就没了，`bucketOf()` 一律回空，
-   课外 5604 首连「该取哪一片」都算不出来，点开只会说取不到正文。 */
+
 const MANIFEST = "data/shards.json";
 
 let booksCache = null;
@@ -131,29 +128,17 @@ let manifestCache = null;
 const bookCache = {};
 const bucketCache = {};
 
-/* 语料是构建产物，不进仓库（见 .gitignore 的 miniprogram/data/）。
-   第一次在开发者工具里打开、又没跑过 `npm run build:data` 时，data/ 整个目录不存在，
-   于是 require 抛的是 node 那句 `Cannot find module '../data/books/books.json'`
-   （小程序运行时更绕：「module 'data/books/books.json.js' is not defined」）——
-   看着像断链，其实是**少跑了一步构建**。
-
-   这里把它翻译成人话：数据没生成就当作空语料，页面渲染空态而不是白屏。
-   判据只认「目录在不在」，不吞别的错误 —— 数据生成了却读到坏文件，那还是要炸出来。 */
 let dataReady = null;
 
 function hasData() {
   if (dataReady === null) {
     try {
 
-      /* 同步探测：data/ 目录本身就是判据。
-         用 require 探一次 books.json 也行，但小程序的 require 报错信息不可读，
-         而这里只需要一个布尔。 */
       const fs = require("fs");
       const path = require("path");
       dataReady = fs.existsSync(path.join(__dirname, "..", "data"));
     } catch (e) {
 
-      /* 小程序里没有 fs —— 那就退回到「试着 require 一次」 */
       try {
         require("../" + BOOKS_DIR + "books.json");
         dataReady = true;
@@ -174,15 +159,12 @@ function loadJson(rel) {
     );
     err.code = "E_NO_DATA";
 
-    /* 标记成可预期的一类，调用方据此走空态，不当成崩溃 */
     err.expected = true;
     throw err;
   }
   return require("../" + rel);
 }
 
-/* 读语料统一从这儿过：数据没生成就回默认值，让页面渲染空态。
-   真生成的语料读坏了（结构不对）不在此列，照旧抛。 */
 function readJson(rel, fallback) {
   try {
     return loadJson(rel);
@@ -233,18 +215,11 @@ function bucketOf(id) {
   return (manifest().map || {})[id] || "";
 }
 
-/* 分片不是「包内文件」那一类：它先从本机取（跑过 build:data 的开发者工具里有），
-   取不到再走云端那条分片路由（Issue #121 方案 A —— 容器下发，**不用备案**）。
-
-   同步的 bucket() 只答「本机有没有」—— 它是被 entry() 之类同步调用的，
-   没网络就如实答「没有」；异步那条在 ensureBucket() 里。 */
 function bucket(name) {
   if (!bucketCache[name]) bucketCache[name] = readJson("data/texts/" + name + ".json", {});
   return bucketCache[name];
 }
 
-/* 拉过的分片记在本机存储里，第二次不再请求 —— 与 store.KEYS 的用法一致，
-   但**只放分片**：它可有可无，清掉也不影响进度。 */
 const SHARD_CACHE_KEY = "shards";
 const SHARD_CACHE_MAX = 40;
 
@@ -257,8 +232,7 @@ function saveShard(name, payload) {
   const store = require("./store");
   const all = shardCache();
   const keys = Object.keys(all);
-  /* 满了就丢最早写进来的那份（记着 at）—— 40 片约 8MB 原文，
-     够覆盖「最近在背的那几部集子」，再多就不该占用户手机了。 */
+
   if (keys.length >= SHARD_CACHE_MAX) {
     keys.sort((a, b) => (all[a].at || 0) - (all[b].at || 0));
     keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
@@ -267,12 +241,6 @@ function saveShard(name, payload) {
   store.write(SHARD_CACHE_KEY, all);
 }
 
-/**
- * 异步取一片：本机 → 云端。
- *
- * 返回 `{ data, from }`，`from` 是 `local` / `remote` 之一；两边都没有就
- * reject 一个带 `code` 的错 —— 调用方据此**如实说没就绪**，不许伪装成空语料。
- */
 function ensureBucket(name) {
   if (!name) return Promise.reject(shardError("E_NO_BUCKET", "没有这一片的名字"));
   const local = bucket(name);
@@ -296,7 +264,6 @@ function ensureBucket(name) {
   });
 }
 
-/** 异步取一条正文：课内 → 本机分片 → 云端分片。 */
 function ensureEntry(id) {
   const inPack = courseTexts()[id];
   if (inPack) return Promise.resolve(inPack);

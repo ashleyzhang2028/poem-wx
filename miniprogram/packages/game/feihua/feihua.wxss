@@ -1,12 +1,7 @@
-/* 飞花令：一屏一题。
-   主角是那个令字 —— 大字、居中、独一份。别的都是配角，
-   字号依次低下去，别跟它抢。 */
-
 .fh-stage {
   text-align: center;
 }
 
-/* 范围 · 第 N 题：一行读数，压到最低一档 */
 .fh-scope {
   display: block;
   font-size: var(--fs-caption);
@@ -14,8 +9,6 @@
   letter-spacing: var(--ls-caption);
 }
 
-/* 令字：**居中一个大字**。上下留白给它，别让输入框贴上来。
-   字用宋体（--font-poem），与正文一个长相 —— 这是诗的字，不是 UI 的字。 */
 .fh-char {
   display: flex;
   align-items: center;
@@ -37,7 +30,6 @@
   margin-bottom: var(--sp-2);
 }
 
-/* 输入框：占满一行。.field 的底色与圆角在 app.wxss 里定一次，这里不重复 */
 .fh-field {
   margin: var(--sp-2) 0 var(--sp-3);
 }
@@ -51,7 +43,6 @@
   flex: 1;
 }
 
-/* 判语：对绿错红，就一句话 */
 .fh-msg {
   display: block;
   font-size: var(--fs-body);
@@ -74,7 +65,6 @@
   padding-top: var(--sp-2);
 }
 
-/* 答案清单 / 这一轮答对的：一行一句，诗 + 出处 */
 .fh-line {
   padding: 22rpx 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -99,7 +89,6 @@
   margin-top: 8rpx;
 }
 
-/* 「看答案」：卡片底部那颗按钮，与上面的清单之间隔一道留白 */
 .fh-reveal {
   margin-top: var(--sp-3);
 }

@@ -1,5 +1,5 @@
 <view class="page" style="{{themeStyle}}">
-  <!-- 未登录：没有什么可管的，说清楚就行 -->
+
   <lock-card wx:if="{{!logged}}" title="权限要登录" note="登录后才能看" mark="权" />
 
   <block wx:else>
@@ -10,13 +10,9 @@
   <view class="card grant">
     <view class="card-title bar">我的授权</view>
     <view class="grant-head">
-      <!-- 档名下面原来还有一行来源（管理员发放 / 授权码兑换 / 默认档位）：
-           2026-10-04 拆自那句「全能（服务端） 所有者」，2026-10-05 又追了一句
-           「有服务端发放删除……只保留 Free, Pro 或者 Max」。用户要的那条线很清楚 ——
-           这一栏只留档名。所以来源整格撤掉，不是换句措辞：留一行「管理员发放」
-           在档名底下，它回答的仍是「谁给你的」，而站在这一页的人本来就是来管这件事的。 -->
+
       <text class="grant-tier-name">{{status.label}}</text>
-      <!-- 能力覆盖做成一条进度：17 项里开了几项，比「13 / 17」更直观 -->
+
       <view class="grant-meter">
         <view class="meter">
           <view class="meter-fill" style="width:{{stats.percent}}%"></view>
@@ -51,8 +47,7 @@
         <text class="acct-name">{{item.label}}</text>
         <text class="acct-sub">{{item.tierLabel ? item.tierLabel : '未分级'}}</text>
       </view>
-      <!-- 改档 / 改角色：只给原生按钮，选值交给原生 showActionSheet。
-           服务器没接上时不给按钮 —— 点下去只会弹一句「只读」的东西不该存在 -->
+
       <view class="acct-acts">
         <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
                 bindtap="onSetTier">改档</button>

@@ -1,27 +1,3 @@
-#!/usr/bin/env node
-/**
- * 量注音那条路的**行高与字距** —— 用户 2026-10-03 那两句的尺子。
- *
- *   node scripts/shots/render.js            # 先生成预览页
- *   node scripts/shots/measure-pinyin.js    # 打一张表
- *   UI_SCALE=.9 node scripts/shots/measure-pinyin.js   # 顺带看全局缩放那一档
- *
- * 它量两个不变量，这两个不变量是用户原话：
- *
- *   1. 「有一行有注音、有一行没注音，没注音的那一行的行间距也应该和有注音的
- *      行间距一样」—— 上一版实测：有拼音的行 81.3rpx、没拼音的行 53.3rpx。
- *      → 这里比「有音的行盒」与「无音的行盒」，两个数必须相等；
- *        再量「上一行字底 → 下一行字顶」，它必须为正（正才是「行距」，
- *        负就是笔画压在一起）。
- *
- *   2. 「每个汉字在 A－ A＋ 所有字号下的汉字字间距保持一致」——
- *      上一版字宽取 min-width 34rpx，字号过档之后一行之内字距会跳。
- *      → 这里逐档量「步进」与「空隙」：一档之内处处相等，
- *        跨档只随字身盒变，**不随字号倍数乱跳**。
- *
- * ⚠️ 量的是预染（Chromium），字体的实际字身和真机不完全一样；
- *    所以读数是「三个数之间齐不齐」，不是拿它去比设计稿的绝对值。
- */
 "use strict";
 const path = require("path");
 const fs = require("fs");
@@ -56,8 +32,7 @@ const UI_SCALE = Number(process.env.UI_SCALE || 1);
   await page.evaluate(() => document.fonts.ready);
 
   const out = await page.evaluate((scale) => {
-    /* 真机比例：1rpx = 390/750 px。预览把 rpx 折成 rem（页根字号），
-       所以先按「真机 390 宽」把 --layout-w 给上，再按 390/750 换算读数。 */
+
     const PER_RPX = 390 / 750;
     const rpx = (px) => +(px / PER_RPX).toFixed(2);
     const dev = [...document.querySelectorAll(".device")]
@@ -68,7 +43,6 @@ const UI_SCALE = Number(process.env.UI_SCALE || 1);
     const body = dev.querySelector(".poem-body");
     const lines = [...dev.querySelectorAll(".token-line")];
 
-    /** 逐档：行盒（有音 / 无音）、步进、空隙、行与行的视觉空隙 */
     function probe(sizeClass) {
       body.className = "poem-body align-left " + sizeClass;
       const rows = lines.slice(0, 10).map((l) => {
@@ -90,7 +64,7 @@ const UI_SCALE = Number(process.env.UI_SCALE || 1);
           gap: gap,
         };
       });
-      // 上一行**字底** → 下一行**字顶**：这是眼睛看到的「行距」
+
       const inkBox = lines.slice(0, 10).map((l) => {
         const cs = [...l.querySelectorAll(".tk-ch")].map((c) => c.getBoundingClientRect());
         return { top: Math.min(...cs.map((c) => c.top)), bot: Math.max(...cs.map((c) => c.bottom)) };

@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-# 上游语料的「锁」——读它、写它、验它。
-#
-# 这个脚本只做三件事，每件都能单独跑：
-#   bash scripts/poem-lock.sh                  # 打印锁里钉的是哪一版
-#   bash scripts/poem-lock.sh --ref            # 只打印 sha（给流水线拼命令用）
-#   bash scripts/poem-lock.sh --verdict <sha>  # 比：锁里的 sha 与给定 sha 是什么关系
-#                                              #   回 same / ahead / behind / unknown
-#   bash scripts/poem-lock.sh --write <sha> [日期]   # 把锁前进到某个 sha
-#
-# 「键」的口径与 poem.lock.json 里那段 note 一致：见 docs/data-backend.md § 四。
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -47,8 +37,7 @@ case "${1:-}" in
       exit 0
     fi
     if [ "$WANT" = "$HAVE" ]; then echo "same"; exit 0; fi
-    # 谁在谁前面，得看历史，光比 sha 看不出来。取不到历史就如实回 unknown，
-    # 不猜 —— 猜错的后果是「锁往后退」（把语料退回旧的一版还当成前进）。
+
     if git -C "$ROOT" cat-file -e "$WANT" 2>/dev/null; then
       if git -C "$ROOT" merge-base --is-ancestor "$HAVE" "$WANT" 2>/dev/null; then
         echo "ahead"    # 上游比锁新

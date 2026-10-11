@@ -22,7 +22,7 @@
 
   <view class="card">
     <view class="card-title bar">正文字号</view>
-    <!-- 字号本来就是连续的，用原生滑动条比两个按钮更贴手感 -->
+
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
@@ -35,11 +35,7 @@
 
   <view class="card">
     <view class="card-title bar">注音</view>
-    <!-- 注音为什么出现在这一页：用户 2026-10-04 问「通用设置里版式有对齐和字号，
-         怎么没有注音的设置？」—— 因为它被单独摆在「阅读设置」那一页的
-         唯一一张卡里，而同是版式的对齐与字号却在这里。同一组偏好分在两页，
-         改一个要跑两处。三档的做法照阅读页那一份搬（图标 + 文字分段），
-         与对齐控件同一副长相：同一页里两个分段控件，不该长两样。 -->
+
     <block wx:if="{{pinyinOn}}">
       <view class="seg">
         <radio-group class="seg-group" bindchange="onPinyin">
@@ -52,8 +48,7 @@
         </radio-group>
       </view>
     </block>
-    <!-- 读音表没就绪 / 这一档没注音，就说清楚为什么没有 ——
-         摆一个按不动的控件比不摆更糟 -->
+
     <text class="hint note" wx:else>{{pinyinNote}}</text>
   </view>
 

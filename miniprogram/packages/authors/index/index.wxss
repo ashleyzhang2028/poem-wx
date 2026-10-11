@@ -1,8 +1,3 @@
-/* 作者索引：两层都在这一页里（见 index.js 顶上的注释）。
-   样式只做两件事 —— 名册那一排排胶囊、以及作者作品列表与列表页对齐。 */
-
-/* 朝代表右边那个「15 朝」：它是个读数，不是可点的一格，
-   所以不复用 .index-cell —— 复用会让它看起来像能点 */
 .index-total {
   flex: none;
   font-size: var(--fs-caption);
@@ -10,7 +5,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 索引卡：与列表页顶上那张同构（左名右数、两列、点一格跳一段） */
 .index-card {
   padding: var(--sp-3) var(--sp-4);
 }
@@ -60,11 +54,6 @@
   flex: none;
 }
 
-/* ---------- 一段一朝 ---------- */
-
-/* 段头：组名 + 两个读数。与列表页的 .group-head 同构 —— 那一份在
-   list.wxss 里，这一页自己再写一遍是因为页面样式表不共享；
-   值全部取令牌，所以两边改主题色会一起改 */
 .era-card {
   padding: var(--sp-3) var(--sp-4);
 }
@@ -91,23 +80,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 名册：一排排小块 ----------
-
-   ⚠️ 这里的类名是 `a-` 开头，**不是 `.chip`**。全站的 `.chip` 是
-   「一组互斥项里选一个」，它绑着原生 `<radio>`/`<checkbox>`
-   （check.js V22 不许页面重画那套底盘、V23 要求每一段都包在 label 里）。
-   名册是**入口**不是选项，借那个名字就等于借来两套不对的约束 ——
-   所以另起一个，长相自己画。
-
-   `auto-fill` + `minmax` 让一行塞几颗由名字长短自己决定。
-
-   `minmax` 的下限取 176rpx：名册里最长的名字是「孔子及弟子、朱熹」八个字，
-   176rpx 装不下它 —— 但它只有 3 位（另两个是「孔子及其弟子」「孔子及弟子」），
-   为它把整片格子撑宽，488 位短名字就全被拉稀了。
-   所以**格子宽度照常用，名字自己让位**：`overflow: hidden` + 省略号是
-   兜底，不是常态 —— 常态下一行放两三颗，短名字一点都不挤。
-   真要让那三个长名字完整显示，改的是 `minmax` 的下限，不是删省略号
-   （删了它会**顶破格子**，比截断更难看）。 */
 .a-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(176rpx, 1fr));
@@ -119,8 +91,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* 64rpx 是**这一处**的取舍：名册一屏要摊 488 位，每格矮一档
-     「一屏看到多少人」就翻倍。别处的列表行仍是 --h-row（96rpx） */
+
   min-height: 64rpx;
   padding: 8rpx var(--sp-3);
   border: 1rpx solid var(--line);
@@ -150,8 +121,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- ② 层 ---------- */
-
 .filter-group {
   margin: 0 0 var(--sp-2);
 }
@@ -160,7 +129,6 @@
   padding: 0 var(--sp-1) var(--sp-2);
 }
 
-/* 已读那一枚：与列表页一字不差（浅灰底 + 绿字，不跟篇名抢眼） */
 .read-dot {
   flex: none;
   font-size: var(--fs-caption);
@@ -176,7 +144,6 @@
   margin-top: var(--sp-2);
 }
 
-/* 返回条：与「课外阅读」第二层那条一字不差（它是个可点元素，得给按下态） */
 .back-bar {
   display: flex;
   align-items: center;

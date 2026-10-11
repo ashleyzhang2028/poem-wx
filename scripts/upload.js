@@ -1,12 +1,3 @@
-#!/usr/bin/env node
-/**
- * 上传体验版（**不是**发布：要提审还得去公众平台点）。
- *
- *   WX_APPID           小程序 appid（也要写进 project.config.json）
- *   WX_PRIVATE_KEY_B64 代码上传密钥的 base64（CI 里用这种：.pem 多行文本
- *                      塞进 YAML 后换行会被吃掉）
- *   或 WX_PRIVATE_KEY  同一份密钥的文件路径
- */
 "use strict";
 
 const fs = require("fs");
@@ -30,7 +21,6 @@ function die(msg) {
 if (!appid) die("缺 WX_APPID");
 if (appid === "touristappid") die("WX_APPID 还是游客模式，先把正式 appid 配好");
 
-// 两者都给时以路径为准（base64 里混进换行会静默变形）。
 if (!keyPath && !keyB64) {
   die("缺 WX_PRIVATE_KEY_B64（或 WX_PRIVATE_KEY 指向的密钥文件）—— " +
       "见 .cnb.yml 的 imports 与密钥仓库 wechat-ci.yml");
@@ -38,13 +28,12 @@ if (!keyPath && !keyB64) {
 
 let keyFile = keyPath;
 if (!keyFile) {
-  // 先剥掉所有空白再解码：YAML 折叠多行与粘贴都会带上换行/空格。
+
   const raw = Buffer.from(keyB64.replace(/\s+/g, ""), "base64");
   if (!raw.length) die("WX_PRIVATE_KEY_B64 解出来是空的，检查是不是贴成了别的东西");
   keyFile = path.join(os.tmpdir(), "wx-upload-key-" + process.pid + ".pem");
   fs.writeFileSync(keyFile, raw, { mode: 0o600 });
-  // PEM 一定是 -----BEGIN，不是就当场说清楚 —— 不然 miniprogram-ci 只回一句
-  // 「密钥无效」，人会去查 appid 与 IP 白名单。
+
   if (!raw.toString("utf8").includes("-----BEGIN")) {
     die("WX_PRIVATE_KEY_B64 解出来不是 PEM 文本（应以 -----BEGIN 开头）—— " +
         "多半是把 appid 或别的内容 base64 了；重新从公众平台下载 .key 再编码");
@@ -55,11 +44,10 @@ if (keyFile === keyPath && (!keyPath || !fs.existsSync(keyPath))) {
   die("WX_PRIVATE_KEY 指向的文件不存在：" + keyPath);
 }
 
-// 语料是构建产物，不入库，上传前必须先跑 build-data.js
 if (!fs.existsSync(path.join(MP, "data", "books", "books.json"))) {
   die("语料还没生成，先跑 POEM_WEB_DIR=... node scripts/build-data.js");
 }
-// appid 两处不一致就会张冠李戴
+
 {
   const cfg = JSON.parse(fs.readFileSync(path.join(MP, "project.config.json"), "utf8"));
   if (cfg.appid !== appid) {
@@ -83,14 +71,6 @@ const project = new ci.Project({
   ignores: ["node_modules/**/*", "data/texts/**/*"]
 });
 
-/* 平台回的那几句话**不像它自己**：这里逐条翻成人话，并说清「谁能改」。
-   这条分岔不是为了好看 —— 现场 `cnb-hat-1k4k8oanv` 回的是
-       〘20003〙 checkIpInWhiteList Failed: "appIdToAppuin failed"
-   而按字面理解会去查「IP 白名单」、查 appid 拼错 —— 两条都不对症：
-   错在**那枚上传密钥不是这个 appid 名下的**（密钥换过、appid 换过、
-   或密钥下到了别的小程序），平台连 appid→企微号 的映射都建不起来，
-   白名单这关自然过不去。
-   翻译放在这儿（而不是只写进文档），是因为踩的人只看得见流水线日志。 */
 function explain(msg) {
   const m = String(msg || "");
   if (/appIdToAppuin/.test(m)) {
