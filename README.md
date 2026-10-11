@@ -43,6 +43,9 @@ $env:POEM_WEB_DIR="C:\poem"; npm run build:data
 set POEM_WEB_DIR=C:\poem && npm run build:data
 ```
 
+`POEM_WEB_DIR` 末尾的空格和路径外面成对的双引号都会被去掉，
+`set POEM_WEB_DIR=C:\poem && npm run build:data` 照原样能跑。
+
 `scripts/clone-poem.sh` 依赖 bash（Git for Windows 自带），在 Git Bash 里跑；
 只取语料也可以直接 `git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git C:/poem`，
 然后按上面的写法指过去 —— 少的那一层是 `poem.lock.json` 的版本锁定。
