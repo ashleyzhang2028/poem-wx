@@ -9,6 +9,7 @@
   "setting": {
     "urlCheck": true,
     "es6": true,
+    "uglifyFileName": false,
     "enhance": true,
     "postcss": true,
     "minified": true,
@@ -44,5 +45,7 @@
   "libVersion": "3.5.5",
   "appid": "wx200a0c667fc67fcb",
   "projectname": "kuibu-poem-miniprogram",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
 }
