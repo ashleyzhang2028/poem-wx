@@ -1,5 +1,4 @@
 $:
-  # 任意分支：只跑自检，不出镜像（出了也没人用，只往制品库堆垃圾）。
   "**":
     - name: 自检
       image: node:20
@@ -8,99 +7,43 @@ $:
         - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
         - node scripts/check.js
         - node scripts/parity.js
-        # 端到端：小程序端 utils ↔ poem 服务端真跑一遍（登录 → 同步 → 换机）。
         - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
-        # 端到端（换库那条）：摊一个构建上下文出来，按线上那份容器的启动路径
-        # （serve-api.js 接线 → require handler）接上 MySQL，跑登录 → 同步，
-        # 并验「新的赢」这条不变式换库之后还在（Issue #111）。
         - POEM_DIR=/tmp/poem node scripts/e2e-mysql.js
 
-# main —— 唯一的分支。推这里就是发一次版：自检 → 镜像 → GHCR → 体验版 → 同步 GitHub。
 main:
   push:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
-      # 必须是 `docker.image`，不是 `image`（流水线级没有 `image` 这个字段，写错会被静默忽略，
-      # 退回的缺省镜像里没有 node）。任务级写 `image` 是合法的，别一起改。
       docker:
         image: node:20
       services:
         - docker
       imports:
-        # 密钥只从密钥仓库读（那个仓库禁止 clone，git clone 一律回 Repository Not Found）。
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
-        # ⚠️ IMAGE 必须在这儿定义：build & push 那步是 `set -eu`，撞上未定义变量当场退出。
-        # ⚠️ 值只写**字面量** —— CNB 的变量替换只认 `$VAR`，`${VAR}` / `${VAR:-default}`
-        #    既不报错也不清空，原样拼进镜像 tag，直到 docker 才炸。
-        # 回滚：把 IMAGE 换成下面 CNB_IMAGE 的值（代价是云托管要重配拉取凭据）。
         IMAGE: ghcr.io/ashleyzhang2028/poem-wx/wx-api
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         TAG: ${CNB_COMMIT_SHORT}
-        # ⚠️ **没在这儿定义 COPY_SHREDS 就是「要分片」** —— 摊分片那步与 docker build
-        #    都按 `${COPY_SHREDS:-1}` 取值。要一个不带分片的瘦镜像（本地调试、回滚验证）
-        #    才加一行 `COPY_SHREDS: "0"`；写 `""`（字面空串）是**表里没人定义它**，
-        #    与「故意不要」不是一回事 —— 两档的差别见 deploy/README.md 那张表。
-        #    分片为什么默认要在：线上正式版要发的就是课外正文，不带分片的镜像
-        #    只会回 404 E_NO_SHARDS，用户看到的是「这个版本里没有课外正文」。
       stages:
         - name: clone poem
           script: bash scripts/clone-poem.sh /tmp/poem
-        # 自检不在这儿重复：同一次 push 里 $."**" 那条已经跑过完全一样的三条。
-        # 摊构建上下文：poem 的 api/ + 本仓库的 Dockerfile 与服务壳，平铺在同一层，
-        # 因为 Dockerfile 按 ./api 与 ./serve-api.js 拷，.dockerignore 也只认上下文根。
         - name: stage context
           script: |
-            # 别写 `set -euo pipefail`：Alpine 的 busybox sh 不认 `-o pipefail`。
             set -eu
             mkdir -p /tmp/ctx
             cp -R /tmp/poem/api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
-            # 存储层那份 MySQL 实现（Issue #111）：它跟着服务壳走，同一层、同一个名字。
-            # 漏了这一行 → Dockerfile 那句 COPY 找不到源，构建回
-            #   failed to calculate checksum ... "/store-mysql.js": not found
-            # 而那看着像「文件没提交」，其实是上下文少摊了一样东西。
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
-            # 分片路由那份（Issue #121 方案 A）：与 serve-api.js 同层同名。
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            # 正文分片（Issue #121 方案 A）：这一层**必须每次都在上下文里出现**，
-            # 为什么不能「不打旗就不 mkdir」：Dockerfile 那句
-            # `COPY shard-src /tmp/shard-src` 是**无条件**的 —— 它前面没有 if，
-            # 只有后面那句 RUN 才看旗。于是上下文里没有这一层时，构建在 COPY 上
-            # 就红（Issue #115：`... "/shard-src": not found`）。空目录是 COPY 的
-            # 合法来源（拷过去就是个空目录），所以这里永远 mkdir，内容才按旗摊。
-            #
-            # 为什么在这儿摊而不是在 Dockerfile 里现取：Dockerfile 的 COPY 源只能来自
-            # 构建上下文，而分片是**构建产物**（.gitignore 里 miniprogram/data/），
-            # checkout 里本来就没有 —— 得先在这里生成。
-            #
-            # ⚠️ 默认摊（`${COPY_SHREDS:-1}`）—— 不是「默认不摊」。
-            #    原先只有 `= 1` 才摊，于是任何不带那面旗的构建（main push、调试构建、
-            #    deploy/build.sh）拿到的镜像里没有 /app/shards/，课外正文只有 404
-            #    E_NO_SHARDS —— 而「这个版本里没有课外正文」这句话是给**没开分片的
-            #    调试镜像**用的，不是给线上正式版用的。只有显式写
-            #    `COPY_SHREDS: "0"`（或任何非 1 的字面量）才跳过摊分片。
-            #    两档的差别（`""` = 没人定义它 / `"0"` = 我知道我不要）见 deploy/README.md。
             mkdir -p /tmp/ctx/shard-src
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
               bash scripts/clone-poem.sh /tmp/poem >/dev/null 2>&1 || true
               POEM_WEB_DIR=/tmp/poem node scripts/build-data.js >/dev/null
-              # ⚠️ 只摊 gz，**且不带 .json 后缀**（Dockerfile 把它们 cp 进 /app/shards 后
-              #    就叫 t001.json.gz，shard-api.js 发预压缩那份时找的正是这个名字）。
-              #    摊成 `t001.json.gz` 是个**静态绿（check.js 只认形状）、运行时空**的坑：
-              #    COPY 照拷、目录非空（E_NO_SHARDS 不会响）、而 shard-api 的
-              #    fileOf(name) 找 `t001.json` 没有 → 每一片都回 404 E_NO_SHARD。
               for f in miniprogram/data/texts/*.json; do
                 gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .json).json.gz"
               done
               du -sh /tmp/ctx/shard-src
-              # ⚠️ 只点 t\d{3} 这一种名字的数目，**别去等 manifest / idx**。
-              #    `manifest` 是 `/api/shard/` 那条路由留着的一个名字，而
-              #    **客户端从来不请求它**：`corpus.js` 的 id → 片名映射读的是主包里
-              #    的 `data/shards.json`（它必须留在包内，见那份注释）。
-              #    所以 `manifest.json.gz` 在这层里**本来就不该有** —— 跑去 ls 它、
-              #    缺了就 exit 1，会把每一次正常构建都拦下来。
               n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].json.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
                 echo "✗ 分片只摊出 $n 片 —— 语料没生成（POEM_WEB_DIR 指对了没？）" >&2
@@ -112,31 +55,16 @@ main:
             else
               echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
             fi
-            # ⚠️ 忽略文件跟**构建上下文**走：摆错位置不报错，只让上下文从 0.3MB 变成 38MB。
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
             du -sh /tmp/ctx
         - name: build & push
           script: |
             set -eu
-            # 忽略文件没摆到上下文根，构建照样成功，只是每次白传 37MB —— 绿着出错，当场断掉。
             if [ ! -f /tmp/ctx/.dockerignore ]; then
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            # ⚠️ **构建绿、部署绿、容器起不来**的那一类，全在这两句上（Issue #115）。
-            #    它们不是「.dockerignore 没摆对」的重复检查，是这个坑的另一半：
-            #    .dockerignore 是**白名单**（先 `**` 排掉一切、再逐条 ! 放行）。
-            #    而**白名单文件本身也有默认** —— 上下文里没有 .dockerignore 时它整个
-            #    不生效，于是**什么都进**；有 .dockerignore、但某一行放行被删掉时，
-            #    那样东西**一个字都进不去**，而 docker 与部署都照样绿：
-            #      · 少了 `!shard-api.js` → 镜像里没有 /app/shard-api.js，
-            #        serve-api.js 的 require("./shard-api.js") 在**启动**那一刻抛
-            #        MODULE_NOT_FOUND，云托管报的是「Back-off restarting failed container」
-            #        —— 看着像服务要重启，其实是构建时就少了这一样。
-            #      · 少了 `!shard-src/**` → 上下文里那层是空的 → /app/shards/ 没有。
-            #    判据落在「放行那一行在不在」「拷过去的文件在不在」上，
-            #    而不是那句「文件存在」上。check.js V53 逐行守着这两条。
             for need in "!shard-api.js" "!shard-src/**"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
@@ -150,10 +78,7 @@ main:
               exit 1
             fi
             REV="$(git -C /tmp/poem rev-parse --short HEAD)"
-            # 要登的就是 IMAGE 那个 registry（GHCR），不是 CNB —— 推哪儿就得先登哪儿，
-            # 否则回 `error from registry: denied`，看着像 PAT 没权限。
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
-            # CNB 那行 login 不能删：基础镜像与构建缓存仍从 CNB 拉。
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
               --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
@@ -165,16 +90,10 @@ main:
             docker push "${IMAGE}:${TAG}"
             docker push "${IMAGE}:latest"
             echo "✓ ${IMAGE}:${TAG}（后端 poem ${REV}）"
-        # 再推一份到 GHCR：CNB 制品库可见性跟着代码仓库走（仓库私有 → 制品私有 →
-        # 云托管要拉就得配凭据），GHCR 那份是公开包，不用配。tag 用上游 poem 的短 sha
-        # ——「线上跑的是哪一版 poem」只有它答得了。第一次推完要去 GitHub 把包设成 Public。
-        # ⚠️ GHCR_TOKEN 必须是 classic PAT（fine-grained 的 Permissions 里没有 Packages 那一栏）。
         - name: 推 GHCR（云托管那份镜像地址）
           script: |
             set -eu
             for v in GHCR_USER GHCR_TOKEN; do
-              # 这里的 `:-` 是 shell 的（`env:` 里没有这回事）：`set -u` 之下撞上未定义
-              # 变量直接退出，那句给人看的横幅根本打不出来。
               eval "val=\${$v:-}"
               if [ -z "$val" ]; then
                 echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
@@ -187,9 +106,6 @@ main:
             docker tag "${IMAGE}:${TAG}" "${IMAGE}:${REV}"
             docker push "${IMAGE}:${REV}"
             echo "✓ ${IMAGE}:${REV}（公开包 —— 云托管从地址拉镜像不用配凭据）"
-        # 上传体验版：只上传，不提审 ——「要不要上线」不该由流水线决定。
-        # 整步用一个 script 块：list 混多行块会被 CNB 串成 &&，busybox sh 报语法错，
-        # 而这步 allow_failure，红了流水线也是绿的 —— 得自己翻日志才看得见。
         - name: 上传体验版
           script: |
             for v in WX_APPID WX_PRIVATE_KEY_B64; do
@@ -201,11 +117,7 @@ main:
                 exit 1
               fi
             done
-            # 语料是构建产物（.gitignore 里有 miniprogram/data/），checkout 里本来就没有；
-            # 上传的是整个 miniprogram，缺了它 upload.js 只会回一句「语料还没生成」。
-            # 自检那三条跑在同一次 push 的另一个任务里，工作区不共享，得在这儿重跑一遍。
             POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-            # --loglevel=error：默认那档会吐 40 行 npm warn，真错被埋在中间。
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
@@ -216,37 +128,12 @@ main:
             }
             echo "✓✓✓ 体验版已上传 ${TAG} ✓✓✓"
           allow_failure: true
-        # 同步到 GitHub：只同步 main（仓库有 80 多个分支，大半是合完就没用的 auto/*）。
-        # 推的是 HEAD:refs/heads/main 且带 --force —— GitHub 那份是只读镜像，别在它上面提交。
-        # 这条不 allow_failure：同步是这一版交付的一部分，断了就该红。
         - name: 同步到 GitHub
           imports:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
           script:
             - node scripts/sync-github.js
 
-# 跟上游：**不做发布链的一步**，是定时的、独立的、红了也不拦谁的那一步。
-#
-# 为什么单开一条：发布链里 clone 的是 poem.lock.json 钉住的那一版，
-# 上游动与不动都影响不到「我们推 main」。上游真动了，由这条流水线自己冒出来
-# —— 自检绿就开 PR 把锁前进一位，自检红就在 Issue 上留一条。
-# 口径与四种出口见 docs/data-backend.md § 四。
-#
-# ⚠️ 语法是 `main: { "crontab: <POSIX cron>": [...] }`，与 `push:` **并列**
-#    在同一个 `main:` 之下 —— **不是**顶格另起一个 `crontab:` 键，
-#    也不是第二个 `main:`。两种情况都解析得出 YAML，但流水线会不见：
-#      顶格 `crontab:`   → 平台报 `CONFIG_EVENT_EMPTY / $ 下无 api_trigger 事件配置`
-#                          （看着像 `$` 段写坏了，与真正的原因差着十万八千里）
-#      第二个 `main:`    → YAML 的键重复，**后面那个把前面那个整个盖掉**，
-#                          发布链就此消失，而文件本身看着完全正常
-#    两种都实测踩过。见 https://docs.cnb.cool/zh/build/crontab.md
-#
-#    表达式是五段 POSIX cron，时区 Asia/Shanghai，最小间隔 5 分钟。
-#    `0 */6 * * *` = 每 6 小时一次：语料是「几天改一次」的量级，够用；
-#    又不至于让一次红了的跟随拖到第二天才被人看见。
-#
-# ⚠️ 这条**不 import 密钥仓库**：它只读上游那个公开仓库。
-#    要开 PR / 留评论才需要 CNB 令牌，那由平台注入的 CNB_TOKEN 顶着。
   "crontab: 0 */6 * * *":
     - name: 跟上游语料（poem-watch）
       image: node:20

@@ -1,6 +1,5 @@
 <view class="page home has-tabbar" style="{{themeStyle}}">
-  <!-- 语料没生成：data/ 是构建产物（不进仓库），说清少跑了哪一步。
-       不写这一屏的话，页面就是「一首诗词都没有」，看着像坏了。 -->
+
   <block wx:if="{{noData}}">
     <view class="card hero">
       <view class="hero-head">
@@ -23,7 +22,6 @@
     <view class="safe-bottom"></view>
   </block>
 
-  <!-- 未登录：一屏目录，看得到、点不进 -->
   <block wx:elif="{{guest}}">
     <view class="card hero">
       <view class="hero-head">
@@ -37,7 +35,6 @@
       <button class="btn primary block hero-btn" bindtap="onLogin">微信登录</button>
     </view>
 
-    <!-- 游客态的提示条：说明当前为什么点不动，顺带就是登录入口（样式见 home.wxss） -->
     <view class="guest-bar" hover-class="guest-bar-hover" hover-stay-time="60" bindtap="onLogin">
       <text class="guest-title">当前是浏览模式</text>
       <text class="guest-sub">登录后可用 · 一年级诗词可看，点开与背诵需登录</text>
@@ -47,7 +44,7 @@
       <view class="toc-head">
         <text class="card-title bar">课本目录</text>
       </view>
-      <!-- 行尾一律写「登录」而不是一把小锁：图标要人猜，字不用 -->
+
       <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <text class="seq">{{item.seq}}</text>
@@ -55,9 +52,7 @@
           <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
-        <!-- 行尾这一格是**共用槽**：未登录放「登录」胶囊，登录后放勾。
-             槽宽固定，两态下列表标题栏的右端才落在同一条竖线上 ——
-             否则同一份目录，登录前登录后标题宽度不一样，一登录整列字都挪位。 -->
+
         <view class="row-end"><text class="row-lock">登录</text></view>
       </view>
     </view>
@@ -65,18 +60,13 @@
     <view class="safe-bottom"></view>
   </block>
 
-  <!-- 登录后：今日计划 -->
   <block wx:else>
-    <!-- 一屏一件事：这张卡只回答「今天背什么」。
-         上面一行日期小字，中间一个大标题，下面是三个大数字，
-         最后是这一屏唯一的一颗墨黑按钮 —— 与参考图同一套层次。 -->
+
     <view class="card hero">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
       <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
 
-      <!-- 三个大数字：今日要背几首、已经背了几首、还剩几首。
-           中间一道细竖线分开 —— 它就是「这一屏的第一眼」 -->
       <view class="stats hero-stats">
         <view class="stat">
           <text class="stat-v">{{stats.today}}</text>
@@ -92,12 +82,6 @@
         </view>
       </view>
 
-      <!-- 进度条：数字说「几首」，这一条说「走到哪了」。
-           ⚠️ **只在真的有进度时出现**（percent > 0）。零进度时它是一根
-           灰尺子 —— 用户 2026-10-04 问「开始背诵上面是横线还是进度条？
-           如果是横线，直接删除」，问的就是它零进度时长的那副样子：
-           一条空槽与一道分隔线在屏幕上是同一样东西。既然此刻没进度可说，
-           就整个不画；右边那行字把读数负责到底。 -->
       <view class="hero-meter" wx:if="{{percent}}">
         <view class="meter">
           <view class="meter-fill" style="width:{{percent}}%"></view>
@@ -105,20 +89,12 @@
         <text class="hero-meter-t">已背 {{doneCount}} / {{total}}</text>
       </view>
 
-      <!-- 开始背：末首评完分再点它说「再练一遍」，其余时候说「开始背」。
-           点下去就是弹出今天这一趟的背诵卡（首屏唯一那颗墨黑按钮）。 -->
       <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
         {{todoCount ? '开始背' : '再练一遍'}}
       </button>
       <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看课内 251 首</button>
     </view>
 
-    <!-- 今日加背：网页版 index.html L67 那一整块（搜索框 + 建议列表）。
-         位置也一样 —— 顶在「今日安排」上面：它是「今天这一趟」的入口，
-         加进去的篇目当场排进下面那一列。
-
-         挂在这里而不是做成一个页面：用户加完要立刻看见它落进了今日安排，
-         弹一个页面出去加、加完再回来，那一下的因果就断了。 -->
     <view class="card">
       <view class="card-title bar">今日加背</view>
       <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
@@ -147,19 +123,11 @@
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
         <text class="empty-text">今天还没排计划</text>
-        <!-- 「去设置」走的仍是 onSettings —— 首页那一行链接撤了，
-             但空态里这一颗得留着：一个计划都没排出来时，人得有条路
-             去把学段 / 范围调好，否则这一屏是个死胡同。 -->
+
         <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
       </view>
     </view>
 
-    <!-- 背诵弹层：点篇名、点「开始背」都从底部弹这张卡上来。
-         它挂在页面根节点上而不是某张卡里 —— 它是 fixed 的整屏浮层，
-         放进卡片会被卡片的层叠上下文裁掉。 -->
-    <!-- 弹层里也能加背（背到一半想「这首明天还得再来」）——
-         加完让首页重排：队列是从首页这一列来的，编不编得进由它说了算。
-         所以弹层只发 change，队列本身由首页刷新后重新灌进去。 -->
     <recite-sheet id="sheet" queue="{{plan}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"
                     bind:change="onExtraChange" />

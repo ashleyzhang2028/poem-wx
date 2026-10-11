@@ -2,7 +2,7 @@
   <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能用" mark="令" />
 
   <block wx:else>
-    <!-- 令字：一屏的主角，居中一个大字 -->
+
     <view class="card fh-stage">
       <text class="fh-scope">{{scopeName}} · 第 {{done.length + 1}} 题</text>
       <view class="fh-char">
@@ -26,7 +26,6 @@
       <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
     </view>
 
-    <!-- 难度 -->
     <view class="card">
       <text class="field-label">难度</text>
       <view class="seg">
@@ -40,7 +39,6 @@
       </view>
     </view>
 
-    <!-- 正确答案：范围里含这个字的所有句子 -->
     <view class="card">
       <view class="card-title bar">正确答案</view>
       <view wx:if="{{revealed}}">
@@ -59,7 +57,6 @@
       </button>
     </view>
 
-    <!-- 这一轮答对的句子 -->
     <view class="card" wx:if="{{done.length}}">
       <view class="card-title bar">这一轮答对的</view>
       <view class="fh-line" wx:for="{{done}}" wx:key="index">

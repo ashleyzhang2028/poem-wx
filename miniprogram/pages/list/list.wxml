@@ -2,8 +2,7 @@
   <lock-card wx:if="{{locked}}" note="登录后才能看" mark="目" />
 
   <block wx:else>
-  <!-- 页头只说「这一页是什么」，不报数字 ——
-       报数字的那一行在筛选条下面（.count），是全页唯一的出处 -->
+
   <view class="page-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
@@ -28,7 +27,6 @@
     <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
   </view>
 
-  <!-- 已读 / 未读：二选一，图标分段。底层仍是原生 radio，点整段都选中 -->
   <view class="seg filter-group">
     <radio-group class="seg-group" bindchange="onFilter">
       <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
@@ -40,8 +38,6 @@
     </radio-group>
   </view>
 
-  <!-- 筛选结果的唯一出处。截断了才多一句「只到前几条」，
-       「报的数」与「列出的行」必须对得上（同一天在飞花令上吃过这个亏）。 -->
   <view class="count hint">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>
 
   <view class="card" wx:for="{{groups}}" wx:key="group" id="g-{{index}}">

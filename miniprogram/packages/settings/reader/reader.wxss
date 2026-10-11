@@ -35,7 +35,6 @@
   margin-top: var(--sp-3);
 }
 
-/* 通道状态那块：一句结论加一个底色，比一行灰字好用 */
 .tts-state {
   margin-top: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
@@ -63,8 +62,6 @@
   margin-top: var(--sp-3);
 }
 
-/* 选中那一档的说明：贴在分段下面一行 —— 三档各带一行说明摆成三行，
-   看不出「这三个里只选了一个」。挪到下面，说清楚的就是「当前这一档」。 */
 .mode-desc {
   display: block;
   padding: 0 var(--sp-1) var(--sp-1);

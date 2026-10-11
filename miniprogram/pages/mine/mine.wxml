@@ -1,18 +1,8 @@
 <view class="page has-tabbar" style="{{themeStyle}}">
-  <!-- 身份卡：回答「我是谁、我这一档能做什么」。
-       头像就是微信头像 —— 点头像走 chooseAvatar，弹出来的第一项就是当前微信头像。
-       它**只存在这台手机上**，不上传、不落对象存储：
-       平台没有任何一条「静默拿微信头像」的 API，而头像又不值得为它养一个存储桶。 -->
+
   <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
     <view class="identity">
-      <!-- 头像那一圈**定尺寸的壳**（.avatar-wrap）。
-           ⚠️ 里面那个带 open-type="chooseAvatar" 的是原生 button：
-           它自带 display:block 与 width:100%，真机上盖过页面样式表给的 width；
-           而它里面的东西又**解析不了 `height:100%`** —— 两条都踩过，
-           都会把头像变成一枚扁椭圆（用户 2026-10-04 报了两次）。
-           所以：尺寸只定在**壳**上，壳 `position:relative`，
-           按钮与头像本体一律 `position:absolute` 贴满它、尺寸写字面量。
-           游客态那个 view 走同一套样式。 -->
+
       <view class="avatar-wrap">
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
                 wx:if="{{logged}}">
@@ -23,23 +13,17 @@
           <view class="avatar avatar-fallback">{{avatarChar}}</view>
         </view>
       </view>
-      <!-- 名字**就地可改**：这一格就是输入框，改完立刻显示。
-           它原来是只显示的一行字，能改的那处在下面「昵称」那一行里 ——
-           同一个值摆两处，一能改、一只显示，看着像两个身份。
-           现在收成一处，下面那一行整个撤了（V37 守着「只有一处」）。
-           ⚠️ 不许把「子」什么的那类词写进界面文案：家庭成员是小程序端
-           刻意不做的能力，parity.js 会把它当成界面上多了个入口。 -->
+
       <view class="identity-main">
         <block wx:if="{{logged}}">
-          <!-- maxlength 取 12：这一行右边还挂着档位芯片，再长的名字会把它挤走 -->
+
           <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
                  placeholder="填一个昵称" placeholder-class="identity-ph"
                  confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
         </block>
-        <!-- 未登录时这里仍是只显示的字：没登录，也就没有名字可改 -->
+
         <text class="identity-name" wx:else>{{nickname}}</text>
-        <!-- 副题只说一件事：「我是谁」。不再解释这张头像哪来的 ——
-             它现在只有一个来源（微信那张），说来源等于说一句用户不需要懂的话。 -->
+
         <view class="identity-sub-row">
           <text class="identity-sub">{{identitySub}}</text>
         </view>
@@ -56,11 +40,6 @@
     </block>
   </view>
 
-  <!-- 背诵概况：三个大数字。一屏最容易被扫到的地方，放三个能一眼比出大小的数。
-
-       标题原来叫「本机数据」—— 用户 2026-10-04 的话是「没有人关心或者需要知道
-       这个数据在本机还是云端」。他说得对：这个位置写的是「我背得怎么样」，
-       数据存在哪儿是系统的内务，不该上屏。见 docs/design-system.md「文案」一节。 -->
   <view class="card">
     <view class="card-title bar">背诵概况</view>
     <view class="stats">
@@ -92,8 +71,6 @@
     </view>
   </view>
 
-  <!-- 学习：登录后是入口清单；未登录整块不出现 ——
-       一张只有一句「登录后会出现…」的卡，占位置不办事 -->
   <view class="card" wx:if="{{logged}}">
     <view class="card-title bar">学习</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
@@ -120,9 +97,7 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <!-- 版式三件事（对齐 · 注音 · 字号）同在一页。注音原来单开一页，
-         与对齐字号分家 —— 2026-10-04 用户问「通用设置里怎么没有注音的设置」
-         之后并回去了（见 docs/design-system.md「背诵设置里没有阅读偏好」）。 -->
+
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
       <view class="row-icon">设</view>
       <view class="row-main">
@@ -131,8 +106,7 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <!-- 答题音效仍在自己那一页（它 @所属题库/考试/飞花令 共用，不是版式）。
-         环境出不了声时整行不出现 —— 一个点不动的入口比没有更糟。 -->
+
     <view class="row" hover-class="row-hover" hover-stay-time="60"
           bindtap="onReader" wx:if="{{sfxVisible}}">
       <view class="row-icon">读</view>
@@ -152,8 +126,6 @@
     </view>
   </view>
 
-  <!-- 权限说明：与「能力」那张卡同一张表（E.matrix），逐条对照。
-       登录后那五项设置入口都在上面的「学习」卡里，这一张只管「我能用什么」。 -->
   <view class="card" wx:if="{{logged}}">
     <view class="card-title bar">能力</view>
     <view class="cap-row" wx:for="{{caps}}" wx:key="cap">

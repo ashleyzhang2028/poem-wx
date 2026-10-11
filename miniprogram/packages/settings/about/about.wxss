@@ -1,5 +1,3 @@
-/* 品牌卡：名字放大、字距放开，下面坠一句出处。
-   一屏只有这一处能这么「空」—— 它是这页的脸 */
 .brand {
   text-align: center;
   padding: var(--sp-5) var(--sp-4);
@@ -31,7 +29,6 @@
   margin-top: var(--sp-3);
 }
 
-/* 计数用等宽数字 —— 与页面里其它「计数」同一口径 */
 .kv-v {
   font-family: var(--font-num);
   color: var(--ink);

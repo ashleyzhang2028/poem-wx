@@ -1,9 +1,3 @@
-/* 这一屏是目录：只排三张入口卡，没有别的控件。
-   （曾经这里还有半屏飞花令的令字格与答案列表 —— 那些随「列表页不直接玩」
-     一起撤了，相关样式也一并收走，不留死规则。） */
-
-/* 三张入口卡：一行放不下三个名字，与其硬挤成一窄条，
-   不如让它按两列排 —— 呼吸感比整齐更重要 */
 .modes {
   display: flex;
   flex-wrap: wrap;
@@ -12,13 +6,9 @@
 }
 
 .mode {
-  /* 从 view 换成 button：原生按钮自带最小宽度与 ::after 边框，这里逐条收掉 */
+
   flex: 1 1 calc(50% - 8rpx);
-  /* 卡内三行要能被 .mode-desc 撑开 —— button 默认 display:block，
-     里面的 text 是行内元素，flex:1 对它无效。所以这里把卡本身改成 flex 列。
-     高度不再给 min-height：一排两张卡由 flex 的 stretch 拉平，
-     第三张（整行一张）自己按内容高 —— 硬给一个最小高度，
-     它就会比上面两张还高出一截。 */
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -42,9 +32,6 @@
   color: var(--strong-text);
 }
 
-/* 三张卡的标题不再各给一个颜色 —— 名字本身说明它是哪一张；
-   颜色留给状态，不留给身份。 */
-
 .mode::after {
   border: none;
 }
@@ -59,7 +46,6 @@
   line-height: 1.6;
 }
 
-/* 卡内第三行给出下一步动作：两面墙一样的卡，点哪张全靠猜 */
 .mode-go {
   display: block;
   font-size: var(--fs-caption);
@@ -72,7 +58,6 @@
   color: var(--ink-3);
 }
 
-/* 差一档的卡片：留个灰样子，让人知道往哪走，而不是整块消失 */
 .mode-off {
   opacity: .55;
 }

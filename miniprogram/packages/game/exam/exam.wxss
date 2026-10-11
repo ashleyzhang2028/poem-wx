@@ -1,14 +1,3 @@
-/* ============================================================
-   题库与考试共用的一套样式。
-   两个页面同源：出题范围 → 挑题型 → 答题 → 看结果，
-   所以长相也共用一份 —— 各写一遍迟早会漂。
-
-   两页在**答题**这一步上只有一处不同：
-   题库逐题判、当场看答案（.option 的 right / wrong），
-   考试全部答完再批（.option 的 picked）。两套类都在这里。
-   ============================================================ */
-
-/* picker 是原生选择器，只统一尺寸与配色 */
 .picker {
   display: flex;
   align-items: center;
@@ -19,17 +8,12 @@
   border-bottom: 1rpx solid var(--line-2);
 }
 
-/* picker 右边那个 › 是 WXML 里写的，样式表不再补一个 —— 会变成两个 */
-
 .note {
   display: block;
   padding-top: var(--sp-2);
   line-height: var(--lh-body);
 }
 
-/* ---------- 答题进度条 ----------
-   一行两件事：走到第几题、已经对了几道。
-   不用再加进度环 —— 答题时眼睛只在题干上。 */
 .exam-bar {
   display: flex;
   align-items: center;
@@ -50,8 +34,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 题干 ----------
-   题干是这一屏唯一要读的东西，居中、放大、行距放开 */
 .stem {
   display: block;
   font-family: var(--font-poem);
@@ -68,14 +50,6 @@
   padding-top: var(--sp-2);
 }
 
-/* ---------- 选项 ----------
-   四个选项长得一样，随手点一下必须看得出点中了哪个，
-   所以按下就压一下；对错再由颜色通知。
-
-   ⚠️ `.option` 的**宽度**是用户点名过的一件事：
-   「模拟考试改名为考试 所有题目答完后再给分给对错 (宽度你应该只显示一半)」。
-   四个选项原来是整屏通栏的一条，字却只有两三个 —— 一行里九成的宽度是空的，
-   看着像没排完。所以选项收成两列：一列一个选项，四个恰好两行。 */
 .options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -83,10 +57,6 @@
   margin-top: var(--sp-1);
 }
 
-/* 一格选项 = 一枚 A B C D 的脚标 + 正文。左对齐 ——
-   四个选项的字数差得很远（「秦观」两个字 vs 一句七言），居中排时
-   每一格的起点都不一样，扫下来是锯齿。左对齐之后字母齐成一条竖线，
-   读的是「A 是什么、B 是什么」。 */
 .option {
   display: flex;
   align-items: center;
@@ -102,9 +72,6 @@
   transition: transform var(--t-press), background-color var(--t-press), border-color var(--t-press);
 }
 
-/* 脚标字母：它是**序号**，不是内容 —— 比正文小一档、浅一档。
-   它跟着选项一起被打乱（见 utils/quiz.js 的 lettered）——
-   字母是选项自带的，不是模板按下标画上去的，所以「看着是 B = 选中的是 B」。 */
 .option-k {
   flex: none;
   width: 32rpx;
@@ -123,9 +90,6 @@
   transform: scale(.98);
 }
 
-/* 考试：选中的那一个当场给个「记下了」的样子（填墨黑、白字），
-   但**不说是对是错** —— 对错要等交卷。用的是与「选一个」同一块填色，
-   于是「我选了它」这件事在整个 app 里只有一种说法。 */
 .option.picked {
   background: var(--strong);
   border-color: var(--strong);
@@ -133,8 +97,6 @@
   font-weight: 600;
 }
 
-/* 选中时那枚字母跟着翻白。它原来是 --ink-3（灰），压在墨底上就糊了 ——
-   「选中了哪一条」这件事在字母上也要看得见。 */
 .option.picked .option-k {
   color: var(--on-ink-soft);
 }
@@ -158,8 +120,6 @@
   color: var(--red);
 }
 
-/* ---------- 结果 ----------
-   分数是这一屏的主角，下面挂一行小字说清「答对几道」 */
 .result {
   text-align: center;
   padding: var(--sp-6) var(--sp-4) var(--sp-5);
@@ -186,7 +146,6 @@
   margin-top: var(--sp-2);
 }
 
-/* ---------- 错题 ---------- */
 .wrong {
   padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -196,10 +155,6 @@
   border-bottom: none;
 }
 
-/* ---------- 交卷后的逐题 ----------
-   考试这一屏不再只列错题：一道一行，行首一枚「对 / 错」的小签。
-   小签是这一屏唯一带颜色的东西 —— 对了绿、错了朱砂，
-   扫一眼就知道哪几道要回头看。 */
 .grade {
   padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -259,7 +214,6 @@
   color: var(--red);
 }
 
-/* 「交卷 / 下一题」那一颗：答题屏只有它一个按钮，跟在四个选项下面 */
 .next-btn {
   margin-top: var(--sp-3);
 }

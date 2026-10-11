@@ -1,7 +1,3 @@
-/* 色点栅格。
-   五列 —— 十个色正好两行，一屏装得下，不必滚。
-   grid 的格子天然等宽等高，热区（.swatch）因此是 108rpx 见方的一整块：
-   圆点只有 56rpx，而手指点到格子里的任何一处都算选中它。 */
 .swatch-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -19,7 +15,6 @@
   min-height: 108rpx;
 }
 
-/* 按下反馈：色点缩一点。V4 要求每个可点的东西都有 —— 色点也不例外 */
 .swatch-hover {
   opacity: .84;
 }
@@ -28,19 +23,12 @@
   transform: scale(.92);
 }
 
-/* 色点：一枚正圆。
-   它**不是**控件，是色样 —— 所以不走全站那两种「能点的一块」的圆角
-   （20rpx 的胶囊格 / 999rpx 的分段），就是 50%。
-   56rpx 是有来历的：它比全站最小的可点高度（--h-opt-seg 56rpx）同档，
-   看着是一枚「点得中」的点；再小就成了一粒芝麻。 */
 .swatch-dot {
   width: 56rpx;
   height: 56rpx;
   border-radius: 50%;
   background: var(--sw);
-  /* 一圈极淡的里描边：白卡上「墨」与「玄色」这两个深色点不需要它，
-     但明黄、竹青这些浅色点在白底上会有点飘 —— 一道 1rpx 的灰圈把它们钉住。
-     走令牌而不是写 rgba：页面样式表里一个色值都不许写死（check.js V13）。 */
+
   box-shadow: inset 0 0 0 1rpx var(--line-strong);
   display: flex;
   align-items: center;
@@ -48,10 +36,6 @@
   transition: transform var(--t-press), box-shadow var(--t-press);
 }
 
-/* 选中的那枚：圆点外一圈本色描边 + 里面一枚勾。
-   描边用 box-shadow 画，不吃盒模型 —— inset 描边会把 56rpx 的色点啃掉一圈，
-   色差肉眼看得出来。描边色取「压在这个色上的字色」：
-   墨黑上画白圈、明黄上画深圈，十个色下都看得见。 */
 .swatch.on .swatch-dot {
   box-shadow: 0 0 0 4rpx var(--sw-on), inset 0 0 0 1rpx var(--line-strong);
 }
@@ -63,8 +47,6 @@
   line-height: 1;
 }
 
-/* 色名：脚注档。它在圆点下面，是这一格的说明 ——
-   选中时压深一档并加重，因为它是**当前值**，不是「又一项」。 */
 .swatch-name {
   font-size: var(--fs-caption);
   color: var(--ink-3);
@@ -77,10 +59,6 @@
   font-weight: 600;
 }
 
-/* ---------- 样例区 ----------
-   这三块是**展示**，不是控件：它们不可点，所以不套 .btn / .seg-item
-   （套了就变成「看着能点、其实点不动」的假控件 —— 比没有更糟）。
-   造型照着真控件来，配色只取主题那一支。 */
 .demo-row {
   display: flex;
   align-items: center;

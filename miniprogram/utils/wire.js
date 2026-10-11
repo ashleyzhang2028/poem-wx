@@ -141,12 +141,6 @@ function packRecords() {
     });
   }
 
-  /* ⚠️ 这里**没有** `profile:v1` 那一行了。
-     它原来装的是「用户自己传的那张头像」，而头像现在只有一个来源：微信那张，
-     且**只落本机、不上传**（见 pages/mine/mine.js 的 onAvatarChoose）。
-     留着一个只有空 `avatar` 的行，等于每次同步都推一条没有内容的东西上去，
-     还会让它跟真正有内容的行争「谁更新」。
-     昵称不靠这一行 —— 它在服务端的 `accounts.nickname` 上，登录时随会话下发。 */
   return rows;
 }
 

@@ -47,9 +47,6 @@ function applySession(data) {
 
   if (data.caps && typeof data.caps === "object") store.write(store.KEYS.caps, data.caps);
 
-  /* ⚠️ 这里**不写头像**。头像只认本机存储里那一张（微信头像的临时路径），
-     服务端的 `wx_accounts.avatar_url` 从来不回值 —— 写它等于每次登录
-     都用一个空串把用户刚选的那张抹掉。 */
   const patch = {
     logged: true,
     tier: data.tier || "",
@@ -63,9 +60,6 @@ function applySession(data) {
   return data;
 }
 
-/* 「没接上服务器」这句话摆在哪，只摆一处。
-   内存里那个标记够本次会话用（toast 与状态都能立刻读到），存储里那句是给
-   下次冷启动用的（`entitlement.status()` 不在启动时发请求）。 */
 let offlineKind = "";
 
 function markOffline(kind) {
@@ -87,19 +81,7 @@ function login() {
         }
 
         if (!configured()) {
-          /* ⚠️ **这里不写 `logged: true`。**
-             这是本仓库最长寿的一处谎话：没接上服务器时按「本机身份」放行，
-             而 `logged` 是**服务端会话**的判据（别人都在读它）——
 
-               · auth.login() 回一个 `{local: true}`，`mine.js` 收下之后就报「已登录」；
-               · 从那一秒起，每个要登录的入口都不再提示，而它们要的服务端会话
-                 一个都没有（`gate.guard()` 不再拦、`sync.ready()` 永远 false）。
-
-             于是一个没连后台的包，长得跟正常的包一模一样 —— 用户点一下、
-             眼前是「已登录」，而库里一个字节都没落（Issue #121）。
-             「进门容易、用起来要求登录」是对的，但**本机不冒充登录**：
-             code 只存进 `loginCode`，只为了下一次真的接上服务器时
-             不用再点一下；真实身份仍以 `profile.logged` 与 `auth token` 为准。 */
           markOffline("off");
           const auth = store.read(store.KEYS.auth, {}) || {};
           auth.loginCode = res.code;
@@ -120,10 +102,7 @@ function login() {
           )
           .then(resolve)
           .catch((err) => {
-            /* 这一 Catch 是「点一下、闪一下，然后什么都没有」那半边的出处：
-               云托管没接上 / 两栏填错 / 服务端还没配密钥时，`request()` 一律拒绝，
-               而 reject 之后界面只留一句 toast。把「卡在哪一步」记下来，
-               界面与「我的」页才说得清下一步该动哪儿（Issue #121）。 */
+
             markOffline("cloud");
             reject(err);
           });
@@ -249,7 +228,6 @@ function localCode() {
   return String(auth.loginCode || "");
 }
 
-/** 本机为什么没在服务端：`cloud` = 云调用两栏未填或不对；`off` = 压根没配；`""` = 正常 */
 function offline() {
   if (offlineKind) return offlineKind;
   if (!configured()) return "off";

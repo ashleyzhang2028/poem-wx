@@ -74,7 +74,6 @@ Page({
       avatarUrl: src,
       avatarChar: (nick || "诗").slice(0, 1),
 
-      // 副题只说「我是谁」——「这张头像哪来的」不再是用户需要懂的事
       identitySub: !profile.logged ? "未登录" : "已登录 · 微信账号",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
@@ -107,9 +106,6 @@ Page({
       .then((res) => {
         wx.hideLoading();
 
-        /* ⚠️ `res.local` 是**没打到服务端**那一支（云调用两栏没填 / 没配）。
-           以前这里一律报「已登录」—— 而库里一个字节都没落，用户以为登上了
-           （Issue #121）。现在如实说「还没接上服务器」，并指出去填那两栏。 */
         if (res && res.local) {
           this.tellOffline();
           this.refresh();
@@ -139,9 +135,6 @@ Page({
       });
   },
 
-  /* 「没接上服务器」怎么讲，只讲一处。
-     两栏没填是**运维配置**，用户填不了 —— 所以这里只说会发生什么，
-     不指路去点哪个按钮（那两格在管理页里、普通用户看不到）。 */
   tellOffline() {
     const why = auth.offline();
     wx.showModal({
@@ -172,9 +165,7 @@ Page({
   syncNote(sy) {
     if (sy.lastSyncAt) return sy.lastText;
     if (!sy.ready) {
-      /* ⚠️ 原来是「换手机进度不跟随 · 点一下重试」—— 读起来像**点一下就能好**，
-         而没接上服务器时点多少下都不会好（Issue #121）。分开说：没登录是没登录，
-         没接服务器是没接服务器。 */
+
       if (!auth.logged()) return "先登录 · 登录后进度跨设备跟随";
       const why = auth.offline();
       if (why === "cloud") return "同步服务器没接上（云调用两栏）";
@@ -201,12 +192,6 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
-  /* 头像就是微信头像，**只落本机、不上传**。
-     平台没有「静默拿微信头像」的 API（2022 起 getUserProfile 只回匿名灰头像），
-     唯一合规的路就是这一下 chooseAvatar。而它给回来的是一枚临时文件路径
-     （wxfile://…）—— 那是这台机器上的东西，换台手机没有意义，
-     服务端的 sanitizeImgUrl 也只收 https 与 /api/avatar/。
-     所以这一格**不进同步报文**：不上传，也就不需要对象存储。 */
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;

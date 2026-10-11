@@ -1,8 +1,3 @@
-/* ============================================================
-   权限页：它是一张「我有什么」的对账单，不是收银台。
-   所以第一张卡只说清当前档位与能力覆盖，其余都是证据。
-   ============================================================ */
-
 .grant {
   background: var(--surface);
 }
@@ -42,9 +37,6 @@
   color: var(--red);
 }
 
-/* ---------- 能力矩阵 ----------
-   一行一项：勾 / 叉 + 名字 + 「差在哪」。
-   分组标题压低一档，它不是内容，是目录 */
 .cap-group {
   display: block;
   font-size: var(--fs-caption);
@@ -55,9 +47,7 @@
 
 .cap {
   display: flex;
-  /* 基线对齐配「勾 / 叉 + 名字」会歪：✓ 与 ✕ 的字形高度不一样，
-     一个坐得高一个坐得低，看着像两行没对齐。改成居中，勾和名字
-     在同一条中轴上。 */
+
   align-items: center;
   min-height: 64rpx;
   padding: 10rpx 0;
@@ -72,7 +62,7 @@
   width: 44rpx;
   flex: none;
   font-size: var(--fs-body);
-  /* 勾与叉都居中占满那一格，两行之间的勾才对得上一条竖线 */
+
   text-align: center;
   line-height: 1.4;
 }
@@ -93,7 +83,6 @@
   margin-right: var(--sp-2);
 }
 
-/* 名字与「差在哪」之间总要有个缝：右边那句是说明，不是名字的一部分 */
 .cap-note {
   padding-left: var(--sp-2);
 }
@@ -110,8 +99,6 @@
   line-height: 1.4;
 }
 
-/* ---------- 名录 ----------
-   一行一个人：左边身份，右边两个动作 */
 .acct {
   display: flex;
   align-items: center;
@@ -150,7 +137,6 @@
   gap: var(--sp-1);
 }
 
-/* 改档 / 改角色是原生 button，只压小尺寸与去掉原生最小宽度 */
 .acct-act {
   color: var(--ink-2);
   border-color: var(--line-strong);

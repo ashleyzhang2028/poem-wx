@@ -1,15 +1,5 @@
 @import "styles/tokens.wxss";
 
-/* ============================================================
-   基座
-   页面样式表只管「这一页长什么样」，凡是两页以上都要写的东西，
-   一律收在这里。收不住的后果不是难看，是**不一致** ——
-   用户说不清哪里别扭，只觉得「一塌糊涂」。
-
-   这一版的层次只有三样：**留白、字重、一道极淡的线**。
-   底色是白的、卡片也是白的，靠间隙与描边分开。
-   ============================================================ */
-
 view, text, button, input, textarea {
   box-sizing: border-box;
 }
@@ -19,27 +9,14 @@ view, text, button, input, textarea {
   padding: var(--sp-3) var(--page-x) calc(24rpx + env(safe-area-inset-bottom));
 }
 
-/* 自绘底栏是 fixed 的，不吃平台的安全区与点击区 —— 有底栏的页面
-   要自己留出「底栏高度 + 安全区」，否则最后一行被压在底栏下面。
-   （原生 tabBar 会由平台自动避让，自绘就得自己来，V21 守着。） */
 .page.has-tabbar {
   padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
-/* 有底栏的页面上，页内那个 .safe-bottom 垫片是**多余的** ——
-   .has-tabbar 的底部内边距已经含了安全区与底栏高度，
-   再垫一层就是 24rpx 的空白，最后一行离底栏远了半指。 */
 .page.has-tabbar .safe-bottom {
   display: none;
 }
 
-/* ---------- 页头 ----------
-   一屏的入口，回答「我在哪、这里有什么」。
-   参考图里那一屏最上面是一行小字标签 + 一个标题，没有别的装饰 ——
-   所以这里也不留底色、不留横线，只有字。
-
-   ⚠️ 页头的大标题不许等于导航栏标题（同屏两行一样的字等于没说）——
-   自检里有断言守着。 */
 .page-head {
   padding: var(--sp-2) var(--sp-1) var(--sp-4);
 }
@@ -53,14 +30,9 @@ view, text, button, input, textarea {
   line-height: var(--lh-tight);
 }
 
-/* 页头这里**是界面在说话**：「今天背什么」「课外阅读」「十七部集子」——
-   它和卡片里的篇名（咏鹅 / 将进酒）会同时出现在一屏里。
-   篇名走宋体是内容需求，页头若也走宋体，两处就会撞成同一种「雅」，
-   反而分不出哪个是书、哪个是书架。所以页头一律黑体，宋体只给诗文。 */
 .head-title.poem {
   font-family: var(--font-poem);
 }
-
 
 .head-sub {
   display: block;
@@ -70,15 +42,6 @@ view, text, button, input, textarea {
   margin-top: var(--sp-2);
 }
 
-/* ---------- 卡片 ----------
-   白底 + 一道极淡的描边，**没有投影**。
-   分层靠「描边 + 留白」这两样，够用了。
-
-   投影是刻意去掉的，不是漏了：卡与卡之间只有 --sp-3（24rpx）的缝，
-   而投影的模糊半径就有 6rpx，一条缝被两侧的投影共同铺满，
-   在浅灰底上会显成一条两头深、中间浅的横带（实测 236 → 245 → 236）。
-   首页自上而下七八张卡，就是七八条这样的带子 —— 看着像渲染坏了。
-   详见 tokens.wxss 里 --shadow 的注释。 */
 .card {
   background: var(--surface);
   border: 1rpx solid var(--line);
@@ -87,7 +50,6 @@ view, text, button, input, textarea {
   margin-bottom: var(--sp-3);
 }
 
-/* 带页头的一屏：第一张卡与页头贴紧一点，不然顶部空一块 */
 .page-head + .card {
   margin-top: 0;
 }
@@ -99,8 +61,6 @@ view, text, button, input, textarea {
   margin-bottom: var(--sp-1);
 }
 
-/* 卡片小标题：不加竖线、不加色 —— 参考图里的小标题就是一行黑字，
-   它靠位置（在卡片最上面）和字重说明自己是标题，不靠装饰。 */
 .card-title.bar {
   display: flex;
   align-items: center;
@@ -130,14 +90,6 @@ view, text, button, input, textarea {
   margin: var(--sp-3) 0 var(--sp-1);
 }
 
-/* ---------- 字段名 ----------
-   一张卡里「这一行是什么」那半截字的统一样子。它比 card-title 轻、
-   比正文小，因为它不是内容，是标签。
-
-   之前散成四份：搜索页的 .opt-label、飞花令的 .opt-label、
-   搜索页的 .section-label、阅读设置里裸写的 .sub-title ——
-   四份的字号差 3rpx、颜色一个 ink-2 一个 ink-3，一页里同时出现就露馅。
-   现在只有这一处。 */
 .field-label {
   display: block;
   font-size: var(--fs-hint);
@@ -147,24 +99,17 @@ view, text, button, input, textarea {
   margin-bottom: 4rpx;
 }
 
-/* 一条淡分隔，比 border 更轻，用在「同一张卡里换话题」的地方 */
 .divider {
   height: 1rpx;
   background: var(--line-2);
   margin: var(--sp-3) 0;
 }
 
-/* ---------- 空状态 ----------
-   一枚淡印章 + 一句人话 + 一个下一步。
-   有出处的「没有」比一个孤零零的方块让人安心 —— 用户知道是真没有，
-   不是没加载出来。 */
 .empty {
   padding: var(--sp-6) var(--sp-3) var(--sp-5);
   text-align: center;
 }
 
-/* 印章：一枚圆里放一个字。居中也走 flex —— 用「line-height 比 height
-   小 4rpx」去凑是同一个坏习惯，圆环一粗就偏，且偏在哪一侧每台机子不一样 */
 .empty-mark {
   display: flex;
   align-items: center;
@@ -192,25 +137,13 @@ view, text, button, input, textarea {
   margin-top: var(--sp-1);
 }
 
-/* ---------- 按钮 ----------
-   三种：**实心墨黑**（一屏的正事）、**白底描边**（并列的另一件事）、
-   **纯文字**（最轻的一档，用于行内小动作）。
-
-   按钮文字**垂直居中**靠的是「内容盒 + align-items」，
-   不是把 line-height 调成比 height 小几 rpx 去凑 —— 那种写法在字重、
-   字号、系统字体任意一个变了之后就会偏，且各页偏的方向还不一样。
-   原生 button 默认是 inline-block + 默认行高，这里统一改成 flex 居中。 */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
   height: var(--h-btn);
   padding: 0 var(--sp-4);
-  /* 按钮与选项格**同一档圆角**。上一版这里写的是 --radius-pill（999rpx）——
-     高 96rpx 的按钮配 999rpx，渲染出来就是一根胶囊；
-     而同一屏里 76rpx 的选项格是 16rpx 的近直角。
-     两种圆角、两种「是不是控件」的说法，用户看到的「不统一」就是它。
-     现在全站只有两种控件长相（见文件末「两条长相」一节）。 */
+
   border-radius: var(--radius-ctl);
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
@@ -227,8 +160,6 @@ view, text, button, input, textarea {
   border: none;
 }
 
-/* 一屏的正事：一块干净的墨黑。
-   参考图里「手机号快捷注册 / 新增档期」就是这一块 —— 全屏只有它一个。 */
 .btn.primary {
   background: var(--strong);
   border-color: var(--strong);
@@ -236,7 +167,6 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* 主按钮按下时压深一档、再缩一点，不然同色相邻时会显得「没点着」 */
 .btn.primary.button-hover {
   background: var(--ink-strong);
   border-color: var(--ink-strong);
@@ -264,11 +194,6 @@ view, text, button, input, textarea {
   margin-top: var(--sp-2);
 }
 
-/* 一排并列的按钮（「说一句 / 接不上了」「试听 / 保存」这种）。
-   两件事必须一起写：**flex 平分宽度** 与 **align-items: center**。
-   少了后者，flex 的默认 stretch 遇上 .btn 的固定 height 会退化成基线对齐 ——
-   同一排里主按钮与次要按钮**顶部齐、底部不齐**，看着像一个大一个小。
-   两个页面各写过一份，现在收在这里。 */
 .actions {
   display: flex;
   align-items: center;
@@ -280,8 +205,6 @@ view, text, button, input, textarea {
   flex: 1;
 }
 
-/* 瘦身版：搜索键、索引开关、名录改档这种「一行里的小按钮」都走它。
-   原生 button 自带最小宽度与默认内边距，不收掉就撑得整行走形。 */
 .btn.mini {
   display: inline-flex;
   align-items: center;
@@ -305,10 +228,6 @@ view, text, button, input, textarea {
   transform: scale(.985);
 }
 
-/* ---------- 列表行 ----------
-   行是导航不是按钮，所以用 hover-class 借原生触碰反馈，不套一层 button。
-   参考图的列表行是「左图标 + 标题/副题 + 右箭头」，行高很松 ——
-   一屏五六行就排满了，这是刻意的：手机上一行认不出是什么，点错比点慢更糟。 */
 .row-hover {
   background: var(--sink);
 }
@@ -332,9 +251,6 @@ view, text, button, input, textarea {
   min-width: 0;
 }
 
-/* 列表行的标题。**它不一定是篇名** —— 我的页的「背诵设置」、
-   关于页的「用户协议」走的也是这个类，这些是界面功能名，不是诗词名。
-   所以这里取 UI 字体；篇名另走 .row-poem（见下），别让宋体漫出来。 */
 .row-title {
   font-family: var(--font-ui);
   font-size: var(--fs-title);
@@ -345,15 +261,9 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
-/* 列表里的**篇名**：宋体只给这一类。咏鹅 / 江南 / 画 是诗词名，
-   「意见反馈」「清空本机数据」不是 —— 同一张卡上两种字混排是最扎眼的那种不一致。 */
 .row-poem {
   font-family: var(--font-poem);
-  /* 篇名是**内容**，不是「重点」—— 所以它不跟主题色走。
-     （Issue #26 加主题色时最容易多染的一处：.row-title 成了 --strong，
-       篇名挂在它后面，颜色就跟着变了。诗词名字上色，
-       与「篇名宋体是内容需求」那条是同一个道理：它是书，不是书架。）
-     正文里的诗字（.char-t / .poem-line）同理，都留在 --ink。 */
+
   color: var(--ink);
 }
 
@@ -367,7 +277,6 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
-/* 行尾那个 ›：压低饱和度，它是提示不是内容 */
 .row-go {
   color: var(--ink-4);
   font-size: 32rpx;
@@ -376,8 +285,6 @@ view, text, button, input, textarea {
   flex: none;
 }
 
-/* 行首图标底：参考图里每行左边有一个浅色小方块（一个 emoji / 一个符号）。
-   用 CSS 画一个圆角浅底，里面放一个字 —— 不引图片资源。 */
 .row-icon {
   flex: none;
   width: 64rpx;
@@ -393,25 +300,15 @@ view, text, button, input, textarea {
   color: var(--ink-2);
 }
 
-/* ---------- 标签 ----------
-   胶囊，浅底，小字。参考图里的「成功 / 提醒 / 错误」三个圆点标签就是这个尺寸。 */
 .tag {
   display: inline-flex;
   align-items: center;
-  /* 标签**不折行、不被压窄**。
-     它是「一个新学 / 复习」的量词胶囊，两个字的固定小块，
-     没有「装不下就换行」这种状态。少了这两条，它在 .row-line 那样
-     一行排开的容器里会被 flex 压缩：长一点的篇名（定风波·莫听穿林打叶声）
-     把标签挤到 46rpx 宽，「新学」于是折成上下两行 —— 实测标签高度
-     从 23px 涨到 42px，整行跟着变形，看着像一枚竖起来的圆点。 */
+
   flex: none;
   white-space: nowrap;
   font-size: var(--fs-caption);
   line-height: 1.5;
-  /* 与选项格同一套内边距口径：上下 --pad-opt-y、左右 --pad-opt-x。
-     标签比格子小一号（它没 min-height，是给文字当底），
-     但那两条边的比例是一样的 —— 一屏里标签与格子挨着时，
-     这一条决定它们是「同一套东西的两个尺寸」还是「两家人的东西」。 */
+
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border-radius: var(--radius-pill);
   color: var(--ink-2);
@@ -444,17 +341,11 @@ view, text, button, input, textarea {
   background: var(--sink);
 }
 
-/* 金色：**用户自己做的选择**（今日加背）。
-   与琥珀（复习）分得开 —— 琥珀说的是「系统排的，到期了」，
-   金说的是「我自己要加的」。同一个浅底上两句话，颜色不能一样。 */
 .tag.gold {
   color: var(--amber);
   background: var(--gold-soft);
 }
 
-/* ---------- 搜索框 ----------
-   参考图的输入框是「浅底 + 无描边 + 胶囊」：它比页面底深一点点，
-   所以看得出是可输入的，又不会因为一道黑边而抢戏。 */
 .search {
   display: flex;
   align-items: center;
@@ -478,9 +369,6 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
-/* ---------- 文本输入（后端地址这类）---------- */
-/* 输入框一律用原生 <input>，样式只统一尺寸与配色 —— 外观改不到它内部，
-   这点必须承认，所以只给边框与圆角 */
 .field {
   display: flex;
   align-items: center;
@@ -498,14 +386,6 @@ view, text, button, input, textarea {
   color: var(--ink);
 }
 
-/* ============================================================
-   统计大数字（参考图里最抓眼的一组）
-   ============================================================ */
-/* 三列并排，每列一个很大的数字 + 一行小标签，中间一道细竖线。
-
-   为什么值得做成共用件：它是参考图里**唯一**一处靠「大」来表达重点的地方。
-   上一版表达重点靠的是颜色（主色卡、金边、印章），一屏里好几处在喊，
-   结果谁也没被听见。大数字不一样 —— 一屏只有一组，且不用颜色。 */
 .stats {
   display: flex;
   align-items: stretch;
@@ -543,41 +423,6 @@ view, text, button, input, textarea {
   letter-spacing: var(--ls-caption);
 }
 
-/* ============================================================
-   小程序自有控件的统一口径
-   ============================================================ */
-/* 这一节是「控件用系统的、配色用这一版的」这句话的落点。
-   开关 / 单选 / 多选 / 滑动条 / 选择器 / 按钮全部走小程序自带控件：
-   行为、无障碍、键盘与读屏由平台保证，我们只负责把它们染成这一版的样子。
-
-   原生控件的交互色只能通过组件属性给（color / activeColor / selected-color），
-   属性在 WXML 里写；样式表这边只统一尺寸、圆角、字体与间距 ——
-   想靠 WXSS 改原生控件的内部结构是不被支持的，所以这里一行都不敢越界。
-
-   ## 「选一个」只有一套长相
-
-   Issue #12 前后反复栽在这里：同一屏里并存过**四种**说法 ——
-   圆点（原生 radio）、一道左侧竖线、填色的底、填色的格子。
-   四种都在说「这几个里选一个」，用户的原话是「选项也不统一」。
-
-   现在收敛成一套，只有两种排布：
-
-   | 排布 | 用在哪 | 类 |
-   |---|---|---|
-   | **横排分段**：合成一颗胶囊，选中的那段填墨黑 | 两三个互斥项（对齐 / 注音 / 在哪儿搜 / 怎么搜） | `.seg` / `.seg-item` |
-   | **等宽格子**：一格一个方块，选中的填墨黑 | 等长的一堆（学期 / 年级 / 每日首数 / 题型） | `.chip-group` / `.chip` |
-   | **竖排选项行**：一行一个，选中的填墨黑 | 名字较长、要一行一个（取诗范围 / 复习算法） | `.opt-group` / `.opt-row` |
-
-   三者的**选中态完全一致**：一块墨黑的底 + 白字。
-   差的是排布（横向排布 / 等宽网格 / 竖排），不是「长相」。
-   底层一律是原生 `<radio>` / `<checkbox>`，视觉隐藏。
-
-   ## 几毫米的规矩
-
-   · 选项与它的文字之间要有默认间距 —— 原生控件不自带外边距，
-     紧贴文字是浏览器的排法，不是控件的排法。这条定在控件自己身上。
-   · 行高收成一条：原生控件被 transform 缩放后，行盒仍按原尺寸算高度，
-     不给 line-height 的话文字基线会跟着控件对齐跑偏。 */
 .pref-item {
   line-height: 1.4;
 }
@@ -587,16 +432,6 @@ view, text, button, input, textarea {
   margin-right: var(--sp-2);
 }
 
-/* ---------- 字号滑块 ----------
-   「A —— A」这一排。两处用到：阅读页的偏好条、通用设置的正文字号。
-
-   左边一个小 A、右边一个大 A —— 它们说的不是「两个选项」，是**量程的两头**：
-   字号是连续量，光一根滑轨加一颗圆钮，在一排图标里看着就是个孤零零的圆圈，
-   既不知道调什么，也不知道往哪边变大。
-
-   两处必须长得一样，所以定在这里一处。上一版各写一份，一边用 ink-4、
-   一边用 ink-3，小 A 一边 22rpx、一边 24rpx —— 同一样东西两个样子，
-   用户说不清哪里别扭，只觉得「不一样」。 */
 .font-row {
   display: flex;
   align-items: center;
@@ -622,67 +457,19 @@ view, text, button, input, textarea {
   font-size: var(--fs-lead);
 }
 
-/* ---------- 选项行（竖排、多个选项、每个带名字）----------
-   「取诗范围」「复习算法」用的是它：一列 4~7 个选项。
-
-   ## 它为什么不该有圆点
-
-   用户 2026-10-02 的原话是「取诗范围我看不出还包括单选框的必要性」。
-   对的 —— 圆点在这里是**多余的第二遍**：
-   这几种控件（分段、格子、选项行）说的都是同一件事「这几个里选一个」，
-   而圆点只在**没有别的选中标志**时才需要。
-   格子用「填色」说，分段用「填色」说，选项行却另起一个圆点说 ——
-   同一个界面上三种说法，这就是「选项不统一」的来源。
-
-   所以选项行跟格子走同一套：**未选中是白底 + 一道极淡的描边，
-   选中是墨底白字 + 右侧一个勾**。勾是给多选留的位子，
-   单选这里画的是「已选」——同一枚图形，形状说「这是个控件」，
-   填色说「选的是它」。
-
-   ## 破相是怎么来的（上一版在这里栽过两次）
-
-   1. **那道竖线**。上一版选中态是 `inset 6rpx 0 0 var(--ink)` ——
-      一条贴左的竖线。inset 阴影**不参与圆角裁切的外沿**，
-      而这一行的 `border-radius` 是 14rpx：圆角把竖线的上端切掉一个斜口，
-      下端也被切 —— 屏幕上就是一根上不接顶、下不接底、左上还有豁口的黑条。
-      现在不画竖线了：整块填色本身就说明了「这一行」，
-      不需要再叠一道线。
-   2. **选中与未选中的左右起点不一样**。上一版给行加了
-      `margin: 0 var(--sp-1)`，而同一张卡里的格子（`.chip-group`）没有 ——
-      于是「学期/年级」和「取诗范围」的左边缝差 8rpx，
-      竖着扫下来就看得出错位。现在两者都归零：
-      卡片自己有 `--page-x` 的呼吸，行不需要再让一次。
-
-   ## 虚线框不画了
-
-   这几行原来还有 `border-bottom` 当行分隔。有了「填色的底」之后
-   分隔线是重复的：未选中的行是白底，靠行与行之间的空隙就能分。
-   线条越少，选中那块填色越显眼。 */
 .opt-group {
   display: flex;
   flex-wrap: wrap;
-  /* 一行之内格子之间的横缝。跟着 --pad-opt-x 走：内边距有多厚，缝就有多宽
-     —— 两者同源，「一格一个」的节奏才不会被缝挤乱。 */
+
   column-gap: var(--pad-opt-x);
   row-gap: var(--pad-opt-y);
 }
 
-/* 竖排：一行一条，各占满整行。
-   仍在用它的只剩「复习算法」—— 那几行名字后面还带着一句「锁住了」的说明，
-   一句话折行是常事，横排会挤。 */
 .opt-group.column {
   flex-direction: column;
   gap: var(--pad-opt-y);
 }
 
-/* 横排：**一样的格子，一样的缝，只差排法**。
-   一行的宽度 = 卡片内容宽（100%）减掉格子之间的缝，除以格数 ——
-   所以格数变了不用改任何别的数。
-
-   为什么取诗范围从竖排改回横排：Issue #12 的原话是
-   「取诗范围选项 inline 显示 而不是一行一条」。七个选项竖排要吃掉
-   七行的高度，一屏里只看得见「取诗范围」这一个设置项，
-   而它上面那两组（学期 / 年级）本来就是横排的 —— 同一张卡里两种排法。 */
 .opt-group.inline {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -690,8 +477,7 @@ view, text, button, input, textarea {
 
 .opt-group.inline .opt-row {
   justify-content: center;
-  /* 横排时宽度由格子定，文字跟着居中 —— 竖排那种「左对齐、右边留白」在这里
-     会看着像没排满。 */
+
   text-align: center;
 }
 
@@ -705,19 +491,6 @@ view, text, button, input, textarea {
   line-height: 1.25;
 }
 
-/* 列数：默认三列，页面上按内容长短挑 `cols-2` / `cols-4`。
-
-   为什么要有 `cols-2`：「取诗范围」那七个选项里最长的是
-   「小学+初中随机」（7 个字宽，Issue #26 已收成「小初随机」）。
-   三列时格宽只有 190rpx、文字要 171rpx —— 文字之外统共 19rpx，
-   两侧各不到 10rpx，就是用户说的「文字和它自己的边界太近了」。
-   而**内边距救不了它**：格子宽是均分定死的，padding 越大、
-   文字到边的距离越小。
-
-   所以这一屏按**最长的那个选项名**选列数，不是按好看：
-   列数越少 → 格子越宽 → 两侧留白越多，代价是行数变多。
-   七项排两列 = 四行（末行单吊一个「全部随机」，见 recite.wxml），
-   每一格从 190rpx 宽到 303rpx，两侧各留 87rpx。 */
 .opt-group.inline.cols-2 {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -738,8 +511,6 @@ view, text, button, input, textarea {
   transition: background-color var(--t-press), border-color var(--t-press);
 }
 
-/* 选中：填墨黑、白字、边同色。与 .chip.on 一字不差 —— 
-   它们本来就该长得一样，各写一遍迟早会漂。 */
 .opt-row.active {
   background: var(--strong);
   border-color: var(--strong);
@@ -754,15 +525,10 @@ view, text, button, input, textarea {
   color: var(--on-ink-soft);
 }
 
-/* 锁住的那几行（权限不够）：透明度压下去，但仍可读 —— 
-   整块隐藏会让人以为「这儿本来就没有」，压暗才说的是「有，但你现在用不了」。 */
 .opt-row.locked {
   opacity: .45;
 }
 
-/* 原生控件只留行为、不留外观：
-   点整行都选中、读屏读得到、键盘走得了 —— 换的只是一张脸。
-   与 .seg-radio 同一套写法。 */
 .opt-radio {
   position: absolute;
   width: 1rpx;
@@ -784,14 +550,6 @@ view, text, button, input, textarea {
   line-height: 1.4;
 }
 
-/* 横排时字号收一档 —— 三列里塞两个字，--fs-title（32rpx）会顶到边框上。
-   收到 --fs-hint 后与格子（.chip-t）**同档同色同字重**：
-   这才是「inline 的选项行长成了格子」这件事的最后一块拼图。
-
-   注意 `.opt-main` 的 `padding: 0` 只在**横排**下成立：
-   横排时盒子宽 100%，文字居中，横向的呼吸交给格子的 --pad-opt-x；
-   竖排一行一条时盒子是 flex:1 自适应，更不能有横向内边距 —— 
-   否则左边的 radio 与文字之间会多出一段说不清来历的空。 */
 .opt-group.inline .opt-name {
   font-size: var(--fs-hint);
 }
@@ -804,7 +562,6 @@ view, text, button, input, textarea {
   line-height: 1.6;
 }
 
-/* 横排的单选项（范围、模式、筛选这种一行放得下的） */
 .pref-item {
   display: flex;
   align-items: center;
@@ -819,7 +576,6 @@ view, text, button, input, textarea {
   transform: scale(.8);
 }
 
-/* 横排筛选条：内容多时横向滚，不折成两行把版式撑乱 */
 .chip-row {
   white-space: nowrap;
   margin-bottom: var(--sp-2);
@@ -830,7 +586,6 @@ view, text, button, input, textarea {
   margin-right: var(--sp-2);
 }
 
-/* ---------- 字段行（键值对）---------- */
 .kv {
   display: flex;
   align-items: center;
@@ -854,14 +609,11 @@ view, text, button, input, textarea {
 
 .kv-v {
   font-size: var(--fs-body);
-  /* 值不跟主题 —— 它是**读数**（「七年级上」「5 首」），不是重点。
-     跟主题的只有标题与按钮，这条边界见 tokens.wxss「墨拆成两支」。 */
+
   color: var(--ink);
   text-align: right;
 }
 
-/* ---------- 进度：一横一竖两个共同件 ---------- */
-/* 横条说「走到哪了」，环说「几比几」。两个都做，别只做一个 */
 .meter {
   height: 8rpx;
   border-radius: 4rpx;
@@ -876,7 +628,6 @@ view, text, button, input, textarea {
   transition: width var(--t-move) var(--ease);
 }
 
-/* 环：纯 CSS 锥形渐变，不引 canvas、不带图片资源 */
 .ring {
   position: relative;
   flex: none;
@@ -919,12 +670,6 @@ view, text, button, input, textarea {
   z-index: 1;
 }
 
-/* ---------- 未登录的那张卡 ---------- */
-/* 门禁卡在 14 个页面里各有一份，长相必须是同一个 —— 用户才会认得出
-   「这是同一道门」，而不是每页一套说法。
-
-   参考图里没有这种卡，但它的语言是有的：一块白底、一枚圆标、
-   一句人话、一个墨黑的主按钮。这一版就按这个来 —— 去掉渐变与印泥色。 */
 .lock-card {
   text-align: center;
   padding: var(--sp-6) var(--sp-4) var(--sp-4);
@@ -969,17 +714,6 @@ view, text, button, input, textarea {
   margin-top: var(--sp-4);
 }
 
-/* ---------- 方字格（飞花令的令字）----------
-   一个方格 + 一个字 + 一个原生 radio。两处用到（大会首页、飞花令页），
-   所以收在这里定一次。
-
-   ⚠️ 上一版把圆点 absolute 到 `right:-6rpx; top:-6rpx`，理由是「中心留给字」——
-   结果圆点**压在字的右上一笔上**：「而」「者」「有」的右上角被盖住半个，
-   而且缩到 0.6 之后命中区也移了位，点上去要先对准那个偏出去的小圈。
-
-   现在的做法：格子右上角**留出一块空**（padding-top 让字整体下移一点），
-   圆点就落在那块空里，不压任何笔画；命中区仍是整个 label（原生 radio
-   在 label 里，点格子任何一处都能选中）。 */
 .char {
   position: relative;
   width: 96rpx;
@@ -991,8 +725,7 @@ view, text, button, input, textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 上下各留一口气：上一版是「整块居中」，
-     字 + 小字两行合起来比格子高，贴到了上下边框上 */
+
   padding: 10rpx 0;
   box-sizing: border-box;
 }
@@ -1002,12 +735,6 @@ view, text, button, input, textarea {
   border-color: var(--strong);
 }
 
-/* 令字格里**不再画一个圆点**。
-   上一版是 absolute 到右上角、缩到 0.56 的原生圆点：小到看不出能点、
-   还压在「而」「者」「有」的笔画上，缩过头之后命中区也跟着偏出格子。
-   选中态由格子自己的「底色 + 描边 + 字变色」来说明白，够了。
-   radio 仍在 label 里（.seg-radio 视觉隐藏），点格子任何一处都选中。 */
-
 .char-t {
   display: block;
   font-family: var(--font-poem);
@@ -1016,8 +743,6 @@ view, text, button, input, textarea {
   line-height: 1.1;
 }
 
-/* 那一行小字（命中数）：它比字低一档，且不许把格子撑高 ——
-   给一条固定行高，格子高度才不会随数字位数变 */
 .char-n {
   display: block;
   height: 26rpx;
@@ -1035,19 +760,6 @@ view, text, button, input, textarea {
   opacity: .6;
 }
 
-/* ============================================================
-   垂直居中的一条总口径
-   ============================================================ */
-/* 小程序里「一行里的东西对不齐」几乎只有两个原因：
-
-   1. 用了 `line-height: <比 height 小几 rpx>` 去凑居中 —— 那不是居中，
-      是把偏差摊到每一行文字上，字号一换就露
-   2. 靠 `align-items: baseline` 排「文字 + 控件」那一行 ——
-      缩放过的原生控件基线不在视觉中心，字就跟着偏
-
-   所以这里只给一件事：**行内元素一律走 flex + center**。
-   下面这两个选择器覆盖了「一行文字 + 一个原生控件」的全部场景，页面不用再写。 */
-
 .row,
 .kv,
 .pref-item,
@@ -1058,7 +770,6 @@ view, text, button, input, textarea {
   align-items: center;
 }
 
-/* 数字与计数的字宽统一：等宽数字让「几比几」不会随数字变化左右跳 */
 .count-num,
 .mastery-num,
 .ring-text,
@@ -1072,12 +783,10 @@ view, text, button, input, textarea {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 底部安全区垫片 ---------- */
 .safe-bottom {
   height: calc(24rpx + env(safe-area-inset-bottom));
 }
 
-/* 页脚一句：给整屏一个收束，不然最后一张卡下面像被切断 */
 .foot {
   text-align: center;
   padding: var(--sp-1) 0 var(--sp-5);
@@ -1087,28 +796,6 @@ view, text, button, input, textarea {
   letter-spacing: 1rpx;
 }
 
-/* ============================================================
-   分段控件（「二选一 / 三选一」的统一长相）
-   ============================================================ */
-/* 「在哪儿搜」「怎么搜」「左对齐还是居中」「注不注音」——这些都是**互斥的
-   少数几个选项**。原来的写法是一排原生单选框：一个空心圆圈 + 两个字。
-   圆圈本身没问题（它确实是原生控件），问题是**它不适合这种场合**：
-
-   1. 圆圈与文字挤在一行，两个选项就占掉半屏，一行放不下三个；
-   2. 选中态只有「圈里多一个点」，对比度很低，扫不出来；
-   3. 「范围」与「方式」两组各排一行圆点（共四个），看着像同一组里的四个选项。
-
-   分段控件把「选一个」画成一颗胶囊：选中的那段填墨黑。
-   一眼看得出「这组里有几个选项、我选了第几个」。
-
-   底层**仍是原生 radio**：包在 <label> 里、被视觉隐藏。
-   点整段就能选中、读屏读得到、键盘走得了 —— 行为全是平台的，
-   我们只是换了一张脸。 */
-/* 分段控件：**一律撑满可用宽度**。
-   上一版只有加了 .fill 的才撑满 —— 于是列表页那条「全部 / 未读」
-   缩成一小撮挤在左边，而搜索页的「全站 / 课内」撑满整行，
-   同一屏两种宽窄。分段就是一个「二选一」的控件，
-   宽窄不该随页面变：撑满时两段的**可点面积**才一样大。 */
 .seg {
   display: flex;
   align-items: center;
@@ -1138,7 +825,6 @@ view, text, button, input, textarea {
   transition: background-color var(--t-press), color var(--t-press);
 }
 
-/* 选中态**填成墨黑**。只把字变色太轻 —— 一层浅灰底上扫不出选中了哪一段 */
 .seg-item.on {
   background: var(--strong);
 }
@@ -1148,16 +834,10 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* 图标跟着文字走：段被选中时整段文字变白，图标跟着变白。
-   用 currentColor 而不是再写一个 --ic 变量 ——
-   变量要在三处（自己 + 两个伪元素）各改一遍，漏一处就出现
-   「文字白了、图标还是灰的」。currentColor 只需改父级一处。 */
 .seg-item.on .seg-icon {
   color: var(--on-ink);
 }
 
-/* 原生 radio 只留行为、不留外观。
-   不用 display:none —— 那会让部分机型的读屏也读不到这一项 */
 .seg-radio {
   position: absolute;
   width: 1rpx;
@@ -1166,10 +846,6 @@ view, text, button, input, textarea {
   pointer-events: none;
 }
 
-/* 分段的文字：**与格子、选项行同档**（--fs-hint）。
-   上一版这里是 --fs-caption（22rpx），比格子小一档 ——
-   同一屏里「左对齐」比「一年级」小 3rpx，用户说不出，
-   但会觉得「这几个东西不是一套的」。 */
 .seg-text {
   font-size: var(--fs-hint);
   color: var(--ink);
@@ -1181,29 +857,12 @@ view, text, button, input, textarea {
   letter-spacing: 1rpx;
 }
 
-/* ---------- 等长选项的格子 ----------
-   年级（12 个）、学期（2 个）、每日首数（5 个）、题型（5 个）这类：
-   选项等长、数量不少，排成网格比排成一列省一半高度。
-   每一格是一个胶囊 —— 形状本身说「这是个能点的选项」，**填色说「选的是它」**。
-
-   为什么不给每格配一个原生圆点/方框：它吃掉横向空间（12 个年级就得多一列），
-   还跟第一行文字对齐、第二行缩进，看着像它只管辖半格。
-   格子排成矩阵这件事，已经把「一组、选一个」说清楚了。
-
-   ⚠️ 唯一的例外是**可多选**的那一组（.chip.multi）—— 单选与多选必须
-   看得出区别，而**区别只许落在底色上**：那一组未选中是灰底（--sink），
-   不另加勾选框。见下面「多选的格子」那一节。 */
 .chip-group {
   display: grid;
-  /* 行内与行间都是 8rpx —— 格子之间要看着是「一组里的几格」，
-     所以缝要小。但**两组之间**必须比组内更松（见下面的 chip-group + chip-group）：
-     否则上一组的末格与下一组的首格贴在一起，两格都选中时
-     会连成一块竖着的黑条，看着像一个被拉长的格子。 */
+
   gap: var(--sp-1) var(--sp-1);
 }
 
-/* 相邻两组格子之间的间距，要比组内大一档 ——
-   「学期」与「年级」本来是两组不同的东西，缝太小就看不出分组。 */
 .chip-group + .chip-group {
   margin-top: var(--sp-3);
 }
@@ -1220,25 +879,13 @@ view, text, button, input, textarea {
   grid-template-columns: repeat(4, 1fr);
 }
 
-/* 格子与「选项行」是同一套长相：未选中的样子、选中的样子、
-   圆角、描边的粗细，全都一样。上一版格子是「浅灰底 + 无描边」、
-   选项行是「白底 + 一道描边」—— 同一屏里两种底，用户说的
-   「选项也不统一」就是它。
-
-   现在：**未选中 = 白底 + 一道极淡描边**（灰底那一档留给「凹槽」）。
-   唯一的例外在下面「多选的格子」那一节：那一组未选中是灰底 ——
-   它得跟旁边的单选格区分开，而「能多选」不能由填色说。 */
 .chip {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: var(--h-opt);
-  /* 上下左右各留一口气：纵向 --pad-opt-y（不再是 0），横向 --pad-opt-x。
-     横向这一档是**用户裁决过的**：他连着说「选项内文字左右 padding 和它自己的
-     边界太近了」，而上一轮只给了 8rpx —— 文字两侧各剩 8rpx，比格子自己的
-     20rpx 圆角还小，看着就是顶在边上。现在与按钮同一档的厚（24rpx）。
-     两者都走 --ui-scale，整体收放时跟着一起收。 */
+
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
   border-radius: var(--radius-ctl);
@@ -1251,20 +898,10 @@ view, text, button, input, textarea {
   border-color: var(--strong);
 }
 
-/* 可多选的那一组，**未选中**是灰底 —— 与旁边单选的白底区分开，说的都是
-   「这儿能按」，只是这一格还能勾。这是单选与多选**唯一**的一处差别。
-   写 `.chip.multi:not(.on)` 而不是 `.chip.multi`：两条规则同权重时，**后写的赢**，
-   而 `.chip.multi` 在这一节里排在 `.chip.on` 后面 —— 直接写它会把选中态那一块
-   主色盖回去，变成「选中了还是灰的」。这也是它必须与 `.chip.on` 挨着写的原因
-   （隔着几十行，下一个人改这里的底就会重踩一次）。 */
 .chip.multi:not(.on) {
   background: var(--sink);
 }
 
-/* 未选中的文字用**正文色**，不用次级灰。
-   「未选中」这件事由**底色**说（白底 / 墨底），不需要文字再灰一次 ——
-   灰字 + 灰底会让人以为「这一项不能用」。次级灰留给「说明」，
-   不留给「选项的名字」。 */
 .chip-t {
   font-size: var(--fs-hint);
   color: var(--ink);
@@ -1277,55 +914,12 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* ---------- 多选的格子：只靠**底色**说选中 ----------
-   「题型」这一类是**可多选**，而它旁边（别处的范围 / 学期 / 年级）是单选。
-   两者必须看得出区别 —— 这是用户连着几轮点名的同一件事。
-
-   这一处前后五版，前四版都栽在同一根上：**想另加一个记号去说「能多选」**。
-
-     一版   墨黑胶囊 + 右上角一枚 14rpx 的小勾
-              → 「全填成墨黑胶囊，跟『选一个』的选中态长得一模一样，
-                 只看色块分不出哪个没勾」
-     二版   人人一颗双圈，内圈都填实
-              → 「选项怎么全部都是选中的重色？难道不是只有选中了才是重色吗？」
-     三版   白底 + **左侧**空心勾选框
-              → 「我不喜欢右侧方形选框，为什么不是未选中用灰色背景(和其他一样)，
-                 选中才是重色？」
-     四版   灰底 + **右侧**空心勾选框（勾也画上了，自己觉得漂亮）
-              → 「还有空心框？不是说了靠颜色区分是否选中吗？没选灰色背景色，
-                 和很多其他选项一样，选中了就是主题色背景色，为啥还有空心框」
-     现在   灰底 / 主色底两档，**没有方框、没有勾、没有任何外加记号**
-
-   三版的驳回是「方框在左边」，四版是把那句话读成了「挪到右边就行」——
-   用户要的其实是**把那个框整个拿掉**：判据从头到尾只有一条，颜色。
-   他前后说了四遍，每一遍都在说同一句：未选中的样子要**和别处那些选项一样**，
-   选中的样子也要一样，多选这件事不该改变一格的**形状**。
-
-   于是两档这样定（与别处的 .chip 只差未选中那一档底色）：
-
-     未选中 · 单选（别处的 .chip）  白底 + 一道描边
-     未选中 · 多选（.chip.multi）  --sink 的灰底 + 一道描边
-     选中   · 两者一模一样        填主色、白字
-
-   —— 单选与多选未选中时的差别**只有底色**，不是形状、不是记号，
-   所以「重色 = 选中」这条口径没被破，也没有多余的东西要去认。
-
-   那「能多选」由什么说？由这一格**点下去会不会把别格关掉**说 ——
-   这是行为，不该在静态的一枚方框上预支。方框还占着右侧一格宽，
-   把名字挤成两行；拿掉之后名字回到格子正中，与上面那组单选格子的名字同一条中线。
-
-   为什么不给每格配一个原生 <checkbox>：它自带的高宽、描边、勾的粗细
-   在各机型上都不同，而这一屏里它要与单选格子并排对齐；四版试下来，
-   凡是把「多选」画成形状的路子，用户都会在截图上一眼挑出来。 */
 .chip.multi {
-  /* 那枚勾选框撤掉之后，这一档不许再把「多选」画成任何形状 ——
-     名字两侧也不再为它让宽（四版让出的那两块正是名字被挤到换行的原因）。 */
+
   padding-left: var(--pad-opt-x);
   padding-right: var(--pad-opt-x);
 }
 
-/* 小号分段：给「同一张卡里连着两组」的场景，别把卡片撑高。
-   搜索页撤掉之后只剩飞花令的难度那一组在用。 */
 .seg-item.mini {
   height: 48rpx;
   padding: 0 16rpx;
@@ -1336,30 +930,6 @@ view, text, button, input, textarea {
   margin-top: var(--sp-1);
 }
 
-/* ---------- 图标：全用 CSS 画 ----------
-   这一组图标要说清「这一档是什么」，所以它得像图标的样子：
-   **同一个网格、同一根线宽、同一个视觉重量**。
-
-   上一版不是这样：三个图标各画各的 ——
-   「不注音」是 20rpx 的圆圈加一道斜杠（还戳出圈外），
-   「生字」是 15rpx 的小方框顶着一个点，「全文」是一排 6rpx 的实心小方块。
-   它们并排出现时：粗的粗、细的细、大的大、小的小，
-   连**光学中心**都不在一条线上（圆的溢出比方的多，视觉上会显得更低）。
-   用户的原话是「瞎画、不对齐」，说的就是这个。
-
-   这一版定一份网格，所有图标都长在它上面：
-
-     · **画布 24×24rpx**，图形一律内缩 2rpx —— 留出的那一圈是
-       「光学边距」：描边图形若顶到画布边缘，会比实心图形看着大一圈。
-     · **线宽 2.5rpx**。圆角端点。线宽只有这一种，
-       不许某个图标为了「看得清」偷偷加粗。
-     · **描边类与实心类不混用**：一个图标要么全描边、要么全实心。
-       混着画就会出现「有的深有的浅」，一眼就乱。
-     · 需要「这里有个东西」时用**描边**，需要「这里被填满」时用**实心**。
-
-   为什么仍不引图标字体 / 图片：主包余量只剩几百 KB，
-   而这组图标只在分段的选项里出现，一共九枚 —— 用 CSS 画得下来。
-   代价是每加一枚都要照着网格写，那就照着写。 */
 .seg-icon {
   position: relative;
   flex: none;
@@ -1367,7 +937,7 @@ view, text, button, input, textarea {
   height: 24rpx;
   --ic: currentColor;
   color: var(--ink-2);
-  /* 图标与文字同色系：选中时整段变白字，图标跟着白 —— 见 .seg-item.on 那组规则 */
+
 }
 
 .seg-icon::before,
@@ -1378,10 +948,6 @@ view, text, button, input, textarea {
   border-radius: 2rpx;
 }
 
-/* ---------- 对齐（三道线）----------
-   左对齐：三行都从左边起，长度递减 —— 「长短不一样」才是对齐的标志，
-   三行一样长就只是「三行」。
-   居中：三行都居中对齐，长度递减。 */
 .ic-left::before {
   left: 2rpx;
   top: 4rpx;
@@ -1412,20 +978,6 @@ view, text, button, input, textarea {
   height: 2.5rpx;
 }
 
-/* ---------- 注音三档 ----------
-   这三枚要一眼分得开，而且**不能跟「对齐」那两枚撞脸**。
-   第一版我给「全文」画了三道横线 —— 那正是 `.ic-left` 的样子，
-   同一屏里并排出现就是「瞎画、不对齐」的观感来源。
-
-   换一个母题：**「一个字 + 它头上的拼音」**。
-   这个母题本身就是注音这件事，三档的差别就落在「有几个」上：
-
-     · **不注音** —— 一个「字 + 拼音」被划掉（圆圈加斜杠，全世界都读「关掉它」）
-     · **生字**   —— 只有**一个**：一个字，头上一点拼音
-     · **全文**   —— 铺满：两个字并排，各自头上都有拼音
-
-   三点区别同时存在（有没有被划掉 / 一个还是两个 / 头上有没有点），
-   任意两点都足以分辨，所以不会看错。 */
 .ic-off::before {
   left: 2rpx;
   top: 2rpx;
@@ -1445,9 +997,6 @@ view, text, button, input, textarea {
   transform: rotate(-45deg);
 }
 
-/* 生字：**一个**「字 + 头上一点」，占不满整行 —— 右边空着一大块，
-   「只标几个」这件事由「空着的那块」说，比数点更直观。
-   （两个字各顶一个点，和「全文」在 24rpx 里几乎分不出来 —— 那是废图。） */
 .ic-rare::before {
   left: 2rpx;
   top: 6rpx;
@@ -1462,8 +1011,6 @@ view, text, button, input, textarea {
   height: 2.5rpx;
 }
 
-/* 全文：**三个**「字 + 头上一点」一路排到底，一点都不空 ——
-   「全都标了」由「排满」说。 */
 .ic-all::before {
   left: 2rpx;
   top: 5rpx;
@@ -1479,11 +1026,6 @@ view, text, button, input, textarea {
   height: 2.5rpx;
 }
 
-/* ============================================================
-   分段标题（一屏里分隔两组卡片的那行小字）
-   ============================================================ */
-/* 参考图里「卡片与数据 / 按钮与页签 / 输入、标签与状态」各是一枚浅灰胶囊，
-   独立于上下卡片，说明「下面这组是什么」。它比 card-title 轻，且不占卡片。 */
 .section-label {
   display: inline-flex;
   align-items: center;
@@ -1496,62 +1038,6 @@ view, text, button, input, textarea {
   margin: var(--sp-2) 0 var(--sp-2);
 }
 
-/* ============================================================
-   两条长相，不是三条（Issue #12 的收尾）
-   ============================================================
-   用户连着三轮问的都是同一件事：「选项也不统一」「能不能确保所有页面
-   相同元素界面的一致性」「和这两处的按钮要不要都和课外阅读列表页
-   那些集子的选项样式保持一致」。
-
-   查下来，全站的可点块当时有**三种**圆角：格子/选项行 16rpx 的近直角、
-   按钮 999rpx 的胶囊、标签 999rpx 的胶囊。三档里前两档都是「能点、能选中」，
-   却是两种长相 —— 这就是「不统一」的出处，而且它不在一页里，跨页才看得见。
-
-   现在收成两条：
-
-   ┌────────────────┬──────────────────┬────────────┬──────────┐
-   │ 长相            │ 用在哪            │ 圆角        │ 高度      │
-   ├────────────────┼──────────────────┼────────────┼──────────┤
-   │ **控件**        │ 选项格、选项行、按钮 │ --radius-ctl│ 76 / 96  │
-   │ **胶囊**        │ 标签、分段、搜索框   │ 999rpx      │ 56 / 60  │
-   └────────────────┴──────────────────┴────────────┴──────────┘
-
-   分界不是「大小」，是**它是什么**：
-   · 控件 —— 一格一个选项、一颗按钮。矩形，四个角看得见，填色说中没选中。
-   · 胶囊 —— 一行里的一段、一个标记。细长，两端的圆就是它的形状。
-   分段（.seg-item）留在胶囊那一档是刻意的：它本来就在一根轨道里，
-   一段的圆角等于轨道的圆角才咬得上；把它改成矩形反而像两个按钮。
-
-   守这件事的是 check.js V23：`.btn` / `.chip` / `.opt-row` 的圆角必须
-   同为 --radius-ctl，且都不许再写裸值。
-   ============================================================ */
-
-/* ============================================================
-   阅读面：一篇诗文的「读」这一半
-   ============================================================
-   标题区 · 身份行 · 偏好行 · 正文 · 注音 · 译文 —— 这六样原来只长在
-   详情页（pages/reader）上。2026-10-03 用户要首页也弹这张卡：
-
-     「首页的今日古诗背诵，当用户点击古诗，他不是从页面底部弹出详情页去
-       背诵吗？请参考 /poem 代码库。这种弹出卡片式方便用户背完随即进入
-       下一首，而不需要页面之间的切换。」
-
-   于是它有了两个住处：整页的详情页，和首页的背诵弹层
-   （components/recite-sheet）。**两处的长相必须是同一张卡** ——
-   用户说的是「同一个东西换个方式打开」，不是「两个页面各有各的排版」。
-
-   所以它收在这里，一处定义两处用。这不是「顺手抽个公共类」：
-   抽走的每一段都带着原来那份理由（为什么身份行是一行、为什么偏好行
-   不许折、为什么注音那条路行距要收），搬过来时一条都没丢。
-
-   两处各自的壳留在各自手里：
-     · 详情页：.poem-card 的内边距、背诵卡、译文卡的间距
-     · 弹层：底部滑上来的动画、把手、钉在卡底的评分区
-   ============================================================ */
-
-/* ---------- 标题区 ----------
-   居中、留白、克制。诗歌标题是这一屏的身份，
-   给它四周留够空，比给它加粗加大更有分量。 */
 .poem-head {
   text-align: center;
   padding: var(--sp-2) 0 var(--sp-3);
@@ -1567,29 +1053,11 @@ view, text, button, input, textarea {
   line-height: 1.45;
 }
 
-/* ---------- 身份行：朝代 · 作者 · 出处 · 学段 ----------
-
-   用户原话：「唐 骆宾王 课内诗词 新学 这些一定一行显示」。
-   上一版它们是三行三样式（朝代作者 / 出处 / 学段胶囊），
-   这一版收成一条，同一个字号、同一个色，中间用同一枚「·」断开 ——
-   四段读起来是一句话，不是四块东西。
-
-   为什么能一行装完（数字是量出来的，不是拍出来的）：
-     卡片内容宽 596rpx（750 − 2·28 页边 − 2·24 卡内 − 2·1 边框）
-     最长的一屏是古文：出处最长的「《左传》」＋「东周 · 左丘明」＋「新学」
-     四段文字 22rpx 档 + 三枚「·」（各 24rpx 含两侧内边距）
-     量出来 ≈ 390rpx，不足卡片内容宽的七成 —— 这一行不会折。
-
-   字号取 --fs-caption（22rpx）而不是 --fs-hint（25rpx）：
-   它是标题的注脚，压一档才像「落在诗题下面的一行小字」，
-   与上面那个大标题拉开层次。这也是全站唯一把 --fs-caption
-   用在「作者信息」上的地方，理由在这儿写着。 */
 .poem-meta-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 一行，不许折 —— 折了「一行显示」这件事就破了，
-     check.js V26 会当场红，而不是等你看截图才发现。 */
+
   flex-wrap: nowrap;
   margin-top: var(--sp-2);
 }
@@ -1597,15 +1065,12 @@ view, text, button, input, textarea {
 .poem-meta {
   font-size: var(--fs-caption);
   color: var(--ink-2);
-  /* 长出处（《古诗十九首》这种）不许把这一行撑破 */
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 学段那一格与前面三段**同字号同颜色**：它是这一行的一部分，
-   不再是一枚独立的胶囊 —— 上一版那枚胶囊在标题下面自己占一行，
-   看着像第二件事。 */
 .poem-meta.stage {
   color: var(--ink-3);
 }
@@ -1616,15 +1081,8 @@ view, text, button, input, textarea {
   padding: 0 12rpx;
 }
 
-/* 题名异写与选本出处：标题底下的一行小字（Issue #516 / #512）。
-   `--ink-3` 比身份行的 `--ink-2` 再退一档 —— 它是「关于这首诗的注」，
-   不是这首诗的身份；字号仍取 --fs-caption，与身份行同档（两行叠在
-   标题下面，字号不齐会看成两种东西）。 */
 .poem-note {
-  /* 一行，不许折 —— 与身份行同一条理由。写成 flex 而不是靠 <text> 的
-     行内特性：预览把每个 WXML 标签都当成块级 div 编译（render.js），
-     只有 flex 能让这两段真排在一行里；写成行内的话，截图与真机不一样，
-     而截图正是看这一行的人唯一的尺子。 */
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1638,57 +1096,27 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
-/* 两段之间那一枚点：两侧留白由它自己出，WXML 里写「 · 」两端的空白
-   会被编译器吃掉，两段会粘成「…张五·选自《唐诗三百首》」 */
 .poem-note-dot {
   font-size: var(--fs-caption);
   color: var(--ink-4);
   padding: 0 12rpx;
 }
 
-/* ---------- 阅读偏好：一行装完 ----------
-   对齐 · 注音 · 字号，按用户给的顺序排成一条，整行居中。
-   三组之间各一道极淡的竖线 —— 它不是装饰，是把这一行切成三段的那个
-   「顿」：没有它，「居中生字」会读成一个选项名。
-
-   ## 为什么能挤进一行（这些数不是拍出来的）
-
-   卡片内容宽：750 − 2·page-x(28) − 2·.poem-card 的横向内边距(24) − 2·边框(1)
-             = 596rpx
-   这一行的七个段（.pref-opt / .pref-size 里的两颗）：
-     左对齐 85 + 居中 62 + 不注音 85 + 生字 62 + 全文 62 + A－ 55 + A＋ 55 = 465
-   两道竖线（1rpx 的线 + 两侧各 --sp-1）              2 × 17 = 34
-                 ─────────────────────────────────────────
-                 合计                                    499
-
-   两份读数互相对账：算式 502rpx、浏览器（scripts/shots/prefs-width.js）
-   499rpx、卡片内容宽 596rpx —— **余 96rpx**。
-   check.js V25 拿算式看守（换文案、加档位它跟着动），
-   真值以那条命令打出来的读数为准。
-
-   ⚠️ 这一行是**这一屏里唯一把字收一档**的地方：字形取 --fs-caption（22rpx），
-   而全站的 --fs-hint 是 25rpx。按 25 算七个段要到 528rpx —— 其实也放得下，
-   但余量只剩 68；22rpx 与 25rpx 差 3rpx，手机屏上看不出来，
-   而这一行装的是三组七段，松一点更像「一行字」而不是「一堵字」。
-   这一行没有「一字一格」的整齐需求，所以收这一档不欠谁。 */
 .prefs {
   display: flex;
   align-items: center;
-  /* 一行，**不许折**。放不下就该当场红（V25），而不是悄悄折成两行 ——
-     折了以后「一行显示」这件事就没人知道它已经破了。 */
+
   flex-wrap: nowrap;
   justify-content: center;
   padding: var(--sp-1) 0 var(--sp-2);
 }
 
-/* 一组选项：贴在一起的两三段，段与段之间不留缝（缝由短的那档 padding 顶着） */
 .pref-seg {
   display: flex;
   align-items: center;
   flex: none;
 }
 
-/* 组与组之间那道竖线。高度 20rpx：比字高一点，才像「分隔」而不是「顿号」 */
 .pref-rule {
   flex: none;
   width: 1rpx;
@@ -1697,10 +1125,6 @@ view, text, button, input, textarea {
   background: var(--line-strong);
 }
 
-/* 一行里的一段。**不是** .seg-item：分段控件是「一根轨道里的几段」，
-   而那根轨道（.seg-group 的浅灰底）在五行十栏里是多余的一层底色 ——
-   这一行要的是「几个词，选中的那个填墨」，所以未选中就是裸字。
-   选中态与全站一致：填墨黑、白字（.seg-item.on / .chip.on / .opt-row.active 同一条）。 */
 .pref-opt {
   display: flex;
   align-items: center;
@@ -1728,9 +1152,6 @@ view, text, button, input, textarea {
   font-weight: 600;
 }
 
-/* 字号那两个端点。它俩是**动作**（一下一档），不是「选一个」，
-   所以没有被选中态 —— 只有「到头了」那一头退成灰（.off），
-   否则用户会一直点一个按下去什么也不发生的按钮。 */
 .pref-size {
   display: flex;
   align-items: center;
@@ -1745,15 +1166,10 @@ view, text, button, input, textarea {
   color: var(--ink-4);
 }
 
-/* 按下反馈：这一行里的三组都是「填墨黑」的选中态，
-   而字号那两个端点是动作、没有选中态 —— 不给反馈就成了「点了没反应」。 */
 .pref-opt-hover {
   background: var(--sink);
 }
 
-/* 注音那条路里的原生控件：视觉隐藏。它与正文里的 .opt-radio 是同一件事
-   （真机上它的宽高是 1rpx，flex 排布里等于不存在）——
-   这里再写一遍，是因为它长在 .pref-opt 里，而 .pref-opt 在全局。 */
 .pref-opt .opt-radio,
 .pref-opt radio {
   position: absolute;
@@ -1763,27 +1179,12 @@ view, text, button, input, textarea {
   pointer-events: none;
 }
 
-/* ---------- 今日加背：那一枚加号 ----------
-   位置两次改过。网页版在详情页那一行工具按钮里（gw-daily）；小程序端
-   先做成自己一行居中的胶囊，2026-10-04 用户说：
-
-     「加入今日背诵只需要一个加号就行了，并且和 A- A+ 放在同一行」
-
-   于是它就是偏好行末尾的一格 —— 与 A－ A＋ 同一副长相、同一个高度，
-   只换了字形（＋ / ✓）。**这是这一格唯一的身份**：一枚加号，
-   加进去以后变成一枚勾。不做「已加入今日背诵」那种长文案 ——
-   它会把这一行撑破（七个段 499rpx，卡片内容宽 596rpx，只剩 96rpx）。
-
-   ⚠️ 它左边没有那道竖线：竖线分的是三组**偏好**（对齐 / 注音 / 字号），
-   而加号是对这一首做的事，不是偏好 —— 给它也加一道线，等于说
-   它是第四组偏好。与 A＋ 之间留一段空白就够分清。 */
 .pref-plus {
   margin-left: var(--sp-3);
   min-width: 44rpx;
   border: 1rpx solid var(--line-strong);
 }
 
-/* 加进去了：填主题色，与全站「选中填色」同一套语言 —— 不必另发明一个记号 */
 .pref-plus.on {
   background: var(--strong);
   border-color: var(--strong);
@@ -1793,14 +1194,10 @@ view, text, button, input, textarea {
   color: var(--on-ink);
 }
 
-/* ---------- 正文 ----------
-   行距给到 1.95：古诗文一行一意，行距紧了就成了密电码。
-   字距也放开一点，宋体在屏幕上本来就偏瘦。 */
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
   font-family: var(--font-poem);
-  /* 行距 1.95：一句一行的排法本身就留了空，再给到 2.05 就成了散架 ——
-       一句一行时行距要收，一行两句时行距要放，两件事不能同一把尺子 */
+
   line-height: 1.95;
 }
 
@@ -1812,8 +1209,6 @@ view, text, button, input, textarea {
   text-align: left;
 }
 
-/* 段落：语料里的一道空行 = 作者分的一段。段与段之间空一档，
-   《琵琶行》的「序」与「诗」才是两段东西，而不是四十几行连着的一堵墙 */
 .poem-stanza + .poem-stanza {
   margin-top: var(--sp-3);
 }
@@ -1825,11 +1220,6 @@ view, text, button, input, textarea {
   letter-spacing: 2rpx;
 }
 
-/* 字号七档。写作 size--2 而不是 size-2，是为了让「负档」在类名上就不会
-   与正档混淆 —— 曾经把 size--1 写成 size-1，两档撞在一起过。
-   ⚠️ size-0 也要显式写出来：不写它就落到 `.poem-line` 的 --fs-poem 上，
-   而下面注音那一节是**逐档列全**的 —— 两处少一档，「切模式不跳字号」
-   就会在基准档上悄悄断掉（V30 第 5 条按逐个档位对齐，少了就红）。 */
 .poem-body.size--2 .poem-line { font-size: 30rpx; }
 .poem-body.size--1 .poem-line { font-size: 33rpx; }
 .poem-body.size-0 .poem-line { font-size: 36rpx; }
@@ -1838,40 +1228,10 @@ view, text, button, input, textarea {
 .poem-body.size-3 .poem-line { font-size: 46rpx; }
 .poem-body.size-4 .poem-line { font-size: 52rpx; }
 
-/* 左对齐时给每行一道极淡的引导线：不齐的行更需要「从哪开始」的锚 */
 .poem-body.align-left .poem-line {
   padding-left: var(--sp-2);
   border-left: 3rpx solid transparent;
 }
-
-/* ---------- 注音 ----------
-   用户 2026-10-03 点出的两句话，都落在这里：
-
-     1. 「有一行有注音、有一行没注音，没注音的那一行的行间距也应该和有
-        注音的行间距一样，否则隔行间距不一」
-        —— 上一版量出来：有拼音的行 81.3rpx，没拼音的行 53.3rpx，
-        一屏里两种高度交替。而现在「生字」档下混排是常态
-        （《将进酒》一页里就有五行没音），所以那不是边角，是主路。
-
-     2. 「有生字注音或者全文注音，要确保每个汉字在 A－ A＋ 所有字号下的
-        汉字字间距保持一致」
-        —— 上一版字宽取 min-width 34rpx，字号过了 34rpx 就顶不住，
-        字与字的空隙在 34rpx 档一行之内会从 4rpx 跳到 0
-        （37.9、37.9、34、34…），换个字号又是另一套。
-
-   所以注音这条路改成**逐档定死**：
-     · 一行 = 拼音槽(--py-slot) + 字身盒(--py-box) + 行的上下内边距
-       （各 2rpx），三个数都是这一档的常数 ——
-       **行里有没有拼音，算出来的高度一样**（没有拼音的字也占着那个槽）；
-     · 字宽 = 字高 = --py-box，格子方正；字身之外的间隙只剩 --py-gap（2rpx），
-       与字号无关，所以 A－ A＋ 全程字距不变；
-     · 标点只占半格（--py-box / 2）—— 全角标点的字身本来就只有汉字一半，
-       照一格占会白出半格，一句七言后面缀个逗号，这一行就顶出去。
-
-   ⚠️ 这一条**不许加行高倍数**：倍数遇到有拼音的那一行，会被拼音槽再撑
-   一次（「槽 + 字」本来就已经比倍数高），有音与无音的行高就差了半行。
-   行高就在这里定死，`.poem-body` 的 line-height 在这条路上不参与。
-   check.js V30 守着这条与上面两个不变量。 */
 
 .token-line {
   display: flex;
@@ -1885,8 +1245,6 @@ view, text, button, input, textarea {
   line-height: 1;
 }
 
-/* 注音那条路的行距就是 --py-line 这个盒子，不能再叠 .poem-body 的行距 ——
-   两个一起算，行与行之间会有半行空白。 */
 .poem-line.token-line {
   line-height: 1;
 }
@@ -1895,7 +1253,6 @@ view, text, button, input, textarea {
   justify-content: flex-start;
 }
 
-/* 一个字一格。`--py-box` 既是宽也是高：宽高同数，格子才稳得住。 */
 .token {
   display: inline-flex;
   flex-direction: column;
@@ -1904,24 +1261,14 @@ view, text, button, input, textarea {
   width: var(--py-box);
   height: var(--py-box);
   margin: 0 var(--py-gap);
-  /* 有拼音与没拼音的字混在一行时，底边对齐才不会高低跳 */
+
   vertical-align: bottom;
 }
 
-/* 标点：它的字身本来就只有汉字的一半（全角标点是「半格字身 + 半格空白」），
-   照 --py-box 占一格会白出半格 —— 一句七言后面缀个逗号，这一行就顶出去。
-   只给它汉字一半的宽，剩下半格由 flex 的底对齐管。
-   哪一格是标点由 utils/pinyin.js 给的 `han` 字段说了算（标签在 WXML 上）。 */
 .token.punc {
   width: calc(var(--py-box) / 2);
 }
 
-/* 拼音槽：给拼音留的那一格。里面的拼音靠底对齐贴住字，不靠 line-height 凑。
-
-   ⚠️ 拼音是**逐字一个 flex 子项**排的，槽低于拼音的行高时，flex 会把拼音
-   挤出去压到上一行的字上（量过：14rpx 的槽配 18rpx 的注音，拼音和上一行的
-   字叠在一起）。七档的槽恒定在 34rpx —— 注音字号 18rpx 不跟字号档位走，
-   槽也就没有理由跟着涨；槽一涨，小档里拼音反而离字越来越远。 */
 .tk-py {
   display: flex;
   align-items: flex-end;
@@ -1935,29 +1282,11 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
-/* 字身行高锁在 1：格子高度已经是这一档的常数，行高再乘一次就把格子撑高了。
-   字号逐档跟正文走 —— 这一条**由下面的 size-* 给**，不在这里取 --fs-poem：
-   --fs-poem 是**基准档**，取它就等于把 A－ A＋ 在注音这条路上关掉。 */
 .tk-ch {
   color: var(--ink);
   line-height: 1;
 }
 
-/* 字号七档：字身盒、拼音槽、行盒、字号**四个数在这一条里配齐**。
-   字身盒取到「字号 + 4rpx」：汉字占满一个字身，而**行距要留在字身之外** ——
-   盒子小于字号，笔画就顶出去压在上一行上（量过：盒子 34rpx、字 36rpx 时
-   行与行的空隙是负的 2rpx，中间那行字挤成一坨）。
-
-   拼音槽 34rpx 七档同值：注音字号不跟正文档位走（--fs-pinyin 恒为 18rpx），
-   槽跟着它定才合理 —— 槽随字号涨，小档里拼音会离字越来越远。
-
-   行盒 --py-line = 槽 + 字身盒 + 上下各 2rpx 呼吸。它是**这一行的高度**，
-   有拼音的字与没拼音的字都撑到这个数。
-
-   `font-size` 直接定在 .poem-body 上，`.tk-ch` 只是继承：
-   这样「字身盒」「字号」是同一档的一对数，量尺子的人一眼能对上，
-   也不会再出现「字号取了个基准值、档位白设」的事。
-   注音那条路的字号与无注音那条路（.poem-line）逐档同值 —— 切模式不跳字号。 */
 .poem-body.size--2 { --py-box: 34rpx; --py-slot: 34rpx; --py-line: 72rpx; font-size: 30rpx; }
 .poem-body.size--1 { --py-box: 37rpx; --py-slot: 34rpx; --py-line: 75rpx; font-size: 33rpx; }
 .poem-body.size-0  { --py-box: 40rpx; --py-slot: 34rpx; --py-line: 78rpx; font-size: 36rpx; }
@@ -1966,10 +1295,6 @@ view, text, button, input, textarea {
 .poem-body.size-3  { --py-box: 51rpx; --py-slot: 34rpx; --py-line: 89rpx; font-size: 46rpx; }
 .poem-body.size-4  { --py-box: 58rpx; --py-slot: 34rpx; --py-line: 96rpx; font-size: 52rpx; }
 
-/* 字身盒的负半边：拼音行里那一行 3rpx 的 `letter-spacing` 在逐字排的
-   行里按**每个 token** 加一遍（flex 子项之间也吃字距），
-   于是字与字的空隙比无拼音的行宽出 3rpx —— 两种排法又对不上了。
-   让 token 收回半个字距，两种排法的**步进**都落回「字宽 + 2·间隙」。 */
 .token {
   letter-spacing: 0;
 }
@@ -1977,9 +1302,6 @@ view, text, button, input, textarea {
   letter-spacing: 0;
 }
 
-/* ---------- 译文 ----------
-   详情页与弹层共用。卡片的间距不在这一类里 ——
-   详情页它是一张 .card，弹层里它是正文下面的一段。 */
 .trans-head {
   display: flex;
   align-items: center;
@@ -1989,9 +1311,6 @@ view, text, button, input, textarea {
   transition: background-color var(--t-press);
 }
 
-/* 收起态那一栏是一块**能点的地方**，所以要占满一行的触控高度 ——
-   它上一版是跟着标题走的（30rpx 上下），手指够不着。
-   展开之后它只是一行小标题，不必再撑那么高。 */
 .trans-head.closed {
   min-height: var(--h-btn-mini);
 }

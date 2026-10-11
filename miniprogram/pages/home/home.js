@@ -34,8 +34,6 @@ Page({
 
     themeStyle: "",
 
-    /* 语料没生成时的空态：data/ 是构建产物（不进仓库），
-       没跑 build:data 就打开，页面给一句人话，而不是白屏（Issue #121）。 */
     noData: false,
     logged: false,
     guest: false,
@@ -71,8 +69,6 @@ Page({
 
   refresh() {
 
-    /* 语料是构建产物。没生成时后面的 corpus.course() 都会回空，
-       页面会是一片「没有诗词」—— 那看着像坏了。这里显式说清是哪一步没跑。 */
     if (!corpus.hasData()) {
       this.setData({
         noData: true,
@@ -124,9 +120,6 @@ Page({
     const settings = store.settings();
     const all = corpus.course();
 
-    // 登录态这一支的范围口径：全从用户设置来（游客那一支在 method 开头就 return 了，
-    // 不共用这一段）。上面那次重构解冲突时把 `view` 的定义删了，却留下三处引用 ——
-    // 登录用户一进首页就 ReferenceError，整个今日计划渲染不出来，看着像「没有数据」。
     const view = { grade: settings.grade, term: settings.term, scope: settings.scope };
 
     const plan = S.generateDailyPlan({

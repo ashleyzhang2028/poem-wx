@@ -305,9 +305,6 @@ function profile() {
   return read(KEYS.profile, {}) || {};
 }
 
-/* 档案（昵称 + 头像）是**本机**那一份：头像只有微信一个来源且不上传，
-   昵称在服务端另有一处（登录时随会话下发）。所以这里不再盖 `at` ——
-   没有跨设备比较，时间戳也就没有意义了（V22 原来守的那条随之退场）。 */
 function saveProfile(patch) {
   const next = Object.assign(profile(), patch || {});
   write(KEYS.profile, next);
@@ -320,9 +317,6 @@ function saveSession(patch) {
   return next;
 }
 
-/* 头像只有一张：本机存储里那一枚（微信头像的一份临时路径）。
-   服务端从来不回头像（`wx_accounts.avatar_url` 一直是空的），
-   所以这里不再有「先本机、后微信」的回落 —— 没有第二处可回落。 */
 function avatarSrc() {
   return profile().avatarLocal || "";
 }

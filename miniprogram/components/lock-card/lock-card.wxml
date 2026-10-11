@@ -1,10 +1,7 @@
 <view class="card lock-card">
   <text class="lock-mark">{{markText}}</text>
   <text class="lock-title">{{title}}</text>
-  <!-- note 是「为什么进不去」的那句人话，各页自定（详情页是
-       「登录后才能看正文与进度」）。属性一直挂在组件上，wxml 却从没渲染它 ——
-       真机上这句根本没出现过，只有离线预览的替身自己拼过一行
-       （Issue #49 走查时发现的：预览里有、真机没有）。 -->
+
   <text class="lock-note" wx:if="{{note}}">{{note}}</text>
   <button class="btn primary block lock-btn" bindtap="onLogin">微信登录</button>
 </view>

@@ -1,13 +1,10 @@
-<!-- 背到这里 -->
 <view class="sheet-root" wx:if="{{open}}">
   <view class="sheet-mask" bindtap="onClose"></view>
 
   <view class="sheet" style="{{themeStyle}}">
-    <!-- 把手：一根短横。它说「这张卡是拉上来的」，也是页面与卡之间的那道边 -->
+
     <view class="sheet-grip"></view>
 
-    <!-- 队列里的位置。放这儿而不是标题里 ——
-         标题是这首诗自己的事，「第几首」是今天这一趟的事 -->
     <view class="sheet-head">
       <text class="sheet-step">{{navText}}</text>
       <view class="sheet-close" hover-class="sheet-close-hover" hover-stay-time="60" bindtap="onClose">
@@ -18,7 +15,7 @@
     <view class="sheet-body">
       <view class="poem-head">
         <text class="poem-title">{{title}}</text>
-        <!-- 身份行：朝代 · 作者 · 出处 · 学段，一行装完（与详情页同一套） -->
+
         <view class="poem-meta-row">
           <text class="poem-meta">{{dynasty}}</text>
           <text class="poem-dot">·</text>
@@ -30,8 +27,7 @@
           <text class="poem-dot">·</text>
           <text class="poem-meta stage">{{stage}}</text>
         </view>
-        <!-- 题名异写与选本出处（Issue #516 / #512）——与详情页同一行小字，
-             理由写在 reader.wxml 那一处（身份行装不下第二重出处） -->
+
         <view class="poem-note" wx:if="{{aliasText || selection}}">
           <text class="poem-note-t" wx:if="{{aliasText}}">{{aliasText}}</text>
           <text class="poem-note-dot" wx:if="{{aliasText && selection}}">·</text>
@@ -39,7 +35,6 @@
         </view>
       </view>
 
-      <!-- 阅读偏好：一行三段（对齐 · 注音 · 字号），与详情页同一套写法 -->
       <view class="prefs">
         <radio-group class="pref-seg" bindchange="onAlign">
           <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
@@ -70,18 +65,12 @@
           </view>
         </view>
 
-        <!-- 今日加背：一枚加号，与 A－ A＋ 同在一行。
-             在弹层里加背是**正当的一刻** —— 背到一半想「这首明天还得再来」，
-             当场就能加，不必退出去回首页。
-             它俩共用同一格样式（app.wxss 阅读面「今日加背」一节）：
-             详情页与这张卡是同一张卡，不该各排一遍。 -->
         <view class="pref-opt mini pref-plus {{dailyOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily">
           <text class="pref-t">{{dailyOn ? '✓' : '＋'}}</text>
         </view>
       </view>
 
-      <!-- 正文：版式由 corpus.layout() 决定，注音与正文同形同序 -->
       <view class="poem-body align-{{align}} size-{{fontSize}}">
         <block wx:if="{{!pinyinOn}}">
           <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
@@ -116,13 +105,6 @@
       </view>
     </view>
 
-    <!-- 评分：钉在卡底，滚到哪儿都够得着。
-         这一块是「背完了」唯一要做的事，不该跟着正文滚走。
-
-         顺序与详情页同一套（用户 2026-10-04：「忘记 模糊 记住三个按钮
-         不需要用卡片包裹，单独一行；掌握度卡片放在这三个按钮下面」）：
-         先评、再看读数。评完眼睛往下走一格就看见掌握度涨了没有 ——
-         上一版读数在上、按钮在下，正好反着。 -->
     <view class="sheet-foot">
       <view class="actions">
         <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
@@ -141,8 +123,6 @@
 
       <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
 
-      <!-- 上一首：只在有上一首时露脸。它是「翻回去看一眼」，
-           不是第二个评分入口 —— 所以压成一行灰字，不占一颗按钮 -->
       <view class="sheet-prev" wx:if="{{index > 0}}" hover-class="sheet-prev-hover" hover-stay-time="60" bindtap="onPrev">
         <text class="sheet-prev-t">上一首</text>
       </view>
