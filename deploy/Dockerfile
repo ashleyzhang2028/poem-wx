@@ -82,6 +82,17 @@ COPY --chown=node:node serve-api.js ./
 # 与 serve-api.js 同一层、同一个名字（COPY 的源按上下文根取）。
 COPY --chown=node:node store-mysql.js ./
 
+# 分片路由（Issue #115 / #134）。与 store-mysql.js 同一层、同一个名字，
+# 由流水线从 deploy-api-serve/ 摆进上下文根。
+#
+# ⚠️ 这一行**必须有**：serve-api.js 在**启动那一刻** require("./shard-api.js")，
+#    而上面 `.dockerignore` 把它放行、`.cnb.yml` 也把它摆进了上下文 ——
+#    放行 ≠ 进镜像。少这一句时构建与部署**都是绿的**（没有任何 COPY 会点它的名），
+#    容器起来之后立刻 `Cannot find module './shard-api.js'`，
+#    云托管报「Back-off restarting failed container」——
+#    看着像服务要重启，其实是镜像里从来没有过这个文件。
+COPY --chown=node:node shard-api.js ./
+
 # 正文分片（Issue #121 方案 A）：分片跟主包一起走云托管容器下发，**仍然免备案**。
 #
 # 为什么可以这样：云调用（wx.cloud.callContainer）走微信内网，不经过

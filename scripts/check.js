@@ -7013,6 +7013,13 @@ function gapped(items, max) {
   ok("Dockerfile 的 COPY 源是 shard-src（上下文根那一层）",
     /COPY --chown=node:node shard-src \/tmp\/shard-src/.test(dockerfile));
 
+  ok("Dockerfile 把 shard-api.js 拷进镜像（放行 ≠ 进镜像，启动期 require 它）",
+    /COPY --chown=node:node shard-api\.js \.\//.test(dockerfile),
+    "白名单放行、流水线摆进上下文都不等于它进了镜像 —— 没有这句 COPY 时" +
+      "构建与部署都是绿的，容器起来才 `Cannot find module './shard-api.js'`" +
+      "（Back-off restarting failed container）。它是 serve-api.js 启动期 require 的，" +
+      "与 store-mysql.js 一样得有一条自己的 COPY。");
+
   ok("流水线把 shard-api.js 摆进上下文那一层",
     /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
   ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
