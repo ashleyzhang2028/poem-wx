@@ -11,12 +11,12 @@
         <view class="seal"><text class="seal-t">跬</text></view>
       </view>
       <view class="guest-bar">
-        <text class="guest-title">在仓库根执行</text>
-        <text class="guest-sub">npm run build:data</text>
+        <text class="guest-title">先取语料</text>
+        <text class="guest-sub">clone-poem.sh /tmp/poem</text>
       </view>
       <view class="guest-bar">
-        <text class="guest-title">POEM_WEB_DIR 指向 poem</text>
-        <text class="guest-sub">见 README「快速开始」</text>
+        <text class="guest-title">在仓库根编译</text>
+        <text class="guest-sub">npm run build:data</text>
       </view>
     </view>
     <view class="safe-bottom"></view>
