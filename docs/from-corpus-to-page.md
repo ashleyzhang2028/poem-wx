@@ -74,11 +74,19 @@ corpus.ensureEntry(id)   → course.json 没有再走分片（下一节）
 ```
 corpus.ensureEntry(id)
   → bucketOf(id) 查清单，算出片名 t017
-  → remote.shard("t017")      utils/remote.js，走 wx.cloud.callContainer
+  → corpus.bucket("t017")     先试 require（真机上 ignore 掉了，读不到）
+  → corpus.shardFromDisk()    再试磁盘：开发者工具打开 miniprogram/ 时走这一条
+  → remote.shard("t017")      都没有才走云：utils/remote.js → wx.cloud.callContainer
   → 容器 /api/shard/t017      deploy-api-serve/shard-api.js 读 /app/shards/t017.json.gz
   → 200 + Content-Encoding: gzip（每片约 44 KB）
   → corpus 缓存这一片（上限 40 片）→ 渲染
 ```
+
+**磁盘那一条是给开发者工具留的。** 工具是真机打包器：`data/texts/` 被 ignore 掉，
+`require` 一律抛 `MODULE_NOT_FOUND`；但那个目录就在你本机磁盘上。
+少了这条兜底，本地跑完 ① 段也只能读课内，课外一律「这一篇取不到正文」——
+而「这一篇取不到正文」在真机上指的是另一件事（下一节）。
+真机上没有 `fs`，这条自动跳过，行为与从前一致。
 
 ⚠️ **清单必须进包，正文必须不进包。** `project.config.json` 的 `packOptions.ignore`
 排掉整个 `data/texts/`；清单一落进去，`bucketOf()` 就一律回空，
