@@ -93,10 +93,18 @@ COPY --chown=node:node store-mysql.js ./
 #      同量下通常更便宜 —— 换来的是「不办备案」与「不养一套 CDN」；
 #   2) 容器是唯一缓存层，冷启动后第一波请求要现压一次 gzip。
 #
-# ⚠️ 默认**不拷内容**：给 `--build-arg COPY_SHREDS=1` 才有分片。
-#    没打旗时 /api/shard/* 回 404 E_NO_SHARDS（出声，不静默回空语料）。
-#    25MB 分片压缩后 5.6MB（22.5%），是刻意不摊进每次构建上下文的：
-#    绝大多数调试构建用不到它，带上只会让每次部署多传 5.6MB。
+# ⚠️ **`COPY_SHREDS=1` 是默认**（流水线给的是 `${COPY_SHREDS:-1}`）。
+#    只有显式写 `COPY_SHREDS=0` 才不拷内容 —— 那一档 /api/shard/* 回 404
+#    E_NO_SHARDS（出声，不静默回空语料），是给**本地调试**用的：
+#    25MB 分片压缩后 5.6MB（22.5%），调后端那几条路由时用不上它。
+#    线上正式版要发的就是课外正文，所以默认这一档必须带分片 ——
+#    不带的话用户看到的是「这个版本里没有课外正文」，而那不是缺陷，
+#    是**发错了镜像**。两档的差别见 deploy/README.md 那张表。
+#
+# ⚠️ 上下文里那层摊的是 `t001.json.gz` 这**一个**名字（不是 `t001.json.gz`
+#    配一份 `t001.json`）：下面 cp 进 /app/shards 之后就叫 `t001.json.gz`，
+#    shard-api.js 发预压缩那份时找的正是它。只摊 gz 是刻意的 —— 25MB 原文
+#    一个字节都不用进上下文，容器也不用解压（发出去的就是这些字节）。
 #
 # ⚠️ 但**上下文里那一层 `shard-src/` 每次都要在**（打了旗有内容，没打旗是空目录）
 #    —— 因为下面那句 COPY 是**无条件**的，它前面没有 if，只有后面那句 RUN 才看旗。
@@ -109,11 +117,15 @@ COPY --chown=node:node store-mysql.js ./
 #    内容才按旗摊。这样「不打旗 → 构建绿 + 404 E_NO_SHARDS」才和文档一致。
 # ⚠️ 上下文里那层叫 `shard-src/`，**且每个文件都是 .gz** —— 流水线摊的时候
 #    只摊压缩后那份（22.5%）。容器里发的就是这些 gz 字节，一个都不用解。
-ARG COPY_SHREDS=
 COPY --chown=node:node shard-src /tmp/shard-src
-RUN if [ "$COPY_SHREDS" = "1" ]; then \
+# ⚠️ 默认值也要是 1：`ARG COPY_SHREDS=` 是「没给 --build-arg 就空」，
+#    而那会让**忘了递参数**的构建静默产出一个没分片的镜像 ——
+#    构建绿、部署绿、`/api/shard/*` 404，而这一版是要发出去的正式版。
+#    `ARG COPY_SHREDS=1` 让「没递」与「递了 1」等价，只有显式 0 才关。
+ARG COPY_SHREDS=1
+RUN if [ "$COPY_SHREDS" != "0" ]; then \
       mkdir -p /app/shards \
-      && cp /tmp/shard-src/*.json /app/shards/ \
+      && cp /tmp/shard-src/*.json /app/shards/ 2>/dev/null || true \
       && cp /tmp/shard-src/*.json.gz /app/shards/ \
       && rm -rf /tmp/shard-src \
       && du -sh /app/shards; \

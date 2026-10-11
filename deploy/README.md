@@ -5,7 +5,7 @@
 
 | 文件 | 干什么 |
 |---|---|
-| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080；里面装一个 `mysql2`；`COPY_SHREDS=1` 时再拷一份正文分片 |
+| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080；里面装一个 `mysql2`；默认再拷一份正文分片（`COPY_SHREDS=0` 才不拷） |
 | `store-mysql.js` | **服务端存储层的 MySQL 实现**（Issue #111）：那组 `getX/putX` 的另一种落地 |
 | `sql/mysql-schema.sql` | 建表语句（全部表，幂等）。⚠️ 它建的是**表**，落点那个**库要自己建**（`CREATE DATABASE \`poem\``），且执行前要 `USE \`poem\`;` —— 见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 3.1 / § 四 |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
@@ -89,18 +89,24 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 
 分片跟主包一起走这个容器下发 —— **仍然免备案**。开关是构建参数 `COPY_SHREDS`：
 
-| | 不加 | `COPY_SHREDS=1` |
+| | 不写（**默认**） | `COPY_SHREDS=0` |
 |---|---|---|
-| 上下文里 | 没有 `shard-src/` | `shard-src/*.json` + `*.json.gz`（**只摊压缩后那份**，5.6MB） |
-| 镜像里 | 没有 `/app/shards/` | `/app/shards/`（5.6MB） |
-| `/api/shard/*` | `404 E_NO_SHARDS` | 200 + `Content-Encoding: gzip`（每片约 44KB） |
+| 上下文里 | `shard-src/*.json.gz`（**只摊压缩后那份**，5.6MB） | 空目录（`shard-src/` 本身仍在，见下） |
+| 镜像里 | `/app/shards/`（5.6MB） | 没有 `/app/shards/` |
+| `/api/shard/*` | 200 + `Content-Encoding: gzip`（每片约 44KB） | `404 E_NO_SHARDS` |
+
+⚠️ **默认是「有」。** 正式版要发的就是课外正文，不带分片的镜像是给本地调试的。
+两档的语义要分清：`COPY_SHREDS` **没定义** → 走默认；`COPY_SHREDS: "0"` → 显式关。
+写成空串（`""`）是第三档，别用 —— 那既不是「没定义」也不是「明确不要」。
 
 三件事一起改才算接上，缺一样都是**不报错地坏**：
 
 1. `deploy-api-serve/shard-api.js` —— 路由本体（名字白名单 + gzip 下发）
 2. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
-   以及 `if [ "${COPY_SHREDS:-}" = "1" ]` 那段摊分片
-3. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src**`
+   以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）
+3. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src/**`
+   —— 白名单那一行少了，构建与部署照样绿，而容器起不来（Issue #115）。
+   `.cnb.yml` 的 build & push 现在会 grep 这两条放行，缺了当场退出
 
 `scripts/check.js` V53 逐条守着上面这三点 + 客户端那一半；
 `scripts/e2e-mysql.js` 也摊一遍上下文（它曾经因为少摊 `shard-api.js` 而炸过）。
@@ -109,7 +115,7 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 一个都不用解 —— 见 `shard-api.js` 的 `gzipped()`。
 
 **为什么默认不摊**：绝大多数调试构建用不到分片，带上只会让每次部署多传 5.6MB。
-要分片就在 `.cnb.yml` 的 `env:` 加 `COPY_SHREDS: "1"`（字面量，别写 `${…:-…}`）。
+不用做任何事就是带分片的。要瘦镜像才在 `.cnb.yml` 的 `env:` 加 `COPY_SHREDS: "0"`（字面量，别写 `${…:-…}`）。
 
 账（体积 / 流量 / 实例 / 与 CDN 的对比）见 [`../docs/shard-delivery.md`](../docs/shard-delivery.md)。
 

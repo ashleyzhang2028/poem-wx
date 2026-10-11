@@ -9747,20 +9747,92 @@ function gapped(items, max) {
      出现在 `if [ "${COPY_SHREDS:-}" = "1" ]` **之前**（同一段 stage context 里）。 */
   {
     const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
-    const flag = cnb.indexOf('if [ "${COPY_SHREDS:-}" = "1" ]');
+    const flag = cnb.indexOf('if [ "${COPY_SHREDS:-1}" != "0" ]');
     ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
       mk >= 0 && flag >= 0 && mk < flag,
-      "`shard-src/` 得在判旗之前就 mkdir —— COPY 是无条件的，空目录才是它的合法来源");
+      "`shard-src/` 得在判旗之前就 mkdir —— COPY 是无条件的，空目录才是它的合法来源" +
+      "（判旗那句现在是 `if [ \"${COPY_SHREDS:-1}\" != \"0\" ]`，这条按它找）");
   }
-  ok("流水线在 COPY_SHREDS=1 时才摊分片内容",
-    /if \[ "\$\{COPY_SHREDS:-\}" = "1" \]/.test(cnb));
+  /* ⚠️ 开关的默认值：**默认摊**（`${COPY_SHREDS:-1}`），只有显式 `0` 才跳过。
+     原先只有 `= "1"` 才摊，于是任何一个不带那面旗的构建（`main` push、调试构建、
+     `deploy/build.sh`）产出的镜像里没有 `/app/shards/` —— 而这一版是要发出去的
+     正式版，用户看到的是「这个版本里没有课外正文」。那句话是给**没开分片的调试
+     镜像**用的，不该是线上正式版的样子。
+     判据落在那两个变量的**取值**上，不落在「出现没出现」上：
+     `= "1"` 那种写法在这条上是红的，`:-1` / `!= "0"` 才绿。 */
+  ok("流水线默认就摊分片（`:-1`，不是只有 `=1` 才摊）",
+    /if \[ "\$\{COPY_SHREDS:-1\}" != "0" \]/.test(cnb),
+    "摊分片那步还是「只有 =1 才摊」—— main push 拿到的镜像里没有分片，" +
+      "课外正文只剩 404 E_NO_SHARDS，而那是给调试镜像留的话");
   ok("摊的是压缩后那份（.gz），不是 25MB 原文",
     /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),
     "摊原文的话，每次构建上下文从 0.3MB 变成 25MB");
+  /* ⚠️ 摊的那个名字必须**逐字**对得上 `shard-api.js` 的 `fileOf`：
+     它找的是 `<name>.json`（预压缩那份在旁边叫 `<name>.json.gz`）。
+     摊成 `t001.json.gz`（把 `.json` 留着）是个**静态绿、运行时空**的坑 ——
+     构建照过（check 只认形状）、目录非空（E_NO_SHARDS 不会响），
+     而每一片都回 404 E_NO_SHARD。判据落在 `basename "$f" .json` 上。 */
+  ok("摊出来的名字是 t001.json.gz（fileOf 找 <name>.json + .gz，多留一个 .json 就每一片 404）",
+    /basename "\$f" \.json\)/.test(cnb) && /\.json\.gz"/.test(cnb),
+    "摊成了 `basename \"$f\".json.gz`（t001.json.gz）—— shard-api 的 fileOf" +
+      " 找 `t001.json` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
   ok("分片在流水线里现生成（构建产物，checkout 里没有）",
     /POEM_WEB_DIR=\/tmp\/poem node scripts\/build-data\.js/.test(cnb));
-  ok("build 时把 COPY_SHREDS 递进去",
-    /--build-arg "COPY_SHREDS=\$\{COPY_SHREDS:-\}"/.test(cnb));
+  ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",
+    /--build-arg "COPY_SHREDS=\$\{COPY_SHREDS:-1\}"/.test(cnb),
+    "递的是 `${COPY_SHREDS:-}` —— 流水线没定义那面旗时递过去一个空串，" +
+      "Dockerfile 里 `ARG COPY_SHREDS=1` 会被这个空串盖掉");
+  /* Dockerfile 那边的同一个默认值：`ARG COPY_SHREDS=` 是「没递就是空」，
+     而空 != "0" —— 所以**单看 RUN 那句**它已经是对的。这一条守的是别被人
+     改回 `ARG COPY_SHREDS=` + `= "1"` 那一对（那一对下「没递参数」= 没分片）。 */
+  ok("Dockerfile 的 ARG 默认值也是 1（没递参数 = 有分片，只有显式 0 才关）",
+    /ARG COPY_SHREDS=1/.test(dockerfile) && /if \[ "\$COPY_SHREDS" != "0" \]/.test(dockerfile),
+    "Dockerfile 那句还是 `ARG COPY_SHREDS=` / `= \"1\"` —— 忘了递参数的构建会静默" +
+      "产出一个没分片的镜像");
+
+  /* ⚠️ 那面旗**不该**出现在 `.cnb.yml` 的 `env:` 里。
+     一旦写上 `COPY_SHREDS: "1"`，它就变成「表里定义的常量」—— 而默认值与
+     显式值两处会各自漂：文档说默认带分片、表里写死 1，看着一致；
+     哪天有人把表里那行删掉，默认还是带分片（对），但「谁在控制它」已经没人说得清。
+     留着空表的语义是**明确**的：没写 = 走默认。判据落在 `env:` 那一节里
+     没有 COPY_SHREDS 上（摊分片那步与 build 那步里的 `${COPY_SHREDS:-1}`
+     不算 —— 它们在 script 里，不在 env 里）。 */
+  {
+    const pushTask = cnb.slice(cnb.indexOf("main:"), cnb.indexOf("crontab:"));
+    const envBlock = (/:\n(?:.*\n)*?\s{8}(?:stages|imports|services):/.exec(pushTask)) || ["", ""];
+    ok("`.cnb.yml` 的 env 表里**没有** COPY_SHREDS（默认值只住在代码里，一处）",
+      envBlock[0].indexOf("COPY_SHREDS") < 0,
+      "env 表里写死了 COPY_SHREDS —— 那与摊分片那步的默认值成了两处，迟早各说各的）");
+  }
+
+  /* ⚠️ 白名单必须放行的**每一样**（Issue #115 的现场：少了 `!shard-api.js`，
+     构建绿、部署绿、容器起不来）。
+     `.dockerignore` 是白名单（先 `**` 排掉一切、再逐条 ! 放行），所以
+     「某一行被删掉」的后果是**那样东西一个字都进不去**，而 docker 不报错。
+     这里逐条钉住，且是**从 Dockerfile / 服务壳真的 require 到谁**倒推出来的：
+       · shard-api.js —— serve-api.js 启动时 require（少了 → MODULE_NOT_FOUND）
+       · shard-src/** —— Dockerfile 那句 COPY 的源（少了 → COPY 红，这个还算好）
+       · store-mysql.js / serve-api.js / api/** —— 同上，另两句 COPY
+     判据落在「放行那一行在不在」上。`.cnb.yml` 的 build & push 里有同一个
+     grep（缺了当场退出）—— 两处都要，因为 check.js 在**另一个任务**里跑，
+     它红了不会拦住这条 push 的 build。 */
+  {
+    const mustAllow = ["!shard-api.js", "!shard-src/**", "!serve-api.js",
+      "!store-mysql.js", "!api/**", "!Dockerfile"];
+    const notAllowed = mustAllow.filter((line) => dockerignore.indexOf(line) < 0);
+    ok("白名单放行了构建与启动真的要用到的每一样（缺一行 = 那样东西一个字都进不去）",
+      notAllowed.length === 0,
+      "没放行：" + JSON.stringify(notAllowed) +
+        "。白名单先 `**` 排掉一切再逐条放行 —— 少一行不会报错，" +
+        "少的是**启动期 require 的那个文件**时，症状是容器 Back-off 重启");
+    /* 反面：放行的这几样必须**真的在仓库里**（路径写歪了 = 放行一个不存在的名字，
+       实测绿、构建照红）。 */
+    const inRepo = ["deploy-api-serve/shard-api.js", "deploy-api-serve/serve-api.js",
+      "deploy/store-mysql.js"];
+    const missingInRepo = inRepo.filter((f) => !fs.existsSync(path.join(ROOT, "..", f)));
+    ok("放行的那几样真的在仓库里（放行一个不存在的名字 = 白名单形同虚设）",
+      missingInRepo.length === 0, "找不到：" + JSON.stringify(missingInRepo));
+  }
 
   // --- 小程序端：拿不到就请求 ---
   ok("remote 暴露了 shard 与 shardReady",
