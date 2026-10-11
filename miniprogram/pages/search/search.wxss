@@ -96,3 +96,10 @@
   align-items: flex-start;
   padding: var(--sp-3) var(--sp-1);
 }
+
+.more-tip {
+  display: block;
+  text-align: center;
+  padding: var(--sp-3) 0 var(--sp-2);
+  font-size: var(--fs-caption);
+}

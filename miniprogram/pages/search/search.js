@@ -8,9 +8,8 @@ const theme = require("../../utils/theme");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
-const PAGE_MAX = 80;
-
-const FULL_MAX = 40;
+const BATCH = 20;
+const PACK_MAX = 80;
 
 Page({
   data: {
@@ -28,8 +27,12 @@ Page({
 
     resultWhere: "",
 
+    more: false,
+    loading: false,
+
     fromFull: false,
-    partial: false
+    partial: false,
+    resultMore: ""
   },
 
   onShow() {
@@ -58,9 +61,27 @@ Page({
     this.setData({ keyword: e.detail.value });
   },
 
-  onClear() {
+  onUnload() {
+    this.busy = false;
+    this.session = null;
     clearTimeout(this.fullTimer);
-    this.setData({ keyword: "", results: [], total: 0, searched: false, searching: false, partial: false });
+    this.fullTimer = null;
+  },
+
+  onClear() {
+    this.busy = false;
+    this.session = null;
+    clearTimeout(this.fullTimer);
+    this.setData({
+      keyword: "",
+      results: [],
+      total: 0,
+      searched: false,
+      searching: false,
+      more: false,
+      loading: false,
+      partial: false
+    });
   },
 
   onHot(e) {
@@ -74,18 +95,25 @@ Page({
     }
     const kw = this.data.keyword.trim();
     if (!kw) {
-      this.setData({ results: [], total: 0, searched: false });
+      this.setData({ results: [], total: 0, searched: false, more: false });
       return;
     }
     store.saveSettings({ lastSearch: kw });
 
+    this.busy = false;
+    this.session = null;
+
     const r = this.byIndex(kw);
-    if (r.total) {
+    if (r.total >= (this.data.fullOn ? BATCH : 1)) {
+      this.fromPack = true;
+      this.total = r.total;
       this.setData({
-        results: r.items,
+        results: r.items.slice(0, BATCH),
         total: r.total,
+        more: r.total > BATCH,
         searched: true,
         searching: false,
+        loading: false,
         fromFull: false,
         resultWhere: "篇名作者 · 全站"
       });
@@ -96,22 +124,24 @@ Page({
       this.setData({
         results: [],
         total: 0,
+        more: false,
         searched: true,
         searching: false,
+        loading: false,
         fromFull: false,
         resultWhere: "篇名作者 · 全站"
       });
       return;
     }
 
-    this.setData({ searching: true, searched: false, partial: false });
+    this.setData({ searching: true, searched: false, more: false, loading: false, partial: false });
 
     clearTimeout(this.fullTimer);
     this.fullTimer = setTimeout(() => this.runFull(kw), 16);
   },
 
-  byIndex(kw) {
-    const r = corpus.search(kw, { limit: PAGE_MAX });
+  byIndex(kw, limit) {
+    const r = corpus.search(kw, { limit: limit || PACK_MAX });
     return {
       total: r.total,
       items: r.items.map((p) => ({
@@ -125,27 +155,58 @@ Page({
     };
   },
 
-  onUnload() {
-    clearTimeout(this.fullTimer);
-    this.fullTimer = null;
+  runFull(kw) {
+    let session = null;
+    try {
+      session = textSearch.makeSession(kw, {});
+    } catch (e) {
+      session = null;
+    }
+    if (!session) {
+      this.setData({ results: [], total: 0, searched: true, searching: false, more: false, loading: false });
+      return;
+    }
+    this.session = session;
+    this.busy = true;
+    this.fromPack = false;
+    this.got = {};
+    this.pushBatch();
   },
 
-  runFull(kw) {
-    let hits = [];
-
-    try {
-      hits = textSearch.search(kw, { limit: FULL_MAX + 1 });
-    } catch (e) {
-      hits = [];
+  onReachBottom() {
+    if (!this.data.more || this.data.loading) return;
+    if (this.fromPack) {
+      const want = this.data.results.length + BATCH;
+      const r = this.byIndex(this.data.keyword.trim(), want);
+      this.setData({ results: r.items.slice(0, want), more: this.total > want });
+      return;
     }
-    const partial = !!hits.partial;
-    const truncated = hits.length > FULL_MAX;
-    if (truncated) hits = hits.slice(0, FULL_MAX);
+    this.pushBatch();
+  },
 
-    this.setData({
-      partial: partial,
-      total: truncated ? FULL_MAX + 1 : hits.length,
-      results: hits.map((h) => ({
+  pushBatch() {
+    const session = this.session;
+    if (!this.busy || !session) return;
+
+    this.setData({ loading: true });
+
+    let batch = [];
+    try {
+      batch = textSearch.nextBatch(session, BATCH);
+    } catch (e) {
+      batch = [];
+    }
+    if (!this.busy || this.session !== session) return;
+
+    const more = batch.length > BATCH;
+    const rows = [];
+    const seen = this.got || (this.got = {});
+    const fullHit = this.gotFull || batch.some((h) => h.where !== "pack");
+    this.gotFull = fullHit;
+    (more ? batch.slice(0, BATCH) : batch).forEach((h) => {
+      if (seen[h.entry.id]) return;
+      seen[h.entry.id] = 1;
+      rows.push({
         id: h.entry.id,
         title: h.entry.t,
         author: h.entry.a,
@@ -153,11 +214,26 @@ Page({
         bookName: h.entry.n,
         lines: h.lines,
         where: h.where === "pack" ? "课内" : "课外"
-      })),
+      });
+    });
+
+    const results = this.data.results.concat(rows);
+
+    this.setData({
+      results: results,
+      total: results.length,
+      more: more && !session.done,
+      loading: false,
       searched: true,
       searching: false,
       fromFull: true,
-      resultWhere: partial ? "正文全文 · 命中片较多，只扫了部分" : "正文全文 · 全站"
+      partial: session.partial,
+      resultMore: more
+        ? "每次 20 篇，往下拉接着出"
+        : session.partial
+        ? "命中的片很多，先扫了命中字最多的那几片"
+        : "就这些了",
+      resultWhere: fullHit ? "正文全文 · 全站" : "篇名作者 · 全站"
     });
   },
 

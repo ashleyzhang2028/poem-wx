@@ -15,7 +15,7 @@
       <text class="result-count">命中 {{total}} 篇</text>
       <text class="hint result-where">{{resultWhere}}</text>
     </view>
-    <text class="hint result-more" wx:if="{{total > results.length}}">只列出前 {{results.length}} 篇</text>
+    <text class="hint result-more">{{resultMore}}</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
@@ -30,6 +30,8 @@
       </view>
       <text class="row-go">›</text>
     </view>
+    <text class="hint more-tip" wx:if="{{more}}">{{loading ? '正在取…' : '往下拉，再接 20 篇'}}</text>
+    <text class="hint more-tip" wx:else>{{fromFull ? '到头了，共 ' : '共 '}}{{total}} 篇</text>
   </view>
 
   <view class="empty" wx:if="{{searched && !results.length}}">
