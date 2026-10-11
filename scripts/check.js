@@ -190,6 +190,15 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "课外正文一律取不到，且异常从 onShow 直接冒出去（白屏）。" +
       "readJson 必须把 MODULE_NOT_FOUND 也当兜底，bucket() 才拿得到空对象继续往分片缓存走");
 
+  ok("分片在磁盘上时 corpus 能直接读它（开发者工具打开 miniprogram/ 也能读课外）",
+    /function\s+shardFromDisk\s*\(/.test(corpusSrc)
+      && /const\s+disk\s*=\s*shardFromDisk\(name\)/.test(corpusSrc)
+      && /from:\s*"disk"/.test(corpusSrc)
+      && /function\s+shardFromDisk[\s\S]{0,200}readFileSync[\s\S]{0,200}catch/.test(corpusSrc),
+    "corpus 只在 require() 命中时读得到分片；开发者工具里 data/texts 被 ignore 掉、" +
+      "require 抛 MODULE_NOT_FOUND，于是课外正文在工具里一律取不到 —— " +
+      "而那个目录就在磁盘上。要在 bucket() 回空之后、走远端之前补一条磁盘兜底");
+
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")

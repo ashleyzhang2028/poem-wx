@@ -124,6 +124,8 @@ const MANIFEST = "data/shards.json";
 
 const BUCKET_DIR = "data/texts/";
 
+const SHARD_FILE_RE = /^t\d{3}$/;
+
 let booksCache = null;
 let courseCache = null;
 let manifestCache = null;
@@ -245,6 +247,23 @@ function saveShard(name, payload) {
   store.write(SHARD_CACHE_KEY, all);
 }
 
+function shardFile(name) {
+  if (!name || !SHARD_FILE_RE.test(name)) return "";
+  return BUCKET_DIR + name + ".json";
+}
+
+function shardFromDisk(name) {
+  const rel = shardFile(name);
+  if (!rel) return null;
+  try {
+    const raw = require("fs").readFileSync(require("path").join(__dirname, "..", rel), "utf8");
+    const data = JSON.parse(raw);
+    return data && Object.keys(data).length ? data : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function ensureBucket(name) {
   if (!name) return Promise.reject(shardError("E_NO_BUCKET", "没有这一片的名字"));
   const local = bucket(name);
@@ -254,6 +273,13 @@ function ensureBucket(name) {
   if (cached && cached.data) {
     bucketCache[name] = cached.data;
     return Promise.resolve({ data: cached.data, from: "local" });
+  }
+
+  const disk = shardFromDisk(name);
+  if (disk) {
+    bucketCache[name] = disk;
+    saveShard(name, disk);
+    return Promise.resolve({ data: disk, from: "disk" });
   }
 
   const remote = require("./remote");
