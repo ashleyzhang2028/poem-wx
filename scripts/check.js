@@ -3,6 +3,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { execFileSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..", "miniprogram");
 let fails = 0;
@@ -6292,6 +6293,42 @@ function gapped(items, max) {
   ok("没有用 `push --mirror`（它带删除，而 checkout 只给一条分支）",
     !/--mirror/.test(jsCode),
     "改回 --mirror 了：GitHub 上本地没有的分支会被删掉，而 CI 里本地只有一条");
+
+  {
+    const repo3 = path.join(path.dirname(__dirname));
+    const readme = fs.readFileSync(path.join(repo3, "README.md"), "utf8");
+    const buildSrc = fs.readFileSync(path.join(repo3, "scripts", "build-data.js"), "utf8");
+
+    ok("README 交代了 Windows 上怎么设 POEM_WEB_DIR（`VAR=x cmd` 是 sh 的写法，PowerShell/cmd 不认）",
+      /\$env:POEM_WEB_DIR/.test(readme) && /set POEM_WEB_DIR/.test(readme),
+      "README 里只有 `POEM_WEB_DIR=/tmp/poem npm run build:data` —— PowerShell 与 cmd 都会" +
+        "报「POEM_WEB_DIR 不是可识别的命令」，而这是新用户的第一条命令（Issue #121 的提问）");
+
+    ok("build-data.js 在缺语料时给出能照抄的命令（不是一句「检查 POEM_WEB_DIR」）",
+      /\$env:POEM_WEB_DIR/.test(buildSrc) && /POEM_WEB_DIR=<poem/.test(buildSrc),
+      "只抛「TEXT_MASTER 为空，检查 POEM_WEB_DIR」时，Windows 用户不知道该换成什么写法");
+
+    ok("缺语料时抛的是自己的错（读文件失败不裸奔一个 ENOENT 栈出来）",
+      /function noCorpus/.test(buildSrc) &&
+        /catch \(e\) \{\s*\n\s*throw noCorpus\(file\);/.test(buildSrc),
+      "loadCorpus 里没接住 readFileSync 的 ENOENT —— 第一个文件读不到就直接抛系统错误，" +
+        "上面那段提示一句都走不到");
+
+    const err = (() => {
+      try {
+        const out = execFileSync(process.execPath,
+          [path.join(repo3, "scripts", "build-data.js")],
+          { env: Object.assign({}, process.env, { POEM_WEB_DIR: path.join(repo3, "no-such-poem") }),
+            encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        return out;
+      } catch (e) {
+        return String((e.stderr || "") + (e.stdout || ""));
+      }
+    })();
+    ok("真跑一遍：POEM_WEB_DIR 指空目录时报的是那几句提示",
+      /语料要先从 poem 仓库取下来/.test(err) && /\$env:POEM_WEB_DIR/.test(err),
+      "实际输出：" + JSON.stringify(err.split("\n").slice(0, 3)));
+  }
 
   {
     const readme = fs.readFileSync(path.join(path.dirname(__dirname), "README.md"), "utf8");

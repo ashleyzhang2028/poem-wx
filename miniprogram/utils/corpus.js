@@ -156,7 +156,7 @@ function loadJson(rel) {
   if (!hasData()) {
     const err = new Error(
       "语料未生成：miniprogram/data/ 不存在。\n" +
-      "先在仓库根跑 `npm run build:data`（需要 POEM_WEB_DIR 指向 poem 仓库），" +
+      "先在仓库根跑 `npm run build:data`（POEM_WEB_DIR 指向 poem 仓库），" +
       "再用开发者工具打开 miniprogram/。见 README「快速开始」。"
     );
     err.code = "E_NO_DATA";

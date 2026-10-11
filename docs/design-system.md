@@ -911,7 +911,7 @@ V39 守着撤干净的这几处，并**反着守一条**：选完头像不许 `m
 ```bash
 # 1. 先把语料编译出来（数据不入库）
 git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
-POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+POEM_WEB_DIR=/tmp/poem node scripts/build-data.js      # Windows 的写法见 README
 
 # 2. 出预览页
 node scripts/shots/render.js

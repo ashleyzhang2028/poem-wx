@@ -13,8 +13,8 @@
 
 ```bash
 # 1. 从 poem 仓库取语料并编译（数据不入库，必须先跑这一步）
-git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
-POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+bash scripts/clone-poem.sh /tmp/poem                 # 取语料，并检出 poem.lock.json 钉的那一版
+POEM_WEB_DIR=/tmp/poem npm run build:data
 
 # 2. 离线自检 + 与网页版对照（项数以命令输出为准）
 node scripts/check.js
@@ -24,15 +24,28 @@ node scripts/parity.js
 ```
 
 ⚠️ **`build:data` 之前必须先有 poem 的源码。** 两个入口是一回事：
+`npm run build:data` = `node scripts/build-data.js`，而 `scripts/clone-poem.sh` 负责把语料取回来。
+没取过语料时两边都会当场说清去哪取，不再只丢一句 `TEXT_MASTER 为空`。
+这一条命令只需要 node（≥18），`package.json` 里那些 devDependency 与它无关，**不必 `npm install`**。
 
-```bash
-npm run build:data                                   # = node scripts/build-data.js
-bash scripts/clone-poem.sh /tmp/poem                 # 取语料，并检出 poem.lock.json 钉的那一版
+### Windows 上怎么设 `POEM_WEB_DIR`
+
+`POEM_WEB_DIR=/tmp/poem npm run build:data` 是 sh 的语法，PowerShell 与 cmd 都不认，
+报 `POEM_WEB_DIR 不是可识别的命令`。各自这样写（路径按自己 clone 的位置改）：
+
+```powershell
+# PowerShell
+$env:POEM_WEB_DIR="C:\poem"; npm run build:data
 ```
 
-直接 `node scripts/build-data.js` 而没 clone 过 poem，报的是 `TEXT_MASTER 为空`
-——**看着像脚本坏了，其实是少给了它语料**（脚本默认去 `/tmp/poem` 找）。
-这一条命令只需要 node（≥18），`package.json` 里那些 devDependency 与它无关，**不必 `npm install`**。
+```bat
+:: Command Prompt
+set POEM_WEB_DIR=C:\poem && npm run build:data
+```
+
+`scripts/clone-poem.sh` 依赖 bash（Git for Windows 自带），在 Git Bash 里跑；
+只取语料也可以直接 `git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git C:/poem`，
+然后按上面的写法指过去 —— 少的那一层是 `poem.lock.json` 的版本锁定。
 
 **语料是构建产物，永远不在 git 里**（`.gitignore` 挡着 `miniprogram/data/`）。
 所以「clone 下来直接打开开发者工具」必然是白屏 —— 首页会给出「语料未生成」的空态，
