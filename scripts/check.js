@@ -9740,7 +9740,19 @@ function gapped(items, max) {
   ok("白名单放行了 shard-src/", /!shard-src/.test(dockerignore));
 
   // --- 流水线：摊分片 + 把开关递给 docker build ---
-  ok("流水线在 COPY_SHREDS=1 时才摊分片",
+  /* ⚠️ `shard-src/` 必须**无条件** mkdir（内容才是条件摊的）。
+     上面那句 `COPY shard-src /tmp/shard-src` 是无条件的 —— 上下文里没有
+     这一层时构建红在 COPY 上（Issue #115：`... "/shard-src": not found`），
+     后面那句 RUN 的开关根本轮不到看。判据：cnb 里那句 `mkdir -p /tmp/ctx/shard-src`
+     出现在 `if [ "${COPY_SHREDS:-}" = "1" ]` **之前**（同一段 stage context 里）。 */
+  {
+    const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
+    const flag = cnb.indexOf('if [ "${COPY_SHREDS:-}" = "1" ]');
+    ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
+      mk >= 0 && flag >= 0 && mk < flag,
+      "`shard-src/` 得在判旗之前就 mkdir —— COPY 是无条件的，空目录才是它的合法来源");
+  }
+  ok("流水线在 COPY_SHREDS=1 时才摊分片内容",
     /if \[ "\$\{COPY_SHREDS:-\}" = "1" \]/.test(cnb));
   ok("摊的是压缩后那份（.gz），不是 25MB 原文",
     /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),

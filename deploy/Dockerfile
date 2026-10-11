@@ -93,10 +93,20 @@ COPY --chown=node:node store-mysql.js ./
 #      同量下通常更便宜 —— 换来的是「不办备案」与「不养一套 CDN」；
 #   2) 容器是唯一缓存层，冷启动后第一波请求要现压一次 gzip。
 #
-# ⚠️ 默认**不拷**：给 `--build-arg COPY_SHREDS=1` 才拷。
-#    没拷时 /api/shard/* 回 404 E_NO_SHARDS（出声，不静默回空语料）。
+# ⚠️ 默认**不拷内容**：给 `--build-arg COPY_SHREDS=1` 才有分片。
+#    没打旗时 /api/shard/* 回 404 E_NO_SHARDS（出声，不静默回空语料）。
 #    25MB 分片压缩后 5.6MB（22.5%），是刻意不摊进每次构建上下文的：
 #    绝大多数调试构建用不到它，带上只会让每次部署多传 5.6MB。
+#
+# ⚠️ 但**上下文里那一层 `shard-src/` 每次都要在**（打了旗有内容，没打旗是空目录）
+#    —— 因为下面那句 COPY 是**无条件**的，它前面没有 if，只有后面那句 RUN 才看旗。
+#    上下文里没有这一层时，构建压根走不到 RUN，红在 COPY 上（Issue #115）：
+#      COPY --chown=node:node shard-src /tmp/shard-src
+#      ERROR: failed to calculate checksum ... "/shard-src": not found
+#    看着像「路径写错 / 文件没提交」，其实是**源目录不在上下文里**。空目录是
+#    COPY 的合法来源（拷过去就是个空目录），所以摊上下文的两个地方
+#    （.cnb.yml 的 stage context、deploy/build.sh）都**永远 mkdir** 这一层，
+#    内容才按旗摊。这样「不打旗 → 构建绿 + 404 E_NO_SHARDS」才和文档一致。
 # ⚠️ 上下文里那层叫 `shard-src/`，**且每个文件都是 .gz** —— 流水线摊的时候
 #    只摊压缩后那份（22.5%）。容器里发的就是这些 gz 字节，一个都不用解。
 ARG COPY_SHREDS=
