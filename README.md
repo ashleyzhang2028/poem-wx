@@ -547,6 +547,21 @@ only supports authentication using a personal access token (classic)* —— 所
 没有 `api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
 流水线为什么这么构建，见 [`deploy/README.md`](deploy/README.md)。
 
+### 哪一类改动要在云托管点「重新部署」
+
+**判据只有一条：`.cnb.yml` 的 `main.push` 里改了没有。**
+改了小程序的页面、工具函数、自检、文档 —— 都不出镜像，云托管不用动；
+体验版随流水线自己就更新了。
+
+出镜像的那几样都在 `main.push` 里，就三处：`deploy/`（Dockerfile、`store-mysql.js`、
+`deploy-api-serve/`）、`.cnb.yml` 自己、以及 `poem` 仓库的 `api/`。
+改了它们，流水线会推一个新 tag（`ghcr.io/…/wx-api:<poem 短 sha>`），
+**但云托管不会自动跟着走** —— 要手动去服务里「重新部署」，把镜像换成那个新 tag。
+
+另外两样只在流水线里用、不进镜像，但会影响上传的体验版：`scripts/` 与
+`poem.lock.json`（语料钉住的那一版）。它们改了不用碰云托管，看的是「上传体验版」
+那一步有没有 `✓✓✓`。那一步是 `allow_failure: true` —— **它失败时流水线照样是绿的**。
+
 消息契约在 [`docs/wx-login-server.md`](docs/wx-login-server.md)（含
 `device` vs `deviceId` 那个静默坑）。
 
