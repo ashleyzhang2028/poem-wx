@@ -43,6 +43,9 @@ Page({
   data: {
     themeStyle: "",
     id: "",
+    /* 课外正文要过一次云端（分片），这一格管那一段空屏 ——
+       课内那 251 首永远走不到它。 */
+    loadingText: false,
     bookId: "",
     title: "",
     author: "",
@@ -127,16 +130,45 @@ Page({
 
   loadEntry() {
     const id = this.data.id;
-
-    const settings = store.settings();
-    const entry = corpus.entry(id);
     const meta = this.findMeta(id);
 
-    if (!entry || !meta) {
+    if (!meta) {
       this.setData({ id });
       wx.showToast({ title: "篇目数据缺失", icon: "none" });
       return;
     }
+
+    /* 课内正文在主包里，同步就有；课外那 5604 首要走分片 ——
+       本机没有时（体验版就是不进包）**异步取**，见 Issue #121 方案 A。
+       `corpus.entry(id)` 仍然先问一次：它是同步的，命中了就省一趟。 */
+    const hit = corpus.entry(id);
+    if (hit) return this.renderEntry(id, hit, meta);
+
+    this.setData({ id, loadingText: true });
+    return corpus
+      .ensureEntry(id)
+      .then((entry) => {
+        if (!entry) throw new Error("这一条不在任何分片里");
+        this.renderEntry(id, entry, meta);
+      })
+      ["catch"]((err) => {
+        this.setData({ loadingText: false });
+        wx.showToast({ title: this.textFailMsg(err), icon: "none" });
+      });
+  },
+
+  /* 「取不到正文」的三种因，界面说三句不同的人话 —— 不合并成一句
+     「加载失败」，因为下一步该做什么完全不同。 */
+  textFailMsg(err) {
+    const code = (err && err.code) || "";
+    if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器（云调用两栏）";
+    if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
+    if (err && /网络|超时|不通/.test(err.message || "")) return "网络不通，稍后再试";
+    return "这一篇取不到正文";
+  },
+
+  renderEntry(id, entry, meta) {
+    const settings = store.settings();
 
     const rec = store.getRecord(id);
 
@@ -144,6 +176,7 @@ Page({
 
     this.setData({
       id,
+      loadingText: false,
       bookId: meta.b,
       title: meta.t,
       author: meta.a,

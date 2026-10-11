@@ -8088,12 +8088,16 @@ function gapped(items, max) {
       /* ⚠️ 摊法**从 `.cnb.yml` 里读**，不在这里手抄一遍。
          手抄的那一版守不住真正要守的东西：流水线里漏了 `cp`，而这里照抄的还是
          「都摆过来了」—— 于是断言绿着，构建在 CI 上才红。
-         判据：`cp <源> /tmp/ctx/<目标>`（也认 `cp <源> /tmp/ctx/` 这个变体）。 */
+         判据：`cp <源> /tmp/ctx/<目标>`（也认 `cp <源> /tmp/ctx/` 这个变体）。
+         ⚠️ `cp` 读的是**摊上下文那一步**的文本，而分片那几行也长成 `cp … /tmp/ctx/…`
+            （在 for 循环里，源是 `$f`、目标是 `shard-src/$(basename …)`）——
+            它们是**条件摊的**（COPY_SHREDS=1 才摊），存在性由 V53 单独守。
+            这里只认字面路径，通配的不猜。 */
       const stageCmds = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8")
         .split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
       const stagedNames = [];
       stageCmds.forEach((l) => {
-        const m = /^cp\s+(\S+)\s+\/tmp\/ctx\/(\S+)$/.exec(l);
+        const m = /^cp\s+([\w./-]+)\s+\/tmp\/ctx\/([\w.-]+)$/.exec(l);
         if (!m) return;
         const src = m[1], dstName = m[2];
         const srcAbs = path.join(repo, src);
@@ -8101,6 +8105,10 @@ function gapped(items, max) {
         fs.copyFileSync(srcAbs, path.join(ctxRoot, dstName));
         stagedNames.push(dstName);
       });
+      /* 分片那层是**条件摊**的：只在 COPY_SHREDS=1 时 mkdir 出来。
+         这里照「打了那面旗」的样子摊一个空目录进去 —— 守的是「COPY 的源在
+         上下文里能找到」，而分片有没有内容由 V53 与部署时那面旗决定。 */
+      fs.mkdirSync(path.join(ctxRoot, "shard-src"), { recursive: true });
       ok("流水线真的把本仓库那几样摊进了上下文（摊法从 .cnb.yml 里读）",
         stagedNames.length >= 4,
         "从 .cnb.yml 里只读到 " + stagedNames.length + " 条 `cp … /tmp/ctx/…`：" +
@@ -9119,7 +9127,10 @@ function gapped(items, max) {
          假绿过 —— 接线挪到 handler 后面，断言照样是绿的）。 */
       const bareServe = serve.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
       const callAt = bareServe.indexOf("\nwireMysqlStore();");
-      const handlerAt = bareServe.indexOf('require("./api/handler.js")');
+      /* ⚠️ `bareServe` 是**摘过注释**的，所以这里不能拿带引号的路径去找 ——
+         本文件里那段「顺序反了」的说明引着它，会指到不存在的位置。
+         V53 里同样按摘注释之后去判 shardApi 与 apiHandler 的先后。 */
+      const handlerAt = bareServe.indexOf("api/handler.js");
       ok("接线在 require handler **之前**（handler 在 require 时就取单例）",
         callAt >= 0 && handlerAt >= 0 && callAt < handlerAt,
         "接在 handler 后面（callAt=" + callAt + " handlerAt=" + handlerAt + "）—— " +
@@ -9609,6 +9620,119 @@ function gapped(items, max) {
   ok("绑了 theme-style 的页面都在 data 里声明了 themeStyle（" + binders.length + " 个）",
     undeclared.length === 0,
     "这些页面首帧会传 null：" + undeclared.map((f) => path.relative(ROOT, f)).join("、"));
+}
+
+/* ---------- V53. 分片走容器下发这条路：两端不许各写一半（Issue #121 方案 A） ----------
+ *
+ * 这一节守的是**一条链**，不是三个文件：
+ *
+ *   小程序 corpus.ensureEntry → remote.shard → /api/shard/<name>
+ *     → serve-api.js 的 shardApi.handle → /app/shards/<name>.json(.gz)
+ *     → 流水线摊 shard-src/ → Dockerfile 的 COPY_SHREDS=1 → 白名单放行
+ *
+ * 链上任何一环缺失都不会报错，只会让课外那 5604 首**静默取不到**：
+ *   · serve 少了 `shardApi.handle` 那一行 → /api/shard/* 落到 poem 的 handler → 404
+ *   · Dockerfile 的 COPY 源还写 `deploy-api-serve/shard-api.js` → 构建红（这一种还算好）
+ *   · .dockerignore 没放行 shard-src/ → 上下文里没那层，COPY 找不到 → 构建红
+ *   · 流水线没给 COPY_SHREDS → 镜像里没分片 → 404 E_NO_SHARDS（**这样最好**：
+ *     至少界面上说的是「这个版本里没有课外正文」，不是「取不到这一篇」）
+ *
+ * 另外守一条**安全**的：`name` 只许 `t\d{3}` / `manifest` / `idx`，
+ * 逐字校验之后才拼路径 —— 别让它成为一个能读任意文件的洞。
+ */
+{
+  const serveSrc = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", "serve-api.js"), "utf8");
+  const shardSrc = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", "shard-api.js"), "utf8");
+  const dockerfile = fs.readFileSync(path.join(ROOT, "..", "deploy", "Dockerfile"), "utf8");
+  const dockerignore = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", ".dockerignore"), "utf8");
+  const cnb = fs.readFileSync(path.join(ROOT, "..", ".cnb.yml"), "utf8");
+  const remoteSrc = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  const corpusSrc2 = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
+  const readerSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+
+  // --- 服务端：路由挂上了 ---
+  ok("服务壳把 /api/shard/* 交给了分片路由",
+    /shardApi\.handle\(req, res, urlPath\)/.test(serveSrc));
+  ok("服务壳 require 了 shard-api（与 store-mysql 一样从上下文根取）",
+    /require\(\"\.\/shard-api\.js\"\)/.test(serveSrc));
+  // 顺序：必须在 apiHandler **之前** —— 之后 require 就永远轮不到它。
+  // ⚠️ 摘注释之后再判（V49 那条在这里踩过同一个坑）：本段说明里正引着那两行。
+  {
+    const bare = serveSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    ok("shardApi 的 require 在 apiHandler 之前",
+      bare.indexOf('require("./shard-api.js")') >= 0 &&
+      bare.indexOf('require("./shard-api.js")') < bare.indexOf('require("./api/handler.js")'),
+      "顺序反了 → /api/shard/* 落到 poem 的 handler 上，静默 404");
+  }
+
+  // --- 服务端：路径不许拼进任何没校验的输入 ---
+  ok("分片名只认 t\\d{3}（不接受 ../、斜杠、别的形状）",
+    /\^t\\d\{3\}\$/.test(shardSrc));
+  ok("清单与倒排索引在白名单里（manifest / idx）",
+    /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*INDEX\s*\]/.test(shardSrc));
+  ok("拼路径只走 fileOf（校验之后再拼）",
+    /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.json"\)/.test(shardSrc));
+  ok("没有分片时回 404 E_NO_SHARDS，不静默回空 body",
+    /E_NO_SHARDS/.test(shardSrc));
+
+  // --- 服务端：命中时按 gzip 发 ---
+  ok("命中时声明 Content-Encoding: gzip（发的是预压缩那份）",
+    /"Content-Encoding":\s*"gzip"/.test(shardSrc));
+
+  // --- 构建：分片真能进镜像 ---
+  ok("Dockerfile 接受 COPY_SHREDS 开关",
+    /ARG COPY_SHREDS=/.test(dockerfile));
+  ok("Dockerfile 的 COPY 源是 shard-src（上下文根那一层）",
+    /COPY --chown=node:node shard-src \/tmp\/shard-src/.test(dockerfile));
+  /* ⚠️ shard-api.js 是**流水线**摆进上下文的（与 serve-api.js 同层同名），
+     Dockerfile 里没有它的 COPY —— 它是被 serve-api.js 直接 require 的，
+     跟 `./shard-api.js` 一个用法，不需要单独 COPY 一行。 */
+  ok("流水线把 shard-api.js 摆进上下文那一层",
+    /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
+  ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
+  ok("白名单放行了 shard-src/", /!shard-src/.test(dockerignore));
+
+  // --- 流水线：摊分片 + 把开关递给 docker build ---
+  ok("流水线在 COPY_SHREDS=1 时才摊分片",
+    /if \[ "\$\{COPY_SHREDS:-\}" = "1" \]/.test(cnb));
+  ok("摊的是压缩后那份（.gz），不是 25MB 原文",
+    /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),
+    "摊原文的话，每次构建上下文从 0.3MB 变成 25MB");
+  ok("分片在流水线里现生成（构建产物，checkout 里没有）",
+    /POEM_WEB_DIR=\/tmp\/poem node scripts\/build-data\.js/.test(cnb));
+  ok("build 时把 COPY_SHREDS 递进去",
+    /--build-arg "COPY_SHREDS=\$\{COPY_SHREDS:-\}"/.test(cnb));
+
+  // --- 小程序端：拿不到就请求 ---
+  ok("remote 暴露了 shard 与 shardReady",
+    /shard,\s*\n\s*shardReady/.test(remoteSrc));
+  ok("分片走的是 /api/shard/（云调用，不是 wx.downloadFile）",
+    /SHARD_PATH = "\/api\/shard\/"/.test(remoteSrc));
+  ok("分片请求**不写进 outbox**（那是给进度用的队列）",
+    !/PATHS\.shard/.test(remoteSrc));
+  ok("corpus 暴露了 ensureBucket / ensureEntry",
+    /ensureBucket,\s*\n\s*ensureEntry,/.test(corpusSrc2));
+  {
+    const fn = corpusSrc2.slice(corpusSrc2.indexOf("function ensureEntry"));
+    const atPack = fn.indexOf("courseTexts()[id]");
+    const atBucket = fn.indexOf("ensureBucket(name)");
+    ok("ensureEntry 的顺序是 课内 → 本机分片 → 云端",
+      atPack >= 0 && atBucket >= 0 && atPack < atBucket,
+      "顺序反了的话，课内那 251 首（本就在主包里）也要过一次网络");
+  }
+  ok("分片缓存有上限（不许无限占用户手机）",
+    /SHARD_CACHE_MAX\s*=\s*\d+/.test(corpusSrc2));
+  ok("取不到时抛的是带 code 的错（界面据此说人话）",
+    /shardError\("E_NO_SHARD_SERVICE"/.test(corpusSrc2));
+
+  // --- 小程序端：阅读页真的会去取、取不到说人话 ---
+  ok("阅读页走 corpus.ensureEntry（不是只同步查一次）",
+    /corpus\s*\n?\.ensureEntry\(id\)/.test(readerSrc) || /ensureEntry\(id\)/.test(readerSrc));
+  ok("阅读页有空态那一屏（不是空卡片）",
+    /loadingText/.test(readerSrc) &&
+    /loadingText/.test(fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8")));
+  ok("阅读页把「没接上服务器」与「这一篇取不到」分开说",
+    /E_NO_SHARD_SERVICE/.test(readerSrc) && /E_NO_SHARDS/.test(readerSrc));
 }
 
 /* ---------- 汇总 ---------- */

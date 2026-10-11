@@ -68,6 +68,41 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
   建 classic：[这个链接](https://github.com/settings/tokens/new?scopes=write:packages)
 - 两组 token 不能互相顶替（`contents` 与 `packages` 在两个体系里分开）
 
+## 一点五、镜像里要不要带正文分片（可选）
+
+**默认不带。** 课外那 5604 首的正文分片（gzip 后 5.6MB）要不要塞进这个镜像，
+由一面旗决定：
+
+| 构建参数 `COPY_SHREDS` | 镜像 | `/api/shard/*` | 什么时候用 |
+|---|---|---|---|
+| 不写（默认） | 不含分片 | `404 E_NO_SHARDS` | 调后端、试登录 —— 绝大多数时候 |
+| `=1` | 含分片（+5.6MB） | 200 gzip | 要让用户真能背课外那 5604 首 |
+
+开着它，就是从 `<服务名>-<环境ID>.sh.run.tcloudbase.com` 的容器直接把分片发给
+小程序 —— **仍然免备案**（云调用不走那份域名名单）。为什么可以这样、
+代价是什么、一个月大概多少钱，见 [`shard-delivery.md`](shard-delivery.md)。
+
+怎么开：`.cnb.yml` 的 `env:` 里加一行，然后推一次 `main`：
+
+```yaml
+env:
+  COPY_SHREDS: "1"
+```
+
+⚠️ 值是**字面量**，别写 `${VAR:-1}` —— CNB 的变量替换只认 `$VAR`，
+另外两种写法既不报错也不清空，会原样拼进参数，直到 docker 才炸。
+
+⚠️ 没开这面旗时，小程序里点开一首课外诗会看到「这个版本里没有课外正文」——
+**这是对的，不是坏了**。课内那 251 首不受影响（它们在主包里）。
+
+### 这条路与「后端走云调用免备案」是同一条口径
+
+| | 走哪条通道 | 要备案吗 |
+|---|---|---|
+| 登录 / 同步 / 管理 | 云调用（`/api/*`） | 不要 |
+| **正文分片** | 云调用（`/api/shard/*`） | **不要** |
+| 走公网的 CDN / 自有域 | request / downloadFile | **要**（`todo.md` 第 13 条） |
+
 ## 二、建服务
 
 [cloud.weixin.qq.com](https://cloud.weixin.qq.com) → **云托管 → 服务管理 → 新建服务**。

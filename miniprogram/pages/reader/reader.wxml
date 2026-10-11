@@ -3,7 +3,15 @@
   <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" />
 
   <block wx:else>
-  <view class="card poem-card">
+  <!-- 课外正文要过一次云端（分片，Issue #121 方案 A）。这一段空屏是**有内容**的：
+       不写它，用户点进一首课外诗会看到一张空卡片，跟「这首诗没正文」分不开。 -->
+  <view class="card poem-card" wx:if="{{loadingText}}">
+    <view class="poem-head">
+      <text class="poem-title">{{title}}</text>
+    </view>
+    <view class="hint hint-line">正在取正文…</view>
+  </view>
+  <view class="card poem-card" wx:else>
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
 

@@ -53,6 +53,11 @@ const CTX = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-mysql-"));
 fs.cpSync(path.join(POEM, "api"), path.join(CTX, "api"), { recursive: true });
 fs.copyFileSync(path.join(REPO, "deploy-api-serve", "serve-api.js"), path.join(CTX, "serve-api.js"));
 fs.copyFileSync(path.join(REPO, "deploy", "store-mysql.js"), path.join(CTX, "store-mysql.js"));
+/* ⚠️ 分片路由那份也要摆进来（Issue #121 方案 A）：`serve-api.js` 现在 require
+   它，漏了这一行，这一条 e2e 会以 `Cannot find module './shard-api.js'` 当场
+   炸掉 —— 而炸的位置是服务壳的 require 链，看着像 e2e 坏了、不像「上下文少摊了一样」。
+   与 `.cnb.yml` 的 stage context 那两步逐行对应：那边也拷了这两个文件。 */
+fs.copyFileSync(path.join(REPO, "deploy-api-serve", "shard-api.js"), path.join(CTX, "shard-api.js"));
 
 // 把那个内存替身摆成 `mysql2/promise` —— `serve-api.js` 就是 require 这个名字的
 fs.mkdirSync(path.join(CTX, "node_modules", "mysql2"), { recursive: true });
