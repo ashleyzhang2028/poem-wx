@@ -78,7 +78,7 @@ main:
               exit 1
             fi
             for shell in serve-api.js store-mysql.js shard-api.js; do
-              grep -qE "^COPY --chown=node:node ${shell//./\\.} \\./" /tmp/ctx/Dockerfile || {
+              grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
                 echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
                 echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2
                 echo "  容器起来才 MODULE_NOT_FOUND（Back-off restarting failed container）。" >&2
