@@ -78,22 +78,30 @@ Node 里怎么跑都是绿的，只有真机会撞，所以判据只能是静态
 `texts/idx.json`（全文倒排 2MB）是**另一回事**：它太大进不了包，
 `text-search.js` 读不到时降级为「按篇名作者检索」，有兜底，故允许它留在 `texts/`。
 
-## 三、分片默认**不进**镜像
+## 三、分片默认**进**镜像（要一个瘦镜像才关）
 
 镜像里有没有分片，由构建参数 `COPY_SHREDS` 决定：
 
 | `COPY_SHREDS` | 镜像 | `/api/shard/*` |
 |---|---|---|
-| 不写（默认） | 不含分片（与从前一样，约 60MB） | `404 E_NO_SHARDS` |
-| `=1` | 含分片（+5.6MB） | 正常 200 |
+| 不写（默认） | **含分片**（+5.6MB） | 200 gzip |
+| `=0` | 不含分片 | `404 E_NO_SHARDS` |
 
-为什么默认不做：绝大多数调试构建（`e2e-mysql`、本地试跑）用不到分片，
-带上只会让每次部署多传 5.6MB。要分片时在 `.cnb.yml` 的 `env:` 里加一行：
+⚠️ **默认是「有」**，与这份文档早先写的「默认不做」正好相反 —— 那一条是错的，
+而且错得看不出：线上正式版拿到的镜像里没有分片，用户点开课外那 5604 首看到的是
+「这个版本里没有课外正文」。那句话是给**没开分片的调试镜像**留的，
+不该是正式版的样子（Issue #115 的现场就是这一类：构建绿、部署绿、功能少一半）。
+
+要一个不带分片的瘦镜像（本地跑 `e2e-mysql`、试登录、回滚验证），才显式关：
 
 ```yaml
 env:
-  COPY_SHREDS: "1"      # 值要写字面量，别写 ${VAR:-...}（CNB 只替换 $VAR）
+  COPY_SHREDS: "0"      # 值要写字面量，别写 ${VAR:-1}（CNB 只替换 $VAR）
 ```
+
+两档的区别说清一次：`COPY_SHREDS` **没定义**是「表里没人提过它」→ 走默认（有分片）；
+`COPY_SHREDS: "0"` 是「我知道，我就是要一个瘦镜像」。中间那档（写成空串）不要用 ——
+它既不是「没定义」也不是「明确不要」，值会一路漂到 docker 才现形。
 
 **没开时的表现是刻意的**：小程序那边收到 `E_NO_SHARDS`，
 界面上说的是「这个版本里没有课外正文」—— 不是「这一篇取不到正文」。
@@ -224,7 +232,8 @@ env:
 |---|---|
 | 构建报 `"/shard-api.js": not found` | 上下文里没有它 —— 漏了流水线 stage context 那一行 `cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js` |
 | `e2e-mysql` 报 `Cannot find module './shard-api.js'` | 同一条：那条 e2e 自己摊一遍上下文，漏摊了这一样 |
-| 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS` 没开）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
+| 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS=0`）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
+| 容器起不来，日志是 `Cannot find module './shard-api.js'` | `.dockerignore` 少了 `!shard-api.js` —— 白名单把它挡在上下文外，构建与部署都绿（Issue #115，见 § 七） |
 | 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 poem 的日志 —— 要单独看 |
 | 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.json`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.json`）——见 § 二「清单进包」 |
 | 自检 V49「接线在 require handler 之前」无故变红 | 块注释里写了 `/api/*` 之类的**带星号的路径**，`/*` 把注释后半段吃掉了。写成行注释，或在块注释里别写 `/xxx/*` |
@@ -235,7 +244,7 @@ env:
 |---|---|
 | `deploy-api-serve/shard-api.js` | 路由本体（名字校验 + gzip 下发） |
 | `deploy-api-serve/serve-api.js` | 把路由挂在 `/api/shard/` 上 |
-| `deploy/Dockerfile` | `COPY_SHREDS=1` 时把分片拷进 `/app/shards/` |
+| `deploy/Dockerfile` | 默认把分片拷进 `/app/shards/`（`COPY_SHREDS=0` 才不拷） |
 | `.cnb.yml` | 那一面旗；摊上下文时只摊 `.gz` |
 | `scripts/build-data.js` | 产出 `data/shards.json`（清单，**进包**）与 `data/texts/*`（正文分片，走云） |
 | `miniprogram/utils/corpus.js` | `ensureEntry` / `ensureBucket`（本机 → 云端）；`MANIFEST` 常量指 `data/shards.json` |

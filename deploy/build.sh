@@ -46,13 +46,31 @@ cp -R "$POEM_DIR/api" "$CTX/api"
 cp "$HERE/Dockerfile" "$CTX/Dockerfile"
 cp "$REPO/deploy-api-serve/serve-api.js" "$CTX/serve-api.js"
 cp "$REPO/deploy/store-mysql.js" "$CTX/store-mysql.js"
-# ⚠️ shard-src/ **每次都摊，只是默认空的**。Dockerfile 那句
+# ⚠️ shard-src/ **每次都摊**（内容按 COPY_SHREDS 决定）。Dockerfile 那句
 #    `COPY shard-src /tmp/shard-src` 是无条件的，上下文里没有这一层就红在 COPY 上
 #    （Issue #115：`failed to calculate checksum ... "/shard-src": not found`）。
-#    空目录是 COPY 的合法来源，于是不打 COPY_SHREDS 时构建照样绿，
-#    /api/shard/* 回 404 E_NO_SHARDS —— 与文档一致。要看带分片的构建，
-#    自己把这层填上 .gz 再 `COPY_SHREDS=1` 构建（见 deploy/README.md）。
+#    空目录是 COPY 的合法来源，所以这里先 mkdir，再多一层判断：
+#      · 默认（没设 COPY_SHREDS）→ **摊**：拿 miniprogram/data/texts/*.json 现压 gz
+#      · COPY_SHREDS=0            → 空着，本地得到一个不带分片的瘦镜像
+#    默认摊而不是默认空，理由与流水线那份一样：线上正式版要发的就是课外正文
+#    （见 deploy/README.md）。本机没有语料时就跳过并说明，不假装摊过了。
 mkdir -p "$CTX/shard-src"
+if [ "${COPY_SHREDS:-1}" != "0" ]; then
+  if [ -d "$REPO/miniprogram/data/texts" ]; then
+    # 只摊 gz、且名字是 t001.json.gz —— shard-api.js 发预压缩那份时找的正是它
+    for f in "$REPO"/miniprogram/data/texts/*.json; do
+      [ -e "$f" ] || continue
+      gzip -9 -c "$f" > "$CTX/shard-src/$(basename "$f" .json).json.gz"
+    done
+    echo "  分片已摊进上下文：$(ls "$CTX/shard-src" | wc -l) 个文件（COPY_SHREDS=${COPY_SHREDS:-1}）"
+  else
+    echo "· 本机没有 miniprogram/data/texts/ —— 分片那层留空（先 npm run build:data）"
+    echo "  这一步**不影响**建镜像：镜像里的 /app/shards/ 会是空的，"
+    echo "  /api/shard/* 回 404 E_NO_SHARDS，与线上那份正式镜像不是一回事"
+  fi
+else
+  echo "  跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
+fi
 # .dockerignore 放到上下文根（那是它生效的位置）
 cp "$REPO/deploy-api-serve/.dockerignore" "$CTX/.dockerignore"
 
@@ -69,7 +87,7 @@ if [ "$DRY_RUN" = "1" ]; then
 fi
 
 docker build \
-  --build-arg "COPY_SHREDS=${COPY_SHREDS:-}" \
+  --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
   --build-arg "API_REV=$REV" \
   --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --build-arg "API_SOURCE=https://cnb.cool/npu-gpu-cpu/poem.git" \

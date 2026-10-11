@@ -26,11 +26,26 @@
 !api/**
 !serve-api.js
 !store-mysql.js
+
+# ⚠️ 分片路由 `shard-api.js`（Issue #115 的现场）。
+#    它是 `serve-api.js` 在**启动那一刻** require 的 —— 少这一行时：
+#      · 上下文里没有这个文件（白名单先 `**` 排掉一切，再逐条 ! 放行）
+#      · 构建**绿**（Dockerfile 只有 serve-api.js / store-mysql.js 两句 COPY，
+#        shard-api.js 是被 require 的，没有 COPY 会去点它的名）
+#      · 部署**绿**（平台只判「镜像拉到了、容器起来了」）
+#      · 容器起来之后立刻死：`Error: Cannot find module './shard-api.js'`，
+#        云托管报「Back-off restarting failed container」——
+#        看着像服务要重启，其实是构建时就少了这一样。
+#    同一个坑的另一半在 store-mysql.js（少 `!store-mysql.js` 时同样是启动期
+#    require 不到，只是那句 COPY 会先红在 checksum 上，比这个好查）。
+#    `.cnb.yml` 的 build & push 现在会逐行 grep 这两条放行，缺了当场退出 ——
+#    别把判据只留在注释里。
 !shard-api.js
 
-# 正文分片（Issue #121 方案 A）：流水线在**打了 COPY_SHREDS=1** 时才摊进上下文，
+# 正文分片（Issue #121 方案 A）：流水线**默认就摊**（`${COPY_SHREDS:-1}`），
 # 走的是 shard-src/ 这一层（构建时 COPY 到 /app/shards）。
-# ⚠️ 这一条放行**不代表**每次构建都传 25MB —— 流水线没打那面旗时不 mkdir
-#    这一层，白名单再放行也没东西可传；打了才摊，摊的是**压缩后 5.6MB**。
+# ⚠️ 这一条放行**不代表**每次构建都传 25MB —— 摊的是**压缩后 5.6MB**，
+#    而且摊的是 `t001.json.gz` 这一个名字（原文一个字节都不进上下文）。
+#    只有显式 `COPY_SHREDS: "0"` 时那一层才空着，白名单再放行也没东西可传。
 !shard-src
 !shard-src/**
