@@ -173,6 +173,25 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       && /function\s+index\(\)[\s\S]{0,400}try\s*{[\s\S]{0,200}require/.test(tsSrc)
       && /function\s+readiness/.test(tsSrc) && /usable/.test(tsSrc),
     "text-search 读不到 idx.json 时必须走 readiness() 降级，不能抛");
+
+  const bucketDir = (corpusSrc.match(/const\s+BUCKET_DIR\s*=\s*["']([^"']+)["']/) || [])[1] || "";
+  const bucketRead = new RegExp(
+    'readJson\\(\\s*BUCKET_DIR\\s*\\+\\s*name\\s*\\+\\s*["\']\\.json["\']\\s*,\\s*\\{\\}\\s*\\)'
+  ).test(corpusSrc);
+  ok("被 ignore 的 texts/<片>.json 有兜底（读不到 = 空对象，不炸）",
+    /function\s+readJson\([\s\S]{0,400}MODULE_NOT_FOUND[\s\S]{0,80}return\s+fallback/.test(corpusSrc)
+      && bucketDir === "data/texts/"
+      && bucketRead,
+    "corpus.bucket() 读的是 " + (bucketDir || "(没找到 BUCKET_DIR 常量)") +
+      "，而它在 packOptions.ignore 里 —— 真机上 require 抛 MODULE_NOT_FOUND，" +
+      "课外正文一律取不到，且异常从 onShow 直接冒出去（白屏）。" +
+      "readJson 必须把 MODULE_NOT_FOUND 也当兜底，bucket() 才拿得到空对象继续往分片缓存走");
+
+  ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
+    /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
+      fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
+    ),
+    "reader.js 的 corpus.entry(id) 不在 try 里，且排在 ensureEntry 之前 —— 它一抛就连 textFailMsg 那套都说不上");
 }
 
 const R = require(path.join(ROOT, "utils", "review-models.js"));
@@ -568,6 +587,45 @@ if (fs.existsSync(idxFile)) {
   const b2 = tsearch.candidateBuckets(tsearch.termsOf("床前明月光"));
   ok("候选分片取交集后收敛", b2.length <= b1.length, b1.length + " → " + b2.length);
   ok("候选分片不空（除非真没有）", b1.length > 0);
+
+  ok("高频字的候选片被截到上限内（一个「月」不该拉全量正文）",
+    b1.length <= tsearch.SCAN_CAP && b1.total > tsearch.SCAN_CAP,
+    "命中 " + b1.total + " 片，返回 " + b1.length + " 片 —— 超过 " + tsearch.SCAN_CAP +
+      " 就该只扫最少的那几片（全量分片约 23MB，用户敲一个字要等它落完盘）");
+
+  const capped = tsearch.search("月", { limit: 10 });
+  ok("截断时如实说明「只扫了部分」", capped.partial === true && capped.scanned <= tsearch.SCAN_CAP,
+    "扫了 " + capped.scanned + " 片，partial=" + capped.partial +
+      " —— 不说明就默认用户看到了全部命中");
+
+  ok("命中片多时也只扫上限内的那几片（不把 23MB 分片全拉下来）",
+    capped.scanned <= tsearch.SCAN_CAP,
+    "扫了 " + capped.scanned + " 片");
+
+  const searchJs = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
+  ok("会话如实说明「只扫了部分」（截断那面旗从分片挑选传到页面）",
+    /session\.partial/.test(searchJs) && /partial:\s*session\.partial/.test(searchJs),
+    "search.js 读不到会话上的 partial —— 候选片被截到 " + tsearch.SCAN_CAP +
+      " 片之后，界面还说「全站」，等于默认用户看到了全部命中");
+
+  ok("会话记着扫了几片，不是把总数一次算完",
+    tsearch.makeSession("月", {}).scanned <= tsearch.SCAN_CAP,
+    "makeSession 一开口就摊开全部候选片 —— 那正是会话式取数要避免的");
+
+  {
+    const idx = JSON.parse(fs.readFileSync(idxFile, "utf8"));
+    const kw = "明月";
+    const cand = tsearch.candidateBuckets(tsearch.termsOf(kw));
+    const scoreOf = (b) => tsearch.termsOf(kw).reduce(
+      (n, t) => n + (((idx.postings[t] || {})[b]) || 0), 0);
+    const sorted = cand.slice().sort((a, b) => scoreOf(a) - scoreOf(b));
+    ok("候选片按命中字频降序取（先扫最可能是那一句的片）",
+      scoreOf(cand[0]) > scoreOf(sorted[0]),
+      "取到的是命中字频最低的那几片（" + cand[0] + "=" + scoreOf(cand[0]) +
+        "，全站最低的是 " + sorted[0] + "=" + scoreOf(sorted[0]) + "）—— " +
+        "一页正文里「月」出现 24 次不等于它写着「明月」：" +
+        "《静夜思》所在的那片在「明月」里排到第 103，永远轮不到");
+  }
 } else {
   ok("全文索引未生成时检索整块关闭", tsearch.readiness().visible === false);
 }
@@ -5666,12 +5724,20 @@ function gapped(items, max) {
           keys.indexOf("sfx") < 0,
           "音效取决于这台机器的扬声器，换台手机就不成立了");
 
-        const clientKeys = Object.keys(store.DEFAULTS).filter((k) => k !== "lastSyncAt");
+        const localOnly = store.LOCAL_ONLY || {};
+        const clientKeys = Object.keys(store.DEFAULTS)
+          .filter((k) => k !== "lastSyncAt" && !localOnly[k]);
         const notOnServer = clientKeys.filter((k) => mine.indexOf(k) < 0);
         ok("小程序端每个跨设备的设置键都在服务端白名单里",
           notOnServer.length === 0,
           "缺 " + JSON.stringify(notOnServer) +
           " —— 这个键推上去会被服务端裁掉，「改了设置、换台手机还是默认」");
+
+        const stray = Object.keys(localOnly).filter((k) => mine.indexOf(k) >= 0);
+        ok("只在本机成立的设置键不占服务端白名单",
+          stray.length === 0,
+          JSON.stringify(stray) + " 在 LOCAL_ONLY 里，服务端却还留着它 —— " +
+            "发出去就被裁，这条白名单键是空转的");
 
         const badType = Object.keys(core.SETTINGS_KEYS)
           .filter((k) => ["int", "str", "bool", "num"].indexOf(core.SETTINGS_KEYS[k]) < 0);

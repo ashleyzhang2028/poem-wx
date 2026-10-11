@@ -2,6 +2,8 @@ const corpus = require("./corpus");
 
 const INDEX = "data/texts/idx.json";
 
+const SCAN_CAP = 12;
+
 let indexCache = null;
 let missing = false;
 
@@ -40,19 +42,27 @@ function candidateBuckets(terms) {
   const idx = index();
   if (!idx) return [];
   const lists = terms
-    .map((t) => idx.postings[t] || null)
-    .filter(Boolean)
-    .sort((a, b) => Object.keys(a).length - Object.keys(b).length);
+    .map((t) => ({ t: t, row: idx.postings[t] || null }))
+    .filter((x) => x.row)
+    .sort((a, b) => Object.keys(a.row).length - Object.keys(b.row).length);
 
   if (!lists.length) return [];
 
-  let acc = Object.keys(lists[0]);
-  for (let i = 1; i < lists.length; i++) {
-    const next = lists[i];
-    acc = acc.filter((b) => next[b] !== undefined);
-    if (!acc.length) break;
-  }
-  return acc;
+  const hit = Object.keys(lists[0].row).filter((b) =>
+    lists.slice(1).every((l) => l.row[b] !== undefined)
+  );
+  if (!hit.length) return [];
+
+  const score = {};
+  hit.forEach((b) => {
+    score[b] = lists.reduce((n, l) => n + l.row[b], 0);
+  });
+
+  hit.sort((a, b) => score[b] - score[a]);
+  const out = hit.slice(0, SCAN_CAP);
+  out.total = hit.length;
+  out.capped = hit.length > SCAN_CAP;
+  return out;
 }
 
 function hitLines(text, keyword) {
@@ -82,6 +92,7 @@ function shardsOf(keyword, book) {
   const manifest = corpus.manifest();
   const byBucket = {};
   const picks = [];
+  let capped = false;
 
   if (book && book !== "poems") {
     const seen = {};
@@ -93,8 +104,10 @@ function shardsOf(keyword, book) {
     });
   } else {
     const terms = termsOf(keyword);
-    if (!terms.length) return { buckets: [], byBucket: byBucket };
-    picks.push.apply(picks, candidateBuckets(terms));
+    if (!terms.length) return { buckets: [], byBucket: byBucket, capped: false };
+    const candidates = candidateBuckets(terms);
+    capped = !!candidates.capped;
+    picks.push.apply(picks, candidates);
   }
 
   picks.forEach((name) => {
@@ -105,7 +118,7 @@ function shardsOf(keyword, book) {
     byBucket[name] = ids;
   });
 
-  return { buckets: picks, byBucket: byBucket };
+  return { buckets: picks, byBucket: byBucket, capped: capped };
 }
 
 function scanShardStage(keyword, state) {
@@ -150,6 +163,8 @@ function makeSession(keyword, opt) {
   const session = {
     keyword: kw,
     stage: stage,
+    scanned: shards.buckets.length,
+    partial: !!shards.capped,
     searched: 0,
     done: false
   };
@@ -183,7 +198,10 @@ function search(keyword, opt) {
   while (out.length < limit && !session.done) {
     out = out.concat(nextBatch(session, limit));
   }
-  return out.slice(0, limit);
+  const sliced = out.slice(0, limit);
+  sliced.scanned = session.scanned;
+  sliced.partial = session.partial;
+  return sliced;
 }
 
 module.exports = {
@@ -195,5 +213,6 @@ module.exports = {
   termsOf,
   candidateBuckets,
   hitLines,
-  INDEX
+  INDEX,
+  SCAN_CAP
 };

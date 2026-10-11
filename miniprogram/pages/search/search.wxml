@@ -15,7 +15,7 @@
       <text class="result-count">命中 {{total}} 篇</text>
       <text class="hint result-where">{{resultWhere}}</text>
     </view>
-    <text class="hint result-more">{{more ? '每次 20 篇，往下拉接着出' : '就这些了'}}</text>
+    <text class="hint result-more">{{resultMore}}</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">

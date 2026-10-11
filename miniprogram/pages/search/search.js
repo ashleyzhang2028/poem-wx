@@ -30,7 +30,9 @@ Page({
     more: false,
     loading: false,
 
-    fromFull: false
+    fromFull: false,
+    partial: false,
+    resultMore: ""
   },
 
   onShow() {
@@ -62,11 +64,14 @@ Page({
   onUnload() {
     this.busy = false;
     this.session = null;
+    clearTimeout(this.fullTimer);
+    this.fullTimer = null;
   },
 
   onClear() {
     this.busy = false;
     this.session = null;
+    clearTimeout(this.fullTimer);
     this.setData({
       keyword: "",
       results: [],
@@ -74,7 +79,8 @@ Page({
       searched: false,
       searching: false,
       more: false,
-      loading: false
+      loading: false,
+      partial: false
     });
   },
 
@@ -128,9 +134,10 @@ Page({
       return;
     }
 
-    this.setData({ searching: true, searched: false, more: false, loading: false });
+    this.setData({ searching: true, searched: false, more: false, loading: false, partial: false });
 
-    setTimeout(() => this.runFull(kw), 16);
+    clearTimeout(this.fullTimer);
+    this.fullTimer = setTimeout(() => this.runFull(kw), 16);
   },
 
   byIndex(kw, limit) {
@@ -220,6 +227,12 @@ Page({
       searched: true,
       searching: false,
       fromFull: true,
+      partial: session.partial,
+      resultMore: more
+        ? "每次 20 篇，往下拉接着出"
+        : session.partial
+        ? "命中的片很多，先扫了命中字最多的那几片"
+        : "就这些了",
       resultWhere: fullHit ? "正文全文 · 全站" : "篇名作者 · 全站"
     });
   },

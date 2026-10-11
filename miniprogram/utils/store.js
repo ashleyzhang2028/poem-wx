@@ -35,8 +35,7 @@ const DEFAULTS = {
   theme: "ink",
   pinyin: "rare",
 
-  speechRate: 1,
-  speechAutoNext: true,
+  lastSearch: "",
 
   lastSyncAt: 0,
 
@@ -45,6 +44,11 @@ const DEFAULTS = {
 const DEVICE_DEFAULTS = {
 
   sfx: true
+};
+
+const LOCAL_ONLY = {
+
+  lastSearch: true
 };
 
 const SCHEMA = 2;
@@ -150,7 +154,7 @@ function cloudSettings() {
   const out = {};
   Object.keys(DEFAULTS).forEach((k) => {
 
-    if (k === "lastSyncAt") return;
+    if (k === "lastSyncAt" || LOCAL_ONLY[k]) return;
     const v = raw[k];
     if (v === undefined || v === null || v === "") return;
     out[k] = v;
@@ -394,6 +398,7 @@ module.exports = {
   deviceId,
   DEFAULTS,
   DEVICE_DEFAULTS,
+  LOCAL_ONLY,
   read,
   write,
   drop,
