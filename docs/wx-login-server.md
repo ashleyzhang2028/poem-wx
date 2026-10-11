@@ -252,7 +252,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 
 | 行 id | 载荷 | 谁写 |
 |---|---|---|
-| `settings:v1` | `{ v:1, settings:{ grade, term, dailyCount, scope, algo, align, fontSize, theme, pinyin, lastSearch }, updatedAt }` | 两端 |
+| `settings:v1` | `{ v:1, settings:{ grade, term, dailyCount, scope, algo, align, fontSize, theme, pinyin }, updatedAt }` | 两端 |
 
 两条设计口径：
 
@@ -312,8 +312,7 @@ var SETTINGS_ROW_ID = "settings:v1";
 // 这一层的作用就是「服务端说了算」，照单全收等于把客户端的话当真理。
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
-  scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str",
-  lastSearch: "str"
+  scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str"
 };
 
 function sanitizeSettings(p) {

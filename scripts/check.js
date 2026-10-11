@@ -192,6 +192,16 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
     ),
     "reader.js 的 corpus.entry(id) 不在 try 里，且排在 ensureEntry 之前 —— 它一抛就连 textFailMsg 那套都说不上");
+
+  const readerAdvance = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  const sheetAdvance = fs.readFileSync(
+    path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
+  ok("评完分自动翻篇的计时器，页面/组件走了要清掉",
+    /this\.advance\s*=\s*setTimeout/.test(readerAdvance)
+      && /onUnload\s*\(\)\s*{[\s\S]{0,120}?clearTimeout\(this\.advance\)/.test(readerAdvance)
+      && /this\.advance\s*=\s*setTimeout/.test(sheetAdvance)
+      && /detached\s*\(\)\s*{[\s\S]{0,120}?clearTimeout\(this\.advance\)/.test(sheetAdvance),
+    "700ms 后再翻页，人在这 700ms 里退出，回调仍会打在已卸载的页面/组件上");
 }
 
 const R = require(path.join(ROOT, "utils", "review-models.js"));
@@ -5127,7 +5137,7 @@ function gapped(items, max) {
         same.length === 1 && same[0].b === "poems",
         "留下的不是课内那条（" + (same[0] || {}).b + "）");
     } else {
-      ok("李白在名册里", false, "488 位里没有李白");
+      ok("李白在名册里", false, "名册里没有李白");
     }
   }
 
