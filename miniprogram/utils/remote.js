@@ -113,6 +113,19 @@ function sendCloud(path, data, method) {
   return cloudCall(conf, path, data, method);
 }
 
+function cloudFailError(err, conf) {
+  const say = (err && err.errMsg) || "云调用不通";
+  const err2 = new Error(
+    say + "\n  调用目标：环境 " + (conf.env || "(空)") + " / 服务 " + (conf.service || "(空)") +
+    " —— 环境 ID 对不上这个小程序的云开发环境时，平台就回 102002 这类话"
+  );
+  err2.errMsg = say;
+  err2.env = conf.env || "";
+  err2.service = conf.service || "";
+  err2.cloudFail = true;
+  return err2;
+}
+
 function cloudCall(conf, path, data, method) {
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
@@ -128,7 +141,7 @@ function cloudCall(conf, path, data, method) {
       success: (res) => (res.statusCode >= 200 && res.statusCode < 300
         ? resolve(res.data)
         : reject(httpError(res.statusCode, res.data))),
-      fail: (err) => reject(new Error((err && err.errMsg) || "云调用不通"))
+      fail: (err) => reject(cloudFailError(err, conf))
     });
   });
 }

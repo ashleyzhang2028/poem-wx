@@ -237,6 +237,33 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "两个编译器路径对这项的默认值还不一致（一个 unset 当 true、一个当 false），" +
       "所以必须显式写 false，不能靠默认");
 
+  const devUnused = pcfg.setting ? pcfg.setting.ignoreDevUnusedFiles : undefined;
+  ok("开发者工具里也不摇掉「没人 require 的」文件（模拟器/预览与上传两条路都要显式关）",
+    devUnused === false,
+    "ignoreDevUnusedFiles 没显式写成 false（现在是 " + JSON.stringify(devUnused) + "）。" +
+      "它与 ignoreUploadUnusedFiles 是**两个**开关：前者管开发者工具的模拟器/预览/真机调试，" +
+      "后者管上传。两只默认值都是「过滤无依赖文件」，而模块图只认 .js，" +
+      "data/ 下的 JSON 一个都不在图上 —— 关一只，另一条路照样把语料摇没。" +
+      "症状：工具里编译后控制台打「语料 没进这个包」，编译输出里一行 " +
+      "`ignoring files: data/books/*.json …`，而磁盘上那份就在那儿（Issue #175）");
+
+  const includeList = (pcfg.packOptions || {}).include || [];
+  const includeValues = includeList.map((r) => String(r.value || ""));
+  const mustInclude = ["data/books", "data/course.json", "data/shards.json",
+    "data/pinyin-table.json", "data/roster.json"];
+  const missingInclude = mustInclude.filter((v) => includeValues.indexOf(v) < 0);
+  ok("进包的语料在 packOptions.include 里（include 压过 ignore，且不靠分析器的判断）",
+    missingInclude.length === 0,
+    "packOptions.include 缺：" + JSON.stringify(missingInclude) + " —— " +
+      "include 是「无论分析器怎么想都带上」的那一档，优先级高于 ignore。" +
+      "缺了它，语料能不能进包就全看两只 ignoreUnused 开关，" +
+      "而将来再有人动一次编译模式，又会静默漏掉一份");
+
+  ok("include 不把 data/texts 拉回主包（26MB 的分片只走云与磁盘）",
+    !includeValues.some((v) => v === "data/texts" || v.indexOf("data/texts/") === 0),
+    "packOptions.include 里出现了 data/texts —— include 压过 ignore，" +
+      "主包会因此多背 26MB，微信那边直接传不上去");
+
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
@@ -5928,6 +5955,14 @@ function gapped(items, max) {
         "「先去备案」上推");
   }
 
+  ok("云调用失败时把「实际用的环境 / 服务」带出来（102002 这类话才好自查）",
+    /function cloudFailError\(/.test(remoteSrc) &&
+      /err2\.env\s*=\s*conf\.env/.test(remoteSrc) &&
+      /err2\.service\s*=\s*conf\.service/.test(remoteSrc) &&
+      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf\)\)/.test(remoteSrc),
+    "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
+      "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
+      "一次就能看出「包里的 env 不是我这个小程序的那个」");
   ok("云开发环境 ID 填成云托管那个时当场说清（两个是不同的环境）",
     /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
     "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +

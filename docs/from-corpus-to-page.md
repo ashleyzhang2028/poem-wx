@@ -123,6 +123,20 @@ corpus.ensureEntry(id)
 **连请求都不会发**，界面只能说「这一篇取不到正文」。
 这条边界由 `check.js` 静态钉着，见 [`shard-delivery.md`](shard-delivery.md)。
 
+⚠️ **语料进包靠三处配置，不是「生成了就自然进」。** 编译器的模块图只认 `.js` 依赖，
+`data/` 下的 JSON 一个都不在图上，默认会被当「无依赖文件」摇掉：
+
+| 处 | 管哪条路 | 值 |
+|---|---|---|
+| `setting.ignoreUploadUnusedFiles` | 上传（`miniprogram-ci`） | `false` |
+| `setting.ignoreDevUnusedFiles` | 开发者工具的模拟器 / 预览 / 真机调试 | `false` |
+| `packOptions.include` | 上面两条的兜底（压过 `ignore`） | `data/books` 与四份根 JSON |
+
+两只 `ignore*UnusedFiles` 是**两个**开关，关一只另一条路照样摇。`include` 是
+「无论分析器怎么想都带上」的那一档，`check.js` 钉着它必须覆盖 `data/books` /
+`course.json` / `shards.json` / `pinyin-table.json` / `roster.json`，且**不许**把
+`data/texts` 拉回来（那是 26MB 的分片，进主包直接传不上去）。
+
 容器里有没有分片，由镜像的构建参数决定：`COPY_SHREDS` 不写＝**有**，
 `=0`＝瘦镜像（`/api/shard/*` 回 `404 E_NO_SHARDS`，界面说「这个版本里没有课外正文」）。
 这两句话指向的下一步动作不同，一路上都不许合并成一句「加载失败」。
@@ -173,7 +187,8 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
 | 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
-| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」 | ① | `npm run build:data`，再在开发者工具里重新编译 |
+| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.json …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
+| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
 | 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。由部署方在管理页（「我的 → 用户与权限」）填，或按 § 五 重跑流水线 |
