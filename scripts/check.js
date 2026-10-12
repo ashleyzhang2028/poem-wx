@@ -199,6 +199,21 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "require 抛 MODULE_NOT_FOUND，于是课外正文在工具里一律取不到 —— " +
       "而那个目录就在磁盘上。要在 bucket() 回空之后、走远端之前补一条磁盘兜底");
 
+  const packedReqs = ["data/books/books.json", "data/course.json", "data/shards.json"].filter(
+    (f) => corpusSrc.indexOf('require("../' + f + '")') < 0
+  );
+  ok("必进包的三份语料在 corpus 里是字面量 require（打包器才认，真机上才存在）",
+    packedReqs.length === 0
+      && /PACKED\.books\(\)/.test(corpusSrc)
+      && /function\s+hasData[\s\S]{0,200}PACKED\.books\(\)/.test(corpusSrc)
+      && !/fs\.existsSync[\s\S]{0,200}data/.test(corpusSrc),
+    "整包只要有一个文件被 packOptions.ignore 排掉（data/texts 就是），打包器就判定 " +
+      "data/ 不是独立文件、整个目录不打包 —— 真机上 require(data/...) 一律 MODULE_NOT_FOUND。" +
+      "所以 books.json / course.json / shards.json 的 require 路径必须写成字面量，hasData() 也只能" +
+      "按包内 require 判；拿 fs.existsSync 量目录，量到的是开发者工具那一列，与手机上相反。" +
+      "缺：" + (packedReqs.join(" / ") || "无") + "；" +
+      "另 hasData() 里不许再有 fs.existsSync 判据");
+
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
@@ -7068,7 +7083,7 @@ function gapped(items, max) {
   ok("corpus 暴露了 hasData（页面据此走空态）",
     /hasData\s*,/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
   ok("hasData 判的是「包内的 books.json 在不在」，不是磁盘上那个目录",
-    !/existsSync/.test(corpusSrc) && /hasData[\s\S]{0,300}require\("\.\.\/" \+ BOOKS_DIR \+ "books\.json"\)/.test(corpusSrc),
+    !/existsSync/.test(corpusSrc) && /hasData[\s\S]{0,300}PACKED\.books\(\)/.test(corpusSrc),
     "真机没有 fs，且 data/ 目录会被 packOptions 拆着打 —— 目录在、包内文件缺时，"
       + "看目录的探针一律回「有数据」，首页于是跳过空态，渲染出一个空目录");
   ok("app.js 把运行版本记进本机（首页空态要说得清「这个包是哪一版」）",
