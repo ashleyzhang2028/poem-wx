@@ -7252,23 +7252,59 @@ function gapped(items, max) {
   }
 
   const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页的空态先给人一句人话",
-    /noData/.test(homeWxmlNoData) && /数据没能载入/.test(homeWxmlNoData),
-    "空态里没有「数据没能载入」那句 —— 首页会渲染成白屏");
-  const localBlock = homeWxmlNoData.slice(
-    homeWxmlNoData.indexOf("数据没能载入"),
-    homeWxmlNoData.indexOf("wx:elif")
-  );
-  ok("空态只在「本地打开」那一支教人跑构建（带版本号的包不许提构建）",
-    /buildRev\s*\?/.test(localBlock) && /build:data/.test(localBlock),
-    "本地打开时不说该跑哪条命令，用户只能看到「数据没能载入」却不知道下一步 —— " +
-      "语料随包走的是**体验版**，本地那一份仍要自己编");
-  ok("空态不许教人 clone-poem（那套跨仓库取语料已经撤掉）",
+  ok("首页不再有「数据没能载入」那张空态卡",
+    !/noData/.test(homeWxmlNoData) && !/数据没能载入/.test(homeWxmlNoData),
+    "首页又摆回一张整块空态 —— 语料缺在哪一段被那张卡吃掉，页面自己不报错，" +
+      "按段排查时反而更难看清断口");
+  ok("首页不许教人 clone-poem（那套跨仓库取语料已经撤掉）",
     !/clone-poem/.test(homeWxmlNoData),
     "空态里还留着 clone-poem.sh —— 那个脚本与那条跨仓库依赖一起删了");
   const homeJsNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
-  ok("首页在 refresh 里读 hasData 决定走空态",
-    /corpus\.hasData\(\)/.test(homeJsNoData));
+  ok("首页缺语料时照常渲染（各卡片自己露出断口）",
+    !/hasData/.test(homeJsNoData) || !/noData|buildRev/.test(homeJsNoData),
+    "home.js 又在 refresh 里按 hasData 改走另一套渲染 —— 卡片不再按真实数据报错");
+  const appSrc = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
+  ok("缺语料改在控制台报（版本 + 语料在不在）",
+    /console\.info[\s\S]{0,200}corpus\.hasData\(\)/.test(appSrc)
+      && /console\.info[\s\S]{0,200}stamp\(\)/.test(appSrc),
+    "空态卡删掉之后，包是哪一版、语料进没进包就没人说了 —— " +
+      "这两句只能在 onLaunch 的控制台里说，页面不再替它出头");
+
+  {
+    const script = [
+      'const path=require("path");',
+      'const ROOT=' + JSON.stringify(ROOT) + ';',
+      'const mem={};',
+      'global.wx={showToast(){},showModal(){},showLoading(){},hideLoading(){},',
+      '  getSystemInfoSync:()=>({statusBarHeight:20,windowWidth:375,platform:"devtools"}),',
+      '  getStorageSync:(k)=>(k in mem?mem[k]:""),setStorageSync:(k,v)=>{mem[k]=v;},',
+      '  removeStorageSync:(k)=>{delete mem[k];},',
+      '  getStorageInfoSync:()=>({keys:Object.keys(mem),currentSize:0,limitSize:10240}),',
+      '  loadFontFace(){},navigateTo(){},switchTab(){},stopPullDownRefresh(){}};',
+      'global.getApp=()=>({globalData:{}});global.getCurrentPages=()=>[];',
+      'const c=require(path.join(ROOT,"utils","corpus.js"));',
+      'c.books=()=>[];c.course=()=>[];c.courseTexts=()=>({});',
+      'c.manifest=()=>({map:{},buckets:[]});c.hasData=()=>false;',
+      'require(path.join(ROOT,"utils","store.js")).saveProfile({logged:true,nickname:"t"});',
+      'let opt=null;global.Page=(o)=>{opt=o;};',
+      'require(path.join(ROOT,"pages","home","home.js"));',
+      'const p=Object.assign({},opt);p.data=JSON.parse(JSON.stringify(opt.data||{}));',
+      'p.setData=function(o){Object.keys(o).forEach((k)=>{this.data[k]=o[k];});};',
+      'p.onShow.call(p);',
+      'if(p.data.noData!==undefined) throw new Error("home.js 还有 noData 分支");',
+      'if(p.data.logged!==true) throw new Error("登录态没渲染出来");',
+      'if(!Array.isArray(p.data.plan)||p.data.plan.length!==0) throw new Error("plan 不是空数组");',
+      'console.log("ok");'
+    ].join("\n");
+
+    let blew = "";
+    try {
+      execFileSync(process.execPath, ["-e", script], { cwd: ROOT, stdio: "pipe" });
+    } catch (e) {
+      blew = String((e.stderr && e.stderr.toString()) || e.message).split("\n").slice(0, 3).join(" | ");
+    }
+    ok("没有语料时首页也照常跑完 refresh（不抛、不留空态分支）", blew === "", blew);
+  }
 
   const wxmlFiles = [];
   (function walk(d) {
