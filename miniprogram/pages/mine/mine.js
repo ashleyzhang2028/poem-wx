@@ -42,9 +42,7 @@ Page({
     lockedCount: 0,
 
     focusLogin: false,
-    adminVisible: false,
-    serverEntry: false,
-    serverSub: ""
+    adminVisible: false
   },
 
   onLoad(query) {
@@ -95,8 +93,6 @@ Page({
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
       adminVisible: E.can("admin"),
-      serverEntry: true,
-      serverSub: this.serverSub(),
 
       caps: E.matrix({ signedIn: !!profile.logged }),
       lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
@@ -145,15 +141,11 @@ Page({
   },
 
   tellOffline() {
-    const why = auth.offline();
     wx.showModal({
       title: "还没接上同步服务器",
-      content: why === "cloud"
-        ? "这台手机连不上同步服务器（云调用两栏没填、或填错了）。\n\n"
-          + "账号与进度不会存到服务端 —— 换台手机就没了。\n\n"
-          + "管理员可以在「我的 → 同步服务器」里填；普通用户可以找部署方。"
-        : "这个包还没配同步服务器，登录接不上，账号与进度只在这台手机上。\n\n"
-          + "配上之后，登录会把进度与设置跨设备带过去。入口在「我的 → 同步服务器」。",
+      content:
+        "登录连不上服务器，账号与进度只在这台手机上，换台手机就没了。\n\n"
+        + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
       showCancel: false
     });
   },
@@ -171,35 +163,11 @@ Page({
     });
   },
 
-  serverSub() {
-    if (!auth.configured()) return "这个包还没配 · 点这里填";
-    if (auth.useCloud()) return "已配 · 走云调用" + (this.data.syncReady ? "" : " · 待接通");
-    return "已配 · " + (auth.baseUrl() || "云调用");
-  },
-
-  onServer() {
-    if (auth.configured() && !auth.isAdmin()) {
-      wx.showModal({
-        title: "同步服务器已配好",
-        content:
-          "这台手机连的是「" + this.serverSub() + "」。\n\n"
-          + "连接设置跟着这台手机走，换一台要重填一次。"
-          + "要改地址，找部署方（见「关于与反馈」的联系邮箱）。",
-        showCancel: false,
-        confirmText: "知道了"
-      });
-      return;
-    }
-    wx.navigateTo({ url: "/packages/admin/index/index?focus=cloud" });
-  },
-
   syncNote(sy) {
     if (sy.lastSyncAt) return sy.lastText;
     if (!sy.ready) {
-
       if (!auth.logged()) return "先登录 · 登录后进度跨设备跟随";
-      const why = auth.offline();
-      if (why === "cloud") return "同步服务器没接上（云调用两栏）";
+      if (auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
       return "同步通道未开 · 进度只在这台手机";
     }
     return "还没同步过 · 点一下同步";
