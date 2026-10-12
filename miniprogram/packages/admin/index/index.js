@@ -38,8 +38,8 @@ Page({
   },
 
   onLoad(query) {
-
     if (query && query.focus === "cloud") this.setData({ focus: true });
+  },
 
   onShow() {
     theme.apply(this);

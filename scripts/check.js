@@ -59,6 +59,16 @@ const jsFiles = [];
 })(ROOT);
 
 jsFiles.forEach((file) => {
+  try {
+    execFileSync(process.execPath, ["--check", file], { stdio: "pipe" });
+    ok("语法可解析 " + path.relative(ROOT, file), true);
+  } catch (e) {
+    const tail = String((e.stderr || "") + (e.stdout || "")).split("\n").slice(0, 4).join(" / ");
+    ok("语法可解析 " + path.relative(ROOT, file), false, tail);
+  }
+});
+
+jsFiles.forEach((file) => {
   const src = fs.readFileSync(file, "utf8");
   const re = /require\(["']([^"']+)["']\)/g;
   let m;
