@@ -6325,12 +6325,24 @@ function gapped(items, max) {
       "WX_PRIVATE_KEY_B64",
     ]);
 
-    const assigned = new Set(
-      shellLines
-        .map((l) => l.match(/^([A-Z][A-Z0-9_]*)=/))
-        .filter(Boolean)
-        .map((m) => m[1])
-    );
+    const undefinedRefs = [];
+    const assignedLines = shellLines
+      .filter((l) => /^[A-Z][A-Z0-9_]*=/.test(l))
+      .map((l) => l.match(/^([A-Z][A-Z0-9_]*)=/)[1]);
+    const assigned = new Set(assignedLines);
+    const jobs = cnb.split(/^\s*- name: /m).slice(1);
+    for (const job of jobs) {
+      const jobLines = job.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+      const assignedHere = [];
+      for (const l of jobLines) {
+        const m = l.match(/^([A-Z][A-Z0-9_]*)=/);
+        if (m) assignedHere.push(m[1]);
+        for (const r of l.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)) {
+          if (defined.has(r[1]) || injected.has(r[1]) || assignedHere.includes(r[1])) continue;
+          undefinedRefs.push(r[1] + " @ " + job.split("\n")[0].trim().slice(0, 30) + " → " + l.slice(0, 50));
+        }
+      }
+    }
     const missing = [...referenced].filter(
       (v) => !defined.has(v) && !injected.has(v) && !assigned.has(v)
     );
@@ -6339,6 +6351,11 @@ function gapped(items, max) {
       "这些变量只在脚本里被引用、`env:` 里没有定义：" + JSON.stringify(missing) +
         " —— job 跑在 Alpine，`set -eu` 之下撞上未定义变量是当场退出，" +
         "报错只有 `sh: N: VAR: parameter not set` 一行，不说是哪条命令");
+    ok("每个任务引用的变量在本任务里先赋了值（stage 之间各起一个 shell，上一条任务的 `REV=…` 留不过来）",
+      undefinedRefs.length === 0,
+      "这些变量在本任务里是「先用后赋」或「只在别的任务里赋过」：" +
+        JSON.stringify(undefinedRefs) +
+        " —— 上一关只查「整个文件里有没有赋过」，赋在另一个任务的 shell 里不算数");
 
     const bashisms = shellLines.filter((l) =>
       /\$\{[A-Za-z_][A-Za-z0-9_]*\/\/|\$\{[A-Za-z_][A-Za-z0-9_]*\^\^|\$\{[A-Za-z_][A-Za-z0-9_]*,,\}|\[\[/.test(l)
