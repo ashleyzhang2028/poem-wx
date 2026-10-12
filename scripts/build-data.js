@@ -4,13 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-/* 语料在本仓库里 —— scripts/corpus/ 就是 poem 那一版的数据文件，
-   构建不再 clone 另一个仓库。要换一版就把 scripts/corpus/ 整目录换掉。 */
 const CORPUS_DIR = path.join(__dirname, "corpus");
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
-/* 云调用两栏是部署方的密钥，值存在密钥仓库 wechat-ci.yml 里，
-   构建期从这里注入、生成 utils/server.js —— 产物不入库。 */
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 const SERVER_KEYS = ["env", "service"];
 
@@ -23,8 +19,6 @@ const TRANSLATION_SOURCES = {
   modern: "依据现行通用选本与通行讲法"
 };
 
-/* scripts/corpus/data 下要按序跑的语料文件。顺序有依赖：
-   site-index.js 要靠 site-books.js 与 index.js 先挂上 window 上的集子表。 */
 const POEM_FILES = [
   "data/poems-1.js", "data/poems-2.js", "data/poems-3.js", "data/poems-4.js",
   "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
@@ -355,9 +349,6 @@ function writeServer() {
   }).join("\n").replace(/,$/, "");
 
   fs.writeFileSync(SERVER_FILE,
-    "/* 构建产物，不入库：值由构建期从环境变量注入（密钥仓库 wechat-ci.yml 的\n" +
-    "   CLOUD_ENV / CLOUD_SERVICE，流水线里引）。本机没注入时两格为空，\n" +
-    "   界面照实说「这个包还没配同步服务器」。 */\n" +
     "const CLOUD = {\n" + body + "\n};\n" +
     "\n" +
     "function cloud() {\n" +

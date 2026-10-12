@@ -132,8 +132,6 @@ let manifestCache = null;
 const bookCache = {};
 const bucketCache = {};
 
-/* 路径必须是字面量：打包器只按静态字符串决定进不进包，而 data/texts 被
-   packOptions.ignore 排掉后整个 data/ 都不进包，真机上 require 一律 MODULE_NOT_FOUND。 */
 const PACKED = {
   books: function () {
     return require("../data/books/books.json");

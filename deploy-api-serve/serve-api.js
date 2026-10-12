@@ -7,7 +7,7 @@ function wireMysqlStore() {
 
   const host = String(process.env.MYSQL_HOST || "").trim();
   if (!host) {
-    console.log("[store] 没配 MYSQL_HOST —— 退回 poem 默认的存储层（内存档，重启即丢）");
+    console.log("[store] 没配 MYSQL_HOST —— 退回默认的存储层（内存档，重启即丢）");
     return false;
   }
 

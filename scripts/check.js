@@ -6680,7 +6680,6 @@ function gapped(items, max) {
         const hits2 = [];
         (function walk2(dir) {
           fs.readdirSync(dir).forEach((f) => {
-            // parity-web 是服务端契约的只读副本，照原样摆着，不参与这条扫
             if (f === ".git" || f === "node_modules" || f === "parity-web") return;
             const full = path.join(dir, f);
             if (fs.statSync(full).isDirectory()) return walk2(full);
@@ -7382,6 +7381,88 @@ function gapped(items, max) {
     /注释/.test(settings) && /PR/.test(settings),
     "用户这一轮要的两件事（自己说的「再说一次 删除代码中的所有注释」、" +
       "「提 PR」）没落进角色设定，下一个人还得再说一次");
+}
+
+{
+  const repoRoot = path.join(__dirname, "..");
+  const scanned = [];
+  const skipDir = (p) =>
+    p === ".git" || p === "node_modules" || p === "corpus" || p === "parity-web";
+
+  (function walk(dir) {
+    fs.readdirSync(dir).forEach((f) => {
+      if (skipDir(f)) return;
+      const full = path.join(dir, f);
+      if (fs.statSync(full).isDirectory()) return walk(full);
+      if (f.endsWith(".js")) scanned.push(path.relative(repoRoot, full));
+    });
+  })(repoRoot);
+
+  function commentAt(src) {
+    const n = src.length;
+    let i = 0;
+    let quote = "";
+    let prev = "";
+    const KEYWORD = /^(return|typeof|instanceof|in|of|new|delete|void|case|do|else|yield|await|throw)$/;
+    while (i < n) {
+      const c = src[i];
+      if (quote) {
+        if (c === "\\") { i += 2; continue; }
+        if (c === quote) quote = "";
+        i++;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === "`") { quote = c; i++; continue; }
+      if (src.slice(i, i + 2) === "//" || src.slice(i, i + 2) === "/*") return i;
+      if (c === "/") {
+        const last = src.slice(0, i).replace(/\s+$/, "").slice(-1);
+        if (!last || "([{,;=:!&|?+-*%^<>~".indexOf(last) >= 0 || KEYWORD.test(prev)) {
+          let j = i + 1;
+          let inClass = false;
+          let closed = false;
+          while (j < n) {
+            const d = src[j];
+            if (d === "\\") { j += 2; continue; }
+            if (d === "\n") break;
+            if (d === "[") inClass = true;
+            else if (d === "]") inClass = false;
+            else if (d === "/" && !inClass) { closed = true; break; }
+            j++;
+          }
+          if (closed) {
+            j++;
+            while (j < n && /[a-z]/i.test(src[j])) j++;
+            prev = "literal";
+            i = j;
+            continue;
+          }
+        }
+        prev = "";
+        i++;
+        continue;
+      }
+      const id = /^[A-Za-z_$][\w$]*/.exec(src.slice(i));
+      if (id) { prev = id[0]; i += id[0].length; continue; }
+      if (!/\s/.test(c)) prev = "";
+      i++;
+    }
+    return -1;
+  }
+
+  const dirty = scanned.filter((rel) => commentAt(fs.readFileSync(path.join(repoRoot, rel), "utf8")) >= 0);
+  ok("源码里没有注释（" + scanned.length + " 份 .js：api / deploy / deploy-api-serve / scripts / miniprogram）",
+    dirty.length === 0,
+    "还有注释：" + dirty.slice(0, 8).join("、") +
+      " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
+
+  const generated = ["miniprogram/utils/server.js", "miniprogram/data/books/books.json"];
+  const leaked = generated.filter((rel) => {
+    const p = path.join(repoRoot, rel);
+    if (!fs.existsSync(p)) return false;
+    return commentAt(fs.readFileSync(p, "utf8")) >= 0;
+  });
+  ok("构建期生成的文件也没有注释（server.js）", leaked.length === 0,
+    "构建产物里带了注释：" + leaked.join("、") + " —— 生成它的那处源码字符串要一起改");
 }
 
 Promise.all(pending).then(() => {

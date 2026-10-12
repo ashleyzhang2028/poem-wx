@@ -8,7 +8,7 @@ var ROUTES = {
 
   "GET /config": "./../_routes/config.js",
   "GET /diag": "./../_routes/diag.js",
-  // 小程序（微信）登录那两条 —— 契约与小程序端 utils/auth.js 一对
+
   "POST /wx/login": "./../_routes/wx/login.js",
   "POST /wx/refresh": "./../_routes/wx/refresh.js",
 

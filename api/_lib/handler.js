@@ -22,27 +22,6 @@ function deps(req, body) {
   };
 }
 
-/**
- * 这一条请求手里的令牌从哪儿来。**两处都认，Cookie 优先。**
- *
- * 网页版带 Cookie，小程序不带 —— 小程序把 token 放在
- * `Authorization: Bearer <accessToken>`（见 `miniprogram/utils/remote.js` 的
- * `send()`）：`wx.request` 不共享浏览器的 Cookie 罐，而 `session.setCookieHeader()`
- * 里那个 `SameSite=Lax` + `Secure` 本来也不是给小程序准备的。
- *
- * 少了这一条，现象是「登录一路绿灯、跟着每一条 `/api/sync/*` 都 401」——
- * 两端都没有一句话是错的，所以谁也定位不到。
- *
- * 三条边界，各有一个踩过的坑：
- *   1. **别在这儿 `decodeURIComponent`**。`fromCookieHeader()` 里面替 Cookie
- *      解过一次（Cookie 里 `=`、`;` 是保留字）；Bearer 那一枚是 base64url + 一个点，
- *      原样用就是对的 —— 多解一次，令牌里恰好出现 `%` 时会被改掉，签名对不上。
- *   2. **认出来之后走的是同一套校验**，不给 Bearer 开小门：`session.read()` 验签与
- *      过期、再查 `sessions` 那一行（`revoked` / `uid` 对得上），一步都不能省。
- *      只有签名是不够的 —— 账号注销之后那一行就没了，而令牌还能验过去。
- *   3. **头名两个大小写都读**：Node 会归一成小写 `authorization`，但自己写的
- *      `http` 包装与某些代理给的是原样的 `Authorization`。
- */
 function tokenOf(req) {
   var h = (req && req.headers) || {};
 
@@ -62,7 +41,6 @@ function withSession(req, d) {
       if (!s) return d;
       return Promise.resolve(d.store.getSession(s.sid)).then(function (row) {
 
-        // A signed token alone is not enough: the row vanishes when the account is deleted.
         if (!row || Number(row.revoked) === 1 || String(row.uid) !== s.uid) return d;
         d.account = { uid: s.uid, sid: s.sid };
         return d;

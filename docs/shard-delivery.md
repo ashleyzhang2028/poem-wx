@@ -241,7 +241,7 @@ env:
 | `e2e-mysql` 报 `Cannot find module './shard-api.js'` | 同一条：那条 e2e 自己摊一遍上下文，漏摊了这一样 |
 | 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS=0`）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
 | 容器起不来，日志是 `Cannot find module './shard-api.js'` | `.dockerignore` 少了 `!shard-api.js` —— 白名单把它挡在上下文外，构建与部署都绿（Issue #115，见 § 七） |
-| 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 poem 的日志 —— 要单独看 |
+| 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 api 的日志 —— 要单独看 |
 | 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.json`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.json`）——见 § 二「清单进包」 |
 | 自检 V49「接线在 require handler 之前」无故变红 | 块注释里写了 `/api/*` 之类的**带星号的路径**，`/*` 把注释后半段吃掉了。写成行注释，或在块注释里别写 `/xxx/*` |
 

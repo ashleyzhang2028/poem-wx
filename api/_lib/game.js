@@ -60,11 +60,7 @@ function corpus() {
         id: p.id, book: b.id, title: p.title || "", author: p.author || "",
         dynasty: p.dynasty || "", text: p.text || "", translation: p.translation || "",
         gradeGroup: p.gradeGroup || p.selection || "", source: p.source || "",
-        // grade / term 也带上：课内三学段（poems:primary 等）是靠它们收窄的。
-        // 从前这里只留 gradeGroup，于是 Ex.select(cps,"poems:primary") 恒为空、
-        // scoped() 一律退回全站、scopeExact 永远 false —— 「服务端没有 grade
-        // 数据」这句老话，根子是这一行漏了两个字段。现在补上，服务端也能按
-        // 学段收窄了（grade 由 data/index.js 给，见那边的 p.grade = i + 1）。
+
         grade: p.grade == null ? null : Number(p.grade),
         term: p.term == null ? null : Number(p.term)
       });
@@ -78,22 +74,10 @@ function quiz() {
   return require(path.join(ROOT, "js", "quiz.js"));
 }
 
-// 范围过滤与前端同源（前端 `js/game.js` 的 `scopedCorpus()`）：
-// **收的是令字**（题），不是作答（答）—— 见 checkFly() 上面那段。
-// exam.js 是 UMD，Node 下直接 require 得到同一个 Ex.select。
 function exam() {
   return require(path.join(ROOT, "js", "exam.js"));
 }
 
-// 按 scope 收窄语料，收窄不了就退回全站、并**如实报** exact = false。
-//   · 认得出的集子（book:xxx）/ 学段（poems:primary 等）按 range 收窄；
-//   · 认不出的 scope 退回全站，不抛；
-// exact 供两处用：一是回执里带 scopeExact（让前端知道这回真按范围收窄了吗），
-// 二是 checkFly() 算 inScope —— exact=false 时收窄没发生，inScope 只能报 null。
-//
-// ⚠️ 从前这里写着「课内三学段服务端没有 grade 数据」。那是**误判**：
-// 语料里其实有 grade（`data/index.js` 给的），是 corpus() 那一行 push 的时候
-// 漏掉了 grade/term 两个字段。现在补上了，课内三学段也收得动。
 function scoped(scopeId) {
   var cps = corpus();
   var id = String(scopeId == null ? "" : scopeId);
@@ -133,20 +117,6 @@ function rebuild(input) {
 function checkFly(input) {
   var Q = quiz();
 
-  // ⚠️ 判分扫**整份语料**，不按用户选的 range 收窄（用户 2026-09-30 裁决）。
-  //
-  // 原文：「我的初始出题范围确实是目标范围内的令字，但我的回答可以超出
-  // 当前范围吧，否则没法回答了」。对 —— range 管的是**令字**（出什么题），
-  // 不管你想起的是哪一句（答）。用户在「小学」范围里闯关，令字给了「风」，
-  // 他答「春风不度玉门关」（王之涣《凉州词》，只在乐府集里）—— 那真是一句
-  // 古诗，拿范围去卡它只会把真句子判成「合集里没有」。
-  //
-  // 从前的写法是 `scoped(input.scopeId).corpus`：判分跟着 range 走。那正是
-  // 这条反馈的由来。现在服务端与前端同一个口径（前端 `answerCorpus()` 也扫
-  // 整份语料），两端的「找到 / 没找到」在同一个语料上算出来，不会再各说一套。
-  //
-  // scopeId 仍收下来：一是留个痕（回答里回带）、二是总句数口径不变。
-  // scoped() 保留 —— **令字**的候选池仍按 range 挑（那是题，该收）。
   var sc = scoped(input.scopeId);
   var cps = corpus();
   var chars = (input.chars || [input.char]).filter(Boolean).map(String);
@@ -155,24 +125,16 @@ function checkFly(input) {
   if (!said) return { bad: "E_BODY", message: "请把你想起来的那一句填上" };
 
   var hit = Q.flyFlower({ poems: cps, chars: chars });
-  // 同一句常出现在好几篇里（「黄河入海流」既是课内《登鹳雀楼》，也在唐诗集里）。
-  // 取第一条当出处，但「在不在范围里」要看**所有**对上的那几条 —— 有一条在范围里
-  // 就算在，别因为语料拼接的先后把课内那句盖过去。
+
   var exactRows = hit.rows.filter(function (r) { return r.text === said; });
   var exact = exactRows[0] || null;
 
-  // 这一句落在用户选的范围里吗？落在范围外也照样算对 —— 只是如实报出来，
-  // 免得用户看见「对上了」还以为那一句真在本范围（小学）里。
-  //
-  // ⚠️ 只有在**服务端真按这个范围收窄过**（sc.exact）时，「在不在范围里」才
-  // 有意义。sc.exact === false 时 sc.corpus 已经是全站（scoped() 的退路），
-  // 拿它算出来的 inScope 恒为 true —— 那是假的，宁可报 null（说不清）。
   var inScope = null;
   if (exact && sc.exact) {
     var scopedIds = {};
     sc.corpus.forEach(function (p) { if (p && p.id != null) scopedIds[String(p.id)] = 1; });
     inScope = exactRows.some(function (r) { return !!scopedIds[String(r.id)]; });
-    // 出处也换成「在范围里的那一条」（有的话）—— 回显给用户看的是本范围里的篇名。
+
     var inRow = exactRows.filter(function (r) { return !!scopedIds[String(r.id)]; })[0];
     if (inRow) exact = inRow;
   }
