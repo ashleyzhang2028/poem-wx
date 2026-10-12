@@ -134,12 +134,20 @@ function cloudCall(conf, path, data, method) {
 }
 
 function httpError(statusCode, data) {
-  const body = data || {};
+  const body = data && typeof data === "object" ? data : {};
   const say = body.message || body.error_description || "";
-  const err = new Error(say || "HTTP " + statusCode);
+  const err = new Error(say || plainStatusError(statusCode));
   err.statusCode = statusCode;
   err.code = body.code || body.error || "";
   return err;
+}
+
+function plainStatusError(statusCode) {
+  if (statusCode === 400) {
+    return "这次请求没被收下（HTTP 400）—— 云调用两栏多半没配对（环境 / 服务名）。";
+  }
+  if (statusCode === 404) return "这个接口没找到（HTTP 404）—— 装上来的这一版和那头不是同一版。";
+  return "HTTP " + statusCode;
 }
 
 function sendHttp(path, data, method) {
