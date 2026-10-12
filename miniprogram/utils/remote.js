@@ -60,8 +60,60 @@ function send(path, data, method) {
   return sendHttp(path, data, method);
 }
 
+let cloudReadyEnv = "";
+
+function cloudError(message, code) {
+  const err = new Error(message);
+  err.code = code || "E_CLOUD";
+  err.expected = true;
+  return err;
+}
+
+function cloudOffError() {
+  return cloudError(
+    "这个运行环境没有云开发能力（wx.cloud 不在）—— " +
+    "开发者工具里要在 project.config.json 的 cloudfunctionRoot 或" +
+    "「云开发」面板上开通，真机则要小程序已开通云开发。",
+    "E_CLOUD_OFF"
+  );
+}
+
+function cloudInitError(env, e) {
+  return cloudError(
+    "wx.cloud.init 没成功（env=" + env + "）：" +
+    ((e && (e.errMsg || e.message)) || "无回话") +
+    "\n  多为这一格不是云开发环境 ID，或这个小程序还没开通云开发。",
+    "E_CLOUD_INIT"
+  );
+}
+
+function cloudReady(env) {
+  if (!wx.cloud || typeof wx.cloud.init !== "function") return Promise.reject(cloudOffError());
+  if (!env || cloudReadyEnv === env) return null;
+
+  let refusal = null;
+  try {
+    wx.cloud.init({
+      env: env,
+      traceUser: false,
+      fail: (e) => { refusal = cloudInitError(env, e); }
+    });
+  } catch (e) {
+    return Promise.reject(cloudInitError(env, e));
+  }
+  if (refusal) return Promise.reject(refusal);
+  cloudReadyEnv = env;
+  return null;
+}
+
 function sendCloud(path, data, method) {
   const conf = cloudConfig();
+  const gate = cloudReady(conf.env);
+  if (gate) return gate;
+  return cloudCall(conf, path, data, method);
+}
+
+function cloudCall(conf, path, data, method) {
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
       config: { env: conf.env },

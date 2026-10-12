@@ -122,6 +122,15 @@ Page({
         const code = (err && err.code) || "";
         if (code === "E_NOT_CONFIGURED") {
           this.tellOffline();
+        } else if (code === "E_CLOUD_OFF" || code === "E_CLOUD_INIT") {
+          wx.showModal({
+            title: "云开发没接通",
+            content:
+              (err.message || "") +
+              "\n\n登录与课外正文都走在云开发上。两格填对、且小程序开通云开发之后，这里才通。",
+            showCancel: false,
+            confirmText: "知道了"
+          });
         } else if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
           wx.showModal({
             title: "登录没打通",
