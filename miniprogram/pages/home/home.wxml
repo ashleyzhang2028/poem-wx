@@ -12,11 +12,15 @@
       </view>
       <view class="guest-bar">
         <text class="guest-title">怎么办</text>
-        <text class="guest-sub">{{buildRev ? '换一个版本，或把这一版重新装一次' : '在开发者工具里重新编译一次'}}</text>
+        <text class="guest-sub">{{buildRev ? '换一个版本重新装' : '在仓库根跑 build:data'}}</text>
+      </view>
+      <view class="guest-bar" wx:if="{{!buildRev}}">
+        <text class="guest-title">再</text>
+        <text class="guest-sub">开发者工具里重新编译一次</text>
       </view>
       <view class="guest-bar">
         <text class="guest-title">版本</text>
-        <text class="guest-sub">{{buildRev ? buildRev : '本地打开（还没有上传版本号）'}}</text>
+        <text class="guest-sub">{{buildRev ? buildRev : '本地打开 · 未上传'}}</text>
       </view>
     </view>
     <view class="safe-bottom"></view>

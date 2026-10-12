@@ -420,6 +420,9 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 同上 | 「公网访问」被关回去了 | 服务设置 → 基础信息里打开 |
 | curl 也不通 | 服务没起来 / 公网访问关着 | 看服务日志与实例数 |
 | curl 通、真机不通 | 本机填过错的云调用两栏，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空；本机那两栏清空即回到包里那份 |
+| 点登录弹 `errCode: -1 \| errMsg: Cloud API isn't enabled, please call ...` | 客户端没先 `wx.cloud.init` 就调 `wx.cloud.callContainer`（`utils/remote.js` 的 `cloudReady()` 补这一步，同一 env 只 init 一次） | 已在代码里修。若自己另写调用，先 `wx.cloud.init({ env })` 再 `callContainer`；一直回这句也说明小程序没开通云开发（§ 6.1） |
+| 点登录弹 `wx.cloud.init 没成功 … env not exists` | `env` 那一格不是云开发环境 ID，或这个小程序没开通云开发 | 同上一格：填**云开发**环境 ID，不是云托管那个数字环境 ID |
+| 点登录弹「这个运行环境没有云开发能力（wx.cloud 不在）」 | 开发者工具里没开通云开发能力，或真机这个 appid 没开云开发 | 工具里开通云开发面板；appid 侧确认已开通 |
 | 平台回 `env not exists` | `config.env` 填了云托管的数字环境 ID | 换成云开发环境 ID（§ 6.1） |
 | 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
 | 管理页只剩「我的授权」，找不到云调用那两格 | 当前档位不是 admin/owner（能写的那两格只在管理页里） | 先按 § 八 发档位；云调用是运维配置，本就不该给所有用户 |

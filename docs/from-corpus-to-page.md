@@ -157,6 +157,10 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 
 两个标识符容易填串，串了的回错是 `env not exists` / `service not found`。
 
+调 `callContainer` 之前必须先 `wx.cloud.init({ env })`，否则真机一律回
+`errCode: -1 | errMsg: Cloud API isn't enabled, please call ...`，登录与课外正文一起哑掉。
+这一步在 `utils/remote.js` 的 `cloudReady()` 里，同一个 env 只 init 一次、env 变了重新 init。
+
 管理页那两栏还在（「我的 → 用户与权限」），优先级是**本机 → 包内**：
 调试、换部署、应急时用它；清空就回到包里注入那份，不存在
 「换台手机要重填一次」这件事 —— 正常用户碰不到那两栏。
@@ -166,7 +170,7 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
 | 首页整块「数据没能载入」，还显示着一个版本号 | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
-| 首页整块「数据没能载入」 | ① | `npm run build:data`，再在开发者工具里重新编译 |
+| 首页整块「数据没能载入」，版本写「本地打开 · 未上传」 | ① | `npm run build:data`，再在开发者工具里重新编译（空态自己就会说这一句） |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
 | 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。由部署方在管理页（「我的 → 用户与权限」）填，或按 § 五 重跑流水线 |
