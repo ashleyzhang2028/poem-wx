@@ -45,7 +45,7 @@ if (keyFile === keyPath && (!keyPath || !fs.existsSync(keyPath))) {
 }
 
 if (!fs.existsSync(path.join(MP, "data", "books", "books.json"))) {
-  die("语料还没生成，先跑 POEM_WEB_DIR=... node scripts/build-data.js");
+  die("语料还没生成，先跑 node scripts/build-data.js");
 }
 
 {

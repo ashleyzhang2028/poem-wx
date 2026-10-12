@@ -5,11 +5,10 @@ const path = require("path");
 const fs = require("fs");
 
 const REPO = path.join(__dirname, "..");
-const POEM = process.env.POEM_DIR || "/tmp/poem";
+const POEM = path.join(REPO, "api");
 
-if (!fs.existsSync(path.join(POEM, "api", "handler.js"))) {
-  console.log("· 读不到 poem（" + POEM + "）—— 端到端同步这一层跳过。");
-  console.log("  跑它：POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js（那边 git clone 一份）");
+if (!fs.existsSync(path.join(POEM, "handler.js"))) {
+  console.log("· 读不到 " + POEM + " —— 端到端同步这一层跳过（后端契约应该在仓库根上）。");
   process.exit(0);
 }
 
@@ -17,8 +16,8 @@ process.env.SESSION_SECRET = process.env.SESSION_SECRET || "e2e-secret-".padEnd(
 process.env.WX_APPID = process.env.WX_APPID || "wx_e2e";
 process.env.WX_SECRET = process.env.WX_SECRET || "sec_e2e";
 
-const PoemHandler = require(path.join(POEM, "api", "handler.js"));
-const config = require(path.join(POEM, "api", "_lib", "config.js"));
+const PoemHandler = require(path.join(POEM, "handler.js"));
+const config = require(path.join(POEM, "_lib", "config.js"));
 config.wxFetch = (url) => {
   const code = new URL(url).searchParams.get("js_code");
   return Promise.resolve({ json: () => Promise.resolve({ openid: "o-" + code, unionid: "u-" + code }) });
@@ -83,7 +82,7 @@ function makeWx(port, mem) {
   ok("同步没报错", !sync.error, JSON.stringify(sync));
   ok("推上去的条数 > 0", sync.pushed > 0, JSON.stringify(sync));
 
-  const svStore = require(path.join(POEM, "api", "_lib", "store.js")).getStore(config);
+  const svStore = require(path.join(POEM, "_lib", "store.js")).getStore(config);
   const rows = await svStore.listProgress(store.profile().userId, "", 0);
   const byId = {};
   rows.forEach((r) => { byId[r.poem_id] = r.payload; });

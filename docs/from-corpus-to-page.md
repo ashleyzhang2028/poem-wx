@@ -7,7 +7,7 @@
 
 | 段 | 这一步做什么 | 做完之后东西在哪 | 断了会看到什么 |
 |---|---|---|---|
-| ① 文件层 | `bash scripts/clone-poem.sh /tmp/poem` 取 poem；`POEM_WEB_DIR=/tmp/poem npm run build:data` 编译 | `miniprogram/data/**`（**不入库**，`.gitignore` 挡着） | 首页整块「语料未生成」 |
+| ① 文件层 | `npm run build:data` 编译（语料在 `scripts/corpus/`，随仓库走） | `miniprogram/data/**`（**不入库**，`.gitignore` 挡着） | 首页整块「数据没能载入」 |
 | ② 本地页面 | 微信开发者工具打开 `miniprogram/` 目录；勾上「不校验合法域名」 | 本地窗口 | 有目录、点得开、课内 251 首能背 |
 | ③ 容器 | 推 `main` 出镜像 → 云托管建服务 → 配环境变量 → 建表 → 小程序里填云调用两栏 | 真机 | 课外 5604 首点开说「这一篇取不到正文」 |
 | ④ 真机 | 云调用两栏在**每台手机**的本机存储里，换机要重填 | 真机 | 同上，且开发者工具里正常 |
@@ -28,11 +28,9 @@
 ## 二、① 段：文件是怎么编出来的
 
 ```
-poem/data/*.js（上游语料，5855 条）
-  ↓ scripts/clone-poem.sh —— 检出 poem.lock.json 钉住的那个 commit
-bash scripts/clone-poem.sh /tmp/poem
-  ↓ scripts/build-data.js —— 读 poem 的 data/，写 miniprogram/data/
-POEM_WEB_DIR=/tmp/poem npm run build:data
+scripts/corpus/data/*.js（语料，5855 条，随仓库走）
+  ↓ scripts/build-data.js —— 读它，写 miniprogram/data/
+npm run build:data
 ```
 
 `build-data.js` 一次产出六样，落在哪里决定了它后面走哪条路：
@@ -55,8 +53,9 @@ POEM_WEB_DIR=/tmp/poem npm run build:data
 - **`miniprogram/data/` 不进 git**，所以 clone 下来直接开工具一定是白屏 —— 这不是 bug。
   推 `main` 的流水线会**自己重跑一遍** `build-data.js`，所以体验版里有数据、你本地没有，
   两件事同时成立。
-- **Windows 上 `POEM_WEB_DIR=/tmp/poem npm run build:data` 这条不成立**（那是 sh 语法）。
-  PowerShell 与 cmd 的写法见 `README.md`「Windows 上怎么设 `POEM_WEB_DIR`」。
+- **换一版语料是一次要人来做的事**：把 `scripts/corpus/` 整份换掉、
+  把 `VERSION.json` 的 `upstreamRef` / `syncedAt` 改过来，再跑构建与自检。
+  没有「自动跟上游」那条流水线了 —— 那是跨仓库依赖的一部分，已经撤掉。
 
 ## 三、② 段：为什么文件在手，课内就能读
 
@@ -137,27 +136,29 @@ git checkout main && git push                → 流水线出镜像
 
 整段照 [`wx-cloud-setup.md`](wx-cloud-setup.md) 走。
 
-## 五、④ 段：云调用两栏是**本机设置**
+## 五、④ 段：云调用两栏**随包写死，用户不必填**
 
-那两格不是微信后台的配置项，也不影响线上服务 ——
-值存在这台手机的本地存储里（`store.KEYS.auth` → `auth.cloud`）。
-所以：**换台手机要重填一次**，这不是没保存住。
+两格写在 **`miniprogram/utils/server.js`** 里，打包时就进了包 ——
+这是部署方的事，用户装上去就能用。
 
-最容易撞的是把两个标识符填串：
+| 填哪一格 | 是什么 |
+|---|---|
+| `CLOUD.env` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` |
+| `CLOUD.service` | 云托管的**服务名**（本部署是 `poem-wx`） |
 
-| 填哪一格 | 是什么 | 回什么错 |
-|---|---|---|
-| `config.env` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` | 填了云托管那个数字 ID → `env not exists` |
-| `X-WX-SERVICE` | 云托管的**服务名**（本部署是 `poem-wx`） | 填成环境 ID → `service not found` |
+两个标识符容易填串，串了的回错是 `env not exists` / `service not found`。
 
-`baseUrl` 留空 —— 两个都填时以 `baseUrl` 为准，把云调用那条路顶掉。
+**本机那两栏还在**（「我的 → 同步服务器」），优先级是**本机 → 包内**：
+调试、换部署、应急时用它；清空就回到包里那份。
+「④ 段」这条口径因此只对**没有 `server.js` 的旧包**成立 —— 现在的包不存在
+「换台手机要重填一次」这件事。
 
 ## 六、认症状
 
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
-| 首页整块「语料未生成」，副标题**带着一个版本号** | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
-| 首页整块「语料未生成」，副标题是「本地跑过 build:data…」 | ① | `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem npm run build:data`，再在开发者工具里重新编译 |
+| 首页整块「数据没能载入」，还显示着一个版本号 | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
+| 首页整块「数据没能载入」 | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
 | 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。**未登录也有入口**：「我的 → 数据与账号 → 同步服务器」 |

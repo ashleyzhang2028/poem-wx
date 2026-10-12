@@ -89,7 +89,7 @@ miniprogram/
 └── data/                            # 由 scripts/build-data.js 生成，不入库
 
 scripts/
-├── build-data.js                    # 语料编译（从 poem 仓库取）
+├── build-data.js                    # 语料编译（读 scripts/corpus/）
 ├── check.js                         # 离线自检
 └── parity.js                        # 与网页版能力表逐项对照，见 § 三点五
 ```
@@ -123,7 +123,7 @@ ok("打包含进度行", packed.rows.some((r) => r.kind === "p" && r.id === "pro
 于是「同步成功但永远拉回 0 条」，界面上还写着「已同步」。
 
 所以另起一层 `utils/wire.js`，只做一件事：本机形状 ↔ 服务端形状。
-判据不靠文档推测，靠读 poem 的源码，并且**把这件事变成会红的检查**：
+判据不靠文档推测，靠读仓库里那份服务端契约（`scripts/parity-web/`），并且**把这件事变成会红的检查**：
 
 | 检查 | 判据出处 |
 |---|---|
@@ -134,12 +134,13 @@ ok("打包含进度行", packed.rows.some((r) => r.kind === "p" && r.id === "pro
 | 加背 / 自选清单有打包 | `sanitizeDailyExtra` / `sanitizeCollections` |
 | 拉回的行能落回本机 | `applyRecords` 往返 |
 
-最强的一条是**把报文喂给 poem 真实的 sanitize 函数**（`scripts/check.js` §8.8）：
-读到 poem 源码就直接 require 它的 `api/_lib/core.js`，用它的
+最强的一条是**把报文喂给真实的 sanitize 函数**（`scripts/check.js` §8.8）：
+`require` 仓库里那份 `scripts/parity-web/core.js`，用它的
 `sanitizePayload` / `sanitizeReads` / `sanitizeDailyExtra` / `sanitizeCollections`
 过一遍我们发出去的数据，**问的是「有没有字段丢了」**而不是「字符串等不等」
 —— 服务端会补齐 `deleted: 0` 这类 canonical 字段，那不算错。
-读不到 poem 时跳过并说明，不假装验过。
+那是服务端契约的**只读副本**，照原样摆着不跟着本仓库改 —— 界定了「报文该长什么样」，
+所以它不该被顺手改成「这样就过了」。
 
 三处具体修掉的错，各自都值得记一笔：
 
@@ -264,9 +265,9 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 线上那份实现就在本仓库（`deploy/store-mysql.js` + `deploy/sql/mysql-schema.sql`），
 **路由层与小程序端一个字都不动**。
 
-三件事（数据在哪 / 后端依赖怎么解 / 上游改数据集为什么会让 CI 红）
+三件事（数据在哪 / 后端依赖怎么解 / 跨仓库依赖怎么撤的）
 逐条写在 [`data-backend.md`](data-backend.md)：存储层那一个接口两个实现、
-腾讯云 MySQL 的三处坑、以及「钉住上游 + 定时跟随」那条治法。
+腾讯云 MySQL 的三处坑、以及语料搬进仓库这件事。
 **这一节不重复它** —— 一份口径只写一处，抄一份就是给自己留一面会漂的镜子。
 
 
@@ -448,21 +449,21 @@ wx.login() 拿 code
 
 | 路径 | 方法 | 谁写的 | 说明 |
 |---|---|---|---|
-| `/api/wx/login` | POST | **要加** | `{ code, device }` → `{ accessToken, refreshToken, expiresIn, tier, role, caps, nickname, userId }`（`avatarUrl` 不再回值：头像只落本机，见 Issue #111） |
-| `/api/wx/refresh` | POST | **要加** | `{ refreshToken }` → 同上 |
-| `/api/sync/pull` `/api/sync/push` | POST | 复用 poem | 报文形状照抄，含条件 upsert 那套时间戳规则 |
-| `/api/admin/accounts` | POST | 复用 poem | 名录 |
-| `/api/admin/grant` | POST/DELETE | 复用 poem | 改档 / 回收 |
-| `/api/admin/role` | POST | 复用 poem | 改角色（仅 owner） |
+| `/api/wx/login` | POST | 本仓库 `api/` | `{ code, device }` → `{ accessToken, refreshToken, expiresIn, tier, role, caps, nickname, userId }`（`avatarUrl` 不再回值：头像只落本机，见 Issue #111） |
+| `/api/wx/refresh` | POST | 本仓库 `api/` | `{ refreshToken }` → 同上 |
+| `/api/sync/pull` `/api/sync/push` | POST | 本仓库 `api/` | 含条件 upsert 那套时间戳规则 |
+| `/api/admin/accounts` | POST | 本仓库 `api/` | 名录 |
+| `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |
+| `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |
 
-**登录这道门不依赖后端**：`utils/auth.js` 在未配置 `baseUrl` 时落一个本机身份，
+**登录这道门不依赖后端**：`utils/auth.js` 在服务器没接上时落一个本机身份，
 门一样开、登录照旧能点，只是不同步。别把「没后端」变成新的一道墙 ——
 § 一点五 那条「通道没就绪就如实说」说的是**通道**（同步 / 朗读 / 检索），
 不是**门**。两件事混起来，后端一没配全站就点不动了。
-**同步与管理刻意复用 poem 已上线的那几个路径**：那边已经跑在线上那台 MySQL 上，
-小程序端另起一套等于同一份进度走两条入库逻辑，迟早有一边先写出「旧数据覆盖新数据」。
-只有微信登录那一层是新的 —— 它必须在服务端做 `code2Session`，
-因为 `appsecret` 不能进小程序包。
+**同步与管理沿用同一套路径与报文**：小程序端另起一套等于同一份进度走两条入库逻辑，
+迟早有一边先写出「旧数据覆盖新数据」。代码在本仓库 `api/` 里，
+线上那次实现落在 `deploy/store-mysql.js`。微信登录那一层必须在服务端做
+`code2Session` —— 因为 `appsecret` 不能进小程序包。
 
 第二条要说清的是**降级后的样子变了**。上一版写的是「后端没就绪时降级为本机身份，
 功能一个不少」——现在功能不是「一个不少」了：
@@ -552,11 +553,11 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 `setting.urlCheck: true` 是**故意的** —— 本地关掉校验只是联调开关，
 配置文件里不许关，免得把「真机上必然失败」当成「跑通了」。
 
-- **主路：云调用（免备案）** —— 小程序 → 我的 → 「用户与权限」→ 页面底部
-  「云调用（不用域名，也不用备案）」两栏（界面里没有叫「管理」的东西），
-  填 `config.env`（云开发环境 ID）与 `X-WX-SERVICE`（云托管**服务名**，本部署 `poem-wx`）。
-  这两格**只有 admin/owner 看得到**（普通用户进管理页只有「我的授权」），
-  且值是**本机存储**、不是平台配置项 —— 换台手机要重填。
+- **主路：云调用（免备案）** —— 两格的值**写死在 `miniprogram/utils/server.js`
+  里随包走**，用户不必填。小程序里那两栏（「我的 → 用户与权限」底部的
+  「云调用」，界面里没有叫「管理」的东西）是**调试与应急**用的：
+  那两格**只有 admin / owner 看得到**（普通用户进那一页只有「我的授权」），
+  值是**本机存储**、不是平台配置项 —— 填了以本机那份为准，清空回到包里那份。
   **`baseUrl` 留空**，request 合法域名那张名单也空着
 - **备选：request 合法域名** —— 名单里填 `https://<已备案域>`，客户端
   `configure({ baseUrl })` 填同一个（协议 + 主机，不带端口、不带路径）
@@ -826,7 +827,7 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
   [`wx-login-server.md`](wx-login-server.md)「同步不再分档」）；四个触发点：
   **登录成功那一刻**、启动后 3 秒、背完一首、用户手动点
 - **管理页**：见 § 四
-- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` 已在 `poem#532` 落地，
+- **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` 在本仓库的 `api/` 里，
   连同会话认 `Authorization: Bearer`、`syncTierGate` 放开、两条新行的服务端白名单。
   剩下的只是运维（配密钥、建 `wx_accounts` 表）—— 照
   [`wx-cloud-setup.md`](wx-cloud-setup.md) 一步步做。契约、报文、表结构在
@@ -845,13 +846,10 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
 ## 八、怎么验
 
 ```bash
-POEM_WEB_DIR=/path/to/poem node scripts/build-data.js   # 生成语料
-node scripts/check.js                                    # 离线自检
+node scripts/build-data.js   # 生成语料（读 scripts/corpus/）
+node scripts/check.js        # 离线自检
+node scripts/parity.js       # 与能力表逐项对照
 ```
-
-（sh 的写法。PowerShell 是 `$env:POEM_WEB_DIR="/path/to/poem"; npm run build:data`，
-cmd 是 `set POEM_WEB_DIR=/path/to/poem && npm run build:data`，见 README「快速开始」。
-`build-data.js` 会去掉路径末尾的空格与成对的双引号，好让 cmd 那种不带引号的写法能用。）
 
 自检覆盖：页面四件套齐全、require 可解析、语料完整性（含分片抽查）、
 **包内/分片的边界**（课内正文进包且不与分片重复、课外仍走分片、主包体积与课内正文预算、
@@ -864,6 +862,6 @@ cmd 是 `set POEM_WEB_DIR=/path/to/poem && npm run build:data`，见 README「�
 
 跑之前得先生成语料 —— 数据不入库，见 § 三。
 
-**自检会「借」poem 的源码来验自己**（`POEM_WEB_DIR` 指过去）：报文喂给它的
-sanitize 函数、已读行 id 对照它的同步表、同步路径对照它的路由表。
-读不到 poem 时这几条跳过并说明，不假装验过 —— 但 CI 里一定读得到。
+**自检会「借」服务端契约来验自己**（`scripts/parity-web/` 与 `scripts/corpus/`）：
+报文喂给那份 `core.js` 的 sanitize 函数、已读行 id 对照语料里的同出步表、
+同步路径对照那份 `routes.js`。这几份都在仓库里，CI 与本机跑的是同一份。

@@ -5,11 +5,11 @@ node_modules/
 # 微信开发者工具的本地私有配置
 miniprogram/project.private.config.json
 
-# 语料由 scripts/build-data.js 从 poem 仓库生成，不入库
+# 语料编译产物由 scripts/build-data.js 生成，不入库（语料本身在 scripts/corpus/）
 miniprogram/data/
 dist/
 
-# deploy/ 是部署描述（跨仓库构建的壳）；本机构建会摊一份上下文，别提交
+# deploy/ 是部署描述；本机构建会摊一份上下文，别提交
 deploy/.build/
 
 # 开发者工具的工程文件只认 miniprogram/ 下这一份

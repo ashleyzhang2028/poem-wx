@@ -3,7 +3,7 @@
 > 这份文档写**小程序后端要什么形状**：报文契约、会话从哪儿取、两张新行、
 > 那张 `wx_accounts` 表，以及部署顺序。
 >
-> **⏹ 状态：服务端已实现**（[`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)，
+> **⏹ 状态：服务端已实现**（本仓库根的 `api/`，
 > 2026-10-11）。下面「要加」的写法保留着 —— 它们是**契约**，不是待办：
 > 哪天又冒出一条新的小程序路由，照着这份的形状写就不会歪。
 > 只剩两件要运维做的：配 `WX_APPID` / `WX_SECRET`，建 `wx_accounts` 表。
@@ -15,7 +15,7 @@
 
 同理，`openid` 也不该落到客户端存储里：客户端只拿 token，`openid` 只活在服务端。
 
-## 两条路由（已在 `poem#532`）
+## 两条路由（已在本仓库 `api/_routes/wx/`）
 
 写在 poem 那边（`api/_lib/routes.js`）：
 
@@ -219,7 +219,7 @@ create index wx_accounts_unionid_idx on wx_accounts (unionid);
 
 ## 同步不再分档（2026-10-04）
 
-> ✅ 服务端那一半已在 `poem#532` 落地（`syncTierGate` 改成只判有没有会话）。
+> ✅ 服务端那一半已落地（`api/_lib/core.js` 的 `syncTierGate` 只判有没有会话）。
 > 客户端那一半在自检里（W5 + V34）。下面这段是这条边界的出处。
 
 **这条改了服务端的一道闸，必须先说。**
@@ -282,7 +282,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 
 ### ⚠️ 服务端必须给 `settings:v1` 加白名单，否则数据会被静默清空
 
-> ✅ 已在 `poem#532` 落地（`SETTINGS_KEYS` + `sanitizeSettings`，
+> ✅ 已落地（`api/_lib/core.js` 的 `SETTINGS_KEYS` + `sanitizeSettings`，
 > 插在 `readRowKeyOf` **之前**）。下面这段是要加的形状，也是「为什么必须加」的出处。
 
 这是**实测**出来的，不是推的：poem 的 `sanitizePayload(p, poemId)` 对认不出的
@@ -366,7 +366,7 @@ select … on conflict (uid, child_id, poem_id) do update
 
 ## 部署顺序
 
-代码已经在了（`poem#532`）。剩下全是运维动作，完整清单在
+代码已经在了（本仓库根的 `api/`）。剩下全是运维动作，完整清单在
 [`wx-cloud-setup.md`](wx-cloud-setup.md)（控制台怎么点、镜像怎么来、云调用怎么填）。
 
 跟后端这一层直接相关的只有两步：

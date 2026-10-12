@@ -1,5 +1,6 @@
 const store = require("./store");
 const wire = require("./wire");
+const server = require("./server");
 
 const SHARD_PATH = "/api/shard/";
 
@@ -23,13 +24,19 @@ function credentialBody(extra) {
   return Object.assign({ device: store.deviceId() }, extra || {});
 }
 
+/* 本机那两栏优先 —— 它是「这台手机连哪儿」的应急出口；
+   没填过就用打包时写死的 server.js，用户不必知道有这两栏。 */
+function cloudOf() {
+  return session().cloud || server.cloud();
+}
+
 function configured() {
   const a = session();
-  return !!(a.baseUrl || (a.cloud && a.cloud.env && a.cloud.service));
+  return !!(a.baseUrl || cloudOf());
 }
 
 function cloudConfig() {
-  const c = session().cloud || {};
+  const c = cloudOf() || {};
   return { env: String(c.env || ""), service: String(c.service || "") };
 }
 
@@ -47,7 +54,7 @@ function shard(name) {
 }
 
 function useCloud() {
-  return !session().baseUrl && !!session().cloud;
+  return !session().baseUrl && !!cloudOf();
 }
 
 function send(path, data, method) {

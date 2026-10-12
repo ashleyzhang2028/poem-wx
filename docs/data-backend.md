@@ -20,7 +20,7 @@
 | ① | **运行时代码**（登录 / 同步 / 管理那几条路由） | poem 的 `api/`，跑在我们自己的容器里（微信云托管，走**云调用**） | **这个项目** | 能（登录、换手机还在不在） |
 | ② | **数据存储**（账号 / 会话 / 进度 / 设置） | 代码里是**可替换**的存储层，接口是一组 `getX / putX / listX`；线上实现 = 腾讯云 MySQL | 运营选择 | 能（数据在不在） |
 | ③ | **静态资产**（5604 条课外正文分片 + 倒排索引） | 现在是**构建产物，跟包走**（`miniprogram/data/`） | **这个项目** | 基本感觉不到（除非你打算上 CDN） |
-| ④ | **构建输入**（语料从哪来） | `scripts/build-data.js` 在 CI 里 `git clone` **poem 的锁定版本** | **这个项目** | 不能，但能让 CI 红 |
+| ④ | **构建输入**（语料从哪来） | 语料在 **`scripts/corpus/`**（随本仓库走），`scripts/build-data.js` 读它 | **这个项目** | 不能 |
 | ⑤ | **代码镜像**（GitHub 只读镜像） | 推 `main` 时同步过去 | 这个项目 | 不能 |
 
 **①②③④⑤ 里，只有 ② 是「数据库」这件事，而且它本来就是一个可替换件。**
@@ -34,8 +34,8 @@
 - **线上那台库是腾讯云 MySQL**，跑在云托管同一个 VPC 里 —— 数据不出境、
   也不受第三方托管商的可用性影响。要换别的（比如云开发数据库）就是再写一个
   store 实现，**不是重写后端**。
-- 用户对「上游改数据集 → 这边 CI 红」的顾虑是**对的，而且已经真的红过**。
-  这一条的根治办法只有一个：**把「上游改了什么」和「推我们的 main」拆开**（见 § 四）。
+- 「上游改数据集 → 这边 CI 红」那条依赖已经**整个撤掉**：语料搬进本仓库
+  `scripts/corpus/`，构建不再 clone 另一个仓库（见 § 四）。
 
 ---
 
@@ -182,113 +182,66 @@ UPDATE accounts SET role = 'owner' WHERE uid = '<你的 uid>';
 
 ---
 
-## 四、上游数据集导致 CI 红：病情与根因
+## 四、跨仓库那条依赖已经撤掉（2026-10-12）
 
-### 4.1 病症长什么样
+### 4.1 以前的问题
 
-`.cnb.yml` 里，**每一个任务的第一步**都是：
+`.cnb.yml` 里每一个任务的第一步都是 clone 另一个仓库取语料：
 
 ```bash
-bash scripts/clone-poem.sh /tmp/poem      # 取 poem 的锁定版本
+bash scripts/clone-poem.sh /tmp/poem      # 取另一个仓库的锁定版本
 POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
-node scripts/check.js
-```
-
-（这是 sh 的写法：`POEM_WEB_DIR=… npm run build:data`。Windows 上的对应写法见
-README「Windows 上怎么设 `POEM_WEB_DIR`」—— PowerShell 与 cmd 都不认这种前缀。）
-
-`clone-poem.sh` 检出的是 **`poem.lock.json` 里钉住的那一版**。
-于是 poem 那边补录几十条、改一版译文、动一个朝代归类，
-这边的自检（`check.js` 里的 `K.counts` / `seqMax` / `KNOWN_HOLES` 那张表）
-就会当场红 —— **推 ours 的 main 的时候红，改 ours 的代码的人是受害者，而错在上游。**
-
-这不是猜测，`check.js` 里那张表本身就把这几轮记着：
-
-```
-counts: { poems: 251, classic: 287, ... }   ← 「这段话会过期，过期就红」
-seqMax:  { gushi: 126, songci: 331, ... }    ← 「补录接号时最容易断的那根线」
-```
-
-那张表的注释里写着「补录之后回来对一次」，就是承认了：**上游一动，我们必红一次**。
-
-### 4.2 根因：把「上游的什么」和「我们推什么」绑在同一次运行里
-
-现在的模型是：
-
-```
-CI 运行时刻 → 决定用哪一版语料 → 决定自检对不对
 ```
 
 于是「CI 绿」同时挂上了三件毫不相干的事：我们的代码对不对、
-上游今天改没改、这两件事碰在一起会怎样。任何一件变，整条红。
+上游今天改没改、这两件事碰在一起会怎样。任何一件变，整条红 ——
+推 main 的人成了受害者，而错在上游。中间那层「锁 + 定时跟随
+（`poem.lock.json` / `poem-watch.sh`）」是把这件事从「随时红」压到「按节奏红」，
+但它没有消掉依赖本身。
 
-### 4.3 治法：把「上游更新」变成一次**显式的、会开 PR 的**动作
+### 4.2 现在的做法：语料随仓库走
 
-原则一句话：**推我们的 `main`，用的必须是这个仓库里记着的那个上游版本；
-上游动了，要让「有人去跟」这件事自己冒出来，而不是拦别人的发布。**
+```
+scripts/corpus/
+  ├── VERSION.json    取自哪一版（upstreamRef / syncedAt）
+  ├── data/           poem 的 data/ 全量（含 text-master.js 与 author-index.js）
+  ├── js/             构建与自检要读的那几个（pinyin / entitlement / sync-coverage）
+  ├── scripts/        build-works-map.js（自检拿它挂 AuthorIndex）
+  └── fonts/          标题宋体子集化的源（font:subset 用）
 
-#### 第一步：钉住上游版本（已做）
+scripts/parity-web/   服务端契约的只读副本（路由表 / 报文清洗 / 存储层形状 / 能力表）
+api/                  后端运行时契约（登录 / 同步 / 管理那几条路由）
+```
 
-- 新增 `poem.lock.json`，记 poem 的 commit/短 sha 与这一版对上的篇数。
-- `scripts/clone-poem.sh` 支持**检出锁定的那个 commit**（`POEM_REF`）。
-- CI 走锁定版，`build-data.js` 打出来的篇数就与 `K` 表逐条对得上。
+构建、自检、e2e 读的都是仓库里这几份，**没有第二个仓库**。
+`.cnb.yml` 里那一步就是一条命令：
 
-#### 第二步：上游更新，不出红，出 PR（已做）
-
-- 新增 `.cnb.yml` 的定时任务：**每 6 小时**取一次 poem 的 `main` 头。
-  - 头 **== 锁里那个** → 什么都不做（绿）。
-  - 头 **!=** 锁里那个 → 自动跑一次 `build-data.js` + `check.js`：
-    - 自检**过** → 自动开一个 PR：**只改 `poem.lock.json`**（把新 sha 写进去），
-      描述里带上这次的语料读数。有人点合并，锁就前进。
-    - 自检**红** → 开一个 Issue（或 PR 里标红），把 `check.js` 的那几句话原样贴进去 ——
-      「要跟着改的是 `K` 表，不是去修上游」。人来看，人来改，人合并。
-
-这样**两件事分开了**：
+```bash
+node scripts/build-data.js
+```
 
 | 事件 | 谁受影响 | 结果 |
 |---|---|---|
-| 上游 poem 改了语料 | **没人**（我们推 main 仍旧用锁定版） | 定时任务自己开出 PR 或 Issue |
+| 上游 poem 改了语料 | **没人** | 这里什么都不发生 —— 没有「跟」这回事了 |
 | 我们推 main | 只有我们的代码 | 自检判的只有这一件事 |
 
-#### 第三步（已做）：锁定 + 自动跟进
+### 4.3 换一版语料怎么做
 
-现在 `.cnb.yml` 里多了一条 **`poem-watch` 定时流水线**，每 6 小时跑一次：
+一次**要人来做**的动作，三步：
 
-```yaml
-main:
-  "crontab: 0 */6 * * *":      # 与 push: 并列在同一个 main: 之下（见下）
-    - name: 跟上游语料（poem-watch）
-      script:
-        - bash scripts/poem-watch.sh
-# 脚本里：
-# 取 upstream/main 的头
-# 与 poem.lock.json 里比：
-#   same    上游没动      → 什么都不做
-#   ahead   上游动了      → 用 POEM_REF=<新 sha> 跑一次 build-data + check
-#              过（绿）→ 用 CNB 的 cnb 命令行开 PR（只动 poem.lock.json，附语料读数）
-#              不过（红）→ 在 Issue #111 上留一条评论，把 check.js 的几句话原样贴过去
-#   unknown 拿不到上游的头 → 出声（「没跟成」不是「跟过了」）
-```
+1. 把新的 `data/` 与 `js/` 覆盖到 `scripts/corpus/`（整份换）
+2. 改 `VERSION.json` 的 `upstreamRef` 与 `syncedAt`
+3. `node scripts/build-data.js && node scripts/check.js` —— 绿了才算换过
 
-读锁 / 写锁在 `scripts/poem-lock.sh`，跟上游在 `scripts/poem-watch.sh`，
-两个脚本都能在本机干跑（`WATCH_DRY=1` 只判断、不开 PR、不写文件）：
-
-```bash
-bash scripts/poem-lock.sh                              # 看锁里钉的是哪一版
-bash scripts/poem-lock.sh --ref                        # 只打印那个 sha（给脚本拼命令用）
-bash scripts/poem-lock.sh --verdict <sha>              # 回 same / ahead / behind / unknown
-bash scripts/poem-lock.sh --write <sha> [日期]          # 把锁前进到某一版
-WATCH_DRY=1 bash scripts/poem-watch.sh                 # 手动跟一次上游（只判断，不写文件、不开 PR）
-bash scripts/poem-watch.sh                             # 真跟一次（CI 里由定时任务跑）
-```
-
----
+红了的意思是「回来对一次」：要改的是 `check.js` 里那张 `K` 表（篇数 / 号段 /
+归位那几条），**不是**去改上游。`scripts/poem-watch.sh` 与 `poem.lock.json`
+连同它们那套定时任务一起撤掉了 —— 「跟上游」这件事没有对象了。
 
 ## 五、现在数据到底怎么管的：一张图
 
 ```
 ① 内容（诗、译文、索引、注音表）
-   poem 仓库（上游语料）
+   scripts/corpus/（语料，随本仓库走）
      └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
           · data/books/<集子>.json   各集子索引（不含正文）       → 进包
           · data/course.json         课内 251 首正文 + 译文       → 进主包
@@ -298,11 +251,9 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
                                         而 CDN 那条路还没铺（等备案，见 todo.md 第 13 条）
                                         —— 今天这份分片既不在包里、也没处下载
 
-     ⚠️ 编译这一步**不在 checkout 里**：语料是构建产物，CI 上传体验版之前会重跑一次
+     ⚠️ 编译这一步**不在 checkout 里**：产物不进 git，CI 上传体验版之前会重跑一次
      （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑
-     `bash scripts/clone-poem.sh /tmp/poem && POEM_WEB_DIR=/tmp/poem node scripts/build-data.js`
-     （Windows 见 README「Windows 上怎么设 `POEM_WEB_DIR`」），
-     见 README「快速开始」。
+     `node scripts/build-data.js`，见 README「快速开始」。
 
 ② 本机（每台手机自己一份，不上云）
    wx.setStorageSync 存：背诵进度、设置、已读标记、今日加背、自选清单、离线队列
@@ -323,7 +274,7 @@ bash scripts/poem-watch.sh                             # 真跟一次（CI 里�
 
 | # | 做什么 | 为什么 | 状态 |
 |---|---|---|---|
-| 1 | 钉住上游 + 定时跟踪（§ 四） | **解掉 CI 被上游绊住这条** | ✅ 已做 |
+| 1 | 语料搬进本仓库（§ 四） | **解掉跨仓库依赖这条** | ✅ 已做（2026-10-12） |
 | 2 | 这份文档 | 把「数据在哪」一次说清，省下每一次重问 | ✅ 已做 |
 | 3 | 换到腾讯云 MySQL（§ 三） | 数据主权：不依赖境外托管商 | ✅ 已做（`deploy/store-mysql.js` + 建表语句） |
 | 4 | 中文 CDN（把 `data/texts/**` 挪出包） | 现在 26MB 分片虽被 ignore，但没进 CDN 就等于「没缓存的条目要联网」这条还没真正兑现。**要走这一步，必须办备案** | ⏸️ 未办备案，见 `todo.md` 第 13 条 |

@@ -1,7 +1,6 @@
 # 云托管后端：只跑 API 的那一份
 
-部署描述。**后端代码不在这个仓库里** —— 它在
-[`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) 的 `api/`。
+部署描述。后端代码在**本仓库根的 `api/`**（登录 / 同步 / 管理那几条路由）。
 
 | 文件 | 干什么 |
 |---|---|
@@ -10,17 +9,16 @@
 | `sql/mysql-schema.sql` | 建表语句（全部表，幂等）。⚠️ 它建的是**表**，落点那个**库要自己建**（`CREATE DATABASE \`poem\``），且执行前要 `USE \`poem\`;` —— 见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 3.1 / § 四 |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
 | `../deploy-api-serve/` | 只挂 `/api/*` 的服务壳 + 白名单（构建时摆进上下文） |
-| `../scripts/find-poem-api-files.py` | 按 `api/_lib/routes.js` 那张表核一遍上下文里的 `api/`（**部署链上跑，拦在 build 之前**） |
+| `../api/` | 后端运行时契约（本仓库根的 `api/`，构建时整棵拷进上下文） |
 
 ## 存储层：为什么这份实现放在这儿
 
-后端代码在 `poem`，但「用哪台数据库」是**这份部署**的选择 ——
-`poem` 同时伺服网页版（跑在 Vercel 上、用它自己的那台库），
-小程序这份镜像只是同一套 `api/` 的另一个部署。两边分开，`poem` 一行都不用动。
+`api/_lib/store.js` 是一组 `getX / putX` 的**契约**，两种落地：内存档与 MySQL 档。
+线上要的是 MySQL，而接线不该长在路由里 —— 所以放在这份部署的入口上。
 
-接线在 `serve-api.js`（这份镜像的入口）：它在 require poem 的 handler **之前**
+接线在 `serve-api.js`（这份镜像的入口）：它在 require `api/handler.js` **之前**
 把 `store.getStore()` 换成「认 `MYSQL_HOST` 就用 MySQL，否则退回原样」。
-poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次 —— 这两步
+`store.js` 是模块级单例，所以替换之后要 `_reset()` 一次 —— 这两步
 （先接、后 require）的顺序写在自检里（V49），挪了会红。
 
 换库要动的地方、那条「新的赢」不变式为什么必须留在数据库层，
@@ -33,7 +31,7 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 | 字段 | 填什么 |
 |---|---|
 | 部署方式 | **镜像** |
-| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
+| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` / `WX_APPID` / `WX_SECRET` |
 | 镜像拉取凭据 | 填 ghcr.io 那份就不用配。走 CNB 槽位才要：用户名 `cnb`、密码一枚 CNB 访问令牌 |
@@ -43,11 +41,11 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 
 探活打 `/healthz`（回 `ok`）—— 这份镜像没有静态站，`/` 就是 404。
 
-**别选「部署方式 = 代码仓库」**：它按被部署仓库的根找 Dockerfile，而本仓库根上没有 `api/`。
+**别选「部署方式 = 代码仓库」**：那份镜像不是按 `Dockerfile` 在原地构建的，
+它是流水线摊好的上下文构建出来的（白名单只放行启动期要的那几样）。
 要人做的全部动作见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md)。
 
-镜像槽位按**本仓库**的 slug，即使源码来自 `poem` —— 流水线在这儿跑。
-写成 `poem/xxx` 云托管就拉不到。
+镜像槽位按**本仓库**的 slug。
 
 ## 两份镜像地址（Issue #71）
 
@@ -55,7 +53,7 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 
 | | 地址 | 可见性 | tag |
 |---|---|---|---|
-| GHCR（**云托管填这份**） | `ghcr.io/ashleyzhang2028/poem-wx/wx-api` | 公开包 | 上游 **poem** 的短 sha |
+| GHCR（**云托管填这份**） | `ghcr.io/ashleyzhang2028/poem-wx/wx-api` | 公开包 | **本仓库**的短 sha |
 | CNB 制品库（备用 / 回滚） | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api` | 私有 | **本仓库**的短 sha |
 
 为什么要有 GHCR 那份：CNB 的 Docker 制品库可见性**跟着代码仓库走**，
@@ -78,19 +76,17 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 
 ## 流水线怎么构建
 
-`poem` 的 `api/` + 本仓库的 `deploy/Dockerfile` 与 `deploy-api-serve/`，
+本仓库根的 `api/` + `deploy/Dockerfile` 与 `deploy-api-serve/`，
 平铺进同一层临时目录再 `docker build`（Dockerfile 按 `./api` 与 `./serve-api.js` 拷）。
 见 `.cnb.yml` 的「发布（自检 → 镜像 → 体验版）」—— 推 `main` 触发，镜像 tag 是
 本仓库这一版的短 sha（`${CNB_COMMIT_SHORT}`），不是分支名。
 
 ⚠️ **`api/` 是整棵拷的，但只剩白名单放行的那几条。** 白名单写错时「构建绿、部署绿、
-容器起来才报 `Cannot find module`」（Issue #134）—— 所以 build & push 那步在
-`docker build` **之前**先跑 `scripts/find-poem-api-files.py`：清单从 `api/_lib/routes.js`
-的 ROUTES 表里读（不是扫一遍上下文里有什么 —— 那种写法在漏文件时照样报「都在」），
-缺一个当场退出。
+容器起来才报 `Cannot find module`」（Issue #134）。白名单逐条放行 `api/**` 与
+`_routes/**`，逐个目录都在 `.dockerignore` 里列着 —— 改它时对着
+`api/_lib/routes.js` 的 ROUTES 表核一遍。
 
-镜像名用 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。**别写成 `${CNB_ROOT_SLUG}`** ——
-那个变量在流水线里指被 clone 的 `poem`。
+镜像名用 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。**别写成 `${CNB_ROOT_SLUG}`**。
 
 ## 正文分片（Issue #121 方案 A）
 
@@ -144,12 +140,12 @@ poem 的 `store.js` 是模块级单例，所以替换之后要 `_reset()` 一次
 
 ⚠️ 代价一条：砍掉 `data/` 与 `js/` 之后，`/api/game/answer`、`/api/exam/records`
 会回 500（`api/_lib/game.js` 里 `require(ROOT + "/js/quiz.js")` 加载不到）。
-小程序两条都不打，所以默认这样。真要语料，用 `poem` 仓库根那份全量 `Dockerfile` 更省事。
+小程序两条都不打，所以默认这样。真要那两条，把 `scripts/corpus/js/quiz.js` 一起摊进
+上下文的白名单里就行。
 
 ## 本机怎么构建
 
 ```bash
-git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git /tmp/poem
-POEM_DIR=/tmp/poem bash deploy/build.sh            # 构建并报体积
-POEM_DIR=/tmp/poem bash deploy/build.sh --dry-run  # 只看上下文，不构建
+bash deploy/build.sh            # 构建并报体积（先 node scripts/build-data.js 摊分片）
+bash deploy/build.sh --dry-run  # 只看上下文，不构建
 ```
