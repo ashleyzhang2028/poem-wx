@@ -217,12 +217,25 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       && /PACKED\.books\(\)/.test(corpusSrc)
       && /function\s+hasData[\s\S]{0,200}PACKED\.books\(\)/.test(corpusSrc)
       && !/fs\.existsSync[\s\S]{0,200}data/.test(corpusSrc),
-    "整包只要有一个文件被 packOptions.ignore 排掉（data/texts 就是），打包器就判定 " +
-      "data/ 不是独立文件、整个目录不打包 —— 真机上 require(data/...) 一律 MODULE_NOT_FOUND。" +
-      "所以 books.json / course.json / shards.json 的 require 路径必须写成字面量，hasData() 也只能" +
-      "按包内 require 判；拿 fs.existsSync 量目录，量到的是开发者工具那一列，与手机上相反。" +
+    "books.json / course.json / shards.json 的 require 路径必须写成字面量 —— " +
+      "打包器只按静态字符串决定进不进包，拼出来的路径它看不见，真机上 require 抛 MODULE_NOT_FOUND。" +
+      "hasData() 也只能按包内 require 判；拿 fs.existsSync 量目录，量到的是开发者工具那一列，" +
+      "与手机上相反。" +
       "缺：" + (packedReqs.join(" / ") || "无") + "；" +
       "另 hasData() 里不许再有 fs.existsSync 判据");
+
+  const upUnused = pcfg.setting ? pcfg.setting.ignoreUploadUnusedFiles : undefined;
+  ok("上传时不摇掉「没人 require 的」文件（语料是数据，摇不动）",
+    upUnused === false,
+    "ignoreUploadUnusedFiles 没显式写成 false（现在是 " + JSON.stringify(upUnused) + "）。" +
+      "真凶在这：上传时 miniprogram-ci 会按模块图剔掉「没人 require 的文件」，" +
+      "而模块图只认 .js 的依赖 —— data/books/*.json、course.json、shards.json 一个都不在图上，" +
+      "于是被整批剔出包。旧注释把这写成「packOptions.ignore 排掉一个文件就整个目录不打包」，" +
+      "机制认错了：isFileIgnored 是按文件比前缀的，data/books/books.json 不落 data/texts/ 名下，" +
+      "本来是会进包的 —— 是被摇掉的。症状就是体验版整屏「语料未生成」，" +
+      "而本地开发者工具里磁盘那份还在，看着像「明明生成了」。" +
+      "两个编译器路径对这项的默认值还不一致（一个 unset 当 true、一个当 false），" +
+      "所以必须显式写 false，不能靠默认");
 
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
@@ -2381,6 +2394,18 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
     /if \(sy\.lastSyncAt\) return sy\.lastText/.test(mineJs),
     "没同步过也敢说「上次同步」，那是假话");
+  {
+    const onServerFn = (mineJs.match(/onServer\(\)\s*\{[\s\S]*?\n  \},/) || [""])[0];
+    ok("没配同步服务器时，配置入口对谁都开（否则零用户时是个死循环）",
+      /auth\.configured\(\)\s*&&\s*!auth\.isAdmin\(\)/.test(onServerFn)
+        && /navigateTo\(\{\s*url:\s*["']\/packages\/admin\/index\/index\?focus=cloud["']/.test(onServerFn),
+      "onServer 里要求「不是 admin 就弹窗劝退」：可角色是服务端发的，" +
+        "服务器没配就登不上、登不上就永远不是 admin —— 这个包一个用户都没有时，" +
+        "谁也没有填那两栏的权限，入口点了只剩一句「找部署方」。" +
+        "判据要反过来：只有「已经配好、且你不是管理员」才劝退；" +
+        "没配时管理员无从谈起，放行去填");
+  }
+
   ok("没同步过时要如实说，且说得出一句「能不能换手机」",
     /还没同步过/.test(mineJs)
       && /登录后进度跨设备跟随/.test(mineJs)

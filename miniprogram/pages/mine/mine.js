@@ -169,14 +169,13 @@ Page({
   },
 
   onServer() {
-    if (!auth.isAdmin()) {
+    if (auth.configured() && !auth.isAdmin()) {
       wx.showModal({
-        title: "同步服务器还没配",
+        title: "同步服务器已配好",
         content:
-          "这个包的部署方要先配好同步服务器：云托管建服务、配环境变量、建表，"
-          + "再在小程序里填「云调用」两栏。\n\n"
-          + "在这之前：账号与进度只在这台手机上，本机那份一字不丢。\n"
-          + "找部署方（见「关于与反馈」的联系邮箱）。",
+          "这台手机连的是「" + this.serverSub() + "」。\n\n"
+          + "连接设置跟着这台手机走，换一台要重填一次。"
+          + "要改地址，找部署方（见「关于与反馈」的联系邮箱）。",
         showCancel: false,
         confirmText: "知道了"
       });
