@@ -75,6 +75,13 @@
 所以：**清单（路由表）进包，正文（大块）走云**。这条边界由 `scripts/check.js` 钉着
 （读 `corpus.js` 里那个 `MANIFEST` 常量，断言它不在 `packOptions.ignore` 名下）——
 Node 里怎么跑都是绿的，只有真机会撞，所以判据只能是静态的。
+
+⚠️ **这条边界还要一道保险**：`project.config.json` 的 `setting.ignoreUploadUnusedFiles`
+必须显式是 `false`。上传时 `miniprogram-ci` 会按模块图剔掉「没人 require 的文件」，
+而 `data/**/*.json` 都不在图上（模块图只认 `.js` 依赖）—— 不关这一项，清单连同
+`books/course` 一起被摇出包，`bucketOf()` 回空，走的正是上表「清单被 ignore」那一行。
+`packOptions.ignore` 只排 `data/texts/`，按文件前缀比，旁边的文件不受牵连。
+细节见 [`from-corpus-to-page.md`](from-corpus-to-page.md) § 三。
 `texts/idx.json`（全文倒排 2MB）是**另一回事**：它太大进不了包，
 `text-search.js` 读不到时降级为「按篇名作者检索」，有兜底，故允许它留在 `texts/`。
 

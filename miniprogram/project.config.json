@@ -9,6 +9,7 @@
   "setting": {
     "urlCheck": true,
     "es6": true,
+    "ignoreUploadUnusedFiles": false,
     "uglifyFileName": false,
     "enhance": true,
     "postcss": true,
