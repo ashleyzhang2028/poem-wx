@@ -235,6 +235,38 @@ function manifest() {
   return manifestCache;
 }
 
+const PROBE_KEY = "kb_probe_v1";
+
+let probeCache = null;
+
+function probe() {
+  if (!probeCache) {
+    try {
+      probeCache = JSON.parse(wx.getStorageSync(PROBE_KEY) || "");
+    } catch (e) {
+      probeCache = {};
+    }
+  }
+  return typeof probeCache === "object" && probeCache ? probeCache : {};
+}
+
+function stamp(rev) {
+  const r = String(rev || "");
+  if (r) {
+    const p = probe();
+    if (p.rev !== r) {
+      p.rev = r;
+      probeCache = p;
+      try {
+        wx.setStorageSync(PROBE_KEY, JSON.stringify(p));
+      } catch (e) {
+        probeCache = {};
+      }
+    }
+  }
+  return probe();
+}
+
 function bucketOf(id) {
   return (manifest().map || {})[id] || "";
 }
@@ -436,5 +468,6 @@ module.exports = {
   search,
   grouped,
   matchEntry,
-  hasData
+  hasData,
+  stamp,
 };

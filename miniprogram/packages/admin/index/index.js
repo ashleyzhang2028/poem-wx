@@ -32,8 +32,14 @@ Page({
     cloudService: "",
     cloudNote: "",
     useCloud: false,
-    wxLoginNote: ""
+    wxLoginNote: "",
+
+    focus: false
   },
+
+  onLoad(query) {
+
+    if (query && query.focus === "cloud") this.setData({ focus: true });
 
   onShow() {
     theme.apply(this);
@@ -176,7 +182,7 @@ Page({
   wxNote() {
     if (!auth.configured()) {
       return "微信登录要服务器配合（code2Session 换 openid）。"
-        + "两格空着时点登录**不算登录成功** —— 账号与进度都还留在这台手机上。"
+        + "两格空着时点登录不算登录成功 —— 账号与进度都还留在这台手机上。"
         + "见 docs/wx-login-server.md。";
     }
 
