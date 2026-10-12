@@ -29,6 +29,35 @@ function todayLabel() {
   return CN_NUM[d.getMonth() + 1] + "月" + cnDay(d.getDate()) + "日 · " + WEEKDAYS[d.getDay()];
 }
 
+function guestCatalog() {
+  const all = corpus.course().filter((p) => p.gr === gate.GUEST_GRADE);
+  const catalog = all.map((p, i) => ({
+    id: p.id,
+    title: p.t,
+    author: p.a,
+    dynasty: p.d,
+    seq: i + 1
+  }));
+  return {
+    logged: false,
+    guest: true,
+    gradeName: S.gradeName(gate.GUEST_GRADE),
+    termName: "",
+    scopeName: "一年级上下册",
+    plan: [],
+    total: 0,
+    doneCount: 0,
+    percent: 0,
+    catalog,
+    catalogCount: catalog.length,
+    catalogLead: catalog.length ? "" : "这一版没带上语料",
+    catalogMiss: catalog.length ? "" : "在项目目录跑 npm run build:data，再在开发者工具里重新编译",
+    stats: { today: 0, done: 0, left: 0 },
+    todoCount: 0,
+    loading: false
+  };
+}
+
 Page({
   data: {
 
@@ -46,6 +75,8 @@ Page({
 
     catalog: [],
     catalogCount: 0,
+    catalogLead: "",
+    catalogMiss: "",
 
     todayLabel: "",
 
@@ -68,35 +99,10 @@ Page({
 
   refresh() {
 
-    const logged = gate.logged();
+    this.setData(guestCatalog());
 
-    if (!logged) {
-      const all = corpus.course().filter((p) => p.gr === gate.GUEST_GRADE);
-      const catalog = all.map((p, i) => ({
-        id: p.id,
-        title: p.t,
-        author: p.a,
-        dynasty: p.d,
-        seq: i + 1
-      }));
-      this.setData({
-        logged: false,
-        guest: true,
-        gradeName: S.gradeName(gate.GUEST_GRADE),
-        termName: "",
-        scopeName: "一年级上下册",
-        plan: [],
-        total: 0,
-        doneCount: 0,
-        percent: 0,
-        catalog,
-        catalogCount: catalog.length,
-        stats: { today: 0, done: 0, left: 0 },
-        todoCount: 0,
-        loading: false
-      });
-      return;
-    }
+    const logged = gate.logged();
+    if (!logged) return;
 
     const settings = store.settings();
     const all = corpus.course();
@@ -148,8 +154,6 @@ Page({
       doneCount: done,
       total,
       percent: total ? Math.round((done / total) * 100) : 0,
-      catalog: [],
-      catalogCount: 0,
       stats: { today: total, done, left: Math.max(0, total - done) },
 
       todoCount: rows.filter((r) => !r.reviewed).length,

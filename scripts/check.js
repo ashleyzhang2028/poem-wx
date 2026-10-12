@@ -7263,6 +7263,12 @@ function gapped(items, max) {
   ok("首页缺语料时照常渲染（各卡片自己露出断口）",
     !/hasData/.test(homeJsNoData) || !/noData|buildRev/.test(homeJsNoData),
     "home.js 又在 refresh 里按 hasData 改走另一套渲染 —— 卡片不再按真实数据报错");
+  ok("课本目录空了要说出来，不许静默空着",
+    /catalogCount\s*:\s*catalog\.length/.test(homeJsNoData)
+      && /catalogLead\s*:/.test(homeJsNoData)
+      && /!catalogCount/.test(homeWxmlNoData),
+    "选课内那一屏（未登录首页）在不给空态 —— 语料缺了目录就是整块空白，" +
+      "看着像数据丢了，只有控制台那一行才说明白（Issue #175）");
   const appSrc = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
   ok("缺语料改在控制台报（版本 + 语料在不在）",
     /console\.info[\s\S]{0,200}corpus\.hasData\(\)/.test(appSrc)
