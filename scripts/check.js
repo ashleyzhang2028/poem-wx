@@ -2951,11 +2951,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     track(
       loginPromise
-        .then((r) => {
-          ok("没接上服务器时 login() 回的是 local（调用方据此说真话）",
-            !!(r && r.local === true),
-            "mine.js 的 onLogin 就是读这个字段决定说不说「已登录」；实际 " + JSON.stringify(r));
-        }, (e) => ok("没接上服务器时 login() 不该 reject", false, String(e && e.message)))
+        .then(
+          (r) => ok("没接上服务器时 login() 不该成功", false, "回了 " + JSON.stringify(r)),
+          (e) => {
+            ok("没接上服务器时 login() 出声拒绝（不再「静默成功」）",
+              !!(e && e.code === "E_NOT_CONFIGURED"),
+              "code=" + (e && e.code) + " msg=" + (e && e.message));
+            ok("拒绝的理由是「这个包还没配服务器」（界面据此指路，不是「登录失败」）",
+              /没配同步服务器/.test(String(e && e.message)),
+              String(e && e.message));
+          }
+        )
 
         .then(() => {
 
@@ -2999,9 +3005,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const mineCode = mineSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
     const loginFn = /onLogin\(\)\s*\{([\s\S]*?)\n  \},/.exec(mineCode);
-    ok("登录成功那句判定先看 `res.local`（没接上服务器时不说「已登录」）",
-      !!loginFn && /res\.local/.test(loginFn[1]),
-      "onLogin 里没有 res.local 这一支 —— 没接上服务器时照样报「已登录」");
+    ok("登录被拒的理由要能指到「同步服务器」这一行（不是一句「登录失败」）",
+      !!loginFn && /E_NOT_CONFIGURED/.test(loginFn[1]) && /tellOffline/.test(loginFn[1]),
+      "onLogin 没有把 E_NOT_CONFIGURED 引到 tellOffline —— 用户看到「登录未完成」，"
+        + "而真正该说的是「这个包还没配同步服务器」");
     ok("有告诉用户「还没接上同步服务器」的那一步",
       /tellOffline/.test(mineCode) && mineCode.indexOf("还没接上同步服务器") >= 0,
       "空壳登录没有任何一句解释，用户只能自己去数据库里查");
@@ -4820,7 +4827,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("「关于」页那一段标题不再叫「本机记录」",
       aboutWxml.indexOf("本机记录") < 0 && /背诵记录/.test(aboutWxml));
     ok("登录成功不再提「本机身份」（用户看不懂，也不必懂）",
-      mineJs.indexOf("本机身份") < 0 || !/title: *"[^"]*本机身份/.test(mineJs));
+      mineJs.indexOf("身份") < 0);
     ok("头像来源不再说「本机设置的头像」/「本机头像」（说「自己设的」就够）",
       mineJs.indexOf("本机设置的头像") < 0 && mineJs.indexOf("本机头像") < 0);
 
@@ -7059,7 +7066,14 @@ function gapped(items, max) {
 
   ok("corpus 有「数据在不在」的探针", /function hasData\s*\(/.test(corpusSrc));
   ok("corpus 暴露了 hasData（页面据此走空态）",
-    /hasData\s*,?\s*\n?\}/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
+    /hasData\s*,/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
+  ok("hasData 判的是「包内的 books.json 在不在」，不是磁盘上那个目录",
+    !/existsSync/.test(corpusSrc) && /hasData[\s\S]{0,300}require\("\.\.\/" \+ BOOKS_DIR \+ "books\.json"\)/.test(corpusSrc),
+    "真机没有 fs，且 data/ 目录会被 packOptions 拆着打 —— 目录在、包内文件缺时，"
+      + "看目录的探针一律回「有数据」，首页于是跳过空态，渲染出一个空目录");
+  ok("app.js 把运行版本记进本机（首页空态要说得清「这个包是哪一版」）",
+    /stampBuild/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8"))
+      && /getAccountInfoSync/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8")));
   ok("语料读取统一过 readJson（拿不到就回默认值，不当崩溃）",
     /function readJson\s*\(/.test(corpusSrc));
 

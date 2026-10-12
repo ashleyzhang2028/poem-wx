@@ -42,7 +42,9 @@ Page({
     lockedCount: 0,
 
     focusLogin: false,
-    adminVisible: false
+    adminVisible: false,
+    serverEntry: false,
+    serverSub: ""
   },
 
   onLoad(query) {
@@ -93,6 +95,8 @@ Page({
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
       adminVisible: E.can("admin"),
+      serverEntry: true,
+      serverSub: this.serverSub(),
 
       caps: E.matrix({ signedIn: !!profile.logged }),
       lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
@@ -106,23 +110,19 @@ Page({
       .then((res) => {
         wx.hideLoading();
 
-        if (res && res.local) {
-          this.tellOffline();
-          this.refresh();
-          return;
+        if (res && res.synced) {
+          wx.showToast({ title: "已登录 · 进度已认回", icon: "none", duration: 2500 });
+        } else {
+          wx.showToast({ title: "已登录 · 这台手机上的记录还在", icon: "none", duration: 2500 });
         }
-
-        wx.showToast({
-          title: res && res.synced ? "已登录 · 进度已认回" : "已登录",
-          icon: "none",
-          duration: 2500
-        });
         this.refresh();
       })
       .catch((err) => {
         wx.hideLoading();
         const code = (err && err.code) || "";
-        if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
+        if (code === "E_NOT_CONFIGURED") {
+          this.tellOffline();
+        } else if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
           wx.showModal({
             title: "登录没打通",
             content: (err.message || "") + "\n\n这是服务端/部署那一侧的事，先看「关于与反馈」里的联系方式。",
@@ -140,11 +140,11 @@ Page({
     wx.showModal({
       title: "还没接上同步服务器",
       content: why === "cloud"
-        ? "这台手机连不上同步服务器（云调用那两栏没填、或填错了）。\n\n"
-          + "登录本身没问题 —— 但**账号与进度不会存到服务端**，换台手机就没了。\n\n"
-          + "填一次「我的 → 用户与权限 → 云调用」两张框（要 admin/owner 才看得到）就好。"
-        : "这个包还没配同步服务器，账号与进度只在这台手机上。\n\n"
-          + "配上之后，登录会把进度与设置跨设备带过去。",
+        ? "这台手机连不上同步服务器（云调用两栏没填、或填错了）。\n\n"
+          + "账号与进度不会存到服务端 —— 换台手机就没了。\n\n"
+          + "管理员可以在「我的 → 同步服务器」里填；普通用户可以找部署方。"
+        : "这个包还没配同步服务器，登录接不上，账号与进度只在这台手机上。\n\n"
+          + "配上之后，登录会把进度与设置跨设备带过去。入口在「我的 → 同步服务器」。",
       showCancel: false
     });
   },
@@ -160,6 +160,29 @@ Page({
         this.refresh();
       }
     });
+  },
+
+  serverSub() {
+    if (!auth.configured()) return "这个包还没配 · 点这里填";
+    if (auth.useCloud()) return "已配 · 走云调用" + (this.data.syncReady ? "" : " · 待接通");
+    return "已配 · " + (auth.baseUrl() || "云调用");
+  },
+
+  onServer() {
+    if (!auth.isAdmin()) {
+      wx.showModal({
+        title: "同步服务器还没配",
+        content:
+          "这个包的部署方要先配好同步服务器：云托管建服务、配环境变量、建表，"
+          + "再在小程序里填「云调用」两栏。\n\n"
+          + "在这之前：账号与进度只在这台手机上，本机那份一字不丢。\n"
+          + "找部署方（见「关于与反馈」的联系邮箱）。",
+        showCancel: false,
+        confirmText: "知道了"
+      });
+      return;
+    }
+    wx.navigateTo({ url: "/packages/admin/index/index?focus=cloud" });
   },
 
   syncNote(sy) {
@@ -251,21 +274,6 @@ Page({
     wx.setClipboardData({
       data: JSON.stringify(data),
       success: () => wx.showToast({ title: "备份已复制，粘贴到安全的地方保存", icon: "none", duration: 2500 })
-    });
-  },
-
-  onLogout() {
-    wx.showModal({
-      title: "退出登录",
-      content: "退出后回到浏览模式：首页仍可看一年级诗词，其余能力要重新登录。已背的进度不会被删。",
-      confirmText: "退出",
-      confirmColor: "#a83b32",
-      success: (res) => {
-        if (!res.confirm) return;
-        auth.logout();
-        this.refresh();
-        wx.showToast({ title: "已退出登录", icon: "none" });
-      }
     });
   },
 

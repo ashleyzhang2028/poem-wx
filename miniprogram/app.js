@@ -13,6 +13,7 @@ App({
 
   onLaunch() {
     store.migrate();
+    this.stampBuild();
 
     corpus.course();
     corpus.manifest();
@@ -28,6 +29,16 @@ App({
 
   onShow() {
     store.touchDaily();
+  },
+
+  stampBuild() {
+    let info = null;
+    try {
+      info = (wx.getAccountInfoSync() || {}).miniProgram || null;
+    } catch (e) {
+      info = null;
+    }
+    corpus.stamp(info && info.version);
   },
 
   onHide() {

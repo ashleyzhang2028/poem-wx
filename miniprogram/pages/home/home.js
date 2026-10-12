@@ -35,6 +35,7 @@ Page({
     themeStyle: "",
 
     noData: false,
+    buildRev: "",
     logged: false,
     guest: false,
     gradeName: "",
@@ -72,6 +73,7 @@ Page({
     if (!corpus.hasData()) {
       this.setData({
         noData: true,
+        buildRev: corpus.stamp().rev || "",
         guest: false,
         logged: false,
         plan: [],

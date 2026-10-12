@@ -11,10 +11,14 @@
         <view class="seal"><text class="seal-t">跬</text></view>
       </view>
       <view class="guest-bar">
+        <text class="guest-title">这个包是怎么来的</text>
+        <text class="guest-sub">{{buildRev ? '构建版本 ' + buildRev : '本地跑过 build:data、工具打开 miniprogram/ 才有语料'}}</text>
+      </view>
+      <view class="guest-bar" wx:if="{{!buildRev}}">
         <text class="guest-title">先取语料</text>
         <text class="guest-sub">clone-poem.sh /tmp/poem</text>
       </view>
-      <view class="guest-bar">
+      <view class="guest-bar" wx:if="{{!buildRev}}">
         <text class="guest-title">在仓库根编译</text>
         <text class="guest-sub">npm run build:data</text>
       </view>
