@@ -36,10 +36,29 @@ node scripts/parity.js
 | `scripts/corpus/` | 语料（poem 那一版的数据文件；取自哪一版见 `scripts/corpus/VERSION.json`） |
 | `scripts/parity-web/` | 服务端契约的只读副本（能力表、路由表、报文清洗、存储层形状），自检拿它当基准 |
 | `api/` | 后端运行时契约（登录 / 同步 / 管理那几条路由），镜像与 `e2e-mysql` 都摊它 |
-| `miniprogram/utils/server.js` | 打包时写死的云调用两栏 —— **用户开箱即用，不必自己填** |
+| `miniprogram/utils/server.js` | 云调用两栏 —— **构建产物，不入库**：构建期从密钥仓库注入，用户开箱即用 |
 
 **没有第二个仓库要跟。** 换一版语料就是把 `scripts/corpus/` 整份换掉、
 把 `VERSION.json` 的 `upstreamRef` / `syncedAt` 改过来，然后重跑上面三步。
+
+### 云调用两栏怎么进包
+
+值是部署方的密钥，**存在密钥仓库**（`poem-wechat-mini-program-secrets` 的
+`wechat-ci.yml`）：
+
+```
+CLOUD_ENV      云开发环境 ID（形如 poem-d9g1bqeq978682c58）
+CLOUD_SERVICE  云托管服务名
+```
+
+构建期由流水线把这两个变量交给 `build-data.js`，它据此生成
+`miniprogram/utils/server.js` —— 跟语料一样是**构建产物**，已 gitignore。
+用户装上去就通，不必自己填。本机没注入时就两格为空，界面照实说
+「这个包还没配同步服务器」。
+
+```bash
+CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data   # 本机要验证这条路时这样跑
+```
 
 管理名录是别人的账号标识，**不进代码库**。要导入就设环境变量：
 
@@ -65,7 +84,7 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 | | 状态 |
 |---|---|
 | **能跑** | 四套算法、注音、题库、飞花令、全文检索、进度总览 —— 全部离线可用，断网也能背（页面清单见 `miniprogram/app.json`） |
-| **要配置** | 微信登录与跨设备同步。代码在 `api/` 里，部署与建表照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做 —— **用户端不用配**：云调用两栏随包写死在 `miniprogram/utils/server.js` |
+| **要配置** | 微信登录与跨设备同步。代码在 `api/` 里，部署与建表照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做 —— **用户端不用配**：云调用两栏在构建期由密钥仓库注入进包 |
 | **不做** | 语音朗读：同声传译插件要企业/个体户主体，自家 TTS 要付费 + 后端签名。用户裁决不做，界面里一个朗读元素都没有 |
 
 所以「一切就好了吗」的答案是**没有**，但**没有的是外部依赖，不是代码**：
@@ -75,8 +94,8 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 提审前必须先做的三件事：
 
 1. ~~换掉 `appid`~~（已换，见上）
-2. ~~接上后端~~（云调用两栏随包写死在 `miniprogram/utils/server.js`，
-   部署方在建服务时把 `env` / `service` 填进去 —— 用户装上空壳包也开箱能用）
+2. ~~接上后端~~（云调用两栏由构建期从密钥仓库注入 `miniprogram/utils/server.js`，
+   值写在 `wechat-ci.yml` 的 `CLOUD_ENV` / `CLOUD_SERVICE` 里 —— 用户开箱能用）
 3. **真机走一遍**。上面所有验证都是离线跑的；安全区、原生控件外观、字体回退、
    分片下载超时各有一摊事，开发者工具的真机预览才是准的
 
@@ -551,8 +570,8 @@ only supports authentication using a personal access token (classic)* —— 所
 - **后端要配一遍**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
   服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在
   `api/` 里），
-  同步与管理复用 poem 已上线的那几个。管理页里可以直接填云调用两栏（或 `baseUrl`）。
-  没配之前一律降级，不做任何「假装成功」
+  同步与管理复用 poem 已上线的那几个。云调用两栏在构建期注入进包，管理页那两栏
+  只是调试与应急出口（`baseUrl` 同理）。没配之前一律降级，不做任何「假装成功」
 - **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与
   poem 服务端接起来真跑一遍（登录 → 同步 → 设置/进度真落库 → 换台手机认回来）。
   上面那些静态自检验得了「报文形状对不对」，验不了「两边合起来通不通」——

@@ -136,21 +136,29 @@ git checkout main && git push                → 流水线出镜像
 
 整段照 [`wx-cloud-setup.md`](wx-cloud-setup.md) 走。
 
-## 五、④ 段：云调用两栏**随包写死，用户不必填**
+## 五、④ 段：云调用两栏**构建期注入进包，用户不必填**
 
-两格写在 **`miniprogram/utils/server.js`** 里，打包时就进了包 ——
-这是部署方的事，用户装上去就能用。
+两格的值是部署方的密钥，存在密钥仓库 `wechat-ci.yml`：
 
-| 填哪一格 | 是什么 |
+| 变量 | 是什么 |
 |---|---|
-| `CLOUD.env` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` |
-| `CLOUD.service` | 云托管的**服务名**（本部署是 `poem-wx`） |
+| `CLOUD_ENV` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` |
+| `CLOUD_SERVICE` | 云托管的**服务名**（本部署是 `poem-wx`） |
+
+流水线把这两个变量交给 `build-data.js`，它据此生成
+`miniprogram/utils/server.js` —— 与语料一样是**构建产物**（已 gitignore），
+随包走，用户装上去就能用。本机没注入时两格为空，界面照实说没配服务器。
+
+本机跑一遍要验证这条路：
+
+```bash
+CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
+```
 
 两个标识符容易填串，串了的回错是 `env not exists` / `service not found`。
 
 **本机那两栏还在**（「我的 → 同步服务器」），优先级是**本机 → 包内**：
-调试、换部署、应急时用它；清空就回到包里那份。
-「④ 段」这条口径因此只对**没有 `server.js` 的旧包**成立 —— 现在的包不存在
+调试、换部署、应急时用它；清空就回到包里注入那份，不存在
 「换台手机要重填一次」这件事。
 
 ## 六、认症状

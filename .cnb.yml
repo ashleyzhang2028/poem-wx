@@ -2,6 +2,8 @@ $:
   "**":
     - name: 自检
       image: node:20
+      imports:
+        - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       script:
         - node scripts/build-data.js
         - node scripts/check.js
@@ -22,6 +24,8 @@ main:
         IMAGE: ghcr.io/ashleyzhang2028/poem-wx/wx-api
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         TAG: ${CNB_COMMIT_SHORT}
+        CLOUD_ENV: ${CLOUD_ENV}
+        CLOUD_SERVICE: ${CLOUD_SERVICE}
       stages:
         - name: stage context
           script: |

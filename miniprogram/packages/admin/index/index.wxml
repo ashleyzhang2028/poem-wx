@@ -68,8 +68,7 @@
 
   <view class="card">
     <view class="card-title bar">同步服务器</view>
-    <text class="hint note" wx:if="{{cloudBuiltin}}">已随包配好，这里不用填</text>
-    <text class="hint note" wx:else>同步与登录走下面两条通道之一；都填时以地址为准</text>
+    <text class="hint note">同步与登录走下面两条通道之一；都填时以地址为准</text>
     <text class="hint note" wx:if="{{focus && !logged}}">这个包还没配 —— 填完下面两栏就能登录</text>
     <view class="field">
       <input class="field-input" type="text" value="{{baseUrl}}" placeholder="https://example.com"
