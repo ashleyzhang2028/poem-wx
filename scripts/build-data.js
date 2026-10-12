@@ -9,6 +9,11 @@ const vm = require("vm");
 const CORPUS_DIR = path.join(__dirname, "corpus");
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
+/* 云调用两栏是部署方的密钥，值存在密钥仓库 wechat-ci.yml 里，
+   构建期从这里注入、生成 utils/server.js —— 产物不入库。 */
+const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
+const SERVER_KEYS = ["env", "service"];
+
 const BUCKET_KB = 200;
 
 const TRANSLATION_SOURCES = {
@@ -150,6 +155,7 @@ function main() {
   writePinyin(W, index, courseTexts, texts);
   writeTextIndex(courseTexts, texts, W);
   writeRoster();
+  writeServer();
 
   console.log("索引 " + index.length + " 条，按 " + Object.keys(byBook).length + " 部集子拆分");
   const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.json")).size / 1024);
@@ -338,6 +344,38 @@ function writeRoster() {
 
   writeJson(file, { generatedAt: new Date().toISOString().slice(0, 10), note: "", users: safe });
   console.log("名录导入 " + safe.length + " 人（构建产物，不入库）");
+}
+
+function writeServer() {
+  const values = { env: String(process.env.CLOUD_ENV || "").trim(), service: String(process.env.CLOUD_SERVICE || "").trim() };
+  const filled = SERVER_KEYS.filter(function (k) { return values[k]; });
+
+  const body = SERVER_KEYS.map(function (k) {
+    return "  " + k + ": " + JSON.stringify(values[k]) + ",";
+  }).join("\n").replace(/,$/, "");
+
+  fs.writeFileSync(SERVER_FILE,
+    "/* 构建产物，不入库：值由构建期从环境变量注入（密钥仓库 wechat-ci.yml 的\n" +
+    "   CLOUD_ENV / CLOUD_SERVICE，流水线里引）。本机没注入时两格为空，\n" +
+    "   界面照实说「这个包还没配同步服务器」。 */\n" +
+    "const CLOUD = {\n" + body + "\n};\n" +
+    "\n" +
+    "function cloud() {\n" +
+    "  if (!CLOUD.env || !CLOUD.service) return null;\n" +
+    "  return { env: CLOUD.env, service: CLOUD.service };\n" +
+    "}\n" +
+    "\n" +
+    "module.exports = { cloud };\n");
+
+  if (filled.length === SERVER_KEYS.length) {
+    console.log("云调用两栏已注入 server.js：" + values.env + " / " + values.service);
+  } else if (filled.length) {
+    console.log("云调用两栏只注入了 " + filled.join(" / ") + " —— " +
+      SERVER_KEYS.filter(function (k) { return !values[k]; }).join(" / ") + " 是空的，" +
+      "这个包仍算没配服务器");
+  } else {
+    console.log("没注入云调用两栏（CLOUD_ENV / CLOUD_SERVICE 都没设）：这个包没配同步服务器");
+  }
 }
 
 function writeJson(file, data) {

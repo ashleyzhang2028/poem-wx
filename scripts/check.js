@@ -1260,9 +1260,11 @@ ok("写本机后队列有记账", syncMod.pendingCount() >= 0);
 ok("本机数据没被动过", !!store.getRecord("probe-1"));
 
 const remoteMod = require(path.join(ROOT, "utils", "remote.js"));
+const serverMod = () => require(path.join(ROOT, "utils", "server.js"));
 
-ok("开箱就有后端（云调用两栏随包写死，用户不必自己填）",
-  remoteMod.configured() === true);
+ok("这个包没注入过云调用两栏时如实说「没配」（不带值就是没配）",
+  !!serverMod().cloud() || remoteMod.configured() === false,
+  "server.js 里没值就地认成没配 —— 不能回落成「已配好」");
 ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
 
@@ -1278,23 +1280,20 @@ ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
   ok("owner / admin 才认管理接口", remoteMod.adminReady() === true);
 
   authMod.configure({ baseUrl: "" });
-  ok("撤掉 baseUrl 回到「走包里那份云调用」", remoteMod.useCloud() === true);
 
   store.write(store.KEYS.auth, { cloud: { env: "probe-env", service: "probe-svc" } });
   ok("本机填过就用本机那份（那是「这台手机连哪儿」的应急出口）",
     remoteMod.useCloud() === true && remoteMod.cloudConfig().service === "probe-svc");
   store.drop(store.KEYS.auth);
-}
 
-{
-  const serverMod = require(path.join(ROOT, "utils", "server.js"));
-  const saved = JSON.stringify(store.read(store.KEYS.auth, {}));
-  store.drop(store.KEYS.auth);
-  ok("本机没填过时用包里那份（不填也能登录、也能取课外正文）",
-    remoteMod.configured() === true && remoteMod.useCloud() === true);
-  ok("包里那份就是云调用两栏",
-    !!serverMod.cloud() && !!serverMod.cloud().env && !!serverMod.cloud().service);
-  store.write(store.KEYS.auth, saved ? JSON.parse(saved) : {});
+  const injected = serverMod().cloud();
+  ok("本机没填过时用包里注入那份 —— 注入了就开箱即用，没注入就如实说没配",
+    injected
+      ? (remoteMod.configured() === true && remoteMod.useCloud() === true
+         && remoteMod.cloudConfig().service === injected.service)
+      : (remoteMod.configured() === false && remoteMod.useCloud() === false),
+    "server.js 里是 " + JSON.stringify(injected) + "，而 configured() 是 " +
+      JSON.stringify(remoteMod.configured()));
 }
 ok(
   "契约路径齐全",
@@ -2997,6 +2996,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     store2.drop(store2.KEYS.auth);
     store2.saveSession({ logged: false, tier: "", tierFromServer: false });
+    auth2.configure({ baseUrl: "", cloud: { env: "probe-env", service: "probe-svc" } });
 
     global.wx.cloud = { callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" }) };
 
@@ -3056,8 +3056,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           delete mem[store2.KEYS.auth];
           delete mem[store2.KEYS.sync];
           store2.saveSession({ logged: false, tier: "", tierFromServer: false });
-          ok("配了服务器之后 configured() 为真（②那条断言的前提）",
-            auth2.configured() === true, JSON.stringify(auth2.baseUrl()));
+          auth2.configure({ baseUrl: "", cloud: { env: "probe-env", service: "probe-svc" } });
+          ok("配上云调用两栏之后 configured() 为真（②那条断言的前提）",
+            auth2.configured() === true,
+            "configured=" + JSON.stringify(auth2.configured()));
           return auth2.login();
         })
         .then(() => {
@@ -5794,10 +5796,24 @@ function gapped(items, max) {
     "`configured()` 只看 `baseUrl` —— 只配云调用的人会被判成「后端未就绪」，" +
       "而那条路其实是通的");
 
-  ok("云调用两栏「本机填过就用本机的，没填过用包里那份」",
+  ok("云调用两栏「本机填过就用本机的，没填过用包里注入那份」",
     /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*server\.cloud\(\)/.test(remoteSrc) &&
       /require\("\.\/server"\)/.test(remoteSrc),
-    "没有内置那一层时，用户必须自己去管理页填两栏才能用 —— 而那是部署方的事");
+    "没有注入那一层时，用户必须自己去管理页填两栏才能用 —— 而那是部署方的事");
+
+  {
+    const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
+    ok("server.js 是构建产物：构建期从环境变量注入（不是把值写在源码里）",
+      !fs.existsSync(path.join(ROOT, "..", "miniprogram", "utils", "server.js")) ||
+        /CLOUD_ENV/.test(buildSrc) && /CLOUD_SERVICE/.test(buildSrc) &&
+        /utils", "server\.js"\)/.test(buildSrc),
+      "语料是构建产物，云调用两栏也该是 —— 值只存在密钥仓库 wechat-ci.yml 里，" +
+        "由 build-data.js 写进 utils/server.js（该文件已 gitignore）");
+    ok("server.js 不进代码库",
+      /miniprogram\/utils\/server\.js/.test(
+        fs.readFileSync(path.join(__dirname, "..", ".gitignore"), "utf8")),
+      "带真实值的 server.js 一旦入库，密钥就跟着代码走了");
+  }
 
   {
     const mem = {};
