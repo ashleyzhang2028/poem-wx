@@ -74,14 +74,30 @@ npm run build:data
 同理，`books.json` / `course.json` / `shards.json` 的 `require` 路径都写成字面量 ——
 打包器只认静态字符串，拼出来的路径它看不见，包内一样取不到。`check.js` 钉着这两条。
 
-⚠️ **语料是数据，不是代码，别让上传时的「摇树」把它摇掉。** 上传时 `miniprogram-ci`
-会按模块图剔掉「没人 require 的文件」，而模块图只认 `.js` 的依赖 ——
-`data/**/*.json` 一个都不在图上，于是被整批剔出包，症状正是体验版目录全空、控制台说语料没进包，
-而本地磁盘上那份还在，看着像「明明生成了」。
-`project.config.json` 的 `setting.ignoreUploadUnusedFiles` 因此**显式写成 `false`**：
-`data/texts/` 该不进包，由 `packOptions.ignore` 按文件前缀排（它只排这一个目录，
-旁边的 `books/`、`course.json`、`shards.json` 照进）；哪些正文不进包是**包边界**的事，
-不该交给摇树去猜。两个编译器路径对这项的默认值还不一致，所以不能靠默认。
+⚠️ **语料的根本判据是「在模块图上」。** 打包器（开发者工具编译、`miniprogram-ci`
+上传各一条路径）按模块图剔文件：图上够不到的，一律当「没人 require 的文件」踢出包。
+而图上只有 `.js` 里**字面量**的 `require("./x.json")`。
+
+三份语料曾经是字面量、其余 19 份是拼接路径（`readJson(BOOKS_DIR + id + ".json")`、
+`require("../" + TABLE)`），那 19 份就被剔出包。症状不齐整、最难认：
+`books.json` 在（集子表渲染得出来），`poems.json` 不在（**首页课内目录整块空**），
+点进每一部也都是空的 —— 磁盘上文件明明在，跑多少次 `build:data` 都没用。
+
+修法是把每一份该进包的文件都写进字面量 `require` 表：
+
+| 表 | 在哪 | 管哪几份 |
+|---|---|---|
+| `PACKED` | `utils/corpus.js` | `books.json` / `course.json` / `shards.json` |
+| `PACKED_BOOK_ROWS` | `utils/corpus.js` | 17 部集子索引，含 `poems.json` |
+| `PACKED_TABLE` | `utils/pinyin.js` | `pinyin-table.json` |
+
+关键在**读文件的那一行要走到那张表**：`ofBook` 写 `packedRows(bookId) || readJson(...)`，
+`pinyin.table` 写 `PACKED_TABLE()`。只摆一张没人调的表，摇树照旧剔。
+`check.js` 从 `app.js` 与各页面走一遍模块图钉这条。
+
+配置那三处（下一节）是**兜底**，不是根因上的修法：`ignore*UnusedFiles` 关的是
+分析器的行为，`include` 是「无论分析器怎么想都带上」。它们挡不住「读文件的那行
+根本不走字面量表」这种改法，模块图判据才挡得住。
 
 在的话，读的顺序是：
 
@@ -137,6 +153,8 @@ corpus.ensureEntry(id)
 `course.json` / `shards.json` / `pinyin-table.json` / `roster.json`，且**不许**把
 `data/texts` 拉回来（那是 26MB 的分片，进主包直接传不上去）。
 
+这三处都只是保险。真正的判据在上一节：**每一份该进包的语料都要在模块图上**。
+
 容器里有没有分片，由镜像的构建参数决定：`COPY_SHREDS` 不写＝**有**，
 `=0`＝瘦镜像（`/api/shard/*` 回 `404 E_NO_SHARDS`，界面说「这个版本里没有课外正文」）。
 这两句话指向的下一步动作不同，一路上都不许合并成一句「加载失败」。
@@ -162,9 +180,15 @@ git checkout main && git push                → 流水线出镜像
 | `CLOUD_ENV` | **云开发**环境 ID，形如 `poem-d9g1bqeq978682c58` |
 | `CLOUD_SERVICE` | 云托管的**服务名**（本部署是 `poem-wx`） |
 
-流水线把这两个变量交给 `build-data.js`，它据此生成
-`miniprogram/utils/server.js` —— 与语料一样是**构建产物**（已 gitignore），
-随包走，用户装上去就能用。本机没注入时两格为空，界面照实说没配服务器。
+流水线把这两个变量交给 `build-data.js`，它据此**覆写** `miniprogram/utils/server.js`
+里那两个值，随包走，用户装上去就能用。本机没注入时两格为空（值不动），
+界面照实说没配服务器。
+
+⚠️ `server.js` 的文件本体**入库**（值是空的），只有值由构建期写。别把它加进
+`.gitignore`：它不在时 `remote.js` 里那句 `require("./server")` 会抛
+`MODULE_NOT_FOUND`，整个模块加载失败；而主包每个页面都直接或间接 require `remote` ——
+页面在 `onLoad` 之前就报错，**首页连语料一起渲染不出来**，看着恰好像「语料没进包」。
+`remote.js` 对这句 require 另有一层兜底（读不到就坐实「没配」），两层都要有。
 
 本机跑一遍要验证这条路：
 
@@ -186,8 +210,9 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
-| 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
+| 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**没打进语料**（多为模块图摇树剔掉） | 合上把语料写成字面量 `require` 的那一版，重传。若三处配置没配齐也会摇掉 —— 见上一节 |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.json …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
+| **首页整页空、连「课本目录」那张卡片都没有**，控制台 `Cannot find module './server'` | ① 之前 —— `server.js` 不在，`remote.js` 加载失败，页面根本没跑起来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，**要入库**），重新编译。见 § 五 |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
@@ -204,7 +229,10 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 
 - `data/shards.json` 不在 `packOptions.ignore` 名下（读 `corpus.js` 的 `MANIFEST` 常量比）
 - `books.json` / `course.json` / `shards.json` 都是字面量 `require`，`hasData()` 里没有 `fs` 判据
-- `setting.ignoreUploadUnusedFiles` 显式是 `false`（语料不在模块图上，不显式关会被摇掉）
+- **主包每一份语料都在模块图上**（从 `app.js` 与各页面走 require 图），且读文件的那行走到字面量表
+- `setting.ignoreUploadUnusedFiles` 与 `setting.ignoreDevUnusedFiles` 都显式是 `false`
+- `packOptions.include` 列出该进的语料，且不含 `data/texts`
+- `server.js` 是入库的空壳（不许被 gitignore 挡住），且 `remote.js` 对它的 require 有兜底
 - 「我的」页没有连接配置入口，接服务器只有管理页一处；用户看得到的地方不出现「云调用」
 - 包内正文就是课内那 251 条，且包内与分片不重叠
 - 课内正文单列 400 KB 预算，超了报红

@@ -1,6 +1,13 @@
 const store = require("./store");
 const wire = require("./wire");
-const server = require("./server");
+
+function packedCloud() {
+  try {
+    return require("./server").cloud() || null;
+  } catch (e) {
+    return null;
+  }
+}
 
 const SHARD_PATH = "/api/shard/";
 
@@ -25,7 +32,7 @@ function credentialBody(extra) {
 }
 
 function cloudOf() {
-  return session().cloud || server.cloud();
+  return session().cloud || packedCloud();
 }
 
 function configured() {

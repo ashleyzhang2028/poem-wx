@@ -309,8 +309,12 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 
 **两格的值构建期就注入了包里** —— 值存在密钥仓库 `wechat-ci.yml`
 （`CLOUD_ENV` / `CLOUD_SERVICE`），流水线把它交给 `build-data.js`，
-生成 `miniprogram/utils/server.js`（构建产物，不入库）。用户装上去就通。
+**覆写** `miniprogram/utils/server.js` 里那两个值。用户装上去就通。
 换部署就是改密钥仓库那两个变量、重跑流水线。
+
+`server.js` 本体（空壳）**在代码库里**，只有值由构建期写。别把它 gitignore 掉：
+少了它，`remote.js` 的 `require("./server")` 会让整个模块加载失败，
+主包每个页面都在 `onLoad` 之前就报错（Issue #175）。
 
 要临时换一个后端（调试、回滚、试别的部署）才走界面：
 
@@ -432,6 +436,8 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 上传体验版回 `20003 … appIdToAppuin failed` | 上传密钥不是这个 appid 名下的（密钥/appid 换过其一） | § 八点五：重新生成代码上传密钥 + 核对 appid + 重跑流水线。**不是** IP 白名单的问题 |
 | 上传体验版回 `checkIpInWhiteList Failed: invalid ip` | 密钥设了 IP 白名单，构建机出口 IP 不在里面 | 放行构建机出口 IP，或把密钥那栏的白名单留空 |
+| **体验版/工具里首页连「课本目录」都没有，控制台 `Cannot find module './server'`** | `miniprogram/utils/server.js` 没进包（被 gitignore 挡住、或构建时删了）。这个文件一缺，`remote.js` 整个模块加载失败，主包页面在 `onLoad` 前就抛 —— 首页整个渲染不出来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，必须入库），重新上传。`remote.js` 里对这句 require 另有兜底，两层都要有 |
+| **首页目录空着，而控制台说「语料 已载入」** | 语料在包里，是**页面渲染**这一段 —— 或这个包还是旧的 | 先确认包是新的；仍空则把 `[跬步]` 那行与控制台报错发出来 |
 | **点登录回 `HTTP 400`，正文一律取不到** | `.cnb.yml` 的 `env:` 里又声明了一遍 `CLOUD_ENV` / `CLOUD_SERVICE`（Issue #175）。`imports` 的变量在 `env:` 求值时还取不到，`${VAR}` 会**原样**留下，于是 `server.js` 里写进的是字面量 `${CLOUD_ENV}` —— 流水线全绿，包却是坏的 | 从 `.cnb.yml` 的 `env:` 里删掉这两行：`imports` 已经把真值放进 shell 环境，`build-data.js` 按 `$VAR` 读得到。自检守着这条（`env:` 不许重声明密钥仓库那几样）。删完重跑 `main` 流水线 |
 | **点一下登录就「成功」了，但库里没有新行** | 两格没填 / 填错 → 客户端没打到服务端。**Issue #121 又踩了一次这个坑**，而当时界面把它报成了「已登录」（空壳登录），用户只能靠翻数据库才发现 | § 6.1 / § 6.2 把两格填对。**已经不会静默成功了**：没连上时界面明说「还没接上同步服务器」，`profile.logged` 也保持 false（见下条）。填好两格后管理页会自动补上那次登录，不必再去点一次 |
 | 没连上服务器时的正确长相 | 点登录 → 弹「还没接上同步服务器」，`数据与账号 → 同步进度` 的副标题写「服务器没接上 · 进度只在这台手机」。「我的」页顶部**仍显示未登录** —— 这是对的，不是坏了 | 去 § 6.2 由部署方填两格。本机那份进度一字不丢，接上之后第一次同步会带上去 |

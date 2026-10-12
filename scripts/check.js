@@ -31,6 +31,43 @@ function readJson(p) {
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
 
+function staticallyReachable(entries) {
+  const seen = new Set();
+  const stack = Array.isArray(entries) ? entries.slice() : [entries];
+  const rel = new Set();
+  const resolve = (from, req) => {
+    if (req.charAt(0) !== ".") return null;
+    const base = path.resolve(path.dirname(from), req);
+    const candidates = [base, base + ".js", base + ".json", path.join(base, "index.js")];
+    for (const c of candidates) {
+      if (fs.existsSync(c) && fs.statSync(c).isFile()) return c;
+    }
+    return null;
+  };
+  while (stack.length) {
+    const f = stack.pop();
+    if (seen.has(f)) continue;
+    seen.add(f);
+    if (!f.endsWith(".js")) continue;
+    const src = fs.readFileSync(f, "utf8");
+    const re = /require\(\s*["'](\.[^"']+)["']\s*\)/g;
+    let m;
+    while ((m = re.exec(src))) {
+      const t = resolve(f, m[1]);
+      if (!t) continue;
+      rel.add(t);
+      stack.push(t);
+    }
+  }
+  const out = new Set();
+  rel.forEach((f) => {
+    if (f.indexOf(path.join(ROOT, "data")) === 0) {
+      out.add(path.relative(ROOT, f).split(path.sep).join("/"));
+    }
+  });
+  return out;
+}
+
 const app = readJson(path.join(ROOT, "app.json"));
 const pages = app.pages.slice();
 (app.subPackages || []).forEach((sp) => {
@@ -223,6 +260,33 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "与手机上相反。" +
       "缺：" + (packedReqs.join(" / ") || "无") + "；" +
       "另 hasData() 里不许再有 fs.existsSync 判据");
+
+  {
+    const reachable = staticallyReachable(
+      [path.join(ROOT, "app.js")].concat(
+        pages.map((p) => path.join(ROOT, p + ".js")).filter((f) => fs.existsSync(f))
+      )
+    );
+    const mustShip = fs.readdirSync(path.join(dataDir, "books"))
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => "data/books/" + f)
+      .concat(["data/course.json", "data/shards.json", "data/pinyin-table.json"]);
+    const dropped = mustShip.filter((f) => !reachable.has(f));
+    const livePath = [
+      /const\s+rows\s*=\s*packedRows\(bookId\)\s*\|\|\s*readJson\(/,
+      /tableCache\s*=\s*PACKED_TABLE\(\)/
+    ].every((re) => re.test(corpusSrc + fs.readFileSync(path.join(ROOT, "utils", "pinyin.js"), "utf8")));
+    ok("主包每一份语料都能被静态 require 到（打包器按模块图摇树，够不到的会被剔出包）",
+      dropped.length === 0 && livePath,
+      "打包器（开发者工具编译与 miniprogram-ci 上传各一条）按模块图摇树，" +
+        "够不到的文件会被当「没人 require 的文件」剔出包，" +
+        "症状是集子表在、点进去每部都空，或首页课内目录整块空着。" +
+        "要在 corpus.js 的 PACKED_BOOK_ROWS 表里（或 pinyin.js 自己的表里）写成字面量 require；" +
+        "而且**真正读这份文件的那行**要走到那个字面量（只摆一张没人调的表不算，摇树照旧剔掉）。" +
+        (dropped.length ? "够不到的：" + dropped.join(" / ") + "。" : "") +
+        (livePath ? "" : "读文件的那行没走字面量表：ofBook 要 `packedRows(bookId) || readJson(...)`，" +
+          "pinyin.table 要 `PACKED_TABLE()`。"));
+  }
 
   const upUnused = pcfg.setting ? pcfg.setting.ignoreUploadUnusedFiles : undefined;
   ok("上传时不摇掉「没人 require 的」文件（语料是数据，摇不动）",
@@ -5862,22 +5926,28 @@ function gapped(items, max) {
       "而那条路其实是通的");
 
   ok("云调用两栏「本机填过就用本机的，没填过用包里注入那份」",
-    /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*server\.cloud\(\)/.test(remoteSrc) &&
+    /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*packedCloud\(\)/.test(remoteSrc) &&
       /require\("\.\/server"\)/.test(remoteSrc),
     "没有注入那一层时，用户必须自己去管理页填两栏才能用 —— 而那是部署方的事");
 
   {
     const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
-    ok("server.js 是构建产物：构建期从环境变量注入（不是把值写在源码里）",
+    ok("云调用两栏是构建产物：值由 build-data.js 从环境变量写进 server.js",
       !fs.existsSync(path.join(ROOT, "..", "miniprogram", "utils", "server.js")) ||
         /CLOUD_ENV/.test(buildSrc) && /CLOUD_SERVICE/.test(buildSrc) &&
         /utils", "server\.js"\)/.test(buildSrc),
-      "语料是构建产物，云调用两栏也该是 —— 值只存在密钥仓库 wechat-ci.yml 里，" +
-        "由 build-data.js 写进 utils/server.js（该文件已 gitignore）");
-    ok("server.js 不进代码库",
-      /miniprogram\/utils\/server\.js/.test(
-        fs.readFileSync(path.join(__dirname, "..", ".gitignore"), "utf8")),
-      "带真实值的 server.js 一旦入库，密钥就跟着代码走了");
+      "值只存在密钥仓库 wechat-ci.yml 里，由 build-data.js 在构建期覆写 server.js");
+    ok("两栏都没设时构建只读不改 —— 不把空壳删掉",
+      /SERVER_KEYS\.filter[\s\S]{0,400}?!fs\.existsSync\(SERVER_FILE\)/.test(buildSrc),
+      "没注入就整份覆写（或删掉）server.js：本地开发与 CI 之间来回切会把空壳弄丢，" +
+        "下一次构建就 module not found");
+    ok("server.js 是入库的空壳（gitignore 不许挡它）",
+      fs.existsSync(path.join(__dirname, "..", "miniprogram", "utils", "server.js"))
+        && !/miniprogram\/utils\/server\.js/.test(
+          fs.readFileSync(path.join(__dirname, "..", ".gitignore"), "utf8")),
+      "server.js 少了或被 gitignore 挡住 —— 它不在时 require(\"./server\") 抛 " +
+        "MODULE_NOT_FOUND，remote.js 整条链断掉，首页在 onLoad 前就报错（Issue #175）；" +
+        "值由 build-data.js 在构建期覆写，空壳本体的值本来就该是空");
   }
 
   {
@@ -5954,6 +6024,11 @@ function gapped(items, max) {
       "标题写着「唯一绕不开」，正文就得靠读者自己推翻它 —— 那是把人往" +
         "「先去备案」上推");
   }
+
+  ok("server.js 不在时 remote.js 照样加载得进（缺它不许把页面拖死）",
+    /function packedCloud\(\)\s*\{[\s\S]{0,200}?require\("\.\/server"\)[\s\S]{0,120}?catch/.test(remoteSrc),
+    "require(\"./server\") 没兜住 MODULE_NOT_FOUND：这个文件一缺，" +
+      "remote.js 整个模块加载失败，主包页面在 onLoad 前就抛 —— 首页连语料都渲染不出来（Issue #175）");
 
   ok("云调用失败时把「实际用的环境 / 服务」带出来（102002 这类话才好自查）",
     /function cloudFailError\(/.test(remoteSrc) &&
@@ -7642,16 +7717,17 @@ function gapped(items, max) {
     "还有注释：" + dirty.slice(0, 8).join("、") +
       " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
 
-  const generated = ["miniprogram/utils/server.js", "miniprogram/data/books/books.json"];
+  const generated = ["miniprogram/data/books/books.json"];
   const leaked = generated.filter((rel) => {
     if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);
     if (!fs.existsSync(p)) return false;
     return commentAt(fs.readFileSync(p, "utf8")) >= 0;
   });
-  ok("构建期生成的文件没有注释，也不入库（值从密钥仓库来）", leaked.length === 0,
+  ok("构建期生成的文件没有注释，也不入库", leaked.length === 0,
     "构建产物带了注释或入了库：" + leaked.join("、") +
-      " —— server.js 该由 build-data.js 生成且被 .gitignore 挡住");
+      " —— 语料是构建产物，由 build-data.js 生成且被 .gitignore 挡住；" +
+      "server.js 反过来：它是入库的空壳，只有值由构建期写");
 }
 
 Promise.all(pending).then(() => {

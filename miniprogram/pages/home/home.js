@@ -51,7 +51,10 @@ function guestCatalog() {
     catalog,
     catalogCount: catalog.length,
     catalogLead: catalog.length ? "" : "这一版没带上语料",
-    catalogMiss: catalog.length ? "" : "在项目目录跑 npm run build:data，再在开发者工具里重新编译",
+    catalogMiss: catalog.length
+      ? ""
+      : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
+        + "再在开发者工具里点「编译」（不是「刷新」）",
     stats: { today: 0, done: 0, left: 0 },
     todoCount: 0,
     loading: false

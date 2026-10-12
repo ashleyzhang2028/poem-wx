@@ -8,8 +8,9 @@ miniprogram/project.private.config.json
 # 语料编译产物由 scripts/build-data.js 生成，不入库（语料本身在 scripts/corpus/）
 miniprogram/data/
 
-# 云调用两栏由构建期从密钥仓库注入，值不进代码库
-miniprogram/utils/server.js
+# 云调用两栏由构建期从密钥仓库注入 server.js，值不进代码库
+# （server.js 本体是空壳、要入库：它不在时 remote.js 整个 require 不进，
+#   主包页面会在 onLoad 前就 MODULE_NOT_FOUND，首页连语料一起空）
 dist/
 
 # deploy/ 是部署描述；本机构建会摊一份上下文，别提交

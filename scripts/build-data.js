@@ -344,6 +344,18 @@ function writeServer() {
   const values = { env: String(process.env.CLOUD_ENV || "").trim(), service: String(process.env.CLOUD_SERVICE || "").trim() };
   const filled = SERVER_KEYS.filter(function (k) { return values[k]; });
 
+  if (!filled.length) {
+    if (!fs.existsSync(SERVER_FILE)) {
+      throw new Error(
+        "miniprogram/utils/server.js 不在，而 CLOUD_ENV / CLOUD_SERVICE 也没设 —— 两头都空。\n" +
+        "这个文件是**入库的空壳**（构建期只改它的值），少了它 remote.js 整条 require 链断掉，\n" +
+        "首页会在 onLoad 前就 MODULE_NOT_FOUND。把它从 git 里捡回来再跑构建。"
+      );
+    }
+    console.log("没注入云调用两栏（CLOUD_ENV / CLOUD_SERVICE 都没设）：这个包没配同步服务器");
+    return;
+  }
+
   const body = SERVER_KEYS.map(function (k) {
     return "  " + k + ": " + JSON.stringify(values[k]) + ",";
   }).join("\n").replace(/,$/, "");
@@ -360,12 +372,10 @@ function writeServer() {
 
   if (filled.length === SERVER_KEYS.length) {
     console.log("云调用两栏已注入 server.js：" + values.env + " / " + values.service);
-  } else if (filled.length) {
+  } else {
     console.log("云调用两栏只注入了 " + filled.join(" / ") + " —— " +
       SERVER_KEYS.filter(function (k) { return !values[k]; }).join(" / ") + " 是空的，" +
       "这个包仍算没配服务器");
-  } else {
-    console.log("没注入云调用两栏（CLOUD_ENV / CLOUD_SERVICE 都没设）：这个包没配同步服务器");
   }
 }
 
