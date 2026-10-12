@@ -1,13 +1,16 @@
-$:
-  "**":
+"**":
+  push:
     - name: 自检
-      image: node:20
-      script:
-        - node scripts/build-data.js
-        - node scripts/check.js
-        - node scripts/parity.js
-        - node scripts/e2e-wx-sync.js
-        - node scripts/e2e-mysql.js
+      docker:
+        image: node:20
+      stages:
+        - name: 自检
+          script:
+            - node scripts/build-data.js
+            - node scripts/check.js
+            - node scripts/parity.js
+            - node scripts/e2e-wx-sync.js
+            - node scripts/e2e-mysql.js
 
 main:
   push:
