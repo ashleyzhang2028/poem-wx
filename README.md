@@ -549,6 +549,11 @@ only supports authentication using a personal access token (classic)* —— 所
 - `scripts/`（含 `scripts/corpus/`）—— 构建期用；改语料只影响新体验版，不影响容器
 - `docs/`、`README.md`、`AGENTS.md`
 
+**「要更新镜像的」那张名单就是判据本身**：`main` 的发布流水线挂着 `ifModify`，
+只列了 `api/**`、`deploy/**`、`deploy-api-serve/**` 与 `.cnb.yml` ——
+推 `main` 时这四样一个都没动，那一步**连跑都不跑**（流水线页上是「未执行」，
+不是失败）。名单与 `ifModify` 对不上时，自检会红（`scripts/check.js`）。
+
 推 `main` 时流水线把镜像推到两个 tag：`<短 sha>`（每次提交都变）与 `latest`。
 **云托管不会自动跟着走** —— 改完上面那几样之后，去服务的「部署」里选新 tag 重新部署，
 线上才真的换过来。

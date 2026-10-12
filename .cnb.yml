@@ -15,6 +15,11 @@ main:
         image: node:20
       services:
         - docker
+      ifModify:
+        - "api/**"
+        - "deploy/**"
+        - "deploy-api-serve/**"
+        - ".cnb.yml"
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
