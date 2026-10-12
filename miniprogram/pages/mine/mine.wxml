@@ -156,14 +156,6 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onServer" wx:if="{{serverEntry}}">
-      <view class="row-icon">服</view>
-      <view class="row-main">
-        <text class="row-title">同步服务器</text>
-        <text class="row-sub">{{serverSub}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{logged}}">
       <view class="row-icon">权</view>
       <view class="row-main">
