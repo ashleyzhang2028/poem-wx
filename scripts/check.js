@@ -2397,33 +2397,30 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("有用户协议入口", aboutWxml.indexOf("onTerms") >= 0 && aboutJs.indexOf("onTerms") >= 0);
 
   const mineJs = fs.readFileSync(path.join(ROOT, "pages/mine/mine.js"), "utf8");
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxml"), "utf8");
   ok("有退出登录入口", mineJs.indexOf("onLogout") >= 0);
   ok("有清空本机数据入口（微信要求可注销）", mineJs.indexOf("onClear") >= 0);
 
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
-  ok("后端地址有配置入口", adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0);
+  ok("后端地址有配置入口（只在管理页，界面上不再有第二处）",
+    adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0
+      && mineJs.indexOf("onServer") < 0,
+    "「我的 → 同步服务器」那一行是运维参数，普通用户既看不懂也改不了 —— " +
+      "入口只留管理页；两格的值构建期从密钥仓库注入，用户不必填");
 
   ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
     /if \(sy\.lastSyncAt\) return sy\.lastText/.test(mineJs),
     "没同步过也敢说「上次同步」，那是假话");
-  {
-    const onServerFn = (mineJs.match(/onServer\(\)\s*\{[\s\S]*?\n  \},/) || [""])[0];
-    ok("没配同步服务器时，配置入口对谁都开（否则零用户时是个死循环）",
-      /auth\.configured\(\)\s*&&\s*!auth\.isAdmin\(\)/.test(onServerFn)
-        && /navigateTo\(\{\s*url:\s*["']\/packages\/admin\/index\/index\?focus=cloud["']/.test(onServerFn),
-      "onServer 里要求「不是 admin 就弹窗劝退」：可角色是服务端发的，" +
-        "服务器没配就登不上、登不上就永远不是 admin —— 这个包一个用户都没有时，" +
-        "谁也没有填那两栏的权限，入口点了只剩一句「找部署方」。" +
-        "判据要反过来：只有「已经配好、且你不是管理员」才劝退；" +
-        "没配时管理员无从谈起，放行去填");
-  }
+  ok("界面上不出现「云调用」这类实现词",
+    !/云调用/.test(mineJs) && !/云调用/.test(mineWxml),
+    "「云调用」「待接通」是平台内部名词，用户看不懂，也没有他能做的事 —— " +
+      "看懂的那批人走 docs/wx-cloud-setup.md");
 
   ok("没同步过时要如实说，且说得出一句「能不能换手机」",
     /还没同步过/.test(mineJs)
       && /登录后进度跨设备跟随/.test(mineJs)
-      && /同步服务器没接上/.test(mineJs)
       && /同步通道未开 · 进度只在这台手机/.test(mineJs));
 
   {
