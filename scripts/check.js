@@ -2403,7 +2403,11 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
-  ok("后端地址有配置入口", adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0);
+  ok("后端地址有配置入口（只在管理页，界面上不再有第二处）",
+    adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0
+      && mineJs.indexOf("onServer") < 0,
+    "「我的 → 同步服务器」那一行是运维参数，普通用户既看不懂也改不了 —— " +
+      "入口只留管理页；两格的值构建期从密钥仓库注入，用户不必填");
 
   ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
@@ -2416,6 +2420,11 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
     "「我的」页又冒出第二处配置入口 —— 两格的值构建期就注进包里了，" +
       "露出来的只有「已配 · 走云调用 · 待接通」这种用户既看不懂也改不动的说法。" +
       "要临时换后端走管理页（docs/wx-cloud-setup.md § 6.2）");
+
+  ok("界面上不出现「云调用」这类实现词",
+    !/云调用/.test(mineJs) && !/云调用/.test(mineWxml),
+    "「云调用」「待接通」是平台内部名词，用户看不懂，也没有他能做的事 —— " +
+      "看懂的那批人走 docs/wx-cloud-setup.md");
 
   ok("没同步过时要如实说，且说得出一句「能不能换手机」",
     /还没同步过/.test(mineJs)

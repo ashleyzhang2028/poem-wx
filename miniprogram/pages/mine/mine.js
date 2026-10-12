@@ -120,10 +120,10 @@ Page({
           this.tellOffline();
         } else if (code === "E_CLOUD_OFF" || code === "E_CLOUD_INIT") {
           wx.showModal({
-            title: "云开发没接通",
+            title: "同步服务器没接上",
             content:
-              (err.message || "") +
-              "\n\n登录与课外正文都走在云开发上。两格填对、且小程序开通云开发之后，这里才通。",
+              "登录与课外正文都要连服务器，这个包还没接上。\n\n"
+              + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
             showCancel: false,
             confirmText: "知道了"
           });
