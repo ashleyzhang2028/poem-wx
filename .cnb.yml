@@ -1,23 +1,142 @@
 $:
   "**":
-    - name: 注入验证
+    - name: 自检
       image: node:20
-      imports:
-        - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       script:
         - node scripts/build-data.js
         - node scripts/check.js
         - node scripts/parity.js
         - node scripts/e2e-wx-sync.js
         - node scripts/e2e-mysql.js
-  api_trigger_inject:
-    - name: 注入验证
-      image: node:20
+
+main:
+  push:
+    - name: 发布（自检 → 镜像 → GHCR → 体验版）
+      docker:
+        image: node:20
+      services:
+        - docker
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
-      script:
-        - node scripts/build-data.js
-        - node scripts/check.js
-        - node scripts/parity.js
-        - node scripts/e2e-wx-sync.js
-        - node scripts/e2e-mysql.js
+      env:
+        IMAGE: ghcr.io/ashleyzhang2028/poem-wx/wx-api
+        CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
+        TAG: ${CNB_COMMIT_SHORT}
+      stages:
+        - name: stage context
+          script: |
+            set -eu
+            mkdir -p /tmp/ctx
+            cp -R api /tmp/ctx/api
+            cp deploy/Dockerfile /tmp/ctx/Dockerfile
+            cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
+            cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
+            cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
+            mkdir -p /tmp/ctx/shard-src
+            if [ "${COPY_SHREDS:-1}" != "0" ]; then
+              echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
+              node scripts/build-data.js >/dev/null
+              for f in miniprogram/data/texts/*.json; do
+                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .json).json.gz"
+              done
+              du -sh /tmp/ctx/shard-src
+              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].json.gz 2>/dev/null | wc -l)
+              if [ "$n" -lt 2 ]; then
+                echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
+                exit 1
+              fi
+              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.json.gz | wc -l) 个文件"
+              ls /tmp/ctx/shard-src/idx.json.gz >/dev/null 2>&1 || \
+                echo "· 没有 idx.json.gz（搜索倒排索引）—— 只有搜索会用到它"
+            else
+              echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
+            fi
+            cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
+            echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
+            du -sh /tmp/ctx
+        - name: build & push
+          script: |
+            set -eu
+            if [ ! -f /tmp/ctx/.dockerignore ]; then
+              echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
+              exit 1
+            fi
+            for need in "!shard-api.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
+              grep -qF "$need" /tmp/ctx/.dockerignore || {
+                echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
+                echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
+                echo "  缺了容器起不来（MODULE_NOT_FOUND），而构建与部署都是绿的。" >&2
+                exit 1
+              }
+            done
+            if [ ! -f /tmp/ctx/shard-api.js ]; then
+              echo "✗ 上下文里没有 shard-api.js —— serve-api.js require 它，容器起不来" >&2
+              exit 1
+            fi
+            for shell in serve-api.js store-mysql.js shard-api.js; do
+              grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
+                echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
+                echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2
+                echo "  容器起来才 MODULE_NOT_FOUND（Back-off restarting failed container）。" >&2
+                exit 1
+              }
+            done
+            if [ ! -f /tmp/ctx/api/handler.js ]; then
+              echo "✗ 上下文里没有 api/handler.js —— 入口就是它，容器起不来" >&2
+              exit 1
+            fi
+            REV="$(git rev-parse --short HEAD)"
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+            docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
+            docker build \
+              --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
+              --build-arg "API_REV=${REV}" \
+              --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
+              --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem-wechat-mini-program.git" \
+              -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" /tmp/ctx
+            docker push "${IMAGE}:${TAG}"
+            docker push "${IMAGE}:latest"
+            echo "✓ ${IMAGE}:${TAG}（后端 api ${REV}）"
+        - name: 推 GHCR（云托管那份镜像地址）
+          script: |
+            set -eu
+            for v in GHCR_USER GHCR_TOKEN; do
+              eval "val=\${$v:-}"
+              if [ -z "$val" ]; then
+                echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+                echo "  GHCR_USER=GitHub 账号名；GHCR_TOKEN 是带 write:packages 的 classic PAT。" >&2
+                exit 1
+              fi
+            done
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+            docker tag "${IMAGE}:${TAG}" "${IMAGE}:${REV}"
+            docker push "${IMAGE}:${REV}"
+            echo "✓ ${IMAGE}:${REV}（公开包 —— 云托管从地址拉镜像不用配凭据）"
+        - name: 上传体验版
+          script: |
+            for v in WX_APPID WX_PRIVATE_KEY_B64; do
+              eval "val=\$$v"
+              if [ -z "$val" ]; then
+                echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v" >&2
+                echo "  已注入的变量名（只列名字）：" >&2
+                env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
+                exit 1
+              fi
+            done
+            node scripts/build-data.js
+            npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
+            node scripts/upload.js "${TAG}" "main ${TAG}" || {
+              code=$?
+              echo "" >&2
+              echo "✗✗✗ 上传体验版没成功（退出码 ${code}） ✗✗✗" >&2
+              echo "  这步是 allow_failure：流水线不会红，别以为绿了就传上去了。" >&2
+              exit "${code}"
+            }
+            echo "✓✓✓ 体验版已上传 ${TAG} ✓✓✓"
+          allow_failure: true
+        - name: 同步到 GitHub
+          imports:
+            - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
+          script:
+            - node scripts/sync-github.js
