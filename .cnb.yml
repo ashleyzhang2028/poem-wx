@@ -1,16 +1,12 @@
 $:
   "**":
-    - name: 自检
-      image: node:20
-      script:
-        - echo "自检分支兜底"
-
-t/api-trigger:
-  api_trigger_inject:
     - name: 注入验证
       image: node:20
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       script:
-        - echo "CLOUD_ENV=${CLOUD_ENV:-（空）}"
-        - echo "CLOUD_SERVICE=${CLOUD_SERVICE:-（空）}"
+        - node scripts/build-data.js
+        - node scripts/check.js
+        - node scripts/parity.js
+        - node scripts/e2e-wx-sync.js
+        - node scripts/e2e-mysql.js
