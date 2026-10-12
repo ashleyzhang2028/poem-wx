@@ -131,7 +131,7 @@ git checkout main && git push                → 流水线出镜像
 云托管按镜像建服务、拉到实例起来
 配 SESSION_SECRET / MYSQL_* / WX_APPID / WX_SECRET    docs/wx-cloud-setup.md § 三
 先 `CREATE DATABASE \`poem\`` + `USE \`poem\``，再整段跑 deploy/sql/mysql-schema.sql   § 四
-小程序 → 我的 → 用户与权限 → 云调用两栏（env + 服务名）  § 6.2
+不填 —— 两栏构建期已注入包里；要临时换后端才去管理页填（env + 服务名）  § 6.2
 ```
 
 整段照 [`wx-cloud-setup.md`](wx-cloud-setup.md) 走。
@@ -157,23 +157,27 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 
 两个标识符容易填串，串了的回错是 `env not exists` / `service not found`。
 
-**本机那两栏还在**（「我的 → 同步服务器」），优先级是**本机 → 包内**：
+调 `callContainer` 之前必须先 `wx.cloud.init({ env })`，否则真机一律回
+`errCode: -1 | errMsg: Cloud API isn't enabled, please call ...`，登录与课外正文一起哑掉。
+这一步在 `utils/remote.js` 的 `cloudReady()` 里，同一个 env 只 init 一次、env 变了重新 init。
+
+管理页那两栏还在（「我的 → 用户与权限」），优先级是**本机 → 包内**：
 调试、换部署、应急时用它；清空就回到包里注入那份，不存在
-「换台手机要重填一次」这件事。
+「换台手机要重填一次」这件事 —— 正常用户碰不到那两栏。
 
 ## 六、认症状
 
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
 | 首页整块「数据没能载入」，还显示着一个版本号 | ① 之前 —— 这一版**根本没打进语料**，本地跑构建救不了它 | 这个包要重新上传。若 `ignoreUploadUnusedFiles` 没显式写 `false`，上传时语料会被摇掉 —— 先补配置再传（`allow_failure` 那一步红过也算） |
-| 首页整块「数据没能载入」 | ① | `npm run build:data`，再在开发者工具里重新编译 |
+| 首页整块「数据没能载入」，版本写「本地打开 · 未上传」 | ① | `npm run build:data`，再在开发者工具里重新编译（空态自己就会说这一句） |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
-| 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。**未登录也有入口**：「我的 → 数据与账号 → 同步服务器」 |
-| 管理页拉不到「云调用」两栏 | ③/④ | 已配好时只让管理员改；这台手机还没配、谁也不是管理员时，「我的 → 同步服务器」直接放行去填 |
+| 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。由部署方在管理页（「我的 → 用户与权限」）填，或按 § 五 重跑流水线 |
+| 管理页拉不到「云调用」两栏 | ③/④ | 只有 admin/owner 能改；先按 `wx-cloud-setup.md` § 八 发档位 |
 | 点课外诗：「这个版本里没有课外正文」 | ③ | 这个镜像构建时 `COPY_SHREDS=0`，取新镜像 |
 | 点课外诗：「这一篇取不到正文」 | ③ | 清单进了包、但容器那一侧没接上（或这一条真不在任何分片里） |
-| 开发者工具正常、真机不行 | ④ | 云调用两栏在这台手机上重填；`baseUrl` 清空 |
+| 开发者工具正常、真机不行 | ④ | 这台手机在管理页填过错的云调用两栏；清空即回到包里那份，`baseUrl` 也留空 |
 | 登录「成功」了但库里没有新行 | ③/④ | 见 `wx-cloud-setup.md` 排错表同一条 |
 
 ## 七、这张口径怎么守
@@ -183,7 +187,7 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 - `data/shards.json` 不在 `packOptions.ignore` 名下（读 `corpus.js` 的 `MANIFEST` 常量比）
 - `books.json` / `course.json` / `shards.json` 都是字面量 `require`，`hasData()` 里没有 `fs` 判据
 - `setting.ignoreUploadUnusedFiles` 显式是 `false`（语料不在模块图上，不显式关会被摇掉）
-- 「没配同步服务器时」`onServer` 不因 `isAdmin()` 把入口锁死（零用户时那是个死循环）
+- 「我的」页没有连接配置入口，接服务器只有管理页一处；用户看得到的地方不出现「云调用」
 - 包内正文就是课内那 251 条，且包内与分片不重叠
 - 课内正文单列 400 KB 预算，超了报红
 - 首页有「语料未生成」的空态

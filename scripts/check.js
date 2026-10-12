@@ -2413,6 +2413,14 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
     /if \(sy\.lastSyncAt\) return sy\.lastText/.test(mineJs),
     "没同步过也敢说「上次同步」，那是假话");
+
+  ok("「我的」页不留连接配置的入口，接服务器只有管理页一处",
+    mineJs.indexOf("onServer") < 0 && mineJs.indexOf("serverSub") < 0
+      && mineWxml.indexOf("同步服务器") < 0,
+    "「我的」页又冒出第二处配置入口 —— 两格的值构建期就注进包里了，" +
+      "露出来的只有「已配 · 走云调用 · 待接通」这种用户既看不懂也改不动的说法。" +
+      "要临时换后端走管理页（docs/wx-cloud-setup.md § 6.2）");
+
   ok("界面上不出现「云调用」这类实现词",
     !/云调用/.test(mineJs) && !/云调用/.test(mineWxml),
     "「云调用」「待接通」是平台内部名词，用户看不懂，也没有他能做的事 —— " +
@@ -2421,6 +2429,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   ok("没同步过时要如实说，且说得出一句「能不能换手机」",
     /还没同步过/.test(mineJs)
       && /登录后进度跨设备跟随/.test(mineJs)
+      && /服务器没接上/.test(mineJs)
       && /同步通道未开 · 进度只在这台手机/.test(mineJs));
 
   {
@@ -2975,7 +2984,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
     removeStorageSync: (k) => { delete mem[k]; },
     request: () => { mem.__requested = (mem.__requested || 0) + 1; },
-    cloud: { callContainer: (o) => o.fail({ errMsg: "offline" }) }
+    cloud: { init: (o) => o.success && o.success(), callContainer: (o) => o.fail({ errMsg: "offline" }) }
   });
 
   {
@@ -2995,7 +3004,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     store2.saveSession({ logged: false, tier: "", tierFromServer: false });
     auth2.configure({ baseUrl: "", cloud: { env: "probe-env", service: "probe-svc" } });
 
-    global.wx.cloud = { callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" }) };
+    global.wx.cloud = {
+      init: (o) => o.success && o.success(),
+      callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" })
+    };
 
     const loginPromise = auth2.login();
     const snapAuth = store2.read(store2.KEYS.auth, {}) || {};
@@ -3031,13 +3043,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           const store2 = require(path.join(ROOT, "utils", "store.js"));
 
           global.wx = fakeWx(mem);
-          global.wx.cloud = { callContainer: (o) => o.success({
-            statusCode: 200,
-            data: {
-              accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
-              tier: "free", role: "user", userId: "wx_probe"
-            }
-          }) };
+          global.wx.cloud = {
+            init: (o) => o.success && o.success(),
+            callContainer: (o) => o.success({
+              statusCode: 200,
+              data: {
+                accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
+                tier: "free", role: "user", userId: "wx_probe"
+              }
+            })
+          };
           global.wx.login = (o) => o.success({ code: "C-ONLINE" });
           global.wx.request = (o) => {
             mem.__requested = (mem.__requested || 0) + 1;
@@ -4792,6 +4807,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const generalJs = read("packages/settings/general/general.js");
   const storeJs = read("utils/store.js");
 
+  ok("用户看得到的地方不出现「云调用」这个词（那是部署方的名词）",
+    ["pages/mine/mine.wxml", "pages/mine/mine.js", "packages/settings/about/about.wxml"]
+      .every((f) => read(f).indexOf("云调用") < 0),
+    "「我的」页写「已配 · 走云调用 · 待接通」：`已配`是部署成没成、" +
+      "`云调用`是走哪条通道、`待接通`是运维还没接好 —— 没有一件是用户能动的。" +
+      "这个词只在管理页与 docs/wx-cloud-setup.md 里出现");
+
   ok("「我的」页不再有第二个昵称输入框（原 .nick-input 那行已撤）",
     mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0,
     "下面那一行还在，同一个值仍摆两处");
@@ -5781,6 +5803,25 @@ function gapped(items, max) {
     "`send()` 里没有按 `useCloud()` 分派，或压根没调 `wx.cloud.callContainer` —— " +
       "那样就只剩 `wx.request` 一条路，而它必须备案");
 
+  ok("调 callContainer 之前先 wx.cloud.init（缺这一步真机回 errCode -1 / Cloud API isn't enabled）",
+    /function cloudReady\s*\(/.test(remoteSrc) &&
+      /wx\.cloud\.init\(/.test(remoteSrc) &&
+      /cloudReady\(conf\.env\)/.test(remoteSrc),
+    "`sendCloud()` 直接调 `wx.cloud.callContainer` 而没先 `wx.cloud.init` —— " +
+      "真机上就是 `errCode: -1 | errMsg: Cloud API isn't enabled, please call ...`，" +
+      "登录与课外正文一起哑掉。自检早先的桩只给了 `callContainer`，所以一直没抓住");
+
+  ok("同一个 env 只 init 一次，env 变了重新 init（本机改过两格之后不能还用旧环境）",
+    /if\s*\(!env\s*\|\|\s*cloudReadyEnv\s*===\s*env\)\s*return null/.test(remoteSrc) &&
+      /cloudReadyEnv\s*=\s*env/.test(remoteSrc),
+    "`cloudReady` 没有「同一个 env 只 init 一次、env 变了重新 init」这层 —— " +
+      "要么每次请求都 init，要么改了配置还用旧环境");
+
+  ok("云开发没开通 / init 失败时给的是带码的错，不是静默", 
+    /E_CLOUD_OFF/.test(remoteSrc) && /E_CLOUD_INIT/.test(remoteSrc),
+    "`ensureCloud` 的失败没有 `E_CLOUD_OFF` / `E_CLOUD_INIT` 这两个码 —— " +
+      "界面只能弹一行被截断的 toast，用户看不出是 env 填错还是没开通云开发");
+
   ok("云调用带齐 X-WX-SERVICE / config.env / authorization（少一个都是平台错或静默 401）",
     /"X-WX-SERVICE":\s*conf\.service/.test(remoteSrc) &&
       /config:\s*\{\s*env:\s*conf\.env/.test(remoteSrc) &&
@@ -5824,6 +5865,7 @@ function gapped(items, max) {
 
       request: () => { sawRequest = true; throw new Error("这条测试里不该走 wx.request"); },
       cloud: {
+        init: (opt) => { inits.push(opt); },
         callContainer: (opt) => {
           calls.push(opt);
 
@@ -5832,6 +5874,7 @@ function gapped(items, max) {
       }
     };
     const calls = [];
+    const inits = [];
     Object.keys(require.cache).forEach((k) => {
       if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
     });
@@ -7172,11 +7215,20 @@ function gapped(items, max) {
   }
 
   const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页的空态说得像用户的话（不提 build:data / clone-poem 这类构建术语）",
-    /noData/.test(homeWxmlNoData) &&
-      /数据没能载入/.test(homeWxmlNoData) &&
-      !/build:data|clone-poem|npm run/.test(homeWxmlNoData),
-    "空态里还在教用户去开发者工具跑构建 —— 语料随包走之后，那不是用户该做的事");
+  ok("首页的空态先给人一句人话",
+    /noData/.test(homeWxmlNoData) && /数据没能载入/.test(homeWxmlNoData),
+    "空态里没有「数据没能载入」那句 —— 首页会渲染成白屏");
+  const localBlock = homeWxmlNoData.slice(
+    homeWxmlNoData.indexOf("数据没能载入"),
+    homeWxmlNoData.indexOf("wx:elif")
+  );
+  ok("空态只在「本地打开」那一支教人跑构建（带版本号的包不许提构建）",
+    /buildRev\s*\?/.test(localBlock) && /build:data/.test(localBlock),
+    "本地打开时不说该跑哪条命令，用户只能看到「数据没能载入」却不知道下一步 —— " +
+      "语料随包走的是**体验版**，本地那一份仍要自己编");
+  ok("空态不许教人 clone-poem（那套跨仓库取语料已经撤掉）",
+    !/clone-poem/.test(homeWxmlNoData),
+    "空态里还留着 clone-poem.sh —— 那个脚本与那条跨仓库依赖一起删了");
   const homeJsNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
   ok("首页在 refresh 里读 hasData 决定走空态",
     /corpus\.hasData\(\)/.test(homeJsNoData));
@@ -7403,12 +7455,19 @@ function gapped(items, max) {
   const skipDir = (p) =>
     p === ".git" || p === "node_modules" || p === "corpus" || p === "parity-web";
 
+  const tracked = new Set(
+    execFileSync("git", ["ls-files"], { cwd: repoRoot }).toString().split("\n").filter(Boolean)
+  );
+
   (function walk(dir) {
     fs.readdirSync(dir).forEach((f) => {
       if (skipDir(f)) return;
       const full = path.join(dir, f);
       if (fs.statSync(full).isDirectory()) return walk(full);
-      if (f.endsWith(".js")) scanned.push(path.relative(repoRoot, full));
+      if (!f.endsWith(".js")) return;
+      const rel = path.relative(repoRoot, full);
+      if (!tracked.has(rel)) return;
+      scanned.push(rel);
     });
   })(repoRoot);
 
@@ -7471,12 +7530,14 @@ function gapped(items, max) {
 
   const generated = ["miniprogram/utils/server.js", "miniprogram/data/books/books.json"];
   const leaked = generated.filter((rel) => {
+    if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);
     if (!fs.existsSync(p)) return false;
     return commentAt(fs.readFileSync(p, "utf8")) >= 0;
   });
-  ok("构建期生成的文件也没有注释（server.js）", leaked.length === 0,
-    "构建产物里带了注释：" + leaked.join("、") + " —— 生成它的那处源码字符串要一起改");
+  ok("构建期生成的文件没有注释，也不入库（值从密钥仓库来）", leaked.length === 0,
+    "构建产物带了注释或入了库：" + leaked.join("、") +
+      " —— server.js 该由 build-data.js 生成且被 .gitignore 挡住");
 }
 
 Promise.all(pending).then(() => {

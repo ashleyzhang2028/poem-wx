@@ -93,6 +93,7 @@ Page({
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
       adminVisible: E.can("admin"),
+
       caps: E.matrix({ signedIn: !!profile.logged }),
       lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
     });
@@ -117,6 +118,15 @@ Page({
         const code = (err && err.code) || "";
         if (code === "E_NOT_CONFIGURED") {
           this.tellOffline();
+        } else if (code === "E_CLOUD_OFF" || code === "E_CLOUD_INIT") {
+          wx.showModal({
+            title: "同步服务器没接上",
+            content:
+              "登录与课外正文都要连服务器，这个包还没接上。\n\n"
+              + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
+            showCancel: false,
+            confirmText: "知道了"
+          });
         } else if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
           wx.showModal({
             title: "登录没打通",
@@ -131,12 +141,11 @@ Page({
   },
 
   tellOffline() {
-    const why = auth.offline();
     wx.showModal({
       title: "还没接上同步服务器",
-      content: why === "cloud"
-        ? "这台手机连不上同步服务器 —— 换台手机就没了。"
-        : "登录要先接上同步服务器，找部署方。",
+      content:
+        "登录连不上服务器，账号与进度只在这台手机上，换台手机就没了。\n\n"
+        + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
       showCancel: false
     });
   },
@@ -158,8 +167,7 @@ Page({
     if (sy.lastSyncAt) return sy.lastText;
     if (!sy.ready) {
       if (!auth.logged()) return "先登录 · 登录后进度跨设备跟随";
-      const why = auth.offline();
-      if (why === "cloud") return "同步服务器没接上";
+      if (auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
       return "同步通道未开 · 进度只在这台手机";
     }
     return "还没同步过 · 点一下同步";
