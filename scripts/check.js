@@ -6425,8 +6425,8 @@ function gapped(items, max) {
       !/-t "\$\{IMAGE\}:\$\{CNB_BRANCH\}"/.test(deployJob),
     "用 CNB_BRANCH 的话 push 触发下它等于 `main`，那不是版本号，回不去");
   ok("只有 main 出镜像（其余分支只自检）",
-    /^\$:/m.test(cnb) && !/^"v\*":/m.test(cnb) &&
-      /\$:[\s\S]*?"\*\*":[\s\S]*?- name: 自检/.test(cnb),
+    /^"\*\*":/m.test(cnb) && !/^"v\*":/m.test(cnb) &&
+      /^"\*\*":[\s\S]*?push:[\s\S]*?- name: 自检/.test(cnb),
     "分支推送也出镜像只会往制品库堆垃圾，而没人会去用那些 tag");
 
   {
@@ -6689,6 +6689,22 @@ function gapped(items, max) {
     ok(".cnb.yml 里只有一个 `main:`（重复的话后者会盖掉前者，发布链静默消失）",
       mainKeys.length === 1,
       "找到 " + mainKeys.length + " 处顶格 `main:`");
+    const branchKeys = lines
+      .filter((l) => /^[A-Za-z$"][^\s:]*:\s*$/.test(l))
+      .map((l) => l.split(":")[0]);
+    const badNesting = [];
+    let cur = "";
+    for (const l of lines) {
+      if (/^[A-Za-z$"][^\s:]*:\s*$/.test(l)) cur = l.split(":")[0];
+      else if (/^\s{2}[^\s].*:\s*$/.test(l) && /^\$/.test(cur)) {
+        badNesting.push(cur + " → " + l.trim());
+      }
+    }
+    ok(".cnb.yml 的 `$` 兜底分支下只写事件（分支 glob 不嵌在 `$` 里，那样平台解析不到）",
+      badNesting.length === 0,
+      "`$` 下出现了非事件的键：" + JSON.stringify(badNesting) +
+        " —— 分支 glob 要顶格写（`\"**\":`），`$` 下只能写 `push` 这类事件；" +
+        "嵌在 `$` 下的 glob 不报错也不生效，流水线静默不跑");
   }
 
   {
