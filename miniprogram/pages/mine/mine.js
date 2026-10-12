@@ -133,6 +133,12 @@ Page({
             content: (err.message || "") + "\n\n这是服务端/部署那一侧的事，先看「关于与反馈」里的联系方式。",
             showCancel: false
           });
+        } else if (err && err.cloudFail) {
+          wx.showModal({
+            title: "登录没有连上服务器",
+            content: (err.message || "") + "\n\n这不是这台手机能改的，把这整段发给部署方。",
+            showCancel: false
+          });
         } else {
           wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
         }

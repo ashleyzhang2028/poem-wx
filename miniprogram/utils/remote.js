@@ -120,19 +120,6 @@ function sendCloud(path, data, method) {
   return cloudCall(conf, path, data, method);
 }
 
-function cloudFailError(err, conf) {
-  const say = (err && err.errMsg) || "云调用不通";
-  const err2 = new Error(
-    say + "\n  调用目标：环境 " + (conf.env || "(空)") + " / 服务 " + (conf.service || "(空)") +
-    " —— 环境 ID 对不上这个小程序的云开发环境时，平台就回 102002 这类话"
-  );
-  err2.errMsg = say;
-  err2.env = conf.env || "";
-  err2.service = conf.service || "";
-  err2.cloudFail = true;
-  return err2;
-}
-
 function cloudCall(conf, path, data, method) {
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
@@ -151,6 +138,27 @@ function cloudCall(conf, path, data, method) {
       fail: (err) => reject(cloudFailError(err, conf))
     });
   });
+}
+
+function cloudFailError(err, conf) {
+  const say = (err && err.errMsg) || "云调用不通";
+  const err2 = new Error(
+    say + "\n  调用目标：环境 " + (conf.env || "(空)") + " / 服务 " + (conf.service || "(空)") +
+    " —— " + cloudFailHint(say)
+  );
+  err2.errMsg = say;
+  err2.env = conf.env || "";
+  err2.service = conf.service || "";
+  err2.cloudFail = true;
+  return err2;
+}
+
+function cloudFailHint(say) {
+  if (/invalid host/i.test(say)) {
+    return "平台按上面那个服务名找不到可路由的服务 —— 你这个小程序的云托管里没有这个名字" +
+      "（没建，或建在别的环境里）。服务名逐字取自云托管「服务管理」，不是云开发环境 ID。";
+  }
+  return "环境 ID 对不上这个小程序的云开发环境时，平台就回 102002 这类话";
 }
 
 function httpError(statusCode, data) {

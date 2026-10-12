@@ -6042,6 +6042,21 @@ function gapped(items, max) {
     /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
     "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +
       "与「调不通」之间来回");
+
+  {
+    const mineSrc = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    ok("云调用回 invalid host 时给的是「服务名找不到后端」这句，不是拿 102002 那套话去套",
+      /function cloudFailHint\s*\(/.test(remoteSrc) &&
+        /invalid host/i.test(remoteSrc) &&
+        /service|服务/.test(remoteSrc.match(/invalid host[\s\S]{0,200}/i)[0]),
+      "invalid host 与 102002 是两个病：前者指 X-WX-SERVICE 找不到可路由的后端" +
+        "（云托管里没这个服务），后者指 config.env 不是这个小程序的云开发环境。" +
+        "一句通用话套两种错，人会往错的方向查（Issue #175）");
+    ok("云调用失败的整段话用弹窗出，不被 toast 截掉",
+      /err\.cloudFail[\s\S]{0,200}?showModal/.test(mineSrc),
+      "cloudFail 的错带环境 / 服务 / 怎么办一长串，走 else 的 toast 会被截成一行 —— " +
+        "用户拿不到能自查的那两格（Issue #175）");
+  }
 }
 
 {
