@@ -34,8 +34,6 @@ Page({
 
     themeStyle: "",
 
-    noData: false,
-    buildRev: "",
     logged: false,
     guest: false,
     gradeName: "",
@@ -69,25 +67,6 @@ Page({
   },
 
   refresh() {
-
-    if (!corpus.hasData()) {
-      this.setData({
-        noData: true,
-        buildRev: corpus.stamp().rev || "",
-        guest: false,
-        logged: false,
-        plan: [],
-        catalog: [],
-        catalogCount: 0,
-        total: 0,
-        doneCount: 0,
-        percent: 0,
-        stats: { today: 0, done: 0, left: 0 },
-        todoCount: 0,
-        loading: false
-      });
-      return;
-    }
 
     const logged = gate.logged();
 
