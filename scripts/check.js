@@ -2978,7 +2978,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
     removeStorageSync: (k) => { delete mem[k]; },
     request: () => { mem.__requested = (mem.__requested || 0) + 1; },
-    cloud: { callContainer: (o) => o.fail({ errMsg: "offline" }) }
+    cloud: { init: (o) => o.success && o.success(), callContainer: (o) => o.fail({ errMsg: "offline" }) }
   });
 
   {
@@ -2998,7 +2998,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     store2.saveSession({ logged: false, tier: "", tierFromServer: false });
     auth2.configure({ baseUrl: "", cloud: { env: "probe-env", service: "probe-svc" } });
 
-    global.wx.cloud = { callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" }) };
+    global.wx.cloud = {
+      init: (o) => o.success && o.success(),
+      callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" })
+    };
 
     const loginPromise = auth2.login();
     const snapAuth = store2.read(store2.KEYS.auth, {}) || {};
@@ -3034,13 +3037,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           const store2 = require(path.join(ROOT, "utils", "store.js"));
 
           global.wx = fakeWx(mem);
-          global.wx.cloud = { callContainer: (o) => o.success({
-            statusCode: 200,
-            data: {
-              accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
-              tier: "free", role: "user", userId: "wx_probe"
-            }
-          }) };
+          global.wx.cloud = {
+            init: (o) => o.success && o.success(),
+            callContainer: (o) => o.success({
+              statusCode: 200,
+              data: {
+                accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
+                tier: "free", role: "user", userId: "wx_probe"
+              }
+            })
+          };
           global.wx.login = (o) => o.success({ code: "C-ONLINE" });
           global.wx.request = (o) => {
             mem.__requested = (mem.__requested || 0) + 1;
@@ -5784,6 +5790,25 @@ function gapped(items, max) {
     "`send()` 里没有按 `useCloud()` 分派，或压根没调 `wx.cloud.callContainer` —— " +
       "那样就只剩 `wx.request` 一条路，而它必须备案");
 
+  ok("调 callContainer 之前先 wx.cloud.init（缺这一步真机回 errCode -1 / Cloud API isn't enabled）",
+    /function cloudReady\s*\(/.test(remoteSrc) &&
+      /wx\.cloud\.init\(/.test(remoteSrc) &&
+      /cloudReady\(conf\.env\)/.test(remoteSrc),
+    "`sendCloud()` 直接调 `wx.cloud.callContainer` 而没先 `wx.cloud.init` —— " +
+      "真机上就是 `errCode: -1 | errMsg: Cloud API isn't enabled, please call ...`，" +
+      "登录与课外正文一起哑掉。自检早先的桩只给了 `callContainer`，所以一直没抓住");
+
+  ok("同一个 env 只 init 一次，env 变了重新 init（本机改过两格之后不能还用旧环境）",
+    /if\s*\(!env\s*\|\|\s*cloudReadyEnv\s*===\s*env\)\s*return null/.test(remoteSrc) &&
+      /cloudReadyEnv\s*=\s*env/.test(remoteSrc),
+    "`cloudReady` 没有「同一个 env 只 init 一次、env 变了重新 init」这层 —— " +
+      "要么每次请求都 init，要么改了配置还用旧环境");
+
+  ok("云开发没开通 / init 失败时给的是带码的错，不是静默", 
+    /E_CLOUD_OFF/.test(remoteSrc) && /E_CLOUD_INIT/.test(remoteSrc),
+    "`ensureCloud` 的失败没有 `E_CLOUD_OFF` / `E_CLOUD_INIT` 这两个码 —— " +
+      "界面只能弹一行被截断的 toast，用户看不出是 env 填错还是没开通云开发");
+
   ok("云调用带齐 X-WX-SERVICE / config.env / authorization（少一个都是平台错或静默 401）",
     /"X-WX-SERVICE":\s*conf\.service/.test(remoteSrc) &&
       /config:\s*\{\s*env:\s*conf\.env/.test(remoteSrc) &&
@@ -5827,6 +5852,7 @@ function gapped(items, max) {
 
       request: () => { sawRequest = true; throw new Error("这条测试里不该走 wx.request"); },
       cloud: {
+        init: (opt) => { inits.push(opt); },
         callContainer: (opt) => {
           calls.push(opt);
 
@@ -5835,6 +5861,7 @@ function gapped(items, max) {
       }
     };
     const calls = [];
+    const inits = [];
     Object.keys(require.cache).forEach((k) => {
       if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
     });
@@ -7175,11 +7202,20 @@ function gapped(items, max) {
   }
 
   const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页的空态说得像用户的话（不提 build:data / clone-poem 这类构建术语）",
-    /noData/.test(homeWxmlNoData) &&
-      /数据没能载入/.test(homeWxmlNoData) &&
-      !/build:data|clone-poem|npm run/.test(homeWxmlNoData),
-    "空态里还在教用户去开发者工具跑构建 —— 语料随包走之后，那不是用户该做的事");
+  ok("首页的空态先给人一句人话",
+    /noData/.test(homeWxmlNoData) && /数据没能载入/.test(homeWxmlNoData),
+    "空态里没有「数据没能载入」那句 —— 首页会渲染成白屏");
+  const localBlock = homeWxmlNoData.slice(
+    homeWxmlNoData.indexOf("数据没能载入"),
+    homeWxmlNoData.indexOf("wx:elif")
+  );
+  ok("空态只在「本地打开」那一支教人跑构建（带版本号的包不许提构建）",
+    /buildRev\s*\?/.test(localBlock) && /build:data/.test(localBlock),
+    "本地打开时不说该跑哪条命令，用户只能看到「数据没能载入」却不知道下一步 —— " +
+      "语料随包走的是**体验版**，本地那一份仍要自己编");
+  ok("空态不许教人 clone-poem（那套跨仓库取语料已经撤掉）",
+    !/clone-poem/.test(homeWxmlNoData),
+    "空态里还留着 clone-poem.sh —— 那个脚本与那条跨仓库依赖一起删了");
   const homeJsNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
   ok("首页在 refresh 里读 hasData 决定走空态",
     /corpus\.hasData\(\)/.test(homeJsNoData));
