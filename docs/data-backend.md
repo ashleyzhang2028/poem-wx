@@ -4,7 +4,7 @@
 >
 > 1. **现在小程序的数据库服务是什么？**
 > 2. **后端存储怎么解耦、换库要动什么？**
-> 3. **小程序的数据是怎么管的、放在哪里？上游 poem 改数据集导致这边 CI 出故障，有没有办法？**
+> 3. **小程序的数据是怎么管的、放在哪里？上游改数据集导致这边 CI 出故障，有没有办法？**
 >
 > 先给结论，再给账。凡是要动代码的地方，都标了「已做 / 待做 / 不做」。
 
@@ -17,7 +17,7 @@
 
 | # | 是什么 | 现在在哪 | 属于谁 | 用户能不能感觉到 |
 |---|---|---|---|---|
-| ① | **运行时代码**（登录 / 同步 / 管理那几条路由） | poem 的 `api/`，跑在我们自己的容器里（微信云托管，走**云调用**） | **这个项目** | 能（登录、换手机还在不在） |
+| ① | **运行时代码**（登录 / 同步 / 管理那几条路由） | 仓库根的 `api/`，跑在我们自己的容器里（微信云托管，走**云调用**） | **这个项目** | 能（登录、换手机还在不在） |
 | ② | **数据存储**（账号 / 会话 / 进度 / 设置） | 代码里是**可替换**的存储层，接口是一组 `getX / putX / listX`；线上实现 = 腾讯云 MySQL | 运营选择 | 能（数据在不在） |
 | ③ | **静态资产**（5604 条课外正文分片 + 倒排索引） | 现在是**构建产物，跟包走**（`miniprogram/data/`） | **这个项目** | 基本感觉不到（除非你打算上 CDN） |
 | ④ | **构建输入**（语料从哪来） | 语料在 **`scripts/corpus/`**（随本仓库走），`scripts/build-data.js` 读它 | **这个项目** | 不能 |
@@ -41,7 +41,7 @@
 
 ## 二、存储层到底在哪：一个接口，两个实现
 
-`poem/api/_lib/store.js` 里那组 `getX / putX / listX` 是**契约**：
+`api/_lib/store.js` 里那组 `getX / putX / listX` 是**契约**：
 `api` 对象上的方法名就是全部约定，路由层只认这些名字，**不认底下是谁**。
 
 ```
@@ -50,27 +50,26 @@ getStore(cfg) ───────┤
                      └─ mysqlStore()    ← 线上（腾讯云 MySQL）
 ```
 
-- **`memoryStore()`** 是 poem 里现成的内存档，本地自检与 `e2e-wx-sync.js` 跑的
-  就是它 —— 换句话说，「换库」这件事**有两份实现同时在跑**，插槽是活的。
+- **`memoryStore()`** 是内存档，本地自检与 `e2e-wx-sync.js` 跑的就是它 ——
+  换句话说，「换库」这件事**有两份实现同时在跑**，插槽是活的。
 - **`mysqlStore()`** 是本仓库新加的那份：代码在 **`deploy/store-mysql.js`**，
   建表语句在 **`deploy/sql/mysql-schema.sql`**。
 
-### 它在哪儿接上去：`serve-api.js`，不是 poem
+### 它在哪儿接上去：`serve-api.js`
 
-这一点值得单独说清，因为它决定了「改 poem 吗」这个问题的答案。
+这一点值得单独说清，因为它决定了「改了这里，路由层要不要跟着动」这个问题的答案。
 
-`poem` 同时伺服**网页版**（跑在 Vercel 上、用它自己那台库）与小程序这份镜像。
-两边共用同一套 `api/`，但**数据库选择本来就该分开** —— 所以：
+数据库选择不写进路由，写在容器的入口上：
 
 ```
 serve-api.js（这份镜像的入口）
-  ├─ 认 MYSQL_HOST  → 建连接池 → 把 poem 的 getStore() 换成 mysqlStore（并 _reset 单例）
-  └─ 不认            → 什么都不做，poem 原样（内存档）
+  ├─ 认 MYSQL_HOST  → 建连接池 → 把 getStore() 换成 mysqlStore（并 _reset 单例）
+  └─ 不认            → 什么都不做，原样（内存档）
   ↓
 require("./api/handler.js")   ← ⚠️ 必须在上面那步**之后**：handler 在 require 时就取单例
 ```
 
-于是 **`poem` 一行都不用改**，它压根不认识 MySQL。接线、建池、`mysql2` 依赖
+于是 **`api/` 一行都不用改**，它压根不认识 MySQL。接线、建池、`mysql2` 依赖
 全落在 `deploy/` 与 `deploy-api-serve/` 这两处（自检 V49 钉着这一段）。
 
 ### 「换库」这件事实际动到的四处
@@ -204,7 +203,7 @@ POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
 ```
 scripts/corpus/
   ├── VERSION.json    取自哪一版（upstreamRef / syncedAt）
-  ├── data/           poem 的 data/ 全量（含 text-master.js 与 author-index.js）
+  ├── data/           语料全量（含 text-master.js 与 author-index.js）
   ├── js/             构建与自检要读的那几个（pinyin / entitlement / sync-coverage）
   ├── scripts/        build-works-map.js（自检拿它挂 AuthorIndex）
   └── fonts/          标题宋体子集化的源（font:subset 用）
@@ -222,7 +221,7 @@ node scripts/build-data.js
 
 | 事件 | 谁受影响 | 结果 |
 |---|---|---|
-| 上游 poem 改了语料 | **没人** | 这里什么都不发生 —— 没有「跟」这回事了 |
+| 上游改了语料 | **没人** | 这里什么都不发生 —— 没有「跟」这回事了 |
 | 我们推 main | 只有我们的代码 | 自检判的只有这一件事 |
 
 ### 4.3 换一版语料怎么做
@@ -234,8 +233,8 @@ node scripts/build-data.js
 3. `node scripts/build-data.js && node scripts/check.js` —— 绿了才算换过
 
 红了的意思是「回来对一次」：要改的是 `check.js` 里那张 `K` 表（篇数 / 号段 /
-归位那几条），**不是**去改上游。`scripts/poem-watch.sh` 与 `poem.lock.json`
-连同它们那套定时任务一起撤掉了 —— 「跟上游」这件事没有对象了。
+归位那几条），**不是**去改上游。`.cnb.yml` 里那些取上游的步骤连同
+`scripts/clone-poem.sh` 一类的脚本都撤掉了 —— 「跟上游」没有对象了。
 
 ## 五、现在数据到底怎么管的：一张图
 

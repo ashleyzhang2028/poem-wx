@@ -134,7 +134,7 @@ function verdict(kind, cfg) {
 function tag(err) {
   try {
     if (err && !err.kind) err.kind = classify(err);
-  } catch (e) {  }
+  } catch (e) {}
   return err;
 }
 

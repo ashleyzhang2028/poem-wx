@@ -24,8 +24,6 @@ function credentialBody(extra) {
   return Object.assign({ device: store.deviceId() }, extra || {});
 }
 
-/* 本机那两栏优先 —— 它是「这台手机连哪儿」的应急出口；
-   没填过就用打包时写死的 server.js，用户不必知道有这两栏。 */
 function cloudOf() {
   return session().cloud || server.cloud();
 }

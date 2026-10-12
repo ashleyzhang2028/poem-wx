@@ -10,7 +10,7 @@ function turnstileReady(cfg) {
 
   if (c.turnstileBypass === true) return false;
   if (c.turnstileEnabled !== true) return false;
-  // Without a site key /api/config hides the widget, so enforcing would reject every request.
+
   if (!String(c.turnstileSiteKey || "").trim()) return false;
   return String(c.turnstileSecretKey || "").length > 0;
 }
@@ -58,7 +58,6 @@ function verify(cfg, input) {
         return { ok: false, reason: "rejected", codes: (data && (data["error-codes"] || data.error_codes)) || [] };
       }
 
-      // Accept subdomains (www.) of SITE_URL; Cloudflare's own widget allowlist is the real gate.
       var want = hostOf(cfg.siteUrl);
       var got = String(data.hostname || "").toLowerCase();
       if (want && got && want !== got && !endsWithHost(got, want) && !endsWithHost(want, got)) {
@@ -81,7 +80,6 @@ function hostOf(url) {
   try { return String(new URL(String(url || "")).hostname || "").toLowerCase(); } catch (e) { return ""; }
 }
 
-// Map the verify result to something the user can act on; raw Cloudflare codes stay in server logs.
 function verdictOf(r) {
   var codes = r.codes || [];
   if (r.reason === "missing_token") {

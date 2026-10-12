@@ -33,7 +33,7 @@ node scripts/parity.js
 
 | 在哪 | 是什么 |
 |---|---|
-| `scripts/corpus/` | 语料（poem 那一版的数据文件；取自哪一版见 `scripts/corpus/VERSION.json`） |
+| `scripts/corpus/` | 语料（统编版与课外集子的数据文件；取自哪一版见 `scripts/corpus/VERSION.json`） |
 | `scripts/parity-web/` | 服务端契约的只读副本（能力表、路由表、报文清洗、存储层形状），自检拿它当基准 |
 | `api/` | 后端运行时契约（登录 / 同步 / 管理那几条路由），镜像与 `e2e-mysql` 都摊它 |
 | `miniprogram/utils/server.js` | 云调用两栏 —— **构建产物，不入库**：构建期从密钥仓库注入，用户开箱即用 |
@@ -239,7 +239,7 @@ https + 有效证书、ICP 备案、不带端口不写 IP，三条都满足才�
   落成的样子是「点一下就给你微信那张」，不是「不点也能拿到」
 - **管理页**：给微信登录用户分层（free / pro / max）与改角色（owner / admin / user），
   归档对齐网页版的权限表；改档只走服务端，没有「改本机档位」那条路
-- **用户与权限**：free / pro / max 三档，与 poem 同一张表
+- **用户与权限**：free / pro / max 三档，与网页版同一张能力表
 - **导出备份**：整份数据复制成 JSON，换手机时导回去
 
 ## 与网页版对照（摘要）
@@ -392,7 +392,7 @@ reader 认它：下一首在这位作者名下找，走到头退回**他的作�
 
 ## 语料随仓库走，口径由自检钉住
 
-语料在 `scripts/corpus/`（poem 那一版的数据文件，取自哪一版见 `VERSION.json`），
+语料在 `scripts/corpus/`（取自哪一版见 `VERSION.json`），
 **没有第二个仓库要跟**。但「不偷偷跟」这条纪律留着 —— 它真正的意思不是
 「别自动拉上游」，而是**「盘上这份语料到底是不是那一份」要有答案**。
 
@@ -480,7 +480,7 @@ miniprogram/
 │                    #   recite-sheet（首页底部弹出来的背诵卡）
 ├── utils/          # 纯逻辑
 │   ├── corpus / store / review-models / scheduler / quiz
-│   ├── wire                        # 报文形状（本机 ↔ poem 服务端）
+│   ├── wire                        # 报文形状（本机 ↔ 服务端）
 │   ├── pinyin / text-search                  # 注音 / 全文检索
 │   ├── speech                                # 朗读：代码在，界面不接（见 docs/todo.md 第 1 条）
 │   ├── author-index                          # 朝代 / 异名归一：表在，界面没来（同上第 15 条）
@@ -489,24 +489,23 @@ miniprogram/
 ├── styles/         # 设计令牌（颜色 / 字阶 / 间距 / 高度，唯一的出处）
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
-├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录（语料现从 poem 编译）
+├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录（语料读 scripts/corpus/）
 ├── check.js        # 离线自检（含 V40 内容口径 / V41 作者索引 / V43 部署件 / V44 设置报文）
 ├── parity.js       # 与网页版逐项对照，能力表每一项都要有交代
-└── e2e-wx-sync.js  # 端到端：小程序端 utils ↔ poem 服务端真跑一遍（登录 → 同步 → 换机）
+└── e2e-wx-sync.js  # 端到端：小程序端 utils ↔ 本仓库后端真跑一遍（登录 → 同步 → 换机）
 ```
 
 ## 后端怎么部署
 
-后端在 [`npu-gpu-cpu/poem`](https://cnb.cool/npu-gpu-cpu/poem) 的 `api/` 里 ——
-**本仓库没有后端代码**，只有部署描述（`deploy/`）。镜像由 CNB 流水线构建
-（源码取 `poem`，Dockerfile 从这边取），云托管按**镜像**部署。
+后端在**本仓库根的 `api/`** 里，部署描述在 `deploy/` 与 `deploy-api-serve/`。
+镜像由 CNB 流水线在 `/tmp/ctx` 摊出上下文后构建，云托管按**镜像**部署。
 
 ```bash
 git checkout main && git pull   # 推 main 就出镜像
 ```
 
 然后照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做：建服务（填镜像
-`ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>`，端口 8080）→
+`ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>`，端口 8080）→
 配环境变量 → 跑一遍 `deploy/sql/mysql-schema.sql` 建表 → 管理页填云调用两栏 → 验。
 
 ⚠️ **镜像地址填 GHCR 那份，不要填 CNB 制品库那份**（Issue #71）：CNB 的 Docker
@@ -524,27 +523,35 @@ only supports authentication using a personal access token (classic)* —— 所
 （同文件里的 `GH_PAT` 是另一码事 —— 同步代码用的，fine-grained 的
 `Contents: Read and write` 就够。两个别互相顶替。）
 
-⚠️ **部署方式选「镜像」，不选「代码仓库」**：指本仓库，它按仓库根找 Dockerfile 而那儿
-没有 `api/`；指 `poem`，拿到的是 49MB 全量镜像，小程序一条静态资源都读不到。
-流水线为什么这么构建，见 [`deploy/README.md`](deploy/README.md)。
+⚠️ **部署方式选「镜像」，不选「代码仓库」**：本仓库根上没有这份镜像的构建上下文
+（`api/` 与三个服务壳文件是流水线在 `/tmp/ctx` 摊出来的）。流水线为什么这么构建，
+见 [`deploy/README.md`](deploy/README.md)。
 
-### 哪一类改动要在云托管点「重新部署」
+### 哪些改动要在云托管更新 Docker 镜像
 
-**判据只有一条：`.cnb.yml` 的 `main.push` 里改了没有。**
-改了小程序的页面、工具函数、自检、文档 —— 都不出镜像，云托管不用动；
-体验版随流水线自己就更新了。
+镜像里装的只有后端：`api/`（路由与内核）、`deploy-api-serve/`（服务壳与分片路由）、
+`deploy/store-mysql.js`（MySQL 存储层）、`deploy/Dockerfile`，外加一份正文分片。
+**小程序端一行都不在镜像里。**
 
-出镜像的那几样都在 `main.push` 里，就三处：`deploy/`（Dockerfile、`store-mysql.js`、
-`deploy-api-serve/`）、`.cnb.yml` 自己、以及 `poem` 仓库的 `api/`。
-改了它们，流水线会推一个新 tag（`ghcr.io/…/wx-api:<poem 短 sha>`），
-**但云托管不会自动跟着走** —— 要手动去服务里「重新部署」，把镜像换成那个新 tag。
+要更新镜像的：
 
-另外两样只在流水线里用、不进镜像，但会影响上传的体验版：`scripts/`（含语料）
-与 `api/`。语料与后端那两样改了不用碰云托管，看的是「上传体验版」那一步有没有
-`✓✓✓`；`api/` 改了要让云托管重新部署。那一步是 `allow_failure: true` —— **它失败时流水线照样是绿的**。
+- `api/` —— 后端本体，改了必须换镜像
+- `deploy/` —— Dockerfile、`store-mysql.js`、`sql/`
+- `deploy-api-serve/` —— `serve-api.js` 与 `shard-api.js`
+- `main` 那条流水线自己（`.cnb.yml`）
 
-消息契约在 [`docs/wx-login-server.md`](docs/wx-login-server.md)（含
-`device` vs `deviceId` 那个静默坑）。
+不要更新镜像的：
+
+- `miniprogram/` —— 随体验版走，与容器无关
+- `scripts/`（含 `scripts/corpus/`）—— 构建期用；改语料只影响新体验版，不影响容器
+- `docs/`、`README.md`、`AGENTS.md`
+
+推 `main` 时流水线把镜像推到两个 tag：`<短 sha>`（每次提交都变）与 `latest`。
+**云托管不会自动跟着走** —— 改完上面那几样之后，去服务的「部署」里选新 tag 重新部署，
+线上才真的换过来。
+
+`main` 那条流水线里，「上传体验版」是 `allow_failure: true` —— **它失败时流水线照样是绿的**，
+要自己翻那一步的日志找 `✓✓✓` / `✗✗✗`。镜像那两步失败会把流水线打红。
 
 ## 还没做的
 
@@ -560,7 +567,7 @@ only supports authentication using a personal access token (classic)* —— 所
 - **朗读不做**：TTS 通道个人主体申请不下来，界面里一处朗读元素都没有（见
   [`docs/todo.md`](docs/todo.md) 第 1 条，以及上面「朗读：不做，界面上也没有」一节）
 - **付费档不能小程序内下单**：微信不允许个人主体做虚拟支付，
-  `pro` / `max` 只能由管理员发兑换码，或后端名录里改档
+  `pro` / `max` 只能由管理员在管理页里按人分
 - **存储层跑在腾讯云 MySQL**：`store.js` 那组 `getX / putX` 是契约，
   线上实现是本仓库的 `deploy/store-mysql.js` + `deploy/sql/mysql-schema.sql`
   **（小程序前端一行不动）**。
@@ -568,16 +575,16 @@ only supports authentication using a personal access token (classic)* —— 所
   真正会踩线的只有「`wx.request` 打未备案域名」，而云调用不经过那张名单。
   换库要动什么、条件 upsert 那条不变式在哪，见 [`docs/data-backend.md`](docs/data-backend.md) § 三
 - **后端要配一遍**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
-  服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在
-  `api/` 里），
-  同步与管理复用 poem 已上线的那几个。云调用两栏在构建期注入进包，管理页那两栏
+  服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在本仓库根的
+  `api/` 里），同步与管理那几条也在那儿。云调用两栏在构建期注入进包，管理页那两栏
   只是调试与应急出口（`baseUrl` 同理）。没配之前一律降级，不做任何「假装成功」
-- **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与
-  poem 服务端接起来真跑一遍（登录 → 同步 → 设置/进度真落库 → 换台手机认回来）。
+- **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与本仓库
+  后端接起来真跑一遍（登录 → 同步 → 设置/进度真落库 → 换台手机认回来）。
   上面那些静态自检验得了「报文形状对不对」，验不了「两边合起来通不通」——
   而这一轮的坑（**登录通但同步一律 401**、字段被服务端裁掉、换机认不回来）
   全都是合起来才显形的
-- **跨端同步要服务端配合一次核对**：小程序发的报文已经按 poem 的
-  `sanitize*` 逐字段对齐并写进自检（自检会直接 require poem 的源码来验），
-  但**「同一个人在两端的 uid 是同一个」这件事只有服务端能保证** —— 见文档末节
+- **跨端同步要服务端配合一次核对**：小程序发的报文已经按服务端的
+  `sanitize*` 逐字段对齐并写进自检（自检会直接 require 契约副本
+  `scripts/parity-web/core.js` 来验），但**「同一个人在两端的 uid 是同一个」
+  这件事只有服务端能保证** —— 见文档末节
 - **客户端档位不是安全边界**：改本机存储就能提档，真扣配额必须在服务端做

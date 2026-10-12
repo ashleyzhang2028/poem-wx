@@ -6,11 +6,10 @@ var session = require("./session");
 var turnstile = require("./turnstile");
 var http = require("./http");
 
-/** 与 handler.js 的 H.log 同一形状 —— core 里也要能留痕，不引第二套日志 */
 function logFacts(event, facts) {
   try {
     if (http && typeof http.log === "function") http.log(event, facts);
-  } catch (e) { /* 日志失败不该影响这一条请求 */ }
+  } catch (e) {}
 }
 
 var DAY = 86400000;
@@ -249,8 +248,6 @@ function pepperOf(cfg) {
   return String(cfg.sessionSecret || cfg.sessionKey || "");
 }
 
-// Locks live in `locked_until`; `status` keeps meaning pending/active so an
-// expired lock can never promote an unverified account to active.
 function isLocked(acc, t) {
   return (Number(acc && acc.locked_until) || 0) > t;
 }
@@ -259,7 +256,6 @@ function lockRetryAfter(acc, t) {
   return Math.max(1, Math.ceil(((Number(acc.locked_until) || 0) - t) / 1000));
 }
 
-// Rows written by the old code carry status "locked" with no expiry.
 function repairLegacyLock(acc) {
   if (acc && acc.status === "locked") acc.status = acc.email_verified_at != null ? "active" : "pending";
   return acc;
@@ -580,12 +576,11 @@ function verifyCode_(deps, input) {
         }
         repairLegacyLock(acc);
 
-        // A code delivered to the mailbox proves ownership just like the confirm link.
         var passwordCleared = false;
         if (rec.channel !== "sms" && acc.email_verified_at == null) {
           acc.email_verified_at = t;
           if (acc.status === "pending") acc.status = "active";
-          // A password set before anyone proved ownership may belong to someone else.
+
           if (acc.password_hash) {
             acc.password_hash = "";
             acc.password_salt = "";
@@ -597,7 +592,7 @@ function verifyCode_(deps, input) {
         if (gate) return Promise.resolve(gate);
                 var first = !markLogin(acc, t);
         return Promise.resolve(store.putAccount(acc)).then(function (saved) {
-          // Sessions opened with the voided password belong to whoever typed it.
+
           if (!passwordCleared) return saved;
           return Promise.resolve(store.revokeSessions(acc.uid)).then(function () { return saved; });
         }).then(function (saved) {
@@ -758,8 +753,6 @@ function registerAfterGuard(deps, input) {
     if (isLocked(acc, t)) return err(423, "E_LOCKED", "为了安全，请稍后再试", { retryAfter: lockRetryAfter(acc, t) });
     repairLegacyLock(acc);
 
-    // An account whose owner is already proven must never get a password from an
-    // unauthenticated request: that would let anyone take it over.
     var proven = acc.email_verified_at != null || acc.status === "active";
     if (!r.created && (acc.password_hash || proven)) {
       var body = {
@@ -1132,7 +1125,6 @@ function resetConfirm(deps, input) {
         acc.password_hash = id.hashPassword(String(input.password), salt);
         acc.password_salt = salt;
 
-        // The reset link reached the mailbox, which proves ownership and ends any lock.
         if (acc.email_verified_at == null) acc.email_verified_at = t;
         acc.locked_until = null;
         acc.status = "active";
@@ -1251,21 +1243,6 @@ function resendVerificationByEmail(deps, input) {
   return resendVerification(anonDeps, input || {});
 }
 
-/* ---------- 微信小程序登录（Issue #71） ----------
- *
- * 两条路由：`POST /api/wx/login`、`POST /api/wx/refresh`。
- * 契约在 `poem-wechat-mini-program/docs/wx-login-server.md`，与小程序端
- * `miniprogram/utils/auth.js` 的 `applySession()` 是一对，**字段名以那边读的为准**。
- *
- * 为什么这一层必须在服务端：`code2Session` 要 `appsecret`，而小程序包是明文可分发
- * 的 —— 拿到 `appsecret` 就等于拿到这个公众号的登录能力。`openid` 同理，
- * 只活在服务端，客户端只拿 token。
- *
- * 这条路的正常态**可以是「没配」的**：本站是「密钥没配也能离线用」的设计，
- * `WX_APPID` / `WX_SECRET` 没配时如实回 503 `E_WX_NOT_CONFIGURED`，
- * 不假装成功、也不假装登录过 —— 客户端据此提示改配置。
- */
-
 var WX_CODE2SESSION = "https://api.weixin.qq.com/sns/jscode2session";
 var WX_TIMEOUT_MS = 8000;
 
@@ -1273,7 +1250,6 @@ function wxReady(cfg) {
   return !!(String(cfg.wxAppId || "").trim() && String(cfg.wxSecret || "").trim());
 }
 
-/** 会话令牌要挂在哪张表上 —— 与 `accounts` 同一套 uid（`wx_accounts.uid` 同域） */
 function isWxAccountsMissing(e) {
   var msg = String((e && e.message) || e).toLowerCase();
   if (msg.indexOf("wx_accounts") < 0) return false;
@@ -1285,7 +1261,6 @@ function wxTableMissing() {
     "服务端还差一步：数据库里没有 wx_accounts 这张表。建表语句见 docs/wx-login-server.md「要用到的那张表」；期间小程序端仍可离线使用。");
 }
 
-/** 拿 code 去换 openid —— 这一步是**唯一**需要 appsecret 的地方 */
 function wxCode2Session(deps, code) {
   var cfg = deps.cfg, t = deps.now();
   var url = WX_CODE2SESSION
@@ -1299,8 +1274,6 @@ function wxCode2Session(deps, code) {
     return Promise.resolve(err(500, "E_INTERNAL", "这个运行环境没有 fetch，微信登录暂时用不了。"));
   }
 
-  // 超时兜底：微信那边卡住时，不能把这条请求一起拖到 handler 的 8 秒身体超时上 ——
-  // 那样返回的是「这次请求没能完整送达」那句人话，与真正的原因（微信侧不通）完全无关。
   var timer = null;
   var timeout = new Promise(function (resolve) {
     timer = setTimeout(function () { resolve({ __timeout: true }); }, WX_TIMEOUT_MS);
@@ -1324,11 +1297,10 @@ function wxCode2Session(deps, code) {
       var wxCode = data && data.errcode ? Number(data.errcode) : 0;
       logFacts("wx.code2session_failed", { errcode: wxCode, errmsg: String((data && data.errmsg) || "").slice(0, 120) });
 
-      // 40029 / 40163：code 不对或已经用过 —— 客户端重新 wx.login 拿一枚就行
       if (wxCode === 40029 || wxCode === 40163) {
         return err(401, "E_WX_CODE", "这次登录用的 code 已经失效了，请重新点一次登录。");
       }
-      // 40013 / 40125：appid 或 appsecret 不对 —— 这是配置问题，不是用户的问题
+
       if (wxCode === 40013 || wxCode === 40125) {
         return err(503, "E_WX_CONFIG", "小程序 appid / appsecret 配得不对，登录走不通（自查 WX_APPID / WX_SECRET）。");
       }
@@ -1347,7 +1319,6 @@ function wxCode2Session(deps, code) {
   });
 }
 
-/** 微信侧的一行账号 —— 按 openid / unionid 认人 */
 function wxFindAccount(store, openid, unionid) {
   var byOpen = String(openid || "");
   var byUnion = String(unionid || "");
@@ -1365,18 +1336,6 @@ function wxFindAccount(store, openid, unionid) {
   });
 }
 
-/**
- * 认回 / 新建一个微信账号，并保证它在 `accounts` 里也有一行。
- *
- * `wx_accounts.uid` 必须与 `accounts.uid` **同一个域**，否则同步与管理两头认不出
- * 是同一个人：小程序里改的档，网页版读不到；网页版背的进度，小程序拉不回来。
- * 所以这里新建的是 `accounts` 那一行（`accountRow()` 就是网页版注册用的同一个），
- * 再把它的 uid 写进 `wx_accounts`。
- *
- * 微信不给邮箱，`email` 那一列留空 —— 但它有唯一索引，空值在多行上会撞。
- * 所以用**按 uid 派生**的占位地址（登不进、也发不到），并且在
- * `wx_accounts` 里认人只认 openid / unionid，不认 email。
- */
 function wxPlaceholderEmail(uid) {
   return "wx-" + String(uid || "").replace(/[^A-Za-z0-9_-]/g, "") + "@wx.local";
 }
@@ -1388,8 +1347,7 @@ function wxEnsureAccount(deps, info, row, t) {
   if (row && row.uid) {
     return Promise.resolve(store.getAccount(row.uid)).then(function (acc) {
       if (acc && acc.status !== "deleted") {
-        // unionid 是后到的（老行可能只存了 openid）：认回时补上。
-        // 不补，同一个人下次从另一台设备进来就认不回同一行。
+
         if (info.unionid && !row.unionid) {
           return Promise.resolve(store.patchWxAccount(row.uid, { unionid: info.unionid, last_login_at: t }))
             .then(function () { return acc; }, function () { return acc; });
@@ -1397,8 +1355,6 @@ function wxEnsureAccount(deps, info, row, t) {
         return acc;
       }
 
-      // 微信那一行还在，`accounts` 那一行却没了（账号注销过）：
-      // 重建一个 accounts 行，uid **沿用旧的那个**，否则进度会挂在另一个 uid 上。
       var rebuilt = accountRow(wxPlaceholderEmail(row.uid), null, t);
       rebuilt.uid = String(row.uid);
       rebuilt.nickname = String(row.nickname || "");
@@ -1410,7 +1366,7 @@ function wxEnsureAccount(deps, info, row, t) {
 
   var acc = accountRow(wxPlaceholderEmail("pending"), null, t);
   acc.email = wxPlaceholderEmail(acc.uid);
-  acc.status = "active";   // 微信 openid 本身就是身份验证，没有「邮箱未确认」这回事
+  acc.status = "active";
   delete acc.email_hash;
 
   return Promise.resolve(store.putAccount(acc)).then(function (saved) {
@@ -1433,7 +1389,6 @@ function wxEnsureAccount(deps, info, row, t) {
   });
 }
 
-/** 服务端下发给小程序的那一份身份。字段名与 `applySession()` 读的一一对应 */
 function wxSessionBody(deps, acc) {
   var cfg = deps.cfg;
   var tier = planTier(acc);
@@ -1455,9 +1410,6 @@ function wxIssueSession(deps, acc, device) {
   var s = session.issue(cfg, acc.uid, t);
   var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
 
-  // 刷新那条路要能按 refreshToken 找回这一行 —— 它就是同一枚会话令牌。
-  // 不落两列的话，服务端只能拿 refreshToken 当「另一枚没存的令牌」，
-  // 于是刷新永远验不过（而客户端只会看到「登录过期了」，看不出是服务端的错）。
   if (device) {
     row.device = String(device).slice(0, 64);
     row.refresh_token = s.token;
@@ -1494,9 +1446,6 @@ function wxLogin(deps, input) {
   var code = String(body.code == null ? "" : body.code).trim();
   if (!code) return Promise.resolve(err(400, "E_WX_CODE", "缺少 wx.login 拿到的 code。"));
 
-  // ⚠️ 字段名是 `device`，不是 `deviceId` —— 这一条契约在客户端就是两套并存的
-  // （`/api/sync/*` 用 deviceId，`/api/wx/*` 用 device）。读不到也能跑，但会话
-  // 签不出设备号、限流会拆成一堆空桶，而且**没有任何一处会报错**。
   var device = String(body.device || body.deviceId || "unknown").slice(0, 64);
 
   var g = limiter.take(cfg, "device", "wxlogin:" + device, t);
@@ -1508,14 +1457,12 @@ function wxLogin(deps, input) {
       wxRow = row;
       return wxEnsureAccount(deps, r.body, row, t);
     }).then(function (acc) {
-      if (acc && acc.body && acc.body.code) return acc;   // 已经是 err() 了（err() 把 code 放在 body 里）
+      if (acc && acc.body && acc.body.code) return acc;
       acc.wx_avatar_url = (wxRow && wxRow.avatar_url) || "";
       return Promise.resolve(store.patchAccount ? store.patchAccount(acc.uid, { last_login_at: t }) : null)
         .then(function () { return acc; }, function () { return acc; })
         .then(function () {
-          // 网页版那套 OWNER_EMAILS 的口子对微信账号不适用（它认的是邮箱）；
-          // 小程序端的第一个 owner 由运维直接改库或走网页版管理页发放，
-          // 服务端**不**给客户端任何一条「把自己设成 owner」的路。
+
           return wxIssueSession(deps, acc, device);
         });
     });
@@ -1537,8 +1484,7 @@ function wxRefresh(deps, input) {
   if (!s) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
 
   return Promise.resolve(store.getSession(s.sid)).then(function (row) {
-    // 同一套校验，一步不省：验签只证明「这枚是我们签的」，
-    // row 才说明它**还在**（账号注销 / 主动登出之后 row 就没了）。
+
     if (!row || Number(row.revoked) === 1 || String(row.uid) !== s.uid) {
       return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
     }
@@ -1552,8 +1498,7 @@ function wxRefresh(deps, input) {
       var device = String(body.device || row.device || "unknown").slice(0, 64);
       return wxIssueSession(deps, acc, device).then(function (r) {
         if (r.status === 200 && row.sid) {
-          // 旧的那一行当场吊销：双 token 这套东西的意义就是「换一枚，旧的作废」。
-          // 不吊销，一枚被偷走的 refreshToken 可以一直用下去。
+
           return Promise.resolve(store.revokeSession(row.sid))["catch"](function () {
             return Promise.resolve(store.patchSession ? store.patchSession(row.sid, { revoked: 1 }) : null);
           }).then(function () { return r; });
@@ -1744,14 +1689,6 @@ var DEFER_ROW_ID = "defer:v1";
 
 var DEFER_MAX = 400;
 
-// 「以后再背」（Issue #481）：一条只有「作品号 + 点它的那一天」—— 没有正文、
-// 没有进度，服务端只做裁剪，不做别的判断。
-//
-// 两档（「明日再背」`span: 1` 与「月后再背」`span: 30`）都另带 `until`
-// （搁到哪一天）与 `span`（搁多少天）—— 两个都是**短字符串 / 小整数**，仍然
-// 不含正文、不含进度。老客户端推上来的条目没有这两格，照旧存得下
-// （不在这儿补默认值 —— 补了服务端就多知道一件客户端的事，读回来由客户端按
-// 明日档补，见 js/recite-defer.js 的 `normalize()`）。
 function sanitizeDefer(p) {
   var out = { v: 1, updatedAt: Number((p && p.updatedAt) || 0) };
   out.updatedAt = isFinite(out.updatedAt) && out.updatedAt > 0 ? Math.round(out.updatedAt) : 0;
@@ -1865,18 +1802,6 @@ function exportAllProgress(deps, uid) {
   });
 }
 
-/**
- * 同步这道闸**只判「有没有会话」，不再判档位**（用户 2026-10-04 裁决）。
- *
- * 边界改过一次，两处必须同时改，只改一边都是坏的：
- *   - 只改客户端 → 界面列出一个点下去必然 403 的入口（假按钮）
- *   - 只改服务端 → 客户端还按 pro 藏入口，用户看不到自己已经能用的功能
- *
- * 小程序端那一半在能力表里（同步从 pro 改成「登录即得」，见自检 W5 / V34）。
- * 这里补上服务端这一半。
- * 「跨设备同步」这个能力键仍在 featuresFor 里 —— 那是给网页版用的，
- * 别顺手删：它一删，网页版那边的档位说明也跟着变了。
- */
 function syncTierGate(deps, input) {
   var store = deps.store;
   if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
@@ -1956,16 +1881,6 @@ function syncPushInner(deps, input) {
 var SETTINGS_ROW_ID = "settings:v1";
 var PROFILE_ROW_ID = "profile:v1";
 
-/**
- * 设置里的白名单。**一条条列出来，不用 `Object.keys(p)` 照单全收** ——
- * 这一层的作用就是「服务端说了算」，照单全收等于把客户端的话当真理。
- *
- * 键表与小程序端 `miniprogram/utils/store.js` 的 `DEFAULTS` **一一对应**
- * （除 `lastSyncAt`：那是本机的读数，不进报文）。那边加一个跨设备的键，
- * 这里不跟着加，症状就是「改了设置、换台手机还是默认」—— 自检盯着这条。
- * `sfx`（答题音效）在 DEVICE_DEFAULTS 里：它取决于这台机器的扬声器，
- * 本来就不该跟着人走，所以这里没有它，别补。
- */
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str",
@@ -1992,8 +1907,7 @@ function sanitizeSettings(p) {
 
 function sanitizeProfile(p) {
   var out = { v: 1, avatar: "", updatedAt: 0 };
-  // 头像只认 https 与本站 /api/avatar/ 两种（与 sanitizeImgUrl 同口径）——
-  // 这个地址会被端上作为图片地址用，不能什么字符串都收。
+
   out.avatar = sanitizeImgUrl(p && p.avatar);
   var t = Number((p && p.updatedAt) || 0);
   out.updatedAt = isFinite(t) && t > 0 ? Math.round(t) : 0;
@@ -2009,11 +1923,7 @@ function sanitizePayload(p, poemId) {
   if (poemId === COLLECTIONS_ROW_ID) return sanitizeCollections(p);
   if (poemId === DEFER_ROW_ID) return sanitizeDefer(p);
   if (poemId === PINYIN_FIX_ROW_ID) return sanitizePinyinFix(p);
-  // 这两行是「设置」与「头像」，小程序端各占一行（整份快照）。
-  // ⚠️ **必须放在 readRowKeyOf 之前**：认不出的行 id 会落到下面那段进度白名单上，
-  // 而它读的是 level / nextReviewAt / learned / reps / history ——
-  // 于是 { grade, theme, … } 一个字段都不剩。表现是「同步成功但什么也没发生」：
-  // 客户端一路绿灯、界面写着「已同步」，换台手机一看还是默认值。
+
   if (poemId === SETTINGS_ROW_ID) return sanitizeSettings(p);
   if (poemId === PROFILE_ROW_ID) return sanitizeProfile(p);
   if (readRowKeyOf(poemId)) return sanitizeReads(p);
@@ -2024,10 +1934,6 @@ function sanitizePayload(p, poemId) {
   if (typeof p.learned === "boolean") out.learned = p.learned;
   if (typeof p.attempted === "boolean") out.attempted = p.attempted;
 
-  // 「已复习 N 次」「忘过 N 次」是界面上直接给用户看的数（Issue #481）。
-  // 原先只认一个 `reps` —— 那是改名前的旧字段，客户端早就写 `reviewCount`
-  // 了，于是这两个数（还有算法与各算法的参量）一到云端就被悄悄抹掉，
-  // 换台设备就成了空白。这里按客户端**实际会写**的字段收。
   if (typeof p.reviewCount === "number") out.reviewCount = Math.max(0, Math.min(100000, Math.round(p.reviewCount)));
   if (typeof p.lapses === "number") out.lapses = Math.max(0, Math.min(100000, Math.round(p.lapses)));
 
@@ -2039,8 +1945,6 @@ function sanitizePayload(p, poemId) {
   if (typeof p.stability === "number") out.stability = Math.max(0, Math.min(100000, Math.round(p.stability * 100) / 100));
   if (typeof p.difficulty === "number") out.difficulty = Math.max(0, Math.min(100, Math.round(p.difficulty * 100) / 100));
 
-  // 当天点过哪一天（同日改判靠它判「今天已经算过一次」）。快照 dayBaseRec
-  // 是本机的事，不上云 —— 计数跟日期走，不跟快照走。
   if (typeof p.dayBase === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.dayBase)) out.dayBase = p.dayBase;
 
   if (Array.isArray(p.history)) {
@@ -2540,7 +2444,7 @@ function adminReportPatch(deps, input) {
     if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
 
     var patch = { status: status, updated_at: t };
-    // Omitted reply keeps the existing one; a status click must not erase it.
+
     if (input && typeof input.reply === "string") {
       patch.reply = clip(input.reply, REPORT_LIMITS.suggestion).trim();
     }
@@ -2562,10 +2466,6 @@ function adminReportPatch(deps, input) {
     });
   });
 }
-
-// ---------------------------------------------------------------------------
-// 注音勘误 · 全站生效（Issue #348）：提交 → 审核 → 生效，见 deploy/sql/mysql-schema.sql 第 10 节。
-// ---------------------------------------------------------------------------
 
 var PINYIN_PROPOSAL_STATUSES = ["pending", "approved", "rejected", "superseded"];
 
@@ -2768,11 +2668,6 @@ function pinyinFixesPublic(deps) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// 意见反馈（Issue #372）：不针对任何一篇的产品建议，且是一段可以
-// 来回跟帖的对话（用户追问、管理员回复），登录与未登录都能发。
-// ---------------------------------------------------------------------------
-
 var FEEDBACK_KINDS = ["feature", "problem", "other"];
 var FEEDBACK_STATUSES = ["open", "replied", "closed"];
 var FEEDBACK_LIMITS = { content: 2000, comment: 2000 };
@@ -2780,9 +2675,6 @@ var DEVICE_ID_SHAPE = /^d_[0-9a-f]{8}$/;
 
 function isFeedbackKind(k) { return FEEDBACK_KINDS.indexOf(String(k || "")) >= 0; }
 
-// 与限流用的是同一份设备号（js/auth-core.js 的 `d_` + 8 位十六进制）。
-// 不认这个形状就当作「没有可用身份」——不能让所有存不住数据的访客共用
-// http.js 里那个「unknown」占位值，那样彼此就看得到对方发的内容了。
 function feedbackIdentity(deps, input) {
   if (deps.account && deps.account.uid) return { uid: deps.account.uid, deviceId: "" };
   var raw = String((input && input.deviceId) || deps.deviceId || "");
@@ -2953,7 +2845,7 @@ function feedbackComment(deps, input) {
       created_at: t
     };
     var patch = { updated_at: t };
-    // A user following up after a reply means "please look again" — reopen it.
+
     if (thread.status !== "open") patch.status = "open";
 
     return Promise.resolve(store.putFeedbackComment(row)).then(function () {
@@ -3149,7 +3041,6 @@ function examRecordPublic(row) {
   };
 }
 
-// 只记「考试」（exam.formal）这一种形态，模拟考试 / 题库不上云（§4.66）。
 function examRecordCreate(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   if (!cfg.hasSession()) {
@@ -3346,7 +3237,7 @@ function deleteAccountData(deps, uid, t) {
     return Promise.resolve(store.deleteProgress(uid))
       .then(function () { return store.revokeSessions(uid); })
       .then(function () {
-        // The avatar sits in a public bucket; leaving it would outlive the account.
+
         try {
           var av = require("./avatar-store").getAvatarStore(cfg);
           return Promise.resolve(av && av.remove ? av.remove(uid) : null)["catch"](function () { return null; });

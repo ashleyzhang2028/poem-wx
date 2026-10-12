@@ -20,8 +20,6 @@ function memoryStore() {
     degrade: function () { return []; },
     deleteAccount: function (uid) { delete db.accounts[uid]; return true; },
 
-    // 微信账号（Issue #71）
-    // `/api/wx/login` 会 500 —— 而那种「配一半」最难查。
     getWxAccountByOpenid: function (openid) {
       var ids = Object.keys(db.wxAccounts || {});
       for (var i = 0; i < ids.length; i++) {
@@ -301,9 +299,6 @@ function memoryStore() {
   return api;
 }
 
-/* 这个部署的存储层在 deploy/store-mysql.js —— 由 deploy-api-serve/serve-api.js
-   在 require handler 之前换上去（见 docs/data-backend.md § 二）。
-   这里只留内存档，本地自检与 e2e 走的就是它。 */
 function objectStore() {
   throw new Error("这个部署没有 REST 存储档：线上用 deploy/store-mysql.js。");
 }
@@ -436,7 +431,7 @@ function attachFeedbackApi(api, call) {
     }).then(function (rows) { return rows && rows[0] ? rows[0] : null; });
   };
   api.deleteFeedbackThread = function (tid) {
-    // Comments cascade at the DB level (feedback_comments.tid references ... on delete cascade).
+
     return call("/feedback_threads?tid=eq." + q(tid), { method: "DELETE", prefer: "return=minimal" })
       .then(function () { return true; });
   };

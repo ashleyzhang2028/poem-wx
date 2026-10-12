@@ -29,9 +29,6 @@ function originMatch(a, b) {
   return !!a && !!b && norm(a) === norm(b);
 }
 
-/* 库那一层由 deploy/store-mysql.js 提供，这里不再自己拼 PostgREST 查询 ——
-   只如实报「底下是什么」。真要逐表核，用 deploy/sql/mysql-schema.sql 里的
-   SHOW TABLES / SHOW COLUMNS，或者 e2e-mysql。 */
 function dbSummary(d) {
   var store = d.store || {};
   var kind = String(store.kind || "unknown");
@@ -137,7 +134,7 @@ function mailReport(d) {
 }
 
 module.exports = handler.make("diag", ["GET"], function (d, body, req) {
-  // Public by design, but each call fans out to the DB with the service key.
+
   var t0 = d.now();
   var gates = [["ip", "diag:" + d.ip], ["global", "diag"]];
   for (var gi = 0; gi < gates.length; gi++) {

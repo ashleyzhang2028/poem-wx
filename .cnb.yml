@@ -2,8 +2,6 @@ $:
   "**":
     - name: 自检
       image: node:20
-      imports:
-        - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       script:
         - node scripts/build-data.js
         - node scripts/check.js

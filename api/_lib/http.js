@@ -72,7 +72,7 @@ function readBody(req) {
           var buf = req.read();
           if (buf) chunks.push(Buffer.isBuffer(buf) ? buf : Buffer.from(buf));
           if (chunks.length) return finish();
-        } catch (e) {  }
+        } catch (e) {}
       }
       return resolve({});
     }

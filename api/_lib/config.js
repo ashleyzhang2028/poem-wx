@@ -15,7 +15,6 @@ function intEnv(name, fallback) {
 
 var CONFIG = {
 
-
   sessionSecret: env("SESSION_SECRET"),
 
   mailTransport: env("MAIL_TRANSPORT", null),
@@ -58,8 +57,6 @@ var CONFIG = {
   smsResendCooldownMs: intEnv("SMS_RESEND_COOLDOWN_MS", 60 * 1000),
   sessionDays: intEnv("SESSION_DAYS", 30),
 
-  // 微信小程序登录（Issue #71）。缺任一个时 /api/wx/* 如实回 503，
-  // 不假装成功 —— appsecret 不能进小程序包，只能落在服务端环境变量里。
   wxAppId: env("WX_APPID"),
   wxSecret: env("WX_SECRET"),
 
@@ -109,13 +106,10 @@ CONFIG.avatarPath = function (uid) {
   return u.slice(0, 2) + "/" + u + "/avatar.jpg";
 };
 
-/* 头像只落本机、不上传（见 docs/todo.md 与自检里的那几条），所以没有公开地址。 */
 CONFIG.avatarPublicUrl = function () {
   return "";
 };
 
-/* 存储层由 deploy-api-serve/serve-api.js 在启动时接上（MySQL）。
-   这里不知道、也不需要知道底下是谁 —— 配没配由那个入口说了算。 */
 CONFIG.hasDb = function () {
   return !!CONFIG.mysql;
 };

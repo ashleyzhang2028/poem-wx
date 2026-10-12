@@ -29,8 +29,6 @@ function memoryAvatar() {
   };
 }
 
-/* 这个部署没有对象存储：头像只落本机，不上传、不落库。
-   这几条留着是因为 core.js 的注销那一支会调它 —— 换成别的存储时在这里接上。 */
 function objectAvatar() {
   return {
     kind: "none",
