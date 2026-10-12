@@ -1,6 +1,6 @@
 # 后端部署：云调用（免域名、免备案）
 
-后端代码在 [`poem`](https://cnb.cool/npu-gpu-cpu/poem) 的 `api/`，**不在本仓库**。
+后端代码在**本仓库根的 `api/`**。
 本仓库只有部署描述（`deploy/`），镜像由 CNB 流水线构建。
 
 主路走**云调用**（`wx.cloud.callContainer`）：走微信内网，不经过 request 合法域名名单，
@@ -11,7 +11,7 @@
   → 云托管按镜像建服务
   → 配环境变量
   → 建 wx_accounts 表
-  → 小程序「我的 → 用户与权限」填云调用两栏
+  → 小程序里的云调用两栏（已随包写死在 `miniprogram/utils/server.js`，一般不用动）
   → 验
 ```
 
@@ -27,7 +27,7 @@ git checkout main && git pull     # 推 main 触发发布流水线
 
 | 地址 | 云托管能直接拉吗 |
 |---|---|
-| `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>` | ✅ 公开包，**不用凭据** |
+| `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>` | ✅ 公开包，**不用凭据** |
 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库短 sha>` | ⚠️ 私有，要配凭据 |
 
 **主路填 ghcr.io 那份。**
@@ -116,7 +116,7 @@ env:
 | 归属环境 | 没有就新建（地域就近） |
 | 服务名称 | 自己起一个，**记住它** —— 后面 § 6.1 要填进 `X-WX-SERVICE`。本套部署用的是 `poem-wx` |
 | 部署方式 | **镜像** |
-| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<poem 短 sha>` |
+| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>` |
 | 端口 | `8080` |
 
 控制台那一栏是**六选一**（绑定 GitHub / GitLab / Gitee 仓库、手动上传代码包、
@@ -162,9 +162,9 @@ WX_APPID=wx200a0c667fc67fcb                  # 缺了登录回 503 E_WX_NOT_CONF
 WX_SECRET=<小程序 appsecret>
 ```
 
-`SESSION_SECRET` / `WX_*` 的完整定义在 `poem` 的 `api/_lib/config.js`；
+`SESSION_SECRET` / `WX_*` 的完整定义在 `api/_lib/config.js`；
 `MYSQL_*` 那几项由这份部署自己读（`deploy-api-serve/serve-api.js`），
-`poem` 那边**不认识**它们 —— 后端代码在那儿，而「用哪台数据库」是这份部署的选择。
+路由层**不认识**它们 —— 「用哪台数据库」是这份部署在 `serve-api.js` 里接的。
 
 ### 3.1 MySQL 怎么建、地址从哪儿来
 
@@ -225,12 +225,12 @@ DMS 界面：**实例 → 数据库管理 → 新建数据库**，库名 `poem`�
 走内网既不用开公网访问、也不用配白名单与 TLS。填公网地址能通，
 但那是把数据库挂到了公网上 —— 没必要。
 
-⚠️ **`MYSQL_HOST` 不填 = 退回内存档**（poem 原本那个实现），
+⚠️ **`MYSQL_HOST` 不填 = 退回内存档**（`api/_lib/store.js` 里那个实现），
 表现是「能登录、能同步，但服务一重启全没了」。所以配完要按 § 七 查一次库。
 
 > **这几个 `MYSQL_*` 不是绑死的。**
 > 它们是「服务端存储层」那个插槽的**一个**实现 —— 存储层是一组
-> `getX / putX / listX` 的接口（`poem/api/_lib/store.js`），线上这份实现就在本仓库的
+> `getX / putX / listX` 的接口（`api/_lib/store.js`），线上这份实现就在本仓库的
 > `deploy/store-mysql.js`。换别的实现，**小程序端与管理页一个字都不用改**。
 > 条件 upsert 那条不变式换库时该怎么落地、以及「换库不是审核的要求」那句话，
 > 见 [`data-backend.md`](data-backend.md) § 三。
@@ -305,10 +305,15 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 **环境 ≠ 服务**：`poem` 是**环境**名（`poem-d9g1bqeq978682c58` 那个前缀就是从它来的），
 `poem-wx` 才是**服务**名。这两格一个要环境、一个要服务，别互相填串。
 
-### 6.2 在小程序里配
+### 6.2 在小程序里配（一般不用做）
 
+**两格的值写在 `miniprogram/utils/server.js` 里，随包走** ——
+部署方在打包时把它填好，用户装上去就通。改它、重新上传，才需要动这一节。
+
+要临时换一个后端（调试、回滚、试别的部署）才走界面：
 小程序 → **我的 → 用户与权限** → 拉到底「云调用（不用域名，也不用备案）」
 两张输入框，填上 6.1 的两个值，点「保存云调用配置」。
+**本机填过就以本机那份为准**；两栏都清空，回到包里那份。
 
 ⚠️ 这一页在**小程序自己**里头（`packages/admin/index/index`），不在 mp.weixin.qq.com 后台。
 微信公众平台那个 [`/wxamp/cloudservice/`](https://mp.weixin.qq.com/wxamp/cloudservice/) 是
@@ -326,10 +331,10 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 - **已经配好**：只有 admin/owner 能改（运维配置，不该人人可动）。普通用户点那一行会被告知
   去找部署方，本机那份进度不受影响。
 
-**这两格不是平台配置项，是本机设置**：值存在**这台手机的本地存储**里
-（`store.KEYS.auth` → `auth.cloud`），只是借「云调用」来称呼 `wx.cloud.callContainer` 这条路。
-所以它不经过微信后台任何一个配置项（在 mp 后台找不到是正常的），
-也不影响线上服务或别的用户 —— 换台手机要重填一次。
+**优先级是「本机 → 包内」**：界面里填的那份存在**这台手机的本地存储**里
+（`store.KEYS.auth` → `auth.cloud`）；没填过就用 `server.js` 那份。
+所以界面上那两格不经过微信后台任何一个配置项（在 mp 后台找不到是正常的），
+也不影响线上服务或别的用户。
 
 **`baseUrl` 留空，request 合法域名也空着** —— 两个都填时以 `baseUrl` 为准。
 
@@ -418,22 +423,21 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 昨天还好，今天打不开 | 免费档缩容到 0 实例 | 加个定时探活打 `/healthz`，5 分钟以上一次 |
 | 同上 | 「公网访问」被关回去了 | 服务设置 → 基础信息里打开 |
 | curl 也不通 | 服务没起来 / 公网访问关着 | 看服务日志与实例数 |
-| curl 通、真机不通 | 云调用两栏填错，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空 |
+| curl 通、真机不通 | 本机填过错的云调用两栏，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空；本机那两栏清空即回到包里那份 |
 | 平台回 `env not exists` | `config.env` 填了云托管的数字环境 ID | 换成云开发环境 ID（§ 6.1） |
 | 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
 | 管理页只剩「我的授权」，找不到云调用那两格 | 当前档位不是 admin/owner（能写的那两格只在管理页里） | 先按 § 八 发档位；云调用是运维配置，本就不该给所有用户。只想看一眼当前连的是哪儿，走「我的 → 同步服务器」 |
 | 未登录时点「微信登录」弹「还没接上同步服务器」 | 这个包没配同步服务器，`login()` 直接出声拒绝（不再静默判「已登录」） | 点「我的 → 数据与账号 → 同步服务器」填两栏（**没配时对谁都开**），或找部署方。没配时账号与进度只在这台手机上 |
 | 点「同步服务器」那一行只弹一句「找部署方」 | 已配好、而你不是 admin/owner | 这台手机不用你改；要改连接地址找部署方。**还没配时不会这样**——那条路对谁都开 |
-| 填完云调用，换台手机要重填 | **正常**：那两格存在本机存储，不是服务端配置 | 它只影响这台手机怎么连后端，不是线上服务的设置项 |
+| 填完云调用，换台手机要重填 | **正常**（只在**手动填过**时）：那份存在本机存储 | 不填就是用包里 `server.js` 那份，正常用户碰不到这两栏 |
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 上传体验版回 `20003 … appIdToAppuin failed` | 上传密钥不是这个 appid 名下的（密钥/appid 换过其一） | § 八点五：重新生成代码上传密钥 + 核对 appid + 重跑流水线。**不是** IP 白名单的问题 |
 | 上传体验版回 `checkIpInWhiteList Failed: invalid ip` | 密钥设了 IP 白名单，构建机出口 IP 不在里面 | 放行构建机出口 IP，或把密钥那栏的白名单留空 |
 | **点一下登录就「成功」了，但库里没有新行** | 两格没填 / 填错 → 客户端没打到服务端。**Issue #121 又踩了一次这个坑**，而当时界面把它报成了「已登录」（空壳登录），用户只能靠翻数据库才发现 | § 6.1 / § 6.2 把两格填对。**已经不会静默成功了**：没连上时界面明说「还没接上同步服务器」，`profile.logged` 也保持 false（见下条）。填好两格后管理页会自动补上那次登录，不必再去点一次 |
 | 没连上服务器时的正确长相 | 点登录 → 弹「还没接上同步服务器」，`数据与账号 → 同步进度` 的副标题写「同步服务器没接上（云调用两栏）」。「我的」页顶部**仍显示未登录** —— 这是对的，不是坏了 | 去 § 6.2 填两格。本机那份进度一字不丢，接上之后第一次同步会带上去 |
-| 流水线红在 `clone poem`，报 `Repository Not Found.` | 凭据不被接受，不是路径错 | `.cnb.yml` 里已留了不带凭据的退路（`poem` 匿名可读） |
 | 流水线红在 `build & push`，报 `invalid reference format` | `.cnb.yml` 的 `env:` 里写了 `${VAR:-default}` | CNB 只替换 `$VAR`，`env:` 的值只能写字面量 |
 | 云托管拉镜像报 401 Unauthorized | ① tag 根本没构建出来（CNB 对匿名请求一律回 401，不区分「没权限」和「不存在」）；② tag 在，但槽位私有、没配凭据 | 先查 tag：`cnb registries list-package-tags --slug npu-gpu-cpu/poem-wechat-mini-program --type docker --name npu-gpu-cpu/poem-wechat-mini-program/wx-api`。没有 → 回 § 1；在、还是 401 → § 2.5 |
-| **服务一重启，用户数据全没了** | `MYSQL_HOST` 那几项没配 / 配错 → 服务端退回了内存档 | § 3.1。看服务日志里那句话：`[store] 没配 MYSQL_HOST —— 退回 poem 默认的存储层`。配好了它会打 `[store] 存储层 = 腾讯云 MySQL <host>:<port>/<db>` |
+| **服务一重启，用户数据全没了** | `MYSQL_HOST` 那几项没配 / 配错 → 服务端退回了内存档 | § 3.1。看服务日志里那句话：`[store] 没配 MYSQL_HOST —— 退回默认的存储层（内存档）`。配好了它会打 `[store] 存储层 = 腾讯云 MySQL <host>:<port>/<db>` |
 | 服务日志报 `配了 MYSQL_HOST 但镜像里没有 mysql2` | 镜像里那个依赖没装上 | 那是 `deploy/Dockerfile` 的 `npm install … mysql2` 那步；重推一次 `main` 出镜像 |
 | 服务日志报 `ER_NO_SUCH_TABLE` | 建表语句没跑（或只跑了一半） | § 四，把 `deploy/sql/mysql-schema.sql` 整段重跑一遍（幂等） |
 | 容器起不来，报 `Back-off restarting failed container`，日志里是 `Cannot find module './_lib/…'` 或 `'./_routes/…'` | 镜像里的 `api/` 是**空壳** —— 构建上下文的白名单只放行了 `api/` 根那层（`!api/**` 不跨层），底下没进去 | 这一版已修（白名单逐条放行 `api/_lib/**` 与 `api/_routes/**`，`.cnb.yml` 在 build 前按 `api/_lib/routes.js` 那张表核一遍）。旧镜像要**重推一次 `main`** 取新的；别去改容器的启动命令，它救不了缺文件 |

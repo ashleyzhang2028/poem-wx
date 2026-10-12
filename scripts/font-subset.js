@@ -3,8 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
-const WEB_DIR = process.env.POEM_WEB_DIR || "/tmp/poem";
-const SRC = process.env.FONT_SRC || path.join(WEB_DIR, "fonts", "NotoSerifSC-600.woff2");
+const SRC = process.env.FONT_SRC || path.join(__dirname, "corpus", "fonts", "NotoSerifSC-600.woff2");
 const OUT = process.env.OUT || path.join(__dirname, "..", "dist", "fonts", "kuibu-title-serif.woff2");
 
 function collectChars() {

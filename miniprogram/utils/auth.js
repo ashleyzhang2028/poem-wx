@@ -217,6 +217,11 @@ function useCloud() {
   return remote.useCloud();
 }
 
+function builtinCloud() {
+  const a = store.read(store.KEYS.auth, {}) || {};
+  return !a.cloud && !a.baseUrl && remote.configured();
+}
+
 function cloudConfig() {
   return remote.cloudConfig();
 }
@@ -252,6 +257,7 @@ module.exports = {
   configure,
   useCloud,
   cloudConfig,
+  builtinCloud,
   applyMe,
   login,
   refresh,

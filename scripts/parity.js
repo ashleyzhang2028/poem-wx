@@ -5,7 +5,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const MP = path.join(ROOT, "miniprogram");
-const WEB = process.env.POEM_WEB_DIR || "/tmp/poem";
+const WEB = path.join(__dirname, "parity-web");
 
 let checks = 0;
 let fails = 0;
@@ -61,9 +61,7 @@ const todoDoc = fs.readFileSync(path.join(ROOT, "docs", "todo.md"), "utf8");
 
 if (!webCaps) {
   console.log("  · 跳过能力表对照：拿不到 " + WEB + "/js/entitlement.js");
-  console.log("    先取语料再跑：bash scripts/clone-poem.sh /tmp/poem（Windows 上用 Git Bash），");
-  console.log("    或让 POEM_WEB_DIR 指向已有的 poem 仓库 —— PowerShell 里是");
-  console.log('    $env:POEM_WEB_DIR="<poem 仓库的路径>"。');
+  console.log("    那份能力表在 scripts/parity-web/js/entitlement.js（仓库内，不该缺）。");
 } else {
   const missing = webCaps.filter((k) => !DECIDED[k]);
   ok("网页版能力表逐项都有交代（" + webCaps.length + " 项）", missing.length === 0, missing.join(", "));

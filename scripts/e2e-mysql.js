@@ -6,18 +6,17 @@ const fs = require("fs");
 const os = require("os");
 
 const REPO = path.join(__dirname, "..");
-const POEM = process.env.POEM_DIR || "/tmp/poem";
+const POEM = path.join(REPO, "api");
 
-if (!fs.existsSync(path.join(POEM, "api", "handler.js"))) {
-  console.log("· 读不到 poem（" + POEM + "）—— MySQL 那条端到端跳过。");
-  console.log("  跑它：POEM_DIR=/tmp/poem node scripts/e2e-mysql.js（那边 git clone 一份）");
+if (!fs.existsSync(path.join(POEM, "handler.js"))) {
+  console.log("· 读不到 " + POEM + " —— MySQL 那条端到端跳过（后端契约应该在仓库根上）。");
   process.exit(0);
 }
 
 const CTX = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-mysql-"));
 
 {
-  const apiSrc = path.join(POEM, "api");
+  const apiSrc = POEM;
   const apiDst = path.join(CTX, "api");
   fs.mkdirSync(apiDst, { recursive: true });
 

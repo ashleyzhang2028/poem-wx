@@ -3,12 +3,11 @@ $:
     - name: 自检
       image: node:20
       script:
-        - bash scripts/clone-poem.sh /tmp/poem
-        - POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+        - node scripts/build-data.js
         - node scripts/check.js
         - node scripts/parity.js
-        - POEM_DIR=/tmp/poem node scripts/e2e-wx-sync.js
-        - POEM_DIR=/tmp/poem node scripts/e2e-mysql.js
+        - node scripts/e2e-wx-sync.js
+        - node scripts/e2e-mysql.js
 
 main:
   push:
@@ -24,13 +23,11 @@ main:
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         TAG: ${CNB_COMMIT_SHORT}
       stages:
-        - name: clone poem
-          script: bash scripts/clone-poem.sh /tmp/poem
         - name: stage context
           script: |
             set -eu
             mkdir -p /tmp/ctx
-            cp -R /tmp/poem/api /tmp/ctx/api
+            cp -R api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
@@ -38,15 +35,14 @@ main:
             mkdir -p /tmp/ctx/shard-src
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
-              bash scripts/clone-poem.sh /tmp/poem >/dev/null 2>&1 || true
-              POEM_WEB_DIR=/tmp/poem node scripts/build-data.js >/dev/null
+              node scripts/build-data.js >/dev/null
               for f in miniprogram/data/texts/*.json; do
                 gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .json).json.gz"
               done
               du -sh /tmp/ctx/shard-src
               n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].json.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
-                echo "✗ 分片只摊出 $n 片 —— 语料没生成（POEM_WEB_DIR 指对了没？）" >&2
+                echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
                 exit 1
               fi
               echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.json.gz | wc -l) 个文件"
@@ -89,8 +85,7 @@ main:
               echo "✗ 上下文里没有 api/handler.js —— 入口就是它，容器起不来" >&2
               exit 1
             fi
-            python3 scripts/find-poem-api-files.py /tmp/ctx/api || exit 1
-            REV="$(git -C /tmp/poem rev-parse --short HEAD)"
+            REV="$(git rev-parse --short HEAD)"
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
@@ -98,11 +93,11 @@ main:
               --build-arg "API_REV=${REV}" \
               --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
               --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-              --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem.git" \
+              --build-arg "API_SOURCE=https://cnb.cool/${CNB_ROOT_SLUG}/poem-wechat-mini-program.git" \
               -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" /tmp/ctx
             docker push "${IMAGE}:${TAG}"
             docker push "${IMAGE}:latest"
-            echo "✓ ${IMAGE}:${TAG}（后端 poem ${REV}）"
+            echo "✓ ${IMAGE}:${TAG}（后端 api ${REV}）"
         - name: 推 GHCR（云托管那份镜像地址）
           script: |
             set -eu
@@ -114,7 +109,6 @@ main:
                 exit 1
               fi
             done
-            REV="$(git -C /tmp/poem rev-parse --short HEAD)"
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker tag "${IMAGE}:${TAG}" "${IMAGE}:${REV}"
             docker push "${IMAGE}:${REV}"
@@ -130,7 +124,7 @@ main:
                 exit 1
               fi
             done
-            POEM_WEB_DIR=/tmp/poem node scripts/build-data.js
+            node scripts/build-data.js
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
@@ -146,9 +140,3 @@ main:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
           script:
             - node scripts/sync-github.js
-
-  "crontab: 0 */6 * * *":
-    - name: 跟上游语料（poem-watch）
-      image: node:20
-      script:
-        - bash scripts/poem-watch.sh

@@ -4,15 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-/* set POEM_WEB_DIR=C:\poem && npm run build:data —— cmd 会把末尾的空格一起塞进
-   变量里，路径没引号时那空格就成了路径的一部分，报错里的路径因此像多了一个空格。 */
-function corpusDir(v) {
-  let d = String(v || "").trim();
-  if (d.length >= 2 && d[0] === '"' && d[d.length - 1] === '"') d = d.slice(1, -1).trim();
-  return d || "/tmp/poem";
-}
-
-const WEB_DIR = corpusDir(process.env.POEM_WEB_DIR);
+/* 语料在本仓库里 —— scripts/corpus/ 就是 poem 那一版的数据文件，
+   构建不再 clone 另一个仓库。要换一版就把 scripts/corpus/ 整目录换掉。 */
+const CORPUS_DIR = path.join(__dirname, "corpus");
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
 const BUCKET_KB = 200;
@@ -24,14 +18,31 @@ const TRANSLATION_SOURCES = {
   modern: "依据现行通用选本与通行讲法"
 };
 
+/* scripts/corpus/data 下要按序跑的语料文件。顺序有依赖：
+   site-index.js 要靠 site-books.js 与 index.js 先挂上 window 上的集子表。 */
+const POEM_FILES = [
+  "data/poems-1.js", "data/poems-2.js", "data/poems-3.js", "data/poems-4.js",
+  "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
+  "data/poems-9.js", "data/poems-10.js", "data/poems-11.js", "data/poems-12.js",
+  "data/text-master.js",
+  "data/poems-classic.js", "data/poems-yuefu.js", "data/poems-tangshi.js",
+  "data/poems-gushi.js", "data/poems-songci.js", "data/poems-yuanqu.js",
+  "data/poems-guwen.js", "data/poems-jinxiandai.js", "data/poems-zhaoming.js",
+  "data/poems-chengyu.js", "data/poems-changshi.js", "data/poems-mingshu.js",
+  "data/poems-mingren-cn.js", "data/poems-mingren-foreign.js",
+  "data/poems-emperor-cn.js", "data/poems-emperor-waiguo.js",
+  "data/group-order.js",
+  "data/index.js",
+  "data/site-books.js",
+  "data/site-index.js",
+  "data/common-chars.js",
+  "data/pinyin-table.js"
+];
+
 function noCorpus(file) {
   return new Error(
-    "读不到 " + file + " —— 语料要先从 poem 仓库取下来，" +
-    "POEM_WEB_DIR 指向那个仓库的根（现在是 " + WEB_DIR + "）。\n" +
-    "Windows（PowerShell）：$env:POEM_WEB_DIR=\"<poem 仓库的路径>\"; npm run build:data\n" +
-    "macOS / Linux：POEM_WEB_DIR=<poem 仓库的路径> npm run build:data\n" +
-    "还没取过语料：bash scripts/clone-poem.sh /tmp/poem（Windows 上用 Git Bash）\n" +
-    "见 README「快速开始」。"
+    "读不到 " + file + " —— 语料是本仓库的一部分，缺了说明 scripts/corpus/ 不完整，\n" +
+    "把 poem 那一版的 data/ 与 js/ 整份拷回来即可（见 docs/from-corpus-to-page.md § 二）。"
   );
 }
 
@@ -41,7 +52,7 @@ function loadCorpus(rels) {
   sandbox.window.document = undefined;
   vm.createContext(sandbox);
   rels.forEach(function (rel) {
-    const file = path.join(WEB_DIR, rel);
+    const file = path.join(CORPUS_DIR, rel);
     let src;
     try {
       src = fs.readFileSync(file, "utf8");
@@ -53,44 +64,12 @@ function loadCorpus(rels) {
   return sandbox.window;
 }
 
-/* 正文按集子分片在 data/text-master/，data/text-master.js 只剩取数入口 ——
-   只引入口的话 window.TEXT_MASTER 是空的，片得在入口之后补进来。
-   片没铺开的上游版本没有这个目录，退回空表即可。 */
-function masterShards() {
-  const dir = path.join(WEB_DIR, "data", "text-master");
-  let names = [];
-  try {
-    names = fs.readdirSync(dir).filter(function (f) { return /\.js$/.test(f); });
-  } catch (e) {
-    return [];
-  }
-  return names.sort().map(function (f) { return "data/text-master/" + f; });
-}
-
 function main() {
 
-  const W = loadCorpus([
-    "data/poems-1.js", "data/poems-2.js", "data/poems-3.js", "data/poems-4.js",
-    "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
-    "data/poems-9.js", "data/poems-10.js", "data/poems-11.js", "data/poems-12.js",
-    "data/text-master.js",
-  ].concat(masterShards()).concat([
-    "data/poems-classic.js", "data/poems-yuefu.js", "data/poems-tangshi.js",
-    "data/poems-gushi.js", "data/poems-songci.js", "data/poems-yuanqu.js",
-    "data/poems-guwen.js", "data/poems-jinxiandai.js", "data/poems-zhaoming.js",
-    "data/poems-chengyu.js", "data/poems-changshi.js", "data/poems-mingshu.js",
-    "data/poems-mingren-cn.js", "data/poems-mingren-foreign.js",
-    "data/poems-emperor-cn.js", "data/poems-emperor-waiguo.js",
-    "data/group-order.js",
-    "data/index.js",
-    "data/site-books.js",
-    "data/site-index.js",
-    "data/common-chars.js",
-    "data/pinyin-table.js"
-  ]));
+  const W = loadCorpus(POEM_FILES);
 
   const master = W.TEXT_MASTER || [];
-  if (!master.length) throw noCorpus(path.join(WEB_DIR, "data", "text-master"));
+  if (!master.length) throw noCorpus(path.join(CORPUS_DIR, "data", "text-master.js"));
 
   const byId = {};
   master.forEach(function (m) {
@@ -237,7 +216,7 @@ function writePinyin(W, index, courseTexts, texts) {
 
   const chars = table;
 
-  const words = extractWords(path.join(WEB_DIR, "js", "pinyin.js"), W);
+  const words = extractWords(path.join(CORPUS_DIR, "js", "pinyin.js"), W);
 
   let commonSet = {};
   if (common) {

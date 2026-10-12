@@ -31,6 +31,7 @@ Page({
     cloudEnv: "",
     cloudService: "",
     cloudNote: "",
+    cloudBuiltin: false,
     useCloud: false,
     wxLoginNote: "",
 
@@ -65,6 +66,7 @@ Page({
       baseUrlNote: this.baseNote(),
       cloudEnv: auth.cloudConfig().env || "",
       cloudService: auth.cloudConfig().service || "",
+      cloudBuiltin: auth.builtinCloud(),
       cloudNote: this.cloudNote(),
       useCloud: auth.useCloud(),
       wxLoginNote: this.wxNote()
@@ -199,6 +201,10 @@ Page({
 
   cloudNote() {
     if (!auth.configured()) return "";
+    if (this.data.cloudBuiltin) {
+      return "这个包开箱就能用（云调用已随包配好），下面两栏只是万一要改："
+        + "留空即用包里那份；填了以填的为准；两栏都清空就回到包里那份。";
+    }
     if (auth.useCloud()) return "已配置，当前走这条。免域名、免备案、免 request 合法域名名单。";
     return "填了就改走云调用（会盖过上面的地址）。免域名、免备案。";
   },

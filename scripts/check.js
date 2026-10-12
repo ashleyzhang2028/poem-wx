@@ -1261,7 +1261,8 @@ ok("本机数据没被动过", !!store.getRecord("probe-1"));
 
 const remoteMod = require(path.join(ROOT, "utils", "remote.js"));
 
-ok("未配后端：configured 为假", remoteMod.configured() === false);
+ok("开箱就有后端（云调用两栏随包写死，用户不必自己填）",
+  remoteMod.configured() === true);
 ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
 
@@ -1277,7 +1278,23 @@ ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
   ok("owner / admin 才认管理接口", remoteMod.adminReady() === true);
 
   authMod.configure({ baseUrl: "" });
-  ok("撤掉 baseUrl 又回到不可用", remoteMod.adminReady() === false);
+  ok("撤掉 baseUrl 回到「走包里那份云调用」", remoteMod.useCloud() === true);
+
+  store.write(store.KEYS.auth, { cloud: { env: "probe-env", service: "probe-svc" } });
+  ok("本机填过就用本机那份（那是「这台手机连哪儿」的应急出口）",
+    remoteMod.useCloud() === true && remoteMod.cloudConfig().service === "probe-svc");
+  store.drop(store.KEYS.auth);
+}
+
+{
+  const serverMod = require(path.join(ROOT, "utils", "server.js"));
+  const saved = JSON.stringify(store.read(store.KEYS.auth, {}));
+  store.drop(store.KEYS.auth);
+  ok("本机没填过时用包里那份（不填也能登录、也能取课外正文）",
+    remoteMod.configured() === true && remoteMod.useCloud() === true);
+  ok("包里那份就是云调用两栏",
+    !!serverMod.cloud() && !!serverMod.cloud().env && !!serverMod.cloud().service);
+  store.write(store.KEYS.auth, saved ? JSON.parse(saved) : {});
 }
 ok(
   "契约路径齐全",
@@ -1378,10 +1395,9 @@ ok("名录不含完整标识泄漏（标签截断）", (roster.users || []).ever
 ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"].indexOf(u.tier) >= 0));
 
 {
-  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-  const corePath = path.join(webDir, "api", "_lib", "core.js");
+  const corePath = path.join(__dirname, "parity-web", "core.js");
   if (!fs.existsSync(corePath)) {
-    ok("报文过一遍服务端 sanitize（读不到 poem，跳过）", true);
+    ok("契约那份 core.js 在（scripts/parity-web/core.js）", false, "缺文件");
   } else {
     let core = null;
     try {
@@ -1450,12 +1466,11 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
 }
 
 {
-  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-  const coverage = path.join(webDir, "js", "sync-coverage.js");
+  const coverage = path.join(__dirname, "corpus", "js", "sync-coverage.js");
   const wireMod = require(path.join(ROOT, "utils", "wire.js"));
 
   if (!fs.existsSync(coverage)) {
-    ok("已读行 id 对照 poem 源码（读不到 poem，跳过）", true);
+    ok("语料里的同步表在（scripts/corpus/js/sync-coverage.js）", false, "缺文件");
   } else {
     const src = fs.readFileSync(coverage, "utf8");
     const declared = new Set();
@@ -1465,25 +1480,25 @@ ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"
 
     const ours = Object.keys(wireMod.READ_ROW).map((k) => wireMod.READ_ROW[k]);
     const unknown = ours.filter((k) => declared.size > 0 && !declared.has(k));
-    ok("已读行 id 都在 poem 的同步表里", unknown.length === 0,
+    ok("已读行 id 都在语料的同步表里", unknown.length === 0,
       unknown.length + " 个对不上：" + unknown.slice(0, 4).join(", "));
 
     const oursSet = new Set(ours);
     const missing = Array.from(declared).filter((k) => !oursSet.has(k));
-    ok("poem 的已读行小程序都有对应（" + missing.length + " 条在网页版有、这边无）", true,
+    ok("语料那个同步表里的已读行小程序都有对应（" + missing.length + " 条那边有、这边无）", true,
       missing.slice(0, 6).join(", "));
   }
 
-  const routes = path.join(webDir, "api", "_lib", "routes.js");
+  const routes = path.join(__dirname, "parity-web", "routes.js");
   if (!fs.existsSync(routes)) {
-    ok("同步路径对照 poem 路由表（读不到 poem，跳过）", true);
+    ok("契约那份 routes.js 在（scripts/parity-web/routes.js）", false, "缺文件");
   } else {
     const rsrc = fs.readFileSync(routes, "utf8");
     const remoteMod2 = require(path.join(ROOT, "utils", "remote.js"));
     ["pull", "push", "accounts", "grant", "role"].forEach((k) => {
       const p2 = remoteMod2.PATHS[k].replace(/^\/api\//, "/");
-      ok("路径在 poem 路由表里 " + remoteMod2.PATHS[k], rsrc.indexOf(p2) > -1,
-        "poem 的 routes.js 里没有这个路由");
+      ok("路径在服务端路由表里 " + remoteMod2.PATHS[k], rsrc.indexOf(p2) > -1,
+        "契约的 routes.js 里没有这个路由");
     });
   }
 }
@@ -2140,7 +2155,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
   const hasData = fs.existsSync(path.join(dataDir, "books", "books.json"));
 
   if (!hasData) {
-    ok("门禁开合（语料未生成，跳过真跑）", true);
+    ok("门禁开合（包里没有语料，跳过真跑）", true);
   } else {
 
     const savedWx = global.wx;
@@ -2963,7 +2978,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
     setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
     removeStorageSync: (k) => { delete mem[k]; },
-    request: () => { mem.__requested = (mem.__requested || 0) + 1; }
+    request: () => { mem.__requested = (mem.__requested || 0) + 1; },
+    cloud: { callContainer: (o) => o.fail({ errMsg: "offline" }) }
   });
 
   {
@@ -2982,40 +2998,49 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     store2.drop(store2.KEYS.auth);
     store2.saveSession({ logged: false, tier: "", tierFromServer: false });
 
+    global.wx.cloud = { callContainer: (o) => o.fail && o.fail({ errMsg: "no cloud" }) };
+
     const loginPromise = auth2.login();
     const snapAuth = store2.read(store2.KEYS.auth, {}) || {};
     const snapProf = store2.profile();
     const snapOffline = auth2.offline();
     const snapRequested = mem.__requested;
 
-    ok("没接上服务器时 profile.logged **不**为 true（这才是「库里没有记录」的正解）",
+    ok("接上服务器（包里那份云调用）时 profile.logged 不为 true —— 服务端还没回话",
       snapProf.logged !== true,
-      "又写成已登录了 —— 界面会报「已登录」，而服务端连这个人都不知道；实际 " + JSON.stringify(snapProf));
-    ok("code 存在 loginCode 里（不是旧的那个 code 字段）",
-      !!snapAuth.loginCode && !snapAuth.code,
-      JSON.stringify(snapAuth));
-    ok("离线这件事被记下来了（界面与能力矩阵要据此说清为什么）",
-      snapOffline === "off", snapOffline);
-    ok("没接上服务器时一次网络请求都不发（没配就没有可打的地方）",
+      "本机自己先认了登录 —— 服务端连这个人都还不知道；实际 " + JSON.stringify(snapProf));
+    ok("走云调用时不打 wx.request（两条通道分得开）",
       !snapRequested, "发了 " + (snapRequested || 0) + " 次请求");
 
     track(
       loginPromise
         .then(
-          (r) => ok("没接上服务器时 login() 不该成功", false, "回了 " + JSON.stringify(r)),
+          (r) => ok("云调用不通时 login() 不该成功", false, "回了 " + JSON.stringify(r)),
           (e) => {
-            ok("没接上服务器时 login() 出声拒绝（不再「静默成功」）",
-              !!(e && e.code === "E_NOT_CONFIGURED"),
-              "code=" + (e && e.code) + " msg=" + (e && e.message));
-            ok("拒绝的理由是「这个包还没配服务器」（界面据此指路，不是「登录失败」）",
-              /没配同步服务器/.test(String(e && e.message)),
-              String(e && e.message));
+            ok("云调用不通时 login() 出声拒绝（不再「静默成功」）",
+              String(e && e.message).length > 0, String(e && e.message));
+            ok("云调用不通时把离线标记留下（界面据此说清为什么）",
+              auth2.offline() === "cloud" || auth2.offline() === "off",
+              "offline=" + JSON.stringify(auth2.offline()));
           }
         )
 
         .then(() => {
 
+          Object.keys(require.cache).forEach((k) => {
+            if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+          });
+          const auth2 = require(path.join(ROOT, "utils", "auth.js"));
+          const store2 = require(path.join(ROOT, "utils", "store.js"));
+
           global.wx = fakeWx(mem);
+          global.wx.cloud = { callContainer: (o) => o.success({
+            statusCode: 200,
+            data: {
+              accessToken: "tok", refreshToken: "ref", expiresIn: 604800,
+              tier: "free", role: "user", userId: "wx_probe"
+            }
+          }) };
           global.wx.login = (o) => o.success({ code: "C-ONLINE" });
           global.wx.request = (o) => {
             mem.__requested = (mem.__requested || 0) + 1;
@@ -3029,21 +3054,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           };
           delete mem[store2.KEYS.profile];
           delete mem[store2.KEYS.auth];
+          delete mem[store2.KEYS.sync];
           store2.saveSession({ logged: false, tier: "", tierFromServer: false });
-          auth2.configure({ baseUrl: "https://probe.test" });
           ok("配了服务器之后 configured() 为真（②那条断言的前提）",
             auth2.configured() === true, JSON.stringify(auth2.baseUrl()));
           return auth2.login();
         })
         .then(() => {
-          global.wx = fakeWx(mem);
-          const prof = mem[store2.KEYS.profile] || {};
-          const box = mem[store2.KEYS.auth] || {};
-          ok("接上服务器时 profile.logged 为 true（①那条改的是「本机不冒充」，不是「本机不给登录」）",
+          const prof = store2.profile() || {};
+          const box = store2.read(store2.KEYS.auth, {}) || {};
+          ok("接上服务器时 profile.logged 为 true（本机不冒充的意思不是「连不上也报成功」）",
             prof.logged === true, JSON.stringify(prof));
-          ok("接上服务器时离线标记被清掉", !box.loginCode, JSON.stringify(box));
-          ok("配了服务器之后真的往服务端打了一次登录（不再走本机那一支）",
-            !!mem.__requested, "一次请求都没发");
+          ok("接上服务器时登录用的临时 code 清掉了", !box.loginCode, JSON.stringify(box));
+          ok("往服务端打了一次登录（不再走本机那一支）",
+            !!box.accessToken, "没拿到 token：" + JSON.stringify(box));
           global.wx = savedWx;
         }, (e) => {
           global.wx = savedWx;
@@ -5052,14 +5076,11 @@ function gapped(items, max) {
   });
   ok("《昭明文选》同一位作者只落一个朝代", collided === 0, collided + " 处冲突");
 
-  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-  const webAuthor = path.join(webDir, "data", "author-index.js");
+  const webAuthor = path.join(__dirname, "corpus", "data", "author-index.js");
   const miniAuthor = path.join(ROOT, "utils", "author-index.js");
 
   if (!fs.existsSync(webAuthor) || !fs.existsSync(miniAuthor)) {
-    console.log("· 作者索引时间轴没得比（" +
-      (fs.existsSync(webAuthor) ? "小程序端" : "poem 那边") +
-      "的 author-index.js 不在，或还没设 POEM_WEB_DIR）—— 跳过两条");
+    console.log("· 作者索引时间轴没得比（语料或小程序端的 author-index.js 不在）—— 跳过两条");
   } else {
     const erasOf = (src) => {
 
@@ -5217,15 +5238,15 @@ function gapped(items, max) {
     "实际 " + roster.total + " —— 补录之后回来对一次（名册是现算的，语料一变就变）");
 
   {
-    const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-    const webAuthor = path.join(webDir, "data", "author-index.js");
+    const webAuthor = path.join(__dirname, "corpus", "data", "author-index.js");
     if (!fs.existsSync(webAuthor)) {
-      console.log("· 作者名册没得比（poem 那边 data/author-index.js 不在，或还没设 POEM_WEB_DIR）—— 跳过一条");
+      console.log("· 作者名册没得比（语料的 data/author-index.js 不在）—— 跳过一条");
     } else {
       let webPeople = null;
       try {
         const vm = require("vm");
 
+        const webDir = path.join(__dirname, "corpus");
         const loader = fs.readFileSync(path.join(webDir, "scripts", "build-works-map.js"), "utf8");
         const m = /const LOAD = \[([\s\S]*?)\];/.exec(loader);
         const list = m ? eval("[" + m[1] + "]") : [];
@@ -5769,9 +5790,14 @@ function gapped(items, max) {
       "`config.env` 少了回 env not exists，`authorization` 少了服务端认不出人（401）");
 
   ok("`configured()` 两条通道都认（只认 baseUrl 会把配好的云调用判成没后端）",
-    /function configured\(\)\s*\{[\s\S]{0,200}?a\.baseUrl[\s\S]{0,160}?a\.cloud/.test(remoteSrc),
+    /function configured\(\)\s*\{[\s\S]{0,220}?a\.baseUrl[\s\S]{0,160}?cloudOf\(\)/.test(remoteSrc),
     "`configured()` 只看 `baseUrl` —— 只配云调用的人会被判成「后端未就绪」，" +
       "而那条路其实是通的");
+
+  ok("云调用两栏「本机填过就用本机的，没填过用包里那份」",
+    /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*server\.cloud\(\)/.test(remoteSrc) &&
+      /require\("\.\/server"\)/.test(remoteSrc),
+    "没有内置那一层时，用户必须自己去管理页填两栏才能用 —— 而那是部署方的事");
 
   {
     const mem = {};
@@ -5853,10 +5879,9 @@ function gapped(items, max) {
 }
 
 {
-  const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-  const corePath = path.join(webDir, "api", "_lib", "core.js");
+  const corePath = path.join(__dirname, "parity-web", "core.js");
   if (!fs.existsSync(corePath)) {
-    ok("设置那一行的报文对得上服务端白名单（读不到 poem，跳过）", true);
+    ok("契约那份 core.js 在（scripts/parity-web/core.js）", false, "缺文件");
   } else {
     const core = require(corePath);
     const mem = {};
@@ -6169,22 +6194,24 @@ function gapped(items, max) {
     /^\*\*$/m.test(di) && /^!api\/_lib\/\*\*$/m.test(di) && /^!serve-api\.js$/m.test(di),
     "写成常规排除名单的话，poem 的 data/ 26MB 会整个漏进上下文");
 
-  const strays = [
+  ok("后端契约在本仓库根上（api/）",
+    fs.existsSync(path.join(repo, "api", "handler.js")) &&
+      fs.existsSync(path.join(repo, "api", "_lib", "store.js")),
+    "没有 api/ —— 镜像与 e2e-mysql 都摊不出上下文");
+
+  const notCopies = [
     path.join(deploy, "api"),
-    path.join(repo, "api"),
     path.join(deploy, "api.synced"),
     path.join(deploy, "sync-api.sh")
   ].filter((p) => fs.existsSync(p));
-  ok("本仓库里没有 poem 的 api/ 副本（后端的唯一住处是 poem）",
-    strays.length === 0,
-    "发现：" + strays.join(", ") +
-    " —— 这一份副本就是「两份代码」那个税的来源：改完 poem 忘了同步，" +
-    "线上跑旧代码而且不报错。要它的话，请先想清楚谁负责发现漂移。");
+  ok("后端只有一份（api/ 在仓库根，deploy/ 里不再有第二份）",
+    notCopies.length === 0,
+    "发现：" + notCopies.join(", ") + " —— 两份就是那个「改了一处、线上跑另一处」的税");
 
   const build = fs.readFileSync(path.join(deploy, "build.sh"), "utf8");
-  ok("deploy/build.sh 是从 poem 摊上下文，不往仓库里落副本",
-    /cp -R "\$POEM_DIR\/api"/.test(build),
-    "落副本就又是「两份」了");
+  ok("deploy/build.sh 摊的是本仓库的 api/，不去 clone 另一个仓库",
+    /cp -R "\$REPO\/api"/.test(build) && !/git clone .*poem/.test(build),
+    "还在从另一个仓库取 api/ —— 那个依赖没抛干净");
 
   const setup = fs.readFileSync(path.join(repo, "docs", "wx-cloud-setup.md"), "utf8");
   ok("云托管设置文档写的是「按镜像部署」",
@@ -6236,19 +6263,13 @@ function gapped(items, max) {
     "发现：" + JSON.stringify(corpses.slice(0, 2)));
 
   const cnb = fs.readFileSync(path.join(repo, ".cnb.yml"), "utf8");
-  ok(".cnb.yml 里那份镜像的流水线去 clone poem（源码上下文 = 后端那一边）",
-    /clone poem[\s\S]{0,400}?clone-poem\.sh/.test(cnb),
-    "没去取 poem 就只能靠副本，而副本正是这一版撤掉的东西");
+  ok(".cnb.yml 里不再去另一个仓库取语料（clone-poem 那条路已撤）",
+    !/clone-poem/.test(cnb) && !/git clone .*poem\.git/.test(cnb),
+    "流水线还在 clone 上游 —— 分片与体验版都还没脱离那个依赖");
 
-  {
-    const sh = fs.readFileSync(path.join(repo, "scripts", "clone-poem.sh"), "utf8");
-    ok("取 poem 留了不带凭据的退路（带了令牌被拒不等于仓库不存在）",
-      /CNB_TOKEN[\s\S]{0,300}?\|\|[\s\S]{0,200}?git clone/.test(sh),
-      "没有退路时，令牌范围不覆盖 poem 会回 128，报错却是「仓库不存在」");
-    ok(".cnb.yml 的两处 clone 都走同一个脚本（退路不写两遍）",
-      (cnb.match(/clone-poem\.sh/g) || []).length >= 2,
-      "两处各写一遍 clone 命令，改一处漏一处");
-  }
+  ok(".cnb.yml 里摊语料就是本仓库那一条命令（没有 POEM_WEB_DIR）",
+    /node scripts\/build-data\.js/.test(cnb) && !/POEM_WEB_DIR/.test(cnb),
+    "还在用 POEM_WEB_DIR 指过去 —— 语料已经在本仓库 scripts/corpus/ 里了");
 
   ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
@@ -6468,14 +6489,14 @@ function gapped(items, max) {
     const readme = fs.readFileSync(path.join(repo3, "README.md"), "utf8");
     const buildSrc = fs.readFileSync(path.join(repo3, "scripts", "build-data.js"), "utf8");
 
-    ok("README 交代了 Windows 上怎么设 POEM_WEB_DIR（`VAR=x cmd` 是 sh 的写法，PowerShell/cmd 不认）",
-      /\$env:POEM_WEB_DIR/.test(readme) && /set POEM_WEB_DIR/.test(readme),
-      "README 里只有 `POEM_WEB_DIR=/tmp/poem npm run build:data` —— PowerShell 与 cmd 都会" +
-        "报「POEM_WEB_DIR 不是可识别的命令」，而这是新用户的第一条命令（Issue #121 的提问）");
+    ok("README 里那个「先跑构建」的说法已经撤掉（语料随仓库走，用户不必自己编）",
+      !/POEM_WEB_DIR/.test(readme) && !/clone-poem/.test(readme),
+      "README 里还留着 POEM_WEB_DIR / clone-poem —— 那是「另有一个上游仓库」的写法，" +
+        "与「语料就在本仓库 scripts/corpus/」矛盾");
 
-    ok("build-data.js 在缺语料时给出能照抄的命令（不是一句「检查 POEM_WEB_DIR」）",
-      /\$env:POEM_WEB_DIR/.test(buildSrc) && /POEM_WEB_DIR=<poem/.test(buildSrc),
-      "只抛「TEXT_MASTER 为空，检查 POEM_WEB_DIR」时，Windows 用户不知道该换成什么写法");
+    ok("build-data.js 离了另一个仓库也能跑（语料读的是 scripts/corpus/）",
+      /CORPUS_DIR\s*=/.test(buildSrc) && !/POEM_WEB_DIR/.test(buildSrc),
+      "build-data.js 还在读 POEM_WEB_DIR —— 那就是没抛掉的跨仓库依赖");
 
     ok("缺语料时抛的是自己的错（读文件失败不裸奔一个 ENOENT 栈出来）",
       /function noCorpus/.test(buildSrc) &&
@@ -6485,17 +6506,20 @@ function gapped(items, max) {
 
     const err = (() => {
       try {
+        const tmp = fs.mkdtempSync(path.join(require("os").tmpdir(), "kb-nocorpus-"));
+        fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
+        fs.copyFileSync(path.join(repo3, "scripts", "build-data.js"),
+          path.join(tmp, "scripts", "build-data.js"));
         const out = execFileSync(process.execPath,
-          [path.join(repo3, "scripts", "build-data.js")],
-          { env: Object.assign({}, process.env, { POEM_WEB_DIR: path.join(repo3, "no-such-poem") }),
-            encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+          [path.join(tmp, "scripts", "build-data.js")],
+          { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
         return out;
       } catch (e) {
         return String((e.stderr || "") + (e.stdout || ""));
       }
     })();
-    ok("真跑一遍：POEM_WEB_DIR 指空目录时报的是那几句提示",
-      /语料要先从 poem 仓库取下来/.test(err) && /\$env:POEM_WEB_DIR/.test(err),
+    ok("真跑一遍：语料目录不在时报的是那几句提示",
+      /读不到 .* —— 语料是本仓库的一部分/.test(err),
       "实际输出：" + JSON.stringify(err.split("\n").slice(0, 3)));
   }
 
@@ -6582,100 +6606,46 @@ function gapped(items, max) {
 
 {
   const repo2 = path.join(ROOT, "..");
-  const lockPath = path.join(repo2, "poem.lock.json");
-  ok("poem.lock.json 在（发布链按它钉住上游）", fs.existsSync(lockPath));
 
-  let lock = null;
-  if (fs.existsSync(lockPath)) {
-    try { lock = JSON.parse(fs.readFileSync(lockPath, "utf8")); } catch (e) { lock = null; }
-  }
-  ok("poem.lock.json 是合法 JSON", !!lock);
-  ok("锁里记的是全 sha（短 sha 钉不住：40 位才唯一）",
-    !!lock && /^[0-9a-f]{40}$/.test(String(lock.ref || "")),
-    lock ? "ref=" + lock.ref : "");
-  ok("锁里写明上游是哪个仓库",
-    !!lock && /^[\w.-]+\/[\w.-]+$/.test(String(lock.repo || "")),
-    lock ? "repo=" + lock.repo : "");
-
-  if (lock && lock.counts) {
-    const mismatch = Object.keys(K.counts).filter((k) => Number(lock.counts[k]) !== K.counts[k]);
-    ok("锁里的篇数与自检的 K 表逐条一致", mismatch.length === 0,
-      "对不上的是：" + JSON.stringify(mismatch.map((k) => k + ": 锁 " + lock.counts[k] + " / K " + K.counts[k])) +
-        " —— 锁前进了就回来把 K 表跟着改（见 docs/data-backend.md § 四）");
-  }
-
-  {
-    const sh = fs.readFileSync(path.join(repo2, "scripts", "clone-poem.sh"), "utf8");
-    ok("clone-poem.sh 会读 poem.lock.json 并检出那一版",
-      /poem\.lock\.json/.test(sh) && /checkout/.test(sh) && /POEM_REF/.test(sh),
-      "没读锁的话，锁就是个摆设 —— 取回来的还是上游的头");
-
-    ok("clone-poem.sh 在拿到的 sha 与锁不一致时当场失败",
-      /if\s+\[\s+"?\$\{?REF\}?"?\s*!=\s*"?main"?\s*\][\s\S]{0,120}?HEAD_SHA[\s\S]{0,160}?exit\s+1/.test(sh),
-      "那条「要的是 A、拿到的是 B → 退出」的判据不在 —— 锁写错一个字符的结果是" +
-        "安静地用着别的一版，而日志里与「锁生效了」一模一样");
-  }
+  const stray = [
+    path.join(repo2, "poem.lock.json"),
+    path.join(repo2, "scripts", "clone-poem.sh"),
+    path.join(repo2, "scripts", "poem-lock.sh"),
+    path.join(repo2, "scripts", "poem-watch.sh"),
+    path.join(repo2, "scripts", "find-poem-api-files.py")
+  ].filter((f) => fs.existsSync(f));
+  ok("跨仓库取语料那套已经不在（锁 / clone / 跟随 / poem 侧清单器）",
+    stray.length === 0,
+    "还留着：" + JSON.stringify(stray.map((f) => path.relative(repo2, f))) +
+      " —— 语料已随仓库走，「跟上游」这件事没有对象了");
 
   {
     const cnb2 = fs.readFileSync(path.join(repo2, ".cnb.yml"), "utf8");
-    const py = (() => {
-      try { return require("js-yaml"); } catch (e) { return null; }
-    })();
-    void py;
-
     const lines = cnb2.split("\n");
 
-    const cronAt = lines.findIndex((l) => /^\s{2}"crontab:\s*\S/.test(l));
-    ok("定时任务写在 `main:` 之下（`main: { \"crontab: …\": […] }`）",
-      cronAt >= 0,
-      "没找到缩进 2 空格的 `\"crontab: <cron>\":` —— 顶格另起一个 `crontab:` 的话，" +
-        "平台报的是「$ 下无 api_trigger 事件配置」，与真正的原因差很远");
-
-    ok("定时任务的 cron 表达式是五段",
-      /^\s{2}"crontab:\s*\S+\s+\S+\s+\S+\s+\S+\s+\S+"\s*:/.test(lines[cronAt] || ""),
-      "表达式不是五段 —— CNB 用的是 POSIX cron（分 时 日 月 周）");
-    const cronBody = cronAt < 0 ? "" : lines.slice(cronAt).join("\n");
-    ok("定时任务跑的就是 poem-watch.sh",
-      /poem-watch\.sh/.test(cronBody),
-      "crontab 那条里没有跟上游那个脚本");
-
     const mainKeys = lines.filter((l) => /^main:/.test(l));
+    ok(".cnb.yml 里没有顶格的 `crontab:`（那个键位置不对，平台解析不到）",
+      lines.filter((l) => /^[A-Za-z$][\w$-]*:/.test(l)).map((l) => l.split(":")[0]).indexOf("crontab") < 0);
     ok(".cnb.yml 里只有一个 `main:`（重复的话后者会盖掉前者，发布链静默消失）",
       mainKeys.length === 1,
       "找到 " + mainKeys.length + " 处顶格 `main:`");
-    const topKeys = lines.filter((l) => /^[A-Za-z$][\w$-]*:/.test(l)).map((l) => l.split(":")[0]);
-    ok(".cnb.yml 里没有顶格的 `crontab:`（那个键位置不对，平台解析不到）",
-      topKeys.indexOf("crontab") < 0,
-      "顶格 `crontab:` 是无效写法 —— 得写成 `main:` 之下缩进 2 空格的 " +
-        "`\"crontab: <表达式>\":`");
-
-    const mainAt = lines.findIndex((l) => /^main:/.test(l));
-    const publishBody = (mainAt < 0 || cronAt < 0) ? "" : lines.slice(mainAt, cronAt).join("\n");
-    ok("发布链（`main:`）里**不**跑跟上游（跑了就又回到原来那条路上）",
-      !/poem-watch/.test(publishBody),
-      "发布链里出现 poem-watch —— 上游一改，我们推 main 就红，治法白做");
-
-    const cloneRaw = publishBody.split("\n")
-      .map((l) => l.replace(/\s+#.*$/, ""))
-      .filter((l) => /git clone .*poem\.git/.test(l) && !/clone-poem\.sh/.test(l));
-    ok("发布链里取 poem 都走 clone-poem.sh（直写 git clone 会绕过锁）",
-      cloneRaw.length === 0,
-      "这几行绕过了锁：" + JSON.stringify(cloneRaw.slice(0, 2)));
   }
 
   {
-    const w = path.join(repo2, "scripts", "poem-watch.sh");
-    ok("scripts/poem-watch.sh 在", fs.existsSync(w));
-    if (fs.existsSync(w)) {
-      const js = fs.readFileSync(w, "utf8");
-      ["same", "ahead", "broke", "unknown"].forEach((v) => {
-        ok("跟上游有「" + v + "」这一种出口", js.indexOf(v) >= 0,
-          "四种出口各自是一个决定：「没动 / 前进 / 红了要人改 / 没跟成」——" +
-            "少一种就会把两件事混成一件");
-      });
-      ok("红了不合并、不改锁（改的是这边的表，不是上游）",
-        /别去改上游|要改的是/.test(js),
-        "红了还前进锁，等于把上游的改动直接吃进发布链");
+    const corpus = path.join(repo2, "scripts", "corpus");
+    ok("语料在仓库里（scripts/corpus/data 与 js）",
+      fs.existsSync(path.join(corpus, "data", "text-master.js")) &&
+        fs.existsSync(path.join(corpus, "data", "poems-1.js")) &&
+        fs.existsSync(path.join(corpus, "js", "entitlement.js")),
+      "缺 scripts/corpus/ —— 构建与自检都跑不起来");
+
+    const ledger = path.join(corpus, "VERSION.json");
+    ok("语料记着它取自哪一版（VERSION.json）", fs.existsSync(ledger));
+    if (fs.existsSync(ledger)) {
+      const v = JSON.parse(fs.readFileSync(ledger, "utf8"));
+      ok("语料台账里有来源 sha 与日期",
+        /^[0-9a-f]{40}$/.test(String(v.upstreamRef || "")) && !!v.syncedAt,
+        JSON.stringify(v));
     }
   }
 
@@ -6694,7 +6664,8 @@ function gapped(items, max) {
         const hits2 = [];
         (function walk2(dir) {
           fs.readdirSync(dir).forEach((f) => {
-            if (f === ".git" || f === "node_modules") return;
+            // parity-web 是服务端契约的只读副本，照原样摆着，不参与这条扫
+            if (f === ".git" || f === "node_modules" || f === "parity-web") return;
             const full = path.join(dir, f);
             if (fs.statSync(full).isDirectory()) return walk2(full);
             if (!/\.(js|json|md|yml|yaml|sh|sql|wxml|wxss)$/.test(f)) return;
@@ -6706,7 +6677,9 @@ function gapped(items, max) {
           hits2.length === 0,
           "发现：" + JSON.stringify(hits2.slice(0, 5)) +
             " —— Issue #111 要求全仓库不再涉及它。换数据库这件事已经落到 " +
-            "deploy/store-mysql.js + deploy/sql/mysql-schema.sql，旧名字不该再留");
+            "deploy/store-mysql.js + deploy/sql/mysql-schema.sql，旧名字不该再留。" +
+            "（scripts/parity-web/ 是服务端契约的只读副本，不在此列 —— " +
+            "它照原样摆着，改不动也不该改）");
       }
       ok("文档回答了「存储层在哪、换库要动什么」（接口是一个插槽，不是长在代码里）",
         /store\.js/.test(d) && /mysqlStore/.test(d) && /deploy\/store-mysql\.js/.test(d),
@@ -6756,10 +6729,9 @@ function gapped(items, max) {
   const sql = fs.existsSync(sqlPath) ? fs.readFileSync(sqlPath, "utf8") : "";
 
   {
-    const webDir = process.env.POEM_WEB_DIR || "/tmp/poem";
-    const poemStore = path.join(webDir, "api", "_lib", "store.js");
+    const poemStore = path.join(__dirname, "parity-web", "store-api.js");
     if (!fs.existsSync(poemStore)) {
-      console.log("· 读不到 poem 的 store.js（" + poemStore + "）—— V49 的形状那几条跳过。");
+      ok("契约那份 store.js 在（scripts/parity-web/store-api.js）", false, "缺文件");
     } else {
       const src = fs.readFileSync(poemStore, "utf8");
       const mem = /function memoryStore\(\)[\s\S]*?\n}\n/.exec(src);
@@ -7171,9 +7143,11 @@ function gapped(items, max) {
   }
 
   const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页有「语料未生成」的空态",
-    /noData/.test(homeWxmlNoData) && /build:data/.test(homeWxmlNoData),
-    "没跑构建时首页只有空白目录，看不出少跑了哪一步");
+  ok("首页的空态说得像用户的话（不提 build:data / clone-poem 这类构建术语）",
+    /noData/.test(homeWxmlNoData) &&
+      /数据没能载入/.test(homeWxmlNoData) &&
+      !/build:data|clone-poem|npm run/.test(homeWxmlNoData),
+    "空态里还在教用户去开发者工具跑构建 —— 语料随包走之后，那不是用户该做的事");
   const homeJsNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
   ok("首页在 refresh 里读 hasData 决定走空态",
     /corpus\.hasData\(\)/.test(homeJsNoData));
@@ -7274,52 +7248,6 @@ function gapped(items, max) {
   }
 
   {
-    const apiSrc = path.join(process.env.POEM_WEB_DIR || "/tmp/poem", "api");
-
-    if (!fs.existsSync(path.join(apiSrc, "_lib", "routes.js"))) {
-      console.log("· 读不到 poem（" + apiSrc + "）—— 镜像里该有哪些后端文件那几条跳过。");
-    } else {
-      const need = new Set(["handler.js"]);
-      const routesSrc = fs.readFileSync(path.join(apiSrc, "_lib", "routes.js"), "utf8");
-      for (const m of routesSrc.matchAll(/"(\.[^"]+\.js)"/g)) {
-        need.add(path.posix.normalize(path.posix.join("_lib", m[1])));
-      }
-      const walk = (dir, rel) => {
-        for (const f of fs.readdirSync(dir)) {
-          const full = path.join(dir, f);
-          const r = rel + "/" + f;
-          if (fs.statSync(full).isDirectory()) walk(full, r);
-          else if (f.endsWith(".js")) need.add(r);
-        }
-      };
-      walk(path.join(apiSrc, "_lib"), "_lib");
-      walk(path.join(apiSrc, "_routes"), "_routes");
-
-      const sh = fs.readFileSync(path.join(ROOT, "..", "scripts", "e2e-mysql.js"), "utf8");
-      const e2eStage = sh.slice(sh.indexOf("const wanted"), sh.indexOf('fs.copyFileSync(path.join(REPO'));
-      ok("e2e 摊上下文时逐条拷了 api 的每一层（`cpSync` 整棵树会把这条判据糊掉）",
-        /_lib\/routes\.js/.test(e2eStage) && /_lib\/http\.js/.test(e2eStage) &&
-          /"_lib"\)/.test(e2eStage) && /"_routes"\)/.test(e2eStage),
-        "e2e 没按 routes.js 逐条拷出 `_lib/` 与 `_routes/` —— " +
-          "摊得比镜像全时，Issue #134 那类「镜像里少了文件」它抓不到");
-
-      ok("Dockerfile 整棵拷 api/（缺的文件在镜像里不补，所以在上下文那一关就得拦下）",
-        /COPY --chown=node:node api \.\/api/.test(dockerfile));
-
-      const piped = fs.readFileSync(path.join(ROOT, "..", ".cnb.yml"), "utf8");
-      const finder = fs.readFileSync(path.join(ROOT, "..", "scripts", "find-poem-api-files.py"), "utf8");
-      ok("清单是从 routes.js 那张表读的，不是「扫一遍上下文里有什么」",
-        /ROUTE_REF/.test(finder) && /routes\.js/.test(finder),
-        "扫上下文那种写法在漏文件时只会少列几个名字，照样报「都在」—— " +
-          "那正是 Issue #134 的形态，判据等于没有");
-      ok("流水线在 build 前跑它（构建机上 poem 整棵树都在，只有镜像里会缺）",
-        /find-poem-api-files\.py/.test(piped),
-        "没跑的话就会回到 Issue #134：构建绿、部署绿、" +
-          "容器起来之后 `Cannot find module './_lib/routes.js'`");
-    }
-  }
-
-  {
     const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
     const flag = cnb.indexOf('if [ "${COPY_SHREDS:-1}" != "0" ]');
     ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
@@ -7341,7 +7269,7 @@ function gapped(items, max) {
     "摊成了 `basename \"$f\".json.gz`（t001.json.gz）—— shard-api 的 fileOf" +
       " 找 `t001.json` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
   ok("分片在流水线里现生成（构建产物，checkout 里没有）",
-    /POEM_WEB_DIR=\/tmp\/poem node scripts\/build-data\.js/.test(cnb));
+    /node scripts\/build-data\.js/.test(cnb));
   ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",
     /--build-arg "COPY_SHREDS=\$\{COPY_SHREDS:-1\}"/.test(cnb),
     "递的是 `${COPY_SHREDS:-}` —— 流水线没定义那面旗时递过去一个空串，" +

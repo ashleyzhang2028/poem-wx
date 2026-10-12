@@ -12,54 +12,34 @@
 ## 快速开始
 
 ```bash
-# 1. 从 poem 仓库取语料并编译（数据不入库，必须先跑这一步）
-bash scripts/clone-poem.sh /tmp/poem                 # 取语料，并检出 poem.lock.json 钉的那一版
-POEM_WEB_DIR=/tmp/poem npm run build:data
+# 1. 编译语料（语料在本仓库 scripts/corpus/，产物不入库）
+npm run build:data
 
-# 2. 离线自检 + 与网页版对照（项数以命令输出为准）
+# 2. 离线自检 + 与网页版能力表对照（项数以命令输出为准）
 node scripts/check.js
 node scripts/parity.js
 
 # 3. 用微信开发者工具打开 miniprogram/ 目录
 ```
 
-⚠️ **`build:data` 之前必须先有 poem 的源码。** 两个入口是一回事：
-`npm run build:data` = `node scripts/build-data.js`，而 `scripts/clone-poem.sh` 负责把语料取回来。
-没取过语料时两边都会当场说清去哪取，不再只丢一句 `TEXT_MASTER 为空`。
-这一条命令只需要 node（≥18），`package.json` 里那些 devDependency 与它无关，**不必 `npm install`**。
+这一条命令只需要 node（≥18），`package.json` 里那些 devDependency 与它无关，
+**不必 `npm install`**。
 
-### Windows 上怎么设 `POEM_WEB_DIR`
+**语料是构建产物，不在 git 里**（`.gitignore` 挡着 `miniprogram/data/`）。
+所以**开发者工具**里第一次打开要先跑一次 ① —— 那一步只是把数据编出来给工具看，
+装到手机上的体验版由流水线在打包前自己跑（见 `.cnb.yml`），**用户端不需要任何构建**。
 
-`POEM_WEB_DIR=/tmp/poem npm run build:data` 是 sh 的语法，PowerShell 与 cmd 都不认，
-报 `POEM_WEB_DIR 不是可识别的命令`。各自这样写（路径按自己 clone 的位置改）：
+### 语料与后端契约都在本仓库
 
-```powershell
-# PowerShell
-$env:POEM_WEB_DIR="C:\poem"; npm run build:data
-```
+| 在哪 | 是什么 |
+|---|---|
+| `scripts/corpus/` | 语料（poem 那一版的数据文件；取自哪一版见 `scripts/corpus/VERSION.json`） |
+| `scripts/parity-web/` | 服务端契约的只读副本（能力表、路由表、报文清洗、存储层形状），自检拿它当基准 |
+| `api/` | 后端运行时契约（登录 / 同步 / 管理那几条路由），镜像与 `e2e-mysql` 都摊它 |
+| `miniprogram/utils/server.js` | 打包时写死的云调用两栏 —— **用户开箱即用，不必自己填** |
 
-```bat
-:: Command Prompt
-set POEM_WEB_DIR=C:\poem && npm run build:data
-```
-
-`POEM_WEB_DIR` 末尾的空格和路径外面成对的双引号都会被去掉，
-`set POEM_WEB_DIR=C:\poem && npm run build:data` 照原样能跑。
-
-`scripts/clone-poem.sh` 依赖 bash（Git for Windows 自带），在 Git Bash 里跑；
-只取语料也可以直接 `git clone --depth 1 https://cnb.cool/npu-gpu-cpu/poem.git C:/poem`，
-然后按上面的写法指过去 —— 少的那一层是 `poem.lock.json` 的版本锁定。
-
-**语料是构建产物，永远不在 git 里**（`.gitignore` 挡着 `miniprogram/data/`）。
-所以「clone 下来直接打开开发者工具」必然是白屏 —— 首页会给出「语料未生成」的空态，
-那不是在报错，是在提醒你少跑了这一步。CI 上传体验版之前会**自己重跑一遍**
-`build-data.js`（见 `.cnb.yml`），所以体验版里有数据、你本地没有，两件事不矛盾。
-
-### `build:data` 之后还有哪几步
-
-这条命令只产出**文件**。文件到页面隔四段，断在哪一段的症状不同：
-课内 251 首靠包内语料，开工具就能背；课外 5604 首与登录同步要接后端。
-四段、症状与对应修法见 [`docs/from-corpus-to-page.md`](docs/from-corpus-to-page.md)。
+**没有第二个仓库要跟。** 换一版语料就是把 `scripts/corpus/` 整份换掉、
+把 `VERSION.json` 的 `upstreamRef` / `syncedAt` 改过来，然后重跑上面三步。
 
 管理名录是别人的账号标识，**不进代码库**。要导入就设环境变量：
 
@@ -85,7 +65,7 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 | | 状态 |
 |---|---|
 | **能跑** | 四套算法、注音、题库、飞花令、全文检索、进度总览 —— 全部离线可用，断网也能背（页面清单见 `miniprogram/app.json`） |
-| **要配置** | 微信登录与跨设备同步。**代码已经齐了**（服务端在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），剩下的全是运维动作 —— 照着 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做 |
+| **要配置** | 微信登录与跨设备同步。代码在 `api/` 里，部署与建表照 [`docs/wx-cloud-setup.md`](docs/wx-cloud-setup.md) 一步步做 —— **用户端不用配**：云调用两栏随包写死在 `miniprogram/utils/server.js` |
 | **不做** | 语音朗读：同声传译插件要企业/个体户主体，自家 TTS 要付费 + 后端签名。用户裁决不做，界面里一个朗读元素都没有 |
 
 所以「一切就好了吗」的答案是**没有**，但**没有的是外部依赖，不是代码**：
@@ -95,9 +75,8 @@ CI（`.cnb.yml`）里没配这个变量，所以构建出来的是空名册，�
 提审前必须先做的三件事：
 
 1. ~~换掉 `appid`~~（已换，见上）
-2. **接上后端**：走云调用就在管理页填两栏（免域名、免备案）；走 `wx.request`
-   就得配 `baseUrl` 并把域名加进「request 合法域名」——
-   开发者工具里勾「不校验合法域名」能绕过，**真机绕不过**，这条最容易在提审后才发现
+2. ~~接上后端~~（云调用两栏随包写死在 `miniprogram/utils/server.js`，
+   部署方在建服务时把 `env` / `service` 填进去 —— 用户装上空壳包也开箱能用）
 3. **真机走一遍**。上面所有验证都是离线跑的；安全区、原生控件外观、字体回退、
    分片下载超时各有一摊事，开发者工具的真机预览才是准的
 
@@ -259,7 +238,7 @@ https + 有效证书、ICP 备案、不带端口不写 IP，三条都满足才�
 | 平台形态 | ⚠️ | 外壳 / 控件 / 离线 / 部署全按小程序最佳实践换掉，不是缺口 |
 
 **一处刻意的反向补充**：微信登录是小程序有、网页版没有的一层 ——
-服务端那两条路由在 [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)，
+服务端那两条路由在本仓库 `api/` 里，
 契约见 [`docs/wx-login-server.md`](docs/wx-login-server.md)。
 
 这张表由 `node scripts/parity.js` 守着：网页版 `js/entitlement.js` 里
@@ -392,47 +371,30 @@ reader 认它：下一首在这位作者名下找，走到头退回**他的作�
 这一条跨三个文件，静态扫描看不出来，所以 V41 是**真跑阅读页**验的：
 连翻五首，每一首的 `author` 都得是李白、`bookId` 都得在那十部里。
 
-## 内容跟着 poem 走，但**不偷偷跟**
+## 语料随仓库走，口径由自检钉住
 
-语料不从仓库里搬，而是 CI 里从 [poem](https://cnb.cool/npu-gpu-cpu/poem) 现编译
-（`scripts/build-data.js`）。所以那边补一篇宋词，这边下一次跑就跟着有 ——
-听着挺省事，毛病也正在这儿：**「这一轮到底同步了没有」没有答案**。
-网页版加了十篇、这边一声不响地也冒出十篇，谁也不知道两边是不是同一份。
+语料在 `scripts/corpus/`（poem 那一版的数据文件，取自哪一版见 `VERSION.json`），
+**没有第二个仓库要跟**。但「不偷偷跟」这条纪律留着 —— 它真正的意思不是
+「别自动拉上游」，而是**「盘上这份语料到底是不是那一份」要有答案**。
 
-所以把「跟的是什么」写下来，写进 `scripts/check.js` 的 V40：
+所以把口径写下来，写进 `scripts/check.js` 的 V40：
 
 | 判据 | 查什么 |
 |---|---|
-| 篇数 | 各集子逐部 + 课外合计 + 带正文的条数（这张表**会过期**，数取自 `poem.lock.json` 与 `build-data.js` 输出） |
+| 篇数 | 各集子逐部 + 课外合计 + 带正文的条数（这张表**会过期**，数取自 `build-data.js` 输出） |
 | 号段 | `gushi 1–126` / `songci 1–331` / `tangshi 1–469` 不许出现**新**空洞 |
 | 归位 | 曹植《七步诗》只此一条、在《古诗「非唐代」》、朝代三国·魏；《唐诗》里非唐的只有记着的那一条（杨万里《闲居初夏午睡起·其一》，通用名篇那一段收的） |
 | 朝代 | 收作品的十部集子里没有空朝代；《昭明文选》同一位作者只落一朝 |
-| 时间轴 | 两端 `author-index.js` 的 `ERAS` 表逐段一致（CI 里刚 clone 了一份 poem，正好拿来比） |
-| 异名 | 两端 `ALIAS` 表逐条一致（**这一条是补来的**：第一版只比 ERAS，poem 那边补的十条异名这边一声不响地落后了十条，名册上于是「桓温」与「桓元子」各挂一半作品） |
+| 时间轴 | 两端 `author-index.js` 的 `ERAS` 表逐段一致（拿 `scripts/corpus/` 那份比） |
+| 异名 | 两端 `ALIAS` 表逐条一致（**这一条是补来的**：第一版只比 ERAS，语料里补的十条异名这边一声不响地落后了十条，名册上于是「桓温」与「桓元子」各挂一半作品） |
 | 合编归属 | 两端 `ATTRIB` 表逐条一致（**同样是补来的**：`ALIAS` 落后是同一个教训 —— #480 第三轮给《古人谈读书》加了归属裁定，这边只搬了 ERAS / ALIAS，没搬 ATTRIB） |
 | 出处两重 | 选本条目必须同时有 `source`（所出之书）与 `selection`（收它的选本）；《唐诗》《词》《曲》《文选》四部的条数逐部对（**这一条抓出过真漏**：`build-data.js` 原先根本没搬 `selection`） |
 | 题名异写 | `aliases` 搬全了（11 条），点名的那几条一条不少（**与出处同一类漏**：构建脚本漏搬一个字段，界面上少一句话，谁也不会发现） |
 
-于是 poem 那边一改，这边不是静默跟上，而是**红**。红的意思是「回来对一次」，
-不是「坏了」—— 对完把 V40 那张表改掉、跑绿，这一轮才算真同步过。
+换一版语料（把 `scripts/corpus/` 整份换掉）就是一次**要人来做**的动作：
+换完把 `VERSION.json` 的 `upstreamRef` / `syncedAt` 改过来，跑一遍自检，
+绿了才算换过。红了的意思是「回来对一次」—— 对完把 V40 那张表改掉。
 篇数表会过期是**故意的**：一份永远不用改的表，也就永远证明不了什么。
-
-### 但**红的不该是别人的发布**（Issue #111）
-
-上面那套有个副作用，用户点名问过：**上游补录一条，这边推 main 时就红** ——
-红在「改我们代码的人」头上，而错在上游。所以 2026-10-11 起多了一层：
-
-| | 谁受影响 | 结果 |
-|---|---|---|
-| 上游 poem 改了语料 | **没人** | 定时任务（每 6 小时）自己冒出来 |
-| 我们推 main | 只有我们的代码 | 自检判的只有这一件事 |
-
-发布链里 `scripts/clone-poem.sh` 现在**检出 `poem.lock.json` 里钉的那一版**
-（不是上游的头）。上游动了由 `.cnb.yml` 的 `crontab` 那条独立流水线处理：
-自检在那一版上**绿** → 自动开一个只动 `poem.lock.json` 的 PR；
-**红** → 把 `check.js` 的结论贴成一条 Issue 评论，人要改的是这边那张表，
-**别去改上游**。四种出口（same / ahead / broke / unknown）都在
-`scripts/poem-watch.sh` 里。
 
 这也解释了为什么号段判据是「不许有**新**空洞」而不是「连号」——
 语料里本来就有洞，而且有理由（`gs-02/03/04` 是《诗经》里与课内重了的、
@@ -558,9 +520,9 @@ only supports authentication using a personal access token (classic)* —— 所
 改了它们，流水线会推一个新 tag（`ghcr.io/…/wx-api:<poem 短 sha>`），
 **但云托管不会自动跟着走** —— 要手动去服务里「重新部署」，把镜像换成那个新 tag。
 
-另外两样只在流水线里用、不进镜像，但会影响上传的体验版：`scripts/` 与
-`poem.lock.json`（语料钉住的那一版）。它们改了不用碰云托管，看的是「上传体验版」
-那一步有没有 `✓✓✓`。那一步是 `allow_failure: true` —— **它失败时流水线照样是绿的**。
+另外两样只在流水线里用、不进镜像，但会影响上传的体验版：`scripts/`（含语料）
+与 `api/`。语料与后端那两样改了不用碰云托管，看的是「上传体验版」那一步有没有
+`✓✓✓`；`api/` 改了要让云托管重新部署。那一步是 `allow_failure: true` —— **它失败时流水线照样是绿的**。
 
 消息契约在 [`docs/wx-login-server.md`](docs/wx-login-server.md)（含
 `device` vs `deviceId` 那个静默坑）。
@@ -588,7 +550,7 @@ only supports authentication using a personal access token (classic)* —— 所
   换库要动什么、条件 upsert 那条不变式在哪，见 [`docs/data-backend.md`](docs/data-backend.md) § 三
 - **后端要配一遍**：接口契约写死在 `utils/remote.js`，**报文形状收在 `utils/wire.js`**。
   服务端代码已就绪（微信登录两条路由 + 会话认 Bearer + 白名单，都在
-  [`poem#532`](https://cnb.cool/npu-gpu-cpu/poem/-/pulls/532)），
+  `api/` 里），
   同步与管理复用 poem 已上线的那几个。管理页里可以直接填云调用两栏（或 `baseUrl`）。
   没配之前一律降级，不做任何「假装成功」
 - **`node scripts/e2e-wx-sync.js` 是这一块的真判据**：它把小程序端 utils 与
