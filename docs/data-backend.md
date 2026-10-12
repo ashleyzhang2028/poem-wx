@@ -278,6 +278,41 @@ node scripts/build-data.js
 | 3 | 换到腾讯云 MySQL（§ 三） | 数据主权：不依赖境外托管商 | ✅ 已做（`deploy/store-mysql.js` + 建表语句） |
 | 4 | 中文 CDN（把 `data/texts/**` 挪出包） | 现在 26MB 分片虽被 ignore，但没进 CDN 就等于「没缓存的条目要联网」这条还没真正兑现。**要走这一步，必须办备案** | ⏸️ 未办备案，见 `todo.md` 第 13 条 |
 
+### 6.1 「后端拆到另一个仓库」这件事：不拆，改用 `ifModify`
+
+动机是成立的：**小程序端推 main 不该重出一份后端镜像**。但达成它的手段不必是拆仓。
+
+判据是 `ifModify`（CNB 的 Pipeline 字段，[语法](https://docs.cnb.cool/zh/build/grammar.md#pipeline-ifmodify)）：
+`main` 的发布流水线只列 `api/**`、`deploy/**`、`deploy-api-serve/**` 与 `.cnb.yml` ——
+这四样一个都没动，那一步连跑都不跑。名单与它必须一致，自检守着（`check.js`）。
+
+拿 `main` 上那 357 个提交量过一遍：
+
+| 类别 | 提交数 | 该不该出镜像 |
+|---|---|---|
+| 改了 `api/` / `deploy/` / `deploy-api-serve/` | 56 | 该 |
+| 只改了 `scripts/check.js` 或 `.cnb.yml` | 255 | 不该 |
+| 其余（`miniprogram/`、`docs/`、语料） | 46 | 不该 |
+
+也就是说，**近 86% 的 main 提交是白出镜像**。`ifModify` 一句话消掉它们。
+
+**为什么不拆仓**，两条硬理由：
+
+1. **发布链就在要被拆掉的 `scripts/` 里。** 镜像的构建上下文是流水线在
+   `/tmp/ctx` 摊出来的，而摊法、`.dockerignore` 白名单、四条端到端自检
+   （`check.js` / `parity.js` / `e2e-wx-sync.js` / `e2e-mysql.js`）全在
+   `scripts/`。要让后端自检跟着 `api/` 一起走，得把 `scripts/check.js`（7800 行、
+   七成是小程序端断言）拆开 —— 而它一拆，两边都不再有完整的判据。
+2. **微信端的上传与同步会跟着劣化。** 拆走之后，
+   `miniprogram-ci` 上传体验版与「同步到 GitHub」要么只在新仓（那 CNB 的
+   `CNB_TOKEN` 受 `build-in-env.md` 的**安全限制**约束：跨仓取私有仓要另配凭据）、
+   要么留在旧仓（那老仓还是每次推 main 都跑一遍）。两条都不是「解耦」，
+   是换一处耦合。
+
+**不拆的代价要认**：`api/` 改一行仍然是全仓自检 + 一次发布。
+今天的量级下这条不贵 —— 发布 task 的 `metricCoreHours` 是 0.23–0.27，
+自检 task 是 0.04–0.06；而消掉那 86% 已经拿回了九成收益。
+
 **关于「怕小程序审核出问题」的一句实话**：**换数据库不是审核的要求**。
 小程序审核看的是「你的内容合规不合规、功能是不是真的」，不看你的数据库跑在哪。
 真正会踩线的只有一件事：**`wx.request` 打到一个未备案的域名上** ——

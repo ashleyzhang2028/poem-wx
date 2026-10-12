@@ -6586,6 +6586,29 @@ function gapped(items, max) {
     /^"\*\*":/m.test(cnb) && !/^"v\*":/m.test(cnb) &&
       /^"\*\*":[\s\S]*?push:[\s\S]*?- name: 自检/.test(cnb),
     "分支推送也出镜像只会往制品库堆垃圾，而没人会去用那些 tag");
+  {
+    const release = deployJob.split(/^\s*- name: /m)[1] || "";
+    const modify = release.match(/^\s{6}ifModify:\s*\n((?:\s{8}-\s*\S+\n)+)/m);
+    const paths = modify ? [...modify[1].matchAll(/-\s*"?([^"\n]+)"?/g)].map((m) => m[1].trim())
+      .filter(Boolean) : [];
+    const want = ["api/**", "deploy/**", "deploy-api-serve/**", ".cnb.yml"];
+    ok("发布流水线认得出「这次改动动没动后端」（ifModify 列了 api/ 与两个部署目录）",
+      want.every((w) => paths.indexOf(w) >= 0),
+      "`main` 的发布流水线缺 ifModify，或它的 glob 没盖住这四样：" +
+      JSON.stringify(want.filter((w) => paths.indexOf(w) < 0)) +
+      "，实际是 " + JSON.stringify(paths) +
+      " —— 少了它，每次推 main（包括只改小程序端与文档的那些）都会重出一份镜像" +
+      "（build & push + 推 GHCR + 上传体验版 + 同步 GitHub）。" +
+      "`main` 上 357 个提交里 311 个碰过 check.js 或 .cnb.yml，" +
+      "而真正要换镜像的是 56 个 —— 判据写宽了就等于没写。");
+    const badGlob = paths.filter((p2) => p2 !== ".cnb.yml" && !/\/\*\*$/.test(p2));
+    ok("目录用的是「dir/**」而不是「dir/」（前者才盖住底下每一层）",
+      badGlob.length === 0,
+      "这些 glob 没盖住底下每一层：" + JSON.stringify(badGlob) +
+      " —— `api/` 与 `api/**` 在 glob 里不是一回事：前者只匹配「api」这一个名字，" +
+      "`api/_lib/core.js` 不在其中，于是底下改了却不重建镜像" +
+      "（比不写 ifModify 更坏：静默）");
+  }
 
   {
     const mainSel = (() => {
