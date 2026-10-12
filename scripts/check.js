@@ -6430,6 +6430,20 @@ function gapped(items, max) {
         "（典型是 docker tag → invalid reference format）；" +
         "真要默认值就把字面量直接写在这儿" +
         "（script: 里的 `${VAR:-x}` 是 shell 的，不受影响，别一起改）");
+
+    const secretVars = ["CLOUD_ENV", "CLOUD_SERVICE", "WX_APPID", "WX_PRIVATE_KEY_B64",
+      "GHCR_USER", "GHCR_TOKEN", "GH_PAT", "GH_REPO"];
+    const clobbered = envLines.filter((l) => {
+      const m = l.match(/^([A-Z][A-Z0-9_]*):/);
+      return m && secretVars.includes(m[1]);
+    });
+    ok(".cnb.yml 的 `env:` 里不重声明密钥仓库那几样 —— 替换时机取不到 imports 的值，只会写进字面量",
+      clobbered.length === 0,
+      "这些在 `env:` 里又声明了一遍：" + JSON.stringify(clobbered) +
+        " —— imports 的变量在 `env:` 求值时还取不到，`${VAR}` 会原样留下" +
+        "（Issue #175：CLOUD_ENV 被写成 `${CLOUD_ENV}` 进了 server.js，" +
+        "登录一路回 HTTP 400，而流水线全绿）。imports 已经把真值放进 shell 环境，" +
+        "脚本按 $VAR 读即可，别在 `env:` 里再声明");
   }
 
   const deployJob = (() => {

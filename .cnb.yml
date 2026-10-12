@@ -22,8 +22,6 @@ main:
         CNB_IMAGE: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/wx-api
         TAG: ${CNB_COMMIT_SHORT}
         REV: ${CNB_COMMIT_SHORT}
-        CLOUD_ENV: ${CLOUD_ENV}
-        CLOUD_SERVICE: ${CLOUD_SERVICE}
       stages:
         - name: stage context
           script: |
@@ -124,6 +122,21 @@ main:
                 env | grep -oE '^(WX|WECHAT)[A-Z0-9_]*' | sort -u >&2
                 exit 1
               fi
+            done
+            for v in CLOUD_ENV CLOUD_SERVICE; do
+              eval "val=\${$v:-}"
+              case "$val" in
+                "")
+                  echo "✗ 密钥仓库 wechat-ci.yml 里读不到 $v —— 云调用两栏会空着" >&2
+                  echo "  登录与课外正文都要这两格；去密钥仓库补上再重跑。" >&2
+                  exit 1
+                  ;;
+                *'${'*|*'}'*)
+                  echo "✗ $v 还是 \${...} 字面量（$val）—— 云调用两栏被写坏，登录必回 HTTP 400" >&2
+                  echo "  别在 .cnb.yml 的 env: 里再声明它；imports 会把真值放进 shell 环境。" >&2
+                  exit 1
+                  ;;
+              esac
             done
             node scripts/build-data.js
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
