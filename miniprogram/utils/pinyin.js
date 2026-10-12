@@ -2,6 +2,10 @@ const store = require("./store");
 
 const TABLE = "data/pinyin-table.json";
 
+const PACKED_TABLE = function () {
+  return require("../data/pinyin-table.json");
+};
+
 let tableCache = null;
 let missing = false;
 
@@ -9,7 +13,7 @@ function table() {
   if (tableCache) return tableCache;
   if (missing) return null;
   try {
-    tableCache = require("../" + TABLE);
+    tableCache = PACKED_TABLE();
   } catch (e) {
     missing = true;
     return null;

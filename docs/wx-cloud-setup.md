@@ -309,8 +309,12 @@ https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 
 **两格的值构建期就注入了包里** —— 值存在密钥仓库 `wechat-ci.yml`
 （`CLOUD_ENV` / `CLOUD_SERVICE`），流水线把它交给 `build-data.js`，
-生成 `miniprogram/utils/server.js`（构建产物，不入库）。用户装上去就通。
+**覆写** `miniprogram/utils/server.js` 里那两个值。用户装上去就通。
 换部署就是改密钥仓库那两个变量、重跑流水线。
+
+`server.js` 本体（空壳）**在代码库里**，只有值由构建期写。别把它 gitignore 掉：
+少了它，`remote.js` 的 `require("./server")` 会让整个模块加载失败，
+主包每个页面都在 `onLoad` 之前就报错（Issue #175）。
 
 要临时换一个后端（调试、回滚、试别的部署）才走界面：
 
@@ -423,6 +427,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 点登录弹 `errCode: -1 \| errMsg: Cloud API isn't enabled, please call ...` | 客户端没先 `wx.cloud.init` 就调 `wx.cloud.callContainer`（`utils/remote.js` 的 `cloudReady()` 补这一步，同一 env 只 init 一次） | 已在代码里修。若自己另写调用，先 `wx.cloud.init({ env })` 再 `callContainer`；一直回这句也说明小程序没开通云开发（§ 6.1） |
 | 点登录弹 `wx.cloud.init 没成功 … env not exists` | `env` 那一格不是云开发环境 ID，或这个小程序没开通云开发 | 同上一格：填**云开发**环境 ID，不是云托管那个数字环境 ID |
 | 点登录弹「这个运行环境没有云开发能力（wx.cloud 不在）」 | 开发者工具里没开通云开发能力，或真机这个 appid 没开云开发 | 工具里开通云开发面板；appid 侧确认已开通 |
+| 点登录回 `cloud.callContainer:fail 102002` | `callContainer` 指着的那一格**不是这个小程序名下的云开发环境**。两种：① 密钥仓库 `CLOUD_ENV` 是**别的环境 ID**（把文档里的**示例值** `poem-d9g1bqeq978682c58` 当成真值填了进去），而小程序实际开的是另一个（如 `cloud1-d8g78yu3h213f201e`）；② 这个小程序确实没开云开发 | 先去**开发者工具 → 云开发控制台 → 设置**复制**真实**环境 ID，对一下包里的那份：报错已带客户端实际用的两格（`环境 xxx / 服务 xxx`）。对不上就把真值写进密钥仓库 `CLOUD_ENV`，重跑 `main` 流水线重打体验版。若两格本来就是对的那个环境，才是没开通云开发 —— 开通后重试，或换 `wx.request` + 已备案域名（§ 6.1 与 [`architecture.md`](architecture.md)） |
 | 平台回 `env not exists` | `config.env` 填了云托管的数字环境 ID | 换成云开发环境 ID（§ 6.1） |
 | 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
 | 管理页只剩「我的授权」，找不到云调用那两格 | 当前档位不是 admin/owner（能写的那两格只在管理页里） | 先按 § 八 发档位；云调用是运维配置，本就不该给所有用户 |
@@ -431,6 +436,8 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 上传体验版回 `20003 … appIdToAppuin failed` | 上传密钥不是这个 appid 名下的（密钥/appid 换过其一） | § 八点五：重新生成代码上传密钥 + 核对 appid + 重跑流水线。**不是** IP 白名单的问题 |
 | 上传体验版回 `checkIpInWhiteList Failed: invalid ip` | 密钥设了 IP 白名单，构建机出口 IP 不在里面 | 放行构建机出口 IP，或把密钥那栏的白名单留空 |
+| **体验版/工具里首页连「课本目录」都没有，控制台 `Cannot find module './server'`** | `miniprogram/utils/server.js` 没进包（被 gitignore 挡住、或构建时删了）。这个文件一缺，`remote.js` 整个模块加载失败，主包页面在 `onLoad` 前就抛 —— 首页整个渲染不出来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，必须入库），重新上传。`remote.js` 里对这句 require 另有兜底，两层都要有 |
+| **首页目录空着，而控制台说「语料 已载入」** | 语料在包里，是**页面渲染**这一段 —— 或这个包还是旧的 | 先确认包是新的；仍空则把 `[跬步]` 那行与控制台报错发出来 |
 | **点登录回 `HTTP 400`，正文一律取不到** | `.cnb.yml` 的 `env:` 里又声明了一遍 `CLOUD_ENV` / `CLOUD_SERVICE`（Issue #175）。`imports` 的变量在 `env:` 求值时还取不到，`${VAR}` 会**原样**留下，于是 `server.js` 里写进的是字面量 `${CLOUD_ENV}` —— 流水线全绿，包却是坏的 | 从 `.cnb.yml` 的 `env:` 里删掉这两行：`imports` 已经把真值放进 shell 环境，`build-data.js` 按 `$VAR` 读得到。自检守着这条（`env:` 不许重声明密钥仓库那几样）。删完重跑 `main` 流水线 |
 | **点一下登录就「成功」了，但库里没有新行** | 两格没填 / 填错 → 客户端没打到服务端。**Issue #121 又踩了一次这个坑**，而当时界面把它报成了「已登录」（空壳登录），用户只能靠翻数据库才发现 | § 6.1 / § 6.2 把两格填对。**已经不会静默成功了**：没连上时界面明说「还没接上同步服务器」，`profile.logged` 也保持 false（见下条）。填好两格后管理页会自动补上那次登录，不必再去点一次 |
 | 没连上服务器时的正确长相 | 点登录 → 弹「还没接上同步服务器」，`数据与账号 → 同步进度` 的副标题写「服务器没接上 · 进度只在这台手机」。「我的」页顶部**仍显示未登录** —— 这是对的，不是坏了 | 去 § 6.2 由部署方填两格。本机那份进度一字不丢，接上之后第一次同步会带上去 |

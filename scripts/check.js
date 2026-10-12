@@ -31,6 +31,43 @@ function readJson(p) {
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
 
+function staticallyReachable(entries) {
+  const seen = new Set();
+  const stack = Array.isArray(entries) ? entries.slice() : [entries];
+  const rel = new Set();
+  const resolve = (from, req) => {
+    if (req.charAt(0) !== ".") return null;
+    const base = path.resolve(path.dirname(from), req);
+    const candidates = [base, base + ".js", base + ".json", path.join(base, "index.js")];
+    for (const c of candidates) {
+      if (fs.existsSync(c) && fs.statSync(c).isFile()) return c;
+    }
+    return null;
+  };
+  while (stack.length) {
+    const f = stack.pop();
+    if (seen.has(f)) continue;
+    seen.add(f);
+    if (!f.endsWith(".js")) continue;
+    const src = fs.readFileSync(f, "utf8");
+    const re = /require\(\s*["'](\.[^"']+)["']\s*\)/g;
+    let m;
+    while ((m = re.exec(src))) {
+      const t = resolve(f, m[1]);
+      if (!t) continue;
+      rel.add(t);
+      stack.push(t);
+    }
+  }
+  const out = new Set();
+  rel.forEach((f) => {
+    if (f.indexOf(path.join(ROOT, "data")) === 0) {
+      out.add(path.relative(ROOT, f).split(path.sep).join("/"));
+    }
+  });
+  return out;
+}
+
 const app = readJson(path.join(ROOT, "app.json"));
 const pages = app.pages.slice();
 (app.subPackages || []).forEach((sp) => {
@@ -224,6 +261,33 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "缺：" + (packedReqs.join(" / ") || "无") + "；" +
       "另 hasData() 里不许再有 fs.existsSync 判据");
 
+  {
+    const reachable = staticallyReachable(
+      [path.join(ROOT, "app.js")].concat(
+        pages.map((p) => path.join(ROOT, p + ".js")).filter((f) => fs.existsSync(f))
+      )
+    );
+    const mustShip = fs.readdirSync(path.join(dataDir, "books"))
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => "data/books/" + f)
+      .concat(["data/course.json", "data/shards.json", "data/pinyin-table.json"]);
+    const dropped = mustShip.filter((f) => !reachable.has(f));
+    const livePath = [
+      /const\s+rows\s*=\s*packedRows\(bookId\)\s*\|\|\s*readJson\(/,
+      /tableCache\s*=\s*PACKED_TABLE\(\)/
+    ].every((re) => re.test(corpusSrc + fs.readFileSync(path.join(ROOT, "utils", "pinyin.js"), "utf8")));
+    ok("主包每一份语料都能被静态 require 到（打包器按模块图摇树，够不到的会被剔出包）",
+      dropped.length === 0 && livePath,
+      "打包器（开发者工具编译与 miniprogram-ci 上传各一条）按模块图摇树，" +
+        "够不到的文件会被当「没人 require 的文件」剔出包，" +
+        "症状是集子表在、点进去每部都空，或首页课内目录整块空着。" +
+        "要在 corpus.js 的 PACKED_BOOK_ROWS 表里（或 pinyin.js 自己的表里）写成字面量 require；" +
+        "而且**真正读这份文件的那行**要走到那个字面量（只摆一张没人调的表不算，摇树照旧剔掉）。" +
+        (dropped.length ? "够不到的：" + dropped.join(" / ") + "。" : "") +
+        (livePath ? "" : "读文件的那行没走字面量表：ofBook 要 `packedRows(bookId) || readJson(...)`，" +
+          "pinyin.table 要 `PACKED_TABLE()`。"));
+  }
+
   const upUnused = pcfg.setting ? pcfg.setting.ignoreUploadUnusedFiles : undefined;
   ok("上传时不摇掉「没人 require 的」文件（语料是数据，摇不动）",
     upUnused === false,
@@ -236,6 +300,33 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "而本地开发者工具里磁盘那份还在，看着像「明明生成了」。" +
       "两个编译器路径对这项的默认值还不一致（一个 unset 当 true、一个当 false），" +
       "所以必须显式写 false，不能靠默认");
+
+  const devUnused = pcfg.setting ? pcfg.setting.ignoreDevUnusedFiles : undefined;
+  ok("开发者工具里也不摇掉「没人 require 的」文件（模拟器/预览与上传两条路都要显式关）",
+    devUnused === false,
+    "ignoreDevUnusedFiles 没显式写成 false（现在是 " + JSON.stringify(devUnused) + "）。" +
+      "它与 ignoreUploadUnusedFiles 是**两个**开关：前者管开发者工具的模拟器/预览/真机调试，" +
+      "后者管上传。两只默认值都是「过滤无依赖文件」，而模块图只认 .js，" +
+      "data/ 下的 JSON 一个都不在图上 —— 关一只，另一条路照样把语料摇没。" +
+      "症状：工具里编译后控制台打「语料 没进这个包」，编译输出里一行 " +
+      "`ignoring files: data/books/*.json …`，而磁盘上那份就在那儿（Issue #175）");
+
+  const includeList = (pcfg.packOptions || {}).include || [];
+  const includeValues = includeList.map((r) => String(r.value || ""));
+  const mustInclude = ["data/books", "data/course.json", "data/shards.json",
+    "data/pinyin-table.json", "data/roster.json"];
+  const missingInclude = mustInclude.filter((v) => includeValues.indexOf(v) < 0);
+  ok("进包的语料在 packOptions.include 里（include 压过 ignore，且不靠分析器的判断）",
+    missingInclude.length === 0,
+    "packOptions.include 缺：" + JSON.stringify(missingInclude) + " —— " +
+      "include 是「无论分析器怎么想都带上」的那一档，优先级高于 ignore。" +
+      "缺了它，语料能不能进包就全看两只 ignoreUnused 开关，" +
+      "而将来再有人动一次编译模式，又会静默漏掉一份");
+
+  ok("include 不把 data/texts 拉回主包（26MB 的分片只走云与磁盘）",
+    !includeValues.some((v) => v === "data/texts" || v.indexOf("data/texts/") === 0),
+    "packOptions.include 里出现了 data/texts —— include 压过 ignore，" +
+      "主包会因此多背 26MB，微信那边直接传不上去");
 
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
@@ -5835,22 +5926,28 @@ function gapped(items, max) {
       "而那条路其实是通的");
 
   ok("云调用两栏「本机填过就用本机的，没填过用包里注入那份」",
-    /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*server\.cloud\(\)/.test(remoteSrc) &&
+    /function cloudOf\(\)\s*\{[\s\S]{0,200}?session\(\)\.cloud\s*\|\|\s*packedCloud\(\)/.test(remoteSrc) &&
       /require\("\.\/server"\)/.test(remoteSrc),
     "没有注入那一层时，用户必须自己去管理页填两栏才能用 —— 而那是部署方的事");
 
   {
     const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
-    ok("server.js 是构建产物：构建期从环境变量注入（不是把值写在源码里）",
+    ok("云调用两栏是构建产物：值由 build-data.js 从环境变量写进 server.js",
       !fs.existsSync(path.join(ROOT, "..", "miniprogram", "utils", "server.js")) ||
         /CLOUD_ENV/.test(buildSrc) && /CLOUD_SERVICE/.test(buildSrc) &&
         /utils", "server\.js"\)/.test(buildSrc),
-      "语料是构建产物，云调用两栏也该是 —— 值只存在密钥仓库 wechat-ci.yml 里，" +
-        "由 build-data.js 写进 utils/server.js（该文件已 gitignore）");
-    ok("server.js 不进代码库",
-      /miniprogram\/utils\/server\.js/.test(
-        fs.readFileSync(path.join(__dirname, "..", ".gitignore"), "utf8")),
-      "带真实值的 server.js 一旦入库，密钥就跟着代码走了");
+      "值只存在密钥仓库 wechat-ci.yml 里，由 build-data.js 在构建期覆写 server.js");
+    ok("两栏都没设时构建只读不改 —— 不把空壳删掉",
+      /SERVER_KEYS\.filter[\s\S]{0,400}?!fs\.existsSync\(SERVER_FILE\)/.test(buildSrc),
+      "没注入就整份覆写（或删掉）server.js：本地开发与 CI 之间来回切会把空壳弄丢，" +
+        "下一次构建就 module not found");
+    ok("server.js 是入库的空壳（gitignore 不许挡它）",
+      fs.existsSync(path.join(__dirname, "..", "miniprogram", "utils", "server.js"))
+        && !/miniprogram\/utils\/server\.js/.test(
+          fs.readFileSync(path.join(__dirname, "..", ".gitignore"), "utf8")),
+      "server.js 少了或被 gitignore 挡住 —— 它不在时 require(\"./server\") 抛 " +
+        "MODULE_NOT_FOUND，remote.js 整条链断掉，首页在 onLoad 前就报错（Issue #175）；" +
+        "值由 build-data.js 在构建期覆写，空壳本体的值本来就该是空");
   }
 
   {
@@ -5928,6 +6025,19 @@ function gapped(items, max) {
         "「先去备案」上推");
   }
 
+  ok("server.js 不在时 remote.js 照样加载得进（缺它不许把页面拖死）",
+    /function packedCloud\(\)\s*\{[\s\S]{0,200}?require\("\.\/server"\)[\s\S]{0,120}?catch/.test(remoteSrc),
+    "require(\"./server\") 没兜住 MODULE_NOT_FOUND：这个文件一缺，" +
+      "remote.js 整个模块加载失败，主包页面在 onLoad 前就抛 —— 首页连语料都渲染不出来（Issue #175）");
+
+  ok("云调用失败时把「实际用的环境 / 服务」带出来（102002 这类话才好自查）",
+    /function cloudFailError\(/.test(remoteSrc) &&
+      /err2\.env\s*=\s*conf\.env/.test(remoteSrc) &&
+      /err2\.service\s*=\s*conf\.service/.test(remoteSrc) &&
+      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf\)\)/.test(remoteSrc),
+    "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
+      "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
+      "一次就能看出「包里的 env 不是我这个小程序的那个」");
   ok("云开发环境 ID 填成云托管那个时当场说清（两个是不同的环境）",
     /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
     "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +
@@ -7263,6 +7373,12 @@ function gapped(items, max) {
   ok("首页缺语料时照常渲染（各卡片自己露出断口）",
     !/hasData/.test(homeJsNoData) || !/noData|buildRev/.test(homeJsNoData),
     "home.js 又在 refresh 里按 hasData 改走另一套渲染 —— 卡片不再按真实数据报错");
+  ok("课本目录空了要说出来，不许静默空着",
+    /catalogCount\s*:\s*catalog\.length/.test(homeJsNoData)
+      && /catalogLead\s*:/.test(homeJsNoData)
+      && /!catalogCount/.test(homeWxmlNoData),
+    "选课内那一屏（未登录首页）在不给空态 —— 语料缺了目录就是整块空白，" +
+      "看着像数据丢了，只有控制台那一行才说明白（Issue #175）");
   const appSrc = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
   ok("缺语料改在控制台报（版本 + 语料在不在）",
     /console\.info[\s\S]{0,200}corpus\.hasData\(\)/.test(appSrc)
@@ -7601,16 +7717,17 @@ function gapped(items, max) {
     "还有注释：" + dirty.slice(0, 8).join("、") +
       " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
 
-  const generated = ["miniprogram/utils/server.js", "miniprogram/data/books/books.json"];
+  const generated = ["miniprogram/data/books/books.json"];
   const leaked = generated.filter((rel) => {
     if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);
     if (!fs.existsSync(p)) return false;
     return commentAt(fs.readFileSync(p, "utf8")) >= 0;
   });
-  ok("构建期生成的文件没有注释，也不入库（值从密钥仓库来）", leaked.length === 0,
+  ok("构建期生成的文件没有注释，也不入库", leaked.length === 0,
     "构建产物带了注释或入了库：" + leaked.join("、") +
-      " —— server.js 该由 build-data.js 生成且被 .gitignore 挡住");
+      " —— 语料是构建产物，由 build-data.js 生成且被 .gitignore 挡住；" +
+      "server.js 反过来：它是入库的空壳，只有值由构建期写");
 }
 
 Promise.all(pending).then(() => {

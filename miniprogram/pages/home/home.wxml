@@ -33,6 +33,12 @@
 
         <view class="row-end"><text class="row-lock">登录</text></view>
       </view>
+
+      <view class="empty" wx:if="{{!loading && !catalogCount}}">
+        <text class="empty-mark">诗</text>
+        <text class="empty-text">{{catalogLead}}</text>
+        <text class="hint empty-tip">{{catalogMiss}}</text>
+      </view>
     </view>
 
     <view class="safe-bottom"></view>

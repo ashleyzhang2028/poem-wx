@@ -144,6 +144,26 @@ const PACKED = {
   }
 };
 
+const PACKED_BOOK_ROWS = {
+  poems: function () { return require("../data/books/poems.json"); },
+  classic: function () { return require("../data/books/classic.json"); },
+  yuefu: function () { return require("../data/books/yuefu.json"); },
+  tangshi: function () { return require("../data/books/tangshi.json"); },
+  gushi: function () { return require("../data/books/gushi.json"); },
+  songci: function () { return require("../data/books/songci.json"); },
+  yuanqu: function () { return require("../data/books/yuanqu.json"); },
+  guwen: function () { return require("../data/books/guwen.json"); },
+  jinxiandai: function () { return require("../data/books/jinxiandai.json"); },
+  zhaoming: function () { return require("../data/books/zhaoming.json"); },
+  chengyu: function () { return require("../data/books/chengyu.json"); },
+  changshi: function () { return require("../data/books/changshi.json"); },
+  mingshu: function () { return require("../data/books/mingshu.json"); },
+  mingren: function () { return require("../data/books/mingren.json"); },
+  "mingren-waiguo": function () { return require("../data/books/mingren-waiguo.json"); },
+  dwang: function () { return require("../data/books/dwang.json"); },
+  "dwang-waiguo": function () { return require("../data/books/dwang-waiguo.json"); }
+};
+
 let dataReady = null;
 
 function hasData() {
@@ -191,6 +211,16 @@ function readJson(rel, fallback) {
   }
 }
 
+function packedRows(bookId) {
+  const hit = PACKED_BOOK_ROWS[bookId];
+  if (!hit) return null;
+  try {
+    return hit();
+  } catch (e) {
+    return null;
+  }
+}
+
 function books() {
   if (!booksCache) booksCache = packed("books") || [];
   return booksCache;
@@ -203,7 +233,7 @@ function bookById(id) {
 function ofBook(bookId) {
   if (!bookCache[bookId]) {
     const meta = bookById(bookId);
-    const rows = readJson(BOOKS_DIR + bookId + ".json", []);
+    const rows = packedRows(bookId) || readJson(BOOKS_DIR + bookId + ".json", []);
     bookCache[bookId] = rows.map(function (p) {
       p.b = bookId;
       p.n = meta ? meta.name : bookId;

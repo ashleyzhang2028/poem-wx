@@ -4,12 +4,19 @@
     "ignore": [
       { "type": "folder", "value": "data/texts" }
     ],
-    "include": []
+    "include": [
+      { "type": "folder", "value": "data/books" },
+      { "type": "file", "value": "data/course.json" },
+      { "type": "file", "value": "data/shards.json" },
+      { "type": "file", "value": "data/pinyin-table.json" },
+      { "type": "file", "value": "data/roster.json" }
+    ]
   },
   "setting": {
     "urlCheck": true,
     "es6": true,
     "ignoreUploadUnusedFiles": false,
+    "ignoreDevUnusedFiles": false,
     "uglifyFileName": false,
     "enhance": true,
     "postcss": true,
