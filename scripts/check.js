@@ -6327,6 +6327,12 @@ function gapped(items, max) {
     /node scripts\/build-data\.js/.test(cnb) && !/POEM_WEB_DIR/.test(cnb),
     "还在用 POEM_WEB_DIR 指过去 —— 语料已经在本仓库 scripts/corpus/ 里了");
 
+  ok("自检任务只跑一个入口（口径写在 scripts/build-and-check.js 一处，yml 里不再逐条列命令）",
+    /- name: 自检[\s\S]*?script:\s*\n\s*- node scripts\/build-and-check\.js\n/.test(cnb),
+    "`\"**\":` 那个自检任务的 script 不是 `node scripts/build-and-check.js` 一行 —— " +
+      "逐条列命令意味着往自检链上插一步要同时改 yml 与编译入口两处，" +
+      "而漏改一处不会有任何报错（顺序错了更是静默给出错误结论）");
+
   ok(".cnb.yml 里那份镜像推在本仓库名下的 wx-api 槽位",
     /\$\{CNB_DOCKER_REGISTRY\}\/\$\{CNB_REPO_SLUG_LOWERCASE\}\/wx-api/.test(cnb),
     "镜像名与文档里那一栏必须对得上，否则云托管拉不到");
@@ -6910,9 +6916,10 @@ function gapped(items, max) {
       "镜像里没有 mysql2 → 配了 MYSQL_HOST 也只能退回内存档，每次重启丢数据");
 
     const cnb3 = fs.readFileSync(path.join(repo4, ".cnb.yml"), "utf8");
+    const runner = fs.readFileSync(path.join(repo4, "scripts", "build-and-check.js"), "utf8");
     ok("CI 里真的跑了 e2e-mysql（形状那几条验不了语义）",
-      /e2e-mysql\.js/.test(cnb3),
-      "流水线里没有 e2e-mysql —— 那条「新的赢」在换库后还在不在，就没人验了");
+      /e2e-mysql\.js/.test(cnb3) || /e2e-mysql\.js/.test(runner),
+      "自检链里没有 e2e-mysql —— 那条「新的赢」在换库后还在不在，就没人验了");
     ok("scripts/e2e-mysql.js 与它的假 MySQL 都在",
       fs.existsSync(path.join(repo4, "scripts", "e2e-mysql.js")) &&
         fs.existsSync(path.join(repo4, "scripts", "mysql-facade.js")),
