@@ -1,6 +1,7 @@
 "use strict";
 
 var ROUTES = {
+  "GET /count": "./../_routes/count.js",
   "POST /send-code": "./../_routes/send-code.js",
   "POST /verify-code": "./../_routes/verify-code.js",
   "GET /me": "./../_routes/me.js",
@@ -82,9 +83,16 @@ function resolve(method, url) {
   return null;
 }
 
+function list() {
+  return Object.keys(ROUTES).map(function (k) {
+    return k.split(" ")[1];
+  });
+}
+
 module.exports = {
   ROUTES: ROUTES,
   PATHS: PATHS,
   PREFIX: PREFIX,
+  list: list,
   resolve: resolve
 };
