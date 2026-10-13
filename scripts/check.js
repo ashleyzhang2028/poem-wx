@@ -7199,6 +7199,37 @@ function gapped(items, max) {
 }
 
 {
+  const repo5 = path.join(ROOT, "..");
+  const routesSrc = fs.readFileSync(path.join(repo5, "api", "_lib", "routes.js"), "utf8");
+  const handlerSrc = fs.readFileSync(path.join(repo5, "api", "handler.js"), "utf8");
+  const countSrc = fs.readFileSync(path.join(repo5, "api", "_routes", "count.js"), "utf8");
+  const setup5 = fs.readFileSync(path.join(repo5, "docs", "wx-cloud-setup.md"), "utf8");
+  const deployReadme5 = fs.readFileSync(path.join(repo5, "deploy", "README.md"), "utf8");
+
+  ok("ROUTES 表里有 GET /count（控制台「云端调试」打的就是它）",
+    /"GET \/count":/.test(routesSrc),
+    "微信云托管控制台的云端调试预填 `GET /api/count`，模板自己那份回 " +
+      "`{\"E_404\":\"没有这个接口。\"}` —— 这份镜像不认这个路径时，" +
+      "人分不清「后端没部署好」和「这是模板的占位接口」（Issue #181）");
+  ok("routes.js 导出 list()，且就是 ROUTES 那张表",
+    /function list\(\)/.test(routesSrc) && /list: list/.test(routesSrc),
+    "接口清单得从路由表来 —— 另抄一份清单，两边迟早对不上");
+  ok("count.js 的清单取自 routes.list()",
+    /routes\.list\(\)/.test(countSrc),
+    "自己再列一遍接口名，等于多一处要跟着 ROUTES 表走的东西");
+  ok("404 的正文点明了接口表在哪儿",
+    /api\/_lib\/routes\.js/.test(handlerSrc),
+    "只回一句「没有这个接口」，下一个人还是得翻代码才知道这一版有哪些接口");
+
+  const cross = /api\/count/.test(setup5) && /api\/_lib\/routes\.js/.test(setup5) &&
+    /api\/count/.test(deployReadme5);
+  ok("文档说清了 /api/count 是这一版镜像的接口表、与模板同名接口怎么分",
+    cross,
+    "控制台模板里那个同名路径回 `E_404`，文档不写这一条，" +
+      "「云端调试」回 404 就会被当成「后端没部署好」");
+}
+
+{
   const walkWxml = (dir) => {
     const out = [];
     for (const f of fs.readdirSync(dir)) {

@@ -271,6 +271,25 @@ SHOW TABLES;   -- 要看到 accounts / wx_accounts / progress / sessions …
 https://poem-wx-326045-4-1502724481.sh.run.tcloudbase.com/healthz   →   回 ok
 ```
 
+`/healthz` 只说明**进程还活着**，不说明这一版镜像里有哪些接口。控制台「云端调试」
+里那条预填的 `GET /api/count` 就是给这一步用的：
+
+```
+GET /api/count   →   200，正文是这一版镜像的接口表
+```
+
+控制台那两条（`/api/count`、`/healthz`）**只有 `/api/count` 是这份镜像的**，
+而它正好能分清两种「404」：
+
+| 现象 | 是什么 |
+|---|---|
+| `/api/count` 回 200 的清单 | 容器活着，这一版后端在应答；别的路径 404 就是那一版真没这个接口 |
+| `/api/count` 回 404 | 打到的**不是这份镜像** —— 服务没起来、部署的是别人家的代码（如模板里的 `E_404 / 没有这个接口`），或请求落在了静态站那层 |
+
+⚠️ 控制台的**模板示例**里那个 `/api/count` 回的是 `{"E_404":"没有这个接口。"}` ——
+那是模板自己的占位接口，不是这份镜像。照着它判断「后端部署好了没」会得出反的结论。
+真判据是 `/api/count` 回一张 `/…` 开头的清单，与 `api/_lib/routes.js` 上的 ROUTES 表逐条对得上。
+
 默认域的形状是 `<服务名>-<环境ID>.sh.run.tcloudbase.com`：
 
 | 段 | 值 | 从哪儿拿 |
@@ -423,6 +442,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 昨天还好，今天打不开 | 免费档缩容到 0 实例 | 加个定时探活打 `/healthz`，5 分钟以上一次 |
 | 同上 | 「公网访问」被关回去了 | 服务设置 → 基础信息里打开 |
 | curl 也不通 | 服务没起来 / 公网访问关着 | 看服务日志与实例数 |
+| **控制台「云端调试」里打 `/api/count` 回 404 `E_404 没有这个接口`** | 打到的不是这份镜像 —— 那个路径是控制台模板的占位接口，模板自己的代码也在回它 | 先确认服务部署的是本仓库那份镜像（§ 二，tag 要具体版本号）；部署好了之后 `/api/count` 回**接口清单**，清单与 `api/_lib/routes.js` 对得上才算这一版在应答 |
 | curl 通、真机不通 | 本机填过错的云调用两栏，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空；本机那两栏清空即回到包里那份 |
 | 点登录弹 `errCode: -1 \| errMsg: Cloud API isn't enabled, please call ...` | 客户端没先 `wx.cloud.init` 就调 `wx.cloud.callContainer`（`utils/remote.js` 的 `cloudReady()` 补这一步，同一 env 只 init 一次） | 已在代码里修。若自己另写调用，先 `wx.cloud.init({ env })` 再 `callContainer`；一直回这句也说明小程序没开通云开发（§ 6.1） |
 | 点登录弹 `wx.cloud.init 没成功 … env not exists` | `env` 那一格不是云开发环境 ID，或这个小程序没开通云开发 | 同上一格：填**云开发**环境 ID，不是云托管那个数字环境 ID |

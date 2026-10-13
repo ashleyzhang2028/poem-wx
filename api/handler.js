@@ -22,7 +22,10 @@ function routeUrl(rawUrl) {
 module.exports = function (req, res) {
   var hit = routes.resolve(req.method, routeUrl(req.url));
   if (!hit) {
-    return H.json(res, 404, { code: "E_404", message: "没有这个接口。" });
+    return H.json(res, 404, {
+      code: "E_404",
+      message: "没有这个接口。这一版后端的接口表在 api/_lib/routes.js，逐条列在 GET /api/count。"
+    });
   }
   return hit.handler(req, res);
 };
