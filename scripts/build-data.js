@@ -139,12 +139,12 @@ function main() {
       });
       return copy;
     });
-    writeJson(path.join(OUT_DIR, "books", b + ".json"), rows);
+    writeModule(path.join(OUT_DIR, "books", b + ".js"), rows);
   });
 
-  writeJson(path.join(OUT_DIR, "books", "books.json"), books);
+  writeModule(path.join(OUT_DIR, "books", "books.js"), books);
 
-  writeJson(path.join(OUT_DIR, "course.json"), courseTexts);
+  writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writeBuckets(texts);
   writePinyin(W, index, courseTexts, texts);
   writeTextIndex(courseTexts, texts, W);
@@ -152,8 +152,8 @@ function main() {
   writeServer();
 
   console.log("索引 " + index.length + " 条，按 " + Object.keys(byBook).length + " 部集子拆分");
-  const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.json")).size / 1024);
-  console.log("课内正文 " + Object.keys(courseTexts).length + " 条进主包，course.json " + courseKb + "KB");
+  const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.js")).size / 1024);
+  console.log("课内正文 " + Object.keys(courseTexts).length + " 条进主包，course.js " + courseKb + "KB");
   console.log("正文分片 " + Object.keys(texts).length + " 条走云端");
 }
 
@@ -199,7 +199,7 @@ function writeBuckets(texts) {
     manifest.push({ n: name, c: ids.length, kb: Math.round(fs.statSync(file).size / 1024) });
   });
 
-  writeJson(path.join(OUT_DIR, "shards.json"), { buckets: manifest, map: map });
+  writeModule(path.join(OUT_DIR, "shards.js"), { buckets: manifest, map: map });
 
   const total = manifest.reduce(function (a, b) { return a + b.kb; }, 0);
   console.log("正文分片 " + manifest.length + " 个，" + total + "KB（未压缩）");
@@ -236,14 +236,14 @@ function writePinyin(W, index, courseTexts, texts) {
     console.log("常用字表缺失，生僻字改用频次判据");
   }
 
-  writeJson(path.join(OUT_DIR, "pinyin-table.json"), {
+  writeModule(path.join(OUT_DIR, "pinyin-table.js"), {
     chars: chars,
     words: words,
     common: commonSet,
     poly: polyphones(chars)
   });
 
-  const size = fs.statSync(path.join(OUT_DIR, "pinyin-table.json")).size;
+  const size = fs.statSync(path.join(OUT_DIR, "pinyin-table.js")).size;
   console.log(
     "读音表 " + Object.keys(chars).length + " 字，词组 " + Object.keys(words).length +
     " 条，常用字 " + Object.keys(commonSet).length + " 个，" +
@@ -281,7 +281,7 @@ function extractWords(file, W) {
 
 function writeTextIndex(courseTexts, texts, W) {
 
-  const manifest = JSON.parse(fs.readFileSync(path.join(OUT_DIR, "shards.json"), "utf8"));
+  const manifest = require(path.join(OUT_DIR, "shards.js"));
   const postings = {};
 
   Object.keys(texts).forEach(function (id) {
@@ -303,11 +303,11 @@ function writeTextIndex(courseTexts, texts, W) {
 
 function writeRoster() {
   const raw = process.env.POEM_ROSTER;
-  const file = path.join(OUT_DIR, "roster.json");
+  const file = path.join(OUT_DIR, "roster.js");
 
   if (!raw) {
 
-    writeJson(file, { generatedAt: "", note: "未导入", users: [] });
+    writeModule(file, { generatedAt: "", note: "未导入", users: [] });
     console.log("名录未导入：管理页只显示本机授权（要导入就设 POEM_ROSTER）");
     return;
   }
@@ -336,7 +336,7 @@ function writeRoster() {
       };
     });
 
-  writeJson(file, { generatedAt: new Date().toISOString().slice(0, 10), note: "", users: safe });
+  writeModule(file, { generatedAt: new Date().toISOString().slice(0, 10), note: "", users: safe });
   console.log("名录导入 " + safe.length + " 人（构建产物，不入库）");
 }
 
@@ -377,6 +377,12 @@ function writeServer() {
       SERVER_KEYS.filter(function (k) { return !values[k]; }).join(" / ") + " 是空的，" +
       "这个包仍算没配服务器");
   }
+}
+
+function writeModule(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, "module.exports = " + JSON.stringify(data) + ";\n");
+  fs.rmSync(file.replace(/\.js$/, ".json"), { force: true });
 }
 
 function writeJson(file, data) {

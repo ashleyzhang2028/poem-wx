@@ -10,7 +10,7 @@ function collectChars() {
   const dir = path.join(__dirname, "..", "miniprogram", "data", "books");
   const chars = new Set();
   fs.readdirSync(dir).forEach((f) => {
-    JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")).forEach((it) => {
+    require(path.join(dir, f)).forEach((it) => {
       String(it.t || "").split("").forEach((c) => chars.add(c));
       String(it.a || "").split("").forEach((c) => chars.add(c));
     });

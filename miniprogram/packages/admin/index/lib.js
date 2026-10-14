@@ -9,7 +9,7 @@ let rosterCache = null;
 function roster() {
   if (rosterCache) return rosterCache;
   try {
-    rosterCache = require("../../../data/roster.json");
+    rosterCache = require("../../../data/roster.js");
   } catch (e) {
     rosterCache = { users: [], note: "名册未生成" };
   }

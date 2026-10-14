@@ -1,9 +1,9 @@
 const store = require("./store");
 
-const TABLE = "data/pinyin-table.json";
+const TABLE = "data/pinyin-table.js";
 
 const PACKED_TABLE = function () {
-  return require("../data/pinyin-table.json");
+  return require("../data/pinyin-table.js");
 };
 
 let tableCache = null;
