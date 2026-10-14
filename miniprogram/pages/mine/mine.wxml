@@ -32,11 +32,11 @@
     </view>
 
     <view class="login-row" wx:if="{{!logged}}">
-      <button class="btn primary block" bindtap="onLogin">微信登录</button>
+      <button class="btn primary block" bindtap="onLogin">登录</button>
     </view>
 
     <block wx:else>
-      <button class="btn ghost mini logout" bindtap="onLogout">退出登录</button>
+      <button class="btn ghost mini logout" bindtap="onLogout">退出</button>
     </block>
   </view>
 
@@ -166,7 +166,7 @@
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
       <view class="row-icon">问</view>
-      <view class="row-main"><text class="row-title">关于与反馈</text></view>
+      <view class="row-main"><text class="row-title">关于</text></view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">

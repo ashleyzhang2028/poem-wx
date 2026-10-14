@@ -120,6 +120,8 @@ function sendCloud(path, data, method) {
   return cloudCall(conf, path, data, method);
 }
 
+const CLOUD_TIMEOUT_MS = 15000;
+
 function cloudCall(conf, path, data, method) {
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
@@ -132,6 +134,7 @@ function cloudCall(conf, path, data, method) {
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       data: data,
+      timeout: CLOUD_TIMEOUT_MS,
       success: (res) => (res.statusCode >= 200 && res.statusCode < 300
         ? resolve(res.data)
         : reject(httpError(res.statusCode, res.data))),
@@ -158,7 +161,11 @@ function cloudFailHint(say) {
     return "平台按上面那个服务名找不到可路由的服务 —— 你这个小程序的云托管里没有这个名字" +
       "（没建，或建在别的环境里）。服务名逐字取自云托管「服务管理」，不是云开发环境 ID。";
   }
-  return "环境 ID 对不上这个小程序的云开发环境时，平台就回 102002 这类话";
+  if (/102002/.test(say)) {
+    return "多为请求超时：云托管实例缩容到 0 后冷启动超过了等待时间，稍后重试；" +
+      "要根治就把服务的最小实例数设为 1。若重试仍是 102002，再核对环境 ID 是不是这个小程序名下的";
+  }
+  return "环境 ID 对不上这个小程序的云开发环境时，平台会回 env not exists 这类话";
 }
 
 function httpError(statusCode, data) {

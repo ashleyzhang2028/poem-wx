@@ -10,22 +10,20 @@
         </view>
         <view class="seal"><text class="seal-t">跬</text></view>
       </view>
-      <button class="btn primary block hero-btn" bindtap="onLogin">微信登录</button>
+      <button class="btn primary block hero-btn" bindtap="onLogin">登录</button>
     </view>
 
     <view class="guest-bar" hover-class="guest-bar-hover" hover-stay-time="60" bindtap="onLogin">
-      <text class="guest-title">当前是浏览模式</text>
-      <text class="guest-sub">登录后可用 · 一年级诗词可看，点开与背诵需登录</text>
+      <text class="guest-title">游客模式</text>
     </view>
 
     <view class="card toc">
       <view class="toc-head">
-        <text class="card-title bar">课本目录</text>
+        <text class="card-title bar">课内诗词</text>
       </view>
 
       <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
-        <text class="seq">{{item.seq}}</text>
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
@@ -80,12 +78,12 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">今日加背</view>
+      <view class="card-title bar">加背</view>
       <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
     </view>
 
     <view class="card">
-      <view class="card-title bar">今日安排</view>
+      <view class="card-title bar">计划</view>
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
         <view class="plan-row" hover-class="row-hover" hover-stay-time="60"
@@ -106,9 +104,9 @@
 
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">今天还没排计划</text>
+        <text class="empty-text">今日未排计划</text>
 
-        <button class="btn ghost mini empty-btn" bindtap="onSettings">去设置</button>
+        <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>
     </view>
 

@@ -3,5 +3,5 @@
   <text class="lock-title">{{title}}</text>
 
   <text class="lock-note" wx:if="{{note}}">{{note}}</text>
-  <button class="btn primary block lock-btn" bindtap="onLogin">微信登录</button>
+  <button class="btn primary block lock-btn" bindtap="onLogin">登录</button>
 </view>
