@@ -286,6 +286,10 @@ node scripts/build-data.js
 `main` 的发布流水线只列 `api/**`、`deploy/**`、`deploy-api-serve/**` 与 `.cnb.yml` ——
 这四样一个都没动，那一步连跑都不跑。名单与它必须一致，自检守着（`check.js`）。
 
+推 `main` 之外还有一个人工入口：`main` 分支详情页上的「发布」按钮
+（`.cnb/web_trigger.yml` → `web_trigger_release`）。脚本与推 `main` 那份是同一套，
+只是不挂 `ifModify` —— 手动发版要的正是「不看改了什么，按当前代码重出一遍」。
+
 拿 `main` 上那 357 个提交量过一遍：
 
 | 类别 | 提交数 | 该不该出镜像 |

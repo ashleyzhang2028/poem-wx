@@ -1,0 +1,6 @@
+branch:
+  - reg: ^main$
+    buttons:
+      - name: 发布
+        description: 镜像 → GHCR → 体验版 → 同步 GitHub（跑刚推上去的这一版）
+        event: web_trigger_release

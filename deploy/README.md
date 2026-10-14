@@ -86,6 +86,11 @@
 见 `.cnb.yml` 的「发布（自检 → 镜像 → 体验版）」—— 推 `main` 触发，镜像 tag 是
 本仓库这一版的短 sha（`${CNB_COMMIT_SHORT}`），不是分支名。
 
+**另一个入口是 `main` 分支详情页上那个「发布」按钮**（`.cnb/web_trigger.yml` →
+`web_trigger_release`）—— 链与推 `main` 那份逐字相同，只是不挂 `ifModify`：
+手动要的正是「无论这次改了什么，都按当前代码重出一遍」。两个入口的脚本
+由 `scripts/check.js` 逐行比着，只改一处就红。
+
 ⚠️ **`api/` 是整棵拷的，但只剩白名单放行的那几条。** 白名单写错时「构建绿、部署绿、
 容器起来才报 `Cannot find module`」（Issue #134）。白名单逐条放行 `api/**` 与
 `_routes/**`，逐个目录都在 `.dockerignore` 里列着 —— 改它时对着
