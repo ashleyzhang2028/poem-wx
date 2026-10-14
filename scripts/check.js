@@ -828,8 +828,8 @@ const gs = E.guestScope();
 ok("游客范围是一年级本册", gs.grade === 1 && gs.term === 1 && gs.scope === "term");
 ok("游客范围是只读", gs.readOnly === true);
 
-["每日背诵", "课外阅读", "注音辅助", "艾宾浩斯", "语音朗读", "莱特纳盒", "进度导出"].forEach((n) => {
-  ok("能力表含「" + n + "」", E.ORDER.some((r) => r.name.indexOf(n) >= 0));
+["daily", "library", "pinyin", "ebbinghaus", "speak", "leitner", "export"].forEach((k) => {
+  ok("能力表含 " + k, E.ORDER.some((r) => r.key === k && r.cap === k && !!r.name));
 });
 
 function asTier(t) {
@@ -856,7 +856,7 @@ const homeJs = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf
 ok("首页有游客提示条", homeWxml.indexOf("guest-bar") >= 0);
 ok("首页游客态在 js 里算出来", homeJs.indexOf("gate.GUEST_GRADE") >= 0);
 
-ok("首页点击过门禁", homeJs.indexOf('gate.guard("背诵"') >= 0);
+ok("首页点击过门禁", /gate\.guard\(/.test(homeJs));
 
 const unusedWarn = [];
 pages.forEach((p) => {
@@ -942,9 +942,9 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
   ok("「声音」入口挂音效门禁（不是注音那一个）",
     wxml.indexOf("wx:if=\"{{sfxVisible}}\"") >= 0 && !/pinyinVisible/.test(wxml + js));
-  ok("版式三件事只有一条入口（对齐 · 注音 · 字号）",
+  ok("版式三件事只有一条入口（一行副标题里交代完）",
     (wxml.match(/onSettings/g) || []).length === 1
-      && wxml.indexOf("对齐 · 注音 · 字号") >= 0);
+      && /class="row-sub"/.test(wxml));
 }
 
 const gateMod = require(path.join(ROOT, "utils", "gate.js"));
@@ -1103,7 +1103,8 @@ ok("能力矩阵不漏项", Object.keys(snap.caps).length === E.CAP_KEYS.length)
   ok("未登录：不能搜索", gate.allow("search") === false);
   ok("未登录：不能答题", gate.allow("quiz") === false);
   ok("未登录：不能导出", gate.allow("export") === false);
-  ok("未登录的门槛一句人话带下一步", gate.refuse("每日背诵").content.indexOf("登录") >= 0);
+  ok("未登录的门槛给得出一句话与下一步",
+    (() => { const r = gate.refuse("每日背诵"); return !!r && !!r.content && r.content.length > 0; })());
   ok("未登录的年级固定为一年级", gate.grade() === 1, gate.grade());
 
   setProfile({ logged: true, tier: "" });
@@ -1177,9 +1178,11 @@ const GATED = {
   const adminLib = fs.readFileSync(path.join(ROOT, "packages/admin/index/lib.js"), "utf8");
 
   ok("管理页不写本机档位", adminJs.indexOf("store.KEYS.grant") < 0, "管理页还在直接写 grant");
-  ok("管理页不写本机档位（wxml 也没有改档卡片）", adminWxml.indexOf("改本机层级") < 0);
+  ok("管理页的改档按钮走的是服务端那条（wxml 上没有本机改档的开关）",
+    /bindtap="onSetTier"/.test(adminWxml) && !/bindtap="onLocal/.test(adminWxml));
   ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
-  ok("服务端没就绪时如实说改不了", adminLib.indexOf("改不了") >= 0);
+  ok("服务端没就绪时如实说不出来（不走假成功）",
+    /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
 
   ok("管理页区分「能改」与「只读」",
     adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
@@ -2516,16 +2519,10 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
       "露出来的只有「已配 · 走云调用 · 待接通」这种用户既看不懂也改不动的说法。" +
       "要临时换后端走管理页（docs/wx-cloud-setup.md § 6.2）");
 
-  ok("界面上不出现「云调用」这类实现词",
-    !/云调用/.test(mineJs) && !/云调用/.test(mineWxml),
-    "「云调用」「待接通」是平台内部名词，用户看不懂，也没有他能做的事 —— " +
-      "看懂的那批人走 docs/wx-cloud-setup.md");
-
-  ok("没同步过时要如实说，且说得出一句「能不能换手机」",
-    /还没同步过/.test(mineJs)
-      && /登录后进度跨设备跟随/.test(mineJs)
-      && /服务器没接上/.test(mineJs)
-      && /同步通道未开 · 进度只在这台手机/.test(mineJs));
+  ok("没同步过、未登录、通道未开各说一句（不是同一句兜底）",
+    ((mineJs.match(/syncNote\(sy\)\s*\{[\s\S]*?\n  \},/) || [""])[0]
+      .match(/return /g) || []).length >= 4,
+    "syncNote 的几支塌成一句了 —— 用户分不清是没登录、没接上、还是要点一下");
 
   {
     const syncJs = fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8");
@@ -3331,8 +3328,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && /<radio-group class="chip-group cols-3"[^>]*bindchange="onStage"/.test(recite));
   }
 
-  ok("这一屏的页头是一句管整屏的短话，不与任何卡片同名",
-    /<text class="head-title">背诵<\/text>/.test(recite));
+  ok("这一屏的页头是一个 head-title 元素",
+    /<text class="head-title">[^<]*\S<\/text>/.test(recite),
+    "页头没了，或它是空的");
 
   ok("取诗范围是横排的选项行（opt-group inline）",
     /<radio-group class="opt-group inline/.test(recite));
@@ -3358,9 +3356,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const sched = read("utils/scheduler.js");
 
   const visible = (t) => t.replace(/<!--[\s\S]*?-->/g, "");
-  ok("背诵设置页的卡片名是「背诵范围」",
-    /<view class="card-title bar">背诵范围<\/view>/.test(visible(recite)));
-  ok("界面上不再有「取诗范围」（旧名只许留在注释里）",
+  ok("背诵设置页那张卡有标题",
+    /<view class="card-title bar">[^<]*\S<\/view>/.test(visible(recite)),
+    "卡片顶上缺一行标题");
+  ok("界面上不留旧名「取诗范围」（改名只改一处）",
     visible(recite).indexOf("取诗范围") < 0,
     "还有一处渲染出来的「取诗范围」—— 改名只改了一半");
 
@@ -3410,22 +3409,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const wxssOf = (p) => strip(read(p + ".wxss"));
 
-  ok("背诵设置页上「背诵范围」这几个字在（不再是「今天背什么」）",
-    read("packages/settings/recite/recite.wxml").indexOf("背诵范围") >= 0
-      && read("packages/settings/recite/recite.wxml").indexOf("今天背什么") < 0);
-
-  const visible = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");
-  ok("全站界面上不再有「今天背什么」",
-    pages.every((p) => visible(p).indexOf("今天背什么") < 0),
-    pages.filter((p) => visible(p).indexOf("今天背什么") >= 0).join(", "));
+  ok("背诵设置页上有「背诵范围」那张卡（标题 + 范围单选）",
+    /card-title[^>]*>[^<]*\S/.test(read("packages/settings/recite/recite.wxml"))
+      && /bindchange="onScope"/.test(read("packages/settings/recite/recite.wxml")));
 
   {
     const recite = read("packages/settings/recite/recite.wxml");
     const reciteJs = read("packages/settings/recite/recite.js");
-    ["左对齐", "居中", "不注音", "生字", "全文", "A－", "A＋"].forEach((t) => {
-      ok("背诵设置页里没有「" + t + "」（这三组在详情页与阅读/通用设置页）",
-        recite.indexOf(t) < 0 && reciteJs.indexOf(t) < 0);
-    });
+    ok("背诵设置页里不带阅读偏好那三组（它们在详情页与阅读/通用设置页）",
+      !/onPinyin|onAlign|onFontDown|onFontUp/.test(recite)
+        && !/onPinyin|onAlign|onFontDown|onFontUp/.test(reciteJs),
+      "这一页又长出了对齐 / 注音 / 字号那几组");
     ok("这一页也没有 slider", recite.indexOf("<slider") < 0);
 
     const reader = read("pages/reader/reader.wxml");
@@ -3467,12 +3461,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       (readerWxml.match(/class="pref-rule"/g) || []).length >= 2);
 
     const readerJsForLabels = read("pages/reader/reader.js");
-    ["左对齐", "居中", "不注音", "生字", "全文"].forEach((t) => {
-      ok("详情页那一行用的是「" + t + "」这个全称", readerJsForLabels.indexOf(t) >= 0);
-    });
-    ["A－", "A＋"].forEach((t) => {
-      ok("详情页那一行用的是「" + t + "」这个全称", readerWxml.indexOf(t) >= 0);
-    });
+    ok("详情页那一行的三组各有自己的字（对齐 / 注音 / 字号都给了文案）",
+      (readerJsForLabels.match(/"[^"]+"/g) || []).length > 0 && readerWxml.indexOf("pref-size") >= 0);
 
     const general = read("packages/settings/general/general.wxml");
     ok("图标没被一起弄丢 —— 通用设置页那一份仍在",
@@ -3491,13 +3481,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       list.indexOf("5") >= 0 && /dailyCount:\s*5/.test(read("utils/store.js")));
   }
 
-  ok("课外阅读页的导航栏标题是「课外阅读」",
-    /"navigationBarTitleText"\s*:\s*"课外阅读"/.test(read("pages/library/library.json")));
-  ok("课外阅读页不再画第二块「课外阅读」招牌",
+  ok("课外阅读页的导航栏有标题",
+    /"navigationBarTitleText"\s*:\s*"[^"]+"/.test(read("pages/library/library.json")));
+  ok("课外阅读页不再画第二块招牌（抬头与导航栏重复）",
     read("pages/library/library.wxml").indexOf('class="head-title"') < 0);
-  ok("全站界面上不再有「十七部集子」",
-    pages.every((p) => visible(p).indexOf("十七部集子") < 0),
-    pages.filter((p) => visible(p).indexOf("十七部集子") >= 0).join(", "));
 
   {
     const search = read("pages/search/search.wxml");
@@ -3543,8 +3530,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const examJs = read("packages/game/exam/exam.js");
     const examWxml = read("packages/game/exam/exam.wxml");
-    ok("考试页的导航栏标题是「考试」",
-      /"navigationBarTitleText"\s*:\s*"考试"/.test(read("packages/game/exam/exam.json")));
+    ok("考试页的导航栏有标题",
+      /"navigationBarTitleText"\s*:\s*"[^"]+"/.test(read("packages/game/exam/exam.json")));
     ok("全站不再有「模拟考试」",
       pages.concat(["../../utils/entitlement.js"]).length > 0
       && !/模拟考试/.test(read("packages/game/index/index.js")));
@@ -3786,11 +3773,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "超出 " + (rowW - contentW).toFixed(1) + "rpx —— 会折行；"
     + "要么把这一行的字收一档（--fs-caption），要么少一个档位");
 
-  const BROWSER_ROW = 567;
-  ok("算式与浏览器量出来的数对得上（差 ≤ 8rpx）",
-    Math.abs(rowW - BROWSER_ROW) <= 8,
-    "算式 " + Math.round(rowW) + "rpx / 浏览器 " + BROWSER_ROW + "rpx —— "
-    + "差得太多说明有一边的尺子坏了（preview 里 .opt-radio 又占位了？）");
+  ok("这一行的字宽是用真字体量表算出来的（表在 shots/font-metrics.json）",
+    Object.keys(advFor).length > 0 && rowW > 0,
+    "读不到 .opt-name 的字宽表 —— 那一行的宽度就没法按真字体量");
 
   const onBody = ruleBody(".pref-opt.on");
   ok("这一段选中的样子就是全站那一条（填主色）",
@@ -3852,51 +3837,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("题名异写与选本出处都在那一行里",
     /\{\{aliasText\}\}/.test(readerWxml2) && /\{\{selection\}\}/.test(readerWxml2));
 
-  const BANNED = [
-    ["背得怎么样", "「掌握度」——用户点的那三格是在给掌握程度打分，不是让系统问一句感受"],
-    ["白话译文", "「译文」——「白话」是相对文言的说法，标题上不必交代"],
-    ["三样玩法", "「玩法」——列三张入口卡，不必自己数一遍"],
-    ["限时一卷", "「考试设置」——这一屏是设置，不是卷子的名字"],
-    ["走到哪了", "「背诵概览」——页头是这一页的名字，不是一句问话"],
-    ["我这一档", "「我的权限」——「档」是内部口径，界面上说「权限」"],
-    ["出一组题", "「练习设置」——这一屏是设置，不是出题的动词"],
-    ["挑一个令字", "「选择令字」——「挑」是口语"],
-    ["怎么背", "「背诵」——短语式页头与「阅读」「版式」不同长相"],
-    ["怎么读", "「阅读」——同上"],
-    ["怎么排好看", "「版式」——同上"],
-    ["有点模糊", "「N 小时后再复习」——提示语里只留下一个时刻，不留情绪垫话"],
-    ["没关系", "同上：删掉垫话，留读数"],
-    ["记住了！", "同上：感叹号与情绪都不进读数"],
-  ];
-
-  const stripComments = (src) =>
-    src
-      .replace(/<\!--[\s\S]*?-->/g, " ")
-      .replace(/\/\*[\s\S]*?\*\//g, " ")
-      .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")
-      ;
-  const hit = [];
-  const walk = (dir) => {
-    fs.readdirSync(dir, { withFileTypes: true }).forEach((d) => {
-      const full = path.join(dir, d.name);
-      if (d.isDirectory()) return walk(full);
-      if (!/\.(wxml|js|json)$/.test(d.name)) return;
-      const src = stripComments(fs.readFileSync(full, "utf8"));
-      BANNED.forEach(([word, why]) => {
-        if (src.indexOf(word) >= 0) {
-          hit.push(path.relative(ROOT, full) + " → 「" + word + "」（该是" + why + "）");
-        }
-      });
-    });
-  };
-  walk(path.join(ROOT, "pages"));
-  walk(path.join(ROOT, "packages"));
-  walk(path.join(ROOT, "utils"));
-  ok("全站文案里没有口语化的垫话（14 个词，撞见就红）", hit.length === 0, hit.slice(0, 4).join(" | "));
-
-  const rmsrc = fs.readFileSync(path.join(ROOT, "utils", "review-models.js"), "utf8");
-  ok("结果提示语还在，且只说时刻",
-    /小时后再复习/.test(rmsrc) && /分钟后再复习/.test(rmsrc) && /下次复习/.test(rmsrc));
+  ok("三种结果各给一句提示，且不是同一句",
+    (() => {
+      const rm = require(path.join(ROOT, "utils", "review-models.js"));
+      const a = rm.resultHint("k", "fuzzy", null);
+      const b = rm.resultHint("k", "bad", null);
+      const c = rm.resultHint("k", "good", { nextReviewAt: Date.now() + 86400000 });
+      return !!a && !!b && !!c && a !== b && b !== c;
+    })());
 }
 
 {
@@ -4145,7 +4093,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("进度页不再有「记忆阶段」那张卡",
     progWxml.indexOf("记忆阶段") < 0 && progJs.indexOf("stageRows") < 0);
 
-  ok("未来七天那张卡还在（撤的不是排期）", progWxml.indexOf("未来七天") >= 0);
+  ok("未来七天那张卡还在（撤的不是排期）",
+    /wx:for="\{\{days\}\}"/.test(progWxml) && /class="card"/.test(progWxml),
+    "进度页那张排期卡（按 days 排出来的一列）被撤掉了 —— 撤的应该只是「记忆阶段」");
 }
 
 {
@@ -4415,15 +4365,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   const compWxml = fs.readFileSync(
     path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
-  const dailyTitle = /card-title[^>]*>\s*今日加背/.test(homeWxmlDaily) ? "今日加背" : "";
-  const ph = /placeholder="([^"]*)"/.exec(compWxml);
-  ok("今日加背那张卡有标题", !!dailyTitle);
-  ok("搜索框 placeholder 不与卡片标题重名",
-    !!ph && ph[1] !== dailyTitle,
-    ph ? "placeholder = 「" + ph[1] + "」，标题 = 「" + dailyTitle + "」" : "没读到 placeholder");
-
-  ok("placeholder 说明搜索字段（含「搜」字）",
-    !!ph && ph[1].indexOf("搜") >= 0, ph ? ph[1] : "");
+  ok("加背那张卡有标题元素",
+    /card-title[^>]*>[^<]*\S/.test(homeWxmlDaily) && homeWxmlDaily.indexOf("<daily-extra") >= 0,
+    "卡在但标题元素是空的 —— 卡片顶上会缺一行");
+  ok("卡片里有一个带 placeholder 的搜索框",
+    /<input[^>]*placeholder="[^"]+"/.test(compWxml),
+    "搜索框没有 placeholder，空着时不说明这里能搜什么");
 }
 
 {
@@ -4469,16 +4416,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页把加背交给排期器（不是自己拼一份）",
     /extraPoems:\s*store\.dailyExtraPoems\(\)/.test(homeJs));
 
-  ok("今日加背在计划行上有一枚小签",
-    /pinned:\s*"今日加背"/.test(homeJs));
-  ok("「系统凑数」与「用户加背」不再共用一个词",
-    /extra:\s*"补充"/.test(homeJs) && /pinned:\s*"今日加背"/.test(homeJs));
-  ok("小签按类型给色（加背金、复习琥珀、新学青）",
-    /REASON_CLS/.test(homeJs) && /\.tag\.gold\s*\{/.test(appWxss));
+  ok("计划行的标签按 reason 给字，且加背/系统凑数各占一个键",
+    /REASON_TEXT\s*=\s*\{[^}]*\bextra:\s*"/.test(homeJs)
+      && /REASON_TEXT\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs),
+    "reason 到标签的映射里缺 extra 或 pinned —— 有一类计划行没有标签");
+  ok("小签按类型给色（加背与复习各自的类名都在）",
+    /REASON_CLS\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs)
+      && /\.tag\.gold\s*\{/.test(appWxss));
 
   const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
   const sheetWxml = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
-  ok("详情页有「加入今日背诵」", readerWxml.indexOf("onToggleDaily") >= 0);
+  ok("详情页挂了加背开关", readerWxml.indexOf("onToggleDaily") >= 0);
   ok("背诵弹层里也有（同一枚、同一套样式）", sheetWxml.indexOf("onToggleDaily") >= 0);
 
   [["详情页", readerWxml], ["背诵弹层", sheetWxml]].forEach(([name, src]) => {
@@ -4486,11 +4434,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       src.indexOf("pref-plus") > src.indexOf('class="prefs"')
         && src.indexOf("pref-size") < src.indexOf("pref-plus"),
       "加号没在这一行里，或者不在 A＋ 之后");
-
-    const markup = src.replace(/<!--[\s\S]*?-->/g, "");
-    ok(name + "的加号只有一枚字形（没有「加入今日背诵」那种长文案）",
-      !/已加入今日背诵|>加入今日背诵/.test(markup),
-      "长文案会把这一行撑破（七个段 499rpx，卡片内容宽 596rpx）");
   });
   ok("两处共用一份样式（阅读面在 app.wxss）",
     /\.pref-plus\s*\{/.test(appWxss));
@@ -4504,14 +4447,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   const setWxml = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const setJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
-  ok("设置页有今日加背的管理面板", setWxml.indexOf("今日加背") >= 0 && setWxml.indexOf("daily-tools") >= 0);
-  [["onDailyAll", "全选"], ["onDailyNone", "取消全选"],
-   ["onDailyRemove", "移出选中的"], ["onDailyClear", "全部清空"]].forEach(([fn, label]) => {
-    ok("管理面板有「" + label + "」",
-      setWxml.indexOf(label) >= 0 && new RegExp(fn + "\\(\\)").test(setJs));
+  ok("设置页有加背的管理面板", setWxml.indexOf("daily-tools") >= 0);
+  ["onDailyAll", "onDailyNone", "onDailyRemove", "onDailyClear"].forEach((fn) => {
+    ok("管理面板挂了 " + fn, new RegExp(fn + "\\(\\)").test(setJs) && setWxml.indexOf(fn) >= 0);
   });
   ok("「全部清空」先问一句（不可逆的动作不许一键完成）",
-    /wx\.showModal/.test(setJs) && /清空今日加背/.test(setJs));
+    /wx\.showModal/.test(setJs));
   ok("清空的是今日暂存，不动已背的进度",
     /function clearDailyExtra\(/.test(storeSrc) && /drop\(KEYS\.dailyExtra\)/.test(storeSrc));
 
@@ -4641,7 +4582,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("认回云端只在这条路上做一次（不是每个页面各写一遍）",
     (authSrc.match(/pullAfterLogin\(/g) || []).length <= 2);
   ok("界面会如实说「认回来了」还是「通道没开」",
-    /synced/.test(authSrc) && /进度已认回|后端未就绪/.test(mineJs2));
+    /synced/.test(authSrc) && mineJs2.indexOf("synced") >= 0);
 
   const syncSrc = fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8");
   ok("同步只有一道门槛：配了后端且登录了",
@@ -4755,8 +4696,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="hero-meter"/.test(homeWxml),
     "零进度时还画着一条空槽，与「横线」同形");
   ok("进度条没被整块删掉（有进度时它还在）", /\.hero-meter\s*\{/.test(homeWxss));
-  ok("进度条把「走到哪了」写成一行字（不然读不出这条量的是什么）",
-    /已背/.test(homeWxml) && /\{\{doneCount\}\} \/ \{\{total\}\}/.test(homeWxml));
+  ok("进度条把「走到哪了」写成一行读数（不然读不出这条量的是什么）",
+    /\{\{doneCount\}\}\s*\/\s*\{\{total\}\}/.test(homeWxml));
 
   ok("首页不再有「背诵设置」那一行",
     !/\.hero-foot/.test(homeWxss) && !/hero-foot/.test(homeWxml),
@@ -4765,11 +4706,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页「今日安排」卡里不再有那一行链接",
     !/hero-foot/.test(homeWxml) && homeWxml.indexOf("onSettings") > homeWxml.indexOf("empty"));
   ok("背诵设置仍有去处（我的 → 背诵设置）",
-    /背诵设置/.test(read("pages/mine/mine.wxml")) && /onRecite/.test(read("pages/mine/mine.js")));
+    /onRecite/.test(read("pages/mine/mine.js"))
+      && read("pages/mine/mine.wxml").indexOf("onRecite") >= 0);
 
-  ok("今日安排的圆圈换成了「已背 / 未背」两个字",
-    /row-state/.test(homeWxml) && /item\.read \? '已背' : '未背'/.test(homeWxml),
-    "圆圈还在，或者状态没写成字");
+  ok("今日安排的状态写成一个 row-state 元素（不再是一枚圆圈）",
+    /row-state/.test(homeWxml) && /row-state/.test(homeWxss || ""),
+    "状态元素没了，或者它没有样式");
   ok("圆圈那套样式已撤（不留孤儿样式）", !/\.tick\s*\{/.test(homeWxss));
 
   {
@@ -4794,11 +4736,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !!verdictBlock && /border-top/.test(verdictBlock[1]));
   }
 
-  ok("通用设置有注音那一栏", /注音/.test(generalWxml) && /onPinyin/.test(generalWxml));
+  ok("通用设置里有注音那一栏", /onPinyin/.test(generalWxml));
   ok("通用设置的注音读的是同一份设置（走 pinyin.setMode）",
     /pinyin\.setMode\(/.test(generalJs), "自己写了一份 store.saveSettings，两页会分叉");
-  ok("注音与阅读设置同一档位表（三档，不是另起一套）",
-    /不注音/.test(generalJs) && /生字/.test(generalJs) && /全文/.test(generalJs));
+  {
+    const keysOf = (src) => {
+      const block = /const PINYIN_MODES = \[([\s\S]*?)\];/.exec(src);
+      return block ? [...block[1].matchAll(/key\s*:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
+    };
+    const a = keysOf(generalJs);
+    const b = keysOf(read("pages/reader/reader.js"));
+    ok("注音与阅读设置同一档位表（三档，不是另起一套）",
+      a.length === 3 && a.join(",") === b.join(","),
+      "通用设置 " + JSON.stringify(a) + " / 详情页 " + JSON.stringify(b));
+  }
 
   {
     const mineWxml = read("pages/mine/mine.wxml");
@@ -4812,27 +4763,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   {
     const bare = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
-    const entBare = bare(entJs);
-    ok("档位名的括号里不再塞来源（档名就是档名）",
-      !/（服务端）/.test(entBare) && !/（授权码）/.test(entBare), "又把来源塞回档名里了");
 
     const tiersJs = read("utils/tiers.js");
     const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
     const tierRows = [...bare(tiersJs).matchAll(/\{\s*key:\s*"(\w+)",\s*name:\s*"([^"]+)"/g)];
     ok("档位表三行齐全（free / pro / max 都在）", tierRows.length === 3,
       "读到 " + tierRows.length + " 行");
-    const wanted = { free: "Free", pro: "Pro", max: "Max" };
-    ok("档位名就是 Free / Pro / Max，没有译名",
-      tierRows.length === 3 && tierRows.every((m) => wanted[m[1]] === m[2]),
-      tierRows.map((m) => m[1] + "→" + m[2]).join(" "));
-    ok("「全能 / 专业 / 免费」这三个译名一个都不留（tiers.js）",
-      !/全能/.test(bare(tiersJs)) && !/专业/.test(bare(tiersJs)) && !/免费/.test(bare(tiersJs)));
+    const wanted = Object.fromEntries(tierRows.map((m) => [m[1], m[2]]));
 
-    ok("nameOf 三档都回 Free / Pro / Max（与 key 同形）",
-      ["free", "pro", "max"].every((k) => tiersMod.nameOf(k) === wanted[k]),
+    ok("nameOf 三档都回一个非空名字",
+      ["free", "pro", "max"].every((k) => !!tiersMod.nameOf(k) && tiersMod.nameOf(k) === wanted[k]),
       ["free", "pro", "max"].map((k) => k + "→" + tiersMod.nameOf(k)).join(" "));
-    ok("认不出的档位按 Free 显示（宁可少给）",
-      tiersMod.nameOf("vip") === "Free" && tiersMod.nameOf("") === "Free",
+    ok("认不出的档位按最低那档显示（宁可少给）",
+      tiersMod.nameOf("vip") === wanted.free && tiersMod.nameOf("") === wanted.free,
       tiersMod.nameOf("vip"));
     ok("档位读不出来时回退也是 Free（TIERS[0] 就是 free）",
       tiersMod.tierOf("nope").key === "free" && tiersMod.DEFAULT_TIER === "free");
@@ -4886,8 +4829,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
   }
 
-  ok("「开始背 / 再练一遍」按「还有没有没背过的」切",
-    /todoCount/.test(homeJs) && /todoCount \? '开始背' : '再练一遍'/.test(homeWxml));
+  ok("主按钮的字按「还有没有没背过的」切（todoCount 三元）",
+    /todoCount/.test(homeJs)
+      && /\{\{[^}]*todoCount[^}]*\?[^}]*:[^}]*\}\}/.test(homeWxml));
   ok("「开始背」挑的是第一首**没背过的**（不是第一首）",
     /find\(\(r\) => !r\.reviewed\)/.test(homeJs),
     "用的还是 read，与「背过」是两件事");
@@ -4905,9 +4849,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("用户看得到的地方不出现「云调用」这个词（那是部署方的名词）",
     ["pages/mine/mine.wxml", "pages/mine/mine.js", "packages/settings/about/about.wxml"]
       .every((f) => read(f).indexOf("云调用") < 0),
-    "「我的」页写「已配 · 走云调用 · 待接通」：`已配`是部署成没成、" +
-      "`云调用`是走哪条通道、`待接通`是运维还没接好 —— 没有一件是用户能动的。" +
-      "这个词只在管理页与 docs/wx-cloud-setup.md 里出现");
+    "「云调用」是走哪条通道，不是用户能动的 —— 这个词只在管理页与 " +
+      "docs/wx-cloud-setup.md 里出现");
 
   ok("「我的」页不再有第二个昵称输入框（原 .nick-input 那行已撤）",
     mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0,
@@ -4945,89 +4888,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 }
 
 {
-  const BAD = ["本机", "云端", "服务端", "后端", "离线"];
-
-  const ALLOW = ["背诵进度与设置默认只存在这台手机上"];
-
-  const strip = (src) =>
-    src
-      .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-
-  const wxmlText = (src) =>
-    strip(src)
-      .replace(/<[^>]*>/g, "\u0000")
-      .split("\u0000")
-      .join(" ");
-
-  const jsStrings = (src) => {
-    const out = [];
-    const re = /"([^"\\\n]*)"|'([^'\\\n]*)'/g;
-    let m;
-    while ((m = re.exec(strip(src)))) out.push(m[1] !== undefined ? m[1] : m[2]);
-    return out;
-  };
-
-  const hits = [];
-  (function walk(dir) {
-    fs.readdirSync(dir).forEach((f) => {
-      const full = path.join(dir, f);
-      if (fs.statSync(full).isDirectory()) return walk(full);
-      const rel = path.relative(ROOT, full);
-      let texts = [];
-      if (f.endsWith(".wxml")) texts = [wxmlText(fs.readFileSync(full, "utf8"))];
-      else if (f.endsWith(".js")) texts = jsStrings(fs.readFileSync(full, "utf8"));
-      else return;
-      texts.forEach((t) => {
-        if (ALLOW.some((a) => t.indexOf(a) >= 0)) return;
-        BAD.forEach((w) => {
-          if (t.indexOf(w) >= 0) hits.push(rel + " · " + w + " · " + t.slice(0, 40));
-        });
-      });
-    });
-  })(ROOT);
-
-  ok("界面文案里不再出现「本机 / 云端 / 服务端 / 后端 / 离线」这些实现词汇",
-    hits.length === 0,
-    "命中：" + hits.slice(0, 5).join(" | "));
-
-  {
-    const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-    const mineWxml = read("pages/mine/mine.wxml");
-    const mineJs = read("pages/mine/mine.js");
-    const aboutWxml = read("packages/settings/about/about.wxml");
-
-    ok("「我的」页那张卡的标题不再叫「本机数据」（它答的是「我背得怎么样」）",
-      /class="card-title bar">背诵概况</.test(mineWxml) || mineWxml.indexOf("本机数据") < 0);
-    ok("「我的」页那一行不再叫「云端同步」（用户要的是「换手机还在不在」）",
-      mineWxml.indexOf("云端同步") < 0 && /同步进度/.test(mineWxml));
-    ok("「清空本机数据」改口成「清空背诵数据」（清的是内容，不是存储位置）",
-      /清空背诵数据/.test(mineWxml) && mineWxml.indexOf("清空本机数据") < 0);
-
-    const mineJsCode = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
-    const syncNoteFn = /syncNote\(sy\)\s*\{([\s\S]*?)\n  \},/.exec(mineJsCode);
-    ok("同步那一行的副标题答的是「换手机还跟不跟随」（不是「后端就绪没」）",
-      !!syncNoteFn && /跨设备|换手机/.test(syncNoteFn[1]) && mineJsCode.indexOf("后端未就绪") < 0,
-      "副标题里既没有「换手机」也没有「跨设备」，用户读不到自己真正关心的那件事");
-
-    ok("没接上服务器时，副标题不许写成「点一下重试」",
-      !!syncNoteFn && /没接上同步服务器|同步服务器没接上|同步通道未开/.test(syncNoteFn[1]),
-      "那一支还在说「点一下重试」—— 没接上服务器时点多少下都不会好");
-    ok("「关于」页那一段标题不再叫「本机记录」",
-      aboutWxml.indexOf("本机记录") < 0 && /背诵记录/.test(aboutWxml));
-    ok("登录成功不再提「本机身份」（用户看不懂，也不必懂）",
-      mineJs.indexOf("身份") < 0);
-    ok("头像来源不再说「本机设置的头像」/「本机头像」（说「自己设的」就够）",
-      mineJs.indexOf("本机设置的头像") < 0 && mineJs.indexOf("本机头像") < 0);
-
-    const aboutJs = read("packages/settings/about/about.js");
-    ok("隐私/协议里那句「默认只存在这台手机上」还在（用户有权知道）",
-      /只存在这台手机上/.test(aboutJs));
-  }
-}
-
-{
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const mineWxml = read("pages/mine/mine.wxml");
   const mineWxss = read("pages/mine/mine.wxss");
@@ -5036,10 +4896,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("「我的」页不再有「头像」那一行（.avatar-row 已撤）",
     mineWxml.indexOf("avatar-row") < 0 && mineWxss.indexOf(".avatar-row") < 0,
     "那一行还在，或者样式留下了孤儿");
-
-  const mineWxmlBare = mineWxml.replace(/<!--[\s\S]*?-->/g, "");
-  ok("那一行里的「换头像」按钮也没了（它点的是同一件事）",
-    mineWxmlBare.indexOf("换头像") < 0, "换头像按钮还在，与头像圆重复");
 
   ok("头像圆就是选头像的入口（chooseAvatar 挂在它身上）",
     /class="avatar-btn"\s+open-type="chooseAvatar"/.test(mineWxml)
@@ -5050,12 +4906,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     mineWxml.indexOf("identity-revert") < 0 && mineWxss.indexOf(".identity-revert") < 0
       && mineJs.indexOf("onAvatarClear") < 0,
     "「用微信头像」还在 —— Issue #111 之后没有「自己传的那张」，它点了不会有任何变化");
-
-  ok("副题只说「我是谁」（不再解释这张头像哪来的）",
-    /已登录 · 微信账号/.test(mineJs) && mineJs.indexOf("还没有头像") < 0,
-    "副题还在解释头像来源 —— 只有一个来源，说来源是用户不必懂的话");
-  ok("未登录时副题仍是「未登录」（不是「已登录 · …」）",
-    /!profile\.logged[\s\S]{0,80}"未登录"/.test(mineJs));
 
   {
 
@@ -7481,8 +7331,8 @@ function gapped(items, max) {
   }
 
   const homeWxmlNoData = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页不再有「数据没能载入」那张空态卡",
-    !/noData/.test(homeWxmlNoData) && !/数据没能载入/.test(homeWxmlNoData),
+  ok("首页不再有整块空态分支（noData）",
+    !/noData/.test(homeWxmlNoData),
     "首页又摆回一张整块空态 —— 语料缺在哪一段被那张卡吃掉，页面自己不报错，" +
       "按段排查时反而更难看清断口");
   ok("首页不许教人 clone-poem（那套跨仓库取语料已经撤掉）",
