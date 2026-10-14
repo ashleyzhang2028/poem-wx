@@ -6566,6 +6566,18 @@ function gapped(items, max) {
       const m = l.match(/^([A-Z][A-Z0-9_]*):/);
       return m && secretVars.includes(m[1]);
     });
+    {
+      const names = envLines
+        .map((l) => (l.match(/^([A-Z][A-Z0-9_]*):/) || [])[1])
+        .filter(Boolean);
+      const reserved = names.filter((v) => /^(CNB|CI)(_|$)/.test(v));
+      ok(".cnb.yml 的 `env:` 里不自造 `CNB_` / `CI` 开头的变量名（前缀归平台所有）",
+        reserved.length === 0,
+        "这些名字占了系统保留前缀：" + JSON.stringify(reserved) +
+          " —— 内置变量都是只读的，同名的自定义变量要么被忽略、要么换个场合撞上" +
+          "（CNB_IMAGE 就是这么踩的：平台的 Docker 相关变量都挂这个前缀）");
+    }
+
     ok(".cnb.yml 的 `env:` 里不重声明密钥仓库那几样 —— 替换时机取不到 imports 的值，只会写进字面量",
       clobbered.length === 0,
       "这些在 `env:` 里又声明了一遍：" + JSON.stringify(clobbered) +
@@ -6871,19 +6883,53 @@ function gapped(items, max) {
     const mainKeys = lines.filter((l) => /^main:/.test(l));
     ok(".cnb.yml 里没有顶格的 `crontab:`（那个键位置不对，平台解析不到）",
       lines.filter((l) => /^[A-Za-z$][\w$-]*:/.test(l)).map((l) => l.split(":")[0]).indexOf("crontab") < 0);
-    ok(".cnb.yml 里只有一个 `main:`（重复的话后者会盖掉前者，发布链静默消失）",
+    ok(".cnb.yml 里 `main` 只顶格写一处（同名的键合并时后一处会盖掉前一处，静默丢一批流水线）",
       mainKeys.length === 1,
-      "找到 " + mainKeys.length + " 处顶格 `main:`");
+      "找到 " + mainKeys.length + " 处顶格 `main:` —— 发布要多个入口时，把 `web_trigger` 事件" +
+        "写进同一处 `main:` 下，别再起一段 `main:`");
     const branchKeys = lines
       .filter((l) => /^[A-Za-z$"][^\s:]*:\s*$/.test(l))
       .map((l) => l.split(":")[0]);
     const badNesting = [];
     let cur = "";
+    const eventsIn = (glob) => {
+      const at = lines.indexOf(glob + ":");
+      if (at < 0) return null;
+      const out = [];
+      for (let i = at + 1; i < lines.length; i += 1) {
+        const l = lines[i];
+        if (!l.trim()) continue;
+        if (/^\S/.test(l)) break;
+        const m = l.match(/^\s{2}([^\s:]+):\s*$/);
+        if (m) out.push(m[1]);
+      }
+      return out;
+    };
+
     for (const l of lines) {
       if (/^[A-Za-z$"][^\s:]*:\s*$/.test(l)) cur = l.split(":")[0];
       else if (/^\s{2}[^\s].*:\s*$/.test(l) && /^\$/.test(cur)) {
         badNesting.push(cur + " → " + l.trim());
       }
+    }
+
+    if (/^main:\s*$/m.test(cnb2)) {
+      const onMain = eventsIn("main") || [];
+      ok("`main` 下的事件都是分支事件（push / web_trigger）",
+        onMain.length > 0 && onMain.every((e) => e === "push" || /^web_trigger/.test(e)),
+        "`main` 下出现了别的事件：" + JSON.stringify(onMain) +
+          " —— issue.* / tag_push / auto_tag 这类与分支无关的事件只能挂 `$`，挂分支名下解析不到");
+    }
+
+    {
+      const onAll = eventsIn('"**"');
+      const onMain = eventsIn("main");
+      const shared = (onAll && onMain)
+        ? onMain.filter((e) => e !== "push" && onAll.indexOf(e) >= 0) : [];
+      ok("`main` 下除 `push` 外的事件没有与 `\"**\"` 重复（两个 glob 同时命中会各跑一遍）",
+        shared.length === 0,
+        "这些事件在 `main` 与 `\"**\"` 下各配了一份：" + JSON.stringify(shared) +
+          " —— 匹配规则是「所有命中的 glob 都跑」，推 main 时同一件事会跑两遍");
     }
     ok(".cnb.yml 的 `$` 兜底分支下只写事件（分支 glob 不嵌在 `$` 里，那样平台解析不到）",
       badNesting.length === 0,
@@ -7512,6 +7558,97 @@ function gapped(items, max) {
   ok("绑了 theme-style 的页面都在 data 里声明了 themeStyle（" + binders.length + " 个）",
     undeclared.length === 0,
     "这些页面首帧会传 null：" + undeclared.map((f) => path.relative(ROOT, f)).join("、"));
+}
+
+{
+  const repo5 = path.join(ROOT, "..");
+  const cnb = fs.readFileSync(path.join(repo5, ".cnb.yml"), "utf8");
+  const triggerPath = path.join(repo5, ".cnb", "web_trigger.yml");
+
+  ok(".cnb/web_trigger.yml 在（发布的手动按钮在这一份里，不在 .cnb.yml）",
+    fs.existsSync(triggerPath),
+    "缺这份文件 —— 仓库页面上没有「发布」按钮，只能靠推一个空提交把流水线叫起来");
+
+  if (fs.existsSync(triggerPath)) {
+    const wt = fs.readFileSync(triggerPath, "utf8");
+
+    const events = [...wt.matchAll(/^\s*event:\s*(\S+)\s*$/gm)].map((m) => m[1]);
+    ok("按钮上那个事件名同时配在 .cnb.yml 的 `main:` 下（少一边都点不出流水线）",
+      events.length > 0 && events.every((e) => new RegExp("^\\s{2}" + e + ":", "m").test(cnb)),
+      "按钮写的事件在 `.cnb.yml` 里找不到同名事件：" + JSON.stringify(events) +
+        " —— 页面提示「无法触发」，实际是流水线没配。web_trigger 事件只能放具体分支名下，" +
+        "放 `$` 兜底里平台解析不到");
+
+    ok(".cnb/web_trigger.yml 里不写 inputs（发布不需要每次手填参数，按钮点了就跑）",
+      !/^\s+inputs:/m.test(wt),
+      "按钮上挂了 inputs —— 发布链的参数是逐次提交定下来的，让人每次手填等于多一处会填错的输入");
+
+    {
+      const mainAt = cnb.indexOf("main:\n  push:");
+      const after = mainAt < 0 ? "" : cnb.slice(mainAt);
+      const seg = (key) => {
+        const i = after.indexOf("  " + key + ":");
+        if (i < 0) return null;
+        const rest = after.slice(i);
+        const next = rest.slice(1).search(/^  \S[^\s:]*:\s*$/m);
+        return next < 0 ? rest : rest.slice(0, next + 1);
+      };
+      const pushSeg = seg("push");
+      const wtSeg = seg("web_trigger_release");
+
+      ok("`main` 下同时配了 `push` 与 `web_trigger_release`（发布两个入口）",
+        !!pushSeg && !!wtSeg,
+        "缺一个 —— 没有 `push` 则推 main 不发版；没有 `web_trigger_release` 则按钮点了没反应");
+
+      const withoutIfModify = (t) => t
+        .split("\n")
+        .filter((l) => !/^\s*ifModify:\s*$/.test(l) &&
+          !/^\s*-\s*"(api|deploy|deploy-api-serve)\/\*\*"\s*$/.test(l) &&
+          !/^\s*-\s*"\.cnb\.yml"\s*$/.test(l))
+        .map((l) => l.replace(/^  (push|web_trigger_release):$/, "  EVENT:"))
+        .join("\n").trim();
+
+      ok("手动发布那一步与推 main 那一步是同一份脚本（各改各的迟早对不上）",
+        !!pushSeg && !!wtSeg && withoutIfModify(pushSeg) === withoutIfModify(wtSeg),
+        "两段不一样 —— 发布链多一个入口，唯一会走岔的地方就是只改了其中一处。" +
+          "左边是 `push`、右边是按钮，逐行比出第一处不同：" +
+          JSON.stringify((() => {
+            const a = withoutIfModify(pushSeg || "").split("\n");
+            const b = withoutIfModify(wtSeg || "").split("\n");
+            for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+              if (a[i] !== b[i]) return [a[i] === undefined ? "(缺行)" : a[i],
+                b[i] === undefined ? "(缺行)" : b[i]];
+            }
+            return null;
+          })()));
+
+      ok("手动发布那条不挂 ifModify（判据只属于「推 main」这一次提交）",
+        !!wtSeg && wtSeg.indexOf("ifModify") < 0,
+        "按钮触发的发布挂了 ifModify —— 它判的是「这次改动碰没碰后端」，" +
+          "而手动发布要的正是「无论改了什么，都按当前代码重出一遍」");
+    }
+
+    {
+      const mainPart = cnb.slice(cnb.indexOf("\nmain:")).split("stages:")[0];
+      const envKeys = new Set(
+        [...mainPart.matchAll(/^\s{8}([A-Z][A-Z0-9_]*):/gm)].map((m) => m[1])
+      );
+      const injected = new Set([
+        "GHCR_USER", "GHCR_TOKEN", "GH_PAT", "GH_REPO", "WX_APPID", "WX_PRIVATE_KEY_B64",
+        "CLOUD_ENV", "CLOUD_SERVICE",
+      ]);
+      const refs = new Set(
+        [...cnb.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)].map((m) => m[1])
+      );
+      const aliased = [...refs].filter((v) => !envKeys.has(v) && !injected.has(v) &&
+        !/^CNB_/.test(v));
+      ok("发布里引用的变量都有出处（env: 里的定义，或密钥仓库 import 进来的）",
+        aliased.length === 0,
+        "这些变量在 `main:` 的 env: 与密钥仓库里都没有：" + JSON.stringify(aliased) +
+          " —— busybox sh 撞上未定义变量是当场 exit，" +
+          "所以要用 `\${VAR:-默认}` 那种写法，或在 env: 里补上");
+    }
+  }
 }
 
 {
