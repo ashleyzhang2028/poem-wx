@@ -123,14 +123,14 @@ Page({
             title: "同步服务器没接上",
             content:
               "登录与课外正文都要连服务器，这个包还没接上。\n\n"
-              + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
+              + "这不是这台手机能改的，找部署方（见「关于」）。",
             showCancel: false,
             confirmText: "知道了"
           });
         } else if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
           wx.showModal({
             title: "登录没打通",
-            content: (err.message || "") + "\n\n这是服务端/部署那一侧的事，先看「关于与反馈」里的联系方式。",
+            content: (err.message || "") + "\n\n这是服务端/部署那一侧的事，先看「关于」里的联系方式。",
             showCancel: false
           });
         } else if (err && err.cloudFail) {
@@ -151,7 +151,7 @@ Page({
       title: "还没接上同步服务器",
       content:
         "登录连不上服务器，账号与进度只在这台手机上，换台手机就没了。\n\n"
-        + "这不是这台手机能改的，找部署方（见「关于与反馈」）。",
+        + "这不是这台手机能改的，找部署方（见「关于」）。",
       showCancel: false
     });
   },
