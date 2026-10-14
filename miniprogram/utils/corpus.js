@@ -118,9 +118,9 @@ function layout(text) {
 }
 
 const BOOKS_DIR = "data/books/";
-const COURSE = "data/course.json";
+const COURSE = "data/course.js";
 
-const MANIFEST = "data/shards.json";
+const MANIFEST = "data/shards.js";
 
 const BUCKET_DIR = "data/texts/";
 
@@ -134,34 +134,34 @@ const bucketCache = {};
 
 const PACKED = {
   books: function () {
-    return require("../data/books/books.json");
+    return require("../data/books/books.js");
   },
   course: function () {
-    return require("../data/course.json");
+    return require("../data/course.js");
   },
   manifest: function () {
-    return require("../data/shards.json");
+    return require("../data/shards.js");
   }
 };
 
 const PACKED_BOOK_ROWS = {
-  poems: function () { return require("../data/books/poems.json"); },
-  classic: function () { return require("../data/books/classic.json"); },
-  yuefu: function () { return require("../data/books/yuefu.json"); },
-  tangshi: function () { return require("../data/books/tangshi.json"); },
-  gushi: function () { return require("../data/books/gushi.json"); },
-  songci: function () { return require("../data/books/songci.json"); },
-  yuanqu: function () { return require("../data/books/yuanqu.json"); },
-  guwen: function () { return require("../data/books/guwen.json"); },
-  jinxiandai: function () { return require("../data/books/jinxiandai.json"); },
-  zhaoming: function () { return require("../data/books/zhaoming.json"); },
-  chengyu: function () { return require("../data/books/chengyu.json"); },
-  changshi: function () { return require("../data/books/changshi.json"); },
-  mingshu: function () { return require("../data/books/mingshu.json"); },
-  mingren: function () { return require("../data/books/mingren.json"); },
-  "mingren-waiguo": function () { return require("../data/books/mingren-waiguo.json"); },
-  dwang: function () { return require("../data/books/dwang.json"); },
-  "dwang-waiguo": function () { return require("../data/books/dwang-waiguo.json"); }
+  poems: function () { return require("../data/books/poems.js"); },
+  classic: function () { return require("../data/books/classic.js"); },
+  yuefu: function () { return require("../data/books/yuefu.js"); },
+  tangshi: function () { return require("../data/books/tangshi.js"); },
+  gushi: function () { return require("../data/books/gushi.js"); },
+  songci: function () { return require("../data/books/songci.js"); },
+  yuanqu: function () { return require("../data/books/yuanqu.js"); },
+  guwen: function () { return require("../data/books/guwen.js"); },
+  jinxiandai: function () { return require("../data/books/jinxiandai.js"); },
+  zhaoming: function () { return require("../data/books/zhaoming.js"); },
+  chengyu: function () { return require("../data/books/chengyu.js"); },
+  changshi: function () { return require("../data/books/changshi.js"); },
+  mingshu: function () { return require("../data/books/mingshu.js"); },
+  mingren: function () { return require("../data/books/mingren.js"); },
+  "mingren-waiguo": function () { return require("../data/books/mingren-waiguo.js"); },
+  dwang: function () { return require("../data/books/dwang.js"); },
+  "dwang-waiguo": function () { return require("../data/books/dwang-waiguo.js"); }
 };
 
 let dataReady = null;
@@ -181,7 +181,7 @@ function hasData() {
 function loadJson(rel) {
   if (!hasData()) {
     const err = new Error(
-      "包里没有 data/books/books.json —— 这一版没带上语料。\n" +
+      "包里没有 data/books/books.js —— 这一版没带上语料。\n" +
       "在开发者工具里重新编译一次（读的是打包结果，不是磁盘上的目录）。"
     );
     err.code = "E_NO_DATA";
@@ -233,7 +233,7 @@ function bookById(id) {
 function ofBook(bookId) {
   if (!bookCache[bookId]) {
     const meta = bookById(bookId);
-    const rows = packedRows(bookId) || readJson(BOOKS_DIR + bookId + ".json", []);
+    const rows = packedRows(bookId) || readJson(BOOKS_DIR + bookId + ".js", []);
     bookCache[bookId] = rows.map(function (p) {
       p.b = bookId;
       p.n = meta ? meta.name : bookId;

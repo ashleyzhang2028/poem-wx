@@ -44,7 +44,7 @@ if (keyFile === keyPath && (!keyPath || !fs.existsSync(keyPath))) {
   die("WX_PRIVATE_KEY 指向的文件不存在：" + keyPath);
 }
 
-if (!fs.existsSync(path.join(MP, "data", "books", "books.json"))) {
+if (!fs.existsSync(path.join(MP, "data", "books", "books.js"))) {
   die("语料还没生成，先跑 node scripts/build-data.js");
 }
 

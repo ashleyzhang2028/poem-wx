@@ -31,6 +31,10 @@ function readJson(p) {
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
 
+function readModule(p) {
+  return JSON.parse(fs.readFileSync(p, "utf8").replace(/^module\.exports = /, "").replace(/;\s*$/, ""));
+}
+
 function staticallyReachable(entries) {
   const seen = new Set();
   const stack = Array.isArray(entries) ? entries.slice() : [entries];
@@ -125,9 +129,9 @@ jsFiles.forEach((file) => {
 });
 
 const dataDir = path.join(ROOT, "data");
-const booksTable = readJson(path.join(dataDir, "books", "books.json"));
+const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
-const manifest = readJson(path.join(dataDir, "shards.json"));
+const manifest = readModule(path.join(dataDir, "shards.js"));
 
 ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
 
@@ -147,7 +151,7 @@ ok(
 
 const bookFiles = fs.readdirSync(path.join(dataDir, "books"));
 booksTable.forEach((b) => {
-  ok("集子索引存在 " + b.id, bookFiles.indexOf(b.id + ".json") >= 0);
+  ok("集子索引存在 " + b.id, bookFiles.indexOf(b.id + ".js") >= 0);
 
   ok("集子索引归属正确 " + b.id,
     perBook[b.id].every((p) => p.b === b.id && p.n === b.name),
@@ -155,14 +159,14 @@ booksTable.forEach((b) => {
 });
 
 {
-  const compact = readJson(path.join(dataDir, "books", "tangshi.json"));
+  const compact = readModule(path.join(dataDir, "books", "tangshi.js"));
   const heavy = compact.filter((p) => p.b !== undefined || p.n !== undefined
     || p.hasT !== undefined || p.aka === null || p.sel === "" || p.gr === 0);
   ok("索引落盘是紧凑的（不带 b / n / hasT，也不带空字段）", heavy.length === 0,
     heavy.length + " 条还带着冗余字段 —— 主包又要顶穿 2MB（见 scripts/build-data.js）");
 }
 
-const courseTexts = readJson(path.join(dataDir, "course.json"));
+const courseTexts = readModule(path.join(dataDir, "course.js"));
 const courseIds = new Set(perBook.poems.map((p) => p.id));
 
 ok("课内正文进包 251 条", Object.keys(courseTexts).length === 251, "实际 " + Object.keys(courseTexts).length);
@@ -211,7 +215,7 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       " —— 它落在 ignore 名单里或不存在，真机上 bucketOf() 会回空，课外正文一律取不到");
 
   booksTable.forEach((b) => {
-    const rel = "data/books/" + b.id + ".json";
+    const rel = "data/books/" + b.id + ".js";
     ok("集子索引在包里 " + rel,
       fs.existsSync(path.join(ROOT, rel)) && !ignored.some((ig) => rel.indexOf(ig) === 0),
       rel + " 被 ignore 了 —— 列表页与按题名检索会空");
@@ -246,7 +250,7 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       "require 抛 MODULE_NOT_FOUND，于是课外正文在工具里一律取不到 —— " +
       "而那个目录就在磁盘上。要在 bucket() 回空之后、走远端之前补一条磁盘兜底");
 
-  const packedReqs = ["data/books/books.json", "data/course.json", "data/shards.json"].filter(
+  const packedReqs = ["data/books/books.js", "data/course.js", "data/shards.js"].filter(
     (f) => corpusSrc.indexOf('require("../' + f + '")') < 0
   );
   ok("必进包的三份语料在 corpus 里是字面量 require（打包器才认，真机上才存在）",
@@ -254,7 +258,7 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       && /PACKED\.books\(\)/.test(corpusSrc)
       && /function\s+hasData[\s\S]{0,200}PACKED\.books\(\)/.test(corpusSrc)
       && !/fs\.existsSync[\s\S]{0,200}data/.test(corpusSrc),
-    "books.json / course.json / shards.json 的 require 路径必须写成字面量 —— " +
+    "books.js / course.js / shards.js 的 require 路径必须写成字面量 —— " +
       "打包器只按静态字符串决定进不进包，拼出来的路径它看不见，真机上 require 抛 MODULE_NOT_FOUND。" +
       "hasData() 也只能按包内 require 判；拿 fs.existsSync 量目录，量到的是开发者工具那一列，" +
       "与手机上相反。" +
@@ -268,9 +272,9 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       )
     );
     const mustShip = fs.readdirSync(path.join(dataDir, "books"))
-      .filter((f) => f.endsWith(".json"))
+      .filter((f) => f.endsWith(".js"))
       .map((f) => "data/books/" + f)
-      .concat(["data/course.json", "data/shards.json", "data/pinyin-table.json"]);
+      .concat(["data/course.js", "data/shards.js", "data/pinyin-table.js"]);
     const dropped = mustShip.filter((f) => !reachable.has(f));
     const livePath = [
       /const\s+rows\s*=\s*packedRows\(bookId\)\s*\|\|\s*readJson\(/,
@@ -313,8 +317,8 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
 
   const includeList = (pcfg.packOptions || {}).include || [];
   const includeValues = includeList.map((r) => String(r.value || ""));
-  const mustInclude = ["data/books", "data/course.json", "data/shards.json",
-    "data/pinyin-table.json", "data/roster.json"];
+  const mustInclude = ["data/books", "data/course.js", "data/shards.js",
+    "data/pinyin-table.js", "data/roster.js"];
   const missingInclude = mustInclude.filter((v) => includeValues.indexOf(v) < 0);
   ok("进包的语料在 packOptions.include 里（include 压过 ignore，且不靠分析器的判断）",
     missingInclude.length === 0,
@@ -597,9 +601,9 @@ ok("无签名档位退回免费", env.ent.status().tier === "free", env.ent.stat
 env.restore();
 
 const pinyin = require(path.join(ROOT, "utils", "pinyin.js"));
-const pinyinTable = path.join(dataDir, "pinyin-table.json");
+const pinyinTable = path.join(dataDir, "pinyin-table.js");
 if (fs.existsSync(pinyinTable)) {
-  const pt = readJson(pinyinTable);
+  const pt = readModule(pinyinTable);
   ok("读音表有字", Object.keys(pt.chars || {}).length > 1000, "只有 " + Object.keys(pt.chars || {}).length + " 字");
   ok("读音表带词组（多音字消歧靠它）", Object.keys(pt.words || {}).length > 0);
   ok("读音表带常用字（生字模式判据）", Object.keys(pt.common || {}).length > 1000);
@@ -1309,7 +1313,7 @@ ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") 
     path.join(ROOT, "utils", "speech.js")
   ];
   const orphans = jsFiles
-    .filter((f) => !reachable[f] && LAZY.indexOf(f) < 0)
+    .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0)
     .map((f) => path.relative(ROOT, f))
     .sort();
   ok("每个 .js 都被入口链引用到（不留没人 require 的孤儿）",
@@ -1479,7 +1483,7 @@ ok("自选清单有打包", packed.recs.some((r) => r.id === "collections:v1" &&
   ok("比本机旧的不覆盖", store.getRecord("probe-2").level === 5);
 }
 
-const roster = readJson(path.join(dataDir, "roster.json"));
+const roster = readModule(path.join(dataDir, "roster.js"));
 ok("名录文件存在（空也要在）", !!roster);
 ok("名录不含完整标识泄漏（标签截断）", (roster.users || []).every((u) => String(u.label).length <= 8));
 ok("名录档位合法", (roster.users || []).every((u) => ["free", "pro", "max"].indexOf(u.tier) >= 0));
@@ -1742,10 +1746,10 @@ ok(
   "超限 " + ((mainPkg - LIMIT_MAIN) / 1024).toFixed(0) + "KB"
 );
 
-const courseKb = fs.statSync(path.join(dataDir, "course.json")).size / 1024;
+const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 ok("课内正文在预算内（" + courseKb.toFixed(0) + "KB ≤ 400KB）", courseKb <= 400);
 
-const pyFile = path.join(dataDir, "pinyin-table.json");
+const pyFile = path.join(dataDir, "pinyin-table.js");
 if (fs.existsSync(pyFile)) {
   const pyKb = fs.statSync(pyFile).size / 1024;
   ok("读音表在预算内（" + pyKb.toFixed(0) + "KB ≤ 200KB）", pyKb <= 200);
@@ -2242,7 +2246,7 @@ ok("主题色只在令牌里定一次", colorLiteral.length === 0, colorLiteral.
 {
 
   const dataDir = path.join(ROOT, "data");
-  const hasData = fs.existsSync(path.join(dataDir, "books", "books.json"));
+  const hasData = fs.existsSync(path.join(dataDir, "books", "books.js"));
 
   if (!hasData) {
     ok("门禁开合（包里没有语料，跳过真跑）", true);
@@ -4341,15 +4345,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
 {
 
-  const coursePath = path.join(ROOT, "data", "course.json");
+  const coursePath = path.join(ROOT, "data", "course.js");
   if (fs.existsSync(coursePath)) {
-    const course = JSON.parse(fs.readFileSync(coursePath, "utf8"));
+    const course = readModule(coursePath);
     const badSrc = [];
     Object.keys(course).forEach(function (id) {
       const src = course[id] && course[id].src;
       if (src && /[A-Za-z]/.test(src)) badSrc.push(id + "=" + src);
     });
-    ok("译文来源是给人看的说明，不是英文 token（course.json 的 src）",
+    ok("译文来源是给人看的说明，不是英文 token（course.js 的 src）",
       badSrc.length === 0, badSrc.slice(0, 3).join(" | "));
 
     const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
@@ -4705,7 +4709,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("按 \\n 取句只有一处（linesOf 收口）", splits === 1, "读到 " + splits + " 处");
 
   const quizMod = require(path.join(ROOT, "packages/game/quiz/lib.js"));
-  const course = JSON.parse(read("data/course.json"));
+  const course = readModule(path.join(ROOT, "data/course.js"));
   const courseIds = Object.keys(course);
 
   let maxStem = 0, maxAnswer = 0, asked = 0, longOne = null;
@@ -7377,7 +7381,7 @@ function gapped(items, max) {
   ok("corpus 有「数据在不在」的探针", /function hasData\s*\(/.test(corpusSrc));
   ok("corpus 暴露了 hasData（页面据此走空态）",
     /hasData\s*,/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
-  ok("hasData 判的是「包内的 books.json 在不在」，不是磁盘上那个目录",
+  ok("hasData 判的是「包内的 books.js 在不在」，不是磁盘上那个目录",
     !/existsSync/.test(corpusSrc) && /hasData[\s\S]{0,300}PACKED\.books\(\)/.test(corpusSrc),
     "真机没有 fs，且 data/ 目录会被 packOptions 拆着打 —— 目录在、包内文件缺时，"
       + "看目录的探针一律回「有数据」，首页于是跳过空态，渲染出一个空目录");
@@ -7786,7 +7790,7 @@ function gapped(items, max) {
     "还有注释：" + dirty.slice(0, 8).join("、") +
       " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
 
-  const generated = ["miniprogram/data/books/books.json"];
+  const generated = ["miniprogram/data/books/books.js"];
   const leaked = generated.filter((rel) => {
     if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);

@@ -13,7 +13,7 @@
 | ④ 真机 | 云调用两栏在**每台手机**的本机存储里，换机要重填 | 真机 | 同上，且开发者工具里正常 |
 
 **「语料没进这个包」只属于第 ① 段。** 它不是说服务器没起、也不是说后端没配 ——
-是**这个包里的 `data/books/books.json` 取不到**。两条来路要分开：
+是**这个包里的 `data/books/books.js` 取不到**。两条来路要分开：
 
 - **本地打开**：本地没编过，`miniprogram/data/` 在磁盘上都不存在 —— 跑一次 ① 段就好。
   注意开发者工具**不会**替你跑这一步：`npm test` / `.cnb.yml` 只在 CI 里跑，
@@ -40,12 +40,12 @@ npm run build:data
 
 | 产物 | 谁读它 | 体积 |
 |---|---|---|
-| `data/books/*.json` + `books.json` | 列表页、检索、作者索引 | 索引合计约 1 MB，**进主包** |
-| `data/course.json` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB，**进主包** |
-| `data/pinyin-table.json` | 注音 | 72 KB，**进主包** |
-| `data/shards.json` | `corpus.bucketOf(id)` —— 算出某一条在哪一片 | 137 KB，**进主包** |
+| `data/books/*.js` + `books.js` | 列表页、检索、作者索引 | 索引合计约 1 MB，**进主包** |
+| `data/course.js` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB，**进主包** |
+| `data/pinyin-table.js` | 注音 | 72 KB，**进主包** |
+| `data/shards.js` | `corpus.bucketOf(id)` —— 算出某一条在哪一片 | 137 KB，**进主包** |
 | `data/texts/t0xx.json` | 课外正文分片 | 120 个文件 / 23 MB，**走容器** |
-| `data/roster.json` | 管理页名录 | 没设 `POEM_ROSTER` 就是空名册 |
+| `data/roster.js` | 管理页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
 第三列是分层的全部理由：主包上限 2 MB，23 MB 的正文进不去。
 课内那 235 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——
@@ -63,7 +63,7 @@ npm run build:data
 ## 三、② 段：为什么文件在手，课内就能读
 
 `utils/corpus.js` 是唯一读语料的地方，它先问一句 `hasData()` ——
-**包里那份 `data/books/books.json` 取不取得到**（`require` 得中就是有）。
+**包里那份 `data/books/books.js` 取不取得到**（`require` 得中就是有）。
 取不到就抛 `E_NO_DATA`，各读语料的入口按空值回。
 
 判据必须是「包内 require 得中」，不能是「`fs.existsSync(miniprogram/data)` 目录在不在」。
@@ -71,7 +71,7 @@ npm run build:data
 目录在、包内文件缺时目录判据一律回「有数据」，首页于是拿空目录往下渲染，
 看着像「数据丢了」。
 
-同理，`books.json` / `course.json` / `shards.json` 的 `require` 路径都写成字面量 ——
+同理，`books.js` / `course.js` / `shards.js` 的 `require` 路径都写成字面量 ——
 打包器只认静态字符串，拼出来的路径它看不见，包内一样取不到。`check.js` 钉着这两条。
 
 ⚠️ **语料的根本判据是「在模块图上」。** 打包器（开发者工具编译、`miniprogram-ci`
@@ -80,16 +80,16 @@ npm run build:data
 
 三份语料曾经是字面量、其余 19 份是拼接路径（`readJson(BOOKS_DIR + id + ".json")`、
 `require("../" + TABLE)`），那 19 份就被剔出包。症状不齐整、最难认：
-`books.json` 在（集子表渲染得出来），`poems.json` 不在（**首页课内目录整块空**），
+`books.js` 在（集子表渲染得出来），`poems.json` 不在（**首页课内目录整块空**），
 点进每一部也都是空的 —— 磁盘上文件明明在，跑多少次 `build:data` 都没用。
 
 修法是把每一份该进包的文件都写进字面量 `require` 表：
 
 | 表 | 在哪 | 管哪几份 |
 |---|---|---|
-| `PACKED` | `utils/corpus.js` | `books.json` / `course.json` / `shards.json` |
+| `PACKED` | `utils/corpus.js` | `books.js` / `course.js` / `shards.js` |
 | `PACKED_BOOK_ROWS` | `utils/corpus.js` | 17 部集子索引，含 `poems.json` |
-| `PACKED_TABLE` | `utils/pinyin.js` | `pinyin-table.json` |
+| `PACKED_TABLE` | `utils/pinyin.js` | `pinyin-table.js` |
 
 关键在**读文件的那一行要走到那张表**：`ofBook` 写 `packedRows(bookId) || readJson(...)`，
 `pinyin.table` 写 `PACKED_TABLE()`。只摆一张没人调的表，摇树照旧剔。
@@ -103,8 +103,8 @@ npm run build:data
 
 ```
 corpus.course()          → data/books/poems.json（课内索引，不带正文）
-corpus.entry(id)         → data/course.json 里查这一条正文
-corpus.ensureEntry(id)   → course.json 没有再走分片（下一节）
+corpus.entry(id)         → data/course.js 里查这一条正文
+corpus.ensureEntry(id)   → course.js 没有再走分片（下一节）
 ```
 
 **课内 251 首这一整段不需要网络、不需要后端、不需要容器** ——
@@ -114,7 +114,7 @@ corpus.ensureEntry(id)   → course.json 没有再走分片（下一节）
 
 ## 四、③ 段：课外 5604 首怎么走
 
-课外正文不在包里，只有一份**清单**（`data/shards.json`）在包里。
+课外正文不在包里，只有一份**清单**（`data/shards.js`）在包里。
 点开一首课外诗时：
 
 ```
@@ -150,7 +150,7 @@ corpus.ensureEntry(id)
 
 两只 `ignore*UnusedFiles` 是**两个**开关，关一只另一条路照样摇。`include` 是
 「无论分析器怎么想都带上」的那一档，`check.js` 钉着它必须覆盖 `data/books` /
-`course.json` / `shards.json` / `pinyin-table.json` / `roster.json`，且**不许**把
+`course.js` / `shards.js` / `pinyin-table.js` / `roster.js`，且**不许**把
 `data/texts` 拉回来（那是 26MB 的分片，进主包直接传不上去）。
 
 这三处都只是保险。真正的判据在上一节：**每一份该进包的语料都要在模块图上**。
@@ -211,8 +211,9 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
 | 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**没打进语料**（多为模块图摇树剔掉） | 合上把语料写成字面量 `require` 的那一版，重传。若三处配置没配齐也会摇掉 —— 见上一节 |
-| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.json …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
+| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.js …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
 | **首页整页空、连「课本目录」那张卡片都没有**，控制台 `Cannot find module './server'` | ① 之前 —— `server.js` 不在，`remote.js` 加载失败，页面根本没跑起来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，**要入库**），重新编译。见 § 五 |
+| 控制台 `module 'data/books/books.json.js' is not defined` | 工具（2.02.2607271 RC 实测）不把 `.json` 当模块打包，任何 `require("….json")` 都抛这句；`.js` 正常 | 语料产物一律输出为 `module.exports = …` 的 `.js`（`build-data.js` 的 `writeModule`），别改回 `.json` |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
@@ -227,8 +228,8 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 
 `check.js` 里与这一段相关的断言：
 
-- `data/shards.json` 不在 `packOptions.ignore` 名下（读 `corpus.js` 的 `MANIFEST` 常量比）
-- `books.json` / `course.json` / `shards.json` 都是字面量 `require`，`hasData()` 里没有 `fs` 判据
+- `data/shards.js` 不在 `packOptions.ignore` 名下（读 `corpus.js` 的 `MANIFEST` 常量比）
+- `books.js` / `course.js` / `shards.js` 都是字面量 `require`，`hasData()` 里没有 `fs` 判据
 - **主包每一份语料都在模块图上**（从 `app.js` 与各页面走 require 图），且读文件的那行走到字面量表
 - `setting.ignoreUploadUnusedFiles` 与 `setting.ignoreDevUnusedFiles` 都显式是 `false`
 - `packOptions.include` 列出该进的语料，且不含 `data/texts`
