@@ -367,6 +367,51 @@ const plan3 = S.generateDailyPlan({
 });
 ok("加背项进计划", plan3.some((p) => p.poem.id === extraPoem.id));
 
+const inCourse = fake.filter((p) => p.gr === 5 && p.tm === 1)[0];
+const plan5 = S.generateDailyPlan({
+  grade: 5,
+  term: 1,
+  count: 5,
+  scope: "term",
+  allPoems: fake,
+  extraPoems: [extraPoem, inCourse],
+  getRecord: () => null
+});
+ok("加背挂在每日几首之外（设 5 首 + 加 2 首 = 今天 7 首）",
+  plan5.length === 7, "实际 " + plan5.length);
+
+const pinned = plan5.filter((p) => p.reason === "pinned").map((p) => p.poem.id);
+ok("加背那两首都排在计划末尾，标 pinned",
+  pinned.length === 2 && pinned.indexOf(extraPoem.id) >= 0
+    && plan5.slice(-2).every((p) => p.reason === "pinned"),
+  JSON.stringify(pinned));
+
+const plain = S.generateDailyPlan({
+  grade: 5,
+  term: 1,
+  count: 5,
+  scope: "term",
+  allPoems: fake,
+  extraPoems: [],
+  getRecord: () => null
+});
+ok("加背不占那 5 个名额（设 5 首，按设置排出来的仍是 5 首）",
+  plain.length === 5 && plan5.filter((p) => p.reason !== "pinned").length === 5);
+
+const outOfCourse = S.generateDailyPlan({
+  grade: 5,
+  term: 1,
+  count: 5,
+  scope: "term",
+  allPoems: fake,
+  extraPoems: [extraPoem],
+  getRecord: () => null
+});
+ok("课外的加背不挪动按设置排出来的那几首（只在末尾接上）",
+  outOfCourse.slice(0, 5).map((p) => p.poem.id).join(",")
+    === plain.map((p) => p.poem.id).join(",")
+    && outOfCourse.length === 6);
+
 ok("没背过的不算到期", !S.isDue(null) && !S.isDue({ level: 0, learned: false }));
 
 const plan4 = S.generateDailyPlan({
@@ -2721,16 +2766,54 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "hero 区还挂着 onStart / onBrowseAll —— 一屏里两个填黑的大按钮");
   ok("点篇目仍走弹层（同一件事，不该两条路）",
     /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
-  const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id) {"));
+  const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id, source) {"));
   ok("弹层由首页把门禁，组件自己不查",
     /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
       && sheetJs.replace(/\/\*[\s\S]*?\*\//g, "").indexOf("gate") < 0,
     "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
-  ok("open 时 queue 换新数组不会把弹层关掉（首页 refresh 会先把 plan 置空）",
-    /observer\(rows\)[\s\S]{0,200}rows && rows\.length/.test(sheetJs),
-    "observer 没判空 —— 点一篇 → markRead → refresh → plan 置空 → 弹层当场闪退");
+
+  {
+    const savedComp = global.Component;
+    let opt = null;
+    global.Component = (o) => { opt = o; };
+    const sheetPath = path.join(sheetDir, "recite-sheet.js");
+    delete require.cache[require.resolve(sheetPath)];
+    require(sheetPath);
+    global.Component = savedComp;
+
+    const mk = (rows, open, index) => {
+      const self = Object.assign({}, opt.methods);
+      self.data = { open, index: index || 0, queue: rows };
+      self.loaded = 0;
+      self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
+      self.loadCurrent = function () { this.loaded += 1; };
+      return self;
+    };
+    const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    const obs = opt.properties.queue.observer;
+
+    const closed = mk(rows, false);
+    obs.call(closed, [{ id: "z" }]);
+    ok("弹层关着时队列换新不写 data（关着的组件不该被首页的 refresh 推着走）",
+      closed.data.queue.length === 3 && closed.loaded === 0);
+
+    const same = mk(rows, true, 1);
+    obs.call(same, rows.map((r) => ({ id: r.id })));
+    ok("队列内容没变时不重写、不重载（不然每次 refresh 都从头读一遍当前篇）",
+      same.data.queue === rows && same.loaded === 0);
+
+    const last = mk(rows, true, 2);
+    obs.call(last, [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }]);
+    ok("队列变长时人停在原来那一篇（加背加进来的排在末尾，不该把弹层顶到别处）",
+      last.data.index === 2 && last.data.queue.length === 4);
+
+    const moved = mk(rows, true, 0);
+    obs.call(moved, [{ id: "c" }, { id: "a" }, { id: "b" }]);
+    ok("当前那一篇换了位置就按它的新位置落位（跟着篇走，不跟着序号走）",
+      moved.data.index === 1);
+  }
   ok("open 时把 queue 落到组件自己的 data 上（不依赖父层那一批 setData 的先后）",
     /setData\(\{\s*open:\s*true,\s*index:\s*idx,\s*queue:\s*list\s*\}/.test(sheetJs),
     "open() 没写 queue —— 首帧 current() 读的是上一批数据");
@@ -2774,7 +2857,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /next\s*>=\s*this\.data\.queue\.length[\s\S]{0,120}?onClose\(\)/.test(sheetJs));
 
   ok("队列从首页传进来（组件不自己排计划）",
-    sheetWxml.indexOf("queue=") < 0 && homeWxml.indexOf('queue="{{plan}}"') >= 0);
+    sheetWxml.indexOf("queue=") < 0 && homeWxml.indexOf('queue="{{sheetRows}}"') >= 0,
+    "首页那两个入口（计划卡 / 全部诗词卡）把各自的队列灌进 sheetRows");
 
   ok("翻页会回调首页（列表的勾要跟着动）",
     /triggerEvent\("open"/.test(sheetJs) && /bind:open="onSheetOpen"/.test(homeWxml));
@@ -2924,9 +3008,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("排期器把加背排进计划，计划行的标签与色按 reason 给",
     /extraPoems/.test(schedSrc) && /extraList/.test(schedSrc)
       && /extraPoems:\s*store\.dailyExtraPoems\(\)/.test(homeJs)
-      && /REASON_TEXT\s*=\s*\{[^}]*\bextra:\s*"/.test(homeJs)
       && /REASON_TEXT\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs)
-      && /REASON_CLS\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs));
+      && /REASON_CLS\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs),
+    "计划行的加背小签没了 —— 它得与「补充」分得开");
+  ok("加背挂在每日几首之外（设置 5 首 + 加 1 首 = 今天 6 首）",
+    /extraList\.forEach[\s\S]{0,240}?reason:\s*"pinned"/.test(schedSrc)
+      && !/function fillFrom\(list, reason\)[\s\S]{0,400}?extraList/.test(schedSrc),
+    "加背又回到候选池里跟「新学」抢那 5 个名额了 —— 用户加了 1 首，计划里反而少 1 首新学");
   ok("详情页与背诵弹层都有加背开关，且共用一份样式（页面里不写第二份）",
     readerWxml.indexOf("onToggleDaily") >= 0
       && sheetWxml.indexOf("onToggleDaily") >= 0
@@ -2944,6 +3032,28 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       .some((k) => k === "home-extra")
       && Object.keys(readJson(path.join(__dirname, "shots", "pages.json")))
         .some((k) => k === "settings-recite-daily"));
+
+  ok("计划卡下面挂着「本年级本学期全部诗词」，默认折叠",
+    /allOpen:\s*false/.test(homeJs)
+      && /allLabel/.test(homeJs) && /allRows/.test(homeJs)
+      && /<view class="card" wx:if="\{\{allCount\}\}">/.test(homeWxml)
+      && /<view class="all-head"/.test(homeWxml)
+      && /wx:if="\{\{allOpen\}\}"/.test(homeWxml)
+      && /wx:for="\{\{allRows\}\}"/.test(homeWxml)
+      && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs),
+    "那张卡要么没挂、要么不是折叠形态");
+  ok("改名的是标题不是数据：随机范围下列的是那一段的全部诗词",
+    /scope\.random\s*\?\s*scope\.scopeName\s*\+\s*"全部诗词"\s*:\s*"本年级本学期全部诗词"/.test(homeJs)
+      && /function scopeList\(all, view, scope\)/.test(homeJs)
+      && /poolForScope/.test(homeJs.slice(homeJs.indexOf("function scopeList"))),
+    "标题与列出的是两件事 —— 随机那几档得写「小学阶段全部诗词」并列小学那一段");
+  ok("全部诗词卡点开走弹层，队列用它自己那一份（不与今日计划混）",
+    /onOpenAll[\s\S]{0,200}?openSheet\(/.test(homeJs)
+      && /source === "all" \? this\.scopeRows\(\) : this\.data\.plan/.test(homeJs)
+      && /<recite-sheet[^>]*queue="\{\{sheetRows\}\}"/.test(homeWxml));
+  ok("预览里有「全部诗词摊开」那一屏",
+    Object.keys(readJson(path.join(__dirname, "shots", "pages.json")))
+      .some((k) => k === "home-all"));
 }
 
 {

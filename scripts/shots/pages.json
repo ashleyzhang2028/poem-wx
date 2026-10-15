@@ -471,6 +471,14 @@
     ],
     "dailyExtra": ["poems-xx1-05"]
   },
+  "home-all": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": { "grade": 7, "term": 1, "scope": "term" },
+    "do": [{ "call": "onToggleAll", "with": {} }]
+  },
   "settings-recite-daily": {
     "page": "packages/settings/recite/recite",
     "title": "背诵设置",

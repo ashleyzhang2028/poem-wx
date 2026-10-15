@@ -144,6 +144,43 @@
   font-weight: 600;
 }
 
+.all-head {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-1) 0;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--t-press);
+}
+
+.all-head .card-title {
+  margin-bottom: 0;
+}
+
+.all-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.all-count {
+  flex: none;
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.all-toggle {
+  flex: none;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  padding-left: var(--sp-2);
+}
+
+.all-head + .toc-row {
+  border-top: 1rpx solid var(--line-2);
+}
+
 .toc-head {
   display: flex;
   align-items: center;
