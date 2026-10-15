@@ -106,7 +106,27 @@
       </view>
     </view>
 
-    <recite-sheet id="sheet" queue="{{plan}}" theme-style="{{themeStyle}}"
+    <view class="card" wx:if="{{allCount}}">
+      <view class="all-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleAll">
+        <text class="card-title bar all-title">{{allLabel}}</text>
+        <text class="all-count">{{allCount}}</text>
+        <text class="all-toggle">{{allOpen ? '收起' : '展开'}}</text>
+      </view>
+
+      <block wx:if="{{allOpen}}">
+        <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
+          <text class="seq">{{item.seq}}</text>
+          <view class="row-main">
+            <text class="row-title row-poem">{{item.title}}</text>
+            <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </block>
+    </view>
+
+    <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"
                     bind:change="onExtraChange" />
 

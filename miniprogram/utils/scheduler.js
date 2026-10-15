@@ -149,13 +149,9 @@ function generateDailyPlan(opt) {
     extraList.push(p);
   });
 
-  const courseIds = {};
-  allPoems.forEach((p) => {
-    courseIds[p.id] = true;
-  });
+  const isExtra = (p) => !!extraById[p.id];
 
-  const dueAll = allPoems.concat(extraList.filter((p) => !courseIds[p.id]))
-    .filter((p) => isDue(getRecord(p.id), now));
+  const dueAll = allPoems.filter((p) => isDue(getRecord(p.id), now) && !isExtra(p));
 
   const inPool = {};
   pool.forEach((p) => {
@@ -187,12 +183,11 @@ function generateDailyPlan(opt) {
     });
   }
 
-  fillFrom(pool, "new");
-  fillFrom(extraList.filter((p) => !courseIds[p.id]), "optional");
+  fillFrom(pool.filter((p) => !isExtra(p)), "new");
 
   if (plan.length < count) {
     const others = allPoems
-      .filter((p) => !used[p.id] && !(p.gr === grade && p.tm === term))
+      .filter((p) => !used[p.id] && !isExtra(p) && !(p.gr === grade && p.tm === term))
       .sort((a, b) => {
         const da = Math.abs(a.gr - grade) * 10 + Math.abs(a.tm - term);
         const db = Math.abs(b.gr - grade) * 10 + Math.abs(b.tm - term);
@@ -203,8 +198,7 @@ function generateDailyPlan(opt) {
 
   if (plan.length < count) {
     const remain = (scope.random ? shuffle(pool) : pool.concat(current))
-      .concat(extraList.filter((p) => !courseIds[p.id]))
-      .filter((p) => !used[p.id]);
+      .filter((p) => !used[p.id] && !isExtra(p));
     remain.forEach((p) => {
       if (plan.length >= count) return;
       used[p.id] = true;
@@ -212,6 +206,15 @@ function generateDailyPlan(opt) {
       plan.push({ poem: p, reason: "extra", reviewRound: rec ? R.clampLevel(rec.level) + 1 : 1 });
     });
   }
+
+  extraList.forEach((p) => {
+    const rec = getRecord(p.id);
+    plan.push({
+      poem: p,
+      reason: "pinned",
+      reviewRound: rec && rec.learned ? R.clampLevel(rec.level) + 1 : 1
+    });
+  });
 
   return plan;
 }
