@@ -139,18 +139,49 @@ function rankOf(tier) {
   return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
 }
 
-function compareRows(snap) {
+const GROUP_TITLE = { free: "登录就有", login: "Free 起", pro: "Pro 起", max: "Max 起" };
+
+function compareCols(snap) {
+  const now = tierNow(snap);
+  return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
+}
+
+function compareGroups(snap) {
   const s = snap || snapshot();
-  const now = s.logged ? s.tier : "";
-  return CAPS.map((c) => ({
-    cap: c.key,
-    name: c.name,
-    cells: tiers.TIERS.map((t) => ({
-      tier: t.key,
-      label: t.name,
-      now: t.key === now,
-      on: rankOf(c.tier) <= rankOf(t.key)
-    }))
+  const byTier = {};
+  CAPS.forEach((c) => {
+    if (!byTier[c.tier]) byTier[c.tier] = [];
+    byTier[c.tier].push(c);
+  });
+  return Object.keys(GROUP_TITLE)
+    .filter((k) => byTier[k] && byTier[k].length)
+    .map((k) => ({
+      key: k,
+      note: GROUP_TITLE[k],
+      rows: byTier[k].map((c) => ({ cap: c.key, name: c.name, cells: cellsOf(c, s) }))
+    }));
+}
+
+function compareSummary() {
+  return tiers.TIERS.map((t) => ({
+    tier: t.key,
+    total: CAPS.length,
+    on: CAPS.filter((c) => rankOf(c.tier) <= rankOf(t.key)).length
+  }));
+}
+
+function tierNow(snap) {
+  const s = snap || snapshot();
+  return s.logged ? s.tier : "";
+}
+
+function cellsOf(cap, snap) {
+  const now = tierNow(snap);
+  return tiers.TIERS.map((t) => ({
+    tier: t.key,
+    label: t.name,
+    now: t.key === now,
+    on: rankOf(cap.tier) <= rankOf(t.key)
   }));
 }
 
@@ -274,7 +305,9 @@ function guestScope() {
 module.exports = {
   CAPS,
   CAP_KEYS,
-  compareRows,
+  compareCols,
+  compareGroups,
+  compareSummary,
   TIER_RANK,
   rankOf,
   tierOf,

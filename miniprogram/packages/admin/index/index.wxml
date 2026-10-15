@@ -24,18 +24,26 @@
     <view class="card-title bar">权限对比</view>
     <view class="compare-row compare-head">
       <text class="compare-cap">功能</text>
-      <text class="compare-tier">{{head.name}}</text>
+      <text class="compare-tier" wx:for="{{heads}}" wx:for-item="col" wx:key="key">
+        <text class="compare-label {{col.now ? 'is-now' : ''}}">{{col.label}}</text>
+        <text class="compare-note" wx:if="{{col.now}}">现在</text>
+      </text>
     </view>
-    <scroll-view class="compare-body" scroll-y>
-      <view class="compare-row" wx:for="{{compareRows}}" wx:key="cap">
-        <text class="compare-cap">{{item.name}}</text>
-        <text class="compare-tier {{col.now ? 'is-now' : ''}}"
-              wx:for="{{item.cells}}" wx:for-item="col" wx:key="tier">
-          <text class="compare-note" wx:if="{{col.now}}">现在</text>
-          <text class="compare-mark {{col.on ? 'on' : 'off'}}">{{col.on ? '✓' : '✕'}}</text>
+    <block wx:for="{{compareGroups}}" wx:key="key">
+      <view class="compare-group">{{item.note}}</view>
+      <view class="compare-row" wx:for="{{item.rows}}" wx:for-item="row" wx:key="cap">
+        <text class="compare-cap">{{row.name}}</text>
+        <text class="compare-tier {{col.on ? 'on' : 'off'}}" wx:for="{{row.cells}}" wx:for-item="col" wx:key="tier">
+          <text class="compare-mark">{{col.on ? '✓' : '✕'}}</text>
         </text>
       </view>
-    </scroll-view>
+    </block>
+    <view class="compare-row compare-sum">
+      <text class="compare-cap">合计</text>
+      <text class="compare-tier" wx:for="{{compareSummary}}" wx:for-item="col" wx:key="tier">
+        <text class="compare-mark">{{col.on}}<text class="compare-of">/{{col.total}}</text></text>
+      </text>
+    </view>
   </view>
 
   <view class="card">
@@ -67,11 +75,6 @@
     <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
   </view>
 
-  <view class="card">
-    <view class="card-title bar">要一个更高的档位</view>
-    <button class="btn ghost block" bindtap="onCopyFeedback">联系邮箱</button>
-    <button class="btn ghost block" bindtap="onLoadAccounts">{{busy ? '刷新中…' : '刷新名录'}}</button>
-  </view>
   </block>
 
   <view class="safe-bottom"></view>
