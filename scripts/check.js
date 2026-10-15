@@ -3347,14 +3347,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && Object.keys(readJson(path.join(__dirname, "shots", "pages.json")))
         .some((k) => k === "settings-recite-daily"));
 
-  ok("计划卡下面挂着「本年级本学期全部诗词」，默认折叠",
+  ok("计划卡下面挂着「本年级本学期全部诗词」，默认折叠、开关是个上下方向的图标",
     /allOpen:\s*false/.test(homeJs)
       && /allLabel/.test(homeJs) && /allRows/.test(homeJs)
       && /<view class="card" wx:if="\{\{allCount\}\}">/.test(homeWxml)
       && /<view class="all-head"/.test(homeWxml)
       && /wx:if="\{\{allOpen\}\}"/.test(homeWxml)
       && /wx:for="\{\{allRows\}\}"/.test(homeWxml)
-      && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs),
+      && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs)
+      && /<text class="all-toggle">\{\{allOpen \? '[^'\u4e00-\u9fa5]+' : '[^'\u4e00-\u9fa5]+'\}\}<\/text>/.test(homeWxml),
     "那张卡要么没挂、要么不是折叠形态");
   ok("改名的是标题不是数据：随机范围下列的是那一段的全部诗词",
     /scope\.random\s*\?\s*scope\.scopeName\s*\+\s*"全部诗词"\s*:\s*"本年级本学期全部诗词"/.test(homeJs)
