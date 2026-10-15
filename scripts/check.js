@@ -3187,6 +3187,32 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     })(),
     "open() 之后 observer 又按属性把队列重写一遍 —— loadCurrent 会被打断，弹层自己把自己收掉");
 
+  ok("open() 按传进来的那一篇落位（同长度的两份队列之间换图，也不落在旧序号上）",
+    (() => {
+      const savedComp = global.Component;
+      let opt = null;
+      global.Component = (o) => { opt = o; };
+      const sheetPath = path.join(sheetDir, "recite-sheet.js");
+      delete require.cache[require.resolve(sheetPath)];
+      require(sheetPath);
+      global.Component = savedComp;
+
+      const self = Object.assign({}, opt.methods);
+      self.data = { open: false, index: 0, queue: [] };
+      self.pushed = false;
+      self.closedAt = 0;
+      self.lastPush = "";
+      self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
+      self.triggerEvent = function () {};
+      self.loadCurrent = function () {};
+      const first = [{ id: "a" }, { id: "b" }];
+      const next = [{ id: "x" }, { id: "y" }];
+      self.open(first, "a");
+      self.open(next, "y");
+      return self.data.index === 1 && self.data.queue[1] === next[1];
+    })(),
+    "open() 只看队列长短，换一份等长队列后仍用旧 index —— 点第 y 篇开出来是 x");
+
   ok("关掉之后有一小段不再重开（列表上的点按与弹层的收起会在同一批数据里撞车）",
     /onClose\(\)\s*\{[\s\S]{0,140}?return;/.test(sheetJs),
     "onClose 里没有那段冷却 —— 收起带动列表重排，重排又把同一顺手点给弹层开了回来");

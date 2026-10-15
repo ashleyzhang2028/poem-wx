@@ -126,10 +126,11 @@ Component({
     open(queue, id) {
       const list = (queue || []).slice();
       if (!list.length) return;
-      const again = this.pushed && list.length === this.data.queue.length;
+      const keep = this.current();
+      const hit = list.findIndex((it) => it.id === id);
+      const idx = hit >= 0 ? hit : (keep ? Math.max(0, list.findIndex((it) => it.id === keep.id)) : 0);
       this.pushed = true;
       this.lastPush = idsOf(list);
-      const idx = again ? this.data.index : Math.max(0, list.findIndex((it) => it.id === id));
       this.missingAt = 0;
       this.missingOf = 0;
       this.setData({ open: true, index: idx, queue: list });
@@ -151,7 +152,8 @@ Component({
       this.missingOf = 0;
       wx.showModal({
         title: "这版没带上正文",
-        content: "第 " + at + " / " + of + " 首的正文不在包里。",
+        content: "第 " + at + " / " + of + " 首的正文不在包里。"
+          + "\n\n点「去同步」把它取回来。",
         confirmText: "去同步",
         cancelText: "知道了",
         success: (res) => {
