@@ -2,6 +2,13 @@ const store = require("./store");
 const tiers = require("./tiers");
 const auth = require("./auth");
 
+const GROUP_RULES = [
+  { key: "free", match: ["free"], name: "登录即得" },
+  { key: "login", match: ["login"], name: "登录后" },
+  { key: "pro", match: ["pro"], name: "Pro 起" },
+  { key: "max", match: ["max"], name: "Max 起" }
+];
+
 const CAPS = [
 
   { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
@@ -30,10 +37,6 @@ const CAPS = [
 const CAP_KEYS = CAPS.map((c) => c.key);
 
 const TIER_RANK = { free: 1, login: 2, pro: 3, max: 4 };
-
-function rankOf(tier) {
-  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
-}
 
 function tierOf(profile) {
   const server = auth.serverTier();
@@ -137,6 +140,38 @@ function hint(key, ctx) {
   if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
+}
+
+function rankOf(tier) {
+  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
+}
+
+function compareRows(snap) {
+  const s = snap || snapshot();
+  const now = s.logged ? s.tier : "";
+  return CAPS.map((c) => {
+    const group = groupOf(c.tier);
+    return {
+      cap: c.key,
+      name: c.name,
+      desc: c.desc,
+      group: group.key,
+      groupName: group.name,
+      groupFirst: false,
+      cells: tiers.TIERS.map((t) => ({
+        tier: t.key,
+        now: t.key === now,
+        on: rankOf(c.tier) <= rankOf(t.key)
+      }))
+    };
+  }).map((row, i, rows) => {
+    row.groupFirst = i === 0 || rows[i - 1].group !== row.group;
+    return row;
+  });
+}
+
+function groupOf(tier) {
+  return GROUP_RULES.find((g) => g.match.indexOf(tier) >= 0) || GROUP_RULES[0];
 }
 
 function snapshot() {
@@ -259,6 +294,9 @@ function guestScope() {
 module.exports = {
   CAPS,
   CAP_KEYS,
+  GROUP_RULES,
+  groupOf,
+  compareRows,
   TIER_RANK,
   rankOf,
   tierOf,

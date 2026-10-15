@@ -28,14 +28,19 @@
       <text class="compare-tier">Pro</text>
       <text class="compare-tier">Max</text>
     </view>
-    <view class="compare-row" wx:for="{{compareRows}}" wx:key="cap">
-      <text class="compare-cap">{{item.name}}</text>
-      <text class="compare-tier {{col.now ? 'is-now' : ''}}"
-            wx:for="{{item.cells}}" wx:for-item="col" wx:key="tier">
-        <text class="compare-note" wx:if="{{col.now}}">现在</text>
-        <text class="compare-mark {{col.on ? 'on' : 'off'}}">{{col.on ? '✓' : '✕'}}</text>
-      </text>
-    </view>
+    <scroll-view class="compare-body" scroll-y>
+      <block wx:for="{{compareRows}}" wx:key="cap">
+        <view class="compare-band" wx:if="{{item.groupFirst}}">{{item.groupName}}</view>
+        <view class="compare-row">
+          <text class="compare-cap">{{item.name}}</text>
+          <text class="compare-tier {{col.now ? 'is-now' : ''}}"
+                wx:for="{{item.cells}}" wx:for-item="col" wx:key="tier">
+            <text class="compare-note" wx:if="{{col.now}}">现在</text>
+            <text class="compare-mark {{col.on ? 'on' : 'off'}}">{{col.on ? '✓' : '✕'}}</text>
+          </text>
+        </view>
+      </block>
+    </scroll-view>
   </view>
 
   <view class="card">

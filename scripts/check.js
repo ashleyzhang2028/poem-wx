@@ -774,12 +774,15 @@ Object.keys(WEB_TIER).forEach((k) => {
 {
   const wxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
   const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
-  ok("权限对比表按三档渲染（compareRows + cells，不是一张写死的表）",
-    wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0 && js.indexOf("compareRows") >= 0,
-    "对比表写死在 wxml 里就再也不会跟着 tiers.TIERS 走");
+  ok("权限对比表按三档渲染（compareRows 铺满能力表，不是一张写死的表）",
+    wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0
+      && js.indexOf("entitlement.compareRows(") >= 0
+      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
+    "对比表写死在 wxml 里、或只挑几项列出来，都会跟能力表走散");
   ok("当前档位列带「现在」（用户只认自己那一列）",
-    js.indexOf("now: t.key === now") >= 0 && wxml.indexOf("col.now") >= 0,
+    /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("col.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
   ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
@@ -915,8 +918,9 @@ const GATED = {
     adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
   ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
-  ok("对比表的每一格由能力表的 need 档位算出来（不写死）",
-    /entitlement\.rankOf\(cap\.need\)\s*<=\s*entitlement\.rankOf\(t\.key\)/.test(adminJs),
+  ok("对比表的每一格由能力表的档位算出来（不写死）",
+    /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
+      fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
