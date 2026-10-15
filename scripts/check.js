@@ -789,6 +789,39 @@ pages.forEach((p) => {
   if (stack.length) balanced = false;
   ok("WXML 标签配平 " + p, balanced, "未闭合: " + stack.join(","));
 
+  const condNode = [];
+  const condStack = [{ kids: [] }];
+  const condRe = /<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g;
+  while ((m = condRe.exec(wxml))) {
+    const cTag = m[2];
+    const cClose = m[1] === "/";
+    const cSelf = m[4] === "/";
+    const ck = /\s(wx:if|wx:elif|wx:else)(?:="([^"]*)")?/.exec(m[3]);
+    const node = { tag: cTag, kind: ck ? ck[1] : null, kids: [] };
+    if (cClose) condStack.pop();
+    else if (!cSelf && VOID.indexOf(cTag) < 0) {
+      condStack[condStack.length - 1].kids.push(node);
+      condStack.push(node);
+    } else condStack[condStack.length - 1].kids.push(node);
+  }
+  const dangling = [];
+  (function walkCond(n) {
+    const conds = n.kids.filter((k) => k.kind);
+    conds.forEach((k, i) => {
+      if (k.kind === "wx:elif" || k.kind === "wx:else") {
+        const prev = conds[i - 1];
+        if (!prev || (prev.kind !== "wx:if" && prev.kind !== "wx:elif")) {
+          dangling.push("<" + k.tag + "> 的 " + k.kind);
+        }
+      }
+    });
+    n.kids.forEach(walkCond);
+  })(condStack[0]);
+  ok("WXML 条件链不断 " + p, dangling.length === 0,
+    dangling.join("、") +
+      " —— wx:elif / wx:else 前面那一个兄弟必须是 wx:if / wx:elif，" +
+      "中间插了别的节点就成了孤立的 elif，真机编译报 Bad attr wx:elif（上传才会发现）");
+
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
   const handlers = new Set();
   const hrefRe = /(?:bind|catch)(?:tap|change|input|confirm|blur|chooseavatar)="([\w$]+)"/g;
@@ -3366,7 +3399,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("选完头像即视为「授权过」，引导条同一轮收掉（Issue #194）",
       /store\.saveProfile\(\{\s*avatarLocal:\s*url,\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8));
     ok("引导条只挂在登录且没授权过那一态上（grantLead）",
-      /class="grant-lead"\s+wx:elif="\{\{grantLead\}\}"/.test(mineWxml8)
+      /class="grant-lead"\s+wx:if="\{\{grantLead\}\}"/.test(mineWxml8)
         && /grantLead:\s*this\.grantLead\(profile\)/.test(mineSrc8));
     ok("「先不用」把授权这件事一次问清，不再反复弹（identityAsked）",
       /store\.saveProfile\(\{\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8)
@@ -3620,7 +3653,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,200}this\.refresh\(\)/.test(mineJs));
 
   ok("未登录时名字那一格仍是只显示的字（不是输入框）",
-    /<text class="identity-name" wx:else>\{\{nickname\}\}<\/text>/.test(mineWxml));
+    /<block wx:else>[\s\S]{0,200}?<text class="identity-name">\{\{nickname\}\}<\/text>/.test(mineWxml));
   ok("就地编辑没被画成一张表单（不铺灰底、不描边框）",
     /\.identity-input\s*\{([^}]*)\}/.test(mineWxss)
       && !/background/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
