@@ -29,7 +29,7 @@
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
 
-        <view class="row-end"><text class="row-lock">登录</text></view>
+        <view class="row-end"><text class="row-lock">未背</text></view>
       </view>
 
       <view class="empty" wx:if="{{!loading && !catalogCount}}">
@@ -71,10 +71,6 @@
         <text class="hero-meter-t">已背 {{doneCount}} / {{total}}</text>
       </view>
 
-      <button class="btn primary block hero-btn" bindtap="onStart" wx:if="{{total}}">
-        {{todoCount ? '开始背' : '再练一遍'}}
-      </button>
-      <button class="btn ghost block hero-btn" bindtap="onBrowseAll" wx:else>看课内 251 首</button>
     </view>
 
     <view class="card">

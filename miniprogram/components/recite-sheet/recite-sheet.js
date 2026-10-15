@@ -50,8 +50,8 @@ Component({
     queue: {
       type: Array,
       value: [],
-      observer() {
-        if (this.data.open) this.loadCurrent();
+      observer(rows) {
+        if (this.data.open && rows && rows.length) this.setData({ queue: rows }, () => this.loadCurrent());
       }
     }
   },
@@ -110,7 +110,7 @@ Component({
       const list = (queue || []).slice();
       if (!list.length) return;
       const idx = Math.max(0, list.findIndex((it) => it.id === id));
-      this.setData({ open: true, index: idx });
+      this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
     },
 

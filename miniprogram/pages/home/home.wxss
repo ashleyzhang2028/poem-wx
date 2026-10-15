@@ -66,10 +66,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.hero-btn {
-  margin-top: var(--sp-4);
-}
-
 .seal {
   flex: none;
   width: 112rpx;
@@ -130,17 +126,21 @@
   margin-right: 12rpx;
 }
 
+.row-lock,
 .row-state {
   flex: none;
   margin-left: var(--sp-2);
   font-size: var(--fs-caption);
   letter-spacing: var(--ls-caption);
-  color: var(--ink-4);
+  color: var(--ink-3);
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--sink);
   white-space: nowrap;
 }
 
 .row-state.on {
-  color: var(--strong-text);
+  color: var(--ink-2);
   font-weight: 600;
 }
 
@@ -174,15 +174,6 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-}
-
-.row-lock {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  padding: 4rpx 16rpx;
-  border-radius: var(--radius-pill);
-  background: var(--sink);
 }
 
 .empty-btn {

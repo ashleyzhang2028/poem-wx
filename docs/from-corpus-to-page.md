@@ -9,8 +9,8 @@
 |---|---|---|---|
 | ① 文件层 | `npm run build:data` 编译（语料在 `scripts/corpus/`，随仓库走） | `miniprogram/data/**`（**不入库**，`.gitignore` 挡着） | 首页目录空着、控制台说「语料 没进这个包」 |
 | ② 本地页面 | 微信开发者工具打开 `miniprogram/` 目录；勾上「不校验合法域名」 | 本地窗口 | 有目录、点得开、课内 251 首能背 |
-| ③ 容器 | 推 `main` 出镜像 → 云托管建服务 → 配环境变量 → 建表 → 小程序里填云调用两栏 | 真机 | 课外 5604 首点开说「这一篇取不到正文」 |
-| ④ 真机 | 云调用两栏在**每台手机**的本机存储里，换机要重填 | 真机 | 同上，且开发者工具里正常 |
+| ③ 容器 | 推 `main` 出镜像 → 云托管建服务 → 配环境变量 → 建表 | 真机 | 课外 5604 首点开说「这一篇取不到正文」 |
+| ④ 真机 | 云调用两栏在**包里**（`miniprogram/utils/server.js`，构建期注入） | 真机 | 同上，且开发者工具里正常 |
 
 **「语料没进这个包」只属于第 ① 段。** 它不是说服务器没起、也不是说后端没配 ——
 是**这个包里的 `data/books/books.js` 取不到**。两条来路要分开：
@@ -166,7 +166,7 @@ git checkout main && git push                → 流水线出镜像
 云托管按镜像建服务、拉到实例起来
 配 SESSION_SECRET / MYSQL_* / WX_APPID / WX_SECRET    docs/wx-cloud-setup.md § 三
 先 `CREATE DATABASE \`poem\`` + `USE \`poem\``，再整段跑 deploy/sql/mysql-schema.sql   § 四
-不填 —— 两栏构建期已注入包里；要临时换后端才去管理页填（env + 服务名）  § 6.2
+两栏的值在代码库里（`miniprogram/utils/server.js`），构建期由密钥仓库覆写；界面上没有填的地方  § 6.2
 ```
 
 整段照 [`wx-cloud-setup.md`](wx-cloud-setup.md) 走。
@@ -202,9 +202,8 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 `errCode: -1 | errMsg: Cloud API isn't enabled, please call ...`，登录与课外正文一起哑掉。
 这一步在 `utils/remote.js` 的 `cloudReady()` 里，同一个 env 只 init 一次、env 变了重新 init。
 
-管理页那两栏还在（「我的 → 用户与权限」），优先级是**本机 → 包内**：
-调试、换部署、应急时用它；清空就回到包里注入那份，不存在
-「换台手机要重填一次」这件事 —— 正常用户碰不到那两栏。
+两栏的值**只存在于代码库**（`miniprogram/utils/server.js`，构建期由密钥仓库覆写）：
+换后端改那份或改密钥仓库变量重跑流水线，界面上没有配置入口（Issue #198）。
 
 ## 六、认症状
 
@@ -216,12 +215,12 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 控制台 `module 'data/books/books.json.js' is not defined` | 工具（2.02.2607271 RC 实测）不把 `.json` 当模块打包，任何 `require("….json")` 都抛这句；`.js` 正常 | 语料产物一律输出为 `module.exports = …` 的 `.js`（`build-data.js` 的 `writeModule`），别改回 `.json` |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
-| 点课外诗：「还没接上同步服务器（云调用两栏）」 | ③/④ | 云调用两栏没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
-| 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。由部署方在管理页（「我的 → 用户与权限」）填，或按 § 五 重跑流水线 |
-| 管理页拉不到「云调用」两栏 | ③/④ | 只有 admin/owner 能改；先按 `wx-cloud-setup.md` § 八 发档位 |
+| 点课外诗：「还没接上同步服务器」 | ③/④ | `server.js` 那两个值没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |
+| 点「微信登录」弹「还没接上同步服务器」 | ③/④ | 这个包还没配。改 `miniprogram/utils/server.js` 那两个值，或按 § 五 重跑流水线 |
+| 界面上找不到云调用两栏 | ③/④ | 运维配置本就不在界面上；改 `miniprogram/utils/server.js` 那两个值 |
 | 点课外诗：「这个版本里没有课外正文」 | ③ | 这个镜像构建时 `COPY_SHREDS=0`，取新镜像 |
 | 点课外诗：「这一篇取不到正文」 | ③ | 清单进了包、但容器那一侧没接上（或这一条真不在任何分片里） |
-| 开发者工具正常、真机不行 | ④ | 这台手机在管理页填过错的云调用两栏；清空即回到包里那份，`baseUrl` 也留空 |
+| 开发者工具正常、真机不行 | ④ | `server.js` 那两个值填错，或 `baseUrl` 留着 —— 核对代码库里那份，重出体验版 |
 | 登录「成功」了但库里没有新行 | ③/④ | 见 `wx-cloud-setup.md` 排错表同一条 |
 
 ## 七、这张口径怎么守
@@ -234,7 +233,7 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 - `setting.ignoreUploadUnusedFiles` 与 `setting.ignoreDevUnusedFiles` 都显式是 `false`
 - `packOptions.include` 列出该进的语料，且不含 `data/texts`
 - `server.js` 是入库的空壳（不许被 gitignore 挡住），且 `remote.js` 对它的 require 有兜底
-- 「我的」页没有连接配置入口，接服务器只有管理页一处；用户看得到的地方不出现「云调用」
+- 界面上没有任何连接配置入口（云调用两栏只在代码库里配）；用户看得到的地方不出现「云调用」
 - 包内正文就是课内那 251 条，且包内与分片不重叠
 - 课内正文单列 400 KB 预算，超了报红
 - 首页不摆语料空态卡；`app.js` 在 `onLaunch` 报版本与语料在不在
