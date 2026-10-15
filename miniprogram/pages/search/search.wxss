@@ -4,8 +4,8 @@
   font-size: var(--fs-hint);
 }
 
-.go-btn {
-  flex: none;
+.search-page .search {
+  padding-right: var(--sp-2);
 }
 
 .result-bar {
@@ -53,6 +53,7 @@
   display: flex;
   flex-wrap: wrap;
   margin: var(--sp-2) 0;
+  font-weight: 500;
 }
 
 .hot-tags .tag-btn {

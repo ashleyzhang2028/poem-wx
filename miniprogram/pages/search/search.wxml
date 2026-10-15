@@ -2,7 +2,7 @@
   <lock-card wx:if="{{locked}}" title="搜索要登录" note="登录后才能搜" mark="寻" />
 
   <block wx:else>
-  <view class="search">
+  <view class="search search-page">
     <text class="search-icon">⌕</text>
     <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />

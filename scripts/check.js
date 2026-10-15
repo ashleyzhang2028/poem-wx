@@ -2400,6 +2400,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   {
+    const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    const searchWxss = read("pages/search/search.wxss");
+    const iconGap = /(^|\})\s*\.search-icon\s*\{([^}]*)\}/.exec(appWxss);
+    const btnGap = /\.go-btn\s*\{([^}]*)\}/.exec(searchWxss);
+    ok("搜索图标与输入框贴得近（margin 只留一档间距，不是 12rpx 那么远）",
+      !!iconGap && Number((/margin-right\s*:\s*(\d+)rpx/.exec(iconGap[2]) || [])[1] || 99) <= 8,
+      "读到 " + JSON.stringify(iconGap && iconGap[2].replace(/\s+/g, " ").trim()));
+    ok("搜索按钮贴右边界（右侧 padding 收窄，不再隔着一整档间距）",
+      /padding-right\s*:\s*var\(--sp-2\)/.test(/\.search-page \.search\s*\{([^}]*)\}/.exec(searchWxss)?.[1] || ""),
+      "搜索页那一条 .search 还是全局那个 48rpx 右边距");
+    ok("「试试」那排胶囊不是粗体（font-weight 400 或 500）",
+      /font-weight\s*:\s*(400|500)/.test(/\.hot-tags \{([^}]*)\}/.exec(searchWxss)?.[1] || ""),
+      "胶囊还是 600 以上");
+  }
+
+  {
     const js = read("pages/search/search.js");
     ok("搜索结果一次只列 20 条",
       /const BATCH = 20;/.test(js) && /nextBatch\(session, BATCH\)/.test(js),
@@ -3096,14 +3113,29 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   {
     const readerWxml = read("pages/reader/reader.wxml");
-    [["详情页", readerWxml], ["背诵弹层", sheetWxml]].forEach(([name, src]) => {
-      const acts = src.indexOf('class="actions"');
-      const head = src.indexOf('class="recite-head"');
-      ok(name + "：三颗按钮在掌握度**上面**（先评、再看读数）",
-        acts >= 0 && head > acts, "顺序还是掌握度在前");
-      ok(name + "：三颗按钮不再包一张卡（.actions 是裸的一行）",
-        /<view class="actions">/.test(src));
-    });
+    const sheetWxmlSrc = sheetWxml;
+    const acts = sheetWxmlSrc.indexOf('class="actions"');
+    const head = sheetWxmlSrc.indexOf('class="recite-head"');
+    ok("背诵弹层：三颗按钮在掌握度**上面**（先评、再看读数）",
+      acts >= 0 && head > acts, "顺序还是掌握度在前");
+    ok("背诵弹层：三颗按钮不再包一张卡（.actions 是裸的一行）",
+      /<view class="actions">/.test(sheetWxmlSrc));
+  }
+
+  {
+    const readerWxml = read("pages/reader/reader.wxml");
+    const readerJs = read("pages/reader/reader.js");
+    ok("详情页只在背诵场景评分（忘记 / 模糊 / 记住与掌握度挂在 reciteMode 上）",
+      /class="card recite-card"\s+wx:if="\{\{reciteMode\}\}"/.test(readerWxml)
+      && /reciteMode:\s*query\.mode === "recite"/.test(readerJs),
+      "评分那一卡不再有条件，浏览场景也会看到它");
+    ok("浏览入口一律带 mode=browse（课外阅读 / 搜索 / 作者索引 / 游戏 / 今日加背）",
+      ["pages/list/list.js", "pages/search/search.js", "components/daily-extra/daily-extra.js",
+        "packages/authors/index/index.js", "packages/game/quiz/quiz.js",
+        "packages/game/feihua/feihua.js"].every((f) => read(f).indexOf("mode=browse") >= 0),
+      "有入口没带上 mode=browse，那个入口进详情页会亮出评分");
+    ok("背诵场景翻篇不丢 mode（readerUrl 把 mode 续上）",
+      /readerUrl\(/.test(readerJs) && /mode=recite/.test(readerJs));
   }
 
   {
@@ -3249,6 +3281,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /\.identity-input\s*\{([^}]*)\}/.test(mineWxss)
       && !/background/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
     "名字那一格铺了底色 / 描了边框，身份卡看着像张表单");
+  ok("昵称那一行没有虚线（Issue #194）",
+    !/border-bottom[^;}]*dashed/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
+    "名字底下还拖着一条虚线");
+  ok("昵称输入框有固定宽度（不占满整行，把档位胶囊顶出去）",
+    /width\s*:\s*\d+rpx/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
+    "还是 width: 100%，输入框会一路拖到胶囊那儿");
 
   ok("通用设置里不再有「背完自动下一首」",
     generalWxml.indexOf("背完自动下一首") < 0 && generalWxml.indexOf("onAutoNext") < 0);

@@ -22,8 +22,10 @@
           <text class="poem-dot">·</text>
           <text class="poem-meta">{{source}}</text>
         </block>
-        <text class="poem-dot">·</text>
-        <text class="poem-meta stage">{{stage}}</text>
+        <block wx:if="{{reciteMode}}">
+          <text class="poem-dot">·</text>
+          <text class="poem-meta stage">{{stage}}</text>
+        </block>
       </view>
 
       <view class="poem-note" wx:if="{{aliasText || selection}}">
@@ -94,7 +96,7 @@
     </view>
   </view>
 
-  <view class="card recite-card">
+  <view class="card recite-card" wx:if="{{reciteMode}}">
     <view class="actions">
       <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
             data-r="{{item.key}}" bindtap="onResult">
