@@ -5,7 +5,7 @@
 
   <block wx:if="{{!author}}">
 
-    <view class="page-head">
+    <view class="page-head roster-head">
       <text class="head-title">{{totalPeople}} 位作者</text>
       <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
     </view>
@@ -44,14 +44,14 @@
   </block>
 
   <block wx:else>
-    <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBackRoster">
-      <text class="back-arrow">‹</text>
-      <text>返回作者索引</text>
-    </view>
-
-    <view class="page-head">
+    <view class="page-head author-head">
       <text class="head-title">{{author}}</text>
-      <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+      <view class="head-side">
+        <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+        <view class="head-back" hover-class="row-hover" hover-stay-time="60" bindtap="onBackRoster">
+          <text class="head-back-arrow">‹</text>
+        </view>
+      </view>
     </view>
 
     <view class="seg filter-group">
