@@ -15,6 +15,8 @@ const RESULTS = [
 const FONT_MIN = -2;
 const FONT_MAX = 4;
 
+const REOPEN_MS = 400;
+
 const ALIGNS = [
   { key: "left", label: "左对齐" },
   { key: "center", label: "居中" }
@@ -26,14 +28,8 @@ const PINYIN_MODES = [
   { key: "all", label: "全文" }
 ];
 
-function sameIds(a, b) {
-  const x = a || [];
-  const y = b || [];
-  if (x.length !== y.length) return false;
-  for (let i = 0; i < x.length; i++) {
-    if (x[i].id !== y[i].id) return false;
-  }
-  return true;
+function idsOf(rows) {
+  return (rows || []).map((it) => it.id).join("|");
 }
 
 function aliasTextOf(meta) {
@@ -61,8 +57,11 @@ Component({
       type: Array,
       value: [],
       observer(rows) {
-        if (!this.data.open || !rows || !rows.length) return;
-        if (sameIds(rows, this.data.queue)) return;
+        if (!rows || !rows.length) return;
+        const mark = idsOf(rows);
+        if (mark === this.lastPush) return;
+        this.lastPush = mark;
+        if (!this.data.open) return;
         const keep = this.current();
         const index = keep ? Math.max(0, rows.findIndex((it) => it.id === keep.id)) : this.data.index;
         this.setData({ queue: rows, index }, () => this.loadCurrent());
@@ -111,7 +110,9 @@ Component({
   },
 
   attached() {
-    this.loaded = false;
+    this.pushed = false;
+    this.closedAt = 0;
+    this.lastPush = "";
   },
 
   detached() {
@@ -123,12 +124,18 @@ Component({
     open(queue, id) {
       const list = (queue || []).slice();
       if (!list.length) return;
-      const idx = Math.max(0, list.findIndex((it) => it.id === id));
+      const again = this.pushed && list.length === this.data.queue.length;
+      this.pushed = true;
+      this.lastPush = idsOf(list);
+      const idx = again ? this.data.index : Math.max(0, list.findIndex((it) => it.id === id));
       this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
     },
 
     onClose() {
+      if (this.closedAt && Date.now() - this.closedAt < REOPEN_MS) return;
+      this.closedAt = Date.now();
+      this.pushed = false;
       this.setData({ open: false, showTranslation: false, hint: "" });
     },
 
