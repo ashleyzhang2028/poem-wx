@@ -38,7 +38,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 2);
+    tabbar.sync(this, 3);
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });

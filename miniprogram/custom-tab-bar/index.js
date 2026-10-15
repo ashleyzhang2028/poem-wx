@@ -12,6 +12,7 @@ Component({
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: "book" },
       { pagePath: "/pages/library/library", text: "课外", icon: "stack", login: true },
+      { pagePath: "/packages/game/index/index", text: "大会", icon: "flag", noSwitch: true },
       { pagePath: "/pages/search/search", text: "搜索", icon: "search", login: true },
       { pagePath: "/pages/mine/mine", text: "我的", icon: "person" }
     ]
@@ -35,6 +36,10 @@ Component({
       const item = this.data.list[i];
       if (!item) return;
       if (i === this.data.active) return;
+      if (item.noSwitch) {
+        wx.navigateTo({ url: item.pagePath });
+        return;
+      }
       if (item.login && !gate.logged()) {
         wx.switchTab({ url: GUEST_TAB });
         return;

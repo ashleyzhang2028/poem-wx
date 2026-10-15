@@ -49,6 +49,11 @@ Page({
     locked: false
   },
 
+  onLoad(query) {
+    const anchor = query && query.focus;
+    this.focusAnchor = anchor === "scope" || anchor === "count" || anchor === "algo" ? anchor : "";
+  },
+
   onShow() {
     theme.apply(this);
     if (!gate.logged()) {
@@ -68,8 +73,18 @@ Page({
         daily: this.dailyRows(),
         dailyMax: store.DAILY_EXTRA_MAX
       }),
-      () => this.updatePool()
+      () => {
+        this.updatePool();
+        this.scrollToAnchor();
+      }
     );
+  },
+
+  scrollToAnchor() {
+    const anchor = this.focusAnchor;
+    if (!anchor) return;
+    this.focusAnchor = "";
+    wx.pageScrollTo({ selector: '[data-anchor="recite-' + anchor + '"]', duration: 240 });
   },
 
   dailyRows() {
