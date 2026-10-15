@@ -1,18 +1,20 @@
 const store = require("./store");
 
-const FAMILY = "Kuibu Serif";
+const TITLE = "Kuibu Serif";
+const TEXT = "Kuibu Serif Text";
 
 let tried = false;
 
-function url() {
+function url(key) {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  return String(auth.fontUrl || "");
+  return String(auth[key] || "");
 }
 
 function readiness() {
-  const u = url();
-  if (!u) {
-    return { visible: false, usable: false, state: "unsupported", reason: "未配置篇名子集字体" };
+  const title = url("fontUrl");
+  const text = url("fontTextUrl");
+  if (!title && !text) {
+    return { visible: false, usable: false, state: "unsupported", reason: "未配置诗词宋体子集" };
   }
   return { visible: true, usable: true, state: "ready", reason: "" };
 }
@@ -24,18 +26,17 @@ function load() {
 
   if (typeof wx.loadFontFace !== "function") return Promise.resolve(false);
 
-  return new Promise((resolve) => {
-    wx.loadFontFace({
-      family: FAMILY,
-      source: 'url("' + url() + '")',
+  const faces = [
+    { family: TITLE, source: url("fontUrl") },
+    { family: TEXT, source: url("fontTextUrl"), desc: { weight: "normal" } }
+  ].filter((f) => f.source);
 
-      global: true,
-      scopes: ["webview"],
+  return Promise.all(faces.map((f) => new Promise((resolve) => {
+    wx.loadFontFace(Object.assign({ global: true, scopes: ["webview"] }, f, {
       success: () => resolve(true),
-
       fail: () => resolve(false)
-    });
-  });
+    }));
+  }))).then((r2) => r2.some(Boolean));
 }
 
-module.exports = { FAMILY, readiness, load, url };
+module.exports = { FAMILY: TITLE, TEXT_FAMILY: TEXT, readiness, load, url };

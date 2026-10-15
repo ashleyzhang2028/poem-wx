@@ -172,10 +172,17 @@
 这条是**内容需求**（诗词要像诗词），不是装饰，所以它从上一版留了下来。
 
 ```css
---font-poem: "Kuibu Serif", "Songti SC", …, serif;
---font-ui:   -apple-system, "PingFang SC", …;
---font-num:  -apple-system, "SF Pro Display", …;   /* 数字 */
+--font-poem:      "Kuibu Serif", "Songti SC", …, serif;   /* 题名 · 身份行：半粗 */
+--font-poem-text: "Kuibu Serif Text", "Songti SC", …, serif;   /* 诗句正文：常规 */
+--font-ui:        -apple-system, "PingFang SC", …;
+--font-num:       -apple-system, "SF Pro Display", …;   /* 数字 */
 ```
+
+两条宋体链不是同一份字重的两个名字：**题名与身份行（含作者名）是半粗，
+诗句正文是常规**。合起来写过一版，结果是外挂那份只有半粗一个源，
+正文会连字重一起继承过去 —— 长段诗句比标题粗，读起来是「通篇都在喊」。
+拆开后 `.poem-title` / `.poem-meta` 走 `--font-poem`（`font-weight: 600`），
+`.poem-body` 走 `--font-poem-text` 且**不写 font-weight**。
 
 「先系统、后外挂」的两层策略没变，做法见 [`architecture.md`](architecture.md) § 六。
 

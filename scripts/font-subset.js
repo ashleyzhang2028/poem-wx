@@ -1,45 +1,73 @@
 "use strict";
+
 const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
+const vm = require("vm");
 
-const SRC = process.env.FONT_SRC || path.join(__dirname, "corpus", "fonts", "NotoSerifSC-600.woff2");
-const OUT = process.env.OUT || path.join(__dirname, "..", "dist", "fonts", "kuibu-title-serif.woff2");
+const CORPUS = path.join(__dirname, "corpus");
+const OUT_DIR = process.env.OUT || path.join(__dirname, "..", "dist", "fonts");
 
-function collectChars() {
-  const dir = path.join(__dirname, "..", "miniprogram", "data", "books");
-  const chars = new Set();
-  fs.readdirSync(dir).forEach((f) => {
-    require(path.join(dir, f)).forEach((it) => {
-      String(it.t || "").split("").forEach((c) => chars.add(c));
-      String(it.a || "").split("").forEach((c) => chars.add(c));
-    });
-  });
-  "0123456789·—、。《》（）〈〉「」…".split("").forEach((c) => chars.add(c));
-  return [...chars].join("");
+const PUNCT = "0123456789·—、。，？！：；（）《》〈〉「」…";
+
+function corpusWindow() {
+  const dir = path.join(CORPUS, "data");
+  const sandbox = { window: {}, console: console };
+  sandbox.window.window = sandbox.window;
+  vm.createContext(sandbox);
+  fs.readdirSync(dir)
+    .filter((f) => /^poems-.*\.js$|^text-master\.js$/.test(f))
+    .sort()
+    .forEach((f) => vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), sandbox, { filename: f }));
+  return sandbox.window;
 }
 
-function main() {
-  if (!fs.existsSync(SRC)) {
-    console.log("跳过：源字体不在 " + SRC + "（设 FONT_SRC 指过去）");
-    return;
-  }
-  const text = collectChars();
-  const textFile = path.join(require("os").tmpdir(), "kuibu-title-chars.txt");
-  fs.writeFileSync(textFile, text);
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+function collectChars() {
+  const W = corpusWindow();
+  const head = new Set();
+  const text = new Set();
+  PUNCT.split("").forEach((c) => { head.add(c); text.add(c); });
 
-  execFileSync("pyftsubset", [
-    SRC,
+  Object.keys(W).forEach((k) => {
+    if (!/^POEMS/.test(k)) return;
+    W[k].forEach((it) => {
+      String(it.title || "").split("").forEach((c) => head.add(c));
+      String(it.author || "").split("").forEach((c) => head.add(c));
+      String(it.text || "").split("").forEach((c) => text.add(c));
+    });
+  });
+
+  return { head: [...head].join(""), text: [...text].join("") };
+}
+
+function subset(source, chars, out) {
+  const textFile = path.join(require("os").tmpdir(), "kuibu-" + path.basename(out) + ".txt");
+  fs.writeFileSync(textFile, chars);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  require("child_process").execFileSync("pyftsubset", [
+    source,
     "--text-file=" + textFile,
     "--flavor=woff2",
     "--layout-features=*",
-    "--output-file=" + OUT
+    "--output-file=" + out
   ], { stdio: "inherit" });
+  return fs.statSync(out).size / 1024;
+}
 
-  const kb = fs.statSync(OUT).size / 1024;
-  console.log("篇名宋体子集：" + text.length + " 字 → " + OUT + "（" + kb.toFixed(0) + "KB）");
-  console.log("传上去之后，把地址填进 auth.fontUrl（或等后端下发），见 utils/font.js");
+function main() {
+  const chars = collectChars();
+  const src = process.env.FONT_SRC || path.join(CORPUS, "fonts", "NotoSerifSC-600.woff2");
+
+  if (!fs.existsSync(src)) {
+    console.log("跳过：源字体不在 " + src + "（设 FONT_SRC 指过去）");
+    return;
+  }
+
+  const titleKb = subset(src, chars.head, path.join(OUT_DIR, "kuibu-title-serif.woff2"));
+  const textKb = subset(src, chars.text, path.join(OUT_DIR, "kuibu-text-serif.woff2"));
+
+  console.log("题名宋体子集：" + chars.head.length + " 字 → kuibu-title-serif.woff2（" + titleKb.toFixed(0) + "KB）");
+  console.log("正文宋体子集：" + chars.text.length + " 字 → kuibu-text-serif.woff2（" + textKb.toFixed(0) + "KB）");
+  console.log("两个文件都要传；地址填进 auth.fontUrl / auth.fontTextUrl，见 utils/font.js");
 }
 
 main();
