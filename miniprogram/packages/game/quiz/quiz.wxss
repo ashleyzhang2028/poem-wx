@@ -108,7 +108,7 @@
 
 .result {
   text-align: center;
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  padding: var(--sp-6) var(--sp-4) var(--sp-5);
   background: var(--surface);
 }
 
