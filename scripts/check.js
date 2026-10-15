@@ -2004,11 +2004,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("首页行尾包了共用的槽", (homeWxml.match(/class="row-end"/g) || []).length >= 2);
   ok("「登录」胶囊与完成勾都在槽里",
-    /<view class="row-end"><text class="row-lock">登录<\/text><\/view>/.test(homeWxml.replace(/\s+/g, " ")
-      .replace(/> </g, "><")) || /row-end"[^>]*>\s*<text class="row-lock"/.test(homeWxml));
+    /row-end"[^>]*>\s*<text class="row-lock"/.test(homeWxml)
+      && /row-end"[^>]*>\s*<text class="row-state/.test(homeWxml));
+  ok("未登录目录行也走 row-lock 胶囊（不是一行裸字）",
+    homeWxml.indexOf('class="row-lock"') >= 0);
   const slot = /\.row-end\s*\{([^}]*)\}/.exec(homeWxss);
   ok("槽有固定宽度", !!slot && /width\s*:\s*\d+rpx/.test(slot[1]), slot && slot[1].replace(/\s+/g, " "));
-  ok("槽宽不小于「登录」胶囊的实际宽度（88rpx 两个字 + 内边距）",
+  ok("槽宽不小于最宽那颗胶囊的实际宽度（88rpx 两个字 + 内边距）",
     !!slot && Number((/width\s*:\s*(\d+)rpx/.exec(slot[1]) || [])[1] || 0) >= 88);
 }
 
@@ -2077,6 +2079,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const appCfg = readJson(path.join(ROOT, "app.json"));
   ok("app.json 开启了自定义 tabBar", appCfg.tabBar && appCfg.tabBar.custom === true);
 
+  const barJs = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
+  ok("课外 / 搜索标了要登录（游客点了不进门，直接去「我的」）",
+    /课外[^}]*login:\s*true/.test(barJs) && /搜索[^}]*login:\s*true/.test(barJs),
+    "两项没标 login —— 游客点进去还是一屏只有一个按钮的门禁页");
+  ok("游客点了这两栏切到「我的」（不是 render 一张 lock-card）",
+    /gate\.logged\(\)/.test(barJs) && /switchTab\(\{\s*url:\s*GUEST_TAB\s*\}/.test(barJs),
+    "没查登录态、或没有跳到「我的」的那一跳");
 }
 
 {
@@ -2681,8 +2690,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /onOpen[\s\S]{0,400}?openSheet\(/.test(homeJs)
       && !/onOpen[\s\S]{0,400}?pages\/reader\/reader/.test(homeJs),
     "onOpen 里还在跳详情页");
-  ok("「开始背」也走弹层（同一件事，不该两条路）",
-    /onStart[\s\S]{0,300}?openSheet\(/.test(homeJs));
+  ok("首页不再有第二个大按钮（「开始背」撤了，只留「加背」卡里那一套）",
+    !/onStart/.test(homeWxml) && !/onBrowseAll/.test(homeWxml),
+    "hero 区还挂着 onStart / onBrowseAll —— 一屏里两个填黑的大按钮");
+  ok("点篇目仍走弹层（同一件事，不该两条路）",
+    /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id) {"));
   ok("弹层由首页把门禁，组件自己不查",
     /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
@@ -2690,6 +2702,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
+  ok("open 时 queue 换新数组不会把弹层关掉（首页 refresh 会先把 plan 置空）",
+    /observer\(rows\)[\s\S]{0,200}rows && rows\.length/.test(sheetJs),
+    "observer 没判空 —— 点一篇 → markRead → refresh → plan 置空 → 弹层当场闪退");
+  ok("open 时把 queue 落到组件自己的 data 上（不依赖父层那一批 setData 的先后）",
+    /setData\(\{\s*open:\s*true,\s*index:\s*idx,\s*queue:\s*list\s*\}/.test(sheetJs),
+    "open() 没写 queue —— 首帧 current() 读的是上一批数据");
   ok("弹层是整屏浮层（fixed）", !!rootBody && /position\s*:\s*fixed/.test(rootBody[1]));
   ok("弹层靠底（从下面推上来，不是居中的对话框）",
     !!rootBody && /align-items\s*:\s*flex-end/.test(rootBody[1]));
@@ -3209,12 +3227,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
   }
 
-  ok("主按钮的字按「还有没有没背过的」切（todoCount 三元）",
-    /todoCount/.test(homeJs)
-      && /\{\{[^}]*todoCount[^}]*\?[^}]*:[^}]*\}\}/.test(homeWxml));
-  ok("「开始背」挑的是第一首**没背过的**（不是第一首）",
-    /find\(\(r\) => !r\.reviewed\)/.test(homeJs),
-    "用的还是 read，与「背过」是两件事");
+  ok("已背那一侧不再是重色（只压一档字重，不换强调色）",
+    /row-state\.on\s*\{([^}]*)\}/.test(homeWxss)
+      && !/var\(--green\)/.test((/\.row-state\.on\s*\{([^}]*)\}/.exec(homeWxss) || [])[1] || ""),
+    "已背又把 --green 拿回来了 —— 用户说颜色太重");
 }
 
 {
