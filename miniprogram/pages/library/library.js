@@ -4,6 +4,7 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const GROUPS = [
   {
@@ -82,7 +83,7 @@ Page({
   },
 
   onLoginGate() {
-    wx.switchTab({ url: "/pages/mine/mine" });
+    tabPage.mine();
   },
 
   onBack() {
@@ -91,7 +92,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onOpenBook(e) {

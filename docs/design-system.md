@@ -696,6 +696,20 @@ V24 守着「未选中那格有 `--sink` 灰底」「主题色底不许写进 `.
 回来看那一栏还亮着。所以 `custom-tab-bar` 的每一项多带一个 `noSwitch`：
 `switchTab` 与 `navigateTo` 在同一个 `onTap` 里分流。
 
+**去 tab 页一律走 `switchTab`，出口只有一个**（`utils/tab-page.js`）。
+微信这条规矩很坑：`navigateTo` 跳 tab 页是**静默失败** —— 不报错、不跳转、
+`fail` 也不回调。于是「点登录去『我的』」写出来就是
+`wx.navigateTo({ url: "/pages/mine/mine?login=1" })`，看着天经地义，
+实际是死链（Issue #195，全站曾有 16 处这么写）。
+
+`tab-page.js` 只两件事：`go(url)` 切 tab、`mine()` 去「我的」。
+不需要 `login()` 这种包装 —— 「我的」页第一张卡就是登录入口，
+切过去就够了，不必再替用户点一下。
+
+底栏那三项要登录的（课外 / 搜索 / 大会）在未登录时**都切「我的」**，
+不 render 一张 `lock-card`：门禁页摆在 tab 位上，用户点一次就多一层要退。
+「大会」与其他两项的区别只在登录之后 —— 它 `navigateTo` 进分包，不是 tab 页。
+
 自绘的**代价**要说清：高亮不再由平台管 —— 每个 tab 页 `onShow` 里要调一次
 `tabbar.sync(this, n)`，否则切过去还亮着上一栏。这一步 V19 按事实守着
 （每页各调一次、序号各不相同、每页都留了 `.has-tabbar` 垫片）。

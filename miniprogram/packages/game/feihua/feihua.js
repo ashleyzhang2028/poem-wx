@@ -4,6 +4,7 @@ const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 const ANSWER_LIMIT = 80;
 
@@ -61,7 +62,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onLevel(e) {

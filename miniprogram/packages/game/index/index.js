@@ -1,6 +1,7 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 const MODES = [
   { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
@@ -39,7 +40,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onMode(e) {

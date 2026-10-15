@@ -4,6 +4,7 @@ const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const sync = require("../../../utils/sync");
+const tabPage = require("../../../utils/tab-page");
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: "left" },
@@ -60,7 +61,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onAlign(e) {

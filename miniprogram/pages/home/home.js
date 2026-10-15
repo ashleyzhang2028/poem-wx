@@ -5,6 +5,7 @@ const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
 
@@ -272,7 +273,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onPullDownRefresh() {

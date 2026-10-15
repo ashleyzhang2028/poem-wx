@@ -4,6 +4,7 @@ const AI = require("../../../utils/author-index");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -43,7 +44,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   allEntries() {

@@ -38,14 +38,7 @@ Page({
     fullTextOn: false,
 
 
-    focusLogin: false,
-
     grantLead: false
-  },
-
-  onLoad(query) {
-
-    this.setData({ focusLogin: query && query.login === "1" });
   },
 
   onShow() {

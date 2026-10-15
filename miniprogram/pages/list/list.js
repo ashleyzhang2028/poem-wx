@@ -2,6 +2,7 @@ const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const gate = require("../../utils/gate");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const FILTERS = [
   { key: "全部", label: "全部", icon: "all-site" },
@@ -90,7 +91,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onOpen(e) {

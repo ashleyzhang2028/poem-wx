@@ -1,3 +1,4 @@
+const tabPage = require("../../utils/tab-page");
 Component({
   properties: {
     title: { type: String, value: "登录后可用" },
@@ -14,7 +15,7 @@ Component({
 
   methods: {
     onLogin() {
-      wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+      tabPage.mine();
     }
   }
 });
