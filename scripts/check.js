@@ -678,7 +678,7 @@ function asMember() {
 asGuest();
 
 ["daily", "library", "pinyin", "ebbinghaus", "speak", "leitner", "export"].forEach((k) => {
-  ok("能力表含 " + k, E.ORDER.some((r) => r.key === k && r.cap === k && !!r.name));
+  ok("能力表含 " + k, E.CAP_KEYS.indexOf(k) >= 0 && !!E.capName(k));
 });
 
 function asTier(t) {
@@ -772,17 +772,15 @@ Object.keys(WEB_TIER).forEach((k) => {
 });
 
 {
-  const page = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
-  const listed = [];
-  const blocks = page.match(/keys:\s*\[[^\]]*\]/g) || [];
-  blocks.forEach((b) => {
-    (b.match(/"(\w+)"/g) || []).forEach((k) => listed.push(k.replace(/"/g, "")));
-  });
-  const missing = E.CAP_KEYS.filter((k) => listed.indexOf(k) < 0);
-  ok("管理页把每条能力都摆出来", missing.length === 0, "漏了 " + missing.join(", "));
-
   const wxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
-  ok("管理页渲染能力分组", wxml.indexOf("grp.rows") >= 0 && wxml.indexOf("groups") >= 0);
+  const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+
+  ok("权限对比表按三档渲染（compareRows + cells，不是一张写死的表）",
+    wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0 && js.indexOf("compareRows") >= 0,
+    "对比表写死在 wxml 里就再也不会跟着 tiers.TIERS 走");
+  ok("当前档位列带「现在」（用户只认自己那一列）",
+    js.indexOf("now: t.key === now") >= 0 && wxml.indexOf("col.now") >= 0,
+    "没有「现在」这枚标记时，用户看不出哪一列是自己");
   ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
 
@@ -917,8 +915,9 @@ const GATED = {
     adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
   ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
-  ok("管理页把每条能力都摆出来", E.CAP_KEYS.every((k) => adminJs.indexOf('"' + k + '"') >= 0),
-    E.CAP_KEYS.filter((k) => adminJs.indexOf('"' + k + '"') < 0).join(", "));
+  ok("对比表的每一格由能力表的 need 档位算出来（不写死）",
+    /entitlement\.rankOf\(cap\.need\)\s*<=\s*entitlement\.rankOf\(t\.key\)/.test(adminJs),
+    "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
@@ -1729,11 +1728,13 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
-  ok("后端地址有配置入口（只在管理页，界面上不再有第二处）",
-    adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0
+  ok("界面上不留后端地址与云调用两栏（值只在代码库里配）",
+    adminWxml.indexOf("onSaveBaseUrl") < 0 && adminJs.indexOf("onSaveBaseUrl") < 0
+      && adminWxml.indexOf("cloudEnv") < 0 && adminJs.indexOf("onSaveCloud") < 0
+      && adminWxml.indexOf("同步服务器") < 0
       && mineJs.indexOf("onServer") < 0,
-    "「我的 → 同步服务器」那一行是运维参数，普通用户既看不懂也改不了 —— " +
-      "入口只留管理页；两格的值构建期从密钥仓库注入，用户不必填");
+    "两栏的值构建期就注进包里，露出来只会是用户既读不懂也改不动的说法 —— " +
+      "要临时换后端就改代码库里的 miniprogram/utils/server.js，不走界面");
 
   ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
@@ -4221,15 +4222,11 @@ function gapped(items, max) {
     ).then(() => { global.wx = savedWx; });
   }
 
-  const adminSrc = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
-  const adminWxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
-  ok("管理页能在界面上配云调用（env + service 两栏都在）",
-    /cloudEnv/.test(adminWxml) && /cloudService/.test(adminWxml) && /onSaveCloud/.test(adminWxml),
-    "只能改代码配云调用的话，这条路就落不到用户手上");
-  ok("云调用两栏缺一个就不许存（存下去只会得到 env not exists）",
-    /if\s*\(!env\s*\|\|\s*!service\)/.test(adminSrc),
-    "允许只填一栏：平台那边回 env not exists / service not found，" +
-      "看着像服务没部署，其实是少了一栏");
+  const adminSrcForCloud = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const remoteSrc2 = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  ok("云调用两栏仍是构建产物（值由 build-data.js 从环境变量写进 server.js，不走界面）",
+    /function packedCloud\(\)/.test(remoteSrc2) && !/cloudEnv/.test(adminSrcForCloud),
+    "界面上一填，这两栏就成了每个用户手里的变量 —— 而它是部署方的配置");
 
   {
     const setup = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8");
@@ -4258,10 +4255,9 @@ function gapped(items, max) {
     "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
       "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
       "一次就能看出「包里的 env 不是我这个小程序的那个」");
-  ok("云开发环境 ID 填成云托管那个时当场说清（两个是不同的环境）",
-    /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
-    "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +
-      "与「调不通」之间来回");
+  ok("云调用失败时说的话分得清 102002 与 env not exists",
+    /102002/.test(remoteSrc) && /env not exists/.test(remoteSrc),
+    "两句话一样时，人不知道该去调最小实例数还是去核对环境 ID");
 
   {
     const mineSrc = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
@@ -5014,11 +5010,11 @@ function gapped(items, max) {
     const doc = fs.readFileSync(path.join(repo4, "docs", "wx-cloud-setup.md"), "utf8");
     const arch = fs.readFileSync(path.join(repo4, "docs", "architecture.md"), "utf8");
 
-    ok("文档写清了「云调用那两格只有 admin/owner 看得到」",
-      /(admin|owner)/.test(doc) && /(普通用户|Free|free)/.test(doc) &&
-        /云调用/.test(doc),
-      "只写「我的 → 用户与权限 → 拉到底」会被读成「所有用户都能填」—— " +
-        "而那张卡在管理页里，普通用户翻到那一页只有「我的授权」。");
+    ok("文档写清了「云调用两格是运维配置，界面上没有」",
+      /运维配置/.test(doc) && /(普通用户|free|Free)/.test(doc) &&
+        /界面上[\s\S]{0,30}没有|没有配置入口/.test(doc),
+      "不写清这一点，读的人会去「我的 → 用户权限」里翻那两栏 —— " +
+        "而那是运维配置，界面上一个输入框都没有（Issue #198）");
 
     const svcRow = /\|\s*`X-WX-SERVICE`\s*\|[^\n]*?poem-wx/.test(doc);
     ok("文档 § 6.1 的服务名举例就是当前部署的名字（不是 poem-api）",
@@ -5032,11 +5028,10 @@ function gapped(items, max) {
       "§ 6.1 只给一个名字不写「以实际为准」，人会把举例当标准值 —— " +
         "换个人建服务叫别的名字，就照着文档抄错");
 
-    ok("架构文档也说清了那两格归 admin、且是本机存储",
-      /用户与权限[\s\S]{0,200}(admin|owner)/.test(arch) &&
-        /本机/.test(arch),
-      "architecture.md 只说「填两栏」，没交代谁能填、值在哪 —— " +
-        "读的人会以为那是个平台配置项");
+    ok("架构文档也说清了那格在代码库里、不在界面上",
+      /server\.js/.test(arch) && /界面上[\s\S]{0,40}没有|不在界面上/.test(arch),
+      "architecture.md 没交代值在哪、谁能改 —— 读的人会去界面上找那两栏，" +
+        "而那是运维配置，本就不该给普通用户");
   }
 }
 

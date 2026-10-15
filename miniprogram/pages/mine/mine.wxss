@@ -135,27 +135,3 @@
   color: var(--red);
 }
 
-.cap-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.cap-name {
-  font-size: var(--fs-body);
-  color: var(--ink);
-}
-
-.cap-state {
-  font-size: var(--fs-caption);
-}
-
-.cap-state.on {
-  color: var(--green);
-}
-
-.cap-state.off {
-  color: var(--amber);
-}

@@ -2,8 +2,6 @@ const admin = require("./lib");
 const tiers = require("../../../utils/tiers");
 const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
-const auth = require("../../../utils/auth");
-const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 
 Page({
@@ -12,8 +10,7 @@ Page({
     logged: false,
     status: {},
     tiers: tiers.TIERS,
-    caps: [],
-    groups: [],
+    compareRows: [],
     stats: { caps: 0, enabled: 0 },
 
     users: [],
@@ -24,21 +21,7 @@ Page({
     canWrite: false,
     canSetRole: false,
     busy: false,
-    msg: "",
-
-    baseUrl: "",
-    baseUrlNote: "",
-    cloudEnv: "",
-    cloudService: "",
-    cloudNote: "",
-    useCloud: false,
-    wxLoginNote: "",
-
-    focus: false
-  },
-
-  onLoad(query) {
-    if (query && query.focus === "cloud") this.setData({ focus: true });
+    msg: ""
   },
 
   onShow() {
@@ -54,20 +37,12 @@ Page({
     this.setData({
       logged: snap.logged,
       status: snap,
-      caps: entitlement.CAP_KEYS.map((k) => Object.assign({ key: k }, snap.caps[k])),
-      groups: this.groupCaps(snap),
+      compareRows: this.compareRows(snap),
       stats: admin.stats(),
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
       canWrite: canWrite,
-      canSetRole: canSetRole,
-      baseUrl: auth.baseUrl() || "",
-      baseUrlNote: this.baseNote(),
-      cloudEnv: auth.cloudConfig().env || "",
-      cloudService: auth.cloudConfig().service || "",
-      cloudNote: this.cloudNote(),
-      useCloud: auth.useCloud(),
-      wxLoginNote: this.wxNote()
+      canSetRole: canSetRole
     });
 
     if (!snap.logged) return;
@@ -93,25 +68,24 @@ Page({
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
   },
 
-  groupCaps(snap) {
-    const GROUPS = [
-      { title: "Free（登录即得）", keys: ["daily", "extra", "library", "pinyin", "ebbinghaus", "progress", "search"] },
-      { title: "登录即开", keys: ["speak", "export", "leitner"] },
-      { title: "Pro 起", keys: ["sync", "sm2", "quiz", "collections", "admin"] },
-      { title: "Max 起", keys: ["fsrs", "feihualing", "exam"] }
+  compareRows(snap) {
+    const COLS = [
+      { key: "daily", name: "每日背诵" },
+      { key: "sm2", name: "SM-2" }
     ];
-    return GROUPS.map((g) => ({
-      title: g.title,
-      rows: g.keys
-        .map((k) => {
-          const c = snap.caps[k];
-          if (!c) return null;
-
-          const noUi = k === "speak";
-          return { name: c.name, on: c.ok && !noUi, noUi: noUi, note: noUi ? "能力键留着 · 界面未做" : c.ok ? "" : entitlement.hint(k) };
-        })
-        .filter(Boolean)
-    }));
+    const now = snap.logged ? snap.tier : "";
+    return COLS.map((row) => {
+      const cap = snap.caps[row.key];
+      return {
+        cap: row.key,
+        name: row.name,
+        cells: tiers.TIERS.map((t) => ({
+          tier: t.key,
+          now: t.key === now,
+          on: !!cap && entitlement.rankOf(cap.need) <= entitlement.rankOf(t.key)
+        }))
+      };
+    });
   },
 
   onSetTier(e) {
@@ -177,96 +151,6 @@ Page({
         });
       }
     });
-  },
-
-  wxNote() {
-    if (!auth.configured()) {
-      return "微信登录要服务器配合（code2Session 换 openid）。"
-        + "两格空着时点登录不算登录成功 —— 账号与进度都还留在这台手机上。"
-        + "见 docs/wx-login-server.md。";
-    }
-
-    return "这两格只是「往哪儿连」，通信本身通不通这里看不出来："
-      + "填好后点一次登录，去库里看 accounts / wx_accounts 有没有新行 "
-      + "（查法见 docs/wx-cloud-setup.md § 七）。一直没有就是那两条路由还没上。";
-  },
-
-  baseNote() {
-    if (!auth.configured()) return "还没配。没配之前：登录只记在这台手机、档位按免费、换手机进度不跟随。";
-    if (auth.useCloud()) return "当前走的是下面的云调用，这格留空即可。";
-    return "已配置。微信公众平台的「request 合法域名」里也要加上这个域名，否则真机一律不通 —— 开发者工具里勾了「不校验合法域名」能绕过，真机绕不过。而这个名单只收**已备案**的域名：云托管默认域填不进去（微信会提示「仅用作测试使用」），所以要这条路就先备好域名。";
-  },
-
-  cloudNote() {
-    if (!auth.configured()) return "";
-    if (auth.useCloud()) return "已配置，当前走这条。免域名、免备案、免 request 合法域名名单。";
-    return "填了就改走云调用（会盖过上面的地址）。免域名、免备案。";
-  },
-
-  onBaseUrl(e) {
-    this.setData({ baseUrl: e.detail.value || "" });
-  },
-
-  onCloudEnv(e) {
-    this.setData({ cloudEnv: e.detail.value || "" });
-  },
-
-  onCloudService(e) {
-    this.setData({ cloudService: e.detail.value || "" });
-  },
-
-  onSaveCloud() {
-    const env = String(this.data.cloudEnv || "").trim();
-    const service = String(this.data.cloudService || "").trim();
-    if (!env && !service) {
-      auth.configure({ cloud: null });
-      this.afterConfigure("已清空云调用配置");
-      return;
-    }
-    if (!env || !service) {
-      wx.showToast({ title: "两个都要填", icon: "none" });
-      return;
-    }
-
-    if (/^\d+-\d+-\d+$/.test(env)) {
-      wx.showModal({
-        title: "env 填错了",
-        content: "这一格要**云开发**环境 ID（形如 poem-xxxxxxxx），不是云托管那个数字环境 ID。两个是不同的环境，平台按这一格找云开发，找不到会回 env not exists。",
-        showCancel: false,
-        confirmText: "知道了"
-      });
-      return;
-    }
-    auth.configure({ cloud: { env: env, service: service } });
-    this.afterConfigure("云调用配置已保存");
-  },
-
-  onSaveBaseUrl() {
-    const url = String(this.data.baseUrl || "").trim();
-    if (url && !/^https:\/\//.test(url)) {
-      wx.showToast({ title: "要 https:// 开头", icon: "none" });
-      return;
-    }
-    auth.configure({ baseUrl: url.replace(/\/+$/, "") });
-    this.afterConfigure(url ? "地址已保存" : "已清空地址");
-  },
-
-  afterConfigure(okMsg) {
-    this.setData({ busy: true });
-
-    const resume = auth.localCode() ? auth.login() : Promise.resolve(null);
-    resume
-      .catch(() => null)
-      .then(() => entitlement.sync())
-      .then((snap) => {
-        this.setData({ busy: false, msg: okMsg });
-        this.refresh();
-        return snap;
-      })
-      .catch(() => {
-        this.setData({ busy: false, msg: okMsg + "，但连不上" });
-        this.refresh();
-      });
   },
 
   onLoadAccounts() {

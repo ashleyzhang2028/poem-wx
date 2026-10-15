@@ -187,17 +187,6 @@ const GUEST_GRADE = 1;
 
 const CAN_GUEST = ["home.browse"];
 
-const ORDER = [
-  { key: "home.browse", cap: "home.browse", name: "首页浏览" },
-  { key: "daily", cap: "daily", name: "每日背诵" },
-  { key: "library", cap: "library", name: "课外阅读" },
-  { key: "pinyin", cap: "pinyin", name: "注音辅助" },
-  { key: "ebbinghaus", cap: "ebbinghaus", name: "艾宾浩斯" },
-  { key: "leitner", cap: "leitner", name: "莱特纳盒" },
-  { key: "speak", cap: "speak", name: "语音朗读" },
-  { key: "export", cap: "export", name: "进度导出" }
-];
-
 function signedIn() {
   return auth.logged();
 }
@@ -263,13 +252,6 @@ function block(name, opt) {
   return false;
 }
 
-function matrix(ctx) {
-  return ORDER.map((row) => {
-    const r = decide(row.key, ctx);
-    return { cap: row.cap, name: row.name, ok: r.ok, hint: hint(row.key, ctx) };
-  });
-}
-
 function guestScope() {
   return { grade: GUEST_GRADE, term: 1, scope: "term", readOnly: true, title: "一年级诗词" };
 }
@@ -293,12 +275,10 @@ module.exports = {
 
   GUEST_GRADE,
   CAN_GUEST,
-  ORDER,
   signedIn,
   decide,
   capName,
   cap,
   block,
-  matrix,
   guestScope
 };
