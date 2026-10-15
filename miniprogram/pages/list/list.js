@@ -43,7 +43,7 @@ Page({
 
     const book = corpus.bookById(this.data.bookId) || { name: "课内诗词", unit: "首" };
     this.setData({ bookName: book.name, unit: book.unit });
-    wx.setNavigationBarTitle({ title: book.name });
+    wx.setNavigationBarTitle({ title: "跬步诗词 · 课外阅读 · " + book.name });
     this.apply();
   },
 

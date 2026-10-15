@@ -97,7 +97,7 @@ Page({
     if (!w) return;
 
     if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
-    wx.setNavigationBarTitle({ title: name });
+    wx.setNavigationBarTitle({ title: "跬步诗词 · 作者索引 · " + name });
     this.applyWorks();
   },
 
@@ -134,7 +134,7 @@ Page({
 
   onBackRoster() {
     this.setData({ author: "", works: [] });
-    wx.setNavigationBarTitle({ title: "作者索引" });
+    wx.setNavigationBarTitle({ title: "跬步诗词 · 作者索引" });
 
   },
 
