@@ -47,23 +47,12 @@
   margin-top: var(--sp-4);
 }
 
-.hero-meter {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-top: var(--sp-3);
+.hero-stats .stat-ring {
+  padding: 0;
 }
 
-.hero-meter .meter {
-  flex: 1;
-  min-width: 0;
-}
-
-.hero-meter-t {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
+.stat-dash {
+  color: var(--ink-4);
 }
 
 .seal {

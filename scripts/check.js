@@ -3559,12 +3559,27 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const adminJs = read("packages/admin/index/index.js");
   const entJs = read("utils/entitlement.js");
 
-  ok("首页那条进度条在零进度时不渲染（不再是一根灰尺子）",
-    /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="hero-meter"/.test(homeWxml),
-    "零进度时还画着一条空槽，与「横线」同形");
-  ok("进度条没被整块删掉（有进度时它还在）", /\.hero-meter\s*\{/.test(homeWxss));
-  ok("进度条把「走到哪了」写成一行读数（不然读不出这条量的是什么）",
+  ok("首页进度是第三列里的一枚环（前三格不再摆一排数字）",
+    /\.stat-ring\s*\{/.test(homeWxss) && /class="ring"/.test(homeWxml)
+      && /class="ring-fill"/.test(homeWxml),
+    "第三格还是一个大数字，或者环被挪出第三格了");
+  ok("首页那枚环在零进度时不渲染（不画一枚空槽）",
+    /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="ring-cap"/.test(homeWxml),
+    "零进度时还画着空环");
+  ok("环下把「走到哪了」写成一行读数（不然读不出这枚环量的是什么）",
     /\{\{doneCount\}\}\s*\/\s*\{\{total\}\}/.test(homeWxml));
+
+  ok("环的尺寸与线宽只有一份定义（首页与背诵进度页取自它）",
+    /--ring-size\s*:/.test(read("styles/tokens.wxss")) && /--ring-w\s*:/.test(read("styles/tokens.wxss")),
+    "尺寸或线宽在某个页面样表里写死了");
+  ok("背诵进度页那个环跟首页同规格（含线宽）",
+    /inset\s*:\s*var\(--ring-w\)/.test(appWxss)
+      && !/\.ov-ring/.test(read("packages/progress/index/index.wxss")),
+    "进度页另写了一套环的尺寸或线宽");
+  ok("背诵进度页那一块读作「背诵进度」（不是另一个名字）",
+    /背诵进度/.test(read("packages/progress/index/index.wxml"))
+      && !/掌握度/.test(read("packages/progress/index/index.wxml")),
+    "总览卡那片还是「掌握度」");
 
   ok("首页不再有「背诵设置」那一行",
     !/\.hero-foot/.test(homeWxss) && !/hero-foot/.test(homeWxml),

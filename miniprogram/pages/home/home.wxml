@@ -58,17 +58,16 @@
           <text class="stat-v">{{stats.done}}</text>
           <text class="stat-k">已背</text>
         </view>
-        <view class="stat">
-          <text class="stat-v">{{stats.left}}</text>
-          <text class="stat-k">还剩</text>
+        <view class="stat stat-ring">
+          <view class="ring-cap" wx:if="{{percent}}">
+            <view class="ring">
+              <view class="ring-track"></view>
+              <view class="ring-fill" style="--p:{{percent}}"></view>
+            </view>
+            <text class="ring-cap-t">{{doneCount}} / {{total}}</text>
+          </view>
+          <text class="stat-v stat-dash" wx:else>—</text>
         </view>
-      </view>
-
-      <view class="hero-meter" wx:if="{{percent}}">
-        <view class="meter">
-          <view class="meter-fill" style="width:{{percent}}%"></view>
-        </view>
-        <text class="hero-meter-t">已背 {{doneCount}} / {{total}}</text>
       </view>
 
     </view>

@@ -876,7 +876,7 @@ V39 守着撤干净的这几处，并**反着守一条**：选完头像不许 `m
 | `.seg-icon` + `.ic-*` | 分段里的图标（同一份 24×24 网格，`currentColor` 取色） |
 | `.search` / `.field` | 输入 |
 | `.kv` | 键值行 |
-| `.meter` / `.ring` | 进度：一横一竖 |
+| `.meter` / `.ring` / `.ring-cap` / `.ring-cap-t` | 进度：一横一竖；环的尺寸与线宽取 `--ring-size` / `--ring-w`，只此一份 |
 | `.empty` / `.empty-mark` | 空状态（必带印章与出路） |
 | `.lock-card`（组件） | 未登录那一道门（全站唯一一份） |
 | `.section-label` | 分隔一组卡片的小标签 |

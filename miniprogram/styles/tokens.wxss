@@ -122,6 +122,9 @@ page {
   --pad-opt-y: calc(4rpx * var(--ui-scale));
   --pad-opt-x: calc(24rpx * var(--ui-scale));
 
+  --ring-size: calc(116rpx * var(--ui-scale));
+  --ring-w: calc(12rpx * var(--ui-scale));
+
   --t-press: .12s;
   --t-move: .28s;
   --ease: cubic-bezier(.22, .61, .36, 1);
