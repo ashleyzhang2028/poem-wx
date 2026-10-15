@@ -114,26 +114,23 @@
       <text class="row-go">›</text>
     </view>
 
-    <block wx:if="{{sfxVisible}}">
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onReader">
-        <view class="row-icon">读</view>
-        <view class="row-main">
-          <text class="row-title">声音</text>
-          <text class="row-sub">答题音效</text>
-        </view>
-        <text class="row-go">›</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+      <view class="row-icon">色</view>
+      <view class="row-main">
+        <text class="row-title">主题</text>
+        <text class="row-sub">{{themeName}}</text>
       </view>
-    </block>
-    <block wx:else>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
-        <view class="row-icon">色</view>
-        <view class="row-main">
-          <text class="row-title">主题</text>
-          <text class="row-sub">{{themeName}}</text>
-        </view>
-        <text class="row-go">›</text>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onReader"
+          wx:if="{{sfxVisible}}">
+      <view class="row-icon">读</view>
+      <view class="row-main">
+        <text class="row-title">声音</text>
+        <text class="row-sub">答题音效</text>
       </view>
-    </block>
+      <text class="row-go">›</text>
+    </view>
   </view>
 
   <view class="card">

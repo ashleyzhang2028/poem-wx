@@ -844,8 +844,14 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   const p = "pages/mine/mine";
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
-  ok("「声音」入口挂音效门禁（不是注音那一个）",
-    wxml.indexOf("wx:if=\"{{sfxVisible}}\"") >= 0 && !/pinyinVisible/.test(wxml + js));
+  const rowAt = (h) => wxml.indexOf('bindtap="' + h + '"');
+  const rowEnd = (h) => wxml.indexOf("</view>", rowAt(h));
+  const wraps = (inner, outer) =>
+    rowAt(inner) >= 0 && rowAt(outer) >= 0 && rowEnd(inner) < rowAt(outer);
+  ok("「主题」与「声音」各是一行（音效门禁只藏自己那一行）",
+    wraps("onTheme", "onReader") && /wx:if="\{\{sfxVisible\}\}"/.test(wxml)
+      && !/pinyinVisible/.test(wxml + js),
+    "主题与声音共用一个条件，或者「声音」挂的是注音那一个门禁");
   ok("版式三件事只有一条入口（一行副标题里交代完）",
     (wxml.match(/onSettings/g) || []).length === 1
       && /class="row-sub"/.test(wxml));
@@ -3548,7 +3554,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const mineWxml = read("pages/mine/mine.wxml");
 
     ok("「我的」页的昵称只有一处：顶部那个名字本身（下面那一行已撤）",
-      mineWxml.indexOf("nick-input") < 0 && /class="identity-input"[^>]*type="nickname"/.test(mineWxml),
+      mineWxml.indexOf("nick-input") < 0
+        && (mineWxml.match(/type="nickname"/g) || []).length === 1,
       "同一个值还摆两处，或者顶部那格还是只显示的字");
     ok("昵称输入框有长度上限（顶部那一行只有一行）",
       /maxlength="12"/.test(mineWxml));
@@ -3641,29 +3648,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "「云调用」是走哪条通道，不是用户能动的 —— 这个词只在管理页与 " +
       "docs/wx-cloud-setup.md 里出现");
 
-  ok("「我的」页不再有第二个昵称输入框（原 .nick-input 那行已撤）",
-    mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0,
-    "下面那一行还在，同一个值仍摆两处");
-  ok("顶部那个名字本身就是输入框（行内编辑）",
-    /class="identity-input"[^>]*type="nickname"/.test(mineWxml) && /onNickname/.test(mineWxml),
-    "顶部还是只显示的一行字");
-  ok("行内编辑有长度上限（顶部那一行只有一行，档位芯片还在它右边）",
-    /class="identity-input"[^>]*maxlength="12"/.test(mineWxml));
-  ok("改完当场重画（不 refresh 就只改了存储，屏上那个名字不变）",
-    /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,200}this\.refresh\(\)/.test(mineJs));
+  ok("昵称只有顶部一处，且就地可改（改完当场重画）",
+    mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0
+      && /class="identity-input"[^>]*type="nickname"[^>]*maxlength="12"/.test(mineWxml)
+      && /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,200}this\.refresh\(\)/.test(mineJs),
+    "同一个值摆了第二处，或者顶部那格还是只显示的字");
 
   ok("未登录时名字那一格仍是只显示的字（不是输入框）",
     /<block wx:else>[\s\S]{0,200}?<text class="identity-name">\{\{nickname\}\}<\/text>/.test(mineWxml));
-  ok("就地编辑没被画成一张表单（不铺灰底、不描边框）",
-    /\.identity-input\s*\{([^}]*)\}/.test(mineWxss)
-      && !/background/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
-    "名字那一格铺了底色 / 描了边框，身份卡看着像张表单");
-  ok("昵称那一行没有虚线（Issue #194）",
-    !/border-bottom[^;}]*dashed/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
-    "名字底下还拖着一条虚线");
-  ok("昵称输入框有固定宽度（不占满整行，把档位胶囊顶出去）",
-    /width\s*:\s*\d+rpx/.test(/\.identity-input\s*\{([^}]*)\}/.exec(mineWxss)[1]),
-    "还是 width: 100%，输入框会一路拖到胶囊那儿");
+  {
+    const box = /\.identity-input\s*\{([^}]*)\}/.exec(mineWxss);
+    ok("名字那一格不像表单，也不占满整行（不铺底、不描线，宽度定死）",
+      !!box && !/background/.test(box[1])
+        && !/border(-(top|bottom|left|right))?\s*:/.test(box[1])
+        && /width\s*:\s*\d+rpx/.test(box[1]),
+      "铺了底色 / 描了边框，或者 width: 100% 会一路拖到档位胶囊那儿");
+  }
 
   ok("通用设置里不再有「背完自动下一首」",
     generalWxml.indexOf("背完自动下一首") < 0 && generalWxml.indexOf("onAutoNext") < 0);
