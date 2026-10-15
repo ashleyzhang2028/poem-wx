@@ -297,6 +297,17 @@ function bucketOf(id) {
   return (manifest().map || {})[id] || "";
 }
 
+const BUCKET_ARMED = [];
+
+function onBucketReady(fn) {
+  if (typeof fn === "function" && BUCKET_ARMED.indexOf(fn) < 0) BUCKET_ARMED.push(fn);
+}
+
+function armBucket(name, payload) {
+  bucketCache[name] = payload;
+  BUCKET_ARMED.forEach(function (fn) { fn(name, payload); });
+}
+
 function bucket(name) {
   if (!bucketCache[name]) bucketCache[name] = readJson(BUCKET_DIR + name + ".json", {});
   return bucketCache[name];
@@ -347,13 +358,13 @@ function ensureBucket(name) {
 
   const cached = shardCache()[name];
   if (cached && cached.data) {
-    bucketCache[name] = cached.data;
+    armBucket(name, cached.data);
     return Promise.resolve({ data: cached.data, from: "local" });
   }
 
   const disk = shardFromDisk(name);
   if (disk) {
-    bucketCache[name] = disk;
+    armBucket(name, disk);
     saveShard(name, disk);
     return Promise.resolve({ data: disk, from: "disk" });
   }
@@ -364,7 +375,7 @@ function ensureBucket(name) {
   return remote.shard(name).then(function (data) {
     const payload = (data && data.t) || data || {};
     if (!payload || !Object.keys(payload).length) throw shardError("E_EMPTY_SHARD", "这一片是空的");
-    bucketCache[name] = payload;
+    armBucket(name, payload);
     saveShard(name, payload);
     return { data: payload, from: "remote" };
   });
@@ -488,6 +499,7 @@ module.exports = {
   bucket,
   ensureBucket,
   ensureEntry,
+  onBucketReady,
   entry,
   entries,
   indexById,

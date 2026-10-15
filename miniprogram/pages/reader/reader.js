@@ -46,6 +46,8 @@ Page({
     id: "",
 
     loadingText: false,
+    loadFailed: false,
+    failText: "",
     bookId: "",
     title: "",
     author: "",
@@ -142,8 +144,7 @@ Page({
     const meta = this.findMeta(id);
 
     if (!meta) {
-      this.setData({ id });
-      wx.showToast({ title: "篇目数据缺失", icon: "none" });
+      this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
 
@@ -153,27 +154,47 @@ Page({
     } catch (e) {
       hit = null;
     }
-    if (hit) return this.renderEntry(id, hit, meta);
+    if (hit) {
+      if (this.data.loadFailed) this.setData({ loadFailed: false, failText: "" });
+      return this.renderEntry(id, hit, meta);
+    }
 
-    this.setData({ id, loadingText: true });
+    this.attempt = (this.attempt || 0) + 1;
+    const round = this.attempt;
+    this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
     return corpus
       .ensureEntry(id)
       .then((entry) => {
+        if (this.attempt !== round) return;
         if (!entry) throw new Error("这一条不在任何分片里");
         this.renderEntry(id, entry, meta);
       })
       ["catch"]((err) => {
-        this.setData({ loadingText: false });
-        wx.showToast({ title: this.textFailMsg(err), icon: "none" });
+        if (this.attempt !== round) return;
+        this.setData({ loadingText: false, loadFailed: true, failText: this.textFailMsg(err) });
       });
+  },
+
+  onRetryText() {
+    if (this.data.loadingText) return;
+    this.loadEntry();
   },
 
   textFailMsg(err) {
     const code = (err && err.code) || "";
-    if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器（云调用两栏）";
+    const say = this.errSay(err);
+    if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器，退出重进再看";
     if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
-    if (err && /网络|超时|不通/.test(err.message || "")) return "网络不通，稍后再试";
+    if (/102002|timed? ?out/i.test(say)) return "取正文超时了 —— 多半是服务实例刚被唤醒，重试一次";
+    if (/invalid host/i.test(say)) return "平台按服务名找不到取正文的服务（云托管里没有这个服务）";
+    if (/fail|Cloud API isn|service not found|env not exists/i.test(say)) return "连不上取正文的服务，重试一次";
+    if (/网络|不通/.test(say)) return "网络不通，稍后再试";
     return "这一篇取不到正文";
+  },
+
+  errSay(err) {
+    if (!err) return "";
+    return String(err.errMsg || err.message || "");
   },
 
   renderEntry(id, entry, meta) {
@@ -298,6 +319,7 @@ Page({
 
   onUnload() {
     if (this.advance) clearTimeout(this.advance);
+    this.attempt = (this.attempt || 0) + 1;
   },
 
   goNext() {

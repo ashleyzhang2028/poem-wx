@@ -6,6 +6,7 @@ const SCAN_CAP = 12;
 
 let indexCache = null;
 let missing = false;
+let armed = false;
 
 function index() {
   if (indexCache) return indexCache;
@@ -26,9 +27,47 @@ function available() {
 
 function readiness() {
   if (!available()) {
+    armShardWriter();
     return { visible: false, usable: false, state: "missing", reason: "全文索引未生成" };
   }
   return { visible: true, usable: true, state: "ready", reason: "" };
+}
+
+function armShardWriter() {
+  if (armed) return;
+  armed = true;
+  corpus.onBucketReady(function (name, payload) {
+    try {
+      require("fs").writeFileSync(
+        require("path").join(__dirname, "..", INDEX),
+        JSON.stringify({ postings: mergePostings(name, payload) })
+      );
+    } catch (e) {
+      missing = true;
+    }
+  });
+}
+
+function mergePostings(name, payload) {
+  const postings = {};
+  if (indexCache && indexCache.postings) {
+    Object.keys(indexCache.postings).forEach(function (ch) {
+      postings[ch] = Object.assign({}, indexCache.postings[ch]);
+      delete postings[ch][name];
+      if (!Object.keys(postings[ch]).length) delete postings[ch];
+    });
+  }
+  Object.keys(payload || {}).forEach(function (id) {
+    const text = payload[id] && payload[id].text;
+    if (!text) return;
+    String(text).split("").forEach(function (ch) {
+      if (!/^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]$/.test(ch)) return;
+      const row = postings[ch] || (postings[ch] = {});
+      row[name] = (row[name] || 0) + 1;
+    });
+  });
+  indexCache = { postings: postings };
+  return postings;
 }
 
 function termsOf(keyword) {
