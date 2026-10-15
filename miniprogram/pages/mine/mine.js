@@ -115,6 +115,7 @@ Page({
       })
       .catch((err) => {
         wx.hideLoading();
+        console.error("[mine] onLogin fail", err);
         const code = (err && err.code) || "";
         if (code === "E_NOT_CONFIGURED") {
           this.tellOffline();

@@ -7,7 +7,7 @@ Component({
 
     themeStyle: "",
     list: [
-      { pagePath: "/pages/home/home", text: "背诵", icon: "book" },
+      { pagePath: "/pages/home/home", text: "今日", icon: "book" },
       { pagePath: "/pages/library/library", text: "课外", icon: "stack" },
       { pagePath: "/pages/search/search", text: "搜索", icon: "search" },
       { pagePath: "/pages/mine/mine", text: "我的", icon: "person" }

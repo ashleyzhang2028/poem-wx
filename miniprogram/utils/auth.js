@@ -75,6 +75,13 @@ function login() {
   return new Promise((resolve, reject) => {
     wx.login({
       success: (res) => {
+        console.log("[auth] wx.login ok", {
+          hasCode: !!res.code,
+          configured: configured(),
+          useCloud: useCloud(),
+          baseUrl: baseUrl(),
+          cloud: cloudConfig()
+        });
         if (!res.code) {
           reject(new Error("wx.login 未返回 code"));
           return;
@@ -110,7 +117,8 @@ function login() {
             reject(err);
           });
       },
-      fail: () => {
+      fail: (err) => {
+        console.error("[auth] wx.login fail", err);
         markOffline("off");
         reject(new Error("微信登录失败"));
       }
