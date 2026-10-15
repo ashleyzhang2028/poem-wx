@@ -592,18 +592,24 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 所以「不外挂字体文件」这条不能松（§ 六 原本就是这么定的）。松不得，
 那就分两层：
 
-1. **先把系统里那个宋体找准。** `--font-poem` 按平台排一串名字：
-   iOS / macOS 的 `Songti SC`、Windows 的 `SimSun`、
+1. **先把系统里那个宋体找准。** `--font-poem` 与 `--font-poem-text` 按平台排
+   同一串名字：iOS / macOS 的 `Songti SC`、Windows 的 `SimSun`、
    Android 各家 ROM 的 `Source Han Serif SC` / `Noto Serif CJK SC` /
    `STSong`……缺一个，那台机上就**静默退回黑体**，而这件事界面上看不出来。
-   所以这一串在自检里逐个守着（V12）。
+   所以这一串在自检里逐个守着（V12）。两条链排的是同一串，差别只在
+   **首位那个外挂名**：题名那条是 `Kuibu Serif`，正文那条是 `Kuibu Serif Text`。
 
-2. **兜不住时用外挂子集补。** 全站 5855 篇的篇名 + 作者名去重只有 3100 个字；
-   子集化之后 1.2MB —— 仍不进包，**与正文分片同一条路**（Issue #121 之后是
+2. **兜不住时用外挂子集补。** 篇名 + 作者名去重 3100 个字、诗句正文去重 1832 个，
+   两个子集都不进包，**与正文分片同一条路**（Issue #121 之后是
    云托管容器下发那条；字体这条还没接上，仍写着「等 CDN」）。
-   真机上由 `wx.loadFontFace` 注册成 `Kuibu Serif`，它排在字体链**首位**：
+   真机上由 `wx.loadFontFace` 各注册一次，分别落在两条字体链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
-   生成脚本 `scripts/font-subset.js`，地址填在 `auth.fontUrl`（或等后端下发）。
+   生成脚本 `scripts/font-subset.js`，地址填在 `auth.fontUrl`（题名）与
+   `auth.fontTextUrl`（正文）。
+
+**两个子集必须分开**，不是一个文件注册两遍：源字体只有半粗（SemiBold）一个源，
+正文那条注册时带 `desc.weight = "normal"`，浏览器/WebView 才会按描述符取常规
+字重；否则长段诗句会连字重一起继承半粗。自检钉住这一条（V12）。
 
 **没配 CDN 就一笔不发起** —— 与朗读那条口径一致（§ 一点五）：
 `utils/font.js` 的 `readiness()` 同步返回 `unsupported`，

@@ -460,20 +460,45 @@ void LOGGED;
     return { font: require(path.join(ROOT, "utils", "font.js")), restore: () => (global.wx = saved) };
   }
 
-  let seen = null;
+  const seen = [];
   const e = bootFont(
-    { fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2" },
-    { loadFontFace: (o) => { seen = o; o.success && o.success(); } }
+    {
+      fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2",
+      fontTextUrl: "https://cdn.example.com/kuibu-text-serif.woff2"
+    },
+    { loadFontFace: (o) => { seen.push(o); o.success && o.success(); } }
   );
-  ok("配了 CDN 时篇名字体就绪", e.font.readiness().usable === true);
+  ok("配了 CDN 时诗词字体就绪", e.font.readiness().usable === true);
   e.font.load();
-  ok("注册名与 --font-poem 首位一致", !!seen && seen.family === "Kuibu Serif",
-    seen ? seen.family : "loadFontFace 没被调用");
+  ok("题名与正文各注册一次",
+    seen.length === 2
+      && seen[0].family === "Kuibu Serif"
+      && seen[1].family === "Kuibu Serif Text",
+    seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
+  ok("正文那次带 normal 字重描述（否则半粗那份会被正文继承）",
+    !!seen[1] && !!(seen[1].desc && seen[1].desc.weight === "normal"));
+  ok("两个地址分别取（题名子集与正文子集不是同一个文件）",
+    !!seen[0] && !!seen[1] && seen[0].source !== seen[1].source);
   e.restore();
+
+  const only = [];
+  const e2 = bootFont(
+    { fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2", fontTextUrl: "" },
+    { loadFontFace: (o) => { only.push(o); o.success && o.success(); } }
+  );
+  e2.font.load();
+  ok("只配了一个地址时只注册那一个（另一个退回系统宋体）",
+    only.length === 1 && only[0].family === "Kuibu Serif",
+    only.map((o) => o.family).join(" | "));
+  e2.restore();
 
   const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
   ok("字体链首位与 font.js 的 FAMILY 同名", !!stackNow && stackNow[1].indexOf("Kuibu Serif") >= 0);
+  const textNow = /--font-poem-text\s*:\s*([^;]+);/.exec(tokensWxss2);
+  ok("正文那条字体链有自己的一份（不与题名混用一个字重）",
+    !!textNow && /^\s*"Kuibu Serif Text"/.test(textNow[1]),
+    textNow ? textNow[1].trim() : "找不到 --font-poem-text");
 }
 
 env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
@@ -1809,9 +1834,20 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   const rowPoem = /\.row-poem\s*\{([^}]*)\}/.exec(appWxss);
   ok("列表篇名用宋体", !!rowPoem && /font-family\s*:\s*var\(--font-poem\)/.test(rowPoem[1]));
 
+  const poemBody = /\.poem-body\s*\{([^}]*)\}/.exec(appWxss);
+  ok("诗句正文走正文那条字体链（--font-poem-text）",
+    !!poemBody && /font-family\s*:\s*var\(--font-poem-text\)/.test(poemBody[1]),
+    poemBody && poemBody[1].replace(/\s+/g, " ").trim());
+  ok("诗句正文不写 font-weight（常规字重由字体链给）",
+    !!poemBody && !/font-weight/.test(poemBody[1]));
+
   const surfaceWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(surfaceWxss);
-  ok("篇名用宋体（阅读面那份）", !!poemTitle && /font-family\s*:\s*var\(--font-poem\)/.test(poemTitle[1]));
+  ok("篇名用宋体（阅读面那份）",
+    !!poemTitle && /font-family\s*:\s*var\(--font-poem(-title)?\)/.test(poemTitle[1]));
+  ok("题名是半粗（600），与正文的常规字重分开",
+    !!poemTitle && /font-weight\s*:\s*600/.test(poemTitle[1]),
+    poemTitle && poemTitle[1].replace(/\s+/g, " ").trim());
   ok("篇名的样式只此一处（页面里不许再写一遍）",
     !/\.poem-title\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8"))
       && !/\.poem-title\s*\{/.test(fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"), "utf8")));
@@ -1819,6 +1855,9 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   const fontJs = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
   ok("外挂字体有就绪判据", /function readiness\s*\(/.test(fontJs));
   ok("未配置时一笔网络都不发起", /unsupported/.test(fontJs) && /return Promise\.resolve\(false\)/.test(fontJs));
+  ok("题名与正文各注册一次（两个字重，同一个子集文件）",
+    /family:\s*TITLE/.test(fontJs) && /family:\s*TEXT/.test(fontJs)
+      && /desc:\s*\{\s*weight:\s*"normal"\s*\}/.test(fontJs));
   const appJs = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
   ok("启动时不阻塞地注册篇名宋体", /font\.load\(\)/.test(appJs));
 }
@@ -2548,6 +2587,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     metaFont && metaFont[1].replace(/\s+/g, " ").trim());
   ok("身份行四段同一个色（样式统一）",
     !!metaFont && /color\s*:\s*var\(--ink-2\)/.test(metaFont[1]));
+  ok("身份行（含作者名）取题名那条宋体链，且半粗",
+    !!metaFont && /font-family\s*:\s*var\(--font-poem\)/.test(metaFont[1])
+      && /font-weight\s*:\s*600/.test(metaFont[1]),
+    metaFont && metaFont[1].replace(/\s+/g, " ").trim());
 
   const metaNoComment = readerWxml2.replace(/<\!--[\s\S]*?-->/g, " ");
   const metaStart = metaNoComment.indexOf('<view class="poem-meta-row">');
