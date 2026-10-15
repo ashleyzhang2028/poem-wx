@@ -59,6 +59,7 @@ var CONFIG = {
 
   wxAppId: env("WX_APPID"),
   wxSecret: env("WX_SECRET"),
+  wxApiBase: env("WX_API_BASE", "https://api.weixin.qq.com"),
 
   cookieName: env("COOKIE_NAME", "kbsid"),
 

@@ -46,7 +46,7 @@ view, text, button, input, textarea {
   background: var(--surface);
   border: 1rpx solid var(--line);
   border-radius: var(--radius);
-  padding: var(--sp-4);
+  padding: var(--sp-3) var(--sp-3);
   margin-bottom: var(--sp-2);
 }
 
