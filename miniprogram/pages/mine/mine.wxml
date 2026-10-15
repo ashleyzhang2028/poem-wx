@@ -14,29 +14,34 @@
 
       <view class="identity-main">
         <block wx:if="{{logged}}">
-
           <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
                  placeholder="填一个昵称" placeholder-class="identity-ph"
                  confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+          <view class="identity-sub-row">
+            <text class="identity-sub">{{identitySub}}</text>
+          </view>
         </block>
 
-        <text class="identity-name" wx:else>{{nickname}}</text>
-
-        <view class="identity-sub-row">
-          <text class="identity-sub">{{identitySub}}</text>
-        </view>
+        <block wx:else>
+          <text class="identity-name">{{nickname}}</text>
+          <view class="identity-sub-row">
+            <text class="identity-sub">{{identitySub}}</text>
+          </view>
+        </block>
       </view>
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
 
-    <view class="grant-lead" wx:elif="{{grantLead}}">
+    <view class="grant-lead" wx:if="{{grantLead}}">
       <view class="grant-lead-text">头像与昵称用微信的：点头像挑微信头像，点名字那一格确认微信昵称</view>
       <button class="btn ghost mini" bindtap="onGrantLeadSkip">先不用</button>
     </view>
 
-    <view class="login-row" wx:if="{{!logged}}">
-      <button class="btn primary block" bindtap="onLogin">登录</button>
-    </view>
+    <block wx:if="{{!logged}}">
+      <view class="login-row">
+        <button class="btn primary block" bindtap="onLogin">登录</button>
+      </view>
+    </block>
 
     <block wx:else>
       <button class="btn ghost mini logout" bindtap="onLogout">退出</button>
@@ -109,23 +114,26 @@
       <text class="row-go">›</text>
     </view>
 
-    <view class="row" hover-class="row-hover" hover-stay-time="60"
-          bindtap="onReader" wx:if="{{sfxVisible}}">
-      <view class="row-icon">读</view>
-      <view class="row-main">
-        <text class="row-title">声音</text>
-        <text class="row-sub">答题音效</text>
+    <block wx:if="{{sfxVisible}}">
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onReader">
+        <view class="row-icon">读</view>
+        <view class="row-main">
+          <text class="row-title">声音</text>
+          <text class="row-sub">答题音效</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
-      <view class="row-icon">色</view>
-      <view class="row-main">
-        <text class="row-title">主题</text>
-        <text class="row-sub">{{themeName}}</text>
+    </block>
+    <block wx:else>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+        <view class="row-icon">色</view>
+        <view class="row-main">
+          <text class="row-title">主题</text>
+          <text class="row-sub">{{themeName}}</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
-    </view>
+    </block>
   </view>
 
   <view class="card">
