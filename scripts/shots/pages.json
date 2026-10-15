@@ -71,7 +71,7 @@
     "syncedAt": 4102444800000,
     "settings": {
       "grade": 7,
-      "theme": "tianqing"
+      "theme": "qinglv"
     }
   },
   "progress": {
@@ -110,32 +110,32 @@
   },
   "settings-theme": {
     "page": "packages/settings/theme/theme",
-    "title": "主题色",
+    "title": "主题",
     "back": true,
     "logged": true
   },
   "settings-theme-guest": {
     "page": "packages/settings/theme/theme",
-    "title": "主题色",
+    "title": "主题",
     "back": true,
     "logged": false
   },
-  "home-tianqing": {
+  "home-qinglv": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "tianqing"
+      "theme": "qinglv"
     }
   },
-  "home-yuguotianqing": {
+  "home-yuqing": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "yuguotianqing"
+      "theme": "yuqing"
     }
   },
   "settings-reader": {
@@ -333,13 +333,13 @@
       }
     ]
   },
-  "home-minghuang": {
+  "home-nuahui": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "minghuang"
+      "theme": "nuahui"
     }
   },
   "game-exam-partial": {
@@ -370,22 +370,22 @@
       "theme": "ink"
     }
   },
-  "home-zhuhong": {
+  "home-mohong": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "zhuhong"
+      "theme": "mohong"
     }
   },
-  "home-zhuqing": {
+  "home-shilv": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "zhuqing"
+      "theme": "shilv"
     }
   },
   "home-yanzhi": {
@@ -397,31 +397,31 @@
       "theme": "yanzhi"
     }
   },
-  "home-xuanse": {
+  "home-qingwa": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "xuanse"
+      "theme": "qingwa"
     }
   },
-  "home-yaqing": {
+  "home-muse": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "yaqing"
+      "theme": "muse"
     }
   },
-  "home-tianshuibi": {
+  "home-wulan": {
     "page": "pages/home/home",
     "title": "跬步",
     "tab": 1,
     "logged": true,
     "settings": {
-      "theme": "tianshuibi"
+      "theme": "wulan"
     }
   },
   "home-sheet": {

@@ -3,7 +3,7 @@ const gate = require("../../../utils/gate");
 
 Page({
   data: {
-    items: theme.all(),
+    items: theme.palette(),
     theme: theme.DEFAULT,
     themeStyle: "",
     currentName: "",

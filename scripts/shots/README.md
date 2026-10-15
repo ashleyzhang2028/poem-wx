@@ -10,17 +10,17 @@ node scripts/shots/measure.js      # 量每一格「两侧还剩多少」—— 
 node scripts/shots/measure.js --metrics   # 从真字体导出 font-metrics.json
 node scripts/shots/prefs-width.js  # 量详情页那一行（对齐 ｜ 注音 ｜ 字号）多宽
 node scripts/shots/measure-pinyin.js  # 量注音那一路：行高齐不齐、字距稳不稳
-THEME=tianqing node scripts/shots/render.js   # 换主题色渲染预览（默认那支墨）
+THEME=qinglv node scripts/shots/render.js   # 换主题渲染预览（默认那支墨色）
 ```
 
 **`THEME` 环境变量**（Issue #26）：主题是运行时设置，预览得能换着看。
 `THEME=<key> node scripts/shots/render.js` 会把主题写进本机设置再跑页面，
-键名见 `utils/theme.js` 的 `THEMES`（`ink` / `zhuhong` / `tianqing` …）。
-不设就是默认的墨。
+键名见 `utils/theme.js` 的实现（`ink` / `qinglv` / `muse` …）。
+不设就是默认的墨色。
 
 配套地，`wxml.js` 现在把**原生控件**的 `color` / `activeColor` / `block-color`
 也画进预览 —— 这三个属性取不到 WXSS 变量，页面只能从 WXML 给字面量，
-主题色正是这么传的。以前预览把它们一律画成墨黑，于是「选了天青、
+主题色正是这么传的。以前预览把它们一律画成墨黑，于是「选了青绿、
 滑条却还是黑的」这张假图会把人带去查一个不存在的 bug。
 
 **`measure.js` 还会打印**详情页那一行**（.prefs）的可用宽 / 内容宽 / 溢出 ——

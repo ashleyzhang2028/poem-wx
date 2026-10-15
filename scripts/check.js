@@ -1837,7 +1837,8 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   ok("字色令牌 --ink 已定义", /--ink\s*:\s*#[0-9a-fA-F]{6}\s*;/.test(tokens));
   ok("强调色 --strong 由 --theme 给", /--strong\s*:\s*var\(--theme\)\s*;/.test(tokens));
-  ok("主题色 --theme 已定义", /--theme\s*:\s*#[0-9a-fA-F]{6}\s*;/.test(tokens));
+  ok("主题 --theme 已定义", /--theme\s*:\s*var\(--c-\w+\)\s*;/.test(tokens));
+  ok("主题的淡淡一档 --strong-soft 已定义", /--strong-soft\s*:\s*var\(--c-\w+-soft\)\s*;/.test(tokens));
 
   const hardCodedColor = [];
   const strayRadius = [];
@@ -2595,14 +2596,90 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const themeSrc = fs.readFileSync(path.join(ROOT, "utils", "theme.js"), "utf8");
   const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
 
-  const defM = /\{\s*key:\s*"(\w+)",\s*name:\s*"墨",\s*hex:\s*"(#[0-9A-Fa-f]{6})"/.exec(themeSrc);
-  ok("默认那一项是「墨」", !!defM, defM ? defM[1] : "读不到");
-  const tM = /--theme\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(tokens);
-  if (tM && defM) {
-    ok("tokens 的 --theme 默认值 == 清单里默认那一项（两处不许各写一遍）",
-      "#" + tM[1].toLowerCase() === defM[2].toLowerCase(),
-      "tokens 里 #" + tM[1] + " vs theme.js " + defM[2]);
-  }
+  const themeMod = require(path.join(ROOT, "utils", "theme.js"));
+  const all = themeMod.all();
+
+  const WANT = [
+    ["qinglv", "青绿", [46, 106, 103]],
+    ["muse", "暮色", [79, 96, 114]],
+    ["nuahui", "暖灰", [164, 86, 104]],
+    ["qingwa", "青瓦", [74, 100, 96]],
+    ["mich", "米褐", [126, 101, 84]],
+    ["shilv", "石绿", [108, 127, 79]],
+    ["mohong", "墨红", [140, 47, 45]],
+    ["wulan", "雾蓝", [96, 126, 149]],
+    ["yanzhi", "胭脂", [157, 41, 51]],
+    ["yuqing", "雨过天青", [47, 96, 85]],
+    ["ink", "墨色", [8, 8, 10]]
+  ];
+
+  const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
+  const softOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 0.05)";
+
+  const missing = WANT.filter(([k, name, rgb]) => {
+    const t = all.find((x) => x.key === k);
+    return !t || t.name !== name || t.rgba !== rgbaOf(rgb);
+  });
+  ok("清单就是这 11 个色（含用户点名的墨色 / 胭脂 / 雨过天青）",
+    missing.length === 0 && all.length === WANT.length,
+    missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
+
+  ok("色值一律 rgba，不再有 hex", !/#[0-9a-fA-F]{3,8}/.test(themeSrc),
+    (/#[0-9a-fA-F]{3,8}/.exec(themeSrc) || [""])[0]);
+
+  const noSoft = all.filter((t) => t.soft !== softOf(t.rgb));
+  ok("每个色都带一档 0.05 的淡淡版（胶囊底用它）", noSoft.length === 0,
+    noSoft.map((t) => t.name).join(", "));
+
+  ok("清单里的每个色都占一个 CSS 变量名", all.every((t) => /^--c-\w+$/.test(themeMod.VAR_OF[t.key])));
+
+  const styleInk = themeMod.style("ink");
+  const veiled = all.filter((t) => styleInk.indexOf(t.rgba) < 0 || styleInk.indexOf(t.soft) < 0);
+  ok("每个色连同它那档淡淡版都挂到页面根节点上", veiled.length === 0,
+    veiled.map((t) => t.name).join(", "));
+
+  ok("默认那一项是「墨色」", themeMod.DEFAULT === "ink"
+    && all.some((t) => t.key === "ink" && t.name === "墨色"));
+  const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);
+  ok("tokens 的 --theme 默认值指向清单里默认那一项（两处不许各写一遍）",
+    !!tDef && tDef[1] === themeMod.DEFAULT,
+    "tokens 里 " + (tDef ? tDef[1] : "读不到") + " vs theme.js " + themeMod.DEFAULT);
+
+  ok("tokens 里的 --theme 指向的那个变量，由页面根节点自己发出来",
+    styleInk.indexOf("--c-ink:" + rgbaOf([8, 8, 10])) >= 0
+      && /var\(--c-ink\)/.test(tokens));
+
+  const srgb = (c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  const lab = (rgb) => {
+    const [r, g, b] = rgb.map(srgb);
+    const X = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+    const Y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+    const Z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+    const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
+  };
+  const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  const pageLab = lab([245, 245, 247]);
+
+  const faint = all.filter((t) => dE(lab(t.rgb), pageLab) < 25);
+  ok("每个色铺在白页面上都看得见（ΔE ≥ 25，最低的是 "
+    + Math.min.apply(null, all.map((t) => dE(lab(t.rgb), pageLab))).toFixed(1) + "）",
+    faint.length === 0, faint.map((t) => t.name).join(", "));
+
+  const lum = (rgb) => 0.2126 * srgb(rgb[0]) + 0.7152 * srgb(rgb[1]) + 0.0722 * srgb(rgb[2]);
+  const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+  const parse = (s) => s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/).slice(1, 4).map(Number);
+  const onLow = all.filter((t) => {
+    const bg = parse(t.rgba);
+    const on = parse(t.on);
+    const best = contrast(bg, [0, 0, 0]) >= contrast(bg, [255, 255, 255]) ? [0, 0, 0] : [255, 255, 255];
+    return contrast(bg, on) < 4.5 || on.join() !== best.join();
+  });
+  ok("压在主色上的字读得出（每个色配的是它压得住的墨，全部 ≥ 4.5:1）",
+    onLow.length === 0, onLow.map((t) => t.name).join(", "));
 
   const missWxml = [], missJs = [];
   pages.forEach((pg) => {
@@ -2678,12 +2755,30 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "读到 " + dotW + "rpx");
   const grid = /(?:^|\})\s*\.swatch-grid\s*\{([^}]*)\}/.exec(themeWxss);
   const cols = grid ? Number(/repeat\((\d+)/.exec(grid[1])?.[1] ?? 0) : 0;
-  ok("色样栅格是 5 列（十个色两行装完，一屏不必滚）", cols === 5, "读到 " + cols + " 列");
+  const themeCount = require(path.join(ROOT, "utils", "theme.js")).all().length;
+  const rows = cols ? Math.ceil(themeCount / cols) : 0;
+  ok("色样栅格是三行装得下的列数（色卡不再占掉半屏）",
+    cols >= 4 && rows <= 3, themeCount + " 个色 / 每行 " + cols + " 个 = " + rows + " 行");
 
   const sw = /(?:^|\})\s*\.swatch\s*\{([^}]*)\}/.exec(themeWxss);
   const minH = sw ? Number(/min-height\s*:\s*(\d+)rpx/.exec(sw[1])?.[1] ?? 0) : 0;
   ok("色样的热区仍有触控下限（.swatch 的 min-height ≥ 88rpx）", minH >= 88,
     "读到 " + minH + "rpx");
+
+  const themeWxml = strip(read("packages/settings/theme/theme.wxml"));
+  ok("圆点里不再打勾（勾是「选项」的记号，色卡本身就是色）",
+    themeWxml.indexOf("✓") < 0 && themeWxss.indexOf(".swatch-tick") < 0);
+  const swatchPalette = require(path.join(ROOT, "utils", "theme.js")).palette();
+  ok("页面拿到的是「本色 + 0.05 + 压在上面的墨」三件",
+    swatchPalette.every((x) => x.rgb && x.soft && x.on)
+      && swatchPalette.some((x) => x.on.indexOf("255, 255, 255") >= 0)
+      && swatchPalette.some((x) => x.on.indexOf("0, 0, 0") >= 0));
+  ok("圆点默认铺的就是 0.05 那一档", /background\s*:\s*var\(--sw-soft\)/.test(dot ? dot[1] : ""));
+  ok("hover / 聚焦 / 选中 / 已选，四处都回到 1.0 的本色",
+    (themeWxss.match(/background\s*:\s*var\(--sw\)/g) || []).length >= 1
+      && /\.swatch-hover\s*\.swatch-dot\s*,/.test(themeWxss)
+      && /\.swatch-dot:focus\s*,/.test(themeWxss)
+      && /\.swatch\.on\s*\.swatch-dot\s*\{/.test(themeWxss));
 
   const progWxml = strip(read("packages/progress/index/index.wxml"));
   const progJs = strip(read("packages/progress/index/index.js"));
@@ -2967,7 +3062,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const storeMod4 = require(path.join(ROOT, "utils", "store.js"));
     const future = Date.now() + 86400000;
 
-    storeMod4.replaceSettings({ grade: 7, theme: "tianqing", fontSize: 2 });
+    storeMod4.replaceSettings({ grade: 7, theme: "qinglv", fontSize: 2 });
     storeMod4.saveSettings({ sfx: true });
     storeMod4.touchSettings(future);
     storeMod4.saveProfile({ avatarLocal: "wxfile://avatar.jpg", nickname: "张敏" }, future);
@@ -2976,7 +3071,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const sRow = packed4.filter((r) => r.id === "settings:v1")[0];
     ok("设置行按服务端形状进包，带年级 / 主题 / 字号，不含跟设备走的那项与头像",
       !!sRow && !!sRow.payload.settings && sRow.updatedAt > 0
-        && sRow.payload.settings.grade === 7 && sRow.payload.settings.theme === "tianqing"
+        && sRow.payload.settings.grade === 7 && sRow.payload.settings.theme === "qinglv"
         && sRow.payload.settings.fontSize === 2
         && sRow.payload.settings.sfx === undefined
         && !packed4.some((r) => r.id === "profile:v1"));
@@ -2987,14 +3082,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     wireMod4.applyRecords(packed4);
     const back = storeMod4.settings();
     ok("换台机器整份认回云端的设置（年级 / 主题 / 字号），头像与音效不跟着换",
-      back.grade === 7 && back.theme === "tianqing" && back.fontSize === 2
+      back.grade === 7 && back.theme === "qinglv" && back.fontSize === 2
         && back.sfx === true && storeMod4.profile().avatarLocal === ""
         && storeMod4.settingsAt() === future);
 
     wireMod4.applyRecords([
-      { id: "settings:v1", payload: { v: 1, settings: { theme: "zhuhong" } }, updatedAt: 1 }
+      { id: "settings:v1", payload: { v: 1, settings: { theme: "mohong" } }, updatedAt: 1 }
     ]);
-    ok("比本机旧的设置不覆盖", storeMod4.settings().theme === "tianqing");
+    ok("比本机旧的设置不覆盖", storeMod4.settings().theme === "qinglv");
   }
 
   {
@@ -3018,7 +3113,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     storeMod45.touchSettings(Date.now());
     const row45 = wireMod45.packRecords().filter((r) => r.id === "settings:v1")[0];
     const themeAtPack = row45.payload.settings.theme;
-    storeMod45.replaceSettings({ theme: "zhuhong" });
+    storeMod45.replaceSettings({ theme: "mohong" });
     ok("打包之后本机再改，报文不许跟着变（不然推上去的是一份说不清来历的数据）",
       row45.payload.settings.theme === themeAtPack, "报文被本机存储的引用串改了");
     storeMod45.replaceSettings({ theme: "ink" });
@@ -3039,7 +3134,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ["通用设置", "packages/settings/general/general.js", /onAlign[\s\S]{0,200}?markDirty/],
     ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
-    ["主题色", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
+    ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
     ["昵称", "pages/mine/mine.js", /onNickname(?:\([^)]*\))?[\s\S]{0,400}?markDirty/]
   ];
