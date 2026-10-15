@@ -24,18 +24,18 @@
     <view class="card-title bar">权限对比</view>
     <view class="compare-row compare-head">
       <text class="compare-cap">功能</text>
-      <text class="compare-tier">Free</text>
-      <text class="compare-tier">Pro</text>
-      <text class="compare-tier">Max</text>
+      <text class="compare-tier">{{head.name}}</text>
     </view>
-    <view class="compare-row" wx:for="{{compareRows}}" wx:key="cap">
-      <text class="compare-cap">{{item.name}}</text>
-      <text class="compare-tier {{col.now ? 'is-now' : ''}}"
-            wx:for="{{item.cells}}" wx:for-item="col" wx:key="tier">
-        <text class="compare-note" wx:if="{{col.now}}">现在</text>
-        <text class="compare-mark {{col.on ? 'on' : 'off'}}">{{col.on ? '✓' : '✕'}}</text>
-      </text>
-    </view>
+    <scroll-view class="compare-body" scroll-y>
+      <view class="compare-row" wx:for="{{compareRows}}" wx:key="cap">
+        <text class="compare-cap">{{item.name}}</text>
+        <text class="compare-tier {{col.now ? 'is-now' : ''}}"
+              wx:for="{{item.cells}}" wx:for-item="col" wx:key="tier">
+          <text class="compare-note" wx:if="{{col.now}}">现在</text>
+          <text class="compare-mark {{col.on ? 'on' : 'off'}}">{{col.on ? '✓' : '✕'}}</text>
+        </text>
+      </view>
+    </scroll-view>
   </view>
 
   <view class="card">

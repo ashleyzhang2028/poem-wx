@@ -16,7 +16,7 @@ const CAPS = [
   { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "login" },
   { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
 
-  { key: "sync", name: "同步进度", desc: "登录即得；换手机进度一字不少", tier: "login" },
+  { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "login" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
@@ -30,10 +30,6 @@ const CAPS = [
 const CAP_KEYS = CAPS.map((c) => c.key);
 
 const TIER_RANK = { free: 1, login: 2, pro: 3, max: 4 };
-
-function rankOf(tier) {
-  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
-}
 
 function tierOf(profile) {
   const server = auth.serverTier();
@@ -137,6 +133,25 @@ function hint(key, ctx) {
   if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
+}
+
+function rankOf(tier) {
+  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
+}
+
+function compareRows(snap) {
+  const s = snap || snapshot();
+  const now = s.logged ? s.tier : "";
+  return CAPS.map((c) => ({
+    cap: c.key,
+    name: c.name,
+    cells: tiers.TIERS.map((t) => ({
+      tier: t.key,
+      label: t.name,
+      now: t.key === now,
+      on: rankOf(c.tier) <= rankOf(t.key)
+    }))
+  }));
 }
 
 function snapshot() {
@@ -259,6 +274,7 @@ function guestScope() {
 module.exports = {
   CAPS,
   CAP_KEYS,
+  compareRows,
   TIER_RANK,
   rankOf,
   tierOf,

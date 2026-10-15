@@ -38,11 +38,19 @@
   color: var(--red);
 }
 
+.compare-body {
+  height: 620rpx;
+}
+
 .compare-row {
   display: flex;
   align-items: center;
   padding: 20rpx 0;
   border-bottom: 1rpx solid var(--line-2);
+}
+
+.compare-body .compare-row:last-child {
+  border-bottom: none;
 }
 
 .compare-head {

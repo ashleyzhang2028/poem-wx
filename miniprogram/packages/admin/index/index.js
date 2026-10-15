@@ -10,6 +10,7 @@ Page({
     logged: false,
     status: {},
     tiers: tiers.TIERS,
+    heads: [],
     compareRows: [],
     stats: { caps: 0, enabled: 0 },
 
@@ -37,7 +38,8 @@ Page({
     this.setData({
       logged: snap.logged,
       status: snap,
-      compareRows: this.compareRows(snap),
+      heads: tiers.TIERS,
+      compareRows: entitlement.compareRows(snap),
       stats: admin.stats(),
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
@@ -66,26 +68,6 @@ Page({
 
   onLogin() {
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
-  },
-
-  compareRows(snap) {
-    const COLS = [
-      { key: "daily", name: "每日背诵" },
-      { key: "sm2", name: "SM-2" }
-    ];
-    const now = snap.logged ? snap.tier : "";
-    return COLS.map((row) => {
-      const cap = snap.caps[row.key];
-      return {
-        cap: row.key,
-        name: row.name,
-        cells: tiers.TIERS.map((t) => ({
-          tier: t.key,
-          now: t.key === now,
-          on: !!cap && entitlement.rankOf(cap.need) <= entitlement.rankOf(t.key)
-        }))
-      };
-    });
   },
 
   onSetTier(e) {
