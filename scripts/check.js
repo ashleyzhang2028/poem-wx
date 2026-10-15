@@ -3061,9 +3061,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     require(sheetPath);
     global.Component = savedComp;
 
-    const mk = (rows, open, index) => {
+    const mk = (rows, open, index, pushed) => {
       const self = Object.assign({}, opt.methods);
       self.data = { open, index: index || 0, queue: rows };
+      self.pushed = !!pushed;
+      self.closedAt = 0;
+      self.lastPush = (rows || []).map((r) => r.id).join("|");
       self.loaded = 0;
       self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
       self.loadCurrent = function () { this.loaded += 1; };
@@ -3075,25 +3078,58 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const closed = mk(rows, false);
     obs.call(closed, [{ id: "z" }]);
     ok("弹层关着时队列换新不写 data（关着的组件不该被首页的 refresh 推着走）",
-      closed.data.queue.length === 3 && closed.loaded === 0);
+      closed.data.queue === rows && closed.loaded === 0);
 
-    const same = mk(rows, true, 1);
+    const same = mk(rows, true, 1, true);
     obs.call(same, rows.map((r) => ({ id: r.id })));
     ok("队列内容没变时不重写、不重载（不然每次 refresh 都从头读一遍当前篇）",
       same.data.queue === rows && same.loaded === 0);
 
-    const last = mk(rows, true, 2);
+    const last = mk(rows, true, 2, true);
     obs.call(last, [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }]);
     ok("队列变长时人停在原来那一篇（加背加进来的排在末尾，不该把弹层顶到别处）",
       last.data.index === 2 && last.data.queue.length === 4);
 
-    const moved = mk(rows, true, 0);
+    const moved = mk(rows, true, 0, true);
     obs.call(moved, [{ id: "c" }, { id: "a" }, { id: "b" }]);
     ok("当前那一篇换了位置就按它的新位置落位（跟着篇走，不跟着序号走）",
       moved.data.index === 1);
   }
+
+  ok("弹层显式打开过，observer 不按属性推来的队列重开（首页 refresh 会把 sheetRows 推回来）",
+    (() => {
+      const savedComp = global.Component;
+      let opt = null;
+      global.Component = (o) => { opt = o; };
+      const sheetPath = path.join(sheetDir, "recite-sheet.js");
+      delete require.cache[require.resolve(sheetPath)];
+      require(sheetPath);
+      global.Component = savedComp;
+
+      const self = Object.assign({}, opt.methods);
+      self.data = { open: false, index: 0, queue: [] };
+      self.pushed = false;
+      self.closedAt = 0;
+      self.lastPush = "";
+      self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
+      self.loadCurrent = function () { this.loaded = (this.loaded || 0) + 1; };
+      self.loaded = 0;
+
+      const rows2 = [{ id: "a" }, { id: "b" }];
+      const obs2 = opt.properties.queue.observer;
+      obs2.call(self, rows2);
+      const before = self.loaded;
+      self.open(rows2, "b");
+      obs2.call(self, rows2.map((r) => ({ id: r.id })));
+      return self.data.open === true && self.data.index === 1 && self.loaded === before + 1;
+    })(),
+    "open() 之后 observer 又按属性把队列重写一遍 —— loadCurrent 会被打断，弹层自己把自己收掉");
+
+  ok("关掉之后有一小段不再重开（列表上的点按与弹层的收起会在同一批数据里撞车）",
+    /onClose\(\)\s*\{[\s\S]{0,140}?return;/.test(sheetJs),
+    "onClose 里没有那段冷却 —— 收起带动列表重排，重排又把同一顺手点给弹层开了回来");
   ok("open 时把 queue 落到组件自己的 data 上（不依赖父层那一批 setData 的先后）",
-    /setData\(\{\s*open:\s*true,\s*index:\s*idx,\s*queue:\s*list\s*\}/.test(sheetJs),
+    /setData\(\{\s*open:\s*true,[\s\S]{0,80}?queue:\s*list\s*\}/.test(sheetJs),
     "open() 没写 queue —— 首帧 current() 读的是上一批数据");
   ok("弹层是整屏浮层（fixed）", !!rootBody && /position\s*:\s*fixed/.test(rootBody[1]));
   ok("弹层靠底（从下面推上来，不是居中的对话框）",
