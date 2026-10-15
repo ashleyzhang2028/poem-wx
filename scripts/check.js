@@ -3029,6 +3029,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   {
+    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    const mineWxml8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+    ok("选完头像即视为「授权过」，引导条同一轮收掉（Issue #194）",
+      /store\.saveProfile\(\{\s*avatarLocal:\s*url,\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8));
+    ok("引导条只挂在登录且没授权过那一态上（grantLead）",
+      /class="grant-lead"\s+wx:elif="\{\{grantLead\}\}"/.test(mineWxml8)
+        && /grantLead:\s*this\.grantLead\(profile\)/.test(mineSrc8));
+    ok("「先不用」把授权这件事一次问清，不再反复弹（identityAsked）",
+      /store\.saveProfile\(\{\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8)
+        && /grantLead\(profile\)[\s\S]{0,300}?profile\.identityAsked/.test(mineSrc8));
+    ok("引导条判据是「没选过头像且昵称还是默认值」，不是别的",
+      /grantLead\(profile\)[\s\S]{0,400}?!profile\.avatarLocal/.test(mineSrc8)
+        && /nick === "我的古诗词"/.test(mineSrc8));
+  }
+
+  {
     const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-login-server.md"), "utf8");
     ok("服务端要加的两行白名单写进了文档",
       doc.indexOf("settings:v1") >= 0 && doc.indexOf("profile:v1") >= 0);
