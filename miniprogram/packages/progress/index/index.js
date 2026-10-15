@@ -3,6 +3,7 @@ const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 const SPAN = 7;
 
@@ -56,6 +57,6 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   }
 });

@@ -1,6 +1,6 @@
 <view class="page has-tabbar" style="{{themeStyle}}">
 
-  <view class="card account {{focusLogin && !logged ? 'account-lead' : ''}}">
+  <view class="card account">
     <view class="identity">
 
       <view class="avatar-wrap">

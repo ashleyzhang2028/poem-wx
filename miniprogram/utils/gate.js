@@ -1,5 +1,6 @@
 const store = require("./store");
 const auth = require("./auth");
+const tabPage = require("./tab-page");
 
 const GUEST_GRADE = 1;
 
@@ -44,7 +45,7 @@ function guard(what, onPass) {
     confirmText: "去登录",
     cancelText: "先看看",
     success: (res) => {
-      if (res.confirm) wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+      if (res.confirm) tabPage.mine();
     }
   });
   return false;

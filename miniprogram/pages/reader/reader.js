@@ -7,6 +7,7 @@ const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -212,7 +213,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   applyReading() {
@@ -234,7 +235,7 @@ Page({
   },
 
   onLoginGate() {
-    wx.switchTab({ url: "/pages/mine/mine" });
+    tabPage.mine();
   },
 
   onPinyin(e) {

@@ -2,6 +2,7 @@ const store = require("../../../utils/store");
 const sfx = require("../../../utils/sfx");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -24,7 +25,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onSfx(e) {

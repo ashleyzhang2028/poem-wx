@@ -2241,7 +2241,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       items.length === 5
         && /\/pages\/home\/home", text: "今日", icon: "book"/.test(barSrc)
         && /\/pages\/library\/library", text: "课外", icon: "stack"/.test(barSrc)
-        && /\/packages\/game\/index\/index", text: "大会", icon: "flag", noSwitch: true/.test(barSrc)
+        && /\/packages\/game\/index\/index", text: "大会", icon: "flag"[^}]*noSwitch: true/.test(barSrc)
         && /\/pages\/search\/search", text: "搜索", icon: "search"/.test(barSrc)
         && /\/pages\/mine\/mine", text: "我的", icon: "person"/.test(barSrc),
       "底栏这一串：" + (barSrc.match(/list: \[[\s\S]*?\]/) || [""])[0].slice(0, 300));
@@ -2270,12 +2270,56 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && syncs["pages/search/search"] === 3 && syncs["pages/mine/mine"] === 4,
       JSON.stringify(syncs) + " —— 少调或调错，切过去还亮着上一栏");
   }
-  ok("课外 / 搜索标了要登录（游客点了不进门，直接去「我的」）",
-    /课外[^}]*login:\s*true/.test(barSrc) && /搜索[^}]*login:\s*true/.test(barSrc),
-    "两项没标 login —— 游客点进去还是一屏只有一个按钮的门禁页");
-  ok("游客点了这两栏切到「我的」（不是 render 一张 lock-card）",
-    /gate\.logged\(\)/.test(barSrc) && /switchTab\(\{\s*url:\s*GUEST_TAB\s*\}/.test(barSrc),
+  ok("课外 / 搜索 / 大会标了要登录（游客点了不进门，直接去「我的」）",
+    /课外[^}]*login:\s*true/.test(barSrc) && /搜索[^}]*login:\s*true/.test(barSrc)
+      && /大会[^}]*login:\s*true/.test(barSrc),
+    "有一项没标 login —— 游客点进去还是一屏只有一个按钮的门禁页");
+  ok("游客点这三栏切到「我的」（不是 render 一张 lock-card）",
+    /gate\.logged\(\)/.test(barSrc)
+      && /!gate\.logged\(\) && item\.login/.test(barSrc)
+      && /tabPage\.mine\(\)/.test(barSrc),
     "没查登录态、或没有跳到「我的」的那一跳");
+
+  {
+    const scan = [];
+    const walk = (dir) => {
+      fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith(".js") && !/^utils\/(store|corpus|remote)\.js$/.test(path.relative(ROOT, p))) {
+          scan.push(p);
+        }
+      });
+    };
+    ["pages", "components", "packages", "utils"].forEach((d) => walk(path.join(ROOT, d)));
+
+    const tabPages = ["/pages/home/home", "/pages/library/library", "/pages/search/search", "/pages/mine/mine"];
+    const bad = [];
+    scan.forEach((p) => {
+      const src = fs.readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+      tabPages.forEach((t) => {
+        if (new RegExp('navigateTo\\(\\{\\s*url:\\s*"' + t.replace(/\//g, "\\/") + '["?]').test(src)) {
+          bad.push(path.relative(ROOT, p) + " → " + t);
+        }
+      });
+    });
+    ok("没有哪一处 navigateTo 去那四个 tab 页（navigateTo 对 tab 页静默失败）",
+      bad.length === 0,
+      bad.join("；") + " —— 用户点下去没有任何反应，也没有报错，正是 Issue #195");
+
+    const helper = fs.readFileSync(path.join(ROOT, "utils", "tab-page.js"), "utf8");
+    ok("去 tab 页统一走 tab-page.js（switchTab 只在这一份里）",
+      /wx\.switchTab\(\{\s*url: url\s*\}\)/.test(helper)
+        && scan.every((p) => path.relative(ROOT, p) === "utils/tab-page.js"
+          || !/wx\.switchTab\(/.test(fs.readFileSync(p, "utf8"))),
+      "又有第二处直接写 switchTab —— 下次改跳转口径就得满地找");
+
+    ok("去「我的」只有 tab-page.mine() 一个出口",
+      /function mine\(\)[\s\S]{0,60}?go\(MINE\)/.test(helper)
+        && scan.filter((p) => path.relative(ROOT, p) !== "utils/tab-page.js")
+          .every((p) => !/switchTab\(\{\s*url:\s*"\/pages\/mine\/mine"/.test(fs.readFileSync(p, "utf8"))),
+      "又多了一处手写 switchTab 去「我的」");
+  }
 }
 
 {

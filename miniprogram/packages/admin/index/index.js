@@ -3,6 +3,7 @@ const tiers = require("../../../utils/tiers");
 const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -67,7 +68,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onSetTier(e) {

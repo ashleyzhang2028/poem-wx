@@ -3,6 +3,7 @@ const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -69,7 +70,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onUnload() {

@@ -5,6 +5,7 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
 
@@ -54,7 +55,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onInput(e) {

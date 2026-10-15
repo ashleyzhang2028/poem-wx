@@ -79,6 +79,7 @@ miniprogram/
 │   ├── text-search.js               # 正文全文检索（倒排索引）
 │   ├── entitlement.js / tiers.js    # 门禁：登录门（block）+ 三档分层
 │   ├── author-index.js              # 作者索引：朝代归一 / 异名归一 / 名册构建
+│   ├── tab-page.js                  # 跳 tab 页的唯一出口（navigateTo 去 tab 页静默失败）
 │   ├── auth.js                      # 微信登录（含无后端时的降级）
 │   ├── wire.js                      # 报文形状（本机 ↔ 服务端），见 § 二点五
 │   ├── remote.js                    # 后端契约（同步 / TTS / 管理）

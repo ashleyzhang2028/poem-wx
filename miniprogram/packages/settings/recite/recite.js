@@ -6,6 +6,7 @@ const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabPage = require("../../../utils/tab-page");
 
 const STAGES = S.STAGE_KEYS.map((k) => ({ key: k, name: S.STAGES[k].name }));
 
@@ -210,7 +211,7 @@ Page({
   },
 
   onLogin() {
-    wx.navigateTo({ url: "/pages/mine/mine?login=1" });
+    tabPage.mine();
   },
 
   onGrade(e) {
