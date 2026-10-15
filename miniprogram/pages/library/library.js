@@ -1,5 +1,4 @@
 const corpus = require("../../utils/corpus");
-const store = require("../../utils/store");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
@@ -37,8 +36,6 @@ Page({
   data: {
     themeStyle: "",
     groups: [],
-    current: null,
-    books: [],
     locked: true,
     reason: ""
   },
@@ -72,23 +69,11 @@ Page({
       });
     }).filter((g) => g.books.length);
 
-    this.setData({ groups, current: null });
-  },
-
-  onOpenGroup(e) {
-    const key = e.currentTarget.dataset.k;
-    const group = this.data.groups.find((g) => g.key === key);
-    this.setData({ current: key });
-    wx.setNavigationBarTitle({ title: "跬步 · 课外阅读 · " + (group ? group.name : "") });
+    this.setData({ groups });
   },
 
   onLoginGate() {
     tabPage.mine();
-  },
-
-  onBack() {
-    this.setData({ current: null });
-    wx.setNavigationBarTitle({ title: "跬步 · 课外阅读" });
   },
 
   onLogin() {
