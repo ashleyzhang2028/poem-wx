@@ -27,20 +27,19 @@
 }
 
 .index-cell {
-  width: 50%;
+  width: 33.3333%;
   min-height: 76rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-2) 12rpx var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
 .index-name {
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
+  font-size: var(--fs-title);
+  color: var(--strong-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -52,6 +51,52 @@
   color: var(--ink-3);
   padding-left: 12rpx;
   flex: none;
+}
+
+.roster-head {
+  padding: var(--sp-3) var(--sp-1) var(--sp-1);
+}
+
+.roster-head .head-title {
+  font-weight: 400;
+}
+
+.roster-head .head-sub {
+  margin-top: var(--sp-1);
+}
+
+.author-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-1) var(--sp-1);
+}
+
+.author-head .head-side {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+
+.author-head .head-sub {
+  margin-top: 0;
+}
+
+.head-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  margin-left: var(--sp-2);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--t-press);
+}
+
+.head-back-arrow {
+  font-size: var(--fs-lead);
+  line-height: 1;
+  color: var(--ink-2);
 }
 
 .era-card {
@@ -82,9 +127,9 @@
 
 .a-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(176rpx, 1fr));
-  gap: 12rpx;
-  margin-top: var(--sp-3);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2) 12rpx;
+  margin-top: var(--sp-2);
 }
 
 .a-cell {
@@ -93,10 +138,7 @@
   justify-content: space-between;
 
   min-height: 64rpx;
-  padding: 8rpx var(--sp-3);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
+  padding: 8rpx 0;
   transition: background-color var(--t-press);
 }
 
@@ -105,7 +147,7 @@
 }
 
 .a-name {
-  font-size: var(--fs-hint);
+  font-size: var(--fs-title);
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -122,7 +164,7 @@
 }
 
 .filter-group {
-  margin: 0 0 var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-2);
 }
 
 .count {
@@ -144,23 +186,3 @@
   margin-top: var(--sp-2);
 }
 
-.back-bar {
-  display: flex;
-  align-items: center;
-  min-height: 76rpx;
-  font-size: var(--fs-body);
-  color: var(--ink-2);
-  padding: var(--sp-1) var(--sp-1);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--t-press);
-}
-
-.back-hover {
-  background: var(--sink);
-}
-
-.back-arrow {
-  font-size: var(--fs-hero);
-  padding-right: var(--sp-1);
-  line-height: 1;
-}
