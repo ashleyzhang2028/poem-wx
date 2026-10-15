@@ -122,9 +122,9 @@ Page({
   },
 
   dailyMsg(r) {
-    if (r.code === "E_LIMIT") return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，先背完再加";
-    if (r.code === "E_STORAGE") return "加不进去：这台手机存不下（空间不足或未开启存储）";
-    return "加不进去";
+    if (r.code === "E_LIMIT") return "今日已加 " + store.DAILY_EXTRA_MAX + " 首，背完再加";
+    if (r.code === "E_STORAGE") return "添加失败：空间不足或存储未开启";
+    return "添加失败";
   },
 
   loadEntry() {

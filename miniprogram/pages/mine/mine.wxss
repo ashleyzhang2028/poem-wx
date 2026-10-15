@@ -1,5 +1,5 @@
 .page {
-  padding: var(--sp-4);
+  padding: var(--sp-3);
 }
 .account {
   padding: var(--sp-4);

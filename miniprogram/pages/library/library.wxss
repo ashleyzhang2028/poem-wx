@@ -4,7 +4,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--sp-4);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
   transition: background-color var(--t-press), border-color var(--t-press), transform var(--t-press);
 }
 

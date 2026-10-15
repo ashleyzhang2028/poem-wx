@@ -1314,7 +1314,11 @@ function wxCode2Session(deps, code) {
     });
   })["catch"](function (e) {
     if (timer) clearTimeout(timer);
-    logFacts("wx.code2session_error", { error: String((e && e.message) || e).slice(0, 200) });
+    var cause = (e && e.cause) || {};
+    logFacts("wx.code2session_error", {
+      error: String((e && e.message) || e).slice(0, 200),
+      cause: String(cause.code || cause.message || "").slice(0, 200)
+    });
     return err(502, "E_WX_UPSTREAM", "连不上微信登录服务，稍后再试。");
   });
 }

@@ -103,8 +103,8 @@ page {
   --sp-2: calc(16rpx * var(--ui-scale));
   --sp-3: calc(24rpx * var(--ui-scale));
   --sp-4: calc(32rpx * var(--ui-scale));
-  --sp-5: calc(48rpx * var(--ui-scale));
-  --sp-6: calc(64rpx * var(--ui-scale));
+  --sp-4: calc(48rpx * var(--ui-scale));
+  --sp-5: calc(64rpx * var(--ui-scale));
   --page-x: calc(28rpx * var(--ui-scale));
 
   --h-btn: calc(96rpx * var(--ui-scale));

@@ -19,7 +19,7 @@
 
     <view class="card toc">
       <view class="toc-head">
-        <text class="card-title bar">课内诗词</text>
+        <text class="card-title bar">今日背诵</text>
       </view>
 
       <view class="toc-row" hover-class="row-hover" hover-stay-time="60"

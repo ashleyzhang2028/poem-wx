@@ -55,7 +55,7 @@ function shardReady() {
 
 function shard(name) {
   if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
-  return send(SHARD_PATH + name, {}, "GET");
+  return sendTraced(SHARD_PATH + name, {}, "GET");
 }
 
 function useCloud() {
@@ -65,6 +65,45 @@ function useCloud() {
 function send(path, data, method) {
   if (useCloud()) return sendCloud(path, data, method);
   return sendHttp(path, data, method);
+}
+
+function traceTarget(path) {
+  if (useCloud()) {
+    const c = cloudConfig();
+    return "cloud env=" + c.env + " service=" + c.service + " path=" + path;
+  }
+  return "http " + baseUrl() + path;
+}
+
+function traceBody(data) {
+  try {
+    return JSON.stringify(data, (k, v) => (/token|code$/i.test(k) && typeof v === "string" ? v.slice(0, 6) + "…(" + v.length + ")" : v));
+  } catch (e) {
+    return String(data);
+  }
+}
+
+function sendTraced(path, data, method) {
+  const verb = method || "POST";
+  const started = Date.now();
+  const head = "[remote] " + verb + " " + traceTarget(path);
+  console.log(head, "body=" + traceBody(data), "auth=" + (session().accessToken ? "Bearer" : "none"));
+  const pending = send(path, data, method);
+  return pending.then(
+    (res) => {
+      console.log(head, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
+      return res;
+    },
+    (err) => {
+      console.error(head, "FAIL", Date.now() - started + "ms", {
+        statusCode: err && err.statusCode,
+        code: err && err.code,
+        errMsg: err && err.errMsg,
+        message: err && err.message
+      });
+      throw err;
+    }
+  );
 }
 
 let cloudReadyEnv = "";
@@ -226,7 +265,7 @@ function request(path, data, method, retried) {
   if (!configured()) return Promise.reject(new Error("同步服务未开通"));
   const isCredential = path === PATHS.login || path === PATHS.refresh;
 
-  return send(path, data, method)["catch"]((err) => {
+  return sendTraced(path, data, method)["catch"]((err) => {
     if (retried || isCredential) throw err;
     if (err.statusCode !== 401) throw err;
     if (SESSION_GONE.indexOf(err.code) < 0) throw err;

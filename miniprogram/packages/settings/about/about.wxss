@@ -1,6 +1,6 @@
 .brand {
   text-align: center;
-  padding: var(--sp-5) var(--sp-4);
+  padding: var(--sp-4) var(--sp-4);
   background: var(--surface);
 }
 
@@ -38,6 +38,6 @@
 .foot {
   display: block;
   text-align: center;
-  padding: var(--sp-3) var(--sp-4) var(--sp-5);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
   line-height: var(--lh-loose);
 }
