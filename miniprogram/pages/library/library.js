@@ -75,7 +75,10 @@ Page({
   },
 
   onOpenGroup(e) {
-    this.setData({ current: e.currentTarget.dataset.k });
+    const key = e.currentTarget.dataset.k;
+    const group = this.data.groups.find((g) => g.key === key);
+    this.setData({ current: key });
+    wx.setNavigationBarTitle({ title: "跬步诗词 · 课外阅读 · " + (group ? group.name : "") });
   },
 
   onLoginGate() {
@@ -84,6 +87,7 @@ Page({
 
   onBack() {
     this.setData({ current: null });
+    wx.setNavigationBarTitle({ title: "跬步诗词 · 课外阅读" });
   },
 
   onLogin() {
