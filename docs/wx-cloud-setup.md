@@ -160,7 +160,16 @@ MYSQL_PASSWORD=<口令>
 MYSQL_DATABASE=poem                           # 缺了降级内存存储，重启即丢
 WX_APPID=wx200a0c667fc67fcb                  # 缺了登录回 503 E_WX_NOT_CONFIGURED
 WX_SECRET=<小程序 appsecret>
+WX_API_BASE=http://api.weixin.qq.com          # 登录 502 且日志 cause 为 DEPTH_ZERO_SELF_SIGNED_CERT 时设
 ```
+
+`WX_API_BASE` 要配合「开放接口服务」，控制台 → 服务管理 → 云调用，按序：
+
+1. 「微信令牌」里配置接口：填 `/sns/jscode2session`，只此一行。
+2. 打开「开放接口服务」开关。
+3. 开关打开**之后**再创建版本（开关状态在创建版本时定下，之前的版本须重新构建）。
+
+生效的请求，响应头带 `x-openapi-seqid`。未开通时不要设 `WX_API_BASE`：`secret` 会以明文走公网。
 
 `SESSION_SECRET` / `WX_*` 的完整定义在 `api/_lib/config.js`；
 `MYSQL_*` 那几项由这份部署自己读（`deploy-api-serve/serve-api.js`），

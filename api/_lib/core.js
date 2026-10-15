@@ -1243,7 +1243,7 @@ function resendVerificationByEmail(deps, input) {
   return resendVerification(anonDeps, input || {});
 }
 
-var WX_CODE2SESSION = "https://api.weixin.qq.com/sns/jscode2session";
+var WX_CODE2SESSION_PATH = "/sns/jscode2session";
 var WX_TIMEOUT_MS = 8000;
 
 function wxReady(cfg) {
@@ -1263,7 +1263,7 @@ function wxTableMissing() {
 
 function wxCode2Session(deps, code) {
   var cfg = deps.cfg, t = deps.now();
-  var url = WX_CODE2SESSION
+  var url = String(cfg.wxApiBase || "https://api.weixin.qq.com").replace(/[/]+$/, "") + WX_CODE2SESSION_PATH
     + "?appid=" + encodeURIComponent(String(cfg.wxAppId || ""))
     + "&secret=" + encodeURIComponent(String(cfg.wxSecret || ""))
     + "&js_code=" + encodeURIComponent(String(code || ""))
