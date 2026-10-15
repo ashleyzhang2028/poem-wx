@@ -3,40 +3,23 @@
 
   <block wx:else>
 
-    <block wx:if="{{!current}}">
-      <view class="group-card" hover-class="group-hover" hover-stay-time="60"
-            wx:for="{{groups}}" wx:key="key" data-k="{{item.key}}" bindtap="onOpenGroup">
-        <view class="gc-head">
-          <view class="gc-left">
-            <text class="gc-name">{{item.name}}</text>
-            <text class="gc-desc">{{item.desc}}</text>
-          </view>
-          <text class="gc-count">{{item.count}} 部</text>
-          <text class="row-go">›</text>
-        </view>
-        <view class="gc-books">
-          <text class="tag ghost" wx:for="{{item.books}}" wx:for-item="b" wx:key="id">{{b.name}} {{b.count}}</text>
-        </view>
+    <view class="card" wx:for="{{groups}}" wx:key="key">
+      <view class="gc-head">
+        <text class="gc-name">{{item.name}}</text>
+        <text class="gc-count">{{item.count}} 部</text>
       </view>
-    </block>
-
-    <block wx:else>
-      <view class="back-bar" hover-class="back-hover" hover-stay-time="60" bindtap="onBack">
-        <text class="back-arrow">‹</text>
-        <text>返回</text>
-      </view>
-      <view class="card" wx:for="{{groups}}" wx:key="key" wx:if="{{item.key === current}}">
-        <view class="card-title bar">{{item.name}}</view>
-        <view class="row" hover-class="row-hover" hover-stay-time="60"
+      <text class="gc-desc">{{item.desc}}</text>
+      <view class="book-grid">
+        <view class="book-cell" hover-class="book-hover" hover-stay-time="60"
               wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
-          <view class="row-main">
-            <text class="row-title">{{b.name}}</text>
-            <text class="row-sub">共 {{b.count}} {{b.unit}}</text>
+          <view class="book-main">
+            <text class="book-name">{{b.name}}</text>
+            <text class="book-sub">共 {{b.count}} {{b.unit}}</text>
           </view>
           <text class="row-go">›</text>
         </view>
       </view>
-    </block>
+    </view>
 
     <view class="safe-bottom"></view>
   </block>
