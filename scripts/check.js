@@ -904,18 +904,20 @@ Object.keys(WEB_TIER).forEach((k) => {
   const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
   const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
-  ok("权限对比表按三档渲染（列入列头、行铺满能力表，都不是写死的）",
-    wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0
-      && wxml.indexOf("{{head.name}}") >= 0 && js.indexOf("heads: tiers.TIERS") >= 0
-      && js.indexOf("entitlement.compareRows(") >= 0
-      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
-    "列头写死、或只挑几项列出来，都会跟档位表与能力表走散");
-  ok("对比表只有档位那一档分组（不再按 tier 另起「登录后」这类分组）",
-    entSys.indexOf("GROUP_RULES") < 0 && wxml.indexOf("groupFirst") < 0,
-    "多出来的一层分组说不动用户：对比以登录为前提");
+  ok("权限对比表的列头就是档位表本身（三档，写死会跟档位走散）",
+    wxml.indexOf("heads") >= 0 && js.indexOf("entitlement.compareCols(") >= 0
+      && E.compareCols({ logged: false, tier: "free" }).map((c) => c.tier).join() === tiersMod.TIER_KEYS.join(),
+    "列头写死、或只挑几档列出来，都会跟档位表走散");
+  ok("权限对比表的行铺满能力表（分段列出，一段不漏）",
+    wxml.indexOf("compareGroups") >= 0 && js.indexOf("entitlement.compareGroups(") >= 0
+      && E.compareGroups({ logged: false, tier: "free" }).reduce((n, g) => n + g.rows.length, 0) === E.CAP_KEYS.length,
+    "只挑几项列出来，用户就看不到自己缺哪几样");
   ok("当前档位列带「现在」（用户只认自己那一列）",
     /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("col.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
+  ok("对比表整表铺在页面上、自己不滚（用户不用在两处别苗头地滚）",
+    wxml.indexOf("compareRows") < 0 && wxml.indexOf("<scroll-view") < 0,
+    "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
   ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
 

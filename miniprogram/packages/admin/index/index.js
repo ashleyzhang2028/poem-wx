@@ -10,9 +10,9 @@ Page({
     themeStyle: "",
     logged: false,
     status: {},
-    tiers: tiers.TIERS,
     heads: [],
-    compareRows: [],
+    compareGroups: [],
+    compareSummary: [],
     stats: { caps: 0, enabled: 0 },
 
     users: [],
@@ -39,8 +39,9 @@ Page({
     this.setData({
       logged: snap.logged,
       status: snap,
-      heads: tiers.TIERS,
-      compareRows: entitlement.compareRows(snap),
+      heads: entitlement.compareCols(snap),
+      compareGroups: entitlement.compareGroups(snap),
+      compareSummary: entitlement.compareSummary(snap),
       stats: admin.stats(),
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
@@ -135,30 +136,4 @@ Page({
       }
     });
   },
-
-  onLoadAccounts() {
-    if (!this.data.adminReady) {
-      wx.showModal({
-        title: "名录不可用",
-        content:
-          (this.data.remoteReady
-            ? "服务器已接上，但你的账号读不到全站名录。"
-            : "服务器还没接上。名录要接上之后才有。") +
-          "\n\n下面的名单是构建时导入的名册（只读），没有它就只能看自己。",
-        showCancel: false,
-        confirmText: "知道了"
-      });
-      return;
-    }
-    this.setData({ busy: true });
-    this.refresh();
-    setTimeout(() => this.setData({ busy: false }), 600);
-  },
-
-  onCopyFeedback() {
-    wx.setClipboardData({
-      data: "kuibuapp@163.com",
-      success: () => wx.showToast({ title: "邮箱已复制，可以申请档位", icon: "none" })
-    });
-  }
 });

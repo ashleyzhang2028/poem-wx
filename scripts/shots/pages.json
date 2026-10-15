@@ -230,6 +230,13 @@
       }
     ]
   },
+  "admin-guest": {
+    "page": "packages/admin/index/index",
+    "title": "用户权限",
+    "back": true,
+    "logged": false,
+    "_note": "未登录的用户权限页：锁卡，不进比对表"
+  },
   "admin": {
     "page": "packages/admin/index/index",
     "title": "用户权限",
