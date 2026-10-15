@@ -110,7 +110,7 @@
       <view class="all-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleAll">
         <text class="card-title bar all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>
-        <text class="all-toggle">{{allOpen ? '收起' : '展开'}}</text>
+        <text class="all-toggle">{{allOpen ? '⌃' : '⌄'}}</text>
       </view>
 
       <block wx:if="{{allOpen}}">
