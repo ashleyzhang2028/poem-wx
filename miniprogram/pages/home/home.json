@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "跬步诗词 · 今日",
+  "navigationBarTitleText": "跬步 · 今日",
   "usingComponents": {
     "recite-sheet": "/components/recite-sheet/recite-sheet",
     "daily-extra": "/components/daily-extra/daily-extra"

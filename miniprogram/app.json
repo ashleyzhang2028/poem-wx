@@ -75,7 +75,7 @@
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "跬步诗词",
+    "navigationBarTitleText": "跬步",
     "backgroundColor": "#f5f5f7",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false
