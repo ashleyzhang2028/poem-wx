@@ -3063,19 +3063,72 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     require(sheetPath);
     global.Component = savedComp;
 
+    const missId = "本仓库没有这一篇的编号";
+    const row = (id) => ({ id });
+
+    const corpusPath = path.join(ROOT, "utils", "corpus.js");
+    const corpusMod = require(corpusPath);
+    const realEntry = corpusMod.entry;
+    const realIndex = corpusMod.indexById;
+    corpusMod.entry = (id) => (id === missId ? null : realEntry(id));
+    corpusMod.indexById = (id) => (id === missId ? null : realIndex(id));
+
+    const said = [];
+    const syncForce = [];
+    const calm = [];
+    const modal = global.wx.showModal;
+    const toast = global.wx.showToast;
+    const syncPath = require.resolve(path.join(ROOT, "utils", "sync.js"));
+    const syncMod = require(syncPath);
+    const force = syncMod.now;
+    global.wx.showModal = (o) => {
+      if (/正文/.test((o && o.title) || "")) said.push(o);
+      else calm.push(o);
+      return Promise.resolve({ confirm: false, cancel: true });
+    };
+    global.wx.showToast = (o) => {
+      if (/正文/.test((o && o.title) || "")) calm.push(o);
+    };
+    syncMod.now = (f) => {
+      if (f) syncForce.push(f);
+      return Promise.resolve({ skipped: "offline" });
+    };
+
     const mk = (rows, open, index, pushed) => {
       const self = Object.assign({}, opt.methods);
-      self.data = { open, index: index || 0, queue: rows };
+      self.data = { open, index: index || 0, queue: rows, showTranslation: false, hint: "" };
       self.pushed = !!pushed;
       self.closedAt = 0;
       self.lastPush = (rows || []).map((r) => r.id).join("|");
       self.loaded = 0;
       self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
-      self.loadCurrent = function () { this.loaded += 1; };
+      self.open = opt.methods.open;
+      self.loadCurrent = opt.methods.loadCurrent;
       return self;
     };
     const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
     const obs = opt.properties.queue.observer;
+
+    const missing = (id) => {
+      const self = mk(rows, false, 1, false);
+      self.data.queue = [row(missId), row(rows[1].id)];
+      self.data.index = 1;
+      self.open(self.data.queue, id);
+      return self;
+    };
+
+    const miss = missing(missId);
+    const missSame = miss.data.index === 0 && miss.data.queue.length === 2;
+    miss.onClose();
+    said.slice().forEach((o) => o.success({ confirm: true, cancel: false }));
+
+    ok("正文缺失时只收起，不把序号往回退（关一下再开，人还该站在点的那一首上）",
+      missSame && !miss.data.open,
+      "缺正文那条路把 index 改回去了，或者没把弹层收起来");
+    ok("正文缺失时当场说清楚、并给一条同步的路（先前只弹一句 toast，转瞬就没了）",
+      said.length === 1 && /\d+\s*\/\s*\d+/.test(said[0].content)
+        && said[0].confirmText === "去同步" && syncForce.length === 1,
+      "缺正文只安静地关掉 —— 「闪一下没了」连个说法都没有");
 
     const closed = mk(rows, false);
     obs.call(closed, [{ id: "z" }]);
@@ -3096,6 +3149,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     obs.call(moved, [{ id: "c" }, { id: "a" }, { id: "b" }]);
     ok("当前那一篇换了位置就按它的新位置落位（跟着篇走，不跟着序号走）",
       moved.data.index === 1);
+
+    global.wx.showModal = modal;
+    global.wx.showToast = toast;
+    syncMod.now = force;
+    delete require.cache[syncPath];
+    corpusMod.entry = realEntry;
+    corpusMod.indexById = realIndex;
   }
 
   ok("弹层显式打开过，observer 不按属性推来的队列重开（首页 refresh 会把 sheetRows 推回来）",
@@ -3126,6 +3186,32 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       return self.data.open === true && self.data.index === 1 && self.loaded === before + 1;
     })(),
     "open() 之后 observer 又按属性把队列重写一遍 —— loadCurrent 会被打断，弹层自己把自己收掉");
+
+  ok("open() 按传进来的那一篇落位（同长度的两份队列之间换图，也不落在旧序号上）",
+    (() => {
+      const savedComp = global.Component;
+      let opt = null;
+      global.Component = (o) => { opt = o; };
+      const sheetPath = path.join(sheetDir, "recite-sheet.js");
+      delete require.cache[require.resolve(sheetPath)];
+      require(sheetPath);
+      global.Component = savedComp;
+
+      const self = Object.assign({}, opt.methods);
+      self.data = { open: false, index: 0, queue: [] };
+      self.pushed = false;
+      self.closedAt = 0;
+      self.lastPush = "";
+      self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
+      self.triggerEvent = function () {};
+      self.loadCurrent = function () {};
+      const first = [{ id: "a" }, { id: "b" }];
+      const next = [{ id: "x" }, { id: "y" }];
+      self.open(first, "a");
+      self.open(next, "y");
+      return self.data.index === 1 && self.data.queue[1] === next[1];
+    })(),
+    "open() 只看队列长短，换一份等长队列后仍用旧 index —— 点第 y 篇开出来是 x");
 
   ok("关掉之后有一小段不再重开（列表上的点按与弹层的收起会在同一批数据里撞车）",
     /onClose\(\)\s*\{[\s\S]{0,140}?return;/.test(sheetJs),
