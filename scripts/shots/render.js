@@ -234,6 +234,7 @@ function expandReciteSheet(wxml, data) {
     navText: ((data.sheetIndex || 0) + 1) + " / " + ((data.plan || []).length || 1),
     queue: data.plan || [],
     master: (data.sheetMastery === undefined ? 0 : data.sheetMastery),
+    mastery: 0,
     hint: data.sheetHint || "",
     align: "center",
     fontSize: 0,

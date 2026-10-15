@@ -9,12 +9,6 @@
   border-bottom: 1rpx solid var(--line-2);
 }
 
-.ov-ring {
-  width: 116rpx;
-  height: 116rpx;
-  flex: none;
-}
-
 .ov-main {
   padding-left: var(--sp-3);
   min-width: 0;

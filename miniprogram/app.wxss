@@ -631,6 +631,8 @@ view, text, button, input, textarea {
 .ring {
   position: relative;
   flex: none;
+  width: var(--ring-size);
+  height: var(--ring-size);
 }
 
 .ring-track,
@@ -652,7 +654,7 @@ view, text, button, input, textarea {
 .ring::after {
   content: "";
   position: absolute;
-  inset: 13%;
+  inset: var(--ring-w);
   border-radius: 50%;
   background: var(--surface);
   border: 1rpx solid var(--line);
@@ -666,8 +668,25 @@ view, text, button, input, textarea {
   justify-content: center;
   font-family: var(--font-num);
   font-weight: 600;
+  font-size: var(--fs-caption);
   color: var(--strong-text);
   z-index: 1;
+}
+
+.ring-cap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ring-cap .ring {
+  margin-bottom: var(--sp-1);
+}
+
+.ring-cap-t {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 
 .lock-card {

@@ -8,13 +8,13 @@
 
   <view class="card overview">
     <view class="ov-head">
-      <view class="ring ov-ring">
+      <view class="ring">
         <view class="ring-track"></view>
         <view class="ring-fill" style="--p:{{masteryPercent}}"></view>
         <text class="ring-text">{{masteryPercent}}%</text>
       </view>
       <view class="ov-main">
-        <text class="ov-title">掌握度</text>
+        <text class="ov-title">背诵进度</text>
         <text class="ov-sub">已掌握 {{overview.mastered}} / 已学 {{overview.learned}}</text>
       </view>
     </view>
