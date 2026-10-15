@@ -113,6 +113,8 @@ Component({
     this.pushed = false;
     this.closedAt = 0;
     this.lastPush = "";
+    this.missingAt = 0;
+    this.missingOf = 0;
   },
 
   detached() {
@@ -128,6 +130,8 @@ Component({
       this.pushed = true;
       this.lastPush = idsOf(list);
       const idx = again ? this.data.index : Math.max(0, list.findIndex((it) => it.id === id));
+      this.missingAt = 0;
+      this.missingOf = 0;
       this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
     },
@@ -137,6 +141,26 @@ Component({
       this.closedAt = Date.now();
       this.pushed = false;
       this.setData({ open: false, showTranslation: false, hint: "" });
+    },
+
+    noticeMissing() {
+      if (!this.missingAt) return;
+      const at = this.missingAt;
+      const of = this.missingOf;
+      this.missingAt = 0;
+      this.missingOf = 0;
+      wx.showModal({
+        title: "这版没带上正文",
+        content: "第 " + at + " / " + of + " 首的正文不在包里。",
+        confirmText: "去同步",
+        cancelText: "知道了",
+        success: (res) => {
+          if (res.confirm) {
+            sync.now(true);
+            wx.showToast({ title: "正在同步正文", icon: "none" });
+          }
+        }
+      });
     },
 
     current() {
@@ -152,8 +176,10 @@ Component({
       const entry = corpus.entry(item.id);
       const meta = corpus.indexById(item.id);
       if (!entry || !meta) {
-        wx.showToast({ title: "篇目数据缺失", icon: "none" });
+        this.missingAt = this.data.index + 1;
+        this.missingOf = this.data.queue.length;
         this.onClose();
+        this.noticeMissing();
         return;
       }
 
