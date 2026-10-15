@@ -2,13 +2,6 @@ const store = require("./store");
 const tiers = require("./tiers");
 const auth = require("./auth");
 
-const GROUP_RULES = [
-  { key: "free", match: ["free"], name: "登录即得" },
-  { key: "login", match: ["login"], name: "登录后" },
-  { key: "pro", match: ["pro"], name: "Pro 起" },
-  { key: "max", match: ["max"], name: "Max 起" }
-];
-
 const CAPS = [
 
   { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
@@ -23,7 +16,7 @@ const CAPS = [
   { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "login" },
   { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
 
-  { key: "sync", name: "同步进度", desc: "登录即得；换手机进度一字不少", tier: "login" },
+  { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "login" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
@@ -149,29 +142,16 @@ function rankOf(tier) {
 function compareRows(snap) {
   const s = snap || snapshot();
   const now = s.logged ? s.tier : "";
-  return CAPS.map((c) => {
-    const group = groupOf(c.tier);
-    return {
-      cap: c.key,
-      name: c.name,
-      desc: c.desc,
-      group: group.key,
-      groupName: group.name,
-      groupFirst: false,
-      cells: tiers.TIERS.map((t) => ({
-        tier: t.key,
-        now: t.key === now,
-        on: rankOf(c.tier) <= rankOf(t.key)
-      }))
-    };
-  }).map((row, i, rows) => {
-    row.groupFirst = i === 0 || rows[i - 1].group !== row.group;
-    return row;
-  });
-}
-
-function groupOf(tier) {
-  return GROUP_RULES.find((g) => g.match.indexOf(tier) >= 0) || GROUP_RULES[0];
+  return CAPS.map((c) => ({
+    cap: c.key,
+    name: c.name,
+    cells: tiers.TIERS.map((t) => ({
+      tier: t.key,
+      label: t.name,
+      now: t.key === now,
+      on: rankOf(c.tier) <= rankOf(t.key)
+    }))
+  }));
 }
 
 function snapshot() {
@@ -294,8 +274,6 @@ function guestScope() {
 module.exports = {
   CAPS,
   CAP_KEYS,
-  GROUP_RULES,
-  groupOf,
   compareRows,
   TIER_RANK,
   rankOf,

@@ -42,12 +42,6 @@
   height: 620rpx;
 }
 
-.compare-band {
-  padding-top: var(--sp-3);
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-}
-
 .compare-row {
   display: flex;
   align-items: center;

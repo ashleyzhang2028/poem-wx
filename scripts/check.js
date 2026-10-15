@@ -776,11 +776,15 @@ Object.keys(WEB_TIER).forEach((k) => {
   const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
   const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
-  ok("权限对比表按三档渲染（compareRows 铺满能力表，不是一张写死的表）",
+  ok("权限对比表按三档渲染（列入列头、行铺满能力表，都不是写死的）",
     wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0
+      && wxml.indexOf("{{head.name}}") >= 0 && js.indexOf("heads: tiers.TIERS") >= 0
       && js.indexOf("entitlement.compareRows(") >= 0
       && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
-    "对比表写死在 wxml 里、或只挑几项列出来，都会跟能力表走散");
+    "列头写死、或只挑几项列出来，都会跟档位表与能力表走散");
+  ok("对比表只有档位那一档分组（不再按 tier 另起「登录后」这类分组）",
+    entSys.indexOf("GROUP_RULES") < 0 && wxml.indexOf("groupFirst") < 0,
+    "多出来的一层分组说不动用户：对比以登录为前提");
   ok("当前档位列带「现在」（用户只认自己那一列）",
     /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("col.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
@@ -1759,7 +1763,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
 
   const capSync = E.CAPS.find((c) => c.key === "sync");
-  ok("云端同步在能力表里且是登录即得", !!capSync && capSync.tier === "login",
+  ok("云端同步在能力表里且不看档位", !!capSync && capSync.tier === "login",
     capSync ? "当前 tier=" + capSync.tier : "能力不存在");
   ok("界面里不再留「要 Pro 才能同步」的说法",
     mineJs.indexOf("要 Pro 起才能跨设备同步") < 0 && mineJs.indexOf("跨设备同步要 Pro 起") < 0);
@@ -3230,11 +3234,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(bareWxml(adminWxml)),
       "副题那一行还在，或者档名换写法了");
 
-    ok("Pro / Max 的副题留空（不写一句重复的来源）",
-      tiersMod.tierOf("pro").sub === "" && tiersMod.tierOf("max").sub === "",
-      "又把来源写回副题里了");
-    ok("Free 的副题还在（登录即得要说得清）",
-      /微信登录即得/.test(tiersMod.tierOf("free").sub));
+    ok("档位副题整条撤掉（对比以登录为前提，来源不必再说一遍）",
+      tiersMod.TIER_KEYS.every((k) => tiersMod.tierOf(k).sub === undefined),
+      "又把「登录就有」当成 Free 的副题写回去了");
     [["管理页 js", bare(adminJs)], ["管理页 wxml", bareWxml(adminWxml)],
      ["我的 js", bare(read("pages/mine/mine.js"))],
      ["我的 wxml", bareWxml(read("pages/mine/mine.wxml"))]].forEach(([name, src]) => {

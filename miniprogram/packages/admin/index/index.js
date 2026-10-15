@@ -10,6 +10,7 @@ Page({
     logged: false,
     status: {},
     tiers: tiers.TIERS,
+    heads: [],
     compareRows: [],
     stats: { caps: 0, enabled: 0 },
 
@@ -37,6 +38,7 @@ Page({
     this.setData({
       logged: snap.logged,
       status: snap,
+      heads: tiers.TIERS,
       compareRows: entitlement.compareRows(snap),
       stats: admin.stats(),
       remoteReady: remote.configured(),
