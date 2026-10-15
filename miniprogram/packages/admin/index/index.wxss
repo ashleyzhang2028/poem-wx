@@ -1,4 +1,5 @@
 .grant {
+  margin-top: var(--sp-3);
   background: var(--surface);
 }
 
@@ -37,66 +38,52 @@
   color: var(--red);
 }
 
-.cap-group {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
-  margin: var(--sp-3) 0 var(--sp-1);
-}
-
-.cap {
+.compare-row {
   display: flex;
-
   align-items: center;
-  min-height: 64rpx;
-  padding: 10rpx 0;
+  padding: 20rpx 0;
   border-bottom: 1rpx solid var(--line-2);
 }
 
-.cap:last-child {
-  border-bottom: none;
+.compare-head {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
 }
 
-.cap-mark {
-  width: 44rpx;
-  flex: none;
+.compare-cap {
+  flex: 1 1 auto;
   font-size: var(--fs-body);
-
-  text-align: center;
-  line-height: 1.4;
+  color: var(--strong-text);
 }
 
-.cap-mark.on {
+.compare-tier {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6rpx;
+  flex: 0 0 96rpx;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+}
+
+.compare-note {
+  font-size: var(--fs-pinyin);
+  color: var(--green);
+  background: var(--green-soft);
+  border-radius: var(--radius-pill);
+  padding: 2rpx 12rpx;
+}
+
+.compare-mark {
+  font-size: var(--fs-body);
+}
+
+.compare-mark.on {
   color: var(--green);
 }
 
-.cap-mark.off {
+.compare-mark.off {
   color: var(--line);
-}
-
-.cap-name {
-  font-size: var(--fs-body);
-  color: var(--strong-text);
-  line-height: 1.4;
-  margin-left: var(--sp-2);
-  margin-right: var(--sp-2);
-}
-
-.cap-note {
-  padding-left: var(--sp-2);
-}
-
-.cap-name.dim {
-  color: var(--ink-3);
-}
-
-.cap-note {
-  flex: 1;
-  text-align: right;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  line-height: 1.4;
 }
 
 .acct {

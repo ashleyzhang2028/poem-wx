@@ -232,7 +232,7 @@
   },
   "admin": {
     "page": "packages/admin/index/index",
-    "title": "用户与权限",
+    "title": "用户权限",
     "back": true,
     "logged": true
   },

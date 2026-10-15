@@ -333,7 +333,7 @@ GET /api/count   →   200，正文是这一版镜像的接口表
 **环境 ≠ 服务**：`poem` 是**环境**名（`poem-d9g1bqeq978682c58` 那个前缀就是从它来的），
 `poem-wx` 才是**服务**名。这两格一个要环境、一个要服务，别互相填串。
 
-### 6.2 在小程序里配（一般不用做）
+### 6.2 换后端：改代码库，不走界面
 
 **两格的值构建期就注入了包里** —— 值存在密钥仓库 `wechat-ci.yml`
 （`CLOUD_ENV` / `CLOUD_SERVICE`），流水线把它交给 `build-data.js`，
@@ -344,27 +344,14 @@ GET /api/count   →   200，正文是这一版镜像的接口表
 少了它，`remote.js` 的 `require("./server")` 会让整个模块加载失败，
 主包每个页面都在 `onLoad` 之前就报错（Issue #175）。
 
-要临时换一个后端（调试、回滚、试别的部署）才走界面：
+**界面上没有配置入口** —— 这两个值是运维配置，普通用户既读不懂也改不动。
+要换一个后端（调试、回滚、试别的部署）就改 `miniprogram/utils/server.js` 里那两个值
+（`baseUrl` 同理：`utils/remote.js` 认它，两个都填时以 `baseUrl` 为准），
+重跑流水线出新的体验版。
 
-小程序 → **我的 → 用户与权限** → 拉到底「云调用（不用域名，也不用备案）」
-两张输入框，填上 6.1 的两个值，点「保存云调用配置」。
-
-这是唯一入口：那张卡**只有 admin/owner 看得到**，普通用户翻到那一页只有
-「我的授权」。「我的」页不放第二处入口 —— 两格的值构建期就注进包了，
-露出来只会是用户既读不懂也改不动的说法（`?focus=cloud` 仍认，只留那两栏）。
-
-⚠️ 这一页在**小程序自己**里头（`packages/admin/index/index`），不在 mp.weixin.qq.com 后台。
-微信公众平台那个 [`/wxamp/cloudservice/`](https://mp.weixin.qq.com/wxamp/cloudservice/) 是
-**云开发 / 云托管服务**的开通与配额页，没有这个表单 —— 指路指错了地方。
-
-**谁能写**：只有 admin/owner（运维配置，不该人人可动）。这套部署里这两格的值
-构建期就注进包了，正常用户碰不到。
-
-**优先级是「本机 → 包内」**：界面里填的那份存在**这台手机的本地存储**里
-（`store.KEYS.auth` → `auth.cloud`）；没填过就用构建期注入 `server.js` 的那份。
-在管理页填过之后要回包里那份，把两栏清空再保存。
-
-**`baseUrl` 留空，request 合法域名也空着** —— 两个都填时以 `baseUrl` 为准。
+⚠️ 换的是**代码库里的那份**，不是微信公众平台后台 ——
+mp.weixin.qq.com 那个 [`/wxamp/cloudservice/`](https://mp.weixin.qq.com/wxamp/cloudservice/)
+是**云开发 / 云托管服务**的开通与配额页，没有这个配置。
 
 ## 七、验
 
@@ -452,7 +439,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 同上 | 「公网访问」被关回去了 | 服务设置 → 基础信息里打开 |
 | curl 也不通 | 服务没起来 / 公网访问关着 | 看服务日志与实例数 |
 | **控制台「云端调试」里打 `/api/count` 回 404 `E_404 没有这个接口`** | 打到的不是这份镜像 —— 那个路径是控制台模板的占位接口，模板自己的代码也在回它 | 先确认服务部署的是本仓库那份镜像（§ 二，tag 要具体版本号）；部署好了之后 `/api/count` 回**接口清单**，清单与 `api/_lib/routes.js` 对得上才算这一版在应答 |
-| curl 通、真机不通 | 本机填过错的云调用两栏，或配置里还留着 `baseUrl` | `baseUrl` 优先于云调用，留空；本机那两栏清空即回到包里那份 |
+| curl 通、真机不通 | 包里的 `server.js` 填了错的云调用两栏，或还留着 `baseUrl` | `baseUrl` 优先于云调用，留空；核对 `server.js` 那两个值（6.2） |
 | 点登录弹 `errCode: -1 \| errMsg: Cloud API isn't enabled, please call ...` | 客户端没先 `wx.cloud.init` 就调 `wx.cloud.callContainer`（`utils/remote.js` 的 `cloudReady()` 补这一步，同一 env 只 init 一次） | 已在代码里修。若自己另写调用，先 `wx.cloud.init({ env })` 再 `callContainer`；一直回这句也说明小程序没开通云开发（§ 6.1） |
 | 点登录弹 `wx.cloud.init 没成功 … env not exists` | `env` 那一格不是云开发环境 ID，或这个小程序没开通云开发 | 同上一格：填**云开发**环境 ID，不是云托管那个数字环境 ID |
 | 点登录弹「这个运行环境没有云开发能力（wx.cloud 不在）」 | 开发者工具里没开通云开发能力，或真机这个 appid 没开云开发 | 工具里开通云开发面板；appid 侧确认已开通 |
@@ -460,9 +447,9 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 平台回 `env not exists` | `config.env` 填了云托管的数字环境 ID | 换成云开发环境 ID（§ 6.1） |
 | 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
 | **点登录回 `cloud.callContainer:fail invalid host`** | 平台拿 `X-WX-SERVICE` 找**可路由的后端**时找不到。最常见：只开了**云开发**（如 `cloud1-d8g78yu3h213f201e`），**云托管**里压根没建服务，而包里那格填的是示例名 `poem-wx`；其次是服务建在别的环境、或名字对不上 | 去**云托管 → 服务管理**确认那个服务存在、名字与服务名逐字相同（没建就按 § 二 建一个，本套部署叫 `poem-wx`）。`CLOUD_SERVICE` 是**服务名**、不是环境 ID；改完写进密钥仓库重跑 `main`。**别拿这个去查 `102002` 或域名备案** —— 三者不是同一件事 |
-| 管理页只剩「我的授权」，找不到云调用那两格 | 当前档位不是 admin/owner（能写的那两格只在管理页里） | 先按 § 八 发档位；云调用是运维配置，本就不该给所有用户 |
+| 界面上找不到云调用两栏 | 运维配置，界面上本就没有 | 改 `miniprogram/utils/server.js` 那两个值，或改密钥仓库变量重跑流水线（6.2） |
 | 未登录时点「微信登录」弹「还没接上同步服务器」 | 这个包没配同步服务器，`login()` 直接出声拒绝（不再静默判「已登录」） | 这个包的值构建期就注了，构建时没给 `CLOUD_ENV` / `CLOUD_SERVICE` —— 按 § 6.2 由部署方在管理页填两栏，或重跑流水线。没配时账号与进度只在这台手机上 |
-| 填完云调用，换台手机要重填 | **正常**（只在管理页**手动填过**时）：那份存在本机存储 | 不填就是用构建期注入包里那份，正常用户碰不到这两栏 |
+
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 上传体验版回 `20003 … appIdToAppuin failed` | 上传密钥不是这个 appid 名下的（密钥/appid 换过其一） | § 八点五：重新生成代码上传密钥 + 核对 appid + 重跑流水线。**不是** IP 白名单的问题 |
 | 上传体验版回 `checkIpInWhiteList Failed: invalid ip` | 密钥设了 IP 白名单，构建机出口 IP 不在里面 | 放行构建机出口 IP，或把密钥那栏的白名单留空 |
