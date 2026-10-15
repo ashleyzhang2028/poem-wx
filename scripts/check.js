@@ -5304,9 +5304,16 @@ function gapped(items, max) {
       " —— 真机上原生 button 的 width:100% 会盖过页面给的固定宽，把它撑成一行宽");
 
   const mineWxss = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxss"), "utf8");
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxml"), "utf8");
+  const mineSrc = fs.readFileSync(path.join(ROOT, "pages/mine/mine.js"), "utf8");
   const wrap = ruleOf(mineWxss, "avatar-wrap");
   const btn = ruleOf(mineWxss, "avatar-btn");
   const av = ruleOf(mineWxss, "avatar");
+  const fb = ruleOf(mineWxss, "avatar-fallback");
+  const avH = /[^-]height\s*:\s*([^;]+);/.exec(av || "");
+  const fbH = /[^-]height\s*:\s*([^;]+);/.exec(fb || "");
+  const avW = /[^-]width\s*:\s*([^;]+);/.exec(av || "");
+  const fbW = /[^-]width\s*:\s*([^;]+);/.exec(fb || "");
   ok("头像的壳自己定尺寸、当包含块、且把溢出裁进圆（.avatar-wrap）",
     !!wrap && /width\s*:\s*112rpx/.test(wrap) && /height\s*:\s*112rpx/.test(wrap) &&
       /overflow\s*:\s*hidden/.test(wrap) && /border-radius\s*:\s*50%/.test(wrap) &&
@@ -5317,12 +5324,19 @@ function gapped(items, max) {
       /width\s*:\s*100%/.test(btn) && /height\s*:\s*100%/.test(btn) &&
       !/[^-]width\s*:\s*112rpx/.test(btn),
     "button 又自己定死尺寸了 —— 它在真机上盖过页面样式表，看着像改了其实没改");
-  ok("头像本体的尺寸写字面量、且不写 height 百分比（真机上那条链会断）",
-    !!av && /position\s*:\s*absolute/.test(av) &&
-      /width\s*:\s*112rpx/.test(av) && /height\s*:\s*112rpx/.test(av) &&
-      !/[^-]height\s*:\s*100%/.test(av) && !/[^-]width\s*:\s*100%/.test(av),
-    "头像本体又回到「100% 尺寸」那一套 —— 原生 button 里 height:100% 解析不出来，" +
-      "图片会按自己的固有比例排成一根横条，就是那枚扁椭圆");
+  ok("头像与首字印同尺寸同形状，且尺寸写字面量（真机上百分比那条链会断）",
+    !!av && !!fb &&
+      /border-radius\s*:\s*50%/.test(av) && /border-radius\s*:\s*50%/.test(fb) &&
+      /position\s*:\s*absolute/.test(av) && /position\s*:\s*absolute/.test(fb) &&
+      !!avW && avW[1].trim() === "112rpx" && !!avH && avH[1].trim() === "112rpx" &&
+      !!fbW && fbW[1].trim() === "112rpx" && !!fbH && fbH[1].trim() === "112rpx",
+    "头像与首字印的尺寸 / 圆角对不齐 —— 两个人各写一套，换一张头像圆就变了形");
+  ok("没有头像时灰底与首字在同一个盒子里（不在原生 button 里画）",
+    /class="avatar-fallback"[^>]*wx:if="\{\{!avatarUrl\}\}"/.test(mineWxml) &&
+      /<button class="avatar-btn"[\s\S]{0,300}?<\/button>\s*<view class="avatar-btn" wx:else><\/view>/.test(mineWxml) &&
+      mineSrc.indexOf("avatarChar") >= 0,
+    "首字印又被塞回原生 button 里了 —— 真机上 button 里的盒模型跟页面样式表对不上，" +
+      "灰底会排成只能看见左侧一点的扁椭圆（Issue #194）");
 }
 
 {

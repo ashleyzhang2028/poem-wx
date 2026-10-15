@@ -7,11 +7,9 @@
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onAvatarChoose"
                 wx:if="{{logged}}">
           <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
-          <view class="avatar avatar-fallback" wx:else>{{avatarChar}}</view>
         </button>
-        <view class="avatar-btn" wx:else>
-          <view class="avatar avatar-fallback">{{avatarChar}}</view>
-        </view>
+        <view class="avatar-btn" wx:else></view>
+        <view class="avatar-fallback" wx:if="{{!avatarUrl}}">{{avatarChar}}</view>
       </view>
 
       <view class="identity-main">
