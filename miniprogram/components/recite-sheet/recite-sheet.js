@@ -26,6 +26,16 @@ const PINYIN_MODES = [
   { key: "all", label: "全文" }
 ];
 
+function sameIds(a, b) {
+  const x = a || [];
+  const y = b || [];
+  if (x.length !== y.length) return false;
+  for (let i = 0; i < x.length; i++) {
+    if (x[i].id !== y[i].id) return false;
+  }
+  return true;
+}
+
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
   if (!raw) return "";
@@ -51,7 +61,11 @@ Component({
       type: Array,
       value: [],
       observer(rows) {
-        if (this.data.open && rows && rows.length) this.setData({ queue: rows }, () => this.loadCurrent());
+        if (!this.data.open || !rows || !rows.length) return;
+        if (sameIds(rows, this.data.queue)) return;
+        const keep = this.current();
+        const index = keep ? Math.max(0, rows.findIndex((it) => it.id === keep.id)) : this.data.index;
+        this.setData({ queue: rows, index }, () => this.loadCurrent());
       }
     }
   },

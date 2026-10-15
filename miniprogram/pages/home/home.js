@@ -6,7 +6,7 @@ const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 
-const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", optional: "自选", pinned: "今日加背" };
+const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
 
 const REASON_CLS = { review: "amber", new: "blue", pinned: "gold" };
 
@@ -27,6 +27,36 @@ function cnDay(n) {
 function todayLabel() {
   const d = new Date();
   return CN_NUM[d.getMonth() + 1] + "月" + cnDay(d.getDate()) + "日 · " + WEEKDAYS[d.getDay()];
+}
+
+function scopeList(all, view, scope) {
+  if (!scope.random) return all.filter((p) => p.gr === view.grade && p.tm === view.term);
+  return S.poolForScope({
+    grade: view.grade,
+    term: view.term,
+    scope: view.scope,
+    allPoems: all
+  }).slice().sort((a, b) => (a.gr - b.gr) || (a.tm - b.tm));
+}
+
+function scopeLabel(scope) {
+  return scope.random ? scope.scopeName + "全部诗词" : "本年级本学期全部诗词";
+}
+
+function rowsOfScope(list, scope) {
+  const records = store.progress();
+  return list.map((p, i) => {
+    const rec = records[p.id] || null;
+    return {
+      id: p.id,
+      seq: i + 1,
+      title: p.t,
+      author: p.a,
+      dynasty: p.d,
+      place: scope.random ? S.gradeName(p.gr) + S.termName(p.tm) : "",
+      stage: S.isLearned(rec) ? S.stageName(rec) : "未学过"
+    };
+  });
 }
 
 function guestCatalog() {
@@ -80,6 +110,13 @@ Page({
     catalogLead: "",
     catalogMiss: "",
 
+    allRows: [],
+    allCount: 0,
+    allLabel: "",
+    allOpen: false,
+
+    sheetRows: [],
+
     todayLabel: "",
 
     stats: { today: 0, done: 0, left: 0 },
@@ -108,6 +145,7 @@ Page({
     const all = corpus.course();
 
     const view = { grade: settings.grade, term: settings.term, scope: settings.scope };
+    const scope = S.scopeOf(view.scope);
 
     const plan = S.generateDailyPlan({
       grade: view.grade,
@@ -120,11 +158,22 @@ Page({
       getRecord: store.getRecord
     });
 
-    const reads = logged ? store.reads("poems") : {};
+    const allList = scopeList(all, view, scope);
+    const allMode = this.data.allOpen || this.sheetSource === "all";
+    const allRows = allMode ? rowsOfScope(allList, scope) : [];
+
+    const reads = {};
+    const readOf = (id) => {
+      const meta = corpus.indexById(id);
+      const book = (meta && meta.b) || "poems";
+      if (!reads[book]) reads[book] = store.reads(book);
+      return !!reads[book][id];
+    };
+
     let done = 0;
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
-      const read = !!reads[it.poem.id];
+      const read = readOf(it.poem.id);
       if (read) done += 1;
       return {
         id: it.poem.id,
@@ -154,21 +203,45 @@ Page({
       total,
       percent: total ? Math.round((done / total) * 100) : 0,
       stats: { today: total, done, left: Math.max(0, total - done) },
+      allCount: allList.length,
+      allLabel: scopeLabel(scope),
+      allRows: this.data.allOpen ? allRows : [],
+      sheetRows: this.sheetSource === "all" ? allRows : rows,
       loading: false
     });
   },
 
-  onOpen(e) {
-    const id = e.currentTarget.dataset.id;
-    this.openSheet(id);
+  scopeRows() {
+    const settings = store.settings();
+    const view = { grade: settings.grade, term: settings.term, scope: settings.scope };
+    const scope = S.scopeOf(view.scope);
+    return rowsOfScope(scopeList(corpus.course(), view, scope), scope);
   },
 
-  openSheet(id) {
+  onOpen(e) {
+    this.openSheet(e.currentTarget.dataset.id, "plan");
+  },
+
+  onOpenAll(e) {
+    this.openSheet(e.currentTarget.dataset.id, "all");
+  },
+
+  openSheet(id, source) {
     gate.guard("背诵", () => {
       const sheet = this.selectComponent("#sheet");
-
-      if (sheet) sheet.open(this.data.plan, id);
+      if (!sheet) return;
+      this.sheetSource = source;
+      const rows = source === "all" ? this.scopeRows() : this.data.plan;
+      const patch = { sheetRows: rows };
+      if (source === "all") patch.allRows = rows;
+      this.setData(patch);
+      sheet.open(rows, id);
     });
+  },
+
+  onToggleAll() {
+    const open = !this.data.allOpen;
+    this.setData({ allOpen: open, allRows: open ? this.scopeRows() : [] });
   },
 
   onSheetOpen() {

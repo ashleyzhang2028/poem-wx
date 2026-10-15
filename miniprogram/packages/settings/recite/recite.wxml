@@ -69,7 +69,7 @@
 
   <view class="card">
 
-    <view class="card-title bar">背诵范围</view>
+    <view class="card-title bar" data-anchor="recite-scope">背诵范围</view>
 
     <radio-group class="opt-group inline cols-2" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
@@ -83,7 +83,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">每日首数</view>
+    <view class="card-title bar" data-anchor="recite-count">每日首数</view>
 
     <radio-group class="chip-group cols-4" bindchange="onCount">
       <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
@@ -94,7 +94,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">复习算法</view>
+    <view class="card-title bar" data-anchor="recite-algo">复习算法</view>
 
     <radio-group class="opt-group column" bindchange="onAlgo">
       <label class="opt-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"

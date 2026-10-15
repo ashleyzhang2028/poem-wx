@@ -106,7 +106,7 @@ view, text, button, input, textarea {
 }
 
 .empty {
-  padding: var(--sp-5) var(--sp-3) var(--sp-4);
+  padding: var(--sp-6) var(--sp-3) var(--sp-5);
   text-align: center;
 }
 
@@ -672,7 +672,7 @@ view, text, button, input, textarea {
 
 .lock-card {
   text-align: center;
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
   background: var(--surface);
   overflow: hidden;
   position: relative;
@@ -789,7 +789,7 @@ view, text, button, input, textarea {
 
 .foot {
   text-align: center;
-  padding: var(--sp-1) 0 var(--sp-4);
+  padding: var(--sp-1) 0 var(--sp-5);
 }
 
 .foot .hint {
@@ -1063,7 +1063,9 @@ view, text, button, input, textarea {
 }
 
 .poem-meta {
+  font-family: var(--font-poem);
   font-size: var(--fs-caption);
+  font-weight: 600;
   color: var(--ink-2);
 
   overflow: hidden;
@@ -1091,6 +1093,7 @@ view, text, button, input, textarea {
 }
 
 .poem-note-t {
+  font-family: var(--font-poem);
   font-size: var(--fs-caption);
   color: var(--ink-3);
   white-space: nowrap;
@@ -1196,7 +1199,7 @@ view, text, button, input, textarea {
 
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
-  font-family: var(--font-poem);
+  font-family: var(--font-poem-text);
 
   line-height: 1.95;
 }

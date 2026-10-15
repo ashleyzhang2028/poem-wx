@@ -203,8 +203,9 @@ function expandComponents(node, data, P) { return node; }
 
 function tabBarHtml(active, themeStyle) {
   const list = [
-    { text: "背诵", icon: "book" },
+    { text: "今日", icon: "book" },
     { text: "课外", icon: "stack" },
+    { text: "大会", icon: "flag" },
     { text: "搜索", icon: "search" },
     { text: "我的", icon: "person" }
   ];

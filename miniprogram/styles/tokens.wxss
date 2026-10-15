@@ -68,6 +68,9 @@ page {
   --font-poem: "Kuibu Serif", "Songti SC", "STSong", "STZhongsong", "Source Han Serif SC",
     "Source Han Serif CN", "Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB",
     "FangSong", serif;
+  --font-poem-text: "Kuibu Serif Text", "Songti SC", "STSong", "STZhongsong", "Source Han Serif SC",
+    "Source Han Serif CN", "Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB",
+    "FangSong", serif;
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", sans-serif;
 
@@ -103,8 +106,8 @@ page {
   --sp-2: calc(16rpx * var(--ui-scale));
   --sp-3: calc(24rpx * var(--ui-scale));
   --sp-4: calc(32rpx * var(--ui-scale));
-  --sp-4: calc(48rpx * var(--ui-scale));
-  --sp-5: calc(64rpx * var(--ui-scale));
+  --sp-5: calc(48rpx * var(--ui-scale));
+  --sp-6: calc(64rpx * var(--ui-scale));
   --page-x: calc(28rpx * var(--ui-scale));
 
   --h-btn: calc(96rpx * var(--ui-scale));
