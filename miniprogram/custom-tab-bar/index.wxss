@@ -141,3 +141,22 @@
   border-radius: 13rpx 13rpx 0 0;
 }
 
+
+.tab-ico-flag::before {
+  left: 17rpx;
+  top: 14rpx;
+  width: 3rpx;
+  height: 28rpx;
+  border-radius: 2rpx;
+}
+
+.tab-ico-flag::after {
+  left: 21rpx;
+  top: 19rpx;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border-top: 9rpx solid transparent;
+  border-bottom: 9rpx solid transparent;
+  border-left: 20rpx solid var(--ic);
+}

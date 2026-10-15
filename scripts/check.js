@@ -746,6 +746,25 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   ok("版式三件事只有一条入口（一行副标题里交代完）",
     (wxml.match(/onSettings/g) || []).length === 1
       && /class="row-sub"/.test(wxml));
+
+  ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
+    wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
+    "「我的」页还有大会那一行 —— 两处入口会漂");
+  ok("「背诵概况」那四行各进各的地方（范围 / 首数 / 算法各带一个 focus）",
+    ["onScope", "onDaily", "onAlgo"].every((h) => wxml.indexOf(h) >= 0 && js.indexOf(h) >= 0)
+      && ["focus=scope", "focus=count", "focus=algo"].every((q) => js.indexOf(q) >= 0),
+    "概况那三行不跳了，或者跳过去不落在那张卡上");
+  const overviewAt = wxml.indexOf('card-title bar">背诵概况');
+  const settingsAt = wxml.indexOf('card-title bar">设置');
+  ok("背诵进度收在「背诵概况」最后一行（学习卡里那一份已撤）",
+    overviewAt >= 0 && settingsAt > overviewAt
+      && (wxml.match(/bindtap="onProgress"/g) || []).length === 1
+      && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onAlgo"')
+      && wxml.indexOf('bindtap="onProgress"') < settingsAt,
+    "进度那一行还在下面那张卡里，或者概况里没有它");
+  ok("背诵设置页接得住这三个 focus（不然跳过去只落个页顶）",
+    /data-anchor="recite-(scope|count|algo)"/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.wxml"), "utf8"))
+      && /focus/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.js"), "utf8")));
 }
 
 const gateMod = require(path.join(ROOT, "utils", "gate.js"));
@@ -2077,6 +2096,45 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const appCfg = readJson(path.join(ROOT, "app.json"));
   ok("app.json 开启了自定义 tabBar", appCfg.tabBar && appCfg.tabBar.custom === true);
 
+  const barSrc = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
+  const barWxml = fs.readFileSync(path.join(tabRoot, "index.wxml"), "utf8");
+  const barWxss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
+
+  {
+    const items = (barSrc.match(/\{ pagePath: "([^"]+)", text: "([^"]+)", icon: "([a-z]+)"([^}]*)\}/g) || []);
+    ok("底栏五项（今日 / 课外 / 大会 / 搜索 / 我的）",
+      items.length === 5
+        && /\/pages\/home\/home", text: "今日", icon: "book"/.test(barSrc)
+        && /\/pages\/library\/library", text: "课外", icon: "stack"/.test(barSrc)
+        && /\/packages\/game\/index\/index", text: "大会", icon: "flag", noSwitch: true/.test(barSrc)
+        && /\/pages\/search\/search", text: "搜索", icon: "search"/.test(barSrc)
+        && /\/pages\/mine\/mine", text: "我的", icon: "person"/.test(barSrc),
+      "底栏这一串：" + (barSrc.match(/list: \[[\s\S]*?\]/) || [""])[0].slice(0, 300));
+    ok("「大会」那枚图标画出来了（不是漏了一个 tab-ico-flag）",
+      /\.tab-ico-flag::before\s*\{/.test(barWxss) && /\.tab-ico-flag::after\s*\{/.test(barWxss),
+      "flag 的两条笔画少了一条");
+    ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
+      /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
+      "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");
+    ok("底栏每一项都经 list 渲染（图标类名不是写死的）",
+      /tab-ico-\{\{item\.icon\}\}/.test(barWxml));
+  }
+
+  {
+    const syncs = {};
+    ["pages/home/home", "pages/library/library", "pages/search/search", "pages/mine/mine"].forEach((p) => {
+      const m = new RegExp("tabbar\\.sync\\(this, (\\d)\\)").exec(fs.readFileSync(path.join(ROOT, p + ".js"), "utf8"));
+      syncs[p] = m ? Number(m[1]) : -1;
+    });
+    const vals = Object.keys(syncs).map((k) => syncs[k]);
+    ok("四个 tab 页各调一次 tabbar.sync（序号互不相同）",
+      vals.every((v) => v >= 0) && new Set(vals).size === vals.length,
+      JSON.stringify(syncs));
+    ok("底栏序号与 list 里的位置对得上（大会插在中间，搜索与我的往后挪了一位）",
+      syncs["pages/home/home"] === 0 && syncs["pages/library/library"] === 1
+        && syncs["pages/search/search"] === 3 && syncs["pages/mine/mine"] === 4,
+      JSON.stringify(syncs) + " —— 少调或调错，切过去还亮着上一栏");
+  }
 }
 
 {
@@ -2370,7 +2428,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const recite = read("packages/settings/recite/recite.wxml");
     ok("「每日首数」这张卡还在",
-      /class="card-title bar">每日首数<\/view>/.test(recite));
+      /card-title[^>]*>每日首数<\/view>/.test(recite));
     const counts = /const DAILY_COUNTS = \[([^\]]*)\];/.exec(read("utils/scheduler.js"));
     const list = (counts ? counts[1] : "").split(",").map((t) => t.trim()).filter(Boolean);
     ok("四档是 3 / 5 / 10 / 20",
@@ -3102,7 +3160,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("首页「今日安排」卡里不再有那一行链接",
     !/hero-foot/.test(homeWxml) && homeWxml.indexOf("onSettings") > homeWxml.indexOf("empty"));
-  ok("背诵设置仍有去处（我的 → 背诵设置）",
+  ok("背诵设置仍有去处（我的 → 设置 → 背诵设置）",
     /onRecite/.test(read("pages/mine/mine.js"))
       && read("pages/mine/mine.wxml").indexOf("onRecite") >= 0);
 

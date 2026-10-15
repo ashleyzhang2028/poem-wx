@@ -53,7 +53,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 3);
+    tabbar.sync(this, 4);
     this.refresh();
   },
 
@@ -226,16 +226,24 @@ Page({
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
+  onScope() {
+    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=scope" });
+  },
+
+  onDaily() {
+    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=count" });
+  },
+
+  onAlgo() {
+    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=algo" });
+  },
+
   onReader() {
     wx.navigateTo({ url: "/packages/settings/reader/reader" });
   },
 
   onProgress() {
     wx.navigateTo({ url: "/packages/progress/index/index" });
-  },
-
-  onGame() {
-    wx.navigateTo({ url: "/packages/game/index/index" });
   },
 
   onAbout() {

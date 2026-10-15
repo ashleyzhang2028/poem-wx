@@ -57,38 +57,38 @@
       </view>
     </view>
     <view class="divider"></view>
-    <view class="kv">
-      <text class="kv-k">背诵范围</text>
-      <text class="kv-v">{{gradeName}} · {{scopeName}}</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onScope">
+      <view class="row-main">
+        <text class="row-title">背诵范围</text>
+        <text class="row-sub">{{gradeName}} · {{scopeName}}</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
-    <view class="kv">
-      <text class="kv-k">每日首数</text>
-      <text class="kv-v">{{dailyCount}} 首</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onDaily">
+      <view class="row-main">
+        <text class="row-title">每日首数</text>
+        <text class="row-sub">{{dailyCount}} 首</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
-    <view class="kv">
-      <text class="kv-k">复习算法</text>
-      <text class="kv-v">{{algoName}}</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAlgo">
+      <view class="row-main">
+        <text class="row-title">复习算法</text>
+        <text class="row-sub">{{algoName}}</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
-  </view>
-
-  <view class="card" wx:if="{{logged}}">
-    <view class="card-title bar">学习</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
-      <view class="row-icon">进</view>
       <view class="row-main">
         <text class="row-title">背诵进度</text>
         <text class="row-sub">七天排期 · 记忆阶段</text>
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onGame">
-      <view class="row-icon">令</view>
-      <view class="row-main">
-        <text class="row-title">古诗词大会</text>
-        <text class="row-sub">飞花令 · 题库 · 考试</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
+  </view>
+
+  <view class="card" wx:if="{{logged}}">
+    <view class="card-title bar">设置</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
       <view class="row-icon">背</view>
       <view class="row-main">
@@ -97,7 +97,6 @@
       </view>
       <text class="row-go">›</text>
     </view>
-
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
       <view class="row-icon">设</view>
       <view class="row-main">

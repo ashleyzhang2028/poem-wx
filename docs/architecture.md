@@ -83,7 +83,7 @@ miniprogram/
 │   ├── wire.js                      # 报文形状（本机 ↔ 服务端），见 § 二点五
 │   ├── remote.js                    # 后端契约（同步 / TTS / 管理）
 │   └── sync.js                      # 同步调度（启动 / 背完 / 手动）
-├── pages/                           # 主包：四个 tab + 列表 + 详情
+├── pages/                           # 主包：四个 tab + 列表 + 详情（底栏五项，见 design-system「底栏」）
 ├── packages/                        # 分包：设置 / 大会 / 进度 / 管理 / 作者索引
 │   └── <分包>/<页>/lib.js            # 只有本分包用的内核（出题 / 飞花令 / 管理数据层）
 └── data/                            # 由 scripts/build-data.js 生成，不入库
