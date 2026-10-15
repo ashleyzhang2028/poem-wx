@@ -10,6 +10,16 @@
     </view>
     <view class="hint hint-line">正在取正文…</view>
   </view>
+  <view class="card poem-card" wx:elif="{{loadFailed}}">
+    <view class="poem-head">
+      <text class="poem-title">{{title}}</text>
+    </view>
+    <view class="empty">
+      <text class="empty-mark">文</text>
+      <text class="empty-text">{{failText}}</text>
+      <button class="btn primary empty-btn" bindtap="onRetryText">重试</button>
+    </view>
+  </view>
   <view class="card poem-card" wx:else>
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>

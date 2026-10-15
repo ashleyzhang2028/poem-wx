@@ -6057,6 +6057,54 @@ function gapped(items, max) {
     /loadingText/.test(fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8")));
   ok("阅读页把「没接上服务器」与「这一篇取不到」分开说",
     /E_NO_SHARD_SERVICE/.test(readerSrc) && /E_NO_SHARDS/.test(readerSrc));
+
+  {
+    const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+    const failScreen = /wx:elif="\{\{loadFailed\}\}"/.test(readerWxml2)
+      && /bindtap="onRetryText"/.test(readerWxml2);
+    ok("取正文失败不留白等：「标题 + 一句实情 + 重试」那一屏在 WXML 里",
+      failScreen && /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*false/.test(readerSrc),
+      "失败只弹过 toast、停在加载态那一屏，用户看到的是「正在取正文」永远不散");
+
+    const failArm = /["']catch["']\]\(\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc)
+      || /catch\s*\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc);
+    ok("失败路径把加载态落回、并换成失败态（不是只出声）",
+      failArm && /loadingText:\s*false[\s\S]{0,80}?loadFailed:\s*true/.test(readerSrc),
+      "catch 里只 setData({loadingText:false})：屏幕回到空卡片，什么都没说");
+
+    {
+      global.Page = (o) => { opt = o; };
+      let opt = null;
+      const readerFile = path.join(ROOT, "pages", "reader", "reader.js");
+      delete require.cache[require.resolve(readerFile)];
+      require(readerFile);
+      const msg = opt.textFailMsg.bind(opt);
+      const cases = [
+        [{ errMsg: "cloud.callContainer:fail 102002" }, /超时/],
+        [{ errMsg: "cloud.callContainer:fail invalid host" }, /服务名/],
+        [{ code: "E_NO_SHARDS" }, /这个版本里没有课外正文/],
+        [{ code: "E_NO_SHARD_SERVICE" }, /没接上同步服务器/]
+      ];
+      const off = cases.filter(([e, re]) => !re.test(msg(e)));
+      ok("失败的四种因各有各的说法（超时 / 服务名 / 镜像没分片 / 没配服务器）",
+        off.length === 0,
+        "这几种落回了兜底那句：" + JSON.stringify(off.map(([e]) => msg(e))) +
+          " —— 四种因指向的下一步动作不同，兜底那句等于没说");
+    }
+  }
+
+  {
+    const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
+    ok("分片取回时补进倒排索引（取过的那几片下一次能按正文搜）",
+      /corpus\.onBucketReady\(/.test(tsSrc) && /postings/.test(tsSrc)
+        && /function\s+armShardWriter/.test(tsSrc),
+      "idx.json 在包外永远读不到，而分片取回来只进 bucket 缓存 —— " +
+        "全文检索永远停在「按篇名作者检索」");
+    ok("补索引写盘失败不牵连取正文（catch 里降级，不抛）",
+      /function\s+armShardWriter[\s\S]{0,400}?catch\s*\(e\)[\s\S]{0,120}?missing\s*=\s*true/.test(tsSrc),
+      "写 idx.json 抛出来会从 onBucketReady 冒进 ensureBucket 的 then 里，" +
+        "取分片成功却报失败");
+  }
 }
 
 {
