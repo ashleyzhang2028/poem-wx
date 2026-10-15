@@ -25,7 +25,6 @@ Page({
     stats: { learned: 0, mastered: 0, readCount: 0 },
 
     tierLabel: "Free",
-    tierSource: "",
 
     sfxVisible: false,
     syncReady: false,
@@ -38,11 +37,10 @@ Page({
     syncSub: "",
     fullTextOn: false,
 
-    caps: [],
-    lockedCount: 0,
 
     focusLogin: false,
-    adminVisible: false
+
+    grantLead: false
   },
 
   onLoad(query) {
@@ -83,7 +81,6 @@ Page({
       dailyCount: settings.dailyCount,
       stats,
       tierLabel: e.label,
-      tierSource: e.source,
       sfxVisible: sfx.readiness().visible,
       fullTextOn: fr.usable,
       syncReady: sy.ready,
@@ -92,11 +89,20 @@ Page({
       syncAllowed: E.can("sync"),
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
-      adminVisible: E.can("admin"),
 
-      caps: E.matrix({ signedIn: !!profile.logged }),
-      lockedCount: E.matrix({ signedIn: !!profile.logged }).filter((c) => !c.ok).length
+      grantLead: this.grantLead(profile)
     });
+  },
+
+  grantLead(profile) {
+    if (!profile.logged) return false;
+    if (profile.identityAsked) return false;
+    return !profile.avatarLocal && this.defaultNick(profile);
+  },
+
+  defaultNick(profile) {
+    const nick = profile.nickname || "";
+    return !nick || nick === "我的古诗词";
   },
 
   onLogin() {
@@ -201,7 +207,7 @@ Page({
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;
-    store.saveProfile({ avatarLocal: url });
+    store.saveProfile({ avatarLocal: url, identityAsked: true });
     this.refresh();
   },
 
@@ -211,6 +217,17 @@ Page({
     store.saveProfile({ nickname });
 
     sync.markDirty();
+    this.refresh();
+    this.settleGrant(nickname);
+  },
+
+  settleGrant(nickname) {
+    if (!nickname || nickname === "我的古诗词") return;
+    store.saveProfile({ identityAsked: true });
+  },
+
+  onGrantLeadSkip() {
+    store.saveProfile({ identityAsked: true });
     this.refresh();
   },
 
@@ -248,10 +265,6 @@ Page({
 
   onAbout() {
     wx.navigateTo({ url: "/packages/settings/about/about" });
-  },
-
-  onPlans() {
-    wx.navigateTo({ url: "/packages/settings/plans/plans" });
   },
 
   onLoginGate() {

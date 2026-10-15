@@ -16,7 +16,7 @@ const CAPS = [
   { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "login" },
   { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
 
-  { key: "sync", name: "同步进度", desc: "登录即得；换手机进度一字不少", tier: "login" },
+  { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "login" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
@@ -30,10 +30,6 @@ const CAPS = [
 const CAP_KEYS = CAPS.map((c) => c.key);
 
 const TIER_RANK = { free: 1, login: 2, pro: 3, max: 4 };
-
-function rankOf(tier) {
-  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
-}
 
 function tierOf(profile) {
   const server = auth.serverTier();
@@ -139,6 +135,25 @@ function hint(key, ctx) {
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
 }
 
+function rankOf(tier) {
+  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
+}
+
+function compareRows(snap) {
+  const s = snap || snapshot();
+  const now = s.logged ? s.tier : "";
+  return CAPS.map((c) => ({
+    cap: c.key,
+    name: c.name,
+    cells: tiers.TIERS.map((t) => ({
+      tier: t.key,
+      label: t.name,
+      now: t.key === now,
+      on: rankOf(c.tier) <= rankOf(t.key)
+    }))
+  }));
+}
+
 function snapshot() {
   const s = status();
   const out = {
@@ -186,17 +201,6 @@ function algoAllowed(key) {
 const GUEST_GRADE = 1;
 
 const CAN_GUEST = ["home.browse"];
-
-const ORDER = [
-  { key: "home.browse", cap: "home.browse", name: "首页浏览" },
-  { key: "daily", cap: "daily", name: "每日背诵" },
-  { key: "library", cap: "library", name: "课外阅读" },
-  { key: "pinyin", cap: "pinyin", name: "注音辅助" },
-  { key: "ebbinghaus", cap: "ebbinghaus", name: "艾宾浩斯" },
-  { key: "leitner", cap: "leitner", name: "莱特纳盒" },
-  { key: "speak", cap: "speak", name: "语音朗读" },
-  { key: "export", cap: "export", name: "进度导出" }
-];
 
 function signedIn() {
   return auth.logged();
@@ -263,13 +267,6 @@ function block(name, opt) {
   return false;
 }
 
-function matrix(ctx) {
-  return ORDER.map((row) => {
-    const r = decide(row.key, ctx);
-    return { cap: row.cap, name: row.name, ok: r.ok, hint: hint(row.key, ctx) };
-  });
-}
-
 function guestScope() {
   return { grade: GUEST_GRADE, term: 1, scope: "term", readOnly: true, title: "一年级诗词" };
 }
@@ -277,6 +274,7 @@ function guestScope() {
 module.exports = {
   CAPS,
   CAP_KEYS,
+  compareRows,
   TIER_RANK,
   rankOf,
   tierOf,
@@ -293,12 +291,10 @@ module.exports = {
 
   GUEST_GRADE,
   CAN_GUEST,
-  ORDER,
   signedIn,
   decide,
   capName,
   cap,
   block,
-  matrix,
   guestScope
 };

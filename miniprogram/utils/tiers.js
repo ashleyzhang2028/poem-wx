@@ -1,7 +1,7 @@
 const TIERS = [
-  { key: "free", name: "Free", sub: "微信登录即得", rank: 1 },
-  { key: "pro", name: "Pro", sub: "", rank: 2 },
-  { key: "max", name: "Max", sub: "", rank: 3 }
+  { key: "free", name: "Free", rank: 1 },
+  { key: "pro", name: "Pro", rank: 2 },
+  { key: "max", name: "Max", rank: 3 }
 ];
 
 const DEFAULT_TIER = "free";

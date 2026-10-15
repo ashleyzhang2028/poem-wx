@@ -232,7 +232,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 > 「我现在是微信小程序项目，不是之前的 web 应用，需要修改，同步功能只要用户登录
 > 就全部提供，确保用户数据不丢失，背诵进度换设备也能得到。请重新设计」
 
-所以小程序端的能力表里，`sync` 从 `pro` 改成了 **`login`**（登录即得，不看档位）。
+所以小程序端的能力表里，`sync` 从 `pro` 改成了 **`login`**（登录就有，不看档位）。
 **服务端那道闸要一起放开**：`syncTierGate` 改成只判「有没有会话」，
 不再判 `gameAllowed(cfg, tier, "sync.multiDevice")`。
 

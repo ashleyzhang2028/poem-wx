@@ -56,7 +56,6 @@ function guestCatalog() {
       : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
         + "再在开发者工具里点「编译」（不是「刷新」）",
     stats: { today: 0, done: 0, left: 0 },
-    todoCount: 0,
     loading: false
   };
 }
@@ -84,8 +83,6 @@ Page({
     todayLabel: "",
 
     stats: { today: 0, done: 0, left: 0 },
-
-    todoCount: 0,
 
     loading: true
   },
@@ -141,7 +138,6 @@ Page({
 
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
-        reviewed: !!(rec && rec.learned),
         read
       };
     });
@@ -158,8 +154,6 @@ Page({
       total,
       percent: total ? Math.round((done / total) * 100) : 0,
       stats: { today: total, done, left: Math.max(0, total - done) },
-
-      todoCount: rows.filter((r) => !r.reviewed).length,
       loading: false
     });
   },
@@ -167,12 +161,6 @@ Page({
   onOpen(e) {
     const id = e.currentTarget.dataset.id;
     this.openSheet(id);
-  },
-
-  onStart() {
-    const first = this.data.plan.find((r) => !r.reviewed) || this.data.plan[0];
-    if (!first) return;
-    this.openSheet(first.id);
   },
 
   openSheet(id) {
@@ -212,11 +200,6 @@ Page({
 
   onLogin() {
     wx.navigateTo({ url: "/pages/mine/mine?login=1" });
-  },
-
-  onBrowseAll() {
-    if (!gate.guard("全部课内诗词")) return;
-    wx.navigateTo({ url: "/pages/list/list?book=poems" });
   },
 
   onPullDownRefresh() {

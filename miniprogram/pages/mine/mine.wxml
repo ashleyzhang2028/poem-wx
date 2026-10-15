@@ -31,6 +31,11 @@
       <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
     </view>
 
+    <view class="grant-lead" wx:elif="{{grantLead}}">
+      <view class="grant-lead-text">头像与昵称用微信的：点头像挑微信头像，点名字那一格确认微信昵称</view>
+      <button class="btn ghost mini" bindtap="onGrantLeadSkip">先不用</button>
+    </view>
+
     <view class="login-row" wx:if="{{!logged}}">
       <button class="btn primary block" bindtap="onLogin">登录</button>
     </view>
@@ -125,21 +130,6 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{logged}}">
-    <view class="card-title bar">能力</view>
-    <view class="cap-row" wx:for="{{caps}}" wx:key="cap">
-      <text class="cap-name">{{item.name}}</text>
-      <text class="cap-state {{item.ok ? 'on' : 'off'}}">{{item.hint}}</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onPlans">
-      <view class="row-main">
-        <text class="row-title">权限说明</text>
-        <text class="row-sub">{{lockedCount ? lockedCount + ' 项未解锁' : '全部可用'}} · 逐条对照</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-  </view>
-
   <view class="card">
     <view class="card-title bar">数据与账号</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">
@@ -158,8 +148,8 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{logged}}">
       <view class="row-icon">权</view>
       <view class="row-main">
-        <text class="row-title">用户与权限</text>
-        <text class="row-sub">档位 · 能力</text>
+        <text class="row-title">用户权限</text>
+        <text class="row-sub">档位 · 权限对比</text>
       </view>
       <text class="row-go">›</text>
     </view>

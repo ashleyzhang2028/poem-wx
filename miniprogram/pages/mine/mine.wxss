@@ -14,6 +14,23 @@
   align-items: center;
 }
 
+.grant-lead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1rpx solid var(--line-2);
+}
+
+.grant-lead-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  line-height: var(--lh-loose);
+}
+
 .avatar-wrap {
   position: relative;
   width: 112rpx;
@@ -135,27 +152,3 @@
   color: var(--red);
 }
 
-.cap-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.cap-name {
-  font-size: var(--fs-body);
-  color: var(--ink);
-}
-
-.cap-state {
-  font-size: var(--fs-caption);
-}
-
-.cap-state.on {
-  color: var(--green);
-}
-
-.cap-state.off {
-  color: var(--amber);
-}

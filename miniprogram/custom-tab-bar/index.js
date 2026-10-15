@@ -1,4 +1,7 @@
 const theme = require("../utils/theme");
+const gate = require("../utils/gate");
+
+const GUEST_TAB = "/pages/mine/mine";
 
 Component({
   data: {
@@ -8,9 +11,9 @@ Component({
     themeStyle: "",
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: "book" },
-      { pagePath: "/pages/library/library", text: "课外", icon: "stack" },
+      { pagePath: "/pages/library/library", text: "课外", icon: "stack", login: true },
       { pagePath: "/packages/game/index/index", text: "大会", icon: "flag", noSwitch: true },
-      { pagePath: "/pages/search/search", text: "搜索", icon: "search" },
+      { pagePath: "/pages/search/search", text: "搜索", icon: "search", login: true },
       { pagePath: "/pages/mine/mine", text: "我的", icon: "person" }
     ]
   },
@@ -35,6 +38,10 @@ Component({
       if (i === this.data.active) return;
       if (item.noSwitch) {
         wx.navigateTo({ url: item.pagePath });
+        return;
+      }
+      if (item.login && !gate.logged()) {
+        wx.switchTab({ url: GUEST_TAB });
         return;
       }
       wx.switchTab({ url: item.pagePath });

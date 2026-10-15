@@ -678,7 +678,7 @@ function asMember() {
 asGuest();
 
 ["daily", "library", "pinyin", "ebbinghaus", "speak", "leitner", "export"].forEach((k) => {
-  ok("能力表含 " + k, E.ORDER.some((r) => r.key === k && r.cap === k && !!r.name));
+  ok("能力表含 " + k, E.CAP_KEYS.indexOf(k) >= 0 && !!E.capName(k));
 });
 
 function asTier(t) {
@@ -791,17 +791,22 @@ Object.keys(WEB_TIER).forEach((k) => {
 });
 
 {
-  const page = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
-  const listed = [];
-  const blocks = page.match(/keys:\s*\[[^\]]*\]/g) || [];
-  blocks.forEach((b) => {
-    (b.match(/"(\w+)"/g) || []).forEach((k) => listed.push(k.replace(/"/g, "")));
-  });
-  const missing = E.CAP_KEYS.filter((k) => listed.indexOf(k) < 0);
-  ok("管理页把每条能力都摆出来", missing.length === 0, "漏了 " + missing.join(", "));
-
   const wxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
-  ok("管理页渲染能力分组", wxml.indexOf("grp.rows") >= 0 && wxml.indexOf("groups") >= 0);
+  const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
+
+  ok("权限对比表按三档渲染（列入列头、行铺满能力表，都不是写死的）",
+    wxml.indexOf("compareRows") >= 0 && wxml.indexOf("col.now") >= 0
+      && wxml.indexOf("{{head.name}}") >= 0 && js.indexOf("heads: tiers.TIERS") >= 0
+      && js.indexOf("entitlement.compareRows(") >= 0
+      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
+    "列头写死、或只挑几项列出来，都会跟档位表与能力表走散");
+  ok("对比表只有档位那一档分组（不再按 tier 另起「登录后」这类分组）",
+    entSys.indexOf("GROUP_RULES") < 0 && wxml.indexOf("groupFirst") < 0,
+    "多出来的一层分组说不动用户：对比以登录为前提");
+  ok("当前档位列带「现在」（用户只认自己那一列）",
+    /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("col.now") >= 0,
+    "没有「现在」这枚标记时，用户看不出哪一列是自己");
   ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
 
@@ -936,8 +941,10 @@ const GATED = {
     adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
   ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
-  ok("管理页把每条能力都摆出来", E.CAP_KEYS.every((k) => adminJs.indexOf('"' + k + '"') >= 0),
-    E.CAP_KEYS.filter((k) => adminJs.indexOf('"' + k + '"') < 0).join(", "));
+  ok("对比表的每一格由能力表的档位算出来（不写死）",
+    /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
+      fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
+    "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
@@ -1748,11 +1755,13 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
-  ok("后端地址有配置入口（只在管理页，界面上不再有第二处）",
-    adminWxml.indexOf("onSaveBaseUrl") >= 0 && adminJs.indexOf("onSaveBaseUrl") >= 0
+  ok("界面上不留后端地址与云调用两栏（值只在代码库里配）",
+    adminWxml.indexOf("onSaveBaseUrl") < 0 && adminJs.indexOf("onSaveBaseUrl") < 0
+      && adminWxml.indexOf("cloudEnv") < 0 && adminJs.indexOf("onSaveCloud") < 0
+      && adminWxml.indexOf("同步服务器") < 0
       && mineJs.indexOf("onServer") < 0,
-    "「我的 → 同步服务器」那一行是运维参数，普通用户既看不懂也改不了 —— " +
-      "入口只留管理页；两格的值构建期从密钥仓库注入，用户不必填");
+    "两栏的值构建期就注进包里，露出来只会是用户既读不懂也改不动的说法 —— " +
+      "要临时换后端就改代码库里的 miniprogram/utils/server.js，不走界面");
 
   ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
   ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
@@ -1773,7 +1782,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
 
   const capSync = E.CAPS.find((c) => c.key === "sync");
-  ok("云端同步在能力表里且是登录即得", !!capSync && capSync.tier === "login",
+  ok("云端同步在能力表里且不看档位", !!capSync && capSync.tier === "login",
     capSync ? "当前 tier=" + capSync.tier : "能力不存在");
   ok("界面里不再留「要 Pro 才能同步」的说法",
     mineJs.indexOf("要 Pro 起才能跨设备同步") < 0 && mineJs.indexOf("跨设备同步要 Pro 起") < 0);
@@ -2023,11 +2032,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("首页行尾包了共用的槽", (homeWxml.match(/class="row-end"/g) || []).length >= 2);
   ok("「登录」胶囊与完成勾都在槽里",
-    /<view class="row-end"><text class="row-lock">登录<\/text><\/view>/.test(homeWxml.replace(/\s+/g, " ")
-      .replace(/> </g, "><")) || /row-end"[^>]*>\s*<text class="row-lock"/.test(homeWxml));
+    /row-end"[^>]*>\s*<text class="row-lock"/.test(homeWxml)
+      && /row-end"[^>]*>\s*<text class="row-state/.test(homeWxml));
+  ok("未登录目录行也走 row-lock 胶囊（不是一行裸字）",
+    homeWxml.indexOf('class="row-lock"') >= 0);
   const slot = /\.row-end\s*\{([^}]*)\}/.exec(homeWxss);
   ok("槽有固定宽度", !!slot && /width\s*:\s*\d+rpx/.test(slot[1]), slot && slot[1].replace(/\s+/g, " "));
-  ok("槽宽不小于「登录」胶囊的实际宽度（88rpx 两个字 + 内边距）",
+  ok("槽宽不小于最宽那颗胶囊的实际宽度（88rpx 两个字 + 内边距）",
     !!slot && Number((/width\s*:\s*(\d+)rpx/.exec(slot[1]) || [])[1] || 0) >= 88);
 }
 
@@ -2135,6 +2146,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && syncs["pages/search/search"] === 3 && syncs["pages/mine/mine"] === 4,
       JSON.stringify(syncs) + " —— 少调或调错，切过去还亮着上一栏");
   }
+  ok("课外 / 搜索标了要登录（游客点了不进门，直接去「我的」）",
+    /课外[^}]*login:\s*true/.test(barSrc) && /搜索[^}]*login:\s*true/.test(barSrc),
+    "两项没标 login —— 游客点进去还是一屏只有一个按钮的门禁页");
+  ok("游客点了这两栏切到「我的」（不是 render 一张 lock-card）",
+    /gate\.logged\(\)/.test(barSrc) && /switchTab\(\{\s*url:\s*GUEST_TAB\s*\}/.test(barSrc),
+    "没查登录态、或没有跳到「我的」的那一跳");
 }
 
 {
@@ -2756,8 +2773,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /onOpen[\s\S]{0,400}?openSheet\(/.test(homeJs)
       && !/onOpen[\s\S]{0,400}?pages\/reader\/reader/.test(homeJs),
     "onOpen 里还在跳详情页");
-  ok("「开始背」也走弹层（同一件事，不该两条路）",
-    /onStart[\s\S]{0,300}?openSheet\(/.test(homeJs));
+  ok("首页不再有第二个大按钮（「开始背」撤了，只留「加背」卡里那一套）",
+    !/onStart/.test(homeWxml) && !/onBrowseAll/.test(homeWxml),
+    "hero 区还挂着 onStart / onBrowseAll —— 一屏里两个填黑的大按钮");
+  ok("点篇目仍走弹层（同一件事，不该两条路）",
+    /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id) {"));
   ok("弹层由首页把门禁，组件自己不查",
     /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
@@ -2765,6 +2785,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
+  ok("open 时 queue 换新数组不会把弹层关掉（首页 refresh 会先把 plan 置空）",
+    /observer\(rows\)[\s\S]{0,200}rows && rows\.length/.test(sheetJs),
+    "observer 没判空 —— 点一篇 → markRead → refresh → plan 置空 → 弹层当场闪退");
+  ok("open 时把 queue 落到组件自己的 data 上（不依赖父层那一批 setData 的先后）",
+    /setData\(\{\s*open:\s*true,\s*index:\s*idx,\s*queue:\s*list\s*\}/.test(sheetJs),
+    "open() 没写 queue —— 首帧 current() 读的是上一批数据");
   ok("弹层是整屏浮层（fixed）", !!rootBody && /position\s*:\s*fixed/.test(rootBody[1]));
   ok("弹层靠底（从下面推上来，不是居中的对话框）",
     !!rootBody && /align-items\s*:\s*flex-end/.test(rootBody[1]));
@@ -3087,6 +3113,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   {
+    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    const mineWxml8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+    ok("选完头像即视为「授权过」，引导条同一轮收掉（Issue #194）",
+      /store\.saveProfile\(\{\s*avatarLocal:\s*url,\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8));
+    ok("引导条只挂在登录且没授权过那一态上（grantLead）",
+      /class="grant-lead"\s+wx:elif="\{\{grantLead\}\}"/.test(mineWxml8)
+        && /grantLead:\s*this\.grantLead\(profile\)/.test(mineSrc8));
+    ok("「先不用」把授权这件事一次问清，不再反复弹（identityAsked）",
+      /store\.saveProfile\(\{\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8)
+        && /grantLead\(profile\)[\s\S]{0,300}?profile\.identityAsked/.test(mineSrc8));
+    ok("引导条判据是「没选过头像且昵称还是默认值」，不是别的",
+      /grantLead\(profile\)[\s\S]{0,400}?!profile\.avatarLocal/.test(mineSrc8)
+        && /nick === "我的古诗词"/.test(mineSrc8));
+  }
+
+  {
     const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-login-server.md"), "utf8");
     ok("服务端要加的两行白名单写进了文档",
       doc.indexOf("settings:v1") >= 0 && doc.indexOf("profile:v1") >= 0);
@@ -3265,11 +3307,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(bareWxml(adminWxml)),
       "副题那一行还在，或者档名换写法了");
 
-    ok("Pro / Max 的副题留空（不写一句重复的来源）",
-      tiersMod.tierOf("pro").sub === "" && tiersMod.tierOf("max").sub === "",
-      "又把来源写回副题里了");
-    ok("Free 的副题还在（登录即得要说得清）",
-      /微信登录即得/.test(tiersMod.tierOf("free").sub));
+    ok("档位副题整条撤掉（对比以登录为前提，来源不必再说一遍）",
+      tiersMod.TIER_KEYS.every((k) => tiersMod.tierOf(k).sub === undefined),
+      "又把「登录就有」当成 Free 的副题写回去了");
     [["管理页 js", bare(adminJs)], ["管理页 wxml", bareWxml(adminWxml)],
      ["我的 js", bare(read("pages/mine/mine.js"))],
      ["我的 wxml", bareWxml(read("pages/mine/mine.wxml"))]].forEach(([name, src]) => {
@@ -3299,12 +3339,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
   }
 
-  ok("主按钮的字按「还有没有没背过的」切（todoCount 三元）",
-    /todoCount/.test(homeJs)
-      && /\{\{[^}]*todoCount[^}]*\?[^}]*:[^}]*\}\}/.test(homeWxml));
-  ok("「开始背」挑的是第一首**没背过的**（不是第一首）",
-    /find\(\(r\) => !r\.reviewed\)/.test(homeJs),
-    "用的还是 read，与「背过」是两件事");
+  ok("已背那一侧不再是重色（只压一档字重，不换强调色）",
+    /row-state\.on\s*\{([^}]*)\}/.test(homeWxss)
+      && !/var\(--green\)/.test((/\.row-state\.on\s*\{([^}]*)\}/.exec(homeWxss) || [])[1] || ""),
+    "已背又把 --green 拿回来了 —— 用户说颜色太重");
 }
 
 {
@@ -4263,15 +4301,11 @@ function gapped(items, max) {
     ).then(() => { global.wx = savedWx; });
   }
 
-  const adminSrc = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
-  const adminWxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
-  ok("管理页能在界面上配云调用（env + service 两栏都在）",
-    /cloudEnv/.test(adminWxml) && /cloudService/.test(adminWxml) && /onSaveCloud/.test(adminWxml),
-    "只能改代码配云调用的话，这条路就落不到用户手上");
-  ok("云调用两栏缺一个就不许存（存下去只会得到 env not exists）",
-    /if\s*\(!env\s*\|\|\s*!service\)/.test(adminSrc),
-    "允许只填一栏：平台那边回 env not exists / service not found，" +
-      "看着像服务没部署，其实是少了一栏");
+  const adminSrcForCloud = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const remoteSrc2 = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  ok("云调用两栏仍是构建产物（值由 build-data.js 从环境变量写进 server.js，不走界面）",
+    /function packedCloud\(\)/.test(remoteSrc2) && !/cloudEnv/.test(adminSrcForCloud),
+    "界面上一填，这两栏就成了每个用户手里的变量 —— 而它是部署方的配置");
 
   {
     const setup = fs.readFileSync(path.join(path.dirname(__dirname), "docs", "wx-cloud-setup.md"), "utf8");
@@ -4300,10 +4334,9 @@ function gapped(items, max) {
     "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
       "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
       "一次就能看出「包里的 env 不是我这个小程序的那个」");
-  ok("云开发环境 ID 填成云托管那个时当场说清（两个是不同的环境）",
-    /\^\\d\+-\\d\+-\\d\+\$/.test(adminSrc) && /env not exists/.test(adminSrc),
-    "不提醒的话，人会拿云托管的环境 ID 去填 `env`，然后在「服务明明部署了」" +
-      "与「调不通」之间来回");
+  ok("云调用失败时说的话分得清 102002 与 env not exists",
+    /102002/.test(remoteSrc) && /env not exists/.test(remoteSrc),
+    "两句话一样时，人不知道该去调最小实例数还是去核对环境 ID");
 
   {
     const mineSrc = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
@@ -5056,11 +5089,11 @@ function gapped(items, max) {
     const doc = fs.readFileSync(path.join(repo4, "docs", "wx-cloud-setup.md"), "utf8");
     const arch = fs.readFileSync(path.join(repo4, "docs", "architecture.md"), "utf8");
 
-    ok("文档写清了「云调用那两格只有 admin/owner 看得到」",
-      /(admin|owner)/.test(doc) && /(普通用户|Free|free)/.test(doc) &&
-        /云调用/.test(doc),
-      "只写「我的 → 用户与权限 → 拉到底」会被读成「所有用户都能填」—— " +
-        "而那张卡在管理页里，普通用户翻到那一页只有「我的授权」。");
+    ok("文档写清了「云调用两格是运维配置，界面上没有」",
+      /运维配置/.test(doc) && /(普通用户|free|Free)/.test(doc) &&
+        /界面上[\s\S]{0,30}没有|没有配置入口/.test(doc),
+      "不写清这一点，读的人会去「我的 → 用户权限」里翻那两栏 —— " +
+        "而那是运维配置，界面上一个输入框都没有（Issue #198）");
 
     const svcRow = /\|\s*`X-WX-SERVICE`\s*\|[^\n]*?poem-wx/.test(doc);
     ok("文档 § 6.1 的服务名举例就是当前部署的名字（不是 poem-api）",
@@ -5074,11 +5107,10 @@ function gapped(items, max) {
       "§ 6.1 只给一个名字不写「以实际为准」，人会把举例当标准值 —— " +
         "换个人建服务叫别的名字，就照着文档抄错");
 
-    ok("架构文档也说清了那两格归 admin、且是本机存储",
-      /用户与权限[\s\S]{0,200}(admin|owner)/.test(arch) &&
-        /本机/.test(arch),
-      "architecture.md 只说「填两栏」，没交代谁能填、值在哪 —— " +
-        "读的人会以为那是个平台配置项");
+    ok("架构文档也说清了那格在代码库里、不在界面上",
+      /server\.js/.test(arch) && /界面上[\s\S]{0,40}没有|不在界面上/.test(arch),
+      "architecture.md 没交代值在哪、谁能改 —— 读的人会去界面上找那两栏，" +
+        "而那是运维配置，本就不该给普通用户");
   }
 }
 
