@@ -77,7 +77,7 @@
 
 .identity-input {
   display: block;
-  width: 100%;
+  width: 320rpx;
   height: calc(46rpx * var(--ui-scale));
   min-height: 0;
   padding: 0;
@@ -85,7 +85,6 @@
   font-weight: 700;
   color: var(--ink);
   letter-spacing: var(--ls-title);
-  border-bottom: 1rpx dashed var(--line-strong);
   border-radius: 0;
 }
 

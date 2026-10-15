@@ -141,7 +141,7 @@ Page({
   onOpen(e) {
     const id = e.currentTarget.dataset.id;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +
-      "&from=" + encodeURIComponent(this.data.author);
+      "&mode=browse&from=" + encodeURIComponent(this.data.author);
     wx.navigateTo({ url: url });
   },
 

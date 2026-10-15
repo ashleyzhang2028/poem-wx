@@ -360,7 +360,7 @@ view, text, button, input, textarea {
 .search-icon {
   color: var(--ink-3);
   font-size: var(--fs-body);
-  margin-right: 12rpx;
+  margin-right: 4rpx;
 }
 
 .search input {

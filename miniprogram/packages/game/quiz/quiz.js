@@ -166,6 +166,6 @@ Page({
   onOpen(e) {
     const q = this.data.questions[this.data.index] || {};
     if (!q.id) return;
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(q.id) });
+    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(q.id) + "&mode=browse" });
   }
 });

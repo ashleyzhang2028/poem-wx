@@ -80,7 +80,7 @@ Component({
     },
 
     onOpen(e) {
-      wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) });
+      wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) + "&mode=browse" });
     },
 
     toggle(id) {

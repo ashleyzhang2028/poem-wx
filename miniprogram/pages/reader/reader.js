@@ -73,6 +73,8 @@ Page({
     hint: "",
     results: RESULTS,
 
+    reciteMode: false,
+
     dailyOn: false,
 
     locked: true,
@@ -83,11 +85,18 @@ Page({
   },
 
   onLoad(query) {
-    this.setData({ id: query.id || "", from: query.from || "" });
+    this.setData({
+      id: query.id || "",
+      from: query.from || "",
+      reciteMode: query.mode === "recite"
+    });
   },
 
   onShow() {
     theme.apply(this);
+    if (!this.data.reciteMode) {
+      this.setData({ hint: "" });
+    }
     if (!gate.logged()) {
 
       this.setData({
@@ -264,6 +273,7 @@ Page({
   },
 
   onResult(e) {
+    if (!this.data.reciteMode) return;
 
     if (!entitlement.can("daily")) {
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
@@ -299,7 +309,7 @@ Page({
     const idx = list.findIndex((p) => p.id === this.data.id);
     for (let i = idx + 1; i < list.length; i++) {
       if (!recs[list[i].id]) {
-        wx.redirectTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(list[i].id) });
+        wx.redirectTo({ url: this.readerUrl(list[i].id) });
         return;
       }
     }
@@ -314,9 +324,15 @@ Page({
       return;
     }
     wx.redirectTo({
-      url: "/pages/reader/reader?id=" + encodeURIComponent(next) +
-        "&from=" + encodeURIComponent(this.data.creator)
+      url: this.readerUrl(next, this.data.creator)
     });
+  },
+
+  readerUrl(id, creator) {
+    let url = "/pages/reader/reader?id=" + encodeURIComponent(id);
+    if (this.data.reciteMode) url += "&mode=recite";
+    if (creator) url += "&from=" + encodeURIComponent(creator);
+    return url;
   },
 
   siblingInAuthor(delta) {
