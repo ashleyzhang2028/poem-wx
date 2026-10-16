@@ -257,7 +257,6 @@ view, text, button, input, textarea {
   min-height: var(--h-row);
   padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
-  border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
 
@@ -286,11 +285,12 @@ view, text, button, input, textarea {
 }
 
 .gc-name {
+  display: block;
   flex: 1;
   min-width: 0;
   font-family: var(--font-poem);
   font-size: var(--fs-lead);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }

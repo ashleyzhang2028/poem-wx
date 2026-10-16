@@ -19,26 +19,24 @@
 }
 
 .book-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--sp-2);
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--sp-2);
   margin-top: var(--sp-3);
 }
 
 .book-cell {
   display: flex;
   align-items: center;
-  min-height: var(--h-opt);
-  padding: var(--sp-2) var(--sp-3);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
-  background: var(--surface);
-  transition: background-color var(--t-press), transform var(--t-press);
+  width: calc((100% - var(--sp-2)) / 2);
+  min-height: var(--h-row);
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
 }
 
 .book-hover {
   background: var(--sink);
-  transform: scale(.992);
 }
 
 .book-main {

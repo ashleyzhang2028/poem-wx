@@ -3,7 +3,7 @@
 
   <block wx:else>
 
-  <view class="page-head">
+  <view class="card book-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
   </view>
@@ -22,20 +22,22 @@
     </view>
   </view>
 
-  <view class="search">
-    <text class="search-icon">⌕</text>
-    <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
-  </view>
+  <view class="card filter-card">
+    <view class="search">
+      <text class="search-icon">⌕</text>
+      <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
+    </view>
 
-  <view class="seg filter-group">
-    <radio-group class="seg-group" bindchange="onFilter">
-      <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
-        <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}"
-               color="{{themeHex}}" />
-        <view class="seg-icon ic-{{item.icon}}"></view>
-        <text class="seg-text">{{item.label}}</text>
-      </label>
-    </radio-group>
+    <view class="seg filter-group">
+      <radio-group class="seg-group" bindchange="onFilter">
+        <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}"
+                 color="{{themeHex}}" />
+          <view class="seg-icon ic-{{item.icon}}"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
   </view>
 
   <view class="count hint">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>

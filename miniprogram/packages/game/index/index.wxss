@@ -20,13 +20,6 @@
   text-align: left;
 }
 
-.mode-name {
-  display: block;
-  font-size: var(--fs-title);
-  font-weight: 600;
-  color: var(--strong-text);
-}
-
 .mode-desc {
   display: block;
   font-size: var(--fs-caption);
