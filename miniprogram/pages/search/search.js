@@ -17,6 +17,7 @@ const PACK_MAX = 80;
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     keyword: "",
 
     fullOn: false,
@@ -41,7 +42,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 3);
+    this.setData({ barBelow: !tabbar.sync(this, 3) });
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });

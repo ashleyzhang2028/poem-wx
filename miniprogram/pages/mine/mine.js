@@ -11,6 +11,7 @@ const theme = require("../../utils/theme");
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     logged: false,
     nickname: "未登录",
     avatarUrl: "",
@@ -36,7 +37,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 4);
+    this.setData({ barBelow: !tabbar.sync(this, 4) });
     this.refresh();
   },
 

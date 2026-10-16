@@ -56,6 +56,7 @@ Component({
   properties: {
 
     themeStyle: { type: String, value: "" },
+    themeHex: { type: String, value: "" },
 
     queue: {
       type: Array,

@@ -35,6 +35,7 @@ const GROUPS = [
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     groups: [],
     locked: true,
     reason: ""
@@ -43,7 +44,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 1);
+    this.setData({ barBelow: !tabbar.sync(this, 1) });
 
     if (!gate.logged() || !E.can("library")) {
       this.setData({ locked: true, reason: E.hint("library") });

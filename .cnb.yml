@@ -144,6 +144,7 @@ main:
               esac
             done
             node scripts/build-data.js
+            node scripts/check.js
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
@@ -290,6 +291,7 @@ main:
               esac
             done
             node scripts/build-data.js
+            node scripts/check.js
             npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?

@@ -2335,14 +2335,25 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   {
     const syncs = {};
+    const unpainted = [];
     ["pages/home/home", "pages/library/library", "pages/search/search", "pages/mine/mine"].forEach((p) => {
-      const m = new RegExp("tabbar\\.sync\\(this, (\\d)\\)").exec(fs.readFileSync(path.join(ROOT, p + ".js"), "utf8"));
+      const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+      const m = new RegExp("tabbar\\.sync\\(this, (\\d)\\)").exec(src);
       syncs[p] = m ? Number(m[1]) : -1;
+      if (!/barBelow\s*:\s*!tabbar\.sync\(this, \d\)/.test(src)) {
+        unpainted.push(p);
+      }
     });
     const vals = Object.keys(syncs).map((k) => syncs[k]);
     ok("每个 tab 页都调了一次 tabbar.sync，且序号互不相同",
       vals.every((v) => v >= 0) && new Set(vals).size === vals.length,
       JSON.stringify(syncs) + " —— 少调、重号或调错，切过去还亮着上一栏");
+    ok("每个 tab 页都把 sync 的结果落成 barBelow（底栏没挂上时不装作它在下面）",
+      unpainted.length === 0,
+      unpainted.join("、") + " —— 小程序冷启动直接进这些页时组件层还没就绪，"
+        + "getTabBar() 当场返回空（开发者工具里就是那句 "
+        + "`property \"inputId\" received type-incompatible value`），"
+        + "而页面照旧留着底栏高：列表最后一行被那 120rpx 与一条不存在的栏夹在中间");
   }
   ok("要登录的那几栏都标了 login（游客点了不进门，直接去「我的」）",
     (barSrc.match(/login:\s*true/g) || []).length >= 3,
@@ -2885,6 +2896,45 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("每个页面的根节点都挂了 themeStyle（主题传得到页面里）",
     missWxml.length === 0, missWxml.join(", "));
   ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
+
+  {
+    const missing = [];
+    const stray = [];
+    const sheets = ["components/recite-sheet/recite-sheet"].concat(pages).concat(
+      (app.subPackages || []).reduce(
+        (all, sp) => all.concat(sp.pages.map((x) => sp.root + "/" + x)), []));
+
+    const files = [...new Set(sheets.concat([
+      "components/recite-sheet/recite-sheet"
+    ]))].filter((p) => fs.existsSync(path.join(ROOT, p + ".wxml")));
+
+    files.forEach((p) => {
+      const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+      const js = fs.existsSync(path.join(ROOT, p + ".js"))
+        ? fs.readFileSync(path.join(ROOT, p + ".js"), "utf8") : "";
+      const binds = /\{\{themeHex\}\}|\bthemeHex\b/.test(wxml);
+      const says = /themeHex\s*:/.test(js);
+      if (binds && !says) missing.push(p);
+      if (says && !binds) stray.push(p);
+    });
+
+    const themeSrc = fs.readFileSync(path.join(ROOT, "utils", "theme.js"), "utf8");
+
+    ok("用了 themeHex 的地方都在自己的 data 里声明了它",
+      missing.length === 0,
+      missing.join("、") + " —— 声明它的地方才接得住 theme.apply() 发的那一份，"
+        + "没有的当场回 undefined：原生的取色控件拿到非值会退回自己的默认色，"
+        + "开发者工具里说的是 `property \"value\" received type-incompatible value`。"
+        + "同一个名字只该有一处出处，不许再拼一个字符串替身");
+
+    ok("themeHex 只发给用得上它的那几个（不声明的地方不推这个字段）",
+      stray.length === 0,
+      stray.join("、") + " —— 声明了却没人读，下一个人会以为它有用");
+
+    ok("页面那份主题数据由 theme.js 一处发给所有人",
+      /setData\(\{\s*theme:\s*key,\s*themeStyle:\s*style\(key\)\s*\}\)/.test(themeSrc),
+      "theme.apply() 发的东西变了 —— 它是所有页面拿主题的唯一口子");
+  }
 }
 
 {
@@ -3290,8 +3340,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /store\.reads\(/.test(homeJs) && /item\.read/.test(homeWxml),
     "把已读那一格删了 —— 读过但没评分的诗在列表上就与没碰过的一样");
 
-  ok("弹层显式接了页面那份主题变量",
+  ok("弹层显式接了页面那两份主题变量（色值也传，弹层里的取色控件要用）",
     homeWxml.indexOf('theme-style="{{themeStyle}}"') >= 0
+      && homeWxml.indexOf('theme-hex="{{themeHex}}"') >= 0
       && /themeStyle:\s*\{\s*type:\s*String/.test(sheetJs)
       && /style="\{\{themeStyle\}\}"/.test(sheetWxml),
     "首页没传 theme-style，或组件没把它挂在根节点上");

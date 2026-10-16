@@ -11,6 +11,7 @@ const tabPage = require("../../../utils/tab-page");
 Page({
   data: {
     themeStyle: "",
+    themeHex: "",
 
     locked: false,
     on: false,

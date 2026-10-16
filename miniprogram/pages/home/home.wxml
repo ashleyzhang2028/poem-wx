@@ -1,4 +1,4 @@
-<view class="page home has-tabbar" style="{{themeStyle}}">
+<view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
   <block wx:if="{{guest}}">
     <view class="card hero">
@@ -167,6 +167,7 @@
     </view>
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
+                    theme-hex="{{themeHex}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"
                     bind:change="onExtraChange" />
 

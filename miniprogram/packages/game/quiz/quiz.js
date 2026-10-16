@@ -10,6 +10,7 @@ const COUNT = 10;
 Page({
   data: {
     themeStyle: "",
+    themeHex: "",
     stage: "setup",
     forms: [],
     pickedForms: [],
