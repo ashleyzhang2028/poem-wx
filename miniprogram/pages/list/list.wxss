@@ -69,13 +69,3 @@
   padding-left: var(--sp-2);
   font-variant-numeric: tabular-nums;
 }
-
-.read-dot {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--green);
-  padding: var(--pad-opt-y) var(--sp-2);
-  border-radius: var(--radius-pill);
-  background: var(--green-soft);
-  margin-right: var(--sp-1);
-}

@@ -128,16 +128,6 @@
   padding: 0 var(--sp-1) var(--sp-2);
 }
 
-.read-dot {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--green);
-  padding: var(--pad-opt-y) var(--sp-2);
-  border-radius: var(--radius-pill);
-  background: var(--green-soft);
-  margin-right: var(--sp-1);
-}
-
 .empty-tip {
   display: block;
   margin-top: var(--sp-2);

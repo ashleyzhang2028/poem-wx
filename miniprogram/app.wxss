@@ -305,9 +305,19 @@ view, text, button, input, textarea {
   color: var(--ink-3);
 }
 
-.seq.done {
-  background: var(--green-soft);
-  color: var(--green);
+.seq.on {
+  background: var(--strong-soft);
+  color: var(--strong-text);
+}
+
+.read-dot {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--strong-text);
+  padding: var(--pad-opt-y) var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--strong-soft);
+  margin-right: var(--sp-1);
 }
 
 .row-poem {
