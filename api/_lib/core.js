@@ -1949,6 +1949,8 @@ function sanitizePayload(p, poemId) {
   if (typeof p.stability === "number") out.stability = Math.max(0, Math.min(100000, Math.round(p.stability * 100) / 100));
   if (typeof p.difficulty === "number") out.difficulty = Math.max(0, Math.min(100, Math.round(p.difficulty * 100) / 100));
 
+  if (typeof p.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.reviewedOn)) out.reviewedOn = p.reviewedOn;
+
   if (Array.isArray(p.history)) {
     out.history = p.history.slice(-200).map(function (h) {
       if (!h || typeof h !== "object") return null;
