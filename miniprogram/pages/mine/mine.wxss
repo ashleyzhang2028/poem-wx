@@ -127,6 +127,7 @@
 
 .tier-chip {
   flex: none;
+  line-height: 1.4;
   font-size: var(--fs-caption);
   color: var(--ink-2);
   background: var(--surface);
@@ -134,6 +135,10 @@
   border-radius: var(--radius-pill);
   padding: 6rpx 20rpx;
   letter-spacing: 1rpx;
+}
+
+.tier-chip-hover {
+  background: var(--line-2);
 }
 
 .login-row {

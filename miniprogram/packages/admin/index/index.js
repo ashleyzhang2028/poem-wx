@@ -1,7 +1,6 @@
-const admin = require("./lib");
-const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const entitlement = require("../../../utils/entitlement");
 const tabPage = require("../../../utils/tab-page");
 
 Page({
@@ -32,7 +31,7 @@ Page({
       heads: entitlement.compareCols(snap),
       compareGroups: entitlement.compareGroups(snap),
       compareSummary: entitlement.compareSummary(snap),
-      stats: admin.stats(),
+      stats: entitlement.stats(),
       usersSub: ready ? "改档位 · 改角色" : "只读"
     });
   },

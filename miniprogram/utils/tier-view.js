@@ -1,8 +1,4 @@
-const entitlement = require("../../../utils/entitlement");
-
-function loggedIn() {
-  return entitlement.loggedIn();
-}
+const entitlement = require("./entitlement");
 
 function stats() {
   const s = entitlement.snapshot();
@@ -15,7 +11,4 @@ function stats() {
   return { caps, enabled: ok, percent: caps ? Math.round((ok / caps) * 100) : 0 };
 }
 
-module.exports = {
-  loggedIn,
-  stats
-};
+module.exports = { stats };

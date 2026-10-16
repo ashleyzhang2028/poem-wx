@@ -683,12 +683,6 @@ view, text, button, input, textarea {
   margin-bottom: var(--sp-1);
 }
 
-.ring-cap-t {
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
-
 .lock-card {
   text-align: center;
   padding: var(--sp-6) var(--sp-4) var(--sp-4);

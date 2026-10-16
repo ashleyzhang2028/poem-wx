@@ -1,6 +1,6 @@
 const corpus = require("../../utils/corpus");
 const gate = require("../../utils/gate");
-const entitlement = require("../../utils/entitlement");
+const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
@@ -45,8 +45,8 @@ Page({
 
     tabbar.sync(this, 1);
 
-    if (!gate.logged() || !entitlement.can("library")) {
-      this.setData({ locked: true, reason: entitlement.hint("library") });
+    if (!gate.logged() || !E.can("library")) {
+      this.setData({ locked: true, reason: E.hint("library") });
       return;
     }
     this.setData({ locked: false, reason: "" });

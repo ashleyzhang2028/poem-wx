@@ -487,6 +487,15 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     textNow ? textNow[1].trim() : "找不到 --font-poem-text");
 }
 
+{
+  delete require.cache[require.resolve(path.join(ROOT, "utils", "entitlement.js"))];
+  const ent = require(path.join(ROOT, "utils", "entitlement.js"));
+  store.saveProfile({ logged: true, tier: "max" });
+  ok("本机写 max 不生效（无签名，按免费算）", ent.status().blocked === "unsigned", JSON.stringify(ent.status()));
+  ok("无签名档位退回免费", ent.status().tier === "free", ent.status().tier);
+  store.saveProfile({ logged: false, tier: "" });
+}
+
 const pinyin = require(path.join(ROOT, "utils", "pinyin.js"));
 const pinyinTable = path.join(dataDir, "pinyin-table.js");
 if (fs.existsSync(pinyinTable)) {
@@ -679,8 +688,12 @@ function asMember() {
 
 asGuest();
 
-["daily", "library", "pinyin", "ebbinghaus", "extra", "leitner", "export"].forEach((k) => {
+["daily", "library", "pinyin", "ebbinghaus", "leitner", "sync"].forEach((k) => {
   ok("能力表含 " + k, E.CAP_KEYS.indexOf(k) >= 0 && !!E.capName(k));
+});
+["speak", "export", "admin"].forEach((k) => {
+  ok("能力表里不再有 " + k, E.CAP_KEYS.indexOf(k) < 0,
+    "这一项已经撤了（朗读：个人主体拿不到通道；导出：进度跟着账号走；管理页：owner / admin 的身份门）");
 });
 
 function asTier(t) {
@@ -813,8 +826,8 @@ const gateMod = require(path.join(ROOT, "utils", "gate.js"));
 const WEB_TIER = {
   daily: "free",
   library: "free",
-  export: "free",
   ebbinghaus: "free",
+  sync: "free",
   leitner: "pro",
   sm2: "pro",
   extra: "pro",
@@ -827,8 +840,8 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
   tiersMod.TIER_KEYS.join() === "free,pro,max");
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
-  "用户列表混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 8], ["pro", 13], ["max", 16]].forEach(([tier, n]) => {
+  "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
+[["free", 7], ["pro", 12], ["max", 15]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -840,8 +853,8 @@ Object.keys(WEB_TIER).forEach((k) => {
 });
 
 {
-  const wxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
-  const js = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.js"), "utf8");
+  const wxml = fs.readFileSync(path.join(ROOT, "packages", "mine", "tier", "tier.wxml"), "utf8");
+  const js = fs.readFileSync(path.join(ROOT, "packages", "mine", "tier", "tier.js"), "utf8");
   const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
   ok("权限对比表的列头就是档位表本身（三档，写死会跟档位走散）",
@@ -940,6 +953,7 @@ const GATED = {
   "packages/settings/reader/reader": "locked",
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
+  "packages/mine/tier/tier": "allowed",
 
   "packages/authors/index/index": "locked"
 };
@@ -980,15 +994,16 @@ const GATED = {
   const usersJs = fs.readFileSync(path.join(ROOT, "packages/users/index/index.js"), "utf8");
   const usersWxml = fs.readFileSync(path.join(ROOT, "packages/users/index/index.wxml"), "utf8");
   const usersLib = fs.readFileSync(path.join(ROOT, "packages/users/index/lib.js"), "utf8");
+  const adminLib = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
 
   ok("用户列表页不写本机档位", usersJs.indexOf("store.KEYS.grant") < 0, "用户列表页还在直接写 grant");
   ok("用户列表页的改档按钮走的是服务端那条（wxml 上没有本机改档的开关）",
     /bindtap="onSetTier"/.test(usersWxml) && !/bindtap="onLocal/.test(usersWxml));
-  ok("改档只走服务端", usersLib.indexOf("remote.setUserTier") >= 0);
+  ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
   ok("服务端没就绪时如实说不出来（不走假成功）",
-    /error|fail|catch/.test(usersLib) && usersLib.indexOf("setUserTier") >= 0);
+    /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
 
   ok("用户列表页区分「能改」与「只读」",
     usersWxml.indexOf("item.editable") >= 0 && usersWxml.indexOf("只读") >= 0);
@@ -1002,6 +1017,18 @@ const GATED = {
     /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
+}
+
+{
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  ok("档位胶囊点得动，进的就是档位与权限那一页",
+    !!chip && /bindtap="onTier"/.test(chip[0])
+      && mineJs.indexOf('url: "/packages/mine/tier/tier"') >= 0,
+    "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
+      + "点下去必须落在对比表上（Issue #234）");
 }
 
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
@@ -1040,6 +1067,37 @@ const subs = {};
 ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0, JSON.stringify(subs.game));
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
 ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/index") >= 0, JSON.stringify(subs.users));
+
+{
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+  const mineWxss = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxss"), "utf8");
+  const tier = "packages/mine/tier/tier";
+  const tierWxml = fs.readFileSync(path.join(ROOT, tier + ".wxml"), "utf8");
+  const tierJs = fs.readFileSync(path.join(ROOT, tier + ".js"), "utf8");
+
+  ok("档位与权限是「我的」下的一块页，不挂在管理分包里",
+    (subs.mine || []).indexOf("tier/tier") >= 0 && (subs.admin || []).indexOf("index/index") >= 0,
+    "entryOf 按分包根给页面归门 —— 落在 admin 分包里，改档那些门禁就会漏掉这张公开的表");
+
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  ok("档位胶囊点得动，进的就是档位与权限那一页",
+    !!chip && /bindtap="onTier"/.test(chip[0])
+      && mineJs.indexOf('url: "/' + tier + '"') >= 0,
+    "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
+      + "点下去必须落在对比表上（Issue #234）");
+  ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
+    /bindtap="onTier"/.test(mineWxml.replace(chip ? chip[0] : "", "")));
+  ok("档位胶囊的样式没换名字", /\.tier-chip\s*\{/.test(mineWxss));
+  ok("档位与权限页不挡登录（挡的是名录，不是整张表）",
+    tierWxml.indexOf("lock-card") < 0 && tierWxml.indexOf("compareGroups") >= 0
+      && !/wx:if="\{\{logged\}\}"/.test(tierWxml),
+    "顶端一张 lock-card 把权限对比一起盖住了 —— 未登录的人正是最该看这张表的人");
+  ok("档位与权限页只读能力表，改档改角色不落在这里",
+    ["onSetTier", "onSetRole", "canWrite", "canSetRole"].every((k) => tierWxml.indexOf(k) < 0
+      && tierJs.indexOf(k) < 0),
+    "这张表给所有人看，改档那几个入口留在管理页的用户名录里");
+}
 
 {
   const subs2 = {};
@@ -1136,9 +1194,13 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
 
   ok("utils/ 里不再有只有分包用的模块",
     !fs.existsSync(path.join(ROOT, "utils", "quiz.js"))
-      && !fs.existsSync(path.join(ROOT, "utils", "admin.js"))
       && !fs.existsSync(path.join(ROOT, "utils", "feihua")),
-    "题库 / 管理 / 飞花令的内核还在主包 utils/ 下");
+    "题库 / 飞花令的内核还在主包 utils/ 下");
+  ok("管理内核与档位表分两处（写别人的与看自己的不是一件事）",
+    fs.existsSync(path.join(ROOT, "utils", "admin.js"))
+      && fs.existsSync(path.join(ROOT, "utils", "tier-view.js"))
+      && fs.readFileSync(path.join(ROOT, "utils", "tier-view.js"), "utf8").indexOf("setUserTier") < 0,
+    "档位与权限页只读能力表，改档那几路仍只归管理页");
 }
 
 pages.forEach((p) => {
@@ -1215,7 +1277,7 @@ ok("打包件形状对（device + 每条 rec 带 id / updatedAt / payload）",
 ok("已读行是服务端认的 marks 形状（不是 payload 本身）",
   packed.recs.filter((r) => r.id.indexOf("reads:") === 0)
     .every((r) => r.payload && r.payload.marks && typeof r.payload.marks === "object"));
-ok("加背与自选清单都按服务端形状打包",
+ok("加背与自选背诵都按服务端形状打包",
   packed.recs.some((r) => r.id === "daily_extra:v1" && r.payload.date && Array.isArray(r.payload.items))
     && packed.recs.some((r) => r.id === "collections:v1" && Array.isArray(r.payload.collections)));
 
@@ -1819,10 +1881,10 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
     "两栏的值构建期就注进包里，露出来只会是用户既读不懂也改不动的说法 —— " +
       "要临时换后端就改代码库里的 miniprogram/utils/server.js，不走界面");
 
-  ok("同步那一行的副标题由数据层算出来（不自己拼）", mineJs.indexOf("syncSub") >= 0);
-  ok("「上次同步」这句只认真同步过（lastSyncAt）来的凭据",
-    /if \(sy\.lastSyncAt\) return sy\.lastText/.test(mineJs),
-    "没同步过也敢说「上次同步」，那是假话");
+  ok("同步那一行的副标题：上次同步 + 队列状态，都用数据层算的（不自己拼）",
+    /syncSub\(sy\)\s*\{[\s\S]{0,300}?sy\.ready[\s\S]{0,200}?sy\.pendingStatus/.test(mineJs)
+      && /syncSub:\s*this\.syncSub\(sy\)/.test(mineJs),
+    "副标题自己拼了一份：末次同步时刻与「还有几项在等」都只有 sync.state() 说了算");
 
   ok("「我的」页不留连接配置的入口，接服务器只有代码库里一处",
     mineJs.indexOf("onServer") < 0 && mineJs.indexOf("serverSub") < 0
@@ -1831,15 +1893,27 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
       "露出来的只有「已配 · 走云调用 · 待接通」这种用户既看不懂也改不动的说法。" +
       "要临时换后端改代码库里的 miniprogram/utils/server.js（docs/wx-cloud-setup.md § 6.2）");
 
-  ok("没同步过、未登录、通道未开各说一句（不是同一句兜底）",
-    ((mineJs.match(/syncNote\(sy\)\s*\{[\s\S]*?\n  \},/) || [""])[0]
-      .match(/return /g) || []).length >= 4,
-    "syncNote 的几支塌成一句了 —— 用户分不清是没登录、没接上、还是要点一下");
+  ok("「我的 → 同步」那一行点得动，且只在登录后出现",
+    /bindtap="onSync"[^>]*wx:if="\{\{logged\}\}"/.test(mineWxml)
+      && /onSync\s*\([\s\S]{0,200}?sync\.now\(true\)/.test(mineJs),
+    "同步那一行没了 —— 用户手里就没有「现在立刻同步一次」这条出口");
+
+  ok("队里还有几项由数据层数出来（不是界面自己记一个数）",
+    /pendingCount\s*\([\s\S]{0,300}?packRecords\(\)/.test(
+      fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8")),
+    "pendingCount 没读打包记录 —— 界面上的「还有几项在等」就成了编的");
 
 
   const capSync = E.CAPS.find((c) => c.key === "sync");
   ok("云端同步在能力表里且不看档位", !!capSync && capSync.tier === "free",
     capSync ? "当前 tier=" + capSync.tier : "能力不存在");
+  ok("「我的」页不再有导出那一行（进度跟着账号走，没有导出这条路）",
+    mineWxml.indexOf("onExport") < 0 && mineJs.indexOf("onExport") < 0
+      && mineJs.indexOf("exportAll") < 0,
+    "导出那一行还在 —— 换手机的路是登录，不是拷一份 JSON 出去");
+  ok("store 里不再留导出 / 导入那对没人调的函数",
+    typeof store.exportAll !== "function" && typeof store.importAll !== "function",
+    "留着没人调，下一个人会以为还有一处备份出口");
   ok("界面里不再留「要 Pro 才能同步」的说法",
     mineJs.indexOf("要 Pro 起才能跨设备同步") < 0 && mineJs.indexOf("跨设备同步要 Pro 起") < 0);
 
@@ -3501,10 +3575,31 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
     ["昵称", "pages/mine/mine.js", /onNickname(?:\([^)]*\))?[\s\S]{0,400}?markDirty/]
   ];
-  ok("改了设置就该传：六个入口都挂了记账，且只记账不发网络",
+  ok("改了设置就该传：六个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
-      && /function markDirty\(\)[\s\S]{0,400}?\}/.test(syncSrc)
-      && !/function markDirty\(\)[\s\S]{0,400}?wx\.request/.test(syncSrc));
+      && /function markDirty\(\)[\s\S]{0,600}?now\(\)/.test(syncSrc)
+      && !/function markDirty\(\)[\s\S]{0,600}?wx\.request/.test(syncSrc),
+    "记账只记得下、推不出去 —— 用户不去「我的」点一下，这次改动静默躺在队列里");
+
+  ok("同步的触发点都在（启动后 3 秒 / 进首页 / 登录那一刻）",
+    /setTimeout\(\(\) => \{[\s\S]{0,120}?sync\.now\(\)/.test(
+      fs.readFileSync(path.join(ROOT, "app.js"), "utf8"))
+      && /gate\.logged\(\)\) sync\.now\(\)/.test(
+        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8"))
+      && /pullAfterLogin/.test(authSrc),
+    "少一处 —— 那一段路上就没人推，用户会以为云同步坏了");
+
+  ok("前台那几次自动推有最小间隔挡着（同一分钟内只发一次）",
+    /MIN_GAP\s*=\s*60\s*\*\s*1000/.test(syncSrc)
+      && /!force && Date\.now\(\) - lastAt < MIN_GAP/.test(syncSrc),
+    "没有最小间隔的话，背完一首就发一次 —— 一次点击一条请求");
+
+  ok("本地改动静默下来（IDLE_GAP 秒）才推，不是每次按键都发",
+    /IDLE_GAP\s*=\s*\d/.test(syncSrc)
+      && /function markDirty\(\)[\s\S]{0,400}?armPackMoment\(\)/.test(syncSrc)
+      && /armPackMoment[\s\S]{0,400}?clearTimeout\(packTimer\)/.test(syncSrc),
+    "记完账立刻发 —— 拖动字号那一串回调会各发一条");
+
   {
     const mineSrc7 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
     const i = mineSrc7.indexOf("onAvatarChoose(");
@@ -3599,8 +3694,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页那枚环在零进度时不渲染（不画一枚空槽）",
     /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="ring-cap"/.test(homeWxml),
     "零进度时还画着空环");
-  ok("环下把「走到哪了」写成一行读数（不然读不出这枚环量的是什么）",
-    /\{\{doneCount\}\}\s*\/\s*\{\{total\}\}/.test(homeWxml));
+  ok("环内那行读数按百分比写（与进度页那枚的写法一致）",
+    /class="ring-text"/.test(homeWxml)
+      && /\{\{percent\}\}%/.test(homeWxml.slice(homeWxml.indexOf("stat-ring"))));
 
   ok("环的尺寸与线宽只有一份定义（首页与背诵进度页取自它）",
     /--ring-size\s*:/.test(read("styles/tokens.wxss")) && /--ring-w\s*:/.test(read("styles/tokens.wxss")),
@@ -3721,9 +3817,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       bare(adminJs).indexOf("sourceText") < 0 && bareWxml(adminWxml).indexOf("sourceText") < 0
         && bare(adminJs).indexOf("scopeText") < 0 && bareWxml(adminWxml).indexOf("scopeText") < 0,
       "留一个没人用的字段，下一个人会以为它还挂在界面上");
+    const grantWxml = bareWxml(read("packages/mine/tier/tier.wxml"));
     ok("授权卡只剩档名（没有副题那一行）",
-      adminWxml.indexOf("grant-tier-k") < 0
-        && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(bareWxml(adminWxml)),
+      grantWxml.indexOf("grant-tier-k") < 0
+        && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(grantWxml),
       "副题那一行还在，或者档名换写法了");
 
     ok("档位副题整条撤掉（对比以登录为前提，来源不必再说一遍）",
