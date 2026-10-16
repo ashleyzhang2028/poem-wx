@@ -41,122 +41,38 @@
 
 .tab-ico {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 56rpx;
   height: 56rpx;
   border-radius: 50%;
-  --ic: #9ca3af;
   transition: background-color .12s;
+}
+
+.tab-ico-img {
+  position: absolute;
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.tab-ico-img.off {
+  opacity: .78;
+}
+
+.tab-ico-img.on {
+  visibility: hidden;
 }
 
 .tab.on .tab-ico {
   background: var(--strong);
-
-  --ic: var(--on-ink);
-
   box-shadow: 0 0 0 2rpx var(--on-ink);
 }
 
-.tab-ico::before,
-.tab-ico::after {
-  content: "";
-  position: absolute;
-  box-sizing: border-box;
-  background: var(--ic);
+.tab.on .tab-ico-img.off {
+  visibility: hidden;
 }
 
-.tab-ico-book::before {
-  left: 13rpx;
-  top: 16rpx;
-  width: 30rpx;
-  height: 24rpx;
-  background: transparent;
-  border: 3rpx solid var(--ic);
-  border-radius: 3rpx 3rpx 5rpx 5rpx;
-}
-
-.tab-ico-book::after {
-  left: 26rpx;
-  top: 17rpx;
-  width: 3rpx;
-  height: 22rpx;
-  border-radius: 1rpx;
-}
-
-.tab-ico-stack::before {
-  left: 14rpx;
-  top: 22rpx;
-  width: 28rpx;
-  height: 16rpx;
-  background: transparent;
-  border: 3rpx solid var(--ic);
-  border-radius: 3rpx;
-}
-
-.tab-ico-stack::after {
-  left: 17rpx;
-  top: 16rpx;
-  width: 22rpx;
-  height: 3rpx;
-  border-radius: 2rpx;
-}
-
-.tab-ico-search::before {
-  left: 13rpx;
-  top: 13rpx;
-  width: 20rpx;
-  height: 20rpx;
-  background: transparent;
-  border: 3rpx solid var(--ic);
-  border-radius: 50%;
-}
-
-.tab-ico-search::after {
-  left: 30rpx;
-  top: 30rpx;
-  width: 12rpx;
-  height: 3rpx;
-  border-radius: 2rpx;
-  transform: rotate(45deg);
-  transform-origin: left center;
-}
-
-.tab-ico-person::before {
-  left: 21rpx;
-  top: 13rpx;
-  width: 14rpx;
-  height: 14rpx;
-  border: 3rpx solid var(--ic);
-  border-radius: 50%;
-  background: transparent;
-}
-
-.tab-ico-person::after {
-  left: 15rpx;
-  top: 32rpx;
-  width: 26rpx;
-  height: 13rpx;
-  background: transparent;
-  border: 3rpx solid var(--ic);
-  border-bottom: none;
-  border-radius: 13rpx 13rpx 0 0;
-}
-
-
-.tab-ico-flag::before {
-  left: 17rpx;
-  top: 14rpx;
-  width: 3rpx;
-  height: 28rpx;
-  border-radius: 2rpx;
-}
-
-.tab-ico-flag::after {
-  left: 21rpx;
-  top: 19rpx;
-  width: 0;
-  height: 0;
-  background: transparent;
-  border-top: 9rpx solid transparent;
-  border-bottom: 9rpx solid transparent;
-  border-left: 20rpx solid var(--ic);
+.tab.on .tab-ico-img.on {
+  visibility: visible;
 }

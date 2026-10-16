@@ -169,7 +169,9 @@ const NATIVE_CSS = `
 .n-slider-knob{position:absolute;top:50%;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
 .n-ph{color:#9ca3af}
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
-.n-image{border-radius:50%;background:#f2f2f4}
+.n-image{background:#f2f2f4}
+img.n-image{background:none}
+.tab-ico-img{background:none}
 /* WXML 标签 → HTML div 之后，默认块级；但页面样式里的 display:flex
    要能压过它，所以这里用最低优先级的选择器 */
 /* 文本节点没有自己的盒子，行高靠父级给 —— 预览里补一条，
@@ -213,16 +215,18 @@ const DEVICE_FONT_SIZE = ".device{font-size:16px}";
 function expandComponents(node, data, P) { return node; }
 
 function tabBarHtml(active, themeStyle) {
+  const icons = require(path.join(ROOT, "utils", "icons.js"));
   const list = [
-    { text: "今日", icon: "book" },
-    { text: "课外", icon: "stack" },
-    { text: "大会", icon: "flag" },
-    { text: "搜索", icon: "search" },
-    { text: "我的", icon: "person" }
+    { text: "今日", icon: icons.home },
+    { text: "课外", icon: icons.library },
+    { text: "大会", icon: icons.conference },
+    { text: "搜索", icon: icons.search },
+    { text: "我的", icon: icons.mine }
   ];
   const items = list.map((it, i) =>
     `<div class="tab ${i === active - 1 ? "on" : ""}">`
-    + `<div class="tab-ico tab-ico-${it.icon}"></div>`
+    + `<div class="tab-ico"><img class="tab-ico-img off" src="${it.icon}">`
+    + `<img class="tab-ico-img on" src="${it.icon}"></div>`
     + `<div class="tab-text">${it.text}</div></div>`).join("");
 
   return `<div class="tabbar" style="${themeStyle || ""}">${items}</div>`;
@@ -293,12 +297,22 @@ function expandTierView(wxml, data) {
   const comp = fs.readFileSync(path.join(ROOT, "components/tier-view/tier-view.wxml"), "utf8");
 
   const entitlement = require(path.join(ROOT, "utils", "entitlement.js"));
+  const tierIcons = require(path.join(ROOT, "utils", "icons.js"));
+  const tiers = require(path.join(ROOT, "utils", "tiers.js"));
   const snap = entitlement.snapshot();
+  const rows = entitlement.compareRows(snap).map((r) => ({
+    cap: r.cap,
+    name: r.name,
+    cells: r.cells.map((c) => Object.assign({}, c, {
+      icon: (c.on ? tierIcons.yesInk : tierIcons.noInk),
+      dim: !c.on && !tiers.strong(c.tier)
+    }))
+  }));
   const merged = Object.assign({}, data, {
     logged: snap.logged,
     status: snap,
     heads: entitlement.compareCols(snap),
-    compareRows: entitlement.compareRows(snap),
+    compareRows: rows,
     compareSummary: entitlement.compareSummary(snap),
     stats: require(path.join(ROOT, "utils", "tier-view.js")).stats()
   });

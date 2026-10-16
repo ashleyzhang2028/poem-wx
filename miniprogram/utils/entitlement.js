@@ -10,13 +10,13 @@ function rankOf(tier) {
 
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
-  if (!n) return { text: "无", note: "", on: false };
+  if (!n) return { text: "", note: "", on: false };
   return { text: n + " 个", note: "每个 " + tiers.COLLECTION_ITEMS_MAX + " 首", on: true };
 }
 
 function courseFreeCell(tier) {
   const on = rankOf(tier) >= rankOf("pro");
-  return { text: on ? "可用" : "未开", note: "", on: on };
+  return { text: "", note: "", on: on };
 }
 
 const CAPS = [
@@ -42,7 +42,7 @@ const CAPS = [
 function cellFor(cap, tier) {
   if (cap.cell) return cap.cell(tier);
   const on = rankOf(cap.tier) <= rankOf(tier);
-  return { text: on ? "可用" : "未开", note: "", on: on };
+  return { text: "", note: "", on: on };
 }
 
 const CAP_KEYS = CAPS.map((c) => c.key);

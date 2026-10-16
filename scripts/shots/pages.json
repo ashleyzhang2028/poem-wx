@@ -112,6 +112,13 @@
     "tier": "pro",
     "_note": "权限对比那张卡：四列（能力 / Free / Pro / Max），一行一项。当前档位那一列带「现在」"
   },
+  "tier-guest": {
+    "page": "packages/mine/tier/tier",
+    "title": "用户权限",
+    "back": true,
+    "logged": false,
+    "_note": "未登录时的权限对比：同一行三格都淡到底，当前档位那一列不标"
+  },
   "settings-recite-selfonly": {
     "page": "packages/settings/recite/recite",
     "title": "背诵设置",

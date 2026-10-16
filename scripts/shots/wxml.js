@@ -189,6 +189,11 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   const style = a.style ? interp(a.style, v) : "";
 
   if (n.tag === "image") {
+    const src = a.src ? interp(a.src, v) : "";
+    if (src) {
+      out.push(`<img data-tag="image" class="n-image ${cls}" src="${src}" style="${style}">`);
+      return;
+    }
     let extra = "";
     if (IMAGE_INTRINSIC && IMAGE_INTRINSIC(cls)) extra = "height:auto;aspect-ratio:4/3;";
     out.push(`<div data-tag="image" class="n-image ${cls}" style="${extra}${style}"></div>`);

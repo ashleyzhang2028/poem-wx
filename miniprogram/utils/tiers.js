@@ -30,6 +30,15 @@ function tierOf(key) {
   return TIERS.find((x) => x.key === key) || TIERS[0];
 }
 
+function rank(tier) {
+  const t = TIERS.find((x) => x.key === tier);
+  return t ? t.rank : 0;
+}
+
+function strong(tier) {
+  return rank(tier) >= rank("pro");
+}
+
 function days(tier) {
   if (tier === "max") return 3650;
   if (tier === "pro") return 365;
@@ -46,5 +55,7 @@ module.exports = {
   isTier,
   nameOf,
   tierOf,
+  strong,
+  rank,
   days
 };

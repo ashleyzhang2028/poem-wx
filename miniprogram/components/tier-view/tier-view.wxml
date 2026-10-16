@@ -24,7 +24,8 @@
     <view class="tier-line" wx:for="{{compareRows}}" wx:key="cap">
       <text class="tier-cap">{{item.name}}</text>
       <view class="tier-cell {{cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
-        <text class="tier-cell-t {{cell.on ? '' : 'off'}}">{{cell.text}}</text>
+        <text class="tier-cell-t" wx:if="{{cell.text}}">{{cell.text}}</text>
+        <image class="tier-cell-ic {{cell.dim ? 'dim' : ''}}" src="{{cell.icon}}" mode="aspectFit" />
         <text class="tier-cell-n" wx:if="{{cell.note}}">{{cell.note}}</text>
       </view>
     </view>

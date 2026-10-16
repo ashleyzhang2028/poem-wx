@@ -1,6 +1,13 @@
 const theme = require("../utils/theme");
+const icons = require("../utils/icons");
 const gate = require("../utils/gate");
 const tabPage = require("../utils/tab-page");
+
+const OFF_INK = "#9ca3af";
+
+function paint(src, ink) {
+  return String(src).replace(/currentColor/g, encodeURIComponent(ink));
+}
 
 Component({
   data: {
@@ -8,26 +15,41 @@ Component({
     active: 0,
 
     themeStyle: "",
+    ink: OFF_INK,
+    onInk: "#ffffff",
     list: [
-      { pagePath: "/pages/home/home", text: "今日", icon: "book" },
-      { pagePath: "/pages/library/library", text: "课外", icon: "stack", login: true },
-      { pagePath: "/packages/game/index/index", text: "大会", icon: "flag", login: true, noSwitch: true },
-      { pagePath: "/pages/search/search", text: "搜索", icon: "search", login: true },
-      { pagePath: "/pages/mine/mine", text: "我的", icon: "person" }
+      { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
+      { pagePath: "/pages/library/library", text: "课外", icon: icons.library, login: true },
+      { pagePath: "/packages/game/index/index", text: "大会", icon: icons.conference, login: true, noSwitch: true },
+      { pagePath: "/pages/search/search", text: "搜索", icon: icons.search, login: true },
+      { pagePath: "/pages/mine/mine", text: "我的", icon: icons.mine }
     ]
   },
 
   attached() {
-    this.setData({ themeStyle: theme.style() });
+    this.paint();
   },
 
   methods: {
     setActive(index) {
-
-      const themeStyle = theme.style();
-      const patch = { themeStyle };
+      const patch = {};
       if (this.data.active !== index) patch.active = index;
       this.setData(patch);
+    },
+
+    paint() {
+      const t = theme.currentTheme();
+      const ink = theme.get("ink").rgba;
+      const items = this.data.list.map((it) => Object.assign({}, it, {
+        off: paint(it.icon, t.rgba),
+        on: paint(it.icon, ink === t.rgba ? t.on : ink)
+      }));
+      this.setData({
+        themeStyle: theme.style(),
+        ink: t.rgba,
+        onInk: t.on,
+        list: items
+      });
     },
 
     onTap(e) {

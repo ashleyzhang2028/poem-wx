@@ -25,7 +25,7 @@ npm test
 `npm test` 自己会先编一遍，**不必再单独敲 `npm run build:data`**；
 只有「开发者工具里要看数据、又不想等自检跑完」时才单跑 `npm run build:data`。
 
-`npm test` 是 `scripts/build-and-check.js`：先编译语料，再依次跑
+`npm test` 是 `scripts/build-and-check.js`：先编译图标与语料，再依次跑
 `check.js` / `parity.js` / `e2e-wx-sync.js` / `e2e-mysql.js`，**头一条不绿就停在那儿**，
 不拿上一轮的产物继续往下走。`.cnb.yml` 里自检与发布两条流水线都只调这个脚本 ——
 自检链要加一步，只改它一处。
@@ -272,7 +272,8 @@ https + 有效证书、ICP 备案、不带端口不写 IP，三条都满足才�
   平台没有任何「静默拿微信头像」的 API，所以「登录后自动用微信头像」
   落成的样子是「点一下就给你微信那张」，不是「不点也能拿到」
 - **用户权限**：free / pro / max 三档，与网页版同一张能力表；页面上是「我的权限」
-  与「权限对比」两张卡，对照表逐行就是能力表本身、逐格按门槛算，当前档位列标「现在」。
+  与「权限对比」两张卡，对照表逐行就是能力表本身、逐格按门槛算
+  （只有「有没有」两态，对勾 / 叉；有量的那一项另写额度），当前档位列标「现在」。
   表照网页版 `/plans/` 排：列头 Free / Pro / Max 三档等分，整表铺在页面上、卡片里不滚。
   两张卡给所有人看，入口是「我的 → 用户权限」（头像右边那枚档位胶囊也到这一页）
 - **后台管理**：`owner` / `admin` 才看得到，入口是「我的 → 后台管理」，
@@ -525,9 +526,11 @@ miniprogram/
 │   ├── author-index                          # 朝代 / 异名归一：表在，界面没来（见 docs/todo.md 第 15 条）
 │   └── entitlement / tiers / admin           # 权限分层与管理
 │   └── auth / remote / sync                  # 微信登录 / 后端契约 / 同步调度
+├── icons/          # 图标的源文件（构建期压成 utils/icons.js，不入包的文件）
 ├── styles/         # 设计令牌（颜色 / 字阶 / 间距 / 高度，唯一的出处）
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
+├── build-icons.js  # miniprogram/icons/ 的 SVG → utils/icons.js（单色 data URI）
 ├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录（语料读 scripts/corpus/）
 ├── check.js        # 离线自检（含 V40 内容口径 / V41 作者索引 / V43 部署件 / V44 设置报文）
 ├── parity.js       # 与网页版逐项对照，能力表每一项都要有交代
