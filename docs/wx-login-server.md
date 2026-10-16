@@ -220,7 +220,7 @@ create index wx_accounts_unionid_idx on wx_accounts (unionid);
 ## 同步不再分档（2026-10-04）
 
 > ✅ 服务端那一半已落地（`api/_lib/core.js` 的 `syncTierGate` 只判有没有会话）。
-> 客户端那一半在自检里（W5 + V34）。下面这段是这条边界的出处。
+> 客户端那一半在自检里（V34）。下面这段是这条边界的出处。
 
 **这条改了服务端的一道闸，必须先说。**
 
@@ -232,7 +232,8 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 > 「我现在是微信小程序项目，不是之前的 web 应用，需要修改，同步功能只要用户登录
 > 就全部提供，确保用户数据不丢失，背诵进度换设备也能得到。请重新设计」
 
-所以小程序端的能力表里，`sync` 从 `pro` 改成了 **`login`**（登录就有，不看档位）。
+所以小程序端的能力表里，`sync` 从 `pro` 改成了 **`login`**（登录就有，不看档位；
+2026-10-16 起 `login` 这一档整体并入 `free`，`sync` 现在是 `free`）。
 **服务端那道闸要一起放开**：`syncTierGate` 改成只判「有没有会话」，
 不再判 `gameAllowed(cfg, tier, "sync.multiDevice")`。
 
@@ -241,7 +242,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 - 只改服务端 → 客户端还按 pro 藏入口，用户看不到自己已经能用的功能
 - 只改客户端 → 界面列出一个点下去必然 403 的入口（那正是我们一直在修的那种假按钮）
 
-自检里钉着客户端这一半（`check.js` W5 + V34 第 6 条）；
+自检里钉着客户端这一半（`check.js` V34 第 6 条）；
 服务端那一半改完，poem 那边 `sync.multiDevice` 这条能力键可以直接从表里退场。
 
 ## 一条新的行 id：`settings:v1`

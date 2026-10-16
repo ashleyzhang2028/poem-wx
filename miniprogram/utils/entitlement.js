@@ -12,11 +12,11 @@ const CAPS = [
   { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处 / 正文", tier: "free" },
   { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "free" },
 
-  { key: "speak", name: "语音朗读", desc: "正文朗读；需要 TTS 通道就绪", tier: "login" },
-  { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "login" },
-  { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "login" },
+  { key: "speak", name: "语音朗读", desc: "正文朗读；需要 TTS 通道就绪", tier: "free" },
+  { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "free" },
+  { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "free" },
 
-  { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "login" },
+  { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "free" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
@@ -29,7 +29,7 @@ const CAPS = [
 
 const CAP_KEYS = CAPS.map((c) => c.key);
 
-const TIER_RANK = { free: 1, login: 2, pro: 3, max: 4 };
+const TIER_RANK = { free: 1, pro: 2, max: 3 };
 
 function tierOf(profile) {
   const server = auth.serverTier();
@@ -104,17 +104,7 @@ function can(key) {
 
   if (switchedOff(key)) return false;
 
-  if (cap.tier === "login") {
-    const s = status();
-
-    if (tiers.DEFAULT_ON.indexOf(key) >= 0) return true;
-    return rankOf(s.tier) >= rankOf("login");
-  }
-
-  const s = status();
-
-  if (rankOf(cap.tier) > rankOf(s.tier)) return false;
-  return true;
+  return rankOf(cap.tier) <= rankOf(status().tier);
 }
 
 function hint(key, ctx) {
@@ -128,7 +118,6 @@ function hint(key, ctx) {
   if (!cap) return "这个功能不存在";
   if (can(key)) return "";
   if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
-  if (cap.tier === "login") return "「" + cap.name + "」要登录后才有";
   const s = status();
   if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
@@ -139,7 +128,7 @@ function rankOf(tier) {
   return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
 }
 
-const GROUP_TITLE = { free: "登录就有", login: "Free 起", pro: "Pro 起", max: "Max 起" };
+const GROUP_TITLE = { free: "Free 起", pro: "Pro 起", max: "Max 起" };
 
 function compareCols(snap) {
   const now = tierNow(snap);

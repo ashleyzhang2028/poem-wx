@@ -8,8 +8,6 @@ const DEFAULT_TIER = "free";
 
 const TIER_KEYS = TIERS.map((t) => t.key);
 
-const DEFAULT_ON = ["speak", "export", "leitner", "sync"];
-
 function isTier(key) {
   return TIER_KEYS.indexOf(key) >= 0;
 }
@@ -33,7 +31,6 @@ module.exports = {
   TIERS,
   TIER_KEYS,
   DEFAULT_TIER,
-  DEFAULT_ON,
   isTier,
   nameOf,
   tierOf,
