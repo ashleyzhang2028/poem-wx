@@ -1040,7 +1040,7 @@ Object.keys(WEB_TIER).forEach((k) => {
       const wxmlT = wxml;
       const row = E.compareRows({ logged: false, tier: "free" });
       const cols = row.reduce((m, r) => m + (r.cells.filter((c) => c.icon).length), 0);
-      return /icons\.yesInk/.test(inst) && /icons\.noInk/.test(inst)
+      return /icons\.yes/.test(inst) && /icons\.no/.test(inst)
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
@@ -2310,27 +2310,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           require(path.join(ROOT, "utils", "icons.js")), icon);
       }),
       "有个图标名在 utils/icons.js 里找不到 —— 那一格只剩文字");
-    ok("图标是 data URI（小程序里一条图片资源都不引）",
+    ok("图标是 base64 data URI（小程序 <image>/mask 不认 URL 编码的 data URI）",
       Object.keys(require(path.join(ROOT, "utils", "icons.js")))
-        .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml,") === 0),
-      "图标改从文件路径取了 —— 多套倍图要跟着进包");
-    ok("填进 src 的颜色是 #hex（rgba() 在真机的 SVG 里非法，整条 fill 会被丢掉）",
-      (() => {
-        const bar = require(path.join(ROOT, "utils", "icons.js"));
-        const src = /function svgInk[\s\S]*?\nfunction paint[\s\S]*?\n\}/.exec(barSrc);
-        if (!src) return false;
-        const paint = new Function("encodeURIComponent",
-          src[0] + "\nreturn paint;")(encodeURIComponent);
-        const one = paint(bar.home, "rgba(8, 8, 10, 1)");
-        return one.indexOf("%2308080a") >= 0 && !/rgba?\(/.test(one);
-      })(),
-      "paint() 把 rgba() 原样填进 SVG 的 fill —— 真机一片空白");
+        .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml;base64,") === 0),
+      "图标不是 base64 data URI —— 真机一片空白（URL 编码那份只在小程序外面能渲染）");
+    ok("底栏图标走 mask 上色（一张图两态，不靠两张图切 visibility）",
+      /mask-image:url\('\{\{item\.icon\}\}'\)/.test(barWxml)
+        && /\.tab-ico-mask[\s\S]{0,400}background-color:\s*currentColor/.test(barWxss)
+        && /mask-size:\s*contain/.test(barWxss),
+      "底栏图标还是两张 <image> 切 visibility —— 换不出主题色，也踩 <image> 认不认 data URI 这条");
     ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
       /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
       "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");
     ok("底栏每一项都经 list 渲染（图标源不是写死的）",
-      /src="\{\{item\.off\}\}"/.test(barWxml) && /src="\{\{item\.on\}\}"/.test(barWxml)
-        && /wx:for="\{\{list\}\}"/.test(barWxml));
+      /wx:for="\{\{list\}\}"/.test(barWxml) && /\{\{item\.icon\}\}/.test(barWxml));
   }
 
   {

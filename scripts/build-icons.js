@@ -12,7 +12,7 @@ const NAMES = [
   ["home", "home.svg"],
   ["library", "library.svg"],
   ["conference", "conference.svg"],
-  ["mine", "\u200cmine.svg"],
+  ["mine", "mine.svg"],
   ["yes", "yes.svg"],
   ["no", "no.svg"],
   ["search", "search.svg"]
@@ -27,16 +27,14 @@ function flatten(svg) {
 }
 
 function dataUri(svg) {
-  return "data:image/svg+xml," + encodeURIComponent(svg)
-    .replace(/%20/g, " ")
-    .replace(/%3D/g, "=")
-    .replace(/%3A/g, ":")
-    .replace(/%2F/g, "/")
-    .replace(/%22/g, "'");
+  return "data:image/svg+xml;base64," + Buffer.from(svg, "utf8").toString("base64");
 }
 
 function tint(uri, color) {
-  return uri.replace(/currentColor/g, encodeURIComponent(color));
+  const head = "data:image/svg+xml;base64,";
+  if (uri.indexOf(head) !== 0) return uri;
+  const svg = Buffer.from(uri.slice(head.length), "base64").toString("utf8");
+  return dataUri(svg.replace(/currentColor/g, color));
 }
 
 function escapeJs(uri) {
@@ -49,6 +47,7 @@ if (missing.length) {
   process.exit(1);
 }
 
+const ICON_URI = {};
 const LINES = [];
 
 NAMES.forEach((n) => {
@@ -57,12 +56,8 @@ NAMES.forEach((n) => {
     console.error(n[1] + " 里没有可换色的 fill / stroke —— 它会是死色");
     process.exit(1);
   }
-  LINES.push("  " + n[0] + ": '" + escapeJs(dataUri(svg)) + "'");
-});
-
-const ICON_URI = {};
-NAMES.forEach((n) => {
-  ICON_URI[n[0]] = dataUri(flatten(fs.readFileSync(path.join(SRC_DIR, n[1]), "utf8")));
+  ICON_URI[n[0]] = dataUri(svg);
+  LINES.push("  " + n[0] + ": '" + escapeJs(ICON_URI[n[0]]) + "'");
 });
 
 ["yes", "no"].forEach((name) => {

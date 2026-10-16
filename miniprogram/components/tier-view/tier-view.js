@@ -21,9 +21,7 @@ Component({
     heads: [],
     logged: false,
     compareRows: [],
-    stats: { caps: 0, enabled: 0, percent: 0 },
-    yesIcon: icons.yesInk,
-    noIcon: icons.noInk
+    stats: { caps: 0, enabled: 0, percent: 0 }
   },
 
   attached() {
