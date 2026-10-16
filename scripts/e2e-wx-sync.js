@@ -67,6 +67,9 @@ function makeWx(port, mem) {
   const auth = require(path.join(REPO, "miniprogram", "utils", "auth.js"));
   const remote = require(path.join(REPO, "miniprogram", "utils", "remote.js"));
 
+  const wire = require(path.join(REPO, "miniprogram", "utils", "wire.js"));
+  const wireRows = () => wire.packRecords();
+
   auth.configure({ baseUrl: "http://127.0.0.1:" + port });
 
   store.saveSettings({ grade: 3, dailyCount: 7, theme: "ink", sfx: false });
@@ -119,6 +122,33 @@ function makeWx(port, mem) {
     !store2.profile().avatarLocal, "居然认回来了：" + String(store2.profile().avatarLocal));
   ok("新手机上那篇进度认回来了（level 4）",
     (store2.getRecord("poem_x") || {}).level === 4, JSON.stringify(store2.getRecord("poem_x")));
+
+  store.clearProgress();
+  const svStoreBefore = await svStore.listProgress(store.profile().userId, "", 0);
+  const back = wire.applyRecords(
+    svStoreBefore
+      .filter((r) => r.poem_id === "poem_x")
+      .map((r) => ({ id: r.poem_id, payload: r.payload, updatedAt: Number(r.updated_at), deleted: !!r.deleted }))
+  );
+  ok("清空未推完时，拉回来的旧记录不会复活（清空是更新的一次删除）",
+    !store.getRecord("poem_x") && back === 0, JSON.stringify(store.getRecord("poem_x")));
+
+  const sync3 = await remote.sync();
+  ok("清空之后推得上去", !sync3.error, JSON.stringify(sync3));
+
+  const after = await svStore.listProgress(store.profile().userId, "", 0);
+  const gone = {};
+  after.forEach((r) => { gone[r.poem_id] = r; });
+  ok("服务端那条进度被标成已删（不是只在本地没了）",
+    gone["poem_x"] && Number(gone["poem_x"].deleted) === 1,
+    JSON.stringify(gone["poem_x"]));
+  ok("清空之后再推，清除标记不再重复发",
+    wireRows().filter((r) => r.id === "poem_x" && r.deleted).length === 0);
+
+  const sync4 = await remote2.sync();
+  ok("另一台手机同步成功", !sync4.error, JSON.stringify(sync4));
+  ok("另一台手机上的那条进度被删掉（清空跨设备生效）",
+    !store2.getRecord("poem_x"), JSON.stringify(store2.getRecord("poem_x")));
 
   server.close();
   const bad = results.filter((r) => !r).length;

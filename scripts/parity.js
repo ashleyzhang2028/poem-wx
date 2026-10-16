@@ -119,21 +119,36 @@ Object.keys(DECIDED).forEach((k) => {
 
 {
 
-  const MUST_NOT_APPEAR = {
-    collections: ["自选清单", "建一个集合"],
-    family: ["子用户", "孩子"],
-    paper: ["打印", "导出 PDF"]
+  const NOT_BUILT = {
+    family: ["family", "child", "kids"],
+    print: ["print", "pdf"]
   };
+  const routes = pages.map((p) => p.toLowerCase());
+  const caps = capKeys.map((k) => String(k).toLowerCase());
+  const jsFiles = [];
+  (function walk(dir) {
+    fs.readdirSync(dir).forEach((f) => {
+      const full = path.join(dir, f);
+      if (fs.statSync(full).isDirectory()) walk(full);
+      else if (f.endsWith(".js")) jsFiles.push(full);
+    });
+  })(MP);
+  const handlers = jsFiles
+    .filter((f) => f.indexOf(path.join(MP, "data")) !== 0)
+    .map((f) => fs.readFileSync(f, "utf8"))
+    .join("\n")
+    .toLowerCase();
+
   const hits = [];
-  pages.forEach((p) => {
-    const wxml = fs.readFileSync(path.join(MP, p + ".wxml"), "utf8");
-    Object.keys(MUST_NOT_APPEAR).forEach((k) => {
-      MUST_NOT_APPEAR[k].forEach((word) => {
-        if (wxml.indexOf(word) >= 0) hits.push(p + " → " + word);
-      });
+  Object.keys(NOT_BUILT).forEach((k) => {
+    NOT_BUILT[k].forEach((word) => {
+      if (routes.some((r) => r.indexOf(word) >= 0)) hits.push("route → " + word);
+      if (caps.some((c) => c.indexOf(word) >= 0)) hits.push("cap → " + word);
+      const re = new RegExp("on[A-Za-z]*" + word + "|" + word + "[A-Za-z]*Handler", "g");
+      if (re.test(handlers)) hits.push("handler → " + word);
     });
   });
-  ok("刻意不做的能力界面上没有入口", hits.length === 0, hits.slice(0, 6).join("; "));
+  ok("刻意不做的能力没有路由、能力项或处理函数", hits.length === 0, hits.slice(0, 6).join("; "));
 }
 
 console.log("");

@@ -27,7 +27,7 @@
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onPrivacy">
-      <view class="row-main"><text class="row-title">隐私说明</text></view>
+      <view class="row-main"><text class="row-title">隐私政策</text></view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCopyFeedback">

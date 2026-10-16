@@ -324,6 +324,7 @@ function push() {
     )
     .then(() => {
       store.drop(store.KEYS.sync);
+      wire.clearRecords(all);
       return { pushed: all.length, sim: false };
     });
 }
