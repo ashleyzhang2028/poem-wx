@@ -31,7 +31,6 @@ function todayLabel() {
 }
 
 function scopeList(all, view, scope) {
-  if (!scope.random) return all.filter((p) => p.gr === view.grade && p.tm === view.term);
   return S.poolForScope({
     grade: view.grade,
     term: view.term,
@@ -41,7 +40,7 @@ function scopeList(all, view, scope) {
 }
 
 function scopeLabel(scope) {
-  return scope.random ? scope.scopeName + "全部诗词" : "本年级本学期全部诗词";
+  return scope.scopeName + "全部诗词";
 }
 
 function rowsOfScope(list, scope) {

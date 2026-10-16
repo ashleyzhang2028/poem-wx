@@ -53,12 +53,14 @@
 }
 
 .day {
+  min-height: 96rpx;
   padding: var(--sp-2) var(--sp-3);
   border-bottom: 1rpx solid var(--line-2);
 }
 
 .day.zero {
-  padding: var(--sp-1) var(--sp-3);
+  min-height: 68rpx;
+  padding: var(--sp-2) var(--sp-3);
 }
 
 .day.zero .day-label {

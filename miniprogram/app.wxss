@@ -548,19 +548,18 @@ view, text, button, input, textarea {
 .opt-group {
   display: flex;
   flex-wrap: wrap;
-
-  column-gap: var(--pad-opt-x);
-  row-gap: var(--pad-opt-y);
+  gap: var(--sp-2);
 }
 
 .opt-group.column {
   flex-direction: column;
-  gap: var(--pad-opt-y);
+  gap: var(--sp-2);
 }
 
 .opt-group.inline {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
 }
 
 .opt-group.inline .opt-row {
@@ -573,10 +572,6 @@ view, text, button, input, textarea {
   flex: none;
   min-width: 0;
   padding: 0;
-}
-
-.opt-group.inline .opt-name {
-  line-height: 1.25;
 }
 
 .opt-group.inline.cols-2 {
@@ -633,13 +628,9 @@ view, text, button, input, textarea {
 .opt-name {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-title);
-  color: var(--ink);
-  line-height: 1.4;
-}
-
-.opt-group.inline .opt-name {
   font-size: var(--fs-hint);
+  color: var(--ink);
+  line-height: 1.3;
 }
 
 .opt-desc {
@@ -965,12 +956,11 @@ view, text, button, input, textarea {
 
 .chip-group {
   display: grid;
-
-  gap: var(--sp-1) var(--sp-1);
+  gap: var(--sp-2);
 }
 
 .chip-group + .chip-group {
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-2);
 }
 
 .chip-group.cols-2 {

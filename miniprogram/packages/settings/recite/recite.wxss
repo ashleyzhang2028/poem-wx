@@ -1,8 +1,3 @@
-.stage-note {
-  display: block;
-  margin-top: var(--sp-2);
-}
-
 .pool-hint {
   display: block;
   margin-top: var(--sp-3);

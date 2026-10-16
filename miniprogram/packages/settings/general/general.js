@@ -4,6 +4,7 @@ const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const sync = require("../../../utils/sync");
+const sfx = require("../../../utils/sfx");
 const tabPage = require("../../../utils/tab-page");
 
 const ALIGNS = [
@@ -33,7 +34,13 @@ Page({
 
     pinyinOn: false,
     pinyinNote: "",
-    locked: false
+    locked: false,
+
+    items: theme.palette(),
+    theme: theme.DEFAULT,
+
+    sfxVisible: false,
+    sfxOn: true
   },
 
   onShow() {
@@ -46,8 +53,12 @@ Page({
     const settings = store.settings();
     const pr = pinyin.readiness();
     const prOn = pr.usable && entitlement.can("pinyin");
+    const fx = sfx.readiness();
     this.setData(
       Object.assign({ locked: false }, settings, {
+        theme: theme.currentTheme().key,
+        sfxVisible: fx.visible,
+        sfxOn: sfx.enabled(),
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
         pinyinNote: prOn
@@ -83,6 +94,25 @@ Page({
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) return;
     this.setData({ pinyin: mode });
+  },
+
+  onPick(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === this.data.theme) return;
+    const picked = theme.set(key);
+    theme.apply(this);
+    this.setData({ theme: picked.key });
+    wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
+  onSfx(e) {
+    this.setData({ sfxOn: sfx.setEnabled(e.detail.value) });
+  },
+
+  onSfxTest() {
+    if (!sfx.preview()) {
+      wx.showToast({ title: "这台设备出不了声", icon: "none" });
+    }
   },
 
 });

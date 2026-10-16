@@ -94,9 +94,10 @@ const viewDir = path.join(ROOT, "components", "tier-view", "tier-view");
 });
 pages.forEach((p) => {
   if (fs.existsSync(path.join(ROOT, p + ".wxss"))) return;
-  ok("没有样式表的页面只放共享组件 " + p,
-    fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8").indexOf("<tier-view") >= 0,
-    "这一页既没有自己的样式表，用的也不是共用的组件");
+  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+  ok("没有样式表的页面只拿共享组件与共享类搭 " + p,
+    wxml.indexOf("<tier-view") >= 0 || /class="[^"]*\bcard\b/.test(wxml),
+    "这一页既没有自己的样式表，搭的也不是共用的东西 —— 样式没有出处");
 });
 
 const jsFiles = [];
@@ -856,17 +857,17 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   const p = "pages/mine/mine";
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
-  const rowAt = (h) => wxml.indexOf('bindtap="' + h + '"');
-  const rowEnd = (h) => wxml.indexOf("</view>", rowAt(h));
-  const wraps = (inner, outer) =>
-    rowAt(inner) >= 0 && rowAt(outer) >= 0 && rowEnd(inner) < rowAt(outer);
-  ok("「主题」与「声音」各是一行（音效门禁只藏自己那一行）",
-    wraps("onTheme", "onReader") && /wx:if="\{\{sfxVisible\}\}"/.test(wxml)
-      && !/pinyinVisible/.test(wxml + js),
-    "主题与声音共用一个条件，或者「声音」挂的是注音那一个门禁");
-  ok("版式三件事只有一条入口（不摆三行）",
-    (wxml.match(/onSettings/g) || []).length === 1,
-    "设置入口摆了不止一处 —— 同一件事有两条路");
+  ok("设置只有一条入口（版式 / 主题 / 声音收在同一页）",
+    (wxml.match(/onSettings/g) || []).length === 1
+      && !/onTheme|onReader|onRecite/.test(wxml)
+      && !/onTheme|onReader|onRecite/.test(js),
+    "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
+  const general = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
+  ok("那一页装着版式 / 声音 / 主题三样",
+    /onAlign/.test(general) && /onPinyin/.test(general) && /onFontSlide/.test(general)
+      && /onSfx/.test(general) && /onPick/.test(general),
+    "三样没并到一页上，或并了却少了一样的处理函数");
 
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
@@ -875,12 +876,9 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
     ["onScope", "onDaily", "onAlgo"].every((h) => wxml.indexOf(h) >= 0 && js.indexOf(h) >= 0)
       && ["focus=scope", "focus=count", "focus=algo"].every((q) => js.indexOf(q) >= 0),
     "概况那三行不跳了，或者跳过去不落在那张卡上");
-  const reciteCardAt = wxml.indexOf('bindtap="onRecite"');
   ok("背诵进度收在「背诵概况」最后一行（学习卡里那一份已撤）",
-    reciteCardAt > 0
-      && (wxml.match(/bindtap="onProgress"/g) || []).length === 1
-      && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onAlgo"')
-      && wxml.indexOf('bindtap="onProgress"') < reciteCardAt,
+    (wxml.match(/bindtap="onProgress"/g) || []).length === 1
+      && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onAlgo"'),
     "进度那一行还在下面那张卡里，或者概况里没有它");
   ok("背诵设置页接得住这三个 focus（不然跳过去只落个页顶）",
     /data-anchor="recite-(scope|count|algo)"/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.wxml"), "utf8"))
@@ -1018,7 +1016,6 @@ const GATED = {
   "packages/game/feihua/feihua": "allowed",
   "packages/progress/index/index": "locked",
   "packages/settings/recite/recite": "locked",
-  "packages/settings/reader/reader": "locked",
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
   "packages/mine/tier/tier": "allowed",
@@ -1037,7 +1034,7 @@ const GATED = {
   ok("阅读页未登录时正文在 block wx:else 里", readerWxml.indexOf("block wx:else") >= 0);
   ok("阅读页锁定时不渲染诗句", readerWxml.indexOf("poem-line") > readerWxml.indexOf("block wx:else"));
 
-  ["general/general", "recite/recite", "reader/reader"].forEach((p) => {
+  ["general/general", "recite/recite"].forEach((p) => {
     const wxml = fs.readFileSync(path.join(ROOT, "packages/settings", p + ".wxml"), "utf8");
     ok("设置页未登录时不渲染设置项 " + p, wxml.indexOf("block wx:else") >= 0);
   });
@@ -1081,20 +1078,23 @@ const GATED = {
   ok("用户列表页区分「能改」与「只读」",
     usersWxml.indexOf("item.editable") >= 0 && usersWxml.indexOf("只读") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(usersWxml));
-  ok("角色改动的入口按 owner 显隐", usersWxml.indexOf("canSetRole") >= 0);
+  ok("用户列表页不再摆改角色的入口（只留改档）",
+    usersWxml.indexOf("canSetRole") < 0 && usersWxml.indexOf("onSetRole") < 0
+      && usersJs.indexOf("onSetRole") < 0 && adminLib.indexOf("setRole") < 0,
+    "角色那一枚还在这页上 —— 授权不在名录里做（Issue #232）");
   ok("用户列表页从管理页那一排放出去（管理页自己没有改档按钮）",
     adminWxml.indexOf("onSetTier") < 0 && adminJs.indexOf("setTier") < 0
       && /bindtap="onUsers"/.test(adminWxml) && /\/packages\/users\/index\/index/.test(adminJs),
     "名录留在管理页里，或放出去了却没给回程入口");
-  ok("权限那两张卡只有一份（组件），两张页面只写标签",
-    /<tier-view\s*\/>/.test(tierWxml) && /<tier-view\s*\/>/.test(adminWxml)
-      && viewWxml.indexOf("compareGroups") >= 0
-      && tierWxml.indexOf("compareGroups") < 0 && adminWxml.indexOf("compareGroups") < 0,
-    "档位与权限页与名录页各画了一份表 —— 任一边改样式都会让另一边说谎");
+  ok("权限表只有一份（组件），用户权限页只写标签",
+    /<tier-view\s*\/>/.test(tierWxml) && viewWxml.indexOf("compareGroups") >= 0
+      && tierWxml.indexOf("compareGroups") < 0,
+    "用户权限页自己又画了一份表 —— 与组件里那份迟早对不上");
 
-  ok("名录页未登录时不摆一张只读的锁卡（那几句已挂在公开的那张表上）",
-    adminWxml.indexOf("lock-card") < 0 && viewWxml.indexOf("未登录 · 暂按 Free") >= 0,
-    "顶端又摆了一张锁卡：未登录的人正是最该看这张表的人");
+  ok("后台管理页不再摆档位那几张卡（普通用户页已经有）",
+    adminWxml.indexOf("<tier-view") < 0 && adminWxml.indexOf("lock-card") < 0
+      && viewWxml.indexOf("未登录 · 暂按 Free") >= 0,
+    "档位卡跟着进了后台管理页 —— 两处各说一遍同一件事（Issue #232）");
 
   ok("名录只有管理页那一处入口（按登录显隐，「我的」页不再列一行）",
     /wx:if="\{\{logged\}\}"[^>]*bindtap="onUsers"/.test(adminWxml)
@@ -1187,7 +1187,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
         .indexOf("未登录") >= 0,
     "顶端一张 lock-card 把权限对比一起盖住了 —— 未登录的人正是最该看这张表的人");
   ok("权限表那一块只读能力表，改档改角色不落在这里",
-    ["onSetTier", "onSetRole", "canWrite", "canSetRole"].every((k) => tierWxml.indexOf(k) < 0
+    ["onSetTier", "onSetRole", "canWrite"].every((k) => tierWxml.indexOf(k) < 0
       && tierJs.indexOf(k) < 0),
     "这张表给所有人看，改档那几个入口留在管理页的用户名录里");
 }
@@ -2484,16 +2484,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("详情页（读这首诗时）注音 / 对齐 / 字号三样都在",
       /onPinyin/.test(reader) && /onAlign/.test(reader) && /onFontDown/.test(reader) && /onFontUp/.test(reader));
     const general = read("packages/settings/general/general.wxml");
-    ok("「通用设置」页三样都在（对齐 / 注音 / 字号）",
+    ok("「设置」页三样都在（对齐 / 注音 / 字号）",
       /onAlign/.test(general) && /onFontSlide/.test(general) && /onPinyin/.test(general));
     const generalJs2 = read("packages/settings/general/general.js");
-    ok("通用设置里的注音走 pinyin.setMode()（不自己写一份 store）",
+    ok("设置里的注音走 pinyin.setMode()（不自己写一份 store）",
       /pinyin\.setMode\(/.test(generalJs2));
 
-    ok("「阅读设置」页不再有注音（它现在只管声音）",
-      !/onMode/.test(read("packages/settings/reader/reader.wxml"))
-        && !/onMode\s*\(/.test(read("packages/settings/reader/reader.js"))
-        && !/PINYIN_MODES/.test(read("packages/settings/reader/reader.js")));
+    ok("主题与声音也并在这一页（各自的动作都在）",
+      /onPick/.test(general) && /onSfx/.test(general) && /swatch/.test(general)
+        && /onPick\s*\(/.test(generalJs2) && /sfx\.setEnabled\(/.test(generalJs2),
+      "主题 / 声音只是搬了壳，动作没跟过来");
   }
 
   {
@@ -3201,7 +3201,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         .every((fn) => setWxml.indexOf(fn) >= 0 && setJs.indexOf(fn) >= 0)
       && /wx\.showModal/.test(setJs));
   ok("能力表里有 extra（与网页版对齐）", E.CAP_KEYS.indexOf("extra") >= 0);
-  ok("计划卡下面挂着「本年级本学期全部诗词」，默认折叠、开关是个上下方向的图标",
+  ok("计划卡下面挂着「全部诗词」那张卡，默认折叠、开关是个上下方向的图标",
     /allOpen:\s*false/.test(homeJs)
       && /allLabel/.test(homeJs) && /allRows/.test(homeJs)
       && /<view class="card" wx:if="\{\{allCount\}\}">/.test(homeWxml)
@@ -3211,11 +3211,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs)
       && /<view class="all-toggle \{\{allOpen \? 'open' : ''\}\}"><\/view>/.test(homeWxml),
     "那张卡要么没挂、要么不是折叠形态");
-  ok("改名的是标题不是数据：随机范围下列的是那一段的全部诗词",
-    /scope\.random\s*\?\s*scope\.scopeName\s*\+\s*"全部诗词"\s*:\s*"本年级本学期全部诗词"/.test(homeJs)
+  ok("标题与列出的是同一件事：都从范围名与 poolForScope 出",
+    /function scopeLabel\(scope\)\s*\{[\s\S]{0,120}?scope\.scopeName\s*\+\s*"全部诗词"/.test(homeJs)
       && /function scopeList\(all, view, scope\)/.test(homeJs)
       && /poolForScope/.test(homeJs.slice(homeJs.indexOf("function scopeList"))),
-    "标题与列出的是两件事 —— 随机那几档得写「小学阶段全部诗词」并列小学那一段");
+    "标题另写一套、或列表不走 poolForScope —— 标题与内容迟早对不上");
   ok("全部诗词卡点开走弹层，队列用它自己那一份（不与今日计划混）",
     /onOpenAll[\s\S]{0,200}?openSheet\(/.test(homeJs)
       && /source === "all" \? this\.scopeRows\(\) : this\.data\.plan/.test(homeJs)
@@ -3446,9 +3446,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页不再有「背诵设置」那一行（hero-foot 那块整块撤了）",
     !/\.hero-foot/.test(homeWxss) && !/hero-foot/.test(homeWxml),
     "那一行还在 —— 首页又多了一处设置入口");
-  ok("背诵设置仍有去处（我的 → 设置 → 背诵设置）",
-    /onRecite/.test(read("pages/mine/mine.js"))
-      && read("pages/mine/mine.wxml").indexOf("onRecite") >= 0);
+  ok("背诵设置的三个去处仍在（我的 → 范围 / 首数 / 算法各带一个 focus）",
+    ["onScope", "onDaily", "onAlgo"].every(
+      (h) => read("pages/mine/mine.js").indexOf(h) >= 0
+        && read("pages/mine/mine.wxml").indexOf(h) >= 0)
+      && !/onRecite/.test(read("pages/mine/mine.js")),
+    "三行都没了，或者又留了一行整页入口（Issue #232 撤的就是它）");
 
   ok("今日安排的状态写成一个 row-state 元素（不再是一枚圆圈）",
     /row-state/.test(homeWxml) && /row-state/.test(homeWxss || ""),
@@ -3548,8 +3551,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       /item\.tierLabel/.test(usersWxml) && !/item\.role/.test(bareWxml(usersWxml)),
       "名册里还挂着 role");
 
-    ok("改角色这个动作没跟着一起删（撤的是标签，不是功能）",
-      /onSetRole/.test(usersWxml) && /setRole/.test(bare(usersJs)));
+    ok("名录不再摆改角色的入口（改档那一枚留着）",
+      !/onSetRole/.test(usersWxml) && !/setRole/.test(bare(usersJs))
+        && /onSetTier/.test(usersWxml),
+      "角色那一枚又回来了，或者改档那一枚被一起删掉了");
   }
 
   {

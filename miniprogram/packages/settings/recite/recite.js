@@ -14,10 +14,10 @@ const STAGE_SCOPE = { primary: "primary", middle: "middle", high: "high" };
 
 function scopeForStage(stage, scope) {
   const to = STAGE_SCOPE[stage];
-  if (!to) return scope;
-  return S.SCOPES[scope] && S.SCOPES[scope].stages && S.SCOPES[scope].stages.length === 1
-    ? to
-    : scope;
+  const s = S.SCOPES[scope];
+  const oneStage = !!s && !!s.stages && s.stages.length === 1;
+  if (!to || !oneStage) return scope;
+  return STAGE_SCOPE[s.stages[0]] ? to : scope;
 }
 
 const TERMS = [
@@ -35,7 +35,6 @@ Page({
 
     stage: "primary",
 
-    gradeNote: "",
     term: 1,
     scope: "upto",
     scopes: [],
@@ -68,7 +67,6 @@ Page({
       Object.assign({}, settings, {
         stage: S.stageOf(settings.grade),
         grades: this.gradeRows(settings.grade),
-        gradeNote: this.gradeNote(settings.grade),
         scopes: scopes,
         algos: this.algoRows(settings.algo),
         daily: this.dailyRows(),
@@ -161,12 +159,6 @@ Page({
     return S.STAGE_GRADES[S.stageOf(grade)].map((g) => ({ value: g, label: S.gradeName(g) }));
   },
 
-  gradeNote(grade) {
-    const key = S.stageOf(grade);
-    const gs = S.STAGE_GRADES[key];
-    return S.stageLabel(key) + "（" + gs[0] + "—" + gs[gs.length - 1] + " 年级）";
-  },
-
   algoRows(current) {
     return R.list().map((m) => {
       const allowed = E.algoAllowed(m.key);
@@ -202,8 +194,7 @@ Page({
     const grade = patch.grade === undefined ? this.data.grade : patch.grade;
     const derived = {
       stage: S.stageOf(grade),
-      grades: this.gradeRows(grade),
-      gradeNote: this.gradeNote(grade)
+      grades: this.gradeRows(grade)
     };
     this.setData(Object.assign(patch, derived, { algos: this.algoRows(patch.algo || this.data.algo) }), () =>
       this.updatePool()

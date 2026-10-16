@@ -42,10 +42,15 @@
 
 .acct-acts {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   flex: none;
   gap: var(--sp-2);
+  padding-left: var(--sp-2);
+}
+
+.acct-tier {
+  color: var(--strong-text);
+  background: var(--strong-soft);
 }
 
 .acct-act {

@@ -48,6 +48,33 @@
     <text class="hint note" wx:else>{{pinyinNote}}</text>
   </view>
 
+  <view class="card" wx:if="{{sfxVisible}}">
+    <view class="card-title bar">声音</view>
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">答对答错出声</text>
+        <text class="row-sub">题库 · 考试 · 飞花令共用</text>
+      </view>
+      <switch checked="{{sfxOn}}" bindchange="onSfx" color="{{themeHex}}" />
+    </view>
+    <button class="btn ghost block test-btn" bindtap="onSfxTest">试听一声</button>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">主题</view>
+
+    <view class="swatch-grid">
+      <view class="swatch {{theme === item.key ? 'on' : ''}}"
+            wx:for="{{items}}" wx:key="key"
+            style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
+            hover-class="swatch-hover" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onPick">
+        <view class="swatch-dot"></view>
+        <text class="swatch-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
   <view class="safe-bottom"></view>
   </block>
 </view>
