@@ -14,6 +14,16 @@ const DAILY_DEFAULT = 5;
 
 const DEFAULT_NAME = "自选背诵";
 
+function usable() {
+  return list().filter((c) => c.items.length > 0);
+}
+
+function selfOnlyOn() {
+  if (!entitlement.can("collections") || !entitlement.can("coursefree")) return false;
+  if (!store.settings().selfOnly) return false;
+  return usable().length > 0;
+}
+
 function capOf() {
   const tier = entitlement.status().tier;
   const n = LIMITS[tier];
@@ -189,6 +199,8 @@ module.exports = {
   DAILY_DEFAULT,
   countOf,
   setCount,
+  usable,
+  selfOnlyOn,
   DEFAULT_NAME,
   capOf,
   nameOf,

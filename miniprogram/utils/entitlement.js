@@ -2,6 +2,23 @@ const store = require("./store");
 const tiers = require("./tiers");
 const auth = require("./auth");
 
+const TIER_RANK = { free: 1, pro: 2, max: 3 };
+
+function rankOf(tier) {
+  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
+}
+
+function collectionCell(tier) {
+  const n = tiers.COLLECTION_LIMITS[tier];
+  if (!n) return { text: "无", note: "", on: false };
+  return { text: n + " 个", note: "每个 " + tiers.COLLECTION_ITEMS_MAX + " 首", on: true };
+}
+
+function courseFreeCell(tier) {
+  const on = rankOf(tier) >= rankOf("pro");
+  return { text: on ? "可用" : "未开", note: "", on: on };
+}
+
 const CAPS = [
   { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
   { key: "library", name: "课外阅读", desc: "十七部集子随选随读", tier: "free" },
@@ -15,15 +32,20 @@ const CAPS = [
   { key: "sync", name: "同步进度", desc: "进度与设置跟着微信账号走", tier: "free" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
-  { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), tier: "pro" },
+  { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
+  { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集子与今日加背", cell: courseFreeCell, tier: "pro" },
   { key: "fsrs", name: "FSRS", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
 ];
 
-const CAP_KEYS = CAPS.map((c) => c.key);
+function cellFor(cap, tier) {
+  if (cap.cell) return cap.cell(tier);
+  const on = rankOf(cap.tier) <= rankOf(tier);
+  return { text: on ? "可用" : "未开", note: "", on: on };
+}
 
-const TIER_RANK = { free: 1, pro: 2, max: 3 };
+const CAP_KEYS = CAPS.map((c) => c.key);
 
 function tierOf(profile) {
   const server = auth.serverTier();
@@ -118,31 +140,27 @@ function hint(key, ctx) {
   return "「" + cap.name + "」需要 " + tiers.nameOf(cap.tier) + " 档";
 }
 
-function rankOf(tier) {
-  return TIER_RANK[tier] === undefined ? 0 : TIER_RANK[tier];
-}
-
-const GROUP_TITLE = { free: "Free 起", pro: "Pro 起", max: "Max 起" };
-
 function compareCols(snap) {
   const now = tierNow(snap);
   return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
 }
 
-function compareGroups(snap) {
+function compareRows(snap) {
   const s = snap || snapshot();
-  const byTier = {};
-  CAPS.forEach((c) => {
-    if (!byTier[c.tier]) byTier[c.tier] = [];
-    byTier[c.tier].push(c);
-  });
-  return Object.keys(GROUP_TITLE)
-    .filter((k) => byTier[k] && byTier[k].length)
-    .map((k) => ({
-      key: k,
-      note: GROUP_TITLE[k],
-      rows: byTier[k].map((c) => ({ cap: c.key, name: c.name, cells: cellsOf(c, s) }))
-    }));
+  return CAPS.map((c) => ({
+    cap: c.key,
+    name: c.name,
+    cells: tiers.TIERS.map((t) => {
+      const cell = cellFor(c, t.key);
+      return {
+        tier: t.key,
+        text: cell.text,
+        note: cell.note || "",
+        now: t.key === tierNow(s),
+        on: !!cell.on
+      };
+    })
+  }));
 }
 
 function compareSummary() {
@@ -158,16 +176,6 @@ function tierNow(snap) {
   return s.logged ? s.tier : "";
 }
 
-function cellsOf(cap, snap) {
-  const now = tierNow(snap);
-  return tiers.TIERS.map((t) => ({
-    tier: t.key,
-    label: t.name,
-    now: t.key === now,
-    on: rankOf(cap.tier) <= rankOf(t.key)
-  }));
-}
-
 function snapshot() {
   const s = status();
   const out = {
@@ -180,7 +188,7 @@ function snapshot() {
     caps: {}
   };
   CAPS.forEach((c) => {
-    out.caps[c.key] = { ok: can(c.key), need: c.tier, name: c.name, desc: c.desc };
+    out.caps[c.key] = { ok: can(c.key), need: c.tier, name: c.name };
   });
   return out;
 }
@@ -289,7 +297,7 @@ module.exports = {
   CAPS,
   CAP_KEYS,
   compareCols,
-  compareGroups,
+  compareRows,
   compareSummary,
   TIER_RANK,
   rankOf,

@@ -93,6 +93,35 @@
     "back": true,
     "logged": true
   },
+  "home-selfonly": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "settings": { "selfOnly": true },
+    "collections": [
+      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }, { "id": "poems-xx1-05" }] }
+    ],
+    "_note": "开着「只背自选」的首页：只剩自选集子，课内「全部诗词」那张卡与排期都收起"
+  },
+  "tier": {
+    "page": "packages/mine/tier/tier",
+    "title": "用户权限",
+    "back": true,
+    "logged": true,
+    "tier": "pro",
+    "_note": "权限对比那张卡：四列（能力 / Free / Pro / Max），一行一项。当前档位那一列带「现在」"
+  },
+  "settings-recite-selfonly": {
+    "page": "packages/settings/recite/recite",
+    "title": "背诵设置",
+    "back": true,
+    "logged": true,
+    "collections": [
+      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }] }
+    ],
+    "_note": "「只背自选」那一开关：集子里有篇目才亮"
+  },
   "settings-recite-middle": {
     "page": "packages/settings/recite/recite",
     "title": "背诵设置",

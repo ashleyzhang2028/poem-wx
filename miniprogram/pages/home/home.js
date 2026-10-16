@@ -160,18 +160,21 @@ Page({
     const view = { grade: settings.grade, term: settings.term, scope: settings.scope };
     const scope = S.scopeOf(view.scope);
 
+    const selfOnly = cols.selfOnlyOn();
+
     const plan = S.generateDailyPlan({
       grade: view.grade,
       term: view.term,
       count: settings.dailyCount,
       scope: view.scope,
       allPoems: all,
+      selfOnly: selfOnly,
 
       extraPoems: store.dailyExtraPoems(),
       getRecord: store.getRecord
     });
 
-    const allList = scopeList(all, view, scope);
+    const allList = selfOnly ? [] : scopeList(all, view, scope);
     const allMode = this.data.allOpen || this.sheetSource === "all";
     const allRows = allMode ? rowsOfScope(allList, scope) : [];
     const sheetRows = this.collectionId ? this.collectionSheetRows(this.collectionId) : [];
@@ -233,6 +236,7 @@ Page({
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
       sheetRows: this.collectionId ? sheetRows : (this.sheetSource === "all" ? allRows : rows),
+      selfOnly: selfOnly,
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),

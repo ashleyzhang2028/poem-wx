@@ -18,7 +18,7 @@ Component({
     note: "",
     heads: [],
     logged: false,
-    compareGroups: [],
+    compareRows: [],
     stats: { caps: 0, enabled: 0, percent: 0 }
   },
 
@@ -36,30 +36,20 @@ Component({
     refresh() {
       const snap = entitlement.snapshot();
       const sums = entitlement.compareSummary();
-      const chips = entitlement.compareCols(snap).map((c, i) => ({
+      const heads = entitlement.compareCols(snap).map((c, i) => ({
         tier: c.tier,
         label: c.label,
         now: c.now,
         on: sums[i].on,
         total: sums[i].total
       }));
-      const groups = entitlement.compareGroups(snap).map((g) => ({
-        key: g.key,
-        note: g.note,
-        rows: g.rows.map((r) => ({
-          cap: r.cap,
-          name: r.name,
-          desc: snap.caps[r.cap].desc,
-          ok: snap.caps[r.cap].ok
-        }))
-      }));
 
       this.setData({
         logged: snap.logged,
         status: snap,
         note: noteOf(snap),
-        heads: chips,
-        compareGroups: groups,
+        heads: heads,
+        compareRows: entitlement.compareRows(snap),
         stats: view.stats()
       });
     }

@@ -122,11 +122,36 @@ function gradeDistance(a, b) {
   return Math.abs(Number(a) - Number(b));
 }
 
+function dedupePoems(list) {
+  const seen = {};
+  const out = [];
+  (list || []).forEach((p) => {
+    if (!p || !p.id || seen[p.id]) return;
+    seen[p.id] = true;
+    out.push(p);
+  });
+  return out;
+}
+
+function pinnedPlan(extraPoems, getRecord) {
+  return (extraPoems || []).filter((p) => p && p.id).map((p) => {
+    const rec = getRecord(p.id);
+    return {
+      poem: p,
+      reason: "pinned",
+      reviewRound: rec && rec.learned ? R.clampLevel(rec.level) + 1 : 1
+    };
+  });
+}
+
 function generateDailyPlan(opt) {
   const grade = Number(opt.grade);
   const term = Number(opt.term);
   const count = opt.count || 5;
   const getRecord = opt.getRecord;
+
+  if (opt.selfOnly) return pinnedPlan(dedupePoems(opt.extraPoems), getRecord);
+
   const now = Date.now();
   const allPoems = opt.allPoems || [];
   const current = allPoems.filter((p) => p.gr === grade && p.tm === term);
@@ -152,13 +177,9 @@ function generateDailyPlan(opt) {
   const plan = [];
   const used = {};
 
+  const extraList = dedupePoems(opt.extraPoems);
   const extraById = {};
-  const extraList = [];
-  (opt.extraPoems || []).forEach((p) => {
-    if (!p || !p.id || extraById[p.id]) return;
-    extraById[p.id] = true;
-    extraList.push(p);
-  });
+  extraList.forEach((p) => { extraById[p.id] = true; });
 
   const isExtra = (p) => !!extraById[p.id];
 

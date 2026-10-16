@@ -4,6 +4,7 @@ const sync = require("../../../utils/sync");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
+const cols = require("../../../utils/collections");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabPage = require("../../../utils/tab-page");
@@ -46,7 +47,13 @@ Page({
     daily: [],
     dailyMax: 20,
     poolSize: 0,
-    locked: false
+    locked: false,
+
+    selfOnlyOn: false,
+    selfOnly: false,
+    selfOnlyHint: "",
+    selfOnlyRows: 0,
+    selfOnlyPoems: 0
   },
 
   onLoad(query) {
@@ -74,9 +81,35 @@ Page({
       }),
       () => {
         this.updatePool();
+        this.updateSelfOnly();
         this.scrollToAnchor();
       }
     );
+  },
+
+  updateSelfOnly() {
+    const rows = cols.usable();
+    const on = E.can("collections") && E.can("coursefree");
+    this.setData({
+      selfOnlyOn: on,
+      selfOnly: on && !!store.settings().selfOnly,
+      selfOnlyRows: rows.length,
+      selfOnlyPoems: rows.reduce((n, c) => n + c.items.length, 0),
+      selfOnlyHint: on
+        ? ""
+        : E.hint("coursefree") || E.hint("collections")
+    });
+  },
+
+  onSelfOnly(e) {
+    const want = !!e.detail.value;
+    if (want && !cols.usable().length) {
+      this.setData({ selfOnly: false });
+      wx.showToast({ title: "先建一个集子、往里面加几首", icon: "none" });
+      return;
+    }
+    this.setData({ selfOnly: want });
+    this.save({ selfOnly: want });
   },
 
   scrollToAnchor() {

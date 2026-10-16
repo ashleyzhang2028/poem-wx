@@ -35,6 +35,8 @@ const DEFAULTS = {
   theme: "ink",
   pinyin: "rare",
 
+  selfOnly: false,
+
   lastSearch: "",
 
   lastSyncAt: 0,

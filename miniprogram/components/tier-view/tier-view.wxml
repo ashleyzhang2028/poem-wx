@@ -8,22 +8,25 @@
     <view class="meter-fill" style="width:{{stats.percent}}%"></view>
   </view>
   <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项能力</text>
-
-  <view class="chips">
-    <view class="chip {{col.now ? 'is-now' : ''}}" wx:for="{{heads}}" wx:for-item="col" wx:key="tier">
-      <text class="chip-name">{{col.label}}</text>
-      <text class="chip-count">{{col.on}} / {{col.total}}</text>
-    </view>
-  </view>
 </view>
 
-<view class="card" wx:for="{{compareGroups}}" wx:key="key">
-  <view class="card-title bar">{{item.note}}</view>
-  <view class="row row-flush" wx:for="{{item.rows}}" wx:for-item="r" wx:key="cap">
-    <view class="row-main">
-      <text class="row-title">{{r.name}}</text>
-      <text class="row-sub">{{r.desc}}</text>
+<view class="card">
+  <view class="card-title bar">权限对比</view>
+
+  <view class="tier-table">
+    <view class="tier-line tier-head">
+      <text class="tier-cap">能力</text>
+      <view class="tier-cell {{col.now ? 'is-now' : ''}}" wx:for="{{heads}}" wx:for-item="col" wx:key="tier">
+        <text class="tier-cell-t">{{col.label}}</text>
+      </view>
     </view>
-    <text class="tag {{r.ok ? 'green' : 'ghost'}} cap-tag">{{r.ok ? '可用' : '未开'}}</text>
+
+    <view class="tier-line" wx:for="{{compareRows}}" wx:key="cap">
+      <text class="tier-cap">{{item.name}}</text>
+      <view class="tier-cell {{cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
+        <text class="tier-cell-t {{cell.on ? '' : 'off'}}">{{cell.text}}</text>
+        <text class="tier-cell-n" wx:if="{{cell.note}}">{{cell.note}}</text>
+      </view>
+    </view>
   </view>
 </view>
