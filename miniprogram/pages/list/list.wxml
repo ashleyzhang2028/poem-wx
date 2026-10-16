@@ -55,6 +55,8 @@
         <text class="row-sub">{{p.dynasty}} · {{p.author}}</text>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
+      <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
+            data-id="{{p.id}}" catchtap="onPick">{{p.picked ? '★' : '☆'}}</view>
       <text class="row-go">›</text>
     </view>
   </view>

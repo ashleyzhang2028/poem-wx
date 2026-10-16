@@ -29,7 +29,7 @@ const DECIDED = {
   "algo.leitner": { kind: "cap", to: "leitner" },
   "algo.sm2": { kind: "cap", to: "sm2" },
   "algo.fsrs": { kind: "cap", to: "fsrs" },
-  "collections.many": { kind: "none", to: "todo-5" },
+  "collections.many": { kind: "cap", to: "collections" },
   "sync.multiDevice": { kind: "cap", to: "sync" },
   "export.paper": { kind: "none", to: "todo-6" },
   "profile.family": { kind: "none", to: "todo-8" },

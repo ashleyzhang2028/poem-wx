@@ -1542,3 +1542,13 @@ view, text, button, input, textarea {
   color: var(--ink-3);
   margin-top: var(--sp-2);
 }
+
+.pref-star {
+  font-size: 30rpx;
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.pref-opt.on .pref-star {
+  color: var(--strong-text);
+}

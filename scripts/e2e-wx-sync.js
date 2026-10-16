@@ -75,6 +75,9 @@ function makeWx(port, mem) {
   store.saveSettings({ grade: 3, dailyCount: 7, theme: "ink", sfx: false });
   store.saveProfile({ avatarLocal: "wxfile://avatar-from-wechat.jpg" });
   store.setRecord("poem_x", { level: 4, reviewCount: 9, updatedAt: Date.now() });
+  store.saveCollections([
+    { id: "c-e2e", name: "自选集", createdAt: 1, items: [{ id: "poems-xx1-01" }, { id: "poems-xx1-02" }] }
+  ]);
 
   await auth.login();
   ok("登录之后 logged=true", auth.logged() === true, JSON.stringify(auth.logged()));
@@ -102,6 +105,11 @@ function makeWx(port, mem) {
     "推上去了：" + JSON.stringify(byId["profile:v1"]) +
       " —— 头像现在是微信那张的临时路径（wxfile://），上传它既没地方存也没意义");
   ok("服务端收到了那篇进度", byId["poem_x"] && byId["poem_x"].level === 4, JSON.stringify(byId["poem_x"]));
+  ok("服务端收到了自选集子（名字与篇目都在）",
+    !!byId["collections:v1"]
+      && byId["collections:v1"].collections[0].name === "自选集"
+      && byId["collections:v1"].collections[0].items.length === 2,
+    JSON.stringify(byId["collections:v1"]));
 
   Object.keys(mem).forEach((k) => delete mem[k]);
   Object.keys(require.cache).forEach((k) => {
@@ -122,6 +130,14 @@ function makeWx(port, mem) {
     !store2.profile().avatarLocal, "居然认回来了：" + String(store2.profile().avatarLocal));
   ok("新手机上那篇进度认回来了（level 4）",
     (store2.getRecord("poem_x") || {}).level === 4, JSON.stringify(store2.getRecord("poem_x")));
+
+  {
+    const cols2 = require(path.join(REPO, "miniprogram", "utils", "collections.js"));
+    const got = cols2.list();
+    ok("新手机上自选集子认回来了（名字与篇目）",
+      got.length === 1 && got[0].name === "自选集" && cols2.idsOf(got[0]).length === 2,
+      JSON.stringify(got));
+  }
 
   store.clearProgress();
   const svStoreBefore = await svStore.listProgress(store.profile().userId, "", 0);

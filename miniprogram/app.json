@@ -13,6 +13,7 @@
       "name": "settings",
       "pages": [
         "general/general",
+        "collections/collections",
         "recite/recite",
         "about/about",
         "privacy/privacy"

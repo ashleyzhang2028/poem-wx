@@ -1,6 +1,8 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const S = require("../../utils/scheduler");
+const cols = require("../../utils/collections");
+const entitlement = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
@@ -124,6 +126,11 @@ Page({
 
     sheetRows: [],
 
+    collections: [],
+    collectionCount: 0,
+    collectionHint: "",
+    collectionOn: false,
+
     todayLabel: "",
 
     stats: { today: 0, done: 0, left: 0 },
@@ -167,6 +174,7 @@ Page({
     const allList = scopeList(all, view, scope);
     const allMode = this.data.allOpen || this.sheetSource === "all";
     const allRows = allMode ? rowsOfScope(allList, scope) : [];
+    const sheetRows = this.collectionId ? this.collectionSheetRows(this.collectionId) : [];
 
     const reads = {};
     const readOf = (id) => {
@@ -200,6 +208,10 @@ Page({
     });
 
     const total = rows.length;
+    const colRows = this.collectionRows();
+    const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
+    const selfDone = colRows.reduce((n, c) => n + c.done, 0);
+
     this.setData({
       logged: true,
       guest: false,
@@ -210,12 +222,138 @@ Page({
       doneCount: done,
       total,
       percent: total ? Math.round((done / total) * 100) : 0,
-      stats: { today: total, done, left: Math.max(0, total - done) },
+      stats: {
+        today: total + selfTotal,
+        done: done + selfDone,
+        self: selfTotal,
+        selfDone: selfDone,
+        left: Math.max(0, total - done)
+      },
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
-      sheetRows: this.sheetSource === "all" ? allRows : rows,
+      sheetRows: this.collectionId ? sheetRows : (this.sheetSource === "all" ? allRows : rows),
+      collections: colRows,
+      collectionCount: colRows.length,
+      collectionOn: entitlement.can("collections"),
+      collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
       loading: false
+    });
+  },
+
+  collectionRows() {
+    const all = corpus.course();
+    return cols.list().map((c) => {
+      const plan = S.collectionPlan(c, {
+        count: cols.countOf(c),
+        allPoems: all,
+        getRecord: store.getRecord
+      });
+      const seen = store.progress();
+      let done = 0;
+      plan.forEach((it) => {
+        if (S.isLearned(seen[it.poem.id])) done += 1;
+      });
+      const ov = S.collectionOverview(all, c);
+      return {
+        id: c.id,
+        name: cols.nameOf(c),
+        count: c.items.length,
+        planned: plan.length,
+        done: done,
+        due: ov.due,
+        learned: ov.learned,
+        percent: plan.length ? Math.round((done / plan.length) * 100) : 0
+      };
+    });
+  },
+
+  collectionPlanOf(id) {
+    const c = cols.find(id);
+    if (!c) return null;
+    return S.collectionPlan(c, {
+      count: cols.countOf(c),
+      allPoems: corpus.course(),
+      getRecord: store.getRecord
+    });
+  },
+
+  collectionSheetRows(id) {
+    const plan = this.collectionPlanOf(id);
+    if (!plan) return [];
+    const reads = {};
+    const readOf = (pid) => {
+      const meta = corpus.indexById(pid);
+      const book = (meta && meta.b) || "poems";
+      if (!reads[book]) reads[book] = store.reads(book);
+      return !!reads[book][pid];
+    };
+    const planIds = {};
+    plan.forEach((it) => { planIds[it.poem.id] = true; });
+    const rest = cols.idsOf(cols.find(id))
+      .filter((pid) => !planIds[pid])
+      .map((pid) => corpus.indexById(pid))
+      .filter(Boolean);
+    const all = plan.map((it) => it.poem).concat(rest);
+    return all.map((p, i) => {
+      const rec = store.getRecord(p.id);
+      return {
+        id: p.id,
+        seq: i + 1,
+        title: p.t,
+        author: p.a,
+        dynasty: p.d,
+        reason: "",
+        reasonKey: "",
+        tagCls: "ghost",
+        stage: S.stageName(rec) || "",
+        mastery: S.mastery(rec),
+        read: readOf(p.id),
+        recited: S.isLearned(rec)
+      };
+    });
+  },
+
+  onOpenCollection(e) {
+    const id = e.currentTarget.dataset.id;
+    gate.guard("自选背诵", () => {
+      if (!entitlement.block("collections", { page: this })) return;
+      const sheet = this.selectComponent("#sheet");
+      if (!sheet) return;
+      const rows = this.collectionSheetRows(id);
+      if (!rows.length) {
+        wx.showToast({ title: "这个集子还是空的", icon: "none" });
+        return;
+      }
+      this.collectionId = id;
+      this.setData({ sheetRows: rows });
+      sheet.open(rows, rows[0].id);
+    });
+  },
+
+  onManageCollections() {
+    if (!gate.guard("自选背诵")) return;
+    wx.navigateTo({ url: "/packages/settings/collections/collections" });
+  },
+
+  onCollectionRename(e) {
+    const id = e.currentTarget.dataset.id;
+    const c = cols.find(id);
+    if (!c) return;
+    wx.showModal({
+      title: "改集子名",
+      editable: true,
+      placeholderText: cols.nameOf(c),
+      success: (res) => {
+        if (!res.confirm) return;
+        const r = cols.rename(id, res.content);
+        if (!r.ok) {
+          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集子", icon: "none" });
+          return;
+        }
+        sync.markDirty();
+        this.refresh();
+      }
     });
   },
 
@@ -239,6 +377,7 @@ Page({
       const sheet = this.selectComponent("#sheet");
       if (!sheet) return;
       this.sheetSource = source;
+      this.collectionId = "";
       const rows = source === "all" ? this.scopeRows() : this.data.plan;
       const patch = { sheetRows: rows };
       if (source === "all") patch.allRows = rows;
@@ -271,6 +410,7 @@ Page({
   },
 
   onSheetFinish() {
+    this.collectionId = "";
     this.refresh();
   },
 

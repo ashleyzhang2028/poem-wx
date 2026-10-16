@@ -83,6 +83,12 @@
             aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
         <view class="glyph ic-{{dailyOn ? 'added' : 'add'}}"></view>
       </view>
+
+      <view class="pref-opt ic pref-plus {{pickOn ? 'on' : ''}}"
+            hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAddToCollection"
+            aria-label="加入自选集子">
+        <text class="pref-star">★</text>
+      </view>
     </view>
 
     <view class="poem-body align-{{align}} size-{{fontSize}}">
