@@ -1,0 +1,44 @@
+<view class="page" style="{{themeStyle}}">
+
+  <lock-card wx:if="{{!logged}}" title="用户列表要登录" note="登录后才能看" mark="人" />
+
+  <block wx:else>
+
+    <view class="page-head">
+      <text class="head-title">{{users.length}} 位用户</text>
+      <text class="head-sub" wx:if="{{remoteReady}}">可改档位与角色</text>
+      <text class="head-sub" wx:else>只读</text>
+    </view>
+
+    <view class="card">
+      <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上</text>
+      <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
+
+      <view class="acct" wx:for="{{users}}" wx:key="id">
+        <view class="acct-main">
+          <text class="acct-name">{{item.label}}</text>
+          <text class="acct-sub">{{item.tierLabel ? item.tierLabel : '未分级'}}</text>
+        </view>
+
+        <view class="acct-acts">
+          <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
+                  bindtap="onSetTier">改档</button>
+          <button class="btn mini acct-act" wx:if="{{canSetRole && item.editable}}" data-u="{{item.id}}"
+                  bindtap="onSetRole">角色</button>
+          <text class="acct-lock" wx:if="{{!canWrite && !canSetRole}}">只读</text>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!users.length}}">
+        <text class="empty-mark">名</text>
+        <text class="empty-text">名录里还没有人</text>
+      </view>
+
+      <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
+      <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
+    </view>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

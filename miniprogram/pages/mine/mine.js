@@ -188,7 +188,7 @@ Page({
   },
 
   onAdmin() {
-    wx.navigateTo({ url: "/packages/admin/index/index" });
+    wx.navigateTo({ url: "/packages/users/index/index" });
   },
 
   onAvatarChoose(e) {

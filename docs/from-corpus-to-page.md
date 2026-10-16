@@ -45,7 +45,7 @@ npm run build:data
 | `data/pinyin-table.js` | 注音 | 72 KB，**进主包** |
 | `data/shards.js` | `corpus.bucketOf(id)` —— 算出某一条在哪一片 | 137 KB，**进主包** |
 | `data/texts/t0xx.json` | 课外正文分片 | 120 个文件 / 23 MB，**走容器** |
-| `data/roster.js` | 管理页名录 | 没设 `POEM_ROSTER` 就是空名册 |
+| `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
 第三列是分层的全部理由：主包上限 2 MB，23 MB 的正文进不去。
 课内那 235 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——

@@ -838,7 +838,7 @@ const WEB_TIER = {
 
 ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
   tiersMod.TIER_KEYS.join() === "free,pro,max");
-ok("能力表里没有「管理页」（那是 owner / admin 的身份门，不是一项能力）",
+ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
 [["free", 7], ["pro", 12], ["max", 15]].forEach(([tier, n]) => {
@@ -871,7 +871,7 @@ Object.keys(WEB_TIER).forEach((k) => {
   ok("对比表整表铺在页面上、自己不滚（用户不用在两处别苗头地滚）",
     wxml.indexOf("compareRows") < 0 && wxml.indexOf("<scroll-view") < 0,
     "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
-  ok("管理页显示当前档位标签", wxml.indexOf("status.label") >= 0);
+  ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
 }
 
 {
@@ -991,21 +991,28 @@ const GATED = {
 }
 
 {
+  const usersJs = fs.readFileSync(path.join(ROOT, "packages/users/index/index.js"), "utf8");
+  const usersWxml = fs.readFileSync(path.join(ROOT, "packages/users/index/index.wxml"), "utf8");
+  const usersLib = fs.readFileSync(path.join(ROOT, "packages/users/index/lib.js"), "utf8");
+  const adminLib = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
-  const adminLib = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
 
-  ok("管理页不写本机档位", adminJs.indexOf("store.KEYS.grant") < 0, "管理页还在直接写 grant");
-  ok("管理页的改档按钮走的是服务端那条（wxml 上没有本机改档的开关）",
-    /bindtap="onSetTier"/.test(adminWxml) && !/bindtap="onLocal/.test(adminWxml));
+  ok("用户列表页不写本机档位", usersJs.indexOf("store.KEYS.grant") < 0, "用户列表页还在直接写 grant");
+  ok("用户列表页的改档按钮走的是服务端那条（wxml 上没有本机改档的开关）",
+    /bindtap="onSetTier"/.test(usersWxml) && !/bindtap="onLocal/.test(usersWxml));
   ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
   ok("服务端没就绪时如实说不出来（不走假成功）",
     /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
 
-  ok("管理页区分「能改」与「只读」",
-    adminWxml.indexOf("item.editable") >= 0 && adminWxml.indexOf("只读") >= 0);
-  ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(adminWxml));
-  ok("角色改动的入口按 owner 显隐", adminWxml.indexOf("canSetRole") >= 0);
+  ok("用户列表页区分「能改」与「只读」",
+    usersWxml.indexOf("item.editable") >= 0 && usersWxml.indexOf("只读") >= 0);
+  ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(usersWxml));
+  ok("角色改动的入口按 owner 显隐", usersWxml.indexOf("canSetRole") >= 0);
+  ok("用户列表页从管理页那一排放出去（管理页自己没有改档按钮）",
+    adminWxml.indexOf("onSetTier") < 0 && adminJs.indexOf("setTier") < 0
+      && /bindtap="onUsers"/.test(adminWxml) && /\/packages\/users\/index\/index/.test(adminJs),
+    "名录留在管理页里，或放出去了却没给回程入口");
   ok("对比表的每一格由能力表的档位算出来（不写死）",
     /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
@@ -1059,6 +1066,7 @@ const subs = {};
 
 ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0, JSON.stringify(subs.game));
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
+ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/index") >= 0, JSON.stringify(subs.users));
 
 {
   const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
@@ -1878,12 +1886,12 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
       && /syncSub:\s*this\.syncSub\(sy\)/.test(mineJs),
     "副标题自己拼了一份：末次同步时刻与「还有几项在等」都只有 sync.state() 说了算");
 
-  ok("「我的」页不留连接配置的入口，接服务器只有管理页一处",
+  ok("「我的」页不留连接配置的入口，接服务器只有代码库里一处",
     mineJs.indexOf("onServer") < 0 && mineJs.indexOf("serverSub") < 0
       && mineWxml.indexOf("同步服务器") < 0,
     "「我的」页又冒出第二处配置入口 —— 两格的值构建期就注进包里了，" +
       "露出来的只有「已配 · 走云调用 · 待接通」这种用户既看不懂也改不动的说法。" +
-      "要临时换后端走管理页（docs/wx-cloud-setup.md § 6.2）");
+      "要临时换后端改代码库里的 miniprogram/utils/server.js（docs/wx-cloud-setup.md § 6.2）");
 
   ok("「我的 → 同步」那一行点得动，且只在登录后出现",
     /bindtap="onSync"[^>]*wx:if="\{\{logged\}\}"/.test(mineWxml)
@@ -3675,6 +3683,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const generalJs = read("packages/settings/general/general.js");
   const adminWxml = read("packages/admin/index/index.wxml");
   const adminJs = read("packages/admin/index/index.js");
+  const usersWxml = read("packages/users/index/index.wxml");
+  const usersJs = read("packages/users/index/index.js");
   const entJs = read("utils/entitlement.js");
 
   ok("首页进度是第三列里的一枚环（前三格不再摆一排数字）",
@@ -3799,9 +3809,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     const bareWxml = (src) => src.replace(/<!--[\s\S]*?-->/g, "");
 
-    ok("界面上不再出现「管理员发放」（管理页 wxml）",
+    ok("界面上不再出现「管理员发放」（权限页 wxml）",
       bareWxml(adminWxml).indexOf("管理员发放") < 0, "这五个字还在卡片上");
-    ok("界面上不再出现「管理员发放」（管理页 js 拼的串）",
+    ok("界面上不再出现「管理员发放」（权限页 js 拼的串）",
       bare(adminJs).indexOf("管理员发放") < 0, "别在 js 里拼这句话");
     ok("来源那一格已撤，不是换了句措辞（sourceText / scopeText 一并删）",
       bare(adminJs).indexOf("sourceText") < 0 && bareWxml(adminWxml).indexOf("sourceText") < 0
@@ -3817,6 +3827,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       tiersMod.TIER_KEYS.every((k) => tiersMod.tierOf(k).sub === undefined),
       "又把「登录就有」当成 Free 的副题写回去了");
     [["管理页 js", bare(adminJs)], ["管理页 wxml", bareWxml(adminWxml)],
+     ["用户列表 js", bare(usersJs)], ["用户列表 wxml", bareWxml(usersWxml)],
      ["我的 js", bare(read("pages/mine/mine.js"))],
      ["我的 wxml", bareWxml(read("pages/mine/mine.wxml"))]].forEach(([name, src]) => {
       ok(name + "：界面里不再有「所有者」这个词",
@@ -3826,11 +3837,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       bareWxml(adminWxml).indexOf("roleLabel") < 0 && bare(adminJs).indexOf("roleLabel") < 0,
       "roleLabel 还在模板里");
     ok("名录那一行只说档位与来源（角色名已撤）",
-      /item\.tierLabel/.test(adminWxml) && !/item\.role/.test(bareWxml(adminWxml)),
+      /item\.tierLabel/.test(usersWxml) && !/item\.role/.test(bareWxml(usersWxml)),
       "名册里还挂着 role");
 
     ok("改角色这个动作没跟着一起删（撤的是标签，不是功能）",
-      /onSetRole/.test(adminWxml) && /setRole/.test(bare(adminJs)));
+      /onSetRole/.test(usersWxml) && /setRole/.test(bare(usersJs)));
   }
 
   {
@@ -5590,7 +5601,7 @@ function gapped(items, max) {
     ok("文档写清了「云调用两格是运维配置，界面上没有」",
       /运维配置/.test(doc) && /(普通用户|free|Free)/.test(doc) &&
         /界面上[\s\S]{0,30}没有|没有配置入口/.test(doc),
-      "不写清这一点，读的人会去「我的 → 用户权限」里翻那两栏 —— " +
+      "不写清这一点，读的人会去「我的 → 用户列表」里翻那两栏 —— " +
         "而那是运维配置，界面上一个输入框都没有（Issue #198）");
 
     const svcRow = /\|\s*`X-WX-SERVICE`\s*\|[^\n]*?poem-wx/.test(doc);
