@@ -36,7 +36,6 @@ const DEFAULTS = {
   pinyin: "rare",
 
   lastSearch: "",
-  collectionCounts: {},
 
   lastSyncAt: 0,
 
@@ -49,8 +48,7 @@ const DEVICE_DEFAULTS = {
 
 const LOCAL_ONLY = {
 
-  lastSearch: true,
-  collectionCounts: true
+  lastSearch: true
 };
 
 const SCHEMA = 2;

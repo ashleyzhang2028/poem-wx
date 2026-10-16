@@ -1,11 +1,12 @@
 const store = require("./store");
+const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 
 const NAME_MAX = 12;
 
-const ITEMS_MAX = 100;
+const ITEMS_MAX = tiers.COLLECTION_ITEMS_MAX;
 
-const LIMITS = { free: 0, pro: 1, max: 200 };
+const LIMITS = tiers.COLLECTION_LIMITS;
 
 const DAILY_COUNTS = [3, 5, 10, 20];
 
@@ -28,13 +29,8 @@ function trimName(raw) {
   return String(raw == null ? "" : raw).trim().slice(0, NAME_MAX);
 }
 
-function countMap() {
-  const raw = store.settings().collectionCounts;
-  return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-}
-
 function countOf(c) {
-  const n = Number(countMap()[c && c.id]);
+  const n = Number(c && c.dailyCount);
   return DAILY_COUNTS.indexOf(n) >= 0 ? n : DAILY_DEFAULT;
 }
 
@@ -62,6 +58,7 @@ function normalize(raw) {
       id: id,
       name: trimName(c.name),
       createdAt: Number(c.createdAt) > 0 ? Math.round(Number(c.createdAt)) : 0,
+      dailyCount: DAILY_COUNTS.indexOf(Number(c.dailyCount)) >= 0 ? Number(c.dailyCount) : DAILY_DEFAULT,
       items: items
     });
   });
@@ -95,6 +92,7 @@ function create(name) {
     id: slug(),
     name: trimName(name) || DEFAULT_NAME,
     createdAt: Date.now(),
+    dailyCount: DAILY_DEFAULT,
     items: []
   };
   all.push(c);
@@ -114,12 +112,13 @@ function rename(id, name) {
 }
 
 function setCount(id, n) {
-  if (!find(id)) return { ok: false, code: "E_NO_COLLECTION" };
+  const all = list();
+  const c = all.filter((x) => x.id === id)[0];
+  if (!c) return { ok: false, code: "E_NO_COLLECTION" };
   const v = Number(n);
   if (DAILY_COUNTS.indexOf(v) < 0) return { ok: false, code: "E_BAD_COUNT" };
-  const map = Object.assign({}, countMap());
-  map[id] = v;
-  store.saveSettings({ collectionCounts: map });
+  c.dailyCount = v;
+  save(all);
   return { ok: true, count: v };
 }
 
@@ -128,12 +127,6 @@ function remove(id) {
   const left = all.filter((x) => x.id !== id);
   if (left.length === all.length) return { ok: false, code: "E_NO_COLLECTION" };
   save(left);
-  const map = countMap();
-  if (map[id] !== undefined) {
-    const next = Object.assign({}, map);
-    delete next[id];
-    store.saveSettings({ collectionCounts: next });
-  }
   return { ok: true };
 }
 
@@ -194,7 +187,6 @@ module.exports = {
   LIMITS,
   DAILY_COUNTS,
   DAILY_DEFAULT,
-  countMap,
   countOf,
   setCount,
   DEFAULT_NAME,
