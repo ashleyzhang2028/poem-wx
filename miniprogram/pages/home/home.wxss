@@ -85,13 +85,17 @@
   flex: 0 1 auto;
 
   min-width: 0;
-  margin-right: var(--sp-2);
+  margin-right: var(--sp-1);
+}
+
+.row-end .row-state + .row-state {
+  margin-left: var(--sp-1);
 }
 
 .row-lock,
 .row-state {
   flex: none;
-  margin-left: var(--sp-2);
+  margin-left: var(--sp-1);
   font-size: var(--fs-caption);
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
@@ -140,10 +144,11 @@
 
 .row-end {
   flex: none;
-  width: 112rpx;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: nowrap;
+  padding-left: var(--sp-2);
 }
 
 .empty-btn {

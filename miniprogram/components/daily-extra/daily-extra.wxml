@@ -16,8 +16,9 @@
 
       <view class="de-btn {{item.on ? 'on' : ''}}"
             hover-class="de-btn-hover" hover-stay-time="60"
-            data-id="{{item.id}}" catchtap="onToggle">
-        <text class="de-glyph">{{item.on ? '✓' : '＋'}}</text>
+            data-id="{{item.id}}" catchtap="onToggle"
+            aria-label="{{item.on ? '移出今日背诵' : '加入今日背诵'}}">
+        <view class="glyph ic-{{item.on ? 'added' : 'add'}}"></view>
       </view>
       <view class="row-main">
         <text class="row-title row-poem">{{item.title}}</text>

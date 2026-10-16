@@ -37,37 +37,40 @@
 
       <view class="prefs">
         <radio-group class="pref-seg" bindchange="onAlign">
-          <label class="pref-opt {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
+          <label class="pref-opt ic {{align === item.key ? 'on' : ''}}"
+                 wx:for="{{aligns}}" wx:key="key" aria-label="{{item.label}}">
             <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="{{themeHex}}" />
-            <text class="pref-t">{{item.label}}</text>
+            <view class="glyph ic-{{item.icon}}"></view>
           </label>
         </radio-group>
 
         <view class="pref-rule"></view>
 
         <radio-group class="pref-seg" bindchange="onPinyin">
-          <label class="pref-opt {{pinyinMode === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
+          <label class="pref-opt ic {{pinyinMode === item.key ? 'on' : ''}}"
+                 wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
             <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="{{themeHex}}" />
-            <text class="pref-t">{{item.label}}</text>
+            <view class="glyph ic-{{item.icon}}"></view>
           </label>
         </radio-group>
 
         <view class="pref-rule"></view>
 
         <view class="pref-size">
-          <view class="pref-opt mini {{fontSize <= fontMin ? 'off' : ''}}"
-                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown">
-            <text class="pref-t">A－</text>
+          <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
+            <view class="glyph ic-smaller"></view>
           </view>
-          <view class="pref-opt mini {{fontSize >= fontMax ? 'off' : ''}}"
-                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp">
-            <text class="pref-t">A＋</text>
+          <view class="pref-opt ic {{fontUp ? '' : 'off'}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp" aria-label="加大字号">
+            <view class="glyph ic-larger"></view>
           </view>
         </view>
 
-        <view class="pref-opt mini pref-plus {{dailyOn ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily">
-          <text class="pref-t">{{dailyOn ? '✓' : '＋'}}</text>
+        <view class="pref-opt ic pref-plus {{dailyOn ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
+              aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
+          <view class="glyph ic-{{dailyOn ? 'added' : 'add'}}"></view>
         </view>
       </view>
 
@@ -83,7 +86,7 @@
           <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
             <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
               <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-                <view class="token" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
                   <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
                   <text class="tk-ch">{{tk.ch}}</text>
                 </view>
@@ -122,10 +125,11 @@
         <view class="meter-fill" style="width:{{mastery}}%"></view>
       </view>
 
-      <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
-
-      <view class="sheet-prev" wx:if="{{index > 0}}" hover-class="sheet-prev-hover" hover-stay-time="60" bindtap="onPrev">
-        <text class="sheet-prev-t">上一首</text>
+      <view class="sheet-tail">
+        <view class="sheet-prev" wx:if="{{index > 0}}" hover-class="sheet-prev-hover" hover-stay-time="60" bindtap="onPrev">
+          <text class="sheet-prev-t">上一首</text>
+        </view>
+        <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
       </view>
     </view>
   </view>
