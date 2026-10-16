@@ -259,11 +259,6 @@ function markRead(book, id) {
   write(KEYS.reads, all);
 }
 
-function unreadCount(book, ids) {
-  const m = reads(book);
-  return (ids || []).filter((id) => !m[id]).length;
-}
-
 const DAILY_EXTRA_MAX = 20;
 
 function dailyExtra() {
@@ -431,7 +426,6 @@ module.exports = {
   dropClearMarks,
   reads,
   markRead,
-  unreadCount,
   DAILY_EXTRA_MAX,
   dailyExtra,
   setDailyExtra,
