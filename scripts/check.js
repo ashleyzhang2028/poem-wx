@@ -3481,6 +3481,35 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /class="row-title clear-text"/.test(bareMarkup(read("pages/mine/mine.wxml")))
       && /var\(--strong-text\)/.test(clearText),
     "这一行又变回第三种颜色了");
+
+  const isNow = (/\.chip\.is-now\s*\{([^}]*)\}/.exec(read("components/tier-view/tier-view.wxss")) || [])[1] || "";
+  const isNowName = (/\.chip\.is-now \.chip-name\s*\{([^}]*)\}/.exec(read("components/tier-view/tier-view.wxss")) || [])[1] || "";
+  ok("「当前档位」那一格用的是主题色那一档（底 0.05、边与字 1.0）",
+    /var\(--strong-soft\)/.test(isNow) && /var\(--strong\)/.test(isNow)
+      && /var\(--strong-text\)/.test(isNowName),
+    "当前档位还挂在 --green 上 —— 换主题时那一格留在原地");
+
+  const right = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/quiz/quiz.wxss")) || [])[1] || "";
+  const rightExam = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/exam/exam.wxss")) || [])[1] || "";
+  ok("答对的选项格用的是主题色那一档（不再单独一支淡绿）",
+    [right, rightExam].every((r) => /var\(--strong-soft\)/.test(r) && /var\(--strong-text\)/.test(r)),
+    "答对那一格还在用 --green-light");
+
+  const okMark = (/\.grade-mark\.ok\s*\{([^}]*)\}/.exec(read("packages/game/exam/exam.wxss")) || [])[1] || "";
+  ok("逐题那个「对」字标记用的是主题色那一档",
+    /var\(--strong-soft\)/.test(okMark) && /var\(--strong-text\)/.test(okMark),
+    "这个标记还在用 --green-soft");
+
+  const statV = (/\.stat-v\s*\{([^}]*)\}/.exec(appWxss) || [])[1] || "";
+  ok("统计大数字不叠粗体（大字号自己撑得住重点）",
+    /font-weight:\s*400/.test(statV),
+    "统计大数字又加回了粗体 —— 与页头标题两处同时在喊");
+
+  const ringW = /--ring-w\s*:\s*calc\((\d+)rpx/.exec(read("styles/tokens.wxss"));
+  const ringSize = /--ring-size\s*:\s*calc\((\d+)rpx/.exec(read("styles/tokens.wxss"));
+  ok("进度环的线宽收了约 1/3（尺寸只有一个旋钮，两处共用它）",
+    !!ringW && !!ringSize && Number(ringW[1]) * 3 <= Number(ringSize[1]) * 2,
+    "环的线宽又变粗了（读数 " + (ringW ? ringW[1] : "?") + "rpx / 环 " + (ringSize ? ringSize[1] : "?") + "rpx）");
 }
 
 {

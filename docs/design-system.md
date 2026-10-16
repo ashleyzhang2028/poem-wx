@@ -171,6 +171,29 @@
 `var(--strong-text)`，且 `.read-dot` 只在 `app.wxss` 定义一次
 （列表页与作者页共用）。
 
+#### 其余「淡绿 / 淡青」胶囊底一并收进主题（Issue #232 续）
+
+接着扫了一遍全站，还有五处挂着 `--green-soft` / `--green-light`，
+谈的也全是「重点那一支色」而不是状态，一并改到 `--strong-soft` /
+`--strong` / `--strong-text`：
+
+| 处 | 类 | 它说的是 |
+|---|---|---|
+| 档位与权限 · 当前档位那一格 | `.chip.is-now` | 「你在这一档」 |
+| 题库 / 考试 · 答对的选项格 | `.option.right` | 「这就是正解」（重点，不是「成功」） |
+| 考试 · 逐题那个「对」字标记 | `.grade-mark.ok` | 「这题对了」 |
+| 题库 · 「看全篇」那条链接 | `.verdict-link` | 一个可去的出口 |
+| 详情页 · 译文标题按下时的底 | `.trans-hover` | 按下的反馈底 |
+
+**真正是状态的仍在状态色上**：`.fh-msg.ok` / `.verdict-line.ok` 这类
+只染字的反馈、「忘记 / 模糊」两颗评分格（`.chip.bad` / `.chip.fuzzy`）、
+`.tag` 的 amber / red / blue / green 四档、`.btn.danger`、
+以及 `.option.wrong` 与 `.grade-mark.no`。它们回答的是「这件事是什么状态」，
+不是「这里是重点」，所以不跟主题 —— 与上一节同一条线。
+
+判据在 `check.js`：这五处规则的声明里必须是主题那三个变量；
+`--green` 只许出现在 `.tag.green` 与上面那几处「状态」里。
+
 ### 层次只用三档灰
 
 ```css
@@ -240,6 +263,12 @@
 `--fs-brand`、`--fs-mark`。
 
 **页面样式表里出现裸 `font-size: 27rpx` 就是漏了令牌** —— V6.5 守着。
+
+**统计大数字（`.stat-v`）是常规字重，不是粗体**（Issue #232）：
+「今日 / 已背」「已学 / 已掌握 / 今日到期」这两排数字本来就大，再叠一层
+`font-weight: 600` 是两处同时在喊；去掉之后大字号自己撑得住重点，
+与页头标题拉开层次。判据在 `check.js`：`.stat-v` 那条规则里是
+`font-weight: 400`。考试分数（`.score`）不走这条 —— 它一屏只出现一处。
 
 ### 行高三档
 
@@ -885,7 +914,7 @@ V39 守着撤干净的这几处，并**反着守一条**：选完头像不许 `m
 | `.seg-icon` + `.ic-*` | 分段里的图标（同一份 24×24 网格，`currentColor` 取色） |
 | `.search` / `.field` | 输入 |
 | `.kv` | 键值行 |
-| `.meter` / `.ring` / `.ring-cap` / `.ring-cap-t` | 进度：一横一竖；环的尺寸与线宽取 `--ring-size` / `--ring-w`，只此一份 |
+| `.meter` / `.ring` / `.ring-cap` / `.ring-cap-t` | 进度：一横一竖；环的尺寸与线宽取 `--ring-size` / `--ring-w`，只此一份。线宽 8rpx（原 12rpx 收了约 1/3，Issue #232） |
 | `.empty` / `.empty-mark` | 空状态（必带印章与出路） |
 | `.lock-card`（组件） | 未登录那一道门（全站唯一一份） |
 | `.section-label` | 分隔一组卡片的小标签 |

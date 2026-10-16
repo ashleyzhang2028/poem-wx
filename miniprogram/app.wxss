@@ -477,7 +477,7 @@ view, text, button, input, textarea {
 .stat-v {
   font-family: var(--font-num);
   font-size: var(--fs-stat);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -1438,7 +1438,7 @@ view, text, button, input, textarea {
 }
 
 .trans-hover {
-  background: var(--green-light);
+  background: var(--strong-soft);
 }
 
 .trans-head .card-title {

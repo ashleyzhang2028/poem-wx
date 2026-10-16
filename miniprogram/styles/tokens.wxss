@@ -131,7 +131,7 @@ page {
   --pad-opt-x: calc(24rpx * var(--ui-scale));
 
   --ring-size: calc(93rpx * var(--ui-scale));
-  --ring-w: calc(12rpx * var(--ui-scale));
+  --ring-w: calc(8rpx * var(--ui-scale));
 
   --t-press: .12s;
   --t-move: .28s;
