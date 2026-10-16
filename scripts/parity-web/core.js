@@ -2039,10 +2039,6 @@ function sanitizePayload(p, poemId) {
   if (typeof p.stability === "number") out.stability = Math.max(0, Math.min(100000, Math.round(p.stability * 100) / 100));
   if (typeof p.difficulty === "number") out.difficulty = Math.max(0, Math.min(100, Math.round(p.difficulty * 100) / 100));
 
-  // 当天点过哪一天（同日改判靠它判「今天已经算过一次」）。快照 dayBaseRec
-  // 是本机的事，不上云 —— 计数跟日期走，不跟快照走。
-  if (typeof p.dayBase === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.dayBase)) out.dayBase = p.dayBase;
-
   if (Array.isArray(p.history)) {
     out.history = p.history.slice(-200).map(function (h) {
       if (!h || typeof h !== "object") return null;
