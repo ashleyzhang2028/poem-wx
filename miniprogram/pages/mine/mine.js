@@ -233,6 +233,11 @@ Page({
     wx.navigateTo({ url: "/packages/progress/index/index" });
   },
 
+  onCollections() {
+    if (!gate.guard("自选背诵")) return;
+    wx.navigateTo({ url: "/packages/settings/collections/collections" });
+  },
+
   onAbout() {
     wx.navigateTo({ url: "/packages/settings/about/about" });
   },

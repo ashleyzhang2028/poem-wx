@@ -1,0 +1,148 @@
+.coll-lead {
+  display: block;
+}
+
+.coll-quota {
+  margin-top: var(--sp-2);
+}
+
+.coll-lock {
+  display: block;
+  margin-top: var(--sp-2);
+  color: var(--amber);
+}
+
+.coll-new {
+  margin-top: var(--sp-3);
+}
+
+.coll-count {
+  padding: var(--sp-2) 0 var(--sp-3);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.coll-count-lead {
+  display: block;
+  margin-bottom: var(--sp-2);
+}
+
+.coll-head {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
+}
+
+.coll-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+}
+
+.coll-empty {
+  padding: var(--sp-4) var(--sp-2);
+}
+
+.all-toggle {
+  flex: none;
+  box-sizing: border-box;
+  width: 14rpx;
+  height: 14rpx;
+  margin: 0 var(--sp-1) 6rpx var(--sp-3);
+  border-right: 3rpx solid var(--ink-3);
+  border-bottom: 3rpx solid var(--ink-3);
+  transform: rotate(45deg);
+  transition: transform var(--t-move) var(--ease);
+}
+
+.all-toggle.open {
+  margin-bottom: 0;
+  margin-top: 6rpx;
+  transform: rotate(-135deg);
+}
+
+.daily-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.daily-row:last-child {
+  border-bottom: none;
+}
+
+.daily-box {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: var(--sp-3);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-box.on {
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.daily-tick {
+  font-size: var(--fs-caption);
+  line-height: 1;
+}
+
+.coll-search {
+  padding: var(--sp-2) 0 var(--sp-3);
+}
+
+.coll-found {
+  margin-top: var(--sp-2);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.coll-found-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
+}
+
+.coll-found-row:last-child {
+  border-bottom: none;
+}
+
+.coll-found-btn {
+  flex: none;
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: var(--sp-3);
+  border-radius: 50%;
+  background: var(--sink);
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coll-found-btn.on {
+  background: var(--strong);
+  color: var(--on-ink);
+}
+
+.coll-found-tick {
+  font-size: 30rpx;
+  line-height: 1;
+}

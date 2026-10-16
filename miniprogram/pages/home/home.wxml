@@ -58,6 +58,10 @@
           <text class="stat-v">{{stats.done}}</text>
           <text class="stat-k">已背</text>
         </view>
+        <view class="stat" wx:if="{{stats.self}}">
+          <text class="stat-v">{{stats.self}}</text>
+          <text class="stat-k">自选</text>
+        </view>
         <view class="stat stat-ring">
           <view class="ring-cap" wx:if="{{percent}}">
             <view class="ring">
@@ -102,6 +106,41 @@
 
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>
+    </view>
+
+
+    <view class="card" wx:if="{{collectionOn || collectionCount || collectionHint}}">
+      <view class="card-open">
+        <text class="card-title bar">自选背诵</text>
+        <text class="all-count" wx:if="{{collectionCount}}">{{collectionCount}} 个</text>
+      </view>
+
+      <text class="hint coll-hint" wx:if="{{collectionHint}}">{{collectionHint}}</text>
+
+      <block wx:if="{{collectionCount}}">
+        <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{collections}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenCollection">
+          <view class="row-main">
+            <view class="row-line">
+              <text class="row-title">{{item.name}}</text>
+            </view>
+            <text class="row-sub">{{item.count}} 首 · 已背 {{item.learned}} · 今日 {{item.planned}}</text>
+          </view>
+          <view class="row-end">
+            <text class="row-state {{item.done ? 'on' : ''}}">{{item.done}}/{{item.planned}}</text>
+            <view class="coll-edit" hover-class="coll-edit-hover" hover-stay-time="60"
+                  data-id="{{item.id}}" catchtap="onCollectionRename">改</view>
+          </view>
+        </view>
+      </block>
+
+      <view class="empty coll-empty" wx:elif="{{collectionOn}}">
+        <text class="empty-mark">选</text>
+        <text class="empty-text">还没有自选集子</text>
+        <text class="hint empty-tip">在课外阅读或搜索里看到好诗，加进自己的集子</text>
+      </view>
+
+      <button class="btn ghost mini coll-btn" wx:if="{{collectionOn}}" bindtap="onManageCollections">管理自选背诵</button>
     </view>
 
     <view class="card" wx:if="{{allCount}}">

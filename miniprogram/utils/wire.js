@@ -121,12 +121,12 @@ function packRecords() {
   }
 
   const cols = clone(store.collections());
-  if (cols.length) {
-    const at = store.collectionsAt() || Date.now();
+  const colsAt = store.collectionsAt();
+  if (colsAt) {
     rows.push({
       id: COLLECTIONS_ROW,
-      payload: { v: 1, collections: cols, updatedAt: at },
-      updatedAt: at,
+      payload: { v: 1, collections: cols, updatedAt: colsAt },
+      updatedAt: colsAt,
       deleted: false
     });
   }

@@ -6,6 +6,7 @@ const pinyin = require("../../utils/pinyin");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
+const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
 
@@ -85,6 +86,7 @@ Page({
     reciteMode: false,
 
     dailyOn: false,
+    pickOn: false,
 
     locked: true,
     lockTitle: "登录后可用",
@@ -126,6 +128,67 @@ Page({
   syncDaily() {
     const on = store.dailyExtra().indexOf(this.data.id) >= 0;
     if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
+    const picked = cols.collectionsOf(this.data.id).length > 0;
+    if (picked !== this.data.pickOn) this.setData({ pickOn: picked });
+  },
+
+  onAddToCollection() {
+    if (!entitlement.block("collections", { page: this })) return;
+    const id = this.data.id;
+    const inList = cols.collectionsOf(id);
+    const names = cols.list().map((c) => cols.nameOf(c));
+    const items = names.concat(["新建集子"]);
+    wx.showActionSheet({
+      itemList: items,
+      success: (res) => {
+        if (res.tapIndex >= names.length) {
+          this.newCollection(id);
+          return;
+        }
+        const c = cols.list()[res.tapIndex];
+        const r = cols.add(c.id, [id]);
+        this.afterPick(r, c);
+      },
+      fail: () => {
+        if (!inList.length) return;
+      }
+    });
+  },
+
+  newCollection(poemId) {
+    const cap = cols.capOf();
+    if (cols.list().length >= cap) {
+      wx.showToast({ title: "最多 " + cap + " 个集子，先删一个", icon: "none" });
+      return;
+    }
+    wx.showModal({
+      title: "新建自选集子",
+      editable: true,
+      placeholderText: cols.DEFAULT_NAME,
+      success: (res) => {
+        if (!res.confirm) return;
+        const made = cols.create(res.content);
+        if (!made.ok) {
+          wx.showToast({ title: "最多 " + cap + " 个集子", icon: "none" });
+          return;
+        }
+        const r = cols.add(made.collection.id, [poemId]);
+        this.afterPick(r, made.collection);
+      }
+    });
+  },
+
+  afterPick(r, c) {
+    if (!r.ok) {
+      const msg = r.code === "E_FULL"
+        ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
+        : r.code === "E_DUP" ? "已经在「" + cols.nameOf(c) + "」里了" : "加不进去";
+      wx.showToast({ title: msg, icon: "none" });
+      return;
+    }
+    sync.markDirty();
+    this.syncDaily();
+    wx.showToast({ title: "已加入「" + cols.nameOf(c) + "」", icon: "none" });
   },
 
   onToggleDaily() {

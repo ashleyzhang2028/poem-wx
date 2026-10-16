@@ -97,3 +97,19 @@
   padding: var(--sp-3) 0 var(--sp-2);
   font-size: var(--fs-caption);
 }
+
+.row-star {
+  flex: none;
+  padding: 0 var(--sp-1);
+  font-size: 34rpx;
+  line-height: 1;
+  color: var(--ink-4);
+}
+
+.row-star.on {
+  color: var(--strong-text);
+}
+
+.row-star-hover {
+  opacity: .7;
+}

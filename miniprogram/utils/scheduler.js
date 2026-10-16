@@ -18,6 +18,7 @@ const DEFAULT_SCOPE = "upto";
 
 const DAILY_COUNTS = [3, 5, 10, 20];
 
+
 const SPAN = 7;
 
 const MASTERED_LEVEL = 7;
@@ -331,6 +332,71 @@ function dueList(allPoems, days) {
   return { days: out, backlog, total: out.reduce((a, d) => a + d.items.length, 0), farther };
 }
 
+function collectionPoems(allPoems, c) {
+  const owner = require("./corpus");
+  return ((c && c.items) || [])
+    .map((it) => allPoems.filter((p) => p.id === it.id)[0] || owner.indexById(it.id))
+    .filter(Boolean);
+}
+
+function collectionPlan(c, opt) {
+  const o = opt || {};
+  const getRecord = o.getRecord || store.getRecord;
+  const count = Number(o.count) || 5;
+  const now = Date.now();
+  const poems = collectionPoems(o.allPoems || [], c);
+  const due = [];
+  const fresh = [];
+  const rest = [];
+
+  poems.forEach((p) => {
+    const rec = getRecord(p.id);
+    if (isDue(rec, now)) due.push(p);
+    else if (!isLearned(rec)) fresh.push(p);
+    else rest.push(p);
+  });
+
+  const at = (p) => {
+    const rec = getRecord(p.id);
+    return rec ? Number(rec.nextReviewAt) || 0 : 0;
+  };
+  due.sort((a, b) => at(a) - at(b));
+
+  const plan = [];
+  const used = {};
+  const take = (list, reason) => {
+    list.forEach((p) => {
+      if (plan.length >= count || used[p.id]) return;
+      used[p.id] = true;
+      const rec = getRecord(p.id);
+      plan.push({
+        poem: p,
+        reason: reason,
+        reviewRound: isLearned(rec) ? R.clampLevel(rec.level) + 1 : 0
+      });
+    });
+  };
+  take(due, "review");
+  take(fresh, "new");
+  take(rest, "extra");
+  return plan;
+}
+
+function collectionOverview(allPoems, c) {
+  const getRecord = (id) => store.getRecord(id);
+  const poems = collectionPoems(allPoems, c);
+  const now = Date.now();
+  let learned = 0;
+  let due = 0;
+  poems.forEach((p) => {
+    const rec = getRecord(p.id);
+    if (!isLearned(rec)) return;
+    learned += 1;
+    if (isDue(rec, now)) due += 1;
+  });
+  return { total: poems.length, learned: learned, due: due };
+}
+
 function gradeName(g) {
   return GRADE_NAMES[g] || g + "年级";
 }
@@ -356,6 +422,8 @@ module.exports = {
   mastery,
   stageName,
   poolForScope,
+  collectionPlan,
+  collectionOverview,
   generateDailyPlan,
   overview,
   dueList,

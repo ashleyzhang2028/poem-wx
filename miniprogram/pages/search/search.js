@@ -3,6 +3,8 @@ const store = require("../../utils/store");
 const textSearch = require("../../utils/text-search");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
+const cols = require("../../utils/collections");
+const sync = require("../../utils/sync");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
@@ -117,7 +119,7 @@ Page({
         loading: false,
         fromFull: false,
         resultWhere: "篇名作者 · 全站"
-      });
+      }, () => this.refreshPicked());
       return;
     }
 
@@ -174,12 +176,72 @@ Page({
     this.pushBatch();
   },
 
+  pickedMap() {
+    const map = {};
+    cols.list().forEach((c) => {
+      cols.idsOf(c).forEach((pid) => { map[pid] = true; });
+    });
+    return map;
+  },
+
+  decorate(items) {
+    const map = this.pickedMap();
+    return (items || []).map((it) => Object.assign({}, it, { picked: !!map[it.id] }));
+  },
+
+  onPick(e) {
+    e.stopPropagation && e.stopPropagation();
+    if (!entitlement.block("collections", { page: this })) return;
+    const id = e.currentTarget.dataset.id;
+    const list = cols.list();
+    if (!list.length) {
+      wx.showModal({
+        title: "还没有自选集子",
+        content: "先去「我的 → 自选背诵」建一个集子。",
+        confirmText: "去建",
+        cancelText: "算了",
+        success: (res) => {
+          if (res.confirm) wx.navigateTo({ url: "/packages/settings/collections/collections" });
+        }
+      });
+      return;
+    }
+    if (list.length === 1) {
+      this.toggleIn(list[0], id);
+      return;
+    }
+    wx.showActionSheet({
+      itemList: list.map((c) => cols.nameOf(c)),
+      success: (res) => this.toggleIn(list[res.tapIndex], id),
+      fail: () => {}
+    });
+  },
+
+  toggleIn(c, poemId) {
+    const inside = cols.idsOf(c).indexOf(poemId) >= 0;
+    const r = inside ? cols.removeItems(c.id, [poemId]) : cols.add(c.id, [poemId]);
+    if (!inside && !r.ok) {
+      const msg = r.code === "E_FULL"
+        ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
+        : "加不进去";
+      wx.showToast({ title: msg, icon: "none" });
+      return;
+    }
+    sync.markDirty();
+    wx.showToast({ title: inside ? "已移出「" + cols.nameOf(c) + "」" : "已加入「" + cols.nameOf(c) + "」", icon: "none" });
+    this.refreshPicked();
+  },
+
+  refreshPicked() {
+    this.setData({ results: this.decorate(this.data.results) });
+  },
+
   onReachBottom() {
     if (!this.data.more || this.data.loading) return;
     if (this.fromPack) {
       const want = this.data.results.length + BATCH;
       const r = this.byIndex(this.data.keyword.trim(), want);
-      this.setData({ results: r.items.slice(0, want), more: this.total > want });
+      this.setData({ results: r.items.slice(0, want), more: this.total > want }, () => this.refreshPicked());
       return;
     }
     this.pushBatch();
@@ -218,7 +280,7 @@ Page({
       });
     });
 
-    const results = this.data.results.concat(rows);
+    const results = this.data.results.concat(this.decorate(rows));
 
     this.setData({
       results: results,

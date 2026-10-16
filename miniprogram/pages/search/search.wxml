@@ -34,6 +34,8 @@
           <text class="hit-line" wx:for="{{item.lines}}" wx:for-item="l" wx:key="*this">{{l}}</text>
         </view>
       </view>
+      <view class="row-star {{item.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
+            data-id="{{item.id}}" catchtap="onPick">{{item.picked ? '★' : '☆'}}</view>
       <text class="row-go">›</text>
     </view>
     <text class="hint more-tip" wx:if="{{more}}">{{loading ? '正在取…' : '往下拉，再接 20 篇'}}</text>

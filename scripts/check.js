@@ -6211,6 +6211,167 @@ function gapped(items, max) {
       "server.js 反过来：它是入库的空壳，只有值由构建期写");
 }
 
+
+{
+  const colsMod = require(path.join(ROOT, "utils", "collections.js"));
+  const R4 = require(path.join(ROOT, "utils", "review-models.js"));
+
+  ok("自选背诵的配额：Free 无、Pro 1、Max 200",
+    colsMod.LIMITS.free === 0 && colsMod.LIMITS.pro === 1 && colsMod.LIMITS.max === 200);
+  ok("每个集子最多 100 首", colsMod.ITEMS_MAX === 100);
+  ok("自由集的算法档位就那四个（3 / 5 / 10 / 20，默认 5）",
+    colsMod.DAILY_COUNTS.join() === "3,5,10,20" && colsMod.DAILY_DEFAULT === 5);
+
+  {
+    const saved = global.wx;
+    const mem = {};
+    global.wx = {
+      getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+      setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+      removeStorageSync: (k) => { delete mem[k]; }
+    };
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+
+    const store3 = require(path.join(ROOT, "utils", "store.js"));
+    const ent3 = require(path.join(ROOT, "utils", "entitlement.js"));
+    const cols3 = require(path.join(ROOT, "utils", "collections.js"));
+
+    const asTier3 = (t) => {
+      store3.saveProfile({ logged: true });
+      store3.write(store3.KEYS.auth, { token: "t", tier: t, at: Date.now() });
+    };
+
+    asTier3("free");
+    ok("Free 建不了集子", cols3.create("甲").ok === false && cols3.capOf() === 0);
+
+    asTier3("pro");
+    const made = cols3.create("唐诗五首");
+    ok("Pro 建得了集子", made.ok === true && cols3.list().length === 1);
+    ok("Pro 只能建 1 个", cols3.create("第二个").ok === false && cols3.list().length === 1);
+
+    const first = cols3.list()[0];
+    ok("新建时名字留空就落到默认名上",
+      (asTier3("max"), cols3.create("   ").ok === true
+        && cols3.list().filter((c) => c.name === cols3.DEFAULT_NAME).length === 1));
+    ok("名字超长按上限截断",
+      (() => { cols3.rename(first.id, "一二三四五六七八九十十一十二十三");
+        return cols3.find(first.id).name.length === cols3.NAME_MAX; })());
+
+    asTier3("max");
+    const empty = cols3.list().filter((c) => c.name === cols3.DEFAULT_NAME)[0];
+    const r1 = cols3.add(first.id, ["pa", "pb", "pa", ""]);
+    ok("同一首不重复收（空 id 丢掉）", r1.added === 2 && cols3.idsOf(cols3.find(first.id)).join() === "pa,pb");
+    ok("再加已有的那首：不再加，报 E_DUP", cols3.add(first.id, ["pa"]).code === "E_DUP");
+
+    const many = [];
+    for (let i = 0; i < cols3.ITEMS_MAX + 5; i++) many.push("px" + i);
+    const r2 = cols3.add(first.id, many);
+    const over = 2 + many.length - cols3.ITEMS_MAX;
+    ok("集子到 100 首封顶（多出来的报 E_FULL）",
+      cols3.idsOf(cols3.find(first.id)).length === cols3.ITEMS_MAX
+        && r2.code === "E_FULL" && r2.full === over,
+      "实际 " + cols3.idsOf(cols3.find(first.id)).length + " 首，code=" + r2.code
+        + "，full=" + r2.full + "（应为 " + over + "）");
+
+    ok("移出选中只移点中的那几首",
+      (() => { const r = cols3.removeItems(first.id, ["px0", "px1"]); return r.removed === 2; })());
+    ok("清空只清篇目、集子还在",
+      (() => { const r = cols3.clearItems(first.id); return r.count === cols3.ITEMS_MAX - 2 && cols3.find(first.id); })());
+
+    ok("每日首数只能落在 3/5/10/20 里",
+      cols3.setCount(first.id, 7).ok === false && cols3.setCount(first.id, 10).ok === true
+        && cols3.countOf(cols3.find(first.id)) === 10);
+    ok("删集子删得掉", cols3.remove(first.id).ok === true && !cols3.find(first.id));
+
+    store3.saveCollections([{ id: "c9", name: "自选", items: [{ id: "poems-xx1-01" }] }]);
+    ok("集子的名字与篇目走同步那一行（服务端只认这两个 + createdAt）",
+      (() => {
+        const wire3 = require(path.join(ROOT, "utils", "wire.js"));
+        const row = wire3.packRecords().filter((r) => r.id === "collections:v1")[0];
+        return !!row && Array.isArray(row.payload.collections)
+          && row.payload.collections[0].name === "自选"
+          && row.payload.collections[0].items.length === 1;
+      })(),
+      "服务端 sanitizeCollections 只留 id / name / createdAt / items，别的字段会被裁掉");
+
+    ok("每个集子的每日首数只落本机（服务端那一行不认这个字段）",
+      (() => {
+        const got = cols3.setCount("c9", 10);
+        const wire3 = require(path.join(ROOT, "utils", "wire.js"));
+        const row = wire3.packRecords().filter((r) => r.id === "collections:v1")[0];
+        const settings = wire3.packRecords().filter((r) => r.id === "settings:v1")[0];
+        return got.ok && cols3.countOf(cols3.find("c9")) === 10
+          && row.payload.collections[0].dailyCount === undefined
+          && !(settings && settings.payload.settings.collectionCounts);
+      })(),
+      "首数进了 collections 那一行就会被服务端裁掉（换台手机又回默认），"
+        + "进了 settings:v1 又不在服务端白名单里 —— 它只能是本机的一项偏好");
+
+    const corpusMod3 = require(path.join(ROOT, "utils", "corpus.js"));
+    const S3 = require(path.join(ROOT, "utils", "scheduler.js"));
+    const poemId = corpusMod3.course()[0].id;
+    store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 3, items: [{ id: poemId }] }]);
+
+    const fake3 = [];
+    for (let i = 0; i < 12; i++) fake3.push({ id: "cp" + i, t: "诗" + i, a: "作者", d: "唐", gr: 1, tm: 1, b: "poems" });
+    store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, createdAt: 1, items: fake3.map((p) => ({ id: p.id })) }]);
+
+    store3.setRecord("cp0", { level: 3, learned: true, nextReviewAt: Date.now() - 86400000, lastReviewAt: Date.now() - 86400000 });
+    const planC = S3.collectionPlan(cols3.find("c1"), {
+      count: 5, allPoems: fake3, getRecord: store3.getRecord
+    });
+    ok("集子按自己的首数排计划（5 首）", planC.length === 5, "实际 " + planC.length);
+    ok("集子里到期的排第一", planC[0].poem.id === "cp0", "实际 " + planC[0].poem.id);
+    ok("到期的那首标复习", planC[0].reason === "review");
+
+    const planEmpty = S3.collectionPlan(cols3.find("c1"), {
+      count: 5, allPoems: [fake3[0]], getRecord: () => null
+    });
+    ok("集子只有一首时计划就一首（不凑数）", planEmpty.length === 1);
+
+    const ov = S3.collectionOverview(fake3, cols3.find("c1"));
+    ok("集子概览报篇目数 / 已背 / 今日到期",
+      ov.total === 12 && ov.learned === 1 && ov.due === 1, JSON.stringify(ov));
+
+    store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, items: [{ id: "cp0" }, { id: "cp0" }] }]);
+    ok("落盘时同一首只留一份",
+      require(path.join(ROOT, "utils", "collections.js")).list()[0].items.length === 1);
+
+    store3.saveCollections([]);
+    global.wx = saved;
+    Object.keys(require.cache).forEach((k) => {
+      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    });
+  }
+
+  const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+  ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
+    && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
+  ok("首页自选卡与背诵弹层共用一套（点一行就地开弹层）",
+    /onOpenCollection/.test(homeSrc4)
+      && fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8").indexOf("onOpenCollection") >= 0);
+  ok("首页集子那一行不是篇名（行标题不许借 row-poem）",
+    fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8")
+      .indexOf('row-title row-poem">{{item.name}}') < 0);
+
+  const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",
+    /onAddToCollection/.test(readerSrc4) && /cols\.add\(/.test(readerSrc4)
+      && /sync\.markDirty\(\)/.test(readerSrc4));
+
+  const listSrc4 = fs.readFileSync(path.join(ROOT, "pages", "list", "list.js"), "utf8");
+  const searchSrc4 = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
+  ok("列表与搜索结果行上都能收诗", /onPick\(/.test(listSrc4) && /onPick\(/.test(searchSrc4));
+
+  ok("自选集子落在设置分包里（不占主包）",
+    (app.subPackages || []).some((sp) => sp.root === "packages/settings"
+      && sp.pages.indexOf("collections/collections") >= 0));
+
+  void R4;
+}
+
 Promise.all(pending).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");

@@ -93,6 +93,13 @@
       </view>
       <text class="row-go">›</text>
     </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
+      <view class="row-main">
+        <text class="row-title">自选背诵</text>
+        <text class="row-sub">自己加的集子 · 改名 · 增删篇目</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
   </view>
 
   <view class="card" wx:if="{{logged}}">
