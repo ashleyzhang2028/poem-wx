@@ -3170,7 +3170,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "弹层 z=" + z + " 底栏 z=" + barZ + " —— 层级关系不对");
 
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-  const surface = [".poem-head", ".poem-title", ".poem-meta-row", ".prefs", ".poem-body", ".tk-py", ".trans-head"];
+  const surface = [".poem-head", ".poem-title", ".poem-meta-row", ".prefs", ".poem-body",
+    ".tk-py", ".trans-head", ".recite-head", ".mastery-bar"];
   const hasRule = (css, cls) =>
     new RegExp(cls.replace(".", "\\.") + "\\s*\\{").test(css);
   const missing = surface.filter((cls) => !hasRule(appWxss, cls));
@@ -3179,7 +3180,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("阅读面只在 app.wxss 定义一份（弹层与详情页共用）",
     missing.length === 0 && dup.length === 0,
-    "缺定义：" + missing.join(", ") + "；写了第二份：" + dup.join(", "));
+    "缺定义：" + missing.join(", ") + "；写了第二份：" + dup.join(", ") +
+      " —— 掌握度那一块（recite-head / mastery-bar）早先只写在详情页的样式表里，" +
+      "弹层里读不到，标题与百分比挤成一行、与上面那三颗评分之间也没有间距（Issue #268）");
 
   ok("弹层用了共用的那几样（选项 / 图标 / 注音 / 生僻字标记 / 掌握度）",
     [".pref-opt", ".pref-opt.ic", ".glyph", ".pref-rule", ".token", ".tk-ch", ".mastery-num", ".trans-text"]
@@ -3722,6 +3725,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       mineWxml.indexOf("nick-input") < 0
         && (mineWxml.match(/type="nickname"/g) || []).length === 1,
       "同一个值还摆两处，或者顶部那格还是只显示的字");
+
+    const authSrc9 = read("utils/auth.js");
+    ok("改昵称会写到服务端的 accounts.nickname（走 PATCH /api/me）",
+      /request\(REMOTE\.me,[\s\S]{0,80}?\"PATCH\"/.test(authSrc9),
+      "昵称只写进了本机存储 —— 数据库 accounts.nickname 永远是空的（Issue #268）");
+    ok("改昵称那一刻就把昵称推上去（不靠进度同步队列捎带）",
+      /onNickname[\s\S]{0,400}?auth\.saveNickname\(/.test(read("pages/mine/mine.js")),
+      "onNickname 只 saveProfile + markDirty —— 进度那条链从来不打包昵称，" +
+        "用户改完到数据库里看依旧为空");
+    ok("没登录 / 没接后端时改昵称不炸（只落本机）",
+      /saveNickname[\s\S]{0,300}?!logged\(\)[\s\S]{0,120}?return Promise\.resolve/.test(authSrc9),
+      "离线改昵称也去发请求 —— 会抛给 onNickname 的调用方，界面停在改不动的那一格");
   }
 
   {

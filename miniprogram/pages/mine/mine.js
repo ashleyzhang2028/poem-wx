@@ -199,6 +199,7 @@ Page({
     store.saveProfile({ nickname });
 
     sync.markDirty();
+    auth.saveNickname(nickname);
     this.refresh();
     this.settleGrant(nickname);
   },

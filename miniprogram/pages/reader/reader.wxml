@@ -137,8 +137,7 @@
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
     <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-      <text class="card-title bar">译文</text>
-      <text class="trans-toggle">{{showTranslation ? '收起' : '展开'}}</text>
+      <text class="trans-toggle">{{showTranslation ? '译文收起' : '译文打开'}}</text>
     </view>
     <view wx:if="{{showTranslation}}">
       <text class="trans-text">{{translation}}</text>

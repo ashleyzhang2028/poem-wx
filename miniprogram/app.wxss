@@ -1408,7 +1408,7 @@ view, text, button, input, textarea {
   padding: 0 var(--sp-1) var(--sp-2);
   font-family: var(--font-poem-text);
 
-  line-height: 1.95;
+  line-height: var(--lh-poem);
 }
 
 .poem-body.align-center {
@@ -1516,10 +1516,31 @@ view, text, button, input, textarea {
   letter-spacing: 0;
 }
 
-.trans-head {
+.recite-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: var(--sp-4);
+}
+
+.recite-head .card-title {
+  margin-bottom: 0;
+}
+
+.mastery-bar {
+  margin-top: var(--sp-2);
+}
+
+.hint-line {
+  display: block;
+  text-align: center;
+  padding-top: var(--sp-3);
+}
+
+.trans-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   padding: var(--sp-1) 0;
   border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
@@ -1533,15 +1554,10 @@ view, text, button, input, textarea {
   background: var(--strong-soft);
 }
 
-.trans-head .card-title {
-  margin-bottom: 0;
-}
-
 .trans-toggle {
   font-size: var(--fs-hint);
   color: var(--ink-2);
   flex: none;
-  padding-left: var(--sp-2);
 }
 
 .trans-text {

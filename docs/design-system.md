@@ -287,6 +287,11 @@
 --lh-loose 1.9   需要放开读的（空状态、说明）
 ```
 
+诗词正文不在这三档里：它自己一支 `--lh-poem 1.5`（`--fs-poem` 的 36rpx 之下
+即 54rpx 行盒）。诗句是整行成句的，用 `--lh-loose` 那样放开会把一首七绝
+摊成一屏半；用 `--lh-body` 又挤。这一档是「读一首诗」的行距，
+与 UI 文案的行距是两件事。
+
 ### 数字一律等宽
 
 `--font-num` + `font-variant-numeric: tabular-nums`。

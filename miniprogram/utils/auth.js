@@ -15,6 +15,8 @@ const REMOTE = {
   me: remote.PATHS.me
 };
 
+const NICK_MAX = 12;
+
 function configured() {
   return remote.configured();
 }
@@ -179,6 +181,19 @@ function refresh() {
     });
 }
 
+function saveNickname(raw) {
+  const nickname = String(raw == null ? "" : raw).replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, NICK_MAX);
+  if (!nickname || !logged() || !configured()) return Promise.resolve({ saved: false, nickname });
+  return request(REMOTE.me, { nickname: nickname }, "PATCH").then(
+    (res) => {
+      const name = (res && res.nickname) || nickname;
+      if (name !== store.profile().nickname) store.saveProfile({ nickname: name });
+      return { saved: true, nickname: name };
+    },
+    () => ({ saved: false, nickname: nickname })
+  );
+}
+
 function logout() {
   store.drop(store.KEYS.auth);
   store.drop(store.KEYS.caps);
@@ -271,5 +286,7 @@ module.exports = {
   serverTier,
   applySession,
   pullAfterLogin,
+  saveNickname,
+  NICK_MAX,
   REMOTE
 };
