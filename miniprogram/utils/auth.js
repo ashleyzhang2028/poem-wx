@@ -218,7 +218,7 @@ function configure(opt) {
     }
   }
   store.write(store.KEYS.auth, auth);
-  return { baseUrl: auth.baseUrl, cloud: auth.cloud || null, speech: !!auth.speech };
+  return { baseUrl: auth.baseUrl, cloud: auth.cloud || null };
 }
 
 function useCloud() {
