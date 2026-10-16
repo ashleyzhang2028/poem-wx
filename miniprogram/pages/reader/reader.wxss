@@ -11,7 +11,6 @@
   align-items: center;
   justify-content: space-between;
   margin-top: var(--sp-4);
-  margin-bottom: var(--sp-2);
 }
 
 .recite-head .card-title {
@@ -19,12 +18,7 @@
 }
 
 .mastery-bar {
-  margin-bottom: 0;
-}
-
-.mastery-num {
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
+  margin-top: var(--sp-2);
 }
 
 .hint-line {

@@ -1,6 +1,7 @@
 .sheet-root {
   position: fixed;
   inset: 0;
+  --sheet-max-h: calc(100vh - 96rpx - var(--tabbar-h));
   z-index: 60;
   display: flex;
   align-items: flex-end;
@@ -20,7 +21,7 @@
   flex-direction: column;
   width: 100%;
 
-  max-height: 88vh;
+  max-height: var(--sheet-max-h);
   background: var(--surface);
   border-radius: var(--radius-block) var(--radius-block) 0 0;
   padding: 0 var(--sp-3);
@@ -83,18 +84,16 @@
 }
 
 .sheet-body {
-  flex: none;
+  flex: 1;
+  min-height: 0;
   width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sheet-foot {
   flex: none;
-
-  margin-top: auto;
-  padding: var(--sp-3) 0 var(--sp-1);
-  border-top: 1rpx solid var(--line-2);
-
-  padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+  padding: var(--sp-1) 0 var(--sp-2);
 }
 
 .sheet-prev {
@@ -102,7 +101,6 @@
   align-items: center;
   justify-content: center;
   min-height: var(--h-btn-mini);
-  margin-top: var(--sp-1);
   border-radius: var(--radius-sm);
   transition: background-color var(--t-press);
 }
@@ -114,4 +112,29 @@
 .sheet-prev-t {
   font-size: var(--fs-hint);
   color: var(--ink-3);
+}
+
+.sheet-tail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--h-btn-mini);
+}
+
+.sheet-tail .hint-line {
+  margin-left: auto;
+}
+
+.sheet-head,
+.sheet-body,
+.sheet-foot {
+  width: 100%;
+}
+
+.sheet-body > .trans-card {
+  margin-bottom: 0;
+}
+
+.sheet-foot .chip-group.actions {
+  margin-top: var(--sp-2);
 }

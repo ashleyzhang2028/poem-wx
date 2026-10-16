@@ -13,23 +13,27 @@ const RESULTS = [
 ];
 
 const FONT_MIN = -2;
-const FONT_MAX = 4;
+const FONT_MAX = 6;
 
 const REOPEN_MS = 400;
 
 const ALIGNS = [
-  { key: "left", label: "左对齐" },
-  { key: "center", label: "居中" }
+  { key: "left", label: "左对齐", icon: "left" },
+  { key: "center", label: "居中", icon: "center" }
 ];
 
 const PINYIN_MODES = [
-  { key: "off", label: "不注音" },
-  { key: "rare", label: "生字" },
-  { key: "all", label: "全文" }
+  { key: "off", label: "不注音", icon: "off" },
+  { key: "rare", label: "生字", icon: "rare" },
+  { key: "all", label: "全文", icon: "all" }
 ];
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
+}
+
+function fontFlags(size) {
+  return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
 function aliasTextOf(meta) {
@@ -95,6 +99,8 @@ Component({
 
     aligns: ALIGNS,
     align: "center",
+    fontDown: false,
+    fontUp: true,
     fontSize: 0,
     fontMin: FONT_MIN,
     fontMax: FONT_MAX,
@@ -188,6 +194,7 @@ Component({
       const settings = store.settings();
       const rec = store.getRecord(item.id);
       const laid = corpus.layout(entry.text);
+      const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(settings.fontSize) || 0));
 
       this.setData({
         id: item.id,
@@ -204,7 +211,8 @@ Component({
         hasTranslation: !!entry.translation,
         showTranslation: false,
         align: settings.align,
-        fontSize: settings.fontSize,
+        fontSize,
+        ...fontFlags(fontSize),
         stage: R.stageName(rec, settings.algo),
         mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0,
         index: this.data.index,
@@ -225,7 +233,7 @@ Component({
       const allowed = entitlement.can("pinyin");
       const usable = pr.usable && allowed;
       const mode = usable ? store.settings().pinyin : "off";
-      const tokens = usable ? pinyin.render(this.data.paras, mode) : [];
+      const tokens = pinyin.render(this.data.paras, usable ? mode : "off");
       this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
     },
 
@@ -268,6 +276,7 @@ Component({
         wx.showToast({ title: "读音表未生成", icon: "none" });
         return;
       }
+      this.setData({ pinyinMode: mode });
       this.applyReading();
     },
 
@@ -282,7 +291,7 @@ Component({
     stepFont(delta) {
       const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
       if (fontSize === this.data.fontSize) return;
-      this.setData({ fontSize });
+      this.setData(Object.assign({ fontSize }, fontFlags(fontSize)));
       store.saveSettings({ fontSize });
     },
 

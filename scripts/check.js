@@ -305,6 +305,41 @@ let rh = null;
 for (let i = 0; i < 60; i++) rh = R.review(rh, "good", "ebbinghaus");
 ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.length);
 
+{
+  const day1 = new Date(2026, 9, 16, 10, 0, 0).getTime();
+  const day2 = new Date(2026, 9, 17, 10, 0, 0).getTime();
+
+  let same = R.review(null, "bad", "ebbinghaus", day1);
+  same = R.review(same, "good", "ebbinghaus", day1 + 60000);
+  same = R.review(same, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同一天改判，留的是最后一次",
+    same.history.length === 1 && same.history[0].result === "fuzzy",
+    "历史 " + same.history.map((h) => h.result).join(","));
+
+  let good = R.review(null, "good", "ebbinghaus", day1);
+  good = R.review(good, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同日改判，掌握度按最后一次算",
+    good.level === same.level && same.level === R.review(null, "good", "ebbinghaus", day1).level,
+    "level " + same.level + " / " + good.level);
+
+  let lapse = R.review(null, "bad", "ebbinghaus", day1);
+  lapse = R.review(lapse, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同日改判，忘过的次数跟着退回去", lapse.lapses === 0, "lapses=" + lapse.lapses);
+
+  let twice = R.review(null, "bad", "ebbinghaus", day1);
+  twice = R.review(twice, "fuzzy", "ebbinghaus", day1 + 60000);
+  twice = R.review(twice, "good", "ebbinghaus", day1 + 120000);
+  ok("同日评几次都只算一次复习", twice.reviewCount === 1, "reviewCount=" + twice.reviewCount);
+
+  let next = R.review(null, "good", "ebbinghaus", day1);
+  next = R.review(next, "fuzzy", "ebbinghaus", day1 + 120000);
+  next = R.review(next, "good", "ebbinghaus", day2);
+  next = R.review(next, "bad", "ebbinghaus", day2 + 1000);
+  ok("隔天再评，连同前一天那次一起记",
+    next.history.length === 2 && next.history[1].result === "bad" && next.reviewCount === 2,
+    "历史 " + next.history.map((h) => h.result).join(",") + "，reviewCount=" + next.reviewCount);
+}
+
 const wxCalls = {};
 global.wx = {
   getStorageSync: (k) => (k in wxCalls ? wxCalls[k] : ""),
@@ -2953,8 +2988,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     missing.length === 0 && dup.length === 0,
     "缺定义：" + missing.join(", ") + "；写了第二份：" + dup.join(", "));
 
-  ok("弹层用了共用的那几样（选项 / 注音 / 生僻字标记）",
-    [".pref-opt", ".pref-t", ".pref-rule", ".token", ".tk-ch"].every((cls) => hasRule(appWxss, cls)),
+  ok("弹层用了共用的那几样（选项 / 图标 / 注音 / 生僻字标记 / 掌握度）",
+    [".pref-opt", ".pref-opt.ic", ".glyph", ".pref-rule", ".token", ".tk-ch", ".mastery-num", ".trans-text"]
+      .every((cls) => hasRule(appWxss, cls)),
     "弹层自绘了一份 —— 与详情页迟早漂开");
 
   ok("三档评分各有自己的分支（忘记 / 模糊 / 记住）",
@@ -2969,11 +3005,64 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     sheetWxml.indexOf("queue=") < 0 && homeWxml.indexOf('queue="{{sheetRows}}"') >= 0,
     "首页那两个入口（计划卡 / 全部诗词卡）把各自的队列灌进 sheetRows");
 
+  ok("偏好条上的每一项都是图标，没有文字标签",
+    !/class="pref-t"/.test(sheetWxml)
+      && /const ALIGNS = \[[\s\S]{0,200}?icon:\s*"left"/.test(sheetJs)
+      && /const PINYIN_MODES = \[[\s\S]{0,260}?icon:\s*"all"/.test(sheetJs)
+      && /glyph ic-\{\{item\.icon\}\}/.test(sheetWxml)
+      && /\.glyph\.ic-left::before/.test(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"))
+      && /\.glyph\.ic-off::before/.test(appWxss)
+      && /\.glyph\.ic-rare::before/.test(appWxss)
+      && /\.glyph\.ic-all::before/.test(appWxss)
+      && /\.glyph\.ic-smaller::before/.test(appWxss)
+      && /\.glyph\.ic-larger::before/.test(appWxss),
+    "偏好条还写着字，或者图标少了一套（三档注音 / 两档对齐 / 加减字号）");
+
+  ok("「加入今日背诵」是一枚图标，没有边框",
+    /\.pref-plus\s*\{[^}]*margin/.test(appWxss)
+      && !/\.pref-plus\s*\{[^}]*border/.test(appWxss)
+      && /glyph ic-\{\{dailyOn \? 'added' : 'add'\}\}/.test(sheetWxml)
+      && /\.glyph\.ic-add::before/.test(appWxss)
+      && /\.glyph\.ic-added::before/.test(appWxss),
+    "加背那枚还是带框的 ＋ —— 用户点名要去掉边框并换成图标");
+
+  ok("弹层的高度按「可视区减掉底栏」算，不吃掉底部（掌握度那道尺不再被遮挡）",
+    /--sheet-max-h:\s*calc\(100vh - [^)]*-\s*var\(--tabbar-h\)\)/.test(sheetWxss)
+      && /\.sheet\s*\{[^}]*max-height:\s*var\(--sheet-max-h\)/.test(sheetWxss)
+      && /\.sheet-body\s*\{[^}]*flex:\s*1/.test(sheetWxss)
+      && /\.sheet-body\s*\{[^}]*overflow-y:\s*auto/.test(sheetWxss)
+      && /--tabbar-h\s*:/.test(fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8")),
+    "弹层矮不下去/高不过可视区 —— 长诗会把底部那几条推到底栏后面");
+
+  ok("弹层里没有多余的分隔线（译文卡上下那两道已撤）",
+    !/\.sheet\s+\.sheet-foot\s*\{[^}]*border-top/.test(sheetWxss)
+      && /\.trans-src\s*\{[^}]*margin-top/.test(appWxss)
+      && !/\.trans-src\s*\{[^}]*border-top/.test(appWxss)
+      && !/\.trans-head\s*\{[^}]*border-bottom/.test(appWxss),
+    "译文上下还挂着线 —— 一条都不该有");
+
   ok("翻页会回调首页（列表的勾要跟着动）",
     /triggerEvent\("open"/.test(sheetJs) && /bind:open="onSheetOpen"/.test(homeWxml));
 
+  const storeSrc = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
+  const schedSrc = fs.readFileSync(path.join(ROOT, "utils", "scheduler.js"), "utf8");
+
   ok("弹层不靠页面传「背没背过」（自己取 store）",
-    /store\.getRecord\(/.test(sheetJs) && sheetJs.indexOf("markRead") >= 0);
+    /store\.getRecord\(/.test(sheetJs));
+
+  ok("打开弹层只算「读过」，不算「背过」（两件事各有各的写法）",
+    sheetJs.indexOf("markRead") >= 0 && /S\.isLearned/.test(homeJs)
+      && /item\.recited/.test(homeWxml) && /item\.read/.test(homeWxml),
+    "把已读与已背写成同一个判据 —— 点开看一眼就成了「已背」");
+
+  ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
+    /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
+      && /if \(recited\) done \+= 1;/.test(homeJs),
+    "首页拿已读当已背 —— 点开弹窗看一眼，统计里就多一首「已背」");
+
+  ok("已读仍单独标出来（它与已背不是一件事）",
+    /store\.reads\(/.test(homeJs) && /item\.read/.test(homeWxml),
+    "把已读那一格删了 —— 读过但没评分的诗在列表上就与没碰过的一样");
 
   ok("弹层显式接了页面那份主题变量",
     homeWxml.indexOf('theme-style="{{themeStyle}}"') >= 0
@@ -2995,9 +3084,32 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /\.token-line\s*\{[^}]*height\s*:\s*var\(--py-line\)/.test(wxss),
     "注音行是靠内容撑高的 —— 有音无音会差半行");
 
-  const steps = [...wxss.matchAll(/\.poem-body\.size(--?\d)\s*\{/g)].map((m) => m[1]);
-  ok("正文字号七档都在（字号设置点下去每一档都要有落点）",
-    steps.length === 7, "读到 " + steps.length + " 档 —— 有档位点了没反应");
+  const sizes = new Set(
+    [...wxss.matchAll(/\.poem-body\.size(--?\d+)/g)]
+      .map((m) => String(m[1]))
+      .map((n) => Number(n.charAt(0) === "-" ? n.slice(1) : n))
+  );
+  const sheetJsSrc = fs.readFileSync(
+    path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
+  const readerJsSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  const range = (src) => {
+    const lo = /FONT_MIN\s*=\s*(-?\d+)/.exec(src);
+    const hi = /FONT_MAX\s*=\s*(-?\d+)/.exec(src);
+    return { lo: lo ? Number(lo[1]) : NaN, hi: hi ? Number(hi[1]) : NaN };
+  };
+  const sheetRange = range(sheetJsSrc);
+  const gaps = [];
+  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+    if (!sizes.has(n)) gaps.push(n);
+  }
+  ok("字号的量程与正文的档位对得上（点到哪一档都要有落点）",
+    Number.isFinite(sheetRange.lo) && sheetRange.hi > sheetRange.lo
+      && gaps.length === 0
+      && range(readerJsSrc).lo === sheetRange.lo && range(readerJsSrc).hi === sheetRange.hi
+      && /fontMax:\s*FONT_MAX/.test(sheetJsSrc)
+      && /fontDown\s*:/.test(sheetJsSrc) && /fontUp\s*:/.test(sheetJsSrc),
+    "量程 " + sheetRange.lo + "…" + sheetRange.hi + "，正文里没有这几档："
+      + gaps.join(", ") + " —— 点下去没反应");
 }
 
 
@@ -3468,7 +3580,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /var\(--strong-soft\)/.test(seqOn) && /var\(--strong-text\)/.test(seqOn),
     "序号胶囊自己填了色 —— 换主题时它会留在原地");
   ok("已背的序号挂上那一档类（未背的回到凹槽底）",
-    /class="seq \{\{item\.read \? 'on' : ''\}\}"/.test(bareMarkup(homeWxml)),
+    /class="seq \{\{item\.recited \? 'on' : ''\}\}"/.test(bareMarkup(homeWxml)),
     "序号那一格没跟着已背变，或者换了第三个类名");
 
   const dot = (/\.read-dot\s*\{([^}]*)\}/.exec(appWxss) || [])[1] || "";
