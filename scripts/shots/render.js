@@ -119,6 +119,7 @@ const TOKENS = flattenCss(path.join(ROOT, "styles/tokens.wxss"));
 const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g, "");
 const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
+  + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
 
   + flattenCss(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"))
 
@@ -275,6 +276,24 @@ function pickSheetPoem(data) {
   };
 }
 
+function expandTierView(wxml, data) {
+  if (wxml.indexOf("<tier-view") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/tier-view/tier-view.wxml"), "utf8");
+
+  const entitlement = require(path.join(ROOT, "utils", "entitlement.js"));
+  const snap = entitlement.snapshot();
+  const merged = Object.assign({}, data, {
+    logged: snap.logged,
+    status: snap,
+    heads: entitlement.compareCols(snap),
+    compareGroups: entitlement.compareGroups(snap),
+    compareSummary: entitlement.compareSummary(snap),
+    stats: require(path.join(ROOT, "utils", "tier-view.js")).stats()
+  });
+  Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
+  return wxml.replace(/<tier-view\s*\/>/g, comp);
+}
+
 function expandDailyExtra(wxml, data) {
   if (wxml.indexOf("<daily-extra") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/daily-extra/daily-extra.wxml"), "utf8");
@@ -334,13 +353,16 @@ function pageHtml(cfg, data) {
     for (let i = 0; i < n; i++) s += '<view class="sk-block sk-line w80"></view>';
     return s + "</view>";
   });
+  wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
 
+  const adminCss = flattenCss(path.join(ROOT, "packages", "admin", "index", "index.wxss"));
+
   setImageIntrinsic(imageIntrinsicResolver(pageCss));
   const body = compile(wxml, data);
-  const screenCssStr = screenCss(cfg, pageCss);
+  const screenCssStr = screenCss(cfg, pageCss + adminCss);
   return `<div class="device" data-screen="${cfg.key}">
   <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>
   <div class="screen"><style>${screenCssStr}</style>${body}</div>

@@ -50,6 +50,10 @@ function _localUsers() {
   ];
 }
 
+function loggedIn() {
+  return entitlement.loggedIn();
+}
+
 function canWrite() {
   return remote.adminReady();
 }
@@ -59,7 +63,7 @@ function canSetRole() {
 }
 
 function list() {
-  if (!entitlement.loggedIn()) {
+  if (!loggedIn()) {
     return Promise.resolve({ users: [], sim: true, note: "登录后才能看名录" });
   }
 
@@ -126,7 +130,7 @@ function _merge(a, b, c) {
 function setTier(userId, tier) {
   if (!tiers.isTier(tier)) return Promise.resolve({ ok: false, msg: "档位不合法" });
 
-  if (!entitlement.loggedIn()) {
+  if (!loggedIn()) {
     return Promise.resolve({ ok: false, msg: "先登录才能改档位" });
   }
   if (!canWrite()) {
@@ -168,6 +172,7 @@ function setRole(userId, role) {
 }
 
 module.exports = {
+  loggedIn,
   list,
   setTier,
   revokeTier,

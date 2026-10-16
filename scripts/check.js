@@ -79,13 +79,24 @@ const pages = app.pages.slice();
 });
 
 pages.forEach((p) => {
-  [".js", ".json", ".wxml", ".wxss"].forEach((ext) => {
+  [".js", ".json", ".wxml"].forEach((ext) => {
     ok(
       "页面文件存在 " + p + ext,
       fs.existsSync(path.join(ROOT, p + ext)),
       "缺失"
     );
   });
+});
+
+const viewDir = path.join(ROOT, "components", "tier-view", "tier-view");
+[".js", ".json", ".wxml", ".wxss"].forEach((ext) => {
+  ok("权限表组件的四件套存在 tier-view" + ext, fs.existsSync(viewDir + ext), "缺失");
+});
+pages.forEach((p) => {
+  if (fs.existsSync(path.join(ROOT, p + ".wxss"))) return;
+  ok("没有样式表的页面只放共享组件 " + p,
+    fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8").indexOf("<tier-view") >= 0,
+    "这一页既没有自己的样式表，用的也不是共用的组件");
 });
 
 const jsFiles = [];
@@ -853,8 +864,10 @@ Object.keys(WEB_TIER).forEach((k) => {
 });
 
 {
-  const wxml = fs.readFileSync(path.join(ROOT, "packages", "mine", "tier", "tier.wxml"), "utf8");
-  const js = fs.readFileSync(path.join(ROOT, "packages", "mine", "tier", "tier.js"), "utf8");
+  const wxml = fs.readFileSync(
+    path.join(ROOT, "components", "tier-view", "tier-view.wxml"), "utf8");
+  const js = fs.readFileSync(
+    path.join(ROOT, "components", "tier-view", "tier-view.js"), "utf8");
   const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
   ok("权限对比表的列头就是档位表本身（三档，写死会跟档位走散）",
@@ -997,6 +1010,11 @@ const GATED = {
   const adminLib = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   const adminWxml = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.wxml"), "utf8");
+  const viewWxml = fs.readFileSync(
+    path.join(ROOT, "components", "tier-view", "tier-view.wxml"), "utf8");
+  const tierWxml = fs.readFileSync(path.join(ROOT, "packages/mine/tier/tier.wxml"), "utf8");
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
   ok("用户列表页不写本机档位", usersJs.indexOf("store.KEYS.grant") < 0, "用户列表页还在直接写 grant");
   ok("用户列表页的改档按钮走的是服务端那条（wxml 上没有本机改档的开关）",
@@ -1013,6 +1031,28 @@ const GATED = {
     adminWxml.indexOf("onSetTier") < 0 && adminJs.indexOf("setTier") < 0
       && /bindtap="onUsers"/.test(adminWxml) && /\/packages\/users\/index\/index/.test(adminJs),
     "名录留在管理页里，或放出去了却没给回程入口");
+  ok("名录这一页以「用户权限」为题（正文与标题同一个词）",
+    JSON.parse(fs.readFileSync(path.join(ROOT, "packages/admin/index/index.json"), "utf8"))
+      .navigationBarTitleText.indexOf("用户权限") >= 0,
+    "标题与正文对不上，读的人会以为是两页");
+
+  ok("权限那两张卡只有一份（组件），两张页面只写标签",
+    /<tier-view\s*\/>/.test(tierWxml) && /<tier-view\s*\/>/.test(adminWxml)
+      && viewWxml.indexOf("compareGroups") >= 0
+      && tierWxml.indexOf("compareGroups") < 0 && adminWxml.indexOf("compareGroups") < 0,
+    "档位与权限页与名录页各画了一份表 —— 任一边改样式都会让另一边说谎");
+
+  ok("名录页未登录时不摆一张只读的锁卡（那几句已挂在公开的那张表上）",
+    adminWxml.indexOf("lock-card") < 0 && viewWxml.indexOf("未登录 · 暂按 Free") >= 0,
+    "顶端又摆了一张锁卡：未登录的人正是最该看这张表的人");
+
+  ok("名录只有管理页那一处入口（按登录显隐，「我的」页不再列一行）",
+    /wx:if="\{\{logged\}\}"[^>]*bindtap="onUsers"/.test(adminWxml)
+      && mineWxml.indexOf("onAdmin") < 0 && mineJs.indexOf("onAdmin") < 0
+      && mineJs.indexOf("isAdmin") < 0,
+    "「我的 → 数据与账号」里还留着用户列表那一行 —— 同一个去处两条路，"
+      + "下一个人不知道该守哪一条（Issue #226）");
+
   ok("对比表的每一格由能力表的档位算出来（不写死）",
     /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
@@ -1089,11 +1129,16 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
   ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
     /bindtap="onTier"/.test(mineWxml.replace(chip ? chip[0] : "", "")));
   ok("档位胶囊的样式没换名字", /\.tier-chip\s*\{/.test(mineWxss));
-  ok("档位与权限页不挡登录（挡的是名录，不是整张表）",
-    tierWxml.indexOf("lock-card") < 0 && tierWxml.indexOf("compareGroups") >= 0
-      && !/wx:if="\{\{logged\}\}"/.test(tierWxml),
+  ok("权限表那一块只有一份（两张页面共用同一个组件）",
+    /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareGroups") < 0
+      && (subs.mine || []).indexOf("tier/tier") >= 0,
+    "又在这一页把表画了一遍");
+  ok("权限表那一块不挡登录（挡的是名录，不是整张表）",
+    tierWxml.indexOf("lock-card") < 0 && !/wx:if="\{\{logged\}\}"/.test(tierWxml)
+      && fs.readFileSync(path.join(ROOT, "components", "tier-view", "tier-view.wxml"), "utf8")
+        .indexOf("未登录") >= 0,
     "顶端一张 lock-card 把权限对比一起盖住了 —— 未登录的人正是最该看这张表的人");
-  ok("档位与权限页只读能力表，改档改角色不落在这里",
+  ok("权限表那一块只读能力表，改档改角色不落在这里",
     ["onSetTier", "onSetRole", "canWrite", "canSetRole"].every((k) => tierWxml.indexOf(k) < 0
       && tierJs.indexOf(k) < 0),
     "这张表给所有人看，改档那几个入口留在管理页的用户名录里");
@@ -1128,10 +1173,24 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
 
   const roots = [path.join(ROOT, "app.js"), path.join(ROOT, "custom-tab-bar", "index.js")];
   pages.forEach((p) => roots.push(path.join(ROOT, p + ".js")));
+  jsFiles.forEach((f) => {
+    if (f.startsWith(path.join(ROOT, "components") + path.sep)) roots.push(f);
+  });
   Object.keys(app.subPackages || {}).forEach(() => {});
   (app.subPackages || []).forEach((sp) => {
     sp.pages.forEach((p) => roots.push(path.join(ROOT, sp.root, p + ".js")));
   });
+  const compDirs = [];
+  (function walkComp(d) {
+    if (!fs.existsSync(d)) return;
+    fs.readdirSync(d).forEach((f) => {
+      const full = path.join(d, f);
+      if (!fs.statSync(full).isDirectory()) return;
+      compDirs.push(full);
+      walkComp(full);
+    });
+  })(path.join(ROOT, "components"));
+
   const addComponents = (jsonPath) => {
     if (!fs.existsSync(jsonPath)) return;
     let cfg;
@@ -1146,6 +1205,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
   (app.subPackages || []).forEach((sp) => {
     sp.pages.forEach((p) => addComponents(path.join(ROOT, sp.root, p + ".json")));
   });
+  compDirs.forEach((d) => addComponents(path.join(d, path.basename(d) + ".json")));
 
   const canUse = {};
   jsFiles.forEach((f) => {
@@ -1553,7 +1613,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 const noFeedback = [];
 pages.forEach((p) => {
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+
+  const wxss = path.join(ROOT, p + ".wxss");
+  const css = fs.existsSync(wxss) ? fs.readFileSync(wxss, "utf8") : "";
   const re = /<view\b([^>]*)>/g;
   let m;
   while ((m = re.exec(wxml))) {
@@ -1566,7 +1628,7 @@ pages.forEach((p) => {
     const has = clsM[1].split(/\s+/).filter(Boolean).some((c) => {
       const base = c.replace(/\{\{[^}]*\}\}/g, "").trim();
       if (!base) return false;
-      return new RegExp("\\." + base.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + ":(active|hover)").test(wxss);
+      return new RegExp("\\." + base.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + ":(active|hover)").test(css);
     });
     if (!has) noFeedback.push(p + " → ." + clsM[1].trim());
   }
@@ -1808,7 +1870,9 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   const ROW_LAYOUT_OK = new Set(["seg-pref", "seg-pref-3", "seg-pref-2"]);
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const wxssPath = path.join(ROOT, p + ".wxss");
+    if (!fs.existsSync(wxssPath)) return;
+    const wxss = fs.readFileSync(wxssPath, "utf8");
     const hit = wxss.match(/^\.(seg-[\w-]+|ic-[\w-]+|chip[\w-]*)\s*(::?[a-z-]+)?\s*\{/gm) || [];
     hit.forEach((h) => {
       const name = h.replace(/^\./, "").replace(/\s*(::?[a-z-]+)?\s*\{$/, "");
@@ -1849,7 +1913,9 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   pages.forEach((p) => {
     const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+
+    const wxssPath = path.join(ROOT, p + ".wxss");
+    const wxss = fs.existsSync(wxssPath) ? fs.readFileSync(wxssPath, "utf8") : "";
     if (wxml.indexOf('class="char ') < 0 && wxml.indexOf('class="char {{') < 0) return;
     ok("令字格不再塞一个缩小的圆点：" + p, wxss.indexOf("char-radio") < 0 && wxml.indexOf("char-radio") < 0);
   });
@@ -1936,7 +2002,9 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   const BUTTONISH = /\.(btn|act|option|action)[\w-]*(\s*,[^{]*)?\s*\{/g;
   const strayHeight = [];
   pages.forEach((p) => {
-    const wxss = fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8");
+    const f = path.join(ROOT, p + ".wxss");
+    if (!fs.existsSync(f)) return;
+    const wxss = fs.readFileSync(f, "utf8");
     let m;
     while ((m = BUTTONISH.exec(wxss))) {
       const body = wxss.slice(m.index, wxss.indexOf("}", m.index));
@@ -2006,7 +2074,9 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   const hardCodedColor = [];
   const strayRadius = [];
   pages.forEach((p) => {
-    const wxss = stripCss(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"));
+    const f = path.join(ROOT, p + ".wxss");
+    if (!fs.existsSync(f)) return;
+    const wxss = stripCss(fs.readFileSync(f, "utf8"));
     for (const m of wxss.matchAll(/#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(/g)) {
       hardCodedColor.push(p + " → " + m[0]);
     }
@@ -2123,7 +2193,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   });
 
   const pageCssAll = strip(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"));
-  const pageSrcAll = pages.map((p) => [p, strip(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"))]);
+  const pageSrcAll = pages.filter((p) => fs.existsSync(path.join(ROOT, p + ".wxss")))
+    .map((p) => [p, strip(fs.readFileSync(path.join(ROOT, p + ".wxss"), "utf8"))]);
 
   const visibleTagRules = [];
   const tagRe = /([^{}]+)\{([^{}]*)\}/g;
@@ -2198,6 +2269,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const stray = [];
   const files = pages.map((p) => [p, path.join(ROOT, p + ".wxml"), path.join(ROOT, p + ".wxss")]);
   files.forEach(([p, wxmlPath, wxssPath]) => {
+    if (!fs.existsSync(wxssPath)) return;
     const wxml = fs.readFileSync(wxmlPath, "utf8");
 
     const flat = wxml.replace(/\{\{[\s\S]*?\}\}/g, "＃");
@@ -3818,7 +3890,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       bare(adminJs).indexOf("sourceText") < 0 && bareWxml(adminWxml).indexOf("sourceText") < 0
         && bare(adminJs).indexOf("scopeText") < 0 && bareWxml(adminWxml).indexOf("scopeText") < 0,
       "留一个没人用的字段，下一个人会以为它还挂在界面上");
-    const grantWxml = bareWxml(read("packages/mine/tier/tier.wxml"));
+    const grantWxml = bareWxml(read("components/tier-view/tier-view.wxml"));
     ok("授权卡只剩档名（没有副题那一行）",
       grantWxml.indexOf("grant-tier-k") < 0
         && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(grantWxml),
