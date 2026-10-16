@@ -50,7 +50,6 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">背诵概况</view>
     <view class="stats">
       <view class="stat">
         <text class="stat-v">{{stats.learned}}</text>
@@ -97,7 +96,6 @@
   </view>
 
   <view class="card" wx:if="{{logged}}">
-    <view class="card-title bar">设置</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
       <view class="row-icon">背</view>
       <view class="row-main">
@@ -135,7 +133,6 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">数据与账号</view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
       <view class="row-icon">档</view>
       <view class="row-main">
