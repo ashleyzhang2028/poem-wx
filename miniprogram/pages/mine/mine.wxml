@@ -152,14 +152,6 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{isAdmin}}">
-      <view class="row-icon">人</view>
-      <view class="row-main">
-        <text class="row-title">用户列表</text>
-        <text class="row-sub">改档位 · 改角色</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
       <view class="row-icon">删</view>
       <view class="row-main"><text class="row-title danger-text">清空背诵数据</text></view>
