@@ -47,7 +47,8 @@
     <view class="card hero">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
-      <text class="hero-sub">{{gradeName}} · {{scopeName}}</text>
+      <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
+      <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
 
       <view class="stats hero-stats">
         <view class="stat">
@@ -102,7 +103,8 @@
 
       <view class="empty" wx:if="{{!loading && !total}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">今日未排计划</text>
+        <text class="empty-text">{{selfOnly ? '今天没有加背' : '今日未排计划'}}</text>
+        <text class="hint empty-tip" wx:if="{{selfOnly}}">自选的今日份在下面那张卡里</text>
 
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>

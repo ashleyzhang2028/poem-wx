@@ -288,7 +288,7 @@ function expandTierView(wxml, data) {
     logged: snap.logged,
     status: snap,
     heads: entitlement.compareCols(snap),
-    compareGroups: entitlement.compareGroups(snap),
+    compareRows: entitlement.compareRows(snap),
     compareSummary: entitlement.compareSummary(snap),
     stats: require(path.join(ROOT, "utils", "tier-view.js")).stats()
   });
@@ -425,6 +425,9 @@ cases.forEach((cfg) => {
 
     if (cfg.dailyExtra) storeMod.setDailyExtra(cfg.dailyExtra);
     else storeMod.clearDailyExtra();
+
+    if (cfg.collections) storeMod.saveCollections(cfg.collections);
+    else storeMod.saveCollections([]);
 
     if (cfg.syncedAt) storeMod.saveSettings({ lastSyncAt: cfg.syncedAt });
     else storeMod.saveSettings({ lastSyncAt: 0 });

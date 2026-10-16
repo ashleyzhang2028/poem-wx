@@ -993,7 +993,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 12], ["max", 15]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 13], ["max", 16]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -1015,17 +1015,26 @@ Object.keys(WEB_TIER).forEach((k) => {
     wxml.indexOf("heads") >= 0 && js.indexOf("entitlement.compareCols(") >= 0
       && E.compareCols({ logged: false, tier: "free" }).map((c) => c.tier).join() === tiersMod.TIER_KEYS.join(),
     "列头写死、或只挑几档列出来，都会跟档位表走散");
-  ok("权限对比表的行铺满能力表（分段列出，一段不漏）",
-    wxml.indexOf("compareGroups") >= 0 && js.indexOf("entitlement.compareGroups(") >= 0
-      && E.compareGroups({ logged: false, tier: "free" }).reduce((n, g) => n + g.rows.length, 0) === E.CAP_KEYS.length,
+  ok("权限对比表的行铺满能力表（一行一项，一项不漏）",
+    wxml.indexOf("compareRows") >= 0 && js.indexOf("entitlement.compareRows(") >= 0
+      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
     "只挑几项列出来，用户就看不到自己缺哪几样");
   ok("当前档位列带「现在」（用户只认自己那一列）",
-    /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("col.now") >= 0,
+    /now:\s*t\.key === tierNow\(s\)/.test(entSys) && wxml.indexOf("cell.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
   ok("对比表整表铺在页面上、自己不滚（用户不用在两处别苗头地滚）",
-    wxml.indexOf("compareRows") < 0 && wxml.indexOf("<scroll-view") < 0,
+    wxml.indexOf("<scroll-view") < 0,
     "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
   ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
+  ok("每一格写的是档位差（有差别的项写具体数，不是一律打勾）",
+    (() => {
+      const row = E.compareRows({ logged: false, tier: "free" })
+        .filter((r) => r.cap === "collections")[0];
+      const tiersRow = row.cells.map((c) => c.text);
+      return tiersRow.join(",") === "无,1 个,200 个"
+        && row.cells.filter((c) => c.on).every((c) => c.note.length > 0);
+    })(),
+    "一格一句「可用 / 未开」，有量的那一项读不出差在哪");
 }
 
 {
@@ -1175,8 +1184,8 @@ const GATED = {
       && /bindtap="onUsers"/.test(adminWxml) && /\/packages\/users\/index\/index/.test(adminJs),
     "名录留在管理页里，或放出去了却没给回程入口");
   ok("权限表只有一份（组件），用户权限页只写标签",
-    /<tier-view\s*\/>/.test(tierWxml) && viewWxml.indexOf("compareGroups") >= 0
-      && tierWxml.indexOf("compareGroups") < 0,
+    /<tier-view\s*\/>/.test(tierWxml) && viewWxml.indexOf("compareRows") >= 0
+      && tierWxml.indexOf("compareRows") < 0,
     "用户权限页自己又画了一份表 —— 与组件里那份迟早对不上");
 
   ok("后台管理页不再摆档位那几张卡（普通用户页已经有）",
@@ -1266,7 +1275,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
   ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
     /bindtap="onTier"/.test(mineWxml.replace(chip ? chip[0] : "", "")));
   ok("权限表那一块只有一份（两张页面共用同一个组件）",
-    /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareGroups") < 0
+    /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareRows") < 0
       && (subs.mine || []).indexOf("tier/tier") >= 0,
     "又在这一页把表画了一遍");
   ok("权限表那一块不挡登录（挡的是名录，不是整张表）",
@@ -3737,12 +3746,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /var\(--strong-text\)/.test(clearText),
     "这一行又变回第三种颜色了");
 
-  const isNow = (/\.chip\.is-now\s*\{([^}]*)\}/.exec(read("components/tier-view/tier-view.wxss")) || [])[1] || "";
-  const isNowName = (/\.chip\.is-now \.chip-name\s*\{([^}]*)\}/.exec(read("components/tier-view/tier-view.wxss")) || [])[1] || "";
-  ok("「当前档位」那一格用的是主题色那一档（底 0.05、边与字 1.0）",
-    /var\(--strong-soft\)/.test(isNow) && /var\(--strong\)/.test(isNow)
-      && /var\(--strong-text\)/.test(isNowName),
-    "当前档位还挂在 --green 上 —— 换主题时那一格留在原地");
+  const tierCss = read("components/tier-view/tier-view.wxss");
+  const isNowT = (/\.tier-cell\.is-now \.tier-cell-t\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
+  const isNowHead = (/\.tier-head \.tier-cell\.is-now::after\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
+  ok("「当前档位」那一列用的是主题色那一档（字与列头那一道都走主题）",
+    /var\(--strong-text\)/.test(isNowT) && /var\(--strong\)/.test(isNowHead),
+    "当前档位还挂在 --green 上 —— 换主题时那一列留在原地");
 
   const right = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/quiz/quiz.wxss")) || [])[1] || "";
   const rightExam = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/exam/exam.wxss")) || [])[1] || "";
@@ -6242,10 +6251,17 @@ function gapped(items, max) {
     colsMod.LIMITS.free === 0 && colsMod.LIMITS.pro === 1 && colsMod.LIMITS.max === 200);
   ok("每个集子最多 100 首", colsMod.ITEMS_MAX === 100);
   ok("权限对比表上写出来的自选背诵配额与配额表同源",
-    require(path.join(ROOT, "utils", "entitlement.js")).CAPS
-      .filter((c) => c.key === "collections")[0].desc.indexOf(tiersMod.collectionQuota()) >= 0
-      && tiersMod.collectionQuota().indexOf(String(colsMod.LIMITS.max)) >= 0
-      && tiersMod.collectionQuota().indexOf(String(colsMod.ITEMS_MAX)) >= 0,
+    (() => {
+      const E5 = require(path.join(ROOT, "utils", "entitlement.js"));
+      const row = E5.compareRows({ logged: false, tier: "free" })
+        .filter((r) => r.cap === "collections")[0];
+      const want = ["free", "pro", "max"].map((t) =>
+        colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个" : "无");
+      const got = row.cells.map((c) => c.text);
+      const items = row.cells.filter((c) => c.on)
+        .every((c) => c.note.indexOf(String(colsMod.ITEMS_MAX)) >= 0);
+      return got.join(",") === want.join(",") && items;
+    })(),
     "对比表那一行的数字另写一份，改配额时两处会说不一样的话");
   ok("自由集的算法档位就那四个（3 / 5 / 10 / 20，默认 5）",
     colsMod.DAILY_COUNTS.join() === "3,5,10,20" && colsMod.DAILY_DEFAULT === 5);
@@ -6380,6 +6396,48 @@ function gapped(items, max) {
     store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, items: [{ id: "cp0" }, { id: "cp0" }] }]);
     ok("落盘时同一首只留一份",
       require(path.join(ROOT, "utils", "collections.js")).list()[0].items.length === 1);
+
+    store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, items: [{ id: "cp0" }] }]);
+
+    const S5 = require(path.join(ROOT, "utils", "scheduler.js"));
+    const course5 = corpusMod3.course();
+    const extra5 = [{ id: "cp0", t: "诗0", a: "作者", d: "唐", gr: 1, tm: 1, b: "poems" }];
+    const plain5 = S5.generateDailyPlan({
+      grade: 1, term: 1, count: 5, scope: "term",
+      allPoems: course5, extraPoems: extra5, getRecord: () => null
+    });
+    const self5 = S5.generateDailyPlan({
+      grade: 1, term: 1, count: 5, scope: "term", selfOnly: true,
+      allPoems: course5, extraPoems: extra5, getRecord: () => null
+    });
+    ok("开着「只背自选」时，排期只回今日加背那几首（课内一首不排）",
+      self5.length === 1 && self5[0].poem.id === "cp0" && self5[0].reason === "pinned"
+        && plain5.some((p) => p.poem.id !== "cp0"),
+      "实际 " + JSON.stringify(self5.map((p) => p.poem.id)));
+    ok("没开时排期照旧（这条开关不改默认行为）",
+      plain5.filter((p) => p.reason === "pinned").length === 1 && plain5.length === 6);
+
+    ok("「只背自选」认集子里有没有篇目（空集子不算数）",
+      (() => {
+        store3.saveCollections([{ id: "c2", name: "空", items: [] }]);
+        const off = cols3.selfOnlyOn();
+        store3.saveCollections([{ id: "c2", name: "有", items: [{ id: "cp0" }] }]);
+        store3.saveSettings({ selfOnly: true });
+        const on = cols3.selfOnlyOn();
+        store3.saveSettings({ selfOnly: false });
+        return off === false && on === true && cols3.selfOnlyOn() === false;
+      })(),
+      "开关自己说了算、不看集子里有没有东西 —— 首页会净空");
+
+    ok("「只背自选」要 pro（Free 开不了）",
+      E.CAPS.filter((c) => c.key === "coursefree")[0].tier === "pro" && E.capName("coursefree") === "只背自选");
+
+    ok("这两项能力各占能力表一行，不是同一项（一个是建集子，一个是停课内）",
+      E.CAP_KEYS.indexOf("coursefree") >= 0 && E.CAP_KEYS.indexOf("collections") >= 0
+        && E.CAP_KEYS.indexOf("coursefree") !== E.CAP_KEYS.indexOf("collections"));
+
+    ok("设置页的开关只落一个键（selfOnly 在跨设备的设置白名单里）",
+      store3.DEFAULTS.selfOnly === false && !store3.LOCAL_ONLY.selfOnly);
 
     store3.saveCollections([]);
     global.wx = saved;

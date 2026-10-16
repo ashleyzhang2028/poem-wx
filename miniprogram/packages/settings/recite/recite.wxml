@@ -108,6 +108,24 @@
 
   </view>
 
+  <view class="card" data-anchor="recite-selfonly">
+    <view class="card-title bar">自选背诵</view>
+
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">只背自选</text>
+        <text class="row-sub">首页不排课内诗词，只排自选集子</text>
+      </view>
+      <switch checked="{{selfOnly}}" bindchange="onSelfOnly" color="{{themeHex}}"
+              disabled="{{!selfOnlyOn}}" />
+    </view>
+
+    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">
+      已建 {{selfOnlyRows}} 个集子 · 共 {{selfOnlyPoems}} 首
+    </text>
+    <text class="hint self-only-note" wx:else>{{selfOnlyHint}}</text>
+  </view>
+
   <view class="safe-bottom"></view>
   </block>
 </view>
