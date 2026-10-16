@@ -368,6 +368,22 @@ view, text, button, input, textarea {
   color: var(--ink-2);
 }
 
+.sw {
+  position: relative;
+  flex: none;
+  width: var(--w-switch);
+  height: var(--h-switch);
+  margin-left: var(--sp-3);
+}
+
+.sw switch {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--switch-scale));
+  transform-origin: center;
+}
+
 .tag {
   display: inline-flex;
   align-items: center;

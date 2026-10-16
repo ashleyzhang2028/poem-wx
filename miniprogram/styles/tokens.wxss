@@ -123,6 +123,10 @@ page {
   --h-opt: calc(76rpx * var(--ui-scale));
   --h-opt-seg: calc(56rpx * var(--ui-scale));
 
+  --w-switch: calc(88rpx * var(--ui-scale));
+  --h-switch: calc(54rpx * var(--ui-scale));
+  --switch-scale: calc(.863 * var(--ui-scale));
+
   --pad-opt-y: calc(4rpx * var(--ui-scale));
   --pad-opt-x: calc(24rpx * var(--ui-scale));
 

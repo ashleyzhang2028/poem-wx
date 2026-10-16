@@ -33,7 +33,16 @@ function runtime() {
     getUserProfile(o) { o && o.fail && o.fail({}); },
     request(o) { o && o.fail && o.fail({ errMsg: "offline" }); },
     downloadFile(o) { o && o.fail && o.fail({}); },
-    createInnerAudioContext: () => ({ play() {}, pause() {}, stop() {}, destroy() {}, onEnded() {}, onError() {} })
+    createInnerAudioContext: () => ({ play() {}, pause() {}, stop() {}, destroy() {}, onEnded() {}, onError() {} }),
+    createWebAudioContext: () => ({
+      currentTime: 0,
+      destination: {},
+      createOscillator: () => ({ connect() {}, start() {}, stop() {}, frequency: {} }),
+      createGain: () => ({
+        connect() {},
+        gain: { setValueAtTime() {}, linearRampToValueAtTime() {} }
+      })
+    })
   });
   global.Component = () => {};
   global.getApp = () => ({ globalData: {} });
@@ -136,6 +145,7 @@ const NATIVE_CSS = `
 .n-radio.dis,.n-checkbox.dis{opacity:.5}
 /* 页面样式表里凡按**标签名**写的规则，这里按 class 补一份等价项。
    少补一条，预览就会比真机好看一点 —— 而问题恰好藏在那一丁点里。 */
+.sw .n-switch{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(var(--switch-scale));transform-origin:center}
 .pref-item .n-radio,.pref-item .n-checkbox{margin-right:var(--sp-2)}
 /* 选项行（.opt-row）里的原生控件现在是**视觉隐藏**的（.opt-radio）——
    它不露脸，所以镜像里也不需要它的外观。原来那三条给
@@ -156,7 +166,7 @@ const NATIVE_CSS = `
 .n-slider{position:relative;height:28px;display:flex;align-items:center;width:100%;--n-slider-inset:10px}
 .n-slider-track{position:relative;height:4px;border-radius:2px;background:#ececef;width:100%;margin:0 var(--n-slider-inset)}
 .n-slider-fill{position:absolute;left:0;top:0;height:4px;border-radius:2px;background:#1c1c1e}
-.n-slider-knob{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
+.n-slider-knob{position:absolute;top:50%;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
 .n-ph{color:#9ca3af}
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
 .n-image{border-radius:50%;background:#f2f2f4}

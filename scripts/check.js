@@ -2591,6 +2591,53 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       /onPick/.test(general) && /onSfx/.test(general) && /swatch/.test(general)
         && /onPick\s*\(/.test(generalJs2) && /sfx\.setEnabled\(/.test(generalJs2),
       "主题 / 声音只是搬了壳，动作没跟过来");
+
+    const shelled = [];
+    const naked = [];
+    pages.concat(["packages/settings/general/general", "packages/settings/recite/recite"])
+      .forEach((p) => {
+        const wxml = read(p + ".wxml");
+        const re = /<switch\b[\s\S]{0,200}?\/>/g;
+        let m;
+        while ((m = re.exec(wxml))) {
+          const before = wxml.slice(0, m.index);
+          if (/<view class="sw">\s*$/.test(before)) shelled.push(p); else naked.push(p);
+        }
+      });
+    ok("两个开关都装在定尺寸的 .sw 壳里（原生开关的固有尺寸不受 --ui-scale 管）",
+      shelled.length >= 2 && naked.length === 0,
+      naked.join(", ") || "只找到 " + shelled.length + " 个带壳的");
+
+    const appWxss = read("app.wxss");
+    ok(".sw 只在 app.wxss 定义一次（两页共用同一档尺寸）",
+      (appWxss.match(/\.sw\s*\{/g) || []).length === 1
+        && [general, read("packages/settings/recite/recite.wxss")]
+          .every((t) => !/\.sw\s*\{/.test(t)),
+      "壳的尺寸被写了两处 —— 两页迟早对不上");
+    ok("壳的尺寸与缩放都取自令牌",
+      /--w-switch\s*:/.test(read("styles/tokens.wxss"))
+        && /--h-switch\s*:/.test(read("styles/tokens.wxss"))
+        && /--switch-scale\s*:/.test(read("styles/tokens.wxss"))
+        && /\.sw\s+switch\s*\{[^}]*scale\(var\(--switch-scale\)\)/.test(appWxss),
+      "壳或缩放写死在页面里，改一处另一处不跟");
+
+    const sfxRow = (() => {
+      const at = general.indexOf('class="row"', general.indexOf("声音</view>"));
+      return at < 0 ? "" : general.slice(at, general.indexOf("</view>\n  </view>", at));
+    })();
+    ok("「试听」和开关在同一行（不再各占一行）",
+      sfxRow.indexOf("onSfxTest") >= 0 && /<switch\b/.test(sfxRow)
+        && !/btn\s+ghost\s+block/.test(general),
+      "试听又回到自己那一行了");
+    ok("「试听」是胶囊（mini + ghost），文案不再带「一声」",
+      /<button[^>]*class="btn mini ghost sfx-test"[^>]*bindtap="onSfxTest"[^>]*>试听<\/button>/.test(general)
+        && general.indexOf("试听一声") < 0,
+      "按钮换了长相，或者文案还留着旧的那句");
+
+    ok("字号滑块只给属性、不在页面样式表里另写一套",
+      /<slider[^>]*block-size="12"/.test(general)
+        && !/n-slider/.test(read("packages/settings/general/general.wxss")),
+      "圆点大小写到了别处");
   }
 
   {

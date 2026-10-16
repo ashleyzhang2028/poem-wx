@@ -116,8 +116,10 @@
         <text class="row-title">只背自选</text>
         <text class="row-sub">首页不排课内诗词，只排自选集子</text>
       </view>
-      <switch checked="{{selfOnly}}" bindchange="onSelfOnly" color="{{themeHex}}"
-              disabled="{{!selfOnlyOn}}" />
+      <view class="sw">
+        <switch checked="{{selfOnly}}" bindchange="onSelfOnly" color="{{themeHex}}"
+                disabled="{{!selfOnlyOn}}" />
+      </view>
     </view>
 
     <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">
