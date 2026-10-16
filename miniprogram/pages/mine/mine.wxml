@@ -96,37 +96,11 @@
   </view>
 
   <view class="card" wx:if="{{logged}}">
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
-      <view class="row-icon">背</view>
-      <view class="row-main">
-        <text class="row-title">背诵设置</text>
-        <text class="row-sub">范围 · 首数 · 算法</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
       <view class="row-icon">设</view>
       <view class="row-main">
-        <text class="row-title">通用设置</text>
-        <text class="row-sub">对齐 · 注音 · 字号</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
-      <view class="row-icon">色</view>
-      <view class="row-main">
-        <text class="row-title">主题</text>
-        <text class="row-sub">{{themeName}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onReader"
-          wx:if="{{sfxVisible}}">
-      <view class="row-icon">读</view>
-      <view class="row-main">
-        <text class="row-title">声音</text>
-        <text class="row-sub">答题音效</text>
+        <text class="row-title">设置</text>
+        <text class="row-sub">版式 · 主题 · 声音</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -136,7 +110,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
       <view class="row-icon">档</view>
       <view class="row-main">
-        <text class="row-title">档位与权限</text>
+        <text class="row-title">用户权限</text>
         <text class="row-sub">自己那一档 · 能力对照</text>
       </view>
       <text class="row-go">›</text>
@@ -144,8 +118,8 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onManage" wx:if="{{manageOn}}">
       <view class="row-icon">管</view>
       <view class="row-main">
-        <text class="row-title">用户权限</text>
-        <text class="row-sub">名录 · 改档位 · 改角色</text>
+        <text class="row-title">后台管理</text>
+        <text class="row-sub">用户列表 · 改档位</text>
       </view>
       <text class="row-go">›</text>
     </view>

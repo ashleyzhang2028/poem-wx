@@ -17,7 +17,7 @@ Page({
   refresh() {
     this.setData({
       logged: entitlement.snapshot().logged,
-      usersSub: remote.adminReady() ? "改档位 · 改角色" : "只读"
+      usersSub: remote.adminReady() ? "改档位" : "只读"
     });
   },
 

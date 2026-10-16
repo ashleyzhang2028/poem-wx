@@ -3,7 +3,6 @@ const auth = require("../../utils/auth");
 const S = require("../../utils/scheduler");
 const E = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
-const sfx = require("../../utils/sfx");
 const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
@@ -26,7 +25,6 @@ Page({
 
     tierLabel: "Free",
 
-    sfxVisible: false,
     manageOn: false,
 
     syncSub: "",
@@ -64,11 +62,9 @@ Page({
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
 
-      themeName: theme.currentTheme().name,
       dailyCount: settings.dailyCount,
       stats,
       tierLabel: e.label,
-      sfxVisible: sfx.readiness().visible,
       manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
       fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
@@ -221,14 +217,6 @@ Page({
     wx.navigateTo({ url: "/packages/settings/general/general" });
   },
 
-  onTheme() {
-    wx.navigateTo({ url: "/packages/settings/theme/theme" });
-  },
-
-  onRecite() {
-    wx.navigateTo({ url: "/packages/settings/recite/recite" });
-  },
-
   onScope() {
     wx.navigateTo({ url: "/packages/settings/recite/recite?focus=scope" });
   },
@@ -239,10 +227,6 @@ Page({
 
   onAlgo() {
     wx.navigateTo({ url: "/packages/settings/recite/recite?focus=algo" });
-  },
-
-  onReader() {
-    wx.navigateTo({ url: "/packages/settings/reader/reader" });
   },
 
   onProgress() {

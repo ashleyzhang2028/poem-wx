@@ -104,21 +104,9 @@
   },
   "settings-general": {
     "page": "packages/settings/general/general",
-    "title": "通用设置",
+    "title": "设置",
     "back": true,
     "logged": true
-  },
-  "settings-theme": {
-    "page": "packages/settings/theme/theme",
-    "title": "主题",
-    "back": true,
-    "logged": true
-  },
-  "settings-theme-guest": {
-    "page": "packages/settings/theme/theme",
-    "title": "主题",
-    "back": true,
-    "logged": false
   },
   "home-qinglv": {
     "page": "pages/home/home",
@@ -137,12 +125,6 @@
     "settings": {
       "theme": "yuqing"
     }
-  },
-  "settings-reader": {
-    "page": "packages/settings/reader/reader",
-    "title": "声音设置",
-    "back": true,
-    "logged": true
   },
   "settings-about": {
     "page": "packages/settings/about/about",
@@ -232,14 +214,14 @@
   },
   "admin-guest": {
     "page": "packages/admin/index/index",
-    "title": "用户权限",
+    "title": "后台管理",
     "back": true,
     "logged": false,
-    "_note": "未登录的用户权限页：锁卡，不进比对表"
+    "_note": "未登录的后台管理页：一句「管理要登录」，没有用户列表"
   },
   "admin": {
     "page": "packages/admin/index/index",
-    "title": "用户权限",
+    "title": "后台管理",
     "back": true,
     "logged": true
   },

@@ -2137,8 +2137,7 @@ function adminAccounts(deps) {
       return ok({
         accounts: list,
         total: list.length,
-        store: store.kind,
-                note: "这里列的是**注册过的账号**（含邮箱明文），每行带 uid 与到期，界面据此改角色与层级。"
+        store: store.kind
       });
     });
   });
