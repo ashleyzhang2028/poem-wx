@@ -143,8 +143,8 @@
   margin-top: var(--sp-3);
 }
 
-.danger-text {
-  color: var(--red);
+.clear-text {
+  color: var(--strong-text);
 }
 
 .logout {

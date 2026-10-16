@@ -81,7 +81,7 @@
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
-          <text class="seq {{item.read ? 'done' : ''}}">{{item.seq}}</text>
+          <text class="seq {{item.read ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <view class="row-line">
               <text class="row-title row-poem">{{item.title}}</text>

@@ -3457,6 +3457,31 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /row-state\.on\s*\{([^}]*)\}/.test(homeWxss)
       && !/var\(--green\)/.test((/\.row-state\.on\s*\{([^}]*)\}/.exec(homeWxss) || [])[1] || ""),
     "已背又把 --green 拿回来了 —— 用户说颜色太重");
+
+  const bareMarkup = (src) => src.replace(/<!--[\s\S]*?-->/g, "");
+  const seqOn = (/\.seq\.on\s*\{([^}]*)\}/.exec(appWxss) || [])[1] || "";
+  ok("已背那个序号用的是主题色那一档淡底（胶囊底不许写死色值）",
+    /var\(--strong-soft\)/.test(seqOn) && /var\(--strong-text\)/.test(seqOn),
+    "序号胶囊自己填了色 —— 换主题时它会留在原地");
+  ok("已背的序号挂上那一档类（未背的回到凹槽底）",
+    /class="seq \{\{item\.read \? 'on' : ''\}\}"/.test(bareMarkup(homeWxml)),
+    "序号那一格没跟着已背变，或者换了第三个类名");
+
+  const dot = (/\.read-dot\s*\{([^}]*)\}/.exec(appWxss) || [])[1] || "";
+  ok("「已读」胶囊用的是主题色那一档淡底",
+    /var\(--strong-soft\)/.test(dot) && /var\(--strong-text\)/.test(dot),
+    "已读胶囊还在用 --green-soft");
+  ok("「已读」胶囊只在 app.wxss 定义一次（列表页与作者页共用）",
+    (appWxss.match(/\.read-dot\s*\{/g) || []).length === 1
+      && ["pages/list/list.wxss", "packages/authors/index/index.wxss"]
+        .every((f) => !/\.read-dot\s*\{/.test(read(f))),
+    "两处页面各留了一份，改一处另一处就不跟了");
+
+  const clearText = (/\.clear-text\s*\{([^}]*)\}/.exec(read("pages/mine/mine.wxss")) || [])[1] || "";
+  ok("「清空背诵数据」那一行用的是主题色（不再单独一支危险色）",
+    /class="row-title clear-text"/.test(bareMarkup(read("pages/mine/mine.wxml")))
+      && /var\(--strong-text\)/.test(clearText),
+    "这一行又变回第三种颜色了");
 }
 
 {
