@@ -6,6 +6,15 @@ const TIERS = [
 
 const DEFAULT_TIER = "free";
 
+const COLLECTION_LIMITS = { free: 0, pro: 1, max: 200 };
+
+const COLLECTION_ITEMS_MAX = 100;
+
+function collectionQuota() {
+  return "Pro " + COLLECTION_LIMITS.pro + " 个 / Max " + COLLECTION_LIMITS.max
+    + " 个，每个最多 " + COLLECTION_ITEMS_MAX + " 首";
+}
+
 const TIER_KEYS = TIERS.map((t) => t.key);
 
 function isTier(key) {
@@ -31,6 +40,9 @@ module.exports = {
   TIERS,
   TIER_KEYS,
   DEFAULT_TIER,
+  COLLECTION_LIMITS,
+  COLLECTION_ITEMS_MAX,
+  collectionQuota,
   isTier,
   nameOf,
   tierOf,

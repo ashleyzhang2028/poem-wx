@@ -344,6 +344,26 @@ if (poemId === SETTINGS_ROW_ID) return sanitizeSettings(p);
 （原来这里还有一条 `PROFILE_ROW_ID` —— Issue #111 之后没有 `profile:v1`
 这一行了，那条分支随之没有对象。见上一节。）
 
+### `collections:v1` 那一行多认一个 `dailyCount`（Issue #235）
+
+自选集子占一行（`collections:v1`），载荷是
+`{ v:1, collections:[{ id, name, createdAt, dailyCount, items }], updatedAt }`。
+`dailyCount` 是「这个集子一天背几首」，与名字、篇目同源同去，**服务端要一起收** ——
+`sanitizeCollections` 里那一格写成 1..100 的整数（服务端不认识 3/5/10/20 这四档，
+那是客户端的选择）：
+
+```js
+var COLLECTIONS_DAILY_MAX = 100;
+if (typeof c.dailyCount === "number" && isFinite(c.dailyCount)) {
+  row2.dailyCount = Math.max(1, Math.min(COLLECTIONS_DAILY_MAX, Math.round(c.dailyCount)));
+}
+```
+
+不加这一格的后果与「`settings:v1` 没白名单」是同一类：`sanitizeCollections`
+照单裁字段，首数在服务端被静默丢掉，客户端一路绿灯，换台手机每个集子回默认 5 首。
+**这一条只改 `api/_lib/core.js` 与 `scripts/parity-web/core.js` 两处** ——
+后者是服务端契约的只读副本，两处要一起动（先例见 `b6a73a3`）。
+
 ### 还有一件事：`updated_at` 与 `created_at` 被同一条 upsert 揉在一起
 
 poem 的 `kb_upsert_progress` 是「按 `updated_at` 比新旧的条件覆盖」，
