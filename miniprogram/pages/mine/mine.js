@@ -27,6 +27,7 @@ Page({
     tierLabel: "Free",
 
     sfxVisible: false,
+    isAdmin: false,
 
     syncSub: "",
     fullTextOn: false,
@@ -71,6 +72,7 @@ Page({
       sfxVisible: sfx.readiness().visible,
       fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
+      isAdmin: auth.isAdmin(),
 
       grantLead: this.grantLead(profile)
     });
@@ -181,8 +183,11 @@ Page({
     });
   },
 
-  onAdmin() {
+  onTier() {
+    wx.navigateTo({ url: "/packages/mine/tier/tier" });
+  },
 
+  onAdmin() {
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 

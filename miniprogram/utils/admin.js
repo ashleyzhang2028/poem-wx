@@ -1,15 +1,15 @@
-const store = require("../../../utils/store");
-const tiers = require("../../../utils/tiers");
-const entitlement = require("../../../utils/entitlement");
-const remote = require("../../../utils/remote");
-const auth = require("../../../utils/auth");
+const store = require("./store");
+const tiers = require("./tiers");
+const entitlement = require("./entitlement");
+const remote = require("./remote");
+const auth = require("./auth");
 
 let rosterCache = null;
 
 function roster() {
   if (rosterCache) return rosterCache;
   try {
-    rosterCache = require("../../../data/roster.js");
+    rosterCache = require("../data/roster.js");
   } catch (e) {
     rosterCache = { users: [], note: "名册未生成" };
   }
@@ -167,23 +167,11 @@ function setRole(userId, role) {
   }));
 }
 
-function stats() {
-  const s = entitlement.snapshot();
-  let ok = 0;
-  Object.keys(s.caps).forEach((k) => {
-    if (s.caps[k].ok) ok += 1;
-  });
-  const caps = Object.keys(s.caps).length;
-
-  return { caps, enabled: ok, percent: caps ? Math.round((ok / caps) * 100) : 0 };
-}
-
 module.exports = {
   list,
   setTier,
   revokeTier,
   setRole,
-  stats,
   canWrite,
   canSetRole,
   roster

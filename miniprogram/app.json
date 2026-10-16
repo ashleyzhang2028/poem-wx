@@ -37,6 +37,13 @@
       ]
     },
     {
+      "root": "packages/mine",
+      "name": "mine",
+      "pages": [
+        "tier/tier"
+      ]
+    },
+    {
       "root": "packages/admin",
       "name": "admin",
       "pages": [
@@ -69,6 +76,13 @@
       "network": "all",
       "packages": [
         "authors"
+      ]
+    },
+    "pages/mine/mine": {
+      "network": "all",
+      "packages": [
+        "mine",
+        "admin"
       ]
     }
   },

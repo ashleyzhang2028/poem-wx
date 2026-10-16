@@ -29,7 +29,8 @@
           </view>
         </block>
       </view>
-      <text class="tier-chip" wx:if="{{logged}}">{{tierLabel}}</text>
+      <view class="tier-chip" wx:if="{{logged}}" hover-class="tier-chip-hover" hover-stay-time="60"
+            bindtap="onTier">{{tierLabel}}</view>
     </view>
 
     <view class="grant-lead" wx:if="{{grantLead}}">
@@ -135,6 +136,14 @@
 
   <view class="card">
     <view class="card-title bar">数据与账号</view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
+      <view class="row-icon">档</view>
+      <view class="row-main">
+        <text class="row-title">档位与权限</text>
+        <text class="row-sub">{{tierLabel}} · 能力对照</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
       <view class="row-icon">云</view>
       <view class="row-main">
@@ -143,17 +152,17 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{logged}}">
-      <view class="row-icon">权</view>
-      <view class="row-main">
-        <text class="row-title">用户权限</text>
-        <text class="row-sub">档位 · 权限对比</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
       <view class="row-icon">问</view>
       <view class="row-main"><text class="row-title">关于</text></view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{isAdmin}}">
+      <view class="row-icon">名</view>
+      <view class="row-main">
+        <text class="row-title">用户名录</text>
+        <text class="row-sub">改档 · 改角色</text>
+      </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">

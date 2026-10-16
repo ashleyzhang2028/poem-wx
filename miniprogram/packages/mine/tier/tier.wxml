@@ -1,0 +1,48 @@
+<view class="page" style="{{themeStyle}}">
+
+  <view class="card grant">
+    <view class="card-title bar">我的权限</view>
+    <view class="grant-head">
+
+      <text class="grant-tier-name">{{status.label}}</text>
+
+      <view class="grant-meter">
+        <view class="meter">
+          <view class="meter-fill" style="width:{{stats.percent}}%"></view>
+        </view>
+        <text class="grant-meter-t">{{stats.enabled}} / {{stats.caps}} 项能力</text>
+      </view>
+    </view>
+
+    <text class="hint note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
+    <text class="hint note" wx:elif="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
+  </view>
+
+  <view class="card compare">
+    <view class="card-title bar">权限对比</view>
+    <view class="compare-row compare-head">
+      <text class="compare-cap">功能</text>
+      <text class="compare-tier" wx:for="{{heads}}" wx:for-item="col" wx:key="key">
+        <text class="compare-label {{col.now ? 'is-now' : ''}}">{{col.label}}</text>
+        <text class="compare-note" wx:if="{{col.now}}">现在</text>
+      </text>
+    </view>
+    <block wx:for="{{compareGroups}}" wx:key="key">
+      <view class="compare-group">{{item.note}}</view>
+      <view class="compare-row" wx:for="{{item.rows}}" wx:for-item="row" wx:key="cap">
+        <text class="compare-cap">{{row.name}}</text>
+        <text class="compare-tier {{col.on ? 'on' : 'off'}}" wx:for="{{row.cells}}" wx:for-item="col" wx:key="tier">
+          <text class="compare-mark">{{col.on ? '✓' : '✕'}}</text>
+        </text>
+      </view>
+    </block>
+    <view class="compare-row compare-sum">
+      <text class="compare-cap">合计</text>
+      <text class="compare-tier" wx:for="{{compareSummary}}" wx:for-item="col" wx:key="tier">
+        <text class="compare-mark">{{col.on}}<text class="compare-of">/{{col.total}}</text></text>
+      </text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>
