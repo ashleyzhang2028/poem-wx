@@ -430,65 +430,6 @@ ok("加背当天可读", store.dailyExtra().length === 2);
 wxCalls[store.KEYS.dailyExtra] = { day: "2000-1-1", ids: ["a"] };
 ok("加背跨天归零", store.dailyExtra().length === 0);
 
-function bootSpeech(wxExtra) {
-  const box = {};
-  const saved = global.wx;
-  global.wx = Object.assign(
-    {
-      getStorageSync: (k) => (k in box ? box[k] : ""),
-      setStorageSync: (k, v) => {
-        box[k] = v;
-      },
-      removeStorageSync: (k) => {
-        delete box[k];
-      }
-    },
-    wxExtra || {}
-  );
-  delete require.cache[require.resolve(path.join(ROOT, "utils", "speech.js"))];
-  delete require.cache[require.resolve(path.join(ROOT, "utils", "entitlement.js"))];
-  const sp = require(path.join(ROOT, "utils", "speech.js"));
-  const en = require(path.join(ROOT, "utils", "entitlement.js"));
-  const out = { speech: sp, ent: en, box: box, restore: () => (global.wx = saved) };
-  return out;
-}
-
-const AUDIO = {
-  createInnerAudioContext: () => ({
-    onEnded: () => {},
-    onError: () => {},
-    play: () => {},
-    pause: () => {},
-    stop: () => {},
-    destroy: () => {}
-  })
-};
-const PLUGIN = { getPlugin: () => ({ textToSpeech: (o) => o.success({ filename: "x.mp3" }) }) };
-
-const LOGGED = { kb_profile_v1: { logged: true } };
-
-let env = bootSpeech({});
-env.box["kb_profile_v1"] = { logged: true };
-ok("无音频接口时朗读不可见", env.speech.readiness().visible === false, JSON.stringify(env.speech.readiness()));
-ok("无音频接口时朗读报 unsupported", env.speech.readiness().state === "unsupported");
-env.restore();
-
-env = bootSpeech(AUDIO);
-env.box["kb_profile_v1"] = { logged: true };
-ok("缺少合成通道时朗读可见", env.speech.readiness().visible === true);
-ok("缺少合成通道时朗读不可用", env.speech.readiness().usable === false);
-ok("缺少合成通道时报 awaiting", env.speech.readiness().state === "awaiting");
-ok("未就绪时给出人话原因", !!env.speech.readiness().reason);
-env.restore();
-
-env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
-env.box["kb_profile_v1"] = { logged: true };
-ok("通道齐备时朗读就绪", env.speech.readiness().usable === true);
-ok("通道齐备时选题用插件", env.speech.resolveProvider() === "plugin");
-env.restore();
-
-void LOGGED;
-
 {
   function bootFont(auth, extra) {
     const box = { kb_auth_v1: auth };
@@ -545,15 +486,6 @@ void LOGGED;
     !!textNow && /^\s*"Kuibu Serif Text"/.test(textNow[1]),
     textNow ? textNow[1].trim() : "找不到 --font-poem-text");
 }
-
-env = bootSpeech(Object.assign({}, AUDIO, PLUGIN));
-env.box["kb_profile_v1"] = { logged: false };
-ok("未登录：朗读报 denied", env.speech.readiness().state === "denied");
-
-env.box["kb_profile_v1"] = { logged: true, tier: "max" };
-ok("本机写 max 不生效（无签名，按免费算）", env.ent.status().blocked === "unsigned", JSON.stringify(env.ent.status()));
-ok("无签名档位退回免费", env.ent.status().tier === "free", env.ent.status().tier);
-env.restore();
 
 const pinyin = require(path.join(ROOT, "utils", "pinyin.js"));
 const pinyinTable = path.join(dataDir, "pinyin-table.js");
@@ -747,7 +679,7 @@ function asMember() {
 
 asGuest();
 
-["daily", "library", "pinyin", "ebbinghaus", "speak", "leitner", "export"].forEach((k) => {
+["daily", "library", "pinyin", "ebbinghaus", "extra", "leitner", "export"].forEach((k) => {
   ok("能力表含 " + k, E.CAP_KEYS.indexOf(k) >= 0 && !!E.capName(k));
 });
 
@@ -881,11 +813,11 @@ const gateMod = require(path.join(ROOT, "utils", "gate.js"));
 const WEB_TIER = {
   daily: "free",
   library: "free",
-  speak: "free",
   export: "free",
   ebbinghaus: "free",
-  leitner: "free",
+  leitner: "pro",
   sm2: "pro",
+  extra: "pro",
   fsrs: "max",
   collections: "pro",
   feihualing: "max"
@@ -893,6 +825,14 @@ const WEB_TIER = {
 
 ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
   tiersMod.TIER_KEYS.join() === "free,pro,max");
+ok("能力表里没有「管理页」（那是 owner / admin 的身份门，不是一项能力）",
+  E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
+  "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
+[["free", 8], ["pro", 13], ["max", 16]].forEach(([tier, n]) => {
+  ok("档位 " + tier + " 拿到 " + n + " 项",
+    E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
+    JSON.stringify(E.compareSummary()));
+});
 Object.keys(WEB_TIER).forEach((k) => {
   const cap = E.CAPS.find((c) => c.key === k);
   ok("档位与网页版一致 " + k, !!cap && cap.tier === WEB_TIER[k],
@@ -1178,8 +1118,7 @@ ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") 
   ok("没有跨包 require（分包模块不许被别的包引用）", leaked.length === 0, leaked.join("；"));
 
   const LAZY = [
-    path.join(ROOT, "utils", "font.js"),
-    path.join(ROOT, "utils", "speech.js")
+    path.join(ROOT, "utils", "font.js")
   ];
   const orphans = jsFiles
     .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0)
@@ -1220,7 +1159,6 @@ const serverMod = () => require(path.join(ROOT, "utils", "server.js"));
 ok("这个包没注入过云调用两栏时如实说「没配」（不带值就是没配）",
   !!serverMod().cloud() || remoteMod.configured() === false,
   "server.js 里没值就地认成没配 —— 不能回落成「已配好」");
-ok("未配后端：TTS 不就绪", remoteMod.speechReady() === false);
 ok("未配后端：管理接口不就绪", remoteMod.adminReady() === false);
 
 {
@@ -1782,7 +1720,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   const seq = [];
   tk.forEach((pr) => pr.forEach((row) => row.forEach((cl) => seq.push(cl.i))));
-  ok("注音给每一句编了号（与朗读同序）",
+  ok("注音给每一句编了号（按正文顺序）",
     seq.length > 0 && seq.every((v, i) => v === i), JSON.stringify(seq));
 }
 
@@ -4843,8 +4781,7 @@ function gapped(items, max) {
 
       store.saveSettings({
         grade: 3, term: 2, dailyCount: 7, scope: "all", algo: "sm2",
-        align: "left", fontSize: 2, theme: "ink", pinyin: "all",
-        speechRate: 1.5, speechAutoNext: false
+        align: "left", fontSize: 2, theme: "ink", pinyin: "all"
       });
 
       store.saveSettings({ lastSyncAt: Date.now(), sfx: false });

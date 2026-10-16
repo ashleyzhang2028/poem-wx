@@ -10,17 +10,14 @@ const CAPS = [
   { key: "ebbinghaus", name: "艾宾浩斯", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
   { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处 / 正文", tier: "free" },
-  { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "free" },
-
-  { key: "speak", name: "语音朗读", desc: "正文朗读；需要 TTS 通道就绪", tier: "free" },
-  { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "free" },
-  { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "free" },
-
   { key: "sync", name: "同步进度", desc: "换手机进度一字不少", tier: "free" },
+  { key: "export", name: "进度导出", desc: "整份数据复制成 JSON", tier: "free" },
+
+  { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "pro" },
+  { key: "leitner", name: "莱特纳盒", desc: "分级盒子复习", tier: "pro" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
-  { key: "collections", name: "自选清单", desc: "教材之外自己加篇目", tier: "pro" },
-  { key: "admin", name: "管理页", desc: "管理员改用户档位与角色", tier: "pro" },
+  { key: "collections", name: "自选背诵", desc: "教材之外自己加篇目", tier: "pro" },
 
   { key: "fsrs", name: "FSRS", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },

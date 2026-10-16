@@ -21,7 +21,7 @@ const DECIDED = {
   "recite.basic": { kind: "cap", to: "daily" },
   "library.all": { kind: "cap", to: "library" },
 
-  "read.aloud": { kind: "none", to: "todo-1" },
+  "read.aloud": { kind: "dropped" },
 
   "pinyin.helper": { kind: "none", to: "todo-3" },
   "export.progress": { kind: "cap", to: "export" },
@@ -59,6 +59,16 @@ const pages = app.pages.slice();
 const capKeys = E.CAP_KEYS;
 const todoDoc = fs.readFileSync(path.join(ROOT, "docs", "todo.md"), "utf8");
 
+const DROPPED_WORDS = ["朗读", "语音", "speak", "tts", "TTS"];
+const DROPPED_DOCS = ["README.md", "docs/architecture.md", "docs/parity.md", "docs/todo.md"];
+function cannotDo(key) {
+  void key;
+  return DROPPED_DOCS.every((f) => {
+    const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+    return DROPPED_WORDS.every((w) => src.indexOf(w) < 0);
+  });
+}
+
 if (!webCaps) {
   console.log("  · 跳过能力表对照：拿不到 " + WEB + "/js/entitlement.js");
   console.log("    那份能力表在 scripts/parity-web/js/entitlement.js（仓库内，不该缺）。");
@@ -83,6 +93,10 @@ Object.keys(DECIDED).forEach((k) => {
     const id = String(d.to).replace(/^todo-/, "");
     const hasRow = new RegExp("\\|\\s*" + id + "\\s*\\|").test(todoDoc);
     ok("不做的有记账 " + k + " → todo.md #" + id, hasRow, "docs/todo.md 里没有第 " + id + " 条");
+  } else if (d.kind === "dropped") {
+    ok("整个撤掉的能力两边都没有 " + k,
+      capKeys.indexOf(k) < 0 && cannotDo(k),
+      "能力表里还有它，或者 docs/ 里还留着它");
   }
 });
 

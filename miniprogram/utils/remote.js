@@ -16,7 +16,6 @@ const PATHS = {
   refresh: "/api/wx/refresh",
   pull: "/api/sync/pull",
   push: "/api/sync/push",
-  speech: "/api/tts/synth",
   accounts: "/api/admin/accounts",
   grant: "/api/admin/grant",
   role: "/api/admin/role",
@@ -355,19 +354,6 @@ function sync() {
     .catch((err) => ({ sim: false, error: err.message }));
 }
 
-function speechReady() {
-  const a = session();
-  return !!(configured() && a.speech === true);
-}
-
-function speech(text) {
-  if (!speechReady()) return Promise.reject(new Error("朗读服务未开通"));
-  return request(PATHS.speech, { text: text }).then((res) => {
-    if (!res || !res.url) throw new Error("合成没返回音频");
-    return res;
-  });
-}
-
 function adminReady() {
   return !!(configured() && authMod().isAdmin());
 }
@@ -430,8 +416,6 @@ module.exports = {
   shardReady,
   cloudConfig,
   request,
-  speechReady,
-  speech,
   sync,
   push,
   pull,

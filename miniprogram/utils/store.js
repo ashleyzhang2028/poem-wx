@@ -13,7 +13,6 @@ const KEYS = {
   grant: "kb_grant_v1",
   signed: "kb_signed_grant_v1",
   device: "kb_device_v1",
-  speech: "kb_speech_v1",
   sync: "kb_sync_outbox_v1",
 
   settingsAt: "kb_settings_at_v1",

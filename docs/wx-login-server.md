@@ -77,7 +77,7 @@ module.exports = handler.make("wx.login", ["POST"], function (d, body) {
   "expiresIn":    604800,
   "tier":         "free",
   "role":         "user",
-  "caps":         { "speak": true },
+  "caps":         { "extra": true },
   "signedGrant":  "...",
   "nickname":     "",
   "avatarUrl":    "",
@@ -384,4 +384,3 @@ select … on conflict (uid, child_id, poem_id) do update
 - 登录点得动，落地的是本机身份，档位按 `free`
 - 同步攒着，界面写「后端未就绪 · 已攒 N 条」；登录那一刻会试一次，成功了就说「进度已认回」
 - 管理页名录只读，写明「服务端未就绪」；改档按钮点了给人话，不静默失败
-- 朗读三条通道都不就绪时，界面里根本不出现播放元素

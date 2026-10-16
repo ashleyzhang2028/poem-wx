@@ -35,24 +35,6 @@
   margin-top: var(--sp-3);
 }
 
-.tts-state {
-  margin-top: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-hint);
-  line-height: var(--lh-body);
-}
-
-.tts-state.ok {
-  color: var(--green);
-  background: var(--green-light);
-}
-
-.tts-state.no {
-  color: var(--amber);
-  background: var(--amber-light);
-}
-
 .step {
   display: block;
   margin-top: 12rpx;
