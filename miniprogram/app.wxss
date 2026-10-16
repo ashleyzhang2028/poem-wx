@@ -1552,3 +1552,10 @@ view, text, button, input, textarea {
 .pref-opt.on .pref-star {
   color: var(--strong-text);
 }
+
+.ellipsis {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

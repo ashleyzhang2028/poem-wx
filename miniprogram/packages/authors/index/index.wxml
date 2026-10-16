@@ -18,7 +18,7 @@
       <view class="index-grid">
         <view class="index-cell" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{eras}}" wx:key="at" data-at="{{item.at}}" bindtap="onJump">
-          <text class="index-name">{{item.name}}</text>
+          <text class="index-name ellipsis">{{item.name}}</text>
           <text class="index-count">{{item.count}} 家</text>
         </view>
       </view>
@@ -34,7 +34,7 @@
         <view class="a-cell" wx:for="{{item.people}}" wx:for-item="a" wx:key="name"
               hover-class="a-cell-hover" hover-stay-time="60"
               data-name="{{a.name}}" bindtap="onAuthor">
-          <text class="a-name">{{a.name}}</text>
+          <text class="a-name ellipsis">{{a.name}}</text>
           <text class="a-num">{{a.count}}</text>
         </view>
       </view>
