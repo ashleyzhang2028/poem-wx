@@ -25,39 +25,68 @@
         <text class="stat-k">已掌握</text>
       </view>
       <view class="stat">
-        <text class="stat-v {{overview.dueToday ? 'due' : ''}}">{{overview.dueToday}}</text>
+        <text class="stat-v">{{overview.dueToday}}</text>
         <text class="stat-k">今日到期</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v">{{overview.avgMastery}}%</text>
+        <text class="stat-k">平均掌握</text>
       </view>
     </view>
 
     <text class="hint warn" wx:if="{{backlogCount}}">逾期 {{backlogCount}} 首 · 会优先排进今天</text>
   </view>
 
-  <view class="card">
-    <view class="card-title bar">未来七天</view>
-    <view class="day {{item.count ? '' : 'zero'}} {{item.today ? 'today' : ''}}" wx:for="{{days}}" wx:key="label">
-      <view class="day-head">
-        <text class="day-label {{item.today ? 'today' : ''}}">{{item.label}}</text>
-        <text class="day-count">{{item.count}} 首</text>
-      </view>
-      <view class="meter day-bar" wx:if="{{item.count}}">
-        <view class="meter-fill day-bar-fill" style="width:{{item.percent}}%"></view>
-      </view>
-      <view class="day-items" wx:if="{{item.items.length}}">
-        <text class="day-item" wx:for="{{item.items}}" wx:for-item="p" wx:key="id">{{p.title}}</text>
-      </view>
-    </view>
-    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首在七天外</text>
-    <view class="empty" wx:if="{{!days.length}}">
-      <text class="empty-mark">空</text>
-      <text class="empty-text">还没有排期</text>
-    </view>
-  </view>
-
   <view class="empty" wx:if="{{!overview.learned}}">
     <text class="empty-mark">始</text>
     <text class="empty-text">还没有背诵记录</text>
   </view>
+
+  <block wx:else>
+  <view class="card">
+    <view class="card-title bar">到期日历<text class="card-sub" wx:if="{{calSub}}">{{calSub}}</text></view>
+    <view class="cal">
+      <view class="cal-cell {{item.today ? 'today' : ''}} {{item.has ? 'has' : ''}}"
+            wx:for="{{calendar}}" wx:key="offset">
+        <text class="cal-count">{{item.has ? item.count : ''}}</text>
+        <view class="cal-bar"><view class="cal-bar-fill" style="height:{{item.height}}%"></view></view>
+        <text class="cal-day">{{item.label}}</text>
+        <text class="cal-date">{{item.date}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{panels.length}}">
+    <view class="card-title bar">全部到期篇目</view>
+    <view class="panel" wx:for="{{panels}}" wx:key="offset" wx:for-item="d">
+      <view class="panel-head">
+        <text class="panel-when {{d.today ? 'today' : ''}} {{d.late ? 'late' : ''}}">{{d.label}}<text class="panel-date">{{d.date}}</text></text>
+        <text class="panel-count">{{d.count}} 篇</text>
+      </view>
+      <view class="due" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{d.rows}}" wx:key="id" data-id="{{item.id}}" data-day="{{d.offset}}" bindtap="onOpen">
+        <view class="due-main">
+          <text class="due-title">{{item.title}}</text>
+          <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+        </view>
+        <text class="due-state">{{item.mastery}}</text>
+        <text class="due-when {{item.late ? 'late' : ''}}">{{item.due}}</text>
+      </view>
+    </view>
+    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">掌握度分布<text class="card-sub" wx:if="{{bucketsSub}}">{{bucketsSub}}</text></view>
+    <view class="bar-row {{item.cls}} {{item.count ? '' : 'zero'}}" wx:for="{{buckets}}" wx:key="label">
+      <text class="bar-label">{{item.label}}</text>
+      <view class="bar-track"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
+      <text class="bar-count">{{item.count}}</text>
+    </view>
+  </view>
+  </block>
+
+  <recite-sheet id="sheet" theme-style="{{themeStyle}}" queue="{{sheetRows}}" bind:finish="onSheetFinish" />
 
   <view class="safe-bottom"></view>
   </block>

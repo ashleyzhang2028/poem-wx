@@ -47,6 +47,15 @@ UI_SCALE=.9 node scripts/shots/measure-pinyin.js   # 顺带看全局缩放那一
 本机存储（别的屏一律清空，否则上一屏加的几首会漏进下一屏的今日安排，
 而那张图的 caption 还写着自己那个名字）。
 
+`pages.json` 里另有 **`seedProgress`**：拍这一屏之前先把一份背诵记录写进本机
+（`fixtures/progress.json`，`{ key, rows }` 两格，每行是
+`{ id, off, lv }` —— `off` 是**距今天数**，渲染时才摊成 `nextReviewAt`。
+写绝对时间戳的话，隔一天这屏就空了）。
+不写它的话，凡是要「有记录才看得见」的屏都只能拍到空态 ——
+`progress` 那四块读数在一块都出不来。列了 `seedProgress` 的屏，别的一律清空
+（`else storeMod.write(storeMod.KEYS.progress, {})`），否则上一屏的记录会漏进
+下一屏。进度页因此有两屏：`progress`（有记录）与 `progress-empty`（空态）。
+
 `settings-recite-daily` 那张卡在整屏的最下面（真机上要滚一段才够得着）。
 预览是静态的：`.device` 与 `.screen` 都是滚动容器，把内容往外挪一律被裁掉，
 所以**这一屏拍不到它**。这一轮因此把那张卡挪到了背诵设置页的第一张 ——

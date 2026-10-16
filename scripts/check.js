@@ -297,6 +297,94 @@ R.ORDER.forEach((key) => {
   ok("换算法保进度 " + key, r.learned === true && typeof r.level === "number");
 });
 
+{
+  const walk = (key, result, times, start) => {
+    let r = null;
+    let t = start;
+    const seen = [];
+    for (let i = 0; i < times; i++) {
+      r = R.review(r, result, key, t);
+      seen.push(r);
+      t = r.nextReviewAt + 24 * 3600 * 1000;
+    }
+    return seen;
+  };
+  const goodDays = (key, n) => walk(key, "good", n, Date.now())
+    .map((r) => Math.round((R.startOfDay(r.nextReviewAt) - R.startOfDay(r.lastReviewAt)) / (24 * 3600 * 1000)));
+
+  ok("艾宾浩斯：连续记住就走完那张固定表的每一格",
+    goodDays("ebbinghaus", 9).join(",") === R.EBBINGHAUS_INTERVALS.slice(1).join(","),
+    "实际 " + goodDays("ebbinghaus", 9).join(",") + "，表里是 " + R.EBBINGHAUS_INTERVALS.slice(1).join(","));
+  ok("艾宾浩斯：表走到头就不再往后",
+    goodDays("ebbinghaus", 12)[11]
+      === R.EBBINGHAUS_INTERVALS[R.EBBINGHAUS_INTERVALS.length - 1],
+    "实际 " + goodDays("ebbinghaus", 12)[11]);
+
+  const BOXES = R.MODELS.leitner.boxes;
+  const boxes = walk("leitner", "good", BOXES.length, Date.now());
+  ok("莱特纳：答对一次往后挪一盒，间隔就是那一盒的天数",
+    boxes.map((r, i) => {
+      const want = Math.min(i + 1, BOXES.length - 1);
+      return (r.box === want
+        && Math.round((R.startOfDay(r.nextReviewAt) - R.startOfDay(r.lastReviewAt)) / (24 * 3600 * 1000)) === BOXES[want]);
+    }).every(Boolean),
+    boxes.map((r) => (r.box + 1) + "号盒").join(","));
+  ok("莱特纳：最后一盒答对仍留在最后一盒",
+    (() => {
+      const last = boxes[boxes.length - 1];
+      const end = R.review(last, "good", "leitner", last.lastReviewAt + 16 * 24 * 3600 * 1000);
+      return end.box === BOXES.length - 1;
+    })());
+  ok("莱特纳：答错退回第 1 盒",
+    (() => {
+      const b = boxes[3];
+      return R.review(b, "bad", "leitner", b.lastReviewAt + 9 * 24 * 3600 * 1000).box === 0;
+    })());
+
+  const sm2 = walk("sm2", "good", 4, Date.now());
+  ok("SM-2：新卡记住走的那几步，就是算法自己报出来的那几步",
+    sm2.slice(0, 3).map((r) => r.interval).join(",") === R.MODELS.sm2.steps().slice(0, 3).join(","),
+    "实际 " + sm2.map((r) => r.interval).join(",") + "，自报 " + R.MODELS.sm2.steps().join(","));
+  ok("SM-2：走完那几步之后才是「乘简易度」",
+    (() => {
+      const last = sm2[sm2.length - 1];
+      const next = R.review(last, "good", "sm2", last.lastReviewAt + last.interval * 24 * 3600 * 1000);
+      return next.interval === Math.max(1, Math.round(last.interval * last.ef)) && next.ef >= last.ef;
+    })());
+  ok("SM-2：简易度压到 " + R.MODELS.sm2.MIN_EF + " 就不再低",
+    (() => {
+      let r = null;
+      let t = Date.now();
+      for (let i = 0; i < 12; i++) { r = R.review(r, "bad", "sm2", t); t += 24 * 3600 * 1000; }
+      return r.ef === R.MODELS.sm2.MIN_EF && r.interval === R.MODELS.sm2.firstIntervals[0];
+    })());
+
+  const fsrs = walk("fsrs", "good", 4, Date.now());
+  ok("FSRS：越稳固间隔越长，下一次由稳定天数算出来",
+    fsrs.every((r, i) => i === 0 || r.stability > fsrs[i - 1].stability)
+      && fsrs.every((r) => Math.round((R.startOfDay(r.nextReviewAt) - R.startOfDay(r.lastReviewAt)) / (24 * 3600 * 1000)) === R.MODELS.fsrs.intervalOf(r.stability)),
+    fsrs.map((r) => r.stability).join(" → "));
+  const fsrsBad = R.review(fsrs[3], "bad", "fsrs", fsrs[3].lastReviewAt + 44 * 24 * 3600 * 1000);
+  ok("FSRS：记错砍稳定天数、加难度",
+    fsrsBad.stability < fsrs[3].stability && fsrsBad.difficulty > fsrs[3].difficulty,
+    "S " + fsrs[3].stability + " → " + fsrsBad.stability + "，D " + fsrs[3].difficulty + " → " + fsrsBad.difficulty);
+
+  ok("四套算法各给三行说明，且都不是空话",
+    R.ORDER.every((k) => {
+      const d = R.MODELS[k].describe();
+      return Array.isArray(d) && d.length === 3 && d.every((x) => typeof x === "string" && x.length >= 4);
+    }),
+    R.ORDER.map((k) => k + ":" + R.MODELS[k].describe().length).join(" "));
+  ok("说明里写的那张间隔表就是跑出来的那张（艾宾浩斯）",
+    R.MODELS.ebbinghaus.describe().some((x) => x.indexOf(R.EBBINGHAUS_INTERVALS.slice(1).join(" → ")) >= 0));
+  ok("说明里写的那组盒子就是跑出来的那组（莱特纳）",
+    R.MODELS.leitner.describe().some((x) => x.indexOf(R.MODELS.leitner.boxes.join(" / ")) >= 0));
+  ok("说明里写的头几步就是跑出来的那几步（SM-2）",
+    R.MODELS.sm2.describe().some((x) => x.indexOf(
+      R.MODELS.sm2.steps().slice(0, R.MODELS.sm2.firstIntervals.length).join(" → ")) >= 0),
+    "描述 " + R.MODELS.sm2.describe().join(" / "));
+}
+
 let r10 = null;
 for (let i = 0; i < 12; i++) r10 = R.review(r10, "good", "ebbinghaus");
 ok("艾宾浩斯档位封顶不越界", r10.level === R.EBBINGHAUS_INTERVALS.length - 1, "level=" + r10.level);
@@ -2759,9 +2847,50 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("进度页不再有「记忆阶段」那张卡（stageRows 数据也撤了）",
     progJs.indexOf("stageRows") < 0);
 
-  ok("未来七天那张卡还在（撤的不是排期）",
-    /wx:for="\{\{days\}\}"/.test(progWxml) && /class="card"/.test(progWxml),
-    "进度页那张排期卡（按 days 排出来的一列）被撤掉了 —— 撤的应该只是「记忆阶段」");
+  ok("排期还在（四块里那块「全部到期篇目」按 days 摊开）",
+    /wx:for="\{\{panels\}\}"/.test(progWxml) && /wx:for="\{\{d\.rows\}\}"/.test(progWxml),
+    "排期那块被撤掉了 —— 撤的应该只是「记忆阶段」");
+
+  ok("进度页那四块读数都在（概要 / 到期日历 / 全部到期篇目 / 掌握度分布）",
+    /class="ring-fill"/.test(progWxml) && /class="cal-cell/.test(progWxml)
+      && /掌握度分布/.test(progWxml) && /class="bar-row/.test(progWxml)
+      && /overview\.avgMastery/.test(progWxml),
+    "四块里缺了一块 —— 网页版 /progress 那几张卡在小程序这边没落全");
+
+  ok("那四块读数不自己算（一律走 scheduler 的 overview / dueList）",
+    /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
+      && progJs.indexOf("store.progress") < 0 && progJs.indexOf("getRecord") < 0
+      && progJs.indexOf("nextReviewAt") < 0,
+    "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
+
+  ok("点篇目走背诵弹层（进度页那几行能背，不只是看）",
+    /<recite-sheet/.test(progWxml) && /data-id="\{\{item\.id\}\}"/.test(progWxml)
+      && /openSheet\(/.test(progJs) === false
+      && /sheet\.open\(/.test(progJs)
+      && /onOpen\b/.test(progJs));
+
+  {
+    const declared = {};
+    const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
+    ((dataBlock || [])[1] || "").replace(/^\s*(\w+)\s*:/gm, (_, k) => { declared[k] = true; });
+
+    const loop = ["item", "index", "d", "p"];
+    const unknown = {};
+    (progWxml.match(/\{\{([^}]*)\}\}/g) || []).forEach((raw) => {
+      raw.slice(2, -2).replace(/'[^']*'|"[^"]*"/g, " ").split(/[^\w.$]+/).forEach((part) => {
+        const seg = part.split(".").filter(Boolean);
+        if (!seg.length) return;
+        if (loop.indexOf(seg[0]) >= 0) return;
+        if (/^[A-Z_]+$/.test(seg[0])) return;
+        if (declared[seg[0]] === undefined) unknown[seg[0]] = true;
+      });
+    });
+
+    const names = Object.keys(unknown).filter((k) => declared[k] !== true && k !== "themeStyle");
+    ok("进度页模板里的每个字段都真的被 setData 过（不留读不到的名字）",
+      names.length === 0,
+      "模板读了这些页面从没设过的字段：" + names.join(", "));
+  }
 }
 
 {
@@ -3420,7 +3549,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const sheetWxml = read("components/recite-sheet/recite-sheet.wxml");
   const appWxss = read("app.wxss");
   const quizWxml = read("packages/game/quiz/quiz.wxml");
-  const dayWxss = read("packages/progress/index/index.wxss");
   const generalWxml = read("packages/settings/general/general.wxml");
   const generalJs = read("packages/settings/general/general.js");
   const adminWxml = read("packages/admin/index/index.wxml");
@@ -3555,18 +3683,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !/onSetRole/.test(usersWxml) && !/setRole/.test(bare(usersJs))
         && /onSetTier/.test(usersWxml),
       "角色那一枚又回来了，或者改档那一枚被一起删掉了");
-  }
-
-  {
-    const day = /\.day\s*\{([^}]*)\}/.exec(dayWxss);
-    ok("未来七天每一行都有左右两道 padding（含没排期的）",
-      !!day && /padding:\s*var\(--sp-2\)\s+var\(--sp-3\)/.test(day[1]),
-      "右侧那道没给，选中行那两道内边距就成了错位");
-    const zero = /\.day\.zero\s*\{([^}]*)\}/.exec(dayWxss);
-    ok("零排期那几天的左右 padding 也在（只有纵向压一档）",
-      !!zero && /var\(--sp-3\)/.test(zero[1]), "零排期那几天被落下，起点又不一样了");
-    ok("「今天」那行自己不再重复给 padding（一处定义）",
-      !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
   }
 
   ok("已背那一侧不再是重色（只压一档字重，不换强调色）",

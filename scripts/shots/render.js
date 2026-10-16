@@ -373,6 +373,28 @@ function pageHtml(cfg, data) {
   </div>`;
 }
 
+const DAY = 24 * 60 * 60 * 1000;
+
+function seedRecords(seed) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const today = d.getTime() + 9 * 60 * 60 * 1000;
+  const out = {};
+  (seed.rows || []).forEach((r) => {
+    out[r.id] = {
+      level: r.lv,
+      learned: true,
+      reviewCount: 3,
+      lapses: 0,
+      algo: "ebbinghaus",
+      lastReviewAt: 0,
+      history: [],
+      nextReviewAt: today + r.off * DAY
+    };
+  });
+  return out;
+}
+
 const only = process.argv[2];
 const rt = runtime();
 const storeMod = require(path.join(ROOT, "utils", "store.js"));
@@ -395,6 +417,11 @@ cases.forEach((cfg) => {
 
     const screenTheme = (cfg.settings && cfg.settings.theme) || THEME;
     storeMod.saveSettings({ theme: screenTheme });
+
+    if (cfg.seedProgress) {
+      const seed = JSON.parse(fs.readFileSync(path.join(ROOT, "..", cfg.seedProgress), "utf8"));
+      storeMod.write(storeMod.KEYS.progress, seedRecords(seed));
+    } else storeMod.write(storeMod.KEYS.progress, {});
 
     if (cfg.dailyExtra) storeMod.setDailyExtra(cfg.dailyExtra);
     else storeMod.clearDailyExtra();

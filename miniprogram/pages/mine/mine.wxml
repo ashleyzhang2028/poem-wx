@@ -89,7 +89,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
       <view class="row-main">
         <text class="row-title">背诵进度</text>
-        <text class="row-sub">七天排期 · 记忆阶段</text>
+        <text class="row-sub">概要 · 到期日历 · 掌握度</text>
       </view>
       <text class="row-go">›</text>
     </view>

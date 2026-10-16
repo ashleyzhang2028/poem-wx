@@ -31,27 +31,30 @@ const MODELS = {
   ebbinghaus: {
     key: "ebbinghaus",
     name: "艾宾浩斯遗忘曲线",
-    short: "艾宾浩斯",
-    sub: "按艾宾浩斯遗忘曲线复习",
     years: "1885 · 固定间隔",
-    blurb: "固定间隔，短篇最省心",
     free: true,
     init: () => ({ level: 0 }),
     intervalDays: (level) => EBBINGHAUS_INTERVALS[clampLevel(level)],
     stageName(rec) {
-      const names = ["新学", "1 天后", "2 天后", "4 天后", "7 天后", "15 天后",
-        "30 天后", "60 天后", "120 天后", "已牢固"];
+      const names = EBBINGHAUS_INTERVALS.map((d, i) => (i ? d + " 天后" : "新学"));
+      names[names.length - 1] = "已牢固";
       return names[clampLevel(rec && rec.level)] || "新学";
+    },
+    describe() {
+      const table = EBBINGHAUS_INTERVALS.slice(1).join(" → ");
+      const last = EBBINGHAUS_INTERVALS[EBBINGHAUS_INTERVALS.length - 1];
+      return [
+        "记住进下一格，记错退一格",
+        "间隔按固定表走：" + table + " 天",
+        "到 " + last + " 天不再往后"
+      ];
     }
   },
 
   leitner: {
     key: "leitner",
     name: "莱特纳盒",
-    short: "Leitner",
-    sub: "按 Leitner 盒复习",
     years: "1972 · 分级盒子",
-    blurb: "答对往后挪一盒",
     free: true,
     boxes: [1, 2, 4, 8, 16],
     init: () => ({ box: 0 }),
@@ -61,16 +64,21 @@ const MODELS = {
     stageName(rec) {
       const b = clampBox(rec && rec.box);
       return (b + 1) + " 号盒 · " + this.boxes[b] + " 天后";
+    },
+    describe() {
+      const n = this.boxes.length;
+      return [
+        "记住进下一盒，记错退回第 1 盒",
+        "共 " + n + " 盒：" + this.boxes.join(" / ") + " 天",
+        "第 " + n + " 盒答对就留在那儿"
+      ];
     }
   },
 
   sm2: {
     key: "sm2",
     name: "SM-2",
-    short: "SM-2",
-    sub: "按 SM-2 复习",
     years: "1987 · 间隔 × 简易度",
-    blurb: "按简易度拉长间隔",
     free: false,
     firstIntervals: [1, 3, 7],
     DEFAULT_EF: 2.5,
@@ -94,16 +102,32 @@ const MODELS = {
       const iv = Math.max(0, Math.round(rec.interval || 0));
       const ef = typeof rec.ef === "number" ? rec.ef : this.DEFAULT_EF;
       return "间隔 " + iv + " 天 · 简易度 " + ef;
+    },
+    describe() {
+      const first = this.steps().slice(0, this.firstIntervals.length);
+      return [
+        "新卡记住：" + first.join(" → ") + " 天",
+        "之后每次间隔 × 简易度",
+        "记错退回 " + this.firstIntervals[0] + " 天，简易度最低压到 " + this.MIN_EF
+      ];
+    },
+    steps() {
+      const out = [];
+      let r = null;
+      let t = 0;
+      for (let i = 0; i <= this.firstIntervals.length; i++) {
+        r = review(r, "good", "sm2", t);
+        out.push(r.interval);
+        t = r.nextReviewAt + DAY;
+      }
+      return out;
     }
   },
 
   fsrs: {
     key: "fsrs",
     name: "FSRS",
-    short: "FSRS",
-    sub: "按 FSRS 复习",
     years: "2022 · 难度 / 稳定性",
-    blurb: "按难度与稳定天数排期",
     free: false,
     params: {
       initS: { bad: 1, fuzzy: 3, good: 6 },
@@ -144,6 +168,13 @@ const MODELS = {
       const st = typeof rec.stability === "number" ? Math.round(rec.stability * 10) / 10 : 0;
       const d = typeof rec.difficulty === "number" ? Math.round(rec.difficulty * 10) / 10 : 0;
       return "稳定 " + st + " 天 · 难度 " + d;
+    },
+    describe() {
+      return [
+        "稳定天数越厚，间隔越长",
+        "快忘光了就提前叫回来复习",
+        "难度 1 到 " + this.params.maxD + "，记错加难度"
+      ];
     }
   }
 };
@@ -315,10 +346,8 @@ function list() {
     return {
       key: m.key,
       name: m.name,
-      short: m.short,
-      sub: m.sub,
       years: m.years,
-      blurb: m.blurb
+      describe: m.describe()
     };
   });
 }

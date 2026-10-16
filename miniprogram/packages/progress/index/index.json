@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "跬步 · 我的 · 背诵进度", "usingComponents": {} }
+{ "navigationBarTitleText": "跬步 · 我的 · 背诵进度", "usingComponents": { "recite-sheet": "/components/recite-sheet/recite-sheet" } }
