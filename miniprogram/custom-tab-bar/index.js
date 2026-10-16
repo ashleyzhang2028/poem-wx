@@ -33,29 +33,35 @@ Component({
   },
 
   attached() {
-    this.paint();
+    this.painted = theme.current();
+    this.setData(this.paint());
   },
 
   methods: {
     setActive(index) {
       const patch = {};
       if (this.data.active !== index) patch.active = index;
-      this.setData(patch);
+
+      const key = theme.current();
+      if (this.painted !== key) {
+        this.painted = key;
+        Object.assign(patch, this.paint());
+      }
+      if (Object.keys(patch).length) this.setData(patch);
     },
 
     paint() {
       const t = theme.currentTheme();
       const ink = theme.get("ink").rgba;
-      const items = this.data.list.map((it) => Object.assign({}, it, {
-        off: paint(it.icon, t.rgba),
-        on: paint(it.icon, ink === t.rgba ? t.on : ink)
-      }));
-      this.setData({
+      return {
         themeStyle: theme.style(),
         ink: t.rgba,
         onInk: t.on,
-        list: items
-      });
+        list: this.data.list.map((it) => Object.assign({}, it, {
+          off: paint(it.icon, t.rgba),
+          on: paint(it.icon, ink === t.rgba ? t.on : ink)
+        }))
+      };
     },
 
     onTap(e) {

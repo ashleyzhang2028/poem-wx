@@ -17,6 +17,7 @@ function blankAnswers(n) {
 Page({
   data: {
     themeStyle: "",
+    themeHex: "",
     stage: "setup",
     scopes: [],
     scopeIndex: 0,

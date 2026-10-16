@@ -240,7 +240,13 @@ function expandReciteSheet(wxml, data) {
   if (wxml.indexOf("<recite-sheet") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
 
+  const t = require(path.join(ROOT, "utils", "theme.js"));
+  const themeNow = t.current();
+
   const merged = Object.assign({}, data, {
+
+    themeHex: t.get(themeNow).rgba,
+    themeStyle: data.themeStyle || t.style(themeNow),
 
     dailyOn: !!data.sheetDailyOn,
     open: !!data.sheetOpen,
@@ -466,13 +472,22 @@ cases.forEach((cfg) => {
     } else {
       store2.write(store2.KEYS.auth, {});
     }
+    const theme2 = require(path.join(ROOT, "utils", "theme.js"));
+
+    MEM[storeMod.KEYS.settings] = Object.assign({}, MEM[storeMod.KEYS.settings], {
+      themeHex: theme2.currentTheme().rgba,
+      themeStyle: theme2.style()
+    });
+
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
+    data.themeHex = theme2.currentTheme().rgba;
+    data.themeStyle = data.themeStyle || theme2.style();
 
     if (cfg.do) {
       cfg.do.forEach((step) => {
         const page = rt.current();
-        const fn = page && page[step.call];
+
         if (typeof fn === "function") fn.call(page, step.with || {});
       });
     }

@@ -48,6 +48,7 @@ function aliasTextOf(meta) {
 Page({
   data: {
     themeStyle: "",
+    themeHex: "",
     id: "",
 
     loadingText: false,

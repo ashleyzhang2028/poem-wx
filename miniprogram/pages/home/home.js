@@ -103,6 +103,8 @@ Page({
   data: {
 
     themeStyle: "",
+    themeHex: "",
+    barBelow: true,
 
     logged: false,
     guest: false,
@@ -141,8 +143,7 @@ Page({
   onShow() {
     theme.apply(this);
 
-    tabbar.sync(this, 0);
-    this.setData({ todayLabel: todayLabel() });
+    this.setData({ todayLabel: todayLabel(), barBelow: !tabbar.sync(this, 0) });
     this.refresh();
 
     if (gate.logged()) sync.now().catch(() => {});

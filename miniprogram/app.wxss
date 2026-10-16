@@ -17,6 +17,10 @@ view, text, button, input, textarea {
   display: none;
 }
 
+.page.tall {
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
 .page-head {
   padding: var(--sp-2) var(--sp-1) var(--sp-4);
 }
