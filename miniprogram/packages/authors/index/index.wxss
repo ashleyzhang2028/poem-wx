@@ -18,17 +18,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
+  padding: var(--sp-2) 12rpx var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
 }
 
 .index-name {
-  font-size: var(--fs-title);
-  color: var(--ink-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
 }
 
 .index-count {
@@ -80,7 +78,7 @@
 .a-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-2);
+  gap: var(--sp-2) 12rpx;
   margin-top: var(--card-title-gap);
 }
 
@@ -99,11 +97,9 @@
 }
 
 .a-name {
-  font-size: var(--fs-title);
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--fs-body);
+  color: var(--strong-text);
 }
 
 .a-num {
