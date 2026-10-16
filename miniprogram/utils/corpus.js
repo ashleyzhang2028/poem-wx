@@ -205,9 +205,7 @@ function readJson(rel, fallback) {
     return loadJson(rel);
   } catch (e) {
     if (e && e.code === "E_NO_DATA") return fallback;
-
-    if (e && e.code === "MODULE_NOT_FOUND") return fallback;
-    throw e;
+    return fallback;
   }
 }
 
@@ -309,7 +307,7 @@ function armBucket(name, payload) {
 }
 
 function bucket(name) {
-  if (!bucketCache[name]) bucketCache[name] = readJson(BUCKET_DIR + name + ".json", {});
+  if (!bucketCache[name]) bucketCache[name] = readJson(BUCKET_DIR + name + ".js", {});
   return bucketCache[name];
 }
 
@@ -336,12 +334,13 @@ function saveShard(name, payload) {
 
 function shardFile(name) {
   if (!name || !SHARD_FILE_RE.test(name)) return "";
-  return BUCKET_DIR + name + ".json";
+  return BUCKET_DIR + name + ".js";
 }
 
 function shardFromDisk(name) {
   const rel = shardFile(name);
   if (!rel) return null;
+  if (!hasData()) return null;
   try {
     const raw = require("fs").readFileSync(require("path").join(__dirname, "..", rel), "utf8");
     const data = JSON.parse(raw);

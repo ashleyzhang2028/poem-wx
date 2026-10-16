@@ -44,7 +44,7 @@ npm run build:data
 | `data/course.js` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB，**进主包** |
 | `data/pinyin-table.js` | 注音 | 72 KB，**进主包** |
 | `data/shards.js` | `corpus.bucketOf(id)` —— 算出某一条在哪一片 | 137 KB，**进主包** |
-| `data/texts/t0xx.json` | 课外正文分片 | 120 个文件 / 23 MB，**走容器** |
+| `data/texts/t0xx.js` | 课外正文分片 | 120 个文件 / 23 MB，**走容器** |
 | `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
 第三列是分层的全部理由：主包上限 2 MB，23 MB 的正文进不去。
@@ -76,11 +76,11 @@ npm run build:data
 
 ⚠️ **语料的根本判据是「在模块图上」。** 打包器（开发者工具编译、`miniprogram-ci`
 上传各一条路径）按模块图剔文件：图上够不到的，一律当「没人 require 的文件」踢出包。
-而图上只有 `.js` 里**字面量**的 `require("./x.json")`。
+而图上只有 `.js` 里**字面量**的 `require("./x")`。
 
-三份语料曾经是字面量、其余 19 份是拼接路径（`readJson(BOOKS_DIR + id + ".json")`、
+三份语料曾经是字面量、其余 19 份是拼接路径（`readJson(BOOKS_DIR + id + ".js")`、
 `require("../" + TABLE)`），那 19 份就被剔出包。症状不齐整、最难认：
-`books.js` 在（集子表渲染得出来），`poems.json` 不在（**首页课内目录整块空**），
+`books.js` 在（集子表渲染得出来），`poems.js` 不在（**首页课内目录整块空**），
 点进每一部也都是空的 —— 磁盘上文件明明在，跑多少次 `build:data` 都没用。
 
 修法是把每一份该进包的文件都写进字面量 `require` 表：
@@ -88,7 +88,7 @@ npm run build:data
 | 表 | 在哪 | 管哪几份 |
 |---|---|---|
 | `PACKED` | `utils/corpus.js` | `books.js` / `course.js` / `shards.js` |
-| `PACKED_BOOK_ROWS` | `utils/corpus.js` | 17 部集子索引，含 `poems.json` |
+| `PACKED_BOOK_ROWS` | `utils/corpus.js` | 17 部集子索引，含 `poems.js` |
 | `PACKED_TABLE` | `utils/pinyin.js` | `pinyin-table.js` |
 
 关键在**读文件的那一行要走到那张表**：`ofBook` 写 `packedRows(bookId) || readJson(...)`，
@@ -102,7 +102,7 @@ npm run build:data
 在的话，读的顺序是：
 
 ```
-corpus.course()          → data/books/poems.json（课内索引，不带正文）
+corpus.course()          → data/books/poems.js（课内索引，不带正文）
 corpus.entry(id)         → data/course.js 里查这一条正文
 corpus.ensureEntry(id)   → course.js 没有再走分片（下一节）
 ```
@@ -123,7 +123,7 @@ corpus.ensureEntry(id)
   → corpus.bucket("t017")     先试 require（真机上 ignore 掉了，读不到）
   → corpus.shardFromDisk()    再试磁盘：开发者工具打开 miniprogram/ 时走这一条
   → remote.shard("t017")      都没有才走云：utils/remote.js → wx.cloud.callContainer
-  → 容器 /api/shard/t017      deploy-api-serve/shard-api.js 读 /app/shards/t017.json.gz
+  → 容器 /api/shard/t017      deploy-api-serve/shard-api.js 读 /app/shards/t017.js.gz
   → 200 + Content-Encoding: gzip（每片约 44 KB）
   → corpus 缓存这一片（上限 40 片）→ 渲染
 ```
@@ -146,7 +146,7 @@ corpus.ensureEntry(id)
 |---|---|---|
 | `setting.ignoreUploadUnusedFiles` | 上传（`miniprogram-ci`） | `false` |
 | `setting.ignoreDevUnusedFiles` | 开发者工具的模拟器 / 预览 / 真机调试 | `false` |
-| `packOptions.include` | 上面两条的兜底（压过 `ignore`） | `data/books` 与四份根 JSON |
+| `packOptions.include` | 上面两条的兜底（压过 `ignore`） | `data/books` 与四份根模块 |
 
 两只 `ignore*UnusedFiles` 是**两个**开关，关一只另一条路照样摇。`include` 是
 「无论分析器怎么想都带上」的那一档，`check.js` 钉着它必须覆盖 `data/books` /
@@ -212,7 +212,7 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**没打进语料**（多为模块图摇树剔掉） | 合上把语料写成字面量 `require` 的那一版，重传。若三处配置没配齐也会摇掉 —— 见上一节 |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.js …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
 | **首页整页空、连「课本目录」那张卡片都没有**，控制台 `Cannot find module './server'` | ① 之前 —— `server.js` 不在，`remote.js` 加载失败，页面根本没跑起来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，**要入库**），重新编译。见 § 五 |
-| 控制台 `module 'data/books/books.json.js' is not defined` | 工具（2.02.2607271 RC 实测）不把 `.json` 当模块打包，任何 `require("….json")` 都抛这句；`.js` 正常 | 语料产物一律输出为 `module.exports = …` 的 `.js`（`build-data.js` 的 `writeModule`），别改回 `.json` |
+| 控制台 `module 'data/texts/t017.json.js' is not defined`，课外正文整片取不到 | 工具（2.02.2607271 RC 实测）不把 `.json` 当模块打包，任何 `require("….json")` 都抛这句；`.js` 正常。开发者工具里读分片正是靠 `require`（`readJson`），于是每一首都落空（Issue #224） | 进包的语料产物**与分片**一律输出为 `module.exports = …` 的 `.js`（`build-data.js` 的 `writeModule`）；分片是 gzip 的 `.js.gz`，`shard-api.js` 解开、去掉最外面那层再回 JSON 报文 |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |
 | 有 251 首目录、点得开、能背 | —— | ①② 都通，课外要去接 ③ |
 | 点课外诗：「还没接上同步服务器」 | ③/④ | `server.js` 那两个值没填或填错，见 § 五 与 `wx-cloud-setup.md` § 6.2 |

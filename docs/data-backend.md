@@ -242,7 +242,7 @@ node scripts/build-data.js
 ① 内容（诗、译文、索引、注音表）
    scripts/corpus/（语料，随本仓库走）
      └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
-          · data/books/<集子>.json   各集子索引（不含正文）       → 进包
+          · data/books/<集子>.js     各集子索引（不含正文）       → 进包
           · data/course.js         课内 251 首正文 + 译文       → 进主包
           · data/pinyin-table.js   读音表（离线注音）           → 进包
           · data/texts/**            其余 5604 条正文 + 倒排索引

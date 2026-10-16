@@ -34,8 +34,8 @@
         remote.shard(name)                    utils/remote.js
           ↓ wx.cloud.callContainer( path: "/api/shard/t017" )
         serve-api.js  →  shardApi.handle()    deploy-api-serve/shard-api.js
-          ↓ 读 /app/shards/t017.json.gz
-        200 + Content-Encoding: gzip（44KB）
+          ↓ 读 /app/shards/t017.js.gz
+        200 + JSON 报文（44KB）
           ↓
         corpus 缓存这一片 → 渲染 → 下次不再请求
 ```
@@ -78,11 +78,11 @@ Node 里怎么跑都是绿的，只有真机会撞，所以判据只能是静态
 
 ⚠️ **这条边界还要一道保险**：`project.config.json` 的 `setting.ignoreUploadUnusedFiles`
 必须显式是 `false`。上传时 `miniprogram-ci` 会按模块图剔掉「没人 require 的文件」，
-而 `data/**/*.json` 都不在图上（模块图只认 `.js` 依赖）—— 不关这一项，清单连同
+而 `data/texts/**` 都不在图上（模块图只认模块依赖，而那个目录被 `packOptions.ignore` 排掉）—— 不关这一项，清单连同
 `books/course` 一起被摇出包，`bucketOf()` 回空，走的正是上表「清单被 ignore」那一行。
 `packOptions.ignore` 只排 `data/texts/`，按文件前缀比，旁边的文件不受牵连。
 细节见 [`from-corpus-to-page.md`](from-corpus-to-page.md) § 三。
-`texts/idx.json`（全文倒排 2MB）是**另一回事**：它太大进不了包，
+`texts/idx.js`（全文倒排 2MB）是**另一回事**：它太大进不了包，
 `text-search.js` 读不到时降级为「按篇名作者检索」，有兜底，故允许它留在 `texts/`。
 分片**取回一片，就把这一片补进倒排索引**（`corpus.onBucketReady` →
 `text-search` 的 `armShardWriter`）：真机上分片不重进包，但取过的那几片
@@ -251,9 +251,9 @@ env:
 | 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS=0`）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
 | 容器起不来，日志是 `Cannot find module './shard-api.js'` | `.dockerignore` 少了 `!shard-api.js` —— 白名单把它挡在上下文外，构建与部署都绿（Issue #115，见 § 七） |
 | 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 api 的日志 —— 要单独看 |
-| 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.json`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.js`）——见 § 二「清单进包」 |
+| 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.js`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.js`）——见 § 二「清单进包」 |
 | 点开课外诗，**一直停在「正在取正文」** | 取分片失败时只弹过一句 toast，而停在屏幕上的是**加载那一屏** —— `loadingText` 没落回 false，页面也没换成空态（Issue #214）。成功才允许离开加载态：失败要落到「标题 + 一句实情 + 重试」那一屏 |
-| 课外诗取到了，可**全文检索还是搜不到它的正文** | `data/texts/` 被 `packOptions.ignore` 挡在包外，`idx.json` 与分片都 require 不到，`readiness()` 回「全文索引未生成」。现在分片**取回哪一片就顺手把倒排索引补哪一片**（`corpus.onBucketReady` → `text-search`），点过的篇目在下一次进搜索页时按正文可搜 |
+| 课外诗取到了，可**全文检索还是搜不到它的正文** | `data/texts/` 被 `packOptions.ignore` 挡在包外，`idx.js` 与分片都 require 不到，`readiness()` 回「全文索引未生成」。现在分片**取回哪一片就顺手把倒排索引补哪一片**（`corpus.onBucketReady` → `text-search`），点过的篇目在下一次进搜索页时按正文可搜 |
 | 自检 V49「接线在 require handler 之前」无故变红 | 块注释里写了 `/api/*` 之类的**带星号的路径**，`/*` 把注释后半段吃掉了。写成行注释，或在块注释里别写 `/xxx/*` |
 
 ## 七、相关文件

@@ -205,7 +205,7 @@ let sampled = 0;
 let bad = 0;
 Object.keys(manifest.map).slice(0, 60).forEach((id) => {
   const name = manifest.map[id];
-  const bucket = readJson(path.join(dataDir, "texts", name + ".json"));
+  const bucket = readModule(path.join(dataDir, "texts", name + ".js"));
   sampled += 1;
   if (!bucket[id] || typeof bucket[id].text !== "string") bad += 1;
 });
@@ -233,23 +233,24 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
 
   const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
   ok("被 ignore 的 texts/idx.json 有兜底（读不到 = 全文检索不可用，不炸）",
-    /INDEX\s*=\s*["']data\/texts\/idx\.json["']/.test(tsSrc)
+    /INDEX\s*=\s*["']data\/texts\/idx\.js["']/.test(tsSrc)
       && /function\s+index\(\)[\s\S]{0,400}try\s*{[\s\S]{0,200}require/.test(tsSrc)
       && /function\s+readiness/.test(tsSrc) && /usable/.test(tsSrc),
-    "text-search 读不到 idx.json 时必须走 readiness() 降级，不能抛");
+    "text-search 读不到 idx.js 时必须走 readiness() 降级，不能抛");
 
   const bucketDir = (corpusSrc.match(/const\s+BUCKET_DIR\s*=\s*["']([^"']+)["']/) || [])[1] || "";
   const bucketRead = new RegExp(
-    'readJson\\(\\s*BUCKET_DIR\\s*\\+\\s*name\\s*\\+\\s*["\']\\.json["\']\\s*,\\s*\\{\\}\\s*\\)'
+    'readJson\\(\\s*BUCKET_DIR\\s*\\+\\s*name\\s*\\+\\s*["\']\\.js["\']\\s*,\\s*\\{\\}\\s*\\)'
   ).test(corpusSrc);
-  ok("被 ignore 的 texts/<片>.json 有兜底（读不到 = 空对象，不炸）",
-    /function\s+readJson\([\s\S]{0,400}MODULE_NOT_FOUND[\s\S]{0,80}return\s+fallback/.test(corpusSrc)
+  ok("被 ignore 的 texts/<片> 有兜底（读不到 = 空对象，不炸）",
+    /function\s+readJson\([\s\S]{0,300}return\s+fallback/.test(corpusSrc)
       && bucketDir === "data/texts/"
       && bucketRead,
     "corpus.bucket() 读的是 " + (bucketDir || "(没找到 BUCKET_DIR 常量)") +
       "，而它在 packOptions.ignore 里 —— 真机上 require 抛 MODULE_NOT_FOUND，" +
       "课外正文一律取不到，且异常从 onShow 直接冒出去（白屏）。" +
-      "readJson 必须把 MODULE_NOT_FOUND 也当兜底，bucket() 才拿得到空对象继续往分片缓存走");
+      "readJson 必须把 require 的失败都兜住（含开发者工具那句 " +
+      "`module '….json.js' is not defined`），bucket() 才拿得到空对象继续往分片缓存走");
 
   ok("分片在磁盘上时 corpus 能直接读它（开发者工具打开 miniprogram/ 也能读课外）",
     /function\s+shardFromDisk\s*\(/.test(corpusSrc)
@@ -259,6 +260,13 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
     "corpus 只在 require() 命中时读得到分片；开发者工具里 data/texts 被 ignore 掉、" +
       "require 抛 MODULE_NOT_FOUND，于是课外正文在工具里一律取不到 —— " +
       "而那个目录就在磁盘上。要在 bucket() 回空之后、走远端之前补一条磁盘兜底");
+
+  ok("进包的语料与分片一律是 .js（开发者工具不把 .json 当模块打包）",
+    /BUCKET_DIR\s*\+\s*name\s*\+\s*"\.js"/.test(corpusSrc),
+    "有地方还在 require `….json`。开发者工具 2.02.2607271 RC 起不把 .json 当模块打包，" +
+      "任何 require('.json') 都抛 `module '….json.js' is not defined`（Issue #224）—— " +
+      "而开发者工具里读分片正是靠 require，于是课外正文整块取不到。" +
+      "进包的语料产物与分片都写成 `module.exports = …` 的 .js");
 
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
@@ -725,7 +733,7 @@ const hasMulti = Object.keys(longLine).some((k) => {
 ok("语料里确实有一行多句的篇目（切句不是白做）", hasMulti === true);
 
 const tsearch = require(path.join(ROOT, "utils", "text-search.js"));
-const idxFile = path.join(dataDir, "texts", "idx.json");
+const idxFile = path.join(dataDir, "texts", "idx.js");
 if (fs.existsSync(idxFile)) {
   ok("全文检索就绪", tsearch.readiness().usable === true);
   const hits = tsearch.search("明月", { limit: 5 });
@@ -788,7 +796,7 @@ if (fs.existsSync(idxFile)) {
     "makeSession 一开口就摊开全部候选片 —— 那正是会话式取数要避免的");
 
   {
-    const idx = JSON.parse(fs.readFileSync(idxFile, "utf8"));
+    const idx = readModule(idxFile);
     const kw = "明月";
     const cand = tsearch.candidateBuckets(tsearch.termsOf(kw));
     const scoreOf = (b) => tsearch.termsOf(kw).reduce(
@@ -5980,12 +5988,17 @@ function gapped(items, max) {
   ok("清单与倒排索引在白名单里（manifest / idx）",
     /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*INDEX\s*\]/.test(shardSrc));
   ok("拼路径只走 fileOf（校验之后再拼）",
-    /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.json"\)/.test(shardSrc));
+    /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.js"\)/.test(shardSrc));
   ok("没有分片时回 404 E_NO_SHARDS，不静默回空 body",
     /E_NO_SHARDS/.test(shardSrc));
 
-  ok("命中时声明 Content-Encoding: gzip（发的是预压缩那份）",
-    /"Content-Encoding":\s*"gzip"/.test(shardSrc));
+  ok("分片本体是 .js，发出去的是 JSON 报文（解开 gz、剥掉 module.exports = 那一层）",
+    /function decode\s*\(/.test(shardSrc)
+      && /function bodyOf\s*\(/.test(shardSrc)
+      && /zlib\.gunzipSync\(raw\)/.test(shardSrc)
+      && /JSON\.stringify\(decode\(plain\)\)/.test(shardSrc),
+    "分片是 `module.exports = {...}` 的 .js（Issue #224：开发者工具不把 .json 当模块打包），" +
+      "服务端得自己把它解回 JSON —— 客户端照旧只认 JSON，这一层是服务端的事");
 
   ok("Dockerfile 接受 COPY_SHREDS 开关",
     /ARG COPY_SHREDS=/.test(dockerfile));
@@ -6045,10 +6058,10 @@ function gapped(items, max) {
     /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),
     "摊原文的话，每次构建上下文从 0.3MB 变成 25MB");
 
-  ok("摊出来的名字是 t001.json.gz（fileOf 找 <name>.json + .gz，多留一个 .json 就每一片 404）",
-    /basename "\$f" \.json\)/.test(cnb) && /\.json\.gz"/.test(cnb),
-    "摊成了 `basename \"$f\".json.gz`（t001.json.gz）—— shard-api 的 fileOf" +
-      " 找 `t001.json` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
+  ok("摊出来的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
+    /basename "\$f" \.js\)/.test(cnb) && /\.js\.gz"/.test(cnb),
+    "摊成了 `basename \"$f\".js.gz`（t001.js.gz）—— shard-api 的 fileOf" +
+      " 找 `t001.js` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
   ok("分片在流水线里现生成（构建产物，checkout 里没有）",
     /node scripts\/build-data\.js/.test(cnb));
   ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",

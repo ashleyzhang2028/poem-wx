@@ -104,7 +104,7 @@
 
 | | 不写（**默认**） | `COPY_SHREDS=0` |
 |---|---|---|
-| 上下文里 | `shard-src/*.json.gz`（**只摊压缩后那份**，5.6MB） | 空目录（`shard-src/` 本身仍在，见下） |
+| 上下文里 | `shard-src/*.js.gz`（**只摊压缩后那份**，5.6MB） | 空目录（`shard-src/` 本身仍在，见下） |
 | 镜像里 | `/app/shards/`（5.6MB） | 没有 `/app/shards/` |
 | `/api/shard/*` | 200 + `Content-Encoding: gzip`（每片约 44KB） | `404 E_NO_SHARDS` |
 
