@@ -1231,9 +1231,9 @@ view, text, button, input, textarea {
 
 .poem-title {
   display: block;
-  font-family: var(--font-detail-title);
+  font-family: var(--font-poem);
   font-size: var(--fs-hero);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--ink);
   letter-spacing: var(--ls-title);
   line-height: 1.45;
@@ -1249,9 +1249,9 @@ view, text, button, input, textarea {
 }
 
 .poem-meta {
-  font-family: var(--font-detail-title);
+  font-family: var(--font-poem);
   font-size: var(--fs-caption);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--ink-2);
 
   overflow: hidden;
@@ -1390,7 +1390,7 @@ view, text, button, input, textarea {
 
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
-  font-family: var(--font-detail-text);
+  font-family: var(--font-poem-text);
 
   line-height: 1.95;
 }
@@ -1411,7 +1411,7 @@ view, text, button, input, textarea {
   display: block;
   font-size: var(--fs-poem);
   color: var(--ink);
-  letter-spacing: 2rpx;
+  letter-spacing: 0;
 }
 
 .poem-body.size--2 .poem-line { font-size: 30rpx; }

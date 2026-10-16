@@ -3213,6 +3213,28 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /\.token-line\s*\{[^}]*height\s*:\s*var\(--py-line\)/.test(wxss),
     "注音行是靠内容撑高的 —— 有音无音会差半行");
 
+  const tokensWxss = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+  const rule = (cls) => {
+    const m = new RegExp("\\." + cls + "\\s*\\{([^}]*)\\}").exec(wxss);
+    return m ? m[1] : "";
+  };
+  const poemTitle = rule("poem-title");
+  const poemLine = rule("poem-line");
+  const poemMeta = rule("poem-meta");
+  ok("题名与身份行是常规字重（重点交给字号与留白）",
+    /font-weight\s*:\s*400/.test(poemTitle) && /font-weight\s*:\s*400/.test(poemMeta),
+    "题名或身份行又叠了粗体 —— 与正文字号一起喊");
+
+  ok("诗句正文不再自己加字距（汉字已是全角方框）",
+    /letter-spacing\s*:\s*0\s*;/.test(poemLine),
+    "正文又加回了字距 —— 字形不变而字距变宽，一列下来是拉伸感");
+
+  ok("详情页的题名与正文走同一串系统宋体（不再单开一条链）",
+    !/--font-detail/.test(tokensWxss)
+      && /\.poem-title\s*\{[^}]*var\(--font-poem\)/.test(wxss)
+      && /\.poem-body\s*\{[^}]*var\(--font-poem-text\)/.test(wxss),
+    "详情页又分出一条字体链，或题名/正文取错了链");
+
   const sizes = new Set(
     [...wxss.matchAll(/\.poem-body\.size(--?\d+)/g)]
       .map((m) => String(m[1]))
