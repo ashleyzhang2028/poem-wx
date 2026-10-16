@@ -53,8 +53,8 @@
 }
 
 .chip.is-now {
-  border-color: var(--green);
-  background: var(--green-soft);
+  border-color: var(--strong);
+  background: var(--strong-soft);
 }
 
 .chip-name {
@@ -63,7 +63,7 @@
 }
 
 .chip.is-now .chip-name {
-  color: var(--green);
+  color: var(--strong-text);
 }
 
 .chip-count {

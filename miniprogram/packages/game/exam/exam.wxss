@@ -102,9 +102,9 @@
 }
 
 .option.right {
-  border-color: var(--green);
-  background: var(--green-light);
-  color: var(--green);
+  border-color: var(--strong);
+  background: var(--strong-soft);
+  color: var(--strong-text);
   font-weight: 600;
 }
 
@@ -184,8 +184,8 @@
 }
 
 .grade-mark.ok {
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--strong-text);
+  background: var(--strong-soft);
 }
 
 .grade-mark.no {

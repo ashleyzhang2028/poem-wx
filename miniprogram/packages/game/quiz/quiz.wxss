@@ -94,9 +94,9 @@
 }
 
 .option.right {
-  border-color: var(--green);
-  background: var(--green-light);
-  color: var(--green);
+  border-color: var(--strong);
+  background: var(--strong-soft);
+  color: var(--strong-text);
   font-weight: 600;
 }
 
@@ -180,7 +180,7 @@
 
 .verdict-link {
   font-size: var(--fs-hint);
-  color: var(--green);
+  color: var(--strong-text);
   padding: var(--sp-1) 0;
 }
 
