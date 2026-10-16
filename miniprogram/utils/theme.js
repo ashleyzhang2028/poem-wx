@@ -120,7 +120,7 @@ function set(key) {
 function apply(page) {
   const key = current();
 
-  page.setData({ theme: key, themeStyle: style(key), themeHex: get(key).rgba });
+  page.setData({ theme: key, themeStyle: style(key) });
   return key;
 }
 

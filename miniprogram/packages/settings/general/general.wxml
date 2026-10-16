@@ -7,8 +7,7 @@
     <view class="seg fill">
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}"
-                 color="{{themeHex}}" />
+          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
@@ -22,7 +21,7 @@
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="12" block-color="{{themeHex}}" activeColor="{{themeHex}}" backgroundColor="#ececef"
+              block-size="12" backgroundColor="#ececef"
               bindchanging="onFontSlide" bindchange="onFontSlide" />
       <text class="font-a big">A</text>
     </view>
@@ -36,8 +35,7 @@
       <view class="seg">
         <radio-group class="seg-group" bindchange="onPinyin">
           <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}"
-                   color="{{themeHex}}" />
+            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}" />
             <view class="seg-icon ic-{{item.icon}}"></view>
             <text class="seg-text">{{item.label}}</text>
           </label>
@@ -57,7 +55,7 @@
       </view>
       <button class="btn mini ghost sfx-test" bindtap="onSfxTest">试听</button>
       <view class="sw">
-        <switch checked="{{sfxOn}}" bindchange="onSfx" color="{{themeHex}}" />
+        <switch checked="{{sfxOn}}" bindchange="onSfx" />
       </view>
     </view>
   </view>

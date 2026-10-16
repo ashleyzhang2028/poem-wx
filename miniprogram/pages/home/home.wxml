@@ -1,4 +1,4 @@
-<view class="page home has-tabbar" style="{{themeStyle}}">
+<view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
   <block wx:if="{{guest}}">
     <view class="card hero">

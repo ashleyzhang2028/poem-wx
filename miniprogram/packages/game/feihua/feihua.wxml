@@ -31,8 +31,7 @@
       <view class="seg">
         <radio-group class="seg-group" bindchange="onLevel">
           <label class="seg-item mini {{level === item.id ? 'on' : ''}}" wx:for="{{levels}}" wx:key="id">
-            <radio class="seg-radio" value="{{item.id}}" checked="{{level === item.id}}"
-                   color="{{themeHex}}" />
+            <radio class="seg-radio" value="{{item.id}}" checked="{{level === item.id}}" />
             <text class="seg-text">{{item.name}}</text>
           </label>
         </radio-group>

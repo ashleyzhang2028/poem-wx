@@ -86,7 +86,8 @@
   </view>
   </block>
 
-  <recite-sheet id="sheet" theme-style="{{themeStyle}}" queue="{{sheetRows}}" bind:finish="onSheetFinish" />
+  <recite-sheet id="sheet" theme-style="{{themeStyle}}"
+                queue="{{sheetRows}}" bind:finish="onSheetFinish" />
 
   <view class="safe-bottom"></view>
   </block>

@@ -268,7 +268,6 @@ function expandReciteSheet(wxml, data) {
       { key: "fuzzy", label: "模糊", cls: "fuzzy" },
       { key: "good", label: "记住", cls: "good" }
     ],
-    themeHex: data.themeHex || "",
     themeStyle: data.themeStyle || ""
   });
 
@@ -468,6 +467,7 @@ cases.forEach((cfg) => {
     } else {
       store2.write(store2.KEYS.auth, {});
     }
+
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
 

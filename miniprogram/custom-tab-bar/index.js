@@ -17,14 +17,25 @@ Component({
   },
 
   attached() {
-    this.setData({ themeStyle: theme.style() });
+    this.painted = theme.current();
+    this.setData(this.paint());
   },
 
   methods: {
     setActive(index) {
       const patch = {};
       if (this.data.active !== index) patch.active = index;
-      this.setData(patch);
+
+      const key = theme.current();
+      if (this.painted !== key) {
+        this.painted = key;
+        Object.assign(patch, this.paint());
+      }
+      if (Object.keys(patch).length) this.setData(patch);
+    },
+
+    paint() {
+      return { themeStyle: theme.style() };
     },
 
     onTap(e) {

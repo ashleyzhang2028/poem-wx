@@ -40,7 +40,7 @@
         <text class="hint coll-count-lead">每天从这个集子排几首</text>
         <radio-group class="chip-group cols-4" data-id="{{c.id}}" bindchange="onCount">
           <label class="chip {{c.dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this" wx:for-item="item">
-            <radio class="seg-radio" value="{{item}}" checked="{{c.dailyCount === item}}" color="{{themeHex}}" />
+            <radio class="seg-radio" value="{{item}}" checked="{{c.dailyCount === item}}" />
             <text class="chip-t">{{item}} 首</text>
           </label>
         </radio-group>
@@ -81,7 +81,7 @@
 
         <checkbox-group bindchange="onPick" wx:if="{{items.length}}">
           <label class="daily-row" wx:for="{{items}}" wx:key="id">
-            <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" color="{{themeHex}}" />
+            <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" />
             <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
             <view class="row-main">
               <text class="row-title row-poem">{{item.title}}</text>
