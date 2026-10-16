@@ -3,26 +3,10 @@ const icons = require("../utils/icons");
 const gate = require("../utils/gate");
 const tabPage = require("../utils/tab-page");
 
-const OFF_INK = "#9ca3af";
-
-function svgInk(color) {
-  const rgb = /rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(String(color));
-  if (!rgb) return color;
-  return "#" + [1, 2, 3].map((i) => ("0" + Number(rgb[i]).toString(16)).slice(-2)).join("");
-}
-
-function paint(src, ink) {
-  return String(src).replace(/currentColor/g, encodeURIComponent(svgInk(ink)));
-}
-
 Component({
   data: {
-
     active: 0,
-
     themeStyle: "",
-    ink: OFF_INK,
-    onInk: "#ffffff",
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
       { pagePath: "/pages/library/library", text: "课外", icon: icons.library, login: true },
@@ -51,17 +35,7 @@ Component({
     },
 
     paint() {
-      const t = theme.currentTheme();
-      const ink = theme.get("ink").rgba;
-      return {
-        themeStyle: theme.style(),
-        ink: t.rgba,
-        onInk: t.on,
-        list: this.data.list.map((it) => Object.assign({}, it, {
-          off: paint(it.icon, t.rgba),
-          on: paint(it.icon, ink === t.rgba ? t.on : ink)
-        }))
-      };
+      return { themeStyle: theme.style() };
     },
 
     onTap(e) {

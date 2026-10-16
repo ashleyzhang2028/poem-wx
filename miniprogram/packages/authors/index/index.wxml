@@ -55,8 +55,7 @@
     <view class="seg filter-group">
       <radio-group class="seg-group" bindchange="onFilter">
         <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}"
-                 color="{{themeHex}}" />
+          <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}" />
           <view class="seg-icon ic-{{item.icon}}"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>

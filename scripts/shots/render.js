@@ -171,7 +171,6 @@ const NATIVE_CSS = `
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
 .n-image{background:#f2f2f4}
 img.n-image{background:none}
-.tab-ico-img{background:none}
 /* WXML 标签 → HTML div 之后，默认块级；但页面样式里的 display:flex
    要能压过它，所以这里用最低优先级的选择器 */
 /* 文本节点没有自己的盒子，行高靠父级给 —— 预览里补一条，
@@ -214,24 +213,27 @@ const DEVICE_FONT_SIZE = ".device{font-size:16px}";
 
 function expandComponents(node, data, P) { return node; }
 
-function tabBarHtml(active, themeStyle) {
-  const icons = require(path.join(ROOT, "utils", "icons.js"));
-  const list = [
-    { text: "今日", icon: icons.home },
-    { text: "课外", icon: icons.library },
-    { text: "大会", icon: icons.conference },
-    { text: "搜索", icon: icons.search },
-    { text: "我的", icon: icons.mine }
-  ];
-  const items = list.map((it, i) =>
-    `<div class="tab ${i === active - 1 ? "on" : ""}">`
-    + `<div class="tab-ico"><img class="tab-ico-img off" src="${it.icon}">`
-    + `<img class="tab-ico-img on" src="${it.icon}"></div>`
-    + `<div class="tab-text">${it.text}</div></div>`).join("");
+let TAB_ITEMS = null;
 
-  return `<div class="tabbar" style="${themeStyle || ""}">${items}</div>`;
+function tabBarItems() {
+  if (TAB_ITEMS) return TAB_ITEMS;
+  const saved = global.Component;
+  let opt = null;
+  global.Component = (o) => { opt = o; };
+  try {
+    require(path.join(ROOT, "custom-tab-bar", "index.js"));
+  } finally {
+    global.Component = saved;
+  }
+  TAB_ITEMS = (opt && opt.data.list) || [];
+  return TAB_ITEMS;
 }
 
+function tabBarHtml(active, themeStyle) {
+  const barWxml = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxml"), "utf8");
+  const data = { active: active - 1, list: tabBarItems(), themeStyle: themeStyle || "" };
+  return compile(barWxml, data);
+}
 function themeStyleOf(data) {
   return (data && data.themeStyle) || "";
 }
@@ -240,13 +242,7 @@ function expandReciteSheet(wxml, data) {
   if (wxml.indexOf("<recite-sheet") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
 
-  const t = require(path.join(ROOT, "utils", "theme.js"));
-  const themeNow = t.current();
-
   const merged = Object.assign({}, data, {
-
-    themeHex: t.get(themeNow).rgba,
-    themeStyle: data.themeStyle || t.style(themeNow),
 
     dailyOn: !!data.sheetDailyOn,
     open: !!data.sheetOpen,
@@ -272,7 +268,6 @@ function expandReciteSheet(wxml, data) {
       { key: "fuzzy", label: "模糊", cls: "fuzzy" },
       { key: "good", label: "记住", cls: "good" }
     ],
-    themeHex: data.themeHex || "",
     themeStyle: data.themeStyle || ""
   });
 
@@ -310,7 +305,7 @@ function expandTierView(wxml, data) {
     cap: r.cap,
     name: r.name,
     cells: r.cells.map((c) => Object.assign({}, c, {
-      icon: (c.on ? tierIcons.yesInk : tierIcons.noInk),
+      icon: (c.on ? tierIcons.yes : tierIcons.no),
       dim: !c.on && !tiers.strong(c.tier)
     }))
   }));
@@ -472,22 +467,14 @@ cases.forEach((cfg) => {
     } else {
       store2.write(store2.KEYS.auth, {});
     }
-    const theme2 = require(path.join(ROOT, "utils", "theme.js"));
-
-    MEM[storeMod.KEYS.settings] = Object.assign({}, MEM[storeMod.KEYS.settings], {
-      themeHex: theme2.currentTheme().rgba,
-      themeStyle: theme2.style()
-    });
 
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
-    data.themeHex = theme2.currentTheme().rgba;
-    data.themeStyle = data.themeStyle || theme2.style();
 
     if (cfg.do) {
       cfg.do.forEach((step) => {
         const page = rt.current();
-
+        const fn = page && page[step.call];
         if (typeof fn === "function") fn.call(page, step.with || {});
       });
     }

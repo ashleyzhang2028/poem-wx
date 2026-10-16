@@ -1040,7 +1040,7 @@ Object.keys(WEB_TIER).forEach((k) => {
       const wxmlT = wxml;
       const row = E.compareRows({ logged: false, tier: "free" });
       const cols = row.reduce((m, r) => m + (r.cells.filter((c) => c.icon).length), 0);
-      return /icons\.yesInk/.test(inst) && /icons\.noInk/.test(inst)
+      return /icons\.yes/.test(inst) && /icons\.no/.test(inst)
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
@@ -2310,27 +2310,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
           require(path.join(ROOT, "utils", "icons.js")), icon);
       }),
       "有个图标名在 utils/icons.js 里找不到 —— 那一格只剩文字");
-    ok("图标是 data URI（小程序里一条图片资源都不引）",
+    ok("图标是 base64 data URI（小程序 <image>/mask 不认 URL 编码的 data URI）",
       Object.keys(require(path.join(ROOT, "utils", "icons.js")))
-        .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml,") === 0),
-      "图标改从文件路径取了 —— 多套倍图要跟着进包");
-    ok("填进 src 的颜色是 #hex（rgba() 在真机的 SVG 里非法，整条 fill 会被丢掉）",
-      (() => {
-        const bar = require(path.join(ROOT, "utils", "icons.js"));
-        const src = /function svgInk[\s\S]*?\nfunction paint[\s\S]*?\n\}/.exec(barSrc);
-        if (!src) return false;
-        const paint = new Function("encodeURIComponent",
-          src[0] + "\nreturn paint;")(encodeURIComponent);
-        const one = paint(bar.home, "rgba(8, 8, 10, 1)");
-        return one.indexOf("%2308080a") >= 0 && !/rgba?\(/.test(one);
-      })(),
-      "paint() 把 rgba() 原样填进 SVG 的 fill —— 真机一片空白");
+        .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml;base64,") === 0),
+      "图标不是 base64 data URI —— 真机一片空白（URL 编码那份只在小程序外面能渲染）");
+    ok("底栏图标走 mask 上色（一张图两态，不靠两张图切 visibility）",
+      /mask-image:url\('\{\{item\.icon\}\}'\)/.test(barWxml)
+        && /\.tab-ico-mask[\s\S]{0,400}background-color:\s*currentColor/.test(barWxss)
+        && /mask-size:\s*contain/.test(barWxss),
+      "底栏图标还是两张 <image> 切 visibility —— 换不出主题色，也踩 <image> 认不认 data URI 这条");
     ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
       /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
       "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");
     ok("底栏每一项都经 list 渲染（图标源不是写死的）",
-      /src="\{\{item\.off\}\}"/.test(barWxml) && /src="\{\{item\.on\}\}"/.test(barWxml)
-        && /wx:for="\{\{list\}\}"/.test(barWxml));
+      /wx:for="\{\{list\}\}"/.test(barWxml) && /\{\{item\.icon\}\}/.test(barWxml));
   }
 
   {
@@ -2896,45 +2889,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("每个页面的根节点都挂了 themeStyle（主题传得到页面里）",
     missWxml.length === 0, missWxml.join(", "));
   ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
-
-  {
-    const missing = [];
-    const stray = [];
-    const sheets = ["components/recite-sheet/recite-sheet"].concat(pages).concat(
-      (app.subPackages || []).reduce(
-        (all, sp) => all.concat(sp.pages.map((x) => sp.root + "/" + x)), []));
-
-    const files = [...new Set(sheets.concat([
-      "components/recite-sheet/recite-sheet"
-    ]))].filter((p) => fs.existsSync(path.join(ROOT, p + ".wxml")));
-
-    files.forEach((p) => {
-      const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-      const js = fs.existsSync(path.join(ROOT, p + ".js"))
-        ? fs.readFileSync(path.join(ROOT, p + ".js"), "utf8") : "";
-      const binds = /\{\{themeHex\}\}|\bthemeHex\b/.test(wxml);
-      const says = /themeHex\s*:/.test(js);
-      if (binds && !says) missing.push(p);
-      if (says && !binds) stray.push(p);
-    });
-
-    const themeSrc = fs.readFileSync(path.join(ROOT, "utils", "theme.js"), "utf8");
-
-    ok("用了 themeHex 的地方都在自己的 data 里声明了它",
-      missing.length === 0,
-      missing.join("、") + " —— 声明它的地方才接得住 theme.apply() 发的那一份，"
-        + "没有的当场回 undefined：原生的取色控件拿到非值会退回自己的默认色，"
-        + "开发者工具里说的是 `property \"value\" received type-incompatible value`。"
-        + "同一个名字只该有一处出处，不许再拼一个字符串替身");
-
-    ok("themeHex 只发给用得上它的那几个（不声明的地方不推这个字段）",
-      stray.length === 0,
-      stray.join("、") + " —— 声明了却没人读，下一个人会以为它有用");
-
-    ok("页面那份主题数据由 theme.js 一处发给所有人",
-      /setData\(\{\s*theme:\s*key,\s*themeStyle:\s*style\(key\)\s*\}\)/.test(themeSrc),
-      "theme.apply() 发的东西变了 —— 它是所有页面拿主题的唯一口子");
-  }
 }
 
 {
@@ -3340,9 +3294,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /store\.reads\(/.test(homeJs) && /item\.read/.test(homeWxml),
     "把已读那一格删了 —— 读过但没评分的诗在列表上就与没碰过的一样");
 
-  ok("弹层显式接了页面那两份主题变量（色值也传，弹层里的取色控件要用）",
+  ok("弹层显式接了页面那份主题变量",
     homeWxml.indexOf('theme-style="{{themeStyle}}"') >= 0
-      && homeWxml.indexOf('theme-hex="{{themeHex}}"') >= 0
       && /themeStyle:\s*\{\s*type:\s*String/.test(sheetJs)
       && /style="\{\{themeStyle\}\}"/.test(sheetWxml),
     "首页没传 theme-style，或组件没把它挂在根节点上");

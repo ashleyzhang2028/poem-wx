@@ -530,7 +530,7 @@ miniprogram/
 ├── styles/         # 设计令牌（颜色 / 字阶 / 间距 / 高度，唯一的出处）
 └── data/           # 生成物，不入库（含 roster.json）
 scripts/
-├── build-icons.js  # miniprogram/icons/ 的 SVG → utils/icons.js（单色 data URI）
+├── build-icons.js  # miniprogram/icons/ 的 SVG → utils/icons.js（单色 base64 data URI）
 ├── build-data.js   # 语料 / 读音表 / 倒排索引 / 名录（语料读 scripts/corpus/）
 ├── check.js        # 离线自检（含 V40 内容口径 / V41 作者索引 / V43 部署件 / V44 设置报文）
 ├── parity.js       # 与网页版逐项对照，能力表每一项都要有交代

@@ -103,7 +103,6 @@ Page({
   data: {
 
     themeStyle: "",
-    themeHex: "",
     barBelow: true,
 
     logged: false,

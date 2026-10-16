@@ -167,7 +167,6 @@
     </view>
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
-                    theme-hex="{{themeHex}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"
                     bind:change="onExtraChange" />
 

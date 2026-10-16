@@ -29,7 +29,6 @@ const TERMS = [
 Page({
   data: {
     themeStyle: "",
-    themeHex: "",
     grades: [],
     terms: TERMS,
     stages: STAGES,

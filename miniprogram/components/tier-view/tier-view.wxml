@@ -25,7 +25,7 @@
       <text class="tier-cap">{{item.name}}</text>
       <view class="tier-cell {{cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
         <text class="tier-cell-t" wx:if="{{cell.text}}">{{cell.text}}</text>
-        <image class="tier-cell-ic {{cell.dim ? 'dim' : ''}}" src="{{cell.icon}}" mode="aspectFit" />
+        <view class="tier-cell-ic {{cell.dim ? 'dim' : ''}}" style="mask-image:url('{{cell.icon}}');-webkit-mask-image:url('{{cell.icon}}');"></view>
         <text class="tier-cell-n" wx:if="{{cell.note}}">{{cell.note}}</text>
       </view>
     </view>

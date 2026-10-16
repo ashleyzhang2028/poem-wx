@@ -56,7 +56,6 @@ function rowsOf(items) {
 Page({
   data: {
     themeStyle: "",
-    themeHex: "",
 
     overview: {},
 

@@ -50,29 +50,19 @@
   transition: background-color .12s;
 }
 
-.tab-ico-img {
-  position: absolute;
+.tab-ico-mask {
   width: 40rpx;
   height: 40rpx;
-}
-
-.tab-ico-img.off {
-  opacity: .78;
-}
-
-.tab-ico-img.on {
-  visibility: hidden;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .tab.on .tab-ico {
   background: var(--strong);
   box-shadow: 0 0 0 2rpx var(--on-ink);
-}
-
-.tab.on .tab-ico-img.off {
-  visibility: hidden;
-}
-
-.tab.on .tab-ico-img.on {
-  visibility: visible;
 }

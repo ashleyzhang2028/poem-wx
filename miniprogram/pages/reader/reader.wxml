@@ -50,7 +50,7 @@
       <radio-group class="pref-seg" bindchange="onAlign">
         <label class="pref-opt ic {{align === item.key ? 'on' : ''}}"
                wx:for="{{aligns}}" wx:key="key" aria-label="{{item.label}}">
-          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" color="{{themeHex}}" />
+          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" />
           <view class="glyph ic-{{item.icon}}"></view>
         </label>
       </radio-group>
@@ -60,7 +60,7 @@
       <radio-group class="pref-seg" bindchange="onPinyin">
         <label class="pref-opt ic {{pinyinMode === item.key ? 'on' : ''}}"
                wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
-          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" color="{{themeHex}}" />
+          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" />
           <view class="glyph ic-{{item.icon}}"></view>
         </label>
       </radio-group>
@@ -118,8 +118,7 @@
   <view class="card recite-card" wx:if="{{reciteMode}}">
     <radio-group class="chip-group cols-3 actions" bindchange="onResult">
       <label class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key">
-        <radio class="seg-radio" value="{{item.key}}" checked="{{item.cls === 'on'}}"
-               color="{{themeHex}}" />
+        <radio class="seg-radio" value="{{item.key}}" checked="{{item.cls === 'on'}}" />
         <text class="chip-t">{{item.label}}</text>
       </label>
     </radio-group>

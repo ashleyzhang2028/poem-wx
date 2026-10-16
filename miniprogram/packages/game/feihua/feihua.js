@@ -11,7 +11,6 @@ const ANSWER_LIMIT = 80;
 Page({
   data: {
     themeStyle: "",
-    themeHex: "",
     levels: feihua.LEVELS,
     level: "normal",
 

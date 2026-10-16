@@ -758,15 +758,19 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
 墨黑圆底**（与页面里「选中 = 填墨黑」同一条规矩）。
 
 图标是 SVG，源文件在 `miniprogram/icons/`，`scripts/build-icons.js` 把它们
-压成单色 data URI 写进 `miniprogram/utils/icons.js`（构建产物，`check.js` 不查在不在）。
+压成 **base64** data URI 写进 `miniprogram/utils/icons.js`（构建产物，`check.js` 不查在不在）。
 **一条图片资源都不引**：data URI 不进包外，也就不必多套倍图。
 五枚里四枚来自 `icons/`，搜索那一枚是照着同一份网格补画的（用户没给）。
 
-`fill` 一律换成 `currentColor` 再编码。真机上这条链只到一半 ——
-小程序**解析不了** `<svg>` 里的 `currentColor`（那是页面继承色，data URI 拿不到），
-所以底栏两项图两张：`.off` 用 `#9ca3af`、`.on` 用主题色，
-由组件在 `paint()` 里把 `currentColor` 换成字面色再写回 `src`。
-只留一张、靠 `opacity` 分两态的做法在浅色主题上会糊（见下面那张对照表）。
+图标**不上 `<image>`，走 `mask`**：`.tab-ico-mask` 拿 data URI 当 `mask-image`，
+`background-color: currentColor` 取色。`currentColor` 在 `<image src>` 里拿不到
+（data URI 是一张独立的图，页面继承色不会进去），在 mask 上却是现成的：
+`.tab` 给 `color: #9ca3af`、`.tab.on` 给 `color: var(--strong-text)`，
+一枚图两态，不必两张图切 `visibility`。
+
+`mask-image` 这份 data URI 必须是 **base64**：`%3Csvg%3E` 那种 URL 编码的
+小程序不认，真机上整片空白（Issue #262 —— 之前在浏览器预览里是好的，
+预览把 `src` 当普通 `<img>` 画，所以一直没发现）。
 
 「大会」那一项不是 tab 页，是 `navigateTo` 进大会分包 —— 底栏停在原页，
 回来看那一栏还亮着。所以 `custom-tab-bar` 的每一项多带一个 `noSwitch`：
