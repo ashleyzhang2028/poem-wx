@@ -881,18 +881,18 @@ const gateMod = require(path.join(ROOT, "utils", "gate.js"));
 const WEB_TIER = {
   daily: "free",
   library: "free",
-  speak: "login",
-  export: "login",
+  speak: "free",
+  export: "free",
   ebbinghaus: "free",
-  leitner: "login",
+  leitner: "free",
   sm2: "pro",
   fsrs: "max",
   collections: "pro",
   feihualing: "max"
 };
 
-ok("同步在「一登录就打开」的白名单里",
-  tiersMod.DEFAULT_ON.indexOf("sync") >= 0);
+ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
+  tiersMod.TIER_KEYS.join() === "free,pro,max");
 Object.keys(WEB_TIER).forEach((k) => {
   const cap = E.CAPS.find((c) => c.key === k);
   ok("档位与网页版一致 " + k, !!cap && cap.tier === WEB_TIER[k],
@@ -1893,7 +1893,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
 
   const capSync = E.CAPS.find((c) => c.key === "sync");
-  ok("云端同步在能力表里且不看档位", !!capSync && capSync.tier === "login",
+  ok("云端同步在能力表里且不看档位", !!capSync && capSync.tier === "free",
     capSync ? "当前 tier=" + capSync.tier : "能力不存在");
   ok("界面里不再留「要 Pro 才能同步」的说法",
     mineJs.indexOf("要 Pro 起才能跨设备同步") < 0 && mineJs.indexOf("跨设备同步要 Pro 起") < 0);
