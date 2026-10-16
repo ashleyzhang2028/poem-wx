@@ -4,53 +4,7 @@
 }
 
 .poem-card {
-  padding: var(--sp-4) var(--sp-3) var(--sp-3);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.act {
-  flex: 1;
-  height: var(--h-act);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-pill);
-  font-size: var(--fs-title);
-  border: 1rpx solid var(--line-strong);
-  background: var(--surface);
-  color: var(--ink-2);
-  transition: transform var(--t-press), background-color var(--t-press);
-}
-
-.act:active {
-  transform: scale(.97);
-}
-
-.act.bad {
-  color: var(--red);
-  background: var(--red-soft);
-  border-color: transparent;
-}
-
-.act.fuzzy {
-  color: var(--amber);
-  background: var(--amber-soft);
-  border-color: transparent;
-}
-
-.act.good {
-  color: var(--on-ink);
-  background: var(--strong);
-  border-color: var(--strong);
-}
-
-.act-label {
-  letter-spacing: var(--ls-title);
+  padding-top: var(--sp-4);
 }
 
 .recite-head {

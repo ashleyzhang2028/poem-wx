@@ -291,7 +291,7 @@ Component({
         wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
         return;
       }
-      const result = e.currentTarget.dataset.r;
+      const result = e.detail.value;
       const settings = store.settings();
       const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
       store.setRecord(this.data.id, rec);

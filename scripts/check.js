@@ -2774,7 +2774,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     alignKeys === 2 && pinyinKeys === 3,
     "读到对齐 " + alignKeys + " 档、注音 " + pinyinKeys + " 档");
   ok("这一行底层仍是原生 radio（包在 label 里、走 .opt-radio 隐藏）",
-    ((readerWxml.match(/<radio\s|<radio>/g) || []).length === 2));
+    /<radio-group class="pref-seg"/.test(readerWxml) && /class="opt-radio"/.test(readerWxml));
 
   const prefRadios = (readerWxml.match(/<radio\s/g) || []).length
     + (readerWxml.match(/<radio>/g) || []).length;
@@ -3458,7 +3458,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /allOpen:\s*false/.test(homeJs)
       && /allLabel/.test(homeJs) && /allRows/.test(homeJs)
       && /<view class="card" wx:if="\{\{allCount\}\}">/.test(homeWxml)
-      && /<view class="all-head"/.test(homeWxml)
+      && /<view class="card-open"[^>]*bindtap="onToggleAll"/.test(homeWxml)
       && /wx:if="\{\{allOpen\}\}"/.test(homeWxml)
       && /wx:for="\{\{allRows\}\}"/.test(homeWxml)
       && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs)
@@ -3728,12 +3728,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const readerWxml = read("pages/reader/reader.wxml");
     const sheetWxmlSrc = sheetWxml;
-    const acts = sheetWxmlSrc.indexOf('class="actions"');
+    const acts = sheetWxmlSrc.indexOf('class="chip-group cols-3 actions"');
     const head = sheetWxmlSrc.indexOf('class="recite-head"');
     ok("背诵弹层：三颗按钮在掌握度**上面**（先评、再看读数）",
       acts >= 0 && head > acts, "顺序还是掌握度在前");
-    ok("背诵弹层：三颗按钮不再包一张卡（.actions 是裸的一行）",
-      /<view class="actions">/.test(sheetWxmlSrc));
+    ok("背诵弹层：三颗按钮就是别的格子那一套（走 .chip，不再自绘一颗按钮）",
+      /<radio-group class="chip-group cols-3 actions"/.test(sheetWxmlSrc)
+        && !/\.act\s*\{/.test(appWxss));
   }
 
   {

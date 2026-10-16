@@ -107,12 +107,13 @@
   </view>
 
   <view class="card recite-card" wx:if="{{reciteMode}}">
-    <view class="actions">
-      <view class="act {{item.cls}}" wx:for="{{results}}" wx:key="key"
-            data-r="{{item.key}}" bindtap="onResult">
-        <text class="act-label">{{item.label}}</text>
-      </view>
-    </view>
+    <radio-group class="chip-group cols-3 actions" bindchange="onResult">
+      <label class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{item.cls === 'on'}}"
+               color="{{themeHex}}" />
+        <text class="chip-t">{{item.label}}</text>
+      </label>
+    </radio-group>
 
     <view class="recite-head">
       <text class="card-title">掌握度</text>

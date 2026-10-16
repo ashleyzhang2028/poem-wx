@@ -46,28 +46,27 @@ view, text, button, input, textarea {
   background: var(--surface);
   border: 1rpx solid var(--line);
   border-radius: var(--radius);
-  padding: var(--sp-3) var(--sp-3);
+  padding: var(--card-y) var(--card-x);
   margin-bottom: var(--sp-2);
 }
 
+.page + .card,
 .page-head + .card {
   margin-top: 0;
 }
 
 .card-title {
+  display: block;
   font-size: var(--fs-title);
   font-weight: 600;
   color: var(--strong-text);
-  margin-bottom: var(--sp-1);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--card-title-gap);
 }
 
 .card-title.bar {
   display: flex;
   align-items: center;
-  font-size: var(--fs-title);
-  font-weight: 600;
-  color: var(--strong-text);
-  margin-bottom: var(--sp-2);
 }
 
 .hint {
@@ -102,7 +101,7 @@ view, text, button, input, textarea {
 .divider {
   height: 1rpx;
   background: var(--line-2);
-  margin: var(--sp-3) 0;
+  margin: 0 0 var(--card-title-gap);
 }
 
 .empty {
@@ -201,6 +200,17 @@ view, text, button, input, textarea {
   margin-top: var(--sp-3);
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+
+.stack .card {
+  margin-bottom: 0;
+}
+
 .actions .btn {
   flex: 1;
 }
@@ -210,7 +220,7 @@ view, text, button, input, textarea {
   align-items: center;
   justify-content: center;
   width: auto;
-  min-width: 0;
+  min-width: var(--w-btn-mini);
   height: var(--h-btn-mini);
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
@@ -244,6 +254,11 @@ view, text, button, input, textarea {
 
 .row:last-child {
   border-bottom: none;
+}
+
+.row-flush {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .row-main {
@@ -455,6 +470,21 @@ view, text, button, input, textarea {
 
 .font-a.big {
   font-size: var(--fs-lead);
+}
+
+.card-open {
+  display: flex;
+  align-items: center;
+}
+
+.card-open > .card-title {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.card-hover {
+  background: var(--sink);
 }
 
 .opt-group {
@@ -909,6 +939,28 @@ view, text, button, input, textarea {
 .chip.on {
   background: var(--strong);
   border-color: var(--strong);
+}
+
+.chip.bad {
+  color: var(--red);
+  background: var(--red-soft);
+  border-color: transparent;
+}
+
+.chip.fuzzy {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: transparent;
+}
+
+.chip.good {
+  color: var(--on-ink);
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t {
+  color: inherit;
 }
 
 .chip.multi:not(.on) {

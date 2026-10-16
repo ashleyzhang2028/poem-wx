@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--sp-4) 0 var(--sp-4);
+  padding: var(--sp-4) 0;
 }
 
 .fh-char-t {
