@@ -135,15 +135,10 @@
 
   <view class="card">
     <view class="card-title bar">数据与账号</view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">
-      <view class="row-icon">出</view>
-      <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON</text></view>
-      <text class="row-go">›</text>
-    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
       <view class="row-icon">云</view>
       <view class="row-main">
-        <text class="row-title">同步进度</text>
+        <text class="row-title">同步</text>
         <text class="row-sub">{{syncSub}}</text>
       </view>
       <text class="row-go">›</text>

@@ -24,7 +24,7 @@ const DECIDED = {
   "read.aloud": { kind: "dropped" },
 
   "pinyin.helper": { kind: "none", to: "todo-3" },
-  "export.progress": { kind: "cap", to: "export" },
+  "export.progress": { kind: "none", to: "todo-6" },
   "algo.ebbinghaus": { kind: "cap", to: "ebbinghaus" },
   "algo.leitner": { kind: "cap", to: "leitner" },
   "algo.sm2": { kind: "cap", to: "sm2" },
@@ -60,7 +60,7 @@ const capKeys = E.CAP_KEYS;
 const todoDoc = fs.readFileSync(path.join(ROOT, "docs", "todo.md"), "utf8");
 
 const DROPPED_WORDS = ["朗读", "语音", "speak", "tts", "TTS"];
-const DROPPED_DOCS = ["README.md", "docs/architecture.md", "docs/parity.md", "docs/todo.md"];
+const DROPPED_DOCS = ["README.md", "docs/architecture.md", "docs/parity.md", "docs/todo.md", "docs/design-system.md"];
 function cannotDo(key) {
   void key;
   return DROPPED_DOCS.every((f) => {

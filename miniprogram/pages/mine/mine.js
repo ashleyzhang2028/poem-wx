@@ -27,12 +27,6 @@ Page({
     tierLabel: "Free",
 
     sfxVisible: false,
-    syncReady: false,
-    syncText: "还没同步过",
-    syncPending: 0,
-
-    syncAllowed: false,
-    syncNote: "",
 
     syncSub: "",
     fullTextOn: false,
@@ -76,12 +70,7 @@ Page({
       tierLabel: e.label,
       sfxVisible: sfx.readiness().visible,
       fullTextOn: fr.usable,
-      syncReady: sy.ready,
-      syncText: sy.lastText,
-      syncPending: sy.pending,
-      syncAllowed: E.can("sync"),
-      syncNote: this.syncNote(sy),
-      syncSub: this.syncNote(sy),
+      syncSub: this.syncSub(sy),
 
       grantLead: this.grantLead(profile)
     });
@@ -169,17 +158,17 @@ Page({
     });
   },
 
-  syncNote(sy) {
-    if (sy.lastSyncAt) return sy.lastText;
-    if (!sy.ready) {
-      if (!auth.logged()) return "先登录 · 登录后进度跨设备跟随";
-      if (auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
-      return "同步通道未开 · 进度只在这台手机";
-    }
-    return "还没同步过 · 点一下同步";
+  syncSub(sy) {
+    if (sy.ready) return sy.lastText + " · " + sy.pendingStatus;
+    if (!sy.ready && auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
+    return "同步通道未开 · 进度只在这台手机";
   },
 
   onSync() {
+    if (!E.can("sync")) {
+      wx.showToast({ title: E.hint("sync"), icon: "none" });
+      return;
+    }
     wx.showLoading({ title: "同步中" });
     sync.now(true).then((res) => {
       wx.hideLoading();
@@ -263,15 +252,6 @@ Page({
   onLoginGate() {
 
     this.onLogin();
-  },
-
-  onExport() {
-    if (!E.block("export.progress", { page: this })) return;
-    const data = store.exportAll();
-    wx.setClipboardData({
-      data: JSON.stringify(data),
-      success: () => wx.showToast({ title: "备份已复制，粘贴到安全的地方保存", icon: "none", duration: 2500 })
-    });
   },
 
   onClear() {

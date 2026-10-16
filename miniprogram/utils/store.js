@@ -346,29 +346,6 @@ function collectionsAt() {
   return Number(raw.at || 0);
 }
 
-function exportAll() {
-  return {
-    schema: SCHEMA,
-    exportedAt: new Date().toISOString(),
-    settings: settings(),
-    progress: progress(),
-    reads: read(KEYS.reads, {}),
-    collections: collections(),
-    profile: profile()
-  };
-}
-
-function importAll(data) {
-  if (!data || typeof data !== "object") throw new Error("备份文件格式不正确");
-
-  if (data.settings) replaceSettings(data.settings);
-  if (data.progress) write(KEYS.progress, data.progress);
-  if (data.reads) write(KEYS.reads, data.reads);
-  if (data.collections) write(KEYS.collections, data.collections);
-  if (data.profile) write(KEYS.profile, data.profile);
-  return true;
-}
-
 function deviceId() {
   let id = read(KEYS.device, "");
   if (id) return id;
@@ -433,7 +410,5 @@ module.exports = {
   collections,
   saveCollections,
   collectionsAt,
-  exportAll,
-  importAll,
   stats
 };
