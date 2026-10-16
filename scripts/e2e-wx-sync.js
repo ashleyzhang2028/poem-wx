@@ -76,7 +76,7 @@ function makeWx(port, mem) {
   store.saveProfile({ avatarLocal: "wxfile://avatar-from-wechat.jpg" });
   store.setRecord("poem_x", { level: 4, reviewCount: 9, updatedAt: Date.now() });
   store.saveCollections([
-    { id: "c-e2e", name: "自选集", createdAt: 1, items: [{ id: "poems-xx1-01" }, { id: "poems-xx1-02" }] }
+    { id: "c-e2e", name: "自选集", createdAt: 1, dailyCount: 10, items: [{ id: "poems-xx1-01" }, { id: "poems-xx1-02" }] }
   ]);
 
   await auth.login();
@@ -105,10 +105,11 @@ function makeWx(port, mem) {
     "推上去了：" + JSON.stringify(byId["profile:v1"]) +
       " —— 头像现在是微信那张的临时路径（wxfile://），上传它既没地方存也没意义");
   ok("服务端收到了那篇进度", byId["poem_x"] && byId["poem_x"].level === 4, JSON.stringify(byId["poem_x"]));
-  ok("服务端收到了自选集子（名字与篇目都在）",
+  ok("服务端收到了自选集子（名字、篇目与每日首数都在）",
     !!byId["collections:v1"]
       && byId["collections:v1"].collections[0].name === "自选集"
-      && byId["collections:v1"].collections[0].items.length === 2,
+      && byId["collections:v1"].collections[0].items.length === 2
+      && byId["collections:v1"].collections[0].dailyCount === 10,
     JSON.stringify(byId["collections:v1"]));
 
   Object.keys(mem).forEach((k) => delete mem[k]);
@@ -134,8 +135,9 @@ function makeWx(port, mem) {
   {
     const cols2 = require(path.join(REPO, "miniprogram", "utils", "collections.js"));
     const got = cols2.list();
-    ok("新手机上自选集子认回来了（名字与篇目）",
-      got.length === 1 && got[0].name === "自选集" && cols2.idsOf(got[0]).length === 2,
+    ok("新手机上自选集子认回来了（名字、篇目与每日首数）",
+      got.length === 1 && got[0].name === "自选集" && cols2.idsOf(got[0]).length === 2
+        && cols2.countOf(got[0]) === 10,
       JSON.stringify(got));
   }
 

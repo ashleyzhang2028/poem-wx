@@ -6308,7 +6308,7 @@ function gapped(items, max) {
     ok("删集子删得掉", cols3.remove(first.id).ok === true && !cols3.find(first.id));
 
     store3.saveCollections([{ id: "c9", name: "自选", items: [{ id: "poems-xx1-01" }] }]);
-    ok("集子的名字与篇目走同步那一行（服务端只认这两个 + createdAt）",
+    ok("集子的名字、篇目与每日首数一起走同步那一行",
       (() => {
         const wire3 = require(path.join(ROOT, "utils", "wire.js"));
         const row = wire3.packRecords().filter((r) => r.id === "collections:v1")[0];
@@ -6316,20 +6316,34 @@ function gapped(items, max) {
           && row.payload.collections[0].name === "自选"
           && row.payload.collections[0].items.length === 1;
       })(),
-      "服务端 sanitizeCollections 只留 id / name / createdAt / items，别的字段会被裁掉");
+      "服务端 sanitizeCollections 留 id / name / createdAt / dailyCount / items");
 
-    ok("每个集子的每日首数只落本机（服务端那一行不认这个字段）",
+    ok("每个集子的每日首数跟着账号走（本机发得出，服务端也认）",
       (() => {
         const got = cols3.setCount("c9", 10);
         const wire3 = require(path.join(ROOT, "utils", "wire.js"));
         const row = wire3.packRecords().filter((r) => r.id === "collections:v1")[0];
         const settings = wire3.packRecords().filter((r) => r.id === "settings:v1")[0];
         return got.ok && cols3.countOf(cols3.find("c9")) === 10
-          && row.payload.collections[0].dailyCount === undefined
+          && row.payload.collections[0].dailyCount === 10
           && !(settings && settings.payload.settings.collectionCounts);
       })(),
-      "首数进了 collections 那一行就会被服务端裁掉（换台手机又回默认），"
-        + "进了 settings:v1 又不在服务端白名单里 —— 它只能是本机的一项偏好");
+      "首数随集子发在 collections:v1 那一行里；不进 settings:v1（它不在服务端白名单里）");
+
+    ok("换台手机认得到每个集子的首数（拉回那一行就落回本机）",
+      (() => {
+        const wire3 = require(path.join(ROOT, "utils", "wire.js"));
+        const fresh = [{ id: "c9", name: "自选", createdAt: 0, dailyCount: 10, items: [{ id: "poems-xx1-01" }] }];
+        store3.saveCollections([]);
+        const applied = wire3.applyRecords([{
+          id: "collections:v1",
+          payload: { v: 1, collections: fresh, updatedAt: Date.now() + 1000 },
+          updatedAt: Date.now() + 1000,
+          deleted: false
+        }]);
+        return applied >= 1 && cols3.countOf(cols3.find("c9")) === 10;
+      })(),
+      "服务端把 dailyCount 裁掉的话，这条只会回默认 5 —— 换台手机就丢");
 
     const corpusMod3 = require(path.join(ROOT, "utils", "corpus.js"));
     const S3 = require(path.join(ROOT, "utils", "scheduler.js"));

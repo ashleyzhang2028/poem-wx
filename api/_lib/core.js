@@ -1640,6 +1640,8 @@ var COLLECTIONS_MAX = 5000;
 
 var COLLECTIONS_ITEMS_MAX = 500;
 
+var COLLECTIONS_DAILY_MAX = 100;
+
 function sanitizeCollections(p) {
   var out = { v: 1, updatedAt: Number((p && p.updatedAt) || 0) };
   out.updatedAt = isFinite(out.updatedAt) && out.updatedAt > 0 ? Math.round(out.updatedAt) : 0;
@@ -1679,12 +1681,16 @@ function sanitizeCollections(p) {
       }
       kept.push(row);
     });
-    out.collections.push({
+    var row2 = {
       id: id,
       name: refText(c.name, 40),
       createdAt: Number(c.createdAt) > 0 ? Math.round(Number(c.createdAt)) : 0,
       items: kept
-    });
+    };
+    if (typeof c.dailyCount === "number" && isFinite(c.dailyCount)) {
+      row2.dailyCount = Math.max(1, Math.min(COLLECTIONS_DAILY_MAX, Math.round(c.dailyCount)));
+    }
+    out.collections.push(row2);
   });
   return out;
 }
