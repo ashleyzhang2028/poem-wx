@@ -93,7 +93,7 @@
 
 .sheet-foot {
   flex: none;
-  padding: var(--sp-1) 0 var(--sp-2);
+  padding: var(--sp-3) 0 var(--sp-3);
 }
 
 .sheet-prev {

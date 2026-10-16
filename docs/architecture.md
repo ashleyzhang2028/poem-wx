@@ -357,8 +357,9 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 **头像与昵称为什么不在这一列里**：头像只有微信一个来源且**不上传**
 （`chooseAvatar` 给回的是 `wxfile://…` 临时路径，见
 [`design-system.md`](design-system.md)「头像」一节、Issue #111），
-所以换台手机就是没有；昵称走服务端的 `accounts.nickname`，登录时随会话下发，
-不占这一条链。
+所以换台手机就是没有；昵称走服务端的 `accounts.nickname` —— 用户在小程序里一改
+（`onNickname`）就走 `PATCH /api/me` 落到 `accounts.nickname`，登录与刷新时随会话下发，
+不占同步这条链（进度那条报文从来不打包昵称）。
 
 ⚠️ 服务端那一半**必须一起做**：`sanitizePayload` 对认不出的行 id
 一律返回 `{}`，所以 `settings:v1` 不加白名单就会被**静默清空** ——
@@ -467,6 +468,8 @@ wx.login() 拿 code
 |---|---|---|---|
 | `/api/wx/login` | POST | 本仓库 `api/` | `{ code, device }` → `{ accessToken, refreshToken, expiresIn, tier, role, caps, nickname, userId }`（`avatarUrl` 不再回值：头像只落本机，见 Issue #111） |
 | `/api/wx/refresh` | POST | 本仓库 `api/` | `{ refreshToken }` → 同上 |
+| `/api/me` | GET | 本仓库 `api/` | 认回会话（本机没 token 时用它） |
+| `/api/me` | PATCH | 本仓库 `api/` | `{ nickname }` → `{ nickname, account }`。改昵称走这条，不占同步链 |
 | `/api/sync/pull` `/api/sync/push` | POST | 本仓库 `api/` | 含条件 upsert 那套时间戳规则 |
 | `/api/admin/accounts` | POST | 本仓库 `api/` | 名录 |
 | `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |

@@ -5,25 +5,3 @@
 .poem-card {
   padding-top: var(--sp-4);
 }
-
-.recite-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--sp-4);
-}
-
-.recite-head .card-title {
-  margin-bottom: 0;
-}
-
-.mastery-bar {
-  margin-top: var(--sp-2);
-}
-
-.hint-line {
-  display: block;
-  text-align: center;
-  padding-top: var(--sp-3);
-}
-
