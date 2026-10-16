@@ -165,8 +165,8 @@ Page({
       return {
         key: m.key,
         name: m.name,
-        blurb: m.blurb,
         years: m.years,
+        describe: m.describe,
         allowed,
 
         lockHint: allowed ? "" : E.hint(m.key),
