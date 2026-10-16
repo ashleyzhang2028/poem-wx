@@ -78,6 +78,13 @@
     "page": "packages/progress/index/index",
     "title": "背诵进度",
     "back": true,
+    "logged": true,
+    "seedProgress": "scripts/shots/fixtures/progress.json"
+  },
+  "progress-empty": {
+    "page": "packages/progress/index/index",
+    "title": "背诵进度",
+    "back": true,
     "logged": true
   },
   "settings-recite": {

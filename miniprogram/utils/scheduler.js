@@ -17,6 +17,12 @@ const DEFAULT_SCOPE = "upto";
 
 const DAILY_COUNTS = [3, 5, 10, 20];
 
+const SPAN = 7;
+
+const MASTERED_LEVEL = 7;
+
+const BACKLOG_DAYS = 7;
+
 const GRADE_NAMES = {
   1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级",
   5: "五年级", 6: "六年级", 7: "七年级", 8: "八年级",
@@ -219,49 +225,106 @@ function generateDailyPlan(opt) {
   return plan;
 }
 
-function overview(allPoems) {
+function lastReviewOf(rec) {
+  if (!rec) return 0;
+  if (Number(rec.lastReviewAt) > 0) return Number(rec.lastReviewAt);
+  const h = rec.history;
+  if (Array.isArray(h) && h.length) return Number(h[h.length - 1].at) || 0;
+  return 0;
+}
+
+function overview(allPoems, days) {
   const getRecord = (id) => store.getRecord(id);
+  const span = Math.max(1, Number(days) || SPAN);
   const now = Date.now();
+  const today = R.startOfDay(now);
+  const calendar = [];
+  for (let i = 0; i < span; i++) calendar.push({ offset: i, day: today + i * DAY, count: 0 });
+
   let learned = 0;
   let mastered = 0;
-  let due = 0;
+  let masterySum = 0;
+  let backlog = 0;
+  const buckets = [0, 0, 0, 0, 0];
 
   allPoems.forEach((p) => {
     const rec = getRecord(p.id);
     if (!rec || !rec.learned) return;
     learned += 1;
-    if (R.clampLevel(rec.level) >= 7) mastered += 1;
-    if (rec.nextReviewAt <= now) due += 1;
+    if (R.clampLevel(rec.level) >= MASTERED_LEVEL) mastered += 1;
+
+    const m = mastery(rec);
+    masterySum += m;
+    buckets[Math.min(buckets.length - 1, Math.floor(m / 20))] += 1;
+
+    const off = Math.round((R.startOfDay(rec.nextReviewAt) - today) / DAY);
+    if (off < -BACKLOG_DAYS) {
+      backlog += 1;
+    } else if (off < 0) {
+      calendar[0].count += 1;
+    } else if (off < span) {
+      calendar[off].count += 1;
+    }
   });
 
-  return { total: allPoems.length, learned, mastered, dueToday: due };
+  const maxDay = calendar.reduce((a, d) => Math.max(a, d.count), 0);
+  return {
+    total: allPoems.length,
+    learned,
+    mastered,
+    avgMastery: learned ? Math.round(masterySum / learned) : 0,
+    dueToday: calendar[0].count,
+    backlog,
+    calendar,
+    maxDay,
+    masteryBuckets: buckets
+  };
 }
 
-function forecast(allPoems, days) {
+function dueList(allPoems, days) {
   const getRecord = (id) => store.getRecord(id);
+  const span = Math.max(1, Number(days) || SPAN);
   const today = R.startOfDay(Date.now());
   const out = [];
-  for (let i = 0; i < days; i++) out.push({ day: today + i * DAY, offset: i, items: [] });
+  for (let i = 0; i < span; i++) out.push({ offset: i, day: today + i * DAY, items: [] });
 
+  const backlog = [];
   let farther = 0;
+
   allPoems.forEach((p) => {
     const rec = getRecord(p.id);
     if (!rec || !rec.learned) return;
     const off = Math.round((R.startOfDay(rec.nextReviewAt) - today) / DAY);
-    if (off >= days) {
+    const item = {
+      id: p.id,
+      title: p.t,
+      author: p.a,
+      dynasty: p.d,
+      daysLeft: off,
+      stageName: R.stageName(rec, algoKey()),
+      mastery: mastery(rec),
+      lastReviewAt: lastReviewOf(rec)
+    };
+    if (off < -BACKLOG_DAYS) {
+      backlog.push(item);
+      return;
+    }
+    if (off >= span) {
       farther += 1;
       return;
     }
-    const bucket = out[Math.max(0, off)];
-    bucket.items.push(Object.assign({ id: p.id, title: p.t, author: p.a }, {
-      daysLeft: off,
-      stageName: R.stageName(rec, algoKey()),
-      mastery: mastery(rec)
-    }));
+    out[Math.max(0, off)].items.push(item);
   });
 
-  const backlog = out[0].items.filter((x) => x.daysLeft < 0);
-  return { days: out, farther, total: allPoems.length, backlog };
+  const byUrgency = (a, b) => {
+    if (a.daysLeft !== b.daysLeft) return a.daysLeft - b.daysLeft;
+    if (a.mastery !== b.mastery) return a.mastery - b.mastery;
+    return a.id < b.id ? -1 : 1;
+  };
+  out.forEach((d) => d.items.sort(byUrgency));
+  backlog.sort(byUrgency);
+
+  return { days: out, backlog, total: out.reduce((a, d) => a + d.items.length, 0), farther };
 }
 
 function gradeName(g) {
@@ -291,9 +354,10 @@ module.exports = {
   poolForScope,
   generateDailyPlan,
   overview,
-  forecast,
+  dueList,
   gradeName,
   termName,
   startOfDay: R.startOfDay,
-  DAY
+  DAY,
+  SPAN
 };

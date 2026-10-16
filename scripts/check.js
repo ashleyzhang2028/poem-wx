@@ -2724,9 +2724,50 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("进度页不再有「记忆阶段」那张卡（stageRows 数据也撤了）",
     progJs.indexOf("stageRows") < 0);
 
-  ok("未来七天那张卡还在（撤的不是排期）",
-    /wx:for="\{\{days\}\}"/.test(progWxml) && /class="card"/.test(progWxml),
-    "进度页那张排期卡（按 days 排出来的一列）被撤掉了 —— 撤的应该只是「记忆阶段」");
+  ok("排期还在（四块里那块「全部到期篇目」按 days 摊开）",
+    /wx:for="\{\{panels\}\}"/.test(progWxml) && /wx:for="\{\{d\.rows\}\}"/.test(progWxml),
+    "排期那块被撤掉了 —— 撤的应该只是「记忆阶段」");
+
+  ok("进度页那四块读数都在（概要 / 到期日历 / 全部到期篇目 / 掌握度分布）",
+    /class="ring-fill"/.test(progWxml) && /class="cal-cell/.test(progWxml)
+      && /掌握度分布/.test(progWxml) && /class="bar-row/.test(progWxml)
+      && /overview\.avgMastery/.test(progWxml),
+    "四块里缺了一块 —— 网页版 /progress 那几张卡在小程序这边没落全");
+
+  ok("那四块读数不自己算（一律走 scheduler 的 overview / dueList）",
+    /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
+      && progJs.indexOf("store.progress") < 0 && progJs.indexOf("getRecord") < 0
+      && progJs.indexOf("nextReviewAt") < 0,
+    "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
+
+  ok("点篇目走背诵弹层（进度页那几行能背，不只是看）",
+    /<recite-sheet/.test(progWxml) && /data-id="\{\{item\.id\}\}"/.test(progWxml)
+      && /openSheet\(/.test(progJs) === false
+      && /sheet\.open\(/.test(progJs)
+      && /onOpen\b/.test(progJs));
+
+  {
+    const declared = {};
+    const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
+    ((dataBlock || [])[1] || "").replace(/^\s*(\w+)\s*:/gm, (_, k) => { declared[k] = true; });
+
+    const loop = ["item", "index", "d", "p"];
+    const unknown = {};
+    (progWxml.match(/\{\{([^}]*)\}\}/g) || []).forEach((raw) => {
+      raw.slice(2, -2).replace(/'[^']*'|"[^"]*"/g, " ").split(/[^\w.$]+/).forEach((part) => {
+        const seg = part.split(".").filter(Boolean);
+        if (!seg.length) return;
+        if (loop.indexOf(seg[0]) >= 0) return;
+        if (/^[A-Z_]+$/.test(seg[0])) return;
+        if (declared[seg[0]] === undefined) unknown[seg[0]] = true;
+      });
+    });
+
+    const names = Object.keys(unknown).filter((k) => declared[k] !== true && k !== "themeStyle");
+    ok("进度页模板里的每个字段都真的被 setData 过（不留读不到的名字）",
+      names.length === 0,
+      "模板读了这些页面从没设过的字段：" + names.join(", "));
+  }
 }
 
 {
@@ -3308,7 +3349,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const sheetWxml = read("components/recite-sheet/recite-sheet.wxml");
   const appWxss = read("app.wxss");
   const quizWxml = read("packages/game/quiz/quiz.wxml");
-  const dayWxss = read("packages/progress/index/index.wxss");
   const generalWxml = read("packages/settings/general/general.wxml");
   const generalJs = read("packages/settings/general/general.js");
   const adminWxml = read("packages/admin/index/index.wxml");
@@ -3438,18 +3478,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     ok("改角色这个动作没跟着一起删（撤的是标签，不是功能）",
       /onSetRole/.test(usersWxml) && /setRole/.test(bare(usersJs)));
-  }
-
-  {
-    const day = /\.day\s*\{([^}]*)\}/.exec(dayWxss);
-    ok("未来七天每一行都有左右两道 padding（含没排期的）",
-      !!day && /padding:\s*var\(--sp-2\)\s+var\(--sp-3\)/.test(day[1]),
-      "右侧那道没给，选中行那两道内边距就成了错位");
-    const zero = /\.day\.zero\s*\{([^}]*)\}/.exec(dayWxss);
-    ok("零排期那几天的左右 padding 也在（只有纵向压一档）",
-      !!zero && /var\(--sp-3\)/.test(zero[1]), "零排期那几天被落下，起点又不一样了");
-    ok("「今天」那行自己不再重复给 padding（一处定义）",
-      !/\.day\.today\s*\{[^}]*padding-left/.test(dayWxss));
   }
 
   ok("已背那一侧不再是重色（只压一档字重，不换强调色）",
