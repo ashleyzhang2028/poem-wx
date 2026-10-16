@@ -73,12 +73,10 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">加背</view>
       <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
     </view>
 
     <view class="card">
-      <view class="card-title bar">计划</view>
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -109,7 +107,7 @@
       <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleAll">
         <text class="card-title bar all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>
-        <text class="all-toggle">{{allOpen ? '⌃' : '⌄'}}</text>
+        <view class="all-toggle {{allOpen ? 'open' : ''}}"></view>
       </view>
 
       <block wx:if="{{allOpen}}">

@@ -144,6 +144,14 @@
       </view>
       <text class="row-go">›</text>
     </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onManage" wx:if="{{manageOn}}">
+      <view class="row-icon">管</view>
+      <view class="row-main">
+        <text class="row-title">用户权限</text>
+        <text class="row-sub">名录 · 改档位 · 改角色</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
       <view class="row-icon">云</view>
       <view class="row-main">

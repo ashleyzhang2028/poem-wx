@@ -27,6 +27,7 @@ Page({
     tierLabel: "Free",
 
     sfxVisible: false,
+    manageOn: false,
 
     syncSub: "",
     fullTextOn: false,
@@ -68,6 +69,7 @@ Page({
       stats,
       tierLabel: e.label,
       sfxVisible: sfx.readiness().visible,
+      manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
       fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
 
@@ -182,6 +184,10 @@ Page({
 
   onTier() {
     wx.navigateTo({ url: "/packages/mine/tier/tier" });
+  },
+
+  onManage() {
+    wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
   onAvatarChoose(e) {

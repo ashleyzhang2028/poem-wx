@@ -2,10 +2,6 @@
   <lock-card wx:if="{{locked}}" title="大会要登录" note="登录后才能进" mark="会" />
 
   <block wx:else>
-  <view class="page-head">
-    <text class="head-title">题型</text>
-  </view>
-
   <view class="modes">
     <button class="btn block mode {{item.ok ? '' : 'mode-off'}}"
             wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">

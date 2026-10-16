@@ -9,7 +9,7 @@ const tabPage = require("../../utils/tab-page");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
 
-const REASON_CLS = { review: "amber", new: "blue", pinned: "gold" };
+const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
 function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
@@ -136,11 +136,10 @@ Page({
   },
 
   refresh() {
-
-    this.setData(guestCatalog());
-
-    const logged = gate.logged();
-    if (!logged) return;
+    if (!gate.logged()) {
+      this.setData(guestCatalog());
+      return;
+    }
 
     const settings = store.settings();
     const all = corpus.course();

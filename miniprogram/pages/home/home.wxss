@@ -76,19 +76,6 @@
   opacity: .82;
 }
 
-.seq {
-  width: 52rpx;
-  flex: none;
-  font-size: var(--fs-caption);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-3);
-  text-align: center;
-}
-
-.seq.done {
-  color: var(--green);
-}
-
 .row-line {
   display: flex;
   align-items: center;
@@ -98,7 +85,7 @@
   flex: 0 1 auto;
 
   min-width: 0;
-  margin-right: 12rpx;
+  margin-right: var(--sp-2);
 }
 
 .row-lock,
@@ -135,10 +122,20 @@
 
 .all-toggle {
   flex: none;
-  font-size: var(--fs-lead);
-  line-height: 1;
-  color: var(--ink-3);
-  padding-left: var(--sp-2);
+  box-sizing: border-box;
+  width: 14rpx;
+  height: 14rpx;
+  margin: 0 var(--sp-1) 6rpx var(--sp-3);
+  border-right: 3rpx solid var(--ink-3);
+  border-bottom: 3rpx solid var(--ink-3);
+  transform: rotate(45deg);
+  transition: transform var(--t-move) var(--ease);
+}
+
+.all-toggle.open {
+  margin-bottom: 0;
+  margin-top: 6rpx;
+  transform: rotate(-135deg);
 }
 
 .row-end {
@@ -176,6 +173,6 @@
 .guest-sub {
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  margin-top: 8rpx;
+  margin-top: var(--sp-1);
   line-height: 1.6;
 }

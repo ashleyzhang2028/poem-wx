@@ -19,8 +19,8 @@
 }
 
 .url-input {
-  height: 84rpx;
-  margin-top: 12rpx;
+  height: var(--h-field);
+  margin-top: var(--sp-2);
   padding: 0 var(--sp-3);
   border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
@@ -37,7 +37,7 @@
 
 .step {
   display: block;
-  margin-top: 12rpx;
+  margin-top: var(--sp-2);
 }
 
 .test-btn {

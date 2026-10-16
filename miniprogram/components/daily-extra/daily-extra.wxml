@@ -2,7 +2,7 @@
   <view class="search de-search">
     <text class="search-icon">⌕</text>
 
-    <input placeholder="搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onInput"
+    <input placeholder="今日加背 · 搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onInput"
            confirm-type="search" bindconfirm="onSearch" />
     <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
   </view>

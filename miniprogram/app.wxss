@@ -276,6 +276,40 @@ view, text, button, input, textarea {
   white-space: nowrap;
 }
 
+.gc-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
+}
+
+.seq {
+  flex: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48rpx;
+  height: 36rpx;
+  padding: 0 var(--sp-1);
+  margin-right: var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.seq.done {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 .row-poem {
   font-family: var(--font-poem);
 
@@ -331,6 +365,11 @@ view, text, button, input, textarea {
   margin-right: 10rpx;
 }
 
+.tag.theme {
+  color: var(--strong);
+  background: var(--strong-soft);
+}
+
 .tag.amber {
   color: var(--amber);
   background: var(--amber-soft);
@@ -375,7 +414,7 @@ view, text, button, input, textarea {
 .search-icon {
   color: var(--ink-3);
   font-size: var(--fs-body);
-  margin-right: 4rpx;
+  margin-right: 14rpx;
 }
 
 .search input {
@@ -1110,7 +1149,7 @@ view, text, button, input, textarea {
 
 .poem-title {
   display: block;
-  font-family: var(--font-poem);
+  font-family: var(--font-detail-title);
   font-size: var(--fs-hero);
   font-weight: 600;
   color: var(--ink);
@@ -1128,7 +1167,7 @@ view, text, button, input, textarea {
 }
 
 .poem-meta {
-  font-family: var(--font-poem);
+  font-family: var(--font-detail-title);
   font-size: var(--fs-caption);
   font-weight: 600;
   color: var(--ink-2);
@@ -1264,7 +1303,7 @@ view, text, button, input, textarea {
 
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
-  font-family: var(--font-poem-text);
+  font-family: var(--font-detail-text);
 
   line-height: 1.95;
 }
