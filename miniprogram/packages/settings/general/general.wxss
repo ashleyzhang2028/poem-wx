@@ -17,8 +17,8 @@
   line-height: var(--lh-body);
 }
 
-.test-btn {
-  margin-top: var(--sp-3);
+.sfx-test {
+  margin-left: var(--sp-3);
 }
 
 .swatch-grid {

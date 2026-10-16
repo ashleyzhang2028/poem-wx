@@ -22,7 +22,7 @@
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="22" block-color="{{themeHex}}" activeColor="{{themeHex}}" backgroundColor="#ececef"
+              block-size="12" block-color="{{themeHex}}" activeColor="{{themeHex}}" backgroundColor="#ececef"
               bindchanging="onFontSlide" bindchange="onFontSlide" />
       <text class="font-a big">A</text>
     </view>
@@ -55,9 +55,11 @@
         <text class="row-title">答对答错出声</text>
         <text class="row-sub">题库 · 考试 · 飞花令共用</text>
       </view>
-      <switch checked="{{sfxOn}}" bindchange="onSfx" color="{{themeHex}}" />
+      <button class="btn mini ghost sfx-test" bindtap="onSfxTest">试听</button>
+      <view class="sw">
+        <switch checked="{{sfxOn}}" bindchange="onSfx" color="{{themeHex}}" />
+      </view>
     </view>
-    <button class="btn ghost block test-btn" bindtap="onSfxTest">试听一声</button>
   </view>
 
   <view class="card">

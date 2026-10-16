@@ -209,8 +209,10 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
 
     const active = a.activeColor ? interp(a.activeColor, v) : "";
     const blockC = a["block-color"] ? interp(a["block-color"], v) : "";
+    const blockSize = Number(interp(a["block-size"] || "28", v)) || 28;
     const fillStyle = active ? `background:${active};` : "";
-    const knobStyle = blockC ? `background:${blockC};` : "";
+    const knobStyle = (blockC ? `background:${blockC};` : "")
+      + `width:${blockSize}px;height:${blockSize}px;`;
     out.push(`<div data-tag="slider" class="n-slider ${cls}"><div class="n-slider-track"><div class="n-slider-fill" style="width:${pc}%;${fillStyle}"></div><div class="n-slider-knob" style="left:${pc}%;${knobStyle}"></div></div></div>`);
     return;
   }
