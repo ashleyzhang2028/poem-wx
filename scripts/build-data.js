@@ -194,8 +194,8 @@ function writeBuckets(texts) {
       map[id] = name;
     });
 
-    const file = path.join(dir, name + ".json");
-    fs.writeFileSync(file, JSON.stringify(payload));
+    const file = path.join(dir, name + ".js");
+    writeModule(file, payload);
     manifest.push({ n: name, c: ids.length, kb: Math.round(fs.statSync(file).size / 1024) });
   });
 
@@ -297,7 +297,7 @@ function writeTextIndex(courseTexts, texts, W) {
   });
 
   const size = Buffer.byteLength(JSON.stringify({ postings: postings }), "utf8");
-  writeJson(path.join(OUT_DIR, "texts", "idx.json"), { postings: postings });
+  writeModule(path.join(OUT_DIR, "texts", "idx.js"), { postings: postings });
   console.log("全文倒排索引 " + Object.keys(postings).length + " 字，" + Math.round(size / 1024) + "KB（走云端）");
 }
 

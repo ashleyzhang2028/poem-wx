@@ -24,22 +24,37 @@ function dirReady() {
 
 function fileOf(name) {
   if (!NAME_RE.test(name) && SPECIAL.indexOf(name) < 0) return null;
-  return path.join(ROOT, name + ".json");
+  return path.join(ROOT, name + ".js");
 }
 
 function gzipped(file) {
-  const gz = file + ".gz";
   try {
-    return fs.readFileSync(gz);
+    return fs.readFileSync(file + ".gz");
   } catch (e) { }
-  const plain = fs.readFileSync(file);
-  const out = zlib.gzipSync(plain, { level: 9 });
-  try {
-    fs.writeFileSync(gz, out);
-  } catch (e) {
+  return fs.readFileSync(file);
+}
 
+function decode(raw) {
+  const head = "module.exports = ";
+  const src = String(raw);
+  if (src.indexOf(head) !== 0) throw new Error("E_BAD_SHARD");
+  if (src.indexOf(head) === src.lastIndexOf(head)) {
+    try {
+      return JSON.parse(src.slice(head.length).replace(/;\s*$/, ""));
+    } catch (e) {
+      throw new Error("E_BAD_SHARD");
+    }
   }
-  return out;
+  const sandbox = { module: { exports: {} } };
+  const vm = require("vm");
+  vm.runInNewContext(src, sandbox, { timeout: 5000 });
+  return sandbox.module.exports;
+}
+
+function bodyOf(file) {
+  const raw = gzipped(file);
+  const plain = raw[0] === 0x1f && raw[1] === 0x8b ? zlib.gunzipSync(raw) : raw;
+  return Buffer.from(JSON.stringify(decode(plain)), "utf8");
 }
 
 function handle(req, res, urlPath) {
@@ -64,10 +79,9 @@ function handle(req, res, urlPath) {
 
   const file = fileOf(name);
   try {
-    const body = gzipped(file);
+    const body = bodyOf(file);
     res.writeHead(200, {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Encoding": "gzip",
       "Content-Length": body.length,
 
       "Cache-Control": "public, max-age=86400",
@@ -75,7 +89,12 @@ function handle(req, res, urlPath) {
     }).end(body);
   } catch (e) {
     res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" })
-      .end(JSON.stringify({ error: "E_NO_SHARD", message: "没有这一片：" + name }));
+      .end(JSON.stringify({
+        error: e && e.message === "E_BAD_SHARD" ? "E_BAD_SHARD" : "E_NO_SHARD",
+        message: e && e.message === "E_BAD_SHARD"
+          ? "这一片的形状不对（分片是 module.exports = {...} 的 .js）"
+          : "没有这一片：" + name
+      }));
   }
   return true;
 }

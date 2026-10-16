@@ -109,10 +109,15 @@ COPY --chown=node:node shard-api.js ./
 #    不带的话用户看到的是「这个版本里没有课外正文」，而那不是缺陷，
 #    是**发错了镜像**。两档的差别见 deploy/README.md 那张表。
 #
-# ⚠️ 上下文里那层摊的是 `t001.json.gz` 这**一个**名字（不是 `t001.json.gz`
-#    配一份 `t001.json`）：下面 cp 进 /app/shards 之后就叫 `t001.json.gz`，
-#    shard-api.js 发预压缩那份时找的正是它。只摊 gz 是刻意的 —— 25MB 原文
-#    一个字节都不用进上下文，容器也不用解压（发出去的就是这些字节）。
+# ⚠️ 上下文里那层摊的是 `t001.js.gz` 这**一个**名字（不是 `t001.js.gz`
+#    配一份 `t001.js`）：下面 cp 进 /app/shards 之后就叫 `t001.js.gz`，
+#    shard-api.js 发那份 gz 时找的正是它。只摊 gz 是刻意的 —— 25MB 原文
+#    一个字节都不用进上下文。
+#    分片本体是 `module.exports = {...}` 的 **.js**：开发者工具 2.02.2607271 RC
+#    起不把 .json 当模块打包，任何 require(".json") 都抛
+#    `module '….json.js' is not defined`（Issue #224），而开发者工具里读分片
+#    正是靠 require。shard-api 读回 gz、解开、回 JSON 报文 —— 客户端照旧
+#    只认 JSON，这一层是服务端的事。
 #
 # ⚠️ 但**上下文里那一层 `shard-src/` 每次都要在**（打了旗有内容，没打旗是空目录）
 #    —— 因为下面那句 COPY 是**无条件**的，它前面没有 if，只有后面那句 RUN 才看旗。
@@ -133,8 +138,8 @@ COPY --chown=node:node shard-src /tmp/shard-src
 ARG COPY_SHREDS=1
 RUN if [ "$COPY_SHREDS" != "0" ]; then \
       mkdir -p /app/shards \
-      && cp /tmp/shard-src/*.json /app/shards/ 2>/dev/null || true \
-      && cp /tmp/shard-src/*.json.gz /app/shards/ \
+      && cp /tmp/shard-src/*.js /app/shards/ 2>/dev/null || true \
+      && cp /tmp/shard-src/*.js.gz /app/shards/ \
       && rm -rf /tmp/shard-src \
       && du -sh /app/shards; \
     else \

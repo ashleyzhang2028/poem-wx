@@ -29,9 +29,9 @@ mkdir -p "$CTX/shard-src"
 if [ "${COPY_SHREDS:-1}" != "0" ]; then
   if [ -d "$REPO/miniprogram/data/texts" ]; then
 
-    for f in "$REPO"/miniprogram/data/texts/*.json; do
+    for f in "$REPO"/miniprogram/data/texts/*.js; do
       [ -e "$f" ] || continue
-      gzip -9 -c "$f" > "$CTX/shard-src/$(basename "$f" .json).json.gz"
+      gzip -9 -c "$f" > "$CTX/shard-src/$(basename "$f" .js).js.gz"
     done
     echo "  分片已摊进上下文：$(ls "$CTX/shard-src" | wc -l) 个文件（COPY_SHREDS=${COPY_SHREDS:-1}）"
   else

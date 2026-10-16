@@ -187,7 +187,7 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 于是按三层落：
 
 1. **包内（免网络）**
-   - 各集子索引 `data/books/<book>.json`（篇名/作者/朝代/出处/分组，不含正文）
+   - 各集子索引 `data/books/<book>.js`（篇名/作者/朝代/出处/分组，不含正文）
    - **课内 251 首的正文与译文 `data/course.js`**
    - 集子表 `data/books/books.js`、分片清单 `data/shards.js`
      ⚠️ 清单**不在** `data/texts/` 里 —— 那个目录整块被 `packOptions.ignore` 排掉

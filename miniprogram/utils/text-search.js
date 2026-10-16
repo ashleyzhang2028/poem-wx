@@ -1,6 +1,6 @@
 const corpus = require("./corpus");
 
-const INDEX = "data/texts/idx.json";
+const INDEX = "data/texts/idx.js";
 
 const SCAN_CAP = 12;
 
@@ -40,7 +40,7 @@ function armShardWriter() {
     try {
       require("fs").writeFileSync(
         require("path").join(__dirname, "..", INDEX),
-        JSON.stringify({ postings: mergePostings(name, payload) })
+        "module.exports = " + JSON.stringify({ postings: mergePostings(name, payload) }) + ";\n"
       );
     } catch (e) {
       missing = true;

@@ -41,18 +41,18 @@ main:
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
               node scripts/build-data.js >/dev/null
-              for f in miniprogram/data/texts/*.json; do
-                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .json).json.gz"
+              for f in miniprogram/data/texts/*.js; do
+                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .js).js.gz"
               done
               du -sh /tmp/ctx/shard-src
-              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].json.gz 2>/dev/null | wc -l)
+              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
                 echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
                 exit 1
               fi
-              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.json.gz | wc -l) 个文件"
-              ls /tmp/ctx/shard-src/idx.json.gz >/dev/null 2>&1 || \
-                echo "· 没有 idx.json.gz（搜索倒排索引）—— 只有搜索会用到它"
+              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.js.gz | wc -l) 个文件"
+              ls /tmp/ctx/shard-src/idx.js.gz >/dev/null 2>&1 || \
+                echo "· 没有 idx.js.gz（搜索倒排索引）—— 只有搜索会用到它"
             else
               echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
             fi
@@ -187,18 +187,18 @@ main:
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
               node scripts/build-data.js >/dev/null
-              for f in miniprogram/data/texts/*.json; do
-                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .json).json.gz"
+              for f in miniprogram/data/texts/*.js; do
+                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .js).js.gz"
               done
               du -sh /tmp/ctx/shard-src
-              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].json.gz 2>/dev/null | wc -l)
+              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
                 echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
                 exit 1
               fi
-              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.json.gz | wc -l) 个文件"
-              ls /tmp/ctx/shard-src/idx.json.gz >/dev/null 2>&1 || \
-                echo "· 没有 idx.json.gz（搜索倒排索引）—— 只有搜索会用到它"
+              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.js.gz | wc -l) 个文件"
+              ls /tmp/ctx/shard-src/idx.js.gz >/dev/null 2>&1 || \
+                echo "· 没有 idx.js.gz（搜索倒排索引）—— 只有搜索会用到它"
             else
               echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
             fi

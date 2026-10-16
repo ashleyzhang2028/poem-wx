@@ -68,7 +68,7 @@ const project = new ci.Project({
   type: "miniProgram",
   projectPath: MP,
   privateKeyPath: keyFile,
-  ignores: ["node_modules/**/*", "data/texts/**/*"]
+  ignores: ["node_modules/**/*", "data/texts/*"]
 });
 
 function explain(msg) {
