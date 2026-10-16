@@ -27,7 +27,7 @@ Page({
     tierLabel: "Free",
 
     sfxVisible: false,
-    syncReady: false,
+    isAdmin: false,
     syncText: "还没同步过",
     syncPending: 0,
 
@@ -82,6 +82,7 @@ Page({
       syncAllowed: E.can("sync"),
       syncNote: this.syncNote(sy),
       syncSub: this.syncNote(sy),
+      isAdmin: auth.isAdmin(),
 
       grantLead: this.grantLead(profile)
     });
@@ -193,6 +194,10 @@ Page({
   },
 
   onTier() {
+    wx.navigateTo({ url: "/packages/mine/tier/tier" });
+  },
+
+  onAdmin() {
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 

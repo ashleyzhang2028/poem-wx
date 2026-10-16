@@ -135,7 +135,15 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">数据与账号</view>
+    <view class="card-title bar">账号与权限</view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
+      <view class="row-icon">档</view>
+      <view class="row-main">
+        <text class="row-title">档位与权限</text>
+        <text class="row-sub">{{tierLabel}} · 能力对照</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onExport" wx:if="{{logged}}">
       <view class="row-icon">出</view>
       <view class="row-main"><text class="row-title">导出备份</text><text class="row-sub">复制成 JSON</text></view>
@@ -152,6 +160,14 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
       <view class="row-icon">问</view>
       <view class="row-main"><text class="row-title">关于</text></view>
+      <text class="row-go">›</text>
+    </view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAdmin" wx:if="{{isAdmin}}">
+      <view class="row-icon">名</view>
+      <view class="row-main">
+        <text class="row-title">用户名录</text>
+        <text class="row-sub">改档 · 改角色</text>
+      </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
