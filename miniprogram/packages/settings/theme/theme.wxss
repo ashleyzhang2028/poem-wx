@@ -46,36 +46,7 @@
 }
 
 .swatch.on .swatch-name {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.demo-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin: var(--sp-2) 0;
-}
-
-.demo-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--h-btn);
-  border-radius: var(--radius-ctl);
-  background: var(--strong);
-  color: var(--on-ink);
-  font-size: var(--fs-title);
-  font-weight: 600;
-  letter-spacing: var(--ls-title);
-}
-
-.demo-btn.ghost {
-  background: var(--surface);
   color: var(--ink-2);
-  border: 1rpx solid var(--line-strong);
-  font-weight: 500;
 }
 
 .demo-pill {

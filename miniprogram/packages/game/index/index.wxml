@@ -7,11 +7,13 @@
   </view>
 
   <view class="modes">
-    <button class="mode mode-{{item.color}} {{item.ok ? '' : 'mode-off'}}"
+    <button class="btn block mode {{item.ok ? '' : 'mode-off'}}"
             wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
-      <text class="mode-name">{{item.name}}</text>
-      <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
-      <text class="mode-go">{{item.ok ? '开始 ›' : '未开放'}}</text>
+      <view class="mode-main">
+        <text class="mode-name">{{item.name}}</text>
+        <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
+      </view>
+      <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>
     </button>
   </view>
 

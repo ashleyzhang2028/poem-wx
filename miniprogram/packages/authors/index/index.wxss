@@ -5,30 +5,16 @@
   font-variant-numeric: tabular-nums;
 }
 
-.index-card {
-  padding: var(--sp-3) var(--sp-4);
-}
-
-.index-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.index-head .card-title {
-  margin-bottom: 0;
-}
-
 .index-grid {
   display: flex;
   flex-wrap: wrap;
-  margin-top: var(--sp-2);
+  margin-top: var(--card-title-gap);
   border-top: 1rpx solid var(--line-2);
 }
 
 .index-cell {
   width: 33.3333%;
-  min-height: 76rpx;
+  min-height: var(--h-opt);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -53,33 +39,8 @@
   flex: none;
 }
 
-.roster-head {
-  padding: var(--sp-3) var(--sp-1) var(--sp-1);
-}
-
 .roster-head .head-title {
   font-weight: 400;
-}
-
-.roster-head .head-sub {
-  margin-top: var(--sp-1);
-}
-
-.author-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--sp-3) var(--sp-1) var(--sp-1);
-}
-
-.author-head .head-side {
-  flex: none;
-  display: flex;
-  align-items: center;
-}
-
-.author-head .head-sub {
-  margin-top: 0;
 }
 
 .head-back {
@@ -97,10 +58,6 @@
   font-size: var(--fs-lead);
   line-height: 1;
   color: var(--ink-2);
-}
-
-.era-card {
-  padding: var(--sp-3) var(--sp-4);
 }
 
 .group-head {
@@ -129,7 +86,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-2) 12rpx;
-  margin-top: var(--sp-2);
+  margin-top: var(--card-title-gap);
 }
 
 .a-cell {

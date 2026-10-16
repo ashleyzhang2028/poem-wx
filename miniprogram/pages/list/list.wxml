@@ -9,7 +9,7 @@
   </view>
 
   <view class="card index-card" wx:if="{{groups.length > 1}}">
-    <view class="index-head">
+    <view class="card-open">
       <text class="card-title bar">索引</text>
       <button class="btn mini index-toggle" bindtap="onToggleIndex">{{collapsed ? '展开' : '收起'}}</button>
     </view>

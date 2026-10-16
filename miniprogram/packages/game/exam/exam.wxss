@@ -122,8 +122,8 @@
 
 .result {
   text-align: center;
-  padding: var(--sp-6) var(--sp-4) var(--sp-5);
-  background: var(--surface);
+  padding-top: var(--sp-6);
+  padding-bottom: var(--sp-5);
 }
 
 .score {

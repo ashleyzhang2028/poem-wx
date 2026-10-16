@@ -1,7 +1,7 @@
 .brand {
   text-align: center;
-  padding: var(--sp-4) var(--sp-4);
-  background: var(--surface);
+  padding-top: var(--sp-4);
+  padding-bottom: var(--sp-4);
 }
 
 .brand-name {
@@ -25,7 +25,7 @@
 .brand-ver {
   display: block;
   font-size: var(--fs-caption);
-  color: var(--line);
+  color: var(--ink-3);
   margin-top: var(--sp-3);
 }
 

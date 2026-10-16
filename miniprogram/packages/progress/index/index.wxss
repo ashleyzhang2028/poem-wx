@@ -1,5 +1,6 @@
 .overview {
-  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  padding-top: var(--sp-4);
+  padding-bottom: var(--sp-3);
 }
 
 .ov-head {

@@ -17,12 +17,12 @@
       <text class="guest-title">游客模式</text>
     </view>
 
-    <view class="card toc">
-      <view class="toc-head">
+    <view class="card">
+      <view class="card-open">
         <text class="card-title bar">今日背诵</text>
       </view>
 
-      <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
+      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
@@ -81,7 +81,7 @@
       <view class="card-title bar">计划</view>
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
-        <view class="plan-row" hover-class="row-hover" hover-stay-time="60"
+        <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
           <text class="seq {{item.read ? 'done' : ''}}">{{item.seq}}</text>
           <view class="row-main">
@@ -106,14 +106,14 @@
     </view>
 
     <view class="card" wx:if="{{allCount}}">
-      <view class="all-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleAll">
+      <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleAll">
         <text class="card-title bar all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>
         <text class="all-toggle">{{allOpen ? '⌃' : '⌄'}}</text>
       </view>
 
       <block wx:if="{{allOpen}}">
-        <view class="toc-row" hover-class="row-hover" hover-stay-time="60"
+        <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
           <text class="seq">{{item.seq}}</text>
           <view class="row-main">
