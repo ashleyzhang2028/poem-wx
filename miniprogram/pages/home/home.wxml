@@ -81,7 +81,7 @@
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
-          <text class="seq {{item.read ? 'on' : ''}}">{{item.seq}}</text>
+          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <view class="row-line">
               <text class="row-title row-poem">{{item.title}}</text>
@@ -90,7 +90,8 @@
             <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
           <view class="row-end">
-            <text class="row-state {{item.read ? 'on' : ''}}">{{item.read ? '已背' : '未背'}}</text>
+            <text class="row-state {{item.recited ? 'on' : ''}}">{{item.recited ? '已背' : '未背'}}</text>
+            <text class="row-state" wx:if="{{!item.read}}">未读</text>
           </view>
         </view>
       </block>
@@ -105,7 +106,7 @@
 
     <view class="card" wx:if="{{allCount}}">
       <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleAll">
-        <text class="card-title bar all-title">{{allLabel}}</text>
+        <text class="card-title bar plain all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>
         <view class="all-toggle {{allOpen ? 'open' : ''}}"></view>
       </view>
@@ -113,11 +114,12 @@
       <block wx:if="{{allOpen}}">
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
-          <text class="seq">{{item.seq}}</text>
+          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <text class="row-title row-poem">{{item.title}}</text>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
+          <text class="row-state" wx:if="{{!item.read}}">未读</text>
           <text class="row-go">›</text>
         </view>
       </block>

@@ -33,30 +33,28 @@
   width: 60rpx;
   height: 60rpx;
   margin-right: var(--sp-3);
-  border: 1rpx solid var(--line-strong);
   border-radius: 50%;
-  background: var(--surface);
-  color: var(--strong-text);
+  background: var(--sink);
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
+  transition: background-color var(--t-press), color var(--t-press);
+}
+
+.de-btn .glyph {
+  color: var(--ink-2);
 }
 
 .de-btn.on {
   background: var(--strong);
-  border-color: var(--strong);
+}
+
+.de-btn.on .glyph {
   color: var(--on-ink);
 }
 
 .de-btn-hover {
   transform: scale(.94);
-}
-
-.de-glyph {
-  font-size: var(--fs-hint);
-  line-height: 1;
 }
 
 .de-empty {

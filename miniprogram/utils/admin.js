@@ -2,7 +2,6 @@ const store = require("./store");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 const remote = require("./remote");
-const auth = require("./auth");
 
 let rosterCache = null;
 
@@ -58,10 +57,6 @@ function canWrite() {
   return remote.adminReady();
 }
 
-function canSetRole() {
-  return remote.adminReady() && auth.role() === "owner";
-}
-
 function list() {
   if (!loggedIn()) {
     return Promise.resolve({ users: [], sim: true, note: "登录后才能看名录" });
@@ -102,6 +97,7 @@ function _normalizeRemote(rows) {
       tierLabel: tiers.nameOf(t),
       until: u.until || null,
       status: u.status || "active",
+      createdAt: Number(u.createdAt) || 0,
       source: "remote",
       local: false,
       remote: true,
@@ -120,8 +116,9 @@ function _merge(a, b, c) {
   });
   const users = Object.keys(byId).map((k) => byId[k]);
   users.sort((x, y) => {
-    if (x.local !== y.local) return x.local ? -1 : 1;
     if (x.remote !== y.remote) return x.remote ? -1 : 1;
+    if (x.createdAt !== y.createdAt) return (y.createdAt || 0) - (x.createdAt || 0);
+    if (x.local !== y.local) return x.local ? -1 : 1;
     return entitlement.rankOf(y.tier) - entitlement.rankOf(x.tier);
   });
   return users;
@@ -158,26 +155,11 @@ function revokeTier(userId) {
   }));
 }
 
-function setRole(userId, role) {
-  if (role !== "user" && role !== "admin") {
-    return Promise.resolve({ ok: false, msg: "角色只认 user / admin" });
-  }
-  if (!canSetRole()) {
-    return Promise.resolve({ ok: false, msg: "没有改角色的权限" });
-  }
-  return remote.setUserRole(userId, role).then((res) => ({
-    ok: true,
-    msg: (res && res.note) || "已改角色"
-  }));
-}
-
 module.exports = {
   loggedIn,
   list,
   setTier,
   revokeTier,
-  setRole,
   canWrite,
-  canSetRole,
   roster
 };

@@ -241,8 +241,10 @@ function expandReciteSheet(wxml, data) {
     fontSize: 0,
     fontMin: -2,
     fontMax: 4,
-    aligns: [{ key: "left", label: "左对齐" }, { key: "center", label: "居中" }],
-    pinyinModes: [{ key: "off", label: "不注音" }, { key: "rare", label: "生字" }, { key: "all", label: "全文" }],
+    aligns: [{ key: "left", label: "左对齐", icon: "left" }, { key: "center", label: "居中", icon: "center" }],
+    pinyinModes: [{ key: "off", label: "不注音", icon: "off" }, { key: "rare", label: "生字", icon: "rare" }, { key: "all", label: "全文", icon: "all" }],
+    fontDown: true,
+    fontUp: true,
     pinyinMode: "off",
     pinyinOn: false,
     results: [

@@ -31,7 +31,6 @@ function todayLabel() {
 }
 
 function scopeList(all, view, scope) {
-  if (!scope.random) return all.filter((p) => p.gr === view.grade && p.tm === view.term);
   return S.poolForScope({
     grade: view.grade,
     term: view.term,
@@ -41,11 +40,16 @@ function scopeList(all, view, scope) {
 }
 
 function scopeLabel(scope) {
-  return scope.random ? scope.scopeName + "全部诗词" : "本年级本学期全部诗词";
+  return scope.scopeName + "全部诗词";
 }
 
 function rowsOfScope(list, scope) {
   const records = store.progress();
+  const recs = store.reads();
+  const read = {};
+  Object.keys(recs).forEach((b) => {
+    Object.keys(recs[b] || {}).forEach((id) => { read[id] = true; });
+  });
   return list.map((p, i) => {
     const rec = records[p.id] || null;
     return {
@@ -55,7 +59,9 @@ function rowsOfScope(list, scope) {
       author: p.a,
       dynasty: p.d,
       place: scope.random ? S.gradeName(p.gr) + S.termName(p.tm) : "",
-      stage: S.isLearned(rec) ? S.stageName(rec) : "未学过"
+      stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
+      read: !!read[p.id],
+      recited: S.isLearned(rec)
     };
   });
 }
@@ -174,7 +180,8 @@ Page({
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
       const read = readOf(it.poem.id);
-      if (read) done += 1;
+      const recited = S.isLearned(rec);
+      if (recited) done += 1;
       return {
         id: it.poem.id,
         seq: i + 1,
@@ -187,7 +194,8 @@ Page({
 
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
-        read
+        read,
+        recited
       };
     });
 

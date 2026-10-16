@@ -10,11 +10,9 @@ Page({
     logged: false,
 
     users: [],
-    rosterNote: "",
     remoteReady: false,
     adminReady: false,
     canWrite: false,
-    canSetRole: false,
     busy: false,
     msg: ""
   },
@@ -27,28 +25,24 @@ Page({
   refresh() {
     const logged = admin.loggedIn();
     const canWrite = admin.canWrite();
-    const canSetRole = admin.canSetRole();
     this.setData({
       logged: logged,
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
-      canWrite: canWrite,
-      canSetRole: canSetRole
+      canWrite: canWrite
     });
 
     if (!logged) return;
     admin.list().then((res) => {
-      this.setData({
-        users: this.decorate(res.users, canWrite, canSetRole),
-        rosterNote: res.note || ""
-      });
+      this.setData({ users: this.decorate(res.users, canWrite) });
     });
   },
 
-  decorate(users, canWrite, canSetRole) {
-    return (users || []).map((u) =>
+  decorate(users, canWrite) {
+    return (users || []).map((u, i) =>
       Object.assign({}, u, {
-        editable: canWrite || canSetRole ? !!u.remote || !!u.local : false
+        seq: i + 1,
+        editable: canWrite ? !!u.remote || !!u.local : false
       })
     );
   },
@@ -59,7 +53,6 @@ Page({
 
   onSetTier(e) {
     const userId = e.currentTarget.dataset.u;
-    const current = e.currentTarget.dataset.t;
 
     if (!this.data.canWrite) {
       wx.showModal({
@@ -73,48 +66,17 @@ Page({
       return;
     }
 
-    const items = tiers.TIERS.map((t) => ({
-      key: t.key,
-      text: t.name
-    }));
+    const items = tiers.TIERS.map((t) => ({ key: t.key, text: t.name }));
     items.unshift({ key: "", text: "收回（重置为 Free）" });
 
     wx.showActionSheet({
       itemList: items.map((i) => i.text),
       success: (res) => {
         const pick = items[res.tapIndex];
-        if (!pick || pick.key === current) return;
-
+        if (!pick) return;
         this.setData({ busy: true, msg: "" });
         const job = pick.key ? admin.setTier(userId, pick.key) : admin.revokeTier(userId);
         job.then((r) => {
-          this.setData({ busy: false, msg: r.msg });
-          this.refresh();
-        });
-      }
-    });
-  },
-
-  onSetRole(e) {
-    const userId = e.currentTarget.dataset.u;
-    const current = e.currentTarget.dataset.r;
-
-    if (!this.data.canSetRole) {
-      wx.showToast({ title: "没有改角色的权限", icon: "none" });
-      return;
-    }
-
-    const items = [
-      { text: "user", key: "user" },
-      { text: "admin", key: "admin" }
-    ];
-    wx.showActionSheet({
-      itemList: items.map((i) => i.text),
-      success: (res) => {
-        const pick = items[res.tapIndex];
-        if (!pick || pick.key === current) return;
-        this.setData({ busy: true, msg: "" });
-        admin.setRole(userId, pick.key).then((r) => {
           this.setData({ busy: false, msg: r.msg });
           this.refresh();
         });

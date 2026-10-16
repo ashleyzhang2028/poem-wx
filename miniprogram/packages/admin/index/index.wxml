@@ -1,18 +1,17 @@
 <view class="page" style="{{themeStyle}}">
 
-  <tier-view />
-
-  <view class="card roster" wx:if="{{!logged}}">
-    <text class="hint note">名录要登录 · 见上面那张表</text>
-  </view>
-
-  <view class="row" hover-class="row-hover" hover-stay-time="60" wx:if="{{logged}}" bindtap="onUsers">
-    <view class="row-icon">人</view>
-    <view class="row-main">
-      <text class="row-title">用户列表</text>
-      <text class="row-sub">{{usersSub}}</text>
+  <view class="card">
+    <view class="row row-flush" wx:if="{{logged}}"
+          hover-class="row-hover" hover-stay-time="60" bindtap="onUsers">
+      <view class="row-icon">人</view>
+      <view class="row-main">
+        <text class="row-title">用户列表</text>
+        <text class="row-sub">{{usersSub}}</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
-    <text class="row-go">›</text>
+
+    <text class="hint note" wx:else>管理要登录</text>
   </view>
 
   <view class="safe-bottom"></view>

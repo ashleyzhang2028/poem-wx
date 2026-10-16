@@ -5,6 +5,7 @@ const DAY = R.DAY;
 
 const SCOPES = {
   term: { label: "本册", scopeName: "本学期", random: false, stages: ["current"] },
+  grade: { label: "本年级", scopeName: "本年级", random: false, stages: ["grade"] },
   upto: { label: "本册及之前", scopeName: "本学期及之前", random: false, stages: ["upto"] },
   primary: { label: "小学随机", scopeName: "小学阶段", random: true, stages: ["primary"] },
   middle: { label: "初中随机", scopeName: "初中阶段", random: true, stages: ["middle"] },
@@ -99,6 +100,9 @@ function poolForScope(opt) {
 
   if (key === "term") {
     return all.filter((p) => p.gr === grade && p.tm === term);
+  }
+  if (key === "grade") {
+    return all.filter((p) => p.gr === grade);
   }
   if (key === "upto") {
     return all.filter((p) => p.gr < grade || (p.gr === grade && p.tm <= term));

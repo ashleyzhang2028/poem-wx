@@ -1949,7 +1949,7 @@ function sanitizePayload(p, poemId) {
   if (typeof p.stability === "number") out.stability = Math.max(0, Math.min(100000, Math.round(p.stability * 100) / 100));
   if (typeof p.difficulty === "number") out.difficulty = Math.max(0, Math.min(100, Math.round(p.difficulty * 100) / 100));
 
-  if (typeof p.dayBase === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.dayBase)) out.dayBase = p.dayBase;
+  if (typeof p.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.reviewedOn)) out.reviewedOn = p.reviewedOn;
 
   if (Array.isArray(p.history)) {
     out.history = p.history.slice(-200).map(function (h) {
@@ -2137,8 +2137,7 @@ function adminAccounts(deps) {
       return ok({
         accounts: list,
         total: list.length,
-        store: store.kind,
-                note: "这里列的是**注册过的账号**（含邮箱明文），每行带 uid 与到期，界面据此改角色与层级。"
+        store: store.kind
       });
     });
   });

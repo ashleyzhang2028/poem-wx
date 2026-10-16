@@ -16,8 +16,8 @@
       <view class="daily-tools">
         <button class="btn mini" bindtap="onDailyAll">全选</button>
         <button class="btn mini" bindtap="onDailyNone">取消全选</button>
-        <button class="btn mini danger" bindtap="onDailyRemove">移出选中的</button>
-        <button class="btn mini danger" bindtap="onDailyClear">全部清空</button>
+        <button class="btn mini danger" bindtap="onDailyRemove">移出选中</button>
+        <button class="btn mini danger" bindtap="onDailyClear">清空</button>
       </view>
 
       <checkbox-group bindchange="onDailyPick">
@@ -43,8 +43,6 @@
         <text class="chip-t">{{item.name}}</text>
       </label>
     </radio-group>
-
-    <text class="hint stage-note">{{gradeNote}}</text>
 
     <radio-group class="chip-group cols-3" data-k="grade" bindchange="onGrade">
       <label class="chip {{grade === item.value ? 'on' : ''}}" wx:for="{{grades}}" wx:key="value">
