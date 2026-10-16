@@ -3638,8 +3638,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页那枚环在零进度时不渲染（不画一枚空槽）",
     /wx:if="\{\{percent\}\}"/.test(homeWxml) && /class="ring-cap"/.test(homeWxml),
     "零进度时还画着空环");
-  ok("环下把「走到哪了」写成一行读数（不然读不出这枚环量的是什么）",
-    /\{\{doneCount\}\}\s*\/\s*\{\{total\}\}/.test(homeWxml));
+  ok("环内那行读数按百分比写（与进度页那枚的写法一致）",
+    /class="ring-text"/.test(homeWxml)
+      && /\{\{percent\}\}%/.test(homeWxml.slice(homeWxml.indexOf("stat-ring"))));
 
   ok("环的尺寸与线宽只有一份定义（首页与背诵进度页取自它）",
     /--ring-size\s*:/.test(read("styles/tokens.wxss")) && /--ring-w\s*:/.test(read("styles/tokens.wxss")),
