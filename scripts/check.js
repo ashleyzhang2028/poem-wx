@@ -999,6 +999,18 @@ const GATED = {
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
+{
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  ok("档位胶囊点得动，进的就是档位与权限那一页",
+    !!chip && /bindtap="onTier"/.test(chip[0])
+      && mineJs.indexOf('url: "/packages/mine/tier/tier"') >= 0,
+    "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
+      + "点下去必须落在对比表上（Issue #234）");
+}
+
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
 ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
 
