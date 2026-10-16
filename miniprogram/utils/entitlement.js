@@ -15,7 +15,7 @@ const CAPS = [
   { key: "sync", name: "同步进度", desc: "进度与设置跟着微信账号走", tier: "free" },
   { key: "sm2", name: "SM-2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
-  { key: "collections", name: "自选背诵", desc: "教材之外自己加篇目", tier: "pro" },
+  { key: "collections", name: "自选背诵", desc: "教材之外自己加篇目 · " + tiers.collectionQuota(), tier: "pro" },
   { key: "fsrs", name: "FSRS", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }

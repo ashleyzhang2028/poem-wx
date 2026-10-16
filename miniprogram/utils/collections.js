@@ -1,11 +1,12 @@
 const store = require("./store");
+const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 
 const NAME_MAX = 12;
 
-const ITEMS_MAX = 100;
+const ITEMS_MAX = tiers.COLLECTION_ITEMS_MAX;
 
-const LIMITS = { free: 0, pro: 1, max: 200 };
+const LIMITS = tiers.COLLECTION_LIMITS;
 
 const DAILY_COUNTS = [3, 5, 10, 20];
 

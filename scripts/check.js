@@ -6241,6 +6241,12 @@ function gapped(items, max) {
   ok("自选背诵的配额：Free 无、Pro 1、Max 200",
     colsMod.LIMITS.free === 0 && colsMod.LIMITS.pro === 1 && colsMod.LIMITS.max === 200);
   ok("每个集子最多 100 首", colsMod.ITEMS_MAX === 100);
+  ok("权限对比表上写出来的自选背诵配额与配额表同源",
+    require(path.join(ROOT, "utils", "entitlement.js")).CAPS
+      .filter((c) => c.key === "collections")[0].desc.indexOf(tiersMod.collectionQuota()) >= 0
+      && tiersMod.collectionQuota().indexOf(String(colsMod.LIMITS.max)) >= 0
+      && tiersMod.collectionQuota().indexOf(String(colsMod.ITEMS_MAX)) >= 0,
+    "对比表那一行的数字另写一份，改配额时两处会说不一样的话");
   ok("自由集的算法档位就那四个（3 / 5 / 10 / 20，默认 5）",
     colsMod.DAILY_COUNTS.join() === "3,5,10,20" && colsMod.DAILY_DEFAULT === 5);
 
