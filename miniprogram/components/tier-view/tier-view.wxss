@@ -13,7 +13,6 @@
   margin-top: var(--sp-1);
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
-  font-weight: 700;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);

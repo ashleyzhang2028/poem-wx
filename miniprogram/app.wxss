@@ -50,6 +50,11 @@ view, text, button, input, textarea {
   margin-bottom: var(--sp-2);
 }
 
+/* 没有标题行的卡片，顶上由卡片自己留白 —— 标题那份下间距不会各减一半 */
+.card:not(:has(> .card-title)) {
+  padding-top: var(--sp-4);
+}
+
 .page + .card,
 .page-head + .card {
   margin-top: 0;
@@ -58,7 +63,7 @@ view, text, button, input, textarea {
 .card-title {
   display: block;
   font-size: var(--fs-title);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--strong-text);
   line-height: var(--lh-tight);
   margin-bottom: var(--card-title-gap);

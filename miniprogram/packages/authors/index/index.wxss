@@ -25,7 +25,7 @@
 
 .index-name {
   font-size: var(--fs-title);
-  color: var(--strong-text);
+  color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -37,10 +37,6 @@
   color: var(--ink-3);
   padding-left: var(--sp-2);
   flex: none;
-}
-
-.roster-head .head-title {
-  font-weight: 400;
 }
 
 .head-back {
@@ -70,7 +66,6 @@
 .group-name {
   font-family: var(--font-poem);
   font-size: var(--fs-title);
-  font-weight: 600;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }

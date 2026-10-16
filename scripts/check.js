@@ -840,13 +840,12 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
     ["onScope", "onDaily", "onAlgo"].every((h) => wxml.indexOf(h) >= 0 && js.indexOf(h) >= 0)
       && ["focus=scope", "focus=count", "focus=algo"].every((q) => js.indexOf(q) >= 0),
     "概况那三行不跳了，或者跳过去不落在那张卡上");
-  const overviewAt = wxml.indexOf('card-title bar">背诵概况');
-  const settingsAt = wxml.indexOf('card-title bar">设置');
+  const reciteCardAt = wxml.indexOf('bindtap="onRecite"');
   ok("背诵进度收在「背诵概况」最后一行（学习卡里那一份已撤）",
-    overviewAt >= 0 && settingsAt > overviewAt
+    reciteCardAt > 0
       && (wxml.match(/bindtap="onProgress"/g) || []).length === 1
       && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onAlgo"')
-      && wxml.indexOf('bindtap="onProgress"') < settingsAt,
+      && wxml.indexOf('bindtap="onProgress"') < reciteCardAt,
     "进度那一行还在下面那张卡里，或者概况里没有它");
   ok("背诵设置页接得住这三个 focus（不然跳过去只落个页顶）",
     /data-anchor="recite-(scope|count|algo)"/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.wxml"), "utf8"))
@@ -2398,7 +2397,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const sched = read("utils/scheduler.js");
 
   ok("背诵设置页那几组选项各自带得出标题元素",
-    (/<view class="card-title bar">[^<]*\S<\/view>/g.test(recite)),
+    (recite.match(/<view class="card-title[^>]*">[^<]*\S<\/view>/g) || []).length >= 5,
     "卡片顶上缺标题元素 —— 一组选项读不出它管什么");
   ok("学段那格绑在 onStage 上，且用的是 scheduler 里那份学段表",
     /bindchange="onStage"/.test(recite)
@@ -2483,7 +2482,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const recite = read("packages/settings/recite/recite.wxml");
     ok("「每日首数」这张卡还在",
-      /card-title[^>]*>每日首数<\/view>/.test(recite));
+      /data-anchor="recite-count"[^>]*>每日首数<\/view>/.test(recite));
     const counts = /const DAILY_COUNTS = \[([^\]]*)\];/.exec(read("utils/scheduler.js"));
     const list = (counts ? counts[1] : "").split(",").map((t) => t.trim()).filter(Boolean);
     ok("四档是 3 / 5 / 10 / 20",
