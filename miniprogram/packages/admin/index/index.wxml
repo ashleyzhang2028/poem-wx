@@ -46,33 +46,13 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="card-title bar">用户名录</view>
-    <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
-    <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
-
-    <view class="acct" wx:for="{{users}}" wx:key="id">
-      <view class="acct-main">
-        <text class="acct-name">{{item.label}}</text>
-        <text class="acct-sub">{{item.tierLabel ? item.tierLabel : '未分级'}}</text>
-      </view>
-
-      <view class="acct-acts">
-        <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
-                bindtap="onSetTier">改档</button>
-        <button class="btn mini acct-act" wx:if="{{canSetRole && item.editable}}" data-u="{{item.id}}"
-                bindtap="onSetRole">角色</button>
-        <text class="acct-lock" wx:if="{{!canWrite && !canSetRole}}">只读</text>
-      </view>
+  <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onUsers">
+    <view class="row-icon">人</view>
+    <view class="row-main">
+      <text class="row-title">用户列表</text>
+      <text class="row-sub">{{usersSub}}</text>
     </view>
-
-    <view class="empty" wx:if="{{!users.length}}">
-        <text class="empty-mark">名</text>
-        <text class="empty-text">名录里还没有人</text>
-
-      </view>
-    <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
-    <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
+    <text class="row-go">›</text>
   </view>
 
   </block>

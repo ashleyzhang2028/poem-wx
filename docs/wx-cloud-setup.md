@@ -240,7 +240,7 @@ DMS 界面：**实例 → 数据库管理 → 新建数据库**，库名 `poem`�
 > **这几个 `MYSQL_*` 不是绑死的。**
 > 它们是「服务端存储层」那个插槽的**一个**实现 —— 存储层是一组
 > `getX / putX / listX` 的接口（`api/_lib/store.js`），线上这份实现就在本仓库的
-> `deploy/store-mysql.js`。换别的实现，**小程序端与管理页一个字都不用改**。
+> `deploy/store-mysql.js`。换别的实现，**小程序端与用户列表页一个字都不用改**。
 > 条件 upsert 那条不变式换库时该怎么落地、以及「换库不是审核的要求」那句话，
 > 见 [`data-backend.md`](data-backend.md) § 三。
 
@@ -382,7 +382,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 
 ## 八、发档位
 
-第一个管理员直接在库里把 `accounts.role` 改成 `owner`，其余人由这个 owner 在管理页发。
+第一个管理员直接在库里把 `accounts.role` 改成 `owner`，其余人由这个 owner 在用户列表页发。
 
 ## 八点五、上传体验版（流水线上这一步，要三样凑齐）
 
@@ -448,7 +448,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 平台回 `service not found` | `X-WX-SERVICE` 填成了环境 ID，或填了别处看到的名字 | 填云托管**服务名**，逐字以「服务管理」里那个为准（本部署是 `poem-wx`，§ 6.1） |
 | **点登录回 `cloud.callContainer:fail invalid host`** | 平台拿 `X-WX-SERVICE` 找**可路由的后端**时找不到。最常见：只开了**云开发**（如 `cloud1-d8g78yu3h213f201e`），**云托管**里压根没建服务，而包里那格填的是示例名 `poem-wx`；其次是服务建在别的环境、或名字对不上 | 去**云托管 → 服务管理**确认那个服务存在、名字与服务名逐字相同（没建就按 § 二 建一个，本套部署叫 `poem-wx`）。`CLOUD_SERVICE` 是**服务名**、不是环境 ID；改完写进密钥仓库重跑 `main`。**别拿这个去查 `102002` 或域名备案** —— 三者不是同一件事 |
 | 界面上找不到云调用两栏 | 运维配置，界面上本就没有 | 改 `miniprogram/utils/server.js` 那两个值，或改密钥仓库变量重跑流水线（6.2） |
-| 未登录时点「微信登录」弹「还没接上同步服务器」 | 这个包没配同步服务器，`login()` 直接出声拒绝（不再静默判「已登录」） | 这个包的值构建期就注了，构建时没给 `CLOUD_ENV` / `CLOUD_SERVICE` —— 按 § 6.2 由部署方在管理页填两栏，或重跑流水线。没配时账号与进度只在这台手机上 |
+| 未登录时点「微信登录」弹「还没接上同步服务器」 | 这个包没配同步服务器，`login()` 直接出声拒绝（不再静默判「已登录」） | 这个包的值构建期就注了，构建时没给 `CLOUD_ENV` / `CLOUD_SERVICE` —— 按 § 6.2 由部署方在代码库里填两栏，或重跑流水线。没配时账号与进度只在这台手机上 |
 
 | 登录通但同步一律 401 | 服务端没认 `Authorization: Bearer` | 见 [`wx-login-server.md`](wx-login-server.md) |
 | 上传体验版回 `20003 … appIdToAppuin failed` | 上传密钥不是这个 appid 名下的（密钥/appid 换过其一） | § 八点五：重新生成代码上传密钥 + 核对 appid + 重跑流水线。**不是** IP 白名单的问题 |
@@ -456,7 +456,7 @@ curl -s -X POST https://<域>/api/sync/pull \
 | **体验版/工具里首页连「课本目录」都没有，控制台 `Cannot find module './server'`** | `miniprogram/utils/server.js` 没进包（被 gitignore 挡住、或构建时删了）。这个文件一缺，`remote.js` 整个模块加载失败，主包页面在 `onLoad` 前就抛 —— 首页整个渲染不出来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，必须入库），重新上传。`remote.js` 里对这句 require 另有兜底，两层都要有 |
 | **首页目录空着，而控制台说「语料 已载入」** | 语料在包里，是**页面渲染**这一段 —— 或这个包还是旧的 | 先确认包是新的；仍空则把 `[跬步]` 那行与控制台报错发出来 |
 | **点登录回 `HTTP 400`，正文一律取不到** | `.cnb.yml` 的 `env:` 里又声明了一遍 `CLOUD_ENV` / `CLOUD_SERVICE`（Issue #175）。`imports` 的变量在 `env:` 求值时还取不到，`${VAR}` 会**原样**留下，于是 `server.js` 里写进的是字面量 `${CLOUD_ENV}` —— 流水线全绿，包却是坏的 | 从 `.cnb.yml` 的 `env:` 里删掉这两行：`imports` 已经把真值放进 shell 环境，`build-data.js` 按 `$VAR` 读得到。自检守着这条（`env:` 不许重声明密钥仓库那几样）。删完重跑 `main` 流水线 |
-| **点一下登录就「成功」了，但库里没有新行** | 两格没填 / 填错 → 客户端没打到服务端。**Issue #121 又踩了一次这个坑**，而当时界面把它报成了「已登录」（空壳登录），用户只能靠翻数据库才发现 | § 6.1 / § 6.2 把两格填对。**已经不会静默成功了**：没连上时界面明说「还没接上同步服务器」，`profile.logged` 也保持 false（见下条）。填好两格后管理页会自动补上那次登录，不必再去点一次 |
+| **点一下登录就「成功」了，但库里没有新行** | 两格没填 / 填错 → 客户端没打到服务端。**Issue #121 又踩了一次这个坑**，而当时界面把它报成了「已登录」（空壳登录），用户只能靠翻数据库才发现 | § 6.1 / § 6.2 把两格填对。**已经不会静默成功了**：没连上时界面明说「还没接上同步服务器」，`profile.logged` 也保持 false（见下条）。填好两格后登录会自动补上那次登录，不必再去点一次 |
 | 没连上服务器时的正确长相 | 点登录 → 弹「还没接上同步服务器」，`数据与账号 → 同步进度` 的副标题写「服务器没接上 · 进度只在这台手机」。「我的」页顶部**仍显示未登录** —— 这是对的，不是坏了 | 去 § 6.2 由部署方填两格。本机那份进度一字不丢，接上之后第一次同步会带上去 |
 | 流水线红在 `build & push`，报 `invalid reference format` | `.cnb.yml` 的 `env:` 里写了 `${VAR:-default}` | CNB 只替换 `$VAR`，`env:` 的值只能写字面量 |
 | 云托管拉镜像报 401 Unauthorized | ① tag 根本没构建出来（CNB 对匿名请求一律回 401，不区分「没权限」和「不存在」）；② tag 在，但槽位私有、没配凭据 | 先查 tag：`cnb registries list-package-tags --slug npu-gpu-cpu/poem-wechat-mini-program --type docker --name npu-gpu-cpu/poem-wechat-mini-program/wx-api`。没有 → 回 § 1；在、还是 401 → § 2.5 |

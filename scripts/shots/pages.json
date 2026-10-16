@@ -243,6 +243,19 @@
     "back": true,
     "logged": true
   },
+  "users": {
+    "page": "packages/users/index/index",
+    "title": "用户列表",
+    "back": true,
+    "logged": true
+  },
+  "users-guest": {
+    "page": "packages/users/index/index",
+    "title": "用户列表",
+    "back": true,
+    "logged": false,
+    "_note": "未登录的用户列表页：锁卡"
+  },
   "reader-tangshi-2fold": {
     "page": "pages/reader/reader",
     "title": "详情",

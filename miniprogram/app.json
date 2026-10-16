@@ -44,6 +44,13 @@
       ]
     },
     {
+      "root": "packages/users",
+      "name": "users",
+      "pages": [
+        "index/index"
+      ]
+    },
+    {
       "root": "packages/authors",
       "name": "authors",
       "pages": [

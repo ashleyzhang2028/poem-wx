@@ -197,6 +197,10 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
+  onUsers() {
+    wx.navigateTo({ url: "/packages/users/index/index" });
+  },
+
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;

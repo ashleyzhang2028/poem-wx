@@ -308,7 +308,7 @@ function writeRoster() {
   if (!raw) {
 
     writeModule(file, { generatedAt: "", note: "未导入", users: [] });
-    console.log("名录未导入：管理页只显示本机授权（要导入就设 POEM_ROSTER）");
+    console.log("名录未导入：用户列表只显示本机授权（要导入就设 POEM_ROSTER）");
     return;
   }
 
