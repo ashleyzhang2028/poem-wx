@@ -11,11 +11,8 @@
       <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
     </view>
 
-    <view class="hot" wx:if="{{!searched}}">
-      <text class="field-label">试试</text>
-      <view class="hot-tags">
-        <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
-      </view>
+    <view class="hot-tags" wx:if="{{!searched}}">
+      <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
     </view>
   </view>
 

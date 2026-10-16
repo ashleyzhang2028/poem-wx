@@ -7,7 +7,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
 
-const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高", "王维"];
+const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
 const BATCH = 20;
 const PACK_MAX = 80;
