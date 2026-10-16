@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-2) 12rpx var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
 }
@@ -35,7 +35,7 @@
   font-family: var(--font-num);
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding-left: 12rpx;
+  padding-left: var(--sp-2);
   flex: none;
 }
 
@@ -78,14 +78,14 @@
 .group-count {
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding-left: 12rpx;
+  padding-left: var(--sp-2);
   font-variant-numeric: tabular-nums;
 }
 
 .a-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-2) 12rpx;
+  gap: var(--sp-2);
   margin-top: var(--card-title-gap);
 }
 
@@ -115,7 +115,7 @@
   font-family: var(--font-num);
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  padding-left: 10rpx;
+  padding-left: var(--sp-1);
   flex: none;
   font-variant-numeric: tabular-nums;
 }
@@ -132,7 +132,7 @@
   flex: none;
   font-size: var(--fs-caption);
   color: var(--green);
-  padding: 2rpx 14rpx;
+  padding: var(--pad-opt-y) var(--sp-2);
   border-radius: var(--radius-pill);
   background: var(--green-soft);
   margin-right: var(--sp-1);

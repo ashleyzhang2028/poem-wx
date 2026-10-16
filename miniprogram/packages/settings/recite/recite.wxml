@@ -1,9 +1,5 @@
 <view class="page" style="{{themeStyle}}">
 
-  <view class="page-head">
-    <text class="head-title">背诵</text>
-  </view>
-
   <lock-card wx:if="{{locked}}" title="背诵设置要登录" note="登录后才能改" mark="背" />
 
   <block wx:else>

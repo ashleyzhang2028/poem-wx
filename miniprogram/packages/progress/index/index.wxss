@@ -59,7 +59,7 @@
 }
 
 .day.zero {
-  padding: 10rpx var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
 }
 
 .day.zero .day-label {
@@ -105,7 +105,7 @@
 }
 
 .day-bar {
-  margin-top: 12rpx;
+  margin-top: var(--sp-2);
 }
 
 .day-label.today + .day-count {
@@ -115,7 +115,7 @@
 .day-items {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 12rpx;
+  margin-top: var(--sp-2);
 }
 
 .day-item {

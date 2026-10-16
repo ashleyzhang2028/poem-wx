@@ -137,7 +137,7 @@
   font-family: var(--font-poem);
   font-size: var(--fs-title);
   color: var(--strong-text);
-  margin-bottom: 10rpx;
+  margin-bottom: var(--sp-1);
   line-height: 1.7;
 }
 

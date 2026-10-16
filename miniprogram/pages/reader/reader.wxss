@@ -1,6 +1,5 @@
 .poem-card .empty-btn {
   margin: var(--sp-3) auto 0;
-  width: 240rpx;
 }
 
 .poem-card {

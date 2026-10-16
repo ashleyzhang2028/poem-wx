@@ -17,7 +17,7 @@
     <view class="empty">
       <text class="empty-mark">文</text>
       <text class="empty-text">{{failText}}</text>
-      <button class="btn primary empty-btn" bindtap="onRetryText">重试</button>
+      <button class="btn primary mini empty-btn" bindtap="onRetryText">重试</button>
     </view>
   </view>
   <view class="card poem-card" wx:else>

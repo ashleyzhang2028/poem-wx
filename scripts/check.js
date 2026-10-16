@@ -2035,8 +2035,8 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   ok("列表篇名用宋体", !!rowPoem && /font-family\s*:\s*var\(--font-poem\)/.test(rowPoem[1]));
 
   const poemBody = /\.poem-body\s*\{([^}]*)\}/.exec(appWxss);
-  ok("诗句正文走正文那条字体链（--font-poem-text）",
-    !!poemBody && /font-family\s*:\s*var\(--font-poem-text\)/.test(poemBody[1]),
+  ok("诗句正文走正文那条字体链（--font-detail-text）",
+    !!poemBody && /font-family\s*:\s*var\(--font-detail-text\)/.test(poemBody[1]),
     poemBody && poemBody[1].replace(/\s+/g, " ").trim());
   ok("诗句正文不写 font-weight（常规字重由字体链给）",
     !!poemBody && !/font-weight/.test(poemBody[1]));
@@ -2044,7 +2044,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   const surfaceWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   const poemTitle = /\.poem-title\s*\{([^}]*)\}/.exec(surfaceWxss);
   ok("篇名用宋体（阅读面那份）",
-    !!poemTitle && /font-family\s*:\s*var\(--font-poem(-title)?\)/.test(poemTitle[1]));
+    !!poemTitle && /font-family\s*:\s*var\(--font-detail-title\)/.test(poemTitle[1]));
   ok("题名是半粗（600），与正文的常规字重分开",
     !!poemTitle && /font-weight\s*:\s*600/.test(poemTitle[1]),
     poemTitle && poemTitle[1].replace(/\s+/g, " ").trim());
@@ -2373,13 +2373,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /tabPage\.mine\(\)/.test(barSrc),
     "没查登录态、或没有跳到「我的」的那一跳");
 
+    const rel = (p) => path.relative(ROOT, p).split(path.sep).join("/");
   {
     const scan = [];
     const walk = (dir) => {
       fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
         const p = path.join(dir, e.name);
         if (e.isDirectory()) walk(p);
-        else if (e.name.endsWith(".js") && !/^utils\/(store|corpus|remote)\.js$/.test(path.relative(ROOT, p))) {
+        else if (e.name.endsWith(".js") && !/^utils\/(store|corpus|remote)\.js$/.test(rel(p))) {
           scan.push(p);
         }
       });
@@ -2392,7 +2393,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       const src = fs.readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
       tabPages.forEach((t) => {
         if (new RegExp('navigateTo\\(\\{\\s*url:\\s*"' + t.replace(/\//g, "\\/") + '["?]').test(src)) {
-          bad.push(path.relative(ROOT, p) + " → " + t);
+          bad.push(rel(p) + " → " + t);
         }
       });
     });
@@ -2403,13 +2404,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const helper = fs.readFileSync(path.join(ROOT, "utils", "tab-page.js"), "utf8");
     ok("去 tab 页统一走 tab-page.js（switchTab 只在这一份里）",
       /wx\.switchTab\(\{\s*url: url\s*\}\)/.test(helper)
-        && scan.every((p) => path.relative(ROOT, p) === "utils/tab-page.js"
+        && scan.every((p) => rel(p) === "utils/tab-page.js"
           || !/wx\.switchTab\(/.test(fs.readFileSync(p, "utf8"))),
       "又有第二处直接写 switchTab —— 下次改跳转口径就得满地找");
 
     ok("去「我的」只有 tab-page.mine() 一个出口",
       /function mine\(\)[\s\S]{0,60}?go\(MINE\)/.test(helper)
-        && scan.filter((p) => path.relative(ROOT, p) !== "utils/tab-page.js")
+        && scan.filter((p) => rel(p) !== "utils/tab-page.js")
           .every((p) => !/switchTab\(\{\s*url:\s*"\/pages\/mine\/mine"/.test(fs.readFileSync(p, "utf8"))),
       "又多了一处手写 switchTab 去「我的」");
   }
@@ -2575,9 +2576,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "recite.wxss / recite.wxml 里还有残留");
   ok("这页不再有 <slider>（字号滑块是详情页的东西）", recite.indexOf("<slider") < 0);
 
-  ok("这一屏的页头是一个 head-title 元素",
-    /<text class="head-title">[^<]*\S<\/text>/.test(recite),
-    "页头没了，或它是空的");
+  ok("这一屏不另摆页头（标题栏已有页名，不再重复一行）",
+    recite.indexOf("head-title") < 0,
+    "页顶又摆了一行与标题栏重复的页名");
 
   ok("取诗范围是横排的选项行（opt-group inline）",
     /<radio-group class="opt-group inline/.test(recite));
@@ -2741,14 +2742,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const searchWxss = read("pages/search/search.wxss");
     const iconGap = /(^|\})\s*\.search-icon\s*\{([^}]*)\}/.exec(appWxss);
     const btnGap = /\.go-btn\s*\{([^}]*)\}/.exec(searchWxss);
-    ok("搜索图标与输入框贴得近（margin 只留一档间距，不是 12rpx 那么远）",
-      !!iconGap && Number((/margin-right\s*:\s*(\d+)rpx/.exec(iconGap[2]) || [])[1] || 99) <= 8,
+    ok("搜索图标与输入框隔半个字（margin 在 8–16rpx，既不贴也不远）",
+      !!iconGap && (() => { const n = Number((/margin-right\s*:\s*(\d+)rpx/.exec(iconGap[2]) || [])[1] || 0); return n >= 8 && n <= 16; })(),
       "读到 " + JSON.stringify(iconGap && iconGap[2].replace(/\s+/g, " ").trim()));
     ok("搜索按钮贴右边界（右侧 padding 收窄，不再隔着一整档间距）",
-      /padding-right\s*:\s*var\(--sp-2\)/.test(/\.search-page \.search\s*\{([^}]*)\}/.exec(searchWxss)?.[1] || ""),
+      Number((/padding\s*:\s*0\s+(\d+)rpx/.exec(/\.search-page\.search\s*\{([^}]*)\}/.exec(searchWxss)?.[1] || "") || [])[1] || 99) <= 8,
       "搜索页那一条 .search 还是全局那个 48rpx 右边距");
     ok("「试试」那排胶囊不是粗体（font-weight 400 或 500）",
-      /font-weight\s*:\s*(400|500)/.test(/\.hot-tags \{([^}]*)\}/.exec(searchWxss)?.[1] || ""),
+      /font-weight\s*:\s*(400|500)/.test(/\.hot-tags \.tag-btn\s*\{([^}]*)\}/.exec(searchWxss)?.[1] || ""),
       "胶囊还是 600 以上");
   }
 
@@ -2875,7 +2876,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("身份行四段同一个色（样式统一）",
     !!metaFont && /color\s*:\s*var\(--ink-2\)/.test(metaFont[1]));
   ok("身份行（含作者名）取题名那条宋体链，且半粗",
-    !!metaFont && /font-family\s*:\s*var\(--font-poem\)/.test(metaFont[1])
+    !!metaFont && /font-family\s*:\s*var\(--font-detail-title\)/.test(metaFont[1])
       && /font-weight\s*:\s*600/.test(metaFont[1]),
     metaFont && metaFont[1].replace(/\s+/g, " ").trim());
 
@@ -3534,7 +3535,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /wx:if="\{\{allOpen\}\}"/.test(homeWxml)
       && /wx:for="\{\{allRows\}\}"/.test(homeWxml)
       && /onToggleAll/.test(homeWxml) && /onToggleAll\(\)/.test(homeJs)
-      && /<text class="all-toggle">\{\{allOpen \? '[^'\u4e00-\u9fa5]+' : '[^'\u4e00-\u9fa5]+'\}\}<\/text>/.test(homeWxml),
+      && /<view class="all-toggle \{\{allOpen \? 'open' : ''\}\}"><\/view>/.test(homeWxml),
     "那张卡要么没挂、要么不是折叠形态");
   ok("改名的是标题不是数据：随机范围下列的是那一段的全部诗词",
     /scope\.random\s*\?\s*scope\.scopeName\s*\+\s*"全部诗词"\s*:\s*"本年级本学期全部诗词"/.test(homeJs)

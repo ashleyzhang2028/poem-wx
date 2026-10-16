@@ -3,16 +3,6 @@
   align-items: baseline;
 }
 
-.gc-name {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-poem);
-  font-size: var(--fs-lead);
-  font-weight: 600;
-  color: var(--strong-text);
-  letter-spacing: var(--ls-title);
-}
-
 .gc-count {
   flex: none;
   font-size: var(--fs-caption);

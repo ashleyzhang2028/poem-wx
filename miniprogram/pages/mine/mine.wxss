@@ -131,7 +131,7 @@
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
   border-radius: var(--radius-pill);
-  padding: 6rpx 20rpx;
+  padding: var(--pad-opt-y) var(--pad-opt-x);
   letter-spacing: 1rpx;
 }
 
@@ -140,7 +140,7 @@
 }
 
 .login-row {
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-3);
 }
 
 .danger-text {
@@ -151,7 +151,7 @@
   display: flex;
   width: 100%;
   text-align: center;
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-3);
 }
 
 .row-icon.danger {

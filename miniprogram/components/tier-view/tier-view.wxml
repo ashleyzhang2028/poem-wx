@@ -1,43 +1,29 @@
 <view class="card grant">
-  <view class="card-title bar">我的权限</view>
-  <view class="grant-head">
+  <text class="grant-eyebrow">当前档位</text>
+  <text class="grant-tier-name">{{status.label}}</text>
+  <text class="hint note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
+  <text class="hint note" wx:elif="{{note}}">{{note}}</text>
 
-    <text class="grant-tier-name">{{status.label}}</text>
+  <view class="meter grant-meter">
+    <view class="meter-fill" style="width:{{stats.percent}}%"></view>
+  </view>
+  <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项能力</text>
 
-    <view class="grant-meter">
-      <view class="meter">
-        <view class="meter-fill" style="width:{{stats.percent}}%"></view>
-      </view>
-      <text class="grant-meter-t">{{stats.enabled}} / {{stats.caps}} 项能力</text>
+  <view class="chips">
+    <view class="chip {{col.now ? 'is-now' : ''}}" wx:for="{{heads}}" wx:for-item="col" wx:key="tier">
+      <text class="chip-name">{{col.label}}</text>
+      <text class="chip-count">{{col.on}} / {{col.total}}</text>
     </view>
   </view>
-
-  <text class="hint note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
-  <text class="hint note" wx:elif="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
 </view>
 
-<view class="card compare">
-  <view class="card-title bar">权限对比</view>
-  <view class="compare-row compare-head">
-    <text class="compare-cap">功能</text>
-    <text class="compare-tier" wx:for="{{heads}}" wx:for-item="col" wx:key="key">
-      <text class="compare-label {{col.now ? 'is-now' : ''}}">{{col.label}}</text>
-      <text class="compare-note" wx:if="{{col.now}}">现在</text>
-    </text>
-  </view>
-  <block wx:for="{{compareGroups}}" wx:key="key">
-    <view class="compare-group">{{item.note}}</view>
-    <view class="compare-row" wx:for="{{item.rows}}" wx:for-item="row" wx:key="cap">
-      <text class="compare-cap">{{row.name}}</text>
-      <text class="compare-tier {{col.on ? 'on' : 'off'}}" wx:for="{{row.cells}}" wx:for-item="col" wx:key="tier">
-        <text class="compare-mark">{{col.on ? '✓' : '✕'}}</text>
-      </text>
+<view class="card" wx:for="{{compareGroups}}" wx:key="key">
+  <view class="card-title bar">{{item.note}}</view>
+  <view class="row row-flush" wx:for="{{item.rows}}" wx:for-item="r" wx:key="cap">
+    <view class="row-main">
+      <text class="row-title">{{r.name}}</text>
+      <text class="row-sub">{{r.desc}}</text>
     </view>
-  </block>
-  <view class="compare-row compare-sum">
-    <text class="compare-cap">合计</text>
-    <text class="compare-tier" wx:for="{{compareSummary}}" wx:for-item="col" wx:key="tier">
-      <text class="compare-mark">{{col.on}}<text class="compare-of">/{{col.total}}</text></text>
-    </text>
+    <text class="tag {{r.ok ? 'green' : 'ghost'}} cap-tag">{{r.ok ? '可用' : '未开'}}</text>
   </view>
 </view>

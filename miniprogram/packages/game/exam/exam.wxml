@@ -2,10 +2,6 @@
   <lock-card wx:if="{{!allowed}}" title="考试" note="登录后才能用" mark="考" />
 
   <block wx:elif="{{stage === 'setup'}}">
-    <view class="page-head">
-      <text class="head-title">考试设置</text>
-    </view>
-
     <view class="card">
       <view class="card-title bar">考试范围</view>
 

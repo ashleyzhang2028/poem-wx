@@ -2,12 +2,21 @@
   <lock-card wx:if="{{locked}}" title="搜索要登录" note="登录后才能搜" mark="寻" />
 
   <block wx:else>
-  <view class="search search-page">
-    <text class="search-icon">⌕</text>
-    <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
-           confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
-    <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
-    <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
+  <view class="card search-card">
+    <view class="search search-page">
+      <text class="search-icon">⌕</text>
+      <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
+             confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
+      <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+      <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
+    </view>
+
+    <view class="hot" wx:if="{{!searched}}">
+      <text class="field-label">试试</text>
+      <view class="hot-tags">
+        <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
+      </view>
+    </view>
   </view>
 
   <view class="result-bar" wx:if="{{searched && results.length}}">
@@ -40,18 +49,10 @@
     <text class="hint empty-tip">正文里也没有这一句</text>
   </view>
 
-  <view class="hot" wx:if="{{!searched}}">
-    <text class="field-label">试试</text>
-    <view class="hot-tags">
-      <button class="tag tag-btn" wx:for="{{hot}}" wx:key="*this" data-k="{{item}}" bindtap="onHot">{{item}}</button>
-    </view>
-
-  </view>
-
   <view class="card author-entry">
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAuthors">
       <view class="row-main">
-        <text class="row-title">作者索引</text>
+        <text class="gc-name">作者索引</text>
         <text class="row-sub">按朝代排，点一位读他的全部作品</text>
       </view>
       <text class="row-go">›</text>
