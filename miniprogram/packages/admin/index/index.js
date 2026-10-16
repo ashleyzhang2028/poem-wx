@@ -1,20 +1,14 @@
-const admin = require("./lib");
+const admin = require("../../../utils/admin");
 const tiers = require("../../../utils/tiers");
-const entitlement = require("../../../utils/entitlement");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const auth = require("../../../utils/auth");
 const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
     themeStyle: "",
     logged: false,
-    status: {},
-    heads: [],
-    compareGroups: [],
-    compareSummary: [],
-    stats: { caps: 0, enabled: 0 },
-
     users: [],
     rosterNote: "",
     generatedAt: "",
@@ -32,24 +26,19 @@ Page({
   },
 
   refresh() {
-    const snap = entitlement.snapshot();
+    const logged = auth.logged();
 
     const canWrite = admin.canWrite();
     const canSetRole = admin.canSetRole();
     this.setData({
-      logged: snap.logged,
-      status: snap,
-      heads: entitlement.compareCols(snap),
-      compareGroups: entitlement.compareGroups(snap),
-      compareSummary: entitlement.compareSummary(snap),
-      stats: admin.stats(),
+      logged: logged,
       remoteReady: remote.configured(),
       adminReady: remote.adminReady(),
       canWrite: canWrite,
       canSetRole: canSetRole
     });
 
-    if (!snap.logged) return;
+    if (!logged) return;
     admin.list().then((res) => {
       this.setData({
         users: this.decorate(res.users, canWrite, canSetRole),
