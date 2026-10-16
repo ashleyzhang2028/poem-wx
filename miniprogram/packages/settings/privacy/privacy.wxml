@@ -1,0 +1,85 @@
+<view class="page" style="{{themeStyle}}">
+
+  <view class="card">
+    <view class="card-title bar">隐私政策</view>
+    <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，一切只在这台手机上，不往外发。登录后，只把背诵记录同步到我们的服务器，好让换手机还在。</text>
+    <text class="policy-meta">更新日期：{{updated}}</text>
+    <text class="policy-meta">生效日期：{{updated}}</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">一、我们是谁</view>
+    <text class="policy-p">运营者：跬步个人开发者。</text>
+    <text class="policy-p">联系邮箱：{{contact}}</text>
+    <text class="policy-p">对本政策或你的个人信息有任何疑问、意见或投诉，发邮件给我们。</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCopyContact">
+      <view class="row-main"><text class="row-title">复制联系邮箱</text></view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">二、登录时我们拿到什么</view>
+    <text class="policy-p">你点登录时，我们把微信给的登录凭证交给服务器，由服务器向微信换取你的 openid，也就是你在这个小程序里的匿名标识，用来认出「这份记录是你的」。这个标识与背诵记录存在一起。</text>
+    <text class="policy-p">头像与昵称由你主动点头像、填名字时才取，且只留在本机，不上传、不入库。不点头像、不填名字，所有功能照常能用。</text>
+    <text class="policy-p">我们不拿手机号，不拿你的微信好友，不拿通讯录、位置、相册，也不读剪贴板。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">三、背诵记录</view>
+    <text class="policy-p">你背到哪一首、复习到第几遍、哪些篇目标了已读，这些记录默认只存在这台手机上。</text>
+    <text class="policy-p">登录后，同样的记录会同步到服务器，与你那个匿名标识绑在一起，用来换手机接着背。同步的内容只有篇目标识、记忆阶段、复习时间与已读标记，没有你写的字，也没有你的身份信息。</text>
+    <text class="policy-p">朗读、注音、字号、主题这些设置只在本地生效，与账号无关。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">四、存多久、放在哪</view>
+    <text class="policy-p">本机数据存在手机里，卸载小程序即随它一起清掉。</text>
+    <text class="policy-p">云端记录存在腾讯云上海地域的服务器里，只在你还有账号时保留。在「我的 → 清空背诵数据」点一下，本机与云端的记录一并删掉，删完换任何手机都找不回。</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onMine">
+      <view class="row-main">
+        <text class="row-title">去「我的」清除记录</text>
+        <text class="row-sub">本机与云端一起清</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+    <text class="policy-p">除你本人要求或法律另有规定，我们不保留更久。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">五、会不会给别人</view>
+    <text class="policy-p">不会。我们不做统计、不投广告、不接第三方 SDK，也不把你的记录卖给或换给任何人。</text>
+    <text class="policy-p">唯一的例外是法律要求：依法需要提供时，我们按法律办。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">六、分享</view>
+    <text class="policy-p">你用微信分享时，分享出去的是固定页面或某一首诗，不带你的标识、昵称与背诵记录。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">七、安全</view>
+    <text class="policy-p">我们只开放必要的服务器访问，限制管理权限，保管好身份凭证。但互联网没有绝对的安全，请你也保管好自己的手机。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">八、你的权利</view>
+    <text class="policy-p">你可以查、改、删自己的个人信息，也可以撤回同意或在「我的」里退出登录。</text>
+    <text class="policy-p">「清空背诵数据」是可以随时用的删除入口。若要连账号一并注销，发邮件到上面的邮箱，我们核实后处理。</text>
+    <text class="policy-p">拒绝提供非必需的信息，不使用头像与昵称一类的授权，不影响背诵、复习、搜索这些核心功能。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">九、孩子与未成年人</view>
+    <text class="policy-p">这款小程序常给孩子用，也可能由家长陪着用。我们不收集与背诵无关的个人信息，也从不要求填生日、姓名或学校。</text>
+    <text class="policy-p">不满十四周岁的孩子，请由家长或监护人来登录与使用；监护人有权查、改、删孩子的记录，或发邮件要求我们处理。</text>
+    <text class="policy-p">我们不设儿童独立账号，也不向孩子推送任何内容与广告。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title bar">十、政策更新</view>
+    <text class="policy-p">功能或法律变化时会更新本政策，改动会写在这页的更新日期上。涉及收集范围或用途变化的，会在使用时另行说明。</text>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

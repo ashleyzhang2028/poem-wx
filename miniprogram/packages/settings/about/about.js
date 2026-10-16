@@ -27,12 +27,6 @@ Page({
   },
 
   onPrivacy() {
-    wx.showModal({
-      title: "隐私说明",
-      content:
-        "登录后只保存你的微信匿名标识用于跨设备同步；头像与昵称只存在这台手机上，" +
-        "不上传。不做统计、不投广告。",
-      showCancel: false
-    });
+    wx.navigateTo({ url: "/packages/settings/privacy/privacy" });
   }
 });

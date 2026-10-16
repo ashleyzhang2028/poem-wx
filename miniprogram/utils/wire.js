@@ -141,7 +141,48 @@ function packRecords() {
     });
   }
 
+  const cleared = store.clearMarks();
+  const goneAt = cleared.at || Date.now();
+  cleared.rows.forEach((r) => {
+    if (!r || !r.id) return;
+    rows.push({ id: String(r.id), payload: {}, updatedAt: Number(r.updatedAt) || goneAt, deleted: true });
+  });
+  cleared.books.forEach((book) => {
+    const rowId = READ_ROW[book];
+    if (rowId) rows.push({ id: READ_PREFIX + rowId, payload: {}, updatedAt: goneAt, deleted: true });
+  });
+  if (cleared.dailyExtra) {
+    rows.push({ id: DAILY_EXTRA_ROW, payload: {}, updatedAt: goneAt, deleted: true });
+  }
+
   return rows;
+}
+
+function clearRecords(rows) {
+  const sent = new Set();
+  (rows || []).forEach((r) => {
+    if (r && r.deleted && r.id) sent.add(String(r.id));
+  });
+  if (!sent.size) return;
+
+  const box = store.clearMarks();
+  const rowsLeft = box.rows.filter((r) => !sent.has(String(r.id)));
+  const booksLeft = box.books.filter((book) => !sent.has(READ_PREFIX + READ_ROW[book]));
+  const extraLeft = box.dailyExtra && !sent.has(DAILY_EXTRA_ROW);
+
+  if (!rowsLeft.length && !booksLeft.length && !extraLeft) store.dropClearMarks();
+  else store.saveClearMarks({ at: box.at, rows: rowsLeft, books: booksLeft, dailyExtra: extraLeft });
+}
+
+function clearedIds() {
+  const box = store.clearMarks();
+  const set = new Set();
+  box.rows.forEach((r) => { if (r && r.id) set.add(String(r.id)); });
+  box.books.forEach((book) => {
+    if (READ_ROW[book]) set.add(READ_PREFIX + READ_ROW[book]);
+  });
+  if (box.dailyExtra) set.add(DAILY_EXTRA_ROW);
+  return set;
 }
 
 function applyRecords(recs) {
@@ -149,15 +190,26 @@ function applyRecords(recs) {
   const progress = store.progress();
   const reads = store.reads();
   const now = Date.now();
+  const mine = clearedIds();
+  const clearAt = store.clearMarks().at || 0;
 
   (recs || []).forEach((row) => {
     if (!row || !row.id) return;
     const at = Number(row.updatedAt) || 0;
     const id = String(row.id);
 
+    if (mine.has(id) && at < clearAt) return;
+
     if (id.indexOf(READ_PREFIX) === 0) {
       const book = ROW_BOOK[id.slice(READ_PREFIX.length)];
       if (!book) return;
+      if (row.deleted) {
+        if (reads[book]) {
+          delete reads[book];
+          applied += 1;
+        }
+        return;
+      }
       const marks = (row.payload && row.payload.marks) || {};
       const box = reads[book] || (reads[book] = {});
       Object.keys(marks).forEach((pid) => {
@@ -175,6 +227,14 @@ function applyRecords(recs) {
     if (id === DAILY_EXTRA_ROW) {
       const payload = row.payload || {};
       const localAt = store.dailyExtraAt() || 0;
+
+      if (row.deleted) {
+        if (at > localAt) {
+          store.clearDailyExtra();
+          applied += 1;
+        }
+        return;
+      }
 
       if (at > localAt && payload.date === store.dayKey()) {
         store.setDailyExtra((payload.items || []).map((it) => it.id).filter(Boolean), at);
@@ -228,6 +288,8 @@ function applyRecords(recs) {
 }
 
 module.exports = {
+  clearRecords,
+  clearedIds,
   READ_ROW,
   ROW_BOOK,
   READ_PREFIX,

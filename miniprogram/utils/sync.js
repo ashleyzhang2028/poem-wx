@@ -28,8 +28,10 @@ function state() {
 
 function pendingCount() {
   const at = packMoment();
-  if (!at) return 0;
-  return wire.packRecords().filter((r) => (r.updatedAt || 0) > at).length;
+  const cleared = store.clearMarks();
+  const clearing = cleared.rows.length + cleared.books.length + (cleared.dailyExtra ? 1 : 0);
+  if (!at) return clearing;
+  return clearing + wire.packRecords().filter((r) => !r.deleted && (r.updatedAt || 0) > at).length;
 }
 
 function packMoment() {

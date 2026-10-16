@@ -14,6 +14,7 @@ const KEYS = {
   signed: "kb_signed_grant_v1",
   device: "kb_device_v1",
   sync: "kb_sync_outbox_v1",
+  clearMarks: "kb_clear_marks_v1",
 
   settingsAt: "kb_settings_at_v1",
 
@@ -206,9 +207,44 @@ function shrinkIfNeeded(all) {
 }
 
 function clearProgress() {
+  const at = Date.now();
+  const rows = [];
+
+  Object.keys(progress()).forEach((id) => {
+    rows.push({ id: id, updatedAt: at });
+  });
+
+  const readBooks = Object.keys(reads()).filter((book) => Object.keys(reads(book)).length);
+  const hadDailyExtra = dailyExtra().length > 0;
+
   drop(KEYS.progress);
   drop(KEYS.reads);
   drop(KEYS.dailyExtra);
+
+  if (rows.length || readBooks.length || hadDailyExtra) {
+    write(KEYS.clearMarks, { at: at, rows: rows, books: readBooks, dailyExtra: hadDailyExtra });
+  } else {
+    drop(KEYS.clearMarks);
+  }
+  return { cleared: rows.length, books: readBooks, dailyExtra: hadDailyExtra };
+}
+
+function clearMarks() {
+  const box = read(KEYS.clearMarks, null) || {};
+  return {
+    at: Number(box.at) || 0,
+    rows: Array.isArray(box.rows) ? box.rows : [],
+    books: Array.isArray(box.books) ? box.books : [],
+    dailyExtra: !!box.dailyExtra
+  };
+}
+
+function saveClearMarks(box) {
+  write(KEYS.clearMarks, box);
+}
+
+function dropClearMarks() {
+  drop(KEYS.clearMarks);
 }
 
 function reads(book) {
@@ -390,6 +426,9 @@ module.exports = {
   setRecord,
   setRecords,
   clearProgress,
+  clearMarks,
+  saveClearMarks,
+  dropClearMarks,
   reads,
   markRead,
   unreadCount,

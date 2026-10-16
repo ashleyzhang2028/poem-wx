@@ -1,0 +1,25 @@
+.policy-lede {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--ink);
+  line-height: var(--lh-body);
+}
+
+.policy-meta {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  margin-top: var(--sp-2);
+}
+
+.policy-p {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
+  margin-bottom: var(--sp-2);
+}
+
+.policy-p:last-child {
+  margin-bottom: 0;
+}
