@@ -192,8 +192,7 @@ Page({
     });
   },
 
-  onAdmin() {
-
+  onTier() {
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 

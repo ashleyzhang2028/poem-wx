@@ -998,6 +998,25 @@ const GATED = {
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
+{
+  const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
+  const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+  const adminWxml = fs.readFileSync(path.join(ROOT, "packages", "admin", "index", "index.wxml"), "utf8");
+
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  ok("档位胶囊点得动，进的就是权限对比那一页",
+    !!chip && /bindtap="onTier"/.test(chip[0])
+      && /onTier\(\)\s*\{[^}]*url:\s*"\/packages\/admin\/index\/index"/.test(mineJs),
+    "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
+      + "点下去必须落在对比表上（Issue #234）");
+  ok("档位胶囊的样式没换名字",
+    /\.tier-chip\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxss"), "utf8")));
+  ok("游客也能看对比表（挡的是名录，不是整页）",
+    adminWxml.indexOf("lock-card") > adminWxml.indexOf("compareGroups")
+      && /<view\b[^>]*class="card"\s+wx:else/.test(adminWxml),
+    "顶端那张 lock-card 把权限对比一起盖住了 —— 未登录的人正是最该看这张表的人");
+}
+
 ok("乱七八糟的码不认", E.redeem("hello").ok === false);
 ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
 

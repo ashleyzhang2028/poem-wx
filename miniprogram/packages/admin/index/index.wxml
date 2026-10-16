@@ -1,8 +1,5 @@
 <view class="page" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{!logged}}" title="权限要登录" note="登录后才能看" mark="权" />
-
-  <block wx:else>
   <view class="card grant">
     <view class="card-title bar">我的权限</view>
     <view class="grant-head">
@@ -17,7 +14,8 @@
       </view>
     </view>
 
-    <text class="hint note" wx:if="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
+    <text class="hint note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
+    <text class="hint note" wx:elif="{{status.blocked === 'unsigned'}}">连不上服务器 · 暂按 Free</text>
   </view>
 
   <view class="card compare">
@@ -46,7 +44,9 @@
     </view>
   </view>
 
-  <view class="card">
+  <lock-card wx:if="{{!logged}}" title="名录要登录" note="登录后才能看" mark="名" />
+
+  <view class="card" wx:else>
     <view class="card-title bar">用户名录</view>
     <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上{{generatedAt ? ' · 生成于 ' + generatedAt : ''}}</text>
     <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
@@ -74,8 +74,6 @@
     <text class="hint note" wx:if="{{rosterNote}}">名录：{{rosterNote}}</text>
     <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
   </view>
-
-  </block>
 
   <view class="safe-bottom"></view>
 </view>
