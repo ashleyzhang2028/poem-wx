@@ -1119,7 +1119,7 @@ Object.keys(WEB_TIER).forEach((k) => {
   clearAuth();
   clearGrant();
   clearCaps();
-  setProfile({ logged: true, tier: "" });
+  setProfile({ logged: false, tier: "" });
 }
 
 const GATED = {
@@ -1440,11 +1440,13 @@ pages.forEach((p) => {
   ok("页面跳转目标都存在 " + p, bad.length === 0, bad.join(","));
 });
 
+asGuest();
+store.drop(store.KEYS.auth);
 store.setRecord("probe-1", { level: 2, learned: true, lastReviewAt: Date.now() });
 const syncMod = require(path.join(ROOT, "utils", "sync.js"));
 syncMod.markDirty();
 
-ok("未配后端时同步不就绪", syncMod.ready() === false);
+ok("未登录时同步不就绪（配没配后端都一样）", syncMod.ready() === false);
 ok("写本机后队列有记账", syncMod.pendingCount() >= 0);
 ok("本机数据没被动过", !!store.getRecord("probe-1"));
 
