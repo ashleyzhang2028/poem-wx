@@ -6,6 +6,7 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 
 const STEPS = [
+  ["编译图标", "build-icons.js"],
   ["编译语料", "build-data.js"],
   ["离线自检", "check.js"],
   ["与网页版能力表对照", "parity.js"],

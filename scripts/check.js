@@ -1034,15 +1034,28 @@ Object.keys(WEB_TIER).forEach((k) => {
     wxml.indexOf("<scroll-view") < 0,
     "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
   ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
-  ok("每一格写的是档位差（有差别的项写具体数，不是一律打勾）",
+  ok("对比表格子里的图标只两枚（有就是 yes、没有就是 no）",
+    (() => {
+      const inst = js;
+      const wxmlT = wxml;
+      const row = E.compareRows({ logged: false, tier: "free" });
+      const cols = row.reduce((m, r) => m + (r.cells.filter((c) => c.icon).length), 0);
+      return /icons\.yesInk/.test(inst) && /icons\.noInk/.test(inst)
+        && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
+    })(),
+    "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
+  ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
       const row = E.compareRows({ logged: false, tier: "free" })
         .filter((r) => r.cap === "collections")[0];
       const tiersRow = row.cells.map((c) => c.text);
-      return tiersRow.join(",") === "无,1 个,200 个"
+      const silent = E.compareRows({ logged: false, tier: "free" })
+        .filter((r) => r.cap === "daily")[0];
+      return tiersRow.join(",") === ",1 个,200 个"
+        && silent.cells.every((c) => c.text === "")
         && row.cells.filter((c) => c.on).every((c) => c.note.length > 0);
     })(),
-    "一格一句「可用 / 未开」，有量的那一项读不出差在哪");
+    "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
 }
 
 {
@@ -2284,23 +2297,29 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const barWxss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
 
   {
-    const items = barSrc.match(/\{ pagePath: "([^"]+)", text: "([^"]+)", icon: "([a-z]+)"([^}]*)\}/g) || [];
+    const items = barSrc.match(/\{ pagePath: "([^"]+)", text: "([^"]+)", icon: icons\.[a-z]+([^}]*)\}/g) || [];
     ok("底栏那一串每一项都带 pagePath / 文案 / 图标三样",
       items.length > 0
-        && items.every((it) => /pagePath: "[^"]+"[^}]*text: "[^"]+"[^}]*icon: "[^"]+"/.test(it)),
+        && items.every((it) => /pagePath: "[^"]+"[^}]*text: "[^"]+"[^}]*icon: icons\.[a-z]+/.test(it)),
       "有项缺了图标或文案 —— 底栏会缺一格或空一行：" +
         (barSrc.match(/list: \[[\s\S]*?\]/) || [""])[0].slice(0, 300));
-    ok("底栏每一项的图标都有对应的笔画（不是漏画一个）",
+    ok("底栏每一项的图标都在图标模块里（不是写了个空名）",
       items.every((it) => {
-        const icon = /icon: "([a-z]+)"/.exec(it)[1];
-        return new RegExp("\\.tab-ico-" + icon + "::?before").test(barWxss);
+        const icon = /icon: icons\.([a-z]+)/.exec(it)[1];
+        return Object.prototype.hasOwnProperty.call(
+          require(path.join(ROOT, "utils", "icons.js")), icon);
       }),
-      "有图标类名在样式表里找不到 —— 那一格只剩文字");
+      "有个图标名在 utils/icons.js 里找不到 —— 那一格只剩文字");
+    ok("图标是 data URI（小程序里一条图片资源都不引）",
+      Object.keys(require(path.join(ROOT, "utils", "icons.js")))
+        .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml,") === 0),
+      "图标改从文件路径取了 —— 多套倍图要跟着进包");
     ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
       /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
       "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");
-    ok("底栏每一项都经 list 渲染（图标类名不是写死的）",
-      /tab-ico-\{\{item\.icon\}\}/.test(barWxml));
+    ok("底栏每一项都经 list 渲染（图标源不是写死的）",
+      /src="\{\{item\.off\}\}"/.test(barWxml) && /src="\{\{item\.on\}\}"/.test(barWxml)
+        && /wx:for="\{\{list\}\}"/.test(barWxml));
   }
 
   {
@@ -3817,10 +3836,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "这一行又变回第三种颜色了");
 
   const tierCss = read("components/tier-view/tier-view.wxss");
-  const isNowT = (/\.tier-cell\.is-now \.tier-cell-t\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
   const isNowHead = (/\.tier-head \.tier-cell\.is-now::after\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
-  ok("「当前档位」那一列用的是主题色那一档（字与列头那一道都走主题）",
-    /var\(--strong-text\)/.test(isNowT) && /var\(--strong\)/.test(isNowHead),
+  ok("「当前档位」那一列用的是主题色那一档（列头那一道走主题）",
+    /var\(--strong\)/.test(isNowHead),
     "当前档位还挂在 --green 上 —— 换主题时那一列留在原地");
 
   const right = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/quiz/quiz.wxss")) || [])[1] || "";
@@ -6331,7 +6349,7 @@ function gapped(items, max) {
       const row = E5.compareRows({ logged: false, tier: "free" })
         .filter((r) => r.cap === "collections")[0];
       const want = ["free", "pro", "max"].map((t) =>
-        colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个" : "无");
+        colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个" : "");
       const got = row.cells.map((c) => c.text);
       const items = row.cells.filter((c) => c.on)
         .every((c) => c.note.indexOf(String(colsMod.ITEMS_MAX)) >= 0);

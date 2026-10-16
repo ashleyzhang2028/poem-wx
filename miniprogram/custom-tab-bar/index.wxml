@@ -2,7 +2,10 @@
   <view class="tab {{active === index ? 'on' : ''}}"
         wx:for="{{list}}" wx:key="pagePath"
         data-index="{{index}}" bindtap="onTap">
-    <view class="tab-ico tab-ico-{{item.icon}}"></view>
+    <view class="tab-ico">
+      <image class="tab-ico-img off" src="{{item.off}}" mode="aspectFit" />
+      <image class="tab-ico-img on" src="{{item.on}}" mode="aspectFit" />
+    </view>
     <text class="tab-text">{{item.text}}</text>
   </view>
 </view>
