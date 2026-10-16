@@ -2314,6 +2314,17 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       Object.keys(require(path.join(ROOT, "utils", "icons.js")))
         .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml,") === 0),
       "图标改从文件路径取了 —— 多套倍图要跟着进包");
+    ok("填进 src 的颜色是 #hex（rgba() 在真机的 SVG 里非法，整条 fill 会被丢掉）",
+      (() => {
+        const bar = require(path.join(ROOT, "utils", "icons.js"));
+        const src = /function svgInk[\s\S]*?\nfunction paint[\s\S]*?\n\}/.exec(barSrc);
+        if (!src) return false;
+        const paint = new Function("encodeURIComponent",
+          src[0] + "\nreturn paint;")(encodeURIComponent);
+        const one = paint(bar.home, "rgba(8, 8, 10, 1)");
+        return one.indexOf("%2308080a") >= 0 && !/rgba?\(/.test(one);
+      })(),
+      "paint() 把 rgba() 原样填进 SVG 的 fill —— 真机一片空白");
     ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
       /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
       "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");

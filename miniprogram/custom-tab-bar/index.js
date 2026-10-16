@@ -5,8 +5,14 @@ const tabPage = require("../utils/tab-page");
 
 const OFF_INK = "#9ca3af";
 
+function svgInk(color) {
+  const rgb = /rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(String(color));
+  if (!rgb) return color;
+  return "#" + [1, 2, 3].map((i) => ("0" + Number(rgb[i]).toString(16)).slice(-2)).join("");
+}
+
 function paint(src, ink) {
-  return String(src).replace(/currentColor/g, encodeURIComponent(ink));
+  return String(src).replace(/currentColor/g, encodeURIComponent(svgInk(ink)));
 }
 
 Component({
