@@ -707,6 +707,27 @@ asGuest();
     "这一项已经撤了（朗读：个人主体拿不到通道；导出：进度跟着账号走；管理页：owner / admin 的身份门）");
 });
 
+{
+  const walkJs = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) return walkJs(p);
+    return e.name.endsWith(".js") ? [p] : [];
+  });
+
+  const called = [];
+  walkJs(ROOT).forEach((file) => {
+    if (file === path.join(ROOT, "utils", "entitlement.js")) return;
+    const src = fs.readFileSync(file, "utf8");
+    const re = /(?:E|entitlement)\.(?:can|hint|block|decide|capName|algoAllowed)\(\s*"([^"]+)"/g;
+    let m;
+    while ((m = re.exec(src))) called.push({ key: m[1], file: path.relative(ROOT, file) });
+  });
+
+  const stray = called.filter((c) => E.CAP_KEYS.indexOf(c.key) < 0);
+  ok("页面调用的能力名都在能力表里", stray.length === 0,
+    stray.map((c) => c.key + " @ " + c.file).join(", ") || "");
+}
+
 function asTier(t) {
   wx.setStorageSync(store.KEYS.profile, { logged: true });
   wx.setStorageSync(store.KEYS.auth, { token: "t", tier: t, at: Date.now() });
