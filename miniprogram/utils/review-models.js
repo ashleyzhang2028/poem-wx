@@ -184,12 +184,37 @@ function adopt(rec, key) {
   return out;
 }
 
+function dayStamp(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+
+function reviewedToday(rec, t) {
+  if (!rec || !rec.reviewedOn) return false;
+  return rec.reviewedOn === dayStamp(t);
+}
+
+function withoutLastMark(r) {
+  const without = JSON.parse(JSON.stringify(r));
+  const last = (without.history || [])[without.history.length - 1];
+  if (last && last.result) {
+    without.history = without.history.slice(0, -1);
+    if (last.result === "bad") without.lapses = Math.max(0, (without.lapses || 0) - 1);
+  }
+  without.reviewCount = Math.max(0, (without.reviewCount || 0) - 1);
+  without.algo = null;
+  return without;
+}
+
 function review(rec, result, key, now) {
   const t = now === undefined ? Date.now() : now;
   const modelKey = ORDER.indexOf(key) >= 0 ? key : (rec && ORDER.indexOf(rec.algo) >= 0 ? rec.algo : DEFAULT_KEY);
   const model = modelOf(modelKey);
 
-  let r = rec ? adopt(rec, modelKey) : null;
+  const first = rec && !reviewedToday(rec, t) ? rec : null;
+  const base = first || (rec ? withoutLastMark(rec) : null);
+
+  let r = base ? adopt(base, modelKey) : null;
   if (!r) {
     r = { level: 0, nextReviewAt: t, lastReviewAt: null, reviewCount: 0, lapses: 0, learned: false, history: [] };
     Object.assign(r, model.init());
@@ -198,8 +223,11 @@ function review(rec, result, key, now) {
   r.lastReviewAt = t;
   r.reviewCount = (r.reviewCount || 0) + 1;
   r.learned = true;
+  r.reviewedOn = dayStamp(t);
 
-  const elapsedDays = rec && rec.lastReviewAt ? Math.max(0, (t - rec.lastReviewAt) / DAY) : 0;
+  const spot = first || r;
+
+  const elapsedDays = spot.lastReviewAt ? Math.max(0, (t - spot.lastReviewAt) / DAY) : 0;
 
   if (result === "fuzzy") {
     r.nextReviewAt = t + FUZZY_HOURS * HOUR;
@@ -298,6 +326,7 @@ function list() {
 module.exports = {
   DAY,
   HOUR,
+  dayStamp,
   MIN,
   EBBINGHAUS_INTERVALS,
   ORDER,

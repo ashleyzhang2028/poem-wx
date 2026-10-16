@@ -1951,6 +1951,8 @@ function sanitizePayload(p, poemId) {
 
   if (typeof p.dayBase === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.dayBase)) out.dayBase = p.dayBase;
 
+  if (typeof p.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.reviewedOn)) out.reviewedOn = p.reviewedOn;
+
   if (Array.isArray(p.history)) {
     out.history = p.history.slice(-200).map(function (h) {
       if (!h || typeof h !== "object") return null;

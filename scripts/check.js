@@ -304,6 +304,41 @@ let rh = null;
 for (let i = 0; i < 60; i++) rh = R.review(rh, "good", "ebbinghaus");
 ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.length);
 
+{
+  const day1 = new Date(2026, 9, 16, 10, 0, 0).getTime();
+  const day2 = new Date(2026, 9, 17, 10, 0, 0).getTime();
+
+  let same = R.review(null, "bad", "ebbinghaus", day1);
+  same = R.review(same, "good", "ebbinghaus", day1 + 60000);
+  same = R.review(same, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同一天改判，留的是最后一次",
+    same.history.length === 1 && same.history[0].result === "fuzzy",
+    "历史 " + same.history.map((h) => h.result).join(","));
+
+  let good = R.review(null, "good", "ebbinghaus", day1);
+  good = R.review(good, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同日改判，掌握度按最后一次算",
+    good.level === same.level && same.level === R.review(null, "good", "ebbinghaus", day1).level,
+    "level " + same.level + " / " + good.level);
+
+  let lapse = R.review(null, "bad", "ebbinghaus", day1);
+  lapse = R.review(lapse, "fuzzy", "ebbinghaus", day1 + 120000);
+  ok("同日改判，忘过的次数跟着退回去", lapse.lapses === 0, "lapses=" + lapse.lapses);
+
+  let twice = R.review(null, "bad", "ebbinghaus", day1);
+  twice = R.review(twice, "fuzzy", "ebbinghaus", day1 + 60000);
+  twice = R.review(twice, "good", "ebbinghaus", day1 + 120000);
+  ok("同日评几次都只算一次复习", twice.reviewCount === 1, "reviewCount=" + twice.reviewCount);
+
+  let next = R.review(null, "good", "ebbinghaus", day1);
+  next = R.review(next, "fuzzy", "ebbinghaus", day1 + 120000);
+  next = R.review(next, "good", "ebbinghaus", day2);
+  next = R.review(next, "bad", "ebbinghaus", day2 + 1000);
+  ok("隔天再评，连同前一天那次一起记",
+    next.history.length === 2 && next.history[1].result === "bad" && next.reviewCount === 2,
+    "历史 " + next.history.map((h) => h.result).join(",") + "，reviewCount=" + next.reviewCount);
+}
+
 const wxCalls = {};
 global.wx = {
   getStorageSync: (k) => (k in wxCalls ? wxCalls[k] : ""),
