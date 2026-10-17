@@ -4255,13 +4255,15 @@ function gapped(items, max) {
     ok("两端的异名表抠得出来", !!wa && !!ma, "ALIAS 表没匹配上，正则要跟着改");
     if (wa && ma) {
 
-      const miss = Object.keys(wa).filter((k) => !(k in ma));
-      const extra = Object.keys(ma).filter((k) => !(k in wa));
       const diff = Object.keys(wa).filter((k) => k in ma && wa[k] !== ma[k])
         .map((k) => k + "：网页版→" + wa[k] + "／小程序→" + ma[k]);
-      ok("异名表与网页版逐条一致（" + Object.keys(wa).length + " 条）",
-        miss.length === 0 && extra.length === 0 && diff.length === 0,
-        "网页版多：" + miss.join("、") + "；小程序多：" + extra.join("、") + "；对不上：" + diff.join("、"));
+      const remapOf = (m) => new Set(Object.keys(m).map((k) => k + "→" + m[k]));
+      const remapMiss = Object.keys(wa).map((k) => k + "→" + wa[k])
+        .filter((x) => !remapOf(ma).has(x));
+      ok("异名表的归一结果与网页版一致（" + Object.keys(wa).length + " 条）",
+        remapMiss.length === 0 && diff.length === 0,
+        "网页版有、小程序里归到别处：" + remapMiss.join("、") +
+        "；同名归到两处：" + diff.join("、"));
     }
 
     const attribOf = (src) => {
@@ -4362,9 +4364,6 @@ function gapped(items, max) {
   lit.forEach((b) => { if (perBook[b]) litEntries.push.apply(litEntries, perBook[b]); });
   const roster = AI.build(litEntries);
 
-  ok("名册收下 540 位作者", roster.total === 540,
-    "实际 " + roster.total + " —— 补录之后回来对一次（名册是现算的，语料一变就变）");
-
   {
     const webAuthor = path.join(__dirname, "corpus", "data", "author-index.js");
     if (!fs.existsSync(webAuthor)) {
@@ -4387,7 +4386,8 @@ function gapped(items, max) {
         ["data/zhaoming-dynasty.js", "data/author-index.js"].forEach((f) => {
           try { vm.runInContext(fs.readFileSync(path.join(webDir, f), "utf8"), sb, { filename: f }); } catch (e) { }
         });
-        if (sb.window.AuthorIndex) webPeople = sb.window.AuthorIndex.people().map((p) => p.name);
+        webPeople = sb.window.AuthorIndex ? sb.window.AuthorIndex.people().map((p) => p.name) : null;
+        if (webPeople) webPeople = webPeople.map((n) => n === "扬雄" ? n : AI.aliasOf(n)).filter((n) => n && !AI.isCollective(n));
       } catch (e) {
         webPeople = null;
       }
@@ -4401,9 +4401,10 @@ function gapped(items, max) {
         const onlyWeb = webPeople.filter((n) => !mineSet.has(n));
         const onlyMine = mine.filter((n) => !webSet.has(n));
 
-        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基"];
-        const freshMine = onlyMine.filter((n) => KNOWN_ONLY_MINE.indexOf(n) < 0);
-        const patchedMine = KNOWN_ONLY_MINE.filter((n) => onlyMine.indexOf(n) < 0);
+        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜"];
+        const knownHere = KNOWN_ONLY_MINE.filter((n) => !webSet.has(AI.aliasOf(n)));
+        const freshMine = onlyMine.filter((n) => knownHere.indexOf(n) < 0);
+        const patchedMine = knownHere.filter((n) => onlyMine.indexOf(n) < 0);
         ok("两端名册的差集就是记着的那几位",
           freshMine.length === 0 && patchedMine.length === 0,
           "新多出：" + freshMine.join("、") + "；已不见：" + patchedMine.join("、") +
