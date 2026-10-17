@@ -15,11 +15,14 @@ const sfx = require("../../utils/sfx");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
-const CHEERS = [
-  { key: "plan", text: "今天的篇目都背完了" },
-  { key: "self", text: "自选的今日份也背完了" },
-  { key: "all", text: "课内和自选，今天的份都背完了" }
-];
+const SELF_CHEERS = {
+  self: "自选的今日份也背完了",
+  all: "课内和自选，今天的份都背完了"
+};
+
+const TOAST_GAP = 2400;
+
+const TOAST_MS = 2200;
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
@@ -302,13 +305,8 @@ Page({
     const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
     const selfToday = colRows.reduce((n, c) => n + c.doneNow, 0);
-    const planDone = total > 0 && done >= total;
     const selfAllDone = selfTotal > 0 && selfToday >= selfTotal;
-    const cheerOn = {
-      plan: planDone && !selfAllDone,
-      self: selfAllDone,
-      all: planDone && selfAllDone
-    };
+    const cheerKey = selfAllDone && allDone ? "all" : selfAllDone ? "self" : "";
 
     this.setData({
       logged: true,
@@ -328,7 +326,7 @@ Page({
         self: selfTotal,
         selfDone: selfDone
       },
-      cheers: CHEERS.filter((c) => cheerOn[c.key]).map((c) => c.text),
+      cheers: cheerKey ? [SELF_CHEERS[cheerKey]] : [],
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
@@ -378,7 +376,9 @@ Page({
     if (!hit || this.cheered === hit.id) return;
     this.cheered = hit.id;
     sfx.pass();
-    wx.showToast({ title: "「" + hit.title + "」今日份已背完 · " + hit.planned + " 首", icon: "none", duration: 2200 });
+    if (Date.now() - this.toastAt() < TOAST_GAP) return;
+    this.toastedAt = Date.now();
+    wx.showToast({ title: "「" + hit.title + "」今日份已背完 · " + hit.planned + " 首", icon: "none", duration: TOAST_MS });
   },
 
   collectionCardRows(plan) {
@@ -541,7 +541,13 @@ Page({
   collectExtra(ofPlan) {
     if (!ofPlan || !this.data.allDone || this.toasted) return;
     this.toasted = true;
-    wx.showToast({ title: "今天的几首都背完了，了不起", icon: "none" });
+    if (Date.now() - this.toastAt() < TOAST_GAP) return;
+    this.toastedAt = Date.now();
+    wx.showToast({ title: "今天的几首都背完了，了不起", icon: "none", duration: TOAST_MS });
+  },
+
+  toastAt() {
+    return this.toastedAt || 0;
   },
 
   onSettings() {
