@@ -19,7 +19,6 @@ Page({
     count: 0,
 
     collections: [],
-    openIds: "",
 
     searchId: "",
     keyword: "",
@@ -46,7 +45,7 @@ Page({
   refresh() {
     const list = cols.list();
     const all = corpus.course();
-    const openIds = this.openList(list);
+    const closed = this.closedList();
     const rows = list.map((c) => {
       const plan = S.collectionPlan(c, {
         count: cols.countOf(c),
@@ -62,26 +61,29 @@ Page({
         due: ov.due,
         planned: plan.length,
         dailyCount: cols.countOf(c),
-        open: openIds.indexOf(c.id) >= 0,
-        items: this.itemRows(c.id)
+        items: this.itemRows(c.id),
+        open: closed.indexOf(c.id) < 0
       };
     });
-    const openIds2 = list.map((c) => c.id).filter((id) => openIds.indexOf(id) >= 0).join(",");
     this.setData({
       on: entitlement.can("collections"),
       hint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
       cap: cols.capOf(),
       count: list.length,
       collections: rows,
-      openIds: openIds2,
       searchId: list.some((c) => c.id === this.data.searchId) ? this.data.searchId : ""
     });
   },
 
-  openList(list) {
-    const kept = (this.data.openIds || "").split(",").filter(Boolean);
-    const ids = kept.filter((id) => list.some((c) => c.id === id));
-    return ids.length ? ids : list.map((c) => c.id);
+  closedList() {
+    const kept = this.closed || [];
+    const ids = cols.list().map((c) => c.id);
+    this.closed = kept.filter((id) => ids.indexOf(id) >= 0);
+    return this.closed;
+  },
+
+  setClosed(list) {
+    this.closed = list;
   },
 
   pickedIds(id) {
@@ -146,8 +148,8 @@ Page({
           return;
         }
         sync.markDirty();
-        const open = this.openList(cols.list()).concat(r.collection.id);
-        this.setData({ openIds: open.join(",") }, () => this.refresh());
+        this.setClosed(this.closedList().filter((x) => x !== r.collection.id));
+        this.refresh();
         wx.showToast({ title: "已新建", icon: "none" });
       }
     });
@@ -155,9 +157,9 @@ Page({
 
   onToggleList(e) {
     const id = e.currentTarget.dataset.id;
-    const open = this.openList(cols.list());
-    const next = open.indexOf(id) >= 0 ? open.filter((x) => x !== id) : open.concat(id);
-    this.setData({ openIds: next.join(",") }, () => this.refresh());
+    const closed = this.closedList();
+    this.setClosed(closed.indexOf(id) >= 0 ? closed.filter((x) => x !== id) : closed.concat(id));
+    this.refresh();
   },
 
   onRename(e) {
@@ -194,7 +196,7 @@ Page({
         if (!res.confirm) return;
         cols.remove(id);
         sync.markDirty();
-        this.setData({ openIds: id }, () => this.refresh());
+        this.refresh();
         wx.showToast({ title: "已删除", icon: "none" });
       }
     });
