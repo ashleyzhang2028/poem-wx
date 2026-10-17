@@ -10,8 +10,15 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
+const sfx = require("../../utils/sfx");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
+
+const CHEERS = [
+  { key: "plan", text: "今天的篇目都背完了" },
+  { key: "self", text: "自选的今日份也背完了" },
+  { key: "all", text: "课内和自选，今天的份都背完了" }
+];
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
@@ -269,6 +276,14 @@ Page({
     const colRows = this.collectionRows();
     const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
+    const selfToday = colRows.reduce((n, c) => n + c.doneNow, 0);
+    const planDone = total > 0 && done >= total;
+    const selfAllDone = selfTotal > 0 && selfToday >= selfTotal;
+    const cheerOn = {
+      plan: planDone && !selfAllDone,
+      self: selfAllDone,
+      all: planDone && selfAllDone
+    };
 
     this.setData({
       logged: true,
@@ -287,6 +302,7 @@ Page({
         selfDone: selfDone,
         left: Math.max(0, total - done)
       },
+      cheers: CHEERS.filter((c) => cheerOn[c.key]).map((c) => c.text),
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
@@ -298,6 +314,8 @@ Page({
       collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
       loading: false
     });
+
+    this.cheerCollection(colRows);
   },
 
   collectionRows() {
@@ -310,8 +328,11 @@ Page({
       });
       const seen = store.progress();
       let done = 0;
+      let doneNow = 0;
       plan.forEach((it) => {
-        if (S.isLearned(seen[it.poem.id])) done += 1;
+        const rec = seen[it.poem.id];
+        if (S.isLearned(rec)) done += 1;
+        if (S.doneToday(rec)) doneNow += 1;
       });
       return {
         id: c.id,
@@ -319,9 +340,19 @@ Page({
         count: c.items.length,
         planned: plan.length,
         done: done,
+        doneNow: doneNow,
+        doneToday: plan.length > 0 && doneNow >= plan.length,
         rows: this.collectionCardRows(plan)
       };
     });
+  },
+
+  cheerCollection(list) {
+    const hit = (list || []).filter((c) => c.doneToday)[0];
+    if (!hit || this.cheered === hit.id) return;
+    this.cheered = hit.id;
+    sfx.pass();
+    wx.showToast({ title: "「" + hit.title + "」今日份已背完 · " + hit.planned + " 首", icon: "none", duration: 2200 });
   },
 
   collectionCardRows(plan) {

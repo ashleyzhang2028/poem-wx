@@ -6707,6 +6707,15 @@ function gapped(items, max) {
     });
     ok("集子只有一首时计划就一首（不凑数）", planEmpty.length === 1);
 
+    const R3 = require(path.join(ROOT, "utils", "review-models.js"));
+    const todayRec = (r) => R3.review(store3.getRecord(r), "good", "ebbinghaus");
+    store3.setRecord("cp1", todayRec("cp1"));
+    ok("「今天背过」只认当天的那次评价，昨天背过的不算",
+      S3.doneToday(store3.getRecord("cp1")) === true
+        && S3.doneToday({ level: 3, learned: true, reviewedOn: "2000-1-1" }) === false
+        && S3.doneToday(null) === false);
+
+    store3.setRecord("cp1", { level: 0, learned: false, nextReviewAt: 0, lastReviewAt: 0, history: [] });
     const ov = S3.collectionOverview(fake3, cols3.find("c1"));
     ok("集子概览报篇目数 / 已背 / 今日到期",
       ov.total === 12 && ov.learned === 1 && ov.due === 1, JSON.stringify(ov));
@@ -6768,6 +6777,13 @@ function gapped(items, max) {
   const homeWxml4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
+  ok("自选集子的今日份背完给一次提示（每张卡带完成态，首页顶部跟着显示）",
+    /doneToday: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4)
+      && /cheerCollection\(/.test(homeSrc4)
+      && homeSrc4.indexOf("S.doneToday(rec)") >= 0
+      && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
+      && /wx:for="\{\{cheers\}\}"/.test(homeWxml4)
+      && /const cheerOn = \{/.test(homeSrc4));
   ok("首页自选卡与背诵弹层共用一套（点一行就地开弹层）",
     /onOpenCollection/.test(homeSrc4) && homeWxml4.indexOf("onOpenCollection") >= 0);
   ok("每个自选集子一张卡，标题是集子名，篇目平铺成一份队列",
