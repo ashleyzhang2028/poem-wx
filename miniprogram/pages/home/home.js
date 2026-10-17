@@ -46,6 +46,15 @@ function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
 }
 
+function stateText(recited, read) {
+  if (recited) return "已背";
+  return read ? "未背" : "未读";
+}
+
+function stateCls(recited) {
+  return recited ? "on" : "idle";
+}
+
 function sourceKey(id) {
   const meta = corpus.indexById(id);
   return meta && meta.b === "poems" ? "course" : "own";
@@ -247,6 +256,8 @@ Page({
         mastery: S.mastery(rec),
         read,
         recited,
+        stateText: stateText(recited, read),
+        stateCls: stateCls(recited),
         source: SOURCE_TEXT[sourceKey(it.poem.id)]
       };
     });
@@ -328,6 +339,8 @@ Page({
   poemRow(p, i, reason, readOf) {
     const rec = store.getRecord(p.id);
     const stage = S.stageName(rec) || "";
+    const read = readOf(p.id);
+    const recited = S.isLearned(rec);
     return {
       id: p.id,
       seq: i + 1,
@@ -339,8 +352,10 @@ Page({
       tagCls: reasonCls(reason),
       stage: stage === REASON_TEXT[reason] ? "" : stage,
       mastery: S.mastery(rec),
-      read: readOf(p.id),
-      recited: S.isLearned(rec),
+      read: read,
+      recited: recited,
+      stateText: stateText(recited, read),
+      stateCls: stateCls(recited),
       source: SOURCE_TEXT[sourceKey(p.id)]
     };
   },

@@ -18,10 +18,7 @@ Component({
   data: {
     keyword: "",
     searched: false,
-    rows: [],
-    count: 0,
-
-    max: store.DAILY_EXTRA_MAX
+    rows: []
   },
 
   attached() {
@@ -31,7 +28,6 @@ Component({
   methods: {
 
     refresh() {
-      this.setData({ count: store.dailyExtra().length, max: store.DAILY_EXTRA_MAX });
       if (this.data.keyword) this.paint(this.data.keyword);
     },
 
