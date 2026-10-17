@@ -6505,6 +6505,24 @@ function gapped(items, max) {
       "server.js 反过来：它是入库的空壳，只有值由构建期写");
 }
 
+{
+  const repoRoot = path.join(__dirname, "..");
+  const tracked = execFileSync("git", ["ls-files"], { cwd: repoRoot })
+    .toString().split("\n").filter(Boolean);
+  const quoted = [];
+  tracked.filter((rel) => /^miniprogram\/.*\.wxml$/.test(rel)).forEach((rel) => {
+    const src = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    src.split("\n").forEach((line, i) => {
+      const blank = /\{\{[^}]*"[^"]*"[^}]*\}\}/.test(line);
+      if (blank) quoted.push(rel + ":" + (i + 1));
+    });
+  });
+  ok("WXML 的花括号表达式里没有裸双引号（上传编译会判 unexpected character）",
+    quoted.length === 0,
+    "这几行把双引号写在花括号里：" + quoted.slice(0, 6).join("、")
+      + " —— 属性值用双引号包着，里面的分支字符串要用单引号（或丢掉空分支）");
+}
+
 
 {
   const colsMod = require(path.join(ROOT, "utils", "collections.js"));
