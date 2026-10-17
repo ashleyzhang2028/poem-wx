@@ -44,6 +44,7 @@
 .hot-tags {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   padding-top: var(--sp-4);
 }
 

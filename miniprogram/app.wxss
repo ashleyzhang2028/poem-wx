@@ -156,7 +156,7 @@ view, text, button, input, textarea {
   height: var(--h-btn);
   padding: 0 var(--sp-4);
 
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
   color: var(--ink);
@@ -623,7 +623,7 @@ view, text, button, input, textarea {
   min-height: var(--h-opt);
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1014,7 +1014,7 @@ view, text, button, input, textarea {
 
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
