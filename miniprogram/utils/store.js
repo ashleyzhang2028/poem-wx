@@ -279,6 +279,11 @@ function toggleDailyExtra(id) {
   const ids = dailyExtra();
   const at = ids.indexOf(id);
 
+  if (at < 0) {
+    const denied = require("./entitlement").decide("extra");
+    if (!denied.ok) return { ok: false, on: false, count: ids.length, code: "E_TIER" };
+  }
+
   if (at >= 0) {
     const next = ids.slice();
     next.splice(at, 1);
