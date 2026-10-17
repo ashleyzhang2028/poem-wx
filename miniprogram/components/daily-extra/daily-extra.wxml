@@ -1,6 +1,4 @@
 <view class="de" style="{{themeStyle}}">
-  <view class="de-limit hint" wx:if="{{count}}">今天已加 {{count}} / {{max}} 首</view>
-
   <view class="de-suggest" wx:if="{{rows.length}}">
     <view class="de-row" wx:for="{{rows}}" wx:key="id"
           hover-class="row-hover" hover-stay-time="60"

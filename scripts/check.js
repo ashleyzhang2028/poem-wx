@@ -3307,8 +3307,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("打开弹层只算「读过」，不算「背过」（两件事各有各的写法）",
     sheetJs.indexOf("markRead") >= 0 && /S\.isLearned/.test(homeJs)
-      && /item\.recited/.test(homeWxml) && /item\.read/.test(homeWxml),
+      && /item\.recited/.test(homeWxml) && /item\.stateText/.test(homeWxml),
     "把已读与已背写成同一个判据 —— 点开看一眼就成了「已背」");
+
+  ok("未读 / 未背 / 已背是同一枚胶囊的三个状态（不并排摆两枚）",
+    /class="row-state \{\{item\.stateCls\}\}"/.test(homeWxml)
+      && !/\{\{!item\.read\}\}/.test(homeWxml)
+      && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
+    "未读又单独摆了一枚 —— 未读必然未背，一枚胶囊按顺序往下走就够了");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
@@ -3316,7 +3322,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "首页拿已读当已背 —— 点开弹窗看一眼，统计里就多一首「已背」");
 
   ok("已读仍单独标出来（它与已背不是一件事）",
-    /store\.reads\(/.test(homeJs) && /item\.read/.test(homeWxml),
+    /store\.reads\(/.test(homeJs) && /stateText\(recited, read\)/.test(homeJs)
+      && /item\.stateText/.test(homeWxml),
     "把已读那一格删了 —— 读过但没评分的诗在列表上就与没碰过的一样");
 
   ok("弹层显式接了页面那份主题变量",

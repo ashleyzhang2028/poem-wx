@@ -117,8 +117,7 @@
             <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
           <view class="row-end">
-            <text class="row-state {{item.recited ? 'on' : ''}}">{{item.recited ? '已背' : '未背'}}</text>
-            <text class="row-state" wx:if="{{!item.read}}">未读</text>
+            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
           </view>
         </view>
       </block>
@@ -163,8 +162,7 @@
             <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
           <view class="row-end">
-            <text class="row-state {{item.recited ? 'on' : ''}}">{{item.recited ? '已背' : '未背'}}</text>
-            <text class="row-state" wx:if="{{!item.read}}">未读</text>
+            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
           </view>
         </view>
 
@@ -194,7 +192,7 @@
             </view>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
-          <text class="row-state" wx:if="{{!item.read}}">未读</text>
+          <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
           <text class="row-go">›</text>
         </view>
       </block>

@@ -142,10 +142,6 @@
   margin-right: var(--sp-1);
 }
 
-.row-end .row-state + .row-state {
-  margin-left: var(--sp-1);
-}
-
 .row-lock,
 .row-state {
   flex: none;
