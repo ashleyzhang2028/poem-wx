@@ -891,7 +891,7 @@ asTier("free");
 
 const homeWxml = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
 const homeJs = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
-ok("首页有游客提示条", homeWxml.indexOf("guest-bar") >= 0);
+ok("首页游客点篇目要登录", homeWxml.indexOf('bindtap="onGuestOpen"') >= 0);
 ok("首页游客态在 js 里算出来", homeJs.indexOf("gate.GUEST_GRADE") >= 0);
 
 ok("首页点击过门禁", /gate\.guard\(/.test(homeJs));
@@ -2609,15 +2609,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   {
-    const mineCode = mineSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
-    const loginFn = /onLogin\(\)\s*\{([\s\S]*?)\n  \},/.exec(mineCode);
+    const flowCode = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const gateCode = fs.readFileSync(path.join(ROOT, "utils", "gate.js"), "utf8");
     ok("登录被拒的理由要能指到「同步服务器」这一行（不是一句「登录失败」）",
-      !!loginFn && /E_NOT_CONFIGURED/.test(loginFn[1]) && /tellOffline/.test(loginFn[1]),
-      "onLogin 没有把 E_NOT_CONFIGURED 引到 tellOffline —— 用户看到「登录未完成」，"
-        + "而真正该说的是「这个包还没配同步服务器」");
-    ok("有告诉用户「还没接上同步服务器」的那一步",
-      /tellOffline/.test(mineCode) && mineCode.indexOf("还没接上同步服务器") >= 0,
-      "空壳登录没有任何一句解释，用户只能自己去数据库里查");
+      /E_NOT_CONFIGURED/.test(flowCode) && flowCode.indexOf("还没接上同步服务器") >= 0,
+      "登录流程没有把 E_NOT_CONFIGURED 说成「这个包还没配同步服务器」——"
+        + "用户看到「登录未完成」，只能自己去数据库里查");
+    ok("登录只有一份（页面不再各写一遍）",
+      /require\(["']\.\.\/\.\.\/utils\/login-flow["']\)/.test(mineSrc)
+        && /require\(["']\.\/login-flow["']\)/.test(gateCode),
+      "「我的」页与门禁弹窗各自写了一遍 wx.login 的成败分支");
   }
 }
 
@@ -3656,7 +3657,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const wireSrc = fs.readFileSync(path.join(ROOT, "utils", "wire.js"), "utf8");
   const storeSrc2 = fs.readFileSync(path.join(ROOT, "utils", "store.js"), "utf8");
   const authSrc = fs.readFileSync(path.join(ROOT, "utils", "auth.js"), "utf8");
-  const mineJs2 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+  const gateSrc = fs.readFileSync(path.join(ROOT, "utils", "gate.js"), "utf8");
 
   ok("设置的跨设备 / 本机两层分得开（音效跟设备走、写设置按键分流）",
     /const DEFAULTS\s*=/.test(storeSrc2) && /const DEVICE_DEFAULTS\s*=/.test(storeSrc2)
@@ -3733,8 +3734,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("登录成功之后立刻认回云端", /pullAfterLogin/.test(authSrc));
   ok("认回云端只在这条路上做一次（不是每个页面各写一遍）",
     (authSrc.match(/pullAfterLogin\(/g) || []).length <= 2);
-  ok("认回云端的结果传得到界面（mine 读 sync 的 synced 字段）",
-    /synced/.test(authSrc) && mineJs2.indexOf("synced") >= 0,
+  ok("认回云端的结果传得到界面（登录流程读 synced 字段）",
+    /synced/.test(authSrc)
+      && /synced/.test(fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
     "认回的结果没传到界面 —— 用户看不出这次登录有没有把进度拿回来");
 
   const syncSrc = fs.readFileSync(path.join(ROOT, "utils", "sync.js"), "utf8");
@@ -5026,7 +5028,6 @@ function gapped(items, max) {
     "两句话一样时，人不知道该去调最小实例数还是去核对环境 ID");
 
   {
-    const mineSrc = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
     ok("云调用回 invalid host 时给的是「服务名找不到后端」这句，不是拿 102002 那套话去套",
       /function cloudFailHint\s*\(/.test(remoteSrc) &&
         /invalid host/i.test(remoteSrc) &&
@@ -5034,8 +5035,9 @@ function gapped(items, max) {
       "invalid host 与 102002 是两个病：前者指 X-WX-SERVICE 找不到可路由的后端" +
         "（云托管里没这个服务），后者指 config.env 不是这个小程序的云开发环境。" +
         "一句通用话套两种错，人会往错的方向查（Issue #175）");
+    const flowSrc = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     ok("云调用失败的整段话用弹窗出，不被 toast 截掉",
-      /err\.cloudFail[\s\S]{0,200}?showModal/.test(mineSrc),
+      /err\.cloudFail[\s\S]{0,200}?showModal/.test(flowSrc),
       "cloudFail 的错带环境 / 服务 / 怎么办一长串，走 else 的 toast 会被截成一行 —— " +
         "用户拿不到能自查的那两格（Issue #175）");
   }
