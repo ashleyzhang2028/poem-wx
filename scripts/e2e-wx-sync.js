@@ -28,12 +28,15 @@ const server = http.createServer((req, res) => PoemHandler(req, res));
 const results = [];
 const ok = (n, c, d) => { results.push(!!c); console.log((c ? "✓ " : "✗ ") + n + (c ? "" : "  —— " + (d || ""))); };
 
+const hits = [];
+
 function makeWx(port, mem) {
   return {
     getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
     setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
     removeStorageSync: (k) => { delete mem[k]; },
     request: (opt) => {
+      hits.push(opt.url);
       const u = new URL(opt.url);
       const data = opt.data === undefined ? null : JSON.stringify(opt.data);
       const req = http.request({
@@ -68,6 +71,7 @@ function makeWx(port, mem) {
   const remote = require(path.join(REPO, "miniprogram", "utils", "remote.js"));
 
   const wire = require(path.join(REPO, "miniprogram", "utils", "wire.js"));
+  const syncModule = require(path.join(REPO, "miniprogram", "utils", "sync.js"));
   const wireRows = () => wire.packRecords();
 
   auth.configure({ baseUrl: "http://127.0.0.1:" + port });
@@ -104,6 +108,7 @@ function makeWx(port, mem) {
 
   const sync = await remote.sync();
   ok("同步没报错", !sync.error, JSON.stringify(sync));
+  ok("同步成功之后没有留下失败痕迹", !syncModule.state().failed, JSON.stringify(syncModule.state()));
   ok("推上去的条数 > 0", sync.pushed > 0, JSON.stringify(sync));
 
   const svStore = require(path.join(POEM, "_lib", "store.js")).getStore(config);
@@ -219,6 +224,51 @@ function makeWx(port, mem) {
   ok("另一台手机同步成功", !sync4.error, JSON.stringify(sync4));
   ok("另一台手机上的那条进度被删掉（清空跨设备生效）",
     !store2.getRecord("poem_x"), JSON.stringify(store2.getRecord("poem_x")));
+
+  {
+    const limit = config.rate.device[0];
+    const saved = config.rate.device;
+    config.rate.device = [[limit[0], 1]];
+    await remote.pull().catch(() => {});
+
+    const called = [];
+    const realNow = syncModule.now;
+    const realFlush = syncModule.flush;
+    syncModule.now = (force) => { called.push(force ? "now:force" : "now"); return realNow(force); };
+    syncModule.flush = () => { called.push("flush"); return realFlush(); };
+
+    store.setRecord("poem_y", { level: 2, reviewCount: 1, updatedAt: Date.now() });
+    const fail = await syncModule.now(true);
+    ok("被限流的那次同步把原因带回来了", fail && fail.error && fail.statusCode === 429, JSON.stringify(fail));
+    const calledBefore = called.length;
+
+    store.setRecord("poem_z", { level: 2, reviewCount: 1, updatedAt: Date.now() });
+    const markBefore = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
+    syncModule.markDirty();
+    await new Promise((r) => setTimeout(r, 900));
+    const marked = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
+    const st = syncModule.state();
+    ok("被限流之后记了改动也不再自动重启一轮重试",
+      marked === markBefore && called.slice(calledBefore).length === 0,
+      JSON.stringify(called.slice(calledBefore)) + " 打了 " + (marked - markBefore) + " 次");
+    ok("被限流之后界面不再显示已同步", st.pendingStatus !== "已同步" && st.failed, JSON.stringify(st));
+    ok("被限流之后给出重试倒计时", st.later > 0 && st.pendingText.indexOf("秒后重试") > 0, JSON.stringify(st));
+
+    const beforeRetry = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
+    syncModule.resetThrottle();
+    const autoRetry = await syncModule.now();
+    await new Promise((r) => setTimeout(r, 60));
+    const afterRetry = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
+    ok("冷却期内的自动同步也不打服务端",
+      afterRetry === beforeRetry && autoRetry.skipped === "waiting" && autoRetry.retryAfter > 0,
+      "打了 " + (afterRetry - beforeRetry) + " 次，" + JSON.stringify(autoRetry));
+    ok("冷却期内待同步的改动仍算在账上", syncModule.unsent() || syncModule.pendingCount() > 0);
+
+    syncModule.now = realNow;
+    syncModule.flush = realFlush;
+    config.rate.device = saved;
+    hits.length = 0;
+  }
 
   server.close();
   const bad = results.filter((r) => !r).length;

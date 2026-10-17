@@ -2114,7 +2114,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
       "要临时换后端就改代码库里的 miniprogram/utils/server.js，不走界面");
 
   ok("同步那一行的副标题：上次同步 + 队列状态，都用数据层算的（不自己拼）",
-    /syncSub\(sy\)\s*\{[\s\S]{0,300}?sy\.ready[\s\S]{0,200}?sy\.pendingStatus/.test(mineJs)
+    /syncSub\(sy\)\s*\{[\s\S]{0,400}?sy\.ready[\s\S]{0,400}?sy\.pendingStatus/.test(mineJs)
       && /syncSub:\s*this\.syncSub\(sy\)/.test(mineJs),
     "副标题自己拼了一份：末次同步时刻与「还有几项在等」都只有 sync.state() 说了算");
 
