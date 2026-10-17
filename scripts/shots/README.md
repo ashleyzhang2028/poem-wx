@@ -102,10 +102,10 @@ chromium 路径可用 `CHROME_PATH` 指）。装不上时它**明说装不上**�
 拿到最终 `data`；再按 `wx:if` / `wx:elif` / `wx:else` / `wx:for` 把 WXML 编译成
 HTML，套进一个 390×844 的手机壳。`rpx → px` 按 390/750 换算。
 
-## 篇名宋体：预览要看得见
+## 诗词宋体：预览要看得见
 
 `--font-poem` 的第一位是外挂名 `Kuibu Serif`，真机上由 `wx.loadFontFace`
-注册（见 `miniprogram/utils/font.js`）。**这个容器里没有中文宋体**，
+注册一次（见 `miniprogram/utils/font.js`）。**这个容器里没有中文宋体**，
 `render.js` 若不做处理，标题会退回文泉驿黑体 —— 那样看截图就分不清
 「标题到底是不是宋体」。
 
@@ -113,7 +113,7 @@ HTML，套进一个 390×844 的手机壳。`rpx → px` 按 390/750 换算。
 
 ```bash
 cp <poem 仓库>/fonts/NotoSerifSC-{400,600}.woff2 scripts/shots/out/serif-{400,600}.woff2
-node scripts/shots/render.js   # 会打印「预览已注入篇名宋体」
+node scripts/shots/render.js   # 会打印「预览已注入诗词宋体」
 ```
 
 没有这两个文件也能跑，只是标题的字形不真 —— 布局仍然是真的。

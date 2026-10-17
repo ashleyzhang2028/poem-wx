@@ -504,7 +504,7 @@ function fontFaceCss() {
 }
 
 const FONT_CSS = fontFaceCss();
-if (FONT_CSS) console.log("预览已注入篇名宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
+if (FONT_CSS) console.log("预览已注入诗词宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
 
 fs.writeFileSync(path.join(__dirname, "out", "preview.html"),
   `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${DEVICE_FONT_SIZE}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);

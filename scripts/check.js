@@ -598,43 +598,26 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   const seen = [];
   const e = bootFont(
-    {
-      fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2",
-      fontTextUrl: "https://cdn.example.com/kuibu-text-serif.woff2"
-    },
+    { fontUrl: "https://cdn.example.com/kuibu-serif.woff2" },
     { loadFontFace: (o) => { seen.push(o); o.success && o.success(); } }
   );
   ok("配了 CDN 时诗词字体就绪", e.font.readiness().usable === true);
   e.font.load();
-  ok("题名与正文各注册一次",
-    seen.length === 2
-      && seen[0].family === "Kuibu Serif"
-      && seen[1].family === "Kuibu Serif Text",
+  ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
+    seen.length === 1 && seen[0].family === e.font.FAMILY,
     seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
-  ok("正文那次带 normal 字重描述（否则半粗那份会被正文继承）",
-    !!seen[1] && !!(seen[1].desc && seen[1].desc.weight === "normal"));
-  ok("两个地址分别取（题名子集与正文子集不是同一个文件）",
-    !!seen[0] && !!seen[1] && seen[0].source !== seen[1].source);
   e.restore();
 
-  const only = [];
-  const e2 = bootFont(
-    { fontUrl: "https://cdn.example.com/kuibu-title-serif.woff2", fontTextUrl: "" },
-    { loadFontFace: (o) => { only.push(o); o.success && o.success(); } }
-  );
+  const idle = [];
+  const e2 = bootFont({}, { loadFontFace: (o) => { idle.push(o); o.success && o.success(); } });
+  ok("没配地址时就绪为否", e2.font.readiness().usable === false);
   e2.font.load();
-  ok("只配了一个地址时只注册那一个（另一个退回系统宋体）",
-    only.length === 1 && only[0].family === "Kuibu Serif",
-    only.map((o) => o.family).join(" | "));
+  ok("没配地址时不去注册字体", idle.length === 0, idle.map((o) => o.family).join(" | "));
   e2.restore();
 
   const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
   ok("字体链首位与 font.js 的 FAMILY 同名", !!stackNow && stackNow[1].indexOf("Kuibu Serif") >= 0);
-  const textNow = /--font-poem-text\s*:\s*([^;]+);/.exec(tokensWxss2);
-  ok("正文那条字体链有自己的一份（不与题名混用一个字重）",
-    !!textNow && /^\s*"Kuibu Serif Text"/.test(textNow[1]),
-    textNow ? textNow[1].trim() : "找不到 --font-poem-text");
 }
 
 {
@@ -3398,11 +3381,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /letter-spacing\s*:\s*0\s*;/.test(poemLine),
     "正文又加回了字距 —— 字形不变而字距变宽，一列下来是拉伸感");
 
-  ok("详情页的题名与正文走同一串系统宋体（不再单开一条链）",
-    !/--font-detail/.test(tokensWxss)
+  ok("详情页的题名与正文同取一条字体链（与其余诗词文本也是同一条）",
+    !/--font-detail|--font-poem-text/.test(tokensWxss)
       && /\.poem-title\s*\{[^}]*var\(--font-poem\)/.test(wxss)
-      && /\.poem-body\s*\{[^}]*var\(--font-poem-text\)/.test(wxss),
-    "详情页又分出一条字体链，或题名/正文取错了链");
+      && /\.poem-body\s*\{[^}]*var\(--font-poem\)/.test(wxss),
+    "详情页的题名与正文又分了链，或取的不是 --font-poem");
 
   const sizes = new Set(
     [...wxss.matchAll(/\.poem-body\.size(--?\d+)/g)]
