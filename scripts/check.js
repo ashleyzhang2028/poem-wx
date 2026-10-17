@@ -1762,7 +1762,7 @@ ok("名录在、标签截断、档位合法",
 
     ok("飞花令页下方有正确答案列表", wxml.indexOf("onReveal") >= 0 && wxml.indexOf("answers") >= 0);
 
-    const actions = wxml.slice(wxml.indexOf("fh-actions"), wxml.indexOf("</view>", wxml.indexOf("fh-actions")));
+    const actions = wxml.slice(wxml.indexOf('class="inline-btns"'), wxml.indexOf("</view>", wxml.indexOf('class="inline-btns"')));
     ok("一行三颗按钮：看答案 / 提交 / 换令",
       ["onReveal", "onSubmit", "onSkip"].every((h) => actions.indexOf(h) >= 0),
       "少了哪一颗，飞花令这一行就不完整");

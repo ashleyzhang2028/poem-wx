@@ -168,6 +168,8 @@ button, textarea {
   line-height: 1.2;
   letter-spacing: var(--ls-title);
   text-align: center;
+  white-space: nowrap;
+  min-width: 0;
   transition: background-color var(--t-press), transform var(--t-press), opacity var(--t-press);
 }
 
@@ -226,8 +228,10 @@ button, textarea {
   margin-bottom: 0;
 }
 
-.actions .btn {
-  flex: 1;
+.inline-btns {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--sp-1);
 }
 
 .btn.mini {
@@ -235,12 +239,19 @@ button, textarea {
   align-items: center;
   justify-content: center;
   width: auto;
-  min-width: var(--w-btn-mini);
+  min-width: 0;
   height: var(--h-btn-mini);
   padding: 0 var(--sp-3);
-  font-size: var(--fs-hint);
+  font-size: var(--fs-caption);
   line-height: 1.2;
   border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.actions .btn,
+.inline-btns .btn.mini {
+  flex: 1;
+  padding: 0;
 }
 
 .btn[disabled] {

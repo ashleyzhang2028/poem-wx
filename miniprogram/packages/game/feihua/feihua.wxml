@@ -16,7 +16,7 @@
                bindinput="onInput" bindconfirm="onSubmit" />
       </view>
 
-      <view class="fh-actions">
+      <view class="inline-btns">
         <button class="btn ghost" bindtap="onReveal">{{revealed ? '收起答案' : '看答案'}}</button>
         <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">提交</button>
         <button class="btn ghost" bindtap="onSkip">换令</button>

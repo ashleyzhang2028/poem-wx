@@ -13,7 +13,7 @@
 
       <text class="hint daily-count">今天加了 {{daily.length}} / {{dailyMax}} 首</text>
 
-      <view class="daily-tools">
+      <view class="inline-btns daily-tools">
         <button class="btn mini" bindtap="onDailyAll">全选</button>
         <button class="btn mini" bindtap="onDailyNone">取消全选</button>
         <button class="btn mini danger" bindtap="onDailyRemove">移出选中</button>
