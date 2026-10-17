@@ -62,6 +62,7 @@ Page({
     selection: "",
 
     aliasText: "",
+    rawText: "",
     paras: [],
     tokens: [],
     translation: "",
@@ -272,10 +273,9 @@ Page({
 
     const rec = store.getRecord(id);
 
-    const laid = corpus.layout(entry.text);
-
     this.setData({
       id,
+      rawText: entry.text,
       loadingText: false,
       bookId: meta.b,
       title: meta.t,
@@ -284,7 +284,6 @@ Page({
       source: meta.s || meta.n,
       selection: meta.sel || "",
       aliasText: aliasTextOf(meta),
-      paras: laid.paras,
       translation: entry.translation || "",
       translationSource: entry.src || "",
       hasTranslation: !!entry.translation,
@@ -308,12 +307,21 @@ Page({
     tabPage.mine();
   },
 
+  relayout(pinyinOn) {
+    const laid = corpus.layout(this.data.rawText, {
+      size: this.data.fontSize,
+      pinyin: pinyinOn
+    });
+    this.setData({ paras: laid.paras });
+  },
+
   applyReading() {
     const pr = pinyin.readiness();
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
     const mode = usable ? store.settings().pinyin : "off";
 
+    if (this.data.rawText) this.relayout(usable);
     const tokens = pinyin.render(this.data.paras, usable ? mode : "off");
     this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
   },
@@ -363,6 +371,7 @@ Page({
     if (fontSize === this.data.fontSize) return;
     this.setData(Object.assign({ fontSize }, fontFlags(fontSize)));
     store.saveSettings({ fontSize });
+    if (this.data.rawText) this.applyReading();
     sync.markDirty();
   },
 

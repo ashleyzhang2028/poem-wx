@@ -90,6 +90,7 @@ Component({
     selection: "",
     aliasText: "",
     stage: "",
+    rawText: "",
     paras: [],
     tokens: [],
     translation: "",
@@ -193,7 +194,6 @@ Component({
 
       const settings = store.settings();
       const rec = store.getRecord(item.id);
-      const laid = corpus.layout(entry.text);
       const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(settings.fontSize) || 0));
 
       this.setData({
@@ -205,7 +205,7 @@ Component({
         source: meta.s || meta.n,
         selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
-        paras: laid.paras,
+        rawText: entry.text,
         translation: entry.translation || "",
         translationSource: entry.src || "",
         hasTranslation: !!entry.translation,
@@ -228,11 +228,20 @@ Component({
       this.triggerEvent("open", { id: item.id });
     },
 
+    relayout(pinyinOn) {
+      const laid = corpus.layout(this.data.rawText, {
+        size: this.data.fontSize,
+        pinyin: pinyinOn
+      });
+      this.setData({ paras: laid.paras });
+    },
+
     applyReading() {
       const pr = pinyin.readiness();
       const allowed = entitlement.can("pinyin");
       const usable = pr.usable && allowed;
       const mode = usable ? store.settings().pinyin : "off";
+      if (this.data.rawText) this.relayout(usable);
       const tokens = pinyin.render(this.data.paras, usable ? mode : "off");
       this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
     },
@@ -293,6 +302,7 @@ Component({
       if (fontSize === this.data.fontSize) return;
       this.setData(Object.assign({ fontSize }, fontFlags(fontSize)));
       store.saveSettings({ fontSize });
+      if (this.data.rawText) this.applyReading();
     },
 
     onResult(e) {

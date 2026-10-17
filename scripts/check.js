@@ -27,6 +27,13 @@ function track(p) {
   return p;
 }
 
+const FS_POEM_RE = /FS_POEM\s*=\s*\[([^\]]*)\]/;
+const PY_BOX_RE = /PY_BOX\s*=\s*\[([^\]]*)\]/;
+
+function stripWs(v) {
+  return String(v == null ? "" : v).replace(/\s+/g, "");
+}
+
 function readJson(p) {
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
@@ -1948,29 +1955,35 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
     try { e = cmod.entry(id); } catch (err) { return; }
     if (!e || !e.text) return;
     checked++;
-    const L = cmod.layout(e.text);
+    const L = cmod.layout(e.text, { size: 0 });
     const rows = L.rows.join("");
     const flat = L.paras.reduce((a, pr) => a.concat(pr), []).map((g) => g.join("")).join("");
     const norm = String(e.text).split("\n").map((x) => cmod.splitClauses(x).join("")).join("");
-    if (rows !== norm) { lost++; if (!exLost) exLost = id; }
+    if (stripWs(rows) !== stripWs(norm)) { lost++; if (!exLost) exLost = id; }
     if (flat !== rows) { unflat++; if (!exFlat) exFlat = id; }
   });
-  ok("版式折叠不丢字（全站 " + checked + " 篇）", lost === 0, lost + " 篇拼不回，例如 " + exLost);
+  ok("版式装箱不丢字（全站 " + checked + " 篇）", lost === 0, lost + " 篇拼不回，例如 " + exLost);
   ok("版式的段落与行是同一份切分", unflat === 0, unflat + " 篇对不上，例如 " + exFlat);
 
-  const qi = cmod.layout("杨柳青青江水平，\n闻郎江上唱歌声。\n东边日出西边雨，\n道是无晴却有晴。");
-  ok("七绝一句一行（短句不被折）",
-    qi.rows.length === 4 && qi.rows[0] === "杨柳青青江水平，",
+  const qi = cmod.layout("杨柳青青江水平，\n闻郎江上唱歌声。\n东边日出西边雨，\n道是无晴却有晴。", { size: 0 });
+  ok("七绝小字号两句一行",
+    qi.rows.length === 2 && qi.rows[0] === "杨柳青青江水平，闻郎江上唱歌声。",
     JSON.stringify(qi.rows));
-  const wu = cmod.layout("空山不见人，\n但闻人语响。");
-  ok("五绝一句一行", wu.rows.length === 2 && wu.rows[1] === "但闻人语响。", JSON.stringify(wu.rows));
+  ok("七绝大字号一句一行",
+    cmod.layout("杨柳青青江水平，\n闻郎江上唱歌声。", { size: 6 }).rows.length === 2);
+  const wu = cmod.layout("空山不见人，\n但闻人语响。", { size: 0 });
+  ok("五绝小字号两句一行", wu.rows.length === 1 && wu.rows[0] === "空山不见人，但闻人语响。", JSON.stringify(wu.rows));
+
+  const sanzi = cmod.layout("人之初，性本善。性相近，习相远。", { size: 0 }).rows;
+  ok("三字一行只在小字号之外出现（短句装箱，不一句一行）",
+    sanzi.length === 1 && sanzi[0] === "人之初，性本善。性相近，习相远。", JSON.stringify(sanzi));
 
   const pipa = cmod.entry("poems-gz10-06");
   ok("《琵琶行并序》取得到正文", !!(pipa && pipa.text));
   if (pipa && pipa.text) {
-    const L = cmod.layout(pipa.text);
-    ok("《琵琶行》的诗序被折开（不再是一整行）",
-      L.rows.length > cmod.splitLines(pipa.text).length,
+    const L = cmod.layout(pipa.text, { size: 0 });
+    ok("《琵琶行》的诗序按栏宽装箱（不再每句一行）",
+      L.rows.length < cmod.splitLines(pipa.text).length * 2,
       "行 " + L.rows.length + " vs 语料行 " + cmod.splitLines(pipa.text).length);
     ok("《琵琶行》的序与诗分成两段",
       L.paras.length > 2, "段数 " + L.paras.length);
@@ -1985,7 +1998,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
       try { e = cmod.entry(id); } catch (err) { return; }
       if (!e || !e.text) return;
       scanned++;
-      cmod.layout(e.text).rows.forEach((r) => {
+      cmod.layout(e.text, { size: 0 }).rows.forEach((r) => {
         const t = r.trim();
         if (!t) return;
 
@@ -2795,6 +2808,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 {
   const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
 
+  const metaWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
   const metaNoComment = readerWxml2.replace(/<\!--[\s\S]*?-->/g, " ");
   const metaStart = metaNoComment.indexOf('<view class="poem-meta-row">');
   const metaEnd = metaNoComment.indexOf("</view>", metaStart);
@@ -2808,10 +2822,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && !/class="tag stage-tag"/.test(metaNoComment),
     "读到的这一段：「" + metaInner.replace(/\s+/g, " ").trim().slice(0, 120) + "」");
 
-  ok("题名异写 / 选本出处与身份行分开排（两者不在同一个容器里）",
-    !/\{\{aliasText\}\}/.test(metaInner) && !/\{\{selection\}\}/.test(metaInner)
-      && /\{\{aliasText\}\}/.test(readerWxml2) && /\{\{selection\}\}/.test(readerWxml2),
-    "并进身份行了 —— 五段会把那一行撑破（《唐诗》37 条、《词》48 条超宽）");
+  ok("选本出处并进身份行，题名异写另起一行",
+    /\{\{selection\}\}/.test(metaInner) && !/\{\{aliasText\}\}/.test(metaInner)
+      && /\{\{aliasText\}\}/.test(readerWxml2),
+    "「选自…」没并进身份行 —— 它和朝代 / 作者 / 出处是同一串来历，分成两行看不成一句话");
+
+  ok("身份行放不下时省略，不换成两行",
+    /\.poem-meta\s*\{[^}]*text-overflow\s*:\s*ellipsis/.test(metaWxss)
+      && /\.poem-meta-row\s*\{[^}]*flex-wrap\s*:\s*nowrap/.test(metaWxss));
 
   ok("三种结果各给一句提示，且不是同一句",
     (() => {
@@ -3364,6 +3382,71 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /fontDown\s*:/.test(sheetJsSrc) && /fontUp\s*:/.test(sheetJsSrc),
     "量程 " + sheetRange.lo + "…" + sheetRange.hi + "，正文里没有这几档："
       + gaps.join(", ") + " —— 点下去没反应");
+
+  const csSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
+  const nums = (re) => {
+    const m = re.exec(csSrc);
+    return m ? m[1].split(",").map((x) => Number(x.trim())) : [];
+  };
+  const fsPoem = nums(FS_POEM_RE);
+  const pyBox = nums(PY_BOX_RE);
+  const sizeRule = (n) => {
+    const sel = ".poem-body.size" + (n < 0 ? "--" + Math.abs(n) : "-" + n);
+    const m = new RegExp(sel.replace(/\./g, "\\.") + "\\s*\\{([^}]*)\\}").exec(wxss);
+    return m ? m[1] : "";
+  };
+  const cssFs = [];
+  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+    const one = /--poem-fs\s*:\s*(\d+)rpx/.exec(sizeRule(n));
+    cssFs.push(one ? Number(one[1]) : NaN);
+  }
+  ok("装箱不跨段：段落由空行与段上限给",
+    /STANZA_MAX_ROWS\s*=\s*\d+/.test(csSrc)
+      && /if \(!ln\.s\.length\)/.test(csSrc));
+
+  ok("表格（框线画的行）整行原样排，不按标点拆",
+    /BOX_DRAWING\s*=\s*\//.test(csSrc)
+      && /pushRows\(\[\[ln\.line\]\]\)/.test(csSrc));
+
+  ok("一行收口优先落在句末，其次才按栏宽",
+    /function sentenceCut\(/.test(csSrc) && /\[。！？\]\$/.test(csSrc)
+      && /function softTail\(/.test(csSrc) && /\[、：；\]\$/.test(csSrc));
+
+  ok("版式装箱用的字号表与样式表逐档相同",
+    fsPoem.length === cssFs.length && fsPoem.every((v, i) => v === cssFs[i]),
+    "corpus.js " + JSON.stringify(fsPoem) + " vs app.wxss " + JSON.stringify(cssFs));
+
+  const cssBox = [];
+  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+    const one = /--py-box\s*:\s*(\d+)rpx/.exec(sizeRule(n));
+    cssBox.push(one ? Number(one[1]) : NaN);
+  }
+  ok("注音装箱用的字身盒与样式表逐档相同",
+    pyBox.length === cssBox.length && pyBox.every((v, i) => v === cssBox[i]),
+    "corpus.js " + JSON.stringify(pyBox) + " vs app.wxss " + JSON.stringify(cssBox));
+
+  const pyGap = /PY_GAP\s*=\s*(\d+)/.exec(csSrc);
+  const cssGap = /--py-gap\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
+  ok("注音的字间距两边同值（装箱按它算一行几个字）",
+    !!pyGap && !!cssGap && Number(pyGap[1]) === Number(cssGap[1]),
+    "corpus.js " + (pyGap && pyGap[1]) + " vs tokens.wxss " + (cssGap && cssGap[1]));
+
+  const pyFs = /--fs-pinyin\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
+  const pySlot = /--py-slot\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
+  ok("注音槽装得下注音那一行（字号抬了槽也要抬）",
+    !!pyFs && !!pySlot && Number(pySlot[1]) >= Number(pyFs[1]) * 1.6,
+    "注音 " + (pyFs && pyFs[1]) + "rpx / 槽 " + (pySlot && pySlot[1]) + "rpx");
+
+  ok("折下来的那一行比句读分行松（软折行 +8px）",
+    /--poem-fold\s*:\s*16rpx/.test(tokensWxss)
+      && /\.poem-line:not\(\.token-line\)\s*\+\s*\.poem-line:not\(\.token-line\)\s*\{[^}]*margin-top\s*:\s*calc\(\s*-1\s*\*\s*var\(--poem-fold\)/.test(wxss),
+    "软折行与句读分行又一样松了");
+
+  ok("版式按字号重排（改字号要重算装箱）",
+    /corpus\.layout\([^)]*\{[^}]*size:/.test(readerJsSrc)
+      && /corpus\.layout\([^)]*\{[^}]*size:/.test(fs.readFileSync(
+        path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8")),
+    "layout 又只吃正文 —— 字号变了行还是原来那些");
 }
 
 
