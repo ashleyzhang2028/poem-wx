@@ -144,6 +144,8 @@ Page({
 
     stats: { today: 0, done: 0, left: 0 },
 
+    extraKeyword: "",
+
     loading: true
   },
 
@@ -388,16 +390,31 @@ Page({
 
   onExtraChange() {
     this.refresh();
+
+    const box = this.selectComponent("#extra");
+    if (box) this.syncExtraKeyword(box);
   },
 
   onExtraInput(e) {
-    const box = this.selectComponent("#extra");
-    if (box) box.onInput(e);
+    this.searchExtra((e && e.detail && e.detail.value) || "");
+  },
 
-    this.setData({
-      extraKeyword: (e && e.detail && e.detail.value) || "",
-      extraRows: (box && box.data && box.data.rows) || []
-    });
+  onExtraSearch(e) {
+    const typed = e && e.detail && e.detail.value;
+    this.searchExtra(typed === undefined ? this.data.extraKeyword : typed, true);
+  },
+
+  onExtraClear() {
+    this.searchExtra("", true);
+  },
+
+  searchExtra(keyword, paint) {
+    this.setData({ extraKeyword: keyword });
+
+    const box = this.selectComponent("#extra");
+    if (!box) return;
+    if (paint) box.onSearch(keyword);
+    else box.onInput({ detail: { value: keyword } });
   },
 
   onSheetFinish() {

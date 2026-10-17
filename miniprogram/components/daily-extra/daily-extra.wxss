@@ -1,18 +1,11 @@
-.de-search {
-
-  margin-bottom: 0;
-}
-
 .de-limit {
   display: block;
-  padding: var(--sp-2) 0 0;
+  padding: 0 var(--sp-4) var(--sp-2);
 }
 
 .de-suggest {
-  margin-top: var(--sp-2);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  border-top: 1rpx solid var(--line);
+  border-bottom: 1rpx solid var(--line);
 }
 
 .de-row {

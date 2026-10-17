@@ -3397,11 +3397,26 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /lock-note[^>]*wx:if/.test(lockWxml) && /\.lock-note\s*\{/.test(appWxssLock));
 
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("首页挂了加背卡，卡里有个带 placeholder 的搜索框（空着时也知道能搜）",
+  const extraWxml = fs.readFileSync(
+    path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
+  const searchLine = /<view class="extra-search">[\s\S]*?<\/view>\s*<\/view>/.exec(homeWxmlDaily);
+  ok("加背搜索行在首页顶部的卡片之外，带 placeholder（空着时也知道能搜）",
     homeWxmlDaily.indexOf("<daily-extra") >= 0
-      && /<input[^>]*placeholder="[^"]+"/.test(
-        fs.readFileSync(path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8")),
-    "加背卡没挂上，或搜索框没有 placeholder");
+      && !!searchLine && /<input[^>]*placeholder="[^"]+"/.test(searchLine[0]),
+    "加背卡没挂上，或搜索行没有 placeholder");
+  ok("搜索行不在卡片里（那张外壳拿掉了）",
+    !!searchLine && searchLine[0].indexOf("card") < 0,
+    "搜索行又套回一张卡 —— 上面那张今日背诵卡已经给过一次外壳");
+  ok("加背卡自己不再画搜索框（搜索行只有首页那一处）",
+    homeWxmlDaily.indexOf('<view class="extra-search">') < homeWxmlDaily.indexOf("<daily-extra")
+      && extraWxml.indexOf("<input") < 0 && extraWxml.indexOf("search-icon") < 0,
+    "搜索框又回到卡片里 —— 一处输入两个地方画，改一个忘一个");
+  ok("搜索行的按键都接到组件上（输入 / 回车 / 清空）",
+    /bindinput="onExtraInput"/.test(homeWxmlDaily)
+      && /bindconfirm="onExtraSearch"/.test(homeWxmlDaily)
+      && /bindtap="onExtraClear"/.test(homeWxmlDaily)
+      && /searchExtra\(/.test(fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8")),
+    "行上的按键没有落到组件 —— 输入不搜、清空不清");
 }
 
 {

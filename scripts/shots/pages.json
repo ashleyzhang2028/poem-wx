@@ -527,7 +527,7 @@
     "logged": true,
     "do": [
       {
-        "call": "onExtraInput",
+        "call": "onExtraSearch",
         "with": {
           "detail": {
             "value": "月"
@@ -536,6 +536,24 @@
       }
     ],
     "dailyExtra": ["poems-xx1-05"]
+  },
+  "home-extra-limited": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "onExtraSearch",
+        "with": {
+          "detail": {
+            "value": "月"
+          }
+        }
+      }
+    ],
+    "dailyExtra": ["poems-xx1-05", "poems-xx3-16"],
+    "_note": "今日加背搜到人、卡里已有两首：读数那一行现在的左边距跟着搜索行走，不再留卡片的内衬"
   },
   "home-all": {
     "page": "pages/home/home",

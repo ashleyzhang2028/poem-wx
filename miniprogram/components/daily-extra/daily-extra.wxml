@@ -1,12 +1,4 @@
 <view class="de" style="{{themeStyle}}">
-  <view class="search de-search">
-    <text class="search-icon">⌕</text>
-
-    <input placeholder="今日加背 · 搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onInput"
-           confirm-type="search" bindconfirm="onSearch" />
-    <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
-  </view>
-
   <view class="de-limit hint" wx:if="{{count}}">今天已加 {{count}} / {{max}} 首</view>
 
   <view class="de-suggest" wx:if="{{rows.length}}">
