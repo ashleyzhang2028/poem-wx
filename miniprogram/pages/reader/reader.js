@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const table = require("../../utils/table");
 const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
@@ -66,6 +67,8 @@ Page({
     rawText: "",
     paras: [],
     tokens: [],
+    blocks: [],
+    tableView: false,
     translation: "",
     translationSource: "",
     hasTranslation: false,
@@ -294,6 +297,7 @@ Page({
     this.setData({
       id,
       rawText: entry.text,
+      tableView: table.hasTable(entry.text),
       loadingText: false,
       bookId: meta.b,
       title: meta.t,
@@ -333,11 +337,37 @@ Page({
     this.setData({ paras: laid.paras });
   },
 
+  paragraphRows(text) {
+    if (!String(text == null ? "" : text).trim()) return [];
+    return corpus.layout(text, { size: this.data.fontSize, pinyin: false }).paras;
+  },
+
+  renderBlocks() {
+    const parsed = table.parseText(this.data.rawText);
+    if (!parsed) return [];
+    const out = [];
+    parsed.parts.forEach((part, i) => {
+      if (part.k === "table") {
+        out.push({ k: "table", key: "t" + i, table: parsed.blocks[part.i] });
+        return;
+      }
+      const rows = this.paragraphRows(part.s);
+      if (!rows.length) return;
+      out.push({ k: "p", key: "p" + i, rows: rows });
+    });
+    return out;
+  },
+
   applyReading() {
     const pr = pinyin.readiness();
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
     const mode = usable ? store.settings().pinyin : "off";
+
+    if (this.data.tableView) {
+      this.setData({ pinyinOn: false, pinyinMode: mode, tokens: [], blocks: this.renderBlocks() });
+      return;
+    }
 
     if (this.data.rawText) this.relayout(usable);
     const tokens = pinyin.render(this.data.paras, usable ? mode : "off");

@@ -93,7 +93,24 @@
     </view>
 
     <view class="poem-body align-{{align}} size-{{fontSize}}">
-      <block wx:if="{{!pinyinOn}}">
+      <block wx:if="{{tableView}}">
+        <block wx:for="{{blocks}}" wx:key="key" wx:for-item="blk">
+          <view class="poem-stanza" wx:if="{{blk.k === 'p'}}">
+            <text class="poem-line" wx:for="{{blk.rows}}" wx:key="index" wx:for-item="para">
+              <text class="poem-clause" wx:for="{{para}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+            </text>
+          </view>
+          <scroll-view class="md-table" scroll-x wx:else>
+            <view class="md-row" wx:for="{{blk.table.rows}}" wx:key="index" wx:for-item="tr">
+              <view class="md-cell" wx:for="{{tr.cells}}" wx:key="index" wx:for-item="cell"
+                    style="width:{{blk.table.widths[index] * 2}}px">
+                <text class="md-line" wx:for="{{cell.text}}" wx:for-item="ln" wx:key="index">{{ln}}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </block>
+      </block>
+      <block wx:elif="{{!pinyinOn}}">
         <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
           <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
             <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
