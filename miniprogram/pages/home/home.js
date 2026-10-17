@@ -19,6 +19,8 @@ const SOURCE_TEXT = { course: "课内", own: "自选" };
 
 const HERO_RATIO = 916 / 1717;
 
+const BANNER_MAX_H = 360;
+
 function windowWidth() {
   const read = (fn) => {
     try {
@@ -39,7 +41,7 @@ function bannerBox() {
     navHeight: box.navHeight,
     navBottom: box.navBottom,
     bannerHeight: box.statusBarHeight + box.navHeight
-      + Math.round(windowWidth() * HERO_RATIO)
+      + Math.min(Math.round(windowWidth() * HERO_RATIO), BANNER_MAX_H)
   };
 }
 

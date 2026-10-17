@@ -9,7 +9,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--status-h) + var(--nav-h) + (100vw / 1.875));
+  height: calc(var(--status-h) + var(--nav-h) + min(100vw / 1.875, 360px));
   overflow: hidden;
   background: var(--surface);
 }
@@ -59,8 +59,12 @@
 }
 
 .extra-search {
-  padding: 0 var(--card-x);
   margin-bottom: var(--sp-2);
+}
+
+.extra-search .search {
+  height: var(--h-btn-mini);
+  border-radius: var(--radius);
 }
 
 .hero-title {
