@@ -62,6 +62,5 @@
 }
 
 .tab.on .tab-ico {
-  background: var(--strong);
-  box-shadow: 0 0 0 2rpx var(--on-ink);
+  background: var(--strong-soft);
 }

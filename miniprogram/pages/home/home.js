@@ -341,7 +341,7 @@ Page({
       if (!sheet) return;
       const rows = this.collectionSheetRows(ds.coll);
       if (!rows.length) {
-        wx.showToast({ title: "这个集子还是空的", icon: "none" });
+        wx.showToast({ title: "这个集合还是空的", icon: "none" });
         return;
       }
       this.collectionId = ds.coll;

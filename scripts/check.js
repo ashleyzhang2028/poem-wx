@@ -962,8 +962,8 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
   ok("设置只有一条入口（版式 / 主题 / 声音收在同一页）",
     (wxml.match(/onSettings/g) || []).length === 1
-      && !/onTheme|onReader|onRecite/.test(wxml)
-      && !/onTheme|onReader|onRecite/.test(js),
+      && !/onTheme|onReader/.test(wxml)
+      && !/onTheme|onReader/.test(js),
     "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
   const general = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
@@ -975,17 +975,15 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
     "「我的」页还有大会那一行 —— 两处入口会漂");
-  ok("「背诵概况」那四行各进各的地方（范围 / 首数 / 算法各带一个 focus）",
-    ["onScope", "onDaily", "onAlgo"].every((h) => wxml.indexOf(h) >= 0 && js.indexOf(h) >= 0)
-      && ["focus=scope", "focus=count", "focus=algo"].every((q) => js.indexOf(q) >= 0),
-    "概况那三行不跳了，或者跳过去不落在那张卡上");
-  ok("背诵进度收在「背诵概况」最后一行（学习卡里那一份已撤）",
+  ok("范围 / 首数 / 算法合成一行「背诵选项」，进的是整页",
+    /bindtap="onRecite"/.test(wxml) && /onRecite\s*\(/.test(js)
+      && /packages\/settings\/recite\/recite"/.test(js)
+      && !/onScope|onDaily|onAlgo/.test(wxml),
+    "三行还各占各的，或者合成之后又带一个 focus —— 指向同一页的三条路就是三条路");
+  ok("背诵进度收在「背诵选项」之后",
     (wxml.match(/bindtap="onProgress"/g) || []).length === 1
-      && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onAlgo"'),
+      && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onRecite"'),
     "进度那一行还在下面那张卡里，或者概况里没有它");
-  ok("背诵设置页接得住这三个 focus（不然跳过去只落个页顶）",
-    /data-anchor="recite-(scope|count|algo)"/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.wxml"), "utf8"))
-      && /focus/.test(fs.readFileSync(path.join(ROOT, "packages", "settings", "recite", "recite.js"), "utf8")));
 }
 
 const gateMod = require(path.join(ROOT, "utils", "gate.js"));
@@ -2718,7 +2716,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const recite = read("packages/settings/recite/recite.wxml");
     ok("「每日首数」这张卡还在",
-      /data-anchor="recite-count"[^>]*>每日首数<\/view>/.test(recite));
+      />每日首数<\/view>/.test(recite));
     const counts = /const DAILY_COUNTS = \[([^\]]*)\];/.exec(read("utils/scheduler.js"));
     const list = (counts ? counts[1] : "").split(",").map((t) => t.trim()).filter(Boolean);
     ok("四档是 3 / 5 / 10 / 20",
@@ -3797,12 +3795,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页不再有「背诵设置」那一行（hero-foot 那块整块撤了）",
     !/\.hero-foot/.test(homeWxss) && !/hero-foot/.test(homeWxml),
     "那一行还在 —— 首页又多了一处设置入口");
-  ok("背诵设置的三个去处仍在（我的 → 范围 / 首数 / 算法各带一个 focus）",
-    ["onScope", "onDaily", "onAlgo"].every(
-      (h) => read("pages/mine/mine.js").indexOf(h) >= 0
-        && read("pages/mine/mine.wxml").indexOf(h) >= 0)
-      && !/onRecite/.test(read("pages/mine/mine.js")),
-    "三行都没了，或者又留了一行整页入口（Issue #232 撤的就是它）");
+  ok("背诵选项只有一条入口（我的 → 背诵选项，进整页）",
+    /onRecite/.test(read("pages/mine/mine.js"))
+      && /bindtap="onRecite"/.test(read("pages/mine/mine.wxml"))
+      && ["onScope", "onDaily", "onAlgo"].every(
+        (h) => read("pages/mine/mine.js").indexOf(h) < 0
+          && read("pages/mine/mine.wxml").indexOf(h) < 0),
+    "范围 / 首数 / 算法又各自留了一行 —— 指向同一页的三条路就是三条路");
 
   ok("今日安排的状态写成一个 row-state 元素（不再是一枚圆圈）",
     /row-state/.test(homeWxml) && /row-state/.test(homeWxss || ""),

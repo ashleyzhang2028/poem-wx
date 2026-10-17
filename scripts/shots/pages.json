@@ -150,6 +150,16 @@
     ],
     "_note": "「只背自选」那一开关：集子里有篇目才亮"
   },
+  "settings-collections": {
+    "page": "packages/settings/collections/collections",
+    "title": "自选背诵",
+    "back": true,
+    "logged": true,
+    "collections": [
+      { "id": "c1", "name": "唐诗三百", "dailyCount": 5, "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }] }
+    ],
+    "_note": "自选背诵的管理页：配额、我的集合、删除 / 清空 / 加篇目"
+  },
   "settings-recite-middle": {
     "page": "packages/settings/recite/recite",
     "title": "背诵设置",

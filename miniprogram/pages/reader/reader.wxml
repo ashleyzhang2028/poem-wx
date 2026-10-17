@@ -87,7 +87,7 @@
 
       <view class="pref-opt ic pref-plus {{pickOn ? 'on' : ''}}"
             hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAddToCollection"
-            aria-label="加入自选集子">
+            aria-label="加入自选集合">
         <text class="pref-star">★</text>
       </view>
     </view>

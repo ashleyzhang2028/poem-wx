@@ -138,7 +138,7 @@ Page({
     const id = this.data.id;
     const inList = cols.collectionsOf(id);
     const names = cols.list().map((c) => cols.nameOf(c));
-    const items = names.concat(["新建集子"]);
+    const items = names.concat(["新建集合"]);
     wx.showActionSheet({
       itemList: items,
       success: (res) => {
@@ -159,18 +159,18 @@ Page({
   newCollection(poemId) {
     const cap = cols.capOf();
     if (cols.list().length >= cap) {
-      wx.showToast({ title: "最多 " + cap + " 个集子，先删一个", icon: "none" });
+      wx.showToast({ title: "最多 " + cap + " 个集合，先删一个", icon: "none" });
       return;
     }
     wx.showModal({
-      title: "新建自选集子",
+      title: "新建自选集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
       success: (res) => {
         if (!res.confirm) return;
         const made = cols.create(res.content);
         if (!made.ok) {
-          wx.showToast({ title: "最多 " + cap + " 个集子", icon: "none" });
+          wx.showToast({ title: "最多 " + cap + " 个集合", icon: "none" });
           return;
         }
         const r = cols.add(made.collection.id, [poemId]);
