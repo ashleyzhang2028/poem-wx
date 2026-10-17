@@ -72,6 +72,7 @@
         </view>
       </view>
 
+      <text class="hero-cheer" wx:for="{{cheers}}" wx:key="*this">{{item}}</text>
     </view>
 
     <view class="extra-search">
@@ -137,6 +138,7 @@
         <view class="card-open">
           <text class="card-title bar">{{coll.title}}</text>
           <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
+          <text class="tag theme" wx:if="{{coll.doneToday}}">今日已背完</text>
         </view>
 
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"

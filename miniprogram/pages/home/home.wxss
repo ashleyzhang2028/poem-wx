@@ -70,6 +70,13 @@
   margin-top: var(--sp-4);
 }
 
+.hero-cheer {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  margin-top: var(--sp-3);
+}
+
 .hero-stats .stat-ring {
   padding: 0;
 }

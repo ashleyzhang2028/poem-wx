@@ -72,6 +72,11 @@ function isLearned(rec) {
   return !!(rec.learned || (rec.history && rec.history.length));
 }
 
+function doneToday(rec, now) {
+  if (!isLearned(rec)) return false;
+  return rec.reviewedOn === R.dayStamp(now === undefined ? Date.now() : now);
+}
+
 function mastery(rec) {
   if (!rec || !rec.learned) return 0;
   return Math.round((R.clampLevel(rec.level) / 9) * 100);
@@ -501,6 +506,7 @@ module.exports = {
   algoKey,
   isDue,
   isLearned,
+  doneToday,
   mastery,
   stageName,
   poolForScope,
