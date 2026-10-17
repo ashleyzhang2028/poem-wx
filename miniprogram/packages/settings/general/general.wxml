@@ -3,7 +3,7 @@
 
   <block wx:else>
   <view class="card">
-    <view class="card-title bar">正文对齐</view>
+    <view class="card-title">正文对齐</view>
     <view class="seg fill">
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
@@ -16,7 +16,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">正文字号</view>
+    <view class="card-title">正文字号</view>
 
     <view class="font-row">
       <text class="font-a small">A</text>
@@ -29,7 +29,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">注音</view>
+    <view class="card-title">注音</view>
 
     <block wx:if="{{pinyinOn}}">
       <view class="seg">
@@ -47,7 +47,7 @@
   </view>
 
   <view class="card" wx:if="{{sfxVisible}}">
-    <view class="card-title bar">声音</view>
+    <view class="card-title">声音</view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">答对答错出声</text>
@@ -61,7 +61,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">主题</view>
+    <view class="card-title">主题</view>
 
     <view class="swatch-grid">
       <view class="swatch {{theme === item.key ? 'on' : ''}}"

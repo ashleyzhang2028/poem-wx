@@ -3,7 +3,7 @@
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
-      <view class="card-title bar">考试范围</view>
+      <view class="card-title">考试范围</view>
 
       <radio-group class="opt-group inline cols-2" bindchange="onScope">
         <label class="opt-row {{scope === item.id ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="id">
@@ -17,7 +17,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">题型</view>
+      <view class="card-title">题型</view>
 
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
@@ -65,7 +65,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">逐题</view>
+      <view class="card-title">逐题</view>
       <view class="grade" wx:for="{{graded}}" wx:key="stem">
         <view class="grade-head">
           <text class="grade-mark {{item.ok ? 'ok' : 'no'}}">{{item.ok ? '对' : '错'}}</text>

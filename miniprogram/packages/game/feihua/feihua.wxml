@@ -28,7 +28,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">出题范围</view>
+      <view class="card-title">出题范围</view>
       <radio-group class="opt-group inline cols-2" bindchange="onScope">
         <label class="opt-row {{scope === item.id ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="id">
           <radio class="opt-radio" value="{{item.id}}" checked="{{scope === item.id}}" />
@@ -52,7 +52,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">答案</view>
+      <view class="card-title">答案</view>
       <view wx:if="{{revealed}}">
         <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
@@ -67,7 +67,7 @@
     </view>
 
     <view class="card" wx:if="{{done.length}}">
-      <view class="card-title bar">这一轮答对的</view>
+      <view class="card-title">这一轮答对的</view>
       <view class="fh-line" wx:for="{{done}}" wx:key="index">
         <text class="fh-seg">{{item.seg}}</text>
         <text class="fh-src" wx:if="{{item.title}}">{{item.title}}</text>

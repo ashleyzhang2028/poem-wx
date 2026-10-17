@@ -3,7 +3,7 @@
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
-      <view class="card-title bar">出题范围</view>
+      <view class="card-title">出题范围</view>
       <radio-group class="opt-group inline cols-2" bindchange="onScope">
         <label class="opt-row {{scope === item.id ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="id">
           <radio class="opt-radio" value="{{item.id}}" checked="{{scope === item.id}}" />
@@ -16,7 +16,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">题型</view>
+      <view class="card-title">题型</view>
 
       <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
         <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
@@ -73,7 +73,7 @@
     </view>
 
     <view class="card" wx:if="{{wrong.length}}">
-      <view class="card-title bar">错题</view>
+      <view class="card-title">错题</view>
       <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
         <text class="wrong-stem">{{item.stem}}</text>
         <text class="wrong-line">正确答案：{{item.answer}}</text>

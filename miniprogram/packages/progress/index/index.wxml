@@ -44,7 +44,7 @@
 
   <block wx:else>
   <view class="card">
-    <view class="card-title bar">到期日历<text class="card-sub" wx:if="{{calSub}}">{{calSub}}</text></view>
+    <view class="card-title">到期日历<text class="card-sub" wx:if="{{calSub}}">{{calSub}}</text></view>
     <view class="cal">
       <view class="cal-cell {{item.today ? 'today' : ''}} {{item.has ? 'has' : ''}}"
             wx:for="{{calendar}}" wx:key="offset">
@@ -57,7 +57,7 @@
   </view>
 
   <view class="card" wx:if="{{panels.length}}">
-    <view class="card-title bar">全部到期篇目</view>
+    <view class="card-title">全部到期篇目</view>
     <view class="panel" wx:for="{{panels}}" wx:key="offset" wx:for-item="d">
       <view class="panel-head">
         <text class="panel-when {{d.today ? 'today' : ''}} {{d.late ? 'late' : ''}}">{{d.label}}<text class="panel-date">{{d.date}}</text></text>
@@ -77,7 +77,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">掌握度分布<text class="card-sub" wx:if="{{bucketsSub}}">{{bucketsSub}}</text></view>
+    <view class="card-title">掌握度分布<text class="card-sub" wx:if="{{bucketsSub}}">{{bucketsSub}}</text></view>
     <view class="bar-row {{item.cls}} {{item.count ? '' : 'zero'}}" wx:for="{{buckets}}" wx:key="label">
       <text class="bar-label">{{item.label}}</text>
       <view class="bar-track"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
