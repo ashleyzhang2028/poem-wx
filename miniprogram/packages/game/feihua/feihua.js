@@ -1,4 +1,5 @@
 const feihua = require("./lib");
+const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
@@ -14,6 +15,8 @@ Page({
     themeStyle: "",
     levels: feihua.LEVELS,
     level: "normal",
+    scopes: gameScopes.list(),
+    scope: "",
 
     barBelow: true,
     char: "",
@@ -53,14 +56,26 @@ Page({
 
   scopeOpt() {
     const s = store.settings();
+    if (this.data.scope) return { scope: this.data.scope };
     return { scope: s.scope, grade: s.grade, term: s.term };
   },
 
   refreshScopeName() {
+    if (this.data.scope) {
+      this.setData({ scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope) });
+      return;
+    }
     const s = store.settings();
     const scope = S.scopeOf(s.scope);
     this.setData({
       scopeName: S.gradeName(s.grade) + S.termName(s.term) + " · " + scope.scopeName
+    });
+  },
+
+  onScope(e) {
+    this.setData({ scope: e.detail.value || "" }, () => {
+      this.setData({ done: [], streak: 0, best: 0 });
+      this.next();
     });
   },
 
