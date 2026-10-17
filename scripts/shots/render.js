@@ -16,6 +16,7 @@ global.wx = {
 };
 
 let CURRENT = null;
+let extraRef = () => null;
 
 function runtime() {
   const saved = { Page: global.Page, Component: global.Component, getApp: global.getApp, getCurrentPages: global.getCurrentPages };
@@ -57,6 +58,9 @@ function runtime() {
       if (!opt) return null;
       const page = Object.assign({}, opt);
       page.data = JSON.parse(JSON.stringify(opt.data || {}));
+
+      let extra = null;
+      extraRef = () => extra;
       page.setData = function (obj, cb) {
         Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
         if (cb) cb();
@@ -81,6 +85,9 @@ function runtime() {
             if (typeof cb === "function") cb.call(this);
           };
           comp.triggerEvent = function () {};
+          comp.attached = opt.attached;
+          if (typeof comp.refresh === "function") comp.refresh();
+          extra = comp;
           return comp;
         }
         if (sel !== "#sheet") return null;
@@ -101,6 +108,7 @@ function runtime() {
     },
 
     current() { return CURRENT; },
+    extra() { return extraRef(); },
     done() { Object.assign(global, { Page: saved.Page, Component: saved.Component, getApp: saved.getApp, getCurrentPages: saved.getCurrentPages }); }
   };
 }
@@ -326,12 +334,10 @@ function expandTierView(wxml, data) {
 function expandDailyExtra(wxml, data) {
   if (wxml.indexOf("<daily-extra") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/daily-extra/daily-extra.wxml"), "utf8");
-  const merged = Object.assign({}, data, {
-    keyword: data.extraKeyword || "",
-    searched: !!data.extraRows && !!data.extraRows.length,
-    rows: data.extraRows || [],
-    count: data.extraCount || 0,
-    max: 20,
+  const box = data.extraBox || {};
+  const merged = Object.assign({}, data, box, {
+    keyword: box.keyword || data.extraKeyword || "",
+    max: box.max || 20,
     themeStyle: data.themeStyle || ""
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
@@ -478,6 +484,8 @@ cases.forEach((cfg) => {
         const page = rt.current();
         const fn = page && page[step.call];
         if (typeof fn === "function") fn.call(page, step.with || {});
+        const box = rt.extra();
+        if (box && box.data) page.data.extraBox = box.data;
       });
     }
     html.push(pageHtml(cfg, data));

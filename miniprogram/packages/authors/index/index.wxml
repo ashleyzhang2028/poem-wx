@@ -5,7 +5,7 @@
 
   <block wx:if="{{!author}}">
 
-    <view class="page-head roster-head">
+    <view class="card roster-head">
       <text class="head-title">{{totalPeople}} 位作者</text>
       <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
     </view>
@@ -44,9 +44,11 @@
   </block>
 
   <block wx:else>
-    <view class="page-head card-open">
-      <text class="head-title">{{author}}</text>
-      <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+    <view class="card author-head">
+      <view class="author-head-main">
+        <text class="head-title">{{author}}</text>
+        <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+      </view>
       <view class="head-back" hover-class="row-hover" hover-stay-time="60" bindtap="onBackRoster">
         <text class="head-back-arrow">‹</text>
       </view>

@@ -2,6 +2,10 @@
   padding: var(--sp-3);
 }
 
+.home .de {
+  margin-bottom: var(--sp-2);
+}
+
 .hero {
   padding: var(--sp-3) var(--sp-3);
 }
@@ -26,10 +30,14 @@
   margin-bottom: var(--sp-2);
 }
 
+.extra-search {
+  padding: 0 var(--card-x);
+  margin-bottom: var(--sp-2);
+}
+
 .hero-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-head);
   font-weight: 700;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
@@ -107,7 +115,6 @@
 
 .row-state.on {
   color: var(--ink-2);
-  font-weight: 600;
 }
 
 .all-title {
@@ -171,7 +178,6 @@
 
 .guest-title {
   font-size: var(--fs-hint);
-  font-weight: 600;
   color: var(--amber);
 }
 

@@ -88,7 +88,6 @@
 .identity-name {
   display: block;
   font-size: var(--fs-lead);
-  font-weight: 700;
   color: var(--ink);
   letter-spacing: var(--ls-title);
 }
@@ -100,7 +99,6 @@
   min-height: 0;
   padding: 0;
   font-size: var(--fs-lead);
-  font-weight: 700;
   color: var(--ink);
   letter-spacing: var(--ls-title);
   border-radius: 0;

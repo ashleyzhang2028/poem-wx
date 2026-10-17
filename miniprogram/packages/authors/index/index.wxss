@@ -37,19 +37,30 @@
   flex: none;
 }
 
+.author-head {
+  display: flex;
+  align-items: center;
+}
+
+.author-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .head-back {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64rpx;
-  height: 64rpx;
+  width: 88rpx;
+  height: 88rpx;
   margin-left: var(--sp-2);
   border-radius: var(--radius-pill);
   transition: background-color var(--t-press);
 }
 
 .head-back-arrow {
-  font-size: var(--fs-lead);
+  font-size: calc(var(--fs-lead) * 2);
   line-height: 1;
   color: var(--ink-2);
 }

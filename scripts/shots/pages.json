@@ -50,6 +50,16 @@
     "tab": 4,
     "logged": true
   },
+  "search-hit": {
+    "page": "pages/search/search",
+    "title": "搜索",
+    "tab": 4,
+    "logged": true,
+    "do": [
+      { "call": "onInput", "with": { "detail": { "value": "李白" } } },
+      { "call": "doSearch" }
+    ]
+  },
   "mine-guest": {
     "page": "pages/mine/mine",
     "title": "我的",
@@ -103,6 +113,17 @@
       { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }, { "id": "poems-xx1-05" }] }
     ],
     "_note": "开着「只背自选」的首页：只剩自选集子，课内「全部诗词」那张卡与排期都收起"
+  },
+  "home-collections": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "collections": [
+      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }, { "id": "classic-gw-1" }] },
+      { "id": "c2", "name": "宋词选", "items": [{ "id": "songci-sc-1" }, { "id": "songci-sc-2" }] }
+    ],
+    "_note": "首页的自选集子：每个集子一张卡，标题「集合名 · 自选」，篇目平铺，篇名后挂状态与出身两枚胶囊"
   },
   "tier": {
     "page": "packages/mine/tier/tier",
@@ -516,7 +537,7 @@
     "logged": true,
     "do": [
       {
-        "call": "onExtraInput",
+        "call": "onExtraSearch",
         "with": {
           "detail": {
             "value": "月"
@@ -525,6 +546,24 @@
       }
     ],
     "dailyExtra": ["poems-xx1-05"]
+  },
+  "home-extra-limited": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "onExtraSearch",
+        "with": {
+          "detail": {
+            "value": "月"
+          }
+        }
+      }
+    ],
+    "dailyExtra": ["poems-xx1-05", "poems-xx3-16"],
+    "_note": "今日加背搜到人、卡里已有两首：读数那一行现在的左边距跟着搜索行走，不再留卡片的内衬"
   },
   "home-all": {
     "page": "pages/home/home",
