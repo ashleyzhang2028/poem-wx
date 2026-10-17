@@ -13,8 +13,15 @@ const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: 
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
+const SOURCE_TEXT = { course: "课内", own: "自选" };
+
 function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
+}
+
+function sourceKey(id) {
+  const meta = corpus.indexById(id);
+  return meta && meta.b === "poems" ? "course" : "own";
 }
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -63,7 +70,8 @@ function rowsOfScope(list, scope) {
       place: scope.random ? S.gradeName(p.gr) + S.termName(p.tm) : "",
       stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
       read: !!read[p.id],
-      recited: S.isLearned(rec)
+      recited: S.isLearned(rec),
+      source: SOURCE_TEXT[sourceKey(p.id)]
     };
   });
 }
@@ -179,13 +187,7 @@ Page({
     const allRows = allMode ? rowsOfScope(allList, scope) : [];
     const sheetRows = this.collectionId ? this.collectionSheetRows(this.collectionId) : [];
 
-    const reads = {};
-    const readOf = (id) => {
-      const meta = corpus.indexById(id);
-      const book = (meta && meta.b) || "poems";
-      if (!reads[book]) reads[book] = store.reads(book);
-      return !!reads[book][id];
-    };
+    const readOf = this.readOf();
 
     let done = 0;
     const rows = plan.map((it, i) => {
@@ -206,7 +208,8 @@ Page({
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
         read,
-        recited
+        recited,
+        source: SOURCE_TEXT[sourceKey(it.poem.id)]
       };
     });
 
@@ -258,18 +261,50 @@ Page({
       plan.forEach((it) => {
         if (S.isLearned(seen[it.poem.id])) done += 1;
       });
-      const ov = S.collectionOverview(all, c);
       return {
         id: c.id,
-        name: cols.nameOf(c),
+        title: cols.nameOf(c),
         count: c.items.length,
         planned: plan.length,
         done: done,
-        due: ov.due,
-        learned: ov.learned,
-        percent: plan.length ? Math.round((done / plan.length) * 100) : 0
+        rows: this.collectionCardRows(plan)
       };
     });
+  },
+
+  collectionCardRows(plan) {
+    const readOf = this.readOf();
+    return plan.map((it, i) => this.poemRow(it.poem, i, it.reason, readOf));
+  },
+
+  readOf() {
+    const reads = {};
+    return (id) => {
+      const meta = corpus.indexById(id);
+      const book = (meta && meta.b) || "poems";
+      if (!reads[book]) reads[book] = store.reads(book);
+      return !!reads[book][id];
+    };
+  },
+
+  poemRow(p, i, reason, readOf) {
+    const rec = store.getRecord(p.id);
+    const stage = S.stageName(rec) || "";
+    return {
+      id: p.id,
+      seq: i + 1,
+      title: p.t,
+      author: p.a,
+      dynasty: p.d,
+      reason: REASON_TEXT[reason] || "",
+      reasonKey: reason || "",
+      tagCls: reasonCls(reason),
+      stage: stage === REASON_TEXT[reason] ? "" : stage,
+      mastery: S.mastery(rec),
+      read: readOf(p.id),
+      recited: S.isLearned(rec),
+      source: SOURCE_TEXT[sourceKey(p.id)]
+    };
   },
 
   collectionPlanOf(id) {
@@ -285,79 +320,31 @@ Page({
   collectionSheetRows(id) {
     const plan = this.collectionPlanOf(id);
     if (!plan) return [];
-    const reads = {};
-    const readOf = (pid) => {
-      const meta = corpus.indexById(pid);
-      const book = (meta && meta.b) || "poems";
-      if (!reads[book]) reads[book] = store.reads(book);
-      return !!reads[book][pid];
-    };
-    const planIds = {};
-    plan.forEach((it) => { planIds[it.poem.id] = true; });
+    const reasonOf = {};
+    plan.forEach((it) => { reasonOf[it.poem.id] = it.reason; });
     const rest = cols.idsOf(cols.find(id))
-      .filter((pid) => !planIds[pid])
+      .filter((pid) => !reasonOf[pid])
       .map((pid) => corpus.indexById(pid))
       .filter(Boolean);
-    const all = plan.map((it) => it.poem).concat(rest);
-    return all.map((p, i) => {
-      const rec = store.getRecord(p.id);
-      return {
-        id: p.id,
-        seq: i + 1,
-        title: p.t,
-        author: p.a,
-        dynasty: p.d,
-        reason: "",
-        reasonKey: "",
-        tagCls: "ghost",
-        stage: S.stageName(rec) || "",
-        mastery: S.mastery(rec),
-        read: readOf(p.id),
-        recited: S.isLearned(rec)
-      };
-    });
+    const readOf = this.readOf();
+    return plan.map((it) => it.poem).concat(rest)
+      .map((p, i) => this.poemRow(p, i, reasonOf[p.id], readOf));
   },
 
   onOpenCollection(e) {
-    const id = e.currentTarget.dataset.id;
+    const ds = e.currentTarget.dataset;
     gate.guard("自选背诵", () => {
       if (!entitlement.block("collections", { page: this })) return;
       const sheet = this.selectComponent("#sheet");
       if (!sheet) return;
-      const rows = this.collectionSheetRows(id);
+      const rows = this.collectionSheetRows(ds.coll);
       if (!rows.length) {
         wx.showToast({ title: "这个集子还是空的", icon: "none" });
         return;
       }
-      this.collectionId = id;
+      this.collectionId = ds.coll;
       this.setData({ sheetRows: rows });
-      sheet.open(rows, rows[0].id);
-    });
-  },
-
-  onManageCollections() {
-    if (!gate.guard("自选背诵")) return;
-    wx.navigateTo({ url: "/packages/settings/collections/collections" });
-  },
-
-  onCollectionRename(e) {
-    const id = e.currentTarget.dataset.id;
-    const c = cols.find(id);
-    if (!c) return;
-    wx.showModal({
-      title: "改集子名",
-      editable: true,
-      placeholderText: cols.nameOf(c),
-      success: (res) => {
-        if (!res.confirm) return;
-        const r = cols.rename(id, res.content);
-        if (!r.ok) {
-          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集子", icon: "none" });
-          return;
-        }
-        sync.markDirty();
-        this.refresh();
-      }
+      sheet.open(rows, ds.id);
     });
   },
 
