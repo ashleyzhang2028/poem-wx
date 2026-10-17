@@ -3870,9 +3870,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("首页进度环的两个元素都在（环 + 环里的填充）",
     /class="ring"/.test(homeWxml) && /class="ring-fill"/.test(homeWxml),
     "环少了一个元素 —— 画不出进度");
-  ok("首页那枚环在零进度时不渲染（不画一枚空槽）",
-    /wx:if="\{\{percent\}\}"/.test(homeWxml),
-    "零进度时还画着空环");
+  ok("首页那枚环跟着 percent 走，零进度与满进度都画",
+    /class="ring-fill" style="--p:\{\{percent\}\}"/.test(homeWxml)
+      && /class="ring-text">\{\{percent\}\}%</.test(homeWxml)
+      && !/stat-dash/.test(homeWxml) && !/\.stat-dash/.test(homeWxss),
+    "环被 progress 之外的条件挡掉了 —— 0% 或 100% 时不显示");
 
   ok("环的尺寸与线宽只有一份定义（首页与背诵进度页取自它）",
     /--ring-size\s*:/.test(read("styles/tokens.wxss")) && /--ring-w\s*:/.test(read("styles/tokens.wxss")),
