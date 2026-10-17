@@ -275,9 +275,15 @@ Page({
 
   onPick(e) {
     const id = e.currentTarget.dataset.id;
-    const picked = {};
-    (e.detail.value || []).forEach((pid) => { picked[pid] = true; });
-    this.setItems(id, this.itemRows(id, picked));
+    const c = cols.find(id);
+    if (!c) return;
+    const before = cols.idsOf(c);
+    const picked = (e.detail.value || []).filter((pid) => before.indexOf(pid) >= 0);
+    const gone = before.filter((pid) => picked.indexOf(pid) < 0);
+    if (!gone.length) return;
+    cols.removeItems(c.id, gone);
+    sync.markDirty();
+    this.refresh();
   },
 
   onPickAll(e) {

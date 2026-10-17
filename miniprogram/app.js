@@ -48,5 +48,6 @@ App({
 
   onHide() {
     if (this.syncTimer) clearTimeout(this.syncTimer);
+    if (gate.logged()) sync.flush().catch(() => {});
   }
 });

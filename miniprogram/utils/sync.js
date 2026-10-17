@@ -9,6 +9,7 @@ let packTimer = null;
 
 const MIN_GAP = 60 * 1000;
 const IDLE_GAP = 5 * 1000;
+const LATE_GAP = 5 * 1000;
 
 function ready() {
   return remote.configured() && auth.logged();
@@ -16,7 +17,7 @@ function ready() {
 
 function state() {
   const s = store.settings();
-  const pending = pendingCount();
+  const pending = pendingCount() || (unsent() ? 1 : 0);
   return {
     ready: ready(),
     lastSyncAt: s.lastSyncAt || 0,
@@ -88,8 +89,30 @@ function now(force) {
 function markDirty() {
   if (!ready()) return;
   armPackMoment();
-  if (Date.now() - lastAt < MIN_GAP) return;
-  now().catch(() => {});
+  if (Date.now() - lastAt < MIN_GAP) {
+    markUnsent();
+    return;
+  }
+  now().catch(() => {
+    markUnsent();
+  });
 }
 
-module.exports = { ready, state, now, markDirty, pendingCount, packMoment, MIN_GAP };
+function markUnsent() {
+  const box = store.read(store.KEYS.sync, {}) || {};
+  if (box.unsent) return;
+  store.write(store.KEYS.sync, Object.assign({}, box, { unsent: Date.now() }));
+  setTimeout(() => flush().catch(() => {}), LATE_GAP);
+}
+
+function unsent() {
+  return Number((store.read(store.KEYS.sync, {}) || {}).unsent || 0) > 0;
+}
+
+function flush() {
+  if (!ready()) return Promise.resolve({ skipped: "offline" });
+  if (!unsent() && !pendingCount()) return Promise.resolve({ skipped: "clean" });
+  return now(true);
+}
+
+module.exports = { ready, state, now, markDirty, flush, unsent, pendingCount, packMoment, MIN_GAP };

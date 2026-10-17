@@ -79,6 +79,24 @@ function makeWx(port, mem) {
     { id: "c-e2e", name: "自选集", createdAt: 1, dailyCount: 10, items: [{ id: "poems-xx1-01" }, { id: "poems-xx1-02" }] }
   ]);
 
+  const sm2Day = { t: 0 };
+  {
+    const collections = require(path.join(REPO, "miniprogram", "utils", "collections.js"));
+    collections.setCount("c-e2e", 20);
+    const R = require(path.join(REPO, "miniprogram", "utils", "review-models.js"));
+    const t0 = Math.floor(Date.now() / 1000) * 1000 - 2 * 86400000;
+    sm2Day.t = t0;
+    store.setRecord("mingshu-ms-225", { level: 3, nextReviewAt: t0, lastReviewAt: t0 - 86400000, learned: true });
+    const sm2 = R.adopt({ learned: true, level: 4, lapses: 3 }, "sm2");
+    store.setRecord("poems-xx1-01", Object.assign(sm2, {
+      level: 5, interval: 21, ef: 1.7, reviewCount: 6, lapses: 3,
+      nextReviewAt: t0, lastReviewAt: t0 - 86400000, reviewedOn: R.dayStamp(t0 - 86400000),
+      history: [{ at: t0 - 86400000, result: "good", level: 5 }]
+    }));
+    store.setRecord("poems-xx1-03", { level: 2, nextReviewAt: Date.now() + 86400000, lastReviewAt: Date.now(), learned: true });
+    store.saveSettings({ algo: "sm2" });
+  }
+
   await auth.login();
   ok("登录之后 logged=true", auth.logged() === true, JSON.stringify(auth.logged()));
   ok("档位从服务端来（free）", auth.serverTier() === "free", auth.serverTier());
@@ -93,6 +111,9 @@ function makeWx(port, mem) {
   const byId = {};
   rows.forEach((r) => { byId[r.poem_id] = r.payload; });
   ok("服务端收到了 settings:v1", !!byId["settings:v1"], JSON.stringify(Object.keys(byId)));
+  ok("服务端那份设置把云端字段写全了（新手机不带本机默认值上去时也有底）",
+    byId["settings:v1"] && byId["settings:v1"].settings.algo === "sm2" && byId["settings:v1"].settings.theme === "ink",
+    JSON.stringify(byId["settings:v1"] && byId["settings:v1"].settings));
   ok("服务端那份设置里有 grade=3 / dailyCount=7",
     byId["settings:v1"] && byId["settings:v1"].settings.grade === 3 && byId["settings:v1"].settings.dailyCount === 7,
     JSON.stringify(byId["settings:v1"]));
@@ -105,11 +126,22 @@ function makeWx(port, mem) {
     "推上去了：" + JSON.stringify(byId["profile:v1"]) +
       " —— 头像现在是微信那张的临时路径（wxfile://），上传它既没地方存也没意义");
   ok("服务端收到了那篇进度", byId["poem_x"] && byId["poem_x"].level === 4, JSON.stringify(byId["poem_x"]));
+  ok("服务端收到了 SM-2 的中间状态（interval / ef / lapses / reviewCount / 评分结果）",
+    !!byId["poems-xx1-01"]
+      && byId["poems-xx1-01"].interval === 21
+      && byId["poems-xx1-01"].ef === 1.7
+      && byId["poems-xx1-01"].lapses === 3
+      && byId["poems-xx1-01"].reviewCount === 6
+      && (byId["poems-xx1-01"].history[0] || {}).result === "good",
+    JSON.stringify(byId["poems-xx1-01"]));
+  ok("只背过没点读过的那篇也进了已读行",
+    !!byId["reads:poem_poems_read_v1"] && !!byId["reads:poem_poems_read_v1"].marks["poems-xx1-03"],
+    JSON.stringify(byId["reads:poem_poems_read_v1"]));
   ok("服务端收到了自选集子（名字、篇目与每日首数都在）",
     !!byId["collections:v1"]
       && byId["collections:v1"].collections[0].name === "自选集"
       && byId["collections:v1"].collections[0].items.length === 2
-      && byId["collections:v1"].collections[0].dailyCount === 10,
+      && byId["collections:v1"].collections[0].dailyCount === 20,
     JSON.stringify(byId["collections:v1"]));
 
   Object.keys(mem).forEach((k) => delete mem[k]);
@@ -131,15 +163,35 @@ function makeWx(port, mem) {
     !store2.profile().avatarLocal, "居然认回来了：" + String(store2.profile().avatarLocal));
   ok("新手机上那篇进度认回来了（level 4）",
     (store2.getRecord("poem_x") || {}).level === 4, JSON.stringify(store2.getRecord("poem_x")));
+  ok("新手机上 algo 认回来了（sm2）", store2.settings().algo === "sm2", String(store2.settings().algo));
+  ok("新手机上 SM-2 的 ef / interval / lapses / reviewCount / history 都认回来了",
+    (() => {
+      const rec = store2.getRecord("poems-xx1-01") || {};
+      return rec.ef === 1.7 && rec.interval === 21 && rec.lapses === 3 && rec.reviewCount === 6
+        && (rec.history[0] || {}).result === "good";
+    })(),
+    JSON.stringify(store2.getRecord("poems-xx1-01")));
+  ok("新手机上那篇的档位与旧手机一致",
+    (store2.getRecord("poems-xx1-01") || {}).level === (store.getRecord("poems-xx1-01") || {}).level,
+    JSON.stringify([store.getRecord("poems-xx1-01"), store2.getRecord("poems-xx1-01")]));
+  ok("新手机上只背没读过的那篇也在已读里",
+    !!store2.reads("poems")["poems-xx1-03"], JSON.stringify(store2.reads("poems")));
 
   {
     const cols2 = require(path.join(REPO, "miniprogram", "utils", "collections.js"));
     const got = cols2.list();
     ok("新手机上自选集子认回来了（名字、篇目与每日首数）",
       got.length === 1 && got[0].name === "自选集" && cols2.idsOf(got[0]).length === 2
-        && cols2.countOf(got[0]) === 10,
+        && cols2.countOf(got[0]) === 20,
       JSON.stringify(got));
   }
+
+  store.markRead("poems", "zhaoming-zm-1");
+  await remote.sync();
+  await remote2.sync();
+  ok("这台手机读过、那台手机没读过的那篇，拉过来之后两边都算读过（读到取并集）",
+    !!store.reads("poems")["zhaoming-zm-1"] && !!store2.reads("poems")["zhaoming-zm-1"],
+    JSON.stringify([store.reads("poems"), store2.reads("poems")]));
 
   store.clearProgress();
   const svStoreBefore = await svStore.listProgress(store.profile().userId, "", 0);
