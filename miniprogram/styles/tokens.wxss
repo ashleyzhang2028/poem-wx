@@ -90,16 +90,16 @@ page {
   --fs-score: calc(104rpx * var(--ui-scale));
   --fs-glyph: calc(200rpx * var(--ui-scale));
   --fs-mark: calc(52rpx * var(--ui-scale));
-  --fs-poem: calc(36rpx * var(--ui-scale));
-  --fs-pinyin: calc(18rpx * var(--ui-scale));
-  --py-gap: calc(2rpx * var(--ui-scale));
-  --py-slot: calc(34rpx * var(--ui-scale));
+  --fs-pinyin: calc(22rpx * var(--ui-scale));
+  --py-gap: calc(1rpx * var(--ui-scale));
+  --py-slot: calc(38rpx * var(--ui-scale));
 
   --lh-tight: 1.3;
   --lh-body: 1.65;
   --lh-loose: 1.9;
 
   --lh-poem: 1.5;
+  --poem-fold: 16rpx;
 
   --ls-title: 1rpx;
   --ls-caption: 2rpx;

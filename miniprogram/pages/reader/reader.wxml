@@ -32,17 +32,18 @@
           <text class="poem-dot">·</text>
           <text class="poem-meta">{{source}}</text>
         </block>
+        <block wx:if="{{selection}}">
+          <text class="poem-dot">·</text>
+          <text class="poem-meta">选自{{selection}}</text>
+        </block>
         <block wx:if="{{reciteMode}}">
           <text class="poem-dot">·</text>
           <text class="poem-meta stage">{{stage}}</text>
         </block>
       </view>
 
-      <view class="poem-note" wx:if="{{aliasText || selection}}">
-        <text class="poem-note-t" wx:if="{{aliasText}}">{{aliasText}}</text>
-
-        <text class="poem-note-dot" wx:if="{{aliasText && selection}}">·</text>
-        <text class="poem-note-t" wx:if="{{selection}}">选自{{selection}}</text>
+      <view class="poem-note" wx:if="{{aliasText}}">
+        <text class="poem-note-t">{{aliasText}}</text>
       </view>
     </view>
 

@@ -6,7 +6,8 @@ function splitClauses(line) {
   let buf = "";
   for (const ch of String(line)) {
     if (CLAUSE_SPLIT.test(ch)) {
-      if (buf.trim()) s.push(buf.trim() + ch);
+      const cl = (buf + ch).trim();
+      if (cl) s.push(cl);
       buf = "";
     } else {
       buf += ch;
@@ -22,99 +23,156 @@ function splitLines(text) {
     .map((line) => ({ line: line, s: splitClauses(line) }));
 }
 
-const PUNCT_END = /[，。！？；：]/;
-const PUNCT_SOFT = /[，、：；]/;
+const HAN = /[\u3400-\u4dbf\u4e00-\u9fff]/;
 
-const MIN_VERSE = 4;
+const BOX_DRAWING = /[─━│┃┌┬┐├┼┤└┴┘┏┳┓┣╋┫┗┻┛═║╔╦╗╠╬╣╚╩╝]/;
 
-const MAX_STANZA_BLOCK = 2;
+const FS_POEM = [30, 33, 36, 39, 42, 46, 52, 58, 64];
 
-const WALL_RUN = 6;
+const PY_BOX = [34, 37, 40, 44, 47, 51, 58, 64, 70];
 
-const RUN_LIMIT = 16;
+const PY_GAP = 1;
 
-function foldClauses(clauses) {
+const MEASURE = 630;
+
+const COUPLET_MAX = 2;
+
+const FIXED_MIN = 4;
+
+const FIXED_MAX = 9;
+
+const STANZA_MAX_ROWS = 12;
+
+function charWidth(size, pinyin) {
+  const at = Math.max(0, Math.min(FS_POEM.length - 1, Number(size) + 2));
+  return pinyin ? PY_BOX[at] + PY_GAP * 2 : FS_POEM[at];
+}
+
+function hanLen(seg) {
+  let n = 0;
+  for (const ch of String(seg || "")) if (HAN.test(ch)) n++;
+  return n;
+}
+
+function fixedVerse(clauses) {
+  if (clauses.length < COUPLET_MAX) return 0;
+  let len = 0;
+  for (let i = 0; i < clauses.length; i++) {
+    const han = hanLen(clauses[i]);
+    if (han < FIXED_MIN || han > FIXED_MAX) return 0;
+    if (!len) len = han;
+    else if (han !== len) return 0;
+  }
+  return len;
+}
+
+function costOf(cl) {
+  return hanLen(cl) || String(cl).length;
+}
+
+function softTail(buf) {
+  return buf.length > 1 && /[、：；]$/.test(buf[buf.length - 1]);
+}
+
+function sentenceCut(buf, limit) {
+  for (let i = buf.length - 1; i > 0; i--) {
+    if (!/[。！？]$/.test(buf[i - 1])) continue;
+    const keep = buf.slice(0, i).reduce((n, cl) => n + costOf(cl), 0);
+    return keep * 2 >= limit || buf.length - i <= 2 ? i : 0;
+  }
+  return 0;
+}
+
+function packClauses(clauses, size, pinyin, cap) {
+  const limit = Math.max(1, Math.floor(MEASURE / charWidth(size, pinyin)));
   const out = [];
   let buf = [];
+  let used = 0;
+
   clauses.forEach((cl) => {
-    buf.push(cl);
-
-    const last = cl[cl.length - 1] || "";
-    if (/[，。！？；：]/.test(last)) {
-      out.push(buf);
-      buf = [];
+    const cost = costOf(cl);
+    const mark = hanLen(cl) === 0;
+    const full = used + cost > limit;
+    const capped = cap && buf.length >= cap;
+    if (buf.length && !mark && (full || capped)) {
+      const cut = sentenceCut(buf, limit);
+      if (cut > 0) {
+        out.push(buf.slice(0, cut));
+        buf = buf.slice(cut);
+        used = buf.reduce((n, x) => n + costOf(x), 0);
+      } else {
+        const tail = softTail(buf) ? buf.pop() : null;
+        out.push(buf);
+        buf = tail ? [tail] : [];
+        used = buf.reduce((n, x) => n + costOf(x), 0);
+      }
     }
+    buf.push(cl);
+    used += cost;
   });
-  if (!buf.length) return out;
-
-  if (out.length) {
-    out[out.length - 1] = out[out.length - 1].concat(buf);
-    return out;
-  }
-
-  out.push(buf);
+  if (buf.length) out.push(buf);
   return out;
 }
 
-function shortAll(clauses) {
-  return clauses.every((cl) => !verseLike(cl));
-}
+function layout(text, opts) {
+  const size = opts && opts.size !== undefined ? Number(opts.size) || 0 : 0;
+  const pinyin = !!(opts && opts.pinyin);
 
-function verseLike(seg) {
-  return String(seg || "").replace(PUNCT_SOFT, "").length >= MIN_VERSE;
-}
-
-function hasStop(rows) {
-  return rows.some((seg) => PUNCT_END.test(seg[seg.length - 1] || ""));
-}
-
-function wallAfter(cur, next) {
-  if (!next.length) return false;
-  const all = cur.concat(next);
-
-  let run = 0;
-  for (let i = all.length - 1; i >= 0; i--) {
-    const row = all[i];
-    if (row.length === 1 && verseLike(row[0]) && hasStop(row)) run++;
-    else break;
-  }
-  if (run >= WALL_RUN) return true;
-  if (all.length >= RUN_LIMIT && hasStop(all[all.length - 1])) return true;
-  return false;
-}
-
-function layout(text) {
   const lines = splitLines(text);
-  const rows = [];
+  const flat = [];
   const paras = [];
 
-  let cur = [];
+  let all = [];
+  lines.forEach((ln) => { if (ln.s.length) all = all.concat(ln.s); });
+  const cap = fixedVerse(all) > 0 ? COUPLET_MAX : Infinity;
 
-  const flush = () => {
-    if (cur.length) paras.push(cur);
-    cur = [];
+  let stanza = [];
+  let pending = [];
+
+  const closeStanza = () => {
+    if (stanza.length) paras.push(stanza);
+    stanza = [];
+  };
+
+  const pushRows = (rows) => {
+    rows.forEach((row) => {
+      flat.push(row);
+      stanza.push(row);
+      if (stanza.length >= STANZA_MAX_ROWS) closeStanza();
+    });
+  };
+
+  const commit = () => {
+    if (pending.length) pushRows(packClauses(pending, size, pinyin, cap));
+    pending = [];
   };
 
   lines.forEach((ln) => {
     if (!ln.s.length) {
-
-      flush();
-      rows.push("");
+      commit();
+      closeStanza();
       return;
     }
 
-    const verse = ln.s.length === 1 || shortAll(ln.s);
-    const cut = verse ? [ln.s] : foldClauses(ln.s);
-    cut.forEach((g) => rows.push(g.join("")));
+    if (BOX_DRAWING.test(ln.line)) {
+      commit();
+      closeStanza();
+      pushRows([[ln.line]]);
+      closeStanza();
+      return;
+    }
 
-    const closeHere = wallAfter(cur, cut);
-    cur = cur.concat(cut);
-    if (closeHere) flush();
+    if (!hanLen(ln.line)) {
+      if (pending.length) pending[pending.length - 1] += ln.line.trim();
+      return;
+    }
+
+    pending = pending.concat(ln.s);
   });
-  flush();
+  commit();
+  closeStanza();
 
-  while (paras.length && !paras[paras.length - 1].length) paras.pop();
-  return { rows: rows, paras: paras, verse: rows.length > lines.length };
+  return { rows: flat.map((row) => row.join("")), paras: paras };
 }
 
 const BOOKS_DIR = "data/books/";
