@@ -1526,16 +1526,20 @@ view, text, button, input, textarea {
 .recite-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--sp-2);
   margin-top: var(--sp-4);
 }
 
-.recite-head .card-title {
-  margin-bottom: 0;
+.recite-label {
+  flex: none;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  line-height: var(--lh-tight);
 }
 
 .mastery-bar {
-  margin-top: var(--sp-2);
+  flex: 1;
+  min-width: 0;
 }
 
 .hint-line {

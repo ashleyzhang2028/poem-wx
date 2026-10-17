@@ -77,25 +77,16 @@
       </view>
 
       <view class="poem-body align-{{align}} size-{{fontSize}}">
-        <block wx:if="{{!pinyinOn}}">
-          <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
-            <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-              <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
-            </text>
-          </view>
-        </block>
-        <block wx:else>
-          <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
-            <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-              <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-                <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
-                  <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-                  <text class="tk-ch">{{tk.ch}}</text>
-                </view>
+        <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
+          <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+            <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+              <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+                <text class="tk-ch">{{tk.ch}}</text>
               </view>
             </view>
           </view>
-        </block>
+        </view>
       </view>
 
       <view class="trans-card" wx:if="{{hasTranslation}}">
@@ -118,11 +109,11 @@
       </radio-group>
 
       <view class="recite-head">
-        <text class="card-title">掌握度</text>
+        <text class="recite-label">掌握度</text>
+        <view class="meter mastery-bar">
+          <view class="meter-fill" style="width:{{mastery}}%"></view>
+        </view>
         <text class="mastery-num">{{mastery}}%</text>
-      </view>
-      <view class="meter mastery-bar">
-        <view class="meter-fill" style="width:{{mastery}}%"></view>
       </view>
 
       <view class="sheet-tail">

@@ -91,7 +91,6 @@ Component({
     aliasText: "",
     stage: "",
     rawText: "",
-    paras: [],
     tokens: [],
     translation: "",
     translationSource: "",
@@ -228,22 +227,17 @@ Component({
       this.triggerEvent("open", { id: item.id });
     },
 
-    relayout(pinyinOn) {
-      const laid = corpus.layout(this.data.rawText, {
-        size: this.data.fontSize,
-        pinyin: pinyinOn
-      });
-      this.setData({ paras: laid.paras });
-    },
-
     applyReading() {
       const pr = pinyin.readiness();
       const allowed = entitlement.can("pinyin");
       const usable = pr.usable && allowed;
       const mode = usable ? store.settings().pinyin : "off";
-      if (this.data.rawText) this.relayout(usable);
-      const tokens = pinyin.render(this.data.paras, usable ? mode : "off");
-      this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
+      const laid = corpus.layout(this.data.rawText, { size: this.data.fontSize, pinyin: usable });
+      this.setData({
+        pinyinOn: usable,
+        pinyinMode: mode,
+        tokens: pinyin.render(laid.paras, usable ? mode : "off")
+      });
     },
 
     syncDaily() {

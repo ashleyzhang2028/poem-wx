@@ -729,6 +729,12 @@ ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null)
   const rwxml = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
   ok("阅读页正文与注音两条路都按句渲染",
     rwxml.indexOf("wx:for=\"{{row}}\"") >= 0 && rwxml.indexOf("wx:for=\"{{cl.tokens}}\"") >= 0);
+
+  const swxml = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.wxml"), "utf8");
+  ok("背诵弹层正文只有一条渲染路（不注音时也得有字）",
+    swxml.indexOf("wx:for=\"{{cl.tokens}}\"") >= 0
+      && swxml.indexOf("wx:for=\"{{paras}}\"") < 0,
+    "弹层还留着按 paras 渲染的另一条路 —— 那条路读的字段没人生成，切到不注音就是一片空白");
 }
 
 const longLine = corpus.courseTexts();
