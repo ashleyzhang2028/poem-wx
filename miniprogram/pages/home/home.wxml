@@ -62,14 +62,13 @@
           <text class="stat-k">自选</text>
         </view>
         <view class="stat stat-ring">
-          <view class="ring-cap" wx:if="{{percent}}">
+          <view class="ring-cap">
             <view class="ring">
               <view class="ring-track"></view>
               <view class="ring-fill" style="--p:{{percent}}"></view>
               <text class="ring-text">{{percent}}%</text>
             </view>
           </view>
-          <text class="stat-v stat-dash" wx:else>—</text>
         </view>
       </view>
 
