@@ -136,7 +136,7 @@
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
   padding: 4rpx 16rpx;
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--sink);
   white-space: nowrap;
 }
