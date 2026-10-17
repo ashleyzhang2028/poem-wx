@@ -144,14 +144,14 @@ function build(entries, opt) {
 
     if (!name || isCollective(name)) return;
 
-    if (p.b === "poems" && p.t) courseWid[dedupKey(p.t, name)] = p;
+    if (p.b === "poems" && p.t) courseWid[dedupKey(p.t, p.a)] = p;
   });
 
   (entries || []).forEach(function (p) {
     if (!p || byBook[p.b] !== true) return;
     const name = personOf(p);
     if (!name || isCollective(name)) return;
-    if (p.b !== "poems" && courseWid[dedupKey(p.t, name)]) return;
+    if (p.b !== "poems" && courseWid[dedupKey(p.t, p.a)]) return;
 
     if (!byPerson[name]) {
       byPerson[name] = { name: name, at: 0, items: [], dynasties: {} };

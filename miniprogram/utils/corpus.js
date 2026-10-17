@@ -175,7 +175,6 @@ function layout(text, opts) {
   return { rows: flat.map((row) => row.join("")), paras: paras };
 }
 
-const BOOKS_DIR = "data/books/";
 const COURSE = "data/course.js";
 
 const MANIFEST = "data/shards.js";
@@ -185,6 +184,7 @@ const BUCKET_DIR = "data/texts/";
 const SHARD_FILE_RE = /^t\d{3}$/;
 
 let booksCache = null;
+let indexCache = null;
 let courseCache = null;
 let manifestCache = null;
 const bookCache = {};
@@ -194,6 +194,9 @@ const PACKED = {
   books: function () {
     return require("../data/books/books.js");
   },
+  index: function () {
+    return require("../data/books/index.js");
+  },
   course: function () {
     return require("../data/course.js");
   },
@@ -202,25 +205,7 @@ const PACKED = {
   }
 };
 
-const PACKED_BOOK_ROWS = {
-  poems: function () { return require("../data/books/poems.js"); },
-  classic: function () { return require("../data/books/classic.js"); },
-  yuefu: function () { return require("../data/books/yuefu.js"); },
-  tangshi: function () { return require("../data/books/tangshi.js"); },
-  gushi: function () { return require("../data/books/gushi.js"); },
-  songci: function () { return require("../data/books/songci.js"); },
-  yuanqu: function () { return require("../data/books/yuanqu.js"); },
-  guwen: function () { return require("../data/books/guwen.js"); },
-  jinxiandai: function () { return require("../data/books/jinxiandai.js"); },
-  zhaoming: function () { return require("../data/books/zhaoming.js"); },
-  chengyu: function () { return require("../data/books/chengyu.js"); },
-  changshi: function () { return require("../data/books/changshi.js"); },
-  mingshu: function () { return require("../data/books/mingshu.js"); },
-  mingren: function () { return require("../data/books/mingren.js"); },
-  "mingren-waiguo": function () { return require("../data/books/mingren-waiguo.js"); },
-  dwang: function () { return require("../data/books/dwang.js"); },
-  "dwang-waiguo": function () { return require("../data/books/dwang-waiguo.js"); }
-};
+const FIELDS = ["id", "t", "a", "d", "at", "s", "g", "sel", "gr", "tm", "aka", "an"];
 
 let dataReady = null;
 
@@ -267,16 +252,6 @@ function readJson(rel, fallback) {
   }
 }
 
-function packedRows(bookId) {
-  const hit = PACKED_BOOK_ROWS[bookId];
-  if (!hit) return null;
-  try {
-    return hit();
-  } catch (e) {
-    return null;
-  }
-}
-
 function books() {
   if (!booksCache) booksCache = packed("books") || [];
   return booksCache;
@@ -286,14 +261,46 @@ function bookById(id) {
   return books().find((b) => b.id === id) || null;
 }
 
+function indexPack() {
+  if (indexCache === null) {
+    try {
+      indexCache = PACKED.index();
+    } catch (e) {
+      indexCache = false;
+    }
+  }
+  return indexCache || null;
+}
+
+function field(dict, key, at) {
+  if (at < 0 || at === undefined) return "";
+  const list = dict && dict[key];
+  return (list && list[at]) || "";
+}
+
+function rowOf(dict, raw, bookId) {
+  const p = {};
+  FIELDS.forEach(function (k, i) { p[k] = raw[i]; });
+  p.a = p.a || "";
+  p.d = field(dict, "d", p.d);
+  p.s = field(dict, "s", p.s);
+  p.g = field(dict, "g", p.g);
+  p.sel = field(dict, "sel", p.sel);
+  p.aka = p.aka || null;
+  p.an = p.an || "";
+  p.b = bookId;
+  p.hasT = true;
+  return p;
+}
+
 function ofBook(bookId) {
   if (!bookCache[bookId]) {
     const meta = bookById(bookId);
-    const rows = packedRows(bookId) || readJson(BOOKS_DIR + bookId + ".js", []);
-    bookCache[bookId] = rows.map(function (p) {
-      p.b = bookId;
+    const pack = indexPack();
+    const rows = pack && pack.rows[bookId] ? pack.rows[bookId] : [];
+    bookCache[bookId] = rows.map(function (raw) {
+      const p = rowOf(pack.dict, raw, bookId);
       p.n = meta ? meta.name : bookId;
-      p.hasT = true;
       return p;
     });
   }
@@ -361,11 +368,16 @@ function onBucketReady(fn) {
 
 function armBucket(name, payload) {
   bucketCache[name] = payload;
+  books().forEach(function (b) { armBook(b.id, payload); });
   BUCKET_ARMED.forEach(function (fn) { fn(name, payload); });
 }
 
 function bucket(name) {
-  if (!bucketCache[name]) bucketCache[name] = readJson(BUCKET_DIR + name + ".js", {});
+  if (!bucketCache[name]) {
+    const data = readJson(BUCKET_DIR + name + ".js", {});
+    if (Object.keys(data).length) armBucket(name, data);
+    else bucketCache[name] = data;
+  }
   return bucketCache[name];
 }
 
@@ -448,7 +460,7 @@ function ensureEntry(id) {
   return ensureBucket(name).then(function (r) {
     const hit = r.data[id] || null;
     if (!hit) throw shardError("E_NO_ENTRY", "这一片里没有这一条：" + id);
-    return hit;
+    return arm(indexById(id), hit) || hit;
   });
 }
 
@@ -459,12 +471,37 @@ function shardError(code, message) {
   return e;
 }
 
+function withTranslation(p, payload) {
+  if (!p || !payload) return null;
+  p.text = payload.text || "";
+  p.translation = payload.translation || "";
+  p.src = payload.src || "";
+  p.tr = p.translation;
+  return p;
+}
+
+function arm(p, payload) {
+  return p && payload && p.at >= 0 ? withTranslation(p, payload) : p;
+}
+
+function armBook(bookId, payload) {
+  const rows = bookCache[bookId];
+  if (!rows || !payload) return;
+  const ids = Object.keys(payload);
+  rows.forEach(function (p) {
+    if (p.at >= 0 && ids[p.at] === p.id) arm(p, payload[p.id]);
+  });
+}
+
 function entry(id) {
   const inPack = courseTexts()[id];
-  if (inPack) return inPack;
+  if (inPack) return withTranslation(indexById(id), inPack) || inPack;
   const name = bucketOf(id);
   if (!name) return null;
-  return bucket(name)[id] || null;
+  const hit = bucket(name)[id] || null;
+  if (!hit) return null;
+  const meta = indexById(id);
+  return meta ? arm(meta, hit) : hit;
 }
 
 function entries(ids) {
@@ -562,6 +599,7 @@ module.exports = {
   ofBook,
   course,
   courseTexts,
+  withTranslation,
   manifest,
   bucketOf,
   bucket,
