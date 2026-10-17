@@ -4,7 +4,9 @@ Component({
     title: { type: String, value: "登录后可用" },
     note: { type: String, value: "" },
 
-    mark: { type: String, value: "" }
+    mark: { type: String, value: "" },
+
+    backTo: { type: String, value: "" }
   },
 
   data: { markText: "" },
@@ -15,7 +17,7 @@ Component({
 
   methods: {
     onLogin() {
-      tabPage.mine();
+      tabPage.back(this.data.backTo);
     }
   }
 });

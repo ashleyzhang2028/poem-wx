@@ -159,7 +159,7 @@ Page({
 
   onOpen(e) {
     const ds = e.currentTarget.dataset;
-    gate.guard("背诵", () => {
+    gate.guard("背诵", this, () => {
       const sheet = this.selectComponent("#sheet");
       if (!sheet) return;
       const panel = this.data.panels.filter((p) => String(p.offset) === String(ds.day))[0];

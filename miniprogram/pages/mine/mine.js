@@ -182,7 +182,7 @@ Page({
   },
 
   onCollections() {
-    if (!gate.guard("自选背诵")) return;
+    if (!gate.guard("自选背诵", this)) return;
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 

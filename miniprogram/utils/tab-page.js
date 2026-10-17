@@ -8,4 +8,20 @@ function mine() {
   go(MINE);
 }
 
-module.exports = { go, mine };
+function back(url) {
+  if (!url) {
+    mine();
+    return;
+  }
+  wx.switchTab({
+    url: url,
+    fail: () => {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => mine()
+      });
+    }
+  });
+}
+
+module.exports = { go, mine, back };

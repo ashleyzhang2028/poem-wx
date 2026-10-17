@@ -389,7 +389,7 @@ Page({
 
   onOpenCollection(e) {
     const ds = e.currentTarget.dataset;
-    gate.guard("自选背诵", () => {
+    gate.guard("自选背诵", this, () => {
       if (!entitlement.block("collections", { page: this })) return;
       const sheet = this.selectComponent("#sheet");
       if (!sheet) return;
@@ -412,7 +412,7 @@ Page({
   },
 
   onGuestOpen() {
-    gate.guard("诗词");
+    gate.guard("诗词", this);
   },
 
   onOpen(e) {
@@ -424,7 +424,7 @@ Page({
   },
 
   openSheet(id, source) {
-    gate.guard("背诵", () => {
+    gate.guard("背诵", this, () => {
       const sheet = this.selectComponent("#sheet");
       if (!sheet) return;
       this.sheetSource = source;
@@ -481,7 +481,7 @@ Page({
   },
 
   onSettings() {
-    if (!gate.guard("背诵设置")) return;
+    if (!gate.guard("背诵设置", this)) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
