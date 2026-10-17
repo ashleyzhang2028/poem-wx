@@ -326,7 +326,7 @@ Page({
       if (!sheet) return;
       const rows = this.collectionSheetRows(id);
       if (!rows.length) {
-        wx.showToast({ title: "这个集子还是空的", icon: "none" });
+        wx.showToast({ title: "这个集合还是空的", icon: "none" });
         return;
       }
       this.collectionId = id;
@@ -345,14 +345,14 @@ Page({
     const c = cols.find(id);
     if (!c) return;
     wx.showModal({
-      title: "改集子名",
+      title: "改集合名",
       editable: true,
       placeholderText: cols.nameOf(c),
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.rename(id, res.content);
         if (!r.ok) {
-          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集子", icon: "none" });
+          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集合", icon: "none" });
           return;
         }
         sync.markDirty();

@@ -115,18 +115,18 @@ Page({
   onCreate() {
     if (!entitlement.block("collections", { page: this })) return;
     if (this.data.count >= this.data.cap) {
-      wx.showToast({ title: "最多 " + this.data.cap + " 个集子，先删一个", icon: "none" });
+      wx.showToast({ title: "最多 " + this.data.cap + " 个集合，先删一个", icon: "none" });
       return;
     }
     wx.showModal({
-      title: "新建自选集子",
+      title: "新建自选集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.create(res.content);
         if (!r.ok) {
-          wx.showToast({ title: "最多 " + this.data.cap + " 个集子", icon: "none" });
+          wx.showToast({ title: "最多 " + this.data.cap + " 个集合", icon: "none" });
           return;
         }
         sync.markDirty();
@@ -147,14 +147,14 @@ Page({
     const c = cols.find(id);
     if (!c) return;
     wx.showModal({
-      title: "改集子名",
+      title: "改集合名",
       editable: true,
       placeholderText: cols.nameOf(c),
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.rename(id, res.content);
         if (!r.ok) {
-          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集子", icon: "none" });
+          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集合", icon: "none" });
           return;
         }
         sync.markDirty();
@@ -168,7 +168,7 @@ Page({
     const c = cols.find(id);
     if (!c) return;
     wx.showModal({
-      title: "删除集子",
+      title: "删除集合",
       content: "「" + cols.nameOf(c) + "」连同里面 " + c.items.length + " 首一起删掉？背诵进度一个字都不动。",
       confirmText: "删除",
       confirmColor: "#a83b32",
@@ -187,8 +187,8 @@ Page({
     const c = cols.find(id);
     if (!c || !c.items.length) return;
     wx.showModal({
-      title: "清空集子",
-      content: "把「" + cols.nameOf(c) + "」里 " + c.items.length + " 首全部移出？集子本身留着。",
+      title: "清空集合",
+      content: "把「" + cols.nameOf(c) + "」里 " + c.items.length + " 首全部移出？集合本身留着。",
       confirmText: "清空",
       cancelText: "算了",
       success: (res) => {
@@ -284,7 +284,7 @@ Page({
     const r = cols.removeItems(this.data.openId, ids);
     sync.markDirty();
     this.setData({ picked: {}, pickedCount: 0 }, () => this.refresh());
-    wx.showToast({ title: r.removed ? "已移出 " + r.removed + " 首" : "这几首已经不在集子里了", icon: "none" });
+    wx.showToast({ title: r.removed ? "已移出 " + r.removed + " 首" : "这几首已经不在集合里了", icon: "none" });
   },
 
 });

@@ -65,24 +65,10 @@
       </view>
     </view>
     <view class="divider"></view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onScope">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
       <view class="row-main">
-        <text class="row-title">背诵范围</text>
-        <text class="row-sub">{{gradeName}} · {{scopeName}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onDaily">
-      <view class="row-main">
-        <text class="row-title">每日首数</text>
-        <text class="row-sub">{{dailyCount}} 首</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAlgo">
-      <view class="row-main">
-        <text class="row-title">复习算法</text>
-        <text class="row-sub">{{algoName}}</text>
+        <text class="row-title">背诵选项</text>
+        <text class="row-sub">{{gradeName}} · {{scopeName}} · 每日 {{dailyCount}} 首 · {{algoName}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
@@ -96,7 +82,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
       <view class="row-main">
         <text class="row-title">自选背诵</text>
-        <text class="row-sub">自己加的集子 · 改名 · 增删篇目</text>
+        <text class="row-sub">自己加的集合 · 改名 · 增删篇目</text>
       </view>
       <text class="row-go">›</text>
     </view>

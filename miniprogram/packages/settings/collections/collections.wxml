@@ -1,23 +1,23 @@
 <view class="page" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选背诵要登录" note="登录后才能建集子" mark="选" />
+  <lock-card wx:if="{{locked}}" title="自选背诵要登录" note="登录后才能建集合" mark="选" />
 
   <block wx:else>
 
   <view class="card">
     <view class="card-title bar">自选背诵</view>
-    <text class="hint coll-lead">把课外阅读或搜索里看到的篇目收进自己的集子，按选定算法跟着背。</text>
+    <text class="hint coll-lead">把课外阅读或搜索里看到的篇目收进自己的集合，按选定算法跟着背。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
     </view>
     <text class="hint coll-lock" wx:else>{{hint}}</text>
 
-    <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集子</button>
+    <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
   </view>
 
   <view class="card" wx:if="{{count}}">
-    <view class="card-title bar">我的集子</view>
+    <view class="card-title bar">我的集合</view>
 
     <block wx:for="{{collections}}" wx:key="id" wx:for-item="c">
       <view class="coll-head" hover-class="row-hover" hover-stay-time="60"
@@ -33,11 +33,11 @@
         <button class="btn mini" data-id="{{c.id}}" bindtap="onRename">改名</button>
         <button class="btn mini" data-id="{{c.id}}" bindtap="onAdd">{{searchId === c.id ? '收起搜索' : '加篇目'}}</button>
         <button class="btn mini danger" data-id="{{c.id}}" bindtap="onClear">清空</button>
-        <button class="btn mini danger" data-id="{{c.id}}" bindtap="onRemove">删除集子</button>
+        <button class="btn mini danger" data-id="{{c.id}}" bindtap="onRemove">删除集合</button>
       </view>
 
       <view class="coll-count" wx:if="{{c.open}}">
-        <text class="hint coll-count-lead">每天从这个集子排几首</text>
+        <text class="hint coll-count-lead">每天从这个集合排几首</text>
         <radio-group class="chip-group cols-4" data-id="{{c.id}}" bindchange="onCount">
           <label class="chip {{c.dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this" wx:for-item="item">
             <radio class="seg-radio" value="{{item}}" checked="{{c.dailyCount === item}}" />
@@ -91,7 +91,7 @@
         </checkbox-group>
 
         <view class="empty coll-empty" wx:else>
-          <text class="empty-text">这个集子还是空的</text>
+          <text class="empty-text">这个集合还是空的</text>
           <text class="hint empty-tip">点「加篇目」去搜索里找</text>
         </view>
       </block>
@@ -101,8 +101,8 @@
   <view class="card" wx:elif="{{on}}">
     <view class="empty">
       <text class="empty-mark">选</text>
-      <text class="empty-text">还没有自选集子</text>
-      <text class="hint empty-tip">在上面点「新建集子」开一个</text>
+      <text class="empty-text">还没有自选集合</text>
+      <text class="hint empty-tip">在上面点「新建集合」开一个</text>
     </view>
   </view>
 

@@ -299,16 +299,18 @@ function expandTierView(wxml, data) {
 
   const entitlement = require(path.join(ROOT, "utils", "entitlement.js"));
   const tierIcons = require(path.join(ROOT, "utils", "icons.js"));
-  const tiers = require(path.join(ROOT, "utils", "tiers.js"));
   const snap = entitlement.snapshot();
-  const rows = entitlement.compareRows(snap).map((r) => ({
-    cap: r.cap,
-    name: r.name,
-    cells: r.cells.map((c) => Object.assign({}, c, {
-      icon: (c.on ? tierIcons.yes : tierIcons.no),
-      dim: !c.on && !tiers.strong(c.tier)
+  const rows = entitlement.compareRows(snap)
+    .map((r) => ({
+      cap: r.cap,
+      name: r.name,
+      yes: r.cells.filter((c) => c.on).length,
+      cells: r.cells.map((c) => Object.assign({}, c, {
+        icon: (c.on ? tierIcons.yes : tierIcons.no),
+        cls: c.on ? (c.now ? "yes-now" : "yes") : "no"
+      }))
     }))
-  }));
+    .sort((a, b) => b.yes - a.yes);
   const merged = Object.assign({}, data, {
     logged: snap.logged,
     status: snap,

@@ -56,11 +56,6 @@ Page({
     selfOnlyPoems: 0
   },
 
-  onLoad(query) {
-    const anchor = query && query.focus;
-    this.focusAnchor = anchor === "scope" || anchor === "count" || anchor === "algo" ? anchor : "";
-  },
-
   onShow() {
     theme.apply(this);
     if (!gate.logged()) {
@@ -82,7 +77,6 @@ Page({
       () => {
         this.updatePool();
         this.updateSelfOnly();
-        this.scrollToAnchor();
       }
     );
   },
@@ -105,18 +99,11 @@ Page({
     const want = !!e.detail.value;
     if (want && !cols.usable().length) {
       this.setData({ selfOnly: false });
-      wx.showToast({ title: "先建一个集子、往里面加几首", icon: "none" });
+      wx.showToast({ title: "先建一个集合、往里面加几首", icon: "none" });
       return;
     }
     this.setData({ selfOnly: want });
     this.save({ selfOnly: want });
-  },
-
-  scrollToAnchor() {
-    const anchor = this.focusAnchor;
-    if (!anchor) return;
-    this.focusAnchor = "";
-    wx.pageScrollTo({ selector: '[data-anchor="recite-' + anchor + '"]', duration: 240 });
   },
 
   dailyRows() {

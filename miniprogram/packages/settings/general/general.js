@@ -38,6 +38,7 @@ Page({
 
     items: theme.palette(),
     theme: theme.DEFAULT,
+    themeColor: theme.currentTheme().rgba,
 
     sfxVisible: false,
     sfxOn: true
@@ -57,6 +58,7 @@ Page({
     this.setData(
       Object.assign({ locked: false }, settings, {
         theme: theme.currentTheme().key,
+        themeColor: theme.currentTheme().rgba,
         sfxVisible: fx.visible,
         sfxOn: sfx.enabled(),
         pinyin: prOn ? settings.pinyin : "off",
@@ -101,7 +103,7 @@ Page({
     if (key === this.data.theme) return;
     const picked = theme.set(key);
     theme.apply(this);
-    this.setData({ theme: picked.key });
+    this.setData({ themeColor: picked.rgba, theme: picked.key });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 

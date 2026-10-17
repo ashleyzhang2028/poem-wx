@@ -1,6 +1,5 @@
 const entitlement = require("../../utils/entitlement");
 const icons = require("../../utils/icons");
-const tiers = require("../../utils/tiers");
 const view = require("../../utils/tier-view");
 
 function noteOf(snap) {
@@ -46,14 +45,17 @@ Component({
         total: sums[i].total
       }));
 
-      const rows = entitlement.compareRows(snap).map((r) => ({
-        cap: r.cap,
-        name: r.name,
-        cells: r.cells.map((c) => Object.assign({}, c, {
-          icon: (c.on ? icons.yes : icons.no),
-          dim: !c.on && !tiers.strong(c.tier)
+      const rows = entitlement.compareRows(snap)
+        .map((r) => ({
+          cap: r.cap,
+          name: r.name,
+          yes: r.cells.filter((c) => c.on).length,
+          cells: r.cells.map((c) => Object.assign({}, c, {
+            icon: (c.on ? icons.yes : icons.no),
+            cls: c.on ? (c.now ? "yes-now" : "yes") : "no"
+          }))
         }))
-      }));
+        .sort((a, b) => b.yes - a.yes);
 
       this.setData({
         logged: snap.logged,

@@ -138,8 +138,8 @@
 
       <view class="empty coll-empty" wx:elif="{{collectionOn}}">
         <text class="empty-mark">选</text>
-        <text class="empty-text">还没有自选集子</text>
-        <text class="hint empty-tip">在课外阅读或搜索里看到好诗，加进自己的集子</text>
+        <text class="empty-text">还没有自选集合</text>
+        <text class="hint empty-tip">在课外阅读或搜索里看到好诗，加进自己的集合</text>
       </view>
 
       <button class="btn ghost mini coll-btn" wx:if="{{collectionOn}}" bindtap="onManageCollections">管理自选背诵</button>

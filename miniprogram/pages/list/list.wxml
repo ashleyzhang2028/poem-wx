@@ -62,7 +62,7 @@
 
   <view class="empty" wx:if="{{!groups.length}}">
     <text class="empty-mark">空</text>
-    <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集子里还没有篇目'}}</text>
+    <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集合里还没有篇目'}}</text>
     <text class="hint empty-tip" wx:if="{{keyword}}">换个词或切到「全部」</text>
   </view>
 

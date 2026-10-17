@@ -219,16 +219,8 @@ Page({
     wx.navigateTo({ url: "/packages/settings/general/general" });
   },
 
-  onScope() {
-    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=scope" });
-  },
-
-  onDaily() {
-    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=count" });
-  },
-
-  onAlgo() {
-    wx.navigateTo({ url: "/packages/settings/recite/recite?focus=algo" });
+  onRecite() {
+    wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
   onProgress() {
