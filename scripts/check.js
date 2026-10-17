@@ -3299,13 +3299,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /\.glyph\.ic-added::before/.test(appWxss),
     "加背那枚还是带框的 ＋ —— 用户点名要去掉边框并换成图标");
 
-  ok("弹层的高度按「可视区减掉底栏」算，不吃掉底部（掌握度那道尺不再被遮挡）",
-    /--sheet-max-h:\s*calc\(100vh - [^)]*-\s*var\(--tabbar-h\)\)/.test(sheetWxss)
+  ok("底栏那一块算在弹层的 padding 里（上下首与底栏隔开，不被挡住）",
+    /--bar-h:\s*calc\(var\(--tabbar-h\)[^)]*\)/.test(sheetWxss)
       && /\.sheet\s*\{[^}]*max-height:\s*var\(--sheet-max-h\)/.test(sheetWxss)
+      && /\.sheet\s*\{[^}]*padding:[^;]*var\(--bar-h\)/.test(sheetWxss)
       && /\.sheet-body\s*\{[^}]*flex:\s*1/.test(sheetWxss)
       && /\.sheet-body\s*\{[^}]*overflow-y:\s*auto/.test(sheetWxss)
       && /--tabbar-h\s*:/.test(fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8")),
-    "弹层矮不下去/高不过可视区 —— 长诗会把底部那几条推到底栏后面");
+    "弹层没给底栏让位 —— 长诗的底部几条会被底栏盖住");
 
   ok("弹层里没有多余的分隔线（译文卡上下那两道已撤）",
     !/\.sheet\s+\.sheet-foot\s*\{[^}]*border-top/.test(sheetWxss)
@@ -3851,11 +3852,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("圆圈那套样式已撤（不留孤儿样式）", !/\.tick\s*\{/.test(homeWxss));
 
   {
-    const readerWxml = read("pages/reader/reader.wxml");
-    const sheetWxmlSrc = sheetWxml;
+    const sheetJsSrc = read("components/recite-sheet/recite-sheet.js");
     ok("背诵弹层那三颗评分走共用的格子控件（.chip 那一套，不自绘按钮）",
-      /<radio-group class="chip-group cols-3 actions"/.test(sheetWxmlSrc)
-        && !/\.act\s*\{/.test(appWxss));
+      /<view class="chip-group cols-3 actions"/.test(sheetWxml)
+        && /data-key="\{\{item\.key\}\}"/.test(sheetWxml)
+        && sheetWxml.indexOf("bindchange=\"onResult\"") < 0
+        && /const result = e\.currentTarget\.dataset\.key/.test(sheetJsSrc)
+        && !/\.act\s*\{/.test(appWxss),
+      "评分又挂回 radio-group —— 同名选项在下一首点不出 change，那一排就点不动了");
   }
 
   {

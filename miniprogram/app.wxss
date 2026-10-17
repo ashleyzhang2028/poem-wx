@@ -746,15 +746,15 @@ button, textarea {
 }
 
 .meter {
-  height: 6rpx;
-  border-radius: 3rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
   background: var(--line);
   overflow: hidden;
 }
 
 .meter-fill {
   height: 100%;
-  border-radius: 3rpx;
+  border-radius: 2rpx;
   background: var(--strong);
   transition: width var(--t-move) var(--ease);
 }
@@ -1073,6 +1073,10 @@ button, textarea {
 
 .chip.on .chip-t {
   color: var(--on-ink);
+}
+
+.chip-hover {
+  filter: brightness(.94);
 }
 
 .chip.multi {

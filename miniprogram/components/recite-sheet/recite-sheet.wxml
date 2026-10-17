@@ -8,7 +8,7 @@
     <view class="sheet-head">
       <text class="sheet-step">{{navText}}</text>
       <view class="sheet-close" hover-class="sheet-close-hover" hover-stay-time="60" bindtap="onClose">
-        <text class="sheet-close-t">✕</text>
+        <view class="sheet-close-x"></view>
       </view>
     </view>
 
@@ -101,12 +101,13 @@
     </view>
 
     <view class="sheet-foot">
-      <radio-group class="chip-group cols-3 actions" bindchange="onResult">
-        <label class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{last === item.key}}" />
+      <view class="chip-group cols-3 actions">
+        <view class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key"
+              hover-class="chip-hover" hover-stay-time="60"
+              data-key="{{item.key}}" bindtap="onResult">
           <text class="chip-t">{{item.label}}</text>
-        </label>
-      </radio-group>
+        </view>
+      </view>
 
       <view class="recite-head">
         <text class="recite-label">掌握度</text>
