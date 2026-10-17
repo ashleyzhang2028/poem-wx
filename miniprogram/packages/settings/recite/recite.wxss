@@ -71,7 +71,7 @@
   display: block;
   padding: var(--sp-3) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }

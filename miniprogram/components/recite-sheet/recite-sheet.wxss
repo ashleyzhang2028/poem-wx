@@ -109,7 +109,7 @@
   align-items: center;
   justify-content: center;
   min-height: var(--h-btn-mini);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--sink);
   transition: background-color var(--t-press), opacity var(--t-press);
 }

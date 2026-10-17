@@ -160,7 +160,7 @@ button, textarea {
   height: var(--h-btn);
   padding: 0 var(--sp-4);
 
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
   color: var(--ink);
@@ -240,7 +240,7 @@ button, textarea {
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
   line-height: 1.2;
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
 }
 
 .btn[disabled] {
@@ -311,7 +311,7 @@ button, textarea {
   height: 36rpx;
   padding: 0 var(--sp-1);
   margin-right: var(--sp-2);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--sink);
   font-family: var(--font-num);
   font-size: var(--fs-caption);
@@ -330,7 +330,7 @@ button, textarea {
   font-size: var(--fs-caption);
   color: var(--strong-text);
   padding: var(--pad-opt-y) var(--sp-2);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--strong-soft);
   margin-right: var(--sp-1);
 }
@@ -416,7 +416,7 @@ button, textarea {
   line-height: 1.5;
 
   padding: var(--pad-opt-y) var(--pad-opt-x);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   color: var(--ink-2);
   background: var(--sink);
   margin-right: 10rpx;
@@ -472,7 +472,7 @@ button, textarea {
   align-items: center;
   background: var(--sink);
   border: 1rpx solid transparent;
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   padding: 0 var(--sp-4);
   height: var(--h-field);
   margin-bottom: var(--sp-2);
@@ -637,7 +637,7 @@ button, textarea {
   min-height: var(--h-opt);
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1028,7 +1028,7 @@ button, textarea {
 
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1262,7 +1262,7 @@ button, textarea {
   color: var(--ink-2);
   letter-spacing: var(--ls-caption);
   background: var(--sink);
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-pill);
   padding: 8rpx 22rpx;
   margin: var(--sp-2) 0 var(--sp-2);
 }
