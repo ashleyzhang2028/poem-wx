@@ -6557,14 +6557,30 @@ function gapped(items, max) {
   }
 
   const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+  const homeWxml4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
   ok("首页自选卡与背诵弹层共用一套（点一行就地开弹层）",
-    /onOpenCollection/.test(homeSrc4)
-      && fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8").indexOf("onOpenCollection") >= 0);
-  ok("首页集子那一行不是篇名（行标题不许借 row-poem）",
-    fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8")
-      .indexOf('row-title row-poem">{{item.name}}') < 0);
+    /onOpenCollection/.test(homeSrc4) && homeWxml4.indexOf("onOpenCollection") >= 0);
+  ok("每个自选集子一张卡，标题带「· 自选」，篇目平铺成一份队列",
+    /title:\s*cols\.nameOf\(c\)\s*\+\s*" · 自选"/.test(homeSrc4)
+      && /wx:for="\{\{collections\}\}"/.test(homeWxml4)
+      && /wx:for="\{\{coll\.rows\}\}"/.test(homeWxml4)
+      && /cols\.find\(id\)/.test(homeSrc4));
+  ok("首页不再有整页入口与就地改名（管理都挪到设置页）",
+    !/onManageCollections/.test(homeSrc4) && !/onManageCollections/.test(homeWxml4)
+      && !/onCollectionRename/.test(homeSrc4) && !/onCollectionRename/.test(homeWxml4)
+      && !/cols\.rename\(/.test(homeSrc4));
+
+  ok("课内 / 自选胶囊由篇目所属集子定，标签互斥（一首只落一个）",
+    /const SOURCE_TEXT = \{ course: "课内", own: "自选" \}/.test(homeSrc4)
+      && /function sourceKey\(id\)/.test(homeSrc4)
+      && /meta\.b === "poems" \? "course" : "own"/.test(homeSrc4)
+      && homeWxml4.indexOf("{{item.source}}") >= 0
+      && homeWxml4.indexOf("{{item.source === '课内' ? 'course' : 'own'}}") >= 0);
+  ok("首页四张卡的篇目行都带来源胶囊（今日 / 全部诗词 / 每个自选集子）",
+    (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 3
+      && /class="tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reason\}\}"/.test(homeWxml4));
 
   const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",
