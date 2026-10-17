@@ -19,7 +19,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title bar">今日背诵</text>
+        <text class="card-title">今日背诵</text>
       </view>
 
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -77,9 +77,17 @@
 
     </view>
 
-    <view class="card">
-      <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
+    <view class="extra-search">
+      <view class="search">
+        <text class="search-icon">⌕</text>
+
+        <input placeholder="今日加背 · 搜篇名 / 作者 / 朝代" value="{{extraKeyword}}" bindinput="onExtraInput"
+               confirm-type="search" bindconfirm="onExtraSearch" />
+        <text class="clear" wx:if="{{extraKeyword}}" bindtap="onExtraClear">✕</text>
+      </view>
     </view>
+
+    <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
 
     <view class="card">
       <skeleton rows="3" wx:if="{{loading}}" />

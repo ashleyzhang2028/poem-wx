@@ -38,8 +38,9 @@ Component({
       this.setData({ keyword: e.detail.value }, () => this.paint(e.detail.value));
     },
 
-    onSearch() {
-      this.paint(this.data.keyword);
+    onSearch(kw) {
+      const keyword = kw === undefined ? this.data.keyword : kw;
+      this.setData({ keyword: keyword }, () => this.paint(keyword));
     },
 
     onClear() {

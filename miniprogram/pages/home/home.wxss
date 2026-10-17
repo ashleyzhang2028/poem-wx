@@ -2,6 +2,10 @@
   padding: var(--sp-3);
 }
 
+.home .de {
+  margin-bottom: var(--sp-2);
+}
+
 .hero {
   padding: var(--sp-3) var(--sp-3);
 }
@@ -23,6 +27,11 @@
   font-size: var(--fs-caption);
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
+  margin-bottom: var(--sp-2);
+}
+
+.extra-search {
+  padding: 0 var(--card-x);
   margin-bottom: var(--sp-2);
 }
 
