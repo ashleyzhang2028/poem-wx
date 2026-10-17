@@ -1,7 +1,8 @@
 .sheet-root {
   position: fixed;
   inset: 0;
-  --sheet-max-h: calc(100vh - 96rpx - var(--tabbar-h));
+  --bar-h: calc(var(--tabbar-h) + var(--sp-2));
+  --sheet-max-h: calc(100vh - 96rpx - var(--bar-h));
   z-index: 60;
   display: flex;
   align-items: flex-end;
@@ -24,7 +25,7 @@
   max-height: var(--sheet-max-h);
   background: var(--surface);
   border-radius: var(--radius-block) var(--radius-block) 0 0;
-  padding: 0 var(--sp-3) env(safe-area-inset-bottom);
+  padding: 0 var(--sp-3) var(--bar-h);
   animation: sheet-up .26s var(--ease);
 }
 
@@ -77,10 +78,31 @@
   background: var(--line);
 }
 
-.sheet-close-t {
-  font-size: var(--fs-title);
-  color: var(--ink-2);
-  line-height: 1;
+.sheet-close-x {
+  position: relative;
+  flex: none;
+  width: 16rpx;
+  height: 16rpx;
+}
+
+.sheet-close-x::before,
+.sheet-close-x::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  margin-top: -.5px;
+  background: var(--ink-2);
+}
+
+.sheet-close-x::before {
+  transform: rotate(45deg);
+}
+
+.sheet-close-x::after {
+  transform: rotate(-45deg);
 }
 
 .sheet-body {
@@ -93,7 +115,7 @@
 
 .sheet-foot {
   flex: none;
-  padding: var(--sp-3) 0 var(--sp-4);
+  padding: var(--sp-3) 0 var(--sp-2);
 }
 
 .sheet-tail {

@@ -12,8 +12,6 @@ const RESULTS = [
   { key: "good", label: "记住", cls: "good" }
 ];
 
-const RESULT_KEYS = RESULTS.map((it) => it.key);
-
 const FONT_MIN = -2;
 const FONT_MAX = 6;
 
@@ -112,7 +110,6 @@ Component({
 
     mastery: 0,
     hint: "",
-    last: "",
     results: RESULTS,
 
     dailyOn: false
@@ -219,7 +216,6 @@ Component({
         ...fontFlags(fontSize),
         stage: R.stageName(rec, settings.algo),
         mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0,
-        last: "",
         index: this.data.index,
         total: this.data.queue.length,
         navText: (this.data.index + 1) + " / " + this.data.queue.length,
@@ -326,7 +322,7 @@ Component({
         wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
         return;
       }
-      const result = e.detail.value;
+      const result = e.currentTarget.dataset.key;
       const settings = store.settings();
       const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
       store.setRecord(this.data.id, rec);
@@ -335,12 +331,11 @@ Component({
       this.setData({
         stage: R.stageName(rec, settings.algo),
         mastery: Math.round((R.clampLevel(rec.level) / 9) * 100),
-        last: "",
         hint: R.resultHint(settings.algo, result, rec)
       });
 
       this.cancelAdvance();
-      this.advance = setTimeout(() => this.goNext(result), 700);
+      this.advance = setTimeout(() => this.goNext(), 700);
     },
 
     cancelAdvance() {
@@ -348,33 +343,28 @@ Component({
       this.advance = 0;
     },
 
-    nextResult(r) {
-      const i = RESULT_KEYS.indexOf(r);
-      return RESULT_KEYS[i < 0 ? 0 : i + 1] || RESULT_KEYS[RESULT_KEYS.length - 1];
-    },
-
-    goNext(prev) {
+    goNext() {
       const next = this.data.index + 1;
       if (next >= this.data.queue.length) {
         this.onClose();
         this.triggerEvent("finish");
         return;
       }
-      this.setData({ index: next, last: this.nextResult(prev) });
+      this.setData({ index: next });
       this.loadCurrent();
     },
 
     onPrev() {
       this.cancelAdvance();
       if (this.data.index <= 0) return;
-      this.setData({ index: this.data.index - 1, last: "" });
+      this.setData({ index: this.data.index - 1 });
       this.loadCurrent();
     },
 
     onNext() {
       this.cancelAdvance();
       if (this.data.index + 1 >= this.data.queue.length) return;
-      this.setData({ index: this.data.index + 1, last: "" });
+      this.setData({ index: this.data.index + 1 });
       this.loadCurrent();
     },
 
