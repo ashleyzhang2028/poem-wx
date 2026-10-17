@@ -208,6 +208,7 @@ Page({
 
   save(patch) {
     store.saveSettings(patch);
+    store.dropDayPlan();
 
     sync.markDirty();
 

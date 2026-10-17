@@ -8,6 +8,7 @@ const KEYS = {
   reads: "kb_reads_v1",
   collections: "kb_collections_v1",
   dailyExtra: "kb_daily_extra_v1",
+  dayPlan: "kb_day_plan_v1",
   profile: "kb_profile_v1",
   auth: "kb_auth_v1",
   grant: "kb_grant_v1",
@@ -380,6 +381,38 @@ function touchDaily() {
   if (raw && raw.day !== dayKey()) drop(KEYS.dailyExtra);
 }
 
+function dayPlan(key) {
+  const raw = read(KEYS.dayPlan, null);
+  if (!raw || raw.key !== key || !Array.isArray(raw.ids) || !Array.isArray(raw.rows)) {
+    return { ids: [], rows: {} };
+  }
+  const rows = {};
+  raw.rows.forEach((r) => {
+    if (r && r.id) rows[r.id] = { reason: r.reason, reviewRound: r.reviewRound };
+  });
+  return { ids: raw.ids.filter((id) => rows[id]), rows: rows };
+}
+
+function saveDayPlan(key, plan) {
+  const rows = (plan || []).map((it) => ({
+    id: it.poem.id,
+    reason: it.reason,
+    reviewRound: Math.max(0, Number(it.reviewRound) || 0)
+  }));
+  write(KEYS.dayPlan, {
+    key: key,
+    ids: rows.map((r) => r.id),
+    rows: rows,
+    at: Date.now()
+  });
+}
+
+function dropDayPlan(key) {
+  const raw = read(KEYS.dayPlan, null);
+  if (!raw || (key && raw.key !== key)) return;
+  drop(KEYS.dayPlan);
+}
+
 function dayKey(ts) {
   const d = new Date(ts || Date.now());
   return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -484,6 +517,9 @@ module.exports = {
   clearDailyExtra,
   dailyExtraPoems,
   dailyExtraAt,
+  dayPlan,
+  saveDayPlan,
+  dropDayPlan,
   touchDaily,
   dayKey,
   profile,

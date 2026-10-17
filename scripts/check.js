@@ -517,6 +517,8 @@ ok(
   plan.every((p) => p.poem.gr === 5 && p.poem.tm === 1)
 );
 
+store.drop(store.KEYS.dayPlan);
+
 const dueId = "p-5-1-3";
 const plan2 = S.generateDailyPlan({
   grade: 5,
@@ -543,6 +545,7 @@ const plan3 = S.generateDailyPlan({
   getRecord: () => null
 });
 ok("加背项进计划", plan3.some((p) => p.poem.id === extraPoem.id));
+store.drop(store.KEYS.dayPlan);
 
 const inCourse = fake.filter((p) => p.gr === 5 && p.tm === 1)[0];
 const plan5 = S.generateDailyPlan({
@@ -563,7 +566,7 @@ ok("加背那两首都排在计划末尾，标 pinned",
     && plan5.slice(-2).every((p) => p.reason === "pinned"),
   JSON.stringify(pinned));
 
-const plain = S.generateDailyPlan({
+const plainOpt = {
   grade: 5,
   term: 1,
   count: 5,
@@ -571,22 +574,19 @@ const plain = S.generateDailyPlan({
   allPoems: fake,
   extraPoems: [],
   getRecord: () => null
-});
+};
+const plain = S.generateDailyPlan(plainOpt);
 ok("加背不占那 5 个名额（设 5 首，按设置排出来的仍是 5 首）",
   plain.length === 5 && plan5.filter((p) => p.reason !== "pinned").length === 5);
+store.drop(store.KEYS.dayPlan);
 
-const outOfCourse = S.generateDailyPlan({
-  grade: 5,
-  term: 1,
-  count: 5,
-  scope: "term",
-  allPoems: fake,
-  extraPoems: [extraPoem],
-  getRecord: () => null
-});
+store.drop(store.KEYS.dayPlan);
+const plainAgain = S.generateDailyPlan(plainOpt);
+const outOfCourse = S.generateDailyPlan(Object.assign({}, plainOpt, { extraPoems: [extraPoem] }));
 ok("课外的加背不挪动按设置排出来的那几首（只在末尾接上）",
   outOfCourse.slice(0, 5).map((p) => p.poem.id).join(",")
-    === plain.map((p) => p.poem.id).join(",")
+    === plainAgain.map((p) => p.poem.id).join(",")
+    && plain.length === 5
     && outOfCourse.length === 6);
 
 ok("没背过的不算到期", !S.isDue(null) && !S.isDue({ level: 0, learned: false }));
@@ -601,6 +601,63 @@ const plan4 = S.generateDailyPlan({
   getRecord: () => null
 });
 ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size === plan4.length);
+
+{
+  store.write(store.KEYS.grant, { code: "c-自检", tier: "max", at: 1 });
+
+  const state = {};
+  const opt = (patch) => Object.assign({
+    grade: 5,
+    term: 1,
+    count: 3,
+    scope: "term",
+    allPoems: fake,
+    extraPoems: [],
+    getRecord: (id) => state[id] || null
+  }, patch || {});
+
+  S.generateDailyPlan(opt());
+  const first = S.generateDailyPlan(opt());
+  ok("今天的名单排出来就记下（同一天再问还是这一份）", first.length === 3);
+
+  const firstIds = first.map((it) => it.poem.id);
+  first.forEach((it) => {
+    state[it.poem.id] = { level: 1, learned: true, nextReviewAt: Date.now() + 86400000 };
+  });
+  const after = S.generateDailyPlan(opt());
+  ok("今天那几首背完，明天再叫新的（背完不自动换一批）",
+    after.map((it) => it.poem.id).join(",") === firstIds.join(","),
+    "背完后换成了 " + after.map((it) => it.poem.id).join(","));
+
+  const fresh = "p-5-1-9";
+  state[fresh] = { level: 2, learned: true, nextReviewAt: Date.now() - 86400000 };
+  const withDue = S.generateDailyPlan(opt());
+  ok("当天新到期的照样补进今天（不占别人的位置）",
+    withDue.length === 4 && withDue[3].poem.id === fresh && withDue[3].reason === "review",
+    withDue.map((it) => it.poem.id + ":" + it.reason).join(" "));
+
+  ok("补进来的那条也在盘上（再问一次不会重复补）",
+    S.generateDailyPlan(opt()).length === 4);
+
+  const extra = { id: "p-12-2-11", t: "加背", a: "作者", d: "唐", gr: 12, tm: 2, b: "poems" };
+  const withExtra = S.generateDailyPlan(opt({ extraPoems: [extra] }));
+  ok("今日加背接在今天那几首之后，不占它们的名额",
+    withExtra.length === 5 && withExtra[4].poem.id === extra.id
+      && withExtra[4].reason === "pinned"
+      && withExtra.slice(0, 4).map((it) => it.poem.id).join(",") === withDue.map((it) => it.poem.id).join(","),
+    withExtra.map((it) => it.poem.id + ":" + it.reason).join(" "));
+
+  store.dropDayPlan();
+  const tomorrow = S.generateDailyPlan(opt({ count: 5 }));
+  ok("换了设置就重排（首数变了，今天是另一份名单）",
+    tomorrow.length === 5, 
+    tomorrow.map((it) => it.poem.id + ":" + it.reason).join(" "));
+
+  store.dropDayPlan();
+  store.drop(store.KEYS.grant);
+}
+
+
 
 store.setDailyExtra(["a", "b"]);
 ok("加背当天可读", store.dailyExtra().length === 2);
@@ -3380,9 +3437,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
     "未读又单独摆了一枚 —— 未读必然未背，一枚胶囊按顺序往下走就够了");
 
+  ok("今日那几首背完给一句收尾（提示与读数共用 allDone，不是一个新判据）",
+    /allDone/.test(homeJs) && /praise/.test(homeJs)
+      && /wx:if="\{\{allDone\}\}"/.test(homeWxml) && /\{\{praise\}\}/.test(homeWxml)
+      && /percent: base \?/.test(homeJs),
+    "今日卡背完了却没有一句收尾 —— 屏幕上看不出今天已经做完");
+
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
-      && /if \(recited\) done \+= 1;/.test(homeJs),
+      && /if \(recited && i < base\) done \+= 1;/.test(homeJs),
     "首页拿已读当已背 —— 点开弹窗看一眼，统计里就多一首「已背」");
 
   ok("已读仍单独标出来（它与已背不是一件事）",
@@ -3615,7 +3678,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /REASON_CLS\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs),
     "计划行的加背小签没了 —— 它得与「补充」分得开");
   ok("加背挂在每日几首之外（设置 5 首 + 加 1 首 = 今天 6 首）",
-    /extraList\.forEach[\s\S]{0,240}?reason:\s*"pinned"/.test(schedSrc)
+    /function pinnedPlan\(/.test(schedSrc)
+      && /pinnedPlan\(extraList, getRecord\)/.test(schedSrc)
       && !/function fillFrom\(list, reason\)[\s\S]{0,400}?extraList/.test(schedSrc),
     "加背又回到候选池里跟「新学」抢那 5 个名额了 —— 用户加了 1 首，计划里反而少 1 首新学");
   ok("详情页与背诵弹层都有加背开关，且共用一份样式（页面里不写第二份）",

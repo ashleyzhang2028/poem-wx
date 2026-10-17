@@ -152,3 +152,42 @@
   margin-top: var(--sp-3);
 }
 
+
+.finish {
+  padding: var(--sp-5) var(--sp-3) var(--sp-4);
+  text-align: center;
+  border-top: 1rpx solid var(--line-2);
+}
+
+.finish:first-child {
+  border-top: 0;
+}
+
+.finish-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 104rpx;
+  height: 104rpx;
+  margin: 0 auto var(--sp-2);
+  border-radius: 50%;
+  background: var(--sink);
+  font-family: var(--font-num);
+  font-size: 42rpx;
+  line-height: 1;
+  color: var(--strong-text);
+}
+
+.finish-text {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-loose);
+}
+
+.finish-tip {
+  display: block;
+  margin-top: var(--sp-2);
+}

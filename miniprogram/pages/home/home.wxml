@@ -50,16 +50,16 @@
 
       <view class="stats hero-stats">
         <view class="stat">
-          <text class="stat-v">{{stats.today}}</text>
+          <text class="stat-v">{{selfOnly ? stats.self : baseCount}}</text>
           <text class="stat-k">今日</text>
         </view>
         <view class="stat">
-          <text class="stat-v">{{stats.done}}</text>
+          <text class="stat-v">{{selfOnly ? stats.selfDone : doneCount}}</text>
           <text class="stat-k">已背</text>
         </view>
-        <view class="stat" wx:if="{{stats.self}}">
-          <text class="stat-v">{{stats.self}}</text>
-          <text class="stat-k">自选</text>
+        <view class="stat" wx:if="{{stats.extra}}">
+          <text class="stat-v">{{stats.extra}}</text>
+          <text class="stat-k">加背</text>
         </view>
         <view class="stat stat-ring">
           <view class="ring-cap">
@@ -112,6 +112,12 @@
         <text class="hint empty-tip" wx:if="{{selfOnly}}">自选的今日份在下面那张卡里</text>
 
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
+      </view>
+
+      <view class="finish" wx:if="{{allDone}}">
+        <text class="finish-mark">✓</text>
+        <text class="finish-text">{{praise}}</text>
+        <text class="hint finish-tip">想多背一首，用上面那条搜索加进来</text>
       </view>
     </view>
 

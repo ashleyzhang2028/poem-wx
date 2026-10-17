@@ -81,6 +81,7 @@ function list() {
 
 function save(next) {
   store.saveCollections(normalize(next));
+  store.dropDayPlan();
   return list();
 }
 

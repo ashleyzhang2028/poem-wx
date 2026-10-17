@@ -1,6 +1,7 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const S = require("../../utils/scheduler");
+const R = require("../../utils/review-models");
 const cols = require("../../utils/collections");
 const entitlement = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
@@ -16,6 +17,18 @@ const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
 const SOURCE_TEXT = { course: "课内", own: "自选" };
+
+const PRAISE = [
+  "今天这几首都背下来了，日积月累，功夫不负有心人。",
+  "今日份收工 —— 千里之行，始于足下。",
+  "一首一首攒起来，你已经比昨天多会了几首。",
+  "背完就放下，明天再来。读书百遍，其义自见。",
+  "这份坚持很了不起，古人的句子也跟着长在你身上了。"
+];
+
+function praiseOf() {
+  return PRAISE[Math.floor(Date.now() / R.DAY) % PRAISE.length];
+}
 
 const HERO_RATIO = 916 / 1717;
 
@@ -184,7 +197,10 @@ Page({
 
     todayLabel: "",
 
-    stats: { today: 0, done: 0, left: 0 },
+    stats: { extra: 0, self: 0, selfDone: 0 },
+    baseCount: 0,
+    allDone: false,
+    praise: "",
 
     extraKeyword: "",
 
@@ -197,6 +213,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.toasted = false;
 
     const bar = tabbar.sync(this, 0);
     this.setData({ todayLabel: todayLabel(), barBelow: !bar });
@@ -238,13 +255,20 @@ Page({
     const sheetRows = this.collectionId ? this.collectionSheetRows(this.collectionId) : [];
 
     const readOf = this.readOf();
-
+    const recorded = store.dayPlan(S.planKeyOf({
+      grade: view.grade,
+      term: view.term,
+      scope: view.scope,
+      count: settings.dailyCount
+    })).ids.length;
     let done = 0;
+    const extraOf = plan.filter((it) => it.reason === "pinned").length;
+    const base = selfOnly ? 0 : Math.max(recorded, plan.length - extraOf);
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
       const read = readOf(it.poem.id);
       const recited = S.isLearned(rec);
-      if (recited) done += 1;
+      if (recited && i < base) done += 1;
       return {
         id: it.poem.id,
         seq: i + 1,
@@ -266,6 +290,7 @@ Page({
     });
 
     const total = rows.length;
+    const allDone = base > 0 && done >= base;
     const colRows = this.collectionRows();
     const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
@@ -279,13 +304,14 @@ Page({
       plan: rows,
       doneCount: done,
       total,
-      percent: total ? Math.round((done / total) * 100) : 0,
+      baseCount: base,
+      allDone: allDone,
+      praise: allDone ? praiseOf() : "",
+      percent: base ? Math.round((done / base) * 100) : 0,
       stats: {
-        today: total + selfTotal,
-        done: done + selfDone,
+        extra: extraOf,
         self: selfTotal,
-        selfDone: selfDone,
-        left: Math.max(0, total - done)
+        selfDone: selfDone
       },
       allCount: allList.length,
       allLabel: scopeLabel(scope),
@@ -478,6 +504,13 @@ Page({
   onSheetFinish() {
     this.collectionId = "";
     this.refresh();
+    this.collectExtra(this.sheetSource === "plan");
+  },
+
+  collectExtra(ofPlan) {
+    if (!ofPlan || !this.data.allDone || this.toasted) return;
+    this.toasted = true;
+    wx.showToast({ title: "今天的几首都背完了，了不起", icon: "none" });
   },
 
   onSettings() {
