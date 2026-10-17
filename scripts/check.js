@@ -3551,6 +3551,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && ["onDailyAll", "onDailyNone", "onDailyRemove", "onDailyClear"]
         .every((fn) => setWxml.indexOf(fn) >= 0 && setJs.indexOf(fn) >= 0)
       && /wx\.showModal/.test(setJs));
+  ok("加背的档位在 store 里判一次，三个入口共用同一个错误码",
+    /require\("\.\/entitlement"\)\.decide\("extra"\)/.test(storeSrc)
+      && /E_TIER/.test(storeSrc)
+      && compJs.indexOf("E_TIER") >= 0
+      && /askDailyUpgrade/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8"))
+      && /askDailyUpgrade/.test(fs.readFileSync(
+        path.join(ROOT, "components/recite-sheet/recite-sheet.js"), "utf8"))
+      && /wx\.showModal/.test(compJs),
+    "Free 档还能往今日加背里加诗 —— 档位这道门只在 store 判，页面各写一份就对不齐");
   ok("能力表里有 extra（与网页版对齐）", E.CAP_KEYS.indexOf("extra") >= 0);
   ok("计划卡下面挂着「全部诗词」那张卡，默认折叠、开关是个上下方向的图标",
     /allOpen:\s*false/.test(homeJs)

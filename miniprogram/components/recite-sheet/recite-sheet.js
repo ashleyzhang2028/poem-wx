@@ -253,6 +253,10 @@ Component({
 
     onToggleDaily() {
       const r = store.toggleDailyExtra(this.data.id);
+      if (r.code === "E_TIER") {
+        this.askDailyUpgrade();
+        return;
+      }
       if (!r.ok) {
         wx.showToast({ title: this.dailyMsg(r), icon: "none" });
         return;
@@ -261,6 +265,18 @@ Component({
       wx.showToast({ title: r.on ? "已加入今日背诵" : "已移出今日背诵", icon: "none" });
 
       this.triggerEvent("change", { count: store.dailyExtra().length });
+    },
+
+    askDailyUpgrade() {
+      wx.showModal({
+        title: "今日加背 · Pro / Max 专享",
+        content: "「今日加背」是 Pro 与 Max 的计划容量：除了每天固定的篇目，还能自己再挑几首一起背。\n\n"
+          + "你现在的档位是 " + entitlement.status().label + "，阅读与搜索不受影响。"
+          + "如果想让今天多背几首，升级到 Pro 或 Max 就能自己加。\n\n"
+          + "感谢你认真对待每一次背诵。",
+        confirmText: "知道了",
+        showCancel: false
+      });
     },
 
     dailyMsg(r) {

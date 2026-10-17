@@ -1,5 +1,6 @@
 const store = require("../../utils/store");
 const corpus = require("../../utils/corpus");
+const entitlement = require("../../utils/entitlement");
 
 const SUGGEST_MAX = 8;
 
@@ -75,9 +76,22 @@ Component({
     onToggle(e) {
       const id = e.currentTarget.dataset.id;
       const r = this.toggle(id);
-      if (r.msg) wx.showToast({ title: r.msg, icon: "none" });
+      if (r.code === "E_TIER") this.askUpgrade();
+      else if (r.msg) wx.showToast({ title: r.msg, icon: "none" });
       if (r.ok === false) return;
       this.afterChange();
+    },
+
+    askUpgrade() {
+      wx.showModal({
+        title: "今日加背 · Pro / Max 专享",
+        content: "「今日加背」是 Pro 与 Max 的计划容量：除了每天固定的篇目，还能自己再挑几首一起背。\n\n"
+          + "你现在的档位是 " + entitlement.status().label + "，搜索和浏览不受影响，随时可以翻看。"
+          + "如果想让今天多背几首，升级到 Pro 或 Max 就能自己加。\n\n"
+          + "感谢你认真对待每一次背诵。",
+        confirmText: "知道了",
+        showCancel: false
+      });
     },
 
     onOpen(e) {
@@ -87,11 +101,12 @@ Component({
     toggle(id) {
       if (!id) return { ok: false, msg: "" };
       const r = store.toggleDailyExtra(id);
-      if (!r.ok) return { ok: false, on: false, msg: this.msgOf(r.code) };
+      if (!r.ok) return { ok: false, on: false, code: r.code, msg: this.msgOf(r.code) };
       return { ok: true, on: r.on, msg: r.on ? "已加入今日背诵" : "已移出今日背诵" };
     },
 
     msgOf(code) {
+      if (code === "E_TIER") return "";
       if (code === "E_LIMIT") {
         return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，够多了 —— 先背完再加";
       }
