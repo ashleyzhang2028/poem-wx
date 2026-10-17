@@ -15,6 +15,7 @@ const KEYS = {
   device: "kb_device_v1",
   sync: "kb_sync_outbox_v1",
   clearMarks: "kb_clear_marks_v1",
+  progressEdge: "kb_progress_edge_v1",
 
   settingsAt: "kb_settings_at_v1",
 
@@ -52,6 +53,12 @@ const LOCAL_ONLY = {
 
   lastSearch: true
 };
+
+const CLOUD_DEFAULTS = {};
+Object.keys(DEFAULTS).forEach((k) => {
+  if (k === "lastSyncAt" || LOCAL_ONLY[k]) return;
+  CLOUD_DEFAULTS[k] = DEFAULTS[k];
+});
 
 const SCHEMA = 2;
 
@@ -143,11 +150,21 @@ function replaceSettings(all) {
   const src = all || {};
   const cloud = {};
   const local = {};
+  const replace = Object.keys(CLOUD_DEFAULTS).some((k) => k in src);
   Object.keys(src).forEach((k) => {
     if (isDeviceKey(k)) local[k] = src[k];
     else cloud[k] = src[k];
   });
-  if (Object.keys(cloud).length) write(KEYS.settings, Object.assign(rawSettings(), cloud));
+  if (!replace) {
+    if (Object.keys(cloud).length) write(KEYS.settings, Object.assign(rawSettings(), cloud));
+    return settings();
+  }
+  const next = Object.assign({}, rawSettings());
+  Object.keys(CLOUD_DEFAULTS).forEach((k) => {
+    const v = cloud[k];
+    next[k] = v === undefined || v === null || v === "" ? DEFAULTS[k] : v;
+  });
+  write(KEYS.settings, next);
   return settings();
 }
 
@@ -157,9 +174,7 @@ function cloudSettings() {
   Object.keys(DEFAULTS).forEach((k) => {
 
     if (k === "lastSyncAt" || LOCAL_ONLY[k]) return;
-    const v = raw[k];
-    if (v === undefined || v === null || v === "") return;
-    out[k] = v;
+    out[k] = raw[k] === undefined || raw[k] === null || raw[k] === "" ? DEFAULTS[k] : raw[k];
   });
   return out;
 }
@@ -187,6 +202,7 @@ function setRecord(id, rec) {
   all[id] = rec;
   shrinkIfNeeded(all);
   write(KEYS.progress, all);
+  require("./wire").keepRecordEdge(id, rec);
   return rec;
 }
 
@@ -259,6 +275,33 @@ function markRead(book, id) {
   const m = all[book] || (all[book] = {});
   m[id] = Date.now();
   write(KEYS.reads, all);
+}
+
+function progressEdge() {
+  const box = read(KEYS.progressEdge, {}) || {};
+  return box && typeof box === "object" ? box : {};
+}
+
+function keepProgressEdge(book, id, at) {
+  if (!book || !id || !(at > 0)) return;
+  const all = progressEdge();
+  const m = all[book] || (all[book] = {});
+  if (m[id] && m[id].at >= at) return;
+  m[id] = { at: Math.round(at), times: 1 };
+  write(KEYS.progressEdge, all);
+}
+
+function dropProgressEdge(book, id) {
+  const all = progressEdge();
+  const m = all[book];
+  if (!m || !m[id]) return;
+  delete m[id];
+  if (!Object.keys(m).length) delete all[book];
+  write(KEYS.progressEdge, all);
+}
+
+function replaceProgressEdge(all) {
+  write(KEYS.progressEdge, all && typeof all === "object" ? all : {});
 }
 
 const DAILY_EXTRA_MAX = 20;
@@ -450,5 +493,9 @@ module.exports = {
   collections,
   saveCollections,
   collectionsAt,
+  progressEdge,
+  keepProgressEdge,
+  dropProgressEdge,
+  replaceProgressEdge,
   stats
 };

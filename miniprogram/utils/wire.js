@@ -1,4 +1,5 @@
 const store = require("./store");
+const R = require("./review-models");
 
 const READ_ROW = {
   poems: "poem_poems_read_v1",
@@ -42,13 +43,48 @@ function clone(v) {
   }
 }
 
+const NUM_FIELDS = {
+  level: [0, 99],
+  box: [0, 99],
+  interval: [0, 100000],
+  reps: [0, 100000],
+  reviewCount: [0, 100000],
+  lapses: [0, 100000]
+};
+
+const REAL_FIELDS = {
+  ef: [1, 10],
+  stability: [0, 100000],
+  difficulty: [0, 100]
+};
+
+const TIME_FIELDS = ["nextReviewAt", "lastReviewAt"];
+
 function slimRecord(rec) {
   const out = {};
   if (!rec || typeof rec !== "object") return out;
-  if (typeof rec.level === "number") out.level = Math.max(0, Math.min(99, Math.round(rec.level)));
-  if (typeof rec.nextReviewAt === "number") out.nextReviewAt = Math.max(0, Math.round(rec.nextReviewAt));
+  Object.keys(NUM_FIELDS).forEach((k) => {
+    if (typeof rec[k] !== "number" || !isFinite(rec[k])) return;
+    const lo = NUM_FIELDS[k][0];
+    const hi = NUM_FIELDS[k][1];
+    out[k] = Math.max(lo, Math.min(hi, Math.round(rec[k])));
+  });
+  Object.keys(REAL_FIELDS).forEach((k) => {
+    if (typeof rec[k] !== "number" || !isFinite(rec[k])) return;
+    const lo = REAL_FIELDS[k][0];
+    const hi = REAL_FIELDS[k][1];
+    out[k] = Math.max(lo, Math.min(hi, Math.round(rec[k] * 100) / 100));
+  });
+  TIME_FIELDS.forEach((k) => {
+    if (typeof rec[k] !== "number" || !isFinite(rec[k])) return;
+    out[k] = Math.max(0, Math.round(rec[k]));
+  });
   if (typeof rec.learned === "boolean") out.learned = rec.learned;
-  if (typeof rec.reps === "number") out.reps = Math.max(0, Math.min(100000, Math.round(rec.reps)));
+  if (typeof rec.attempted === "boolean") out.attempted = rec.attempted;
+  if (typeof rec.algo === "string" && /^[a-z0-9]{1,16}$/.test(rec.algo)) out.algo = rec.algo;
+  if (typeof rec.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(rec.reviewedOn)) {
+    out.reviewedOn = rec.reviewedOn;
+  }
   if (Array.isArray(rec.history)) {
     out.history = rec.history
       .slice(-200)
@@ -57,6 +93,7 @@ function slimRecord(rec) {
         const r = {};
         if (typeof h.at === "number") r.at = Math.round(h.at);
         if (typeof h.level === "number") r.level = Math.round(h.level);
+        if (h.result === "good" || h.result === "fuzzy" || h.result === "bad") r.result = h.result;
         return r;
       })
       .filter(Boolean);
@@ -64,38 +101,98 @@ function slimRecord(rec) {
   return out;
 }
 
+const BOOK_IDS = Object.keys(READ_ROW).sort((a, b) => b.length - a.length);
+
+function bookOf(id) {
+  const s = String(id == null ? "" : id);
+  return BOOK_IDS.filter((k) => s.indexOf(k + "-") === 0)[0] || "";
+}
+
 function recordStamp(rec) {
   return Number((rec && (rec.lastReviewAt || rec.updatedAt)) || 0);
+}
+
+function latestAt(marks) {
+  let at = 0;
+  Object.keys(marks || {}).forEach((id) => {
+    if (Number((marks[id] || {}).at) > at) at = Number(marks[id].at);
+  });
+  return at;
+}
+
+function advanceRecord(rec, at, key) {
+  const due = Number((rec && rec.nextReviewAt) || 0);
+  if (!key || rec.algo !== key || !due || due > at) return null;
+  return R.review(rec, "good", key, at);
+}
+
+function keepRecordEdge(id, rec) {
+  const book = bookOf(id);
+  if (!book) return;
+  const at = Math.max(recordStamp(rec), Number((store.reads(book) || {})[id]) || 0);
+  store.keepProgressEdge(book, id, at);
+}
+
+function mergeMark(slim, edge) {
+  const out = {};
+  Object.keys(slim).forEach((id) => { out[id] = { at: slim[id].at, times: slim[id].times }; });
+  Object.keys(edge || {}).forEach((id) => {
+    const a = Number(edge[id] && edge[id].at) || 0;
+    const t = Number(edge[id] && edge[id].times) || 0;
+    if (!out[id] || a > out[id].at) out[id] = { at: a, times: t };
+  });
+  return out;
 }
 
 function packRecords() {
   const rows = [];
 
   const progress = store.progress();
-  Object.keys(progress).forEach((id) => {
-    const rec = progress[id];
-    const at = recordStamp(rec);
-    if (!at) return;
-    rows.push({ id: id, payload: slimRecord(rec), updatedAt: at, deleted: false });
+  const reads = store.reads();
+  const readEdges = {};
+  const list = Object.keys(progress).map((id) => ({ id: id, rec: progress[id] })).filter((it) => recordStamp(it.rec));
+
+  list.forEach((it) => {
+    const book = bookOf(it.id);
+    if (!book) return;
+    readEdges[book] = readEdges[book] || {};
+    readEdges[book][it.id] = Math.max(Number((reads[book] || {})[it.id]) || 0, recordStamp(it.rec));
   });
 
-  const reads = store.reads();
-  Object.keys(reads).forEach((book) => {
+  list.forEach((it) => {
+    const book = bookOf(it.id);
+    const mark = Number((reads[book] || {})[it.id]) || 0;
+    const at = Math.max(recordStamp(it.rec), mark);
+    const next = advanceRecord(it.rec, at, store.settings().algo);
+    if (!next) {
+      rows.push({ id: it.id, payload: slimRecord(it.rec), updatedAt: recordStamp(it.rec), deleted: false });
+      return;
+    }
+    if (book) readEdges[book][it.id] = Math.max(readEdges[book][it.id] || 0, next.lastReviewAt);
+    rows.push({ id: it.id, payload: slimRecord(next), updatedAt: next.lastReviewAt, deleted: false });
+  });
+
+  const edgeFrom = store.progressEdge();
+  Object.keys(READ_ROW).forEach((book) => {
     const rowId = READ_ROW[book];
-    if (!rowId) return;
+    const local = reads[book] || {};
     const marks = {};
-    let n = 0;
-    Object.keys(reads[book] || {}).forEach((id) => {
-      const ts = Number(reads[book][id]) || 0;
+    Object.keys(local).forEach((id) => {
+      const ts = Number(local[id]) || 0;
       if (!ts) return;
       marks[id] = { at: ts, times: 1 };
-      n += 1;
     });
-    if (!n) return;
-    let at = 0;
-    Object.keys(marks).forEach((k) => {
-      if (marks[k].at > at) at = marks[k].at;
+    Object.keys(readEdges[book] || {}).forEach((id) => {
+      const ts = Number(readEdges[book][id]) || 0;
+      if (!ts) return;
+      marks[id] = { at: Math.max(ts, Number((marks[id] || {}).at) || 0), times: 1 };
     });
+    Object.keys(edgeFrom[book] || {}).forEach((id) => {
+      if (marks[id]) return;
+      marks[id] = edgeFrom[book][id];
+    });
+    const at = latestAt(marks);
+    if (!at) return;
     rows.push({
       id: READ_PREFIX + rowId,
       payload: { v: 1, updatedAt: at, marks: marks },
@@ -192,6 +289,7 @@ function applyRecords(recs) {
   const now = Date.now();
   const mine = clearedIds();
   const clearAt = store.clearMarks().at || 0;
+  const readEdges = store.progressEdge();
 
   (recs || []).forEach((row) => {
     if (!row || !row.id) return;
@@ -221,6 +319,7 @@ function applyRecords(recs) {
           applied += 1;
         }
       });
+      readEdges[book] = mergeMark(marks, readEdges[book]);
       return;
     }
 
@@ -261,6 +360,13 @@ function applyRecords(recs) {
       if (at > localAt && Array.isArray(payload.collections)) {
         store.saveCollections(payload.collections, at);
         applied += 1;
+        return;
+      }
+      if (at !== localAt || !Array.isArray(payload.collections)) return;
+      const merged = mergeCollections(store.collections(), payload.collections);
+      if (merged.changed) {
+        store.saveCollections(merged.list, at);
+        applied += 1;
       }
       return;
     }
@@ -272,19 +378,74 @@ function applyRecords(recs) {
     if (row.deleted) {
       if (old && at >= oldAt) {
         delete progress[id];
+        store.dropProgressEdge(bookOf(id), id);
         applied += 1;
       }
       return;
     }
+    if (old && at <= oldAt) return;
+
     if (at > oldAt) {
       progress[id] = Object.assign({}, payload, { lastReviewAt: at, updatedAt: at, syncedAt: now });
       applied += 1;
     }
   });
 
+  Object.keys(progress).forEach((id) => {
+    const rec = progress[id];
+    const book = bookOf(id);
+    if (!book || !rec || !rec.learned) return;
+    const at = recordStamp(rec);
+    if (!at) return;
+    const box = reads[book] || (reads[book] = {});
+    if (!box[id] || box[id] < at) {
+      box[id] = at;
+      applied += 1;
+    }
+    readEdges[book] = mergeMark({ [id]: { at: at, times: 1 } }, readEdges[book]);
+  });
+
   store.write(store.KEYS.progress, progress);
   store.write(store.KEYS.reads, reads);
+  store.replaceProgressEdge(readEdges);
   return applied;
+}
+
+function mergeCollections(local, remote) {
+  const mine = Array.isArray(local) ? local : [];
+  const theirs = Array.isArray(remote) ? remote : [];
+  const byId = {};
+  const order = [];
+  mine.forEach((c) => {
+    if (!c || !c.id) return;
+    byId[c.id] = c;
+    order.push(c.id);
+  });
+  let changed = false;
+  theirs.forEach((c) => {
+    if (!c || !c.id) return;
+    if (!byId[c.id]) {
+      byId[c.id] = c;
+      order.push(c.id);
+      changed = true;
+      return;
+    }
+    const merged = Object.assign({}, byId[c.id]);
+    if ((Number(c.createdAt) || 0) > 0 && !merged.createdAt) merged.createdAt = c.createdAt;
+    const have = {};
+    const items = [];
+    ((merged.items || []).concat(c.items || [])).forEach((it) => {
+      const pid = it && typeof it === "object" ? it.id : it;
+      if (!pid || have[pid]) return;
+      have[pid] = true;
+      items.push({ id: pid });
+    });
+    const before = (merged.items || []).length;
+    merged.items = items;
+    if (items.length !== before) changed = true;
+    byId[c.id] = merged;
+  });
+  return { list: order.map((id) => byId[id]), changed: changed };
 }
 
 module.exports = {
@@ -298,7 +459,11 @@ module.exports = {
   SETTINGS_ROW,
   RECORD_ROW,
   slimRecord,
+  bookOf,
+  keepRecordEdge,
   recordStamp,
+  latestAt,
+  mergeMark,
   packRecords,
   applyRecords
 };
