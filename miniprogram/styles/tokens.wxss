@@ -130,6 +130,7 @@ page {
   --pad-opt-x: calc(24rpx * var(--ui-scale));
 
   --tabbar-h: calc(112rpx + env(safe-area-inset-bottom));
+  --pad-tab: calc(120rpx + env(safe-area-inset-bottom));
 
   --ring-size: calc(93rpx * var(--ui-scale));
   --ring-w: calc(8rpx * var(--ui-scale));

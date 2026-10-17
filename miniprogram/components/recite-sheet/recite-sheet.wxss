@@ -24,7 +24,7 @@
   max-height: var(--sheet-max-h);
   background: var(--surface);
   border-radius: var(--radius-block) var(--radius-block) 0 0;
-  padding: 0 var(--sp-3);
+  padding: 0 var(--sp-3) env(safe-area-inset-bottom);
   animation: sheet-up .26s var(--ease);
 }
 
@@ -93,36 +93,39 @@
 
 .sheet-foot {
   flex: none;
-  padding: var(--sp-3) 0 calc(var(--sp-4) + 20px);
-}
-
-.sheet-prev {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--h-btn-mini);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--t-press);
-}
-
-.sheet-prev-hover {
-  background: var(--sink);
-}
-
-.sheet-prev-t {
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
+  padding: var(--sp-3) 0 var(--sp-4);
 }
 
 .sheet-tail {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: var(--h-btn-mini);
+  align-items: stretch;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 
-.sheet-tail .hint-line {
-  margin-left: auto;
+.sheet-step-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--h-btn-mini);
+  border-radius: var(--radius-ctl);
+  background: var(--sink);
+  transition: background-color var(--t-press), opacity var(--t-press);
+}
+
+.sheet-step-hover {
+  background: var(--line);
+}
+
+.sheet-step-btn.off {
+  opacity: .4;
+  pointer-events: none;
+}
+
+.sheet-step-t {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
 }
 
 .sheet-head,
