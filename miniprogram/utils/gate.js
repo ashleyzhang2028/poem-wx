@@ -4,6 +4,8 @@ const loginFlow = require("./login-flow");
 
 const GUEST_GRADE = 1;
 
+let pending = null;
+
 const PUBLIC_ACTIONS = [
   "browse-home",
   "browse-grade",
@@ -33,7 +35,7 @@ function refuse(what) {
   };
 }
 
-function guard(what, onPass) {
+function guard(what, page, onPass) {
   const r = refuse(what);
   if (r.ok) {
     if (onPass) onPass();
@@ -46,10 +48,20 @@ function guard(what, onPass) {
     cancelText: "取消",
     success: (res) => {
       if (!res.confirm) return;
-      loginFlow.run().catch(() => {});
+      pending = { run: onPass || null, page: page || null };
+      loginFlow.run(page).catch(() => {});
     }
   });
   return false;
+}
+
+function resume(page) {
+  const job = pending;
+  pending = null;
+  const at = (job && job.page) || page;
+  if (at && at.refresh) at.refresh();
+  if (job && typeof job.run === "function") job.run();
+  return !!job;
 }
 
 function grade() {
@@ -57,4 +69,4 @@ function grade() {
   return store.settings().grade;
 }
 
-module.exports = { GUEST_GRADE, PUBLIC_ACTIONS, logged, allow, canRead, refuse, guard, grade };
+module.exports = { GUEST_GRADE, PUBLIC_ACTIONS, logged, allow, canRead, refuse, guard, resume, grade };

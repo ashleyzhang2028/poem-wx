@@ -1,4 +1,6 @@
 const auth = require("./auth");
+const gate = require("./gate");
+const tabPage = require("./tab-page");
 
 function failText(err) {
   const code = (err && err.code) || "";
@@ -54,6 +56,12 @@ function done(res) {
   }
 }
 
+function backTo(page) {
+  if (!page || !page.route) return "";
+  if (page.route === "pages/mine/mine") return "";
+  return "/" + page.route;
+}
+
 function run(page) {
   wx.showLoading({ title: "登录中" });
   return auth
@@ -61,13 +69,15 @@ function run(page) {
     .then((res) => {
       wx.hideLoading();
       done(res);
-      if (page && page.refresh) page.refresh();
+      const resumed = gate.resume(page);
+      const back = backTo(page);
+      if (back && !resumed) tabPage.back(back);
       return res;
     })
     .catch((err) => {
       wx.hideLoading();
       prompt(err);
-      if (page && page.refresh) page.refresh();
+      gate.resume(page);
       throw err;
     });
 }
