@@ -29,7 +29,7 @@
         <text class="all-toggle {{c.open ? 'open' : ''}}"></text>
       </view>
 
-      <view class="coll-tools" wx:if="{{c.open}}">
+      <view class="inline-btns coll-tools" wx:if="{{c.open}}">
         <button class="btn mini" data-id="{{c.id}}" bindtap="onRename">改名</button>
         <button class="btn mini" data-id="{{c.id}}" bindtap="onAdd">{{searchId === c.id ? '收起搜索' : '加篇目'}}</button>
         <button class="btn mini danger" data-id="{{c.id}}" bindtap="onClear">清空</button>
@@ -73,7 +73,7 @@
       </view>
 
       <block wx:if="{{c.open}}">
-        <view class="coll-tools" wx:if="{{c.count}}">
+        <view class="inline-btns coll-tools" wx:if="{{c.count}}">
           <button class="btn mini" data-id="{{c.id}}" bindtap="onPickAll">全选</button>
           <button class="btn mini" data-id="{{c.id}}" bindtap="onPickNone">取消全选</button>
           <button class="btn mini danger" data-id="{{c.id}}" bindtap="onRemovePicked">移出选中</button>

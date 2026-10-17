@@ -36,17 +36,8 @@
 }
 
 .coll-tools {
-  display: flex;
   flex-wrap: nowrap;
-  gap: var(--sp-1);
   padding: var(--sp-2) 0;
-}
-
-.coll-tools .btn.mini {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  font-size: var(--fs-caption);
 }
 
 .coll-tools .btn.mini,

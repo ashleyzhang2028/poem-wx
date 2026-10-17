@@ -109,9 +109,8 @@ page {
   --sp-6: calc(64rpx * var(--ui-scale));
   --page-x: calc(28rpx * var(--ui-scale));
 
-  --h-btn: calc(96rpx * var(--ui-scale));
+  --h-btn: calc(88rpx * var(--ui-scale));
   --h-btn-mini: calc(60rpx * var(--ui-scale));
-  --w-btn-mini: calc(160rpx * var(--ui-scale));
   --card-x: calc(28rpx * var(--ui-scale));
   --card-y: calc(24rpx * var(--ui-scale));
   --card-title-gap: calc(16rpx * var(--ui-scale));

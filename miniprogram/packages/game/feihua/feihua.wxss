@@ -34,15 +34,6 @@
   margin: var(--sp-2) 0 var(--sp-3);
 }
 
-.fh-actions {
-  display: flex;
-  gap: var(--sp-2);
-}
-
-.fh-actions .btn {
-  flex: 1;
-}
-
 .fh-msg {
   display: block;
   font-size: var(--fs-body);
