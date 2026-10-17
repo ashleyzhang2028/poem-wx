@@ -50,6 +50,16 @@
     "tab": 4,
     "logged": true
   },
+  "search-hit": {
+    "page": "pages/search/search",
+    "title": "搜索",
+    "tab": 4,
+    "logged": true,
+    "do": [
+      { "call": "onInput", "with": { "detail": { "value": "李白" } } },
+      { "call": "doSearch" }
+    ]
+  },
   "mine-guest": {
     "page": "pages/mine/mine",
     "title": "我的",

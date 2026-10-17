@@ -111,7 +111,6 @@
 }
 
 .tier-head .tier-cell.is-now .tier-cell-t {
-  font-weight: 600;
 }
 
 .tier-head .tier-cell.is-now::after {

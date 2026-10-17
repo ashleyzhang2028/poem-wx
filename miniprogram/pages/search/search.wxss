@@ -31,7 +31,6 @@
   flex: none;
   font-size: var(--fs-body);
   color: var(--ink);
-  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -87,8 +86,12 @@
 }
 
 .hit-row {
-  align-items: flex-start;
+  align-items: center;
   padding: var(--sp-3) var(--sp-1);
+}
+
+.hit-row .row-main {
+  padding-right: var(--sp-2);
 }
 
 .more-tip {
@@ -96,20 +99,4 @@
   text-align: center;
   padding: var(--sp-3) 0 var(--sp-2);
   font-size: var(--fs-caption);
-}
-
-.row-star {
-  flex: none;
-  padding: 0 var(--sp-1);
-  font-size: 34rpx;
-  line-height: 1;
-  color: var(--ink-4);
-}
-
-.row-star.on {
-  color: var(--strong-text);
-}
-
-.row-star-hover {
-  opacity: .7;
 }

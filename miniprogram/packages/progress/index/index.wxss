@@ -110,7 +110,6 @@
 
 .cal-cell.today .cal-day {
   color: var(--strong-text);
-  font-weight: 600;
 }
 
 .cal-date {
@@ -139,7 +138,6 @@
 
 .panel-when.today {
   color: var(--strong-text);
-  font-weight: 600;
 }
 
 .panel-when.late {

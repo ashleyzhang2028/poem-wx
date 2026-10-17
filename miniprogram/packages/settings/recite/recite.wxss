@@ -90,7 +90,6 @@
 
 .algo-row.active .algo-name {
   color: var(--strong-text);
-  font-weight: 600;
 }
 
 .algo-years {

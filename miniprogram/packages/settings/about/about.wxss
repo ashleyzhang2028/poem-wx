@@ -8,7 +8,6 @@
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-brand);
-  font-weight: 700;
   color: var(--strong-text);
   letter-spacing: 10rpx;
 }
