@@ -9,6 +9,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
 const nav = require("../../utils/nav");
+const LUNAR = require("../../utils/lunar");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
 
@@ -53,17 +54,15 @@ function sourceKey(id) {
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
-const CN_NUM = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-
-function cnDay(n) {
-  if (n <= 10) return CN_NUM[n];
-  if (n < 20) return "十" + (n % 10 ? CN_NUM[n % 10] : "");
-  return CN_NUM[Math.floor(n / 10)] + "十" + (n % 10 ? CN_NUM[n % 10] : "");
+function pad(n) {
+  return n < 10 ? "0" + n : "" + n;
 }
 
 function todayLabel() {
   const d = new Date();
-  return CN_NUM[d.getMonth() + 1] + "月" + cnDay(d.getDate()) + "日 · " + WEEKDAYS[d.getDay()];
+  const lunar = LUNAR.label(d);
+  const solar = pad(d.getFullYear() % 100) + "年" + pad(d.getMonth() + 1) + "月" + pad(d.getDate()) + "日";
+  return [solar].concat(lunar ? [lunar] : [], [WEEKDAYS[d.getDay()]]).join(" · ");
 }
 
 function scopeList(all, view, scope) {

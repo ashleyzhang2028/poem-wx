@@ -1,20 +1,15 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="banner" style="--status-h:{{statusBarHeight}}px;--nav-h:{{navHeight}}px;--title-y:{{navBottom}}px">
+  <view class="banner" style="--status-h:{{statusBarHeight}}px;--nav-h:{{navHeight}}px">
 
     <image class="banner-img" src="/icons/hero.png" mode="widthFix" />
-
-    <view class="banner-title">
-      <text class="banner-brand">跬步</text>
-      <text class="banner-say">{{todayLabel}}</text>
-    </view>
 
   </view>
 
   <view class="banner-space" style="height:{{bannerHeight}}px"></view>
 
   <block wx:if="{{guest}}">
-    <view class="card hero">
+    <view class="card hero hero-lead">
       <view class="hero-head">
         <view class="hero-left">
           <text class="hero-eyebrow">今日</text>
@@ -57,7 +52,7 @@
 
   <block wx:else>
 
-    <view class="card hero">
+    <view class="card hero hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
       <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>

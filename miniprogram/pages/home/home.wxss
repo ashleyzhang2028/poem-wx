@@ -20,30 +20,6 @@
   height: auto;
 }
 
-.banner-title {
-  position: absolute;
-  left: var(--page-x);
-  top: var(--title-y);
-  display: flex;
-  flex-direction: column;
-}
-
-.banner-brand {
-  font-family: var(--font-poem);
-  font-size: var(--fs-title);
-  font-weight: 700;
-  letter-spacing: var(--ls-title);
-  line-height: var(--lh-tight);
-  color: var(--strong-text);
-}
-
-.banner-say {
-  font-size: var(--fs-caption);
-  letter-spacing: var(--ls-caption);
-  color: var(--ink-3);
-  margin-top: 2rpx;
-}
-
 .banner-space {
   pointer-events: none;
 }
@@ -54,6 +30,12 @@
 
 .hero {
   padding: var(--sp-3) var(--sp-3);
+}
+
+.home .hero-lead {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * var(--sp-5));
 }
 
 .hero-head {
