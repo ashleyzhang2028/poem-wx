@@ -12,9 +12,16 @@
 
 .daily-tools {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
+  flex-wrap: nowrap;
+  gap: var(--sp-1);
   margin-bottom: var(--sp-2);
+}
+
+.daily-tools .btn.mini {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  font-size: var(--fs-caption);
 }
 
 .daily-row {
@@ -64,7 +71,7 @@
   display: block;
   padding: var(--sp-3) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -81,7 +88,8 @@
 }
 
 .algo-name {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   font-family: var(--font-poem);
   font-size: var(--fs-body);
   color: var(--ink);

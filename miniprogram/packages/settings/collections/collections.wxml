@@ -73,14 +73,14 @@
       </view>
 
       <block wx:if="{{c.open}}">
-        <view class="coll-tools" wx:if="{{items.length}}">
-          <button class="btn mini" bindtap="onPickAll">全选</button>
-          <button class="btn mini" bindtap="onPickNone">取消全选</button>
-          <button class="btn mini danger" bindtap="onRemovePicked">移出选中</button>
+        <view class="coll-tools" wx:if="{{c.count}}">
+          <button class="btn mini" data-id="{{c.id}}" bindtap="onPickAll">全选</button>
+          <button class="btn mini" data-id="{{c.id}}" bindtap="onPickNone">取消全选</button>
+          <button class="btn mini danger" data-id="{{c.id}}" bindtap="onRemovePicked">移出选中</button>
         </view>
 
-        <checkbox-group bindchange="onPick" wx:if="{{items.length}}">
-          <label class="daily-row" wx:for="{{items}}" wx:key="id">
+        <checkbox-group bindchange="onPick" data-id="{{c.id}}" wx:if="{{c.count}}">
+          <label class="daily-row" wx:for="{{c.items}}" wx:key="id">
             <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" />
             <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
             <view class="row-main">

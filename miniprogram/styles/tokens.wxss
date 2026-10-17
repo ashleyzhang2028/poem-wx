@@ -56,7 +56,7 @@ page {
 
   --radius-sm: calc(16rpx * var(--ui-scale));
 
-  --radius-ctl: calc(999rpx * var(--ui-scale));
+  --radius-ctl: calc(16rpx * var(--ui-scale));
   --radius: calc(20rpx * var(--ui-scale));
   --radius-block: calc(24rpx * var(--ui-scale));
   --radius-pill: 999rpx;

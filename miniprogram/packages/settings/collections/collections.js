@@ -19,9 +19,7 @@ Page({
     count: 0,
 
     collections: [],
-    openId: "",
-    picked: {},
-    pickedCount: 0,
+    openIds: "",
 
     searchId: "",
     keyword: "",
@@ -48,6 +46,7 @@ Page({
   refresh() {
     const list = cols.list();
     const all = corpus.course();
+    const openIds = this.openList(list);
     const rows = list.map((c) => {
       const plan = S.collectionPlan(c, {
         count: cols.countOf(c),
@@ -63,28 +62,45 @@ Page({
         due: ov.due,
         planned: plan.length,
         dailyCount: cols.countOf(c),
-        open: this.data.openId === c.id
+        open: openIds.indexOf(c.id) >= 0,
+        items: this.itemRows(c.id)
       };
     });
-    const openId = rows.some((r) => r.open) ? this.data.openId : "";
+    const openIds2 = list.map((c) => c.id).filter((id) => openIds.indexOf(id) >= 0).join(",");
     this.setData({
       on: entitlement.can("collections"),
       hint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
       cap: cols.capOf(),
       count: list.length,
       collections: rows,
-      openId: openId,
-      searchId: openId === this.data.searchId ? this.data.searchId : "",
-      items: openId ? this.itemRows(openId) : [],
-      picked: {},
-      pickedCount: 0
+      openIds: openIds2,
+      searchId: list.some((c) => c.id === this.data.searchId) ? this.data.searchId : ""
     });
   },
 
-  itemRows(id) {
+  openList(list) {
+    const kept = (this.data.openIds || "").split(",").filter(Boolean);
+    const ids = kept.filter((id) => list.some((c) => c.id === id));
+    return ids.length ? ids : list.map((c) => c.id);
+  },
+
+  pickedIds(id) {
+    const row = this.data.collections.filter((c) => c.id === id)[0];
+    return row ? row.items.filter((it) => it.picked).map((it) => it.id) : [];
+  },
+
+  setItems(id, items) {
+    this.setData({
+      collections: this.data.collections.map((c) => (c.id === id
+        ? Object.assign({}, c, { items: items })
+        : c))
+    });
+  },
+
+  itemRows(id, picked) {
     const c = cols.find(id);
     if (!c) return [];
-    const picked = this.data.picked || {};
+    picked = picked || {};
     return cols.idsOf(c).map((pid, i) => {
       const p = corpus.indexById(pid);
       return {
@@ -130,7 +146,8 @@ Page({
           return;
         }
         sync.markDirty();
-        this.setData({ openId: r.collection.id, picked: {}, pickedCount: 0 }, () => this.refresh());
+        const open = this.openList(cols.list()).concat(r.collection.id);
+        this.setData({ openIds: open.join(",") }, () => this.refresh());
         wx.showToast({ title: "已新建", icon: "none" });
       }
     });
@@ -138,8 +155,9 @@ Page({
 
   onToggleList(e) {
     const id = e.currentTarget.dataset.id;
-    const openId = this.data.openId === id ? "" : id;
-    this.setData({ openId: openId, picked: {}, pickedCount: 0 }, () => this.refresh());
+    const open = this.openList(cols.list());
+    const next = open.indexOf(id) >= 0 ? open.filter((x) => x !== id) : open.concat(id);
+    this.setData({ openIds: next.join(",") }, () => this.refresh());
   },
 
   onRename(e) {
@@ -176,7 +194,7 @@ Page({
         if (!res.confirm) return;
         cols.remove(id);
         sync.markDirty();
-        this.setData({ openId: this.data.openId === id ? "" : this.data.openId }, () => this.refresh());
+        this.setData({ openIds: id }, () => this.refresh());
         wx.showToast({ title: "已删除", icon: "none" });
       }
     });
@@ -195,7 +213,7 @@ Page({
         if (!res.confirm) return;
         const r = cols.clearItems(id);
         sync.markDirty();
-        this.setData({ picked: {}, pickedCount: 0 }, () => this.refresh());
+        this.refresh();
         wx.showToast({ title: "已移出 " + r.count + " 首", icon: "none" });
       }
     });
@@ -256,35 +274,35 @@ Page({
   },
 
   onPick(e) {
+    const id = e.currentTarget.dataset.id;
     const picked = {};
     (e.detail.value || []).forEach((pid) => { picked[pid] = true; });
-    this.setData({
-      picked: picked,
-      pickedCount: Object.keys(picked).length,
-      items: this.itemRows(this.data.openId)
-    });
+    this.setItems(id, this.itemRows(id, picked));
   },
 
-  onPickAll() {
+  onPickAll(e) {
+    const id = e.currentTarget.dataset.id;
     const picked = {};
-    this.data.items.forEach((it) => { picked[it.id] = true; });
-    this.setData({ picked: picked, pickedCount: Object.keys(picked).length, items: this.itemRows(this.data.openId) });
+    this.itemRows(id).forEach((it) => { picked[it.id] = true; });
+    this.setItems(id, this.itemRows(id, picked));
   },
 
-  onPickNone() {
-    this.setData({ picked: {}, pickedCount: 0, items: this.itemRows(this.data.openId) });
+  onPickNone(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setItems(id, this.itemRows(id));
   },
 
-  onRemovePicked() {
-    const ids = Object.keys(this.data.picked || {});
+  onRemovePicked(e) {
+    const id = e.currentTarget.dataset.id;
+    const ids = this.pickedIds(id);
     if (!ids.length) {
       wx.showToast({ title: "还没选中任何一篇", icon: "none" });
       return;
     }
-    const r = cols.removeItems(this.data.openId, ids);
+    cols.removeItems(id, ids);
     sync.markDirty();
-    this.setData({ picked: {}, pickedCount: 0 }, () => this.refresh());
-    wx.showToast({ title: r.removed ? "已移出 " + r.removed + " 首" : "这几首已经不在集合里了", icon: "none" });
+    this.refresh();
+    wx.showToast({ title: "已移出 " + ids.length + " 首", icon: "none" });
   },
 
 });

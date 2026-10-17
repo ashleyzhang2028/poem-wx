@@ -61,6 +61,7 @@
 
 .head-back-arrow {
   font-size: calc(var(--fs-lead) * 2);
+  font-weight: 200;
   line-height: 1;
   color: var(--ink-2);
 }
