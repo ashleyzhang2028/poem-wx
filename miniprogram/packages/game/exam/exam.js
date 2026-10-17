@@ -1,5 +1,5 @@
 const quiz = require("../quiz/lib");
-const corpus = require("../../../utils/corpus");
+const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
@@ -20,7 +20,7 @@ Page({
     themeStyle: "",
     stage: "setup",
     scopes: [],
-    scopeIndex: 0,
+    scope: "",
     count: QUESTION_COUNT,
     questions: [],
     index: 0,
@@ -56,9 +56,11 @@ Page({
     if (!ok || this.ready) return;
     this.ready = true;
 
-    const books = corpus.books().filter((b) => b.id !== "poems");
-    const scopes = [{ id: "", name: "课内诗词" }].concat(books.map((b) => ({ id: b.id, name: b.name })));
-    this.setData({ scopes, forms: quiz.FORMS, pickedForms: quiz.FORM_KEYS.slice() });
+    this.setData({
+      scopes: gameScopes.list(),
+      forms: quiz.FORMS,
+      pickedForms: quiz.FORM_KEYS.slice()
+    });
   },
 
   onToggleForm(e) {
@@ -81,11 +83,11 @@ Page({
   },
 
   onScope(e) {
-    this.setData({ scopeIndex: Number(e.detail.value) || 0 });
+    this.setData({ scope: e.detail.value || "" });
   },
 
   onStart() {
-    const scope = this.data.scopes[this.data.scopeIndex].id;
+    const scope = this.data.scope;
     const questions = quiz.build({ scope, count: QUESTION_COUNT, forms: this.data.pickedForms });
     if (!questions.length) {
       wx.showToast({ title: "这个范围出不了题", icon: "none" });

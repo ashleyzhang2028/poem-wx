@@ -1,5 +1,5 @@
 const quiz = require("./lib");
-const corpus = require("../../../utils/corpus");
+const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
@@ -15,7 +15,7 @@ Page({
     forms: [],
     pickedForms: [],
     scopes: [],
-    scopeIndex: 0,
+    scope: "",
     count: COUNT,
     questions: [],
     index: 0,
@@ -45,10 +45,8 @@ Page({
     if (!ok || this.ready) return;
     this.ready = true;
 
-    const books = corpus.books().filter((b) => b.id !== "poems");
-    const scopes = [{ id: "", name: "课内诗词" }].concat(books.map((b) => ({ id: b.id, name: b.name })));
     this.setData({
-      scopes,
+      scopes: gameScopes.list(),
       forms: quiz.FORMS,
       pickedForms: quiz.FORM_KEYS.slice()
     });
@@ -59,7 +57,7 @@ Page({
   },
 
   onScope(e) {
-    this.setData({ scopeIndex: Number(e.detail.value) || 0 });
+    this.setData({ scope: e.detail.value || "" });
   },
 
   onToggleForm(e) {
@@ -74,7 +72,7 @@ Page({
   },
 
   onStart() {
-    const scope = this.data.scopes[this.data.scopeIndex].id;
+    const scope = this.data.scope;
     const questions = quiz.build({
       scope,
       count: this.data.count,

@@ -5,9 +5,14 @@
     <view class="card">
       <view class="card-title bar">考试范围</view>
 
-      <picker range="{{scopes}}" range-key="name" value="{{scopeIndex}}" bindchange="onScope">
-        <view class="picker">{{scopes[scopeIndex].name}} ›</view>
-      </picker>
+      <radio-group class="opt-group inline cols-2" bindchange="onScope">
+        <label class="opt-row {{scope === item.id ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="id">
+          <radio class="opt-radio" value="{{item.id}}" checked="{{scope === item.id}}" />
+          <view class="opt-main">
+            <text class="opt-name">{{item.name}}</text>
+          </view>
+        </label>
+      </radio-group>
       <text class="count-line">共 {{count}} 题 · 限时 20 分钟</text>
     </view>
 
