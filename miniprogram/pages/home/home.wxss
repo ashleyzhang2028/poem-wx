@@ -154,7 +154,7 @@
   letter-spacing: var(--ls-caption);
   color: var(--ink-3);
   padding: 4rpx 16rpx;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--sink);
   white-space: nowrap;
 }
@@ -183,8 +183,8 @@
   width: 14rpx;
   height: 14rpx;
   margin: 0 var(--sp-1) 6rpx var(--sp-3);
-  border-right: 3rpx solid var(--ink-3);
-  border-bottom: 3rpx solid var(--ink-3);
+  border-right: 2rpx solid var(--ink-3);
+  border-bottom: 2rpx solid var(--ink-3);
   transform: rotate(45deg);
   transition: transform var(--t-move) var(--ease);
 }

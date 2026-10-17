@@ -150,6 +150,7 @@
   width: 100%;
   text-align: center;
   margin-top: var(--sp-3);
+  font-weight: 400;
 }
 
 .row-icon.danger {

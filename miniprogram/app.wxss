@@ -156,7 +156,7 @@ view, text, button, input, textarea {
   height: var(--h-btn);
   padding: 0 var(--sp-4);
 
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   border: 1rpx solid var(--line-strong);
   color: var(--ink);
@@ -236,7 +236,7 @@ view, text, button, input, textarea {
   padding: 0 var(--sp-3);
   font-size: var(--fs-hint);
   line-height: 1.2;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
 }
 
 .btn[disabled] {
@@ -307,7 +307,7 @@ view, text, button, input, textarea {
   height: 36rpx;
   padding: 0 var(--sp-1);
   margin-right: var(--sp-2);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--sink);
   font-family: var(--font-num);
   font-size: var(--fs-caption);
@@ -326,7 +326,7 @@ view, text, button, input, textarea {
   font-size: var(--fs-caption);
   color: var(--strong-text);
   padding: var(--pad-opt-y) var(--sp-2);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--strong-soft);
   margin-right: var(--sp-1);
 }
@@ -412,7 +412,7 @@ view, text, button, input, textarea {
   line-height: 1.5;
 
   padding: var(--pad-opt-y) var(--pad-opt-x);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   color: var(--ink-2);
   background: var(--sink);
   margin-right: 10rpx;
@@ -468,7 +468,7 @@ view, text, button, input, textarea {
   align-items: center;
   background: var(--sink);
   border: 1rpx solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   padding: 0 var(--sp-4);
   height: var(--h-field);
   margin-bottom: var(--sp-2);
@@ -633,7 +633,7 @@ view, text, button, input, textarea {
   min-height: var(--h-opt);
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1024,7 +1024,7 @@ view, text, button, input, textarea {
 
   padding: var(--pad-opt-y) var(--pad-opt-x);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--surface);
   transition: background-color var(--t-press), border-color var(--t-press);
 }
@@ -1258,7 +1258,7 @@ view, text, button, input, textarea {
   color: var(--ink-2);
   letter-spacing: var(--ls-caption);
   background: var(--sink);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   padding: 8rpx 22rpx;
   margin: var(--sp-2) 0 var(--sp-2);
 }

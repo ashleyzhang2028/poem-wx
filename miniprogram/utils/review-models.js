@@ -30,7 +30,7 @@ function clampBox(b) {
 const MODELS = {
   ebbinghaus: {
     key: "ebbinghaus",
-    name: "艾宾浩斯遗忘曲线",
+    name: "艾宾浩斯 (Ebbinghaus)",
     years: "1885 · 固定间隔",
     free: true,
     init: () => ({ level: 0 }),
@@ -53,7 +53,7 @@ const MODELS = {
 
   leitner: {
     key: "leitner",
-    name: "莱特纳盒",
+    name: "莱特纳盒 (Leitner Box)",
     years: "1972 · 分级盒子",
     free: true,
     boxes: [1, 2, 4, 8, 16],
@@ -77,7 +77,7 @@ const MODELS = {
 
   sm2: {
     key: "sm2",
-    name: "SM-2",
+    name: "SM-2 (SuperMemo 2)",
     years: "1987 · 间隔 × 简易度",
     free: false,
     firstIntervals: [1, 3, 7],
@@ -126,7 +126,7 @@ const MODELS = {
 
   fsrs: {
     key: "fsrs",
-    name: "FSRS",
+    name: "FSRS (自由间隔重复调度)",
     years: "2022 · 难度 / 稳定性",
     free: false,
     params: {
