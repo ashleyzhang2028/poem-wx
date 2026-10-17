@@ -196,7 +196,9 @@ Page({
   onShow() {
     theme.apply(this);
 
-    this.setData({ todayLabel: todayLabel(), barBelow: !tabbar.sync(this, 0) });
+    const bar = tabbar.sync(this, 0);
+    this.setData({ todayLabel: todayLabel(), barBelow: !bar });
+    if (bar) tabbar.show(this);
     this.refresh();
 
     if (gate.logged()) sync.now().catch(() => {});

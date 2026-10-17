@@ -857,6 +857,21 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
 回来看那一栏还亮着。所以 `custom-tab-bar` 的每一项多带一个 `noSwitch`：
 `switchTab` 与 `navigateTo` 在同一个 `onTap` 里分流。
 
+#### 画面上不在这条栏里的页，把这栏收起来
+
+自定义 tabBar 的组件实例是**全应用共用**的那一个：`navigateTo` 出去之后，
+`switchTab` 页上的那条栏照旧画在新页面上（Issue #293 ——
+详情页、列表页、古诗词大会与它的三个子页底部都压着一条不属于那里的栏）。
+
+页与栏的对应关系写在组件自己身上，不写在页面上：`list` 每一项的
+`pagePath` 就是这栏出现在哪些页上的名单。组件 `attached` 时按当前路由
+对一次（冷启动从分包页进来也认得出），此后由页面在 `onShow` / `onUnload` 里
+调 `tabbar.show(this)` / `tabbar.hide(this)` 报到。`tabbar.pick(this)` 是
+「点亮大会那一格，并且让这栏出现在这页上」—— 大会那一项与它的三个子页都走它。
+
+页面这一侧仍是 `barBelow`：`barBelow` 说的是「这栏挂在这页上吗」，
+不是「这栏在不在」。`.has-tabbar` 垫片的判据没变。
+
 **去 tab 页一律走 `switchTab`，出口只有一个**（`utils/tab-page.js`）。
 微信这条规矩很坑：`navigateTo` 跳 tab 页是**静默失败** —— 不报错、不跳转、
 `fail` 也不回调。于是「点登录去『我的』」写出来就是

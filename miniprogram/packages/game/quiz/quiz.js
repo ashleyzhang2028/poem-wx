@@ -3,6 +3,7 @@ const corpus = require("../../../utils/corpus");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const COUNT = 10;
@@ -21,6 +22,7 @@ Page({
     current: null,
     picked: "",
 
+    barBelow: true,
     optionRows: [],
 
     metaLine: "",
@@ -37,6 +39,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: !tabbar.pick(this) });
     const ok = entitlement.can("quiz");
     this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("quiz") });
     if (!ok || this.ready) return;

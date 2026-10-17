@@ -1,6 +1,7 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const MODES = [
@@ -21,12 +22,14 @@ Page({
   data: {
 
     themeStyle: "",
+    barBelow: true,
     locked: true,
     cards: []
   },
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: !tabbar.pick(this) });
     if (!gate.logged()) {
       this.setData({ locked: true, cards: [] });
       return;

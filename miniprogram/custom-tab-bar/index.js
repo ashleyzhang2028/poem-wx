@@ -19,6 +19,12 @@ Component({
   attached() {
     this.painted = theme.current();
     this.setData(this.paint());
+
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1];
+    if (page && page.route === this.data.list[this.data.active].pagePath.slice(1)) {
+      this.setData({ pageHere: true });
+    }
   },
 
   methods: {
@@ -36,6 +42,16 @@ Component({
 
     paint() {
       return { themeStyle: theme.style() };
+    },
+
+    show() {
+      if (this.data.pageHere) return;
+      this.setData({ pageHere: true });
+    },
+
+    hide() {
+      if (!this.data.pageHere) return;
+      this.setData({ pageHere: false });
     },
 
     onTap(e) {

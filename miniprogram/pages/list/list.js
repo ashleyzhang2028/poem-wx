@@ -5,6 +5,7 @@ const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const theme = require("../../utils/theme");
+const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
 
 const FILTERS = [
@@ -39,6 +40,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    tabbar.hide(this);
 
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -50,6 +52,10 @@ Page({
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: "跬步 · 课外阅读 · " + book.name });
     this.apply();
+  },
+
+  onUnload() {
+    tabbar.show(this);
   },
 
   apply() {

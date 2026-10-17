@@ -44,7 +44,9 @@ Page({
   onShow() {
     theme.apply(this);
 
-    this.setData({ barBelow: !tabbar.sync(this, 1) });
+    const bar = tabbar.sync(this, 1);
+    this.setData({ barBelow: !bar });
+    if (bar) tabbar.show(this);
 
     if (!gate.logged() || !E.can("library")) {
       this.setData({ locked: true, reason: E.hint("library") });

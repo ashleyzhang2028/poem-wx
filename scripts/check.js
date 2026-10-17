@@ -2346,26 +2346,61 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   }
 
   {
+    const HOME = ["pages/home/home", "pages/library/library", "pages/search/search", "pages/mine/mine"];
+    const GAME = ["packages/game/index/index", "packages/game/feihua/feihua",
+      "packages/game/quiz/quiz", "packages/game/exam/exam"];
     const syncs = {};
-    const unpainted = [];
-    ["pages/home/home", "pages/library/library", "pages/search/search", "pages/mine/mine"].forEach((p) => {
+    const call = {};
+    HOME.forEach((p) => {
       const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
       const m = new RegExp("tabbar\\.sync\\(this, (\\d)\\)").exec(src);
       syncs[p] = m ? Number(m[1]) : -1;
-      if (!/barBelow\s*:\s*!tabbar\.sync\(this, \d\)/.test(src)) {
-        unpainted.push(p);
-      }
+      call[p] = "sync";
     });
+    GAME.forEach((p) => {
+      const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+      call[p] = /tabbar\.pick\(this\)/.test(src) ? "pick" : "";
+    });
+
     const vals = Object.keys(syncs).map((k) => syncs[k]);
     ok("每个 tab 页都调了一次 tabbar.sync，且序号互不相同",
       vals.every((v) => v >= 0) && new Set(vals).size === vals.length,
       JSON.stringify(syncs) + " —— 少调、重号或调错，切过去还亮着上一栏");
-    ok("每个 tab 页都把 sync 的结果落成 barBelow（底栏没挂上时不装作它在下面）",
-      unpainted.length === 0,
-      unpainted.join("、") + " —— 小程序冷启动直接进这些页时组件层还没就绪，"
-        + "getTabBar() 当场返回空（开发者工具里就是那句 "
-        + "`property \"inputId\" received type-incompatible value`），"
-        + "而页面照旧留着底栏高：列表最后一行被那 120rpx 与一条不存在的栏夹在中间");
+
+    const stray = Object.keys(homeCallAll()).filter((p) => !HOME.includes(p) && !GAME.includes(p));
+    function homeCallAll() {
+      const out = {};
+      const walk = (dir) => {
+        fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+          const q = path.join(dir, e.name);
+          if (e.isDirectory()) walk(q);
+          else if (e.name.endsWith(".js")) {
+            out[path.relative(ROOT, q).split(path.sep).join("/").replace(/\.js$/, "")] =
+              fs.readFileSync(q, "utf8");
+          }
+        });
+      };
+      ["pages", "packages"].forEach((d) => walk(path.join(ROOT, d)));
+      return out;
+    }
+
+    const painted = HOME.concat(GAME).filter((p) => {
+      const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+      const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+      return /barBelow\s*:\s*!\s*(tabbar\.(sync|pick)\(this[,)]|bar\b)/.test(src)
+        && /barBelow \? 'has-tabbar' : 'tall'/.test(wxml);
+    });
+    ok("用到自绘底栏的页都按「挂得上才留垫片」算 barBelow",
+      painted.length === HOME.length + GAME.length,
+      HOME.concat(GAME).filter((p) => painted.indexOf(p) < 0).join("、")
+        + " —— 小程序冷启动直接进这些页时组件层还没就绪，getTabBar() 当场返回空"
+        + "（开发者工具里就是那句 `property \"inputId\" received type-incompatible value`），"
+        + "而页面照旧留着底栏高：最后一行被那 120rpx 与一条不存在的栏夹在中间");
+
+    ok("大会与它的三个子页把底栏点亮在「大会」那一格",
+      GAME.every((p) => call[p] === "pick"),
+      GAME.filter((p) => call[p] !== "pick").join("、")
+        + " —— 进了大会还亮着上一栏，退回来时那一栏又是暗的");
   }
   ok("要登录的那几栏都标了 login（游客点了不进门，直接去「我的」）",
     (barSrc.match(/login:\s*true/g) || []).length >= 3,
