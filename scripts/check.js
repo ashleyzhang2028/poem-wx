@@ -2847,6 +2847,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const all = themeMod.all();
 
   const WANT = [
+    ["daiqing", "黛青", [2, 54, 51]],
     ["qinglv", "青绿", [46, 106, 103]],
     ["muse", "暮色", [79, 96, 114]],
     ["nuahui", "暖灰", [164, 86, 104]],
@@ -2867,7 +2868,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb);
   });
-  ok("清单就是这 11 个色（含用户点名的墨色 / 胭脂 / 雨过天青）",
+  ok("清单就是这 12 个色（含用户点名的黛青 / 墨色 / 胭脂 / 雨过天青）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
@@ -2886,16 +2887,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("每个色连同它那档淡淡版都挂到页面根节点上", veiled.length === 0,
     veiled.map((t) => t.name).join(", "));
 
-  ok("默认那一项是「墨色」", themeMod.DEFAULT === "ink"
-    && all.some((t) => t.key === "ink" && t.name === "墨色"));
+  ok("默认那一项是「黛青」", themeMod.DEFAULT === "daiqing"
+    && all.some((t) => t.key === "daiqing" && t.name === "黛青"));
   const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);
   ok("tokens 的 --theme 默认值指向清单里默认那一项（两处不许各写一遍）",
     !!tDef && tDef[1] === themeMod.DEFAULT,
     "tokens 里 " + (tDef ? tDef[1] : "读不到") + " vs theme.js " + themeMod.DEFAULT);
 
   ok("tokens 里的 --theme 指向的那个变量，由页面根节点自己发出来",
-    styleInk.indexOf("--c-ink:" + rgbaOf([8, 8, 10])) >= 0
-      && /var\(--c-ink\)/.test(tokens));
+    styleInk.indexOf("--c-daiqing:" + rgbaOf([2, 54, 51])) >= 0
+      && /var\(--c-daiqing\)/.test(tokens));
 
   const missWxml = [], missJs = [];
   pages.forEach((pg) => {

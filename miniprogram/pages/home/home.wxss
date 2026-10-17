@@ -1,5 +1,51 @@
 .home {
   padding: var(--sp-3);
+  padding-top: 0;
+  position: relative;
+}
+
+.banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--status-h) + var(--nav-h) + (100vw / 1.875));
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.banner-title {
+  position: absolute;
+  left: var(--page-x);
+  top: var(--title-y);
+  display: flex;
+  flex-direction: column;
+}
+
+.banner-brand {
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
+  color: var(--strong-text);
+}
+
+.banner-say {
+  font-size: var(--fs-caption);
+  letter-spacing: var(--ls-caption);
+  color: var(--ink-3);
+  margin-top: 2rpx;
+}
+
+.banner-space {
+  pointer-events: none;
 }
 
 .home .de {

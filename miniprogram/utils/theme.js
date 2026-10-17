@@ -1,6 +1,7 @@
 const store = require("./store");
 
 const THEMES = [
+  { key: "daiqing", name: "黛青",     rgb: [2, 54, 51] },
   { key: "ink",     name: "墨色",     rgb: [8, 8, 10] },
   { key: "qinglv",  name: "青绿",     rgb: [46, 106, 103] },
   { key: "muse",    name: "暮色",     rgb: [79, 96, 114] },
@@ -14,7 +15,7 @@ const THEMES = [
   { key: "yuqing",  name: "雨过天青", rgb: [47, 96, 85] }
 ];
 
-const DEFAULT = "ink";
+const DEFAULT = "daiqing";
 
 const WASH = 0.05;
 
@@ -55,6 +56,7 @@ const VAR_OF = {};
 ["qinglv", "muse", "nuahui", "qingwa", "mich", "shilv", "mohong", "wulan"].forEach((k) => {
   VAR_OF[k] = "--c-" + k;
 });
+VAR_OF.daiqing = "--c-daiqing";
 VAR_OF.ink = "--c-ink";
 VAR_OF.yanzhi = "--c-yanzhi";
 VAR_OF.yuqing = "--c-yuqing";

@@ -1,13 +1,13 @@
 page {
 
-  --theme: var(--c-ink);
+  --theme: var(--c-daiqing);
   --ink: #1c1c1e;
 
   --strong: var(--theme);
-  --strong-soft: var(--c-ink-soft);
+  --strong-soft: var(--c-daiqing-soft);
   --strong-text: var(--theme);
 
-  --theme-deep: var(--c-ink);
+  --theme-deep: var(--c-daiqing);
   --ink-strong: var(--theme-deep);
 
   --ink-2: #6b7280;
