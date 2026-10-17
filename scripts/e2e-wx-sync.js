@@ -25,6 +25,8 @@ config.wxFetch = (url) => {
 
 const server = http.createServer((req, res) => PoemHandler(req, res));
 
+const R = require(path.join(REPO, "miniprogram", "utils", "review-models.js"));
+
 const results = [];
 const ok = (n, c, d) => { results.push(!!c); console.log((c ? "✓ " : "✗ ") + n + (c ? "" : "  —— " + (d || ""))); };
 
@@ -87,7 +89,6 @@ function makeWx(port, mem) {
   {
     const collections = require(path.join(REPO, "miniprogram", "utils", "collections.js"));
     collections.setCount("c-e2e", 20);
-    const R = require(path.join(REPO, "miniprogram", "utils", "review-models.js"));
     const t0 = Math.floor(Date.now() / 1000) * 1000 - 2 * 86400000;
     sm2Day.t = t0;
     store.setRecord("mingshu-ms-225", { level: 3, nextReviewAt: t0, lastReviewAt: t0 - 86400000, learned: true });
@@ -149,6 +150,23 @@ function makeWx(port, mem) {
       && byId["collections:v1"].collections[0].dailyCount === 20,
     JSON.stringify(byId["collections:v1"]));
 
+  const advanceDue = new Date(2026, 0, 5, 10).getTime();
+  store.setRecord("poems-xx1-28", {
+    level: 2, learned: true, algo: "sm2", reviewCount: 3,
+    nextReviewAt: advanceDue, lastReviewAt: advanceDue, reviewedOn: "2000-1-1",
+    history: [{ at: advanceDue, result: "good", level: 2 }]
+  });
+  const advancedRow = wireRows().filter((r) => r.id === "poems-xx1-28")[0] || {};
+  ok("到期未复习的那篇上行时按当前算法推进一档",
+    (advancedRow.payload || {}).level === 3, JSON.stringify(advancedRow.payload));
+  ok("推进后的那条，时间戳与 payload 的复习时间落在同一刻、复习日是当天",
+    advancedRow.updatedAt === advancedRow.payload.lastReviewAt
+      && advancedRow.payload.reviewedOn === R.dayStamp(Date.now()),
+    JSON.stringify([advancedRow.updatedAt, advancedRow.payload.lastReviewAt, advancedRow.payload.reviewedOn]));
+
+  const syncAdvance = await remote.sync();
+  ok("推进过的那篇推得上去", !syncAdvance.error, JSON.stringify(syncAdvance));
+
   Object.keys(mem).forEach((k) => delete mem[k]);
   Object.keys(require.cache).forEach((k) => {
     if (k.indexOf(path.join(REPO, "miniprogram", "utils")) === 0) delete require.cache[k];
@@ -181,6 +199,9 @@ function makeWx(port, mem) {
     JSON.stringify([store.getRecord("poems-xx1-01"), store2.getRecord("poems-xx1-01")]));
   ok("新手机上只背没读过的那篇也在已读里",
     !!store2.reads("poems")["poems-xx1-03"], JSON.stringify(store2.reads("poems")));
+  ok("新手机上推进过的那篇档位与旧手机上看到的一致",
+    (store2.getRecord("poems-xx1-28") || {}).level === 3,
+    JSON.stringify(store2.getRecord("poems-xx1-28")));
 
   {
     const cols2 = require(path.join(REPO, "miniprogram", "utils", "collections.js"));

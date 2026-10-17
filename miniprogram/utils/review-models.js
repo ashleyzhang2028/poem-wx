@@ -356,6 +356,8 @@ module.exports = {
   DAY,
   HOUR,
   dayStamp,
+  dayAt,
+  daysFor,
   MIN,
   EBBINGHAUS_INTERVALS,
   ORDER,

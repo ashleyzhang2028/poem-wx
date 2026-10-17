@@ -120,10 +120,13 @@ function latestAt(marks) {
   return at;
 }
 
-function advanceRecord(rec, at, key) {
-  const due = Number((rec && rec.nextReviewAt) || 0);
-  if (!key || rec.algo !== key || !due || due > at) return null;
-  return R.review(rec, "good", key, at);
+function advanceRecord(rec, due, key, now) {
+  if (!key || rec.algo !== key || !Number(rec.nextReviewAt) || rec.nextReviewAt > due) return null;
+  const next = R.review(Object.assign({}, rec, { nextReviewAt: 0 }), "good", key, due);
+  next.lastReviewAt = now;
+  next.reviewedOn = R.dayStamp(now);
+  next.nextReviewAt = R.dayAt(now, R.daysFor(key, next));
+  return next;
 }
 
 function keepRecordEdge(id, rec) {
@@ -146,6 +149,7 @@ function mergeMark(slim, edge) {
 
 function packRecords() {
   const rows = [];
+  const advanced = [];
 
   const progress = store.progress();
   const reads = store.reads();
@@ -163,13 +167,16 @@ function packRecords() {
     const book = bookOf(it.id);
     const mark = Number((reads[book] || {})[it.id]) || 0;
     const at = Math.max(recordStamp(it.rec), mark);
-    const next = advanceRecord(it.rec, at, store.settings().algo);
+    const now = Date.now();
+    const next = advanceRecord(it.rec, at, store.settings().algo, now);
     if (!next) {
       rows.push({ id: it.id, payload: slimRecord(it.rec), updatedAt: recordStamp(it.rec), deleted: false });
       return;
     }
     if (book) readEdges[book][it.id] = Math.max(readEdges[book][it.id] || 0, next.lastReviewAt);
-    rows.push({ id: it.id, payload: slimRecord(next), updatedAt: next.lastReviewAt, deleted: false });
+    const payload = slimRecord(next);
+    rows.push({ id: it.id, payload, updatedAt: next.lastReviewAt, deleted: false });
+    advanced.push({ id: it.id, rec: Object.assign({}, payload, { updatedAt: next.lastReviewAt }) });
   });
 
   const edgeFrom = store.progressEdge();
@@ -252,6 +259,7 @@ function packRecords() {
     rows.push({ id: DAILY_EXTRA_ROW, payload: {}, updatedAt: goneAt, deleted: true });
   }
 
+  if (advanced.length) store.setRecords(advanced);
   return rows;
 }
 
