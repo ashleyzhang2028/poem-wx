@@ -6562,8 +6562,8 @@ function gapped(items, max) {
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
   ok("首页自选卡与背诵弹层共用一套（点一行就地开弹层）",
     /onOpenCollection/.test(homeSrc4) && homeWxml4.indexOf("onOpenCollection") >= 0);
-  ok("每个自选集子一张卡，标题带「· 自选」，篇目平铺成一份队列",
-    /title:\s*cols\.nameOf\(c\)\s*\+\s*" · 自选"/.test(homeSrc4)
+  ok("每个自选集子一张卡，标题是集子名，篇目平铺成一份队列",
+    /title:\s*cols\.nameOf\(c\),/.test(homeSrc4)
       && /wx:for="\{\{collections\}\}"/.test(homeWxml4)
       && /wx:for="\{\{coll\.rows\}\}"/.test(homeWxml4)
       && /cols\.find\(id\)/.test(homeSrc4));

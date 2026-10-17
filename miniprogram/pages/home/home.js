@@ -263,7 +263,7 @@ Page({
       });
       return {
         id: c.id,
-        title: cols.nameOf(c) + " · 自选",
+        title: cols.nameOf(c),
         count: c.items.length,
         planned: plan.length,
         done: done,
