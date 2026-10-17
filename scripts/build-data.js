@@ -93,8 +93,8 @@ function main() {
     index.push({
       id: p.id,
       t: p.title,
-      a: p.author || p.authorName || "",
-      an: p.authorName && p.authorName !== p.author ? p.authorName : "",
+      a: p.authorName || p.author || "",
+      an: p.authorName && p.authorName !== p.author ? p.author : "",
       d: p.dynasty || "",
       s: p.source || "",
 
