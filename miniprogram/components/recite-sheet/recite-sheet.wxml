@@ -118,11 +118,11 @@
       </view>
 
       <view class="sheet-tail">
-        <view class="sheet-step-btn prev {{index > 0 ? "" : "off"}}"
+        <view class="sheet-step-btn prev {{index > 0 ? '' : 'off'}}"
               hover-class="sheet-step-hover" hover-stay-time="60" bindtap="onPrev">
           <text class="sheet-step-t">‹ 上一首</text>
         </view>
-        <view class="sheet-step-btn next {{index + 1 < total ? "" : "off"}}"
+        <view class="sheet-step-btn next {{index + 1 < total ? '' : 'off'}}"
               hover-class="sheet-step-hover" hover-stay-time="60" bindtap="onNext">
           <text class="sheet-step-t">下一首 ›</text>
         </view>
