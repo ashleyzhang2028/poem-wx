@@ -3377,9 +3377,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const wxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "");
 
-  ok("注音那一行的高度由令牌给（不随内容长出来）",
-    /\.token-line\s*\{[^}]*height\s*:\s*var\(--py-line\)/.test(wxss),
-    "注音行是靠内容撑高的 —— 有音无音会差半行");
+  ok("注音那一行按内容撑高（有音无音不差半行，软折行也不压上一行）",
+    /\.token-line\s*\{[^}]*height\s*:\s*auto/.test(wxss)
+      && /\.token\s*\{[^}]*height\s*:\s*calc\(\s*var\(--py-slot\)\s*\+\s*var\(--poem-fs\)\s*\)/.test(wxss),
+    "注音行又定死在 --py-line —— 软折行那一行的拼音会压到上一行上");
 
   const tokensWxss = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const rule = (cls) => {

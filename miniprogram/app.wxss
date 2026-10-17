@@ -1460,7 +1460,7 @@ view, text, button, input, textarea {
   width: 100%;
   border-radius: var(--radius-sm);
   transition: background-color var(--t-move);
-  height: var(--py-line);
+  height: auto;
   line-height: 1;
 }
 
@@ -1478,8 +1478,9 @@ view, text, button, input, textarea {
   align-items: center;
   justify-content: flex-end;
   width: var(--py-box);
-  height: var(--py-box);
+  height: calc(var(--py-slot) + var(--poem-fs));
   margin: 0 var(--py-gap);
+  flex: none;
 
   vertical-align: bottom;
 }
