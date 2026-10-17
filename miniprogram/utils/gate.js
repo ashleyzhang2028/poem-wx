@@ -28,8 +28,8 @@ function refuse(what) {
   if (logged()) return { ok: true, title: "", content: "" };
   return {
     ok: false,
-    title: "登录后可用",
-    content: "「" + what + "」要微信登录之后才能用。"
+    title: "登录",
+    content: "解锁跬步诗词的更多可能。"
   };
 }
 
