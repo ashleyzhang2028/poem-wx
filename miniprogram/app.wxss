@@ -1228,34 +1228,34 @@ button, textarea {
 }
 
 .glyph.ic-add::before {
-  left: 11rpx;
+  left: 10.75rpx;
   top: 3rpx;
   width: 2.5rpx;
   height: 18rpx;
 }
 
 .glyph.ic-add::after {
-  left: 3rpx;
-  top: 11rpx;
-  width: 18rpx;
+  left: 2rpx;
+  top: 10.75rpx;
+  width: 20rpx;
   height: 2.5rpx;
 }
 
 .glyph.ic-added::before {
-  left: 3rpx;
-  top: 11rpx;
-  width: 9rpx;
+  left: 5rpx;
+  top: 10rpx;
+  width: 7rpx;
   height: 2.5rpx;
   transform: rotate(45deg);
   transform-origin: left center;
 }
 
 .glyph.ic-added::after {
-  left: 10rpx;
-  top: 15rpx;
-  width: 13rpx;
+  left: 10.2rpx;
+  top: 15.2rpx;
+  width: 12rpx;
   height: 2.5rpx;
-  transform: rotate(-50deg);
+  transform: rotate(-45deg);
   transform-origin: left center;
 }
 
