@@ -175,6 +175,11 @@ const NATIVE_CSS = `
 .n-slider-track{position:relative;height:4px;border-radius:2px;background:#ececef;width:100%;margin:0 var(--n-slider-inset)}
 .n-slider-fill{position:absolute;left:0;top:0;height:4px;border-radius:2px;background:#1c1c1e}
 .n-slider-knob{position:absolute;top:50%;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
+/* 原生 <button> 自带粗体（微信里就是 700）。只给它外观、不给字重 ——
+   真机的字重由 app.wxss 的 button 规则统一压到 400，预览里再现一遍
+   就等于「页面有没有把字重压回去」永远测不出来。 */
+.n-button{border:none;background:none;color:inherit;letter-spacing:normal;font-family:inherit;cursor:pointer}
+.n-button[disabled]{cursor:default}
 .n-ph{color:#9ca3af}
 .n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
 .n-image{background:#f2f2f4}

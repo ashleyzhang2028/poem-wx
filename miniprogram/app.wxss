@@ -4,6 +4,10 @@ view, text, button, input, textarea {
   box-sizing: border-box;
 }
 
+button, textarea {
+  font-weight: 400;
+}
+
 .page {
   min-height: 100vh;
   padding: var(--sp-3) var(--sp-3);

@@ -18,7 +18,7 @@
 
 .fh-char-t {
   font-family: var(--font-poem);
-  font-size: var(--fs-glyph);
+  font-size: calc(var(--fs-glyph) * .8);
   line-height: 1;
   color: var(--ink);
 }
@@ -87,8 +87,4 @@
   font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: var(--sp-1);
-}
-
-.fh-reveal {
-  margin-top: var(--sp-3);
 }

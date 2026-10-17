@@ -206,6 +206,13 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
     out.push(`<div data-tag="input" class="n-input ${cls} ${type === "nickname" ? "n-nick" : ""}" style="${style}">${val ? `<span>${val}</span>` : `<span class="n-ph">${ph}</span>`}</div>`);
     return;
   }
+  if (n.tag === "button") {
+    const dis = interp(a.disabled || "false", v) === "true";
+    const buf = [];
+    render(bodyNodes, data, buf);
+    out.push(`<button data-tag="button" class="n-button ${cls}"${dis ? " disabled" : ""} style="${style}">${buf.join("")}</button>`);
+    return;
+  }
   if (n.tag === "slider") {
     const mn = Number(interp(a.min || "0", v)) || 0;
     const mx = Number(interp(a.max || "100", v)) || 100;

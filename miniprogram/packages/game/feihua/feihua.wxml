@@ -17,8 +17,8 @@
       </view>
 
       <view class="fh-actions">
-        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">交这一句</button>
-        <button class="btn ghost" bindtap="onSkip">换一个字</button>
+        <button class="btn ghost" bindtap="onReveal">{{revealed ? '收起答案' : '看答案'}}</button>
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">提交</button>
       </view>
 
       <text class="fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
@@ -39,7 +39,7 @@
     </view>
 
     <view class="card">
-      <view class="card-title bar">正确答案</view>
+      <view class="card-title bar">答案</view>
       <view wx:if="{{revealed}}">
         <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
@@ -51,9 +51,6 @@
           <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
         </view>
       </view>
-      <button class="btn ghost block fh-reveal" bindtap="onReveal">
-        {{revealed ? '收起答案' : '看答案'}}
-      </button>
     </view>
 
     <view class="card" wx:if="{{done.length}}">
