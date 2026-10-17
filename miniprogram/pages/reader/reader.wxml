@@ -93,7 +93,7 @@
     </view>
 
     <view class="poem-body align-{{align}} size-{{fontSize}}">
-      <block wx:if="{{tableView}}">
+      <block wx:if="{{blocksOn}}">
         <block wx:for="{{blocks}}" wx:key="key" wx:for-item="blk">
           <view class="poem-stanza" wx:if="{{blk.k === 'p'}}">
             <text class="poem-line" wx:for="{{blk.rows}}" wx:key="index" wx:for-item="para">
@@ -110,15 +110,7 @@
           </scroll-view>
         </block>
       </block>
-      <block wx:elif="{{!pinyinOn}}">
-        <view class="poem-stanza" wx:for="{{paras}}" wx:key="index" wx:for-item="para">
-          <text class="poem-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-            <text class="poem-clause" wx:for="{{row}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
-          </text>
-        </view>
-      </block>
-      <block wx:else>
-
+      <block wx:elif="{{pinyinOn}}">
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
           <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
             <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
