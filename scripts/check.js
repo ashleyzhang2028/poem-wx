@@ -6849,7 +6849,20 @@ function gapped(items, max) {
       && homeSrc4.indexOf("S.doneToday(rec)") >= 0
       && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
       && /wx:for="\{\{cheers\}\}"/.test(homeWxml4)
-      && /const cheerOn = \{/.test(homeSrc4));
+      && /cheers: cheerKey \? \[SELF_CHEERS\[cheerKey\]\] : \[\]/.test(homeSrc4));
+
+  ok("首页收尾只有一处判据：自选的鼓励语不再另立一套 planDone",
+    !/planDone/.test(homeSrc4)
+      && (homeSrc4.match(/const allDone =/g) || []).length === 1
+      && /const cheerKey = selfAllDone && allDone/.test(homeSrc4));
+
+  ok("两处 toast 互斥（前一条还在屏上，后一条不叠上去）",
+    (homeSrc4.match(/Date\.now\(\) - this\.toastAt\(\) < TOAST_GAP/g) || []).length === 2
+      && (homeSrc4.match(/toastedAt = Date\.now\(\)/g) || []).length === 2
+      && (homeSrc4.match(/toastAt\(\) \{\s*return this\.toastedAt/g) || []).length === 1
+      && /const TOAST_MS = /.test(homeSrc4)
+      && (homeSrc4.match(/duration: TOAST_MS/g) || []).length === 2);
+
   ok("首页自选卡与背诵弹层共用一套（点一行就地开弹层）",
     /onOpenCollection/.test(homeSrc4) && homeWxml4.indexOf("onOpenCollection") >= 0);
   ok("每个自选集子一张卡，标题是集子名，篇目平铺成一份队列",
