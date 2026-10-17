@@ -6780,6 +6780,20 @@ function gapped(items, max) {
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
       && sp.pages.indexOf("collections/collections") >= 0));
 
+  {
+    const tableMod = require(path.join(ROOT, "utils", "table.js"));
+    const foreign = ["dwang-waiguo", "mingren-waiguo"];
+    const foreignRows = foreign.reduce((acc, id) => acc.concat(perBook[id] || []), []);
+    const broken = foreignRows.filter((p) => {
+      const e = corpus.entry(p.id);
+      const t = e && e.text ? tableMod.parseText(e.text) : null;
+      return !t || !t.blocks.length || t.blocks.some((b) => b.widths.length < 2 || !b.rows.length);
+    });
+    ok("帝王与名家的「外国」两卷带正文（" + foreignRows.length + " 条，正文里的框线表解析成两列以上）",
+      broken.length === 0,
+      "这几条取不到正文或表格没有解析出行列：" + broken.map((p) => p.id).slice(0, 8).join("、"));
+  }
+
   void R4;
 }
 
