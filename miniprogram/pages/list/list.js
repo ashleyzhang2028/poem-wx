@@ -9,8 +9,8 @@ const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
 
 const FILTERS = [
-  { key: "全部", label: "全部", icon: "all-site" },
-  { key: "未读", label: "未读", icon: "title" }
+  { key: "全部", label: "全部" },
+  { key: "未读", label: "未读" }
 ];
 
 Page({

@@ -5,7 +5,7 @@
   <block wx:else>
 
   <view class="card">
-    <view class="card-title bar">今日加背</view>
+    <view class="card-title">今日加背</view>
 
     <view wx:if="{{!daily.length}}" class="hint">今天还没加背 —— 在首页「今日加背」里搜一篇加进来。</view>
 
@@ -34,7 +34,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">当前学段</view>
+    <view class="card-title">当前学段</view>
 
     <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">
       <label class="chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key">
@@ -60,7 +60,7 @@
 
   <view class="card">
 
-    <view class="card-title bar">背诵范围</view>
+    <view class="card-title">背诵范围</view>
 
     <radio-group class="opt-group inline cols-2" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">
@@ -74,7 +74,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">每日首数</view>
+    <view class="card-title">每日首数</view>
 
     <radio-group class="chip-group compact cols-4" bindchange="onCount">
       <label class="chip compact {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
@@ -85,7 +85,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">复习算法</view>
+    <view class="card-title">复习算法</view>
 
     <radio-group class="algo-group" bindchange="onAlgo">
       <label class="algo-row {{item.active ? 'active' : ''}} {{item.allowed ? '' : 'locked'}}"
@@ -106,7 +106,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title bar">自选背诵</view>
+    <view class="card-title">自选背诵</view>
 
     <view class="row">
       <view class="row-main">

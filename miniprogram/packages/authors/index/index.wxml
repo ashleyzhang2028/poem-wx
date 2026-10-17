@@ -12,7 +12,7 @@
 
     <view class="card index-card">
       <view class="card-open">
-        <text class="card-title bar">朝代</text>
+        <text class="card-title">朝代</text>
         <text class="index-total">{{eras.length}} 朝</text>
       </view>
       <view class="index-grid">

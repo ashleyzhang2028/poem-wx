@@ -5,7 +5,7 @@
   <block wx:else>
 
   <view class="card">
-    <view class="card-title bar">自选背诵</view>
+    <view class="card-title">自选背诵</view>
     <text class="hint coll-lead">把课外阅读或搜索里看到的篇目收进自己的集合，按选定算法跟着背。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
@@ -17,7 +17,7 @@
   </view>
 
   <view class="card" wx:if="{{count}}">
-    <view class="card-title bar">我的集合</view>
+    <view class="card-title">我的集合</view>
 
     <block wx:for="{{collections}}" wx:key="id" wx:for-item="c">
       <view class="coll-head" hover-class="row-hover" hover-stay-time="60"

@@ -11,7 +11,7 @@
 </view>
 
 <view class="card">
-  <view class="card-title bar">权限对比</view>
+  <view class="card-title">权限对比</view>
 
   <view class="tier-table">
     <view class="tier-line tier-head">
