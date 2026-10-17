@@ -68,6 +68,7 @@ Page({
     paras: [],
     tokens: [],
     blocks: [],
+    blocksOn: false,
     tableView: false,
     translation: "",
     translationSource: "",
@@ -329,10 +330,10 @@ Page({
     tabPage.mine();
   },
 
-  relayout(pinyinOn) {
+  relayout() {
     const laid = corpus.layout(this.data.rawText, {
       size: this.data.fontSize,
-      pinyin: pinyinOn
+      pinyin: this.data.pinyinOn
     });
     this.setData({ paras: laid.paras });
   },
@@ -363,15 +364,16 @@ Page({
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
     const mode = usable ? store.settings().pinyin : "off";
+    const tableBlocks = usable && this.data.tableView;
 
-    if (this.data.tableView) {
-      this.setData({ pinyinOn: false, pinyinMode: mode, tokens: [], blocks: this.renderBlocks() });
-      return;
-    }
-
-    if (this.data.rawText) this.relayout(usable);
-    const tokens = pinyin.render(this.data.paras, usable ? mode : "off");
-    this.setData({ pinyinOn: usable, pinyinMode: mode, tokens });
+    this.setData({
+      pinyinOn: usable,
+      pinyinMode: mode,
+      blocksOn: tableBlocks,
+      blocks: tableBlocks ? this.renderBlocks() : []
+    });
+    if (this.data.rawText) this.relayout();
+    if (!tableBlocks) this.setData({ tokens: pinyin.render(this.data.paras, mode) });
   },
 
   findMeta(id) {
