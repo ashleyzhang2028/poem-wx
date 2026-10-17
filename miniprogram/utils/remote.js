@@ -212,6 +212,7 @@ function httpError(statusCode, data) {
   const err = new Error(say || plainStatusError(statusCode));
   err.statusCode = statusCode;
   err.code = body.code || body.error || "";
+  err.retryAfter = Number(body.retryAfter) || 0;
   return err;
 }
 
@@ -348,11 +349,22 @@ function pull() {
   });
 }
 
+function failure(err) {
+  const e = err || {};
+  return {
+    sim: false,
+    error: e.message || "同步失败",
+    statusCode: Number(e.statusCode) || 0,
+    code: e.code || "",
+    retryAfter: Number(e.retryAfter) || 0
+  };
+}
+
 function sync() {
   if (!configured()) return Promise.resolve({ sim: true, pulled: 0, pushed: 0 });
   return pull()
     .then((a) => push().then((b) => ({ sim: false, pulled: a.applied, pushed: b.pushed })))
-    .catch((err) => ({ sim: false, error: err.message }));
+    ["catch"]((err) => failure(err));
 }
 
 function adminReady() {

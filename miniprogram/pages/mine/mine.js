@@ -159,9 +159,13 @@ Page({
   },
 
   syncSub(sy) {
-    if (sy.ready) return sy.lastText + " · " + sy.pendingStatus;
-    if (!sy.ready && auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
-    return "同步通道未开 · 进度只在这台手机";
+    if (!sy.ready) {
+      if (auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
+      return "同步通道未开 · 进度只在这台手机";
+    }
+    if (sy.later) return sy.lastText + " · " + sy.pendingText;
+    if (sy.failed) return sy.failedText + " 没同步上 · " + sy.pendingText;
+    return sy.lastText + " · " + sy.pendingStatus;
   },
 
   onSync() {
@@ -173,9 +177,10 @@ Page({
     sync.now(true).then((res) => {
       wx.hideLoading();
       let title = "已同步";
-      if (res.error) title = "同步失败：" + res.error;
+      if (res.error) title = sync.state().later ? "同步太频繁，等一会儿再试" : "同步失败：" + res.error;
       else if (res.skipped === "offline") title = "同步通道未开 · 进度只在这台手机";
       else if (res.skipped === "throttled") title = "刚同步过，过会儿再来";
+      else if (res.skipped === "waiting") title = "上次没同步上，" + res.retryAfter + " 秒后自动再试";
       wx.showToast({ title, icon: "none" });
       this.refresh();
     });
