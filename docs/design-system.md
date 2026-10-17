@@ -276,17 +276,15 @@
 这条是**内容需求**（诗词要像诗词），不是装饰，所以它从上一版留了下来。
 
 ```css
---font-poem:      "Kuibu Serif", "Songti SC", …, serif;        /* 题名 · 身份行 */
---font-poem-text: "Kuibu Serif Text", "Songti SC", …, serif;   /* 诗句正文 */
---font-ui:        -apple-system, "PingFang SC", …;
---font-num:       -apple-system, "SF Pro Display", …;   /* 数字 */
+--font-poem: "Kuibu Serif", "Songti SC", …, serif;             /* 全部诗词文本 */
+--font-ui:   -apple-system, "PingFang SC", …;
+--font-num:  -apple-system, "SF Pro Display", …;   /* 数字 */
 ```
 
-两条链排同一串系统名，差别只在首位那个外挂名。**题名、身份行与诗句正文
+诗词文本只有这一条链：详情页的题名、身份行、诗句正文与列表里的书名、词牌、
+摘句同取它，详情页不另开字体。**题名、身份行与诗句正文
 一律常规字重**（`font-weight: 400`）—— 详情页标题、身份行、正文都用常规，
-重点由字号与留白给，不由字重给。外挂那份源字体只有半粗（SemiBold）一个源，
-所以正文那条注册时带 `desc.weight = "normal"`，否则长段诗句会连字重一起
-继承成半粗（自检 V12 钉着这一条）。
+重点由字号与留白给，不由字重给。
 
 「先系统、后外挂」的两层策略没变，做法见 [`architecture.md`](architecture.md) § 六。
 

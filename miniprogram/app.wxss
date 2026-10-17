@@ -1420,7 +1420,7 @@ view, text, button, input, textarea {
 
 .poem-body {
   padding: 0 var(--sp-1) var(--sp-2);
-  font-family: var(--font-poem-text);
+  font-family: var(--font-poem);
 }
 
 .poem-body.align-center {

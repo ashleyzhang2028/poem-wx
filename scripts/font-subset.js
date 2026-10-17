@@ -62,12 +62,10 @@ function main() {
     return;
   }
 
-  const titleKb = subset(src, chars.head, path.join(OUT_DIR, "kuibu-title-serif.woff2"));
-  const textKb = subset(src, chars.text, path.join(OUT_DIR, "kuibu-text-serif.woff2"));
+  const kb = subset(src, chars.head + chars.text, path.join(OUT_DIR, "kuibu-serif.woff2"));
 
-  console.log("题名宋体子集：" + chars.head.length + " 字 → kuibu-title-serif.woff2（" + titleKb.toFixed(0) + "KB）");
-  console.log("正文宋体子集：" + chars.text.length + " 字 → kuibu-text-serif.woff2（" + textKb.toFixed(0) + "KB）");
-  console.log("两个文件都要传；地址填进 auth.fontUrl / auth.fontTextUrl，见 utils/font.js");
+  console.log("诗词宋体子集：" + (chars.head + chars.text).length + " 字 → kuibu-serif.woff2（" + kb.toFixed(0) + "KB）");
+  console.log("地址填进 auth.fontUrl，见 utils/font.js");
 }
 
 main();
