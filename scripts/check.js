@@ -1240,6 +1240,15 @@ const sampleId = allEntries[0].id;
 const freshId = corpus.course()[0].id;
 ok("indexById 能命中条目", corpus.indexById(sampleId) && corpus.indexById(sampleId).t === allEntries[0].t);
 ok("indexById 找不到时回 null", corpus.indexById("不存在的-id") === null);
+
+const foreignMiss = allEntries.filter((p) => !corpus.indexById(p.id));
+ok("每条索引都查得回自己（集子 id 比条目 id 长的两部外国集子也要认）",
+  foreignMiss.length === 0,
+  "查不回的还有 " + foreignMiss.length + " 条：" + foreignMiss.slice(0, 3).map((p) => p.id).join("、"));
+const foreignOwner = corpus.indexById("dwang-em-w-03");
+ok("外国集子的条目落在自己那一部集子上",
+  !!foreignOwner && foreignOwner.b === "dwang-waiguo",
+  "实际 " + (foreignOwner ? foreignOwner.b : "查不到"));
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
 ok("全站搜索能跨集子", corpus.search("李白", { limit: 5 }).items.length === 5);
 
@@ -1754,7 +1763,8 @@ function dirSize(dir, skipPrefix) {
   return total;
 }
 
-const mainPkg = dirSize(ROOT, path.join(ROOT, "data", "texts"));
+const subRoots = (app.subPackages || []).map((sp) => path.join(ROOT, sp.root));
+const mainPkg = subRoots.reduce((sum, dir) => sum - dirSize(dir), dirSize(ROOT, path.join(ROOT, "data", "texts")));
 ok(
   "主包在 2MB 内（" + (mainPkg / 1024 / 1024).toFixed(2) + "MB）",
   mainPkg <= LIMIT_MAIN,

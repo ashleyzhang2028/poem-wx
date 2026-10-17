@@ -478,12 +478,23 @@ function entries(ids) {
 
 function indexById(id) {
   const owner = ownerOf(id);
-  if (!owner) return null;
-  const full = ofBook(owner);
-  for (let i = 0; i < full.length; i++) {
-    if (full[i].id === id) return full[i];
+  const hit = owner ? pick(ofBook(owner), id) : null;
+  return hit || pick(ofBook(holderOf(id)), id);
+}
+
+function pick(rows, id) {
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].id === id) return rows[i];
   }
   return null;
+}
+
+function holderOf(id) {
+  const all = books();
+  for (let i = 0; i < all.length; i++) {
+    if (pick(ofBook(all[i].id), id)) return all[i].id;
+  }
+  return "";
 }
 
 function ownerOf(id) {
