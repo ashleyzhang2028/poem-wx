@@ -471,7 +471,7 @@ button, textarea {
   display: flex;
   align-items: center;
   background: var(--sink);
-  border: 1rpx solid transparent;
+  border: 1rpx solid var(--line-strong);
   border-radius: var(--radius-pill);
   padding: 0 var(--sp-4);
   height: var(--h-field);
@@ -962,7 +962,7 @@ button, textarea {
   flex: 1;
   gap: 8rpx;
   padding: 0 var(--sp-2);
-  height: 60rpx;
+  min-height: var(--h-opt);
   border-radius: var(--radius-pill);
   transition: background-color var(--t-press), color var(--t-press);
 }
@@ -988,14 +988,12 @@ button, textarea {
 }
 
 .seg-text {
+  font-family: var(--font-ui);
   font-size: var(--fs-hint);
+  font-weight: 400;
   color: var(--ink);
   letter-spacing: 1rpx;
   white-space: nowrap;
-}
-
-.seg-item.on .seg-text {
-  letter-spacing: 1rpx;
 }
 
 .chip-group {
@@ -1065,7 +1063,9 @@ button, textarea {
 }
 
 .chip-t {
+  font-family: var(--font-ui);
   font-size: var(--fs-hint);
+  font-weight: 400;
   color: var(--ink);
   line-height: 1.3;
   text-align: center;
@@ -1080,14 +1080,12 @@ button, textarea {
 }
 
 .chip.multi {
-
   padding-left: var(--pad-opt-x);
   padding-right: var(--pad-opt-x);
 }
 
-.seg-item.mini {
-  height: 48rpx;
-  padding: 0 16rpx;
+.chip.compact {
+  min-height: var(--h-opt-compact);
 }
 
 .seg + .field-label,
