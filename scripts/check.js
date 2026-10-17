@@ -6749,6 +6749,19 @@ function gapped(items, max) {
   ok("表格块有独立的渲染路径（不注音、可横向滚动）",
     /md-table/.test(readerWxml4) && /scroll-x/.test(readerWxml4) && /tableView/.test(readerSrc4));
 
+  const wideCases = ["changshi-cs-218", "changshi-cs-221", "mingren-mr-w-93"];
+  const wideOk = wideCases.filter(function (id) {
+    const entry = corpus.entry(id);
+    const t = entry && entry.text ? tableMod.parseText(entry.text) : null;
+    if (!t || !t.blocks.length) return false;
+    return t.blocks.every(function (b) {
+      return b.rows.every(function (r) { return r.cells.length === b.widths.length; });
+    });
+  });
+  ok("正文行比框线宽（补空格没补齐 / 一格塞了两格）时，多出来的字并进末格，不另起一格",
+    wideOk.length === wideCases.length,
+    "逐格数对不上的还有：" + wideCases.filter(function (id) { return wideOk.indexOf(id) < 0; }).join("、"));
+
   ok("自选集子落在设置分包里（不占主包）",
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
       && sp.pages.indexOf("collections/collections") >= 0));
