@@ -97,7 +97,6 @@
   border-color: var(--strong);
   background: var(--strong-soft);
   color: var(--strong-text);
-  font-weight: 600;
 }
 
 .option.wrong {
@@ -115,7 +114,6 @@
 .score {
   font-family: var(--font-num);
   font-size: var(--fs-score);
-  font-weight: 600;
   color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;

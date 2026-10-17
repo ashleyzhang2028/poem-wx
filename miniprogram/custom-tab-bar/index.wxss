@@ -36,7 +36,6 @@
 }
 
 .tab.on .tab-text {
-  font-weight: 600;
 }
 
 .tab-ico {

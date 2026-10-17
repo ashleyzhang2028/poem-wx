@@ -28,7 +28,7 @@ view, text, button, input, textarea {
 .head-title {
   display: block;
   font-size: var(--fs-head);
-  font-weight: 700;
+  font-weight: 400;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
@@ -161,7 +161,6 @@ view, text, button, input, textarea {
   border: 1rpx solid var(--line-strong);
   color: var(--ink);
   font-size: var(--fs-title);
-  font-weight: 500;
   line-height: 1.2;
   letter-spacing: var(--ls-title);
   text-align: center;
@@ -176,7 +175,6 @@ view, text, button, input, textarea {
   background: var(--strong);
   border-color: var(--strong);
   color: var(--on-ink);
-  font-weight: 600;
 }
 
 .btn.primary.button-hover {
@@ -347,6 +345,22 @@ view, text, button, input, textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.row-star {
+  flex: none;
+  padding: 0 var(--sp-1);
+  font-size: 34rpx;
+  line-height: 1;
+  color: var(--ink-4);
+}
+
+.row-star.on {
+  color: var(--strong-text);
+}
+
+.row-star-hover {
+  opacity: .7;
 }
 
 .row-go {
@@ -621,7 +635,6 @@ view, text, button, input, textarea {
 
 .opt-row.active .opt-name {
   color: var(--on-ink);
-  font-weight: 600;
 }
 
 .opt-row.active .opt-desc {
@@ -771,7 +784,6 @@ view, text, button, input, textarea {
   align-items: center;
   justify-content: center;
   font-family: var(--font-num);
-  font-weight: 600;
   font-size: var(--fs-caption);
   color: var(--strong-text);
   z-index: 1;
@@ -813,7 +825,6 @@ view, text, button, input, textarea {
 .lock-title {
   display: block;
   font-size: var(--fs-lead);
-  font-weight: 700;
   color: var(--ink);
   font-family: var(--font-poem);
   letter-spacing: var(--ls-title);
@@ -948,7 +959,6 @@ view, text, button, input, textarea {
 
 .seg-item.on .seg-text {
   color: var(--on-ink);
-  font-weight: 600;
 }
 
 .seg-item.on .seg-icon {
@@ -1049,7 +1059,6 @@ view, text, button, input, textarea {
 
 .chip.on .chip-t {
   color: var(--on-ink);
-  font-weight: 600;
 }
 
 .chip.multi {

@@ -94,7 +94,6 @@
   background: var(--strong);
   border-color: var(--strong);
   color: var(--on-ink);
-  font-weight: 600;
 }
 
 .option.picked .option-k {
@@ -105,7 +104,6 @@
   border-color: var(--strong);
   background: var(--strong-soft);
   color: var(--strong-text);
-  font-weight: 600;
 }
 
 .option.right .option-k,
@@ -129,7 +127,6 @@
 .score {
   font-family: var(--font-num);
   font-size: var(--fs-score);
-  font-weight: 600;
   color: var(--strong-text);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -179,7 +176,6 @@
   align-items: center;
   justify-content: center;
   font-size: var(--fs-hint);
-  font-weight: 600;
   line-height: 1;
 }
 
