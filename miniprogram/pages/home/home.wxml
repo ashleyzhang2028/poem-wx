@@ -10,19 +10,9 @@
 
   <block wx:if="{{guest}}">
     <view class="card hero hero-lead">
-      <view class="hero-head">
-        <view class="hero-left">
-          <text class="hero-eyebrow">今日</text>
-          <text class="hero-title">{{gradeName}}</text>
-          <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
-        </view>
-        <view class="seal"><text class="seal-t">跬</text></view>
-      </view>
-      <button class="btn primary block hero-btn" bindtap="onLogin">登录</button>
-    </view>
-
-    <view class="guest-bar" hover-class="guest-bar-hover" hover-stay-time="60" bindtap="onLogin">
-      <text class="guest-title">游客模式</text>
+      <text class="hero-eyebrow">今日</text>
+      <text class="hero-title">{{gradeName}}</text>
+      <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
     </view>
 
     <view class="card">
@@ -31,7 +21,7 @@
       </view>
 
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+            wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onGuestOpen">
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>

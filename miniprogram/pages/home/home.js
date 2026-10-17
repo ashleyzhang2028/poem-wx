@@ -5,9 +5,9 @@ const cols = require("../../utils/collections");
 const entitlement = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
+const loginFlow = require("../../utils/login-flow");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const tabPage = require("../../utils/tab-page");
 const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
 
@@ -411,6 +411,10 @@ Page({
     return rowsOfScope(scopeList(corpus.course(), view, scope), scope);
   },
 
+  onGuestOpen() {
+    gate.guard("诗词");
+  },
+
   onOpen(e) {
     this.openSheet(e.currentTarget.dataset.id, "plan");
   },
@@ -479,10 +483,6 @@ Page({
   onSettings() {
     if (!gate.guard("背诵设置")) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
-  },
-
-  onLogin() {
-    tabPage.mine();
   },
 
   onPullDownRefresh() {

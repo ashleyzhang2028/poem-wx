@@ -1,7 +1,6 @@
 const store = require("./store");
 const auth = require("./auth");
-const tabPage = require("./tab-page");
-const tabbar = require("./tabbar");
+const loginFlow = require("./login-flow");
 
 const GUEST_GRADE = 1;
 
@@ -30,7 +29,7 @@ function refuse(what) {
   return {
     ok: false,
     title: "登录后可用",
-    content: "「" + what + "」要微信登录之后才能用。\n\n登录只为两件事：跨设备带走进度、让管理员知道把档位发给谁。不登录也能看首页目录。"
+    content: "「" + what + "」要微信登录之后才能用。"
   };
 }
 
@@ -43,12 +42,11 @@ function guard(what, onPass) {
   wx.showModal({
     title: r.title,
     content: r.content,
-    confirmText: "去登录",
-    cancelText: "先看看",
+    confirmText: "登录",
+    cancelText: "取消",
     success: (res) => {
       if (!res.confirm) return;
-      if (tabbar.exists()) tabPage.mine();
-      else wx.navigateBack({ fail: () => tabPage.mine() });
+      loginFlow.run().catch(() => {});
     }
   });
   return false;
