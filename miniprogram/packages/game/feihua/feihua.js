@@ -4,6 +4,7 @@ const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const ANSWER_LIMIT = 80;
@@ -14,6 +15,7 @@ Page({
     levels: feihua.LEVELS,
     level: "normal",
 
+    barBelow: true,
     char: "",
 
     done: [],
@@ -38,6 +40,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: !tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
     this.setData({
       allowed: ok,

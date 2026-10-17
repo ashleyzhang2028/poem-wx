@@ -239,7 +239,7 @@ function tabBarItems() {
 
 function tabBarHtml(active, themeStyle) {
   const barWxml = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxml"), "utf8");
-  const data = { active: active - 1, list: tabBarItems(), themeStyle: themeStyle || "" };
+  const data = { active: active - 1, list: tabBarItems(), themeStyle: themeStyle || "", pageHere: true };
   return compile(barWxml, data);
 }
 function themeStyleOf(data) {

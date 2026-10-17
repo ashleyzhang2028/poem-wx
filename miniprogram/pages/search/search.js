@@ -42,7 +42,9 @@ Page({
   onShow() {
     theme.apply(this);
 
-    this.setData({ barBelow: !tabbar.sync(this, 3) });
+    const bar = tabbar.sync(this, 3);
+    this.setData({ barBelow: !bar });
+    if (bar) tabbar.show(this);
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });

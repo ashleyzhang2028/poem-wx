@@ -11,6 +11,7 @@
   background: rgba(255, 255, 255, .94);
 
   border-top: 1rpx solid #ececef;
+  transition: transform .16s ease, opacity .16s ease;
 }
 
 .tab {
@@ -63,4 +64,10 @@
 
 .tab.on .tab-ico {
   background: var(--strong-soft);
+}
+
+.tabbar.bar-away {
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
 }

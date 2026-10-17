@@ -8,6 +8,7 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
+const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
 
 const RESULTS = [
@@ -106,6 +107,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    tabbar.hide(this);
     if (!this.data.reciteMode) {
       this.setData({ hint: "" });
     }
@@ -415,6 +417,7 @@ Page({
   },
 
   onUnload() {
+    tabbar.show(this);
     if (this.advance) clearTimeout(this.advance);
     this.attempt = (this.attempt || 0) + 1;
   },

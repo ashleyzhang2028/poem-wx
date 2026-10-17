@@ -210,7 +210,8 @@
     "page": "packages/game/index/index",
     "title": "古诗词大会",
     "back": true,
-    "logged": true
+    "logged": true,
+    "tab": 3
   },
   "game-feihua": {
     "page": "packages/game/feihua/feihua",

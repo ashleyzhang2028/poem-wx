@@ -1,4 +1,4 @@
-<view class="page" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="大会要登录" note="登录后才能进" mark="会" />
 
   <block wx:else>
