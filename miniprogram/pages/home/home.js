@@ -8,12 +8,39 @@ const gate = require("../../utils/gate");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
+const nav = require("../../utils/nav");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
 const SOURCE_TEXT = { course: "课内", own: "自选" };
+
+const HERO_RATIO = 916 / 1717;
+
+function windowWidth() {
+  const read = (fn) => {
+    try {
+      return Number(fn().windowWidth) || 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+  return (wx.getWindowInfo && read(wx.getWindowInfo))
+    || read(wx.getSystemInfoSync)
+    || 375;
+}
+
+function bannerBox() {
+  const box = nav.top();
+  return {
+    statusBarHeight: box.statusBarHeight,
+    navHeight: box.navHeight,
+    navBottom: box.navBottom,
+    bannerHeight: box.statusBarHeight + box.navHeight
+      + Math.round(windowWidth() * HERO_RATIO)
+  };
+}
 
 function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
@@ -113,6 +140,11 @@ Page({
     themeStyle: "",
     barBelow: true,
 
+    statusBarHeight: 0,
+    navHeight: 0,
+    navBottom: 0,
+    bannerHeight: 0,
+
     logged: false,
     guest: false,
     gradeName: "",
@@ -147,6 +179,10 @@ Page({
     extraKeyword: "",
 
     loading: true
+  },
+
+  onLoad() {
+    this.setData(bannerBox());
   },
 
   onShow() {
