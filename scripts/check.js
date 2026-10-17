@@ -6730,6 +6730,25 @@ function gapped(items, max) {
   const searchSrc4 = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
   ok("列表与搜索结果行上都能收诗", /onPick\(/.test(listSrc4) && /onPick\(/.test(searchSrc4));
 
+  const tableMod = require(path.join(ROOT, "utils", "table.js"));
+  const readerWxml4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+  const tableCases = ["changshi-cs-218", "dwang-em-c-legend-06", "mingren-mr-c-06", "mingshu-ms-230"];
+  const parsed = tableCases.filter(function (id) {
+    const entry = corpus.entry(id);
+    if (!entry || !entry.text) return false;
+    const t = tableMod.parseText(entry.text);
+    if (!t || t.parts.length < 2 || !t.blocks.length) return false;
+    return t.blocks.every(function (b) {
+      return b.widths.length >= 2
+        && b.rows.every(function (r) { return r.cells.every(function (c) { return c.text.length > 0; }); })
+        && !JSON.stringify(b).match(/[│┌├└┬┼┴┐┤┘─]/);
+    });
+  });
+  ok("详情页把语料里的框线表格解析成行列（文学常识 / 帝王 / 名家 / 名著导读各一条）",
+    parsed.length === tableCases.length);
+  ok("表格块有独立的渲染路径（不注音、可横向滚动）",
+    /md-table/.test(readerWxml4) && /scroll-x/.test(readerWxml4) && /tableView/.test(readerSrc4));
+
   ok("自选集子落在设置分包里（不占主包）",
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
       && sp.pages.indexOf("collections/collections") >= 0));

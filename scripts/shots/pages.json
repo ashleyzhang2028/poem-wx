@@ -56,8 +56,17 @@
     "tab": 4,
     "logged": true,
     "do": [
-      { "call": "onInput", "with": { "detail": { "value": "李白" } } },
-      { "call": "doSearch" }
+      {
+        "call": "onInput",
+        "with": {
+          "detail": {
+            "value": "李白"
+          }
+        }
+      },
+      {
+        "call": "doSearch"
+      }
     ]
   },
   "mine-guest": {
@@ -108,9 +117,25 @@
     "title": "跬步",
     "tab": 1,
     "logged": true,
-    "settings": { "selfOnly": true },
+    "settings": {
+      "selfOnly": true
+    },
     "collections": [
-      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }, { "id": "poems-xx1-05" }] }
+      {
+        "id": "c1",
+        "name": "唐诗三百",
+        "items": [
+          {
+            "id": "poems-xx1-01"
+          },
+          {
+            "id": "poems-xx1-03"
+          },
+          {
+            "id": "poems-xx1-05"
+          }
+        ]
+      }
     ],
     "_note": "开着「只背自选」的首页：只剩自选集子，课内「全部诗词」那张卡与排期都收起"
   },
@@ -120,8 +145,33 @@
     "tab": 1,
     "logged": true,
     "collections": [
-      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }, { "id": "classic-gw-1" }] },
-      { "id": "c2", "name": "宋词选", "items": [{ "id": "songci-sc-1" }, { "id": "songci-sc-2" }] }
+      {
+        "id": "c1",
+        "name": "唐诗三百",
+        "items": [
+          {
+            "id": "poems-xx1-01"
+          },
+          {
+            "id": "poems-xx1-03"
+          },
+          {
+            "id": "classic-gw-1"
+          }
+        ]
+      },
+      {
+        "id": "c2",
+        "name": "宋词选",
+        "items": [
+          {
+            "id": "songci-sc-1"
+          },
+          {
+            "id": "songci-sc-2"
+          }
+        ]
+      }
     ],
     "_note": "首页的自选集子：每个集子一张卡，标题「集合名 · 自选」，篇目平铺，篇名后挂状态与出身两枚胶囊"
   },
@@ -146,7 +196,18 @@
     "back": true,
     "logged": true,
     "collections": [
-      { "id": "c1", "name": "唐诗三百", "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }] }
+      {
+        "id": "c1",
+        "name": "唐诗三百",
+        "items": [
+          {
+            "id": "poems-xx1-01"
+          },
+          {
+            "id": "poems-xx1-03"
+          }
+        ]
+      }
     ],
     "_note": "「只背自选」那一开关：集子里有篇目才亮"
   },
@@ -156,7 +217,19 @@
     "back": true,
     "logged": true,
     "collections": [
-      { "id": "c1", "name": "唐诗三百", "dailyCount": 5, "items": [{ "id": "poems-xx1-01" }, { "id": "poems-xx1-03" }] }
+      {
+        "id": "c1",
+        "name": "唐诗三百",
+        "dailyCount": 5,
+        "items": [
+          {
+            "id": "poems-xx1-01"
+          },
+          {
+            "id": "poems-xx1-03"
+          }
+        ]
+      }
     ],
     "_note": "自选背诵的管理页：配额、我的集合、删除 / 清空 / 加篇目"
   },
@@ -437,7 +510,7 @@
         }
       }
     ]
-          },
+  },
   "home-ink": {
     "page": "pages/home/home",
     "title": "跬步",
@@ -546,7 +619,9 @@
         }
       }
     ],
-    "dailyExtra": ["poems-xx1-05"]
+    "dailyExtra": [
+      "poems-xx1-05"
+    ]
   },
   "home-extra-limited": {
     "page": "pages/home/home",
@@ -563,7 +638,10 @@
         }
       }
     ],
-    "dailyExtra": ["poems-xx1-05", "poems-xx3-16"],
+    "dailyExtra": [
+      "poems-xx1-05",
+      "poems-xx3-16"
+    ],
     "_note": "今日加背搜到人、卡里已有两首：读数那一行现在的左边距跟着搜索行走，不再留卡片的内衬"
   },
   "home-all": {
@@ -571,8 +649,17 @@
     "title": "跬步",
     "tab": 1,
     "logged": true,
-    "settings": { "grade": 7, "term": 1, "scope": "term" },
-    "do": [{ "call": "onToggleAll", "with": {} }]
+    "settings": {
+      "grade": 7,
+      "term": 1,
+      "scope": "term"
+    },
+    "do": [
+      {
+        "call": "onToggleAll",
+        "with": {}
+      }
+    ]
   },
   "settings-recite-daily": {
     "page": "packages/settings/recite/recite",
@@ -585,7 +672,11 @@
         "with": {}
       }
     ],
-    "dailyExtra": ["poems-xx1-01", "poems-cz7-01", "poems-xx1-03"]
+    "dailyExtra": [
+      "poems-xx1-01",
+      "poems-cz7-01",
+      "poems-xx1-03"
+    ]
   },
   "mine-avatar-local": {
     "page": "pages/mine/mine",
@@ -593,7 +684,11 @@
     "tab": 5,
     "logged": true,
     "_note": "自己传过头像的「我的」：副题右边那枚「用微信头像」是退回微信那张的唯一入口。见 check.js V38",
-    "saveProfile": { "logged": true, "nickname": "张敏", "avatarLocal": "wxfile://demo.jpg" }
+    "saveProfile": {
+      "logged": true,
+      "nickname": "张敏",
+      "avatarLocal": "wxfile://demo.jpg"
+    }
   },
   "authors-roster": {
     "page": "packages/authors/index/index",
@@ -607,7 +702,38 @@
     "title": "作者索引",
     "back": true,
     "logged": true,
-    "do": [{ "call": "onAuthor", "with": { "currentTarget": { "dataset": { "name": "李白" } } } }],
+    "do": [
+      {
+        "call": "onAuthor",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "name": "李白"
+            }
+          }
+        }
+      }
+    ],
     "_note": "作者索引②层：李白名下 60 条。点进去的那一位由 do 调 onAuthor 摆好"
+  },
+  "reader-table-changshi": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "changshi-cs-218"
+    },
+    "_note": "文学常识里「历代年号举要」那张框线表格：三列，年号一列最长，验证表格的列宽分配与单元格折行"
+  },
+  "reader-table-mingren": {
+    "page": "pages/reader/reader",
+    "title": "详情",
+    "back": true,
+    "logged": true,
+    "query": {
+      "id": "mingren-mr-c-06"
+    },
+    "_note": "名家「中国」里的《师旷》：左窄右宽的两列表，右列是长传记（见 check.js 表格解析那两条）"
   }
 }
