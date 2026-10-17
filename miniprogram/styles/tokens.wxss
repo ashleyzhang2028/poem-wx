@@ -120,7 +120,7 @@ page {
   --h-field: calc(84rpx * var(--ui-scale));
 
   --h-opt: calc(76rpx * var(--ui-scale));
-  --h-opt-seg: calc(56rpx * var(--ui-scale));
+  --h-opt-compact: calc(61rpx * var(--ui-scale));
 
   --w-switch: calc(88rpx * var(--ui-scale));
   --h-switch: calc(54rpx * var(--ui-scale));

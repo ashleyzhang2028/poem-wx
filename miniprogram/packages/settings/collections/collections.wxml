@@ -38,8 +38,8 @@
 
       <view class="coll-count" wx:if="{{c.open}}">
         <text class="hint coll-count-lead">每天从这个集合排几首</text>
-        <radio-group class="chip-group cols-4" data-id="{{c.id}}" bindchange="onCount">
-          <label class="chip {{c.dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this" wx:for-item="item">
+        <radio-group class="chip-group compact cols-4" data-id="{{c.id}}" bindchange="onCount">
+          <label class="chip compact {{c.dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this" wx:for-item="item">
             <radio class="seg-radio" value="{{item}}" checked="{{c.dailyCount === item}}" />
             <text class="chip-t">{{item}} 首</text>
           </label>

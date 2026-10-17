@@ -50,15 +50,10 @@
   margin-bottom: var(--sp-2);
 }
 
-.extra-search .search {
-  height: var(--h-btn-mini);
-  border-radius: var(--radius);
-}
-
 .hero-title {
   display: block;
   font-family: var(--font-poem);
-  font-weight: 700;
+  font-weight: 400;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);

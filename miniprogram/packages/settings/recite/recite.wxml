@@ -76,8 +76,8 @@
   <view class="card">
     <view class="card-title bar">每日首数</view>
 
-    <radio-group class="chip-group cols-4" bindchange="onCount">
-      <label class="chip {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
+    <radio-group class="chip-group compact cols-4" bindchange="onCount">
+      <label class="chip compact {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
         <radio class="seg-radio" value="{{item}}" checked="{{dailyCount === item}}" />
         <text class="chip-t">{{item}} 首</text>
       </label>
