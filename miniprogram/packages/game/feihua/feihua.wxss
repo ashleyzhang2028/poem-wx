@@ -42,8 +42,7 @@
 .fh-actions .btn {
   flex: 1;
   min-width: 0;
-  padding: 0 var(--sp-2);
-  font-size: var(--fs-body);
+  padding: 0 var(--sp-1);
 }
 
 .fh-msg {
