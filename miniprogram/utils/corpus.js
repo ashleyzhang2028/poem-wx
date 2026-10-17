@@ -288,6 +288,7 @@ function rowOf(dict, raw, bookId) {
   p.sel = field(dict, "sel", p.sel);
   p.aka = p.aka || null;
   p.an = p.an || "";
+  p.a = p.a || p.an;
   p.b = bookId;
   p.hasT = true;
   return p;

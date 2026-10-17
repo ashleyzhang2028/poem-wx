@@ -180,11 +180,18 @@ function labelTable(rows) {
   });
 }
 
+function widthFor(widths) {
+  const total = widths.reduce(function (a, b) { return a + b; }, 0);
+  return Math.max(total, MIN_TABLE);
+}
+
 function layoutRows(built) {
   const widths = fitWidths(built.widths);
   const wide = widths.length === 2 && widths[1] > LABEL_MAX;
   const rows = wide ? labelTable(built.rows) : built.rows;
-  const colWidths = wide ? [Math.min(widths[0], LABEL_MAX), LABEL_WIDTH] : widths;
+  const colWidths = wide
+    ? [Math.min(widths[0], LABEL_MAX), widthFor(widths) - Math.min(widths[0], LABEL_MAX)]
+    : widths;
   return {
     widths: colWidths,
     rows: rows.map(function (r) {

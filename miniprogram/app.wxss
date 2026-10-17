@@ -1475,6 +1475,10 @@ button, textarea {
   align-items: stretch;
 }
 
+.md-row:last-child .md-cell {
+  flex: 1;
+}
+
 .md-cell {
   flex: none;
   box-sizing: border-box;

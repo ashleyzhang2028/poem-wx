@@ -225,7 +225,7 @@ function packBooks(byBook, shards) {
       return [
         p.id,
         p.t,
-        p.a && p.a !== p.t ? p.a : null,
+        p.a || p.an || null,
         put("d", p.d),
         at[p.id] === undefined ? -1 : at[p.id],
         put("s", p.s),
