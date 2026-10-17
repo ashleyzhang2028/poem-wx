@@ -167,20 +167,23 @@ ok(
 );
 
 const bookFiles = fs.readdirSync(path.join(dataDir, "books"));
-booksTable.forEach((b) => {
-  ok("集子索引存在 " + b.id, bookFiles.indexOf(b.id + ".js") >= 0);
+const bookPack = readModule(path.join(dataDir, "books", "index.js"));
+ok("集子索引落在一份合表里（books/index.js）",
+  Object.keys(bookPack.books).length === booksTable.length
+    && Object.keys(bookPack.rows).length === booksTable.length,
+  "合表里的集子数与 books.js 对不上");
 
+booksTable.forEach((b) => {
   ok("集子索引归属正确 " + b.id,
-    perBook[b.id].every((p) => p.b === b.id && p.n === b.name),
+    perBook[b.id].length === bookPack.books[b.id]
+      && perBook[b.id].every((p) => p.b === b.id && p.n === b.name),
     "b / n 与实际集子对不上");
 });
 
 {
-  const compact = readModule(path.join(dataDir, "books", "tangshi.js"));
-  const heavy = compact.filter((p) => p.b !== undefined || p.n !== undefined
-    || p.hasT !== undefined || p.aka === null || p.sel === "" || p.gr === 0);
-  ok("索引落盘是紧凑的（不带 b / n / hasT，也不带空字段）", heavy.length === 0,
-    heavy.length + " 条还带着冗余字段 —— 主包又要顶穿 2MB（见 scripts/build-data.js）");
+  const wide = bookPack.rows.tangshi.filter((r) => r.length !== 12);
+  ok("索引落盘只存列（无名、不存正文）", wide.length === 0,
+    wide.length + " 行形状不对 —— 薄索引把字段名与集子名都省了（见 scripts/build-data.js）");
 }
 
 const courseTexts = readModule(path.join(dataDir, "course.js"));
@@ -219,6 +222,30 @@ Object.keys(manifest.map).slice(0, 60).forEach((id) => {
 ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条取不到");
 
 {
+  const misses = [];
+  let checked = 0;
+  allEntries.forEach((p) => {
+    if (manifest.map[p.id] === undefined) return;
+    if (p.at < 0) {
+      misses.push(p.id);
+      return;
+    }
+    checked += 1;
+    const ids = Object.keys(readModule(path.join(dataDir, "texts", manifest.map[p.id] + ".js")));
+    if (ids[p.at] !== p.id) misses.push(p.id);
+  });
+  ok("薄索引里的分片序号指得准（译文按它回填，共 " + checked + " 条）",
+    checked > 1000 && misses.length === 0,
+    misses.length + " 条按序号取到的是别人 —— 编译期算序号与落盘顺序不一致，" +
+    "详情页的译文会串到别的篇目上：" + JSON.stringify(misses.slice(0, 3)));
+
+  const wrong = allEntries.filter((p) => (manifest.map[p.id] === undefined) !== (p.at < 0));
+  ok("索引记的「有没有分片」与分片清单互补", wrong.length === 0,
+    wrong.length + " 条对不上：" + JSON.stringify(wrong.slice(0, 3).map((p) => p.id)) +
+    " —— 课内 251 条在 course.js、其余在分片");
+}
+
+{
   const pcfg = readJson(path.join(ROOT, "project.config.json")) || {};
   const ignored = ((pcfg.packOptions || {}).ignore || []).map((r) => String(r.value || ""));
 
@@ -231,12 +258,12 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
     "corpus 读的是 " + (manPath || "(没找到 MANIFEST 常量)") +
       " —— 它落在 ignore 名单里或不存在，真机上 bucketOf() 会回空，课外正文一律取不到");
 
-  booksTable.forEach((b) => {
-    const rel = "data/books/" + b.id + ".js";
+  {
+    const rel = "data/books/index.js";
     ok("集子索引在包里 " + rel,
       fs.existsSync(path.join(ROOT, rel)) && !ignored.some((ig) => rel.indexOf(ig) === 0),
       rel + " 被 ignore 了 —— 列表页与按题名检索会空");
-  });
+  }
 
   const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
   ok("被 ignore 的 texts/idx.json 有兜底（读不到 = 全文检索不可用，不炸）",

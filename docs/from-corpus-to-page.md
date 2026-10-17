@@ -40,7 +40,7 @@ npm run build:data
 
 | 产物 | 谁读它 | 体积 |
 |---|---|---|
-| `data/books/*.js` + `books.js` | 列表页、检索、作者索引 | 索引合计约 1 MB，**进主包** |
+| `data/books/index.js` + `books.js` | 列表页、检索、作者索引 | 索引 564 KB，**进主包** |
 | `data/course.js` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB，**进主包** |
 | `data/pinyin-table.js` | 注音 | 72 KB，**进主包** |
 | `data/shards.js` | `corpus.bucketOf(id)` —— 算出某一条在哪一片 | 137 KB，**进主包** |
@@ -102,7 +102,7 @@ npm run build:data
 在的话，读的顺序是：
 
 ```
-corpus.course()          → data/books/poems.js（课内索引，不带正文）
+corpus.course()          → data/books/index.js 里 poems 那一组（课内索引，不带正文）
 corpus.entry(id)         → data/course.js 里查这一条正文
 corpus.ensureEntry(id)   → course.js 没有再走分片（下一节）
 ```
@@ -210,7 +210,7 @@ CLOUD_ENV=… CLOUD_SERVICE=… npm run build:data
 | 看到什么 | 断在哪一段 | 下一步 |
 |---|---|---|
 | 首页目录空着，控制台「版本 xxxx · 语料 没进这个包」 | ① 之前 —— 这一版**没打进语料**（多为模块图摇树剔掉） | 合上把语料写成字面量 `require` 的那一版，重传。若三处配置没配齐也会摇掉 —— 见上一节 |
-| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/*.js …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
+| 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里一行 `ignoring files: data/books/index.js …` | ① —— 工具把语料当「无依赖文件」摇掉了（`ignoreDevUnusedFiles` 默认 true），磁盘上那份明明在 | 配置里补 `ignoreDevUnusedFiles: false` 与 `packOptions.include`（见上一节），重开项目再编译。与 `npm run build:data` 无关：构建跑过也不代表工具肯把它打进包 |
 | **首页整页空、连「课本目录」那张卡片都没有**，控制台 `Cannot find module './server'` | ① 之前 —— `server.js` 不在，`remote.js` 加载失败，页面根本没跑起来 | 把 `miniprogram/utils/server.js` 从 git 捡回来（空壳，**要入库**），重新编译。见 § 五 |
 | 控制台 `module 'data/texts/t017.json.js' is not defined`，课外正文整片取不到 | 工具（2.02.2607271 RC 实测）不把 `.json` 当模块打包，任何 `require("….json")` 都抛这句；`.js` 正常。开发者工具里读分片正是靠 `require`（`readJson`），于是每一首都落空（Issue #224） | 进包的语料产物**与分片**一律输出为 `module.exports = …` 的 `.js`（`build-data.js` 的 `writeModule`）；分片是 gzip 的 `.js.gz`，`shard-api.js` 解开、去掉最外面那层再回 JSON 报文 |
 | 首页目录空着，控制台「版本 本地打开 · 未上传 · 语料 没进这个包」，编译输出里没有 `ignoring files` | ① | `npm run build:data`，再在开发者工具里重新编译 |

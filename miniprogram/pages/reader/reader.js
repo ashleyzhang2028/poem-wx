@@ -246,7 +246,7 @@ Page({
     } catch (e) {
       hit = null;
     }
-    if (hit) {
+    if (hit && hit.text) {
       if (this.data.loadFailed) this.setData({ loadFailed: false, failText: "" });
       return this.renderEntry(id, hit, meta);
     }
@@ -307,9 +307,9 @@ Page({
       source: meta.s || meta.n,
       selection: meta.sel || "",
       aliasText: aliasTextOf(meta),
-      translation: entry.translation || "",
+      translation: entry.tr || "",
       translationSource: entry.src || "",
-      hasTranslation: !!entry.translation,
+      hasTranslation: !!entry.tr,
       align: settings.align,
       fontSize: size,
       ...fontFlags(size),

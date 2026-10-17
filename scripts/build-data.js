@@ -94,6 +94,7 @@ function main() {
       id: p.id,
       t: p.title,
       a: p.author || p.authorName || "",
+      an: p.authorName && p.authorName !== p.author ? p.authorName : "",
       d: p.dynasty || "",
       s: p.source || "",
 
@@ -121,31 +122,18 @@ function main() {
     }
   });
 
+  const shards = writeBuckets(texts);
+
   const byBook = {};
   index.forEach(function (p) {
     (byBook[p.book] = byBook[p.book] || []).push(p);
   });
 
-  Object.keys(byBook).forEach(function (b) {
-
-    const rows = byBook[b].map(function (p) {
-      const copy = {};
-      Object.keys(p).forEach(function (k) {
-
-        if (k === "book" || k === "bookName") return;
-        const v = p[k];
-        if (v === null || v === undefined || v === "" || v === 0) return;
-        copy[k] = v;
-      });
-      return copy;
-    });
-    writeModule(path.join(OUT_DIR, "books", b + ".js"), rows);
-  });
+  writeBookIndex(byBook, shards);
 
   writeModule(path.join(OUT_DIR, "books", "books.js"), books);
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
-  writeBuckets(texts);
   writePinyin(W, index, courseTexts, texts);
   writeTextIndex(courseTexts, texts, W);
   writeRoster();
@@ -203,6 +191,70 @@ function writeBuckets(texts) {
 
   const total = manifest.reduce(function (a, b) { return a + b.kb; }, 0);
   console.log("正文分片 " + manifest.length + " 个，" + total + "KB（未压缩）");
+
+  return { manifest: manifest, map: map };
+}
+
+function packBooks(byBook, shards) {
+  const dict = { d: [], g: [], sel: [], s: [] };
+  const shared = {};
+  const put = function (key, v) {
+    if (!v) return -1;
+    const at = shared[key + "\u0000" + v];
+    if (at !== undefined) return at;
+    dict[key].push(v);
+    return (shared[key + "\u0000" + v] = dict[key].length - 1);
+  };
+
+  const at = {};
+  const inBucket = {};
+  const books = {};
+  const rows = {};
+
+  Object.keys(shards.map).sort(function (a, b) {
+    return (shards.map[a] < shards.map[b] ? -1 : 1);
+  }).forEach(function (id) {
+    const name = shards.map[id];
+    inBucket[name] = (inBucket[name] || 0) + 1;
+    at[id] = inBucket[name] - 1;
+  });
+
+  Object.keys(byBook).forEach(function (b) {
+    books[b] = byBook[b].length;
+    rows[b] = byBook[b].map(function (p) {
+      return [
+        p.id,
+        p.t,
+        p.a && p.a !== p.t ? p.a : null,
+        put("d", p.d),
+        at[p.id] === undefined ? -1 : at[p.id],
+        put("s", p.s),
+        put("g", p.g),
+        put("sel", p.sel),
+        p.gr || 0,
+        p.tm || 0,
+        p.aka && p.aka.length ? p.aka : null,
+        p.an || null
+      ];
+    });
+  });
+
+  writeModule(path.join(OUT_DIR, "books", "index.js"), { dict: dict, books: books, rows: rows });
+  return Object.keys(books);
+}
+
+function writeBookIndex(byBook, shards) {
+  const books = packBooks(byBook, shards);
+  const dir = path.join(OUT_DIR, "books");
+
+  fs.readdirSync(dir).forEach(function (f) {
+    if (/^index\.js$/.test(f) || /^books\.js$/.test(f)) return;
+    fs.rmSync(path.join(dir, f));
+  });
+
+  console.log("集子索引 " + books.length + " 部，" +
+    Math.round(fs.statSync(path.join(dir, "index.js")).size / 1024) +
+    "KB（薄索引：正文与译文按分片内序号补）");
 }
 
 function writePinyin(W, index, courseTexts, texts) {
