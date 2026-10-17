@@ -12,6 +12,8 @@ const RESULTS = [
   { key: "good", label: "记住", cls: "good" }
 ];
 
+const RESULT_KEYS = RESULTS.map((it) => it.key);
+
 const FONT_MIN = -2;
 const FONT_MAX = 6;
 
@@ -110,6 +112,7 @@ Component({
 
     mastery: 0,
     hint: "",
+    last: "",
     results: RESULTS,
 
     dailyOn: false
@@ -124,7 +127,7 @@ Component({
   },
 
   detached() {
-    if (this.advance) clearTimeout(this.advance);
+    this.cancelAdvance();
   },
 
   methods: {
@@ -135,6 +138,7 @@ Component({
       const keep = this.current();
       const hit = list.findIndex((it) => it.id === id);
       const idx = hit >= 0 ? hit : (keep ? Math.max(0, list.findIndex((it) => it.id === keep.id)) : 0);
+      this.cancelAdvance();
       this.pushed = true;
       this.lastPush = idsOf(list);
       this.missingAt = 0;
@@ -145,6 +149,7 @@ Component({
 
     onClose() {
       if (this.closedAt && Date.now() - this.closedAt < REOPEN_MS) return;
+      this.cancelAdvance();
       this.closedAt = Date.now();
       this.pushed = false;
       this.setData({ open: false, showTranslation: false, hint: "" });
@@ -214,6 +219,7 @@ Component({
         ...fontFlags(fontSize),
         stage: R.stageName(rec, settings.algo),
         mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0,
+        last: "",
         index: this.data.index,
         total: this.data.queue.length,
         navText: (this.data.index + 1) + " / " + this.data.queue.length,
@@ -329,28 +335,46 @@ Component({
       this.setData({
         stage: R.stageName(rec, settings.algo),
         mastery: Math.round((R.clampLevel(rec.level) / 9) * 100),
+        last: "",
         hint: R.resultHint(settings.algo, result, rec)
       });
 
-      wx.vibrateShort({ type: "light" });
-
-      this.advance = setTimeout(() => this.goNext(), 700);
+      this.cancelAdvance();
+      this.advance = setTimeout(() => this.goNext(result), 700);
     },
 
-    goNext() {
+    cancelAdvance() {
+      if (this.advance) clearTimeout(this.advance);
+      this.advance = 0;
+    },
+
+    nextResult(r) {
+      const i = RESULT_KEYS.indexOf(r);
+      return RESULT_KEYS[i < 0 ? 0 : i + 1] || RESULT_KEYS[RESULT_KEYS.length - 1];
+    },
+
+    goNext(prev) {
       const next = this.data.index + 1;
       if (next >= this.data.queue.length) {
         this.onClose();
         this.triggerEvent("finish");
         return;
       }
-      this.setData({ index: next });
+      this.setData({ index: next, last: this.nextResult(prev) });
       this.loadCurrent();
     },
 
     onPrev() {
+      this.cancelAdvance();
       if (this.data.index <= 0) return;
-      this.setData({ index: this.data.index - 1 });
+      this.setData({ index: this.data.index - 1, last: "" });
+      this.loadCurrent();
+    },
+
+    onNext() {
+      this.cancelAdvance();
+      if (this.data.index + 1 >= this.data.queue.length) return;
+      this.setData({ index: this.data.index + 1, last: "" });
       this.loadCurrent();
     },
 

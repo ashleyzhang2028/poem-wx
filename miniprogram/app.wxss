@@ -14,7 +14,7 @@ button, textarea {
 }
 
 .page.has-tabbar {
-  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  padding-bottom: var(--pad-tab);
 }
 
 .page.has-tabbar .safe-bottom {
@@ -22,7 +22,7 @@ button, textarea {
 }
 
 .page.tall {
-  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  padding-bottom: var(--pad-tab);
 }
 
 .page-head {
@@ -746,15 +746,15 @@ button, textarea {
 }
 
 .meter {
-  height: 8rpx;
-  border-radius: 4rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
   background: var(--line);
   overflow: hidden;
 }
 
 .meter-fill {
   height: 100%;
-  border-radius: 4rpx;
+  border-radius: 3rpx;
   background: var(--strong);
   transition: width var(--t-move) var(--ease);
 }
@@ -926,7 +926,7 @@ button, textarea {
 }
 
 .safe-bottom {
-  height: calc(24rpx + env(safe-area-inset-bottom));
+  height: var(--pad-tab);
 }
 
 .foot {
@@ -1588,7 +1588,7 @@ button, textarea {
 .hint-line {
   display: block;
   text-align: center;
-  padding-top: var(--sp-3);
+  padding-top: var(--sp-2);
 }
 
 .trans-head {

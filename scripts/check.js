@@ -288,7 +288,7 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
     /this\.advance\s*=\s*setTimeout/.test(readerAdvance)
       && /onUnload\s*\(\)\s*{[\s\S]{0,120}?clearTimeout\(this\.advance\)/.test(readerAdvance)
       && /this\.advance\s*=\s*setTimeout/.test(sheetAdvance)
-      && /detached\s*\(\)\s*{[\s\S]{0,120}?clearTimeout\(this\.advance\)/.test(sheetAdvance),
+      && /detached\s*\(\)\s*{[\s\S]{0,120}?cancelAdvance\(\)/.test(sheetAdvance),
     "700ms 后再翻页，人在这 700ms 里退出，回调仍会打在已卸载的页面/组件上");
 }
 
@@ -4043,7 +4043,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("设置里的 autoNext 默认键也撤了（没人会再读它）",
     !/^\s*autoNext:/m.test(storeJs), "默认值还留着，等于给下一个来读它的人递了个空承诺");
   ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
-    /setTimeout\(\(\) => this\.goNext\(\), 700\)/.test(read("components/recite-sheet/recite-sheet.js")));
+    /setTimeout\(\(\) => this\.goNext\(/.test(read("components/recite-sheet/recite-sheet.js")));
 
 }
 
