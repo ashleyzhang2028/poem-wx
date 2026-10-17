@@ -11,7 +11,7 @@ const theme = require("../../utils/theme");
 const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
 
-const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "今日加背" };
+const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
