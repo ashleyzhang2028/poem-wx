@@ -12,6 +12,7 @@ const theme = require("../../utils/theme");
 const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
 const sfx = require("../../utils/sfx");
+const quotes = require("../../utils/finish-quote");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -34,16 +35,8 @@ const FACES = [
   { key: "good", icon: "smile", cls: "good", label: "记住" }
 ];
 
-const PRAISE = [
-  "今天这几首都背下来了，日积月累，功夫不负有心人。",
-  "今日份收工 —— 千里之行，始于足下。",
-  "一首一首攒起来，你已经比昨天多会了几首。",
-  "背完就放下，明天再来。读书百遍，其义自见。",
-  "这份坚持很了不起，古人的句子也跟着长在你身上了。"
-];
-
-function praiseOf() {
-  return PRAISE[Math.floor(Date.now() / R.DAY) % PRAISE.length];
+function praiseOf(scope) {
+  return quotes.pick(Date.now() / R.DAY, scope);
 }
 
 const HERO_RATIO = 916 / 1717;
@@ -337,7 +330,7 @@ Page({
       total,
       baseCount: base,
       allDone: allDone,
-      praise: allDone ? praiseOf() : "",
+      praise: allDone ? praiseOf("course") : "",
       percent: base ? Math.round((done / base) * 100) : 0,
       stats: {
         extra: extraOf,
@@ -350,6 +343,7 @@ Page({
       allRows: this.data.allOpen ? allRows : [],
       sheetRows: this.collectionId ? sheetRows : (this.sheetSource === "all" ? allRows : rows),
       selfOnly: selfOnly,
+      selfPraise: selfAllDone ? praiseOf("own") : "",
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),

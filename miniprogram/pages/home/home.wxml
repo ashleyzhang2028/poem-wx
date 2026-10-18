@@ -121,10 +121,14 @@
       <view class="finish" wx:if="{{allDone}}">
         <text class="finish-mark">✓</text>
         <text class="finish-text">{{praise}}</text>
-        <text class="hint finish-tip">想多背一首，用上面那条搜索加进来</text>
+        <text class="hint finish-tip">想多背一首，搜今日加背</text>
       </view>
     </view>
 
+    <view class="finish finish-self" wx:if="{{selfPraise}}">
+      <text class="finish-mark">✓</text>
+      <text class="finish-text">{{selfPraise}}</text>
+    </view>
 
     <view class="card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}">
       <text class="hint" wx:if="{{collectionHint}}">{{collectionHint}}</text>
