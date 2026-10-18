@@ -2144,6 +2144,7 @@ function adminAccounts(deps) {
       return ok({
         accounts: list,
         total: list.length,
+        createdAt: list.map(function (a) { return a.createdAt; }),
         store: store.kind
       });
     });
