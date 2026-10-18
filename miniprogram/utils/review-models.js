@@ -1,9 +1,8 @@
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
-const MIN = 60 * 1000;
 
-const FUZZY_HOURS = 12;
-const BAD_MINUTES = 30;
+const NEXT_DAY_HOUR = 9;
+const REVIEW_WINDOW_HOURS = 16;
 
 const EBBINGHAUS_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60, 120, 240];
 
@@ -14,7 +13,12 @@ function startOfDay(ts) {
 }
 
 function dayAt(ts, days) {
-  return startOfDay(ts) + days * DAY + 9 * HOUR;
+  return startOfDay(ts) + days * DAY + NEXT_DAY_HOUR * HOUR;
+}
+
+function nextSlot(ts) {
+  const at = dayAt(ts, 1);
+  return ts + REVIEW_WINDOW_HOURS * HOUR > at ? at : dayAt(ts, 2);
 }
 
 function clampLevel(lv) {
@@ -261,7 +265,7 @@ function review(rec, result, key, now) {
   const elapsedDays = spot.lastReviewAt ? Math.max(0, (t - spot.lastReviewAt) / DAY) : 0;
 
   if (result === "fuzzy") {
-    r.nextReviewAt = t + FUZZY_HOURS * HOUR;
+    r.nextReviewAt = nextSlot(t);
     pushHistory(r, result, t);
     return r;
   }
@@ -269,7 +273,7 @@ function review(rec, result, key, now) {
   if (result === "bad") {
     r.lapses = (r.lapses || 0) + 1;
     advance(modelKey, r, result, elapsedDays);
-    r.nextReviewAt = t + BAD_MINUTES * MIN;
+    r.nextReviewAt = nextSlot(t);
     pushHistory(r, result, t);
     return r;
   }
@@ -333,8 +337,6 @@ function pushHistory(r, result, t) {
 }
 
 function resultHint(key, result, rec) {
-  if (result === "fuzzy") return FUZZY_HOURS + " 小时后再复习";
-  if (result === "bad") return BAD_MINUTES + " 分钟后再复习";
   if (!rec || !rec.nextReviewAt) return "已记录";
   const d = new Date(rec.nextReviewAt);
   return "下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
@@ -358,7 +360,6 @@ module.exports = {
   dayStamp,
   dayAt,
   daysFor,
-  MIN,
   EBBINGHAUS_INTERVALS,
   ORDER,
   DEFAULT_KEY,
