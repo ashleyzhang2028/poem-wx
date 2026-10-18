@@ -3416,7 +3416,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       "弹层里读不到，标题与百分比挤成一行、与上面那三颗评分之间也没有间距（Issue #268）");
 
   ok("弹层用了共用的那几样（选项 / 图标 / 注音 / 生僻字标记 / 掌握度）",
-    [".pref-opt", ".pref-opt.ic", ".glyph", ".pref-rule", ".token", ".tk-ch", ".mastery-num", ".trans-text"]
+    [".pref-opt", ".pref-opt.ic", ".glyph", ".token", ".tk-ch", ".mastery-num", ".trans-text"]
       .every((cls) => hasRule(appWxss, cls)),
     "弹层自绘了一份 —— 与详情页迟早漂开");
 
@@ -6971,6 +6971,8 @@ function gapped(items, max) {
 
   const tableMod = require(path.join(ROOT, "utils", "table.js"));
   const readerWxml4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+  const sheetWxml4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.wxml"), "utf8");
+  const sheetSrc4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
   const tableCases = ["changshi-cs-218", "dwang-em-c-legend-06", "mingren-mr-c-06", "mingshu-ms-230"];
   const parsed = tableCases.filter(function (id) {
     const entry = corpus.entry(id);
@@ -6985,8 +6987,9 @@ function gapped(items, max) {
   });
   ok("详情页把语料里的框线表格解析成行列（文学常识 / 帝王 / 名家 / 名著导读各一条）",
     parsed.length === tableCases.length);
-  ok("表格块有独立的渲染路径（不注音）",
-    /md-table/.test(readerWxml4) && /tableView/.test(readerSrc4));
+  ok("表格块有独立的渲染路径（不注音），详情页与弹层共用",
+    /md-table/.test(readerWxml4) && /tableView/.test(readerSrc4)
+      && /md-table/.test(sheetWxml4) && /table\.hasTable\(/.test(sheetSrc4));
 
   const wideCases = ["changshi-cs-218", "changshi-cs-221", "mingren-mr-w-93"];
   const wideOk = wideCases.filter(function (id) {

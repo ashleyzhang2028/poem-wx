@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const table = require("../../utils/table");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
 const pinyin = require("../../utils/pinyin");
@@ -94,6 +95,8 @@ Component({
     loadingText: false,
     stage: "",
     rawText: "",
+    tableView: false,
+    blocks: [],
     tokens: [],
     translation: "",
     translationSource: "",
@@ -263,6 +266,7 @@ Component({
         aliasText: aliasTextOf(meta),
         loadingText: false,
         rawText: entry.text,
+        tableView: table.hasTable(entry.text),
         translation: entry.tr || "",
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
@@ -286,16 +290,37 @@ Component({
     },
 
     applyReading() {
-      const pr = pinyin.readiness();
-      const allowed = entitlement.can("pinyin");
-      const usable = pr.usable && allowed;
+      const usable = pinyin.readiness().usable && entitlement.can("pinyin");
       const mode = usable ? store.settings().pinyin : "off";
+      const blocks = this.tableBlocks();
       const laid = corpus.layout(this.data.rawText, { size: this.data.fontSize, pinyin: usable });
       this.setData({
         pinyinOn: usable,
         pinyinMode: mode,
-        tokens: pinyin.render(laid.paras, usable ? mode : "off")
+        blocks,
+        tokens: blocks.length ? [] : pinyin.render(laid.paras, mode)
       });
+    },
+
+    tableBlocks() {
+      if (!this.data.tableView) return [];
+      const parsed = table.parseText(this.data.rawText);
+      if (!parsed) return [];
+      const out = [];
+      parsed.parts.forEach((part, i) => {
+        if (part.k === "table") {
+          out.push({ k: "table", key: "t" + i, table: parsed.blocks[part.i] });
+          return;
+        }
+        const rows = this.paragraphRows(part.s);
+        if (rows.length) out.push({ k: "p", key: "p" + i, rows });
+      });
+      return out;
+    },
+
+    paragraphRows(text) {
+      if (!String(text == null ? "" : text).trim()) return [];
+      return corpus.layout(text, { size: this.data.fontSize, pinyin: false }).paras;
     },
 
     syncDaily() {

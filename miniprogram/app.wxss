@@ -1274,14 +1274,6 @@ button, textarea {
   overflow: hidden;
 }
 
-.pref-rule {
-  flex: none;
-  width: 1rpx;
-  height: 20rpx;
-  margin: 0 var(--sp-1);
-  background: var(--line-strong);
-}
-
 .pref-opt {
   display: flex;
   align-items: center;
