@@ -57,53 +57,67 @@ function canWrite() {
   return remote.adminReady();
 }
 
-const SPAN_KEYS = ["year", "month", "week", "day"];
-const WINDOWS = [
-  { key: "d1", span: "day", back: 0 },
-  { key: "d7", span: "day", back: 6 },
-  { key: "d30", span: "month", back: 0 },
-  { key: "y1", span: "year", back: 0 }
+const BACK = [
+  { n: 1, unit: "day" },
+  { n: 7, unit: "day" },
+  { n: 30, unit: "day" },
+  { n: 1, unit: "year" }
 ];
 
-const ROWS = [
-  { tag: "新增", cells: ["d1", "d7", "d30", "y1"] },
-  { tag: "自然", cells: ["day", "week", "month", "year"] }
-];
+const BACK_HEAD = "自此刻往回数 1 天 / 7 天 / 30 天 / 365 天";
+const SPAN_HEAD = "从本周一 / 本月 1 日 / 今年 1 月 1 日算到此刻";
 
 function _createdAts(res) {
   if (res && res.createdAt && res.createdAt.length) return res.createdAt;
   return (res && res.users ? res.users : []).map((u) => u.createdAt);
 }
 
-function _startOf(ts, span) {
+function _day(y, m, d) {
+  return new Date(y, m, d).getTime();
+}
+
+function _startOf(ts) {
   const d = new Date(ts);
-  if (span === "year") return new Date(d.getFullYear(), 0, 1).getTime();
-  if (span === "month") return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-  const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  return midnight - ((d.getDay() + 6) % 7) * 86400000;
+  return _day(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function _weekStart(ts) {
+  const d = new Date(ts);
+  return _day(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+}
+
+function _monthStart(ts) {
+  const d = new Date(ts);
+  return _day(d.getFullYear(), d.getMonth(), 1);
+}
+
+function _yearStart(ts) {
+  return _day(new Date(ts).getFullYear(), 0, 1);
+}
+
+function _backFrom(now, unit, n) {
+  const d = new Date(now);
+  if (unit === "month") return _day(d.getFullYear(), d.getMonth() - n, d.getDate());
+  if (unit === "year") return _day(d.getFullYear() - n, d.getMonth(), d.getDate());
+  return now - n * 86400000;
+}
+
+function _cells(ats, cuts) {
+  return cuts.map((at) => ({ v: ats.filter((t) => t > at).length, at: at }));
 }
 
 function summarize(at, total) {
   const now = Date.now();
   const ats = (at || []).map(Number).filter((t) => t > 0);
-  const cut = {};
-  SPAN_KEYS.forEach((k) => { cut[k] = _startOf(now, k); });
-  WINDOWS.forEach((w) => {
-    const d = new Date(now);
-    if (w.span === "year") d.setFullYear(d.getFullYear() - 1);
-    else if (w.span === "month") d.setMonth(d.getMonth() - 1);
-    else d.setTime(d.getTime() - 86400000);
-    d.setDate(d.getDate() - (w.back || 0));
-    cut[w.key] = d.getTime();
-  });
-
-  const counts = { total: Number(total) || ats.length };
-  Object.keys(cut).forEach((k) => {
-    counts[k] = ats.filter((t) => t >= cut[k]).length;
-  });
-
-  const list = (keys) => keys.map((k) => ({ v: counts[k] || 0 }));
-  return { total: counts.total, loaded: ats.length, rows: ROWS.map((r) => ({ tag: r.tag, cells: list(r.cells) })) };
+  const rows = [
+    { tag: "新增", head: BACK_HEAD, cells: _cells(ats, BACK.map((b) => _backFrom(now, b.unit, b.n))) },
+    {
+      tag: "自然",
+      head: SPAN_HEAD,
+      cells: _cells(ats, [_startOf(now), _weekStart(now), _monthStart(now), _yearStart(now)])
+    }
+  ];
+  return { total: Number(total) || ats.length, loaded: ats.length, rows: rows };
 }
 
 function list() {

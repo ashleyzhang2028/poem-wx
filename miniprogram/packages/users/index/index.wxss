@@ -8,7 +8,7 @@
   color: var(--red);
 }
 
-.sum-head {
+.sum-total {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -40,8 +40,12 @@
 
 .sum-row {
   display: flex;
-  align-items: center;
-  padding: var(--sp-1) 0;
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.sum-row:last-of-type {
+  border-bottom: none;
 }
 
 .sum-label {
@@ -51,20 +55,19 @@
   color: var(--ink-2);
 }
 
-.sum-cells {
+.sum-body {
   flex: 1;
   min-width: 0;
+}
+
+.sum-cells {
   display: flex;
 }
 
-.sum-num,
-.sum-scale-k {
+.sum-num {
   flex: 1;
   min-width: 0;
   text-align: right;
-}
-
-.sum-num {
   font-family: var(--font-num);
   font-size: var(--fs-lead);
   color: var(--strong-text);
@@ -73,10 +76,8 @@
 }
 
 .sum-scale {
+  display: block;
   padding-top: var(--sp-1);
-}
-
-.sum-scale-k {
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
