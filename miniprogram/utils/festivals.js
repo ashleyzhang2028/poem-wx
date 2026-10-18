@@ -15,25 +15,72 @@ const LEAD = 2;
 
 const SHOW_DAYS = LEAD + 1;
 
-const UNVERIFIED = "unverified";
-
-const UNVERIFIED_TEXT = "非正规译注：下面几首的译文是机器整理的释义，未逐字校对，请自行校验对错";
-
 const WORKS = [
   ["gushi-gs-67", "春节"],
+  ["gushi-gs-73", "春节"],
+  ["songci-sc-120", "元宵节"],
+  ["tangshi-ts-357", "元宵节"],
   ["tangshi-ts-265", "寒食节"],
+  ["poems-xx3-15", "清明节"],
+  ["songci-sc-154", "清明节"],
+  ["tangshi-ts-458", "春社日"],
+  ["tangshi-ts-99", "立春"],
+  ["songci-sc-180", "立春"],
+  ["yuanqu-yq-21", "立春"],
+  ["poems-xx6-17", "立夏"],
   ["tangshi-ts-335", "端午节"],
+  ["songci-sc-305", "端午节"],
+  ["poems-xx6-09", "七夕节"],
+  ["poems-xx5-02", "七夕节"],
+  ["poems-gz10-15", "七夕节"],
+  ["tangshi-ts-285", "七夕节"],
+  ["tangshi-ts-96", "中秋节"],
+  ["tangshi-ts-110", "中秋节"],
+  ["songci-sc-97", "中秋节"],
+  ["yuefu-yf-40", "中秋节"],
+  ["tangshi-ts-190", "秋季"],
   ["tangshi-ts-254", "重阳节"],
   ["tangshi-ts-414", "重阳节"],
-  ["tangshi-ts-132", "重阳节"],
-  ["gushi-gs-15", "立夏"]
+  ["tangshi-ts-176", "重阳节"],
+  ["songci-sc-233", "重阳节"],
+  ["tangshi-ts-190", "重阳节"]
 ];
+
+const SEASON_OF = {
+  立春: "春季", 雨水: "春季", 惊蛰: "春季", 春分: "春季", 清明: "春季", 谷雨: "春季",
+  立夏: "夏季", 小满: "夏季", 芒种: "夏季", 夏至: "夏季", 小暑: "夏季", 大暑: "夏季",
+  立秋: "秋季", 处暑: "秋季", 白露: "秋季", 秋分: "秋季", 寒露: "秋季", 霜降: "秋季",
+  立冬: "冬季", 小雪: "冬季", 大雪: "冬季", 冬至: "冬季", 小寒: "冬季", 大寒: "冬季"
+};
+
+const SEASON_TERMS = {
+  春季: ["立春", "雨水", "惊蛰", "春分", "清明", "谷雨"],
+  夏季: ["立夏", "小满", "芒种", "夏至", "小暑", "大暑"],
+  秋季: ["立秋", "处暑", "白露", "秋分", "寒露", "霜降"],
+  冬季: ["立冬", "小雪", "大雪", "冬至", "小寒", "大寒"]
+};
+
+const LUNAR_SEASON = { 12: "冬季", 1: "冬季", 2: "春季", 3: "春季", 4: "春季", 5: "夏季", 6: "夏季", 7: "夏季", 8: "秋季", 9: "秋季", 10: "秋季", 11: "冬季" };
+
+const SEASONS = ["春季", "夏季", "秋季", "冬季"];
+
+function seasonOf(name) {
+  if (SEASONS.indexOf(name) >= 0) return name;
+  if (SEASON_OF[name]) return SEASON_OF[name];
+  const entry = TRADITIONAL.filter((x) => x.key === name)[0];
+  if (!entry) return "";
+  if (entry.term) return SEASON_OF[entry.term];
+  if (entry.before) return SEASON_OF[entry.before.term];
+  return LUNAR_SEASON[entry.lunar[0]] || "";
+}
 
 module.exports = {
   TRADITIONAL,
   LEAD,
   SHOW_DAYS,
-  UNVERIFIED,
-  UNVERIFIED_TEXT,
-  WORKS
+  WORKS,
+  SEASONS,
+  SEASON_OF,
+  SEASON_TERMS,
+  seasonOf
 };

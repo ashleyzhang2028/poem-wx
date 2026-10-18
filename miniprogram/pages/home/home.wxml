@@ -105,7 +105,6 @@
         </view>
       </view>
 
-      <text class="seasonal-note" wx:if="{{seasonal.askCheck}}">{{seasonal.askCheck}}</text>
     </view>
 
     <view class="extra-search">

@@ -17,8 +17,7 @@ const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
   "public-domain": "原文属公有领域，依据公认注本与通行译注",
-  modern: "依据现行通用选本与通行讲法",
-  unverified: "非正规译注：机器整理的释义，未逐字校对，仅备参考，请自行校验对错"
+  modern: "依据现行通用选本与通行讲法"
 };
 
 const POEM_FILES = [

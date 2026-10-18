@@ -6889,20 +6889,20 @@ function gapped(items, max) {
       "指向不存在的：" + ghost.slice(0, 5).map((w) => w[0]).join("、"));
 
     const unknownFest = SEASON.WORKS.filter((w) => SEASON.TERMS.indexOf(w[1]) < 0
-      && !SEASON.TRADITIONAL.some((x) => x.key === w[1]));
+      && !SEASON.TRADITIONAL.some((x) => x.key === w[1])
+      && SEASON.SEASONS.indexOf(w[1]) < 0);
     ok("季节限定表里只出现这张表认得的节日与节气", unknownFest.length === 0,
       "认不得：" + unknownFest.slice(0, 5).map((w) => w[1]).join("、"));
 
-    ok("非正规译注另立一档，来源里写明要用户自己校验",
-      /非正规译注/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "build-data.js"), "utf8"))
-        && /自行校验/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "build-data.js"), "utf8"))
-        && /自行校验/.test(SEASON.ASK_CHECK));
-
-    ok("季节限定每一条都取到作品，译文缺了才挂非正规译注",
+    ok("季节限定每一条都取到作品，且译文有署名来源",
       SEASON.WORKS.every((w) => {
         const hit = SEASON.entryOf(w[0]);
-        return !!hit && !!hit.tr;
+        return !!hit && !!hit.tr && !!hit.src;
       }));
+
+    ok("季节限定表里没有同一首挂两遍",
+      Object.keys(SEASON.WORKS.reduce((m, w) => Object.assign(m, { [w[1] + w[0]]: 1 }), {}))
+        .length === SEASON.WORKS.length);
 
     ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
       SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
@@ -6925,6 +6925,20 @@ function gapped(items, max) {
         const want = SEASON.WORKS.filter((w) => w[1] === "重阳节").map((w) => w[0]);
         return c.poems.length === want.length && c.poems.every((p) => want.indexOf(p.id) >= 0);
       })());
+
+    ok("没有应景作品的节日节气不出卡，往下递补到有作品的窗口",
+      (() => {
+        const c = at(2026, 10, 20);
+        return !!c && c.key === "重阳节";
+      })(),
+      "重阳当天的实际：" + JSON.stringify(at(2026, 10, 20) && at(2026, 10, 20).key));
+
+    ok("传统节日走完三天交回给所在节气，中间不断档",
+      (() => {
+        const keys = [21, 22, 23, 24, 25].map((d) => (at(2026, 10, d) || {}).key || "");
+        return keys.every((k) => !!k);
+      })(),
+      "实际 " + [21, 22, 23, 24, 25].map((d) => d + ":" + ((at(2026, 10, d) || {}).key || "无")).join(" "));
 
     ok("节气在自己的周期内一直列，到下一个节气才换",
       (() => {
