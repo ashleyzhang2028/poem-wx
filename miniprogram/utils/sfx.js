@@ -70,6 +70,21 @@ const VOICES = {
     { f: 311, ms: 200, gap: 110, v: 0.15 }
   ],
 
+  bad: [
+    { f: 392, ms: 110, gap: 0, v: 0.15 },
+    { f: 294, ms: 170, gap: 85, v: 0.14 }
+  ],
+
+  fuzzy: [
+    { f: 494, ms: 100, gap: 0, v: 0.14 },
+    { f: 466, ms: 130, gap: 85, v: 0.13 }
+  ],
+
+  good: [
+    { f: 659, ms: 80, gap: 0, v: 0.15 },
+    { f: 880, ms: 120, gap: 60, v: 0.14 }
+  ],
+
   pass: [
     { f: 659, ms: 100, gap: 0, v: 0.15 },
     { f: 784, ms: 100, gap: 80, v: 0.15 },
@@ -82,6 +97,25 @@ const VOICES = {
     { f: 1047, ms: 520, gap: 40, v: 0.09 }
   ]
 };
+
+function heard(name) {
+  if (!enabled() || !supported()) return false;
+  const c = context();
+  if (!c) return false;
+  const notes = VOICES[name];
+  if (!notes) return false;
+  try {
+    const now = c.currentTime;
+    notes.forEach((n) => tone(c, n.f, n.ms, now + n.gap / 1000, n.v));
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+function recite(result) {
+  return heard(result);
+}
 
 function play(name) {
   if (!enabled() || !supported()) return false;
@@ -133,6 +167,7 @@ module.exports = {
   readiness,
   play,
   preview,
+  recite,
   answer,
   pass,
   rank

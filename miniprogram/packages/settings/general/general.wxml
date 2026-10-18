@@ -51,7 +51,7 @@
     <view class="row">
       <view class="row-main">
         <text class="row-title">答对答错出声</text>
-        <text class="row-sub">题库 · 考试 · 飞花令共用</text>
+        <text class="row-sub">背诵三态 · 题库 · 考试 · 飞花令共用</text>
       </view>
       <button class="btn mini ghost sfx-test" bindtap="onSfxTest">试听</button>
       <view class="sw">
