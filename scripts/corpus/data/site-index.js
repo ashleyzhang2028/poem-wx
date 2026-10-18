@@ -13,6 +13,8 @@
       if (!list || !list.length) return;
       list.forEach(function (raw) {
 
+        if (drops(b.id + "-" + raw.id, raw.id)) return;
+
         var p = (typeof window.masterTextOf === "function")
           ? window.masterTextOf(raw, b.id) : raw;
 
@@ -67,6 +69,22 @@
     });
 
     return out;
+  }
+
+  var DROPPED_ENTRIES = {
+    "gushi-gs-63": "gushi-gs-44",
+    "gushi-gs-109": "gushi-gs-44",
+    "gushi-gs-126": "gushi-gs-78",
+    "tangshi-ts-462": "tangshi-ts-283",
+    "tangshi-ts-463": "tangshi-ts-388",
+    "classic-gw-181": "classic-gw-89",
+    "classic-gw-208": "classic-gw-132",
+    "classic-gw-251": "classic-gw-40"
+  };
+
+  function drops(id, key) {
+    if (!Object.prototype.hasOwnProperty.call(DROPPED_ENTRIES, id)) return false;
+    return String(DROPPED_ENTRIES[id]) === String(key);
   }
 
   window.buildSiteIndex = buildSiteIndex;

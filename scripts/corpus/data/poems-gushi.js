@@ -359,7 +359,6 @@ window.POEMS_GUSHI = [
   { textRef: "gushi-gs-60", id: "gs-60", title: "野望", source: "《苇碧轩集》", dynasty: "宋", author: "翁卷", gradeGroup: "宋诗" },
   { textRef: "gushi-gs-61", id: "gs-61", title: "苔", source: "《小仓山房集》", dynasty: "清", author: "袁枚", gradeGroup: "元明清诗" },
   { textRef: "poems-xx2-07", id: "gs-62", title: "敕勒歌", source: "《乐府诗集》", dynasty: "北朝", author: "佚名", gradeGroup: "六朝诗" },
-  { textRef: "gushi-gs-44", id: "gs-63", title: "赠范晔诗", source: "《太平御览》", dynasty: "南朝·宋", author: "陆凯", gradeGroup: "六朝诗", aliases: ["赠范晔"] },
   { textRef: "poems-xx6-11", id: "gs-64", title: "游园不值", source: "《江湖集》", dynasty: "宋", author: "叶绍翁", gradeGroup: "宋诗" },
   { textRef: "poems-xx4-06", id: "gs-65", title: "绝句", source: "《李清照集》", dynasty: "宋", author: "李清照", gradeGroup: "宋诗" },
   { textRef: "poems-xx6-19", id: "gs-66", title: "春日", source: "《晦庵集》", dynasty: "宋", author: "朱熹", gradeGroup: "宋诗" },
@@ -422,7 +421,6 @@ window.POEMS_GUSHI = [
   { textRef: "gushi-gs-106", id: "gs-106", title: "就义诗", source: "《杨忠愍公集》", dynasty: "明", author: "杨继盛", gradeGroup: "元明清诗" },
   { textRef: "gushi-gs-107", id: "gs-107", title: "锦云川", source: "《灵岩山人诗集》", dynasty: "清", author: "毕沅", gradeGroup: "元明清诗" },
   { textRef: "gushi-gs-108", id: "gs-108", title: "对酒", source: "《秋瑾集》", dynasty: "清", author: "秋瑾", gradeGroup: "元明清诗" },
-  { textRef: "gushi-gs-44", id: "gs-109", title: "赠范晔诗", source: "《太平御览》", dynasty: "南朝·宋", author: "陆凯", gradeGroup: "六朝诗", aliases: ["赠范晔"] },
   { textRef: "gushi-gs-110", id: "gs-110", title: "明日歌", source: "《鹤滩集》", dynasty: "明", author: "钱福", gradeGroup: "元明清诗" },
   { textRef: "gushi-gs-111", id: "gs-111", title: "垓下歌", source: "《史记·项羽本纪》", dynasty: "秦末", author: "项羽", gradeGroup: "汉魏诗" },
   { textRef: "gushi-gs-112", id: "gs-112", title: "短歌行", source: "《乐府诗集》", dynasty: "东汉", author: "曹操", gradeGroup: "汉魏诗" },
@@ -442,5 +440,4 @@ window.POEMS_GUSHI = [
   { textRef: "gushi-gs-121", id: "gs-121", title: "江上", source: "《临川先生文集》", dynasty: "宋", author: "王安石", gradeGroup: "宋诗" },
   { textRef: "gushi-gs-123", id: "gs-123", title: "秋日湖上", source: "《全宋诗》", dynasty: "宋", author: "徐元杰", gradeGroup: "宋诗" },
   { textRef: "gushi-gs-125", id: "gs-125", title: "赠刘景文", source: "《苏轼诗集》", dynasty: "宋", author: "苏轼", gradeGroup: "宋诗" },
-  { textRef: "gushi-gs-126", id: "gs-126", title: "蚕妇", source: "《全宋诗》", dynasty: "宋", author: "张俞", gradeGroup: "宋诗" },
 ];
