@@ -57,6 +57,55 @@ function canWrite() {
   return remote.adminReady();
 }
 
+const SPAN_KEYS = ["year", "month", "week", "day"];
+const WINDOWS = [
+  { key: "d1", span: "day", back: 0 },
+  { key: "d7", span: "day", back: 6 },
+  { key: "d30", span: "month", back: 0 },
+  { key: "y1", span: "year", back: 0 }
+];
+
+const ROWS = [
+  { tag: "新增", cells: ["d1", "d7", "d30", "y1"] },
+  { tag: "自然", cells: ["day", "week", "month", "year"] }
+];
+
+function _createdAts(res) {
+  if (res && res.createdAt && res.createdAt.length) return res.createdAt;
+  return (res && res.users ? res.users : []).map((u) => u.createdAt);
+}
+
+function _startOf(ts, span) {
+  const d = new Date(ts);
+  if (span === "year") return new Date(d.getFullYear(), 0, 1).getTime();
+  if (span === "month") return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return midnight - ((d.getDay() + 6) % 7) * 86400000;
+}
+
+function summarize(at, total) {
+  const now = Date.now();
+  const ats = (at || []).map(Number).filter((t) => t > 0);
+  const cut = {};
+  SPAN_KEYS.forEach((k) => { cut[k] = _startOf(now, k); });
+  WINDOWS.forEach((w) => {
+    const d = new Date(now);
+    if (w.span === "year") d.setFullYear(d.getFullYear() - 1);
+    else if (w.span === "month") d.setMonth(d.getMonth() - 1);
+    else d.setTime(d.getTime() - 86400000);
+    d.setDate(d.getDate() - (w.back || 0));
+    cut[w.key] = d.getTime();
+  });
+
+  const counts = { total: Number(total) || ats.length };
+  Object.keys(cut).forEach((k) => {
+    counts[k] = ats.filter((t) => t >= cut[k]).length;
+  });
+
+  const list = (keys) => keys.map((k) => ({ v: counts[k] || 0 }));
+  return { total: counts.total, loaded: ats.length, rows: ROWS.map((r) => ({ tag: r.tag, cells: list(r.cells) })) };
+}
+
 function list() {
   if (!loggedIn()) {
     return Promise.resolve({ users: [], sim: true, note: "登录后才能看名录" });
@@ -77,7 +126,8 @@ function list() {
       users: _merge(_rosterUsers(), _localUsers(), _normalizeRemote(res.users)),
       sim: false,
       note: res.note || "",
-      total: res.total
+      total: res.total,
+      stats: summarize(_createdAts(res), res.total)
     }))
     .catch((err) => ({
       users: _merge(_rosterUsers(), _localUsers(), []),
@@ -92,7 +142,7 @@ function _normalizeRemote(rows) {
     const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
     return {
       id: u.uid || u.id,
-      label: u.nickname || u.email || String(u.uid || "").slice(0, 8),
+      label: u.nickname || u.email || "微信用户 " + String(u.uid || "").slice(-4),
       tier: t,
       tierLabel: tiers.nameOf(t),
       until: u.until || null,
@@ -158,6 +208,7 @@ function revokeTier(userId) {
 module.exports = {
   loggedIn,
   list,
+  summarize,
   setTier,
   revokeTier,
   canWrite,

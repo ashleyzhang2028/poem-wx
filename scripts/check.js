@@ -1301,6 +1301,32 @@ const GATED = {
     "「我的 → 数据与账号」里还留着用户列表那一行 —— 同一个去处两条路，"
       + "下一个人不知道该守哪一条（Issue #226）");
 
+  {
+    const adminLibSrc = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
+    const stat = require(path.join(ROOT, "utils", "admin.js")).summarize;
+
+    ok("统计卡与名录同一趟拿数（不另开一次请求）",
+      /listUsers\(\)[\s\S]{0,400}summarize\(/.test(adminLibSrc)
+        && /stats:\s*summarize\(/.test(adminLibSrc),
+      "统计另发一次请求 —— 两份数迟早对不上");
+    ok("统计卡挂在用户列表页上（不在管理页）",
+      /stats\.rows/.test(usersWxml) && adminWxml.indexOf("stats.rows") < 0);
+
+    const H = 3600000;
+    const D = 24 * H;
+    const now = Date.now();
+    const ats = [now - H, now - 3 * D, now - 40 * D, now - 400 * D];
+    const sum = stat(ats, ats.length);
+    ok("统计的四个窗口由宽到窄都算得出", !!sum && sum.rows.length === 2
+      && sum.rows[0].cells.length === 4 && sum.rows[1].cells.length === 4
+      && sum.rows[0].cells[0].v === 1 && sum.rows[0].cells[3].v === 3,
+      sum ? JSON.stringify(sum.rows.map((r) => r.cells.map((c) => c.v))) : "没有统计");
+    ok("总用户数取服务端报的总数，不是手上有几条",
+      stat([now - H], 987).total === 987,
+      "翻了 500 条名单之后总数会跟着掉");
+    ok("空名录也给得出四个零", stat([], 0).rows.every((r) => r.cells.every((c) => c.v === 0)));
+  }
+
   ok("对比表的每一格由能力表的档位算出来（不写死）",
     /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),

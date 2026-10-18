@@ -380,6 +380,7 @@ function listUsers() {
   return request(PATHS.accounts, { deviceId: store.deviceId() }).then((res) => ({
     users: (res && res.accounts) || [],
     total: (res && res.total) || 0,
+    createdAt: (res && res.createdAt) || [],
     note: (res && res.note) || "",
     sim: false
   }));

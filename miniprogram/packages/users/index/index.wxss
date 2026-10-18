@@ -8,6 +8,80 @@
   color: var(--red);
 }
 
+.sum-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.sum-v {
+  font-family: var(--font-num);
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  color: var(--strong-text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1rpx;
+}
+
+.sum-tag {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.sum-partial {
+  font-size: var(--fs-caption);
+  color: var(--amber);
+}
+
+.sum-row {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-1) 0;
+}
+
+.sum-label {
+  flex: none;
+  width: 76rpx;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.sum-cells {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.sum-num,
+.sum-scale-k {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+}
+
+.sum-num {
+  font-family: var(--font-num);
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.sum-scale {
+  padding-top: var(--sp-1);
+}
+
+.sum-scale-k {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
 .acct {
   display: flex;
   align-items: center;

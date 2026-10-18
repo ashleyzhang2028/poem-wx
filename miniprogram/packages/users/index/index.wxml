@@ -5,6 +5,33 @@
   <block wx:else>
 
     <view class="card">
+      <text class="card-title">用户统计</text>
+
+      <view class="sum-head" wx:if="{{stats}}">
+        <text class="sum-v">{{stats.total}}</text>
+        <text class="sum-tag">总用户</text>
+        <text class="sum-partial" wx:if="{{stats.loaded < stats.total}}">统计覆盖最近 {{stats.loaded}} 位</text>
+      </view>
+
+      <view class="sum-row" wx:for="{{stats.rows}}" wx:key="tag" wx:for-item="row">
+        <text class="sum-label">{{row.tag}}</text>
+        <text class="sum-num" wx:for="{{row.cells}}" wx:key="v" wx:for-item="cell">{{cell.v}}</text>
+      </view>
+
+      <view class="sum-row sum-scale">
+        <text class="sum-label"></text>
+        <view class="sum-cells">
+          <text class="sum-scale-k">一天</text>
+          <text class="sum-scale-k">一周</text>
+          <text class="sum-scale-k">一月</text>
+          <text class="sum-scale-k">一年</text>
+        </view>
+      </view>
+
+      <text class="hint note">「新增」自此刻往回数，「自然」从本周一 / 本月 1 日 / 今年 1 月 1 日算起。名录只读时不给数。</text>
+    </view>
+
+    <view class="card">
       <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上</text>
       <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
 
