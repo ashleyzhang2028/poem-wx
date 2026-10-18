@@ -107,6 +107,7 @@
         <view class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key"
               hover-class="chip-hover" hover-stay-time="60"
               data-key="{{item.key}}" bindtap="onResult">
+          <view class="glyph ic-{{item.icon}}"><view class="face-mouth"></view></view>
           <text class="chip-t">{{item.label}}</text>
         </view>
       </view>

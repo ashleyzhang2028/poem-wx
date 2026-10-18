@@ -15,7 +15,10 @@ const NAMES = [
   ["mine", "mine.svg"],
   ["yes", "yes.svg"],
   ["no", "no.svg"],
-  ["search", "search.svg"]
+  ["search", "search.svg"],
+  ["smile", "smile.svg"],
+  ["meh", "meh.svg"],
+  ["frown", "frown.svg"]
 ];
 
 function flatten(svg) {

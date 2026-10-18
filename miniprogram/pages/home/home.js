@@ -28,6 +28,12 @@ const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
 const SOURCE_TEXT = { course: "课内", own: "自选" };
 
+const FACES = [
+  { key: "bad", icon: "frown", cls: "bad", label: "忘记" },
+  { key: "fuzzy", icon: "meh", cls: "fuzzy", label: "模糊" },
+  { key: "good", icon: "smile", cls: "good", label: "记住" }
+];
+
 const PRAISE = [
   "今天这几首都背下来了，日积月累，功夫不负有心人。",
   "今日份收工 —— 千里之行，始于足下。",
@@ -79,6 +85,38 @@ function stateText(recited, read) {
 
 function stateCls(recited) {
   return recited ? "on" : "idle";
+}
+
+function pickedToday(rec) {
+  if (!R.reviewedToday(rec, Date.now())) return "";
+  const last = (rec.history || [])[rec.history.length - 1];
+  return (last && last.result) || "";
+}
+
+function countBy(rows, of) {
+  const box = {};
+  rows.forEach((it) => {
+    const k = of(it);
+    if (k) box[k] = (box[k] || 0) + 1;
+  });
+  return box;
+}
+
+function heroStatsOf(rows) {
+  const list = [];
+  const reason = countBy(rows, (it) => REASON_TEXT[it.reasonKey]);
+  const source = countBy(rows, (it) => it.source);
+  const picked = countBy(rows, (it) => it.picked);
+  ["新学", "复习"].forEach((k) => {
+    if (reason[k]) list.push({ key: k, text: k + " " + reason[k] });
+  });
+  ["课内", "自选"].forEach((k) => {
+    if (source[k]) list.push({ key: k, text: k + " " + source[k] });
+  });
+  FACES.forEach((f) => {
+    if (picked[f.key]) list.push({ key: f.key, text: f.label + " " + picked[f.key] });
+  });
+  return list;
 }
 
 function sourceKey(id) {
@@ -208,6 +246,8 @@ Page({
     todayLabel: "",
 
     stats: { extra: 0, self: 0, selfDone: 0 },
+    heroStats: [],
+    faces: FACES,
     baseCount: 0,
     allDone: false,
     praise: "",
@@ -291,6 +331,7 @@ Page({
 
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
+        picked: pickedToday(rec),
         read,
         recited,
         stateText: stateText(recited, read),
@@ -315,6 +356,7 @@ Page({
       termName: S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       plan: rows,
+      heroStats: heroStatsOf(rows),
       doneCount: done,
       total,
       baseCount: base,
@@ -412,6 +454,7 @@ Page({
       tagCls: reasonCls(reason),
       stage: stage === REASON_TEXT[reason] ? "" : stage,
       mastery: S.mastery(rec),
+      picked: pickedToday(rec),
       read: read,
       recited: recited,
       stateText: stateText(recited, read),
@@ -474,6 +517,25 @@ Page({
 
   onOpen(e) {
     this.openSheet(e.currentTarget.dataset.id, "plan");
+  },
+
+  onFace(e) {
+    const ds = e.currentTarget.dataset;
+    const face = FACES.filter((f) => f.key === ds.key)[0];
+    if (!face) return;
+    if (!entitlement.can("daily")) {
+      wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
+      return;
+    }
+    const settings = store.settings();
+    const rec = R.review(store.getRecord(ds.id), face.key, settings.algo);
+    store.setRecord(ds.id, rec);
+    sync.markDirty();
+    this.refresh();
+    wx.showToast({
+      title: face.label + " · " + R.resultHint(settings.algo, face.key, rec),
+      icon: "none"
+    });
   },
 
   onOpenAll(e) {
@@ -553,6 +615,16 @@ Page({
   onSettings() {
     if (!gate.guard("背诵设置", this)) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
+  },
+
+  seedFaces() {
+    const ids = this.data.plan.map((it) => it.id);
+    FACES.forEach((f, i) => {
+      const id = ids[i];
+      if (!id) return;
+      store.setRecord(id, R.review(store.getRecord(id), f.key, store.settings().algo));
+    });
+    this.refresh();
   },
 
   onPullDownRefresh() {

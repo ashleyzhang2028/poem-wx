@@ -574,6 +574,18 @@
       "theme": "wulan"
     }
   },
+  "home-faced": {
+    "page": "pages/home/home",
+    "title": "跬步",
+    "tab": 1,
+    "logged": true,
+    "do": [
+      {
+        "call": "seedFaces"
+      }
+    ],
+    "_note": "认过几首的首页：右侧三张脸按最后一次结果点亮，标题下那一行跟着计数"
+  },
   "home-sheet": {
     "page": "pages/home/home",
     "title": "跬步",

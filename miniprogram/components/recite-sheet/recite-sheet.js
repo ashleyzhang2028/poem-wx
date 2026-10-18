@@ -7,9 +7,9 @@ const theme = require("../../utils/theme");
 const sync = require("../../utils/sync");
 
 const RESULTS = [
-  { key: "bad", label: "忘记", cls: "bad" },
-  { key: "fuzzy", label: "模糊", cls: "fuzzy" },
-  { key: "good", label: "记住", cls: "good" }
+  { key: "bad", icon: "frown", label: "忘记", cls: "bad" },
+  { key: "fuzzy", icon: "meh", label: "模糊", cls: "fuzzy" },
+  { key: "good", icon: "smile", label: "记住", cls: "good" }
 ];
 
 const FONT_MIN = -2;
