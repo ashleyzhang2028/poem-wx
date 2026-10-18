@@ -270,29 +270,79 @@ function cap(key) {
   return { name: c.name, login: true, tier: c.tier };
 }
 
+function showLogin(name, ctx) {
+  wx.showModal({
+    title: capName(name),
+    content: "登录只是开个门。进度仍然只存在这台手机上。",
+    confirmText: "登录",
+    cancelText: "取消",
+    success: (res) => {
+      if (res.confirm && ctx && typeof ctx.onLoginGate === "function") ctx.onLoginGate(name);
+    }
+  });
+}
+
+function showTier(name, ctx) {
+  wx.showModal({
+    title: capName(name),
+    content: "「" + capName(name) + "」需要 " + tierNeed(name) + " 档。\n\n可用的档位与逐项对照在用户权限页。",
+    confirmText: "升级",
+    cancelText: "取消",
+    success: (res) => {
+      if (res.confirm && ctx && typeof ctx.onTierGate === "function") ctx.onTierGate(name);
+    }
+  });
+}
+
+function showTierToast(name) {
+  wx.showToast({ title: "「" + capName(name) + "」需要 " + tierNeed(name) + " 档", icon: "none" });
+}
+
+function tierNeed(name) {
+  const cap = CAPS.find((c) => c.key === name);
+  return tiers.nameOf(cap ? cap.tier : "pro");
+}
+
 function block(name, opt) {
   const o = opt || {};
   const r = decide(name, o);
   if (r.ok) return true;
   if (o.silent) return false;
 
-  const text = hint(name, o);
-
-  if (o.loginPrompt === false || !o.page || typeof o.page.onLoginGate !== "function") {
-    wx.showToast({ title: text, icon: "none" });
+  const page = o.page;
+  if (o.loginPrompt === false || !page) {
+    showTierToast(name);
     return false;
   }
 
-  wx.showModal({
-    title: r.name + " · " + text,
-    content: o.content || "登录只是开个门。进度仍然只存在这台手机上。",
-    confirmText: "去登录",
-    cancelText: "再看看",
-    success: (res) => {
-      if (res.confirm) o.page.onLoginGate(name);
+  if (r.login) {
+    if (typeof page.onLoginGate !== "function") {
+      wx.showToast({ title: "登录" + hint(name, o) + "后可用", icon: "none" });
+      return false;
     }
-  });
+    showLogin(name, page);
+    return false;
+  }
+
+  if (typeof page.onTierGate !== "function") {
+    showTierToast(name);
+    return false;
+  }
+  showTier(name, page);
   return false;
+}
+
+function gateTier(name, opt) {
+  const o = opt || {};
+  if (decide(name, o).ok) return true;
+  if (o.silent) return false;
+  if (o.page && typeof o.page.onTierGate === "function") showTier(name, o.page);
+  else showTierToast(name);
+  return false;
+}
+
+function openTierPage() {
+  wx.navigateTo({ url: "/packages/mine/tier/tier" });
 }
 
 function guestScope() {
@@ -326,5 +376,7 @@ module.exports = {
   capName,
   cap,
   block,
+  gateTier,
+  openTierPage,
   guestScope
 };
