@@ -3472,8 +3472,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "偏好条还写着字，或者图标少了一套（两档注音 / 两档对齐 / 加减字号）");
 
   ok("「加入今日背诵」是一枚图标，没有边框",
-    /\.pref-plus\s*\{[^}]*margin/.test(appWxss)
-      && !/\.pref-plus\s*\{[^}]*border/.test(appWxss)
+    !/\.pref-plus\s*\{[^}]*border/.test(appWxss)
       && /icons\[dailyOn \? 'added' : 'add'\]/.test(sheetWxml)
       && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).add)
       && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).added),
@@ -3775,12 +3774,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /pinnedPlan\(extraList, getRecord\)/.test(schedSrc)
       && !/function fillFrom\(list, reason\)[\s\S]{0,400}?extraList/.test(schedSrc),
     "加背又回到候选池里跟「新学」抢那 5 个名额了 —— 用户加了 1 首，计划里反而少 1 首新学");
-  ok("详情页与背诵弹层都有加背开关，且共用一份样式（页面里不写第二份）",
+  ok("详情页与背诵弹层都有加背开关，且共用一份间距（页面里不写第二份）",
     readerWxml.indexOf("onToggleDaily") >= 0
       && sheetWxml.indexOf("onToggleDaily") >= 0
-      && /\.pref-plus\s*\{/.test(appWxss)
-      && !/\.pref-plus\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8"))
-      && !/\.pref-plus\s*\{/.test(fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"), "utf8")));
+      && /\.prefs\s*\{[^}]*gap/.test(appWxss)
+      && !/\.prefs\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8"))
+      && !/\.prefs\s*\{/.test(fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"), "utf8")));
   ok("设置页的加背管理面板：四个动作都在，清空先问一句",
     setWxml.indexOf("daily-tools") >= 0
       && ["onDailyAll", "onDailyNone", "onDailyRemove", "onDailyClear"]
@@ -7008,7 +7007,7 @@ function gapped(items, max) {
       "实际 " + JSON.stringify(SEASON.active(dayOf(2026, 5, 21)).map((h) => h.key)));
 
     const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
-    ok("关掉季节限定是 Pro 起的一项能力，Free 开不了",
+    ok("隐藏季节限定是 Pro 起的一项能力，Free 开不了",
       !!capRow && capRow.tier === "pro"
         && E.compareRows({ logged: false, tier: "free" })
           .filter((r) => r.cap === SEASON.CAP)[0].cells[0].on === false);
