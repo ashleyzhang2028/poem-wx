@@ -245,6 +245,28 @@
   margin-top: var(--sp-2);
 }
 
+.seasonal-refresh {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: var(--sp-2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+}
+
+.seasonal-refresh-hover {
+  transform: scale(.94);
+}
+
+.seasonal-refresh .glyph {
+  width: 30rpx;
+  height: 30rpx;
+  color: var(--ink-3);
+}
+
 .seasonal-list {
   margin-top: var(--sp-2);
 }

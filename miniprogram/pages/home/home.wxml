@@ -82,6 +82,10 @@
       <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="openSeasonal">
         <text class="card-title seasonal-title">季节限定</text>
         <text class="all-count">{{seasonal.rows.length}}</text>
+        <view class="seasonal-refresh" hover-class="seasonal-refresh-hover" hover-stay-time="60"
+              wx:if="{{seasonal.refresh}}" catchtap="onSeasonalRefresh" aria-label="换一批">
+          <view class="glyph" style="mask-image:url('{{icons.refresh}}');-webkit-mask-image:url('{{icons.refresh}}');"></view>
+        </view>
       </view>
 
       <view class="seasonal-list">
