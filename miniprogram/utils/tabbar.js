@@ -24,7 +24,7 @@ function hide(page) {
 
 function pick(page) {
   const bar = sync(page, 2);
-  if (bar) show(page);
+  show(page);
   return bar;
 }
 
