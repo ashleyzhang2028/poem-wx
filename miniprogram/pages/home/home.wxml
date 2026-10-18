@@ -103,7 +103,7 @@
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
-                  data-key="{{face.key}}" bindtap="onFace">
+                  data-key="{{face.key}}" catchtap="onFace">
               <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
             </view>
           </view>
@@ -159,7 +159,7 @@
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
-                  data-key="{{face.key}}" bindtap="onFace">
+                  data-key="{{face.key}}" catchtap="onFace">
               <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
             </view>
           </view>
