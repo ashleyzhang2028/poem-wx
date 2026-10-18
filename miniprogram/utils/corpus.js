@@ -456,11 +456,11 @@ function ensureEntry(id) {
   if (inPack) return Promise.resolve(inPack);
 
   const name = bucketOf(id);
-  if (!name) return Promise.resolve(null);
+  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "分片清单里没有这一条：" + id));
 
   return ensureBucket(name).then(function (r) {
     const hit = r.data[id] || null;
-    if (!hit) throw shardError("E_NO_ENTRY", "这一片里没有这一条：" + id);
+    if (!hit || !hit.text) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
     return arm(indexById(id), hit) || hit;
   });
 }

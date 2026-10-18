@@ -275,6 +275,8 @@ Page({
   textFailMsg(err) {
     const code = (err && err.code) || "";
     const say = this.errSay(err);
+    if (code === "E_NO_ENTRY") return "分片清单里没有这一篇";
+    if (code === "E_NO_TEXT") return "这一片的正文不完整，换一篇看看";
     if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器，退出重进再看";
     if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
     if (/102002|timed? ?out/i.test(say)) return "取正文超时了 —— 多半是服务实例刚被唤醒，重试一次";

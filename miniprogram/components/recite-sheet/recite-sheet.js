@@ -121,6 +121,8 @@ Component({
     this.closedAt = 0;
     this.lastPush = "";
     this.loadToken = 0;
+    this.textErr = "";
+    this.errSay = "";
   },
 
   detached() {
@@ -158,14 +160,27 @@ Component({
     },
 
     failText() {
-      return sync.ready() ? "点「同步」联网取回来" : "登录后能取回这一首的正文";
+      if (!sync.ready()) return "登录后能取回这一首的正文";
+      return "再取一次";
+    },
+
+    whyText() {
+      const code = this.textErr;
+      if (code === "E_NO_ENTRY") return "这一首不在正文分片的清单里。";
+      if (code === "E_NO_SHARDS") return "服务端这个版本没带正文分片。";
+      if (code === "E_NO_SHARD_SERVICE") return "这个包没接上取正文的服务。";
+      if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时了，多半是服务刚被唤醒。";
+      if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到取正文的服务。";
+      return "";
     },
 
     askMissing() {
+      const why = this.whyText();
       wx.showModal({
         title: "正文加载",
-        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首的正文没取到。\n\n"
-          + (sync.ready() ? "点「同步」再取一次。" : "登录后能取回这一首的正文。"),
+        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首的正文没取到。"
+          + (why ? "\n\n" + why : "")
+          + "\n\n" + (sync.ready() ? "点「同步」再取一次。" : "登录后能取回这一首的正文。"),
         confirmText: "同步",
         cancelText: "取消",
         success: (res) => {
@@ -181,7 +196,6 @@ Component({
       }
       const item = this.current();
       if (!item || this.data.loadingText) return;
-      wx.showToast({ title: "正在同步正文", icon: "none" });
       this.fetchText(item);
     },
 
@@ -220,9 +234,12 @@ Component({
           this.cancelLoad();
           this.renderCurrent(item, got, now);
         })
-        ["catch"](() => {
+        ["catch"]((err) => {
           if (token !== this.loadToken) return;
           this.cancelLoad();
+          this.textErr = (err && err.code) || "";
+          this.errSay = (err && err.message) || "";
+          this.setData({ loadingText: false });
           this.askMissing();
         });
     },

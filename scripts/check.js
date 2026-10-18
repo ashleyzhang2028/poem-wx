@@ -6449,6 +6449,13 @@ function gapped(items, max) {
   }
   ok("分片缓存有上限（不许无限占用户手机）",
     /SHARD_CACHE_MAX\s*=\s*\d+/.test(corpusSrc2));
+  {
+    const fn = corpusSrc2.slice(corpusSrc2.indexOf("function ensureEntry"));
+    ok("清单里没有这一条时抛 E_NO_ENTRY（不是静默 resolve(null)）",
+      /shardError\("E_NO_ENTRY"/.test(fn.slice(0, fn.indexOf("ensureBucket(name)"))),
+      "resolve(null) 把「清单缺这一条」与「本来就没有正文」混成一句 —— " +
+        "两个位置都只能报「取不到」，说不出是哪一环断的");
+  }
   ok("取不到时抛的是带 code 的错（界面据此说人话）",
     /shardError\("E_NO_SHARD_SERVICE"/.test(corpusSrc2));
 
