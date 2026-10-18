@@ -61,6 +61,19 @@
   </view>
 
   <view class="card">
+    <view class="card-title">季节限定</view>
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">首页显示节日节气卡</text>
+        <text class="row-sub">{{seasonalLock ? seasonalNote : '节日前两天与当天、节气周期内列出应景诗词'}}</text>
+      </view>
+      <view class="sw">
+        <switch checked="{{seasonalOn}}" disabled="{{seasonalLock}}" color="{{themeColor}}" bindchange="onSeasonal" />
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
     <view class="card-title">主题</view>
 
     <view class="swatch-grid">

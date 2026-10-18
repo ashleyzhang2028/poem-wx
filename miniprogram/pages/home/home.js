@@ -11,6 +11,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
+const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 
@@ -217,6 +218,9 @@ Page({
 
     todayLabel: "",
 
+    seasonal: null,
+    seasonalOn: false,
+
     stats: { today: 0, done: 0, left: 0, extra: 0 },
     faces: FACES,
     baseCount: 0,
@@ -246,7 +250,7 @@ Page({
 
   refresh() {
     if (!gate.logged()) {
-      this.setData(guestCatalog());
+      this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
       return;
     }
 
@@ -349,10 +353,73 @@ Page({
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
       collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
+      seasonal: this.seasonalCard(),
       loading: false
     });
 
     this.cheerCollection(colRows);
+  },
+
+  seasonalCard() {
+    const card = seasonal.card();
+    if (!card) return null;
+    const readOf = this.readOf();
+    const extra = store.dailyExtra();
+    return Object.assign({}, card, {
+      rows: card.poems.map((p, i) => Object.assign(this.poemRow(p, i, "", readOf), {
+        daily: extra.indexOf(p.id) >= 0
+      }))
+    });
+  },
+
+  seasonalRows() {
+    const card = this.data.seasonal;
+    return card ? card.rows : [];
+  },
+
+  openSeasonal() {
+    const rows = this.seasonalRows();
+    if (!rows.length) return;
+    const sheet = this.selectComponent("#sheet");
+    if (!sheet) return;
+    this.sheetSource = "seasonal";
+    this.collectionId = "";
+    this.setData({ sheetRows: rows });
+    sheet.open(rows, rows[0].id);
+  },
+
+  onSeasonalAdd(e) {
+    const id = e.currentTarget.dataset.id;
+    const r = store.toggleDailyExtra(id);
+    const box = this.selectComponent("#extra");
+    if (r.code === "E_TIER") {
+      if (box) box.askUpgrade();
+      return;
+    }
+    if (!r.ok) {
+      wx.showToast({ title: r.code === "E_LIMIT" ? "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首" : "加不进去", icon: "none" });
+      return;
+    }
+    wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
+    const rows = this.seasonalRows();
+    const at = rows.map((x) => x.id).indexOf(id);
+    if (at >= 0) this.setData({ ["seasonal.rows[" + at + "].daily"]: r.on });
+    if (box) box.refresh();
+  },
+
+  onSeasonalCollect(e) {
+    const id = e.currentTarget.dataset.id;
+    gate.guard("自选背诵", this, () => {
+      if (!entitlement.block("collections", { page: this })) return;
+      const box = this.selectComponent("#collect");
+      if (box) box.ask(id);
+    });
+  },
+
+  onSeasonalCollectDone(e) {
+    const d = (e && e.detail) || {};
+    if (!d.id || !d.collectionId) return;
+    wx.showToast({ title: "已收进「" + d.name + "」", icon: "none" });
   },
 
   collectionRows() {

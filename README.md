@@ -37,6 +37,7 @@ npm test
 | 在哪 | 是什么 |
 |---|---|
 | `scripts/corpus/` | 语料（统编版与课外集子的数据文件；取自哪一版见 `scripts/corpus/VERSION.json`） |
+| `scripts/corpus/data/poems-seasonal.js` | 本仓库补录的语料（节日节气诗词），由 `scripts/corpus-extra.js` 在构建期并进站点索引 |
 | `scripts/parity-web/` | 服务端契约的只读副本（能力表、路由表、报文清洗、存储层形状），自检拿它当基准 |
 | `api/` | 后端运行时契约（登录 / 同步 / 管理那几条路由），镜像与 `e2e-mysql` 都摊它 |
 | `miniprogram/utils/server.js` | 云调用两栏 —— **构建产物，不入库**：构建期从密钥仓库注入，用户开箱即用 |

@@ -5,6 +5,7 @@ const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
+const seasonal = require("../../../utils/seasonal");
 const tabPage = require("../../../utils/tab-page");
 
 const ALIGNS = [
@@ -41,7 +42,11 @@ Page({
     themeColor: theme.currentTheme().rgba,
 
     sfxVisible: false,
-    sfxOn: true
+    sfxOn: true,
+
+    seasonalOn: true,
+    seasonalLock: false,
+    seasonalNote: ""
   },
 
   onShow() {
@@ -61,6 +66,9 @@ Page({
         themeColor: theme.currentTheme().rgba,
         sfxVisible: fx.visible,
         sfxOn: sfx.enabled(),
+        seasonalOn: !seasonal.switched(),
+        seasonalLock: !seasonal.canSwitch(),
+        seasonalNote: seasonal.canSwitch() ? "" : seasonal.hintOf(),
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
         pinyinNote: prOn
@@ -105,6 +113,15 @@ Page({
     theme.apply(this);
     this.setData({ themeColor: picked.rgba, theme: picked.key });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
+  onSeasonal(e) {
+    const r = seasonal.setOn(e.detail.value);
+    if (!r.ok) {
+      wx.showToast({ title: seasonal.hintOf(), icon: "none" });
+    }
+    this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: !seasonal.canSwitch() });
+    if (r.ok) sync.markDirty();
   },
 
   onSfx(e) {

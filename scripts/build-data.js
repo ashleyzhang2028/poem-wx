@@ -8,6 +8,8 @@ const CORPUS_DIR = path.join(__dirname, "corpus");
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
+
+const EXTRA_CORPUS = require("./corpus-extra");
 const SERVER_KEYS = ["env", "service"];
 
 const BUCKET_KB = 200;
@@ -75,6 +77,8 @@ function main() {
     byId[m.id] = m;
     (m.entries || []).forEach(function (e) { if (!byId[e]) byId[e] = m; });
   });
+
+  EXTRA_CORPUS.attach(W);
 
   const siteIndex = W.SITE_INDEX || [];
   const books = W.SITE_BOOKS || [];

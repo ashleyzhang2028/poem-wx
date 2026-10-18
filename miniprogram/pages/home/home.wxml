@@ -78,6 +78,34 @@
       <text class="hero-cheer" wx:for="{{cheers}}" wx:key="*this">{{item}}</text>
     </view>
 
+    <view class="card seasonal" wx:if="{{seasonal}}">
+      <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="openSeasonal">
+        <text class="card-title seasonal-title">季节限定</text>
+        <text class="tag theme seasonal-tag">{{seasonal.tip}}</text>
+        <text class="all-count">{{seasonal.rows.length}}</text>
+      </view>
+
+      <view class="seasonal-list">
+        <view class="row row-flush seasonal-row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{seasonal.rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openSeasonal">
+          <view class="row-main">
+            <text class="row-title row-poem">{{item.title}}</text>
+            <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}</text>
+          </view>
+          <view class="seasonal-btns">
+            <view class="de-btn {{item.daily ? 'on' : ''}}" hover-class="de-btn-hover" hover-stay-time="60"
+                  data-id="{{item.id}}" catchtap="onSeasonalAdd"
+                  aria-label="{{item.daily ? '移出今日加背' : '加入今日加背'}}">
+              <view class="glyph ic-{{item.daily ? 'added' : 'add'}}"></view>
+            </view>
+            <view class="seasonal-collect" hover-class="de-btn-hover" hover-stay-time="60"
+                  data-id="{{item.id}}" catchtap="onSeasonalCollect"
+                  aria-label="收进自选集">收</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <view class="extra-search">
       <view class="search">
         <text class="search-icon">⌕</text>
@@ -203,6 +231,8 @@
         </view>
       </block>
     </view>
+
+    <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onSeasonalCollectDone" />
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"

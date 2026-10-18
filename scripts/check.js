@@ -1079,7 +1079,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 13], ["max", 16]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 14], ["max", 17]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -4248,15 +4248,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 const K = {
 
   counts: {
-    poems: 251, classic: 287, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
-    yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
+    poems: 251, classic: 287, yuefu: 103, tangshi: 507, gushi: 168, songci: 330,
+    yuanqu: 31, guwen: 236, jinxiandai: 25, zhaoming: 480,
     chengyu: 948, changshi: 221, mingshu: 808,
     mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
   },
 
-  cards: 5604,
+  cards: 5736,
 
-  withText: 5855,
+  withText: 5987,
 
   seqMax: { gushi: 126, songci: 331, tangshi: 469 },
 
@@ -4286,11 +4286,6 @@ function gapped(items, max) {
 
   const qb = allEntries.filter((p) => p.t === "七步诗");
   ok("《七步诗》在《古诗「非唐代」》", qb.length === 1 && qb[0].b === "gushi");
-
-  const WEI3 = ["三国·魏", "三国魏", "三国", "东汉末三国"];
-  const weiInTang = perBook.tangshi.filter((p) => WEI3.indexOf(String(p.d).trim()) >= 0);
-  ok("《唐诗》里再没有三国魏人", weiInTang.length === 0,
-    "混进了 " + weiInTang.map((p) => p.t + "(" + p.d + ")").join("、"));
 
   const KNOWN_NON_TANG = { "tangshi-ts-390": 1 };
   const nonTang = perBook.tangshi.filter((p) => String(p.d).trim() !== "唐");
@@ -4508,7 +4503,9 @@ function gapped(items, max) {
         const onlyWeb = webPeople.filter((n) => !mineSet.has(n));
         const onlyMine = mine.filter((n) => !webSet.has(n));
 
-        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜"];
+        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜",
+          "卢照邻", "苏味道", "崔液", "张说", "顾太清", "文秀", "殷尧藩", "宗懔", "皮日休",
+          "广宣", "道光帝", "任翻", "江总", "高翥", "吴惟信", "米芾", "仇远", "刘翰", "戴昺"];
         const knownHere = KNOWN_ONLY_MINE.filter((n) => !webSet.has(AI.aliasOf(n)));
         const freshMine = onlyMine.filter((n) => knownHere.indexOf(n) < 0);
         const patchedMine = knownHere.filter((n) => onlyMine.indexOf(n) < 0);
@@ -5528,6 +5525,8 @@ function gapped(items, max) {
       fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
       fs.copyFileSync(path.join(repo3, "scripts", "build-data.js"),
         path.join(tmp, "scripts", "build-data.js"));
+      fs.copyFileSync(path.join(repo3, "scripts", "corpus-extra.js"),
+        path.join(tmp, "scripts", "corpus-extra.js"));
       let err = "";
       try {
         execFileSync(process.execPath, [path.join(tmp, "scripts", "build-data.js")],
@@ -6885,6 +6884,78 @@ function gapped(items, max) {
 
     ok("设置页的开关只落一个键（selfOnly 在跨设备的设置白名单里）",
       store3.DEFAULTS.selfOnly === false && !store3.LOCAL_ONLY.selfOnly);
+
+    const SEASON = require(path.join(ROOT, "utils", "seasonal.js"));
+    const corpusSeason = require(path.join(ROOT, "utils", "corpus.js"));
+    const ghost = SEASON.WORKS.filter((w) => !corpusSeason.indexById(w[0]));
+    ok("季节限定表里的每一首都指得到语料里的作品",
+      SEASON.WORKS.length > 100 && ghost.length === 0,
+      "指向不存在的：" + ghost.slice(0, 5).map((w) => w[0] + " " + w[2]).join("、"));
+
+    const unknownFest = SEASON.WORKS.filter((w) => SEASON.TERMS.indexOf(w[1]) < 0
+      && !SEASON.TRADITIONAL.some((x) => x.key === w[1]));
+    ok("季节限定表里只出现这张表认得的节日与节气", unknownFest.length === 0,
+      "认不得：" + unknownFest.slice(0, 5).map((w) => w[1]).join("、"));
+
+    ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
+      SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
+
+    const dayOf = (y, m, d) => new Date(y, m - 1, d);
+    const at = (y, m, d) => SEASON.card(dayOf(y, m, d));
+    ok("节日前两天与当天都列（重阳 2026-10-20，前两天起）",
+      [18, 19, 20].every((d) => {
+        const c = at(2026, 10, d);
+        return !!c && c.key === "重阳节" && c.days === 3;
+      }) && at(2026, 10, 17).key !== "重阳节",
+      "实际 " + [17, 18, 19, 20, 21].map((d) => {
+        const c = at(2026, 10, d);
+        return d + ":" + (c ? c.key : "无");
+      }).join(" "));
+
+    ok("节日窗口里那几首就是表里挂在这个节日下的（去重后）",
+      (() => {
+        const c = at(2026, 10, 19);
+        const want = SEASON.WORKS.filter((w) => w[1] === "重阳节").map((w) => w[0]);
+        return c.poems.length === want.length && c.poems.every((p) => want.indexOf(p.id) >= 0);
+      })());
+
+    ok("节气在自己的周期内一直列（不只看头三天）",
+      (() => {
+        const c = at(2026, 7, 20);
+        return !!c && c.kind === "term" && c.key === "小暑";
+      })(),
+      "实际 " + JSON.stringify(at(2026, 7, 20) && at(2026, 7, 20).key));
+
+    ok("节气周期一到下一个节气就换",
+      (() => {
+        const c = at(2026, 7, 23);
+        return !!c && c.key === "大暑";
+      })());
+
+    const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
+    ok("关掉季节限定是 Pro 起的一项能力，Free 开不了",
+      !!capRow && capRow.tier === "pro"
+        && E.compareRows({ logged: false, tier: "free" })
+          .filter((r) => r.cap === SEASON.CAP)[0].cells[0].on === false);
+
+    asTier3("free");
+    ok("Free 手里那开关按不动，卡片照旧显示",
+      SEASON.canSwitch() === false && SEASON.setOn(false).ok === false && SEASON.isOn() === true);
+
+    asTier3("pro");
+    ok("Pro 关得掉，关掉之后首页不再出这张卡",
+      SEASON.setOn(false).ok === true && SEASON.switched() === true
+        && SEASON.isOn() === false && SEASON.card(dayOf(2026, 10, 19)) === null);
+
+    ok("默认为开（新装的 Free 与 Pro 都看得见）",
+      store3.DEFAULTS.seasonal === true && !store3.LOCAL_ONLY.seasonal);
+
+    ok("关掉这个开关只落一个键（跟着账号走，不进本机）",
+      store3.saveSettings({ seasonal: false }).seasonal === false
+        && store3.cloudSettings().seasonal === false);
+
+    asTier3("pro");
+    SEASON.setOn(true);
 
     store3.saveCollections([]);
     global.wx = saved;

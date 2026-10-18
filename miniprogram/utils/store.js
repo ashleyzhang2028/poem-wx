@@ -39,6 +39,8 @@ const DEFAULTS = {
 
   selfOnly: false,
 
+  seasonal: true,
+
   lastSearch: "",
 
   lastSyncAt: 0,
