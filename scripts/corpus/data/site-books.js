@@ -5,6 +5,7 @@
     { id: "poems", name: "课内诗词", page: "/", varName: "POEMS_ALL", unit: "首" },
     { id: "classic", name: "古文", page: "/classic/", varName: "POEMS_CLASSIC", unit: "篇" },
     { id: "yuefu", name: "乐府集", page: "/yuefu/", varName: "POEMS_YUEFU", unit: "首" },
+    { id: "season", name: "节日节气", page: "/season/", varName: "POEMS_SEASONAL_SEASON", unit: "首" },
     { id: "tangshi", name: "唐诗", page: "/tangshi/", varName: "POEMS_TANGSHI", unit: "首" },
     /* Issue #461：唐诗集只收唐（317 首 dynasty 全「唐」，保选本原貌）；
        先秦 / 汉魏六朝 / 宋 / 元明清的「非唐古诗」另立一部《古诗「非唐代」》。

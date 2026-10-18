@@ -150,7 +150,7 @@ const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
 const manifest = readModule(path.join(dataDir, "shards.js"));
 
-ok("集子表 17 部", (booksTable || []).length === 17, "实际 " + (booksTable || []).length);
+ok("集子表 18 部", (booksTable || []).length === 18, "实际 " + (booksTable || []).length);
 
 var corpus = require(path.join(ROOT, "utils", "corpus.js"));
 const perBook = {};
@@ -6894,10 +6894,15 @@ function gapped(items, max) {
     ok("季节限定表里只出现这张表认得的节日与节气", unknownFest.length === 0,
       "认不得：" + unknownFest.slice(0, 5).map((w) => w[1]).join("、"));
 
-    ok("季节限定每一条都取到作品，且译文有署名来源",
+    ok("季节限定每一条都取到作品", SEASON.WORKS.every((w) => !!SEASON.entryOf(w[0])));
+
+    ok("节日节气那部集子里逐首都带正文，题名与作者不留空",
+      corpusSeason.ofBook("season").every((p) => !!p.t && !!p.a && !!p.text));
+
+    ok("季节限定里带译文的篇目，译文都挂得上来源档",
       SEASON.WORKS.every((w) => {
         const hit = SEASON.entryOf(w[0]);
-        return !!hit && !!hit.tr && !!hit.src;
+        return !hit || !hit.tr || !!hit.src;
       }));
 
     ok("季节限定表里没有同一首挂两遍",
