@@ -95,7 +95,7 @@ page {
   --lh-body: 1.65;
   --lh-loose: 1.9;
 
-  --lh-poem: 1.5;
+  --lh-poem: 1.4;
   --poem-fold: 16rpx;
 
   --ls-title: 1rpx;

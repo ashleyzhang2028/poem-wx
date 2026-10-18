@@ -142,8 +142,6 @@ function annotate(clause, mode, line, at) {
 }
 
 function render(paras, mode) {
-  const probe = mode === "off" || !available() ? null : table();
-
   let seq = 0;
   return (paras || []).map((para) =>
     (para || []).map((row) => {
@@ -151,7 +149,7 @@ function render(paras, mode) {
       const line = (row || []).join("");
       let at = 0;
       return (row || []).map((clause) => {
-        const out = probe ? annotate(clause, mode, line, at) : [];
+        const out = annotate(clause, mode, line, at);
         at += clause.length;
         return { i: seq++, tokens: out };
       });

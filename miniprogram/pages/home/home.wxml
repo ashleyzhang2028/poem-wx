@@ -1,6 +1,6 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="banner" style="--status-h:{{statusBarHeight}}px;--nav-h:{{navHeight}}px">
+  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px; height: 402rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">
 
     <image class="banner-img" src="/icons/hero.png" mode="widthFix" />
 
