@@ -43,10 +43,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-
-    const bar = tabbar.sync(this, 1);
-    this.setData({ barBelow: !bar });
-    if (bar) tabbar.show(this);
+    this.setData({ barBelow: !!tabbar.sync(this, 1) });
 
     if (!gate.logged() || !E.can("library")) {
       this.setData({ locked: true, reason: E.hint("library") });

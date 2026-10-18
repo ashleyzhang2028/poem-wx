@@ -12,20 +12,12 @@ function sync(page, index) {
   return bar;
 }
 
-function show(page) {
-  const bar = barOf(page);
-  if (bar && typeof bar.show === "function") bar.show();
-}
-
-function hide(page) {
-  const bar = barOf(page);
-  if (bar && typeof bar.hide === "function") bar.hide();
-}
-
 function pick(page) {
-  const bar = sync(page, 2);
-  show(page);
-  return bar;
+  return sync(page, 2);
+}
+
+function below(page) {
+  return !!barOf(page);
 }
 
 function exists() {
@@ -34,4 +26,4 @@ function exists() {
   return !!barOf(page);
 }
 
-module.exports = { sync, show, hide, pick, exists };
+module.exports = { sync, pick, below, exists };

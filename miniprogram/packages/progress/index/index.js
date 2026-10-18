@@ -2,6 +2,7 @@ const corpus = require("../../../utils/corpus");
 const S = require("../../../utils/scheduler");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const SPAN = S.SPAN;
@@ -56,6 +57,7 @@ function rowsOf(items) {
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
 
     overview: {},
 
@@ -80,6 +82,7 @@ Page({
   onShow() {
     this.sheetIds = this.sheetIds || [];
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

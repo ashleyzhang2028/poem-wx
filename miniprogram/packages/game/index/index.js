@@ -29,7 +29,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: !tabbar.pick(this) });
+    this.setData({ barBelow: !!tabbar.pick(this) });
     if (!gate.logged()) {
       this.setData({ locked: true, cards: [] });
       return;

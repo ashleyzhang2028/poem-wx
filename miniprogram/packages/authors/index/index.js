@@ -4,12 +4,14 @@ const AI = require("../../../utils/author-index");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
 
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     locked: true,
 
     eras: [],
@@ -33,6 +35,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });

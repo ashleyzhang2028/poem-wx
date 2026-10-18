@@ -50,7 +50,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: !tabbar.pick(this) });
+    this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("exam");
     this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("exam") });
     if (!ok || this.ready) return;

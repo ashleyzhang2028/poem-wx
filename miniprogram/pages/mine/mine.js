@@ -37,10 +37,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-
-    const bar = tabbar.sync(this, 4);
-    this.setData({ barBelow: !bar });
-    if (bar) tabbar.show(this);
+    this.setData({ barBelow: !!tabbar.sync(this, 4) });
     this.refresh();
   },
 

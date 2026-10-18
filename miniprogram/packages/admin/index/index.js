@@ -1,5 +1,6 @@
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const entitlement = require("../../../utils/entitlement");
 const admin = require("../../../utils/admin");
 const icons = require("../../../utils/icons");
@@ -7,6 +8,7 @@ const icons = require("../../../utils/icons");
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     logged: false,
     usersSub: "",
 
@@ -21,6 +23,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
     this.loadStats();
   },

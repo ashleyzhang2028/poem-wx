@@ -43,7 +43,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: !tabbar.pick(this) });
+    this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
     this.setData({
       allowed: ok,

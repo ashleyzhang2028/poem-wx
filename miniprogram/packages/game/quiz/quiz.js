@@ -39,7 +39,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: !tabbar.pick(this) });
+    this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
     this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("quiz") });
     if (!ok || this.ready) return;

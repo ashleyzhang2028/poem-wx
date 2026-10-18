@@ -6,12 +6,14 @@ const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const sync = require("../../../utils/sync");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
 
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
 
     locked: false,
     on: false,
@@ -37,6 +39,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

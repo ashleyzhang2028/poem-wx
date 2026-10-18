@@ -1,4 +1,4 @@
-<view class="page" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
   <view class="card">
     <view class="card-title">隐私政策</view>

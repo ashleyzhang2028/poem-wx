@@ -7,6 +7,7 @@ const E = require("../../../utils/entitlement");
 const cols = require("../../../utils/collections");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const STAGES = S.STAGE_KEYS.map((k) => ({ key: k, name: S.STAGES[k].name }));
@@ -29,6 +30,7 @@ const TERMS = [
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     grades: [],
     terms: TERMS,
     stages: STAGES,
@@ -58,6 +60,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;
