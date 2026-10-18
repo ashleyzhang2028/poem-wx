@@ -133,12 +133,6 @@ Page({
     });
   },
 
-  onBackRoster() {
-    this.setData({ author: "", works: [] });
-    wx.setNavigationBarTitle({ title: "跬步 · 作者索引" });
-
-  },
-
   onOpen(e) {
     const id = e.currentTarget.dataset.id;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +

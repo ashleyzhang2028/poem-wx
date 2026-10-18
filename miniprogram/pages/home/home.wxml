@@ -88,9 +88,13 @@
       </view>
     </view>
 
-    <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
-
     <view class="card">
+      <view class="card-open">
+        <text class="card-title">今日课内</text>
+      </view>
+
+      <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
+
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"

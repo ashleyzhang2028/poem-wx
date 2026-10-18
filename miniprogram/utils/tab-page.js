@@ -1,7 +1,12 @@
 const MINE = "/pages/mine/mine";
+const GAME = "/packages/game/index/index";
 
 function go(url) {
   wx.switchTab({ url: url });
+}
+
+function conference() {
+  wx.navigateTo({ url: GAME });
 }
 
 function mine() {
@@ -24,4 +29,4 @@ function back(url) {
   });
 }
 
-module.exports = { go, mine, back };
+module.exports = { go, conference, mine, back };
