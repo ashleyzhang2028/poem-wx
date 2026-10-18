@@ -3,6 +3,7 @@ const pinyin = require("../../../utils/pinyin");
 const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
@@ -25,6 +26,7 @@ const PINYIN_MODES = [
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     aligns: ALIGNS,
     align: "center",
     fontSize: 0,
@@ -51,6 +53,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;

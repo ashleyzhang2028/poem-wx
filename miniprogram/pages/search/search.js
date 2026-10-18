@@ -44,10 +44,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-
-    const bar = tabbar.sync(this, 3);
-    this.setData({ barBelow: !bar });
-    if (bar) tabbar.show(this);
+    this.setData({ barBelow: !!tabbar.sync(this, 3) });
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });

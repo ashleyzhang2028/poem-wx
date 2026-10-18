@@ -17,6 +17,7 @@ const FILTERS = [
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     bookId: "",
     bookName: "",
     unit: "篇",
@@ -42,7 +43,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    tabbar.hide(this);
+    this.setData({ barBelow: tabbar.below(this) });
 
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -54,10 +55,6 @@ Page({
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: "跬步 · 课外阅读 · " + book.name });
     this.apply();
-  },
-
-  onUnload() {
-    tabbar.show(this);
   },
 
   apply() {

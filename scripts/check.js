@@ -2551,18 +2551,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       return out;
     }
 
-    const painted = HOME.concat(GAME).filter((p) => {
+    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p));
+    const offBar = allPages.filter((p) => {
       const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
       const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-      return /barBelow\s*:\s*!\s*(tabbar\.(sync|pick)\(this[,)]|bar\b)/.test(src)
-        && /barBelow \? 'has-tabbar' : 'tall'/.test(wxml);
+      return !/tabbar\.(sync|pick|below)\(this[,)]/.test(src)
+        || !/barBelow \? 'has-tabbar' : 'tall'/.test(wxml);
     });
-    ok("用到自绘底栏的页都按「挂得上才留垫片」算 barBelow",
-      painted.length === HOME.length + GAME.length,
-      HOME.concat(GAME).filter((p) => painted.indexOf(p) < 0).join("、")
-        + " —— 小程序冷启动直接进这些页时组件层还没就绪，getTabBar() 当场返回空"
-        + "（开发者工具里就是那句 `property \"inputId\" received type-incompatible value`），"
-        + "而页面照旧留着底栏高：最后一行被那 120rpx 与一条不存在的栏夹在中间");
+    ok("每一页都挂着这条栏、也留了垫片（不按页藏栏了，Issue #370）",
+      offBar.length === 0,
+      offBar.join("、")
+        + " —— 这一栏现在每页都在：不 sync / pick 就还亮着上一页的格子，"
+        + "不按 barBelow 给垫片就压在正文最后一行上");
 
     ok("大会与它的三个子页把底栏点亮在「大会」那一格",
       GAME.every((p) => call[p] === "pick"),

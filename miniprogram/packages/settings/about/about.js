@@ -1,11 +1,13 @@
 const store = require("../../../utils/store");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 
 Page({
-  data: { themeStyle: "", stats: {}, version: "1.0.0" },
+  data: { themeStyle: "", barBelow: true, stats: {}, version: "1.0.0" },
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     this.setData({ stats: store.stats() });
   },
 

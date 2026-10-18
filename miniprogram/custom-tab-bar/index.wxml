@@ -1,4 +1,4 @@
-<view class="tabbar {{pageHere ? '' : 'bar-away'}}" style="{{themeStyle}}">
+<view class="tabbar" style="{{themeStyle}}">
   <view class="tab {{active === index ? 'on' : ''}}"
         wx:for="{{list}}" wx:key="pagePath"
         data-index="{{index}}" bindtap="onTap">

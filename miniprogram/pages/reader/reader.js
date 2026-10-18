@@ -54,6 +54,7 @@ function aliasTextOf(meta) {
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     id: "",
 
     loadingText: false,
@@ -116,7 +117,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    tabbar.hide(this);
+    this.setData({ barBelow: tabbar.below(this) });
     if (!this.data.reciteMode) {
       this.setData({ hint: "" });
     }
@@ -456,7 +457,6 @@ Page({
   },
 
   onUnload() {
-    tabbar.show(this);
     if (this.advance) clearTimeout(this.advance);
     this.loadToken = (this.loadToken || 0) + 1;
   },

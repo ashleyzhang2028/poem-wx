@@ -5,7 +5,7 @@ const tabPage = require("../utils/tab-page");
 
 Component({
   data: {
-    active: 0,
+    active: -1,
     themeStyle: "",
     conference: 2,
     list: [
@@ -20,12 +20,6 @@ Component({
   attached() {
     this.painted = theme.current();
     this.setData(this.paint());
-
-    const pages = getCurrentPages();
-    const page = pages[pages.length - 1];
-    if (page && page.route === this.data.list[this.data.active].pagePath.slice(1)) {
-      this.setData({ pageHere: true });
-    }
   },
 
   methods: {
@@ -45,21 +39,10 @@ Component({
       return { themeStyle: theme.style() };
     },
 
-    show() {
-      if (this.data.pageHere) return;
-      this.setData({ pageHere: true });
-    },
-
-    hide() {
-      if (!this.data.pageHere) return;
-      this.setData({ pageHere: false });
-    },
-
     onTap(e) {
       const i = Number(e.currentTarget.dataset.index);
       const item = this.data.list[i];
       if (!item) return;
-      if (i === this.data.active) return;
       if (!gate.logged() && item.login) {
         tabPage.mine();
         return;
@@ -68,6 +51,7 @@ Component({
         tabPage.conference();
         return;
       }
+      if (i === this.data.active) return;
       tabPage.go(item.pagePath);
     }
   }

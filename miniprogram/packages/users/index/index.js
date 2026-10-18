@@ -2,11 +2,13 @@ const admin = require("./lib");
 const tiers = require("../../../utils/tiers");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
     themeStyle: "",
+    barBelow: true,
     logged: false,
 
     users: [],
@@ -19,6 +21,7 @@ Page({
 
   onShow() {
     theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
   },
 

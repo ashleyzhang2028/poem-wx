@@ -244,7 +244,7 @@ function tabBarItems() {
 
 function tabBarHtml(active, themeStyle) {
   const barWxml = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.wxml"), "utf8");
-  const data = { active: active - 1, list: tabBarItems(), themeStyle: themeStyle || "", pageHere: true };
+  const data = { active: (active || 0) - 1, list: tabBarItems(), themeStyle: themeStyle || "" };
   return compile(barWxml, data);
 }
 function themeStyleOf(data) {

@@ -1,4 +1,4 @@
-<view class="page" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="进度要登录" note="登录后才能看" mark="进" />
 
   <block wx:else>
