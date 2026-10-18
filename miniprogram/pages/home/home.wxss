@@ -30,12 +30,13 @@
 
 .hero {
   padding: var(--sp-3) var(--sp-3);
+  background: transparent;
 }
 
 .home .hero-lead {
   position: relative;
   z-index: 1;
-  margin-top: calc(-1 * var(--sp-5));
+  margin-top: calc(-5 * var(--sp-5));
 }
 
 .hero-eyebrow {

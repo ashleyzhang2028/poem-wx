@@ -1,5 +1,6 @@
 {
   "navigationBarTitleText": "跬步诗词",
+  "navigationStyle": "custom",
   "usingComponents": {
     "recite-sheet": "/components/recite-sheet/recite-sheet",
     "daily-extra": "/components/daily-extra/daily-extra"

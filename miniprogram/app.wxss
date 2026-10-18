@@ -1542,10 +1542,13 @@ button, textarea {
   margin-top: calc(-1 * var(--poem-fold));
 }
 
+.poem-line.token-line + .poem-line.token-line {
+  margin-top: calc(var(--py-slot) * -0.2);
+}
+
 .md-table {
   width: 100%;
   margin: var(--sp-3) 0;
-  white-space: nowrap;
 }
 
 .md-row {
@@ -1553,12 +1556,9 @@ button, textarea {
   align-items: stretch;
 }
 
-.md-row:last-child .md-cell {
-  flex: 1;
-}
-
 .md-cell {
-  flex: none;
+  flex: 1 1 0;
+  min-width: 0;
   box-sizing: border-box;
   padding: var(--sp-1) calc(8rpx * var(--ui-scale));
   border-right: 1rpx solid var(--line-strong);
@@ -1581,7 +1581,7 @@ button, textarea {
 }
 
 .md-line {
-  display: block;
+  display: inline;
 }
 
 .poem-body.align-left .poem-line {
