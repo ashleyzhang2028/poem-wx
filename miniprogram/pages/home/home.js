@@ -43,7 +43,8 @@ const PAGE_ICONS = {
   checked: icons.added,
   add: icons.add,
   added: icons.added,
-  playlist: icons.playlist
+  playlist: icons.playlist,
+  refresh: icons.refresh
 };
 
 function datasetOf(e) {
@@ -406,6 +407,12 @@ Page({
         daily: extra.indexOf(p.id) >= 0
       }))
     });
+  },
+
+  onSeasonalRefresh(e) {
+    if (!seasonal.redraw()) return;
+    const card = this.seasonalCard();
+    if (card) this.setData({ seasonal: card });
   },
 
   seasonalRows() {

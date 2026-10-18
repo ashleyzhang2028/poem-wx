@@ -7029,13 +7029,6 @@ function gapped(items, max) {
         && (at(2026, 10, 16) || {}).tip === "2日后 · 重阳节",
       "实际 " + [16, 17, 18].map((d) => d + ":" + ((at(2026, 10, d) || {}).tip || "无")).join(" "));
 
-    ok("节日窗口里那几首就是表里挂在这个节日下的（去重后）",
-      (() => {
-        const c = at(2026, 10, 18);
-        const want = SEASON.WORKS.filter((w) => w[1] === "重阳节").map((w) => w[0]);
-        return c.poems.length === want.length && c.poems.every((p) => want.indexOf(p.id) >= 0);
-      })());
-
     ok("传统节日走完三天交回给所在节气，中间不断档",
       (() => {
         const keys = [19, 20, 21, 22, 23].map((d) => (at(2026, 10, d) || {}).key || "");
@@ -7057,6 +7050,39 @@ function gapped(items, max) {
           && next.key === "芒种" && next.elapsed === 1;
       })(),
       "实际 " + JSON.stringify(SEASON.active(dayOf(2026, 5, 21)).map((h) => h.key)));
+
+    ok("卡片上的篇目都来自这一天挂得上的节日与节气，节日那类最多三首、不重样",
+      (() => {
+        const c = at(2026, 10, 18);
+        if (!c || c.more !== true) return false;
+        const want = SEASON.WORKS.filter((w) => w[1] === "重阳节").map((w) => w[0]);
+        const ids = c.poems.map((p) => p.id);
+        return c.poems.every((p) => want.indexOf(p.id) >= 0)
+          && ids.length === 3
+          && ids.filter((id, i) => ids.indexOf(id) === i).length === 3;
+      })(),
+      "实际 " + ((at(2026, 10, 18) || {}).poems || []).map((p) => p.id).join("、"));
+
+    ok("挂得不够三首就全列，且不出去换的图标",
+      (() => {
+        const c = at(2026, 5, 21);
+        return !!c && c.key === "小满" && c.poems.length === 1 && c.more === false && c.refresh === false;
+      })(),
+      "实际 " + JSON.stringify(at(2026, 5, 21) || null).slice(0, 120));
+
+    ok("换一批只换当天这张卡上的那一类，换出来的还是三首且不重样",
+      (() => {
+        const day = dayOf(2026, 10, 18);
+        const before = (SEASON.card(day) || {}).poems || [];
+        if (!SEASON.redraw(day)) return false;
+        const next = SEASON.card(day) || {};
+        const ids = (next.poems || []).map((p) => p.id);
+        if (before.length !== 3 || next.refresh !== true || ids.length !== 3) return false;
+        return ids.filter((id, i) => ids.indexOf(id) === i).length === 3;
+      })());
+
+    ok("挂得不够三首时换不了，刷新图标也就不出来",
+      SEASON.card(dayOf(2026, 5, 21)).refresh === false && SEASON.redraw(dayOf(2026, 5, 21)) === false);
 
     const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
     ok("隐藏季节限定是 Pro 起的一项能力，Free 开不了",
@@ -7092,6 +7118,13 @@ function gapped(items, max) {
 
   const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
   const homeWxml4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+  ok("换一批的图标拢在标题行里，点一下重新取卡、不去开弹层",
+    /wx:if="\{\{seasonal\.refresh\}\}"/.test(homeWxml4)
+      && /catchtap="onSeasonalRefresh"/.test(homeWxml4)
+      && /onSeasonalRefresh\(/.test(homeSrc4)
+      && /seasonal\.redraw\(\)/.test(homeSrc4)
+      && /setData\(\{ seasonal: card \}\)/.test(homeSrc4));
+
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
   ok("自选集子的今日份背完给一次提示（每张卡带完成态，首页顶部跟着显示）",

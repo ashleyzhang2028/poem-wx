@@ -29,6 +29,7 @@ const NAMES = [
   ["all", "CilTextSize.svg"],
   ["zoomOut", "CilZoomOut.svg"],
   ["zoomIn", "CilZoomIn.svg"],
+  ["refresh", "CilLoop.svg"],
   ["chart", "CilChartBar.svg"],
   ["trend", "CilChartLine.svg"]
 ];
