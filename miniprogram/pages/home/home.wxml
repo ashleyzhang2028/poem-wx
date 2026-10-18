@@ -249,7 +249,7 @@
       </block>
     </view>
 
-    <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onSeasonalCollectDone" />
+    <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"

@@ -312,7 +312,7 @@ Page({
     const allList = selfOnly ? [] : scopeList(all, view, scope);
     const allMode = this.data.allOpen || this.sheetSource === "all";
     const allRows = allMode ? rowsOfScope(allList, scope) : [];
-    const sheetRows = this.collectionId ? this.collectionSheetRows(this.collectionId) : [];
+    const sheetRows = this.sheetRowsOf(this.data.plan);
 
     const readOf = this.readOf();
     const recorded = store.dayPlan(S.planKeyOf({
@@ -383,7 +383,7 @@ Page({
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
-      sheetRows: this.collectionId ? sheetRows : (this.sheetSource === "all" ? allRows : rows),
+      sheetRows: sheetRows,
       selfOnly: selfOnly,
       selfPraise: selfAllDone ? praiseOf("own") : "",
       collections: colRows,
@@ -468,10 +468,18 @@ Page({
     });
   },
 
-  onSeasonalCollectDone(e) {
+  onCollectDone(e) {
     const d = (e && e.detail) || {};
     if (!d.id || !d.collectionId) return;
+    this.refresh();
     wx.showToast({ title: "已收进「" + d.name + "」", icon: "none" });
+  },
+
+  sheetRowsOf(plan) {
+    if (this.collectionId) return this.collectionSheetRows(this.collectionId);
+    if (this.sheetSource === "all") return this.scopeRows();
+    if (this.sheetSource === "seasonal") return this.seasonalRows();
+    return plan;
   },
 
   collectionRows() {
