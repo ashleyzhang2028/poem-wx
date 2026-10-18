@@ -233,6 +233,13 @@
   margin-top: var(--sp-2);
 }
 
+.seasonal-note {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
 .seasonal-btns {
   flex: none;
   display: flex;

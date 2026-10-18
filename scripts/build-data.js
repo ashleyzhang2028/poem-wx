@@ -9,7 +9,6 @@ const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 
-const EXTRA_CORPUS = require("./corpus-extra");
 const SERVER_KEYS = ["env", "service"];
 
 const BUCKET_KB = 200;
@@ -18,7 +17,8 @@ const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
   "public-domain": "原文属公有领域，依据公认注本与通行译注",
-  modern: "依据现行通用选本与通行讲法"
+  modern: "依据现行通用选本与通行讲法",
+  unverified: "非正规译注：机器整理的释义，未逐字校对，仅备参考，请自行校验对错"
 };
 
 const POEM_FILES = [
@@ -77,8 +77,6 @@ function main() {
     byId[m.id] = m;
     (m.entries || []).forEach(function (e) { if (!byId[e]) byId[e] = m; });
   });
-
-  EXTRA_CORPUS.attach(W);
 
   const siteIndex = W.SITE_INDEX || [];
   const books = W.SITE_BOOKS || [];

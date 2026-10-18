@@ -386,6 +386,15 @@ Page({
     this.collectionId = "";
     this.setData({ sheetRows: rows });
     sheet.open(rows, rows[0].id);
+    this.attachSeasonal(rows);
+  },
+
+  attachSeasonal(rows) {
+    rows.forEach((row) => {
+      const item = seasonal.entryOf(row.id);
+      if (!item) return;
+      corpus.withTranslation(row, item);
+    });
   },
 
   onSeasonalAdd(e) {

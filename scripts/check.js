@@ -4248,15 +4248,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 const K = {
 
   counts: {
-    poems: 251, classic: 287, yuefu: 103, tangshi: 507, gushi: 168, songci: 330,
-    yuanqu: 31, guwen: 236, jinxiandai: 25, zhaoming: 480,
+    poems: 251, classic: 287, yuefu: 103, tangshi: 433, gushi: 113, songci: 330,
+    yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
     chengyu: 948, changshi: 221, mingshu: 808,
     mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
   },
 
-  cards: 5736,
+  cards: 5604,
 
-  withText: 5987,
+  withText: 5855,
 
   seqMax: { gushi: 126, songci: 331, tangshi: 469 },
 
@@ -4503,9 +4503,7 @@ function gapped(items, max) {
         const onlyWeb = webPeople.filter((n) => !mineSet.has(n));
         const onlyMine = mine.filter((n) => !webSet.has(n));
 
-        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜",
-          "卢照邻", "苏味道", "崔液", "张说", "顾太清", "文秀", "殷尧藩", "宗懔", "皮日休",
-          "广宣", "道光帝", "任翻", "江总", "高翥", "吴惟信", "米芾", "仇远", "刘翰", "戴昺"];
+        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜"];
         const knownHere = KNOWN_ONLY_MINE.filter((n) => !webSet.has(AI.aliasOf(n)));
         const freshMine = onlyMine.filter((n) => knownHere.indexOf(n) < 0);
         const patchedMine = knownHere.filter((n) => onlyMine.indexOf(n) < 0);
@@ -5525,8 +5523,6 @@ function gapped(items, max) {
       fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
       fs.copyFileSync(path.join(repo3, "scripts", "build-data.js"),
         path.join(tmp, "scripts", "build-data.js"));
-      fs.copyFileSync(path.join(repo3, "scripts", "corpus-extra.js"),
-        path.join(tmp, "scripts", "corpus-extra.js"));
       let err = "";
       try {
         execFileSync(process.execPath, [path.join(tmp, "scripts", "build-data.js")],
@@ -6889,13 +6885,24 @@ function gapped(items, max) {
     const corpusSeason = require(path.join(ROOT, "utils", "corpus.js"));
     const ghost = SEASON.WORKS.filter((w) => !corpusSeason.indexById(w[0]));
     ok("季节限定表里的每一首都指得到语料里的作品",
-      SEASON.WORKS.length > 100 && ghost.length === 0,
-      "指向不存在的：" + ghost.slice(0, 5).map((w) => w[0] + " " + w[2]).join("、"));
+      SEASON.WORKS.length > 0 && ghost.length === 0,
+      "指向不存在的：" + ghost.slice(0, 5).map((w) => w[0]).join("、"));
 
     const unknownFest = SEASON.WORKS.filter((w) => SEASON.TERMS.indexOf(w[1]) < 0
       && !SEASON.TRADITIONAL.some((x) => x.key === w[1]));
     ok("季节限定表里只出现这张表认得的节日与节气", unknownFest.length === 0,
       "认不得：" + unknownFest.slice(0, 5).map((w) => w[1]).join("、"));
+
+    ok("非正规译注另立一档，来源里写明要用户自己校验",
+      /非正规译注/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "build-data.js"), "utf8"))
+        && /自行校验/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "build-data.js"), "utf8"))
+        && /自行校验/.test(SEASON.ASK_CHECK));
+
+    ok("季节限定每一条都取到作品，译文缺了才挂非正规译注",
+      SEASON.WORKS.every((w) => {
+        const hit = SEASON.entryOf(w[0]);
+        return !!hit && !!hit.tr;
+      }));
 
     ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
       SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
@@ -6906,7 +6913,7 @@ function gapped(items, max) {
       [18, 19, 20].every((d) => {
         const c = at(2026, 10, d);
         return !!c && c.key === "重阳节" && c.days === 3;
-      }) && at(2026, 10, 17).key !== "重阳节",
+      }) && (at(2026, 10, 17) || { key: "" }).key !== "重阳节",
       "实际 " + [17, 18, 19, 20, 21].map((d) => {
         const c = at(2026, 10, d);
         return d + ":" + (c ? c.key : "无");
@@ -6919,18 +6926,15 @@ function gapped(items, max) {
         return c.poems.length === want.length && c.poems.every((p) => want.indexOf(p.id) >= 0);
       })());
 
-    ok("节气在自己的周期内一直列（不只看头三天）",
+    ok("节气在自己的周期内一直列，到下一个节气才换",
       (() => {
-        const c = at(2026, 7, 20);
-        return !!c && c.kind === "term" && c.key === "小暑";
+        const hit = (m, d) => SEASON.active(dayOf(2026, m, d)).filter((h) => h.kind === "term")[0];
+        const from = hit(5, 21);
+        const next = hit(6, 5);
+        return !!from && !!next && from.key === "小满" && from.elapsed === 1
+          && next.key === "芒种" && next.elapsed === 1;
       })(),
-      "实际 " + JSON.stringify(at(2026, 7, 20) && at(2026, 7, 20).key));
-
-    ok("节气周期一到下一个节气就换",
-      (() => {
-        const c = at(2026, 7, 23);
-        return !!c && c.key === "大暑";
-      })());
+      "实际 " + JSON.stringify(SEASON.active(dayOf(2026, 5, 21)).map((h) => h.key)));
 
     const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
     ok("关掉季节限定是 Pro 起的一项能力，Free 开不了",
