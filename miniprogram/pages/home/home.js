@@ -37,7 +37,14 @@ const FACES = [
   { key: "good", icon: icons.smile, cls: "good", label: "记住" }
 ];
 
-const PAGE_ICONS = { search: icons.search, clear: icons.clear, checked: icons.added };
+const PAGE_ICONS = {
+  search: icons.search,
+  clear: icons.clear,
+  checked: icons.added,
+  add: icons.add,
+  added: icons.added,
+  playlist: icons.playlist
+};
 
 function datasetOf(e) {
   const box = {};

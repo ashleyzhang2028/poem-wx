@@ -70,17 +70,19 @@ function windowOf(name, today) {
   const list = [year - 1, year, year + 1].map((y) => dayOf(entry, y)).filter((x) => x > 0);
   let hit = null;
   list.forEach((at) => {
+    const from = at - F.LEAD * DAY;
     const elapsed = Math.round((midnight(today) - at) / DAY);
-    if (elapsed >= 0 && elapsed < F.SHOW_DAYS && (!hit || at > hit.at)) hit = { at: at, elapsed: elapsed };
+    if (elapsed >= -F.LEAD && elapsed < F.SHOW_DAYS - F.LEAD
+      && (!hit || at > hit.at)) hit = { at: at, from: from, elapsed: elapsed };
   });
   if (!hit) return null;
   return {
     key: name,
     kind: "festival",
-    elapsed: hit.elapsed,
+    elapsed: hit.elapsed + F.LEAD,
     days: F.SHOW_DAYS,
-    from: hit.at,
-    to: hit.at + F.SHOW_DAYS * DAY
+    from: hit.from,
+    to: hit.from + F.SHOW_DAYS * DAY
   };
 }
 
@@ -187,13 +189,17 @@ function hintOf() {
   return entitlement.hint(CAP);
 }
 
+const KIND_NAME = { festival: "节日", term: "节气" };
+
+function tagOf(hit) {
+  return (KIND_NAME[hit.kind] || "") + " · " + hit.key;
+}
+
 function tipOf(hit) {
-  if (hit.kind === "season") return hit.of;
-  if (hit.kind !== "festival") return hit.key + " 第 " + (hit.elapsed + 1) + " 天";
+  if (hit.kind !== "festival") return tagOf(hit);
   const left = hit.days - 1 - hit.elapsed;
-  if (left === 0) return "今日" + hit.key;
-  if (left === 1) return "明天" + hit.key;
-  return left + " 天后的" + hit.key;
+  const when = left === 0 ? "" : (left === 1 ? "明日" : left + "日后");
+  return when ? when + " · " + hit.key : hit.key;
 }
 
 function entryOf(id) {
@@ -212,6 +218,7 @@ function card(now) {
       kind: hit.kind,
       elapsed: hit.elapsed,
       days: hit.days,
+      tag: tagOf(hit),
       tip: tipOf(hit),
       from: hit.from,
       poems: list

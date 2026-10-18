@@ -250,20 +250,6 @@
   gap: var(--sp-2);
 }
 
-.seasonal-collect {
-  width: 60rpx;
-  height: 60rpx;
-  box-sizing: border-box;
-  border: 1rpx solid var(--line);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  background: var(--sink);
-}
-
 .de-btn {
   flex: none;
   width: 60rpx;
