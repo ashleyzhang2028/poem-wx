@@ -93,32 +93,6 @@ function pickedToday(rec) {
   return (last && last.result) || "";
 }
 
-function countBy(rows, of) {
-  const box = {};
-  rows.forEach((it) => {
-    const k = of(it);
-    if (k) box[k] = (box[k] || 0) + 1;
-  });
-  return box;
-}
-
-function heroStatsOf(rows) {
-  const list = [];
-  const reason = countBy(rows, (it) => REASON_TEXT[it.reasonKey]);
-  const source = countBy(rows, (it) => it.source);
-  const picked = countBy(rows, (it) => it.picked);
-  ["新学", "复习"].forEach((k) => {
-    if (reason[k]) list.push({ key: k, text: k + " " + reason[k] });
-  });
-  ["课内", "自选"].forEach((k) => {
-    if (source[k]) list.push({ key: k, text: k + " " + source[k] });
-  });
-  FACES.forEach((f) => {
-    if (picked[f.key]) list.push({ key: f.key, text: f.label + " " + picked[f.key] });
-  });
-  return list;
-}
-
 function sourceKey(id) {
   const meta = corpus.indexById(id);
   return meta && meta.b === "poems" ? "course" : "own";
@@ -246,7 +220,6 @@ Page({
     todayLabel: "",
 
     stats: { extra: 0, self: 0, selfDone: 0 },
-    heroStats: [],
     faces: FACES,
     baseCount: 0,
     allDone: false,
@@ -326,7 +299,6 @@ Page({
         author: it.poem.a,
         dynasty: it.poem.d,
         reason: REASON_TEXT[it.reason] || "",
-        reasonKey: it.reason,
         tagCls: reasonCls(it.reason),
 
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
@@ -356,7 +328,6 @@ Page({
       termName: S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       plan: rows,
-      heroStats: heroStatsOf(rows),
       doneCount: done,
       total,
       baseCount: base,
@@ -450,7 +421,6 @@ Page({
       author: p.a,
       dynasty: p.d,
       reason: REASON_TEXT[reason] || "",
-      reasonKey: reason || "",
       tagCls: reasonCls(reason),
       stage: stage === REASON_TEXT[reason] ? "" : stage,
       mastery: S.mastery(rec),
