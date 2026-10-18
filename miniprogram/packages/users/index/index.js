@@ -64,7 +64,7 @@ Page({
           ? "你的账号没有改档位的权限。"
           : "同步服务器还没接上，名录只读。",
         showCancel: false,
-        confirmText: "知道了"
+        confirmText: "好"
       });
       return;
     }

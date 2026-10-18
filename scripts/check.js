@@ -1128,6 +1128,18 @@ Object.keys(WEB_TIER).forEach((k) => {
     wxml.indexOf("<scroll-view") < 0,
     "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
   ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
+  ok("档位与登录的对话框都收在 entitlement 里，「升级」落到用户权限页",
+    /function showTier\s*\(/.test(entSys) && /function showLogin\s*\(/.test(entSys)
+      && /onTierGate/.test(entSys) && /onLoginGate/.test(entSys)
+      && /url:\s*"\/packages\/mine\/tier\/tier"/.test(entSys)
+      && !/askDailyUpgrade|askUpgrade/.test(entSys),
+    "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
+  ok("确认按钮不超过两个字、取消一律叫「取消」（Issue #370）",
+    jsFiles.every((f) => {
+      const s = fs.readFileSync(f, "utf8");
+      return !/confirmText:\s*"(.{3,})"/.test(s) && !/cancelText:\s*"(?!取消")[^"]+"/.test(s);
+    }),
+    "对话框里还有三个字的确认键，或者取消那枚叫「再看看」「算了」");
   ok("对比表格子里的图标只两枚（有就是 yes、没有就是 no）",
     (() => {
       const inst = js;
@@ -2534,7 +2546,6 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       vals.every((v) => v >= 0) && new Set(vals).size === vals.length,
       JSON.stringify(syncs) + " —— 少调、重号或调错，切过去还亮着上一栏");
 
-    const stray = Object.keys(homeCallAll()).filter((p) => !HOME.includes(p) && !GAME.includes(p));
     function homeCallAll() {
       const out = {};
       const walk = (dir) => {
@@ -3250,7 +3261,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id, source) {"));
   ok("弹层由首页把门禁，组件自己不查",
     /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
-      && sheetJs.replace(/\/\*[\s\S]*?\*\//g, "").indexOf("gate") < 0,
+      && !/gate\.(?!Tier)/.test(sheetJs.replace(/\/\*[\s\S]*?\*\//g, "")),
     "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
@@ -3818,10 +3829,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /require\("\.\/entitlement"\)\.decide\("extra"\)/.test(storeSrc)
       && /E_TIER/.test(storeSrc)
       && compJs.indexOf("E_TIER") >= 0
-      && /askDailyUpgrade/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8"))
-      && /askDailyUpgrade/.test(fs.readFileSync(
+      && /entitlement\.gateTier\("extra"/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8"))
+      && /entitlement\.gateTier\("extra"/.test(fs.readFileSync(
         path.join(ROOT, "components/recite-sheet/recite-sheet.js"), "utf8"))
-      && /wx\.showModal/.test(compJs),
+      && /entitlement\.gateTier\("extra"/.test(compJs),
     "Free 档还能往今日加背里加诗 —— 档位这道门只在 store 判，页面各写一份就对不齐");
   ok("能力表里有 extra（与网页版对齐）", E.CAP_KEYS.indexOf("extra") >= 0);
   ok("计划卡下面挂着「全部诗词」那张卡，默认折叠、开关是个上下方向的图标",

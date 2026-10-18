@@ -80,6 +80,10 @@ Page({
     tabPage.mine();
   },
 
+  onTierGate() {
+    E.openTierPage();
+  },
+
   onOpenBook(e) {
     if (!E.block("library", { page: this })) return;
     wx.navigateTo({ url: "/pages/list/list?book=" + e.currentTarget.dataset.b });

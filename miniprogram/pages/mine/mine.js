@@ -94,6 +94,7 @@ Page({
       title: "退出登录",
       content: "退出后背诵数据不会丢，但功能要重新登录才能用。",
       confirmText: "退出",
+      cancelText: "取消",
       success: (r) => {
         if (!r.confirm) return;
         auth.logout();
@@ -188,8 +189,11 @@ Page({
   },
 
   onLoginGate() {
-
     this.onLogin();
+  },
+
+  onTierGate() {
+    this.onTier();
   },
 
   onPrivacy() {
@@ -201,6 +205,7 @@ Page({
       title: "清空背诵数据",
       content: "背诵进度、已读标记、今日加背都会删掉，本机与云端的记录一起清，且无法恢复。",
       confirmText: "清空",
+      cancelText: "取消",
       confirmColor: "#a83b32",
       success: (res) => {
         if (!res.confirm) return;

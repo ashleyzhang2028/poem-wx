@@ -117,6 +117,16 @@
     </view>
   </view>
 
+  <view class="card">
+    <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onPermissions">
+      <view class="row-main">
+        <text class="row-title">用户权限</text>
+        <text class="row-sub">免费能读能看，背诵与自选要登录并升档</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
   <view class="card recite-card" wx:if="{{reciteMode}}">
     <radio-group class="chip-group cols-3 actions" bindchange="onResult">
       <label class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key">

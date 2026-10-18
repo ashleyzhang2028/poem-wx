@@ -163,7 +163,7 @@ Page({
       title: "清空今日加背",
       content: "把今天加背的 " + n + " 首全部移出？已经背过的进度与掌握度一个字都不动。",
       confirmText: "清空",
-      cancelText: "算了",
+      cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const gone = store.clearDailyExtra();

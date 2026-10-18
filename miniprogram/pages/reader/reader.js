@@ -171,6 +171,7 @@ Page({
 
   newCollection(poemId) {
     const cap = cols.capOf();
+    if (!entitlement.gateTier("collections", { page: this })) return;
     if (cols.list().length >= cap) {
       wx.showToast({ title: "最多 " + cap + " 个集合，先删一个", icon: "none" });
       return;
@@ -179,6 +180,8 @@ Page({
       title: "新建自选集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
+      confirmText: "新建",
+      cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const made = cols.create(res.content);
@@ -208,7 +211,7 @@ Page({
   onToggleDaily() {
     const r = store.toggleDailyExtra(this.data.id);
     if (r.code === "E_TIER") {
-      this.askDailyUpgrade();
+      entitlement.gateTier("extra", { page: this });
       return;
     }
     if (!r.ok) {
@@ -220,16 +223,8 @@ Page({
     sync.markDirty();
   },
 
-  askDailyUpgrade() {
-    wx.showModal({
-      title: "今日加背 · Pro / Max 专享",
-      content: "「今日加背」是 Pro 与 Max 的计划容量：除了每天固定的篇目，还能自己再挑几首一起背。\n\n"
-        + "你现在的档位是 " + entitlement.status().label + "，阅读与搜索不受影响。"
-        + "如果想让今天多背几首，升级到 Pro 或 Max 就能自己加。\n\n"
-        + "感谢你认真对待每一次背诵。",
-      confirmText: "知道了",
-      showCancel: false
-    });
+  onTierGate() {
+    entitlement.openTierPage();
   },
 
   dailyMsg(r) {
@@ -394,6 +389,10 @@ Page({
 
   onLoginGate() {
     tabPage.mine();
+  },
+
+  onPermissions() {
+    entitlement.openTierPage();
   },
 
   onPinyin(e) {
