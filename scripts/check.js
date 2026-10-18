@@ -6933,11 +6933,10 @@ function gapped(items, max) {
     /const SOURCE_TEXT = \{ course: "课内", own: "自选" \}/.test(homeSrc4)
       && /function sourceKey\(id\)/.test(homeSrc4)
       && /meta\.b === "poems" \? "course" : "own"/.test(homeSrc4)
-      && homeWxml4.indexOf("{{item.source}}") >= 0
-      && homeWxml4.indexOf("{{item.source === '课内' ? 'course' : 'own'}}") >= 0);
-  ok("首页四张卡的篇目行都带来源胶囊（今日 / 全部诗词 / 每个自选集子）",
-    (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 3
-      && /class="tag row-tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reasonOn\}\}">\{\{item\.reason\}\}/.test(homeWxml4));
+      && (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 2);
+  ok("今日计划与自选集合的篇目行带来源与原因胶囊，全部诗词那张卡只带名次与进度",
+    (homeWxml4.match(/\{\{item\.source === '课内' \? 'course' : 'own'\}\}/g) || []).length === 2
+      && (homeWxml4.match(/class="tag row-tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reasonOn\}\}">\{\{item\.reason\}\}/g) || []).length === 2);
 
   const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",

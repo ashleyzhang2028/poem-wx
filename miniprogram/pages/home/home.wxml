@@ -193,10 +193,7 @@
               wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
-            <view class="row-line">
-              <text class="row-title row-poem">{{item.title}}</text>
-              <text class="tag {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
-            </view>
+            <text class="row-title row-poem">{{item.title}}</text>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
           <view class="row-end">

@@ -86,18 +86,6 @@
   opacity: .82;
 }
 
-.row-line {
-  display: flex;
-  align-items: center;
-}
-
-.row-line .row-title {
-  flex: 0 1 auto;
-
-  min-width: 0;
-  margin-right: var(--sp-1);
-}
-
 .row-state {
   flex: none;
   margin-left: var(--sp-1);
