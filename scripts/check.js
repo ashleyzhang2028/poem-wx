@@ -323,16 +323,30 @@ const R = require(path.join(ROOT, "utils", "review-models.js"));
 
 ok("四套算法都在", R.ORDER.length === 4 && R.ORDER.every((k) => R.MODELS[k]));
 
-let rec = R.review(null, "good", "ebbinghaus");
-const afterGood = rec.nextReviewAt - rec.lastReviewAt;
-rec = R.review(null, "bad", "ebbinghaus");
-const afterBad = rec.nextReviewAt - rec.lastReviewAt;
-ok("忘记后 30 分钟内回来", Math.abs(afterBad - 30 * 60 * 1000) < 1000);
-ok("模糊后 12 小时回来", (() => {
-  const r = R.review(null, "fuzzy", "ebbinghaus");
-  return Math.abs(r.nextReviewAt - r.lastReviewAt - 12 * 3600 * 1000) < 1000;
-})());
-ok("记住后间隔不短于忘记后", afterGood > afterBad);
+{
+  const noon = new Date(2025, 0, 6, 12, 0, 0).getTime();
+  const evening = new Date(2025, 0, 6, 23, 0, 0).getTime();
+  const nextAt = (t, result) => R.review(null, result, "ebbinghaus", t).nextReviewAt;
+  const noonBad = nextAt(noon, "bad");
+  const noonFuzzy = nextAt(noon, "fuzzy");
+  const eveningBad = nextAt(evening, "bad");
+  const eveningFuzzy = nextAt(evening, "fuzzy");
+  ok("忘记 / 模糊：下一次落在复习时刻上，不落在半夜",
+    noonBad === R.startOfDay(noon) + 2 * R.DAY + 9 * R.HOUR
+      && noonFuzzy === noonBad
+      && eveningBad === R.startOfDay(evening) + R.DAY + 9 * R.HOUR
+      && eveningFuzzy === eveningBad,
+    "中午评「忘记」落在 " + new Date(noonBad).toLocaleString("zh-CN")
+      + "，评「模糊」落在 " + new Date(noonFuzzy).toLocaleString("zh-CN")
+      + "；夜里 23 点评「忘记」落在 " + new Date(eveningBad).toLocaleString("zh-CN")
+      + "。12 小时 / 30 分钟这样的短间隔照着结果类型硬加，就会把复习推到半夜或凌晨，"
+      + "而人在那个点上不会背诗");
+  ok("隔天的复习都排在同一天的同一刻，日历上的到期日与排期不打架",
+    [noonBad, noonFuzzy, eveningBad, eveningFuzzy, nextAt(noon, "good")].every((at) =>
+      at === R.startOfDay(at) + 9 * R.HOUR || at === R.startOfDay(at) + R.DAY + 9 * R.HOUR),
+    "有个结果排到了 9 点以外：" + [noonBad, noonFuzzy, eveningBad, eveningFuzzy]
+      .map((at) => new Date(at).toLocaleString("zh-CN")).join(" / "));
+}
 
 R.ORDER.forEach((key) => {
   const r = R.review({ level: 5, learned: true, lapses: 1, reviewCount: 6 }, "good", key);
@@ -3011,14 +3025,16 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /\.poem-meta\s*\{[^}]*text-overflow\s*:\s*ellipsis/.test(metaWxss)
       && /\.poem-meta-row\s*\{[^}]*flex-wrap\s*:\s*nowrap/.test(metaWxss));
 
-  ok("三种结果各给一句提示，且不是同一句",
+  ok("评分后的提示读的是记录上的下次复习时刻",
     (() => {
       const rm = require(path.join(ROOT, "utils", "review-models.js"));
-      const a = rm.resultHint("k", "fuzzy", null);
-      const b = rm.resultHint("k", "bad", null);
-      const c = rm.resultHint("k", "good", { nextReviewAt: Date.now() + 86400000 });
-      return !!a && !!b && !!c && a !== b && b !== c;
-    })());
+      const at = new Date(2025, 0, 7, 9, 0, 0).getTime();
+      const hint = rm.resultHint("k", "good", { nextReviewAt: at });
+      const other = rm.resultHint("k", "good", { nextReviewAt: at + 86400000 });
+      return hint.indexOf("1 月 7 日") >= 0 && other.indexOf("1 月 8 日") >= 0;
+    })(),
+    "提示若自己按结果类型算「N 小时 / N 分钟后」，就和记录上的 nextReviewAt 对不上 —— "
+      + "用户照着提示去等，等到的不是排期里那一天");
 }
 
 {
