@@ -2398,6 +2398,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const barSrc = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
   const barWxml = fs.readFileSync(path.join(tabRoot, "index.wxml"), "utf8");
   const barWxss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
+  const tabPageSrc = fs.readFileSync(path.join(ROOT, "utils", "tab-page.js"), "utf8");
 
   {
     const items = barSrc.match(/\{ pagePath: "([^"]+)", text: "([^"]+)", icon: icons\.[a-z]+([^}]*)\}/g) || [];
@@ -2422,8 +2423,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && /\.tab-ico-mask[\s\S]{0,400}background-color:\s*currentColor/.test(barWxss)
         && /mask-size:\s*contain/.test(barWxss),
       "底栏图标还是两张 <image> 切 visibility —— 换不出主题色，也踩 <image> 认不认 data URI 这条");
-    ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里 switchTab 只在非大会项上）",
-      /noSwitch/.test(barSrc) && /if \(item\.noSwitch\)[\s\S]{0,120}wx\.navigateTo/.test(barSrc),
+    ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里只有大会那一格转给 tabPage.conference）",
+      /conference: 2/.test(barSrc)
+        && /if \(i === this\.data\.conference\)[\s\S]{0,80}tabPage\.conference\(\)/.test(barSrc)
+        && /function conference\(\)[\s\S]{0,80}wx\.navigateTo/.test(tabPageSrc),
       "大会那一项要是走 switchTab，平台会把它当成第五个 tab 页，而它不在 app.json 的 tabBar.list 里");
     ok("底栏每一项都经 list 渲染（图标源不是写死的）",
       /wx:for="\{\{list\}\}"/.test(barWxml) && /\{\{item\.icon\}\}/.test(barWxml));

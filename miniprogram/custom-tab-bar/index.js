@@ -7,10 +7,11 @@ Component({
   data: {
     active: 0,
     themeStyle: "",
+    conference: 2,
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
       { pagePath: "/pages/library/library", text: "课外", icon: icons.library, login: true },
-      { pagePath: "/packages/game/index/index", text: "大会", icon: icons.conference, login: true, noSwitch: true },
+      { pagePath: "/packages/game/index/index", text: "大会", icon: icons.conference, login: true },
       { pagePath: "/pages/search/search", text: "搜索", icon: icons.search, login: true },
       { pagePath: "/pages/mine/mine", text: "我的", icon: icons.mine }
     ]
@@ -63,8 +64,8 @@ Component({
         tabPage.mine();
         return;
       }
-      if (item.noSwitch) {
-        wx.navigateTo({ url: item.pagePath });
+      if (i === this.data.conference) {
+        tabPage.conference();
         return;
       }
       tabPage.go(item.pagePath);

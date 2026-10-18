@@ -44,14 +44,9 @@
   </block>
 
   <block wx:else>
-    <view class="card author-head">
-      <view class="author-head-main">
-        <text class="head-title">{{author}}</text>
-        <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
-      </view>
-      <view class="head-back" hover-class="row-hover" hover-stay-time="60" bindtap="onBackRoster">
-        <text class="head-back-arrow">‹</text>
-      </view>
+    <view class="card">
+      <text class="head-title">{{author}}</text>
+      <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
     </view>
 
     <view class="seg filter-group">

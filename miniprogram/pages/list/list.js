@@ -122,8 +122,8 @@ Page({
       wx.showModal({
         title: "还没有自选集合",
         content: "先去「我的 → 自选背诵」建一个集合。",
-        confirmText: "去建",
-        cancelText: "算了",
+        confirmText: "创建",
+        cancelText: "取消",
         success: (res) => {
           if (res.confirm) wx.navigateTo({ url: "/packages/settings/collections/collections" });
         }

@@ -237,8 +237,8 @@ Page({
     this.toasted = false;
 
     const bar = tabbar.sync(this, 0);
-    this.setData({ todayLabel: todayLabel(), barBelow: !bar });
     if (bar) tabbar.show(this);
+    this.setData({ todayLabel: todayLabel(), barBelow: !bar });
     this.refresh();
 
     if (gate.logged()) sync.now().catch(() => {});
