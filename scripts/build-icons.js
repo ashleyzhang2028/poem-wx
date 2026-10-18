@@ -28,7 +28,9 @@ const NAMES = [
   ["off", "CilText.svg"],
   ["all", "CilTextSize.svg"],
   ["zoomOut", "CilZoomOut.svg"],
-  ["zoomIn", "CilZoomIn.svg"]
+  ["zoomIn", "CilZoomIn.svg"],
+  ["chart", "CilChartBar.svg"],
+  ["trend", "CilChartLine.svg"]
 ];
 
 function flatten(svg) {

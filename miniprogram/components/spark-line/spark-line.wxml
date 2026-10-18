@@ -1,0 +1,3 @@
+<view class="spark" style="width:100%;height:100%">
+  <canvas type="2d" class="spark-cv" style="width:100%;height:100%"></canvas>
+</view>

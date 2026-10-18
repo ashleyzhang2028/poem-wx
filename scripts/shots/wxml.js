@@ -196,6 +196,10 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   const v = makeVal(data);
   const cls = a.class ? interp(a.class, v).replace(/\s+/g, " ").trim() : "";
   const style = a.style ? interp(a.style, v) : "";
+  const extra = Object.keys(a)
+    .filter((k) => k !== "class" && k !== "style" && k.indexOf("wx:") !== 0 && k !== "id" && k !== "checked")
+    .map((k) => " " + k + '="' + interp(a[k], v) + '"')
+    .join("");
 
   if (n.tag === "image") {
     const src = a.src ? interp(a.src, v) : "";
@@ -269,7 +273,7 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   }
 
   if (n.tag === "block") { out.push(inner); return; }
-  out.push(`<div data-tag="${n.tag}" class="${cls}" style="${style}">${inner}</div>`);
+  out.push(`<div data-tag="${n.tag}" class="${cls}" style="${style}"${extra}>${inner}</div>`);
 }
 
 function compile(wxml, data) {

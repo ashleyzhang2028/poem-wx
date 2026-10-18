@@ -363,6 +363,34 @@ function imageIntrinsicResolver(pageCss) {
   });
 }
 
+const SPARK_TAG = /<spark-line\b[^>]*\/>/g;
+
+function sparkPath(curve, w, h) {
+  const pts = [];
+  String(curve || "").split(" ").forEach((pair) => {
+    const xy = pair.split(",");
+    if (xy.length !== 2) return;
+    const x = Number(xy[0]);
+    const y = Number(xy[1]);
+    if (isNaN(x) || isNaN(y)) return;
+    pts.push([(x * w) / 100, (y * h) / 32]);
+  });
+  if (pts.length < 2) return "";
+  const d = ["M" + pts[0][0].toFixed(1) + " " + pts[0][1].toFixed(1)];
+  for (let i = 3; i < pts.length; i += 3) {
+    d.push("C" + [pts[i - 2][0], pts[i - 2][1], pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]]
+      .map((v) => v.toFixed(1)).join(" "));
+  }
+  return d.join(" ");
+}
+
+function expandSpark(wxml, data) {
+  return wxml.replace(SPARK_TAG, () => {
+    const d = sparkPath(data.curve, 300, 90);
+    return '<div class="spark-slot" data-spark="' + d + '"></div>';
+  });
+}
+
 function pageHtml(cfg, data) {
   const wxmlPath = path.join(ROOT, cfg.page + ".wxml");
   let wxml = fs.readFileSync(wxmlPath, "utf8");
@@ -398,6 +426,7 @@ function pageHtml(cfg, data) {
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);
+  wxml = expandSpark(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
 
   const adminCss = flattenCss(path.join(ROOT, "packages", "admin", "index", "index.wxss"));
@@ -439,6 +468,8 @@ const only = process.argv[2];
 const rt = runtime();
 const storeMod = require(path.join(ROOT, "utils", "store.js"));
 const saveProfile = storeMod.saveProfile;
+
+const HOUR = 3600000;
 
 const cases = [];
 Object.keys(PAGE_TITLES).forEach((key) => {
@@ -485,6 +516,17 @@ cases.forEach((cfg) => {
 
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
+
+    if (cfg.seedStats) {
+      const page = rt.current();
+      const now = Date.now();
+      const ats = [];
+      cfg.seedStats.forEach((n, i) => {
+        for (let k = 0; k < n; k++) ats.push(now - i * DAY - k * HOUR);
+      });
+      page.data.stats = require(path.join(ROOT, "utils/admin.js")).summarize(ats, cfg.seedStatsTotal || ats.length);
+      if (page.paint) page.paint();
+    }
 
     if (cfg.do) {
       cfg.do.forEach((step) => {

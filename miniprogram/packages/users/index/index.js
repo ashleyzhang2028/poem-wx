@@ -10,7 +10,6 @@ Page({
     logged: false,
 
     users: [],
-    stats: null,
     remoteReady: false,
     adminReady: false,
     canWrite: false,
@@ -35,10 +34,7 @@ Page({
 
     if (!logged) return;
     admin.list().then((res) => {
-      this.setData({
-        users: this.decorate(res.users, canWrite),
-        stats: res.stats || null
-      });
+      this.setData({ users: this.decorate(res.users, canWrite) });
     });
   },
 

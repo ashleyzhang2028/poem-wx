@@ -1,0 +1,118 @@
+.note {
+  display: block;
+  padding-top: var(--sp-2);
+  line-height: var(--lh-body);
+}
+
+.st-total {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.st-v {
+  font-family: var(--font-num);
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  color: var(--strong-text);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1rpx;
+}
+
+.st-tag {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.st-partial {
+  font-size: var(--fs-caption);
+  color: var(--amber);
+}
+
+.st-tabs {
+  margin-top: var(--sp-3);
+}
+
+.st-figs {
+  display: flex;
+  gap: var(--sp-5);
+  padding: var(--sp-3) 0 var(--sp-1);
+}
+
+.st-fig {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.st-num {
+  font-family: var(--font-num);
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+}
+
+.st-cap {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.st-bar {
+  padding-top: var(--sp-2);
+}
+
+.st-cols {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(4rpx * var(--ui-scale));
+  height: 160rpx;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.st-col {
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.st-fill {
+  width: 100%;
+  min-height: 2rpx;
+  border-radius: 4rpx 4rpx 0 0;
+  background: var(--strong);
+  opacity: .82;
+}
+
+.st-line {
+  padding-top: var(--sp-2);
+}
+
+.st-box {
+  position: relative;
+  height: 180rpx;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.st-axis {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--sp-1);
+}
+
+.st-axis-t {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.st-switch {
+  padding-top: var(--sp-3);
+}
