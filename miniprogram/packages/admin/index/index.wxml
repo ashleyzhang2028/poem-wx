@@ -1,5 +1,73 @@
 <view class="page" style="{{themeStyle}}">
 
+  <view class="card" wx:if="{{logged && stats}}">
+    <text class="card-title">用户统计</text>
+
+    <view class="st-total">
+      <text class="st-v">{{stats.total}}</text>
+      <text class="st-tag">总用户</text>
+      <text class="st-partial" wx:if="{{stats.loaded < stats.total}}">统计覆盖最近 {{stats.loaded}} 位</text>
+    </view>
+
+    <view class="seg st-tabs">
+      <radio-group class="seg-group" bindchange="onTab">
+        <label class="seg-item {{tab === 'bar' ? 'on' : ''}}">
+          <radio class="seg-radio" value="bar" checked="{{tab === 'bar'}}" />
+          <view class="seg-icon" style="mask-image:url('{{icons.chart}}');-webkit-mask-image:url('{{icons.chart}}');"></view>
+          <text class="seg-text">近一年</text>
+        </label>
+        <label class="seg-item {{tab === 'line' ? 'on' : ''}}">
+          <radio class="seg-radio" value="line" checked="{{tab === 'line'}}" />
+          <view class="seg-icon" style="mask-image:url('{{icons.trend}}');-webkit-mask-image:url('{{icons.trend}}');"></view>
+          <text class="seg-text">趋势</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="st-figs">
+      <view class="st-fig">
+        <text class="st-num">{{chart.added}}</text>
+        <text class="st-cap">新增</text>
+      </view>
+      <view class="st-fig">
+        <text class="st-num">{{chart.avg}}</text>
+        <text class="st-cap">日均</text>
+      </view>
+    </view>
+
+    <view class="st-bar" wx:if="{{tab === 'bar'}}">
+      <view class="st-cols">
+        <view class="st-col" wx:for="{{stats.bars}}" wx:key="i">
+          <view class="st-fill" style="height:{{item.h}}%"></view>
+        </view>
+      </view>
+      <view class="st-axis">
+        <text class="st-axis-t">12 周前</text>
+        <text class="st-axis-t">近一年每周新增</text>
+        <text class="st-axis-t">本周</text>
+      </view>
+    </view>
+
+    <view class="st-line" wx:else>
+      <view class="st-box">
+        <spark-line points="{{curve}}" color="{{lineColor}}" />
+      </view>
+      <view class="st-axis">
+        <text class="st-axis-t">{{chart.days}} 天前</text>
+        <text class="st-axis-t">每天新增</text>
+        <text class="st-axis-t">今天</text>
+      </view>
+      <view class="seg st-switch">
+        <radio-group class="seg-group" bindchange="onRange">
+          <label class="seg-item {{range === item.key ? 'on' : ''}}" wx:for="{{stats.ranges}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{range === item.key}}" />
+            <text class="seg-text">{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
+    </view>
+  </view>
+
   <view class="card">
     <view class="row row-flush" wx:if="{{logged}}"
           hover-class="row-hover" hover-stay-time="60" bindtap="onUsers">

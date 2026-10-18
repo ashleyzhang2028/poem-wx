@@ -57,20 +57,18 @@ function canWrite() {
   return remote.adminReady();
 }
 
-const BACK = [
-  { n: 1, unit: "day" },
-  { n: 7, unit: "day" },
-  { n: 30, unit: "day" },
-  { n: 1, unit: "year" }
+const RANGES = [
+  { key: "7", days: 7, label: "近 7 天" },
+  { key: "30", days: 30, label: "近 30 天" },
+  { key: "90", days: 90, label: "近 90 天" },
+  { key: "365", days: 365, label: "近一年" }
 ];
 
-const BACK_HEAD = "自此刻往回数 1 天 / 7 天 / 30 天 / 365 天";
-const SPAN_HEAD = "从本周一 / 本月 1 日 / 今年 1 月 1 日算到此刻";
-
-function _createdAts(res) {
-  if (res && res.createdAt && res.createdAt.length) return res.createdAt;
-  return (res && res.users ? res.users : []).map((u) => u.createdAt);
-}
+const DEFAULT_RANGE = "30";
+const WEEK = 7;
+const WEEK_SPAN = 52;
+const CURVE_W = 100;
+const CURVE_H = 32;
 
 function _day(y, m, d) {
   return new Date(y, m, d).getTime();
@@ -81,43 +79,89 @@ function _startOf(ts) {
   return _day(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function _weekStart(ts) {
-  const d = new Date(ts);
-  return _day(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+function _createdAts(res) {
+  if (res && res.createdAt && res.createdAt.length) return res.createdAt;
+  return (res && res.users ? res.users : []).map((u) => u.createdAt);
 }
 
-function _monthStart(ts) {
-  const d = new Date(ts);
-  return _day(d.getFullYear(), d.getMonth(), 1);
+function _counts(ats, now) {
+  const days = new Array(WEEK_SPAN * WEEK).fill(0);
+  ats.forEach((t) => {
+    const i = Math.floor((now - t) / 86400000);
+    if (i >= 0 && i < days.length) days[i] += 1;
+  });
+  return days;
 }
 
-function _yearStart(ts) {
-  return _day(new Date(ts).getFullYear(), 0, 1);
+function _bars(days) {
+  const bars = [];
+  let peak = 0;
+  for (let w = WEEK_SPAN - 1; w >= 0; w--) {
+    let v = 0;
+    for (let d = 0; d < WEEK; d++) v += days[(WEEK_SPAN - 1 - w) * WEEK + d] || 0;
+    if (v > peak) peak = v;
+    bars.push({ i: w, v: v, h: 0 });
+  }
+  bars.forEach((b) => {
+    b.h = peak ? Math.round((b.v / peak) * 100) : 0;
+  });
+  return bars;
 }
 
-function _backFrom(now, unit, n) {
-  const d = new Date(now);
-  if (unit === "month") return _day(d.getFullYear(), d.getMonth() - n, d.getDate());
-  if (unit === "year") return _day(d.getFullYear() - n, d.getMonth(), d.getDate());
-  return now - n * 86400000;
-}
-
-function _cells(ats, cuts) {
-  return cuts.map((at) => ({ v: ats.filter((t) => t > at).length, at: at }));
+function _curve(ats, now, days) {
+  if (!ats.length || days < 2) return "";
+  const buckets = Math.min(days, 36);
+  const size = days / buckets;
+  const sums = new Array(buckets).fill(0);
+  ats.forEach((t) => {
+    const ago = (now - t) / 86400000;
+    if (ago < 0 || ago >= days) return;
+    sums[buckets - 1 - Math.floor(ago / size)] += 1;
+  });
+  const peak = Math.max.apply(null, sums) || 1;
+  const y = (v) => Math.round(Math.max(0, Math.min(CURVE_H, CURVE_H - (v / peak) * (CURVE_H - 2) - 1)) * 10) / 10;
+  const pts = sums.map((v, i) => ({
+    x: Math.round(((i * CURVE_W) / (buckets - 1)) * 10) / 10,
+    v: v
+  }));
+  const flat = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i - 2] || pts[i - 1];
+    const p1 = pts[i - 1];
+    const p2 = pts[i];
+    const p3 = pts[i + 1] || p2;
+    for (let k = 1; k <= 3; k++) {
+      const t = k / 3;
+      const smooth = (a, b, c, d) =>
+        0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t
+          + (3 * b - a - 3 * c + d) * t * t * t);
+      flat.push({
+        x: Math.round(smooth(p0.x, p1.x, p2.x, p3.x) * 10) / 10,
+        v: Math.max(0, smooth(p0.v, p1.v, p2.v, p3.v))
+      });
+    }
+  }
+  return flat.map((q) => q.x + "," + y(q.v)).join(" ");
 }
 
 function summarize(at, total) {
   const now = Date.now();
-  const ats = (at || []).map(Number).filter((t) => t > 0);
-  const rows = [
-    { tag: "新增", head: BACK_HEAD, cells: _cells(ats, BACK.map((b) => _backFrom(now, b.unit, b.n))) },
-    {
-      tag: "自然",
-      head: SPAN_HEAD,
-      cells: _cells(ats, [_startOf(now), _weekStart(now), _monthStart(now), _yearStart(now)])
-    }
-  ];
-  return { total: Number(total) || ats.length, loaded: ats.length, rows: rows };
+  const today = new Date(_startOf(now));
+  const ats = (at || []).map(Number).filter((t) => t > 0 && t <= now);
+  const bars = _bars(_counts(ats, now));
+  const ranges = RANGES.map((r) => {
+    const from = _day(today.getFullYear(), today.getMonth(), today.getDate() - r.days + 1);
+    const n = ats.filter((t) => t >= from).length;
+    return {
+      key: r.key,
+      label: r.label,
+      days: r.days,
+      added: n,
+      avg: Math.round((n / r.days) * 100) / 100,
+      line: _curve(ats, now, r.days - 1)
+    };
+  });
+  return { total: Number(total) || ats.length, loaded: ats.length, bars: bars, ranges: ranges };
 }
 
 function list() {
@@ -223,6 +267,9 @@ module.exports = {
   loggedIn,
   list,
   summarize,
+  defaultRange: function () {
+    return DEFAULT_RANGE;
+  },
   setTier,
   revokeTier,
   canWrite,
