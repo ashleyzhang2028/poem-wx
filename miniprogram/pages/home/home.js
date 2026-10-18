@@ -98,6 +98,11 @@ function sourceKey(id) {
   return meta && meta.b === "poems" ? "course" : "own";
 }
 
+function sourceBook(id) {
+  const meta = corpus.indexById(id);
+  return (meta && meta.b) || "poems";
+}
+
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 
 function pad(n) {
@@ -500,6 +505,7 @@ Page({
     const settings = store.settings();
     const rec = R.review(store.getRecord(ds.id), face.key, settings.algo);
     store.setRecord(ds.id, rec);
+    store.markRead(sourceBook(ds.id), ds.id);
     sync.markDirty();
     this.refresh();
     wx.showToast({
