@@ -91,7 +91,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}</text>
-              <text class="tag row-tag row-cat theme" wx:if="{{seasonal.tip}}">{{seasonal.tip}}</text>
+              <text class="tag row-tag row-cat theme" wx:if="{{seasonal.tag}}">{{seasonal.tag}}</text>
             </view>
           </view>
           <view class="seasonal-btns">
