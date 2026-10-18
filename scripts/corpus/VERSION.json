@@ -16,6 +16,12 @@
       "issue": 361,
       "source": "https://www.guwendao.net （原古诗文网 gushiwen.cn）逐首署名页",
       "note": "随上游换版时这份要单独留下，不要被整份覆盖掉。"
+    },
+    {
+      "file": "data/text-master.js（chengyu-cy-13、chengyu-cy-18 两条正文）",
+      "issue": 374,
+      "source": "《淮南子·天文训》《淮南子·览冥训》《史记·夏本纪》",
+      "note": "这两条正文原以「……」跨过整段，读起来是被截断的半句；已补足到句意完整。随上游换版时不要把这段改回去。"
     }
   ]
 }
