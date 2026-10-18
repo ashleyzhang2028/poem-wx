@@ -119,6 +119,7 @@ Page({
 
       this.setData({
         locked: true,
+        loadingText: false,
         lockTitle: "这篇要登录",
         lockNote: "登录后才能看正文与进度"
       });
@@ -251,30 +252,31 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
-    this.attempt = (this.attempt || 0) + 1;
-    const round = this.attempt;
+    const token = (this.loadToken || 0) + 1;
+    this.loadToken = token;
     this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
     return corpus
       .ensureEntry(id)
       .then((entry) => {
-        if (this.attempt !== round) return;
+        if (token !== this.loadToken) return;
         if (!entry) throw new Error("这一条不在任何分片里");
-        this.renderEntry(id, entry, meta);
+        this.renderEntry(id, entry, this.findMeta(id));
       })
       ["catch"]((err) => {
-        if (this.attempt !== round) return;
+        if (token !== this.loadToken) return;
         this.setData({ loadingText: false, loadFailed: true, failText: this.textFailMsg(err) });
       });
   },
 
   onRetryText() {
-    if (this.data.loadingText) return;
     this.loadEntry();
   },
 
   textFailMsg(err) {
     const code = (err && err.code) || "";
     const say = this.errSay(err);
+    if (code === "E_NO_ENTRY") return "分片清单里没有这一篇";
+    if (code === "E_NO_TEXT") return "这一片的正文不完整，换一篇看看";
     if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器，退出重进再看";
     if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
     if (/102002|timed? ?out/i.test(say)) return "取正文超时了 —— 多半是服务实例刚被唤醒，重试一次";
@@ -451,7 +453,7 @@ Page({
   onUnload() {
     tabbar.show(this);
     if (this.advance) clearTimeout(this.advance);
-    this.attempt = (this.attempt || 0) + 1;
+    this.loadToken = (this.loadToken || 0) + 1;
   },
 
   goNext() {

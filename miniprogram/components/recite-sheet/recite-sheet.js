@@ -89,6 +89,7 @@ Component({
 
     selection: "",
     aliasText: "",
+    loadingText: false,
     stage: "",
     rawText: "",
     tokens: [],
@@ -119,12 +120,14 @@ Component({
     this.pushed = false;
     this.closedAt = 0;
     this.lastPush = "";
-    this.missingAt = 0;
-    this.missingOf = 0;
+    this.loadToken = 0;
+    this.textErr = "";
+    this.errSay = "";
   },
 
   detached() {
     this.cancelAdvance();
+    this.cancelLoad();
   },
 
   methods: {
@@ -138,8 +141,7 @@ Component({
       this.cancelAdvance();
       this.pushed = true;
       this.lastPush = idsOf(list);
-      this.missingAt = 0;
-      this.missingOf = 0;
+      this.cancelLoad();
       this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
     },
@@ -149,28 +151,52 @@ Component({
       this.cancelAdvance();
       this.closedAt = Date.now();
       this.pushed = false;
-      this.setData({ open: false, showTranslation: false, hint: "" });
+      this.cancelLoad();
+      this.setData({ open: false, loadingText: false, showTranslation: false, hint: "" });
     },
 
-    noticeMissing() {
-      if (!this.missingAt) return;
-      const at = this.missingAt;
-      const of = this.missingOf;
-      this.missingAt = 0;
-      this.missingOf = 0;
+    cancelLoad() {
+      this.loadToken = (this.loadToken || 0) + 1;
+    },
+
+    failText() {
+      if (!sync.ready()) return "登录后能取回这一首的正文";
+      return "再取一次";
+    },
+
+    whyText() {
+      const code = this.textErr;
+      if (code === "E_NO_ENTRY") return "这一首不在正文分片的清单里。";
+      if (code === "E_NO_SHARDS") return "服务端这个版本没带正文分片。";
+      if (code === "E_NO_SHARD_SERVICE") return "这个包没接上取正文的服务。";
+      if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时了，多半是服务刚被唤醒。";
+      if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到取正文的服务。";
+      return "";
+    },
+
+    askMissing() {
+      const why = this.whyText();
       wx.showModal({
-        title: "这版没带上正文",
-        content: "第 " + at + " / " + of + " 首的正文不在包里。"
-          + "\n\n点「去同步」把它取回来。",
-        confirmText: "去同步",
-        cancelText: "知道了",
+        title: "正文加载",
+        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首的正文没取到。"
+          + (why ? "\n\n" + why : "")
+          + "\n\n" + (sync.ready() ? "点「同步」再取一次。" : "登录后能取回这一首的正文。"),
+        confirmText: "同步",
+        cancelText: "取消",
         success: (res) => {
-          if (res.confirm) {
-            sync.now(true);
-            wx.showToast({ title: "正在同步正文", icon: "none" });
-          }
+          if (res.confirm) this.onSyncText();
         }
       });
+    },
+
+    onSyncText() {
+      if (!sync.ready()) {
+        wx.showToast({ title: this.failText(), icon: "none" });
+        return;
+      }
+      const item = this.current();
+      if (!item || this.data.loadingText) return;
+      this.fetchText(item);
     },
 
     current() {
@@ -183,16 +209,42 @@ Component({
         this.onClose();
         return;
       }
-      const entry = corpus.entry(item.id);
+      this.cancelLoad();
       const meta = corpus.indexById(item.id);
-      if (!entry || !meta) {
-        this.missingAt = this.data.index + 1;
-        this.missingOf = this.data.queue.length;
-        this.onClose();
-        this.noticeMissing();
+      const hit = corpus.entry(item.id);
+      if (hit && meta) {
+        this.renderCurrent(item, hit, meta);
         return;
       }
+      this.fetchText(item);
+    },
 
+    fetchText(item) {
+      this.cancelLoad();
+      const token = this.loadToken;
+      this.setData({ open: true, loadingText: true, showTranslation: false, hint: "" });
+
+      corpus
+        .ensureEntry(item.id)
+        .then((entry) => {
+          if (token !== this.loadToken) return;
+          const got = entry || corpus.entry(item.id);
+          const now = corpus.indexById(item.id);
+          if (!got || !now) throw new Error("这一首的正文没取到");
+          this.cancelLoad();
+          this.renderCurrent(item, got, now);
+        })
+        ["catch"]((err) => {
+          if (token !== this.loadToken) return;
+          this.cancelLoad();
+          this.textErr = (err && err.code) || "";
+          this.errSay = (err && err.message) || "";
+          this.setData({ loadingText: false });
+          this.askMissing();
+        });
+    },
+
+    renderCurrent(item, entry, meta) {
       const settings = store.settings();
       const rec = store.getRecord(item.id);
       const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(settings.fontSize) || 0));
@@ -206,6 +258,7 @@ Component({
         source: meta.s || meta.n,
         selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
+        loadingText: false,
         rawText: entry.text,
         translation: entry.tr || "",
         translationSource: entry.src || "",
