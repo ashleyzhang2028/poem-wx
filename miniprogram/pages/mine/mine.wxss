@@ -8,21 +8,42 @@
   align-items: center;
 }
 
-.grant-lead {
+.wechat-picks {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+  flex-direction: column;
+  gap: var(--sp-2);
   margin-top: var(--sp-3);
   padding-top: var(--sp-3);
   border-top: 1rpx solid var(--line-2);
 }
 
-.grant-lead-text {
+.wechat-pick {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: var(--h-btn-mini);
+  padding: var(--pad-opt-y) var(--pad-opt-x);
+  border-radius: var(--radius-ctl);
+  background: var(--sink);
+}
+
+.wechat-pick-hover {
+  background: var(--line);
+}
+
+.wechat-pick-title {
+  flex: none;
+  font-size: var(--fs-body);
+  color: var(--ink);
+}
+
+.wechat-pick-sub {
   flex: 1;
   min-width: 0;
+  text-align: right;
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  line-height: var(--lh-loose);
 }
 
 .avatar-wrap {
@@ -134,7 +155,7 @@
 }
 
 .tier-chip-hover {
-  background: var(--line-2);
+  background: var(--line);
 }
 
 .login-row {

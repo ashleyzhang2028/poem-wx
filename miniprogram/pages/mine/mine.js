@@ -49,14 +49,14 @@ Page({
     const sy = sync.state();
     const fr = require("../../utils/text-search").readiness();
 
-    const nick = profile.nickname || "我的古诗词";
+    const nick = store.displayName();
     const src = store.avatarSrc();
 
     this.setData({
       logged: !!profile.logged,
       nickname: profile.logged ? nick : "未登录",
       avatarUrl: src,
-      avatarChar: (nick || "诗").slice(0, 1),
+      avatarChar: store.avatarChar(),
 
       identitySub: !profile.logged ? "未登录" : "已登录 · 微信账号",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
@@ -76,13 +76,7 @@ Page({
 
   grantLead(profile) {
     if (!profile.logged) return false;
-    if (profile.identityAsked) return false;
-    return !profile.avatarLocal && this.defaultNick(profile);
-  },
-
-  defaultNick(profile) {
-    const nick = profile.nickname || "";
-    return !nick || nick === "我的古诗词";
+    return !profile.avatarLocal && store.defaultNick(profile.nickname);
   },
 
   onLogin() {
@@ -142,29 +136,56 @@ Page({
   onAvatarChoose(e) {
     const url = e.detail.avatarUrl;
     if (!url) return;
-    store.saveProfile({ avatarLocal: url, identityAsked: true });
+    store.saveProfile({ avatarLocal: url });
+    this.syncBar();
     this.refresh();
   },
 
   onNickname(e) {
     const nickname = (e.detail.value || "").trim();
     if (!nickname) return;
-    store.saveProfile({ nickname });
+    this.saveNickname(nickname);
+  },
 
+  onUseWechatAvatar() {
+    this.chooseWechatAvatar(false);
+  },
+
+  onUseWechatIdentity() {
+    this.chooseWechatAvatar(true);
+  },
+
+  chooseWechatAvatar(withNickname) {
+    wx.chooseAvatar({
+      success: (r) => {
+        this.storeAvatar(r && r.avatarUrl);
+        if (!withNickname) {
+          wx.showToast({ title: "头像已换成微信的", icon: "none" });
+          return;
+        }
+        this.saveNickname(this.data.nickname);
+        wx.showToast({ title: "头像与昵称都换成微信的了", icon: "none" });
+      }
+    });
+  },
+
+  storeAvatar(url) {
+    if (!url) return;
+    store.saveProfile({ avatarLocal: url });
+    this.syncBar();
+    this.refresh();
+  },
+
+  saveNickname(nickname) {
+    store.saveProfile({ nickname });
+    this.syncBar();
     sync.markDirty();
     auth.saveNickname(nickname);
     this.refresh();
-    this.settleGrant(nickname);
   },
 
-  settleGrant(nickname) {
-    if (!nickname || nickname === "我的古诗词") return;
-    store.saveProfile({ identityAsked: true });
-  },
-
-  onGrantLeadSkip() {
-    store.saveProfile({ identityAsked: true });
-    this.refresh();
+  syncBar() {
+    tabbar.sync(this, 4);
   },
 
   onSettings() {
