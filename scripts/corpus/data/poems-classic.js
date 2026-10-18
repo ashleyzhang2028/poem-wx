@@ -1603,7 +1603,6 @@ window.POEMS_CLASSIC = [
   { textRef: "classic-gw-54", id: "gw-178", title: "割席分坐", source: "《世说新语·德行》", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-6", id: "gw-179", title: "王戎早慧", source: "《世说新语·雅量》", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-35", id: "gw-180", title: "画龙点睛", source: "《历代名画记》", dynasty: "唐", author: "张彦远", gradeGroup: "神话传说" },
-  { textRef: "classic-gw-89", id: "gw-181", title: "陶母责子", source: "《世说新语·贤媛》", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "人物故事" },
 
   /* Issue #505 · 第二批古文 25 篇（第 51~100 组，序号 51、53 … 99）。
      正文在 scripts/data/classic-corpus-505b.js；其中 2 条（锯竿入城 /
@@ -1634,7 +1633,6 @@ window.POEMS_CLASSIC = [
   { textRef: "classic-gw-204", id: "gw-204", title: "盗牛者强辩", source: "《世说新语·言语》", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-205", id: "gw-205", title: "引婴儿投江", source: "《吕氏春秋·察今》", dynasty: "战国", author: "吕不韦等", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-80", id: "gw-207", title: "锯竿入城", source: "《笑林》", dynasty: "三国·魏", author: "邯郸淳", gradeGroup: "寓言故事" },
-  { textRef: "classic-gw-132", id: "gw-208", title: "枭逢鸠", source: "《说苑·谈丛》", dynasty: "西汉", author: "刘向", gradeGroup: "寓言故事" },
 
   /* Issue #505 · 第三批古文（第 101~150 组，序号 101、103 … 149）。
      正文在 scripts/data/classic-corpus-505c.js；壳只挂 textRef。
@@ -1706,7 +1704,6 @@ window.POEMS_CLASSIC = [
   { textRef: "classic-gw-248", id: "gw-248", title: "北人食菱", source: "《雪涛小说·知无涯》", dynasty: "明", author: "江盈科", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-249", id: "gw-249", title: "孔子论学", source: "《论语》", dynasty: "先秦", author: "孔子及弟子", gradeGroup: "诸子论道" },
   { textRef: "classic-gw-250", id: "gw-250", title: "铁杵成针", source: "《方舆胜览·眉州·磨针溪》", dynasty: "宋", author: "祝穆", gradeGroup: "治学勤读" },
-  { textRef: "classic-gw-251", id: "gw-251", title: "螳螂捕蝉", source: "《说苑·正谏》", dynasty: "西汉", author: "刘向", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-27", id: "gw-252", title: "郑人买履", source: "《韩非子·外储说左上》", dynasty: "战国", author: "韩非", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-37", id: "gw-253", title: "鹬蚌相争", source: "《战国策·燕策二》", dynasty: "西汉", author: "刘向编", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-33", id: "gw-254", title: "滥竽充数", source: "《韩非子·内储说上》", dynasty: "战国", author: "韩非", gradeGroup: "寓言故事" },
