@@ -53,12 +53,16 @@
 
       <view class="stats hero-stats">
         <view class="stat">
+          <text class="stat-v">{{stats.today}}</text>
+          <text class="stat-k">今日</text>
+        </view>
+        <view class="stat">
           <text class="stat-v">{{doneCount}}</text>
           <text class="stat-k">已背</text>
         </view>
-        <view class="stat" wx:if="{{stats.extra}}">
-          <text class="stat-v">{{stats.extra}}</text>
-          <text class="stat-k">加背</text>
+        <view class="stat">
+          <text class="stat-v">{{stats.left}}</text>
+          <text class="stat-k">待背</text>
         </view>
         <view class="stat stat-ring">
           <view class="ring-cap">
@@ -96,7 +100,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag own" wx:if="{{item.source === '自选'}}">{{item.source}}</text>
+              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
@@ -156,7 +160,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag own" wx:if="{{item.source === '自选'}}">{{item.source}}</text>
+              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>

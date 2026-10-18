@@ -6929,15 +6929,14 @@ function gapped(items, max) {
       && !/onCollectionRename/.test(homeSrc4) && !/onCollectionRename/.test(homeWxml4)
       && !/cols\.rename\(/.test(homeSrc4));
 
-  ok("自选胶囊只挂在自选篇目上：课内是常态，不再逐行标，判据仍由所属集子定",
-    /const OWN_TAG = "自选"/.test(homeSrc4)
-      && /function ownTag\(id\)/.test(homeSrc4)
-      && /meta\.b === "poems" \? "" : OWN_TAG/.test(homeSrc4)
-      && (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 2
-      && (homeWxml4.match(/wx:if="\{\{item\.source === '自选'\}\}"/g) || []).length === 2);
-  ok("今日计划与自选集合的篇目行都带原因胶囊，全部诗词那张卡逐行带的是名次与进度",
-    (homeWxml4.match(/class="tag row-tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reasonOn\}\}">\{\{item\.reason\}\}/g) || []).length === 2
-      && /wx:for="\{\{allRows\}\}"[\s\S]{0,600}?row-state \{\{item\.stateCls\}\}/.test(homeWxml4));
+  ok("课内 / 自选胶囊由篇目所属集子定，标签互斥（一首只落一个）",
+    /const SOURCE_TEXT = \{ course: "课内", own: "自选" \}/.test(homeSrc4)
+      && /function sourceKey\(id\)/.test(homeSrc4)
+      && /meta\.b === "poems" \? "course" : "own"/.test(homeSrc4)
+      && (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 2);
+  ok("今日计划与自选集合的篇目行带来源与原因胶囊，全部诗词那张卡只带名次与进度",
+    (homeWxml4.match(/\{\{item\.source === '课内' \? 'course' : 'own'\}\}/g) || []).length === 2
+      && (homeWxml4.match(/class="tag row-tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reasonOn\}\}">\{\{item\.reason\}\}/g) || []).length === 2);
 
   const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",

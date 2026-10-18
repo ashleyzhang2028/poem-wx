@@ -27,7 +27,7 @@ const TOAST_MS = 2200;
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
-const OWN_TAG = "自选";
+const SOURCE_TEXT = { course: "课内", own: "自选" };
 
 const FACES = [
   { key: "bad", icon: "frown", cls: "bad", label: "忘记" },
@@ -86,9 +86,9 @@ function pickedToday(rec) {
   return (last && last.result) || "";
 }
 
-function ownTag(id) {
+function sourceKey(id) {
   const meta = corpus.indexById(id);
-  return meta && meta.b === "poems" ? "" : OWN_TAG;
+  return meta && meta.b === "poems" ? "course" : "own";
 }
 
 function sourceBook(id) {
@@ -141,7 +141,7 @@ function rowsOfScope(list, scope) {
       stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
       read: !!read[p.id],
       recited: S.isLearned(rec),
-      source: ownTag(p.id)
+      source: SOURCE_TEXT[sourceKey(p.id)]
     };
   });
 }
@@ -172,7 +172,7 @@ function guestCatalog() {
       ? ""
       : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
         + "再在开发者工具里点「编译」（不是「刷新」）",
-    stats: { today: 0, done: 0, left: 0 },
+    stats: { today: 0, done: 0, left: 0, extra: 0 },
     loading: false
   };
 }
@@ -217,7 +217,7 @@ Page({
 
     todayLabel: "",
 
-    stats: { extra: 0, self: 0, selfDone: 0 },
+    stats: { today: 0, done: 0, left: 0, extra: 0 },
     faces: FACES,
     baseCount: 0,
     allDone: false,
@@ -306,7 +306,7 @@ Page({
         recited,
         stateText: stateText(recited, read),
         stateCls: stateCls(recited),
-        source: ownTag(it.poem.id)
+        source: SOURCE_TEXT[sourceKey(it.poem.id)]
       };
     });
 
@@ -333,9 +333,10 @@ Page({
       praise: allDone ? praiseOf("course") : "",
       percent: base ? Math.round((done / base) * 100) : 0,
       stats: {
-        extra: extraOf,
-        self: selfTotal,
-        selfDone: selfDone
+        today: selfOnly ? selfTotal : total,
+        done: selfOnly ? selfDone : done,
+        left: selfOnly ? Math.max(selfTotal - selfDone, 0) : Math.max(total - done, 0),
+        extra: extraOf
       },
       cheers: cheerKey ? [SELF_CHEERS[cheerKey]] : [],
       allCount: allList.length,
@@ -428,7 +429,7 @@ Page({
       recited: recited,
       stateText: stateText(recited, read),
       stateCls: stateCls(recited),
-      source: ownTag(p.id)
+      source: SOURCE_TEXT[sourceKey(p.id)]
     };
   },
 
