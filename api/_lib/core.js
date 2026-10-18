@@ -1894,7 +1894,8 @@ var PROFILE_ROW_ID = "profile:v1";
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str",
-  autoNext: "bool", speechRate: "num", speechAutoNext: "bool", selfOnly: "bool"
+  autoNext: "bool", speechRate: "num", speechAutoNext: "bool", selfOnly: "bool",
+  seasonal: "bool"
 };
 
 function sanitizeSettings(p) {

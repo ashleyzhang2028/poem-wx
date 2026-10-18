@@ -1978,7 +1978,8 @@ var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", theme: "str", pinyin: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool",
-  selfOnly: "bool"
+  selfOnly: "bool",
+  seasonal: "bool"
 };
 
 function sanitizeSettings(p) {

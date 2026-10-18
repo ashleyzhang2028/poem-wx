@@ -1,0 +1,69 @@
+.cp-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, .35);
+  display: flex;
+  align-items: flex-end;
+}
+
+.cp {
+  width: 100%;
+  max-height: 80vh;
+  box-sizing: border-box;
+  padding: var(--sp-4) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow-y: auto;
+}
+
+.cp-title {
+  display: block;
+  font-size: var(--fs-title);
+  color: var(--strong-text);
+}
+
+.cp-sub {
+  display: block;
+  margin-top: var(--sp-1);
+}
+
+.cp-list {
+  margin: var(--sp-3) 0;
+}
+
+.cp-row {
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.cp-empty {
+  padding: var(--sp-4) 0;
+}
+
+.cp-create {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.cp-input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  padding: 0 var(--sp-3);
+  box-sizing: border-box;
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+  font-size: var(--fs-body);
+}
+
+.cp-new,
+.cp-close {
+  margin-top: var(--sp-2);
+}
+
+.cp-tier {
+  max-height: 86vh;
+}
