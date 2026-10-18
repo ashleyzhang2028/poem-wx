@@ -3170,7 +3170,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
 
-  {
+  track((async () => {
     const savedComp = global.Component;
     let opt = null;
     global.Component = (o) => { opt = o; };
@@ -3220,7 +3220,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       self.setData = function (obj) { Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; }); };
       self.open = opt.methods.open;
       self.loadCurrent = opt.methods.loadCurrent;
+      self.cancelLoad = opt.methods.cancelLoad;
+      self.fetchText = opt.methods.fetchText;
+      self.askMissing = opt.methods.askMissing;
+      self.onSyncText = opt.methods.onSyncText;
+      self.failText = opt.methods.failText;
       return self;
+    };
+    const settled = () => {
+      said.splice(0).forEach((o) => o.success({ cancel: true }));
+      said.length = 0;
+      calm.length = 0;
+      syncForce.length = 0;
     };
     const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
     const obs = opt.properties.queue.observer;
@@ -3236,15 +3247,30 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const miss = missing(missId);
     const missSame = miss.data.index === 0 && miss.data.queue.length === 2;
     miss.onClose();
-    said.slice().forEach((o) => o.success({ confirm: true, cancel: false }));
 
     ok("正文缺失时只收起，不把序号往回退（关一下再开，人还该站在点的那一首上）",
       missSame && !miss.data.open,
       "缺正文那条路把 index 改回去了，或者没把弹层收起来");
-    ok("正文缺失时当场说清楚、并给一条同步的路（先前只弹一句 toast，转瞬就没了）",
-      said.length === 1 && /\d+\s*\/\s*\d+/.test(said[0].content)
-        && !!said[0].confirmText && syncForce.length === 1,
-      "缺正文只安静地关掉 —— 「闪一下没了」连个说法都没有");
+
+    settled();
+    const net = missing(missId);
+    const loadingShown = net.data.loadingText === true;
+    const netOpen = net.data.open === true;
+    net.onClose();
+
+    ok("正文缺失先自己取（不去动整包同步，也不当场弹框）",
+      syncForce.length === 0 && said.length === 0 && netOpen,
+      "缺正文那条路要么弹了框、要么触发了整包同步 —— 用户只是想读这一首");
+    ok("取的过程中在身份行下面留一道细线（waiting 走的是 loadingText）",
+      loadingShown,
+      "等待没有可读的状态位 —— 细线挂不上");
+
+    await new Promise((r) => setTimeout(r, 120));
+    const saidIn = said.length;
+    ok("取不到才弹「正文加载」框，两个按钮是「取消」与「同步」",
+      saidIn === 1 && said[0].title === "正文加载"
+        && said[0].cancelText === "取消" && said[0].confirmText === "同步",
+      "失败之后没有给一条手动同步的路，或者按钮不是用户点名的那两个");
 
     const closed = mk(rows, false);
     obs.call(closed, [{ id: "z" }]);
@@ -3272,7 +3298,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     delete require.cache[syncPath];
     corpusMod.entry = realEntry;
     corpusMod.indexById = realIndex;
-  }
+  }));
 
   ok("弹层显式打开过，observer 不按属性推来的队列重开（首页 refresh 会把 sheetRows 推回来）",
     (() => {
@@ -6436,11 +6462,17 @@ function gapped(items, max) {
 
   {
     const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
-    const failScreen = /wx:elif="\{\{loadFailed\}\}"/.test(readerWxml2)
+    const failScreen = /wx:if="\{\{loadFailed\}\}"/.test(readerWxml2)
       && /bindtap="onRetryText"/.test(readerWxml2);
     ok("取正文失败不留白等：「标题 + 一句实情 + 重试」那一屏在 WXML 里",
       failScreen && /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*false/.test(readerSrc),
       "失败只弹过 toast、停在加载态那一屏，用户看到的是「正在取正文」永远不散");
+
+    ok("取正文的等待是身份行下面那一道细线（加载完就没了，不留加载屏）",
+      /poem-loading/.test(readerWxml2) && /loadingText/.test(readerWxml2)
+        && readerWxml2.indexOf("poem-loading") > readerWxml2.indexOf("poem-meta-row")
+        && !/正在取正文/.test(readerWxml2),
+      "等待又占了一屏，或者细线不在朝代 / 作者那一行下面");
 
     const failArm = /["']catch["']\]\(\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc)
       || /catch\s*\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc);

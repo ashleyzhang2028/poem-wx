@@ -4,13 +4,7 @@
 
   <block wx:else>
 
-  <view class="card poem-card" wx:if="{{loadingText}}">
-    <view class="poem-head">
-      <text class="poem-title">{{title}}</text>
-    </view>
-    <view class="hint hint-line">正在取正文…</view>
-  </view>
-  <view class="card poem-card" wx:elif="{{loadFailed}}">
+  <view class="card poem-card" wx:if="{{loadFailed}}">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
     </view>
@@ -45,6 +39,8 @@
       <view class="poem-note" wx:if="{{aliasText}}">
         <text class="poem-note-t">{{aliasText}}</text>
       </view>
+
+      <view class="poem-loading" wx:if="{{loadingText}}"></view>
     </view>
 
     <view class="prefs">

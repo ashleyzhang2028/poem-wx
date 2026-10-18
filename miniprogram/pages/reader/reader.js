@@ -119,6 +119,7 @@ Page({
 
       this.setData({
         locked: true,
+        loadingText: false,
         lockTitle: "这篇要登录",
         lockNote: "登录后才能看正文与进度"
       });
@@ -251,24 +252,23 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
-    this.attempt = (this.attempt || 0) + 1;
-    const round = this.attempt;
+    const token = (this.loadToken || 0) + 1;
+    this.loadToken = token;
     this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
     return corpus
       .ensureEntry(id)
       .then((entry) => {
-        if (this.attempt !== round) return;
+        if (token !== this.loadToken) return;
         if (!entry) throw new Error("这一条不在任何分片里");
-        this.renderEntry(id, entry, meta);
+        this.renderEntry(id, entry, this.findMeta(id));
       })
       ["catch"]((err) => {
-        if (this.attempt !== round) return;
+        if (token !== this.loadToken) return;
         this.setData({ loadingText: false, loadFailed: true, failText: this.textFailMsg(err) });
       });
   },
 
   onRetryText() {
-    if (this.data.loadingText) return;
     this.loadEntry();
   },
 
@@ -451,7 +451,7 @@ Page({
   onUnload() {
     tabbar.show(this);
     if (this.advance) clearTimeout(this.advance);
-    this.attempt = (this.attempt || 0) + 1;
+    this.loadToken = (this.loadToken || 0) + 1;
   },
 
   goNext() {

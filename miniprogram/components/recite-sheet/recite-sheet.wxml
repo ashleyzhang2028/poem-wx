@@ -35,6 +35,8 @@
         <view class="poem-note" wx:if="{{aliasText}}">
           <text class="poem-note-t">{{aliasText}}</text>
         </view>
+
+        <view class="poem-loading" wx:if="{{loadingText}}"></view>
       </view>
 
       <view class="prefs">
