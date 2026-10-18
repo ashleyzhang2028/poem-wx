@@ -1,6 +1,6 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px; height: 402rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">
+  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px">
 
     <image class="banner-img" src="/icons/hero.png" mode="widthFix" />
 
@@ -28,7 +28,7 @@
         </view>
 
         <view class="row-end">
-          <text class="row-state idle">未背</text>
+          <text class="tag idle">未背</text>
           <text class="row-go">›</text>
         </view>
       </view>
@@ -100,9 +100,9 @@
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+              wx:for="{{plan}}" wx:key="id">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
-          <view class="row-main">
+          <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="onOpen">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
@@ -113,7 +113,7 @@
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
-                  data-key="{{face.key}}" catchtap="onFace">
+                  data-id="{{item.id}}" data-key="{{face.key}}" bindtap="onFace">
               <view class="face-ico" style="mask-image:url('{{face.icon}}');-webkit-mask-image:url('{{face.icon}}');"></view>
             </view>
           </view>
@@ -163,10 +163,9 @@
         </view>
 
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{coll.rows}}" wx:key="id" data-id="{{item.id}}" data-coll="{{coll.id}}"
-              bindtap="onOpenCollection">
+              wx:for="{{coll.rows}}" wx:key="id">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
-          <view class="row-main">
+          <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" data-coll="{{coll.id}}" bindtap="onOpenCollection">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
@@ -177,7 +176,7 @@
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
-                  data-key="{{face.key}}" catchtap="onFace">
+                  data-id="{{item.id}}" data-key="{{face.key}}" bindtap="onFace">
               <view class="face-ico" style="mask-image:url('{{face.icon}}');-webkit-mask-image:url('{{face.icon}}');"></view>
             </view>
           </view>
@@ -207,8 +206,7 @@
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
           <view class="row-end">
-            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
-            <text class="row-go">›</text>
+            <text class="tag row-state {{item.stateCls}}">{{item.stateText}}</text>
           </view>
         </view>
       </block>

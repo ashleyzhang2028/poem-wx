@@ -3480,7 +3480,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "把已读与已背写成同一个判据 —— 点开看一眼就成了「已背」");
 
   ok("未读 / 未背 / 已背是同一枚胶囊的三个状态（不并排摆两枚）",
-    /class="row-state \{\{item\.stateCls\}\}"/.test(homeWxml)
+    /class="tag row-state \{\{item\.stateCls\}\}"/.test(homeWxml)
       && !/\{\{!item\.read\}\}/.test(homeWxml)
       && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
     "未读又单独摆了一枚 —— 未读必然未背，一枚胶囊按顺序往下走就够了");

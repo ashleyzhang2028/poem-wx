@@ -38,6 +38,17 @@ const FACES = [
 
 const PAGE_ICONS = { search: icons.search, clear: icons.clear, checked: icons.added };
 
+function datasetOf(e) {
+  const box = {};
+  let node = e && e.currentTarget;
+  while (node) {
+    const ds = node.dataset || {};
+    Object.keys(ds).forEach((k) => { if (box[k] === undefined) box[k] = ds[k]; });
+    node = node.parentNode;
+  }
+  return box;
+}
+
 function praiseOf(scope) {
   return quotes.pick(Date.now() / R.DAY, scope);
 }
@@ -144,6 +155,8 @@ function rowsOfScope(list, scope) {
       stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
       read: !!read[p.id],
       recited: S.isLearned(rec),
+      stateText: stateText(S.isLearned(rec), !!read[p.id]),
+      stateCls: stateCls(S.isLearned(rec)),
       source: SOURCE_TEXT[sourceKey(p.id)]
     };
   });
@@ -462,7 +475,7 @@ Page({
   },
 
   onOpenCollection(e) {
-    const ds = e.currentTarget.dataset;
+    const ds = datasetOf(e);
     gate.guard("自选背诵", this, () => {
       if (!entitlement.block("collections", { page: this })) return;
       const sheet = this.selectComponent("#sheet");
@@ -490,11 +503,12 @@ Page({
   },
 
   onOpen(e) {
-    this.openSheet(e.currentTarget.dataset.id, "plan");
+    const ds = datasetOf(e);
+    this.openSheet(ds.id, "plan");
   },
 
   onFace(e) {
-    const ds = e.currentTarget.dataset;
+    const ds = datasetOf(e);
     const face = FACES.filter((f) => f.key === ds.key)[0];
     if (!face) return;
     if (!entitlement.can("daily")) {
