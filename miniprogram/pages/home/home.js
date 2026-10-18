@@ -172,7 +172,7 @@ function guestCatalog() {
       ? ""
       : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
         + "再在开发者工具里点「编译」（不是「刷新」）",
-    stats: { today: 0, done: 0, left: 0 },
+    stats: { today: 0, done: 0, left: 0, extra: 0 },
     loading: false
   };
 }
@@ -217,7 +217,7 @@ Page({
 
     todayLabel: "",
 
-    stats: { extra: 0, self: 0, selfDone: 0 },
+    stats: { today: 0, done: 0, left: 0, extra: 0 },
     faces: FACES,
     baseCount: 0,
     allDone: false,
@@ -333,9 +333,10 @@ Page({
       praise: allDone ? praiseOf("course") : "",
       percent: base ? Math.round((done / base) * 100) : 0,
       stats: {
-        extra: extraOf,
-        self: selfTotal,
-        selfDone: selfDone
+        today: selfOnly ? selfTotal : total,
+        done: selfOnly ? selfDone : done,
+        left: selfOnly ? Math.max(selfTotal - selfDone, 0) : Math.max(total - done, 0),
+        extra: extraOf
       },
       cheers: cheerKey ? [SELF_CHEERS[cheerKey]] : [],
       allCount: allList.length,

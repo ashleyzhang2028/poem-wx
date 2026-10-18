@@ -53,12 +53,16 @@
 
       <view class="stats hero-stats">
         <view class="stat">
+          <text class="stat-v">{{stats.today}}</text>
+          <text class="stat-k">今日</text>
+        </view>
+        <view class="stat">
           <text class="stat-v">{{doneCount}}</text>
           <text class="stat-k">已背</text>
         </view>
-        <view class="stat" wx:if="{{stats.extra}}">
-          <text class="stat-v">{{stats.extra}}</text>
-          <text class="stat-k">加背</text>
+        <view class="stat">
+          <text class="stat-v">{{stats.left}}</text>
+          <text class="stat-k">待背</text>
         </view>
         <view class="stat stat-ring">
           <view class="ring-cap">
