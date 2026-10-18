@@ -6922,7 +6922,7 @@ function gapped(items, max) {
       && homeWxml4.indexOf("{{item.source === '课内' ? 'course' : 'own'}}") >= 0);
   ok("首页四张卡的篇目行都带来源胶囊（今日 / 全部诗词 / 每个自选集子）",
     (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 3
-      && /class="tag \{\{item\.tagCls\}\}" wx:if="\{\{item\.reason\}\}"/.test(homeWxml4));
+      && /class="tag row-tag .*\{\{item\.tagCls\}\}[^"]*">\{\{item\.reason\}\}/.test(homeWxml4));
 
   const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",

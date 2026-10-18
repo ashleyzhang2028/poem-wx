@@ -27,7 +27,10 @@
           <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
         </view>
 
-        <view class="row-end"><text class="row-lock">未背</text></view>
+        <view class="row-end">
+          <text class="row-state idle">未背</text>
+          <text class="row-go">›</text>
+        </view>
       </view>
 
       <view class="empty" wx:if="{{!loading && !catalogCount}}">
@@ -45,16 +48,18 @@
     <view class="card hero hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
-      <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
-      <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
+
+      <view class="hero-meta">
+        <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
+        <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
+        <view class="stats meta-stats" wx:if="{{heroStats.length}}">
+          <text class="tag hero-tag theme" wx:for="{{heroStats}}" wx:key="key">{{item.text}}</text>
+        </view>
+      </view>
 
       <view class="stats hero-stats">
         <view class="stat">
-          <text class="stat-v">{{selfOnly ? stats.self : baseCount}}</text>
-          <text class="stat-k">今日</text>
-        </view>
-        <view class="stat">
-          <text class="stat-v">{{selfOnly ? stats.selfDone : doneCount}}</text>
+          <text class="stat-v">{{doneCount}}</text>
           <text class="stat-k">已背</text>
         </view>
         <view class="stat" wx:if="{{stats.extra}}">
@@ -94,15 +99,19 @@
               wx:for="{{plan}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
-            <view class="row-line">
-              <text class="row-title row-poem">{{item.title}}</text>
-              <text class="tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
-              <text class="tag {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+            <text class="row-title row-poem">{{item.title}}</text>
+            <view class="row-sub">
+              <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
+              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag {{item.tagCls}} {{item.reasonOn ? 'on' : ''}}">{{item.reason}}</text>
             </view>
-            <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
-          <view class="row-end">
-            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
+          <view class="faces">
+            <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
+                  wx:for="{{faces}}" wx:for-item="face" wx:key="key"
+                  data-key="{{face.key}}" bindtap="onFace">
+              <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
+            </view>
           </view>
         </view>
       </block>
@@ -146,15 +155,19 @@
               bindtap="onOpenCollection">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
-            <view class="row-line">
-              <text class="row-title row-poem">{{item.title}}</text>
-              <text class="tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
-              <text class="tag {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+            <text class="row-title row-poem">{{item.title}}</text>
+            <view class="row-sub">
+              <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
+              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag {{item.tagCls}} {{item.reasonOn ? 'on' : ''}}">{{item.reason}}</text>
             </view>
-            <text class="row-sub">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
           </view>
-          <view class="row-end">
-            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
+          <view class="faces">
+            <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
+                  wx:for="{{faces}}" wx:for-item="face" wx:key="key"
+                  data-key="{{face.key}}" bindtap="onFace">
+              <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
+            </view>
           </view>
         </view>
 
@@ -184,8 +197,10 @@
             </view>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
-          <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
-          <text class="row-go">›</text>
+          <view class="row-end">
+            <text class="row-state {{item.stateCls}}">{{item.stateText}}</text>
+            <text class="row-go">›</text>
+          </view>
         </view>
       </block>
     </view>

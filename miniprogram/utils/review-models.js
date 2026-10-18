@@ -366,6 +366,7 @@ module.exports = {
   modelOf,
   adopt,
   review,
+  reviewedToday,
   resultHint,
   startOfDay,
   dayAt,

@@ -59,11 +59,49 @@
   line-height: var(--lh-tight);
 }
 
+.hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--sp-2);
+}
+
 .hero-sub {
   display: block;
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: var(--fs-hint);
   color: var(--ink-3);
-  margin-top: var(--sp-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-stats {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.hero-sub + .meta-stats {
+  margin-left: var(--sp-1);
+}
+
+.hero-tag {
+  flex: none;
+  font-size: var(--fs-hint);
+  line-height: 1.4;
+  padding: var(--pad-opt-y) var(--sp-2);
+  margin: var(--sp-1) 0 0 var(--sp-1);
+  color: var(--ink-2);
+  background: var(--sink);
+}
+
+.hero-tag.theme {
+  color: var(--strong);
+  background: var(--strong-soft);
 }
 
 .hero-stats {
@@ -97,7 +135,6 @@
   margin-right: var(--sp-1);
 }
 
-.row-lock,
 .row-state {
   flex: none;
   margin-left: var(--sp-1);
@@ -112,6 +149,46 @@
 
 .row-state.on {
   color: var(--ink-2);
+}
+
+.faces {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding-left: var(--sp-3);
+}
+
+.face {
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--t-press);
+}
+
+.face .glyph {
+  width: 40rpx;
+  height: 40rpx;
+  color: var(--ink-4);
+}
+
+.face-hover {
+  background: var(--sink);
+}
+
+.face.on.bad .glyph {
+  color: var(--red);
+}
+
+.face.on.fuzzy .glyph {
+  color: var(--amber);
+}
+
+.face.on.good .glyph {
+  color: var(--strong);
 }
 
 .all-title {

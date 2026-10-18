@@ -357,6 +357,21 @@ button, textarea {
   white-space: nowrap;
 }
 
+.row-sub:has(.tag) {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.row-sub-t {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .row-star {
   flex: none;
   padding: 0 var(--sp-1);
@@ -431,6 +446,19 @@ button, textarea {
 .tag.theme {
   color: var(--strong);
   background: var(--strong-soft);
+}
+
+.tag.row-tag {
+  margin-right: 0;
+  margin-left: 10rpx;
+}
+
+.tag.row-tag:not(.row-cat) {
+  display: none;
+}
+
+.tag.row-tag.on {
+  display: inline-flex;
 }
 
 .tag.amber {
@@ -1068,6 +1096,10 @@ button, textarea {
   background: var(--sink);
 }
 
+.chip .glyph {
+  margin-right: var(--sp-1);
+}
+
 .chip-t {
   font-family: var(--font-ui);
   font-size: var(--fs-hint);
@@ -1229,6 +1261,65 @@ button, textarea {
   top: 2rpx;
   width: 2.5rpx;
   height: 20rpx;
+}
+
+.glyph.ic-smile,
+.glyph.ic-meh,
+.glyph.ic-frown {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.glyph.ic-smile::before,
+.glyph.ic-meh::before,
+.glyph.ic-frown::before {
+  left: 6rpx;
+  top: 6rpx;
+  width: 24rpx;
+  height: 24rpx;
+  border: 2.5rpx solid var(--ic);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.glyph.ic-smile::after,
+.glyph.ic-meh::after,
+.glyph.ic-frown::after {
+  left: 10rpx;
+  top: 10rpx;
+  width: 3.5rpx;
+  height: 3.5rpx;
+  border-radius: 50%;
+  background: var(--ic);
+  box-shadow: 12.5rpx 0 0 var(--ic);
+}
+
+.glyph.ic-smile .face-mouth,
+.glyph.ic-meh .face-mouth,
+.glyph.ic-frown .face-mouth {
+  position: absolute;
+  left: 9rpx;
+  top: 15rpx;
+  width: 18rpx;
+  height: 9rpx;
+  border-bottom: 2.5rpx solid var(--ic);
+  border-radius: 0 0 50% 50%;
+}
+
+.glyph.ic-meh .face-mouth {
+  height: 0;
+  top: 20rpx;
+  border-bottom: 0;
+  border-top: 2.5rpx solid var(--ic);
+  border-radius: 0;
+}
+
+.glyph.ic-frown .face-mouth {
+  height: 9rpx;
+  top: 20rpx;
+  border-bottom: 0;
+  border-top: 2.5rpx solid var(--ic);
+  border-radius: 50% 50% 0 0;
 }
 
 .glyph.ic-add::before {
