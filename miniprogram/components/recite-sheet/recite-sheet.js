@@ -6,6 +6,7 @@ const pinyin = require("../../utils/pinyin");
 const entitlement = require("../../utils/entitlement");
 const theme = require("../../utils/theme");
 const sync = require("../../utils/sync");
+const sfx = require("../../utils/sfx");
 const icons = require("../../utils/icons");
 
 const RESULTS = [
@@ -404,6 +405,7 @@ Component({
         return;
       }
       const result = e.currentTarget.dataset.key;
+      sfx.recite(result);
       const settings = store.settings();
       const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
       store.setRecord(this.data.id, rec);

@@ -515,6 +515,7 @@ Page({
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
       return;
     }
+    sfx.recite(face.key);
     const settings = store.settings();
     const rec = R.review(store.getRecord(ds.id), face.key, settings.algo);
     store.setRecord(ds.id, rec);
