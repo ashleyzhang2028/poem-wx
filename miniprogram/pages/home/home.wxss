@@ -194,11 +194,17 @@
 .finish {
   padding: var(--sp-5) var(--sp-3) var(--sp-4);
   text-align: center;
+}
+
+.finish-self {
   border-top: 1px solid var(--line-2);
 }
 
-.finish:first-child {
-  border-top: 0;
+.card-done {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  text-align: center;
+  border-top: 1px solid var(--line-2);
 }
 
 .finish-mark {

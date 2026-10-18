@@ -161,7 +161,7 @@
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>
 
-      <view class="finish" wx:if="{{allDone}}">
+      <view class="card-done" wx:if="{{allDone}}">
         <view class="finish-mark">
           <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
         </view>
