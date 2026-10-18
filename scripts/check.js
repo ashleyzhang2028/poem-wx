@@ -6963,8 +6963,8 @@ function gapped(items, max) {
   });
   ok("详情页把语料里的框线表格解析成行列（文学常识 / 帝王 / 名家 / 名著导读各一条）",
     parsed.length === tableCases.length);
-  ok("表格块有独立的渲染路径（不注音、可横向滚动）",
-    /md-table/.test(readerWxml4) && /scroll-x/.test(readerWxml4) && /tableView/.test(readerSrc4));
+  ok("表格块有独立的渲染路径（不注音）",
+    /md-table/.test(readerWxml4) && /tableView/.test(readerSrc4));
 
   const wideCases = ["changshi-cs-218", "changshi-cs-221", "mingren-mr-w-93"];
   const wideOk = wideCases.filter(function (id) {

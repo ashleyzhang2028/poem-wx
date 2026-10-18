@@ -96,14 +96,14 @@
               <text class="poem-clause" wx:for="{{para}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
             </text>
           </view>
-          <scroll-view class="md-table" scroll-x wx:else>
+          <view class="md-table" wx:else>
             <view class="md-row" wx:for="{{blk.table.rows}}" wx:key="index" wx:for-item="tr">
               <view class="md-cell" wx:for="{{tr.cells}}" wx:key="index" wx:for-item="cell"
-                    style="width:{{blk.table.widths[index] * 2}}px">
+                    style="flex-grow:{{blk.table.widths[index]}}">
                 <text class="md-line" wx:for="{{cell.text}}" wx:for-item="ln" wx:key="index">{{ln}}</text>
               </view>
             </view>
-          </scroll-view>
+          </view>
         </block>
       </block>
       <block wx:elif="{{pinyinOn}}">
