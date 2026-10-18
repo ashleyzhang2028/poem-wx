@@ -6907,6 +6907,25 @@ function gapped(items, max) {
       self5.length === 1 && self5[0].poem.id === "cp0" && self5[0].reason === "pinned"
         && plain5.some((p) => p.poem.id !== "cp0"),
       "实际 " + JSON.stringify(self5.map((p) => p.poem.id)));
+    ok("「只背自选」的名单与课内那份分开落盘（两份名单各有各的键）",
+      S5.planKeyOf({ grade: 1, term: 1, scope: "term", count: 5, selfOnly: true })
+        !== S5.coursePlanKeyOf({ grade: 1, term: 1, scope: "term", count: 5 }),
+      "自选那份和课内那份共用了同一个名单位 —— 开一次开关就把课内名单换成自选那几首");
+    ok("「只背自选」期间课内那份名单照旧（关掉开关不用重排，加背那几首也不占它的名额）",
+      (() => {
+        const extraIds = ["cp0", "cp1"];
+        const extraPoems = extraIds.map((id) => ({ id: id }));
+        const self = S5.generateDailyPlan({
+          grade: 1, term: 1, count: 5, scope: "term", selfOnly: true,
+          allPoems: [], extraPoems: extraPoems, getRecord: () => null
+        }).filter((p) => p.reason === "pinned").map((p) => p.poem.id);
+        const course = S5.generateDailyPlan({
+          grade: 1, term: 1, count: 5, scope: "term",
+          allPoems: course5, extraPoems: extraPoems, getRecord: () => null
+        }).filter((p) => p.reason !== "pinned").map((p) => p.poem.id);
+        return extraIds.every((id) => self.indexOf(id) >= 0) && extraIds.every((id) => course.indexOf(id) < 0);
+      })(),
+      "自选模式下的两份名单共用了同一行 —— 加背那几首会顶掉课内的名额");
     ok("没开时排期照旧（这条开关不改默认行为）",
       plain5.filter((p) => p.reason === "pinned").length === 1 && plain5.length === 6);
 

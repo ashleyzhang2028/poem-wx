@@ -152,7 +152,13 @@ function pinnedPlan(extraPoems, getRecord) {
 function planKeyOf(opt) {
   const scope = scopeOf(opt.scope);
   const count = Number(opt.count) || DAILY_COUNTS[1];
-  return [store.dayKey(), Number(opt.grade), Number(opt.term)].concat(scope.stages, [count]).join("|");
+  const key = [store.dayKey(), Number(opt.grade), Number(opt.term)].concat(scope.stages, [count]);
+  if (opt.selfOnly) key.push("self");
+  return key.join("|");
+}
+
+function coursePlanKeyOf(opt) {
+  return planKeyOf(Object.assign({}, opt, { selfOnly: false }));
 }
 
 function dueRow(p, rec) {
@@ -217,13 +223,25 @@ function placedPlan(opt) {
   return all;
 }
 
+function selfOnlyPlan(opt) {
+  const placed = placedPlan(Object.assign({}, opt, { allPoems: [] }));
+  if (!placed) return pinnedPlan(dedupePoems(opt.extraPoems), opt.getRecord);
+  const inPlan = {};
+  placed.forEach((it) => { inPlan[it.poem.id] = true; });
+  const added = dedupePoems(opt.extraPoems).filter((p) => !inPlan[p.id]);
+  if (!added.length) return placed;
+  const pinned = pinnedPlan(added, opt.getRecord);
+  store.saveDayPlan(planKeyOf(opt), placed);
+  return placed.concat(pinned);
+}
+
 function generateDailyPlan(opt) {
   const grade = Number(opt.grade);
   const term = Number(opt.term);
   const count = opt.count || 5;
   const getRecord = opt.getRecord;
 
-  if (opt.selfOnly) return pinnedPlan(dedupePoems(opt.extraPoems), getRecord);
+  if (opt.selfOnly) return selfOnlyPlan(opt);
 
   const placed = placedPlan(opt);
   if (placed) return placed.concat(pinnedPlan(dedupePoems(opt.extraPoems), getRecord));
@@ -511,6 +529,7 @@ module.exports = {
   stageName,
   poolForScope,
   planKeyOf,
+  coursePlanKeyOf,
   collectionPlan,
   collectionOverview,
   generateDailyPlan,

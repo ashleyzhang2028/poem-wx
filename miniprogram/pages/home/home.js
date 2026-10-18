@@ -197,6 +197,8 @@ function guestCatalog() {
       : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
         + "再在开发者工具里点「编译」（不是「刷新」）",
     stats: { today: 0, done: 0, left: 0, extra: 0 },
+    coursePlan: [],
+    courseBase: 0,
     loading: false
   };
 }
@@ -245,6 +247,8 @@ Page({
     seasonalOn: false,
 
     stats: { today: 0, done: 0, left: 0, extra: 0 },
+    coursePlan: [],
+    courseBase: 0,
     faces: FACES,
     icons: PAGE_ICONS,
     baseCount: 0,
@@ -286,17 +290,23 @@ Page({
 
     const selfOnly = cols.selfOnlyOn();
 
-    const plan = S.generateDailyPlan({
+    const planOpt = {
       grade: view.grade,
       term: view.term,
       count: settings.dailyCount,
       scope: view.scope,
       allPoems: all,
-      selfOnly: selfOnly,
 
       extraPoems: store.dailyExtraPoems(),
       getRecord: store.getRecord
-    });
+    };
+
+    const plan = S.generateDailyPlan(Object.assign({ selfOnly: selfOnly }, planOpt));
+
+    const coursePlan = selfOnly ? S.generateDailyPlan(planOpt) : [];
+    const courseRecorded = selfOnly
+      ? store.dayPlan(S.coursePlanKeyOf(planOpt)).ids.length
+      : 0;
 
     const allList = selfOnly ? [] : scopeList(all, view, scope);
     const allMode = this.data.allOpen || this.sheetSource === "all";
@@ -312,7 +322,7 @@ Page({
     })).ids.length;
     let done = 0;
     const extraOf = plan.filter((it) => it.reason === "pinned").length;
-    const base = selfOnly ? 0 : Math.max(recorded, plan.length - extraOf);
+    const base = Math.max(recorded, plan.length - extraOf);
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
       const read = readOf(it.poem.id);
@@ -366,6 +376,8 @@ Page({
         left: selfOnly ? Math.max(selfTotal - selfDone, 0) : Math.max(total - done, 0),
         extra: extraOf
       },
+      coursePlan: selfOnly ? coursePlan.filter((it) => it.reason !== "pinned").map((it, i) => this.poemRow(it.poem, i, it.reason, readOf)) : [],
+      courseBase: selfOnly ? Math.max(courseRecorded, coursePlan.length - coursePlan.filter((it) => it.reason === "pinned").length) : 0,
       cheers: cheerKey ? [SELF_CHEERS[cheerKey]] : [],
       allCount: allList.length,
       allLabel: scopeLabel(scope),
