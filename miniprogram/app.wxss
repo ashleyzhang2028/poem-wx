@@ -1266,7 +1266,7 @@ button, textarea {
 .prefs {
   display: flex;
   align-items: center;
-
+  gap: var(--sp-2);
   flex-wrap: nowrap;
   justify-content: center;
   padding: var(--sp-1) 0 var(--sp-2);
@@ -1360,10 +1360,6 @@ button, textarea {
   height: 1rpx;
   opacity: 0;
   pointer-events: none;
-}
-
-.pref-plus {
-  margin-left: var(--sp-2);
 }
 
 .poem-body {
