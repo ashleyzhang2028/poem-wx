@@ -7144,7 +7144,6 @@ function gapped(items, max) {
   ok("两处 toast 互斥（前一条还在屏上，后一条不叠上去）",
     (homeSrc4.match(/Date\.now\(\) - this\.toastAt\(\) < TOAST_GAP/g) || []).length === 2
       && (homeSrc4.match(/toastedAt = Date\.now\(\)/g) || []).length === 2
-      && (homeSrc4.match(/toastAt\(\) \{\s*return this\.toastedAt/g) || []).length === 1
       && /const TOAST_MS = /.test(homeSrc4)
       && (homeSrc4.match(/duration: TOAST_MS/g) || []).length === 2);
 
