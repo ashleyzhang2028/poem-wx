@@ -52,8 +52,6 @@
         </label>
       </radio-group>
 
-      <view class="pref-rule"></view>
-
       <radio-group class="pref-seg" bindchange="onPinyin">
         <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
                wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
@@ -61,8 +59,6 @@
           <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
         </label>
       </radio-group>
-
-      <view class="pref-rule"></view>
 
       <view class="pref-size">
         <view class="pref-opt ic {{fontDown ? '' : 'off'}}"

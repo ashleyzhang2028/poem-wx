@@ -48,8 +48,6 @@
           </label>
         </radio-group>
 
-        <view class="pref-rule"></view>
-
         <radio-group class="pref-seg" bindchange="onPinyin">
           <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
                  wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
@@ -57,8 +55,6 @@
             <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
           </label>
         </radio-group>
-
-        <view class="pref-rule"></view>
 
         <view class="pref-size">
           <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
@@ -79,16 +75,35 @@
       </view>
 
       <view class="poem-body align-{{align}} size-{{fontSize}}">
-        <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
-          <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-            <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-              <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
-                <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-                <text class="tk-ch">{{tk.ch}}</text>
+        <block wx:if="{{blocks.length}}">
+          <block wx:for="{{blocks}}" wx:key="key" wx:for-item="blk">
+            <view class="poem-stanza" wx:if="{{blk.k === 'p'}}">
+              <text class="poem-line" wx:for="{{blk.rows}}" wx:key="index" wx:for-item="para">
+                <text class="poem-clause" wx:for="{{para}}" wx:key="index" wx:for-item="cl">{{cl}}</text>
+              </text>
+            </view>
+            <view class="md-table" wx:else>
+              <view class="md-row" wx:for="{{blk.table.rows}}" wx:key="index" wx:for-item="tr">
+                <view class="md-cell" wx:for="{{tr.cells}}" wx:key="index" wx:for-item="cell"
+                      style="flex-grow:{{blk.table.widths[index]}}">
+                  <text class="md-line" wx:for="{{cell.text}}" wx:for-item="ln" wx:key="index">{{ln}}</text>
+                </view>
+              </view>
+            </view>
+          </block>
+        </block>
+        <block wx:else>
+          <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
+            <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+              <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+                <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+                  <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+                  <text class="tk-ch">{{tk.ch}}</text>
+                </view>
               </view>
             </view>
           </view>
-        </view>
+        </block>
       </view>
 
       <view class="trans-card" wx:if="{{hasTranslation}}">
