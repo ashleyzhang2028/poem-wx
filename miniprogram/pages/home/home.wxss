@@ -2,6 +2,7 @@
   padding: var(--sp-3);
   padding-top: 0;
   position: relative;
+  background: var(--surface);
 }
 
 .banner {
@@ -87,19 +88,12 @@
   opacity: .82;
 }
 
-.row-state {
-  flex: none;
-  margin-left: var(--sp-1);
-  font-size: var(--fs-caption);
-  letter-spacing: var(--ls-caption);
+.tag.row-state {
   color: var(--ink-3);
-  padding: 4rpx 16rpx;
-  border-radius: var(--radius-pill);
-  background: var(--sink);
-  white-space: nowrap;
+  margin-right: 0;
 }
 
-.row-state.on {
+.tag.row-state.on {
   color: var(--ink-2);
 }
 
