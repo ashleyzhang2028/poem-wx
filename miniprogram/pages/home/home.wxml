@@ -99,7 +99,7 @@
             </view>
           </view>
           <view class="seasonal-btns">
-            <view class="de-btn {{item.daily ? 'on' : ''}}" hover-class="de-btn-hover" hover-stay-time="60"
+            <view class="de-btn seasonal-btn {{item.daily ? 'on' : ''}}" hover-class="de-btn-hover" hover-stay-time="60"
                   data-id="{{item.id}}" catchtap="onSeasonalAdd"
                   aria-label="{{item.daily ? '移出今日加背' : '加入今日加背'}}">
               <view class="glyph" style="mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');"></view>
