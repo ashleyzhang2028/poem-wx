@@ -3463,11 +3463,26 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
     "未读又单独摆了一枚 —— 未读必然未背，一枚胶囊按顺序往下走就够了");
 
+  const quotesSrc = fs.readFileSync(path.join(ROOT, "utils", "finish-quote.js"), "utf8");
+  const quotes = require(path.join(ROOT, "utils", "finish-quote.js"));
   ok("今日那几首背完给一句收尾（提示与读数共用 allDone，不是一个新判据）",
     /allDone/.test(homeJs) && /praise/.test(homeJs)
       && /wx:if="\{\{allDone\}\}"/.test(homeWxml) && /\{\{praise\}\}/.test(homeWxml)
       && /percent: base \?/.test(homeJs),
     "今日卡背完了却没有一句收尾 —— 屏幕上看不出今天已经做完");
+
+  ok("收尾句取自格言池，随日期换（不是一个固定句）",
+    quotes.LINES.length === 100
+      && new Set(quotes.LINES).size === 100
+      && /quotes\.pick\(Date\.now\(\) \/ R\.DAY/.test(homeJs)
+      && !/const PRAISE/.test(homeJs),
+    "收尾句写死在一处 —— 每天看到的是同一句话");
+
+  ok("课内与自选各自收尾，池子与取法只有一份",
+    /praiseOf\("course"\)/.test(homeJs) && /praiseOf\("own"\)/.test(homeJs)
+      && /wx:if="\{\{selfPraise\}\}"/.test(homeWxml)
+      && (quotesSrc.match(/^const LINES = \[/gm) || []).length === 1,
+    "自选的今日份背完了没有收尾句 —— 自选模式下看不到完成");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
