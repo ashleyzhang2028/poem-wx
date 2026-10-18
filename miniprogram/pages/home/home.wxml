@@ -96,7 +96,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag own" wx:if="{{item.source === '自选'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
@@ -156,7 +156,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag own" wx:if="{{item.source === '自选'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
@@ -189,10 +189,7 @@
               wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
-            <view class="row-line">
-              <text class="row-title row-poem">{{item.title}}</text>
-              <text class="tag {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
-            </view>
+            <text class="row-title row-poem">{{item.title}}</text>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
           </view>
           <view class="row-end">

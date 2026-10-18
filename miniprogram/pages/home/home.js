@@ -27,7 +27,7 @@ const TOAST_MS = 2200;
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
-const SOURCE_TEXT = { course: "课内", own: "自选" };
+const OWN_TAG = "自选";
 
 const FACES = [
   { key: "bad", icon: "frown", cls: "bad", label: "忘记" },
@@ -86,9 +86,9 @@ function pickedToday(rec) {
   return (last && last.result) || "";
 }
 
-function sourceKey(id) {
+function ownTag(id) {
   const meta = corpus.indexById(id);
-  return meta && meta.b === "poems" ? "course" : "own";
+  return meta && meta.b === "poems" ? "" : OWN_TAG;
 }
 
 function sourceBook(id) {
@@ -141,7 +141,7 @@ function rowsOfScope(list, scope) {
       stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
       read: !!read[p.id],
       recited: S.isLearned(rec),
-      source: SOURCE_TEXT[sourceKey(p.id)]
+      source: ownTag(p.id)
     };
   });
 }
@@ -306,7 +306,7 @@ Page({
         recited,
         stateText: stateText(recited, read),
         stateCls: stateCls(recited),
-        source: SOURCE_TEXT[sourceKey(it.poem.id)]
+        source: ownTag(it.poem.id)
       };
     });
 
@@ -428,7 +428,7 @@ Page({
       recited: recited,
       stateText: stateText(recited, read),
       stateCls: stateCls(recited),
-      source: SOURCE_TEXT[sourceKey(p.id)]
+      source: ownTag(p.id)
     };
   },
 
