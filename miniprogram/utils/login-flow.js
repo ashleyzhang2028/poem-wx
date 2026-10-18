@@ -35,7 +35,7 @@ function prompt(err) {
       title: "登录没有连上服务器",
       content: (err.message || "") + "\n\n这不是这台手机能改的，把这整段发给部署方。",
       showCancel: false,
-      confirmText: "知道了"
+      confirmText: "好"
     });
     return;
   }
@@ -45,7 +45,7 @@ function prompt(err) {
     wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
     return;
   }
-  wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "知道了" });
+  wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "好" });
 }
 
 function done(res) {

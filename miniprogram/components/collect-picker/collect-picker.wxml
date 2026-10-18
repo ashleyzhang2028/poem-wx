@@ -33,6 +33,6 @@
 <view class="cp-mask" wx:if="{{tierOpen}}" bindtap="onTierClose">
   <view class="cp cp-tier" catchtap="onStop" style="{{themeStyle}}">
     <tier-view />
-    <button class="btn ghost block cp-close" bindtap="onTierClose">知道了</button>
+    <button class="btn ghost block cp-close" bindtap="onTierClose">取消</button>
   </view>
 </view>

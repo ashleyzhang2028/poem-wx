@@ -74,22 +74,14 @@ Component({
     onToggle(e) {
       const id = e.currentTarget.dataset.id;
       const r = this.toggle(id);
-      if (r.code === "E_TIER") this.askUpgrade();
+      if (r.code === "E_TIER") entitlement.gateTier("extra", { page: this });
       else if (r.msg) wx.showToast({ title: r.msg, icon: "none" });
       if (r.ok === false) return;
       this.afterChange();
     },
 
-    askUpgrade() {
-      wx.showModal({
-        title: "今日加背 · Pro / Max 专享",
-        content: "「今日加背」是 Pro 与 Max 的计划容量：除了每天固定的篇目，还能自己再挑几首一起背。\n\n"
-          + "你现在的档位是 " + entitlement.status().label + "，搜索和浏览不受影响，随时可以翻看。"
-          + "如果想让今天多背几首，升级到 Pro 或 Max 就能自己加。\n\n"
-          + "感谢你认真对待每一次背诵。",
-        confirmText: "知道了",
-        showCancel: false
-      });
+    onTierGate() {
+      entitlement.openTierPage();
     },
 
     onOpen(e) {

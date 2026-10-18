@@ -445,7 +445,7 @@ Page({
     const r = store.toggleDailyExtra(id);
     const box = this.selectComponent("#extra");
     if (r.code === "E_TIER") {
-      if (box) box.askUpgrade();
+      entitlement.gateTier("extra", { page: this });
       return;
     }
     if (!r.ok) {
@@ -610,6 +610,10 @@ Page({
 
   onGuestOpen() {
     gate.guard("诗词", this);
+  },
+
+  onPermissions() {
+    entitlement.openTierPage();
   },
 
   onOpen(e) {

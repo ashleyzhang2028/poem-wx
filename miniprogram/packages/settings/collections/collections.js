@@ -143,6 +143,8 @@ Page({
       title: "新建自选集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
+      confirmText: "新建",
+      cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.create(res.content);
@@ -173,6 +175,8 @@ Page({
       title: "改集合名",
       editable: true,
       placeholderText: cols.nameOf(c),
+      confirmText: "改名",
+      cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.rename(id, res.content);
@@ -194,6 +198,7 @@ Page({
       title: "删除集合",
       content: "「" + cols.nameOf(c) + "」连同里面 " + c.items.length + " 首一起删掉？背诵进度一个字都不动。",
       confirmText: "删除",
+      cancelText: "取消",
       confirmColor: "#a83b32",
       success: (res) => {
         if (!res.confirm) return;
@@ -213,7 +218,7 @@ Page({
       title: "清空集合",
       content: "把「" + cols.nameOf(c) + "」里 " + c.items.length + " 首全部移出？集合本身留着。",
       confirmText: "清空",
-      cancelText: "算了",
+      cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.clearItems(id);
