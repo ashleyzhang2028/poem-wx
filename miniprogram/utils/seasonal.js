@@ -70,17 +70,19 @@ function windowOf(name, today) {
   const list = [year - 1, year, year + 1].map((y) => dayOf(entry, y)).filter((x) => x > 0);
   let hit = null;
   list.forEach((at) => {
+    const from = at - F.LEAD * DAY;
     const elapsed = Math.round((midnight(today) - at) / DAY);
-    if (elapsed >= 0 && elapsed < F.SHOW_DAYS && (!hit || at > hit.at)) hit = { at: at, elapsed: elapsed };
+    if (elapsed >= -F.LEAD && elapsed < F.SHOW_DAYS - F.LEAD
+      && (!hit || at > hit.at)) hit = { at: at, from: from, elapsed: elapsed };
   });
   if (!hit) return null;
   return {
     key: name,
     kind: "festival",
-    elapsed: hit.elapsed,
+    elapsed: hit.elapsed + F.LEAD,
     days: F.SHOW_DAYS,
-    from: hit.at,
-    to: hit.at + F.SHOW_DAYS * DAY
+    from: hit.from,
+    to: hit.from + F.SHOW_DAYS * DAY
   };
 }
 
