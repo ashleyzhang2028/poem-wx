@@ -130,6 +130,36 @@
   margin-top: var(--sp-2);
 }
 
+.rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+}
+
+.rank-name {
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-caption);
+}
+
+.rank-note {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+}
+
+.best-line {
+  margin-top: var(--sp-1);
+}
+
+.result .dots {
+  justify-content: center;
+  margin-top: var(--sp-3);
+}
+
 .wrong-stem {
   display: block;
   font-family: var(--font-poem);
