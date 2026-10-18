@@ -48,14 +48,8 @@
     <view class="card hero hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
-
-      <view class="hero-meta">
-        <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
-        <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
-        <view class="stats meta-stats" wx:if="{{heroStats.length}}">
-          <text class="tag hero-tag theme" wx:for="{{heroStats}}" wx:key="key">{{item.text}}</text>
-        </view>
-      </view>
+      <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
+      <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
 
       <view class="stats hero-stats">
         <view class="stat">
@@ -103,7 +97,7 @@
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
               <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
-              <text class="tag row-tag {{item.tagCls}} {{item.reasonOn ? 'on' : ''}}">{{item.reason}}</text>
+              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
           <view class="faces">
@@ -159,7 +153,7 @@
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
               <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
-              <text class="tag row-tag {{item.tagCls}} {{item.reasonOn ? 'on' : ''}}">{{item.reason}}</text>
+              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
           <view class="faces">
