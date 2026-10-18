@@ -1,6 +1,7 @@
 const store = require("../../utils/store");
 const corpus = require("../../utils/corpus");
 const entitlement = require("../../utils/entitlement");
+const icons = require("../../utils/icons");
 
 const SUGGEST_MAX = 8;
 
@@ -18,7 +19,8 @@ Component({
   data: {
     keyword: "",
     searched: false,
-    rows: []
+    rows: [],
+    icons: { add: icons.add, added: icons.added }
   },
 
   attached() {

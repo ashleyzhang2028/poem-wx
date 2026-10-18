@@ -13,6 +13,7 @@ const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
+const icons = require("../../utils/icons");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -30,10 +31,12 @@ const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 const SOURCE_TEXT = { course: "课内", own: "自选" };
 
 const FACES = [
-  { key: "bad", icon: "frown", cls: "bad", label: "忘记" },
-  { key: "fuzzy", icon: "meh", cls: "fuzzy", label: "模糊" },
-  { key: "good", icon: "smile", cls: "good", label: "记住" }
+  { key: "bad", icon: icons.frown, cls: "bad", label: "忘记" },
+  { key: "fuzzy", icon: icons.meh, cls: "fuzzy", label: "模糊" },
+  { key: "good", icon: icons.smile, cls: "good", label: "记住" }
 ];
+
+const PAGE_ICONS = { search: icons.search, clear: icons.clear, checked: icons.added };
 
 function praiseOf(scope) {
   return quotes.pick(Date.now() / R.DAY, scope);
@@ -219,6 +222,7 @@ Page({
 
     stats: { today: 0, done: 0, left: 0, extra: 0 },
     faces: FACES,
+    icons: PAGE_ICONS,
     baseCount: 0,
     allDone: false,
     praise: "",

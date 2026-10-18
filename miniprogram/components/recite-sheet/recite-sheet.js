@@ -5,11 +5,12 @@ const pinyin = require("../../utils/pinyin");
 const entitlement = require("../../utils/entitlement");
 const theme = require("../../utils/theme");
 const sync = require("../../utils/sync");
+const icons = require("../../utils/icons");
 
 const RESULTS = [
-  { key: "bad", icon: "frown", label: "忘记", cls: "bad" },
-  { key: "fuzzy", icon: "meh", label: "模糊", cls: "fuzzy" },
-  { key: "good", icon: "smile", label: "记住", cls: "good" }
+  { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
+  { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
+  { key: "good", icon: icons.smile, label: "记住", cls: "good" }
 ];
 
 const FONT_MIN = -2;
@@ -18,15 +19,16 @@ const FONT_MAX = 6;
 const REOPEN_MS = 400;
 
 const ALIGNS = [
-  { key: "left", label: "左对齐", icon: "left" },
-  { key: "center", label: "居中", icon: "center" }
+  { key: "left", label: "左对齐", icon: icons.left },
+  { key: "center", label: "居中", icon: icons.center }
 ];
 
 const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: "off" },
-  { key: "rare", label: "生字", icon: "rare" },
-  { key: "all", label: "全文", icon: "all" }
+  { key: "off", label: "不注音", icon: icons.off },
+  { key: "all", label: "全文", icon: icons.all }
 ];
+
+const PAGE_ICONS = { add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
@@ -112,6 +114,7 @@ Component({
     mastery: 0,
     hint: "",
     results: RESULTS,
+    icons: PAGE_ICONS,
 
     dailyOn: false
   },

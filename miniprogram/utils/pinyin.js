@@ -115,27 +115,19 @@ function readOf(ch, text, i) {
   return list[0];
 }
 
-function needAnnotate(ch) {
-  const t = table();
-  if (!t) return false;
-  if (!readings(ch).length) return false;
-  const common = (t.common || {})[ch] === 1;
-  const poly = (t.poly || {})[ch] === true;
-  return !common || poly;
-}
-
 function annotate(clause, mode, line, at) {
   const text = String(clause || "");
+  const full = mode === "all";
   const context = line === undefined ? text : String(line || "");
   const offset = line === undefined ? 0 : Number(at) || 0;
 
-  if (mode === "off" || !available()) {
+  if (!full || !available()) {
     return text.split("").map((ch) => ({ ch: ch, py: "", mark: false, han: isHan(ch) }));
   }
 
   return text.split("").map((ch, i) => {
     if (!isHan(ch)) return { ch: ch, py: "", mark: false, han: false };
-    const mark = mode === "all" ? !!readings(ch).length : needAnnotate(ch);
+    const mark = !!readings(ch).length;
     if (!mark) return { ch: ch, py: "", mark: false, han: true };
     return { ch: ch, py: readOf(ch, context, offset + i), mark: true, han: true };
   });
@@ -159,7 +151,7 @@ function render(paras, mode) {
 
 function getMode() {
   if (!available()) return "off";
-  return store.settings().pinyin || "rare";
+  return store.settings().pinyin === "all" ? "all" : "off";
 }
 
 function setMode(mode) {
@@ -179,7 +171,6 @@ module.exports = {
   readiness,
   readings,
   readOf,
-  needAnnotate,
   annotate,
   render,
   getMode,

@@ -30,8 +30,17 @@
   transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
 }
 
-.de-btn .glyph {
+.de-ico {
+  width: 32rpx;
+  height: 32rpx;
+  background-color: currentColor;
   color: var(--ink-2);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .de-btn.on {
@@ -39,7 +48,7 @@
   border-color: var(--strong);
 }
 
-.de-btn.on .glyph {
+.de-btn.on .de-ico {
   color: var(--strong-text);
 }
 

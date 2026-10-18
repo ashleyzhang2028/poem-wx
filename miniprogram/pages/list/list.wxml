@@ -24,7 +24,7 @@
 
   <view class="card filter-card">
     <view class="search">
-      <text class="search-icon">⌕</text>
+      <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
       <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
     </view>
 
@@ -54,7 +54,8 @@
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
       <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
-            data-id="{{p.id}}" catchtap="onPick">{{p.picked ? '★' : '☆'}}</view>
+            style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"
+            data-id="{{p.id}}" catchtap="onPick"></view>
       <text class="row-go">›</text>
     </view>
   </view>

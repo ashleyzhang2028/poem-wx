@@ -58,7 +58,7 @@
       <radio-group class="seg-group" bindchange="onFilter">
         <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}" />
-          <view class="seg-icon ic-{{item.icon}}"></view>
+          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
           <text class="seg-text">{{item.label}}</text>
         </label>
       </radio-group>

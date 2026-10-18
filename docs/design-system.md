@@ -572,18 +572,19 @@
 > 「详情页一行显示 —— 左对齐 居中 不注音 生字 全文 A- A+」
 > 「详情页你是没动，但是不是说了 「注音 ｜ 对齐 ｜ 字号」一行显示吗，你做到了吗？」
 
-那一行是「**对齐 ｜ 注音 ｜ 字号 ｜ 加背**」，整行居中，三组之间各一道
-极淡的竖线。**六个选项与加背开关全部用图标，没有字**（2026-10-16，Issue #247）：
-图标只画 `.glyph` 一个元素（背景/描边各一处），一套形状在 `app.wxss` 里
-定义一次，详情页与弹层共用。选中态是「颜色加深 + 项下一条 3rpx 短横」，
-不再是填墨一块 —— 一枚 24rpx 的图标被实心色块包着会糊成一团。
+那一行是「**对齐 ｜ 注音 ｜ 字号 ｜ 加背 ｜ 自选**」，整行居中，三组之间各一道
+极淡的竖线。**每一项都是图标，没有字**（2026-10-16，Issue #247）：
+图标是一份 SVG，`scripts/build-icons.js` 压成 base64 data URI 进 `utils/icons.js`，
+页面拿 `mask-image` + `currentColor` 取色（见本节「图标：同一份网格」）。
+互斥的两三档套一层圆角矩形（`.pref-seg` / `.pref-size`），选中那一格填 `--strong-soft`。
 
-| 图标 | 是什么 | 图形 |
+| 图标键 | 是什么 | 源文件 |
 |---|---|---|
-| `ic-left` / `ic-center` | 左对齐 / 居中 | 三条横线，短的一根靠左或居中 |
-| `ic-off` / `ic-rare` / `ic-all` | 不注音 / 生字 / 全文 | 划掉的圆 / 短符号压一条长线 / 斜排的注音点 |
-| `ic-smaller` / `ic-larger` | 减小 / 加大字号 | 一枚 `−` / 一枚 `＋` |
-| `ic-add` / `ic-added` | 加入 / 移出今日背诵 | 一枚 `＋` / 一个对勾；**没有边框** |
+| `left` / `center` | 左对齐 / 居中 | `CilJustifyLeft.svg` / `CilJustifyCenter.svg` |
+| `off` / `all` | 不注音 / 全文注音（生字档已撤） | `CilText.svg` / `CilTextSize.svg` |
+| `zoomOut` / `zoomIn` | A− / A+ | `CilZoomOut.svg` / `CilZoomIn.svg` |
+| `add` / `added` | 加入 / 已在今日背诵 | `CilPlus.svg` / `CilCheckAlt.svg` |
+| `playlist` | 加入自选集合 | `CilPlaylistAdd.svg` |
 
 三处和别的地方不一样，都写明了理由：
 
@@ -592,9 +593,10 @@
 | 段的外形 | `.pref-opt`，未选中就是**裸图标** | `.seg-item`（在浅灰轨道里） | 那一圈轨道底色在「三组挤一行」里是多余的一层 |
 | 图标的容器 | `.glyph`（24rpx，与文字同一视觉重量） | `.seg-icon`（与字并排） | 这里没有字，图标自己就是那一项 |
 
-**选中态不是填墨**：图标改用 `--strong-text` 加深，并加一条 3rpx 短横（`.pref-opt.ic.on::after`），
-底透明 —— 一枚 24rpx 的图标被实心色块包着会糊成一团。底层仍是原生 `<radio>`（包在 `<label>` 里、
-走 `.opt-radio` 视觉隐藏），加背开关是一个 `<view>` + `bindtap`。
+**选中态是淡底 + 图标转主题色**：`.pref-opt.on .glyph` 取 `--strong-text`，
+`.pref-opt.on` 铺 `--strong-soft` —— 一枚 40rpx 的线描图标被实心色块包着会糊成一团，
+所以不用填墨。底层仍是原生 `<radio>`（包在 `<label>` 里、走 `.opt-radio` 视觉隐藏），
+加背与自选是两个 `<view>` + `bindtap`。
 「设置」页那根 `<slider>` 不动 —— 它是集中调字号的地方，独占一行。
 
 ### 详情页的身份行：朝代 · 作者 · 出处 · 学段
@@ -793,30 +795,25 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
    而同一张卡里的格子没有 —— 于是「学期/年级」和「取诗范围」的左边缝差 8rpx，
    竖着扫下来就看得出错位。现在两者都归零。
 
-### 图标：同一份网格
+### 图标：一份 SVG，一副容器
 
-`不注音 / 生字 / 全文` 这三枚，用户说「瞎画不对齐」。上一版确实各画各的 ——
-圆的溢出比方的多，光学中心不在一条线上，并排看着就是「不对齐」。
-
-现在定一份网格，所有图标都长在它上面：
+早先的图标是一个元素加两枚伪元素在 `app.wxss` 里画出来的（`ic-left`、`ic-rare` 那一套）。
+形状自己定、尺寸自己量，多个图标并排时重心对不齐；后来改成**一份 SVG 一份源文件**：
+`miniprogram/icons/*.svg` 由 `scripts/build-icons.js` 压成 base64 data URI 写进
+`utils/icons.js`，页面只给一个 `.glyph` / `.seg-icon` 容器，`mask-image` 取形、
+`background-color: currentColor` 取色。一份图两态，不必按状态换两张。
 
 | 规矩 | 值 |
 |---|---|
-| 画布 | 24 × 24rpx，图形内缩 2rpx（留出光学边距） |
-| 线宽 | 2.5rpx，只有这一种；圆角端点 |
-| 混用 | 描边类与实心类不混；一个图标要么全描边、要么全实心 |
-| 配色 | `currentColor` —— 段选中时整段变白，图标跟着白，不用改三处 |
+| 画布 | `viewBox="0 0 512 512"`，容器 40rpx 见方、`mask-size: contain` |
+| 配色 | `currentColor` —— 段选中、行 hover 都由父级给色 |
+| 换色 | 只改 `color`，不改 `mask-image` |
+| 状态 | 同一件事的两个状态各有一枚图（`add` / `added`、`yes` / `no`） |
 
-三枚「注音」共用一个母题（**一个字 + 它头上的拼音**），差别落在「有几个」上：
-
-- **不注音** —— 一个「字 + 拼音」被圆圈加斜杠划掉
-- **生字** —— 只有**一个**，右边空着一大块
-- **全文** —— **三个**一路排到底，一点都不空
-
-第一版我给「全文」画了三道横线 —— 那正是 `.ic-left` 的样子，
-同一屏里并排出现就是「瞎画」的观感来源。所以母题换掉了。
-「全站」（地球）也一样：只画圆加一道横线会读成「⊖（禁止）」，
-必须把**经线**也画出来才像球。
+`check.js` 守三件事：用到的图标键都在 `utils/icons.js` 里且是 base64 data URI；
+容器只定义一处（`/^\\.glyph,\n\\.seg-icon \\{[^}]*background-color: currentColor;/m`）；
+图标位（`.face` / `.finish-mark` / `.de-btn` / `.coll-found-btn` / `.clear`）里不再出现字符凑的记号。
+图形长什么样，由人看。
 
 ### 尺寸只有一个旋钮
 
@@ -1074,7 +1071,7 @@ V39 守着撤干净的这几处，并**反着守一条**：选完头像不许 `m
 | `.chip-group` / `.chip`（`.multi`） | 等长选项格子 |
 | `.opt-group(.inline / .column)` / `.opt-row` / `.opt-radio` | 选项行（背诵范围横排两列）|
 | `.algo-group` / `.algo-row` / `.algo-head` / `.algo-lines` | 说明卡（复习算法：名字 + 年份一行，规则三行）|
-| `.seg-icon` + `.ic-*` | 分段里的图标（同一份 24×24 网格，`currentColor` 取色） |
+| `.glyph` / `.seg-icon` | 图标容器：`mask-image` 取形、`currentColor` 取色，一份图两态 |
 | `.search` / `.field` | 输入 |
 | `.kv` | 键值行 |
 | `.meter` / `.ring` / `.ring-cap` / `.ring-cap-t` | 进度：一横一竖；环的尺寸与线宽取 `--ring-size` / `--ring-w`，只此一份。线宽 8rpx（原 12rpx 收了约 1/3，Issue #232） |

@@ -4,10 +4,12 @@
   <block wx:else>
   <view class="card search-card">
     <view class="search search-page">
-      <text class="search-icon">⌕</text>
+      <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
       <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
              confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
-      <text class="clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+      <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onClear">
+        <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
+      </view>
       <button class="btn mini primary go-btn" bindtap="doSearch">搜索</button>
     </view>
 
@@ -35,7 +37,8 @@
         </view>
       </view>
       <view class="row-star {{item.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
-            data-id="{{item.id}}" catchtap="onPick">{{item.picked ? '★' : '☆'}}</view>
+            style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"
+            data-id="{{item.id}}" catchtap="onPick"></view>
       <text class="row-go">›</text>
     </view>
     <text class="hint more-tip" wx:if="{{more}}">{{loading ? '正在取…' : '往下拉，再接 20 篇'}}</text>

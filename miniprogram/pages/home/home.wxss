@@ -121,25 +121,32 @@
   transition: background-color var(--t-press);
 }
 
-.face .glyph {
+.face-ico {
   width: 40rpx;
   height: 40rpx;
+  background-color: currentColor;
   color: var(--ink-4);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .face-hover {
   background: var(--sink);
 }
 
-.face.on.bad .glyph {
+.face.on.bad .face-ico {
   color: var(--red);
 }
 
-.face.on.fuzzy .glyph {
+.face.on.fuzzy .face-ico {
   color: var(--amber);
 }
 
-.face.on.good .glyph {
+.face.on.good .face-ico {
   color: var(--strong);
 }
 
@@ -209,10 +216,19 @@
   margin: 0 auto var(--sp-2);
   border-radius: 50%;
   background: var(--sink);
-  font-family: var(--font-num);
-  font-size: 42rpx;
-  line-height: 1;
+}
+
+.finish-ico {
+  width: 52rpx;
+  height: 52rpx;
+  background-color: currentColor;
   color: var(--strong-text);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .finish-text {

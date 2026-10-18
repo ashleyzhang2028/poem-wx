@@ -35,7 +35,7 @@ const DEFAULTS = {
   fontSize: 0,
 
   theme: "ink",
-  pinyin: "rare",
+  pinyin: "off",
 
   selfOnly: false,
 

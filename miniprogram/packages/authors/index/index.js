@@ -5,6 +5,7 @@ const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const tabPage = require("../../../utils/tab-page");
+const icons = require("../../../utils/icons");
 
 Page({
   data: {
@@ -23,8 +24,8 @@ Page({
 
     filter: "全部",
     filters: [
-      { key: "全部", label: "全部", icon: "all-site" },
-      { key: "未读", label: "未读", icon: "title" }
+      { key: "全部", label: "全部", icon: icons.all },
+      { key: "未读", label: "未读", icon: icons.off }
     ],
     matched: 0,
     unread: 0

@@ -41,20 +41,20 @@
 
       <view class="prefs">
         <radio-group class="pref-seg" bindchange="onAlign">
-          <label class="pref-opt ic {{align === item.key ? 'on' : ''}}"
+          <label class="pref-opt in-seg {{align === item.key ? 'on' : ''}}"
                  wx:for="{{aligns}}" wx:key="key" aria-label="{{item.label}}">
             <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" />
-            <view class="glyph ic-{{item.icon}}"></view>
+            <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
           </label>
         </radio-group>
 
         <view class="pref-rule"></view>
 
         <radio-group class="pref-seg" bindchange="onPinyin">
-          <label class="pref-opt ic {{pinyinMode === item.key ? 'on' : ''}}"
+          <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
                  wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
             <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" />
-            <view class="glyph ic-{{item.icon}}"></view>
+            <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
           </label>
         </radio-group>
 
@@ -63,18 +63,18 @@
         <view class="pref-size">
           <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
                 hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
-            <view class="glyph ic-smaller"></view>
+            <view class="glyph" style="mask-image:url('{{icons.zoomOut}}');-webkit-mask-image:url('{{icons.zoomOut}}');"></view>
           </view>
           <view class="pref-opt ic {{fontUp ? '' : 'off'}}"
                 hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp" aria-label="加大字号">
-            <view class="glyph ic-larger"></view>
+            <view class="glyph" style="mask-image:url('{{icons.zoomIn}}');-webkit-mask-image:url('{{icons.zoomIn}}');"></view>
           </view>
         </view>
 
         <view class="pref-opt ic pref-plus {{dailyOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
               aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
-          <view class="glyph ic-{{dailyOn ? 'added' : 'add'}}"></view>
+          <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
         </view>
       </view>
 
@@ -107,7 +107,7 @@
         <view class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key"
               hover-class="chip-hover" hover-stay-time="60"
               data-key="{{item.key}}" bindtap="onResult">
-          <view class="glyph ic-{{item.icon}}"><view class="face-mouth"></view></view>
+          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
           <text class="chip-t">{{item.label}}</text>
         </view>
       </view>

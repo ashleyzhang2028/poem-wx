@@ -7,6 +7,7 @@ const gate = require("../../../utils/gate");
 const sync = require("../../../utils/sync");
 const theme = require("../../../utils/theme");
 const tabPage = require("../../../utils/tab-page");
+const icons = require("../../../utils/icons");
 
 Page({
   data: {
@@ -27,6 +28,8 @@ Page({
     suggestMax: 8,
 
     counts: cols.DAILY_COUNTS,
+
+    icons: { search: icons.search, clear: icons.clear, add: icons.add, added: icons.added },
 
     nameMax: cols.NAME_MAX,
     itemsMax: cols.ITEMS_MAX
