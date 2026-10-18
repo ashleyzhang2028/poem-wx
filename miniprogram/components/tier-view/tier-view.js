@@ -51,7 +51,7 @@ Component({
           name: r.name,
           yes: r.cells.filter((c) => c.on).length,
           cells: r.cells.map((c) => Object.assign({}, c, {
-            icon: (c.on ? icons.yes : icons.no),
+            icon: c.on ? icons.yes : icons.no,
             cls: c.on ? (c.now ? "yes-now" : "yes") : "no"
           }))
         }))

@@ -723,9 +723,11 @@ if (fs.existsSync(pinyinTable)) {
 
   ok("逐字标音不丢字", pinyin.annotate("床前明月光", "all").length === 5);
 
-  const rare = pinyin.annotate("白发三千丈", "rare");
-  const markOf = (ch) => (rare.find((c) => c.ch === ch) || {}).mark;
-  ok("生字模式标多音字「发」", markOf("发") === true);
+  const full = pinyin.annotate("白发三千丈", "all");
+  const markOf = (ch) => (full.find((c) => c.ch === ch) || {}).mark;
+  ok("全文注音标到「发」", markOf("发") === true);
+  ok("注音只剩两档（不注音 / 全文），生字档已下线",
+    pinyin.annotate("白发三千丈", "rare").every((c) => !c.mark));
 
   ok("多音字按词组消歧 白发→fà", pinyin.readOf("发", "白发", 1) === "fà", pinyin.readOf("发", "白发", 1));
   ok("关掉注音就不切词", pinyin.annotate("床前明月光", "off").every((c) => !c.mark));
@@ -734,7 +736,7 @@ if (fs.existsSync(pinyinTable)) {
   const cmod = require(path.join(ROOT, "utils", "corpus.js"));
 
   const t3 = cmod.layout("鹅，鹅，鹅，\n\n曲项向天歌。").paras;
-  const t3r = pinyin.render(t3, "rare");
+  const t3r = pinyin.render(t3, "all");
   ok("注音形状：段数不丢", t3r.length === 2, JSON.stringify(t3r.length));
 
   ok("注音形状：一行切得出多句", t3r[0][0].length === 3, JSON.stringify(t3r[0][0].length));
@@ -750,12 +752,12 @@ if (fs.existsSync(pinyinTable)) {
   ok("注音不重切句子（句号还在）", t3last[t3last.length - 1].ch === "。",
     JSON.stringify(t3last));
 
-  const t4 = pinyin.render(cmod.layout("白发三千丈").paras, "rare");
+  const t4 = pinyin.render(cmod.layout("白发三千丈").paras, "all");
   ok("切句后消歧窗口仍是整行（白发→fà）",
     t4[0][0][0].tokens.filter((c) => c.ch === "发")[0].py === "fà",
     JSON.stringify(t4[0][0][0].tokens.filter((c) => c.ch === "发")));
 
-  const t5 = pinyin.render(cmod.layout("君不见，高堂明镜悲白发，朝如青丝暮成雪。").paras, "rare");
+  const t5 = pinyin.render(cmod.layout("君不见，高堂明镜悲白发，朝如青丝暮成雪。").paras, "all");
   const f5 = t5[0]
     .map((row) => row.map((cl) => cl.tokens.filter((c) => c.ch === "发")).reduce((a, c) => a.concat(c), []))
     .reduce((a, c) => a.concat(c), []);
@@ -2105,7 +2107,7 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   const pj = require(path.join(ROOT, "utils", "pinyin.js"));
   const L2 = cmod.layout("君不见，黄河之水天上来，\n奔流到海不复回。");
-  const tk = pj.render(L2.paras, "rare");
+  const tk = pj.render(L2.paras, "all");
 
   const seq = [];
   tk.forEach((pr) => pr.forEach((row) => row.forEach((cl) => seq.push(cl.i))));
@@ -2116,10 +2118,31 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 {
   const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
 
-  ["ic-left", "ic-center", "ic-off", "ic-rare", "ic-all"]
-    .forEach((ic) => {
-      ok("共用图标 ." + ic + " 在 app.wxss 里定义", new RegExp("\\." + ic + "::?before").test(appWxss));
+  const iconMod = require(path.join(ROOT, "utils", "icons.js"));
+  ["left", "center", "off", "all", "zoomOut", "zoomIn", "add", "added", "playlist", "smile", "meh", "frown", "yes", "no"]
+    .forEach((name) => {
+      ok("图标 " + name + " 从 utils/icons.js 取（SVG 源文件在 icons/）",
+        typeof iconMod[name] === "string" && iconMod[name].indexOf("data:image/svg+xml;base64,") === 0);
     });
+  ok("图标走 mask 上色（一只容器 + currentColor，不按状态换图）",
+    /^\.glyph,\n\.seg-icon \{[^}]*background-color: currentColor;/m.test(appWxss)
+      && /^\.glyph,\n\.seg-icon \{[^}]*color: var\(--ink-2\);/m.test(appWxss));
+
+  const charIcons = [];
+  pages.forEach((p) => {
+    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    if (/class="(glyph|seg-icon) ic-[a-z]/.test(wxml) || /class="[a-z-]*ic-\{\{/.test(wxml)) {
+      charIcons.push(p + " → 还有伪元素画的 ic-* 图标");
+    }
+    const re = /<(view|label)\b[^>]*class="([^"]*\b(?:face|finish-mark|de-btn|coll-found-btn|clear)(?!-)\b[^"]*)"[^>]*>([\s\S]{0,120}?)<\/\1>/g;
+    let m;
+    while ((m = re.exec(wxml))) {
+      if (/mask-image/.test(m[3])) continue;
+      charIcons.push(p + " → ." + m[2].trim() + " 里是「" + m[3].replace(/\s+/g, " ").trim().slice(0, 8) + "」");
+    }
+  });
+  ok("图标位上一律是 mask 图标，没有伪元素画的，也没有字符凑的",
+    charIcons.length === 0, charIcons.slice(0, 6).join("; "));
 
   ok("分段控件底盘只定义一次", (appWxss.match(/^\.seg-group\s*\{/gm) || []).length === 1);
   ok("格子控件底盘只定义一次", (appWxss.match(/^\.chip\s*\{/gm) || []).length === 1);
@@ -2839,7 +2862,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     const general = read("packages/settings/general/general.wxml");
     ok("图标没被一起弄丢 —— 通用设置页那一份仍在",
-      /seg-icon\s+ic-/.test(general));
+      /class="seg-icon" style="mask-image:url\('\{\{item\.icon\}\}'\)/.test(general));
   }
 
   {
@@ -3411,23 +3434,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("偏好条上的每一项都是图标，没有文字标签",
     !/class="pref-t"/.test(sheetWxml)
-      && /const ALIGNS = \[[\s\S]{0,200}?icon:\s*"left"/.test(sheetJs)
-      && /const PINYIN_MODES = \[[\s\S]{0,260}?icon:\s*"all"/.test(sheetJs)
-      && /glyph ic-\{\{item\.icon\}\}/.test(sheetWxml)
-      && /\.glyph\.ic-left::before/.test(fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8"))
-      && /\.glyph\.ic-off::before/.test(appWxss)
-      && /\.glyph\.ic-rare::before/.test(appWxss)
-      && /\.glyph\.ic-all::before/.test(appWxss)
-      && /\.glyph\.ic-smaller::before/.test(appWxss)
-      && /\.glyph\.ic-larger::before/.test(appWxss),
-    "偏好条还写着字，或者图标少了一套（三档注音 / 两档对齐 / 加减字号）");
+      && /const ALIGNS = \[[\s\S]{0,200}?icon:\s*icons\.left/.test(sheetJs)
+      && /const PINYIN_MODES = \[[\s\S]{0,260}?icon:\s*icons\.all/.test(sheetJs)
+      && /mask-image:url\('\{\{item\.icon\}\}'\)/.test(sheetWxml)
+      && /mask-image:url\('\{\{icons\.zoomOut\}\}'\)/.test(sheetWxml)
+      && /mask-image:url\('\{\{icons\.zoomIn\}\}'\)/.test(sheetWxml),
+    "偏好条还写着字，或者图标少了一套（两档注音 / 两档对齐 / 加减字号）");
 
   ok("「加入今日背诵」是一枚图标，没有边框",
     /\.pref-plus\s*\{[^}]*margin/.test(appWxss)
       && !/\.pref-plus\s*\{[^}]*border/.test(appWxss)
-      && /glyph ic-\{\{dailyOn \? 'added' : 'add'\}\}/.test(sheetWxml)
-      && /\.glyph\.ic-add::before/.test(appWxss)
-      && /\.glyph\.ic-added::before/.test(appWxss),
+      && /icons\[dailyOn \? 'added' : 'add'\]/.test(sheetWxml)
+      && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).add)
+      && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).added),
     "加背那枚还是带框的 ＋ —— 用户点名要去掉边框并换成图标");
 
   ok("底栏那一块算在弹层的 padding 里（上下首与底栏隔开，不被挡住）",
@@ -4048,8 +4067,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     };
     const a = keysOf(generalJs);
     const b = keysOf(read("pages/reader/reader.js"));
-    ok("注音与阅读设置同一档位表（三档，不是另起一套）",
-      a.length === 3 && a.join(",") === b.join(","),
+    ok("注音与阅读设置同一档位表（两档，不是另起一套）",
+      a.length === 2 && a.join(",") === b.join(","),
       "通用设置 " + JSON.stringify(a) + " / 详情页 " + JSON.stringify(b));
   }
 

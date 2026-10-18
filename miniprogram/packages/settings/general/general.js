@@ -6,19 +6,19 @@ const theme = require("../../../utils/theme");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const tabPage = require("../../../utils/tab-page");
+const icons = require("../../../utils/icons");
 
 const ALIGNS = [
-  { key: "left", label: "左对齐", icon: "left" },
-  { key: "center", label: "居中", icon: "center" }
+  { key: "left", label: "左对齐", icon: icons.left },
+  { key: "center", label: "居中", icon: icons.center }
 ];
 
 const FONT_MIN = -2;
 const FONT_MAX = 4;
 
 const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: "off", desc: "正文不带拼音" },
-  { key: "rare", label: "生字", icon: "rare", desc: "只给生僻字与多音字标音" },
-  { key: "all", label: "全文", icon: "all", desc: "逐字标音" }
+  { key: "off", label: "不注音", icon: icons.off, desc: "正文不带拼音" },
+  { key: "all", label: "全文", icon: icons.all, desc: "逐字标音" }
 ];
 
 Page({
@@ -30,7 +30,7 @@ Page({
     fontMin: FONT_MIN,
     fontMax: FONT_MAX,
     pinyinModes: PINYIN_MODES,
-    pinyin: "rare",
+    pinyin: "off",
 
     pinyinOn: false,
     pinyinNote: "",

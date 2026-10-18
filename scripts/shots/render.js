@@ -254,6 +254,7 @@ function themeStyleOf(data) {
 function expandReciteSheet(wxml, data) {
   if (wxml.indexOf("<recite-sheet") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxml"), "utf8");
+  const icons = require(path.join(ROOT, "utils", "icons.js"));
 
   const merged = Object.assign({}, data, {
 
@@ -270,16 +271,17 @@ function expandReciteSheet(wxml, data) {
     fontSize: 0,
     fontMin: -2,
     fontMax: 4,
-    aligns: [{ key: "left", label: "左对齐", icon: "left" }, { key: "center", label: "居中", icon: "center" }],
-    pinyinModes: [{ key: "off", label: "不注音", icon: "off" }, { key: "rare", label: "生字", icon: "rare" }, { key: "all", label: "全文", icon: "all" }],
+    aligns: [{ key: "left", label: "左对齐", icon: icons.left }, { key: "center", label: "居中", icon: icons.center }],
+    pinyinModes: [{ key: "off", label: "不注音", icon: icons.off }, { key: "all", label: "全文", icon: icons.all }],
+    icons: { add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn },
     fontDown: true,
     fontUp: true,
     pinyinMode: "off",
     pinyinOn: false,
     results: [
-      { key: "bad", icon: "frown", label: "忘记", cls: "bad" },
-      { key: "fuzzy", icon: "meh", label: "模糊", cls: "fuzzy" },
-      { key: "good", icon: "smile", label: "记住", cls: "good" }
+      { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
+      { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
+      { key: "good", icon: icons.smile, label: "记住", cls: "good" }
     ],
     themeStyle: data.themeStyle || ""
   });

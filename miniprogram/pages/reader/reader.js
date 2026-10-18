@@ -11,6 +11,7 @@ const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
+const icons = require("../../utils/icons");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -22,15 +23,18 @@ const FONT_MIN = -2;
 const FONT_MAX = 6;
 
 const ALIGNS = [
-  { key: "left", label: "左对齐", icon: "left" },
-  { key: "center", label: "居中", icon: "center" }
+  { key: "left", label: "左对齐", icon: icons.left },
+  { key: "center", label: "居中", icon: icons.center }
 ];
 
 const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: "off" },
-  { key: "rare", label: "生字", icon: "rare" },
-  { key: "all", label: "全文", icon: "all" }
+  { key: "off", label: "不注音", icon: icons.off },
+  { key: "all", label: "全文", icon: icons.all }
 ];
+
+const PAGE_ICONS = {
+  add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, playlist: icons.playlist
+};
 
 function fontFlags(size) {
   return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
@@ -93,6 +97,7 @@ Page({
 
     dailyOn: false,
     pickOn: false,
+    icons: PAGE_ICONS,
 
     locked: true,
     lockTitle: "登录后可用",

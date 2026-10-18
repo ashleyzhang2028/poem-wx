@@ -80,11 +80,13 @@
 
     <view class="extra-search">
       <view class="search">
-        <text class="search-icon">⌕</text>
+        <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
 
         <input placeholder="今日加背 · 搜篇名 / 作者 / 朝代" value="{{extraKeyword}}" bindinput="onExtraInput"
                confirm-type="search" bindconfirm="onExtraSearch" />
-        <text class="clear" wx:if="{{extraKeyword}}" bindtap="onExtraClear">✕</text>
+        <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{extraKeyword}}" bindtap="onExtraClear">
+          <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
+        </view>
       </view>
     </view>
 
@@ -112,7 +114,7 @@
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
                   data-key="{{face.key}}" catchtap="onFace">
-              <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
+              <view class="face-ico" style="mask-image:url('{{face.icon}}');-webkit-mask-image:url('{{face.icon}}');"></view>
             </view>
           </view>
         </view>
@@ -127,14 +129,18 @@
       </view>
 
       <view class="finish" wx:if="{{allDone}}">
-        <text class="finish-mark">✓</text>
+        <view class="finish-mark">
+          <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
+        </view>
         <text class="finish-text">{{praise}}</text>
         <text class="hint finish-tip">想多背一首，搜今日加背</text>
       </view>
     </view>
 
     <view class="finish finish-self" wx:if="{{selfPraise}}">
-      <text class="finish-mark">✓</text>
+      <view class="finish-mark">
+        <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
+      </view>
       <text class="finish-text">{{selfPraise}}</text>
     </view>
 
@@ -172,7 +178,7 @@
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
                   data-key="{{face.key}}" catchtap="onFace">
-              <view class="glyph ic-{{face.icon}}"><view class="face-mouth"></view></view>
+              <view class="face-ico" style="mask-image:url('{{face.icon}}');-webkit-mask-image:url('{{face.icon}}');"></view>
             </view>
           </view>
         </view>

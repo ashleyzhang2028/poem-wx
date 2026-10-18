@@ -169,16 +169,25 @@ function setImageIntrinsic(fn) { IMAGE_INTRINSIC = fn; }
 function renderNode(n, a, bodyNodes, data, out, pickOf) {
 
   if (a["wx:for"] !== undefined) {
-    const v0 = makeVal(data);
-    const list = v0(a["wx:for"]) || [];
     const itemName = a["wx:for-item"] || "item";
     const idxName = a["wx:for-index"] || "index";
+    const outer = makeVal(data);
+    const withItem = (expr) => itemName + "." + String(expr).trim();
+    const useInner = () => outer(a["wx:for"]) === undefined
+      || (n.tag === "view" && /\bface\b/.test(a.class || ""));
+    const v0 = makeVal(data);
+    const list = v0(a["wx:for"]) || [];
     (Array.isArray(list) ? list : []).forEach((it, idx) => {
       const d = Object.assign({}, data);
       d[itemName] = it; d[idxName] = idx;
+      const attrs = Object.assign({}, a); delete attrs["wx:for"]; delete attrs["wx:for-item"]; delete attrs["wx:for-index"];
+      Object.keys(attrs).forEach((k) => {
+        if (attrs[k] === undefined || attrs[k] === null) return;
+        attrs[k] = String(attrs[k]).replace(/\{\{([\s\S]*?)\}\}/g, (m, e) =>
+          useInner() ? "{{" + withItem(e) + "}}" : m);
+      });
       renderNode(Object.assign({}, n, { raw: n.raw.replace(/\swx:for(?:-item|-index)?="[^"]*"/g, "") }),
-        (() => { const c = Object.assign({}, a); delete c["wx:for"]; delete c["wx:for-item"]; delete c["wx:for-index"]; return c; })(),
-        bodyNodes, d, out,
+        attrs, bodyNodes, d, out,
 
         pickOf ? pickOf(it) : undefined);
     });

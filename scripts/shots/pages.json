@@ -436,7 +436,7 @@
       "id": "poems-gz11-06"
     },
     "settings": {
-      "pinyin": "rare"
+      "pinyin": "all"
     }
   },
   "reader-shijing": {
@@ -613,7 +613,7 @@
       "id": "poems-xx1-01"
     },
     "settings": {
-      "pinyin": "rare"
+      "pinyin": "all"
     }
   },
   "home-extra": {

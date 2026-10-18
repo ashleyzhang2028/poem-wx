@@ -146,7 +146,14 @@
   color: var(--on-ink);
 }
 
-.coll-found-tick {
-  font-size: 30rpx;
-  line-height: 1;
+.coll-found-ico {
+  width: 32rpx;
+  height: 32rpx;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }

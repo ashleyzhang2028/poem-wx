@@ -48,16 +48,18 @@
 
       <view class="coll-search" wx:if="{{c.open && searchId === c.id}}">
         <view class="search">
-          <text class="search-icon">⌕</text>
+          <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
           <input placeholder="搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" />
-          <text class="clear" wx:if="{{keyword}}" bindtap="onSuggestClear">✕</text>
+          <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onSuggestClear">
+            <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
+          </view>
         </view>
 
         <view class="coll-found" wx:if="{{found.length}}">
           <view class="coll-found-row" hover-class="row-hover" hover-stay-time="60"
                 wx:for="{{found}}" wx:key="id" data-id="{{item.id}}" bindtap="onAddOne">
             <view class="coll-found-btn {{item.on ? 'on' : ''}}">
-              <text class="coll-found-tick">{{item.on ? '✓' : '+'}}</text>
+              <view class="coll-found-ico" style="mask-image:url('{{icons[item.on ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.on ? 'added' : 'add']}}');"></view>
             </view>
             <view class="row-main">
               <text class="row-title row-poem">{{item.title}}</text>

@@ -8,6 +8,7 @@ const sync = require("../../utils/sync");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
+const icons = require("../../utils/icons");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
@@ -36,7 +37,9 @@ Page({
 
     fromFull: false,
     partial: false,
-    resultMore: ""
+    resultMore: "",
+
+    icons: { search: icons.search, clear: icons.clear, playlist: icons.playlist }
   },
 
   onShow() {

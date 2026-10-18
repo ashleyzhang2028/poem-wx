@@ -7,6 +7,7 @@ const sync = require("../../utils/sync");
 const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
+const icons = require("../../utils/icons");
 
 const FILTERS = [
   { key: "全部", label: "全部" },
@@ -31,7 +32,8 @@ Page({
     collapsed: false,
 
     pickId: "",
-    locked: true
+    locked: true,
+    icons: { search: icons.search, playlist: icons.playlist }
   },
 
   onLoad(query) {

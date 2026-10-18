@@ -9,16 +9,26 @@ const OUT_FILE = path.join(__dirname, "..", "miniprogram", "utils", "icons.js");
 const HEX = /#[0-9a-fA-F]{3,8}\b/g;
 
 const NAMES = [
-  ["home", "home.svg"],
-  ["library", "library.svg"],
-  ["conference", "conference.svg"],
-  ["mine", "mine.svg"],
-  ["yes", "yes.svg"],
-  ["no", "no.svg"],
-  ["search", "search.svg"],
-  ["smile", "smile.svg"],
-  ["meh", "meh.svg"],
-  ["frown", "frown.svg"]
+  ["home", "CilBadge.svg"],
+  ["library", "CilLibraryBuilding.svg"],
+  ["conference", "CilDiamond.svg"],
+  ["mine", "CilUser.svg"],
+  ["search", "CilSearch.svg"],
+  ["clear", "CilXCircle.svg"],
+  ["yes", "CilCheckCircle.svg"],
+  ["no", "CilXCircle.svg"],
+  ["smile", "CilSmile.svg"],
+  ["meh", "CilMeh.svg"],
+  ["frown", "CilSad.svg"],
+  ["add", "CilPlus.svg"],
+  ["added", "CilCheckAlt.svg"],
+  ["playlist", "CilPlaylistAdd.svg"],
+  ["left", "CilJustifyLeft.svg"],
+  ["center", "CilJustifyCenter.svg"],
+  ["off", "CilText.svg"],
+  ["all", "CilTextSize.svg"],
+  ["zoomOut", "CilZoomOut.svg"],
+  ["zoomIn", "CilZoomIn.svg"]
 ];
 
 function flatten(svg) {
@@ -31,13 +41,6 @@ function flatten(svg) {
 
 function dataUri(svg) {
   return "data:image/svg+xml;base64," + Buffer.from(svg, "utf8").toString("base64");
-}
-
-function tint(uri, color) {
-  const head = "data:image/svg+xml;base64,";
-  if (uri.indexOf(head) !== 0) return uri;
-  const svg = Buffer.from(uri.slice(head.length), "base64").toString("utf8");
-  return dataUri(svg.replace(/currentColor/g, color));
 }
 
 function escapeJs(uri) {
@@ -61,10 +64,6 @@ NAMES.forEach((n) => {
   }
   ICON_URI[n[0]] = dataUri(svg);
   LINES.push("  " + n[0] + ": '" + escapeJs(ICON_URI[n[0]]) + "'");
-});
-
-["yes", "no"].forEach((name) => {
-  LINES.push("  " + name + "Ink: '" + escapeJs(tint(ICON_URI[name], "#1c1c1e")) + "'");
 });
 
 fs.writeFileSync(OUT_FILE,
