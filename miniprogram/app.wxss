@@ -1273,7 +1273,9 @@ button, textarea {
 }
 
 
-.pref-seg {
+.pref-seg,
+.pref-size,
+.pref-act {
   display: flex;
   align-items: center;
   flex: none;
@@ -1306,19 +1308,14 @@ button, textarea {
   border-radius: 0;
 }
 
-.pref-size {
-  display: flex;
-  align-items: center;
-  flex: none;
-  box-sizing: border-box;
-  border: 1rpx solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
 .pref-size .pref-opt.ic {
   width: 64rpx;
   height: 52rpx;
+  margin: 0;
+  border-radius: 0;
+}
+
+.pref-act .pref-opt.ic {
   margin: 0;
   border-radius: 0;
 }
