@@ -161,6 +161,20 @@ function coursePlanKeyOf(opt) {
   return planKeyOf(Object.assign({}, opt, { selfOnly: false }));
 }
 
+function todaySet(planKey, base) {
+  const saved = store.dayPlan(planKey).ids;
+  if (base <= 0) return [];
+  return saved.length ? saved.slice(0, base) : [];
+}
+
+function todayDone(ids, recited) {
+  return (ids || []).filter((id) => !!recited[id]).length;
+}
+
+function todayLeft(ids, recited) {
+  return (ids || []).filter((id) => !recited[id]).length;
+}
+
 function dueRow(p, rec) {
   return { poem: p, reason: "review", reviewRound: rec ? R.clampLevel(rec.level) + 1 : 1 };
 }
@@ -530,6 +544,9 @@ module.exports = {
   poolForScope,
   planKeyOf,
   coursePlanKeyOf,
+  todaySet,
+  todayDone,
+  todayLeft,
   collectionPlan,
   collectionOverview,
   generateDailyPlan,
