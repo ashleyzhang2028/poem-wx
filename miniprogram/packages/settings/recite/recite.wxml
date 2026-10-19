@@ -5,7 +5,7 @@
   <block wx:else>
 
   <view class="card">
-    <view class="card-title poem">今日加背</view>
+    <view class="card-title">今日加背</view>
 
     <view wx:if="{{!daily.length}}" class="hint">今天还没加背 —— 在首页「今日加背」里搜一篇加进来。</view>
 
@@ -34,7 +34,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title poem">当前学段</view>
+    <view class="card-title">当前学段</view>
 
     <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">
       <label class="chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key">
@@ -74,7 +74,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title poem">每日首数</view>
+    <view class="card-title">每日首数</view>
 
     <radio-group class="chip-group compact cols-4" bindchange="onCount">
       <label class="chip compact {{dailyCount === item ? 'on' : ''}}" wx:for="{{counts}}" wx:key="*this">
