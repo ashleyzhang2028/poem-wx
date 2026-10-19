@@ -2,11 +2,14 @@ const store = require("./store");
 const remote = require("./remote");
 
 function pullAfterLogin() {
+  let r = null;
   try {
-    return require("./sync").now(true) || Promise.resolve({ skipped: "offline" });
+    r = require("./sync").now(true);
   } catch (e) {
-    return Promise.resolve({ skipped: "offline" });
+    r = null;
   }
+  if (!r || typeof r.then !== "function") return Promise.resolve({ skipped: "offline" });
+  return r.then((res) => res || {}, () => ({ skipped: "offline" }));
 }
 
 const REMOTE = {

@@ -48,18 +48,22 @@ function guard(what, page, onPass) {
     cancelText: "取消",
     success: (res) => {
       if (!res.confirm) return;
-      pending = { run: onPass || null, page: page || null };
-      loginFlow.run(page).catch(() => {});
+      open(onPass, page);
     }
   });
   return false;
+}
+
+function open(onPass, page) {
+  pending = { run: onPass || null, page: page || null };
+  loginFlow.run(page).catch(() => {});
 }
 
 function resume(page) {
   const job = pending;
   pending = null;
   const at = (job && job.page) || page;
-  if (at && at.refresh) at.refresh();
+  if (at && typeof at.refresh === "function") at.refresh();
   if (job && typeof job.run === "function") job.run();
   return !!job;
 }

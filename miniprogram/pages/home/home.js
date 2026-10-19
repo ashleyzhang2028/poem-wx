@@ -639,6 +639,17 @@ Page({
     gate.guard("诗词", this, () => this.refresh());
   },
 
+  onLoginGate() {
+    loginFlow.run(this).catch(() => {});
+  },
+
+  onLoginTapped() {
+    loginFlow
+      .run(this)
+      .then((res) => loginFlow.settle(res, this))
+      .catch(() => {});
+  },
+
   onPermissions() {
     entitlement.openTierPage();
   },
