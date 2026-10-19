@@ -8,6 +8,7 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 const rankingSubmit = require("../../../utils/ranking-submit");
+const rankingSelf = require("../../../utils/ranking");
 
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
@@ -32,6 +33,8 @@ Page({
 
     lastScore: 0,
     ranked: false,
+    rankOff: false,
+    rankWhere: "",
 
     input: "",
     message: "",
@@ -104,8 +107,6 @@ Page({
     if (!p && exclude.length) {
       p = feihua.pick({ level: this.data.level, scope: opt.scope });
     }
-    if (this.data.streak) this.report(this.data.streak);
-
     const char = p ? p.char : "";
     this.setData(
       {
@@ -165,6 +166,7 @@ Page({
     }
     sfx.pass();
     this.markRound();
+    this.report(this.data.done.length);
     this.setData({ locked: true, message: "时间到 · 这一轮 " + this.data.done.length + " 句", messageOk: true });
   },
 
@@ -180,7 +182,10 @@ Page({
   onRestart() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    this.setData({ done: [], streak: 0, best: 0, message: "", remark: "", locked: false }, () => {
+    this.setData({
+      done: [], streak: 0, best: 0, message: "", remark: "", locked: false,
+      ranked: false, rankOff: false, lastScore: 0
+    }, () => {
       this.restartClock();
       this.next();
     });
@@ -232,10 +237,17 @@ Page({
     }, ms);
   },
 
-  report(streak) {
+  report(said) {
     rankingSubmit
-      .submitPlay("fly", { stage: "all", scopeId: this.data.scope || "", score: streak, total: streak })
-      .then((res) => this.setData({ ranked: !!(res && res.ok), lastScore: streak }));
+      .submitPlay("fly", { scopeId: this.data.scope || "", score: said, total: said })
+      .then((res) => {
+        this.setData({
+          ranked: !!(res && res.ok && res.on),
+          rankOff: !!(res && res.ok && !res.on),
+          lastScore: said,
+          rankWhere: rankingSelf.label()
+        });
+      });
   },
 
   onUnload() {
@@ -256,7 +268,10 @@ Page({
 
   onSkip() {
     if (this.timer) clearTimeout(this.timer);
-    if (this.data.done.length) this.markRound();
+    if (this.data.done.length) {
+      this.markRound();
+      this.report(this.data.done.length);
+    }
     this.next();
   },
 

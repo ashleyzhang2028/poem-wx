@@ -8,6 +8,7 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 const rankingSubmit = require("../../../utils/ranking-submit");
+const rankingSelf = require("../../../utils/ranking");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -57,7 +58,10 @@ Page({
 
     allowed: false,
     reason: "",
-    ranked: false
+    ranked: false,
+    rankOff: false,
+    rankSent: false,
+    rankWhere: ""
   },
 
   onShow() {
@@ -278,15 +282,22 @@ Page({
   },
 
   report(correct, count) {
-    rankingSubmit.submitPlay("exam", {
-      stage: "all",
-      scopeId: this.data.scope || "",
-      score: correct,
-      total: count,
-      durationSec: DURATION - this.data.remain
-    }).then((res) => {
-      if (this.data.stage === "result") this.setData({ ranked: !!(res && res.ok) });
-    });
+    rankingSubmit
+      .submitPlay("exam", {
+        scopeId: this.data.scope || "",
+        score: correct,
+        total: count,
+        durationSec: DURATION - this.data.remain
+      })
+      .then((res) => {
+        if (this.data.stage !== "result") return;
+        this.setData({
+          ranked: !!(res && res.ok && res.on),
+          rankOff: !!(res && res.ok && !res.on),
+          rankSent: !!(res && res.ok),
+          rankWhere: rankingSelf.label()
+        });
+      });
   },
 
   onAgain() {
@@ -304,6 +315,9 @@ Page({
       rank: null,
       best: "",
       newBest: false,
+      ranked: false,
+      rankOff: false,
+      rankSent: false,
       remain: DURATION,
       remainText: "20:00"
     });

@@ -292,6 +292,33 @@ function makeWx(port, mem) {
   }
 
   {
+    const holder = require(path.join(POEM, "_lib", "store.js"));
+    const origGet = holder.getStore;
+    const shared = holder.getStore(config);
+    holder.getStore = function () { return shared; };
+    svStore.putSetting("ranking:exam", "0");
+
+    ok("那一行开关写进去之后，服务端读得回来（读的是库里的列，不是另一个字段名）",
+      !!(await shared.getSetting("ranking:exam")), "开关写进去了却读不到 —— 后台拨一次、重启一次就变回关闭");
+
+    const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
+    const relay = submitter.submitPlay("exam", { score: 7, total: 10, durationSec: 120 });
+    await new Promise((r) => setTimeout(r, 120));
+    const got = await relay;
+    holder.getStore = origGet;
+
+    const self = require(path.join(REPO, "miniprogram", "utils", "ranking.js")).selfGrade(store.settings());
+    const saved = (await shared.listScoreRecords({ game: "exam" }, 20)).filter((r) => r.uid === store.profile().userId);
+    ok("关着榜时交上来的成绩照样落库（开着才展示，不是开着才收）",
+      !!got && got.ok === true && got.on === false && saved.length === 1,
+      JSON.stringify(got) + " 落库 " + saved.length + " 行");
+    ok("成绩记的是这个人的学段 / 年级 / 学期（不是一律 all，否则哪儿都查不到这一行）",
+      saved.length === 1 && saved[0].stage === self.stage && saved[0].grade === self.grade
+        && saved[0].term === self.term,
+      JSON.stringify(saved[0]) + " 本机 " + JSON.stringify(self));
+  }
+
+  {
     const rankMod = require(path.join(REPO, "miniprogram", "utils", "ranking.js"));
     const rankingMask = (name) => rankMod.maskNick(name);
     const api = (body, method) => {
@@ -322,8 +349,9 @@ function makeWx(port, mem) {
     ok("关着的时候读不到榜单（不是空榜，是明说没开）",
       offList.status === 403 && offList.body.code === "E_RANKING_OFF", JSON.stringify(offList.body));
 
-    const offSubmit = await api({ op: "submit", game: "exam", score: 9, total: 10 });
-    ok("关着的时候交上来的成绩也不收", offSubmit.status === 403 && offSubmit.body.code === "E_RANKING_OFF",
+    const offSubmit = await api({ op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1 });
+    ok("关着的时候交上来的成绩照收，回一句 on:false（开关管展示，不管收不收）",
+      offSubmit.status === 200 && !!offSubmit.body.recorded && offSubmit.body.on === false,
       JSON.stringify(offSubmit.body));
 
     await svStore.putSetting("ranking:exam", "1");

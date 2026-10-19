@@ -3133,7 +3133,7 @@ var BOARD_STAGES = ["all", "primary", "middle", "high"];
 var BOARD_STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
 var BOARD_PERIODS = ["day", "week", "month", "year"];
 var BOARD_SIZES = [10, 20, 50];
-var BOARD_LIMITS = { scopeId: 64, size: 50, records: 3000 };
+var BOARD_LIMITS = { scopeId: 64, size: 50, records: 20000 };
 var BOARD_NICK_MAX = 12;
 var BOARD_GRADE_LABELS = { 1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级", 5: "五年级", 6: "六年级",
   7: "七年级", 8: "八年级", 9: "九年级", 10: "高一", 11: "高二", 12: "高三" };
@@ -3226,7 +3226,8 @@ function boardKeyOf(game) {
 
 function boardReadSwitch(deps, game) {
   return Promise.resolve(deps.store.getSetting(boardKeyOf(game))).then(function (row) {
-    return !!(row && String(row.value) === "1");
+    var v = row && row.svalue != null ? row.svalue : row && row.value;
+    return String(v == null ? "" : v) === "1";
   });
 }
 
@@ -3236,7 +3237,7 @@ function boardWriteSwitch(deps, game, on) {
   });
 }
 
-function boardGate(deps, input) {
+function boardGate(deps, input, needOn) {
   var cfg = deps.cfg;
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
@@ -3246,8 +3247,10 @@ function boardGate(deps, input) {
     return Promise.resolve(err(400, "E_GAME", "榜单只认 fly / exam 两种"));
   }
   return boardReadSwitch(deps, game).then(function (on) {
-    if (!on) return err(403, "E_RANKING_OFF", "榜单没开（管理员可以在后台打开）", { game: game });
-    return { game: game };
+    if (needOn !== false && !on) {
+      return err(403, "E_RANKING_OFF", "榜单没开（管理员可以在后台打开）", { game: game });
+    }
+    return { game: game, on: on };
   });
 }
 
@@ -3299,7 +3302,7 @@ function boardList(deps, input) {
 
     var q = { game: g.game, stage: filter.stage, from: since };
     if (filter.stage !== "all" && filter.grade) q.grade = filter.grade;
-    if (filter.stage !== "all" && filter.term) q.term = filter.term;
+    if (filter.stage !== "all" && filter.grade && filter.term) q.term = filter.term;
 
     return Promise.resolve(deps.store.listScoreRecords(q, BOARD_LIMITS.records)).then(function (rows) {
       var ranked = boardRows(rows, deps.now());
@@ -3341,7 +3344,7 @@ function boardList(deps, input) {
 }
 
 function boardSubmit(deps, input) {
-  var gate = boardGate(deps, input);
+  var gate = boardGate(deps, input, false);
   return Promise.resolve(gate).then(function (g) {
     if (g && g.status) return g;
     if (!deps.account) return err(401, "E_NO_SESSION", "交成绩要登录");
@@ -3369,7 +3372,7 @@ function boardSubmit(deps, input) {
         created_at: deps.now()
       };
       return Promise.resolve(deps.store.putScoreRecord(row)).then(function () {
-        return ok({ recorded: row.srid, score: score, total: total });
+        return ok({ recorded: row.srid, score: score, total: total, on: !!g.on });
       });
     });
   });

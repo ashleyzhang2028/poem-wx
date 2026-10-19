@@ -3231,7 +3231,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "只关列表不关提交，用户交完成绩却发现榜上没有自己");
 
   ok("开关默认关（没有那一行就是关，不是开）",
-    /return !!\(row && String\(row\.value\) === "1"\)/.test(apiCore)
+    /return String\(v == null \? "" : v\) === "1"/.test(apiCore)
       && /var want = !!/.test(apiCore)
       && !/row === null[\s\S]{0,40}?return true/.test(apiCore),
     "默认值翻成 true 之后，昵称会不经管理员点头就摆到别人面前");
