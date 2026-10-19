@@ -15,7 +15,7 @@
       </view>
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
-        <text class="empty-text">还没有自选集合</text>
+        <text class="empty-text say">还没有自选集合</text>
       </view>
     </view>
 
