@@ -38,6 +38,7 @@
 }
 
 .index-name {
+  font-family: var(--font-poem);
   font-size: var(--fs-hint);
   color: var(--ink-2);
   overflow: hidden;

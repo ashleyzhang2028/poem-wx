@@ -61,7 +61,7 @@
   </view>
 
   <view class="card">
-    <view class="card-title">季节限定</view>
+    <view class="card-title poem">季节限定</view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">首页显示节日节气卡</text>

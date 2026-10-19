@@ -21,7 +21,7 @@
     <view class="row row-flush">
       <view class="row-icon">榜</view>
       <view class="row-main">
-        <text class="row-title">排行榜</text>
+        <text class="row-title poem">排行榜</text>
         <text class="row-sub">分学段 · 分年级 · 分学期 · 按日周月年</text>
       </view>
       <text class="row-go">›</text>
