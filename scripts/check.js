@@ -2600,6 +2600,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       GAME.filter((p) => call[p] !== "pick").join("、")
         + " —— 进了大会还亮着上一栏，退回来时那一栏又是暗的");
   }
+  ok("「我的」那一格画的是头像，没有头像时退回昵称首字（不画写死的那张默认图）",
+    /wx:if="\{\{item\.me && meAvatar\}\}"[^>]*src="\{\{meAvatar\}\}"/.test(barWxml)
+      && /wx:elif="\{\{item\.me\}\}">\{\{meChar\}\}<\/view>/.test(barWxml)
+      && /meAvatar:\s*store\.avatarSrc\(\)/.test(barSrc)
+      && /meChar:\s*store\.avatarChar\(\)/.test(barSrc),
+    "底栏那一格还挂着 icons.mine —— 换了头像只有页面里变，底栏不跟着变");
   ok("要登录的那几栏都标了 login（游客点了不进门，直接去「我的」）",
     (barSrc.match(/login:\s*true/g) || []).length >= 3,
     "标 login 的项不足三项 —— 有入口没标，游客点进去还是一屏只有一个按钮的门禁页");
@@ -3991,7 +3997,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
-    ["昵称", "pages/mine/mine.js", /onNickname(?:\([^)]*\))?[\s\S]{0,400}?markDirty/]
+    ["昵称", "pages/mine/mine.js", /saveNickname\([^)]*\)[\s\S]{0,300}?markDirty/]
   ];
   ok("改了设置就该传：六个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
@@ -4029,17 +4035,29 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
     const mineWxml8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
-    ok("选完头像即视为「授权过」，引导条同一轮收掉（Issue #194）",
-      /store\.saveProfile\(\{\s*avatarLocal:\s*url,\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8));
-    ok("引导条只挂在登录且没授权过那一态上（grantLead）",
-      /class="grant-lead"\s+wx:if="\{\{grantLead\}\}"/.test(mineWxml8)
-        && /grantLead:\s*this\.grantLead\(profile\)/.test(mineSrc8));
-    ok("「先不用」把授权这件事一次问清，不再反复弹（identityAsked）",
-      /store\.saveProfile\(\{\s*identityAsked:\s*true\s*\}\)/.test(mineSrc8)
-        && /grantLead\(profile\)[\s\S]{0,300}?profile\.identityAsked/.test(mineSrc8));
-    ok("引导条判据是「没选过头像且昵称还是默认值」，不是别的",
-      /grantLead\(profile\)[\s\S]{0,400}?!profile\.avatarLocal/.test(mineSrc8)
-        && /nick === "我的古诗词"/.test(mineSrc8));
+    const pick = (fn) => {
+      const i = mineSrc8.indexOf(fn + "(");
+      return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
+    };
+    ok("两个一键选项都在（只换头像 / 头像和昵称一起换）",
+      /bindtap="onUseWechatAvatar"/.test(mineWxml8)
+        && /bindtap="onUseWechatIdentity"/.test(mineWxml8)
+        && !!pick("onUseWechatAvatar") && !!pick("onUseWechatIdentity"),
+      "「用微信头像」或「用微信头像和昵称」少了一个");
+    ok("两项都经 wx.chooseAvatar 拿微信那张（平台没有静默拿头像的接口）",
+      /chooseWechatAvatar\(withNickname\)[\s\S]{0,200}?wx\.chooseAvatar\(\{/.test(mineSrc8),
+      "用了别的接口 —— getUserProfile 只回灰头像匿名用户");
+    ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
+      /chooseWechatAvatar\(withNickname\)[\s\S]{0,600}?this\.saveNickname\(/.test(mineSrc8)
+        && /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(mineSrc8),
+      "只换了头像，昵称没推上去");
+    ok("两个选项只挂在登录那一态上（没登录时没有可换的身份）",
+      /<view class="wechat-picks"[^>]*wx:if="\{\{logged\}\}"/.test(mineWxml8));
+    ok("头像或昵称一换，底栏那格跟着重画",
+      /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
+        && /store\.saveProfile\(\{\s*avatarLocal:\s*url\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
+        && /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
+      "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
   }
 
   {
@@ -4192,8 +4210,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       /request\(REMOTE\.me,[\s\S]{0,80}?\"PATCH\"/.test(authSrc9),
       "昵称只写进了本机存储 —— 数据库 accounts.nickname 永远是空的（Issue #268）");
     ok("改昵称那一刻就把昵称推上去（不靠进度同步队列捎带）",
-      /onNickname[\s\S]{0,400}?auth\.saveNickname\(/.test(read("pages/mine/mine.js")),
-      "onNickname 只 saveProfile + markDirty —— 进度那条链从来不打包昵称，" +
+      /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(read("pages/mine/mine.js")),
+      "改昵称只落本机 + markDirty —— 进度那条链从来不打包昵称，" +
         "用户改完到数据库里看依旧为空");
     ok("没登录 / 没接后端时改昵称不炸（只落本机）",
       /saveNickname[\s\S]{0,300}?!logged\(\)[\s\S]{0,120}?return Promise\.resolve/.test(authSrc9),
@@ -6148,6 +6166,11 @@ function gapped(items, max) {
     /class="avatar-fallback"[^>]*wx:if="\{\{!avatarUrl\}\}"/.test(mineWxml)
       && mineSrc.indexOf("avatarChar") >= 0,
     "首字印又被塞回原生 button 里 —— 真机上它的盒模型跟页面样式表对不上（Issue #194）");
+
+  ok("首字印上面盖着一层命中区，点字也算点头像（Issue #388）",
+    /class="avatar-hit"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
+      && /onAvatarTap\([^)]*\)[\s\S]{0,120}?chooseWechatAvatar\(false\)/.test(mineSrc),
+    "首字印与原生 button 并列、不穿透，点在字上就没反应");
 }
 
 {

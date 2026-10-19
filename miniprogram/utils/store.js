@@ -436,8 +436,26 @@ function saveSession(patch) {
   return next;
 }
 
+function defaultNickname() {
+  return "我的古诗词";
+}
+
+function defaultNick(name) {
+  const nick = String(name == null ? "" : name).trim();
+  return !nick || nick === defaultNickname();
+}
+
+function displayName() {
+  const nick = profile().nickname || "";
+  return defaultNick(nick) ? "诗" : nick;
+}
+
 function avatarSrc() {
   return profile().avatarLocal || "";
+}
+
+function avatarChar() {
+  return displayName().slice(0, 1);
 }
 
 function collections() {
@@ -527,7 +545,11 @@ module.exports = {
   profile,
   saveProfile,
   saveSession,
+  defaultNickname,
+  defaultNick,
+  displayName,
   avatarSrc,
+  avatarChar,
   collections,
   saveCollections,
   collectionsAt,
