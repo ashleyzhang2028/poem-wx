@@ -2,18 +2,47 @@
   text-align: center;
 }
 
+.fh-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
 .fh-scope {
-  display: block;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
+}
+
+.fh-clock {
+  flex: none;
+  font-family: var(--font-num);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-open {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
 }
 
 .fh-char {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--sp-4) 0;
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+
+.fh-mark {
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
 }
 
 .fh-char-t {
@@ -28,6 +57,10 @@
   font-size: var(--fs-hint);
   color: var(--ink-3);
   margin-bottom: var(--sp-2);
+}
+
+.fh-stage .inline-btns .btn.primary {
+  flex: 1;
 }
 
 .fh-field {
@@ -82,4 +115,54 @@
 
 .fh-note.ranked {
   color: var(--strong-text);
+}
+
+.restart {
+  margin-top: var(--sp-3);
+}
+
+.qa-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.qa-line:last-child {
+  border-bottom: none;
+}
+
+.qa-n {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: var(--radius-pill);
+  background: var(--strong-soft);
+  color: var(--strong-text);
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qa-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qa-seg {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.qa-src {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
 }

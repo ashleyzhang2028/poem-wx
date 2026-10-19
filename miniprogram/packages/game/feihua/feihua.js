@@ -1,6 +1,7 @@
 const feihua = require("./lib");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
+const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const store = require("../../../utils/store");
 const S = require("../../../utils/scheduler");
@@ -10,6 +11,7 @@ const tabPage = require("../../../utils/tab-page");
 const rankingSubmit = require("../../../utils/ranking-submit");
 
 const ANSWER_LIMIT = 80;
+const ROUND_LIMIT = 90;
 
 Page({
   data: {
@@ -35,6 +37,13 @@ Page({
     messageOk: false,
 
     locked: false,
+    flash: "",
+    mark: "",
+
+    hinted: false,
+
+    left: ROUND_LIMIT,
+    leftText: "1:30",
 
     revealed: false,
     answers: [],
@@ -120,10 +129,68 @@ Page({
         message: "",
         messageOk: false,
         locked: false,
+        flash: "",
+        mark: "",
+        hinted: false,
         revealed: false,
         answers: []
-      }
+      },
+      () => this.startClock()
     );
+  },
+
+  startClock() {
+    this.stopClock();
+    this.clock = setInterval(() => {
+      const left = this.data.left - 1;
+      if (left <= 0) {
+        this.stopClock();
+        this.setData({ left: 0, leftText: "0:00" });
+        this.endRound();
+        return;
+      }
+      this.setData({ left, leftText: this.format(left) });
+    }, 1000);
+  },
+
+  stopClock() {
+    if (this.clock) clearInterval(this.clock);
+    this.clock = null;
+  },
+
+  restartClock() {
+    this.setData({ left: ROUND_LIMIT, leftText: this.format(ROUND_LIMIT) });
+  },
+
+  format(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  },
+
+  endRound() {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    this.stopClock();
+    if (!this.data.done.length) {
+      this.setData({ locked: true, message: "时间到，一句也没接上", messageOk: false });
+      return;
+    }
+    sfx.pass();
+    this.setData({ locked: true, message: "时间到 · 这一轮 " + this.data.done.length + " 句", messageOk: true });
+  },
+
+  onLoad() {
+    this.restartClock();
+  },
+
+  onRestart() {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    this.setData({ done: [], streak: 0, best: 0, message: "", locked: false }, () => {
+      this.restartClock();
+      this.next();
+    });
   },
 
   onInput(e) {
@@ -133,26 +200,26 @@ Page({
   onSubmit() {
     if (this.data.locked || !this.data.char) return;
     const r = feihua.judge(this.data.char, this.data.input, this.data.done.map((d) => d.seg));
-    sfx.answer(r.ok);
-    wx.vibrateShort({ type: r.ok ? "light" : "medium" });
+    const streak = r.ok ? this.data.streak + 1 : 0;
+    const fb = feedback.mark(this, r.ok, streak);
 
     if (!r.ok) {
-
-      this.setData({ message: r.reason, messageOk: false, locked: true });
+      this.setData({ message: r.reason, messageOk: false, locked: true, mark: "✗", flash: fb.flash });
       this.advance(1400);
       return;
     }
 
     const row = { char: this.data.char, seg: r.seg, title: r.hit ? r.hit.title : "" };
     const done = this.data.done.concat([row]);
-    const streak = this.data.streak + 1;
     this.setData({
       done,
       streak,
       best: Math.max(this.data.best, streak),
-      message: "对上了" + (r.hit ? "：" + r.hit.title : ""),
+      message: "对上了 · " + (r.hit ? r.hit.title : "在集子里"),
       messageOk: true,
-      locked: true
+      locked: true,
+      mark: "✓",
+      flash: fb.flash
     });
     this.advance(900);
   },
@@ -173,6 +240,8 @@ Page({
 
   onUnload() {
     if (this.timer) clearTimeout(this.timer);
+    this.stopClock();
+    feedback.close(this);
   },
 
   onReveal() {
@@ -188,6 +257,21 @@ Page({
   onSkip() {
     if (this.timer) clearTimeout(this.timer);
     this.next();
+  },
+
+  onHint() {
+    if (this.data.locked || this.data.hinted) return;
+    const opt = this.scopeOpt();
+    const h = feihua.hint(
+      this.data.char,
+      Object.assign({ exclude: this.data.done.map((d) => d.seg) }, opt)
+    );
+    if (!h) {
+      wx.showToast({ title: "这个字在范围内就这几句了", icon: "none" });
+      return;
+    }
+    feedback.buzz("light");
+    this.setData({ hinted: true, message: h.head + "…… 共 " + h.total + " 字", messageOk: false });
   },
 
   onOpen(e) {

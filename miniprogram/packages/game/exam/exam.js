@@ -1,6 +1,7 @@
 const quiz = require("../quiz/lib");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
+const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
@@ -45,6 +46,12 @@ Page({
     pickedForms: [],
     cardSet: false,
 
+    slots: [],
+    marked: 0,
+    rank: null,
+    best: "",
+    newBest: false,
+
     allowed: false,
     reason: "",
     ranked: false
@@ -82,6 +89,7 @@ Page({
 
   onUnload() {
     this.stopTimer();
+    feedback.close(this);
   },
 
   onScope(e) {
@@ -108,10 +116,24 @@ Page({
         graded: [],
         correct: 0,
         remain: DURATION,
-        remainText: "20:00"
+        remainText: "20:00",
+        slots: this.slotsOf(blankAnswers(questions.length), 0),
+        marked: 0,
+        rank: null,
+        best: "",
+        newBest: false
       },
       () => this.startTimer()
     );
+  },
+
+  slotsOf(answers, index) {
+    return (answers || []).map((a, i) => {
+      let cls = "";
+      if (a) cls = "on";
+      if (i === index) cls = (cls + " now").trim();
+      return { i: i, cls: cls };
+    });
   },
 
   startTimer() {
@@ -141,11 +163,36 @@ Page({
   onPick(e) {
     const picked = e.currentTarget.dataset.v;
     if (picked === this.data.picked) return;
-    sfx.answer(true);
+    feedback.buzz("light");
 
     const answers = this.data.answers.slice();
     answers[this.data.index] = picked;
-    this.setData({ picked, answers });
+    const slots = this.slotsOf(answers, this.data.index);
+    this.setData({
+      picked,
+      answers,
+      slots,
+      marked: slots.filter((x) => x === "done").length
+    });
+  },
+
+  onJump(e) {
+    const index = Number(e.currentTarget.dataset.i);
+    if (!(index >= 0) || index === this.data.index || index >= this.data.questions.length) return;
+    this.goto(index);
+  },
+
+  goto(index) {
+    const next = this.data.questions[index];
+    if (!next) return;
+    this.setData({
+      index,
+      current: next,
+      optionRows: quiz.optionRows(next.options),
+      metaLine: this.metaLineOf(next),
+      picked: this.data.answers[index] || "",
+      slots: this.slotsOf(this.data.answers, index)
+    });
   },
 
   onNext() {
@@ -154,15 +201,12 @@ Page({
       this.finish();
       return;
     }
+    this.goto(index);
+  },
 
-    const next = this.data.questions[index];
-    this.setData({
-      index,
-      current: next,
-      optionRows: quiz.optionRows(next.options),
-      metaLine: this.metaLineOf(next),
-      picked: this.data.answers[index] || ""
-    });
+  onPrev() {
+    if (this.data.index <= 0) return;
+    this.goto(this.data.index - 1);
   },
 
   metaLineOf(q) {
@@ -182,6 +226,10 @@ Page({
     const correct = graded.filter((g) => g.ok).length;
 
     const total = questions.length || 1;
+    const score = Math.round((correct / total) * 100);
+    const rank = feedback.rankPercent(score);
+    const kept = feedback.keep(feedback.KEYS.exam, { pct: score, at: Date.now(), rank: rank });
+
     sfx.rank(correct, total);
     this.setData({
       stage: "result",
@@ -193,7 +241,10 @@ Page({
         ok: g.ok
       })),
       correct,
-      score: Math.round((correct / total) * 100)
+      score,
+      rank,
+      newBest: kept.best,
+      best: kept.before ? kept.before.rank.name : ""
     });
     this.report(correct, questions.length);
   },

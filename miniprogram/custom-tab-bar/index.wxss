@@ -61,6 +61,23 @@
   -webkit-mask-size: contain;
 }
 
+.tab-ico-face {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+}
+
+.tab-ico-char {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sink);
+  font-family: var(--font-poem);
+  font-size: var(--fs-caption);
+  line-height: 1;
+  color: var(--ink-2);
+}
+
 .tab.on .tab-ico {
   background: var(--strong-soft);
 }

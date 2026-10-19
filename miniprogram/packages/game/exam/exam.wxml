@@ -35,7 +35,13 @@
   <block wx:elif="{{stage === 'running'}}">
     <view class="exam-bar">
       <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
+      <text class="exam-timer">已答 {{marked}} 题</text>
       <text class="exam-timer">{{remainText}}</text>
+    </view>
+
+    <view class="dots exam-slots">
+      <view class="dot {{item.cls}}" wx:for="{{slots}}" wx:key="i" data-i="{{item.i}}"
+            hover-class="dot-hover" bindtap="onJump">{{item.i + 1}}</view>
     </view>
 
     <view class="card">
@@ -52,9 +58,12 @@
       </view>
     </view>
 
-    <button class="btn primary block next-btn" bindtap="onNext">
-      {{index + 1 >= questions.length ? '交卷' : '下一题'}}
-    </button>
+    <view class="exam-nav">
+      <button class="btn ghost mini" bindtap="onPrev" disabled="{{index === 0}}">上一题</button>
+      <button class="btn primary next-btn" bindtap="onNext">
+        {{index + 1 >= questions.length ? '交卷' : '下一题'}}
+      </button>
+    </view>
   </block>
 
   <block wx:else>
@@ -62,6 +71,15 @@
       <text class="score">{{score}}</text>
       <text class="score-k">分</text>
       <text class="hint">答对 {{correct}} / {{questions.length}}</text>
+
+      <view class="rank" wx:if="{{rank}}">
+        <text class="rank-name">{{rank.name}}</text>
+        <text class="rank-note">{{rank.note}}</text>
+      </view>
+
+      <text class="hint best-line" wx:if="{{newBest}}">这一档比之前高，记下了</text>
+      <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
+
       <text class="ranked" wx:if="{{ranked}}">已上榜 · 同档同期限里比</text>
     </view>
 

@@ -3,29 +3,68 @@
 
   <block wx:else>
 
-    <view class="card fh-stage">
-      <text class="fh-scope">{{scopeName}} · 第 {{done.length + 1}} 题</text>
+    <view class="card fh-stage {{flash ? 'flash ' + flash : ''}}">
+      <view class="fh-head">
+        <text class="fh-scope">{{scopeName}}</text>
+        <text class="combo {{streak >= 5 ? 'hot' : ''}}" wx:if="{{streak >= 2}}">{{streak}} 连对</text>
+        <text class="fh-clock">{{leftText}}</text>
+      </view>
+
       <view class="fh-char">
         <text class="fh-char-t">{{char}}</text>
+        <text class="fh-mark" wx:if="{{mark}}">{{mark}}</text>
       </view>
       <text class="fh-ask">写一句带「{{char}}」的诗词</text>
 
-      <view class="field fh-field">
+      <view class="field fh-field {{flash ? 'flash ' + flash : ''}}">
         <input class="field-input" value="{{input}}" placeholder="例如：云深不知处"
                confirm-type="done" focus="{{!locked}}"
                bindinput="onInput" bindconfirm="onSubmit" />
       </view>
 
       <view class="inline-btns">
-        <button class="btn ghost" bindtap="onReveal">{{revealed ? '收起答案' : '看答案'}}</button>
-        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">提交</button>
-        <button class="btn ghost" bindtap="onSkip">换令</button>
+        <button class="btn ghost mini" bindtap="onHint" disabled="{{locked || hinted}}">提示</button>
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">接上</button>
+        <button class="btn ghost mini" bindtap="onSkip">换令</button>
       </view>
 
       <text class="fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
 
       <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
       <text class="fh-note ranked" wx:if="{{ranked}}">上一轮 {{lastScore}} 句已上榜</text>
+
+      <button class="btn ghost block restart" wx:if="{{locked && done.length}}" bindtap="onRestart">
+        再开一轮
+      </button>
+    </view>
+
+    <view class="card" wx:if="{{done.length}}">
+      <view class="card-title">这一轮接上的</view>
+      <view class="qa-line" wx:for="{{done}}" wx:key="index">
+        <text class="qa-n">{{index + 1}}</text>
+        <view class="qa-body">
+          <text class="qa-seg">{{item.seg}}</text>
+          <text class="qa-src" wx:if="{{item.title}}">{{item.title}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-open" bindtap="onReveal" hover-class="card-hover" hover-stay-time="60">
+        <text class="card-title">看看还有哪些</text>
+        <text class="fh-open">{{revealed ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{revealed}}">
+        <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+          <text class="fh-seg">{{item.seg}}</text>
+          <text class="fh-src">{{item.title}} · {{item.author}}</text>
+        </view>
+        <view class="empty" wx:if="{{!answers.length}}">
+          <text class="empty-mark">字</text>
+          <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
+        </view>
+      </view>
     </view>
 
     <view class="card">
@@ -49,29 +88,6 @@
             <text class="seg-text">{{item.name}}</text>
           </label>
         </radio-group>
-      </view>
-    </view>
-
-    <view class="card">
-      <view class="card-title">答案</view>
-      <view wx:if="{{revealed}}">
-        <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
-          <text class="fh-seg">{{item.seg}}</text>
-          <text class="fh-src">{{item.title}} · {{item.author}}</text>
-        </view>
-        <view class="empty" wx:if="{{!answers.length}}">
-          <text class="empty-mark">字</text>
-          <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="card" wx:if="{{done.length}}">
-      <view class="card-title">这一轮答对的</view>
-      <view class="fh-line" wx:for="{{done}}" wx:key="index">
-        <text class="fh-seg">{{item.seg}}</text>
-        <text class="fh-src" wx:if="{{item.title}}">{{item.title}}</text>
       </view>
     </view>
   </block>

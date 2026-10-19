@@ -114,6 +114,21 @@ function look(char, opt) {
   return out;
 }
 
+function hint(char, opt) {
+  const o = opt || {};
+  const rows = look(char, Object.assign({ limit: 200 }, o));
+  const seen = {};
+  (o.exclude || []).forEach((t) => {
+    seen[_feihua_strip(t)] = 1;
+  });
+  for (let i = 0; i < rows.length; i++) {
+    const seg = _feihua_strip(rows[i].seg);
+    if (seen[seg]) continue;
+    return { head: seg.slice(0, 2), total: seg.length };
+  }
+  return null;
+}
+
 function _feihua_strip(s) {
   return String(s).replace(/[^\u3400-\u9fff]/g, "");
 }
@@ -200,4 +215,14 @@ function pick(opt) {
   return { char: it.char, count: it.count, level: it.level };
 }
 
-module.exports = { LEVELS, pool, levelOf, pick, look, judge, charsOf: _feihua_chars, scopedPoems: _feihua_scopedPoems };
+module.exports = {
+  LEVELS,
+  pool,
+  levelOf,
+  pick,
+  look,
+  hint,
+  judge,
+  charsOf: _feihua_chars,
+  scopedPoems: _feihua_scopedPoems
+};

@@ -6,7 +6,10 @@
     <button class="btn block mode {{item.ok ? '' : 'mode-off'}}"
             wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
       <view class="mode-main">
-        <text class="gc-name">{{item.name}}</text>
+        <view class="mode-head">
+          <text class="gc-name">{{item.name}}</text>
+          <text class="tag theme" wx:if="{{item.bestText}}">最好 {{item.bestText}}</text>
+        </view>
         <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
       </view>
       <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>

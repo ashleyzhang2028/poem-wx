@@ -1,6 +1,7 @@
 const quiz = require("./lib");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
+const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
@@ -32,6 +33,13 @@ Page({
     wrong: [],
 
     pct: 0,
+    flash: "",
+    combo: feedback.comboOf(0),
+    streaks: [],
+    streakFlags: [],
+    rank: null,
+    best: null,
+    newBest: false,
 
     allowed: false,
     reason: ""
@@ -96,7 +104,13 @@ Page({
         last: null,
         answered: 0,
         correct: 0,
-        wrong: []
+        wrong: [],
+        flash: "",
+        combo: feedback.comboOf(0),
+        streaks: [],
+        streakFlags: [],
+        rank: null,
+        newBest: false
       }
     );
   },
@@ -122,8 +136,11 @@ Page({
     if (this.data.picked || !this.data.current) return;
     const picked = e.currentTarget.dataset.v;
     const res = quiz.judge(this.data.current, picked);
-
-    sfx.answer(res.ok);
+    const combo = feedback.mark(this, res.ok, this.data.combo.n + 1);
+    const streaks = res.ok
+      ? this.data.streaks.concat([this.data.index])
+      : this.data.streaks;
+    const streakFlags = this.data.questions.map((q, i) => streaks.indexOf(i) >= 0);
 
     this.setData({
       picked,
@@ -132,6 +149,9 @@ Page({
       last: res,
       answered: this.data.answered + 1,
       correct: this.data.correct + (res.ok ? 1 : 0),
+      combo: combo.combo,
+      streaks: streaks,
+      streakFlags: streakFlags,
       wrong: res.ok
         ? this.data.wrong
         : this.data.wrong.concat([
@@ -143,10 +163,7 @@ Page({
   onNext() {
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
-
-      sfx.rank(this.data.correct, this.data.questions.length);
-
-      this.setData({ stage: "result", pct: this.pctOf(this.data.correct, this.data.questions.length) });
+      this.finish();
       return;
     }
 
@@ -157,12 +174,39 @@ Page({
       optionRows: this.rowsWithCls(next.options, "", next.answer),
       metaLine: this.metaLineOf(next),
       picked: "",
-      last: null
+      last: null,
+      flash: ""
+    });
+  },
+
+  finish() {
+    const total = this.data.questions.length;
+    const pct = this.pctOf(this.data.correct, total);
+    const rank = feedback.rankPercent(pct);
+    const kept = feedback.keep(feedback.KEYS.quiz, {
+      pct: pct,
+      at: Date.now(),
+      rank: rank
+    });
+
+    sfx.rank(this.data.correct, total);
+
+    this.setData({
+      stage: "result",
+      pct: pct,
+      rank: rank,
+      newBest: kept.best,
+      best: kept.before ? kept.before.rank.name : ""
     });
   },
 
   onAgain() {
-    this.setData({ stage: "setup", questions: [], wrong: [] });
+    feedback.close(this);
+    this.setData({ stage: "setup", questions: [], wrong: [], rank: null, newBest: false, flash: "" });
+  },
+
+  onUnload() {
+    feedback.close(this);
   },
 
   onOpen(e) {
