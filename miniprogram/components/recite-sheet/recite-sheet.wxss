@@ -201,6 +201,9 @@
 }
 
 .poem-miss-btn {
-  display: inline-flex;
-  margin-top: var(--sp-3);
+  display: flex;
+  margin: var(--sp-3) auto 0;
+  width: 220rpx;
+  height: var(--h-btn);
+  font-size: var(--fs-body);
 }
