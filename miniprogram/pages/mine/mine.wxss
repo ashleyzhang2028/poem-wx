@@ -10,20 +10,19 @@
 
 .avatar-wrap {
   position: relative;
-  width: 112rpx;
-  height: 112rpx;
+  width: 120rpx;
+  height: 120rpx;
   flex: none;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 0 2rpx var(--line);
 }
 
 .avatar {
   position: absolute;
   top: 0;
   left: 0;
-  width: 112rpx;
-  height: 112rpx;
+  width: 120rpx;
+  height: 120rpx;
   border-radius: 50%;
 }
 
@@ -106,8 +105,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 112rpx;
-  height: 112rpx;
+  width: 120rpx;
+  height: 120rpx;
   border-radius: 50%;
   background: var(--sink);
   font-family: var(--font-poem);
