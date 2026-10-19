@@ -104,8 +104,8 @@
 }
 
 .tier-cell-ic {
-  width: 32rpx;
-  height: 32rpx;
+  width: var(--glyph-round);
+  height: var(--glyph-round);
   color: var(--ink-4);
   background-color: currentColor;
   mask-repeat: no-repeat;
@@ -124,12 +124,15 @@
   color: var(--ink-2);
 }
 
-.tier-cell-ic.yes-now {
-  color: var(--strong);
-  transform: scale(1.15);
+.tier-cell.is-now .tier-cell-ic {
+  box-sizing: border-box;
+  padding: var(--glyph-edge);
+  border-radius: 50%;
+  background: var(--strong);
 }
 
-.tier-head .tier-cell.is-now .tier-cell-t {
+.tier-cell.is-now .tier-cell-ic:not(.no) {
+  color: var(--on-ink);
 }
 
 .tier-head .tier-cell.is-now::after {

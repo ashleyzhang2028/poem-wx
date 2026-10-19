@@ -129,6 +129,9 @@ page {
   --h-round: calc(60rpx * var(--ui-scale));
   --h-round-ico: calc(40rpx * var(--ui-scale));
 
+  --glyph-round: calc(32rpx * var(--ui-scale));
+  --glyph-edge: calc(3rpx * var(--ui-scale));
+
   --w-switch: calc(88rpx * var(--ui-scale));
   --h-switch: calc(54rpx * var(--ui-scale));
   --switch-scale: calc(.863 * var(--ui-scale));

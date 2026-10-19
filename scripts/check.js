@@ -4697,6 +4697,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /var\(--strong\)/.test(isNowHead),
     "当前档位还挂在 --green 上 —— 换主题时那一列留在原地");
 
+  const cellIc = (/^\.tier-cell-ic\s*\{([^}]*)\}/m.exec(tierCss) || [])[1] || "";
+  const nowIc = (/^\.tier-cell\.is-now \.tier-cell-ic\s*\{([^}]*)\}/m.exec(tierCss) || [])[1] || "";
+  const nowMark = (/\.tier-cell\.is-now \.tier-cell-ic:not\(\.no\)\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
+  ok("对比表的图标一档尺寸（当前档位那一栏不靠放大说事）",
+    /width:\s*var\(--glyph-round\)/.test(cellIc) && /height:\s*var\(--glyph-round\)/.test(cellIc)
+      && !/transform:\s*scale\(/.test(tierCss),
+    "当前档位那一栏的图标被单独放大了 —— 同一列里两种直径，看着像两种东西");
+  ok("当前档位那一栏是主题色实底、图标取压在它上面的那一色（不是白底描边）",
+    /background:\s*var\(--strong\)/.test(nowIc) && /border-radius:\s*50%/.test(nowIc)
+      && /color:\s*var\(--on-ink\)/.test(nowMark),
+    "自己这一档还停在「白底 + 主题色描边」上 —— 与不支持 / 其他档位的白卡差得不够（Issue #425）");
+
   {
     const ruleCount = (sel) => (appWxss.match(new RegExp("\\n" + sel + "\\s*[,{]"), "g") || []).length;
     ok("闪动 / 连击 / 题号格只在 app.wxss 各定义一次",
