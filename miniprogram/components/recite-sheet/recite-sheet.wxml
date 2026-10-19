@@ -94,7 +94,7 @@
             </view>
           </block>
         </block>
-        <block wx:else>
+        <block wx:elif="{{tokens.length}}">
           <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
             <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
               <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
@@ -106,6 +106,11 @@
             </view>
           </view>
         </block>
+        <view class="poem-miss" wx:else>
+          <text class="hint poem-miss-t">{{loadingText ? '正在取这一首的正文' : textMiss}}</text>
+          <button class="btn primary mini poem-miss-btn" wx:if="{{!loadingText && textMiss && syncable}}"
+                  bindtap="onSyncText">再取一次</button>
+        </view>
       </view>
 
       <view class="trans-card" wx:if="{{hasTranslation}}">

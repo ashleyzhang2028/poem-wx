@@ -249,7 +249,7 @@
   flex: none;
   width: 48rpx;
   height: 48rpx;
-  margin-left: var(--sp-2);
+  margin-left: auto;
   border-radius: 50%;
   display: flex;
   align-items: center;

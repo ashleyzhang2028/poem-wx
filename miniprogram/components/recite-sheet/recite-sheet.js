@@ -94,6 +94,8 @@ Component({
     selection: "",
     aliasText: "",
     loadingText: false,
+    textMiss: "",
+    syncable: false,
     stage: "",
     rawText: "",
     tableView: false,
@@ -130,6 +132,7 @@ Component({
     this.loadToken = 0;
     this.textErr = "";
     this.errSay = "";
+    this.missAt = -1;
   },
 
   detached() {
@@ -174,11 +177,32 @@ Component({
     whyText() {
       const code = this.textErr;
       if (code === "E_NO_ENTRY") return "这一首不在正文分片的清单里。";
+      if (code === "E_NO_TEXT") return "这一片的正文不完整。";
       if (code === "E_NO_SHARDS") return "服务端这个版本没带正文分片。";
       if (code === "E_NO_SHARD_SERVICE") return "这个包没接上取正文的服务。";
       if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时了，多半是服务刚被唤醒。";
       if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到取正文的服务。";
+      if (/网络|不通/.test(this.errSay)) return "网络不通。";
       return "";
+    },
+
+    missText() {
+      if (!sync.ready()) return "这一首的正文没取到，登录后能取回来。";
+      const why = this.whyText();
+      return "这一首的正文没取到。" + (why ? why : "多半是网络没通，再取一次。");
+    },
+
+    markMissing() {
+      this.setData({
+        loadingText: false,
+        blocks: [],
+        tokens: [],
+        textMiss: this.missText(),
+        syncable: sync.ready()
+      });
+      if (this.data.id && this.missAt === this.data.index) return;
+      this.missAt = this.data.index;
+      this.askMissing();
     },
 
     askMissing() {
@@ -229,7 +253,16 @@ Component({
     fetchText(item) {
       this.cancelLoad();
       const token = this.loadToken;
-      this.setData({ open: true, loadingText: true, showTranslation: false, hint: "" });
+      this.setData({
+        open: true,
+        loadingText: true,
+        showTranslation: false,
+        hint: "",
+        blocks: [],
+        tokens: [],
+        textMiss: "",
+        syncable: sync.ready()
+      });
 
       corpus
         .ensureEntry(item.id)
@@ -246,8 +279,7 @@ Component({
           this.cancelLoad();
           this.textErr = (err && err.code) || "";
           this.errSay = (err && err.message) || "";
-          this.setData({ loadingText: false });
-          this.askMissing();
+          this.markMissing();
         });
     },
 
@@ -266,6 +298,8 @@ Component({
         selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
         loadingText: false,
+        textMiss: "",
+        syncable: sync.ready(),
         rawText: entry.text,
         tableView: table.hasTable(entry.text),
         translation: entry.tr || "",

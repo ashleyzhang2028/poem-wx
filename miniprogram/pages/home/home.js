@@ -446,15 +446,16 @@ Page({
     return card ? card.rows : [];
   },
 
-  openSeasonal() {
+  onSeasonalOpen(e) {
     const rows = this.seasonalRows();
     if (!rows.length) return;
     const sheet = this.selectComponent("#sheet");
     if (!sheet) return;
+    const id = (e && e.currentTarget && e.currentTarget.dataset.id) || rows[0].id;
     this.sheetSource = "seasonal";
     this.collectionId = "";
     this.setData({ sheetRows: rows });
-    sheet.open(rows, rows[0].id);
+    sheet.open(rows, id);
     this.attachSeasonal(rows);
   },
 

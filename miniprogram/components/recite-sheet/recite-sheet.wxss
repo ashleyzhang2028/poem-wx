@@ -189,3 +189,18 @@
   from { transform: translateX(-100%); }
   to { transform: translateX(250%); }
 }
+
+.poem-miss {
+  padding: var(--sp-6) var(--sp-2);
+  text-align: center;
+  font-family: var(--font-ui);
+}
+
+.poem-miss-t {
+  display: block;
+}
+
+.poem-miss-btn {
+  display: inline-flex;
+  margin-top: var(--sp-3);
+}
