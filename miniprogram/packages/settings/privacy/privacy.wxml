@@ -4,7 +4,6 @@
     <view class="card-title">隐私政策</view>
     <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，一切只在这台手机上，不往外发。登录后，把背诵记录同步到我们的服务器，好让换手机还在；你填的昵称也会存到服务器，并可能出现在排行榜上。</text>
     <text class="policy-meta">更新日期：{{updated}}</text>
-    <text class="policy-meta">生效日期：{{updated}}</text>
   </view>
 
   <view class="card">
