@@ -2,7 +2,7 @@
 
   <view class="card">
     <view class="card-title">隐私政策</view>
-    <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，一切只在这台手机上，不往外发。登录后，只把背诵记录同步到我们的服务器，好让换手机还在。</text>
+    <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，一切只在这台手机上，不往外发。登录后，把背诵记录同步到我们的服务器，好让换手机还在；你填的昵称也会存到服务器，并可能出现在排行榜上。</text>
     <text class="policy-meta">更新日期：{{updated}}</text>
     <text class="policy-meta">生效日期：{{updated}}</text>
   </view>
@@ -21,7 +21,9 @@
   <view class="card">
     <view class="card-title">二、登录时我们拿到什么</view>
     <text class="policy-p">你点登录时，我们把微信给的登录凭证交给服务器，由服务器向微信换取你的 openid，也就是你在这个小程序里的匿名标识，用来认出「这份记录是你的」。这个标识与背诵记录存在一起。</text>
-    <text class="policy-p">头像与昵称由你主动点头像、填名字时才取，且只留在本机，不上传、不入库。不点头像、不填名字，所有功能照常能用。</text>
+    <text class="policy-p">头像由你主动点选时才取，只留在本机，不上传、不入库，别人看不到。</text>
+    <text class="policy-p">昵称不同：登录后你填的名字会存到服务器，一是换手机还叫这个名字，二是排行榜要显示它（见第五节）。名字由你自己填（也可以用微信昵称一键填上），你不填，我们不会自己去取。</text>
+    <text class="policy-p">不点头像、不填名字，所有功能照常能用。没填名字时，榜上以「诗友」加你编号的后四位生出一个代称，再照第五节的办法打码，显示成「诗***6」这样。</text>
     <text class="policy-p">我们不拿手机号，不拿你的微信好友，不拿通讯录、位置、相册，也不读剪贴板。</text>
   </view>
 
@@ -48,8 +50,10 @@
 
   <view class="card">
     <view class="card-title">五、会不会给别人</view>
-    <text class="policy-p">不会。我们不做统计、不投广告、不接第三方 SDK，也不把你的记录卖给或换给任何人。</text>
-    <text class="policy-p">唯一的例外是法律要求：依法需要提供时，我们按法律办。</text>
+    <text class="policy-p">我们不做统计、不投广告、不接第三方 SDK，不把你的记录卖给或换给任何人，也不把你的头像给别人看。</text>
+    <text class="policy-p">会露给别人的只有一处：排行榜。管理员打开榜单之后，你考完试、玩完一轮飞花令的成绩会进榜，榜上列出你的昵称 —— 只留首末字，中间一律星号（「张三」写成「张**三」，「欧阳修文」写成「欧***文」）。同榜的人看到的还有名次、成绩与用时，看不到头像，看不到你背了哪些篇目，也看不到你写的字。</text>
+    <text class="policy-p">排行榜默认关闭。关着的时候成绩不上报，榜上不会有你这一行。管理员在后台能看到完整昵称，只用于核对与处理问题。</text>
+    <text class="policy-p">除此之外的例外是法律要求：依法需要提供时，我们按法律办。</text>
   </view>
 
   <view class="card">
@@ -66,6 +70,7 @@
     <view class="card-title">八、你的权利</view>
     <text class="policy-p">你可以查、改、删自己的个人信息，也可以撤回同意或在「我的」里退出登录。</text>
     <text class="policy-p">「清空背诵数据」是可以随时用的删除入口。若要连账号一并注销，发邮件到上面的邮箱，我们核实后处理。</text>
+    <text class="policy-p">昵称随时可以改，改完榜上立刻是新名字。</text>
     <text class="policy-p">拒绝提供非必需的信息，不使用头像与昵称一类的授权，不影响背诵、复习、搜索这些核心功能。</text>
   </view>
 
