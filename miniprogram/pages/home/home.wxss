@@ -190,6 +190,26 @@
   margin-top: var(--sp-3);
 }
 
+.guest-lead {
+  margin-bottom: var(--sp-3);
+}
+
+.guest-lead-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--strong-text);
+  line-height: var(--lh-tight);
+}
+
+.guest-lead-sub {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+}
+
 
 .finish {
   padding: var(--sp-5) var(--sp-3) var(--sp-4);

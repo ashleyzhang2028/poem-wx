@@ -40,6 +40,14 @@
       </view>
     </view>
 
+    <view class="card">
+      <view class="guest-lead">
+        <text class="guest-lead-title">解锁跬步诗词的更多可能</text>
+        <text class="guest-lead-sub">登录后可跨设备认回背诵进度</text>
+      </view>
+      <button class="btn primary block" bindtap="onLoginTapped">登录</button>
+    </view>
+
     <view class="safe-bottom"></view>
   </block>
 

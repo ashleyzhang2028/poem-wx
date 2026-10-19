@@ -62,17 +62,21 @@ function backTo(page) {
   return "/" + page.route;
 }
 
+function settle(res, page) {
+  done(res);
+  const resumed = gate.resume(page);
+  const back = backTo(page);
+  if (back && !resumed) tabPage.back(back);
+  return res;
+}
+
 function run(page) {
   wx.showLoading({ title: "登录中" });
   return auth
     .login()
     .then((res) => {
       wx.hideLoading();
-      done(res);
-      const resumed = gate.resume(page);
-      const back = backTo(page);
-      if (back && !resumed) tabPage.back(back);
-      return res;
+      return settle(res, page);
     })
     .catch((err) => {
       wx.hideLoading();
@@ -82,4 +86,4 @@ function run(page) {
     });
 }
 
-module.exports = { run };
+module.exports = { run, settle };
