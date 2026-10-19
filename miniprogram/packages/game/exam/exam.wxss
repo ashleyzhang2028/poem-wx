@@ -213,3 +213,81 @@
 .next-btn {
   margin-top: var(--sp-3);
 }
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.dot {
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid var(--line-2);
+  background: var(--surface);
+  transition: background-color var(--t-press), border-color var(--t-press);
+}
+
+.dot-no {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.dot.done {
+  background: var(--strong-soft);
+  border-color: var(--strong-soft);
+}
+
+.dot.done .dot-no {
+  color: var(--strong-text);
+}
+
+.dot.here {
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.dot.here .dot-no {
+  color: var(--on-ink);
+}
+
+.dot:active {
+  transform: scale(.94);
+}
+
+.dots-note {
+  display: block;
+  margin-top: var(--sp-2);
+}
+
+.quit-line {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--amber);
+  line-height: var(--lh-body);
+  margin-top: var(--sp-3);
+}
+
+.exam-acts {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.cheer {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: var(--lh-loose);
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-2);
+}

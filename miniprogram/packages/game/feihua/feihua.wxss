@@ -49,6 +49,15 @@
   color: var(--red);
 }
 
+.fh-cheer {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+  line-height: var(--lh-loose);
+  padding-top: var(--sp-2);
+}
+
 .fh-note {
   display: block;
   font-size: var(--fs-caption);

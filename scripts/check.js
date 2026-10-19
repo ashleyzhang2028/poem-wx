@@ -1909,6 +1909,62 @@ ok("名录在、标签截断、档位合法",
   }
 }
 
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const cheer = require(path.join(ROOT, "utils", "cheer.js"));
+
+  ok("鼓励语只有一份（考试与飞花令取同一个池，不在页面里各写一套）",
+    (fs.readFileSync(path.join(ROOT, "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK) = /gm) || []).length === 3
+      && /cheer\.ofScore/.test(read("packages/game/exam/exam.js"))
+      && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js")),
+    "激励文案散在页面里 —— 改一处漏一处");
+
+  const low = cheer.ofScore(0, 1) + cheer.ofScore(35, 1);
+  const high = cheer.ofScore(100, 1);
+  ok("分数低也有一句（不是只夸高分）",
+    cheer.ofScore(0, 1).length > 0 && cheer.ofScore(35, 2).length > 0
+      && cheer.MARKS.length >= 5
+      && high.indexOf("满分") >= 0 && low.indexOf("满分") < 0,
+    "低分那一档没有话，或者高低分收到的是同一句");
+
+  ok("分数档位跟着分走（0 / 35 / 73 / 100 各落到自己那一档）",
+    new Set([0, 35, 73, 100].map((p) => cheer.ofScore(p, 0))).size === 4,
+    "几个不同的分给的是同一句");
+
+  ok("飞花令连对到里程碑才加话（第 4 句不刷屏）",
+    cheer.ofStreak(2) === "" && cheer.ofStreak(3) !== ""
+      && cheer.ofStreak(4) === "" && cheer.ofStreak(10) !== ""
+      && cheer.ofStreak(11) === "" && cheer.ofStreak(40) !== "",
+    "每一句都加一条，或者连对三条也没话");
+
+  const examJs = read("packages/game/exam/exam.js");
+  const examWxml = read("packages/game/exam/exam.wxml").replace(/<!--[\s\S]*?-->/g, "");
+  ok("考试结果那句评语由分数算（cheerLine 进 data，模板读它）",
+    /cheerLine:\s*cheer\.ofScore\(/.test(examJs) && examWxml.indexOf("{{cheerLine}}") >= 0,
+    "结果页没有评语");
+
+  ok("考试可以回到前面的题（题号跳转 + 上一题，答案是同一份数组）",
+    /onJump\(/.test(examJs) && /onStep\(/.test(examJs)
+      && examWxml.indexOf('bindtap="onJump"') >= 0 && examWxml.indexOf('bindtap="onStep"') >= 0
+      && /answers\[this\.data\.index\] = picked/.test(examJs)
+      && /picked: this\.data\.answers\[i\]/.test(read("packages/game/exam/exam.js")),
+    "回看只翻页面，选中项与答案数组对不上");
+
+  ok("带着空题交卷先提醒一次（不是拦死，也不静默交上去）",
+    /confirmSubmit\(\)/.test(examJs)
+      && /cheer\.ofQuit\(/.test(examJs)
+      && /if \(this\.quitLine === line\) return true;/.test(examJs)
+      && examWxml.indexOf("{{quitLine}}") >= 0,
+    "空着题交卷既没有提醒，也没法再交");
+
+  const fhJs = read("packages/game/feihua/feihua.js");
+  ok("飞花令把里程碑那句渲染出来（页面上下各留一份，翻题时清掉）",
+    read("packages/game/feihua/feihua.wxml").indexOf("{{cheerLine}}") >= 0
+      && /cheerLine:\s*cheer\.ofStreak\(/.test(fhJs)
+      && /cheerLine: ""/.test(fhJs.replace(/cheerLine:\s*cheer\.ofStreak\(streak\)/, "")),
+    "连对的话没进模板，或者翻到下一题还挂着上一题的夸奖");
+}
+
 const LIMIT_MAIN = 2 * 1024 * 1024;
 
 function dirSize(dir, skipPrefix) {

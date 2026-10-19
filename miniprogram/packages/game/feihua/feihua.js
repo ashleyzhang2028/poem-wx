@@ -1,4 +1,5 @@
 const feihua = require("./lib");
+const cheer = require("../../../utils/cheer");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
@@ -25,6 +26,7 @@ Page({
 
     streak: 0,
     best: 0,
+    cheerLine: "",
 
     input: "",
     message: "",
@@ -113,6 +115,7 @@ Page({
         input: "",
         message: "",
         messageOk: false,
+        cheerLine: "",
         locked: false,
         revealed: false,
         answers: []
@@ -144,7 +147,8 @@ Page({
       done,
       streak,
       best: Math.max(this.data.best, streak),
-      message: "对上了" + (r.hit ? "：" + r.hit.title : ""),
+      cheerLine: cheer.ofStreak(streak),
+      message: "对上了" + (r.hit ? "：" + r.hit.title : "") + (streak >= 3 ? "，连对 " + streak + " 句" : ""),
       messageOk: true,
       locked: true
     });

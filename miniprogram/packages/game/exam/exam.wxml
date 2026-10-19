@@ -52,9 +52,22 @@
       </view>
     </view>
 
-    <button class="btn primary block next-btn" bindtap="onNext">
-      {{index + 1 >= questions.length ? '交卷' : '下一题'}}
-    </button>
+    <view class="dots">
+      <view class="dot {{item.done ? 'done' : ''}} {{item.here ? 'here' : ''}}"
+            wx:for="{{dots}}" wx:key="key" data-i="{{index}}" bindtap="onJump">
+        <text class="dot-no">{{item.no}}</text>
+      </view>
+    </view>
+    <text class="hint dots-note">点号回看，改过的答案照样算</text>
+
+    <text class="quit-line" wx:if="{{quitLine}}">{{quitLine}}</text>
+
+    <view class="exam-acts">
+      <button class="btn ghost" bindtap="onStep" data-step="-1" disabled="{{index === 0}}">上一题</button>
+      <button class="btn primary next-btn" bindtap="onNext">
+        {{index + 1 >= questions.length ? '交卷' : '下一题'}}
+      </button>
+    </view>
   </block>
 
   <block wx:else>
@@ -62,6 +75,7 @@
       <text class="score">{{score}}</text>
       <text class="score-k">分</text>
       <text class="hint">答对 {{correct}} / {{questions.length}}</text>
+      <text class="cheer">{{cheerLine}}</text>
     </view>
 
     <view class="card">

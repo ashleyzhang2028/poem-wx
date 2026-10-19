@@ -1,4 +1,5 @@
 const quiz = require("../quiz/lib");
+const cheer = require("../../../utils/cheer");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
@@ -37,6 +38,9 @@ Page({
 
     graded: [],
     correct: 0,
+    cheerLine: "",
+    quitLine: "",
+    dots: [],
     remain: DURATION,
     remainText: "20:00",
     score: 0,
@@ -93,6 +97,7 @@ Page({
       wx.showToast({ title: "这个范围出不了题", icon: "none" });
       return;
     }
+    const answers = blankAnswers(questions.length);
     this.setData(
       {
         stage: "running",
@@ -102,9 +107,12 @@ Page({
         optionRows: quiz.optionRows(questions[0].options),
         metaLine: this.metaLineOf(questions[0]),
         picked: "",
-        answers: blankAnswers(questions.length),
+        answers,
+        dots: this.dotsOf(answers),
         graded: [],
         correct: 0,
+        cheerLine: "",
+        quitLine: "",
         remain: DURATION,
         remainText: "20:00"
       },
@@ -136,6 +144,16 @@ Page({
     return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
   },
 
+  dotsOf(answers) {
+    const index = this.data.index;
+    return answers.map((a, i) => ({
+      key: i,
+      no: i + 1,
+      done: !!a,
+      here: i === index
+    }));
+  },
+
   onPick(e) {
     const picked = e.currentTarget.dataset.v;
     if (picked === this.data.picked) return;
@@ -143,24 +161,49 @@ Page({
 
     const answers = this.data.answers.slice();
     answers[this.data.index] = picked;
-    this.setData({ picked, answers });
+    this.setData({ picked, answers, dots: this.dotsOf(answers), quitLine: "" });
+  },
+
+  goto(index) {
+    const questions = this.data.questions;
+    if (!questions.length) return;
+    const i = Math.max(0, Math.min(questions.length - 1, index));
+    const q = questions[i];
+    this.setData({
+      index: i,
+      current: q,
+      optionRows: quiz.optionRows(q.options),
+      metaLine: this.metaLineOf(q),
+      picked: this.data.answers[i] || "",
+      dots: this.dotsOf(this.data.answers)
+    });
+  },
+
+  onStep(e) {
+    this.goto(this.data.index + Number(e.currentTarget.dataset.step || 0));
+  },
+
+  onJump(e) {
+    this.goto(Number(e.currentTarget.dataset.i));
   },
 
   onNext() {
-    const index = this.data.index + 1;
-    if (index >= this.data.questions.length) {
+    if (this.data.index + 1 >= this.data.questions.length) {
+      if (!this.confirmSubmit()) return;
       this.finish();
       return;
     }
+    this.goto(this.data.index + 1);
+  },
 
-    const next = this.data.questions[index];
-    this.setData({
-      index,
-      current: next,
-      optionRows: quiz.optionRows(next.options),
-      metaLine: this.metaLineOf(next),
-      picked: this.data.answers[index] || ""
-    });
+  confirmSubmit() {
+    const answers = this.data.answers;
+    const answered = answers.filter((a) => a).length;
+    const line = cheer.ofQuit(answered, this.data.questions.length);
+    if (!line) return true;
+    if (this.quitLine === line) return true;
+    this.setData({ quitLine: line });
+    return false;
   },
 
   metaLineOf(q) {
@@ -180,9 +223,12 @@ Page({
     const correct = graded.filter((g) => g.ok).length;
 
     const total = questions.length || 1;
+    const score = Math.round((correct / total) * 100);
     sfx.rank(correct, total);
     this.setData({
       stage: "result",
+      cheerLine: cheer.ofScore(score, correct),
+      quitLine: "",
       graded: graded.map((g) => ({
         stem: g.stem,
         title: g.title,
@@ -191,7 +237,7 @@ Page({
         ok: g.ok
       })),
       correct,
-      score: Math.round((correct / total) * 100)
+      score
     });
   },
 
@@ -203,6 +249,9 @@ Page({
       graded: [],
       picked: "",
       correct: 0,
+      cheerLine: "",
+      quitLine: "",
+      dots: [],
       remain: DURATION,
       remainText: "20:00"
     });
