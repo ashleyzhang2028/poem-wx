@@ -17,43 +17,15 @@
 
 .de-btn {
   flex: none;
-  width: 60rpx;
-  height: 60rpx;
   margin-right: var(--sp-3);
-  box-sizing: border-box;
-  border: 1rpx solid transparent;
-  border-radius: 50%;
-  background: var(--sink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
 }
 
-.de-ico {
-  width: 32rpx;
-  height: 32rpx;
-  background-color: currentColor;
+.de-btn .glyph {
   color: var(--ink-2);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
 }
 
-.de-btn.on {
-  background: var(--strong-soft);
-  border-color: var(--strong);
-}
-
-.de-btn.on .de-ico {
+.de-btn.on .glyph {
   color: var(--strong-text);
-}
-
-.de-btn-hover {
-  transform: scale(.94);
 }
 
 .de-empty {
