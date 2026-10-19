@@ -141,7 +141,7 @@
 }
 
 .face.on.good .face-ico {
-  color: var(--on-ink);
+  color: var(--red);
 }
 
 .all-title {

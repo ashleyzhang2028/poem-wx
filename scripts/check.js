@@ -3810,6 +3810,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("三档评分各有自己的分支（忘记 / 模糊 / 记住）",
     ["忘记", "模糊", "记住"].every((t) => sheetJs.indexOf(t) >= 0),
     "少一档 —— 有一类评价给不出去");
+  {
+    const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+    const onInk = ((tokens.match(/--on-ink:\s*([^;]+);/) || [])[1] || "").replace(/var\(--([\w-]+)\)/, (m, n) => {
+      return (tokens.match(new RegExp("--" + n + ":\\s*([^;]+);")) || [])[1] || "";
+    });
+    const light = /#fff|#ffffff|rgba\(255,\s*255,\s*255,\s*1\)|white/i.test(onInk);
+    const faceCss = fs.readFileSync(path.join(ROOT, "pages/home/home.wxss"), "utf8");
+    const onFace = faceCss.match(/\.face\.on\.[a-z]+\s+\.face-ico\s*\{[^}]*\}/g) || [];
+    const invisible = onFace.filter((r) => /var\(--on-ink\)/.test(r));
+    ok("卡片上的评价图标不取「重色底上的字色」（那色在白卡上等于消失）",
+      light && onFace.length > 0 && invisible.length === 0,
+      "首页 .face.on.* 有 " + invisible.length + " 条取 --on-ink（该色落在白卡上等于看不见，Issue #413）");
+  }
   ok("评分后顺势进下一首（不是「关掉再去找」）",
     /goNext\(/.test(sheetJs) && /this\.setData\(\{\s*index:\s*next/.test(sheetJs));
   ok("队列走完就把弹层收掉（人回到列表，勾都在）",

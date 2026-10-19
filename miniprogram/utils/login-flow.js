@@ -1,5 +1,4 @@
 const auth = require("./auth");
-const gate = require("./gate");
 const tabPage = require("./tab-page");
 
 function failText(err) {
@@ -62,9 +61,18 @@ function backTo(page) {
   return "/" + page.route;
 }
 
+function resume(page) {
+  const step = require("./gate");
+  if (!step || typeof step.resume !== "function") {
+    if (page && typeof page.refresh === "function") page.refresh();
+    return false;
+  }
+  return step.resume(page);
+}
+
 function settle(res, page) {
   done(res);
-  const resumed = gate.resume(page);
+  const resumed = resume(page);
   const back = backTo(page);
   if (back && !resumed) tabPage.back(back);
   return res;
@@ -81,9 +89,9 @@ function run(page) {
     .catch((err) => {
       wx.hideLoading();
       prompt(err);
-      gate.resume(page);
+      resume(page);
       throw err;
     });
 }
 
-module.exports = { run, settle };
+module.exports = { run, settle, resume };

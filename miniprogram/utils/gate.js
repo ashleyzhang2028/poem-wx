@@ -56,7 +56,8 @@ function guard(what, page, onPass) {
 
 function open(onPass, page) {
   pending = { run: onPass || null, page: page || null };
-  loginFlow.run(page).catch(() => {});
+  const flow = loginFlow && typeof loginFlow.run === "function" ? loginFlow : require("./login-flow");
+  flow.run(page).catch(() => {});
 }
 
 function resume(page) {
