@@ -71,16 +71,17 @@
         </view>
       </view>
 
-      <view class="pref-opt ic pref-plus {{dailyOn ? 'on' : ''}}"
-            hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
-            aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
-        <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
-      </view>
-
-      <view class="pref-opt ic pref-plus {{pickOn ? 'on' : ''}}"
-            hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAddToCollection"
-            aria-label="加入自选集合">
-        <view class="glyph" style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"></view>
+      <view class="pref-act">
+        <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
+              aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
+          <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
+        </view>
+        <view class="pref-opt ic {{pickOn ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAddToCollection"
+              aria-label="加入自选集合">
+          <view class="glyph" style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"></view>
+        </view>
       </view>
     </view>
 

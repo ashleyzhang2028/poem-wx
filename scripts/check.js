@@ -3759,12 +3759,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /mask-image:url\('\{\{icons\.zoomIn\}\}'\)/.test(sheetWxml),
     "偏好条还写着字，或者图标少了一套（两档注音 / 两档对齐 / 加减字号）");
 
-  ok("「加入今日背诵」是一枚图标，没有边框",
-    !/\.pref-plus\s*\{[^}]*border/.test(appWxss)
+  ok("「加入今日背诵」与「加入自选」同在一个分组里，都是图标",
+    /\.pref-act\s*\{[^}]*border:\s*1rpx/.test(appWxss)
+      && /class="pref-act"[\s\S]{0,700}?onToggleDaily[\s\S]{0,400}?onAddToCollection/
+        .test(fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8"))
       && /icons\[dailyOn \? 'added' : 'add'\]/.test(sheetWxml)
       && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).add)
       && /data:image\/svg\+xml;base64,/.test(require(path.join(ROOT, "utils", "icons.js")).added),
-    "加背那枚还是带框的 ＋ —— 用户点名要去掉边框并换成图标");
+    "加背与自选那两枚又散在偏好条外 —— 换回图标，并收进同一个分组框");
 
   ok("底栏那一块算在弹层的 padding 里（上下首与底栏隔开，不被挡住）",
     /--bar-h:\s*calc\(var\(--tabbar-h\)[^)]*\)/.test(sheetWxss)
