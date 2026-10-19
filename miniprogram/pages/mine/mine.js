@@ -120,7 +120,7 @@ Page({
       if (res.error) title = sync.state().later ? "同步太频繁，等一会儿再试" : "同步失败：" + res.error;
       else if (res.skipped === "offline") title = "同步通道未开 · 进度只在这台手机";
       else if (res.skipped === "throttled") title = "刚同步过，过会儿再来";
-      else if (res.skipped === "waiting") title = "上次没同步上，" + res.retryAfter + " 秒后自动再试";
+      else if (res.skipped === "waiting") title = "上次没同步上，" + sync.waitText(res.retryAfter) + "后自动再试";
       wx.showToast({ title, icon: "none" });
       this.refresh();
     });

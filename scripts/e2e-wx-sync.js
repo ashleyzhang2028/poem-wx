@@ -273,7 +273,8 @@ function makeWx(port, mem) {
       marked === markBefore && called.slice(calledBefore).length === 0,
       JSON.stringify(called.slice(calledBefore)) + " 打了 " + (marked - markBefore) + " 次");
     ok("被限流之后界面不再显示已同步", st.pendingStatus !== "已同步" && st.failed, JSON.stringify(st));
-    ok("被限流之后给出重试倒计时", st.later > 0 && st.pendingText.indexOf("秒后重试") > 0, JSON.stringify(st));
+    ok("被限流之后给出重试倒计时（按服务端给的窗口等，再叠自身的退避）",
+      st.later >= limit[0] / 1000 && st.pendingText.indexOf("后重试") > 0, JSON.stringify(st));
 
     const beforeRetry = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
     syncModule.resetThrottle();
