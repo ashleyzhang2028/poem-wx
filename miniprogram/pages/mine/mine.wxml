@@ -107,11 +107,11 @@
   </view>
 
   <view class="card">
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier" wx:if="{{!logged}}">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
       <view class="row-icon">档</view>
       <view class="row-main">
         <text class="row-title">用户权限</text>
-        <text class="row-sub">未登录 · 免费能读能看，背诵与自选要登录并升档</text>
+        <text class="row-sub">自己那一档 · 能力对照 · 升档</text>
       </view>
       <text class="row-go">›</text>
     </view>
