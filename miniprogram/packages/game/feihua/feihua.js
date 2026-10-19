@@ -135,7 +135,7 @@ Page({
 
     if (!r.ok) {
 
-      this.setData({ message: r.reason, messageOk: false, locked: true });
+      this.setData({ message: cheer.ofSay(r.why, this.data.done.length), messageOk: false, locked: true });
       this.advance(1400);
       return;
     }
@@ -148,7 +148,7 @@ Page({
       streak,
       best: Math.max(this.data.best, streak),
       cheerLine: cheer.ofStreak(streak),
-      message: "对上了" + (r.hit ? "：" + r.hit.title : "") + (streak >= 3 ? "，连对 " + streak + " 句" : ""),
+      message: cheer.ofSay("hit", streak) + (r.hit ? "：" + r.hit.title : "") + (streak >= 3 ? "，连对 " + streak + " 句" : ""),
       messageOk: true,
       locked: true
     });

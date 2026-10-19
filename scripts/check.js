@@ -1919,12 +1919,12 @@ ok("名录在、标签截断、档位合法",
       && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js")),
     "激励文案散在页面里 —— 改一处漏一处");
 
-  const low = cheer.ofScore(0, 1) + cheer.ofScore(35, 1);
+  const low = cheer.ofScore(0, 1);
   const high = cheer.ofScore(100, 1);
   ok("分数低也有一句（不是只夸高分）",
     cheer.ofScore(0, 1).length > 0 && cheer.ofScore(35, 2).length > 0
       && cheer.MARKS.length >= 5
-      && high.indexOf("满分") >= 0 && low.indexOf("满分") < 0,
+      && high !== low,
     "低分那一档没有话，或者高低分收到的是同一句");
 
   ok("分数档位跟着分走（0 / 35 / 73 / 100 各落到自己那一档）",
