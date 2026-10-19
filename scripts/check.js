@@ -4072,7 +4072,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "加背又回到候选池里跟「新学」抢那 5 个名额，或加背没进落盘的那一份 —— "
       + "下次进首页按落盘还原时它就没了，计划从 6 首弹回 5 首（Issue #370）");
   ok("「今日课内」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
-    /const base = Math\.max\(recorded, plan\.length - extraOf\);/.test(homeJs)
+    /const base = Math\.max\(recorded\.length, plan\.length - extraOf\);/.test(homeJs)
       && /baseCount: base,/.test(homeJs)
       && /class="all-count" wx:if="\{\{!selfOnly\}\}">\{\{baseCount \? doneCount \+ '\/' \+ baseCount : total \+ ' 首'\}\}/.test(homeWxml),
     "卡片读数按落盘条数算、行按实时计划给 —— 两处一错位，用户看到「6 首」里少一首（Issue #370）");
