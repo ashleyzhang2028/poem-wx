@@ -58,6 +58,13 @@
       ]
     },
     {
+      "root": "packages/ranking",
+      "name": "ranking",
+      "pages": [
+        "index/index"
+      ]
+    },
+    {
       "root": "packages/authors",
       "name": "authors",
       "pages": [

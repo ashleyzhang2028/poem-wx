@@ -3,6 +3,7 @@ const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
+const remote = require("../../../utils/remote");
 
 const MODES = [
   { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
@@ -24,7 +25,8 @@ Page({
     themeStyle: "",
     barBelow: true,
     locked: true,
-    cards: []
+    cards: [],
+    rankingOn: false
   },
 
   onShow() {
@@ -40,6 +42,17 @@ Page({
       return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(CAP[m.key]) });
     });
     this.setData({ locked: false, cards });
+    this.loadRanking();
+  },
+
+  loadRanking() {
+    remote.rankingVisible("exam").then((vis) => {
+      this.setData({ rankingOn: !!vis.on && !vis.offline });
+    });
+  },
+
+  onRanking() {
+    wx.navigateTo({ url: "/packages/ranking/index/index" });
   },
 
   onLogin() {

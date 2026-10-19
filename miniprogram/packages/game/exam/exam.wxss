@@ -213,3 +213,10 @@
 .next-btn {
   margin-top: var(--sp-3);
 }
+
+.ranked {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
+}

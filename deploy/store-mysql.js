@@ -344,6 +344,49 @@ function mysqlStore(cfg) {
     },
     deleteExamRecord: function (eid) {
       return query("DELETE FROM exam_records WHERE eid = ?", [String(eid || "")]).then(function () { return true; });
+    },
+
+    putScoreRecord: function (row) {
+      return insertRow("score_records", row, ["srid"]).then(function () { return { srid: row.srid }; });
+    },
+    listScoreRecords: function (filter, limit) {
+      var f = filter || {};
+      var where = [], params = [];
+      if (f.game) { where.push("game = ?"); params.push(String(f.game)); }
+      if (f.stage && f.stage !== "all") { where.push("stage = ?"); params.push(String(f.stage)); }
+      if (f.grade) { where.push("grade = ?"); params.push(Number(f.grade)); }
+      if (f.term) { where.push("term = ?"); params.push(Number(f.term)); }
+      if (f.from) { where.push("created_at >= ?"); params.push(Number(f.from)); }
+      var sql = "SELECT * FROM score_records" + (where.length ? " WHERE " + where.join(" AND ") : "")
+        + " ORDER BY created_at DESC LIMIT " + Number(limit || 3000);
+      return query(sql, params).then(function (rows) {
+        return (rows || []).map(function (r) {
+          return {
+            srid: String(r.srid || ""),
+            uid: String(r.uid || ""),
+            game: String(r.game || ""),
+            scope_id: String(r.scope_id || ""),
+            stage: String(r.stage || ""),
+            grade: num(r.grade) || 0,
+            term: num(r.term) || 0,
+            score: num(r.score) || 0,
+            total: num(r.total) || 0,
+            duration_sec: num(r.duration_sec) || 0,
+            created_at: num(r.created_at) || 0
+          };
+        });
+      });
+    },
+
+    getSetting: function (key) {
+      return query("SELECT skey, svalue FROM app_settings WHERE skey = ? LIMIT 1", [String(key || "")])
+        .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
+    },
+    putSetting: function (key, value) {
+      return query("INSERT INTO app_settings (skey, svalue, updated_at) VALUES (?,?,?) "
+        + "ON DUPLICATE KEY UPDATE svalue = VALUES(svalue), updated_at = VALUES(updated_at)",
+        [String(key || ""), value == null ? null : String(value), Date.now()])
+        .then(function () { return { key: key, value: value }; });
     }
   };
 

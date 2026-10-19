@@ -62,6 +62,7 @@
       <text class="score">{{score}}</text>
       <text class="score-k">分</text>
       <text class="hint">答对 {{correct}} / {{questions.length}}</text>
+      <text class="ranked" wx:if="{{ranked}}">已上榜 · 同档同期限里比</text>
     </view>
 
     <view class="card">

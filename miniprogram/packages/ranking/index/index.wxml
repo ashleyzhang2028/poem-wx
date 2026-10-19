@@ -1,0 +1,99 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <lock-card wx:if="{{state === 'login'}}" title="排行榜要登录" note="登录后才能看" mark="榜" />
+
+  <block wx:else>
+    <view class="card">
+      <view class="lb-games">
+        <view class="lb-game {{game === item.key ? 'on' : ''}}" wx:for="{{games}}" wx:key="key"
+              data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onGame">
+          <text class="lb-game-name">{{item.name}}</text>
+        </view>
+      </view>
+      <text class="hint note">{{gameDesc}}</text>
+
+      <view class="lb-seg">
+        <view class="lb-chip {{stage === item.key ? 'on' : ''}}" wx:for="{{stages}}" wx:key="key"
+              data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onStage">{{item.name}}</view>
+      </view>
+
+      <view class="lb-seg" wx:if="{{grades.length}}">
+        <view class="lb-chip {{grade === item.key ? 'on' : ''}}" wx:for="{{grades}}" wx:key="key"
+              data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onGrade">{{item.name}}</view>
+      </view>
+
+      <view class="lb-seg" wx:if="{{grades.length}}">
+        <view class="lb-chip {{term === item.key ? 'on' : ''}}" wx:for="{{terms}}" wx:key="key"
+              data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onTerm">{{item.name}}</view>
+      </view>
+
+      <view class="lb-seg">
+        <view class="lb-chip {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key"
+              data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onPeriod">{{item.name}}</view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'board' || state === 'empty'}}">
+      <view class="lb-head">
+        <text class="card-title plain lb-title">{{label}}</text>
+        <text class="lb-sub">前三名上台</text>
+      </view>
+
+      <view class="podium">
+        <view class="podium-col r{{item.rank}}" wx:for="{{podium}}" wx:key="rank">
+          <view class="medal medal-{{item.filled ? 'on' : 'off'}}">
+            <text class="medal-mark">{{item.mark}}</text>
+          </view>
+          <text class="medal-title">{{item.title}}</text>
+          <text class="podium-nick" wx:if="{{item.filled}}">{{item.nick}}</text>
+          <text class="podium-nick off" wx:else>虚位</text>
+          <text class="podium-score" wx:if="{{item.filled}}">{{item.score}}/{{item.total}}</text>
+          <view class="podium-base"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'board'}}">
+      <view class="lb-row lb-row-head">
+        <text class="lb-rank">名次</text>
+        <text class="lb-nick">诗友</text>
+        <text class="lb-score">成绩</text>
+      </view>
+      <view class="lb-row {{item.me ? 'me' : ''}}" wx:for="{{rest}}" wx:key="rank">
+        <text class="lb-rank">{{item.rank}}</text>
+        <text class="lb-nick">{{item.nick}}</text>
+        <text class="lb-score">{{item.score}}/{{item.total}}</text>
+      </view>
+      <text class="hint note">只把昵称的首末字留着，中间一律星号</text>
+    </view>
+
+    <view class="card" wx:if="{{state === 'empty'}}">
+      <view class="empty">
+        <view class="empty-mark">{{empty.mark}}</view>
+        <text class="empty-text">{{empty.text}}</text>
+        <text class="hint empty-tip">{{empty.tip}}</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'off'}}">
+      <view class="empty">
+        <view class="empty-mark">隐</view>
+        <text class="empty-text">排行榜没有开</text>
+        <text class="hint empty-tip">管理员在后台打开之后，这里才有名次</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'offline'}}">
+      <view class="empty">
+        <view class="empty-mark">·</view>
+        <text class="empty-text">{{reason}}</text>
+        <button class="btn ghost mini lb-retry" bindtap="onRetry">重试</button>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'loading'}}">
+      <text class="hint note">正在读榜单…</text>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </block>
+</view>

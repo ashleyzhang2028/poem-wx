@@ -158,6 +158,10 @@ function newExamRecordId() {
   return "er_" + crypto.randomBytes(8).toString("hex");
 }
 
+function newScoreRecordId() {
+  return "sc_" + crypto.randomBytes(8).toString("hex");
+}
+
 function newSalt() {
   return crypto.randomBytes(8).toString("hex");
 }
@@ -177,6 +181,7 @@ module.exports = {
   newFeedbackId: newFeedbackId,
   newFeedbackCommentId: newFeedbackCommentId,
   newExamRecordId: newExamRecordId,
+  newScoreRecordId: newScoreRecordId,
   normalizePhone: normalizePhone,
   isPhoneShape: isPhoneShape,
   maskPhone: maskPhone,
