@@ -2,7 +2,7 @@
 
   <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px">
 
-    <image class="banner-img" src="/icons/hero.png" mode="widthFix" />
+    <image class="banner-img" src="{{banner}}" mode="widthFix" />
 
   </view>
 

@@ -3358,6 +3358,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   const WANT = [
     ["daiqing", "黛青", [2, 54, 51]],
+    ["yangzhou", "扬州", [2, 54, 51]],
+    ["kaifeng", "开封", [2, 54, 51]],
     ["qinglv", "青绿", [46, 106, 103]],
     ["muse", "暮色", [79, 96, 114]],
     ["nuahui", "暖灰", [164, 86, 104]],
@@ -3378,8 +3380,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb);
   });
-  ok("清单就是这 12 个色（含用户点名的黛青 / 墨色 / 胭脂 / 雨过天青）",
-    missing.length === 0 && all.length === WANT.length,
+  ok("清单就是这 14 项（扬州 / 开封 紧随黛青，其余是用户点名的十一个色）",
+    missing.length === 0 && all.length === WANT.length
+      && all.slice(0, 3).map((t) => t.key).join() === "daiqing,yangzhou,kaifeng",
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
   ok("色值统一一种写法（rgba），不混 hex（混着写对不齐、也难比对）",
@@ -3396,6 +3399,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const veiled = all.filter((t) => styleInk.indexOf(t.rgba) < 0 || styleInk.indexOf(t.soft) < 0);
   ok("每个色连同它那档淡淡版都挂到页面根节点上", veiled.length === 0,
     veiled.map((t) => t.name).join(", "));
+
+  const BANNERS = { daiqing: "/icons/hero.png", yangzhou: "/icons/yangzhou.png", kaifeng: "/icons/kaifeng.png" };
+  const wrongBanner = all.filter((t) => themeMod.bannerOf(t.key) !== (BANNERS[t.key] || "/icons/hero.png"));
+  ok("首页 banner 跟着主题走（扬州 / 开封 各一张，其余都是 hero.png）",
+    wrongBanner.length === 0,
+    wrongBanner.map((t) => t.name + " → " + themeMod.bannerOf(t.key)).join(", "));
 
   ok("默认那一项是「黛青」", themeMod.DEFAULT === "daiqing"
     && all.some((t) => t.key === "daiqing" && t.name === "黛青"));
