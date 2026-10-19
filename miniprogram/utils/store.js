@@ -241,6 +241,7 @@ function clearProgress() {
   drop(KEYS.progress);
   drop(KEYS.reads);
   drop(KEYS.dailyExtra);
+  drop(KEYS.dayPlan);
 
   if (rows.length || readBooks.length || hadDailyExtra) {
     write(KEYS.clearMarks, { at: at, rows: rows, books: readBooks, dailyExtra: hadDailyExtra });

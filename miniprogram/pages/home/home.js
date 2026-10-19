@@ -313,20 +313,22 @@ Page({
     const sheetRows = this.sheetRowsOf(this.data.plan);
 
     const readOf = this.readOf();
-    const recorded = store.dayPlan(S.planKeyOf({
+    const planKey = S.planKeyOf({
       grade: view.grade,
       term: view.term,
       scope: view.scope,
       count: settings.dailyCount
-    })).ids.length;
-    let done = 0;
+    });
+    const recorded = store.dayPlan(planKey).ids;
     const extraOf = plan.filter((it) => it.reason === "pinned").length;
-    const base = Math.max(recorded, plan.length - extraOf);
+    const base = Math.max(recorded.length, plan.length - extraOf);
+    const todaySet = S.todaySet(planKey, base);
+    const recitedOf = {};
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
       const read = readOf(it.poem.id);
       const recited = S.isLearned(rec);
-      if (recited && i < base) done += 1;
+      recitedOf[it.poem.id] = recited;
       return {
         id: it.poem.id,
         seq: i + 1,
@@ -348,7 +350,9 @@ Page({
     });
 
     const total = rows.length;
-    const allDone = base > 0 && done >= base;
+    const done = S.todayDone(todaySet, recitedOf);
+    const allDone = done >= base;
+    const left = S.todayLeft(todaySet, recitedOf);
     const colRows = this.collectionRows();
     const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
@@ -372,7 +376,7 @@ Page({
       stats: {
         today: selfOnly ? selfTotal : total,
         done: selfOnly ? selfDone : done,
-        left: selfOnly ? Math.max(selfTotal - selfDone, 0) : Math.max(total - done, 0),
+        left: selfOnly ? Math.max(selfTotal - selfDone, 0) : left,
         extra: extraOf
       },
       coursePlan: selfOnly ? coursePlan.filter((it) => it.reason !== "pinned").map((it, i) => this.poemRow(it.poem, i, it.reason, readOf)) : [],

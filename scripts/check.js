@@ -3825,8 +3825,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
-      && /if \(recited && i < base\) done \+= 1;/.test(homeJs),
+      && /recitedOf\[it\.poem\.id\] = recited/.test(homeJs)
+      && /S\.todayDone\(todaySet, recitedOf\)/.test(homeJs),
     "首页拿已读当已背 —— 点开弹窗看一眼，统计里就多一首「已背」");
+
+  ok("今日的读数只看今天排定的那几首，日计划重排后不会凭空变成「已背完」",
+    /function todaySet\(planKey, base\)/.test(schedSrc)
+      && /S\.todayLeft\(todaySet, recitedOf\)/.test(homeJs)
+      && /drop\(KEYS\.dayPlan\)/.test(storeSrc),
+    "「今天背完几首」改为数计划里的长度 —— 重排后新诗还没背，首页就说今天背完了");
 
   ok("已读仍单独标出来（它与已背不是一件事）",
     /store\.reads\(/.test(homeJs) && /stateText\(recited, read\)/.test(homeJs)
