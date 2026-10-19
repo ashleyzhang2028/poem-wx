@@ -83,6 +83,8 @@
 
       <text class="hint best-line" wx:if="{{newBest}}">这一档比之前高，记下了</text>
       <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
+
+      <text class="ranked" wx:if="{{ranked}}">已上榜 · 同档同期限里比</text>
     </view>
 
     <view class="card">

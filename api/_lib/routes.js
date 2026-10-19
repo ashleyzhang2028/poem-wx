@@ -21,6 +21,7 @@ var ROUTES = {
   "GET /family": "./../_routes/family/index.js",
   "POST /family": "./../_routes/family/index.js",
   "POST /game/answer": "./../_routes/game/answer.js",
+  "POST /ranking": "./../_routes/ranking/index.js",
   "GET /exam/records": "./../_routes/exam/records.js",
   "POST /exam/records": "./../_routes/exam/records.js",
   "POST /admin/grant": "./../_routes/admin/grant.js",
@@ -30,6 +31,8 @@ var ROUTES = {
   "POST /admin/role": "./../_routes/admin/role.js",
   "POST /admin/reports": "./../_routes/admin/reports.js",
   "POST /admin/pinyin": "./../_routes/admin/pinyin.js",
+  "GET /admin/ranking": "./../_routes/admin/ranking.js",
+  "POST /admin/ranking": "./../_routes/admin/ranking.js",
   "GET /pinyin-fixes": "./../_routes/pinyin-fixes.js",
   "POST /admin/feedback": "./../_routes/admin/feedback.js",
 

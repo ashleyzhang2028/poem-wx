@@ -33,6 +33,7 @@
       <text class="fh-cheer" wx:if="{{cheerLine}}">{{cheerLine}}</text>
 
       <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
+      <text class="fh-note ranked" wx:if="{{ranked}}">上一轮 {{lastScore}} 句已上榜</text>
 
       <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
 

@@ -187,6 +187,49 @@ function makeWx(port, mem) {
     ok("旧的删除标记不许把新的进度标成已删", r && r.deleted === 0, JSON.stringify(r));
   }
 
+  {
+    const storeMod = require(path.join(CTX, "api", "_lib", "store.js"));
+    const cfgMod = require(path.join(CTX, "api", "_lib", "config.js"));
+    const s = storeMod.getStore(cfgMod);
+    const UID = "probe-uid";
+    const record = {
+      srid: "sc_probe_1", uid: UID, game: "exam", scope_id: "", stage: "primary",
+      grade: 3, term: 1, score: 8, total: 10, duration_sec: 600, created_at: 5000
+    };
+    await s.putScoreRecord(record);
+    await s.putScoreRecord(Object.assign({}, record, {
+      srid: "sc_probe_2", uid: UID, grade: 7, stage: "middle", score: 10, created_at: 6000
+    }));
+
+    const mine = await s.listScoreRecords({ game: "exam", stage: "primary", grade: 3, from: 4000 }, 100);
+    ok("成绩按学段 / 年级 / 时间段筛得准（别的档不收进来）",
+      mine.length === 1 && mine[0].srid === "sc_probe_1" && mine[0].created_at === 5000,
+      JSON.stringify(mine.map((x) => x.srid)));
+
+    const early = await s.listScoreRecords({ game: "exam", from: 5500 }, 100);
+    ok("按窗口起点筛（今日 / 本周 / 本月 / 今年都是这一条）",
+      early.length === 1 && early[0].srid === "sc_probe_2",
+      JSON.stringify(early.map((x) => x.srid)));
+
+    const other = await s.listScoreRecords({ game: "fly" }, 100);
+    ok("两种榜各看各的", other.length === 0, JSON.stringify(other.map((x) => x.srid)));
+
+    ok("成绩底账里没有昵称（改名不用回灌）",
+      !Object.prototype.hasOwnProperty.call(mine[0], "nickname"), JSON.stringify(Object.keys(mine[0] || {})));
+
+    const none = await s.getSetting("ranking:exam");
+    ok("开关没有那一行就是关（默认不开）", none === null, JSON.stringify(none));
+
+    await s.putSetting("ranking:exam", "1");
+    const on = await s.getSetting("ranking:exam");
+    ok("开关写得进去也读得回来", !!on && String(on.svalue) === "1", JSON.stringify(on));
+
+    await s.putSetting("ranking:exam", "0");
+    const off = await s.getSetting("ranking:exam");
+    ok("关掉是改写同一行（读回来是 0，不是又开了一行）",
+      !!off && String(off.svalue) === "0", JSON.stringify(off));
+  }
+
   server.close();
   fs.rmSync(CTX, { recursive: true, force: true });
   const bad = results.filter((r) => !r).length;

@@ -12,6 +12,8 @@ const db = {
   feedback_threads: new Map(),
   feedback_comments: new Map(),
   exam_records: new Map(),
+  score_records: new Map(),
+  app_settings: new Map(),
   progress: new Map()
 };
 
@@ -27,6 +29,8 @@ const PK = {
   feedback_threads: ["tid"],
   feedback_comments: ["cid"],
   exam_records: ["eid"],
+  score_records: ["srid"],
+  app_settings: ["skey"],
   progress: ["uid", "child_id", "poem_id"]
 };
 
@@ -131,6 +135,15 @@ function testTerm(row, term, params) {
 
   let m = /^`?([a-z_0-9]+)`?\s*=\s*\?$/i.exec(term);
   if (m) return String(row[m[1]]) === String(params.shift());
+
+  m = /^`?([a-z_0-9]+)`?\s*>=\s*\?$/i.exec(term);
+  if (m) {
+    const v = params.shift();
+    const a = Number(row[m[1]]);
+    const b = Number(v);
+    if (!isFinite(a) || !isFinite(b)) return false;
+    return a >= b;
+  }
 
   m = /^`?([a-z_0-9]+)`?\s*>\s*\?$/i.exec(term);
   if (m) {

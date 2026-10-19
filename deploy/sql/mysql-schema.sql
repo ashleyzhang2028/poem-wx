@@ -354,6 +354,41 @@ CREATE TABLE IF NOT EXISTS `exam_records` (
   CONSTRAINT `exam_records_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------ score_records
+-- 排行榜的成绩底账。一行 = 一次交卷。`game` 区分飞花令（fly）与考试（exam）。
+-- 分档口径（学段 / 年级 / 学期）在写这一行时定死：用户之后改自己的年级，
+-- 旧成绩仍留在当时那一档里，不会跟着人跑到别的榜单上。
+-- ⚠️ 它**不存昵称**。榜单上的名字在读取时从 accounts.nickname 现取，
+-- 改名之后全站一次生效，不需要回灌历史行。
+CREATE TABLE IF NOT EXISTS `score_records` (
+  `srid`         VARCHAR(64)  NOT NULL,
+  `uid`          VARCHAR(64)  NOT NULL,
+  `game`         VARCHAR(16)  NOT NULL DEFAULT 'exam',
+  `scope_id`     VARCHAR(64)  NOT NULL DEFAULT '',
+  `stage`        VARCHAR(16)  NOT NULL DEFAULT 'all',
+  `grade`        INT          NOT NULL DEFAULT 0,
+  `term`         INT          NOT NULL DEFAULT 0,
+  `score`        INT          NOT NULL DEFAULT 0,
+  `total`        INT          NOT NULL DEFAULT 0,
+  `duration_sec` INT          NOT NULL DEFAULT 0,
+  `created_at`   BIGINT       NOT NULL,
+  PRIMARY KEY (`srid`),
+  KEY `score_records_board_idx` (`game`, `stage`, `created_at`),
+  KEY `score_records_uid_idx` (`uid`, `created_at`),
+  CONSTRAINT `score_records_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------------- app_settings
+-- 全站开关的落点（键值对）。现在只有一行：
+--   ranking:<game> = '1' / '0'   —— 排行榜显示开关，**没有这一行就是关**
+-- 开关默认关，是因为榜单会把昵称摆到别的用户面前：它得由管理员主动打开。
+CREATE TABLE IF NOT EXISTS `app_settings` (
+  `skey`       VARCHAR(64) NOT NULL,
+  `svalue`     TEXT        NULL,
+  `updated_at` BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`skey`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================================================
 -- 建完表之后：第一个管理员
 -- ==========================================================================

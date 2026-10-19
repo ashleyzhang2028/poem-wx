@@ -277,3 +277,10 @@
   width: auto;
   margin-top: 0;
 }
+
+.ranked {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
+}

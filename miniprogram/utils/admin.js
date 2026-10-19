@@ -263,6 +263,23 @@ function revokeTier(userId) {
   }));
 }
 
+function rankingState() {
+  if (!loggedIn() || !canWrite()) {
+    return Promise.resolve({ on: false, sim: true, note: "登录且是管理员才能改" });
+  }
+  return remote.adminRanking("exam").then((res) => ({ on: !!res.on, sim: false }));
+}
+
+function setRanking(on) {
+  if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：服务器未接上或权限不足" });
+  return remote.setAdminRanking("exam", on).then((res) => ({
+    ok: !!res.ok,
+    on: !!res.on,
+    msg: res.on ? "排行榜已打开" : "排行榜已隐藏",
+    sim: res.sim
+  }));
+}
+
 module.exports = {
   loggedIn,
   list,
@@ -273,5 +290,7 @@ module.exports = {
   setTier,
   revokeTier,
   canWrite,
+  rankingState,
+  setRanking,
   roster
 };

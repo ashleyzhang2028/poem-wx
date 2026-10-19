@@ -132,6 +132,10 @@
   margin-top: var(--sp-1);
 }
 
+.fh-note.ranked {
+  color: var(--strong-text);
+}
+
 .restart {
   margin-top: var(--sp-3);
 }
