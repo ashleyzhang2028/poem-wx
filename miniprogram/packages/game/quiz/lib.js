@@ -1,4 +1,5 @@
 const corpus = require("../../../utils/corpus");
+const gameScopes = require("../../../utils/game-scopes");
 
 const FORMS = [
   { key: "next", name: "下句" },
@@ -48,7 +49,7 @@ function _quiz_linesOf(p) {
 }
 
 function build(opt) {
-  const pool = (opt.scope ? corpus.ofBook(opt.scope) : corpus.course()).filter((p) => p.hasT);
+  const pool = gameScopes.pool(opt.scope).filter((p) => p.hasT);
   const count = opt.count || 10;
   const forms = opt.forms && opt.forms.length ? opt.forms : FORM_KEYS;
   const start = opt.start || 0;
@@ -113,7 +114,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
   }
 
   if (form === "title") {
-    if (!p.t || !lines.length) return null;
+    if (!p.t || p.t.length > MAX_LINE || !lines.length) return null;
     const pool2 = pool.filter((q) => q.t && q.t !== p.t).map((q) => q.t);
     const distractors = _quiz_uniqueSample(pool2, 3);
     if (distractors.length < 3) return null;

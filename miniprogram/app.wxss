@@ -709,6 +709,12 @@ button, textarea {
   grid-template-columns: repeat(4, 1fr);
 }
 
+.opt-group.inline.tight .opt-row {
+  min-height: var(--h-opt-tight);
+  padding-left: var(--sp-2);
+  padding-right: var(--sp-2);
+}
+
 .opt-row {
   position: relative;
   display: flex;

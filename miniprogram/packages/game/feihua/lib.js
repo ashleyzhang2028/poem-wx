@@ -1,4 +1,5 @@
 const corpus = require("../../../utils/corpus");
+const gameScopes = require("../../../utils/game-scopes");
 
 const LEVELS = [
   { id: "easy", name: "常见字", min: 25 },
@@ -23,24 +24,12 @@ function _feihua_segsOf(text, gated) {
 }
 
 function _feihua_allPoems() {
-  return corpus.course();
+  return gameScopes.pool("");
 }
 
 function _feihua_scopedPoems(opt) {
   const o = opt || {};
-  if (!o.scope) return _feihua_allPoems();
-  let S;
-  try {
-    S = require("../../../utils/scheduler");
-  } catch (e) {
-    return _feihua_allPoems();
-  }
-  const out = S.poolForScope({
-    grade: o.grade,
-    term: o.term,
-    scope: o.scope,
-    allPoems: _feihua_allPoems()
-  });
+  const out = gameScopes.pool(o.scope);
   return out && out.length ? out : _feihua_allPoems();
 }
 
@@ -161,7 +150,7 @@ function judge(char, input, said) {
   });
 
   if (!hit) {
-    return { ok: false, why: "absent", reason: "这一句不在课内诗文集里，换一句试试" };
+    return { ok: false, why: "absent", reason: "诗词集里查不到这一句，换一句试试" };
   }
   return { ok: true, hit, seg: hit.seg };
 }
