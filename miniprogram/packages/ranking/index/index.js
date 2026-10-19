@@ -1,4 +1,3 @@
-const store = require("../../../utils/store");
 const remote = require("../../../utils/remote");
 const ranking = require("../../../utils/ranking");
 const theme = require("../../../utils/theme");
@@ -35,14 +34,14 @@ Page({
   },
 
   onLoad() {
-    const self = ranking.selfGrade(store.settings());
-    const query = ranking.queryOf({ stage: self.stage, grade: self.grade, term: self.term, period: "day" });
+    const query = ranking.queryOf({ stage: "all", period: "day" });
     this.setData({
       stage: query.stage,
       grade: query.grade,
       term: query.term,
       grades: ranking.gradesOf(query.stage),
-      gameDesc: ranking.gameOf("exam").desc
+      gameDesc: ranking.gameOf("exam").desc,
+      label: ranking.labelOf(query)
     });
   },
 
@@ -64,6 +63,7 @@ Page({
     const game = this.data.game;
     remote
       .rankingVisible(game)
+      ["catch"](() => ({ on: true, offline: false }))
       .then((vis) => {
         if (vis.offline) {
           this.setData({ state: "offline", reason: "同步服务没接上，榜单看不了" });
@@ -73,19 +73,23 @@ Page({
           this.setData({ state: "off", reason: "" });
           return null;
         }
+        const query = ranking.queryOf(this.data);
         return remote.rankingList({
           game: game,
-          stage: this.data.stage,
-          grade: this.data.grade,
-          term: this.data.term,
-          period: this.data.period,
+          stage: query.stage,
+          grade: query.grade,
+          term: query.term,
+          period: query.period,
           size: ranking.DEFAULT_SIZE
         });
       })
       .then((res) => {
         if (!res) return;
         if (!res.ok) {
-          this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });
+          this.setData({
+            state: res.off ? "off" : "offline",
+            reason: res.reason || "榜单没读上来，稍后再试"
+          });
           return;
         }
         const board = (res.board || []).map(ranking.maskRow);
@@ -110,7 +114,10 @@ Page({
   onGame(e) {
     const game = e.currentTarget.dataset.k;
     if (!game || game === this.data.game) return;
-    this.setData({ game: game, gameDesc: ranking.gameOf(game).desc, board: [], podium: [], rest: [], me: null, beyond: 0 });
+    this.setData({
+      game: game, gameDesc: ranking.gameOf(game).desc, board: [], podium: [], rest: [], me: null, beyond: 0,
+      label: ranking.labelOf(this.data), empty: ranking.emptyOf(game)
+    });
     this.load();
   },
 
@@ -119,21 +126,23 @@ Page({
     if (!stage || stage === this.data.stage) return;
     const grades = ranking.gradesOf(stage);
     const grade = grades.length ? grades[0].key : 0;
-    this.setData({ stage: stage, grades: grades, grade: grade, term: grade ? 1 : 0 });
+    this.setData({
+      stage: stage, grades: grades, grade: grade, term: 0, label: ranking.labelOf({ stage: stage })
+    });
     this.load();
   },
 
   onGrade(e) {
     const grade = Number(e.currentTarget.dataset.k) || 0;
     if (grade === this.data.grade) return;
-    this.setData({ grade: grade, term: grade && !this.data.term ? 1 : this.data.term });
+    this.setData({ grade: grade, label: ranking.labelOf({ stage: this.data.stage, grade: grade, term: this.data.term }) });
     this.load();
   },
 
   onTerm(e) {
-    const term = Number(e.currentTarget.dataset.k) || 0;
-    if (term === this.data.term) return;
-    this.setData({ term: term });
+    const raw = Number(e.currentTarget.dataset.k) || 0;
+    const term = raw === this.data.term ? 0 : raw;
+    this.setData({ term: term, label: ranking.labelOf({ stage: this.data.stage, grade: this.data.grade, term: term }) });
     this.load();
   },
 

@@ -27,26 +27,27 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
-    this.loadStats();
     this.loadRanking();
   },
 
   loadRanking() {
     admin.rankingState().then((res) => {
       this.setData({
+        logged: entitlement.snapshot().logged,
         rankingOn: !!res.on,
-        rankingNote: res.note || "打开后大会页才出现榜单入口"
+        rankingNote: res.note || (remote.adminReady() ? "关 · 打开后大会页才出现榜单入口" : "只读")
       });
+      if (this.data.logged) this.loadStats();
     });
   },
 
   onRanking(e) {
     const on = !!e.detail.value;
-    this.setData({ rankingOn: on });
+    this.setData({ rankingOn: on, rankingNote: "正在写…" });
     admin.setRanking(on).then((res) => {
       if (!res.ok) {
         this.setData({ rankingOn: !on, rankingNote: res.msg });
-        wx.showToast({ title: res.msg, icon: "none" });
+        wx.showModal({ title: "没写进去", content: res.msg, showCancel: false });
         return;
       }
       this.setData({ rankingOn: !!res.on, rankingNote: res.on ? "已打开" : "已隐藏" });

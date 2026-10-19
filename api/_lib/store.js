@@ -303,7 +303,7 @@ function memoryStore() {
       if (f.game) out = out.filter(function (r) { return r.game === f.game; });
       if (f.stage && f.stage !== "all") out = out.filter(function (r) { return r.stage === f.stage; });
       if (f.grade) out = out.filter(function (r) { return Number(r.grade) === Number(f.grade); });
-      if (f.term) out = out.filter(function (r) { return Number(r.term) === Number(f.term); });
+      if (f.grade && f.term) out = out.filter(function (r) { return Number(r.term) === Number(f.term); });
       if (f.from) out = out.filter(function (r) { return Number(r.created_at) >= Number(f.from); });
       out.sort(function (a, b) { return (b.created_at || 0) - (a.created_at || 0); });
       return Promise.resolve(out.slice(0, limit || 3000));

@@ -10,6 +10,7 @@ function packedCloud() {
 }
 
 const SHARD_PATH = "/api/shard/";
+const SESSION_FRESH_MS = 60 * 1000;
 
 const PATHS = {
   login: "/api/wx/login",
@@ -377,6 +378,28 @@ function authMod() {
   return require("./auth");
 }
 
+let sessionAt = 0;
+let sessionPending = null;
+
+function sessionRefresh() {
+  if (!configured()) return Promise.resolve(false);
+  if (sessionPending) return sessionPending;
+  if (sessionAt && Date.now() - sessionAt < SESSION_FRESH_MS) return Promise.resolve(false);
+  sessionPending = authMod()
+    .refresh()
+    .then((r) => {
+      sessionAt = Date.now();
+      sessionPending = null;
+      return !!(r && !r.local);
+    })
+    ["catch"](() => {
+      sessionAt = Date.now();
+      sessionPending = null;
+      return false;
+    });
+  return sessionPending;
+}
+
 function listUsers() {
   if (!adminReady()) return Promise.resolve({ users: [], sim: true });
   return request(PATHS.accounts, { deviceId: store.deviceId() }).then((res) => ({
@@ -431,21 +454,32 @@ function rankingVisible(game) {
 
 function rankingList(query) {
   if (!configured()) return Promise.resolve({ ok: false, offline: true, board: [] });
-  return request(PATHS.ranking, Object.assign({ op: "list" }, query || {})).then((res) => ({
-    ok: true,
-    offline: false,
-    board: (res && res.board) || [],
-    me: (res && res.me) || null,
-    total: (res && res.total) || 0,
-    label: (res && res.label) || "",
-    filter: (res && res.filter) || null
-  }));
+  return request(PATHS.ranking, Object.assign({ op: "list" }, query || {})).then(
+    (res) => ({
+      ok: true,
+      offline: false,
+      board: (res && res.board) || [],
+      me: (res && res.me) || null,
+      total: (res && res.total) || 0,
+      size: (res && res.size) || 0,
+      label: (res && res.label) || "",
+      filter: (res && res.filter) || null
+    }),
+    (err) => ({
+      ok: false,
+      offline: !!(err && err.statusCode && err.statusCode === 503),
+      off: !!(err && err.code === "E_RANKING_OFF"),
+      board: [],
+      reason: (err && err.message) || "榜单没读上来"
+    })
+  );
 }
 
 function rankingSubmit(entry) {
   if (!configured()) return Promise.resolve({ ok: false, offline: true });
   return request(PATHS.ranking, Object.assign({ op: "submit" }, entry || {})).then((res) => ({
     ok: !!(res && res.recorded),
+    on: !!(res && res.on),
     offline: false
   }));
 }
@@ -483,6 +517,7 @@ module.exports = {
   pull,
   pack,
   adminReady,
+  sessionRefresh,
   listUsers,
   setUserTier,
   revokeUserTier,

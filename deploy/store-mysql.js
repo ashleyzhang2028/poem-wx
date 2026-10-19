@@ -355,7 +355,7 @@ function mysqlStore(cfg) {
       if (f.game) { where.push("game = ?"); params.push(String(f.game)); }
       if (f.stage && f.stage !== "all") { where.push("stage = ?"); params.push(String(f.stage)); }
       if (f.grade) { where.push("grade = ?"); params.push(Number(f.grade)); }
-      if (f.term) { where.push("term = ?"); params.push(Number(f.term)); }
+      if (f.grade && f.term) { where.push("term = ?"); params.push(Number(f.term)); }
       if (f.from) { where.push("created_at >= ?"); params.push(Number(f.from)); }
       var sql = "SELECT * FROM score_records" + (where.length ? " WHERE " + where.join(" AND ") : "")
         + " ORDER BY created_at DESC LIMIT " + Number(limit || 3000);
