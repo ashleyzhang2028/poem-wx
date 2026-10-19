@@ -1,13 +1,14 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
+const feedback = require("../../../utils/feedback");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
 const MODES = [
-  { key: "feihua", name: "飞花令", desc: "给一个字接句", color: "green" },
-  { key: "quiz", name: "题库", desc: "抽题逐题判", color: "amber" },
-  { key: "exam", name: "考试", desc: "20 分钟一卷", color: "blue" }
+  { key: "feihua", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
+  { key: "quiz", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz },
+  { key: "exam", name: "考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam }
 ];
 
 const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
@@ -37,7 +38,12 @@ Page({
 
     const cards = MODES.map((m) => {
       const ok = entitlement.can(CAP[m.key]);
-      return Object.assign({}, m, { ok: ok, note: ok ? "" : entitlement.hint(CAP[m.key]) });
+      const best = ok ? feedback.read(m.best) : null;
+      return Object.assign({}, m, {
+        ok: ok,
+        note: ok ? "" : entitlement.hint(CAP[m.key]),
+        bestText: best ? best.rank.name : ""
+      });
     });
     this.setData({ locked: false, cards });
   },

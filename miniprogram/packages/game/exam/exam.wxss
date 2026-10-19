@@ -143,6 +143,46 @@
   margin-top: var(--sp-2);
 }
 
+.rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+}
+
+.rank-name {
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-caption);
+}
+
+.rank-note {
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+}
+
+.best-line {
+  margin-top: var(--sp-1);
+}
+
+.exam-slots {
+  padding-bottom: var(--sp-3);
+}
+
+.dot.now {
+  border-color: var(--strong);
+}
+
+.exam-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
 .wrong {
   padding: var(--sp-3) 0;
   border-bottom: 1rpx solid var(--line-2);
@@ -214,71 +254,11 @@
   margin-top: var(--sp-3);
 }
 
-.dots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
-  margin-top: var(--sp-4);
-}
-
-.dot {
-  flex: none;
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1rpx solid var(--line-2);
-  background: var(--surface);
-  transition: background-color var(--t-press), border-color var(--t-press);
-}
-
-.dot-no {
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
-
-.dot.done {
-  background: var(--strong-soft);
-  border-color: var(--strong-soft);
-}
-
-.dot.done .dot-no {
-  color: var(--strong-text);
-}
-
-.dot.here {
-  background: var(--strong);
-  border-color: var(--strong);
-}
-
-.dot.here .dot-no {
-  color: var(--on-ink);
-}
-
-.dot:active {
-  transform: scale(.94);
-}
-
-.dots-note {
-  display: block;
-  margin-top: var(--sp-2);
-}
-
 .quit-line {
   display: block;
   font-size: var(--fs-body);
   color: var(--amber);
   line-height: var(--lh-body);
-  margin-top: var(--sp-3);
-}
-
-.exam-acts {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: var(--sp-2);
   margin-top: var(--sp-3);
 }
 
@@ -290,4 +270,10 @@
   line-height: var(--lh-loose);
   margin-top: var(--sp-3);
   padding: 0 var(--sp-2);
+}
+
+.exam-nav .next-btn {
+  flex: 1;
+  width: auto;
+  margin-top: 0;
 }

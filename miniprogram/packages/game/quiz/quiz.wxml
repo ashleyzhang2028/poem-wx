@@ -35,10 +35,11 @@
   <block wx:elif="{{stage === 'running'}}">
     <view class="exam-bar">
       <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
+      <text class="combo {{combo.hot ? 'hot' : ''}}" wx:if="{{combo.shown}}">{{combo.n}} 连对</text>
       <text class="exam-timer">答对 {{correct}}</text>
     </view>
 
-    <view class="card">
+    <view class="card {{flash ? 'flash ' + flash : ''}}">
       <text class="stem">{{current.stem}}</text>
 
       <text class="hint stem-sub">{{metaLine}}</text>
@@ -70,6 +71,19 @@
       <text class="score-k">/ {{questions.length}} 题</text>
 
       <text class="hint">正确率 {{pct}}%</text>
+
+      <view class="rank" wx:if="{{rank}}">
+        <text class="rank-name">{{rank.name}}</text>
+        <text class="rank-note">{{rank.note}}</text>
+      </view>
+
+      <text class="hint best-line" wx:if="{{newBest}}">这一档比之前高，记下了</text>
+      <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
+
+      <view class="dots" wx:if="{{questions.length}}">
+        <view class="dot {{item ? 'on' : ''}}" wx:for="{{streakFlags}}" wx:key="index"
+              hover-class="dot-hover">{{index + 1}}</view>
+      </view>
     </view>
 
     <view class="card" wx:if="{{wrong.length}}">

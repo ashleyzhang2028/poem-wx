@@ -10,6 +10,8 @@
         </button>
         <view class="avatar-btn" wx:else></view>
         <view class="avatar-fallback" wx:if="{{!avatarUrl}}">{{avatarChar}}</view>
+        <view class="avatar-hit" wx:if="{{logged}}" hover-class="avatar-hit-active"
+              hover-stay-time="60" bindtap="onAvatarTap"></view>
       </view>
 
       <view class="identity-main">
@@ -33,9 +35,17 @@
             bindtap="onTier">{{tierLabel}}</view>
     </view>
 
-    <view class="grant-lead" wx:if="{{grantLead}}">
-      <view class="grant-lead-text">头像与昵称用微信的：点头像挑微信头像，点名字那一格确认微信昵称</view>
-      <button class="btn ghost mini" bindtap="onGrantLeadSkip">先不用</button>
+    <view class="wechat-picks" wx:if="{{logged}}">
+      <view class="wechat-pick" hover-class="wechat-pick-hover" hover-stay-time="60"
+            bindtap="onUseWechatAvatar">
+        <text class="wechat-pick-title">用微信头像</text>
+        <text class="wechat-pick-sub">头像换成微信那张</text>
+      </view>
+      <view class="wechat-pick" hover-class="wechat-pick-hover" hover-stay-time="60"
+            bindtap="onUseWechatIdentity">
+        <text class="wechat-pick-title">用微信头像和昵称</text>
+        <text class="wechat-pick-sub">两样都换成微信的</text>
+      </view>
     </view>
 
     <block wx:if="{{!logged}}">
