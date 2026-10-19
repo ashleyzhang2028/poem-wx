@@ -15,6 +15,12 @@
   line-height: var(--lh-tight);
 }
 
+.mode-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
 .mode-main {
   flex: 1;
   min-width: 0;

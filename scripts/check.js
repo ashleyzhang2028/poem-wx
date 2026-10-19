@@ -1891,8 +1891,8 @@ ok("名录在、标签截断、档位合法",
     ok("飞花令页下方有正确答案列表", wxml.indexOf("onReveal") >= 0 && wxml.indexOf("answers") >= 0);
 
     const actions = wxml.slice(wxml.indexOf('class="inline-btns"'), wxml.indexOf("</view>", wxml.indexOf('class="inline-btns"')));
-    ok("一行三颗按钮：看答案 / 提交 / 换令",
-      ["onReveal", "onSubmit", "onSkip"].every((h) => actions.indexOf(h) >= 0),
+    ok("一行三颗按钮：提示 / 接上 / 换令",
+      ["onHint", "onSubmit", "onSkip"].every((h) => actions.indexOf(h) >= 0),
       "少了哪一颗，飞花令这一行就不完整");
 
     const js = read("packages/game/feihua/feihua.js");
@@ -1906,6 +1906,26 @@ ok("名录在、标签截断、档位合法",
       /setTimeout/.test(js) && /onUnload[\s\S]{0,120}?clearTimeout/.test(js));
     ok("换令先清掉待翻的计时器，再出下一个令字",
       /onSkip\(\)[\s\S]{0,160}?clearTimeout[\s\S]{0,160}?this\.next\(\)/.test(js));
+
+    ok("一轮有倒计时，到点收轮（不再是一题接一题无限连）",
+      /startClock\(\)[\s\S]{0,200}?setInterval/.test(js) && /endRound\(\)/.test(js),
+      "少了计时那一层 —— 飞花令又变回没有输赢的填空题");
+    ok("离开页面把两条计时器都停掉",
+      /onUnload[\s\S]{0,160}?clearTimeout/.test(js) && /onUnload[\s\S]{0,160}?stopClock/.test(js));
+  }
+
+  {
+    const js = read("packages/game/feihua/feihua.js");
+    const lib = require(path.join(ROOT, "packages/game/feihua/lib.js"));
+    const h = lib.hint("月", { exclude: ["床前明月光 "] });
+    ok("提示只给两个字的头，不给整句（说全了就等于替人答了）",
+      !!h && h.head.length === 2 && typeof h.total === "number",
+      JSON.stringify(h));
+    const all = lib.look("月", { limit: 9999 }).map((r) => r.seg);
+    const tail = lib.hint("月", { exclude: all });
+    ok("范围内的句子都被说过时，提示不给假的",
+      all.length > 0 && tail === null, JSON.stringify(tail));
+    ok("一次机会用一个提示（提示过就不再出按钮）", /hinted/.test(js));
   }
 }
 
@@ -3001,6 +3021,24 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("交卷后逐题列出对错（不只是错题）",
       examWxml.indexOf("graded") >= 0 && examWxml.indexOf('class="grade-mark') >= 0);
 
+    ok("考试能跳题回去改答案（题号格 + 上一题）",
+      examWxml.indexOf("onJump") >= 0 && examJs.indexOf("goto(") >= 0
+        && examJs.indexOf("onPrev") >= 0,
+      "选择题交了卷才判，途中却不许回头改 —— 漏答一题就白丢一分");
+    ok("题号格按「答没答」上色，类名由 slotsOf 一处算好再传进模板",
+      /slotsOf\s*\(/.test(examJs) && examWxml.indexOf("{{slots}}") >= 0
+        && examWxml.indexOf("{{item.cls}}") >= 0,
+      "模板里还在自己拼类名 —— 插值只吃一层，宁可算好再传");
+    ok("那个「现在这题」的标记走主题色，不另起一支",
+      /var\(--strong\)/.test((/\.dot\.now\s*\{([^}]*)\}/.exec(read("packages/game/exam/exam.wxss")) || [])[1] || ""),
+      "当前题号与已答用两支不相干的色 —— 一屏两处都在喊");
+
+    const quizJs = read("packages/game/quiz/quiz.js");
+    ok("题库当场给对错（判定在 onPick 里，不等下一题）",
+      /onPick\(e\)[\s\S]{0,400}?quiz\.judge/.test(quizJs));
+    ok("连对是一枚读数，不是藏在文案里（combo 走共享的 feedback）",
+      /feedback\.mark\(/.test(quizJs) && /wx:if="\{\{combo\.shown\}\}"/.test(read("packages/game/quiz/quiz.wxml")),
+      "答对答错只剩一句字色 —— 连着答对与偶然撞对读起来一样");
   }
 }
 
@@ -4244,6 +4282,26 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("「当前档位」那一列用的是主题色那一档（列头那一道走主题）",
     /var\(--strong\)/.test(isNowHead),
     "当前档位还挂在 --green 上 —— 换主题时那一列留在原地");
+
+  {
+    const ruleCount = (sel) => (appWxss.match(new RegExp("\\n" + sel + "\\s*[,{]"), "g") || []).length;
+    ok("闪动 / 连击 / 题号格只在 app.wxss 各定义一次",
+      [".flash\\.yes", ".flash\\.no", "\\.combo", "\\.dot"].every((sel) => ruleCount(sel) === 1),
+      "有一档写在两处 —— 三页会慢慢各长一样");
+
+    const dupPages = ["packages/game/quiz/quiz", "packages/game/exam/exam", "packages/game/feihua/feihua"];
+    const stray = dupPages.filter((f) => /\n\.(flash|combo|dot)\s*[,{]/.test(read(f + ".wxss")));
+    ok("闪动 / 连击 / 题号格三样没在页面样式表里另写一份",
+      stray.length === 0, stray.join(", "));
+
+    const fb = require(path.join(ROOT, "utils", "feedback.js"));
+    const seen = [0, 10, 19, 20, 39, 40, 59, 60, 79, 80, 89, 90, 99, 100].map((p) => fb.rankPercent(p));
+    ok("段位只单调往上（分高的段位名不许排在分低的下面）",
+      seen.every((r, i) => i === 0 || r.rank >= seen[i - 1].rank) && fb.rankPercent(100).name === "状元",
+      JSON.stringify(seen.map((r) => r.name)));
+    ok("段位表七档，名字不重复",
+      new Set(fb.RANKS.map((r) => r.name)).size === fb.RANKS.length && fb.RANKS.length === 7);
+  }
 
   const right = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/quiz/quiz.wxss")) || [])[1] || "";
   const rightExam = (/\.option\.right\s*\{([^}]*)\}/.exec(read("packages/game/exam/exam.wxss")) || [])[1] || "";
