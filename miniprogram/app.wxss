@@ -140,7 +140,12 @@ button, textarea {
   display: block;
   font-size: var(--fs-title);
   color: var(--ink-2);
+  letter-spacing: var(--ls-title);
   line-height: var(--lh-loose);
+}
+
+.empty-text.say {
+  font-family: var(--font-poem);
 }
 
 .empty-tip {

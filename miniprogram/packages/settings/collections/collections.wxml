@@ -103,7 +103,7 @@
   <view class="card" wx:elif="{{on}}">
     <view class="empty">
       <text class="empty-mark">选</text>
-      <text class="empty-text">还没有自选集合</text>
+      <text class="empty-text say">还没有自选集合</text>
       <text class="hint empty-tip">在上面点「新建集合」开一个</text>
     </view>
   </view>
