@@ -125,6 +125,10 @@ Page({
     tabPage.mine();
   },
 
+  onTier() {
+    entitlement.openTierPage();
+  },
+
   onCount(e) {
     const id = e.currentTarget.dataset.id;
     const n = Number(e.detail.value);

@@ -11,7 +11,7 @@
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
     </view>
-    <text class="hint coll-lock" wx:else>{{hint}}</text>
+    <text class="hint coll-lock" wx:else bindtap="onTier">{{hint}}</text>
 
     <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
   </view>
