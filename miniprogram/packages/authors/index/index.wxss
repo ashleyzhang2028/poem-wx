@@ -81,6 +81,7 @@
 
 .a-name {
   min-width: 0;
+  font-family: var(--font-poem);
   font-size: var(--fs-body);
   color: var(--strong-text);
 }

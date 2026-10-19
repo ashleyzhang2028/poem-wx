@@ -74,21 +74,21 @@
     <view class="divider"></view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
       <view class="row-main">
-        <text class="row-title">背诵选项</text>
+        <text class="row-title poem">背诵选项</text>
         <text class="row-sub">{{gradeName}} · {{scopeName}} · 每日 {{dailyCount}} 首 · {{algoName}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
       <view class="row-main">
-        <text class="row-title">背诵进度</text>
+        <text class="row-title poem">背诵进度</text>
         <text class="row-sub">概要 · 到期日历 · 掌握度</text>
       </view>
       <text class="row-go">›</text>
     </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
       <view class="row-main">
-        <text class="row-title">自选背诵</text>
+        <text class="row-title poem">自选背诵</text>
         <text class="row-sub">自己加的集合 · 改名 · 增删篇目</text>
       </view>
       <text class="row-go">›</text>
@@ -110,7 +110,7 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
       <view class="row-icon">档</view>
       <view class="row-main">
-        <text class="row-title">用户权限</text>
+        <text class="row-title poem">用户权限</text>
         <text class="row-sub">自己那一档 · 能力对照 · 升档</text>
       </view>
       <text class="row-go">›</text>

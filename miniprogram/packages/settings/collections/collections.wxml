@@ -23,7 +23,7 @@
       <view class="coll-head" hover-class="row-hover" hover-stay-time="60"
             data-id="{{c.id}}" bindtap="onToggleList">
         <view class="row-main">
-          <text class="row-title">{{c.name}}</text>
+          <text class="row-title poem">{{c.name}}</text>
           <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 今日 {{c.planned}} 首</text>
         </view>
         <text class="all-toggle {{c.open ? 'open' : ''}}"></text>
