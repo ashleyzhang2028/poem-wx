@@ -72,7 +72,7 @@ Page({
     if (!ok || this.ready) return;
     this.ready = true;
 
-    const pickedForms = quiz.FORM_KEYS.slice();
+    const pickedForms = quiz.DEFAULT_FORM_KEYS.slice();
     this.setData({
       scopes: gameScopes.list(),
       pickedForms,

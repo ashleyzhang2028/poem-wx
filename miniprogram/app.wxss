@@ -207,7 +207,9 @@ button, textarea {
 }
 
 .btn.block {
-  width: 100%;
+  width: var(--w-btn);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .btn.block + .btn.block {
@@ -1126,7 +1128,7 @@ button, textarea {
 }
 
 .chip.on {
-  background: var(--strong);
+  background: var(--strong-soft);
   border-color: var(--strong);
 }
 
@@ -1162,7 +1164,7 @@ button, textarea {
 }
 
 .chip.on .chip-t {
-  color: var(--on-ink);
+  color: var(--strong-text);
 }
 
 .chip-hover {

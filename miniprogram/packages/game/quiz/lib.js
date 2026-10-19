@@ -10,6 +10,7 @@ const FORMS = [
 ];
 
 const FORM_KEYS = FORMS.map((f) => f.key);
+const DEFAULT_FORM_KEYS = FORM_KEYS.slice(0, 2);
 
 function _quiz_pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -216,4 +217,6 @@ function optionClass(row, picked, answer) {
   return "";
 }
 
-module.exports = { FORMS, FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass };
+module.exports = {
+  FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass
+};
