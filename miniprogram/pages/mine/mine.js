@@ -147,6 +147,10 @@ Page({
     this.saveNickname(nickname);
   },
 
+  onAvatarTap() {
+    this.chooseWechatAvatar(false);
+  },
+
   onUseWechatAvatar() {
     this.chooseWechatAvatar(false);
   },

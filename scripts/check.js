@@ -6108,6 +6108,11 @@ function gapped(items, max) {
     /class="avatar-fallback"[^>]*wx:if="\{\{!avatarUrl\}\}"/.test(mineWxml)
       && mineSrc.indexOf("avatarChar") >= 0,
     "首字印又被塞回原生 button 里 —— 真机上它的盒模型跟页面样式表对不上（Issue #194）");
+
+  ok("首字印上面盖着一层命中区，点字也算点头像（Issue #388）",
+    /class="avatar-hit"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
+      && /onAvatarTap\([^)]*\)[\s\S]{0,120}?chooseWechatAvatar\(false\)/.test(mineSrc),
+    "首字印与原生 button 并列、不穿透，点在字上就没反应");
 }
 
 {

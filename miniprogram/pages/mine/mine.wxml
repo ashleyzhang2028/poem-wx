@@ -10,6 +10,8 @@
         </button>
         <view class="avatar-btn" wx:else></view>
         <view class="avatar-fallback" wx:if="{{!avatarUrl}}">{{avatarChar}}</view>
+        <view class="avatar-hit" wx:if="{{logged}}" hover-class="avatar-hit-active"
+              hover-stay-time="60" bindtap="onAvatarTap"></view>
       </view>
 
       <view class="identity-main">
