@@ -1140,7 +1140,10 @@ button, textarea {
   border-color: var(--depth);
 }
 
-.chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t,
+.chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t {
+  color: inherit;
+}
+
 .chip.bad .glyph, .chip.fuzzy .glyph, .chip.good .glyph {
   color: inherit;
   background-color: currentColor;
