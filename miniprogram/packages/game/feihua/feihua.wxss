@@ -59,8 +59,14 @@
   margin-bottom: var(--sp-2);
 }
 
-.fh-stage .inline-btns .btn.primary {
+.fh-stage .inline-btns .btn,
+.fh-stage .inline-btns .btn.mini {
   flex: 1;
+  height: var(--h-opt-tight);
+  padding: 0;
+  font-size: var(--fs-title);
+  letter-spacing: var(--ls-title);
+  line-height: 1.2;
 }
 
 .fh-field {
