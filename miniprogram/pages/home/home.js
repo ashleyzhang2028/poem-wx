@@ -421,7 +421,7 @@ Page({
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
-      collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
+      collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections").replace(/。$/, ""),
       seasonal: this.seasonalCard(),
       loading: false
     });

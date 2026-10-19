@@ -190,7 +190,7 @@
     </view>
 
     <view class="card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}">
-      <text class="hint" wx:if="{{collectionHint}}">{{collectionHint}}</text>
+      <text class="hint" wx:if="{{collectionHint}}" bindtap="onPermissions">{{collectionHint}}</text>
 
       <view class="empty" wx:if="{{collectionOn}}">
         <text class="empty-mark">选</text>
