@@ -3866,10 +3866,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       const body = chipBodyOf(k);
       return !/background:\s*var\(--depth\)/.test(body) || !/color:\s*var\(--on-ink\)/.test(body);
     });
+    const partOf = (k, part) => {
+      const hit = chipRules.filter((r) => r.sel.split(",").map((x) => x.trim())
+        .indexOf(".chip." + k + " " + part) >= 0);
+      return hit.map((r) => r.body).join("");
+    };
+    const chipped = ["bad", "fuzzy", "good"].filter((k) => {
+      const label = partOf(k, ".chip-t");
+      const glyph = partOf(k, ".glyph");
+      return !/color:\s*inherit/.test(label) || /background-color/.test(label)
+        || !/color:\s*inherit/.test(glyph) || !/background-color:\s*currentColor/.test(glyph);
+    });
     ok("评分格三档（忘记 / 模糊 / 记住）共用主题底与压得住的字色",
       flipped.length === 0
-        && /background:\s*var\(--strong\)/.test(chipOn) && !/background:\s*var\(--depth\)/.test(chipOn),
-      flipped.join(", ") + " 没跟另外两档同底同色 —— 换到别的主题上会有一档看不见（Issue #425）");
+        && /background:\s*var\(--strong\)/.test(chipOn) && !/background:\s*var\(--depth\)/.test(chipOn)
+        && chipped.length === 0,
+      flipped.join(", ") + " 没跟另外两档同底同色；"
+        + chipped.join(", ") + " 的文字与图标没分开 —— 字跟着涂成实心块就看不见了（Issue #425）");
 
     const theme = require(path.join(ROOT, "utils", "theme.js"));
     const channelOf = (v) => {
