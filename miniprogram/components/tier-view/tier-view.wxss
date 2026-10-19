@@ -1,5 +1,13 @@
 .grant {
+  position: relative;
   margin-top: var(--sp-3);
+}
+
+.grant-top {
+  position: absolute;
+  left: var(--card-x);
+  right: var(--card-x);
+  bottom: calc(var(--card-y) + var(--fs-caption) * var(--lh-body) + var(--sp-4));
 }
 
 .grant-eyebrow {
@@ -11,28 +19,34 @@
 .grant-tier-name {
   display: block;
   margin-top: var(--sp-1);
-  font-family: var(--font-poem);
+  font-family: var(--font-ui);
   font-size: var(--fs-hero);
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
 }
 
-.note {
+.guest-note {
   display: block;
   margin-top: var(--sp-1);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
 }
 
 .grant-meter {
-  margin-top: var(--sp-4);
+  margin-top: 0;
 }
 
 .grant-meter-t {
-  display: block;
-  margin-top: var(--sp-2);
+  position: absolute;
+  left: var(--card-x);
+  right: var(--card-x);
+  bottom: calc(var(--card-y) + var(--fs-caption) * var(--lh-body) / 2 - 1rpx);
   font-size: var(--fs-caption);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .tier-table {

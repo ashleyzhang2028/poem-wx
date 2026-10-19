@@ -1330,7 +1330,7 @@ const GATED = {
 
   ok("后台管理页不再摆档位那几张卡（普通用户页已经有）",
     adminWxml.indexOf("<tier-view") < 0 && adminWxml.indexOf("lock-card") < 0
-      && viewWxml.indexOf("未登录 · 暂按 Free") >= 0,
+      && viewWxml.indexOf("status.label") >= 0 && viewWxml.indexOf("guest-note") >= 0,
     "档位卡跟着进了后台管理页 —— 两处各说一遍同一件事（Issue #232）");
 
   ok("名录只有管理页那一处入口（按登录显隐，「我的」页不再列一行）",
