@@ -88,6 +88,12 @@
     </view>
   </view>
 
+  <view class="card danger-zone">
+    <view class="card-title danger-title">危险操作</view>
+    <text class="hint danger-note">背诵进度、已读标记、今日加背都会删掉，本机与云端的记录一起清，且无法恢复。</text>
+    <button class="btn danger block danger-clear" bindtap="onClearData">清空数据</button>
+  </view>
+
   <view class="safe-bottom"></view>
   </block>
 </view>

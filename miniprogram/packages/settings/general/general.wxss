@@ -71,3 +71,20 @@
 .swatch.on .swatch-name {
   color: var(--ink-2);
 }
+
+.danger-zone {
+  border-color: var(--red-edge);
+}
+
+.danger-title {
+  color: var(--red);
+}
+
+.danger-note {
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.danger-clear {
+  margin-top: var(--sp-1);
+}

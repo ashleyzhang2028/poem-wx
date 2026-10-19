@@ -36,7 +36,7 @@
   <view class="card">
     <view class="card-title">四、存多久、放在哪</view>
     <text class="policy-p">本机数据存在手机里，卸载小程序即随它一起清掉。</text>
-    <text class="policy-p">云端记录存在腾讯云上海地域的服务器里，只在你还有账号时保留。在「我的 → 清空背诵数据」点一下，本机与云端的记录一并删掉，删完换任何手机都找不回。</text>
+    <text class="policy-p">云端记录存在腾讯云上海地域的服务器里，只在你还有账号时保留。在「我的 → 设置 → 清空数据」点一下，本机与云端的记录一并删掉，删完换任何手机都找不回。</text>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onMine">
       <view class="row-main">
         <text class="row-title">去「我的」清除记录</text>
@@ -68,7 +68,7 @@
   <view class="card">
     <view class="card-title">八、你的权利</view>
     <text class="policy-p">你可以查、改、删自己的个人信息，也可以撤回同意或在「我的」里退出登录。</text>
-    <text class="policy-p">「清空背诵数据」是可以随时用的删除入口。若要连账号一并注销，发邮件到上面的邮箱，我们核实后处理。</text>
+    <text class="policy-p">「清空数据」是可以随时用的删除入口。若要连账号一并注销，发邮件到上面的邮箱，我们核实后处理。</text>
     <text class="policy-p">昵称随时可以改，改完榜上立刻是新名字。</text>
     <text class="policy-p">拒绝提供非必需的信息，不使用头像与昵称一类的授权，不影响背诵、复习、搜索这些核心功能。</text>
   </view>

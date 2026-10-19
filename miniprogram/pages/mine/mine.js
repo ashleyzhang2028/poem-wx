@@ -229,22 +229,6 @@ Page({
 
   onPrivacy() {
     wx.navigateTo({ url: "/packages/settings/privacy/privacy" });
-  },
-
-  onClear() {
-    wx.showModal({
-      title: "清空背诵数据",
-      content: "背诵进度、已读标记、今日加背都会删掉，本机与云端的记录一起清，且无法恢复。",
-      confirmText: "清空",
-      cancelText: "取消",
-      confirmColor: "#a83b32",
-      success: (res) => {
-        if (!res.confirm) return;
-        store.clearProgress();
-        sync.markDirty();
-        this.refresh();
-        wx.showToast({ title: "已清空", icon: "success" });
-      }
-    });
   }
+
 });
