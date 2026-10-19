@@ -859,7 +859,7 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
 | 选项与文字的间距 | `app.wxss` 给 `<radio>` / `<checkbox>` 自己上 `margin-right` | 原生控件不带外边距 —— 紧贴是浏览器的排法，不是控件的排法 |
 | 按钮文字垂直居中 | `.btn` 用 `flex + align-items:center` | 原生 button 的默认行高由平台按字号算，和页面给的 `height` 对不上就偏 |
 | 并列按钮一样高 | `.actions` 显式 `align-items:center` | flex 默认 `stretch` 遇上固定 `height` 会退化成基线对齐 |
-| **要定尺寸的原生 button（头像那枚）** | 尺寸只定在**外层的壳**上（`.avatar-wrap`，`position:relative` + `overflow:hidden`），壳里那两样（button 与头像本体）一律 `position:absolute` 贴满它、尺寸写**字面量** | 原生 button 有两条自作主张的默认，2026-10-04 各踩了一次：① 自带 `display:block` 与 `width:100%`，真机上盖过页面样式表给的 `width` —— 写 `width:112rpx` 不生效，被撑成一行宽，叠上 `border-radius:50%` 就是一枚扁椭圆；② 它里面**解析不了 `height:100%`** —— 把尺寸挪到壳上之后，宽度那条链活着、高度那条断在 button 上，里面的 `<image>` 于是按**自己那张图的固有比例**排高度（横构图排成一根横条），又是一枚扁椭圆，`aspectFill` 再取中段，看着就是「只显示了左侧一点」。绝对定位 + 字面量把两条默认一起绕开。V50 守着 |
+| **要定尺寸的原生 button（头像那枚）** | 尺寸只定在**外层的壳**上（`.avatar-wrap`，`position:relative` + `overflow:hidden`），壳里那两样（button 与头像本体）一律 `position:absolute` 贴满它、尺寸写**字面量** | 原生 button 有两条自作主张的默认，2026-10-04 各踩了一次：① 自带 `display:block` 与 `width:100%`，真机上盖过页面样式表给的 `width` —— 写 `width:112rpx` 不生效，被撑成一行宽，叠上 `border-radius:50%` 就是一枚扁椭圆；② 它里面**解析不了 `height:100%`** —— 把尺寸挪到壳上之后，宽度那条链活着、高度那条断在 button 上，里面的 `<image>` 于是按**自己那张图的固有比例**排高度（横构图排成一根横条），又是一枚扁椭圆，`aspectFill` 再取中段，看着就是「只显示了左侧一点」。绝对定位 + 字面量把两条默认一起绕开（Issue #394 之后那一层按钮已撤，头像圈本身就是一个 `bindtap` 的 `view`，两条默认不再撞上） |
 ### 底栏：自绘，因为原生只认图片
 
 用户原话：「导航栏几何按钮明明文字上面有图标的，现在好像没有，例如 我的」。
@@ -946,7 +946,7 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
 落成一条**没有优先级可言的**规则：
 
 ```
-微信头像（chooseAvatar 给你的那一张）  →  昵称首字印
+微信头像（open-type="chooseAvatar" 给你的那一张）  →  昵称首字印
 ```
 
 **这一节原来不是这样。** 原来有三个来源、一条优先级
@@ -973,7 +973,7 @@ Issue #111 把「用户自己上传」整条路收掉了 —— 于是来源只�
 #### 所以头像只落本机、不上传
 
 ```
-选头像（chooseAvatar）
+选头像（open-type="chooseAvatar" 那个按钮的 chooseavatar 事件）
   → store.profile().avatarLocal = 那枚临时路径
   → 只写 wx.setStorageSync，**不进同步报文、不上传**
 ```
@@ -981,35 +981,36 @@ Issue #111 把「用户自己上传」整条路收掉了 —— 于是来源只�
 - 换台手机：头像**不在**（这是刻意的，不是 bug）——
   真要它在，就得养一份对象存储，而 Issue #111 要的正是别养。
 - 没选过：显示昵称首字印，**不拿灰头像冒充**。
-- **首字印不画在原生 button 里**（Issue #194）：`open-type="chooseAvatar"` 那个 button
-  只包住 `<image>`，首字印是与它并列的一层，走自己的宽高字面量与圆角。
-  真机上原生 button 里的盒模型跟页面样式表对不上（`height:100%` 解析不出来），
-  灰底会排成「只看得见左侧一点」的扁椭圆。判据见 V50。
-- **首字印上面盖一层命中区**（`.avatar-hit`，登录态才画，`bindtap="onAvatarTap"`，
-  与 `open-type="chooseAvatar"` 那个 button 走同一个动作）：两层并列意味着按钮自身的
-  命中区只有它那一圈，点正中那个字会落在首字印上、什么也不发生。
-  这一层贴满 `.avatar-wrap`，把整枚圆补齐成一个可点区域。
+- **头像走 `open-type="chooseAvatar"` 这个原生按钮的 `bindchooseavatar` 事件，
+  不调 `wx.chooseAvatar`**：客户端 API 表里没有后者的名字（基础库 3.5.5 实测
+  `wx.chooseAvatar is not a function`，Issue #394），能拿回头像的只有按钮。
+- **整枚圆是一个 `bindtap` 的命中区**（`.avatar-wrap`，登录态才开，`bindtap="onAvatarTap"`）：
+  头像图与首字印都只是它的孩子，点哪一块都打开弹层。原来那套「原生 button 包住头像图、
+  首字印与它并列、再盖一层 `.avatar-hit`」已随 Issue #394 撤掉。
 - 副题只说「我是谁」（`已登录 · 微信账号`），不再解释这张头像哪来的 ——
   只有一个来源，说来源等于说一句用户不需要懂的话。
 
-#### 两个一键选项：用微信头像 / 用微信头像和昵称（Issue #370）
+#### 两个一键选项收在一个底部弹层里（Issue #370 / #394）
 
 用户 2026-10-04 在 Issue #370 里提到，点昵称那格时键盘上方会直接给出「用微信昵称」，
 于是问能不能也一键用微信头像、乃至两样一起换。能 —— 头像那半仍要用户点一下
 （平台没有静默拿头像的接口，见上），但**点一下就够了**，不必再自己进相册挑。
 
-身份卡下面两行（`.wechat-picks`，只在登录态出现）：
+点身份卡上那枚头像圆，从底部升起一层（`.wechat-sheet`，登录态才打得开）：
 
 | 选项 | 做什么 |
 |---|---|
-| 用微信头像 | `wx.chooseAvatar` → 弹层第一项就是当前微信头像 → 落本机 |
-| 用微信头像和昵称 | 同上；昵称取输入框当前那一格（用户确认微信昵称后它已经是微信那个），再走 `auth.saveNickname` 推上去 |
+| 用微信头像 | `chooseavatar` 事件带回来的那张 → 落本机 |
+| 用微信头像和昵称 | 同上；昵称走输入框那条 `onNickname`，再由 `saveNickname` 推上去 |
 
-- 两行都不弹 `wx.showModal` 二次确认：动作本身就在弹层里，用户取消就没有后续。
-- 昵称不经 `type="nickname"` 的输入事件拿到 —— `wx.chooseAvatar` **不会**带回昵称。
+- 这两个选项**只在弹层里出现**，身份卡上不再摆（Issue #394 用户原话
+  「结果你直接把那两个选项写到顶部卡片了，太丑了」）。
+- 两项都是 `open-type="chooseAvatar"` 的按钮：点一下先关弹层、再让微信那头出选择界面，
+  用户取消就没有后续，不弹 `wx.showModal` 二次确认。
+- 昵称不经 `type="nickname"` 的输入事件拿到 —— `chooseavatar` **不会**带回昵称。
   「和昵称」这一项是把输入框里那一格一并提交，所以文案说的是「一起换」不是
   「自动读昵称」。平台没有第二条路。
-- 用户自己改昵称、以及这两个选项，走的是同一个 `saveNickname`：
+- 用户自己改昵称、以及这两个选项，走的是同一个 `onNickname` → `saveNickname`：
   落本机、`markDirty`、`auth.saveNickname` 推送，三件事只有一份。
 - 头像仍然只落本机、不进报文（Issue #111 不变）。
 

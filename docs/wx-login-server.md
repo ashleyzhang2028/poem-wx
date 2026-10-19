@@ -88,7 +88,7 @@ module.exports = handler.make("wx.login", ["POST"], function (d, body) {
 - `tier` 只认 `free` / `pro` / `max`
 - `role` 只认 `owner` / `admin` / `user`
 - `caps` 可省；给了就按人开关某项能力，不必改档位（`entitlement.switchedOff()` 读它）
-- 昵称头像留空即可 —— 用户在小程序里自己选（`chooseAvatar` / `type="nickname"`），
+- 昵称头像留空即可 —— 用户在小程序里自己选（`open-type="chooseAvatar"` / `type="nickname"`），
   服务端不静默抓
 
 ### `POST /api/wx/refresh`
@@ -274,7 +274,7 @@ poem 的 `api/_lib/core.js` 里，`syncPull` / `syncPush` 第一步都过
 「用户自己上传头像」这条路（用户原话：*不要再提供用户自己上传头像的功能了，
 也许能节省对象存储或者静态资源存储*），于是：
 
-- 头像只认微信那一张，而它是 `chooseAvatar` 给回的一枚**临时文件路径**
+- 头像只认微信那一张，而它是 `open-type="chooseAvatar"` 给回的一枚**临时文件路径**
   （`wxfile://…`）—— 那是**这台机器上的**东西，进报文没有意义。
 - 所以 `profile:v1` 这一行**整个退场**：客户端不再打包它，
   服务端那条 `sanitizeProfile` 白名单也就没有对象了。

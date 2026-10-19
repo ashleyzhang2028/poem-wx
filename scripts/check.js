@@ -4230,7 +4230,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   {
     const mineSrc7 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    const i = mineSrc7.indexOf("onAvatarChoose(");
+    const i = mineSrc7.indexOf("storeAvatar(");
     const body = i < 0 ? "" : mineSrc7.slice(i, mineSrc7.indexOf("\n  },", i));
     ok("头像不挂记账（挂了就等于它进同步队列，而上传它要养一份存储桶）",
       !!body && body.indexOf("markDirty") < 0);
@@ -4243,20 +4243,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       const i = mineSrc8.indexOf(fn + "(");
       return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
     };
-    ok("两个一键选项都在（只换头像 / 头像和昵称一起换）",
-      /bindtap="onUseWechatAvatar"/.test(mineWxml8)
-        && /bindtap="onUseWechatIdentity"/.test(mineWxml8)
-        && !!pick("onUseWechatAvatar") && !!pick("onUseWechatIdentity"),
-      "「用微信头像」或「用微信头像和昵称」少了一个");
-    ok("两项都经 wx.chooseAvatar 拿微信那张（平台没有静默拿头像的接口）",
-      /chooseWechatAvatar\(withNickname\)[\s\S]{0,200}?wx\.chooseAvatar\(\{/.test(mineSrc8),
-      "用了别的接口 —— getUserProfile 只回灰头像匿名用户");
+    ok("两个一键选项都在弹层里（只换头像 / 头像和昵称一起换）",
+      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
+        && !!pick("onWechatAvatar") && !!pick("onWechatIdentity"),
+      "「用微信头像」或「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    ok("两项都经 open-type=\"chooseAvatar\" 拿微信那张（平台没有静默拿头像的接口）",
+      (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
+        && /takeWechatAvatar\(e, withNickname\)[\s\S]{0,300}?e\.detail\.avatarUrl/.test(mineSrc8),
+      "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
-      /chooseWechatAvatar\(withNickname\)[\s\S]{0,600}?this\.saveNickname\(/.test(mineSrc8)
+      /takeWechatAvatar\(e, withNickname\)[\s\S]{0,600}?this\.onNickname\(/.test(mineSrc8)
+        && /onNickname\(e\)[\s\S]{0,200}?this\.saveNickname\(/.test(mineSrc8)
         && /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(mineSrc8),
       "只换了头像，昵称没推上去");
-    ok("两个选项只挂在登录那一态上（没登录时没有可换的身份）",
-      /<view class="wechat-picks"[^>]*wx:if="\{\{logged\}\}"/.test(mineWxml8));
+    ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
+      /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
+        && !!pick("onWechatPickClose"),
+      "没登录也能弹出换身份的层");
     ok("头像或昵称一换，底栏那格跟着重画",
       /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
         && /store\.saveProfile\(\{\s*avatarLocal:\s*url\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
@@ -4585,9 +4588,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     mineWxml.indexOf("avatar-row") < 0 && mineWxss.indexOf(".avatar-row") < 0,
     "那一行还在，或者样式留下了孤儿");
 
-  ok("头像圆就是选头像的入口（chooseAvatar 挂在它身上）",
-    /class="avatar-btn"\s+open-type="chooseAvatar"/.test(mineWxml)
-      && /bindchooseavatar="onAvatarChoose"/.test(mineWxml),
+  ok("头像圆就是选头像的入口（点它开那个弹层）",
+    /class="avatar-wrap"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
+      && /onAvatarTap\(\)[\s\S]{0,200}?wechatPick:\s*true/.test(mineJs),
     "头像圆不再是入口了，头像无处可点");
 
   ok("「用微信头像」那个动作已撤（没有可退的东西了）",
@@ -4598,12 +4601,12 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
 
     const body = (() => {
-      const i = mineJs.indexOf("onAvatarChoose(");
+      const i = mineJs.indexOf("takeWechatAvatar(");
       if (i < 0) return "";
       const j = mineJs.indexOf("\n  },", i);
       return j < 0 ? mineJs.slice(i) : mineJs.slice(i, j);
     })();
-    ok("头像的入口函数在（点它选微信那张）", !!body, "没找到 onAvatarChoose");
+    ok("头像的落盘函数在（选完落本机那张）", !!body, "没找到 takeWechatAvatar");
     ok("头像不上传（选完不调 markDirty，也不走任何上传接口）",
       !!body && body.indexOf("markDirty") < 0 && !/uploadFile|\/api\/avatar/.test(body),
       "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +
@@ -6371,10 +6374,10 @@ function gapped(items, max) {
       && mineSrc.indexOf("avatarChar") >= 0,
     "首字印又被塞回原生 button 里 —— 真机上它的盒模型跟页面样式表对不上（Issue #194）");
 
-  ok("首字印上面盖着一层命中区，点字也算点头像（Issue #388）",
-    /class="avatar-hit"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
-      && /onAvatarTap\([^)]*\)[\s\S]{0,120}?chooseWechatAvatar\(false\)/.test(mineSrc),
-    "首字印与原生 button 并列、不穿透，点在字上就没反应");
+  ok("整枚圆都是命中区，点首字印也算点头像（Issue #388）",
+    /class="avatar-wrap"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
+      && /onAvatarTap\(\)[\s\S]{0,200}?wechatPick:\s*true/.test(mineSrc),
+    "首字印与头像图并列、不穿透，点在字上就没反应");
 }
 
 {

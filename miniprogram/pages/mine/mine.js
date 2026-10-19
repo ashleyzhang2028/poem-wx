@@ -18,6 +18,7 @@ Page({
     avatarUrl: "",
 
     avatarChar: "诗",
+    wechatPick: false,
     identitySub: "未登录",
     gradeName: "",
     scopeName: "",
@@ -133,14 +134,6 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
-  onAvatarChoose(e) {
-    const url = e.detail.avatarUrl;
-    if (!url) return;
-    store.saveProfile({ avatarLocal: url });
-    this.syncBar();
-    this.refresh();
-  },
-
   onNickname(e) {
     const nickname = (e.detail.value || "").trim();
     if (!nickname) return;
@@ -148,29 +141,33 @@ Page({
   },
 
   onAvatarTap() {
-    this.chooseWechatAvatar(false);
+    if (!this.data.logged) return;
+    this.setData({ wechatPick: true });
   },
 
-  onUseWechatAvatar() {
-    this.chooseWechatAvatar(false);
+  onWechatPickClose() {
+    this.setData({ wechatPick: false });
   },
 
-  onUseWechatIdentity() {
-    this.chooseWechatAvatar(true);
+  onWechatAvatar(e) {
+    this.takeWechatAvatar(e, false);
   },
 
-  chooseWechatAvatar(withNickname) {
-    wx.chooseAvatar({
-      success: (r) => {
-        this.storeAvatar(r && r.avatarUrl);
-        if (!withNickname) {
-          wx.showToast({ title: "头像已换成微信的", icon: "none" });
-          return;
-        }
-        this.saveNickname(this.data.nickname);
-        wx.showToast({ title: "头像与昵称都换成微信的了", icon: "none" });
-      }
-    });
+  onWechatIdentity(e) {
+    this.takeWechatAvatar(e, true);
+  },
+
+  takeWechatAvatar(e, withNickname) {
+    this.setData({ wechatPick: false });
+    const url = e && e.detail && e.detail.avatarUrl;
+    if (!url) return;
+    this.storeAvatar(url);
+    if (!withNickname) {
+      wx.showToast({ title: "头像已换成微信的", icon: "none" });
+      return;
+    }
+    this.onNickname({ detail: { value: this.data.nickname } });
+    wx.showToast({ title: "头像与昵称都换成微信的了", icon: "none" });
   },
 
   storeAvatar(url) {
