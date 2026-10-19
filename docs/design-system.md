@@ -281,7 +281,7 @@
 这条是**内容需求**（诗词要像诗词），不是装饰，所以它从上一版留了下来。
 
 ```css
---font-poem: "Kuibu Serif", "Songti SC", …, serif;             /* 全部诗词文本 */
+--font-poem: "Kuibu Serif", "Songti SC", …, serif;             /* 全部诗词文本，外挂装的是朱雀仿宋 */
 --font-ui:   -apple-system, "PingFang SC", …;
 --font-num:  -apple-system, "SF Pro Display", …;   /* 数字 */
 ```
