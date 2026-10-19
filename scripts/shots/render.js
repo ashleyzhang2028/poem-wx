@@ -411,7 +411,7 @@ function pageHtml(cfg, data) {
 
     return `<view${cond} class="card lock-card"><text class="lock-mark">${mark}</text><text class="lock-title">${title}</text>`
       + (note ? `<text class="lock-note">${note}</text>` : "")
-      + `<button class="btn primary block lock-btn">微信登录</button></view>`;
+      + `<button class="btn primary block">微信登录</button></view>`;
   });
   wxml = wxml.replace(/<skeleton\b([^>]*)\/>/g, (_, a) => {
     const rows = /rows\s*=\s*"(\d+)"/.exec(a);

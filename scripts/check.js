@@ -3866,6 +3866,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       const body = chipBodyOf(k);
       return !/background:\s*var\(--depth\)/.test(body) || !/color:\s*var\(--on-ink\)/.test(body);
     });
+    const chipOnT = (/^\.chip\.on \.chip-t\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
     const partOf = (k, part) => {
       const hit = chipRules.filter((r) => r.sel.split(",").map((x) => x.trim())
         .indexOf(".chip." + k + " " + part) >= 0);
@@ -3878,11 +3879,15 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         || !/color:\s*inherit/.test(glyph) || !/background-color:\s*currentColor/.test(glyph);
     });
     ok("评分格三档（忘记 / 模糊 / 记住）共用主题底与压得住的字色",
-      flipped.length === 0
-        && /background:\s*var\(--strong\)/.test(chipOn) && !/background:\s*var\(--depth\)/.test(chipOn)
-        && chipped.length === 0,
+      flipped.length === 0 && /color:\s*var\(--strong-text\)/.test(chipOnT)
+        && !/background:\s*var\(--depth\)/.test(chipOn) && chipped.length === 0,
       flipped.join(", ") + " 没跟另外两档同底同色；"
         + chipped.join(", ") + " 的文字与图标没分开 —— 字跟着涂成实心块就看不见了（Issue #425）");
+
+    ok("选中的格子是 0.05 的主题底 + 1.0 的主题边框，字走主题色",
+      /background:\s*var\(--strong-soft\)/.test(chipOn)
+        && /border-color:\s*var\(--strong\)/.test(chipOn),
+      "选中态不是淡底 + 主题边框 —— 与其他「说了有这回事」的标注分成了两副样子（Issue #425）");
 
     const theme = require(path.join(ROOT, "utils", "theme.js"));
     const channelOf = (v) => {
