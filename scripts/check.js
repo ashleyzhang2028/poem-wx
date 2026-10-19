@@ -7480,6 +7480,25 @@ function gapped(items, max) {
     ok("节日节气那部集子里逐首都带正文，题名与作者不留空",
       corpusSeason.ofBook("season").every((p) => !!p.t && !!p.a && !!p.text));
 
+    ok("季节限定这一层需要的正文都在包里（不必走分片、也不问服务端起没起）",
+      (() => {
+        const need = {};
+        SEASON.WORKS.forEach((w) => { need[w[0]] = 1; });
+        let d = new Date(2026, 0, 1);
+        for (let i = 0; i < 366; i += 1) {
+          const c = SEASON.card(d);
+          if (c) c.poems.forEach((p) => { need[p.id] = 1; });
+          d = new Date(d.getTime() + 86400000);
+        }
+        const off = Object.keys(need).filter((id) => {
+          const e = corpusSeason.entry(id);
+          return !e || !e.text;
+        });
+        return off.length === 0;
+      })(),
+      "这几首的正文只在分片里，点开要先过一次云端：" +
+        SEASON.WORKS.filter((w) => corpusSeason.bucketOf(w[0])).map((w) => w[0]).slice(0, 8).join("、"));
+
     ok("季节限定里带译文的篇目，译文都挂得上来源档",
       SEASON.WORKS.every((w) => {
         const hit = SEASON.entryOf(w[0]);
@@ -7697,6 +7716,10 @@ function gapped(items, max) {
   ok("正文行比框线宽（补空格没补齐 / 一格塞了两格）时，多出来的字并进末格，不另起一格",
     wideOk.length === wideCases.length,
     "逐格数对不上的还有：" + wideCases.filter(function (id) { return wideOk.indexOf(id) < 0; }).join("、"));
+
+  ok("正文没取到时标题与作者跟着那一首走（不沿用上一篇的）",
+    /markMissing\(item\)/.test(sheetSrc4)
+      && /missHead\(item\)[\s\S]{0,80}corpus\.indexById\(item\.id\)/.test(sheetSrc4));
 
   ok("自选集子落在设置分包里（不占主包）",
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
