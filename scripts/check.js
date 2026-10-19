@@ -3635,6 +3635,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       self.fetchText = opt.methods.fetchText;
       self.askMissing = opt.methods.askMissing;
       self.onSyncText = opt.methods.onSyncText;
+      self.retryable = opt.methods.retryable;
       self.failText = opt.methods.failText;
       return self;
     };
@@ -3690,6 +3691,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && missData.blocks.length === 0 && missData.tokens.length === 0
         && typeof opt.methods.missText === "function",
       "正文取不到时弹层正文区还是空的 —— 看上去像显示了上一次那一首");
+    ok("「再取一次」挂在 view 上而不是原生 button 上（原生 button 自带一层 ::after，压着点不动）",
+      /<view[^>]*poem-miss-btn[^>]*bindtap="onSyncText"/.test(sheetWxml)
+        && sheetWxml.indexOf("<button") < 0,
+      "正文缺失区里又用回了原生 button —— 点下去没有反馈，或者干脆点不到");
+
+    ok("临时失败才给「再取一次」，清单里没有这一篇就不给（按下去也白按）",
+      (() => {
+        const self = mk(rows, false, 0, false);
+        self.textErr = "E_TIMEOUT";
+        self.errSay = "request:fail timeout";
+        const netOk = self.retryable() === true && self.data.syncable !== true;
+        self.textErr = "E_NO_ENTRY";
+        self.errSay = "";
+        return netOk && self.retryable() === false;
+      })(),
+      "按钮挂在哪一种失败上判错了 —— 要么永远点得到，要么永远点不到");
+
     ok("同一次卡住只弹一次框，点「再取一次」不会又叠一个框",
       (() => {
         const self = mk(rows, false);

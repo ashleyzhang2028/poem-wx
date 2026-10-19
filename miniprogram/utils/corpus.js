@@ -505,6 +505,16 @@ function entry(id) {
   return meta ? arm(meta, hit) : hit;
 }
 
+function forgetText(id) {
+  const name = bucketOf(id);
+  if (!name || !bucketCache[name]) return;
+  delete bucketCache[name];
+  const all = shardCache();
+  if (!all[name]) return;
+  delete all[name];
+  store.write(SHARD_CACHE_KEY, all);
+}
+
 function entries(ids) {
   const out = {};
   (ids || []).forEach((id) => {
@@ -606,6 +616,7 @@ module.exports = {
   bucket,
   ensureBucket,
   ensureEntry,
+  forgetText,
   onBucketReady,
   entry,
   entries,

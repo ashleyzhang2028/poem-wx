@@ -108,8 +108,9 @@
         </block>
         <view class="poem-miss" wx:else>
           <text class="hint poem-miss-t">{{loadingText ? '正在取这一首的正文' : textMiss}}</text>
-          <button class="btn primary mini poem-miss-btn" wx:if="{{!loadingText && textMiss && syncable}}"
-                  bindtap="onSyncText">再取一次</button>
+          <view class="btn primary mini poem-miss-btn" wx:if="{{!loadingText && textMiss && syncable}}"
+                hover-class="button-hover" hover-stay-time="60"
+                bindtap="onSyncText">再取一次</view>
         </view>
       </view>
 

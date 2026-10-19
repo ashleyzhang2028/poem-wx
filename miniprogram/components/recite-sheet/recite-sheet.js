@@ -20,6 +20,8 @@ const FONT_MAX = 6;
 
 const REOPEN_MS = 400;
 
+const TRANSIENT_ERR = /1020|timeout|timed? ?out|ETIMEDOUT|ENET|网络|超时|请稍后|-1\b/i;
+
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
   { key: "center", label: "居中", icon: icons.center }
@@ -186,10 +188,16 @@ Component({
       return "";
     },
 
+    retryable() {
+      if (!sync.ready()) return false;
+      return TRANSIENT_ERR.test(this.textErr + " " + this.errSay);
+    },
+
     missText() {
       if (!sync.ready()) return "这一首的正文没取到，登录后能取回来。";
       const why = this.whyText();
-      return "这一首的正文没取到。" + (why ? why : "多半是网络没通，再取一次。");
+      if (why) return "这一首的正文没取到。" + why + (this.retryable() ? "再取一次。" : "");
+      return "这一首的正文没取到。多半是网络没通，再取一次。";
     },
 
     markMissing() {
@@ -198,7 +206,7 @@ Component({
         blocks: [],
         tokens: [],
         textMiss: this.missText(),
-        syncable: sync.ready()
+        syncable: this.retryable()
       });
       if (this.data.id && this.missAt === this.data.index) return;
       this.missAt = this.data.index;
@@ -227,6 +235,7 @@ Component({
       }
       const item = this.current();
       if (!item || this.data.loadingText) return;
+      corpus.forgetText(item.id);
       this.fetchText(item);
     },
 
