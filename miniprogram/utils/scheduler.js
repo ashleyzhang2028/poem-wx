@@ -217,22 +217,28 @@ function placedPlan(opt) {
   }
 
   const added = todayAdded(placed, opt);
-  if (!added.length) return placed;
-  const all = placed.concat(added);
-  store.saveDayPlan(key, all);
-  return all;
+  const withAdded = placed.concat(added);
+  const merged = mergePinned(withAdded, opt.extraPoems, opt.getRecord);
+  if (!added.length && merged.length === withAdded.length) return withAdded;
+  store.saveDayPlan(key, merged);
+  return merged;
+}
+
+function mergePinned(plan, extraPoems, getRecord) {
+  const inPlan = {};
+  (plan || []).forEach((it) => { inPlan[it.poem.id] = true; });
+  const added = pinnedPlan(dedupePoems(extraPoems), getRecord)
+    .filter((it) => !inPlan[it.poem.id]);
+  return added.length ? (plan || []).concat(added) : (plan || []);
 }
 
 function selfOnlyPlan(opt) {
-  const placed = placedPlan(Object.assign({}, opt, { allPoems: [] }));
-  if (!placed) return pinnedPlan(dedupePoems(opt.extraPoems), opt.getRecord);
-  const inPlan = {};
-  placed.forEach((it) => { inPlan[it.poem.id] = true; });
-  const added = dedupePoems(opt.extraPoems).filter((p) => !inPlan[p.id]);
-  if (!added.length) return placed;
-  const pinned = pinnedPlan(added, opt.getRecord);
-  store.saveDayPlan(planKeyOf(opt), placed);
-  return placed.concat(pinned);
+  const planned = placedPlan(Object.assign({}, opt, { allPoems: [] }));
+  const base = planned || [];
+  const merged = mergePinned(base, opt.extraPoems, opt.getRecord);
+  if (!planned && !merged.length) return [];
+  store.saveDayPlan(coursePlanKeyOf(opt), merged);
+  return merged;
 }
 
 function generateDailyPlan(opt) {
@@ -244,7 +250,7 @@ function generateDailyPlan(opt) {
   if (opt.selfOnly) return selfOnlyPlan(opt);
 
   const placed = placedPlan(opt);
-  if (placed) return placed.concat(pinnedPlan(dedupePoems(opt.extraPoems), getRecord));
+  if (placed) return placed;
 
   const now = Date.now();
   const allPoems = opt.allPoems || [];
@@ -271,9 +277,8 @@ function generateDailyPlan(opt) {
   const plan = [];
   const used = {};
 
-  const extraList = dedupePoems(opt.extraPoems);
   const extraById = {};
-  extraList.forEach((p) => { extraById[p.id] = true; });
+  dedupePoems(opt.extraPoems).forEach((p) => { extraById[p.id] = true; });
 
   const isExtra = (p) => !!extraById[p.id];
 
@@ -330,9 +335,35 @@ function generateDailyPlan(opt) {
     });
   }
 
-  store.saveDayPlan(planKeyOf(opt), plan);
+  const merged = mergePinned(plan, opt.extraPoems, getRecord);
+  store.saveDayPlan(planKeyOf(opt), merged);
+  return merged;
+}
 
-  return plan.concat(pinnedPlan(extraList, getRecord));
+function seedOrder(seed) {
+  return (a, b) => hash(seed + a.id) - hash(seed + b.id);
+}
+
+function hash(text) {
+  let h = 2166136261;
+  const s = String(text);
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) / 4294967296;
+}
+
+function samplePlan(opt) {
+  const pool = poolForScope({
+    grade: Number(opt.grade),
+    term: Number(opt.term),
+    scope: opt.scope,
+    allPoems: opt.allPoems
+  });
+  const count = Number(opt.count) || DAILY_COUNTS[1];
+  const list = (pool.length ? pool : (opt.allPoems || [])).slice().sort(seedOrder(opt.seed || 0));
+  return list.slice(0, count).map((p) => ({ poem: p, reason: "new", reviewRound: 0 }));
 }
 
 function lastReviewOf(rec) {
@@ -532,6 +563,7 @@ module.exports = {
   coursePlanKeyOf,
   collectionPlan,
   collectionOverview,
+  samplePlan,
   generateDailyPlan,
   overview,
   dueList,

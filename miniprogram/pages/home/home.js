@@ -27,6 +27,10 @@ const TOAST_GAP = 2400;
 
 const TOAST_MS = 2200;
 
+const GUEST_SCOPE = "term";
+
+const GUEST_SEED = 20240301;
+
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
 const SOURCE_TEXT = { course: "课内", own: "自选" };
@@ -172,12 +176,19 @@ function rowsOfScope(list, scope) {
 }
 
 function guestCatalog() {
-  const all = corpus.course().filter((p) => p.gr === gate.GUEST_GRADE);
-  const catalog = all.map((p, i) => ({
-    id: p.id,
-    title: p.t,
-    author: p.a,
-    dynasty: p.d,
+  const plan = S.samplePlan({
+    grade: gate.GUEST_GRADE,
+    term: 1,
+    scope: GUEST_SCOPE,
+    count: store.DEFAULTS.dailyCount,
+    allPoems: corpus.course(),
+    seed: GUEST_SEED
+  });
+  const catalog = plan.map((it, i) => ({
+    id: it.poem.id,
+    title: it.poem.t,
+    author: it.poem.a,
+    dynasty: it.poem.d,
     seq: i + 1
   }));
   return {
@@ -185,7 +196,7 @@ function guestCatalog() {
     guest: true,
     gradeName: S.gradeName(gate.GUEST_GRADE),
     termName: "",
-    scopeName: "一年级上下册",
+    scopeName: S.gradeName(gate.GUEST_GRADE),
     plan: [],
     total: 0,
     doneCount: 0,
@@ -271,8 +282,6 @@ Page({
 
     this.setData({ todayLabel: todayLabel(), barBelow: !!tabbar.sync(this, 0) });
     this.refresh();
-
-    if (gate.logged()) sync.now().catch(() => {});
   },
 
   refresh() {
@@ -281,6 +290,21 @@ Page({
       return;
     }
 
+    this.paint();
+    this.pull();
+  },
+
+  pull() {
+    const seq = (this.pullSeq || 0) + 1;
+    this.pullSeq = seq;
+    sync.pullOnly(true).then((res) => {
+      if (this.pullSeq !== seq) return;
+      if (!res || res.skipped || res.error || !res.applied) return;
+      this.paint();
+    }).catch(() => {});
+  },
+
+  paint() {
     const settings = store.settings();
     const all = corpus.course();
 
@@ -607,7 +631,7 @@ Page({
   },
 
   onGuestOpen() {
-    gate.guard("诗词", this);
+    gate.guard("诗词", this, () => this.refresh());
   },
 
   onPermissions() {
