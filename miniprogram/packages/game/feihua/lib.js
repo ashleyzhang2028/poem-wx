@@ -136,18 +136,18 @@ function _feihua_strip(s) {
 function judge(char, input, said) {
   const ch = String(char || "").trim();
   const raw = String(input || "").trim();
-  if (!ch) return { ok: false, reason: "先出一个令字" };
-  if (!raw) return { ok: false, reason: "写一句带这个字的诗" };
-  if (raw.indexOf(ch) < 0) return { ok: false, reason: "这句里没有「" + ch + "」" };
+  if (!ch) return { ok: false, why: "empty", reason: "先出一个令字" };
+  if (!raw) return { ok: false, why: "empty", reason: "写一句带这个字的诗" };
+  if (raw.indexOf(ch) < 0) return { ok: false, why: "char", reason: "这句里没有「" + ch + "」" };
 
   const mine = _feihua_strip(raw);
-  if (mine.length < 4) return { ok: false, reason: "太短了，至少写四字" };
+  if (mine.length < 4) return { ok: false, why: "short", reason: "太短了，至少写四字" };
 
   const used = {};
   (said || []).forEach((s) => {
     used[_feihua_strip(s)] = 1;
   });
-  if (used[mine]) return { ok: false, reason: "这一句说过了" };
+  if (used[mine]) return { ok: false, why: "said", reason: "这一句说过了" };
 
   let hit = null;
   _feihua_allPoems().forEach((p) => {
@@ -161,7 +161,7 @@ function judge(char, input, said) {
   });
 
   if (!hit) {
-    return { ok: false, reason: "这一句不在课内诗文集里，换一句试试" };
+    return { ok: false, why: "absent", reason: "这一句不在课内诗文集里，换一句试试" };
   }
   return { ok: true, hit, seg: hit.seg };
 }

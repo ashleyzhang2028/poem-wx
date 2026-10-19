@@ -2,7 +2,7 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
-const UPDATED = "2026-10-16";
+const UPDATED = "2026-10-19";
 const CONTACT = "kuibuapp@163.com";
 
 Page({

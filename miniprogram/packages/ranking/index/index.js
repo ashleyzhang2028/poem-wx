@@ -88,13 +88,13 @@ Page({
           this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });
           return;
         }
-        const board = res.board || [];
+        const board = (res.board || []).map(ranking.maskRow);
         const size = res.size || this.data.size;
         this.setData({
           state: board.length ? "board" : "empty",
           board: board,
           size: size,
-          me: res.me || null,
+          me: res.me ? ranking.maskRow(res.me) : null,
           beyond: ranking.beyondOf(board, size, res.total),
           podium: ranking.podiumOf(board),
           rest: ranking.restOf(board),

@@ -1929,6 +1929,75 @@ ok("名录在、标签截断、档位合法",
   }
 }
 
+{
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const cheer = require(path.join(ROOT, "utils", "cheer.js"));
+
+  ok("鼓励语只有一份（考试与飞花令取同一个池，不在页面里各写一套）",
+    (fs.readFileSync(path.join(ROOT, "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK|LING) = /gm) || []).length === 4
+      && /cheer\.ofScore/.test(read("packages/game/exam/exam.js"))
+      && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js"))
+      && /cheer\.ofLing/.test(read("packages/game/feihua/feihua.js")),
+    "激励文案散在页面里 —— 改一处漏一处");
+
+  const low = cheer.ofScore(0, 1);
+  const high = cheer.ofScore(100, 1);
+  ok("分数低也有一句（不是只夸高分）",
+    cheer.ofScore(0, 1).length > 0 && cheer.ofScore(35, 2).length > 0
+      && cheer.MARKS.length >= 5
+      && high !== low,
+    "低分那一档没有话，或者高低分收到的是同一句");
+
+  ok("分数档位跟着分走（0 / 35 / 73 / 100 各落到自己那一档）",
+    new Set([0, 35, 73, 100].map((p) => cheer.ofScore(p, 0))).size === 4,
+    "几个不同的分给的是同一句");
+
+  ok("飞花令连对到里程碑才加话（第 4 句不刷屏）",
+    cheer.ofStreak(2) === "" && cheer.ofStreak(3) !== ""
+      && cheer.ofStreak(4) === "" && cheer.ofStreak(10) !== ""
+      && cheer.ofStreak(11) === "" && cheer.ofStreak(40) !== "",
+    "每一句都加一条，或者连对三条也没话");
+
+  const examJs = read("packages/game/exam/exam.js");
+  const examWxml = read("packages/game/exam/exam.wxml").replace(/<!--[\s\S]*?-->/g, "");
+  ok("考试结果那句评语由分数算（cheerLine 进 data，模板读它）",
+    /cheerLine:\s*cheer\.ofScore\(/.test(examJs) && examWxml.indexOf("{{cheerLine}}") >= 0,
+    "结果页没有评语");
+
+  ok("考试可以回到前面的题（题号跳转 + 上一题，答案是同一份数组）",
+    /onJump\(/.test(examJs) && /onPrev\(/.test(examJs)
+      && examWxml.indexOf('bindtap="onJump"') >= 0 && examWxml.indexOf('bindtap="onPrev"') >= 0
+      && /answers\[this\.data\.index\] = picked/.test(examJs)
+      && /picked: this\.data\.answers\[index\]/.test(read("packages/game/exam/exam.js")),
+    "回看只翻页面，选中项与答案数组对不上");
+
+  ok("带着空题交卷先提醒一次（不是拦死，也不静默交上去）",
+    /confirmSubmit\(\)/.test(examJs)
+      && /cheer\.ofQuit\(/.test(examJs)
+      && /if \(this\.data\.quitLine === line\) return true;/.test(examJs)
+      && examWxml.indexOf("{{quitLine}}") >= 0,
+    "空着题交卷既没有提醒，也没法再交");
+
+  ok("飞花令按接上的句数给这一轮评语（0 / 4 / 8 / 13 / 14 各落到自己那一档）",
+    [0, 4, 8, 13, 14].every((n) => cheer.ofLing(n, 0).length > 0)
+      && new Set([0, 4, 8, 13, 14].map((n) => cheer.ofLing(n, 0))).size === 5,
+    "几个不同的句数给的是同一句，或某一档没有话");
+
+  const fhJs = read("packages/game/feihua/feihua.js");
+  const fhWxml = read("packages/game/feihua/feihua.wxml").replace(/<!--[\s\S]*?-->/g, "");
+  ok("飞花令一轮结束时把这轮的评语写进 remark，翻令时清掉",
+    /remark:\s*cheer\.ofLing\(/.test(fhJs)
+      && fhWxml.indexOf("{{remark}}") >= 0
+      && /remark: ""/.test(fhJs.replace(/remark:\s*cheer\.ofLing\([^)]*\)/, "")),
+    "评语没进模板，或者换令之后还挂着上一轮的评语");
+
+  ok("飞花令把里程碑那句渲染出来（页面上下各留一份，翻题时清掉）",
+    read("packages/game/feihua/feihua.wxml").indexOf("{{cheerLine}}") >= 0
+      && /cheerLine:\s*cheer\.ofStreak\(/.test(fhJs)
+      && /cheerLine: ""/.test(fhJs.replace(/cheerLine:\s*cheer\.ofStreak\(streak\)/, "")),
+    "连对的话没进模板，或者翻到下一题还挂着上一题的夸奖");
+}
+
 const LIMIT_MAIN = 2 * 1024 * 1024;
 
 function dirSize(dir, skipPrefix) {
@@ -3067,12 +3136,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && rank.stageOfGrade(12) === "high",
     "学段边界与 scheduler.js 那张表走散，同一份成绩会落到两个榜里");
 
-  ok("昵称只留首末字，中间一律三个星号",
+  ok("昵称只留首末字，中间一律两个星号",
     rank.maskNick("张三") === "张**三"
-      && rank.maskNick("欧阳修文") === "欧***文"
+      && rank.maskNick("欧阳修文") === "欧**文"
       && rank.maskNick("李") === "李**"
-      && rank.maskNick("", "u_123456") === "诗***6",
+      && rank.maskNick("", "u_123456") === "诗**6",
     "打码口径不对 —— " + [rank.maskNick("张三"), rank.maskNick("欧阳修文"), rank.maskNick("")].join(" / "));
+
+  ok("榜单每一行（含自己那一行）都走同一个打码，页面上不留全名",
+    rank.maskRow({ nick: "张三", rank: 1 }).nick === "张**三"
+      && rank.maskRow({ nick: "张三", rank: 1 }).rank === 1
+      && rank.maskRow({ rank: 2 }).nick === ""
+      && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
+      && /me: res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs),
+    "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
     rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 1, nick: "乙", score: 9, total: 10 }])[0].tied === true
@@ -3095,6 +3172,29 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /BOARD_STAGE_GRADES = \{ primary: \[1, 2, 3, 4, 5, 6\], middle: \[7, 8, 9\], high: \[10, 11, 12\] \}/.test(apiCore)
       && /function boardMaskNick/.test(apiCore) && /function boardPeriodStart/.test(apiCore),
     "服务端另立一套学段或另写一份打码，两端就会给出不同的名字与分组");
+
+  ok("昵称写入前过一遍敏感词（拦在 nicknameSet，落库那一层不拦）",
+    /var nickGuard = require\("\.\/nick-guard"\)/.test(apiCore)
+      && /function nicknameSet[\s\S]{0,300}?nickGuard\.hit\(name\)[\s\S]{0,120}?E_NICK_BLOCKED/.test(apiCore),
+    "只在前端拦 —— 换个客户端直连 /api/me 就写进去了");
+
+  ok("榜单打码前先过敏感词（库里已存着的脏名字不上榜）",
+    /function boardMaskNick[\s\S]{0,200}?nickGuard\.hit\(name\)/.test(apiCore),
+    "只拦新写入的话，改口径之前存下的脏名字会一直摆在榜上");
+
+  {
+    const guard = require(path.join(__dirname, "..", "api", "_lib", "nick-guard.js"));
+    ok("敏感词过滤认全角与夹字符（`傻 逼` / `ＦＵＣＫ` 一样认出来）",
+      guard.hit("傻 逼") && guard.hit("傻*逼") && guard.hit("ＦＵＣＫ") && guard.hit("加微信领红包")
+        && !guard.hit("李白") && !guard.hit("欧阳修文") && !guard.hit("诗友3456"),
+      "归一化只做了 trim —— 夹一个空格或星号就绕过去了");
+  }
+
+  ok("昵称被拦后端上退回原名并说一句（不把脏名字留在本机）",
+    /blocked: !!\(err && err\.code === "E_NICK_BLOCKED"\)/.test(read("utils/auth.js"))
+      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => this\.revertNickname\(before, r\)\)/.test(read("pages/mine/mine.js"))
+      && /revertNickname\(before, r\)[\s\S]{0,300}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("pages/mine/mine.js")),
+    "服务端不收，本机却已经改成了那个名字 —— 顶栏与榜上各说一套");
 
   ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
     /function boardGate/.test(apiCore)

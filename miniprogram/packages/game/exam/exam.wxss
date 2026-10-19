@@ -254,6 +254,24 @@
   margin-top: var(--sp-3);
 }
 
+.quit-line {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--amber);
+  line-height: var(--lh-body);
+  margin-top: var(--sp-3);
+}
+
+.cheer {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: var(--lh-loose);
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-2);
+}
+
 .exam-nav .next-btn {
   flex: 1;
   width: auto;

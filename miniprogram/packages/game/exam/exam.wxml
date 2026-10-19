@@ -58,6 +58,8 @@
       </view>
     </view>
 
+    <text class="quit-line" wx:if="{{quitLine}}">{{quitLine}}</text>
+
     <view class="exam-nav">
       <button class="btn ghost mini" bindtap="onPrev" disabled="{{index === 0}}">上一题</button>
       <button class="btn primary next-btn" bindtap="onNext">
@@ -71,6 +73,8 @@
       <text class="score">{{score}}</text>
       <text class="score-k">分</text>
       <text class="hint">答对 {{correct}} / {{questions.length}}</text>
+
+      <text class="cheer">{{cheerLine}}</text>
 
       <view class="rank" wx:if="{{rank}}">
         <text class="rank-name">{{rank.name}}</text>

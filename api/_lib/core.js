@@ -5,6 +5,7 @@ var mail = require("./mail");
 var session = require("./session");
 var turnstile = require("./turnstile");
 var http = require("./http");
+var nickGuard = require("./nick-guard");
 
 function logFacts(event, facts) {
   try {
@@ -1532,6 +1533,9 @@ function nicknameNorm(raw) {
 function nicknameSet(deps, input) {
   if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "登录之后才能改昵称"));
   var name = nicknameNorm(input && input.nickname);
+  if (nickGuard.hit(name)) {
+    return Promise.resolve(err(400, "E_NICK_BLOCKED", "这个昵称里有不能用的字，换一个吧"));
+  }
   return Promise.resolve(deps.store.patchAccount(deps.account.uid, { nickname: name }))
     .then(function () { return deps.store.getAccount(deps.account.uid); })
     .then(function (acc) {
@@ -3160,11 +3164,10 @@ function boardPeriodStart(period, at) {
 
 function boardMaskNick(raw, uid) {
   var name = nicknameNorm(raw);
-  if (!name) name = "诗友" + String(uid || "").slice(-4);
+  if (!name || nickGuard.hit(name)) name = "诗友" + String(uid || "").slice(-4);
   var chars = Array.from(name);
   if (chars.length === 1) return chars[0] + "**";
-  if (chars.length === 2) return chars[0] + "**" + chars[1];
-  return chars[0] + "***" + chars[chars.length - 1];
+  return chars[0] + "**" + chars[chars.length - 1];
 }
 
 function boardRows(records, now) {

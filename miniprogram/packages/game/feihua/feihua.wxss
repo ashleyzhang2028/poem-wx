@@ -82,6 +82,25 @@
   color: var(--red);
 }
 
+.fh-remark {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-loose);
+  padding-top: var(--sp-3);
+}
+
+.fh-cheer {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+  line-height: var(--lh-loose);
+  padding-top: var(--sp-2);
+}
+
 .fh-note {
   display: block;
   font-size: var(--fs-caption);

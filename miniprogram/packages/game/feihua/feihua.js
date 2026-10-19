@@ -1,4 +1,5 @@
 const feihua = require("./lib");
+const cheer = require("../../../utils/cheer");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
@@ -28,6 +29,8 @@ Page({
 
     streak: 0,
     best: 0,
+    cheerLine: "",
+    remark: "",
 
     lastScore: 0,
     ranked: false,
@@ -128,6 +131,8 @@ Page({
         input: "",
         message: "",
         messageOk: false,
+        cheerLine: "",
+        remark: "",
         locked: false,
         flash: "",
         mark: "",
@@ -177,6 +182,7 @@ Page({
       return;
     }
     sfx.pass();
+    this.markRound();
     this.setData({ locked: true, message: "时间到 · 这一轮 " + this.data.done.length + " 句", messageOk: true });
   },
 
@@ -184,10 +190,15 @@ Page({
     this.restartClock();
   },
 
+  markRound() {
+    const said = this.data.done.length;
+    this.setData({ remark: cheer.ofLing(said, said) });
+  },
+
   onRestart() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    this.setData({ done: [], streak: 0, best: 0, message: "", locked: false }, () => {
+    this.setData({ done: [], streak: 0, best: 0, message: "", remark: "", locked: false }, () => {
       this.restartClock();
       this.next();
     });
@@ -204,7 +215,13 @@ Page({
     const fb = feedback.mark(this, r.ok, streak);
 
     if (!r.ok) {
-      this.setData({ message: r.reason, messageOk: false, locked: true, mark: "✗", flash: fb.flash });
+      this.setData({
+        message: cheer.ofSay(r.why, this.data.done.length),
+        messageOk: false,
+        locked: true,
+        mark: "✗",
+        flash: fb.flash
+      });
       this.advance(1400);
       return;
     }
@@ -215,7 +232,8 @@ Page({
       done,
       streak,
       best: Math.max(this.data.best, streak),
-      message: "对上了 · " + (r.hit ? r.hit.title : "在集子里"),
+      cheerLine: cheer.ofStreak(streak),
+      message: cheer.ofSay("hit", streak) + (r.hit ? "：" + r.hit.title : ""),
       messageOk: true,
       locked: true,
       mark: "✓",
@@ -256,6 +274,7 @@ Page({
 
   onSkip() {
     if (this.timer) clearTimeout(this.timer);
+    if (this.data.done.length) this.markRound();
     this.next();
   },
 

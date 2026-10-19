@@ -1,4 +1,5 @@
 const quiz = require("../quiz/lib");
+const cheer = require("../../../utils/cheer");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
@@ -39,6 +40,8 @@ Page({
 
     graded: [],
     correct: 0,
+    cheerLine: "",
+    quitLine: "",
     remain: DURATION,
     remainText: "20:00",
     score: 0,
@@ -103,6 +106,7 @@ Page({
       wx.showToast({ title: "这个范围出不了题", icon: "none" });
       return;
     }
+    const answers = blankAnswers(questions.length);
     this.setData(
       {
         stage: "running",
@@ -112,12 +116,14 @@ Page({
         optionRows: quiz.optionRows(questions[0].options),
         metaLine: this.metaLineOf(questions[0]),
         picked: "",
-        answers: blankAnswers(questions.length),
+        answers,
         graded: [],
         correct: 0,
+        cheerLine: "",
+        quitLine: "",
         remain: DURATION,
         remainText: "20:00",
-        slots: this.slotsOf(blankAnswers(questions.length), 0),
+        slots: this.slotsOf(answers, 0),
         marked: 0,
         rank: null,
         best: "",
@@ -172,14 +178,18 @@ Page({
       picked,
       answers,
       slots,
-      marked: slots.filter((x) => x === "done").length
+      marked: answers.filter((a) => a).length,
+      quitLine: ""
     });
   },
 
-  onJump(e) {
-    const index = Number(e.currentTarget.dataset.i);
-    if (!(index >= 0) || index === this.data.index || index >= this.data.questions.length) return;
-    this.goto(index);
+  slotsOf(answers, index) {
+    return (answers || []).map((a, i) => {
+      let cls = "";
+      if (a) cls = "on";
+      if (i === index) cls = (cls + " now").trim();
+      return { i: i, cls: cls };
+    });
   },
 
   goto(index) {
@@ -195,18 +205,34 @@ Page({
     });
   },
 
-  onNext() {
-    const index = this.data.index + 1;
-    if (index >= this.data.questions.length) {
-      this.finish();
-      return;
-    }
+  onJump(e) {
+    const index = Number(e.currentTarget.dataset.i);
+    if (!(index >= 0) || index === this.data.index || index >= this.data.questions.length) return;
     this.goto(index);
   },
 
   onPrev() {
     if (this.data.index <= 0) return;
     this.goto(this.data.index - 1);
+  },
+
+  confirmSubmit() {
+    const answers = this.data.answers;
+    const answered = answers.filter((a) => a).length;
+    const line = cheer.ofQuit(answered, this.data.questions.length);
+    if (!line) return true;
+    if (this.data.quitLine === line) return true;
+    this.setData({ quitLine: line });
+    return false;
+  },
+
+  onNext() {
+    if (this.data.index + 1 >= this.data.questions.length) {
+      if (!this.confirmSubmit()) return;
+      this.finish();
+      return;
+    }
+    this.goto(this.data.index + 1);
   },
 
   metaLineOf(q) {
@@ -233,6 +259,8 @@ Page({
     sfx.rank(correct, total);
     this.setData({
       stage: "result",
+      cheerLine: cheer.ofScore(score, correct),
+      quitLine: "",
       graded: graded.map((g) => ({
         stem: g.stem,
         title: g.title,
@@ -269,6 +297,13 @@ Page({
       graded: [],
       picked: "",
       correct: 0,
+      cheerLine: "",
+      quitLine: "",
+      slots: [],
+      marked: 0,
+      rank: null,
+      best: "",
+      newBest: false,
       remain: DURATION,
       remainText: "20:00"
     });
