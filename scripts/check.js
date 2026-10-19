@@ -4059,16 +4059,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && compJs.indexOf("store.DAILY_EXTRA_MAX") >= 0
       && !/>=\s*20\b/.test(compJs));
   ok("排期器把加背排进计划，计划行的标签与色按 reason 给",
-    /extraPoems/.test(schedSrc) && /extraList/.test(schedSrc)
+    /extraPoems/.test(schedSrc) && /mergePinned/.test(schedSrc)
       && /extraPoems:\s*store\.dailyExtraPoems\(\)/.test(homeJs)
       && /REASON_TEXT\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs)
       && /REASON_CLS\s*=\s*\{[^}]*\bpinned:\s*"/.test(homeJs),
     "计划行的加背小签没了 —— 它得与「补充」分得开");
-  ok("加背挂在每日几首之外（设置 5 首 + 加 1 首 = 今天 6 首）",
-    /function pinnedPlan\(/.test(schedSrc)
-      && /pinnedPlan\(extraList, getRecord\)/.test(schedSrc)
-      && !/function fillFrom\(list, reason\)[\s\S]{0,400}?extraList/.test(schedSrc),
-    "加背又回到候选池里跟「新学」抢那 5 个名额了 —— 用户加了 1 首，计划里反而少 1 首新学");
+  ok("加背挂在每日几首之外，且与课内几首一起落盘（设置 5 首 + 加 1 首 = 今天 6 首）",
+    /function mergePinned\(/.test(schedSrc)
+      && /pinnedPlan\(dedupePoems\(extraPoems\), getRecord\)/.test(schedSrc)
+      && !/plan\.concat\(pinnedPlan/.test(schedSrc)
+      && /function placedPlan\(opt\)[\s\S]{0,1400}?mergePinned\(withAdded/.test(schedSrc),
+    "加背又回到候选池里跟「新学」抢那 5 个名额，或加背没进落盘的那一份 —— "
+      + "下次进首页按落盘还原时它就没了，计划从 6 首弹回 5 首（Issue #370）");
+  ok("「今日课内」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
+    /const base = Math\.max\(recorded, plan\.length - extraOf\);/.test(homeJs)
+      && /baseCount: base,/.test(homeJs)
+      && /class="all-count" wx:if="\{\{!selfOnly\}\}">\{\{baseCount \? doneCount \+ '\/' \+ baseCount : total \+ ' 首'\}\}/.test(homeWxml),
+    "卡片读数按落盘条数算、行按实时计划给 —— 两处一错位，用户看到「6 首」里少一首（Issue #370）");
   ok("详情页与背诵弹层都有加背开关，且共用一份间距（页面里不写第二份）",
     readerWxml.indexOf("onToggleDaily") >= 0
       && sheetWxml.indexOf("onToggleDaily") >= 0
@@ -4220,7 +4227,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /setTimeout\(\(\) => \{[\s\S]{0,120}?sync\.now\(\)/.test(
       fs.readFileSync(path.join(ROOT, "app.js"), "utf8"))
       && /gate\.logged\(\)\) sync\.now\(\)/.test(
-        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8"))
+        fs.readFileSync(path.join(ROOT, "app.js"), "utf8"))
       && /pullAfterLogin/.test(authSrc),
     "少一处 —— 那一段路上就没人推，用户会以为云同步坏了");
 

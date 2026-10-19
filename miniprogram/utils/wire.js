@@ -180,6 +180,7 @@ function packRecords() {
   });
 
   const edgeFrom = store.progressEdge();
+  const readEdgeFrom = store.readsEdge();
   Object.keys(READ_ROW).forEach((book) => {
     const rowId = READ_ROW[book];
     const local = reads[book] || {};
@@ -193,6 +194,11 @@ function packRecords() {
       const ts = Number(readEdges[book][id]) || 0;
       if (!ts) return;
       marks[id] = { at: Math.max(ts, Number((marks[id] || {}).at) || 0), times: 1 };
+    });
+    Object.keys(readEdgeFrom[book] || {}).forEach((id) => {
+      const ts = Number(readEdgeFrom[book][id]) || 0;
+      if (!ts || ts <= (Number((marks[id] || {}).at) || 0)) return;
+      marks[id] = { at: ts, times: 1 };
     });
     Object.keys(edgeFrom[book] || {}).forEach((id) => {
       if (marks[id]) return;
@@ -260,7 +266,15 @@ function packRecords() {
   }
 
   if (advanced.length) store.setRecords(advanced);
+  touchPushed(rows);
   return rows;
+}
+
+function touchPushed(rows) {
+  const at = Date.now();
+  (rows || []).forEach((r) => {
+    if (r && !r.deleted && /^[^:]+:[^:]+:/.test(String(r.id || ""))) store.touchDayPlan(at);
+  });
 }
 
 function clearRecords(rows) {
@@ -358,6 +372,10 @@ function applyRecords(recs) {
         store.replaceSettings(payload.settings);
         store.touchSettings(at);
         applied += 1;
+      }
+
+      if (Number(payload.settings && payload.settings.dailyCount) !== Number(store.settings().dailyCount)) {
+        store.dropDayPlan();
       }
       return;
     }

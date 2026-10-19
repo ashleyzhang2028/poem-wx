@@ -90,14 +90,21 @@ function pad(n) {
 }
 
 function now(force) {
+  return run(force, remote.sync);
+}
+
+function pullOnly(force) {
+  return run(force, remote.pull);
+}
+
+function run(force, job) {
   if (running) return Promise.resolve({ skipped: "busy" });
   if (!ready()) return Promise.resolve({ skipped: "offline", pending: pendingCount() });
   if (!force && Date.now() - lastAt < MIN_GAP) return Promise.resolve({ skipped: "throttled" });
   if (!force && waiting()) return Promise.resolve({ skipped: "waiting", retryAfter: retryIn() });
 
   running = true;
-  return remote
-    .sync()
+  return job()
     .then((res) => {
       running = false;
       if (res && res.error) {
@@ -157,4 +164,4 @@ function resetThrottle() {
   lastAt = 0;
 }
 
-module.exports = { resetThrottle, ready, state, now, markDirty, flush, unsent, pendingCount, packMoment, MIN_GAP, RETRY_STEP, RETRY_MAX };
+module.exports = { resetThrottle, ready, state, now, pullOnly, markDirty, flush, unsent, pendingCount, packMoment, MIN_GAP, RETRY_STEP, RETRY_MAX };

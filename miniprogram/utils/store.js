@@ -9,6 +9,7 @@ const KEYS = {
   collections: "kb_collections_v1",
   dailyExtra: "kb_daily_extra_v1",
   dayPlan: "kb_day_plan_v1",
+  dayPlanAt: "kb_day_plan_at_v1",
   profile: "kb_profile_v1",
   auth: "kb_auth_v1",
   grant: "kb_grant_v1",
@@ -17,6 +18,7 @@ const KEYS = {
   sync: "kb_sync_outbox_v1",
   clearMarks: "kb_clear_marks_v1",
   progressEdge: "kb_progress_edge_v1",
+  readsEdge: "kb_reads_edge_v1",
 
   settingsAt: "kb_settings_at_v1",
 
@@ -279,6 +281,7 @@ function markRead(book, id) {
   const m = all[book] || (all[book] = {});
   m[id] = Date.now();
   write(KEYS.reads, all);
+  keepReadsEdge(book, { [id]: m[id] });
 }
 
 function progressEdge() {
@@ -416,6 +419,32 @@ function dropDayPlan(key) {
   drop(KEYS.dayPlan);
 }
 
+function dayPlanAt() {
+  return Number(read(KEYS.dayPlanAt, 0)) || 0;
+}
+
+function touchDayPlan(at) {
+  write(KEYS.dayPlanAt, Number(at) || Date.now());
+}
+
+function readsEdge() {
+  return read(KEYS.readsEdge, {}) || {};
+}
+
+function keepReadsEdge(book, marks) {
+  if (!book || !marks) return;
+  const all = readsEdge();
+  const box = all[book] || {};
+  let top = 0;
+  Object.keys(marks).forEach((id) => {
+    const ts = Number(marks[id]) || 0;
+    if (ts > (Number(box[id]) || 0)) box[id] = ts;
+    if (ts > top) top = ts;
+  });
+  write(KEYS.readsEdge, all);
+  if (top > dayPlanAt()) touchDayPlan(top);
+}
+
 function dayKey(ts) {
   const d = new Date(ts || Date.now());
   return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -541,6 +570,10 @@ module.exports = {
   dayPlan,
   saveDayPlan,
   dropDayPlan,
+  dayPlanAt,
+  touchDayPlan,
+  readsEdge,
+  keepReadsEdge,
   touchDaily,
   dayKey,
   profile,
