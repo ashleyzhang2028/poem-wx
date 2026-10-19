@@ -250,7 +250,7 @@ Page({
           ranked: !!(res && res.ok && res.on),
           rankOff: !!(res && res.ok && !res.on),
           lastScore: said,
-          rankWhere: rankingSelf.label()
+          rankWhere: rankingSelf.labelOf()
         });
       });
   },

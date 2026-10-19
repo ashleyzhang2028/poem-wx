@@ -21,19 +21,23 @@ function nameOf(scopes, id) {
 
 let poolCache = null;
 
+function hasText(id) {
+  if (corpus.courseTexts()[id]) return true;
+  return !!corpus.manifest().map[id];
+}
+
 function pool(scopeId) {
   const bookId = POEM_BOOKS.indexOf(scopeId) >= 0 ? scopeId : "poems";
   if (!poolCache) poolCache = {};
   if (poolCache[bookId]) return poolCache[bookId];
 
-  const manifest = corpus.manifest().map || {};
   const seen = {};
   const out = [];
 
   POEM_BOOKS.forEach((id) => {
     if (bookId !== "poems" && id !== "poems" && id !== bookId) return;
     corpus.ofBook(id).forEach((p) => {
-      if (seen[p.id] || !manifest[p.id]) return;
+      if (seen[p.id] || !hasText(p.id)) return;
       seen[p.id] = 1;
       out.push(p);
     });

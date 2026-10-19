@@ -139,6 +139,13 @@ function multiPicker(checkedExpr, v) {
   return (it) => !!it && list.indexOf(it[prop]) >= 0;
 }
 
+function onPicker(node) {
+  const a = attrsOf(holeRestore(node.raw));
+  const cls = a.class ? String(a.class).replace(/^\{\{|\}\}$/g, "") : "";
+  if (!/\bitem\.on\b/.test(cls)) return null;
+  return (it) => !!it && !!it.on;
+}
+
 function findCheckedAttr(nodes) {
   for (let i = 0; i < nodes.length; i++) {
     const n = nodes[i];
@@ -256,7 +263,8 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
     const buf = [];
     if (n.tag === "checkbox-group") {
 
-      renderMembers(bodyNodes, data, buf, multiPicker(findCheckedAttr(bodyNodes), v));
+      renderMembers(bodyNodes, data, buf,
+        multiPicker(findCheckedAttr(bodyNodes), v) || onPicker(n));
     } else {
       render(bodyNodes, data, buf);
     }

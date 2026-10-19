@@ -512,11 +512,30 @@
       {
         "call": "onToggleForm",
         "with": {
-          "detail": {
-            "value": [
-              "next",
-              "title"
-            ]
+          "currentTarget": {
+            "dataset": {
+              "key": "author"
+            }
+          }
+        }
+      },
+      {
+        "call": "onToggleForm",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "key": "dynasty"
+            }
+          }
+        }
+      },
+      {
+        "call": "onToggleForm",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "key": "title"
+            }
           }
         }
       }
