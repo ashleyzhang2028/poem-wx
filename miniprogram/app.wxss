@@ -1148,7 +1148,8 @@ button, textarea {
   border-color: var(--strong);
 }
 
-.chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t {
+.chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t,
+.chip.bad .glyph, .chip.fuzzy .glyph, .chip.good .glyph {
   color: inherit;
 }
 
