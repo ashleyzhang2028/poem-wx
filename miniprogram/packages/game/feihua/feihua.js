@@ -23,6 +23,7 @@ Page({
 
     barBelow: true,
     char: "",
+    ask: "",
 
     done: [],
 
@@ -111,19 +112,23 @@ Page({
     this.setData(
       {
         char: char,
+        locked: !char,
+        ask: char ? "写一句带「" + char + "」的诗词" : "这一档的令字出完了，换一档难度再来",
         input: "",
         message: "",
         messageOk: false,
         cheerLine: "",
         remark: "",
-        locked: false,
         flash: "",
         mark: "",
         hinted: false,
         revealed: false,
         answers: []
       },
-      () => this.startClock()
+      () => {
+        if (!char) return;
+        this.startClock();
+      }
     );
   },
 
