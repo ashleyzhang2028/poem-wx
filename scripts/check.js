@@ -7728,6 +7728,14 @@ function gapped(items, max) {
     /markMissing\(item\)/.test(sheetSrc4)
       && /missHead\(item\)[\s\S]{0,80}corpus\.indexById\(item\.id\)/.test(sheetSrc4));
 
+  const collWxml4 = fs.readFileSync(path.join(ROOT, "packages", "settings", "collections", "collections.wxml"), "utf8");
+  const collSrc4 = fs.readFileSync(path.join(ROOT, "packages", "settings", "collections", "collections.js"), "utf8");
+  ok("集子里勾选只改选中态，不落盘也不刷新（点一下就把篇目挪走）",
+    /data-pid="\{\{item\.id\}\}" bindtap="onPick"/.test(collWxml4)
+      && !/checkbox-group/.test(collWxml4)
+      && /onPick\(e\)[\s\S]{0,400}setItems\(id,/.test(collSrc4)
+      && !/onPick\(e\)[\s\S]{0,400}(removeItems|clearItems|sync\.markDirty|this\.refresh)/.test(collSrc4));
+
   ok("自选集子落在设置分包里（不占主包）",
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
       && sp.pages.indexOf("collections/collections") >= 0));

@@ -81,16 +81,16 @@
           <button class="btn mini danger" data-id="{{c.id}}" bindtap="onRemovePicked">移出选中</button>
         </view>
 
-        <checkbox-group bindchange="onPick" data-id="{{c.id}}" wx:if="{{c.count}}">
-          <label class="daily-row" wx:for="{{c.items}}" wx:key="id">
-            <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" />
+        <view wx:if="{{c.count}}">
+          <view class="daily-row" hover-class="row-hover" hover-stay-time="60"
+                wx:for="{{c.items}}" wx:key="id" data-id="{{c.id}}" data-pid="{{item.id}}" bindtap="onPick">
             <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
             <view class="row-main">
               <text class="row-title row-poem">{{item.title}}</text>
               <text class="row-sub">{{item.meta}}</text>
             </view>
-          </label>
-        </checkbox-group>
+          </view>
+        </view>
 
         <view class="empty coll-empty" wx:else>
           <text class="empty-text">这个集合还是空的</text>
