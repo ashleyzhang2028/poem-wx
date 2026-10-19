@@ -139,11 +139,6 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onClear">
-      <view class="row-icon">删</view>
-      <view class="row-main"><text class="row-title clear-text">清空背诵数据</text></view>
-      <text class="row-go">›</text>
-    </view>
   </view>
 
   <view class="safe-bottom"></view>

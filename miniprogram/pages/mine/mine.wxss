@@ -178,10 +178,6 @@
   margin-top: var(--sp-3);
 }
 
-.clear-text {
-  color: var(--strong-text);
-}
-
 .logout {
   display: flex;
   width: 100%;

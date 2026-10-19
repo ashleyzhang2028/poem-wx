@@ -4678,11 +4678,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         .every((f) => !/\.read-dot\s*\{/.test(read(f))),
     "两处页面各留了一份，改一处另一处就不跟了");
 
-  const clearText = (/\.clear-text\s*\{([^}]*)\}/.exec(read("pages/mine/mine.wxss")) || [])[1] || "";
-  ok("「清空背诵数据」那一行用的是主题色（不再单独一支危险色）",
-    /class="row-title clear-text"/.test(bareMarkup(read("pages/mine/mine.wxml")))
-      && /var\(--strong-text\)/.test(clearText),
-    "这一行又变回第三种颜色了");
+  {
+    const settWxml = bareMarkup(read("packages/settings/general/general.wxml"));
+    const clearBtn = settWxml.indexOf('bindtap="onClearData"');
+    const themeCard = settWxml.indexOf('class="card-title">主题');
+    ok("清空数据在设置页，且在主题卡片之下",
+      clearBtn > themeCard && themeCard > 0 && /class="btn danger block danger-clear"/.test(settWxml),
+      "清空数据又挪走了，或者主题卡片挪了 —— 它是设置页最后一张卡");
+    ok("「我的」页不再另摆一份清空入口",
+      !/onClear\b/.test(bareMarkup(read("pages/mine/mine.wxml")))
+        && !/onClear\s*\(/.test(read("pages/mine/mine.js")),
+      "两处都在，改一处另一处就不跟了");
+  }
 
   const tierCss = read("components/tier-view/tier-view.wxss");
   const isNowHead = (/\.tier-head \.tier-cell\.is-now::after\s*\{([^}]*)\}/.exec(tierCss) || [])[1] || "";
