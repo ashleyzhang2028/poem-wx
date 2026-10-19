@@ -283,9 +283,15 @@ function showLogin(name, ctx) {
 }
 
 function showTier(name, ctx) {
+  const why = hint(name);
+  const content = can(name)
+    ? "「" + capName(name) + "」现在是开着的，重新进一次这个功能就行。"
+    : (why && why !== "登录后可用" ? why + "。" : "「" + capName(name) + "」需要 " + tierNeed(name) + " 档。")
+      + "\n\n可用的档位与逐项对照在用户权限页。";
+
   wx.showModal({
     title: capName(name),
-    content: "「" + capName(name) + "」需要 " + tierNeed(name) + " 档。\n\n可用的档位与逐项对照在用户权限页。",
+    content: content,
     confirmText: "升级",
     cancelText: "取消",
     success: (res) => {

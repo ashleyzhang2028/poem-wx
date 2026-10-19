@@ -111,7 +111,7 @@
       <view class="row-icon">档</view>
       <view class="row-main">
         <text class="row-title">用户权限</text>
-        <text class="row-sub">自己那一档 · 能力对照</text>
+        <text class="row-sub">自己那一档 · 能力对照 · 升档</text>
       </view>
       <text class="row-go">›</text>
     </view>

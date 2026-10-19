@@ -391,10 +391,6 @@ Page({
     tabPage.mine();
   },
 
-  onPermissions() {
-    entitlement.openTierPage();
-  },
-
   onPinyin(e) {
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) {
