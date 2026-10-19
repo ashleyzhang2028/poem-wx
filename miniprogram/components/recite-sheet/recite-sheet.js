@@ -193,6 +193,27 @@ Component({
       return TRANSIENT_ERR.test(this.textErr + " " + this.errSay);
     },
 
+    missHead(item) {
+      const meta = corpus.indexById(item.id) || item;
+      return {
+        id: item.id,
+        navText: (this.data.index + 1) + " / " + this.data.queue.length,
+        bookId: meta.b || item.b || "",
+        title: meta.t || "",
+        author: meta.a || "",
+        dynasty: meta.d || "",
+        source: meta.s || meta.n || "",
+        selection: meta.sel || "",
+        aliasText: aliasTextOf(meta),
+        stage: "",
+        mastery: 0,
+        hasTranslation: false,
+        translation: "",
+        translationSource: "",
+        showTranslation: false
+      };
+    },
+
     missText() {
       if (!sync.ready()) return "这一首的正文没取到，登录后能取回来。";
       const why = this.whyText();
@@ -200,24 +221,29 @@ Component({
       return "这一首的正文没取到。多半是网络没通，再取一次。";
     },
 
-    markMissing() {
-      this.setData({
-        loadingText: false,
-        blocks: [],
-        tokens: [],
-        textMiss: this.missText(),
-        syncable: this.retryable()
-      });
+    markMissing(item) {
+      this.setData(Object.assign(
+        {
+          loadingText: false,
+          blocks: [],
+          tokens: [],
+          textMiss: this.missText(),
+          syncable: this.retryable()
+        },
+        item ? this.missHead(item) : {}
+      ));
       if (this.data.id && this.missAt === this.data.index) return;
       this.missAt = this.data.index;
-      this.askMissing();
+      this.askMissing(item);
     },
 
-    askMissing() {
+    askMissing(item) {
       const why = this.whyText();
+      const name = (item && item.title) || "";
       wx.showModal({
         title: "正文加载",
-        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首的正文没取到。"
+        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首"
+          + (name ? "「" + name + "」" : "") + "的正文没取到。"
           + (why ? "\n\n" + why : "")
           + "\n\n" + (sync.ready() ? "点「同步」再取一次。" : "登录后能取回这一首的正文。"),
         confirmText: "同步",
@@ -288,7 +314,7 @@ Component({
           this.cancelLoad();
           this.textErr = (err && err.code) || "";
           this.errSay = (err && err.message) || "";
-          this.markMissing();
+          this.markMissing(item);
         });
     },
 
