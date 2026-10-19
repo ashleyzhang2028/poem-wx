@@ -1130,18 +1130,8 @@ button, textarea {
   border-color: var(--strong);
 }
 
-.chip.bad {
-  color: var(--red);
-  background: var(--red-soft);
-  border-color: transparent;
-}
-
-.chip.fuzzy {
-  color: var(--amber);
-  background: var(--amber-soft);
-  border-color: transparent;
-}
-
+.chip.bad,
+.chip.fuzzy,
 .chip.good {
   color: var(--on-ink);
   background: var(--depth);
@@ -1151,6 +1141,7 @@ button, textarea {
 .chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t,
 .chip.bad .glyph, .chip.fuzzy .glyph, .chip.good .glyph {
   color: inherit;
+  background-color: currentColor;
 }
 
 .chip.multi:not(.on) {

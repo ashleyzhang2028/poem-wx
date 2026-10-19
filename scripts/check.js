@@ -3819,13 +3819,21 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       !!mark && /color:\s*var\(--mark\)/.test(onFace),
       ".face.on .face-ico 没取 --mark —— 白卡与主题底上会共用一种颜色（Issue #425）");
 
-    const chipGood = (/^\.chip\.good\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
     const chipOn = (/^\.chip\.on\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
-    const accent = /background:\s*var\(--depth\)/.test(chipGood);
-    ok("评分格「记住」的底取 --depth（白字要压得住），不是与「选中」同一个 --strong",
-      accent && /color:\s*var\(--on-ink\)/.test(chipGood)
+    const chipRules = [...appWxss.matchAll(/^([^{}]+)\{([^}]*)\}/gm)].map((m) => ({
+      sel: m[1].trim(), body: m[2]
+    }));
+    const chipBodyOf = (k) => chipRules
+      .filter((r) => r.sel.split(",").map((x) => x.trim()).indexOf(".chip." + k) >= 0)
+      .map((r) => r.body).join("");
+    const flipped = ["bad", "fuzzy", "good"].filter((k) => {
+      const body = chipBodyOf(k);
+      return !/background:\s*var\(--depth\)/.test(body) || !/color:\s*var\(--on-ink\)/.test(body);
+    });
+    ok("评分格三档（忘记 / 模糊 / 记住）共用主题底与压得住的字色",
+      flipped.length === 0
         && /background:\s*var\(--strong\)/.test(chipOn) && !/background:\s*var\(--depth\)/.test(chipOn),
-      "弹窗里的主题色一浅，压在上面的白笑脸就没了（Issue #425）");
+      flipped.join(", ") + " 没跟另外两档同底同色 —— 换到别的主题上会有一档看不见（Issue #425）");
 
     const theme = require(path.join(ROOT, "utils", "theme.js"));
     const channelOf = (v) => {
