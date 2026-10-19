@@ -1808,28 +1808,12 @@ ok("名录在、标签截断、档位合法",
 
 {
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
+  const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
 
-  const scope = { scope: "primary", grade: 1, term: 1 };
-  const inScope = {};
-  feihua.scopedPoems(scope).forEach(() => {});
   {
-
-    const chars = {};
-    feihua.look("", scope);
-
-    const corpusMod = require(path.join(ROOT, "utils", "corpus.js"));
-    feihua.scopedPoems(scope).forEach((p) => {
-      const e = corpusMod.entry(p.id);
-      if (!e || !e.text) return;
-      String(e.text).split("").forEach((ch) => {
-        if (/[\u3400-\u9fff]/.test(ch)) chars[ch] = 1;
-      });
-    });
-    Object.keys(chars).forEach((c) => { inScope[c] = 1; });
-
     const picks = [];
     for (let i = 0; i < 30; i++) {
-      const p = feihua.pick({ level: "normal", scope: "primary", grade: 1, term: 1 });
+      const p = feihua.pick({ level: "normal", scope: "tangshi" });
       if (p) picks.push(p.char);
     }
     ok("飞花令出得了令字（范围内随机）", picks.length === 30, "只有 " + picks.length + " 次出字");
@@ -1838,17 +1822,45 @@ ok("名录在、标签截断、档位合法",
   }
 
   {
-    const scopeSmall = { scope: "term", grade: 1, term: 1 };
-    const inSmall = feihua.look("月", Object.assign({ limit: 9999 }, scopeSmall));
+    const names = scopes.list().map((s) => s.id);
+    ok("出题范围只列诗词集子（改编成文章、辞书、故事集的那几部不进来）",
+      names.indexOf("poems") >= 0 && names.indexOf("tangshi") >= 0
+        && names.indexOf("songci") >= 0 && names.indexOf("yuefu") >= 0
+        && names.indexOf("season") < 0 && names.indexOf("chengyu") < 0
+        && names.indexOf("changshi") < 0 && names.indexOf("mingshu") < 0
+        && names.indexOf("classic") < 0 && names.indexOf("guwen") < 0,
+      "范围里有非诗词的集子：" + names.join("、"));
+
+    const manifest = require(path.join(ROOT, "utils", "corpus.js")).manifest().map;
+    const booksMod = require(path.join(ROOT, "utils", "corpus.js"));
+    const missing = [];
+    scopes.list().forEach((s) => {
+      if (s.id === "poems") return;
+      booksMod.ofBook(s.id).forEach((p) => {
+        if (manifest[p.id] && !scopes.pool(s.id).some((q) => q.id === p.id)) {
+          missing.push(s.id + ":" + p.id);
+        }
+      });
+    });
+    ok("每个集子里凡有正文的条目都进得了这个范围（不是拿课内那 251 首冒充全集）",
+      missing.length === 0, "漏了 " + missing.slice(0, 5).join("、"));
+  }
+
+  {
+    const all = feihua.look("月", { limit: 9999 }).map((r) => r.seg);
+    const inTang = feihua.look("月", { scope: "tangshi", limit: 9999 }).map((r) => r.seg);
     const say = feihua.judge("月", "床前明月光", []);
-    ok("作答能超出背诵范围（范围选一上，答静夜思照样对）",
+    ok("作答能超出出题范围（范围选唐诗，答课内的静夜思照样对）",
       say.ok === true, say.reason || "判成了错");
 
-    const scopedAll = feihua.look("月", { limit: 9999 });
     ok("看答案按范围收窄（范围内的句子少于全部）",
-      inSmall.length < scopedAll.length,
-      "范围内 " + inSmall.length + " vs 全部 " + scopedAll.length);
+      inTang.length < all.length,
+      "范围内 " + inTang.length + " vs 全部 " + all.length);
   }
+
+  ok("作答在全部诗词集子里找（课内没收录的那首也算对）",
+    feihua.judge("城", "一片孤城万仞山", []).ok === true
+      && feihua.judge("河", "黄河远上白云间", []).ok === true);
 
   ok("作答必须含令字", feihua.judge("月", "床前明月光", []).ok === true
     && feihua.judge("月", "白日依山尽", []).ok === false);

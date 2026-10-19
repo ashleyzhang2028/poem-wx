@@ -24,7 +24,7 @@
 
       <view class="inline-btns">
         <button class="btn ghost mini" bindtap="onHint" disabled="{{locked || hinted}}">提示</button>
-        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">接上</button>
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">接令</button>
         <button class="btn ghost mini" bindtap="onSkip">换令</button>
       </view>
 
@@ -73,7 +73,7 @@
 
     <view class="card">
       <view class="card-title">出题范围</view>
-      <radio-group class="opt-group inline cols-2" bindchange="onScope">
+      <radio-group class="opt-group inline tight cols-3" bindchange="onScope">
         <label class="opt-row {{scope === item.id ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="id">
           <radio class="opt-radio" value="{{item.id}}" checked="{{scope === item.id}}" />
           <view class="opt-main">

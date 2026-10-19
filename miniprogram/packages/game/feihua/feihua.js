@@ -4,8 +4,6 @@ const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
-const store = require("../../../utils/store");
-const S = require("../../../utils/scheduler");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
@@ -71,21 +69,11 @@ Page({
   },
 
   scopeOpt() {
-    const s = store.settings();
-    if (this.data.scope) return { scope: this.data.scope };
-    return { scope: s.scope, grade: s.grade, term: s.term };
+    return { scope: this.data.scope };
   },
 
   refreshScopeName() {
-    if (this.data.scope) {
-      this.setData({ scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope) });
-      return;
-    }
-    const s = store.settings();
-    const scope = S.scopeOf(s.scope);
-    this.setData({
-      scopeName: S.gradeName(s.grade) + S.termName(s.term) + " · " + scope.scopeName
-    });
+    this.setData({ scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope) });
   },
 
   onScope(e) {
@@ -111,16 +99,10 @@ Page({
     this.refreshScopeName();
     const opt = this.scopeOpt();
     const exclude = this.data.done.map((d) => d.char);
-    let p = feihua.pick({
-      level: this.data.level,
-      scope: opt.scope,
-      grade: opt.grade,
-      term: opt.term,
-      exclude: exclude
-    });
+    let p = feihua.pick({ level: this.data.level, scope: opt.scope, exclude: exclude });
 
     if (!p && exclude.length) {
-      p = feihua.pick({ level: this.data.level, scope: opt.scope, grade: opt.grade, term: opt.term });
+      p = feihua.pick({ level: this.data.level, scope: opt.scope });
     }
     if (this.data.streak) this.report(this.data.streak);
 
