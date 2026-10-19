@@ -402,7 +402,7 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 现在每一个会改到同步数据的入口都挂了记账（自检 V34 第 7 条逐个点名）。
 
 **头像与昵称为什么不在这一列里**：头像只有微信一个来源且**不上传**
-（`chooseAvatar` 给回的是 `wxfile://…` 临时路径，见
+（`open-type="chooseAvatar"` 给回的是 `wxfile://…` 临时路径，见
 [`design-system.md`](design-system.md)「头像」一节、Issue #111），
 所以换台手机就是没有；昵称走服务端的 `accounts.nickname` —— 用户在小程序里一改
 （`onNickname`）就走 `PATCH /api/me` 落到 `accounts.nickname`，登录与刷新时随会话下发，
@@ -547,7 +547,7 @@ wx.login() 拿 code
 
 边界沿用网页版那几条：
 
-- **不静默抓取** —— 头像走 `chooseAvatar`、昵称走 `type="nickname"`，都由用户主动给；
+- **不静默抓取** —— 头像走 `open-type="chooseAvatar"`、昵称走 `type="nickname"`，都由用户主动给；
   头像**只落本机、不上传**（Issue #111：不为它养一份对象存储）
 - **登录后问一次** —— 首次进「我的」页弹一条引导，让用户去点头像 / 确认昵称；
   同意过或点过「先不用」都不再问（Issue #194）
