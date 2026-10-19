@@ -221,6 +221,8 @@ Page({
     themeStyle: "",
     barBelow: true,
 
+    banner: theme.BANNER,
+
     statusBarHeight: 0,
     navHeight: 0,
     navBottom: 0,
@@ -280,7 +282,11 @@ Page({
     theme.apply(this);
     this.toasted = false;
 
-    this.setData({ todayLabel: todayLabel(), barBelow: !!tabbar.sync(this, 0) });
+    this.setData({
+      banner: theme.bannerOf(theme.current()),
+      todayLabel: todayLabel(),
+      barBelow: !!tabbar.sync(this, 0)
+    });
     this.refresh();
   },
 

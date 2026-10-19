@@ -1,21 +1,25 @@
 const store = require("./store");
 
 const THEMES = [
-  { key: "daiqing", name: "黛青",     rgb: [2, 54, 51] },
-  { key: "ink",     name: "墨色",     rgb: [8, 8, 10] },
-  { key: "qinglv",  name: "青绿",     rgb: [46, 106, 103] },
-  { key: "muse",    name: "暮色",     rgb: [79, 96, 114] },
-  { key: "nuahui",  name: "暖灰",     rgb: [164, 86, 104] },
-  { key: "qingwa",  name: "青瓦",     rgb: [74, 100, 96] },
-  { key: "mich",    name: "米褐",     rgb: [126, 101, 84] },
-  { key: "shilv",   name: "石绿",     rgb: [108, 127, 79] },
-  { key: "mohong",  name: "墨红",     rgb: [140, 47, 45] },
-  { key: "wulan",   name: "雾蓝",     rgb: [96, 126, 149] },
-  { key: "yanzhi",  name: "胭脂",     rgb: [157, 41, 51] },
-  { key: "yuqing",  name: "雨过天青", rgb: [47, 96, 85] }
+  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png" },
+  { key: "yangzhou", name: "扬州", rgb: [2, 54, 51], banner: "/icons/yangzhou.png" },
+  { key: "kaifeng", name: "开封", rgb: [2, 54, 51], banner: "/icons/kaifeng.png" },
+  { key: "ink", name: "墨色", rgb: [8, 8, 10] },
+  { key: "qinglv", name: "青绿", rgb: [46, 106, 103] },
+  { key: "muse", name: "暮色", rgb: [79, 96, 114] },
+  { key: "nuahui", name: "暖灰", rgb: [164, 86, 104] },
+  { key: "qingwa", name: "青瓦", rgb: [74, 100, 96] },
+  { key: "mich", name: "米褐", rgb: [126, 101, 84] },
+  { key: "shilv", name: "石绿", rgb: [108, 127, 79] },
+  { key: "mohong", name: "墨红", rgb: [140, 47, 45] },
+  { key: "wulan", name: "雾蓝", rgb: [96, 126, 149] },
+  { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51] },
+  { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85] }
 ];
 
 const DEFAULT = "daiqing";
+
+const BANNER = "/icons/hero.png";
 
 const WASH = 0.05;
 
@@ -50,16 +54,13 @@ THEMES.forEach((t) => {
   t.rgba = rgba(t.rgb, 1);
   t.soft = rgba(t.rgb, WASH);
   t.on = rgba(inkOn(t.rgb), 1);
+  t.banner = t.banner || BANNER;
 });
 
 const VAR_OF = {};
-["qinglv", "muse", "nuahui", "qingwa", "mich", "shilv", "mohong", "wulan"].forEach((k) => {
-  VAR_OF[k] = "--c-" + k;
+THEMES.forEach((t) => {
+  VAR_OF[t.key] = "--c-" + t.key;
 });
-VAR_OF.daiqing = "--c-daiqing";
-VAR_OF.ink = "--c-ink";
-VAR_OF.yanzhi = "--c-yanzhi";
-VAR_OF.yuqing = "--c-yuqing";
 
 function palette() {
   return THEMES.map((t) => ({
@@ -68,6 +69,7 @@ function palette() {
     rgb: t.rgba,
     soft: t.soft,
     on: t.on,
+    banner: t.banner,
     varName: VAR_OF[t.key]
   }));
 }
@@ -78,6 +80,8 @@ function variables() {
 
 const BY_KEY = {};
 THEMES.forEach((t) => { BY_KEY[t.key] = t; });
+
+const VAR_DECLS = variables().join(";");
 
 function all() {
   return THEMES;
@@ -99,7 +103,7 @@ function currentTheme() {
 function style(key) {
   const t = get(key || current());
 
-  return variables().join(";") +
+  return VAR_DECLS +
     ";--theme:" + t.rgba + ";--theme-deep:" + t.rgba +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +
     ";--strong:" + t.rgba + ";--strong-soft:" + t.soft + ";--strong-text:" + t.rgba +
@@ -126,7 +130,11 @@ function apply(page) {
   return key;
 }
 
+function bannerOf(key) {
+  return get(key).banner;
+}
+
 module.exports = {
-  THEMES, DEFAULT, WASH, VAR_OF,
-  all, palette, variables, get, current, currentTheme, style, set, apply
+  THEMES, DEFAULT, WASH, BANNER, VAR_OF,
+  all, palette, variables, bannerOf, get, current, currentTheme, style, set, apply
 };
