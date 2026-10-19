@@ -3811,17 +3811,47 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ["忘记", "模糊", "记住"].every((t) => sheetJs.indexOf(t) >= 0),
     "少一档 —— 有一类评价给不出去");
   {
-    const tokens = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
-    const onInk = ((tokens.match(/--on-ink:\s*([^;]+);/) || [])[1] || "").replace(/var\(--([\w-]+)\)/, (m, n) => {
-      return (tokens.match(new RegExp("--" + n + ":\\s*([^;]+);")) || [])[1] || "";
-    });
-    const light = /#fff|#ffffff|rgba\(255,\s*255,\s*255,\s*1\)|white/i.test(onInk);
+    const tokensCss = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
+    const mark = ((tokensCss.match(/--mark:\s*([^;]+);/) || [])[1] || "").trim();
     const faceCss = fs.readFileSync(path.join(ROOT, "pages/home/home.wxss"), "utf8");
-    const onFace = faceCss.match(/\.face\.on\.[a-z]+\s+\.face-ico\s*\{[^}]*\}/g) || [];
-    const invisible = onFace.filter((r) => /var\(--on-ink\)/.test(r));
-    ok("卡片上的评价图标不取「重色底上的字色」（那色在白卡上等于消失）",
-      light && onFace.length > 0 && invisible.length === 0,
-      "首页 .face.on.* 有 " + invisible.length + " 条取 --on-ink（该色落在白卡上等于看不见，Issue #413）");
+    const onFace = (faceCss.match(/\.face\.on\s+\.face-ico\s*\{[^}]*\}/g) || []).join("");
+    ok("卡片的评价图标取 --mark（不跟着所在底色换主题色）",
+      !!mark && /color:\s*var\(--mark\)/.test(onFace),
+      ".face.on .face-ico 没取 --mark —— 白卡与主题底上会共用一种颜色（Issue #425）");
+
+    const chipOn = (/^\.chip\.on\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
+    const chipRules = [...appWxss.matchAll(/^([^{}]+)\{([^}]*)\}/gm)].map((m) => ({
+      sel: m[1].trim(), body: m[2]
+    }));
+    const chipBodyOf = (k) => chipRules
+      .filter((r) => r.sel.split(",").map((x) => x.trim()).indexOf(".chip." + k) >= 0)
+      .map((r) => r.body).join("");
+    const flipped = ["bad", "fuzzy", "good"].filter((k) => {
+      const body = chipBodyOf(k);
+      return !/background:\s*var\(--depth\)/.test(body) || !/color:\s*var\(--on-ink\)/.test(body);
+    });
+    ok("评分格三档（忘记 / 模糊 / 记住）共用主题底与压得住的字色",
+      flipped.length === 0
+        && /background:\s*var\(--strong\)/.test(chipOn) && !/background:\s*var\(--depth\)/.test(chipOn),
+      flipped.join(", ") + " 没跟另外两档同底同色 —— 换到别的主题上会有一档看不见（Issue #425）");
+
+    const theme = require(path.join(ROOT, "utils", "theme.js"));
+    const channelOf = (v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const luminance = (rgb) => 0.2126 * channelOf(rgb[0]) + 0.7152 * channelOf(rgb[1]) + 0.0722 * channelOf(rgb[2]);
+    const contrastOf = (a, b) => {
+      const x = luminance(a), y = luminance(b);
+      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    };
+    const weak = theme.all().filter((t) => {
+      const ink = t.on === "rgba(255, 255, 255, 1)" ? [255, 255, 255] : [0, 0, 0];
+      return contrastOf(t.depth, ink) < 4.5 || contrastOf([255, 255, 255], theme.MARK) < theme.MARK_MIN;
+    });
+    ok("每支主题的 --depth 都压得住压在上面的字（--mark 在白卡上也看得清）",
+      theme.all().length > 0 && weak.length === 0,
+      weak.map((t) => t.key).join(", ") + " —— 换到这支主题，弹窗底上的字就糊了");
   }
   ok("评分后顺势进下一首（不是「关掉再去找」）",
     /goNext\(/.test(sheetJs) && /this\.setData\(\{\s*index:\s*next/.test(sheetJs));

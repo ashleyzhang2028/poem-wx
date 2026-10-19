@@ -23,6 +23,12 @@ const BANNER = "/icons/hero.png";
 
 const WASH = 0.05;
 
+const MARK = [56, 56, 58];
+
+const MARK_MIN = 3;
+
+const DEEP_STEP = 0.04;
+
 function rgba(rgb, alpha) {
   return "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + alpha + ")";
 }
@@ -50,10 +56,23 @@ function inkOn(rgb) {
   return contrast(rgb, c) >= AA ? c : (c === BLACK ? WHITE : BLACK);
 }
 
+function mix(a, b, p) {
+  return [0, 1, 2].map((i) => Math.round(a[i] * (1 - p) + b[i] * p));
+}
+
+function deepOf(rgb) {
+  const ink = inkOn(rgb);
+  let p = 1;
+  while (p > 0 && contrast(mix(rgb, ink, p), ink) < AA) p -= DEEP_STEP;
+  return mix(rgb, ink, Math.max(p, 0));
+}
+
 THEMES.forEach((t) => {
   t.rgba = rgba(t.rgb, 1);
   t.soft = rgba(t.rgb, WASH);
   t.on = rgba(inkOn(t.rgb), 1);
+  t.depth = deepOf(t.rgb);
+  t.mark = rgba(MARK, 1);
   t.banner = t.banner || BANNER;
 });
 
@@ -69,13 +88,17 @@ function palette() {
     rgb: t.rgba,
     soft: t.soft,
     on: t.on,
+    mark: t.mark,
+    depth: rgba(t.depth, 1),
     banner: t.banner,
     varName: VAR_OF[t.key]
   }));
 }
 
 function variables() {
-  return THEMES.map((t) => VAR_OF[t.key] + ":" + t.rgba + ";" + VAR_OF[t.key] + "-soft:" + t.soft);
+  return THEMES.map((t) => VAR_OF[t.key] + ":" + t.rgba
+    + ";" + VAR_OF[t.key] + "-soft:" + t.soft
+    + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
 }
 
 const BY_KEY = {};
@@ -108,7 +131,8 @@ function style(key) {
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +
     ";--strong:" + t.rgba + ";--strong-soft:" + t.soft + ";--strong-text:" + t.rgba +
     ";--ink-strong:" + t.rgba + ";--on-ink:" + t.on + ";--on-ink-soft:"
-    + t.on.replace(/,\s*1\)$/, ",.7)");
+    + t.on.replace(/,\s*1\)$/, ",.7)")
+    + ";--mark:" + t.mark + ";--depth:" + rgba(t.depth, 1);
 }
 
 function set(key) {
@@ -135,6 +159,6 @@ function bannerOf(key) {
 }
 
 module.exports = {
-  THEMES, DEFAULT, WASH, BANNER, VAR_OF,
+  THEMES, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
   all, palette, variables, bannerOf, get, current, currentTheme, style, set, apply
 };
