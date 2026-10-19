@@ -3641,6 +3641,26 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
         && said[0].cancelText === "取消" && said[0].confirmText === "同步",
       "失败之后没有给一条手动同步的路，或者按钮不是用户点名的那两个");
 
+    const missRow = missing(missId);
+    const missData = missRow.data;
+    ok("取不到正文时弹层正文区不留空：给一行说明，并给一条再取一次的路",
+      missData.loadingText === false && !!missData.textMiss
+        && missData.blocks.length === 0 && missData.tokens.length === 0
+        && typeof opt.methods.missText === "function",
+      "正文取不到时弹层正文区还是空的 —— 看上去像显示了上一次那一首");
+    ok("同一次卡住只弹一次框，点「再取一次」不会又叠一个框",
+      (() => {
+        const self = mk(rows, false);
+        self.missAt = 0;
+        self.data.index = 0;
+        self.data.id = "a";
+        said.length = 0;
+        self.markMissing();
+        return said.length === 0;
+      })(),
+      "正文区里的重取把确认框又弹了一遍");
+    missRow.onClose();
+
     const closed = mk(rows, false);
     obs.call(closed, [{ id: "z" }]);
     ok("弹层关着时队列换新不写 data（关着的组件不该被首页的 refresh 推着走）",
@@ -7465,6 +7485,11 @@ function gapped(items, max) {
       && /onSeasonalRefresh\(/.test(homeSrc4)
       && /seasonal\.redraw\(\)/.test(homeSrc4)
       && /setData\(\{ seasonal: card \}\)/.test(homeSrc4));
+
+  ok("季节限定的标题行只当标题：打开弹层的入口挂在列表行上，带 data-id 定位到那一首",
+    !/bindtap="[^"]*"[^>]*>\s*<text class="card-title seasonal-title"/.test(homeWxml4)
+      && /wx:for="\{\{seasonal\.rows\}\}"[^>]*data-id="\{\{item\.id\}\}"[^>]*bindtap="onSeasonalOpen"/.test(homeWxml4)
+      && /onSeasonalOpen\(e\)[\s\S]{0,400}?sheet\.open\(rows, id\)/.test(homeSrc4));
 
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));

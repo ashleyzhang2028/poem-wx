@@ -79,7 +79,7 @@
     </view>
 
     <view class="card seasonal" wx:if="{{seasonal}}">
-      <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="openSeasonal">
+      <view class="card-open">
         <text class="card-title seasonal-title">季节限定</text>
         <text class="all-count">{{seasonal.rows.length}}</text>
         <view class="seasonal-refresh" hover-class="seasonal-refresh-hover" hover-stay-time="60"
@@ -90,7 +90,7 @@
 
       <view class="seasonal-list">
         <view class="row row-flush seasonal-row" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{seasonal.rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openSeasonal">
+              wx:for="{{seasonal.rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onSeasonalOpen">
           <view class="row-main">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
