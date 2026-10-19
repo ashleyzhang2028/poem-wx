@@ -1353,6 +1353,38 @@ button, textarea {
   background: var(--sink);
 }
 
+.round-btn {
+  flex: none;
+  box-sizing: border-box;
+  width: var(--h-round);
+  height: var(--h-round);
+  border: 1rpx solid transparent;
+  border-radius: 50%;
+  background: var(--sink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
+}
+
+.round-btn .glyph {
+  width: var(--h-round-ico);
+  height: var(--h-round-ico);
+}
+
+.round-btn.on {
+  background: var(--strong-soft);
+  border-color: var(--strong);
+}
+
+.round-btn.on .glyph {
+  color: var(--strong-text);
+}
+
+.round-btn-hover {
+  transform: scale(.94);
+}
+
 .pref-opt .opt-radio,
 .pref-opt radio {
   position: absolute;

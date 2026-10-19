@@ -277,34 +277,3 @@
   align-items: center;
   gap: var(--sp-2);
 }
-
-.de-btn {
-  flex: none;
-  width: 60rpx;
-  height: 60rpx;
-  box-sizing: border-box;
-  border: 1rpx solid transparent;
-  border-radius: 50%;
-  background: var(--sink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
-}
-
-.de-btn .glyph {
-  color: var(--ink-2);
-}
-
-.de-btn.on {
-  background: var(--strong-soft);
-  border-color: var(--strong);
-}
-
-.de-btn.on .glyph {
-  color: var(--strong-text);
-}
-
-.de-btn-hover {
-  transform: scale(.94);
-}

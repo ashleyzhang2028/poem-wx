@@ -2304,6 +2304,8 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
 
   ok("分段控件底盘只定义一次", (appWxss.match(/^\.seg-group\s*\{/gm) || []).length === 1);
   ok("格子控件底盘只定义一次", (appWxss.match(/^\.chip\s*\{/gm) || []).length === 1);
+  ok("圆钮底盘只定义一次（首页的加背钮与候选列表的加号共用它）",
+    (appWxss.match(/^\.round-btn\s*\{/gm) || []).length === 1);
 
   const redefined = [];
 
