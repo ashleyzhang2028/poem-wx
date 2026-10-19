@@ -3167,7 +3167,8 @@ function boardMaskNick(raw, uid) {
   return chars[0] + "***" + chars[chars.length - 1];
 }
 
-function boardRows(records) {
+function boardRows(records, now) {
+  var nowMs = Number(now) || Date.now();
   var byUid = {};
   (records || []).forEach(function (r) {
     if (!r || !r.uid) return;
@@ -3177,10 +3178,16 @@ function boardRows(records) {
     var at = Number(r.created_at) || 0;
     var cur = byUid[r.uid];
     if (!cur) {
-      byUid[r.uid] = { uid: r.uid, score: score, total: total, duration: duration, at: at, plays: 1 };
+      cur = byUid[r.uid] = { uid: r.uid, firstAt: at || nowMs, plays: 0 };
+      cur.score = score;
+      cur.total = total;
+      cur.duration = duration;
+      cur.at = at;
+      cur.plays = 1;
       return;
     }
     cur.plays += 1;
+    cur.firstAt = Math.min(cur.firstAt, at || nowMs);
     if (score > cur.score
       || (score === cur.score && total > cur.total)
       || (score === cur.score && total === cur.total && duration && (!cur.duration || duration < cur.duration))
@@ -3196,7 +3203,16 @@ function boardRows(records) {
     if (b.score !== a.score) return b.score - a.score;
     if (b.total !== a.total) return b.total - a.total;
     if (a.duration !== b.duration) return (a.duration || 1e9) - (b.duration || 1e9);
-    return a.at - b.at;
+    return a.firstAt - b.firstAt;
+  });
+
+  var rank = 0, above = null;
+  rows.forEach(function (r) {
+    if (!above || above.score !== r.score || above.total !== r.total) {
+      rank += 1;
+      above = r;
+    }
+    r.rank = rank;
   });
   return rows;
 }
@@ -3255,6 +3271,19 @@ function boardVisible(deps, input) {
     .then(function (on) { return ok({ on: on }); });
 }
 
+function boardShow(acc, r) {
+  return {
+    rank: r.rank,
+    score: r.score,
+    total: r.total,
+    durationSec: r.duration,
+    plays: r.plays,
+    at: r.at,
+    nick: boardMaskNick(acc.nickname, r.uid),
+    me: !!r.mine
+  };
+}
+
 function boardList(deps, input) {
   var gate = boardGate(deps, input);
   return Promise.resolve(gate).then(function (g) {
@@ -3263,41 +3292,45 @@ function boardList(deps, input) {
     var size = Number(input && input.size) || 10;
     if (BOARD_SIZES.indexOf(size) < 0) size = 10;
     var since = boardPeriodStart(filter.period, deps.now());
+    var me = deps.account ? deps.account.uid : "";
 
     var q = { game: g.game, stage: filter.stage, from: since };
     if (filter.stage !== "all" && filter.grade) q.grade = filter.grade;
     if (filter.stage !== "all" && filter.term) q.term = filter.term;
 
     return Promise.resolve(deps.store.listScoreRecords(q, BOARD_LIMITS.records)).then(function (rows) {
-      var ranked = boardRows(rows);
-      var top = ranked.slice(0, size);
-      return Promise.all(top.map(function (r) {
+      var ranked = boardRows(rows, deps.now());
+      ranked.forEach(function (r) {
+        if (r.uid === me) r.mine = true;
+      });
+
+      var beyond = ranked.filter(function (r) {
+        return r.mine && ranked.indexOf(r) >= size;
+      }).pop() || null;
+      var shown = ranked.slice(0, size);
+      var pick = shown.concat(beyond ? [beyond] : []);
+
+      return Promise.all(pick.map(function (r) {
         return Promise.resolve(deps.store.getAccount(r.uid)).then(function (acc) {
           return acc && acc.status !== "deleted" ? acc : null;
         });
       })).then(function (accs) {
         var board = [];
-        top.forEach(function (r, i) {
-          var acc = accs[i];
-          if (!acc) return;
-          board.push({
-            rank: board.length + 1,
-            score: r.score,
-            total: r.total,
-            durationSec: r.duration,
-            plays: r.plays,
-            at: r.at,
-            nick: boardMaskNick(acc.nickname, r.uid),
-            me: !!(deps.account && deps.account.uid === r.uid)
-          });
+        shown.forEach(function (r, i) {
+          if (!accs[i]) return;
+          board.push(boardShow(accs[i], r));
         });
+        var self = null;
+        if (beyond && accs[shown.length]) self = boardShow(accs[shown.length], beyond);
         return ok({
           game: g.game,
           filter: filter,
           label: boardLabelOf(filter),
           size: size,
+          total: ranked.length,
           from: since,
-          board: board.slice(0, size)
+          board: board,
+          me: self
         });
       });
     });

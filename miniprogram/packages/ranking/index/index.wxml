@@ -35,7 +35,7 @@
     <view class="card" wx:if="{{state === 'board' || state === 'empty'}}">
       <view class="lb-head">
         <text class="card-title plain lb-title">{{label}}</text>
-        <text class="lb-sub">前三名上台</text>
+        <text class="lb-sub">前三名上台 · 只列前 {{size}} 名</text>
       </view>
 
       <view class="podium">
@@ -62,6 +62,15 @@
         <text class="lb-rank">{{item.rank}}</text>
         <text class="lb-nick">{{item.nick}}</text>
         <text class="lb-score">{{item.score}}/{{item.total}}</text>
+      </view>
+      <view class="lb-gap" wx:if="{{beyond}}">
+        <text class="lb-dots">⋯ {{beyond}} 位</text>
+      </view>
+      <view class="lb-row me" wx:if="{{me}}">
+        <text class="lb-me-mark">我</text>
+        <text class="lb-rank">{{me.rank}}</text>
+        <text class="lb-nick">{{me.nick}}</text>
+        <text class="lb-score">{{me.score}}/{{me.total}}</text>
       </view>
       <text class="hint note">只把昵称的首末字留着，中间一律星号</text>
     </view>

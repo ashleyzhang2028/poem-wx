@@ -190,6 +190,15 @@
   color: var(--strong-text);
 }
 
+.lb-me-mark {
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-1);
+  border-radius: var(--radius-sm);
+  background: var(--strong-soft);
+  color: var(--strong-text);
+  font-size: var(--fs-caption);
+}
+
 .lb-rank {
   width: 88rpx;
   font-size: var(--fs-body);
@@ -212,6 +221,19 @@
   text-align: right;
   font-size: var(--fs-body);
   color: var(--ink-2);
+  font-family: var(--font-num);
+}
+
+.lb-gap {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.lb-dots {
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
   font-family: var(--font-num);
 }
 

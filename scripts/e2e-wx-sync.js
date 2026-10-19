@@ -347,6 +347,31 @@ function makeWx(port, mem) {
     ok("只考过小学那一档时，初中榜是空的", (other.body.board || []).length === 0,
       JSON.stringify(other.body.board));
 
+    const others = [];
+    for (let i = 0; i < 25; i += 1) {
+      const uid = "u_probe_" + i;
+      await svStore.putAccount({ uid: uid, status: "active", nickname: "诗友" + i, created_at: 1 });
+      await svStore.putScoreRecord({
+        srid: "sc_probe_" + i, uid: uid, game: "exam", scope_id: "", stage: "primary",
+        grade: 3, term: 1, score: 10, total: 10, duration_sec: 100 + i, created_at: Date.now() - 1000 + i
+      });
+      others.push(uid);
+    }
+
+    const cut = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10 });
+    ok("榜只列前 N 名（剩下的人不跟着拉下来）",
+      (cut.body.board || []).length === 10 && cut.body.total === 26,
+      (cut.body.board || []).length + " / " + cut.body.total);
+    ok("自己排在 N 名之外时，单给自己一行名次（不把整张榜拉下来）",
+      !!cut.body.me && cut.body.me.rank === 2 && cut.body.me.me === true,
+      JSON.stringify(cut.body.me) + " total=" + cut.body.total);
+    ok("同分同名次（下一名跳号）",
+      (cut.body.board || []).every((r) => r.rank === 1) && cut.body.me.rank === 2,
+      JSON.stringify((cut.body.board || []).map((r) => r.rank).concat([cut.body.me && cut.body.me.rank])));
+    ok("圈外那一行的名字也是打码的（不因为是自己就露全名）",
+      !!cut.body.me && cut.body.me.nick === rankingMask5("测试某某"),
+      JSON.stringify(cut.body.me && cut.body.me.nick));
+
     const flyList = await api({ op: "list", game: "fly", stage: "all", period: "day" });
     ok("飞花令榜与考试榜各算各的", flyList.status === 403, JSON.stringify(flyList.body));
 

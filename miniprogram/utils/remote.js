@@ -435,6 +435,8 @@ function rankingList(query) {
     ok: true,
     offline: false,
     board: (res && res.board) || [],
+    me: (res && res.me) || null,
+    total: (res && res.total) || 0,
     label: (res && res.label) || "",
     filter: (res && res.filter) || null
   }));

@@ -3074,6 +3074,11 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && rank.maskNick("", "u_123456") === "诗***6",
     "打码口径不对 —— " + [rank.maskNick("张三"), rank.maskNick("欧阳修文"), rank.maskNick("")].join(" / "));
 
+  ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
+    rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 1, nick: "乙", score: 9, total: 10 }])[0].tied === true
+      && rank.restOf([{ rank: 1 }, { rank: 2 }, { rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
+    "同分的人各占一行名次，第 2 名凭空消失；或同一个人被抄成两行");
+
   ok("领奖台只认前三名，第四名起进列表",
     rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 2, nick: "乙", score: 8, total: 10 }])
       .filter((m) => m.filled).length === 2
@@ -3109,6 +3114,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && !/nickname/.test(apiStore.slice(apiStore.indexOf("putScoreRecord"), apiStore.indexOf("getSetting")))
       && !/`nickname`/.test(apiMysql.slice(apiMysql.indexOf("putScoreRecord"), apiMysql.indexOf("putSetting"))),
     "把昵称抄进了成绩行，用户改名后榜上留的还是旧名字");
+
+  ok("榜只给前 N 名，N 之外的自己单给一行",
+    /var shown = ranked\.slice\(0, size\)/.test(apiCore)
+      && /me: self/.test(apiCore)
+      && /r\.mine && ranked\.indexOf\(r\) >= size/.test(apiCore),
+    "整张榜拉下来再挑 —— 人一多就白拉；或者干脆不给自己那一行，第 1685 名看不到自己");
+
+  ok("圈外那一行在上榜行下面，隔一句「还有多少位」",
+    pageWxml.indexOf("{{beyond}}") >= 0
+      && pageWxml.indexOf("wx:if=\"{{me}}\"") >= 0
+      && pageWxml.indexOf("wx:for=\"{{rest}}\"") < pageWxml.indexOf("wx:if=\"{{me}}\"")
+      && rank.beyondOf([{ rank: 1 }], 10, 1685) === 1684 && rank.beyondOf([], 10, 0) === 0,
+    "圈外那一行跑到列表上面，或者「还有几位」把自己也数进去");
 
   ok("榜单是单独一页，入口在大会页（不挤进考试页里）",
     app.subPackages.filter((sp) => sp.root === "packages/ranking").length === 1

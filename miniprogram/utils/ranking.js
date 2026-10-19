@@ -102,7 +102,7 @@ function podiumOf(board) {
   const rows = board || [];
   const byRank = {};
   rows.forEach((r) => {
-    if (r.rank >= 1 && r.rank <= 3) byRank[r.rank] = r;
+    if (r.rank >= 1 && r.rank <= 3 && !byRank[r.rank]) byRank[r.rank] = r;
   });
   return MEDALS.map((m) => {
     const r = byRank[m.rank];
@@ -111,6 +111,7 @@ function podiumOf(board) {
       title: m.title,
       mark: m.mark,
       filled: !!r,
+      tied: !!r && rows.filter((x) => x.rank === m.rank).length > 1,
       nick: r ? r.nick : "",
       score: r ? r.score : 0,
       total: r ? r.total : 0
@@ -120,6 +121,12 @@ function podiumOf(board) {
 
 function restOf(board) {
   return (board || []).filter((r) => r.rank > 3);
+}
+
+function beyondOf(board, size, total) {
+  const rows = board || [];
+  if (!rows.length) return 0;
+  return Math.max(0, (Number(total) || 0) - rows.length);
 }
 
 function emptyOf(game) {
@@ -148,5 +155,6 @@ module.exports = {
   maskNick,
   podiumOf,
   restOf,
+  beyondOf,
   emptyOf
 };

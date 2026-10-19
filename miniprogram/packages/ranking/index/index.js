@@ -25,6 +25,9 @@ Page({
     board: [],
     podium: [],
     rest: [],
+    me: null,
+    size: ranking.DEFAULT_SIZE,
+    beyond: 0,
     label: "",
     empty: ranking.emptyOf("exam"),
     state: "loading",
@@ -86,9 +89,13 @@ Page({
           return;
         }
         const board = res.board || [];
+        const size = res.size || this.data.size;
         this.setData({
           state: board.length ? "board" : "empty",
           board: board,
+          size: size,
+          me: res.me || null,
+          beyond: ranking.beyondOf(board, size, res.total),
           podium: ranking.podiumOf(board),
           rest: ranking.restOf(board),
           label: res.label || ranking.labelOf(this.data),
@@ -103,7 +110,7 @@ Page({
   onGame(e) {
     const game = e.currentTarget.dataset.k;
     if (!game || game === this.data.game) return;
-    this.setData({ game: game, gameDesc: ranking.gameOf(game).desc, board: [], podium: [], rest: [] });
+    this.setData({ game: game, gameDesc: ranking.gameOf(game).desc, board: [], podium: [], rest: [], me: null, beyond: 0 });
     this.load();
   },
 
