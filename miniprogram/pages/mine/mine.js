@@ -181,11 +181,20 @@ Page({
   },
 
   saveNickname(nickname) {
+    const before = store.profile().nickname || "";
     store.saveProfile({ nickname });
     this.syncBar();
     sync.markDirty();
-    auth.saveNickname(nickname);
     this.refresh();
+    auth.saveNickname(nickname).then((r) => this.revertNickname(before, r));
+  },
+
+  revertNickname(before, r) {
+    if (!r || !r.blocked) return;
+    store.saveProfile({ nickname: before });
+    this.syncBar();
+    this.refresh();
+    wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
   },
 
   syncBar() {

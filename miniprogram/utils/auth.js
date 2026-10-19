@@ -190,7 +190,12 @@ function saveNickname(raw) {
       if (name !== store.profile().nickname) store.saveProfile({ nickname: name });
       return { saved: true, nickname: name };
     },
-    () => ({ saved: false, nickname: nickname })
+    (err) => ({
+      saved: false,
+      nickname: nickname,
+      blocked: !!(err && err.code === "E_NICK_BLOCKED"),
+      reason: (err && err.message) || ""
+    })
   );
 }
 

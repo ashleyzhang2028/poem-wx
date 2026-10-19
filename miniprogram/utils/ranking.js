@@ -92,10 +92,16 @@ function labelOf(q) {
 
 function maskNick(raw, uid) {
   const name = String(raw == null ? "" : raw).replace(/\s+/g, "");
+  if (/^.[*]{2}.?$/.test(name)) return name;
   const chars = Array.from(name || ("诗友" + String(uid || "").slice(-4)));
   if (chars.length === 1) return chars[0] + "**";
-  if (chars.length === 2) return chars[0] + "**" + chars[1];
-  return chars[0] + "***" + chars[chars.length - 1];
+  return chars[0] + "**" + chars[chars.length - 1];
+}
+
+function maskRow(row) {
+  const r = row || {};
+  const nick = String(r.nick == null ? "" : r.nick);
+  return Object.assign({}, r, { nick: nick ? maskNick(nick) : "" });
 }
 
 function podiumOf(board) {
@@ -153,6 +159,7 @@ module.exports = {
   queryOf,
   labelOf,
   maskNick,
+  maskRow,
   podiumOf,
   restOf,
   beyondOf,

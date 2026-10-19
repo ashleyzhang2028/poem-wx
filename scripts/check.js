@@ -3136,12 +3136,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && rank.stageOfGrade(12) === "high",
     "学段边界与 scheduler.js 那张表走散，同一份成绩会落到两个榜里");
 
-  ok("昵称只留首末字，中间一律三个星号",
+  ok("昵称只留首末字，中间一律两个星号",
     rank.maskNick("张三") === "张**三"
-      && rank.maskNick("欧阳修文") === "欧***文"
+      && rank.maskNick("欧阳修文") === "欧**文"
       && rank.maskNick("李") === "李**"
-      && rank.maskNick("", "u_123456") === "诗***6",
+      && rank.maskNick("", "u_123456") === "诗**6",
     "打码口径不对 —— " + [rank.maskNick("张三"), rank.maskNick("欧阳修文"), rank.maskNick("")].join(" / "));
+
+  ok("榜单每一行（含自己那一行）都走同一个打码，页面上不留全名",
+    rank.maskRow({ nick: "张三", rank: 1 }).nick === "张**三"
+      && rank.maskRow({ nick: "张三", rank: 1 }).rank === 1
+      && rank.maskRow({ rank: 2 }).nick === ""
+      && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
+      && /me: res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs),
+    "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
     rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 1, nick: "乙", score: 9, total: 10 }])[0].tied === true
@@ -3164,6 +3172,29 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /BOARD_STAGE_GRADES = \{ primary: \[1, 2, 3, 4, 5, 6\], middle: \[7, 8, 9\], high: \[10, 11, 12\] \}/.test(apiCore)
       && /function boardMaskNick/.test(apiCore) && /function boardPeriodStart/.test(apiCore),
     "服务端另立一套学段或另写一份打码，两端就会给出不同的名字与分组");
+
+  ok("昵称写入前过一遍敏感词（拦在 nicknameSet，落库那一层不拦）",
+    /var nickGuard = require\("\.\/nick-guard"\)/.test(apiCore)
+      && /function nicknameSet[\s\S]{0,300}?nickGuard\.hit\(name\)[\s\S]{0,120}?E_NICK_BLOCKED/.test(apiCore),
+    "只在前端拦 —— 换个客户端直连 /api/me 就写进去了");
+
+  ok("榜单打码前先过敏感词（库里已存着的脏名字不上榜）",
+    /function boardMaskNick[\s\S]{0,200}?nickGuard\.hit\(name\)/.test(apiCore),
+    "只拦新写入的话，改口径之前存下的脏名字会一直摆在榜上");
+
+  {
+    const guard = require(path.join(__dirname, "..", "api", "_lib", "nick-guard.js"));
+    ok("敏感词过滤认全角与夹字符（`傻 逼` / `ＦＵＣＫ` 一样认出来）",
+      guard.hit("傻 逼") && guard.hit("傻*逼") && guard.hit("ＦＵＣＫ") && guard.hit("加微信领红包")
+        && !guard.hit("李白") && !guard.hit("欧阳修文") && !guard.hit("诗友3456"),
+      "归一化只做了 trim —— 夹一个空格或星号就绕过去了");
+  }
+
+  ok("昵称被拦后端上退回原名并说一句（不把脏名字留在本机）",
+    /blocked: !!\(err && err\.code === "E_NICK_BLOCKED"\)/.test(read("utils/auth.js"))
+      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => this\.revertNickname\(before, r\)\)/.test(read("pages/mine/mine.js"))
+      && /revertNickname\(before, r\)[\s\S]{0,300}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("pages/mine/mine.js")),
+    "服务端不收，本机却已经改成了那个名字 —— 顶栏与榜上各说一套");
 
   ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
     /function boardGate/.test(apiCore)

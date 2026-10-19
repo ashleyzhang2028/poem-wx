@@ -293,6 +293,7 @@ function makeWx(port, mem) {
 
   {
     const rankMod = require(path.join(REPO, "miniprogram", "utils", "ranking.js"));
+    const rankingMask = (name) => rankMod.maskNick(name);
     const api = (body, method) => {
       const data = body || {};
       return new Promise((resolve) => {
@@ -339,7 +340,7 @@ function makeWx(port, mem) {
     const mineRow = (board.body.board || []).filter((r) => r.me)[0];
     ok("自己那一行在榜上，名次从 1 起", !!mineRow && mineRow.rank === 1, JSON.stringify(board.body.board));
     ok("榜上的名字是打码过的（首末字 + 星号）",
-      !!mineRow && mineRow.nick === rankingMask5("测试某某"), JSON.stringify(mineRow && mineRow.nick));
+      !!mineRow && mineRow.nick === rankingMask("测试某某"), JSON.stringify(mineRow && mineRow.nick));
     ok("榜单按学段 / 年级 / 学期分档（别的档里没有这一行）",
       board.body.label === "小学 · 三年级上册", String(board.body.label));
 
@@ -369,7 +370,7 @@ function makeWx(port, mem) {
       (cut.body.board || []).every((r) => r.rank === 1) && cut.body.me.rank === 2,
       JSON.stringify((cut.body.board || []).map((r) => r.rank).concat([cut.body.me && cut.body.me.rank])));
     ok("圈外那一行的名字也是打码的（不因为是自己就露全名）",
-      !!cut.body.me && cut.body.me.nick === rankingMask5("测试某某"),
+      !!cut.body.me && cut.body.me.nick === rankingMask("测试某某"),
       JSON.stringify(cut.body.me && cut.body.me.nick));
 
     const flyList = await api({ op: "list", game: "fly", stage: "all", period: "day" });
@@ -389,10 +390,37 @@ function makeWx(port, mem) {
     });
     ok("开关不是谁都能拧（普通用户拨不动）", notAdmin.status === 403, String(notAdmin.body));
 
-    function rankingMask5(name) {
-      const chars = Array.from(name);
-      return chars[0] + "***" + chars[chars.length - 1];
-    }
+    const mePatch = (body) => new Promise((resolve) => {
+      const req = http.request({
+        port, method: "PATCH", path: "/api/me",
+        headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
+      }, (res) => {
+        let buf = "";
+        res.on("data", (d) => (buf += d));
+        res.on("end", () => {
+          let out = null;
+          try { out = JSON.parse(buf); } catch (e) { out = buf; }
+          resolve({ status: res.statusCode, body: out });
+        });
+      });
+      req.write(JSON.stringify(body));
+      req.end();
+    });
+
+    const badNick = await mePatch({ nickname: "加微信领红包" });
+    ok("昵称里有敏感词时不收（明说换一个，不是静默截断）",
+      badNick.status === 400 && badNick.body.code === "E_NICK_BLOCKED", JSON.stringify(badNick.body));
+    const goodNick = await mePatch({ nickname: "测试某某" });
+    ok("干净昵称照旧收得下", goodNick.status === 200 && goodNick.body.nickname === "测试某某",
+      JSON.stringify(goodNick.body));
+
+    await svStore.patchAccount(store.profile().userId, { nickname: "傻逼一号" });
+    const dirty = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10 });
+    const dirtyRow = (dirty.body.board || []).filter((r) => r.me)[0] || dirty.body.me;
+    ok("库里存着敏感昵称时榜单不摆它，退回「诗友 + 尾号」",
+      !!dirtyRow && dirtyRow.nick === rankingMask("诗友" + String(store.profile().userId).slice(-4)),
+      JSON.stringify(dirtyRow && dirtyRow.nick));
+    await svStore.patchAccount(store.profile().userId, { nickname: "测试某某" });
   }
 
   server.close();
