@@ -201,6 +201,10 @@ function judge(question, picked) {
   };
 }
 
+function formRows(picked) {
+  return FORMS.map((f) => Object.assign({}, f, { on: (picked || []).indexOf(f.key) >= 0 }));
+}
+
 function formOf(key) {
   return FORMS.find((f) => f.key === key) || FORMS[0];
 }
@@ -212,4 +216,4 @@ function optionClass(row, picked, answer) {
   return "";
 }
 
-module.exports = { FORMS, FORM_KEYS, formOf, build, judge, optionRows, optionClass };
+module.exports = { FORMS, FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass };

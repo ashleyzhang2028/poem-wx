@@ -19,14 +19,13 @@
     <view class="card">
       <view class="card-title">题型</view>
 
-      <checkbox-group class="chip-group cols-3" bindchange="onToggleForm">
-        <label class="chip multi {{pickedForms.indexOf(item.key) >= 0 ? 'on' : ''}}"
-               wx:for="{{forms}}" wx:key="key">
-          <checkbox class="seg-radio" value="{{item.key}}"
-                    checked="{{pickedForms.indexOf(item.key) >= 0}}" />
+      <view class="chip-group cols-3">
+        <view class="chip multi {{item.on ? 'on' : ''}}"
+              wx:for="{{forms}}" wx:key="key" data-key="{{item.key}}" bindtap="onToggleForm"
+              hover-class="chip-hover" hover-stay-time="60">
           <text class="chip-t">{{item.name}}</text>
-        </label>
-      </checkbox-group>
+        </view>
+      </view>
 
     </view>
     <button class="btn primary block" bindtap="onStart">开始考试</button>

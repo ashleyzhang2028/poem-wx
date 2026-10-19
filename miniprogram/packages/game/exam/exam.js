@@ -72,22 +72,25 @@ Page({
     if (!ok || this.ready) return;
     this.ready = true;
 
+    const pickedForms = quiz.FORM_KEYS.slice();
     this.setData({
       scopes: gameScopes.list(),
-      forms: quiz.FORMS,
-      pickedForms: quiz.FORM_KEYS.slice()
+      pickedForms,
+      forms: quiz.formRows(pickedForms)
     });
   },
 
   onToggleForm(e) {
-    const picked = e.detail.value || [];
+    const key = e.currentTarget.dataset.key;
+    const has = this.data.pickedForms.indexOf(key) >= 0;
+    const picked = has
+      ? this.data.pickedForms.filter((k) => k !== key)
+      : this.data.pickedForms.concat([key]);
     if (!picked.length) {
       wx.showToast({ title: "至少留一种题型", icon: "none" });
-
-      this.setData({ pickedForms: this.data.pickedForms.slice() });
       return;
     }
-    this.setData({ pickedForms: picked });
+    this.setData({ pickedForms: picked, forms: quiz.formRows(picked) });
   },
 
   onLogin() {
@@ -295,7 +298,7 @@ Page({
           ranked: !!(res && res.ok && res.on),
           rankOff: !!(res && res.ok && !res.on),
           rankSent: !!(res && res.ok),
-          rankWhere: rankingSelf.label()
+          rankWhere: rankingSelf.labelOf()
         });
       });
   },

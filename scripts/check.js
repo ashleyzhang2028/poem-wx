@@ -1859,19 +1859,27 @@ ok("名录在、标签截断、档位合法",
         && names.indexOf("classic") < 0 && names.indexOf("guwen") < 0,
       "范围里有非诗词的集子：" + names.join("、"));
 
-    const manifest = require(path.join(ROOT, "utils", "corpus.js")).manifest().map;
     const booksMod = require(path.join(ROOT, "utils", "corpus.js"));
     const missing = [];
     scopes.list().forEach((s) => {
-      if (s.id === "poems") return;
       booksMod.ofBook(s.id).forEach((p) => {
-        if (manifest[p.id] && !scopes.pool(s.id).some((q) => q.id === p.id)) {
+        const e = booksMod.entry(p.id);
+        if (e && e.text && !scopes.pool(s.id).some((q) => q.id === p.id)) {
           missing.push(s.id + ":" + p.id);
         }
       });
     });
-    ok("每个集子里凡有正文的条目都进得了这个范围（不是拿课内那 251 首冒充全集）",
+    ok("每个集子里凡有正文的条目都进得了这个范围（课内 251 首也算，正文在主包里）",
       missing.length === 0, "漏了 " + missing.slice(0, 5).join("、"));
+
+    const empty = [];
+    scopes.list().forEach((s) => {
+      feihua.LEVELS.forEach((lv) => {
+        if (!feihua.pick({ level: lv.id, scope: s.id })) empty.push(s.id + "/" + lv.id);
+      });
+    });
+    ok("每一档每一个范围都出得了令字（进页面不会先说「出完了」）",
+      empty.length === 0, "出不了字：" + empty.join("、"));
   }
 
   {
@@ -2364,33 +2372,43 @@ ok("可点元素都有按下反馈", noFeedback.length === 0, noFeedback.slice(0
   ok("分段 / 图标 / 格子的样式没有在页面里各写一遍",
     redefined.length === 0, redefined.slice(0, 5).join("; "));
 
-  const notWrapped = [];
+  const TAGS = /<(label|view)\b([^>]*)>/g;
+  const attrOf = (attrs, name) => {
+    const m = new RegExp(name + '="([^"]*)"').exec(attrs || "");
+    return m ? m[1] : "";
+  };
+
+  const notBound = [];
   pages.forEach((p) => {
     const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
 
-    const re = /<(label|view)\b[^>]*class="(seg-item|chip)\b[^"]*"/g;
-    let m, hits = 0;
-    while ((m = re.exec(wxml))) {
-      hits++;
-      if (m[1] !== "label") notWrapped.push(p + " → <" + m[1] + ' class="' + m[2] + '">');
+    let m;
+    while ((m = TAGS.exec(wxml))) {
+      const cls = attrOf(m[2], "class");
+      if (!/(^|\s)(seg-item|chip)(\s|$)/.test(cls)) continue;
+      if (m[1] === "label" && /<radio\b/.test(wxml)) continue;
+      if (attrOf(m[2], "bindtap")) continue;
+      notBound.push(p + " → <" + m[1] + ' class="' + cls + '">');
     }
-
-    if (hits && !/<(radio|checkbox)\b/.test(wxml)) notWrapped.push(p + " 缺原生控件");
   });
-  ok("分段与格子的每一段都点得到（label + 原生控件）", notWrapped.length === 0, notWrapped.join("; "));
+  ok("分段与格子的每一段都点得到（label 里的原生控件，或者自己 bindtap）",
+    notBound.length === 0, notBound.join("; "));
 
-  const multiGroups = [];
+  const multiSites = [];
   pages.forEach((p) => {
     const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
+    if (!/<checkbox-group[^>]*class="chip-group/.test(wxml)) return;
 
-    if (/<checkbox-group[^>]*class="chip-group/.test(wxml)) {
-
-      const chips = (wxml.match(/<label\b[^>]*class="chip\b/g) || []).length;
-      const multi = (wxml.match(/<label\b[^>]*class="chip multi\b/g) || []).length;
-      if (chips !== multi || chips === 0) multiGroups.push(p + " (" + multi + "/" + chips + ")");
+    let m, chips = 0, multi = 0;
+    while ((m = TAGS.exec(wxml))) {
+      const cls = attrOf(m[2], "class");
+      if (!/(^|\s)chip(\s|$)/.test(cls)) continue;
+      chips++;
+      if (/(^|\s)multi(\s|$)/.test(cls)) multi++;
     }
+    if (chips !== multi || chips === 0) multiSites.push(p + " (" + multi + "/" + chips + ")");
   });
-  ok("多选的格子带 multi（与单选分得开）", multiGroups.length === 0, multiGroups.join("; "));
+  ok("多选的格子带 multi（与单选分得开）", multiSites.length === 0, multiSites.join("; "));
 
   pages.forEach((p) => {
     const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
