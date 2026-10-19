@@ -132,16 +132,8 @@
   background: var(--sink);
 }
 
-.face.on.bad .face-ico {
-  color: var(--red);
-}
-
-.face.on.fuzzy .face-ico {
-  color: var(--amber);
-}
-
-.face.on.good .face-ico {
-  color: var(--red);
+.face.on .face-ico {
+  color: var(--mark);
 }
 
 .all-title {

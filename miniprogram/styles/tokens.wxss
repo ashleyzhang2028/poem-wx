@@ -5,6 +5,7 @@ page {
 
   --strong: var(--theme);
   --strong-soft: var(--c-daiqing-soft);
+  --depth: var(--c-daiqing-depth);
   --strong-text: var(--theme);
 
   --theme-deep: var(--c-daiqing);
@@ -18,6 +19,8 @@ page {
   --on-theme-soft: rgba(255, 255, 255, .7);
   --on-ink: var(--on-theme);
   --on-ink-soft: var(--on-theme-soft);
+
+  --mark: #38383a;
 
   --bg: #f5f5f7;
   --surface: #ffffff;
