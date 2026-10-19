@@ -1,6 +1,8 @@
 const corpus = require("../../../utils/corpus");
 const gameScopes = require("../../../utils/game-scopes");
 
+const LIMIT = 60;
+
 const LEVELS = [
   { id: "easy", name: "常见字", min: 25 },
   { id: "normal", name: "一般字", min: 6 },
@@ -81,23 +83,12 @@ function look(char, opt) {
   const o = opt || {};
   const ch = String(char || "").trim();
   if (!ch) return [];
-  const limit = o.limit || 60;
+  const limit = o.limit || LIMIT;
   const out = [];
 
-  _feihua_scopedPoems(o).forEach((p) => {
+  (poolOfScope(o.scope)[ch] || []).forEach((r) => {
     if (out.length >= limit) return;
-    const e = corpus.entry(p.id);
-    if (!e || !e.text) return;
-    _feihua_segsOf(e.text).forEach((s) => {
-      if (out.length >= limit || s.indexOf(ch) < 0) return;
-      out.push({
-        id: p.id,
-        title: p.t,
-        author: p.a,
-        dynasty: p.d,
-        seg: s
-      });
-    });
+    out.push({ id: r.id, title: r.title, author: r.author, dynasty: r.dynasty, seg: r.seg });
   });
 
   return out;
@@ -105,7 +96,7 @@ function look(char, opt) {
 
 function hint(char, opt) {
   const o = opt || {};
-  const rows = look(char, Object.assign({ limit: 200 }, o));
+  const rows = look(char, Object.assign({ limit: parseInt(o.limit, 10) || 200 }, o));
   const seen = {};
   (o.exclude || []).forEach((t) => {
     seen[_feihua_strip(t)] = 1;
@@ -157,39 +148,26 @@ function judge(char, input, said) {
 
 function pick(opt) {
   const o = opt || {};
-  const inScope = _feihua_scopedPoems(o);
-  const excl = {};
-  (o.exclude || []).forEach((c) => {
-    excl[c] = 1;
-  });
+  const asked = o.exclude || [];
+  const byScope = poolOfScope(o.scope);
+  const hits = collect(o, byScope).filter((c) => asked.indexOf(c) < 0);
+  if (!hits.length) return null;
 
-  const inScopeChars = {};
-  inScope.forEach((p) => {
-    const e = corpus.entry(p.id);
-    if (!e || !e.text) return;
-    _feihua_segsOf(e.text).forEach((s) => {
-      Array.from(new Set(Array.from(s))).forEach((ch) => {
-        if (/[\u3400-\u9fff]/.test(ch)) inScopeChars[ch] = 1;
-      });
-    });
-  });
+  const it = hits[Math.floor(Math.random() * hits.length)];
+  const rows = byScope[it] || [];
+  return { char: it, count: rows.length };
+}
 
+function collect(o, byScope) {
   const all = pool();
   const lv = levelOf(o.level);
 
-  const match = (scopeOnly, levelOnly) => {
-    const list = Object.keys(all)
-      .map((c) => all[c])
-      .filter((it) => {
-        if (excl[it.char]) return false;
-        if (scopeOnly && !inScopeChars[it.char]) return false;
-        if (levelOnly) {
-          if (lv.max ? it.count > lv.max : it.count < lv.min) return false;
-        }
-        return true;
-      });
-    return list;
-  };
+  const match = (scopeOnly, levelOnly) => Object.keys(all).filter((c) => {
+    const it = all[c];
+    if (scopeOnly && !byScope[it.char]) return false;
+    if (levelOnly && !(lv.max ? it.count <= lv.max : it.count >= lv.min)) return false;
+    return true;
+  });
 
   const tiers = [
     match(true, true),
@@ -197,11 +175,54 @@ function pick(opt) {
     match(true, false),
     match(false, false)
   ];
-  const hits = tiers.find((t) => t.length) || [];
-  if (!hits.length) return null;
+  return tiers.find((t) => t.length) || [];
+}
 
-  const it = hits[Math.floor(Math.random() * hits.length)];
-  return { char: it.char, count: it.count, level: it.level };
+let segsCache = null;
+
+function segsOfScope(scopeId) {
+  const key = scopeId || "";
+  if (!segsCache) segsCache = {};
+  if (segsCache[key]) return segsCache[key];
+
+  const out = [];
+  _feihua_scopedPoems({ scope: scopeId }).forEach((p) => {
+    const e = corpus.entry(p.id);
+    if (!e || !e.text) return;
+    _feihua_segsOf(e.text).forEach((seg) => {
+      out.push({ id: p.id, title: p.t, author: p.a, dynasty: p.d, seg: seg });
+    });
+  });
+
+  segsCache[key] = out;
+  return out;
+}
+
+let byScopeCache = null;
+
+function poolOfScope(scopeId) {
+  const key = scopeId || "";
+  if (!byScopeCache) byScopeCache = {};
+  if (byScopeCache[key]) return byScopeCache[key];
+
+  const out = {};
+  segsOfScope(scopeId).forEach((r) => {
+    charSetOf(r.seg).forEach((ch) => {
+      if (!out[ch]) out[ch] = [];
+      out[ch].push(r);
+    });
+  });
+
+  byScopeCache[key] = out;
+  return out;
+}
+
+function charSetOf(seg) {
+  const set = new Set();
+  Array.from(seg).forEach((ch) => {
+    if (/[\u3400-\u9fff]/.test(ch)) set.add(ch);
+  });
+  return Array.from(set);
 }
 
 module.exports = {

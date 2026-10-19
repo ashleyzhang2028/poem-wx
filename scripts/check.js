@@ -1832,6 +1832,21 @@ ok("名录在、标签截断、档位合法",
     ok("飞花令出得了令字（范围内随机）", picks.length === 30, "只有 " + picks.length + " 次出字");
     ok("随机出来的令字都能随机到不止一个（不是钉死一个）",
       new Set(picks).size > 1, "30 次只出了 " + new Set(picks).size + " 个字");
+
+    const blind = [];
+    scopes.list().forEach((s) => {
+      ["easy", "normal", "hard"].forEach((lv) => {
+        const asked = [];
+        for (let i = 0; i < 400; i++) {
+          const p = feihua.pick({ level: lv, scope: s.id, exclude: asked });
+          if (!p) break;
+          asked.push(p.char);
+          if (!feihua.look(p.char, { scope: s.id, limit: 1 }).length) blind.push(s.id + "/" + lv + ":" + p.char);
+        }
+      });
+    });
+    ok("出的令字在这个范围里一定接得上（不会出一个空格子）",
+      blind.length === 0, "出得了字却查不到答案：" + blind.slice(0, 5).join("、"));
   }
 
   {

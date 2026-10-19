@@ -11,10 +11,10 @@
       </view>
 
       <view class="fh-char">
-        <text class="fh-char-t">{{char}}</text>
+        <text class="fh-char-t">{{char || '令'}}</text>
         <text class="fh-mark" wx:if="{{mark}}">{{mark}}</text>
       </view>
-      <text class="fh-ask">写一句带「{{char}}」的诗词</text>
+      <text class="fh-ask">{{ask}}</text>
 
       <view class="field fh-field {{flash ? 'flash ' + flash : ''}}">
         <input class="field-input" value="{{input}}" placeholder="例如：云深不知处"
