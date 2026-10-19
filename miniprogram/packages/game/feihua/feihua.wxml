@@ -34,6 +34,8 @@
 
       <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
 
+      <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
+
       <button class="btn ghost block restart" wx:if="{{locked && done.length}}" bindtap="onRestart">
         再开一轮
       </button>

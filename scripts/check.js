@@ -1934,9 +1934,10 @@ ok("名录在、标签截断、档位合法",
   const cheer = require(path.join(ROOT, "utils", "cheer.js"));
 
   ok("鼓励语只有一份（考试与飞花令取同一个池，不在页面里各写一套）",
-    (fs.readFileSync(path.join(ROOT, "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK) = /gm) || []).length === 3
+    (fs.readFileSync(path.join(ROOT, "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK|LING) = /gm) || []).length === 4
       && /cheer\.ofScore/.test(read("packages/game/exam/exam.js"))
-      && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js")),
+      && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js"))
+      && /cheer\.ofLing/.test(read("packages/game/feihua/feihua.js")),
     "激励文案散在页面里 —— 改一处漏一处");
 
   const low = cheer.ofScore(0, 1);
@@ -1977,7 +1978,19 @@ ok("名录在、标签截断、档位合法",
       && examWxml.indexOf("{{quitLine}}") >= 0,
     "空着题交卷既没有提醒，也没法再交");
 
+  ok("飞花令按接上的句数给这一轮评语（0 / 4 / 8 / 13 / 14 各落到自己那一档）",
+    [0, 4, 8, 13, 14].every((n) => cheer.ofLing(n, 0).length > 0)
+      && new Set([0, 4, 8, 13, 14].map((n) => cheer.ofLing(n, 0))).size === 5,
+    "几个不同的句数给的是同一句，或某一档没有话");
+
   const fhJs = read("packages/game/feihua/feihua.js");
+  const fhWxml = read("packages/game/feihua/feihua.wxml").replace(/<!--[\s\S]*?-->/g, "");
+  ok("飞花令一轮结束时把这轮的评语写进 remark，翻令时清掉",
+    /remark:\s*cheer\.ofLing\(/.test(fhJs)
+      && fhWxml.indexOf("{{remark}}") >= 0
+      && /remark: ""/.test(fhJs.replace(/remark:\s*cheer\.ofLing\([^)]*\)/, "")),
+    "评语没进模板，或者换令之后还挂着上一轮的评语");
+
   ok("飞花令把里程碑那句渲染出来（页面上下各留一份，翻题时清掉）",
     read("packages/game/feihua/feihua.wxml").indexOf("{{cheerLine}}") >= 0
       && /cheerLine:\s*cheer\.ofStreak\(/.test(fhJs)

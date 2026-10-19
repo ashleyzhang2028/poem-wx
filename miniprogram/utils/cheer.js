@@ -24,6 +24,31 @@ const STREAK = {
   30: "三十句，这已是本事。"
 };
 
+const LING = {
+  14: [
+    "连吟如贯，胸藏千章。此令酣畅，后会有期。",
+    "应对从容，行云无滞。诗心如是，当为雅客。"
+  ],
+  9: [
+    "气象初成，偶作停顿，诗思未竭。",
+    "令下有得，句蕴春风。精进少许，一气贯通。"
+  ],
+  5: [
+    "路径已明，句待熟诵。时时温习，随口可成。",
+    "中途得句，足见勤功。细加研读，渐至盈篇。"
+  ],
+  1: [
+    "起手稍缓，已入雅境。日日积累，不必匆促。",
+    "初接片语，即是开端。诗书久浸，眼界自宽。"
+  ],
+  0: [
+    "一时难续，所得非虚。广储诗章，重赴飞花。",
+    "令字虽难，自此启学。勤加记诵，终可应答。"
+  ]
+};
+
+const LING_FROM = [14, 9, 5, 1, 0];
+
 const MILESTONE = 10;
 
 function _cheer_pick(list, seed) {
@@ -77,8 +102,29 @@ const SAY = {
   absent: ["这一句不在诗文集里。", "没对上，换一句试试。"]
 };
 
+function _cheer_lingFrom(n) {
+  return LING_FROM.find((f) => n >= f);
+}
+
+function ofLing(said, seed) {
+  const n = Math.max(0, Math.floor(said) || 0);
+  return _cheer_pick(LING[_cheer_lingFrom(n)], seed);
+}
+
 function ofSay(why, seed) {
   return _cheer_pick(SAY[why] || SAY.absent, seed);
 }
 
-module.exports = { MARKS, KEEP, STREAK, SAY, ofScore, ofStreak, ofRun, ofQuit, ofSay };
+module.exports = {
+  MARKS,
+  KEEP,
+  STREAK,
+  LING,
+  SAY,
+  ofScore,
+  ofStreak,
+  ofRun,
+  ofQuit,
+  ofLing,
+  ofSay
+};
