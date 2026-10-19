@@ -695,22 +695,35 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   }
 
   const seen = [];
-  const e = bootFont(
-    { fontUrl: "https://cdn.example.com/kuibu-serif.woff2" },
-    { loadFontFace: (o) => { seen.push(o); o.success && o.success(); } }
-  );
-  ok("配了 CDN 时诗词字体就绪", e.font.readiness().usable === true);
-  e.font.load();
-  ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
-    seen.length === 1 && seen[0].family === e.font.FAMILY,
-    seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
+  const e = bootFont({}, { loadFontFace: (o) => { seen.push(o); o.success && o.success(); } });
+  ok("默认地址下诗词字体就绪", e.font.readiness().usable === true);
+  e.font.load().then(() => {
+    ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
+      seen.length === 1 && seen[0].family === e.font.FAMILY,
+      seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
+  });
   e.restore();
 
+  const fallback = [];
+  const e3 = bootFont({}, {
+    loadFontFace: (o) => {
+      fallback.push(o.source);
+      o.source.indexOf(".woff2") >= 0 ? (o.fail && o.fail({})) : (o.success && o.success());
+    }
+  });
+  e3.font.load().then((hit) => {
+    ok("woff2 那一份注册失败就退到 woff（老 iOS）",
+      hit === true && fallback.length === 2 && fallback[1].indexOf(".woff2") < 0,
+      fallback.join(" | "));
+  });
+  e3.restore();
+
   const idle = [];
-  const e2 = bootFont({}, { loadFontFace: (o) => { idle.push(o); o.success && o.success(); } });
-  ok("没配地址时就绪为否", e2.font.readiness().usable === false);
-  e2.font.load();
-  ok("没配地址时不去注册字体", idle.length === 0, idle.map((o) => o.family).join(" | "));
+  const e2 = bootFont({ fontUrl: "" }, { loadFontFace: (o) => { idle.push(o); o.success && o.success(); } });
+  ok("地址被显式清空时就绪为否", e2.font.readiness().usable === false);
+  e2.font.load().then(() => {
+    ok("没地址时不去注册字体", idle.length === 0, idle.map((o) => o.family).join(" | "));
+  });
   e2.restore();
 
   const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
