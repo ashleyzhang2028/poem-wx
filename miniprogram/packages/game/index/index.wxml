@@ -16,6 +16,18 @@
     </button>
   </view>
 
+  <view class="card ranking-card" wx:if="{{rankingOn}}" hover-class="row-hover" hover-stay-time="60"
+        bindtap="onRanking">
+    <view class="row row-flush">
+      <view class="row-icon">榜</view>
+      <view class="row-main">
+        <text class="row-title">排行榜</text>
+        <text class="row-sub">分学段 · 分年级 · 分学期 · 按日周月年</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
   <view class="safe-bottom"></view>
   </block>
 </view>

@@ -291,6 +291,110 @@ function makeWx(port, mem) {
     hits.length = 0;
   }
 
+  {
+    const rankMod = require(path.join(REPO, "miniprogram", "utils", "ranking.js"));
+    const api = (body, method) => {
+      const data = body || {};
+      return new Promise((resolve) => {
+        const req = http.request({
+          port, method: method || "POST", path: "/api/ranking",
+          headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
+        }, (res) => {
+          let buf = "";
+          res.on("data", (d) => (buf += d));
+          res.on("end", () => {
+            let out = null;
+            try { out = JSON.parse(buf); } catch (e) { out = buf; }
+            resolve({ status: res.statusCode, body: out });
+          });
+        });
+        req.write(JSON.stringify(data));
+        req.end();
+      });
+    };
+
+    const offVisible = await api({ op: "visible", game: "exam" });
+    ok("榜单一上线是关的（默认关，谁都没打开过）",
+      offVisible.status === 200 && offVisible.body.on === false, JSON.stringify(offVisible.body));
+
+    const offList = await api({ op: "list", game: "exam" });
+    ok("关着的时候读不到榜单（不是空榜，是明说没开）",
+      offList.status === 403 && offList.body.code === "E_RANKING_OFF", JSON.stringify(offList.body));
+
+    const offSubmit = await api({ op: "submit", game: "exam", score: 9, total: 10 });
+    ok("关着的时候交上来的成绩也不收", offSubmit.status === 403 && offSubmit.body.code === "E_RANKING_OFF",
+      JSON.stringify(offSubmit.body));
+
+    await svStore.putSetting("ranking:exam", "1");
+    await svStore.patchAccount(store.profile().userId, { nickname: "测试某某" });
+
+    const onSubmit = await api({
+      op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1, durationSec: 300
+    });
+    ok("开了之后成绩收得下", onSubmit.status === 200 && !!onSubmit.body.recorded, JSON.stringify(onSubmit.body));
+
+    const board = await api({
+      op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10
+    });
+    const mineRow = (board.body.board || []).filter((r) => r.me)[0];
+    ok("自己那一行在榜上，名次从 1 起", !!mineRow && mineRow.rank === 1, JSON.stringify(board.body.board));
+    ok("榜上的名字是打码过的（首末字 + 星号）",
+      !!mineRow && mineRow.nick === rankingMask5("测试某某"), JSON.stringify(mineRow && mineRow.nick));
+    ok("榜单按学段 / 年级 / 学期分档（别的档里没有这一行）",
+      board.body.label === "小学 · 三年级上册", String(board.body.label));
+
+    const other = await api({ op: "list", game: "exam", stage: "middle", grade: 7, period: "day" });
+    ok("只考过小学那一档时，初中榜是空的", (other.body.board || []).length === 0,
+      JSON.stringify(other.body.board));
+
+    const others = [];
+    for (let i = 0; i < 25; i += 1) {
+      const uid = "u_probe_" + i;
+      await svStore.putAccount({ uid: uid, status: "active", nickname: "诗友" + i, created_at: 1 });
+      await svStore.putScoreRecord({
+        srid: "sc_probe_" + i, uid: uid, game: "exam", scope_id: "", stage: "primary",
+        grade: 3, term: 1, score: 10, total: 10, duration_sec: 100 + i, created_at: Date.now() - 1000 + i
+      });
+      others.push(uid);
+    }
+
+    const cut = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10 });
+    ok("榜只列前 N 名（剩下的人不跟着拉下来）",
+      (cut.body.board || []).length === 10 && cut.body.total === 26,
+      (cut.body.board || []).length + " / " + cut.body.total);
+    ok("自己排在 N 名之外时，单给自己一行名次（不把整张榜拉下来）",
+      !!cut.body.me && cut.body.me.rank === 2 && cut.body.me.me === true,
+      JSON.stringify(cut.body.me) + " total=" + cut.body.total);
+    ok("同分同名次（下一名跳号）",
+      (cut.body.board || []).every((r) => r.rank === 1) && cut.body.me.rank === 2,
+      JSON.stringify((cut.body.board || []).map((r) => r.rank).concat([cut.body.me && cut.body.me.rank])));
+    ok("圈外那一行的名字也是打码的（不因为是自己就露全名）",
+      !!cut.body.me && cut.body.me.nick === rankingMask5("测试某某"),
+      JSON.stringify(cut.body.me && cut.body.me.nick));
+
+    const flyList = await api({ op: "list", game: "fly", stage: "all", period: "day" });
+    ok("飞花令榜与考试榜各算各的", flyList.status === 403, JSON.stringify(flyList.body));
+
+    const notAdmin = await new Promise((resolve) => {
+      const req = http.request({
+        port, method: "POST", path: "/api/admin/ranking",
+        headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
+      }, (res) => {
+        let buf = "";
+        res.on("data", (d) => (buf += d));
+        res.on("end", () => resolve({ status: res.statusCode, body: buf }));
+      });
+      req.write(JSON.stringify({ game: "exam", on: true }));
+      req.end();
+    });
+    ok("开关不是谁都能拧（普通用户拨不动）", notAdmin.status === 403, String(notAdmin.body));
+
+    function rankingMask5(name) {
+      const chars = Array.from(name);
+      return chars[0] + "***" + chars[chars.length - 1];
+    }
+  }
+
   server.close();
   const bad = results.filter((r) => !r).length;
   console.log("\n" + results.length + " 项，失败 " + bad + " 项");

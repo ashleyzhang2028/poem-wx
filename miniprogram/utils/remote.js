@@ -19,6 +19,8 @@ const PATHS = {
   accounts: "/api/admin/accounts",
   grant: "/api/admin/grant",
   role: "/api/admin/role",
+  ranking: "/api/ranking",
+  adminRanking: "/api/admin/ranking",
   me: "/api/me"
 };
 
@@ -419,6 +421,52 @@ function setUserRole(uid, role) {
   }));
 }
 
+function rankingVisible(game) {
+  if (!configured()) return Promise.resolve({ on: false, offline: true });
+  return request(PATHS.ranking, { op: "visible", game: game }).then((res) => ({
+    on: !!(res && res.on),
+    offline: false
+  }));
+}
+
+function rankingList(query) {
+  if (!configured()) return Promise.resolve({ ok: false, offline: true, board: [] });
+  return request(PATHS.ranking, Object.assign({ op: "list" }, query || {})).then((res) => ({
+    ok: true,
+    offline: false,
+    board: (res && res.board) || [],
+    me: (res && res.me) || null,
+    total: (res && res.total) || 0,
+    label: (res && res.label) || "",
+    filter: (res && res.filter) || null
+  }));
+}
+
+function rankingSubmit(entry) {
+  if (!configured()) return Promise.resolve({ ok: false, offline: true });
+  return request(PATHS.ranking, Object.assign({ op: "submit" }, entry || {})).then((res) => ({
+    ok: !!(res && res.recorded),
+    offline: false
+  }));
+}
+
+function adminRanking(game) {
+  if (!adminReady()) return Promise.resolve({ on: false, sim: true });
+  return request(PATHS.adminRanking, { game: game }, "GET").then((res) => ({
+    on: !!(res && res.on),
+    sim: false
+  }));
+}
+
+function setAdminRanking(game, on) {
+  if (!adminReady()) return Promise.resolve({ ok: false, sim: true });
+  return request(PATHS.adminRanking, { game: game, on: !!on }).then((res) => ({
+    ok: true,
+    on: !!(res && res.on),
+    sim: false
+  }));
+}
+
 module.exports = {
   PATHS,
   credentialBody,
@@ -438,5 +486,10 @@ module.exports = {
   listUsers,
   setUserTier,
   revokeUserTier,
-  setUserRole
+  setUserRole,
+  rankingVisible,
+  rankingList,
+  rankingSubmit,
+  adminRanking,
+  setAdminRanking
 };

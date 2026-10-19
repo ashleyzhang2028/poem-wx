@@ -6,6 +6,7 @@ const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
+const rankingSubmit = require("../../../utils/ranking-submit");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -52,7 +53,8 @@ Page({
     newBest: false,
 
     allowed: false,
-    reason: ""
+    reason: "",
+    ranked: false
   },
 
   onShow() {
@@ -243,6 +245,19 @@ Page({
       rank,
       newBest: kept.best,
       best: kept.before ? kept.before.rank.name : ""
+    });
+    this.report(correct, questions.length);
+  },
+
+  report(correct, count) {
+    rankingSubmit.submitPlay("exam", {
+      stage: "all",
+      scopeId: this.data.scope || "",
+      score: correct,
+      total: count,
+      durationSec: DURATION - this.data.remain
+    }).then((res) => {
+      if (this.data.stage === "result") this.setData({ ranked: !!(res && res.ok) });
     });
   },
 

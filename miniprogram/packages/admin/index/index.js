@@ -18,7 +18,9 @@ Page({
     range: admin.defaultRange(),
     tab: "bar",
     chart: null,
-    curve: ""
+    curve: "",
+    rankingOn: false,
+    rankingNote: "默认关 · 打开后大会页才出现榜单入口"
   },
 
   onShow() {
@@ -26,6 +28,29 @@ Page({
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
     this.loadStats();
+    this.loadRanking();
+  },
+
+  loadRanking() {
+    admin.rankingState().then((res) => {
+      this.setData({
+        rankingOn: !!res.on,
+        rankingNote: res.note || "打开后大会页才出现榜单入口"
+      });
+    });
+  },
+
+  onRanking(e) {
+    const on = !!e.detail.value;
+    this.setData({ rankingOn: on });
+    admin.setRanking(on).then((res) => {
+      if (!res.ok) {
+        this.setData({ rankingOn: !on, rankingNote: res.msg });
+        wx.showToast({ title: res.msg, icon: "none" });
+        return;
+      }
+      this.setData({ rankingOn: !!res.on, rankingNote: res.on ? "已打开" : "已隐藏" });
+    });
   },
 
   refresh() {

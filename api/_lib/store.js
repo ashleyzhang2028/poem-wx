@@ -3,7 +3,7 @@
 var upstream = require("./upstream");
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {} };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, scoreRecords: {}, settings: {} };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -294,6 +294,25 @@ function memoryStore() {
       if (!db.examRecords[eid]) return Promise.resolve(false);
       delete db.examRecords[eid];
       return Promise.resolve(true);
+    },
+
+    putScoreRecord: function (row) { db.scoreRecords[row.srid] = row; return Promise.resolve({ srid: row.srid }); },
+    listScoreRecords: function (filter, limit) {
+      var f = filter || {};
+      var out = Object.keys(db.scoreRecords).map(function (k) { return db.scoreRecords[k]; });
+      if (f.game) out = out.filter(function (r) { return r.game === f.game; });
+      if (f.stage && f.stage !== "all") out = out.filter(function (r) { return r.stage === f.stage; });
+      if (f.grade) out = out.filter(function (r) { return Number(r.grade) === Number(f.grade); });
+      if (f.term) out = out.filter(function (r) { return Number(r.term) === Number(f.term); });
+      if (f.from) out = out.filter(function (r) { return Number(r.created_at) >= Number(f.from); });
+      out.sort(function (a, b) { return (b.created_at || 0) - (a.created_at || 0); });
+      return Promise.resolve(out.slice(0, limit || 3000));
+    },
+
+    getSetting: function (key) { return Promise.resolve(db.settings[key] || null); },
+    putSetting: function (key, value) {
+      db.settings[key] = { key: key, value: value == null ? null : value };
+      return Promise.resolve(db.settings[key]);
     }
   };
   return api;

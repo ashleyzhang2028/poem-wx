@@ -4,6 +4,7 @@ const feedback = require("../../../utils/feedback");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
+const remote = require("../../../utils/remote");
 
 const MODES = [
   { key: "feihua", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
@@ -25,7 +26,8 @@ Page({
     themeStyle: "",
     barBelow: true,
     locked: true,
-    cards: []
+    cards: [],
+    rankingOn: false
   },
 
   onShow() {
@@ -46,6 +48,17 @@ Page({
       });
     });
     this.setData({ locked: false, cards });
+    this.loadRanking();
+  },
+
+  loadRanking() {
+    remote.rankingVisible("exam").then((vis) => {
+      this.setData({ rankingOn: !!vis.on && !vis.offline });
+    });
+  },
+
+  onRanking() {
+    wx.navigateTo({ url: "/packages/ranking/index/index" });
   },
 
   onLogin() {

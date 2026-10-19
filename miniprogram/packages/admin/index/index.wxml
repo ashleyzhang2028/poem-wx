@@ -69,6 +69,18 @@
   </view>
 
   <view class="card">
+    <view class="row row-flush">
+      <view class="row-icon">榜</view>
+      <view class="row-main">
+        <text class="row-title">古诗词大会排行榜</text>
+        <text class="row-sub">{{rankingNote}}</text>
+      </view>
+      <view class="sw">
+        <switch checked="{{rankingOn}}" color="{{lineColor}}"
+                bindchange="onRanking" disabled="{{!logged}}" />
+      </view>
+    </view>
+
     <view class="row row-flush" wx:if="{{logged}}"
           hover-class="row-hover" hover-stay-time="60" bindtap="onUsers">
       <view class="row-icon">人</view>

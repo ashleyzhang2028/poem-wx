@@ -3049,6 +3049,108 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 }
 
 {
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const rank = require(path.join(ROOT, "utils", "ranking.js"));
+  const pageJs = read("packages/ranking/index/index.js");
+  const pageWxml = read("packages/ranking/index/index.wxml");
+  const adminJs = read("packages/admin/index/index.js");
+  const adminWxml = read("packages/admin/index/index.wxml");
+  const apiCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
+  const apiStore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "store.js"), "utf8");
+  const apiMysql = fs.readFileSync(path.join(__dirname, "..", "deploy", "store-mysql.js"), "utf8");
+
+  ok("分档口径与排期层同一套学段（小学 1-6 / 初中 7-9 / 高中 10-12）",
+    rank.STAGE_GRADES.primary.join() === "1,2,3,4,5,6"
+      && rank.STAGE_GRADES.middle.join() === "7,8,9"
+      && rank.STAGE_GRADES.high.join() === "10,11,12"
+      && rank.stageOfGrade(1) === "primary" && rank.stageOfGrade(9) === "middle"
+      && rank.stageOfGrade(12) === "high",
+    "学段边界与 scheduler.js 那张表走散，同一份成绩会落到两个榜里");
+
+  ok("昵称只留首末字，中间一律三个星号",
+    rank.maskNick("张三") === "张**三"
+      && rank.maskNick("欧阳修文") === "欧***文"
+      && rank.maskNick("李") === "李**"
+      && rank.maskNick("", "u_123456") === "诗***6",
+    "打码口径不对 —— " + [rank.maskNick("张三"), rank.maskNick("欧阳修文"), rank.maskNick("")].join(" / "));
+
+  ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
+    rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 1, nick: "乙", score: 9, total: 10 }])[0].tied === true
+      && rank.restOf([{ rank: 1 }, { rank: 2 }, { rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
+    "同分的人各占一行名次，第 2 名凭空消失；或同一个人被抄成两行");
+
+  ok("领奖台只认前三名，第四名起进列表",
+    rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 2, nick: "乙", score: 8, total: 10 }])
+      .filter((m) => m.filled).length === 2
+      && rank.podiumOf([]).length === 3
+      && rank.restOf([{ rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
+    "领奖台与列表的切分不在第 3 名上，同一个人会既上台又上榜");
+
+  ok("榜单查询把「全部学段」与「具体年级」分开（两者不会同时生效）",
+    rank.queryOf({ stage: "all", grade: 3, term: 1 }).grade === 0
+      && rank.queryOf({ stage: "primary", grade: 3, term: 1 }).grade === 3,
+    "选了全部还带着年级，榜单就会在一段空成绩里排");
+
+  ok("服务端与客户端的分档口径是同一套（能力键同表）",
+    /BOARD_STAGE_GRADES = \{ primary: \[1, 2, 3, 4, 5, 6\], middle: \[7, 8, 9\], high: \[10, 11, 12\] \}/.test(apiCore)
+      && /function boardMaskNick/.test(apiCore) && /function boardPeriodStart/.test(apiCore),
+    "服务端另立一套学段或另写一份打码，两端就会给出不同的名字与分组");
+
+  ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
+    /function boardGate/.test(apiCore)
+      && /E_RANKING_OFF/.test(apiCore)
+      && /function boardList[\s\S]{0,400}?boardGate/.test(apiCore)
+      && /function boardSubmit[\s\S]{0,400}?boardGate/.test(apiCore),
+    "只关列表不关提交，用户交完成绩却发现榜上没有自己");
+
+  ok("开关默认关（没有那一行就是关，不是开）",
+    /return !!\(row && String\(row\.value\) === "1"\)/.test(apiCore)
+      && /var want = !!/.test(apiCore)
+      && !/row === null[\s\S]{0,40}?return true/.test(apiCore),
+    "默认值翻成 true 之后，昵称会不经管理员点头就摆到别人面前");
+
+  ok("成绩底账不存昵称（改名一次全站生效，不用回灌历史行）",
+    /putScoreRecord: function \(row\)/.test(apiStore)
+      && !/nickname/.test(apiStore.slice(apiStore.indexOf("putScoreRecord"), apiStore.indexOf("getSetting")))
+      && !/`nickname`/.test(apiMysql.slice(apiMysql.indexOf("putScoreRecord"), apiMysql.indexOf("putSetting"))),
+    "把昵称抄进了成绩行，用户改名后榜上留的还是旧名字");
+
+  ok("榜只给前 N 名，N 之外的自己单给一行",
+    /var shown = ranked\.slice\(0, size\)/.test(apiCore)
+      && /me: self/.test(apiCore)
+      && /r\.mine && ranked\.indexOf\(r\) >= size/.test(apiCore),
+    "整张榜拉下来再挑 —— 人一多就白拉；或者干脆不给自己那一行，第 1685 名看不到自己");
+
+  ok("圈外那一行在上榜行下面，隔一句「还有多少位」",
+    pageWxml.indexOf("{{beyond}}") >= 0
+      && pageWxml.indexOf("wx:if=\"{{me}}\"") >= 0
+      && pageWxml.indexOf("wx:for=\"{{rest}}\"") < pageWxml.indexOf("wx:if=\"{{me}}\"")
+      && rank.beyondOf([{ rank: 1 }], 10, 1685) === 1684 && rank.beyondOf([], 10, 0) === 0,
+    "圈外那一行跑到列表上面，或者「还有几位」把自己也数进去");
+
+  ok("榜单是单独一页，入口在大会页（不挤进考试页里）",
+    app.subPackages.filter((sp) => sp.root === "packages/ranking").length === 1
+      && /onRanking/.test(read("packages/game/index/index.js"))
+      && /packages\/ranking\/index\/index/.test(read("packages/game/index/index.js"))
+      && pageWxml.indexOf("podium") >= 0
+      && pageJs.indexOf("rankingList") >= 0,
+    "榜单挂在考试结果页里的话，飞花令那一半就没有入口");
+
+  ok("榜单页按「学段 / 年级 / 学期 / 日周月年」四层收窄，且走的是同一份查询",
+    pageWxml.indexOf("onStage") >= 0 && pageWxml.indexOf("onGrade") >= 0
+      && pageWxml.indexOf("onTerm") >= 0 && pageWxml.indexOf("onPeriod") >= 0
+      && (pageJs.match(/this\.load\(\)/g) || []).length >= 4,
+    "少一层就等于把不同档次的成绩排在一块");
+
+  ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
+    adminWxml.indexOf("onRanking") >= 0
+      && /admin\.rankingState\(\)/.test(adminJs) && /admin\.setRanking\(/.test(adminJs)
+      && /PATHS\.adminRanking/.test(read("utils\/remote.js"))
+      && /"\/api\/admin\/ranking"/.test(read("utils\/remote.js")),
+    "开关只在页面上改个布尔值、不落服务端 —— 用户那头一点变化都没有");
+}
+
+{
   const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
   const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
   const prefsAt = readerWxml.indexOf('class="prefs"');

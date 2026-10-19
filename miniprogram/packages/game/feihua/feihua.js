@@ -8,6 +8,7 @@ const S = require("../../../utils/scheduler");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
+const rankingSubmit = require("../../../utils/ranking-submit");
 
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
@@ -27,6 +28,9 @@ Page({
 
     streak: 0,
     best: 0,
+
+    lastScore: 0,
+    ranked: false,
 
     input: "",
     message: "",
@@ -115,6 +119,8 @@ Page({
     if (!p && exclude.length) {
       p = feihua.pick({ level: this.data.level, scope: opt.scope, grade: opt.grade, term: opt.term });
     }
+    if (this.data.streak) this.report(this.data.streak);
+
     const char = p ? p.char : "";
     this.setData(
       {
@@ -224,6 +230,12 @@ Page({
       this.timer = null;
       this.next();
     }, ms);
+  },
+
+  report(streak) {
+    rankingSubmit
+      .submitPlay("fly", { stage: "all", scopeId: this.data.scope || "", score: streak, total: streak })
+      .then((res) => this.setData({ ranked: !!(res && res.ok), lastScore: streak }));
   },
 
   onUnload() {

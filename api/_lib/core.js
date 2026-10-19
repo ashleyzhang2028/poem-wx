@@ -3124,6 +3124,285 @@ function examRecordDelete(deps, input) {
   });
 }
 
+var BOARD_GAMES = ["fly", "exam"];
+var BOARD_STAGES = ["all", "primary", "middle", "high"];
+var BOARD_STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
+var BOARD_PERIODS = ["day", "week", "month", "year"];
+var BOARD_SIZES = [10, 20, 50];
+var BOARD_LIMITS = { scopeId: 64, size: 50, records: 3000 };
+var BOARD_NICK_MAX = 12;
+var BOARD_GRADE_LABELS = { 1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级", 5: "五年级", 6: "六年级",
+  7: "七年级", 8: "八年级", 9: "九年级", 10: "高一", 11: "高二", 12: "高三" };
+var BOARD_KEY_PREFIX = "ranking:";
+
+function boardStageOfGrade(grade) {
+  var g = Number(grade) || 0;
+  var keys = Object.keys(BOARD_STAGE_GRADES);
+  for (var i = 0; i < keys.length; i++) {
+    if (BOARD_STAGE_GRADES[keys[i]].indexOf(g) >= 0) return keys[i];
+  }
+  return "all";
+}
+
+function boardPeriodStart(period, at) {
+  var d = new Date(Number(at) || Date.now());
+  if (period === "week") {
+    var sinceMonday = (d.getDay() + 6) % 7;
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - sinceMonday);
+    return d.getTime();
+  }
+  if (period === "month") return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  if (period === "year") return new Date(d.getFullYear(), 0, 1).getTime();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function boardMaskNick(raw, uid) {
+  var name = nicknameNorm(raw);
+  if (!name) name = "诗友" + String(uid || "").slice(-4);
+  var chars = Array.from(name);
+  if (chars.length === 1) return chars[0] + "**";
+  if (chars.length === 2) return chars[0] + "**" + chars[1];
+  return chars[0] + "***" + chars[chars.length - 1];
+}
+
+function boardRows(records, now) {
+  var nowMs = Number(now) || Date.now();
+  var byUid = {};
+  (records || []).forEach(function (r) {
+    if (!r || !r.uid) return;
+    var score = Number(r.score) || 0;
+    var total = Number(r.total) || 0;
+    var duration = Number(r.duration_sec) || 0;
+    var at = Number(r.created_at) || 0;
+    var cur = byUid[r.uid];
+    if (!cur) {
+      cur = byUid[r.uid] = { uid: r.uid, firstAt: at || nowMs, plays: 0 };
+      cur.score = score;
+      cur.total = total;
+      cur.duration = duration;
+      cur.at = at;
+      cur.plays = 1;
+      return;
+    }
+    cur.plays += 1;
+    cur.firstAt = Math.min(cur.firstAt, at || nowMs);
+    if (score > cur.score
+      || (score === cur.score && total > cur.total)
+      || (score === cur.score && total === cur.total && duration && (!cur.duration || duration < cur.duration))
+      || (score === cur.score && total === cur.total && duration === cur.duration && at > cur.at)) {
+      cur.score = score;
+      cur.total = total;
+      cur.duration = duration;
+      cur.at = at;
+    }
+  });
+  var rows = Object.keys(byUid).map(function (k) { return byUid[k]; });
+  rows.sort(function (a, b) {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.total !== a.total) return b.total - a.total;
+    if (a.duration !== b.duration) return (a.duration || 1e9) - (b.duration || 1e9);
+    return a.firstAt - b.firstAt;
+  });
+
+  var rank = 0, above = null;
+  rows.forEach(function (r) {
+    if (!above || above.score !== r.score || above.total !== r.total) {
+      rank += 1;
+      above = r;
+    }
+    r.rank = rank;
+  });
+  return rows;
+}
+
+function boardKeyOf(game) {
+  return BOARD_KEY_PREFIX + game;
+}
+
+function boardReadSwitch(deps, game) {
+  return Promise.resolve(deps.store.getSetting(boardKeyOf(game))).then(function (row) {
+    return !!(row && String(row.value) === "1");
+  });
+}
+
+function boardWriteSwitch(deps, game, on) {
+  return Promise.resolve(deps.store.putSetting(boardKeyOf(game), on ? "1" : "0")).then(function () {
+    return !!on;
+  });
+}
+
+function boardGate(deps, input) {
+  var cfg = deps.cfg;
+  if (!cfg.hasSession()) {
+    return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
+  }
+  var game = String((input && input.game) || "exam").toLowerCase();
+  if (BOARD_GAMES.indexOf(game) < 0) {
+    return Promise.resolve(err(400, "E_GAME", "榜单只认 fly / exam 两种"));
+  }
+  return boardReadSwitch(deps, game).then(function (on) {
+    if (!on) return err(403, "E_RANKING_OFF", "榜单没开（管理员可以在后台打开）", { game: game });
+    return { game: game };
+  });
+}
+
+function boardFilterOf(input) {
+  var stage = String((input && input.stage) || "all").toLowerCase();
+  if (BOARD_STAGES.indexOf(stage) < 0) stage = "all";
+  var grade = Number(input && input.grade) || 0;
+  var term = Number(input && input.term) || 0;
+  var period = String((input && input.period) || "day").toLowerCase();
+  if (BOARD_PERIODS.indexOf(period) < 0) period = "day";
+  return { stage: stage, grade: grade, term: term, period: period };
+}
+
+function boardLabelOf(filter) {
+  if (filter.stage === "all") return "全部学段";
+  var name = { primary: "小学", middle: "初中", high: "高中" }[filter.stage] || "全部学段";
+  var g = filter.grade ? BOARD_GRADE_LABELS[filter.grade] || "" : "";
+  var t = g && filter.term ? (filter.term === 1 ? "上册" : "下册") : "";
+  return name + (g || t ? " · " + g + t : "");
+}
+
+function boardVisible(deps, input) {
+  return boardReadSwitch(deps, String((input && input.game) || "exam").toLowerCase())
+    .then(function (on) { return ok({ on: on }); });
+}
+
+function boardShow(acc, r) {
+  return {
+    rank: r.rank,
+    score: r.score,
+    total: r.total,
+    durationSec: r.duration,
+    plays: r.plays,
+    at: r.at,
+    nick: boardMaskNick(acc.nickname, r.uid),
+    me: !!r.mine
+  };
+}
+
+function boardList(deps, input) {
+  var gate = boardGate(deps, input);
+  return Promise.resolve(gate).then(function (g) {
+    if (g && g.status) return g;
+    var filter = boardFilterOf(input);
+    var size = Number(input && input.size) || 10;
+    if (BOARD_SIZES.indexOf(size) < 0) size = 10;
+    var since = boardPeriodStart(filter.period, deps.now());
+    var me = deps.account ? deps.account.uid : "";
+
+    var q = { game: g.game, stage: filter.stage, from: since };
+    if (filter.stage !== "all" && filter.grade) q.grade = filter.grade;
+    if (filter.stage !== "all" && filter.term) q.term = filter.term;
+
+    return Promise.resolve(deps.store.listScoreRecords(q, BOARD_LIMITS.records)).then(function (rows) {
+      var ranked = boardRows(rows, deps.now());
+      ranked.forEach(function (r) {
+        if (r.uid === me) r.mine = true;
+      });
+
+      var beyond = ranked.filter(function (r) {
+        return r.mine && ranked.indexOf(r) >= size;
+      }).pop() || null;
+      var shown = ranked.slice(0, size);
+      var pick = shown.concat(beyond ? [beyond] : []);
+
+      return Promise.all(pick.map(function (r) {
+        return Promise.resolve(deps.store.getAccount(r.uid)).then(function (acc) {
+          return acc && acc.status !== "deleted" ? acc : null;
+        });
+      })).then(function (accs) {
+        var board = [];
+        shown.forEach(function (r, i) {
+          if (!accs[i]) return;
+          board.push(boardShow(accs[i], r));
+        });
+        var self = null;
+        if (beyond && accs[shown.length]) self = boardShow(accs[shown.length], beyond);
+        return ok({
+          game: g.game,
+          filter: filter,
+          label: boardLabelOf(filter),
+          size: size,
+          total: ranked.length,
+          from: since,
+          board: board,
+          me: self
+        });
+      });
+    });
+  });
+}
+
+function boardSubmit(deps, input) {
+  var gate = boardGate(deps, input);
+  return Promise.resolve(gate).then(function (g) {
+    if (g && g.status) return g;
+    if (!deps.account) return err(401, "E_NO_SESSION", "交成绩要登录");
+    return Promise.resolve(deps.store.getAccount(deps.account.uid)).then(function (me) {
+      if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+      var total = Math.max(0, Math.min(999, Number(input && input.total) || 0));
+      if (!total) return err(400, "E_EMPTY", "这一局没有成绩，不记");
+      var score = Math.max(0, Math.min(total, Number(input && input.score) || 0));
+      var stage = String((input && input.stage) || "all").toLowerCase();
+      if (BOARD_STAGES.indexOf(stage) < 0) stage = "all";
+      var grade = Math.max(0, Math.min(12, Number(input && input.grade) || 0));
+      var term = Math.max(0, Math.min(2, Number(input && input.term) || 0));
+
+      var row = {
+        srid: id.newScoreRecordId(),
+        uid: deps.account.uid,
+        game: g.game,
+        scope_id: clip(input && input.scopeId, BOARD_LIMITS.scopeId),
+        stage: stage,
+        grade: stage === "all" ? 0 : grade,
+        term: stage === "all" ? 0 : term,
+        score: score,
+        total: total,
+        duration_sec: Math.max(0, Math.min(24 * 3600, Number(input && input.durationSec) || 0)),
+        created_at: deps.now()
+      };
+      return Promise.resolve(deps.store.putScoreRecord(row)).then(function () {
+        return ok({ recorded: row.srid, score: score, total: total });
+      });
+    });
+  });
+}
+
+function adminRankingGet(deps, input) {
+  var cfg = deps.cfg, store = deps.store;
+  var gate = adminGate(deps, cfg);
+  if (gate) return Promise.resolve(gate);
+  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
+    var game = String((input && input.game) || "exam").toLowerCase();
+    if (BOARD_GAMES.indexOf(game) < 0) return err(400, "E_GAME", "榜单只认 fly / exam 两种");
+    return boardReadSwitch(deps, game).then(function (on) {
+      return ok({ game: game, on: on });
+    });
+  });
+}
+
+function adminRankingSet(deps, input) {
+  var cfg = deps.cfg, store = deps.store;
+  var gate = adminGate(deps, cfg);
+  if (gate) return Promise.resolve(gate);
+  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
+    var game = String((input && input.game) || "exam").toLowerCase();
+    if (BOARD_GAMES.indexOf(game) < 0) return err(400, "E_GAME", "榜单只认 fly / exam 两种");
+    var want = !!(input && (input.on === true || input.on === "1" || input.on === 1));
+    return boardWriteSwitch(deps, game, want).then(function (on) {
+      return ok({ game: game, on: on });
+    });
+  });
+}
+
 function gameAnswer(deps, input, extra) {
   var cfg = deps.cfg, t = deps.now();
   var game = (extra && extra.game) || require("./game");
@@ -3363,6 +3642,17 @@ module.exports = {
   FEEDBACK_STATUSES: FEEDBACK_STATUSES,
   FEEDBACK_LIMITS: FEEDBACK_LIMITS,
 
+  boardVisible: boardVisible,
+  boardList: boardList,
+  boardSubmit: boardSubmit,
+  adminRankingGet: adminRankingGet,
+  adminRankingSet: adminRankingSet,
+  boardPeriodStart: boardPeriodStart,
+  boardMaskNick: boardMaskNick,
+  boardStageOfGrade: boardStageOfGrade,
+  BOARD_GAMES: BOARD_GAMES,
+  BOARD_STAGES: BOARD_STAGES,
+  BOARD_PERIODS: BOARD_PERIODS,
   examRecordCreate: examRecordCreate,
   examRecordsMine: examRecordsMine,
   examRecordDelete: examRecordDelete,
