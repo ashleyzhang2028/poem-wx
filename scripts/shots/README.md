@@ -112,7 +112,7 @@ HTML，套进一个 390×844 的手机壳。`rpx → px` 按 390/750 换算。
 所以预览会把本机的 Noto Serif SC 注册成同名：
 
 ```bash
-cp <poem 仓库>/fonts/NotoSerifSC-{400,600}.woff2 scripts/shots/out/serif-{400,600}.woff2
+cp NotoSerifSC-{400,600}.woff2 scripts/shots/out/serif-{400,600}.woff2
 node scripts/shots/render.js   # 会打印「预览已注入诗词宋体」
 ```
 

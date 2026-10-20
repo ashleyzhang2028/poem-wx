@@ -205,8 +205,7 @@ scripts/corpus/
   ├── VERSION.json    取自哪一版（upstreamRef / syncedAt）
   ├── data/           语料全量（含 text-master.js 与 author-index.js）
   ├── js/             构建与自检要读的那几个（pinyin / entitlement / sync-coverage）
-  ├── scripts/        build-works-map.js（自检拿它挂 AuthorIndex）
-  └── fonts/          诗词宋体子集化的源（scripts/font-subset.js 用）
+  └── scripts/        build-works-map.js（自检拿它挂 AuthorIndex）
 
 scripts/parity-web/   服务端契约的只读副本（路由表 / 报文清洗 / 存储层形状 / 能力表）
 api/                  后端运行时契约（登录 / 同步 / 管理那几条路由）

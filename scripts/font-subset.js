@@ -4,13 +4,12 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-const CORPUS = path.join(__dirname, "corpus");
 const OUT_DIR = process.env.OUT || path.join(__dirname, "..", "dist", "fonts");
 
 const PUNCT = "0123456789·—、。，？！：；（）《》〈〉「」…";
 
 function corpusWindow() {
-  const dir = path.join(CORPUS, "data");
+  const dir = path.join(__dirname, "corpus", "data");
   const sandbox = { window: {}, console: console };
   sandbox.window.window = sandbox.window;
   vm.createContext(sandbox);
@@ -55,10 +54,15 @@ function subset(source, chars, out) {
 
 function main() {
   const chars = collectChars();
-  const src = process.env.FONT_SRC || path.join(CORPUS, "fonts", "NotoSerifSC-600.woff2");
+  const src = process.env.FONT_SRC;
+
+  if (!src) {
+    console.log("跳过：未给 FONT_SRC（一份完整的中文宋体源，如 NotoSerifSC-600.woff2）");
+    return;
+  }
 
   if (!fs.existsSync(src)) {
-    console.log("跳过：源字体不在 " + src + "（设 FONT_SRC 指过去）");
+    console.log("跳过：源字体不在 " + src);
     return;
   }
 
