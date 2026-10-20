@@ -7,7 +7,7 @@
   <view class="card">
     <view class="card-title">今日加背</view>
 
-    <view wx:if="{{!daily.length}}" class="hint">今天还没加背 —— 在首页「今日加背」里搜一篇加进来。</view>
+    <view wx:if="{{!daily.length}}" class="hint">暂无加背</view>
 
     <block wx:else>
 
@@ -31,6 +31,26 @@
         </label>
       </checkbox-group>
     </block>
+  </view>
+
+  <view class="card">
+    <view class="card-title">自选背诵</view>
+
+    <view class="row">
+      <view class="row-main">
+        <text class="row-title">只背自选</text>
+        <text class="row-sub">首页不列课内诗词，只列自选诗词集合进行背诵</text>
+      </view>
+      <view class="sw">
+        <switch checked="{{selfOnly}}" bindchange="onSelfOnly"
+                disabled="{{!selfOnlyOn}}" />
+      </view>
+    </view>
+
+    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">
+      已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首
+    </text>
+    <text class="hint self-only-note" wx:else>{{selfOnlyHint}}</text>
   </view>
 
   <view class="card">
@@ -103,26 +123,6 @@
       </label>
     </radio-group>
 
-  </view>
-
-  <view class="card">
-    <view class="card-title">自选背诵</view>
-
-    <view class="row">
-      <view class="row-main">
-        <text class="row-title">只背自选</text>
-        <text class="row-sub">首页不排课内诗词，只排自选集合</text>
-      </view>
-      <view class="sw">
-        <switch checked="{{selfOnly}}" bindchange="onSelfOnly"
-                disabled="{{!selfOnlyOn}}" />
-      </view>
-    </view>
-
-    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">
-      已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首
-    </text>
-    <text class="hint self-only-note" wx:else>{{selfOnlyHint}}</text>
   </view>
 
   <view class="safe-bottom"></view>
