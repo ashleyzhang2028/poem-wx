@@ -49,6 +49,7 @@ Page({
   },
 
   refresh() {
+    this.keepPicks();
     const list = cols.list();
     const all = corpus.course();
     const closed = this.closedList();
@@ -67,7 +68,7 @@ Page({
         due: ov.due,
         planned: plan.length,
         dailyCount: cols.countOf(c),
-        items: this.itemRows(c.id),
+        items: this.itemRows(c.id, (this.kept || {})[c.id]),
         open: closed.indexOf(c.id) < 0
       };
     });
@@ -92,6 +93,15 @@ Page({
     this.closed = list;
   },
 
+  keepPicks() {
+    const kept = {};
+    this.data.collections.forEach((c) => {
+      const on = c.items.filter((it) => it.picked).map((it) => it.id);
+      kept[c.id] = on;
+    });
+    this.kept = kept;
+  },
+
   pickedIds(id) {
     const row = this.data.collections.filter((c) => c.id === id)[0];
     return row ? row.items.filter((it) => it.picked).map((it) => it.id) : [];
@@ -108,7 +118,8 @@ Page({
   itemRows(id, picked) {
     const c = cols.find(id);
     if (!c) return [];
-    picked = picked || {};
+    const on = {};
+    (picked || []).forEach((pid) => { on[pid] = true; });
     return cols.idsOf(c).map((pid, i) => {
       const p = corpus.indexById(pid);
       return {
@@ -116,7 +127,7 @@ Page({
         seq: i + 1,
         title: p ? p.t : pid,
         meta: p ? [p.d, p.a, p.n].filter(Boolean).join(" · ") : "这一条不在语料里",
-        picked: !!picked[pid]
+        picked: !!on[pid]
       };
     });
   },
@@ -292,22 +303,18 @@ Page({
 
   onPick(e) {
     const id = e.currentTarget.dataset.id;
-    const c = cols.find(id);
-    if (!c) return;
-    const before = cols.idsOf(c);
-    const picked = (e.detail.value || []).filter((pid) => before.indexOf(pid) >= 0);
-    const gone = before.filter((pid) => picked.indexOf(pid) < 0);
-    if (!gone.length) return;
-    cols.removeItems(c.id, gone);
-    sync.markDirty();
-    this.refresh();
+    const pid = e.currentTarget.dataset.pid;
+    const row = this.data.collections.filter((c) => c.id === id)[0];
+    if (!row || !pid) return;
+    const items = row.items.map((it) => (it.id === pid
+      ? Object.assign({}, it, { picked: !it.picked })
+      : it));
+    this.setItems(id, items);
   },
 
   onPickAll(e) {
     const id = e.currentTarget.dataset.id;
-    const picked = {};
-    this.itemRows(id).forEach((it) => { picked[it.id] = true; });
-    this.setItems(id, this.itemRows(id, picked));
+    this.setItems(id, this.itemRows(id).map((it) => Object.assign({}, it, { picked: true })));
   },
 
   onPickNone(e) {
@@ -318,14 +325,26 @@ Page({
   onRemovePicked(e) {
     const id = e.currentTarget.dataset.id;
     const ids = this.pickedIds(id);
+    const c = cols.find(id);
+    if (!c) return;
     if (!ids.length) {
       wx.showToast({ title: "还没选中任何一篇", icon: "none" });
       return;
     }
-    cols.removeItems(id, ids);
-    sync.markDirty();
-    this.refresh();
-    wx.showToast({ title: "已移出 " + ids.length + " 首", icon: "none" });
+    wx.showModal({
+      title: "移出选中的篇目",
+      content: "把「" + cols.nameOf(c) + "」里选中的 " + ids.length + " 首移出？背诵进度一个字都不动。",
+      confirmText: "移出",
+      cancelText: "取消",
+      confirmColor: "#a83b32",
+      success: (res) => {
+        if (!res.confirm) return;
+        cols.removeItems(id, ids);
+        sync.markDirty();
+        this.refresh();
+        wx.showToast({ title: "已移出 " + ids.length + " 首", icon: "none" });
+      }
+    });
   },
 
 });
