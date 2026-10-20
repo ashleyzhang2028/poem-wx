@@ -12,6 +12,12 @@ const FORMS = [
 const FORM_KEYS = FORMS.map((f) => f.key);
 const DEFAULT_FORM_KEYS = FORM_KEYS.slice(0, 2);
 
+const TITLE_SPOILED = ["next", "prev", "title", "author"];
+
+function titleSpoiled(forms) {
+  return (forms || []).some((k) => TITLE_SPOILED.indexOf(k) >= 0);
+}
+
 function _quiz_pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -66,7 +72,7 @@ function build(opt) {
     const lines = _quiz_linesOf(p);
     if (lines.length < 2 && forms.indexOf("next") >= 0) continue;
 
-    const form = opt.sequential ? forms[questions.length % forms.length] : _quiz_pick(forms);
+    const form = pickedForm(forms, questions.length, opt);
     const q = _quiz_makeQuestion(form, p, lines, pool);
     if (!q) continue;
     used[p.id] = true;
@@ -75,6 +81,11 @@ function build(opt) {
   }
 
   return questions;
+}
+
+function pickedForm(forms, index, opt) {
+  if (opt && opt.sequential) return forms[index % forms.length];
+  return _quiz_pick(forms);
 }
 
 function _quiz_makeQuestion(form, p, lines, pool) {
@@ -218,5 +229,6 @@ function optionClass(row, picked, answer) {
 }
 
 module.exports = {
-  FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass
+  FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass,
+  titleSpoiled
 };

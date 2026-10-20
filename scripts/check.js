@@ -1903,6 +1903,15 @@ ok("名录在、标签截断、档位合法",
     ok("每个集子里凡有正文的条目都进得了这个范围（课内 251 首也算，正文在主包里）",
       missing.length === 0, "漏了 " + missing.slice(0, 5).join("、"));
 
+    const leak = [];
+    scopes.list().forEach((s) => {
+      scopes.pool(s.id).forEach((p) => {
+        if (p.b !== "poems" && p.b !== s.id) leak.push(s.id + ":" + p.id + "(" + p.b + ")");
+      });
+    });
+    ok("选某个集子就只出那本（课内那 251 首照旧带上，别的集子不许混进来）",
+      leak.length === 0, "混进来了 " + leak.slice(0, 5).join("、"));
+
     const empty = [];
     scopes.list().forEach((s) => {
       feihua.LEVELS.forEach((lv) => {
@@ -3542,6 +3551,36 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("模板里不再手判「填朝代」有没有出处（那个判据搬进了 metaLineOf）",
     examWxml.indexOf("current.form !== 'dynasty'") < 0
       && quizWxml.indexOf("current.form !== 'dynasty'") < 0);
+
+  const quizLib = require(path.join(ROOT, "packages", "game", "quiz", "lib.js"));
+  const spoiling = ["next", "prev", "author", "title"];
+  ok("考篇名 / 上句 / 下句 / 作者这几种题型下，题干预告里不带篇名（带了就是把答案写在题面上）",
+    quizLib.titleSpoiled(spoiling) === true && quizLib.titleSpoiled(["dynasty"]) === false,
+    "titleSpoiled 的判据反了或漏了题型");
+  ok("题库页与考试页都按这份判据决定题干预告给不给篇名",
+    /quiz\.titleSpoiled\(/.test(quizJs) && /quiz\.titleSpoiled\(/.test(examJs));
+
+  const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const wrongScope = [];
+  scopeMod.list().forEach((s) => {
+    if (s.id === "poems") return;
+    scopeMod.pool(s.id).forEach((p) => {
+      if (p.b !== "poems" && p.b !== s.id) wrongScope.push(s.id + ":" + p.id);
+    });
+  });
+  ok("题库与考试用的是这个收窄过的范围（选了「词」不会出唐诗）",
+    wrongScope.length === 0, "串味 " + wrongScope.slice(0, 5).join("、"));
+
+  const examCss = read("packages/game/exam/exam.wxss");
+  const quizCss = read("packages/game/quiz/quiz.wxss");
+  const rule = (css, sel) => (new RegExp("\\n" + sel + "\\s*\\{([^}]*)\\}").exec(css) || [])[1] || "";
+  ok("候选项与选项字母走诗体字（题面上的字与选项上的字是同一副字）",
+    /--font-poem/.test(rule(quizCss, "\\.option-t")) && /--font-poem/.test(rule(quizCss, "\\.option-k"))
+      && /--font-poem/.test(rule(examCss, "\\.option-t")) && /--font-poem/.test(rule(examCss, "\\.option-k")),
+    "选项那几行还落在系统黑体上");
+  ok("考试页的题号格水平居中（不是从左往右堆）",
+    /justify-content:\s*center/.test(rule(read("app.wxss"), "\\.dots")),
+    "十格挤在左边");
 
   const lettered = /function _quiz_lettered\([\s\S]*?\n\}/.exec(quizSrc);
   ok("选项字母在数据层生成（lettered 函数在）", !!lettered);
