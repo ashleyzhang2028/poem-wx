@@ -4,6 +4,7 @@ const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
+const enter = require("../../utils/enter");
 
 const GROUPS = [
   {
@@ -39,6 +40,7 @@ Page({
     themeStyle: "",
     barBelow: true,
     groups: [],
+    enter: { on: false, delay: [] },
     locked: true,
     reason: ""
   },
@@ -46,6 +48,7 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 1) });
+    enter.again(this.enterSeq);
 
     if (!gate.logged() || !E.can("library")) {
       this.setData({ locked: true, reason: E.hint("library") });
@@ -75,6 +78,7 @@ Page({
     }).filter((g) => g.books.length);
 
     this.setData({ groups });
+    this.enterSeq = enter.paint(this.enterSeq) || enter.open(this, groups.length);
   },
 
   onLoginGate() {

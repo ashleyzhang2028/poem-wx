@@ -5,12 +5,12 @@
 
   <block wx:if="{{!author}}">
 
-    <view class="card roster-head">
+    <view class="{{enter.on ? 'enter' : ''}} card roster-head" style="--d:{{enter.delay[0]}}ms">
       <text class="head-title">{{totalPeople}} 位作者</text>
       <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
     </view>
 
-    <view class="card index-card">
+    <view class="{{enter.on ? 'enter' : ''}} card index-card" style="--d:{{enter.delay[1]}}ms">
       <view class="card-open">
         <text class="card-title">朝代</text>
         <text class="index-total">{{eras.length}} 朝</text>
@@ -24,7 +24,7 @@
       </view>
     </view>
 
-    <view class="card era-card" wx:for="{{sections}}" wx:key="at" id="era-{{item.at}}">
+    <view class="{{enter.on ? 'enter' : ''}} card era-card" wx:for="{{sections}}" wx:key="at" id="era-{{item.at}}" style="--d:{{enter.delay[index]}}ms">
       <view class="group-head">
         <text class="group-name">{{item.name}}</text>
         <text class="group-count">{{item.count}} 家 · {{item.works}} 条</text>
@@ -44,12 +44,12 @@
   </block>
 
   <block wx:else>
-    <view class="card">
+    <view class="{{enter.on ? 'enter' : ''}} card" style="--d:{{enter.delay[0]}}ms">
       <text class="head-title">{{author}}</text>
       <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
     </view>
 
-    <view class="seg filter-group">
+    <view class="{{enter.on ? 'enter' : ''}} seg filter-group" style="--d:{{enter.delay[1]}}ms">
       <radio-group class="seg-group" bindchange="onFilter">
         <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}" />
@@ -59,9 +59,9 @@
       </radio-group>
     </view>
 
-    <view class="count hint">共 {{matched}} 条</view>
+    <view class="{{enter.on ? 'enter' : ''}} count hint" style="--d:{{enter.delay[2]}}ms">共 {{matched}} 条</view>
 
-    <view class="card">
+    <view class="{{enter.on ? 'enter' : ''}} card" style="--d:{{enter.delay[3]}}ms">
       <view class="row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
         <view class="row-main">
