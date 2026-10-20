@@ -1593,7 +1593,7 @@ window.POEMS_CLASSIC = [
   { textRef: "classic-gw-168", id: "gw-168", title: "张溥抄书", source: "明史·张溥传", dynasty: "清", author: "张廷玉等", gradeGroup: "治学勤读" },
   { textRef: "classic-gw-169", id: "gw-169", title: "铁杵磨成针", source: "方舆胜览", dynasty: "宋", author: "祝穆", gradeGroup: "治学勤读" },
   { textRef: "classic-gw-170", id: "gw-170", title: "叶廷珪与《海录》", source: "诗人玉屑", dynasty: "宋", author: "魏庆之", gradeGroup: "治学勤读" },
-  { textRef: "classic-gw-171", id: "gw-171", title: "隋侯救蛇得珠", source: "淮南子·览冥训高诱注", dynasty: "西汉", author: "刘安等", gradeGroup: "神话传说" },
+  { textRef: "classic-gw-171", id: "gw-171", title: "隋侯救蛇得珠", source: "《淮南子·览冥训》高诱注", dynasty: "西汉", author: "刘安等", gradeGroup: "神话传说" },
   { textRef: "classic-gw-172", id: "gw-172", title: "天雨谷", source: "搜神记", dynasty: "东晋", author: "干宝", gradeGroup: "神话传说" },
   { textRef: "classic-gw-173", id: "gw-173", title: "宋令文有神力", source: "朝野佥载", dynasty: "唐", author: "张鷟", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-174", id: "gw-174", title: "杨修啖酪", source: "世说新语·捷悟", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "志人逸事" },
@@ -1614,7 +1614,7 @@ window.POEMS_CLASSIC = [
   { textRef: "classic-gw-185", id: "gw-185", title: "杀驼破瓮", source: "百喻经", dynasty: "南朝·齐", author: "求那毗地译", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-186", id: "gw-186", title: "鹦鹉灭火", source: "宣验记", dynasty: "南朝·宋", author: "刘义庆", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-187", id: "gw-187", title: "青蛙鼓腹", source: "韩非子·内储说上", dynasty: "战国", author: "韩非", gradeGroup: "寓言故事" },
-  { textRef: "classic-gw-188", id: "gw-188", title: "「的卢」救刘备", source: "三国志·蜀书·先主传裴注引世语", dynasty: "西晋", author: "陈寿", gradeGroup: "志人逸事" },
+  { textRef: "classic-gw-188", id: "gw-188", title: "「的卢」救刘备", source: "《三国志·蜀书·先主传》裴注引《世语", dynasty: "西晋", author: "陈寿", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-189", id: "gw-189", title: "群啄鱼", source: "聊斋志异·卷五", dynasty: "清", author: "蒲松龄", gradeGroup: "寓言故事" },
   { textRef: "classic-gw-190", id: "gw-190", title: "只许州官放火", source: "老学庵笔记·卷五", dynasty: "宋", author: "陆游", gradeGroup: "志人逸事" },
   { textRef: "classic-gw-191", id: "gw-191", title: "孟母断织", source: "列女传·母仪传", dynasty: "西汉", author: "刘向", gradeGroup: "治学勤读" },
@@ -1740,7 +1740,7 @@ window.POEMS_CLASSIC = [
      正文在 scripts/data/classic-corpus-517b.js；
      其中最后两条与《古文观止》是同篇（正文一字不差），壳挂 textRef 指到
      guwen 的键上，正文只在 guwen 那一份语料里落一份。 */
-  { textRef: "classic-gw-277", id: "gw-277", title: "牛郎织女", source: "月令广义·七月令引小说", dynasty: "明", author: "冯应京", gradeGroup: "神话传说" },
+  { textRef: "classic-gw-277", id: "gw-277", title: "牛郎织女", source: "《月令广义·七月令》引小说", dynasty: "明", author: "冯应京", gradeGroup: "神话传说" },
   { textRef: "classic-gw-278", id: "gw-278", title: "郑板桥教子", source: "郑板桥集·潍县署中与舍弟墨第二书", dynasty: "清", author: "郑燮", gradeGroup: "人物故事" },
   { textRef: "classic-gw-279", id: "gw-279", title: "冠必正", source: "弟子规·谨", dynasty: "清", author: "李毓秀", gradeGroup: "蒙学经典" },
   { textRef: "classic-gw-280", id: "gw-280", title: "训学斋规", source: "训学斋规", dynasty: "宋", author: "朱熹", gradeGroup: "治学勤读" },

@@ -62,7 +62,7 @@ window.CHENGYU_SUPPORT = [
   {
     title: "犬马之劳",
     text: "臣不胜受恩感激，愿效犬马之劳。",
-    source: "三国志·蜀书·后主传裴松之注",
+    source: "《三国志·蜀书·后主传》裴松之注",
     dynasty: "三国",
     note: "史注与奏疏中屡见，此为通行句式"
   },
