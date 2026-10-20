@@ -69,7 +69,7 @@ function main() {
   const kb = subset(src, chars.head + chars.text, path.join(OUT_DIR, "kuibu-serif.woff2"));
 
   console.log("诗词宋体子集：" + (chars.head + chars.text).length + " 字 → kuibu-serif.woff2（" + kb.toFixed(0) + "KB）");
-  console.log("地址填进 auth.fontUrl，见 utils/font.js");
+  console.log("传到云存储后改 utils/font.js 的 SETS");
 }
 
 main();
