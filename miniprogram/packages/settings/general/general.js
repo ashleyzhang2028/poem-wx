@@ -39,8 +39,6 @@ Page({
     pinyinNote: "",
     locked: false,
 
-    items: theme.palette(),
-    theme: theme.DEFAULT,
     themeColor: theme.currentTheme().rgba,
 
     sfxVisible: false,
@@ -65,7 +63,6 @@ Page({
     const fx = sfx.readiness();
     this.setData(
       Object.assign({ locked: false }, settings, {
-        theme: theme.currentTheme().key,
         themeColor: theme.currentTheme().rgba,
         sfxVisible: fx.visible,
         sfxOn: sfx.enabled(),
@@ -107,15 +104,6 @@ Page({
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) return;
     this.setData({ pinyin: mode });
-  },
-
-  onPick(e) {
-    const key = e.currentTarget.dataset.key;
-    if (key === this.data.theme) return;
-    const picked = theme.set(key);
-    theme.apply(this);
-    this.setData({ themeColor: picked.rgba, theme: picked.key });
-    wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onSeasonal(e) {

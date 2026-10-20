@@ -31,6 +31,7 @@ Page({
     manageOn: false,
 
     syncSub: "",
+    themeName: "",
     fullTextOn: false,
 
     grantLead: false
@@ -70,6 +71,7 @@ Page({
       manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
       fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
+      themeName: theme.currentTheme().name,
 
       grantLead: this.grantLead(profile)
     });
@@ -200,6 +202,10 @@ Page({
 
   onSettings() {
     wx.navigateTo({ url: "/packages/settings/general/general" });
+  },
+
+  onTheme() {
+    wx.navigateTo({ url: "/packages/settings/theme/theme" });
   },
 
   onRecite() {
