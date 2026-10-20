@@ -3348,8 +3348,20 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   ok("选本出处并进身份行，题名异写另起一行",
     /\{\{selection\}\}/.test(metaInner) && !/\{\{aliasText\}\}/.test(metaInner)
-      && /\{\{aliasText\}\}/.test(readerWxml2),
-    "「选自…」没并进身份行 —— 它和朝代 / 作者 / 出处是同一串来历，分成两行看不成一句话");
+      && /\{\{aliasText\}\}/.test(readerWxml2));
+
+  const bookNameOf = (() => {
+    const src = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+    const m = src.match(/function bookNameOf\s*\(name\)\s*\{[\s\S]*?\n\}/);
+    return m ? new Function(m[0] + ";return bookNameOf;")() : null;
+  })();
+
+  ok("身份行只摆书名，书名号与「选自」不落到界面",
+    typeof bookNameOf === "function"
+      && bookNameOf("《全唐诗》") === "全唐诗"
+      && bookNameOf("《唐诗三百首》") === "唐诗三百首"
+      && bookNameOf("  ") === ""
+      && bookNameOf(null) === "");
 
   ok("身份行放不下时省略，不换成两行",
     /\.poem-meta\s*\{[^}]*text-overflow\s*:\s*ellipsis/.test(metaWxss)

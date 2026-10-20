@@ -42,10 +42,8 @@ function fontFlags(size) {
   return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
-function bookTitleOf(name) {
-  const raw = String(name == null ? "" : name).trim();
-  if (!raw) return "";
-  return /《.+》/.test(raw) ? raw : "《" + raw + "》";
+function bookNameOf(name) {
+  return String(name == null ? "" : name).replace(/[《》]/g, "").trim();
 }
 
 function aliasTextOf(meta) {
@@ -208,8 +206,8 @@ Component({
         title: meta.t || "",
         author: meta.a || "",
         dynasty: meta.d || "",
-        source: meta.s || bookTitleOf(meta.n),
-        selection: meta.sel ? "选自" + meta.sel : "",
+        source: bookNameOf(meta.s || meta.n),
+        selection: bookNameOf(meta.sel),
         aliasText: aliasTextOf(meta),
         stage: "",
         mastery: 0,
@@ -335,8 +333,8 @@ Component({
         title: meta.t,
         author: meta.a,
         dynasty: meta.d,
-        source: meta.s || bookTitleOf(meta.n),
-        selection: meta.sel ? "选自" + meta.sel : "",
+        source: bookNameOf(meta.s || meta.n),
+        selection: bookNameOf(meta.sel),
         aliasText: aliasTextOf(meta),
         loadingText: false,
         textMiss: "",
