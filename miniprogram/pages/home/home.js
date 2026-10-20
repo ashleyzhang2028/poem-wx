@@ -18,11 +18,6 @@ const icons = require("../../utils/icons");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
-const SELF_CHEERS = {
-  self: "自选的今日份也背完了",
-  all: "课内和自选，今天的份都背完了"
-};
-
 const TOAST_GAP = 2400;
 
 const TOAST_MS = 2200;
@@ -388,7 +383,6 @@ Page({
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
     const selfToday = colRows.reduce((n, c) => n + c.doneNow, 0);
     const selfAllDone = selfTotal > 0 && selfToday >= selfTotal;
-    const cheerKey = selfAllDone && allDone ? "all" : selfAllDone ? "self" : "";
 
     this.setData({
       logged: true,
@@ -411,7 +405,6 @@ Page({
       },
       coursePlan: selfOnly ? coursePlan.filter((it) => it.reason !== "pinned").map((it, i) => this.poemRow(it.poem, i, it.reason, readOf)) : [],
       courseBase: selfOnly ? Math.max(courseRecorded, coursePlan.length - coursePlan.filter((it) => it.reason === "pinned").length) : 0,
-      cheers: cheerKey ? [SELF_CHEERS[cheerKey]] : [],
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],
