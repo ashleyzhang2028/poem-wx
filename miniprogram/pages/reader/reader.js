@@ -41,6 +41,12 @@ function fontFlags(size) {
   return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
+function bookTitleOf(name) {
+  const raw = String(name == null ? "" : name).trim();
+  if (!raw) return "";
+  return /《.+》/.test(raw) ? raw : "《" + raw + "》";
+}
+
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
   if (!raw) return "";
@@ -309,8 +315,8 @@ Page({
       title: meta.t,
       author: meta.a,
       dynasty: meta.d,
-      source: meta.s || meta.n,
-      selection: meta.sel || "",
+      source: meta.s || bookTitleOf(meta.n),
+      selection: meta.sel ? "选自" + meta.sel : "",
       aliasText: aliasTextOf(meta),
       translation: entry.tr || "",
       translationSource: entry.src || "",
