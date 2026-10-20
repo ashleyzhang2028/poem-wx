@@ -9,14 +9,12 @@ const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
 const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
+const scale = require("../../../utils/type-scale");
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
   { key: "center", label: "居中", icon: icons.center }
 ];
-
-const FONT_MIN = -2;
-const FONT_MAX = 4;
 
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off, desc: "正文不带拼音" },
@@ -30,8 +28,8 @@ Page({
     aligns: ALIGNS,
     align: "center",
     fontSize: 0,
-    fontMin: FONT_MIN,
-    fontMax: FONT_MAX,
+    fontMin: scale.MIN,
+    fontMax: scale.MAX,
     pinyinModes: PINYIN_MODES,
     pinyin: "off",
 
@@ -93,7 +91,7 @@ Page({
   },
 
   onFontSlide(e) {
-    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(e.detail.value)));
+    const fontSize = scale.clamp(e.detail.value);
     if (fontSize === this.data.fontSize) return;
     store.saveSettings({ fontSize });
     this.setData({ fontSize });

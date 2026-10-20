@@ -3117,6 +3117,22 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       /<slider[^>]*block-size="12"/.test(general)
         && !/n-slider/.test(read("packages/settings/general/general.wxss")),
       "圆点大小写到了别处");
+
+    const typeCard = (() => {
+      const at = general.indexOf("正文排版");
+      return at < 0 ? "" : general.slice(at, general.indexOf('card-title', at + 4));
+    })();
+    ok("对齐与字号在同一张「正文排版」卡里（上面那两张不再各占一张）",
+      general.indexOf('class="card-title">正文对齐') < 0
+        && general.indexOf('class="card-title">正文字号') < 0
+        && /onAlign/.test(typeCard) && /onFontSlide/.test(typeCard),
+      "两张卡还是分开的，或者其中一组没搬进「正文排版」");
+
+    const sample = /class="poem-body ([^"]*)"/.exec(general);
+    ok("示例文字同时受对齐与字号驱动（两个字段都进 class）",
+      !!sample && /\balign-\{\{align\}\}/.test(sample[1])
+        && /\bsize-\{\{fontSize\}\}/.test(sample[1]),
+      "示例只看其中一项 —— 切选项时另一半不跟");
   }
 
   {
@@ -4173,27 +4189,36 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       .map((m) => String(m[1]))
       .map((n) => Number(n.charAt(0) === "-" ? n.slice(1) : n))
   );
-  const sheetJsSrc = fs.readFileSync(
-    path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
-  const readerJsSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
-  const range = (src) => {
-    const lo = /FONT_MIN\s*=\s*(-?\d+)/.exec(src);
-    const hi = /FONT_MAX\s*=\s*(-?\d+)/.exec(src);
+  const readSrc = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const sheetJsSrc = readSrc("components/recite-sheet/recite-sheet.js");
+  const readerJsSrc = readSrc("pages/reader/reader.js");
+  const generalJsSrc = readSrc("packages/settings/general/general.js");
+  const scaleSrc = readSrc("utils/type-scale.js");
+
+  const rangeOf = (src) => {
+    const lo = /const MIN\s*=\s*(-?\d+)/.exec(src);
+    const hi = /const MAX\s*=\s*(-?\d+)/.exec(src);
     return { lo: lo ? Number(lo[1]) : NaN, hi: hi ? Number(hi[1]) : NaN };
   };
-  const sheetRange = range(sheetJsSrc);
+  const scaleRange = rangeOf(scaleSrc);
   const gaps = [];
-  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
     if (!sizes.has(n)) gaps.push(n);
   }
   ok("字号的量程与正文的档位对得上（点到哪一档都要有落点）",
-    Number.isFinite(sheetRange.lo) && sheetRange.hi > sheetRange.lo
+    Number.isFinite(scaleRange.lo) && scaleRange.hi > scaleRange.lo
       && gaps.length === 0
-      && range(readerJsSrc).lo === sheetRange.lo && range(readerJsSrc).hi === sheetRange.hi
-      && /fontMax:\s*FONT_MAX/.test(sheetJsSrc)
-      && /fontDown\s*:/.test(sheetJsSrc) && /fontUp\s*:/.test(sheetJsSrc),
-    "量程 " + sheetRange.lo + "…" + sheetRange.hi + "，正文里没有这几档："
+      && /fontDown\s*:/.test(scaleSrc) && /fontUp\s*:/.test(scaleSrc),
+    "量程 " + scaleRange.lo + "…" + scaleRange.hi + "，正文里没有这几档："
       + gaps.join(", ") + " —— 点下去没反应");
+
+  ok("字号量程只有一份定义（阅读页 / 背诵弹层 / 设置页都取它）",
+    [sheetJsSrc, readerJsSrc, generalJsSrc]
+      .every((src) => /require\(("\.\.\/\.\.\/utils\/type-scale"|"\.\.\/\.\.\/\.\.\/utils\/type-scale")\)/.test(src)
+        && !/FONT_(MIN|MAX)\s*=/.test(src) && !/\bconst (MIN|MAX)\s*=/.test(src))
+      && /fontMin:\s*scale\.MIN/.test(generalJsSrc)
+      && /fontMax:\s*scale\.MAX/.test(generalJsSrc),
+    "设置页自己写了一份量程 —— 它和正文那两处迟早对不上（Issue #425：设置封顶 4，正文能到 6）");
 
   const csSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
   const nums = (re) => {
@@ -4208,7 +4233,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     return m ? m[1] : "";
   };
   const cssFs = [];
-  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
     const one = /--poem-fs\s*:\s*(\d+)rpx/.exec(sizeRule(n));
     cssFs.push(one ? Number(one[1]) : NaN);
   }
@@ -4229,7 +4254,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "corpus.js " + JSON.stringify(fsPoem) + " vs app.wxss " + JSON.stringify(cssFs));
 
   const cssBox = [];
-  for (let n = sheetRange.lo; n <= sheetRange.hi; n++) {
+  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
     const one = /--py-box\s*:\s*(\d+)rpx/.exec(sizeRule(n));
     cssBox.push(one ? Number(one[1]) : NaN);
   }

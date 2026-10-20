@@ -8,15 +8,13 @@ const theme = require("../../utils/theme");
 const sync = require("../../utils/sync");
 const sfx = require("../../utils/sfx");
 const icons = require("../../utils/icons");
+const scale = require("../../utils/type-scale");
 
 const RESULTS = [
   { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
   { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
   { key: "good", icon: icons.smile, label: "记住", cls: "good" }
 ];
-
-const FONT_MIN = -2;
-const FONT_MAX = 6;
 
 const REOPEN_MS = 400;
 
@@ -36,10 +34,6 @@ const PAGE_ICONS = { add: icons.add, added: icons.added, zoomOut: icons.zoomOut,
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
-}
-
-function fontFlags(size) {
-  return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
 function aliasTextOf(meta) {
@@ -113,8 +107,8 @@ Component({
     fontDown: false,
     fontUp: true,
     fontSize: 0,
-    fontMin: FONT_MIN,
-    fontMax: FONT_MAX,
+    fontMin: scale.MIN,
+    fontMax: scale.MAX,
     pinyinModes: PINYIN_MODES,
     pinyinMode: "off",
     pinyinOn: false,
@@ -321,7 +315,7 @@ Component({
     renderCurrent(item, entry, meta) {
       const settings = store.settings();
       const rec = store.getRecord(item.id);
-      const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(settings.fontSize) || 0));
+      const fontSize = scale.clamp(settings.fontSize);
 
       this.setData({
         id: item.id,
@@ -343,7 +337,7 @@ Component({
         showTranslation: false,
         align: settings.align,
         fontSize,
-        ...fontFlags(fontSize),
+        ...scale.flags(fontSize),
         stage: R.stageName(rec, settings.algo),
         mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0,
         index: this.data.index,
@@ -453,9 +447,9 @@ Component({
     },
 
     stepFont(delta) {
-      const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
+      const fontSize = scale.clamp(this.data.fontSize + delta);
       if (fontSize === this.data.fontSize) return;
-      this.setData(Object.assign({ fontSize }, fontFlags(fontSize)));
+      this.setData(Object.assign({ fontSize }, scale.flags(fontSize)));
       store.saveSettings({ fontSize });
       if (this.data.rawText) this.applyReading();
     },
