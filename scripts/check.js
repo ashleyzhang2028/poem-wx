@@ -3418,11 +3418,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("每个色连同它那档淡淡版都挂到页面根节点上", veiled.length === 0,
     veiled.map((t) => t.name).join(", "));
 
-  const BANNERS = { daiqing: "/icons/hero.png", yangzhou: "/icons/yangzhou.png", kaifeng: "/icons/kaifeng.png" };
-  const wrongBanner = all.filter((t) => themeMod.bannerOf(t.key) !== (BANNERS[t.key] || "/icons/hero.png"));
-  ok("首页 banner 跟着主题走（扬州 / 开封 各一张，其余都是 hero.png）",
+  const CITY_BANNERS = {
+    yangzhou: "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/yangzhou.png",
+    kaifeng: "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/kaifeng.png"
+  };
+  const wrongBanner = all.filter((t) => themeMod.bannerOf(t.key) !== (CITY_BANNERS[t.key] || "/icons/hero.png"));
+  ok("首页 banner 跟着主题走（扬州 / 开封 各一张走对象存储，其余都是 hero.png）",
     wrongBanner.length === 0,
     wrongBanner.map((t) => t.name + " → " + themeMod.bannerOf(t.key)).join(", "));
+
+  const boxedCity = all.filter((t) => /^\/icons\/.*\.(png|jpg)$/.test(t.banner || "") && t.banner !== "/icons/hero.png");
+  ok("扬州 / 开封 的 banner 不进包（包内只留 hero.png 这一张画）",
+    boxedCity.length === 0, boxedCity.map((t) => t.name).join(", "));
 
   ok("默认那一项是「黛青」", themeMod.DEFAULT === "daiqing"
     && all.some((t) => t.key === "daiqing" && t.name === "黛青"));
