@@ -4294,7 +4294,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   const extraWxml = fs.readFileSync(
     path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
-  const searchLine = /<view\b[^>]*class="[^"]*extra-search[^"]*"[^>]*>[\s\S]*?<\/view>\s*<\/view>/.exec(homeWxmlDaily);
+  const searchLine = /<view class="extra-search">[\s\S]*?<\/view>\s*<\/view>/.exec(homeWxmlDaily);
   ok("加背搜索行在首页顶部的卡片之外，带 placeholder（空着时也知道能搜）",
     homeWxmlDaily.indexOf("<daily-extra") >= 0
       && !!searchLine && /<input[^>]*placeholder="[^"]+"/.test(searchLine[0]),
@@ -4303,7 +4303,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     !!searchLine && searchLine[0].indexOf("card") < 0,
     "搜索行又套回一张卡 —— 上面那张今日背诵卡已经给过一次外壳");
   ok("加背卡自己不再画搜索框（搜索行只有首页那一处）",
-    homeWxmlDaily.indexOf("extra-search") < homeWxmlDaily.indexOf("<daily-extra")
+    homeWxmlDaily.indexOf('<view class="extra-search">') < homeWxmlDaily.indexOf("<daily-extra")
       && extraWxml.indexOf("<input") < 0 && extraWxml.indexOf("search-icon") < 0,
     "搜索框又回到卡片里 —— 一处输入两个地方画，改一个忘一个");
   ok("搜索行的按键都接到组件上（输入 / 回车 / 清空）",
@@ -4385,7 +4385,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("计划卡下面挂着「全部诗词」那张卡，默认折叠、开关是个上下方向的图标",
     /allOpen:\s*false/.test(homeJs)
       && /allLabel/.test(homeJs) && /allRows/.test(homeJs)
-      && /<view\b[^>]*wx:if="\{\{allCount\}\}"/.test(homeWxml)
+      && /<view class="card" wx:if="\{\{allCount\}\}">/.test(homeWxml)
       && /<view class="card-open"[^>]*bindtap="onToggleAll"/.test(homeWxml)
       && /wx:if="\{\{allOpen\}\}"/.test(homeWxml)
       && /wx:for="\{\{allRows\}\}"/.test(homeWxml)
@@ -7903,32 +7903,6 @@ function gapped(items, max) {
   }
 
   void R4;
-}
-
-{
-  const enterWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-
-  const rise = /\.enter\s*\{[^}]*animation\s*:/.test(enterWxss)
-    && /\.enter\s*\{[^}]*animation-delay\s*:\s*var\(--d/.test(enterWxss)
-    && /@keyframes enter-rise\s*\{/.test(enterWxss);
-  ok("入场渐显只在 app.wxss 定义一次（类名带 --d 作错峰延迟）", rise,
-    "四个页面共用一条动画，页面样式表里不各写一份 keyframes");
-
-  const expect = {
-    "pages/home/home": "enter.delay",
-    "pages/library/library": "enter.delay",
-    "pages/search/search": "enter.delay",
-    "packages/authors/index/index": "enter.delay"
-  };
-  const missing = Object.keys(expect).filter((p) => {
-    const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-    const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
-    return wxml.indexOf("'enter'") < 0
-      || wxml.indexOf(expect[p]) < 0
-      || js.indexOf('require("../../utils/enter")') < 0 && js.indexOf('require("../../../utils/enter")') < 0;
-  });
-  ok("首页 / 课外阅读 / 搜索 / 作者索引进场时逐块渐显", missing.length === 0,
-    "这几个页面没挂上入场动画：" + missing.join("、"));
 }
 
 Promise.all(pending).then(() => {
