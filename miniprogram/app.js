@@ -36,6 +36,15 @@ App({
 
   onShow() {
     store.touchDaily();
+    this.refreshTierDaily();
+  },
+
+  refreshTierDaily() {
+    if (!gate.logged() || !store.tierDue()) return;
+    entitlement
+      .sync()
+      .then(() => store.touchTier())
+      .catch(() => {});
   },
 
   stampBuild() {

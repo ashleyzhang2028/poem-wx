@@ -21,6 +21,7 @@ const KEYS = {
   readsEdge: "kb_reads_edge_v1",
 
   settingsAt: "kb_settings_at_v1",
+  tierAt: "kb_tier_at_v1",
 
   caps: "kb_caps_v1",
   version: "kb_schema_version"
@@ -192,6 +193,22 @@ function touchSettings(at) {
   const t = Number(at) || Date.now();
   write(KEYS.settingsAt, t);
   return t;
+}
+
+function tierAt() {
+  return Number(read(KEYS.tierAt, 0)) || 0;
+}
+
+function touchTier(at) {
+  const t = Number(at) || Date.now();
+  write(KEYS.tierAt, t);
+  return t;
+}
+
+function tierDue(now) {
+  const last = tierAt();
+  if (!last) return true;
+  return dayKey(last) !== dayKey(now);
 }
 
 function progress() {
@@ -549,6 +566,9 @@ module.exports = {
   cloudSettings,
   settingsAt,
   touchSettings,
+  tierAt,
+  touchTier,
+  tierDue,
   progress,
   getRecord,
   setRecord,
