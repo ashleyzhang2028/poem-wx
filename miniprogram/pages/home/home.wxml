@@ -9,13 +9,13 @@
   <view class="banner-space" style="height:{{bannerHeight}}px"></view>
 
   <block wx:if="{{guest}}">
-    <view class="{{enter.on ? 'enter' : ''}} card hero hero-lead" style="--d:{{enter.delay[0]}}ms">
+    <view class="card hero hero-lead">
       <text class="hero-eyebrow">今日</text>
       <text class="hero-title">{{gradeName}}</text>
       <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} card" style="--d:{{enter.delay[1]}}ms">
+    <view class="card">
       <view class="card-open">
         <text class="card-title">今日背诵</text>
       </view>
@@ -40,7 +40,7 @@
       </view>
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} card" style="--d:{{enter.delay[2]}}ms">
+    <view class="card">
       <view class="guest-lead">
         <text class="guest-lead-title">解锁跬步诗词的更多可能</text>
         <text class="guest-lead-sub">登录后可跨设备同步背诵进度</text>
@@ -53,7 +53,7 @@
 
   <block wx:else>
 
-    <view class="{{enter.on ? 'enter' : ''}} card hero hero-lead" style="--d:{{enter.delay[0]}}ms">
+    <view class="card hero hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
       <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
@@ -84,7 +84,7 @@
       </view>
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} card seasonal" wx:if="{{seasonal}}" style="--d:{{enter.delay[1]}}ms">
+    <view class="card seasonal" wx:if="{{seasonal}}">
       <view class="card-open">
         <text class="card-title seasonal-title">季节限定</text>
         <text class="all-count">{{seasonal.rows.length}}</text>
@@ -121,7 +121,7 @@
 
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} extra-search" style="--d:{{enter.delay[2]}}ms">
+    <view class="extra-search">
       <view class="search">
         <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
 
@@ -133,7 +133,7 @@
       </view>
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} card" style="--d:{{enter.delay[5]}}ms">
+    <view class="card">
       <view class="card-open">
         <text class="card-title">{{selfOnly ? '今日加背' : '今日课内'}}</text>
         <text class="all-count" wx:if="{{!selfOnly}}">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
@@ -180,7 +180,7 @@
       </view>
     </view>
 
-    <view class="{{enter.on ? 'enter' : ''}} card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}" style="--d:{{enter.delay[6]}}ms">
+    <view class="card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}">
       <text class="hint" wx:if="{{collectionHint}}" bindtap="onPermissions">{{collectionHint}}</text>
 
       <view class="empty" wx:if="{{collectionOn}}">
@@ -191,7 +191,7 @@
     </view>
 
     <block wx:if="{{collectionOn}}">
-      <view class="{{enter.on ? 'enter' : ''}} card" wx:for="{{collections}}" wx:key="id" wx:for-item="coll" style="--d:{{enter.delay[index < 4 ? index + 4 : 8]}}ms">
+      <view class="card" wx:for="{{collections}}" wx:key="id" wx:for-item="coll">
         <view class="card-open">
           <text class="card-title">{{coll.title}}</text>
           <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
@@ -232,7 +232,7 @@
       </view>
     </block>
 
-    <view class="{{enter.on ? 'enter' : ''}} card" wx:if="{{allCount}}" style="--d:{{enter.delay[9]}}ms">
+    <view class="card" wx:if="{{allCount}}">
       <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleAll">
         <text class="card-title all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>

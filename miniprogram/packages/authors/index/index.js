@@ -7,15 +7,12 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
-const enter = require("../../../utils/enter");
 
 Page({
   data: {
     themeStyle: "",
     barBelow: true,
     locked: true,
-
-    enter: { on: false, delay: [] },
 
     eras: [],
 
@@ -39,7 +36,6 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
-    enter.again(this.enterSeq);
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });
@@ -48,11 +44,7 @@ Page({
     this.setData({ locked: false });
 
     this.buildRoster();
-    if (this.data.author) {
-      this.openAuthor(this.data.author);
-      return;
-    }
-    this.enterSeq = enter.open(this, this.data.sections.length + 2);
+    if (this.data.author) this.openAuthor(this.data.author);
   },
 
   onLogin() {
@@ -109,11 +101,7 @@ Page({
     const w = this.roster && this.roster.people[name];
     if (!w) return;
 
-    if (this.data.author !== name || !this.enterSeq) {
-      this.data.author = name;
-      this.enterSeq = enter.open(this, 4);
-    }
-    this.setData({ author: name, filter: "全部" });
+    if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
     wx.setNavigationBarTitle({ title: "跬步 · 作者索引 · " + name });
     this.applyWorks();
   },

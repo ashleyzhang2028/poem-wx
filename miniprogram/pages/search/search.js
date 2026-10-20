@@ -10,7 +10,6 @@ const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
-const enter = require("../../utils/enter");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
@@ -32,8 +31,6 @@ Page({
     searching: false,
     locked: true,
 
-    enter: { on: false, delay: [] },
-
     resultWhere: "",
 
     more: false,
@@ -49,13 +46,11 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 3) });
-    enter.again(this.enterSeq);
 
     if (!gate.logged() || !entitlement.can("search")) {
       this.setData({ locked: true });
       return;
     }
-    this.enterSeq = enter.open(this, 4);
     const saved = store.settings();
     const fr = textSearch.readiness();
     this.setData({
