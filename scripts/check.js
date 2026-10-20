@@ -4447,17 +4447,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const appSrc2 = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
 
     storeMod2.write(storeMod2.KEYS.tierAt, 0);
-    ok("档位一天只对一次：没有记录时算到期，同一天内不算到期、跨自然日再算",
+    ok("档位一小时只对一次：没有记录时算到期，间隔内不算到期、满一小时再算",
       storeMod2.tierDue() === true
         && storeMod2.tierDue(storeMod2.touchTier()) === false
-        && storeMod2.tierDue(storeMod2.tierAt() + 86400000) === true,
-      "按天比日期的判据错了 —— 要么每次进前台都拉一次，要么跨天后不拉");
+        && storeMod2.tierDue(storeMod2.tierAt() + 59 * 60 * 1000) === false
+        && storeMod2.tierDue(storeMod2.tierAt() + 60 * 60 * 1000) === true,
+      "按小时比时间戳的判据错了 —— 要么每次进前台都拉一次，要么满一小时还不再拉");
 
-    ok("每日对档挂在 onShow（常驻后台再回来也走得到）",
-      /onShow\(\)[\s\S]{0,160}?refreshTierDaily/.test(appSrc2)
+    ok("小时对档挂在 onShow（常驻后台再回来也走得到）",
+      /onShow\(\)[\s\S]{0,160}?refreshTierHourly/.test(appSrc2)
         && /tierDue\(\)/.test(appSrc2)
         && /entitlement\s*\n?\s*\.sync\(\)/.test(appSrc2),
-      "每日对档只挂在 onLaunch 上 —— 用户开着好几天不回冷启，档位就一直不刷");
+      "对档只挂在 onLaunch 上 —— 用户开着好几天不回冷启，档位就一直不刷");
   }
 
   ok("前台那几次自动推有最小间隔挡着（同一分钟内只发一次）",

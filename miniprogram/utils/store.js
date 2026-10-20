@@ -68,6 +68,8 @@ Object.keys(DEFAULTS).forEach((k) => {
 
 const SCHEMA = 2;
 
+const TIER_GAP_MS = 60 * 60 * 1000;
+
 function read(key, fallback) {
   try {
     const v = wx.getStorageSync(key);
@@ -208,7 +210,7 @@ function touchTier(at) {
 function tierDue(now) {
   const last = tierAt();
   if (!last) return true;
-  return dayKey(last) !== dayKey(now);
+  return (Number(now) || Date.now()) - last >= TIER_GAP_MS;
 }
 
 function progress() {

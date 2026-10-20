@@ -36,10 +36,10 @@ App({
 
   onShow() {
     store.touchDaily();
-    this.refreshTierDaily();
+    this.refreshTierHourly();
   },
 
-  refreshTierDaily() {
+  refreshTierHourly() {
     if (!gate.logged() || !store.tierDue()) return;
     entitlement
       .sync()
