@@ -28,7 +28,7 @@
         </block>
         <block wx:if="{{selection}}">
           <text class="poem-dot">·</text>
-          <text class="poem-meta">选自{{selection}}</text>
+          <text class="poem-meta">{{selection}}</text>
         </block>
         <block wx:if="{{reciteMode}}">
           <text class="poem-dot">·</text>
