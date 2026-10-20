@@ -9,6 +9,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const tabPage = require("../../utils/tab-page");
 const icons = require("../../utils/icons");
+const trail = require("../../utils/trail");
 
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
@@ -308,6 +309,7 @@ Page({
   },
 
   onOpen(e) {
+    trail.set(this.data.results.map((p) => p.id));
     wx.navigateTo({
       url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) + "&mode=browse"
     });

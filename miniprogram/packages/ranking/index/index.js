@@ -1,4 +1,5 @@
 const remote = require("../../../utils/remote");
+const sfx = require("../../../utils/sfx");
 const ranking = require("../../../utils/ranking");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
@@ -59,6 +60,7 @@ Page({
       this.setData({ state: "login", reason: "" });
       return;
     }
+    sfx.play("tick");
     this.setData({ state: "loading" });
     const game = this.data.game;
     remote
@@ -93,6 +95,7 @@ Page({
           return;
         }
         const board = (res.board || []).map(ranking.maskRow);
+        const onPodium = !!res.me && res.me.rank >= 1 && res.me.rank <= 3;
         const size = res.size || this.data.size;
         this.setData({
           state: board.length ? "board" : "empty",
@@ -105,6 +108,7 @@ Page({
           label: res.label || ranking.labelOf(this.data),
           empty: ranking.emptyOf(game)
         });
+        if (onPodium) sfx.play("rank");
       })
       .catch(() => {
         this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });

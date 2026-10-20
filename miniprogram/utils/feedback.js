@@ -53,7 +53,7 @@ function mark(stage, ok, streak) {
   const hit = ok === true;
   flash(stage, hit);
   buzz(hit ? "light" : "medium");
-  const voice = sfx.answer(hit);
+  const voice = sfx.answer(hit, streak);
   return { flash: hit ? "yes" : "no", combo: comboOf(hit ? streak : 0), voice: voice };
 }
 

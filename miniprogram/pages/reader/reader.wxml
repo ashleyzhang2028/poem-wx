@@ -147,6 +147,20 @@
     </view>
   </view>
 
+  <view class="pager" wx:if="{{pager.show}}">
+    <view class="pager-cell {{pager.prev ? '' : 'off'}}" data-id="{{pager.prev.id}}"
+          hover-class="pager-hover" hover-stay-time="60" bindtap="onPage">
+      <text class="pager-dir">‹ 上一篇</text>
+      <text class="pager-name poem">{{pager.prev.title}}</text>
+    </view>
+    <view class="pager-cell next {{pager.next ? '' : 'off'}}" data-id="{{pager.next.id}}"
+          hover-class="pager-hover" hover-stay-time="60" bindtap="onPage">
+      <text class="pager-dir">下一篇 ›</text>
+      <text class="pager-name poem">{{pager.next.title}}</text>
+    </view>
+  </view>
+
   <view class="safe-bottom"></view>
   </block>
+  <tab-bar id="tabbar" />
 </view>

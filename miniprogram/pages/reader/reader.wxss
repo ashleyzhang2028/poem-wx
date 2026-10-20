@@ -31,3 +31,47 @@
   from { transform: translateX(-100%); }
   to { transform: translateX(250%); }
 }
+
+.pager {
+  display: flex;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-4);
+}
+
+.pager-cell {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+}
+
+.pager-cell.next {
+  text-align: right;
+}
+
+.pager-cell.off {
+  visibility: hidden;
+}
+
+.pager-hover {
+  background: var(--sink);
+}
+
+.pager-dir {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-title);
+}
+
+.pager-name {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
