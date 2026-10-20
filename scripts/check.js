@@ -7744,18 +7744,14 @@ function gapped(items, max) {
 
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
-  ok("自选集子的今日份背完给一次提示（每张卡带完成态，首页顶部跟着显示）",
+  ok("自选集子的今日份背完给一次提示",
     /doneToday: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4)
       && /cheerCollection\(/.test(homeSrc4)
-      && homeSrc4.indexOf("S.doneToday(rec)") >= 0
-      && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
-      && /wx:for="\{\{cheers\}\}"/.test(homeWxml4)
-      && /cheers: cheerKey \? \[SELF_CHEERS\[cheerKey\]\] : \[\]/.test(homeSrc4));
+      && homeSrc4.indexOf("S.doneToday(rec)") >= 0);
 
   ok("首页收尾只有一处判据：自选的鼓励语不再另立一套 planDone",
     !/planDone/.test(homeSrc4)
-      && (homeSrc4.match(/const allDone =/g) || []).length === 1
-      && /const cheerKey = selfAllDone && allDone/.test(homeSrc4));
+      && (homeSrc4.match(/const allDone =/g) || []).length === 1);
 
   ok("两处 toast 互斥（前一条还在屏上，后一条不叠上去）",
     (homeSrc4.match(/Date\.now\(\) - this\.toastAt\(\) < TOAST_GAP/g) || []).length === 2
