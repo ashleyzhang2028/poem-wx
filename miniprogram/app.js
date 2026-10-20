@@ -37,6 +37,15 @@ App({
 
   onShow() {
     store.touchDaily();
+    this.refreshTierHourly();
+  },
+
+  refreshTierHourly() {
+    if (!gate.logged() || !store.tierDue()) return;
+    entitlement
+      .sync()
+      .then(() => store.touchTier())
+      .catch(() => {});
   },
 
   watchFont() {

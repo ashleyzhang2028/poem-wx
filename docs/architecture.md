@@ -992,6 +992,12 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
   **登录成功那一刻**、启动后 3 秒、进首页、本地改动静默 5 秒后自己推一程；
   手动那条在「我的 → 同步」，记着绕过 60 秒最小间隔（`sync.now(true)`）——
   界面里只有这一处按钮，其余全自动
+- **档位每小时对一次**：`app.js` 的 `onShow` 里比 `kb_tier_at_v1` 记的时间戳，
+  距上次满一小时才走一次 `entitlement.sync()`（`store.tierDue()`，间隔 `TIER_GAP_MS`）。
+  挂 onShow 不挂 onLaunch，是因为常驻后台的小程序不会再跑 onLaunch。
+  这只是刷新，不是校验：拉失败不写记录，下一次进前台再试，
+  已有的 `auth.tier` 不被清空；真正的校验由服务端在业务请求上做。
+  支付成功后的即时重拉不走这个节流，届时要绕开 `remote.sessionRefresh()` 的 60 秒窗口
 - **管理页与用户列表**：见 § 四
 - **微信登录后端**：`/api/wx/login` 与 `/api/wx/refresh` 在本仓库的 `api/` 里，
   连同会话认 `Authorization: Bearer`、`syncTierGate` 放开、两条新行的服务端白名单。
