@@ -9,28 +9,30 @@ const GROUPS = [
   {
     key: "course",
     name: "课内诗词",
-    desc: "一至高三 · 按年级分册",
+    note: "一至高三 · 按年级分册",
     books: ["poems"]
   },
   {
     key: "texts",
     name: "诗文典籍",
-    desc: "古文 / 乐府 / 唐诗 / 词 / 曲 / 文选",
     books: ["classic", "guwen", "yuefu", "tangshi", "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"]
   },
   {
     key: "people",
     name: "人物",
-    desc: "帝王 · 历代名家",
     books: ["dwang", "dwang-waiguo", "mingren", "mingren-waiguo"]
   },
   {
     key: "common",
     name: "文史常识",
-    desc: "成语 / 文学常识 / 名著导读",
     books: ["chengyu", "changshi", "mingshu"]
   }
 ];
+
+function groupDesc(g, books) {
+  if (g.note) return g.note;
+  return books.map((b) => String(b.name).replace(/[「」]/g, "")).join(" / ");
+}
 
 Page({
   data: {
@@ -58,7 +60,10 @@ Page({
 
     const groups = GROUPS.map((g) => {
       const books = g.books.map((id) => byId[id]).filter(Boolean);
-      return Object.assign({}, g, {
+      return {
+        key: g.key,
+        name: g.name,
+        desc: groupDesc(g, books),
         books: books.map((b) => ({
           id: b.id,
           name: b.name,
@@ -66,7 +71,7 @@ Page({
           count: corpus.ofBook(b.id).length
         })),
         count: books.length
-      });
+      };
     }).filter((g) => g.books.length);
 
     this.setData({ groups });
