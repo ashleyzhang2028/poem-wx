@@ -25,6 +25,7 @@ App({
     );
 
     font.load().catch(() => {});
+    this.watchFont();
     sfx.warm();
 
     if (gate.logged()) entitlement.sync().catch(() => {});
@@ -36,6 +37,16 @@ App({
 
   onShow() {
     store.touchDaily();
+  },
+
+  watchFont() {
+    let last = entitlement.status().tier;
+    this.fontTimer = setInterval(() => {
+      const tier = entitlement.status().tier;
+      if (tier === last) return;
+      last = tier;
+      font.load().catch(() => {});
+    }, 2000);
   },
 
   stampBuild() {
@@ -50,6 +61,7 @@ App({
 
   onHide() {
     if (this.syncTimer) clearTimeout(this.syncTimer);
+    if (this.fontTimer) clearInterval(this.fontTimer);
     if (gate.logged()) sync.flush().catch(() => {});
   }
 });

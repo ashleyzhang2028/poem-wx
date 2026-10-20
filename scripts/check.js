@@ -681,6 +681,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 {
   function bootFont(auth, extra) {
     const box = { kb_auth_v1: auth };
+    const savedProfile = store.read(store.KEYS.profile, {});
     const saved = global.wx;
     global.wx = Object.assign(
       {
@@ -691,7 +692,19 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
       extra || {}
     );
     delete require.cache[require.resolve(path.join(ROOT, "utils", "font.js"))];
-    return { font: require(path.join(ROOT, "utils", "font.js")), restore: () => (global.wx = saved) };
+    delete require.cache[require.resolve(path.join(ROOT, "utils", "entitlement.js"))];
+    return {
+      font: require(path.join(ROOT, "utils", "font.js")),
+      restore: () => {
+        global.wx = saved;
+        store.write(store.KEYS.profile, savedProfile);
+      }
+    };
+  }
+
+  function asTier(tier) {
+    store.saveProfile({ logged: true, tier: "" });
+    global.wx.setStorageSync("kb_auth_v1", { tier: tier });
   }
 
   const seen = [];
@@ -701,10 +714,25 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
       seen.length === 1 && seen[0].family === e.font.FAMILY,
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
+    ok("没登录取 free 那两份", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
   });
   e.restore();
 
+  const proSeen = [];
+  asTier("pro");
+  const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
+  ep.font.load().then(() => {
+    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.SETS.pro[0], proSeen[0]);
+    ok("Pro 与 Free 是两套地址", ep.font.SETS.pro[0] !== ep.font.SETS.free[0]);
+    proSeen.length = 0;
+    return ep.font.load();
+  }).then(() => {
+    ok("同一档位注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
+  });
+  ep.restore();
+
   const fallback = [];
+  asTier("free");
   const e3 = bootFont({}, {
     loadFontFace: (o) => {
       fallback.push(o.source);
@@ -713,7 +741,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   });
   e3.font.load().then((hit) => {
     ok("woff2 那一份注册失败就退到 woff（老 iOS）",
-      hit === true && fallback.length === 2 && fallback[1].indexOf(".woff2") < 0,
+      hit === true && fallback.length === 2 && fallback[1] === e3.font.SETS.free[1],
       fallback.join(" | "));
   });
   e3.restore();
@@ -732,6 +760,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 }
 
 {
+  store.drop(store.KEYS.auth);
   delete require.cache[require.resolve(path.join(ROOT, "utils", "entitlement.js"))];
   const ent = require(path.join(ROOT, "utils", "entitlement.js"));
   store.saveProfile({ logged: true, tier: "max" });

@@ -1,13 +1,23 @@
 const store = require("./store");
+const tiers = require("./tiers");
+const entitlement = require("./entitlement");
 
 const FAMILY = "Kuibu Serif";
 
-const SOURCES = [
-  "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/zhuquefangsong-regular/zhuquefangsong-regular-3500.woff2",
-  "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/zhuquefangsong-regular/zhuquefangsong-regular-3500.woff"
-];
+const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/zhuquefangsong-regular/zhuquefangsong-regular-";
 
-let tried = false;
+const SETS = {
+  free: [BASE + "free.woff2", BASE + "free.woff"],
+  pro: [BASE + "pro.woff2", BASE + "pro.woff"]
+};
+
+function paid(tier) {
+  return tiers.rank(tier) >= tiers.rank("pro");
+}
+
+function setOf(tier) {
+  return paid(tier) ? "pro" : "free";
+}
 
 function configured() {
   const auth = store.read(store.KEYS.auth, {}) || {};
@@ -15,7 +25,7 @@ function configured() {
     const list = Array.isArray(auth.fontUrl) ? auth.fontUrl : [auth.fontUrl];
     return list.map((it) => String(it || "")).filter(Boolean);
   }
-  return SOURCES.slice();
+  return SETS[setOf(entitlement.status().tier)].slice();
 }
 
 function readiness() {
@@ -45,14 +55,22 @@ function sequence(list) {
   );
 }
 
+let loaded = "";
+
 function load() {
-  const r = readiness();
-  if (!r.usable || tried) return Promise.resolve(false);
-  tried = true;
+  const list = configured();
+  const key = list.join(" ");
+
+  if (!list.length || key === loaded) return Promise.resolve(false);
 
   if (typeof wx.loadFontFace !== "function") return Promise.resolve(false);
 
-  return sequence(configured());
+  loaded = key;
+
+  return sequence(list).then((ok) => {
+    if (!ok) loaded = "";
+    return ok;
+  });
 }
 
-module.exports = { FAMILY, SOURCES, readiness, load, configured };
+module.exports = { FAMILY, SETS, setOf, readiness, load, configured };
