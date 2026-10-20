@@ -41,11 +41,6 @@ function fontFlags(size) {
   return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
-function bookNameOf(name) {
-  const raw = String(name == null ? "" : name);
-  return (raw.indexOf("《") >= 0 && raw.indexOf("》") >= 0 ? raw.replace(/[《》]/g, "") : raw).trim();
-}
-
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
   if (!raw) return "";
@@ -314,8 +309,8 @@ Page({
       title: meta.t,
       author: meta.a,
       dynasty: meta.d,
-      source: bookNameOf(meta.s || meta.n),
-      selection: bookNameOf(meta.sel),
+      source: meta.s || meta.n || "",
+      selection: meta.sel || "",
       aliasText: aliasTextOf(meta),
       translation: entry.tr || "",
       translationSource: entry.src || "",

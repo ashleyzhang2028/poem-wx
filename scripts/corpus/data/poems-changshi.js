@@ -6,7 +6,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尚书·舜典》",
+    source: "尚书·舜典",
     excerpt: "诗言志，歌永言",
     gradeGroup: "文体知识"
   },
@@ -17,7 +17,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "佚名",
-    source: "《旧唐书·音乐志》",
+    source: "旧唐书·音乐志",
     excerpt: "词者，乐府之变",
     gradeGroup: "文体知识"
   },
@@ -28,7 +28,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "元",
     author: "佚名",
-    source: "《中原音韵》",
+    source: "中原音韵",
     excerpt: "元曲一体，北音为宗",
     gradeGroup: "文体知识"
   },
@@ -39,7 +39,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "战国",
     author: "荀况",
-    source: "《荀子·赋篇》",
+    source: "荀子·赋篇",
     excerpt: "赋者，铺也",
     gradeGroup: "文体知识"
   },
@@ -50,7 +50,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "两晋南北朝",
     author: "佚名",
-    source: "《文心雕龙·丽辞》",
+    source: "文心雕龙·丽辞",
     excerpt: "丽辞之体，凡有四对",
     gradeGroup: "文体知识"
   },
@@ -61,7 +61,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "先秦",
     author: "佚名",
-    source: "《文心雕龙·总术》",
+    source: "文心雕龙·总术",
     excerpt: "无韵者笔也，有韵者文也",
     gradeGroup: "文体知识"
   },
@@ -72,7 +72,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "佚名",
-    source: "《莺莺传》",
+    source: "莺莺传",
     excerpt: "唐代文言短篇小说",
     gradeGroup: "文体知识"
   },
@@ -83,7 +83,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "宋",
     author: "佚名",
-    source: "《清平山堂话本》",
+    source: "清平山堂话本",
     excerpt: "说话人底本",
     gradeGroup: "文体知识"
   },
@@ -94,7 +94,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "元",
     author: "施耐庵",
-    source: "《水浒传》",
+    source: "水浒传",
     excerpt: "分章标回，各自成篇",
     gradeGroup: "文体知识"
   },
@@ -105,7 +105,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书·礼乐志》",
+    source: "汉书·礼乐志",
     excerpt: "采诗夜诵",
     gradeGroup: "文体知识"
   },
@@ -116,7 +116,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "佚名",
-    source: "《唐诗三百首》",
+    source: "唐诗三百首",
     excerpt: "古体不拘格律",
     gradeGroup: "文体知识"
   },
@@ -127,7 +127,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "佚名",
-    source: "《唐诗三百首》",
+    source: "唐诗三百首",
     excerpt: "篇有定句，句有定字",
     gradeGroup: "文体知识"
   },
@@ -138,7 +138,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "元",
     author: "佚名",
-    source: "《元曲三百首》",
+    source: "元曲三百首",
     excerpt: "单支曲子为小令",
     gradeGroup: "文体知识"
   },
@@ -149,7 +149,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "元",
     author: "佚名",
-    source: "《元曲三百首》",
+    source: "元曲三百首",
     excerpt: "同一宫调诸曲相连",
     gradeGroup: "文体知识"
   },
@@ -160,7 +160,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "西汉",
     author: "贾谊",
-    source: "《汉书·贾谊传》",
+    source: "汉书·贾谊传",
     excerpt: "上书言事之文",
     gradeGroup: "文体知识"
   },
@@ -171,7 +171,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "两晋南北朝",
     author: "王羲之",
-    source: "《兰亭集序》",
+    source: "兰亭集序",
     excerpt: "述作之意，叙其始末",
     gradeGroup: "文体知识"
   },
@@ -182,7 +182,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "刘禹锡",
-    source: "《陋室铭》",
+    source: "陋室铭",
     excerpt: "刻于器物，以自警",
     gradeGroup: "文体知识"
   },
@@ -193,7 +193,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "柳宗元",
-    source: "《永州八记》",
+    source: "永州八记",
     excerpt: "记事、写景、抒怀",
     gradeGroup: "文体知识"
   },
@@ -204,7 +204,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "韩愈",
-    source: "《师说》",
+    source: "师说",
     excerpt: "托物言志，阐明义理",
     gradeGroup: "文体知识"
   },
@@ -215,7 +215,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "春秋",
     author: "孔子",
-    source: "《论语》",
+    source: "论语",
     excerpt: "记录言辞，不加铺陈",
     gradeGroup: "文体知识"
   },
@@ -226,7 +226,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "战国",
     author: "庄周",
-    source: "《庄子》",
+    source: "庄子",
     excerpt: "藉外论之，寄寓其理",
     gradeGroup: "文体知识"
   },
@@ -237,7 +237,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "上古传说",
     author: "佚名",
-    source: "《山海经》",
+    source: "山海经",
     excerpt: "古代先民对自然的解释",
     gradeGroup: "文体知识"
   },
@@ -248,7 +248,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "战国",
     author: "屈原",
-    source: "《楚辞》",
+    source: "楚辞",
     excerpt: "书楚语，作楚声",
     gradeGroup: "文体知识"
   },
@@ -259,7 +259,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "唐",
     author: "刘禹锡",
-    source: "《竹枝词》",
+    source: "竹枝词",
     excerpt: "巴渝民歌入诗",
     gradeGroup: "文体知识"
   },
@@ -270,7 +270,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "明清",
     author: "佚名",
-    source: "《再生缘》",
+    source: "再生缘",
     excerpt: "说唱相间，以唱为主",
     gradeGroup: "文体知识"
   },
@@ -281,7 +281,7 @@ window.POEMS_CHANGSHI = [
     group: "文体知识",
     dynasty: "明清",
     author: "佚名",
-    source: "《呼家将》",
+    source: "呼家将",
     excerpt: "北方说唱，鼓板节之",
     gradeGroup: "文体知识"
   },
@@ -292,7 +292,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "战国",
     author: "屈原",
-    source: "《史记·屈原贾生列传》",
+    source: "史记·屈原贾生列传",
     excerpt: "中国第一位伟大诗人",
     gradeGroup: "作家与作品"
   },
@@ -303,7 +303,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·太史公自序》",
+    source: "史记·太史公自序",
     excerpt: "究天人之际，通古今之变",
     gradeGroup: "作家与作品"
   },
@@ -314,7 +314,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "两晋南北朝",
     author: "陶渊明",
-    source: "《晋书·陶潜传》",
+    source: "晋书·陶潜传",
     excerpt: "不为五斗米折腰",
     gradeGroup: "作家与作品"
   },
@@ -325,7 +325,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "李白",
-    source: "《旧唐书·李白传》",
+    source: "旧唐书·李白传",
     excerpt: "诗仙",
     gradeGroup: "作家与作品"
   },
@@ -336,7 +336,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "杜甫",
-    source: "《旧唐书·杜甫传》",
+    source: "旧唐书·杜甫传",
     excerpt: "诗圣",
     gradeGroup: "作家与作品"
   },
@@ -347,7 +347,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "王维",
-    source: "《旧唐书·王维传》",
+    source: "旧唐书·王维传",
     excerpt: "诗中有画，画中有诗",
     gradeGroup: "作家与作品"
   },
@@ -358,7 +358,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "白居易",
-    source: "《旧唐书·白居易传》",
+    source: "旧唐书·白居易传",
     excerpt: "文章合为时而著",
     gradeGroup: "作家与作品"
   },
@@ -369,7 +369,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "韩愈",
-    source: "《旧唐书·韩愈传》",
+    source: "旧唐书·韩愈传",
     excerpt: "文起八代之衰",
     gradeGroup: "作家与作品"
   },
@@ -380,7 +380,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "唐",
     author: "柳宗元",
-    source: "《旧唐书·柳宗元传》",
+    source: "旧唐书·柳宗元传",
     excerpt: "唐宋八大家之一",
     gradeGroup: "作家与作品"
   },
@@ -391,7 +391,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "宋",
     author: "苏轼",
-    source: "《宋史·苏轼传》",
+    source: "宋史·苏轼传",
     excerpt: "唐宋八大家之一",
     gradeGroup: "作家与作品"
   },
@@ -402,7 +402,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "宋",
     author: "李清照",
-    source: "《宋史·李格非传》",
+    source: "宋史·李格非传",
     excerpt: "婉约词宗",
     gradeGroup: "作家与作品"
   },
@@ -413,7 +413,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "宋",
     author: "辛弃疾",
-    source: "《宋史·辛弃疾传》",
+    source: "宋史·辛弃疾传",
     excerpt: "豪放词宗",
     gradeGroup: "作家与作品"
   },
@@ -424,7 +424,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "元",
     author: "关汉卿",
-    source: "《录鬼簿》",
+    source: "录鬼簿",
     excerpt: "元杂剧奠基人",
     gradeGroup: "作家与作品"
   },
@@ -435,7 +435,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "元",
     author: "罗贯中",
-    source: "《三国演义》",
+    source: "三国演义",
     excerpt: "章回小说开创者",
     gradeGroup: "作家与作品"
   },
@@ -446,7 +446,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "元",
     author: "施耐庵",
-    source: "《水浒传》",
+    source: "水浒传",
     excerpt: "英雄传奇代表",
     gradeGroup: "作家与作品"
   },
@@ -457,7 +457,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "明",
     author: "吴承恩",
-    source: "《西游记》",
+    source: "西游记",
     excerpt: "神魔小说代表",
     gradeGroup: "作家与作品"
   },
@@ -468,7 +468,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "清",
     author: "曹雪芹",
-    source: "《红楼梦》",
+    source: "红楼梦",
     excerpt: "中国古典小说顶峰",
     gradeGroup: "作家与作品"
   },
@@ -479,7 +479,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "清",
     author: "蒲松龄",
-    source: "《聊斋志异》",
+    source: "聊斋志异",
     excerpt: "写鬼写妖，高人一等",
     gradeGroup: "作家与作品"
   },
@@ -490,7 +490,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "清",
     author: "吴敬梓",
-    source: "《儒林外史》",
+    source: "儒林外史",
     excerpt: "讽刺小说之冠",
     gradeGroup: "作家与作品"
   },
@@ -501,7 +501,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "清",
     author: "龚自珍",
-    source: "《己亥杂诗》",
+    source: "己亥杂诗",
     excerpt: "近代改良思想先驱",
     gradeGroup: "作家与作品"
   },
@@ -512,7 +512,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《呐喊》《彷徨》",
+    source: "呐喊彷徨",
     excerpt: "中国现代文学奠基人",
     gradeGroup: "作家与作品"
   },
@@ -523,7 +523,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《女神》",
+    source: "女神",
     excerpt: "新诗奠基之作",
     gradeGroup: "作家与作品"
   },
@@ -534,7 +534,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《子夜》",
+    source: "子夜",
     excerpt: "社会剖析小说代表",
     gradeGroup: "作家与作品"
   },
@@ -545,7 +545,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "老舍",
-    source: "《骆驼祥子》",
+    source: "骆驼祥子",
     excerpt: "人民艺术家",
     gradeGroup: "作家与作品"
   },
@@ -556,7 +556,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "巴金",
-    source: "《家》",
+    source: "家",
     excerpt: "激流三部曲",
     gradeGroup: "作家与作品"
   },
@@ -567,7 +567,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "曹禺",
-    source: "《雷雨》",
+    source: "雷雨",
     excerpt: "中国现代话剧奠基作",
     gradeGroup: "作家与作品"
   },
@@ -578,7 +578,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《背影》《荷塘月色》",
+    source: "背影荷塘月色",
     excerpt: "现代散文名家",
     gradeGroup: "作家与作品"
   },
@@ -589,7 +589,7 @@ window.POEMS_CHANGSHI = [
     group: "作家与作品",
     dynasty: "近现代",
     author: "冰心",
-    source: "《繁星》《春水》",
+    source: "繁星春水",
     excerpt: "小诗体开创者",
     gradeGroup: "作家与作品"
   },
@@ -600,7 +600,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "东汉",
     author: "曹丕",
-    source: "《典论·论文》",
+    source: "典论·论文",
     excerpt: "建安七子，各擅其美",
     gradeGroup: "流派与并称"
   },
@@ -611,7 +611,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "三国",
     author: "佚名",
-    source: "《世说新语·任诞》",
+    source: "世说新语·任诞",
     excerpt: "七人常集于竹林之下",
     gradeGroup: "流派与并称"
   },
@@ -622,7 +622,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "韩愈",
-    source: "《唐宋八大家文钞》",
+    source: "唐宋八大家文钞",
     excerpt: "古文运动代表",
     gradeGroup: "流派与并称"
   },
@@ -633,7 +633,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "元",
     author: "关汉卿",
-    source: "《录鬼簿》",
+    source: "录鬼簿",
     excerpt: "关马郑白",
     gradeGroup: "流派与并称"
   },
@@ -644,7 +644,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "王勃",
-    source: "《旧唐书·文苑传》",
+    source: "旧唐书·文苑传",
     excerpt: "王杨卢骆当时体",
     gradeGroup: "流派与并称"
   },
@@ -655,7 +655,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "西汉",
     author: "司马相如",
-    source: "《汉书·艺文志》",
+    source: "汉书·艺文志",
     excerpt: "汉赋之冠",
     gradeGroup: "流派与并称"
   },
@@ -666,7 +666,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "宋",
     author: "黄庭坚",
-    source: "《宋史·文苑传》",
+    source: "宋史·文苑传",
     excerpt: "皆游苏轼之门",
     gradeGroup: "流派与并称"
   },
@@ -677,7 +677,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "宋",
     author: "柳永",
-    source: "《雨霖铃》",
+    source: "雨霖铃",
     excerpt: "词分婉约豪放",
     gradeGroup: "流派与并称"
   },
@@ -688,7 +688,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "宋",
     author: "苏轼",
-    source: "《念奴娇·赤壁怀古》",
+    source: "念奴娇·赤壁怀古",
     excerpt: "词开豪放一派",
     gradeGroup: "流派与并称"
   },
@@ -699,7 +699,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "王维",
-    source: "《山居秋暝》",
+    source: "山居秋暝",
     excerpt: "诗中有画",
     gradeGroup: "流派与并称"
   },
@@ -710,7 +710,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "高适",
-    source: "《燕歌行》",
+    source: "燕歌行",
     excerpt: "大漠孤烟，长河落日",
     gradeGroup: "流派与并称"
   },
@@ -721,7 +721,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "宋",
     author: "黄庭坚",
-    source: "《江西诗社宗派图》",
+    source: "江西诗社宗派图",
     excerpt: "夺胎换骨，点铁成金",
     gradeGroup: "流派与并称"
   },
@@ -732,7 +732,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "清",
     author: "方苞",
-    source: "《古文约选》",
+    source: "古文约选",
     excerpt: "义理、考据、辞章",
     gradeGroup: "流派与并称"
   },
@@ -743,7 +743,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "明",
     author: "袁宏道",
-    source: "《叙小修诗》",
+    source: "叙小修诗",
     excerpt: "独抒性灵，不拘格套",
     gradeGroup: "流派与并称"
   },
@@ -754,7 +754,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "明",
     author: "李梦阳",
-    source: "《空同集》",
+    source: "空同集",
     excerpt: "文必秦汉，诗必盛唐",
     gradeGroup: "流派与并称"
   },
@@ -765,7 +765,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "三国",
     author: "曹操",
-    source: "《世说新语》",
+    source: "世说新语",
     excerpt: "父子三人，建安风骨",
     gradeGroup: "流派与并称"
   },
@@ -776,7 +776,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "韩愈",
-    source: "《昌黎先生集》",
+    source: "昌黎先生集",
     excerpt: "复古明道，反对骈俪",
     gradeGroup: "流派与并称"
   },
@@ -787,7 +787,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "唐",
     author: "白居易",
-    source: "《新乐府序》",
+    source: "新乐府序",
     excerpt: "文章合为时而著",
     gradeGroup: "流派与并称"
   },
@@ -798,7 +798,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "五代",
     author: "温庭筠",
-    source: "《花间集》",
+    source: "花间集",
     excerpt: "词为艳科",
     gradeGroup: "流派与并称"
   },
@@ -809,7 +809,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "五代",
     author: "李煜",
-    source: "《南唐二主词》",
+    source: "南唐二主词",
     excerpt: "亡国之音，词境始大",
     gradeGroup: "流派与并称"
   },
@@ -820,7 +820,7 @@ window.POEMS_CHANGSHI = [
     group: "流派与并称",
     dynasty: "宋",
     author: "辛弃疾",
-    source: "《稼轩长短句》",
+    source: "稼轩长短句",
     excerpt: "慷慨纵横，有不可一世之概",
     gradeGroup: "流派与并称"
   },
@@ -831,7 +831,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "先秦",
     author: "佚名",
-    source: "《诗经》",
+    source: "诗经",
     excerpt: "我国最早的诗歌总集",
     gradeGroup: "典籍"
   },
@@ -842,7 +842,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尚书》",
+    source: "尚书",
     excerpt: "我国最早的散文总集",
     gradeGroup: "典籍"
   },
@@ -853,7 +853,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "春秋",
     author: "左丘明",
-    source: "《左传》",
+    source: "左传",
     excerpt: "我国第一部叙事完备的编年体史书",
     gradeGroup: "典籍"
   },
@@ -864,7 +864,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "西汉",
     author: "刘向",
-    source: "《战国策》",
+    source: "战国策",
     excerpt: "国别体史料汇编",
     gradeGroup: "典籍"
   },
@@ -875,7 +875,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记》",
+    source: "史记",
     excerpt: "我国第一部纪传体通史",
     gradeGroup: "典籍"
   },
@@ -886,7 +886,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "东汉",
     author: "班固",
-    source: "《汉书》",
+    source: "汉书",
     excerpt: "我国第一部纪传体断代史",
     gradeGroup: "典籍"
   },
@@ -897,7 +897,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "范晔",
-    source: "《后汉书》",
+    source: "后汉书",
     excerpt: "记载东汉史事",
     gradeGroup: "典籍"
   },
@@ -908,7 +908,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "陈寿",
-    source: "《三国志》",
+    source: "三国志",
     excerpt: "记载魏蜀吴三国史事",
     gradeGroup: "典籍"
   },
@@ -919,7 +919,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "宋",
     author: "司马光",
-    source: "《资治通鉴》",
+    source: "资治通鉴",
     excerpt: "我国第一部编年体通史",
     gradeGroup: "典籍"
   },
@@ -930,7 +930,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "刘义庆",
-    source: "《世说新语》",
+    source: "世说新语",
     excerpt: "志人小说代表作",
     gradeGroup: "典籍"
   },
@@ -941,7 +941,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "干宝",
-    source: "《搜神记》",
+    source: "搜神记",
     excerpt: "志怪小说代表作",
     gradeGroup: "典籍"
   },
@@ -952,7 +952,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "刘勰",
-    source: "《文心雕龙》",
+    source: "文心雕龙",
     excerpt: "我国第一部文学理论专著",
     gradeGroup: "典籍"
   },
@@ -963,7 +963,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "钟嵘",
-    source: "《诗品》",
+    source: "诗品",
     excerpt: "我国第一部诗歌评论专著",
     gradeGroup: "典籍"
   },
@@ -974,7 +974,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "萧统",
-    source: "《文选》",
+    source: "文选",
     excerpt: "现存最早的诗文总集",
     gradeGroup: "典籍"
   },
@@ -985,7 +985,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "宋",
     author: "郭茂倩",
-    source: "《乐府诗集》",
+    source: "乐府诗集",
     excerpt: "乐府诗的总集",
     gradeGroup: "典籍"
   },
@@ -996,7 +996,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "东汉",
     author: "佚名",
-    source: "《文选》",
+    source: "文选",
     excerpt: "五言诗成熟的标志",
     gradeGroup: "典籍"
   },
@@ -1007,7 +1007,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "清",
     author: "蘅塘退士",
-    source: "《唐诗三百首》",
+    source: "唐诗三百首",
     excerpt: "流传最广的唐诗选本",
     gradeGroup: "典籍"
   },
@@ -1018,7 +1018,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "清",
     author: "吴楚材",
-    source: "《古文观止》",
+    source: "古文观止",
     excerpt: "历代散文选本",
     gradeGroup: "典籍"
   },
@@ -1029,7 +1029,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "东汉",
     author: "许慎",
-    source: "《说文解字》",
+    source: "说文解字",
     excerpt: "我国第一部字典",
     gradeGroup: "典籍"
   },
@@ -1040,7 +1040,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尔雅》",
+    source: "尔雅",
     excerpt: "我国第一部词典",
     gradeGroup: "典籍"
   },
@@ -1051,7 +1051,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "春秋",
     author: "孔子",
-    source: "《论语》",
+    source: "论语",
     excerpt: "儒家经典，语录体",
     gradeGroup: "典籍"
   },
@@ -1062,7 +1062,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "战国",
     author: "孟轲",
-    source: "《孟子》",
+    source: "孟子",
     excerpt: "儒家经典，长于论辩",
     gradeGroup: "典籍"
   },
@@ -1073,7 +1073,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "战国",
     author: "庄周",
-    source: "《庄子》",
+    source: "庄子",
     excerpt: "道家经典，想象奇诡",
     gradeGroup: "典籍"
   },
@@ -1084,7 +1084,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "战国",
     author: "荀况",
-    source: "《荀子》",
+    source: "荀子",
     excerpt: "先秦诸子集大成",
     gradeGroup: "典籍"
   },
@@ -1095,7 +1095,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "战国",
     author: "韩非",
-    source: "《韩非子》",
+    source: "韩非子",
     excerpt: "法家集大成之作",
     gradeGroup: "典籍"
   },
@@ -1106,7 +1106,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "战国",
     author: "墨翟",
-    source: "《墨子》",
+    source: "墨子",
     excerpt: "墨家经典",
     gradeGroup: "典籍"
   },
@@ -1117,7 +1117,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "春秋",
     author: "李耳",
-    source: "《老子》",
+    source: "老子",
     excerpt: "道家首部经典",
     gradeGroup: "典籍"
   },
@@ -1128,7 +1128,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "西汉",
     author: "刘向",
-    source: "《楚辞》",
+    source: "楚辞",
     excerpt: "我国第一部浪漫主义诗歌总集",
     gradeGroup: "典籍"
   },
@@ -1139,7 +1139,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "两晋南北朝",
     author: "徐陵",
-    source: "《玉台新咏》",
+    source: "玉台新咏",
     excerpt: "继《诗经》《楚辞》后的诗歌总集",
     gradeGroup: "典籍"
   },
@@ -1150,7 +1150,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "清",
     author: "彭定求",
-    source: "《全唐诗》",
+    source: "全唐诗",
     excerpt: "唐诗总集",
     gradeGroup: "典籍"
   },
@@ -1161,7 +1161,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "清",
     author: "纪昀",
-    source: "《四库全书》",
+    source: "四库全书",
     excerpt: "我国古代最大的丛书",
     gradeGroup: "典籍"
   },
@@ -1172,7 +1172,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "春秋",
     author: "孔子",
-    source: "《四书章句集注》",
+    source: "四书章句集注",
     excerpt: "儒家经典的核心",
     gradeGroup: "典籍"
   },
@@ -1183,7 +1183,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "先秦",
     author: "佚名",
-    source: "《十三经注疏》",
+    source: "十三经注疏",
     excerpt: "儒家十三部经典",
     gradeGroup: "典籍"
   },
@@ -1194,7 +1194,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《二十四史》",
+    source: "二十四史",
     excerpt: "中国历代正史",
     gradeGroup: "典籍"
   },
@@ -1205,7 +1205,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "宋",
     author: "刘克庄",
-    source: "《千家诗》",
+    source: "千家诗",
     excerpt: "蒙学诗歌选本",
     gradeGroup: "典籍"
   },
@@ -1216,7 +1216,7 @@ window.POEMS_CHANGSHI = [
     group: "典籍",
     dynasty: "清",
     author: "沈德潜",
-    source: "《古诗源》",
+    source: "古诗源",
     excerpt: "唐以前诗歌选本",
     gradeGroup: "典籍"
   },
@@ -1227,7 +1227,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·檀弓》",
+    source: "礼记·檀弓",
     excerpt: "幼名，冠字",
     gradeGroup: "称谓与礼俗"
   },
@@ -1238,7 +1238,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《逸周书·谥法解》",
+    source: "逸周书·谥法解",
     excerpt: "谥者，行之迹也",
     gradeGroup: "称谓与礼俗"
   },
@@ -1249,7 +1249,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书·高帝纪》",
+    source: "汉书·高帝纪",
     excerpt: "祖有功而宗有德",
     gradeGroup: "称谓与礼俗"
   },
@@ -1260,7 +1260,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "刘彻",
-    source: "《汉书·武帝纪》",
+    source: "汉书·武帝纪",
     excerpt: "建元为中国年号之始",
     gradeGroup: "称谓与礼俗"
   },
@@ -1271,7 +1271,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·曲礼》",
+    source: "礼记·曲礼",
     excerpt: "入门而问讳",
     gradeGroup: "称谓与礼俗"
   },
@@ -1282,7 +1282,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·曲礼》",
+    source: "礼记·曲礼",
     excerpt: "二十曰弱，冠",
     gradeGroup: "称谓与礼俗"
   },
@@ -1293,7 +1293,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "孔子",
-    source: "《论语·为政》",
+    source: "论语·为政",
     excerpt: "三十而立",
     gradeGroup: "称谓与礼俗"
   },
@@ -1304,7 +1304,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《唐诗纪事》",
+    source: "唐诗纪事",
     excerpt: "六十为花甲",
     gradeGroup: "称谓与礼俗"
   },
@@ -1315,7 +1315,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·曲礼》",
+    source: "礼记·曲礼",
     excerpt: "百年曰期颐",
     gradeGroup: "称谓与礼俗"
   },
@@ -1326,7 +1326,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·曲礼》",
+    source: "礼记·曲礼",
     excerpt: "天子死曰崩",
     gradeGroup: "称谓与礼俗"
   },
@@ -1337,7 +1337,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尚书·尧典》",
+    source: "尚书·尧典",
     excerpt: "以亲九族",
     gradeGroup: "称谓与礼俗"
   },
@@ -1348,7 +1348,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《礼记·大传》",
+    source: "礼记·大传",
     excerpt: "别子为祖，继别为宗",
     gradeGroup: "称谓与礼俗"
   },
@@ -1359,7 +1359,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《仪礼·丧服》",
+    source: "仪礼·丧服",
     excerpt: "五服之制",
     gradeGroup: "称谓与礼俗"
   },
@@ -1370,7 +1370,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《周礼·春官》",
+    source: "周礼·春官",
     excerpt: "社稷，国之本也",
     gradeGroup: "称谓与礼俗"
   },
@@ -1381,7 +1381,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《左传·庄公十年》",
+    source: "左传·庄公十年",
     excerpt: "牺牲玉帛，弗敢加也",
     gradeGroup: "称谓与礼俗"
   },
@@ -1392,7 +1392,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《周礼·春官》",
+    source: "周礼·春官",
     excerpt: "九拜之礼",
     gradeGroup: "称谓与礼俗"
   },
@@ -1403,7 +1403,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·祭统》",
+    source: "礼记·祭统",
     excerpt: "致齐于内，散齐于外",
     gradeGroup: "称谓与礼俗"
   },
@@ -1414,7 +1414,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《史记·项羽本纪》",
+    source: "史记·项羽本纪",
     excerpt: "项王东向坐",
     gradeGroup: "称谓与礼俗"
   },
@@ -1425,7 +1425,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·曲礼》",
+    source: "礼记·曲礼",
     excerpt: "自卑而尊人",
     gradeGroup: "称谓与礼俗"
   },
@@ -1436,7 +1436,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "两晋南北朝",
     author: "佚名",
-    source: "《晋书·宣帝纪》",
+    source: "晋书·宣帝纪",
     excerpt: "巾帼遗之",
     gradeGroup: "称谓与礼俗"
   },
@@ -1447,7 +1447,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "隋",
     author: "佚名",
-    source: "《隋书·选举志》",
+    source: "隋书·选举志",
     excerpt: "隋炀帝始建进士科",
     gradeGroup: "制度与地理"
   },
@@ -1458,7 +1458,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "唐",
     author: "佚名",
-    source: "《新唐书·选举志》",
+    source: "新唐书·选举志",
     excerpt: "进士科尤为贵重",
     gradeGroup: "制度与地理"
   },
@@ -1469,7 +1469,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "明清",
     author: "佚名",
-    source: "《明史·选举志》",
+    source: "明史·选举志",
     excerpt: "三级考试，层层选拔",
     gradeGroup: "制度与地理"
   },
@@ -1480,7 +1480,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "明清",
     author: "佚名",
-    source: "《明史·选举志》",
+    source: "明史·选举志",
     excerpt: "破题承题，起讲入题",
     gradeGroup: "制度与地理"
   },
@@ -1491,7 +1491,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "隋",
     author: "佚名",
-    source: "《隋书·百官志》",
+    source: "隋书·百官志",
     excerpt: "中书、门下、尚书",
     gradeGroup: "制度与地理"
   },
@@ -1502,7 +1502,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "三国",
     author: "陈群",
-    source: "《三国志·陈群传》",
+    source: "三国志·陈群传",
     excerpt: "上品无寒门",
     gradeGroup: "制度与地理"
   },
@@ -1513,7 +1513,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "西汉",
     author: "刘彻",
-    source: "《汉书·武帝纪》",
+    source: "汉书·武帝纪",
     excerpt: "举孝廉，辟公府",
     gradeGroup: "制度与地理"
   },
@@ -1524,7 +1524,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《史记·封禅书》",
+    source: "史记·封禅书",
     excerpt: "登泰山，禅梁父",
     gradeGroup: "制度与地理"
   },
@@ -1535,7 +1535,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《史记·历书》",
+    source: "史记·历书",
     excerpt: "天干地支，六十循环",
     gradeGroup: "制度与地理"
   },
@@ -1546,7 +1546,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《淮南子·天文训》",
+    source: "淮南子·天文训",
     excerpt: "立春、雨水、惊蛰",
     gradeGroup: "制度与地理"
   },
@@ -1557,7 +1557,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《说文解字》",
+    source: "说文解字",
     excerpt: "月始为朔",
     gradeGroup: "制度与地理"
   },
@@ -1568,7 +1568,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "邹衍",
-    source: "《汉书·艺文志》",
+    source: "汉书·艺文志",
     excerpt: "五行相生相克",
     gradeGroup: "制度与地理"
   },
@@ -1579,7 +1579,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尚书·禹贡》",
+    source: "尚书·禹贡",
     excerpt: "禹别九州",
     gradeGroup: "制度与地理"
   },
@@ -1590,7 +1590,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《诗经·小雅》",
+    source: "诗经·小雅",
     excerpt: "中原有菽",
     gradeGroup: "制度与地理"
   },
@@ -1601,7 +1601,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "西汉",
     author: "佚名",
-    source: "《史记·苏秦列传》",
+    source: "史记·苏秦列传",
     excerpt: "秦地被山带河",
     gradeGroup: "制度与地理"
   },
@@ -1612,7 +1612,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "隋",
     author: "佚名",
-    source: "《隋书·地理志》",
+    source: "隋书·地理志",
     excerpt: "南京，古称金陵",
     gradeGroup: "制度与地理"
   },
@@ -1623,7 +1623,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "唐",
     author: "佚名",
-    source: "《江南可采莲》",
+    source: "江南可采莲",
     excerpt: "江南可采莲",
     gradeGroup: "制度与地理"
   },
@@ -1634,7 +1634,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "两晋南北朝",
     author: "佚名",
-    source: "《木兰诗》",
+    source: "木兰诗",
     excerpt: "关山度若飞",
     gradeGroup: "制度与地理"
   },
@@ -1645,7 +1645,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《尔雅·释山》",
+    source: "尔雅·释山",
     excerpt: "泰山、华山、衡山、恒山、嵩山",
     gradeGroup: "制度与地理"
   },
@@ -1656,7 +1656,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "先秦",
     author: "佚名",
-    source: "《礼记·王制》",
+    source: "礼记·王制",
     excerpt: "东夷、西戎、南蛮、北狄",
     gradeGroup: "制度与地理"
   },
@@ -1667,7 +1667,7 @@ window.POEMS_CHANGSHI = [
     group: "制度与地理",
     dynasty: "秦",
     author: "佚名",
-    source: "《史记·秦始皇本纪》",
+    source: "史记·秦始皇本纪",
     excerpt: "分天下以为三十六郡",
     gradeGroup: "制度与地理"
   },
@@ -1678,7 +1678,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "佚名",
-    source: "《毛诗序》",
+    source: "毛诗序",
     excerpt: "风雅颂赋比兴",
     gradeGroup: "名句与典故"
   },
@@ -1689,7 +1689,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "孔子",
-    source: "《论语》",
+    source: "论语",
     excerpt: "学而时习之",
     gradeGroup: "名句与典故"
   },
@@ -1700,7 +1700,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "佚名",
-    source: "《文心雕龙·辨骚》",
+    source: "文心雕龙·辨骚",
     excerpt: "风骚并称，文学之源",
     gradeGroup: "名句与典故"
   },
@@ -1711,7 +1711,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "两晋南北朝",
     author: "佚名",
-    source: "《乐府诗集》",
+    source: "乐府诗集",
     excerpt: "孔雀东南飞，木兰当户织",
     gradeGroup: "名句与典故"
   },
@@ -1722,7 +1722,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "唐",
     author: "杜甫",
-    source: "《石壕吏》",
+    source: "石壕吏",
     excerpt: "暮投石壕村",
     gradeGroup: "名句与典故"
   },
@@ -1733,7 +1733,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "唐",
     author: "贾岛",
-    source: "《题李凝幽居》",
+    source: "题李凝幽居",
     excerpt: "僧敲月下门",
     gradeGroup: "名句与典故"
   },
@@ -1744,7 +1744,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "两晋南北朝",
     author: "谢道韫",
-    source: "《世说新语·言语》",
+    source: "世说新语·言语",
     excerpt: "未若柳絮因风起",
     gradeGroup: "名句与典故"
   },
@@ -1755,7 +1755,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "两晋南北朝",
     author: "左思",
-    source: "《晋书·左思传》",
+    source: "晋书·左思传",
     excerpt: "豪贵之家竞相传写",
     gradeGroup: "名句与典故"
   },
@@ -1766,7 +1766,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "两晋南北朝",
     author: "王羲之",
-    source: "《书断·王羲之》",
+    source: "书断·王羲之",
     excerpt: "笔入木三分",
     gradeGroup: "名句与典故"
   },
@@ -1777,7 +1777,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "唐",
     author: "李白",
-    source: "《开元天宝遗事》",
+    source: "开元天宝遗事",
     excerpt: "笔头生花",
     gradeGroup: "名句与典故"
   },
@@ -1788,7 +1788,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "唐",
     author: "李白",
-    source: "《方舆胜览》",
+    source: "方舆胜览",
     excerpt: "只要功夫深，铁杵磨成针",
     gradeGroup: "名句与典故"
   },
@@ -1799,7 +1799,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "孔子",
-    source: "《史记·孔子世家》",
+    source: "史记·孔子世家",
     excerpt: "读《易》韦编三绝",
     gradeGroup: "名句与典故"
   },
@@ -1810,7 +1810,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "两晋南北朝",
     author: "车胤",
-    source: "《晋书·车胤传》",
+    source: "晋书·车胤传",
     excerpt: "家贫不常得油",
     gradeGroup: "名句与典故"
   },
@@ -1821,7 +1821,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "匡衡",
-    source: "《西京杂记》",
+    source: "西京杂记",
     excerpt: "穿壁引其光",
     gradeGroup: "名句与典故"
   },
@@ -1832,7 +1832,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "战国",
     author: "苏秦",
-    source: "《战国策·秦策》",
+    source: "战国策·秦策",
     excerpt: "引锥自刺其股",
     gradeGroup: "名句与典故"
   },
@@ -1843,7 +1843,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "宋",
     author: "杨时",
-    source: "《宋史·杨时传》",
+    source: "宋史·杨时传",
     excerpt: "门外雪深一尺",
     gradeGroup: "名句与典故"
   },
@@ -1854,7 +1854,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "佚名",
-    source: "《列子·汤问》",
+    source: "列子·汤问",
     excerpt: "峨峨兮若泰山",
     gradeGroup: "名句与典故"
   },
@@ -1865,7 +1865,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·项羽本纪》",
+    source: "史记·项羽本纪",
     excerpt: "皆沉船，破釜甑",
     gradeGroup: "名句与典故"
   },
@@ -1876,7 +1876,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·越王勾践世家》",
+    source: "史记·越王勾践世家",
     excerpt: "置胆于坐，饮食尝之",
     gradeGroup: "名句与典故"
   },
@@ -1887,7 +1887,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·淮阴侯列传》",
+    source: "史记·淮阴侯列传",
     excerpt: "背水阵",
     gradeGroup: "名句与典故"
   },
@@ -1898,7 +1898,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·秦始皇本纪》",
+    source: "史记·秦始皇本纪",
     excerpt: "丞相误邪？谓鹿为马",
     gradeGroup: "名句与典故"
   },
@@ -1909,7 +1909,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·廉颇蔺相如列传》",
+    source: "史记·廉颇蔺相如列传",
     excerpt: "臣请完璧归赵",
     gradeGroup: "名句与典故"
   },
@@ -1920,7 +1920,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《史记·廉颇蔺相如列传》",
+    source: "史记·廉颇蔺相如列传",
     excerpt: "肉袒负荆",
     gradeGroup: "名句与典故"
   },
@@ -1931,7 +1931,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "战国",
     author: "吕不韦",
-    source: "《史记·吕不韦列传》",
+    source: "史记·吕不韦列传",
     excerpt: "有能增损一字者予千金",
     gradeGroup: "名句与典故"
   },
@@ -1942,7 +1942,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "宋",
     author: "苏轼",
-    source: "《和董传留别》",
+    source: "和董传留别",
     excerpt: "腹有诗书气自华",
     gradeGroup: "名句与典故"
   },
@@ -1953,7 +1953,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "先秦",
     author: "孔子",
-    source: "《论语·述而》",
+    source: "论语·述而",
     excerpt: "三人行，必有我师焉",
     gradeGroup: "名句与典故"
   },
@@ -1964,7 +1964,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "战国",
     author: "荀况",
-    source: "《荀子·劝学》",
+    source: "荀子·劝学",
     excerpt: "锲而不舍，金石可镂",
     gradeGroup: "名句与典故"
   },
@@ -1975,7 +1975,7 @@ window.POEMS_CHANGSHI = [
     group: "名句与典故",
     dynasty: "战国",
     author: "荀况",
-    source: "《荀子·劝学》",
+    source: "荀子·劝学",
     excerpt: "不积跬步，无以至千里",
     gradeGroup: "名句与典故"
   },
@@ -1986,7 +1986,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "陈独秀",
-    source: "《新青年》",
+    source: "新青年",
     excerpt: "中国现代文学的发轫地",
     gradeGroup: "现当代文学史事件"
   },
@@ -1997,7 +1997,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "胡适",
-    source: "《文学改良刍议》",
+    source: "文学改良刍议",
     excerpt: "提倡白话文，反对文言文",
     gradeGroup: "现当代文学史事件"
   },
@@ -2008,7 +2008,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "陈独秀",
-    source: "《新青年》",
+    source: "新青年",
     excerpt: "德先生与赛先生",
     gradeGroup: "现当代文学史事件"
   },
@@ -2019,7 +2019,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "佚名",
-    source: "《呐喊》",
+    source: "呐喊",
     excerpt: "外争主权，内除国贼",
     gradeGroup: "现当代文学史事件"
   },
@@ -2030,7 +2030,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "胡适",
-    source: "《建设的文学革命论》",
+    source: "建设的文学革命论",
     excerpt: "国语的文学，文学的国语",
     gradeGroup: "现当代文学史事件"
   },
@@ -2041,7 +2041,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《创造》季刊",
+    source: "创造季刊",
     excerpt: "为艺术而艺术",
     gradeGroup: "现当代文学史事件"
   },
@@ -2052,7 +2052,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《小说月报》",
+    source: "小说月报",
     excerpt: "为人生而艺术",
     gradeGroup: "现当代文学史事件"
   },
@@ -2063,7 +2063,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《对于左翼作家联盟的意见》",
+    source: "对于左翼作家联盟的意见",
     excerpt: "中国左翼作家联盟",
     gradeGroup: "现当代文学史事件"
   },
@@ -2074,7 +2074,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "蒋光慈",
-    source: "《太阳月刊》",
+    source: "太阳月刊",
     excerpt: "革命文学论争",
     gradeGroup: "现当代文学史事件"
   },
@@ -2085,7 +2085,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "周作人",
-    source: "《语丝》",
+    source: "语丝",
     excerpt: "任意而谈，无所顾忌",
     gradeGroup: "现当代文学史事件"
   },
@@ -2096,7 +2096,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《新月》月刊",
+    source: "新月月刊",
     excerpt: "新诗格律化",
     gradeGroup: "现当代文学史事件"
   },
@@ -2107,7 +2107,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《萌芽月刊》",
+    source: "萌芽月刊",
     excerpt: "革命文学到左翼文学",
     gradeGroup: "现当代文学史事件"
   },
@@ -2118,7 +2118,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "毛泽东",
-    source: "《在延安文艺座谈会上的讲话》",
+    source: "在延安文艺座谈会上的讲话",
     excerpt: "文艺为人民大众",
     gradeGroup: "现当代文学史事件"
   },
@@ -2129,7 +2129,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "孙犁",
-    source: "《荷花淀》",
+    source: "荷花淀",
     excerpt: "诗情画意的乡土小说",
     gradeGroup: "现当代文学史事件"
   },
@@ -2140,7 +2140,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "赵树理",
-    source: "《小二黑结婚》",
+    source: "小二黑结婚",
     excerpt: "从生活中来，到生活中去",
     gradeGroup: "现当代文学史事件"
   },
@@ -2151,7 +2151,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "北岛",
-    source: "《回答》",
+    source: "回答",
     excerpt: "我不相信",
     gradeGroup: "现当代文学史事件"
   },
@@ -2162,7 +2162,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "卢新华",
-    source: "《伤痕》",
+    source: "伤痕",
     excerpt: "于无声处听惊雷",
     gradeGroup: "现当代文学史事件"
   },
@@ -2173,7 +2173,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "王蒙",
-    source: "《蝴蝶》",
+    source: "蝴蝶",
     excerpt: "反思历史，重新认识",
     gradeGroup: "现当代文学史事件"
   },
@@ -2184,7 +2184,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "韩少功",
-    source: "《文学的根》",
+    source: "文学的根",
     excerpt: "文学有根，深植于民族土壤",
     gradeGroup: "现当代文学史事件"
   },
@@ -2195,7 +2195,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "马原",
-    source: "《冈底斯的诱惑》",
+    source: "冈底斯的诱惑",
     excerpt: "形式的实验与探索",
     gradeGroup: "现当代文学史事件"
   },
@@ -2206,7 +2206,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《狂人日记》",
+    source: "狂人日记",
     excerpt: "由古典向现代的转型",
     gradeGroup: "现当代文学史事件"
   },
@@ -2217,7 +2217,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "赵树理",
-    source: "《三里湾》",
+    source: "三里湾",
     excerpt: "1949 年后的文学阶段",
     gradeGroup: "现当代文学史事件"
   },
@@ -2228,7 +2228,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "池莉",
-    source: "《烦恼人生》",
+    source: "烦恼人生",
     excerpt: "零度情感，还原生活",
     gradeGroup: "现当代文学史事件"
   },
@@ -2239,7 +2239,7 @@ window.POEMS_CHANGSHI = [
     group: "现当代文学史事件",
     dynasty: "近现代",
     author: "闻一多",
-    source: "《死水》",
+    source: "死水",
     excerpt: "新诗格律的探索",
     gradeGroup: "现当代文学史事件"
   },
@@ -2251,7 +2251,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《逸周书·谥法解》",
+    source: "逸周书·谥法解",
     excerpt: "谥者，行之迹也；大行受大名，细行受细名",
     gradeGroup: "称谓与礼俗",
   },
@@ -2262,7 +2262,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《逸周书·谥法解》",
+    source: "逸周书·谥法解",
     excerpt: "上谥美、中谥平、下谥恶，三类以定褒贬",
     gradeGroup: "称谓与礼俗",
   },
@@ -2273,7 +2273,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《逸周书·谥法解》",
+    source: "逸周书·谥法解",
     excerpt: "文、武、成、康、昭、宣、明、仁、孝——善行之谥",
     gradeGroup: "称谓与礼俗",
   },
@@ -2284,7 +2284,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西周",
     author: "佚名",
-    source: "《逸周书·谥法解》",
+    source: "逸周书·谥法解",
     excerpt: "炀、厉、灵、幽、荒、刺、丑——恶行之谥",
     gradeGroup: "称谓与礼俗",
   },
@@ -2295,7 +2295,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "东汉",
     author: "佚名",
-    source: "《后汉书·陈寔传》",
+    source: "后汉书·陈寔传",
     excerpt: "私谥由门人乡党所上，追谥为身后追加",
     gradeGroup: "称谓与礼俗",
   },
@@ -2306,7 +2306,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "先秦",
     author: "佚名",
-    source: "《史记》《汉书》各本纪",
+    source: "史记汉书各本纪",
     excerpt: "周文王、周武王、秦始皇、汉文帝、汉武帝、魏武帝……",
     gradeGroup: "称谓与礼俗",
   },
@@ -2317,7 +2317,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "唐",
     author: "佚名",
-    source: "《旧唐书》《新唐书》《明史》《清史稿》各本纪",
+    source: "旧唐书新唐书明史清史稿各本纪",
     excerpt: "隋炀帝、唐高祖、唐太宗、宋仁宗、明太祖、清圣祖……",
     gradeGroup: "称谓与礼俗",
   },
@@ -2328,7 +2328,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书·高帝纪》",
+    source: "汉书·高帝纪",
     excerpt: "祖有功而宗有德",
     gradeGroup: "称谓与礼俗",
   },
@@ -2339,7 +2339,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书》《旧唐书》",
+    source: "汉书旧唐书",
     excerpt: "汉称谥、唐称庙、明清称年号",
     gradeGroup: "称谓与礼俗",
   },
@@ -2350,7 +2350,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书》《后汉书》《新唐书》",
+    source: "汉书后汉书新唐书",
     excerpt: "太祖、太宗、世祖、高祖、中兴之主的庙号定例",
     gradeGroup: "称谓与礼俗",
   },
@@ -2361,7 +2361,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "宋",
     author: "佚名",
-    source: "《宋史》《元史》《明史》《清史稿》",
+    source: "宋史元史明史清史稿",
     excerpt: "太祖、太宗、仁宗、世祖、圣祖——一帝一庙号",
     gradeGroup: "称谓与礼俗",
   },
@@ -2372,7 +2372,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "刘彻",
-    source: "《汉书·武帝纪》",
+    source: "汉书·武帝纪",
     excerpt: "建元为中国年号之始",
     gradeGroup: "称谓与礼俗",
   },
@@ -2383,7 +2383,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书》《旧唐书》历代年号",
+    source: "汉书旧唐书历代年号",
     excerpt: "天、建、元、永、太、光——年号取字的常见套路",
     gradeGroup: "称谓与礼俗",
   },
@@ -2394,7 +2394,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书》《宋书》各本纪",
+    source: "汉书宋书各本纪",
     excerpt: "建元、元光、太初、建武、黄初、太康、元嘉……",
     gradeGroup: "称谓与礼俗",
   },
@@ -2405,7 +2405,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "隋",
     author: "佚名",
-    source: "《旧唐书》《宋史》《明史》《清史稿》",
+    source: "旧唐书宋史明史清史稿",
     excerpt: "开皇、贞观、开元、洪武、康雍乾——一帝一号之变",
     gradeGroup: "称谓与礼俗",
   },
@@ -2416,7 +2416,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《史记》三家注《通典》",
+    source: "史记三家注通典",
     excerpt: "年号纪年、干支纪年、公元纪年的互见",
     gradeGroup: "称谓与礼俗",
   },
@@ -2428,7 +2428,7 @@ window.POEMS_CHANGSHI = [
     group: "称谓与礼俗",
     dynasty: "西汉",
     author: "佚名",
-    source: "《汉书》《旧唐书》《宋史》《明史》《清史稿》",
+    source: "汉书旧唐书宋史明史清史稿",
     excerpt: "同一个人三种叫法：汉武帝即世宗、唐太宗即文皇帝、康熙即圣祖",
     gradeGroup: "称谓与礼俗",
   },

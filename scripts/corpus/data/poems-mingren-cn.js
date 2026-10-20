@@ -9,7 +9,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "商末周初",
     author: "姜尚",
-    source: "《姜尚》·生卒不详（约前 1128—约前 1015）",
+    source: "姜尚·生卒不详（约前 1128—约前 1015）",
     excerpt: "兵家之祖"
   },
   {
@@ -22,7 +22,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋齐",
     author: "管仲",
-    source: "《管仲》·约前 723—前 645",
+    source: "管仲·约前 723—前 645",
     excerpt: "春秋第一相"
   },
   {
@@ -35,7 +35,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "管子",
-    source: "《管子》·约前 723—前 645",
+    source: "管子·约前 723—前 645",
     excerpt: "法家的先驱"
   },
   {
@@ -48,7 +48,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋郑",
     author: "子产",
-    source: "《子产》·约前 580—前 522",
+    source: "子产·约前 580—前 522",
     excerpt: "为政宽猛相济"
   },
   {
@@ -61,7 +61,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "晏婴",
-    source: "《晏婴》·约前 578—前 500",
+    source: "晏婴·约前 578—前 500",
     excerpt: "二桃杀三士的谋者"
   },
   {
@@ -74,7 +74,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "师旷",
-    source: "《师旷》·约前 572—约前 532（生卒无确考）",
+    source: "师旷·约前 572—约前 532（生卒无确考）",
     excerpt: "盲乐师 · 以乐谏君"
   },
   {
@@ -87,7 +87,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "老子",
-    source: "《老子》·约前 571—约前 471（生卒无确考）",
+    source: "老子·约前 571—约前 471（生卒无确考）",
     excerpt: "道家学派创始人"
   },
   {
@@ -100,7 +100,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "左丘明",
-    source: "《左丘明》·约前 556—约前 451",
+    source: "左丘明·约前 556—约前 451",
     excerpt: "《左传》《国语》的作者（传）"
   },
   {
@@ -113,7 +113,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "孔子",
-    source: "《孔子》·前 551—前 479",
+    source: "孔子·前 551—前 479",
     excerpt: "儒家学派创始人"
   },
   {
@@ -126,7 +126,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋齐",
     author: "司马穰苴",
-    source: "《司马穰苴》·生卒不详（约前 6 世纪）",
+    source: "司马穰苴·生卒不详（约前 6 世纪）",
     excerpt: "斩庄贾立军法"
   },
   {
@@ -139,7 +139,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋郑",
     author: "邓析",
-    source: "《邓析》·约前 545—前 501",
+    source: "邓析·约前 545—前 501",
     excerpt: "《竹刑》· 最早的讼师"
   },
   {
@@ -152,7 +152,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "孙武",
-    source: "《孙武》·约前 545—约前 470",
+    source: "孙武·约前 545—约前 470",
     excerpt: "兵圣 · 《孙子兵法》作者"
   },
   {
@@ -165,7 +165,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "范蠡",
-    source: "《范蠡》·约前 536—约前 448",
+    source: "范蠡·约前 536—约前 448",
     excerpt: "陶朱公 · 计然之术"
   },
   {
@@ -178,7 +178,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "鲁班",
-    source: "《鲁班》·约前 507—约前 444",
+    source: "鲁班·约前 507—约前 444",
     excerpt: "中国工匠的祖师"
   },
   {
@@ -191,7 +191,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "墨子",
-    source: "《墨子》·约前 468—约前 376",
+    source: "墨子·约前 468—约前 376",
     excerpt: "兼爱非攻的鼓吹者"
   },
   {
@@ -204,7 +204,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国魏",
     author: "李悝",
-    source: "《李悝》·约前 455—约前 395",
+    source: "李悝·约前 455—约前 395",
     excerpt: "《法经》· 中国第一部法典"
   },
   {
@@ -217,7 +217,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "吴起",
-    source: "《吴起》·前 440—前 381",
+    source: "吴起·前 440—前 381",
     excerpt: "孙吴并列 · 武卒之创"
   },
   {
@@ -230,7 +230,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋战国",
     author: "扁鹊",
-    source: "《扁鹊》·约前 407—约前 310（生卒有争议）",
+    source: "扁鹊·约前 407—约前 310（生卒有争议）",
     excerpt: "脉学的开创者"
   },
   {
@@ -243,7 +243,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "甘德",
-    source: "《甘德》·约前 400—约前 340",
+    source: "甘德·约前 400—约前 340",
     excerpt: "《甘石星经》之一，世界上最早的星表之一"
   },
   {
@@ -256,7 +256,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "石申",
-    source: "《石申》·约前 400—约前 330",
+    source: "石申·约前 400—约前 330",
     excerpt: "《石氏星经》的作者，记恒星八百颗"
   },
   {
@@ -269,7 +269,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "白圭",
-    source: "《白圭》·约前 400—约前 340",
+    source: "白圭·约前 400—约前 340",
     excerpt: "人弃我取"
   },
   {
@@ -282,7 +282,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国赵",
     author: "慎到",
-    source: "《慎到》·约前 395—约前 315",
+    source: "慎到·约前 395—约前 315",
     excerpt: "法家「势」派"
   },
   {
@@ -295,7 +295,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国秦",
     author: "商鞅",
-    source: "《商鞅》·约前 390—前 338",
+    source: "商鞅·约前 390—前 338",
     excerpt: "变法强秦"
   },
   {
@@ -308,7 +308,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国韩",
     author: "申不害",
-    source: "《申不害》·约前 385—前 337",
+    source: "申不害·约前 385—前 337",
     excerpt: "法家「术」派"
   },
   {
@@ -321,7 +321,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "孙膑",
-    source: "《孙膑》·约前 382—约前 316",
+    source: "孙膑·约前 382—约前 316",
     excerpt: "围魏救赵的指挥者"
   },
   {
@@ -334,7 +334,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "孟子",
-    source: "《孟子》·约前 372—前 289",
+    source: "孟子·约前 372—前 289",
     excerpt: "亚圣 · 性善论的提出者"
   },
   {
@@ -347,7 +347,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "张仪",
-    source: "《张仪》·？—前 309",
+    source: "张仪·？—前 309",
     excerpt: "连横 · 秦相"
   },
   {
@@ -360,7 +360,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "庄子",
-    source: "《庄子》·约前 369—约前 286",
+    source: "庄子·约前 369—约前 286",
     excerpt: "道家的集大成者"
   },
   {
@@ -373,7 +373,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "春秋",
     author: "伯牙",
-    source: "《伯牙》·约前 4 世纪（生卒无确考）",
+    source: "伯牙·约前 4 世纪（生卒无确考）",
     excerpt: "高山流水"
   },
   {
@@ -386,7 +386,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "苏秦",
-    source: "《苏秦》·？—前 284",
+    source: "苏秦·？—前 284",
     excerpt: "合纵 · 六国相印"
   },
   {
@@ -399,7 +399,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "屈原",
-    source: "《屈原》·约前 340—前 278",
+    source: "屈原·约前 340—前 278",
     excerpt: "中国第一位伟大的诗人"
   },
   {
@@ -412,7 +412,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国秦",
     author: "白起",
-    source: "《白起》·？—前 257",
+    source: "白起·？—前 257",
     excerpt: "长平之战 · 歼灭战之极"
   },
   {
@@ -425,7 +425,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "荀子",
-    source: "《荀子》·约前 313—前 238",
+    source: "荀子·约前 313—前 238",
     excerpt: "先秦儒学的总结者"
   },
   {
@@ -438,7 +438,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国秦",
     author: "李冰",
-    source: "《李冰》·约前 302—约前 235",
+    source: "李冰·约前 302—约前 235",
     excerpt: "都江堰"
   },
   {
@@ -451,7 +451,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国楚",
     author: "宋玉",
-    source: "《宋玉》·约前 298—约前 222",
+    source: "宋玉·约前 298—约前 222",
     excerpt: "辞赋之祖，悲秋之始"
   },
   {
@@ -464,7 +464,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国赵",
     author: "李牧",
-    source: "《李牧》·？—前 229",
+    source: "李牧·？—前 229",
     excerpt: "北破匈奴 · 赵国长城"
   },
   {
@@ -477,7 +477,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "秦",
     author: "李斯",
-    source: "《李斯》·约前 280—前 208",
+    source: "李斯·约前 280—前 208",
     excerpt: "书同文的推行者"
   },
   {
@@ -490,7 +490,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国",
     author: "韩非",
-    source: "《韩非》·约前 280—前 233",
+    source: "韩非·约前 280—前 233",
     excerpt: "法家的集大成者"
   },
   {
@@ -503,7 +503,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "张释之",
-    source: "《张释之》·约前 200—？",
+    source: "张释之·约前 200—？",
     excerpt: "法者天子所与天下公共"
   },
   {
@@ -516,7 +516,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "萧何",
-    source: "《萧何》·约前 257—前 193",
+    source: "萧何·约前 257—前 193",
     excerpt: "汉家第一功臣"
   },
   {
@@ -529,7 +529,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国秦",
     author: "王翦",
-    source: "《王翦》·生卒不详（约前 3 世纪）",
+    source: "王翦·生卒不详（约前 3 世纪）",
     excerpt: "秦灭六国的第一将"
   },
   {
@@ -542,7 +542,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国赵",
     author: "廉颇",
-    source: "《廉颇》·生卒不详（约前 3 世纪）",
+    source: "廉颇·生卒不详（约前 3 世纪）",
     excerpt: "负荆请罪 · 坚壁持重"
   },
   {
@@ -555,7 +555,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "战国秦",
     author: "郑国",
-    source: "《郑国》·约前 250—前 210 在世",
+    source: "郑国·约前 250—前 210 在世",
     excerpt: "郑国渠"
   },
   {
@@ -568,7 +568,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "陈平",
-    source: "《陈平》·？—前 178",
+    source: "陈平·？—前 178",
     excerpt: "六出奇计"
   },
   {
@@ -581,7 +581,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "韩信",
-    source: "《韩信》·约前 231—前 196",
+    source: "韩信·约前 231—前 196",
     excerpt: "兵仙 · 汉初三杰"
   },
   {
@@ -594,7 +594,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "周亚夫",
-    source: "《周亚夫》·？—前 143",
+    source: "周亚夫·？—前 143",
     excerpt: "细柳营 · 三月平叛"
   },
   {
@@ -607,7 +607,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "贾谊",
-    source: "《贾谊》·前 200—前 168",
+    source: "贾谊·前 200—前 168",
     excerpt: "汉初政论与辞赋的代表，三十三岁早逝"
   },
   {
@@ -620,7 +620,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "枚乘",
-    source: "《枚乘》·？—前 140",
+    source: "枚乘·？—前 140",
     excerpt: "汉大赋的开山之作"
   },
   {
@@ -633,7 +633,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "司马相如",
-    source: "《司马相如》·前 179—前 117",
+    source: "司马相如·前 179—前 117",
     excerpt: "赋圣"
   },
   {
@@ -646,7 +646,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "董仲舒",
-    source: "《董仲舒》·前 179—前 104",
+    source: "董仲舒·前 179—前 104",
     excerpt: "儒术独尊的推手"
   },
   {
@@ -659,7 +659,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "卫青",
-    source: "《卫青》·？—前 106",
+    source: "卫青·？—前 106",
     excerpt: "汉匈战争的转折"
   },
   {
@@ -672,7 +672,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "张骞",
-    source: "《张骞》·约前 164—前 114",
+    source: "张骞·约前 164—前 114",
     excerpt: "凿空西域"
   },
   {
@@ -685,7 +685,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "东方朔",
-    source: "《东方朔》·约前 161—前 93",
+    source: "东方朔·约前 161—前 93",
     excerpt: "以诙谐讽谏见长的辞赋家"
   },
   {
@@ -698,7 +698,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "落下闳",
-    source: "《落下闳》·约前 156—前 87",
+    source: "落下闳·约前 156—前 87",
     excerpt: "《太初历》的创制者，浑天说的实践者"
   },
   {
@@ -711,7 +711,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "桑弘羊",
-    source: "《桑弘羊》·前 152—前 80",
+    source: "桑弘羊·前 152—前 80",
     excerpt: "盐铁官营 · 均输平准"
   },
   {
@@ -724,7 +724,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "司马迁",
-    source: "《司马迁》·约前 145—约前 87",
+    source: "司马迁·约前 145—约前 87",
     excerpt: "史家之绝唱"
   },
   {
@@ -737,7 +737,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "霍去病",
-    source: "《霍去病》·前 140—前 117",
+    source: "霍去病·前 140—前 117",
     excerpt: "封狼居胥"
   },
   {
@@ -750,7 +750,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "赵过",
-    source: "《赵过》·约前 140—约前 87",
+    source: "赵过·约前 140—约前 87",
     excerpt: "代田法与耧车的推广者"
   },
   {
@@ -763,7 +763,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "氾胜之",
-    source: "《氾胜之》·约前 1 世纪—？",
+    source: "氾胜之·约前 1 世纪—？",
     excerpt: "现存最早农书的作者"
   },
   {
@@ -776,7 +776,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西汉",
     author: "扬雄",
-    source: "《扬雄》·前 53—18",
+    source: "扬雄·前 53—18",
     excerpt: "汉赋四大家之一"
   },
   {
@@ -789,7 +789,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "王充",
-    source: "《王充》·27—约 97",
+    source: "王充·27—约 97",
     excerpt: "东汉的批判者"
   },
   {
@@ -802,7 +802,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "王景",
-    source: "《王景》·约 30—约 85",
+    source: "王景·约 30—约 85",
     excerpt: "治河千载无患"
   },
   {
@@ -815,7 +815,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "班固",
-    source: "《班固》·32—92",
+    source: "班固·32—92",
     excerpt: "《汉书》主撰者"
   },
   {
@@ -828,7 +828,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "班超",
-    source: "《班超》·32—102",
+    source: "班超·32—102",
     excerpt: "投笔从戎 · 三十六人定西域"
   },
   {
@@ -841,7 +841,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "许慎",
-    source: "《许慎》·约 58—约 147",
+    source: "许慎·约 58—约 147",
     excerpt: "《说文解字》· 字圣"
   },
   {
@@ -854,7 +854,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "蔡伦",
-    source: "《蔡伦》·约 63—121",
+    source: "蔡伦·约 63—121",
     excerpt: "造纸术 · 蔡侯纸"
   },
   {
@@ -867,7 +867,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "张衡",
-    source: "《张衡》·78—139",
+    source: "张衡·78—139",
     excerpt: "文理兼通的通才"
   },
   {
@@ -880,7 +880,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "郑玄",
-    source: "《郑玄》·127—200",
+    source: "郑玄·127—200",
     excerpt: "郑学 · 通经之路"
   },
   {
@@ -893,7 +893,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "蔡邕",
-    source: "《蔡邕》·133—192",
+    source: "蔡邕·133—192",
     excerpt: "书法、琴学、文章皆一代宗主"
   },
   {
@@ -906,7 +906,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末",
     author: "华佗",
-    source: "《华佗》·约 145—208",
+    source: "华佗·约 145—208",
     excerpt: "外科鼻祖 · 麻沸散"
   },
   {
@@ -919,7 +919,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末",
     author: "张仲景",
-    source: "《张仲景》·约 150—约 219",
+    source: "张仲景·约 150—约 219",
     excerpt: "医圣 · 《伤寒杂病论》作者"
   },
   {
@@ -932,7 +932,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国",
     author: "孔融",
-    source: "《孔融》·153—208",
+    source: "孔融·153—208",
     excerpt: "建安七子之首，以让梨与直言著称"
   },
   {
@@ -945,7 +945,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国",
     author: "曹操",
-    source: "《曹操》·155—220",
+    source: "曹操·155—220",
     excerpt: "建安风骨的开创者"
   },
   {
@@ -958,7 +958,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉",
     author: "徐干",
-    source: "《徐干》·170—217",
+    source: "徐干·170—217",
     excerpt: "民数 ·《中论》"
   },
   {
@@ -971,7 +971,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国吴",
     author: "周瑜",
-    source: "《周瑜》·175—210",
+    source: "周瑜·175—210",
     excerpt: "赤壁之战 · 江东周郎"
   },
   {
@@ -984,7 +984,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国",
     author: "蔡琰",
-    source: "《蔡琰》·约 177—约 250",
+    source: "蔡琰·约 177—约 250",
     excerpt: "《悲愤诗》与《胡笳十八拍》的作者"
   },
   {
@@ -997,7 +997,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国",
     author: "王粲",
-    source: "《王粲》·177—217",
+    source: "王粲·177—217",
     excerpt: "建安七子中成就最高者，《登楼赋》作者"
   },
   {
@@ -1010,7 +1010,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "三国",
     author: "诸葛亮",
-    source: "《诸葛亮》·181—234",
+    source: "诸葛亮·181—234",
     excerpt: "智绝 · 蜀汉丞相"
   },
   {
@@ -1023,7 +1023,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东汉末三国",
     author: "曹丕",
-    source: "《曹丕》·187—226",
+    source: "曹丕·187—226",
     excerpt: "《典论·论文》的作者，《燕歌行》开七言先声"
   },
   {
@@ -1036,7 +1036,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "三国魏",
     author: "曹植",
-    source: "《曹植》·192—232",
+    source: "曹植·192—232",
     excerpt: "建安之杰"
   },
   {
@@ -1049,7 +1049,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "三国魏",
     author: "马钧",
-    source: "《马钧》·约 200—约 270",
+    source: "马钧·约 200—约 270",
     excerpt: "翻车 · 改良绫机"
   },
   {
@@ -1062,7 +1062,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "三国魏",
     author: "阮籍",
-    source: "《阮籍》·210—263",
+    source: "阮籍·210—263",
     excerpt: "竹林七贤之首"
   },
   {
@@ -1075,7 +1075,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "三国魏",
     author: "嵇康",
-    source: "《嵇康》·223—262",
+    source: "嵇康·223—262",
     excerpt: "《广陵散》与「声无哀乐」"
   },
   {
@@ -1088,7 +1088,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西晋",
     author: "陈寿",
-    source: "《陈寿》·233—297",
+    source: "陈寿·233—297",
     excerpt: "《三国志》作者"
   },
   {
@@ -1101,7 +1101,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "潘岳",
-    source: "《潘岳》·247—300",
+    source: "潘岳·247—300",
     excerpt: "《悼亡诗》的开创者，与陆机并称「潘江陆海」"
   },
   {
@@ -1114,7 +1114,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西晋",
     author: "左思",
-    source: "《左思》·约 250—约 305",
+    source: "左思·约 250—约 305",
     excerpt: "洛阳纸贵的作者"
   },
   {
@@ -1127,7 +1127,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "张协",
-    source: "《张协》·约 255—约 310",
+    source: "张协·约 255—约 310",
     excerpt: "太康诗风的代表，《杂诗》十首"
   },
   {
@@ -1140,7 +1140,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "西晋",
     author: "陆机",
-    source: "《陆机》·261—303",
+    source: "陆机·261—303",
     excerpt: "太康之英"
   },
   {
@@ -1153,7 +1153,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "郭璞",
-    source: "《郭璞》·276—324",
+    source: "郭璞·276—324",
     excerpt: "游仙诗的开创者，又是《尔雅》的注家"
   },
   {
@@ -1166,7 +1166,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "干宝",
-    source: "《干宝》·约 283—351",
+    source: "干宝·约 283—351",
     excerpt: "志怪小说的开山者，《搜神记》作者"
   },
   {
@@ -1179,7 +1179,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋",
     author: "葛洪",
-    source: "《葛洪》·283—343",
+    source: "葛洪·283—343",
     excerpt: "《肘后备急方》"
   },
   {
@@ -1192,7 +1192,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "王羲之",
-    source: "《王羲之》·303—361",
+    source: "王羲之·303—361",
     excerpt: "「书圣」，《兰亭序》为天下第一行书"
   },
   {
@@ -1205,7 +1205,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋",
     author: "法显",
-    source: "《法显》·337—约 422",
+    source: "法显·337—约 422",
     excerpt: "西行求法的第一人（先于玄奘）"
   },
   {
@@ -1218,7 +1218,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋",
     author: "谢玄",
-    source: "《谢玄》·343—388",
+    source: "谢玄·343—388",
     excerpt: "淝水之战 · 北府兵"
   },
   {
@@ -1231,7 +1231,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "王献之",
-    source: "《王献之》·344—386",
+    source: "王献之·344—386",
     excerpt: "「小圣」，与父并称「二王」，创一笔书"
   },
   {
@@ -1244,7 +1244,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋十六国",
     author: "鸠摩罗什",
-    source: "《鸠摩罗什》·344—413",
+    source: "鸠摩罗什·344—413",
     excerpt: "意译派的开山"
   },
   {
@@ -1257,7 +1257,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "顾恺之",
-    source: "《顾恺之》·约 348—409",
+    source: "顾恺之·约 348—409",
     excerpt: "「才绝、画绝、痴绝」，《洛神赋图》传其摹本"
   },
   {
@@ -1270,7 +1270,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "王珣",
-    source: "《王珣》·349—400",
+    source: "王珣·349—400",
     excerpt: "《伯远帖》的作者，三希之一"
   },
   {
@@ -1283,7 +1283,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋",
     author: "陶渊明",
-    source: "《陶渊明》·365—427",
+    source: "陶渊明·365—427",
     excerpt: "田园诗的开山者"
   },
   {
@@ -1296,7 +1296,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "东晋南朝宋",
     author: "谢灵运",
-    source: "《谢灵运》·385—433",
+    source: "谢灵运·385—433",
     excerpt: "山水诗的开山者"
   },
   {
@@ -1309,7 +1309,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南朝宋",
     author: "范晔",
-    source: "《范晔》·398—446",
+    source: "范晔·398—446",
     excerpt: "《后汉书》"
   },
   {
@@ -1322,7 +1322,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "刘义庆",
-    source: "《刘义庆》·403—444",
+    source: "刘义庆·403—444",
     excerpt: "《世说新语》的主编，志人小说的集大成"
   },
   {
@@ -1335,7 +1335,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "鲍照",
-    source: "《鲍照》·约 414—466",
+    source: "鲍照·约 414—466",
     excerpt: "《拟行路难》十八首，七言歌行的开路人"
   },
   {
@@ -1348,7 +1348,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "陆探微",
-    source: "《陆探微》·？—约 485",
+    source: "陆探微·？—约 485",
     excerpt: "「秀骨清像」的画风开创者"
   },
   {
@@ -1361,7 +1361,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南朝宋齐",
     author: "祖冲之",
-    source: "《祖冲之》·429—500",
+    source: "祖冲之·429—500",
     excerpt: "圆周率精确到七位"
   },
   {
@@ -1374,7 +1374,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "江淹",
-    source: "《江淹》·444—505",
+    source: "江淹·444—505",
     excerpt: "《恨赋》《别赋》的作者，「江郎才尽」出此"
   },
   {
@@ -1387,7 +1387,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南朝齐梁",
     author: "范缜",
-    source: "《范缜》·约 450—515",
+    source: "范缜·约 450—515",
     excerpt: "《神灭论》· 形神相即"
   },
   {
@@ -1400,7 +1400,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南朝梁",
     author: "陶弘景",
-    source: "《陶弘景》·456—536",
+    source: "陶弘景·456—536",
     excerpt: "山中宰相"
   },
   {
@@ -1413,7 +1413,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "谢朓",
-    source: "《谢朓》·464—499",
+    source: "谢朓·464—499",
     excerpt: "「一生低首谢宣城」，山水诗的最新变"
   },
   {
@@ -1426,7 +1426,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "刘勰",
-    source: "《刘勰》·约 465—约 520",
+    source: "刘勰·约 465—约 520",
     excerpt: "《文心雕龙》的作者，体大思精的文学理论体系"
   },
   {
@@ -1439,7 +1439,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "钟嵘",
-    source: "《钟嵘》·约 468—约 518",
+    source: "钟嵘·约 468—约 518",
     excerpt: "《诗品》的作者，中国第一部诗歌批评专著"
   },
   {
@@ -1452,7 +1452,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "贾思勰",
-    source: "《贾思勰》·约 479—约 545",
+    source: "贾思勰·约 479—约 545",
     excerpt: "《齐民要术》的作者，现存最早最完整的农书"
   },
   {
@@ -1465,7 +1465,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "张僧繇",
-    source: "《张僧繇》·约 500—约 560",
+    source: "张僧繇·约 500—约 560",
     excerpt: "「画龙点睛」的主角，没骨山水的先驱"
   },
   {
@@ -1478,7 +1478,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "智永",
-    source: "《智永》·约 510—约 608",
+    source: "智永·约 510—约 608",
     excerpt: "《真草千字文》八百本，王羲之七世孙"
   },
   {
@@ -1491,7 +1491,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "庾信",
-    source: "《庾信》·513—581",
+    source: "庾信·513—581",
     excerpt: "《哀江南赋》为骈文绝唱，集南北朝之大成"
   },
   {
@@ -1504,7 +1504,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "颜之推",
-    source: "《颜之推》·531—约 591",
+    source: "颜之推·531—约 591",
     excerpt: "《颜氏家训》"
   },
   {
@@ -1517,7 +1517,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两晋南北朝",
     author: "展子虔",
-    source: "《展子虔》·约 545—约 618",
+    source: "展子虔·约 545—约 618",
     excerpt: "《游春图》为现存最早的山水卷轴"
   },
   {
@@ -1530,7 +1530,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "隋",
     author: "宇文恺",
-    source: "《宇文恺》·555—612",
+    source: "宇文恺·555—612",
     excerpt: "大兴城与洛阳城的总设计"
   },
   {
@@ -1543,7 +1543,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "欧阳询",
-    source: "《欧阳询》·557—641",
+    source: "欧阳询·557—641",
     excerpt: "欧体楷书的创立者，《九成宫醴泉铭》"
   },
   {
@@ -1556,7 +1556,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "虞世南",
-    source: "《虞世南》·558—638",
+    source: "虞世南·558—638",
     excerpt: "唐初四大书家之一，《孔子庙堂碑》"
   },
   {
@@ -1569,7 +1569,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李靖",
-    source: "《李靖》·571—649",
+    source: "李靖·571—649",
     excerpt: "卫国公 · 击灭东突厥的名将"
   },
   {
@@ -1582,7 +1582,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "孔颖达",
-    source: "《孔颖达》·574—648",
+    source: "孔颖达·574—648",
     excerpt: "《五经正义》"
   },
   {
@@ -1595,7 +1595,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "房玄龄",
-    source: "《房玄龄》·579—648",
+    source: "房玄龄·579—648",
     excerpt: "贞观名相"
   },
   {
@@ -1608,7 +1608,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "戴胄",
-    source: "《戴胄》·约 580—633",
+    source: "戴胄·约 580—633",
     excerpt: "法者国家所以布大信于天下"
   },
   {
@@ -1621,7 +1621,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "孙思邈",
-    source: "《孙思邈》·约 581—682（一说 541—682）",
+    source: "孙思邈·约 581—682（一说 541—682）",
     excerpt: "药王 · 《千金方》作者"
   },
   {
@@ -1634,7 +1634,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "杜如晦",
-    source: "《杜如晦》·585—630",
+    source: "杜如晦·585—630",
     excerpt: "贞观名相 · 房谋杜断"
   },
   {
@@ -1647,7 +1647,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王绩",
-    source: "《王绩》·约 589—644",
+    source: "王绩·约 589—644",
     excerpt: "唐初第一隐士诗人"
   },
   {
@@ -1660,7 +1660,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "隋",
     author: "李春",
-    source: "《李春》·生卒年不详，主要活动于隋开皇、大业年间（6 世纪末—7 世纪初）",
+    source: "李春·生卒年不详，主要活动于隋开皇、大业年间（6 世纪末—7 世纪初）",
     excerpt: "赵州桥的建造者"
   },
   {
@@ -1673,7 +1673,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "长孙无忌",
-    source: "《长孙无忌》·约 594—659",
+    source: "长孙无忌·约 594—659",
     excerpt: "《唐律疏议》"
   },
   {
@@ -1686,7 +1686,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "褚遂良",
-    source: "《褚遂良》·596—659",
+    source: "褚遂良·596—659",
     excerpt: "褚体楷书的创立者，《雁塔圣教序》"
   },
   {
@@ -1699,7 +1699,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "阎立本",
-    source: "《阎立本》·约 601—673",
+    source: "阎立本·约 601—673",
     excerpt: "《步辇图》《历代帝王图》的作者"
   },
   {
@@ -1712,7 +1712,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "玄奘",
-    source: "《玄奘》·602—664",
+    source: "玄奘·602—664",
     excerpt: "西行求法的第一人"
   },
   {
@@ -1725,7 +1725,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "骆宾王",
-    source: "《骆宾王》·约 619—约 687",
+    source: "骆宾王·约 619—约 687",
     excerpt: "初唐四杰之一"
   },
   {
@@ -1738,7 +1738,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "卢照邻",
-    source: "《卢照邻》·约 634—约 686",
+    source: "卢照邻·约 634—约 686",
     excerpt: "初唐四杰之一"
   },
   {
@@ -1751,7 +1751,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "义净",
-    source: "《义净》·635—713",
+    source: "义净·635—713",
     excerpt: "海路求法 · 三大译经家"
   },
   {
@@ -1764,7 +1764,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "慧能",
-    source: "《慧能》·638—713",
+    source: "慧能·638—713",
     excerpt: "中国禅的祖师"
   },
   {
@@ -1777,7 +1777,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "孙过庭",
-    source: "《孙过庭》·646—691",
+    source: "孙过庭·646—691",
     excerpt: "《书谱》的作者，理论与草书并绝"
   },
   {
@@ -1790,7 +1790,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "姚崇",
-    source: "《姚崇》·650—721",
+    source: "姚崇·650—721",
     excerpt: "救时宰相"
   },
   {
@@ -1803,7 +1803,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王勃",
-    source: "《王勃》·650—676",
+    source: "王勃·650—676",
     excerpt: "初唐四杰之首"
   },
   {
@@ -1816,7 +1816,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "杨炯",
-    source: "《杨炯》·650—约 693",
+    source: "杨炯·650—约 693",
     excerpt: "初唐四杰之一"
   },
   {
@@ -1829,7 +1829,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李思训",
-    source: "《李思训》·653—718",
+    source: "李思训·653—718",
     excerpt: "青绿山水的开创，「大小李将军」之「大李」"
   },
   {
@@ -1842,7 +1842,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "宋之问",
-    source: "《宋之问》·约 656—约 712",
+    source: "宋之问·约 656—约 712",
     excerpt: "律诗定型的推动者，「近乡情更怯」的作者"
   },
   {
@@ -1855,7 +1855,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "沈佺期",
-    source: "《沈佺期》·约 656—约 715",
+    source: "沈佺期·约 656—约 715",
     excerpt: "与宋之问并称「沈宋」，律诗定型的代表"
   },
   {
@@ -1868,7 +1868,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "贺知章",
-    source: "《贺知章》·659—744",
+    source: "贺知章·659—744",
     excerpt: "四明狂客"
   },
   {
@@ -1881,7 +1881,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "张若虚",
-    source: "《张若虚》·约 660—约 720",
+    source: "张若虚·约 660—约 720",
     excerpt: "孤篇横绝"
   },
   {
@@ -1894,7 +1894,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "陈子昂",
-    source: "《陈子昂》·661—702",
+    source: "陈子昂·661—702",
     excerpt: "唐诗革新的旗手"
   },
   {
@@ -1907,7 +1907,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "刘知几",
-    source: "《刘知几》·661—721",
+    source: "刘知几·661—721",
     excerpt: "中国第一部史学理论专著作者"
   },
   {
@@ -1920,7 +1920,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "宋璟",
-    source: "《宋璟》·663—737",
+    source: "宋璟·663—737",
     excerpt: "守法持正的宰相"
   },
   {
@@ -1933,7 +1933,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "张旭",
-    source: "《张旭》·约 675—约 750",
+    source: "张旭·约 675—约 750",
     excerpt: "「草圣」，狂草的开山，与怀素并称「颠张醉素」"
   },
   {
@@ -1946,7 +1946,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "张九龄",
-    source: "《张九龄》·678—740",
+    source: "张九龄·678—740",
     excerpt: "开元名相，以《感遇》与「海上生明月」名世"
   },
   {
@@ -1959,7 +1959,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "吴道子",
-    source: "《吴道子》·约 680—约 759",
+    source: "吴道子·约 680—约 759",
     excerpt: "「画圣」，吴带当风，为百代画工之祖"
   },
   {
@@ -1972,7 +1972,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "一行",
-    source: "《一行》·683—727",
+    source: "一行·683—727",
     excerpt: "《大衍历》与世界上第一次子午线实测"
   },
   {
@@ -1985,7 +1985,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王翰",
-    source: "《王翰》·约 687—约 726",
+    source: "王翰·约 687—约 726",
     excerpt: "凉州词的第一作者"
   },
   {
@@ -1998,7 +1998,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王之涣",
-    source: "《王之涣》·688—742",
+    source: "王之涣·688—742",
     excerpt: "存诗最少的名家"
   },
   {
@@ -2011,7 +2011,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "孟浩然",
-    source: "《孟浩然》·689—740",
+    source: "孟浩然·689—740",
     excerpt: "盛唐山水田园第一人"
   },
   {
@@ -2024,7 +2024,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "郭子仪",
-    source: "《郭子仪》·697—781",
+    source: "郭子仪·697—781",
     excerpt: "再造唐室 · 单骑退敌"
   },
   {
@@ -2037,7 +2037,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王昌龄",
-    source: "《王昌龄》·698—757",
+    source: "王昌龄·698—757",
     excerpt: "七绝圣手"
   },
   {
@@ -2050,7 +2050,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李龟年",
-    source: "《李龟年》·约 698—约 765",
+    source: "李龟年·约 698—约 765",
     excerpt: "开元第一乐师"
   },
   {
@@ -2063,7 +2063,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王维",
-    source: "《王维》·约 701—761",
+    source: "王维·约 701—761",
     excerpt: "诗佛 · 诗中有画"
   },
   {
@@ -2076,7 +2076,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李白",
-    source: "《李白》·701—762",
+    source: "李白·701—762",
     excerpt: "诗仙"
   },
   {
@@ -2089,7 +2089,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "高适",
-    source: "《高适》·约 704—765",
+    source: "高适·约 704—765",
     excerpt: "诗人之达者"
   },
   {
@@ -2102,7 +2102,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "崔颢",
-    source: "《崔颢》·约 704—754",
+    source: "崔颢·约 704—754",
     excerpt: "唐人七律第一"
   },
   {
@@ -2115,7 +2115,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "韩幹",
-    source: "《韩幹》·约 706—783",
+    source: "韩幹·约 706—783",
     excerpt: "画马的名家，《照夜白图》"
   },
   {
@@ -2128,7 +2128,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李光弼",
-    source: "《李光弼》·708—764",
+    source: "李光弼·708—764",
     excerpt: "中兴第一 · 太原保卫"
   },
   {
@@ -2141,7 +2141,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "刘长卿",
-    source: "《刘长卿》·约 709—约 780",
+    source: "刘长卿·约 709—约 780",
     excerpt: "五言长城，《逢雪宿芙蓉山主人》作者"
   },
   {
@@ -2154,7 +2154,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "颜真卿",
-    source: "《颜真卿》·709—785",
+    source: "颜真卿·709—785",
     excerpt: "颜体楷书的创立者，《祭侄文稿》为第二行书"
   },
   {
@@ -2167,7 +2167,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "杜甫",
-    source: "《杜甫》·712—770",
+    source: "杜甫·712—770",
     excerpt: "诗圣 · 诗史"
   },
   {
@@ -2180,7 +2180,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "张萱",
-    source: "《张萱》·约 713—约 755 在世",
+    source: "张萱·约 713—约 755 在世",
     excerpt: "《捣练图》"
   },
   {
@@ -2193,7 +2193,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "岑参",
-    source: "《岑参》·约 715—770",
+    source: "岑参·约 715—770",
     excerpt: "边塞诗的奇笔"
   },
   {
@@ -2206,7 +2206,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "刘晏",
-    source: "《刘晏》·716—780",
+    source: "刘晏·716—780",
     excerpt: "漕运 · 榷盐法"
   },
   {
@@ -2219,7 +2219,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李阳冰",
-    source: "《李阳冰》·约 721—约 787",
+    source: "李阳冰·约 721—约 787",
     excerpt: "小篆的复兴者，李白族叔"
   },
   {
@@ -2232,7 +2232,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "韩滉",
-    source: "《韩滉》·723—787",
+    source: "韩滉·723—787",
     excerpt: "《五牛图》的作者，中国最早的纸本绘画之一"
   },
   {
@@ -2245,7 +2245,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "周昉",
-    source: "《周昉》·约 730—约 800",
+    source: "周昉·约 730—约 800",
     excerpt: "《簪花仕女图》的作者，绮罗人物画代表"
   },
   {
@@ -2258,7 +2258,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "陆羽",
-    source: "《陆羽》·733—804",
+    source: "陆羽·733—804",
     excerpt: "茶圣 · 茶经"
   },
   {
@@ -2271,7 +2271,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "杜佑",
-    source: "《杜佑》·735—812",
+    source: "杜佑·735—812",
     excerpt: "《通典》的作者，典章制度通史的开创者"
   },
   {
@@ -2284,7 +2284,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "韦应物",
-    source: "《韦应物》·约 737—约 792",
+    source: "韦应物·约 737—约 792",
     excerpt: "山水田园的传人，「野渡无人舟自横」"
   },
   {
@@ -2297,7 +2297,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "怀素",
-    source: "《怀素》·737—799",
+    source: "怀素·737—799",
     excerpt: "狂草的集大成者，《自叙帖》为草书绝品"
   },
   {
@@ -2310,7 +2310,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李益",
-    source: "《李益》·750—约 830",
+    source: "李益·750—约 830",
     excerpt: "中唐边塞诗的代表，七绝多入乐传唱"
   },
   {
@@ -2323,7 +2323,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "孟郊",
-    source: "《孟郊》·751—814",
+    source: "孟郊·751—814",
     excerpt: "苦吟诗人的代表"
   },
   {
@@ -2336,7 +2336,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "张籍",
-    source: "《张籍》·约 766—约 830",
+    source: "张籍·约 766—约 830",
     excerpt: "与王建并称「张王乐府」，写实一派"
   },
   {
@@ -2349,7 +2349,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "王建",
-    source: "《王建》·约 767—约 831",
+    source: "王建·约 767—约 831",
     excerpt: "《宫词》百首与乐府诗的作者"
   },
   {
@@ -2362,7 +2362,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "韩愈",
-    source: "《韩愈》·768—824",
+    source: "韩愈·768—824",
     excerpt: "文起八代之衰"
   },
   {
@@ -2375,7 +2375,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "白居易",
-    source: "《白居易》·772—846",
+    source: "白居易·772—846",
     excerpt: "诗魔 · 新乐府运动主将"
   },
   {
@@ -2388,7 +2388,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "刘禹锡",
-    source: "《刘禹锡》·772—842",
+    source: "刘禹锡·772—842",
     excerpt: "「诗豪」，《陋室铭》与《竹枝词》的作者"
   },
   {
@@ -2401,7 +2401,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "柳宗元",
-    source: "《柳宗元》·773—819",
+    source: "柳宗元·773—819",
     excerpt: "唐宋八大家 · 山水游记之祖"
   },
   {
@@ -2414,7 +2414,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "柳公权",
-    source: "《柳公权》·778—865",
+    source: "柳公权·778—865",
     excerpt: "柳体楷书的创立者，「颜筋柳骨」"
   },
   {
@@ -2427,7 +2427,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "贾岛",
-    source: "《贾岛》·779—843",
+    source: "贾岛·779—843",
     excerpt: "推敲 · 郊寒岛瘦"
   },
   {
@@ -2440,7 +2440,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "元稹",
-    source: "《元稹》·779—831",
+    source: "元稹·779—831",
     excerpt: "与白居易并称「元白」，新乐府运动的旗手"
   },
   {
@@ -2453,7 +2453,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李贺",
-    source: "《李贺》·790—816",
+    source: "李贺·790—816",
     excerpt: "诗鬼"
   },
   {
@@ -2466,7 +2466,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "卢仝",
-    source: "《卢仝》·约 795—约 835",
+    source: "卢仝·约 795—约 835",
     excerpt: "七碗茶歌"
   },
   {
@@ -2479,7 +2479,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "杜牧",
-    source: "《杜牧》·803—852",
+    source: "杜牧·803—852",
     excerpt: "晚唐七绝第一家"
   },
   {
@@ -2492,7 +2492,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "温庭筠",
-    source: "《温庭筠》·约 812—约 870",
+    source: "温庭筠·约 812—约 870",
     excerpt: "花间鼻祖"
   },
   {
@@ -2505,7 +2505,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "李商隐",
-    source: "《李商隐》·约 813—约 858",
+    source: "李商隐·约 813—约 858",
     excerpt: "晚唐诗坛的殿军"
   },
   {
@@ -2518,7 +2518,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "唐",
     author: "韦庄",
-    source: "《韦庄》·约 836—约 910",
+    source: "韦庄·约 836—约 910",
     excerpt: "《秦妇吟》长篇叙事诗的作者，花间派词人"
   },
   {
@@ -2531,7 +2531,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "五代",
     author: "黄筌",
-    source: "《黄筌》·约 903—965",
+    source: "黄筌·约 903—965",
     excerpt: "《写生珍禽图》· 黄家富贵"
   },
   {
@@ -2544,7 +2544,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "五代",
     author: "顾闳中",
-    source: "《顾闳中》·约 910—约 980",
+    source: "顾闳中·约 910—约 980",
     excerpt: "《韩熙载夜宴图》的作者"
   },
   {
@@ -2557,7 +2557,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "郭忠恕",
-    source: "《郭忠恕》·约 910—977",
+    source: "郭忠恕·约 910—977",
     excerpt: "界画第一，《雪霁江行图》的作者"
   },
   {
@@ -2570,7 +2570,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "赵普",
-    source: "《赵普》·922—992",
+    source: "赵普·922—992",
     excerpt: "半部论语治天下"
   },
   {
@@ -2583,7 +2583,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "五代十国（南唐）",
     author: "李煜",
-    source: "《李煜》·937—978",
+    source: "李煜·937—978",
     excerpt: "词中之帝"
   },
   {
@@ -2596,7 +2596,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "喻皓",
-    source: "《喻皓》·生卒年不详，活动于五代末至北宋初（10 世纪）",
+    source: "喻皓·生卒年不详，活动于五代末至北宋初（10 世纪）",
     excerpt: "《木经》作者"
   },
   {
@@ -2609,7 +2609,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "范宽",
-    source: "《范宽》·约 950—约 1032",
+    source: "范宽·约 950—约 1032",
     excerpt: "《溪山行旅图》的作者，北宋山水三大家之一"
   },
   {
@@ -2622,7 +2622,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "寇准",
-    source: "《寇准》·961—1023",
+    source: "寇准·961—1023",
     excerpt: "澶渊之盟的定者"
   },
   {
@@ -2635,7 +2635,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "毕昇",
-    source: "《毕昇》·约 970—1051",
+    source: "毕昇·约 970—1051",
     excerpt: "活字印刷术"
   },
   {
@@ -2648,7 +2648,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "柳永",
-    source: "《柳永》·约 984—约 1053",
+    source: "柳永·约 984—约 1053",
     excerpt: "慢词的开山人"
   },
   {
@@ -2661,7 +2661,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "范仲淹",
-    source: "《范仲淹》·989—1052",
+    source: "范仲淹·989—1052",
     excerpt: "北宋士大夫的样板"
   },
   {
@@ -2674,7 +2674,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "晏殊",
-    source: "《晏殊》·991—1055",
+    source: "晏殊·991—1055",
     excerpt: "太平宰相词人"
   },
   {
@@ -2687,7 +2687,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "胡瑗",
-    source: "《胡瑗》·993—1059",
+    source: "胡瑗·993—1059",
     excerpt: "苏湖教法 · 明体达用"
   },
   {
@@ -2700,7 +2700,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "郭熙",
-    source: "《郭熙》·约 1000—约 1090",
+    source: "郭熙·约 1000—约 1090",
     excerpt: "《早春图》与《林泉高致》的作者"
   },
   {
@@ -2713,7 +2713,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "欧阳修",
-    source: "《欧阳修》·1007—1072",
+    source: "欧阳修·1007—1072",
     excerpt: "北宋文坛盟主"
   },
   {
@@ -2726,7 +2726,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "狄青",
-    source: "《狄青》·1008—1057",
+    source: "狄青·1008—1057",
     excerpt: "面涅将军 · 昆仑关"
   },
   {
@@ -2739,7 +2739,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "苏洵",
-    source: "《苏洵》·1009—1066",
+    source: "苏洵·1009—1066",
     excerpt: "三苏之首"
   },
   {
@@ -2752,7 +2752,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "蔡襄",
-    source: "《蔡襄》·1012—1067",
+    source: "蔡襄·1012—1067",
     excerpt: "宋四家之一，《万安桥记》书丹"
   },
   {
@@ -2765,7 +2765,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "曾巩",
-    source: "《曾巩》·1019—1083",
+    source: "曾巩·1019—1083",
     excerpt: "唐宋八大家之一"
   },
   {
@@ -2778,7 +2778,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "司马光",
-    source: "《司马光》·1019—1086",
+    source: "司马光·1019—1086",
     excerpt: "《资治通鉴》主编"
   },
   {
@@ -2791,7 +2791,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "张载",
-    source: "《张载》·1020—1077",
+    source: "张载·1020—1077",
     excerpt: "横渠四句 · 关学"
   },
   {
@@ -2804,7 +2804,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "苏颂",
-    source: "《苏颂》·1020—1101",
+    source: "苏颂·1020—1101",
     excerpt: "水运仪象台的建造者，世界最早的天文钟"
   },
   {
@@ -2817,7 +2817,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "王安石",
-    source: "《王安石》·1021—1086",
+    source: "王安石·1021—1086",
     excerpt: "北宋变法的主持者"
   },
   {
@@ -2830,7 +2830,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "沈括",
-    source: "《沈括》·1031—1095",
+    source: "沈括·1031—1095",
     excerpt: "《梦溪笔谈》的作者"
   },
   {
@@ -2843,7 +2843,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "程颢",
-    source: "《程颢》·1032—1085",
+    source: "程颢·1032—1085",
     excerpt: "二程之兄"
   },
   {
@@ -2856,7 +2856,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "程颐",
-    source: "《程颐》·1033—1107",
+    source: "程颐·1033—1107",
     excerpt: "程朱理学的源头"
   },
   {
@@ -2869,7 +2869,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "苏轼",
-    source: "《苏轼》·1037—1101",
+    source: "苏轼·1037—1101",
     excerpt: "全才文人 · 豪放词的开创者"
   },
   {
@@ -2882,7 +2882,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "晏几道",
-    source: "《晏几道》·约 1038—约 1110",
+    source: "晏几道·约 1038—约 1110",
     excerpt: "《小山词》的作者，婉约词中最深情的一支"
   },
   {
@@ -2895,7 +2895,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "苏辙",
-    source: "《苏辙》·1039—1112",
+    source: "苏辙·1039—1112",
     excerpt: "唐宋八大家之一，与父兄并称「三苏」"
   },
   {
@@ -2908,7 +2908,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "黄庭坚",
-    source: "《黄庭坚》·1045—1105",
+    source: "黄庭坚·1045—1105",
     excerpt: "江西诗派的开山祖师，「点铁成金」"
   },
   {
@@ -2921,7 +2921,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "秦观",
-    source: "《秦观》·1049—1100",
+    source: "秦观·1049—1100",
     excerpt: "婉约派的正宗，「两情若是久长时」"
   },
   {
@@ -2934,7 +2934,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "李公麟",
-    source: "《李公麟》·1049—1106",
+    source: "李公麟·1049—1106",
     excerpt: "白描 ·《五马图》"
   },
   {
@@ -2947,7 +2947,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "米芾",
-    source: "《米芾》·1051—1107",
+    source: "米芾·1051—1107",
     excerpt: "宋四家之一，刷字如风樯阵马"
   },
   {
@@ -2960,7 +2960,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "贺铸",
-    source: "《贺铸》·1052—1125",
+    source: "贺铸·1052—1125",
     excerpt: "「贺梅子」，《青玉案》的作者"
   },
   {
@@ -2973,7 +2973,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "周邦彦",
-    source: "《周邦彦》·1056—1121",
+    source: "周邦彦·1056—1121",
     excerpt: "词家之冠"
   },
   {
@@ -2986,7 +2986,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "李诫",
-    source: "《李诫》·约 1065—1110",
+    source: "李诫·约 1065—1110",
     excerpt: "《营造法式》的编者"
   },
   {
@@ -2999,7 +2999,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "李唐",
-    source: "《李唐》·约 1066—约 1150",
+    source: "李唐·约 1066—约 1150",
     excerpt: "南宋四家的开创者，《万壑松风图》"
   },
   {
@@ -3012,7 +3012,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "陈旉",
-    source: "《陈旉》·1076—1156",
+    source: "陈旉·1076—1156",
     excerpt: "地力常新壮"
   },
   {
@@ -3025,7 +3025,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "赵佶",
-    source: "《赵佶》·1082—1135",
+    source: "赵佶·1082—1135",
     excerpt: "宋徽宗，瘦金体与院体画的开创者"
   },
   {
@@ -3038,7 +3038,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "两宋之交",
     author: "李清照",
-    source: "《李清照》·1084—约 1155",
+    source: "李清照·1084—约 1155",
     excerpt: "婉约词宗 · 千古第一才女"
   },
   {
@@ -3051,7 +3051,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "张择端",
-    source: "《张择端》·约 1085—约 1145",
+    source: "张择端·约 1085—约 1145",
     excerpt: "《清明上河图》的作者"
   },
   {
@@ -3064,7 +3064,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "北宋",
     author: "王希孟",
-    source: "《王希孟》·约 1096—约 1120",
+    source: "王希孟·约 1096—约 1120",
     excerpt: "《千里江山图》"
   },
   {
@@ -3077,7 +3077,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "岳飞",
-    source: "《岳飞》·1103—1142",
+    source: "岳飞·1103—1142",
     excerpt: "精忠报国的统帅"
   },
   {
@@ -3090,7 +3090,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "郑樵",
-    source: "《郑樵》·1104—1162",
+    source: "郑樵·1104—1162",
     excerpt: "《通志》二百卷的作者，会通思想的提倡者"
   },
   {
@@ -3103,7 +3103,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "陆游",
-    source: "《陆游》·1125—1210",
+    source: "陆游·1125—1210",
     excerpt: "爱国诗人 · 存诗最多的诗人"
   },
   {
@@ -3116,7 +3116,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "范成大",
-    source: "《范成大》·1126—1193",
+    source: "范成大·1126—1193",
     excerpt: "中兴四大诗人之一"
   },
   {
@@ -3129,7 +3129,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "杨万里",
-    source: "《杨万里》·1127—1206",
+    source: "杨万里·1127—1206",
     excerpt: "中兴四大诗人之一"
   },
   {
@@ -3142,7 +3142,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "朱熹",
-    source: "《朱熹》·1130—1200",
+    source: "朱熹·1130—1200",
     excerpt: "理学集大成者"
   },
   {
@@ -3155,7 +3155,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "陆九渊",
-    source: "《陆九渊》·1139—1193",
+    source: "陆九渊·1139—1193",
     excerpt: "心学的开山"
   },
   {
@@ -3168,7 +3168,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "辛弃疾",
-    source: "《辛弃疾》·1140—1207",
+    source: "辛弃疾·1140—1207",
     excerpt: "豪放词宗 · 词中之龙"
   },
   {
@@ -3181,7 +3181,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "马远",
-    source: "《马远》·约 1140—约 1225",
+    source: "马远·约 1140—约 1225",
     excerpt: "「马一角」，南宋四家之一，《踏歌图》"
   },
   {
@@ -3194,7 +3194,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "姜夔",
-    source: "《姜夔》·约 1155—1221",
+    source: "姜夔·约 1155—1221",
     excerpt: "自度曲的词人"
   },
   {
@@ -3207,7 +3207,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "夏圭",
-    source: "《夏圭》·约 1180—约 1230",
+    source: "夏圭·约 1180—约 1230",
     excerpt: "「夏半边」，南宋四家之一，《溪山清远图》"
   },
   {
@@ -3220,7 +3220,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "宋慈",
-    source: "《宋慈》·1186—1249",
+    source: "宋慈·1186—1249",
     excerpt: "《洗冤集录》· 法医学之父"
   },
   {
@@ -3233,7 +3233,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "金",
     author: "元好问",
-    source: "《元好问》·1190—1257",
+    source: "元好问·1190—1257",
     excerpt: "金元之际的文宗"
   },
   {
@@ -3246,7 +3246,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "南宋",
     author: "梁楷",
-    source: "《梁楷》·约 1201—约 1264 在世",
+    source: "梁楷·约 1201—约 1264 在世",
     excerpt: "《泼墨仙人图》· 减笔"
   },
   {
@@ -3259,7 +3259,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "关汉卿",
-    source: "《关汉卿》·约 1220—约 1300",
+    source: "关汉卿·约 1220—约 1300",
     excerpt: "元杂剧奠基人 · 曲圣"
   },
   {
@@ -3272,7 +3272,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "白朴",
-    source: "《白朴》·1226—约 1306",
+    source: "白朴·1226—约 1306",
     excerpt: "元曲四大家之一"
   },
   {
@@ -3285,7 +3285,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "王恽",
-    source: "《王恽》·1227—1304",
+    source: "王恽·1227—1304",
     excerpt: "劝农与水利的谏臣"
   },
   {
@@ -3298,7 +3298,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "郭守敬",
-    source: "《郭守敬》·1231—1316",
+    source: "郭守敬·1231—1316",
     excerpt: "授时历与水利工程"
   },
   {
@@ -3311,7 +3311,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "宋",
     author: "文天祥",
-    source: "《文天祥》·1236—1283",
+    source: "文天祥·1236—1283",
     excerpt: "《正气歌》与《过零丁洋》的作者，宋末的脊梁"
   },
   {
@@ -3324,7 +3324,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "黄道婆",
-    source: "《黄道婆》·约 1245—约 1330",
+    source: "黄道婆·约 1245—约 1330",
     excerpt: "棉纺织技术的推广者"
   },
   {
@@ -3337,7 +3337,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "鲜于枢",
-    source: "《鲜于枢》·1246—1302",
+    source: "鲜于枢·1246—1302",
     excerpt: "元代书法与赵孟頫并称「二雄」"
   },
   {
@@ -3350,7 +3350,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "马致远",
-    source: "《马致远》·约 1250—约 1321",
+    source: "马致远·约 1250—约 1321",
     excerpt: "秋思之祖"
   },
   {
@@ -3363,7 +3363,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "马端临",
-    source: "《马端临》·约 1254—1323",
+    source: "马端临·约 1254—1323",
     excerpt: "《文献通考》的作者，二十四考的开山"
   },
   {
@@ -3376,7 +3376,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "赵孟頫",
-    source: "《赵孟頫》·1254—1322",
+    source: "赵孟頫·1254—1322",
     excerpt: "赵体 ·《鹊华秋色图》"
   },
   {
@@ -3389,7 +3389,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "睢景臣",
-    source: "《睢景臣》·约 1260—约 1330",
+    source: "睢景臣·约 1260—约 1330",
     excerpt: "《高祖还乡》套数，散曲讽刺的代表"
   },
   {
@@ -3402,7 +3402,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "郑光祖",
-    source: "《郑光祖》·约 1264—约 1300",
+    source: "郑光祖·约 1264—约 1300",
     excerpt: "元曲四大家之一，《倩女离魂》的作者"
   },
   {
@@ -3415,7 +3415,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "黄公望",
-    source: "《黄公望》·1269—1354",
+    source: "黄公望·1269—1354",
     excerpt: "《富春山居图》的作者，元四家之首"
   },
   {
@@ -3428,7 +3428,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "张养浩",
-    source: "《张养浩》·1270—1329",
+    source: "张养浩·1270—1329",
     excerpt: "《山坡羊·潼关怀古》的作者，以散曲写民生"
   },
   {
@@ -3441,7 +3441,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "王祯",
-    source: "《王祯》·约 1271—约 1368",
+    source: "王祯·约 1271—约 1368",
     excerpt: "《农书》的作者，木活字印刷的实践者"
   },
   {
@@ -3454,7 +3454,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "吴镇",
-    source: "《吴镇》·1280—1354",
+    source: "吴镇·1280—1354",
     excerpt: "元四家之一，渔父题材与墨竹的名家"
   },
   {
@@ -3467,7 +3467,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "乔吉",
-    source: "《乔吉》·约 1280—1345",
+    source: "乔吉·约 1280—1345",
     excerpt: "元散曲的清丽一派，《两世姻缘》作者"
   },
   {
@@ -3480,7 +3480,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "王实甫",
-    source: "《王实甫》·生卒年不详，活动于元成宗元贞、大德年间（13 世纪末—14 世纪初）",
+    source: "王实甫·生卒年不详，活动于元成宗元贞、大德年间（13 世纪末—14 世纪初）",
     excerpt: "《西厢记》作者"
   },
   {
@@ -3493,7 +3493,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元末明初",
     author: "施耐庵",
-    source: "《施耐庵》·约 1296—约 1370",
+    source: "施耐庵·约 1296—约 1370",
     excerpt: "《水浒传》的作者，白话长篇小说的开山"
   },
   {
@@ -3506,7 +3506,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "倪瓒",
-    source: "《倪瓒》·1301—1374",
+    source: "倪瓒·1301—1374",
     excerpt: "元四家之一，简淡荒寒的逸品极致"
   },
   {
@@ -3519,7 +3519,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元",
     author: "高明",
-    source: "《高明》·约 1305—约 1371",
+    source: "高明·约 1305—约 1371",
     excerpt: "《琵琶记》的作者，「南戏之祖」"
   },
   {
@@ -3532,7 +3532,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "元末明初",
     author: "罗贯中",
-    source: "《罗贯中》·约 1330—约 1400",
+    source: "罗贯中·约 1330—约 1400",
     excerpt: "章回小说开创者"
   },
   {
@@ -3545,7 +3545,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "徐达",
-    source: "《徐达》·1332—1385",
+    source: "徐达·1332—1385",
     excerpt: "明开国第一功臣"
   },
   {
@@ -3558,7 +3558,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "郑和",
-    source: "《郑和》·1371—1433",
+    source: "郑和·1371—1433",
     excerpt: "七下西洋"
   },
   {
@@ -3571,7 +3571,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "于谦",
-    source: "《于谦》·1398—1457",
+    source: "于谦·1398—1457",
     excerpt: "北京保卫战"
   },
   {
@@ -3584,7 +3584,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "蒯祥",
-    source: "《蒯祥》·1398—1481",
+    source: "蒯祥·1398—1481",
     excerpt: "天安门的设计者"
   },
   {
@@ -3597,7 +3597,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "邱濬",
-    source: "《邱濬》·1421—1495",
+    source: "邱濬·1421—1495",
     excerpt: "《大学衍义补》"
   },
   {
@@ -3610,7 +3610,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "沈周",
-    source: "《沈周》·1427—1509",
+    source: "沈周·1427—1509",
     excerpt: "吴门画派的开创者，明四家之首"
   },
   {
@@ -3623,7 +3623,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "文徵明",
-    source: "《文徵明》·1470—1559",
+    source: "文徵明·1470—1559",
     excerpt: "明四家之一，诗文书画四绝"
   },
   {
@@ -3636,7 +3636,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "唐寅",
-    source: "《唐寅》·1470—1524",
+    source: "唐寅·1470—1524",
     excerpt: "明四家之一，「江南第一风流才子」"
   },
   {
@@ -3649,7 +3649,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "王守仁",
-    source: "《王守仁》·1472—1529",
+    source: "王守仁·1472—1529",
     excerpt: "心学集大成者"
   },
   {
@@ -3662,7 +3662,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "仇英",
-    source: "《仇英》·约 1498—约 1552",
+    source: "仇英·约 1498—约 1552",
     excerpt: "明四家之一，以工笔重彩与界画见长"
   },
   {
@@ -3675,7 +3675,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "吴承恩",
-    source: "《吴承恩》·约 1500—约 1582",
+    source: "吴承恩·约 1500—约 1582",
     excerpt: "《西游记》作者"
   },
   {
@@ -3688,7 +3688,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "归有光",
-    source: "《归有光》·1507—1571",
+    source: "归有光·1507—1571",
     excerpt: "唐宋派古文大家，《项脊轩志》的作者"
   },
   {
@@ -3701,7 +3701,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "李时珍",
-    source: "《李时珍》·1518—1593",
+    source: "李时珍·1518—1593",
     excerpt: "《本草纲目》作者"
   },
   {
@@ -3714,7 +3714,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "潘季驯",
-    source: "《潘季驯》·1521—1595",
+    source: "潘季驯·1521—1595",
     excerpt: "束水攻沙"
   },
   {
@@ -3727,7 +3727,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "徐渭",
-    source: "《徐渭》·1521—1593",
+    source: "徐渭·1521—1593",
     excerpt: "《墨葡萄图》· 大写意"
   },
   {
@@ -3740,7 +3740,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "张居正",
-    source: "《张居正》·1525—1582",
+    source: "张居正·1525—1582",
     excerpt: "万历中兴的推手"
   },
   {
@@ -3753,7 +3753,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "李贽",
-    source: "《李贽》·1527—1602",
+    source: "李贽·1527—1602",
     excerpt: "被下狱自刎的思想者"
   },
   {
@@ -3766,7 +3766,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "戚继光",
-    source: "《戚继光》·1528—1588",
+    source: "戚继光·1528—1588",
     excerpt: "抗倭名将 · 练兵大师"
   },
   {
@@ -3779,7 +3779,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "朱载堉",
-    source: "《朱载堉》·1536—1611",
+    source: "朱载堉·1536—1611",
     excerpt: "十二平均律的创立者"
   },
   {
@@ -3792,7 +3792,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "汤显祖",
-    source: "《汤显祖》·1550—1616",
+    source: "汤显祖·1550—1616",
     excerpt: "《牡丹亭》作者 · 东方莎士比亚"
   },
   {
@@ -3805,7 +3805,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "董其昌",
-    source: "《董其昌》·1555—1636",
+    source: "董其昌·1555—1636",
     excerpt: "松江画派的领袖，南北宗论的提出者"
   },
   {
@@ -3818,7 +3818,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "徐光启",
-    source: "《徐光启》·1562—1633",
+    source: "徐光启·1562—1633",
     excerpt: "中西会通第一人"
   },
   {
@@ -3831,7 +3831,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "袁宏道",
-    source: "《袁宏道》·1568—1610",
+    source: "袁宏道·1568—1610",
     excerpt: "公安派的领袖，「独抒性灵，不拘格套」"
   },
   {
@@ -3844,7 +3844,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "冯梦龙",
-    source: "《冯梦龙》·1574—1646",
+    source: "冯梦龙·1574—1646",
     excerpt: "「三言」的编纂者，话本小说的总结人"
   },
   {
@@ -3857,7 +3857,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "凌濛初",
-    source: "《凌濛初》·1580—1644",
+    source: "凌濛初·1580—1644",
     excerpt: "「二拍」的作者，拟话本的殿军"
   },
   {
@@ -3870,7 +3870,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "袁崇焕",
-    source: "《袁崇焕》·1584—1630",
+    source: "袁崇焕·1584—1630",
     excerpt: "宁远大捷 · 自坏长城"
   },
   {
@@ -3883,7 +3883,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "宋应星",
-    source: "《宋应星》·1587—约 1666",
+    source: "宋应星·1587—约 1666",
     excerpt: "中国十七世纪的工艺百科全书"
   },
   {
@@ -3896,7 +3896,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "徐霞客",
-    source: "《徐霞客》·1587—1641",
+    source: "徐霞客·1587—1641",
     excerpt: "《徐霞客游记》的作者，石灰岩地貌的最早系统记述"
   },
   {
@@ -3909,7 +3909,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "谈迁",
-    source: "《谈迁》·1594—1658",
+    source: "谈迁·1594—1658",
     excerpt: "以三十年之力著《国榷》，稿失而复著"
   },
   {
@@ -3922,7 +3922,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明",
     author: "陈洪绶",
-    source: "《陈洪绶》·1598—1652",
+    source: "陈洪绶·1598—1652",
     excerpt: "人物画的高峰，《水浒叶子》与《西厢记》插图"
   },
   {
@@ -3935,7 +3935,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明末清初",
     author: "黄宗羲",
-    source: "《黄宗羲》·1610—1695",
+    source: "黄宗羲·1610—1695",
     excerpt: "中国思想启蒙的先驱"
   },
   {
@@ -3948,7 +3948,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "李渔",
-    source: "《李渔》·1611—1680",
+    source: "李渔·1611—1680",
     excerpt: "《闲情偶寄》的作者，戏曲理论的集大成"
   },
   {
@@ -3961,7 +3961,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明末清初",
     author: "顾炎武",
-    source: "《顾炎武》·1613—1682",
+    source: "顾炎武·1613—1682",
     excerpt: "天下兴亡，匹夫有责"
   },
   {
@@ -3974,7 +3974,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "明末清初",
     author: "王夫之",
-    source: "《王夫之》·1619—1692",
+    source: "王夫之·1619—1692",
     excerpt: "船山先生"
   },
   {
@@ -3987,7 +3987,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "朱耷",
-    source: "《朱耷》·1626—约 1705",
+    source: "朱耷·1626—约 1705",
     excerpt: "「八大山人」，写意花鸟的孤高极致"
   },
   {
@@ -4000,7 +4000,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "靳辅",
-    source: "《靳辅》·1633—1692",
+    source: "靳辅·1633—1692",
     excerpt: "治河方略 · 中河"
   },
   {
@@ -4013,7 +4013,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "颜元",
-    source: "《颜元》·1635—1704",
+    source: "颜元·1635—1704",
     excerpt: "习斋 · 实学教育家"
   },
   {
@@ -4026,7 +4026,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "蒲松龄",
-    source: "《蒲松龄》·1640—1715",
+    source: "蒲松龄·1640—1715",
     excerpt: "文言短篇小说之王"
   },
   {
@@ -4039,7 +4039,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "石涛",
-    source: "《石涛》·1642—约 1718",
+    source: "石涛·1642—约 1718",
     excerpt: "「搜尽奇峰打草稿」，《苦瓜和尚画语录》"
   },
   {
@@ -4052,7 +4052,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "洪昇",
-    source: "《洪昇》·1645—1704",
+    source: "洪昇·1645—1704",
     excerpt: "《长生殿》作者"
   },
   {
@@ -4065,7 +4065,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "孔尚任",
-    source: "《孔尚任》·1648—1718",
+    source: "孔尚任·1648—1718",
     excerpt: "《桃花扇》作者"
   },
   {
@@ -4078,7 +4078,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "纳兰性德",
-    source: "《纳兰性德》·1655—1685",
+    source: "纳兰性德·1655—1685",
     excerpt: "《饮水词》的作者，清代词坛的第一人"
   },
   {
@@ -4091,7 +4091,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "江永",
-    source: "《江永》·1681—1762",
+    source: "江永·1681—1762",
     excerpt: "古韵标准 · 皖派前驱"
   },
   {
@@ -4104,7 +4104,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "金农",
-    source: "《金农》·1687—1763",
+    source: "金农·1687—1763",
     excerpt: "扬州八怪之一，漆书自成一格"
   },
   {
@@ -4117,7 +4117,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "郎世宁",
-    source: "《郎世宁》·1688—1766",
+    source: "郎世宁·1688—1766",
     excerpt: "西洋画法的传入者，清宫院画的独特一支"
   },
   {
@@ -4130,7 +4130,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "郑燮",
-    source: "《郑燮》·1693—1766",
+    source: "郑燮·1693—1766",
     excerpt: "「扬州八怪」之首，画竹与「难得糊涂」"
   },
   {
@@ -4143,7 +4143,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "吴敬梓",
-    source: "《吴敬梓》·1701—1754",
+    source: "吴敬梓·1701—1754",
     excerpt: "讽刺小说之祖"
   },
   {
@@ -4156,7 +4156,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "曹雪芹",
-    source: "《曹雪芹》·约 1715—约 1763",
+    source: "曹雪芹·约 1715—约 1763",
     excerpt: "《红楼梦》作者"
   },
   {
@@ -4169,7 +4169,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "袁枚",
-    source: "《袁枚》·1716—1798",
+    source: "袁枚·1716—1798",
     excerpt: "性灵说的倡导者，《随园诗话》的作者"
   },
   {
@@ -4182,7 +4182,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "王鸣盛",
-    source: "《王鸣盛》·1722—1797",
+    source: "王鸣盛·1722—1797",
     excerpt: "《十七史商榷》的作者，考据史学的中坚"
   },
   {
@@ -4195,7 +4195,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "戴震",
-    source: "《戴震》·1724—1777",
+    source: "戴震·1724—1777",
     excerpt: "乾嘉皖派的领袖"
   },
   {
@@ -4208,7 +4208,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "赵翼",
-    source: "《赵翼》·1727—1814",
+    source: "赵翼·1727—1814",
     excerpt: "《廿二史札记》的作者，「江山代有才人出」"
   },
   {
@@ -4221,7 +4221,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "钱大昕",
-    source: "《钱大昕》·1728—1804",
+    source: "钱大昕·1728—1804",
     excerpt: "乾嘉史学的代表，《廿二史考异》的作者"
   },
   {
@@ -4234,7 +4234,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "段玉裁",
-    source: "《段玉裁》·1735—1815",
+    source: "段玉裁·1735—1815",
     excerpt: "《说文解字注》"
   },
   {
@@ -4247,7 +4247,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "章学诚",
-    source: "《章学诚》·1738—1801",
+    source: "章学诚·1738—1801",
     excerpt: "《文史通义》作者"
   },
   {
@@ -4260,7 +4260,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "王念孙",
-    source: "《王念孙》·1744—1832",
+    source: "王念孙·1744—1832",
     excerpt: "高邮二王 · 广雅疏证"
   },
   {
@@ -4273,7 +4273,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "焦循",
-    source: "《焦循》·1763—1820",
+    source: "焦循·1763—1820",
     excerpt: "扬州学派的通人"
   },
   {
@@ -4286,7 +4286,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "阮元",
-    source: "《阮元》·1764—1849",
+    source: "阮元·1764—1849",
     excerpt: "乾嘉学术的组织者"
   },
   {
@@ -4299,7 +4299,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "王引之",
-    source: "《王引之》·1766—1834",
+    source: "王引之·1766—1834",
     excerpt: "《经传释词》"
   },
   {
@@ -4312,7 +4312,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "包世臣",
-    source: "《包世臣》·1775—1855",
+    source: "包世臣·1775—1855",
     excerpt: "《安吴四种》"
   },
   {
@@ -4325,7 +4325,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "龚自珍",
-    source: "《龚自珍》·1792—1841",
+    source: "龚自珍·1792—1841",
     excerpt: "近代思想启蒙的先声，「我劝天公重抖擞」"
   },
   {
@@ -4338,7 +4338,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "魏源",
-    source: "《魏源》·1794—1857",
+    source: "魏源·1794—1857",
     excerpt: "睁眼看世界的先行者"
   },
   {
@@ -4351,7 +4351,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "曾国藩",
-    source: "《曾国藩》·1811—1872",
+    source: "曾国藩·1811—1872",
     excerpt: "晚清中兴名臣"
   },
   {
@@ -4364,7 +4364,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "李善兰",
-    source: "《李善兰》·1811—1882",
+    source: "李善兰·1811—1882",
     excerpt: "近代数学与天文学的译介者"
   },
   {
@@ -4377,7 +4377,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "左宗棠",
-    source: "《左宗棠》·1812—1885",
+    source: "左宗棠·1812—1885",
     excerpt: "收复新疆"
   },
   {
@@ -4390,7 +4390,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "徐寿",
-    source: "《徐寿》·1818—1884",
+    source: "徐寿·1818—1884",
     excerpt: "元素中译名的制定者"
   },
   {
@@ -4403,7 +4403,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "丁宝桢",
-    source: "《丁宝桢》·1820—1886",
+    source: "丁宝桢·1820—1886",
     excerpt: "都江堰三次大修之一"
   },
   {
@@ -4416,7 +4416,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "李鸿章",
-    source: "《李鸿章》·1823—1901",
+    source: "李鸿章·1823—1901",
     excerpt: "裱糊匠 · 洋务重臣"
   },
   {
@@ -4429,7 +4429,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "翁同龢",
-    source: "《翁同龢》·1830—1904",
+    source: "翁同龢·1830—1904",
     excerpt: "光绪帝师，晚清宫廷政治的亲历者与记录者"
   },
   {
@@ -4442,7 +4442,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "吴大澂",
-    source: "《吴大澂》·1835—1902",
+    source: "吴大澂·1835—1902",
     excerpt: "《说文古籀补》"
   },
   {
@@ -4455,7 +4455,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "张之洞",
-    source: "《张之洞》·1837—1909",
+    source: "张之洞·1837—1909",
     excerpt: "中体西用 · 癸卯学制"
   },
   {
@@ -4468,7 +4468,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "沈家本",
-    source: "《沈家本》·1840—1913",
+    source: "沈家本·1840—1913",
     excerpt: "清末修律大臣"
   },
   {
@@ -4481,7 +4481,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "任颐",
-    source: "《任颐》·1840—1895",
+    source: "任颐·1840—1895",
     excerpt: "「海上四任」之首，海派人物与花鸟的领袖"
   },
   {
@@ -4494,7 +4494,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "吴昌硕",
-    source: "《吴昌硕》·1844—1927",
+    source: "吴昌硕·1844—1927",
     excerpt: "「后海派」的领袖，诗书画印四绝"
   },
   {
@@ -4507,7 +4507,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "王懿荣",
-    source: "《王懿荣》·1845—1900",
+    source: "王懿荣·1845—1900",
     excerpt: "甲骨文的第一位发现者"
   },
   {
@@ -4520,7 +4520,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "黄遵宪",
-    source: "《黄遵宪》·1848—1905",
+    source: "黄遵宪·1848—1905",
     excerpt: "「诗界革命」的旗帜，《人境庐诗草》"
   },
   {
@@ -4533,7 +4533,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "林纾",
-    source: "《林纾》·1852—1924",
+    source: "林纾·1852—1924",
     excerpt: "林译小说"
   },
   {
@@ -4546,7 +4546,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "严复",
-    source: "《严复》·1854—1921",
+    source: "严复·1854—1921",
     excerpt: "《天演论》译者"
   },
   {
@@ -4559,7 +4559,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "刘鹗",
-    source: "《刘鹗》·1857—1909",
+    source: "刘鹗·1857—1909",
     excerpt: "《老残游记》的作者，甲骨文最早的收藏与著录者"
   },
   {
@@ -4572,7 +4572,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "康有为",
-    source: "《康有为》·1858—1927",
+    source: "康有为·1858—1927",
     excerpt: "戊戌变法的领袖"
   },
   {
@@ -4585,7 +4585,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "詹天佑",
-    source: "《詹天佑》·1861—1919",
+    source: "詹天佑·1861—1919",
     excerpt: "中国铁路之父"
   },
   {
@@ -4598,7 +4598,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "齐白石",
-    source: "《齐白石》·1864—1957",
+    source: "齐白石·1864—1957",
     excerpt: "「人民艺术家」，虾与花鸟的现代高峰"
   },
   {
@@ -4611,7 +4611,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "黄宾虹",
-    source: "《黄宾虹》·1865—1955",
+    source: "黄宾虹·1865—1955",
     excerpt: "「五笔七墨」，山水画的集大成"
   },
   {
@@ -4624,7 +4624,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清",
     author: "吴趼人",
-    source: "《吴趼人》·1866—1910",
+    source: "吴趼人·1866—1910",
     excerpt: "《二十年目睹之怪现状》的作者"
   },
   {
@@ -4637,7 +4637,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "清（晚清）",
     author: "李宝嘉",
-    source: "《李宝嘉》·1867—1906",
+    source: "李宝嘉·1867—1906",
     excerpt: "谴责小说四大家之一"
   },
   {
@@ -4650,7 +4650,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "蔡元培",
-    source: "《蔡元培》·1868—1940",
+    source: "蔡元培·1868—1940",
     excerpt: "北大精神的奠定者"
   },
   {
@@ -4663,7 +4663,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "曾朴",
-    source: "《曾朴》·1872—1935",
+    source: "曾朴·1872—1935",
     excerpt: "晚清四大家之一"
   },
   {
@@ -4676,7 +4676,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "梁启超",
-    source: "《梁启超》·1873—1929",
+    source: "梁启超·1873—1929",
     excerpt: "近代维新派代表"
   },
   {
@@ -4689,7 +4689,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "沈寿",
-    source: "《沈寿》·1874—1921",
+    source: "沈寿·1874—1921",
     excerpt: "仿真绣 ·《雪宦绣谱》"
   },
   {
@@ -4702,7 +4702,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "王国维",
-    source: "《王国维》·1877—1927",
+    source: "王国维·1877—1927",
     excerpt: "《人间词话》与甲骨学「二重证据法」的开创"
   },
   {
@@ -4715,7 +4715,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "陈独秀",
-    source: "《陈独秀》·1879—1942",
+    source: "陈独秀·1879—1942",
     excerpt: "新文化运动的总司令"
   },
   {
@@ -4728,7 +4728,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "陈垣",
-    source: "《陈垣》·1880—1971",
+    source: "陈垣·1880—1971",
     excerpt: "《史源学》的创立者，元史与宗教史大家"
   },
   {
@@ -4741,7 +4741,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《鲁迅》·1881—1936",
+    source: "鲁迅·1881—1936",
     excerpt: "中国现代文学的奠基人"
   },
   {
@@ -4754,7 +4754,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "吕思勉",
-    source: "《吕思勉》·1884—1957",
+    source: "吕思勉·1884—1957",
     excerpt: "通史四大家的代表，《吕著中国通史》"
   },
   {
@@ -4767,7 +4767,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "萧友梅",
-    source: "《萧友梅》·1884—1940",
+    source: "萧友梅·1884—1940",
     excerpt: "中国专业音乐教育之父"
   },
   {
@@ -4780,7 +4780,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "秉志",
-    source: "《秉志》·1886—1965",
+    source: "秉志·1886—1965",
     excerpt: "中国近代生物学的奠基人，中国科学社发起人"
   },
   {
@@ -4793,7 +4793,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "李大钊",
-    source: "《李大钊》·1889—1927",
+    source: "李大钊·1889—1927",
     excerpt: "中国最早的马克思主义者"
   },
   {
@@ -4806,7 +4806,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "陈寅恪",
-    source: "《陈寅恪》·1890—1969",
+    source: "陈寅恪·1890—1969",
     excerpt: "「独立之精神，自由之思想」，隋唐史大家"
   },
   {
@@ -4819,7 +4819,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "竺可桢",
-    source: "《竺可桢》·1890—1974",
+    source: "竺可桢·1890—1974",
     excerpt: "中国近代气象学与地理学的奠基人"
   },
   {
@@ -4832,7 +4832,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "中国",
     author: "侯德榜",
-    source: "《侯德榜》·1890—1974",
+    source: "侯德榜·1890—1974",
     excerpt: "「侯氏制碱法」，中国近代化学工业的奠基"
   },
   {
@@ -4845,7 +4845,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "赵元任",
-    source: "《赵元任》·1892—1982",
+    source: "赵元任·1892—1982",
     excerpt: "中国现代语言学之父"
   },
   {
@@ -4858,7 +4858,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "华彦钧",
-    source: "《华彦钧》·1893—1950",
+    source: "华彦钧·1893—1950",
     excerpt: "《二泉映月》"
   },
   {
@@ -4871,7 +4871,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "胡先骕",
-    source: "《胡先骕》·1894—1968",
+    source: "胡先骕·1894—1968",
     excerpt: "中国植物分类学的奠基人，水杉的发现与命名者"
   },
   {
@@ -4884,7 +4884,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "吕彦直",
-    source: "《吕彦直》·1894—1929",
+    source: "吕彦直·1894—1929",
     excerpt: "中山陵与广州中山纪念堂的设计者"
   },
   {
@@ -4897,7 +4897,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "董作宾",
-    source: "《董作宾》·1895—1963",
+    source: "董作宾·1895—1963",
     excerpt: "殷墟第一次发掘 · 断代"
   },
   {
@@ -4910,7 +4910,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "徐悲鸿",
-    source: "《徐悲鸿》·1895—1953",
+    source: "徐悲鸿·1895—1953",
     excerpt: "以素描改造中国画，画马名世"
   },
   {
@@ -4923,7 +4923,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "刘天华",
-    source: "《刘天华》·1895—1932",
+    source: "刘天华·1895—1932",
     excerpt: "《良宵》《空山鸟语》"
   },
   {
@@ -4936,7 +4936,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "郁达夫",
-    source: "《郁达夫》·1896—1945",
+    source: "郁达夫·1896—1945",
     excerpt: "创造社的代表作家"
   },
   {
@@ -4949,7 +4949,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "李济",
-    source: "《李济》·1896—1979",
+    source: "李济·1896—1979",
     excerpt: "中国考古学之父"
   },
   {
@@ -4962,7 +4962,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《徐志摩》·1897—1931",
+    source: "徐志摩·1897—1931",
     excerpt: "新月派代表诗人"
   },
   {
@@ -4975,7 +4975,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "潘天寿",
-    source: "《潘天寿》·1897—1971",
+    source: "潘天寿·1897—1971",
     excerpt: "「一味霸悍」，指画与花鸟的现代变格"
   },
   {
@@ -4988,7 +4988,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《朱自清》·1898—1948",
+    source: "朱自清·1898—1948",
     excerpt: "现代散文名家"
   },
   {
@@ -5001,7 +5001,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "翦伯赞",
-    source: "《翦伯赞》·1898—1968",
+    source: "翦伯赞·1898—1968",
     excerpt: "马克思主义史学的代表，《中国史纲》作者"
   },
   {
@@ -5014,7 +5014,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "闻一多",
-    source: "《闻一多》·1899—1946",
+    source: "闻一多·1899—1946",
     excerpt: "新月派的理论旗手，《红烛》《死水》的作者"
   },
   {
@@ -5027,7 +5027,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "张大千",
-    source: "《张大千》·1899—1983",
+    source: "张大千·1899—1983",
     excerpt: "临摹敦煌与泼彩山水的大家"
   },
   {
@@ -5040,7 +5040,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "林风眠",
-    source: "《林风眠》·1900—1991",
+    source: "林风眠·1900—1991",
     excerpt: "中西融合的先行者，国立艺术院首任院长"
   },
   {
@@ -5053,7 +5053,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "王力",
-    source: "《王力》·1900—1986",
+    source: "王力·1900—1986",
     excerpt: "汉语史学科的建立者"
   },
   {
@@ -5066,7 +5066,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "黄自",
-    source: "《黄自》·1904—1938",
+    source: "黄自·1904—1938",
     excerpt: "清唱剧《长恨歌》"
   },
   {
@@ -5079,7 +5079,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "冼星海",
-    source: "《冼星海》·1905—1945",
+    source: "冼星海·1905—1945",
     excerpt: "《黄河大合唱》"
   },
   {
@@ -5092,7 +5092,7 @@ window.POEMS_MINGREN_CN = [
     country: "中国",
     dynasty: "近现代",
     author: "聂耳",
-    source: "《聂耳》·1912—1935",
+    source: "聂耳·1912—1935",
     excerpt: "《义勇军进行曲》"
   },
 ];

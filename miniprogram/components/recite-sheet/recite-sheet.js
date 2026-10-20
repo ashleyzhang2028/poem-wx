@@ -42,10 +42,6 @@ function fontFlags(size) {
   return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
 }
 
-function bookNameOf(name) {
-  return String(name == null ? "" : name).replace(/[《》]/g, "").trim();
-}
-
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
   if (!raw) return "";
@@ -206,8 +202,8 @@ Component({
         title: meta.t || "",
         author: meta.a || "",
         dynasty: meta.d || "",
-        source: bookNameOf(meta.s || meta.n),
-        selection: bookNameOf(meta.sel),
+        source: meta.s || meta.n || "",
+        selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
         stage: "",
         mastery: 0,
@@ -333,8 +329,8 @@ Component({
         title: meta.t,
         author: meta.a,
         dynasty: meta.d,
-        source: bookNameOf(meta.s || meta.n),
-        selection: bookNameOf(meta.sel),
+        source: meta.s || meta.n || "",
+        selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
         loadingText: false,
         textMiss: "",
