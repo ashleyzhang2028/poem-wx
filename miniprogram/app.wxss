@@ -770,7 +770,7 @@ button, textarea {
 
 .opt-name {
   display: block;
-  font-family: var(--font-poem);
+  font-family: var(--font-ui);
   font-size: var(--fs-hint);
   color: var(--ink);
   line-height: 1.3;
