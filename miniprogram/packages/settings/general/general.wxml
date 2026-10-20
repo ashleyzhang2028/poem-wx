@@ -67,7 +67,7 @@
     <view class="card-title">季节限定</view>
     <view class="row">
       <view class="row-main">
-        <text class="row-title">首页显示节日节气卡</text>
+        <text class="row-title">显示季节限定</text>
         <text class="row-sub">{{seasonalLock ? seasonalNote : '节日前两天与当天、节气周期内列出应景诗词'}}</text>
       </view>
       <view class="sw">
@@ -78,7 +78,7 @@
 
   <view class="card danger-zone">
     <view class="card-title danger-title">危险操作</view>
-    <text class="hint danger-note">背诵进度、已读标记、今日加背都会删掉，本机与云端的记录一起清，且无法恢复。</text>
+    <text class="hint danger-note">背诵进度、已读标记、今日加背都会删除，本机与云端的记录一起清，且无法恢复。</text>
     <button class="btn danger block danger-clear" bindtap="onClearData">清空数据</button>
   </view>
 

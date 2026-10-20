@@ -126,7 +126,7 @@ Page({
   onClearData() {
     wx.showModal({
       title: "清空数据",
-      content: "背诵进度、已读标记、今日加背都会删掉，本机与云端的记录一起清，且无法恢复。",
+      content: "背诵进度、已读标记、今日加背都会删除，本机与云端的记录一起清，且无法恢复。",
       confirmText: "清空",
       cancelText: "取消",
       confirmColor: "#a83b32",

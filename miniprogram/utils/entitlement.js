@@ -39,7 +39,7 @@ const CAPS = [
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与今日加背", cell: courseFreeCell, tier: "pro" },
-  { key: "seasonal", name: "隐藏季节限定", desc: "首页那张节日节气卡可以自己收起来", cell: seasonalCell, tier: "pro" },
+  { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", cell: seasonalCell, tier: "pro" },
   { key: "fsrs", name: "FSRS (自由间隔重复调度)", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
