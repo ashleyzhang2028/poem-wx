@@ -410,7 +410,6 @@ Page({
       allRows: this.data.allOpen ? allRows : [],
       sheetRows: sheetRows,
       selfOnly: selfOnly,
-      selfPraise: selfAllDone ? praiseOf("own") : "",
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
@@ -532,6 +531,7 @@ Page({
         done: done,
         doneNow: doneNow,
         doneToday: plan.length > 0 && doneNow >= plan.length,
+        praise: plan.length > 0 && doneNow >= plan.length ? praiseOf("own") : "",
         rows: this.collectionCardRows(plan)
       };
     });

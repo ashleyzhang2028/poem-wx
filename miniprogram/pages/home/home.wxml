@@ -180,13 +180,6 @@
       </view>
     </view>
 
-    <view class="finish finish-self" wx:if="{{selfPraise}}">
-      <view class="finish-mark">
-        <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
-      </view>
-      <text class="finish-text">{{selfPraise}}</text>
-    </view>
-
     <view class="card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}">
       <text class="hint" wx:if="{{collectionHint}}" bindtap="onPermissions">{{collectionHint}}</text>
 
@@ -222,6 +215,13 @@
               <view class="face-ico" style="mask-image:url('{{face.icon}}');-webkit-mask-image:url('{{face.icon}}');"></view>
             </view>
           </view>
+        </view>
+
+        <view class="card-done" wx:if="{{coll.doneToday}}">
+          <view class="finish-mark">
+            <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
+          </view>
+          <text class="finish-text">{{coll.praise}}</text>
         </view>
 
         <view class="empty" wx:if="{{!coll.rows.length}}">
