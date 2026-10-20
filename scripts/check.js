@@ -4836,10 +4836,6 @@ const K = {
     mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
   },
 
-  cards: 5604,
-
-  withText: 5855,
-
   seqMax: { gushi: 126, songci: 331, tangshi: 469 },
 
   course: 251,
@@ -4865,6 +4861,11 @@ function gapped(items, max) {
     ok("篇数对得上网页版 · " + id, perBook[id].length === K.counts[id],
       "语料 " + perBook[id].length + "，表里写 " + K.counts[id] + "（补录之后回来对一次）");
   });
+
+  const shelfIds = Object.keys(K.counts).filter((id) => id !== "poems");
+  const shelfCount = shelfIds.reduce((n, id) => n + perBook[id].length, 0);
+  ok("课外十七部合计与各集子篇数一致", shelfCount === 5594,
+    "各集子加起来 " + shelfCount + "（补录之后回来对一次）");
 
   const qb = allEntries.filter((p) => p.t === "七步诗");
   ok("《七步诗》在《古诗「非唐代」》", qb.length === 1 && qb[0].b === "gushi");
