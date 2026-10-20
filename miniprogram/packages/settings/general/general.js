@@ -134,9 +134,7 @@ Page({
   onSfxTest() {
     if (!sfx.preview()) {
       wx.showToast({ title: "这台设备出不了声", icon: "none" });
-      return;
     }
-    sfx.recite("good");
   },
 
   onClearData() {

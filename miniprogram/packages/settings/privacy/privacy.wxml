@@ -86,4 +86,5 @@
   </view>
 
   <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
 </view>

@@ -1,16 +1,59 @@
 const store = require("./store");
 
+const COMBO_FROM = 5;
+
+const VOICES = {
+  tap: [{ f: 880, ms: 40, gap: 0, v: 0.1 }],
+  tick: [{ f: 1400, ms: 30, gap: 0, v: 0.08 }],
+  ok: [
+    { f: 784, ms: 90, gap: 0, v: 0.16 },
+    { f: 1047, ms: 130, gap: 70, v: 0.15 }
+  ],
+  no: [
+    { f: 415, ms: 140, gap: 0, v: 0.16 },
+    { f: 311, ms: 200, gap: 110, v: 0.15 }
+  ],
+  bad: [
+    { f: 392, ms: 110, gap: 0, v: 0.15 },
+    { f: 294, ms: 170, gap: 85, v: 0.14 }
+  ],
+  fuzzy: [
+    { f: 494, ms: 100, gap: 0, v: 0.14 },
+    { f: 466, ms: 130, gap: 85, v: 0.13 }
+  ],
+  good: [
+    { f: 659, ms: 80, gap: 0, v: 0.15 },
+    { f: 880, ms: 120, gap: 60, v: 0.14 }
+  ],
+  combo: [
+    { f: 1047, ms: 60, gap: 0, v: 0.14 },
+    { f: 1319, ms: 60, gap: 55, v: 0.14 },
+    { f: 1568, ms: 120, gap: 110, v: 0.14 }
+  ],
+  pass: [
+    { f: 659, ms: 100, gap: 0, v: 0.15 },
+    { f: 784, ms: 100, gap: 80, v: 0.15 },
+    { f: 1047, ms: 220, gap: 80, v: 0.16 }
+  ],
+  rank: [
+    { f: 523, ms: 420, gap: 0, v: 0.13 },
+    { f: 784, ms: 420, gap: 0, v: 0.10 },
+    { f: 1047, ms: 520, gap: 40, v: 0.09 }
+  ],
+  gong: [{ f: 196, ms: 600, gap: 0, v: 0.18 }]
+};
+
 let ctx = null;
 let broken = false;
+let warmed = false;
+const buffers = {};
 
 function supported() {
   return typeof wx.createWebAudioContext === "function";
 }
 
 function enabled() {
-
-  const s = store.settings();
-  return s.sfx !== false;
+  return store.settings().sfx !== false;
 }
 
 function setEnabled(on) {
@@ -58,93 +101,56 @@ function tone(c, freq, ms, at, vol) {
   osc.stop(t0 + dur + 0.01);
 }
 
-const VOICES = {
+function load(c, name) {
+  wx.getFileSystemManager().readFile({
+    filePath: "/audio/" + name + ".wav",
+    success: (res) => {
+      c.decodeAudioData(res.data, (buf) => { buffers[name] = buf; }, () => {});
+    },
+    fail: () => {}
+  });
+}
 
-  ok: [
-    { f: 784, ms: 90, gap: 0, v: 0.16 },
-    { f: 1047, ms: 130, gap: 70, v: 0.15 }
-  ],
+function warm() {
+  if (warmed || !enabled()) return;
+  const c = context();
+  if (!c) return;
+  warmed = true;
+  Object.keys(VOICES).forEach((name) => load(c, name));
+}
 
-  no: [
-    { f: 415, ms: 140, gap: 0, v: 0.16 },
-    { f: 311, ms: 200, gap: 110, v: 0.15 }
-  ],
-
-  bad: [
-    { f: 392, ms: 110, gap: 0, v: 0.15 },
-    { f: 294, ms: 170, gap: 85, v: 0.14 }
-  ],
-
-  fuzzy: [
-    { f: 494, ms: 100, gap: 0, v: 0.14 },
-    { f: 466, ms: 130, gap: 85, v: 0.13 }
-  ],
-
-  good: [
-    { f: 659, ms: 80, gap: 0, v: 0.15 },
-    { f: 880, ms: 120, gap: 60, v: 0.14 }
-  ],
-
-  pass: [
-    { f: 659, ms: 100, gap: 0, v: 0.15 },
-    { f: 784, ms: 100, gap: 80, v: 0.15 },
-    { f: 1047, ms: 220, gap: 80, v: 0.16 }
-  ],
-
-  rank: [
-    { f: 523, ms: 420, gap: 0, v: 0.13 },
-    { f: 784, ms: 420, gap: 0, v: 0.10 },
-    { f: 1047, ms: 520, gap: 40, v: 0.09 }
-  ]
-};
-
-function heard(name) {
-  if (!enabled() || !supported()) return false;
+function sound(name) {
   const c = context();
   if (!c) return false;
-  const notes = VOICES[name];
-  if (!notes) return false;
+  warm();
+  const key = VOICES[name] ? name : "ok";
   try {
-    const now = c.currentTime;
-    notes.forEach((n) => tone(c, n.f, n.ms, now + n.gap / 1000, n.v));
+    if (c.state === "suspended" && typeof c.resume === "function") c.resume();
+    if (buffers[key]) {
+      const src = c.createBufferSource();
+      src.buffer = buffers[key];
+      src.connect(c.destination);
+      src.start(0);
+    } else {
+      const now = c.currentTime;
+      VOICES[key].forEach((n) => tone(c, n.f, n.ms, now + n.gap / 1000, n.v));
+    }
   } catch (e) {
     return false;
   }
   return true;
-}
-
-function recite(result) {
-  return heard(result);
 }
 
 function play(name) {
-  if (!enabled() || !supported()) return false;
-  const c = context();
-  if (!c) return false;
-  const notes = VOICES[name] || VOICES.ok;
-  try {
-    const now = c.currentTime;
-    notes.forEach((n) => tone(c, n.f, n.ms, now + n.gap / 1000, n.v));
-  } catch (e) {
-
-    return false;
-  }
-  return true;
+  return enabled() && sound(name);
 }
 
 function preview() {
-  if (!supported()) return false;
-  const c = context();
-  if (!c) return false;
-  try {
-    tone(c, 784, 160, c.currentTime, 0.16);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return sound("good");
 }
 
-function answer(okFlag) {
+function answer(okFlag, streak) {
+  if (okFlag && Number(streak) >= COMBO_FROM) return play("combo");
   return play(okFlag ? "ok" : "no");
 }
 
@@ -165,9 +171,10 @@ module.exports = {
   enabled,
   setEnabled,
   readiness,
+  warm,
   play,
   preview,
-  recite,
+  recite: play,
   answer,
   pass,
   rank

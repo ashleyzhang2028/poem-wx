@@ -1,1 +1,6 @@
-{ "navigationBarTitleText": "跬步 · 我的 · 古诗词大会 · 考试", "usingComponents": {} }
+{
+  "navigationBarTitleText": "跬步 · 我的 · 古诗词大会 · 考试",
+  "usingComponents": {
+    "tab-bar": "/custom-tab-bar/index"
+  }
+}
