@@ -96,8 +96,11 @@
   font-size: var(--fs-hint);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
-  white-space: normal;
-  word-break: break-word;
+}
+
+.tier-cell-n {
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
 }
 
 .tier-cell-ic {

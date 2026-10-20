@@ -7,9 +7,9 @@ const tabbar = require("../../../utils/tabbar");
 const remote = require("../../../utils/remote");
 
 const MODES = [
-  { key: "feihua", glyph: "令", name: "古诗文大会·飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
-  { key: "quiz", glyph: "题", name: "古诗文大会·题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz },
-  { key: "exam", glyph: "考", name: "古诗文大会·考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam }
+  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
+  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz },
+  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam }
 ];
 
 const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
