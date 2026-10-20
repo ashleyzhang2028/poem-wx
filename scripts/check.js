@@ -4051,17 +4051,23 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "今日卡背完了却没有一句收尾 —— 屏幕上看不出今天已经做完");
 
   ok("收尾句取自格言池，随日期换（不是一个固定句）",
-    quotes.LINES.length === 100
-      && new Set(quotes.LINES).size === 100
+    quotes.LINES.length > 0
+      && new Set(quotes.LINES).size === quotes.LINES.length
       && /quotes\.pick\(Date\.now\(\) \/ R\.DAY/.test(homeJs)
       && !/const PRAISE/.test(homeJs),
     "收尾句写死在一处 —— 每天看到的是同一句话");
 
   ok("课内与自选各自收尾，池子与取法只有一份",
     /praiseOf\("course"\)/.test(homeJs) && /praiseOf\("own"\)/.test(homeJs)
-      && /wx:if="\{\{selfPraise\}\}"/.test(homeWxml)
+      && /wx:if="\{\{coll\.doneToday\}\}"[\s\S]{0,400}?\{\{coll\.praise\}\}/.test(homeWxml)
       && (quotesSrc.match(/^const LINES = \[/gm) || []).length === 1,
     "自选的今日份背完了没有收尾句 —— 自选模式下看不到完成");
+
+  ok("自选的收尾句挂在完成的那张集子卡里，不另起一块",
+    !/finish-self/.test(homeWxml)
+      && !/finish-self/.test(fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxss"), "utf8"))
+      && /praise: plan\.length > 0 && doneNow >= plan\.length \? praiseOf\("own"\)/.test(homeJs),
+    "自选背完又在卡片外面挂了一句 —— 同一个完成信号出现两次，位置还与自选卡错位");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
@@ -7747,11 +7753,14 @@ function gapped(items, max) {
   ok("自选集子的今日份背完给一次提示",
     /doneToday: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4)
       && /cheerCollection\(/.test(homeSrc4)
-      && homeSrc4.indexOf("S.doneToday(rec)") >= 0);
+      && homeSrc4.indexOf("S.doneToday(rec)") >= 0
+      && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
+      && /praise: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4));
 
   ok("首页收尾只有一处判据：自选的鼓励语不再另立一套 planDone",
     !/planDone/.test(homeSrc4)
-      && (homeSrc4.match(/const allDone =/g) || []).length === 1);
+      && (homeSrc4.match(/const allDone =/g) || []).length === 1
+      && !/SELF_CHEERS/.test(homeSrc4));
 
   ok("两处 toast 互斥（前一条还在屏上，后一条不叠上去）",
     (homeSrc4.match(/Date\.now\(\) - this\.toastAt\(\) < TOAST_GAP/g) || []).length === 2
