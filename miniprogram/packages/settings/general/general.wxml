@@ -3,7 +3,8 @@
 
   <block wx:else>
   <view class="card">
-    <view class="card-title">正文对齐</view>
+    <view class="card-title">正文排版</view>
+
     <view class="seg fill">
       <radio-group class="seg-group" bindchange="onAlign">
         <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
@@ -13,10 +14,6 @@
         </label>
       </radio-group>
     </view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">正文字号</view>
 
     <view class="font-row">
       <text class="font-a small">A</text>
@@ -25,7 +22,13 @@
               bindchanging="onFontSlide" bindchange="onFontSlide" />
       <text class="font-a big">A</text>
     </view>
-    <text class="hint sample" style="font-size:{{30 + fontSize * 3}}rpx">床前明月光，疑是地上霜。</text>
+
+    <view class="poem-body align-{{align}} size-{{fontSize}} font-sample">
+      <view class="poem-stanza">
+        <text class="poem-line">床前明月光，疑是地上霜。</text>
+        <text class="poem-line">举头望明月，低头思故乡。</text>
+      </view>
+    </view>
   </view>
 
   <view class="card">

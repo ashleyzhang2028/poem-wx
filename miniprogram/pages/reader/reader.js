@@ -13,15 +13,13 @@ const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
+const scale = require("../../utils/type-scale");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
   { key: "fuzzy", label: "模糊", cls: "fuzzy" },
   { key: "good", label: "记住", cls: "good" }
 ];
-
-const FONT_MIN = -2;
-const FONT_MAX = 6;
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
@@ -36,10 +34,6 @@ const PINYIN_MODES = [
 const PAGE_ICONS = {
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, playlist: icons.playlist
 };
-
-function fontFlags(size) {
-  return { fontDown: size > FONT_MIN, fontUp: size < FONT_MAX };
-}
 
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
@@ -85,8 +79,8 @@ Page({
     fontDown: false,
     fontUp: true,
     fontSize: 0,
-    fontMin: FONT_MIN,
-    fontMax: FONT_MAX,
+    fontMin: scale.MIN,
+    fontMax: scale.MAX,
     pinyinModes: PINYIN_MODES,
     pinyinMode: "off",
     pinyinOn: false,
@@ -296,7 +290,7 @@ Page({
 
   renderEntry(id, entry, meta) {
     const settings = store.settings();
-    const size = Math.max(FONT_MIN, Math.min(FONT_MAX, Number(settings.fontSize) || 0));
+    const size = scale.clamp(settings.fontSize);
 
     const rec = store.getRecord(id);
 
@@ -317,7 +311,7 @@ Page({
       hasTranslation: !!entry.tr,
       align: settings.align,
       fontSize: size,
-      ...fontFlags(size),
+      ...scale.flags(size),
       stage: R.stageName(rec, settings.algo),
       mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0
     });
@@ -423,9 +417,9 @@ Page({
   },
 
   stepFont(delta) {
-    const fontSize = Math.max(FONT_MIN, Math.min(FONT_MAX, this.data.fontSize + delta));
+    const fontSize = scale.clamp(this.data.fontSize + delta);
     if (fontSize === this.data.fontSize) return;
-    this.setData(Object.assign({ fontSize }, fontFlags(fontSize)));
+    this.setData(Object.assign({ fontSize }, scale.flags(fontSize)));
     store.saveSettings({ fontSize });
     if (this.data.rawText) this.applyReading();
     sync.markDirty();

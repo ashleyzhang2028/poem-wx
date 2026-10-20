@@ -2,13 +2,10 @@
   margin: var(--sp-2) 0 4rpx;
 }
 
-.sample {
-  display: block;
-  font-family: var(--font-poem);
-  line-height: var(--lh-loose);
-  padding: var(--sp-3) 0 var(--sp-1);
+.font-sample {
+  padding: var(--sp-3) 0 0;
+  margin-top: var(--sp-3);
   border-top: 1rpx dashed var(--line-2);
-  margin-top: var(--sp-2);
 }
 
 .note {
