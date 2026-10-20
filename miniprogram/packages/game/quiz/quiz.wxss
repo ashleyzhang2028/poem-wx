@@ -72,6 +72,7 @@
 .option-k {
   flex: none;
   width: 32rpx;
+  font-family: var(--font-poem);
   font-size: var(--fs-hint);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
@@ -80,6 +81,7 @@
 .option-t {
   flex: 1;
   min-width: 0;
+  font-family: var(--font-poem);
   line-height: 1.5;
 }
 

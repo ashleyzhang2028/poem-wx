@@ -26,7 +26,7 @@ function _feihua_segsOf(text, gated) {
 }
 
 function _feihua_allPoems() {
-  return gameScopes.pool("");
+  return gameScopes.field();
 }
 
 function _feihua_scopedPoems(opt) {

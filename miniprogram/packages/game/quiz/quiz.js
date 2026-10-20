@@ -17,6 +17,7 @@ Page({
     pickedForms: [],
     scopes: [],
     scope: "",
+    needTitle: false,
     count: COUNT,
     questions: [],
     index: 0,
@@ -57,7 +58,8 @@ Page({
     this.setData({
       scopes: gameScopes.list(),
       pickedForms,
-      forms: quiz.formRows(pickedForms)
+      forms: quiz.formRows(pickedForms),
+      needTitle: !quiz.titleSpoiled(pickedForms)
     });
   },
 
@@ -79,7 +81,11 @@ Page({
       wx.showToast({ title: "至少留一种题型", icon: "none" });
       return;
     }
-    this.setData({ pickedForms: picked, forms: quiz.formRows(picked) });
+    this.setData({
+      pickedForms: picked,
+      forms: quiz.formRows(picked),
+      needTitle: !quiz.titleSpoiled(picked)
+    });
   },
 
   onStart() {
@@ -131,7 +137,7 @@ Page({
   metaLineOf(q) {
     if (!q) return "";
     const name = quiz.formOf(q.form).name;
-    if (q.form === "dynasty" || !q.title) return name;
+    if (!this.data.needTitle || !q.title) return name;
     return name + " · 出自《" + q.title + "》";
   },
 
