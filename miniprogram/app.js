@@ -4,6 +4,7 @@ const sync = require("./utils/sync");
 const entitlement = require("./utils/entitlement");
 const gate = require("./utils/gate");
 const font = require("./utils/font");
+const sfx = require("./utils/sfx");
 
 App({
   globalData: {
@@ -24,6 +25,7 @@ App({
     );
 
     font.load().catch(() => {});
+    sfx.warm();
 
     if (gate.logged()) entitlement.sync().catch(() => {});
 

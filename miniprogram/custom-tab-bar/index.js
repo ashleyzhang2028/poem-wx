@@ -5,6 +5,10 @@ const gate = require("../utils/gate");
 const tabPage = require("../utils/tab-page");
 
 Component({
+  properties: {
+    current: { type: String, value: "" }
+  },
+
   data: {
     active: -1,
     themeStyle: "",
@@ -22,7 +26,10 @@ Component({
 
   attached() {
     this.painted = theme.current();
-    this.setData(Object.assign(this.paint(), this.paintMe()));
+    const patch = Object.assign(this.paint(), this.paintMe());
+    const fixed = parseInt(this.data.current, 10);
+    if (fixed >= 0) patch.active = fixed;
+    this.setData(patch);
   },
 
   methods: {
@@ -56,7 +63,8 @@ Component({
         return;
       }
       if (i === this.data.conference) {
-        tabPage.conference();
+        if (i === this.data.active) tabPage.hub();
+        else tabPage.conference();
         return;
       }
       if (i === this.data.active) return;

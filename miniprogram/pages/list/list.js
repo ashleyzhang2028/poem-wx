@@ -8,6 +8,7 @@ const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
 const icons = require("../../utils/icons");
+const trail = require("../../utils/trail");
 
 const FILTERS = [
   { key: "全部", label: "全部" },
@@ -160,6 +161,7 @@ Page({
   },
 
   onOpen(e) {
+    trail.set(this.data.groups.reduce((ids, g) => ids.concat(g.items.map((p) => p.id)), []));
     wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) + "&mode=browse" });
   },
 

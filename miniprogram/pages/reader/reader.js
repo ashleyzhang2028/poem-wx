@@ -11,6 +11,7 @@ const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
 const tabPage = require("../../utils/tab-page");
+const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
 
 const RESULTS = [
@@ -104,7 +105,8 @@ Page({
     lockTitle: "登录后可用",
     lockNote: "",
 
-    creator: ""
+    creator: "",
+    pager: { show: false, prev: null, next: null }
   },
 
   onLoad(query) {
@@ -324,6 +326,7 @@ Page({
     store.markRead(meta.b, id);
     this.loaded = true;
     this.setData({ creator: this.data.from || "" });
+    this.refreshPager();
     this.syncDaily();
 
     this.applyReading();
@@ -492,9 +495,19 @@ Page({
     return url;
   },
 
-  siblingInAuthor(delta) {
+  refreshPager() {
+    const seq = this.data.creator ? this.authorIds() : null;
+    this.setData({ pager: this.data.reciteMode ? { show: false } : trail.around(this.data.id, seq) });
+  },
+
+  onPage(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    wx.redirectTo({ url: this.readerUrl(id, this.data.creator) });
+  },
+
+  authorIds() {
     const who = this.data.creator;
-    if (!who) return "";
     if (!this.rosterCache) {
       const entries = [];
       AI.LIT_BOOKS.forEach((b) => {
@@ -502,7 +515,12 @@ Page({
       });
       this.rosterCache = AI.build(entries);
     }
-    const ids = AI.worksOf(this.rosterCache, who);
+    return AI.worksOf(this.rosterCache, who);
+  },
+
+  siblingInAuthor(delta) {
+    if (!this.data.creator) return "";
+    const ids = this.authorIds();
     const idx = ids.indexOf(this.data.id);
     if (idx < 0) return "";
     const at = idx + delta;

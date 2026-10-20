@@ -82,4 +82,5 @@
     <view class="safe-bottom"></view>
   </block>
   </block>
+  <tab-bar id="tabbar" current="3" />
 </view>

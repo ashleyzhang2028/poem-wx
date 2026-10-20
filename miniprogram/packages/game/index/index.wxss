@@ -1,18 +1,108 @@
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.hero-seal {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--radius);
+  background: var(--sink);
+  color: var(--ink-3);
+  font-family: var(--font-poem);
+  font-size: var(--fs-hero);
+  transform: rotate(-4deg);
+}
+
+.hero-seal.earned {
+  background: var(--strong-soft);
+  color: var(--strong-text);
+  animation: seal-pop .5s ease-out;
+}
+
+.hero-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-name {
+  display: block;
+  font-size: var(--fs-lead);
+  color: var(--strong-text);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-tight);
+}
+
+.hero-title {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
+}
+
+.hero-sub {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+
 .modes {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
 }
 
 .mode {
-  justify-content: flex-start;
-  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
   gap: var(--sp-3);
-  height: auto;
-  min-height: var(--h-btn);
+  margin-bottom: 0;
   padding: var(--sp-3);
-  line-height: var(--lh-tight);
+  animation: mode-in .36s ease-out both;
+  transition: transform .12s;
+}
+
+.mode-hover {
+  transform: scale(.98);
+}
+
+.mode-glyph {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: var(--strong-soft);
+  color: var(--strong-text);
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+}
+
+.glyph-quiz {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.glyph-exam {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.glyph-ranking {
+  background: var(--green-soft);
+  color: var(--green);
 }
 
 .mode-head {
@@ -50,3 +140,25 @@
   color: var(--ink-3);
 }
 
+@keyframes mode-in {
+  from {
+    opacity: 0;
+    transform: translateY(24rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes seal-pop {
+  0% {
+    transform: rotate(-4deg) scale(.6);
+  }
+  70% {
+    transform: rotate(-4deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(-4deg) scale(1);
+  }
+}

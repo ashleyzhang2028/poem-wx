@@ -12,6 +12,11 @@ const rankingSelf = require("../../../utils/ranking");
 
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
+const URGENT_FROM = 10;
+
+function clockPatch(left, text) {
+  return { left, leftText: text, leftPct: Math.round((left / ROUND_LIMIT) * 100), urgent: left <= URGENT_FROM };
+}
 
 Page({
   data: {
@@ -49,6 +54,8 @@ Page({
 
     left: ROUND_LIMIT,
     leftText: "1:30",
+    leftPct: 100,
+    urgent: false,
 
     revealed: false,
     answers: [],
@@ -138,11 +145,12 @@ Page({
       const left = this.data.left - 1;
       if (left <= 0) {
         this.stopClock();
-        this.setData({ left: 0, leftText: "0:00" });
+        this.setData(clockPatch(0, "0:00"));
         this.endRound();
         return;
       }
-      this.setData({ left, leftText: this.format(left) });
+      this.setData(clockPatch(left, this.format(left)));
+      if (left <= URGENT_FROM) sfx.play("tick");
     }, 1000);
   },
 
@@ -152,7 +160,7 @@ Page({
   },
 
   restartClock() {
-    this.setData({ left: ROUND_LIMIT, leftText: this.format(ROUND_LIMIT) });
+    this.setData(clockPatch(ROUND_LIMIT, this.format(ROUND_LIMIT)));
   },
 
   format(sec) {
@@ -166,6 +174,7 @@ Page({
     this.timer = null;
     this.stopClock();
     if (!this.data.done.length) {
+      sfx.play("gong");
       this.setData({ locked: true, message: "时间到，一句也没接上", messageOk: false });
       return;
     }

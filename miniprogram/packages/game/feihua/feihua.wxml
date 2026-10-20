@@ -7,8 +7,10 @@
       <view class="fh-head">
         <text class="fh-scope">{{scopeName}}</text>
         <text class="combo {{streak >= 5 ? 'hot' : ''}}" wx:if="{{streak >= 2}}">{{streak}} 连对</text>
-        <text class="fh-clock">{{leftText}}</text>
+        <text class="fh-clock {{urgent ? 'urgent' : ''}}">{{leftText}}</text>
       </view>
+
+      <view class="fh-bar"><view class="fh-bar-fill {{urgent ? 'urgent' : ''}}" style="width:{{leftPct}}%"></view></view>
 
       <view class="fh-char">
         <text class="fh-char-t">{{char || '令'}}</text>
@@ -98,4 +100,5 @@
   </block>
 
   <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="2" />
 </view>

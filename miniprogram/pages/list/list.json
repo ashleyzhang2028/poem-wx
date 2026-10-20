@@ -1,1 +1,6 @@
-{ "navigationBarTitleText": "跬步 · 课外阅读", "usingComponents": {} }
+{
+  "navigationBarTitleText": "跬步 · 课外阅读",
+  "usingComponents": {
+    "tab-bar": "/custom-tab-bar/index"
+  }
+}

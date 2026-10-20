@@ -20,7 +20,7 @@ Page({
     chart: null,
     curve: "",
     rankingOn: false,
-    rankingNote: "默认关 · 打开后大会页才出现榜单入口"
+    rankingNote: "默认关 · 打开后大会页的排行榜才能点进去"
   },
 
   onShow() {
@@ -35,7 +35,7 @@ Page({
       this.setData({
         logged: entitlement.snapshot().logged,
         rankingOn: !!res.on,
-        rankingNote: res.note || (remote.adminReady() ? "关 · 打开后大会页才出现榜单入口" : "只读")
+        rankingNote: res.note || (remote.adminReady() ? "关 · 打开后大会页的排行榜才能点进去" : "只读")
       });
       if (this.data.logged) this.loadStats();
     });

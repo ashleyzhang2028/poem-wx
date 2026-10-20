@@ -9,6 +9,16 @@ function conference() {
   wx.navigateTo({ url: GAME });
 }
 
+function hub() {
+  const pages = getCurrentPages();
+  const at = pages.map((p) => p.route).lastIndexOf(GAME.slice(1));
+  if (at < 0) {
+    conference();
+    return;
+  }
+  if (at < pages.length - 1) wx.navigateBack({ delta: pages.length - 1 - at });
+}
+
 function mine() {
   go(MINE);
 }
@@ -29,4 +39,4 @@ function back(url) {
   });
 }
 
-module.exports = { go, conference, mine, back };
+module.exports = { go, conference, hub, mine, back };

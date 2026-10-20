@@ -2,32 +2,43 @@
   <lock-card wx:if="{{locked}}" title="大会要登录" note="登录后才能进" mark="会" />
 
   <block wx:else>
-  <view class="modes">
-    <button class="btn block mode {{item.ok ? '' : 'mode-off'}}"
-            wx:for="{{cards}}" wx:key="key" data-k="{{item.key}}" bindtap="onMode">
-      <view class="mode-main">
-        <view class="mode-head">
-          <text class="gc-name">{{item.name}}</text>
-          <text class="tag theme" wx:if="{{item.bestText}}">最好 {{item.bestText}}</text>
-        </view>
-        <text class="mode-desc" wx:if="{{item.ok && item.desc}}">{{item.desc}}</text>
+    <view class="card hero">
+      <view class="hero-seal {{heroTitle ? 'earned' : ''}}">{{heroMark}}</view>
+      <view class="hero-main">
+        <text class="hero-name poem">古诗词大会</text>
+        <text class="hero-title" wx:if="{{heroTitle}}">当前功名 · {{heroTitle}}</text>
+        <text class="hero-sub">{{heroSub}}</text>
       </view>
-      <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>
-    </button>
-  </view>
-
-  <view class="card ranking-card" wx:if="{{rankingOn}}" hover-class="row-hover" hover-stay-time="60"
-        bindtap="onRanking">
-    <view class="row row-flush">
-      <view class="row-icon">榜</view>
-      <view class="row-main">
-        <text class="row-title poem">排行榜</text>
-        <text class="row-sub">分学段 · 分年级 · 分学期 · 按日周月年</text>
-      </view>
-      <text class="row-go">›</text>
     </view>
-  </view>
 
-  <view class="safe-bottom"></view>
+    <view class="modes">
+      <view class="card mode {{item.ok ? '' : 'mode-off'}}" wx:for="{{cards}}" wx:key="key"
+            style="animation-delay:{{index * 70}}ms" data-k="{{item.key}}"
+            hover-class="mode-hover" hover-stay-time="40" bindtap="onMode">
+        <view class="mode-glyph glyph-{{item.key}}">{{item.glyph}}</view>
+        <view class="mode-main">
+          <view class="mode-head">
+            <text class="gc-name">{{item.name}}</text>
+            <text class="tag theme" wx:if="{{item.bestText}}">最好 {{item.bestText}}</text>
+          </view>
+          <text class="mode-desc">{{item.ok ? item.desc : item.note}}</text>
+        </view>
+        <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>
+      </view>
+    </view>
+
+    <view class="card mode {{rankingState === 'off' ? 'mode-off' : ''}}"
+          style="animation-delay:210ms" hover-class="mode-hover" hover-stay-time="40" bindtap="onRanking">
+      <view class="mode-glyph glyph-ranking">榜</view>
+      <view class="mode-main">
+        <text class="gc-name">排行榜</text>
+        <text class="mode-desc">{{rankingSub}}</text>
+      </view>
+      <text class="mode-go">{{rankingState === 'off' ? '未开放' : '查看'}}</text>
+    </view>
+
+    <view class="safe-bottom"></view>
   </block>
+
+  <tab-bar id="tabbar" current="2" />
 </view>

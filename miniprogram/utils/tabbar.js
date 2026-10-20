@@ -1,6 +1,7 @@
 function barOf(page) {
-  if (!page || typeof page.getTabBar !== "function") return null;
-  const bar = page.getTabBar();
+  if (!page) return null;
+  const native = typeof page.getTabBar === "function" ? page.getTabBar() : null;
+  const bar = native || (typeof page.selectComponent === "function" ? page.selectComponent("#tabbar") : null);
   if (!bar || typeof bar.setActive !== "function") return null;
   return bar;
 }
