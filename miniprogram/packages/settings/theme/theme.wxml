@@ -1,0 +1,23 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="换主题要登录" note="登录后才能改" mark="主" />
+
+  <block wx:else>
+  <view class="card">
+    <view class="card-title">主题</view>
+
+    <view class="swatch-grid">
+      <view class="swatch {{theme === item.key ? 'on' : ''}}"
+            wx:for="{{items}}" wx:key="key"
+            style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
+            hover-class="swatch-hover" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onPick">
+        <view class="swatch-dot"></view>
+        <text class="swatch-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  </block>
+  <tab-bar id="tabbar" current="4" />
+</view>

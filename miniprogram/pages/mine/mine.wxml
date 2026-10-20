@@ -96,11 +96,19 @@
   </view>
 
   <view class="card" wx:if="{{logged}}">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+      <view class="row-icon">主</view>
+      <view class="row-main">
+        <text class="row-title">主题</text>
+        <text class="row-sub">{{themeName}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
       <view class="row-icon">设</view>
       <view class="row-main">
         <text class="row-title">设置</text>
-        <text class="row-sub">版式 · 主题 · 声音</text>
+        <text class="row-sub">版式 · 声音 · 季节</text>
       </view>
       <text class="row-go">›</text>
     </view>

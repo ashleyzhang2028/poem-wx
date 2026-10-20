@@ -1062,17 +1062,19 @@ ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.ent
   const p = "pages/mine/mine";
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
   const js = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
-  ok("设置只有一条入口（版式 / 主题 / 声音收在同一页）",
+  ok("设置与主题各一条入口（版式 / 声音在设置，主题单独一页）",
     (wxml.match(/onSettings/g) || []).length === 1
-      && !/onTheme|onReader/.test(wxml)
-      && !/onTheme|onReader/.test(js),
+      && (wxml.match(/onTheme/g) || []).length === 1
+      && !/onReader/.test(wxml)
+      && !/onReader/.test(js)
+      && /packages\/settings\/theme\/theme"/.test(js),
     "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
   const general = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
-  ok("那一页装着版式 / 声音 / 主题三样",
+  ok("设置那一页装着版式 / 声音两样（主题已搬去自己那一页）",
     /onAlign/.test(general) && /onPinyin/.test(general) && /onFontSlide/.test(general)
-      && /onSfx/.test(general) && /onPick/.test(general),
-    "三样没并到一页上，或并了却少了一样的处理函数");
+      && /onSfx/.test(general) && !/onPick|swatch/.test(general),
+    "版式 / 声音没并到一页上，或主题卡片还留在设置里");
 
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
@@ -3017,10 +3019,19 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     ok("设置里的注音走 pinyin.setMode()（不自己写一份 store）",
       /pinyin\.setMode\(/.test(generalJs2));
 
-    ok("主题与声音也并在这一页（各自的动作都在）",
-      /onPick/.test(general) && /onSfx/.test(general) && /swatch/.test(general)
-        && /onPick\s*\(/.test(generalJs2) && /sfx\.setEnabled\(/.test(generalJs2),
+    ok("声音并在这一页，主题搬到自己那一页（各自的动作都在）",
+      /onSfx/.test(general) && /sfx\.setEnabled\(/.test(generalJs2)
+        && !/onPick|swatch/.test(general) && !/onPick\s*\(/.test(generalJs2),
       "主题 / 声音只是搬了壳，动作没跟过来");
+
+    const themeWxml2 = read("packages/settings/theme/theme.wxml");
+    const themeJs2 = read("packages/settings/theme/theme.js");
+    ok("主题页装着色卡，落在 theme.set() 上（不自己写一份 store）",
+      /onPick/.test(themeWxml2) && /swatch/.test(themeWxml2)
+        && /theme\.set\(/.test(themeJs2) && /theme\.palette\(/.test(themeJs2),
+      "色卡搬过去了，动作没跟过来");
+    ok("设置页不再摆色卡（不留孤儿样式）",
+      !/swatch/.test(read("packages/settings/general/general.wxss")));
 
     const shelled = [];
     const naked = [];
@@ -4700,10 +4711,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   {
     const settWxml = bareMarkup(read("packages/settings/general/general.wxml"));
     const clearBtn = settWxml.indexOf('bindtap="onClearData"');
-    const themeCard = settWxml.indexOf('class="card-title">主题');
-    ok("清空数据在设置页，且在主题卡片之下",
-      clearBtn > themeCard && themeCard > 0 && /class="btn danger block danger-clear"/.test(settWxml),
-      "清空数据又挪走了，或者主题卡片挪了 —— 它是设置页最后一张卡");
+    const lastCard = settWxml.lastIndexOf('class="card');
+    ok("清空数据在设置页最后一张卡（危险操作垫底）",
+      clearBtn > lastCard && lastCard > 0 && /class="btn danger block danger-clear"/.test(settWxml),
+      "清空数据又挪走了，或者它下面又长出一张卡");
     ok("「我的」页不再另摆一份清空入口",
       !/onClear\b/.test(bareMarkup(read("pages/mine/mine.wxml")))
         && !/onClear\s*\(/.test(read("pages/mine/mine.js")),
