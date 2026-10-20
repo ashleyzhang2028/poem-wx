@@ -11,7 +11,7 @@ function rankOf(tier) {
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
   if (!n) return { text: "", note: "", on: false };
-  return { text: n + " 个", note: "每个 " + tiers.COLLECTION_ITEMS_MAX + " 首", on: true };
+  return { text: n + " 个集合", note: "", on: true };
 }
 
 function courseFreeCell(tier) {
