@@ -1,9 +1,11 @@
 const store = require("./store");
 
+const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
+
 const THEMES = [
   { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png" },
-  { key: "yangzhou", name: "扬州", rgb: [2, 54, 51], banner: "/icons/yangzhou.png" },
-  { key: "kaifeng", name: "开封", rgb: [2, 54, 51], banner: "/icons/kaifeng.png" },
+  { key: "yangzhou", name: "扬州", rgb: [2, 54, 51], banner: CITY_BANNER + "yangzhou.png" },
+  { key: "kaifeng", name: "开封", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png" },
   { key: "ink", name: "墨色", rgb: [8, 8, 10] },
   { key: "qinglv", name: "青绿", rgb: [46, 106, 103] },
   { key: "muse", name: "暮色", rgb: [79, 96, 114] },

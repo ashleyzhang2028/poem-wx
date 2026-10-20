@@ -57,8 +57,9 @@
 淡淡一档 `rgba(2, 54, 51, 0.05)`。它是默认那一项。
 
 **扬州 / 开封**（Issue #413）紧接黛青之后，色值与黛青同（`rgba(2, 54, 51, 1)`），
-换的只是首页 banner：扬州 → `icons/yangzhou.png`，开封 → `icons/kaifeng.png`。
-其余主题一律 `icons/hero.png`。三者同色，所以色卡上那三枚圆点长得一样，
+换的只是首页 banner：扬州 / 开封 两张从云托管对象存储取
+（`https://<环境域>.tcb.qcloud.la/themes/city/<key>.png`，见 `theme.js` 的 `CITY_BANNER`），
+不进包；其余主题一律包内 `icons/hero.png`。三者同色，所以色卡上那三枚圆点长得一样，
 名字是唯一的分辨依据；色差与对比度两条判据因此也只算得出同一组数。
 色随城名走的这一版是暂时的，日后哪座城单独配色，只改 `THEMES` 里那一行。
 
