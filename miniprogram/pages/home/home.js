@@ -15,6 +15,7 @@ const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
+const enter = require("../../utils/enter");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -266,6 +267,8 @@ Page({
 
     extraKeyword: "",
 
+    enter: { on: false, delay: [] },
+
     loading: true
   },
 
@@ -276,6 +279,7 @@ Page({
   onShow() {
     theme.apply(this);
     this.toasted = false;
+    enter.again(this.enterSeq);
 
     this.setData({
       banner: theme.bannerOf(theme.current()),
@@ -288,6 +292,7 @@ Page({
   refresh() {
     if (!gate.logged()) {
       this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
+      this.enterSeq = enter.open(this, 3);
       return;
     }
 
@@ -417,6 +422,8 @@ Page({
       seasonal: this.seasonalCard(),
       loading: false
     });
+
+    this.enterSeq = enter.paint(this.enterSeq) || enter.open(this, 10);
 
     this.cheerCollection(colRows);
   },

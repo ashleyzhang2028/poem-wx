@@ -21,7 +21,7 @@ function tokenize(src) {
   return res;
 }
 
-let HOLES = [];
+var HOLES = [];
 function makeValFor(d) { return makeVal(d); }
 function holeRestore(str) {
   return String(str).replace(/\u0001(\d+)\u0002/g, (_, i) => "{{" + HOLES[Number(i)] + "}}");

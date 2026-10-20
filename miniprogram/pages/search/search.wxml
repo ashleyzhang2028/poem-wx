@@ -2,7 +2,7 @@
   <lock-card wx:if="{{locked}}" title="搜索要登录" note="登录后才能搜" mark="寻" />
 
   <block wx:else>
-  <view class="card search-card">
+  <view class="{{enter.on ? 'enter' : ''}} card search-card" style="--d:{{enter.delay[0]}}ms">
     <view class="search search-page">
       <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
       <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
@@ -18,7 +18,7 @@
     </view>
   </view>
 
-  <view class="result-bar" wx:if="{{searched && results.length}}">
+  <view class="{{enter.on ? 'enter' : ''}} result-bar" wx:if="{{searched && results.length}}" style="--d:{{enter.delay[1]}}ms">
     <view class="result-head">
       <text class="result-count">命中 {{total}} 篇</text>
       <text class="hint result-where">{{resultWhere}}</text>
@@ -26,7 +26,7 @@
     <text class="hint result-more">{{resultMore}}</text>
   </view>
 
-  <view class="card" wx:if="{{searched && results.length}}">
+  <view class="{{enter.on ? 'enter' : ''}} card" wx:if="{{searched && results.length}}" style="--d:{{enter.delay[2]}}ms">
     <view class="row hit-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{results}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
       <view class="row-main">
@@ -45,13 +45,13 @@
     <text class="hint more-tip" wx:else>{{fromFull ? '到头了，共 ' : '共 '}}{{total}} 篇</text>
   </view>
 
-  <view class="empty" wx:if="{{searched && !results.length}}">
+  <view class="{{enter.on ? 'enter' : ''}} empty" wx:if="{{searched && !results.length}}" style="--d:{{enter.delay[2]}}ms">
     <text class="empty-mark">无</text>
     <text class="empty-text">「{{keyword}}」没有匹配的篇目</text>
     <text class="hint empty-tip">正文里也没有这一句</text>
   </view>
 
-  <view class="card author-entry">
+  <view class="{{enter.on ? 'enter' : ''}} card author-entry" style="--d:{{enter.delay[3]}}ms">
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAuthors">
       <view class="row-main">
         <text class="gc-name">作者索引</text>

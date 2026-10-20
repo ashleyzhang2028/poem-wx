@@ -3,7 +3,7 @@
 
   <block wx:else>
 
-    <view class="card" wx:for="{{groups}}" wx:key="key">
+    <view class="{{enter.on ? 'enter' : ''}} card" wx:for="{{groups}}" wx:key="key" style="--d:{{enter.delay[index]}}ms">
       <view class="gc-head">
         <text class="gc-name">{{item.name}}</text>
         <text class="gc-count">{{item.count}} 部</text>
