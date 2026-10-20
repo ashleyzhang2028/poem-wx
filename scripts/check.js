@@ -3361,18 +3361,13 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     /\{\{selection\}\}/.test(metaInner) && !/\{\{aliasText\}\}/.test(metaInner)
       && /\{\{aliasText\}\}/.test(readerWxml2));
 
-  const bookNameOf = (() => {
-    const src = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
-    const m = src.match(/function bookNameOf\s*\(name\)\s*\{[\s\S]*?\n\}/);
-    return m ? new Function(m[0] + ";return bookNameOf;")() : null;
-  })();
+  const readJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
+  const sheetJs = fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.js"), "utf8");
 
-  ok("身份行只摆书名，书名号与「选自」不落到界面",
-    typeof bookNameOf === "function"
-      && bookNameOf("《全唐诗》") === "全唐诗"
-      && bookNameOf("《唐诗三百首》") === "唐诗三百首"
-      && bookNameOf("  ") === ""
-      && bookNameOf(null) === "");
+  ok("出处与选本只在语料里存书名，界面不剥括号",
+    !/bookNameOf|bookTitleOf/.test(readJs) && !/bookNameOf|bookTitleOf/.test(sheetJs)
+      && /source: meta\.s \|\| meta\.n/.test(readJs)
+      && /source: meta\.s \|\| meta\.n/.test(sheetJs));
 
   ok("身份行放不下时省略，不换成两行",
     /\.poem-meta\s*\{[^}]*text-overflow\s*:\s*ellipsis/.test(metaWxss)

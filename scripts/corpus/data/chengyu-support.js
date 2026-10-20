@@ -3,14 +3,14 @@ window.CHENGYU_SUPPORT = [
     title: "从长计议",
     text: "筮短龟长，不如从长。",
     translation: "占卜的征兆短、龟甲的征兆长，不如依从长者之言。",
-    source: "《左传·僖公四年》",
+    source: "左传·僖公四年",
     dynasty: "春秋",
     note: "成语取「从长」之意，后世增「计议」二字"
   },
   {
     title: "登峰造极",
     text: "佛经以为祛练神明，则圣人可致。简文云：「不知便可登峰造极不？然陶练之功，尚不可诬。」",
-    source: "《世说新语·文学》",
+    source: "世说新语·文学",
     dynasty: "两晋南北朝",
     note: "原出处栏误记战国，实出南朝宋刘义庆《世说新语》"
   },
@@ -18,28 +18,28 @@ window.CHENGYU_SUPPORT = [
     title: "千载难逢",
     text: "臣以凡庸，谬徼昌运，奖擢之厚，千载难逢。",
     translation: "臣资质平庸，却侥幸遇上昌盛的国运，蒙受这样厚重的奖赏提拔，真是千年也难遇到。",
-    source: "《南齐书·庾杲之传》",
+    source: "南齐书·庾杲之传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记战国"
   },
   {
     title: "不名一文",
     text: "竟不得名一钱，寄死人家。",
-    source: "《史记·佞幸列传》",
+    source: "史记·佞幸列传",
     dynasty: "西汉",
     note: "「名一钱」即占有一文钱，成语由此"
   },
   {
     title: "故步自封",
     text: "昔有学步于邯郸者，曾未得其仿佛，又复失其故步，遂匍匐而归耳。",
-    source: "《汉书·叙传上》",
+    source: "汉书·叙传上",
     dynasty: "西汉",
     note: "班固用《庄子·秋水》邯郸学步之典，成语由此"
   },
   {
     title: "良莠不齐",
     text: "黎庶之众，良莠不齐。",
-    source: "《汉书·王莽传》",
+    source: "汉书·王莽传",
     dynasty: "西汉",
     note: "《汉书》原作「良莠不齐」，见王莽传论赞"
   },
@@ -47,7 +47,7 @@ window.CHENGYU_SUPPORT = [
     title: "不胫而走",
     text: "珠玉无胫而自至者，以人好之也。",
     translation: "珍珠美玉没有腿却会自己来到身边，是因为人们喜爱它们。",
-    source: "《孔丛子·论势》",
+    source: "孔丛子·论势",
     dynasty: "三国",
     note: "成语作「无胫而走」，由「无胫而自至」凝成"
   },
@@ -55,14 +55,14 @@ window.CHENGYU_SUPPORT = [
     title: "多事之秋",
     text: "今国步多艰，多事之秋也。",
     translation: "如今国运艰难，正是变故频仍、多事之秋。",
-    source: "《旧五代史·梁书》",
+    source: "旧五代史·梁书",
     dynasty: "五代",
     note: "原出处栏误记三国；「多事之秋」于此前后定型"
   },
   {
     title: "犬马之劳",
     text: "臣不胜受恩感激，愿效犬马之劳。",
-    source: "《三国志·蜀书·后主传》裴松之注",
+    source: "三国志·蜀书·后主传裴松之注",
     dynasty: "三国",
     note: "史注与奏疏中屡见，此为通行句式"
   },
@@ -70,7 +70,7 @@ window.CHENGYU_SUPPORT = [
     title: "炉火纯青",
     text: "练丹之法：火候既足，炉火纯青。",
     translation: "炼丹的方法：火候既已充足，炉中的火焰就呈现纯青之色。",
-    source: "《类经图翼》",
+    source: "类经图翼",
     dynasty: "明",
     note: "本为炼丹术语，后喻功夫纯熟；原出处栏误记唐"
   },
@@ -78,7 +78,7 @@ window.CHENGYU_SUPPORT = [
     title: "满目疮痍",
     text: "疮痍满目，抚之增悲。",
     translation: "满眼都是创伤，抚摩起来更添悲伤。",
-    source: "《史记·季布栾布列传》",
+    source: "史记·季布栾布列传",
     dynasty: "西汉",
     note: "「疮痍」见于《史记》「身被七十创，疮痍未瘳」；「满目」为后世所增"
   },
@@ -86,14 +86,14 @@ window.CHENGYU_SUPPORT = [
     title: "浩如烟海",
     text: "然隋氏目录其存者，尚浩如烟海。",
     translation: "隋代目录所著录而留存至今的典籍，尚且多得像烟雾弥漫的大海。",
-    source: "《隋书·经籍志》",
+    source: "隋书·经籍志",
     dynasty: "唐",
     note: "原出处栏误记宋"
   },
   {
     title: "妙手回春",
     text: "医道通乎仙道，妙手回春，生死人而肉白骨。",
-    source: "《类经图翼》",
+    source: "类经图翼",
     dynasty: "明",
     note: "原出处栏误记宋；中医典籍中为通行语"
   },
@@ -101,35 +101,35 @@ window.CHENGYU_SUPPORT = [
     title: "惜墨如金",
     text: "凡作诗要惜墨如金，择景要取精用弘。",
     translation: "凡作诗都要像爱惜金子一样爱惜笔墨，选取景物要精当而运用得充分。",
-    source: "《寓意编》",
+    source: "寓意编",
     dynasty: "明",
     note: "「李成惜墨如金」为画论旧语，此句为诗法通行表述"
   },
   {
     title: "言简意赅",
     text: "言简意赅，含蓄不尽。",
-    source: "《随园诗话》",
+    source: "随园诗话",
     dynasty: "清",
     note: "原出处栏误记宋"
   },
   {
     title: "蛛丝马迹",
     text: "循蛛丝马迹以求之，未有不得其迹者。",
-    source: "《酉阳杂俎》",
+    source: "酉阳杂俎",
     dynasty: "唐",
     note: "笔记杂纂中屡见，此为通行句式"
   },
   {
     title: "忘恩负义",
     text: "背恩忘义，人神共弃。",
-    source: "《魏书·萧宝夤传》",
+    source: "魏书·萧宝夤传",
     dynasty: "两晋南北朝",
     note: "「背恩忘义」即「忘恩负义」"
   },
   {
     title: "魂不附体",
     text: "闻变惊起，魂不附体。",
-    source: "《南史·谢朓传》",
+    source: "南史·谢朓传",
     dynasty: "两晋南北朝",
     note: "史传纪乱中为通行语"
   },
@@ -137,35 +137,35 @@ window.CHENGYU_SUPPORT = [
     title: "少见多怪",
     text: "少所见，多所怪，睹橐驼，言马肿背。",
     translation: "见的东西少，觉得奇怪的事就多，看到骆驼，就说马背上肿起了一块。",
-    source: "《牟子理惑论》",
+    source: "牟子理惑论",
     dynasty: "东汉",
     note: "原句为四三言，成语「少见多怪」由此凝成"
   },
   {
     title: "独树一帜",
     text: "独树一帜，自成一家。",
-    source: "《随园诗话》",
+    source: "随园诗话",
     dynasty: "清",
     note: "论诗用语，原出处栏未记；另见《宋史》「独树一帜」之评"
   },
   {
     title: "家喻户晓",
     text: "家喻户晓，人人皆知。",
-    source: "《缴郑熙等免罪》",
+    source: "缴郑熙等免罪",
     dynasty: "宋",
     note: "「家喻而户晓」见于苏轼制诏，此为后世通行句式"
   },
   {
     title: "千人一面",
     text: "千人一面，千部一腔。",
-    source: "《阅微草堂笔记》",
+    source: "阅微草堂笔记",
     dynasty: "清",
     note: "评小说戏曲语，亦见《红楼梦》第一回"
   },
   {
     title: "如痴如醉",
     text: "如痴如醉，迷恋不已。",
-    source: "《洞仙歌》",
+    source: "洞仙歌",
     dynasty: "宋",
     note: "词曲中为通行语"
   },
@@ -173,7 +173,7 @@ window.CHENGYU_SUPPORT = [
     title: "徒劳无功",
     text: "举事而不时，力尽而功不成，此劳而无功也。",
     translation: "做事不合时机，力气耗尽而功业不成，这就是白费气力而没有成效。",
-    source: "《管子·形势》",
+    source: "管子·形势",
     dynasty: "春秋",
     note: "成语「徒劳无功」由此凝成"
   },
@@ -181,14 +181,14 @@ window.CHENGYU_SUPPORT = [
     title: "一举两得",
     text: "一举而两得之，不如一举而两失之。",
     translation: "一个举动同时得到两样好处，也胜过一个举动同时失掉两样。",
-    source: "《晋书·束皙传》",
+    source: "晋书·束皙传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记唐"
   },
   {
     title: "自投罗网",
     text: "飞蛾扑火，自投罗网。",
-    source: "《野客丛书》",
+    source: "野客丛书",
     dynasty: "宋",
     note: "宋人笔记中为通行语"
   },
@@ -196,14 +196,14 @@ window.CHENGYU_SUPPORT = [
     title: "坐以待毙",
     text: "战而不胜，犹可退守；坐以待毙，非计之得也。",
     translation: "作战而不能取胜，还可以退守；坐着等死，不是好办法。",
-    source: "《管子·参患》",
+    source: "管子·参患",
     dynasty: "春秋",
     note: "原出处栏作《管子·参患》，「坐以待毙」为后世通行表述"
   },
   {
     title: "直言不讳",
     text: "臣闻忠臣之事君也，直言不讳。",
-    source: "《晋书·刘波传》",
+    source: "晋书·刘波传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记唐"
   },
@@ -211,14 +211,14 @@ window.CHENGYU_SUPPORT = [
     title: "自食其果",
     text: "天作孽，犹可违；自作孽，不可逭。",
     translation: "上天降下的灾祸还可以躲开，自己造成的罪孽却逃不掉。",
-    source: "《尚书·太甲上》",
+    source: "尚书·太甲上",
     dynasty: "上古传说",
     note: "成语取「自作孽不可逭」之意"
   },
   {
     title: "自食其力",
     text: "自力更生，自食其力。",
-    source: "《礼记·礼器》",
+    source: "礼记·礼器",
     dynasty: "战国",
     note: "「食力」见于《礼记》「庶人食力」，成语由此"
   },
@@ -226,7 +226,7 @@ window.CHENGYU_SUPPORT = [
     title: "座无虚席",
     text: "每讲论，座无虚席。",
     translation: "每次讲学论道，座位没有空着的。",
-    source: "《晋书·王浑传》",
+    source: "晋书·王浑传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记唐"
   },
@@ -234,21 +234,21 @@ window.CHENGYU_SUPPORT = [
     title: "长篇累牍",
     text: "长篇累牍，繁而不杀。",
     translation: "篇幅很长、文字繁多，繁富而不加剪裁。",
-    source: "《明史·文苑传》",
+    source: "明史·文苑传",
     dynasty: "清",
     note: "「连篇累牍」见《隋书·李谔传》；此处取「长篇」一语"
   },
   {
     title: "口诛笔伐",
     text: "口诛笔伐，声罪致讨。",
-    source: "《史记·秦始皇本纪》",
+    source: "史记·秦始皇本纪",
     dynasty: "西汉",
     note: "语出贾谊《过秦论》「仁义不施而攻守之势异也」之论，成语后起"
   },
   {
     title: "别出心裁",
     text: "别出心裁，不落窠臼。",
-    source: "《水浒传》",
+    source: "水浒传",
     dynasty: "明",
     note: "评点用语，明代小说评点中屡见"
   },
@@ -256,84 +256,84 @@ window.CHENGYU_SUPPORT = [
     title: "不刊之论",
     text: "是悬诸日月不刊之书也。",
     translation: "这是可以悬挂在日月之下、不可更改的著作。",
-    source: "《答扬雄书》",
+    source: "答扬雄书",
     dynasty: "西汉",
     note: "刘歆语；成语「不刊之论」由此"
   },
   {
     title: "才思敏捷",
     text: "才思敏捷，下笔成章。",
-    source: "《旧唐书·陆贽传》",
+    source: "旧唐书·陆贽传",
     dynasty: "唐",
     note: "史传评语，原出处栏同"
   },
   {
     title: "沧海横流",
     text: "沧海横流，方显英雄本色。",
-    source: "《晋书·王尼传》",
+    source: "晋书·王尼传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记唐；「沧海横流」见郭璞《游仙诗》"
   },
   {
     title: "曾几何时",
     text: "曾几何时，而公之墓木已拱。",
-    source: "《祭盛侍郎文》",
+    source: "祭盛侍郎文",
     dynasty: "宋",
     note: "「曾几何时」见于韩愈《祭十二郎文》「几何不从汝而死也」之句式，此为通行表述"
   },
   {
     title: "大吹大擂",
     text: "大吹大擂，饮酒作乐。",
-    source: "《水浒传》",
+    source: "水浒传",
     dynasty: "明",
     note: "明代小说中为通行语"
   },
   {
     title: "断壁残垣",
     text: "断壁残垣，荒草萋萋。",
-    source: "《桃花扇》",
+    source: "桃花扇",
     dynasty: "清",
     note: "戏曲中为通行语"
   },
   {
     title: "繁文缛节",
     text: "繁文缛节，礼节繁多。",
-    source: "《史记·礼书》",
+    source: "史记·礼书",
     dynasty: "西汉",
     note: "「繁文」见《史记·礼书》「文貌繁，情欲省」之论，成语后起"
   },
   {
     title: "方兴未艾",
     text: "方兴未艾，未有止息。",
-    source: "《答吕伯恭书》",
+    source: "答吕伯恭书",
     dynasty: "宋",
     note: "朱熹书信中为通行语"
   },
   {
     title: "浮想联翩",
     text: "浮想联翩，思接千载。",
-    source: "《文赋》",
+    source: "文赋",
     dynasty: "两晋南北朝",
     note: "陆机《文赋》「精骛八极，心游万仞」之意，成语后起"
   },
   {
     title: "高屋建瓴",
     text: "譬犹居高屋之上建瓴水也。",
-    source: "《史记·高祖本纪》",
+    source: "史记·高祖本纪",
     dynasty: "西汉",
     note: "原文作「譬犹居高屋之上建瓴水也」，成语由此"
   },
   {
     title: "功败垂成",
     text: "降龄何促，功败垂成。",
-    source: "《晋书·谢玄传》",
+    source: "晋书·谢玄传",
     dynasty: "两晋南北朝",
     note: "原出处栏误记唐"
   },
   {
     title: "骇人听闻",
     text: "骇人听闻，惊世骇俗。",
-    source: "《隋书·音乐志》",
+    source: "隋书·音乐志",
     dynasty: "唐",
     note: "原出处栏误记唐，出处同"
   },
@@ -341,7 +341,7 @@ window.CHENGYU_SUPPORT = [
     title: "集腋成裘",
     text: "狐白之裘，盖非一狐之腋也。",
     translation: "狐腋白毛做成的皮袍，不是一只狐狸的腋毛就能做成的。",
-    source: "《慎子·知忠》",
+    source: "慎子·知忠",
     dynasty: "战国",
     note: "《墨子·亲士》亦有「千镒之裘，非一狐之白也」"
   },
@@ -349,84 +349,84 @@ window.CHENGYU_SUPPORT = [
     title: "金科玉律",
     text: "懿律嘉量，金科玉条。",
     translation: "美好的律令、标准的量器，如金铸的科条、玉刻的律文。",
-    source: "《剧秦美新》",
+    source: "剧秦美新",
     dynasty: "西汉",
     note: "扬雄文；成语作「金科玉律」，由「金科玉条」来"
   },
   {
     title: "举步维艰",
     text: "举步维艰，进退维谷。",
-    source: "《宋书·谢庄传》",
+    source: "宋书·谢庄传",
     dynasty: "两晋南北朝",
     note: "史传奏疏中为通行语"
   },
   {
     title: "苦心孤诣",
     text: "苦心孤诣，深造自得。",
-    source: "《与汪孟慈书》",
+    source: "与汪孟慈书",
     dynasty: "清",
     note: "清人书信中为通行语；「孤诣」谓独到之境"
   },
   {
     title: "寥若晨星",
     text: "今之存者，寥若晨星。",
-    source: "《祭柳子厚文》",
+    source: "祭柳子厚文",
     dynasty: "唐",
     note: "韩愈祭文中为通行语"
   },
   {
     title: "屡试不爽",
     text: "屡试不爽，百无一失。",
-    source: "《与友人论文书》",
+    source: "与友人论文书",
     dynasty: "清",
     note: "「不爽」谓不差；清人文集评点中为通行语"
   },
   {
     title: "莫衷一是",
     text: "众说纷纭，莫衷一是。",
-    source: "《清史稿》",
+    source: "清史稿",
     dynasty: "清",
     note: "史传论赞中为通行语"
   },
   {
     title: "泥沙俱下",
     text: "泥沙俱下，玉石杂陈。",
-    source: "《随园诗话》",
+    source: "随园诗话",
     dynasty: "清",
     note: "论诗用语；亦见《二十年目睹之怪现状》"
   },
   {
     title: "披沙拣金",
     text: "披沙拣金，往往见宝。",
-    source: "《世说新语·文学》",
+    source: "世说新语·文学",
     dynasty: "两晋南北朝",
     note: "原文作「披沙拣金，往往见宝」，成语由此"
   },
   {
     title: "穷兵黩武",
     text: "穷兵黩武，动费万计。",
-    source: "《三国志·吴书·陆抗传》",
+    source: "三国志·吴书·陆抗传",
     dynasty: "两晋南北朝",
     note: "陆抗上疏之语；《三国志》成书于两晋南北朝 —— 全库朝代栏记成书朝代，故归两晋南北朝"
   },
   {
     title: "趋之若鹜",
     text: "趋之若鹜，如蚁附膻。",
-    source: "《明史·萧如薰传》",
+    source: "明史·萧如薰传",
     dynasty: "清",
     note: "《明史》为清人所修，「趋之若鹜」于此前后定型"
   },
   {
     title: "忍俊不禁",
     text: "忍俊不禁，一笑粲然。",
-    source: "《太常引》",
+    source: "太常引",
     dynasty: "宋",
     note: "宋词中为通行语"
   },
   {
     title: "素昧平生",
     text: "素昧平生，忽承垂顾。",
-    source: "《赠田叟》",
+    source: "赠田叟",
     dynasty: "唐",
     note: "唐诗与书简中为通行语"
   },
@@ -434,14 +434,14 @@ window.CHENGYU_SUPPORT = [
     title: "条分缕析",
     text: "条分缕析，脉络分明。",
     translation: "一条条地分析，脉络清楚分明。",
-    source: "《进学解》",
+    source: "进学解",
     dynasty: "唐",
     note: "韩愈文「记事者必提其要，纂言者必钩其玄」之意，成语后起"
   },
   {
     title: "蔚然成风",
     text: "蔚然成风，相沿成习。",
-    source: "《文心雕龙·时序》",
+    source: "文心雕龙·时序",
     dynasty: "两晋南北朝",
     note: "「蔚然」见《文心雕龙》；成语于清代定型"
   },
@@ -449,7 +449,7 @@ window.CHENGYU_SUPPORT = [
     title: "无可厚非",
     text: "未可厚非。",
     translation: "不可以过分指责。",
-    source: "《汉书·王莽传》",
+    source: "汉书·王莽传",
     dynasty: "东汉",
     note: "原文作「未可厚非」，成语作「无可厚非」"
   },
@@ -457,7 +457,7 @@ window.CHENGYU_SUPPORT = [
     title: "相形见绌",
     text: "相形见绌，优劣自明。",
     translation: "两相比较就显得逊色，优劣自然分明。",
-    source: "《文心雕龙·时序》",
+    source: "文心雕龙·时序",
     dynasty: "两晋南北朝",
     note: "「相形」见《文心雕龙》；成语于清代定型"
   },
@@ -465,14 +465,14 @@ window.CHENGYU_SUPPORT = [
     title: "信手拈来",
     text: "信手拈来，皆成妙谛。",
     translation: "随手取用，都成为精妙的意趣。",
-    source: "《题画》",
+    source: "题画",
     dynasty: "宋",
     note: "宋人题画诗中为通行语"
   },
   {
     title: "休戚与共",
     text: "休戚与共，同甘共苦。",
-    source: "《晋书·王导传》",
+    source: "晋书·王导传",
     dynasty: "两晋南北朝",
     note: "「休戚」见《晋书》与《国语》；「与共」为后世所增"
   },
@@ -480,14 +480,14 @@ window.CHENGYU_SUPPORT = [
     title: "喧宾夺主",
     text: "喧宾夺主，反客为主。",
     translation: "客人的声势压过主人，反倒成了主人。",
-    source: "《二十年目睹之怪现状》",
+    source: "二十年目睹之怪现状",
     dynasty: "清",
     note: "晚清小说中为通行语"
   },
   {
     title: "一劳永逸",
     text: "一劳永逸，长治久安。",
-    source: "《谏太宗十思疏》",
+    source: "谏太宗十思疏",
     dynasty: "唐",
     note: "「一劳永逸」见《后汉书·班超传》「一劳而久逸」，魏徵疏中作此语"
   },
@@ -495,7 +495,7 @@ window.CHENGYU_SUPPORT = [
     title: "振聋发聩",
     text: "振聋发聩，警醒世人。",
     translation: "巨响能使耳聋的人也听见，警醒世间的糊涂人。",
-    source: "《随园诗话》",
+    source: "随园诗话",
     dynasty: "清",
     note: "「发聋振聩」见清代文集，成语作「振聋发聩」"
   },
@@ -503,14 +503,14 @@ window.CHENGYU_SUPPORT = [
     title: "正本清源",
     text: "正本清源，端本澄源。",
     translation: "从根本处整顿，从源头上澄清。",
-    source: "《晋书·武帝纪》",
+    source: "晋书·武帝纪",
     dynasty: "唐",
     note: "《晋书》为唐人所修 —— 全库朝代栏记成书朝代，故归唐"
   },
   {
     title: "钟灵毓秀",
     text: "钟灵毓秀，人杰地灵。",
-    source: "《红楼梦》",
+    source: "红楼梦",
     dynasty: "清",
     note: "「钟灵毓秀」见《红楼梦》与清人游记"
   },
@@ -518,28 +518,28 @@ window.CHENGYU_SUPPORT = [
     title: "左支右绌",
     text: "左支右绌，力不从心。",
     translation: "左边支撑了右边又不足，力气跟不上心意。",
-    source: "《史记·周本纪》",
+    source: "史记·周本纪",
     dynasty: "西汉",
     note: "「支绌」为清代通行语；成语于晚清定型"
   },
   {
     title: "安之若素",
     text: "安之若素，泰然处之。",
-    source: "《庄子·人间世》",
+    source: "庄子·人间世",
     dynasty: "战国",
     note: "「安之若命」见《庄子·人间世》，成语作「安之若素」"
   },
   {
     title: "众志成城",
     text: "故谚曰：「众心成城，众口铄金。」",
-    source: "《国语·周语下》",
+    source: "国语·周语下",
     dynasty: "春秋",
     note: "成语作「众志成城」，「众心成城」是其语本；同组「众口铄金」另取《史记·鲁仲连邹阳列传》邹阳《狱中上书》「众口铄金，积毁销骨」"
   },
   {
     title: "众口铄金",
     text: "故女无美恶，入宫见妒；士无贤不肖，入朝见嫉……众口铄金，积毁销骨。",
-    source: "《史记·鲁仲连邹阳列传》",
+    source: "史记·鲁仲连邹阳列传",
     dynasty: "西汉",
     translation: "所以女子无论美丑，一入宫廷就遭嫉妒；士人无论贤与不肖，一入朝廷就被嫉恨……众人的嘴足以熔化金子，一次次的毁谤足以销蚀骨头。",
     note: "此句为「众口铄金」更权威、更早的书证（邹阳《狱中上书》）；原先与「众志成城」共用《国语》那一条谚语"
@@ -548,7 +548,7 @@ window.CHENGYU_SUPPORT = [
     title: "不容置喙",
     text: "不容置喙，无由辩白。",
     translation: "不允许插嘴，没有机会辩白。",
-    source: "《宋史》",
+    source: "宋史",
     dynasty: "宋",
     note: "史传奏疏中为通行语"
   },
@@ -556,21 +556,21 @@ window.CHENGYU_SUPPORT = [
     title: "不足为训",
     text: "不足为训，未可为准。",
     translation: "不值得作为准则，不可以拿来当标准。",
-    source: "《左传·昭公二十年》",
+    source: "左传·昭公二十年",
     dynasty: "春秋",
     note: "「训」谓法则；成语于明清定型"
   },
   {
     title: "矫揉造作",
     text: "矫揉造作，失其自然。",
-    source: "《文心雕龙》",
+    source: "文心雕龙",
     dynasty: "两晋南北朝",
     note: "「矫揉」见《文心雕龙·定势》，成语由此"
   },
   {
     title: "旁征博引",
     text: "旁征博引，辞采飞扬。",
-    source: "《文心雕龙》",
+    source: "文心雕龙",
     dynasty: "两晋南北朝",
     note: "「旁征」见《文心雕龙》；成语于清代定型"
   }

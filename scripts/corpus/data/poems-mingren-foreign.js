@@ -9,7 +9,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古代以色列",
     author: "摩西",
-    source: "《摩西》·约前 13 世纪",
+    source: "摩西·约前 13 世纪",
     excerpt: "十诫与出埃及的先知"
   },
   {
@@ -22,7 +22,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古波斯",
     author: "琐罗亚斯德",
-    source: "《琐罗亚斯德》·约前 628—约前 551",
+    source: "琐罗亚斯德·约前 628—约前 551",
     excerpt: "拜火教的创立者"
   },
   {
@@ -35,7 +35,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古印度",
     author: "马哈维拉",
-    source: "《马哈维拉》·约前 599—约前 527",
+    source: "马哈维拉·约前 599—约前 527",
     excerpt: "耆那教的最后一位祖师"
   },
   {
@@ -48,7 +48,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "毕达哥拉斯",
-    source: "《毕达哥拉斯》·约前 570—约前 495",
+    source: "毕达哥拉斯·约前 570—约前 495",
     excerpt: "勾股定理与「万物皆数」，数学作为信仰的开端"
   },
   {
@@ -61,7 +61,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古印度",
     author: "释迦牟尼",
-    source: "《释迦牟尼》·约前 563—约前 483",
+    source: "释迦牟尼·约前 563—约前 483",
     excerpt: "佛教的创立者"
   },
   {
@@ -74,7 +74,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "赫拉克利特",
-    source: "《赫拉克利特》·约前 535—前 475",
+    source: "赫拉克利特·约前 535—前 475",
     excerpt: "「人不能两次踏入同一条河流」"
   },
   {
@@ -87,7 +87,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "埃斯库罗斯",
-    source: "《埃斯库罗斯》·约前 525—前 456",
+    source: "埃斯库罗斯·约前 525—前 456",
     excerpt: "「悲剧之父」，《被缚的普罗米修斯》"
   },
   {
@@ -100,7 +100,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊雅典",
     author: "地米斯托克利",
-    source: "《地米斯托克利》·约前 524—约前 459",
+    source: "地米斯托克利·约前 524—约前 459",
     excerpt: "萨拉米斯海战"
   },
   {
@@ -113,7 +113,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "索福克勒斯",
-    source: "《索福克勒斯》·约前 496—前 406",
+    source: "索福克勒斯·约前 496—前 406",
     excerpt: "《俄狄浦斯王》，「戏剧艺术的荷马」"
   },
   {
@@ -126,7 +126,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "芝诺",
-    source: "《芝诺》·约前 490—约前 430",
+    source: "芝诺·约前 490—约前 430",
     excerpt: "悖论的发明者"
   },
   {
@@ -139,7 +139,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "欧里庇得斯",
-    source: "《欧里庇得斯》·约前 480—前 406",
+    source: "欧里庇得斯·约前 480—前 406",
     excerpt: "《美狄亚》，把悲剧转向人的心理"
   },
   {
@@ -152,7 +152,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "米隆",
-    source: "《米隆》·约前 480—约前 440",
+    source: "米隆·约前 480—约前 440",
     excerpt: "《掷铁饼者》，古典雕塑的动感典范"
   },
   {
@@ -165,7 +165,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "菲迪亚斯",
-    source: "《菲迪亚斯》·约前 480—前 430",
+    source: "菲迪亚斯·约前 480—前 430",
     excerpt: "帕特农神庙的雕塑总监，古典雕塑的高峰"
   },
   {
@@ -178,7 +178,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "波留克列特斯",
-    source: "《波留克列特斯》·约前 480—约前 420",
+    source: "波留克列特斯·约前 480—约前 420",
     excerpt: "《持矛者》与《法则》，人体比例的规范者"
   },
   {
@@ -191,7 +191,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "苏格拉底",
-    source: "《苏格拉底》·前 469—前 399",
+    source: "苏格拉底·前 469—前 399",
     excerpt: "西方哲学的奠基者"
   },
   {
@@ -204,7 +204,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "德谟克利特",
-    source: "《德谟克利特》·约前 460—约前 370",
+    source: "德谟克利特·约前 460—约前 370",
     excerpt: "原子论的首倡者"
   },
   {
@@ -217,7 +217,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "希波克拉底",
-    source: "《希波克拉底》·约前 460—约前 370",
+    source: "希波克拉底·约前 460—约前 370",
     excerpt: "医学之父"
   },
   {
@@ -230,7 +230,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "阿里斯托芬",
-    source: "《阿里斯托芬》·约前 450—约前 385",
+    source: "阿里斯托芬·约前 450—约前 385",
     excerpt: "「喜剧之父」，《鸟》《云》《蛙》"
   },
   {
@@ -243,7 +243,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "色诺芬",
-    source: "《色诺芬》·约前 430—约前 354",
+    source: "色诺芬·约前 430—约前 354",
     excerpt: "万人远征 · 退军记"
   },
   {
@@ -256,7 +256,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "柏拉图",
-    source: "《柏拉图》·前 427—前 347",
+    source: "柏拉图·前 427—前 347",
     excerpt: "理念论的创立者"
   },
   {
@@ -269,7 +269,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "亚里士多德",
-    source: "《亚里士多德》·前 384—前 322",
+    source: "亚里士多德·前 384—前 322",
     excerpt: "百科全书式的哲学家"
   },
   {
@@ -282,7 +282,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古马其顿",
     author: "亚历山大",
-    source: "《亚历山大》·前 356—前 323",
+    source: "亚历山大·前 356—前 323",
     excerpt: "十三年 · 希腊化世界"
   },
   {
@@ -295,7 +295,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "伊壁鸠鲁",
-    source: "《伊壁鸠鲁》·前 341—前 270",
+    source: "伊壁鸠鲁·前 341—前 270",
     excerpt: "「快乐即身体的无痛苦与灵魂的无纷扰」"
   },
   {
@@ -308,7 +308,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "欧几里得",
-    source: "《欧几里得》·约前 330—约前 275",
+    source: "欧几里得·约前 330—约前 275",
     excerpt: "公理化方法的开创者"
   },
   {
@@ -321,7 +321,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "阿基米德",
-    source: "《阿基米德》·前 287—前 212",
+    source: "阿基米德·前 287—前 212",
     excerpt: "古代最伟大的科学家"
   },
   {
@@ -334,7 +334,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "阿波罗尼奥斯",
-    source: "《阿波罗尼奥斯》·约前 262—约前 190",
+    source: "阿波罗尼奥斯·约前 262—约前 190",
     excerpt: "《圆锥曲线论》，圆锥曲线理论的奠基"
   },
   {
@@ -347,7 +347,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古迦太基",
     author: "汉尼拔",
-    source: "《汉尼拔》·前 247—约前 183",
+    source: "汉尼拔·前 247—约前 183",
     excerpt: "坎尼 · 包围战的化身"
   },
   {
@@ -360,7 +360,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "大西庇阿",
-    source: "《大西庇阿》·前 236—前 183",
+    source: "大西庇阿·前 236—前 183",
     excerpt: "扎马之战 · 击败汉尼拔"
   },
   {
@@ -373,7 +373,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "西塞罗",
-    source: "《西塞罗》·前 106—前 43",
+    source: "西塞罗·前 106—前 43",
     excerpt: "拉丁散文的最高峰"
   },
   {
@@ -386,7 +386,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "恺撒",
-    source: "《恺撒》·前 100—前 44",
+    source: "恺撒·前 100—前 44",
     excerpt: "我来我见我征服"
   },
   {
@@ -399,7 +399,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "维吉尔",
-    source: "《维吉尔》·前 70—前 19",
+    source: "维吉尔·前 70—前 19",
     excerpt: "《埃涅阿斯纪》，罗马的史诗"
   },
   {
@@ -412,7 +412,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "贺拉斯",
-    source: "《贺拉斯》·前 65—前 8",
+    source: "贺拉斯·前 65—前 8",
     excerpt: "《诗艺》，欧洲古典主义文论的源头"
   },
   {
@@ -425,7 +425,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "奥维德",
-    source: "《奥维德》·前 43—17",
+    source: "奥维德·前 43—17",
     excerpt: "《变形记》，希腊罗马神话的集大成"
   },
   {
@@ -438,7 +438,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "荷马",
-    source: "《荷马》·约前 9—前 8 世纪",
+    source: "荷马·约前 9—前 8 世纪",
     excerpt: "《伊利亚特》与《奥德赛》，西方文学的源头"
   },
   {
@@ -451,7 +451,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "罗马帝国犹太行省",
     author: "耶稣",
-    source: "《耶稣》·约前 4—公元 30",
+    source: "耶稣·约前 4—公元 30",
     excerpt: "基督教的创立者"
   },
   {
@@ -464,7 +464,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "塞内加",
-    source: "《塞内加》·约前 4—65",
+    source: "塞内加·约前 4—65",
     excerpt: "斯多葛哲学的代表，《道德书简》"
   },
   {
@@ -477,7 +477,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "罗马帝国",
     author: "圣保罗",
-    source: "《圣保罗》·约公元 5—67",
+    source: "圣保罗·约公元 5—67",
     excerpt: "把基督教推向世界的人"
   },
   {
@@ -490,7 +490,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "托勒密",
-    source: "《托勒密》·约 90—约 168",
+    source: "托勒密·约 90—约 168",
     excerpt: "《天文学大成》，地心体系的集大成"
   },
   {
@@ -503,7 +503,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马",
     author: "马可·奥勒留",
-    source: "《马可·奥勒留》·121—180",
+    source: "马可·奥勒留·121—180",
     excerpt: "皇帝哲学家"
   },
   {
@@ -516,7 +516,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊 / 古罗马",
     author: "盖伦",
-    source: "《盖伦》·约 129—约 216",
+    source: "盖伦·约 129—约 216",
     excerpt: "古代医学的集大成者"
   },
   {
@@ -529,7 +529,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古希腊",
     author: "丢番图",
-    source: "《丢番图》·约 200—约 284",
+    source: "丢番图·约 200—约 284",
     excerpt: "《算术》的作者，不定方程与符号代数的先声"
   },
   {
@@ -542,7 +542,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古波斯",
     author: "摩尼",
-    source: "《摩尼》·216—276",
+    source: "摩尼·216—276",
     excerpt: "摩尼教（明教）的创始人"
   },
   {
@@ -555,7 +555,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "古罗马（后期）",
     author: "奥古斯丁",
-    source: "《奥古斯丁》·354—430",
+    source: "奥古斯丁·354—430",
     excerpt: "西方神学之父"
   },
   {
@@ -568,7 +568,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "东罗马",
     author: "查士丁尼",
-    source: "《查士丁尼》·约 482—565",
+    source: "查士丁尼·约 482—565",
     excerpt: "罗马法的集大成者"
   },
   {
@@ -581,7 +581,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "东罗马",
     author: "贝利撒留",
-    source: "《贝利撒留》·约 505—565",
+    source: "贝利撒留·约 505—565",
     excerpt: "最后一位罗马将军"
   },
   {
@@ -594,7 +594,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波斯",
     author: "阿维森纳",
-    source: "《阿维森纳》·980—1037",
+    source: "阿维森纳·980—1037",
     excerpt: "《医典》的作者，阿拉伯医学的顶峰"
   },
   {
@@ -607,7 +607,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国 / 罗马教廷",
     author: "乌尔班二世",
-    source: "《乌尔班二世》·约 1042—1099",
+    source: "乌尔班二世·约 1042—1099",
     excerpt: "十字军东征的号召者"
   },
   {
@@ -620,7 +620,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "埃及与叙利亚",
     author: "萨拉丁",
-    source: "《萨拉丁》·1137—1193",
+    source: "萨拉丁·1137—1193",
     excerpt: "哈丁角 · 收复耶路撒冷"
   },
   {
@@ -633,7 +633,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "蒙古",
     author: "成吉思汗",
-    source: "《成吉思汗》·1162—1227",
+    source: "成吉思汗·1162—1227",
     excerpt: "千户制 · 欧亚通道"
   },
   {
@@ -646,7 +646,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "斐波那契",
-    source: "《斐波那契》·约 1175—约 1250",
+    source: "斐波那契·约 1175—约 1250",
     excerpt: "阿拉伯数字与斐波那契数列的传入者"
   },
   {
@@ -659,7 +659,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "蒙古",
     author: "速不台",
-    source: "《速不台》·1176—1248",
+    source: "速不台·1176—1248",
     excerpt: "长子西征 · 大纵深迂回"
   },
   {
@@ -672,7 +672,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利（中世纪）",
     author: "阿奎那",
-    source: "《阿奎那》·1225—1274",
+    source: "阿奎那·1225—1274",
     excerpt: "经院哲学的顶峰"
   },
   {
@@ -685,7 +685,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "但丁",
-    source: "《但丁》·1265—1321",
+    source: "但丁·1265—1321",
     excerpt: "《神曲》，现代意大利语的奠基"
   },
   {
@@ -698,7 +698,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "乔托",
-    source: "《乔托》·约 1267—1337",
+    source: "乔托·约 1267—1337",
     excerpt: "文艺复兴绘画的先声，壁画中的人情与透视"
   },
   {
@@ -711,7 +711,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "彼特拉克",
-    source: "《彼特拉克》·1304—1374",
+    source: "彼特拉克·1304—1374",
     excerpt: "「人文主义之父」，《歌集》与十四行诗"
   },
   {
@@ -724,7 +724,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "薄伽丘",
-    source: "《薄伽丘》·1313—1375",
+    source: "薄伽丘·1313—1375",
     excerpt: "《十日谈》，欧洲近代小说的开端"
   },
   {
@@ -737,7 +737,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中亚帖木儿帝国",
     author: "帖木儿",
-    source: "《帖木儿》·1336—1405",
+    source: "帖木儿·1336—1405",
     excerpt: "安卡拉之战 · 未尝一败"
   },
   {
@@ -750,7 +750,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "乔叟",
-    source: "《乔叟》·约 1343—1400",
+    source: "乔叟·约 1343—1400",
     excerpt: "《坎特伯雷故事集》，英语诗歌的奠基"
   },
   {
@@ -763,7 +763,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "布鲁内莱斯基",
-    source: "《布鲁内莱斯基》·1377—1446",
+    source: "布鲁内莱斯基·1377—1446",
     excerpt: "佛罗伦萨大教堂穹顶，文艺复兴建筑的奠基"
   },
   {
@@ -776,7 +776,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "古腾堡",
-    source: "《古腾堡》·约 1398—1468",
+    source: "古腾堡·约 1398—1468",
     excerpt: "活字印刷术"
   },
   {
@@ -789,7 +789,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "阿尔伯蒂",
-    source: "《阿尔伯蒂》·1404—1472",
+    source: "阿尔伯蒂·1404—1472",
     excerpt: "《论建筑》，文艺复兴建筑理论的奠基"
   },
   {
@@ -802,7 +802,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "波提切利",
-    source: "《波提切利》·1445—1510",
+    source: "波提切利·1445—1510",
     excerpt: "《维纳斯的诞生》《春》"
   },
   {
@@ -815,7 +815,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "博斯",
-    source: "《博斯》·约 1450—1516",
+    source: "博斯·约 1450—1516",
     excerpt: "《人间乐园》，超现实想象的五百年前身"
   },
   {
@@ -828,7 +828,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "伊莎贝拉一世",
-    source: "《伊莎贝拉一世》·1451—1504",
+    source: "伊莎贝拉一世·1451—1504",
     excerpt: "资助哥伦布的天主教女王"
   },
   {
@@ -841,7 +841,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利 / 西班牙",
     author: "哥伦布",
-    source: "《哥伦布》·1451—1506",
+    source: "哥伦布·1451—1506",
     excerpt: "发现美洲新大陆"
   },
   {
@@ -854,7 +854,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "达·芬奇",
-    source: "《达·芬奇》·1452—1519",
+    source: "达·芬奇·1452—1519",
     excerpt: "《蒙娜丽莎》《最后的晚餐》，文艺复兴的万能之人"
   },
   {
@@ -867,7 +867,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利佛罗伦萨",
     author: "马基雅维利",
-    source: "《马基雅维利》·1469—1527",
+    source: "马基雅维利·1469—1527",
     excerpt: "近代政治学的开山"
   },
   {
@@ -880,7 +880,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "葡萄牙",
     author: "达·伽马",
-    source: "《达·伽马》·约 1469—1524",
+    source: "达·伽马·约 1469—1524",
     excerpt: "绕过好望角到印度"
   },
   {
@@ -893,7 +893,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "丢勒",
-    source: "《丢勒》·1471—1528",
+    source: "丢勒·1471—1528",
     excerpt: "版画与油画的北方针尖，《忧郁 I》《祈祷之手》"
   },
   {
@@ -906,7 +906,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰",
     author: "哥白尼",
-    source: "《哥白尼》·1473—1543",
+    source: "哥白尼·1473—1543",
     excerpt: "日心说 · 《天体运行论》"
   },
   {
@@ -919,7 +919,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "米开朗琪罗",
-    source: "《米开朗琪罗》·1475—1564",
+    source: "米开朗琪罗·1475—1564",
     excerpt: "《大卫》《创世记》天顶画，雕塑与绘画的双峰"
   },
   {
@@ -932,7 +932,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "皮萨罗",
-    source: "《皮萨罗》·约 1476—1541",
+    source: "皮萨罗·约 1476—1541",
     excerpt: "征服印加帝国"
   },
   {
@@ -945,7 +945,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "乔尔乔内",
-    source: "《乔尔乔内》·约 1477—1510",
+    source: "乔尔乔内·约 1477—1510",
     excerpt: "《暴风雨》《沉睡的维纳斯》，威尼斯画派的先驱"
   },
   {
@@ -958,7 +958,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "马丁·路德",
-    source: "《马丁·路德》·1483—1546",
+    source: "马丁·路德·1483—1546",
     excerpt: "宗教改革的开端"
   },
   {
@@ -971,7 +971,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "拉斐尔",
-    source: "《拉斐尔》·1483—1520",
+    source: "拉斐尔·1483—1520",
     excerpt: "《雅典学院》，文艺复兴三杰中最优美的一位"
   },
   {
@@ -984,7 +984,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "科尔特斯",
-    source: "《科尔特斯》·1485—1547",
+    source: "科尔特斯·1485—1547",
     excerpt: "征服阿兹特克帝国"
   },
   {
@@ -997,7 +997,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "提香",
-    source: "《提香》·约 1488—1576",
+    source: "提香·约 1488—1576",
     excerpt: "威尼斯画派的领袖，色彩的大师"
   },
   {
@@ -1010,7 +1010,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞士",
     author: "帕拉塞尔苏斯",
-    source: "《帕拉塞尔苏斯》·1493—1541",
+    source: "帕拉塞尔苏斯·1493—1541",
     excerpt: "医药化学的开创，把化学引入治疗"
   },
   {
@@ -1023,7 +1023,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉伯雷",
-    source: "《拉伯雷》·约 1494—1553",
+    source: "拉伯雷·约 1494—1553",
     excerpt: "《巨人传》，文艺复兴的狂欢精神"
   },
   {
@@ -1036,7 +1036,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "卡尔达诺",
-    source: "《卡尔达诺》·1501—1576",
+    source: "卡尔达诺·1501—1576",
     excerpt: "三次、四次方程解法的公布者，《大衍术》"
   },
   {
@@ -1049,7 +1049,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "帕拉第奥",
-    source: "《帕拉第奥》·1508—1580",
+    source: "帕拉第奥·1508—1580",
     excerpt: "《建筑四书》，「帕拉第奥式」影响欧美三百年"
   },
   {
@@ -1062,7 +1062,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国 / 日内瓦",
     author: "加尔文",
-    source: "《加尔文》·1509—1564",
+    source: "加尔文·1509—1564",
     excerpt: "加尔文宗 ·《基督教要义》"
   },
   {
@@ -1075,7 +1075,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "比利时",
     author: "维萨里",
-    source: "《维萨里》·1514—1564",
+    source: "维萨里·1514—1564",
     excerpt: "《人体的构造》，近代解剖学的奠基"
   },
   {
@@ -1088,7 +1088,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "丁托列托",
-    source: "《丁托列托》·1518—1594",
+    source: "丁托列托·1518—1594",
     excerpt: "《最后的晚餐》，威尼斯画派的最后一位巨人"
   },
   {
@@ -1101,7 +1101,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "勃鲁盖尔",
-    source: "《勃鲁盖尔》·约 1525—1569",
+    source: "勃鲁盖尔·约 1525—1569",
     excerpt: "《雪中猎人》《农民的婚礼》，风景与民俗画的巨匠"
   },
   {
@@ -1114,7 +1114,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "蒙田",
-    source: "《蒙田》·1533—1592",
+    source: "蒙田·1533—1592",
     excerpt: "《随笔集》，「我知道什么呢？」"
   },
   {
@@ -1127,7 +1127,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "韦达",
-    source: "《韦达》·1540—1603",
+    source: "韦达·1540—1603",
     excerpt: "代数符号化的开创，「韦达定理」"
   },
   {
@@ -1140,7 +1140,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "希腊 / 西班牙",
     author: "格列柯",
-    source: "《格列柯》·1541—1614",
+    source: "格列柯·1541—1614",
     excerpt: "《奥尔加斯伯爵的葬礼》，扭曲拉长的人物与火焰般的色彩"
   },
   {
@@ -1153,7 +1153,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "丹麦",
     author: "第谷·布拉赫",
-    source: "《第谷·布拉赫》·1546—1601",
+    source: "第谷·布拉赫·1546—1601",
     excerpt: "近代天文观测的最精确者，二十年的观测记录"
   },
   {
@@ -1166,7 +1166,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "塞万提斯",
-    source: "《塞万提斯》·1547—1616",
+    source: "塞万提斯·1547—1616",
     excerpt: "《堂吉诃德》，反骑士小说的骑士小说"
   },
   {
@@ -1179,7 +1179,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "培根",
-    source: "《培根》·1561—1626",
+    source: "培根·1561—1626",
     excerpt: "「知识就是力量」，近代归纳法的奠基"
   },
   {
@@ -1192,7 +1192,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《莎士比亚》·1564—1616",
+    source: "莎士比亚·1564—1616",
     excerpt: "三十七部剧作与一百五十余首十四行诗"
   },
   {
@@ -1205,7 +1205,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "伽利略",
-    source: "《伽利略》·1564—1642",
+    source: "伽利略·1564—1642",
     excerpt: "近代科学之父 · 望远镜"
   },
   {
@@ -1218,7 +1218,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "蒙特威尔第",
-    source: "《蒙特威尔第》·1567—1643",
+    source: "蒙特威尔第·1567—1643",
     excerpt: "歌剧之父"
   },
   {
@@ -1231,7 +1231,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "开普勒",
-    source: "《开普勒》·1571—1630",
+    source: "开普勒·1571—1630",
     excerpt: "行星运动三定律，《新天文学》"
   },
   {
@@ -1244,7 +1244,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "比利时",
     author: "鲁本斯",
-    source: "《鲁本斯》·1577—1640",
+    source: "鲁本斯·1577—1640",
     excerpt: "巴洛克绘画的巨匠，《劫夺吕西普的女儿》"
   },
   {
@@ -1257,7 +1257,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "哈维",
-    source: "《哈维》·1578—1657",
+    source: "哈维·1578—1657",
     excerpt: "血液循环的发现者"
   },
   {
@@ -1270,7 +1270,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "格劳秀斯",
-    source: "《格劳秀斯》·1583—1645",
+    source: "格劳秀斯·1583—1645",
     excerpt: "国际法之父"
   },
   {
@@ -1283,7 +1283,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "黎塞留",
-    source: "《黎塞留》·1585—1642",
+    source: "黎塞留·1585—1642",
     excerpt: "国家理由 · 均势外交"
   },
   {
@@ -1296,7 +1296,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "古斯塔夫二世",
-    source: "《古斯塔夫二世》·1594—1632",
+    source: "古斯塔夫二世·1594—1632",
     excerpt: "北方雄狮 · 近代军制的起点"
   },
   {
@@ -1309,7 +1309,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "笛卡尔",
-    source: "《笛卡尔》·1596—1650",
+    source: "笛卡尔·1596—1650",
     excerpt: "「我思故我在」，解析几何的创立者"
   },
   {
@@ -1322,7 +1322,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "克伦威尔",
-    source: "《克伦威尔》·1599—1658",
+    source: "克伦威尔·1599—1658",
     excerpt: "共和实验的执行者"
   },
   {
@@ -1335,7 +1335,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "比利时",
     author: "凡·戴克",
-    source: "《凡·戴克》·1599—1641",
+    source: "凡·戴克·1599—1641",
     excerpt: "英国宫廷肖像画的奠基者"
   },
   {
@@ -1348,7 +1348,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "委拉斯开兹",
-    source: "《委拉斯开兹》·1599—1660",
+    source: "委拉斯开兹·1599—1660",
     excerpt: "《宫娥》《纺织女》，西班牙黄金时代的宫廷画家"
   },
   {
@@ -1361,7 +1361,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "费马",
-    source: "《费马》·1601—1665",
+    source: "费马·1601—1665",
     excerpt: "「费马大定理」与解析几何的先驱，业余数学家之王"
   },
   {
@@ -1374,7 +1374,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "伦勃朗",
-    source: "《伦勃朗》·1606—1669",
+    source: "伦勃朗·1606—1669",
     excerpt: "《夜巡》《自画像》系列，光与影的心理肖像"
   },
   {
@@ -1387,7 +1387,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "密尔顿",
-    source: "《密尔顿》·1608—1674",
+    source: "密尔顿·1608—1674",
     excerpt: "《失乐园》，失明后口述完成"
   },
   {
@@ -1400,7 +1400,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "莫里哀",
-    source: "《莫里哀》·1622—1673",
+    source: "莫里哀·1622—1673",
     excerpt: "《伪君子》《悭吝人》，法国古典喜剧的创立"
   },
   {
@@ -1413,7 +1413,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "帕斯卡",
-    source: "《帕斯卡》·1623—1662",
+    source: "帕斯卡·1623—1662",
     excerpt: "射影几何与概率论的奠基，《思想录》"
   },
   {
@@ -1426,7 +1426,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "配第",
-    source: "《配第》·1623—1687",
+    source: "配第·1623—1687",
     excerpt: "《政治算术》"
   },
   {
@@ -1439,7 +1439,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "波义耳",
-    source: "《波义耳》·1627—1691",
+    source: "波义耳·1627—1691",
     excerpt: "近代化学的奠基，《怀疑派化学家》"
   },
   {
@@ -1452,7 +1452,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "惠更斯",
-    source: "《惠更斯》·1629—1695",
+    source: "惠更斯·1629—1695",
     excerpt: "摆钟的发明者，光的波动说的早期提出者"
   },
   {
@@ -1465,7 +1465,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "洛克",
-    source: "《洛克》·1632—1704",
+    source: "洛克·1632—1704",
     excerpt: "「白板说」，经验主义与自由主义的源头"
   },
   {
@@ -1478,7 +1478,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "斯宾诺莎",
-    source: "《斯宾诺莎》·1632—1677",
+    source: "斯宾诺莎·1632—1677",
     excerpt: "磨镜片的哲学家"
   },
   {
@@ -1491,7 +1491,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "列文虎克",
-    source: "《列文虎克》·1632—1723",
+    source: "列文虎克·1632—1723",
     excerpt: "发现微生物"
   },
   {
@@ -1504,7 +1504,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "维米尔",
-    source: "《维米尔》·1632—1675",
+    source: "维米尔·1632—1675",
     excerpt: "《戴珍珠耳环的少女》《倒牛奶的女仆》"
   },
   {
@@ -1517,7 +1517,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "胡克",
-    source: "《胡克》·1635—1703",
+    source: "胡克·1635—1703",
     excerpt: "「胡克定律」与细胞的命名者"
   },
   {
@@ -1530,7 +1530,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉辛",
-    source: "《拉辛》·1639—1699",
+    source: "拉辛·1639—1699",
     excerpt: "《费德尔》《安德洛玛克》，古典悲剧的巅峰"
   },
   {
@@ -1543,7 +1543,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "牛顿",
-    source: "《牛顿》·1643—1727",
+    source: "牛顿·1643—1727",
     excerpt: "经典力学的奠基者"
   },
   {
@@ -1556,7 +1556,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "莱布尼兹",
-    source: "《莱布尼兹》·1646—1716",
+    source: "莱布尼兹·1646—1716",
     excerpt: "微积分与二进制的发明者"
   },
   {
@@ -1569,7 +1569,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "哈雷",
-    source: "《哈雷》·1656—1742",
+    source: "哈雷·1656—1742",
     excerpt: "哈雷彗星回归的预言者"
   },
   {
@@ -1582,7 +1582,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "笛福",
-    source: "《笛福》·约 1660—1731",
+    source: "笛福·约 1660—1731",
     excerpt: "《鲁滨逊漂流记》，英国小说的开端"
   },
   {
@@ -1595,7 +1595,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "斯威夫特",
-    source: "《斯威夫特》·1667—1745",
+    source: "斯威夫特·1667—1745",
     excerpt: "《格列佛游记》，讽刺文学的经典"
   },
   {
@@ -1608,7 +1608,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "维瓦尔第",
-    source: "《维瓦尔第》·1678—1741",
+    source: "维瓦尔第·1678—1741",
     excerpt: "《四季》"
   },
   {
@@ -1621,7 +1621,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "巴赫",
-    source: "《巴赫》·1685—1750",
+    source: "巴赫·1685—1750",
     excerpt: "「西方音乐之父」，《勃兰登堡协奏曲》《马太受难曲》"
   },
   {
@@ -1634,7 +1634,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 英国",
     author: "亨德尔",
-    source: "《亨德尔》·1685—1759",
+    source: "亨德尔·1685—1759",
     excerpt: "《弥赛亚》《水上音乐》，巴洛克的另一极"
   },
   {
@@ -1647,7 +1647,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "孟德斯鸠",
-    source: "《孟德斯鸠》·1689—1755",
+    source: "孟德斯鸠·1689—1755",
     excerpt: "三权分立"
   },
   {
@@ -1660,7 +1660,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "伏尔泰",
-    source: "《伏尔泰》·1694—1778",
+    source: "伏尔泰·1694—1778",
     excerpt: "启蒙运动 · 宗教宽容"
   },
   {
@@ -1673,7 +1673,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "魁奈",
-    source: "《魁奈》·1694—1774",
+    source: "魁奈·1694—1774",
     excerpt: "《经济表》· 重农学派"
   },
   {
@@ -1686,7 +1686,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "富兰克林",
-    source: "《富兰克林》·1706—1790",
+    source: "富兰克林·1706—1790",
     excerpt: "从风筝里取电的人"
   },
   {
@@ -1699,7 +1699,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "菲尔丁",
-    source: "《菲尔丁》·1707—1754",
+    source: "菲尔丁·1707—1754",
     excerpt: "《汤姆·琼斯》，「散文滑稽史诗」"
   },
   {
@@ -1712,7 +1712,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞士",
     author: "欧拉",
-    source: "《欧拉》·1707—1783",
+    source: "欧拉·1707—1783",
     excerpt: "最多产的数学家"
   },
   {
@@ -1725,7 +1725,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "林奈",
-    source: "《林奈》·1707—1778",
+    source: "林奈·1707—1778",
     excerpt: "生物命名法的创始者"
   },
   {
@@ -1738,7 +1738,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "布丰",
-    source: "《布丰》·1707—1788",
+    source: "布丰·1707—1788",
     excerpt: "《自然史》三十六卷，进化思想的先声"
   },
   {
@@ -1751,7 +1751,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国（苏格兰）",
     author: "休谟",
-    source: "《休谟》·1711—1776",
+    source: "休谟·1711—1776",
     excerpt: "经验论的终点"
   },
   {
@@ -1764,7 +1764,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "卢梭",
-    source: "《卢梭》·1712—1778",
+    source: "卢梭·1712—1778",
     excerpt: "《社会契约论》《爱弥儿》，浪漫主义的先驱"
   },
   {
@@ -1777,7 +1777,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "狄德罗",
-    source: "《狄德罗》·1713—1784",
+    source: "狄德罗·1713—1784",
     excerpt: "《百科全书》的主编，启蒙运动的旗手"
   },
   {
@@ -1790,7 +1790,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国（苏格兰）",
     author: "亚当·斯密",
-    source: "《亚当·斯密》·1723—1790",
+    source: "亚当·斯密·1723—1790",
     excerpt: "古典经济学的奠基者"
   },
   {
@@ -1803,7 +1803,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "康德",
-    source: "《康德》·1724—1804",
+    source: "康德·1724—1804",
     excerpt: "近代哲学的分水岭"
   },
   {
@@ -1816,7 +1816,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄罗斯",
     author: "苏沃洛夫",
-    source: "《苏沃洛夫》·1730—1800",
+    source: "苏沃洛夫·1730—1800",
     excerpt: "制胜的科学"
   },
   {
@@ -1829,7 +1829,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "华盛顿",
-    source: "《华盛顿》·1732—1799",
+    source: "华盛顿·1732—1799",
     excerpt: "主动交出权力的人"
   },
   {
@@ -1842,7 +1842,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "海顿",
-    source: "《海顿》·1732—1809",
+    source: "海顿·1732—1809",
     excerpt: "「交响曲之父」，一百零四部交响曲"
   },
   {
@@ -1855,7 +1855,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉格朗日",
-    source: "《拉格朗日》·1736—1813",
+    source: "拉格朗日·1736—1813",
     excerpt: "分析力学与变分法的建立者"
   },
   {
@@ -1868,7 +1868,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "瓦特",
-    source: "《瓦特》·1736—1819",
+    source: "瓦特·1736—1819",
     excerpt: "改良蒸汽机"
   },
   {
@@ -1881,7 +1881,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "贝卡里亚",
-    source: "《贝卡里亚》·1738—1794",
+    source: "贝卡里亚·1738—1794",
     excerpt: "《论犯罪与刑罚》"
   },
   {
@@ -1894,7 +1894,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "赫歇尔",
-    source: "《赫歇尔》·1738—1822",
+    source: "赫歇尔·1738—1822",
     excerpt: "天王星的发现者，恒星天文学的奠基"
   },
   {
@@ -1907,7 +1907,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "舍勒",
-    source: "《舍勒》·1742—1786",
+    source: "舍勒·1742—1786",
     excerpt: "氧气的独立发现者，萤石与氯的研究"
   },
   {
@@ -1920,7 +1920,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "杰斐逊",
-    source: "《杰斐逊》·1743—1826",
+    source: "杰斐逊·1743—1826",
     excerpt: "独立宣言的起草者"
   },
   {
@@ -1933,7 +1933,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉瓦锡",
-    source: "《拉瓦锡》·1743—1794",
+    source: "拉瓦锡·1743—1794",
     excerpt: "近代化学之父"
   },
   {
@@ -1946,7 +1946,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉马克",
-    source: "《拉马克》·1744—1829",
+    source: "拉马克·1744—1829",
     excerpt: "「用进废退」与获得性遗传的最早系统表述"
   },
   {
@@ -1959,7 +1959,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄罗斯",
     author: "库图佐夫",
-    source: "《库图佐夫》·1745—1813",
+    source: "库图佐夫·1745—1813",
     excerpt: "1812 卫国战争"
   },
   {
@@ -1972,7 +1972,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "戈雅",
-    source: "《戈雅》·1746—1828",
+    source: "戈雅·1746—1828",
     excerpt: "《1808 年 5 月 3 日》《狂想曲》，从宫廷到黑色的转变"
   },
   {
@@ -1985,7 +1985,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "大卫",
-    source: "《大卫》·1748—1825",
+    source: "大卫·1748—1825",
     excerpt: "《马拉之死》《拿破仑加冕》，新古典主义的领袖"
   },
   {
@@ -1998,7 +1998,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "歌德",
-    source: "《歌德》·1749—1832",
+    source: "歌德·1749—1832",
     excerpt: "《浮士德》《少年维特之烦恼》"
   },
   {
@@ -2011,7 +2011,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉普拉斯",
-    source: "《拉普拉斯》·1749—1827",
+    source: "拉普拉斯·1749—1827",
     excerpt: "《天体力学》，《概率分析理论》"
   },
   {
@@ -2024,7 +2024,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "詹纳",
-    source: "《詹纳》·1749—1823",
+    source: "詹纳·1749—1823",
     excerpt: "牛痘接种法的发明者，疫苗学的开端"
   },
   {
@@ -2037,7 +2037,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "勒让德",
-    source: "《勒让德》·1752—1833",
+    source: "勒让德·1752—1833",
     excerpt: "椭圆积分与数论的研究者，《几何学基础》"
   },
   {
@@ -2050,7 +2050,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "莫扎特",
-    source: "《莫扎特》·1756—1791",
+    source: "莫扎特·1756—1791",
     excerpt: "《费加罗的婚礼》《安魂曲》，三十五岁早逝的神童"
   },
   {
@@ -2063,7 +2063,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "纳尔逊",
-    source: "《纳尔逊》·1758—1805",
+    source: "纳尔逊·1758—1805",
     excerpt: "特拉法加海战"
   },
   {
@@ -2076,7 +2076,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "席勒",
-    source: "《席勒》·1759—1805",
+    source: "席勒·1759—1805",
     excerpt: "《阴谋与爱情》《欢乐颂》，与歌德并称「德国古典文学」"
   },
   {
@@ -2089,7 +2089,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "道尔顿",
-    source: "《道尔顿》·1766—1844",
+    source: "道尔顿·1766—1844",
     excerpt: "近代原子论的创立者"
   },
   {
@@ -2102,7 +2102,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "马尔萨斯",
-    source: "《马尔萨斯》·1766—1834",
+    source: "马尔萨斯·1766—1834",
     excerpt: "《人口论》"
   },
   {
@@ -2115,7 +2115,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "萨伊",
-    source: "《萨伊》·1767—1832",
+    source: "萨伊·1767—1832",
     excerpt: "萨伊定律"
   },
   {
@@ -2128,7 +2128,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "惠灵顿",
-    source: "《惠灵顿》·1769—1852",
+    source: "惠灵顿·1769—1852",
     excerpt: "滑铁卢 · 半岛战争"
   },
   {
@@ -2141,7 +2141,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拿破仑",
-    source: "《拿破仑》·1769—1821",
+    source: "拿破仑·1769—1821",
     excerpt: "奥斯特里茨 · 军团体系"
   },
   {
@@ -2154,7 +2154,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "居维叶",
-    source: "《居维叶》·1769—1832",
+    source: "居维叶·1769—1832",
     excerpt: "比较解剖学与古脊椎动物学的奠基，「灾变论」"
   },
   {
@@ -2167,7 +2167,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "华兹华斯",
-    source: "《华兹华斯》·1770—1850",
+    source: "华兹华斯·1770—1850",
     excerpt: "湖畔派领袖，《抒情歌谣集》序为浪漫主义宣言"
   },
   {
@@ -2180,7 +2180,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "黑格尔",
-    source: "《黑格尔》·1770—1831",
+    source: "黑格尔·1770—1831",
     excerpt: "辩证法的系统建构者"
   },
   {
@@ -2193,7 +2193,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "贝多芬",
-    source: "《贝多芬》·1770—1827",
+    source: "贝多芬·1770—1827",
     excerpt: "《命运交响曲》《第九交响曲》，古典到浪漫的桥梁"
   },
   {
@@ -2206,7 +2206,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "柯勒律治",
-    source: "《柯勒律治》·1772—1834",
+    source: "柯勒律治·1772—1834",
     excerpt: "《古舟子咏》《忽必烈汗》，与华兹华斯合著《抒情歌谣集》"
   },
   {
@@ -2219,7 +2219,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "李嘉图",
-    source: "《李嘉图》·1772—1823",
+    source: "李嘉图·1772—1823",
     excerpt: "比较优势 · 劳动价值论"
   },
   {
@@ -2232,7 +2232,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "简·奥斯汀",
-    source: "《简·奥斯汀》·1775—1817",
+    source: "简·奥斯汀·1775—1817",
     excerpt: "《傲慢与偏见》《爱玛》，英国家庭小说的巅峰"
   },
   {
@@ -2245,7 +2245,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "阿伏伽德罗",
-    source: "《阿伏伽德罗》·1776—1856",
+    source: "阿伏伽德罗·1776—1856",
     excerpt: "分子假说的提出者，气体定律的补全"
   },
   {
@@ -2258,7 +2258,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "高斯",
-    source: "《高斯》·1777—1855",
+    source: "高斯·1777—1855",
     excerpt: "数学王子"
   },
   {
@@ -2271,7 +2271,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "安格尔",
-    source: "《安格尔》·1780—1867",
+    source: "安格尔·1780—1867",
     excerpt: "《泉》《土耳其浴室》，古典素描的极致"
   },
   {
@@ -2284,7 +2284,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "帕格尼尼",
-    source: "《帕格尼尼》·1782—1840",
+    source: "帕格尼尼·1782—1840",
     excerpt: "《二十四首随想曲》"
   },
   {
@@ -2297,7 +2297,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "委内瑞拉",
     author: "玻利瓦尔",
-    source: "《玻利瓦尔》·1783—1830",
+    source: "玻利瓦尔·1783—1830",
     excerpt: "南美的解放者"
   },
   {
@@ -2310,7 +2310,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "司汤达",
-    source: "《司汤达》·1783—1842",
+    source: "司汤达·1783—1842",
     excerpt: "《红与黑》《巴马修道院》，心理小说的开创"
   },
   {
@@ -2323,7 +2323,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "达盖尔",
-    source: "《达盖尔》·1787—1851",
+    source: "达盖尔·1787—1851",
     excerpt: "摄影术（银版法）"
   },
   {
@@ -2336,7 +2336,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "拜伦",
-    source: "《拜伦》·1788—1824",
+    source: "拜伦·1788—1824",
     excerpt: "《唐璜》《恰尔德·哈罗尔德游记》，浪漫主义的叛逆者"
   },
   {
@@ -2349,7 +2349,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "叔本华",
-    source: "《叔本华》·1788—1860",
+    source: "叔本华·1788—1860",
     excerpt: "唯意志论的开创者"
   },
   {
@@ -2362,7 +2362,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "柯西",
-    source: "《柯西》·1789—1857",
+    source: "柯西·1789—1857",
     excerpt: "极限与连续性的严格化，《分析教程》"
   },
   {
@@ -2375,7 +2375,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "法拉第",
-    source: "《法拉第》·1791—1867",
+    source: "法拉第·1791—1867",
     excerpt: "电磁感应的发现者"
   },
   {
@@ -2388,7 +2388,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "莫尔斯",
-    source: "《莫尔斯》·1791—1872",
+    source: "莫尔斯·1791—1872",
     excerpt: "电报与莫尔斯电码的发明者"
   },
   {
@@ -2401,7 +2401,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "雪莱",
-    source: "《雪莱》·1792—1822",
+    source: "雪莱·1792—1822",
     excerpt: "《西风颂》《解放了的普罗米修斯》"
   },
   {
@@ -2414,7 +2414,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "罗西尼",
-    source: "《罗西尼》·1792—1868",
+    source: "罗西尼·1792—1868",
     excerpt: "《塞维利亚的理发师》"
   },
   {
@@ -2427,7 +2427,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "济慈",
-    source: "《济慈》·1795—1821",
+    source: "济慈·1795—1821",
     excerpt: "《夜莺颂》《希腊古瓮颂》，二十五岁病逝"
   },
   {
@@ -2440,7 +2440,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "舒伯特",
-    source: "《舒伯特》·1797—1828",
+    source: "舒伯特·1797—1828",
     excerpt: "六百余首艺术歌曲，《魔王》《冬之旅》"
   },
   {
@@ -2453,7 +2453,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "多尼采蒂",
-    source: "《多尼采蒂》·1797—1848",
+    source: "多尼采蒂·1797—1848",
     excerpt: "《拉美莫尔的露琪亚》"
   },
   {
@@ -2466,7 +2466,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "德拉克洛瓦",
-    source: "《德拉克洛瓦》·1798—1863",
+    source: "德拉克洛瓦·1798—1863",
     excerpt: "《自由引导人民》，浪漫主义绘画的旗帜"
   },
   {
@@ -2479,7 +2479,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "巴尔扎克",
-    source: "《巴尔扎克》·1799—1850",
+    source: "巴尔扎克·1799—1850",
     excerpt: "《人间喜剧》九十余部，法国社会的书记官"
   },
   {
@@ -2492,7 +2492,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "普希金",
-    source: "《普希金》·1799—1837",
+    source: "普希金·1799—1837",
     excerpt: "《叶甫盖尼·奥涅金》，俄罗斯文学语言的奠基"
   },
   {
@@ -2505,7 +2505,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "普鲁士-德国",
     author: "毛奇",
-    source: "《毛奇》·1800—1891",
+    source: "毛奇·1800—1891",
     excerpt: "分进合击 · 参谋部之父"
   },
   {
@@ -2518,7 +2518,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "雨果",
-    source: "《雨果》·1802—1885",
+    source: "雨果·1802—1885",
     excerpt: "《悲惨世界》《巴黎圣母院》，法国浪漫主义的领袖"
   },
   {
@@ -2531,7 +2531,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "大仲马",
-    source: "《大仲马》·1802—1870",
+    source: "大仲马·1802—1870",
     excerpt: "《三个火枪手》《基度山伯爵》"
   },
   {
@@ -2544,7 +2544,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "挪威",
     author: "阿贝尔",
-    source: "《阿贝尔》·1802—1829",
+    source: "阿贝尔·1802—1829",
     excerpt: "五次方程无代数解的证明者，二十七岁病逝"
   },
   {
@@ -2557,7 +2557,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "柏辽兹",
-    source: "《柏辽兹》·1803—1869",
+    source: "柏辽兹·1803—1869",
     excerpt: "《幻想交响曲》"
   },
   {
@@ -2570,7 +2570,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "乔治·桑",
-    source: "《乔治·桑》·1804—1876",
+    source: "乔治·桑·1804—1876",
     excerpt: "《安蒂亚娜》《魔沼》，浪漫主义的女性声音"
   },
   {
@@ -2583,7 +2583,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "马志尼",
-    source: "《马志尼》·1805—1872",
+    source: "马志尼·1805—1872",
     excerpt: "青年意大利"
   },
   {
@@ -2596,7 +2596,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "丹麦",
     author: "安徒生",
-    source: "《安徒生》·1805—1875",
+    source: "安徒生·1805—1875",
     excerpt: "《海的女儿》《丑小鸭》，童话的世界"
   },
   {
@@ -2609,7 +2609,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "穆勒",
-    source: "《穆勒》·1806—1873",
+    source: "穆勒·1806—1873",
     excerpt: "《政治经济学原理》"
   },
   {
@@ -2622,7 +2622,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "加里波第",
-    source: "《加里波第》·1807—1882",
+    source: "加里波第·1807—1882",
     excerpt: "千人军 · 红衫军"
   },
   {
@@ -2635,7 +2635,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "林肯",
-    source: "《林肯》·1809—1865",
+    source: "林肯·1809—1865",
     excerpt: "葛底斯堡演说"
   },
   {
@@ -2648,7 +2648,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "果戈理",
-    source: "《果戈理》·1809—1852",
+    source: "果戈理·1809—1852",
     excerpt: "《死魂灵》《钦差大臣》，讽刺文学的开山"
   },
   {
@@ -2661,7 +2661,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "爱伦·坡",
-    source: "《爱伦·坡》·1809—1849",
+    source: "爱伦·坡·1809—1849",
     excerpt: "《乌鸦》《厄舍府的倒塌》，侦探小说与恐怖小说的开创"
   },
   {
@@ -2674,7 +2674,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "达尔文",
-    source: "《达尔文》·1809—1882",
+    source: "达尔文·1809—1882",
     excerpt: "进化论的奠基者"
   },
   {
@@ -2687,7 +2687,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "门德尔松",
-    source: "《门德尔松》·1809—1847",
+    source: "门德尔松·1809—1847",
     excerpt: "《婚礼进行曲》"
   },
   {
@@ -2700,7 +2700,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "加富尔",
-    source: "《加富尔》·1810—1861",
+    source: "加富尔·1810—1861",
     excerpt: "意大利统一的设计师"
   },
   {
@@ -2713,7 +2713,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰 / 法国",
     author: "肖邦",
-    source: "《肖邦》·1810—1849",
+    source: "肖邦·1810—1849",
     excerpt: "《夜曲》《练习曲》《波兰舞曲》，钢琴的诗人"
   },
   {
@@ -2726,7 +2726,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "舒曼",
-    source: "《舒曼》·1810—1856",
+    source: "舒曼·1810—1856",
     excerpt: "《童年情景》《狂欢节》，浪漫主义音乐与乐评的双重代表"
   },
   {
@@ -2739,7 +2739,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "伽罗瓦",
-    source: "《伽罗瓦》·1811—1832",
+    source: "伽罗瓦·1811—1832",
     excerpt: "群论的创立者，二十岁死于决斗"
   },
   {
@@ -2752,7 +2752,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "本生",
-    source: "《本生》·1811—1899",
+    source: "本生·1811—1899",
     excerpt: "光谱分析的创立者，本生灯的发明者"
   },
   {
@@ -2765,7 +2765,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "勒维耶",
-    source: "《勒维耶》·1811—1877",
+    source: "勒维耶·1811—1877",
     excerpt: "海王星的预言与发现者"
   },
   {
@@ -2778,7 +2778,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "匈牙利",
     author: "李斯特",
-    source: "《李斯特》·1811—1886",
+    source: "李斯特·1811—1886",
     excerpt: "「钢琴之王」，交响诗的开创"
   },
   {
@@ -2791,7 +2791,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《狄更斯》·1812—1870",
+    source: "狄更斯·1812—1870",
     excerpt: "《雾都孤儿》《双城记》，维多利亚时代的社会良心"
   },
   {
@@ -2804,7 +2804,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "丹麦",
     author: "克尔凯郭尔",
-    source: "《克尔凯郭尔》·1813—1855",
+    source: "克尔凯郭尔·1813—1855",
     excerpt: "存在主义的先驱，《恐惧与颤栗》"
   },
   {
@@ -2817,7 +2817,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "瓦格纳",
-    source: "《瓦格纳》·1813—1883",
+    source: "瓦格纳·1813—1883",
     excerpt: "《尼伯龙根的指环》《特里斯坦与伊索尔德》，乐剧的改革者"
   },
   {
@@ -2830,7 +2830,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "威尔第",
-    source: "《威尔第》·1813—1901",
+    source: "威尔第·1813—1901",
     excerpt: "《茶花女》《阿依达》《奥赛罗》，意大利歌剧的巅峰"
   },
   {
@@ -2843,7 +2843,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "莱蒙托夫",
-    source: "《莱蒙托夫》·1814—1841",
+    source: "莱蒙托夫·1814—1841",
     excerpt: "《当代英雄》《帆》，二十七岁死于决斗"
   },
   {
@@ -2856,7 +2856,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "米勒",
-    source: "《米勒》·1814—1875",
+    source: "米勒·1814—1875",
     excerpt: "《拾穗者》《晚祷》，农民生活的虔诚书写"
   },
   {
@@ -2869,7 +2869,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "夏洛蒂·勃朗特",
-    source: "《夏洛蒂·勃朗特》·1816—1855",
+    source: "夏洛蒂·勃朗特·1816—1855",
     excerpt: "《简·爱》的作者，勃朗特三姐妹之长"
   },
   {
@@ -2882,7 +2882,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "艾米莉·勃朗特",
-    source: "《艾米莉·勃朗特》·1818—1848",
+    source: "艾米莉·勃朗特·1818—1848",
     excerpt: "《呼啸山庄》，英国小说史上最激烈的一部"
   },
   {
@@ -2895,7 +2895,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《屠格涅夫》·1818—1883",
+    source: "屠格涅夫·1818—1883",
     excerpt: "《父与子》《猎人笔记》，俄国社会的观察者"
   },
   {
@@ -2908,7 +2908,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "马克思",
-    source: "《马克思》·1818—1883",
+    source: "马克思·1818—1883",
     excerpt: "《资本论》《共产党宣言》，历史唯物主义的创立"
   },
   {
@@ -2921,7 +2921,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "焦耳",
-    source: "《焦耳》·1818—1889",
+    source: "焦耳·1818—1889",
     excerpt: "热功当量的测定者"
   },
   {
@@ -2934,7 +2934,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "艾略特",
-    source: "《艾略特》·1819—1880",
+    source: "艾略特·1819—1880",
     excerpt: "《米德尔马契》《弗洛斯河上的磨坊》，本名玛丽安·埃文斯"
   },
   {
@@ -2947,7 +2947,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "惠特曼",
-    source: "《惠特曼》·1819—1892",
+    source: "惠特曼·1819—1892",
     excerpt: "《草叶集》，美国诗歌的自由之声"
   },
   {
@@ -2960,7 +2960,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "梅尔维尔",
-    source: "《梅尔维尔》·1819—1891",
+    source: "梅尔维尔·1819—1891",
     excerpt: "《白鲸》，美国文学的海洋史诗"
   },
   {
@@ -2973,7 +2973,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "莫顿",
-    source: "《莫顿》·1819—1868",
+    source: "莫顿·1819—1868",
     excerpt: "乙醚麻醉"
   },
   {
@@ -2986,7 +2986,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "库尔贝",
-    source: "《库尔贝》·1819—1877",
+    source: "库尔贝·1819—1877",
     excerpt: "《奥尔南的葬礼》，现实主义的宣言"
   },
   {
@@ -2999,7 +2999,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "南丁格尔",
-    source: "《南丁格尔》·1820—1910",
+    source: "南丁格尔·1820—1910",
     excerpt: "现代护理学的创始者，克里米亚战场的「提灯女神」"
   },
   {
@@ -3012,7 +3012,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "波德莱尔",
-    source: "《波德莱尔》·1821—1867",
+    source: "波德莱尔·1821—1867",
     excerpt: "《恶之花》，现代主义诗歌的开端"
   },
   {
@@ -3025,7 +3025,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "福楼拜",
-    source: "《福楼拜》·1821—1880",
+    source: "福楼拜·1821—1880",
     excerpt: "《包法利夫人》，「完美的句子的殉道者」"
   },
   {
@@ -3038,7 +3038,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《陀思妥耶夫斯基》·1821—1881",
+    source: "陀思妥耶夫斯基·1821—1881",
     excerpt: "《罪与罚》《卡拉马佐夫兄弟》，心理小说的深渊"
   },
   {
@@ -3051,7 +3051,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "巴斯德",
-    source: "《巴斯德》·1822—1895",
+    source: "巴斯德·1822—1895",
     excerpt: "微生物学的奠基者"
   },
   {
@@ -3064,7 +3064,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "孟德尔",
-    source: "《孟德尔》·1822—1884",
+    source: "孟德尔·1822—1884",
     excerpt: "遗传学的奠基人"
   },
   {
@@ -3077,7 +3077,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "匈牙利",
     author: "裴多菲",
-    source: "《裴多菲》·1823—1849",
+    source: "裴多菲·1823—1849",
     excerpt: "《自由与爱情》「生命诚可贵」，二十六岁阵亡"
   },
   {
@@ -3090,7 +3090,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "华莱士",
-    source: "《华莱士》·1823—1913",
+    source: "华莱士·1823—1913",
     excerpt: "自然选择的独立发现者，与达尔文同时"
   },
   {
@@ -3103,7 +3103,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "基尔霍夫",
-    source: "《基尔霍夫》·1824—1887",
+    source: "基尔霍夫·1824—1887",
     excerpt: "光谱分析与电路定律的建立者"
   },
   {
@@ -3116,7 +3116,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国（苏格兰）",
     author: "开尔文",
-    source: "《开尔文》·1824—1907",
+    source: "开尔文·1824—1907",
     excerpt: "绝对温标的创立者"
   },
   {
@@ -3129,7 +3129,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "布鲁克纳",
-    source: "《布鲁克纳》·1824—1896",
+    source: "布鲁克纳·1824—1896",
     excerpt: "九部交响曲，教堂管风琴师出身的交响大家"
   },
   {
@@ -3142,7 +3142,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "捷克",
     author: "斯美塔那",
-    source: "《斯美塔那》·1824—1884",
+    source: "斯美塔那·1824—1884",
     excerpt: "《伏尔塔瓦河》"
   },
   {
@@ -3155,7 +3155,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "黎曼",
-    source: "《黎曼》·1826—1866",
+    source: "黎曼·1826—1866",
     excerpt: "黎曼几何与「黎曼猜想」，几何学的革命者"
   },
   {
@@ -3168,7 +3168,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "约瑟夫·李斯特",
-    source: "《约瑟夫·李斯特》·1827—1912",
+    source: "约瑟夫·李斯特·1827—1912",
     excerpt: "外科消毒法"
   },
   {
@@ -3181,7 +3181,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《托尔斯泰》·1828—1910",
+    source: "托尔斯泰·1828—1910",
     excerpt: "《战争与和平》《安娜·卡列尼娜》《复活》"
   },
   {
@@ -3194,7 +3194,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "挪威",
     author: "易卜生",
-    source: "《易卜生》·1828—1906",
+    source: "易卜生·1828—1906",
     excerpt: "《玩偶之家》《人民公敌》，现代戏剧的奠基"
   },
   {
@@ -3207,7 +3207,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "凯库勒",
-    source: "《凯库勒》·1829—1896",
+    source: "凯库勒·1829—1896",
     excerpt: "苯环结构的提出者，有机化学的奠基"
   },
   {
@@ -3220,7 +3220,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "狄金森",
-    source: "《狄金森》·1830—1886",
+    source: "狄金森·1830—1886",
     excerpt: "一千八百首诗，生前只发表十首"
   },
   {
@@ -3233,7 +3233,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国（苏格兰）",
     author: "麦克斯韦",
-    source: "《麦克斯韦》·1831—1879",
+    source: "麦克斯韦·1831—1879",
     excerpt: "电磁理论的统一者"
   },
   {
@@ -3246,7 +3246,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "奥托",
-    source: "《奥托》·1832—1891",
+    source: "奥托·1832—1891",
     excerpt: "四冲程内燃机"
   },
   {
@@ -3259,7 +3259,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "埃菲尔",
-    source: "《埃菲尔》·1832—1923",
+    source: "埃菲尔·1832—1923",
     excerpt: "埃菲尔铁塔与纽约自由女神像内部结构"
   },
   {
@@ -3272,7 +3272,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "马奈",
-    source: "《马奈》·1832—1883",
+    source: "马奈·1832—1883",
     excerpt: "《草地上的午餐》《奥林匹亚》，印象派的引路人"
   },
   {
@@ -3285,7 +3285,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "诺贝尔",
-    source: "《诺贝尔》·1833—1896",
+    source: "诺贝尔·1833—1896",
     excerpt: "诺贝尔奖的设立者"
   },
   {
@@ -3298,7 +3298,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "鲍罗丁",
-    source: "《鲍罗丁》·1833—1887",
+    source: "鲍罗丁·1833—1887",
     excerpt: "《伊戈尔王子》"
   },
   {
@@ -3311,7 +3311,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "勃拉姆斯",
-    source: "《勃拉姆斯》·1833—1897",
+    source: "勃拉姆斯·1833—1897",
     excerpt: "《第一交响曲》·《匈牙利舞曲》"
   },
   {
@@ -3324,7 +3324,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "门捷列夫",
-    source: "《门捷列夫》·1834—1907",
+    source: "门捷列夫·1834—1907",
     excerpt: "元素周期律的发现者"
   },
   {
@@ -3337,7 +3337,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "德加",
-    source: "《德加》·1834—1917",
+    source: "德加·1834—1917",
     excerpt: "《舞蹈课》《舞台上的舞女》，动态与构图的探索"
   },
   {
@@ -3350,7 +3350,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "瓦尔拉斯",
-    source: "《瓦尔拉斯》·1834—1910",
+    source: "瓦尔拉斯·1834—1910",
     excerpt: "一般均衡理论"
   },
   {
@@ -3363,7 +3363,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "马克·吐温",
-    source: "《马克·吐温》·1835—1910",
+    source: "马克·吐温·1835—1910",
     excerpt: "《汤姆·索亚历险记》《哈克贝利·费恩历险记》"
   },
   {
@@ -3376,7 +3376,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "塞尚",
-    source: "《塞尚》·1839—1906",
+    source: "塞尚·1839—1906",
     excerpt: "《圣维克多山》《苹果与橘子》，「现代绘画之父」"
   },
   {
@@ -3389,7 +3389,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "穆索尔斯基",
-    source: "《穆索尔斯基》·1839—1881",
+    source: "穆索尔斯基·1839—1881",
     excerpt: "《图画展览会》"
   },
   {
@@ -3402,7 +3402,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "莫奈",
-    source: "《莫奈》·1840—1926",
+    source: "莫奈·1840—1926",
     excerpt: "《日出·印象》《睡莲》，印象派的命名者"
   },
   {
@@ -3415,7 +3415,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "罗丹",
-    source: "《罗丹》·1840—1917",
+    source: "罗丹·1840—1917",
     excerpt: "《思想者》《加莱义民》《地狱之门》"
   },
   {
@@ -3428,7 +3428,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "柴可夫斯基",
-    source: "《柴可夫斯基》·1840—1893",
+    source: "柴可夫斯基·1840—1893",
     excerpt: "《天鹅湖》《胡桃夹子》《悲怆交响曲》"
   },
   {
@@ -3441,7 +3441,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "门格尔",
-    source: "《门格尔》·1840—1921",
+    source: "门格尔·1840—1921",
     excerpt: "《国民经济学原理》"
   },
   {
@@ -3454,7 +3454,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "雷诺阿",
-    source: "《雷诺阿》·1841—1919",
+    source: "雷诺阿·1841—1919",
     excerpt: "《煎饼磨坊的舞会》，光与欢愉的画家"
   },
   {
@@ -3467,7 +3467,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "捷克",
     author: "德沃夏克",
-    source: "《德沃夏克》·1841—1904",
+    source: "德沃夏克·1841—1904",
     excerpt: "《自新大陆交响曲》《斯拉夫舞曲》"
   },
   {
@@ -3480,7 +3480,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "马歇尔",
-    source: "《马歇尔》·1842—1924",
+    source: "马歇尔·1842—1924",
     excerpt: "《经济学原理》· 供求曲线"
   },
   {
@@ -3493,7 +3493,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国 / 英国",
     author: "詹姆斯",
-    source: "《詹姆斯》·1843—1916",
+    source: "詹姆斯·1843—1916",
     excerpt: "《一位女士的画像》《鸽翼》，心理现实主义的大师"
   },
   {
@@ -3506,7 +3506,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "科赫",
-    source: "《科赫》·1843—1910",
+    source: "科赫·1843—1910",
     excerpt: "结核杆菌与霍乱弧菌的发现，1905 年诺贝尔奖"
   },
   {
@@ -3519,7 +3519,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "挪威",
     author: "格里格",
-    source: "《格里格》·1843—1907",
+    source: "格里格·1843—1907",
     excerpt: "《培尔·金特》组曲"
   },
   {
@@ -3532,7 +3532,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "尼采",
-    source: "《尼采》·1844—1900",
+    source: "尼采·1844—1900",
     excerpt: "重估一切价值的批判者"
   },
   {
@@ -3545,7 +3545,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "列宾",
-    source: "《列宾》·1844—1930",
+    source: "列宾·1844—1930",
     excerpt: "《伏尔加河上的纤夫》"
   },
   {
@@ -3558,7 +3558,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "康托尔",
-    source: "《康托尔》·1845—1918",
+    source: "康托尔·1845—1918",
     excerpt: "集合论的创立者，「无穷」被分出了等级"
   },
   {
@@ -3571,7 +3571,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "伦琴",
-    source: "《伦琴》·1845—1923",
+    source: "伦琴·1845—1923",
     excerpt: "X 射线的发现者"
   },
   {
@@ -3584,7 +3584,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰",
     author: "显克微支",
-    source: "《显克微支》·1846—1916",
+    source: "显克微支·1846—1916",
     excerpt: "《你往何处去》，1905 年诺贝尔文学奖"
   },
   {
@@ -3597,7 +3597,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国 / 美国",
     author: "贝尔",
-    source: "《贝尔》·1847—1922",
+    source: "贝尔·1847—1922",
     excerpt: "电话的发明者"
   },
   {
@@ -3610,7 +3610,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "爱迪生",
-    source: "《爱迪生》·1847—1931",
+    source: "爱迪生·1847—1931",
     excerpt: "电灯与电力系统"
   },
   {
@@ -3623,7 +3623,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "高更",
-    source: "《高更》·1848—1903",
+    source: "高更·1848—1903",
     excerpt: "《我们从哪里来？》，塔希提岛的原始色彩"
   },
   {
@@ -3636,7 +3636,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "苏里科夫",
-    source: "《苏里科夫》·1848—1916",
+    source: "苏里科夫·1848—1916",
     excerpt: "《近卫军临刑的早晨》"
   },
   {
@@ -3649,7 +3649,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "帕累托",
-    source: "《帕累托》·1848—1923",
+    source: "帕累托·1848—1923",
     excerpt: "帕累托最优"
   },
   {
@@ -3662,7 +3662,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "斯特林堡",
-    source: "《斯特林堡》·1849—1912",
+    source: "斯特林堡·1849—1912",
     excerpt: "《朱丽小姐》《到大马士革去》，瑞典现代戏剧的开创"
   },
   {
@@ -3675,7 +3675,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "巴甫洛夫",
-    source: "《巴甫洛夫》·1849—1936",
+    source: "巴甫洛夫·1849—1936",
     excerpt: "条件反射的研究，1904 年诺贝尔生理学或医学奖"
   },
   {
@@ -3688,7 +3688,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "范特霍夫",
-    source: "《范特霍夫》·1852—1911",
+    source: "范特霍夫·1852—1911",
     excerpt: "立体化学的创立，首届诺贝尔化学奖"
   },
   {
@@ -3701,7 +3701,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "亨利·贝克雷尔",
-    source: "《亨利·贝克雷尔》·1852—1908",
+    source: "亨利·贝克雷尔·1852—1908",
     excerpt: "放射性的发现"
   },
   {
@@ -3714,7 +3714,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "高迪",
-    source: "《高迪》·1852—1926",
+    source: "高迪·1852—1926",
     excerpt: "圣家堂、米拉公寓，加泰罗尼亚现代主义的巅峰"
   },
   {
@@ -3727,7 +3727,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "梵高",
-    source: "《梵高》·1853—1890",
+    source: "梵高·1853—1890",
     excerpt: "《向日葵》《星月夜》，三十七岁在麦田里开枪"
   },
   {
@@ -3740,7 +3740,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰",
     author: "王尔德",
-    source: "《王尔德》·1854—1900",
+    source: "王尔德·1854—1900",
     excerpt: "《道林·格雷的画像》《不可儿戏》，唯美主义的代表"
   },
   {
@@ -3753,7 +3753,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "庞加莱",
-    source: "《庞加莱》·1854—1912",
+    source: "庞加莱·1854—1912",
     excerpt: "拓扑学与混沌理论的奠基，「庞加莱猜想」"
   },
   {
@@ -3766,7 +3766,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰",
     author: "肖伯纳",
-    source: "《肖伯纳》·1856—1950",
+    source: "肖伯纳·1856—1950",
     excerpt: "《华伦夫人的职业》《皮格马利翁》，1925 年诺贝尔文学奖"
   },
   {
@@ -3779,7 +3779,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "弗洛伊德",
-    source: "《弗洛伊德》·1856—1939",
+    source: "弗洛伊德·1856—1939",
     excerpt: "精神分析的开创者"
   },
   {
@@ -3792,7 +3792,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "凡勃伦",
-    source: "《凡勃伦》·1857—1929",
+    source: "凡勃伦·1857—1929",
     excerpt: "《有闲阶级论》"
   },
   {
@@ -3805,7 +3805,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "西奥多·罗斯福",
-    source: "《西奥多·罗斯福》·1858—1919",
+    source: "西奥多·罗斯福·1858—1919",
     excerpt: "反托拉斯 · 国家公园"
   },
   {
@@ -3818,7 +3818,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "艾米琳·潘克斯特",
-    source: "《艾米琳·潘克斯特》·1858—1928",
+    source: "艾米琳·潘克斯特·1858—1928",
     excerpt: "英国妇女参政权运动"
   },
   {
@@ -3831,7 +3831,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "拉格洛夫",
-    source: "《拉格洛夫》·1858—1940",
+    source: "拉格洛夫·1858—1940",
     excerpt: "《尼尔斯骑鹅旅行记》，首位获诺贝尔文学奖的女性"
   },
   {
@@ -3844,7 +3844,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "普朗克",
-    source: "《普朗克》·1858—1947",
+    source: "普朗克·1858—1947",
     excerpt: "量子论的开启者"
   },
   {
@@ -3857,7 +3857,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "波特",
-    source: "《波特》·1858—1932",
+    source: "波特·1858—1932",
     excerpt: "科学与艺术双绝的植物学家"
   },
   {
@@ -3870,7 +3870,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国（奥匈出身）",
     author: "胡塞尔",
-    source: "《胡塞尔》·1859—1938",
+    source: "胡塞尔·1859—1938",
     excerpt: "现象学的开创者"
   },
   {
@@ -3883,7 +3883,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞典",
     author: "阿伦尼乌斯",
-    source: "《阿伦尼乌斯》·1859—1927",
+    source: "阿伦尼乌斯·1859—1927",
     excerpt: "电离理论，1903 年诺贝尔化学奖"
   },
   {
@@ -3896,7 +3896,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "修拉",
-    source: "《修拉》·1859—1891",
+    source: "修拉·1859—1891",
     excerpt: "《大碗岛的星期天下午》，点彩法的创立"
   },
   {
@@ -3909,7 +3909,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《契诃夫》·1860—1904",
+    source: "契诃夫·1860—1904",
     excerpt: "短篇小说与《樱桃园》《海鸥》的剧作家"
   },
   {
@@ -3922,7 +3922,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "马勒",
-    source: "《马勒》·1860—1911",
+    source: "马勒·1860—1911",
     excerpt: "《大地之歌》《第八交响曲》，交响曲世界的建造者"
   },
   {
@@ -3935,7 +3935,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《泰戈尔》·1861—1941",
+    source: "泰戈尔·1861—1941",
     excerpt: "《吉檀迦利》，1913 年诺贝尔文学奖（亚洲首位）"
   },
   {
@@ -3948,7 +3948,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "希尔伯特",
-    source: "《希尔伯特》·1862—1943",
+    source: "希尔伯特·1862—1943",
     excerpt: "二十三个数学问题，二十世纪数学的领航"
   },
   {
@@ -3961,7 +3961,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "克里姆特",
-    source: "《克里姆特》·1862—1918",
+    source: "克里姆特·1862—1918",
     excerpt: "《吻》《金鱼》，维也纳分离派的领袖"
   },
   {
@@ -3974,7 +3974,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "德彪西",
-    source: "《德彪西》·1862—1918",
+    source: "德彪西·1862—1918",
     excerpt: "《月光》《牧神午后前奏曲》，印象主义音乐的开创"
   },
   {
@@ -3987,7 +3987,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "亨利·福特",
-    source: "《亨利·福特》·1863—1947",
+    source: "亨利·福特·1863—1947",
     excerpt: "T 型车 · 流水线"
   },
   {
@@ -4000,7 +4000,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "比利时 / 美国",
     author: "利奥·贝克兰",
-    source: "《利奥·贝克兰》·1863—1944",
+    source: "利奥·贝克兰·1863—1944",
     excerpt: "电木（第一种合成塑料）"
   },
   {
@@ -4013,7 +4013,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "挪威",
     author: "蒙克",
-    source: "《蒙克》·1863—1944",
+    source: "蒙克·1863—1944",
     excerpt: "《呐喊》，表现主义的先声"
   },
   {
@@ -4026,7 +4026,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "韦伯",
-    source: "《韦伯》·1864—1920",
+    source: "韦伯·1864—1920",
     excerpt: "《新教伦理与资本主义精神》"
   },
   {
@@ -4039,7 +4039,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰",
     author: "叶芝",
-    source: "《叶芝》·1865—1939",
+    source: "叶芝·1865—1939",
     excerpt: "《当你老了》，爱尔兰文艺复兴的领袖，1923 年诺贝尔文学奖"
   },
   {
@@ -4052,7 +4052,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "芬兰",
     author: "西贝柳斯",
-    source: "《西贝柳斯》·1865—1957",
+    source: "西贝柳斯·1865—1957",
     excerpt: "《芬兰颂》"
   },
   {
@@ -4065,7 +4065,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "摩尔根",
-    source: "《摩尔根》·1866—1945",
+    source: "摩尔根·1866—1945",
     excerpt: "果蝇实验与基因的染色体定位，1933 年诺贝尔奖"
   },
   {
@@ -4078,7 +4078,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 德国",
     author: "康定斯基",
-    source: "《康定斯基》·1866—1944",
+    source: "康定斯基·1866—1944",
     excerpt: "抽象绘画的开创，《论艺术的精神》"
   },
   {
@@ -4091,7 +4091,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《夏目漱石》·1867—1916",
+    source: "夏目漱石·1867—1916",
     excerpt: "《我是猫》《心》，日本近代文学的代表"
   },
   {
@@ -4104,7 +4104,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰 / 法国",
     author: "居里夫人",
-    source: "《居里夫人》·1867—1934",
+    source: "居里夫人·1867—1934",
     excerpt: "放射学的开创者"
   },
   {
@@ -4117,7 +4117,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "莱特兄弟",
-    source: "《莱特兄弟》·1867—1912 / 1871—1948",
+    source: "莱特兄弟·1867—1912 / 1871—1948",
     excerpt: "第一架飞机的制造者"
   },
   {
@@ -4130,7 +4130,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "赖特",
-    source: "《赖特》·1867—1959",
+    source: "赖特·1867—1959",
     excerpt: "流水别墅、古根海姆美术馆，「有机建筑」的提倡者"
   },
   {
@@ -4143,7 +4143,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "高尔基",
-    source: "《高尔基》·1868—1936",
+    source: "高尔基·1868—1936",
     excerpt: "《童年》《在人间》《我的大学》，自传三部曲"
   },
   {
@@ -4156,7 +4156,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "哈伯",
-    source: "《哈伯》·1868—1934",
+    source: "哈伯·1868—1934",
     excerpt: "合成氨的实现，「面包来自空气」"
   },
   {
@@ -4169,7 +4169,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "印度",
     author: "甘地",
-    source: "《甘地》·1869—1948",
+    source: "甘地·1869—1948",
     excerpt: "非暴力不合作"
   },
   {
@@ -4182,7 +4182,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "马蒂斯",
-    source: "《马蒂斯》·1869—1954",
+    source: "马蒂斯·1869—1954",
     excerpt: "《舞蹈》《红色的和谐》，野兽派的领袖"
   },
   {
@@ -4195,7 +4195,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 苏联",
     author: "列宁",
-    source: "《列宁》·1870—1924",
+    source: "列宁·1870—1924",
     excerpt: "十月革命 · 苏联的创建者"
   },
   {
@@ -4208,7 +4208,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国 / 意大利",
     author: "阿马迪奥·贾尼尼",
-    source: "《阿马迪奥·贾尼尼》·1870—1949",
+    source: "阿马迪奥·贾尼尼·1870—1949",
     excerpt: "美洲银行 · 消费金融"
   },
   {
@@ -4221,7 +4221,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "巴多格里奥",
-    source: "《巴多格里奥》·1871—1956",
+    source: "巴多格里奥·1871—1956",
     excerpt: "1943 年意大利退出轴心"
   },
   {
@@ -4234,7 +4234,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "新西兰 / 英国",
     author: "卢瑟福",
-    source: "《卢瑟福》·1871—1937",
+    source: "卢瑟福·1871—1937",
     excerpt: "原子核的发现者，「卢瑟福散射实验」"
   },
   {
@@ -4247,7 +4247,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "罗素",
-    source: "《罗素》·1872—1970",
+    source: "罗素·1872—1970",
     excerpt: "逻辑与公共写作的典范"
   },
   {
@@ -4260,7 +4260,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "荷兰",
     author: "蒙德里安",
-    source: "《蒙德里安》·1872—1944",
+    source: "蒙德里安·1872—1944",
     excerpt: "《红黄蓝的构成》，几何抽象的最高点"
   },
   {
@@ -4273,7 +4273,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 美国",
     author: "拉赫玛尼诺夫",
-    source: "《拉赫玛尼诺夫》·1873—1943",
+    source: "拉赫玛尼诺夫·1873—1943",
     excerpt: "《第二钢琴协奏曲》《帕格尼尼主题狂想曲》"
   },
   {
@@ -4286,7 +4286,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "丘吉尔",
-    source: "《丘吉尔》·1874—1965",
+    source: "丘吉尔·1874—1965",
     excerpt: "绝不投降的战时首相"
   },
   {
@@ -4299,7 +4299,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "马可尼",
-    source: "《马可尼》·1874—1937",
+    source: "马可尼·1874—1937",
     excerpt: "无线电报"
   },
   {
@@ -4312,7 +4312,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 美国",
     author: "勋伯格",
-    source: "《勋伯格》·1874—1951",
+    source: "勋伯格·1874—1951",
     excerpt: "十二音体系的创立者，《月迷彼埃罗》"
   },
   {
@@ -4325,7 +4325,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "里尔克",
-    source: "《里尔克》·1875—1926",
+    source: "里尔克·1875—1926",
     excerpt: "《杜伊诺哀歌》《给青年诗人的信》"
   },
   {
@@ -4338,7 +4338,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "托马斯·曼",
-    source: "《托马斯·曼》·1875—1955",
+    source: "托马斯·曼·1875—1955",
     excerpt: "《布登勃洛克一家》《魔山》，1929 年诺贝尔文学奖"
   },
   {
@@ -4351,7 +4351,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "拉威尔",
-    source: "《拉威尔》·1875—1937",
+    source: "拉威尔·1875—1937",
     excerpt: "《波莱罗》"
   },
   {
@@ -4364,7 +4364,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "阿登纳",
-    source: "《阿登纳》·1876—1967",
+    source: "阿登纳·1876—1967",
     excerpt: "联邦德国的奠基者"
   },
   {
@@ -4377,7 +4377,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "威利斯·开利",
-    source: "《威利斯·开利》·1876—1950",
+    source: "威利斯·开利·1876—1950",
     excerpt: "空调的发明者"
   },
   {
@@ -4390,7 +4390,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "罗马尼亚 / 法国",
     author: "布朗库西",
-    source: "《布朗库西》·1876—1957",
+    source: "布朗库西·1876—1957",
     excerpt: "《吻》《空间中的鸟》，现代雕塑的极简开端"
   },
   {
@@ -4403,7 +4403,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "哈代",
-    source: "《哈代》·1877—1947",
+    source: "哈代·1877—1947",
     excerpt: "《一个数学家的辩白》，解析数论与拉马努金的伯乐"
   },
   {
@@ -4416,7 +4416,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 瑞士",
     author: "黑塞",
-    source: "《黑塞》·1877—1962",
+    source: "黑塞·1877—1962",
     excerpt: "《荒原狼》《玻璃球游戏》，1946 年诺贝尔文学奖"
   },
   {
@@ -4429,7 +4429,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "斯大林",
-    source: "《斯大林》·1878—1953",
+    source: "斯大林·1878—1953",
     excerpt: "苏联工业化与卫国战争"
   },
   {
@@ -4442,7 +4442,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "玛格丽特·桑格",
-    source: "《玛格丽特·桑格》·1879—1966",
+    source: "玛格丽特·桑格·1879—1966",
     excerpt: "节育运动的开创者"
   },
   {
@@ -4455,7 +4455,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 瑞士 / 美国",
     author: "爱因斯坦",
-    source: "《爱因斯坦》·1879—1955",
+    source: "爱因斯坦·1879—1955",
     excerpt: "相对论的创立者"
   },
   {
@@ -4468,7 +4468,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国",
     author: "马列维奇",
-    source: "《马列维奇》·1879—1935",
+    source: "马列维奇·1879—1935",
     excerpt: "《白底上的黑方块》，至上主义的宣言"
   },
   {
@@ -4481,7 +4481,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "海伦·凯勒",
-    source: "《海伦·凯勒》·1880—1968",
+    source: "海伦·凯勒·1880—1968",
     excerpt: "《假如给我三天光明》"
   },
   {
@@ -4494,7 +4494,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "德加斯佩里",
-    source: "《德加斯佩里》·1881—1954",
+    source: "德加斯佩里·1881—1954",
     excerpt: "战后意大利的定盘星"
   },
   {
@@ -4507,7 +4507,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "茨威格",
-    source: "《茨威格》·1881—1942",
+    source: "茨威格·1881—1942",
     excerpt: "《一个陌生女人的来信》《昨日的世界》"
   },
   {
@@ -4520,7 +4520,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国 / 苏格兰",
     author: "亚历山大·弗莱明",
-    source: "《亚历山大·弗莱明》·1881—1955",
+    source: "亚历山大·弗莱明·1881—1955",
     excerpt: "青霉素"
   },
   {
@@ -4533,7 +4533,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "弗莱明",
-    source: "《弗莱明》·1881—1955",
+    source: "弗莱明·1881—1955",
     excerpt: "青霉素的发现者，1945 年诺贝尔奖"
   },
   {
@@ -4546,7 +4546,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙 / 法国",
     author: "毕加索",
-    source: "《毕加索》·1881—1973",
+    source: "毕加索·1881—1973",
     excerpt: "《格尔尼卡》《亚维农少女》，立体主义的创立"
   },
   {
@@ -4559,7 +4559,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "富兰克林·罗斯福",
-    source: "《富兰克林·罗斯福》·1882—1945",
+    source: "富兰克林·罗斯福·1882—1945",
     excerpt: "新政 · 二战同盟"
   },
   {
@@ -4572,7 +4572,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰",
     author: "乔伊斯",
-    source: "《乔伊斯》·1882—1941",
+    source: "乔伊斯·1882—1941",
     excerpt: "《尤利西斯》《都柏林人》，意识流小说的巅峰"
   },
   {
@@ -4585,7 +4585,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "伍尔夫",
-    source: "《伍尔夫》·1882—1941",
+    source: "伍尔夫·1882—1941",
     excerpt: "《达洛维夫人》《到灯塔去》，意识流与女性主义文论"
   },
   {
@@ -4598,7 +4598,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰",
     author: "詹姆斯·乔伊斯",
-    source: "《詹姆斯·乔伊斯》·1882—1941",
+    source: "詹姆斯·乔伊斯·1882—1941",
     excerpt: "《尤利西斯》"
   },
   {
@@ -4611,7 +4611,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "诺特",
-    source: "《诺特》·1882—1935",
+    source: "诺特·1882—1935",
     excerpt: "抽象代数的奠基者，「诺特定理」"
   },
   {
@@ -4624,7 +4624,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "罗伯特·戈达德",
-    source: "《罗伯特·戈达德》·1882—1945",
+    source: "罗伯特·戈达德·1882—1945",
     excerpt: "第一枚液体燃料火箭"
   },
   {
@@ -4637,7 +4637,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "布拉克",
-    source: "《布拉克》·1882—1963",
+    source: "布拉克·1882—1963",
     excerpt: "立体主义的共同创立者，与毕加索并肩"
   },
   {
@@ -4650,7 +4650,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "霍珀",
-    source: "《霍珀》·1882—1967",
+    source: "霍珀·1882—1967",
     excerpt: "《夜游者》，都市孤独的画家"
   },
   {
@@ -4663,7 +4663,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 美国",
     author: "斯特拉文斯基",
-    source: "《斯特拉文斯基》·1882—1971",
+    source: "斯特拉文斯基·1882—1971",
     excerpt: "《春之祭》，二十世纪音乐的分水岭"
   },
   {
@@ -4676,7 +4676,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 美国",
     author: "伊戈尔·斯特拉文斯基",
-    source: "《伊戈尔·斯特拉文斯基》·1882—1971",
+    source: "伊戈尔·斯特拉文斯基·1882—1971",
     excerpt: "《春之祭》"
   },
   {
@@ -4689,7 +4689,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利",
     author: "墨索里尼",
-    source: "《墨索里尼》·1883—1945",
+    source: "墨索里尼·1883—1945",
     excerpt: "法西斯主义的创始者"
   },
   {
@@ -4702,7 +4702,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "卡夫卡",
-    source: "《卡夫卡》·1883—1924",
+    source: "卡夫卡·1883—1924",
     excerpt: "《变形记》《城堡》《审判》，现代主义的预言者"
   },
   {
@@ -4715,7 +4715,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 美国",
     author: "格罗皮乌斯",
-    source: "《格罗皮乌斯》·1883—1969",
+    source: "格罗皮乌斯·1883—1969",
     excerpt: "包豪斯的创办者，现代设计教育的奠基"
   },
   {
@@ -4728,7 +4728,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "可可·香奈儿",
-    source: "《可可·香奈儿》·1883—1971",
+    source: "可可·香奈儿·1883—1971",
     excerpt: "小黑裙 · 香奈儿套装"
   },
   {
@@ -4741,7 +4741,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "凯恩斯",
-    source: "《凯恩斯》·1883—1946",
+    source: "凯恩斯·1883—1946",
     excerpt: "《就业、利息和货币通论》"
   },
   {
@@ -4754,7 +4754,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 美国",
     author: "熊彼特",
-    source: "《熊彼特》·1883—1950",
+    source: "熊彼特·1883—1950",
     excerpt: "创新 · 创造性破坏"
   },
   {
@@ -4767,7 +4767,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "埃莉诺·罗斯福",
-    source: "《埃莉诺·罗斯福》·1884—1962",
+    source: "埃莉诺·罗斯福·1884—1962",
     excerpt: "《世界人权宣言》"
   },
   {
@@ -4780,7 +4780,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "路易斯·梅耶",
-    source: "《路易斯·梅耶》·1884—1957",
+    source: "路易斯·梅耶·1884—1957",
     excerpt: "好莱坞制片厂制度"
   },
   {
@@ -4793,7 +4793,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "劳伦斯",
-    source: "《劳伦斯》·1885—1930",
+    source: "劳伦斯·1885—1930",
     excerpt: "《儿子与情人》《查泰莱夫人的情人》"
   },
   {
@@ -4806,7 +4806,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "丹麦",
     author: "玻尔",
-    source: "《玻尔》·1885—1962",
+    source: "玻尔·1885—1962",
     excerpt: "哥本哈根学派的领袖"
   },
   {
@@ -4819,7 +4819,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "查尔斯·美林",
-    source: "《查尔斯·美林》·1885—1956",
+    source: "查尔斯·美林·1885—1956",
     excerpt: "美林 · 把华尔街带给大众"
   },
   {
@@ -4832,7 +4832,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "以色列",
     author: "大卫·本-古里安",
-    source: "《大卫·本-古里安》·1886—1973",
+    source: "大卫·本-古里安·1886—1973",
     excerpt: "以色列的建国总理"
   },
   {
@@ -4845,7 +4845,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 美国",
     author: "密斯·凡·德·罗",
-    source: "《密斯·凡·德·罗》·1886—1969",
+    source: "密斯·凡·德·罗·1886—1969",
     excerpt: "「少即是多」，巴塞罗那馆与西格拉姆大厦"
   },
   {
@@ -4858,7 +4858,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "蒙哥马利",
-    source: "《蒙哥马利》·1887—1976",
+    source: "蒙哥马利·1887—1976",
     excerpt: "阿拉曼 · 物资先行"
   },
   {
@@ -4871,7 +4871,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "曼施坦因",
-    source: "《曼施坦因》·1887—1973",
+    source: "曼施坦因·1887—1973",
     excerpt: "镰刀计划"
   },
   {
@@ -4884,7 +4884,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "印度",
     author: "拉马努金",
-    source: "《拉马努金》·1887—1920",
+    source: "拉马努金·1887—1920",
     excerpt: "无师自通的天才，三千九百个公式"
   },
   {
@@ -4897,7 +4897,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利",
     author: "薛定谔",
-    source: "《薛定谔》·1887—1961",
+    source: "薛定谔·1887—1961",
     excerpt: "波动力学方程，「薛定谔的猫」"
   },
   {
@@ -4910,7 +4910,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞士 / 法国",
     author: "柯布西耶",
-    source: "《柯布西耶》·1887—1965",
+    source: "柯布西耶·1887—1965",
     excerpt: "《走向新建筑》，现代主义建筑的宣言者"
   },
   {
@@ -4923,7 +4923,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "俄国 / 法国",
     author: "夏加尔",
-    source: "《夏加尔》·1887—1985",
+    source: "夏加尔·1887—1985",
     excerpt: "《生日》《我与村庄》，梦与故乡的色彩"
   },
   {
@@ -4936,7 +4936,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "欧姬芙",
-    source: "《欧姬芙》·1887—1986",
+    source: "欧姬芙·1887—1986",
     excerpt: "《牛头骨与红布》《黑鸢尾》，美国现代主义的代表"
   },
   {
@@ -4949,7 +4949,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞士 / 法国",
     author: "勒·柯布西耶",
-    source: "《勒·柯布西耶》·1887—1965",
+    source: "勒·柯布西耶·1887—1965",
     excerpt: "《走向新建筑》· 现代主义建筑"
   },
   {
@@ -4962,7 +4962,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国 / 美国",
     author: "马塞尔·杜尚",
-    source: "《马塞尔·杜尚》·1887—1968",
+    source: "马塞尔·杜尚·1887—1968",
     excerpt: "《泉》· 观念艺术"
   },
   {
@@ -4975,7 +4975,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "肯尼迪家族",
-    source: "《肯尼迪家族》·1888—2009",
+    source: "肯尼迪家族·1888—2009",
     excerpt: "美国政治的「王朝」"
   },
   {
@@ -4988,7 +4988,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "葡萄牙",
     author: "佩索阿",
-    source: "《佩索阿》·1888—1935",
+    source: "佩索阿·1888—1935",
     excerpt: "《惶然录》，以多个「异名者」写作的诗人"
   },
   {
@@ -5001,7 +5001,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国 / 英国",
     author: "T.S.艾略特",
-    source: "《T.S.艾略特》·1888—1965",
+    source: "T.S.艾略特·1888—1965",
     excerpt: "《荒原》"
   },
   {
@@ -5014,7 +5014,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "塞尔曼·瓦克斯曼",
-    source: "《塞尔曼·瓦克斯曼》·1888—1973",
+    source: "塞尔曼·瓦克斯曼·1888—1973",
     excerpt: "链霉素的发现者，1948 年诺贝尔生理学或医学奖"
   },
   {
@@ -5027,7 +5027,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "希特勒",
-    source: "《希特勒》·1889—1945",
+    source: "希特勒·1889—1945",
     excerpt: "挑起二战的一方"
   },
   {
@@ -5040,7 +5040,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "阿赫玛托娃",
-    source: "《阿赫玛托娃》·1889—1966",
+    source: "阿赫玛托娃·1889—1966",
     excerpt: "《安魂曲》《reqiuem》，「俄罗斯诗歌的月亮」"
   },
   {
@@ -5053,7 +5053,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "海德格尔",
-    source: "《海德格尔》·1889—1976",
+    source: "海德格尔·1889—1976",
     excerpt: "追问存在的哲学家"
   },
   {
@@ -5066,7 +5066,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 英国",
     author: "维特根斯坦",
-    source: "《维特根斯坦》·1889—1951",
+    source: "维特根斯坦·1889—1951",
     excerpt: "语言哲学的枢纽"
   },
   {
@@ -5079,7 +5079,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "哈勃",
-    source: "《哈勃》·1889—1953",
+    source: "哈勃·1889—1953",
     excerpt: "河外星系的发现，宇宙膨胀的证据"
   },
   {
@@ -5092,7 +5092,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国 / 美国",
     author: "查理·卓别林",
-    source: "《查理·卓别林》·1889—1977",
+    source: "查理·卓别林·1889—1977",
     excerpt: "流浪汉 ·《摩登时代》"
   },
   {
@@ -5105,7 +5105,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "戴高乐",
-    source: "《戴高乐》·1890—1970",
+    source: "戴高乐·1890—1970",
     excerpt: "自由法国 · 第五共和国"
   },
   {
@@ -5118,7 +5118,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "越南",
     author: "胡志明",
-    source: "《胡志明》·1890—1969",
+    source: "胡志明·1890—1969",
     excerpt: "越南独立与越战"
   },
   {
@@ -5131,7 +5131,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "帕斯捷尔纳克",
-    source: "《帕斯捷尔纳克》·1890—1960",
+    source: "帕斯捷尔纳克·1890—1960",
     excerpt: "《日瓦戈医生》，1958 年诺贝尔文学奖（被迫拒绝）"
   },
   {
@@ -5144,7 +5144,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "艾森豪威尔",
-    source: "《艾森豪威尔》·1890—1969",
+    source: "艾森豪威尔·1890—1969",
     excerpt: "诺曼底登陆 · 盟军统帅"
   },
   {
@@ -5157,7 +5157,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "隆美尔",
-    source: "《隆美尔》·1891—1944",
+    source: "隆美尔·1891—1944",
     excerpt: "沙漠之狐"
   },
   {
@@ -5170,7 +5170,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "邓尼茨",
-    source: "《邓尼茨》·1891—1980",
+    source: "邓尼茨·1891—1980",
     excerpt: "代表德国签署投降书"
   },
   {
@@ -5183,7 +5183,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "加拿大",
     author: "班廷",
-    source: "《班廷》·1891—1941",
+    source: "班廷·1891—1941",
     excerpt: "胰岛素的发现者，1923 年诺贝尔奖"
   },
   {
@@ -5196,7 +5196,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "大卫·沙诺夫",
-    source: "《大卫·沙诺夫》·1891—1971",
+    source: "大卫·沙诺夫·1891—1971",
     excerpt: "NBC · 电视时代"
   },
   {
@@ -5209,7 +5209,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "利奥·伯内特",
-    source: "《利奥·伯内特》·1891—1971",
+    source: "利奥·伯内特·1891—1971",
     excerpt: "万宝路牛仔 · 广告形象"
   },
   {
@@ -5222,7 +5222,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "日本",
     author: "芥川龙之介",
-    source: "《芥川龙之介》·1892—1927",
+    source: "芥川龙之介·1892—1927",
     excerpt: "《罗生门》《竹林中》，短篇小说的巨匠"
   },
   {
@@ -5235,7 +5235,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "德布罗意",
-    source: "《德布罗意》·1892—1987",
+    source: "德布罗意·1892—1987",
     excerpt: "物质波假说，波粒二象性的推广者"
   },
   {
@@ -5248,7 +5248,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "马雅可夫斯基",
-    source: "《马雅可夫斯基》·1893—1930",
+    source: "马雅可夫斯基·1893—1930",
     excerpt: "《穿裤子的云》，未来主义的旗手"
   },
   {
@@ -5261,7 +5261,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "米罗",
-    source: "《米罗》·1893—1983",
+    source: "米罗·1893—1983",
     excerpt: "《哈里昆的狂欢》，天真与符号的诗人"
   },
   {
@@ -5274,7 +5274,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "比利时",
     author: "勒梅特",
-    source: "《勒梅特》·1894—1966",
+    source: "勒梅特·1894—1966",
     excerpt: "「大爆炸」理论的最早提出者"
   },
   {
@@ -5287,7 +5287,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "玛莎·葛兰姆",
-    source: "《玛莎·葛兰姆》·1894—1991",
+    source: "玛莎·葛兰姆·1894—1991",
     excerpt: "美国现代舞的技术"
   },
   {
@@ -5300,7 +5300,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "比尔·威尔逊",
-    source: "《比尔·威尔逊》·1895—1971",
+    source: "比尔·威尔逊·1895—1971",
     excerpt: "匿名戒酒会（AA）"
   },
   {
@@ -5313,7 +5313,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "菲茨杰拉德",
-    source: "《菲茨杰拉德》·1896—1940",
+    source: "菲茨杰拉德·1896—1940",
     excerpt: "《了不起的盖茨比》，爵士时代的记录者"
   },
   {
@@ -5326,7 +5326,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "瑞士",
     author: "让·皮亚杰",
-    source: "《让·皮亚杰》·1896—1980",
+    source: "让·皮亚杰·1896—1980",
     excerpt: "儿童认知发展四阶段"
   },
   {
@@ -5339,7 +5339,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "朱可夫",
-    source: "《朱可夫》·1896—1974",
+    source: "朱可夫·1896—1974",
     excerpt: "莫斯科 · 斯大林格勒 · 柏林"
   },
   {
@@ -5352,7 +5352,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "艾哈德",
-    source: "《艾哈德》·1897—1977",
+    source: "艾哈德·1897—1977",
     excerpt: "社会市场经济的推手"
   },
   {
@@ -5365,7 +5365,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "福克纳",
-    source: "《福克纳》·1897—1962",
+    source: "福克纳·1897—1962",
     excerpt: "《喧哗与骚动》《我弥留之际》，1949 年诺贝尔文学奖"
   },
   {
@@ -5378,7 +5378,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "居里奥·居里",
-    source: "《居里奥·居里》·1897—1956",
+    source: "居里奥·居里·1897—1956",
     excerpt: "人工放射性的发现，1935 年诺贝尔化学奖"
   },
   {
@@ -5391,7 +5391,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国 / 意大利",
     author: "查理·卢西安诺",
-    source: "《查理·卢西安诺》·1897—1962",
+    source: "查理·卢西安诺·1897—1962",
     excerpt: "五大家族委员会"
   },
   {
@@ -5404,7 +5404,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "布莱希特",
-    source: "《布莱希特》·1898—1956",
+    source: "布莱希特·1898—1956",
     excerpt: "「史诗剧场」与「间离效果」的创立者"
   },
   {
@@ -5417,7 +5417,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "洛尔迦",
-    source: "《洛尔迦》·1898—1936",
+    source: "洛尔迦·1898—1936",
     excerpt: "《吉普赛谣曲集》《血婚》，1936 年被枪杀"
   },
   {
@@ -5430,7 +5430,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "亨利·摩尔",
-    source: "《亨利·摩尔》·1898—1986",
+    source: "亨利·摩尔·1898—1986",
     excerpt: "《母与子》《卧像》，现代雕塑的公共形象"
   },
   {
@@ -5443,7 +5443,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "乔治·格什温",
-    source: "《乔治·格什温》·1898—1937",
+    source: "乔治·格什温·1898—1937",
     excerpt: "《蓝色狂想曲》《波吉与贝丝》，爵士与古典的交汇"
   },
   {
@@ -5456,7 +5456,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "海明威",
-    source: "《海明威》·1899—1961",
+    source: "海明威·1899—1961",
     excerpt: "《老人与海》《永别了，武器》，1954 年诺贝尔文学奖"
   },
   {
@@ -5469,7 +5469,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "阿根廷",
     author: "博尔赫斯",
-    source: "《博尔赫斯》·1899—1986",
+    source: "博尔赫斯·1899—1986",
     excerpt: "《小径分岔的花园》《阿莱夫》，迷宫与无限的图书馆"
   },
   {
@@ -5482,7 +5482,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "日本",
     author: "川端康成",
-    source: "《川端康成》·1899—1972",
+    source: "川端康成·1899—1972",
     excerpt: "《雪国》《古都》，1968 年诺贝尔文学奖"
   },
   {
@@ -5495,7 +5495,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "胡安·特里普",
-    source: "《胡安·特里普》·1899—1981",
+    source: "胡安·特里普·1899—1981",
     excerpt: "泛美航空 · 国际航线"
   },
   {
@@ -5508,7 +5508,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 英国",
     author: "哈耶克",
-    source: "《哈耶克》·1899—1992",
+    source: "哈耶克·1899—1992",
     excerpt: "自发秩序的辩护者"
   },
   {
@@ -5521,7 +5521,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "海森堡",
-    source: "《海森堡》·1901—1976",
+    source: "海森堡·1901—1976",
     excerpt: "矩阵力学与测不准原理，1932 年诺贝尔奖"
   },
   {
@@ -5534,7 +5534,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "鲍林",
-    source: "《鲍林》·1901—1994",
+    source: "鲍林·1901—1994",
     excerpt: "化学键的本质，1954 年诺贝尔化学奖与 1962 年和平奖"
   },
   {
@@ -5547,7 +5547,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "意大利 / 美国",
     author: "费米",
-    source: "《费米》·1901—1954",
+    source: "费米·1901—1954",
     excerpt: "核时代的开启者"
   },
   {
@@ -5560,7 +5560,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "沃尔特·迪斯尼",
-    source: "《沃尔特·迪斯尼》·1901—1966",
+    source: "沃尔特·迪斯尼·1901—1966",
     excerpt: "米老鼠 · 迪斯尼乐园"
   },
   {
@@ -5573,7 +5573,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "路易斯·阿姆斯特朗",
-    source: "《路易斯·阿姆斯特朗》·1901—1971",
+    source: "路易斯·阿姆斯特朗·1901—1971",
     excerpt: "爵士小号 · 独奏即兴"
   },
   {
@@ -5586,7 +5586,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "伊朗",
     author: "霍梅尼",
-    source: "《霍梅尼》·1902—1989",
+    source: "霍梅尼·1902—1989",
     excerpt: "伊朗伊斯兰革命"
   },
   {
@@ -5599,7 +5599,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "斯坦贝克",
-    source: "《斯坦贝克》·1902—1968",
+    source: "斯坦贝克·1902—1968",
     excerpt: "《愤怒的葡萄》，1939 年普利策奖"
   },
   {
@@ -5612,7 +5612,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "查尔斯·林德伯格",
-    source: "《查尔斯·林德伯格》·1902—1974",
+    source: "查尔斯·林德伯格·1902—1974",
     excerpt: "首次单人飞越大西洋"
   },
   {
@@ -5625,7 +5625,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 英国",
     author: "波普尔",
-    source: "《波普尔》·1902—1994",
+    source: "波普尔·1902—1994",
     excerpt: "「可证伪性」作为科学的标准，《开放社会及其敌人》"
   },
   {
@@ -5638,7 +5638,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "狄拉克",
-    source: "《狄拉克》·1902—1984",
+    source: "狄拉克·1902—1984",
     excerpt: "狄拉克方程，反物质的理论预言者"
   },
   {
@@ -5651,7 +5651,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "罗杰斯与汉默斯坦",
-    source: "《罗杰斯与汉默斯坦》·1902—1979 / 1895—1960",
+    source: "罗杰斯与汉默斯坦·1902—1979 / 1895—1960",
     excerpt: "《音乐之声》· 美国音乐剧"
   },
   {
@@ -5664,7 +5664,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "雷·克罗克",
-    source: "《雷·克罗克》·1902—1984",
+    source: "雷·克罗克·1902—1984",
     excerpt: "麦当劳 · 快餐业"
   },
   {
@@ -5677,7 +5677,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "奥威尔",
-    source: "《奥威尔》·1903—1950",
+    source: "奥威尔·1903—1950",
     excerpt: "《一九八四》《动物农场》，政治寓言的经典"
   },
   {
@@ -5690,7 +5690,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "肯尼亚 / 英国",
     author: "利基家族",
-    source: "《利基家族》·1903—2022",
+    source: "利基家族·1903—2022",
     excerpt: "东非的人类起源考古"
   },
   {
@@ -5703,7 +5703,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "匈牙利 / 美国",
     author: "冯·诺依曼",
-    source: "《冯·诺依曼》·1903—1957",
+    source: "冯·诺依曼·1903—1957",
     excerpt: "现代计算机架构的设计者"
   },
   {
@@ -5716,7 +5716,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "平卡斯",
-    source: "《平卡斯》·1903—1967",
+    source: "平卡斯·1903—1967",
     excerpt: "口服避孕药"
   },
   {
@@ -5729,7 +5729,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "智利",
     author: "聂鲁达",
-    source: "《聂鲁达》·1904—1973",
+    source: "聂鲁达·1904—1973",
     excerpt: "《二十首情诗与一首绝望的歌》，1971 年诺贝尔文学奖"
   },
   {
@@ -5742,7 +5742,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "西班牙",
     author: "达利",
-    source: "《达利》·1904—1989",
+    source: "达利·1904—1989",
     excerpt: "《记忆的永恒》，超现实主义的代言人"
   },
   {
@@ -5755,7 +5755,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "萨特",
-    source: "《萨特》·1905—1980",
+    source: "萨特·1905—1980",
     excerpt: "存在主义的旗手"
   },
   {
@@ -5768,7 +5768,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "爱尔兰 / 法国",
     author: "贝克特",
-    source: "《贝克特》·1906—1989",
+    source: "贝克特·1906—1989",
     excerpt: "《等待戈多》，荒诞派戏剧的代表，1969 年诺贝尔奖"
   },
   {
@@ -5781,7 +5781,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 美国",
     author: "阿伦特",
-    source: "《阿伦特》·1906—1975",
+    source: "阿伦特·1906—1975",
     excerpt: "《极权主义的起源》《人的境况》，政治哲学的重要声音"
   },
   {
@@ -5794,7 +5794,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "菲洛·法恩斯沃思",
-    source: "《菲洛·法恩斯沃思》·1906—1971",
+    source: "菲洛·法恩斯沃思·1906—1971",
     excerpt: "全电子电视"
   },
   {
@@ -5807,7 +5807,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "奥地利 / 美国",
     author: "库尔特·哥德尔",
-    source: "《库尔特·哥德尔》·1906—1978",
+    source: "库尔特·哥德尔·1906—1978",
     excerpt: "不完全性定理"
   },
   {
@@ -5820,7 +5820,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "肖斯塔科维奇",
-    source: "《肖斯塔科维奇》·1906—1975",
+    source: "肖斯塔科维奇·1906—1975",
     excerpt: "十五部交响曲，《第七交响曲》写于列宁格勒围城"
   },
   {
@@ -5833,7 +5833,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "沃尔特·路则",
-    source: "《沃尔特·路则》·1907—1970",
+    source: "沃尔特·路则·1907—1970",
     excerpt: "美国汽车工人工会"
   },
   {
@@ -5846,7 +5846,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "雷切尔·卡森",
-    source: "《雷切尔·卡森》·1907—1964",
+    source: "雷切尔·卡森·1907—1964",
     excerpt: "《寂静的春天》"
   },
   {
@@ -5859,7 +5859,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "威廉·李维特",
-    source: "《威廉·李维特》·1907—1994",
+    source: "威廉·李维特·1907—1994",
     excerpt: "莱维敦 · 美国郊区"
   },
   {
@@ -5872,7 +5872,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "波伏娃",
-    source: "《波伏娃》·1908—1986",
+    source: "波伏娃·1908—1986",
     excerpt: "女性主义理论的奠基者"
   },
   {
@@ -5885,7 +5885,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联",
     author: "朗道",
-    source: "《朗道》·1908—1968",
+    source: "朗道·1908—1968",
     excerpt: "理论物理学的最小值原理，1962 年诺贝尔奖"
   },
   {
@@ -5898,7 +5898,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "雅诗·兰黛",
-    source: "《雅诗·兰黛》·1908—2004",
+    source: "雅诗·兰黛·1908—2004",
     excerpt: "化妆品业 · 赠品小样"
   },
   {
@@ -5911,7 +5911,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "阿尔巴尼亚 / 印度",
     author: "特里萨修女",
-    source: "《特里萨修女》·1910—1997",
+    source: "特里萨修女·1910—1997",
     excerpt: "仁爱传教修女会"
   },
   {
@@ -5924,7 +5924,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "霍奇金",
-    source: "《霍奇金》·1910—1994",
+    source: "霍奇金·1910—1994",
     excerpt: "青霉素与维生素 B12 的结构测定，1964 年诺贝尔化学奖"
   },
   {
@@ -5937,7 +5937,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "威廉·肖克利",
-    source: "《威廉·肖克利》·1910—1989",
+    source: "威廉·肖克利·1910—1989",
     excerpt: "晶体管 · 硅谷的起源"
   },
   {
@@ -5950,7 +5950,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "罗纳德·里根",
-    source: "《罗纳德·里根》·1911—2004",
+    source: "罗纳德·里根·1911—2004",
     excerpt: "冷战收场 · 柏林墙演说"
   },
   {
@@ -5963,7 +5963,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国 / 美国",
     author: "陈省身",
-    source: "《陈省身》·1911—2004",
+    source: "陈省身·1911—2004",
     excerpt: "微分几何的奠基者，「陈示性类」"
   },
   {
@@ -5976,7 +5976,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "露西尔·鲍尔",
-    source: "《露西尔·鲍尔》·1911—1989",
+    source: "露西尔·鲍尔·1911—1989",
     excerpt: "《我爱露西》· 情景喜剧"
   },
   {
@@ -5989,7 +5989,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国 / 美国",
     author: "吴健雄",
-    source: "《吴健雄》·1912—1997",
+    source: "吴健雄·1912—1997",
     excerpt: "宇称不守恒的实验验证者，「物理学第一夫人」"
   },
   {
@@ -6002,7 +6002,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "图灵",
-    source: "《图灵》·1912—1954",
+    source: "图灵·1912—1954",
     excerpt: "计算机科学之父"
   },
   {
@@ -6015,7 +6015,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "波洛克",
-    source: "《波洛克》·1912—1956",
+    source: "波洛克·1912—1956",
     excerpt: "《秋韵》，行动绘画与「滴画」的开创"
   },
   {
@@ -6028,7 +6028,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "弗里德曼",
-    source: "《弗里德曼》·1912—2006",
+    source: "弗里德曼·1912—2006",
     excerpt: "货币主义 ·《资本主义与自由》"
   },
   {
@@ -6041,7 +6041,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国",
     author: "勃兰特",
-    source: "《勃兰特》·1913—1992",
+    source: "勃兰特·1913—1992",
     excerpt: "新东方政策 · 华沙之跪"
   },
   {
@@ -6054,7 +6054,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "罗莎·帕克斯",
-    source: "《罗莎·帕克斯》·1913—2005",
+    source: "罗莎·帕克斯·1913—2005",
     excerpt: "蒙哥马利公交抵制"
   },
   {
@@ -6067,7 +6067,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国（阿尔及利亚出生）",
     author: "加缪",
-    source: "《加缪》·1913—1960",
+    source: "加缪·1913—1960",
     excerpt: "荒诞哲学的代表"
   },
   {
@@ -6080,7 +6080,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "索尔克",
-    source: "《索尔克》·1914—1995",
+    source: "索尔克·1914—1995",
     excerpt: "脊髓灰质炎疫苗的研制者，拒绝为其申请专利"
   },
   {
@@ -6093,7 +6093,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "约纳斯·沙克",
-    source: "《约纳斯·沙克》·1914—1995",
+    source: "约纳斯·沙克·1914—1995",
     excerpt: "脊髓灰质炎疫苗"
   },
   {
@@ -6106,7 +6106,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "弗兰克·西纳特拉",
-    source: "《弗兰克·西纳特拉》·1915—1998",
+    source: "弗兰克·西纳特拉·1915—1998",
     excerpt: "美国歌本的演唱者"
   },
   {
@@ -6119,7 +6119,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "克里克",
-    source: "《克里克》·1916—2004",
+    source: "克里克·1916—2004",
     excerpt: "DNA 双螺旋的共同发现者，分子生物学的奠基"
   },
   {
@@ -6132,7 +6132,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "约翰·肯尼迪",
-    source: "《约翰·肯尼迪》·1917—1963",
+    source: "约翰·肯尼迪·1917—1963",
     excerpt: "新边疆 · 登月计划"
   },
   {
@@ -6145,7 +6145,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国 / 美国",
     author: "贝聿铭",
-    source: "《贝聿铭》·1917—2019",
+    source: "贝聿铭·1917—2019",
     excerpt: "卢浮宫金字塔、苏州博物馆，1983 年普利兹克奖"
   },
   {
@@ -6158,7 +6158,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "南非",
     author: "曼德拉",
-    source: "《曼德拉》·1918—2013",
+    source: "曼德拉·1918—2013",
     excerpt: "罗本岛二十七年"
   },
   {
@@ -6171,7 +6171,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "葛培理",
-    source: "《葛培理》·1918—2018",
+    source: "葛培理·1918—2018",
     excerpt: "福音布道运动"
   },
   {
@@ -6184,7 +6184,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "费曼",
-    source: "《费曼》·1918—1988",
+    source: "费曼·1918—1988",
     excerpt: "量子电动力学与费曼图，1965 年诺贝尔奖"
   },
   {
@@ -6197,7 +6197,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "山姆·沃尔顿",
-    source: "《山姆·沃尔顿》·1918—1992",
+    source: "山姆·沃尔顿·1918—1992",
     excerpt: "沃尔玛 · 天天平价"
   },
   {
@@ -6210,7 +6210,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "杰基·罗宾森",
-    source: "《杰基·罗宾森》·1919—1972",
+    source: "杰基·罗宾森·1919—1972",
     excerpt: "打破棒球的肤色界限"
   },
   {
@@ -6223,7 +6223,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "新西兰 / 尼泊尔",
     author: "希拉里与丹增·诺盖",
-    source: "《希拉里与丹增·诺盖》·1919—2008 / 1914—1986",
+    source: "希拉里与丹增·诺盖·1919—2008 / 1914—1986",
     excerpt: "首次登顶珠峰"
   },
   {
@@ -6236,7 +6236,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰 / 梵蒂冈",
     author: "教宗若望·保禄二世",
-    source: "《教宗若望·保禄二世》·1920—2005",
+    source: "教宗若望·保禄二世·1920—2005",
     excerpt: "走遍世界的教宗"
   },
   {
@@ -6249,7 +6249,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "罗尔斯",
-    source: "《罗尔斯》·1921—2002",
+    source: "罗尔斯·1921—2002",
     excerpt: "正义论的作者"
   },
   {
@@ -6262,7 +6262,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联 / 俄罗斯",
     author: "安德烈·萨哈罗夫",
-    source: "《安德烈·萨哈罗夫》·1921—1989",
+    source: "安德烈·萨哈罗夫·1921—1989",
     excerpt: "苏联氢弹之父与人权斗士"
   },
   {
@@ -6275,7 +6275,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "日本",
     author: "盛田昭夫",
-    source: "《盛田昭夫》·1921—1999",
+    source: "盛田昭夫·1921—1999",
     excerpt: "索尼 · 随身听"
   },
   {
@@ -6288,7 +6288,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国 / 美国",
     author: "杨振宁",
-    source: "《杨振宁》·1922—",
+    source: "杨振宁·1922—",
     excerpt: "规范场论的创立者"
   },
   {
@@ -6301,7 +6301,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "马龙·白兰度",
-    source: "《马龙·白兰度》·1924—2004",
+    source: "马龙·白兰度·1924—2004",
     excerpt: "方法派表演 ·《教父》"
   },
   {
@@ -6314,7 +6314,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "玛格丽特·撒切尔",
-    source: "《玛格丽特·撒切尔》·1925—2013",
+    source: "玛格丽特·撒切尔·1925—2013",
     excerpt: "铁娘子 · 撒切尔主义"
   },
   {
@@ -6327,7 +6327,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "日本",
     author: "三岛由纪夫",
-    source: "《三岛由纪夫》·1925—1970",
+    source: "三岛由纪夫·1925—1970",
     excerpt: "《金阁寺》《潮骚》，1970 年剖腹自尽"
   },
   {
@@ -6340,7 +6340,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "法国",
     author: "福柯",
-    source: "《福柯》·1926—1984",
+    source: "福柯·1926—1984",
     excerpt: "权力与话语的分析者"
   },
   {
@@ -6353,7 +6353,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "玛丽莲·梦露",
-    source: "《玛丽莲·梦露》·1926—1962",
+    source: "玛丽莲·梦露·1926—1962",
     excerpt: "好莱坞的偶像"
   },
   {
@@ -6366,7 +6366,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "彼德·罗兹尔",
-    source: "《彼德·罗兹尔》·1926—1996",
+    source: "彼德·罗兹尔·1926—1996",
     excerpt: "超级碗 · NFL"
   },
   {
@@ -6379,7 +6379,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "哥伦比亚",
     author: "马尔克斯",
-    source: "《马尔克斯》·1927—2014",
+    source: "马尔克斯·1927—2014",
     excerpt: "《百年孤独》，魔幻现实主义，1982 年诺贝尔文学奖"
   },
   {
@@ -6392,7 +6392,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "阿根廷 / 古巴",
     author: "切·格瓦拉",
-    source: "《切·格瓦拉》·1928—1967",
+    source: "切·格瓦拉·1928—1967",
     excerpt: "《英勇的游击队员》"
   },
   {
@@ -6405,7 +6405,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "乔姆斯基",
-    source: "《乔姆斯基》·1928—",
+    source: "乔姆斯基·1928—",
     excerpt: "转换生成语法与「普遍语法」，语言学的革命者"
   },
   {
@@ -6418,7 +6418,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "纳什",
-    source: "《纳什》·1928—2015",
+    source: "纳什·1928—2015",
     excerpt: "博弈论「纳什均衡」，1994 年诺贝尔经济学奖"
   },
   {
@@ -6431,7 +6431,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "沃森",
-    source: "《沃森》·1928—",
+    source: "沃森·1928—",
     excerpt: "DNA 双螺旋结构的发现者，1962 年诺贝尔奖"
   },
   {
@@ -6444,7 +6444,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "沃霍尔",
-    source: "《沃霍尔》·1928—1987",
+    source: "沃霍尔·1928—1987",
     excerpt: "《玛丽莲双联画》《金宝汤罐头》，波普艺术的旗手"
   },
   {
@@ -6457,7 +6457,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "马丁·路德·金",
-    source: "《马丁·路德·金》·1929—1968",
+    source: "马丁·路德·金·1929—1968",
     excerpt: "《我有一个梦想》"
   },
   {
@@ -6470,7 +6470,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "捷克 / 法国",
     author: "米兰·昆德拉",
-    source: "《米兰·昆德拉》·1929—2023",
+    source: "米兰·昆德拉·1929—2023",
     excerpt: "《生命中不能承受之轻》《玩笑》"
   },
   {
@@ -6483,7 +6483,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "德国 / 荷兰",
     author: "安妮·弗兰克",
-    source: "《安妮·弗兰克》·1929—1945",
+    source: "安妮·弗兰克·1929—1945",
     excerpt: "《安妮日记》"
   },
   {
@@ -6496,7 +6496,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "威尔逊",
-    source: "《威尔逊》·1929—2021",
+    source: "威尔逊·1929—2021",
     excerpt: "社会生物学与「生物多样性」一词的推广"
   },
   {
@@ -6509,7 +6509,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "巴特·辛普森",
-    source: "《巴特·辛普森》·1987 年首登场（《辛普森一家》1989 年开播）",
+    source: "巴特·辛普森·1987 年首登场（辛普森一家1989 年开播）",
     excerpt: "《辛普森一家》"
   },
   {
@@ -6522,7 +6522,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "哈维·米尔克",
-    source: "《哈维·米尔克》·1930—1978",
+    source: "哈维·米尔克·1930—1978",
     excerpt: "美国LGBT权利运动"
   },
   {
@@ -6535,7 +6535,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "苏联 / 俄罗斯",
     author: "戈尔巴乔夫",
-    source: "《戈尔巴乔夫》·1931—2022",
+    source: "戈尔巴乔夫·1931—2022",
     excerpt: "新思维 · 冷战结束"
   },
   {
@@ -6548,7 +6548,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "印度",
     author: "阿马蒂亚·森",
-    source: "《阿马蒂亚·森》·1933—",
+    source: "阿马蒂亚·森·1933—",
     excerpt: "《以自由看待发展》"
   },
   {
@@ -6561,7 +6561,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "萨根",
-    source: "《萨根》·1934—1996",
+    source: "萨根·1934—1996",
     excerpt: "《宇宙》与行星科学的普及者"
   },
   {
@@ -6574,7 +6574,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "秘鲁 / 西班牙",
     author: "略萨",
-    source: "《略萨》·1936—",
+    source: "略萨·1936—",
     excerpt: "《绿房子》《城市与狗》，2010 年诺贝尔文学奖"
   },
   {
@@ -6587,7 +6587,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国 / 美国",
     author: "丁肇中",
-    source: "《丁肇中》·1936—",
+    source: "丁肇中·1936—",
     excerpt: "J 粒子的发现者，1976 年诺贝尔物理学奖"
   },
   {
@@ -6600,7 +6600,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "中国台湾",
     author: "李远哲",
-    source: "《李远哲》·1936—",
+    source: "李远哲·1936—",
     excerpt: "分子反应动力学的开创，1986 年诺贝尔化学奖"
   },
   {
@@ -6613,7 +6613,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "吉姆·汉森",
-    source: "《吉姆·汉森》·1936—1990",
+    source: "吉姆·汉森·1936—1990",
     excerpt: "《芝麻街》· 木偶剧场"
   },
   {
@@ -6626,7 +6626,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国 / 中国香港",
     author: "李小龙",
-    source: "《李小龙》·1940—1973",
+    source: "李小龙·1940—1973",
     excerpt: "截拳道 · 功夫电影"
   },
   {
@@ -6639,7 +6639,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "古尔德",
-    source: "《古尔德》·1941—2002",
+    source: "古尔德·1941—2002",
     excerpt: "「间断平衡」理论，《奇妙的生命》"
   },
   {
@@ -6652,7 +6652,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "道金斯",
-    source: "《道金斯》·1941—",
+    source: "道金斯·1941—",
     excerpt: "《自私的基因》，从基因视角看演化"
   },
   {
@@ -6665,7 +6665,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "鲍勃·迪伦",
-    source: "《鲍勃·迪伦》·1941—",
+    source: "鲍勃·迪伦·1941—",
     excerpt: "诺贝尔文学奖的歌手"
   },
   {
@@ -6678,7 +6678,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "霍金",
-    source: "《霍金》·1942—2018",
+    source: "霍金·1942—2018",
     excerpt: "宇宙学的布道者"
   },
   {
@@ -6691,7 +6691,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "艾瑞莎·弗兰克林",
-    source: "《艾瑞莎·弗兰克林》·1942—2018",
+    source: "艾瑞莎·弗兰克林·1942—2018",
     excerpt: "灵魂乐皇后 ·《Respect》"
   },
   {
@@ -6704,7 +6704,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "波兰",
     author: "瓦文萨",
-    source: "《瓦文萨》·1943—",
+    source: "瓦文萨·1943—",
     excerpt: "团结工会的领导人"
   },
   {
@@ -6717,7 +6717,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "史蒂芬·斯皮尔伯格",
-    source: "《史蒂芬·斯皮尔伯格》·1946—",
+    source: "史蒂芬·斯皮尔伯格·1946—",
     excerpt: "暑期档大片 ·《辛德勒的名单》"
   },
   {
@@ -6730,7 +6730,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "奥普拉·温弗里",
-    source: "《奥普拉·温弗里》·1954—",
+    source: "奥普拉·温弗里·1954—",
     excerpt: "美国电视脱口秀"
   },
   {
@@ -6743,7 +6743,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "蒂姆·伯纳斯-李",
-    source: "《蒂姆·伯纳斯-李》·1955—",
+    source: "蒂姆·伯纳斯-李·1955—",
     excerpt: "万维网 · HTTP/HTML"
   },
   {
@@ -6756,7 +6756,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "美国",
     author: "比尔·盖茨",
-    source: "《比尔·盖茨》·1955—",
+    source: "比尔·盖茨·1955—",
     excerpt: "微软 · Windows"
   },
   {
@@ -6769,7 +6769,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "披头士",
-    source: "《披头士》·1960—1970",
+    source: "披头士·1960—1970",
     excerpt: "摇滚乐 · 六十年代文化"
   },
   {
@@ -6782,7 +6782,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "英国",
     author: "戴安娜王妃",
-    source: "《戴安娜王妃》·1961—1997",
+    source: "戴安娜王妃·1961—1997",
     excerpt: "威尔士王妃 · 反地雷运动"
   },
   {
@@ -6795,7 +6795,7 @@ window.POEMS_MINGREN_FOREIGN = [
     country: "外国",
     dynasty: "澳大利亚 / 美国",
     author: "陶哲轩",
-    source: "《陶哲轩》·1975—",
+    source: "陶哲轩·1975—",
     excerpt: "当代最重要的数学家之一，2006 年菲尔兹奖"
   },
 ];

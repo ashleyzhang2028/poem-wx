@@ -7,7 +7,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "南朝宋",
     author: "刘义庆",
-    source: "《世说新语》",
+    source: "世说新语",
     excerpt: "名士的言谈与风骨"
   },
   {
@@ -18,7 +18,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "元末明初",
     author: "施耐庵",
-    source: "《水浒传》",
+    source: "水浒传",
     excerpt: "官逼民反，逼上梁山"
   },
   {
@@ -29,7 +29,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "元末明初",
     author: "罗贯中",
-    source: "《三国演义》",
+    source: "三国演义",
     excerpt: "天下大势，分久必合"
   },
   {
@@ -40,7 +40,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "吴承恩",
-    source: "《西游记》",
+    source: "西游记",
     excerpt: "取经路上八十一难"
   },
   {
@@ -51,7 +51,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "许仲琳",
-    source: "《封神演义》",
+    source: "封神演义",
     excerpt: "神魔斗法，子牙封神"
   },
   {
@@ -62,7 +62,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "冯梦龙",
-    source: "《东周列国志》",
+    source: "东周列国志",
     excerpt: "列国五百年的兴亡"
   },
   {
@@ -73,7 +73,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "冯梦龙",
-    source: "《喻世明言》",
+    source: "喻世明言",
     excerpt: "三言：世态人情的短篇"
   },
   {
@@ -84,7 +84,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "冯梦龙",
-    source: "《警世通言》",
+    source: "警世通言",
     excerpt: "三言：公案与知己之交"
   },
   {
@@ -95,7 +95,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "冯梦龙",
-    source: "《醒世恒言》",
+    source: "醒世恒言",
     excerpt: "三言：市井间的百态"
   },
   {
@@ -106,7 +106,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "凌濛初",
-    source: "《初刻拍案惊奇》",
+    source: "初刻拍案惊奇",
     excerpt: "二拍：奇闻与果报"
   },
   {
@@ -117,7 +117,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "明",
     author: "凌濛初",
-    source: "《二刻拍案惊奇》",
+    source: "二刻拍案惊奇",
     excerpt: "二拍：吏治与市井"
   },
   {
@@ -128,7 +128,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "褚人获",
-    source: "《隋唐演义》",
+    source: "隋唐演义",
     excerpt: "隋末群雄与瓦岗英雄"
   },
   {
@@ -139,7 +139,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "蒲松龄",
-    source: "《聊斋志异》",
+    source: "聊斋志异",
     excerpt: "写鬼写妖，高人一等"
   },
   {
@@ -150,7 +150,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "钱彩",
-    source: "《说岳全传》",
+    source: "说岳全传",
     excerpt: "精忠报国的岳飞"
   },
   {
@@ -161,7 +161,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "吴敬梓",
-    source: "《儒林外史》",
+    source: "儒林外史",
     excerpt: "功名富贵无凭据"
   },
   {
@@ -172,7 +172,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "曹雪芹",
-    source: "《红楼梦》",
+    source: "红楼梦",
     excerpt: "满纸荒唐言，一把辛酸泪"
   },
   {
@@ -183,7 +183,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "李汝珍",
-    source: "《镜花缘》",
+    source: "镜花缘",
     excerpt: "君子国里的女儿家"
   },
   {
@@ -194,7 +194,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "石玉昆",
-    source: "《三侠五义》",
+    source: "三侠五义",
     excerpt: "包公案与江湖义士"
   },
   {
@@ -205,7 +205,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "李宝嘉",
-    source: "《官场现形记》",
+    source: "官场现形记",
     excerpt: "晚清官场的百丑图"
   },
   {
@@ -216,7 +216,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清",
     author: "吴趼人",
-    source: "《二十年目睹之怪现状》",
+    source: "二十年目睹之怪现状",
     excerpt: "九死一生的所见所闻"
   },
   {
@@ -227,7 +227,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清末",
     author: "刘鹗",
-    source: "《老残游记》",
+    source: "老残游记",
     excerpt: "一个走方郎中的游历"
   },
   {
@@ -238,7 +238,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国古典小说",
     dynasty: "清末",
     author: "曾朴",
-    source: "《孽海花》",
+    source: "孽海花",
     excerpt: "状元与名花的三十年"
   },
   {
@@ -249,7 +249,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "老舍",
-    source: "《月牙儿》",
+    source: "月牙儿",
     excerpt: "母女两代女人的路"
   },
   {
@@ -260,7 +260,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "老舍",
-    source: "《猫城记》",
+    source: "猫城记",
     excerpt: "火星上的猫国"
   },
   {
@@ -271,7 +271,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "老舍",
-    source: "《二马》",
+    source: "二马",
     excerpt: "一对父子在伦敦"
   },
   {
@@ -282,7 +282,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "巴金",
-    source: "《寒夜》",
+    source: "寒夜",
     excerpt: "一个小职员的冬天"
   },
   {
@@ -293,7 +293,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《林家铺子》",
+    source: "林家铺子",
     excerpt: "一家小店的倒闭"
   },
   {
@@ -304,7 +304,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《春蚕》",
+    source: "春蚕",
     excerpt: "丰收反而成了灾"
   },
   {
@@ -315,7 +315,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "沈从文",
-    source: "《湘行散记》",
+    source: "湘行散记",
     excerpt: "沅水上写给妻子的信"
   },
   {
@@ -326,7 +326,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "萧红",
-    source: "《小城三月》",
+    source: "小城三月",
     excerpt: "一个少女的春天"
   },
   {
@@ -337,7 +337,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "郁达夫",
-    source: "《故都的秋》",
+    source: "故都的秋",
     excerpt: "梧桐叶与北国的秋"
   },
   {
@@ -348,7 +348,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "丁玲",
-    source: "《莎菲女士的日记》",
+    source: "莎菲女士的日记",
     excerpt: "一个女人的内心"
   },
   {
@@ -359,7 +359,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "叶圣陶",
-    source: "《稻草人》",
+    source: "稻草人",
     excerpt: "童话里的田野"
   },
   {
@@ -370,7 +370,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "叶圣陶",
-    source: "《潘先生在难中》",
+    source: "潘先生在难中",
     excerpt: "一个老师的狼狈"
   },
   {
@@ -381,7 +381,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "师陀",
-    source: "《果园城记》",
+    source: "果园城记",
     excerpt: "一座小城的人物志"
   },
   {
@@ -392,7 +392,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "周立波",
-    source: "《山乡巨变》",
+    source: "山乡巨变",
     excerpt: "合作社里的新生活"
   },
   {
@@ -403,7 +403,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "刘知侠",
-    source: "《铁道游击队》",
+    source: "铁道游击队",
     excerpt: "扒火车的英雄"
   },
   {
@@ -414,7 +414,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "曲波",
-    source: "《林海雪原》",
+    source: "林海雪原",
     excerpt: "穿林海跨雪原"
   },
   {
@@ -425,7 +425,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "梁斌",
-    source: "《红旗谱》",
+    source: "红旗谱",
     excerpt: "三代农民的斗争"
   },
   {
@@ -436,7 +436,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "杜鹏程",
-    source: "《保卫延安》",
+    source: "保卫延安",
     excerpt: "一场战役的正面"
   },
   {
@@ -447,7 +447,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "吴强",
-    source: "《红日》",
+    source: "红日",
     excerpt: "孟良崮上的三天"
   },
   {
@@ -458,7 +458,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "欧阳山",
-    source: "《三家巷》",
+    source: "三家巷",
     excerpt: "广州一条巷子的三家"
   },
   {
@@ -469,7 +469,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "冯德英",
-    source: "《苦菜花》",
+    source: "苦菜花",
     excerpt: "一位母亲的抗战"
   },
   {
@@ -480,7 +480,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "徐光耀",
-    source: "《小兵张嘎》",
+    source: "小兵张嘎",
     excerpt: "嘎子的枪"
   },
   {
@@ -491,7 +491,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "管桦",
-    source: "《小英雄雨来》",
+    source: "小英雄雨来",
     excerpt: "我们是中国儿童团"
   },
   {
@@ -502,7 +502,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "华山",
-    source: "《鸡毛信》",
+    source: "鸡毛信",
     excerpt: "一封三根鸡毛的信"
   },
   {
@@ -513,7 +513,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "李心田",
-    source: "《闪闪的红星》",
+    source: "闪闪的红星",
     excerpt: "潘冬子的红星"
   },
   {
@@ -524,7 +524,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《社戏》",
+    source: "社戏",
     excerpt: "那一夜的好豆好戏"
   },
   {
@@ -535,7 +535,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《孔乙己》",
+    source: "孔乙己",
     excerpt: "穿长衫站着喝酒的人"
   },
   {
@@ -546,7 +546,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "方志敏",
-    source: "《可爱的中国》",
+    source: "可爱的中国",
     excerpt: "狱中写给将来的中国"
   },
   {
@@ -557,7 +557,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "郁达夫",
-    source: "《沉沦》",
+    source: "沉沦",
     excerpt: "一个留日学生的苦闷"
   },
   {
@@ -568,7 +568,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《呐喊》",
+    source: "呐喊",
     excerpt: "铁屋子里的喊声"
   },
   {
@@ -579,7 +579,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "郁达夫",
-    source: "《春风沉醉的晚上》",
+    source: "春风沉醉的晚上",
     excerpt: "夜上海的两个人"
   },
   {
@@ -590,7 +590,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《彷徨》",
+    source: "彷徨",
     excerpt: "路正长，夜也正长"
   },
   {
@@ -601,7 +601,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "叶圣陶",
-    source: "《倪焕之》",
+    source: "倪焕之",
     excerpt: "一个小学教师的十年"
   },
   {
@@ -612,7 +612,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "柔石",
-    source: "《二月》",
+    source: "二月",
     excerpt: "一个青年的彷徨"
   },
   {
@@ -623,7 +623,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "张恨水",
-    source: "《啼笑因缘》",
+    source: "啼笑因缘",
     excerpt: "大鼓书女与两个男人"
   },
   {
@@ -634,7 +634,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "巴金",
-    source: "《家》",
+    source: "家",
     excerpt: "四世同堂的牢笼"
   },
   {
@@ -645,7 +645,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "张恨水",
-    source: "《金粉世家》",
+    source: "金粉世家",
     excerpt: "一个家族的盛衰"
   },
   {
@@ -656,7 +656,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《子夜》",
+    source: "子夜",
     excerpt: "上海的证券与工厂"
   },
   {
@@ -667,7 +667,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "沈从文",
-    source: "《边城》",
+    source: "边城",
     excerpt: "等一个人，也许永远不回来"
   },
   {
@@ -678,7 +678,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "萧红",
-    source: "《生死场》",
+    source: "生死场",
     excerpt: "北方农村的生与死"
   },
   {
@@ -689,7 +689,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《故事新编》",
+    source: "故事新编",
     excerpt: "把古人拉进现代"
   },
   {
@@ -700,7 +700,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "老舍",
-    source: "《骆驼祥子》",
+    source: "骆驼祥子",
     excerpt: "一个车夫的堕落史"
   },
   {
@@ -711,7 +711,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "巴金",
-    source: "《春》",
+    source: "春",
     excerpt: "春天总会来"
   },
   {
@@ -722,7 +722,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "沈从文",
-    source: "《长河》",
+    source: "长河",
     excerpt: "辰河上的一条船"
   },
   {
@@ -733,7 +733,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "林语堂",
-    source: "《京华烟云》",
+    source: "京华烟云",
     excerpt: "三分儒道，一片烟云"
   },
   {
@@ -744,7 +744,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "巴金",
-    source: "《秋》",
+    source: "秋",
     excerpt: "高家的最后一批人"
   },
   {
@@ -755,7 +755,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "萧红",
-    source: "《呼兰河传》",
+    source: "呼兰河传",
     excerpt: "祖父的园子与后花园"
   },
   {
@@ -766,7 +766,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "茅盾",
-    source: "《腐蚀》",
+    source: "腐蚀",
     excerpt: "一本日记里的堕落"
   },
   {
@@ -777,7 +777,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "老舍",
-    source: "《四世同堂》",
+    source: "四世同堂",
     excerpt: "小羊圈胡同的八年"
   },
   {
@@ -788,7 +788,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "钱锺书",
-    source: "《围城》",
+    source: "围城",
     excerpt: "城里的人想逃出来"
   },
   {
@@ -799,7 +799,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "丁玲",
-    source: "《太阳照在桑干河上》",
+    source: "太阳照在桑干河上",
     excerpt: "土改中的一个村子"
   },
   {
@@ -810,7 +810,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "周立波",
-    source: "《暴风骤雨》",
+    source: "暴风骤雨",
     excerpt: "一场土改的风暴"
   },
   {
@@ -821,7 +821,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "杨沫",
-    source: "《青春之歌》",
+    source: "青春之歌",
     excerpt: "一个知识女性的道路"
   },
   {
@@ -832,7 +832,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "柳青",
-    source: "《创业史》",
+    source: "创业史",
     excerpt: "蛤蟆滩上的一代人"
   },
   {
@@ -843,7 +843,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "近现代",
     author: "罗广斌 / 杨益言",
-    source: "《红岩》",
+    source: "红岩",
     excerpt: "在烈火中永生"
   },
   {
@@ -854,7 +854,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "李英儒",
-    source: "《野火春风斗古城》",
+    source: "野火春风斗古城",
     excerpt: "城里的地下工作"
   },
   {
@@ -865,7 +865,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "李晓明 / 韩安庆",
-    source: "《平原枪声》",
+    source: "平原枪声",
     excerpt: "平原上的游击"
   },
   {
@@ -876,7 +876,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "冯志",
-    source: "《敌后武工队》",
+    source: "敌后武工队",
     excerpt: "一支武工队"
   },
   {
@@ -887,7 +887,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "刘流",
-    source: "《烈火金钢》",
+    source: "烈火金钢",
     excerpt: "一场反扫荡"
   },
   {
@@ -898,7 +898,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "袁静 / 孔厥",
-    source: "《新儿女英雄传》",
+    source: "新儿女英雄传",
     excerpt: "白洋淀上的新人"
   },
   {
@@ -909,7 +909,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代小说",
     dynasty: "当代",
     author: "马烽 / 西戎",
-    source: "《吕梁英雄传》",
+    source: "吕梁英雄传",
     excerpt: "吕梁山上的民兵"
   },
   {
@@ -920,7 +920,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王蒙",
-    source: "《青春万岁》",
+    source: "青春万岁",
     excerpt: "一群青年的中学生活"
   },
   {
@@ -931,7 +931,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王蒙",
-    source: "《组织部新来的青年人》",
+    source: "组织部新来的青年人",
     excerpt: "一个年轻人的困惑"
   },
   {
@@ -942,7 +942,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "近现代",
     author: "林海音",
-    source: "《城南旧事》",
+    source: "城南旧事",
     excerpt: "城南的旧事，童年的远去"
   },
   {
@@ -953,7 +953,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "姚雪垠",
-    source: "《李自成》",
+    source: "李自成",
     excerpt: "一位闯王的一生"
   },
   {
@@ -964,7 +964,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "高阳",
-    source: "《胡雪岩》",
+    source: "胡雪岩",
     excerpt: "一个红顶商人"
   },
   {
@@ -975,7 +975,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "高阳",
-    source: "《慈禧全传》",
+    source: "慈禧全传",
     excerpt: "一位太后的身边"
   },
   {
@@ -986,7 +986,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "谌容",
-    source: "《人到中年》",
+    source: "人到中年",
     excerpt: "一位眼科大夫"
   },
   {
@@ -997,7 +997,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "路遥",
-    source: "《人生》",
+    source: "人生",
     excerpt: "高加林的两条路"
   },
   {
@@ -1008,7 +1008,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "余华",
-    source: "《兄弟》",
+    source: "兄弟",
     excerpt: "两个兄弟，两个时代"
   },
   {
@@ -1019,7 +1019,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "余华",
-    source: "《在细雨中呼喊》",
+    source: "在细雨中呼喊",
     excerpt: "一个孩子的记忆"
   },
   {
@@ -1030,7 +1030,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "贾平凹",
-    source: "《秦腔》",
+    source: "秦腔",
     excerpt: "为故乡立碑"
   },
   {
@@ -1041,7 +1041,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫言",
-    source: "《檀香刑》",
+    source: "檀香刑",
     excerpt: "一场酷刑与一出戏"
   },
   {
@@ -1052,7 +1052,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫言",
-    source: "《生死疲劳》",
+    source: "生死疲劳",
     excerpt: "六道轮回看人间"
   },
   {
@@ -1063,7 +1063,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫应丰",
-    source: "《将军吟》",
+    source: "将军吟",
     excerpt: "一位将军的沉浮"
   },
   {
@@ -1074,7 +1074,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿来",
-    source: "《空山》",
+    source: "空山",
     excerpt: "一座村庄的三部曲"
   },
   {
@@ -1085,7 +1085,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "迟子建",
-    source: "《额尔古纳河右岸》",
+    source: "额尔古纳河右岸",
     excerpt: "一位鄂温克老人的一生"
   },
   {
@@ -1096,7 +1096,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "迟子建",
-    source: "《白雪乌鸦》",
+    source: "白雪乌鸦",
     excerpt: "一场鼠疫里的哈尔滨"
   },
   {
@@ -1107,7 +1107,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "毕飞宇",
-    source: "《青衣》",
+    source: "青衣",
     excerpt: "一个戏曲演员的执念"
   },
   {
@@ -1118,7 +1118,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "毕飞宇",
-    source: "《玉米》",
+    source: "玉米",
     excerpt: "一个女人的奋斗"
   },
   {
@@ -1129,7 +1129,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘震云",
-    source: "《一句顶一万句》",
+    source: "一句顶一万句",
     excerpt: "找一个说得着的人"
   },
   {
@@ -1140,7 +1140,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘震云",
-    source: "《手机》",
+    source: "手机",
     excerpt: "手机里藏着的话"
   },
   {
@@ -1151,7 +1151,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘震云",
-    source: "《温故一九四二》",
+    source: "温故一九四二",
     excerpt: "一场大饥荒的调查"
   },
   {
@@ -1162,7 +1162,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阎真",
-    source: "《活着之上》",
+    source: "活着之上",
     excerpt: "高校里的知识分子"
   },
   {
@@ -1173,7 +1173,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阎真",
-    source: "《沧浪之水》",
+    source: "沧浪之水",
     excerpt: "一个卫生局干部的成长"
   },
   {
@@ -1184,7 +1184,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "毕淑敏",
-    source: "《红处方》",
+    source: "红处方",
     excerpt: "戒毒医院"
   },
   {
@@ -1195,7 +1195,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "黄仁宇",
-    source: "《万历十五年》",
+    source: "万历十五年",
     excerpt: "一个大明王朝的截面"
   },
   {
@@ -1206,7 +1206,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "霍达",
-    source: "《补天裂》",
+    source: "补天裂",
     excerpt: "一段香港的历史"
   },
   {
@@ -1217,7 +1217,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王火",
-    source: "《战争和人》",
+    source: "战争和人",
     excerpt: "一个家庭在战争里"
   },
   {
@@ -1228,7 +1228,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王旭烽",
-    source: "《南方有嘉木》",
+    source: "南方有嘉木",
     excerpt: "茶人家族的百年"
   },
   {
@@ -1239,7 +1239,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘白羽",
-    source: "《第二个太阳》",
+    source: "第二个太阳",
     excerpt: "一段解放的历程"
   },
   {
@@ -1250,7 +1250,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "孙力 / 余小惠",
-    source: "《都市风流》",
+    source: "都市风流",
     excerpt: "一座城市的建设者"
   },
   {
@@ -1261,7 +1261,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李準",
-    source: "《黄河东流去》",
+    source: "黄河东流去",
     excerpt: "黄泛区里的七户人家"
   },
   {
@@ -1272,7 +1272,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张洁",
-    source: "《沉重的翅膀》",
+    source: "沉重的翅膀",
     excerpt: "改革的重量"
   },
   {
@@ -1283,7 +1283,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张洁",
-    source: "《无字》",
+    source: "无字",
     excerpt: "一个女人家族的三代"
   },
   {
@@ -1294,7 +1294,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "陈忠实",
-    source: "《白鹿原上》",
+    source: "白鹿原上",
     excerpt: "《白鹿原》的短篇"
   },
   {
@@ -1305,7 +1305,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李佩甫",
-    source: "《羊的门》",
+    source: "羊的门",
     excerpt: "一个村支书的权力"
   },
   {
@@ -1316,7 +1316,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李佩甫",
-    source: "《城的灯》",
+    source: "城的灯",
     excerpt: "进城的路"
   },
   {
@@ -1327,7 +1327,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李佩甫",
-    source: "《生命册》",
+    source: "生命册",
     excerpt: "从乡下到城里"
   },
   {
@@ -1338,7 +1338,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘醒龙",
-    source: "《天行者》",
+    source: "天行者",
     excerpt: "乡村教师"
   },
   {
@@ -1349,7 +1349,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘醒龙",
-    source: "《凤凰琴》",
+    source: "凤凰琴",
     excerpt: "一个民办教师"
   },
   {
@@ -1360,7 +1360,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿耐",
-    source: "《大江东去》",
+    source: "大江东去",
     excerpt: "改革开放三十年"
   },
   {
@@ -1371,7 +1371,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王蒙",
-    source: "《蝴蝶》",
+    source: "蝴蝶",
     excerpt: "一位老部长的回忆"
   },
   {
@@ -1382,7 +1382,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "古华",
-    source: "《芙蓉镇》",
+    source: "芙蓉镇",
     excerpt: "一个小镇的风雨"
   },
   {
@@ -1393,7 +1393,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李国文",
-    source: "《冬天里的春天》",
+    source: "冬天里的春天",
     excerpt: "一个人与一段历史"
   },
   {
@@ -1404,7 +1404,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "杨绛",
-    source: "《干校六记》",
+    source: "干校六记",
     excerpt: "下放的日子"
   },
   {
@@ -1415,7 +1415,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张抗抗",
-    source: "《北极光》",
+    source: "北极光",
     excerpt: "一代人的求索"
   },
   {
@@ -1426,7 +1426,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "铁凝",
-    source: "《哦，香雪》",
+    source: "哦，香雪",
     excerpt: "大山里的一只文具盒"
   },
   {
@@ -1437,7 +1437,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张承志",
-    source: "《黑骏马（张承志）》",
+    source: "黑骏马（张承志）",
     excerpt: "草原上的一段往事"
   },
   {
@@ -1448,7 +1448,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张承志",
-    source: "《北方的河》",
+    source: "北方的河",
     excerpt: "四条河与一个青年"
   },
   {
@@ -1459,7 +1459,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿城",
-    source: "《棋王》",
+    source: "棋王",
     excerpt: "为棋不为生"
   },
   {
@@ -1470,7 +1470,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿城",
-    source: "《树王》",
+    source: "树王",
     excerpt: "一棵树的命运"
   },
   {
@@ -1481,7 +1481,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿城",
-    source: "《孩子王》",
+    source: "孩子王",
     excerpt: "一个知青老师的识字课"
   },
   {
@@ -1492,7 +1492,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫言",
-    source: "《透明的红萝卜》",
+    source: "透明的红萝卜",
     excerpt: "一个孩子的哭声"
   },
   {
@@ -1503,7 +1503,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "刘心武",
-    source: "《钟鼓楼》",
+    source: "钟鼓楼",
     excerpt: "一天之内的北京"
   },
   {
@@ -1514,7 +1514,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "凌力",
-    source: "《少年天子》",
+    source: "少年天子",
     excerpt: "顺治帝的一生"
   },
   {
@@ -1525,7 +1525,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "路遥",
-    source: "《平凡的世界》",
+    source: "平凡的世界",
     excerpt: "普通人的奋斗"
   },
   {
@@ -1536,7 +1536,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王蒙",
-    source: "《活动变人形》",
+    source: "活动变人形",
     excerpt: "一个家庭的内战"
   },
   {
@@ -1547,7 +1547,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张抗抗",
-    source: "《隐形伴侣》",
+    source: "隐形伴侣",
     excerpt: "一个女知青的婚姻"
   },
   {
@@ -1558,7 +1558,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫言",
-    source: "《红高粱家族》",
+    source: "红高粱家族",
     excerpt: "高密东北乡的传奇"
   },
   {
@@ -1569,7 +1569,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "霍达",
-    source: "《穆斯林的葬礼》",
+    source: "穆斯林的葬礼",
     excerpt: "一个家族与一座玉城"
   },
   {
@@ -1580,7 +1580,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "余华",
-    source: "《十八岁出门远行》",
+    source: "十八岁出门远行",
     excerpt: "一个少年的第一次远行"
   },
   {
@@ -1591,7 +1591,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "方方",
-    source: "《风景》",
+    source: "风景",
     excerpt: "一条汉正街的七哥"
   },
   {
@@ -1602,7 +1602,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "池莉",
-    source: "《烦恼人生》",
+    source: "烦恼人生",
     excerpt: "印象厚的一天"
   },
   {
@@ -1613,7 +1613,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张承志",
-    source: "《金牧场》",
+    source: "金牧场",
     excerpt: "红卫兵一代的回忆"
   },
   {
@@ -1624,7 +1624,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "余华",
-    source: "《现实一种》",
+    source: "现实一种",
     excerpt: "一家人的冷漠"
   },
   {
@@ -1635,7 +1635,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "杨绛",
-    source: "《洗澡》",
+    source: "洗澡",
     excerpt: "一个知识分子的改造"
   },
   {
@@ -1646,7 +1646,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "铁凝",
-    source: "《玫瑰门》",
+    source: "玫瑰门",
     excerpt: "三代女人的一门"
   },
   {
@@ -1657,7 +1657,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《妻妾成群》",
+    source: "妻妾成群",
     excerpt: "大红灯笼与四房太太"
   },
   {
@@ -1668,7 +1668,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《罂粟之家》",
+    source: "罂粟之家",
     excerpt: "一个家族的气味"
   },
   {
@@ -1679,7 +1679,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "唐浩明",
-    source: "《曾国藩》",
+    source: "曾国藩",
     excerpt: "一个读书人的事功"
   },
   {
@@ -1690,7 +1690,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《红粉》",
+    source: "红粉",
     excerpt: "两个女人与一个新时代"
   },
   {
@@ -1701,7 +1701,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "二月河",
-    source: "《雍正皇帝》",
+    source: "雍正皇帝",
     excerpt: "九龙夺嫡"
   },
   {
@@ -1712,7 +1712,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "余华",
-    source: "《活着》",
+    source: "活着",
     excerpt: "为了活着本身而活着"
   },
   {
@@ -1723,7 +1723,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "陈忠实",
-    source: "《白鹿原》",
+    source: "白鹿原",
     excerpt: "一个原上的两家人"
   },
   {
@@ -1734,7 +1734,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《米》",
+    source: "米",
     excerpt: "一个乡下人进城"
   },
   {
@@ -1745,7 +1745,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《城北地带》",
+    source: "城北地带",
     excerpt: "一条街上的少年"
   },
   {
@@ -1756,7 +1756,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿来",
-    source: "《尘埃落定》",
+    source: "尘埃落定",
     excerpt: "一个土司的傻儿子"
   },
   {
@@ -1767,7 +1767,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "林白",
-    source: "《一个人的战争》",
+    source: "一个人的战争",
     excerpt: "一个女人的成长"
   },
   {
@@ -1778,7 +1778,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "二月河",
-    source: "《乾隆皇帝》",
+    source: "乾隆皇帝",
     excerpt: "盛世的黄昏"
   },
   {
@@ -1789,7 +1789,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "近现代",
     author: "余华",
-    source: "《许三观卖血记》",
+    source: "许三观卖血记",
     excerpt: "靠卖血撑着的一家人"
   },
   {
@@ -1800,7 +1800,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "莫言",
-    source: "《丰乳肥臀》",
+    source: "丰乳肥臀",
     excerpt: "一位母亲的百年"
   },
   {
@@ -1811,7 +1811,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "王安忆",
-    source: "《长恨歌》",
+    source: "长恨歌",
     excerpt: "上海小姐的一生"
   },
   {
@@ -1822,7 +1822,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "唐浩明",
-    source: "《杨度》",
+    source: "杨度",
     excerpt: "一个通才的迷途"
   },
   {
@@ -1833,7 +1833,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "陈染",
-    source: "《私人生活》",
+    source: "私人生活",
     excerpt: "一个人的日常"
   },
   {
@@ -1844,7 +1844,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "张平",
-    source: "《抉择》",
+    source: "抉择",
     excerpt: "一场国企改革"
   },
   {
@@ -1855,7 +1855,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "池莉",
-    source: "《来来往往》",
+    source: "来来往往",
     excerpt: "一段都市情感"
   },
   {
@@ -1866,7 +1866,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "铁凝",
-    source: "《大浴女》",
+    source: "大浴女",
     excerpt: "四个女人的成长"
   },
   {
@@ -1877,7 +1877,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "都梁",
-    source: "《亮剑》",
+    source: "亮剑",
     excerpt: "狭路相逢勇者胜"
   },
   {
@@ -1888,7 +1888,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "宗璞",
-    source: "《野葫芦引》",
+    source: "野葫芦引",
     excerpt: "南渡北归的大学"
   },
   {
@@ -1899,7 +1899,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "宗璞",
-    source: "《东藏记》",
+    source: "东藏记",
     excerpt: "抗战中的大学"
   },
   {
@@ -1910,7 +1910,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "池莉",
-    source: "《生活秀》",
+    source: "生活秀",
     excerpt: "吉庆街的来双扬"
   },
   {
@@ -1921,7 +1921,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "中国",
     author: "刘慈欣",
-    source: "《流浪地球》",
+    source: "流浪地球",
     excerpt: "带着地球去流浪"
   },
   {
@@ -1932,7 +1932,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "唐浩明",
-    source: "《张之洞》",
+    source: "张之洞",
     excerpt: "一位洋务派重臣"
   },
   {
@@ -1943,7 +1943,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "麦家",
-    source: "《解密》",
+    source: "解密",
     excerpt: "一个数学天才与密码"
   },
   {
@@ -1954,7 +1954,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李洱",
-    source: "《花腔》",
+    source: "花腔",
     excerpt: "一个革命者的叙述"
   },
   {
@@ -1965,7 +1965,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "熊召政",
-    source: "《张居正》",
+    source: "张居正",
     excerpt: "一位首辅的改革"
   },
   {
@@ -1976,7 +1976,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "麦家",
-    source: "《暗算》",
+    source: "暗算",
     excerpt: "听风者"
   },
   {
@@ -1987,7 +1987,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "杨绛",
-    source: "《我们仨》",
+    source: "我们仨",
     excerpt: "一个家庭三人"
   },
   {
@@ -1998,7 +1998,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "中国",
     author: "刘慈欣",
-    source: "《超新星纪元》",
+    source: "超新星纪元",
     excerpt: "一群孩子的世界"
   },
   {
@@ -2009,7 +2009,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阎连科",
-    source: "《受活》",
+    source: "受活",
     excerpt: "一个会绝活的村庄"
   },
   {
@@ -2020,7 +2020,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "姜戎",
-    source: "《狼图腾》",
+    source: "狼图腾",
     excerpt: "草原与狼"
   },
   {
@@ -2031,7 +2031,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "中国",
     author: "刘慈欣",
-    source: "《球状闪电》",
+    source: "球状闪电",
     excerpt: "一朵雷雨的球"
   },
   {
@@ -2042,7 +2042,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "麦家",
-    source: "《风声》",
+    source: "风声",
     excerpt: "谁是老鬼"
   },
   {
@@ -2053,7 +2053,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "方方",
-    source: "《万箭穿心》",
+    source: "万箭穿心",
     excerpt: "一个女人的武汉"
   },
   {
@@ -2064,7 +2064,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "毕飞宇",
-    source: "《推拿》",
+    source: "推拿",
     excerpt: "盲人推拿师的世界"
   },
   {
@@ -2075,7 +2075,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "孙皓晖",
-    source: "《大秦帝国》",
+    source: "大秦帝国",
     excerpt: "一部历史长篇"
   },
   {
@@ -2086,7 +2086,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "中国",
     author: "刘慈欣",
-    source: "《三体》",
+    source: "三体",
     excerpt: "给岁月以文明"
   },
   {
@@ -2097,7 +2097,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿耐",
-    source: "《欢乐颂》",
+    source: "欢乐颂",
     excerpt: "五个女人的城市"
   },
   {
@@ -2108,7 +2108,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "岳南",
-    source: "《南渡北归》",
+    source: "南渡北归",
     excerpt: "一代知识分子的迁徙"
   },
   {
@@ -2119,7 +2119,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "金宇澄",
-    source: "《繁花》",
+    source: "繁花",
     excerpt: "上海的市井与腔调"
   },
   {
@@ -2130,7 +2130,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "林白",
-    source: "《北去来辞》",
+    source: "北去来辞",
     excerpt: "一个女人的迁徙"
   },
   {
@@ -2141,7 +2141,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "苏童",
-    source: "《黄雀记》",
+    source: "黄雀记",
     excerpt: "三个少年的错"
   },
   {
@@ -2152,7 +2152,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "方方",
-    source: "《涂自强的个人悲伤》",
+    source: "涂自强的个人悲伤",
     excerpt: "一个农村大学生的路"
   },
   {
@@ -2163,7 +2163,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "阿耐",
-    source: "《都挺好》",
+    source: "都挺好",
     excerpt: "一家人的账"
   },
   {
@@ -2174,7 +2174,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "李洱",
-    source: "《应物兄》",
+    source: "应物兄",
     excerpt: "一座大学里的众生"
   },
   {
@@ -2185,7 +2185,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国当代小说",
     dynasty: "当代",
     author: "滕肖澜",
-    source: "《心居》",
+    source: "心居",
     excerpt: "在上海买房"
   },
   {
@@ -2196,7 +2196,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《坟》",
+    source: "坟",
     excerpt: "一面是坟，一面是路"
   },
   {
@@ -2207,7 +2207,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《华盖集》",
+    source: "华盖集",
     excerpt: "横眉冷对千夫指"
   },
   {
@@ -2218,7 +2218,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《且介亭杂文》",
+    source: "且介亭杂文",
     excerpt: "在租界亭子间写的"
   },
   {
@@ -2229,7 +2229,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅 / 许广平",
-    source: "《两地书》",
+    source: "两地书",
     excerpt: "两个人的通信"
   },
   {
@@ -2240,7 +2240,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "冰心",
-    source: "《繁星·春水》",
+    source: "繁星·春水",
     excerpt: "母爱、童真与自然"
   },
   {
@@ -2251,7 +2251,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "冰心",
-    source: "《小橘灯》",
+    source: "小橘灯",
     excerpt: "一盏照亮夜路的小灯"
   },
   {
@@ -2262,7 +2262,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "冰心",
-    source: "《往事》",
+    source: "往事",
     excerpt: "关于母亲的回忆"
   },
   {
@@ -2273,7 +2273,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "冰心",
-    source: "《樱花赞》",
+    source: "樱花赞",
     excerpt: "一朵花看一个民族"
   },
   {
@@ -2284,7 +2284,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《荷塘月色》",
+    source: "荷塘月色",
     excerpt: "这一片天地是我的"
   },
   {
@@ -2295,7 +2295,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《匆匆》",
+    source: "匆匆",
     excerpt: "燕子去了，有再来的时候"
   },
   {
@@ -2306,7 +2306,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《浆声灯影里的秦淮河》",
+    source: "浆声灯影里的秦淮河",
     excerpt: "桨声与灯影"
   },
   {
@@ -2317,7 +2317,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《绿与白水漈》",
+    source: "绿与白水漈",
     excerpt: "一潭绿与一条瀑布"
   },
   {
@@ -2328,7 +2328,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "郁达夫",
-    source: "《故都的秋与钓台的春昼》",
+    source: "故都的秋与钓台的春昼",
     excerpt: "两篇散文的对照"
   },
   {
@@ -2339,7 +2339,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "梁实秋",
-    source: "《雅舍谈吃》",
+    source: "雅舍谈吃",
     excerpt: "北平的味道"
   },
   {
@@ -2350,7 +2350,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "梁实秋",
-    source: "《槐园梦忆》",
+    source: "槐园梦忆",
     excerpt: "一位妻子的回忆"
   },
   {
@@ -2361,7 +2361,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "丰子恺",
-    source: "《缘缘堂随笔》",
+    source: "缘缘堂随笔",
     excerpt: "孩子与小猫"
   },
   {
@@ -2372,7 +2372,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "丰子恺",
-    source: "《白鹅》",
+    source: "白鹅",
     excerpt: "一只高傲的鹅"
   },
   {
@@ -2383,7 +2383,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "丰子恺",
-    source: "《手指》",
+    source: "手指",
     excerpt: "五根手指的争论"
   },
   {
@@ -2394,7 +2394,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "周作人",
-    source: "《乌篷船》",
+    source: "乌篷船",
     excerpt: "水乡里的船"
   },
   {
@@ -2405,7 +2405,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "周作人",
-    source: "《雨天的书》",
+    source: "雨天的书",
     excerpt: "雨天里的文章"
   },
   {
@@ -2416,7 +2416,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "何其芳",
-    source: "《画梦录》",
+    source: "画梦录",
     excerpt: "梦一样的散文"
   },
   {
@@ -2427,7 +2427,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱德",
-    source: "《回忆我的母亲》",
+    source: "回忆我的母亲",
     excerpt: "一位母亲的勤劳"
   },
   {
@@ -2438,7 +2438,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "孙犁",
-    source: "《白洋淀纪事》",
+    source: "白洋淀纪事",
     excerpt: "荷花淀里的夫妻"
   },
   {
@@ -2449,7 +2449,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "孙犁",
-    source: "《荷花淀》",
+    source: "荷花淀",
     excerpt: "水生嫂的叮嘱"
   },
   {
@@ -2460,7 +2460,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "周作人",
-    source: "《故乡的野菜》",
+    source: "故乡的野菜",
     excerpt: "野菜与乡愁"
   },
   {
@@ -2471,7 +2471,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "冰心",
-    source: "《寄小读者》",
+    source: "寄小读者",
     excerpt: "用孩子的口吻写信"
   },
   {
@@ -2482,7 +2482,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《野草》",
+    source: "野草",
     excerpt: "我自爱我的野草"
   },
   {
@@ -2493,7 +2493,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "鲁迅",
-    source: "《朝花夕拾》",
+    source: "朝花夕拾",
     excerpt: "从百草园到三味书屋"
   },
   {
@@ -2504,7 +2504,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "朱自清",
-    source: "《背影》",
+    source: "背影",
     excerpt: "父亲的背影"
   },
   {
@@ -2515,7 +2515,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "梁实秋",
-    source: "《雅舍小品》",
+    source: "雅舍小品",
     excerpt: "一间漏雨的屋子"
   },
   {
@@ -2526,7 +2526,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "近现代",
     author: "梁实秋",
-    source: "《清华八年》",
+    source: "清华八年",
     excerpt: "在清华读书的日子"
   },
   {
@@ -2537,7 +2537,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "杨朔",
-    source: "《荔枝蜜》",
+    source: "荔枝蜜",
     excerpt: "蜜蜂与荔枝花"
   },
   {
@@ -2548,7 +2548,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "杨朔",
-    source: "《雪浪花》",
+    source: "雪浪花",
     excerpt: "浪花里的礁石"
   },
   {
@@ -2559,7 +2559,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "杨朔",
-    source: "《茶花赋》",
+    source: "茶花赋",
     excerpt: "一朵茶花与一个祖国"
   },
   {
@@ -2570,7 +2570,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "刘白羽",
-    source: "《长江三日》",
+    source: "长江三日",
     excerpt: "三峡里的日出"
   },
   {
@@ -2581,7 +2581,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "冰心",
-    source: "《小橘灯与三寄小读者》",
+    source: "小橘灯与三寄小读者",
     excerpt: "为孩子写的散文"
   },
   {
@@ -2592,7 +2592,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "秦牧",
-    source: "《社稷坛抒情》",
+    source: "社稷坛抒情",
     excerpt: "五色土上的思索"
   },
   {
@@ -2603,7 +2603,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "秦牧",
-    source: "《艺海拾贝》",
+    source: "艺海拾贝",
     excerpt: "文艺随笔"
   },
   {
@@ -2614,7 +2614,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "秦牧",
-    source: "《土地》",
+    source: "土地",
     excerpt: "土地与后代人"
   },
   {
@@ -2625,7 +2625,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "何为",
-    source: "《第二次考试》",
+    source: "第二次考试",
     excerpt: "一场考试的背后"
   },
   {
@@ -2636,7 +2636,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "何为",
-    source: "《临江楼记》",
+    source: "临江楼记",
     excerpt: "一座小楼的记忆"
   },
   {
@@ -2647,7 +2647,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "徐迟",
-    source: "《黄山记》",
+    source: "黄山记",
     excerpt: "登黄山的路线"
   },
   {
@@ -2658,7 +2658,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "徐迟",
-    source: "《哥德巴赫猜想》",
+    source: "哥德巴赫猜想",
     excerpt: "一个数学家的一生"
   },
   {
@@ -2669,7 +2669,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "魏巍",
-    source: "《谁是最可爱的人与其他》",
+    source: "谁是最可爱的人与其他",
     excerpt: "战地通讯集"
   },
   {
@@ -2680,7 +2680,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "周立波",
-    source: "《山那面人家》",
+    source: "山那面人家",
     excerpt: "湖南农村的一场婚礼"
   },
   {
@@ -2691,7 +2691,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "孙犁",
-    source: "《铁木前传》",
+    source: "铁木前传",
     excerpt: "两个手艺人"
   },
   {
@@ -2702,7 +2702,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "杨绛",
-    source: "《我们仨与走到人生边上》",
+    source: "我们仨与走到人生边上",
     excerpt: "一个家庭三人"
   },
   {
@@ -2713,7 +2713,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "刘白羽",
-    source: "《长江三峡》",
+    source: "长江三峡",
     excerpt: "三峡的壮阔"
   },
   {
@@ -2724,7 +2724,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "碧野",
-    source: "《天山景物记》",
+    source: "天山景物记",
     excerpt: "天山的花与雪"
   },
   {
@@ -2735,7 +2735,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "汪曾祺",
-    source: "《故乡的食物》",
+    source: "故乡的食物",
     excerpt: "高邮的鸭蛋"
   },
   {
@@ -2746,7 +2746,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "汪曾祺",
-    source: "《人间草木》",
+    source: "人间草木",
     excerpt: "花草与人"
   },
   {
@@ -2757,7 +2757,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代散文",
     dynasty: "当代",
     author: "汪曾祺",
-    source: "《受戒与其他》",
+    source: "受戒与其他",
     excerpt: "一些小城的故事"
   },
   {
@@ -2768,7 +2768,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《凤凰涅槃》",
+    source: "凤凰涅槃",
     excerpt: "凤凰在火里重生"
   },
   {
@@ -2779,7 +2779,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《天上的街市》",
+    source: "天上的街市",
     excerpt: "街市上陈列着珍奇"
   },
   {
@@ -2790,7 +2790,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《棠棣之花》",
+    source: "棠棣之花",
     excerpt: "一柄剑与一对姐弟"
   },
   {
@@ -2801,7 +2801,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "闻一多",
-    source: "《红烛》",
+    source: "红烛",
     excerpt: "蜡炬成灰泪始干"
   },
   {
@@ -2812,7 +2812,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "闻一多",
-    source: "《七子之歌》",
+    source: "七子之歌",
     excerpt: "澳门、香港与旅顺"
   },
   {
@@ -2823,7 +2823,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《再别康桥》",
+    source: "再别康桥",
     excerpt: "轻轻的我走了"
   },
   {
@@ -2834,7 +2834,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《云游》",
+    source: "云游",
     excerpt: "云在天空中游"
   },
   {
@@ -2845,7 +2845,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《猛虎集》",
+    source: "猛虎集",
     excerpt: "猛虎在蔷薇上嗅"
   },
   {
@@ -2856,7 +2856,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《沙扬娜拉》",
+    source: "沙扬娜拉",
     excerpt: "最是那一低头的温柔"
   },
   {
@@ -2867,7 +2867,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "戴望舒",
-    source: "《雨巷》",
+    source: "雨巷",
     excerpt: "一个丁香一样的姑娘"
   },
   {
@@ -2878,7 +2878,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "戴望舒",
-    source: "《望舒草》",
+    source: "望舒草",
     excerpt: "一册诗的集子"
   },
   {
@@ -2889,7 +2889,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "戴望舒",
-    source: "《我用残损的手掌》",
+    source: "我用残损的手掌",
     excerpt: "摸索这广大的土地"
   },
   {
@@ -2900,7 +2900,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "戴望舒",
-    source: "《狱中题壁》",
+    source: "狱中题壁",
     excerpt: "在狱里写下的话"
   },
   {
@@ -2911,7 +2911,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "戴望舒",
-    source: "《我的记忆》",
+    source: "我的记忆",
     excerpt: "我的记忆是忠实于我的"
   },
   {
@@ -2922,7 +2922,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "何其芳",
-    source: "《预言》",
+    source: "预言",
     excerpt: "这一个心跳的日子"
   },
   {
@@ -2933,7 +2933,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "何其芳",
-    source: "《夜歌》",
+    source: "夜歌",
     excerpt: "我为少男少女们歌唱"
   },
   {
@@ -2944,7 +2944,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "李季",
-    source: "《王贵与李香香》",
+    source: "王贵与李香香",
     excerpt: "信天游里的爱情"
   },
   {
@@ -2955,7 +2955,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "阮章竞",
-    source: "《漳河水》",
+    source: "漳河水",
     excerpt: "三个妇女的命运"
   },
   {
@@ -2966,7 +2966,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《女神》",
+    source: "女神",
     excerpt: "我是一条天狗"
   },
   {
@@ -2977,7 +2977,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "徐志摩",
-    source: "《志摩的诗》",
+    source: "志摩的诗",
     excerpt: "一册诗的合集"
   },
   {
@@ -2988,7 +2988,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "近现代",
     author: "闻一多",
-    source: "《死水》",
+    source: "死水",
     excerpt: "这是一沟绝望的死水"
   },
   {
@@ -2999,7 +2999,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《大堰河——我的保姆》",
+    source: "大堰河——我的保姆",
     excerpt: "大堰河，我的保姆"
   },
   {
@@ -3010,7 +3010,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《雪落在中国的土地上》",
+    source: "雪落在中国的土地上",
     excerpt: "寒冷在封锁着中国"
   },
   {
@@ -3021,7 +3021,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《向太阳》",
+    source: "向太阳",
     excerpt: "太阳向我滚来"
   },
   {
@@ -3032,7 +3032,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《北方》",
+    source: "北方",
     excerpt: "北方的雪与土地"
   },
   {
@@ -3043,7 +3043,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《黎明的通知》",
+    source: "黎明的通知",
     excerpt: "请叫醒一切的人"
   },
   {
@@ -3054,7 +3054,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《艾青诗选》",
+    source: "艾青诗选",
     excerpt: "为什么我的眼里常含泪水"
   },
   {
@@ -3065,7 +3065,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《光的赞歌》",
+    source: "光的赞歌",
     excerpt: "让光去照彻一切"
   },
   {
@@ -3076,7 +3076,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "现当代",
     author: "艾青",
-    source: "《归来的歌》",
+    source: "归来的歌",
     excerpt: "二十年后的重新歌唱"
   },
   {
@@ -3087,7 +3087,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "贺敬之",
-    source: "《回延安》",
+    source: "回延安",
     excerpt: "几回回梦里回延安"
   },
   {
@@ -3098,7 +3098,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "贺敬之",
-    source: "《放声歌唱》",
+    source: "放声歌唱",
     excerpt: "大声唱出这个时代"
   },
   {
@@ -3109,7 +3109,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "贺敬之",
-    source: "《雷锋之歌》",
+    source: "雷锋之歌",
     excerpt: "一个名字的歌"
   },
   {
@@ -3120,7 +3120,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "贺敬之",
-    source: "《桂林山水歌》",
+    source: "桂林山水歌",
     excerpt: "云中的神，雾中的仙"
   },
   {
@@ -3131,7 +3131,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "郭小川",
-    source: "《致青年公民》",
+    source: "致青年公民",
     excerpt: "向困难进军"
   },
   {
@@ -3142,7 +3142,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "郭小川",
-    source: "《甘蔗林——青纱帐》",
+    source: "甘蔗林——青纱帐",
     excerpt: "南方的甘蔗与北方的青纱"
   },
   {
@@ -3153,7 +3153,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "郭小川",
-    source: "《团泊洼的秋天》",
+    source: "团泊洼的秋天",
     excerpt: "秋天里的思索"
   },
   {
@@ -3164,7 +3164,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "郭小川",
-    source: "《将军三部曲》",
+    source: "将军三部曲",
     excerpt: "一位将军的三个时期"
   },
   {
@@ -3175,7 +3175,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "闻捷",
-    source: "《复仇的火焰》",
+    source: "复仇的火焰",
     excerpt: "天山下的故事"
   },
   {
@@ -3186,7 +3186,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "闻捷",
-    source: "《天山牧歌》",
+    source: "天山牧歌",
     excerpt: "牧歌里的新疆"
   },
   {
@@ -3197,7 +3197,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "北岛",
-    source: "《回答》",
+    source: "回答",
     excerpt: "卑鄙是卑鄙者的通行证"
   },
   {
@@ -3208,7 +3208,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "北岛",
-    source: "《一切》",
+    source: "一切",
     excerpt: "一切都是命运"
   },
   {
@@ -3219,7 +3219,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "北岛",
-    source: "《宣告》",
+    source: "宣告",
     excerpt: "也许最后的时刻到了"
   },
   {
@@ -3230,7 +3230,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "北岛",
-    source: "《北岛诗选》",
+    source: "北岛诗选",
     excerpt: "一册诗的合集"
   },
   {
@@ -3241,7 +3241,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《致橡树》",
+    source: "致橡树",
     excerpt: "我必须是你近旁的一株木棉"
   },
   {
@@ -3252,7 +3252,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《双桅船》",
+    source: "双桅船",
     excerpt: "雾打湿了我的双翼"
   },
   {
@@ -3263,7 +3263,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《祖国啊，我亲爱的祖国》",
+    source: "祖国啊，我亲爱的祖国",
     excerpt: "我是你十亿分之一"
   },
   {
@@ -3274,7 +3274,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《神女峰》",
+    source: "神女峰",
     excerpt: "与其在悬崖上展览千年"
   },
   {
@@ -3285,7 +3285,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《这也是一切》",
+    source: "这也是一切",
     excerpt: "不是一切大树都被暴风折断"
   },
   {
@@ -3296,7 +3296,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "舒婷",
-    source: "《会唱歌的鸢尾花》",
+    source: "会唱歌的鸢尾花",
     excerpt: "一册诗集"
   },
   {
@@ -3307,7 +3307,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "顾城",
-    source: "《一代人》",
+    source: "一代人",
     excerpt: "黑夜给了我黑色的眼睛"
   },
   {
@@ -3318,7 +3318,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "顾城",
-    source: "《远和近》",
+    source: "远和近",
     excerpt: "你看我时很远"
   },
   {
@@ -3329,7 +3329,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "顾城",
-    source: "《我是一个任性的孩子》",
+    source: "我是一个任性的孩子",
     excerpt: "我想画下一切"
   },
   {
@@ -3340,7 +3340,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "海子",
-    source: "《面朝大海，春暖花开》",
+    source: "面朝大海，春暖花开",
     excerpt: "从明天起，做一个幸福的人"
   },
   {
@@ -3351,7 +3351,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "海子",
-    source: "《麦地》",
+    source: "麦地",
     excerpt: "麦地里的诗"
   },
   {
@@ -3362,7 +3362,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "海子",
-    source: "《九月》",
+    source: "九月",
     excerpt: "目击众神死亡的草原"
   },
   {
@@ -3373,7 +3373,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "海子",
-    source: "《亚洲铜》",
+    source: "亚洲铜",
     excerpt: "亚洲铜，亚洲铜"
   },
   {
@@ -3384,7 +3384,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "余光中",
-    source: "《乡愁》",
+    source: "乡愁",
     excerpt: "一枚小小的邮票"
   },
   {
@@ -3395,7 +3395,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "余光中",
-    source: "《白玉苦瓜》",
+    source: "白玉苦瓜",
     excerpt: "一件博物馆里的玉器"
   },
   {
@@ -3406,7 +3406,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "余光中",
-    source: "《等你，在雨中》",
+    source: "等你，在雨中",
     excerpt: "在雨中等你"
   },
   {
@@ -3417,7 +3417,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "余光中",
-    source: "《听听那冷雨》",
+    source: "听听那冷雨",
     excerpt: "雨落在瓦上的声音"
   },
   {
@@ -3428,7 +3428,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "余光中",
-    source: "《寻李白》",
+    source: "寻李白",
     excerpt: "那一双傲慢的靴子"
   },
   {
@@ -3439,7 +3439,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "洛夫",
-    source: "《洛夫诗选》",
+    source: "洛夫诗选",
     excerpt: "石室之死亡"
   },
   {
@@ -3450,7 +3450,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "洛夫",
-    source: "《边界望乡》",
+    source: "边界望乡",
     excerpt: "望远镜中扩大数十倍的乡愁"
   },
   {
@@ -3461,7 +3461,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "痖弦",
-    source: "《痖弦诗选》",
+    source: "痖弦诗选",
     excerpt: "深渊"
   },
   {
@@ -3472,7 +3472,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "郑愁予",
-    source: "《错误》",
+    source: "错误",
     excerpt: "我达达的马蹄是美丽的错误"
   },
   {
@@ -3483,7 +3483,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "席慕蓉",
-    source: "《寄给故乡》",
+    source: "寄给故乡",
     excerpt: "故乡的歌是一支清远的笛"
   },
   {
@@ -3494,7 +3494,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "席慕蓉",
-    source: "《七里香》",
+    source: "七里香",
     excerpt: "在七里香的花丛里"
   },
   {
@@ -3505,7 +3505,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "席慕蓉",
-    source: "《无怨的青春》",
+    source: "无怨的青春",
     excerpt: "一册抒情诗"
   },
   {
@@ -3516,7 +3516,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现当代诗歌",
     dynasty: "当代",
     author: "汪国真",
-    source: "《热爱生命·汪国真》",
+    source: "热爱生命·汪国真",
     excerpt: "只要热爱生命"
   },
   {
@@ -3527,7 +3527,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "曹禺",
-    source: "《日出（戏剧）》",
+    source: "日出（戏剧）",
     excerpt: "太阳升起来了，黑暗留在后面"
   },
   {
@@ -3538,7 +3538,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "田汉",
-    source: "《获虎之夜》",
+    source: "获虎之夜",
     excerpt: "一个猎户的女儿"
   },
   {
@@ -3549,7 +3549,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "田汉",
-    source: "《南归》",
+    source: "南归",
     excerpt: "一个归来的旅人"
   },
   {
@@ -3560,7 +3560,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "田汉",
-    source: "《名优之死》",
+    source: "名优之死",
     excerpt: "一位戏曲演员之死"
   },
   {
@@ -3571,7 +3571,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "曹禺",
-    source: "《雷雨》",
+    source: "雷雨",
     excerpt: "一个雷雨之夜的崩坏"
   },
   {
@@ -3582,7 +3582,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "夏衍",
-    source: "《秋瑾传》",
+    source: "秋瑾传",
     excerpt: "一位女革命者"
   },
   {
@@ -3593,7 +3593,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "夏衍",
-    source: "《赛金花》",
+    source: "赛金花",
     excerpt: "一位女子的身世"
   },
   {
@@ -3604,7 +3604,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "曹禺",
-    source: "《原野》",
+    source: "原野",
     excerpt: "复仇与荒原"
   },
   {
@@ -3615,7 +3615,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "夏衍",
-    source: "《上海屋檐下》",
+    source: "上海屋檐下",
     excerpt: "弄堂里的一天"
   },
   {
@@ -3626,7 +3626,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "曹禺",
-    source: "《北京人》",
+    source: "北京人",
     excerpt: "一个家庭的解体"
   },
   {
@@ -3637,7 +3637,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "夏衍",
-    source: "《法西斯细菌》",
+    source: "法西斯细菌",
     excerpt: "一位医生的觉醒"
   },
   {
@@ -3648,7 +3648,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《屈原·郭沫若》",
+    source: "屈原·郭沫若",
     excerpt: "话剧版屈原"
   },
   {
@@ -3659,7 +3659,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "王大化",
-    source: "《兄妹开荒》",
+    source: "兄妹开荒",
     excerpt: "一部秧歌剧"
   },
   {
@@ -3670,7 +3670,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "赵树理",
-    source: "《小二黑结婚》",
+    source: "小二黑结婚",
     excerpt: "一对青年的婚事"
   },
   {
@@ -3681,7 +3681,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "赵树理",
-    source: "《李有才板话》",
+    source: "李有才板话",
     excerpt: "快板里的一个村子"
   },
   {
@@ -3692,7 +3692,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "夏衍",
-    source: "《芳草天涯》",
+    source: "芳草天涯",
     excerpt: "一部剧作"
   },
   {
@@ -3703,7 +3703,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "贺敬之 / 丁毅",
-    source: "《白毛女》",
+    source: "白毛女",
     excerpt: "旧社会把人变成鬼"
   },
   {
@@ -3714,7 +3714,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "赵树理",
-    source: "《登记》",
+    source: "登记",
     excerpt: "一张结婚证"
   },
   {
@@ -3725,7 +3725,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "赵树理",
-    source: "《三里湾》",
+    source: "三里湾",
     excerpt: "一个村的合作化"
   },
   {
@@ -3736,7 +3736,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "老舍",
-    source: "《西望长安》",
+    source: "西望长安",
     excerpt: "一部讽刺喜剧"
   },
   {
@@ -3747,7 +3747,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "老舍",
-    source: "《茶馆》",
+    source: "茶馆",
     excerpt: "一个大茶馆，一个小社会"
   },
   {
@@ -3758,7 +3758,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "老舍",
-    source: "《全家福》",
+    source: "全家福",
     excerpt: "一家人的团聚"
   },
   {
@@ -3769,7 +3769,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "近现代",
     author: "郭沫若",
-    source: "《蔡文姬·郭沫若》",
+    source: "蔡文姬·郭沫若",
     excerpt: "文姬归汉"
   },
   {
@@ -3780,7 +3780,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "曹禺",
-    source: "《胆剑篇》",
+    source: "胆剑篇",
     excerpt: "越王勾践"
   },
   {
@@ -3791,7 +3791,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "曹禺",
-    source: "《王昭君》",
+    source: "王昭君",
     excerpt: "一位和亲的宫女"
   },
   {
@@ -3802,7 +3802,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "老舍",
-    source: "《龙须沟》",
+    source: "龙须沟",
     excerpt: "一条臭沟变清"
   },
   {
@@ -3813,7 +3813,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "老舍",
-    source: "《方珍珠》",
+    source: "方珍珠",
     excerpt: "一个女艺人的翻身"
   },
   {
@@ -3824,7 +3824,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "田汉",
-    source: "《关汉卿·田汉剧作》",
+    source: "关汉卿·田汉剧作",
     excerpt: "一位戏曲家的故事"
   },
   {
@@ -3835,7 +3835,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "田汉",
-    source: "《文成公主》",
+    source: "文成公主",
     excerpt: "一位远嫁的公主"
   },
   {
@@ -3846,7 +3846,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "田汉",
-    source: "《丽人行》",
+    source: "丽人行",
     excerpt: "三个女性的遭遇"
   },
   {
@@ -3857,7 +3857,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "沙叶新",
-    source: "《陈毅市长》",
+    source: "陈毅市长",
     excerpt: "一位市长的胸怀"
   },
   {
@@ -3868,7 +3868,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "李龙云",
-    source: "《小井胡同》",
+    source: "小井胡同",
     excerpt: "一条胡同的四十年"
   },
   {
@@ -3879,7 +3879,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "沙叶新",
-    source: "《寻找男子汉》",
+    source: "寻找男子汉",
     excerpt: "一部话剧"
   },
   {
@@ -3890,7 +3890,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "锦云",
-    source: "《狗儿爷涅槃》",
+    source: "狗儿爷涅槃",
     excerpt: "一位农民的执念"
   },
   {
@@ -3901,7 +3901,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "赖声川",
-    source: "《暗恋桃花源》",
+    source: "暗恋桃花源",
     excerpt: "一场排戏的错位"
   },
   {
@@ -3912,7 +3912,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "陈子度等",
-    source: "《桑树坪纪事》",
+    source: "桑树坪纪事",
     excerpt: "一个山村的故事"
   },
   {
@@ -3923,7 +3923,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "何冀平",
-    source: "《天下第一楼》",
+    source: "天下第一楼",
     excerpt: "一家烤鸭店的兴衰"
   },
   {
@@ -3934,7 +3934,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "英若诚译",
-    source: "《哗变》",
+    source: "哗变",
     excerpt: "一部法庭剧"
   },
   {
@@ -3945,7 +3945,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "郭启宏",
-    source: "《李白》",
+    source: "李白",
     excerpt: "一位诗人的晚年"
   },
   {
@@ -3956,7 +3956,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "姚远",
-    source: "《商鞅》",
+    source: "商鞅",
     excerpt: "一位改革者的下场"
   },
   {
@@ -3967,7 +3967,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "赖声川",
-    source: "《如梦之梦》",
+    source: "如梦之梦",
     excerpt: "一场八小时的戏"
   },
   {
@@ -3978,7 +3978,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "中国现代戏剧",
     dynasty: "当代",
     author: "赖声川",
-    source: "《宝岛一村》",
+    source: "宝岛一村",
     excerpt: "一个眷村的故事"
   },
   {
@@ -3989,7 +3989,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "荷马",
-    source: "《伊利亚特》",
+    source: "伊利亚特",
     excerpt: "阿喀琉斯的愤怒"
   },
   {
@@ -4000,7 +4000,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "荷马",
-    source: "《奥德赛》",
+    source: "奥德赛",
     excerpt: "十年还乡路"
   },
   {
@@ -4011,7 +4011,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "伊索",
-    source: "《伊索寓言》",
+    source: "伊索寓言",
     excerpt: "龟兔赛跑"
   },
   {
@@ -4022,7 +4022,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "埃斯库罗斯",
-    source: "《被缚的普罗米修斯》",
+    source: "被缚的普罗米修斯",
     excerpt: "为人类盗火的代价"
   },
   {
@@ -4033,7 +4033,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "埃斯库罗斯",
-    source: "《阿伽门农》",
+    source: "阿伽门农",
     excerpt: "一位归来的国王"
   },
   {
@@ -4044,7 +4044,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "索福克勒斯",
-    source: "《俄狄浦斯王》",
+    source: "俄狄浦斯王",
     excerpt: "杀父娶母的宿命"
   },
   {
@@ -4055,7 +4055,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "索福克勒斯",
-    source: "《安提戈涅》",
+    source: "安提戈涅",
     excerpt: "她执意要埋哥哥"
   },
   {
@@ -4066,7 +4066,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "欧里庇得斯",
-    source: "《美狄亚》",
+    source: "美狄亚",
     excerpt: "被抛弃的女人的复仇"
   },
   {
@@ -4077,7 +4077,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "欧里庇得斯",
-    source: "《酒神的伴侣》",
+    source: "酒神的伴侣",
     excerpt: "一部悲剧"
   },
   {
@@ -4088,7 +4088,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "柏拉图",
-    source: "《理想国》",
+    source: "理想国",
     excerpt: "一个理想国的蓝图"
   },
   {
@@ -4099,7 +4099,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "柏拉图",
-    source: "《会饮篇》",
+    source: "会饮篇",
     excerpt: "关于爱神的赞辞"
   },
   {
@@ -4110,7 +4110,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "柏拉图",
-    source: "《申辩篇》",
+    source: "申辩篇",
     excerpt: "苏格拉底的申辩"
   },
   {
@@ -4121,7 +4121,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "亚里士多德",
-    source: "《诗学》",
+    source: "诗学",
     excerpt: "悲剧为什么会让人痛快"
   },
   {
@@ -4132,7 +4132,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "亚里士多德",
-    source: "《形而上学》",
+    source: "形而上学",
     excerpt: "一部哲学"
   },
   {
@@ -4143,7 +4143,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "亚里士多德",
-    source: "《尼各马可伦理学》",
+    source: "尼各马可伦理学",
     excerpt: "关于幸福"
   },
   {
@@ -4154,7 +4154,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古希腊",
     author: "亚里士多德",
-    source: "《政治学》",
+    source: "政治学",
     excerpt: "一部政治学"
   },
   {
@@ -4165,7 +4165,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "奥维德",
-    source: "《变形记·奥维德》",
+    source: "变形记·奥维德",
     excerpt: "万物都在变成另一种东西"
   },
   {
@@ -4176,7 +4176,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "李维",
-    source: "《罗马史》",
+    source: "罗马史",
     excerpt: "一部罗马通史"
   },
   {
@@ -4187,7 +4187,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "普鲁塔克",
-    source: "《希腊罗马名人传》",
+    source: "希腊罗马名人传",
     excerpt: "一部比较传记"
   },
   {
@@ -4198,7 +4198,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "马可·奥勒留",
-    source: "《沉思录》",
+    source: "沉思录",
     excerpt: "一位皇帝的日记"
   },
   {
@@ -4209,7 +4209,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "阿普列乌斯",
-    source: "《金驴记》",
+    source: "金驴记",
     excerpt: "一个人变成了驴"
   },
   {
@@ -4220,7 +4220,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "两河",
     author: "佚名",
-    source: "《吉尔伽美什史诗》",
+    source: "吉尔伽美什史诗",
     excerpt: "最早的史诗"
   },
   {
@@ -4231,7 +4231,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古埃及",
     author: "佚名",
-    source: "《亡灵书》",
+    source: "亡灵书",
     excerpt: "一部咒语集"
   },
   {
@@ -4242,7 +4242,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "佚名",
-    source: "《摩诃婆罗多》",
+    source: "摩诃婆罗多",
     excerpt: "般度族与俱卢族之战"
   },
   {
@@ -4253,7 +4253,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "迦梨陀娑",
-    source: "《沙恭达罗》",
+    source: "沙恭达罗",
     excerpt: "一朵花认出了一段姻缘"
   },
   {
@@ -4264,7 +4264,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "佚名",
-    source: "《五卷书》",
+    source: "五卷书",
     excerpt: "用寓言教人处事"
   },
   {
@@ -4275,7 +4275,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "佚名",
-    source: "《奥义书》",
+    source: "奥义书",
     excerpt: "一部哲学经典"
   },
   {
@@ -4286,7 +4286,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "佚名",
-    source: "《薄伽梵歌》",
+    source: "薄伽梵歌",
     excerpt: "一部宗教哲学诗"
   },
   {
@@ -4297,7 +4297,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古罗马",
     author: "维吉尔",
-    source: "《埃涅阿斯纪》",
+    source: "埃涅阿斯纪",
     excerpt: "特洛伊人的建国之路"
   },
   {
@@ -4308,7 +4308,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "卡夫卡",
-    source: "《变形记》",
+    source: "变形记",
     excerpt: "一觉醒来变成大甲虫"
   },
   {
@@ -4319,7 +4319,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "古印度",
     author: "蚁垤",
-    source: "《罗摩衍那》",
+    source: "罗摩衍那",
     excerpt: "罗摩与悉多的流放"
   },
   {
@@ -4330,7 +4330,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "佚名",
-    source: "《万叶集》",
+    source: "万叶集",
     excerpt: "日本最早的和歌集"
   },
   {
@@ -4341,7 +4341,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "阿拉伯",
     author: "佚名",
-    source: "《一千零一夜》",
+    source: "一千零一夜",
     excerpt: "讲一夜，多活一天"
   },
   {
@@ -4352,7 +4352,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "阿拉伯",
     author: "佚名",
-    source: "《阿里巴巴与四十大盗》",
+    source: "阿里巴巴与四十大盗",
     excerpt: "芝麻，开门"
   },
   {
@@ -4363,7 +4363,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "阿拉伯",
     author: "佚名",
-    source: "《阿拉丁与神灯》",
+    source: "阿拉丁与神灯",
     excerpt: "擦一擦神灯"
   },
   {
@@ -4374,7 +4374,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "阿拉伯",
     author: "佚名",
-    source: "《辛巴达航海记》",
+    source: "辛巴达航海记",
     excerpt: "七次远航"
   },
   {
@@ -4385,7 +4385,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "佚名",
-    source: "《贝奥武夫》",
+    source: "贝奥武夫",
     excerpt: "英雄与火龙同归于尽"
   },
   {
@@ -4396,7 +4396,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "清少纳言",
-    source: "《枕草子》",
+    source: "枕草子",
     excerpt: "春是破晓，夏是夜晚"
   },
   {
@@ -4407,7 +4407,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "紫式部",
-    source: "《源氏物语》",
+    source: "源氏物语",
     excerpt: "一位光源氏的浮世生涯"
   },
   {
@@ -4418,7 +4418,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "佚名",
-    source: "《狐狸列那的故事》",
+    source: "狐狸列那的故事",
     excerpt: "一只狡猾的狐狸"
   },
   {
@@ -4429,7 +4429,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "佚名",
-    source: "《尼伯龙根之歌》",
+    source: "尼伯龙根之歌",
     excerpt: "一位英雄被刺中的后背"
   },
   {
@@ -4440,7 +4440,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "佚名",
-    source: "《平家物语》",
+    source: "平家物语",
     excerpt: "祇园精舍钟声响"
   },
   {
@@ -4451,7 +4451,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "冰岛",
     author: "佚名",
-    source: "《萨迦选》",
+    source: "萨迦选",
     excerpt: "冰岛人的故事"
   },
   {
@@ -4462,7 +4462,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "但丁",
-    source: "《新生》",
+    source: "新生",
     excerpt: "为一个女子写的一生"
   },
   {
@@ -4473,7 +4473,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "但丁",
-    source: "《神曲》",
+    source: "神曲",
     excerpt: "地狱、炼狱、天堂"
   },
   {
@@ -4484,7 +4484,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "吉田兼好",
-    source: "《徒然草》",
+    source: "徒然草",
     excerpt: "无事可做的一百段"
   },
   {
@@ -4495,7 +4495,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "薄伽丘",
-    source: "《十日谈》",
+    source: "十日谈",
     excerpt: "十天一百个故事"
   },
   {
@@ -4506,7 +4506,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "乔叟",
-    source: "《坎特伯雷故事集》",
+    source: "坎特伯雷故事集",
     excerpt: "去坎特伯雷路上的故事会"
   },
   {
@@ -4517,7 +4517,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "罗哈斯",
-    source: "《塞莱斯蒂娜》",
+    source: "塞莱斯蒂娜",
     excerpt: "一对恋人的悲剧"
   },
   {
@@ -4528,7 +4528,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "拉伯雷",
-    source: "《巨人传》",
+    source: "巨人传",
     excerpt: "笑是人的本性"
   },
   {
@@ -4539,7 +4539,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "佚名",
-    source: "《小癞子》",
+    source: "小癞子",
     excerpt: "一个流浪孩子的自述"
   },
   {
@@ -4550,7 +4550,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "葡萄牙",
     author: "卡蒙斯",
-    source: "《卢济塔尼亚人之歌》",
+    source: "卢济塔尼亚人之歌",
     excerpt: "葡萄牙的民族史诗"
   },
   {
@@ -4561,7 +4561,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "蒙田",
-    source: "《蒙田随笔集》",
+    source: "蒙田随笔集",
     excerpt: "我知道什么呢"
   },
   {
@@ -4572,7 +4572,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《仲夏夜之梦》",
+    source: "仲夏夜之梦",
     excerpt: "森林里的四角恋"
   },
   {
@@ -4583,7 +4583,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《威尼斯商人》",
+    source: "威尼斯商人",
     excerpt: "一磅肉的官司"
   },
   {
@@ -4594,7 +4594,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《罗密欧与朱丽叶》",
+    source: "罗密欧与朱丽叶",
     excerpt: "两个家族的仇与一对恋人"
   },
   {
@@ -4605,7 +4605,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《无事生非》",
+    source: "无事生非",
     excerpt: "被挑拨的一对"
   },
   {
@@ -4616,7 +4616,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《哈姆雷特》",
+    source: "哈姆雷特",
     excerpt: "生存还是毁灭"
   },
   {
@@ -4627,7 +4627,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《第十二夜》",
+    source: "第十二夜",
     excerpt: "双胞胎认错了人"
   },
   {
@@ -4638,7 +4638,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《奥赛罗》",
+    source: "奥赛罗",
     excerpt: "一条手帕与一场嫉妒"
   },
   {
@@ -4649,7 +4649,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《李尔王》",
+    source: "李尔王",
     excerpt: "一个父亲的醒悟"
   },
   {
@@ -4660,7 +4660,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "塞万提斯",
-    source: "《堂·吉诃德》",
+    source: "堂·吉诃德",
     excerpt: "与风车作战的骑士"
   },
   {
@@ -4671,7 +4671,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《麦克白》",
+    source: "麦克白",
     excerpt: "野心家的下场"
   },
   {
@@ -4682,7 +4682,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "莎士比亚",
-    source: "《暴风雨》",
+    source: "暴风雨",
     excerpt: "魔岛上的宽恕"
   },
   {
@@ -4693,7 +4693,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "维加",
-    source: "《羊泉村》",
+    source: "羊泉村",
     excerpt: "全村人一起反抗"
   },
   {
@@ -4704,7 +4704,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "卡尔德隆",
-    source: "《人生如梦》",
+    source: "人生如梦",
     excerpt: "醒来才知是梦"
   },
   {
@@ -4715,7 +4715,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "弥尔顿",
-    source: "《失乐园》",
+    source: "失乐园",
     excerpt: "人的堕落与自由意志"
   },
   {
@@ -4726,7 +4726,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "拉·封丹",
-    source: "《拉·封丹寓言》",
+    source: "拉·封丹寓言",
     excerpt: "知了与蚂蚁"
   },
   {
@@ -4737,7 +4737,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "帕斯卡尔",
-    source: "《帕斯卡尔思想录》",
+    source: "帕斯卡尔思想录",
     excerpt: "人是会思想的苇草"
   },
   {
@@ -4748,7 +4748,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "班扬",
-    source: "《天路历程》",
+    source: "天路历程",
     excerpt: "从毁灭城走到天城"
   },
   {
@@ -4759,7 +4759,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "松尾芭蕉",
-    source: "《奥州小道》",
+    source: "奥州小道",
     excerpt: "古池や蛙飛びこむ"
   },
   {
@@ -4770,7 +4770,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "朝鲜",
     author: "金万重",
-    source: "《九云梦》",
+    source: "九云梦",
     excerpt: "一场梦中的九个云"
   },
   {
@@ -4781,7 +4781,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "笛福",
-    source: "《鲁滨逊漂流记》",
+    source: "鲁滨逊漂流记",
     excerpt: "一个人在岛上过二十八年"
   },
   {
@@ -4792,7 +4792,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "孟德斯鸠",
-    source: "《波斯人信札》",
+    source: "波斯人信札",
     excerpt: "两个波斯人在巴黎"
   },
   {
@@ -4803,7 +4803,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "斯威夫特",
-    source: "《格列佛游记》",
+    source: "格列佛游记",
     excerpt: "小人国、大人国与慧骃国"
   },
   {
@@ -4814,7 +4814,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "孟德斯鸠",
-    source: "《论法的精神》",
+    source: "论法的精神",
     excerpt: "三权分立"
   },
   {
@@ -4825,7 +4825,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "菲尔丁",
-    source: "《汤姆·琼斯》",
+    source: "汤姆·琼斯",
     excerpt: "弃儿的漂泊记"
   },
   {
@@ -4836,7 +4836,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "斯特恩",
-    source: "《项狄传》",
+    source: "项狄传",
     excerpt: "一部奇特的小说"
   },
   {
@@ -4847,7 +4847,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "伏尔泰",
-    source: "《老实人》",
+    source: "老实人",
     excerpt: "还是要种我们的园地"
   },
   {
@@ -4858,7 +4858,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "卢梭",
-    source: "《爱弥儿》",
+    source: "爱弥儿",
     excerpt: "顺其自然的教育"
   },
   {
@@ -4869,7 +4869,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "卢梭",
-    source: "《社会契约论》",
+    source: "社会契约论",
     excerpt: "人生而自由"
   },
   {
@@ -4880,7 +4880,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "歌德",
-    source: "《少年维特之烦恼》",
+    source: "少年维特之烦恼",
     excerpt: "一个少年的心事"
   },
   {
@@ -4891,7 +4891,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "卢梭",
-    source: "《忏悔录》",
+    source: "忏悔录",
     excerpt: "我要把一个人的真面目示人"
   },
   {
@@ -4902,7 +4902,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "席勒",
-    source: "《强盗》",
+    source: "强盗",
     excerpt: "一个哥哥变成了强盗"
   },
   {
@@ -4913,7 +4913,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "席勒",
-    source: "《阴谋与爱情》",
+    source: "阴谋与爱情",
     excerpt: "一场门第悬殊的恋爱"
   },
   {
@@ -4924,7 +4924,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "彭斯",
-    source: "《彭斯诗选》",
+    source: "彭斯诗选",
     excerpt: "我的爱人像一朵红红的玫瑰"
   },
   {
@@ -4935,7 +4935,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "歌德",
-    source: "《威廉·迈斯特的学习时代》",
+    source: "威廉·迈斯特的学习时代",
     excerpt: "一个人的自我教育"
   },
   {
@@ -4946,7 +4946,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "柯勒律治",
-    source: "《古舟子咏》",
+    source: "古舟子咏",
     excerpt: "一只信天翁的血"
   },
   {
@@ -4957,7 +4957,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "华兹华斯",
-    source: "《华兹华斯与湖畔派》",
+    source: "华兹华斯与湖畔派",
     excerpt: "湖畔派的诗"
   },
   {
@@ -4968,7 +4968,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "朝鲜",
     author: "佚名",
-    source: "《春香传》",
+    source: "春香传",
     excerpt: "艺妓之女与贵公子"
   },
   {
@@ -4979,7 +4979,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "席勒",
-    source: "《威廉·退尔》",
+    source: "威廉·退尔",
     excerpt: "射苹果的瑞士人"
   },
   {
@@ -4990,7 +4990,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "歌德",
-    source: "《浮士德》",
+    source: "浮士德",
     excerpt: "与魔鬼打赌的人"
   },
   {
@@ -5001,7 +5001,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "简·奥斯汀",
-    source: "《理智与情感》",
+    source: "理智与情感",
     excerpt: "姐姐用脑子，妹妹用心"
   },
   {
@@ -5012,7 +5012,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "格林兄弟",
-    source: "《格林童话》",
+    source: "格林童话",
     excerpt: "白雪公主与小红帽"
   },
   {
@@ -5023,7 +5023,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "简·奥斯汀",
-    source: "《傲慢与偏见》",
+    source: "傲慢与偏见",
     excerpt: "第一印象常常是靠不住的"
   },
   {
@@ -5034,7 +5034,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "简·奥斯汀",
-    source: "《爱玛》",
+    source: "爱玛",
     excerpt: "爱替人做媒的姑娘"
   },
   {
@@ -5045,7 +5045,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "歌德",
-    source: "《歌德诗选》",
+    source: "歌德诗选",
     excerpt: "漫游者的夜歌"
   },
   {
@@ -5056,7 +5056,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "雪莱夫人",
-    source: "《弗兰肯斯坦》",
+    source: "弗兰肯斯坦",
     excerpt: "他造出了一个人"
   },
   {
@@ -5067,7 +5067,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "司各特",
-    source: "《艾凡赫》",
+    source: "艾凡赫",
     excerpt: "狮心王时代的骑士"
   },
   {
@@ -5078,7 +5078,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "叔本华",
-    source: "《作为意志和表象的世界》",
+    source: "作为意志和表象的世界",
     excerpt: "一部哲学"
   },
   {
@@ -5089,7 +5089,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "拜伦",
-    source: "《唐璜》",
+    source: "唐璜",
     excerpt: "一部讽刺的史诗"
   },
   {
@@ -5100,7 +5100,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "雪莱",
-    source: "《西风颂》",
+    source: "西风颂",
     excerpt: "冬天来了，春天还会远吗"
   },
   {
@@ -5111,7 +5111,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "济慈",
-    source: "《夜莺颂》",
+    source: "夜莺颂",
     excerpt: "我的心痛，昏沉欲睡"
   },
   {
@@ -5122,7 +5122,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "济慈",
-    source: "《希腊古瓮颂》",
+    source: "希腊古瓮颂",
     excerpt: "一件不朽的器物"
   },
   {
@@ -5133,7 +5133,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "雪莱",
-    source: "《致云雀》",
+    source: "致云雀",
     excerpt: "云雀在天空里欢叫"
   },
   {
@@ -5144,7 +5144,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "普希金",
-    source: "《假如生活欺骗了你》",
+    source: "假如生活欺骗了你",
     excerpt: "一切都将会过去"
   },
   {
@@ -5155,7 +5155,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "曼佐尼",
-    source: "《约婚夫妇》",
+    source: "约婚夫妇",
     excerpt: "一对未婚夫妻的磨难"
   },
   {
@@ -5166,7 +5166,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "海涅",
-    source: "《海涅诗选》",
+    source: "海涅诗选",
     excerpt: "乘着歌声的翅膀"
   },
   {
@@ -5177,7 +5177,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "巴尔扎克",
-    source: "《驴皮记》",
+    source: "驴皮记",
     excerpt: "一张驴皮的愿望"
   },
   {
@@ -5188,7 +5188,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "雨果",
-    source: "《巴黎圣母院》",
+    source: "巴黎圣母院",
     excerpt: "钟楼上那个敲钟人"
   },
   {
@@ -5199,7 +5199,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "普希金",
-    source: "《叶甫盖尼·奥涅金》",
+    source: "叶甫盖尼·奥涅金",
     excerpt: "多余人的样本"
   },
   {
@@ -5210,7 +5210,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "普希金",
-    source: "《渔夫和金鱼的故事》",
+    source: "渔夫和金鱼的故事",
     excerpt: "贪心的老太婆"
   },
   {
@@ -5221,7 +5221,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "果戈理",
-    source: "《彼得堡故事》",
+    source: "彼得堡故事",
     excerpt: "外套与鼻子"
   },
   {
@@ -5232,7 +5232,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "丹麦",
     author: "安徒生",
-    source: "《安徒生童话》",
+    source: "安徒生童话",
     excerpt: "卖火柴的小女孩"
   },
   {
@@ -5243,7 +5243,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "芬兰",
     author: "隆洛特",
-    source: "《卡勒瓦拉》",
+    source: "卡勒瓦拉",
     excerpt: "芬兰民族史诗"
   },
   {
@@ -5254,7 +5254,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "果戈理",
-    source: "《钦差大臣》",
+    source: "钦差大臣",
     excerpt: "一个冒牌钦差"
   },
   {
@@ -5265,7 +5265,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "普希金",
-    source: "《上尉的女儿》",
+    source: "上尉的女儿",
     excerpt: "普加乔夫起义中的爱情"
   },
   {
@@ -5276,7 +5276,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "丹麦",
     author: "安徒生",
-    source: "《海的女儿》",
+    source: "海的女儿",
     excerpt: "为了爱，她变成了泡沫"
   },
   {
@@ -5287,7 +5287,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "莱蒙托夫",
-    source: "《诗人之死》",
+    source: "诗人之死",
     excerpt: "诗人死了，这荣誉的俘虏"
   },
   {
@@ -5298,7 +5298,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《雾都孤儿》",
+    source: "雾都孤儿",
     excerpt: "孤儿在雾都问路"
   },
   {
@@ -5309,7 +5309,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "莱蒙托夫",
-    source: "《当代英雄》",
+    source: "当代英雄",
     excerpt: "毕巧林的自白"
   },
   {
@@ -5320,7 +5320,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "施瓦布",
-    source: "《希腊神话故事》",
+    source: "希腊神话故事",
     excerpt: "诸神与英雄的故事"
   },
   {
@@ -5331,7 +5331,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "果戈理",
-    source: "《死魂灵》",
+    source: "死魂灵",
     excerpt: "买死农奴的骗子"
   },
   {
@@ -5342,7 +5342,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《圣诞颂歌》",
+    source: "圣诞颂歌",
     excerpt: "守财奴的一夜三梦"
   },
   {
@@ -5353,7 +5353,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "丹麦",
     author: "安徒生",
-    source: "《丑小鸭》",
+    source: "丑小鸭",
     excerpt: "它本来就该是天鹅"
   },
   {
@@ -5364,7 +5364,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "大仲马",
-    source: "《三剑客与火枪手》",
+    source: "三剑客与火枪手",
     excerpt: "法国历史小说"
   },
   {
@@ -5375,7 +5375,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "海涅",
-    source: "《德国，一个冬天的童话》",
+    source: "德国，一个冬天的童话",
     excerpt: "一部政治讽刺诗"
   },
   {
@@ -5386,7 +5386,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "大仲马",
-    source: "《基督山伯爵》",
+    source: "基督山伯爵",
     excerpt: "等待与希望"
   },
   {
@@ -5397,7 +5397,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《穷人》",
+    source: "穷人",
     excerpt: "一封封信里的穷日子"
   },
   {
@@ -5408,7 +5408,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "夏洛蒂·勃朗特",
-    source: "《简·爱》",
+    source: "简·爱",
     excerpt: "我们的精神是平等的"
   },
   {
@@ -5419,7 +5419,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "艾米莉·勃朗特",
-    source: "《呼啸山庄》",
+    source: "呼啸山庄",
     excerpt: "一场跨越两代的爱与复仇"
   },
   {
@@ -5430,7 +5430,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "萨克雷",
-    source: "《名利场》",
+    source: "名利场",
     excerpt: "两个女人，两条路"
   },
   {
@@ -5441,7 +5441,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "小仲马",
-    source: "《茶花女·小说与话剧》",
+    source: "茶花女·小说与话剧",
     excerpt: "两种体裁的茶花女"
   },
   {
@@ -5452,7 +5452,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《白夜》",
+    source: "白夜",
     excerpt: "四个夜晚的相遇"
   },
   {
@@ -5463,7 +5463,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《大卫·科波菲尔》",
+    source: "大卫·科波菲尔",
     excerpt: "他把自己写进了书里"
   },
   {
@@ -5474,7 +5474,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "霍桑",
-    source: "《红字》",
+    source: "红字",
     excerpt: "胸前的那个字母"
   },
   {
@@ -5485,7 +5485,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "施托姆",
-    source: "《茵梦湖》",
+    source: "茵梦湖",
     excerpt: "一段旧时的爱情"
   },
   {
@@ -5496,7 +5496,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "华兹华斯",
-    source: "《序曲集》",
+    source: "序曲集",
     excerpt: "大自然的歌手"
   },
   {
@@ -5507,7 +5507,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "梅尔维尔",
-    source: "《白鲸》",
+    source: "白鲸",
     excerpt: "追一条白鲸到天涯"
   },
   {
@@ -5518,7 +5518,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "斯托夫人",
-    source: "《汤姆叔叔的小屋》",
+    source: "汤姆叔叔的小屋",
     excerpt: "在奴隶制下做一个好人"
   },
   {
@@ -5529,7 +5529,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《猎人笔记》",
+    source: "猎人笔记",
     excerpt: "在庄园里听见民间"
   },
   {
@@ -5540,7 +5540,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "梭罗",
-    source: "《瓦尔登湖》",
+    source: "瓦尔登湖",
     excerpt: "在林中小屋住两年"
   },
   {
@@ -5551,7 +5551,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "惠特曼",
-    source: "《草叶集》",
+    source: "草叶集",
     excerpt: "我歌唱带电的肉体"
   },
   {
@@ -5562,7 +5562,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "惠特曼",
-    source: "《自己之歌》",
+    source: "自己之歌",
     excerpt: "我赞美我自己"
   },
   {
@@ -5573,7 +5573,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "福楼拜",
-    source: "《包法利夫人与情感教育》",
+    source: "包法利夫人与情感教育",
     excerpt: "两部法国小说"
   },
   {
@@ -5584,7 +5584,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《罗亭》",
+    source: "罗亭",
     excerpt: "只会说不会做的青年"
   },
   {
@@ -5595,7 +5595,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "波德莱尔",
-    source: "《恶之花》",
+    source: "恶之花",
     excerpt: "巴黎的忧郁"
   },
   {
@@ -5606,7 +5606,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《阿霞》",
+    source: "阿霞",
     excerpt: "一段短暂的爱情"
   },
   {
@@ -5617,7 +5617,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《双城记》",
+    source: "双城记",
     excerpt: "这是最好的时代，也是最坏的时代"
   },
   {
@@ -5628,7 +5628,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《贵族之家》",
+    source: "贵族之家",
     excerpt: "两个错过的人"
   },
   {
@@ -5639,7 +5639,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "冈察洛夫",
-    source: "《奥勃洛摩夫》",
+    source: "奥勃洛摩夫",
     excerpt: "躺在沙发上的一生"
   },
   {
@@ -5650,7 +5650,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "奥斯特洛夫斯基",
-    source: "《大雷雨》",
+    source: "大雷雨",
     excerpt: "跳进伏尔加河的女人"
   },
   {
@@ -5661,7 +5661,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "柯林斯",
-    source: "《白衣女人》",
+    source: "白衣女人",
     excerpt: "谁是那个穿白衣的女人"
   },
   {
@@ -5672,7 +5672,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《前夜》",
+    source: "前夜",
     excerpt: "总要有人先走"
   },
   {
@@ -5683,7 +5683,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《初恋》",
+    source: "初恋",
     excerpt: "一个少年的初恋"
   },
   {
@@ -5694,7 +5694,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "狄更斯",
-    source: "《远大前程》",
+    source: "远大前程",
     excerpt: "一场空欢喜的馈赠"
   },
   {
@@ -5705,7 +5705,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《被侮辱与被损害的》",
+    source: "被侮辱与被损害的",
     excerpt: "被践踏的人"
   },
   {
@@ -5716,7 +5716,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "雨果",
-    source: "《悲惨世界》",
+    source: "悲惨世界",
     excerpt: "冉阿让与一块面包"
   },
   {
@@ -5727,7 +5727,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《死屋手记》",
+    source: "死屋手记",
     excerpt: "流放营里的一双眼睛"
   },
   {
@@ -5738,7 +5738,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "屠格涅夫",
-    source: "《父与子》",
+    source: "父与子",
     excerpt: "两代人的交锋"
   },
   {
@@ -5749,7 +5749,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "金斯利",
-    source: "《水孩子》",
+    source: "水孩子",
     excerpt: "扫烟囱的孩子下了水"
   },
   {
@@ -5760,7 +5760,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《气球上的五星期》",
+    source: "气球上的五星期",
     excerpt: "乘热气球横穿非洲"
   },
   {
@@ -5771,7 +5771,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《地心游记》",
+    source: "地心游记",
     excerpt: "从火山口下去"
   },
   {
@@ -5782,7 +5782,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "卡罗尔",
-    source: "《爱丽丝漫游奇境》",
+    source: "爱丽丝漫游奇境",
     excerpt: "掉进兔子洞以后"
   },
   {
@@ -5793,7 +5793,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《从地球到月球》",
+    source: "从地球到月球",
     excerpt: "一门巨炮把人送上月球"
   },
   {
@@ -5804,7 +5804,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《罪与罚》",
+    source: "罪与罚",
     excerpt: "一把斧头与一颗良心"
   },
   {
@@ -5815,7 +5815,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《赌徒》",
+    source: "赌徒",
     excerpt: "一张轮盘赌桌"
   },
   {
@@ -5826,7 +5826,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《格兰特船长的儿女》",
+    source: "格兰特船长的儿女",
     excerpt: "顺着漂流瓶去找人"
   },
   {
@@ -5837,7 +5837,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "挪威",
     author: "易卜生",
-    source: "《培尔·金特》",
+    source: "培尔·金特",
     excerpt: "一个浪子的自我"
   },
   {
@@ -5848,7 +5848,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "柯林斯",
-    source: "《月亮宝石》",
+    source: "月亮宝石",
     excerpt: "一颗被诅咒的印度宝石"
   },
   {
@@ -5859,7 +5859,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "奥尔科特",
-    source: "《小妇人》",
+    source: "小妇人",
     excerpt: "四姐妹的成长"
   },
   {
@@ -5870,7 +5870,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《白痴》",
+    source: "白痴",
     excerpt: "一个太善良的人"
   },
   {
@@ -5881,7 +5881,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《战争与和平》",
+    source: "战争与和平",
     excerpt: "四个家族与一场战争"
   },
   {
@@ -5892,7 +5892,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "波德莱尔",
-    source: "《巴黎的忧郁》",
+    source: "巴黎的忧郁",
     excerpt: "散文诗"
   },
   {
@@ -5903,7 +5903,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《海底两万里》",
+    source: "海底两万里",
     excerpt: "跟着鹦鹉螺号下潜"
   },
   {
@@ -5914,7 +5914,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "乔治·艾略特",
-    source: "《米德尔马契》",
+    source: "米德尔马契",
     excerpt: "外省生活的双重奏"
   },
   {
@@ -5925,7 +5925,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "兰波",
-    source: "《醉舟》",
+    source: "醉舟",
     excerpt: "我是一条在河上漂流的船"
   },
   {
@@ -5936,7 +5936,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《八十天环游地球》",
+    source: "八十天环游地球",
     excerpt: "一场打赌的旅程"
   },
   {
@@ -5947,7 +5947,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "尼采",
-    source: "《悲剧的诞生》",
+    source: "悲剧的诞生",
     excerpt: "日神与酒神"
   },
   {
@@ -5958,7 +5958,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《群魔》",
+    source: "群魔",
     excerpt: "一场阴谋与一群狂热者"
   },
   {
@@ -5969,7 +5969,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "兰波",
-    source: "《地狱一季》",
+    source: "地狱一季",
     excerpt: "一种季节"
   },
   {
@@ -5980,7 +5980,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "凡尔纳",
-    source: "《神秘岛》",
+    source: "神秘岛",
     excerpt: "荒岛上从零开始"
   },
   {
@@ -5991,7 +5991,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "乔万尼奥里",
-    source: "《斯巴达克斯》",
+    source: "斯巴达克斯",
     excerpt: "角斗士起义"
   },
   {
@@ -6002,7 +6002,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "马克·吐温",
-    source: "《汤姆·索亚历险记》",
+    source: "汤姆·索亚历险记",
     excerpt: "刷栅栏的孩子"
   },
   {
@@ -6013,7 +6013,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "涅克拉索夫",
-    source: "《谁在俄罗斯能过好日子》",
+    source: "谁在俄罗斯能过好日子",
     excerpt: "七个农民找答案"
   },
   {
@@ -6024,7 +6024,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《安娜·卡列尼娜》",
+    source: "安娜·卡列尼娜",
     excerpt: "幸福的家庭都是相似的"
   },
   {
@@ -6035,7 +6035,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "挪威",
     author: "易卜生",
-    source: "《易卜生戏剧选》",
+    source: "易卜生戏剧选",
     excerpt: "玩偶之家"
   },
   {
@@ -6046,7 +6046,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "哈代",
-    source: "《还乡》",
+    source: "还乡",
     excerpt: "荒原上不肯熄灭的火"
   },
   {
@@ -6057,7 +6057,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "亨利·詹姆斯",
-    source: "《黛西·米勒》",
+    source: "黛西·米勒",
     excerpt: "一个美国姑娘在欧洲"
   },
   {
@@ -6068,7 +6068,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "挪威",
     author: "易卜生",
-    source: "《玩偶之家》",
+    source: "玩偶之家",
     excerpt: "娜拉走出那扇门"
   },
   {
@@ -6079,7 +6079,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "法布尔",
-    source: "《昆虫记》",
+    source: "昆虫记",
     excerpt: "荒石园里的观察者"
   },
   {
@@ -6090,7 +6090,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "莫泊桑",
-    source: "《莫泊桑中短篇全集》",
+    source: "莫泊桑中短篇全集",
     excerpt: "三百篇短篇"
   },
   {
@@ -6101,7 +6101,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "莫泊桑",
-    source: "《项链与羊脂球》",
+    source: "项链与羊脂球",
     excerpt: "两篇名作"
   },
   {
@@ -6112,7 +6112,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "陀思妥耶夫斯基",
-    source: "《卡拉马佐夫兄弟》",
+    source: "卡拉马佐夫兄弟",
     excerpt: "谁杀了父亲"
   },
   {
@@ -6123,7 +6123,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "亨利·詹姆斯",
-    source: "《一位女士的画像》",
+    source: "一位女士的画像",
     excerpt: "她以为自己在选择"
   },
   {
@@ -6134,7 +6134,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "马克·吐温",
-    source: "《王子与贫儿》",
+    source: "王子与贫儿",
     excerpt: "换了衣服就换了身份"
   },
   {
@@ -6145,7 +6145,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "挪威",
     author: "易卜生",
-    source: "《人民公敌》",
+    source: "人民公敌",
     excerpt: "多数派与真理"
   },
   {
@@ -6156,7 +6156,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "史蒂文森",
-    source: "《金银岛》",
+    source: "金银岛",
     excerpt: "一张藏宝图引出的远航"
   },
   {
@@ -6167,7 +6167,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "尼采",
-    source: "《查拉图斯特拉如是说》",
+    source: "查拉图斯特拉如是说",
     excerpt: "人要成为超人"
   },
   {
@@ -6178,7 +6178,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "科洛迪",
-    source: "《木偶奇遇记》",
+    source: "木偶奇遇记",
     excerpt: "同一个木偶的另一译名"
   },
   {
@@ -6189,7 +6189,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "马克·吐温",
-    source: "《哈克贝利·费恩历险记》",
+    source: "哈克贝利·费恩历险记",
     excerpt: "顺密西西比河漂下去"
   },
   {
@@ -6200,7 +6200,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《变色龙》",
+    source: "变色龙",
     excerpt: "一条狗咬人后的看人下菜"
   },
   {
@@ -6211,7 +6211,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "克拉林",
-    source: "《庭长夫人》",
+    source: "庭长夫人",
     excerpt: "一座外省小城的流言"
   },
   {
@@ -6222,7 +6222,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "史蒂文森",
-    source: "《化身博士》",
+    source: "化身博士",
     excerpt: "同一个人身上的两个人"
   },
   {
@@ -6233,7 +6233,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "伯内特",
-    source: "《小公子》",
+    source: "小公子",
     excerpt: "一个孩子改变一个家"
   },
   {
@@ -6244,7 +6244,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《伊凡·伊里奇之死》",
+    source: "伊凡·伊里奇之死",
     excerpt: "一个官员的死"
   },
   {
@@ -6255,7 +6255,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《万卡》",
+    source: "万卡",
     excerpt: "一封寄不到的信"
   },
   {
@@ -6266,7 +6266,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "洛蒂",
-    source: "《冰岛渔夫》",
+    source: "冰岛渔夫",
     excerpt: "布列塔尼的渔人"
   },
   {
@@ -6277,7 +6277,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "亚米契斯",
-    source: "《爱的教育》",
+    source: "爱的教育",
     excerpt: "一个四年级孩子的日记"
   },
   {
@@ -6288,7 +6288,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "柯南·道尔",
-    source: "《福尔摩斯探案集》",
+    source: "福尔摩斯探案集",
     excerpt: "基本演绎法"
   },
   {
@@ -6299,7 +6299,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "狄金森",
-    source: "《狄金森诗选》",
+    source: "狄金森诗选",
     excerpt: "我是无名之辈"
   },
   {
@@ -6310,7 +6310,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "哈代",
-    source: "《德伯家的苔丝》",
+    source: "德伯家的苔丝",
     excerpt: "一个纯洁的女人"
   },
   {
@@ -6321,7 +6321,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《克莱采奏鸣曲》",
+    source: "克莱采奏鸣曲",
     excerpt: "一把小提琴引出的猜忌"
   },
   {
@@ -6332,7 +6332,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《第六病室》",
+    source: "第六病室",
     excerpt: "谁是疯子"
   },
   {
@@ -6343,7 +6343,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "马克·吐温",
-    source: "《百万英镑》",
+    source: "百万英镑",
     excerpt: "一张钞票的魔力"
   },
   {
@@ -6354,7 +6354,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "爱尔兰",
     author: "叶芝",
-    source: "《当你老了》",
+    source: "当你老了",
     excerpt: "炉火旁的一册诗"
   },
   {
@@ -6365,7 +6365,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "吉卜林",
-    source: "《丛林故事》",
+    source: "丛林故事",
     excerpt: "狼群里养大的孩子"
   },
   {
@@ -6376,7 +6376,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "威尔斯",
-    source: "《时间机器》",
+    source: "时间机器",
     excerpt: "一直开到八十万年后"
   },
   {
@@ -6387,7 +6387,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "哈代",
-    source: "《无名的裘德》",
+    source: "无名的裘德",
     excerpt: "读书人的路被门第堵死"
   },
   {
@@ -6398,7 +6398,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《海鸥》",
+    source: "海鸥",
     excerpt: "一部关于戏剧的戏"
   },
   {
@@ -6409,7 +6409,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "威尔斯",
-    source: "《隐身人》",
+    source: "隐身人",
     excerpt: "看不见的人反而无处容身"
   },
   {
@@ -6420,7 +6420,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "斯托克",
-    source: "《德古拉》",
+    source: "德古拉",
     excerpt: "从特兰西瓦尼亚来的伯爵"
   },
   {
@@ -6431,7 +6431,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "威尔斯",
-    source: "《世界大战》",
+    source: "世界大战",
     excerpt: "火星人从陨石坑里站起来"
   },
   {
@@ -6442,7 +6442,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《套中人》",
+    source: "套中人",
     excerpt: "把自己装进一个套子"
   },
   {
@@ -6453,7 +6453,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "托尔斯泰",
-    source: "《复活》",
+    source: "复活",
     excerpt: "一个人灵魂的醒来"
   },
   {
@@ -6464,7 +6464,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《带小狗的女人》",
+    source: "带小狗的女人",
     excerpt: "一段迟到的爱"
   },
   {
@@ -6475,7 +6475,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "德莱塞",
-    source: "《嘉莉妹妹》",
+    source: "嘉莉妹妹",
     excerpt: "一个女孩进城以后"
   },
   {
@@ -6486,7 +6486,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "鲍姆",
-    source: "《绿野仙踪》",
+    source: "绿野仙踪",
     excerpt: "多萝西的奥兹国"
   },
   {
@@ -6497,7 +6497,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "弗洛伊德",
-    source: "《弗洛伊德梦的解析》",
+    source: "弗洛伊德梦的解析",
     excerpt: "梦是愿望的达成"
   },
   {
@@ -6508,7 +6508,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "托马斯·曼",
-    source: "《布登勃洛克一家》",
+    source: "布登勃洛克一家",
     excerpt: "一个家族的衰落"
   },
   {
@@ -6519,7 +6519,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《三姊妹》",
+    source: "三姊妹",
     excerpt: "回莫斯科去"
   },
   {
@@ -6530,7 +6530,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《契诃夫短篇小说选》",
+    source: "契诃夫短篇小说选",
     excerpt: "一册短篇集"
   },
   {
@@ -6541,7 +6541,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "高尔基",
-    source: "《海燕》",
+    source: "海燕",
     excerpt: "让暴风雨来得更猛烈些吧"
   },
   {
@@ -6552,7 +6552,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海伦·凯勒",
-    source: "《假如给我三天光明》",
+    source: "假如给我三天光明",
     excerpt: "在黑暗里看见光明"
   },
   {
@@ -6563,7 +6563,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "杰克·伦敦",
-    source: "《野性的呼唤》",
+    source: "野性的呼唤",
     excerpt: "一条狗听见了祖先的呼唤"
   },
   {
@@ -6574,7 +6574,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "罗曼·罗兰",
-    source: "《贝多芬传》",
+    source: "贝多芬传",
     excerpt: "一位音乐家的苦难"
   },
   {
@@ -6585,7 +6585,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "罗曼·罗兰",
-    source: "《名人传》",
+    source: "名人传",
     excerpt: "贝多芬、米开朗琪罗、托尔斯泰"
   },
   {
@@ -6596,7 +6596,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "欧·亨利",
-    source: "《警察与赞美诗》",
+    source: "警察与赞美诗",
     excerpt: "想进监狱的人"
   },
   {
@@ -6607,7 +6607,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "杰克·伦敦",
-    source: "《海狼》",
+    source: "海狼",
     excerpt: "一艘捕海豹船上的强弱法则"
   },
   {
@@ -6618,7 +6618,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "罗曼·罗兰",
-    source: "《约翰·克利斯朵夫·少年》",
+    source: "约翰·克利斯朵夫·少年",
     excerpt: "一个天才的早岁"
   },
   {
@@ -6629,7 +6629,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "契诃夫",
-    source: "《樱桃园》",
+    source: "樱桃园",
     excerpt: "园子被卖掉了"
   },
   {
@@ -6640,7 +6640,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "伯内特",
-    source: "《小公主》",
+    source: "小公主",
     excerpt: "在阁楼上当公主"
   },
   {
@@ -6651,7 +6651,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《我是猫》",
+    source: "我是猫",
     excerpt: "一只猫看他的主人"
   },
   {
@@ -6662,7 +6662,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "欧·亨利",
-    source: "《欧·亨利短篇小说选》",
+    source: "欧·亨利短篇小说选",
     excerpt: "麦琪的礼物"
   },
   {
@@ -6673,7 +6673,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "欧·亨利",
-    source: "《最后一片叶子》",
+    source: "最后一片叶子",
     excerpt: "画上去的叶子救了人"
   },
   {
@@ -6684,7 +6684,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "辛克莱",
-    source: "《屠场》",
+    source: "屠场",
     excerpt: "芝加哥的肉联厂"
   },
   {
@@ -6695,7 +6695,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "杰克·伦敦",
-    source: "《白牙》",
+    source: "白牙",
     excerpt: "一半是狗，一半是狼"
   },
   {
@@ -6706,7 +6706,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "杰克·伦敦",
-    source: "《热爱生命》",
+    source: "热爱生命",
     excerpt: "病狼与断粮的人"
   },
   {
@@ -6717,7 +6717,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "罗曼·罗兰",
-    source: "《米开朗琪罗传》",
+    source: "米开朗琪罗传",
     excerpt: "一位雕塑家的一生"
   },
   {
@@ -6728,7 +6728,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《在轮下》",
+    source: "在轮下",
     excerpt: "被教育碾碎的人"
   },
   {
@@ -6739,7 +6739,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "拉格洛夫",
-    source: "《尼尔斯骑鹅旅行记》",
+    source: "尼尔斯骑鹅旅行记",
     excerpt: "骑在鹅背上看瑞典"
   },
   {
@@ -6750,7 +6750,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《少爷》",
+    source: "少爷",
     excerpt: "一个莽撞的教师"
   },
   {
@@ -6761,7 +6761,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《草枕》",
+    source: "草枕",
     excerpt: "山路上的闲情"
   },
   {
@@ -6772,7 +6772,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《沉船》",
+    source: "沉船",
     excerpt: "一场翻船后的相遇"
   },
   {
@@ -6783,7 +6783,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "高尔基",
-    source: "《母亲》",
+    source: "母亲",
     excerpt: "一个母亲的觉悟"
   },
   {
@@ -6794,7 +6794,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "格雷厄姆",
-    source: "《柳林风声》",
+    source: "柳林风声",
     excerpt: "河岸边的四个好朋友"
   },
   {
@@ -6805,7 +6805,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "加拿大",
     author: "蒙哥马利",
-    source: "《绿山墙的安妮》",
+    source: "绿山墙的安妮",
     excerpt: "红头发女孩被领回了家"
   },
   {
@@ -6816,7 +6816,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《三四郎》",
+    source: "三四郎",
     excerpt: "一个乡下青年进了东京"
   },
   {
@@ -6827,7 +6827,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "杰克·伦敦",
-    source: "《马丁·伊登》",
+    source: "马丁·伊登",
     excerpt: "一个水手想当作家"
   },
   {
@@ -6838,7 +6838,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《吉檀迦利》",
+    source: "吉檀迦利",
     excerpt: "你已经使我永生"
   },
   {
@@ -6849,7 +6849,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《戈拉》",
+    source: "戈拉",
     excerpt: "我是印度人"
   },
   {
@@ -6860,7 +6860,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "石川啄木",
-    source: "《石川啄木短歌》",
+    source: "石川啄木短歌",
     excerpt: "一握之砂"
   },
   {
@@ -6871,7 +6871,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "巴里",
-    source: "《彼得·潘》",
+    source: "彼得·潘",
     excerpt: "永无岛上不肯长大的孩子"
   },
   {
@@ -6882,7 +6882,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "伯内特",
-    source: "《秘密花园》",
+    source: "秘密花园",
     excerpt: "一把钥匙开一座园子"
   },
   {
@@ -6893,7 +6893,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "罗曼·罗兰",
-    source: "《托尔斯泰传》",
+    source: "托尔斯泰传",
     excerpt: "一位文豪的思想"
   },
   {
@@ -6904,7 +6904,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "托马斯·曼",
-    source: "《死于威尼斯》",
+    source: "死于威尼斯",
     excerpt: "一个作家的痴迷"
   },
   {
@@ -6915,7 +6915,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "卡夫卡",
-    source: "《卡夫卡短篇集》",
+    source: "卡夫卡短篇集",
     excerpt: "一部短篇合集"
   },
   {
@@ -6926,7 +6926,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "高尔基",
-    source: "《童年》",
+    source: "童年",
     excerpt: "在外祖父家的日子"
   },
   {
@@ -6937,7 +6937,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《新月集》",
+    source: "新月集",
     excerpt: "孩子的世界"
   },
   {
@@ -6948,7 +6948,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《园丁集》",
+    source: "园丁集",
     excerpt: "我的爱在我心里"
   },
   {
@@ -6959,7 +6959,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "庞德",
-    source: "《庞德诗选》",
+    source: "庞德诗选",
     excerpt: "在地铁站"
   },
   {
@@ -6970,7 +6970,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "高尔基",
-    source: "《在人间》",
+    source: "在人间",
     excerpt: "少年在人间讨生活"
   },
   {
@@ -6981,7 +6981,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "乌纳穆诺",
-    source: "《雾》",
+    source: "雾",
     excerpt: "一个人走进了小说里"
   },
   {
@@ -6992,7 +6992,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "希梅内斯",
-    source: "《小银与我》",
+    source: "小银与我",
     excerpt: "散文诗里的一头小毛驴"
   },
   {
@@ -7003,7 +7003,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "夏目漱石",
-    source: "《心·夏目漱石》",
+    source: "心·夏目漱石",
     excerpt: "先生的遗嘱"
   },
   {
@@ -7014,7 +7014,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "毛姆",
-    source: "《人生的枷锁》",
+    source: "人生的枷锁",
     excerpt: "挣脱一只脚，又套上另一只"
   },
   {
@@ -7025,7 +7025,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "芥川龙之介",
-    source: "《罗生门》",
+    source: "罗生门",
     excerpt: "在雨里等一场恶"
   },
   {
@@ -7036,7 +7036,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "芥川龙之介",
-    source: "《鼻》",
+    source: "鼻",
     excerpt: "长了鼻子的法师"
   },
   {
@@ -7047,7 +7047,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "印度",
     author: "泰戈尔",
-    source: "《飞鸟集》",
+    source: "飞鸟集",
     excerpt: "生如夏花之绚烂"
   },
   {
@@ -7058,7 +7058,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "弗罗斯特",
-    source: "《弗罗斯特诗选》",
+    source: "弗罗斯特诗选",
     excerpt: "未选择的路"
   },
   {
@@ -7069,7 +7069,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "弗罗斯特",
-    source: "《未选择的路》",
+    source: "未选择的路",
     excerpt: "一片黄树林里的岔路"
   },
   {
@@ -7080,7 +7080,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "芥川龙之介",
-    source: "《地狱变》",
+    source: "地狱变",
     excerpt: "一位画师"
   },
   {
@@ -7091,7 +7091,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "毛姆",
-    source: "《月亮与六便士》",
+    source: "月亮与六便士",
     excerpt: "满地都是六便士，他抬头看见了月亮"
   },
   {
@@ -7102,7 +7102,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《德米安》",
+    source: "德米安",
     excerpt: "该隐印记的孩子"
   },
   {
@@ -7113,7 +7113,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "瓦雷里",
-    source: "《海滨墓园》",
+    source: "海滨墓园",
     excerpt: "这平静的屋顶上"
   },
   {
@@ -7124,7 +7124,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "黎巴嫩",
     author: "纪伯伦",
-    source: "《纪伯伦散文诗选》",
+    source: "纪伯伦散文诗选",
     excerpt: "你们的孩子不是你们的孩子"
   },
   {
@@ -7135,7 +7135,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《悉达多》",
+    source: "悉达多",
     excerpt: "一条河教会他的事"
   },
   {
@@ -7146,7 +7146,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "茨威格",
-    source: "《一位陌生女子的来信》",
+    source: "一位陌生女子的来信",
     excerpt: "一封信写尽一生"
   },
   {
@@ -7157,7 +7157,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "芥川龙之介",
-    source: "《竹林中》",
+    source: "竹林中",
     excerpt: "谁是真相"
   },
   {
@@ -7168,7 +7168,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "艾略特",
-    source: "《荒原》",
+    source: "荒原",
     excerpt: "四月是最残忍的月份"
   },
   {
@@ -7179,7 +7179,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "高尔基",
-    source: "《我的大学》",
+    source: "我的大学",
     excerpt: "喀山的一所社会大学"
   },
   {
@@ -7190,7 +7190,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "格林",
-    source: "《红帆》",
+    source: "红帆",
     excerpt: "等一艘红帆船"
   },
   {
@@ -7201,7 +7201,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "黎巴嫩",
     author: "纪伯伦",
-    source: "《先知》",
+    source: "先知",
     excerpt: "关于爱、工作与死亡"
   },
   {
@@ -7212,7 +7212,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "托马斯·曼",
-    source: "《魔山》",
+    source: "魔山",
     excerpt: "山上的疗养院"
   },
   {
@@ -7223,7 +7223,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "绥拉菲莫维奇",
-    source: "《铁流》",
+    source: "铁流",
     excerpt: "一支突围的队伍"
   },
   {
@@ -7234,7 +7234,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "宫泽贤治",
-    source: "《宫泽贤治诗选》",
+    source: "宫泽贤治诗选",
     excerpt: "不畏风雨"
   },
   {
@@ -7245,7 +7245,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "智利",
     author: "聂鲁达",
-    source: "《二十首情诗与一首绝望的歌》",
+    source: "二十首情诗与一首绝望的歌",
     excerpt: "爱情与绝望"
   },
   {
@@ -7256,7 +7256,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "德莱塞",
-    source: "《美国悲剧》",
+    source: "美国悲剧",
     excerpt: "一个人被欲望推上电椅"
   },
   {
@@ -7267,7 +7267,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "菲茨杰拉德",
-    source: "《了不起的盖茨比》",
+    source: "了不起的盖茨比",
     excerpt: "绿灯在对岸一闪一闪"
   },
   {
@@ -7278,7 +7278,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "卡夫卡",
-    source: "《审判》",
+    source: "审判",
     excerpt: "无缘无故被起诉"
   },
   {
@@ -7289,7 +7289,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "叶赛宁",
-    source: "《叶赛宁诗选》",
+    source: "叶赛宁诗选",
     excerpt: "你不要在黎明时唤醒我"
   },
   {
@@ -7300,7 +7300,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海明威",
-    source: "《太阳照常升起》",
+    source: "太阳照常升起",
     excerpt: "迷惘的一代"
   },
   {
@@ -7311,7 +7311,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "卡夫卡",
-    source: "《城堡》",
+    source: "城堡",
     excerpt: "土地测量员进不了村"
   },
   {
@@ -7322,7 +7322,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "川端康成",
-    source: "《伊豆的舞女》",
+    source: "伊豆的舞女",
     excerpt: "一段少年的旅途"
   },
   {
@@ -7333,7 +7333,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "黎巴嫩",
     author: "纪伯伦",
-    source: "《沙与沫》",
+    source: "沙与沫",
     excerpt: "一粒沙与一滴沫"
   },
   {
@@ -7344,7 +7344,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "马雅可夫斯基",
-    source: "《马雅可夫斯基诗选》",
+    source: "马雅可夫斯基诗选",
     excerpt: "穿裤子的云"
   },
   {
@@ -7355,7 +7355,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "维·比安基",
-    source: "《森林报》",
+    source: "森林报",
     excerpt: "一年四季的森林日记"
   },
   {
@@ -7366,7 +7366,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《荒原狼》",
+    source: "荒原狼",
     excerpt: "一半是人，一半是狼"
   },
   {
@@ -7377,7 +7377,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "茨威格",
-    source: "《人类群星闪耀时》",
+    source: "人类群星闪耀时",
     excerpt: "十四个历史瞬间"
   },
   {
@@ -7388,7 +7388,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "法捷耶夫",
-    source: "《毁灭》",
+    source: "毁灭",
     excerpt: "一支游击队的溃败"
   },
   {
@@ -7399,7 +7399,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "爱尔兰",
     author: "叶芝",
-    source: "《叶芝诗选》",
+    source: "叶芝诗选",
     excerpt: "当你老了"
   },
   {
@@ -7410,7 +7410,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "福克纳",
-    source: "《喧哗与骚动》",
+    source: "喧哗与骚动",
     excerpt: "一个家族的败落回声"
   },
   {
@@ -7421,7 +7421,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海明威",
-    source: "《永别了，武器》",
+    source: "永别了，武器",
     excerpt: "一场告别的战争"
   },
   {
@@ -7432,7 +7432,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "雷马克",
-    source: "《西线无战事》",
+    source: "西线无战事",
     excerpt: "战争没有旁观者"
   },
   {
@@ -7443,7 +7443,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "小林多喜二",
-    source: "《蟹工船》",
+    source: "蟹工船",
     excerpt: "一艘船上的劳役"
   },
   {
@@ -7454,7 +7454,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "福克纳",
-    source: "《我弥留之际》",
+    source: "我弥留之际",
     excerpt: "抬着棺材走过洪水"
   },
   {
@@ -7465,7 +7465,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《纳尔齐斯与歌尔德蒙》",
+    source: "纳尔齐斯与歌尔德蒙",
     excerpt: "两个朋友的两条路"
   },
   {
@@ -7476,7 +7476,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "赫胥黎",
-    source: "《美丽新世界》",
+    source: "美丽新世界",
     excerpt: "被安排好的幸福"
   },
   {
@@ -7487,7 +7487,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "福克纳",
-    source: "《八月之光》",
+    source: "八月之光",
     excerpt: "带着嫌疑出生的人"
   },
   {
@@ -7498,7 +7498,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "怀尔德",
-    source: "《大森林里的小木屋》",
+    source: "大森林里的小木屋",
     excerpt: "威斯康星的童年"
   },
   {
@@ -7509,7 +7509,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "洛尔迦",
-    source: "《血的婚礼》",
+    source: "血的婚礼",
     excerpt: "一场逃不掉的婚礼"
   },
   {
@@ -7520,7 +7520,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "谷崎润一郎",
-    source: "《春琴抄》",
+    source: "春琴抄",
     excerpt: "一个仆人对女主人的一生"
   },
   {
@@ -7531,7 +7531,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "谷崎润一郎",
-    source: "《阴翳礼赞》",
+    source: "阴翳礼赞",
     excerpt: "美不在明亮处"
   },
   {
@@ -7542,7 +7542,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "西班牙",
     author: "洛尔迦",
-    source: "《洛尔迦诗选》",
+    source: "洛尔迦诗选",
     excerpt: "吉普赛谣曲集"
   },
   {
@@ -7553,7 +7553,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "菲茨杰拉德",
-    source: "《夜色温柔》",
+    source: "夜色温柔",
     excerpt: "爵士时代的挽歌"
   },
   {
@@ -7564,7 +7564,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "布莱希特",
-    source: "《三毛钱小说》",
+    source: "三毛钱小说",
     excerpt: "一部讽刺小说"
   },
   {
@@ -7575,7 +7575,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "奥斯特洛夫斯基",
-    source: "《钢铁是怎样炼成的》",
+    source: "钢铁是怎样炼成的",
     excerpt: "把整个生命献给人类"
   },
   {
@@ -7586,7 +7586,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "怀尔德",
-    source: "《草原上的小屋》",
+    source: "草原上的小屋",
     excerpt: "拓荒的一家"
   },
   {
@@ -7597,7 +7597,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海明威",
-    source: "《乞力马扎罗的雪》",
+    source: "乞力马扎罗的雪",
     excerpt: "山顶上那只冻僵的豹子"
   },
   {
@@ -7608,7 +7608,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "斯坦贝克",
-    source: "《人鼠之间》",
+    source: "人鼠之间",
     excerpt: "一间自己的小房子"
   },
   {
@@ -7619,7 +7619,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "丹麦",
     author: "布里克森",
-    source: "《走出非洲》",
+    source: "走出非洲",
     excerpt: "在肯尼亚的农场"
   },
   {
@@ -7630,7 +7630,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "川端康成",
-    source: "《雪国》",
+    source: "雪国",
     excerpt: "穿过县界长长的隧道"
   },
   {
@@ -7641,7 +7641,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "托尔金",
-    source: "《霍比特人》",
+    source: "霍比特人",
     excerpt: "去而复返的旅程"
   },
   {
@@ -7652,7 +7652,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "斯坦贝克",
-    source: "《愤怒的葡萄》",
+    source: "愤怒的葡萄",
     excerpt: "一辆装满家当的旧卡车"
   },
   {
@@ -7663,7 +7663,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海明威",
-    source: "《丧钟为谁而鸣》",
+    source: "丧钟为谁而鸣",
     excerpt: "桥要炸，人也要活"
   },
   {
@@ -7674,7 +7674,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "肖洛霍夫",
-    source: "《静静的顿河》",
+    source: "静静的顿河",
     excerpt: "一个哥萨克的一生"
   },
   {
@@ -7685,7 +7685,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "伯顿",
-    source: "《小房子》",
+    source: "小房子",
     excerpt: "一座房子看着城市长大"
   },
   {
@@ -7696,7 +7696,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "加缪",
-    source: "《局外人与鼠疫》",
+    source: "局外人与鼠疫",
     excerpt: "两部代表作"
   },
   {
@@ -7707,7 +7707,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "茨威格",
-    source: "《象棋的故事》",
+    source: "象棋的故事",
     excerpt: "被囚禁出的棋艺"
   },
   {
@@ -7718,7 +7718,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "奥地利",
     author: "茨威格",
-    source: "《昨日的世界》",
+    source: "昨日的世界",
     excerpt: "一个欧洲人的回忆"
   },
   {
@@ -7729,7 +7729,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "圣埃克苏佩里",
-    source: "《小王子》",
+    source: "小王子",
     excerpt: "重要的东西用眼睛是看不见的"
   },
   {
@@ -7740,7 +7740,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "黑塞",
-    source: "《玻璃球游戏》",
+    source: "玻璃球游戏",
     excerpt: "一个未来的学园"
   },
   {
@@ -7751,7 +7751,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "布莱希特",
-    source: "《伽利略传》",
+    source: "伽利略传",
     excerpt: "一位科学家"
   },
   {
@@ -7762,7 +7762,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "谷崎润一郎",
-    source: "《细雪》",
+    source: "细雪",
     excerpt: "四姐妹的婚事"
   },
   {
@@ -7773,7 +7773,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "艾略特",
-    source: "《四个四重奏》",
+    source: "四个四重奏",
     excerpt: "时间与永恒"
   },
   {
@@ -7784,7 +7784,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "毛姆",
-    source: "《刀锋》",
+    source: "刀锋",
     excerpt: "剃刀边缘很难越过"
   },
   {
@@ -7795,7 +7795,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "埃斯特斯",
-    source: "《一百条裙子》",
+    source: "一百条裙子",
     excerpt: "一个女孩的裙子"
   },
   {
@@ -7806,7 +7806,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "卡维林",
-    source: "《船长与大尉》",
+    source: "船长与大尉",
     excerpt: "两位船长与一位姑娘"
   },
   {
@@ -7817,7 +7817,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "奥威尔",
-    source: "《动物农场》",
+    source: "动物农场",
     excerpt: "所有的动物一律平等，但有些更平等"
   },
   {
@@ -7828,7 +7828,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "怀特",
-    source: "《精灵鼠小弟》",
+    source: "精灵鼠小弟",
     excerpt: "小老鼠的出走"
   },
   {
@@ -7839,7 +7839,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "法捷耶夫",
-    source: "《青年近卫军》",
+    source: "青年近卫军",
     excerpt: "一群少年的抵抗"
   },
   {
@@ -7850,7 +7850,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "林格伦",
-    source: "《长袜子皮皮》",
+    source: "长袜子皮皮",
     excerpt: "力大无穷的小姑娘"
   },
   {
@@ -7861,7 +7861,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "芬兰",
     author: "扬松",
-    source: "《木民一家》",
+    source: "木民一家",
     excerpt: "一群小木民"
   },
   {
@@ -7872,7 +7872,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "雷马克",
-    source: "《凯旋门》",
+    source: "凯旋门",
     excerpt: "一个流亡医生在巴黎"
   },
   {
@@ -7883,7 +7883,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "波列伏依",
-    source: "《真正的人》",
+    source: "真正的人",
     excerpt: "一位无脚飞行员"
   },
   {
@@ -7894,7 +7894,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "斯坦贝克",
-    source: "《珍珠》",
+    source: "珍珠",
     excerpt: "一颗珍珠带来的灾祸"
   },
   {
@@ -7905,7 +7905,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "太宰治",
-    source: "《斜阳》",
+    source: "斜阳",
     excerpt: "一个没落贵族之家"
   },
   {
@@ -7916,7 +7916,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "太宰治",
-    source: "《人间失格》",
+    source: "人间失格",
     excerpt: "我这一生尽是可耻之事"
   },
   {
@@ -7927,7 +7927,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "奥威尔",
-    source: "《一九八四》",
+    source: "一九八四",
     excerpt: "老大哥在看着你"
   },
   {
@@ -7938,7 +7938,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "波伏娃",
-    source: "《第二性》",
+    source: "第二性",
     excerpt: "女人不是天生的"
   },
   {
@@ -7949,7 +7949,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "三岛由纪夫",
-    source: "《假面的告白》",
+    source: "假面的告白",
     excerpt: "一部自白"
   },
   {
@@ -7960,7 +7960,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "科斯莫杰米扬斯卡娅",
-    source: "《卓娅与舒拉的故事》",
+    source: "卓娅与舒拉的故事",
     excerpt: "一对姐弟"
   },
   {
@@ -7971,7 +7971,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "阿西莫夫",
-    source: "《我，机器人》",
+    source: "我，机器人",
     excerpt: "机器人三定律"
   },
   {
@@ -7982,7 +7982,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "布雷德伯里",
-    source: "《火星编年史》",
+    source: "火星编年史",
     excerpt: "火星上的小镇"
   },
   {
@@ -7993,7 +7993,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "刘易斯",
-    source: "《纳尼亚传奇：狮子、女巫和魔衣橱》",
+    source: "纳尼亚传奇：狮子、女巫和魔衣橱",
     excerpt: "衣服柜后面的雪国"
   },
   {
@@ -8004,7 +8004,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "塞林格",
-    source: "《麦田里的守望者》",
+    source: "麦田里的守望者",
     excerpt: "只想守住麦田边的孩子"
   },
   {
@@ -8015,7 +8015,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "阿西莫夫",
-    source: "《银河帝国：基地》",
+    source: "银河帝国：基地",
     excerpt: "银河帝国的衰亡"
   },
   {
@@ -8026,7 +8026,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "斯坦贝克",
-    source: "《伊甸之东》",
+    source: "伊甸之东",
     excerpt: "一对兄弟与一次选择"
   },
   {
@@ -8037,7 +8037,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "怀特",
-    source: "《夏洛的网》",
+    source: "夏洛的网",
     excerpt: "一只蜘蛛救了一头猪"
   },
   {
@@ -8048,7 +8048,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海明威",
-    source: "《老人与海》",
+    source: "老人与海",
     excerpt: "一个人可以被毁灭，但不能被打败"
   },
   {
@@ -8059,7 +8059,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "卡尔维诺",
-    source: "《分成两半的子爵》",
+    source: "分成两半的子爵",
     excerpt: "一半好一半坏"
   },
   {
@@ -8070,7 +8070,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "川端康成",
-    source: "《千只鹤》",
+    source: "千只鹤",
     excerpt: "一只鹤，一只茶碗"
   },
   {
@@ -8081,7 +8081,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "布雷德伯里",
-    source: "《华氏 451 度》",
+    source: "华氏 451 度",
     excerpt: "纸的燃点"
   },
   {
@@ -8092,7 +8092,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "戈尔丁",
-    source: "《蝇王》",
+    source: "蝇王",
     excerpt: "荒岛上的孩子自己变成了野兽"
   },
   {
@@ -8103,7 +8103,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "三岛由纪夫",
-    source: "《潮骚》",
+    source: "潮骚",
     excerpt: "海边的渔村少年"
   },
   {
@@ -8114,7 +8114,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "托尔金",
-    source: "《魔戒同盟》",
+    source: "魔戒同盟",
     excerpt: "一枚戒指的重量"
   },
   {
@@ -8125,7 +8125,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "托尔金",
-    source: "《双塔奇兵》",
+    source: "双塔奇兵",
     excerpt: "两条线同时往前"
   },
   {
@@ -8136,7 +8136,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "帕乌斯托夫斯基",
-    source: "《金蔷薇》",
+    source: "金蔷薇",
     excerpt: "关于写作与灵感"
   },
   {
@@ -8147,7 +8147,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "林格伦",
-    source: "《小飞人卡尔松》",
+    source: "小飞人卡尔松",
     excerpt: "背上有个螺旋桨"
   },
   {
@@ -8158,7 +8158,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "托尔金",
-    source: "《王者无敌》",
+    source: "王者无敌",
     excerpt: "魔影退了"
   },
   {
@@ -8169,7 +8169,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "三岛由纪夫",
-    source: "《金阁寺》",
+    source: "金阁寺",
     excerpt: "美把人逼到绝路"
   },
   {
@@ -8180,7 +8180,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "金斯堡",
-    source: "《嚎叫》",
+    source: "嚎叫",
     excerpt: "我看见这一代最杰出的头脑"
   },
   {
@@ -8191,7 +8191,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "帕斯捷尔纳克",
-    source: "《日瓦戈医生》",
+    source: "日瓦戈医生",
     excerpt: "一个医生与一个时代"
   },
   {
@@ -8202,7 +8202,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "卡尔维诺",
-    source: "《树上的男爵》",
+    source: "树上的男爵",
     excerpt: "一辈子不下树"
   },
   {
@@ -8213,7 +8213,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "帕斯捷尔纳克",
-    source: "《帕斯捷尔纳克诗选》",
+    source: "帕斯捷尔纳克诗选",
     excerpt: "日瓦戈的诗"
   },
   {
@@ -8224,7 +8224,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "格拉斯",
-    source: "《铁皮鼓》",
+    source: "铁皮鼓",
     excerpt: "不肯长大的孩子敲着鼓"
   },
   {
@@ -8235,7 +8235,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "卡尔维诺",
-    source: "《不存在的骑士》",
+    source: "不存在的骑士",
     excerpt: "只有盔甲，没有人"
   },
   {
@@ -8246,7 +8246,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "井上靖",
-    source: "《敦煌》",
+    source: "敦煌",
     excerpt: "一座城与一批经卷"
   },
   {
@@ -8257,7 +8257,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "塞尔登",
-    source: "《时代广场的蟋蟀》",
+    source: "时代广场的蟋蟀",
     excerpt: "一只蟋蟀在纽约"
   },
   {
@@ -8268,7 +8268,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "奥台尔",
-    source: "《蓝色海豚岛》",
+    source: "蓝色海豚岛",
     excerpt: "一个女孩独自活十八年"
   },
   {
@@ -8279,7 +8279,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "法国",
     author: "戈西尼",
-    source: "《小尼古拉》",
+    source: "小尼古拉",
     excerpt: "一个法国小男孩的日常"
   },
   {
@@ -8290,7 +8290,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "海勒",
-    source: "《第二十二条军规》",
+    source: "第二十二条军规",
     excerpt: "什么都能证明的事，什么都证明不了"
   },
   {
@@ -8301,7 +8301,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "德国",
     author: "格拉斯",
-    source: "《猫与鼠》",
+    source: "猫与鼠",
     excerpt: "一个少年与一只猫"
   },
   {
@@ -8312,7 +8312,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "阿赫玛托娃",
-    source: "《阿赫玛托娃诗选》",
+    source: "阿赫玛托娃诗选",
     excerpt: "安魂曲"
   },
   {
@@ -8323,7 +8323,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞士",
     author: "荣格",
-    source: "《荣格自传》",
+    source: "荣格自传",
     excerpt: "回忆·梦·思考"
   },
   {
@@ -8334,7 +8334,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "索尔仁尼琴",
-    source: "《伊凡·杰尼索维奇的一天》",
+    source: "伊凡·杰尼索维奇的一天",
     excerpt: "劳改营里的普通一天"
   },
   {
@@ -8345,7 +8345,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "芬兰",
     author: "扬松",
-    source: "《木民谷的春天》",
+    source: "木民谷的春天",
     excerpt: "一个春天"
   },
   {
@@ -8356,7 +8356,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "川端康成",
-    source: "《古都》",
+    source: "古都",
     excerpt: "两座城，两姐妹"
   },
   {
@@ -8367,7 +8367,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "伯吉斯",
-    source: "《发条橙》",
+    source: "发条橙",
     excerpt: "自由意志的选择"
   },
   {
@@ -8378,7 +8378,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "迪克",
-    source: "《高堡奇人》",
+    source: "高堡奇人",
     excerpt: "轴心国赢了的那个世界"
   },
   {
@@ -8389,7 +8389,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "林格伦",
-    source: "《淘气包埃米尔》",
+    source: "淘气包埃米尔",
     excerpt: "把猪血扣在爸爸头上"
   },
   {
@@ -8400,7 +8400,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "山崎丰子",
-    source: "《白色巨塔》",
+    source: "白色巨塔",
     excerpt: "医院里的权力"
   },
   {
@@ -8411,7 +8411,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "俄国",
     author: "阿赫玛托娃",
-    source: "《安魂曲》",
+    source: "安魂曲",
     excerpt: "一部组诗"
   },
   {
@@ -8422,7 +8422,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "赫伯特",
-    source: "《沙丘》",
+    source: "沙丘",
     excerpt: "香料与沙虫"
   },
   {
@@ -8433,7 +8433,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "布尔加科夫",
-    source: "《大师和玛格丽特》",
+    source: "大师和玛格丽特",
     excerpt: "魔鬼造访莫斯科"
   },
   {
@@ -8444,7 +8444,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "捷克",
     author: "塞弗尔特",
-    source: "《塞弗尔特诗选》",
+    source: "塞弗尔特诗选",
     excerpt: "世界美如斯"
   },
   {
@@ -8455,7 +8455,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "克拉克",
-    source: "《2001：太空漫游》",
+    source: "2001：太空漫游",
     excerpt: "黑石碑"
   },
   {
@@ -8466,7 +8466,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "勒古恩",
-    source: "《地海巫师》",
+    source: "地海巫师",
     excerpt: "真名就是力量"
   },
   {
@@ -8477,7 +8477,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "冯内古特",
-    source: "《五号屠场》",
+    source: "五号屠场",
     excerpt: "事情就是这样"
   },
   {
@@ -8488,7 +8488,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "瓦西里耶夫",
-    source: "《这里的黎明静悄悄》",
+    source: "这里的黎明静悄悄",
     excerpt: "五个女兵与一个准尉"
   },
   {
@@ -8499,7 +8499,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "三岛由纪夫",
-    source: "《春雪》",
+    source: "春雪",
     excerpt: "贵族少年的恋爱"
   },
   {
@@ -8510,7 +8510,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "勒古恩",
-    source: "《黑暗的左手》",
+    source: "黑暗的左手",
     excerpt: "一个没有性别的世界"
   },
   {
@@ -8521,7 +8521,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "阿根廷",
     author: "博尔赫斯",
-    source: "《博尔赫斯诗选》",
+    source: "博尔赫斯诗选",
     excerpt: "我用什么才能留住你"
   },
   {
@@ -8532,7 +8532,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "怀特",
-    source: "《吹小号的天鹅》",
+    source: "吹小号的天鹅",
     excerpt: "一只不会叫的天鹅"
   },
   {
@@ -8543,7 +8543,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "艾特玛托夫",
-    source: "《白轮船》",
+    source: "白轮船",
     excerpt: "一个孩子的童话"
   },
   {
@@ -8554,7 +8554,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "奥布莱恩",
-    source: "《尼姆的老鼠》",
+    source: "尼姆的老鼠",
     excerpt: "一群会读书的耗子"
   },
   {
@@ -8565,7 +8565,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "卡尔维诺",
-    source: "《看不见的城市》",
+    source: "看不见的城市",
     excerpt: "五十五座虚构的城"
   },
   {
@@ -8576,7 +8576,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "智利",
     author: "聂鲁达",
-    source: "《聂鲁达诗选》",
+    source: "聂鲁达诗选",
     excerpt: "二十首情诗与一首绝望的歌"
   },
   {
@@ -8587,7 +8587,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "索尔仁尼琴",
-    source: "《古拉格群岛》",
+    source: "古拉格群岛",
     excerpt: "劳改营国的编年史"
   },
   {
@@ -8598,7 +8598,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "林格伦",
-    source: "《狮心兄弟》",
+    source: "狮心兄弟",
     excerpt: "一个童话"
   },
   {
@@ -8609,7 +8609,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "小松左京",
-    source: "《日本沉没》",
+    source: "日本沉没",
     excerpt: "一个国家的末日"
   },
   {
@@ -8620,7 +8620,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "瑞典",
     author: "特兰斯特罗默",
-    source: "《特兰斯特罗默诗选》",
+    source: "特兰斯特罗默诗选",
     excerpt: "十七首诗"
   },
   {
@@ -8631,7 +8631,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "以色列",
     author: "阿米亥",
-    source: "《阿米亥诗选》",
+    source: "阿米亥诗选",
     excerpt: "耶路撒冷"
   },
   {
@@ -8642,7 +8642,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "哈利",
-    source: "《根》",
+    source: "根",
     excerpt: "从非洲村庄到美洲种植园"
   },
   {
@@ -8653,7 +8653,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "波兰",
     author: "辛波斯卡",
-    source: "《辛波斯卡诗选》",
+    source: "辛波斯卡诗选",
     excerpt: "一见钟情"
   },
   {
@@ -8664,7 +8664,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "波兰",
     author: "米沃什",
-    source: "《米沃什诗选》",
+    source: "米沃什诗选",
     excerpt: "诗的见证"
   },
   {
@@ -8675,7 +8675,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "卡尔维诺",
-    source: "《寒冬夜行人》",
+    source: "寒冬夜行人",
     excerpt: "十个开头的小说"
   },
   {
@@ -8686,7 +8686,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "亚当斯",
-    source: "《银河系漫游指南》",
+    source: "银河系漫游指南",
     excerpt: "别忘了带毛巾"
   },
   {
@@ -8697,7 +8697,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "苏联",
     author: "艾特玛托夫",
-    source: "《一日长于百年》",
+    source: "一日长于百年",
     excerpt: "一个火车站"
   },
   {
@@ -8708,7 +8708,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "意大利",
     author: "埃科",
-    source: "《玫瑰之名》",
+    source: "玫瑰之名",
     excerpt: "修道院里的连环案"
   },
   {
@@ -8719,7 +8719,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "村上春树",
-    source: "《世界尽头与冷酷仙境》",
+    source: "世界尽头与冷酷仙境",
     excerpt: "两个世界一个我"
   },
   {
@@ -8730,7 +8730,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "伯森",
-    source: "《手斧男孩》",
+    source: "手斧男孩",
     excerpt: "一把斧头活下来"
   },
   {
@@ -8741,7 +8741,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "村上春树",
-    source: "《挪威的森林》",
+    source: "挪威的森林",
     excerpt: "直子与绿子"
   },
   {
@@ -8752,7 +8752,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "劳里",
-    source: "《数星星的孩子》",
+    source: "数星星的孩子",
     excerpt: "一个丹麦女孩的逃亡"
   },
   {
@@ -8763,7 +8763,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "美国",
     author: "克莱瑞",
-    source: "《亲爱的汉修先生》",
+    source: "亲爱的汉修先生",
     excerpt: "给作家写的信"
   },
   {
@@ -8774,7 +8774,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与魔法石》",
+    source: "哈利·波特与魔法石",
     excerpt: "九又四分之三站台"
   },
   {
@@ -8785,7 +8785,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与密室》",
+    source: "哈利·波特与密室",
     excerpt: "密室被打开了"
   },
   {
@@ -8796,7 +8796,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与阿兹卡班的囚徒》",
+    source: "哈利·波特与阿兹卡班的囚徒",
     excerpt: "一个逃犯与一只大狗"
   },
   {
@@ -8807,7 +8807,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与火焰杯》",
+    source: "哈利·波特与火焰杯",
     excerpt: "三强争霸赛"
   },
   {
@@ -8818,7 +8818,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "盖曼",
-    source: "《美国众神》",
+    source: "美国众神",
     excerpt: "旧神与新神之战"
   },
   {
@@ -8829,7 +8829,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "村上春树",
-    source: "《海边的卡夫卡》",
+    source: "海边的卡夫卡",
     excerpt: "十五岁的出走"
   },
   {
@@ -8840,7 +8840,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与凤凰社》",
+    source: "哈利·波特与凤凰社",
     excerpt: "魔法部不肯承认的事"
   },
   {
@@ -8851,7 +8851,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与混血王子》",
+    source: "哈利·波特与混血王子",
     excerpt: "一本旧课本"
   },
   {
@@ -8862,7 +8862,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "英国",
     author: "罗琳",
-    source: "《哈利·波特与死亡圣器》",
+    source: "哈利·波特与死亡圣器",
     excerpt: "最后一件魂器"
   },
   {
@@ -8873,7 +8873,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "日本",
     author: "村上春树",
-    source: "《1Q84》",
+    source: "1Q84",
     excerpt: "两个月亮的世界"
   },
   {
@@ -8884,7 +8884,7 @@ window.POEMS_MINGSHU = [
     gradeGroup: "外国文学",
     dynasty: "波兰",
     author: "辛波斯卡",
-    source: "《万物静默如谜》",
+    source: "万物静默如谜",
     excerpt: "一册诗集"
   },
 ];
