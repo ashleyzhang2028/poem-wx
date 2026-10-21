@@ -4571,9 +4571,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     "记完账立刻发 —— 拖动字号那一串回调会各发一条");
 
   {
-    const mineSrc7 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    const i = mineSrc7.indexOf("storeAvatar(");
-    const body = i < 0 ? "" : mineSrc7.slice(i, mineSrc7.indexOf("\n  },", i));
+    const flowSrc7 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const i = flowSrc7.indexOf("function takeAvatar(");
+    const body = i < 0 ? "" : flowSrc7.slice(i, flowSrc7.indexOf("\n}\n", i));
     ok("头像不挂记账（挂了就等于它进同步队列，而上传它要养一份存储桶）",
       !!body && body.indexOf("markDirty") < 0);
   }
@@ -4585,28 +4585,47 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       const i = mineSrc8.indexOf(fn + "(");
       return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
     };
-    ok("两个一键选项都在弹层里（只换头像 / 头像和昵称一起换）",
-      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
-        && !!pick("onWechatAvatar") && !!pick("onWechatIdentity"),
-      "「用微信头像」或「用微信头像和昵称」少了一个，或者跑到了弹层外面");
-    ok("两项都经 open-type=\"chooseAvatar\" 拿微信那张（平台没有静默拿头像的接口）",
+    ok("三个一键选项都在弹层里（头像 / 昵称 / 两样一起换）",
+      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindinput="onWechatNickname"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
+        && !!pick("onWechatAvatar") && !!pick("onWechatNickname") && !!pick("onWechatIdentity"),
+      "「用微信头像」「用微信昵称」「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    ok("头像那两项各是一个 open-type=\"chooseAvatar\" 的按钮（平台没有静默拿头像的接口）",
       (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
-        && /takeWechatAvatar\(e, withNickname\)[\s\S]{0,300}?e\.detail\.avatarUrl/.test(mineSrc8),
+        && /takeAvatar\(e && e\.detail && e\.detail\.avatarUrl/.test(mineSrc8)
+        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(
+          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
-      /takeWechatAvatar\(e, withNickname\)[\s\S]{0,600}?this\.onNickname\(/.test(mineSrc8)
-        && /onNickname\(e\)[\s\S]{0,200}?this\.saveNickname\(/.test(mineSrc8)
-        && /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(mineSrc8),
+      /onWechatIdentity\(e\)[\s\S]{0,400}?loginFlow\.takeNickname\([\s\S]{0,200}?afterWechatNickname/.test(mineSrc8)
+        && /function takeNickname\(name, after\)[\s\S]{0,400}?auth\.saveNickname\(nickname\)/.test(
+          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
       "只换了头像，昵称没推上去");
     ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
       /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
+        && /onNicknameTap\(e\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
         && !!pick("onWechatPickClose"),
       "没登录也能弹出换身份的层");
     ok("头像或昵称一换，底栏那格跟着重画",
       /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
-        && /store\.saveProfile\(\{\s*avatarLocal:\s*url\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
-        && /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
+        && /onWechatAvatar\(e\)[\s\S]{0,300}?this\.syncBar\(\)/.test(mineSrc8)
+        && /afterWechatNickname\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
+  }
+
+  {
+    const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const mineCode9 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    ok("登录成功后问一次用不用微信的（三选一，取消就照旧）",
+      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(page\)/.test(flowSrc9)
+        && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
+        && /itemList: WECHAT_ITEMS/.test(flowSrc9)
+        && /fail: \(\) => resolve\(""\)/.test(flowSrc9),
+      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口；或者取消那一下被当成选了第一项");
+    ok("登录后那一问与弹层那三项落在同一处（头像 / 昵称各只有一份实现）",
+      /module\.exports = \{[^}]*askWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
+        && /loginFlow\.takeAvatar\(/.test(mineCode9)
+        && /loginFlow\.takeNickname\(/.test(mineCode9),
+      "登录后那一问自己又写了一遍落盘与推送 —— 两处会各说一套");
   }
 
   {
@@ -4751,7 +4770,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
     ok("「我的」页的昵称只有一处：顶部那个名字本身（下面那一行已撤）",
       mineWxml.indexOf("nick-input") < 0
-        && (mineWxml.match(/type="nickname"/g) || []).length === 1,
+        && /class="identity-input"[^>]*type="nickname"/.test(mineWxml),
       "同一个值还摆两处，或者顶部那格还是只显示的字");
 
     const authSrc9 = read("utils/auth.js");
@@ -4924,7 +4943,7 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("昵称只有顶部一处，且就地可改（改完当场重画）",
     mineWxml.indexOf("nick-input") < 0 && mineWxss.indexOf(".nick-input") < 0
       && /class="identity-input"[^>]*type="nickname"/.test(mineWxml)
-      && /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,200}this\.refresh\(\)/.test(mineJs),
+      && /saveNickname\(nickname\)[\s\S]{0,300}?auth\.saveNickname\(nickname\)\.then\(\(r\) => this\.revertNickname/.test(mineJs),
     "同一个值摆了第二处，或者顶部那格还是只显示的字");
 
   ok("未登录时名字那一格只显示（不是输入框）",
@@ -4961,13 +4980,14 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
 
   {
 
+    const flowJs = read("utils/login-flow.js");
     const body = (() => {
-      const i = mineJs.indexOf("takeWechatAvatar(");
+      const i = flowJs.indexOf("function takeAvatar(");
       if (i < 0) return "";
-      const j = mineJs.indexOf("\n  },", i);
-      return j < 0 ? mineJs.slice(i) : mineJs.slice(i, j);
+      const j = flowJs.indexOf("\n}\n", i);
+      return j < 0 ? flowJs.slice(i) : flowJs.slice(i, j);
     })();
-    ok("头像的落盘函数在（选完落本机那张）", !!body, "没找到 takeWechatAvatar");
+    ok("头像的落盘函数在（选完落本机那张）", !!body, "没找到 takeAvatar");
     ok("头像不上传（选完不调 markDirty，也不走任何上传接口）",
       !!body && body.indexOf("markDirty") < 0 && !/uploadFile|\/api\/avatar/.test(body),
       "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +

@@ -1,4 +1,6 @@
 const auth = require("./auth");
+const store = require("./store");
+const sync = require("./sync");
 const tabPage = require("./tab-page");
 
 function failText(err) {
@@ -47,12 +49,116 @@ function prompt(err) {
   wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "好" });
 }
 
+function toastLater(title) {
+  return () => wx.showToast({ title, icon: "none", duration: 2500 });
+}
+
 function done(res) {
-  if (res && res.synced) {
-    wx.showToast({ title: "已登录 · 进度已认回", icon: "none", duration: 2500 });
-  } else {
-    wx.showToast({ title: "已登录 · 这台手机上的记录还在", icon: "none", duration: 2500 });
+  if (!res || !res.wechatAsked) {
+    const title = res && res.synced ? "已登录 · 进度已认回" : "已登录 · 这台手机上的记录还在";
+    wx.showToast({ title, icon: "none", duration: 2500 });
+    return;
   }
+  res.afterToast = res.synced
+    ? toastLater("已登录 · 进度已认回")
+    : toastLater("已登录 · 这台手机上的记录还在");
+}
+
+const WECHAT_ITEMS = ["用微信头像", "用微信昵称", "用微信头像和昵称"];
+
+function wechatPick() {
+  return new Promise((resolve) => {
+    wx.showActionSheet({
+      itemList: WECHAT_ITEMS,
+      success: (r) => resolve(WECHAT_ITEMS[r && r.tapIndex] || ""),
+      fail: () => resolve("")
+    });
+  });
+}
+
+function askWechat(page) {
+  return wechatPick().then((picked) => {
+    if (!picked) return "";
+    const action = wechatActionOf(picked);
+    const after = () => resume(page);
+    return action.avatar
+      .then((url) => {
+        if (url) takeAvatar(url, !!action.nickname);
+        if (!action.nickname) {
+          after();
+          return "";
+        }
+        return action.nickname.then((name) => {
+          return takeNickname(name, after);
+        });
+      })
+      .catch((err) => {
+        prompt(err);
+        after();
+        throw err;
+      });
+  });
+}
+
+function wechatActionOf(picked) {
+  if (picked === WECHAT_ITEMS[0]) {
+    return { avatar: pickAvatar(), nickname: null };
+  }
+  if (picked === WECHAT_ITEMS[1]) {
+    return { avatar: Promise.resolve(""), nickname: pickNickname() };
+  }
+  return { avatar: pickAvatar(), nickname: pickNickname() };
+}
+
+function pickAvatar() {
+  return new Promise((resolve) => {
+    wx.chooseAvatar({
+      success: (r) => resolve((r && r.avatarUrl) || ""),
+      fail: () => resolve("")
+    });
+  });
+}
+
+function pickNickname() {
+  return new Promise((resolve) => {
+    wx.showModal({
+      title: "微信昵称",
+      editable: true,
+      placeholderText: "填微信里的昵称",
+      confirmText: "用",
+      cancelText: "取消",
+      success: (r) => resolve(r && r.confirm ? (r.content || "").trim() : ""),
+      fail: () => resolve("")
+    });
+  });
+}
+
+function takeAvatar(url, withNickname) {
+  if (!url) return false;
+  store.saveProfile({ avatarLocal: url });
+  if (!withNickname) wx.showToast({ title: "头像已换成微信的", icon: "none" });
+  return true;
+}
+
+function takeNickname(name, after) {
+  const nickname = String(name == null ? "" : name).replace(/[\u0000-\u001f<>]/g, "").trim();
+  if (!nickname) {
+    if (after) after();
+    return Promise.resolve({ saved: false });
+  }
+  const before = store.profile().nickname || "";
+  store.saveProfile({ nickname });
+  sync.markDirty();
+  return auth.saveNickname(nickname).then((r) => {
+    if (r && r.blocked) {
+      store.saveProfile({ nickname: before });
+      wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
+    } else {
+      wx.showToast({ title: "昵称已换成微信的", icon: "none" });
+    }
+    if (after) after();
+    return r;
+  });
 }
 
 function backTo(page) {
@@ -75,6 +181,7 @@ function settle(res, page) {
   const resumed = resume(page);
   const back = backTo(page);
   if (back && !resumed) tabPage.back(back);
+  if (res && res.afterToast) res.afterToast();
   return res;
 }
 
@@ -84,7 +191,10 @@ function run(page) {
     .login()
     .then((res) => {
       wx.hideLoading();
-      return settle(res, page);
+      return askWechat(page).then(() => {
+        res.wechatAsked = true;
+        return settle(res, page);
+      });
     })
     .catch((err) => {
       wx.hideLoading();
@@ -94,4 +204,4 @@ function run(page) {
     });
 }
 
-module.exports = { run, settle, resume };
+module.exports = { run, settle, resume, askWechat, takeAvatar, takeNickname };
