@@ -131,7 +131,7 @@ function hint(key, ctx) {
 
   if (isGuestOk(key)) return "";
 
-  if (!in2) return "登录后可用";
+  if (!in2) return "登录可用";
 
   const cap = CAPS.find((c) => c.key === key);
   if (!cap) return "这个功能不存在";
@@ -295,7 +295,7 @@ function cap(key) {
 function showLogin(name, ctx) {
   wx.showModal({
     title: "要先登录",
-    content: "「" + capName(name) + "」登录之后才能用。进度存在账号里，换台手机接着背。",
+    content: "「" + capName(name) + "」登录可用。",
     confirmText: "登录",
     cancelText: "取消",
     success: (res) => {
@@ -308,7 +308,7 @@ function showTier(name, ctx) {
   const why = hint(name);
   const content = can(name)
     ? "「" + capName(name) + "」现在是开着的，重新进一次这个功能就行。"
-    : (why && why !== "登录后可用" ? why + "。" : "「" + capName(name) + "」需要 " + tierNeed(name) + " 权限。")
+    : (why && why !== "登录可用" ? why + "。" : "「" + capName(name) + "」需要 " + tierNeed(name) + " 权限。")
       + "\n\n可用的档位与逐项对照在用户权限页。";
 
   wx.showModal({

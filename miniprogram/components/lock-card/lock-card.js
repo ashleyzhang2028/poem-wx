@@ -1,7 +1,7 @@
 const tabPage = require("../../utils/tab-page");
 Component({
   properties: {
-    title: { type: String, value: "登录后可用" },
+    title: { type: String, value: "登录可用" },
     note: { type: String, value: "" },
 
     mark: { type: String, value: "" },

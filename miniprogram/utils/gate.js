@@ -4,8 +4,6 @@ const loginFlow = require("./login-flow");
 
 const GUEST_GRADE = 1;
 
-let pending = null;
-
 const PUBLIC_ACTIONS = [
   "browse-home",
   "browse-grade",
@@ -31,9 +29,7 @@ function refuse(what) {
   return {
     ok: false,
     title: "要先登录",
-    content: what
-      ? "「" + what + "」登录之后才能用。进度存在账号里，换台手机接着背。"
-      : "登录之后才能用。进度存在账号里，换台手机接着背。"
+    content: what ? "「" + what + "」登录可用。" : "登录可用。"
   };
 }
 
@@ -57,21 +53,12 @@ function guard(what, page, onPass) {
 }
 
 function open(onPass, page) {
-  pending = { run: onPass || null, page: page || null };
-  const flow = loginFlow && typeof loginFlow.run === "function" ? loginFlow : require("./login-flow");
-  flow
-    .askLogin(page)
-    .then((res) => (res ? flow.settle(res, page) : null))
-    .catch(() => {});
+  loginFlow.after(onPass, page);
+  loginFlow.askLogin(page).catch(() => {});
 }
 
 function resume(page) {
-  const job = pending;
-  pending = null;
-  const at = (job && job.page) || page;
-  if (at && typeof at.refresh === "function") at.refresh();
-  if (job && typeof job.run === "function") job.run();
-  return !!job;
+  return loginFlow.resume(page);
 }
 
 function grade() {

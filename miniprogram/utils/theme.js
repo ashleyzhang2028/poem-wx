@@ -120,7 +120,7 @@ function groupOpen(group) {
 function groupLockNote(group) {
   if (groupOpen(group)) return "";
   const need = tiers.nameOf(group.tier);
-  if (!entitlement.loggedIn()) return "登录后可用 · " + need + " 起";
+  if (!entitlement.loggedIn()) return "登录可用 · " + need + " 起";
   return need + " 起可用";
 }
 

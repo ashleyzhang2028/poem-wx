@@ -2802,6 +2802,11 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /require\(["']\.\.\/\.\.\/utils\/login-flow["']\)/.test(mineSrc)
         && /require\(["']\.\/login-flow["']\)/.test(gateCode),
       "「我的」页与门禁弹窗各自写了一遍 wx.login 的成败分支");
+    ok("登录流程与门禁不互相 require（循环依赖会让 gate 交到半个空壳）",
+      flowCode.indexOf('require("./gate")') < 0
+        && flowCode.indexOf("require('./gate')") < 0,
+      "login-flow 又 require 了 gate —— 两个模块互指时，先加载的那个只能拿到未填完的 exports，"
+        + "askLogin 里调 gate.logged() 就是 TypeError: e.logged is not a function（Issue #498）");
   }
 }
 

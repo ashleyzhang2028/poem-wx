@@ -1,5 +1,4 @@
 const auth = require("./auth");
-const gate = require("./gate");
 const store = require("./store");
 const sync = require("./sync");
 const tabPage = require("./tab-page");
@@ -195,8 +194,6 @@ function askWechat(page, entry) {
 const ASK = {
   login: () => ({
     title: "登录",
-    content: "登录后进度会同步到账号，换台手机也接得上。\n\n"
-      + "只拿微信的公开标识认人，不读你的手机号、好友和聊天记录。",
     confirmText: "登录"
   }),
   wechat: () => ({
@@ -221,17 +218,17 @@ function ask(box) {
 }
 
 function askLogin(page) {
-  if (gate.logged()) return Promise.resolve(null);
+  if (auth.logged()) return Promise.resolve(null);
   return ask(ASK.login()).then((ok) => (ok ? run(page) : null));
 }
 
 function askWechatPick(page) {
-  if (!gate.logged()) return Promise.resolve(null);
+  if (!auth.logged()) return Promise.resolve(null);
   return ask(ASK.wechat()).then((ok) => (ok ? start(page, WECHAT_ITEMS[2]) : null));
 }
 
 function start(page, picked) {
-  if (!picked || !gate.logged()) return Promise.resolve(null);
+  if (!picked || !auth.logged()) return Promise.resolve(null);
   const entry = wechatEntry(picked);
   if (page && typeof page.wechatBind === "function") page.wechatBind(entry);
   return askWechat(page, entry);
@@ -243,13 +240,19 @@ function backTo(page) {
   return "/" + page.route;
 }
 
+let pending = null;
+
+function after(onPass, page) {
+  pending = { run: onPass || null, page: page || null };
+}
+
 function resume(page) {
-  const step = require("./gate");
-  if (!step || typeof step.resume !== "function") {
-    if (page && typeof page.refresh === "function") page.refresh();
-    return false;
-  }
-  return step.resume(page);
+  const job = pending;
+  pending = null;
+  const at = (job && job.page) || page;
+  if (at && typeof at.refresh === "function") at.refresh();
+  if (job && typeof job.run === "function") job.run();
+  return !!job;
 }
 
 function settle(res, page) {
@@ -283,6 +286,7 @@ function run(page) {
 module.exports = {
   run,
   start,
+  after,
   askLogin,
   WECHAT_ITEMS,
   settle,
