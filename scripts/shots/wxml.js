@@ -282,4 +282,4 @@ function compile(wxml, data) {
   return out.join("");
 }
 
-module.exports = { compile, setImageIntrinsic };
+module.exports = { compile, setImageIntrinsic, restoreHoles: holeRestore };

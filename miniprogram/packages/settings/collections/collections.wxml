@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选背诵要登录" note="登录后才能建集合" mark="选" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="自选背诵" note="登录后才能建集合" mark="选" bind:login="onLogin" />
 
   <block wx:else>
 
