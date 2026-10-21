@@ -30,7 +30,7 @@ function failText(err) {
   return null;
 }
 
-function prompt(err) {
+function sendFail(err) {
   if (err && err.cloudFail) {
     wx.showModal({
       title: "登录没有连上服务器",
@@ -38,8 +38,35 @@ function prompt(err) {
       showCancel: false,
       confirmText: "好"
     });
-    return;
+    return true;
   }
+  if (err && err.statusCode) {
+    const say = err.message || "";
+    const code = err.code || String(err.statusCode);
+    wx.showModal({
+      title: "登录没有连上服务器",
+      content: (say || "服务器回了 " + err.statusCode) + "\n\n（" + code + "）这不是这台手机能改的，把这整段发给部署方。",
+      showCancel: false,
+      confirmText: "好"
+    });
+    return true;
+  }
+  if (err && err.host) {
+    wx.showModal({
+      title: "登录没有连上服务器",
+      content: "服务器在 " + (err.baseUrl || err.host) + "，这台手机打不通："
+        + ((err.errMsg || err.message) || "没有回话")
+        + "\n\n多半是域名没备案或被拦，这不是这台手机能改的，把这段发给部署方。",
+      showCancel: false,
+      confirmText: "好"
+    });
+    return true;
+  }
+  return false;
+}
+
+function prompt(err) {
+  if (sendFail(err)) return;
 
   const box = failText(err);
   if (!box) {
@@ -214,7 +241,8 @@ function askWechatBox(host) {
 
 function askLogin(page) {
   if (auth.logged()) return Promise.resolve(null);
-  return ask(ASK.login()).then((ok) => (ok ? run(page) : null));
+  const host = revive(page) || page;
+  return ask(ASK.login()).then((ok) => (ok ? run(host) : null));
 }
 
 function identityHost(page) {
@@ -268,19 +296,26 @@ function settle(res, page) {
   return res;
 }
 
+function revive(page) {
+  const host = identityHost(page);
+  if (host && typeof host.done === "function") host.done();
+  return host;
+}
+
 function run(page) {
+  const at = revive(page) || page;
   wx.showLoading({ title: "登录中" });
   return auth
     .login()
     .then((res) => {
       wx.hideLoading();
       done(res);
-      return askWechatPick(page).then(() => settle(res, page));
+      return askWechatPick(at).then(() => settle(res, at));
     })
     .catch((err) => {
       wx.hideLoading();
       prompt(err);
-      resume(page);
+      resume(at);
       throw err;
     });
 }

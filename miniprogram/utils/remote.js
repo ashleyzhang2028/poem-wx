@@ -209,6 +209,18 @@ function cloudFailHint(say) {
   return "环境 ID 对不上这个小程序的云开发环境时，平台会回 env not exists 这类话";
 }
 
+function hostError(err, baseUrl) {
+  const e = new Error((err && err.errMsg) || "网络不可用");
+  e.errMsg = e.message;
+  e.baseUrl = baseUrl || "";
+  try {
+    e.host = String(baseUrl || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  } catch (x) {
+    e.host = "";
+  }
+  return e;
+}
+
 function httpError(statusCode, data) {
   const body = data && typeof data === "object" ? data : {};
   const say = body.message || body.error_description || "";
@@ -244,7 +256,7 @@ function sendHttp(path, data, method) {
 
         else reject(httpError(res.statusCode, res.data));
       },
-      fail: (err) => reject(new Error((err && err.errMsg) || "网络不可用"))
+      fail: (err) => reject(hostError(err, baseUrl()))
     });
   });
 }

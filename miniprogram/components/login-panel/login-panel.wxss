@@ -115,13 +115,6 @@
   padding: 0 var(--sp-2);
 }
 
-.login-title {
-  display: block;
-  font-size: var(--fs-title);
-  color: var(--strong-text);
-  letter-spacing: var(--ls-title);
-}
-
 .wechat-catch {
   position: fixed;
   left: 0;
