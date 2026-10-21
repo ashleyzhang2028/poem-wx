@@ -146,6 +146,13 @@ function compareCols(snap) {
   return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
 }
 
+const COMPARE_NAME = {
+  ebbinghaus: "复习算法·艾宾浩斯",
+  leitner: "复习算法·莱特纳盒",
+  sm2: "复习算法·SM-2",
+  fsrs: "复习算法·FSRS"
+};
+
 const VIEW_NAME = {
   quiz: "古诗文大会·题库",
   feihualing: "古诗文大会·飞花令",
@@ -156,6 +163,10 @@ function viewNameOf(cap) {
   return VIEW_NAME[cap.key] || cap.name;
 }
 
+function compareNameOf(cap) {
+  return COMPARE_NAME[cap.key] || viewNameOf(cap);
+}
+
 function splitName(name) {
   const cut = name.indexOf(" ");
   if (cut < 0) return { name: name, en: "" };
@@ -164,7 +175,7 @@ function splitName(name) {
 
 function compareRows(snap) {
   const s = snap || snapshot();
-  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(viewNameOf(c)), {
+  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(compareNameOf(c)), {
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {
