@@ -13,7 +13,8 @@
         <block wx:if="{{logged}}">
           <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
                  placeholder="填一个昵称" placeholder-class="identity-ph"
-                 confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+                 confirm-type="done" bindblur="onNickname" bindconfirm="onNickname"
+                 bindtap="onNicknameTap" />
           <view class="identity-sub-row">
             <text class="identity-sub">{{identitySub}}</text>
           </view>
@@ -44,15 +45,21 @@
   <view class="wechat-sheet-mask" wx:if="{{wechatPick}}" bindtap="onWechatPickClose"
         hover-class="none">
     <view class="wechat-sheet" catchtap="onWechatPickClose" hover-class="none">
-      <text class="wechat-sheet-title">换成微信的</text>
-      <text class="wechat-sheet-sub">头像、昵称，或两样一起换</text>
+      <text class="wechat-sheet-title">微信账号</text>
+      <text class="wechat-sheet-sub">头像、昵称，或两样一起换成微信的</text>
       <button class="wechat-sheet-item" open-type="chooseAvatar" bindchooseavatar="onWechatAvatar">
         <text class="wechat-sheet-t">用微信头像</text>
+      </button>
+      <button class="wechat-sheet-item" type="nickname" bindinput="onWechatNickname"
+              bindblur="onWechatNickname" bindchange="onWechatNickname">
+        <text class="wechat-sheet-t">用微信昵称</text>
       </button>
       <button class="wechat-sheet-item" open-type="chooseAvatar" bindchooseavatar="onWechatIdentity">
         <text class="wechat-sheet-t">用微信头像和昵称</text>
       </button>
-      <button class="btn ghost block wechat-sheet-cancel" bindtap="onWechatPickClose">取消</button>
+      <button class="wechat-sheet-item quiet" bindtap="onWechatPickClose">
+        <text class="wechat-sheet-t quiet">取消</text>
+      </button>
     </view>
   </view>
 

@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="换主题要登录" note="登录后才能改" mark="主" />
+  <lock-card wx:if="{{locked}}" title="换主题要登录" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:else>
   <view class="card">

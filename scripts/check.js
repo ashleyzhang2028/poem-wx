@@ -443,7 +443,53 @@ R.ORDER.forEach((key) => {
 
 let r10 = null;
 for (let i = 0; i < 12; i++) r10 = R.review(r10, "good", "ebbinghaus");
-ok("艾宾浩斯档位封顶不越界", r10.level === R.EBBINGHAUS_INTERVALS.length - 1, "level=" + r10.level);
+ok("艾宾浩斯档位封顶不越界", r10.level === R.LEVEL_MAX, "level=" + r10.level);
+
+{
+  const caps = {};
+  R.ORDER.forEach((k) => {
+    let r = null;
+    let t = Date.now();
+    for (let i = 0; i < 20; i++) {
+      r = R.review(r, "good", k, t);
+      t = r.nextReviewAt + 24 * 3600 * 1000;
+    }
+    caps[k] = r.level;
+  });
+  ok("四套算法数的是同一把尺子（连续记住都走到同一格封顶）",
+    R.ORDER.every((k) => caps[k] === R.LEVEL_MAX),
+    R.ORDER.map((k) => k + ":" + caps[k]).join(" "));
+
+  ok("掌握度满分 = 档位封顶那一格",
+    R.mastery({ level: R.LEVEL_MAX, learned: true }) === 100
+      && R.mastery({ level: 0, learned: true }) === 0
+      && R.mastery(null) === 0 && R.mastery({ level: 9, learned: false }) === 0);
+
+  const firstMastered = (() => {
+    for (let lv = 0; lv <= R.LEVEL_MAX; lv++) {
+      if (R.mastered({ level: lv, learned: true })) return lv;
+    }
+    return -1;
+  })();
+  ok("「已掌握」的门槛就落在掌握度分布最后一档里（不会被算进别的档）",
+    firstMastered > 0
+      && !R.mastered({ level: firstMastered - 1, learned: true })
+      && Math.floor(R.mastery({ level: firstMastered - 1, learned: true }) / 20)
+        === Math.floor(R.MASTERED_PERCENT / 20) - 1
+      && Math.floor(R.mastery({ level: firstMastered, learned: true }) / 20)
+        === Math.floor(R.MASTERED_PERCENT / 20),
+    "门槛 " + R.MASTERED_PERCENT + "% 落在第 " + firstMastered + " 格，与分布的档位对不齐");
+}
+
+{
+  const inline = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8")
+    + fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
+    + fs.readFileSync(path.join(ROOT, "utils", "scheduler.js"), "utf8");
+  ok("掌握度只在一个地方算（界面与排期都调 R.mastery，不各写一遍除法）",
+    /\/\s*R\.LEVEL_MAX/.test(inline) === false && /\/\s*9\b/.test(inline) === false
+      && inline.indexOf("R.mastery(") >= 0,
+    "又有页面自己算了掌握度 —— 改一次口径就得改好几处");
+}
 
 let rh = null;
 for (let i = 0; i < 60; i++) rh = R.review(rh, "good", "ebbinghaus");
@@ -2877,7 +2923,8 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && rank.maskRow({ nick: "张三", rank: 1 }).rank === 1
       && rank.maskRow({ rank: 2 }).nick === ""
       && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
-      && /me: res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs),
+      && /const me = res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs)
+      && /me: me,/.test(pageJs),
     "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
@@ -2970,6 +3017,18 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && pageWxml.indexOf("onTerm") >= 0 && pageWxml.indexOf("onPeriod") >= 0
       && (pageJs.match(/this\.load\(\)/g) || []).length >= 4,
     "少一层就等于把不同档次的成绩排在一块");
+
+  ok("榜单页的空状态与重试都是 view + 自定的按压（不是原生 button）",
+    pageWxml.indexOf("<button") < 0 && (pageWxml.match(/bindtap="onRetry"/g) || []).length >= 2,
+    "原生 button 的 ::after 灰边会压在账上，按压态只剩平台那一套");
+
+  ok("榜单页只在「真有一行」时才画领奖台与名次表（空榜不留一张只有表头的卡）",
+    /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
+    "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
+
+  ok("后台那行说明与开关同源（重新进后台不会把「已打开」说成「关」）",
+    adminJs.indexOf("res.on ?") >= 0 && adminJs.indexOf("已打开") >= 0,
+    "开关打开之后重新进后台，说明还写着「关」—— 与那颗开着的开关互相打脸");
 
   ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
     adminWxml.indexOf("onRanking") >= 0
@@ -3151,9 +3210,10 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     progJs.indexOf("stageRows") < 0);
 
 
-  ok("那四块读数不自己算（一律走 scheduler 的 overview / dueList）",
+  ok("那几块读数不自己算（本册与自选都走 scheduler 的 overview / dueList）",
     /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
-      && progJs.indexOf("store.progress") < 0 && progJs.indexOf("getRecord") < 0
+      && /S\.collectionsProgress\(/.test(progJs)
+      && progJs.indexOf("store.progress") < 0
       && progJs.indexOf("nextReviewAt") < 0,
     "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
 
@@ -3168,7 +3228,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
     ((dataBlock || [])[1] || "").replace(/^\s*(\w+)\s*:/gm, (_, k) => { declared[k] = true; });
 
-    const loop = ["item", "index", "d", "p"];
+    const loop = (progWxml.match(/wx:for-item="(\w+)"/g) || [])
+      .map((m) => m.replace(/[^\w]/g, "").slice("wxforitem".length))
+      .concat(["item", "index"]);
     const unknown = {};
     (progWxml.match(/\{\{([^}]*)\}\}/g) || []).forEach((raw) => {
       raw.slice(2, -2).replace(/'[^']*'|"[^"]*"/g, " ").split(/[^\w.$]+/).forEach((part) => {
@@ -3727,6 +3789,31 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     /note\s*:\s*\{/.test(lockJs) && /lock-note/.test(lockWxml)
       && /lock-note[^>]*wx:if/.test(lockWxml) && /\.lock-note\s*\{/.test(appWxssLock));
 
+  {
+    const wxmlFiles = [];
+    const walk = (dir) => {
+      fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith(".wxml")) wxmlFiles.push(p);
+      });
+    };
+    walk(path.join(ROOT, "pages"));
+    walk(path.join(ROOT, "packages"));
+    let cards = 0;
+    let wired = 0;
+    wxmlFiles.forEach((p) => {
+      const found = fs.readFileSync(p, "utf8").match(/<lock-card\b[^>]*>/g) || [];
+      cards += found.length;
+      found.forEach((tag) => {
+        if (tag.indexOf("bind:login") >= 0) wired += 1;
+      });
+    });
+    ok("每张登录卡都接上了登录按键（卡上那颗按钮点了有去处）",
+      cards > 0 && wired === cards,
+      wired + " / " + cards + " 张卡接上了登录按键");
+  }
+
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   const extraWxml = fs.readFileSync(
     path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
@@ -3977,9 +4064,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     "记完账立刻发 —— 拖动字号那一串回调会各发一条");
 
   {
-    const mineSrc7 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    const i = mineSrc7.indexOf("storeAvatar(");
-    const body = i < 0 ? "" : mineSrc7.slice(i, mineSrc7.indexOf("\n  },", i));
+    const flowSrc7 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const i = flowSrc7.indexOf("function takeAvatar(");
+    const body = i < 0 ? "" : flowSrc7.slice(i, flowSrc7.indexOf("\n}\n", i));
     ok("头像不挂记账（挂了就等于它进同步队列，而上传它要养一份存储桶）",
       !!body && body.indexOf("markDirty") < 0);
   }
@@ -3991,28 +4078,47 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       const i = mineSrc8.indexOf(fn + "(");
       return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
     };
-    ok("两个一键选项都在弹层里（只换头像 / 头像和昵称一起换）",
-      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
-        && !!pick("onWechatAvatar") && !!pick("onWechatIdentity"),
-      "「用微信头像」或「用微信头像和昵称」少了一个，或者跑到了弹层外面");
-    ok("两项都经 open-type=\"chooseAvatar\" 拿微信那张（平台没有静默拿头像的接口）",
+    ok("三个一键选项都在弹层里（头像 / 昵称 / 两样一起换）",
+      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindinput="onWechatNickname"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
+        && !!pick("onWechatAvatar") && !!pick("onWechatNickname") && !!pick("onWechatIdentity"),
+      "「用微信头像」「用微信昵称」「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    ok("头像那两项各是一个 open-type=\"chooseAvatar\" 的按钮（平台没有静默拿头像的接口）",
       (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
-        && /takeWechatAvatar\(e, withNickname\)[\s\S]{0,300}?e\.detail\.avatarUrl/.test(mineSrc8),
+        && /takeAvatar\(e && e\.detail && e\.detail\.avatarUrl/.test(mineSrc8)
+        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(
+          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
-      /takeWechatAvatar\(e, withNickname\)[\s\S]{0,600}?this\.onNickname\(/.test(mineSrc8)
-        && /onNickname\(e\)[\s\S]{0,200}?this\.saveNickname\(/.test(mineSrc8)
-        && /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(mineSrc8),
+      /onWechatIdentity\(e\)[\s\S]{0,400}?loginFlow\.takeNickname\([\s\S]{0,200}?afterWechatNickname/.test(mineSrc8)
+        && /function takeNickname\(name, after\)[\s\S]{0,400}?auth\.saveNickname\(nickname\)/.test(
+          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
       "只换了头像，昵称没推上去");
     ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
       /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
+        && /onNicknameTap\(e\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
         && !!pick("onWechatPickClose"),
       "没登录也能弹出换身份的层");
     ok("头像或昵称一换，底栏那格跟着重画",
       /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
-        && /store\.saveProfile\(\{\s*avatarLocal:\s*url\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
-        && /store\.saveProfile\(\{\s*nickname\s*\}\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
+        && /onWechatAvatar\(e\)[\s\S]{0,300}?this\.syncBar\(\)/.test(mineSrc8)
+        && /afterWechatNickname\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
+  }
+
+  {
+    const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const mineCode9 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    ok("登录成功后问一次用不用微信的（三选一，取消就照旧）",
+      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(page\)/.test(flowSrc9)
+        && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
+        && /itemList: WECHAT_ITEMS/.test(flowSrc9)
+        && /fail: \(\) => resolve\(""\)/.test(flowSrc9),
+      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口；或者取消那一下被当成选了第一项");
+    ok("登录后那一问与弹层那三项落在同一处（头像 / 昵称各只有一份实现）",
+      /module\.exports = \{[^}]*askWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
+        && /loginFlow\.takeAvatar\(/.test(mineCode9)
+        && /loginFlow\.takeNickname\(/.test(mineCode9),
+      "登录后那一问自己又写了一遍落盘与推送 —— 两处会各说一套");
   }
 
   {
@@ -4225,13 +4331,14 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
   {
 
+    const flowJs = read("utils/login-flow.js");
     const body = (() => {
-      const i = mineJs.indexOf("takeWechatAvatar(");
+      const i = flowJs.indexOf("function takeAvatar(");
       if (i < 0) return "";
-      const j = mineJs.indexOf("\n  },", i);
-      return j < 0 ? mineJs.slice(i) : mineJs.slice(i, j);
+      const j = flowJs.indexOf("\n}\n", i);
+      return j < 0 ? flowJs.slice(i) : flowJs.slice(i, j);
     })();
-    ok("头像的落盘函数在（选完落本机那张）", !!body, "没找到 takeWechatAvatar");
+    ok("头像的落盘函数在（选完落本机那张）", !!body, "没找到 takeAvatar");
     ok("头像不上传（选完不调 markDirty，也不走任何上传接口）",
       !!body && body.indexOf("markDirty") < 0 && !/uploadFile|\/api\/avatar/.test(body),
       "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +
@@ -6819,9 +6926,21 @@ function gapped(items, max) {
         && S3.doneToday(null) === false);
 
     store3.setRecord("cp1", { level: 0, learned: false, nextReviewAt: 0, lastReviewAt: 0, history: [] });
-    const ov = S3.collectionOverview(fake3, cols3.find("c1"));
+    const ov = S3.collectionProgress(cols3.find("c1"), {
+      allPoems: fake3, getRecord: store3.getRecord, count: 5
+    }).overview;
     ok("集子概览报篇目数 / 已背 / 今日到期",
-      ov.total === 12 && ov.learned === 1 && ov.due === 1, JSON.stringify(ov));
+      ov.total === 12 && ov.learned === 1 && ov.dueToday === 1, JSON.stringify(ov));
+
+    store3.setRecord("cp0", { level: 9, learned: true, nextReviewAt: Date.now() + 86400000, lastReviewAt: Date.now() });
+    const colCards = S3.collectionsProgress([cols3.find("c1")], {
+      allPoems: fake3, getRecord: store3.getRecord, count: 5
+    });
+    ok("集子的读数与本册同源（掌握度 / 已掌握 / 掌握度分布都来自 overview）",
+      colCards.length === 1 && colCards[0].overview.mastered === 1
+        && colCards[0].overview.avgMastery === R3.mastery(store3.getRecord("cp0"))
+        && colCards[0].overview.masteryBuckets.reduce((a, b) => a + b, 0) === 1,
+      JSON.stringify(colCards[0] && colCards[0].overview));
 
     store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, items: [{ id: "cp0" }, { id: "cp0" }] }]);
     ok("落盘时同一首只留一份",

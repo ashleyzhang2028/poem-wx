@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选背诵要登录" note="登录后才能建集合" mark="选" />
+  <lock-card wx:if="{{locked}}" title="自选背诵要登录" note="登录后才能建集合" mark="选" bind:login="onLogin" />
 
   <block wx:else>
 
@@ -24,7 +24,11 @@
             data-id="{{c.id}}" bindtap="onToggleList">
         <view class="row-main">
           <text class="row-title poem">{{c.name}}</text>
-          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 今日 {{c.planned}} 首</text>
+          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}%</text>
+          <view class="coll-meter">
+            <view class="meter"><view class="meter-fill" style="width:{{c.masteredPercent}}%"></view></view>
+            <text class="coll-meter-t">今日 {{c.planned}} 首</text>
+          </view>
         </view>
         <text class="all-toggle {{c.open ? 'open' : ''}}"></text>
       </view>

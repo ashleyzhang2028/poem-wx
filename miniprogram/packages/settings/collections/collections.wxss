@@ -157,3 +157,22 @@
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
 }
+
+.coll-meter {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-2);
+}
+
+.coll-meter .meter {
+  flex: 1;
+  min-width: 0;
+}
+
+.coll-meter-t {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}

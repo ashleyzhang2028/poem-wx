@@ -95,13 +95,14 @@ Page({
           return;
         }
         const board = (res.board || []).map(ranking.maskRow);
-        const onPodium = !!res.me && res.me.rank >= 1 && res.me.rank <= 3;
+        const me = res.me ? ranking.maskRow(res.me) : null;
+        const onPodium = !!me && me.rank >= 1 && me.rank <= 3;
         const size = res.size || this.data.size;
         this.setData({
-          state: board.length ? "board" : "empty",
+          state: board.length || me ? "board" : "empty",
           board: board,
           size: size,
-          me: res.me ? ranking.maskRow(res.me) : null,
+          me: me,
           beyond: ranking.beyondOf(board, size, res.total),
           podium: ranking.podiumOf(board),
           rest: ranking.restOf(board),

@@ -59,13 +59,21 @@ Page({
         allPoems: all,
         getRecord: store.getRecord
       });
-      const ov = S.collectionOverview(all, c);
+      const progress = S.collectionProgress(c, {
+        allPoems: all,
+        getRecord: store.getRecord,
+        count: cols.countOf(c)
+      });
+      const stat = progress.overview;
       return {
         id: c.id,
         name: cols.nameOf(c),
         count: c.items.length,
-        learned: ov.learned,
-        due: ov.due,
+        learned: stat.learned,
+        due: stat.dueToday + stat.backlog,
+        mastered: stat.mastered,
+        avgMastery: stat.avgMastery,
+        masteredPercent: stat.learned ? Math.round((stat.mastered / stat.learned) * 100) : 0,
         planned: plan.length,
         dailyCount: cols.countOf(c),
         items: this.itemRows(c.id, (this.kept || {})[c.id]),

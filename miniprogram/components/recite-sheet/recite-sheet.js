@@ -338,8 +338,8 @@ Component({
         align: settings.align,
         fontSize,
         ...scale.flags(fontSize),
-        stage: R.stageName(rec, settings.algo),
-        mastery: rec && rec.learned ? Math.round((R.clampLevel(rec.level) / 9) * 100) : 0,
+        stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
+        mastery: R.mastery(rec),
         index: this.data.index,
         total: this.data.queue.length,
         navText: (this.data.index + 1) + " / " + this.data.queue.length,
@@ -467,8 +467,8 @@ Component({
       sync.markDirty();
 
       this.setData({
-        stage: R.stageName(rec, settings.algo),
-        mastery: Math.round((R.clampLevel(rec.level) / 9) * 100),
+        stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
+        mastery: R.mastery(rec),
         hint: R.resultHint(settings.algo, result, rec)
       });
 
