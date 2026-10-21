@@ -3026,9 +3026,15 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
     "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
 
-  ok("后台那行说明与开关同源（重新进后台不会把「已打开」说成「关」）",
-    adminJs.indexOf("res.on ?") >= 0 && adminJs.indexOf("已打开") >= 0,
-    "开关打开之后重新进后台，说明还写着「关」—— 与那颗开着的开关互相打脸");
+  ok("后台开关读的是服务端的那一份状态（重新进后台不会把「已打开」说成「关」）",
+    /rankingOn: res\.games/.test(adminJs) && /rankingOn\[item\.key\]/.test(read("packages/admin/index/index.wxml")),
+    "开关开过之后重新进后台又变回关 —— 与库里那一行互相打脸");
+
+  ok("飞花令与大会各有一个开关，后台拨的是各自的键（拨一个不会顺手改另一个）",
+    /RANKING_GAMES = \["fly", "exam"\]/.test(read("utils/admin.js"))
+      && /remote\.setAdminRanking\(game, on\)/.test(read("utils/admin.js"))
+      && /PATHS\.adminRanking \+ qs/.test(read("utils/remote.js")),
+    "后台只认 exam 那一行 —— 飞花令的成绩永远上不了榜，页面还告诉用户「排行榜没开」");
 
   ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
     adminWxml.indexOf("onRanking") >= 0

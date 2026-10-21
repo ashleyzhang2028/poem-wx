@@ -228,11 +228,13 @@ function plainStatusError(statusCode) {
 }
 
 function sendHttp(path, data, method) {
+  const verb = String(method || "POST").toUpperCase();
+  const body = verb === "GET" ? undefined : data;
   return new Promise((resolve, reject) => {
     wx.request({
       url: baseUrl() + path,
-      method: method || "POST",
-      data,
+      method: verb,
+      data: body,
       header: {
         "content-type": "application/json",
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
@@ -486,7 +488,8 @@ function rankingSubmit(entry) {
 
 function adminRanking(game) {
   if (!adminReady()) return Promise.resolve({ on: false, sim: true });
-  return request(PATHS.adminRanking, { game: game }, "GET").then((res) => ({
+  const qs = game ? "?game=" + encodeURIComponent(game) : "";
+  return request(PATHS.adminRanking + qs, null, "GET").then((res) => ({
     on: !!(res && res.on),
     sim: false
   }));
