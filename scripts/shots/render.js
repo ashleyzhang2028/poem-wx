@@ -407,7 +407,7 @@ function pageHtml(cfg, data) {
     const v = (s) => String(s).replace(/\{\{([\s\S]*?)\}\}/g, (_, e) => {
       try { return String(new Function(...Object.keys(data), "return (" + e + ")")(...Object.values(data))); } catch (err) { return ""; }
     });
-    const title = v(attrs.title || "登录后可用");
+    const title = v(attrs.title || "登录可用");
     const note = v(attrs.note || "");
     const mark = v(attrs.mark) || title.charAt(0);
     const cond = attrs["wx:if"] ? ` wx:if="${attrs["wx:if"]}"` : "";

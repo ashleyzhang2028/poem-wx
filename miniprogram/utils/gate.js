@@ -29,7 +29,7 @@ function refuse(what) {
   return {
     ok: false,
     title: "要先登录",
-    content: what ? "「" + what + "」登录之后才能用。" : "登录之后才能用。"
+    content: what ? "「" + what + "」登录可用。" : "登录可用。"
   };
 }
 
