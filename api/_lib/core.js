@@ -1316,6 +1316,17 @@ function wxCode2Session(deps, code) {
   })["catch"](function (e) {
     if (timer) clearTimeout(timer);
     var cause = (e && e.cause) || {};
+    var causeCode = String(cause.code || "");
+    if (causeCode.indexOf("CERT") >= 0 || causeCode === "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+      || causeCode.indexOf("SELF_SIGNED") >= 0) {
+      return err(502, "E_WX_CERT",
+        "服务器连不上微信（接口出口的 HTTPS 证书校验没过：" + causeCode + "）。"
+        + "先解决服务器到 api.weixin.qq.com 的链路，再点登录。");
+    }
+    if (causeCode === "ENOTFOUND" || causeCode === "EAI_AGAIN" || causeCode === "ECONNREFUSED") {
+      return err(502, "E_WX_OFFLINE",
+        "服务器连不上微信（DNS/连接失败：" + causeCode + "），登录走不通。");
+    }
     logFacts("wx.code2session_error", {
       error: String((e && e.message) || e).slice(0, 200),
       cause: String(cause.code || cause.message || "").slice(0, 200)

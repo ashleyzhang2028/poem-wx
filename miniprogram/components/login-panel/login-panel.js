@@ -94,6 +94,19 @@ Component({
       });
     },
 
+    done() {
+      this.release();
+      this.refresh();
+      this.triggerEvent("changed");
+    },
+
+    release() {
+      const entry = this.entry;
+      this.entry = null;
+      this.arm("");
+      if (entry) entry.exit = () => {};
+    },
+
     onLogout() {
       wx.showModal({
         title: "退出登录",

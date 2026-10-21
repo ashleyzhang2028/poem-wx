@@ -41,9 +41,6 @@
     </view>
 
     <view class="card">
-      <view class="guest-lead">
-        <text class="guest-lead-title">登录</text>
-      </view>
       <button class="btn primary block" bindtap="onLoginTapped">登录</button>
     </view>
 

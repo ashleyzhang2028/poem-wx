@@ -4271,7 +4271,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
 
     ok("登录成功后问一次用不用微信的（取消就照旧）",
-      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(page\)/.test(flowSrc9)
+      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(at\)/.test(flowSrc9)
         && /function askWechat\(page\)[\s\S]{0,200}?goIdentity\(page\)/.test(flowSrc9),
       "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口");
     ok("换头像/换昵称只有一份实现（卡片与登录后那一问都调它）",

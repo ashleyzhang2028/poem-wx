@@ -175,17 +175,6 @@
   margin-top: var(--sp-3);
 }
 
-.guest-lead {
-  margin-bottom: var(--sp-3);
-}
-
-.guest-lead-title {
-  display: block;
-  font-size: var(--fs-title);
-  color: var(--strong-text);
-  line-height: var(--lh-tight);
-}
-
 .guest-note {
   display: block;
   margin-top: var(--sp-2);
