@@ -89,8 +89,16 @@
 
 .tier-cell-t {
   font-size: var(--fs-hint);
-  color: var(--ink-2);
+  color: var(--ink-4);
   font-variant-numeric: tabular-nums;
+}
+
+.tier-cell-t.yes {
+  color: var(--ink-2);
+}
+
+.tier-cell.is-now .tier-cell-t:not(.no) {
+  color: var(--on-ink);
 }
 
 .tier-cell-n {

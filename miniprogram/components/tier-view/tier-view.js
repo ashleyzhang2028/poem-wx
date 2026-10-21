@@ -50,7 +50,7 @@ Component({
           cap: r.cap,
           name: r.name,
           cells: r.cells.map((c) => Object.assign({}, c, {
-            icon: c.on ? icons.yes : icons.no,
+            icon: c.text ? "" : (c.on ? icons.yes : icons.no),
             cls: c.on ? (c.now ? "yes-now" : "yes") : "no"
           }))
         }));

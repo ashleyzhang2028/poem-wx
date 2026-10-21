@@ -1274,10 +1274,9 @@ Object.keys(WEB_TIER).forEach((k) => {
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
       const row = rows.filter((r) => r.cap === "collections")[0];
-      const tiersRow = row.cells.map((c) => c.note);
+      const tiersRow = row.cells.map((c) => c.text);
       const silent = rows.filter((r) => r.cap === "daily")[0];
-      return tiersRow.join(",") === ",1 个集合,200 个集合"
-        && row.cells.every((c) => c.text === "")
+      return tiersRow.join(",") === "无,1 个集合,200 个集合"
         && silent.cells.every((c) => c.text === "" && c.note === "");
     })(),
     "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
@@ -7022,8 +7021,8 @@ function gapped(items, max) {
       const row = E5.compareRows({ logged: false, tier: "free" })
         .filter((r) => r.cap === "collections")[0];
       const want = ["free", "pro", "max"].map((t) =>
-        colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个集合" : "");
-      const got = row.cells.map((c) => c.note);
+        colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个集合" : "无");
+      const got = row.cells.map((c) => c.text);
       return got.join(",") === want.join(",");
     })(),
     "对比表那一行的数字另写一份，改配额时两处会说不一样的话");
