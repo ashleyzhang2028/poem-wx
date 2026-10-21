@@ -214,7 +214,7 @@ Page({
     if (!c) return;
     wx.showModal({
       title: "删除集合",
-      content: "「" + cols.nameOf(c) + "」连同里面 " + c.items.length + " 首一起删掉？背诵进度一个字都不动。",
+      content: "「" + cols.nameOf(c) + "」连同里面 " + c.items.length + " 首一起删除？背诵进度一个字都不动。",
       confirmText: "删除",
       cancelText: "取消",
       confirmColor: "#a83b32",
