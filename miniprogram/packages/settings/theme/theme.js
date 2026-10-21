@@ -65,6 +65,7 @@ Page({
     if (!r.changed) return;
     this.setData(this.view());
     font.load().catch(() => {});
+    font.loadAll();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

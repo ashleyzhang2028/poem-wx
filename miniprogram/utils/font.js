@@ -20,6 +20,8 @@ const FACES = FONTS.map((f) => ({
   pro: [BASE + f.stem + "pro.woff2", BASE + f.stem + "pro.woff"]
 }));
 
+const FAMILIES = FACES.map((f) => f.family);
+
 const BY_KEY = {};
 FACES.forEach((f) => { BY_KEY[f.key] = f; });
 
@@ -52,7 +54,9 @@ const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Sou
   + '"Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB", "FangSong", serif';
 
 function stack(key) {
-  return '"' + face(key || current()).family + '", ' + STACK;
+  const first = face(key || current()).family;
+  return [first].concat(FAMILIES.filter((f) => f !== first)).map((f) => '"' + f + '"').join(", ")
+    + ", " + STACK;
 }
 
 function addresses(key) {
@@ -98,23 +102,37 @@ function sequence(face0, list) {
   );
 }
 
-let loaded = "";
+let loaded = {};
+
+function familyOf(source) {
+  const hit = FACES.filter((f) => f.pro.concat(f.free).indexOf(source) >= 0)[0];
+  return hit ? hit.family : "";
+}
 
 function load() {
   const f = face();
   const list = configured();
+
+  if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
+
   const key = f.key + " " + list.join(" ");
+  if (loaded[key]) return loaded[key];
 
-  if (!list.length || key === loaded) return Promise.resolve(false);
-
-  if (typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-
-  loaded = key;
-
-  return sequence(f, list).then((ok) => {
-    if (!ok) loaded = "";
+  loaded[key] = sequence(f, list).then((ok) => {
+    if (!ok) delete loaded[key];
     return ok;
   });
+  return loaded[key];
+}
+
+function sourcesOf(f) {
+  return configured().map((s) => (familyOf(s) ? s.replace(familyOf(s), f.family) : s));
+}
+
+function loadAll() {
+  if (!configured().length || typeof wx.loadFontFace !== "function") return;
+  FACES.filter((f) => f.key !== face().key)
+    .forEach((f) => { sequence(f, sourcesOf(f)).catch(() => {}); });
 }
 
 function set(key) {
@@ -135,5 +153,5 @@ function set(key) {
 module.exports = {
   FONTS, FACES, DEFAULT, BASE, readiness, options,
   paid, pickable, lockedName, current, face, stack,
-  addresses, configured, load, set
+  addresses, configured, load, loadAll, set
 };
