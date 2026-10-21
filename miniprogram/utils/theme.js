@@ -2,21 +2,27 @@ const store = require("./store");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
+const TRADITION = "tradition";
+
+const LANDSCAPE = "landscape";
+
 const THEMES = [
-  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png" },
-  { key: "yangzhou", name: "扬州", rgb: [2, 54, 51], banner: CITY_BANNER + "yangzhou.png" },
-  { key: "kaifeng", name: "开封", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png" },
-  { key: "ink", name: "墨色", rgb: [8, 8, 10] },
-  { key: "qinglv", name: "青绿", rgb: [46, 106, 103] },
-  { key: "muse", name: "暮色", rgb: [79, 96, 114] },
-  { key: "nuahui", name: "暖灰", rgb: [164, 86, 104] },
-  { key: "qingwa", name: "青瓦", rgb: [74, 100, 96] },
-  { key: "mich", name: "米褐", rgb: [126, 101, 84] },
-  { key: "shilv", name: "石绿", rgb: [108, 127, 79] },
-  { key: "mohong", name: "墨红", rgb: [140, 47, 45] },
-  { key: "wulan", name: "雾蓝", rgb: [96, 126, 149] },
-  { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51] },
-  { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85] }
+  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png", group: TRADITION },
+  { key: "ink", name: "墨色", rgb: [8, 8, 10], group: TRADITION },
+  { key: "qinglv", name: "青绿", rgb: [46, 106, 103], group: TRADITION },
+  { key: "muse", name: "暮色", rgb: [79, 96, 114], group: TRADITION },
+  { key: "nuahui", name: "暖灰", rgb: [164, 86, 104], group: TRADITION },
+  { key: "qingwa", name: "青瓦", rgb: [74, 100, 96], group: TRADITION },
+  { key: "mich", name: "米褐", rgb: [126, 101, 84], group: TRADITION },
+  { key: "shilv", name: "石绿", rgb: [108, 127, 79], group: TRADITION },
+  { key: "mohong", name: "墨红", rgb: [140, 47, 45], group: TRADITION },
+  { key: "wulan", name: "雾蓝", rgb: [96, 126, 149], group: TRADITION },
+  { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51], group: TRADITION },
+  { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85], group: TRADITION },
+  { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [2, 54, 51], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
+  { key: "qingmingshanghetu", name: "清明上河图", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
+  { key: "benxiguanmenshan", name: "本溪关门山", rgb: [205, 20, 11], banner: CITY_BANNER + "benxi_guanmenshan.png", group: LANDSCAPE },
+  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE }
 ];
 
 const DEFAULT = "daiqing";
@@ -87,6 +93,7 @@ function palette() {
   return THEMES.map((t) => ({
     key: t.key,
     name: t.name,
+    group: t.group,
     rgb: t.rgba,
     soft: t.soft,
     on: t.on,
@@ -94,6 +101,20 @@ function palette() {
     depth: rgba(t.depth, 1),
     banner: t.banner,
     varName: VAR_OF[t.key]
+  }));
+}
+
+const GROUPS = [
+  { key: TRADITION, title: "中国传统" },
+  { key: LANDSCAPE, title: "大好河山" }
+];
+
+function groups() {
+  const swatches = palette();
+  return GROUPS.map((g) => ({
+    key: g.key,
+    title: g.title,
+    items: swatches.filter((s) => s.group === g.key)
   }));
 }
 
@@ -161,6 +182,6 @@ function bannerOf(key) {
 }
 
 module.exports = {
-  THEMES, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
-  all, palette, variables, bannerOf, get, current, currentTheme, style, set, apply
+  THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
+  all, palette, groups, variables, bannerOf, get, current, currentTheme, style, set, apply
 };
