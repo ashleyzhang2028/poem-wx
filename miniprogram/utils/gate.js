@@ -24,15 +24,6 @@ function canRead() {
   return logged();
 }
 
-function refuse(what) {
-  if (logged()) return { ok: true, title: "", content: "" };
-  return {
-    ok: false,
-    title: "登录提示",
-    content: what ? "「" + what + "」登录可用。" : "登录可用。"
-  };
-}
-
 function guard(what, page, onPass) {
   return open(onPass, page);
 }
@@ -71,7 +62,6 @@ module.exports = {
   logged,
   allow,
   canRead,
-  refuse,
   guard,
   open,
   cancel,

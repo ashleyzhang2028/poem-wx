@@ -136,7 +136,7 @@ Page({
   },
 
   onAddToCollection() {
-    if (!entitlement.block("collections", { page: this })) return;
+    if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const id = this.data.id;
     const inList = cols.collectionsOf(id);
     const names = cols.list().map((c) => cols.nameOf(c));

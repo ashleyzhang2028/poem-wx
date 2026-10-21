@@ -139,14 +139,12 @@ Page({
 
   onCollections() {
     if (!this.requireRecite()) return;
-    E.block("collections", { page: this, loginPrompt: false });
-    if (!E.can("collections")) return;
+    if (!E.block("collections", { page: this })) return;
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
   requireRecite() {
-    E.block("daily", { page: this, loginPrompt: false });
-    return E.loggedIn();
+    return E.block("daily", { page: this });
   },
 
   onAbout() {

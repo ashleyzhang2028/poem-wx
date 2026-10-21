@@ -81,7 +81,7 @@ Page({
   },
 
   onOpenBook(e) {
-    if (!E.block("library", { page: this })) return;
+    if (!E.block("library", { page: this, loginPrompt: true })) return;
     wx.navigateTo({ url: "/pages/list/list?book=" + e.currentTarget.dataset.b });
   },
 

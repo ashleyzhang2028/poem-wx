@@ -515,7 +515,6 @@ Page({
   onSeasonalCollect(e) {
     const id = e.currentTarget.dataset.id;
     if (!this.requireLogin("collections")) return;
-    if (!this.collectGate()) return;
     const have = cols.collectionsOf(id);
     if (have.length === 1) {
       this.dropFromCollection(id, have[0]);
@@ -540,14 +539,8 @@ Page({
     this.setData({ ["seasonal.rows[" + hit.at + "].collected"]: !!on });
   },
 
-  collectGate() {
-    entitlement.block("collections", { page: this });
-    return entitlement.can("collections");
-  },
-
   requireLogin(name) {
-    entitlement.block(name, { page: this, loginPrompt: false });
-    return entitlement.loggedIn();
+    return entitlement.block(name, { page: this, loginPrompt: true });
   },
 
   onCollectDone(e) {
@@ -672,7 +665,6 @@ Page({
   onOpenCollection(e) {
     const ds = datasetOf(e);
     if (!this.requireLogin("collections")) return;
-    if (!entitlement.block("collections", { page: this })) return;
     const sheet = this.selectComponent("#sheet");
     if (!sheet) return;
     const rows = this.collectionSheetRows(ds.coll);
@@ -688,7 +680,6 @@ Page({
   onProgress(e) {
     const id = datasetOf(e).id;
     if (!this.requireLogin("collections")) return;
-    if (!entitlement.block("collections", { page: this })) return;
     wx.navigateTo({ url: "/packages/progress/index/index?coll=" + encodeURIComponent(id) });
   },
 
