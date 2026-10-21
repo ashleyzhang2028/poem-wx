@@ -255,9 +255,10 @@ Page({
     rankingSubmit
       .submitPlay("fly", { scopeId: this.data.scope || "", score: said, total: said })
       .then((res) => {
+        const sent = !!(res && (res.ok || res.off));
         this.setData({
-          ranked: !!(res && res.ok && res.on),
-          rankOff: !!(res && res.ok && !res.on),
+          ranked: sent && !!res.on,
+          rankOff: sent && !res.on,
           lastScore: said,
           rankWhere: rankingSelf.labelOf()
         });

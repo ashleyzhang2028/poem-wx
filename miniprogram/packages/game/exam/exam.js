@@ -299,10 +299,11 @@ Page({
       })
       .then((res) => {
         if (this.data.stage !== "result") return;
+        const sent = !!(res && (res.ok || res.off));
         this.setData({
-          ranked: !!(res && res.ok && res.on),
-          rankOff: !!(res && res.ok && !res.on),
-          rankSent: !!(res && res.ok),
+          ranked: sent && !!res.on,
+          rankOff: sent && !res.on,
+          rankSent: sent,
           rankWhere: rankingSelf.labelOf()
         });
       });

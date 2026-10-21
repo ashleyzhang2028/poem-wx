@@ -25,8 +25,8 @@ const PERIODS = [
 ];
 
 const GAMES = [
-  { key: "exam", name: "考试榜", desc: "一次交卷，按分数排" },
-  { key: "fly", name: "飞花令榜", desc: "一轮令字，按接上的句数排" }
+  { key: "exam", name: "考试榜" },
+  { key: "fly", name: "飞花令榜" }
 ];
 
 const MEDALS = [
@@ -36,10 +36,6 @@ const MEDALS = [
 ];
 
 const DEFAULT_SIZE = 10;
-
-function gameOf(key) {
-  return GAMES.filter((g) => g.key === key)[0] || GAMES[0];
-}
 
 function stageOfGrade(grade) {
   const g = Number(grade) || 0;
@@ -149,7 +145,6 @@ module.exports = {
   MEDALS,
   DEFAULT_SIZE,
   STAGE_GRADES,
-  gameOf,
   stageOfGrade,
   stageName,
   gradesOf,

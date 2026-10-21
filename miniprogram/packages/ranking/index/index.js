@@ -13,7 +13,6 @@ Page({
     logged: false,
     games: ranking.GAMES,
     game: "exam",
-    gameDesc: "",
     stages: ranking.STAGES,
     periods: ranking.PERIODS,
     stage: "all",
@@ -41,7 +40,6 @@ Page({
       grade: query.grade,
       term: query.term,
       grades: ranking.gradesOf(query.stage),
-      gameDesc: ranking.gameOf("exam").desc,
       label: ranking.labelOf(query)
     });
   },
@@ -62,56 +60,42 @@ Page({
     }
     sfx.play("tick");
     this.setData({ state: "loading" });
-    const game = this.data.game;
+    const query = ranking.queryOf(this.data);
     remote
-      .rankingVisible(game)
-      ["catch"](() => ({ on: true, offline: false }))
-      .then((vis) => {
-        if (vis.offline) {
-          this.setData({ state: "offline", reason: "同步服务没接上，榜单看不了" });
-          return null;
-        }
-        if (!vis.on) {
-          this.setData({ state: "off", reason: "" });
-          return null;
-        }
-        const query = ranking.queryOf(this.data);
-        return remote.rankingList({
-          game: game,
-          stage: query.stage,
-          grade: query.grade,
-          term: query.term,
-          period: query.period,
-          size: ranking.DEFAULT_SIZE
-        });
+      .rankingList({
+        game: this.data.game,
+        stage: query.stage,
+        grade: query.grade,
+        term: query.term,
+        period: query.period,
+        size: ranking.DEFAULT_SIZE
       })
       .then((res) => {
-        if (!res) return;
-        if (!res.ok) {
+        if (res.ok) {
+          const board = (res.board || []).map(ranking.maskRow);
+          const me = res.me ? ranking.maskRow(res.me) : null;
+          const size = res.size || this.data.size;
           this.setData({
-            state: res.off ? "off" : "offline",
-            reason: res.reason || "榜单没读上来，稍后再试"
+            state: board.length || me ? "board" : "empty",
+            board: board,
+            size: size,
+            me: me,
+            beyond: ranking.beyondOf(board, size, res.total),
+            podium: ranking.podiumOf(board),
+            rest: ranking.restOf(board),
+            label: res.label || ranking.labelOf(this.data),
+            empty: ranking.emptyOf(this.data.game)
           });
+          if (me && me.rank >= 1 && me.rank <= 3) sfx.play("rank");
           return;
         }
-        const board = (res.board || []).map(ranking.maskRow);
-        const me = res.me ? ranking.maskRow(res.me) : null;
-        const onPodium = !!me && me.rank >= 1 && me.rank <= 3;
-        const size = res.size || this.data.size;
-        this.setData({
-          state: board.length || me ? "board" : "empty",
-          board: board,
-          size: size,
-          me: me,
-          beyond: ranking.beyondOf(board, size, res.total),
-          podium: ranking.podiumOf(board),
-          rest: ranking.restOf(board),
-          label: res.label || ranking.labelOf(this.data),
-          empty: ranking.emptyOf(game)
-        });
-        if (onPodium) sfx.play("rank");
+        if (res.off) {
+          this.setData({ state: "off", reason: "" });
+          return;
+        }
+        this.setData({ state: "offline", reason: res.reason || "榜单没读上来，稍后再试" });
       })
-      .catch(() => {
+      ["catch"](() => {
         this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });
       });
   },
@@ -120,7 +104,7 @@ Page({
     const game = e.currentTarget.dataset.k;
     if (!game || game === this.data.game) return;
     this.setData({
-      game: game, gameDesc: ranking.gameOf(game).desc, board: [], podium: [], rest: [], me: null, beyond: 0,
+      game: game, board: [], podium: [], rest: [], me: null, beyond: 0,
       label: ranking.labelOf(this.data), empty: ranking.emptyOf(game)
     });
     this.load();

@@ -34,6 +34,9 @@ function runtime() {
     getUserProfile(o) { o && o.fail && o.fail({}); },
     request(o) { o && o.fail && o.fail({ errMsg: "offline" }); },
     downloadFile(o) { o && o.fail && o.fail({}); },
+    getFileSystemManager: () => ({
+      readFile(o) { o && o.fail && o.fail({ errMsg: "no audio in preview" }); }
+    }),
     createInnerAudioContext: () => ({ play() {}, pause() {}, stop() {}, destroy() {}, onEnded() {}, onError() {} }),
     createWebAudioContext: () => ({
       currentTime: 0,

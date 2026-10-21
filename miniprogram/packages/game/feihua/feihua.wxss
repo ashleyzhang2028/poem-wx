@@ -31,7 +31,7 @@
 }
 
 .fh-bar {
-  height: 8rpx;
+  height: 4rpx;
   margin: var(--sp-2) 0;
   border-radius: var(--radius-pill);
   background: var(--sink);
