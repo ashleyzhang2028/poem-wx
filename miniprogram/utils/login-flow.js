@@ -64,104 +64,31 @@ function done(res) {
     : toastLater("已登录 · 这台手机上的记录还在");
 }
 
-const WECHAT_ITEMS = ["用微信头像", "用微信昵称", "用微信头像和昵称"];
-
-function wechatActionOf(picked) {
-  const avatar = picked !== WECHAT_ITEMS[1];
-  const nickname = picked !== WECHAT_ITEMS[0];
-  return { avatar, nickname, picked };
-}
-
-function wechatParts(picked) {
-  const action = wechatActionOf(picked);
-  const parts = [];
-  if (action.avatar) parts.push("avatar");
-  if (action.nickname) parts.push("nickname");
-  return parts;
-}
-
-function wechatEntry(picked) {
-  const entry = {
-    picked,
-    part: "",
-    waiting: null,
-    early: "",
-    earlyValue: "",
-    exit: () => resume(null),
-    arm: (part) => {
-      entry.part = part;
-      if (typeof entry.ready === "function") entry.ready(part);
-    }
-  };
-  const ask = (part) => {
-    if (entry.early === part) {
-      const value = entry.earlyValue;
-      entry.early = "";
-      entry.earlyValue = "";
-      return Promise.resolve(value);
-    }
-    return new Promise((resolve) => {
-      entry.waiting = resolve;
-      entry.arm(part);
-    });
-  };
-  wechatParts(picked).forEach((part) => {
-    entry[part] = () => ask(part);
-  });
-  return entry;
-}
-
-function takeWechat(entry) {
-  const at = entry || {};
-  const after = at.after || at.exit || (() => {});
-  const give = (value) => {
-    const resolve = at.waiting;
-    const part = at.part;
-    at.waiting = null;
-    at.part = "";
-    if (typeof resolve === "function") {
-      resolve(value || "");
-      return;
-    }
-    at.early = part;
-    at.earlyValue = value || "";
-  };
-  at.give = give;
-  const finish = (result) => {
-    after();
-    return result;
-  };
-  const avatarPart = () => (typeof at.avatar === "function" ? at.avatar() : Promise.resolve(""));
-  const nicknamePart = () => (typeof at.nickname === "function" ? at.nickname() : Promise.resolve(""));
-  return avatarPart().then((url) => {
-    if (url) takeAvatar(url, typeof at.nickname === "function");
-    if (typeof at.nickname !== "function") return finish({ avatar: url, nickname: "" });
-    return nicknamePart().then((name) => {
-      return takeNickname(name, null, nicknamePart).then((res) => finish({
-        avatar: url,
-        nickname: res && res.saved ? name : ""
-      }));
-    });
+function share(action, page) {
+  const at = action || {};
+  const url = String(at.avatar || "").trim();
+  if (!url || !auth.logged()) return Promise.resolve(null);
+  takeAvatar(url, at.nickname);
+  if (!at.nickname) return Promise.resolve({ avatar: url, nickname: "" });
+  return askNickname(page).then((typed) => {
+    if (!typed) return { avatar: url, nickname: "" };
+    return takeNickname(typed).then((res) => ({
+      avatar: url,
+      nickname: res && res.saved ? typed : ""
+    }));
   });
 }
 
-function takeAvatar(url, withNickname) {
+function takeAvatar(url, keepQuiet) {
   if (!url) return false;
   store.saveProfile({ avatarLocal: url });
-  if (!withNickname) wx.showToast({ title: "头像已换成微信的", icon: "none" });
+  if (!keepQuiet) wx.showToast({ title: "头像已换成微信的", icon: "none" });
   return true;
 }
 
-function takeNickname(name, after, again) {
+function takeNickname(name) {
   const nickname = String(name == null ? "" : name).replace(/[\u0000-\u001f<>]/g, "").trim();
-  if (!nickname) {
-    const retry = typeof again === "function" ? again() : null;
-    if (!retry) {
-      if (after) after();
-      return Promise.resolve({ saved: false });
-    }
-    return Promise.resolve(retry).then((next) => takeNickname(next, after, again));
-  }
+  if (!nickname) return Promise.resolve({ saved: false });
   const before = store.profile().nickname || "";
   store.saveProfile({ nickname });
   sync.markDirty();
@@ -172,22 +99,7 @@ function takeNickname(name, after, again) {
     } else {
       wx.showToast({ title: "昵称已换成微信的", icon: "none" });
     }
-    if (after) after();
     return r;
-  });
-}
-
-function askWechat(page, entry) {
-  const at = entry || {};
-  const after = at.exit || (() => resume(page));
-  if (!at.picked) {
-    after();
-    return Promise.resolve(null);
-  }
-  return takeWechat(at).catch((err) => {
-    prompt(err);
-    after();
-    throw err;
   });
 }
 
@@ -198,9 +110,15 @@ const ASK = {
   }),
   wechat: () => ({
     title: "换成微信的",
-    content: "把头像和昵称换成微信里的那一份。\n\n"
+    content: "头像和昵称换成微信里的那一份。\n\n"
       + "头像只留在这台手机上，不同步、也不上传。",
     confirmText: "换掉"
+  }),
+  nickname: () => ({
+    title: "填一个昵称",
+    editable: true,
+    placeholderText: "键盘上方可以选微信昵称",
+    confirmText: "好"
   })
 };
 
@@ -209,29 +127,45 @@ function ask(box) {
     wx.showModal({
       title: box.title,
       content: box.content,
+      editable: box.editable,
+      placeholderText: box.placeholderText,
       confirmText: box.confirmText,
       cancelText: "取消",
-      success: (r) => resolve(!!(r && r.confirm)),
-      fail: () => resolve(false)
+      success: (r) => resolve(r && r.confirm ? (box.editable ? String(r.content || "") : true) : ""),
+      fail: () => resolve("")
     });
   });
+}
+
+function askNickname(page) {
+  return ask(ASK.nickname()).then((typed) => {
+    if (!typed) return "";
+    return takeNickname(typed).then((res) => (res && res.blocked ? "" : typed));
+  });
+}
+
+function askWechat(page) {
+  if (!auth.logged()) return Promise.resolve(false);
+  return ask(ASK.wechat()).then((ok) => (ok ? goIdentity(page) : false));
+}
+
+function goIdentity(page) {
+  if (page && typeof page.showIdentity === "function") {
+    page.showIdentity();
+    return true;
+  }
+  wx.showToast({ title: "在「我的」点一下头像圆", icon: "none", duration: 2500 });
+  return false;
+}
+
+function start(page, action) {
+  if (!action || !auth.logged()) return Promise.resolve(null);
+  return share(action, page);
 }
 
 function askLogin(page) {
   if (auth.logged()) return Promise.resolve(null);
   return ask(ASK.login()).then((ok) => (ok ? run(page) : null));
-}
-
-function askWechatPick(page) {
-  if (!auth.logged()) return Promise.resolve(null);
-  return ask(ASK.wechat()).then((ok) => (ok ? start(page, WECHAT_ITEMS[2]) : null));
-}
-
-function start(page, picked) {
-  if (!picked || !auth.logged()) return Promise.resolve(null);
-  const entry = wechatEntry(picked);
-  if (page && typeof page.wechatBind === "function") page.wechatBind(entry);
-  return askWechat(page, entry);
 }
 
 function backTo(page) {
@@ -270,8 +204,8 @@ function run(page) {
     .login()
     .then((res) => {
       wx.hideLoading();
-      return askWechatPick(page).then(() => {
-        res.wechatAsked = true;
+      return askWechat(page).then((asked) => {
+        res.wechatAsked = asked;
         return settle(res, page);
       });
     })
@@ -288,14 +222,10 @@ module.exports = {
   start,
   after,
   askLogin,
-  WECHAT_ITEMS,
   settle,
   resume,
   askWechat,
-  askWechatPick,
-  wechatEntry,
-  wechatParts,
-  takeWechat,
+  share,
   takeAvatar,
   takeNickname
 };

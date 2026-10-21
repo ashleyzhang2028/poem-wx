@@ -576,10 +576,11 @@ wx.login() 拿 code
 
 边界沿用网页版那几条：
 
-- **不静默抓取** —— 头像走 `open-type="chooseAvatar"`、昵称走 `type="nickname"`，都由用户主动给；
+- **不静默抓取** —— 头像走 `open-type="chooseAvatar"`、昵称走 `wx.showModal({ editable: true })`
+  里键盘上方那一格（`type="nickname"` 放进隐藏层要用户先点一次键盘才回值，Issue #498），都由用户主动给；
   头像**只落本机、不上传**（Issue #111：不为它养一份对象存储）
-- **登录后问一次** —— `login-flow.run()` 在登录落地后弹一次三选一
-  （用微信头像 / 用微信昵称 / 两样一起），选了什么当场应用，取消就照旧（Issue #474）
+- **登录后问一次** —— `login-flow.run()` 在登录落地后弹一次「换成微信的」，
+  确认就把身份卡摆到取头像那一态，取消就照旧（Issue #474）
 - **提供注销入口** —— 微信强制要求。「我的 → 设置 → 清空数据」删本机与云端记录
   （清空落成删除标记推上去，见 `utils/wire.js` 的 `clearRecords`），「退出登录」断会话
 - **隐私政策** —— 「我的 → 隐私政策」一页（`packages/settings/privacy/`），
