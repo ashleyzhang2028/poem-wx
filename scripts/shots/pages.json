@@ -378,7 +378,38 @@
     "title": "后台管理",
     "back": true,
     "logged": true,
-    "seedStats": [3, 5, 2, 0, 8, 1, 4, 0, 0, 12, 2, 3, 1, 0, 2, 5, 0, 1, 3, 2, 0, 0, 4, 1, 2, 0, 3, 6, 1, 2],
+    "seedStats": [
+      3,
+      5,
+      2,
+      0,
+      8,
+      1,
+      4,
+      0,
+      0,
+      12,
+      2,
+      3,
+      1,
+      0,
+      2,
+      5,
+      0,
+      1,
+      3,
+      2,
+      0,
+      0,
+      4,
+      1,
+      2,
+      0,
+      3,
+      6,
+      1,
+      2
+    ],
     "seedStatsTotal": 58
   },
   "admin-line": {
@@ -386,9 +417,49 @@
     "title": "后台管理",
     "back": true,
     "logged": true,
-    "seedStats": [3, 5, 2, 0, 8, 1, 4, 0, 0, 12, 2, 3, 1, 0, 2, 5, 0, 1, 3, 2, 0, 0, 4, 1, 2, 0, 3, 6, 1, 2],
+    "seedStats": [
+      3,
+      5,
+      2,
+      0,
+      8,
+      1,
+      4,
+      0,
+      0,
+      12,
+      2,
+      3,
+      1,
+      0,
+      2,
+      5,
+      0,
+      1,
+      3,
+      2,
+      0,
+      0,
+      4,
+      1,
+      2,
+      0,
+      3,
+      6,
+      1,
+      2
+    ],
     "seedStatsTotal": 58,
-    "do": [{ "call": "onTab", "with": { "detail": { "value": "line" } } }]
+    "do": [
+      {
+        "call": "onTab",
+        "with": {
+          "detail": {
+            "value": "line"
+          }
+        }
+      }
+    ]
   },
   "users": {
     "page": "packages/users/index/index",
@@ -783,5 +854,49 @@
       "id": "mingren-mr-c-06"
     },
     "_note": "名家「中国」里的《师旷》：左窄右宽的两列表，右列是长传记（见 check.js 表格解析那两条）"
+  },
+  "game-ranking": {
+    "page": "packages/ranking/index/index",
+    "title": "排行榜",
+    "back": true,
+    "logged": true
+  },
+  "game-ranking-fly": {
+    "page": "packages/ranking/index/index",
+    "title": "排行榜",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onGame",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "k": "fly"
+            }
+          }
+        }
+      }
+    ],
+    "_note": "切换到飞花令榜：看顶部那颗标签页里选中的那一格与下面那几排筛选是两件事"
+  },
+  "game-ranking-empty": {
+    "page": "packages/ranking/index/index",
+    "title": "排行榜",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onStage",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "k": "high"
+            }
+          }
+        }
+      }
+    ],
+    "_note": "换一个空学段：空状态那张卡"
   }
 }

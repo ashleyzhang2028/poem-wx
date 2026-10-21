@@ -4,32 +4,36 @@
   line-height: var(--lh-body);
 }
 
-.lb-games {
+.lb-tabs {
   display: flex;
-  gap: var(--sp-2);
+  gap: var(--sp-5);
+  padding: 0 var(--sp-1);
+  margin-bottom: var(--sp-2);
+  border-bottom: 1rpx solid var(--line-strong);
 }
 
-.lb-game {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--h-field);
-  border: 1rpx solid var(--line-strong);
-  border-radius: var(--radius-ctl);
-  background: var(--surface);
-  color: var(--ink-2);
-}
-
-.lb-game.on {
-  border-color: var(--strong);
-  background: var(--strong);
-  color: var(--on-ink);
-}
-
-.lb-game-name {
-  font-size: var(--fs-body);
+.lb-tab {
+  position: relative;
+  padding: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--fs-title);
+  color: var(--ink-3);
   letter-spacing: var(--ls-title);
+  transition: color var(--t-press);
+}
+
+.lb-tab.on {
+  color: var(--strong-text);
+}
+
+.lb-tab.on::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1rpx;
+  height: 4rpx;
+  border-radius: var(--radius-pill);
+  background: var(--strong);
 }
 
 .lb-seg {
@@ -37,6 +41,10 @@
   flex-wrap: wrap;
   gap: var(--sp-2);
   margin-top: var(--sp-3);
+}
+
+.lb-seg:first-child {
+  margin-top: 0;
 }
 
 .lb-chip {

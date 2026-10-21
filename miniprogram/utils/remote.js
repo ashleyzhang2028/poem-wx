@@ -478,12 +478,21 @@ function rankingList(query) {
 }
 
 function rankingSubmit(entry) {
-  if (!configured()) return Promise.resolve({ ok: false, offline: true });
-  return request(PATHS.ranking, Object.assign({ op: "submit" }, entry || {})).then((res) => ({
-    ok: !!(res && res.recorded),
-    on: !!(res && res.on),
-    offline: false
-  }));
+  if (!configured()) return Promise.resolve({ ok: false, offline: true, off: false });
+  return request(PATHS.ranking, Object.assign({ op: "submit" }, entry || {})).then(
+    (res) => ({
+      ok: !!(res && res.recorded),
+      on: !!(res && res.on),
+      off: false,
+      offline: false
+    }),
+    (err) => ({
+      ok: false,
+      on: false,
+      off: !!(err && err.code === "E_RANKING_OFF"),
+      offline: !!(err && err.statusCode === 503)
+    })
+  );
 }
 
 function adminRanking(game) {
