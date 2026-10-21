@@ -1241,13 +1241,13 @@ Object.keys(WEB_TIER).forEach((k) => {
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
-      const row = E.compareRows({ logged: false, tier: "free" })
-        .filter((r) => r.cap === "collections")[0];
-      const tiersRow = row.cells.map((c) => c.text);
-      const silent = E.compareRows({ logged: false, tier: "free" })
-        .filter((r) => r.cap === "daily")[0];
+      const rows = E.compareRows({ logged: false, tier: "free" });
+      const row = rows.filter((r) => r.cap === "collections")[0];
+      const tiersRow = row.cells.map((c) => c.note);
+      const silent = rows.filter((r) => r.cap === "daily")[0];
       return tiersRow.join(",") === ",1 个集合,200 个集合"
-        && silent.cells.every((c) => c.text === "");
+        && row.cells.every((c) => c.text === "")
+        && silent.cells.every((c) => c.text === "" && c.note === "");
     })(),
     "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
 }
@@ -6796,7 +6796,7 @@ function gapped(items, max) {
         .filter((r) => r.cap === "collections")[0];
       const want = ["free", "pro", "max"].map((t) =>
         colsMod.LIMITS[t] ? colsMod.LIMITS[t] + " 个集合" : "");
-      const got = row.cells.map((c) => c.text);
+      const got = row.cells.map((c) => c.note);
       return got.join(",") === want.join(",");
     })(),
     "对比表那一行的数字另写一份，改配额时两处会说不一样的话");
@@ -7140,10 +7140,9 @@ function gapped(items, max) {
       SEASON.card(dayOf(2026, 5, 21)).refresh === false && SEASON.redraw(dayOf(2026, 5, 21)) === false);
 
     const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
-    ok("隐藏季节限定是 Pro 起的一项能力，Free 开不了",
+    ok("隐藏季节限定是 Pro 起的一项门禁，Free 开不了",
       !!capRow && capRow.tier === "pro"
-        && E.compareRows({ logged: false, tier: "free" })
-          .filter((r) => r.cap === SEASON.CAP)[0].cells[0].on === false);
+        && E.compareSummary().filter((x) => x.tier === "free")[0].on < E.CAP_KEYS.length);
 
     asTier3("free");
     ok("Free 手里那开关按不动，卡片照旧显示",

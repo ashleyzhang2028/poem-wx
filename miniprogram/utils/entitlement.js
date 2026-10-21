@@ -11,7 +11,7 @@ function rankOf(tier) {
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
   if (!n) return { text: "", note: "", on: false };
-  return { text: n + " 个集合", note: "", on: true };
+  return { text: "", note: n + " 个集合", on: true };
 }
 
 function courseFreeCell(tier) {
@@ -19,28 +19,23 @@ function courseFreeCell(tier) {
   return { text: "", note: "", on: on };
 }
 
-function seasonalCell(tier) {
-  const on = rankOf(tier) >= rankOf("pro");
-  return { text: on ? "可关" : "常显", note: "", on: on };
-}
-
 const CAPS = [
   { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
   { key: "library", name: "课外阅读", desc: "十七部集合随选随读", tier: "free" },
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
-  { key: "ebbinghaus", name: "艾宾浩斯 (Ebbinghaus)", desc: "固定间隔复习", tier: "free" },
+  { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
   { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处 / 正文", tier: "free" },
   { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "pro" },
-  { key: "leitner", name: "莱特纳盒 (Leitner Box)", desc: "分级盒子复习", tier: "pro" },
+  { key: "leitner", name: "莱特纳盒 Leitner Box", desc: "分级盒子复习", tier: "pro" },
 
   { key: "sync", name: "同步进度", desc: "进度与设置跟着微信账号走", tier: "free" },
-  { key: "sm2", name: "SM-2 (SuperMemo 2)", desc: "间隔 × 简易度", tier: "pro" },
+  { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与今日加背", cell: courseFreeCell, tier: "pro" },
-  { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", cell: seasonalCell, tier: "pro" },
-  { key: "fsrs", name: "FSRS (自由间隔重复调度)", desc: "难度 / 稳定性排期", tier: "max" },
+  { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
+  { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
 ];
@@ -161,11 +156,15 @@ function viewNameOf(cap) {
   return VIEW_NAME[cap.key] || cap.name;
 }
 
+function splitName(name) {
+  const cut = name.indexOf(" ");
+  if (cut < 0) return { name: name, en: "" };
+  return { name: name.slice(0, cut), en: name.slice(cut + 1) };
+}
+
 function compareRows(snap) {
   const s = snap || snapshot();
-  return CAPS.map((c) => ({
-    cap: c.key,
-    name: viewNameOf(c),
+  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(viewNameOf(c)), {
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {
