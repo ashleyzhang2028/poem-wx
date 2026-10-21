@@ -1,5 +1,8 @@
 const corpus = require("../../../utils/corpus");
 const S = require("../../../utils/scheduler");
+const cols = require("../../../utils/collections");
+const store = require("../../../utils/store");
+const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
@@ -43,6 +46,40 @@ function metaOf(row) {
   return parts.join(" · ");
 }
 
+function collectionCard(row) {
+  const ov = row.overview;
+  const buckets = BUCKETS.map((b, i) => ({
+    label: b.label,
+    cls: b.cls,
+    count: ov.masteryBuckets[i]
+  }));
+  const bucketMax = Math.max(1, ...buckets.map((b) => b.count));
+  const calendar = ov.calendar.map((d, i) => ({
+    label: i === 0 ? "今天" : i === 1 ? "明天" : WEEKDAYS[new Date(d.day).getDay()],
+    count: d.count,
+    has: d.count > 0
+  }));
+  return {
+    id: row.id,
+    title: row.name,
+    total: ov.total,
+    learned: ov.learned,
+    mastered: ov.mastered,
+    dueToday: ov.dueToday,
+    backlog: ov.backlog,
+    avgMastery: ov.avgMastery,
+    farther: row.due.farther,
+    percent: ov.learned ? Math.round((ov.mastered / ov.learned) * 100) : 0,
+    calendar,
+    buckets: buckets.map((b) => Object.assign({}, b, {
+      percent: b.count ? Math.max(FLOOR, Math.round((b.count / bucketMax) * 100)) : 0
+    })),
+    sub: ov.learned
+      ? "已掌握 " + ov.mastered + " / 已学 " + ov.learned
+      : (ov.total ? "还没开始背" : "这个集合是空的")
+  };
+}
+
 function rowsOf(items) {
   return items.map((it) => ({
     id: it.id,
@@ -75,6 +112,9 @@ Page({
     backlogCount: 0,
 
     sheetRows: [],
+
+    selfRows: [],
+    selfOn: false,
 
     locked: false
   },
@@ -149,8 +189,20 @@ Page({
       farther: due.farther,
       buckets,
       bucketsSub: overview.learned ? "平均 " + overview.avgMastery + "%" : "",
-      sheetRows: this.sheetQueue(panels)
+      sheetRows: this.sheetQueue(panels),
+      selfOn: entitlement.can("collections"),
+      selfRows: this.selfCards(all)
     });
+  },
+
+  selfCards(all) {
+    if (!entitlement.can("collections")) return [];
+    const rows = S.collectionsProgress(cols.usable(), {
+      allPoems: all,
+      getRecord: store.getRecord,
+      days: SPAN
+    });
+    return rows.map((r) => collectionCard(r));
   },
 
   sheetQueue(panels) {
@@ -177,6 +229,11 @@ Page({
     this.sheetIds = [];
     this.setData({ sheetRows: [] });
     this.refresh();
+  },
+
+  onCollections() {
+    if (!gate.guard("自选背诵", this)) return;
+    wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
   onLogin() {

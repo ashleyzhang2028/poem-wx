@@ -6,6 +6,10 @@ const REVIEW_WINDOW_HOURS = 16;
 
 const EBBINGHAUS_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60, 120, 240];
 
+const LEVEL_MAX = 9;
+
+const MASTERED_PERCENT = 80;
+
 function startOfDay(ts) {
   const d = new Date(ts);
   d.setHours(0, 0, 0, 0);
@@ -23,7 +27,21 @@ function nextSlot(ts) {
 
 function clampLevel(lv) {
   const n = typeof lv === "number" && isFinite(lv) ? Math.round(lv) : 0;
-  return Math.max(0, Math.min(n, EBBINGHAUS_INTERVALS.length - 1));
+  return Math.max(0, Math.min(n, LEVEL_MAX));
+}
+
+function mastery(rec) {
+  if (!rec || !rec.learned) return 0;
+  return Math.round((clampLevel(rec.level) / LEVEL_MAX) * 100);
+}
+
+function mastered(rec) {
+  return mastery(rec) >= MASTERED_PERCENT;
+}
+
+function levelName(level) {
+  const lv = clampLevel(level);
+  return lv >= LEVEL_MAX ? "已牢固" : lv + " / " + LEVEL_MAX;
 }
 
 function clampBox(b) {
@@ -361,6 +379,11 @@ module.exports = {
   dayAt,
   daysFor,
   EBBINGHAUS_INTERVALS,
+  LEVEL_MAX,
+  MASTERED_PERCENT,
+  mastery,
+  mastered,
+  levelName,
   ORDER,
   DEFAULT_KEY,
   MODELS,

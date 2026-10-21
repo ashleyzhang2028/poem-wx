@@ -21,8 +21,6 @@ const DAILY_COUNTS = [3, 5, 10, 20];
 
 const SPAN = 7;
 
-const MASTERED_LEVEL = 7;
-
 const BACKLOG_DAYS = 7;
 
 const GRADE_NAMES = {
@@ -78,8 +76,7 @@ function doneToday(rec, now) {
 }
 
 function mastery(rec) {
-  if (!rec || !rec.learned) return 0;
-  return Math.round((R.clampLevel(rec.level) / 9) * 100);
+  return R.mastery(rec);
 }
 
 function stageName(rec) {
@@ -388,8 +385,8 @@ function lastReviewOf(rec) {
   return 0;
 }
 
-function overview(allPoems, days) {
-  const getRecord = (id) => store.getRecord(id);
+function overview(allPoems, days, getRecord) {
+  const recOf = getRecord || ((id) => store.getRecord(id));
   const span = Math.max(1, Number(days) || SPAN);
   const now = Date.now();
   const today = R.startOfDay(now);
@@ -403,10 +400,10 @@ function overview(allPoems, days) {
   const buckets = [0, 0, 0, 0, 0];
 
   allPoems.forEach((p) => {
-    const rec = getRecord(p.id);
+    const rec = recOf(p.id);
     if (!rec || !rec.learned) return;
     learned += 1;
-    if (R.clampLevel(rec.level) >= MASTERED_LEVEL) mastered += 1;
+    if (R.mastered(rec)) mastered += 1;
 
     const m = mastery(rec);
     masterySum += m;
@@ -436,8 +433,8 @@ function overview(allPoems, days) {
   };
 }
 
-function dueList(allPoems, days) {
-  const getRecord = (id) => store.getRecord(id);
+function dueList(allPoems, days, getRecord) {
+  const recOf = getRecord || ((id) => store.getRecord(id));
   const span = Math.max(1, Number(days) || SPAN);
   const today = R.startOfDay(Date.now());
   const out = [];
@@ -447,7 +444,7 @@ function dueList(allPoems, days) {
   let farther = 0;
 
   allPoems.forEach((p) => {
-    const rec = getRecord(p.id);
+    const rec = recOf(p.id);
     if (!rec || !rec.learned) return;
     const off = Math.round((R.startOfDay(rec.nextReviewAt) - today) / DAY);
     const item = {
@@ -532,19 +529,33 @@ function collectionPlan(c, opt) {
   return plan;
 }
 
-function collectionOverview(allPoems, c) {
-  const getRecord = (id) => store.getRecord(id);
+function collectionProgress(c, opt) {
+  const o = opt || {};
+  const allPoems = o.allPoems || [];
+  const getRecord = o.getRecord || store.getRecord;
   const poems = collectionPoems(allPoems, c);
-  const now = Date.now();
-  let learned = 0;
-  let due = 0;
-  poems.forEach((p) => {
-    const rec = getRecord(p.id);
-    if (!isLearned(rec)) return;
-    learned += 1;
-    if (isDue(rec, now)) due += 1;
+
+  const ov = overview(poems, o.days || SPAN, getRecord);
+  const due = dueList(poems, o.days || SPAN, getRecord);
+  const plan = collectionPlan(c, { count: o.count || 5, allPoems: allPoems, getRecord: getRecord });
+  let doneNow = 0;
+  plan.forEach((it) => {
+    if (doneToday(getRecord(it.poem.id))) doneNow += 1;
   });
-  return { total: poems.length, learned: learned, due: due };
+
+  return {
+    id: c.id,
+    name: c.name,
+    count: poems.length,
+    overview: ov,
+    due: due,
+    planned: plan.length,
+    doneNow: doneNow
+  };
+}
+
+function collectionsProgress(list, opt) {
+  return (list || []).map((c) => collectionProgress(c, opt));
 }
 
 function gradeName(g) {
@@ -579,7 +590,8 @@ module.exports = {
   todayDone,
   todayLeft,
   collectionPlan,
-  collectionOverview,
+  collectionProgress,
+  collectionsProgress,
   samplePlan,
   generateDailyPlan,
   overview,

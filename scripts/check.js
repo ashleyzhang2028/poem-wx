@@ -443,7 +443,53 @@ R.ORDER.forEach((key) => {
 
 let r10 = null;
 for (let i = 0; i < 12; i++) r10 = R.review(r10, "good", "ebbinghaus");
-ok("艾宾浩斯档位封顶不越界", r10.level === R.EBBINGHAUS_INTERVALS.length - 1, "level=" + r10.level);
+ok("艾宾浩斯档位封顶不越界", r10.level === R.LEVEL_MAX, "level=" + r10.level);
+
+{
+  const caps = {};
+  R.ORDER.forEach((k) => {
+    let r = null;
+    let t = Date.now();
+    for (let i = 0; i < 20; i++) {
+      r = R.review(r, "good", k, t);
+      t = r.nextReviewAt + 24 * 3600 * 1000;
+    }
+    caps[k] = r.level;
+  });
+  ok("四套算法数的是同一把尺子（连续记住都走到同一格封顶）",
+    R.ORDER.every((k) => caps[k] === R.LEVEL_MAX),
+    R.ORDER.map((k) => k + ":" + caps[k]).join(" "));
+
+  ok("掌握度满分 = 档位封顶那一格",
+    R.mastery({ level: R.LEVEL_MAX, learned: true }) === 100
+      && R.mastery({ level: 0, learned: true }) === 0
+      && R.mastery(null) === 0 && R.mastery({ level: 9, learned: false }) === 0);
+
+  const firstMastered = (() => {
+    for (let lv = 0; lv <= R.LEVEL_MAX; lv++) {
+      if (R.mastered({ level: lv, learned: true })) return lv;
+    }
+    return -1;
+  })();
+  ok("「已掌握」的门槛就落在掌握度分布最后一档里（不会被算进别的档）",
+    firstMastered > 0
+      && !R.mastered({ level: firstMastered - 1, learned: true })
+      && Math.floor(R.mastery({ level: firstMastered - 1, learned: true }) / 20)
+        === Math.floor(R.MASTERED_PERCENT / 20) - 1
+      && Math.floor(R.mastery({ level: firstMastered, learned: true }) / 20)
+        === Math.floor(R.MASTERED_PERCENT / 20),
+    "门槛 " + R.MASTERED_PERCENT + "% 落在第 " + firstMastered + " 格，与分布的档位对不齐");
+}
+
+{
+  const inline = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8")
+    + fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
+    + fs.readFileSync(path.join(ROOT, "utils", "scheduler.js"), "utf8");
+  ok("掌握度只在一个地方算（界面与排期都调 R.mastery，不各写一遍除法）",
+    /\/\s*R\.LEVEL_MAX/.test(inline) === false && /\/\s*9\b/.test(inline) === false
+      && inline.indexOf("R.mastery(") >= 0,
+    "又有页面自己算了掌握度 —— 改一次口径就得改好几处");
+}
 
 let rh = null;
 for (let i = 0; i < 60; i++) rh = R.review(rh, "good", "ebbinghaus");
@@ -3637,9 +3683,10 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && /overview\.avgMastery/.test(progWxml),
     "四块里缺了一块 —— 网页版 /progress 那几张卡在小程序这边没落全");
 
-  ok("那四块读数不自己算（一律走 scheduler 的 overview / dueList）",
+  ok("那几块读数不自己算（本册与自选都走 scheduler 的 overview / dueList）",
     /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
-      && progJs.indexOf("store.progress") < 0 && progJs.indexOf("getRecord") < 0
+      && /S\.collectionsProgress\(/.test(progJs)
+      && progJs.indexOf("store.progress") < 0
       && progJs.indexOf("nextReviewAt") < 0,
     "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
 
@@ -3654,7 +3701,9 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
     const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
     ((dataBlock || [])[1] || "").replace(/^\s*(\w+)\s*:/gm, (_, k) => { declared[k] = true; });
 
-    const loop = ["item", "index", "d", "p"];
+    const loop = (progWxml.match(/wx:for-item="(\w+)"/g) || [])
+      .map((m) => m.replace(/[^\w]/g, "").slice("wxforitem".length))
+      .concat(["item", "index"]);
     const unknown = {};
     (progWxml.match(/\{\{([^}]*)\}\}/g) || []).forEach((raw) => {
       raw.slice(2, -2).replace(/'[^']*'|"[^"]*"/g, " ").split(/[^\w.$]+/).forEach((part) => {
@@ -7571,9 +7620,21 @@ function gapped(items, max) {
         && S3.doneToday(null) === false);
 
     store3.setRecord("cp1", { level: 0, learned: false, nextReviewAt: 0, lastReviewAt: 0, history: [] });
-    const ov = S3.collectionOverview(fake3, cols3.find("c1"));
+    const ov = S3.collectionProgress(cols3.find("c1"), {
+      allPoems: fake3, getRecord: store3.getRecord, count: 5
+    }).overview;
     ok("集子概览报篇目数 / 已背 / 今日到期",
-      ov.total === 12 && ov.learned === 1 && ov.due === 1, JSON.stringify(ov));
+      ov.total === 12 && ov.learned === 1 && ov.dueToday === 1, JSON.stringify(ov));
+
+    store3.setRecord("cp0", { level: 9, learned: true, nextReviewAt: Date.now() + 86400000, lastReviewAt: Date.now() });
+    const colCards = S3.collectionsProgress([cols3.find("c1")], {
+      allPoems: fake3, getRecord: store3.getRecord, count: 5
+    });
+    ok("集子的读数与本册同源（掌握度 / 已掌握 / 掌握度分布都来自 overview）",
+      colCards.length === 1 && colCards[0].overview.mastered === 1
+        && colCards[0].overview.avgMastery === R3.mastery(store3.getRecord("cp0"))
+        && colCards[0].overview.masteryBuckets.reduce((a, b) => a + b, 0) === 1,
+      JSON.stringify(colCards[0] && colCards[0].overview));
 
     store3.saveCollections([{ id: "c1", name: "一集", dailyCount: 5, items: [{ id: "cp0" }, { id: "cp0" }] }]);
     ok("落盘时同一首只留一份",
