@@ -181,7 +181,6 @@
 
 .guest-lead-title {
   display: block;
-  font-family: var(--font-poem);
   font-size: var(--fs-title);
   color: var(--strong-text);
   line-height: var(--lh-tight);
