@@ -3255,6 +3255,12 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && fontMod.options().length === 3,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
+  const themeWxss = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8");
+  ok("字体卡不为预览注册另外两款字族（名字走系统字体）",
+    themeWxss.indexOf("--font-") < 0 && themeWxml.indexOf("fontStyle") < 0,
+    "字体卡还在拿另外两款的字族渲染行名");
+
   const rFree = (() => {
     tierAs("free");
     return fontMod.set("huiwen");

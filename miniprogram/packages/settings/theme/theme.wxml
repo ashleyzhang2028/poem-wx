@@ -20,14 +20,14 @@
     </view>
   </view>
 
-  <view class="card group-card" style="{{fontStyle}}">
+  <view class="card group-card">
     <view class="group-head">
       <text class="card-title group-title">字体</text>
       <text class="group-lock" wx:if="{{fontLocked}}">Pro 起</text>
     </view>
 
     <view class="font-list">
-      <view class="font-row {{item.key}} {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
+      <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onFont">

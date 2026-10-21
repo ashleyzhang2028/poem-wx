@@ -122,18 +122,6 @@
   color: var(--strong-text);
 }
 
-.font-row.zhuque .font-glyph {
-  font-family: var(--font-zhuque);
-}
-
-.font-row.huiwen .font-glyph {
-  font-family: var(--font-huiwen);
-}
-
-.font-row.chillkai .font-glyph {
-  font-family: var(--font-chillkai);
-}
-
 .font-note {
   display: block;
   margin-top: 4rpx;

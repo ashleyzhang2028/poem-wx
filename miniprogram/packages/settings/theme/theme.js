@@ -10,7 +10,6 @@ Page({
     barBelow: true,
     locked: false,
 
-    fontStyle: "",
     groups: theme.groups(),
     theme: theme.DEFAULT,
 
@@ -21,7 +20,6 @@ Page({
   },
 
   onShow() {
-    this.setData({ fontStyle: font.sampleStyle() });
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
@@ -65,9 +63,8 @@ Page({
       return;
     }
     if (!r.changed) return;
-    font.load().catch(() => {});
-    this.setData({ fontStyle: font.sampleStyle() });
     this.setData(this.view());
+    font.load().catch(() => {});
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

@@ -55,10 +55,6 @@ function stack(key) {
   return '"' + face(key || current()).family + '", ' + STACK;
 }
 
-function sampleStyle() {
-  return FACES.map((f) => "--font-" + f.key + ":" + stack(f.key)).join(";");
-}
-
 function addresses(key) {
   const f = BY_KEY[key] || FREE_FACE;
   return pickable() ? f.pro.slice() : f.free.slice();
@@ -138,6 +134,6 @@ function set(key) {
 
 module.exports = {
   FONTS, FACES, DEFAULT, BASE, readiness, options,
-  paid, pickable, lockedName, current, face, stack, sampleStyle,
+  paid, pickable, lockedName, current, face, stack,
   addresses, configured, load, set
 };
