@@ -9,7 +9,7 @@ Page({
     barBelow: true,
     locked: false,
 
-    items: theme.palette(),
+    groups: theme.groups(),
     theme: theme.DEFAULT
   },
 

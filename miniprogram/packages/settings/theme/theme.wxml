@@ -2,12 +2,12 @@
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:else>
-  <view class="card">
-    <view class="card-title">主题</view>
+  <view class="card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+    <view class="card-title">{{group.title}}</view>
 
     <view class="swatch-grid">
       <view class="swatch {{theme === item.key ? 'on' : ''}}"
-            wx:for="{{items}}" wx:key="key"
+            wx:for="{{group.items}}" wx:key="key"
             style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
             hover-class="swatch-hover" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onPick">

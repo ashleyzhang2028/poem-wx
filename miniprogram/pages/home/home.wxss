@@ -10,7 +10,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: calc(var(--status-h) + var(--nav-h) + min(100vw / 1.875, 360px));
+  height: calc(var(--chrome) + var(--wide));
   overflow: hidden;
   background: var(--surface);
 }
@@ -18,7 +18,9 @@
 .banner-img {
   display: block;
   width: 100%;
-  height: auto;
+  height: calc(var(--chrome) + var(--tall));
+  object-fit: cover;
+  object-position: top center;
 }
 
 .banner-space {

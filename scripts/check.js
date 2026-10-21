@@ -3100,33 +3100,44 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   const all = themeMod.all();
 
   const WANT = [
-    ["daiqing", "黛青", [2, 54, 51]],
-    ["yangzhou", "扬州", [2, 54, 51]],
-    ["kaifeng", "开封", [2, 54, 51]],
-    ["qinglv", "青绿", [46, 106, 103]],
-    ["muse", "暮色", [79, 96, 114]],
-    ["nuahui", "暖灰", [164, 86, 104]],
-    ["qingwa", "青瓦", [74, 100, 96]],
-    ["mich", "米褐", [126, 101, 84]],
-    ["shilv", "石绿", [108, 127, 79]],
-    ["mohong", "墨红", [140, 47, 45]],
-    ["wulan", "雾蓝", [96, 126, 149]],
-    ["yanzhi", "胭脂", [157, 41, 51]],
-    ["yuqing", "雨过天青", [47, 96, 85]],
-    ["ink", "墨色", [8, 8, 10]]
+    ["daiqing", "黛青", [2, 54, 51], "tradition"],
+    ["qinglv", "青绿", [46, 106, 103], "tradition"],
+    ["muse", "暮色", [79, 96, 114], "tradition"],
+    ["nuahui", "暖灰", [164, 86, 104], "tradition"],
+    ["qingwa", "青瓦", [74, 100, 96], "tradition"],
+    ["mich", "米褐", [126, 101, 84], "tradition"],
+    ["shilv", "石绿", [108, 127, 79], "tradition"],
+    ["mohong", "墨红", [140, 47, 45], "tradition"],
+    ["wulan", "雾蓝", [96, 126, 149], "tradition"],
+    ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
+    ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
+    ["ink", "墨色", [8, 8, 10], "tradition"],
+    ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
+    ["qingmingshanghetu", "清明上河图", [2, 54, 51], "landscape"],
+    ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
+    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"]
   ];
 
   const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
-  const softOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 0.05)";
 
   const missing = WANT.filter(([k, name, rgb]) => {
     const t = all.find((x) => x.key === k);
-    return !t || t.name !== name || t.rgba !== rgbaOf(rgb);
+    return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 14 项（扬州 / 开封 紧随黛青，其余是用户点名的十一个色）",
-    missing.length === 0 && all.length === WANT.length
-      && all.slice(0, 3).map((t) => t.key).join() === "daiqing,yangzhou,kaifeng",
+  ok("清单就是这 16 项（十二个传统色 + 四张大好河山）",
+    missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
+
+  const groupMod = themeMod.groups();
+  const badGroup = WANT.filter(([k, , , g]) => {
+    const hit = groupMod.find((x) => x.items.some((i) => i.key === k));
+    return !hit || hit.key !== g;
+  });
+  ok("每支主题都归到自己那张卡上（中国传统 / 大好河山）",
+    badGroup.length === 0 && groupMod.length === 2
+      && groupMod.map((x) => x.title).join() === "中国传统,大好河山"
+      && groupMod[0].items.length + groupMod[1].items.length === all.length,
+    badGroup.map((m) => m[1]).join(", ") + " 没归位；卡片 " + groupMod.map((x) => x.title).join(" / "));
 
   const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);
   ok("tokens 的 --theme 默认值指向清单里默认那一项（两处不许各写一遍）",
