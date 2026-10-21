@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "我的 · 主题",
+  "navigationBarTitleText": "我的 · 主题和字体",
   "usingComponents": {
     "tab-bar": "/custom-tab-bar/index"
   }

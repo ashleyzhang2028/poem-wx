@@ -7,6 +7,7 @@ const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
 
 Page({
@@ -33,6 +34,7 @@ Page({
 
     syncSub: "",
     themeName: "",
+    fontName: "",
     fullTextOn: false,
 
     grantLead: false
@@ -73,6 +75,7 @@ Page({
       fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
       themeName: theme.currentTheme().name,
+      fontName: font.face().name,
 
       grantLead: this.grantLead(profile)
     });

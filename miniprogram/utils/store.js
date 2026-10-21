@@ -38,6 +38,7 @@ const DEFAULTS = {
   fontSize: 0,
 
   theme: "ink",
+  font: "zhuque",
   pinyin: "off",
 
   selfOnly: false,
