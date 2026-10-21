@@ -2,7 +2,7 @@
 
   <login-panel id="login" tier-label="{{tierLabel}}"
                bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
-               bind:tier="onTier" />
+               bind:login="onLogin" bind:tier="onTier" />
 
   <view class="card">
     <view class="stats">

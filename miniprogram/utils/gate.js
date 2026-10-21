@@ -34,27 +34,22 @@ function refuse(what) {
 }
 
 function guard(what, page, onPass) {
-  const r = refuse(what);
-  if (r.ok) {
-    if (onPass) onPass();
-    return true;
-  }
-  wx.showModal({
-    title: r.title,
-    content: r.content,
-    confirmText: "登录",
-    cancelText: "取消",
-    success: (res) => {
-      if (!res.confirm) return;
-      open(onPass, page);
-    }
-  });
-  return false;
+  return open(onPass, page);
 }
 
 function open(onPass, page) {
+  if (logged()) {
+    loginFlow.resume(page);
+    if (onPass) onPass();
+    return true;
+  }
   loginFlow.after(onPass, page);
-  loginFlow.run(page).catch(() => {});
+  loginFlow.start(page).catch(() => {});
+  return false;
+}
+
+function cancel(page) {
+  loginFlow.cancel(page);
 }
 
 function ask(page) {
@@ -70,4 +65,17 @@ function grade() {
   return store.settings().grade;
 }
 
-module.exports = { GUEST_GRADE, PUBLIC_ACTIONS, logged, allow, canRead, refuse, guard, open, ask, resume, grade };
+module.exports = {
+  GUEST_GRADE,
+  PUBLIC_ACTIONS,
+  logged,
+  allow,
+  canRead,
+  refuse,
+  guard,
+  open,
+  cancel,
+  ask,
+  resume,
+  grade
+};

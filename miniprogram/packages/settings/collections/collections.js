@@ -7,7 +7,6 @@ const gate = require("../../../utils/gate");
 const sync = require("../../../utils/sync");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
 
 Page({
@@ -140,9 +139,6 @@ Page({
     });
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onTier() {
     entitlement.openTierPage();

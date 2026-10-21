@@ -1083,7 +1083,9 @@ const homeJs = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf
 ok("首页游客点篇目要登录", homeWxml.indexOf('bindtap="onGuestOpen"') >= 0);
 ok("首页游客态在 js 里算出来", homeJs.indexOf("gate.GUEST_GRADE") >= 0);
 
-ok("首页点击过门禁", /gate\.guard\(/.test(homeJs));
+ok("首页点击过门禁",
+  /requireLogin\(/.test(homeJs.slice(homeJs.indexOf("openSheet(id, source) {"))),
+  "openSheet 里没查登录 —— 游客点得开背诵弹层");
 
 pages.forEach((p) => {
   const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
@@ -1248,7 +1250,7 @@ Object.keys(WEB_TIER).forEach((k) => {
   ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
   ok("档位与登录的对话框都收在 entitlement 里，「升级」落到用户权限页",
     /function showTier\s*\(/.test(entSys) && /function showLogin\s*\(/.test(entSys)
-      && /onTierGate/.test(entSys) && /onLoginGate/.test(entSys)
+      && /onTierGate/.test(entSys)
       && /url:\s*"\/packages\/mine\/tier\/tier"/.test(entSys)
       && !/askDailyUpgrade|askUpgrade/.test(entSys),
     "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
@@ -2806,10 +2808,10 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
         && /require\(["']\.\/login-flow["']\)/.test(gateCode),
       "「我的」页与门禁弹窗各自写了一遍 wx.login 的成败分支");
     const openBody = (gateCode.match(/function open\(onPass, page\) \{[\s\S]*?\n\}/) || [""])[0];
-    ok("门禁弹窗里点了「登录」就真去登录，不再弹第二个确认框",
-      /loginFlow\.after\(/.test(openBody) && /loginFlow\.run\(/.test(openBody)
+    ok("门禁弹窗只有一份，点了「登录」就真去登录",
+      /loginFlow\.start\(/.test(openBody) && openBody.indexOf("wx.showModal") < 0
         && openBody.indexOf("askLogin") < 0,
-      "open() 里又调了 askLogin —— 那一步会再弹一次「登录 / 取消」，"
+      "open() 自己弹框、或又调了 askLogin —— 一次点击会叠出两个「登录」弹窗，"
         + "用户点完「登录」以为没反应（Issue #502）。函数体："
         + openBody.replace(/\s+/g, " "));
     ok("登录流程与门禁不互相 require（循环依赖会让 gate 交到半个空壳）",
@@ -2848,6 +2850,32 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 {
   const recite = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const reciteJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
+}
+
+{
+  const entSrc = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
+  const gateSrc = fs.readFileSync(path.join(ROOT, "utils", "gate.js"), "utf8");
+  const flowSrc = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+  const lockSrc = fs.readFileSync(path.join(ROOT, "components", "lock-card", "lock-card.js"), "utf8");
+  const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+  const showLoginBody = (entSrc.match(/function showLogin\(name, ctx\) \{[\s\S]*?\n\}/) || [""])[0];
+  const blockBody = (entSrc.match(/function block\(name, opt\) \{[\s\S]*?\n\}/) || [""])[0];
+
+  ok("登录弹窗只有一个：门禁与能力检查都走 gate.open",
+    showLoginBody.indexOf("showModal") < 0 && /gate\.open\(/.test(showLoginBody)
+      && blockBody.indexOf("showLogin(") >= 0 && blockBody.indexOf("wx.showModal") < 0,
+    "entitlement 与 gate 各自 showModal 了一遍 —— 一次点击叠出两个都带「登录」的弹窗（Issue #502）");
+  ok("先问登录，再问档位（同一件事只问一遍）",
+    blockBody.indexOf("if (r.login)") >= 0
+      && blockBody.indexOf("if (r.login)") < blockBody.indexOf("showTier("),
+    "block 先过档位再过登录 —— 登录完还要被第二道门再拦一次（Issue #502）");
+  ok("页面的「登录」按钮都进同一段真实登录流程",
+    /loginFlow\.run\(/.test(lockSrc) && /triggerEvent\(["']login["']\)/.test(panelSrc)
+      && flowSrc.indexOf("function run(") >= 0,
+    "锁页卡或身份卡上的「登录」还只是跳「我的」—— 两处按钮两套行为");
+  ok("同一时刻只弹一个登录框",
+    /let asking\s*=\s*false/.test(flowSrc) && /if \(auth\.logged\(\) \|\| asking\)/.test(flowSrc),
+    "askLogin 不拦重入 —— 登录框没关时再点一下又叠一个");
 }
 
 {
@@ -3474,9 +3502,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id, source) {"));
   ok("弹层由首页把门禁，组件自己不查",
-    /gate\.guard\(/.test(openSheetSrc.slice(0, 600))
+    /requireLogin\(/.test(openSheetSrc.slice(0, 600))
       && !/gate\.(?!Tier)/.test(sheetJs.replace(/\/\*[\s\S]*?\*\//g, "")),
-    "首页 openSheet 里没调 gate.guard，或组件自己查了门禁");
+    "首页 openSheet 里没查登录，或组件自己查了门禁");
 
   const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
 

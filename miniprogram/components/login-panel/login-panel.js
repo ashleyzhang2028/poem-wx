@@ -36,7 +36,7 @@ Component({
     },
 
     onLogin() {
-      loginFlow.askLogin(this).catch(() => {});
+      this.triggerEvent("login");
     },
 
     onWechat() {

@@ -3,8 +3,6 @@ const S = require("../../../utils/scheduler");
 const cols = require("../../../utils/collections");
 const store = require("../../../utils/store");
 const entitlement = require("../../../utils/entitlement");
-const gate = require("../../../utils/gate");
-const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
@@ -207,15 +205,14 @@ Page({
 
   onOpen(e) {
     const ds = e.currentTarget.dataset;
-    gate.guard("背诵", this, () => {
-      const sheet = this.selectComponent("#sheet");
-      if (!sheet) return;
-      const panel = this.data.panels.filter((p) => String(p.offset) === String(ds.day))[0];
-      const rows = panel ? panel.rows : [];
-      this.sheetIds = rows.map((r) => r.id);
-      this.setData({ sheetRows: rows });
-      sheet.open(rows, ds.id);
-    });
+    if (!this.requireLogin()) return;
+    const sheet = this.selectComponent("#sheet");
+    if (!sheet) return;
+    const panel = this.data.panels.filter((p) => String(p.offset) === String(ds.day))[0];
+    const rows = panel ? panel.rows : [];
+    this.sheetIds = rows.map((r) => r.id);
+    this.setData({ sheetRows: rows });
+    sheet.open(rows, ds.id);
   },
 
   onSheetFinish() {
@@ -225,15 +222,14 @@ Page({
   },
 
   onCollections() {
-    if (!gate.guard("自选背诵", this)) return;
+    if (!this.requireLogin()) return;
+    entitlement.block("collections", { page: this, loginPrompt: false });
+    if (!entitlement.can("collections")) return;
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
-  onLoginGate() {
-    this.onLogin();
-  },
-
-  onLogin() {
-    loginFlow.askLogin(this).catch(() => {});
+  requireLogin() {
+    entitlement.block("daily", { page: this, loginPrompt: false });
+    return entitlement.loggedIn();
   }
 });

@@ -193,14 +193,31 @@ function goIdentity(page) {
 }
 
 function start(page, action) {
-  if (!action || !auth.logged()) return Promise.resolve(null);
+  if (!action) return Promise.resolve(null);
+  if (!auth.logged()) return askLogin(page).then(() => start(page, action));
   return share(action, page);
 }
 
+let asking = false;
+
+const history = [];
+
 function askLogin(page) {
-  if (auth.logged()) return Promise.resolve(null);
+  if (auth.logged() || asking) return Promise.resolve(null);
+  asking = true;
   const host = revive(page) || page;
-  return ask(ASK.login()).then((ok) => (ok ? run(host) : null));
+  const from = host && typeof host.route === "string" ? host.route : "";
+  return ask(ASK.login())
+    .then((ok) => {
+      asking = false;
+      if (!ok) return null;
+      if (from) history.push(from);
+      return run(host);
+    })
+    .catch((err) => {
+      asking = false;
+      throw err;
+    });
 }
 
 function identityHost(page) {
@@ -222,6 +239,15 @@ function after(onPass, page) {
   pending = { run: onPass || null, page: page || null };
 }
 
+function cancel(page) {
+  pending = null;
+  const at = page && typeof page.route === "string" ? page : null;
+  const last = history[history.length - 1];
+  if (!at || !last || last !== at.route) return;
+  history.pop();
+  tabPage.back("/" + at.route);
+}
+
 function resume(page) {
   const job = pending;
   pending = null;
@@ -232,6 +258,7 @@ function resume(page) {
 }
 
 function settle(res, page) {
+  history.pop();
   const resumed = resume(page);
   report(res);
   const back = backTo(page);
@@ -270,6 +297,7 @@ module.exports = {
   run,
   start,
   after,
+  cancel,
   askLogin,
   settle,
   resume,

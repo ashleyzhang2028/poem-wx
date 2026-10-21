@@ -5,7 +5,6 @@ const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
 
 Page({
@@ -47,9 +46,6 @@ Page({
     if (this.data.author) this.openAuthor(this.data.author);
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   allEntries() {
     const out = [];

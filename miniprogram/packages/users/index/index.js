@@ -3,7 +3,6 @@ const tiers = require("../../../utils/tiers");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -50,9 +49,6 @@ Page({
     );
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onSetTier(e) {
     const userId = e.currentTarget.dataset.u;

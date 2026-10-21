@@ -2,12 +2,12 @@ const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const textSearch = require("../../utils/text-search");
 const gate = require("../../utils/gate");
+const loginFlow = require("../../utils/login-flow");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const tabPage = require("../../utils/tab-page");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
 
@@ -60,10 +60,6 @@ Page({
     });
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
-
   onTierGate() {
     entitlement.openTierPage();
   },
@@ -101,7 +97,7 @@ Page({
 
   doSearch() {
     if (!gate.logged()) {
-      this.onLogin();
+      loginFlow.run(this);
       return;
     }
     const kw = this.data.keyword.trim();

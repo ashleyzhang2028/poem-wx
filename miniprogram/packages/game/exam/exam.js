@@ -6,7 +6,6 @@ const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const rankingSelf = require("../../../utils/ranking");
 
@@ -98,9 +97,6 @@ Page({
     });
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onUnload() {
     this.stopTimer();
