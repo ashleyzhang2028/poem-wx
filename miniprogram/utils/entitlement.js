@@ -11,8 +11,8 @@ function rankOf(tier) {
 
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
-  if (!n) return { text: "", note: "", on: false };
-  return { text: "", note: n + " 个集合", on: true };
+  if (!n) return { text: "无", note: "", on: false };
+  return { text: n + " 个集合", note: "", on: true };
 }
 
 function courseFreeCell(tier) {
@@ -170,15 +170,9 @@ function compareNameOf(cap) {
   return COMPARE_NAME[cap.key] || viewNameOf(cap);
 }
 
-function splitName(name) {
-  const cut = name.indexOf(" ");
-  if (cut < 0) return { name: name, en: "" };
-  return { name: name.slice(0, cut), en: name.slice(cut + 1) };
-}
-
 function compareRows(snap) {
   const s = snap || snapshot();
-  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(compareNameOf(c)), {
+  return CAPS.map((c) => Object.assign({ cap: c.key, name: compareNameOf(c) }, {
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {

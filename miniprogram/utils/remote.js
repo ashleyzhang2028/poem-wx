@@ -119,7 +119,7 @@ function cloudError(message, code) {
 
 function cloudOffError() {
   return cloudError(
-    "这个运行环境没有云开发能力（wx.cloud 不在）—— " +
+    "这个运行环境没有云开发功能（wx.cloud 不在）—— " +
     "开发者工具里要在 project.config.json 的 cloudfunctionRoot 或" +
     "「云开发」面板上开通，真机则要小程序已开通云开发。",
     "E_CLOUD_OFF"

@@ -9,7 +9,7 @@
   <view class="meter grant-meter">
     <view class="meter-fill" style="width:{{stats.percent}}%"></view>
   </view>
-  <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项能力</text>
+  <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项功能</text>
 </view>
 
 <view class="card">
@@ -17,19 +17,16 @@
 
   <view class="tier-table">
     <view class="tier-line tier-head">
-      <text class="tier-cap">能力</text>
+      <text class="tier-cap">功能</text>
       <view class="tier-cell {{col.now ? 'is-now' : ''}}" wx:for="{{heads}}" wx:for-item="col" wx:key="tier">
         <text class="tier-cell-t">{{col.label}}</text>
       </view>
     </view>
 
     <view class="tier-line" wx:for="{{compareRows}}" wx:key="cap">
-      <text class="tier-cap">
-        <text class="tier-cap-cn">{{item.name}}</text>
-        <text class="tier-cap-en" wx:if="{{item.en}}">{{item.en}}</text>
-      </text>
+      <text class="tier-cap">{{item.name}}</text>
       <view class="tier-cell {{cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
-        <text class="tier-cell-t" wx:if="{{cell.text}}">{{cell.text}}</text>
+        <text class="tier-cell-t {{cell.cls}}" wx:if="{{cell.text}}">{{cell.text}}</text>
         <view class="tier-cell-ic {{cell.cls}}"
               style="mask-image:url('{{cell.icon}}');-webkit-mask-image:url('{{cell.icon}}');"></view>
         <text class="tier-cell-n" wx:if="{{cell.note}}">{{cell.note}}</text>

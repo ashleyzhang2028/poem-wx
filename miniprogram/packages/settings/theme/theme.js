@@ -36,7 +36,7 @@ Page({
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
       fontLocked: !pickable,
-      fontNote: pickable ? "" : "字体属于 " + font.lockedName() + " 起的能力，先按默认那一款显示"
+      fontNote: pickable ? "" : "字体属于 " + font.lockedName() + " 起的功能，先按默认那一款显示"
     };
   },
 
