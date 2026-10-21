@@ -1,72 +1,8 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="card account">
-    <view class="identity">
-
-      <view class="avatar-wrap" hover-class="{{logged ? 'avatar-hit-active' : 'none'}}"
-            hover-stay-time="60" bindtap="onAvatarTap">
-        <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
-        <view class="avatar-fallback" wx:if="{{!avatarUrl}}">{{avatarChar}}</view>
-      </view>
-
-      <view class="identity-main">
-        <block wx:if="{{logged}}">
-          <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
-                 placeholder="填一个昵称" placeholder-class="identity-ph"
-                 confirm-type="done" bindblur="onNickname" bindconfirm="onNickname"
-                 bindtap="onNicknameTap" />
-          <view class="identity-sub-row">
-            <text class="identity-sub">{{identitySub}}</text>
-          </view>
-        </block>
-
-        <block wx:else>
-          <text class="identity-name">{{nickname}}</text>
-          <view class="identity-sub-row">
-            <text class="identity-sub">{{identitySub}}</text>
-          </view>
-        </block>
-      </view>
-      <view class="tier-chip" wx:if="{{logged}}" hover-class="tier-chip-hover" hover-stay-time="60"
-            bindtap="onTier">{{tierLabel}}</view>
-    </view>
-
-    <block wx:if="{{!logged}}">
-      <view class="login-row">
-        <button class="btn primary block" bindtap="onLogin">登录</button>
-      </view>
-    </block>
-
-    <block wx:else>
-      <button class="btn ghost mini logout" bindtap="onLogout">退出</button>
-    </block>
-  </view>
-
-  <view class="wechat-sheet-mask" wx:if="{{wechatPick}}" bindtap="onWechatPickClose"
-        hover-class="none">
-    <view class="wechat-sheet" catchtap="onWechatPickClose" hover-class="none">
-      <text class="wechat-sheet-title">微信账号</text>
-      <text class="wechat-sheet-sub">头像、昵称，或两样一起换成微信的</text>
-      <button class="wechat-sheet-item" open-type="chooseAvatar" bindchooseavatar="onWechatAvatar">
-        <text class="wechat-sheet-t">用微信头像</text>
-      </button>
-      <button class="wechat-sheet-item" type="nickname" bindinput="onWechatNickname"
-              bindblur="onWechatNickname">
-        <text class="wechat-sheet-t">用微信昵称</text>
-      </button>
-      <button class="wechat-sheet-item" open-type="chooseAvatar" bindchooseavatar="onWechatIdentity">
-        <text class="wechat-sheet-t">用微信头像和昵称</text>
-      </button>
-      <button class="wechat-sheet-item quiet" bindtap="onWechatPickClose">
-        <text class="wechat-sheet-t quiet">取消</text>
-      </button>
-    </view>
-  </view>
-
-  <view class="wechat-catch" wx:if="{{wechatFocus}}">
-    <input class="wechat-catch-input" type="nickname" focus="{{wechatFocus}}"
-           bindinput="onWechatNicknameInput" bindblur="onWechatNicknameInput" />
-  </view>
+  <login-panel id="login" tier-label="{{tierLabel}}"
+               bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
+               bind:tier="onTier" />
 
   <view class="card">
     <view class="stats">

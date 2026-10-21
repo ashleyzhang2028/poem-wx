@@ -1468,9 +1468,12 @@ const GATED = {
   const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
   const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
-  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  const panelWxml = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const panelJs = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(panelWxml);
   ok("档位胶囊点得动，进的就是档位与权限那一页",
-    !!chip && /bindtap="onTier"/.test(chip[0])
+    !!chip && /bindtap="onTier"/.test(chip[0]) && /onTier\s*\(\)\s*\{[\s\S]{0,80}?triggerEvent\("tier"\)/.test(panelJs)
+      && /bind:tier="onTier"/.test(mineWxml)
       && mineJs.indexOf('url: "/packages/mine/tier/tier"') >= 0,
     "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
       + "点下去必须落在对比表上（Issue #234）");
@@ -1533,14 +1536,16 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     (subs.mine || []).indexOf("tier/tier") >= 0 && (subs.admin || []).indexOf("index/index") >= 0,
     "entryOf 按分包根给页面归门 —— 落在 admin 分包里，改档那些门禁就会漏掉这张公开的表");
 
-  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  const panelWxml2 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const chip2 = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(panelWxml2);
   ok("档位胶囊点得动，进的就是档位与权限那一页",
-    !!chip && /bindtap="onTier"/.test(chip[0])
+    !!chip2 && /bindtap="onTier"/.test(chip2[0])
+      && /bind:tier="onTier"/.test(mineWxml)
       && mineJs.indexOf('url: "/' + tier + '"') >= 0,
     "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
       + "点下去必须落在对比表上（Issue #234）");
   ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
-    /bindtap="onTier"/.test(mineWxml.replace(chip ? chip[0] : "", "")));
+    /bindtap="onTier"/.test(mineWxml));
   ok("权限表那一块只有一份（两张页面共用同一个组件）",
     /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareRows") < 0
       && (subs.mine || []).indexOf("tier/tier") >= 0,
@@ -2968,8 +2973,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
   ok("昵称被拦后端上退回原名并说一句（不把脏名字留在本机）",
     /blocked: !!\(err && err\.code === "E_NICK_BLOCKED"\)/.test(read("utils/auth.js"))
-      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => this\.revertNickname\(before, r\)\)/.test(read("pages/mine/mine.js"))
-      && /revertNickname\(before, r\)[\s\S]{0,300}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("pages/mine/mine.js")),
+      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => \{[\s\S]{0,400}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("components/login-panel/login-panel.js")),
     "服务端不收，本机却已经改成了那个名字 —— 顶栏与榜上各说一套");
 
   ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
@@ -4028,7 +4032,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
-    ["昵称", "pages/mine/mine.js", /saveNickname\([^)]*\)[\s\S]{0,300}?markDirty/]
+    ["昵称", "utils/login-flow.js", /function takeNickname\([\s\S]{0,500}?markDirty/]
   ];
   ok("改了设置就该传：六个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
@@ -4083,62 +4087,62 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   }
 
   {
-    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    const mineWxml8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
-    const pick = (fn) => {
-      const i = mineSrc8.indexOf(fn + "(");
-      return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
-    };
-    ok("三个一键选项都在弹层里（头像 / 昵称 / 两样一起换）",
-      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindinput="onWechatNickname"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
-        && !!pick("onWechatAvatar") && !!pick("onWechatNickname") && !!pick("onWechatIdentity"),
-      "「用微信头像」「用微信昵称」「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+    const panelWxml8 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
     const flowSrc8 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
-    ok("头像那两项各是一个 open-type=\"chooseAvatar\" 的按钮（平台没有静默拿头像的接口）",
-      (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
-        && /detail\.avatarUrl/.test(mineSrc8)
-        && !/wx\.chooseAvatar/.test(flowSrc8 + mineSrc8)
-        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8),
+    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+    ok("换头像与换昵称各有一个入口，两个都从同一个壳出去",
+      /bindtap="onWechat"/.test(panelWxml8)
+        && /onWechat\(\)[\s\S]{0,200}?loginFlow\.start\(/.test(panelSrc)
+        && /type="nickname"/.test(panelWxml8)
+        && /onNickname\(e\)[\s\S]{0,400}?auth\.saveNickname\(/.test(panelSrc),
+      "头像或昵称没了入口 —— 用户拿不回来微信那张");
+    ok("头像走 open-type=\"chooseAvatar\" 那一环的 chooseavatar 事件（平台没有静默拿头像的接口）",
+      /entry\[part\] = \(\) => ask\(part\)/.test(flowSrc8)
+        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8)
+        && !/wx\.chooseAvatar/.test(flowSrc8 + panelSrc),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
       /function wechatParts\(picked\)[\s\S]{0,200}?parts\.push\("nickname"\)/.test(flowSrc8)
         && /function takeNickname\(name, after, again\)[\s\S]{0,1400}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
       "只换了头像，昵称没推上去");
-    ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
-      /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
-        && /onNicknameTap\(e\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
-        && !!pick("onWechatPickClose"),
-      "没登录也能弹出换身份的层");
+    ok("没登录时那枚圆不出现在页面上（没有可换的身份）",
+      /<view class="card login-box" wx:else>/.test(panelWxml8)
+        && /onWechatAvatar\(e\)[\s\S]{0,160}?if \(!url \|\| !this\.data\.logged\) return/.test(panelSrc),
+      "没登录也能走换身份那一步 —— 那一步没有可换的身份");
     ok("头像或昵称一换，底栏那格跟着重画",
-      /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
-        && /onWechatAvatar\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
-        && /onWechatIdentity\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
-        && /entry\.exit = \(\) => this\.afterWechatNickname\(\)/.test(mineSrc8)
-        && /afterWechatNickname\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
+      /done\(\)[\s\S]{0,200}?this\.refresh\(\)[\s\S]{0,200}?triggerEvent\("changed"\)/.test(panelSrc)
+        && /bind:changed="onIdentityChanged"/.test(
+          fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8"))
+        && /onIdentityChanged\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
+        && /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
   }
 
   {
     const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
-    const mineCode9 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    ok("登录成功后问一次用不用微信的（三选一，取消就照旧）",
+    const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+
+    ok("登录成功后问一次用不用微信的（取消就照旧）",
       /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechatPick\(page\)/.test(flowSrc9)
         && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
-        && /itemList: WECHAT_ITEMS/.test(flowSrc9)
-        && /fail: \(\) => resolve\(""\)/.test(flowSrc9),
-      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口；或者取消那一下被当成选了第一项");
-    ok("登录后那一问与弹层那三项落在同一处（头像 / 昵称各只有一份实现）",
+        && /function start\(page, picked\)/.test(flowSrc9),
+      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口");
+    ok("换头像/换昵称只有一份实现（页面与登录后那一问都调它）",
       /module\.exports = \{[^}]*wechatEntry[^}]*takeWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
-        && /loginFlow\.wechatEntry\(/.test(mineCode9)
-        && /loginFlow\.askWechat\(/.test(mineCode9)
-        && !/function takeNickname/.test(mineCode9)
-        && !/function takeAvatar/.test(mineCode9),
-      "登录后那一问自己又写了一遍落盘与推送 —— 两处会各说一套");
+        && /loginFlow\.start\(this, loginFlow\.WECHAT_ITEMS\[2\]\)/.test(panelCode9)
+        && !/function takeNickname/.test(panelCode9)
+        && !/function takeAvatar/.test(panelCode9),
+      "页面自己又写了一遍落盘与推送 —— 两处会各说一套");
     ok("昵称只走微信给的那一份，不再凭空弹一个输入框让人敲",
-      !/editable:\s*true/.test(flowSrc9 + mineCode9)
+      !/editable:\s*true/.test(flowSrc9 + panelCode9)
         && /type="nickname"/.test(
-          fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8")),
+          fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8")),
       "又在客户端弹输入框 —— 微信昵称本来就该由 type=\"nickname\" 那一格带回来");
+    ok("取昵称那次抢跑也认（输入框先回值、等待方后挂上，不许把值丢掉）",
+      /if \(entry\.early === part\)[\s\S]{0,160}?Promise\.resolve\(value\)/.test(flowSrc9),
+      "等待方挂上时把已到的值丢了 —— 用户点完头像和昵称，昵称那一步永远等不到回话");
   }
 
   {
@@ -4249,7 +4253,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /request\(REMOTE\.me,[\s\S]{0,80}?\"PATCH\"/.test(authSrc9),
       "昵称只写进了本机存储 —— 数据库 accounts.nickname 永远是空的（Issue #268）");
     ok("改昵称那一刻就把昵称推上去（不靠进度同步队列捎带）",
-      /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(read("pages/mine/mine.js")),
+      /onNickname\(e\)[\s\S]{0,400}?auth\.saveNickname\(/.test(read("components/login-panel/login-panel.js")),
       "改昵称只落本机 + markDirty —— 进度那条链从来不打包昵称，" +
         "用户改完到数据库里看依旧为空");
     ok("没登录 / 没接后端时改昵称不炸（只落本机）",
@@ -4326,7 +4330,6 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const mineWxml = read("pages/mine/mine.wxml");
-  const mineWxss = read("pages/mine/mine.wxss");
   const mineJs = read("pages/mine/mine.js");
   const generalWxml = read("packages/settings/general/general.wxml");
   const generalJs = read("packages/settings/general/general.js");
@@ -4345,9 +4348,8 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const mineWxml = read("pages/mine/mine.wxml");
-  const mineWxss = read("pages/mine/mine.wxss");
   const mineJs = read("pages/mine/mine.js");
-
+  const panelJs = read("components/login-panel/login-panel.js");
 
   {
 
@@ -4364,7 +4366,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +
         "函数体：" + body.replace(/\s+/g, " ").slice(0, 160));
 
-    const bareJs = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const bareJs = (mineJs + panelJs).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     ok("整个小程序端没有上传头像的接口调用",
       !/wx\.uploadFile|\/api\/avatar/.test(bareJs),
       "还留着上传头像的路 —— 那就是又回到「要一份对象存储」");
@@ -6103,17 +6105,16 @@ function gapped(items, max) {
   });
 
 
-  const mineWxss = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxss"), "utf8");
-  const mineWxml = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxml"), "utf8");
-  const mineSrc = fs.readFileSync(path.join(ROOT, "pages/mine/mine.js"), "utf8");
+  const panelWxml = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
   ok("头像与首字印是两个分支（没有头像时才画首字）",
-    /class="avatar-fallback"[^>]*wx:if="\{\{!avatarUrl\}\}"/.test(mineWxml)
-      && mineSrc.indexOf("avatarChar") >= 0,
+    /class="avatar-fallback"[^>]*wx:else/.test(panelWxml)
+      && panelSrc.indexOf("avatarChar") >= 0,
     "首字印又被塞回原生 button 里 —— 真机上它的盒模型跟页面样式表对不上（Issue #194）");
 
   ok("整枚圆都是命中区，点首字印也算点头像（Issue #388）",
-    /class="avatar-wrap"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
-      && /onAvatarTap\(\)[\s\S]{0,200}?wechatPick:\s*true/.test(mineSrc),
+    /<view class="avatar-wrap">[\s\S]{0,400}?<button class="wechat-choose" open-type="chooseAvatar"/.test(panelWxml)
+      && /onWechatAvatar\(e\)[\s\S]{0,160}?loginFlow\.start\(/.test(panelSrc),
     "首字印与头像图并列、不穿透，点在字上就没反应");
 }
 

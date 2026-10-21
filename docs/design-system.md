@@ -1035,52 +1035,57 @@ Issue #111 把「用户自己上传」整条路收掉了 —— 于是来源只�
 - **头像走 `open-type="chooseAvatar"` 这个原生按钮的 `bindchooseavatar` 事件，
   不调 `wx.chooseAvatar`**：客户端 API 表里没有后者的名字（基础库 3.5.5 实测
   `wx.chooseAvatar is not a function`，Issue #394），能拿回头像的只有按钮。
-- **整枚圆是一个 `bindtap` 的命中区**（`.avatar-wrap`，登录态才开，`bindtap="onAvatarTap"`）：
-  头像图与首字印都只是它的孩子，点哪一块都打开弹层。原来那套「原生 button 包住头像图、
-  首字印与它并列、再盖一层 `.avatar-hit`」已随 Issue #394 撤掉。
+- **整枚圆是一个命中区**（`.avatar-wrap` 里的 `.wechat-choose` 按钮盖满它），
+  头像图与首字印只是它的孩子，点哪一块都走取头像那一步。
 - 副题只说「我是谁」（`已登录 · 微信账号`），不再解释这张头像哪来的 ——
   只有一个来源，说来源等于说一句用户不需要懂的话。
 
-#### 三个一键选项收在一个底部弹层里（Issue #370 / #394 / #474）
+#### 换头像只有一条路：点那枚圆（Issue #474）
 
-点头像圆、或点昵称输入框那格（它空着时）从底部升起一层
-（`.wechat-sheet`，登录态才打得开），标题是「微信账号」：
+Issue #370 / #394 那两轮把「三个一键选项」收进一层自绘底部弹层。那套落不下来：
+`chooseavatar` 事件派给的是那个按钮本身，弹层一关它就没了 ——
+用户选完头像，值落在已经摘掉的节点上，等于没选；昵称那一项更绕，
+要先点按钮、再让一个不可见的输入框抢焦点、再等 `bindinput`。
+Issue #474 把这个编舞整条撤掉：
 
-| 选项 | 做什么 |
+| 点哪里 | 做什么 |
 |---|---|
-| 用微信头像 | `chooseavatar` 事件带回来的那张 → 落本机 |
-| 用微信昵称 | `type="nickname"` 的按钮，键盘上方那格带回微信昵称 → 落本机 + `PATCH /api/me` |
-| 用微信头像和昵称 | 头像同第一项；昵称同第二项 |
+| 头像圆（登录态） | `open-type="chooseAvatar"` 那一环：选完写本机，再取一次昵称 |
+| 昵称那一格（直接敲） | `type="nickname"`，键盘上方给微信昵称，选中即落本机 + `PATCH /api/me` |
+| 「取微信头像」按钮 | 与点圆等价（按钮一行的位置看得见字，圆没有字） |
 
-- 选项**只在弹层里出现**，身份卡上不摆（Issue #394）。
-- 落盘与推送各只有一份，在 `utils/login-flow.js`（`takeAvatar` / `takeNickname`）；
-  页面与登录后那一问都调它，不各写一遍。
-- 取消是弹层最后一行，`.wechat-sheet-item.quiet`（透明底 + 描边），
-  与上面三项不混成一排。
-- 头像两项都是 `open-type="chooseAvatar"` 的按钮：点一下先关弹层、再让微信那头出选择界面，
-  用户取消就没有后续，不弹 `wx.showModal` 二次确认。
-- 昵称那几项改了名字也要重画底栏（首字印就是昵称首字），
-  所以 `onWechatNickname` / `onWechatIdentity` 收尾都过 `afterWechatNickname`。
-- 昵称不需要用户再敲一遍：`type="nickname"` 的输入框在键盘上方给出微信昵称，选中即触发
-  `bindinput`，弹层当场收起。`chooseavatar` 本身**不会**带回昵称，所以「和昵称」那一项
-  头像落完还要再取一次昵称：弹层收起后由页面里那个不可见的 `type="nickname"` 输入框
-  （`.wechat-catch`，`focus` 由 `wechatFocus` 驱动）接这一下。
-- 收昵称的两处（弹层那按钮、页面里补位的输入框）都走 `wechatNicknameOf`，
-  空值不当成「用户取消了」——没带回就还停在等昵称那一态，补输入框继续候着。
+- 动作只有一份实现在 `utils/login-flow.js`（`start` → `wechatEntry` → `takeAvatar` /
+  `takeNickname`），组件只负责把 `chooseavatar` 带回来的那枚临时路径交回去（`give`）。
+- 取头像的那一枚 `open-type="chooseAvatar"` 按钮**常驻在页面上**（`.wechat-choose`，
+  与头像圆同尺寸、透明），不随某个弹层一起摘掉。它压在头像圆上 —— 点圆点到的就是它。
+- 头像与昵称两样一起换时，`give` 的那一下**先记下来**：昵称那一步的等待方可能是后挂上的
+  （`wechatEntry` 的 `early` / `earlyValue`），先到不丢，后到直接取。
+- 落盘与推送各只有一份，页面与登录后那一问都调它，不各写一遍。
 - 昵称被服务端拦掉时退回原值并说一句；头像仍然只落本机、不进报文（Issue #111 不变）。
 
 #### 登录成功后问一次（Issue #474）
 
-`login-flow.run()` 在 `auth.login()` 落地之后先弹一次 `wx.showActionSheet`，
-三项与前一张表一致（`WECHAT_ITEMS`）。选了什么就走同一对 `takeAvatar` / `takeNickname`；
-取消、或者某一步用户自己退掉，登录照旧完成。
+`login-flow.run()` 在 `auth.login()` 落地之后问一次「换成微信的」，确认就走同一对
+`takeAvatar` / `takeNickname`；取消、或者某一步用户自己退掉，登录照旧完成。
 
+- 这一问是 `wx.showModal`（两枚键：换掉 / 取消），不再是 `wx.showActionSheet` ——
+  三选一里有两项都要 `chooseavatar` 那一环，而动作表只列在页面上。
 - 先问再收尾：这一问夹在 `auth.login()` 与 `settle()` 之间，所以「已登录」那条 toast
   挪到问完之后（`res.wechatAsked` + `res.afterToast`），不会被弹层盖住。
-- 这一问没有 `wx.showModal` 式的输入框：昵称只由微信给（`type="nickname"`），
-  拿不到就停在等昵称那一态，不让人自己敲一遍假装是微信昵称。
-- 不给「不换」这一项：取消就是。
+- 这一问没有输入框：昵称只由微信给（`type="nickname"`），不让人敲一遍假装是微信昵称。
 - 这一问在每次登录都出现，不记「问过了」—— 登录是低频动作，多问一次比多存一个标记便宜。
+
+#### 登录入口只有一处：`components/login-panel`
+
+「我的」页第一张卡与首页那张卡是同一个组件：
+
+- 未登录：标题「登录」、一句为什么（进度存进账号，换台手机接着背）、
+  一枚 `.btn.primary.block`「登录」、底下一行 `.hint` 说清只拿什么。
+- 已登录：头像圆 + 昵称（`type="nickname"` 可直接改）+ 档位胶囊，
+  下面一行两枚 `.btn.ghost`（取微信头像 / 退出），同一套 `.btn` 高度与圆角，
+  不再有弹层里那套自造的尺寸。
+- 门禁弹窗（`utils/gate.js` 与 `utils/entitlement.js`）问的那一句与这里同口径，
+  确认键统一「登录」、取消键统一「取消」。
 
 #### 底栏「我的」那一格也是这张头像
 
@@ -1088,7 +1093,7 @@ Issue #111 把「用户自己上传」整条路收掉了 —— 于是来源只�
 不再画死的那枚人形图标。改头像或昵称后，页面调 `tabbar.sync(this, 4)` 让底栏重画 ——
 `setActive` 每次都会重算这两项，所以不会等到下次切页才更新。
 
-头像圆那个入口保留：它给的也是微信那张，与「用微信头像」等价。
+头像圆那个入口就是取头像本身：它给的也是微信那张，「取微信头像」那枚按钮与它等价。
 
 V22 守着：`avatarSrc()` 只认本机那一张、`avatarUrl` 字段整个退场、
 登录不写头像、页面一律走 `store.avatarSrc()`、不再出现 `getUserProfile`。

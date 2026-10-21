@@ -292,8 +292,8 @@ function cap(key) {
 
 function showLogin(name, ctx) {
   wx.showModal({
-    title: capName(name),
-    content: "登录只是开个门。进度仍然只存在这台手机上。",
+    title: "要先登录",
+    content: "「" + capName(name) + "」登录之后才能用。进度存在账号里，换台手机接着背。",
     confirmText: "登录",
     cancelText: "取消",
     success: (res) => {

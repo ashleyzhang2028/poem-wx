@@ -194,6 +194,12 @@
   line-height: var(--lh-body);
 }
 
+.guest-note {
+  display: block;
+  margin-top: var(--sp-2);
+  text-align: center;
+}
+
 
 .finish {
   padding: var(--sp-5) var(--sp-3) var(--sp-4);
