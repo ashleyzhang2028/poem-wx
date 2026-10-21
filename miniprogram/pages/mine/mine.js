@@ -15,13 +15,6 @@ Page({
     themeStyle: "",
     barBelow: true,
     logged: false,
-    nickname: "未登录",
-    avatarUrl: "",
-
-    avatarChar: "诗",
-    wechatPick: false,
-    wechatFocus: false,
-    identitySub: "未登录",
     gradeName: "",
     scopeName: "",
     algoName: "",
@@ -34,10 +27,7 @@ Page({
 
     syncSub: "",
     themeName: "",
-    fontName: "",
-    fullTextOn: false,
-
-    grantLead: false
+    fontName: ""
   },
 
   onShow() {
@@ -52,18 +42,9 @@ Page({
     const stats = store.stats();
     const e = E.status();
     const sy = sync.state();
-    const fr = require("../../utils/text-search").readiness();
-
-    const nick = store.displayName();
-    const src = store.avatarSrc();
 
     this.setData({
       logged: !!profile.logged,
-      nickname: profile.logged ? nick : "未登录",
-      avatarUrl: src,
-      avatarChar: store.avatarChar(),
-
-      identitySub: !profile.logged ? "未登录" : "已登录 · 微信账号",
       gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       algoName: require("../../utils/review-models").modelOf(settings.algo).name,
@@ -72,36 +53,19 @@ Page({
       stats,
       tierLabel: e.label,
       manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
-      fullTextOn: fr.usable,
       syncSub: this.syncSub(sy),
       themeName: theme.currentTheme().name,
-      fontName: font.face().name,
-
-      grantLead: this.grantLead(profile)
+      fontName: font.face().name
     });
-  },
-
-  grantLead(profile) {
-    if (!profile.logged) return false;
-    return !profile.avatarLocal && store.defaultNick(profile.nickname);
   },
 
   onLogin() {
-    loginFlow.run(this).catch(() => {});
+    loginFlow.askLogin(this).then((res) => (res ? loginFlow.settle(res, this) : null)).catch(() => {});
   },
 
-  onLogout() {
-    wx.showModal({
-      title: "退出登录",
-      content: "退出后背诵数据不会丢，但功能要重新登录才能用。",
-      confirmText: "退出",
-      cancelText: "取消",
-      success: (r) => {
-        if (!r.confirm) return;
-        auth.logout();
-        this.refresh();
-      }
-    });
+  onIdentityChanged() {
+    this.syncBar();
+    this.refresh();
   },
 
   syncSub(sy) {
@@ -138,101 +102,6 @@ Page({
 
   onManage() {
     wx.navigateTo({ url: "/packages/admin/index/index" });
-  },
-
-  onNickname(e) {
-    const nickname = (e.detail.value || "").trim();
-    if (!nickname) return;
-    this.saveNickname(nickname);
-  },
-
-  onAvatarTap() {
-    if (!this.data.logged) return;
-    this.setData({ wechatPick: true });
-  },
-
-  onNicknameTap(e) {
-    if (!this.data.logged) return;
-    if ((e.detail.value || "").trim()) return;
-    this.setData({ wechatPick: true });
-  },
-
-  onWechatPickClose() {
-    this.setData({ wechatPick: false });
-  },
-
-  onWechatAvatar(e) {
-    this.startWechat("用微信头像");
-    this.wechatGive(e && e.detail && e.detail.avatarUrl);
-  },
-
-  onWechatNickname(e) {
-    this.startWechat("用微信昵称");
-    this.wechatGive(this.wechatNicknameOf(e));
-  },
-
-  onWechatIdentity(e) {
-    this.startWechat("用微信头像和昵称");
-    this.wechatGive(e && e.detail && e.detail.avatarUrl);
-  },
-
-  startWechat(picked) {
-    this.setData({ wechatPick: false });
-    this.wechatTyped = "";
-    this.wechatPart = "";
-    const entry = loginFlow.wechatEntry(picked);
-    this.wechatEntryNow = entry;
-    entry.ready = (part) => this.wechatArm(part);
-    entry.exit = () => this.afterWechatNickname();
-    loginFlow.askWechat(this, entry).catch(() => this.afterWechatNickname());
-    entry.arm(picked === "用微信昵称" ? "nickname" : "avatar");
-  },
-
-  wechatArm(part) {
-    this.wechatPart = part;
-    this.setData({ wechatFocus: part === "nickname" });
-  },
-
-  wechatGive(value) {
-    const entry = this.wechatEntryNow;
-    const part = this.wechatPart;
-    if (!part || !entry) return;
-    this.wechatArm("");
-    entry.give(value || "");
-  },
-
-  wechatNicknameOf(e) {
-    const detail = (e && e.detail) || {};
-    return detail.value || this.wechatTyped || "";
-  },
-
-  onWechatNicknameInput(e) {
-    const value = this.wechatNicknameOf(e);
-    this.wechatTyped = value;
-    if (!value || this.wechatPart !== "nickname") return;
-    this.wechatGive(value);
-  },
-
-  afterWechatNickname() {
-    this.syncBar();
-    this.refresh();
-  },
-
-  saveNickname(nickname) {
-    const before = store.profile().nickname || "";
-    store.saveProfile({ nickname });
-    this.syncBar();
-    sync.markDirty();
-    this.refresh();
-    auth.saveNickname(nickname).then((r) => this.revertNickname(before, r));
-  },
-
-  revertNickname(before, r) {
-    if (!r || !r.blocked) return;
-    store.saveProfile({ nickname: before });
-    this.syncBar();
-    this.refresh();
-    wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
   },
 
   syncBar() {

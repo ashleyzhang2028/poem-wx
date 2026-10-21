@@ -1,4 +1,5 @@
 const auth = require("./auth");
+const gate = require("./gate");
 const store = require("./store");
 const sync = require("./sync");
 const tabPage = require("./tab-page");
@@ -66,16 +67,6 @@ function done(res) {
 
 const WECHAT_ITEMS = ["用微信头像", "用微信昵称", "用微信头像和昵称"];
 
-function wechatPick() {
-  return new Promise((resolve) => {
-    wx.showActionSheet({
-      itemList: WECHAT_ITEMS,
-      success: (r) => resolve(WECHAT_ITEMS[r && r.tapIndex] || ""),
-      fail: () => resolve("")
-    });
-  });
-}
-
 function wechatActionOf(picked) {
   const avatar = picked !== WECHAT_ITEMS[1];
   const nickname = picked !== WECHAT_ITEMS[0];
@@ -95,20 +86,26 @@ function wechatEntry(picked) {
     picked,
     part: "",
     waiting: null,
+    early: "",
+    earlyValue: "",
     exit: () => resume(null),
     arm: (part) => {
       entry.part = part;
       if (typeof entry.ready === "function") entry.ready(part);
     }
   };
-  const ask = (part) => new Promise((resolve) => {
-    entry.waiting = resolve;
-    entry.arm(part);
+  const ask = (part) => {
     if (entry.early === part) {
+      const value = entry.earlyValue;
       entry.early = "";
-      resolve(entry.earlyValue);
+      entry.earlyValue = "";
+      return Promise.resolve(value);
     }
-  });
+    return new Promise((resolve) => {
+      entry.waiting = resolve;
+      entry.arm(part);
+    });
+  };
   wechatParts(picked).forEach((part) => {
     entry[part] = () => ask(part);
   });
@@ -184,7 +181,10 @@ function takeNickname(name, after, again) {
 function askWechat(page, entry) {
   const at = entry || {};
   const after = at.exit || (() => resume(page));
-  if (!at.picked) return Promise.resolve(null);
+  if (!at.picked) {
+    after();
+    return Promise.resolve(null);
+  }
   return takeWechat(at).catch((err) => {
     prompt(err);
     after();
@@ -192,12 +192,49 @@ function askWechat(page, entry) {
   });
 }
 
-function askWechatPick(page, make) {
-  return wechatPick().then((picked) => {
-    const entry = wechatEntry(picked);
-    if (typeof make === "function") make(entry);
-    return askWechat(page, entry);
+const ASK = {
+  login: () => ({
+    title: "登录",
+    content: "登录后进度会同步到账号，换台手机也接得上。\n\n"
+      + "只拿微信的公开标识认人，不读你的手机号、好友和聊天记录。",
+    confirmText: "登录"
+  }),
+  wechat: () => ({
+    title: "换成微信的",
+    content: "把头像和昵称换成微信里的那一份。\n\n"
+      + "头像只留在这台手机上，不同步、也不上传。",
+    confirmText: "换掉"
+  })
+};
+
+function ask(box) {
+  return new Promise((resolve) => {
+    wx.showModal({
+      title: box.title,
+      content: box.content,
+      confirmText: box.confirmText,
+      cancelText: "取消",
+      success: (r) => resolve(!!(r && r.confirm)),
+      fail: () => resolve(false)
+    });
   });
+}
+
+function askLogin(page) {
+  if (gate.logged()) return Promise.resolve(null);
+  return ask(ASK.login()).then((ok) => (ok ? run(page) : null));
+}
+
+function askWechatPick(page) {
+  if (!gate.logged()) return Promise.resolve(null);
+  return ask(ASK.wechat()).then((ok) => (ok ? start(page, WECHAT_ITEMS[2]) : null));
+}
+
+function start(page, picked) {
+  if (!picked || !gate.logged()) return Promise.resolve(null);
+  const entry = wechatEntry(picked);
+  if (page && typeof page.wechatBind === "function") page.wechatBind(entry);
+  return askWechat(page, entry);
 }
 
 function backTo(page) {
@@ -245,6 +282,9 @@ function run(page) {
 
 module.exports = {
   run,
+  start,
+  askLogin,
+  WECHAT_ITEMS,
   settle,
   resume,
   askWechat,

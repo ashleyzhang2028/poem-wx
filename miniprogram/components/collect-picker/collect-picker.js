@@ -28,7 +28,7 @@ Component({
     },
 
     paint(id, title, creating, draft) {
-      const list = cols.usable().map((c) => ({
+      const list = cols.list().map((c) => ({
         id: c.id,
         name: cols.nameOf(c),
         count: c.items.length,
@@ -54,6 +54,7 @@ Component({
     onStop() {},
 
     onStartCreate() {
+      if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       if (cols.capOf() <= cols.list().length) {
         this.setData({ tierOpen: true });
         return;
@@ -65,15 +66,8 @@ Component({
       this.setData({ draft: e.detail.value });
     },
 
-    onConfirmDraft() {
-      this.onSubmitCreate();
-    },
-
-    onCancelCreate() {
-      this.setData({ creating: false, draft: "" });
-    },
-
     onSubmitCreate() {
+      if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       const r = cols.create(this.data.draft);
       if (!r.ok) {
         if (r.code === "E_LIMIT") this.setData({ tierOpen: true });
@@ -81,6 +75,14 @@ Component({
       }
       this.addTo(r.collection.id, r.collection.name);
       this.setData({ creating: false, draft: "" });
+    },
+
+    onLoginGate() {
+      entitlement.openTierPage();
+    },
+
+    onTierGate() {
+      entitlement.openTierPage();
     },
 
     onPick(e) {

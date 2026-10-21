@@ -508,7 +508,8 @@ Page({
   onSeasonalCollect(e) {
     const id = e.currentTarget.dataset.id;
     gate.guard("自选背诵", this, () => {
-      if (!entitlement.block("collections", { page: this })) return;
+      const blocked = this.collectGate();
+      if (blocked) return blocked();
       const have = cols.collectionsOf(id);
       if (have.length === 1) {
         this.dropFromCollection(id, have[0]);
@@ -532,6 +533,20 @@ Page({
     const hit = this.seasonalRow(id);
     if (hit.at < 0) return;
     this.setData({ ["seasonal.rows[" + hit.at + "].collected"]: !!on });
+  },
+
+  collectGate() {
+    if (entitlement.block("collections", { page: this })) return null;
+    if (entitlement.can("collections")) return this.staleCollections;
+    return entitlement.openTierPage;
+  },
+
+  staleCollections() {
+    wx.showModal({
+      title: "自选背诵",
+      content: "「自选背诵」现在是开着的，重新进一次即可。",
+      showCancel: false
+    });
   },
 
   onCollectDone(e) {
@@ -682,13 +697,13 @@ Page({
   },
 
   onLoginGate() {
-    loginFlow.run(this).catch(() => {});
+    this.onLoginTapped();
   },
 
   onLoginTapped() {
     loginFlow
-      .run(this)
-      .then((res) => loginFlow.settle(res, this))
+      .askLogin(this)
+      .then((res) => (res ? loginFlow.settle(res, this) : null))
       .catch(() => {});
   },
 

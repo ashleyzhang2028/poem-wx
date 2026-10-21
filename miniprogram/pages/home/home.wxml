@@ -42,10 +42,11 @@
 
     <view class="card">
       <view class="guest-lead">
-        <text class="guest-lead-title">用户登录</text>
-        <text class="guest-lead-sub">解锁更多可能</text>
+        <text class="guest-lead-title">登录</text>
+        <text class="guest-lead-sub">进度存在账号里，换台手机接着背。</text>
       </view>
       <button class="btn primary block" bindtap="onLoginTapped">登录</button>
+      <text class="hint guest-note">只拿微信的公开标识认人，不读手机号与聊天记录。</text>
     </view>
 
     <view class="safe-bottom"></view>

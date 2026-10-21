@@ -18,6 +18,10 @@ function usable() {
   return list().filter((c) => c.items.length > 0);
 }
 
+function isEmpty() {
+  return list().length === 0;
+}
+
 function selfOnlyOn() {
   if (!entitlement.can("collections") || !entitlement.can("coursefree")) return false;
   if (!store.settings().selfOnly) return false;
@@ -201,6 +205,7 @@ module.exports = {
   countOf,
   setCount,
   usable,
+  isEmpty,
   selfOnlyOn,
   DEFAULT_NAME,
   capOf,

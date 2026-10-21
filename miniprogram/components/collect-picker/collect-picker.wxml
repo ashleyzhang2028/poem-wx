@@ -1,6 +1,11 @@
 <view class="cp-mask" wx:if="{{open}}" bindtap="onMask">
   <view class="cp" catchtap="onStop" style="{{themeStyle}}">
-    <text class="cp-title">收进自选集</text>
+    <view class="cp-head">
+      <text class="cp-title">收进自选集</text>
+      <view class="cp-close" hover-class="cp-close-hover" hover-stay-time="60" bindtap="close">
+        <view class="cp-close-x"></view>
+      </view>
+    </view>
     <text class="hint cp-sub" wx:if="{{title}}">{{title}}</text>
 
     <view class="cp-list">
@@ -16,26 +21,23 @@
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
+        <text class="hint empty-tip">在下面新建一个，把这首收进去</text>
       </view>
     </view>
 
     <view class="cp-create" wx:if="{{creating}}">
-      <input class="cp-input" value="{{draft}}" placeholder="集合的名字" maxlength="12" bindinput="onDraft"
-             confirm-type="done" bindconfirm="onConfirmDraft" />
-      <button class="btn mini ghost" bindtap="onCancelCreate">取消</button>
-      <button class="btn mini primary" bindtap="onSubmitCreate">建好并收进去</button>
+      <input class="cp-input" value="{{draft}}" placeholder="新集合的名字" maxlength="12" bindinput="onDraft"
+             confirm-type="done" bindconfirm="onSubmitCreate" />
+      <button class="btn mini primary" bindtap="onSubmitCreate">创建并收录</button>
     </view>
 
-    <view class="cp-actions">
-      <button class="btn ghost cp-act" wx:if="{{!creating}}" bindtap="onStartCreate">新建集合</button>
-      <button class="btn ghost cp-act" bindtap="close">取消</button>
-    </view>
+    <button class="btn ghost block cp-dismiss" bindtap="close">先不收了</button>
   </view>
 </view>
 
 <view class="cp-mask" wx:if="{{tierOpen}}" bindtap="onTierClose">
   <view class="cp cp-tier" catchtap="onStop" style="{{themeStyle}}">
     <tier-view />
-    <button class="btn ghost block cp-tier-close" bindtap="onTierClose">取消</button>
+    <button class="btn ghost block cp-dismiss" bindtap="onTierClose">取消</button>
   </view>
 </view>
