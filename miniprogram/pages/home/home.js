@@ -113,6 +113,12 @@ function sourceKey(id) {
   return meta && meta.b === "poems" ? "course" : "own";
 }
 
+function dailyOnIds() {
+  const box = {};
+  store.dailyExtra().forEach((id) => { box[id] = true; });
+  return box;
+}
+
 function sourceBook(id) {
   const meta = corpus.indexById(id);
   return (meta && meta.b) || "poems";
@@ -348,6 +354,7 @@ Page({
     const extraOf = plan.filter((it) => it.reason === "pinned").length;
     const base = Math.max(recorded.length, plan.length - extraOf);
     const todaySet = S.todaySet(planKey, base);
+    const dailyOn = dailyOnIds();
     const recitedOf = {};
     const rows = plan.map((it, i) => {
       const rec = store.getRecord(it.poem.id);
@@ -366,6 +373,7 @@ Page({
         stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
         mastery: S.mastery(rec),
         picked: pickedToday(rec),
+        daily: !!dailyOn[it.poem.id],
         read,
         recited,
         stateText: stateText(recited, read),
@@ -426,11 +434,20 @@ Page({
     if (!card) return null;
     const readOf = this.readOf();
     const extra = store.dailyExtra();
+    const collected = {};
+    cols.list().forEach((c) => cols.idsOf(c).forEach((id) => { collected[id] = true; }));
     return Object.assign({}, card, {
       rows: card.poems.map((p, i) => Object.assign(this.poemRow(p, i, "", readOf), {
-        daily: extra.indexOf(p.id) >= 0
+        daily: extra.indexOf(p.id) >= 0,
+        collected: !!collected[p.id]
       }))
     });
+  },
+
+  seasonalRow(id) {
+    const rows = this.seasonalRows();
+    const at = rows.map((x) => x.id).indexOf(id);
+    return { at: at, row: at >= 0 ? rows[at] : null };
   },
 
   onSeasonalRefresh(e) {
@@ -478,25 +495,51 @@ Page({
       return;
     }
     wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
-    const rows = this.seasonalRows();
-    const at = rows.map((x) => x.id).indexOf(id);
-    if (at >= 0) this.setData({ ["seasonal.rows[" + at + "].daily"]: r.on });
+    this.syncDailyExtra(id, r.on);
+    this.paint();
     if (box) box.refresh();
+  },
+
+  syncDailyExtra(id, on) {
+    const at = this.seasonalRow(id).at;
+    if (at >= 0) this.setData({ ["seasonal.rows[" + at + "].daily"]: !!on });
   },
 
   onSeasonalCollect(e) {
     const id = e.currentTarget.dataset.id;
     gate.guard("自选背诵", this, () => {
       if (!entitlement.block("collections", { page: this })) return;
+      const have = cols.collectionsOf(id);
+      if (have.length === 1) {
+        this.dropFromCollection(id, have[0]);
+        return;
+      }
       const box = this.selectComponent("#collect");
       if (box) box.ask(id);
     });
   },
 
+  dropFromCollection(id, c) {
+    const r = cols.removeItems(c.id, [id]);
+    if (!r.ok) return;
+    this.syncCollected(id, false);
+    this.paint();
+    sync.markDirty();
+    wx.showToast({ title: "已从「" + c.name + "」移出", icon: "none" });
+  },
+
+  syncCollected(id, on) {
+    const hit = this.seasonalRow(id);
+    if (hit.at < 0) return;
+    this.setData({ ["seasonal.rows[" + hit.at + "].collected"]: !!on });
+  },
+
   onCollectDone(e) {
     const d = (e && e.detail) || {};
     if (!d.id || !d.collectionId) return;
-    this.refresh();
+    this.syncCollected(d.id, true);
+    this.paint();
+    sync.markDirty();
     wx.showToast({ title: "已收进「" + d.name + "」", icon: "none" });
   },
 

@@ -65,6 +65,10 @@ Component({
       this.setData({ draft: e.detail.value });
     },
 
+    onConfirmDraft() {
+      this.onSubmitCreate();
+    },
+
     onCancelCreate() {
       this.setData({ creating: false, draft: "" });
     },
