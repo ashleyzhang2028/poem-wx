@@ -29,7 +29,7 @@
             <text class="poem-meta">{{selection}}</text>
           </block>
           <text class="poem-dot">·</text>
-          <text class="poem-meta stage">{{stage}}</text>
+          <text class="poem-meta">{{stage}}</text>
         </view>
 
         <view class="poem-note" wx:if="{{aliasText}}">
