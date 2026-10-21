@@ -1103,40 +1103,48 @@ Issue #474 把这个编舞整条撤掉：
 
 | 点哪里 | 做什么 |
 |---|---|
-| 头像圆（登录态） | `open-type="chooseAvatar"` 那一环：选完写本机，再取一次昵称 |
-| 昵称那一格（直接敲） | `type="nickname"`，键盘上方给微信昵称，选中即落本机 + `PATCH /api/me` |
-| 「取微信头像」按钮 | 与点圆等价（按钮一行的位置看得见字，圆没有字） |
+| 头像圆（登录态） | `open-type="chooseAvatar"` 那一环：选完写本机，再问一次昵称 |
+| 「换成微信的」按钮 | 与点圆等价，另外直接在同一个弹窗里写昵称 |
+| 昵称那一行 | 同一个弹窗（`promptName`），键盘上方可以选微信昵称 |
 
-- 动作只有一份实现在 `utils/login-flow.js`（`start` → `wechatEntry` → `takeAvatar` /
-  `takeNickname`），组件只负责把 `chooseavatar` 带回来的那枚临时路径交回去（`give`）。
-- 取头像的那一枚 `open-type="chooseAvatar"` 按钮**常驻在页面上**（`.wechat-choose`，
-  与头像圆同尺寸、透明），不随某个弹层一起摘掉。它压在头像圆上 —— 点圆点到的就是它。
-- 头像与昵称两样一起换时，`give` 的那一下**先记下来**：昵称那一步的等待方可能是后挂上的
-  （`wechatEntry` 的 `early` / `earlyValue`），先到不丢，后到直接取。
-- 落盘与推送各只有一份，页面与登录后那一问都调它，不各写一遍。
+- `open-type="chooseAvatar"` 按钮**常驻在页面上**（`.wechat-choose`，
+  与头像圆同尺寸、透明），压在头像圆上 —— 点圆点到的就是它。
+- 落盘与推送各只有一份（`utils/login-flow.js` 的 `takeAvatar` / `takeNickname`），
+  卡片与登录后那一问都调它，不各写一遍。
 - 昵称被服务端拦掉时退回原值并说一句；头像仍然只落本机、不进报文（Issue #111 不变）。
+
+#### 昵称不再靠看不见的输入框抢焦点（Issue #498）
+
+`type="nickname"` 那一格放在隐藏层里由 `focus` 唤起时，回值要先等用户点一次键盘，
+等待方挂着一个 Promise 悬在那里 —— 体验版上就是卡在这一步。这一条编舞撤掉：
+
+- 页面里不再有 `type="nickname"` 的隐藏输入框，也不再靠 `focus` 去唤起它。
+- 昵称改由 `wx.showModal({ editable: true })` 接：一个看得见的输入框，
+  键盘上方仍可点微信昵称填进去，用户不点也能手写，确认即落本机 + `PATCH /api/me`。
+- 头像选完要连带换昵称时，同一枚弹窗顶上；取消就只换头像，不再悬着等。
+- `wechatEntry` / `early` / `earlyValue` 那套「先到不丢」的机制随之删掉 ——
+  它存在的唯一理由是等一个没人知道什么时候回值的输入框。
 
 #### 登录成功后问一次（Issue #474）
 
-`login-flow.run()` 在 `auth.login()` 落地之后问一次「换成微信的」，确认就走同一对
-`takeAvatar` / `takeNickname`；取消、或者某一步用户自己退掉，登录照旧完成。
+`login-flow.run()` 在 `auth.login()` 落地之后问一次「换成微信的」，确认就把身份卡
+摆到取头像那一态（`picking`，卡片里多出「用微信昵称」）；取消、或者某一步用户自己
+退掉，登录照旧完成。
 
 - 这一问是 `wx.showModal`（两枚键：换掉 / 取消），不再是 `wx.showActionSheet` ——
   三选一里有两项都要 `chooseavatar` 那一环，而动作表只列在页面上。
 - 先问再收尾：这一问夹在 `auth.login()` 与 `settle()` 之间，所以「已登录」那条 toast
   挪到问完之后（`res.wechatAsked` + `res.afterToast`），不会被弹层盖住。
-- 这一问没有输入框：昵称只由微信给（`type="nickname"`），不让人敲一遍假装是微信昵称。
 - 这一问在每次登录都出现，不记「问过了」—— 登录是低频动作，多问一次比多存一个标记便宜。
 
 #### 登录入口只有一处：`components/login-panel`
 
 「我的」页第一张卡与首页那张卡是同一个组件：
 
-- 未登录：标题「登录」、一句为什么（进度存进账号，换台手机接着背）、
-  一枚 `.btn.primary.block`「登录」、底下一行 `.hint` 说清只拿什么。
-- 已登录：头像圆 + 昵称（`type="nickname"` 可直接改）+ 档位胶囊，
-  下面一行两枚 `.btn.ghost`（取微信头像 / 退出），同一套 `.btn` 高度与圆角，
-  不再有弹层里那套自造的尺寸。
+- 未登录：标题「登录」、一枚 `.btn.primary.block`「登录」。
+- 已登录：头像圆 + 昵称 + 档位胶囊，下面一行两枚 `.btn.ghost`（换成微信的 / 退出），
+  同一套 `.btn` 高度与圆角，不再有弹层里那套自造的尺寸。
+  「换成微信的」与点昵称那一行都走 `wx.showModal` 的 `editable`，不挂隐藏输入框。
 - 门禁弹窗（`utils/gate.js` 与 `utils/entitlement.js`）问的那一句与这里同口径，
   确认键统一「登录」、取消键统一「取消」。
 

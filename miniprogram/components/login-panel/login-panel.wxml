@@ -8,9 +8,9 @@
     </view>
 
     <view class="identity-main">
-      <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
-             placeholder="填一个昵称" placeholder-class="identity-ph"
-             confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+      <view class="identity-main-text" bindtap="onWechat">
+        <text class="identity-name">{{nickname}}</text>
+      </view>
       <text class="identity-sub">已登录 · 微信账号</text>
     </view>
 
@@ -18,17 +18,14 @@
           bindtap="onTier">{{tierLabel}}</view>
   </view>
 
+  <button class="btn primary block wechat-go" wx:if="{{picking}}" bindtap="promptName">用微信昵称</button>
+
   <view class="identity-acts">
-    <button class="btn ghost" bindtap="onWechat">取微信头像</button>
+    <button class="btn ghost" bindtap="onWechat">换成微信的</button>
     <button class="btn ghost" bindtap="onLogout">退出</button>
   </view>
 </view>
 
 <view class="card login-box" wx:else>
   <button class="btn primary block" bindtap="onLogin">登录</button>
-</view>
-
-<view class="wechat-catch" wx:if="{{wechatFocus}}">
-  <input class="wechat-catch-input" type="nickname" focus="{{wechatFocus}}"
-         bindinput="onWechatInput" bindblur="onWechatInput" />
 </view>

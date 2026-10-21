@@ -7,6 +7,7 @@ const entitlement = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const loginFlow = require("../../utils/login-flow");
+const tabPage = require("../../utils/tab-page");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const nav = require("../../utils/nav");
@@ -698,6 +699,10 @@ Page({
 
   onLoginGate() {
     this.onLoginTapped();
+  },
+
+  showIdentity() {
+    tabPage.mine();
   },
 
   onLoginTapped() {

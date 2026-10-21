@@ -17,7 +17,7 @@ Component({
     nickname: "",
     avatarUrl: "",
     avatarChar: "诗",
-    wechatFocus: false
+    picking: false
   },
 
   attached() {
@@ -31,7 +31,8 @@ Component({
         logged: !!profile.logged,
         nickname: profile.logged ? store.displayName() : "",
         avatarUrl: store.avatarSrc(),
-        avatarChar: store.avatarChar()
+        avatarChar: store.avatarChar(),
+        picking: !!profile.logged && this.data.picking
       });
     },
 
@@ -41,14 +42,56 @@ Component({
 
     onWechat() {
       if (!this.data.logged) return;
-      loginFlow.start(this, loginFlow.WECHAT_ITEMS[2]).catch(() => {});
+      this.pick(true);
     },
 
     onWechatAvatar(e) {
       const url = (e && e.detail && e.detail.avatarUrl) || "";
+      this.pick(false);
       if (!url || !this.data.logged) return;
-      loginFlow.start(this, loginFlow.WECHAT_ITEMS[2]).catch(() => {});
-      this.give(url);
+      loginFlow.share({ avatar: url, nickname: true }, this).then((res) => {
+        this.done();
+        if (res && res.nickname) this.triggerEvent("changed");
+      }).catch(() => this.done());
+    },
+
+    pick(withNickname) {
+      if (!this.data.logged) return;
+      if (!withNickname) {
+        this.setData({ picking: true });
+        return;
+      }
+      this.setData({ picking: false });
+      this.promptName();
+    },
+
+    promptName() {
+      if (!this.data.logged) return;
+      wx.showModal({
+        title: "昵称",
+        editable: true,
+        placeholderText: "键盘上方可以选微信昵称",
+        confirmText: "好",
+        cancelText: "取消",
+        success: (r) => {
+          if (!r || !r.confirm) return;
+          this.saveName(String(r.content || "").trim());
+        }
+      });
+    },
+
+    saveName(nickname) {
+      if (!nickname) return;
+      const before = store.profile().nickname || "";
+      store.saveProfile({ nickname });
+      this.refresh();
+      this.triggerEvent("changed");
+      auth.saveNickname(nickname).then((r) => {
+        if (!r || !r.blocked) return;
+        store.saveProfile({ nickname: before });
+        this.refresh();
+        wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
+      });
     },
 
     done() {
@@ -79,51 +122,18 @@ Component({
       tabPage.mine();
     },
 
-    onNickname(e) {
-      const nickname = ((e && e.detail && e.detail.value) || "").trim();
-      if (!nickname) return;
-      const before = store.profile().nickname || "";
-      store.saveProfile({ nickname });
-      this.refresh();
-      this.triggerEvent("changed");
-      auth.saveNickname(nickname).then((r) => {
-        if (!r || !r.blocked) return;
-        store.saveProfile({ nickname: before });
-        this.refresh();
-        wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
-      });
-    },
-
     onTier() {
       this.triggerEvent("tier");
     },
 
-    wechatBind(entry) {
-      this.entry = entry;
-      this.typed = "";
-      entry.ready = (part) => this.arm(part);
-      entry.exit = () => this.done();
+    showIdentity() {
+      this.setData({ picking: true });
     },
 
-    arm(part) {
-      this.part = part;
-      if (this.data.wechatFocus !== (part === "nickname")) {
-        this.setData({ wechatFocus: part === "nickname" });
-      }
-    },
-
-    give(value) {
-      if (!this.entry || !this.part) return;
-      const at = this.entry;
-      this.arm("");
-      at.give(value || "");
-    },
-
-    onWechatInput(e) {
-      const value = ((e && e.detail && e.detail.value) || this.typed || "").trim();
-      this.typed = value;
-      if (!value || this.part !== "nickname") return;
-      this.give(value);
+    done() {
+      this.setData({ picking: false });
+      this.refresh();
+      this.triggerEvent("changed");
     }
   }
 });

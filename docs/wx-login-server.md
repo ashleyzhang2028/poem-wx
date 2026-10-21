@@ -88,8 +88,8 @@ module.exports = handler.make("wx.login", ["POST"], function (d, body) {
 - `tier` 只认 `free` / `pro` / `max`
 - `role` 只认 `owner` / `admin` / `user`
 - `caps` 可省；给了就按人开关某项能力，不必改档位（`entitlement.switchedOff()` 读它）
-- 昵称头像留空即可 —— 用户在小程序里自己选（`open-type="chooseAvatar"` / `type="nickname"`），
-  服务端不静默抓
+- 昵称头像留空即可 —— 用户在小程序里自己选（`open-type="chooseAvatar"` /
+  `wx.showModal({ editable: true })` 里键盘上方那格），服务端不静默抓
 
 ### `POST /api/wx/refresh`
 

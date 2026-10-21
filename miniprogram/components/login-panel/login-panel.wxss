@@ -63,21 +63,20 @@
   padding-left: var(--sp-3);
 }
 
-.identity-input {
+.identity-main-text {
   display: block;
-  width: 100%;
-  height: calc(46rpx * var(--ui-scale));
-  min-height: 0;
   padding: 0;
-  font-size: var(--fs-lead);
-  color: var(--ink);
-  letter-spacing: var(--ls-title);
-  border-radius: 0;
 }
 
-.identity-ph {
-  color: var(--ink-3);
-  font-weight: 400;
+.identity-name {
+  display: block;
+  font-size: var(--fs-lead);
+  line-height: 1.4;
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .identity-sub {
@@ -115,18 +114,6 @@
   padding: 0 var(--sp-2);
 }
 
-.wechat-catch {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: -1;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-
-.wechat-catch-input {
-  width: 0;
-  height: 0;
+.wechat-go {
+  margin-top: var(--sp-3);
 }
