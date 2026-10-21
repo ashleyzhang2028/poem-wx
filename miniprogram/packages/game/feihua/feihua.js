@@ -39,7 +39,6 @@ Page({
 
     lastScore: 0,
     ranked: false,
-    rankOff: false,
     rankWhere: "",
 
     input: "",
@@ -198,7 +197,7 @@ Page({
     this.timer = null;
     this.setData({
       done: [], streak: 0, best: 0, message: "", remark: "", locked: false,
-      ranked: false, rankOff: false, lastScore: 0
+      ranked: false, lastScore: 0
     }, () => {
       this.restartClock();
       this.next();
@@ -257,7 +256,6 @@ Page({
       .then((res) => {
         this.setData({
           ranked: !!(res && res.ok && res.on),
-          rankOff: !!(res && res.ok && !res.on),
           lastScore: said,
           rankWhere: rankingSelf.labelOf()
         });

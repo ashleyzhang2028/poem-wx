@@ -69,14 +69,14 @@
   </view>
 
   <view class="card">
-    <view class="row row-flush">
+    <view class="row row-flush" wx:for="{{rankingGames}}" wx:key="key">
       <view class="row-icon">榜</view>
       <view class="row-main">
-        <text class="row-title">古诗词大会排行榜</text>
-        <text class="row-sub">{{rankingNote}}</text>
+        <text class="row-title">{{item.name}}</text>
+        <text class="row-sub">{{rankingNote || item.sub}}</text>
       </view>
       <view class="sw">
-        <switch checked="{{rankingOn}}" color="{{lineColor}}"
+        <switch checked="{{rankingOn[item.key]}}" color="{{lineColor}}" data-game="{{item.key}}"
                 bindchange="onRanking" disabled="{{!logged}}" />
       </view>
     </view>
