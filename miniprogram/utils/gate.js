@@ -28,7 +28,7 @@ function refuse(what) {
   if (logged()) return { ok: true, title: "", content: "" };
   return {
     ok: false,
-    title: "要先登录",
+    title: "登录提示",
     content: what ? "「" + what + "」登录可用。" : "登录可用。"
   };
 }
@@ -57,6 +57,10 @@ function open(onPass, page) {
   loginFlow.askLogin(page).catch(() => {});
 }
 
+function ask(page) {
+  return loginFlow.askLogin(page).catch(() => null);
+}
+
 function resume(page) {
   return loginFlow.resume(page);
 }
@@ -66,4 +70,4 @@ function grade() {
   return store.settings().grade;
 }
 
-module.exports = { GUEST_GRADE, PUBLIC_ACTIONS, logged, allow, canRead, refuse, guard, resume, grade };
+module.exports = { GUEST_GRADE, PUBLIC_ACTIONS, logged, allow, canRead, refuse, guard, open, ask, resume, grade };

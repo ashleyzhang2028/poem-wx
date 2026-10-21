@@ -1355,8 +1355,8 @@ const GATED = {
   "packages/game/quiz/quiz": "allowed",
   "packages/game/exam/exam": "allowed",
   "packages/game/feihua/feihua": "allowed",
-  "packages/progress/index/index": "locked",
-  "packages/settings/recite/recite": "locked",
+  "packages/progress/index/index": "gate",
+  "packages/settings/recite/recite": "gate",
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
   "packages/mine/tier/tier": "allowed",
@@ -1375,10 +1375,6 @@ const GATED = {
   ok("阅读页未登录时正文在 block wx:else 里", readerWxml.indexOf("block wx:else") >= 0);
   ok("阅读页锁定时不渲染诗句", readerWxml.indexOf("poem-line") > readerWxml.indexOf("block wx:else"));
 
-  ["general/general", "recite/recite"].forEach((p) => {
-    const wxml = fs.readFileSync(path.join(ROOT, "packages/settings", p + ".wxml"), "utf8");
-    ok("设置页未登录时不渲染设置项 " + p, wxml.indexOf("block wx:else") >= 0);
-  });
 
   const GATE_MARK = /gate\.(logged|canRead)\(|entitlement\.can\(/;
   Object.keys(GATED).forEach((p) => {
@@ -2297,6 +2293,13 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       Object.keys(GATED).forEach((pg) => {
         const flag = GATED[pg];
 
+        if (flag === "gate") {
+          const data = mount(pg, { id: freshId });
+          if (!data) { ok("门禁能开 " + pg, false, "页面没调用 Page()"); return; }
+          ok("登录后页面上不再有登录卡 " + pg, data.locked === undefined,
+            "登录了还锁着（locked=" + data.locked + "）");
+          return;
+        }
         if (flag !== "locked") return;
         const data = mount(pg, { id: freshId });
         if (!data) { ok("门禁能开 " + pg, false, "页面没调用 Page()"); return; }

@@ -4,9 +4,9 @@ const cols = require("../../../utils/collections");
 const store = require("../../../utils/store");
 const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
+const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 
 const SPAN = S.SPAN;
 
@@ -114,20 +114,13 @@ Page({
     sheetRows: [],
 
     selfRows: [],
-    selfOn: false,
-
-    locked: false
+    selfOn: false
   },
 
   onShow() {
     this.sheetIds = this.sheetIds || [];
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
-    if (!gate.logged()) {
-      this.setData({ locked: true });
-      return;
-    }
-    this.setData({ locked: false });
     this.refresh();
   },
 
@@ -236,7 +229,11 @@ Page({
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
+  onLoginGate() {
+    this.onLogin();
+  },
+
   onLogin() {
-    tabPage.mine();
+    loginFlow.askLogin(this).catch(() => {});
   }
 });
