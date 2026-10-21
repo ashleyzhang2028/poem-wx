@@ -16,6 +16,7 @@
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
+        <text class="hint empty-tip">在下面新建一个，把这首收进去</text>
       </view>
     </view>
 
