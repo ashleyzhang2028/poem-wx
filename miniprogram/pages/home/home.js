@@ -685,6 +685,13 @@ Page({
     sheet.open(rows, ds.id);
   },
 
+  onProgress(e) {
+    const id = datasetOf(e).id;
+    if (!this.requireLogin("collections")) return;
+    if (!entitlement.block("collections", { page: this })) return;
+    wx.navigateTo({ url: "/packages/progress/index/index?coll=" + encodeURIComponent(id) });
+  },
+
   scopeRows() {
     const settings = store.settings();
     const view = { grade: settings.grade, term: settings.term, scope: settings.scope };

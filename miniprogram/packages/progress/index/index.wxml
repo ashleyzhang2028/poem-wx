@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}" scroll-into-view="{{anchor}}">
   <view class="card overview">
     <view class="ov-head">
       <view class="ring">
@@ -88,7 +88,7 @@
     <view class="card-title">自选背诵<text class="card-sub">{{selfRows.length}} 个集合</text></view>
     <text class="hint self-lead">每个集合各排一份计划，读数与本册同一口径</text>
 
-    <view class="self" wx:for="{{selfRows}}" wx:key="id">
+    <view class="self" wx:for="{{selfRows}}" wx:key="id" id="self-{{item.id}}">
       <view class="self-head">
         <view class="ring">
           <view class="ring-track"></view>

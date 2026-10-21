@@ -3448,6 +3448,16 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && /sheet\.open\(/.test(progJs)
       && /onOpen\b/.test(progJs));
 
+  ok("自选集合的标题点得动，落到进度页那一个集合上",
+    /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(
+      fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8"))
+      && /wx\.navigateTo\(\{ url: "\/packages\/progress\/index\/index\?coll="/.test(
+        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8"))
+      && /onLoad\(query\)/.test(progJs)
+      && /scroll-into-view="\{\{anchor\}\}"/.test(progWxml)
+      && /id="self-\{\{item\.id\}\}"/.test(progWxml)
+      && /this\.setData\(\{ anchor: "self-" \+ id \}\)/.test(progJs));
+
   {
     const declared = {};
     const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
