@@ -200,6 +200,10 @@ button, textarea {
   border-color: var(--line-strong);
 }
 
+.btn.ghost.button-hover {
+  opacity: .7;
+}
+
 .btn.danger {
   color: var(--red);
   border-color: var(--red-edge);

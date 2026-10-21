@@ -35,7 +35,9 @@ Page({
       this.setData({
         logged: entitlement.snapshot().logged,
         rankingOn: !!res.on,
-        rankingNote: res.note || (remote.adminReady() ? "关 · 打开后大会页的排行榜才能点进去" : "只读")
+        rankingNote: res.note || (remote.adminReady()
+          ? (res.on ? "已打开" : "关 · 打开后大会页的排行榜才能点进去")
+          : "只读")
       });
       if (this.data.logged) this.loadStats();
     });

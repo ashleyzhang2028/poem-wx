@@ -3257,7 +3257,8 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && rank.maskRow({ nick: "张三", rank: 1 }).rank === 1
       && rank.maskRow({ rank: 2 }).nick === ""
       && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
-      && /me: res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs),
+      && /const me = res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs)
+      && /me: me,/.test(pageJs),
     "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
@@ -3350,6 +3351,18 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
       && pageWxml.indexOf("onTerm") >= 0 && pageWxml.indexOf("onPeriod") >= 0
       && (pageJs.match(/this\.load\(\)/g) || []).length >= 4,
     "少一层就等于把不同档次的成绩排在一块");
+
+  ok("榜单页的空状态与重试都是 view + 自定的按压（不是原生 button）",
+    pageWxml.indexOf("<button") < 0 && (pageWxml.match(/bindtap="onRetry"/g) || []).length >= 2,
+    "原生 button 的 ::after 灰边会压在账上，按压态只剩平台那一套");
+
+  ok("榜单页只在「真有一行」时才画领奖台与名次表（空榜不留一张只有表头的卡）",
+    /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
+    "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
+
+  ok("后台那行说明与开关同源（重新进后台不会把「已打开」说成「关」）",
+    adminJs.indexOf("res.on ?") >= 0 && adminJs.indexOf("已打开") >= 0,
+    "开关打开之后重新进后台，说明还写着「关」—— 与那颗开着的开关互相打脸");
 
   ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
     adminWxml.indexOf("onRanking") >= 0
@@ -4290,6 +4303,31 @@ const renderSrc = fs.readFileSync(path.join(__dirname, "shots", "render.js"), "u
   ok("lock-card 声明并渲染了 note（空 note 不留空白，样式收在 app.wxss）",
     /note\s*:\s*\{/.test(lockJs) && /lock-note/.test(lockWxml)
       && /lock-note[^>]*wx:if/.test(lockWxml) && /\.lock-note\s*\{/.test(appWxssLock));
+
+  {
+    const wxmlFiles = [];
+    const walk = (dir) => {
+      fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith(".wxml")) wxmlFiles.push(p);
+      });
+    };
+    walk(path.join(ROOT, "pages"));
+    walk(path.join(ROOT, "packages"));
+    let cards = 0;
+    let wired = 0;
+    wxmlFiles.forEach((p) => {
+      const found = fs.readFileSync(p, "utf8").match(/<lock-card\b[^>]*>/g) || [];
+      cards += found.length;
+      found.forEach((tag) => {
+        if (tag.indexOf("bind:login") >= 0) wired += 1;
+      });
+    });
+    ok("每张登录卡都接上了登录按键（卡上那颗按钮点了有去处）",
+      cards > 0 && wired === cards,
+      wired + " / " + cards + " 张卡接上了登录按键");
+  }
 
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   const extraWxml = fs.readFileSync(

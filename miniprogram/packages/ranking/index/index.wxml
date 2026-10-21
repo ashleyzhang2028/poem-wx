@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{state === 'login'}}" title="排行榜要登录" note="登录后才能看" mark="榜" />
+  <lock-card wx:if="{{state === 'login'}}" title="排行榜要登录" note="登录后才能看" mark="榜" bind:login="onLogin" />
 
   <block wx:else>
     <view class="card">
@@ -88,6 +88,8 @@
         <view class="empty-mark">隐</view>
         <text class="empty-text">排行榜没有开</text>
         <text class="hint empty-tip">管理员在后台打开之后，这里才有名次</text>
+        <view class="btn ghost mini lb-retry" hover-class="button-hover" hover-stay-time="60"
+              bindtap="onRetry">再看看</view>
       </view>
     </view>
 
@@ -95,7 +97,8 @@
       <view class="empty">
         <view class="empty-mark">·</view>
         <text class="empty-text">{{reason}}</text>
-        <button class="btn ghost mini lb-retry" bindtap="onRetry">重试</button>
+        <view class="btn ghost mini lb-retry" hover-class="button-hover" hover-stay-time="60"
+              bindtap="onRetry">重试</view>
       </view>
     </view>
 
