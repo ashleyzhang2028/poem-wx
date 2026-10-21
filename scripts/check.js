@@ -1252,10 +1252,10 @@ Object.keys(WEB_TIER).forEach((k) => {
       && /url:\s*"\/packages\/mine\/tier\/tier"/.test(entSys)
       && !/askDailyUpgrade|askUpgrade/.test(entSys),
     "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
-  ok("确认按钮不超过两个字、取消一律叫「取消」（Issue #370）",
+  ok("确认按钮不超过两个字、取消只有「取消」与「暂缓」两种说法（Issue #370 / #502）",
     jsFiles.every((f) => {
       const s = fs.readFileSync(f, "utf8");
-      return !/confirmText:\s*"(.{3,})"/.test(s) && !/cancelText:\s*"(?!取消")[^"]+"/.test(s);
+      return !/confirmText:\s*"(.{3,})"/.test(s) && !/cancelText:\s*"(?!取消"|暂缓")[^"]+"/.test(s);
     }),
     "对话框里还有三个字的确认键，或者取消那枚叫「再看看」「算了」");
   ok("对比表格子里的图标只两枚（有就是 yes、没有就是 no）",
