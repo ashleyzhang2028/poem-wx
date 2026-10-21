@@ -66,10 +66,6 @@ Component({
       this.setData({ draft: e.detail.value });
     },
 
-    onCancelCreate() {
-      this.setData({ creating: false, draft: "" });
-    },
-
     onSubmitCreate() {
       if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       const r = cols.create(this.data.draft);
