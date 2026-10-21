@@ -19,14 +19,7 @@ Page({
   },
 
   onTerms() {
-    wx.showModal({
-      title: "用户协议",
-      content:
-        "本小程序为古诗词背诵工具。背诵进度与设置默认只存在这台手机上，" +
-        "不登录不会向外发送任何数据；登录后可跨设备同步，你随时可以清空。",
-      showCancel: false,
-      confirmText: "好"
-    });
+    wx.navigateTo({ url: "/packages/settings/terms/terms" });
   },
 
   onPrivacy() {
