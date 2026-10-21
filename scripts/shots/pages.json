@@ -181,7 +181,7 @@
     "back": true,
     "logged": true,
     "tier": "pro",
-    "_note": "权限对比那张卡：四列（能力 / Free / Pro / Max），一行一项。当前档位那一列带「现在」"
+    "_note": "权限对比那张卡：四列（功能 / Free / Pro / Max），一行一项。当前档位那一列带「现在」"
   },
   "tier-guest": {
     "page": "packages/mine/tier/tier",

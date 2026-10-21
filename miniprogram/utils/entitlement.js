@@ -170,15 +170,9 @@ function compareNameOf(cap) {
   return COMPARE_NAME[cap.key] || viewNameOf(cap);
 }
 
-function splitName(name) {
-  const cut = name.indexOf(" ");
-  if (cut < 0) return { name: name, en: "" };
-  return { name: name.slice(0, cut), en: name.slice(cut + 1) };
-}
-
 function compareRows(snap) {
   const s = snap || snapshot();
-  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(compareNameOf(c)), {
+  return CAPS.map((c) => Object.assign({ cap: c.key, name: compareNameOf(c) }, {
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {
