@@ -309,6 +309,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "跬步 · 飞花令", path: "/packages/game/feihua/feihua" };
+    return { title: "飞花令", path: "/packages/game/feihua/feihua" };
   }
 });

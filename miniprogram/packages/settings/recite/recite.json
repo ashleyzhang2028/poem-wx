@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "跬步 · 我的 · 背诵设置",
+  "navigationBarTitleText": "我的 · 背诵设置",
   "usingComponents": {
     "tab-bar": "/custom-tab-bar/index"
   }

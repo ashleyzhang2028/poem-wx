@@ -102,7 +102,7 @@ Page({
     if (!w) return;
 
     if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
-    wx.setNavigationBarTitle({ title: "跬步 · 作者索引 · " + name });
+    wx.setNavigationBarTitle({ title: "作者索引 · " + name });
     this.applyWorks();
   },
 
@@ -145,6 +145,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "跬步 · 作者索引", path: "/packages/authors/index/index" };
+    return { title: "作者索引", path: "/packages/authors/index/index" };
   }
 });

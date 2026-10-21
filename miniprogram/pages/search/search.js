@@ -320,6 +320,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "跬步 · 全站搜索", path: "/pages/search/search" };
+    return { title: "全站搜索", path: "/pages/search/search" };
   }
 });

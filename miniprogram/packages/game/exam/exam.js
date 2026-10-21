@@ -331,6 +331,6 @@ Page({
     });
   },
   onShareAppMessage() {
-    return { title: "跬步 · 古诗词考试", path: "/packages/game/exam/exam" };
+    return { title: "古诗词考试", path: "/packages/game/exam/exam" };
   }
 });

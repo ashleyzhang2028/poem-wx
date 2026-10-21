@@ -775,10 +775,10 @@ Page({
 
   onShareAppMessage() {
 
-    return { title: "跬步 · 每天背一首古诗文", path: "/pages/home/home" };
+    return { title: "每天背一首古诗文", path: "/pages/home/home" };
   },
 
   onShareTimeline() {
-    return { title: "跬步 · 每天背一首古诗文" };
+    return { title: "每天背一首古诗文" };
   }
 });

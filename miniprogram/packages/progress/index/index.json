@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "跬步 · 我的 · 背诵进度",
+  "navigationBarTitleText": "我的 · 背诵进度",
   "usingComponents": {
     "recite-sheet": "/components/recite-sheet/recite-sheet",
     "tab-bar": "/custom-tab-bar/index"
