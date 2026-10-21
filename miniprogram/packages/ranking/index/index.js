@@ -4,7 +4,6 @@ const ranking = require("../../../utils/ranking");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const gate = require("../../../utils/gate");
-const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -146,9 +145,6 @@ Page({
     this.load();
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onShareAppMessage() {
     return { title: "古诗词大会排行榜", path: "/packages/ranking/index/index" };

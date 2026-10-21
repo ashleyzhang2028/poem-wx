@@ -1,6 +1,7 @@
 const store = require("./store");
 const tiers = require("./tiers");
 const auth = require("./auth");
+const gate = require("./gate");
 
 const TIER_RANK = { free: 1, pro: 2, max: 3 };
 
@@ -293,15 +294,12 @@ function cap(key) {
 }
 
 function showLogin(name, ctx) {
-  wx.showModal({
-    title: "要先登录",
-    content: "「" + capName(name) + "」登录可用。",
-    confirmText: "登录",
-    cancelText: "取消",
-    success: (res) => {
-      if (res.confirm && ctx && typeof ctx.onLoginGate === "function") ctx.onLoginGate(name);
-    }
-  });
+  gate.open(() => onLoginGate(name, ctx), ctx);
+}
+
+function onLoginGate(name, ctx) {
+  if (typeof ctx.onLoginGate === "function") ctx.onLoginGate(name);
+  else ctx.onLogin();
 }
 
 function showTier(name, ctx) {
@@ -338,13 +336,8 @@ function block(name, opt) {
   if (o.silent) return false;
 
   const page = o.page;
-  if (o.loginPrompt === false || !page) {
-    showTierToast(name);
-    return false;
-  }
-
   if (r.login) {
-    if (typeof page.onLoginGate !== "function") {
+    if (o.loginPrompt === false || !page) {
       wx.showToast({ title: "登录" + hint(name, o) + "后可用", icon: "none" });
       return false;
     }
@@ -352,7 +345,7 @@ function block(name, opt) {
     return false;
   }
 
-  if (typeof page.onTierGate !== "function") {
+  if (o.loginPrompt === false || !page || typeof page.onTierGate !== "function") {
     showTierToast(name);
     return false;
   }

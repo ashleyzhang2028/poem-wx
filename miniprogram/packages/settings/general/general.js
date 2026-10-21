@@ -7,7 +7,6 @@ const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
-const tabPage = require("../../../utils/tab-page");
 const icons = require("../../../utils/icons");
 const scale = require("../../../utils/type-scale");
 
@@ -79,9 +78,6 @@ Page({
     );
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onAlign(e) {
     const align = e.detail.value;

@@ -3,7 +3,6 @@ const auth = require("../../utils/auth");
 const S = require("../../utils/scheduler");
 const E = require("../../utils/entitlement");
 const sync = require("../../utils/sync");
-const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
@@ -69,7 +68,7 @@ Page({
   },
 
   onLogin() {
-    loginFlow.askLogin(this).catch(() => {});
+    loginFlow.askLogin(this);
   },
 
   onIdentityChanged(res) {
@@ -129,26 +128,29 @@ Page({
   },
 
   onRecite() {
-    if (!gate.guard("背诵设置", this)) return;
+    if (!this.requireRecite()) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
   onProgress() {
-    if (!gate.guard("背诵进度", this)) return;
+    if (!this.requireRecite()) return;
     wx.navigateTo({ url: "/packages/progress/index/index" });
   },
 
   onCollections() {
-    if (!gate.guard("自选背诵", this)) return;
+    if (!this.requireRecite()) return;
+    E.block("collections", { page: this, loginPrompt: false });
+    if (!E.can("collections")) return;
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
+  },
+
+  requireRecite() {
+    E.block("daily", { page: this, loginPrompt: false });
+    return E.loggedIn();
   },
 
   onAbout() {
     wx.navigateTo({ url: "/packages/settings/about/about" });
-  },
-
-  onLoginGate() {
-    this.onLogin();
   },
 
   onTierGate() {

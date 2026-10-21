@@ -5,7 +5,6 @@ const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 
 const COUNT = 10;
 
@@ -63,9 +62,6 @@ Page({
     });
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onScope(e) {
     this.setData({ scope: e.detail.value || "" });

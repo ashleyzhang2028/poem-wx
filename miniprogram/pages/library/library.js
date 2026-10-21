@@ -3,7 +3,6 @@ const gate = require("../../utils/gate");
 const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const tabPage = require("../../utils/tab-page");
 
 const GROUPS = [
   {
@@ -75,14 +74,6 @@ Page({
     }).filter((g) => g.books.length);
 
     this.setData({ groups });
-  },
-
-  onLoginGate() {
-    tabPage.mine();
-  },
-
-  onLogin() {
-    tabPage.mine();
   },
 
   onTierGate() {

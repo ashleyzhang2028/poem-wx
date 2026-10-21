@@ -6,7 +6,6 @@ const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
-const tabPage = require("../../utils/tab-page");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
 
@@ -102,9 +101,6 @@ Page({
     this.setData({ filter: e.detail.value }, () => this.apply());
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onTierGate() {
     entitlement.openTierPage();

@@ -10,7 +10,6 @@ const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
-const tabPage = require("../../utils/tab-page");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
@@ -320,9 +319,6 @@ Page({
     this.applyReading();
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   relayout() {
     const laid = corpus.layout(this.data.rawText, {
@@ -376,10 +372,6 @@ Page({
 
   onToggleTranslation() {
     this.setData({ showTranslation: !this.data.showTranslation });
-  },
-
-  onLoginGate() {
-    tabPage.mine();
   },
 
   onPinyin(e) {

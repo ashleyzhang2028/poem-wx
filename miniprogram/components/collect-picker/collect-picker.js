@@ -77,10 +77,6 @@ Component({
       this.setData({ creating: false, draft: "" });
     },
 
-    onLoginGate() {
-      entitlement.openTierPage();
-    },
-
     onTierGate() {
       entitlement.openTierPage();
     },

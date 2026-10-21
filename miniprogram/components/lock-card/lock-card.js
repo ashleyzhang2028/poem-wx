@@ -1,4 +1,5 @@
-const tabPage = require("../../utils/tab-page");
+const loginFlow = require("../../utils/login-flow");
+
 Component({
   properties: {
     title: { type: String, value: "登录可用" },
@@ -17,7 +18,7 @@ Component({
 
   methods: {
     onLogin() {
-      tabPage.back(this.data.backTo);
+      loginFlow.run(this);
     }
   }
 });

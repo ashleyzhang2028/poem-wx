@@ -2,7 +2,6 @@ const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 
 Page({
   data: {
@@ -41,9 +40,6 @@ Page({
     };
   },
 
-  onLogin() {
-    tabPage.mine();
-  },
 
   onPick(e) {
     const key = e.currentTarget.dataset.key;

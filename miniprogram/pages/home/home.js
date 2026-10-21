@@ -514,17 +514,15 @@ Page({
 
   onSeasonalCollect(e) {
     const id = e.currentTarget.dataset.id;
-    gate.guard("自选背诵", this, () => {
-      const blocked = this.collectGate();
-      if (blocked) return blocked();
-      const have = cols.collectionsOf(id);
-      if (have.length === 1) {
-        this.dropFromCollection(id, have[0]);
-        return;
-      }
-      const box = this.selectComponent("#collect");
-      if (box) box.ask(id);
-    });
+    if (!this.requireLogin("collections")) return;
+    if (!this.collectGate()) return;
+    const have = cols.collectionsOf(id);
+    if (have.length === 1) {
+      this.dropFromCollection(id, have[0]);
+      return;
+    }
+    const box = this.selectComponent("#collect");
+    if (box) box.ask(id);
   },
 
   dropFromCollection(id, c) {
@@ -543,17 +541,13 @@ Page({
   },
 
   collectGate() {
-    if (entitlement.block("collections", { page: this })) return null;
-    if (entitlement.can("collections")) return this.staleCollections;
-    return entitlement.openTierPage;
+    entitlement.block("collections", { page: this });
+    return entitlement.can("collections");
   },
 
-  staleCollections() {
-    wx.showModal({
-      title: "自选背诵",
-      content: "「自选背诵」现在是开着的，重新进一次即可。",
-      showCancel: false
-    });
+  requireLogin(name) {
+    entitlement.block(name, { page: this, loginPrompt: false });
+    return entitlement.loggedIn();
   },
 
   onCollectDone(e) {
@@ -677,19 +671,18 @@ Page({
 
   onOpenCollection(e) {
     const ds = datasetOf(e);
-    gate.guard("自选背诵", this, () => {
-      if (!entitlement.block("collections", { page: this })) return;
-      const sheet = this.selectComponent("#sheet");
-      if (!sheet) return;
-      const rows = this.collectionSheetRows(ds.coll);
-      if (!rows.length) {
-        wx.showToast({ title: "这个集合还是空的", icon: "none" });
-        return;
-      }
-      this.collectionId = ds.coll;
-      this.setData({ sheetRows: rows });
-      sheet.open(rows, ds.id);
-    });
+    if (!this.requireLogin("collections")) return;
+    if (!entitlement.block("collections", { page: this })) return;
+    const sheet = this.selectComponent("#sheet");
+    if (!sheet) return;
+    const rows = this.collectionSheetRows(ds.coll);
+    if (!rows.length) {
+      wx.showToast({ title: "这个集合还是空的", icon: "none" });
+      return;
+    }
+    this.collectionId = ds.coll;
+    this.setData({ sheetRows: rows });
+    sheet.open(rows, ds.id);
   },
 
   scopeRows() {
@@ -700,11 +693,8 @@ Page({
   },
 
   onGuestOpen() {
-    gate.guard("诗词", this, () => this.refresh());
-  },
-
-  onLoginGate() {
-    this.onLoginTapped();
+    if (!this.requireLogin("daily")) return;
+    this.refresh();
   },
 
   showIdentity() {
@@ -712,7 +702,7 @@ Page({
   },
 
   onLoginTapped() {
-    loginFlow.askLogin(this).catch(() => {});
+    loginFlow.askLogin(this);
   },
 
   onPermissions() {
@@ -750,17 +740,16 @@ Page({
   },
 
   openSheet(id, source) {
-    gate.guard("背诵", this, () => {
-      const sheet = this.selectComponent("#sheet");
-      if (!sheet) return;
-      this.sheetSource = source;
-      this.collectionId = "";
-      const rows = source === "all" ? this.scopeRows() : this.data.plan;
-      const patch = { sheetRows: rows };
-      if (source === "all") patch.allRows = rows;
-      this.setData(patch);
-      sheet.open(rows, id);
-    });
+    if (!this.requireLogin("daily")) return;
+    const sheet = this.selectComponent("#sheet");
+    if (!sheet) return;
+    this.sheetSource = source;
+    this.collectionId = "";
+    const rows = source === "all" ? this.scopeRows() : this.data.plan;
+    const patch = { sheetRows: rows };
+    if (source === "all") patch.allRows = rows;
+    this.setData(patch);
+    sheet.open(rows, id);
   },
 
   onToggleAll() {
@@ -820,7 +809,7 @@ Page({
   },
 
   onSettings() {
-    if (!gate.guard("背诵设置", this)) return;
+    if (!this.requireLogin("daily")) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
