@@ -5,6 +5,7 @@ const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const remote = require("../../../utils/remote");
+const tabPage = require("../../../utils/tab-page");
 
 const MODES = [
   { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
@@ -85,6 +86,10 @@ Page({
       return;
     }
     wx.navigateTo({ url: "/packages/ranking/index/index" });
+  },
+
+  onLogin() {
+    tabPage.mine();
   },
 
   onMode(e) {
