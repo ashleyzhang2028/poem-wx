@@ -51,6 +51,13 @@ Component({
       this.give(url);
     },
 
+    done() {
+      this.entry = null;
+      this.arm("");
+      this.refresh();
+      this.triggerEvent("changed");
+    },
+
     onLogout() {
       wx.showModal({
         title: "退出登录",
@@ -111,13 +118,6 @@ Component({
       this.typed = value;
       if (!value || this.part !== "nickname") return;
       this.give(value);
-    },
-
-    done() {
-      this.entry = null;
-      this.arm("");
-      this.refresh();
-      this.triggerEvent("changed");
     }
   }
 });

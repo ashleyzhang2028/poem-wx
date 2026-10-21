@@ -49,19 +49,9 @@ function prompt(err) {
   wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "好" });
 }
 
-function toastLater(title) {
-  return () => wx.showToast({ title, icon: "none", duration: 2500 });
-}
-
 function done(res) {
-  if (!res || !res.wechatAsked) {
-    const title = res && res.synced ? "已登录 · 进度已认回" : "已登录 · 这台手机上的记录还在";
-    wx.showToast({ title, icon: "none", duration: 2500 });
-    return;
-  }
-  res.afterToast = res.synced
-    ? toastLater("已登录 · 进度已认回")
-    : toastLater("已登录 · 这台手机上的记录还在");
+  const title = res && res.synced ? "已登录 · 进度已认回" : "已登录 · 这台手机上的记录还在";
+  wx.showToast({ title, icon: "none", duration: 2500 });
 }
 
 const WECHAT_ITEMS = ["用微信头像", "用微信昵称", "用微信头像和昵称"];
@@ -80,14 +70,14 @@ function wechatParts(picked) {
   return parts;
 }
 
-function wechatEntry(picked) {
+function wechatEntry(picked, exit) {
   const entry = {
+    exit: typeof exit === "function" ? exit : () => resume(null),
     picked,
     part: "",
     waiting: null,
     early: "",
     earlyValue: "",
-    exit: () => resume(null),
     arm: (part) => {
       entry.part = part;
       if (typeof entry.ready === "function") entry.ready(part);
@@ -180,6 +170,7 @@ function takeNickname(name, after, again) {
 function askWechat(page, entry) {
   const at = entry || {};
   const after = at.exit || (() => resume(page));
+  at.exit = after;
   if (!at.picked) {
     after();
     return Promise.resolve(null);
@@ -217,20 +208,35 @@ function ask(box) {
   });
 }
 
+function askWechatBox(host) {
+  return ask(ASK.wechat()).then((ok) => (ok ? start(host, WECHAT_ITEMS[2]) : null));
+}
+
 function askLogin(page) {
   if (auth.logged()) return Promise.resolve(null);
   return ask(ASK.login()).then((ok) => (ok ? run(page) : null));
 }
 
+function identityHost(page) {
+  const at = page || {};
+  if (typeof at.wechatBind === "function") return at;
+  const panel = typeof at.selectComponent === "function" ? at.selectComponent("#login") : null;
+  return panel && typeof panel.wechatBind === "function" ? panel : null;
+}
+
 function askWechatPick(page) {
   if (!auth.logged()) return Promise.resolve(null);
-  return ask(ASK.wechat()).then((ok) => (ok ? start(page, WECHAT_ITEMS[2]) : null));
+  const host = identityHost(page);
+  if (!host) return Promise.resolve(null);
+  return askWechatBox(host);
 }
 
 function start(page, picked) {
   if (!picked || !auth.logged()) return Promise.resolve(null);
-  const entry = wechatEntry(picked);
-  if (page && typeof page.wechatBind === "function") page.wechatBind(entry);
+  const host = identityHost(page) || identityHost(getCurrentPages().slice(-1)[0]);
+  if (!host) return Promise.resolve(null);
+  const entry = wechatEntry(picked, () => host.done());
+  host.wechatBind(entry);
   return askWechat(page, entry);
 }
 
@@ -256,11 +262,9 @@ function resume(page) {
 }
 
 function settle(res, page) {
-  done(res);
   const resumed = resume(page);
   const back = backTo(page);
   if (back && !resumed) tabPage.back(back);
-  if (res && res.afterToast) res.afterToast();
   return res;
 }
 
@@ -270,10 +274,8 @@ function run(page) {
     .login()
     .then((res) => {
       wx.hideLoading();
-      return askWechatPick(page).then(() => {
-        res.wechatAsked = true;
-        return settle(res, page);
-      });
+      done(res);
+      return askWechatPick(page).then(() => settle(res, page));
     })
     .catch((err) => {
       wx.hideLoading();
