@@ -43,7 +43,6 @@
     <view class="card">
       <view class="guest-lead">
         <text class="guest-lead-title">登录</text>
-        <text class="guest-lead-sub">进度存在账号里，换台手机接着背。</text>
       </view>
       <button class="btn primary block" bindtap="onLoginTapped">登录</button>
     </view>

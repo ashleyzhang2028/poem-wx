@@ -26,7 +26,6 @@
 
 <view class="card login-box" wx:else>
   <text class="login-title">登录</text>
-  <text class="login-sub">进度存进账号，换台手机接着背。</text>
   <button class="btn primary block" bindtap="onLogin">登录</button>
 </view>
 

@@ -29,9 +29,7 @@ function refuse(what) {
   return {
     ok: false,
     title: "要先登录",
-    content: what
-      ? "「" + what + "」登录之后才能用。进度存在账号里，换台手机接着背。"
-      : "登录之后才能用。进度存在账号里，换台手机接着背。"
+    content: what ? "「" + what + "」登录之后才能用。" : "登录之后才能用。"
   };
 }
 

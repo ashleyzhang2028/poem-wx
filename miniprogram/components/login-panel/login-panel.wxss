@@ -122,21 +122,6 @@
   letter-spacing: var(--ls-title);
 }
 
-.login-sub {
-  display: block;
-  margin-top: var(--sp-1);
-  margin-bottom: var(--sp-3);
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
-  line-height: var(--lh-body);
-}
-
-.login-note {
-  display: block;
-  margin-top: var(--sp-2);
-  text-align: center;
-}
-
 .wechat-catch {
   position: fixed;
   left: 0;

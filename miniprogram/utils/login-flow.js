@@ -194,7 +194,6 @@ function askWechat(page, entry) {
 const ASK = {
   login: () => ({
     title: "登录",
-    content: "登录后进度会同步到账号，换台手机也接得上。",
     confirmText: "登录"
   }),
   wechat: () => ({

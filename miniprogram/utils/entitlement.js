@@ -295,7 +295,7 @@ function cap(key) {
 function showLogin(name, ctx) {
   wx.showModal({
     title: "要先登录",
-    content: "「" + capName(name) + "」登录之后才能用。进度存在账号里，换台手机接着背。",
+    content: "「" + capName(name) + "」登录之后才能用。",
     confirmText: "登录",
     cancelText: "取消",
     success: (res) => {
