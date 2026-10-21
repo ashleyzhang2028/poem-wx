@@ -701,10 +701,7 @@ Page({
   },
 
   onLoginTapped() {
-    loginFlow
-      .askLogin(this)
-      .then((res) => (res ? loginFlow.settle(res, this) : null))
-      .catch(() => {});
+    loginFlow.askLogin(this).catch(() => {});
   },
 
   onPermissions() {

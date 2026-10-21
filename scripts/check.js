@@ -4272,7 +4272,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
 
     ok("登录成功后问一次用不用微信的（取消就照旧）",
-      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechatPick\(page\)/.test(flowSrc9)
+      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechatPick\(at\)/.test(flowSrc9)
         && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
         && /function start\(page, picked\)/.test(flowSrc9),
       "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口");
