@@ -2805,6 +2805,13 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /require\(["']\.\.\/\.\.\/utils\/login-flow["']\)/.test(mineSrc)
         && /require\(["']\.\/login-flow["']\)/.test(gateCode),
       "「我的」页与门禁弹窗各自写了一遍 wx.login 的成败分支");
+    const openBody = (gateCode.match(/function open\(onPass, page\) \{[\s\S]*?\n\}/) || [""])[0];
+    ok("门禁弹窗里点了「登录」就真去登录，不再弹第二个确认框",
+      /loginFlow\.after\(/.test(openBody) && /loginFlow\.run\(/.test(openBody)
+        && openBody.indexOf("askLogin") < 0,
+      "open() 里又调了 askLogin —— 那一步会再弹一次「登录 / 取消」，"
+        + "用户点完「登录」以为没反应（Issue #502）。函数体："
+        + openBody.replace(/\s+/g, " "));
     ok("登录流程与门禁不互相 require（循环依赖会让 gate 交到半个空壳）",
       flowCode.indexOf('require("./gate")') < 0
         && flowCode.indexOf("require('./gate')") < 0,

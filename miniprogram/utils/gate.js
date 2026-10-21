@@ -54,7 +54,7 @@ function guard(what, page, onPass) {
 
 function open(onPass, page) {
   loginFlow.after(onPass, page);
-  loginFlow.askLogin(page).catch(() => {});
+  loginFlow.run(page).catch(() => {});
 }
 
 function ask(page) {
