@@ -1,0 +1,37 @@
+<view class="card identity" wx:if="{{logged}}">
+  <view class="identity-row">
+    <view class="avatar-wrap">
+      <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
+      <view class="avatar-fallback" wx:else>{{avatarChar}}</view>
+      <button class="wechat-choose" open-type="chooseAvatar" aria-label="换成微信头像"
+              bindchooseavatar="onWechatAvatar"></button>
+    </view>
+
+    <view class="identity-main">
+      <input class="identity-input" type="nickname" value="{{nickname}}" maxlength="12"
+             placeholder="填一个昵称" placeholder-class="identity-ph"
+             confirm-type="done" bindblur="onNickname" bindconfirm="onNickname" />
+      <text class="identity-sub">已登录 · 微信账号</text>
+    </view>
+
+    <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
+          bindtap="onTier">{{tierLabel}}</view>
+  </view>
+
+  <view class="identity-acts">
+    <button class="btn ghost" bindtap="onWechat">取微信头像</button>
+    <button class="btn ghost" bindtap="onLogout">退出</button>
+  </view>
+</view>
+
+<view class="card login-box" wx:else>
+  <text class="login-title">登录</text>
+  <text class="login-sub">进度存进账号，换台手机接着背。</text>
+  <button class="btn primary block" bindtap="onLogin">登录</button>
+  <text class="hint login-note">只拿微信的公开标识认人，不读手机号与聊天记录。</text>
+</view>
+
+<view class="wechat-catch" wx:if="{{wechatFocus}}">
+  <input class="wechat-catch-input" type="nickname" focus="{{wechatFocus}}"
+         bindinput="onWechatInput" bindblur="onWechatInput" />
+</view>

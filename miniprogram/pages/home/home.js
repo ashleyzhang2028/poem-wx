@@ -639,13 +639,13 @@ Page({
   },
 
   onLoginGate() {
-    loginFlow.run(this).catch(() => {});
+    this.onLoginTapped();
   },
 
   onLoginTapped() {
     loginFlow
-      .run(this)
-      .then((res) => loginFlow.settle(res, this))
+      .askLogin(this)
+      .then((res) => (res ? loginFlow.settle(res, this) : null))
       .catch(() => {});
   },
 
