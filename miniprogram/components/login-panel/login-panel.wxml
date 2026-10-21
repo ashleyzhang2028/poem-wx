@@ -22,7 +22,7 @@
 
   <view class="identity-acts">
     <button class="btn ghost" bindtap="onWechat">换成微信的</button>
-    <button class="btn ghost" bindtap="onLogout">退出</button>
+    <button class="btn ghost" bindtap="onLogout">辞别</button>
   </view>
 </view>
 

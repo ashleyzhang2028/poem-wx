@@ -108,10 +108,10 @@ Component({
 
     onLogout() {
       wx.showModal({
-        title: "退出登录",
-        content: "退出后背诵数据不会丢，但功能要重新登录才能用。",
-        confirmText: "退出",
-        cancelText: "取消",
+        title: "辞别",
+        content: "君日积月累之吟咏笔录，藏于云笈；此番跬途，于此暂歇。待来日重至，复拾诗章。",
+        confirmText: "辞别",
+        cancelText: "暂缓",
         success: (r) => (r && r.confirm ? this.leave() : null)
       });
     },
