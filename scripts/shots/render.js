@@ -319,6 +319,7 @@ function expandTierView(wxml, data) {
     .map((r) => ({
       cap: r.cap,
       name: r.name,
+      en: r.en,
       yes: r.cells.filter((c) => c.on).length,
       cells: r.cells.map((c) => Object.assign({}, c, {
         icon: (c.on ? tierIcons.yes : tierIcons.no),
