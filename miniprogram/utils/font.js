@@ -1,46 +1,89 @@
 const store = require("./store");
-const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 
-const FAMILY = "Kuibu Serif";
+const FONTS = [
+  { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", stem: "zhuquefangsong-regular/zhuquefangsong-regular-" },
+  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", stem: "huiwenmincho-improved/huiwenmincho-improved-" },
+  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", stem: "chillkai/chillkai-" }
+];
 
-const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/zhuquefangsong-regular/zhuquefangsong-regular-";
+const DEFAULT = "zhuque";
 
-const SETS = {
-  free: [BASE + "free.woff2", BASE + "free.woff"],
-  pro: [BASE + "pro.woff2", BASE + "pro.woff"]
-};
+const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/";
 
-function paid(tier) {
-  return tiers.rank(tier) >= tiers.rank("pro");
+const FACES = FONTS.map((f) => ({
+  key: f.key,
+  name: f.name,
+  note: f.note,
+  family: "Kuibu Poem " + f.key,
+  free: [BASE + f.stem + "free.woff2", BASE + f.stem + "free.woff"],
+  pro: [BASE + f.stem + "pro.woff2", BASE + f.stem + "pro.woff"]
+}));
+
+const BY_KEY = {};
+FACES.forEach((f) => { BY_KEY[f.key] = f; });
+
+const FREE_FACE = FACES[0];
+
+function paid() {
+  return entitlement.rankOf(entitlement.status().tier) >= entitlement.rankOf("pro");
 }
 
-function setOf(tier) {
-  return paid(tier) ? "pro" : "free";
+function pickable() {
+  return paid();
+}
+
+function lockedName() {
+  return entitlement.status().tier === "free" ? "Pro" : "Free";
+}
+
+function current() {
+  const key = store.settings().font;
+  if (!BY_KEY[key]) return DEFAULT;
+  if (!pickable() && key !== DEFAULT) return DEFAULT;
+  return key;
+}
+
+function face(key) {
+  return BY_KEY[key] || FREE_FACE;
+}
+
+const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Source Han Serif CN", '
+  + '"Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB", "FangSong", serif';
+
+function stack(key) {
+  return '"' + face(key || current()).family + '", ' + STACK;
+}
+
+function addresses(key) {
+  const f = BY_KEY[key] || FREE_FACE;
+  return pickable() ? f.pro.slice() : f.free.slice();
 }
 
 function configured() {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  if (auth.fontUrl !== undefined) {
-    const list = Array.isArray(auth.fontUrl) ? auth.fontUrl : [auth.fontUrl];
-    return list.map((it) => String(it || "")).filter(Boolean);
-  }
-  return SETS[setOf(entitlement.status().tier)].slice();
+  if (auth.fontUrl === undefined) return addresses(current());
+  const list = Array.isArray(auth.fontUrl) ? auth.fontUrl : [auth.fontUrl];
+  return list.map((it) => String(it || "")).filter(Boolean);
 }
 
 function readiness() {
   if (!configured().length) {
-    return { visible: false, usable: false, state: "unsupported", reason: "未配置诗词仿宋子集" };
+    return { visible: false, usable: false, state: "unsupported", reason: "未配置诗词子集" };
   }
   return { visible: true, usable: true, state: "ready", reason: "" };
 }
 
-function attempt(source) {
+function options() {
+  return FACES.map((f) => ({ key: f.key, name: f.name, note: f.note }));
+}
+
+function attempt(face0, source) {
   return new Promise((resolve) => {
     wx.loadFontFace({
       global: true,
       scopes: ["webview"],
-      family: FAMILY,
+      family: face0.family,
       source,
       success: () => resolve(true),
       fail: () => resolve(false)
@@ -48,9 +91,9 @@ function attempt(source) {
   });
 }
 
-function sequence(list) {
+function sequence(face0, list) {
   return list.reduce(
-    (prev, source) => prev.then((done) => (done ? true : attempt(source))),
+    (prev, source) => prev.then((done) => (done ? true : attempt(face0, source))),
     Promise.resolve(false)
   );
 }
@@ -58,8 +101,9 @@ function sequence(list) {
 let loaded = "";
 
 function load() {
+  const f = face();
   const list = configured();
-  const key = list.join(" ");
+  const key = f.key + " " + list.join(" ");
 
   if (!list.length || key === loaded) return Promise.resolve(false);
 
@@ -67,10 +111,29 @@ function load() {
 
   loaded = key;
 
-  return sequence(list).then((ok) => {
+  return sequence(f, list).then((ok) => {
     if (!ok) loaded = "";
     return ok;
   });
 }
 
-module.exports = { FAMILY, SETS, setOf, readiness, load, configured };
+function set(key) {
+  const f = BY_KEY[key];
+  if (!f) return { ok: false, reason: "unknown" };
+  if (!pickable()) return { ok: false, reason: "tier" };
+  if (key === current()) return { ok: true, changed: false };
+  store.saveSettings({ font: key });
+
+  try {
+    require("./sync").markDirty();
+  } catch (e) {
+
+  }
+  return { ok: true, changed: true, font: key };
+}
+
+module.exports = {
+  FONTS, FACES, DEFAULT, BASE, readiness, options,
+  paid, pickable, lockedName, current, face, stack,
+  addresses, configured, load, set
+};

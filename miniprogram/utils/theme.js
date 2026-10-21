@@ -1,4 +1,7 @@
 const store = require("./store");
+const font = require("./font");
+const tiers = require("./tiers");
+const entitlement = require("./entitlement");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
@@ -105,17 +108,34 @@ function palette() {
 }
 
 const GROUPS = [
-  { key: TRADITION, title: "中国传统" },
-  { key: LANDSCAPE, title: "大好河山" }
+  { key: TRADITION, title: "中国传统", tier: "free" },
+  { key: LANDSCAPE, title: "大好河山", tier: "pro", cap: "sights" }
 ];
+
+function groupOpen(group) {
+  if (tiers.rank(group.tier) <= tiers.rank("free")) return true;
+  return entitlement.can(group.cap);
+}
+
+function groupLockNote(group) {
+  if (groupOpen(group)) return "";
+  const need = tiers.nameOf(group.tier);
+  if (!entitlement.loggedIn()) return "登录后可用 · " + need + " 起";
+  return need + " 起可用";
+}
 
 function groups() {
   const swatches = palette();
-  return GROUPS.map((g) => ({
-    key: g.key,
-    title: g.title,
-    items: swatches.filter((s) => s.group === g.key)
-  }));
+  return GROUPS.map((g) => {
+    const open = groupOpen(g);
+    return {
+      key: g.key,
+      title: g.title,
+      locked: !open,
+      lockNote: groupLockNote(g),
+      items: swatches.filter((s) => s.group === g.key).map((s) => Object.assign({}, s, { locked: !open }))
+    };
+  });
 }
 
 function variables() {
@@ -137,19 +157,28 @@ function get(key) {
   return BY_KEY[key] || BY_KEY[DEFAULT];
 }
 
+function reachable(key) {
+  const t = BY_KEY[key];
+  if (!t) return false;
+  const g = GROUPS.filter((x) => x.key === t.group)[0];
+  return !g || groupOpen(g);
+}
+
 function current() {
   const key = store.settings().theme;
-  return BY_KEY[key] ? key : DEFAULT;
+  if (!BY_KEY[key]) return DEFAULT;
+  if (!reachable(key)) return DEFAULT;
+  return key;
 }
 
 function currentTheme() {
   return get(current());
 }
 
-function style(key) {
+function style(key, fontKey) {
   const t = get(key || current());
 
-  return VAR_DECLS +
+  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) +
     ";--theme:" + t.rgba + ";--theme-deep:" + t.rgba +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +
     ";--strong:" + t.rgba + ";--strong-soft:" + t.soft + ";--strong-text:" + t.rgba +
@@ -160,6 +189,7 @@ function style(key) {
 
 function set(key) {
   if (!BY_KEY[key]) return currentTheme();
+  if (!reachable(key)) return currentTheme();
   store.saveSettings({ theme: key });
 
   try {
@@ -183,5 +213,6 @@ function bannerOf(key) {
 
 module.exports = {
   THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
-  all, palette, groups, variables, bannerOf, get, current, currentTheme, style, set, apply
+  all, palette, groups, groupOpen, groupLockNote, reachable,
+  variables, bannerOf, get, current, currentTheme, style, set, apply
 };

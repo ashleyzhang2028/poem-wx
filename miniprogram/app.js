@@ -49,11 +49,11 @@ App({
   },
 
   watchFont() {
-    let last = entitlement.status().tier;
+    let last = font.face().key + " " + entitlement.status().tier;
     this.fontTimer = setInterval(() => {
-      const tier = entitlement.status().tier;
-      if (tier === last) return;
-      last = tier;
+      const now = font.face().key + " " + entitlement.status().tier;
+      if (now === last) return;
+      last = now;
       font.load().catch(() => {});
     }, 2000);
   },

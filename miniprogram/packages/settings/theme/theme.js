@@ -1,4 +1,5 @@
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
@@ -10,7 +11,12 @@ Page({
     locked: false,
 
     groups: theme.groups(),
-    theme: theme.DEFAULT
+    theme: theme.DEFAULT,
+
+    fonts: [],
+    font: font.DEFAULT,
+    fontLocked: true,
+    fontNote: ""
   },
 
   onShow() {
@@ -20,7 +26,19 @@ Page({
       this.setData({ locked: true });
       return;
     }
-    this.setData({ locked: false, theme: theme.current() });
+    this.setData(Object.assign({ locked: false }, this.view()));
+  },
+
+  view() {
+    const pickable = font.pickable();
+    return {
+      groups: theme.groups(),
+      theme: theme.current(),
+      fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
+      font: font.current(),
+      fontLocked: !pickable,
+      fontNote: pickable ? "" : "字体属于 " + font.lockedName() + " 起的能力，先按默认那一款显示"
+    };
   },
 
   onLogin() {
@@ -30,9 +48,23 @@ Page({
   onPick(e) {
     const key = e.currentTarget.dataset.key;
     if (key === this.data.theme) return;
-    const picked = theme.set(key);
+    theme.set(key);
     theme.apply(this);
-    this.setData({ theme: picked.key });
+    this.setData({ theme: theme.current() });
+    wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
+  onFont(e) {
+    const key = e.currentTarget.dataset.key;
+    const r = font.set(key);
+    if (!r.ok) {
+      wx.showToast({ title: r.reason === "tier" ? "字体需要 Pro 权限" : "这款字体不存在", icon: "none" });
+      this.setData(this.view());
+      return;
+    }
+    if (!r.changed) return;
+    this.setData(this.view());
+    font.load().catch(() => {});
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });
