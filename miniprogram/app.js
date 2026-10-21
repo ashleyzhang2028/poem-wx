@@ -25,6 +25,7 @@ App({
     );
 
     font.load().catch(() => {});
+    font.loadAll();
     this.watchFont();
     sfx.warm();
 
@@ -55,6 +56,7 @@ App({
       if (now === last) return;
       last = now;
       font.load().catch(() => {});
+      font.loadAll();
     }, 2000);
   },
 
