@@ -89,7 +89,7 @@
 
 .tier-cell-t {
   font-size: var(--fs-hint);
-  color: var(--ink-4);
+  color: var(--strong-soft);
   font-variant-numeric: tabular-nums;
 }
 
@@ -97,8 +97,8 @@
   color: var(--ink-2);
 }
 
-.tier-cell.is-now .tier-cell-t:not(.no) {
-  color: var(--on-ink);
+.tier-cell.is-now .tier-cell-t {
+  color: var(--strong-text);
 }
 
 .tier-cell-n {
@@ -109,7 +109,7 @@
 .tier-cell-ic {
   width: var(--glyph-round);
   height: var(--glyph-round);
-  color: var(--ink-4);
+  color: var(--strong-soft);
   background-color: currentColor;
   mask-repeat: no-repeat;
   mask-position: center;
@@ -120,7 +120,7 @@
 }
 
 .tier-cell-ic.no {
-  color: var(--ink-4);
+  color: var(--strong-soft);
 }
 
 .tier-cell-ic.yes {
@@ -132,9 +132,10 @@
   padding: var(--glyph-edge);
   border-radius: 50%;
   background: var(--strong);
+  color: var(--strong-text);
 }
 
-.tier-cell.is-now .tier-cell-ic:not(.no) {
+.tier-cell.is-now .tier-cell-ic.yes {
   color: var(--on-ink);
 }
 
