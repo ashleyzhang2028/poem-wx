@@ -31,6 +31,22 @@
   opacity: 0.84;
 }
 
+.wechat-catch {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.wechat-catch-input {
+  width: 0;
+  height: 0;
+}
+
 .wechat-sheet-mask {
   position: fixed;
   inset: 0;

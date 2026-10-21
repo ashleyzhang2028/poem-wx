@@ -4082,16 +4082,16 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindinput="onWechatNickname"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
         && !!pick("onWechatAvatar") && !!pick("onWechatNickname") && !!pick("onWechatIdentity"),
       "「用微信头像」「用微信昵称」「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    const flowSrc8 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     ok("头像那两项各是一个 open-type=\"chooseAvatar\" 的按钮（平台没有静默拿头像的接口）",
       (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
-        && /takeAvatar\(e && e\.detail && e\.detail\.avatarUrl/.test(mineSrc8)
-        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(
-          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
+        && /detail\.avatarUrl/.test(mineSrc8)
+        && !/wx\.chooseAvatar/.test(flowSrc8 + mineSrc8)
+        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
-      /onWechatIdentity\(e\)[\s\S]{0,400}?loginFlow\.takeNickname\([\s\S]{0,200}?afterWechatNickname/.test(mineSrc8)
-        && /function takeNickname\(name, after\)[\s\S]{0,400}?auth\.saveNickname\(nickname\)/.test(
-          fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8")),
+      /function wechatParts\(picked\)[\s\S]{0,200}?parts\.push\("nickname"\)/.test(flowSrc8)
+        && /function takeNickname\(name, after, again\)[\s\S]{0,1400}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
       "只换了头像，昵称没推上去");
     ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
       /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
@@ -4100,7 +4100,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       "没登录也能弹出换身份的层");
     ok("头像或昵称一换，底栏那格跟着重画",
       /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
-        && /onWechatAvatar\(e\)[\s\S]{0,300}?this\.syncBar\(\)/.test(mineSrc8)
+        && /onWechatAvatar\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
+        && /onWechatIdentity\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
+        && /entry\.exit = \(\) => this\.afterWechatNickname\(\)/.test(mineSrc8)
         && /afterWechatNickname\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
   }
@@ -4109,16 +4111,23 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     const mineCode9 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
     ok("登录成功后问一次用不用微信的（三选一，取消就照旧）",
-      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(page\)/.test(flowSrc9)
+      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechatPick\(page\)/.test(flowSrc9)
         && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
         && /itemList: WECHAT_ITEMS/.test(flowSrc9)
         && /fail: \(\) => resolve\(""\)/.test(flowSrc9),
       "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口；或者取消那一下被当成选了第一项");
     ok("登录后那一问与弹层那三项落在同一处（头像 / 昵称各只有一份实现）",
-      /module\.exports = \{[^}]*askWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
-        && /loginFlow\.takeAvatar\(/.test(mineCode9)
-        && /loginFlow\.takeNickname\(/.test(mineCode9),
+      /module\.exports = \{[^}]*wechatEntry[^}]*takeWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
+        && /loginFlow\.wechatEntry\(/.test(mineCode9)
+        && /loginFlow\.askWechat\(/.test(mineCode9)
+        && !/function takeNickname/.test(mineCode9)
+        && !/function takeAvatar/.test(mineCode9),
       "登录后那一问自己又写了一遍落盘与推送 —— 两处会各说一套");
+    ok("昵称只走微信给的那一份，不再凭空弹一个输入框让人敲",
+      !/editable:\s*true/.test(flowSrc9 + mineCode9)
+        && /type="nickname"/.test(
+          fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8")),
+      "又在客户端弹输入框 —— 微信昵称本来就该由 type=\"nickname\" 那一格带回来");
   }
 
   {

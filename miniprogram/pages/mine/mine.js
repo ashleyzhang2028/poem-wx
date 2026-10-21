@@ -19,6 +19,7 @@ Page({
 
     avatarChar: "诗",
     wechatPick: false,
+    wechatFocus: false,
     identitySub: "未登录",
     gradeName: "",
     scopeName: "",
@@ -158,21 +159,55 @@ Page({
   },
 
   onWechatAvatar(e) {
-    this.setData({ wechatPick: false });
-    loginFlow.takeAvatar(e && e.detail && e.detail.avatarUrl, false);
-    this.syncBar();
-    this.refresh();
+    this.startWechat("用微信头像");
+    this.wechatGive(e && e.detail && e.detail.avatarUrl);
   },
 
   onWechatNickname(e) {
-    this.setData({ wechatPick: false });
-    loginFlow.takeNickname(e && e.detail && e.detail.value, () => this.afterWechatNickname());
+    this.startWechat("用微信昵称");
+    this.wechatGive(this.wechatNicknameOf(e));
   },
 
   onWechatIdentity(e) {
+    this.startWechat("用微信头像和昵称");
+    this.wechatGive(e && e.detail && e.detail.avatarUrl);
+  },
+
+  startWechat(picked) {
     this.setData({ wechatPick: false });
-    loginFlow.takeAvatar(e && e.detail && e.detail.avatarUrl, true);
-    loginFlow.takeNickname(e && e.detail && e.detail.value, () => this.afterWechatNickname());
+    this.wechatTyped = "";
+    this.wechatPart = "";
+    const entry = loginFlow.wechatEntry(picked);
+    this.wechatEntryNow = entry;
+    entry.ready = (part) => this.wechatArm(part);
+    entry.exit = () => this.afterWechatNickname();
+    loginFlow.askWechat(this, entry).catch(() => this.afterWechatNickname());
+    entry.arm(picked === "用微信昵称" ? "nickname" : "avatar");
+  },
+
+  wechatArm(part) {
+    this.wechatPart = part;
+    this.setData({ wechatFocus: part === "nickname" });
+  },
+
+  wechatGive(value) {
+    const entry = this.wechatEntryNow;
+    const part = this.wechatPart;
+    if (!part || !entry) return;
+    this.wechatArm("");
+    entry.give(value || "");
+  },
+
+  wechatNicknameOf(e) {
+    const detail = (e && e.detail) || {};
+    return detail.value || this.wechatTyped || "";
+  },
+
+  onWechatNicknameInput(e) {
+    const value = this.wechatNicknameOf(e);
+    this.wechatTyped = value;
+    if (!value || this.wechatPart !== "nickname") return;
+    this.wechatGive(value);
   },
 
   afterWechatNickname() {
