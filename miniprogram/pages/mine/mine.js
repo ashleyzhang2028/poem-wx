@@ -147,34 +147,35 @@ Page({
     this.setData({ wechatPick: true });
   },
 
+  onNicknameTap(e) {
+    if (!this.data.logged) return;
+    if ((e.detail.value || "").trim()) return;
+    this.setData({ wechatPick: true });
+  },
+
   onWechatPickClose() {
     this.setData({ wechatPick: false });
   },
 
   onWechatAvatar(e) {
-    this.takeWechatAvatar(e, false);
+    this.setData({ wechatPick: false });
+    loginFlow.takeAvatar(e && e.detail && e.detail.avatarUrl, false);
+    this.syncBar();
+    this.refresh();
+  },
+
+  onWechatNickname(e) {
+    this.setData({ wechatPick: false });
+    loginFlow.takeNickname(e && e.detail && e.detail.value, () => this.afterWechatNickname());
   },
 
   onWechatIdentity(e) {
-    this.takeWechatAvatar(e, true);
-  },
-
-  takeWechatAvatar(e, withNickname) {
     this.setData({ wechatPick: false });
-    const url = e && e.detail && e.detail.avatarUrl;
-    if (!url) return;
-    this.storeAvatar(url);
-    if (!withNickname) {
-      wx.showToast({ title: "头像已换成微信的", icon: "none" });
-      return;
-    }
-    this.onNickname({ detail: { value: this.data.nickname } });
-    wx.showToast({ title: "头像与昵称都换成微信的了", icon: "none" });
+    loginFlow.takeAvatar(e && e.detail && e.detail.avatarUrl, true);
+    loginFlow.takeNickname(e && e.detail && e.detail.value, () => this.afterWechatNickname());
   },
 
-  storeAvatar(url) {
-    if (!url) return;
-    store.saveProfile({ avatarLocal: url });
+  afterWechatNickname() {
     this.syncBar();
     this.refresh();
   },
