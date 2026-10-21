@@ -117,10 +117,12 @@ Page({
   },
 
   onRecite() {
+    if (!gate.guard("背诵设置", this)) return;
     wx.navigateTo({ url: "/packages/settings/recite/recite" });
   },
 
   onProgress() {
+    if (!gate.guard("背诵进度", this)) return;
     wx.navigateTo({ url: "/packages/progress/index/index" });
   },
 

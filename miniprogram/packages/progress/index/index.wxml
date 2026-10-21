@@ -1,7 +1,4 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="背诵进度" note="登录后才能看" mark="进" bind:login="onLogin" />
-
-  <block wx:else>
   <view class="card overview">
     <view class="ov-head">
       <view class="ring">
@@ -167,6 +164,5 @@
                 queue="{{sheetRows}}" bind:finish="onSheetFinish" />
 
   <view class="safe-bottom"></view>
-  </block>
   <tab-bar id="tabbar" current="4" />
 </view>

@@ -5,10 +5,8 @@ const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
 const cols = require("../../../utils/collections");
-const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const tabPage = require("../../../utils/tab-page");
 
 const STAGES = S.STAGE_KEYS.map((k) => ({ key: k, name: S.STAGES[k].name }));
 
@@ -49,7 +47,6 @@ Page({
     daily: [],
     dailyMax: 20,
     poolSize: 0,
-    locked: false,
 
     selfOnlyOn: false,
     selfOnly: false,
@@ -61,11 +58,6 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
-    if (!gate.logged()) {
-      this.setData({ locked: true });
-      return;
-    }
-    this.setData({ locked: false });
     const settings = store.settings();
     const scopes = Object.keys(S.SCOPES).map((k) => ({ key: k, label: S.SCOPES[k].label }));
     this.setData(
@@ -223,10 +215,6 @@ Page({
     this.setData(Object.assign(patch, derived, { algos: this.algoRows(patch.algo || this.data.algo) }), () =>
       this.updatePool()
     );
-  },
-
-  onLogin() {
-    tabPage.mine();
   },
 
   onGrade(e) {
