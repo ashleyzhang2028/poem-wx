@@ -1,0 +1,53 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card">
+    <view class="card-title">用户协议</view>
+    <text class="policy-lede">欢迎使用跬步。使用本小程序即表示你已阅读并同意本协议。个人信息的处理方式见《隐私政策》。</text>
+    <text class="policy-meta">更新日期：{{updated}}</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onPrivacy">
+      <view class="row-main"><text class="row-title">查看隐私政策</text></view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">一、服务与使用</view>
+    <text class="policy-p">服务内容：依据复习算法安排古诗文的背诵与复习，提供古诗文及经典文集的阅读，以及飞花令、题库、考试等练习。</text>
+    <text class="policy-p">使用方式：不登录即可使用阅读、背诵等基础功能，适用于个人学习、家庭辅导与课堂教学。登录后，背诵记录可跨设备同步，并可使用需要账号的功能。</text>
+    <text class="policy-p">账号：使用微信登录，不设单独的账号与密码。请勿出借、转让或出租你的账号。</text>
+    <text class="policy-p">功能档位：Free / Pro / Max 是功能标识，由服务器按账号下发，不是付费凭证。本小程序不提供支付、购买或任何收款渠道。</text>
+    <text class="policy-p">排行榜：排行榜由管理员开启。开启后，你完成的考试与飞花令成绩会进榜，榜上显示打码后的昵称、名次、成绩与用时，详见《隐私政策》。</text>
+    <text class="policy-p">使用限制：不得批量抓取内容用于商业销售或引流；不得干扰本产品正常运行；不得利用漏洞或脚本刷榜、提交虚假成绩。违反的，我们可以限制相关功能。</text>
+    <text class="policy-p">数据保管：学习进度默认只存在这台手机上，登录后同步到服务器。可在「我的 → 设置 → 清空数据」删除本机与服务器上的记录，删除后无法恢复，请自行留意。需要注销账号，请发邮件至下方邮箱。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">二、学生与未成年人</view>
+    <text class="policy-p">未成年人：未满十八周岁的用户，请在监护人的同意和指导下使用；不满十四周岁的，须由监护人代为登录并同意本协议与《隐私政策》。我们不设未成年人独立账号，不收集与背诵无关的个人信息。</text>
+    <text class="policy-p">无广告与内购：不含广告、应用内购买或付费诱导内容；免费档位可使用全部核心功能。</text>
+    <text class="policy-p">昵称：昵称用于显示称呼，并以首末字、中间星号的形式出现在排行榜上。建议使用非正式称呼，不要填写真实姓名、学校班级或联系方式；含违规内容的昵称会被拒绝或以代称显示。</text>
+    <text class="policy-p">功能定位：本产品是辅助记忆工具，不替代学校课堂教学，不对学习成绩作任何承诺。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">三、内容与准确性</view>
+    <text class="policy-p">版权：古诗文原文属公共领域（现当代作品除外）。白话译文、注音、内容分组与程序代码由本产品整理制作，可免费用于个人学习与非商业教学；商业使用须事先取得授权。页面标注了来源的内容，以标注为准。</text>
+    <text class="policy-p">准确性：文本、注音与译文经人工整理校对，仍可能有疏漏，仅供学习参考，以学校教材与教师讲授为准。年级学期编排参照统编版教材的通行安排，各地进度不同，请以实际使用的教材为准。</text>
+    <text class="policy-p">纠错与申诉：发现内容错误，或认为内容侵犯了你的合法权益，请发邮件联系，我们核实后处理。</text>
+  </view>
+
+  <view class="card">
+    <view class="card-title">四、免责与变更</view>
+    <text class="policy-p">服务现状：本产品按现状免费提供，不承诺持续可用、无差错运行或长期维护。</text>
+    <text class="policy-p">责任限制：在法律允许的最大范围内，因使用或无法使用本产品造成的学习效果、数据丢失等后果，我们不承担赔偿责任。</text>
+    <text class="policy-p">协议变更：协议随功能调整更新，以本页内容与更新日期为准。继续使用即视为接受更新后的协议。</text>
+    <text class="policy-p">协议问题与内容纠错，请联系：{{contact}}</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCopyContact">
+      <view class="row-main"><text class="row-title">复制联系邮箱</text></view>
+      <text class="row-go">›</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>
