@@ -36,7 +36,6 @@
 
       <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
       <text class="fh-note ranked" wx:if="{{ranked}}">这一轮 {{lastScore}} 句已上榜 · {{rankWhere}}</text>
-      <text class="fh-note" wx:elif="{{rankOff}}">这一轮 {{lastScore}} 句记下了，排行榜现在没开</text>
 
       <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
 

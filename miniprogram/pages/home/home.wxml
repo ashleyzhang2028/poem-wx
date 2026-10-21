@@ -42,10 +42,11 @@
 
     <view class="card">
       <view class="guest-lead">
-        <text class="guest-lead-title">用户登录</text>
-        <text class="guest-lead-sub">解锁更多可能</text>
+        <text class="guest-lead-title">登录</text>
+        <text class="guest-lead-sub">进度存在账号里，换台手机接着背。</text>
       </view>
       <button class="btn primary block" bindtap="onLoginTapped">登录</button>
+      <text class="hint guest-note">只拿微信的公开标识认人，不读手机号与聊天记录。</text>
     </view>
 
     <view class="safe-bottom"></view>
@@ -105,15 +106,16 @@
             </view>
           </view>
           <view class="seasonal-btns">
-            <view class="round-btn de-btn {{item.daily ? 'on' : ''}}" hover-class="round-btn-hover" hover-stay-time="60"
+            <view class="seasonal-btn {{item.daily ? 'on' : ''}}" hover-class="seasonal-btn-hover" hover-stay-time="60"
                   data-id="{{item.id}}" catchtap="onSeasonalAdd"
                   aria-label="{{item.daily ? '移出今日加背' : '加入今日加背'}}">
               <view class="glyph" style="mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');"></view>
+              <text class="seasonal-btn-text">{{item.daily ? '已加' : '加背'}}</text>
             </view>
-            <view class="round-btn de-btn" hover-class="round-btn-hover" hover-stay-time="60"
+            <view class="seasonal-btn {{item.collected ? 'on' : ''}}" hover-class="seasonal-btn-hover" hover-stay-time="60"
                   data-id="{{item.id}}" catchtap="onSeasonalCollect"
-                  aria-label="收进自选集">
-              <view class="glyph" style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"></view>
+                  aria-label="{{item.collected ? '取消收进自选集' : '收进自选集'}}">
+              <text class="seasonal-btn-text">{{item.collected ? '已收' : '收进'}}</text>
             </view>
           </view>
         </view>

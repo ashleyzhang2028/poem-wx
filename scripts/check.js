@@ -757,22 +757,48 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   ok("默认地址下诗词字体就绪", e.font.readiness().usable === true);
   e.font.load().then(() => {
     ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
-      seen.length === 1 && seen[0].family === e.font.FAMILY,
+      seen.length === 1 && seen[0].family === e.font.face().family,
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
-    ok("没登录取 free 那两份", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
+    ok("没登录取默认那一款的 free 子集", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
   });
   e.restore();
+
+  asTier("free");
+  const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
+  ok("Free 换不了字体（三款摆着，只有默认那款可选）",
+    picked.font.pickable() === false
+      && picked.font.options().length === 3
+      && picked.font.set("huiwen").ok === false,
+    JSON.stringify(picked.font.options()) + " / pickable=" + picked.font.pickable());
+  picked.font.set("huiwen");
+  ok("Free 换了也还是那款默认的", picked.font.current() === picked.font.DEFAULT, picked.font.current());
+  picked.restore();
 
   const proSeen = [];
   asTier("pro");
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
-    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.SETS.pro[0], proSeen[0]);
-    ok("Pro 与 Free 是两套地址", ep.font.SETS.pro[0] !== ep.font.SETS.free[0]);
+    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0], proSeen[0]);
+    ok("Pro 与 Free 是两套地址",
+      ep.font.FACES[0].pro[0] !== ep.font.FACES[0].free[0]
+        && ep.font.FACES[0].free[0] !== ep.font.FACES[1].free[0]);
     proSeen.length = 0;
     return ep.font.load();
   }).then(() => {
-    ok("同一档位注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
+    ok("同一款注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
+    ok("三款字各有各的字族与地址（不是同一份换个名字）",
+      ep.font.FACES.map((f) => f.family).join() === "Kuibu Poem zhuque,Kuibu Poem huiwen,Kuibu Poem chillkai"
+        && ep.font.FACES.every((f) => f.pro[0] !== ep.font.FACES[0].pro[0]),
+      ep.font.FACES.map((f) => f.family + " " + f.pro[0]).join(" | "));
+    proSeen.length = 0;
+    const r = ep.font.set("huiwen");
+    ok("Pro 切到汇文明朝，换的是它自己的那一份", r.ok === true && ep.font.current() === "huiwen");
+    return ep.font.load().then(() => {
+      ok("切换之后重新注册的是新款那一份",
+        proSeen.length === 1 && proSeen[0] === ep.font.addresses("huiwen")[0]
+          && proSeen[0].indexOf("huiwen") > 0,
+        proSeen.join(" | "));
+    });
   });
   ep.restore();
 
@@ -786,7 +812,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   });
   e3.font.load().then((hit) => {
     ok("woff2 那一份注册失败就退到 woff（老 iOS）",
-      hit === true && fallback.length === 2 && fallback[1] === e3.font.SETS.free[1],
+      hit === true && fallback.length === 2 && fallback[1] === e3.font.addresses(e3.font.DEFAULT)[1],
       fallback.join(" | "));
   });
   e3.restore();
@@ -801,7 +827,10 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
-  ok("字体链首位与 font.js 的 FAMILY 同名", !!stackNow && stackNow[1].indexOf("Kuibu Serif") >= 0);
+  const fontNow = require(path.join(ROOT, "utils", "font.js"));
+  ok("tokens 的字体链首位就是默认那一款的字族（页面进场前也先用它）",
+    !!stackNow && stackNow[1].indexOf(fontNow.FACES[0].family) >= 0,
+    (stackNow ? stackNow[1] : "读不到") + " vs " + fontNow.FACES[0].family);
 }
 
 {
@@ -1184,7 +1213,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 14], ["max", 17]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 16], ["max", 19]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -1468,9 +1497,12 @@ const GATED = {
   const mineWxml = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
   const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
-  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  const panelWxml = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const panelJs = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(panelWxml);
   ok("档位胶囊点得动，进的就是档位与权限那一页",
-    !!chip && /bindtap="onTier"/.test(chip[0])
+    !!chip && /bindtap="onTier"/.test(chip[0]) && /onTier\s*\(\)\s*\{[\s\S]{0,80}?triggerEvent\("tier"\)/.test(panelJs)
+      && /bind:tier="onTier"/.test(mineWxml)
       && mineJs.indexOf('url: "/packages/mine/tier/tier"') >= 0,
     "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
       + "点下去必须落在对比表上（Issue #234）");
@@ -1533,14 +1565,16 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     (subs.mine || []).indexOf("tier/tier") >= 0 && (subs.admin || []).indexOf("index/index") >= 0,
     "entryOf 按分包根给页面归门 —— 落在 admin 分包里，改档那些门禁就会漏掉这张公开的表");
 
-  const chip = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(mineWxml);
+  const panelWxml2 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const chip2 = /<view\b[^>]*class="tier-chip"[^>]*>/.exec(panelWxml2);
   ok("档位胶囊点得动，进的就是档位与权限那一页",
-    !!chip && /bindtap="onTier"/.test(chip[0])
+    !!chip2 && /bindtap="onTier"/.test(chip2[0])
+      && /bind:tier="onTier"/.test(mineWxml)
       && mineJs.indexOf('url: "/' + tier + '"') >= 0,
     "胶囊还是死的，或者跳去了别处 —— 用户只有从「我的」页看出来自己是哪一档，"
       + "点下去必须落在对比表上（Issue #234）");
   ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
-    /bindtap="onTier"/.test(mineWxml.replace(chip ? chip[0] : "", "")));
+    /bindtap="onTier"/.test(mineWxml));
   ok("权限表那一块只有一份（两张页面共用同一个组件）",
     /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareRows") < 0
       && (subs.mine || []).indexOf("tier/tier") >= 0,
@@ -2968,8 +3002,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
   ok("昵称被拦后端上退回原名并说一句（不把脏名字留在本机）",
     /blocked: !!\(err && err\.code === "E_NICK_BLOCKED"\)/.test(read("utils/auth.js"))
-      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => this\.revertNickname\(before, r\)\)/.test(read("pages/mine/mine.js"))
-      && /revertNickname\(before, r\)[\s\S]{0,300}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("pages/mine/mine.js")),
+      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => \{[\s\S]{0,400}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("components/login-panel/login-panel.js")),
     "服务端不收，本机却已经改成了那个名字 —— 顶栏与榜上各说一套");
 
   ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
@@ -3026,9 +3059,15 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
     "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
 
-  ok("后台那行说明与开关同源（重新进后台不会把「已打开」说成「关」）",
-    adminJs.indexOf("res.on ?") >= 0 && adminJs.indexOf("已打开") >= 0,
-    "开关打开之后重新进后台，说明还写着「关」—— 与那颗开着的开关互相打脸");
+  ok("后台开关读的是服务端的那一份状态（重新进后台不会把「已打开」说成「关」）",
+    /rankingOn: res\.games/.test(adminJs) && /rankingOn\[item\.key\]/.test(read("packages/admin/index/index.wxml")),
+    "开关开过之后重新进后台又变回关 —— 与库里那一行互相打脸");
+
+  ok("飞花令与大会各有一个开关，后台拨的是各自的键（拨一个不会顺手改另一个）",
+    /RANKING_GAMES = \["fly", "exam"\]/.test(read("utils/admin.js"))
+      && /remote\.setAdminRanking\(game, on\)/.test(read("utils/admin.js"))
+      && /PATHS\.adminRanking \+ qs/.test(read("utils/remote.js")),
+    "后台只认 exam 那一行 —— 飞花令的成绩永远上不了榜，页面还告诉用户「排行榜没开」");
 
   ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
     adminWxml.indexOf("onRanking") >= 0
@@ -3139,6 +3178,54 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && groupMod[0].items.length + groupMod[1].items.length === all.length,
     badGroup.map((m) => m[1]).join(", ") + " 没归位；卡片 " + groupMod.map((x) => x.title).join(" / "));
 
+  function inTradition(key) {
+    return WANT.filter((w) => w[0] === key)[0][3] === "tradition";
+  }
+
+  {
+    const tierOf = (t) => {
+      store.saveProfile({ logged: true, tier: "" });
+      store.drop(store.KEYS.auth);
+      store.drop(store.KEYS.caps);
+      store.drop(store.KEYS.grant);
+      if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
+    };
+    const groupOf = (key) => themeMod.groups().filter((g) => g.key === key)[0];
+
+    tierOf("free");
+    ok("Free 手里「大好河山」那张卡是灰的，「中国传统」照旧能点",
+      groupOf("landscape").locked === true
+        && groupOf("landscape").lockNote !== ""
+        && groupOf("landscape").items.every((i) => i.locked)
+        && groupOf("tradition").locked === false
+        && groupOf("tradition").items.every((i) => !i.locked),
+      JSON.stringify(groupOf("landscape").items.map((i) => i.locked)));
+
+    themeMod.set("yangzhoushxihu");
+    ok("Free 点不出大好河山那一支（点了也停在原来那支）",
+      themeMod.current() !== "yangzhoushxihu" && inTradition(themeMod.current()),
+      themeMod.current());
+
+    tierOf("pro");
+    ok("Pro 起大好河山整张卡亮起来（同一份清单，只是不再灰）",
+      groupOf("landscape").locked === false
+        && groupOf("landscape").items.every((i) => !i.locked)
+        && groupOf("landscape").lockNote === "");
+    themeMod.set("yangzhoushxihu");
+    ok("Pro 点得进大好河山那一支", themeMod.current() === "yangzhoushxihu", themeMod.current());
+
+    tierOf("free");
+    ok("档位掉回 Free 时，停在大好河山上的那支要退回默认那支（页面不挂在够不着的颜色上）",
+      themeMod.current() === themeMod.DEFAULT, themeMod.current());
+
+    store.drop(store.KEYS.grant);
+    store.drop(store.KEYS.auth);
+    store.saveProfile({ logged: false });
+    ok("未登录也读得到清单（灰着，连同提示）",
+      groupOf("landscape").locked === true && groupOf("landscape").lockNote.indexOf("登录") >= 0,
+      groupOf("landscape").lockNote);
+  }
+
   const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);
   ok("tokens 的 --theme 默认值指向清单里默认那一项（两处不许各写一遍）",
     !!tDef && tDef[1] === themeMod.DEFAULT,
@@ -3154,6 +3241,65 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   ok("每个页面的根节点都挂了 themeStyle（主题传得到页面里）",
     missWxml.length === 0, missWxml.join(", "));
   ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
+}
+
+{
+  const themeWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
+  const themeJs = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const fontMod = require(path.join(ROOT, "utils", "font.js"));
+
+  const tierAs = (t) => {
+    store.saveProfile({ logged: true, tier: "" });
+    store.drop(store.KEYS.auth);
+    store.drop(store.KEYS.grant);
+    store.drop(store.KEYS.caps);
+    if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
+  };
+
+  ok("字体卡片在主题页里，三款各占一行（选择器接到 set 上）",
+    themeWxml.indexOf('class="font-row') >= 0
+      && themeJs.indexOf("font.options()") >= 0
+      && themeJs.indexOf("font.set(") >= 0
+      && fontMod.options().length === 3,
+    "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
+
+  const themeWxss = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8");
+  ok("字体卡不为预览注册另外两款字族（名字走系统字体）",
+    themeWxss.indexOf("--font-") < 0 && themeWxml.indexOf("fontStyle") < 0,
+    "字体卡还在拿另外两款的字族渲染行名");
+
+  const rFree = (() => {
+    tierAs("free");
+    return fontMod.set("huiwen");
+  })();
+  ok("Free 切不了字体（set 直接拒，不静默改）",
+    rFree.ok === false && rFree.reason === "tier" && fontMod.current() === fontMod.DEFAULT,
+    JSON.stringify(rFree));
+
+  tierAs("pro");
+  const rPro = fontMod.set("chillkai");
+  ok("Pro 切得动，且落进 settings（跟着账号走）",
+    rPro.ok === true && store.settings().font === "chillkai" && store.LOCAL_ONLY.font !== true,
+    JSON.stringify(rPro) + " / " + store.settings().font);
+
+  const fontCap = E.CAPS.filter((c) => c.key === "font")[0];
+  const sightsCap = E.CAPS.filter((c) => c.key === "sights")[0];
+  ok("权限页两项各归各档（大好河山与字体都是 Pro 起）",
+    !!fontCap && fontCap.tier === "pro" && !!sightsCap && sightsCap.tier === "pro"
+      && E.CAP_KEYS.indexOf("font") >= 0 && E.CAP_KEYS.indexOf("sights") >= 0);
+
+  tierAs("free");
+  ok("Free 手上这两项是关的", E.can("font") === false && E.can("sights") === false);
+  tierAs("pro");
+  ok("Pro 手上这两项是开的", E.can("font") === true && E.can("sights") === true);
+
+  store.drop(store.KEYS.grant);
+  store.drop(store.KEYS.auth);
+  store.saveProfile({ logged: false });
+  store.saveSettings({ font: fontMod.DEFAULT });
 }
 
 {
@@ -4028,7 +4174,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
-    ["昵称", "pages/mine/mine.js", /saveNickname\([^)]*\)[\s\S]{0,300}?markDirty/]
+    ["昵称", "utils/login-flow.js", /function takeNickname\([\s\S]{0,500}?markDirty/]
   ];
   ok("改了设置就该传：六个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
@@ -4083,62 +4229,62 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   }
 
   {
-    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    const mineWxml8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8");
-    const pick = (fn) => {
-      const i = mineSrc8.indexOf(fn + "(");
-      return i < 0 ? "" : mineSrc8.slice(i, mineSrc8.indexOf("\n  },", i));
-    };
-    ok("三个一键选项都在弹层里（头像 / 昵称 / 两样一起换）",
-      /<view class="wechat-sheet"[\s\S]*?bindchooseavatar="onWechatAvatar"[\s\S]*?bindinput="onWechatNickname"[\s\S]*?bindchooseavatar="onWechatIdentity"[\s\S]*?<\/view>/.test(mineWxml8)
-        && !!pick("onWechatAvatar") && !!pick("onWechatNickname") && !!pick("onWechatIdentity"),
-      "「用微信头像」「用微信昵称」「用微信头像和昵称」少了一个，或者跑到了弹层外面");
+    const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+    const panelWxml8 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
     const flowSrc8 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
-    ok("头像那两项各是一个 open-type=\"chooseAvatar\" 的按钮（平台没有静默拿头像的接口）",
-      (mineWxml8.match(/open-type="chooseAvatar"/g) || []).length === 2
-        && /detail\.avatarUrl/.test(mineSrc8)
-        && !/wx\.chooseAvatar/.test(flowSrc8 + mineSrc8)
-        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8),
+    const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+
+    ok("换头像与换昵称各有一个入口，两个都从同一个壳出去",
+      /bindtap="onWechat"/.test(panelWxml8)
+        && /onWechat\(\)[\s\S]{0,200}?loginFlow\.start\(/.test(panelSrc)
+        && /type="nickname"/.test(panelWxml8)
+        && /onNickname\(e\)[\s\S]{0,400}?auth\.saveNickname\(/.test(panelSrc),
+      "头像或昵称没了入口 —— 用户拿不回来微信那张");
+    ok("头像走 open-type=\"chooseAvatar\" 那一环的 chooseavatar 事件（平台没有静默拿头像的接口）",
+      /entry\[part\] = \(\) => ask\(part\)/.test(flowSrc8)
+        && /function takeAvatar\(url, withNickname\)[\s\S]{0,120}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8)
+        && !/wx\.chooseAvatar/.test(flowSrc8 + panelSrc),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
     ok("「头像和昵称」那一项把昵称也走同一条推送（不是只改本机）",
       /function wechatParts\(picked\)[\s\S]{0,200}?parts\.push\("nickname"\)/.test(flowSrc8)
         && /function takeNickname\(name, after, again\)[\s\S]{0,1400}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
       "只换了头像，昵称没推上去");
-    ok("弹层只在登录那一态打得开（没登录时没有可换的身份）",
-      /onAvatarTap\(\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
-        && /onNicknameTap\(e\)[\s\S]{0,120}?if \(!this\.data\.logged\) return/.test(mineSrc8)
-        && !!pick("onWechatPickClose"),
-      "没登录也能弹出换身份的层");
+    ok("没登录时那枚圆不出现在页面上（没有可换的身份）",
+      /<view class="card login-box" wx:else>/.test(panelWxml8)
+        && /onWechatAvatar\(e\)[\s\S]{0,160}?if \(!url \|\| !this\.data\.logged\) return/.test(panelSrc),
+      "没登录也能走换身份那一步 —— 那一步没有可换的身份");
     ok("头像或昵称一换，底栏那格跟着重画",
-      /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8)
-        && /onWechatAvatar\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
-        && /onWechatIdentity\(e\)[\s\S]{0,120}?startWechat/.test(mineSrc8)
-        && /entry\.exit = \(\) => this\.afterWechatNickname\(\)/.test(mineSrc8)
-        && /afterWechatNickname\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8),
+      /done\(\)[\s\S]{0,200}?this\.refresh\(\)[\s\S]{0,200}?triggerEvent\("changed"\)/.test(panelSrc)
+        && /bind:changed="onIdentityChanged"/.test(
+          fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8"))
+        && /onIdentityChanged\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
+        && /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
   }
 
   {
     const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
-    const mineCode9 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
-    ok("登录成功后问一次用不用微信的（三选一，取消就照旧）",
+    const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+
+    ok("登录成功后问一次用不用微信的（取消就照旧）",
       /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechatPick\(page\)/.test(flowSrc9)
         && /const WECHAT_ITEMS = \["用微信头像", "用微信昵称", "用微信头像和昵称"\]/.test(flowSrc9)
-        && /itemList: WECHAT_ITEMS/.test(flowSrc9)
-        && /fail: \(\) => resolve\(""\)/.test(flowSrc9),
-      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口；或者取消那一下被当成选了第一项");
-    ok("登录后那一问与弹层那三项落在同一处（头像 / 昵称各只有一份实现）",
+        && /function start\(page, picked\)/.test(flowSrc9),
+      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口");
+    ok("换头像/换昵称只有一份实现（页面与登录后那一问都调它）",
       /module\.exports = \{[^}]*wechatEntry[^}]*takeWechat[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
-        && /loginFlow\.wechatEntry\(/.test(mineCode9)
-        && /loginFlow\.askWechat\(/.test(mineCode9)
-        && !/function takeNickname/.test(mineCode9)
-        && !/function takeAvatar/.test(mineCode9),
-      "登录后那一问自己又写了一遍落盘与推送 —— 两处会各说一套");
+        && /loginFlow\.start\(this, loginFlow\.WECHAT_ITEMS\[2\]\)/.test(panelCode9)
+        && !/function takeNickname/.test(panelCode9)
+        && !/function takeAvatar/.test(panelCode9),
+      "页面自己又写了一遍落盘与推送 —— 两处会各说一套");
     ok("昵称只走微信给的那一份，不再凭空弹一个输入框让人敲",
-      !/editable:\s*true/.test(flowSrc9 + mineCode9)
+      !/editable:\s*true/.test(flowSrc9 + panelCode9)
         && /type="nickname"/.test(
-          fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8")),
+          fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8")),
       "又在客户端弹输入框 —— 微信昵称本来就该由 type=\"nickname\" 那一格带回来");
+    ok("取昵称那次抢跑也认（输入框先回值、等待方后挂上，不许把值丢掉）",
+      /if \(entry\.early === part\)[\s\S]{0,160}?Promise\.resolve\(value\)/.test(flowSrc9),
+      "等待方挂上时把已到的值丢了 —— 用户点完头像和昵称，昵称那一步永远等不到回话");
   }
 
   {
@@ -4249,7 +4395,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /request\(REMOTE\.me,[\s\S]{0,80}?\"PATCH\"/.test(authSrc9),
       "昵称只写进了本机存储 —— 数据库 accounts.nickname 永远是空的（Issue #268）");
     ok("改昵称那一刻就把昵称推上去（不靠进度同步队列捎带）",
-      /saveNickname\([^)]*\)[\s\S]{0,300}?auth\.saveNickname\(/.test(read("pages/mine/mine.js")),
+      /onNickname\(e\)[\s\S]{0,400}?auth\.saveNickname\(/.test(read("components/login-panel/login-panel.js")),
       "改昵称只落本机 + markDirty —— 进度那条链从来不打包昵称，" +
         "用户改完到数据库里看依旧为空");
     ok("没登录 / 没接后端时改昵称不炸（只落本机）",
@@ -4326,7 +4472,6 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const mineWxml = read("pages/mine/mine.wxml");
-  const mineWxss = read("pages/mine/mine.wxss");
   const mineJs = read("pages/mine/mine.js");
   const generalWxml = read("packages/settings/general/general.wxml");
   const generalJs = read("packages/settings/general/general.js");
@@ -4345,9 +4490,8 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const mineWxml = read("pages/mine/mine.wxml");
-  const mineWxss = read("pages/mine/mine.wxss");
   const mineJs = read("pages/mine/mine.js");
-
+  const panelJs = read("components/login-panel/login-panel.js");
 
   {
 
@@ -4364,7 +4508,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       "选完头像还去 markDirty / 传文件 —— 那就要为它养一份对象存储（Issue #111 要的正是别养）。" +
         "函数体：" + body.replace(/\s+/g, " ").slice(0, 160));
 
-    const bareJs = mineJs.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const bareJs = (mineJs + panelJs).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     ok("整个小程序端没有上传头像的接口调用",
       !/wx\.uploadFile|\/api\/avatar/.test(bareJs),
       "还留着上传头像的路 —— 那就是又回到「要一份对象存储」");
@@ -6103,17 +6247,16 @@ function gapped(items, max) {
   });
 
 
-  const mineWxss = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxss"), "utf8");
-  const mineWxml = fs.readFileSync(path.join(ROOT, "pages/mine/mine.wxml"), "utf8");
-  const mineSrc = fs.readFileSync(path.join(ROOT, "pages/mine/mine.js"), "utf8");
+  const panelWxml = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
+  const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
   ok("头像与首字印是两个分支（没有头像时才画首字）",
-    /class="avatar-fallback"[^>]*wx:if="\{\{!avatarUrl\}\}"/.test(mineWxml)
-      && mineSrc.indexOf("avatarChar") >= 0,
+    /class="avatar-fallback"[^>]*wx:else/.test(panelWxml)
+      && panelSrc.indexOf("avatarChar") >= 0,
     "首字印又被塞回原生 button 里 —— 真机上它的盒模型跟页面样式表对不上（Issue #194）");
 
   ok("整枚圆都是命中区，点首字印也算点头像（Issue #388）",
-    /class="avatar-wrap"[^>]*bindtap="onAvatarTap"/.test(mineWxml)
-      && /onAvatarTap\(\)[\s\S]{0,200}?wechatPick:\s*true/.test(mineSrc),
+    /<view class="avatar-wrap">[\s\S]{0,400}?<button class="wechat-choose" open-type="chooseAvatar"/.test(panelWxml)
+      && /onWechatAvatar\(e\)[\s\S]{0,160}?loginFlow\.start\(/.test(panelSrc),
     "首字印与头像图并列、不穿透，点在字上就没反应");
 }
 
@@ -7194,6 +7337,15 @@ function gapped(items, max) {
     !/bindtap="[^"]*"[^>]*>\s*<text class="card-title seasonal-title"/.test(homeWxml4)
       && /wx:for="\{\{seasonal\.rows\}\}"[^>]*data-id="\{\{item\.id\}\}"[^>]*bindtap="onSeasonalOpen"/.test(homeWxml4)
       && /onSeasonalOpen\(e\)[\s\S]{0,400}?sheet\.open\(rows, id\)/.test(homeSrc4));
+
+  ok("季节限定上加背/收进就地重排首页（顶读数与课内行跟着变，不用手动刷新）",
+    /onSeasonalAdd\(e\)[\s\S]{0,900}?this\.paint\(\)/.test(homeSrc4)
+      && /onCollectDone\(e\)[\s\S]{0,300}?this\.paint\(\)/.test(homeSrc4));
+  ok("季节限定行上的两枚都是胶囊按钮：文案在行上，已加/已收点得动",
+    /class="seasonal-btn \{\{item\.daily \? 'on' : ''\}\}"/.test(homeWxml4)
+      && /class="seasonal-btn \{\{item\.collected \? 'on' : ''\}\}"/.test(homeWxml4)
+      && /catchtap="onSeasonalAdd"/.test(homeWxml4) && /catchtap="onSeasonalCollect"/.test(homeWxml4)
+      && /onSeasonalCollect\(e\)[\s\S]{0,500}?cols\.removeItems\(/.test(homeSrc4));
 
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));

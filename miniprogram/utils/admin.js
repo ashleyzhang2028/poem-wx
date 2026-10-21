@@ -267,27 +267,33 @@ function refreshSession() {
   return remote.sessionRefresh();
 }
 
+const RANKING_GAMES = ["fly", "exam"];
+
 function rankingState() {
   if (!loggedIn()) {
-    return Promise.resolve({ on: false, sim: true, note: "登录且是管理员才能改" });
+    return Promise.resolve({ games: {}, sim: true, note: "登录且是管理员才能改" });
   }
   return refreshSession().then(() => {
     if (!canWrite()) {
-      return { on: false, sim: true, note: "改不了：服务器未接上，或这个账号不是管理员" };
+      return { games: {}, sim: true, note: "改不了：服务器未接上，或这个账号不是管理员" };
     }
-    return remote.adminRanking("exam").then((res) => ({ on: !!res.on, sim: false, note: "" }));
+    return Promise.all(RANKING_GAMES.map((g) => remote.adminRanking(g))).then((rows) => {
+      const games = {};
+      RANKING_GAMES.forEach((g, i) => { games[g] = !!(rows[i] && rows[i].on); });
+      return { games, sim: false, note: "" };
+    });
   });
 }
 
-function setRanking(on) {
+function setRanking(game, on) {
   return refreshSession().then(() => {
     if (!canWrite()) {
       return { ok: false, msg: "改不了：服务器未接上，或这个账号不是管理员" };
     }
-    return remote.setAdminRanking("exam", on).then((res) => ({
+    return remote.setAdminRanking(game, on).then((res) => ({
       ok: !!res.ok,
       on: !!res.on,
-      msg: res.on ? "排行榜已打开" : "排行榜已隐藏",
+      msg: res.on ? "已打开" : "已隐藏",
       sim: res.sim
     }));
   });

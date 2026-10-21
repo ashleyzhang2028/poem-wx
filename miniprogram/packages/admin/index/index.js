@@ -19,8 +19,12 @@ Page({
     tab: "bar",
     chart: null,
     curve: "",
-    rankingOn: false,
-    rankingNote: "默认关 · 打开后大会页的排行榜才能点进去"
+    rankingGames: [
+      { key: "fly", name: "飞花令榜", sub: "默认关 · 打开后飞花令的成绩才上榜" },
+      { key: "exam", name: "古诗词大会榜", sub: "默认关 · 打开后大会页的排行榜才能点进去" }
+    ],
+    rankingOn: {},
+    rankingNote: ""
   },
 
   onShow() {
@@ -34,25 +38,24 @@ Page({
     admin.rankingState().then((res) => {
       this.setData({
         logged: entitlement.snapshot().logged,
-        rankingOn: !!res.on,
-        rankingNote: res.note || (remote.adminReady()
-          ? (res.on ? "已打开" : "关 · 打开后大会页的排行榜才能点进去")
-          : "只读")
+        rankingOn: res.games || {},
+        rankingNote: res.note || (remote.adminReady() ? "" : "只读")
       });
       if (this.data.logged) this.loadStats();
     });
   },
 
   onRanking(e) {
+    const game = e.currentTarget.dataset.game;
     const on = !!e.detail.value;
-    this.setData({ rankingOn: on, rankingNote: "正在写…" });
-    admin.setRanking(on).then((res) => {
+    this.setData({ ["rankingOn." + game]: on, rankingNote: "正在写…" });
+    admin.setRanking(game, on).then((res) => {
       if (!res.ok) {
-        this.setData({ rankingOn: !on, rankingNote: res.msg });
+        this.setData({ ["rankingOn." + game]: !on, rankingNote: res.msg });
         wx.showModal({ title: "没写进去", content: res.msg, showCancel: false });
         return;
       }
-      this.setData({ rankingOn: !!res.on, rankingNote: res.on ? "已打开" : "已隐藏" });
+      this.setData({ ["rankingOn." + game]: !!res.on, rankingNote: "" });
     });
   },
 

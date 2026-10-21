@@ -84,7 +84,6 @@
       <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
 
       <text class="ranked" wx:if="{{ranked}}">已上榜 · {{rankWhere}}</text>
-      <text class="hint best-line" wx:elif="{{rankOff}}">成绩记下了，排行榜现在没开，打开之后才看得见名次</text>
     </view>
 
     <view class="card">

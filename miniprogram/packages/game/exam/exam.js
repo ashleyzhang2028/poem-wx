@@ -60,7 +60,6 @@ Page({
     allowed: false,
     reason: "",
     ranked: false,
-    rankOff: false,
     rankSent: false,
     rankWhere: ""
   },
@@ -302,7 +301,6 @@ Page({
         const sent = !!(res && (res.ok || res.off));
         this.setData({
           ranked: sent && !!res.on,
-          rankOff: sent && !res.on,
           rankSent: sent,
           rankWhere: rankingSelf.labelOf()
         });
@@ -325,7 +323,6 @@ Page({
       best: "",
       newBest: false,
       ranked: false,
-      rankOff: false,
       rankSent: false,
       remain: DURATION,
       remainText: "20:00"

@@ -698,30 +698,39 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
    + CDN），由 `wx.loadFontFace` 在真机上注册一次，落在这条链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
 
-**线上是朱雀仿宋**（OFL 1.1），按档位两份子集，地址写在 `utils/font.js` 的 `SETS`：
+**线上三款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
+清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
-| 档位 | 字表 | woff2 | woff |
+| 款 | 键 | 字族 | 子集地址 |
 |---|---|---|---|
-| 未登录 / Free | 4237 字 | 1476KB | 1789KB |
-| 已登录 Pro / Max | 6893 字 | 2536KB | 3089KB |
+| 朱雀仿宋（默认） | `zhuque` | `Kuibu Poem zhuque` | `zhuquefangsong-regular/zhuquefangsong-regular-{free,pro}.{woff2,woff}` |
+| 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved/huiwenmincho-improved-{free,pro}.{woff2,woff}` |
+| 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai/chillkai-{free,pro}.{woff2,woff}` |
 
-pro 是 free 的超集（free 的字在 pro 里一个不缺），所以换档不会出现「某些字原本有、
-升级后反而没有」。每档按 woff2 → woff 的顺序试：第一份 `fail` 才往下一份走，
-老 iOS 不认 woff2 时得到的是 woff，不是黑体；woff2 成了就不再发 woff 那一笔。
+三款各注册一个字族，`--font-poem` 的首位跟着 `settings.font` 换名字 ——
+换字体不重排正文，也不影响后面那串系统衬线兜底。
 
-哪一档由 `utils/font.js` 的 `setOf(tier)` 定，`tier` 取 `entitlement.status().tier`
-—— 与权限页同一个判据，不在字体这边另立一套。`auth.fontUrl` 仍可覆盖
-（字符串或数组），显式给空串就是不启用这条链。
+免费那档只能停在朱雀仿宋，用的也是它的 free 子集；Pro / Max 三款都能选，
+取的是所选那款的 pro 子集（字表更大）。所以「换款」与「换子集」是两件事，
+各由 `FONTS` 的键与 `pickable()` 定，不在字体这边另立一套档位判据。
 
-档位会在一次启动内变（登录、刷新拿到 `plan.tier`、登出），所以 `app.js` 每两秒比对
-一次 `status().tier`，变了才重注册；`font.load()` 按地址去重，同一档连着调用只发一次
-`wx.loadFontFace`。
+- 谁可选：`font.pickable()` 取 `entitlement.status().tier`，pro 起。
+  Free 那里 `font.set()` 直接拒（`{ ok: false, reason: "tier" }`），
+  不静默改、也不假装成功；`current()` 另挡一道，档位掉回 Free 时
+  停在非默认款上的用户退回默认那款。
+- 每份按 woff2 → woff 的顺序试：第一份 `fail` 才往下一份走，
+  老 iOS 不认 woff2 时得到的是 woff，不是黑体；woff2 成了就不再发 woff 那一笔。
+- `auth.fontUrl` 仍可覆盖（字符串或数组），显式给空串就是不启用这条链。
+
+档位与所选那款都会在一次启动内变（登录、刷新拿到 `plan.tier`、登出、在主题页
+点另一款），所以 `app.js` 每两秒比对一次「款 + 档位」，变了才重注册；
+`font.load()` 按「款 + 地址」去重，同一款连着调用只发一次 `wx.loadFontFace`。
 
 **`wx.loadFontFace` 一次只吃一份文件**，所以 `@font-face` 那种「woff2 在前、woff 兜底」
 的多 `src` 写法用不上 —— 小程序不解析页面里的 `@font-face`，兜底只能写在 JS 里排队试。
 
 **字表有洞，按「显示不好拉倒」处理**：仍缺的字不走这份字族，落到后面的系统宋体；
-系统也没有的，才是豆腐。要补就重新裁一份、换 `SETS` 里的地址，页面一处不用动。
+系统也没有的，才是豆腐。要补就重新裁一份、换 `FONTS` 里的地址，页面一处不用动。
 生成脚本 `scripts/font-subset.js`。
 
 **地址里不带 `sign` / `t`。** 带签名的下载链是会过期的一次性地址，
@@ -730,9 +739,10 @@ pro 是 free 的超集（free 的字在 pro 里一个不缺），所以换档不
 这是观感增强，不是权限边界。
 
 **全站只留一条字体链。** 详情页的题名、身份行、诗句正文，与列表里的书名、
-词牌、诗句摘句同取 `--font-poem`，首位的 `Kuibu Serif` 也只有一个文件
-（两个子集合成一份注册）：行与行、页与页之间不该有两种宋体，
+词牌、诗句摘句同取 `--font-poem`，首位的字族一次只注册一款（同一时刻只有
+一个 `Kuibu Poem *` 在场）：行与行、页与页之间不该有两种宋体，
 同一批字在两张页面上字形不同，看起来是「两种字体」而不是「两个来源」。
+主题页那张字体卡的三个行名不算在内 —— 它用系统字体渲染，不为预览注册另外两款。
 自检钉住这一条（V12）。
 
 **题名与正文一律不做加粗**：详情页的标题、身份行、诗句正文都用常规，

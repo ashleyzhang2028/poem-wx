@@ -35,6 +35,8 @@ const CAPS = [
   { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与今日加背", cell: courseFreeCell, tier: "pro" },
   { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
+  { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
+  { key: "font", name: "字体", desc: "汇文明朝 · 寒蝉正楷，正文题名一起换", tier: "pro" },
   { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
@@ -146,6 +148,13 @@ function compareCols(snap) {
   return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
 }
 
+const COMPARE_NAME = {
+  ebbinghaus: "复习算法·艾宾浩斯",
+  leitner: "复习算法·莱特纳盒",
+  sm2: "复习算法·SM-2",
+  fsrs: "复习算法·FSRS"
+};
+
 const VIEW_NAME = {
   quiz: "古诗文大会·题库",
   feihualing: "古诗文大会·飞花令",
@@ -156,6 +165,10 @@ function viewNameOf(cap) {
   return VIEW_NAME[cap.key] || cap.name;
 }
 
+function compareNameOf(cap) {
+  return COMPARE_NAME[cap.key] || viewNameOf(cap);
+}
+
 function splitName(name) {
   const cut = name.indexOf(" ");
   if (cut < 0) return { name: name, en: "" };
@@ -164,7 +177,7 @@ function splitName(name) {
 
 function compareRows(snap) {
   const s = snap || snapshot();
-  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(viewNameOf(c)), {
+  return CAPS.map((c) => Object.assign({ cap: c.key }, splitName(compareNameOf(c)), {
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {
@@ -281,8 +294,8 @@ function cap(key) {
 
 function showLogin(name, ctx) {
   wx.showModal({
-    title: capName(name),
-    content: "登录只是开个门。进度仍然只存在这台手机上。",
+    title: "要先登录",
+    content: "「" + capName(name) + "」登录之后才能用。进度存在账号里，换台手机接着背。",
     confirmText: "登录",
     cancelText: "取消",
     success: (res) => {

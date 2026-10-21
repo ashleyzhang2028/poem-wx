@@ -30,8 +30,10 @@ function refuse(what) {
   if (logged()) return { ok: true, title: "", content: "" };
   return {
     ok: false,
-    title: "登录",
-    content: "解锁跬步诗词的更多可能。"
+    title: "要先登录",
+    content: what
+      ? "「" + what + "」登录之后才能用。进度存在账号里，换台手机接着背。"
+      : "登录之后才能用。进度存在账号里，换台手机接着背。"
   };
 }
 
@@ -57,7 +59,10 @@ function guard(what, page, onPass) {
 function open(onPass, page) {
   pending = { run: onPass || null, page: page || null };
   const flow = loginFlow && typeof loginFlow.run === "function" ? loginFlow : require("./login-flow");
-  flow.run(page).catch(() => {});
+  flow
+    .askLogin(page)
+    .then((res) => (res ? flow.settle(res, page) : null))
+    .catch(() => {});
 }
 
 function resume(page) {

@@ -9,12 +9,62 @@
 
 .cp {
   width: 100%;
-  max-height: 80vh;
+  max-height: calc(80vh - var(--pad-tab));
   box-sizing: border-box;
   padding: var(--sp-4) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
   background: var(--surface);
   border-radius: var(--radius) var(--radius) 0 0;
   overflow-y: auto;
+}
+
+.cp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.cp-close {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--h-btn-mini);
+  height: var(--h-btn-mini);
+  border-radius: 50%;
+  background: var(--sink);
+  transition: background-color var(--t-press);
+}
+
+.cp-close-hover {
+  background: var(--line);
+}
+
+.cp-close-x {
+  position: relative;
+  flex: none;
+  width: 16rpx;
+  height: 16rpx;
+}
+
+.cp-close-x::before,
+.cp-close-x::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  margin-top: -.5px;
+  background: var(--ink-2);
+}
+
+.cp-close-x::before {
+  transform: rotate(45deg);
+}
+
+.cp-close-x::after {
+  transform: rotate(-45deg);
 }
 
 .cp-title {
@@ -60,10 +110,22 @@
 }
 
 .cp-new,
-.cp-close {
+.cp-dismiss {
   margin-top: var(--sp-2);
 }
 
+.cp-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.cp-act {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--sp-3);
+}
+
 .cp-tier {
-  max-height: 86vh;
+  max-height: calc(86vh - var(--pad-tab));
 }

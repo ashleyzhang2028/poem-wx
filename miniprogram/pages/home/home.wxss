@@ -194,6 +194,12 @@
   line-height: var(--lh-body);
 }
 
+.guest-note {
+  display: block;
+  margin-top: var(--sp-2);
+  text-align: center;
+}
+
 
 .finish {
   padding: var(--sp-5) var(--sp-3) var(--sp-4);
@@ -278,5 +284,45 @@
   flex: none;
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
+}
+
+.seasonal-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--h-round);
+  padding: 0 var(--sp-2);
+  box-sizing: border-box;
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
+}
+
+.seasonal-btn .glyph {
+  width: var(--h-round-ico);
+  height: var(--h-round-ico);
+  color: var(--ink-2);
+}
+
+.seasonal-btn.on {
+  background: var(--strong-soft);
+  border-color: var(--strong);
+  color: var(--strong-text);
+}
+
+.seasonal-btn.on .glyph {
+  color: var(--strong-text);
+}
+
+.seasonal-btn-hover {
+  opacity: .72;
+}
+
+.seasonal-btn-text {
+  font-size: var(--fs-caption);
+  line-height: 1;
+  white-space: nowrap;
 }
