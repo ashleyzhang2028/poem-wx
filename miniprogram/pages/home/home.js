@@ -65,37 +65,27 @@ const HERO_RATIO = 916 / 1717;
 
 const BANNER_MAX_H = 360;
 
-const BANNER_MIN_H = 120;
-
-const BANNER_MARGIN = 24;
-
-function windowInfo() {
+function windowWidth() {
   const read = (fn) => {
     try {
-      const info = fn() || {};
-      return { width: Number(info.windowWidth) || 0, height: Number(info.windowHeight) || 0 };
+      return Number(fn().windowWidth) || 0;
     } catch (e) {
-      return { width: 0, height: 0 };
+      return 0;
     }
   };
   return (wx.getWindowInfo && read(wx.getWindowInfo))
     || read(wx.getSystemInfoSync)
-    || { width: 375, height: 667 };
+    || 375;
 }
 
 function bannerBox() {
   const box = nav.top();
-  const info = windowInfo();
-  const chrome = box.statusBarHeight + box.navHeight;
-  const wide = Math.min(Math.round((info.width || 375) * HERO_RATIO), BANNER_MAX_H);
   return {
     statusBarHeight: box.statusBarHeight,
     navHeight: box.navHeight,
     navBottom: box.navBottom,
-    bannerHeight: chrome + wide,
-    bannerChrome: chrome,
-    bannerWide: wide,
-    bannerTall: Math.max(Math.round((info.height || 667) - BANNER_MARGIN) - chrome, BANNER_MIN_H)
+    bannerHeight: box.statusBarHeight + box.navHeight
+      + Math.min(Math.round(windowWidth() * HERO_RATIO), BANNER_MAX_H)
   };
 }
 

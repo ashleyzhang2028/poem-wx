@@ -1,8 +1,8 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px; --chrome: {{bannerChrome}}px; --wide: {{bannerWide}}px; --tall: {{bannerTall}}px">
+  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px">
 
-    <image class="banner-img" src="{{banner}}" mode="aspectFill" />
+    <image class="banner-img" src="{{banner}}" mode="widthFix" />
 
   </view>
 
