@@ -2,6 +2,7 @@ const theme = require("../utils/theme");
 const store = require("../utils/store");
 const icons = require("../utils/icons");
 const gate = require("../utils/gate");
+const loginFlow = require("../utils/login-flow");
 const tabPage = require("../utils/tab-page");
 
 Component({
@@ -30,6 +31,12 @@ Component({
     const fixed = parseInt(this.data.current, 10);
     if (fixed >= 0) patch.active = fixed;
     this.setData(patch);
+    this.onLoginSettled = () => this.setData(this.paintMe());
+    loginFlow.watch(this.onLoginSettled);
+  },
+
+  detached() {
+    loginFlow.unwatch(this.onLoginSettled);
   },
 
   methods: {

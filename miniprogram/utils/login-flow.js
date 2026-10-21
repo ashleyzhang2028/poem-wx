@@ -81,6 +81,30 @@ function done(res) {
   wx.showToast({ title, icon: "none", duration: 2500 });
 }
 
+const listeners = [];
+
+function watch(fn) {
+  if (typeof fn !== "function" || listeners.indexOf(fn) >= 0) return fn;
+  listeners.push(fn);
+  return fn;
+}
+
+function unwatch(fn) {
+  const at = listeners.indexOf(fn);
+  if (at >= 0) listeners.splice(at, 1);
+}
+
+function report(res) {
+  const box = { logged: auth.logged(), synced: !!(res && res.synced) };
+  listeners.slice().forEach((fn) => {
+    try {
+      fn(box);
+    } catch (e) {
+      console.error("[login] 订阅方刷新失败", e);
+    }
+  });
+}
+
 function share(action, page) {
   const at = action || {};
   const url = String(at.avatar || "").trim();
@@ -209,6 +233,7 @@ function resume(page) {
 
 function settle(res, page) {
   const resumed = resume(page);
+  report(res);
   const back = backTo(page);
   if (back && !resumed) tabPage.back(back);
   return res;
@@ -251,5 +276,7 @@ module.exports = {
   askWechat,
   share,
   takeAvatar,
-  takeNickname
+  takeNickname,
+  watch,
+  unwatch
 };

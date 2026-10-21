@@ -278,6 +278,12 @@ Page({
 
   onLoad() {
     this.setData(bannerBox());
+    this.onLoginSettled = () => this.refresh();
+    loginFlow.watch(this.onLoginSettled);
+  },
+
+  onUnload() {
+    loginFlow.unwatch(this.onLoginSettled);
   },
 
   onShow() {

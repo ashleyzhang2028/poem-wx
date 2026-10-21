@@ -1,7 +1,6 @@
 const store = require("../../utils/store");
 const auth = require("../../utils/auth");
 const loginFlow = require("../../utils/login-flow");
-const tabPage = require("../../utils/tab-page");
 
 Component({
   options: {
@@ -119,7 +118,9 @@ Component({
 
     leave() {
       auth.logout();
-      tabPage.mine();
+      this.setData({ picking: false });
+      this.refresh();
+      this.triggerEvent("changed", { logged: false });
     },
 
     onTier() {

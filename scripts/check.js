@@ -2818,6 +2818,31 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       "login-flow 又 require 了 gate —— 两个模块互指时，先加载的那个只能拿到未填完的 exports，"
         + "askLogin 里调 gate.logged() 就是 TypeError: e.logged is not a function（Issue #498）");
   }
+
+  {
+    const flowSrc = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
+    const settleBody = (flowSrc.match(/function settle\(res, page\) \{[\s\S]*?\n\}/) || [""])[0];
+    const minePage = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
+    const homePage = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
+    const barCode = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.js"), "utf8");
+    const panelCode = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+    const watched = (src) => /loginFlow\.watch\(/.test(src) && /loginFlow\.unwatch\(/.test(src);
+
+    ok("登录收尾会通知订阅方（关在页面里的那次登录，页面得知道它成了）",
+      /function report\(res\)/.test(flowSrc) && /report\(res\)/.test(settleBody),
+      "settle 没有通知任何一方 —— 登录成了页面还在画未登录那一屏（Issue #502）");
+    ok("首页、我的、底栏都订上这条通知，也都在卸载时退订",
+      watched(minePage) && watched(homePage) && watched(barCode),
+      [minePage.indexOf("loginFlow.watch") < 0 ? "我的" : "",
+        homePage.indexOf("loginFlow.watch") < 0 ? "首页" : "",
+        barCode.indexOf("loginFlow.watch") < 0 ? "底栏" : ""].filter(Boolean).join("、")
+        + " 没订上 —— 登录完了界面不会自己换那一屏");
+    ok("退出就地对齐界面，不再靠 switchTab 重进自己这一页",
+      /leave\(\) \{[\s\S]{0,200}?auth\.logout\(\)[\s\S]{0,200}?triggerEvent\(["']changed["'], \{ logged: false \}/.test(panelCode)
+        && panelCode.indexOf("tabPage") < 0,
+      "退出后又 switchTab 回「我的」—— 已经在「我的」时 switchTab 是空操作，"
+        + "界面就停在已登录那一屏（Issue #502）");
+  }
 }
 
 {
@@ -4271,7 +4296,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /done\(\)[\s\S]{0,200}?this\.refresh\(\)[\s\S]{0,200}?triggerEvent\("changed"\)/.test(panelSrc)
         && /bind:changed="onIdentityChanged"/.test(
           fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8"))
-        && /onIdentityChanged\(\)[\s\S]{0,80}?this\.syncBar\(\)/.test(mineSrc8)
+        && /onIdentityChanged\(res\) \{[\s\S]{0,160}?this\.syncBar\(\)/.test(mineSrc8)
         && /syncBar\(\)[\s\S]{0,80}?tabbar\.sync\(this,\s*4\)/.test(mineSrc8),
       "底栏还是那张写死的默认图 —— 换完头像要等切页才更新");
   }

@@ -36,6 +36,15 @@ Page({
     this.refresh();
   },
 
+  onLoad() {
+    this.onLoginSettled = (res) => this.onIdentityChanged(res);
+    loginFlow.watch(this.onLoginSettled);
+  },
+
+  onUnload() {
+    loginFlow.unwatch(this.onLoginSettled);
+  },
+
   refresh() {
     const settings = store.settings();
     const profile = store.profile();
@@ -63,9 +72,12 @@ Page({
     loginFlow.askLogin(this).catch(() => {});
   },
 
-  onIdentityChanged() {
+  onIdentityChanged(res) {
+    const panel = this.selectComponent("#login");
+    if (panel && typeof panel.refresh === "function") panel.refresh();
     this.syncBar();
     this.refresh();
+    if (res && res.logged === true && E.can("sync")) sync.now(true).catch(() => {});
   },
 
   syncSub(sy) {
