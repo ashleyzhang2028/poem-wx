@@ -112,7 +112,13 @@ Page({
     sheetRows: [],
 
     selfRows: [],
-    selfOn: false
+    selfOn: false,
+
+    anchor: ""
+  },
+
+  onLoad(query) {
+    this.focusId = (query && query.coll) || "";
   },
 
   onShow() {
@@ -120,6 +126,15 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
+    this.focusSelf();
+  },
+
+  focusSelf() {
+    if (this.focused) return;
+    this.focused = true;
+    const id = this.focusId;
+    if (!id || !this.data.selfRows.some((r) => r.id === id)) return;
+    this.setData({ anchor: "self-" + id });
   },
 
   refresh() {
