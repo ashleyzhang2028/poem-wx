@@ -1296,7 +1296,7 @@ button, textarea {
   align-items: center;
   flex: none;
   box-sizing: border-box;
-  border: 1rpx solid var(--line-strong);
+  border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -1343,7 +1343,7 @@ button, textarea {
 }
 
 .pref-opt .glyph {
-  color: var(--ink-2);
+  color: var(--ink-4);
 }
 
 .pref-opt.on .glyph {
@@ -1356,10 +1356,6 @@ button, textarea {
 
 .pref-opt.in-seg.on {
   background: var(--strong-soft);
-}
-
-.pref-opt.ic.off .glyph {
-  color: var(--ink-4);
 }
 
 .pref-opt-hover {
