@@ -487,9 +487,24 @@ Page({
   onSeasonalCollect(e) {
     const id = e.currentTarget.dataset.id;
     gate.guard("自选背诵", this, () => {
-      if (!entitlement.block("collections", { page: this })) return;
+      const blocked = this.collectGate();
+      if (blocked) return blocked();
       const box = this.selectComponent("#collect");
       if (box) box.ask(id);
+    });
+  },
+
+  collectGate() {
+    if (entitlement.block("collections", { page: this })) return null;
+    if (entitlement.can("collections")) return this.staleCollections;
+    return entitlement.openTierPage;
+  },
+
+  staleCollections() {
+    wx.showModal({
+      title: "自选背诵",
+      content: "「自选背诵」现在是开着的，重新进一次即可。",
+      showCancel: false
     });
   },
 
