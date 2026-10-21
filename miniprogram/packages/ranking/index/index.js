@@ -166,6 +166,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "跬步 · 古诗词大会排行榜", path: "/packages/ranking/index/index" };
+    return { title: "古诗词大会排行榜", path: "/packages/ranking/index/index" };
   }
 });

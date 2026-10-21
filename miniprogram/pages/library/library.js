@@ -95,6 +95,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "跬步 · 课外阅读", path: "/pages/library/library" };
+    return { title: "课外阅读", path: "/pages/library/library" };
   }
 });

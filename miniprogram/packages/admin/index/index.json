@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "跬步 · 我的 · 后台管理",
+  "navigationBarTitleText": "我的 · 后台管理",
   "usingComponents": {
     "spark-line": "../../../components/spark-line/spark-line",
     "tab-bar": "/custom-tab-bar/index"

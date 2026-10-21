@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "跬步 · 我的 · 古诗词大会 · 题库",
+  "navigationBarTitleText": "我的 · 古诗词大会 · 题库",
   "usingComponents": {
     "tab-bar": "/custom-tab-bar/index"
   }
