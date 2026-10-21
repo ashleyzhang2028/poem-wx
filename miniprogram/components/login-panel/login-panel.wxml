@@ -28,7 +28,6 @@
   <text class="login-title">登录</text>
   <text class="login-sub">进度存进账号，换台手机接着背。</text>
   <button class="btn primary block" bindtap="onLogin">登录</button>
-  <text class="hint login-note">只拿微信的公开标识认人，不读手机号与聊天记录。</text>
 </view>
 
 <view class="wechat-catch" wx:if="{{wechatFocus}}">

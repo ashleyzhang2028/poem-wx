@@ -46,7 +46,6 @@
         <text class="guest-lead-sub">进度存在账号里，换台手机接着背。</text>
       </view>
       <button class="btn primary block" bindtap="onLoginTapped">登录</button>
-      <text class="hint guest-note">只拿微信的公开标识认人，不读手机号与聊天记录。</text>
     </view>
 
     <view class="safe-bottom"></view>

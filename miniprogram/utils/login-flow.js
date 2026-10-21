@@ -194,8 +194,7 @@ function askWechat(page, entry) {
 const ASK = {
   login: () => ({
     title: "登录",
-    content: "登录后进度会同步到账号，换台手机也接得上。\n\n"
-      + "只拿微信的公开标识认人，不读你的手机号、好友和聊天记录。",
+    content: "登录后进度会同步到账号，换台手机也接得上。",
     confirmText: "登录"
   }),
   wechat: () => ({
