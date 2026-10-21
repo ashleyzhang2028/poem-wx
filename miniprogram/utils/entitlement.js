@@ -11,7 +11,7 @@ function rankOf(tier) {
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
   if (!n) return { text: "", note: "", on: false };
-  return { text: n + " 个", note: "每个 " + tiers.COLLECTION_ITEMS_MAX + " 首", on: true };
+  return { text: n + " 个集合", note: "", on: true };
 }
 
 function courseFreeCell(tier) {
@@ -151,11 +151,21 @@ function compareCols(snap) {
   return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
 }
 
+const VIEW_NAME = {
+  quiz: "古诗文大会·题库",
+  feihualing: "古诗文大会·飞花令",
+  exam: "古诗文大会·考试"
+};
+
+function viewNameOf(cap) {
+  return VIEW_NAME[cap.key] || cap.name;
+}
+
 function compareRows(snap) {
   const s = snap || snapshot();
   return CAPS.map((c) => ({
     cap: c.key,
-    name: c.name,
+    name: viewNameOf(c),
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(c, t.key);
       return {
