@@ -51,7 +51,7 @@
         <text class="wechat-sheet-t">用微信头像</text>
       </button>
       <button class="wechat-sheet-item" type="nickname" bindinput="onWechatNickname"
-              bindblur="onWechatNickname" bindchange="onWechatNickname">
+              bindblur="onWechatNickname">
         <text class="wechat-sheet-t">用微信昵称</text>
       </button>
       <button class="wechat-sheet-item" open-type="chooseAvatar" bindchooseavatar="onWechatIdentity">
@@ -61,6 +61,11 @@
         <text class="wechat-sheet-t quiet">取消</text>
       </button>
     </view>
+  </view>
+
+  <view class="wechat-catch" wx:if="{{wechatFocus}}">
+    <input class="wechat-catch-input" type="nickname" focus="{{wechatFocus}}"
+           bindinput="onWechatNicknameInput" bindblur="onWechatNicknameInput" />
   </view>
 
   <view class="card">
