@@ -757,22 +757,48 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   ok("默认地址下诗词字体就绪", e.font.readiness().usable === true);
   e.font.load().then(() => {
     ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
-      seen.length === 1 && seen[0].family === e.font.FAMILY,
+      seen.length === 1 && seen[0].family === e.font.face().family,
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
-    ok("没登录取 free 那两份", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
+    ok("没登录取默认那一款的 free 子集", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
   });
   e.restore();
+
+  asTier("free");
+  const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
+  ok("Free 换不了字体（三款摆着，只有默认那款可选）",
+    picked.font.pickable() === false
+      && picked.font.options().length === 3
+      && picked.font.set("huiwen").ok === false,
+    JSON.stringify(picked.font.options()) + " / pickable=" + picked.font.pickable());
+  picked.font.set("huiwen");
+  ok("Free 换了也还是那款默认的", picked.font.current() === picked.font.DEFAULT, picked.font.current());
+  picked.restore();
 
   const proSeen = [];
   asTier("pro");
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
-    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.SETS.pro[0], proSeen[0]);
-    ok("Pro 与 Free 是两套地址", ep.font.SETS.pro[0] !== ep.font.SETS.free[0]);
+    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0], proSeen[0]);
+    ok("Pro 与 Free 是两套地址",
+      ep.font.FACES[0].pro[0] !== ep.font.FACES[0].free[0]
+        && ep.font.FACES[0].free[0] !== ep.font.FACES[1].free[0]);
     proSeen.length = 0;
     return ep.font.load();
   }).then(() => {
-    ok("同一档位注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
+    ok("同一款注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
+    ok("三款字各有各的字族与地址（不是同一份换个名字）",
+      ep.font.FACES.map((f) => f.family).join() === "Kuibu Poem zhuque,Kuibu Poem huiwen,Kuibu Poem chillkai"
+        && ep.font.FACES.every((f) => f.pro[0] !== ep.font.FACES[0].pro[0]),
+      ep.font.FACES.map((f) => f.family + " " + f.pro[0]).join(" | "));
+    proSeen.length = 0;
+    const r = ep.font.set("huiwen");
+    ok("Pro 切到汇文明朝，换的是它自己的那一份", r.ok === true && ep.font.current() === "huiwen");
+    return ep.font.load().then(() => {
+      ok("切换之后重新注册的是新款那一份",
+        proSeen.length === 1 && proSeen[0] === ep.font.addresses("huiwen")[0]
+          && proSeen[0].indexOf("huiwen") > 0,
+        proSeen.join(" | "));
+    });
   });
   ep.restore();
 
@@ -786,7 +812,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   });
   e3.font.load().then((hit) => {
     ok("woff2 那一份注册失败就退到 woff（老 iOS）",
-      hit === true && fallback.length === 2 && fallback[1] === e3.font.SETS.free[1],
+      hit === true && fallback.length === 2 && fallback[1] === e3.font.addresses(e3.font.DEFAULT)[1],
       fallback.join(" | "));
   });
   e3.restore();
@@ -801,7 +827,10 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
-  ok("字体链首位与 font.js 的 FAMILY 同名", !!stackNow && stackNow[1].indexOf("Kuibu Serif") >= 0);
+  const fontNow = require(path.join(ROOT, "utils", "font.js"));
+  ok("tokens 的字体链首位就是默认那一款的字族（页面进场前也先用它）",
+    !!stackNow && stackNow[1].indexOf(fontNow.FACES[0].family) >= 0,
+    (stackNow ? stackNow[1] : "读不到") + " vs " + fontNow.FACES[0].family);
 }
 
 {
@@ -1184,7 +1213,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 14], ["max", 17]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 16], ["max", 19]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -3030,9 +3059,15 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
     "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
 
-  ok("后台那行说明与开关同源（重新进后台不会把「已打开」说成「关」）",
-    adminJs.indexOf("res.on ?") >= 0 && adminJs.indexOf("已打开") >= 0,
-    "开关打开之后重新进后台，说明还写着「关」—— 与那颗开着的开关互相打脸");
+  ok("后台开关读的是服务端的那一份状态（重新进后台不会把「已打开」说成「关」）",
+    /rankingOn: res\.games/.test(adminJs) && /rankingOn\[item\.key\]/.test(read("packages/admin/index/index.wxml")),
+    "开关开过之后重新进后台又变回关 —— 与库里那一行互相打脸");
+
+  ok("飞花令与大会各有一个开关，后台拨的是各自的键（拨一个不会顺手改另一个）",
+    /RANKING_GAMES = \["fly", "exam"\]/.test(read("utils/admin.js"))
+      && /remote\.setAdminRanking\(game, on\)/.test(read("utils/admin.js"))
+      && /PATHS\.adminRanking \+ qs/.test(read("utils/remote.js")),
+    "后台只认 exam 那一行 —— 飞花令的成绩永远上不了榜，页面还告诉用户「排行榜没开」");
 
   ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
     adminWxml.indexOf("onRanking") >= 0
@@ -3143,6 +3178,54 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && groupMod[0].items.length + groupMod[1].items.length === all.length,
     badGroup.map((m) => m[1]).join(", ") + " 没归位；卡片 " + groupMod.map((x) => x.title).join(" / "));
 
+  function inTradition(key) {
+    return WANT.filter((w) => w[0] === key)[0][3] === "tradition";
+  }
+
+  {
+    const tierOf = (t) => {
+      store.saveProfile({ logged: true, tier: "" });
+      store.drop(store.KEYS.auth);
+      store.drop(store.KEYS.caps);
+      store.drop(store.KEYS.grant);
+      if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
+    };
+    const groupOf = (key) => themeMod.groups().filter((g) => g.key === key)[0];
+
+    tierOf("free");
+    ok("Free 手里「大好河山」那张卡是灰的，「中国传统」照旧能点",
+      groupOf("landscape").locked === true
+        && groupOf("landscape").lockNote !== ""
+        && groupOf("landscape").items.every((i) => i.locked)
+        && groupOf("tradition").locked === false
+        && groupOf("tradition").items.every((i) => !i.locked),
+      JSON.stringify(groupOf("landscape").items.map((i) => i.locked)));
+
+    themeMod.set("yangzhoushxihu");
+    ok("Free 点不出大好河山那一支（点了也停在原来那支）",
+      themeMod.current() !== "yangzhoushxihu" && inTradition(themeMod.current()),
+      themeMod.current());
+
+    tierOf("pro");
+    ok("Pro 起大好河山整张卡亮起来（同一份清单，只是不再灰）",
+      groupOf("landscape").locked === false
+        && groupOf("landscape").items.every((i) => !i.locked)
+        && groupOf("landscape").lockNote === "");
+    themeMod.set("yangzhoushxihu");
+    ok("Pro 点得进大好河山那一支", themeMod.current() === "yangzhoushxihu", themeMod.current());
+
+    tierOf("free");
+    ok("档位掉回 Free 时，停在大好河山上的那支要退回默认那支（页面不挂在够不着的颜色上）",
+      themeMod.current() === themeMod.DEFAULT, themeMod.current());
+
+    store.drop(store.KEYS.grant);
+    store.drop(store.KEYS.auth);
+    store.saveProfile({ logged: false });
+    ok("未登录也读得到清单（灰着，连同提示）",
+      groupOf("landscape").locked === true && groupOf("landscape").lockNote.indexOf("登录") >= 0,
+      groupOf("landscape").lockNote);
+  }
+
   const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);
   ok("tokens 的 --theme 默认值指向清单里默认那一项（两处不许各写一遍）",
     !!tDef && tDef[1] === themeMod.DEFAULT,
@@ -3158,6 +3241,65 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   ok("每个页面的根节点都挂了 themeStyle（主题传得到页面里）",
     missWxml.length === 0, missWxml.join(", "));
   ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
+}
+
+{
+  const themeWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
+  const themeJs = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const fontMod = require(path.join(ROOT, "utils", "font.js"));
+
+  const tierAs = (t) => {
+    store.saveProfile({ logged: true, tier: "" });
+    store.drop(store.KEYS.auth);
+    store.drop(store.KEYS.grant);
+    store.drop(store.KEYS.caps);
+    if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
+  };
+
+  ok("字体卡片在主题页里，三款各占一行（选择器接到 set 上）",
+    themeWxml.indexOf('class="font-row') >= 0
+      && themeJs.indexOf("font.options()") >= 0
+      && themeJs.indexOf("font.set(") >= 0
+      && fontMod.options().length === 3,
+    "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
+
+  const themeWxss = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8");
+  ok("字体卡不为预览注册另外两款字族（名字走系统字体）",
+    themeWxss.indexOf("--font-") < 0 && themeWxml.indexOf("fontStyle") < 0,
+    "字体卡还在拿另外两款的字族渲染行名");
+
+  const rFree = (() => {
+    tierAs("free");
+    return fontMod.set("huiwen");
+  })();
+  ok("Free 切不了字体（set 直接拒，不静默改）",
+    rFree.ok === false && rFree.reason === "tier" && fontMod.current() === fontMod.DEFAULT,
+    JSON.stringify(rFree));
+
+  tierAs("pro");
+  const rPro = fontMod.set("chillkai");
+  ok("Pro 切得动，且落进 settings（跟着账号走）",
+    rPro.ok === true && store.settings().font === "chillkai" && store.LOCAL_ONLY.font !== true,
+    JSON.stringify(rPro) + " / " + store.settings().font);
+
+  const fontCap = E.CAPS.filter((c) => c.key === "font")[0];
+  const sightsCap = E.CAPS.filter((c) => c.key === "sights")[0];
+  ok("权限页两项各归各档（大好河山与字体都是 Pro 起）",
+    !!fontCap && fontCap.tier === "pro" && !!sightsCap && sightsCap.tier === "pro"
+      && E.CAP_KEYS.indexOf("font") >= 0 && E.CAP_KEYS.indexOf("sights") >= 0);
+
+  tierAs("free");
+  ok("Free 手上这两项是关的", E.can("font") === false && E.can("sights") === false);
+  tierAs("pro");
+  ok("Pro 手上这两项是开的", E.can("font") === true && E.can("sights") === true);
+
+  store.drop(store.KEYS.grant);
+  store.drop(store.KEYS.auth);
+  store.saveProfile({ logged: false });
+  store.saveSettings({ font: fontMod.DEFAULT });
 }
 
 {

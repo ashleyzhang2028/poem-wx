@@ -47,8 +47,8 @@
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
       <view class="row-icon">主</view>
       <view class="row-main">
-        <text class="row-title">主题</text>
-        <text class="row-sub">{{themeName}}</text>
+        <text class="row-title">主题和字体</text>
+        <text class="row-sub">{{themeName}} · {{fontName}}</text>
       </view>
       <text class="row-go">›</text>
     </view>

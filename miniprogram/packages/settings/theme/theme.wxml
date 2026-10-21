@@ -2,19 +2,46 @@
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:else>
-  <view class="card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
-    <view class="card-title">{{group.title}}</view>
+  <view class="card group-card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+    <view class="group-head">
+      <text class="card-title group-title">{{group.title}}</text>
+      <text class="group-lock" wx:if="{{group.locked}}">{{group.lockNote}}</text>
+    </view>
 
     <view class="swatch-grid">
-      <view class="swatch {{theme === item.key ? 'on' : ''}}"
+      <view class="swatch {{theme === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{group.items}}" wx:key="key"
             style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
-            hover-class="swatch-hover" hover-stay-time="60"
+            hover-class="{{item.locked ? 'none' : 'swatch-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onPick">
         <view class="swatch-dot"></view>
         <text class="swatch-name">{{item.name}}</text>
       </view>
     </view>
+  </view>
+
+  <view class="card group-card">
+    <view class="group-head">
+      <text class="card-title group-title">字体</text>
+      <text class="group-lock" wx:if="{{fontLocked}}">Pro 起</text>
+    </view>
+
+    <view class="font-list">
+      <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
+            wx:for="{{fonts}}" wx:key="key"
+            hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onFont">
+        <view class="font-sample">
+          <text class="font-glyph">{{item.name}}</text>
+          <text class="font-note">{{item.note}}</text>
+        </view>
+        <view class="font-tick">
+          <view class="font-dot"></view>
+        </view>
+      </view>
+    </view>
+
+    <text class="hint font-lead" wx:if="{{fontNote}}">{{fontNote}}</text>
   </view>
 
   <view class="safe-bottom"></view>

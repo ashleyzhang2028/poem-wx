@@ -7,6 +7,7 @@ const gate = require("../../utils/gate");
 const tiers = require("../../utils/tiers");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
 
 Page({
@@ -25,7 +26,8 @@ Page({
     manageOn: false,
 
     syncSub: "",
-    themeName: ""
+    themeName: "",
+    fontName: ""
   },
 
   onShow() {
@@ -52,7 +54,8 @@ Page({
       tierLabel: e.label,
       manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
       syncSub: this.syncSub(sy),
-      themeName: theme.currentTheme().name
+      themeName: theme.currentTheme().name,
+      fontName: font.face().name
     });
   },
 

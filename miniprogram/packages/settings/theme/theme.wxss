@@ -1,3 +1,24 @@
+.group-head {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.group-title {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.group-lock {
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  letter-spacing: var(--ls-caption);
+  line-height: 1.2;
+}
+
 .swatch-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -47,4 +68,105 @@
 
 .swatch.on .swatch-name {
   color: var(--ink-2);
+}
+
+.swatch.locked .swatch-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
+}
+
+.swatch.locked .swatch-name {
+  color: var(--ink-4);
+}
+
+.font-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
+}
+
+.font-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius);
+  transition: background-color var(--t-press), border-color var(--t-press);
+}
+
+.font-row.on {
+  background: var(--strong-soft);
+  border-color: var(--strong);
+}
+
+.font-hover {
+  background: var(--sink);
+}
+
+.font-sample {
+  flex: 1;
+  min-width: 0;
+}
+
+.font-glyph {
+  display: block;
+  font-size: var(--fs-lead);
+  line-height: var(--lh-tight);
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+}
+
+.font-row.on .font-glyph {
+  color: var(--strong-text);
+}
+
+.font-note {
+  display: block;
+  margin-top: 4rpx;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  line-height: 1.3;
+}
+
+.font-tick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--line-strong);
+}
+
+.font-dot {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: transparent;
+  transition: background-color var(--t-press);
+}
+
+.font-row.on .font-tick {
+  border-color: var(--strong);
+}
+
+.font-row.on .font-dot {
+  background: var(--strong);
+}
+
+.font-row.locked {
+  opacity: .45;
+}
+
+.font-row.locked .font-tick {
+  border-style: dashed;
+}
+
+.font-lead {
+  display: block;
+  margin-top: var(--sp-2);
 }

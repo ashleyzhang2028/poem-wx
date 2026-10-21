@@ -60,7 +60,6 @@ Page({
     allowed: false,
     reason: "",
     ranked: false,
-    rankOff: false,
     rankSent: false,
     rankWhere: ""
   },
@@ -301,7 +300,6 @@ Page({
         if (this.data.stage !== "result") return;
         this.setData({
           ranked: !!(res && res.ok && res.on),
-          rankOff: !!(res && res.ok && !res.on),
           rankSent: !!(res && res.ok),
           rankWhere: rankingSelf.labelOf()
         });
@@ -324,7 +322,6 @@ Page({
       best: "",
       newBest: false,
       ranked: false,
-      rankOff: false,
       rankSent: false,
       remain: DURATION,
       remainText: "20:00"
