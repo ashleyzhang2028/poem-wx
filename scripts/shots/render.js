@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { compile, setImageIntrinsic } = require("./wxml.js");
+const { compile, setImageIntrinsic, restoreHoles } = require("./wxml.js");
 const ROOT = path.join(__dirname, "..", "..", "miniprogram");
 
 const THEME = process.env.THEME || "";
@@ -405,8 +405,7 @@ function pageHtml(cfg, data) {
     });
     const title = v(attrs.title || "登录后可用");
     const note = v(attrs.note || "");
-    const mark = v(attrs.mark || title.charAt(0));
-
+    const mark = v(attrs.mark) || title.charAt(0);
     const cond = attrs["wx:if"] ? ` wx:if="${attrs["wx:if"]}"` : "";
 
     return `<view${cond} class="card lock-card"><text class="lock-mark">${mark}</text><text class="lock-title">${title}</text>`
@@ -555,6 +554,9 @@ function fontFaceCss() {
 const FONT_CSS = fontFaceCss();
 if (FONT_CSS) console.log("预览已注入诗词宋体（out/serif-*.woff2）—— 真机走 wx.loadFontFace");
 
+const BODY_HTML = html.join("\n")
+  .replace(/\u0001(\d+)\u0002/g, (_, n) => restoreHoles("\u0001" + n + "\u0002"));
+
 fs.writeFileSync(path.join(__dirname, "out", "preview.html"),
-  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${DEVICE_FONT_SIZE}</style><style>${FONT_CSS}</style></head><body>${html.join("\n")}</body></html>`);
+  `<!doctype html><html><head><meta charset="utf-8"><style>${SHELL_CSS}</style><style>${DEVICE_FONT_SIZE}</style><style>${FONT_CSS}</style></head><body>${BODY_HTML}</body></html>`);
 console.log("写出 " + html.length + " 屏 → scripts/shots/out/preview.html");

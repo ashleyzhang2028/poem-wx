@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{!allowed}}" title="题库" note="登录后才能用" mark="题" bind:login="onLogin" />
+  <lock-card wx:if="{{!allowed}}" title="题库" note="登录后才能练" mark="题" bind:login="onLogin" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">

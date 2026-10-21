@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="作者索引要登录" note="登录后才能看" mark="人" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="作者索引" note="登录后才能看" mark="人" bind:login="onLogin" />
 
   <block wx:else>
 

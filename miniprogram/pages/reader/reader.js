@@ -96,8 +96,8 @@ Page({
     icons: PAGE_ICONS,
 
     locked: true,
-    lockTitle: "登录后可用",
-    lockNote: "",
+    lockTitle: "诗词详情",
+    lockNote: "登录后才能看正文与进度",
 
     creator: "",
     pager: { show: false, prev: null, next: null }
@@ -118,13 +118,7 @@ Page({
       this.setData({ hint: "" });
     }
     if (!gate.logged()) {
-
-      this.setData({
-        locked: true,
-        loadingText: false,
-        lockTitle: "这篇要登录",
-        lockNote: "登录后才能看正文与进度"
-      });
+      this.setData({ locked: true, loadingText: false });
       return;
     }
 
