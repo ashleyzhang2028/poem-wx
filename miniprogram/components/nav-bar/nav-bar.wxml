@@ -1,0 +1,8 @@
+<view class="nav" style="height: {{height}}px; padding-top: {{top}}px">
+  <view class="nav-row" style="height: {{row}}px">
+    <view class="nav-back" hover-class="nav-back-hover" hover-stay-time="60" bindtap="onBack">
+      <view class="nav-arrow"></view>
+    </view>
+    <view class="nav-title" style="font-family: {{font}}">{{title}}</view>
+  </view>
+</view>

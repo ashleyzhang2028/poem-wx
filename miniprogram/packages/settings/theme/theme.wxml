@@ -1,6 +1,8 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
 
+  <nav-bar title="主题" />
+
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:else>
@@ -40,7 +42,7 @@
     </view>
   </view>
 
-  <view class="safe-bottom"></view>
+  <view class="safe-bottom gap-bottom"></view>
   </block>
   <tab-bar id="tabbar" current="4" />
 </view>

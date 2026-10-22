@@ -1,12 +1,18 @@
 .banner {
-  display: block;
-  width: 100%;
+  --page-gutter: var(--sp-3);
+  position: relative;
+  width: calc(100% + 2 * var(--page-gutter));
+  margin-left: calc(-1 * var(--page-gutter));
   overflow: hidden;
   background: var(--surface);
+}
+
+.banner-full {
+  margin-top: calc(-1 * var(--page-gutter));
 }
 
 .banner-img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
 }

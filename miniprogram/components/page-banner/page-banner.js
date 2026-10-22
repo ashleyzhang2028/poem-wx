@@ -1,10 +1,10 @@
-const nav = require("../../utils/nav");
-
 const RATIO = 916 / 1717;
 
 const MAX_H = 360;
 
-function width() {
+let memo = null;
+
+function windowWidth() {
   const read = (fn) => {
     try {
       return Number(fn().windowWidth) || 0;
@@ -17,21 +17,25 @@ function width() {
     || 375;
 }
 
+function imageHeight() {
+  if (memo === null) memo = Math.min(Math.round(windowWidth() * RATIO), MAX_H);
+  return memo;
+}
+
 Component({
   properties: {
     src: { type: String, value: "" }
   },
 
   data: {
-    barHeight: 0,
+    full: false,
     imageHeight: 0
   },
 
   attached() {
-    const box = nav.top();
-    this.setData({
-      barHeight: box.statusBarHeight + box.navHeight,
-      imageHeight: Math.min(Math.round(width() * RATIO), MAX_H)
-    });
+    const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+    const page = pages[pages.length - 1];
+    const full = !!page && pages.length === 1;
+    this.setData({ full, imageHeight: imageHeight() });
   }
 });

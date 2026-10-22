@@ -121,5 +121,11 @@
 }
 
 .group-card:first-of-type {
+  position: relative;
+  z-index: 1;
   margin-top: calc(-5 * var(--sp-5));
+}
+
+.page.tall .gap-bottom {
+  display: none;
 }
