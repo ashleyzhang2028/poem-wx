@@ -1510,6 +1510,8 @@ const GATED = {
     const fbLib = read("utils/feedback-api.js");
     const adminFbLib = read("utils/admin-feedback.js");
     const remoteSrc = read("utils/remote.js");
+    const fbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "feedback", "index.js"), "utf8");
+    const adminFbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8");
     const serverCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
     const minePage = read("pages/mine/mine.wxml");
     const adminPage = read("packages/admin/index/index.wxml");
@@ -1571,13 +1573,18 @@ const GATED = {
         && !/identity\.deviceId/.test(serverCore),
       "服务端还留着按设备标识认人的路");
 
-    ok("用户能删自己那一条（服务端 already 有路，页面给得出入口）",
-      /fb\.remove\(/.test(fbPageJs) && /bindtap="onDeleteThread"/.test(read("packages/feedback/index/index.wxml"))
-        && /^\s*feedbackDelete,$/m.test(remoteSrc),
-      "服务端有 op: delete，页面上没有删的入口 —— 提过的话撤不回来");
-
-    ok("后台详情能给用户删（那条管理路径也接上）",
-      /adminFeedbackDelete/.test(adminFbLib) && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js")));
+    const fbWxml = read("packages/feedback/index/index.wxml");
+    ok("反馈记录谁都不删（用户撤不回，管理员也删不掉，台账留着）",
+      !/op === "delete"/.test(fbRouteSrc)
+        && !/deleteThread|deleteComment/.test(adminFbRouteSrc)
+        && /ADMIN_OPS\.indexOf\(op\) < 0/.test(adminFbRouteSrc)
+        && !/feedbackDelete|remove/.test(fbLib)
+        && !/feedbackDelete|remove/.test(adminFbLib)
+        && !/feedbackDelete|adminFeedbackDelete/.test(remoteSrc)
+        && !/fb\.remove\(|onDeleteThread|onDeleteComment/.test(fbPageJs)
+        && !/onDeleteThread|onDeleteComment/.test(read("packages/admin/feedback/detail/detail.js"))
+        && !/onDeleteThread|onDeleteComment|canDelete/.test(fbWxml),
+      "反馈页或后台又摆出了删除入口 —— 记录是台账，删了就对不上账");
 
     ok("限流按人算，不按设备算（uid 换成设备号等于删掉限流）",
       /function feedbackRateGate\(deps, uid\)[\s\S]{0,200}"uid"/.test(serverCore)

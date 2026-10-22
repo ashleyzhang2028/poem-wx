@@ -2743,18 +2743,11 @@ function ownsFeedbackThread(identity, deviceKey, row) {
   return feedbackThreadVisible(identity, deviceKey, row);
 }
 
-function ownsFeedbackComment(identity, deviceKey, row) {
-  if (!row || row.author_role !== "user") return false;
-  if (String(row.uid || "") === identity.uid) return true;
-  return !!deviceKey && String(row.uid || "") === "" && String(row.device_id || "") === deviceKey;
-}
-
-function feedbackThreadPublic(row, comments, canDelete) {
+function feedbackThreadPublic(row, comments) {
   if (!row) return null;
   var mine = comments || [];
   return {
     tid: String(row.tid || ""),
-    canDelete: !!canDelete,
     kind: isFeedbackKind(row.kind) ? String(row.kind) : "other",
     status: FEEDBACK_STATUSES.indexOf(row.status) >= 0 ? row.status : "open",
     resolution: isFeedbackResolution(row.resolution) ? String(row.resolution) : "pending",
@@ -2767,15 +2760,14 @@ function feedbackThreadPublic(row, comments, canDelete) {
   };
 }
 
-function feedbackCommentPublic(row, canDelete) {
+function feedbackCommentPublic(row) {
   if (!row) return null;
   return {
     cid: String(row.cid || ""),
     tid: String(row.tid || ""),
     role: row.author_role === "admin" ? "admin" : "user",
     content: String(row.content || ""),
-    createdAt: Number(row.created_at) || 0,
-    canDelete: !!canDelete
+    createdAt: Number(row.created_at) || 0
   };
 }
 
@@ -2841,7 +2833,7 @@ function feedbackCreate(deps, input) {
         return String(r.kind || "") === kind && String(r.title || "") === title
           && String(r.content || "") === content;
       })[0];
-      if (same) return ok({ thread: feedbackThreadPublic(same, [], true), duplicate: true });
+      if (same) return ok({ thread: feedbackThreadPublic(same, []), duplicate: true });
 
       var row = {
         tid: id.newFeedbackId(),
@@ -2883,11 +2875,8 @@ function feedbackMine(deps, input) {
       var byTid = {};
       (comments || []).forEach(function (c) { (byTid[c.tid] || (byTid[c.tid] = [])).push(c); });
       return list.map(function (r) {
-        var canDelete = ownsFeedbackThread(identity, deviceKey, r);
-        var talks = (byTid[r.tid] || []).map(function (c) {
-          return feedbackCommentPublic(c, canDelete && ownsFeedbackComment(identity, deviceKey, c));
-        });
-        return feedbackThreadPublic(r, talks, canDelete);
+        var talks = (byTid[r.tid] || []).map(feedbackCommentPublic);
+        return feedbackThreadPublic(r, talks);
       }).filter(Boolean);
     });
   }
@@ -2949,42 +2938,10 @@ function feedbackComment(deps, input) {
 
     return Promise.resolve(store.putFeedbackComment(row)).then(function () {
       return Promise.resolve(store.patchFeedbackThread(tid, patch)).then(function () {
-        return ok({ comment: feedbackCommentPublic(row, true) });
+        return ok({ comment: feedbackCommentPublic(row) });
       });
     });
   });
-}
-
-function feedbackDelete(deps, input) {
-  var store = deps.store, cfg = deps.cfg;
-  if (!cfg.hasSession()) {
-    return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
-  }
-  var identity = feedbackIdentity(deps);
-  if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
-
-  var tid = clip(input && input.tid, 64).trim();
-  var cid = clip(input && input.cid, 64).trim();
-
-  var deviceKey = feedbackDeviceKey(deps);
-
-  if (tid) {
-    return Promise.resolve(store.getFeedbackThread(tid)).then(function (thread) {
-      if (!ownsFeedbackThread(identity, deviceKey, thread)) return err(404, "E_NO_THREAD", "没有这一条（可能已经删了）");
-      return Promise.resolve(store.deleteFeedbackThread(tid)).then(function () {
-        return ok({ deleted: "thread", tid: tid });
-      });
-    });
-  }
-  if (cid) {
-    return Promise.resolve(store.getFeedbackComment(cid)).then(function (comment) {
-      if (!ownsFeedbackComment(identity, deviceKey, comment)) return err(404, "E_NO_COMMENT", "没有这一条（可能已经删了，或者是管理员回的，删不掉）");
-      return Promise.resolve(store.deleteFeedbackComment(cid)).then(function () {
-        return ok({ deleted: "comment", cid: cid });
-      });
-    });
-  }
-  return Promise.resolve(err(400, "E_BAD_TARGET", "要删哪一条没说清楚"));
 }
 
 function adminFeedbackList(deps, input) {
@@ -3127,40 +3084,6 @@ function adminFeedbackStatus(deps, input) {
         status: patch.status || String(row.status || ""),
         resolution: patch.resolution || String(row.resolution || "")
       });
-    });
-  });
-}
-
-function adminFeedbackDeleteThread(deps, input) {
-  var cfg = deps.cfg, store = deps.store;
-  var gate = adminGate(deps, cfg);
-  if (gate) return Promise.resolve(gate);
-  var tid = clip(input && input.tid, 64).trim();
-  if (!tid) return Promise.resolve(err(400, "E_TID", "缺 tid"));
-
-  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
-    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
-    return Promise.resolve(store.deleteFeedbackThread(tid)).then(function (done) {
-      if (!done) return err(404, "E_NO_THREAD", "没有 tid 是 " + tid + " 的那一条");
-      return ok({ deleted: "thread", tid: tid });
-    });
-  });
-}
-
-function adminFeedbackDeleteComment(deps, input) {
-  var cfg = deps.cfg, store = deps.store;
-  var gate = adminGate(deps, cfg);
-  if (gate) return Promise.resolve(gate);
-  var cid = clip(input && input.cid, 64).trim();
-  if (!cid) return Promise.resolve(err(400, "E_CID", "缺 cid"));
-
-  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
-    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
-    return Promise.resolve(store.deleteFeedbackComment(cid)).then(function (done) {
-      if (!done) return err(404, "E_NO_COMMENT", "没有 cid 是 " + cid + " 的那一条");
-      return ok({ deleted: "comment", cid: cid });
     });
   });
 }
@@ -3771,13 +3694,10 @@ module.exports = {
   feedbackCreate: feedbackCreate,
   feedbackMine: feedbackMine,
   feedbackComment: feedbackComment,
-  feedbackDelete: feedbackDelete,
   adminFeedbackList: adminFeedbackList,
   adminFeedbackGet: adminFeedbackGet,
   adminFeedbackReply: adminFeedbackReply,
   adminFeedbackStatus: adminFeedbackStatus,
-  adminFeedbackDeleteThread: adminFeedbackDeleteThread,
-  adminFeedbackDeleteComment: adminFeedbackDeleteComment,
   FEEDBACK_KINDS: FEEDBACK_KINDS,
   FEEDBACK_STATUSES: FEEDBACK_STATUSES,
   FEEDBACK_RESOLUTIONS: FEEDBACK_RESOLUTIONS,
