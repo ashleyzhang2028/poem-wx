@@ -149,41 +149,87 @@ function compareCols(snap) {
   return tiers.TIERS.map((t) => ({ tier: t.key, label: t.name, now: t.key === now }));
 }
 
-const COMPARE_NAME = {
+const VIEW_NAME = {
+  daily: "首页·今日课内",
+  extra: "首页·今日加背",
+  collections: "首页·自选背诵",
+  progress: "首页·背诵进度",
+  seasonal: "首页·季节限定隐藏",
+  pinyin: "我的·正文排版",
   ebbinghaus: "复习算法·艾宾浩斯",
   leitner: "复习算法·莱特纳盒",
   sm2: "复习算法·SM-2",
-  fsrs: "复习算法·FSRS"
-};
-
-const VIEW_NAME = {
+  fsrs: "复习算法·FSRS",
+  library: "课外阅读",
+  search: "全站搜索",
   quiz: "古诗文大会·题库",
   feihualing: "古诗文大会·飞花令",
-  exam: "古诗文大会·考试"
+  exam: "古诗文大会·考试",
+  sights: "主题·大好河山",
+  font: "主题·字体选择",
+  coursefree: "我的·只背自选",
+  sync: "我的·同步进度"
 };
 
-function viewNameOf(cap) {
+const LEAGUE_NAME = "古诗文大会·排行榜";
+
+const COMPARE_ORDER = [
+  "daily", "extra", "collections", "progress", "seasonal", "pinyin",
+  "ebbinghaus", "leitner", "sm2", "fsrs",
+  "library", "search",
+  "quiz", "feihualing", "exam",
+  "sights", "font", "coursefree", "sync"
+];
+
+function compareNameOf(cap) {
   return VIEW_NAME[cap.key] || cap.name;
 }
 
-function compareNameOf(cap) {
-  return COMPARE_NAME[cap.key] || viewNameOf(cap);
+function leagueRow(join) {
+  return {
+    cap: "league:" + (join ? "join" : "off"),
+    name: LEAGUE_NAME + (join ? "" : "(不参与)"),
+    cells: tiers.TIERS.map((t) => ({
+      tier: t.key,
+      text: "",
+      note: "",
+      now: false,
+      on: rankOf(t.key) >= rankOf("max")
+    }))
+  };
 }
 
-function compareRows(snap) {
-  const s = snap || snapshot();
-  return CAPS.map((c) => Object.assign({ cap: c.key, name: compareNameOf(c) }, {
+function capRow(cap, now) {
+  return {
+    cap: cap.key,
+    name: compareNameOf(cap),
     cells: tiers.TIERS.map((t) => {
-      const cell = cellFor(c, t.key);
+      const cell = cellFor(cap, t.key);
       return {
         tier: t.key,
         text: cell.text,
         note: cell.note || "",
-        now: t.key === tierNow(s),
+        now: t.key === now,
         on: !!cell.on
       };
     })
-  }));
+  };
+}
+
+function compareRows(snap) {
+  const s = snap || snapshot();
+  const now = tierNow(s);
+  const rows = [];
+  COMPARE_ORDER.forEach((key) => {
+    const cap = CAPS.find((c) => c.key === key);
+    if (!cap) return;
+    rows.push(capRow(cap, now));
+    if (key === "exam") rows.push(leagueRow(true), leagueRow(false));
+  });
+  CAPS.forEach((c) => {
+    if (COMPARE_ORDER.indexOf(c.key) < 0) rows.push(capRow(c, now));
+  });
+  return rows;
 }
 
 function compareSummary() {

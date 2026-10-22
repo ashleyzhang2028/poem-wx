@@ -45,6 +45,8 @@ const DEFAULTS = {
 
   seasonal: true,
 
+  leagueBoard: true,
+
   lastSearch: "",
 
   lastSyncAt: 0,

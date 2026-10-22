@@ -46,7 +46,9 @@ Page({
 
     seasonalOn: true,
     seasonalLock: false,
-    seasonalNote: ""
+    seasonalNote: "",
+
+    leagueBoardOn: true
   },
 
   onShow() {
@@ -70,6 +72,7 @@ Page({
         seasonalOn: !seasonal.switched(),
         seasonalLock: !seasonal.canSwitch(),
         seasonalNote: seasonal.canSwitch() ? "" : seasonal.hintOf(),
+        leagueBoardOn: settings.leagueBoard !== false,
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
         sampleTokens: this.sample(prOn ? settings.pinyin : "off", size)
@@ -110,6 +113,13 @@ Page({
     }
     this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: !seasonal.canSwitch() });
     if (r.ok) sync.markDirty();
+  },
+
+  onLeagueBoard(e) {
+    const on = !!e.detail.value;
+    store.saveSettings({ leagueBoard: on });
+    this.setData({ leagueBoardOn: on });
+    sync.markDirty();
   },
 
   onSfx(e) {
