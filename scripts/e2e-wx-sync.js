@@ -523,6 +523,32 @@ function makeWx(port, mem) {
   }
 
   {
+    const guest = (body) => new Promise((resolve) => {
+      const data = JSON.stringify(body || {});
+      const req = http.request({
+        port, method: "POST", path: "/api/feedback",
+        headers: { "content-type": "application/json", "x-kb-device": "d_deadbeef" }
+      }, (res) => {
+        let buf = "";
+        res.on("data", (d) => (buf += d));
+        res.on("end", () => {
+          let out = null;
+          try { out = JSON.parse(buf); } catch (e) { out = buf; }
+          resolve({ status: res.statusCode, body: out });
+        });
+      });
+      req.write(data);
+      req.end();
+    });
+
+    const noLogin = await guest({ kind: "bug", title: "没登录就想提", content: "带上设备号也不行。", deviceId: "d_deadbeef" });
+    ok("未登录发不出意见（带设备标识也不认，回 401）",
+      noLogin.status === 401 && noLogin.body.code === "E_NO_SESSION", JSON.stringify(noLogin.body));
+    const noLoginRead = await guest({});
+    ok("未登录也读不到任何一条反馈", noLoginRead.status === 401, JSON.stringify(noLoginRead.body));
+  }
+
+  {
     const fbApi = require(path.join(REPO, "miniprogram", "utils", "feedback-api.js"));
     const adminFb = require(path.join(REPO, "miniprogram", "utils", "admin-feedback.js"));
 

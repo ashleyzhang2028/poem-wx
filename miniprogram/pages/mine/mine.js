@@ -8,6 +8,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
+const gate = require("../../utils/gate");
 
 Page({
   data: {
@@ -125,6 +126,7 @@ Page({
   },
 
   onFeedback() {
+    if (!gate.open(null, this)) return;
     wx.navigateTo({ url: "/packages/feedback/index/index" });
   },
 
