@@ -40,6 +40,7 @@ const DEFAULTS = {
   theme: "ink",
   font: "zhuque",
   pinyin: "off",
+  banner: "",
 
   selfOnly: false,
 
@@ -60,7 +61,9 @@ const DEVICE_DEFAULTS = {
 
 const LOCAL_ONLY = {
 
-  lastSearch: true
+  lastSearch: true,
+
+  banner: true
 };
 
 const CLOUD_DEFAULTS = {};

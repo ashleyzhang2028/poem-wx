@@ -12,7 +12,7 @@
       <tier-tag wx:if="{{group.locked}}" tier="{{group.tier}}" />
     </view>
 
-    <view class="swatch-grid">
+    <view class="swatch-grid" wx:if="{{group.key !== own}}">
       <view class="swatch {{theme === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{group.items}}" wx:key="key"
             style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
@@ -21,6 +21,24 @@
         <view class="swatch-dot"></view>
         <text class="swatch-name">{{item.name}}</text>
       </view>
+    </view>
+
+    <view class="own" wx:else>
+      <view class="swatch own-pick {{theme === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
+            wx:for="{{group.items}}" wx:key="key"
+            hover-class="{{item.locked ? 'none' : 'swatch-hover'}}" hover-stay-time="60"
+            data-key="{{item.key}}" bindtap="onOwnPick">
+        <view class="own-thumb swatch-dot {{item.set ? 'has-img' : ''}}">
+          <image class="own-thumb-img" wx:if="{{item.set}}" src="{{item.banner}}" mode="aspectFill" />
+        </view>
+        <text class="swatch-name">{{ownSet ? '已换上你的图' : '还没有图'}}</text>
+      </view>
+
+      <view class="own-acts">
+        <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换一张' : '选一张图'}}</button>
+        <button class="btn ghost mini" wx:if="{{ownSet}}" bindtap="onOwnClear">恢复默认</button>
+      </view>
+      <text class="own-note">图只存在这台手机上，不同步到服务器，换设备就回到默认 banner。</text>
     </view>
   </view>
 

@@ -1234,7 +1234,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 16], ["max", 19]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 16], ["max", 20]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -3346,9 +3346,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const hit = groupMod.find((x) => x.items.some((i) => i.key === k));
     return !hit || hit.key !== g;
   });
-  ok("每支主题都归到自己那张卡上（中国传统 / 大好河山）",
-    badGroup.length === 0 && groupMod.length === 2
-      && groupMod.map((x) => x.title).join() === "中国传统,大好河山"
+  ok("每支主题都归到自己那张卡上（中国传统 / 大好河山 / 自选）",
+    badGroup.length === 0 && groupMod.length === 3
+      && groupMod.map((x) => x.title).join() === "中国传统,大好河山,自选"
       && groupMod[0].items.length + groupMod[1].items.length === all.length,
     badGroup.map((m) => m[1]).join(", ") + " 没归位；卡片 " + groupMod.map((x) => x.title).join(" / "));
 
@@ -3424,6 +3424,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   const themeJs = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
   const fontMod = require(path.join(ROOT, "utils", "font.js"));
+  const themeMod = require(path.join(ROOT, "utils", "theme.js"));
 
   const tierAs = (t) => {
     store.saveProfile({ logged: true, tier: "" });
@@ -3470,6 +3471,53 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   ok("Free 手上这两项是关的", E.can("font") === false && E.can("sights") === false);
   tierAs("pro");
   ok("Pro 手上这两项是开的", E.can("font") === true && E.can("sights") === true);
+
+  const custom = require(path.join(ROOT, "utils", "custom-banner.js"));
+  const themePageWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
+  const themePageJs = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
+
+  ok("自选那张色卡排在「大好河山」之后，页面上有选图 / 换图与恢复默认的接法",
+    themeMod.groups().map((g) => g.key).indexOf(themeMod.OWN) === 2
+      && ownGroup().items.length === 1
+      && ownGroup().items[0].key === themeMod.OWN_KEY
+      && themePageWxml.indexOf("onOwnUpload") >= 0
+      && themePageWxml.indexOf("onOwnClear") >= 0
+      && themePageJs.indexOf("custom.pick()") >= 0);
+
+  tierAs("pro");
+  ok("Pro 手上还没有自选 banner（这一项 Max 起，权限对比页也这么写）",
+    ownGroup().locked === true && ownGroup().tier === "max"
+      && E.can("ownbanner") === false
+      && (E.CAPS.filter((c) => c.key === "ownbanner")[0] || {}).tier === "max"
+      && E.compareRows(E.snapshot()).some((r) => r.cap === "ownbanner"));
+
+  tierAs("max");
+  store.saveSettings({ banner: custom.IMAGE + "AAAA", theme: themeMod.OWN_KEY });
+  ok("Max 手上那项亮着，选的自选主题真的落到 banner 上",
+    E.can("ownbanner") === true
+      && ownGroup().locked === false
+      && themeMod.current() === themeMod.OWN_KEY
+      && themeMod.bannerSrc().indexOf(custom.IMAGE) === 0,
+    themeMod.current() + " / " + themeMod.bannerSrc().slice(0, 24));
+
+  ok("自选图只在本机（不进云端设置报文）",
+    !("banner" in store.cloudSettings()) && store.LOCAL_ONLY.banner === true,
+    "banner 混进了 cloudSettings —— 换台设备就不该带过去");
+
+  tierAs("free");
+  ok("档位掉下来时退回默认那一支（图还在，但不再用）",
+    themeMod.current() === themeMod.DEFAULT
+      && themeMod.bannerSrc() === themeMod.BANNER,
+    themeMod.current());
+
+  tierAs("max");
+  themeMod.clearOwn();
+  ok("恢复默认：自选那支的图与本机标记一起清掉",
+    custom.src() === "" && store.settings().theme !== themeMod.OWN_KEY
+      && themeMod.current() === themeMod.DEFAULT);
 
   store.drop(store.KEYS.grant);
   store.drop(store.KEYS.auth);

@@ -2,12 +2,17 @@ const store = require("./store");
 const font = require("./font");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
+const custom = require("./custom-banner");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
 const TRADITION = "tradition";
 
 const LANDSCAPE = "landscape";
+
+const OWN = "own";
+
+const OWN_KEY = "own";
 
 const THEMES = [
   { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png", group: TRADITION },
@@ -30,6 +35,13 @@ const THEMES = [
   { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
   { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE }
 ];
+
+const OWN_THEME = {
+  key: OWN_KEY,
+  name: "自选",
+  rgb: [8, 8, 10],
+  group: OWN
+};
 
 const DEFAULT = "daiqing";
 
@@ -112,7 +124,8 @@ function palette() {
 
 const GROUPS = [
   { key: TRADITION, title: "中国传统", tier: "free" },
-  { key: LANDSCAPE, title: "大好河山", tier: "pro", cap: "sights" }
+  { key: LANDSCAPE, title: "大好河山", tier: "pro", cap: "sights" },
+  { key: OWN, title: "自选", tier: "max", cap: "ownbanner" }
 ];
 
 function groupOpen(group) {
@@ -120,8 +133,11 @@ function groupOpen(group) {
   return entitlement.can(group.cap);
 }
 
+function itemsOf(groupKey) {
+  return groupKey === OWN ? [ownSwatch()] : palette().filter((s) => s.group === groupKey);
+}
+
 function groups() {
-  const swatches = palette();
   return GROUPS.map((g) => {
     const open = groupOpen(g);
     return {
@@ -129,9 +145,27 @@ function groups() {
       title: g.title,
       tier: g.tier,
       locked: !open,
-      items: swatches.filter((s) => s.group === g.key).map((s) => Object.assign({}, s, { locked: !open }))
+      items: itemsOf(g.key).map((s) => Object.assign({}, s, { locked: !open }))
     };
   });
+}
+
+function ownSwatch() {
+  const t = OWN_THEME;
+  const banner = custom.src();
+  return {
+    key: t.key,
+    name: t.name,
+    group: t.group,
+    rgb: banner ? t.rgba : "",
+    soft: banner ? t.soft : "",
+    on: t.on,
+    mark: t.mark,
+    depth: rgba(t.depth, 1),
+    banner: banner,
+    set: !!banner,
+    varName: VAR_OF[t.key]
+  };
 }
 
 function variables() {
@@ -140,13 +174,25 @@ function variables() {
     + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
 }
 
+OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
+OWN_THEME.soft = rgba(OWN_THEME.rgb, WASH);
+OWN_THEME.on = rgba(inkOn(OWN_THEME.rgb), 1);
+OWN_THEME.depth = deepOf(OWN_THEME.rgb);
+OWN_THEME.mark = rgba(MARK, 1);
+VAR_OF[OWN_THEME.key] = "--c-" + OWN_THEME.key;
+
 const BY_KEY = {};
 THEMES.forEach((t) => { BY_KEY[t.key] = t; });
+BY_KEY[OWN_THEME.key] = OWN_THEME;
 
 const VAR_DECLS = variables().join(";");
 
 function all() {
   return THEMES;
+}
+
+function ownUsable() {
+  return groupOpen(GROUPS.filter((g) => g.key === OWN)[0]) && !!custom.src();
 }
 
 function get(key) {
@@ -162,6 +208,7 @@ function reachable(key) {
 
 function current() {
   const key = store.settings().theme;
+  if (key === OWN_KEY) return ownUsable() ? OWN_KEY : DEFAULT;
   if (!BY_KEY[key]) return DEFAULT;
   if (!reachable(key)) return DEFAULT;
   return key;
@@ -184,16 +231,25 @@ function style(key, fontKey) {
 }
 
 function set(key) {
+  if (key === OWN_KEY) {
+    if (!ownUsable()) return currentTheme();
+    store.saveSettings({ theme: OWN_KEY });
+    markDirty();
+    return OWN_THEME;
+  }
   if (!BY_KEY[key]) return currentTheme();
   if (!reachable(key)) return currentTheme();
   store.saveSettings({ theme: key });
+  markDirty();
+  return get(key);
+}
 
+function markDirty() {
   try {
     require("./sync").markDirty();
   } catch (e) {
 
   }
-  return get(key);
 }
 
 function apply(page) {
@@ -204,11 +260,28 @@ function apply(page) {
 }
 
 function bannerOf(key) {
+  if (key === OWN_KEY) return custom.src() || BANNER;
   return get(key).banner;
+}
+
+function bannerSrc() {
+  return bannerOf(current());
+}
+
+function ownSwatchData() {
+  return ownSwatch();
+}
+
+function clearOwn() {
+  if (store.settings().theme === OWN_KEY) set(DEFAULT);
+  custom.clear();
+  return currentTheme();
 }
 
 module.exports = {
   THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
-  all, palette, groups, groupOpen, reachable,
-  variables, bannerOf, get, current, currentTheme, style, set, apply
+  OWN, OWN_KEY, OWN_THEME,
+  all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
+  variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply,
+  clearOwn
 };

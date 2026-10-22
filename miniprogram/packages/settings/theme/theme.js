@@ -1,8 +1,10 @@
 const theme = require("../../../utils/theme");
+const custom = require("../../../utils/custom-banner");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
 const tabbar = require("../../../utils/tabbar");
 const tiers = require("../../../utils/tiers");
+const loginFlow = require("../../../utils/login-flow");
 
 Page({
   data: {
@@ -11,6 +13,8 @@ Page({
     locked: false,
 
     banner: theme.BANNER,
+    own: theme.OWN,
+    ownSet: false,
 
     groups: theme.groups(),
     theme: theme.DEFAULT,
@@ -25,7 +29,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), banner: theme.bannerOf(theme.current()) });
+    this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc() });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;
@@ -42,6 +46,7 @@ Page({
     const pickable = font.pickable();
     return {
       groups: theme.groups(),
+      ownSet: theme.ownSwatchData().set,
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, {
         locked: !pickable && f.key !== font.DEFAULT,
@@ -59,9 +64,59 @@ Page({
     const key = e.currentTarget.dataset.key;
     if (key === this.data.theme) return;
     theme.set(key);
+    this.paint();
+  },
+
+  paint() {
     theme.apply(this);
-    this.setData({ theme: theme.current(), banner: theme.bannerOf(theme.current()) });
+    this.setData({
+      theme: theme.current(),
+      banner: theme.bannerSrc(),
+      groups: theme.groups(),
+      ownSet: theme.ownSwatchData().set
+    });
+  },
+
+  onOwnPick() {
+    const item = theme.ownSwatchData();
+    if (!item.set) {
+      wx.showToast({ title: "先选一张图", icon: "none" });
+      return;
+    }
+    if (!theme.ownUsable()) {
+      wx.showToast({ title: tiers.nameOf("max") + " 起可用", icon: "none" });
+      return;
+    }
+    if (this.data.theme === theme.OWN_KEY) return;
+    theme.set(theme.OWN_KEY);
+    this.paint();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
+  onOwnUpload() {
+    if (!theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0])) {
+      wx.showToast({ title: tiers.nameOf("max") + " 起可用", icon: "none" });
+      return;
+    }
+    custom.pick().then((r) => {
+      if (!r.ok) {
+        if (r.reason !== "cancel") wx.showToast({ title: "这张图读不出来，换一张试试", icon: "none" });
+        return;
+      }
+      theme.set(theme.OWN_KEY);
+      this.paint();
+      wx.showToast({ title: "已换成这一张", icon: "none" });
+    });
+  },
+
+  onOwnClear() {
+    theme.clearOwn();
+    this.paint();
+    wx.showToast({ title: "已恢复默认 banner", icon: "none" });
+  },
+
+  onLogin() {
+    loginFlow.run(this);
   },
 
   onFont(e) {
