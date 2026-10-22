@@ -190,7 +190,8 @@
   height: 104rpx;
   margin: 0 auto var(--sp-2);
   border-radius: 50%;
-  background: var(--sink);
+  background: var(--strong-soft);
+  border: 1rpx solid var(--strong);
 }
 
 .finish-ico {
