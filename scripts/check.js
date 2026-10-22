@@ -3206,6 +3206,11 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && /function boardSubmit[\s\S]{0,400}?boardGate/.test(apiCore),
     "只关列表不关提交，用户交完成绩却发现榜上没有自己");
 
+  ok("往榜上灌成绩的两条路都限流（成绩底账只增不减）",
+    /function boardSubmit[\s\S]{0,1600}?limiter\.take\(cfg, "device", "board:"/.test(apiCore)
+      && /function examRecordCreate[\s\S]{0,1600}?limiter\.take\(cfg, "device", "examrec:"/.test(apiCore),
+    "去掉限流之后一个 deviceId 能在几秒内往 score_records / exam_records 里灌满行");
+
   ok("两个榜默认开着（没有那一行就是开，只有显式写 0 才算关）",
     /return String\(v == null \? "" : String\(v\)\.trim\(\)\) !== "0"/.test(apiCore),
     "默认值翻成关之后，用户一进榜就是「没有开」—— 榜不该等谁来拧一下");

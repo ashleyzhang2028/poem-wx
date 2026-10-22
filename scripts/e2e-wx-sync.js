@@ -344,6 +344,8 @@ function makeWx(port, mem) {
     ok("库里没有那一行时榜单读回来是开的（默认打开，不必等谁来拨）",
       !(await shared.getSetting("ranking:fly")), "默认值落在库里 —— 换台机器、清一次库就变成关");
 
+    await shared.patchAccount(store.profile().userId, { plan: "max" });
+
     const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
     const relay = submitter.submitPlay("exam", { score: 7, total: 10, durationSec: 120 });
     await new Promise((r) => setTimeout(r, 120));
@@ -384,6 +386,13 @@ function makeWx(port, mem) {
       });
     };
 
+    await svStore.patchAccount(store.profile().userId, { plan: "free" });
+    const freeSubmit = await api({ op: "submit", game: "exam", score: 1, total: 1 });
+    await svStore.patchAccount(store.profile().userId, { plan: "max" });
+    ok("交成绩先要玩得动那一项，白蹭的挡在门外",
+      freeSubmit.status === 403 && freeSubmit.body.code === "E_TIER",
+      JSON.stringify(freeSubmit.body));
+
     const onVisible = await api({ op: "visible", game: "exam" });
     ok("榜单一上线就是开的（库里没有那一行，不必等谁点头）",
       onVisible.status === 200 && onVisible.body.on === true, JSON.stringify(onVisible.body));
@@ -392,7 +401,7 @@ function makeWx(port, mem) {
     ok("开着的时候读得到榜单（空榜也是一张榜，不是「没有开」）",
       onList.status === 200 && Array.isArray(onList.body.board), JSON.stringify(onList.body));
 
-    await svStore.patchAccount(store.profile().userId, { nickname: "测试某某" });
+    await svStore.patchAccount(store.profile().userId, { nickname: "测试某某", plan: "max" });
 
     const onSubmit = await api({
       op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1, durationSec: 300
