@@ -1912,7 +1912,7 @@ var SETTINGS_KEYS = {
   scope: "str", algo: "str", align: "str", theme: "str",
   font: "str", pinyin: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool", selfOnly: "bool",
-  seasonal: "bool"
+  seasonal: "bool", leagueBoard: "bool"
 };
 
 function sanitizeSettings(p) {

@@ -18,10 +18,15 @@ function submit(entry) {
   return remote.rankingSubmit(entry);
 }
 
+function optedIn() {
+  return store.settings().leagueBoard !== false;
+}
+
 function submitPlay(game, fact) {
   const f = fact || {};
   const total = Number(f.total) || 0;
   if (!total) return Promise.resolve({ ok: false, skipped: true });
+  if (!optedIn()) return Promise.resolve({ ok: false, unjoined: true });
   return submit(
     Object.assign(entryOf(game), {
       scopeId: f.scopeId || "",
@@ -32,4 +37,4 @@ function submitPlay(game, fact) {
   );
 }
 
-module.exports = { submit, submitPlay, entryOf };
+module.exports = { submit, submitPlay, entryOf, optedIn };
