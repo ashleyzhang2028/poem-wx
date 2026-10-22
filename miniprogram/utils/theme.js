@@ -25,7 +25,10 @@ const THEMES = [
   { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [2, 54, 51], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
   { key: "qingmingshanghetu", name: "清明上河图", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
   { key: "benxiguanmenshan", name: "本溪关门山", rgb: [205, 20, 11], banner: CITY_BANNER + "benxi_guanmenshan.png", group: LANDSCAPE },
-  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE }
+  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
+  { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
+  { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
+  { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE }
 ];
 
 const DEFAULT = "daiqing";

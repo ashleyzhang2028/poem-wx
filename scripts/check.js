@@ -1237,12 +1237,13 @@ Object.keys(WEB_TIER).forEach((k) => {
     wxml.indexOf("heads") >= 0 && js.indexOf("entitlement.compareCols(") >= 0
       && E.compareCols({ logged: false, tier: "free" }).map((c) => c.tier).join() === tiersMod.TIER_KEYS.join(),
     "列头写死、或只挑几档列出来，都会跟档位表走散");
-  ok("权限对比表的行铺满能力表（一行一项，一项不漏）",
+  ok("权限对比表的行铺满能力表（一行一项，一项不漏，另加排行榜两行）",
     wxml.indexOf("compareRows") >= 0 && js.indexOf("entitlement.compareRows(") >= 0
-      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length,
+      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length + 2
+      && E.CAP_KEYS.every((k) => E.compareRows({ logged: false, tier: "free" }).some((r) => r.cap === k)),
     "只挑几项列出来，用户就看不到自己缺哪几样");
   ok("当前档位列带「现在」（用户只认自己那一列）",
-    /now:\s*t\.key === tierNow\(s\)/.test(entSys) && wxml.indexOf("cell.now") >= 0,
+    /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("cell.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
   ok("对比表整表铺在页面上、自己不滚（用户不用在两处别苗头地滚）",
     wxml.indexOf("<scroll-view") < 0,
@@ -1270,6 +1271,16 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
+  ok("排行榜两行紧跟考试、写的是「参与 / 不参与」",
+    (() => {
+      const rows = E.compareRows({ logged: false, tier: "free" });
+      const at = rows.findIndex((r) => r.cap === "exam");
+      const [join, off] = rows.slice(at + 1, at + 3);
+      return join && off && /排行榜$/.test(join.name) && /排行榜\(不参与\)$/.test(off.name)
+        && join.cells.map((c) => c.on).join() === "false,false,true"
+        && off.cells.map((c) => c.on).join() === "false,false,true";
+    })(),
+    "两行没跟着考试排、或者 Max 之外也亮了");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
@@ -3287,7 +3298,10 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
     ["qingmingshanghetu", "清明上河图", [2, 54, 51], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
-    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"]
+    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
+    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
+    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"]
   ];
 
   const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
@@ -3296,7 +3310,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 16 项（十二个传统色 + 四张大好河山）",
+  ok("清单就是这 19 项（十二个传统色 + 七张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
@@ -4622,6 +4636,13 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     !/^\s*autoNext:/m.test(storeJs), "默认值还留着，等于给下一个来读它的人递了个空承诺");
   ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
     /setTimeout\(\(\) => this\.goNext\(/.test(read("components/recite-sheet/recite-sheet.js")));
+
+  ok("古诗词大会那张卡在危险操作上方，开关落在 leagueBoard 上",
+    generalWxml.indexOf("leagueBoardOn") >= 0
+      && generalWxml.indexOf("leagueBoardOn") < generalWxml.indexOf("danger-zone")
+      && /onLeagueBoard[\s\S]{0,200}?saveSettings\(\{\s*leagueBoard/.test(generalJs)
+      && /leagueBoardOn:\s*settings\.leagueBoard !== false/.test(generalJs),
+    "卡片不在危险操作上方，或者开关没落到 leagueBoard（写死一个 true 等于没开关）");
 
 }
 
@@ -7451,6 +7472,15 @@ function gapped(items, max) {
     ok("关掉这个开关只落一个键（跟着账号走，不进本机）",
       store3.saveSettings({ seasonal: false }).seasonal === false
         && store3.cloudSettings().seasonal === false);
+
+    const LEAGUE = require(path.join(ROOT, "utils", "ranking-submit.js"));
+    store3.saveSettings({ leagueBoard: false });
+    ok("参与排行榜默认为开、关掉之后成绩不再往榜单交",
+      store3.DEFAULTS.leagueBoard === true && !store3.LOCAL_ONLY.leagueBoard
+        && LEAGUE.optedIn() === false
+        && store3.cloudSettings().leagueBoard === false);
+    store3.saveSettings({ leagueBoard: true });
+    ok("开关打开时照常交榜（拦截只认那个键）", LEAGUE.optedIn() === true);
 
     asTier3("pro");
     SEASON.setOn(true);
