@@ -3139,7 +3139,7 @@ function mountFull(pg, query) {
         && examJs.indexOf("onPrev") >= 0,
       "选择题交了卷才判，途中却不许回头改 —— 漏答一题就白丢一分");
     ok("题号格按「答没答」上色，类名由 slotsOf 一处算好再传进模板",
-      /slotsOf\s*\(/.test(examJs) && examWxml.indexOf("{{slots}}") >= 0
+      (examJs.match(/^  slotsOf\(/gm) || []).length === 1 && examWxml.indexOf("{{slots}}") >= 0
         && examWxml.indexOf("{{item.cls}}") >= 0,
       "模板里还在自己拼类名 —— 插值只吃一层，宁可算好再传");
     ok("那个「现在这题」的标记走主题色，不另起一支",

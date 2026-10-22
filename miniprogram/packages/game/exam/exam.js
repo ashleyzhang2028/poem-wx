@@ -208,15 +208,6 @@ Page({
     });
   },
 
-  slotsOf(answers, index) {
-    return (answers || []).map((a, i) => {
-      let cls = "";
-      if (a) cls = "on";
-      if (i === index) cls = (cls + " now").trim();
-      return { i: i, cls: cls };
-    });
-  },
-
   goto(index) {
     const next = this.data.questions[index];
     if (!next) return;
