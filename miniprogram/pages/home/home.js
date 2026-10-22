@@ -253,7 +253,7 @@ Page({
     this.toasted = false;
 
     this.setData({
-      banner: theme.bannerOf(theme.current()),
+      banner: theme.bannerSrc(),
       todayLabel: todayLabel(),
       barBelow: !!tabbar.sync(this, 0)
     });

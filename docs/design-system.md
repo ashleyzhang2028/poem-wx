@@ -56,8 +56,10 @@
 「黛青」用的是 `rgba(2, 54, 51, 1)`，取自首页 banner 那幅画上的墨绿，
 淡淡一档 `rgba(2, 54, 51, 0.05)`。它是默认那一项。
 
-色卡分两张：**中国传统**与**大好河山**（Issue #442）。分组写在 `THEMES` 每一项的
-`group` 字段上，页面上两张卡由 `theme.groups()` 给出，不另抄一份名单。
+色卡分三张：**中国传统**、**大好河山**（Issue #442）与**自选**（Issue #541）。
+分组写在 `THEMES` 每一项的 `group` 字段上，页面上三张卡由 `theme.groups()` 给出，
+不另抄一份名单；「自选」不是一个色，是一项能力，`items` 只有一项
+（`theme.ownSwatchData()`）。
 
 大好河山七支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
 （`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `theme.js` 的 `CITY_BANNER`），
@@ -149,6 +151,24 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 判据落在 `theme.groups()` 与 `current()`：`items[].locked` 给页面，
 `set()` 与 `current()` 各自挡一道 —— 点不动，且档位掉回 Free 时
 停在那一支上的用户退回默认那支，页面不会挂在够不着的颜色上。
+
+#### 自选：换的是 banner 那张图，Max 起
+
+第三张卡「自选」不换色，换的是 banner 那张图（能力键 `ownbanner`，max 起）。
+用户可以自己传一张图，图按 banner 的原比例（916 / 1717）折到 1200px 宽，
+jpg 质量 72，`wx.compressImage` 压完读成 base64 存进 `kb_settings_v1` 的 `banner`。
+
+**只存本机。** `banner` 与 `lastSearch` 一样进 `store.LOCAL_ONLY`，
+`cloudSettings()` 不给它，所以换台设备就回到默认那张 `icons/hero.png`；
+档位掉下来时 `current()` 退回默认那支，图还在本机但不再用。
+界面上一句「图只存在这台手机上，不同步到服务器，换设备就回到默认 banner」。
+
+banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按比例折，
+`mode="widthFix"`；自选那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
+`aspectFill` 裁进去，不算 banner 本身。
+
+清空（恢复默认）一并清掉 `theme` 那一格里的 `own`，否则会停在一条没有图的主题上。
+`check.js` 守着三件事：这一项归 max、图不进云端报文、清空之后回到默认那支。
 
 #### 字体：四格即预览
 

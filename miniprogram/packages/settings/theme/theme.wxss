@@ -139,3 +139,45 @@
 .page.tall .gap-bottom {
   display: none;
 }
+
+.own {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding-top: var(--sp-2);
+}
+
+.own-pick {
+  flex-direction: row;
+  min-height: 0;
+  gap: var(--sp-2);
+}
+
+.own-thumb {
+  overflow: hidden;
+}
+
+.swatch-dot.has-img {
+  border-radius: var(--radius-sm);
+}
+
+.own-thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.own-acts {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.own-note {
+  flex: 1 0 100%;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: 1rpx;
+  line-height: var(--lh-body);
+}
