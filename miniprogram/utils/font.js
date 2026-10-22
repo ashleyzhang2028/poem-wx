@@ -6,8 +6,11 @@ const TIER = "pro";
 const FONTS = [
   { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", stem: "zhuquefangsong-regular/zhuquefangsong-regular-" },
   { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", stem: "huiwenmincho-improved/huiwenmincho-improved-" },
-  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", stem: "chillkai/chillkai-" }
+  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", stem: "chillkai/chillkai-" },
+  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", stem: "cooperzhengkai/cooperzhengkai-" }
 ];
+
+const PREVIEW = "烟花三月下扬州";
 
 const DEFAULT = "zhuque";
 
@@ -19,7 +22,9 @@ const FACES = FONTS.map((f) => ({
   note: f.note,
   family: "Kuibu Poem " + f.key,
   free: [BASE + f.stem + "free.woff2", BASE + f.stem + "free.woff"],
-  pro: [BASE + f.stem + "pro.woff2", BASE + f.stem + "pro.woff"]
+  pro: [BASE + f.stem + "pro.woff2", BASE + f.stem + "pro.woff"],
+  preview: [BASE + f.stem + "7.woff2", BASE + f.stem + "7.woff"],
+  previewFamily: "Kuibu Preview " + f.key
 }));
 
 const FAMILIES = FACES.map((f) => f.family);
@@ -81,7 +86,7 @@ function readiness() {
 }
 
 function options() {
-  return FACES.map((f) => ({ key: f.key, name: f.name, note: f.note }));
+  return FACES.map((f) => ({ key: f.key, name: f.name }));
 }
 
 function attempt(face0, source) {
@@ -127,6 +132,20 @@ function load() {
   return loaded[key];
 }
 
+let previews = {};
+
+function preview(key) {
+  const f = BY_KEY[key];
+  if (!f || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
+  if (previews[f.key]) return previews[f.key];
+
+  previews[f.key] = sequence({ family: f.previewFamily }, f.preview).then((ok) => {
+    if (!ok) delete previews[f.key];
+    return ok;
+  });
+  return previews[f.key];
+}
+
 function sourcesOf(f) {
   return configured().map((s) => (familyOf(s) ? s.replace(familyOf(s), f.family) : s));
 }
@@ -153,7 +172,7 @@ function set(key) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, readiness, options,
+  FONTS, FACES, DEFAULT, BASE, PREVIEW, readiness, options,
   paid, pickable, tier, current, face, stack,
-  addresses, configured, load, loadAll, set
+  addresses, configured, load, loadAll, preview, set
 };

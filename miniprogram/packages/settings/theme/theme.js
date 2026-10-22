@@ -17,6 +17,8 @@ Page({
 
     fonts: [],
     font: font.DEFAULT,
+    fontPreview: font.PREVIEW,
+    previewFamilyOf: "Kuibu Preview " + font.DEFAULT,
     fontLocked: true,
     fontTier: "pro"
   },
@@ -29,6 +31,11 @@ Page({
       return;
     }
     this.setData(Object.assign({ locked: false }, this.view()));
+    this.warmPreview();
+  },
+
+  warmPreview() {
+    font.options().forEach((f) => { font.preview(f.key).catch(() => {}); });
   },
 
   view() {
@@ -36,8 +43,12 @@ Page({
     return {
       groups: theme.groups(),
       theme: theme.current(),
-      fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
+      fonts: font.options().map((f) => Object.assign({}, f, {
+        locked: !pickable && f.key !== font.DEFAULT,
+        tone: "Kuibu Preview " + f.key
+      })),
       font: font.current(),
+      previewFamilyOf: font.face().previewFamily,
       fontLocked: !pickable,
       fontTier: font.tier()
     };
@@ -66,6 +77,7 @@ Page({
     this.setData(this.view());
     font.load().catch(() => {});
     font.loadAll();
+    this.warmPreview();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });
