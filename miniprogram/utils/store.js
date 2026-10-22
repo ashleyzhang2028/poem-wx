@@ -634,7 +634,9 @@ function deferAt() {
 }
 
 function setDefer(items, at) {
-  write(KEYS.defer, { list: items || [], at: Number(at) || Date.now() });
+  const prev = deferAt();
+  const next = Number(at) || 0;
+  write(KEYS.defer, { list: items || [], at: Math.max(prev, next, Date.now()) });
 }
 
 function pinyinFixes() {
