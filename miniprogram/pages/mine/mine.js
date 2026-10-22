@@ -13,6 +13,7 @@ Page({
   data: {
     themeStyle: "",
     barBelow: true,
+    guestClass: "",
     logged: false,
     gradeName: "",
     scopeName: "",
@@ -65,6 +66,13 @@ Page({
       themeName: theme.currentTheme().name,
       fontName: font.face().name
     });
+
+    this.syncClass();
+  },
+
+  syncClass() {
+    const guestClass = this.data.logged ? "" : "guest";
+    if (guestClass !== this.data.guestClass) this.setData({ guestClass });
   },
 
   onLogin() {
