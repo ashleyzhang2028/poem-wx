@@ -353,6 +353,7 @@ function ofBook(bookId) {
       p.n = meta ? meta.name : bookId;
       idIndex[p.id] = p;
       if (idBook[p.id] === undefined) idBook[p.id] = bookId;
+      p.lb = matchTextOf(p);
       return p;
     });
     bookCache[bookId] = list;
@@ -437,9 +438,16 @@ function bucket(name) {
 const SHARD_CACHE_KEY = "shards";
 const SHARD_CACHE_MAX = 40;
 
+let shardBox = null;
+let shardBoxWx = null;
+
 function shardCache() {
+  if (shardBox && shardBoxWx === wx) return shardBox;
   const store = require("./store");
-  return store.read(SHARD_CACHE_KEY, {}) || {};
+  const raw = store.read(SHARD_CACHE_KEY, {});
+  shardBox = raw && typeof raw === "object" ? raw : {};
+  shardBoxWx = wx;
+  return shardBox;
 }
 
 function saveShard(name, payload) {
@@ -452,7 +460,12 @@ function saveShard(name, payload) {
     keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
   }
   all[name] = { at: Date.now(), data: payload };
-  store.write(SHARD_CACHE_KEY, all);
+  if (store.write(SHARD_CACHE_KEY, all)) return;
+  delete all[name];
+  if (shardBox === all) {
+    shardBox = null;
+    shardBoxWx = null;
+  }
 }
 
 function shardFile(name) {
@@ -564,7 +577,9 @@ function forgetText(id) {
   const all = shardCache();
   if (!all[name]) return;
   delete all[name];
-  require("./store").write(SHARD_CACHE_KEY, all);
+  if (require("./store").write(SHARD_CACHE_KEY, all)) return;
+  shardBox = null;
+  shardBoxWx = null;
 }
 
 function entries(ids) {
@@ -635,26 +650,28 @@ function search(keyword, opt) {
 
 const LOWER_FIELDS = ["t", "a", "d", "s", "g"];
 
-const loweredOf = new WeakMap();
-
-function lowered(p) {
-  const hit = loweredOf.get(p);
-  if (hit) return hit;
-  const low = {};
+function matchTextOf(p) {
+  const parts = [];
   for (let i = 0; i < LOWER_FIELDS.length; i++) {
     const v = p[LOWER_FIELDS[i]];
-    low[LOWER_FIELDS[i]] = v ? String(v).toLowerCase() : "";
+    if (v) parts.push(String(v).toLowerCase());
   }
-  loweredOf.set(p, low);
-  return low;
+  return parts.join("\n");
 }
 
 function matchEntry(p, kw) {
-  const low = lowered(p);
-  for (let i = 0; i < LOWER_FIELDS.length; i++) {
-    if (low[LOWER_FIELDS[i]].indexOf(kw) >= 0) return true;
+  return (p.lb === undefined ? matchTextOf(p) : p.lb).indexOf(kw) >= 0;
+}
+
+function searchAt(bookId, keyword) {
+  const kw = String(keyword || "").trim().toLowerCase();
+  if (!kw || !bookId) return { at: [], total: 0 };
+  const pool = ofBook(bookId);
+  const at = [];
+  for (let i = 0; i < pool.length; i++) {
+    if (matchEntry(pool[i], kw)) at.push(i);
   }
-  return false;
+  return { at: at, total: at.length };
 }
 
 function grouped(list) {
@@ -696,6 +713,7 @@ module.exports = {
   entries,
   indexById,
   search,
+  searchAt,
   grouped,
   matchEntry,
   hasData,

@@ -115,21 +115,24 @@ function write(key, value) {
   try {
     wx.setStorageSync(key, value);
     delete hot[key];
-    if (key === KEYS.progress) dropProgressCache();
-    if (key === KEYS.reads) dropReadsCache();
     return true;
   } catch (e) {
+    forgetCache(key);
     return false;
   }
 }
 
 function drop(key) {
+  forgetCache(key);
   try {
     wx.removeStorageSync(key);
   } catch (e) {
 
   }
   delete hot[key];
+}
+
+function forgetCache(key) {
   if (key === KEYS.progress) dropProgressCache();
   if (key === KEYS.reads) dropReadsCache();
 }
@@ -251,16 +254,35 @@ function tierDue(now) {
   return (Number(now) || Date.now()) - last >= TIER_GAP_MS;
 }
 
+let progressScratch = null;
+
 function progress() {
   if (progressCache && progressWx === wx) return progressCache;
-  const all = read(KEYS.progress, {}) || {};
+  let all;
+  if (progressScratch) {
+    all = progressScratch;
+    progressScratch = null;
+    fillStore(all, read(KEYS.progress, {}) || {});
+  } else {
+    all = read(KEYS.progress, {}) || {};
+  }
   progressCache = all;
   progressWx = wx;
   return all;
 }
 
 function dropProgressCache() {
+  if (!progressCache) return;
+  if (progressCache !== progressScratch) {
+    progressScratch = progressCache;
+    fillStore(progressScratch, {});
+  }
   progressCache = null;
+}
+
+function fillStore(dst, src) {
+  Object.keys(dst).forEach((k) => delete dst[k]);
+  Object.keys(src).forEach((k) => { dst[k] = src[k]; });
 }
 
 function getRecord(id) {
@@ -338,15 +360,30 @@ function dropClearMarks() {
   drop(KEYS.clearMarks);
 }
 
+let readsScratch = null;
+
 function reads(book) {
   if (!readsCache || readsWx !== wx) {
-    readsCache = read(KEYS.reads, {}) || {};
+    let all;
+    if (readsScratch) {
+      all = readsScratch;
+      readsScratch = null;
+      fillStore(all, read(KEYS.reads, {}) || {});
+    } else {
+      all = read(KEYS.reads, {}) || {};
+    }
+    readsCache = all;
     readsWx = wx;
   }
   return book ? readsCache[book] || {} : readsCache;
 }
 
 function dropReadsCache() {
+  if (!readsCache) return;
+  if (readsCache !== readsScratch) {
+    readsScratch = readsCache;
+    fillStore(readsScratch, {});
+  }
   readsCache = null;
 }
 

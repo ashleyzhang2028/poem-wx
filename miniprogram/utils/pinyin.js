@@ -46,17 +46,32 @@ function readings(ch) {
   return raw ? String(raw).split("/") : [];
 }
 
+const WORD_HEAD = {};
+
+let wordTable = null;
+
+function wordsByHead(t) {
+  if (wordTable && wordTable.t === t) return WORD_HEAD;
+  wordTable = { t: t };
+  Object.keys(WORD_HEAD).forEach((k) => delete WORD_HEAD[k]);
+  Object.keys((t && t.words) || {}).forEach((w) => {
+    const head = w.charAt(0);
+    (WORD_HEAD[head] || (WORD_HEAD[head] = [])).push(w);
+  });
+  Object.keys(WORD_HEAD).forEach((k) => WORD_HEAD[k].sort((a, b) => b.length - a.length));
+  return WORD_HEAD;
+}
+
 function wordAt(text, i) {
   const t = table();
   if (!t || !t.words) return "";
-  const keys = Object.keys(t.words);
-  for (let k = 0; k < keys.length; k++) {
-    const w = keys[k];
-    for (let off = 0; off < w.length; off++) {
-      const start = i - off;
-      if (start < 0) continue;
-      if (text.substr(start, w.length) === w) return t.words[w][off];
-    }
+  const list = wordsByHead(t)[String(text).charAt(i)];
+  if (!list) return "";
+  for (let k = 0; k < list.length; k++) {
+    const w = list[k];
+    const start = i - (w.length - 1);
+    if (start < 0) continue;
+    if (text.substr(start, w.length) === w) return t.words[w][w.length - 1];
   }
   return "";
 }

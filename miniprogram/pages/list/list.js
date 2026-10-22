@@ -60,32 +60,43 @@ Page({
   apply() {
     const { bookId, keyword, filter } = this.data;
     const all = corpus.ofBook(bookId);
-    const base = keyword ? this.matched(bookId, keyword) : all;
+    const at = keyword ? this.matched(bookId, keyword) : null;
 
     const reads = store.reads(bookId);
-    const list = filter === "未读" ? base.filter((p) => !reads[p.id]) : base;
-
     const picked = this.pickedMap();
-    const groups = corpus.grouped(list);
+    const inMatch = {};
+    (at || []).forEach((i) => { inMatch[i] = true; });
+    const order = [];
+    const map = {};
     let seq = 0;
-    groups.forEach((g) => {
-      g.items = g.items.map((p) => {
-        seq += 1;
-        return {
-          id: p.id,
-          title: p.t,
-          author: p.a,
-          dynasty: p.d,
-          seq: seq,
-          read: !!reads[p.id],
-          picked: !!picked[p.id]
-        };
+    let matched = 0;
+
+    all.forEach((p, i) => {
+      if (at && !inMatch[i]) return;
+      if (filter === "未读" && reads[p.id]) return;
+      matched += 1;
+      const g = p.g || "";
+      if (!map[g]) {
+        map[g] = [];
+        order.push(g);
+      }
+      seq += 1;
+      map[g].push({
+        id: p.id,
+        title: p.t,
+        author: p.a,
+        dynasty: p.d,
+        seq: seq,
+        read: !!reads[p.id],
+        picked: !!picked[p.id]
       });
     });
 
+    const groups = order.map((g) => ({ group: g, items: map[g] }));
+
     this.setData({
       groups,
-      matched: list.length,
+      matched,
       total: all.length,
       groupCount: groups.length
     });
@@ -93,16 +104,15 @@ Page({
 
   matched(bookId, keyword) {
     const key = bookId + "\u0000" + keyword;
-    if (this.matchKey === key) return this.matchList;
-    const list = corpus.search(keyword, { book: bookId, limit: 2000 }).items;
+    if (this.matchKey === key) return this.matchAt;
     this.matchKey = key;
-    this.matchList = list;
-    return list;
+    this.matchAt = corpus.searchAt(bookId, keyword).at;
+    return this.matchAt;
   },
 
   forgetMatch() {
     this.matchKey = "";
-    this.matchList = null;
+    this.matchAt = null;
   },
 
   onSearch(e) {

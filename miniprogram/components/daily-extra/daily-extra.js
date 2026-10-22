@@ -34,26 +34,26 @@ Component({
     },
 
     onInput(e) {
-      this.setData({ keyword: e.detail.value }, () => this.paint(e.detail.value));
+      this.paint(e.detail.value);
     },
 
     onSearch(kw) {
-      const keyword = kw === undefined ? this.data.keyword : kw;
-      this.setData({ keyword: keyword }, () => this.paint(keyword));
+      this.paint(kw === undefined ? this.data.keyword : kw);
     },
 
     onClear() {
-      this.setData({ keyword: "", searched: false, rows: [] });
+      this.paint("");
     },
 
     paint(kw) {
-      const keyword = String(kw || "").trim();
+      const typed = String(kw || "");
+      const keyword = typed.trim();
       if (!keyword) {
-        this.setData({ rows: [], searched: false });
+        this.setData({ keyword: typed, rows: [], searched: false });
         return;
       }
       const r = corpus.search(keyword, { limit: SUGGEST_MAX });
-      this.setData({ rows: this.decorate(r.items), searched: true });
+      this.setData({ keyword: typed, rows: this.decorate(r.items), searched: true });
     },
 
     decorate(items) {
