@@ -532,7 +532,7 @@ function forgetText(id) {
   const all = shardCache();
   if (!all[name]) return;
   delete all[name];
-  store.write(SHARD_CACHE_KEY, all);
+  require("./store").write(SHARD_CACHE_KEY, all);
 }
 
 function entries(ids) {

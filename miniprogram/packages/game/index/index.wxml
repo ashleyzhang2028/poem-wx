@@ -5,7 +5,7 @@
     <view class="card hero">
       <view class="hero-seal {{heroTitle ? 'earned' : ''}}">{{heroMark}}</view>
       <view class="hero-main">
-        <text class="hero-name poem">古诗词大会</text>
+        <text class="hero-name poem">古诗文大会</text>
         <text class="hero-title" wx:if="{{heroTitle}}">当前功名 · {{heroTitle}}</text>
         <text class="hero-sub">{{heroSub}}</text>
       </view>

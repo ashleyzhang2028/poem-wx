@@ -51,6 +51,13 @@ function memoryStore() {
     putCode: function (rec) { db.codes[rec.code_id] = rec; return rec; },
     getCode: function (codeId) { return db.codes[codeId] || null; },
 
+    bumpCodeAttempt: function (codeId) {
+      var c = db.codes[codeId];
+      if (!c) return 0;
+      c.attempts = Number(c.attempts || 0) + 1;
+      return c.attempts;
+    },
+
     patchCode: function (codeId, patch) {
       var c = db.codes[codeId];
       if (!c) return false;

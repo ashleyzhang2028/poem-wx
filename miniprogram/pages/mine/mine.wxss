@@ -8,11 +8,9 @@
 .mine.guest .mine-main {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   flex: 1;
   min-height: 100vh;
-  margin-top: calc(var(--pad-tab) * -1);
-  padding: calc(var(--pad-tab) / 2) 0;
 }
 
 .mine.guest .mine-main > .login-lead {
@@ -21,4 +19,8 @@
 
 .mine.guest .safe-bottom {
   display: none;
+}
+
+.mine .my-login {
+  margin-bottom: var(--sp-4);
 }

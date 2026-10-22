@@ -749,7 +749,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   function asTier(tier) {
     store.saveProfile({ logged: true, tier: "" });
-    global.wx.setStorageSync("kb_auth_v1", { tier: tier });
+    store.write(store.KEYS.auth, { tier: tier });
   }
 
   const seen = [];
@@ -1054,10 +1054,10 @@ const E = require(path.join(ROOT, "utils", "entitlement.js"));
 const tiersMod = require(path.join(ROOT, "utils", "tiers.js"));
 
 function asGuest() {
-  wx.setStorageSync(store.KEYS.profile, { logged: false });
+  store.write(store.KEYS.profile, { logged: false });
 }
 function asMember() {
-  wx.setStorageSync(store.KEYS.profile, { logged: true, tier: "pro" });
+  store.write(store.KEYS.profile, { logged: true, tier: "pro" });
 }
 
 asGuest();
@@ -1092,8 +1092,8 @@ asGuest();
 }
 
 function asTier(t) {
-  wx.setStorageSync(store.KEYS.profile, { logged: true });
-  wx.setStorageSync(store.KEYS.auth, { token: "t", tier: t, at: Date.now() });
+  store.write(store.KEYS.profile, { logged: true });
+  store.write(store.KEYS.auth, { token: "t", tier: t, at: Date.now() });
 }
 asTier("free");
 
@@ -3352,6 +3352,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
   {
     const tierOf = (t) => {
+      const store = require(path.join(ROOT, "utils", "store.js"));
       store.saveProfile({ logged: true, tier: "" });
       store.drop(store.KEYS.auth);
       store.drop(store.KEYS.caps);

@@ -1563,7 +1563,7 @@ button, textarea {
 .recite-label {
   flex: none;
   font-size: var(--fs-hint);
-  color: var(--ink-3);
+  color: var(--ink-2);
   line-height: var(--lh-tight);
 }
 

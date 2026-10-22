@@ -78,12 +78,13 @@
   justify-content: center;
   gap: 4rpx;
   padding: 10rpx 4rpx;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   transition: background-color var(--t-press), color var(--t-press);
 }
 
 .font-row.on {
   background: var(--strong-soft);
+  border: 1rpx solid var(--strong);
 }
 
 .font-hover {
@@ -109,7 +110,11 @@
 }
 
 .font-row.on .font-name {
-  color: var(--ink-2);
+  color: var(--strong);
+}
+
+.font-row.on .font-sample {
+  color: var(--strong);
 }
 
 .font-row.locked {
