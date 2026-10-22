@@ -48,6 +48,7 @@ function applySession(data) {
   if (data.tier) auth.tier = data.tier;
   if (data.role) auth.role = data.role;
   if (data.signedGrant) auth.signedGrant = data.signedGrant;
+  auth.userId = data.userId || auth.userId || "";
   store.write(store.KEYS.auth, auth);
 
   if (data.caps && typeof data.caps === "object") store.write(store.KEYS.caps, data.caps);
@@ -56,7 +57,8 @@ function applySession(data) {
     logged: true,
     tier: data.tier || "",
     tierFromServer: !!data.tier,
-    userId: data.userId || store.profile().userId || ""
+    userId: data.userId || store.profile().userId || "",
+    role: data.role || store.profile().role || ""
   };
   const nick = data.nickname || store.profile().nickname;
   if (nick && nick !== store.profile().nickname) patch.nickname = nick;
@@ -146,7 +148,7 @@ function applyMe(me) {
   auth.sessionFrom = "cookie";
   store.write(store.KEYS.auth, auth);
 
-  store.saveSession({ logged: true, tier: tier, tierFromServer: true, userId: me.uid });
+  store.saveSession({ logged: true, tier: tier, tierFromServer: true, userId: me.uid, role: role });
 
   const nick = me.nickname || "";
   if (nick && nick !== store.profile().nickname) store.saveProfile({ nickname: nick });
@@ -205,7 +207,7 @@ function saveNickname(raw) {
 function logout() {
   store.drop(store.KEYS.auth);
   store.drop(store.KEYS.caps);
-  store.saveSession({ logged: false, tier: "", tierFromServer: false });
+  store.saveSession({ logged: false, tier: "", tierFromServer: false, role: "" });
 }
 
 function token() {
@@ -219,7 +221,7 @@ function logged() {
 
 function role() {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  return auth.role || "";
+  return auth.role || store.profile().role || "";
 }
 
 function isAdmin() {

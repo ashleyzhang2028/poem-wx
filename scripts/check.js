@@ -1579,6 +1579,17 @@ const GATED = {
     ok("后台详情能给用户删（那条管理路径也接上）",
       /adminFeedbackDelete/.test(adminFbLib) && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js")));
 
+    ok("后台列表也能删（不用先点进详情）",
+      /onDelete/.test(read("packages/admin/feedback/index.js"))
+        && /bindlongpress="onDelete"/.test(read("packages/admin/feedback/index.wxml"))
+        && /data-tid="\{\{row\.tid\}\}"[^>]*catchtap="onDelete"/.test(read("packages/admin/feedback/index.wxml")),
+      "列表页删不了，管理员得逐条点进详情 —— 一次清理十几条就是这么耗光的");
+
+    ok("登录回来就把服务端给的角色记进本机会话（重启后改档位/删反馈的按钮才出得来）",
+      /saveSession\(\{[^}]*role: role\s*\}/.test(read("utils/auth.js"))
+        && /store\.profile\(\)\.role/.test(read("utils/auth.js")),
+      "角色只落在 auth 那份里，profile 侧的 isAdmin() 重启后读不到 —— 按钮被自己藏起来");
+
     ok("限流按人算，不按设备算（uid 换成设备号等于删掉限流）",
       /function feedbackRateGate\(deps, uid\)[\s\S]{0,200}"uid"/.test(serverCore)
         && /uid: \[\[3600000, 10\], \[86400000, 30\]\]/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "config.js"), "utf8")),

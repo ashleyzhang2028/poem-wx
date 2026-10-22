@@ -672,6 +672,12 @@ function makeWx(port, mem) {
       !afterRemove.threads.some((t) => t.tid === other.thread.tid),
       JSON.stringify(afterRemove.threads.map((t) => t.tid)));
 
+    await auth2.refresh();
+    const adminSession = require(path.join(REPO, "miniprogram", "utils", "admin.js"));
+    ok("刷新会话后本机认得出管理员（重启后后台那些按钮才出得来）",
+      adminSession.canWrite() === true && adminSession.loggedIn() === true,
+      JSON.stringify({ role: store.profile().role, ready: adminSession.canWrite() }));
+
     const adminRemoved = await adminFb.remove(first.thread.tid, "");
     ok("管理员也删得掉（后台详情那条路）", adminRemoved.ok === true, JSON.stringify(adminRemoved));
     ok("删完之后连沟通记录一起没了",

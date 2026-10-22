@@ -33,7 +33,7 @@ Page({
     this.setData({
       logged: entitlement.snapshot().logged,
       usersSub: remote.adminReady() ? "改档位" : "只读",
-      feedbackSub: remote.adminReady() ? "列表 · 回复" : "只读",
+      feedbackSub: remote.adminReady() ? "列表 · 回复 · 删除" : "只读",
       lineColor: theme.currentTheme().rgba
     });
     this.loadStats();

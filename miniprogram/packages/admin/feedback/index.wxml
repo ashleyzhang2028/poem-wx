@@ -16,7 +16,8 @@
       </view>
 
       <view class="fb-card" wx:for="{{item.threads}}" wx:for-item="row" wx:key="tid"
-            hover-class="row-hover" hover-stay-time="60" data-tid="{{row.tid}}" bindtap="onOpen">
+            hover-class="row-hover" hover-stay-time="60" data-tid="{{row.tid}}" bindtap="onOpen"
+            bindlongpress="onDelete">
         <view class="fb-card-top">
           <text class="fb-card-title">{{row.title}}</text>
           <text class="tag {{row.tone}}">{{row.resolutionName}}</text>
@@ -24,6 +25,7 @@
         <view class="fb-card-foot">
           <text class="fb-card-user">{{row.nickname || row.uid || row.deviceId}}</text>
           <text class="fb-card-stamp">{{row.createdText}} · 最后处理 {{row.updatedText}}</text>
+          <text class="fb-op" wx:if="{{canWrite}}" data-tid="{{row.tid}}" catchtap="onDelete">删除</text>
         </view>
       </view>
     </view>
