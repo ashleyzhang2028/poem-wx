@@ -1,7 +1,7 @@
 <view class="cp-mask" wx:if="{{open}}" bindtap="onMask">
   <view class="cp" catchtap="onStop" style="{{themeStyle}}">
     <view class="cp-head">
-      <text class="cp-title">收进自选集</text>
+      <text class="cp-title">加入自选集</text>
       <text class="cp-count">已建 {{total}} / {{cap}} 个</text>
       <view class="cp-close" hover-class="cp-close-hover" hover-stay-time="60" bindtap="close">
         <view class="cp-close-x"></view>
@@ -17,12 +17,14 @@
           <text class="row-title">{{item.name}}</text>
           <text class="row-sub">{{item.has ? '已经在里面' : item.count + ' 首 / ' + itemsMax + ' 首'}}</text>
         </view>
-        <text class="row-state {{item.has ? 'on' : 'idle'}}">{{item.has ? '已收' : '收进'}}</text>
+        <text class="row-state {{item.has ? 'on' : 'idle'}}">{{item.has ? '已加入' : '加入'}}</text>
       </view>
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
-        <text class="hint empty-tip">在下面新建一个，把这首收进去</text>
+        <view class="cp-go-create" hover-class="cp-go-create-hover" hover-stay-time="60" bindtap="onGoCreate">
+          <text>创建自选集</text>
+        </view>
       </view>
     </view>
 

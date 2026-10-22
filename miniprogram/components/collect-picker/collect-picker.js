@@ -61,6 +61,11 @@ Component({
 
     onStop() {},
 
+    onGoCreate() {
+      this.close();
+      this.triggerEvent("goCreate");
+    },
+
     onStartCreate() {
       if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       if (cols.capOf() <= cols.list().length) {
