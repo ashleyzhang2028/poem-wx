@@ -1424,7 +1424,6 @@ function wxSessionBody(deps, acc) {
   return {
     tier: tier,
     role: role,
-    expiresIn: Math.round((Number(cfg.sessionDays) || 30) * 86400),
     signedGrant: "",
     nickname: String(acc.nickname || ""),
     avatarUrl: String(acc.wx_avatar_url || ""),
@@ -1438,6 +1437,7 @@ function wxIssueSession(deps, acc, device) {
   var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
 
   if (device) row.device = String(device).slice(0, 64);
+  row.refresh_token = s.token;
 
   return Promise.resolve(store.putSession(row))["catch"](function (e) {
     var msg = String((e && e.message) || e).toLowerCase();
@@ -1447,6 +1447,7 @@ function wxIssueSession(deps, acc, device) {
     throw e;
   }).then(function () {
     var body = wxSessionBody(deps, acc);
+    body.expiresIn = s.ttlSec;
     body.accessToken = s.token;
     body.refreshToken = s.token;
     return ok(body);

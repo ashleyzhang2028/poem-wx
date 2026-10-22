@@ -2338,6 +2338,33 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   });
 }
 
+let sandboxPage = null;
+
+function mountPage(pg, query) {
+  let opt = null;
+  global.Page = (o) => { opt = o; };
+  const file = path.join(ROOT, pg + ".js");
+  delete require.cache[require.resolve(file)];
+  require(file);
+  if (!opt) return null;
+  const page = Object.assign({}, opt);
+  page.data = JSON.parse(JSON.stringify(opt.data || {}));
+  page.setData = function (obj, cb) {
+    Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
+    if (cb) cb();
+  };
+  ["onLoad", "onShow"].forEach((fn) => {
+    if (typeof page[fn] === "function") page[fn].call(page, query || {});
+  });
+  sandboxPage = page;
+  return page.data;
+}
+
+function mountFull(pg, query) {
+  mountPage(pg, query);
+  return sandboxPage;
+}
+
 {
 
   const dataDir = path.join(ROOT, "data");
@@ -2380,24 +2407,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     global.getApp = () => ({ globalData: {} });
     global.getCurrentPages = () => [];
 
-    function mount(pg, query) {
-      let opt = null;
-      global.Page = (o) => { opt = o; };
-      const file = path.join(ROOT, pg + ".js");
-      delete require.cache[require.resolve(file)];
-      require(file);
-      if (!opt) return null;
-      const page = Object.assign({}, opt);
-      page.data = JSON.parse(JSON.stringify(opt.data || {}));
-      page.setData = function (obj, cb) {
-        Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
-        if (cb) cb();
-      };
-      ["onLoad", "onShow"].forEach((fn) => {
-        if (typeof page[fn] === "function") page[fn].call(page, query || {});
-      });
-      return page.data;
-    }
+    const mount = (pg, query) => mountPage(pg, query);
 
     const storeMod = require(path.join(ROOT, "utils", "store.js"));
     const savedProfile = storeMod.profile();
@@ -7806,8 +7816,73 @@ function gapped(items, max) {
         && avatarStore.sniffImage(Buffer.concat([jpegHead, Buffer.from("xx")])) === "");
   }
 
-  ok("会话行不再把会话令牌当刷新令牌存（等于把口令抄一份进库）",
-    !/row\.refresh_token = s\.token/.test(coreSrc));
+}
+
+{
+  const api = path.join(__dirname, "..", "api");
+  const cfgMod = require(path.join(api, "_lib", "config.js"));
+  const saved = {
+    secret: cfgMod.sessionSecret, key: cfgMod.sessionKey, days: cfgMod.sessionDays,
+    appId: cfgMod.wxAppId, secretWx: cfgMod.wxSecret, fetch: cfgMod.wxFetch
+  };
+  delete cfgMod.sessionKey;
+  cfgMod.sessionDays = 30;
+  Object.defineProperty(cfgMod, "sessionSecret", {
+    value: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    writable: true, configurable: true, enumerable: true
+  });
+  cfgMod.wxAppId = "wx_probe";
+  cfgMod.wxSecret = "wx_probe_secret";
+  cfgMod.wxFetch = () => Promise.resolve({ json: () => Promise.resolve({ openid: "openid-probe" }) });
+
+  const coreMod = require(path.join(api, "_lib", "core.js"));
+  const sessionMod = require(path.join(api, "_lib", "session.js"));
+  const storeMod = require(path.join(api, "_lib", "store.js")).getStore(cfgMod);
+  let clock = Date.now();
+  const probeDeps = () => ({
+    cfg: cfgMod, store: storeMod, limiter: coreMod.makeRateLimiter(),
+    now: () => clock, account: null, ip: "127.0.0.1", deviceId: "d_00000001"
+  });
+  const probe = coreMod.wxLogin(probeDeps(), { code: "C", device: "d_00000001" })
+    .then((r) => {
+      const body = r.body || {};
+      const sid = body.accessToken ? (sessionMod.read(cfgMod, body.accessToken, clock) || {}).sid : "";
+      const row = sid ? storeMod.getSession(sid) : null;
+
+      ok("刷新那条路能找回自己的会话行（刷不回来 = 每次登录只撑得过一个有效期）",
+        !!row && row.refresh_token === body.refreshToken,
+        "登录落下的会话行里没有 refresh_token，而刷新只认「库里那一列与请求里的相等」——"
+          + "缺这一列时刷新恒回 401，客户端把「过期」当成立刻过期：刚登录完又被要求登录");
+
+      ok("登录回的 expiresIn 与会话真正的有效期一致",
+        !!row && body.expiresIn === Math.round((row.exp - row.iat) / 1000),
+        "回的是 " + body.expiresIn + " 秒，会话是 " + (row ? Math.round((row.exp - row.iat) / 1000) : "?") + " 秒"
+          + " —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
+
+      clock += ((Number(body.expiresIn) || 0) - 5) * 1000;
+      return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" })
+        .then((rr) => {
+          ok("令牌过期之后仍刷得回来（这是刷新唯一存在的理由）",
+            rr.status === 200,
+            "拿到 " + rr.status + " " + ((rr.body && rr.body.code) || "") + "：" + ((rr.body && rr.body.message) || ""));
+        });
+    })
+    .catch((e) => {
+      ok("刷新那条路能找回自己的会话行（刷不回来 = 每次登录只撑得过一个有效期）", false, e && e.message);
+    });
+
+  track(probe.then(() => {
+    Object.keys(saved).forEach((k) => {
+      const key = {
+        secret: "sessionSecret", key: "sessionKey", days: "sessionDays",
+        appId: "wxAppId", secretWx: "wxSecret", fetch: "wxFetch"
+      }[k];
+      Object.defineProperty(cfgMod, key, {
+        value: saved[k] === undefined ? undefined : saved[k],
+        writable: true, configurable: true, enumerable: true
+      });
+    });
+  }));
 }
 
 Promise.all(pending).then(() => {
