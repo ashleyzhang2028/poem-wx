@@ -181,6 +181,10 @@
   text-align: center;
 }
 
+.login-btn {
+  margin-bottom: var(--sp-2);
+}
+
 
 .finish {
   padding: var(--sp-5) var(--sp-3) var(--sp-4);
