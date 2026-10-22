@@ -118,6 +118,7 @@
   opacity: 1;
 }
 
-.login-box {
-  margin-bottom: var(--sp-2);
+.login-lead {
+  height: var(--h-field);
+  margin-top: var(--sp-4);
 }
