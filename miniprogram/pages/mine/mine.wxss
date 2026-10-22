@@ -1,15 +1,24 @@
 .mine.guest {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.mine.guest .card:last-child {
+.mine.guest .mine-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   flex: 1;
+  min-height: 100vh;
+  margin-top: calc(var(--pad-tab) * -1);
+  padding: calc(var(--pad-tab) / 2) 0;
 }
 
-.mine.guest .card:last-child + .safe-bottom {
+.mine.guest .mine-main > .login-lead {
+  margin-bottom: var(--sp-2);
+}
+
+.mine.guest .safe-bottom {
   display: none;
 }

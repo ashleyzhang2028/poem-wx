@@ -1,109 +1,111 @@
 <view class="page mine {{barBelow ? 'has-tabbar' : 'tall'}} {{guestClass}}" style="{{themeStyle}}">
 
-  <login-panel id="login" tier-label="{{tierLabel}}"
-               bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
-               bind:login="onLogin" bind:tier="onTier" />
+  <view class="mine-main">
+    <login-panel id="login" tier-label="{{tierLabel}}"
+                 bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
+                 bind:login="onLogin" bind:tier="onTier" />
 
-  <view class="card">
-    <view class="stats">
-      <view class="stat">
-        <text class="stat-v">{{stats.learned}}</text>
-        <text class="stat-k">已学</text>
+    <view class="card">
+      <view class="stats">
+        <view class="stat">
+          <text class="stat-v">{{stats.learned}}</text>
+          <text class="stat-k">已学</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{stats.mastered}}</text>
+          <text class="stat-k">已掌握</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{stats.readCount}}</text>
+          <text class="stat-k">已读篇目</text>
+        </view>
       </view>
-      <view class="stat">
-        <text class="stat-v">{{stats.mastered}}</text>
-        <text class="stat-k">已掌握</text>
+      <view class="divider"></view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
+        <view class="row-main">
+          <text class="row-title poem">背诵选项</text>
+          <text class="row-sub">{{gradeName}} · {{scopeName}} · 每日 {{dailyCount}} 首 · {{algoName}}</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <view class="stat">
-        <text class="stat-v">{{stats.readCount}}</text>
-        <text class="stat-k">已读篇目</text>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
+        <view class="row-main">
+          <text class="row-title poem">背诵进度</text>
+          <text class="row-sub">概要 · 到期日历 · 掌握度</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
+        <view class="row-main">
+          <text class="row-title poem">自选背诵</text>
+          <text class="row-sub">自己加的集合 · 改名 · 增删篇目</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
     </view>
-    <view class="divider"></view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onRecite">
-      <view class="row-main">
-        <text class="row-title poem">背诵选项</text>
-        <text class="row-sub">{{gradeName}} · {{scopeName}} · 每日 {{dailyCount}} 首 · {{algoName}}</text>
+
+    <view class="card" wx:if="{{logged}}">
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+        <view class="row-icon">主</view>
+        <view class="row-main">
+          <text class="row-title">主题和字体</text>
+          <text class="row-sub">{{themeName}} · {{fontName}}</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onProgress">
-      <view class="row-main">
-        <text class="row-title poem">背诵进度</text>
-        <text class="row-sub">概要 · 到期日历 · 掌握度</text>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
+        <view class="row-icon">设</view>
+        <view class="row-main">
+          <text class="row-title">设置</text>
+          <text class="row-sub">版式 · 声音 · 季节</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
-      <view class="row-main">
-        <text class="row-title poem">自选背诵</text>
-        <text class="row-sub">自己加的集合 · 改名 · 增删篇目</text>
+
+    <view class="card">
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
+        <view class="row-icon">档</view>
+        <view class="row-main">
+          <text class="row-title poem">用户权限</text>
+          <text class="row-sub">自己那一档 · 功能对照 · 升档</text>
+        </view>
+        <text class="row-go">›</text>
       </view>
-      <text class="row-go">›</text>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback" wx:if="{{logged}}">
+        <view class="row-icon">议</view>
+        <view class="row-main">
+          <text class="row-title">意见建议</text>
+          <text class="row-sub">反馈问题 · 查看处理进度</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onManage" wx:if="{{manageOn}}">
+        <view class="row-icon">管</view>
+        <view class="row-main">
+          <text class="row-title">后台管理</text>
+          <text class="row-sub">用户列表 · 改档位</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
+        <view class="row-icon">云</view>
+        <view class="row-main">
+          <text class="row-title">同步</text>
+          <text class="row-sub">{{syncSub}}</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
+        <view class="row-icon">关</view>
+        <view class="row-main">
+          <text class="row-title">关于</text>
+          <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见建议</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
     </view>
+
+    <view class="safe-bottom"></view>
   </view>
-
-  <view class="card" wx:if="{{logged}}">
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
-      <view class="row-icon">主</view>
-      <view class="row-main">
-        <text class="row-title">主题和字体</text>
-        <text class="row-sub">{{themeName}} · {{fontName}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
-      <view class="row-icon">设</view>
-      <view class="row-main">
-        <text class="row-title">设置</text>
-        <text class="row-sub">版式 · 声音 · 季节</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
-      <view class="row-icon">档</view>
-      <view class="row-main">
-        <text class="row-title poem">用户权限</text>
-        <text class="row-sub">自己那一档 · 功能对照 · 升档</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback" wx:if="{{logged}}">
-      <view class="row-icon">议</view>
-      <view class="row-main">
-        <text class="row-title">意见建议</text>
-        <text class="row-sub">反馈问题 · 查看处理进度</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onManage" wx:if="{{manageOn}}">
-      <view class="row-icon">管</view>
-      <view class="row-main">
-        <text class="row-title">后台管理</text>
-        <text class="row-sub">用户列表 · 改档位</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
-      <view class="row-icon">云</view>
-      <view class="row-main">
-        <text class="row-title">同步</text>
-        <text class="row-sub">{{syncSub}}</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
-      <view class="row-icon">关</view>
-      <view class="row-main">
-        <text class="row-title">关于</text>
-        <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见建议</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-  </view>
-
-  <view class="safe-bottom"></view>
 </view>
