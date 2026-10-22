@@ -297,7 +297,7 @@ Page({
       })
       .then((res) => {
         if (this.data.stage !== "result") return;
-        const sent = !!(res && (res.ok || res.off));
+        const sent = !!(res && res.ok);
         this.setData({
           ranked: sent && !!res.on,
           rankSent: sent,

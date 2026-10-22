@@ -303,7 +303,7 @@ function findOrCreateAccount(store, cfg, identity, t) {
   return Promise.resolve(store.getAccountByHash(hash)).then(function (acc) {
     if (acc && acc.status !== "deleted") return { acc: acc, created: false };
 
-    var row = accountRow(identity.raw != null ? identity.raw : identity.value, hash, t);
+    var row = accountRow(ch === "sms" ? "" : (identity.raw != null ? identity.raw : identity.value), hash, t);
     return Promise.resolve(store.putAccount(row)).then(function (saved) {
       return { acc: saved || row, created: true };
     });
@@ -326,7 +326,7 @@ function normIdentity(input) {
   }
   var phone = id.normalizePhone(raw);
   if (!id.isPhoneShape(phone)) return { bad: "E_PHONE_FORMAT", message: "这个手机号看起来不太对，再检查一下" };
-    return { channel: ch, value: phone, raw: phone, mask: id.maskPhone(phone), bucket: "phone", key: phone };
+  return { channel: ch, value: phone, raw: "", mask: id.maskPhone(phone), bucket: "phone", key: phone };
 }
 
 function smsReady(cfg) {

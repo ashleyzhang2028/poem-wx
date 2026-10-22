@@ -2167,7 +2167,12 @@ ok("名录在、标签截断、档位合法",
     ok("自动翻题用计时器，页面走了要清掉",
       /setTimeout/.test(js) && /onUnload[\s\S]{0,120}?clearTimeout/.test(js));
     ok("换令先清掉待翻的计时器，再出下一个令字",
-      /onSkip\(\)[\s\S]{0,160}?clearTimeout[\s\S]{0,160}?this\.next\(\)/.test(js));
+      (() => {
+        const at = js.indexOf("onSkip()");
+        const body = at < 0 ? "" : js.slice(at, js.indexOf("onHint()", at));
+        const cut = body.indexOf("clearTimeout");
+        return cut >= 0 && body.indexOf("this.next()", cut) > cut;
+      })());
 
     ok("一轮有倒计时，到点收轮（不再是一题接一题无限连）",
       /startClock\(\)[\s\S]{0,200}?setInterval/.test(js) && /endRound\(\)/.test(js),

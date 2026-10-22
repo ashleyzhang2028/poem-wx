@@ -126,6 +126,7 @@ Page({
       },
       () => {
         if (!char) return;
+        this.ended = false;
         this.startClock();
       }
     );
@@ -165,6 +166,8 @@ Page({
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.stopClock();
+    if (this.ended) return;
+    this.ended = true;
     if (!this.data.done.length) {
       sfx.play("gong");
       this.setData({ locked: true, message: "时间到，一句也没接上", messageOk: false });
@@ -187,7 +190,9 @@ Page({
 
   onRestart() {
     if (this.timer) clearTimeout(this.timer);
+    if (this.clock) this.stopClock();
     this.timer = null;
+    this.ended = false;
     this.setData({
       done: [], streak: 0, best: 0, message: "", remark: "", locked: false,
       ranked: false, lastScore: 0
@@ -245,9 +250,14 @@ Page({
 
   report(said) {
     rankingSubmit
-      .submitPlay("fly", { scopeId: this.data.scope || "", score: said, total: said })
+      .submitPlay("fly", {
+        scopeId: this.data.scope || "",
+        score: said,
+        total: said,
+        durationSec: ROUND_LIMIT - this.data.left
+      })
       .then((res) => {
-        const sent = !!(res && (res.ok || res.off));
+        const sent = !!(res && res.ok);
         this.setData({
           ranked: sent && !!res.on,
           lastScore: said,
@@ -274,6 +284,9 @@ Page({
 
   onSkip() {
     if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    this.stopClock();
+    this.ended = true;
     if (this.data.done.length) {
       this.markRound();
       this.report(this.data.done.length);
