@@ -7727,6 +7727,52 @@ function gapped(items, max) {
   void R4;
 }
 
+{
+  const api = path.join(__dirname, "..", "api");
+  const coreSrc = fs.readFileSync(path.join(api, "_lib", "core.js"), "utf8");
+  const httpMod = require(path.join(api, "_lib", "http.js"));
+  const avatarStore = require(path.join(api, "_lib", "avatar-store.js"));
+
+  {
+    const shown = JSON.stringify(httpMod.redact({
+      accessToken: "a", secretKey: "s", password: "p", sid: "s2",
+      deviceId: "d_1", mysqlHost: "h", nested: { refreshToken: "r" }
+    }));
+    ok("请求日志里 token / 密钥 / 口令一律打码，设备号留着（排查要用）",
+      shown.indexOf('"a"') < 0 && shown.indexOf('"s"') < 0 && shown.indexOf('"p"') < 0
+        && shown.indexOf("d_1") > -1 && shown.indexOf("h") > -1,
+      shown);
+  }
+
+  ok("发验证码就把这一账号的错轮计数清掉（否则作废满 3 轮后新码永远进不了）",
+    /clearWrongRounds\(deps, acc\.uid\)/.test(coreSrc)
+      && /function clearWrongRounds\(deps, uid\) \{[\s\S]{0,120}WRONG\.uid/.test(coreSrc));
+
+  {
+    const s = avatarStore.memoryAvatar();
+    for (let i = 0; i < 200; i++) s.put("u_" + i, "image/png", Buffer.alloc(1024 * 1024));
+    const kept = Object.keys(s._objects).length;
+    const bytes = Object.keys(s._objects).reduce((n, k) => n + s._objects[k].bytes.length, 0);
+    ok("头像内存档有总量上限（放 200 张 1MB 只留得下 64MB 的量）",
+      kept > 0 && bytes <= 64 * 1024 * 1024, "留了 " + kept + " 张 / " + Math.round(bytes / 1048576) + "MB");
+  }
+
+  {
+    const head = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+    const iend = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
+    const jpegHead = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
+    const jpegTail = Buffer.from([0xFF, 0xD9]);
+    ok("头像只认完整的 PNG / JPEG（截断的、只贴了个文件头的都不收）",
+      avatarStore.sniffImage(Buffer.concat([head, iend])) === "image/png"
+        && avatarStore.sniffImage(Buffer.concat([jpegHead, jpegTail])) === "image/jpeg"
+        && avatarStore.sniffImage(Buffer.concat([head, Buffer.from("xx")])) === ""
+        && avatarStore.sniffImage(Buffer.concat([jpegHead, Buffer.from("xx")])) === "");
+  }
+
+  ok("会话行不再把会话令牌当刷新令牌存（等于把口令抄一份进库）",
+    !/row\.refresh_token = s\.token/.test(coreSrc));
+}
+
 Promise.all(pending).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");

@@ -62,10 +62,16 @@ var BODY_TIMEOUT = { __kb_body_timeout__: true };
 var BODY_TIMEOUT_MS = 8000;
 
 function readBodyGuarded(req) {
-  return Promise.race([
-    H.readBody(req),
-    new Promise(function (resolve) { setTimeout(function () { resolve(BODY_TIMEOUT); }, BODY_TIMEOUT_MS); })
-  ]);
+  var timer = null;
+  var timeout = new Promise(function (resolve) {
+    timer = setTimeout(function () { resolve(BODY_TIMEOUT); }, BODY_TIMEOUT_MS);
+    if (timer && typeof timer.unref === "function") timer.unref();
+  });
+  return Promise.race([H.readBody(req), timeout]).then(function (v) {
+    if (timer) clearTimeout(timer);
+    if (v === BODY_TIMEOUT) H.drain(req);
+    return v;
+  });
 }
 
 function make(name, methods, run, opts) {
