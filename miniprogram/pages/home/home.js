@@ -510,6 +510,10 @@ Page({
     return entitlement.block(name, { page: this, loginPrompt: true });
   },
 
+  onGoCollections() {
+    wx.navigateTo({ url: "/packages/settings/collections/collections" });
+  },
+
   onCollectDone(e) {
     const d = (e && e.detail) || {};
     if (!d.id || !d.collectionId) return;

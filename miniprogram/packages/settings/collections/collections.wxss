@@ -12,7 +12,6 @@
 
 .coll-count {
   padding: var(--sp-2) 0 var(--sp-3);
-  border-bottom: 1rpx solid var(--line-2);
 }
 
 .coll-count-lead {
@@ -25,13 +24,13 @@
   align-items: center;
   min-height: var(--h-row);
   padding: var(--sp-2) 0;
-  border-bottom: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
 }
 
 .coll-tools {
   flex-wrap: nowrap;
   padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
 }
 
 .coll-tools .btn.mini,

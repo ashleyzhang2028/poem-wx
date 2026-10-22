@@ -82,10 +82,6 @@
   letter-spacing: var(--ls-caption);
 }
 
-.cp-create-head {
-  margin-top: var(--sp-2);
-}
-
 .cp-sub {
   display: block;
   margin-top: var(--sp-1);
@@ -102,27 +98,3 @@
 .cp-empty {
   padding: var(--sp-4) 0;
 }
-
-.cp-create {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-2);
-}
-
-.cp-input {
-  flex: 1;
-  min-width: 0;
-  height: 72rpx;
-  padding: 0 var(--sp-3);
-  box-sizing: border-box;
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--sink);
-  font-size: var(--fs-body);
-}
-
-.cp-new {
-  margin-top: var(--sp-2);
-}
-
