@@ -243,7 +243,7 @@
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:finish="onSheetFinish"
-                    bind:change="onExtraChange" />
+                    bind:change="onExtraChange" bind:defer="onDeferChange" />
 
     <view class="safe-bottom"></view>
   </block>

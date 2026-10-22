@@ -1,5 +1,6 @@
 const R = require("./review-models");
 const store = require("./store");
+const defer = require("./defer");
 
 const DAY = R.DAY;
 
@@ -187,6 +188,7 @@ function dueOrder(getRecord) {
 function todayAdded(placed, opt) {
   const now = Date.now();
   const getRecord = opt.getRecord;
+  const held = defer.heldIds();
   const taken = {};
   (placed || []).forEach((it) => {
     taken[it.poem.id] = true;
@@ -195,12 +197,17 @@ function todayAdded(placed, opt) {
     taken[p.id] = true;
   });
   return (opt.allPoems || [])
-    .filter((p) => !taken[p.id] && isDue(getRecord(p.id), now))
+    .filter((p) => !held[p.id] && !taken[p.id] && isDue(getRecord(p.id), now))
     .sort(dueOrder(getRecord))
     .map((p) => dueRow(p, getRecord(p.id)));
 }
 
+function heldCount(ids, held) {
+  return (ids || []).filter((id) => held[id]).length;
+}
+
 function placedPlan(opt) {
+  const held = defer.heldIds();
   const byId = {};
   (opt.allPoems || []).concat(dedupePoems(opt.extraPoems)).forEach((p) => {
     if (p && p.id) byId[p.id] = p;
@@ -213,7 +220,7 @@ function placedPlan(opt) {
   (saved.ids || []).forEach((id) => {
     const poem = byId[id];
     const row = saved.rows[id];
-    if (!poem || !row) return;
+    if (!poem || !row || held[id]) return;
     kept += 1;
     placed.push({
       poem: poem,
@@ -222,17 +229,35 @@ function placedPlan(opt) {
     });
   });
 
-  if (!placed.length || kept !== saved.ids.length) {
+  if (!placed.length || kept !== saved.ids.length - heldCount(saved.ids, held)) {
     store.dropDayPlan(key);
     return null;
   }
 
-  const added = todayAdded(placed, opt);
+  const added = todayAdded(placed, opt).concat(refillPlan(placed, opt, saved.ids.length));
   const withAdded = placed.concat(added);
   const merged = mergePinned(withAdded, opt.extraPoems, opt.getRecord);
   if (!added.length && merged.length === withAdded.length) return withAdded;
   store.saveDayPlan(key, merged);
   return merged;
+}
+
+function refillPlan(placed, opt, target) {
+  const missing = target - placed.length;
+  if (missing <= 0) return [];
+  const held = defer.heldIds();
+  const taken = {};
+  (placed || []).forEach((it) => { taken[it.poem.id] = true; });
+  (opt.extraPoems || []).forEach((p) => { taken[p.id] = true; });
+  return (poolForScope({
+    grade: Number(opt.grade),
+    term: Number(opt.term),
+    scope: opt.scope,
+    allPoems: opt.allPoems
+  }) || [])
+    .filter((p) => !held[p.id] && !taken[p.id])
+    .slice(0, missing)
+    .map((p) => ({ poem: p, reason: "new", reviewRound: 0 }));
 }
 
 function mergePinned(plan, extraPoems, getRecord) {
@@ -264,7 +289,8 @@ function generateDailyPlan(opt) {
   if (placed) return placed;
 
   const now = Date.now();
-  const allPoems = opt.allPoems || [];
+  const held = defer.heldIds();
+  const allPoems = (opt.allPoems || []).filter((p) => !held[p.id]);
   const current = allPoems.filter((p) => p.gr === grade && p.tm === term);
   const scope = scopeOf(opt.scope);
 
@@ -491,7 +517,8 @@ function collectionPlan(c, opt) {
   const getRecord = o.getRecord || store.getRecord;
   const count = Number(o.count) || 5;
   const now = Date.now();
-  const poems = collectionPoems(o.allPoems || [], c);
+  const held = defer.heldIds();
+  const poems = collectionPoems(o.allPoems || [], c).filter((p) => !held[p.id]);
   const due = [];
   const fresh = [];
   const rest = [];

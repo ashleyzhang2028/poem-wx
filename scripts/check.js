@@ -707,6 +707,19 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
       && withExtra.slice(0, 4).map((it) => it.poem.id).join(",") === withDue.map((it) => it.poem.id).join(","),
     withExtra.map((it) => it.poem.id + ":" + it.reason).join(" "));
 
+  {
+    const defer = require(path.join(ROOT, "utils", "defer.js"));
+    const heldOne = withExtra[0].poem.id;
+    defer.put(heldOne, "tomorrow");
+    const held = S.generateDailyPlan(opt({ extraPoems: [extra] }));
+    const named = defer.isHeld(store.deferList().filter((it) => it.wid === heldOne)[0]);
+    ok("压着的那一首不上今天的榜，空出来的位置补一首新的（条数不变）",
+      held.length === withExtra.length && held.every((it) => it.poem.id !== heldOne),
+      held.map((it) => it.poem.id).join(","));
+    ok("台账里压着的那一条认得出「哪天回来」", named === true);
+    defer.drop(heldOne);
+  }
+
   store.dropDayPlan();
   const tomorrow = S.generateDailyPlan(opt({ count: 5 }));
   ok("换了设置就重排（首数变了，今天是另一份名单）",

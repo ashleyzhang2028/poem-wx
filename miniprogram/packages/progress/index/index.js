@@ -5,6 +5,7 @@ const store = require("../../../utils/store");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
+const defer = require("../../../utils/defer");
 
 const SPAN = S.SPAN;
 
@@ -104,6 +105,8 @@ Page({
     panels: [],
     farther: 0,
 
+    defers: [],
+
     buckets: [],
     bucketsSub: "",
 
@@ -196,6 +199,7 @@ Page({
       buckets,
       bucketsSub: overview.learned ? "平均 " + overview.avgMastery + "%" : "",
       sheetRows: this.sheetQueue(panels),
+      defers: defer.lists(),
       selfOn: entitlement.can("collections"),
       selfRows: this.selfCards(all)
     });
@@ -231,6 +235,25 @@ Page({
   },
 
   onSheetFinish() {
+    this.sheetIds = [];
+    this.setData({ sheetRows: [] });
+    this.refresh();
+  },
+
+  onOpenDefer(e) {
+    const ds = e.currentTarget.dataset;
+    if (!this.requireLogin()) return;
+    const sheet = this.selectComponent("#sheet");
+    if (!sheet) return;
+    const held = this.data.defers.filter((lv) => lv.key === ds.key)[0];
+    const rows = held ? held.rows : [];
+    if (!rows.length) return;
+    this.sheetIds = rows.map((r) => r.id);
+    this.setData({ sheetRows: rows });
+    sheet.open(rows, ds.id);
+  },
+
+  onDeferChange() {
     this.sheetIds = [];
     this.setData({ sheetRows: [] });
     this.refresh();

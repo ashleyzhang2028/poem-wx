@@ -9,11 +9,17 @@ const sync = require("../../utils/sync");
 const sfx = require("../../utils/sfx");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
+const defer = require("../../utils/defer");
 
 const RESULTS = [
   { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
   { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
   { key: "good", icon: icons.smile, label: "记住", cls: "good" }
+];
+
+const DEFERS = [
+  { key: "tomorrow", icon: icons.tomorrow, label: "明日再背", cls: "defer" },
+  { key: "month", icon: icons.month, label: "月后再背", cls: "defer" }
 ];
 
 const REOPEN_MS = 400;
@@ -116,9 +122,11 @@ Component({
     mastery: 0,
     hint: "",
     results: RESULTS,
+    defers: DEFERS,
     icons: PAGE_ICONS,
 
-    dailyOn: false
+    dailyOn: false,
+    heldKey: ""
   },
 
   attached() {
@@ -389,7 +397,28 @@ Component({
 
     syncDaily() {
       const on = store.dailyExtra().indexOf(this.data.id) >= 0;
-      if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
+      const heldKey = this.heldKeyOf(this.data.id);
+      if (on !== this.data.dailyOn || heldKey !== this.data.heldKey) {
+        this.setData({ dailyOn: on, heldKey: heldKey });
+      }
+    },
+
+    heldKeyOf(id) {
+      const hit = id ? store.deferList().filter((it) => it.wid === id && defer.isHeld(it))[0] : null;
+      return hit ? defer.levelOfSpan(hit.span).key : "";
+    },
+
+    onDefer(e) {
+      const level = defer.levelOf(e.currentTarget.dataset.key);
+      const item = this.current();
+      if (!level || !item) return;
+      const on = this.data.heldKey !== level.key;
+      if (on) defer.put(item.id, level.key);
+      else defer.drop(item.id);
+      sync.markDirty();
+      this.setData({ heldKey: on ? level.key : "" });
+      wx.showToast({ title: on ? level.label : "已取消「" + level.label + "」", icon: "none" });
+      this.triggerEvent("defer", { id: item.id, key: level.key, on: on });
     },
 
     onToggleDaily() {

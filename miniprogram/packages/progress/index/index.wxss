@@ -254,6 +254,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.defer-lead {
+  display: block;
+  padding-bottom: var(--sp-2);
+}
+
 .self-lead {
   display: block;
   padding-bottom: var(--sp-2);

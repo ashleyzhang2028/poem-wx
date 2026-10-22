@@ -73,6 +73,25 @@
     <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
   </view>
 
+  <view class="card" wx:if="{{defers.length}}">
+    <view class="card-title">延后再背</view>
+    <text class="hint defer-lead">点过的这几首按日子压着，到日子自己回到今日计划</text>
+    <view class="panel" wx:for="{{defers}}" wx:key="key" wx:for-item="lv">
+      <view class="panel-head">
+        <text class="panel-when">{{lv.label}}</text>
+        <text class="panel-count">{{lv.count}} 篇</text>
+      </view>
+      <view class="due" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{lv.rows}}" wx:key="id" data-id="{{item.id}}" data-key="{{lv.key}}" bindtap="onOpenDefer">
+        <view class="due-main">
+          <text class="due-title">{{item.title}}</text>
+          <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+        </view>
+        <text class="due-when">{{item.due}}</text>
+      </view>
+    </view>
+  </view>
+
   <view class="card">
     <view class="card-title">掌握度分布<text class="card-sub" wx:if="{{bucketsSub}}">{{bucketsSub}}</text></view>
     <view class="bar-row {{item.cls}} {{item.count ? '' : 'zero'}}" wx:for="{{buckets}}" wx:key="label">
@@ -161,7 +180,7 @@
   </view>
 
   <recite-sheet id="sheet" theme-style="{{themeStyle}}"
-                queue="{{sheetRows}}" bind:finish="onSheetFinish" />
+                queue="{{sheetRows}}" bind:finish="onSheetFinish" bind:defer="onDeferChange" />
 
   <view class="safe-bottom"></view>
   <tab-bar id="tabbar" current="4" />
