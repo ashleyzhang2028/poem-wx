@@ -87,19 +87,11 @@
       </view>
       <text class="row-go">›</text>
     </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTerms">
-      <view class="row-icon">约</view>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
+      <view class="row-icon">关</view>
       <view class="row-main">
-        <text class="row-title">用户协议</text>
-        <text class="row-sub">怎么用 · 边界 · 免责</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onPrivacy">
-      <view class="row-icon">私</view>
-      <view class="row-main">
-        <text class="row-title">隐私政策</text>
-        <text class="row-sub">收集什么 · 存哪 · 怎么删</text>
+        <text class="row-title">关于</text>
+        <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见反馈</text>
       </view>
       <text class="row-go">›</text>
     </view>

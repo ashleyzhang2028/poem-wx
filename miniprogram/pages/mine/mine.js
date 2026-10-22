@@ -153,14 +153,6 @@ Page({
 
   onTierGate() {
     this.onTier();
-  },
-
-  onTerms() {
-    wx.navigateTo({ url: "/packages/settings/terms/terms" });
-  },
-
-  onPrivacy() {
-    wx.navigateTo({ url: "/packages/settings/privacy/privacy" });
   }
 
 });
