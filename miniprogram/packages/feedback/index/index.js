@@ -2,6 +2,7 @@ const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -62,16 +63,18 @@ Page({
       return;
     }
     this.setData({ submitting: true });
-    fb.submit({ kind: this.data.kind, title: checked.title, content: checked.content }).then((res) => {
-      this.setData({ submitting: false });
-      if (!res.ok) {
-        wx.showToast({ title: res.reason, icon: "none" });
-        return;
-      }
-      this.setData({ title: "", content: "" });
-      wx.showToast({ title: res.duplicate ? "刚刚已经发过" : "已提交", icon: "none" });
-      this.load();
-    });
+    guard
+      .once("feedback:submit", () => fb.submit({ kind: this.data.kind, title: checked.title, content: checked.content }))
+      .then((res) => {
+        this.setData({ submitting: false });
+        if (!res.ok) {
+          wx.showToast({ title: res.reason, icon: "none" });
+          return;
+        }
+        this.setData({ title: "", content: "" });
+        wx.showToast({ title: res.duplicate ? "刚刚已经发过" : "已提交", icon: "none" });
+        this.load();
+      });
   },
 
   onReplyInput(e) {
@@ -83,7 +86,7 @@ Page({
     const tid = e.currentTarget.dataset.tid;
     if (!tid) return;
     this.setData({ sending: true });
-    fb.comment(tid, this.data.reply[tid]).then((res) => {
+    guard.once("feedback:comment:" + tid, () => fb.comment(tid, this.data.reply[tid])).then((res) => {
       this.setData({ sending: false });
       if (!res.ok) {
         wx.showToast({ title: res.reason, icon: "none" });

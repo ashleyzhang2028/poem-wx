@@ -2,6 +2,7 @@ const auth = require("./auth");
 const store = require("./store");
 const sync = require("./sync");
 const tabPage = require("./tab-page");
+const guard = require("./guard");
 
 function failText(err) {
   const code = (err && err.code) || "";
@@ -180,11 +181,13 @@ function settle(res, page) {
 }
 
 function run(page) {
+  if (guard.busy("login")) return Promise.resolve(null);
   wx.showLoading({ title: "正在登录" });
-  return auth
-    .login()
+  return guard
+    .once("login", () => auth.login())
     .then((res) => {
       wx.hideLoading();
+      if (res && res.skipped) return null;
       done(res);
       return settle(res, page);
     })

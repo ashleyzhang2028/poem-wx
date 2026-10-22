@@ -4,6 +4,7 @@ const tabbar = require("../../../utils/tabbar");
 const entitlement = require("../../../utils/entitlement");
 const admin = require("../../../utils/admin");
 const icons = require("../../../utils/icons");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -40,8 +41,8 @@ Page({
 
   loadStats() {
     if (!remote.adminReady()) return;
-    admin.list().then((res) => {
-      if (res.error || !res.stats) return;
+    guard.once("admin:stats", () => admin.list()).then((res) => {
+      if (!res || res.error || !res.stats) return;
       this.setData({ stats: res.stats });
       this.paint();
     });

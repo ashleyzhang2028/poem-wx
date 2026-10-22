@@ -16,6 +16,7 @@ const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
 const defer = require("../../utils/defer");
+const guard = require("../../utils/guard");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -274,11 +275,13 @@ Page({
   pull() {
     const seq = (this.pullSeq || 0) + 1;
     this.pullSeq = seq;
-    sync.pullOnly(true).then((res) => {
-      if (this.pullSeq !== seq) return;
-      if (!res || res.skipped || res.error || !res.applied) return;
-      this.paint();
-    }).catch(() => {});
+    guard
+      .once("home:pull", () => sync.pullOnly(true))
+      .then((res) => {
+        if (this.pullSeq !== seq) return;
+        if (!res || res.skipped || res.error || !res.applied) return;
+        this.paint();
+      });
   },
 
   paint() {
@@ -453,7 +456,9 @@ Page({
 
   onSeasonalAdd(e) {
     const id = e.currentTarget.dataset.id;
+    if (!guard.enter("home:extra:" + id)) return;
     const r = store.toggleDailyExtra(id);
+    guard.leave("home:extra:" + id);
     const box = this.selectComponent("#extra");
     if (r.code === "E_TIER") {
       entitlement.gateTier("extra", { page: this });
@@ -677,12 +682,14 @@ Page({
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
       return;
     }
+    if (!guard.enter("home:face:" + ds.id)) return;
     sfx.recite(face.key);
     const settings = store.settings();
     const rec = R.review(store.getRecord(ds.id), face.key, settings.algo);
     store.setRecord(ds.id, rec);
     store.markRead(sourceBook(ds.id), ds.id);
     sync.markDirty();
+    guard.leave("home:face:" + ds.id);
     this.refresh();
     wx.showToast({
       title: face.label + " · " + R.resultHint(settings.algo, face.key, rec),

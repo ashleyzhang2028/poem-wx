@@ -10,6 +10,7 @@ const sfx = require("../../utils/sfx");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
 const defer = require("../../utils/defer");
+const guard = require("../../utils/guard");
 
 const RESULTS = [
   { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
@@ -156,6 +157,7 @@ Component({
       this.pushed = true;
       this.lastPush = idsOf(list);
       this.cancelLoad();
+      guard.reset("sheet:result");
       this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
     },
@@ -484,6 +486,7 @@ Component({
     },
 
     onResult(e) {
+      if (guard.gap("sheet:result")) return;
       if (!entitlement.can("daily")) {
         wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
         return;
@@ -494,6 +497,7 @@ Component({
       const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
       store.setRecord(this.data.id, rec);
       sync.markDirty();
+      guard.mark("sheet:result");
 
       this.setData({
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),

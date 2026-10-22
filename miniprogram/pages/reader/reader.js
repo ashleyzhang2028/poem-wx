@@ -293,6 +293,8 @@ Page({
 
     const rec = store.getRecord(id);
 
+    this.resultAt = "";
+
     this.setData({
       id,
       rawText: entry.text,
@@ -419,6 +421,7 @@ Page({
 
   onResult(e) {
     if (!this.data.reciteMode) return;
+    if (this.data.hint || this.resultAt === this.data.id) return;
 
     if (!entitlement.can("daily")) {
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
@@ -429,6 +432,7 @@ Page({
     const rec = R.review(store.getRecord(this.data.id), result, settings.algo);
     store.setRecord(this.data.id, rec);
     sync.markDirty();
+    this.resultAt = this.data.id;
 
     this.setData({
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),

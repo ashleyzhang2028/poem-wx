@@ -1,6 +1,7 @@
 const cols = require("../../utils/collections");
 const corpus = require("../../utils/corpus");
 const entitlement = require("../../utils/entitlement");
+const guard = require("../../utils/guard");
 
 Component({
   options: {
@@ -75,13 +76,16 @@ Component({
 
     onSubmitCreate() {
       if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
+      if (!guard.enter("picker:create")) return;
       const r = cols.create(this.data.draft);
       if (!r.ok) {
+        guard.leave("picker:create");
         if (r.code === "E_LIMIT") {
           wx.showToast({ title: "最多 " + cols.capOf() + " 个集合，先删一个", icon: "none" });
         }
         return;
       }
+      guard.leave("picker:create");
       this.addTo(r.collection.id, r.collection.name);
       this.setData({ creating: false, draft: "" });
       this.triggerEvent("created", { collectionId: r.collection.id, name: r.collection.name });
