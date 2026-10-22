@@ -14,16 +14,16 @@
       </radio-group>
 
       <text class="field-label fb-gap">标题</text>
-      <input class="fb-input" value="{{title}}" maxlength="{{titleMax}}" placeholder="一句话说清"
+      <input class="fb-input" value="{{title}}" maxlength="{{titleMax}}" placeholder="风吹草低见牛羊，见字的拼音问题"
              placeholder-class="fb-ph" bindinput="onTitle" />
 
       <text class="field-label fb-gap">正文</text>
-      <textarea class="fb-area" value="{{content}}" maxlength="{{contentMax}}" placeholder="具体情况、复现步骤或建议"
+      <textarea class="fb-area" value="{{content}}" maxlength="{{contentMax}}" placeholder="北朝民歌敕勒歌最后一句，见读 xiàn 还是 jiàn，请核对注音"
                 placeholder-class="fb-ph" bindinput="onContent"></textarea>
       <text class="fb-count">{{content.length}}/{{contentMax}}</text>
 
       <view class="actions">
-        <button class="btn primary" bindtap="onSubmit" disabled="{{submitting}}">提交</button>
+        <button class="btn primary block" bindtap="onSubmit" disabled="{{submitting}}">提交</button>
       </view>
     </view>
 
