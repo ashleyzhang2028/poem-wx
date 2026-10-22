@@ -26,7 +26,7 @@ function submitPlay(game, fact) {
   const f = fact || {};
   const total = Number(f.total) || 0;
   if (!total) return Promise.resolve({ ok: false, skipped: true });
-  if (!optedIn()) return Promise.resolve({ ok: false, unjoined: true });
+  if (!optedIn()) return Promise.resolve({ ok: false, on: false, unjoined: true });
   return submit(
     Object.assign(entryOf(game), {
       scopeId: f.scopeId || "",
