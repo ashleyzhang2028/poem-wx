@@ -8,8 +8,8 @@ function set(ids) {
 
 function sequenceOf(id) {
   if (trailIds.indexOf(id) >= 0) return trailIds;
-  const meta = corpus.indexById(id);
-  return meta && meta.b ? corpus.ofBook(meta.b).map((p) => p.id) : [];
+  const book = corpus.bookOf(id);
+  return book ? corpus.ofBook(book).map((p) => p.id) : [];
 }
 
 function stub(id) {

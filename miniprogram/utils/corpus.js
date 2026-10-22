@@ -90,6 +90,16 @@ function costOf(cl) {
   return hanLen(cl) || String(cl).length;
 }
 
+function noHan(str) {
+  for (let i = 0; i < str.length; i++) if (HAN.test(str[i])) return false;
+  return true;
+}
+
+function costFast(cl) {
+  const s = String(cl);
+  return noHan(s) ? s.length : costOf(s);
+}
+
 function softTail(buf) {
   return buf.length > 1 && /[、：；]$/.test(buf[buf.length - 1]);
 }
@@ -110,8 +120,8 @@ function packClauses(clauses, size, pinyin, cap) {
   let used = 0;
 
   clauses.forEach((cl) => {
-    const cost = costOf(cl);
-    const mark = hanLen(cl) === 0;
+    const cost = costFast(cl);
+    const mark = noHan(String(cl));
     const full = used + cost > limit;
     const capped = cap && buf.length >= cap;
     if (buf.length && !mark && (full || capped)) {
@@ -134,10 +144,25 @@ function packClauses(clauses, size, pinyin, cap) {
   return out;
 }
 
+const LAYOUT_MEMO_MAX = 160;
+
+const layoutMemo = {};
+const layoutMemoKeys = [];
+
 function layout(text, opts) {
   const size = opts && opts.size !== undefined ? Number(opts.size) || 0 : 0;
   const pinyin = !!(opts && opts.pinyin);
+  const raw = String(text == null ? "" : text);
+  const memoKey = size + "|" + (pinyin ? 1 : 0) + "|" + raw;
+  if (layoutMemo[memoKey]) return layoutMemo[memoKey];
+  const out = layoutOf(raw, size, pinyin);
+  layoutMemo[memoKey] = out;
+  layoutMemoKeys.push(memoKey);
+  if (layoutMemoKeys.length > LAYOUT_MEMO_MAX) delete layoutMemo[layoutMemoKeys.shift()];
+  return out;
+}
 
+function layoutOf(text, size, pinyin) {
   const lines = splitLines(text);
   const flat = [];
   const paras = [];
@@ -204,6 +229,8 @@ const BUCKET_DIR = "data/texts/";
 const SHARD_FILE_RE = /^t\d{3}$/;
 
 let booksCache = null;
+const idIndex = {};
+const idBook = {};
 let indexCache = null;
 let courseCache = null;
 let manifestCache = null;
@@ -278,7 +305,9 @@ function books() {
 }
 
 function bookById(id) {
-  return books().find((b) => b.id === id) || null;
+  const all = books();
+  for (let i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+  return null;
 }
 
 function indexPack() {
@@ -319,11 +348,14 @@ function ofBook(bookId) {
     const meta = bookById(bookId);
     const pack = indexPack();
     const rows = pack && pack.rows[bookId] ? pack.rows[bookId] : [];
-    bookCache[bookId] = rows.map(function (raw) {
+    const list = rows.map(function (raw) {
       const p = rowOf(pack.dict, raw, bookId);
       p.n = meta ? meta.name : bookId;
+      idIndex[p.id] = p;
+      if (idBook[p.id] === undefined) idBook[p.id] = bookId;
       return p;
     });
+    bookCache[bookId] = list;
   }
   return bookCache[bookId];
 }
@@ -544,10 +576,34 @@ function entries(ids) {
   return out;
 }
 
+function ownerOf(id) {
+  const all = books();
+  let best = "";
+  const s = String(id || "");
+  for (let i = 0; i < all.length; i++) {
+    const b = all[i].id;
+    if (s.indexOf(b + "-") === 0 && b.length > best.length) best = b;
+  }
+  return best;
+}
+
 function indexById(id) {
+  if (idIndex[id]) return idIndex[id];
   const owner = ownerOf(id);
   const hit = owner ? pick(ofBook(owner), id) : null;
-  return hit || pick(ofBook(holderOf(id)), id);
+  if (hit) return hit;
+  const all = books();
+  for (let i = 0; i < all.length; i++) {
+    const other = pick(ofBook(all[i].id), id);
+    if (other) return other;
+  }
+  return null;
+}
+
+function bookOf(id) {
+  if (idBook[id] !== undefined) return idBook[id];
+  const meta = indexById(id);
+  return (meta && meta.b) || "";
 }
 
 function pick(rows, id) {
@@ -555,24 +611,6 @@ function pick(rows, id) {
     if (rows[i].id === id) return rows[i];
   }
   return null;
-}
-
-function holderOf(id) {
-  const all = books();
-  for (let i = 0; i < all.length; i++) {
-    if (pick(ofBook(all[i].id), id)) return all[i].id;
-  }
-  return "";
-}
-
-function ownerOf(id) {
-  const all = books();
-  let best = "";
-  for (let i = 0; i < all.length; i++) {
-    const b = all[i].id;
-    if (id.indexOf(b + "-") === 0 && b.length > best.length) best = b;
-  }
-  return best;
 }
 
 function search(keyword, opt) {
@@ -595,14 +633,28 @@ function search(keyword, opt) {
   return { items: items, total: total };
 }
 
+const LOWER_FIELDS = ["t", "a", "d", "s", "g"];
+
+const loweredOf = new WeakMap();
+
+function lowered(p) {
+  const hit = loweredOf.get(p);
+  if (hit) return hit;
+  const low = {};
+  for (let i = 0; i < LOWER_FIELDS.length; i++) {
+    const v = p[LOWER_FIELDS[i]];
+    low[LOWER_FIELDS[i]] = v ? String(v).toLowerCase() : "";
+  }
+  loweredOf.set(p, low);
+  return low;
+}
+
 function matchEntry(p, kw) {
-  return !!(
-    (p.t && p.t.toLowerCase().indexOf(kw) >= 0) ||
-    (p.a && p.a.toLowerCase().indexOf(kw) >= 0) ||
-    (p.d && p.d.toLowerCase().indexOf(kw) >= 0) ||
-    (p.s && p.s.toLowerCase().indexOf(kw) >= 0) ||
-    (p.g && p.g.toLowerCase().indexOf(kw) >= 0)
-  );
+  const low = lowered(p);
+  for (let i = 0; i < LOWER_FIELDS.length; i++) {
+    if (low[LOWER_FIELDS[i]].indexOf(kw) >= 0) return true;
+  }
+  return false;
 }
 
 function grouped(list) {
@@ -628,6 +680,7 @@ module.exports = {
   books,
   bookById,
   ownerOf,
+  bookOf,
   ofBook,
   course,
   courseTexts,

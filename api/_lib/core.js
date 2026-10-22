@@ -303,7 +303,7 @@ function findOrCreateAccount(store, cfg, identity, t) {
   return Promise.resolve(store.getAccountByHash(hash)).then(function (acc) {
     if (acc && acc.status !== "deleted") return { acc: acc, created: false };
 
-    var row = accountRow(ch === "sms" ? "" : (identity.raw != null ? identity.raw : identity.value), hash, t);
+    var row = accountRow(identity.raw != null ? identity.raw : identity.value, hash, t);
     return Promise.resolve(store.putAccount(row)).then(function (saved) {
       return { acc: saved || row, created: true };
     });
@@ -326,7 +326,7 @@ function normIdentity(input) {
   }
   var phone = id.normalizePhone(raw);
   if (!id.isPhoneShape(phone)) return { bad: "E_PHONE_FORMAT", message: "这个手机号看起来不太对，再检查一下" };
-  return { channel: ch, value: phone, raw: "", mask: id.maskPhone(phone), bucket: "phone", key: phone };
+    return { channel: ch, value: phone, raw: phone, mask: id.maskPhone(phone), bucket: "phone", key: phone };
 }
 
 function smsReady(cfg) {
@@ -538,85 +538,72 @@ function verifyCode_(deps, input) {
 
     if (Number(rec.expires_at) <= t) return err(400, "E_CODE_EXPIRED", "验证码已过期，点「重新发送」");
 
-    var expect = id.codeHash(rec.uid, rec.purpose, given, rec.salt, pepperOf(cfg));
-    var same = id.timingSafeEqual(expect, rec.code_hash);
+    return Promise.resolve(
+      store.bumpCodeAttempt ? store.bumpCodeAttempt(codeId) : Number(rec.attempts) + 1
+    ).then(function (next) {
+      if (Number(next) > Number(cfg.codeMaxAttempts)) return err(400, "E_CODE_VOID", "请用最新收到的验证码");
 
-    if (!same) {
+      var expect = id.codeHash(rec.uid, rec.purpose, given, rec.salt, pepperOf(cfg));
+      if (!id.timingSafeEqual(expect, rec.code_hash)) return rejectCode(deps, store, cfg, codeId, rec, ipKey, t, Number(next));
 
-      limiterHit(deps, WRONG.ip, ipKey, t);
-      var bumped = store.bumpCodeAttempt ? store.bumpCodeAttempt(codeId) : null;
-      var next = Promise.resolve(bumped).then(function (n) {
-        if (typeof n === "number" && isFinite(n)) return n;
-        return Promise.resolve(store.patchCode ? store.patchCode(codeId, { attempts: Number(rec.attempts || 0) + 1 }) : null)
-          .then(function () { return Number(rec.attempts || 0) + 1; });
-      });
-      return next.then(function (count) {
-        var voided = count >= cfg.codeMaxAttempts;
-        var patch = voided ? { consumed_at: t } : {};
-        return Promise.resolve(store.patchCode ? store.patchCode(codeId, patch) : null)
-          .then(function () {
-            if (!voided) {
-              return err(400, "E_CODE_WRONG", "验证码不对，再检查一下", {
-                remaining: Math.max(0, cfg.codeMaxAttempts - count)
-              });
+      return Promise.resolve(store.patchCode ? store.patchCode(codeId, { consumed_at: t }) : null)
+        .then(function () { return store.getAccount(rec.uid); })
+        .then(function (acc) {
+          if (!acc || acc.status === "deleted") return err(400, "E_CODE_VOID", "请用最新收到的验证码");
+          if (isLocked(acc, t)) return err(423, "E_LOCKED", "为了安全，请稍后再试", { retryAfter: lockRetryAfter(acc, t) });
+          repairLegacyLock(acc);
+
+          var passwordCleared = false;
+          if (rec.channel !== "sms" && acc.email_verified_at == null) {
+            acc.email_verified_at = t;
+            if (acc.status === "pending") acc.status = "active";
+            if (acc.password_hash) {
+              acc.password_hash = "";
+              acc.password_salt = "";
+              passwordCleared = true;
             }
-            return Promise.resolve(bumpWrongRound(deps, rec.uid, t)).then(function () {
-              if (lockVerdict(deps, rec.uid, t)) {
-                return err(423, "E_LOCKED", "为了安全，请 24 小时后再试（也可以换一个网络或用别的邮箱）",
-                  { retryAfter: Math.round((Number(cfg.lockMs) || 86400000) / 1000) });
+          }
+
+          var gate = emailGate(deps, acc);
+          if (gate) return gate;
+
+          var first = !markLogin(acc, t);
+          return Promise.resolve(store.putAccount(acc)).then(function (saved) {
+            if (!passwordCleared) return saved;
+            return Promise.resolve(store.revokeSessions(acc.uid)).then(function () { return saved || acc; });
+          }).then(function (saved) {
+            return claimOwnerRole(store, cfg, saved || acc).then(function () { return saved || acc; });
+          }).then(function (saved) {
+            return issueSessionFor(deps, saved || acc, first).then(function (sess) {
+              if (passwordCleared && sess && sess.body) {
+                sess.body.passwordCleared = true;
+                sess.body.note = "邮箱已确认。注册时设的密码在确认之前填写，为了安全已作废；需要密码登录请用「忘记密码」重新设置。";
               }
-              return err(400, "E_CODE_VOID", "这一枚验证码已作废，请重新发送", {
-                round: wrongRounds(deps, rec.uid),
-                limit: Number(cfg.wrongRoundsLimit) || 3
-              });
+              return sess;
             });
           });
-      });
-    }
+        });
+    });
+  });
+}
 
-    return Promise.resolve(store.patchCode ? store.patchCode(codeId, { consumed_at: t }) : null)
-      .then(function () { return store.getAccount(rec.uid); })
-      .then(function (acc) {
-        if (!acc || acc.status === "deleted") return err(400, "E_CODE_VOID", "请用最新收到的验证码");
-        if (isLocked(acc, t)) {
-          return err(423, "E_LOCKED", "为了安全，请稍后再试", { retryAfter: lockRetryAfter(acc, t) });
+function rejectCode(deps, store, cfg, codeId, rec, ipKey, t, next) {
+  limiterHit(deps, WRONG.ip, ipKey, t);
+  var voided = next >= Number(cfg.codeMaxAttempts);
+  return Promise.resolve(store.patchCode ? store.patchCode(codeId, voided ? { consumed_at: t } : {}) : null)
+    .then(function () {
+      if (!voided) return err(400, "E_CODE_WRONG", "验证码不对，再检查一下", { remaining: Math.max(0, cfg.codeMaxAttempts - next) });
+      return Promise.resolve(bumpWrongRound(deps, rec.uid, t)).then(function () {
+        if (lockVerdict(deps, rec.uid, t)) {
+          return err(423, "E_LOCKED", "为了安全，请 24 小时后再试（也可以换一个网络或用别的邮箱）",
+            { retryAfter: Math.round((Number(cfg.lockMs) || 86400000) / 1000) });
         }
-        repairLegacyLock(acc);
-
-        var passwordCleared = false;
-        if (rec.channel !== "sms" && acc.email_verified_at == null) {
-          acc.email_verified_at = t;
-          if (acc.status === "pending") acc.status = "active";
-
-          if (acc.password_hash) {
-            acc.password_hash = "";
-            acc.password_salt = "";
-            passwordCleared = true;
-          }
-        }
-
-        var gate = emailGate(deps, acc);
-        if (gate) return Promise.resolve(gate);
-        var first = !markLogin(acc, t);
-        return Promise.resolve(store.putAccount(acc)).then(function (saved) {
-
-          if (!passwordCleared) return saved;
-          return Promise.resolve(store.revokeSessions(acc.uid)).then(function () { return saved; });
-        }).then(function (saved) {
-
-          return claimOwnerRole(store, cfg, saved || acc).then(function () { return saved || acc; });
-        }).then(function (saved) {
-
-          return issueSessionFor(deps, saved || acc, first).then(function (sess) {
-            if (passwordCleared && sess && sess.body) {
-              sess.body.passwordCleared = true;
-              sess.body.note = "邮箱已确认。注册时设的密码在确认之前填写，为了安全已作废；需要密码登录请用「忘记密码」重新设置。";
-            }
-            return sess;
-          });
+        return err(400, "E_CODE_VOID", "这一枚验证码已作废，请重新发送", {
+          round: wrongRounds(deps, rec.uid),
+          limit: Number(cfg.wrongRoundsLimit) || 3
         });
       });
-  });
+    });
 }
 
 function checkPassword(cfg, pw) {
