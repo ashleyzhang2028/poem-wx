@@ -31,6 +31,8 @@
       <tier-tag tier="{{tier}}" />
     </view>
 
+    <button class="btn mini ghost block cp-new" wx:if="{{!creating}}" bindtap="onStartCreate">新建集合</button>
+
     <view class="cp-create" wx:if="{{creating}}">
       <input class="cp-input" value="{{draft}}" placeholder="新集合的名字" maxlength="12" bindinput="onDraft"
              confirm-type="done" bindconfirm="onSubmitCreate" />

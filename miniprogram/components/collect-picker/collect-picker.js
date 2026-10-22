@@ -84,6 +84,7 @@ Component({
       }
       this.addTo(r.collection.id, r.collection.name);
       this.setData({ creating: false, draft: "" });
+      this.triggerEvent("created", { collectionId: r.collection.id, name: r.collection.name });
     },
 
     onTierGate() {
