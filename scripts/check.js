@@ -3133,7 +3133,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && rank.maskRow({ rank: 2 }).nick === ""
       && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
       && /const me = res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs)
-      && /me: me,/.test(pageJs),
+      && /me: mineOnBoard \? null : me,/.test(pageJs),
     "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
@@ -3197,17 +3197,19 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && !/`nickname`/.test(apiMysql.slice(apiMysql.indexOf("putScoreRecord"), apiMysql.indexOf("putSetting"))),
     "把昵称抄进了成绩行，用户改名后榜上留的还是旧名字");
 
-  ok("榜只给前 N 名，N 之外的自己单给一行",
-    /var shown = ranked\.slice\(0, size\)/.test(apiCore)
+  ok("榜只给前 100 名，100 名之外的自己单给一行",
+    rank.DEFAULT_SIZE === 100
+      && /var BOARD_SIZES = \[100\]/.test(apiCore)
+      && /var shown = ranked\.slice\(0, size\)/.test(apiCore)
       && /me: self/.test(apiCore)
-      && /r\.mine && ranked\.indexOf\(r\) >= size/.test(apiCore),
-    "整张榜拉下来再挑 —— 人一多就白拉；或者干脆不给自己那一行，第 1685 名看不到自己");
+      && /var beyond = mineIndex >= size \? ranked\[mineIndex\] : null/.test(apiCore),
+    "整张榜拉下来再挑 —— 人一多就白拉；或者干脆不给自己那一行，第 305 名看不到自己");
 
   ok("圈外那一行在上榜行下面，隔一句「还有多少位」",
     pageWxml.indexOf("{{beyond}}") >= 0
       && pageWxml.indexOf("wx:if=\"{{me}}\"") >= 0
       && pageWxml.indexOf("wx:for=\"{{rest}}\"") < pageWxml.indexOf("wx:if=\"{{me}}\"")
-      && rank.beyondOf([{ rank: 1 }], 10, 1685) === 1684 && rank.beyondOf([], 10, 0) === 0,
+      && rank.beyondOf([{ rank: 1 }], 100, 305) === 304 && rank.beyondOf([], 100, 0) === 0,
     "圈外那一行跑到列表上面，或者「还有几位」把自己也数进去");
 
   ok("榜单是单独一页，入口在大会页（不挤进考试页里）",

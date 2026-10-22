@@ -3222,8 +3222,8 @@ var BOARD_GAMES = ["fly", "exam"];
 var BOARD_STAGES = ["all", "primary", "middle", "high"];
 var BOARD_STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
 var BOARD_PERIODS = ["day", "week", "month", "year"];
-var BOARD_SIZES = [10, 20, 50];
-var BOARD_LIMITS = { scopeId: 64, size: 50, records: 20000 };
+var BOARD_SIZES = [100];
+var BOARD_LIMITS = { scopeId: 64, records: 20000 };
 var BOARD_NICK_MAX = 12;
 var BOARD_GRADE_LABELS = { 1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级", 5: "五年级", 6: "六年级",
   7: "七年级", 8: "八年级", 9: "九年级", 10: "高一", 11: "高二", 12: "高三" };
@@ -3379,8 +3379,7 @@ function boardList(deps, input) {
   return Promise.resolve(gate).then(function (g) {
     if (g && g.status) return g;
     var filter = boardFilterOf(input);
-    var size = Number(input && input.size) || 10;
-    if (BOARD_SIZES.indexOf(size) < 0) size = 10;
+    var size = BOARD_SIZES.indexOf(Number(input && input.size)) >= 0 ? Number(input.size) : 100;
     var since = boardPeriodStart(filter.period, deps.now());
     var me = deps.account ? deps.account.uid : "";
 
@@ -3394,9 +3393,11 @@ function boardList(deps, input) {
         if (r.uid === me) r.mine = true;
       });
 
-      var beyond = ranked.filter(function (r) {
-        return r.mine && ranked.indexOf(r) >= size;
-      }).pop() || null;
+      var mineIndex = -1;
+      ranked.forEach(function (r, i) {
+        if (r.mine) mineIndex = i;
+      });
+      var beyond = mineIndex >= size ? ranked[mineIndex] : null;
       var shown = ranked.slice(0, size);
       var pick = shown.concat(beyond ? [beyond] : []);
 
