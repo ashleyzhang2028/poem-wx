@@ -170,12 +170,16 @@
 
 .own-acts {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--sp-2);
+  margin-left: auto;
 }
 
 .own-note {
   flex: 1 0 100%;
+  order: -1;
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: 1rpx;

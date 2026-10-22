@@ -3524,6 +3524,8 @@ function mountFull(pg, query) {
     path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
   const themePageJs = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const themePageJson = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.json"), "utf8"));
   const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
 
   ok("自选那张色卡排在「大好河山」之后，页面上有选图 / 换图与恢复默认的接法",
@@ -3532,7 +3534,8 @@ function mountFull(pg, query) {
       && ownGroup().items[0].key === themeMod.OWN_KEY
       && themePageWxml.indexOf("onOwnUpload") >= 0
       && themePageWxml.indexOf("onOwnClear") >= 0
-      && themePageJs.indexOf("custom.pick()") >= 0);
+      && themePageJs.indexOf("custom.choose()") >= 0
+      && /banner-crop/.test(themePageJson.usingComponents["banner-crop"] || ""));
 
   tierAs("pro");
   ok("Pro 手上还没有自选 banner（这一项 Max 起，权限对比页也这么写）",

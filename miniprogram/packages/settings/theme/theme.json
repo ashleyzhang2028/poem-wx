@@ -5,6 +5,7 @@
     "nav-bar": "/components/nav-bar/nav-bar",
     "page-banner": "/components/page-banner/page-banner",
     "tier-tag": "/components/tier-tag/tier-tag",
+    "banner-crop": "/components/banner-crop/banner-crop",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

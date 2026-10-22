@@ -155,15 +155,27 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 #### 自选：换的是 banner 那张图，Max 起
 
 第三张卡「自选」不换色，换的是 banner 那张图（能力键 `ownbanner`，max 起）。
-用户可以自己传一张图，图按 banner 的原比例（916 / 1717）折到 1200px 宽，
-jpg 质量 72，`wx.compressImage` 压完读成 base64 存进 `kb_settings_v1` 的 `banner`。
+选完图先进选区（`components/banner-crop`）：画布按 750 × 360 摆，
+双指或「放大 / 缩小」缩，单指拖，框里看到的就是要留下的那一段。
+
+选区打开时 `custom.suggest()` 给一版初值：把图缩到 250px 宽的网格，
+按列统计边缘，拿最大的那一列的活动区当首图范围（放大后铺满框），
+再对底边那一行的边缘做一次贴合。判不出行线（照片式整图）时按原样框住整张，
+不让一次猜错把竖幅裁成一条。这份判据在 `utils/banner-crop.js`。
+
+截取走 `canvas 2d`：原图先按比例缩到目标宽度的 1/4 再画，
+`drawImage` 带源矩形把选区抠出来铺满 1200 × 576，jpg 质量 72，
+base64 存进 `kb_settings_v1` 的 `banner`。画布与网格共用一枚隐藏 canvas（`id="crop"`）。
 
 **只存本机。** `banner` 与 `lastSearch` 一样进 `store.LOCAL_ONLY`，
 `cloudSettings()` 不给它，所以换台设备就回到默认那张 `icons/hero.png`；
 档位掉下来时 `current()` 退回默认那支，图还在本机但不再用。
-界面上一句「图只存在这台手机上，不同步到服务器，换设备就回到默认 banner」。
+色卡上那句只说一件事：「图片存于本机，不同步到服务器」。
 
-banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按比例折，
+这张卡的排法：缩略图与「有没有图」那一句靠左，提示语占一行，
+一排按钮靠右（`.own-acts` 上 `justify-content: flex-end`）。
+
+banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按 916 / 1717 折，
 `mode="widthFix"`；自选那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
 `aspectFill` 裁进去，不算 banner 本身。
 
