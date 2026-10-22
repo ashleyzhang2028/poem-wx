@@ -499,7 +499,11 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 
 两条入口：**我的 → 意见建议**（登录可见，`packages/feedback/index`）与
 **后台管理 → 用户反馈**（`packages/admin/feedback/index`，详情在
-`packages/admin/feedback/detail/detail`）。两页共用 `utils/feedback-api.js`
+`packages/admin/feedback/detail/detail`）。
+
+反馈只认登录身份：四条用户路径（建 / 读 / 跟帖 / 删）都以 `uid` 认人，
+没有会话回 `401 E_NO_SESSION`，不拿设备标识顶替。页面进来先过 `gate.open`，
+登录流程走完再画。两页共用 `utils/feedback-api.js`
 （类别 / 状态 / 处理方式三张表 + 校验 + 装饰）与 `utils/admin-feedback.js`
 （分组与回复），不在页面里各抄一遍名单。
 

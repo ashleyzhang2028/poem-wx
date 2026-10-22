@@ -1521,13 +1521,22 @@ const GATED = {
       adminFbLib.indexOf("GROUPS") >= 0
         && read("packages/admin/feedback/index.wxml").indexOf("wx:for=\"{{groups}}\"") >= 0);
 
-    ok("意见建议那一行在「我的」，只对登录用户出现",
-      /bindtap="onFeedback"[^>]*wx:if="\{\{logged\}\}"/.test(minePage)
-        || /wx:if="\{\{logged\}\}"[^>]*bindtap="onFeedback"/.test(minePage));
+    ok("意见建议那一行在「我的」，点下去先过登录",
+      /onFeedback\(\)\s*\{[^}]*gate\.open\(/.test(read("pages/mine/mine.js")),
+      "未登录点头像那一行没走登录流程");
     ok("后台管理页有用户反馈那一行", /bindtap="onFeedback"/.test(adminPage));
     ok("两条入口都落到真页面（跳转目标在 app.json 里）",
       /\/packages\/feedback\/index\/index/.test(read("pages/mine/mine.js"))
         && /\/packages\/admin\/feedback\/index/.test(read("packages/admin/index/index.js")));
+
+    const fbPageJs = read("packages/feedback/index/index.js");
+    ok("意见页没有未登录形态：进来先走登录，页面里不留 guest 分支",
+      /enter\(\)[\s\S]{0,200}gate\.open\(/.test(fbPageJs) && /onShow[\s\S]{0,120}this\.enter\(\)/.test(fbPageJs),
+      "意见页还摆着未登录的壳");
+    ok("反馈只认登录身份：服务端不拿设备标识顶替 uid",
+      !/deviceId/.test(fbLib) && /function feedbackIdentity\(deps\)/.test(serverCore)
+        && !/identity\.deviceId/.test(serverCore),
+      "服务端还留着按设备标识认人的路");
   }
 
   {

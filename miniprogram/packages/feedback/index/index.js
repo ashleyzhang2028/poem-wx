@@ -1,6 +1,5 @@
 const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
-const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
@@ -24,18 +23,20 @@ Page({
     sending: false
   },
 
-  onLogin() {
-    loginFlow.run(this);
-  },
-
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), logged: gate.logged() });
+    if (!this.enter()) return;
+    this.setData({ barBelow: tabbar.below(this), logged: true });
     this.load();
   },
 
+  enter() {
+    if (gate.logged()) return true;
+    gate.open(null, this);
+    return false;
+  },
+
   load() {
-    if (!this.data.logged) return;
     fb.mine().then((res) => {
       this.setData({ threads: res.threads, offline: res.offline });
     });

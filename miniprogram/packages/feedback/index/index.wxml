@@ -1,8 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{!logged}}" title="意见建议" note="登录后才能提交" mark="议" bind:login="onLogin" />
-
-  <block wx:else>
+  <block wx:if="{{logged}}">
 
     <view class="card">
       <text class="card-title">意见类型</text>

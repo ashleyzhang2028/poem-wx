@@ -2708,38 +2708,33 @@ var FEEDBACK_STATUSES = ["open", "replied", "closed"];
 var FEEDBACK_RESOLUTIONS = ["pending", "adopted", "planned", "rejected", "duplicate"];
 var FEEDBACK_LIMITS = { title: 40, content: 2000, comment: 2000 };
 var FEEDBACK_DEDUPE_MS = 60 * 1000;
-var DEVICE_ID_SHAPE = /^d_[0-9a-f]{8}$/;
 
 function isFeedbackKind(k) { return FEEDBACK_KINDS.indexOf(String(k || "")) >= 0; }
 function isFeedbackResolution(v) { return FEEDBACK_RESOLUTIONS.indexOf(String(v || "")) >= 0; }
 
 function feedbackDedupeHash(identity, kind, title, content) {
   return crypto.createHash("sha256")
-    .update([identity.uid || identity.deviceId, kind, title, content].join("\u0001"), "utf8")
+    .update([identity.uid, kind, title, content].join("\u0001"), "utf8")
     .digest("hex");
 }
 
-function feedbackIdentity(deps, input) {
-  if (deps.account && deps.account.uid) return { uid: deps.account.uid, deviceId: "" };
-  var raw = String((input && input.deviceId) || deps.deviceId || "");
-  if (!DEVICE_ID_SHAPE.test(raw)) return null;
-  return { uid: "", deviceId: raw };
+function feedbackIdentity(deps) {
+  if (deps.account && deps.account.uid) return { uid: deps.account.uid };
+  return null;
 }
 
 function feedbackThreadFilterOf(identity) {
-  return identity.uid ? { uid: identity.uid } : { deviceId: identity.deviceId };
+  return { uid: identity.uid };
 }
 
 function ownsFeedbackThread(identity, row) {
   if (!row) return false;
-  if (identity.uid) return String(row.uid || "") === identity.uid;
-  return !!identity.deviceId && !row.uid && String(row.device_id || "") === identity.deviceId;
+  return String(row.uid || "") === identity.uid;
 }
 
 function ownsFeedbackComment(identity, row) {
   if (!row || row.author_role !== "user") return false;
-  if (identity.uid) return String(row.uid || "") === identity.uid;
-  return !!identity.deviceId && !row.uid && String(row.device_id || "") === identity.deviceId;
+  return String(row.uid || "") === identity.uid;
 }
 
 function feedbackThreadPublic(row, comments) {
@@ -2801,11 +2796,8 @@ function feedbackCreate(deps, input) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。想提意见可以直接开一个 Issue，那条路不依赖服务端。"));
   }
 
-  var identity = feedbackIdentity(deps, input);
-  if (!identity) {
-    return Promise.resolve(err(400, "E_NO_IDENTITY",
-      "浏览器没能存下一个设备标识（可能是隐私模式，或清了本机数据），这一条发出去也找不回来了。登录后再发，或者直接开一个 Issue。"));
-  }
+  var identity = feedbackIdentity(deps);
+  if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "登录之后才能提意见"));
 
   var kind = isFeedbackKind(input && input.kind) ? input.kind : "other";
   var title = clip(input && input.title, FEEDBACK_LIMITS.title).trim();
@@ -2813,14 +2805,14 @@ function feedbackCreate(deps, input) {
   var content = clip(input && input.content, FEEDBACK_LIMITS.content).trim();
   if (!content) return Promise.resolve(err(400, "E_EMPTY", "写一句想法再发（哪怕一句话）"));
 
-  var rateKey = "feedback:" + (identity.uid || identity.deviceId);
+  var rateKey = "feedback:" + identity.uid;
   var gate = feedbackRateGate(deps, rateKey);
   if (gate) return Promise.resolve(gate);
 
   var dedupe = feedbackDedupeHash(identity, kind, title, content);
 
-  return Promise.resolve(identity.uid ? store.getAccount(identity.uid) : null).then(function (me) {
-    if (identity.uid && (!me || me.status === "deleted")) return err(401, "E_NO_SESSION", "还没有登录");
+  return Promise.resolve(store.getAccount(identity.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
 
     return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), 5)).then(function (recent) {
       var same = (recent || []).filter(function (r) {
@@ -2830,8 +2822,8 @@ function feedbackCreate(deps, input) {
 
       var row = {
         tid: id.newFeedbackId(),
-        uid: identity.uid || null,
-        device_id: identity.deviceId || "",
+        uid: identity.uid,
+        device_id: "",
         email: String((me && me.email) || ""),
         nickname: String((me && me.nickname) || ""),
         kind: kind,
@@ -2855,8 +2847,8 @@ function feedbackMine(deps, input) {
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
   }
-  var identity = feedbackIdentity(deps, input);
-  if (!identity) return Promise.resolve(ok({ threads: [], noIdentity: true }));
+  var identity = feedbackIdentity(deps);
+  if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
 
   var limit = Math.max(1, Math.min(200, Number(input && input.limit) || 100));
   return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), limit)).then(function (rows) {
@@ -2876,15 +2868,15 @@ function feedbackComment(deps, input) {
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
   }
-  var identity = feedbackIdentity(deps, input);
-  if (!identity) return Promise.resolve(err(400, "E_NO_IDENTITY", "浏览器没能存下设备标识，这一条发不出去。登录后再试。"));
+  var identity = feedbackIdentity(deps);
+  if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
 
   var tid = clip(input && input.tid, 64).trim();
   if (!tid) return Promise.resolve(err(400, "E_TID", "缺 tid"));
   var content = clip(input && input.content, FEEDBACK_LIMITS.comment).trim();
   if (!content) return Promise.resolve(err(400, "E_EMPTY", "写一句再发"));
 
-  var rateKey = "feedback-comment:" + (identity.uid || identity.deviceId);
+  var rateKey = "feedback-comment:" + identity.uid;
   var gate = feedbackRateGate(deps, rateKey);
   if (gate) return Promise.resolve(gate);
 
@@ -2894,8 +2886,8 @@ function feedbackComment(deps, input) {
     var row = {
       cid: id.newFeedbackCommentId(),
       tid: tid,
-      uid: identity.uid || null,
-      device_id: identity.deviceId || "",
+      uid: identity.uid,
+      device_id: "",
       author_role: "user",
       nickname: String(thread.nickname || ""),
       content: content,
@@ -2918,8 +2910,8 @@ function feedbackDelete(deps, input) {
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED", "服务端还没配置好（缺 SESSION_SECRET）。"));
   }
-  var identity = feedbackIdentity(deps, input);
-  if (!identity) return Promise.resolve(err(400, "E_NO_IDENTITY", "浏览器没能存下设备标识，认不出这是你发的。"));
+  var identity = feedbackIdentity(deps);
+  if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
 
   var tid = clip(input && input.tid, 64).trim();
   var cid = clip(input && input.cid, 64).trim();
