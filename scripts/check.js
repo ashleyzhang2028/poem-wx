@@ -3287,7 +3287,10 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
     ["qingmingshanghetu", "清明上河图", [2, 54, 51], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
-    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"]
+    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
+    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
+    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"]
   ];
 
   const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
@@ -3296,7 +3299,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 16 项（十二个传统色 + 四张大好河山）",
+  ok("清单就是这 19 项（十二个传统色 + 七张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
