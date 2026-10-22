@@ -267,38 +267,6 @@ function refreshSession() {
   return remote.sessionRefresh();
 }
 
-const RANKING_GAMES = ["fly", "exam"];
-
-function rankingState() {
-  if (!loggedIn()) {
-    return Promise.resolve({ games: {}, sim: true, note: "登录且是管理员才能改" });
-  }
-  return refreshSession().then(() => {
-    if (!canWrite()) {
-      return { games: {}, sim: true, note: "改不了：服务器未接上，或这个账号不是管理员" };
-    }
-    return Promise.all(RANKING_GAMES.map((g) => remote.adminRanking(g))).then((rows) => {
-      const games = {};
-      RANKING_GAMES.forEach((g, i) => { games[g] = !!(rows[i] && rows[i].on); });
-      return { games, sim: false, note: "" };
-    });
-  });
-}
-
-function setRanking(game, on) {
-  return refreshSession().then(() => {
-    if (!canWrite()) {
-      return { ok: false, msg: "改不了：服务器未接上，或这个账号不是管理员" };
-    }
-    return remote.setAdminRanking(game, on).then((res) => ({
-      ok: !!res.ok,
-      on: !!res.on,
-      msg: res.on ? "已打开" : "已隐藏",
-      sim: res.sim
-    }));
-  });
-}
-
 module.exports = {
   loggedIn,
   list,
@@ -309,7 +277,5 @@ module.exports = {
   setTier,
   revokeTier,
   canWrite,
-  rankingState,
-  setRanking,
   roster
 };

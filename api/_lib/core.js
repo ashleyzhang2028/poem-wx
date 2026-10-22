@@ -3317,13 +3317,7 @@ function boardKeyOf(game) {
 function boardReadSwitch(deps, game) {
   return Promise.resolve(deps.store.getSetting(boardKeyOf(game))).then(function (row) {
     var v = row && row.svalue != null ? row.svalue : row && row.value;
-    return String(v == null ? "" : v) === "1";
-  });
-}
-
-function boardWriteSwitch(deps, game, on) {
-  return Promise.resolve(deps.store.putSetting(boardKeyOf(game), on ? "1" : "0")).then(function () {
-    return !!on;
+    return String(v == null ? "" : String(v).trim()) !== "0";
   });
 }
 
@@ -3464,37 +3458,6 @@ function boardSubmit(deps, input) {
       return Promise.resolve(deps.store.putScoreRecord(row)).then(function () {
         return ok({ recorded: row.srid, score: score, total: total, on: !!g.on });
       });
-    });
-  });
-}
-
-function adminRankingGet(deps, input) {
-  var cfg = deps.cfg, store = deps.store;
-  var gate = adminGate(deps, cfg);
-  if (gate) return Promise.resolve(gate);
-  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
-    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
-    var game = String((input && input.game) || "exam").toLowerCase();
-    if (BOARD_GAMES.indexOf(game) < 0) return err(400, "E_GAME", "榜单只认 fly / exam 两种");
-    return boardReadSwitch(deps, game).then(function (on) {
-      return ok({ game: game, on: on });
-    });
-  });
-}
-
-function adminRankingSet(deps, input) {
-  var cfg = deps.cfg, store = deps.store;
-  var gate = adminGate(deps, cfg);
-  if (gate) return Promise.resolve(gate);
-  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
-    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
-    var game = String((input && input.game) || "exam").toLowerCase();
-    if (BOARD_GAMES.indexOf(game) < 0) return err(400, "E_GAME", "榜单只认 fly / exam 两种");
-    var want = !!(input && (input.on === true || input.on === "1" || input.on === 1));
-    return boardWriteSwitch(deps, game, want).then(function (on) {
-      return ok({ game: game, on: on });
     });
   });
 }
@@ -3743,8 +3706,6 @@ module.exports = {
   boardVisible: boardVisible,
   boardList: boardList,
   boardSubmit: boardSubmit,
-  adminRankingGet: adminRankingGet,
-  adminRankingSet: adminRankingSet,
   boardPeriodStart: boardPeriodStart,
   boardMaskNick: boardMaskNick,
   boardStageOfGrade: boardStageOfGrade,

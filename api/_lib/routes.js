@@ -31,8 +31,6 @@ var ROUTES = {
   "POST /admin/role": "./../_routes/admin/role.js",
   "POST /admin/reports": "./../_routes/admin/reports.js",
   "POST /admin/pinyin": "./../_routes/admin/pinyin.js",
-  "GET /admin/ranking": "./../_routes/admin/ranking.js",
-  "POST /admin/ranking": "./../_routes/admin/ranking.js",
   "GET /pinyin-fixes": "./../_routes/pinyin-fixes.js",
   "POST /admin/feedback": "./../_routes/admin/feedback.js",
 

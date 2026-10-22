@@ -218,16 +218,11 @@ function makeWx(port, mem) {
       !Object.prototype.hasOwnProperty.call(mine[0], "nickname"), JSON.stringify(Object.keys(mine[0] || {})));
 
     const none = await s.getSetting("ranking:exam");
-    ok("开关没有那一行就是关（默认不开）", none === null, JSON.stringify(none));
-
-    await s.putSetting("ranking:exam", "1");
-    const on = await s.getSetting("ranking:exam");
-    ok("开关写得进去也读得回来", !!on && String(on.svalue) === "1", JSON.stringify(on));
+    ok("榜单开关没有那一行（读出来是空的，默认由 core 判成开）", none === null, JSON.stringify(none));
 
     await s.putSetting("ranking:exam", "0");
     const off = await s.getSetting("ranking:exam");
-    ok("关掉是改写同一行（读回来是 0，不是又开了一行）",
-      !!off && String(off.svalue) === "0", JSON.stringify(off));
+    ok("显式关掉是写进同一行（读回来是 0）", !!off && String(off.svalue) === "0", JSON.stringify(off));
   }
 
   {

@@ -297,10 +297,9 @@ function makeWx(port, mem) {
     const origGet = holder.getStore;
     const shared = holder.getStore(config);
     holder.getStore = function () { return shared; };
-    svStore.putSetting("ranking:exam", "0");
 
-    ok("那一行开关写进去之后，服务端读得回来（读的是库里的列，不是另一个字段名）",
-      !!(await shared.getSetting("ranking:exam")), "开关写进去了却读不到 —— 后台拨一次、重启一次就变回关闭");
+    ok("库里没有那一行时榜单读回来是开的（默认打开，不必等谁来拨）",
+      !(await shared.getSetting("ranking:fly")), "默认值落在库里 —— 换台机器、清一次库就变成关");
 
     const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
     const relay = submitter.submitPlay("exam", { score: 7, total: 10, durationSec: 120 });
@@ -310,8 +309,8 @@ function makeWx(port, mem) {
 
     const self = require(path.join(REPO, "miniprogram", "utils", "ranking.js")).selfGrade(store.settings());
     const saved = (await shared.listScoreRecords({ game: "exam" }, 20)).filter((r) => r.uid === store.profile().userId);
-    ok("关着榜时交上来的成绩照样落库（开着才展示，不是开着才收）",
-      !!got && got.ok === true && got.on === false && saved.length === 1,
+    ok("交上来的成绩落库（开关管展示，不是开着才收）",
+      !!got && got.ok === true && got.on === true && saved.length === 1,
       JSON.stringify(got) + " 落库 " + saved.length + " 行");
     ok("成绩记的是这个人的学段 / 年级 / 学期（不是一律 all，否则哪儿都查不到这一行）",
       saved.length === 1 && saved[0].stage === self.stage && saved[0].grade === self.grade
@@ -342,26 +341,22 @@ function makeWx(port, mem) {
       });
     };
 
-    const offVisible = await api({ op: "visible", game: "exam" });
-    ok("榜单一上线是关的（默认关，谁都没打开过）",
-      offVisible.status === 200 && offVisible.body.on === false, JSON.stringify(offVisible.body));
+    const onVisible = await api({ op: "visible", game: "exam" });
+    ok("榜单一上线就是开的（库里没有那一行，不必等谁点头）",
+      onVisible.status === 200 && onVisible.body.on === true, JSON.stringify(onVisible.body));
 
-    const offList = await api({ op: "list", game: "exam" });
-    ok("关着的时候读不到榜单（不是空榜，是明说没开）",
-      offList.status === 403 && offList.body.code === "E_RANKING_OFF", JSON.stringify(offList.body));
+    const onList = await api({ op: "list", game: "exam" });
+    ok("开着的时候读得到榜单（空榜也是一张榜，不是「没有开」）",
+      onList.status === 200 && Array.isArray(onList.body.board), JSON.stringify(onList.body));
 
-    const offSubmit = await api({ op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1 });
-    ok("关着的时候交上来的成绩照收，回一句 on:false（开关管展示，不管收不收）",
-      offSubmit.status === 200 && !!offSubmit.body.recorded && offSubmit.body.on === false,
-      JSON.stringify(offSubmit.body));
-
-    await svStore.putSetting("ranking:exam", "1");
     await svStore.patchAccount(store.profile().userId, { nickname: "测试某某" });
 
     const onSubmit = await api({
       op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1, durationSec: 300
     });
-    ok("开了之后成绩收得下", onSubmit.status === 200 && !!onSubmit.body.recorded, JSON.stringify(onSubmit.body));
+    ok("开着的时候成绩收得下，回一句 on:true",
+      onSubmit.status === 200 && !!onSubmit.body.recorded && onSubmit.body.on === true,
+      JSON.stringify(onSubmit.body));
 
     const board = await api({
       op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10
@@ -403,9 +398,17 @@ function makeWx(port, mem) {
       JSON.stringify(cut.body.me && cut.body.me.nick));
 
     const flyList = await api({ op: "list", game: "fly", stage: "all", period: "day" });
-    ok("飞花令榜与考试榜各算各的", flyList.status === 403, JSON.stringify(flyList.body));
+    ok("飞花令榜与考试榜各算各的（飞花令那边没有交过卷，是空榜）",
+      flyList.status === 200 && (flyList.body.board || []).length === 0, JSON.stringify(flyList.body));
 
-    const notAdmin = await new Promise((resolve) => {
+    const offAgain = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day" });
+    ok("关掉之后读不到成绩（明说没开，不是给一张空榜）",
+      (await svStore.putSetting("ranking:exam", "0"), true)
+        && (await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day" })).status === 403,
+      JSON.stringify(offAgain.body));
+    await svStore.putSetting("ranking:exam", "1");
+
+    const goneAdmin = await new Promise((resolve) => {
       const req = http.request({
         port, method: "POST", path: "/api/admin/ranking",
         headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
@@ -417,7 +420,8 @@ function makeWx(port, mem) {
       req.write(JSON.stringify({ game: "exam", on: true }));
       req.end();
     });
-    ok("开关不是谁都能拧（普通用户拨不动）", notAdmin.status === 403, String(notAdmin.body));
+    ok("后台那枚开关的接口已经撤掉（没有人能从后台把榜关掉）",
+      goneAdmin.status === 404, String(goneAdmin.body));
 
     const mePatch = (body) => new Promise((resolve) => {
       const req = http.request({
