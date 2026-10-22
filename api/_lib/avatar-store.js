@@ -59,14 +59,38 @@ function objectAvatar() {
   };
 }
 
+function storedAvatar(store) {
+  return {
+    kind: "db",
+    ready: function () { return true; },
+    put: function (uid, mime, bytes) {
+      var u = safeUid(uid);
+      if (!u) return Promise.resolve({ ok: false, code: "E_NO_UID" });
+      return Promise.resolve(store.putAvatar(u, mime, bytes))
+        .then(function () { return { ok: true, bytes: bytes.length }; });
+    },
+    get: function (uid) {
+      return Promise.resolve(store.getAvatar(safeUid(uid)))
+        .then(function (row) {
+          return row && row.bytes && row.bytes.length ? row : null;
+        });
+    },
+    remove: function (uid) {
+      return Promise.resolve(store.deleteAvatar(safeUid(uid)))
+        .then(function () { return true; });
+    }
+  };
+}
+
 var singleton = null;
 
 function getAvatarStore(cfg) {
   var c = cfg || require("./config");
-  if (singleton && singleton._cfg === c) return singleton.impl;
-  void c;
-  var impl = memoryAvatar();
-  singleton = { _cfg: c, impl: impl };
+  var store = require("./store").getStore(c);
+  var kind = store && typeof store.putAvatar === "function" ? "db" : "memory";
+  if (singleton && singleton._store === store && singleton._kind === kind) return singleton.impl;
+  var impl = kind === "db" ? storedAvatar(store) : memoryAvatar();
+  singleton = { _store: store, _kind: kind, impl: impl };
   return impl;
 }
 
@@ -94,6 +118,7 @@ module.exports = {
   OK_MIME: OK_MIME,
   safeUid: safeUid,
   memoryAvatar: memoryAvatar,
+  storedAvatar: storedAvatar,
   objectAvatar: objectAvatar,
   getAvatarStore: getAvatarStore,
   resetAvatarStore: resetAvatarStore,

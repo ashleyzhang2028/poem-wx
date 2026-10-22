@@ -115,8 +115,17 @@ function notConfigured(res, what) {
   });
 }
 
+function binary(res, status, body, headers) {
+  var h = { "Cache-Control": "no-store" };
+  if (headers) Object.keys(headers).forEach(function (k) { h[k] = headers[k]; });
+  res.statusCode = status;
+  Object.keys(h).forEach(function (k) { res.setHeader(k, h[k]); });
+  res.end(body || Buffer.alloc(0));
+}
+
 module.exports = {
   json: json,
+  binary: binary,
   log: log,
   drain: drain,
   redact: redact,

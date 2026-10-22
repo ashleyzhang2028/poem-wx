@@ -104,8 +104,8 @@
 
 | | 不写（**默认**） | `COPY_SHREDS=0` |
 |---|---|---|
-| 上下文里 | `shard-src/*.js.gz`（**只摊压缩后那份**，5.6MB） | 空目录（`shard-src/` 本身仍在，见下） |
-| 镜像里 | `/app/shards/`（5.6MB） | 没有 `/app/shards/` |
+| 上下文里 | `shard-src/t001…t121.js.gz`（**只摊压缩后那份**，5.3MB）+ `upload.manifest` | 空目录（`shard-src/` 本身仍在，见下） |
+| 镜像里 | `/app/shards/`（5.3MB） | 没有 `/app/shards/` |
 | `/api/shard/*` | 200 + `Content-Encoding: gzip`（每片约 44KB） | `404 E_NO_SHARDS` |
 
 ⚠️ **默认是「有」。** 正式版要发的就是课外正文，不带分片的镜像是给本地调试的。
@@ -114,14 +114,15 @@
 
 四件事一起改才算接上，缺一样都是**不报错地坏**：
 
-1. `deploy-api-serve/shard-api.js` —— 路由本体（名字白名单 + gzip 下发）
+1. `deploy-api-serve/shard-api.js` —— 路由本体（名字白名单 + gzip 下发 + 内存索引）
 2. `deploy/Dockerfile` 里 `COPY --chown=node:node shard-api.js ./` —— 把它从
    上下文根拷进 `/app`。**放行 ≠ 进镜像**：少了这条 COPY 时上下文里有它、
    构建与部署都是绿的，容器起来才 `Cannot find module './shard-api.js'`
    （Issue #134）。它是 `serve-api.js` 启动期 require 的，与 `store-mysql.js`
    一样得有一条自己的 COPY —— 另两句 COPY 不会顺手把它带上。
 3. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
-   以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）
+   以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）。
+   摊分片走 `scripts/shard-stage.js`，缓存目录挂在 `docker.volumes: /tmp/poem-shard-cache`
 4. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src/**`
    —— 白名单那一行少了，构建与部署照样绿，而容器起不来（Issue #115）。
 
@@ -129,11 +130,17 @@
 `scripts/check.js` V53 逐条守着上面四点 + 客户端那一半；
 `scripts/e2e-mysql.js` 也摊一遍上下文（它曾经因为少摊 `shard-api.js` 而炸过）。
 
-**为什么分片只摊 gzip 那份**：上下文里 5.6MB vs 25MB。容器发的就是这些字节，
-一个都不用解 —— 见 `shard-api.js` 的 `gzipped()`。
+**为什么分片只摊 gzip 那份**：上下文里 5.3MB vs 25MB。容器发的就是这些字节，
+一个都不用解 —— 见 `shard-api.js` 的 `gzipped()`。倒排索引 `idx.js` 不摊：
+客户端只打 `t\d{3}`，服务端没有它的路由。
 
-**为什么默认不摊**：绝大多数调试构建用不到分片，带上只会让每次部署多传 5.6MB。
-不用做任何事就是带分片的。要瘦镜像才在 `.cnb.yml` 的 `env:` 加 `COPY_SHREDS: "0"`（字面量，别写 `${…:-…}`）。
+**摊分片为什么有缓存**：分片内容由语料决定，不由 commit 决定。`shard-stage.js`
+按 `sha256(语料清单 + 编译脚本)` 判断能不能直接复用上一版摊好的那份，省掉一轮
+`build-data.js` 与 121 次 gzip。Docker 按文件内容算 COPY 层的缓存键，语料变了
+（`t001`→`t002`）那 5.3MB 仍然要传，这一步省不掉；日志里那行 `分片清单 <hash>`
+相同才说明这次真的没重传。
+
+要瘦镜像才在 `.cnb.yml` 的 `env:` 加 `COPY_SHREDS: "0"`（字面量，别写 `${…:-…}`）。
 
 账（体积 / 流量 / 实例 / 与 CDN 的对比）见 [`../docs/shard-delivery.md`](../docs/shard-delivery.md)。
 
@@ -156,6 +163,6 @@
 ## 本机怎么构建
 
 ```bash
-bash deploy/build.sh            # 构建并报体积（先 node scripts/build-data.js 摊分片）
+bash deploy/build.sh            # 构建并报体积（分片由 scripts/shard-stage.js 现摊）
 bash deploy/build.sh --dry-run  # 只看上下文，不构建
 ```

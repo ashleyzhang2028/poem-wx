@@ -417,7 +417,8 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 | 自选背诵（集子一行，含名字 / 每日首数 / 篇目） | 云 | ✅ |
 | **全部设置**（年级 / 册次 / 范围 / 首数 / 算法 / 主题 / 注音 / 字号 / 对齐 / 自动翻篇） | 云 | ✅（2026-10-04 补） |
 | 昵称 | 云（`accounts.nickname`） | ✅ |
-| 头像 | 只在本机 | ❌ **刻意的**：它只有微信一个来源且不上传（Issue #111），换台手机就是没有 |
+| 服务端存下的头像 | 云（`avatars` 表） | ✅ 登录后按 `/api/avatar/<uid>` 取回 |
+| 孩子头像 | 只在本机 | ❌ **刻意的**：它只有微信一个来源且不上传（Issue #111），换台手机就是没有 |
 | 音效开关 | 只在本机 | ❌ **故意的**：它取决于这台机器的扬声器 |
 
 两条边界：
@@ -596,6 +597,8 @@ wx.login() 拿 code
 | `/api/me` | GET | 本仓库 `api/` | 认回会话（本机没 token 时用它） |
 | `/api/me` | PATCH | 本仓库 `api/` | `{ nickname }` → `{ nickname, account }`。改昵称走这条，不占同步链 |
 | `/api/sync/pull` `/api/sync/push` | POST | 本仓库 `api/` | 含条件 upsert 那套时间戳规则 |
+| `/api/avatar` | POST / DELETE | 本仓库 `api/` | 服务端头像（落 `avatars` 表，≤1MB 的 PNG / JPEG） |
+| `/api/avatar/<uid>` | GET | 本仓库 `api/` | 取回那张头像；带 ETag，`If-None-Match` 对上回 304 |
 | `/api/admin/accounts` | POST | 本仓库 `api/` | 名录 |
 | `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |
 | `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |

@@ -13,6 +13,8 @@ main:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
       docker:
         image: node:20
+        volumes:
+          - /tmp/poem-shard-cache
       services:
         - docker
       ifModify:
@@ -31,28 +33,24 @@ main:
         - name: stage context
           script: |
             set -eu
-            mkdir -p /tmp/ctx
+            mkdir -p /tmp/ctx /tmp/ctx/shard-src
             cp -R api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            mkdir -p /tmp/ctx/shard-src
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
-              node scripts/build-data.js >/dev/null
-              for f in miniprogram/data/texts/*.js; do
-                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .js).js.gz"
-              done
+              node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
+              cp /tmp/poem-shard-cache/t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/
               du -sh /tmp/ctx/shard-src
+              echo "  分片清单 $(sha256sum /tmp/ctx/shard-src/upload.manifest | cut -c1-20)（与上一版相同 = 这次不重传那 5.3MB）"
               n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
                 echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
                 exit 1
               fi
-              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.js.gz | wc -l) 个文件"
-              ls /tmp/ctx/shard-src/idx.js.gz >/dev/null 2>&1 || \
-                echo "· 没有 idx.js.gz（搜索倒排索引）—— 只有搜索会用到它"
+              echo "  $n 片"
             else
               echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
             fi
@@ -165,6 +163,8 @@ main:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
       docker:
         image: node:20
+        volumes:
+          - /tmp/poem-shard-cache
       services:
         - docker
       imports:
@@ -178,28 +178,24 @@ main:
         - name: stage context
           script: |
             set -eu
-            mkdir -p /tmp/ctx
+            mkdir -p /tmp/ctx /tmp/ctx/shard-src
             cp -R api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            mkdir -p /tmp/ctx/shard-src
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
-              node scripts/build-data.js >/dev/null
-              for f in miniprogram/data/texts/*.js; do
-                gzip -9 -c "$f" > "/tmp/ctx/shard-src/$(basename "$f" .js).js.gz"
-              done
+              node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
+              cp /tmp/poem-shard-cache/t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/
               du -sh /tmp/ctx/shard-src
+              echo "  分片清单 $(sha256sum /tmp/ctx/shard-src/upload.manifest | cut -c1-20)（与上一版相同 = 这次不重传那 5.3MB）"
               n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
               if [ "$n" -lt 2 ]; then
                 echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
                 exit 1
               fi
-              echo "  $n 片 + $(ls /tmp/ctx/shard-src/*.js.gz | wc -l) 个文件"
-              ls /tmp/ctx/shard-src/idx.js.gz >/dev/null 2>&1 || \
-                echo "· 没有 idx.js.gz（搜索倒排索引）—— 只有搜索会用到它"
+              echo "  $n 片"
             else
               echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
             fi

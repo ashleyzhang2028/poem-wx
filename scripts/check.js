@@ -6891,8 +6891,10 @@ function gapped(items, max) {
 
   ok("分片名只认 t\\d{3}（不接受 ../、斜杠、别的形状）",
     /\^t\\d\{3\}\$/.test(shardSrc));
-  ok("清单与倒排索引在白名单里（manifest / idx）",
-    /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*INDEX\s*\]/.test(shardSrc));
+  ok("只有清单是特殊名（倒排索引 idx 不进镜像，客户端也不打它）",
+    /SPECIAL\s*=\s*\[\s*MANIFEST\s*\]/.test(shardSrc),
+    "SPECIAL 里还留着 INDEX —— 服务端从来的路由只有 t\\d{3}，idx 那一片没人会请求" +
+      "（2MB 原文 / 466KB gzip 白跟着镜像走一趟）");
   ok("拼路径只走 fileOf（校验之后再拼）",
     /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.js"\)/.test(shardSrc));
   ok("没有分片时回 404 E_NO_SHARDS，不静默回空 body",
@@ -6900,11 +6902,20 @@ function gapped(items, max) {
 
   ok("分片本体是 .js，发出去的是 JSON 报文（解开 gz、剥掉 module.exports = 那一层）",
     /function decode\s*\(/.test(shardSrc)
-      && /function bodyOf\s*\(/.test(shardSrc)
       && /zlib\.gunzipSync\(raw\)/.test(shardSrc)
       && /JSON\.stringify\(decode\(plain\)\)/.test(shardSrc),
     "分片是 `module.exports = {...}` 的 .js（Issue #224：开发者工具不把 .json 当模块打包），" +
       "服务端得自己把它解回 JSON —— 客户端照旧只认 JSON，这一层是服务端的事");
+
+  ok("一片只在第一次请求时解一遍（之后走内存那份）",
+    /const index = \{\}/.test(shardSrc) && /function entryOf\s*\(/.test(shardSrc)
+      && /if \(index\[name\]\) return index\[name\]/.test(shardSrc),
+    "没有内存索引 —— 每片每次请求都要 gunzipSync + 解析 + 重新序列化，" +
+      "0.25 核的实例上这一项就是实打实的 CPU");
+  ok("ETag 与 If-None-Match 对上就回 304（不是只发个 ETag 就算数）",
+    /function notModified\s*\(/.test(shardSrc) && /"if-none-match"/.test(shardSrc)
+      && /send\(res, 304/.test(shardSrc),
+    "ETag 发了却不看 If-None-Match —— 那只是响应头里多一行字，省不下一次序列化");
 
   ok("Dockerfile 接受 COPY_SHREDS 开关",
     /ARG COPY_SHREDS=/.test(dockerfile));
@@ -6948,7 +6959,7 @@ function gapped(items, max) {
   }
 
   {
-    const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
+    const mk = cnb.indexOf("mkdir -p /tmp/ctx /tmp/ctx/shard-src");
     const flag = cnb.indexOf('if [ "${COPY_SHREDS:-1}" != "0" ]');
     ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
       mk >= 0 && flag >= 0 && mk < flag,
@@ -6956,18 +6967,28 @@ function gapped(items, max) {
       "（判旗那句现在是 `if [ \"${COPY_SHREDS:-1}\" != \"0\" ]`，这条按它找）");
   }
 
+  {
+    const stageSrc = fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8");
+    ok("分片摊不摊由语料说了算（缓存挂在构建节点上，语料没变就复用）",
+      /volumes:\s*\n\s*- \/tmp\/poem-shard-cache/.test(cnb)
+        && (cnb.match(/node scripts\/shard-stage\.js \/tmp\/poem-shard-cache/g) || []).length === 2,
+      "读不到分片缓存那一步 —— 语料没变的部署每推一次都要重新 build-data + gzip 121 轮");
+    ok("摊的是压缩后那份，且只摊 t001…t121，不摊 idx",
+      /SHARD_RE = \/\^t\\d\{3\}\\\.js\$\//.test(stageSrc) && /gzipSync/.test(stageSrc)
+        && cnb.indexOf("t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/") > 0,
+      "摊原文的话每次上下文从 0.3MB 变成 25MB；摊的时候得排除 idx —— 那一片服务端一次都不发");
+  }
+
   ok("流水线默认就摊分片（`:-1`，不是只有 `=1` 才摊）",
     /if \[ "\$\{COPY_SHREDS:-1\}" != "0" \]/.test(cnb),
     "摊分片那步还是「只有 =1 才摊」—— main push 拿到的镜像里没有分片，" +
       "课外正文只剩 404 E_NO_SHARDS，而那是给调试镜像留的话");
-  ok("摊的是压缩后那份（.gz），不是 25MB 原文",
-    /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),
-    "摊原文的话，每次构建上下文从 0.3MB 变成 25MB");
-
-  ok("摊出来的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
-    /basename "\$f" \.js\)/.test(cnb) && /\.js\.gz"/.test(cnb),
-    "摊成了 `basename \"$f\".js.gz`（t001.js.gz）—— shard-api 的 fileOf" +
-      " 找 `t001.js` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
+  ok("台账上的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
+    /gzipSync\(fs\.readFileSync\(path\.join\(TEXTS, f\)\)/.test(
+      fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8"))
+      && /f \+ "\.gz"/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8")),
+    "摊出来的名字不是 t001.js.gz —— shard-api 的 fileOf 找 `t001.js` 找不到，" +
+      "于是目录非空、E_NO_SHARDS 不响、每一片 404");
   ok("分片在流水线里现生成（构建产物，checkout 里没有）",
     /node scripts\/build-data\.js/.test(cnb));
   ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",
@@ -7797,6 +7818,7 @@ function gapped(items, max) {
   const coreSrc = fs.readFileSync(path.join(api, "_lib", "core.js"), "utf8");
   const httpMod = require(path.join(api, "_lib", "http.js"));
   const avatarStore = require(path.join(api, "_lib", "avatar-store.js"));
+  const cfgSrc2 = fs.readFileSync(path.join(api, "_lib", "config.js"), "utf8");
 
   {
     const shown = JSON.stringify(httpMod.redact({
@@ -7821,6 +7843,19 @@ function gapped(items, max) {
     ok("头像内存档有总量上限（放 200 张 1MB 只留得下 64MB 的量）",
       kept > 0 && bytes <= 64 * 1024 * 1024, "留了 " + kept + " 张 / " + Math.round(bytes / 1048576) + "MB");
   }
+
+  ok("头像落在库里（重启不丢、多实例之间不用互相同步）",
+    /function storedAvatar\s*\(/.test(fs.readFileSync(path.join(api, "_lib", "avatar-store.js"), "utf8"))
+      && /store\.putAvatar\s*\(/.test(fs.readFileSync(path.join(api, "_lib", "avatar-store.js"), "utf8"))
+      && /CREATE TABLE IF NOT EXISTS `avatars`/.test(
+        fs.readFileSync(path.join(ROOT, "..", "deploy", "sql", "mysql-schema.sql"), "utf8")),
+    "头像还只进实例内存 —— 容器一重启全丢，而 prod 是多实例");
+
+  ok("头像有读回的路（GET /api/avatar/<uid>，与 avatarPublicUrl 指的同一个地址）",
+    /"GET \/avatar\/:uid"/.test(fs.readFileSync(path.join(api, "_lib", "routes.js"), "utf8"))
+      && fs.existsSync(path.join(api, "_routes", "avatar", "file.js"))
+      && /"\/api\/avatar\/" \+ u/.test(cfgSrc2),
+    "给了头像地址却没有下载它的路由 —— 页面拿到的每一张都是 404");
 
   {
     const head = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);

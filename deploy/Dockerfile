@@ -32,6 +32,14 @@
 #
 #    所以别再把白名单挪走 —— 判据在自检 V43 里钉着（摆错位置会红）。
 #
+# ⚠️ **分片那一层的内容由语料决定，不由 commit 决定。** 流水线把它摊在一个挂在构建
+#    节点上的缓存目录里（`.cnb.yml` 的 `docker.volumes`），语料 hash 没变就直接复用
+#    上一版摊好的 `t001.js.gz` —— 省掉一整轮 `build-data.js` 与 `gzip -9`。
+#    但 Docker 只按**文件内容**算 COPY 层的缓存键：上一版是 t001，这一版是 t002，
+#    哪怕语料没变，COPY 层也会失效、重传 5.3MB。所以摊分片那步把
+#    `sha256(分片清单)` 写成 `shard-src/upload.manifest`，并在上下文体积之前打出来：
+#    两次日志里那一串相同 = 这一版没重传；不同 = 语料变了，本来就该重传。
+#
 # 基础镜像走 `BASE_IMAGE`，**默认是 Docker Hub 的 node:20-alpine**。
 # 多这一层不是为了好看：国内构建机上 Docker Hub 慢／不通时，命令行加
 #     --build-arg BASE_IMAGE=<你的镜像源>/library/node:20-alpine
@@ -104,7 +112,7 @@ COPY --chown=node:node shard-api.js ./
 # ⚠️ **`COPY_SHREDS=1` 是默认**（流水线给的是 `${COPY_SHREDS:-1}`）。
 #    只有显式写 `COPY_SHREDS=0` 才不拷内容 —— 那一档 /api/shard/* 回 404
 #    E_NO_SHARDS（出声，不静默回空语料），是给**本地调试**用的：
-#    25MB 分片压缩后 5.6MB（22.5%），调后端那几条路由时用不上它。
+#    25MB 分片压缩后 5.3MB（22.5%），调后端那几条路由时用不上它。
 #    线上正式版要发的就是课外正文，所以默认这一档必须带分片 ——
 #    不带的话用户看到的是「这个版本里没有课外正文」，而那不是缺陷，
 #    是**发错了镜像**。两档的差别见 deploy/README.md 那张表。
@@ -131,6 +139,7 @@ COPY --chown=node:node shard-api.js ./
 # ⚠️ 上下文里那层叫 `shard-src/`，**且每个文件都是 .gz** —— 流水线摊的时候
 #    只摊压缩后那份（22.5%）。容器里发的就是这些 gz 字节，一个都不用解。
 COPY --chown=node:node shard-src /tmp/shard-src
+RUN node -e "const fs=require('fs');console.log('  分片清单 ' + (fs.existsSync('/tmp/shard-src/upload.manifest') ? require('crypto').createHash('sha256').update(fs.readFileSync('/tmp/shard-src/upload.manifest')).digest('hex').slice(0,20) : '（没有分片）'))"
 # ⚠️ 默认值也要是 1：`ARG COPY_SHREDS=` 是「没给 --build-arg 就空」，
 #    而那会让**忘了递参数**的构建静默产出一个没分片的镜像 ——
 #    构建绿、部署绿、`/api/shard/*` 404，而这一版是要发出去的正式版。

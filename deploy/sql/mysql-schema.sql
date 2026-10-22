@@ -382,6 +382,19 @@ CREATE TABLE IF NOT EXISTS `score_records` (
   CONSTRAINT `score_records_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------------ avatars
+-- 服务端存下来的头像本体（POST /api/avatar 写，`GET /api/avatar/<uid>` 读）。
+-- 落在库里而不是实例内存里：容器重启不丢，多个实例之间也不用互相同步。
+-- 一张上限 1MB（`AVATAR_MAX_BYTES`），账号删了跟着删。
+CREATE TABLE IF NOT EXISTS `avatars` (
+  `uid`        VARCHAR(64)  NOT NULL,
+  `mime`       VARCHAR(32)  NOT NULL DEFAULT '',
+  `bytes`      MEDIUMBLOB   NOT NULL,
+  `updated_at` BIGINT       NOT NULL DEFAULT 0,
+  PRIMARY KEY (`uid`),
+  CONSTRAINT `avatars_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- --------------------------------------------------------------- app_settings
 -- 全站开关的落点（键值对）。现在只有一行：
 --   ranking:<game> = '1' / '0'   —— 排行榜显示开关，**没有这一行就是关**

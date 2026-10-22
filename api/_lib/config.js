@@ -107,8 +107,10 @@ CONFIG.avatarPath = function (uid) {
   return u.slice(0, 2) + "/" + u + "/avatar.jpg";
 };
 
-CONFIG.avatarPublicUrl = function () {
-  return "";
+CONFIG.avatarPublicUrl = function (uid) {
+  var u = String(uid || "").replace(/[^A-Za-z0-9_-]/g, "");
+  if (u.length < 2) return "";
+  return "/api/avatar/" + u;
 };
 
 CONFIG.hasDb = function () {

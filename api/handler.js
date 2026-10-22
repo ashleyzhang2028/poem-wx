@@ -27,7 +27,7 @@ module.exports = function (req, res) {
       message: "没有这个接口。这一版后端的接口表在 api/_lib/routes.js，逐条列在 GET /api/count。"
     });
   }
-  return hit.handler(req, res);
+  return hit.handler(req, res, hit.params ? hit.params() : null);
 };
 
 module.exports.routeUrl = routeUrl;
