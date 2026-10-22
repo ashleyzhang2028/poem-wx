@@ -9,7 +9,7 @@
 .font-sample {
   padding: var(--sp-3) 0 0;
   margin-top: var(--sp-3);
-  border-top: 1rpx dashed var(--line-2);
+  border-top: 1rpx solid var(--line-2);
 }
 
 .sfx-test {

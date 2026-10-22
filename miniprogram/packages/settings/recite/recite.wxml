@@ -46,7 +46,12 @@
       </view>
     </view>
 
-    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首</text>
+    <view class="row self-only-row" hover-class="row-hover" hover-stay-time="60" wx:if="{{selfOnlyOn}}" bindtap="onCollections">
+      <view class="row-main">
+        <text class="hint self-only-note">已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
   </view>
 
   <view class="card">
