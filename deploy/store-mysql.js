@@ -112,6 +112,22 @@ function mysqlStore(cfg) {
       return query("SELECT * FROM accounts WHERE uid = ? LIMIT 1", [String(uid || "")])
         .then(function (rows) { return accountRow(rows && rows[0]); });
     },
+    getAccounts: function (uids) {
+      var list = (uids || []).map(function (u) { return String(u || ""); }).filter(Boolean);
+      if (!list.length) return Promise.resolve([]);
+      var uniq = [];
+      list.forEach(function (u) { if (uniq.indexOf(u) < 0) uniq.push(u); });
+      var out = {};
+      return query(
+        "SELECT * FROM accounts WHERE uid IN (" + uniq.map(function () { return "?"; }).join(",") + ")",
+        uniq
+      ).then(function (rows) {
+        (rows || []).forEach(function (r) {
+          if (r && r.uid) out[String(r.uid)] = accountRow(r);
+        });
+        return list.map(function (u) { return out[u] || null; });
+      });
+    },
     putAccount: function (acc) {
       var row = pickCols(acc, ACCOUNT_COLS);
       var cols = safeCols(row);
@@ -393,6 +409,25 @@ function mysqlStore(cfg) {
           };
         });
       });
+    },
+
+    putAvatar: function (uid, mime, bytes) {
+      return query("INSERT INTO avatars (uid, mime, bytes, updated_at) VALUES (?,?,?,?) "
+        + "ON DUPLICATE KEY UPDATE mime = VALUES(mime), bytes = VALUES(bytes), updated_at = VALUES(updated_at)",
+        [String(uid || ""), String(mime || ""), bytes, Date.now()])
+        .then(function () { return true; });
+    },
+    getAvatar: function (uid) {
+      return query("SELECT mime, bytes FROM avatars WHERE uid = ? LIMIT 1", [String(uid || "")])
+        .then(function (rows) {
+          var r = rows && rows[0];
+          if (!r) return null;
+          return { mime: String(r.mime || ""), bytes: Buffer.isBuffer(r.bytes) ? r.bytes : Buffer.from(r.bytes || []) };
+        });
+    },
+    deleteAvatar: function (uid) {
+      return query("DELETE FROM avatars WHERE uid = ?", [String(uid || "")])
+        .then(function () { return true; });
     },
 
     getSetting: function (key) {

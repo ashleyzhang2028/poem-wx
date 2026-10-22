@@ -19,3 +19,6 @@ deploy/.build/
 # 开发者工具的工程文件只认 miniprogram/ 下这一份
 /project.config.json
 /project.private.config.json
+
+# 分片缓存指纹（scripts/shard-stage.js 写，构建节点上那份缓存对不对就靠它）
+.shard-fp

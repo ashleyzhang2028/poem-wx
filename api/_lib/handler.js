@@ -76,7 +76,7 @@ function readBodyGuarded(req) {
 
 function make(name, methods, run, opts) {
   opts = opts || {};
-  return function (req, res) {
+  return function (req, res, params) {
     var m = String(req.method || "GET").toUpperCase();
     if (methods.indexOf(m) < 0) return H.methodNotAllowed(res, methods);
 
@@ -101,6 +101,7 @@ function make(name, methods, run, opts) {
           });
         }
         var d = deps(req, body);
+        d.params = params || null;
         return withSession(req, d).then(function (d2) {
           return run(d2, body || {}, req);
         }).then(function (out) {
@@ -109,6 +110,21 @@ function make(name, methods, run, opts) {
           if (out.cookies && out.cookies.length) {
 
             res.setHeader("Set-Cookie", out.cookies);
+          }
+
+          if (out.raw) {
+            H.log("api.ok", { api: name, status: out.status });
+            if (String((req.headers || {})["if-none-match"] || "").indexOf(out.raw.etag) >= 0) {
+              H.binary(res, 304, null, out.headers || null);
+              return;
+            }
+            H.binary(res, out.status, out.raw.bytes, {
+              "Content-Type": out.raw.mime,
+              "Content-Length": out.raw.bytes.length,
+              "Cache-Control": "public, max-age=86400",
+              "ETag": out.raw.etag
+            });
+            return;
           }
 
           if (out.body && out.body.code === "E_TURNSTILE") {

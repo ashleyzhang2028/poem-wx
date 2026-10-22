@@ -1,32 +1,62 @@
 const store = require("./store");
+const crop = require("./banner-crop");
 
 const IMAGE = "data:image/jpeg;base64,";
 
 const WIDTH = 1200;
 
-const RATIO = 916 / 1717;
+const QUALITY = 0.72;
 
-async function prepare(path) {
-  try {
-    const info = await new Promise((resolve, reject) => {
-      wx.getImageInfo({ src: path, success: resolve, fail: reject });
+const GRID = 250;
+
+const SCALE = 4;
+
+const RATIO_W = crop.RATIO_W;
+
+const RATIO_H = crop.RATIO_H;
+
+function photo(path) {
+  return new Promise((resolve, reject) => {
+    wx.getImageInfo({ src: path, success: resolve, fail: reject });
+  });
+}
+
+function shrink(path, width, height) {
+  if (!width || !height) return Promise.resolve({ tempFilePath: path });
+  return new Promise((resolve) => {
+    wx.compressImage({
+      src: path,
+      quality: 100,
+      compressedWidth: Math.round(width),
+      compressedHeight: Math.round(height),
+      success: (res) => resolve(res),
+      fail: () => resolve({ tempFilePath: path })
     });
-    const width = Math.min(WIDTH, Number(info.width) || WIDTH);
-    const height = Math.round(width / RATIO);
-    const res = await new Promise((resolve, reject) => {
-      wx.compressImage({
-        src: path,
-        quality: 72,
-        compressedWidth: width,
-        compressedHeight: height,
-        success: resolve,
-        fail: reject
-      });
-    });
-    return res.tempFilePath || "";
-  } catch (e) {
-    return "";
-  }
+  });
+}
+
+function node(comp, id) {
+  return new Promise((resolve, reject) => {
+    wx.createSelectorQuery().in(comp).select("#" + id).fields({ node: true }, (res) => {
+      if (res && res.node) resolve(res.node);
+      else reject(new Error("no canvas"));
+    }).exec();
+  });
+}
+
+function pixels(comp, id, src, width, height) {
+  return node(comp, id).then((canvas) => new Promise((resolve, reject) => {
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    const img = canvas.createImage();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(ctx.getImageData(0, 0, width, height).data);
+    };
+    img.onerror = () => reject(new Error("no image"));
+    img.src = src;
+  }));
 }
 
 function read(file) {
@@ -40,8 +70,61 @@ function read(file) {
   });
 }
 
-async function put(path) {
-  const file = await prepare(path);
+function artOf(img, box, scale) {
+  const width = Math.min(WIDTH, Math.max(1, Math.round(img.w * box.sw * scale)));
+  return {
+    sx: Math.round(img.w * box.sx),
+    sy: Math.round(img.h * box.sy),
+    sw: Math.max(1, Math.round(img.w * box.sw)),
+    sh: Math.max(1, Math.round(img.h * box.sh)),
+    width: width,
+    height: Math.max(1, Math.round(width * RATIO_H / RATIO_W))
+  };
+}
+
+function exportTemp(canvas, art) {
+  return new Promise((resolve) => {
+    wx.canvasToTempFilePath({
+      canvas: canvas,
+      x: 0,
+      y: 0,
+      width: art.width,
+      height: art.height,
+      destWidth: art.width,
+      destHeight: art.height,
+      fileType: "jpg",
+      quality: QUALITY,
+      success: (r) => resolve(r.tempFilePath || ""),
+      fail: () => resolve("")
+    });
+  });
+}
+
+async function prepare(path, img, comp, id, box, scale) {
+  try {
+    const art = artOf(img, box, scale);
+    const small = await shrink(path, img.w * scale / SCALE, img.h * scale / SCALE);
+    const canvas = await node(comp, id);
+    if (!canvas) return "";
+    return new Promise((resolve) => {
+      const image = canvas.createImage();
+      image.onload = () => {
+        canvas.width = art.width;
+        canvas.height = art.height;
+        canvas.getContext("2d").drawImage(image, art.sx, art.sy, art.sw, art.sh,
+          0, 0, art.width, art.height);
+        exportTemp(canvas, art).then(resolve);
+      };
+      image.onerror = () => resolve("");
+      image.src = small.tempFilePath || path;
+    });
+  } catch (e) {
+    return "";
+  }
+}
+
+async function put(path, img, comp, id, box, scale) {
+  const file = await prepare(path, img, comp, id, crop.clampBox(box), scale);
   if (!file) return { ok: false, reason: "read" };
   const data = await read(file).catch(() => "");
   if (data.length <= IMAGE.length) return { ok: false, reason: "read" };
@@ -58,7 +141,16 @@ function src() {
   return typeof v === "string" && v.indexOf(IMAGE) === 0 ? v : "";
 }
 
-function pick() {
+function probe(path, img, comp, id) {
+  const width = GRID;
+  const height = Math.max(8, Math.round(GRID * img.h / img.w));
+  return shrink(path, width, height)
+    .then((small) => pixels(comp, id, small.tempFilePath || path, width, height))
+    .then((data) => ({ w: width, h: height, data: data }))
+    .catch(() => null);
+}
+
+function choose() {
   return new Promise((resolve) => {
     wx.chooseMedia({
       count: 1,
@@ -72,11 +164,25 @@ function pick() {
           resolve({ ok: false, reason: "choose" });
           return;
         }
-        put(path).then(resolve, () => resolve({ ok: false, reason: "read" }));
+        photo(path).then((info) => {
+          const img = { w: Number(info.width) || 0, h: Number(info.height) || 0 };
+          if (!img.w || !img.h) {
+            resolve({ ok: false, reason: "read" });
+            return;
+          }
+          resolve({ ok: true, path: path, img: img });
+        }, () => resolve({ ok: false, reason: "read" }));
       },
       fail: () => resolve({ ok: false, reason: "cancel" })
     });
   });
 }
 
-module.exports = { src, put, clear, pick, IMAGE, WIDTH, RATIO };
+function suggest(path, img, comp, id, box) {
+  const scale = RATIO_W * img.h / (RATIO_H * img.w);
+  return probe(path, img, comp, id)
+    .then((grid) => crop.snap(box, grid ? grid.data : null, grid ? grid.w : 0, grid ? grid.h : 0))
+    .then((fit) => ({ box: fit, scale: Math.min(1, scale) }));
+}
+
+module.exports = { src, put, clear, choose, suggest, IMAGE, WIDTH, RATIO_W, RATIO_H };

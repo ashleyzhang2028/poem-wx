@@ -34,11 +34,12 @@
         <text class="swatch-name">{{ownSet ? '已换上你的图' : '还没有图'}}</text>
       </view>
 
+      <text class="own-note">图片存于本机，不同步到服务器</text>
+
       <view class="own-acts">
         <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换一张' : '选一张图'}}</button>
         <button class="btn ghost mini" wx:if="{{ownSet}}" bindtap="onOwnClear">恢复默认</button>
       </view>
-      <text class="own-note">图只存在这台手机上，不同步到服务器，换设备就回到默认 banner。</text>
     </view>
   </view>
 
@@ -61,5 +62,7 @@
 
   <view class="safe-bottom gap-bottom"></view>
   </block>
+  <banner-crop id="crop" bind:done="onCropDone" />
+
   <tab-bar id="tabbar" current="4" />
 </view>

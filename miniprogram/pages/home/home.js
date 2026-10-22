@@ -15,7 +15,6 @@ const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
-const defer = require("../../utils/defer");
 const guard = require("../../utils/guard");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
@@ -262,21 +261,21 @@ Page({
     this.refresh();
   },
 
-  refresh() {
+  refresh(force) {
     if (!gate.logged()) {
       this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
       return;
     }
 
     this.paint();
-    this.pull();
+    this.pull(force);
   },
 
-  pull() {
+  pull(force) {
     const seq = (this.pullSeq || 0) + 1;
     this.pullSeq = seq;
     guard
-      .once("home:pull", () => sync.pullOnly(true))
+      .once("home:pull", () => sync.pullOnly(!!force))
       .then((res) => {
         if (this.pullSeq !== seq) return;
         if (!res || res.skipped || res.error || !res.applied) return;
@@ -723,11 +722,7 @@ Page({
     this.refresh();
   },
 
-  onDeferChange(e) {
-    const d = (e && e.detail) || {};
-    if (!d.id) return;
-    const level = defer.levelOf(d.key);
-    if (!d.on && level) wx.showToast({ title: "已取消「" + level.label + "」", icon: "none" });
+  onDeferChange() {
     this.refresh();
   },
 
@@ -794,7 +789,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.refresh();
+    this.refresh(true);
     setTimeout(() => wx.stopPullDownRefresh(), 320);
   },
 

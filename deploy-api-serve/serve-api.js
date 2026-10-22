@@ -89,6 +89,8 @@ function createServer() {
 if (require.main === module) {
   createServer().listen(PORT, function () {
     console.log("poem-api（只有 /api/*）已启动：http://localhost:" + PORT);
+    const n = shardApi.warm();
+    if (n) console.log("[shard] 预热 " + n + " 片（首请求不用再解 gzip）");
   });
 }
 

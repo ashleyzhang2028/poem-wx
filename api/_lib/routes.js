@@ -18,6 +18,7 @@ var ROUTES = {
   "DELETE /account": "./../_routes/account.js",
   "POST /avatar": "./../_routes/avatar/index.js",
   "DELETE /avatar": "./../_routes/avatar/index.js",
+  "GET /avatar/:uid": "./../_routes/avatar/file.js",
   "GET /family": "./../_routes/family/index.js",
   "POST /family": "./../_routes/family/index.js",
   "POST /game/answer": "./../_routes/game/answer.js",
@@ -76,12 +77,39 @@ function resolve(method, url) {
   var hit = ROUTES[m + " " + rest];
   if (hit) return { path: rest, handler: require(hit), methodAllowed: true };
 
+  var wild = matchParam(m, rest);
+  if (wild) return wild;
+
   var any = Object.keys(ROUTES).filter(function (k) {
     return k.split(" ")[1] === rest;
   })[0];
   if (any) return { path: rest, handler: require(ROUTES[any]), methodAllowed: false };
 
   return null;
+}
+
+function matchParam(method, rest) {
+  var segs = rest.split("/");
+  var keys = Object.keys(ROUTES).filter(function (k) {
+    if (k.split(" ")[0] !== method) return false;
+    var p = k.split(" ")[1].split("/");
+    if (p.length !== segs.length) return false;
+    return p.every(function (seg, i) { return seg.charAt(0) === ":" || seg === segs[i]; });
+  })[0];
+  if (!keys) return null;
+  var names = keys.split(" ")[1].split("/");
+  return {
+    path: rest,
+    handler: require(ROUTES[keys]),
+    methodAllowed: true,
+    params: function () {
+      var out = {};
+      names.forEach(function (seg, i) {
+        if (seg.charAt(0) === ":") out[seg.slice(1)] = decodeURIComponent(segs[i]);
+      });
+      return out;
+    }
+  };
 }
 
 function list() {

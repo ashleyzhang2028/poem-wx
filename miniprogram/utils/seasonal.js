@@ -59,15 +59,24 @@ function lunarMidnight(year, month, day) {
   return lunarDayOf(year, month, day);
 }
 
-function lunarDayOf(year, month, day) {
-  const probe = new Date(year, 0, 1);
+const LUNAR_YEAR = {};
+
+function lunarYearDays(year) {
+  if (LUNAR_YEAR[year]) return LUNAR_YEAR[year];
+  const at = [];
+  const start = Date.UTC(year, 0, 1);
   for (let i = 0; i < 366; i += 1) {
-    const d = new Date(probe.getTime() + i * DAY);
+    const d = new Date(start + i * DAY);
     const it = LUNAR.lunar(d);
-    if (!it || it.year !== year) continue;
-    if (it.month === month && it.day === day && !it.leap) return midnight(d);
+    if (!it || it.year !== year || it.leap) continue;
+    at[it.month * 32 + it.day] = midnight(d);
   }
-  return 0;
+  LUNAR_YEAR[year] = at;
+  return at;
+}
+
+function lunarDayOf(year, month, day) {
+  return lunarYearDays(year)[month * 32 + day] || 0;
 }
 
 function dayOf(entry, year) {
