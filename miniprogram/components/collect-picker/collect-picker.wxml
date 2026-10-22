@@ -38,7 +38,5 @@
              confirm-type="done" bindconfirm="onSubmitCreate" />
       <button class="btn mini primary" bindtap="onSubmitCreate">创建并收录</button>
     </view>
-
-    <button class="btn ghost block cp-dismiss" bindtap="close">先不收了</button>
   </view>
 </view>
