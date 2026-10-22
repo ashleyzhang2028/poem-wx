@@ -92,6 +92,8 @@ Page({
 
     dailyOn: false,
     pickOn: false,
+    extraTier: "pro",
+    pickTier: "pro",
     icons: PAGE_ICONS,
 
     locked: true,
@@ -133,6 +135,10 @@ Page({
     if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
     const picked = cols.collectionsOf(this.data.id).length > 0;
     if (picked !== this.data.pickOn) this.setData({ pickOn: picked });
+    this.setData({
+      extraTier: entitlement.tierOf("extra"),
+      pickTier: entitlement.tierOf("collections")
+    });
   },
 
   onAddToCollection() {

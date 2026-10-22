@@ -7,7 +7,7 @@
   <view class="card group-card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
     <view class="group-head">
       <text class="card-title group-title">{{group.title}}</text>
-      <text class="group-lock" wx:if="{{group.locked}}">{{group.lockNote}}</text>
+      <tier-tag wx:if="{{group.locked}}" tier="{{group.tier}}" />
     </view>
 
     <view class="swatch-grid">
@@ -25,7 +25,7 @@
   <view class="card group-card">
     <view class="group-head">
       <text class="card-title group-title">字体</text>
-      <text class="group-lock" wx:if="{{fontLocked}}">Pro 起</text>
+      <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
 
     <view class="font-list">
@@ -42,8 +42,6 @@
         </view>
       </view>
     </view>
-
-    <text class="hint font-lead" wx:if="{{fontNote}}">{{fontNote}}</text>
   </view>
 
   <view class="safe-bottom"></view>

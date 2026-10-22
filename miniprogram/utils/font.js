@@ -1,6 +1,8 @@
 const store = require("./store");
 const entitlement = require("./entitlement");
 
+const TIER = "pro";
+
 const FONTS = [
   { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", stem: "zhuquefangsong-regular/zhuquefangsong-regular-" },
   { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", stem: "huiwenmincho-improved/huiwenmincho-improved-" },
@@ -35,8 +37,8 @@ function pickable() {
   return paid();
 }
 
-function lockedName() {
-  return entitlement.status().tier === "free" ? "Pro" : "Free";
+function tier() {
+  return TIER;
 }
 
 function current() {
@@ -152,6 +154,6 @@ function set(key) {
 
 module.exports = {
   FONTS, FACES, DEFAULT, BASE, readiness, options,
-  paid, pickable, lockedName, current, face, stack,
+  paid, pickable, tier, current, face, stack,
   addresses, configured, load, loadAll, set
 };

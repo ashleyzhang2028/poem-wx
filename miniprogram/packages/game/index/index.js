@@ -6,9 +6,9 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = [
-  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
-  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz },
-  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam }
+  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua, tier: "max" },
+  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz, tier: "pro" },
+  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam, tier: "max" }
 ];
 
 const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
@@ -44,14 +44,10 @@ Page({
     }
 
     const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? feedback.read(m.best) : null));
-    const cards = MODES.map((m, i) => {
-      const ok = entitlement.can(CAP[m.key]);
-      return Object.assign({}, m, {
-        ok: ok,
-        note: ok ? "" : entitlement.hint(CAP[m.key]),
-        bestText: boxes[i] ? boxes[i].rank.name : ""
-      });
-    });
+    const cards = MODES.map((m, i) => Object.assign({}, m, {
+      ok: entitlement.can(CAP[m.key]),
+      bestText: boxes[i] ? boxes[i].rank.name : ""
+    }));
     const top = topRank(boxes);
     this.setData({
       locked: false,

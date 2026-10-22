@@ -120,13 +120,6 @@ function groupOpen(group) {
   return entitlement.can(group.cap);
 }
 
-function groupLockNote(group) {
-  if (groupOpen(group)) return "";
-  const need = tiers.nameOf(group.tier);
-  if (!entitlement.loggedIn()) return "登录可用 · " + need + " 起";
-  return need + " 起可用";
-}
-
 function groups() {
   const swatches = palette();
   return GROUPS.map((g) => {
@@ -134,8 +127,8 @@ function groups() {
     return {
       key: g.key,
       title: g.title,
+      tier: g.tier,
       locked: !open,
-      lockNote: groupLockNote(g),
       items: swatches.filter((s) => s.group === g.key).map((s) => Object.assign({}, s, { locked: !open }))
     };
   });
@@ -216,6 +209,6 @@ function bannerOf(key) {
 
 module.exports = {
   THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
-  all, palette, groups, groupOpen, groupLockNote, reachable,
+  all, palette, groups, groupOpen, reachable,
   variables, bannerOf, get, current, currentTheme, style, set, apply
 };

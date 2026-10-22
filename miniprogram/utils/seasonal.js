@@ -340,8 +340,8 @@ function setOn(on) {
   return { ok: true, reason: "ok", name: CAP, login: false };
 }
 
-function hintOf() {
-  return entitlement.hint(CAP);
+function tier() {
+  return entitlement.tierOf(CAP);
 }
 
 function tagOf(hit) {
@@ -378,7 +378,7 @@ module.exports = {
   canSwitch,
   switched,
   setOn,
-  hintOf,
+  tier,
   redraw,
   card
 };

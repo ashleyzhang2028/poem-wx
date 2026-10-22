@@ -62,11 +62,14 @@
   </view>
 
   <view class="card">
-    <view class="card-title">季节限定</view>
+    <view class="card-head">
+      <text class="card-title">季节限定</text>
+      <tier-tag wx:if="{{seasonalLock}}" tier="{{seasonalTier}}" />
+    </view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">显示季节限定</text>
-        <text class="row-sub">{{seasonalLock ? seasonalNote : '节日前两天与当天、节气周期内列出应景诗词'}}</text>
+        <text class="row-sub">节日前两天与当天、节气周期内列出应景诗词</text>
       </view>
       <view class="sw">
         <switch checked="{{seasonalOn}}" disabled="{{seasonalLock}}" color="{{themeColor}}" bindchange="onSeasonal" />

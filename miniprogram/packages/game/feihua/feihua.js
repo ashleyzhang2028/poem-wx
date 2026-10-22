@@ -61,17 +61,14 @@ Page({
     scopeName: "",
 
     allowed: true,
-    reason: ""
+    tier: "max"
   },
 
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
-    this.setData({
-      allowed: ok,
-      reason: ok ? "" : entitlement.hint("feihualing")
-    });
+    this.setData({ allowed: ok, tier: entitlement.tierOf("feihualing") });
     if (!ok || this.ready) return;
     this.ready = true;
     this.next();

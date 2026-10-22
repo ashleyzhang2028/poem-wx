@@ -5,13 +5,15 @@
   <block wx:else>
 
   <view class="card">
-    <view class="card-title">自选背诵</view>
+    <view class="card-head">
+      <text class="card-title">自选背诵</text>
+      <tier-tag wx:if="{{!on}}" tier="{{tier}}" />
+    </view>
     <text class="hint coll-lead">把课外阅读或搜索里看到的篇目收进自己的集合，按选定算法跟着背。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
     </view>
-    <text class="hint coll-lock" wx:else bindtap="onTier">{{hint}}</text>
 
     <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
   </view>

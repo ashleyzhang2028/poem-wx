@@ -10,15 +10,6 @@
   margin-bottom: 0;
 }
 
-.group-lock {
-  flex: none;
-  margin-left: var(--sp-2);
-  font-size: var(--fs-caption);
-  color: var(--ink-4);
-  letter-spacing: var(--ls-caption);
-  line-height: 1.2;
-}
-
 .swatch-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -164,11 +155,6 @@
 
 .font-row.locked .font-tick {
   border-style: dashed;
-}
-
-.font-lead {
-  display: block;
-  margin-top: var(--sp-2);
 }
 
 .group-card:first-of-type {

@@ -10,6 +10,7 @@ const seasonal = require("../../../utils/seasonal");
 const icons = require("../../../utils/icons");
 const scale = require("../../../utils/type-scale");
 const corpus = require("../../../utils/corpus");
+const tiers = require("../../../utils/tiers");
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
@@ -46,7 +47,7 @@ Page({
 
     seasonalOn: true,
     seasonalLock: false,
-    seasonalNote: "",
+    seasonalTier: "pro",
 
     leagueBoardOn: true
   },
@@ -71,7 +72,7 @@ Page({
         sfxOn: sfx.enabled(),
         seasonalOn: !seasonal.switched(),
         seasonalLock: !seasonal.canSwitch(),
-        seasonalNote: seasonal.canSwitch() ? "" : seasonal.hintOf(),
+        seasonalTier: seasonal.tier(),
         leagueBoardOn: settings.leagueBoard !== false,
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
@@ -109,7 +110,7 @@ Page({
   onSeasonal(e) {
     const r = seasonal.setOn(e.detail.value);
     if (!r.ok) {
-      wx.showToast({ title: seasonal.hintOf(), icon: "none" });
+      wx.showToast({ title: tiers.nameOf(seasonal.tier()) + " 起可用", icon: "none" });
     }
     this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: !seasonal.canSwitch() });
     if (r.ok) sync.markDirty();
