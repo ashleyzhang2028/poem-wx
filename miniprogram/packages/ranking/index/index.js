@@ -88,10 +88,6 @@ Page({
           if (me && me.rank >= 1 && me.rank <= 3) sfx.play("rank");
           return;
         }
-        if (res.off) {
-          this.setData({ state: "off", reason: "" });
-          return;
-        }
         this.setData({ state: "offline", reason: res.reason || "榜单没读上来，稍后再试" });
       })
       ["catch"](() => {

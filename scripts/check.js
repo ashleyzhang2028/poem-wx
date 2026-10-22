@@ -3157,11 +3157,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && /function boardSubmit[\s\S]{0,400}?boardGate/.test(apiCore),
     "只关列表不关提交，用户交完成绩却发现榜上没有自己");
 
-  ok("开关默认关（没有那一行就是关，不是开）",
-    /return String\(v == null \? "" : v\) === "1"/.test(apiCore)
-      && /var want = !!/.test(apiCore)
-      && !/row === null[\s\S]{0,40}?return true/.test(apiCore),
-    "默认值翻成 true 之后，昵称会不经管理员点头就摆到别人面前");
+  ok("两个榜默认开着（没有那一行就是开，只有显式写 0 才算关）",
+    /return String\(v == null \? "" : String\(v\)\.trim\(\)\) !== "0"/.test(apiCore),
+    "默认值翻成关之后，用户一进榜就是「没有开」—— 榜不该等谁来拧一下");
 
   ok("成绩底账不存昵称（改名一次全站生效，不用回灌历史行）",
     /putScoreRecord: function \(row\)/.test(apiStore)
@@ -3197,29 +3195,19 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     "少一层就等于把不同档次的成绩排在一块");
 
   ok("榜单页的空状态与重试都是 view + 自定的按压（不是原生 button）",
-    pageWxml.indexOf("<button") < 0 && (pageWxml.match(/bindtap="onRetry"/g) || []).length >= 2,
+    pageWxml.indexOf("<button") < 0 && pageWxml.indexOf('bindtap="onRetry"') >= 0
+      && pageWxml.indexOf('bindtap="onGame"') >= 0,
     "原生 button 的 ::after 灰边会压在账上，按压态只剩平台那一套");
 
   ok("榜单页只在「真有一行」时才画领奖台与名次表（空榜不留一张只有表头的卡）",
     /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
     "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
 
-  ok("后台开关读的是服务端的那一份状态（重新进后台不会把「已打开」说成「关」）",
-    /rankingOn: res\.games/.test(adminJs) && /rankingOn\[item\.key\]/.test(read("packages/admin/index/index.wxml")),
-    "开关开过之后重新进后台又变回关 —— 与库里那一行互相打脸");
-
-  ok("飞花令与大会各有一个开关，后台拨的是各自的键（拨一个不会顺手改另一个）",
-    /RANKING_GAMES = \["fly", "exam"\]/.test(read("utils/admin.js"))
-      && /remote\.setAdminRanking\(game, on\)/.test(read("utils/admin.js"))
-      && /PATHS\.adminRanking \+ qs/.test(read("utils/remote.js")),
-    "后台只认 exam 那一行 —— 飞花令的成绩永远上不了榜，页面还告诉用户「排行榜没开」");
-
-  ok("管理后台那枚开关作用是实打实的（读回来的是服务端那一行）",
-    adminWxml.indexOf("onRanking") >= 0
-      && /admin\.rankingState\(\)/.test(adminJs) && /admin\.setRanking\(/.test(adminJs)
-      && /PATHS\.adminRanking/.test(read("utils\/remote.js"))
-      && /"\/api\/admin\/ranking"/.test(read("utils\/remote.js")),
-    "开关只在页面上改个布尔值、不落服务端 —— 用户那头一点变化都没有");
+  ok("后台不再有榜单开关（两个榜在应用里默认打开，页面与接口都不留拨杆）",
+    adminWxml.indexOf("onRanking") < 0 && !/rankingState\(/.test(adminJs) && !/setRanking\(/.test(adminJs)
+      && !/adminRanking/.test(read("utils/remote.js")) && !/adminRanking/.test(apiCore)
+      && !/admin\/ranking/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "routes.js"), "utf8")),
+    "后台还留着一枚开关，用户读到的「默认打开」就是句假话");
 }
 
 {

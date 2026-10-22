@@ -21,7 +21,6 @@ const PATHS = {
   grant: "/api/admin/grant",
   role: "/api/admin/role",
   ranking: "/api/ranking",
-  adminRanking: "/api/admin/ranking",
   feedback: "/api/feedback",
   adminFeedback: "/api/admin/feedback",
   me: "/api/me"
@@ -509,24 +508,6 @@ function rankingSubmit(entry) {
   );
 }
 
-function adminRanking(game) {
-  if (!adminReady()) return Promise.resolve({ on: false, sim: true });
-  const qs = game ? "?game=" + encodeURIComponent(game) : "";
-  return request(PATHS.adminRanking + qs, null, "GET").then((res) => ({
-    on: !!(res && res.on),
-    sim: false
-  }));
-}
-
-function setAdminRanking(game, on) {
-  if (!adminReady()) return Promise.resolve({ ok: false, sim: true });
-  return request(PATHS.adminRanking, { game: game, on: !!on }).then((res) => ({
-    ok: true,
-    on: !!(res && res.on),
-    sim: false
-  }));
-}
-
 function feedbackMine() {
   if (!configured()) return Promise.resolve({ threads: [], offline: true });
   return request(PATHS.feedback, { deviceId: store.deviceId() }, "GET").then(
@@ -605,8 +586,6 @@ module.exports = {
   rankingVisible,
   rankingList,
   rankingSubmit,
-  adminRanking,
-  setAdminRanking,
   feedbackMine,
   feedbackCreate,
   feedbackComment,

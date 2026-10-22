@@ -4,7 +4,6 @@ const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
-const remote = require("../../../utils/remote");
 
 const MODES = [
   { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua },
@@ -20,12 +19,6 @@ const PAGE = {
   exam: "/packages/game/exam/exam"
 };
 
-const RANKING_HINT = { on: "分学段 · 分年级 · 分学期 · 按日周月年", off: "榜单暂未开放", unknown: "点进去看看名次" };
-
-function anyOn(list) {
-  return list.some((v) => v && v.on);
-}
-
 function topRank(boxes) {
   return boxes.reduce((top, box) => (box && (!top || box.rank.rank > top.rank.rank) ? box : top), null);
 }
@@ -38,9 +31,7 @@ Page({
     cards: [],
     heroMark: "会",
     heroTitle: "",
-    heroSub: "",
-    rankingState: "unknown",
-    rankingSub: RANKING_HINT.unknown
+    heroSub: ""
   },
 
   onShow() {
@@ -69,26 +60,10 @@ Page({
       heroTitle: top ? top.rank.name : "",
       heroSub: top ? top.rank.note : "三个擂台，先挑一个上场"
     });
-    this.loadRanking();
-  },
-
-  loadRanking() {
-    Promise.all([
-      remote.rankingVisible("exam").catch(() => ({ on: false, offline: true })),
-      remote.rankingVisible("fly").catch(() => ({ on: false, offline: true }))
-    ]).then((list) => {
-      const offline = list.some((v) => v.offline);
-      const state = offline ? "unknown" : anyOn(list) ? "on" : "off";
-      this.setData({ rankingState: state, rankingSub: RANKING_HINT[state] });
-    });
   },
 
   onRanking() {
     sfx.play("tap");
-    if (this.data.rankingState === "off") {
-      wx.showToast({ title: "榜单还没开，等管理员打开", icon: "none" });
-      return;
-    }
     wx.navigateTo({ url: "/packages/ranking/index/index" });
   },
 

@@ -69,18 +69,6 @@
   </view>
 
   <view class="card">
-    <view class="row row-flush" wx:for="{{rankingGames}}" wx:key="key">
-      <view class="row-icon">榜</view>
-      <view class="row-main">
-        <text class="row-title">{{item.name}}</text>
-        <text class="row-sub">{{rankingNote || item.sub}}</text>
-      </view>
-      <view class="sw">
-        <switch checked="{{rankingOn[item.key]}}" color="{{lineColor}}" data-game="{{item.key}}"
-                bindchange="onRanking" disabled="{{!logged}}" />
-      </view>
-    </view>
-
     <view class="row row-flush" wx:if="{{logged}}"
           hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback">
       <view class="row-icon">馈</view>
