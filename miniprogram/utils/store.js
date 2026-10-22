@@ -7,6 +7,8 @@ const KEYS = {
   deviceSettings: "kb_device_settings_v1",
   reads: "kb_reads_v1",
   collections: "kb_collections_v1",
+  defer: "kb_recite_defer_v1",
+  pinyinFix: "kb_pinyin_fix_v1",
   dailyExtra: "kb_daily_extra_v1",
   dayPlan: "kb_day_plan_v1",
   dayPlanAt: "kb_day_plan_at_v1",
@@ -583,6 +585,36 @@ function collectionsAt() {
   return Number(raw.at || 0);
 }
 
+function deferList() {
+  const raw = read(KEYS.defer, null);
+  const list = raw && Array.isArray(raw.list) ? raw.list : [];
+  return list.filter((it) => it && it.wid && it.day);
+}
+
+function deferAt() {
+  const raw = read(KEYS.defer, null);
+  return raw ? Number(raw.at || 0) : 0;
+}
+
+function setDefer(items, at) {
+  write(KEYS.defer, { list: items || [], at: Number(at) || Date.now() });
+}
+
+function pinyinFixes() {
+  const raw = read(KEYS.pinyinFix, null);
+  const list = raw && Array.isArray(raw.list) ? raw.list : [];
+  return list.filter((f) => f && f.wid && f.line && f.py);
+}
+
+function pinyinFixAt() {
+  const raw = read(KEYS.pinyinFix, null);
+  return raw ? Number(raw.at || 0) : 0;
+}
+
+function setPinyinFixes(fixes, at) {
+  write(KEYS.pinyinFix, { list: fixes || [], at: Number(at) || Date.now() });
+}
+
 function deviceId() {
   let id = read(KEYS.device, "");
   if (id) return id;
@@ -635,6 +667,12 @@ module.exports = {
   dropClearMarks,
   reads,
   markRead,
+  deferList,
+  deferAt,
+  setDefer,
+  pinyinFixes,
+  pinyinFixAt,
+  setPinyinFixes,
   DAILY_EXTRA_MAX,
   dailyExtra,
   setDailyExtra,

@@ -127,6 +127,7 @@ Page({
       () => {
         if (!char) return;
         this.ended = false;
+        this.roundAt = Date.now();
         this.startClock();
       }
     );
@@ -254,7 +255,7 @@ Page({
         scopeId: this.data.scope || "",
         score: said,
         total: said,
-        durationSec: ROUND_LIMIT - this.data.left
+        durationSec: this.roundSec()
       })
       .then((res) => {
         const sent = !!(res && res.ok);
@@ -264,6 +265,11 @@ Page({
           rankWhere: rankingSelf.labelOf()
         });
       });
+  },
+
+  roundSec() {
+    if (!this.roundAt) return 0;
+    return Math.max(0, Math.min(ROUND_LIMIT, Math.round((Date.now() - this.roundAt) / 1000)));
   },
 
   onUnload() {

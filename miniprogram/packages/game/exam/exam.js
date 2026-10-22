@@ -64,9 +64,15 @@ Page({
     rankWhere: ""
   },
 
+  onHide() {
+    this.stopTimer();
+    if (this.data.stage === "running") this.tick();
+  },
+
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
+    if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
     this.setData({ allowed: ok, tier: entitlement.tierOf("exam") });
     if (!ok || this.ready) return;
@@ -116,6 +122,8 @@ Page({
       return;
     }
     const answers = blankAnswers(questions.length);
+    this.endedAt = 0;
+    this.startedAt = Date.now();
     this.setData(
       {
         stage: "running",
@@ -154,15 +162,20 @@ Page({
 
   startTimer() {
     this.stopTimer();
-    this.timer = setInterval(() => {
-      const remain = this.data.remain - 1;
-      if (remain <= 0) {
-        this.stopTimer();
-        this.finish();
-        return;
-      }
-      this.setData({ remain, remainText: this.format(remain) });
-    }, 1000);
+    if (!this.startedAt) this.startedAt = Date.now() - (DURATION - this.data.remain) * 1000;
+    this.timer = setInterval(() => this.tick(), 1000);
+  },
+
+  tick() {
+    const remain = Math.max(0, Math.ceil((this.startedAt + DURATION * 1000 - Date.now()) / 1000));
+    if (remain <= 0) {
+      this.stopTimer();
+      this.setData({ remain: 0, remainText: this.format(0) });
+      this.finish();
+      return;
+    }
+    if (remain === this.data.remain) return;
+    this.setData({ remain, remainText: this.format(remain) });
   },
 
   stopTimer() {
@@ -254,6 +267,8 @@ Page({
   },
 
   finish() {
+    if (this.endedAt) return;
+    this.endedAt = Date.now();
     this.stopTimer();
     const questions = this.data.questions;
     const answers = this.data.answers;
@@ -287,13 +302,19 @@ Page({
     this.report(correct, questions.length);
   },
 
+  elapsedSec() {
+    if (!this.startedAt) return 0;
+    const end = this.endedAt || Date.now();
+    return Math.max(0, Math.min(DURATION, Math.round((end - this.startedAt) / 1000)));
+  },
+
   report(correct, count) {
     rankingSubmit
       .submitPlay("exam", {
         scopeId: this.data.scope || "",
         score: correct,
         total: count,
-        durationSec: DURATION - this.data.remain
+        durationSec: this.elapsedSec()
       })
       .then((res) => {
         if (this.data.stage !== "result") return;
@@ -324,8 +345,11 @@ Page({
       ranked: false,
       rankSent: false,
       remain: DURATION,
-      remainText: "20:00"
+      remainText: "20:00",
+      endedAt: 0
     });
+    this.endedAt = 0;
+    this.startedAt = 0;
   },
   onShareAppMessage() {
     return { title: "古诗词考试", path: "/packages/game/exam/exam" };

@@ -27,6 +27,8 @@ Object.keys(READ_ROW).forEach((k) => {
 });
 
 const DAILY_EXTRA_ROW = "daily_extra:v1";
+const DEFER_ROW = "defer:v1";
+const PINYIN_FIX_ROW = "pinyin_fix:v1";
 const COLLECTIONS_ROW = "collections:v1";
 
 const SETTINGS_ROW = "settings:v1";
@@ -261,6 +263,26 @@ function packRecords() {
     const rowId = READ_ROW[book];
     if (rowId) rows.push({ id: READ_PREFIX + rowId, payload: {}, updatedAt: goneAt, deleted: true });
   });
+  const deferAt = store.deferAt();
+  if (deferAt) {
+    rows.push({
+      id: DEFER_ROW,
+      payload: { v: 1, updatedAt: deferAt, items: clone(store.deferList()) },
+      updatedAt: deferAt,
+      deleted: false
+    });
+  }
+
+  const pinyinAt = store.pinyinFixAt();
+  if (pinyinAt) {
+    rows.push({
+      id: PINYIN_FIX_ROW,
+      payload: { v: 1, updatedAt: pinyinAt, fixes: clone(store.pinyinFixes()) },
+      updatedAt: pinyinAt,
+      deleted: false
+    });
+  }
+
   if (cleared.dailyExtra) {
     rows.push({ id: DAILY_EXTRA_ROW, payload: {}, updatedAt: goneAt, deleted: true });
   }
@@ -380,6 +402,20 @@ function applyRecords(recs) {
       return;
     }
 
+    if (id === DEFER_ROW) {
+      if (at <= store.deferAt()) return;
+      store.setDefer((row.payload && row.payload.items) || [], at);
+      applied += 1;
+      return;
+    }
+
+    if (id === PINYIN_FIX_ROW) {
+      if (at <= store.pinyinFixAt()) return;
+      store.setPinyinFixes((row.payload && row.payload.fixes) || [], at);
+      applied += 1;
+      return;
+    }
+
     if (id === COLLECTIONS_ROW) {
       const payload = row.payload || {};
       const localAt = store.collectionsAt() || 0;
@@ -481,6 +517,8 @@ module.exports = {
   ROW_BOOK,
   READ_PREFIX,
   DAILY_EXTRA_ROW,
+  DEFER_ROW,
+  PINYIN_FIX_ROW,
   COLLECTIONS_ROW,
   SETTINGS_ROW,
   RECORD_ROW,
