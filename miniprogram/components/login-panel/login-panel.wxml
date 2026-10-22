@@ -23,6 +23,4 @@
   </view>
 </view>
 
-<view class="card login-box" wx:else>
-  <button class="btn primary block" bindtap="onLogin">登录</button>
-</view>
+<button class="btn primary block login-box" wx:else bindtap="onLogin">登录</button>
