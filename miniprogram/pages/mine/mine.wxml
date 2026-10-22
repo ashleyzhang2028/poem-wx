@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page mine {{barBelow ? 'has-tabbar' : 'tall'}} {{guestClass}}" style="{{themeStyle}}">
 
   <login-panel id="login" tier-label="{{tierLabel}}"
                bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"

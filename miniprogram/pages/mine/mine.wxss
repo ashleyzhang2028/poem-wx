@@ -1,0 +1,15 @@
+.mine.guest {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.mine.guest .card:last-child {
+  flex: 1;
+}
+
+.mine.guest .card:last-child + .safe-bottom {
+  display: none;
+}
