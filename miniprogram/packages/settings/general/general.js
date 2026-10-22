@@ -17,7 +17,7 @@ const ALIGNS = [
   { key: "center", label: "居中", icon: icons.center }
 ];
 
-const SAMPLE = "床前明月光，疑是地上霜。\n举头望明月，低头思故乡。";
+const SAMPLE = "举头望明月，低头思故乡。";
 
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off, desc: "正文不带拼音" },
