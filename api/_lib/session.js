@@ -22,18 +22,20 @@ function sign(payload, secret) {
 
 function issue(cfg, uid, now) {
   var t = now || Date.now();
+  var ttlMs = (Number(cfg.sessionDays) || 30) * 86400000;
   var body = {
     s: require("./identity").newSid(),
     u: uid,
     i: t,
-    e: t + cfg.sessionDays * 86400000
+    e: t + ttlMs
   };
   var json = JSON.stringify(body);
   var payload = b64url(json);
 
   return {
     token: payload + "." + sign(payload, keyOf(cfg)),
-    sid: body.s, uid: body.u, iat: body.i, exp: body.e
+    sid: body.s, uid: body.u, iat: body.i, exp: body.e,
+    ttlSec: Math.round(ttlMs / 1000)
   };
 }
 
