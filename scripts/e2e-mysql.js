@@ -223,6 +223,14 @@ function makeWx(port, mem) {
     await s.putSetting("ranking:exam", "0");
     const off = await s.getSetting("ranking:exam");
     ok("显式关掉是写进同一行（读回来是 0）", !!off && String(off.svalue) === "0", JSON.stringify(off));
+
+    await s.putAccount({ uid: "board-a", nickname: "甲", status: "active", created_at: 1 });
+    await s.putAccount({ uid: "board-b", nickname: "乙", status: "active", created_at: 1 });
+    const batch = await s.getAccounts(["board-a", "board-b", "board-没有"]);
+    ok("榜单一次取一批账号（顺序跟着要的那份走，缺的留空）",
+      batch.length === 3 && batch[0] && batch[0].nickname === "甲"
+        && batch[1] && batch[1].nickname === "乙" && batch[2] === null,
+      JSON.stringify(batch.map((x) => (x ? x.nickname : null))));
   }
 
   {
