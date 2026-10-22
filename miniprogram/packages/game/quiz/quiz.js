@@ -25,6 +25,7 @@ Page({
 
     barBelow: true,
     optionRows: [],
+    stemRows: [],
 
     metaLine: "",
     last: null,
@@ -104,6 +105,7 @@ Page({
         current: questions[0],
 
         optionRows: this.rowsWithCls(questions[0].options, "", questions[0].answer),
+        stemRows: quiz.stemRows(questions[0]),
         metaLine: this.metaLineOf(questions[0]),
         picked: "",
         last: null,
@@ -177,6 +179,7 @@ Page({
       index,
       current: next,
       optionRows: this.rowsWithCls(next.options, "", next.answer),
+      stemRows: quiz.stemRows(next),
       metaLine: this.metaLineOf(next),
       picked: "",
       last: null,

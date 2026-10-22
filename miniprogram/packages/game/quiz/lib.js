@@ -34,23 +34,19 @@ function _quiz_shuffle(arr) {
 }
 
 const MAX_LINE = 24;
-const SENTENCE_END = /[，。！？；、]/;
 
 function _quiz_linesOf(p) {
   const e = corpus.entry(p.id);
   if (!e || !e.text) return [];
-  const raw = String(e.text)
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
 
   const out = [];
-  raw.forEach((line) => {
-    if (line.length <= MAX_LINE) { out.push(line); return; }
-    line.split(SENTENCE_END).forEach((seg) => {
-      const t = seg.trim();
-      if (t && t.length <= MAX_LINE) out.push(t);
-    });
+  corpus.splitLines(e.text).forEach((ln) => {
+    const segs = ln.s;
+    if (segs.length > 1) {
+      segs.forEach((seg) => out.push(seg));
+      return;
+    }
+    if (segs.length && segs[0].length <= MAX_LINE) out.push(segs[0]);
   });
   return out;
 }
@@ -169,6 +165,13 @@ function _quiz_makeQuestion(form, p, lines, pool) {
   };
 }
 
+function stemRows(question) {
+  const stem = question && question.stem;
+  const rows = corpus.splitDisplay(stem);
+  while (rows.length < 3) rows.push("");
+  return rows;
+}
+
 function _quiz_lettered(options) {
   return options.map((v, i) => ({ key: "ABCD"[i] || String(i + 1), text: v }));
 }
@@ -230,5 +233,5 @@ function optionClass(row, picked, answer) {
 
 module.exports = {
   FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass,
-  titleSpoiled
+  stemRows, titleSpoiled
 };

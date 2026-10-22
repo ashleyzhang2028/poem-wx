@@ -47,7 +47,9 @@
     </view>
 
     <view class="card">
-      <text class="stem">{{current.stem}}</text>
+      <view class="stem">
+        <text class="stem-row" wx:for="{{stemRows}}" wx:key="index">\n{{item}}</text>
+      </view>
 
       <text class="hint stem-sub">{{metaLine}}</text>
     </view>
@@ -56,7 +58,7 @@
       <view class="option {{item.text === picked ? 'picked' : ''}}"
             wx:for="{{optionRows}}" wx:key="key" data-v="{{item.text}}" bindtap="onPick">
         <text class="option-k">{{item.key}}</text>
-        <text class="option-t">{{item.text}}</text>
+        <text class="option-t">\n{{item.text}}</text>
       </view>
     </view>
 
@@ -94,7 +96,7 @@
       <view class="grade" wx:for="{{graded}}" wx:key="stem">
         <view class="grade-head">
           <text class="grade-mark {{item.ok ? 'ok' : 'no'}}">{{item.ok ? '对' : '错'}}</text>
-          <text class="grade-stem">{{item.stem}}</text>
+          <text class="grade-stem">\n{{item.stem}}</text>
         </view>
         <text class="grade-line">正确答案：{{item.answer}}</text>
         <text class="grade-line picked-line" wx:if="{{!item.ok}}">你选的：{{item.picked}}</text>
