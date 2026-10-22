@@ -2,6 +2,18 @@
 
 var upstream = require("./upstream");
 
+var PATCH_KEYS = ["plan", "plan_until", "role", "last_login_at", "login_count", "nickname", "status",
+  "email", "email_verified_at", "password_hash", "password_salt", "locked_until"];
+
+function ownPatch(patch) {
+  var out = {};
+  if (!patch || typeof patch !== "object") return out;
+  PATCH_KEYS.forEach(function (k) {
+    if (Object.prototype.hasOwnProperty.call(patch, k)) out[k] = patch[k];
+  });
+  return out;
+}
+
 function memoryStore() {
   var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, scoreRecords: {}, settings: {} };
   var api = {
@@ -68,11 +80,8 @@ function memoryStore() {
     patchAccount: function (uid, patch) {
       var a = db.accounts[uid];
       if (!a) return false;
-
-      ["plan", "plan_until", "role", "last_login_at", "login_count", "nickname", "status",
-        "email", "email_verified_at", "password_hash", "password_salt", "locked_until"].forEach(function (k) {
-        if (patch && Object.prototype.hasOwnProperty.call(patch, k)) a[k] = patch[k];
-      });
+      var clean = ownPatch(patch);
+      Object.keys(clean).forEach(function (k) { a[k] = clean[k]; });
       return true;
     },
 

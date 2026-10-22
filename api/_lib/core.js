@@ -397,7 +397,7 @@ function sendCodeAfterGuard(deps, input, who, isSms, purpose, device, ip) {
     }
   }
 
-  var rawCode = input.code || id.newCode(cfg.codeLength);
+  var rawCode = id.newCode(cfg.codeLength);
   var salt = id.newSalt();
   var echoAllowed = false;
 
@@ -538,37 +538,40 @@ function verifyCode_(deps, input) {
 
     if (Number(rec.expires_at) <= t) return err(400, "E_CODE_EXPIRED", "验证码已过期，点「重新发送」");
 
-    return Promise.resolve(store.bumpCodeAttempt ? store.bumpCodeAttempt(codeId) : Number(rec.attempts) + 1).then(function (next) {
-    if (next > cfg.codeMaxAttempts) return err(400, "E_CODE_VOID", "请用最新收到的验证码");
     var expect = id.codeHash(rec.uid, rec.purpose, given, rec.salt, pepperOf(cfg));
     var same = id.timingSafeEqual(expect, rec.code_hash);
 
     if (!same) {
 
       limiterHit(deps, WRONG.ip, ipKey, t);
-      var patch = {};
-
-      if (next >= cfg.codeMaxAttempts) patch.consumed_at = t;
-      var voided = next >= cfg.codeMaxAttempts;
-      return Promise.resolve(store.patchCode ? store.patchCode(codeId, patch) : null)
-        .then(function () {
-
-          if (!voided) {
-            return err(400, "E_CODE_WRONG", "验证码不对，再检查一下", {
-              remaining: Math.max(0, cfg.codeMaxAttempts - next)
-            });
-          }
-          return Promise.resolve(bumpWrongRound(deps, rec.uid, t)).then(function () {
-            if (lockVerdict(deps, rec.uid, t)) {
-              return err(423, "E_LOCKED", "为了安全，请 24 小时后再试（也可以换一个网络或用别的邮箱）",
-                { retryAfter: Math.round((Number(cfg.lockMs) || 86400000) / 1000) });
+      var bumped = store.bumpCodeAttempt ? store.bumpCodeAttempt(codeId) : null;
+      var next = Promise.resolve(bumped).then(function (n) {
+        if (typeof n === "number" && isFinite(n)) return n;
+        return Promise.resolve(store.patchCode ? store.patchCode(codeId, { attempts: Number(rec.attempts || 0) + 1 }) : null)
+          .then(function () { return Number(rec.attempts || 0) + 1; });
+      });
+      return next.then(function (count) {
+        var voided = count >= cfg.codeMaxAttempts;
+        var patch = voided ? { consumed_at: t } : {};
+        return Promise.resolve(store.patchCode ? store.patchCode(codeId, patch) : null)
+          .then(function () {
+            if (!voided) {
+              return err(400, "E_CODE_WRONG", "验证码不对，再检查一下", {
+                remaining: Math.max(0, cfg.codeMaxAttempts - count)
+              });
             }
-            return err(400, "E_CODE_VOID", "这一枚验证码已作废，请重新发送", {
-              round: wrongRounds(deps, rec.uid),
-              limit: Number(cfg.wrongRoundsLimit) || 3
+            return Promise.resolve(bumpWrongRound(deps, rec.uid, t)).then(function () {
+              if (lockVerdict(deps, rec.uid, t)) {
+                return err(423, "E_LOCKED", "为了安全，请 24 小时后再试（也可以换一个网络或用别的邮箱）",
+                  { retryAfter: Math.round((Number(cfg.lockMs) || 86400000) / 1000) });
+              }
+              return err(400, "E_CODE_VOID", "这一枚验证码已作废，请重新发送", {
+                round: wrongRounds(deps, rec.uid),
+                limit: Number(cfg.wrongRoundsLimit) || 3
+              });
             });
           });
-        });
+      });
     }
 
     return Promise.resolve(store.patchCode ? store.patchCode(codeId, { consumed_at: t }) : null)
@@ -594,7 +597,7 @@ function verifyCode_(deps, input) {
 
         var gate = emailGate(deps, acc);
         if (gate) return Promise.resolve(gate);
-                var first = !markLogin(acc, t);
+        var first = !markLogin(acc, t);
         return Promise.resolve(store.putAccount(acc)).then(function (saved) {
 
           if (!passwordCleared) return saved;
@@ -613,7 +616,6 @@ function verifyCode_(deps, input) {
           });
         });
       });
-    });
   });
 }
 

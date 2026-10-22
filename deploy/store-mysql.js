@@ -24,8 +24,18 @@ function pickCols(obj, allowed) {
   return out;
 }
 
+function nonProto(obj) {
+  var out = {};
+  Object.keys(obj || {}).forEach(function (k) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") return;
+    if (!Object.prototype.hasOwnProperty.call(obj, k)) return;
+    out[k] = obj[k];
+  });
+  return out;
+}
+
 function safeCols(obj) {
-  return Object.keys(obj || {}).map(assertIdent);
+  return Object.keys(nonProto(obj)).map(assertIdent);
 }
 
 function assignValues(cols, extra) {
@@ -412,17 +422,12 @@ function mysqlStore(cfg) {
 
   function patchRow(table, key, val, patch, returning) {
     assertIdent(table); assertIdent(key);
-    var cols = safeCols(patch);
+    var cols = safeCols(nonProto(patch));
     if (!cols.length) return Promise.resolve(returning ? null : true);
+    var values = cols.map(function (c) { return patch[c]; }).concat([String(val || "")]);
     var sets = cols.map(function (c) { return "`" + c + "` = ?"; }).join(", ");
-    if (!returning) {
-      return query("UPDATE " + table + " SET " + sets + " WHERE " + key + " = ?",
-        cols.map(function (c) { return patch[c]; }).concat([String(val || "")])).then(function () { return true; });
-    }
-
-    return query("UPDATE " + table + " SET " + sets + " WHERE " + key + " = ?",
-      cols.map(function (c) { return patch[c]; }).concat([String(val || "")]))
-      .then(function () { return getRow(table, key, val); });
+    return query("UPDATE " + table + " SET " + sets + " WHERE " + key + " = ?", values)
+      .then(function () { return returning ? getRow(table, key, val) : true; });
   }
 
   function countByStatus(table, where, params, fallback) {
