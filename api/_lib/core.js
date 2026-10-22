@@ -3119,7 +3119,7 @@ function gameAllowed(cfg, tier, cap) {
   return featuresFor(cfg, tier).indexOf(cap) >= 0;
 }
 
-var EXAM_RECORD_LIMITS = { scopeId: 64, scopeLabel: 40, stem: 120, answer: 60, items: 60 };
+var EXAM_RECORD_LIMITS = { scopeId: 64, scopeLabel: 40, stem: 120, answer: 60, items: 60, perUid: 200 };
 
 function examRecordItemClip(it) {
   return {
@@ -3159,6 +3159,9 @@ function examRecordCreate(deps, input) {
       return err(403, "E_TIER", "考试历史要 Max 才能用（当前：" + tier + "）", { cap: "exam.formal", tier: tier });
     }
 
+    var eg = deps.limiter.take(cfg, "device", "examrec:" + String(deps.deviceId || "unknown"), t);
+    if (!eg.ok) return err(429, "E_RATE_DEVICE", "存得太频繁了，请稍后再试", { retryAfter: eg.retryAfter });
+
     var total = Math.max(0, Math.min(999, Number(input && input.total) || 0));
     if (!total) return err(400, "E_EMPTY", "这一卷没有题目，不存");
     var score = Math.max(0, Math.min(total, Number(input && input.score) || 0));
@@ -3177,9 +3180,15 @@ function examRecordCreate(deps, input) {
       items: items,
       created_at: t
     };
-    return Promise.resolve(store.putExamRecord(row)).then(function () {
-      return ok({ record: examRecordPublic(row) });
-    });
+    return Promise.resolve(store.listExamRecords({ uid: deps.account.uid }, EXAM_RECORD_LIMITS.perUid))
+      .then(function (old) {
+        if ((old || []).length < EXAM_RECORD_LIMITS.perUid) return null;
+        return Promise.resolve(store.deleteExamRecord(old[old.length - 1].eid));
+      })
+      .then(function () { return store.putExamRecord(row); })
+      .then(function () {
+        return ok({ record: examRecordPublic(row) });
+      });
   });
 }
 
@@ -3431,12 +3440,25 @@ function boardList(deps, input) {
 }
 
 function boardSubmit(deps, input) {
+  var cfg = deps.cfg, store = deps.store, t = deps.now();
   var gate = boardGate(deps, input, false);
   return Promise.resolve(gate).then(function (g) {
     if (g && g.status) return g;
     if (!deps.account) return err(401, "E_NO_SESSION", "交成绩要登录");
-    return Promise.resolve(deps.store.getAccount(deps.account.uid)).then(function (me) {
+    return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
       if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+
+      var tier = planTier(me);
+      var cap = g.game === "fly" ? GAME_CAP.fly : GAME_CAP.review;
+      if (!gameAllowed(cfg, tier, cap)) {
+        return err(403, "E_TIER", "这个榜要先玩得动那一项（" + cap + "），当前：" + tier, { cap: cap, tier: tier });
+      }
+
+      var rg = deps.limiter.take(cfg, "device", "board:" + String(deps.deviceId || "unknown"), t);
+      if (!rg.ok) return err(429, "E_RATE_DEVICE", "交成绩太频繁了，请稍后再试", { retryAfter: rg.retryAfter });
+      var ug = deps.limiter.take(cfg, "device", "board:" + me.uid, t);
+      if (!ug.ok) return err(429, "E_RATE_DEVICE", "交成绩太频繁了，请稍后再试", { retryAfter: ug.retryAfter });
+
       var total = Math.max(0, Math.min(999, Number(input && input.total) || 0));
       if (!total) return err(400, "E_EMPTY", "这一局没有成绩，不记");
       var score = Math.max(0, Math.min(total, Number(input && input.score) || 0));
@@ -3456,9 +3478,9 @@ function boardSubmit(deps, input) {
         score: score,
         total: total,
         duration_sec: Math.max(0, Math.min(24 * 3600, Number(input && input.durationSec) || 0)),
-        created_at: deps.now()
+        created_at: t
       };
-      return Promise.resolve(deps.store.putScoreRecord(row)).then(function () {
+      return Promise.resolve(store.putScoreRecord(row)).then(function () {
         return ok({ recorded: row.srid, score: score, total: total, on: !!g.on });
       });
     });
