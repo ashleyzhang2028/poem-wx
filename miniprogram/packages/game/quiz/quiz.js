@@ -86,6 +86,7 @@ Page({
   },
 
   onStart() {
+    if (this.data.stage !== "setup") return;
     const scope = this.data.scope;
     const questions = quiz.build({
       scope,
@@ -168,6 +169,7 @@ Page({
   },
 
   onNext() {
+    if (this.data.stage !== "running") return;
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
       this.finish();

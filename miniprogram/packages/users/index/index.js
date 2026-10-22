@@ -3,6 +3,7 @@ const tiers = require("../../../utils/tiers");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -35,7 +36,7 @@ Page({
     });
 
     if (!logged) return;
-    admin.list().then((res) => {
+    guard.once("users:list", () => admin.list()).then((res) => {
       this.setData({ users: this.decorate(res.users, canWrite) });
     });
   },
@@ -52,6 +53,7 @@ Page({
 
   onSetTier(e) {
     const userId = e.currentTarget.dataset.u;
+    if (this.data.busy) return;
 
     if (!this.data.canWrite) {
       wx.showModal({
@@ -75,7 +77,7 @@ Page({
         if (!pick) return;
         this.setData({ busy: true, msg: "" });
         const job = pick.key ? admin.setTier(userId, pick.key) : admin.revokeTier(userId);
-        job.then((r) => {
+        guard.once("users:tier:" + userId, () => job).then((r) => {
           this.setData({ busy: false, msg: r.msg });
           this.refresh();
         });

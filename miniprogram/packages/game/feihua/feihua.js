@@ -8,6 +8,7 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const rankingSelf = require("../../../utils/ranking");
+const guard = require("../../../utils/guard");
 
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
@@ -208,7 +209,8 @@ Page({
   },
 
   onSubmit() {
-    if (this.data.locked || !this.data.char) return;
+    if (this.data.locked || !this.data.char || guard.gap("feihua:say")) return;
+    guard.mark("feihua:say");
     const r = feihua.judge(this.data.char, this.data.input, this.data.done.map((d) => d.seg));
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);
@@ -250,13 +252,13 @@ Page({
   },
 
   report(said) {
-    rankingSubmit
-      .submitPlay("fly", {
+    guard
+      .once("feihua:report", () => rankingSubmit.submitPlay("fly", {
         scopeId: this.data.scope || "",
         score: said,
         total: said,
         durationSec: this.roundSec()
-      })
+      }))
       .then((res) => {
         const sent = !!(res && res.ok);
         this.setData({

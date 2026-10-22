@@ -3140,7 +3140,7 @@ function mountFull(pg, query) {
         && examJs.indexOf("onPrev") >= 0,
       "选择题交了卷才判，途中却不许回头改 —— 漏答一题就白丢一分");
     ok("题号格按「答没答」上色，类名由 slotsOf 一处算好再传进模板",
-      /slotsOf\s*\(/.test(examJs) && examWxml.indexOf("{{slots}}") >= 0
+      (examJs.match(/^  slotsOf\(/gm) || []).length === 1 && examWxml.indexOf("{{slots}}") >= 0
         && examWxml.indexOf("{{item.cls}}") >= 0,
       "模板里还在自己拼类名 —— 插值只吃一层，宁可算好再传");
     ok("那个「现在这题」的标记走主题色，不另起一支",
@@ -7981,6 +7981,85 @@ function gapped(items, max) {
       });
     });
   }));
+}
+
+
+{
+
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const guarded = (src, call) => {
+    const at = src.indexOf(call);
+    if (at < 0) return false;
+    const near = src.slice(Math.max(0, at - 200), at + 200);
+    return near.indexOf("guard") >= 0 || near.indexOf(".once(") >= 0;
+  };
+
+  const guardMod = require(path.join(ROOT, "utils", "guard.js"));
+  ok("防重复的闸门有「占位中」与「刚点过」两种",
+    typeof guardMod.once === "function" && typeof guardMod.gap === "function"
+      && typeof guardMod.mark === "function",
+    "没有 utils/guard.js 的 once / gap，防重复就只能各页各写一份");
+  ok("同一把闸门第二次进来拿不到",
+    guardMod.enter("check:once") === true && guardMod.enter("check:once") === false,
+    "连进两次都放行 —— 连点十几下就是十几份请求");
+  guardMod.leave("check:once");
+  ok("闸门放开之后又能进来", guardMod.enter("check:once") === true, "放不开就等于一次失败之后再点不动");
+  guardMod.reset("check:once");
+  guardMod.mark("check:gap");
+  ok("刚点过的那一下还拦着，隔一会儿就放", guardMod.gap("check:gap") === true
+    && guardMod.gap("check:gap", 0) === false, "间隔判据没生效");
+
+  const reports = [
+    ["packages/game/exam/exam.js", "exam:report"],
+    ["packages/game/feihua/feihua.js", "feihua:report"]
+  ];
+  reports.forEach(([file, key]) => {
+    ok("交到榜上的成绩只发一次 " + file, guarded(read(file), "once(\"" + key + "\""),
+      "交成绩没过闸门 —— 连点就落成多条记录，而榜单只取每人最好的一条");
+  });
+
+  const entries = [
+    ["packages/ranking/index/index.js", ".once(", "load"],
+    ["utils/login-flow.js", ".once(", "run"]
+  ].concat(reports.map(([file, key]) => [file, "once(\"" + key + "\"", "report"]));
+  entries.forEach(([file, key, fn]) => {
+    ok("提交型入口只走一次 " + file + " · " + fn, guarded(read(file), key),
+      fn + " 没过闸门 —— 连点就是重复提交");
+  });
+
+  ok("登录卡连点不会叠出第二次登录",
+    /guard\.busy\(\"login\"\)/.test(read("utils/login-flow.js")),
+    "两次 showLoading 叠在一起，先回来的那次就把后一次的遮罩关了");
+
+  const single = [
+    ["pages/home/home.js", "home:face"],
+    ["pages/home/home.js", "home:extra"],
+    ["packages/settings/collections/collections.js", "cols:create"],
+    ["packages/settings/collections/collections.js", "cols:add"]
+  ];
+  single.forEach(([file, key]) => {
+    ok("落盘的入口占住就不放第二下 " + file + " · " + key,
+      read(file).indexOf("guard.enter(\"" + key) >= 0,
+      "两下连点各写一次 —— 复习次数、加背首数都会翻倍");
+  });
+
+  ok("题库连点「下一题」不会把两题的判定叠在同一题上",
+    /onNext\(\)\s*\{\s*if \(this\.data\.stage !== \"running\"\) return;/
+      .test(read("packages/game/quiz/quiz.js")),
+    "没拦阶段就往下走，漏答也能翻页");
+  ok("交卷只结算一次（计时器归零与点「交卷」不能各算一遍）",
+    /finish\(\)\s*\{[\s\S]{0,120}?if \(this\.endedAt \|\| this\.data\.stage !== \"running\"\) return;/
+      .test(read("packages/game/exam/exam.js")),
+    "两条路各自结算 —— 成绩与榜单各落一次");
+  ok("交卷之后点「再看结果」不再走一遍结算",
+    /onNext\(\)\s*\{\s*if \(this\.data\.stage !== \"running\"\) return;/.test(read("packages/game/exam/exam.js")),
+    "结算画面上的按钮仍然通到 finish() —— 成绩与榜单各再落一次");
+  ok("弹出层的「忘记 / 模糊 / 记住」连点只记一次",
+    /onResult\(e\)\s*\{\s*if \(guard\.gap\(/.test(read("components/recite-sheet/recite-sheet.js")),
+    "两下连点各写一次，复习次数翻倍");
+  ok("浏览模式的阅读页不记复习（连点会把复习次数刷上去）",
+    /onResult\(e\)\s*\{\s*if \(!this\.data\.reciteMode\) return;/.test(read("pages/reader/reader.js")),
+    "浏览模式也记了一次复习");
 }
 
 Promise.all(pending).then(() => {

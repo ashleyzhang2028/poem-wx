@@ -7,6 +7,7 @@ const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
+const guard = require("../../../utils/guard");
 const rankingSelf = require("../../../utils/ranking");
 
 const DURATION = 20 * 60;
@@ -115,6 +116,7 @@ Page({
   },
 
   onStart() {
+    if (this.data.stage !== "setup") return;
     const scope = this.data.scope;
     const questions = quiz.build({ scope, count: QUESTION_COUNT, forms: this.data.pickedForms });
     if (!questions.length) {
@@ -206,15 +208,6 @@ Page({
     });
   },
 
-  slotsOf(answers, index) {
-    return (answers || []).map((a, i) => {
-      let cls = "";
-      if (a) cls = "on";
-      if (i === index) cls = (cls + " now").trim();
-      return { i: i, cls: cls };
-    });
-  },
-
   goto(index) {
     const next = this.data.questions[index];
     if (!next) return;
@@ -251,6 +244,7 @@ Page({
   },
 
   onNext() {
+    if (this.data.stage !== "running") return;
     if (this.data.index + 1 >= this.data.questions.length) {
       if (!this.confirmSubmit()) return;
       this.finish();
@@ -267,7 +261,7 @@ Page({
   },
 
   finish() {
-    if (this.endedAt) return;
+    if (this.endedAt || this.data.stage !== "running") return;
     this.endedAt = Date.now();
     this.stopTimer();
     const questions = this.data.questions;
@@ -309,13 +303,13 @@ Page({
   },
 
   report(correct, count) {
-    rankingSubmit
-      .submitPlay("exam", {
+    guard
+      .once("exam:report", () => rankingSubmit.submitPlay("exam", {
         scopeId: this.data.scope || "",
         score: correct,
         total: count,
         durationSec: this.elapsedSec()
-      })
+      }))
       .then((res) => {
         if (this.data.stage !== "result") return;
         const sent = !!(res && res.ok);
