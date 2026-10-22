@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
 
   <nav-bar title="主题" />
@@ -7,7 +7,7 @@
 
   <block wx:else>
   <view class="card group-card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
-    <view class="group-head">
+    <view class="card-head">
       <text class="card-title group-title">{{group.title}}</text>
       <tier-tag wx:if="{{group.locked}}" tier="{{group.tier}}" />
     </view>
@@ -25,7 +25,7 @@
   </view>
 
   <view class="card group-card">
-    <view class="group-head">
+    <view class="card-head">
       <text class="card-title group-title">字体</text>
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
