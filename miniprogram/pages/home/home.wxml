@@ -133,7 +133,10 @@
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{selfOnly ? coursePlan : plan}}" wx:key="id">
-          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
+          <view class="seq-done" wx:if="{{item.recited}}">
+            <view class="glyph" style="mask-image:url('{{icons.added}}');-webkit-mask-image:url('{{icons.added}}');"></view>
+          </view>
+          <text class="seq" wx:else>{{item.seq}}</text>
           <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="onOpen">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
@@ -183,7 +186,10 @@
 
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{coll.rows}}" wx:key="id">
-          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
+          <view class="seq-done" wx:if="{{item.recited}}">
+            <view class="glyph" style="mask-image:url('{{icons.added}}');-webkit-mask-image:url('{{icons.added}}');"></view>
+          </view>
+          <text class="seq" wx:else>{{item.seq}}</text>
           <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" data-coll="{{coll.id}}" bindtap="onOpenCollection">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
@@ -226,7 +232,10 @@
       <block wx:if="{{allOpen}}">
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{allRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenAll">
-          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
+          <view class="seq-done" wx:if="{{item.recited}}">
+            <view class="glyph" style="mask-image:url('{{icons.added}}');-webkit-mask-image:url('{{icons.added}}');"></view>
+          </view>
+          <text class="seq" wx:else>{{item.seq}}</text>
           <view class="row-main">
             <text class="row-title row-poem">{{item.title}}</text>
             <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>

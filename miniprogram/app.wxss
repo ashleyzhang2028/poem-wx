@@ -350,9 +350,26 @@ button, textarea {
   color: var(--ink-3);
 }
 
-.seq.on {
+.seq-done {
+  flex: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48rpx;
+  height: 36rpx;
+  padding: 0 var(--sp-1);
+  margin-right: var(--sp-2);
+  border: 1rpx solid var(--strong);
+  border-radius: var(--radius-pill);
   background: var(--strong-soft);
   color: var(--strong-text);
+}
+
+.seq-done .glyph {
+  width: 22rpx;
+  height: 22rpx;
+  color: currentColor;
 }
 
 .read-dot {
