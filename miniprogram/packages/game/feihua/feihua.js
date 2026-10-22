@@ -12,6 +12,7 @@ const rankingSelf = require("../../../utils/ranking");
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
 const URGENT_FROM = 10;
+const REPORT_MIN = 2;
 
 function clockPatch(left, text) {
   return { left, leftText: text, leftPct: Math.round((left / ROUND_LIMIT) * 100), urgent: left <= URGENT_FROM };
@@ -250,6 +251,7 @@ Page({
   },
 
   report(said) {
+    if (said < REPORT_MIN) return;
     rankingSubmit
       .submitPlay("fly", {
         scopeId: this.data.scope || "",

@@ -144,6 +144,7 @@ function applyMe(me) {
   auth.tierUntil = plan.until == null ? null : Number(plan.until);
 
   auth.sessionFrom = "cookie";
+  if (me.expiresIn) auth.expiresAt = Date.now() + Number(me.expiresIn) * 1000;
   store.write(store.KEYS.auth, auth);
 
   store.saveSession({ logged: true, tier: tier, tierFromServer: true, userId: me.uid });

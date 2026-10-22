@@ -126,15 +126,7 @@
     </view>
 
     <view class="sheet-foot">
-      <view class="chip-group cols-5 actions">
-        <view class="chip defer {{heldKey === item.key ? 'on' : ''}}" wx:for="{{defers}}" wx:key="key"
-              hover-class="chip-hover" hover-stay-time="60"
-              data-key="{{item.key}}" bindtap="onDefer"
-              aria-label="{{heldKey === item.key ? '取消' : ''}}{{item.label}}">
-          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          <text class="chip-t">{{item.label}}</text>
-        </view>
-
+      <view class="chip-group cols-3 actions">
         <view class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key"
               hover-class="chip-hover" hover-stay-time="60"
               data-key="{{item.key}}" bindtap="onResult">
@@ -155,6 +147,13 @@
         <view class="sheet-step-btn prev {{index > 0 ? '' : 'off'}}"
               hover-class="sheet-step-hover" hover-stay-time="60" bindtap="onPrev">
           <text class="sheet-step-t">‹ 上一首</text>
+        </view>
+        <view class="sheet-step-btn defer {{heldKey === item.key ? 'on' : ''}}" wx:for="{{defers}}" wx:key="key"
+              hover-class="sheet-step-hover" hover-stay-time="60"
+              data-key="{{item.key}}" bindtap="onDefer"
+              aria-label="{{heldKey === item.key ? '取消' : ''}}{{item.label}}">
+          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
+          <text class="sheet-step-t">{{item.label}}</text>
         </view>
         <view class="sheet-step-btn next {{index + 1 < total ? '' : 'off'}}"
               hover-class="sheet-step-hover" hover-stay-time="60" bindtap="onNext">
