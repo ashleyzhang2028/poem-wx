@@ -7,24 +7,24 @@ function failText(err) {
   const code = (err && err.code) || "";
   if (code === "E_NOT_CONFIGURED") {
     return {
-      title: "还没接上同步服务器",
+      title: "未连接同步服务",
       content:
-        "登录连不上服务器，账号与进度只在这台手机上，换台手机就没了。\n\n"
-        + "这不是这台手机能改的，找部署方（见「关于」）。"
+        "登录服务暂不可用，账号与进度仅存于本机，更换设备后将无法找回。\n\n"
+        + "此问题须由服务维护方处理，联系方式见「关于」。"
     };
   }
   if (code === "E_CLOUD_OFF" || code === "E_CLOUD_INIT") {
     return {
-      title: "同步服务器没接上",
+      title: "未连接同步服务",
       content:
-        "登录与课外正文都要连服务器，这个包还没接上。\n\n"
-        + "这不是这台手机能改的，找部署方（见「关于」）。"
+        "登录与课外正文均依赖服务器，当前版本尚未配置。\n\n"
+        + "此问题须由服务维护方处理，联系方式见「关于」。"
     };
   }
   if (code === "E_WX_NOT_CONFIGURED" || code === "E_WX_CONFIG" || code === "E_WX_TABLE") {
     return {
-      title: "登录没打通",
-      content: ((err && err.message) || "") + "\n\n这是服务端/部署那一侧的事，先看「关于」里的联系方式。"
+      title: "登录未成功",
+      content: ((err && err.message) || "") + "\n\n此为服务端问题，请通过「关于」中的方式联系服务维护方。"
     };
   }
   return null;
@@ -33,10 +33,10 @@ function failText(err) {
 function sendFail(err) {
   if (err && err.cloudFail) {
     wx.showModal({
-      title: "登录没有连上服务器",
-      content: (err.message || "") + "\n\n这不是这台手机能改的，把这整段发给部署方。",
+      title: "无法连接服务器",
+      content: (err.message || "") + "\n\n请将以上信息完整反馈给服务维护方。",
       showCancel: false,
-      confirmText: "好"
+      confirmText: "知悉"
     });
     return true;
   }
@@ -44,21 +44,21 @@ function sendFail(err) {
     const say = err.message || "";
     const code = err.code || String(err.statusCode);
     wx.showModal({
-      title: "登录没有连上服务器",
-      content: (say || "服务器回了 " + err.statusCode) + "\n\n（" + code + "）这不是这台手机能改的，把这整段发给部署方。",
+      title: "服务器返回异常",
+      content: (say || "服务器返回 " + err.statusCode) + "\n\n（" + code + "）请将以上信息完整反馈给服务维护方。",
       showCancel: false,
-      confirmText: "好"
+      confirmText: "知悉"
     });
     return true;
   }
   if (err && err.host) {
     wx.showModal({
-      title: "登录没有连上服务器",
-      content: "服务器在 " + (err.baseUrl || err.host) + "，这台手机打不通："
-        + ((err.errMsg || err.message) || "没有回话")
-        + "\n\n多半是域名没备案或被拦，这不是这台手机能改的，把这段发给部署方。",
+      title: "无法访问服务器",
+      content: "无法访问 " + (err.host || err.baseUrl) + "："
+        + ((err.errMsg || err.message) || "无响应")
+        + "\n\n可能因域名未备案或被拦截，请将以上信息反馈给服务维护方。",
       showCancel: false,
-      confirmText: "好"
+      confirmText: "知悉"
     });
     return true;
   }
@@ -73,11 +73,11 @@ function prompt(err) {
     wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
     return;
   }
-  wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "好" });
+  wx.showModal({ title: box.title, content: box.content, showCancel: false, confirmText: "知悉" });
 }
 
 function done(res) {
-  const title = res && res.synced ? "已登录 · 进度已认回" : "已登录 · 这台手机上的记录还在";
+  const title = res && res.synced ? "登录成功，进度已恢复" : "登录成功，本机记录已保留";
   wx.showToast({ title, icon: "none", duration: 2500 });
 }
 
@@ -121,7 +121,7 @@ function takeNickname(name) {
   return auth.saveNickname(nickname).then((r) => {
     if (r && r.blocked) {
       store.saveProfile({ nickname: before });
-      wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
+      wx.showToast({ title: r.reason || "昵称不可用，请更换", icon: "none" });
     } else {
       wx.showToast({ title: "昵称已更新", icon: "none" });
     }
@@ -180,7 +180,7 @@ function settle(res, page) {
 }
 
 function run(page) {
-  wx.showLoading({ title: "登录中" });
+  wx.showLoading({ title: "正在登录" });
   return auth
     .login()
     .then((res) => {

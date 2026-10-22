@@ -46,16 +46,16 @@ function state() {
   return {
     ready: ready(),
     lastSyncAt: s.lastSyncAt || 0,
-    lastText: s.lastSyncAt ? timeText(s.lastSyncAt) : "还没有同步过",
+    lastText: s.lastSyncAt ? timeText(s.lastSyncAt) : "尚未同步",
     failed: !!at,
     failedText: at ? timeText(at) : "",
     later: waiting() ? retryIn() : 0,
     pendingStatus: pending
-      ? (waiting() ? pending + " 项等重试" : late ? "待同步" : pending + " 项在等同步")
+      ? (waiting() ? pending + " 项待重试" : late ? "待同步" : pending + " 项待同步")
       : "已同步",
     pendingText: pending
-      ? (waiting() ? pending + " 项改动等 " + waitText(retryIn()) + "后重试" : late ? "这次没同步上，稍后自动重试" : pending + " 项改动在等同步")
-      : at ? "上一次同步没成功，稍后自动重试" : "进度跟着微信账号走，不用手动"
+      ? (waiting() ? pending + " 项改动将在 " + waitText(retryIn()) + "后重试" : late ? "本次未同步成功，稍后自动重试" : pending + " 项改动待同步")
+      : at ? "上次同步未成功，稍后自动重试" : "进度跟随微信账号，无需手动同步"
   };
 }
 

@@ -81,11 +81,11 @@ Page({
 
   syncSub(sy) {
     if (!sy.ready) {
-      if (auth.offline() === "cloud") return "服务器没接上 · 进度只在这台手机";
-      return "同步通道未开 · 进度只在这台手机";
+      if (auth.offline() === "cloud") return "服务未连接 · 进度仅存于本机";
+      return "同步未开启 · 进度仅存于本机";
     }
     if (sy.later) return sy.lastText + " · " + sy.pendingText;
-    if (sy.failed) return sy.failedText + " 没同步上 · " + sy.pendingText;
+    if (sy.failed) return sy.failedText + " 未同步成功 · " + sy.pendingText;
     return sy.lastText + " · " + sy.pendingStatus;
   },
 
@@ -94,14 +94,14 @@ Page({
       wx.showToast({ title: E.hint("sync"), icon: "none" });
       return;
     }
-    wx.showLoading({ title: "同步中" });
+    wx.showLoading({ title: "正在同步" });
     sync.now(true).then((res) => {
       wx.hideLoading();
-      let title = "已同步";
-      if (res.error) title = sync.state().later ? "同步太频繁，等一会儿再试" : "同步失败：" + res.error;
-      else if (res.skipped === "offline") title = "同步通道未开 · 进度只在这台手机";
-      else if (res.skipped === "throttled") title = "刚同步过，过会儿再来";
-      else if (res.skipped === "waiting") title = "上次没同步上，" + sync.waitText(res.retryAfter) + "后自动再试";
+      let title = "同步完成";
+      if (res.error) title = sync.state().later ? "同步过于频繁，请稍后再试" : "同步失败：" + res.error;
+      else if (res.skipped === "offline") title = "同步未开启，进度仅存于本机";
+      else if (res.skipped === "throttled") title = "刚刚已同步，请稍后再试";
+      else if (res.skipped === "waiting") title = "上次同步未成功，" + sync.waitText(res.retryAfter) + "后自动重试";
       wx.showToast({ title, icon: "none" });
       this.refresh();
     });

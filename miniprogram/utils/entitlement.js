@@ -129,10 +129,10 @@ function hint(key, ctx) {
   const cap = CAPS.find((c) => c.key === key);
   if (!cap) return "这个功能不存在";
   if (can(key)) return "";
-  if (switchedOff(key)) return "管理员把「" + cap.name + "」关掉了";
+  if (switchedOff(key)) return "「" + cap.name + "」已关闭";
   const s = status();
-  if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
-  if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
+  if (s.blocked === "cloud") return "同步服务未连接（云调用两栏未填或填错），进度仅存于本机";
+  if (s.blocked === "unsigned") return "无法连接服务器，档位暂按 Free 计，请稍后再试";
   return tiers.nameOf(cap.tier) + " 起可用";
 }
 
@@ -333,14 +333,21 @@ function onLoginGate(name, ctx) {
 }
 
 function showTier(name, ctx) {
+  if (can(name)) {
+    wx.showModal({
+      title: "请重新进入",
+      content: "「" + capName(name) + "」已开通，重新进入该功能即可使用。\n\n各档位权益详见「用户权限」页。",
+      showCancel: false,
+      confirmText: "知悉"
+    });
+    return;
+  }
   const why = hint(name);
-  const content = can(name)
-    ? "「" + capName(name) + "」现在是开着的，重新进一次这个功能就行。"
-    : (why && why !== "登录可用" ? why + "。" : tierOf(name) + " 起可用。")
-      + "\n\n可用的档位与逐项对照在用户权限页。";
+  const content = (why && why !== "登录可用" ? why + "。" : tierOf(name) + " 起可用。")
+    + "\n\n各档位权益详见「用户权限」页。";
 
   wx.showModal({
-    title: capName(name),
+    title: "权限不足",
     content: content,
     confirmText: "升级",
     cancelText: "取消",
@@ -368,7 +375,7 @@ function block(name, opt) {
   const page = o.page;
   if (r.login) {
     if (o.loginPrompt === false || !page) {
-      wx.showToast({ title: "「" + r.name + "」登录后可用", icon: "none" });
+      wx.showToast({ title: "「" + r.name + "」需登录后使用", icon: "none" });
       return false;
     }
     showLogin(name, page);

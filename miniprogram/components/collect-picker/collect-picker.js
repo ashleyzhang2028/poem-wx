@@ -99,11 +99,11 @@ Component({
     addTo(collectionId, name) {
       const r = cols.add(collectionId, [this.data.poemId]);
       if (r.code === "E_FULL") {
-        wx.showToast({ title: "这个集合已经 " + cols.ITEMS_MAX + " 首了", icon: "none" });
+        wx.showToast({ title: "该集合已达 " + cols.ITEMS_MAX + " 首上限", icon: "none" });
         return;
       }
       if (r.code === "E_DUP") {
-        wx.showToast({ title: "「" + name + "」里已经有这首", icon: "none" });
+        wx.showToast({ title: "「" + name + "」中已有本篇", icon: "none" });
         this.close();
         return;
       }

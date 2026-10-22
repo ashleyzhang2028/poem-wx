@@ -120,9 +120,9 @@ Page({
     const list = cols.list();
     if (!list.length) {
       wx.showModal({
-        title: "还没有自选集合",
-        content: "先去「我的 → 自选背诵」建一个集合。",
-        confirmText: "新建",
+        title: "暂无自选集合",
+        content: "请前往「我的 → 自选背诵」新建集合。",
+        confirmText: "前往",
         cancelText: "取消",
         success: (res) => {
           if (res.confirm) wx.navigateTo({ url: "/packages/settings/collections/collections" });
@@ -135,7 +135,7 @@ Page({
       return;
     }
     wx.showActionSheet({
-      itemList: list.map((c) => cols.nameOf(c)),
+      itemList: list.map((c) => cols.nameOf(c) + "（" + cols.idsOf(c).length + " 首）"),
       success: (res) => this.toggleIn(list[res.tapIndex], id),
       fail: () => {}
     });
@@ -147,7 +147,7 @@ Page({
     if (!inside && !r.ok) {
       const msg = r.code === "E_FULL"
         ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : "加不进去";
+        : "添加失败";
       wx.showToast({ title: msg, icon: "none" });
       return;
     }

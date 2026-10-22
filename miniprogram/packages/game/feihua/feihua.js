@@ -289,7 +289,7 @@ Page({
       Object.assign({ exclude: this.data.done.map((d) => d.seg) }, opt)
     );
     if (!h) {
-      wx.showToast({ title: "这个字在范围内就这几句了", icon: "none" });
+      wx.showToast({ title: "该字在范围内仅有这些诗句", icon: "none" });
       return;
     }
     feedback.buzz("light");

@@ -92,7 +92,7 @@ Page({
     const want = !!e.detail.value;
     if (want && !cols.usable().length) {
       this.setData({ selfOnly: false });
-      wx.showToast({ title: "先建一个集合、往里面加几首", icon: "none" });
+      wx.showToast({ title: "请先新建集合并添加篇目", icon: "none" });
       return;
     }
     this.setData({ selfOnly: want });
@@ -137,12 +137,12 @@ Page({
   onDailyRemove() {
     const ids = this.data.daily.filter((it) => it.picked).map((it) => it.id);
     if (!ids.length) {
-      wx.showToast({ title: "还没选中任何一篇", icon: "none" });
+      wx.showToast({ title: "未选择篇目", icon: "none" });
       return;
     }
     const n = store.removeDailyExtra(ids);
     this.refreshDaily();
-    wx.showToast({ title: n ? "已移出 " + n + " 首" : "这几首已经不在今天的加背里了", icon: "none" });
+    wx.showToast({ title: n ? "已移出 " + n + " 首" : "所选篇目已不在今日加背中", icon: "none" });
     sync.markDirty();
   },
 
@@ -151,14 +151,14 @@ Page({
     if (!n) return;
     wx.showModal({
       title: "清空今日加背",
-      content: "把今天加背的 " + n + " 首全部移出？已经背过的进度与掌握度一个字都不动。",
+      content: "移出今日加背的全部 " + n + " 首？已背进度与掌握度不受影响。",
       confirmText: "清空",
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const gone = store.clearDailyExtra();
         this.refreshDaily();
-        wx.showToast({ title: "今天的加背已清空 " + gone + " 首", icon: "none" });
+        wx.showToast({ title: gone ? "已清空今日加背 " + gone + " 首" : "所选篇目已不在今日加背中", icon: "none" });
         sync.markDirty();
       }
     });

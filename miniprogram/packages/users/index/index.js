@@ -55,18 +55,18 @@ Page({
 
     if (!this.data.canWrite) {
       wx.showModal({
-        title: "改不了别人的档位",
+        title: "无权修改",
         content: this.data.remoteReady
-          ? "你的账号没有改档位的权限。"
-          : "同步服务器还没接上，名录只读。",
+          ? "您的账号无修改档位的权限。"
+          : "同步服务未连接，名录仅可查看。",
         showCancel: false,
-        confirmText: "好"
+        confirmText: "知悉"
       });
       return;
     }
 
     const items = tiers.TIERS.map((t) => ({ key: t.key, text: t.name }));
-    items.unshift({ key: "", text: "收回（重置为 Free）" });
+    items.unshift({ key: "", text: "重置为 Free" });
 
     wx.showActionSheet({
       itemList: items.map((i) => i.text),

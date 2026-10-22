@@ -461,7 +461,7 @@ Page({
       return;
     }
     if (!r.ok) {
-      wx.showToast({ title: r.code === "E_LIMIT" ? "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首" : "加不进去", icon: "none" });
+      wx.showToast({ title: r.code === "E_LIMIT" ? "今日已加背 " + store.DAILY_EXTRA_MAX + " 首" : "添加失败", icon: "none" });
       return;
     }
     wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
@@ -493,7 +493,7 @@ Page({
     this.syncCollected(id, false);
     this.paint();
     sync.markDirty();
-    wx.showToast({ title: "已从「" + c.name + "」移出", icon: "none" });
+    wx.showToast({ title: "已移出「" + c.name + "」", icon: "none" });
   },
 
   syncCollected(id, on) {
@@ -512,7 +512,7 @@ Page({
     this.syncCollected(d.id, true);
     this.paint();
     sync.markDirty();
-    wx.showToast({ title: "已收进「" + d.name + "」", icon: "none" });
+    wx.showToast({ title: "已加入「" + d.name + "」", icon: "none" });
   },
 
   sheetRowsOf(plan) {
@@ -559,7 +559,7 @@ Page({
     sfx.pass();
     if (Date.now() - this.toastAt() < TOAST_GAP) return;
     this.toastedAt = Date.now();
-    wx.showToast({ title: "「" + hit.title + "」今日份已背完 · " + hit.planned + " 首", icon: "none", duration: TOAST_MS });
+    wx.showToast({ title: "「" + hit.title + "」今日已背完 · " + hit.planned + " 首", icon: "none", duration: TOAST_MS });
   },
 
   collectionCardRows(plan) {
@@ -632,7 +632,7 @@ Page({
     if (!sheet) return;
     const rows = this.collectionSheetRows(ds.coll);
     if (!rows.length) {
-      wx.showToast({ title: "这个集合还是空的", icon: "none" });
+      wx.showToast({ title: "该集合暂无篇目", icon: "none" });
       return;
     }
     this.collectionId = ds.coll;
@@ -758,7 +758,7 @@ Page({
     this.toasted = true;
     if (Date.now() - this.toastAt() < TOAST_GAP) return;
     this.toastedAt = Date.now();
-    wx.showToast({ title: "今天的几首都背完了，了不起", icon: "none", duration: TOAST_MS });
+    wx.showToast({ title: "今日篇目已全部背完", icon: "none", duration: TOAST_MS });
   },
 
   toastAt() {

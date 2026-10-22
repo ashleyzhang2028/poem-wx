@@ -47,10 +47,10 @@ Component({
     onName() {
       if (!this.data.logged) return;
       wx.showModal({
-        title: "昵称",
+        title: "设置昵称",
         editable: true,
-        placeholderText: "键盘上方可以选微信昵称",
-        confirmText: "好",
+        placeholderText: "可选用键盘上方的微信昵称",
+        confirmText: "确认",
         cancelText: "取消",
         success: (r) => {
           if (!r || !r.confirm) return;
@@ -67,9 +67,9 @@ Component({
     onLogout() {
       wx.showModal({
         title: "辞别",
-        content: "君日积月累之吟咏笔录，藏于云笈；此番跬途，于此暂歇。待来日重至，复拾诗章。",
+        content: "君之吟咏笔录，积日累月，皆藏云笈。此行暂歇，他日重至，诗章犹在。",
         confirmText: "辞别",
-        cancelText: "暂缓",
+        cancelText: "留步",
         success: (r) => (r && r.confirm ? this.leave() : null)
       });
     },
