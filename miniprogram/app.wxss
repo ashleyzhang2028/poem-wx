@@ -812,34 +812,6 @@ button, textarea {
   margin-right: var(--sp-2);
 }
 
-.kv {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 80rpx;
-  padding: var(--sp-2) 0;
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.kv:last-child,
-.kv:last-of-type {
-  border-bottom: none;
-}
-
-.kv-k {
-  font-size: var(--fs-body);
-  color: var(--ink-2);
-  flex: none;
-  padding-right: var(--sp-2);
-}
-
-.kv-v {
-  font-size: var(--fs-body);
-
-  color: var(--ink);
-  text-align: right;
-}
-
 .mastery-num {
   font-size: var(--fs-hint);
   color: var(--ink-3);
@@ -1003,7 +975,6 @@ button, textarea {
 }
 
 .row,
-.kv,
 .pref-item,
 .opt-row,
 .field,
@@ -1711,7 +1682,7 @@ button, textarea {
 }
 
 .fb-pick-item.on {
-  background: var(--strong);
+  background: var(--strong-soft);
   border-color: var(--strong);
 }
 
@@ -1724,7 +1695,7 @@ button, textarea {
 }
 
 .fb-pick-item.on .fb-pick-t {
-  color: var(--on-ink);
+  color: var(--strong-text);
 }
 
 .fb-pick-radio {

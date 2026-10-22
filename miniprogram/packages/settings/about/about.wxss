@@ -28,12 +28,6 @@
   margin-top: var(--sp-3);
 }
 
-.kv-v {
-  font-family: var(--font-num);
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
 .foot {
   display: block;
   text-align: center;
