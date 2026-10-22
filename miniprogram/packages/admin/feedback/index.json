@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "用户反馈",
+  "usingComponents": {
+    "lock-card": "/components/lock-card/lock-card"
+  }
+}

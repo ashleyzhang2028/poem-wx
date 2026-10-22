@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "意见建议",
+  "usingComponents": {
+    "lock-card": "/components/lock-card/lock-card"
+  }
+}

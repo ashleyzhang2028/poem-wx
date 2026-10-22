@@ -898,5 +898,112 @@
       }
     ],
     "_note": "换一个空学段：空状态那张卡"
+  },
+  "feedback": {
+    "page": "packages/feedback/index/index",
+    "title": "意见建议",
+    "back": true,
+    "logged": true,
+    "seedFeedback": [
+      {
+        "tid": "fb_1",
+        "kind": "bug",
+        "status": "replied",
+        "resolution": "planned",
+        "title": "详情页注音错位",
+        "content": "三年级上册第三首，开了注音之后拼音跑到下一行。",
+        "createdAt": 1792377181146,
+        "updatedAt": 1792549981146,
+        "comments": [
+          {
+            "cid": "fc_1",
+            "tid": "fb_1",
+            "role": "user",
+            "content": "补充：只有开了注音才出现。",
+            "createdAt": 1792380781146
+          },
+          {
+            "cid": "fc_2",
+            "tid": "fb_1",
+            "role": "admin",
+            "content": "已复现，下一版修。",
+            "createdAt": 1792549981146
+          }
+        ]
+      },
+      {
+        "tid": "fb_2",
+        "kind": "recommend",
+        "status": "closed",
+        "resolution": "adopted",
+        "title": "想加《击壤歌》",
+        "content": "日出而作，日入而息。这首能不能进自选。",
+        "createdAt": 1791858781146,
+        "updatedAt": 1792117981146,
+        "comments": [
+          {
+            "cid": "fc_3",
+            "tid": "fb_2",
+            "role": "admin",
+            "content": "已排进下一批选本。",
+            "createdAt": 1792117981146
+          }
+        ]
+      }
+    ]
+  },
+  "admin-feedback": {
+    "page": "packages/admin/feedback/index",
+    "title": "用户反馈",
+    "back": true,
+    "logged": true,
+    "seedFeedback": [
+      {
+        "tid": "fb_1",
+        "kind": "bug",
+        "status": "replied",
+        "resolution": "planned",
+        "title": "详情页注音错位",
+        "content": "三年級上册第三首，注音跑到下一行。",
+        "createdAt": 1792377181146,
+        "updatedAt": 1792549981146,
+        "nickname": "张敏",
+        "uid": "u_52a1",
+        "comments": []
+      },
+      {
+        "tid": "fb_2",
+        "kind": "recommend",
+        "status": "closed",
+        "resolution": "adopted",
+        "title": "想加《击壤歌》",
+        "content": "日出而作。",
+        "createdAt": 1791858781146,
+        "updatedAt": 1792117981146,
+        "nickname": "诗友4821",
+        "uid": "u_9f2c",
+        "comments": []
+      },
+      {
+        "tid": "fb_3",
+        "kind": "performance",
+        "status": "open",
+        "resolution": "pending",
+        "title": "进出详情页有点卡",
+        "content": "低端机上翻页会白一下。",
+        "createdAt": 1792549981146,
+        "updatedAt": 1792549981146,
+        "nickname": "诗友1180",
+        "uid": "u_1a3d",
+        "comments": []
+      }
+    ],
+    "seedGroups": true
+  },
+  "feedback-guest": {
+    "page": "packages/feedback/index/index",
+    "title": "意见建议",
+    "back": true,
+    "logged": false
   }
 }

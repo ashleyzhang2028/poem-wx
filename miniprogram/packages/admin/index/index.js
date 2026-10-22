@@ -11,6 +11,7 @@ Page({
     barBelow: true,
     logged: false,
     usersSub: "",
+    feedbackSub: "",
 
     icons: { chart: icons.chart, trend: icons.trend },
     lineColor: "",
@@ -63,6 +64,7 @@ Page({
     this.setData({
       logged: entitlement.snapshot().logged,
       usersSub: remote.adminReady() ? "改档位" : "只读",
+      feedbackSub: remote.adminReady() ? "列表 · 回复" : "只读",
       lineColor: theme.currentTheme().rgba
     });
   },
@@ -102,5 +104,9 @@ Page({
 
   onUsers() {
     wx.navigateTo({ url: "/packages/users/index/index" });
+  },
+
+  onFeedback() {
+    wx.navigateTo({ url: "/packages/admin/feedback/index" });
   }
 });

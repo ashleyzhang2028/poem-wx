@@ -49,6 +49,15 @@
       "root": "packages/admin",
       "name": "admin",
       "pages": [
+        "index/index",
+        "feedback/index",
+        "feedback/detail/detail"
+      ]
+    },
+    {
+      "root": "packages/feedback",
+      "name": "feedback",
+      "pages": [
         "index/index"
       ]
     },

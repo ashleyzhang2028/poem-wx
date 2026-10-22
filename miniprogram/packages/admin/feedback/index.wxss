@@ -1,0 +1,4 @@
+.fb-reason {
+  display: block;
+  padding: var(--sp-2) var(--sp-1);
+}

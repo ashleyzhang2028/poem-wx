@@ -1,0 +1,38 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <lock-card wx:if="{{!logged}}" title="用户反馈" note="登录后才能看" mark="馈" bind:login="onLogin" />
+
+  <block wx:else>
+
+    <view class="card" wx:for="{{groups}}" wx:key="key">
+      <view class="fb-group-head">
+        <text class="card-title plain">{{item.name}}</text>
+        <text class="tag {{item.tone}}">{{item.threads.length}}</text>
+      </view>
+
+      <view class="empty" wx:if="{{!item.threads.length}}">
+        <text class="empty-mark">空</text>
+        <text class="empty-text">这一类没有</text>
+      </view>
+
+      <view class="fb-card" wx:for="{{item.threads}}" wx:for-item="row" wx:key="tid"
+            hover-class="row-hover" hover-stay-time="60" data-tid="{{row.tid}}" bindtap="onOpen">
+        <view class="fb-card-top">
+          <text class="fb-card-title">{{row.title}}</text>
+          <text class="tag {{row.tone}}">{{row.resolutionName}}</text>
+        </view>
+        <view class="fb-card-foot">
+          <text class="fb-card-user">{{row.nickname || row.uid || row.deviceId}}</text>
+          <text class="fb-card-stamp">{{row.createdText}} · 最后处理 {{row.updatedText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <text class="hint fb-reason" wx:if="{{reason}}">{{reason}}</text>
+    <text class="hint fb-reason" wx:elif="{{!canWrite}}">只读</text>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

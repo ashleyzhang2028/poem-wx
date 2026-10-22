@@ -418,7 +418,7 @@ function attachPinyinProposalApi(api, call) {
   return api;
 }
 
-var FEEDBACK_THREAD_COLS = "tid,uid,device_id,email,nickname,kind,content,status,created_at,updated_at";
+var FEEDBACK_THREAD_COLS = "tid,uid,device_id,email,nickname,kind,title,content,status,resolution,dedupe_hash,created_at,updated_at";
 var FEEDBACK_COMMENT_COLS = "cid,tid,uid,device_id,author_role,nickname,content,created_at";
 
 function feedbackThreadFilterQs(filter) {

@@ -22,6 +22,8 @@ const PATHS = {
   role: "/api/admin/role",
   ranking: "/api/ranking",
   adminRanking: "/api/admin/ranking",
+  feedback: "/api/feedback",
+  adminFeedback: "/api/admin/feedback",
   me: "/api/me"
 };
 
@@ -525,6 +527,60 @@ function setAdminRanking(game, on) {
   }));
 }
 
+function feedbackMine() {
+  if (!configured()) return Promise.resolve({ threads: [], offline: true });
+  return request(PATHS.feedback, { deviceId: store.deviceId() }, "GET").then(
+    (res) => ({ threads: (res && res.threads) || [], offline: false }),
+    (err) => ({ threads: [], offline: true, reason: (err && err.message) || "" })
+  );
+}
+
+function feedbackCreate(entry) {
+  if (!configured()) return Promise.resolve({ ok: false, offline: true });
+  return request(PATHS.feedback, Object.assign({ deviceId: store.deviceId() }, entry || {})).then(
+    (res) => ({ ok: true, thread: res && res.thread, duplicate: !!(res && res.duplicate) }),
+    (err) => ({ ok: false, reason: (err && err.message) || "没发出先去", code: (err && err.code) || "" })
+  );
+}
+
+function feedbackComment(tid, content) {
+  if (!configured()) return Promise.resolve({ ok: false, offline: true });
+  return request(PATHS.feedback, {
+    op: "comment", tid: tid, content: content, deviceId: store.deviceId()
+  }).then(
+    (res) => ({ ok: true, comment: res && res.comment }),
+    (err) => ({ ok: false, reason: (err && err.message) || "没发出去" })
+  );
+}
+
+function adminFeedbackList(status) {
+  if (!adminReady()) return Promise.resolve({ ok: false, threads: [], counts: {} });
+  return request(PATHS.adminFeedback, { op: "list", status: status || "all" }).then(
+    (res) => ({
+      ok: true,
+      threads: (res && res.threads) || [],
+      counts: (res && res.counts) || {}
+    }),
+    (err) => ({ ok: false, threads: [], counts: {}, reason: (err && err.message) || "" })
+  );
+}
+
+function adminFeedbackThread(tid) {
+  if (!adminReady()) return Promise.resolve({ ok: false });
+  return request(PATHS.adminFeedback, { op: "thread", tid: tid }).then(
+    (res) => ({ ok: true, thread: res && res.thread }),
+    (err) => ({ ok: false, reason: (err && err.message) || "" })
+  );
+}
+
+function adminFeedbackReply(entry) {
+  if (!adminReady()) return Promise.resolve({ ok: false });
+  return request(PATHS.adminFeedback, Object.assign({ op: "reply" }, entry || {})).then(
+    (res) => ({ ok: true, status: res && res.status, resolution: res && res.resolution }),
+    (err) => ({ ok: false, reason: (err && err.message) || "" })
+  );
+}
+
 module.exports = {
   PATHS,
   credentialBody,
@@ -550,5 +606,11 @@ module.exports = {
   rankingList,
   rankingSubmit,
   adminRanking,
-  setAdminRanking
+  setAdminRanking,
+  feedbackMine,
+  feedbackCreate,
+  feedbackComment,
+  adminFeedbackList,
+  adminFeedbackThread,
+  adminFeedbackReply
 };

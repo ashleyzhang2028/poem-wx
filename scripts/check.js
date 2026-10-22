@@ -1361,6 +1361,9 @@ const GATED = {
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
   "packages/mine/tier/tier": "allowed",
+  "packages/feedback/index/index": "logged",
+  "packages/admin/feedback/index": "logged",
+  "packages/admin/feedback/detail/detail": "logged",
 
   "packages/authors/index/index": "locked"
 };
@@ -1440,6 +1443,61 @@ const GATED = {
       && mineJs.indexOf("isAdmin") < 0,
     "「我的 → 数据与账号」里还留着用户列表那一行 —— 同一个去处两条路，"
       + "下一个人不知道该守哪一条（Issue #226）");
+
+  {
+    const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+    const fbLib = read("utils/feedback-api.js");
+    const adminFbLib = read("utils/admin-feedback.js");
+    const remoteSrc = read("utils/remote.js");
+    const serverCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
+    const minePage = read("pages/mine/mine.wxml");
+    const adminPage = read("packages/admin/index/index.wxml");
+    const fbApi = require(path.join(ROOT, "utils", "feedback-api.js"));
+    const KINDS = fbApi.KINDS.map((k) => k.key).join(",");
+
+    ok("反馈类别只有一份名单，页面取它（不另抄一遍）",
+      KINDS === "bug,typo,feature,experience,recommend,performance,account,payment,other"
+        && read("packages/feedback/index/index.js").indexOf("feedback-api") >= 0
+        && read("packages/feedback/index/index.wxml").indexOf("wx:for=\"{{kinds}}\"") >= 0
+        && fbLib.indexOf("KINDS") >= 0,
+      KINDS);
+
+    const coreKinds = /var FEEDBACK_KINDS = \[([^\]]*)\]/.exec(serverCore);
+    ok("服务端认的类别与客户端同一份（发一个它不认的会被悄悄记成「其他」）",
+      !!coreKinds && coreKinds[1].replace(/[\s"]/g, "") === KINDS,
+      coreKinds ? coreKinds[1] : "服务端没有 FEEDBACK_KINDS");
+
+    ok("标题进得去也回得来（服务端存了才画得出列表）",
+      /clip\(input && input\.title, FEEDBACK_LIMITS\.title\)/.test(serverCore)
+        && /title: String\(row\.title/.test(serverCore)
+        && /title: body\.title/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "feedback", "index.js"), "utf8")));
+
+    ok("处理方式与处理结果都由管理员给，且只认那几档",
+      /FEEDBACK_RESOLUTIONS = \[/.test(serverCore)
+        && /isFeedbackResolution/.test(serverCore)
+        && adminFbLib.indexOf("resolution") >= 0);
+
+    ok("重复提交不发第二遍（内容相同且一分钟内只落一条）",
+      /FEEDBACK_DEDUPE_MS/.test(serverCore) && /dedupe_hash/.test(serverCore)
+        && /duplicate/.test(serverCore) && /E_EMPTY/.test(serverCore));
+
+    ok("后台详情单取一条（不是把整张列表拉下来再筛）",
+      /op === "thread"/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8"))
+        && remoteSrc.indexOf("PATHS.adminFeedback") >= 0
+        && adminFbLib.indexOf("adminFeedbackThread") >= 0);
+
+    ok("后台列表按处理结果分组，组名单只有一份",
+      adminFbLib.indexOf("GROUPS") >= 0
+        && read("packages/admin/feedback/index.wxml").indexOf("wx:for=\"{{groups}}\"") >= 0);
+
+    ok("意见建议那一行在「我的」，只对登录用户出现",
+      /bindtap="onFeedback"[^>]*wx:if="\{\{logged\}\}"/.test(minePage)
+        || /wx:if="\{\{logged\}\}"[^>]*bindtap="onFeedback"/.test(minePage));
+    ok("后台管理页有用户反馈那一行", /bindtap="onFeedback"/.test(adminPage));
+    ok("两条入口都落到真页面（跳转目标在 app.json 里）",
+      /\/packages\/feedback\/index\/index/.test(read("pages/mine/mine.js"))
+        && /\/packages\/admin\/feedback\/index/.test(read("packages/admin/index/index.js")));
+  }
 
   {
     const adminLibSrc = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");

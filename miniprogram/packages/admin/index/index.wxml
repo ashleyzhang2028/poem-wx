@@ -82,6 +82,16 @@
     </view>
 
     <view class="row row-flush" wx:if="{{logged}}"
+          hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback">
+      <view class="row-icon">馈</view>
+      <view class="row-main">
+        <text class="row-title">用户反馈</text>
+        <text class="row-sub">{{feedbackSub}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+
+    <view class="row row-flush" wx:if="{{logged}}"
           hover-class="row-hover" hover-stay-time="60" bindtap="onUsers">
       <view class="row-icon">人</view>
       <view class="row-main">

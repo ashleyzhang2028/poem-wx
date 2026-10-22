@@ -119,6 +119,15 @@ function applyOnDuplicateKey(table, sql, cur, vals) {
   return cur;
 }
 
+function setsOf(sql) {
+  const m = /^\s*UPDATE\s+`?[a-z_]+`?\s+SET\s+([\s\S]*?)\s+WHERE\s/i.exec(sql);
+  if (!m) return [];
+  return m[1].split(",").map((seg) => {
+    const c = /^\s*`?([a-z_0-9]+)`?\s*=\s*\?\s*$/i.exec(seg);
+    return c ? c[1] : "";
+  }).filter(Boolean);
+}
+
 function whereOf(sql) {
   const m = /\bWHERE\s+([\s\S]*?)(?:\s+ORDER\s+BY|\s+LIMIT|$)/i.exec(sql);
   return m ? m[1].trim() : "";
@@ -209,8 +218,20 @@ const facade = {
 
         if (/^\s*UPDATE/i.test(sql)) {
           const all = t ? [...db[t].values()] : [];
-          all.forEach((r) => { if (hits(r, sql, params)) Object.assign(r, {}); });
-          return Promise.resolve([{ affectedRows: all.length }, []]);
+          const sets = setsOf(sql);
+          const pkCols = PK[t] || [];
+          const setParams = params.slice();
+          const keyParams = params.slice(sets.length);
+          let n = 0;
+          all.forEach((r) => {
+            const hit = !whereTerms(sql).length || whereTerms(sql).every((t2) => testTerm(r, t2, keyParams.slice()));
+            if (!hit) return;
+            sets.forEach((c) => {
+              if (pkCols.indexOf(c) < 0) r[c] = setParams.shift();
+            });
+            n += 1;
+          });
+          return Promise.resolve([{ affectedRows: n }, []]);
         }
 
         if (/^\s*DELETE/i.test(sql)) {

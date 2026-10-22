@@ -37,11 +37,11 @@ function assignValues(cols, extra) {
   return parts.join(", ");
 }
 
-function upsertSql(table, cols, keyCols) {
+function upsertSql(table, cols, keyCols, override) {
   assertIdent(table);
   var names = cols.map(function (c) { return "`" + assertIdent(c) + "`"; });
   var marks = cols.map(function () { return "?"; });
-  var updatable = cols.filter(function (c) { return keyCols.indexOf(c) < 0; });
+  var updatable = cols.filter(function (c) { return keyCols.indexOf(c) < 0 && c !== override; });
   return "INSERT INTO `" + table + "` (" + names.join(",") + ") VALUES (" + marks.join(",") + ")"
     + (updatable.length ? " ON DUPLICATE KEY UPDATE " + assignValues(updatable) : "");
 }
@@ -291,7 +291,9 @@ function mysqlStore(cfg) {
       return countByStatus("pinyin_proposals", [], [], "pending");
     },
 
-    putFeedbackThread: function (row) { return insertRow("feedback_threads", row, ["tid"]).then(function () { return { tid: row.tid }; }); },
+    putFeedbackThread: function (row) {
+      return insertRow("feedback_threads", row, ["tid"], "dedupe_hash").then(function () { return { tid: row.tid }; });
+    },
     getFeedbackThread: function (tid) { return getRow("feedback_threads", "tid", tid); },
     listFeedbackThreads: function (filter, limit) {
       var f = filter || {};
@@ -390,10 +392,10 @@ function mysqlStore(cfg) {
     }
   };
 
-  function insertRow(table, row, keyCols) {
+  function insertRow(table, row, keyCols, override) {
     var cols = safeCols(row);
     if (!cols.length) return Promise.resolve(row);
-    return query(upsertSql(table, cols, keyCols), cols.map(function (c) { return row[c]; }))
+    return query(upsertSql(table, cols, keyCols, override), cols.map(function (c) { return row[c]; }))
       .then(function () { return row; });
   }
 

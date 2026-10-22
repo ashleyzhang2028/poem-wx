@@ -452,6 +452,90 @@ function makeWx(port, mem) {
     await svStore.patchAccount(store.profile().userId, { nickname: "测试某某" });
   }
 
+  {
+    const fbApi = require(path.join(REPO, "miniprogram", "utils", "feedback-api.js"));
+    const adminFb = require(path.join(REPO, "miniprogram", "utils", "admin-feedback.js"));
+
+    const draft = { kind: "bug", title: "详情页注音错位", content: "三年级上册第三首，注音跑到下一行。" };
+    const first = await fbApi.submit(draft);
+    ok("意见提交落到服务端（回的是那条 thread）", !!first.ok && !!first.thread && !!first.thread.tid,
+      JSON.stringify(first));
+    ok("提交后状态是未处理、处理方式是待定",
+      !!first.thread && first.thread.status === "open" && first.thread.resolution === "pending",
+      JSON.stringify(first.thread));
+
+    const again = await fbApi.submit(draft);
+    ok("同一个人、同一份内容连点两次只落一条（第二次回 duplicate）",
+      !!again.ok && again.duplicate === true && again.thread.tid === first.thread.tid,
+      JSON.stringify(again));
+
+    const rows = await svStore.listFeedbackThreads({ uid: store.profile().userId }, 50);
+    ok("库里只有一行（重复提交没多写一行）", rows.length === 1, "行数 " + rows.length);
+
+    const blank = await fbApi.submit({ kind: "bug", title: "  ", content: "有正文" });
+    ok("标题空着就不发（本地先挡）", blank.ok === false, JSON.stringify(blank));
+
+    const mine = await fbApi.mine();
+    ok("自己的反馈读得回来", mine.threads.length === 1 && mine.threads[0].tid === first.thread.tid,
+      JSON.stringify(mine.threads.map((t) => t.tid)));
+    ok("读回来的那条带类型名与状态名（页面直接摆）",
+      mine.threads[0].kindName === "Bug 反馈" && mine.threads[0].statusName === "未处理",
+      JSON.stringify([mine.threads[0].kindName, mine.threads[0].statusName]));
+
+    const said = await fbApi.comment(first.thread.tid, "补充：只有开了注音才出现。");
+    ok("用户能就这一条追加说明", !!said.ok, JSON.stringify(said));
+
+    const after = await fbApi.mine();
+    ok("追加之后那条下面挂着两段话（正文之外）",
+      after.threads[0].comments.length === 1 && after.threads[0].comments[0].admin === false,
+      JSON.stringify(after.threads[0].comments));
+
+    const notAdmin = await remote.adminFeedbackList("all");
+    ok("普通用户读不到后台那份列表", notAdmin.ok === false, JSON.stringify(notAdmin));
+
+    const me = await svStore.getAccount(store.profile().userId);
+    await svStore.patchAccount(store.profile().userId, { role: "admin" });
+    await remote.sessionRefresh();
+
+    const list = await remote.adminFeedbackList("all");
+    ok("管理员读得到反馈列表", list.ok === true && list.threads.length === 1, JSON.stringify(list));
+    ok("后台那一份带提交人与处理方式（列表与详情要摆）",
+      !!list.threads[0] && list.threads[0].resolution === "pending" && !!list.threads[0].nickname,
+      JSON.stringify(list.threads[0]));
+
+    const one = await remote.adminFeedbackThread(first.thread.tid);
+    ok("单条详情读得到（不是把整张列表拉下来筛）", one.ok === true && one.thread.tid === first.thread.tid,
+      JSON.stringify(one));
+
+    const replied = await adminFb.reply(first.thread.tid, "已知，下次发版修。", "closed", "adopted");
+    ok("管理员回复并置为已处理 / 已采纳",
+      replied.ok === true && replied.status === "closed" && replied.resolution === "adopted",
+      JSON.stringify(replied));
+
+    const back = await fbApi.mine();
+    ok("用户那边看到已处理、已采纳，且有管理员那一段",
+      back.threads[0].status === "closed" && back.threads[0].resolutionName === "已采纳"
+        && back.threads[0].comments.some((c) => c.admin),
+      JSON.stringify(back.threads[0]));
+
+    const follow = await fbApi.comment(first.thread.tid, "好的，等发版。");
+    ok("用户还能继续跟进（反馈回到未处理）", !!follow.ok);
+    const reopened = await fbApi.mine();
+    ok("跟进之后状态回到未处理（不是永远挂在已处理上）",
+      reopened.threads[0].status === "open", JSON.stringify(reopened.threads[0].status));
+
+    const groups = await adminFb.list();
+    ok("后台按处理结果分组（三组都在）",
+      groups.ok === true && groups.groups.length === 3
+        && groups.groups.map((g) => g.key).join(",") === "open,replied,closed",
+      JSON.stringify(groups.groups && groups.groups.map((g) => [g.key, g.threads.length])));
+
+    const blank2 = await adminFb.reply(first.thread.tid, "   ", "open", "pending");
+    ok("空回复不发", blank2.ok === false, JSON.stringify(blank2));
+
+    await svStore.patchAccount(store.profile().userId, { role: me.role || "user" });
+  }
+
   server.close();
   const bad = results.filter((r) => !r).length;
   console.log("\n" + results.length + " 项，失败 " + bad + " 项");

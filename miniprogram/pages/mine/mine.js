@@ -115,6 +115,10 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
+  onFeedback() {
+    wx.navigateTo({ url: "/packages/feedback/index/index" });
+  },
+
   syncBar() {
     tabbar.sync(this, 4);
   },
