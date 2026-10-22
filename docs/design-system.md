@@ -59,7 +59,7 @@
 色卡分两张：**中国传统**与**大好河山**（Issue #442）。分组写在 `THEMES` 每一项的
 `group` 字段上，页面上两张卡由 `theme.groups()` 给出，不另抄一份名单。
 
-大好河山四支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
+大好河山七支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
 （`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `theme.js` 的 `CITY_BANNER`），
 不进包；其余主题一律包内 `icons/hero.png`。
 
@@ -69,6 +69,9 @@
 | 清明上河图 | `rgba(2, 54, 51, 1)` | `kaifeng.png` |
 | 本溪关门山 | `rgba(205, 20, 11, 1)` | `benxi_guanmenshan.png` |
 | 温州雁荡山 | `rgba(22, 53, 46, 1)` | `wenzhou_yandangshan.png` |
+| 丽江虎跳峡 | `rgba(44, 62, 62, 1)` | `yunnan_hutiaoxia.png` |
+| 南平武夷山 | `rgba(14, 133, 118, 1)` | `nanping_wuyishan.png` |
+| 富阳富春江 | `rgba(26, 37, 35, 1)` | `fuyang_fuchunjiang.png` |
 
 前两支与黛青同色，色卡上那两枚圆点长得一样，名字是唯一的分辨依据。
 
@@ -140,8 +143,8 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 
 不够档时那张卡**整张灰着**：圆点退成空心描边、色名压一档、点不动、
 卡标题右边一行小字说「Pro 起可用」（未登录说「登录可用 · Pro 起」）。
-不做「点了弹升级」，也不是把四项从清单里抽掉 —— 摆在那儿才说得清
-「这四支存在，只是不在你这一档」。
+不做「点了弹升级」，也不是把这些项从清单里抽掉 —— 摆在那儿才说得清
+「它们存在，只是不在你这一档」。
 
 判据落在 `theme.groups()` 与 `current()`：`items[].locked` 给页面，
 `set()` 与 `current()` 各自挡一道 —— 点不动，且档位掉回 Free 时
