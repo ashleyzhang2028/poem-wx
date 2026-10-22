@@ -23,7 +23,7 @@ const THEMES = [
   { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51], group: TRADITION },
   { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85], group: TRADITION },
   { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [2, 54, 51], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
-  { key: "qingmingshanghetu", name: "清明上河图", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
+  { key: "qingmingshanghetu", name: "开封上河图", rgb: [2, 54, 51], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
   { key: "benxiguanmenshan", name: "本溪关门山", rgb: [205, 20, 11], banner: CITY_BANNER + "benxi_guanmenshan.png", group: LANDSCAPE },
   { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
   { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },

@@ -17,7 +17,7 @@ Page({
 
     fonts: [],
     font: font.DEFAULT,
-    fontPreview: font.PREVIEW,
+    fontSample: font.PREVIEW,
     previewFamilyOf: "Kuibu Preview " + font.DEFAULT,
     fontLocked: true,
     fontTier: "pro"

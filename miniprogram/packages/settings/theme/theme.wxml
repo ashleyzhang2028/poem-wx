@@ -30,14 +30,13 @@
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
 
-    <view class="font-preview" style="font-family:'{{previewFamilyOf}}'">{{fontPreview}}</view>
-
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onFont">
-        <text class="font-name" style="font-family:'{{item.tone}}'">{{item.name}}</text>
+        <text class="font-sample" style="font-family:'{{item.tone}}'">{{fontSample}}</text>
+        <text class="font-name">{{item.name}}</text>
       </view>
     </view>
   </view>
