@@ -151,7 +151,7 @@ function makeWx(port, mem) {
   ok("假 MySQL 里落了那篇进度",
     !!byId["poem_x"] && byId["poem_x"].payload.level === 4,
     JSON.stringify(byId["poem_x"] && byId["poem_x"].payload));
-  ok("头像**没有**进库（只落本机，Issue #111）",
+  ok("孩子的头像**没有**混进同步记录（只落本机，Issue #111）",
     !byId["profile:v1"], "库里出现了 profile:v1");
 
   {
@@ -223,6 +223,15 @@ function makeWx(port, mem) {
     await s.putSetting("ranking:exam", "0");
     const off = await s.getSetting("ranking:exam");
     ok("显式关掉是写进同一行（读回来是 0）", !!off && String(off.svalue) === "0", JSON.stringify(off));
+
+    const png = Buffer.from([1, 2, 3, 4]);
+    ok("头像写进库里、读回来的字节一样（容器重启不丢）",
+      (await s.putAvatar("probe-uid", "image/png", png))
+        && (await s.getAvatar("probe-uid")).bytes.equals(png)
+        && (await s.getAvatar("probe-uid")).mime === "image/png",
+      JSON.stringify((await s.getAvatar("probe-uid")) || null));
+    await s.deleteAvatar("probe-uid");
+    ok("删掉之后读回 null", (await s.getAvatar("probe-uid")) === null);
   }
 
   {

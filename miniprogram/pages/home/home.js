@@ -261,20 +261,20 @@ Page({
     this.refresh();
   },
 
-  refresh() {
+  refresh(force) {
     if (!gate.logged()) {
       this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
       return;
     }
 
     this.paint();
-    this.pull();
+    this.pull(force);
   },
 
-  pull() {
+  pull(force) {
     const seq = (this.pullSeq || 0) + 1;
     this.pullSeq = seq;
-    sync.pullOnly(true).then((res) => {
+    sync.pullOnly(!!force).then((res) => {
       if (this.pullSeq !== seq) return;
       if (!res || res.skipped || res.error || !res.applied) return;
       this.paint();
@@ -787,7 +787,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.refresh();
+    this.refresh(true);
     setTimeout(() => wx.stopPullDownRefresh(), 320);
   },
 

@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, scoreRecords: {}, settings: {} };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, scoreRecords: {}, avatars: {}, settings: {} };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -323,6 +323,19 @@ function memoryStore() {
       if (f.from) out = out.filter(function (r) { return Number(r.created_at) >= Number(f.from); });
       out.sort(function (a, b) { return (b.created_at || 0) - (a.created_at || 0); });
       return Promise.resolve(out.slice(0, limit || 3000));
+    },
+
+    putAvatar: function (uid, mime, bytes) {
+      db.avatars[uid] = { mime: mime, bytes: bytes };
+      return Promise.resolve(true);
+    },
+    getAvatar: function (uid) {
+      var row = db.avatars[uid];
+      return Promise.resolve(row ? { mime: row.mime, bytes: row.bytes } : null);
+    },
+    deleteAvatar: function (uid) {
+      delete db.avatars[uid];
+      return Promise.resolve(true);
     },
 
     getSetting: function (key) { return Promise.resolve(db.settings[key] || null); },

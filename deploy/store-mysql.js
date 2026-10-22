@@ -395,6 +395,25 @@ function mysqlStore(cfg) {
       });
     },
 
+    putAvatar: function (uid, mime, bytes) {
+      return query("INSERT INTO avatars (uid, mime, bytes, updated_at) VALUES (?,?,?,?) "
+        + "ON DUPLICATE KEY UPDATE mime = VALUES(mime), bytes = VALUES(bytes), updated_at = VALUES(updated_at)",
+        [String(uid || ""), String(mime || ""), bytes, Date.now()])
+        .then(function () { return true; });
+    },
+    getAvatar: function (uid) {
+      return query("SELECT mime, bytes FROM avatars WHERE uid = ? LIMIT 1", [String(uid || "")])
+        .then(function (rows) {
+          var r = rows && rows[0];
+          if (!r) return null;
+          return { mime: String(r.mime || ""), bytes: Buffer.isBuffer(r.bytes) ? r.bytes : Buffer.from(r.bytes || []) };
+        });
+    },
+    deleteAvatar: function (uid) {
+      return query("DELETE FROM avatars WHERE uid = ?", [String(uid || "")])
+        .then(function () { return true; });
+    },
+
     getSetting: function (key) {
       return query("SELECT skey, svalue FROM app_settings WHERE skey = ? LIMIT 1", [String(key || "")])
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });

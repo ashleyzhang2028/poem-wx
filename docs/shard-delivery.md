@@ -53,8 +53,14 @@
 
 | 环节 | 谁压 | 多大的量 |
 |---|---|---|
-| 构建上下文 → 镜像 | 流水线 `gzip -9`，上下文里只摊 `.gz` | 5.6MB（不是 25MB） |
+| 构建上下文 → 镜像 | `scripts/shard-stage.js` 摊，只摊 `t001…t121` 的 `.gz` | 5.3MB（不是 25MB） |
 | 容器 → 手机 | 直接发那份 `.gz`，带 `Content-Encoding: gzip` | 每片约 44KB |
+
+摊分片这一步的结果由**语料**决定，不由 commit 决定，所以它摊在构建节点的
+缓存目录里（`.cnb.yml` 的 `docker.volumes: /tmp/poem-shard-cache`）：
+语料 hash 没变就直接复用上一版摊好的那份，不重跑 `build-data.js` 与 gzip。
+Docker 按文件内容算 COPY 层的缓存键，上一版是 `t001`、这一版是 `t002` 时那 5.3MB
+仍然要传 —— 所以摊完会打一行 `分片清单 <hash>`，两次日志里这一串相同才说明这次没重传。
 
 台账详见 [`deploy/README.md`](../deploy/README.md) 的「成本」一节。
 
@@ -94,7 +100,7 @@ Node 里怎么跑都是绿的，只有真机会撞，所以判据只能是静态
 
 | `COPY_SHREDS` | 镜像 | `/api/shard/*` |
 |---|---|---|
-| 不写（默认） | **含分片**（+5.6MB） | 200 gzip |
+| 不写（默认） | **含分片**（+5.3MB） | 200 gzip |
 | `=0` | 不含分片 | `404 E_NO_SHARDS` |
 
 ⚠️ **默认是「有」**，与这份文档早先写的「默认不做」正好相反 —— 那一条是错的，
@@ -164,12 +170,15 @@ env:
 
 | | 进镜像那层 | 发到手机那片 |
 |---|---|---|
-| 原文 | 25.04 MB（122 个 json，含倒排索引 2.0MB） | 每片 186–210 KB |
-| **gzip -9 之后** | **5.63 MB**（22.5%） | **每片约 44 KB**（中位 39KB） |
+| 原文 | 25.04 MB（122 个 .js，含倒排索引 2.0MB） | 每片 186–210 KB |
+| **gzip -9 之后** | **5.3 MB**（121 片，不含 idx） | **每片约 44 KB**（中位 39KB） |
 | 清单 + 倒排索引 | 18 KB + 466 KB | 同左 |
 
-**每次部署要多传的**：5.6MB（不是 25MB —— 流水线只摊压缩后那份）。
-**镜像体积**：+5.6MB。这两条都是一次性的，与用户数无关。
+倒排索引 `idx.js` **不进镜像**：客户端只打 `/api/shard/t\d{3}`，服务端也没有它的路由，
+那一片（原文 2.0MB / gzip 466KB）谁也读不到，不摊。
+
+**每次部署要多传的**：5.3MB（不是 25MB —— 流水线只摊压缩后那份）。
+**镜像体积**：+5.3MB。这两条都是一次性的，与用户数无关。
 
 ### 5.2 容器（真正花钱的地方）
 
@@ -252,6 +261,7 @@ env:
 | 课外正文取不到，界面说「这一篇取不到正文」 | 镜像里没分片（`COPY_SHREDS=0`）。**这时该看到的是「这个版本里没有课外正文」**，看到前一句说明界面把两种因合并了 |
 | 容器起不来，日志是 `Cannot find module './shard-api.js'` | `.dockerignore` 少了 `!shard-api.js` —— 白名单把它挡在上下文外，构建与部署都绿（Issue #115，见 § 七） |
 | 容器日志里什么都看不出来 | 分片路由在 `apiHandler` **之前**，它 200 了就不进 api 的日志 —— 要单独看 |
+| 部署时间没变短，镜像层照旧重传 | 语料变了（上一版 `t001` 这一版 `t002`）。Docker 按文件内容算 COPY 的缓存键，摊分片那一步省的是 `build-data.js` 与 gzip，不是这 5.3MB；两次日志里 `分片清单 <hash>` 相同才说明没重传 |
 | 课外正文取不到，界面说「这一篇取不到正文」，**而日志里一个请求都没有** | 清单被 `packOptions.ignore` 排掉了（曾经它写在 `data/texts/manifest.js`）。`bucketOf()` 回空，客户端**根本不会发请求**。清单要在包里（`data/shards.js`）——见 § 二「清单进包」 |
 | 点开课外诗，**一直停在「正在取正文」** | 取分片失败时只弹过一句 toast，而停在屏幕上的是**加载那一屏** —— `loadingText` 没落回 false，页面也没换成空态（Issue #214）。成功才允许离开加载态：失败要落到「标题 + 一句实情 + 重试」那一屏 |
 | 课外诗取到了，可**全文检索还是搜不到它的正文** | `data/texts/` 被 `packOptions.ignore` 挡在包外，`idx.js` 与分片都 require 不到，`readiness()` 回「全文索引未生成」。现在分片**取回哪一片就顺手把倒排索引补哪一片**（`corpus.onBucketReady` → `text-search`），点过的篇目在下一次进搜索页时按正文可搜 |
@@ -261,10 +271,11 @@ env:
 
 | 文件 | 干什么 |
 |---|---|
-| `deploy-api-serve/shard-api.js` | 路由本体（名字校验 + gzip 下发） |
+| `deploy-api-serve/shard-api.js` | 路由本体（名字校验 + gzip 下发 + 内存索引 / 304） |
 | `deploy-api-serve/serve-api.js` | 把路由挂在 `/api/shard/` 上 |
 | `deploy/Dockerfile` | 默认把分片拷进 `/app/shards/`（`COPY_SHREDS=0` 才不拷） |
-| `.cnb.yml` | 那一面旗；摊上下文时只摊 `.gz` |
+| `scripts/shard-stage.js` | 摊分片：按语料 hash 复用缓存，只摊 `t\d{3}` 的 `.gz` |
+| `.cnb.yml` | 那一面旗；摊上下文时只摊 `.gz`；缓存挂在 `docker.volumes` |
 | `scripts/build-data.js` | 产出 `data/shards.js`（清单，**进包**）与 `data/texts/*`（正文分片，走云） |
 | `miniprogram/utils/corpus.js` | `ensureEntry` / `ensureBucket`（本机 → 云端）；`MANIFEST` 常量指 `data/shards.js` |
 | `miniprogram/utils/remote.js` | `shard()`（走云调用，不写 outbox） |

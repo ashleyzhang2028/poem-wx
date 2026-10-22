@@ -13,6 +13,7 @@ const db = {
   feedback_comments: new Map(),
   exam_records: new Map(),
   score_records: new Map(),
+  avatars: new Map(),
   app_settings: new Map(),
   progress: new Map()
 };
@@ -30,6 +31,7 @@ const PK = {
   feedback_comments: ["cid"],
   exam_records: ["eid"],
   score_records: ["srid"],
+  avatars: ["uid"],
   app_settings: ["skey"],
   progress: ["uid", "child_id", "poem_id"]
 };
