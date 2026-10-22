@@ -5,6 +5,7 @@ const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
 const cols = require("../../../utils/collections");
+const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
@@ -97,6 +98,10 @@ Page({
     }
     this.setData({ selfOnly: want });
     this.save({ selfOnly: want });
+  },
+
+  onCollections() {
+    gate.open(() => wx.navigateTo({ url: "/packages/settings/collections/collections" }), this);
   },
 
   dailyRows() {

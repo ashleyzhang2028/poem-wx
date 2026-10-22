@@ -2,7 +2,7 @@
   display: block;
   margin-top: var(--sp-3);
   padding-top: var(--sp-2);
-  border-top: 1rpx dashed var(--line-2);
+  border-top: 1rpx solid var(--line-2);
 }
 
 .daily-count {
@@ -120,7 +120,11 @@
   opacity: .45;
 }
 
-.self-only-note {
+.self-only-row {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.self-only-row .self-only-note {
   display: block;
-  margin-top: var(--sp-2);
 }
