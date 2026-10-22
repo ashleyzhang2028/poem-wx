@@ -3139,7 +3139,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && rank.maskRow({ rank: 2 }).nick === ""
       && /const board = \(res\.board \|\| \[\]\)\.map\(ranking\.maskRow\)/.test(pageJs)
       && /const me = res\.me \? ranking\.maskRow\(res\.me\) : null/.test(pageJs)
-      && /me: mineOnBoard \? null : me,/.test(pageJs),
+      && /me: self,/.test(pageJs),
     "服务端已经打过一次，端上没再兜一层 —— 换个后端或漏改一处就露全名");
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
@@ -3154,10 +3154,14 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && rank.restOf([{ rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
     "领奖台与列表的切分不在第 3 名上，同一个人会既上台又上榜");
 
-  ok("榜单查询把「全部学段」与「具体年级」分开（两者不会同时生效）",
+  ok("榜单只发服务端认得的档位（全部学段不带年级，年级要落在本学段里）",
     rank.queryOf({ stage: "all", grade: 3, term: 1 }).grade === 0
-      && rank.queryOf({ stage: "primary", grade: 3, term: 1 }).grade === 3,
-    "选了全部还带着年级，榜单就会在一段空成绩里排");
+      && rank.queryOf({ stage: "all", grade: 3, term: 1 }).term === 0
+      && rank.queryOf({ stage: "primary", grade: 3, term: 1 }).grade === 3
+      && rank.queryOf({ stage: "primary", grade: 3, term: 1 }).term === 1
+      && rank.queryOf({ stage: "primary", grade: 7, term: 1 }).grade === 0
+      && rank.queryOf({ stage: "primary", grade: 3, term: 9 }).term === 0,
+    "端上留着服务端不认的档位 —— 标签与榜单会各说一套");
 
   ok("服务端与客户端的分档口径是同一套（能力键同表）",
     /BOARD_STAGE_GRADES = \{ primary: \[1, 2, 3, 4, 5, 6\], middle: \[7, 8, 9\], high: \[10, 11, 12\] \}/.test(apiCore)
@@ -3215,7 +3219,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     pageWxml.indexOf("{{beyond}}") >= 0
       && pageWxml.indexOf("wx:if=\"{{me}}\"") >= 0
       && pageWxml.indexOf("wx:for=\"{{rest}}\"") < pageWxml.indexOf("wx:if=\"{{me}}\"")
-      && rank.beyondOf([{ rank: 1 }], 100, 305) === 304 && rank.beyondOf([], 100, 0) === 0,
+      && rank.beyondOf([{ rank: 1 }], 305) === 304 && rank.beyondOf([], 0) === 0,
     "圈外那一行跑到列表上面，或者「还有几位」把自己也数进去");
 
   ok("榜单是单独一页，入口在大会页（不挤进考试页里）",
@@ -3225,6 +3229,12 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       && pageWxml.indexOf("podium") >= 0
       && pageJs.indexOf("rankingList") >= 0,
     "榜单挂在考试结果页里的话，飞花令那一半就没有入口");
+
+  ok("切学段不替用户预选年级，册次只在选了年级之后才出现",
+    !/grade: grade, term: 0, label/.test(pageJs)
+      && /wx:if="\{\{grade\}\}"/.test(pageWxml)
+      && /if \(!this\.data\.grade\) return;/.test(pageJs),
+    "服务端不认的档位又回来了 —— 选了「全部」却挂着一个年级");
 
   ok("榜单页按「学段 / 年级 / 学期 / 日周月年」四层收窄，且走的是同一份查询",
     pageWxml.indexOf("onStage") >= 0 && pageWxml.indexOf("onGrade") >= 0
@@ -3238,7 +3248,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     "原生 button 的 ::after 灰边会压在账上，按压态只剩平台那一套");
 
   ok("榜单页只在「真有一行」时才画领奖台与名次表（空榜不留一张只有表头的卡）",
-    /board\.length \|\| me \? "board" : "empty"/.test(pageJs),
+    /board\.length \|\| self \? "board" : "empty"/.test(pageJs),
     "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
 
   ok("后台不再有榜单开关（两个榜在应用里默认打开，页面与接口都不留拨杆）",

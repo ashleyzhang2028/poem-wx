@@ -441,6 +441,28 @@ function makeWx(port, mem) {
       !!cut.body.me && cut.body.me.nick === rankingMask("测试某某"),
       JSON.stringify(cut.body.me && cut.body.me.nick));
 
+    const cst = (y, mo, d, h, mi) => Date.UTC(y, mo, d, h - 8, mi);
+    const windowOf = (period, at) => {
+      const coreMod = require(path.join(POEM, "_lib", "core.js"));
+      return coreMod.boardList({
+        cfg: config,
+        store: svStore,
+        limiter: coreMod.makeRateLimiter(),
+        now: () => at,
+        account: { uid: store.profile().userId }
+      }, { game: "exam", stage: "all", period: period }).then((r) => r.body.from);
+    };
+    ok("「今日」按东八区零点切，不认容器跑在哪个时区",
+      (await windowOf("day", cst(2026, 9, 22, 0, 30))) === Date.UTC(2026, 9, 21, 16, 0)
+        && (await windowOf("day", cst(2026, 9, 22, 23, 30))) === Date.UTC(2026, 9, 21, 16, 0)
+        && (await windowOf("day", cst(2026, 9, 23, 0, 30))) === Date.UTC(2026, 9, 22, 16, 0),
+      "窗口起点跟着进程本地时区走 —— 换一台机器（UTC）就是早上 8 点换日");
+    ok("「本周 / 本月 / 今年」同样落在东八区零点上（周一为一周之始）",
+      (await windowOf("week", cst(2026, 9, 22, 10, 0))) === Date.UTC(2026, 9, 18, 16, 0)
+        && (await windowOf("month", cst(2026, 9, 22, 10, 0))) === Date.UTC(2026, 8, 30, 16, 0)
+        && (await windowOf("year", cst(2026, 9, 22, 10, 0))) === Date.UTC(2025, 11, 31, 16, 0),
+      "周期起点按 UTC 算 —— 每月 1 号与 1 月 1 日都提前了 8 小时");
+
     const flyList = await api({ op: "list", game: "fly", stage: "all", period: "day" });
     ok("飞花令榜与考试榜各算各的（飞花令那边没有交过卷，是空榜）",
       flyList.status === 200 && (flyList.body.board || []).length === 0, JSON.stringify(flyList.body));

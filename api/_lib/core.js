@@ -3227,6 +3227,8 @@ var BOARD_NICK_MAX = 12;
 var BOARD_GRADE_LABELS = { 1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级", 5: "五年级", 6: "六年级",
   7: "七年级", 8: "八年级", 9: "九年级", 10: "高一", 11: "高二", 12: "高三" };
 var BOARD_KEY_PREFIX = "ranking:";
+var BOARD_DAY_MS = 24 * 60 * 60 * 1000;
+var BOARD_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 function boardStageOfGrade(grade) {
   var g = Number(grade) || 0;
@@ -3238,17 +3240,18 @@ function boardStageOfGrade(grade) {
 }
 
 function boardPeriodStart(period, at) {
-  var d = new Date(Number(at) || Date.now());
-  if (period === "week") {
-    var sinceMonday = (d.getDay() + 6) % 7;
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - sinceMonday);
-    return d.getTime();
+  var ms = Number(at) || Date.now();
+  var day = Math.floor((ms + BOARD_TZ_OFFSET_MS) / BOARD_DAY_MS);
+  if (period === "month") {
+    var m = new Date(day * BOARD_DAY_MS);
+    return Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), 1) - BOARD_TZ_OFFSET_MS;
   }
-  if (period === "month") return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-  if (period === "year") return new Date(d.getFullYear(), 0, 1).getTime();
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+  if (period === "year") {
+    var y = new Date(day * BOARD_DAY_MS);
+    return Date.UTC(y.getUTCFullYear(), 0, 1) - BOARD_TZ_OFFSET_MS;
+  }
+  if (period === "week") day -= (new Date(day * BOARD_DAY_MS).getUTCDay() + 6) % 7;
+  return day * BOARD_DAY_MS - BOARD_TZ_OFFSET_MS;
 }
 
 function boardMaskNick(raw, uid) {
