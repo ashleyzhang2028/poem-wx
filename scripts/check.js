@@ -1290,18 +1290,17 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("排行榜两行紧跟考试、按参与 / 不参与各占一行",
+  ok("排行榜两行紧跟考试、只亮在最高档",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
       const at = rows.findIndex((r) => r.cap === "exam");
       const [join, off] = rows.slice(at + 1, at + 3);
-      const lit = (r) => r.cells.map((c) => c.on).join();
-      return join && off
-        && join.cap === "league:join" && off.cap === "league:off"
-        && join.name !== off.name
-        && lit(join) === "false,false,true" && lit(off) === "false,false,true";
+      const top = tiersMod.TIER_KEYS[tiersMod.TIER_KEYS.length - 1];
+      return join && off && join.name !== off.name
+        && [join, off].every((r) => r.cells.map((c) => c.on).join()
+          === tiersMod.TIER_KEYS.map((k) => String(k === top)).join());
     })(),
-    "两行没跟着考试排、或者 Max 之外也亮了");
+    "两行没跟着考试排，或者最高档之外也亮了");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
