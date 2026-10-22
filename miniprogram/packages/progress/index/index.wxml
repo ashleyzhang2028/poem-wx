@@ -108,7 +108,7 @@
       <view class="stats self-row">
         <view class="stat">
           <text class="stat-v">{{item.total}}</text>
-          <text class="stat-k">集合</text>
+          <text class="stat-k">篇目</text>
         </view>
         <view class="stat">
           <text class="stat-v">{{item.learned}}</text>
