@@ -409,7 +409,6 @@ function sendCodeAfterGuard(deps, input, who, isSms, purpose, device, ip) {
         { retryAfter: lockRetryAfter(acc, t) });
     }
     if (acc.locked_until || acc.status === "locked") {
-      limiter._hits[WRONG.uid + "|" + acc.uid] = [];
       acc.locked_until = null;
       repairLegacyLock(acc);
       store.patchAccount(acc.uid, { locked_until: null, status: acc.status });
@@ -451,6 +450,7 @@ function sendCodeAfterGuard(deps, input, who, isSms, purpose, device, ip) {
         };
 
         if (cfg.allowCodeEcho && echoAllowed) body.devCode = rawCode;
+        clearWrongRounds(deps, acc.uid);
         return ok(body);
       })
       .catch(function (e) {
@@ -497,6 +497,16 @@ function limiterCount(deps, ns, key) {
 
 function wrongRounds(deps, uid) {
   return limiterCount(deps, WRONG.uid, uid);
+}
+
+function clearWrongRounds(deps, uid) {
+  (deps.limiter._hits || {})[WRONG.uid + "|" + String(uid)] = [];
+  return true;
+}
+
+function clearWrongIp(deps, ip) {
+  (deps.limiter._hits || {})[WRONG.ip + "|" + String(ip)] = [];
+  return true;
 }
 
 function wrongByIp(deps, ip) {
@@ -575,6 +585,7 @@ function verifyCode_(deps, input) {
             return claimOwnerRole(store, cfg, saved || acc).then(function () { return saved || acc; });
           }).then(function (saved) {
             return issueSessionFor(deps, saved || acc, first).then(function (sess) {
+              clearWrongIp(deps, ipKey);
               if (passwordCleared && sess && sess.body) {
                 sess.body.passwordCleared = true;
                 sess.body.note = "邮箱已确认。注册时设的密码在确认之前填写，为了安全已作废；需要密码登录请用「忘记密码」重新设置。";
@@ -1426,10 +1437,7 @@ function wxIssueSession(deps, acc, device) {
   var s = session.issue(cfg, acc.uid, t);
   var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
 
-  if (device) {
-    row.device = String(device).slice(0, 64);
-    row.refresh_token = s.token;
-  }
+  if (device) row.device = String(device).slice(0, 64);
 
   return Promise.resolve(store.putSession(row))["catch"](function (e) {
     var msg = String((e && e.message) || e).toLowerCase();

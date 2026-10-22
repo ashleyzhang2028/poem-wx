@@ -1,6 +1,6 @@
 "use strict";
 
-var SECRET_KEYS = /^(code|codeHash|salt|token|sessionSecret|mysqlPassword|apiKey|sid|pepper)$/i;
+var SECRET_KEYS = /^(code|.*token$|.*secret.*|.*salt.*|.*hash.*|.*password[s]?$|sid|pepper|authorization|cookie|api.*)$/i;
 
 function redact(value, depth) {
   depth = depth || 0;
@@ -12,6 +12,7 @@ function redact(value, depth) {
   if (typeof value === "object") {
     var out = {};
     Object.keys(value).forEach(function (k) {
+      if (k === "__proto__" || k === "constructor" || k === "prototype") return;
       out[k] = SECRET_KEYS.test(k) ? "[redacted]" : redact(value[k], depth + 1);
     });
     return out;
@@ -38,6 +39,12 @@ function json(res, status, body, headers) {
 
 function methodNotAllowed(res, allow) {
   json(res, 405, { code: "E_METHOD", message: "不支持的请求方式" }, { Allow: allow.join(", ") });
+}
+
+function drain(req) {
+  try {
+    if (req && typeof req.resume === "function") req.resume();
+  } catch (e) {}
 }
 
 function readBody(req) {
@@ -78,8 +85,9 @@ function readBody(req) {
     }
 
     req.on("data", function (c) {
+      if (done) return;
       chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c));
-      if (Buffer.concat(chunks).length > 64 * 1024) { done = true; resolve(null); }
+      if (Buffer.concat(chunks).length > 64 * 1024) { done = true; drain(req); resolve(null); }
     });
     req.on("end", finish);
     req.on("error", function () { done = true; resolve(null); });
@@ -110,6 +118,7 @@ function notConfigured(res, what) {
 module.exports = {
   json: json,
   log: log,
+  drain: drain,
   redact: redact,
   readBody: readBody,
   clientIp: clientIp,
