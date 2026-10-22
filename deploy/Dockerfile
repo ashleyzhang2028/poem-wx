@@ -173,6 +173,11 @@ RUN npm install --no-audit --no-fund --omit=dev mysql2@3 --no-package-lock \
 
 ENV NODE_ENV=production
 ENV PORT=8080
+
+# 时区写死东八区：日志时间戳、任何走本地时区的库都按它算。
+# 榜单的窗口在代码里固定按 +8 算（api 的 boardPeriodStart），不靠这一行 ——
+# 这条是给「进程自己的时间」兜底，别让时区随基础镜像漂。
+ENV TZ=Asia/Shanghai
 EXPOSE 8080
 
 # 探活打 /healthz：只判「进程还在不在应答」，不拿 /api/* 的状态码当判据 ——
