@@ -98,15 +98,26 @@ Page({
       wx.showToast({ title: tiers.nameOf("max") + " 起可用", icon: "none" });
       return;
     }
-    custom.pick().then((r) => {
+    custom.choose().then((r) => {
       if (!r.ok) {
         if (r.reason !== "cancel") wx.showToast({ title: "这张图读不出来，换一张试试", icon: "none" });
         return;
       }
-      theme.set(theme.OWN_KEY);
-      this.paint();
-      wx.showToast({ title: "已换成这一张", icon: "none" });
+      const crop = this.selectComponent("#crop");
+      if (!crop) return;
+      crop.open(r);
     });
+  },
+
+  onCropDone(e) {
+    const r = e.detail || {};
+    if (!r.ok) {
+      wx.showToast({ title: "这张图截不出来，换一张试试", icon: "none" });
+      return;
+    }
+    theme.set(theme.OWN_KEY);
+    this.paint();
+    wx.showToast({ title: "已换成这一张", icon: "none" });
   },
 
   onOwnClear() {
