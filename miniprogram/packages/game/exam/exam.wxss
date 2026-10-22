@@ -35,13 +35,17 @@
 }
 
 .stem {
-  display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
   color: var(--ink);
   line-height: 1.9;
   text-align: center;
   padding: var(--sp-2) 0;
+}
+
+.stem-row {
+  display: block;
+  white-space: pre-line;
 }
 
 .stem-sub {
@@ -86,6 +90,7 @@
   min-width: 0;
   font-family: var(--font-poem);
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 .option:active {

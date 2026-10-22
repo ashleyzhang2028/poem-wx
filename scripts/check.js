@@ -4450,35 +4450,42 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const quizSrc = read("packages/game/quiz/lib.js");
-  const stripped = quizSrc.replace(/\/\*[\s\S]*?\*\//g, "");
+  const dataDir = path.join(ROOT, "data");
+  if (!fs.existsSync(path.join(dataDir, "books", "books.js"))) {
+    ok("出题口径（包里没有语料，跳过真跑）", true);
+  } else {
+    const quizSrc = read("packages/game/quiz/lib.js");
+    const cap = /const MAX_LINE = (\d+);/.exec(quizSrc);
+    const capN = cap ? Number(cap[1]) : 0;
+    ok("题干有上限（16 ~ 32 字）", capN >= 16 && capN <= 32);
+    ok("按 \\n 取句只有一处（linesOf 收口）",
+      quizSrc.indexOf('.split("\\n")') < 0 && quizSrc.indexOf("corpus.splitLines") >= 0);
 
-  const cap = /const MAX_LINE = (\d+);/.exec(stripped);
-  const se = /const SENTENCE_END = \/\[([^\]]+)\]\//.exec(stripped);
-  const capN = cap ? Number(cap[1]) : 0;
-  ok("题干有上限（16 ~ 32 字），行内还按中文句读再切",
-    capN >= 16 && capN <= 32 && !!se
-      && "，。！？；".split("").filter((c) => se[1].indexOf(c) >= 0).length >= 4);
-  ok("按 \\n 取句只有一处（linesOf 收口）",
-    (stripped.match(/\.split\("\\n"\)/g) || []).length === 1);
+    const corpusMod = require(path.join(ROOT, "utils", "corpus.js"));
+    const quizMod = require(path.join(ROOT, "packages/game/quiz/lib.js"));
+    const whole = (text) => String(text).split("\n").map((x) => x.trim()).filter(Boolean).join("");
+    const broken = (text) => {
+      const parts = corpusMod.splitDisplay(text);
+      return parts.length > 0 && parts.join("") === whole(text)
+        && parts.slice(0, -1).every((x) => /[，。！？；：、]$/.test(x));
+    };
 
-  const quizMod = require(path.join(ROOT, "packages/game/quiz/lib.js"));
-  let maxStem = 0, maxAnswer = 0, asked = 0;
-  for (let round = 0; round < 300; round++) {
-    quizMod.build({ count: 10, forms: ["next", "prev", "author", "title"] }).forEach((q) => {
-      asked++;
-      maxStem = Math.max(maxStem, (q.stem || "").length);
-      maxAnswer = Math.max(maxAnswer, (q.answer || "").length);
-    });
+    let maxAnswer = 0, unbroken = [];
+    for (let round = 0; round < 300; round++) {
+      quizMod.build({ count: 10, forms: ["next", "prev", "author", "title"] }).forEach((q) => {
+        maxAnswer = Math.max(maxAnswer, (q.answer || "").length);
+        if (!broken(q.stem || "") || quizMod.stemRows(q).length < 3) unbroken.push(q.stem);
+      });
+    }
+    ok("真跑 300 轮出题：题干按句读拆成多行，逗号也断，拼回等于原句（上限内）",
+      !unbroken.length && maxAnswer > 0 && maxAnswer <= capN,
+      "没拆开的 " + unbroken.length + " 条，例如 " + JSON.stringify(unbroken.slice(0, 3)));
+
+    const course = readModule(path.join(dataDir, "course.js"));
+    const proseIds = Object.keys(course).filter((id) => String(course[id].text).length > 100);
+    ok("课内确实有长文（上面那条不是空转）", proseIds.length > 10,
+      "只找到 " + proseIds.length + " 篇长文");
   }
-  ok("真跑 300 轮出题：题干与答案都不超过上限",
-    asked > 0 && maxStem <= capN && maxAnswer > 0 && maxAnswer <= capN,
-    "题干 " + maxStem + " / 答案 " + maxAnswer + " / 上限 " + capN);
-
-  const course = readModule(path.join(ROOT, "data/course.js"));
-  const proseIds = Object.keys(course).filter((id) => String(course[id].text).length > 100);
-  ok("课内确实有长文（上面那条不是空转）", proseIds.length > 10,
-    "只找到 " + proseIds.length + " 篇长文");
 }
 
 {

@@ -17,6 +17,26 @@ function splitClauses(line) {
   return s;
 }
 
+function splitDisplay(text) {
+  const rows = [];
+  String(text == null ? "" : text)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      let buf = "";
+      for (const ch of line) {
+        buf += ch;
+        if (CLAUSE_SPLIT.test(ch)) {
+          rows.push(buf);
+          buf = "";
+        }
+      }
+      if (buf) rows.push(buf);
+    });
+  return rows;
+}
+
 function splitLines(text) {
   return String(text == null ? "" : text)
     .split("\n")
@@ -603,6 +623,7 @@ module.exports = {
   CLAUSE_SPLIT,
   splitLines,
   splitClauses,
+  splitDisplay,
   layout,
   books,
   bookById,

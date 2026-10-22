@@ -32,6 +32,7 @@ Page({
 
     barBelow: true,
     optionRows: [],
+    stemRows: [],
 
     metaLine: "",
 
@@ -122,6 +123,7 @@ Page({
         index: 0,
         current: questions[0],
         optionRows: quiz.optionRows(questions[0].options),
+        stemRows: quiz.stemRows(questions[0]),
         metaLine: this.metaLineOf(questions[0]),
         picked: "",
         answers,
@@ -207,6 +209,7 @@ Page({
       index,
       current: next,
       optionRows: quiz.optionRows(next.options),
+      stemRows: quiz.stemRows(next),
       metaLine: this.metaLineOf(next),
       picked: this.data.answers[index] || "",
       slots: this.slotsOf(this.data.answers, index)
