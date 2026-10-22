@@ -7537,10 +7537,11 @@ function gapped(items, max) {
   ok("季节限定上加背/收进就地重排首页（顶读数与课内行跟着变，不用手动刷新）",
     /onSeasonalAdd\(e\)[\s\S]{0,900}?this\.paint\(\)/.test(homeSrc4)
       && /onCollectDone\(e\)[\s\S]{0,300}?this\.paint\(\)/.test(homeSrc4));
-  ok("季节限定行上的两枚都是胶囊按钮：文案在行上，已加/已收点得动",
-    /class="seasonal-btn \{\{item\.daily \? 'on' : ''\}\}"/.test(homeWxml4)
-      && /class="seasonal-btn \{\{item\.collected \? 'on' : ''\}\}"/.test(homeWxml4)
+  ok("季节限定行上的两枚与今日加背同一个圆钮：已加/已收点得动，收进用自选集合那枚图标",
+    /class="round-btn \{\{item\.daily \? 'on' : ''\}\}"/.test(homeWxml4)
+      && /class="round-btn \{\{item\.collected \? 'on' : ''\}\}"/.test(homeWxml4)
       && /catchtap="onSeasonalAdd"/.test(homeWxml4) && /catchtap="onSeasonalCollect"/.test(homeWxml4)
+      && /icons\.playlist/.test(homeWxml4)
       && /onSeasonalCollect\(e\)[\s\S]{0,500}?cols\.removeItems\(/.test(homeSrc4));
 
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
