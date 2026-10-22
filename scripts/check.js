@@ -1288,7 +1288,7 @@ Object.keys(WEB_TIER).forEach((k) => {
       const tiersRow = row.cells.map((c) => c.text);
       const silent = rows.filter((r) => r.cap === "daily")[0];
       return tiersRow.join(",") === "无,1 个集合,200 个集合"
-        && silent.cells.every((c) => c.text === "" && c.note === "");
+        && silent.cells.every((c) => c.text === "");
     })(),
     "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
 }

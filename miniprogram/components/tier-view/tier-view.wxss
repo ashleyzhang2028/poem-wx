@@ -101,11 +101,6 @@
   color: var(--strong-text);
 }
 
-.tier-cell-n {
-  font-size: var(--fs-caption);
-  color: var(--ink-4);
-}
-
 .tier-cell-ic {
   width: var(--glyph-round);
   height: var(--glyph-round);

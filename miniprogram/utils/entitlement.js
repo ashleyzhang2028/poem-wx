@@ -11,13 +11,13 @@ function rankOf(tier) {
 
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
-  if (!n) return { text: "无", note: "", on: false };
-  return { text: n + " 个集合", note: "", on: true };
+  if (!n) return { text: "无", on: false };
+  return { text: n + " 个集合", on: true };
 }
 
 function courseFreeCell(tier) {
   const on = rankOf(tier) >= rankOf("pro");
-  return { text: "", note: "", on: on };
+  return { text: "", on: on };
 }
 
 const CAPS = [
@@ -46,7 +46,7 @@ const CAPS = [
 function cellFor(cap, tier) {
   if (cap.cell) return cap.cell(tier);
   const on = rankOf(cap.tier) <= rankOf(tier);
-  return { text: "", note: "", on: on };
+  return { text: "", on: on };
 }
 
 const CAP_KEYS = CAPS.map((c) => c.key);
@@ -184,7 +184,6 @@ function leagueRow(join) {
     cells: tiers.TIERS.map((t) => ({
       tier: t.key,
       text: "",
-      note: "",
       now: false,
       on: rankOf(t.key) >= rankOf("max")
     }))
@@ -200,7 +199,6 @@ function capRow(cap, now) {
       return {
         tier: t.key,
         text: cell.text,
-        note: cell.note || "",
         now: t.key === now,
         on: !!cell.on
       };
