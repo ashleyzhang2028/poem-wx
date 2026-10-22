@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的 · 自选进度",
+  "usingComponents": {
+    "progress-view": "/components/progress-view/progress-view",
+    "recite-sheet": "/components/recite-sheet/recite-sheet",
+    "tab-bar": "/custom-tab-bar/index"
+  }
+}

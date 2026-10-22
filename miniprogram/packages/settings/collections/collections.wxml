@@ -22,9 +22,9 @@
     <view class="card-title">我的集合</view>
 
     <block wx:for="{{collections}}" wx:key="id" wx:for-item="c">
-      <view class="coll-head" hover-class="row-hover" hover-stay-time="60"
-            data-id="{{c.id}}" bindtap="onToggleList">
-        <view class="row-main">
+      <view class="coll-head">
+        <view class="row-main" hover-class="row-main-hover" hover-stay-time="60"
+              data-id="{{c.id}}" bindtap="onToggleList">
           <text class="row-title poem">{{c.name}}</text>
           <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}%</text>
           <view class="coll-meter">
@@ -32,7 +32,8 @@
             <text class="coll-meter-t">今日 {{c.planned}} 首</text>
           </view>
         </view>
-        <text class="all-toggle {{c.open ? 'open' : ''}}"></text>
+        <text class="row-go" data-id="{{c.id}}" bindtap="onProgress">›</text>
+        <text class="all-toggle {{c.open ? 'open' : ''}}" data-id="{{c.id}}" bindtap="onToggleList"></text>
       </view>
 
       <view class="inline-btns coll-tools" wx:if="{{c.open}}">

@@ -178,6 +178,11 @@ Page({
     });
   },
 
+  onProgress(e) {
+    const id = (e.currentTarget.dataset || {}).id;
+    wx.navigateTo({ url: "/packages/progress/coll/coll?coll=" + encodeURIComponent(id) });
+  },
+
   onToggleList(e) {
     const id = e.currentTarget.dataset.id;
     const closed = this.closedList();

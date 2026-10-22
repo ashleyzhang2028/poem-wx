@@ -179,6 +179,7 @@
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
           <text class="card-title">{{coll.title}}</text>
           <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
+          <view class="coll-dot" style="background:{{coll.color}}"></view>
           <text class="row-go">›</text>
         </view>
 

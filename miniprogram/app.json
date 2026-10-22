@@ -35,7 +35,8 @@
       "root": "packages/progress",
       "name": "progress",
       "pages": [
-        "index/index"
+        "index/index",
+        "coll/coll"
       ]
     },
     {
