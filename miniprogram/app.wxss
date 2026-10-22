@@ -350,26 +350,9 @@ button, textarea {
   color: var(--ink-3);
 }
 
-.seq-done {
-  flex: none;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48rpx;
-  height: 36rpx;
-  padding: 0 var(--sp-1);
-  margin-right: var(--sp-2);
-  border: 1rpx solid var(--strong);
-  border-radius: var(--radius-pill);
+.seq.on {
   background: var(--strong-soft);
   color: var(--strong-text);
-}
-
-.seq-done .glyph {
-  width: 22rpx;
-  height: 22rpx;
-  color: currentColor;
 }
 
 .read-dot {
@@ -1599,6 +1582,24 @@ button, textarea {
   font-size: var(--fs-hint);
   color: var(--ink-2);
   flex: none;
+}
+
+.trans-toggle-arrow {
+  flex: none;
+  box-sizing: border-box;
+  width: 14rpx;
+  height: 14rpx;
+  margin: 0 var(--sp-1) 6rpx var(--sp-2);
+  border-right: 2rpx solid var(--ink-3);
+  border-bottom: 2rpx solid var(--ink-3);
+  transform: rotate(45deg);
+  transition: transform var(--t-move) var(--ease);
+}
+
+.trans-toggle-arrow.open {
+  margin-bottom: 0;
+  margin-top: 6rpx;
+  transform: rotate(-135deg);
 }
 
 .trans-text {
