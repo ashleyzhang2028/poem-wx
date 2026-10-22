@@ -11,6 +11,7 @@ const icons = require("../../../utils/icons");
 const scale = require("../../../utils/type-scale");
 const corpus = require("../../../utils/corpus");
 const tiers = require("../../../utils/tiers");
+const cols = require("../../../utils/collections");
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
@@ -136,13 +137,14 @@ Page({
   onClearData() {
     wx.showModal({
       title: "清空数据",
-      content: "背诵进度、已读标记及今日加背将被删除，本机与云端记录一并清除，且不可恢复。",
+      content: "背诵进度、已读标记、今日加背及自选集合里的篇目将被删除，本机与云端记录一并清除，且不可恢复。",
       confirmText: "清空",
       cancelText: "取消",
       confirmColor: "#a83b32",
       success: (res) => {
         if (!res.confirm) return;
         store.clearProgress();
+        cols.prune();
         sync.markDirty();
         wx.showToast({ title: "已清空", icon: "success" });
       }

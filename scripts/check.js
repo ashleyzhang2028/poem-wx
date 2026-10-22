@@ -6824,6 +6824,21 @@ function gapped(items, max) {
   const corpusSrc2 = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
   const readerSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
 
+  ok("镜像里的时区写死成东八区（不随基础镜像漂）",
+    /^ENV TZ=Asia\/Shanghai$/m.test(dockerfile));
+
+  {
+    const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-cloud-setup.md"), "utf8");
+    const seg = cnb.slice(cnb.indexOf("\nmain:")).split(/^  web_trigger_release:/m)[0];
+    const listed = [...seg.matchAll(/^\s*-\s*"([^"]+)"\s*$/gm)].map((m) => m[1]).sort();
+    const documented = [...doc.matchAll(/^\s*-\s*`([^`]+)`\s+——/gm)].map((m) => m[1]).sort();
+    ok("「哪些改动要重出镜像」那份名单与 .cnb.yml 的 ifModify 一致",
+      listed.length > 0 && listed.join() === documented.join(),
+      "两处要对得上 —— 流水线挂的 ifModify 是 " + JSON.stringify(listed) +
+        "，docs/wx-cloud-setup.md 写的是 " + JSON.stringify(documented) +
+        "（改发布链时名单要跟着动）");
+  }
+
   ok("服务壳把 /api/shard/* 交给了分片路由",
     /shardApi\.handle\(req, res, urlPath\)/.test(serveSrc));
   ok("服务壳 require 了 shard-api（与 store-mysql 一样从上下文根取）",
@@ -7271,6 +7286,19 @@ function gapped(items, max) {
       cols3.setCount(first.id, 7).ok === false && cols3.setCount(first.id, 10).ok === true
         && cols3.countOf(cols3.find(first.id)) === 10);
     ok("删集子删得掉", cols3.remove(first.id).ok === true && !cols3.find(first.id));
+
+    ok("清空数据后集子里不在语料里的条目不留下（清空即 prune）",
+      (() => {
+        const real = require(path.join(ROOT, "utils", "corpus.js")).course()[0].id;
+        store3.saveCollections([
+          { id: "ck", name: "留着", items: [{ id: real }, { id: "poems-ghost-01" }] },
+          { id: "cg", name: "只剩空的", items: [{ id: "poems-ghost-02" }] }
+        ]);
+        const n = cols3.prune();
+        const keep = cols3.find("ck");
+        return n === 2 && !!keep && cols3.idsOf(keep).join() === real && !cols3.find("cg");
+      })(),
+      "清空数据清掉进度、集子里那条还指着已删的篇目 —— 点进去是空壳");
 
     store3.saveCollections([{ id: "c9", name: "自选", items: [{ id: "poems-xx1-01" }] }]);
     ok("集子的名字、篇目与每日首数一起走同步那一行",

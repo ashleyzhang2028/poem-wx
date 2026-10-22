@@ -115,6 +115,9 @@ function turnstileNote(cfg, probe) {
   if (w === "no_site_key") {
     return "TURNSTILE_ENABLED=1 但没填 TURNSTILE_SITE_KEY：**前端不会渲染方框**，而服务端照旧在拦 —— 于是每一次登录/注册都会被拒（400 E_TURNSTILE）。两个 key 是一对，缺一个都跑不起来";
   }
+  if (w === "no_secret_key") {
+    return "TURNSTILE_ENABLED=1 且有 Site Key，但没填 TURNSTILE_SECRET_KEY：方框在页面上照常出现，服务端的 turnstileReady() 却判为没配好 —— 于是**校验被整段跳过**，方框成了摆设。两个 key 是一对，缺一个都跑不起来";
+  }
   if (probe && probe.secretValid === false) {
     return "TURNSTILE_SECRET_KEY 无效：Cloudflare 回 invalid-input-secret —— 多半是**把 Site Key 与 Secret Key 弄混了**（两个长得像），或 key 已被删除/重置。页面上的症状就是「方框一直不出现」";
   }
@@ -122,6 +125,12 @@ function turnstileNote(cfg, probe) {
     return "打不通 challenges.cloudflare.com/siteverify（HTTP 0）：服务端验不了 token，**所有登录/注册都会回 400 E_TURNSTILE** —— 查这台部署的网络出口 / 代理";
   }
   return "开关与两个 key 都在。方框仍需**浏览器**里真渲染一次才算数 —— 页面上不出现方框时，看浏览器控制台（多半是 Site Key 填错，或本站域名没加进那个 widget 的允许列表）";
+}
+
+function turnstileCheck(t) {
+  if (t.widget === "renders") return t.secretProbe && t.secretProbe.secretValid === false ? false : true;
+  if (t.widget === "bypassed" || t.widget === "disabled") return null;
+  return false;
 }
 
 function sessionReport(d) {
@@ -164,13 +173,22 @@ module.exports = handler.make("diag", ["GET"], function (d, body, req) {
       hasSiteKey: !!d.cfg.turnstileSiteKey,
       hasSecretKey: !!d.cfg.turnstileSecretKey,
 
-      widget: null,
+      widget: turnstileWidgetState(d.cfg),
       note: null,
       secretProbe: null
     }
   };
 
   var jobs = [dbSummary(d).then(function (s2) { r.database.probe = s2; })];
+
+  if (r.turnstile.widget === "renders") {
+    jobs.push(turnstileProbe(d.cfg).then(function (p) {
+      r.turnstile.secretProbe = p;
+      r.turnstile.note = turnstileNote(d.cfg, p);
+    }));
+  } else {
+    r.turnstile.note = turnstileNote(d.cfg, null);
+  }
 
   return Promise.all(jobs).then(function () {
     var code = verdictOf(r);
@@ -193,9 +211,7 @@ module.exports = handler.make("diag", ["GET"], function (d, body, req) {
         hint: out.database.usable ? null : "看服务启动日志里那行 [store] —— 多半是 MYSQL_* 没配" },
       {
         name: "人机校验的方框在浏览器里该出现（Site Key + Secret Key + 开关三者都要）",
-        ok: out.turnstile.widget === "renders" ? true
-          : (out.turnstile.widget === "bypassed" ? null
-            : (out.turnstile.widget === "disabled" ? null : false)),
+        ok: turnstileCheck(out.turnstile),
         hint: out.turnstile.note
       }
     ];

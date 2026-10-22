@@ -1,6 +1,7 @@
 const store = require("./store");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
+const corpus = require("./corpus");
 
 const NAME_MAX = 12;
 
@@ -190,6 +191,22 @@ function removeItems(id, poemIds) {
   return { ok: n > 0, removed: n };
 }
 
+function prune() {
+  const all = list();
+  let removed = 0;
+  const next = all
+    .map((c) => {
+      const items = c.items.filter((it) => {
+        if (corpus.hasData() && !corpus.indexById(it.id)) { removed += 1; return false; }
+        return true;
+      });
+      return items.length === c.items.length ? c : Object.assign({}, c, { items: items });
+    })
+    .filter((c) => c.items.length > 0);
+  if (removed) save(next);
+  return removed;
+}
+
 function collectionsOf(poemId) {
   return list()
     .filter((c) => idsOf(c).indexOf(poemId) >= 0)
@@ -222,5 +239,6 @@ module.exports = {
   clearItems,
   add,
   removeItems,
+  prune,
   collectionsOf
 };

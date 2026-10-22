@@ -19,6 +19,19 @@
 
 ## 一、出镜像
 
+### 哪些改动要重出镜像
+
+`main` 的发布流水线挂着 `ifModify`，只有碰到下列路径的提交才会重出镜像
+（名单在 `.cnb.yml`，两处要一致）：
+
+- `api/**` —— 后端本体
+- `deploy/**` —— Dockerfile、SQL、MySQL 存储层
+- `deploy-api-serve/**` —— 云托管那层服务壳与分片路由
+- `.cnb.yml` —— 流水线自身
+
+只改 `miniprogram/**`、`docs/**`、`scripts/**` 时流水线**不跑**，镜像停在上一版 ——
+这类改动由体验版验证，不用等镜像。手动点一次发布（`web_trigger_release`）不受这份名单约束。
+
 ```bash
 git checkout main && git pull     # 推 main 触发发布流水线
 ```
