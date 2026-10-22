@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "我的 · 古诗词大会 · 飞花令",
+  "navigationBarTitleText": "古诗文大会 · 飞花令",
   "usingComponents": {
     "tier-tag": "/components/tier-tag/tier-tag",
     "tab-bar": "/custom-tab-bar/index"

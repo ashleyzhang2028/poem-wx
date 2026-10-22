@@ -157,6 +157,11 @@ function mysqlStore(cfg) {
       return query("SELECT * FROM codes WHERE code_id = ? LIMIT 1", [String(codeId || "")])
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
     },
+    bumpCodeAttempt: function (codeId) {
+      return query("UPDATE codes SET attempts = attempts + 1 WHERE code_id = ?", [String(codeId || "")])
+        .then(function () { return query("SELECT attempts FROM codes WHERE code_id = ? LIMIT 1", [String(codeId || "")]); })
+        .then(function (rows) { return rows && rows[0] ? Number(rows[0].attempts) : 0; });
+    },
     patchCode: function (codeId, patch) {
       return patchRow("codes", "code_id", codeId, patch);
     },

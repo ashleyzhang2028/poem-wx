@@ -154,16 +154,16 @@ const VIEW_NAME = {
   fsrs: "复习算法·FSRS",
   library: "课外阅读",
   search: "全站搜索",
-  quiz: "古诗文大会·题库",
-  feihualing: "古诗文大会·飞花令",
-  exam: "古诗文大会·考试",
+  quiz: "大会·题库",
+  feihualing: "大会·飞花令",
+  exam: "大会·考试",
   sights: "主题·大好河山",
   font: "主题·字体选择",
   coursefree: "我的·只背自选",
   sync: "我的·同步进度"
 };
 
-const LEAGUE_NAME = "古诗文大会·排行榜";
+const LEAGUE_NAME = "大会·排行榜";
 
 const COMPARE_ORDER = [
   "daily", "extra", "collections", "progress", "seasonal", "pinyin",
@@ -180,7 +180,7 @@ function compareNameOf(cap) {
 function leagueRow(join) {
   return {
     cap: "league:" + (join ? "join" : "off"),
-    name: LEAGUE_NAME + (join ? "" : "(不参与)"),
+    name: LEAGUE_NAME + (join ? "" : "·不参与"),
     cells: tiers.TIERS.map((t) => ({
       tier: t.key,
       text: "",

@@ -73,9 +73,29 @@ const SCHEMA = 2;
 
 const TIER_GAP_MS = 60 * 60 * 1000;
 
+let hot = {};
+let hotWx = null;
+
+function isHot(key) {
+  return key === KEYS.profile || key === KEYS.auth || key === KEYS.caps;
+}
+
 function read(key, fallback) {
   try {
-    const v = wx.getStorageSync(key);
+    let v;
+    if (isHot(key)) {
+      if (hotWx !== wx) {
+        hot = {};
+        hotWx = wx;
+      }
+      if (!(key in hot)) {
+        const raw = wx.getStorageSync(key);
+        hot[key] = raw === "" || raw === null || raw === undefined ? null : JSON.stringify(raw);
+      }
+      v = hot[key] === null ? undefined : JSON.parse(hot[key]);
+    } else {
+      v = wx.getStorageSync(key);
+    }
     return v === "" || v === null || v === undefined ? fallback : v;
   } catch (e) {
     return fallback;
@@ -85,6 +105,7 @@ function read(key, fallback) {
 function write(key, value) {
   try {
     wx.setStorageSync(key, value);
+    delete hot[key];
     return true;
   } catch (e) {
     return false;
@@ -97,6 +118,7 @@ function drop(key) {
   } catch (e) {
 
   }
+  delete hot[key];
 }
 
 function migrate() {

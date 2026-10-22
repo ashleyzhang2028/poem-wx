@@ -286,6 +286,7 @@ function isOwnerEmail(cfg, email) {
 function claimOwnerRole(store, cfg, acc) {
   if (!acc || acc.status === "deleted") return Promise.resolve(false);
   if (!isOwnerEmail(cfg, acc.email)) return Promise.resolve(false);
+  if (acc.email_verified_at == null) return Promise.resolve(false);
   if (String(acc.role || "user").toLowerCase() === "owner") return Promise.resolve(false);
   return Promise.resolve(store.patchAccount(acc.uid, { role: "owner" })).then(function () {
 
@@ -537,14 +538,15 @@ function verifyCode_(deps, input) {
 
     if (Number(rec.expires_at) <= t) return err(400, "E_CODE_EXPIRED", "验证码已过期，点「重新发送」");
 
+    return Promise.resolve(store.bumpCodeAttempt ? store.bumpCodeAttempt(codeId) : Number(rec.attempts) + 1).then(function (next) {
+    if (next > cfg.codeMaxAttempts) return err(400, "E_CODE_VOID", "请用最新收到的验证码");
     var expect = id.codeHash(rec.uid, rec.purpose, given, rec.salt, pepperOf(cfg));
     var same = id.timingSafeEqual(expect, rec.code_hash);
 
     if (!same) {
 
       limiterHit(deps, WRONG.ip, ipKey, t);
-      var next = Number(rec.attempts) + 1;
-      var patch = { attempts: next };
+      var patch = {};
 
       if (next >= cfg.codeMaxAttempts) patch.consumed_at = t;
       var voided = next >= cfg.codeMaxAttempts;
@@ -611,6 +613,7 @@ function verifyCode_(deps, input) {
           });
         });
       });
+    });
   });
 }
 
@@ -889,11 +892,18 @@ function verifyEmail(deps, input) {
         if (isLocked(acc, t)) {
           return err(423, "E_LOCKED", "为了安全，请稍后再试", { retryAfter: lockRetryAfter(acc, t) });
         }
+        var wasUnverified = acc.email_verified_at == null;
         acc.email_verified_at = t;
         repairLegacyLock(acc);
         if (acc.status === "pending") acc.status = "active";
+        if (wasUnverified && acc.password_hash) {
+          acc.password_hash = "";
+          acc.password_salt = "";
+        }
                 var firstVerify = !markLogin(acc, t);
         return Promise.resolve(store.putAccount(acc)).then(function (saved) {
+          return wasUnverified ? Promise.resolve(store.revokeSessions(acc.uid)).then(function () { return saved; }) : saved;
+        }).then(function (saved) {
           return claimOwnerRole(store, cfg, saved || acc).then(function () { return saved || acc; });
         }).then(function (saved) {
           var cur = saved || acc;

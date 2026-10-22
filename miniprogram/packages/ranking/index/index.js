@@ -144,6 +144,6 @@ Page({
 
 
   onShareAppMessage() {
-    return { title: "古诗词大会排行榜", path: "/packages/ranking/index/index" };
+    return { title: "古诗文大会排行榜", path: "/packages/ranking/index/index" };
   }
 });

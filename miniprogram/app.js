@@ -4,6 +4,7 @@ const sync = require("./utils/sync");
 const entitlement = require("./utils/entitlement");
 const gate = require("./utils/gate");
 const font = require("./utils/font");
+const loginFlow = require("./utils/login-flow");
 const sfx = require("./utils/sfx");
 
 App({
@@ -24,12 +25,11 @@ App({
       " · 语料 " + (corpus.hasData() ? "已载入" : "没进这个包")
     );
 
-    font.load().catch(() => {});
-    font.loadAll();
-    this.watchFont();
+    this.reloadFont();
+    loginFlow.watch(() => this.reloadFont());
     sfx.warm();
 
-    if (gate.logged()) entitlement.sync().catch(() => {});
+    if (gate.logged()) entitlement.sync().then(() => this.reloadFont()).catch(() => {});
 
     this.syncTimer = setTimeout(() => {
       if (gate.logged()) sync.now().catch(() => {});
@@ -38,6 +38,7 @@ App({
 
   onShow() {
     store.touchDaily();
+    this.reloadFont();
     this.refreshTierHourly();
   },
 
@@ -45,19 +46,16 @@ App({
     if (!gate.logged() || !store.tierDue()) return;
     entitlement
       .sync()
-      .then(() => store.touchTier())
+      .then(() => {
+        store.touchTier();
+        this.reloadFont();
+      })
       .catch(() => {});
   },
 
-  watchFont() {
-    let last = font.face().key + " " + entitlement.status().tier;
-    this.fontTimer = setInterval(() => {
-      const now = font.face().key + " " + entitlement.status().tier;
-      if (now === last) return;
-      last = now;
-      font.load().catch(() => {});
-      font.loadAll();
-    }, 2000);
+  reloadFont() {
+    font.load().catch(() => {});
+    font.loadAll();
   },
 
   stampBuild() {
@@ -72,7 +70,6 @@ App({
 
   onHide() {
     if (this.syncTimer) clearTimeout(this.syncTimer);
-    if (this.fontTimer) clearInterval(this.fontTimer);
     if (gate.logged()) sync.flush().catch(() => {});
   }
 });

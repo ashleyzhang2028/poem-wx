@@ -107,6 +107,7 @@ Page({
       wx.hideLoading();
       let title = "同步完成";
       if (res.error) title = sync.state().later ? "同步过于频繁，请稍后再试" : "同步失败：" + res.error;
+      else if (res.skipped === "busy") title = "正在同步，请稍候";
       else if (res.skipped === "offline") title = "同步未开启，进度仅存于本机";
       else if (res.skipped === "throttled") title = "刚刚已同步，请稍后再试";
       else if (res.skipped === "waiting") title = "上次同步未成功，" + sync.waitText(res.retryAfter) + "后自动重试";
