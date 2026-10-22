@@ -15,7 +15,6 @@ const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
-const defer = require("../../utils/defer");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -716,11 +715,7 @@ Page({
     this.refresh();
   },
 
-  onDeferChange(e) {
-    const d = (e && e.detail) || {};
-    if (!d.id) return;
-    const level = defer.levelOf(d.key);
-    if (!d.on && level) wx.showToast({ title: "已取消「" + level.label + "」", icon: "none" });
+  onDeferChange() {
     this.refresh();
   },
 

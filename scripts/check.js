@@ -716,8 +716,24 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
     ok("压着的那一首不上今天的榜，空出来的位置补一首新的（条数不变）",
       held.length === withExtra.length && held.every((it) => it.poem.id !== heldOne),
       held.map((it) => it.poem.id).join(","));
-    ok("台账里压着的那一条认得出「哪天回来」", named === true);
+    ok("压着的那一条认得出「哪天回来」", named === true);
+    ok("到期当天就回来（不是多压一天）",
+      defer.isHeld({ wid: heldOne, day: store.dayKey(), until: store.dayKey(), span: 1 }) === false);
+    ok("服务端补零的日期与前端的不补零算同一天",
+      defer.isHeld({ wid: heldOne, day: store.dayKey(), until: defer.shiftDay(store.dayKey(), 1) }) === true
+        && defer.daysLeftOf({ wid: heldOne, day: store.dayKey(), until: "2099-01-02" })
+          === defer.daysLeftOf({ wid: heldOne, day: store.dayKey(), until: "2099-1-2" }));
     defer.drop(heldOne);
+  }
+
+  {
+    const defer = require(path.join(ROOT, "utils", "defer.js"));
+    const stamp = store.deferAt() - 60000;
+    store.setDefer(store.deferList(), stamp);
+    defer.put(withExtra[1].poem.id, "tomorrow");
+    ok("点一次「再背」就把台账当成新的（不会被服务端当成旧行丢掉）",
+      store.deferAt() > stamp, stamp + " -> " + store.deferAt());
+    defer.drop(withExtra[1].poem.id);
   }
 
   store.dropDayPlan();

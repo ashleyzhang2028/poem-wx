@@ -317,6 +317,11 @@ function expandReciteSheet(wxml, data) {
       { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
       { key: "good", icon: icons.smile, label: "记住", cls: "good" }
     ],
+    defers: [
+      { key: "tomorrow", icon: icons.tomorrow, label: "明日再背", cls: "defer" },
+      { key: "month", icon: icons.month, label: "月后再背", cls: "defer" }
+    ],
+    heldKey: data.sheetHeldKey || "",
     themeStyle: data.themeStyle || ""
   });
 
