@@ -35,7 +35,7 @@ const MEDALS = [
   { rank: 3, title: "探花", mark: "季" }
 ];
 
-const DEFAULT_SIZE = 10;
+const DEFAULT_SIZE = 100;
 
 function stageOfGrade(grade) {
   const g = Number(grade) || 0;

@@ -73,12 +73,13 @@ Page({
         if (res.ok) {
           const board = (res.board || []).map(ranking.maskRow);
           const me = res.me ? ranking.maskRow(res.me) : null;
+          const mineOnBoard = !!me && board.filter((r) => r.uid === me.uid).length > 0;
           const size = res.size || this.data.size;
           this.setData({
             state: board.length || me ? "board" : "empty",
             board: board,
             size: size,
-            me: me,
+            me: mineOnBoard ? null : me,
             beyond: ranking.beyondOf(board, size, res.total),
             podium: ranking.podiumOf(board),
             rest: ranking.restOf(board),

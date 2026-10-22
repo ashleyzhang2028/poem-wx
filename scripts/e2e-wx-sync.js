@@ -359,7 +359,7 @@ function makeWx(port, mem) {
       JSON.stringify(onSubmit.body));
 
     const board = await api({
-      op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10
+      op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 100
     });
     const mineRow = (board.body.board || []).filter((r) => r.me)[0];
     ok("自己那一行在榜上，名次从 1 起", !!mineRow && mineRow.rank === 1, JSON.stringify(board.body.board));
@@ -372,25 +372,26 @@ function makeWx(port, mem) {
     ok("只考过小学那一档时，初中榜是空的", (other.body.board || []).length === 0,
       JSON.stringify(other.body.board));
 
-    const others = [];
-    for (let i = 0; i < 25; i += 1) {
+    for (let i = 0; i < 104; i += 1) {
       const uid = "u_probe_" + i;
       await svStore.putAccount({ uid: uid, status: "active", nickname: "诗友" + i, created_at: 1 });
       await svStore.putScoreRecord({
         srid: "sc_probe_" + i, uid: uid, game: "exam", scope_id: "", stage: "primary",
-        grade: 3, term: 1, score: 10, total: 10, duration_sec: 100 + i, created_at: Date.now() - 1000 + i
+        grade: 3, term: 1, score: 10, total: 10, duration_sec: 10 + i, created_at: Date.now() - 1000 + i
       });
-      others.push(uid);
     }
 
-    const cut = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10 });
-    ok("榜只列前 N 名（剩下的人不跟着拉下来）",
-      (cut.body.board || []).length === 10 && cut.body.total === 26,
+    const cut = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 100 });
+    ok("榜只列前 100 名（剩下的人不跟着拉下来）",
+      (cut.body.board || []).length === 100 && cut.body.total === 105,
       (cut.body.board || []).length + " / " + cut.body.total);
-    ok("自己排在 N 名之外时，单给自己一行名次（不把整张榜拉下来）",
-      !!cut.body.me && cut.body.me.rank === 2 && cut.body.me.me === true,
+    ok("100 名之外时单给自己一行，名次照实（第 305 名也看得到自己）",
+      !!cut.body.me && cut.body.me.me === true && cut.body.me.rank === 2,
       JSON.stringify(cut.body.me) + " total=" + cut.body.total);
-    ok("同分同名次（下一名跳号）",
+    ok("自己的那一行不在前 100 名里时，榜上不重复出现",
+      (cut.body.board || []).filter((r) => r.me).length === 0,
+      JSON.stringify((cut.body.board || []).filter((r) => r.me)));
+    ok("同分同名次（前 100 名榜上名次全为 1，第 101 名起才跳号）",
       (cut.body.board || []).every((r) => r.rank === 1) && cut.body.me.rank === 2,
       JSON.stringify((cut.body.board || []).map((r) => r.rank).concat([cut.body.me && cut.body.me.rank])));
     ok("圈外那一行的名字也是打码的（不因为是自己就露全名）",
@@ -448,7 +449,7 @@ function makeWx(port, mem) {
       JSON.stringify(goodNick.body));
 
     await svStore.patchAccount(store.profile().userId, { nickname: "傻逼一号" });
-    const dirty = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 10 });
+    const dirty = await api({ op: "list", game: "exam", stage: "primary", grade: 3, term: 1, period: "day", size: 100 });
     const dirtyRow = (dirty.body.board || []).filter((r) => r.me)[0] || dirty.body.me;
     ok("库里存着敏感昵称时榜单不摆它，退回「诗友 + 尾号」",
       !!dirtyRow && dirtyRow.nick === rankingMask("诗友" + String(store.profile().userId).slice(-4)),
