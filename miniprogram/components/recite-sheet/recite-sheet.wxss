@@ -136,6 +136,24 @@
   transition: background-color var(--t-press), opacity var(--t-press);
 }
 
+.sheet-step-btn.prev,
+.sheet-step-btn.next {
+  flex: 0 0 auto;
+  padding: 0 var(--sp-3);
+}
+
+.sheet-step-btn .glyph {
+  margin-right: var(--sp-1);
+}
+
+.sheet-step-btn.on {
+  background: var(--strong-soft);
+}
+
+.sheet-step-btn.on .sheet-step-t {
+  color: var(--strong-text);
+}
+
 .sheet-step-hover {
   background: var(--line);
 }

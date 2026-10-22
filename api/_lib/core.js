@@ -39,6 +39,7 @@ function rateWindow(cfg, bucket) {
   if (bucket === "verify") return cfg.rateVerify || [];
   if (bucket === "reset") return cfg.rateReset || [];
   if (bucket === "login") return cfg.rateLogin || [];
+  if (bucket === "board") return cfg.rateBoard || [];
   return cfg.rate[bucket] || [];
 }
 
@@ -161,6 +162,7 @@ function publicAccount(cfg, acc) {
     plan: { tier: planTier(acc), until: acc.plan_until || null },
     role: role,
     features: featuresFor(cfg, planTier(acc)),
+    expiresIn: Math.round((Number(cfg.sessionDays) || 30) * 86400),
 
         email: String(acc.email || ""),
 
@@ -1473,11 +1475,12 @@ function wxLogin(deps, input) {
 
   var device = String(body.device || body.deviceId || "unknown").slice(0, 64);
 
-  var g = limiter.take(cfg, "device", "wxlogin:" + device, t);
+  var g = limiter.check(cfg, "device", "wxlogin:" + device, t);
   if (!g.ok) return Promise.resolve(err(429, "E_RATE_DEVICE", "登录太频繁了，稍等片刻再试", { retryAfter: g.retryAfter }));
 
   return wxCode2Session(deps, code).then(function (r) {
     if (r.status !== 200) return r;
+    limiter.hit("device", "wxlogin:" + device, t);
     return wxFindAccount(store, r.body.openid, r.body.unionid).then(function (row) {
       wxRow = row;
       return wxEnsureAccount(deps, r.body, row, t);
@@ -3509,9 +3512,9 @@ function boardSubmit(deps, input) {
         return err(403, "E_TIER", "这个榜要先玩得动那一项（" + cap + "），当前：" + tier, { cap: cap, tier: tier });
       }
 
-      var rg = deps.limiter.take(cfg, "device", "board:" + String(deps.deviceId || "unknown"), t);
+      var rg = deps.limiter.take(cfg, "board", "dev:" + String(deps.deviceId || "unknown"), t);
       if (!rg.ok) return err(429, "E_RATE_DEVICE", "交成绩太频繁了，请稍后再试", { retryAfter: rg.retryAfter });
-      var ug = deps.limiter.take(cfg, "device", "board:" + me.uid, t);
+      var ug = deps.limiter.take(cfg, "board", "uid:" + me.uid, t);
       if (!ug.ok) return err(429, "E_RATE_DEVICE", "交成绩太频繁了，请稍后再试", { retryAfter: ug.retryAfter });
 
       var total = Math.max(0, Math.min(999, Number(input && input.total) || 0));
