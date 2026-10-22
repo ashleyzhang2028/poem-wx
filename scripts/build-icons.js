@@ -31,7 +31,9 @@ const NAMES = [
   ["zoomIn", "CilZoomIn.svg"],
   ["refresh", "CilLoop.svg"],
   ["chart", "CilChartBar.svg"],
-  ["trend", "CilChartLine.svg"]
+  ["trend", "CilChartLine.svg"],
+  ["tomorrow", "CilCalendarTomorrow.svg"],
+  ["month", "CilCalendarMonth.svg"]
 ];
 
 function flatten(svg) {

@@ -1095,6 +1095,10 @@ button, textarea {
   grid-template-columns: repeat(4, 1fr);
 }
 
+.chip-group.cols-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .chip {
   position: relative;
   display: flex;
