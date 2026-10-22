@@ -1585,6 +1585,16 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     ["onSetTier", "onSetRole", "canWrite"].every((k) => tierWxml.indexOf(k) < 0
       && tierJs.indexOf(k) < 0),
     "这张表给所有人看，改档那几个入口留在管理页的用户名录里");
+
+  const aboutWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "about", "about.wxml"), "utf8");
+  ok("关于只在「用户权限」那一张卡的最末一行，「我的」页不再单列用户协议 / 隐私政策",
+    /bindtap="onAbout"/.test(mineWxml) && /onAbout\s*\(/.test(mineJs)
+      && mineJs.indexOf("terms/terms") < 0 && mineJs.indexOf("privacy/privacy") < 0,
+    "协议与隐私又在「我的」页各占一行 —— 同一个入口两条路");
+  ok("用户协议与隐私政策落在关于页的菜单里",
+    /bindtap="onTerms"/.test(aboutWxml) && /bindtap="onPrivacy"/.test(aboutWxml),
+    "关于页少了协议或隐私那一行 —— 从「我的」撤掉之后就没有别的出口了");
 }
 
 {
