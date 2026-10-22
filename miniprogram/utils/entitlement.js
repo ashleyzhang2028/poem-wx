@@ -178,6 +178,7 @@ function compareNameOf(cap) {
 }
 
 function leagueRow(join) {
+  const on = rankOf(tiers.TIERS[tiers.TIERS.length - 1].key);
   return {
     cap: "league:" + (join ? "join" : "off"),
     name: LEAGUE_NAME + (join ? "" : "·不参与"),
@@ -185,7 +186,7 @@ function leagueRow(join) {
       tier: t.key,
       text: "",
       now: false,
-      on: rankOf(t.key) >= rankOf("max")
+      on: rankOf(t.key) >= on
     }))
   };
 }
