@@ -15,6 +15,16 @@
       </radio-group>
     </view>
 
+    <view class="seg fill pinyin-row" wx:if="{{pinyinOn}}">
+      <radio-group class="seg-group" bindchange="onPinyin">
+        <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}" />
+          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
+          <text class="seg-text">{{item.label}}</text>
+        </label>
+      </radio-group>
+    </view>
+
     <view class="font-row">
       <text class="font-a small">A</text>
       <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
@@ -24,29 +34,17 @@
     </view>
 
     <view class="poem-body align-{{align}} size-{{fontSize}} font-sample">
-      <view class="poem-stanza">
-        <text class="poem-line">床前明月光，疑是地上霜。</text>
-        <text class="poem-line">举头望明月，低头思故乡。</text>
+      <view class="poem-stanza" wx:for="{{sampleTokens}}" wx:key="index" wx:for-item="para">
+        <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+          <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
+            <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
+              <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
+              <text class="tk-ch">{{tk.ch}}</text>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">注音</view>
-
-    <block wx:if="{{pinyinOn}}">
-      <view class="seg">
-        <radio-group class="seg-group" bindchange="onPinyin">
-          <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}" />
-            <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-            <text class="seg-text">{{item.label}}</text>
-          </label>
-        </radio-group>
-      </view>
-    </block>
-
-    <text class="hint note" wx:else>{{pinyinNote}}</text>
   </view>
 
   <view class="card" wx:if="{{sfxVisible}}">
