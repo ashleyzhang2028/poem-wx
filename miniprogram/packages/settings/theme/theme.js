@@ -56,7 +56,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     const r = font.set(key);
     if (!r.ok) {
-      wx.showToast({ title: r.reason === "tier" ? "字体需要 Pro 权限" : "这款字体不存在", icon: "none" });
+      wx.showToast({ title: r.reason === "tier" ? "字体需 Pro 权限" : "字体不存在", icon: "none" });
       this.setData(this.view());
       return;
     }

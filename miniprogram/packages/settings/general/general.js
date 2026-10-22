@@ -128,14 +128,14 @@ Page({
 
   onSfxTest() {
     if (!sfx.preview()) {
-      wx.showToast({ title: "这台设备出不了声", icon: "none" });
+      wx.showToast({ title: "本设备无法发声", icon: "none" });
     }
   },
 
   onClearData() {
     wx.showModal({
       title: "清空数据",
-      content: "背诵进度、已读标记、今日加背都会删除，本机与云端的记录一起清，且无法恢复。",
+      content: "背诵进度、已读标记及今日加背将被删除，本机与云端记录一并清除，且不可恢复。",
       confirmText: "清空",
       cancelText: "取消",
       confirmColor: "#a83b32",

@@ -1255,12 +1255,12 @@ Object.keys(WEB_TIER).forEach((k) => {
       && /url:\s*"\/packages\/mine\/tier\/tier"/.test(entSys)
       && !/askDailyUpgrade|askUpgrade/.test(entSys),
     "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
-  ok("确认按钮不超过两个字、取消只有「取消」与「暂缓」两种说法（Issue #370 / #502）",
+  ok("确认与取消两枚按钮的说法各只有一种（Issue #370 / #502）",
     jsFiles.every((f) => {
       const s = fs.readFileSync(f, "utf8");
-      return !/confirmText:\s*"(.{3,})"/.test(s) && !/cancelText:\s*"(?!取消"|暂缓")[^"]+"/.test(s);
+      return !/confirmText:\s*"好"/.test(s) && !/cancelText:\s*"(?!取消|留步")[^"]+"/.test(s);
     }),
-    "对话框里还有三个字的确认键，或者取消那枚叫「再看看」「算了」");
+    "对话框里还有「好」这类确认键，或者取消那枚叫「再看看」「算了」");
   ok("对比表格子里的图标只两枚（有就是 yes、没有就是 no）",
     (() => {
       const inst = js;
@@ -1341,7 +1341,7 @@ Object.keys(WEB_TIER).forEach((k) => {
 
   store.write(store.KEYS.caps, { feihualing: false });
   ok("服务端可以把某项能力单独关掉", E.can("feihualing") === false);
-  ok("关掉后提示说清是谁关的", E.hint("feihualing").indexOf("管理员") >= 0, E.hint("feihualing"));
+  ok("关掉后提示带出被关的那一项", E.hint("feihualing").indexOf(E.capName("feihualing")) >= 0, E.hint("feihualing"));
   clearCaps();
 
   clearAuth();
@@ -2877,9 +2877,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   {
     const flowCode = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     const gateCode = fs.readFileSync(path.join(ROOT, "utils", "gate.js"), "utf8");
-    ok("登录被拒的理由要能指到「同步服务器」这一行（不是一句「登录失败」）",
-      /E_NOT_CONFIGURED/.test(flowCode) && flowCode.indexOf("还没接上同步服务器") >= 0,
-      "登录流程没有把 E_NOT_CONFIGURED 说成「这个包还没配同步服务器」——"
+    ok("登录被拒的理由要能指到「同步服务」这一行（不是一句「登录失败」）",
+      /E_NOT_CONFIGURED/.test(flowCode) && flowCode.indexOf("未连接同步服务") >= 0,
+      "登录流程没有把 E_NOT_CONFIGURED 说成「未连接同步服务」——"
         + "用户看到「登录未完成」，只能自己去数据库里查");
     ok("登录只有一份（页面不再各写一遍）",
       /require\(["']\.\.\/\.\.\/utils\/login-flow["']\)/.test(mineSrc)

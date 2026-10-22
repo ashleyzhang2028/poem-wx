@@ -139,16 +139,16 @@ Page({
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const id = this.data.id;
     const inList = cols.collectionsOf(id);
-    const names = cols.list().map((c) => cols.nameOf(c));
-    const items = names.concat(["新建集合"]);
+    const list = cols.list();
+    const names = list.map((c) => cols.nameOf(c));
     wx.showActionSheet({
-      itemList: items,
+      itemList: list.map((c) => cols.nameOf(c) + "（" + cols.idsOf(c).length + " 首）").concat(["新建集合"]),
       success: (res) => {
         if (res.tapIndex >= names.length) {
           this.newCollection(id);
           return;
         }
-        const c = cols.list()[res.tapIndex];
+        const c = list[res.tapIndex];
         const r = cols.add(c.id, [id]);
         this.afterPick(r, c);
       },
@@ -162,11 +162,11 @@ Page({
     const cap = cols.capOf();
     if (!entitlement.gateTier("collections", { page: this })) return;
     if (cols.list().length >= cap) {
-      wx.showToast({ title: "最多 " + cap + " 个集合，先删一个", icon: "none" });
+      wx.showToast({ title: "集合已达上限（" + cap + " 个），请先删除一个", icon: "none" });
       return;
     }
     wx.showModal({
-      title: "新建自选集合",
+      title: "新建集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
       confirmText: "新建",
@@ -188,7 +188,7 @@ Page({
     if (!r.ok) {
       const msg = r.code === "E_FULL"
         ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : r.code === "E_DUP" ? "已经在「" + cols.nameOf(c) + "」里了" : "加不进去";
+        : r.code === "E_DUP" ? "已在「" + cols.nameOf(c) + "」中" : "添加失败";
       wx.showToast({ title: msg, icon: "none" });
       return;
     }
@@ -208,7 +208,7 @@ Page({
       return;
     }
     this.setData({ dailyOn: r.on });
-    wx.showToast({ title: r.on ? "已加入今日背诵" : "已移出今日背诵", icon: "none" });
+    wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
     sync.markDirty();
   },
 
@@ -217,8 +217,8 @@ Page({
   },
 
   dailyMsg(r) {
-    if (r.code === "E_LIMIT") return "今日已加 " + store.DAILY_EXTRA_MAX + " 首，背完再加";
-    if (r.code === "E_STORAGE") return "添加失败：空间不足或存储未开启";
+    if (r.code === "E_LIMIT") return "今日已加背 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+    if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
     return "添加失败";
   },
 
@@ -377,7 +377,7 @@ Page({
   onPinyin(e) {
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) {
-      wx.showToast({ title: "读音表未生成", icon: "none" });
+      wx.showToast({ title: "读音表尚未生成", icon: "none" });
       return;
     }
     this.setData({ pinyinMode: mode });

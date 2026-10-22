@@ -166,18 +166,18 @@ Component({
     },
 
     failText() {
-      if (!sync.ready()) return "登录后能取回这一首的正文";
-      return "再取一次";
+      if (!sync.ready()) return "登录后可获取本篇正文";
+      return "重新获取";
     },
 
     whyText() {
       const code = this.textErr;
-      if (code === "E_NO_ENTRY") return "这一首不在正文分片的清单里。";
-      if (code === "E_NO_TEXT") return "这一片的正文不完整。";
-      if (code === "E_NO_SHARDS") return "服务端这个版本没带正文分片。";
-      if (code === "E_NO_SHARD_SERVICE") return "这个包没接上取正文的服务。";
-      if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时了，多半是服务刚被唤醒。";
-      if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到取正文的服务。";
+      if (code === "E_NO_ENTRY") return "本篇不在正文分片清单中。";
+      if (code === "E_NO_TEXT") return "该分片正文不完整。";
+      if (code === "E_NO_SHARDS") return "服务端当前版本未包含正文分片。";
+      if (code === "E_NO_SHARD_SERVICE") return "当前版本未配置正文服务。";
+      if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时，服务可能刚被唤醒。";
+      if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到正文服务。";
       if (/网络|不通/.test(this.errSay)) return "网络不通。";
       return "";
     },
@@ -209,10 +209,10 @@ Component({
     },
 
     missText() {
-      if (!sync.ready()) return "这一首的正文没取到，登录后能取回来。";
+      if (!sync.ready()) return "本篇正文获取失败，登录后可获取。";
       const why = this.whyText();
-      if (why) return "这一首的正文没取到。" + why + (this.retryable() ? "再取一次。" : "");
-      return "这一首的正文没取到。多半是网络没通，再取一次。";
+      if (why) return "本篇正文获取失败。" + why + (this.retryable() ? "请重新获取。" : "");
+      return "本篇正文获取失败，可能因网络不通，请重新获取。";
     },
 
     markMissing(item) {
@@ -235,11 +235,11 @@ Component({
       const why = this.whyText();
       const name = (item && item.title) || "";
       wx.showModal({
-        title: "正文加载",
+        title: "正文获取失败",
         content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首"
-          + (name ? "「" + name + "」" : "") + "的正文没取到。"
+          + (name ? "「" + name + "」" : "") + "正文获取失败。"
           + (why ? "\n\n" + why : "")
-          + "\n\n" + (sync.ready() ? "点「同步」再取一次。" : "登录后能取回这一首的正文。"),
+          + "\n\n" + (sync.ready() ? "请点击「同步」重试。" : "登录后可获取本篇正文。"),
         confirmText: "同步",
         cancelText: "取消",
         success: (res) => {
@@ -403,7 +403,7 @@ Component({
         return;
       }
       this.setData({ dailyOn: r.on });
-      wx.showToast({ title: r.on ? "已加入今日背诵" : "已移出今日背诵", icon: "none" });
+      wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
 
       this.triggerEvent("change", { count: store.dailyExtra().length });
     },
@@ -413,9 +413,9 @@ Component({
     },
 
     dailyMsg(r) {
-      if (r.code === "E_LIMIT") return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，先背完再加";
-      if (r.code === "E_STORAGE") return "加不进去：这台手机存不下（空间不足或未开启存储）";
-      return "加不进去";
+      if (r.code === "E_LIMIT") return "今日已加背 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+      if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
+      return "添加失败";
     },
 
     onToggleTranslation() {
@@ -431,7 +431,7 @@ Component({
     onPinyin(e) {
       const mode = e.detail.value;
       if (!pinyin.setMode(mode)) {
-        wx.showToast({ title: "读音表未生成", icon: "none" });
+        wx.showToast({ title: "读音表尚未生成", icon: "none" });
         return;
       }
       this.setData({ pinyinMode: mode });

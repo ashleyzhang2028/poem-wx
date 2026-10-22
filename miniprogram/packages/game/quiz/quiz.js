@@ -74,7 +74,7 @@ Page({
       ? this.data.pickedForms.filter((k) => k !== key)
       : this.data.pickedForms.concat([key]);
     if (!picked.length) {
-      wx.showToast({ title: "至少留一种题型", icon: "none" });
+      wx.showToast({ title: "请至少保留一种题型", icon: "none" });
       return;
     }
     this.setData({
@@ -93,7 +93,7 @@ Page({
       sequential: false
     });
     if (!questions.length) {
-      wx.showToast({ title: "这个范围出不了题", icon: "none" });
+      wx.showToast({ title: "当前范围无法出题", icon: "none" });
       return;
     }
     this.setData(

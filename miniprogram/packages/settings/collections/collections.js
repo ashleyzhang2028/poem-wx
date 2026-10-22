@@ -158,11 +158,11 @@ Page({
   onCreate() {
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     if (this.data.count >= this.data.cap) {
-      wx.showToast({ title: "最多 " + this.data.cap + " 个集合，先删一个", icon: "none" });
+      wx.showToast({ title: "集合已达上限（" + this.data.cap + " 个），请先删除一个", icon: "none" });
       return;
     }
     wx.showModal({
-      title: "新建自选集合",
+      title: "新建集合",
       editable: true,
       placeholderText: cols.DEFAULT_NAME,
       confirmText: "新建",
@@ -194,16 +194,16 @@ Page({
     const c = cols.find(id);
     if (!c) return;
     wx.showModal({
-      title: "改集合名",
+      title: "重命名集合",
       editable: true,
       placeholderText: cols.nameOf(c),
-      confirmText: "改名",
+      confirmText: "重命名",
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const r = cols.rename(id, res.content);
         if (!r.ok) {
-          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名字不能为空" : "没找到这个集合", icon: "none" });
+          wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名称不能为空" : "集合不存在", icon: "none" });
           return;
         }
         sync.markDirty();
@@ -218,7 +218,7 @@ Page({
     if (!c) return;
     wx.showModal({
       title: "删除集合",
-      content: "「" + cols.nameOf(c) + "」连同里面 " + c.items.length + " 首一起删除？背诵进度一个字都不动。",
+      content: "删除「" + cols.nameOf(c) + "」及其中 " + c.items.length + " 首篇目？背诵进度不受影响。",
       confirmText: "删除",
       cancelText: "取消",
       confirmColor: "#a83b32",
@@ -238,7 +238,7 @@ Page({
     if (!c || !c.items.length) return;
     wx.showModal({
       title: "清空集合",
-      content: "把「" + cols.nameOf(c) + "」里 " + c.items.length + " 首全部移出？集合本身留着。",
+      content: "移出「" + cols.nameOf(c) + "」中全部 " + c.items.length + " 首篇目？集合本身将保留。",
       confirmText: "清空",
       cancelText: "取消",
       success: (res) => {
@@ -296,7 +296,7 @@ Page({
     if (!inside && !r.ok) {
       const msg = r.code === "E_FULL"
         ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : "加不进去";
+        : "添加失败";
       wx.showToast({ title: msg, icon: "none" });
       return;
     }
@@ -332,12 +332,12 @@ Page({
     const c = cols.find(id);
     if (!c) return;
     if (!ids.length) {
-      wx.showToast({ title: "还没选中任何一篇", icon: "none" });
+      wx.showToast({ title: "未选择篇目", icon: "none" });
       return;
     }
     wx.showModal({
-      title: "移出选中的篇目",
-      content: "把「" + cols.nameOf(c) + "」里选中的 " + ids.length + " 首移出？背诵进度一个字都不动。",
+      title: "移出篇目",
+      content: "将所选 " + ids.length + " 首移出「" + cols.nameOf(c) + "」？背诵进度不受影响。",
       confirmText: "移出",
       cancelText: "取消",
       confirmColor: "#a83b32",

@@ -92,16 +92,16 @@ Component({
       if (!id) return { ok: false, msg: "" };
       const r = store.toggleDailyExtra(id);
       if (!r.ok) return { ok: false, on: false, code: r.code, msg: this.msgOf(r.code) };
-      return { ok: true, on: r.on, msg: r.on ? "已加入今日背诵" : "已移出今日背诵" };
+      return { ok: true, on: r.on, msg: r.on ? "已加入今日加背" : "已移出今日加背" };
     },
 
     msgOf(code) {
       if (code === "E_TIER") return "";
       if (code === "E_LIMIT") {
-        return "今天已经加了 " + store.DAILY_EXTRA_MAX + " 首，够多了 —— 先背完再加";
+        return "今日已加背 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
       }
-      if (code === "E_STORAGE") return "加不进去：这台手机存不下（空间不足或未开启存储）";
-      return "加不进去";
+      if (code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
+      return "添加失败";
     },
 
     afterChange() {
