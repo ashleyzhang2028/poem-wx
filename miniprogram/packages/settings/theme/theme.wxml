@@ -28,18 +28,14 @@
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
 
+    <view class="font-preview" style="font-family:'{{previewFamilyOf}}'">{{fontPreview}}</view>
+
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onFont">
-        <view class="font-sample">
-          <text class="font-glyph">{{item.name}}</text>
-          <text class="font-note">{{item.note}}</text>
-        </view>
-        <view class="font-tick">
-          <view class="font-dot"></view>
-        </view>
+        <text class="font-name" style="font-family:'{{item.tone}}'">{{item.name}}</text>
       </view>
     </view>
   </view>
