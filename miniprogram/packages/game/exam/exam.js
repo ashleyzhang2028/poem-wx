@@ -57,7 +57,7 @@ Page({
     newBest: false,
 
     allowed: false,
-    reason: "",
+    tier: "max",
     ranked: false,
     rankSent: false,
     rankWhere: ""
@@ -67,7 +67,7 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("exam");
-    this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("exam") });
+    this.setData({ allowed: ok, tier: entitlement.tierOf("exam") });
     if (!ok || this.ready) return;
     this.ready = true;
 

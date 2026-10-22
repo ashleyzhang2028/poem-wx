@@ -81,7 +81,7 @@ Page({
     });
     this.setData({
       on: entitlement.can("collections"),
-      hint: entitlement.can("collections") ? "" : entitlement.hint("collections"),
+      tier: entitlement.tierOf("collections"),
       cap: cols.capOf(),
       count: list.length,
       collections: rows,
@@ -139,10 +139,6 @@ Page({
     });
   },
 
-
-  onTier() {
-    entitlement.openTierPage();
-  },
 
   onCount(e) {
     const id = e.currentTarget.dataset.id;

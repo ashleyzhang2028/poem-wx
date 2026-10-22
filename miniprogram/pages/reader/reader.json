@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "tier-tag": "/components/tier-tag/tier-tag",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

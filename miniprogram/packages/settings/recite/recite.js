@@ -50,7 +50,7 @@ Page({
 
     selfOnlyOn: false,
     selfOnly: false,
-    selfOnlyHint: "",
+    selfOnlyTier: "pro",
     selfOnlyRows: 0,
     selfOnlyPoems: 0
   },
@@ -82,11 +82,9 @@ Page({
     this.setData({
       selfOnlyOn: on,
       selfOnly: on && !!store.settings().selfOnly,
+      selfOnlyTier: E.can("collections") ? E.tierOf("coursefree") : E.tierOf("collections"),
       selfOnlyRows: rows.length,
-      selfOnlyPoems: rows.reduce((n, c) => n + c.items.length, 0),
-      selfOnlyHint: on
-        ? ""
-        : E.hint("coursefree") || E.hint("collections")
+      selfOnlyPoems: rows.reduce((n, c) => n + c.items.length, 0)
     });
   },
 
@@ -183,8 +181,7 @@ Page({
         years: m.years,
         describe: m.describe,
         allowed,
-
-        lockHint: allowed ? "" : E.hint(m.key),
+        tier: E.tierOf(m.key),
         active: m.key === current
       };
     });

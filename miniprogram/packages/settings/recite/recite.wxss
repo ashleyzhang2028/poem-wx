@@ -120,13 +120,6 @@
   opacity: .45;
 }
 
-.algo-locked {
-  display: block;
-  margin-top: var(--sp-2);
-  font-size: var(--fs-caption);
-  color: var(--amber);
-}
-
 .self-only-note {
   display: block;
   margin-top: var(--sp-2);

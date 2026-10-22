@@ -2,6 +2,7 @@ const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
 const tabbar = require("../../../utils/tabbar");
+const tiers = require("../../../utils/tiers");
 
 Page({
   data: {
@@ -17,7 +18,7 @@ Page({
     fonts: [],
     font: font.DEFAULT,
     fontLocked: true,
-    fontNote: ""
+    fontTier: "pro"
   },
 
   onShow() {
@@ -38,7 +39,7 @@ Page({
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
       fontLocked: !pickable,
-      fontNote: pickable ? "" : "字体属于 " + font.lockedName() + " 起的功能，先按默认那一款显示"
+      fontTier: font.tier()
     };
   },
 
@@ -56,7 +57,8 @@ Page({
     const key = e.currentTarget.dataset.key;
     const r = font.set(key);
     if (!r.ok) {
-      wx.showToast({ title: r.reason === "tier" ? "字体需 Pro 权限" : "字体不存在", icon: "none" });
+      const title = r.reason === "tier" ? tiers.nameOf(font.tier()) + " 起可用" : "这款字体不存在";
+      wx.showToast({ title, icon: "none" });
       this.setData(this.view());
       return;
     }

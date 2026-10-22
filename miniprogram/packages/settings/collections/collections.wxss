@@ -6,12 +6,6 @@
   margin-top: var(--sp-2);
 }
 
-.coll-lock {
-  display: block;
-  margin-top: var(--sp-2);
-  color: var(--amber);
-}
-
 .coll-new {
   margin-top: var(--sp-3);
 }

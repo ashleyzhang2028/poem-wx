@@ -2,6 +2,7 @@
   <view class="cp" catchtap="onStop" style="{{themeStyle}}">
     <view class="cp-head">
       <text class="cp-title">收进自选集</text>
+      <text class="cp-count">已建 {{total}} / {{cap}} 个</text>
       <view class="cp-close" hover-class="cp-close-hover" hover-stay-time="60" bindtap="close">
         <view class="cp-close-x"></view>
       </view>
@@ -25,6 +26,11 @@
       </view>
     </view>
 
+    <view class="cp-head cp-create-head" wx:if="{{full}}">
+      <text class="cp-title">新建集合</text>
+      <tier-tag tier="{{tier}}" />
+    </view>
+
     <view class="cp-create" wx:if="{{creating}}">
       <input class="cp-input" value="{{draft}}" placeholder="新集合的名字" maxlength="12" bindinput="onDraft"
              confirm-type="done" bindconfirm="onSubmitCreate" />
@@ -32,12 +38,5 @@
     </view>
 
     <button class="btn ghost block cp-dismiss" bindtap="close">先不收了</button>
-  </view>
-</view>
-
-<view class="cp-mask" wx:if="{{tierOpen}}" bindtap="onTierClose">
-  <view class="cp cp-tier" catchtap="onStop" style="{{themeStyle}}">
-    <tier-view />
-    <button class="btn ghost block cp-dismiss" bindtap="onTierClose">取消</button>
   </view>
 </view>

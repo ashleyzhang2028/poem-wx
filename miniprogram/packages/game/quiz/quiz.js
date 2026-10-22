@@ -42,14 +42,14 @@ Page({
     newBest: false,
 
     allowed: false,
-    reason: ""
+    tier: "pro"
   },
 
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
-    this.setData({ allowed: ok, reason: ok ? "" : entitlement.hint("quiz") });
+    this.setData({ allowed: ok, tier: entitlement.tierOf("quiz") });
     if (!ok || this.ready) return;
     this.ready = true;
 

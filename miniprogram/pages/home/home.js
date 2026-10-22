@@ -220,7 +220,6 @@ Page({
 
     collections: [],
     collectionCount: 0,
-    collectionHint: "",
     collectionOn: false,
 
     todayLabel: "",
@@ -393,7 +392,6 @@ Page({
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
-      collectionHint: entitlement.can("collections") ? "" : entitlement.hint("collections").replace(/。$/, ""),
       seasonal: this.seasonalCard(),
       loading: false
     });
@@ -666,10 +664,6 @@ Page({
 
   onLoginTapped() {
     loginFlow.askLogin(this);
-  },
-
-  onPermissions() {
-    entitlement.openTierPage();
   },
 
   onOpen(e) {

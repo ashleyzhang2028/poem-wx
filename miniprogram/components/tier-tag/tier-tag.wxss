@@ -1,0 +1,10 @@
+.tier-tag,
+[data-tag="text"][tier-tag="1"] {
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  letter-spacing: var(--ls-caption);
+  line-height: 1.2;
+  white-space: nowrap;
+}
