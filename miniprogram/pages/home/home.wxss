@@ -253,42 +253,10 @@
   gap: var(--sp-1);
 }
 
-.seasonal-btn {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  height: var(--h-round);
-  padding: 0 var(--sp-2);
-  box-sizing: border-box;
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius-pill);
-  color: var(--ink-2);
-  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
-}
-
-.seasonal-btn .glyph {
-  width: var(--h-round-ico);
-  height: var(--h-round-ico);
+.seasonal-btns .glyph {
   color: var(--ink-4);
 }
 
-.seasonal-btn.on {
-  background: var(--strong-soft);
-  border-color: var(--strong);
+.seasonal-btns .round-btn.on .glyph {
   color: var(--strong-text);
-}
-
-.seasonal-btn.on .glyph {
-  color: var(--strong-text);
-}
-
-.seasonal-btn-hover {
-  opacity: .72;
-}
-
-.seasonal-btn-text {
-  font-size: var(--fs-caption);
-  line-height: 1;
-  white-space: nowrap;
 }
