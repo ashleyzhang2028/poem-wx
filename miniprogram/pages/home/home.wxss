@@ -9,14 +9,11 @@
   margin-bottom: var(--sp-2);
 }
 
-.hero {
-  padding: var(--sp-3) var(--sp-3);
-  background: transparent;
-}
-
 .home .hero-lead {
   position: relative;
   z-index: 1;
+  margin-top: var(--banner-lead-gap);
+  background: transparent;
 }
 
 .hero-eyebrow {
