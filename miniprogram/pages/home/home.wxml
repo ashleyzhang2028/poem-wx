@@ -3,7 +3,7 @@
   <page-banner src="{{banner}}" />
 
   <block wx:if="{{guest}}">
-    <view class="card hero hero-lead">
+    <view class="card hero-lead">
       <text class="hero-eyebrow">今日</text>
       <text class="hero-title">{{gradeName}}</text>
       <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
@@ -41,7 +41,7 @@
 
   <block wx:else>
 
-    <view class="card hero hero-lead">
+    <view class="card hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
       <text class="hero-title">今日背诵</text>
       <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
