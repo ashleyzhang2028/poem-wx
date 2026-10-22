@@ -137,7 +137,8 @@ function flattenCss(file, seen) {
 
 const TOKENS = flattenCss(path.join(ROOT, "styles/tokens.wxss"));
 const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g, "");
-const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
+const COMP_CSS = flattenCss(path.join(ROOT, "components/page-banner/page-banner.wxss"))
+  + flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
   + flattenCss(path.join(ROOT, "packages/feedback/index/index.wxss"))
@@ -397,6 +398,24 @@ function withSeedFeedback(cfg, data) {
   });
 }
 
+function expandPageBanner(wxml, data) {
+  if (wxml.indexOf("<page-banner") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/page-banner/page-banner.wxml"), "utf8");
+  const nav = require(path.join(ROOT, "utils", "nav.js"));
+  const box = nav.top();
+  const width = Number((global.wx.getWindowInfo && global.wx.getWindowInfo().windowWidth)
+    || global.wx.getSystemInfoSync().windowWidth) || 375;
+  const merged = Object.assign({}, data, {
+    barHeight: box.statusBarHeight + box.navHeight,
+    imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
+  });
+  Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
+  return wxml.replace(/<page-banner[^>]*\/>/g, (tag) => {
+    const src = /src\s*=\s*"([^"]*)"/.exec(tag);
+    return comp.replace(/src="\{\{src\}\}"/, 'src="' + (src ? src[1] : "") + '"');
+  });
+}
+
 function expandDailyExtra(wxml, data) {
   if (wxml.indexOf("<daily-extra") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/daily-extra/daily-extra.wxml"), "utf8");
@@ -481,6 +500,7 @@ function pageHtml(cfg, data) {
     for (let i = 0; i < n; i++) s += '<view class="sk-block sk-line w80"></view>';
     return s + "</view>";
   });
+  wxml = expandPageBanner(wxml, data);
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);

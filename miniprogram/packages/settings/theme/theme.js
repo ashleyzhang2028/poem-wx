@@ -9,6 +9,8 @@ Page({
     barBelow: true,
     locked: false,
 
+    banner: theme.BANNER,
+
     groups: theme.groups(),
     theme: theme.DEFAULT,
 
@@ -20,7 +22,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this) });
+    this.setData({ barBelow: tabbar.below(this), banner: theme.bannerOf(theme.current()) });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;
@@ -46,7 +48,7 @@ Page({
     if (key === this.data.theme) return;
     theme.set(key);
     theme.apply(this);
-    this.setData({ theme: theme.current() });
+    this.setData({ theme: theme.current(), banner: theme.bannerOf(theme.current()) });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 

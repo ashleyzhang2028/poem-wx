@@ -1,12 +1,6 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="banner" style="--status-h: {{statusBarHeight}}px; --nav-h: {{navHeight}}px">
-
-    <image class="banner-img" src="{{banner}}" mode="widthFix" />
-
-  </view>
-
-  <view class="banner-space" style="height:{{bannerHeight}}px"></view>
+  <page-banner src="{{banner}}" />
 
   <block wx:if="{{guest}}">
     <view class="card hero hero-lead">

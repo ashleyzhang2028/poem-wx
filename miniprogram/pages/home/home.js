@@ -10,7 +10,6 @@ const loginFlow = require("../../utils/login-flow");
 const tabPage = require("../../utils/tab-page");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const nav = require("../../utils/nav");
 const LUNAR = require("../../utils/lunar");
 const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
@@ -60,34 +59,6 @@ function datasetOf(e) {
 
 function praiseOf(scope) {
   return quotes.pick(Date.now() / R.DAY, scope);
-}
-
-const HERO_RATIO = 916 / 1717;
-
-const BANNER_MAX_H = 360;
-
-function windowWidth() {
-  const read = (fn) => {
-    try {
-      return Number(fn().windowWidth) || 0;
-    } catch (e) {
-      return 0;
-    }
-  };
-  return (wx.getWindowInfo && read(wx.getWindowInfo))
-    || read(wx.getSystemInfoSync)
-    || 375;
-}
-
-function bannerBox() {
-  const box = nav.top();
-  return {
-    statusBarHeight: box.statusBarHeight,
-    navHeight: box.navHeight,
-    navBottom: box.navBottom,
-    bannerHeight: box.statusBarHeight + box.navHeight
-      + Math.min(Math.round(windowWidth() * HERO_RATIO), BANNER_MAX_H)
-  };
 }
 
 function reasonCls(key) {
@@ -225,11 +196,6 @@ Page({
 
     banner: theme.BANNER,
 
-    statusBarHeight: 0,
-    navHeight: 0,
-    navBottom: 0,
-    bannerHeight: 0,
-
     logged: false,
     guest: false,
     gradeName: "",
@@ -277,7 +243,6 @@ Page({
   },
 
   onLoad() {
-    this.setData(bannerBox());
     this.onLoginSettled = () => this.refresh();
     loginFlow.watch(this.onLoginSettled);
   },
