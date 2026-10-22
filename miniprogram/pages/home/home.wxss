@@ -181,8 +181,9 @@
   text-align: center;
 }
 
-.login-btn {
-  margin-bottom: var(--sp-2);
+.login-lead {
+  height: var(--h-field);
+  margin-top: var(--sp-4);
 }
 
 

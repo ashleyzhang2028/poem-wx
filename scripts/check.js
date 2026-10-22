@@ -4390,7 +4390,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /function takeNickname\(name\)[\s\S]{0,500}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
       "昵称没推上去");
     ok("没登录时那枚圆不出现在页面上（没有可换的身份）",
-      /<button[^>]*class="[^"]*login-box[^"]*"[^>]*wx:else[^>]*>/.test(panelWxml8)
+      /<button[^>]*class="[^"]*login-lead[^"]*"[^>]*wx:else[^>]*>/.test(panelWxml8)
         && /onWechatAvatar\(e\)[\s\S]{0,160}?if \(!url \|\| !this\.data\.logged\) return/.test(panelSrc),
       "没登录也能走换身份那一步 —— 那一步没有可换的身份");
     ok("头像或昵称一换，底栏那格跟着重画",

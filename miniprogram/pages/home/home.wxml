@@ -40,7 +40,7 @@
       </view>
     </view>
 
-    <button class="btn primary block login-btn" bindtap="onLoginTapped">登录</button>
+    <button class="btn primary block login-lead" bindtap="onLoginTapped">登录</button>
 
     <view class="safe-bottom"></view>
   </block>
