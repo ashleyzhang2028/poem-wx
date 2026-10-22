@@ -2818,10 +2818,8 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       "「我的」页与门禁弹窗各自写了一遍 wx.login 的成败分支");
     const openBody = (gateCode.match(/function open\(onPass, page\) \{[\s\S]*?\n\}/) || [""])[0];
     ok("门禁弹窗只有一份，点了「登录」就真去登录",
-      /loginFlow\.start\(/.test(openBody) && openBody.indexOf("wx.showModal") < 0
-        && openBody.indexOf("askLogin") < 0,
-      "open() 自己弹框、或又调了 askLogin —— 一次点击会叠出两个「登录」弹窗，"
-        + "用户点完「登录」以为没反应（Issue #502）。函数体："
+      /loginFlow\.askLogin\(/.test(openBody) && openBody.indexOf("wx.showModal") < 0,
+      "open() 自己弹框、或没走 askLogin —— 登录入口分成两套，点了没有真去登录（Issue #502）。函数体："
         + openBody.replace(/\s+/g, " "));
     ok("登录流程与门禁不互相 require（循环依赖会让 gate 交到半个空壳）",
       flowCode.indexOf('require("./gate")') < 0
@@ -2849,7 +2847,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
         barCode.indexOf("loginFlow.watch") < 0 ? "底栏" : ""].filter(Boolean).join("、")
         + " 没订上 —— 登录完了界面不会自己换那一屏");
     ok("退出就地对齐界面，不再靠 switchTab 重进自己这一页",
-      /leave\(\) \{[\s\S]{0,200}?auth\.logout\(\)[\s\S]{0,200}?triggerEvent\(["']changed["'], \{ logged: false \}/.test(panelCode)
+      /leave\(\) \{[\s\S]{0,200}?auth\.logout\(\)[\s\S]{0,200}?loginFlow\.report\(\)/.test(panelCode)
         && panelCode.indexOf("tabPage") < 0,
       "退出后又 switchTab 回「我的」—— 已经在「我的」时 switchTab 是空操作，"
         + "界面就停在已登录那一屏（Issue #502）");
@@ -3091,7 +3089,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
 
   ok("昵称被拦后端上退回原名并说一句（不把脏名字留在本机）",
     /blocked: !!\(err && err\.code === "E_NICK_BLOCKED"\)/.test(read("utils/auth.js"))
-      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => \{[\s\S]{0,400}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("components/login-panel/login-panel.js")),
+      && /auth\.saveNickname\(nickname\)\.then\(\(r\) => \{[\s\S]{0,400}?store\.saveProfile\(\{ nickname: before \}\)/.test(read("utils/login-flow.js")),
     "服务端不收，本机却已经改成了那个名字 —— 顶栏与榜上各说一套");
 
   ok("榜单读写都过同一道开关门（关着不给看也不收成绩）",
@@ -4333,26 +4331,24 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const flowSrc8 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     const mineSrc8 = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
-    ok("换头像与换昵称各有一个入口，两个都从同一个壳出去",
-      /bindtap="onWechat"/.test(panelWxml8)
-        && /onWechat\(\)[\s\S]{0,200}?this\.pick\(true\)/.test(panelSrc)
-        && /promptName\(\)[\s\S]{0,400}?this\.saveName\(/.test(panelSrc),
-      "头像或昵称没了入口 —— 用户拿不回来微信那张");
+    ok("换头像与换昵称各有一个入口，互不串联",
+      /bindtap="onName"/.test(panelWxml8)
+        && /onName\(\)[\s\S]{0,400}?loginFlow\.takeNickname\(/.test(panelSrc)
+        && /onWechatAvatar\(e\)[\s\S]{0,200}?loginFlow\.takeAvatar\(/.test(panelSrc),
+      "头像或昵称没了入口");
     ok("头像走 open-type=\"chooseAvatar\" 那一环的 chooseavatar 事件（平台没有静默拿头像的接口）",
-      /onWechatAvatar\(e\)[\s\S]{0,200}?loginFlow\.share\(/.test(panelSrc)
-        && /function takeAvatar\(url, keepQuiet\)[\s\S]{0,160}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8)
+      /function takeAvatar\(url\)[\s\S]{0,160}?store\.saveProfile\(\{ avatarLocal: url \}\)/.test(flowSrc8)
         && !/wx\.chooseAvatar/.test(flowSrc8 + panelSrc),
       "用了 wx.chooseAvatar 这类客户端接口 —— 基础库上没有它，点了会报 not a function");
-    ok("换微信的那一对把昵称也走同一条推送（不是只改本机）",
-      /nickname: true/.test(panelSrc)
-        && /function takeNickname\(name\)[\s\S]{0,400}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
-      "只换了头像，昵称没推上去");
+    ok("昵称落本机后走同一条推送（不是只改本机）",
+      /function takeNickname\(name\)[\s\S]{0,500}?auth\.saveNickname\(nickname\)/.test(flowSrc8),
+      "昵称没推上去");
     ok("没登录时那枚圆不出现在页面上（没有可换的身份）",
       /<view class="card login-box" wx:else>/.test(panelWxml8)
         && /onWechatAvatar\(e\)[\s\S]{0,160}?if \(!url \|\| !this\.data\.logged\) return/.test(panelSrc),
       "没登录也能走换身份那一步 —— 那一步没有可换的身份");
     ok("头像或昵称一换，底栏那格跟着重画",
-      /done\(\)[\s\S]{0,200}?this\.refresh\(\)[\s\S]{0,200}?triggerEvent\("changed"\)/.test(panelSrc)
+      /done\(\) \{[\s\S]{0,100}?this\.refresh\(\)[\s\S]{0,100}?triggerEvent\("changed"\)/.test(panelSrc)
         && /bind:changed="onIdentityChanged"/.test(
           fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.wxml"), "utf8"))
         && /onIdentityChanged\(res\) \{[\s\S]{0,160}?this\.syncBar\(\)/.test(mineSrc8)
@@ -4364,13 +4360,14 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
 
-    ok("登录成功后问一次用不用微信的（取消就照旧）",
-      /auth\s*\n?\.login\(\)[\s\S]{0,300}?askWechat\(at\)/.test(flowSrc9)
-        && /function askWechat\(page\)[\s\S]{0,200}?goIdentity\(page\)/.test(flowSrc9),
-      "登录完直接把用户丢进页面 —— 想用微信那张还得自己找入口");
-    ok("换头像/换昵称只有一份实现（卡片与登录后那一问都调它）",
-      /module\.exports = \{[^}]*share[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
-        && /loginFlow\.share\(/.test(panelCode9)
+    ok("登录不再追问，也不留多余入口（身份卡只剩头像圆、昵称行、辞别）",
+      !/askWechat|goIdentity/.test(flowSrc9)
+        && !/wechat-go|onWechat\(\)|bindtap="onWechat"|picking/.test(panelCode9
+          + fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8")),
+      "登录完又弹一问、或身份卡又长出第二枚换身份的按钮");
+    ok("换头像/换昵称只有一份实现（卡片调它）",
+      /module\.exports = \{[^}]*takeAvatar[^}]*takeNickname[^}]*\}/.test(flowSrc9)
+        && /loginFlow\.takeAvatar\(/.test(panelCode9)
         && !/function takeNickname/.test(panelCode9)
         && !/function takeAvatar/.test(panelCode9),
       "页面自己又写了一遍落盘与推送 —— 两处会各说一套");
@@ -4489,7 +4486,8 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
       /request\(REMOTE\.me,[\s\S]{0,80}?\"PATCH\"/.test(authSrc9),
       "昵称只写进了本机存储 —— 数据库 accounts.nickname 永远是空的（Issue #268）");
     ok("改昵称那一刻就把昵称推上去（不靠进度同步队列捎带）",
-      /saveName\(nickname\)[\s\S]{0,400}?auth\.saveNickname\(/.test(read("components/login-panel/login-panel.js")),
+      /loginFlow\.takeNickname\(/.test(read("components/login-panel/login-panel.js"))
+        && /function takeNickname[\s\S]{0,600}?auth\.saveNickname\(/.test(read("utils/login-flow.js")),
       "改昵称只落本机 + markDirty —— 进度那条链从来不打包昵称，" +
         "用户改完到数据库里看依旧为空");
     ok("没登录 / 没接后端时改昵称不炸（只落本机）",
@@ -6350,7 +6348,7 @@ function gapped(items, max) {
 
   ok("整枚圆都是命中区，点首字印也算点头像（Issue #388）",
     /<view class="avatar-wrap">[\s\S]{0,400}?<button class="wechat-choose" open-type="chooseAvatar"/.test(panelWxml)
-      && /onWechatAvatar\(e\)[\s\S]{0,160}?loginFlow\.share\(/.test(panelSrc),
+      && /onWechatAvatar\(e\)[\s\S]{0,160}?loginFlow\.takeAvatar\(/.test(panelSrc),
     "首字印与头像图并列、不穿透，点在字上就没反应");
 }
 

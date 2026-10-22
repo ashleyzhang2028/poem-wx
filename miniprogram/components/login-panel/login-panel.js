@@ -15,8 +15,7 @@ Component({
     logged: false,
     nickname: "",
     avatarUrl: "",
-    avatarChar: "诗",
-    picking: false
+    avatarChar: "诗"
   },
 
   attached() {
@@ -30,8 +29,7 @@ Component({
         logged: !!profile.logged,
         nickname: profile.logged ? store.displayName() : "",
         avatarUrl: store.avatarSrc(),
-        avatarChar: store.avatarChar(),
-        picking: !!profile.logged && this.data.picking
+        avatarChar: store.avatarChar()
       });
     },
 
@@ -39,32 +37,14 @@ Component({
       this.triggerEvent("login");
     },
 
-    onWechat() {
-      if (!this.data.logged) return;
-      this.pick(true);
-    },
-
     onWechatAvatar(e) {
       const url = (e && e.detail && e.detail.avatarUrl) || "";
-      this.pick(false);
       if (!url || !this.data.logged) return;
-      loginFlow.share({ avatar: url, nickname: true }, this).then((res) => {
-        this.done();
-        if (res && res.nickname) this.triggerEvent("changed");
-      }).catch(() => this.done());
+      loginFlow.takeAvatar(url);
+      this.done();
     },
 
-    pick(withNickname) {
-      if (!this.data.logged) return;
-      if (!withNickname) {
-        this.setData({ picking: true });
-        return;
-      }
-      this.setData({ picking: false });
-      this.promptName();
-    },
-
-    promptName() {
+    onName() {
       if (!this.data.logged) return;
       wx.showModal({
         title: "昵称",
@@ -74,36 +54,14 @@ Component({
         cancelText: "取消",
         success: (r) => {
           if (!r || !r.confirm) return;
-          this.saveName(String(r.content || "").trim());
+          loginFlow.takeNickname(r.content).then(() => this.done(), () => this.done());
         }
       });
     },
 
-    saveName(nickname) {
-      if (!nickname) return;
-      const before = store.profile().nickname || "";
-      store.saveProfile({ nickname });
-      this.refresh();
-      this.triggerEvent("changed");
-      auth.saveNickname(nickname).then((r) => {
-        if (!r || !r.blocked) return;
-        store.saveProfile({ nickname: before });
-        this.refresh();
-        wx.showToast({ title: r.reason || "这个昵称不能用，换一个吧", icon: "none" });
-      });
-    },
-
     done() {
-      this.release();
       this.refresh();
       this.triggerEvent("changed");
-    },
-
-    release() {
-      const entry = this.entry;
-      this.entry = null;
-      this.arm("");
-      if (entry) entry.exit = () => {};
     },
 
     onLogout() {
@@ -118,23 +76,12 @@ Component({
 
     leave() {
       auth.logout();
-      this.setData({ picking: false });
       this.refresh();
-      this.triggerEvent("changed", { logged: false });
+      loginFlow.report();
     },
 
     onTier() {
       this.triggerEvent("tier");
-    },
-
-    showIdentity() {
-      this.setData({ picking: true });
-    },
-
-    done() {
-      this.setData({ picking: false });
-      this.refresh();
-      this.triggerEvent("changed");
     }
   }
 });

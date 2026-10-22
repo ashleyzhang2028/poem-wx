@@ -35,7 +35,7 @@ function open(onPass, page) {
     return true;
   }
   loginFlow.after(onPass, page);
-  loginFlow.start(page).catch(() => {});
+  loginFlow.askLogin(page).catch(() => {});
   return false;
 }
 

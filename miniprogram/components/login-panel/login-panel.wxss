@@ -108,12 +108,6 @@
   gap: var(--sp-2);
   margin-top: var(--sp-3);
 }
-
 .identity-acts .btn {
-  flex: 1;
-  padding: 0 var(--sp-2);
-}
-
-.wechat-go {
-  margin-top: var(--sp-3);
+  width: 100%;
 }
