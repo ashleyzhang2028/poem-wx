@@ -21,9 +21,14 @@ function table() {
   return tableCache;
 }
 
+let charsReady = null;
+
 function available() {
-  const t = table();
-  return !!(t && t.chars && Object.keys(t.chars).length);
+  if (charsReady === null) {
+    const t = table();
+    charsReady = !!(t && t.chars && Object.keys(t.chars).length);
+  }
+  return charsReady;
 }
 
 function readiness() {
