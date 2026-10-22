@@ -877,10 +877,11 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移一个
 `--sp-3` 把盒顶推到屏幕最上沿，盖住刘海区与导航行，微信胶囊浮在画上；
 页面自有导航（`components/nav-bar`）绝对定位在画里，标题压在画上。
-首卡用负 margin 上移 `--sp-5` 压在画的下沿，并自带
-`position: relative; z-index: 1`，否则会被导航行盖住。
+画里的标题行占掉画的上一段，首卡因此不再压到画的下沿，改为让出
+`--banner-lead-gap`（`96rpx`）落在画里，并自带 `position: relative; z-index: 1`，
+否则会被导航行盖住。
 主题页（`packages/settings/theme`）与首页同一套：banner、导航行、首卡位置一致，
-切主题时图与配色同时换。
+切主题时图与配色同时换；页面底色取 `--surface`，卡片去底留框线。
 
 画随主题换一张：`THEMES` 每一项带 `banner` 字段，页面读 `theme.bannerOf(key)`。
 大好河山那七张走云托管对象存储的 `themes/city/` 路径（包内不放这几张，

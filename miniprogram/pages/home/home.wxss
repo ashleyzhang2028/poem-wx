@@ -17,7 +17,7 @@
 .home .hero-lead {
   position: relative;
   z-index: 1;
-  margin-top: calc(-5 * var(--sp-5));
+  margin-top: var(--banner-lead-gap);
 }
 
 .hero-eyebrow {

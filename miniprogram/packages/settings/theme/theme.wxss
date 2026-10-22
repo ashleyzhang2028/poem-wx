@@ -1,9 +1,3 @@
-.group-head {
-  display: flex;
-  align-items: baseline;
-  min-width: 0;
-}
-
 .group-title {
   flex: 1;
   min-width: 0;
@@ -120,10 +114,19 @@
   opacity: .45;
 }
 
-.group-card:first-of-type {
+.theme-page {
+  padding-top: 0;
+  background: var(--surface);
+}
+
+.theme-page .group-card {
+  background: transparent;
+}
+
+.theme-page .group-card:first-of-type {
   position: relative;
   z-index: 1;
-  margin-top: calc(-5 * var(--sp-5));
+  margin-top: var(--banner-lead-gap);
 }
 
 .page.tall .gap-bottom {
