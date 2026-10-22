@@ -253,7 +253,10 @@
     "page": "packages/settings/general/general",
     "title": "设置",
     "back": true,
-    "logged": true
+    "logged": true,
+    "settings": {
+      "pinyin": "all"
+    }
   },
   "settings-theme": {
     "page": "packages/settings/theme/theme",

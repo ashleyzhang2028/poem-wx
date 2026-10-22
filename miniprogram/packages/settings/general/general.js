@@ -9,11 +9,14 @@ const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
 const icons = require("../../../utils/icons");
 const scale = require("../../../utils/type-scale");
+const corpus = require("../../../utils/corpus");
 
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
   { key: "center", label: "居中", icon: icons.center }
 ];
+
+const SAMPLE = "床前明月光，疑是地上霜。\n举头望明月，低头思故乡。";
 
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off, desc: "正文不带拼音" },
@@ -33,7 +36,7 @@ Page({
     pinyin: "off",
 
     pinyinOn: false,
-    pinyinNote: "",
+    sampleTokens: [],
     locked: false,
 
     themeColor: theme.currentTheme().rgba,
@@ -56,6 +59,7 @@ Page({
 
     const settings = store.settings();
     const pr = pinyin.readiness();
+    const size = scale.clamp(settings.fontSize);
     const prOn = pr.usable && entitlement.can("pinyin");
     const fx = sfx.readiness();
     this.setData(
@@ -68,16 +72,15 @@ Page({
         seasonalNote: seasonal.canSwitch() ? "" : seasonal.hintOf(),
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
-        pinyinNote: prOn
-          ? ""
-          : pr.usable
-            ? "注音要登录并且档位够才开。"
-            : "读音表还没生成。跑一次 build-data.js 就会带上 —— 生成前这一栏不显示，"
-              + "免得留个点了没反应的控件。"
+        sampleTokens: this.sample(prOn ? settings.pinyin : "off", size)
       })
     );
   },
 
+
+  sample(mode, size) {
+    return pinyin.render(corpus.layout(SAMPLE, { size, pinyin: mode === "all" }).paras, mode);
+  },
 
   onAlign(e) {
     const align = e.detail.value;
@@ -90,14 +93,14 @@ Page({
     const fontSize = scale.clamp(e.detail.value);
     if (fontSize === this.data.fontSize) return;
     store.saveSettings({ fontSize });
-    this.setData({ fontSize });
+    this.setData({ fontSize, sampleTokens: this.sample(this.data.pinyin, fontSize) });
     sync.markDirty();
   },
 
   onPinyin(e) {
     const mode = e.detail.value;
     if (!pinyin.setMode(mode)) return;
-    this.setData({ pinyin: mode });
+    this.setData({ pinyin: mode, sampleTokens: this.sample(mode, this.data.fontSize) });
   },
 
   onSeasonal(e) {

@@ -1,17 +1,15 @@
+.pinyin-row {
+  margin-top: var(--sp-2);
+}
+
 .font-row {
-  margin: var(--sp-2) 0 4rpx;
+  margin-top: var(--sp-2);
 }
 
 .font-sample {
   padding: var(--sp-3) 0 0;
   margin-top: var(--sp-3);
   border-top: 1rpx dashed var(--line-2);
-}
-
-.note {
-  display: block;
-  margin-top: var(--sp-2);
-  line-height: var(--lh-body);
 }
 
 .sfx-test {
