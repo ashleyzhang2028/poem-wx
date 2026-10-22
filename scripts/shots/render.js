@@ -137,7 +137,8 @@ function flattenCss(file, seen) {
 
 const TOKENS = flattenCss(path.join(ROOT, "styles/tokens.wxss"));
 const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g, "");
-const COMP_CSS = flattenCss(path.join(ROOT, "components/page-banner/page-banner.wxss"))
+const COMP_CSS = flattenCss(path.join(ROOT, "components/nav-bar/nav-bar.wxss"))
+  + flattenCss(path.join(ROOT, "components/page-banner/page-banner.wxss"))
   + flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
@@ -403,15 +404,13 @@ function expandTierTag(wxml) {
   return String(wxml).replace(/<tier-tag\b[^>]*?\/>/g, '<text tier-tag="1">Pro 起</text>');
 }
 
-function expandPageBanner(wxml, data) {
+function expandPageBanner(wxml, data, navbar) {
   if (wxml.indexOf("<page-banner") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/page-banner/page-banner.wxml"), "utf8");
-  const nav = require(path.join(ROOT, "utils", "nav.js"));
-  const box = nav.top();
   const width = Number((global.wx.getWindowInfo && global.wx.getWindowInfo().windowWidth)
     || global.wx.getSystemInfoSync().windowWidth) || 375;
   const merged = Object.assign({}, data, {
-    barHeight: box.statusBarHeight + box.navHeight,
+    full: navbar === "custom",
     imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
@@ -419,6 +418,35 @@ function expandPageBanner(wxml, data) {
     const src = /src\s*=\s*"([^"]*)"/.exec(tag);
     return comp.replace(/src="\{\{src\}\}"/, 'src="' + (src ? src[1] : "") + '"');
   });
+}
+
+function expandNavBar(wxml, data, navbar) {
+  if (wxml.indexOf("<nav-bar") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/nav-bar/nav-bar.wxml"), "utf8");
+  const nav = require(path.join(ROOT, "utils", "nav.js"));
+  const font = require(path.join(ROOT, "utils", "font.js"));
+  const box = nav.top();
+  const merged = Object.assign({}, data, {
+    height: box.statusBarHeight + box.navHeight,
+    top: box.navTop,
+    row: box.navBottom - box.navTop,
+    font: font.stack()
+  });
+  Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
+  return wxml.replace(/<nav-bar([^>]*)\/>/g, (_, attrs) => {
+    const title = /title\s*=\s*"((?:\{\{[^}]*\}\}|[^"])*)"/.exec(attrs);
+    return comp.replace(/\{\{title\}\}/, title ? title[1] : "");
+  });
+}
+
+function navbarOf(cfg) {
+  const file = path.join(ROOT, cfg.page + ".json");
+  if (!fs.existsSync(file)) return "default";
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8")).navigationStyle || "default";
+  } catch (e) {
+    return "default";
+  }
 }
 
 function expandDailyExtra(wxml, data) {
@@ -506,7 +534,8 @@ function pageHtml(cfg, data) {
     return s + "</view>";
   });
   wxml = expandTierTag(wxml);
-  wxml = expandPageBanner(wxml, data);
+  wxml = expandPageBanner(wxml, data, navbarOf(cfg));
+  wxml = expandNavBar(wxml, data, navbarOf(cfg));
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
   wxml = expandReciteSheet(wxml, data);
@@ -518,8 +547,9 @@ function pageHtml(cfg, data) {
   setImageIntrinsic(imageIntrinsicResolver(pageCss));
   const body = compile(wxml, data);
   const screenCssStr = screenCss(cfg, pageCss + adminCss);
+  const navbar = navbarOf(cfg) === "custom" ? "" : `<div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>`;
   return `<div class="device" data-screen="${cfg.key}">
-  <div class="navbar">${cfg.back ? '<span class="back">‹</span>' : ""}${cfg.title}${cfg.menu ? '<span class="menu"><i></i><i></i><i></i></span>' : ""}</div>
+  ${navbar}
   <div class="screen"><style>${screenCssStr}</style>${body}</div>
   <div class="caption">${cfg.key}</div>
   ${cfg.tab ? tabBarHtml(cfg.tab, themeStyleOf(data)) : ""}
