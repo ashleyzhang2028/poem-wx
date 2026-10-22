@@ -15,7 +15,8 @@ const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
-const defer = require("../../utils/defer");
+const guard = require("../../utils/guard");
+const pv = require("../../components/progress-view/progress-view");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -261,24 +262,26 @@ Page({
     this.refresh();
   },
 
-  refresh() {
+  refresh(force) {
     if (!gate.logged()) {
       this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
       return;
     }
 
     this.paint();
-    this.pull();
+    this.pull(force);
   },
 
-  pull() {
+  pull(force) {
     const seq = (this.pullSeq || 0) + 1;
     this.pullSeq = seq;
-    sync.pullOnly(true).then((res) => {
-      if (this.pullSeq !== seq) return;
-      if (!res || res.skipped || res.error || !res.applied) return;
-      this.paint();
-    }).catch(() => {});
+    guard
+      .once("home:pull", () => sync.pullOnly(!!force))
+      .then((res) => {
+        if (this.pullSeq !== seq) return;
+        if (!res || res.skipped || res.error || !res.applied) return;
+        this.paint();
+      });
   },
 
   paint() {
@@ -453,7 +456,9 @@ Page({
 
   onSeasonalAdd(e) {
     const id = e.currentTarget.dataset.id;
+    if (!guard.enter("home:extra:" + id)) return;
     const r = store.toggleDailyExtra(id);
+    guard.leave("home:extra:" + id);
     const box = this.selectComponent("#extra");
     if (r.code === "E_TIER") {
       entitlement.gateTier("extra", { page: this });
@@ -505,6 +510,10 @@ Page({
     return entitlement.block(name, { page: this, loginPrompt: true });
   },
 
+  onGoCollections() {
+    wx.navigateTo({ url: "/packages/settings/collections/collections" });
+  },
+
   onCollectDone(e) {
     const d = (e && e.detail) || {};
     if (!d.id || !d.collectionId) return;
@@ -523,7 +532,7 @@ Page({
 
   collectionRows() {
     const all = corpus.course();
-    return cols.list().map((c) => {
+    return cols.list().map((c, i) => {
       const plan = S.collectionPlan(c, {
         count: cols.countOf(c),
         allPoems: all,
@@ -545,6 +554,7 @@ Page({
         done: done,
         doneNow: doneNow,
         doneToday: plan.length > 0 && doneNow >= plan.length,
+        color: pv.DOTS[i % pv.DOTS.length],
         praise: plan.length > 0 && doneNow >= plan.length ? praiseOf("own") : "",
         rows: this.collectionCardRows(plan)
       };
@@ -641,7 +651,7 @@ Page({
   onProgress(e) {
     const id = datasetOf(e).id;
     if (!this.requireLogin("collections")) return;
-    wx.navigateTo({ url: "/packages/progress/index/index?coll=" + encodeURIComponent(id) });
+    wx.navigateTo({ url: "/packages/progress/coll/coll?coll=" + encodeURIComponent(id) });
   },
 
   scopeRows() {
@@ -677,12 +687,14 @@ Page({
       wx.showToast({ title: entitlement.hint("daily"), icon: "none" });
       return;
     }
+    if (!guard.enter("home:face:" + ds.id)) return;
     sfx.recite(face.key);
     const settings = store.settings();
     const rec = R.review(store.getRecord(ds.id), face.key, settings.algo);
     store.setRecord(ds.id, rec);
     store.markRead(sourceBook(ds.id), ds.id);
     sync.markDirty();
+    guard.leave("home:face:" + ds.id);
     this.refresh();
     wx.showToast({
       title: face.label + " · " + R.resultHint(settings.algo, face.key, rec),
@@ -716,11 +728,7 @@ Page({
     this.refresh();
   },
 
-  onDeferChange(e) {
-    const d = (e && e.detail) || {};
-    if (!d.id) return;
-    const level = defer.levelOf(d.key);
-    if (!d.on && level) wx.showToast({ title: "已取消「" + level.label + "」", icon: "none" });
+  onDeferChange() {
     this.refresh();
   },
 
@@ -787,7 +795,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.refresh();
+    this.refresh(true);
     setTimeout(() => wx.stopPullDownRefresh(), 320);
   },
 

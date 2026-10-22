@@ -1,6 +1,8 @@
 "use strict";
 
-var SECRET_KEYS = /^(code|.*token$|.*secret.*|.*salt.*|.*hash.*|.*password[s]?$|sid|pepper|authorization|cookie|api.*)$/i;
+var SECRET_KEYS = /(^|_)(code|codes|token|tokens|secret|salt|hash|password|passwd|pass|pwd|sid|pepper|authorization|cookie|apikey|session|sessionkey|session_key|devcode|devtoken)(_|$)/i;
+var EMAIL_KEYS = /(^|_)(email|mail|to)(_|$)/i;
+var OK_KEYS = /^(api|at|event|status|status_code|statuscode|kind|reason|codes|uid|limit|bytes|declared|code|error|errcode|error_code|retry_after|retryafter|ms|name|elapsed)$/i;
 
 function redact(value, depth) {
   depth = depth || 0;
@@ -13,11 +15,23 @@ function redact(value, depth) {
     var out = {};
     Object.keys(value).forEach(function (k) {
       if (k === "__proto__" || k === "constructor" || k === "prototype") return;
-      out[k] = SECRET_KEYS.test(k) ? "[redacted]" : redact(value[k], depth + 1);
+      var hit = maskKey(k);
+      out[k] = hit ? hit : redact(value[k], depth + 1);
     });
     return out;
   }
   return "[unknown]";
+}
+
+function snakeOf(k) {
+  return String(k).replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+}
+
+function maskKey(k) {
+  if (OK_KEYS.test(snakeOf(k))) return "";
+  if (SECRET_KEYS.test(snakeOf(k))) return "[redacted]";
+  if (EMAIL_KEYS.test(snakeOf(k))) return "[email]";
+  return "";
 }
 
 function log(event, detail) {
@@ -115,8 +129,17 @@ function notConfigured(res, what) {
   });
 }
 
+function binary(res, status, body, headers) {
+  var h = { "Cache-Control": "no-store" };
+  if (headers) Object.keys(headers).forEach(function (k) { h[k] = headers[k]; });
+  res.statusCode = status;
+  Object.keys(h).forEach(function (k) { res.setHeader(k, h[k]); });
+  res.end(body || Buffer.alloc(0));
+}
+
 module.exports = {
   json: json,
+  binary: binary,
   log: log,
   drain: drain,
   redact: redact,

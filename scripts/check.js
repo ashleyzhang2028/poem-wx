@@ -716,8 +716,24 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
     ok("压着的那一首不上今天的榜，空出来的位置补一首新的（条数不变）",
       held.length === withExtra.length && held.every((it) => it.poem.id !== heldOne),
       held.map((it) => it.poem.id).join(","));
-    ok("台账里压着的那一条认得出「哪天回来」", named === true);
+    ok("压着的那一条认得出「哪天回来」", named === true);
+    ok("到期当天就回来（不是多压一天）",
+      defer.isHeld({ wid: heldOne, day: store.dayKey(), until: store.dayKey(), span: 1 }) === false);
+    ok("服务端补零的日期与前端的不补零算同一天",
+      defer.isHeld({ wid: heldOne, day: store.dayKey(), until: defer.shiftDay(store.dayKey(), 1) }) === true
+        && defer.daysLeftOf({ wid: heldOne, day: store.dayKey(), until: "2099-01-02" })
+          === defer.daysLeftOf({ wid: heldOne, day: store.dayKey(), until: "2099-1-2" }));
     defer.drop(heldOne);
+  }
+
+  {
+    const defer = require(path.join(ROOT, "utils", "defer.js"));
+    const stamp = store.deferAt() - 60000;
+    store.setDefer(store.deferList(), stamp);
+    defer.put(withExtra[1].poem.id, "tomorrow");
+    ok("点一次「再背」就把台账当成新的（不会被服务端当成旧行丢掉）",
+      store.deferAt() > stamp, stamp + " -> " + store.deferAt());
+    defer.drop(withExtra[1].poem.id);
   }
 
   store.dropDayPlan();
@@ -1401,6 +1417,7 @@ const GATED = {
   "packages/game/exam/exam": "allowed",
   "packages/game/feihua/feihua": "allowed",
   "packages/progress/index/index": "gate",
+  "packages/progress/coll/coll": "gate",
   "packages/settings/recite/recite": "gate",
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
@@ -1507,9 +1524,13 @@ const GATED = {
       KINDS);
 
     const coreKinds = /var FEEDBACK_KINDS = \[([^\]]*)\]/.exec(serverCore);
-    ok("服务端认的类别与客户端同一份（发一个它不认的会被悄悄记成「其他」）",
+    ok("服务端认的类别与客户端同一份",
       !!coreKinds && coreKinds[1].replace(/[\s"]/g, "") === KINDS,
       coreKinds ? coreKinds[1] : "服务端没有 FEEDBACK_KINDS");
+
+    ok("不认的类别退回 400，不悄悄记成「其他」",
+      /E_KIND/.test(serverCore) && /!isFeedbackKind\(kind\)/.test(serverCore),
+      "服务端把不认的类别改成 other 落库 —— 类型里的信息就这么丢了");
 
     ok("标题进得去也回得来（服务端存了才画得出列表）",
       /clip\(input && input\.title, FEEDBACK_LIMITS\.title\)/.test(serverCore)
@@ -1522,8 +1543,7 @@ const GATED = {
         && adminFbLib.indexOf("resolution") >= 0);
 
     ok("重复提交不发第二遍（内容相同且一分钟内只落一条）",
-      /FEEDBACK_DEDUPE_MS/.test(serverCore) && /dedupe_hash/.test(serverCore)
-        && /duplicate/.test(serverCore) && /E_EMPTY/.test(serverCore));
+      /FEEDBACK_DEDUPE_MS/.test(serverCore) && /duplicate/.test(serverCore) && /E_EMPTY/.test(serverCore));
 
     ok("后台详情单取一条（不是把整张列表拉下来再筛）",
       /op === "thread"/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8"))
@@ -1550,6 +1570,25 @@ const GATED = {
       !/deviceId/.test(fbLib) && /function feedbackIdentity\(deps\)/.test(serverCore)
         && !/identity\.deviceId/.test(serverCore),
       "服务端还留着按设备标识认人的路");
+
+    ok("用户能删自己那一条（服务端 already 有路，页面给得出入口）",
+      /fb\.remove\(/.test(fbPageJs) && /bindtap="onDeleteThread"/.test(read("packages/feedback/index/index.wxml"))
+        && /^\s*feedbackDelete,$/m.test(remoteSrc),
+      "服务端有 op: delete，页面上没有删的入口 —— 提过的话撤不回来");
+
+    ok("后台详情能给用户删（那条管理路径也接上）",
+      /adminFeedbackDelete/.test(adminFbLib) && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js")));
+
+    ok("限流按人算，不按设备算（uid 换成设备号等于删掉限流）",
+      /function feedbackRateGate\(deps, uid\)[\s\S]{0,200}"uid"/.test(serverCore)
+        && /uid: \[\[3600000, 10\], \[86400000, 30\]\]/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "config.js"), "utf8")),
+      "feedbackRateGate 还在拿 uid 当设备键 —— 与「不按设备认人」同一条错");
+
+    ok("跟进不再顺手改类别（后端只动 status 与 updated_at）",
+      (() => {
+        const fn = /function feedbackComment\(deps, input\)[\s\S]*?\n}/.exec(serverCore);
+        return !!fn && !/patch\.kind/.test(fn[0]) && /patch\.status = "open"/.test(fn[0]);
+      })());
   }
 
   {
@@ -3123,7 +3162,7 @@ function mountFull(pg, query) {
         && examJs.indexOf("onPrev") >= 0,
       "选择题交了卷才判，途中却不许回头改 —— 漏答一题就白丢一分");
     ok("题号格按「答没答」上色，类名由 slotsOf 一处算好再传进模板",
-      /slotsOf\s*\(/.test(examJs) && examWxml.indexOf("{{slots}}") >= 0
+      (examJs.match(/^  slotsOf\(/gm) || []).length === 1 && examWxml.indexOf("{{slots}}") >= 0
         && examWxml.indexOf("{{item.cls}}") >= 0,
       "模板里还在自己拼类名 —— 插值只吃一层，宁可算好再传");
     ok("那个「现在这题」的标记走主题色，不另起一支",
@@ -3535,6 +3574,8 @@ function mountFull(pg, query) {
     path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
   const themePageJs = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const themePageJson = JSON.parse(fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "theme", "theme.json"), "utf8"));
   const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
 
   ok("自选那张色卡排在「大好河山」之后，页面上有选图 / 换图与恢复默认的接法",
@@ -3543,7 +3584,8 @@ function mountFull(pg, query) {
       && ownGroup().items[0].key === themeMod.OWN_KEY
       && themePageWxml.indexOf("onOwnUpload") >= 0
       && themePageWxml.indexOf("onOwnClear") >= 0
-      && themePageJs.indexOf("custom.pick()") >= 0);
+      && themePageJs.indexOf("custom.choose()") >= 0
+      && /banner-crop/.test(themePageJson.usingComponents["banner-crop"] || ""));
 
   tierAs("pro");
   ok("Pro 手上还没有自选 banner（这一项 Max 起，权限对比页也这么写）",
@@ -3644,32 +3686,57 @@ function mountFull(pg, query) {
 
   const progWxml = strip(read("packages/progress/index/index.wxml"));
   const progJs = strip(read("packages/progress/index/index.js"));
+  const collWxml = strip(read("packages/progress/coll/coll.wxml"));
+  const collJs = strip(read("packages/progress/coll/coll.js"));
+  const pvJs = strip(read("components/progress-view/progress-view.js"));
+  const pvWxml = strip(read("components/progress-view/progress-view.wxml"));
+
   ok("进度页不再有「记忆阶段」那张卡（stageRows 数据也撤了）",
     progJs.indexOf("stageRows") < 0);
 
+  ok("课内与自选两块读数的画法只有一份（components/progress-view 里那四块）",
+    ["calendar", "due", "buckets", "defer"].every((k) => pvWxml.indexOf("labels." + k) >= 0)
+      && /<progress-view\b/.test(progWxml) && /<progress-view\b/.test(collWxml)
+      && progWxml.indexOf("cal-bar") < 0 && collWxml.indexOf("cal-bar") < 0
+      && progWxml.indexOf("bar-row") < 0 && collWxml.indexOf("bar-row") < 0,
+    "两条进度各自摊开画了一遍 —— 同一块读数会有第二个出处");
 
-  ok("那几块读数不自己算（本册与自选都走 scheduler 的 overview / dueList）",
-    /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
-      && /S\.collectionsProgress\(/.test(progJs)
-      && progJs.indexOf("store.progress") < 0
-      && progJs.indexOf("nextReviewAt") < 0,
+  ok("那几块读数不自己算（本册与每个集合都走 scheduler 的 overview / dueList / collectionProgress）",
+    /S\.overview\(/.test(pvJs) && /S\.dueList\(/.test(pvJs)
+      && /S\.collectionProgress\(/.test(pvJs)
+      && /collectionView\(/.test(collJs)
+      && [progJs, collJs, pvJs].every((src) => src.indexOf("store.progress") < 0
+        && src.indexOf("nextReviewAt") < 0),
     "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
 
   ok("点篇目走背诵弹层（进度页那几行能背，不只是看）",
-    /<recite-sheet/.test(progWxml) && /data-id="\{\{item\.id\}\}"/.test(progWxml)
-      && /openSheet\(/.test(progJs) === false
-      && /sheet\.open\(/.test(progJs)
-      && /onOpen\b/.test(progJs));
+    /<recite-sheet/.test(pvWxml) === false
+      && /<recite-sheet/.test(progWxml) && /<recite-sheet/.test(collWxml)
+      && /data-id="\{\{item\.id\}\}"/.test(pvWxml)
+      && /sheet\.open\(/.test(progJs) && /sheet\.open\(/.test(collJs)
+      && /onOpen\b/.test(pvJs));
 
-  ok("自选集合的标题点得动，落到进度页那一个集合上",
-    /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(
-      fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8"))
-      && /wx\.navigateTo\(\{ url: "\/packages\/progress\/index\/index\?coll="/.test(
-        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8"))
-      && /onLoad\(query\)/.test(progJs)
-      && /scroll-into-view="\{\{anchor\}\}"/.test(progWxml)
-      && /id="self-\{\{item\.id\}\}"/.test(progWxml)
-      && /this\.setData\(\{ anchor: "self-" \+ id \}\)/.test(progJs));
+  ok("自选集合的标题点得动，落到自选进度页那一个集合上",
+    /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(read("pages/home/home.wxml"))
+      && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(read("pages/home/home.js"))
+      && /data-id="\{\{c\.id\}\}"[^>]*bindtap="onProgress"/.test(
+        read("packages/settings/collections/collections.wxml"))
+      && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(
+        read("packages/settings/collections/collections.js"))
+      && /onLoad\(query\)/.test(collJs)
+      && /this\.setData\(\{ anchor: "coll-" \+ id \}\)/.test(collJs)
+      && /anchor="coll-\{\{coll\.id\}\}"/.test(collWxml)
+      && /id="\{\{anchor\}\}"/.test(pvWxml),
+    "首页 / 管理页那一下没落到自选进度页的集合位置上");
+
+  ok("多个集子靠标题栏右侧那枚色点分开，取色只有一处",
+    /<view class="dot" style="background:\{\{coll\.color\}\}">/.test(collWxml)
+      && /coll\.color/.test(read("pages/home/home.wxml"))
+      && /pv\.DOTS\[/.test(collJs)
+      && /pv\.DOTS\[/.test(strip(
+        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8")))
+      && (pvJs.match(/const DOTS = \[/g) || []).length === 1,
+    "色点自己另排了一份色 —— 同一个集合在首页与进度页会是两个颜色");
 
   {
     const declared = {};
@@ -6921,8 +6988,10 @@ function gapped(items, max) {
 
   ok("分片名只认 t\\d{3}（不接受 ../、斜杠、别的形状）",
     /\^t\\d\{3\}\$/.test(shardSrc));
-  ok("清单与倒排索引在白名单里（manifest / idx）",
-    /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*INDEX\s*\]/.test(shardSrc));
+  ok("只有清单是特殊名（倒排索引 idx 不进镜像，客户端也不打它）",
+    /SPECIAL\s*=\s*\[\s*MANIFEST\s*\]/.test(shardSrc),
+    "SPECIAL 里还留着 INDEX —— 服务端从来的路由只有 t\\d{3}，idx 那一片没人会请求" +
+      "（2MB 原文 / 466KB gzip 白跟着镜像走一趟）");
   ok("拼路径只走 fileOf（校验之后再拼）",
     /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.js"\)/.test(shardSrc));
   ok("没有分片时回 404 E_NO_SHARDS，不静默回空 body",
@@ -6930,11 +6999,20 @@ function gapped(items, max) {
 
   ok("分片本体是 .js，发出去的是 JSON 报文（解开 gz、剥掉 module.exports = 那一层）",
     /function decode\s*\(/.test(shardSrc)
-      && /function bodyOf\s*\(/.test(shardSrc)
       && /zlib\.gunzipSync\(raw\)/.test(shardSrc)
       && /JSON\.stringify\(decode\(plain\)\)/.test(shardSrc),
     "分片是 `module.exports = {...}` 的 .js（Issue #224：开发者工具不把 .json 当模块打包），" +
       "服务端得自己把它解回 JSON —— 客户端照旧只认 JSON，这一层是服务端的事");
+
+  ok("一片只在第一次请求时解一遍（之后走内存那份）",
+    /const index = \{\}/.test(shardSrc) && /function entryOf\s*\(/.test(shardSrc)
+      && /if \(index\[name\]\) return index\[name\]/.test(shardSrc),
+    "没有内存索引 —— 每片每次请求都要 gunzipSync + 解析 + 重新序列化，" +
+      "0.25 核的实例上这一项就是实打实的 CPU");
+  ok("ETag 与 If-None-Match 对上就回 304（不是只发个 ETag 就算数）",
+    /function notModified\s*\(/.test(shardSrc) && /"if-none-match"/.test(shardSrc)
+      && /send\(res, 304/.test(shardSrc),
+    "ETag 发了却不看 If-None-Match —— 那只是响应头里多一行字，省不下一次序列化");
 
   ok("Dockerfile 接受 COPY_SHREDS 开关",
     /ARG COPY_SHREDS=/.test(dockerfile));
@@ -6978,7 +7056,7 @@ function gapped(items, max) {
   }
 
   {
-    const mk = cnb.indexOf("mkdir -p /tmp/ctx/shard-src");
+    const mk = cnb.indexOf("mkdir -p /tmp/ctx /tmp/ctx/shard-src");
     const flag = cnb.indexOf('if [ "${COPY_SHREDS:-1}" != "0" ]');
     ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
       mk >= 0 && flag >= 0 && mk < flag,
@@ -6986,18 +7064,28 @@ function gapped(items, max) {
       "（判旗那句现在是 `if [ \"${COPY_SHREDS:-1}\" != \"0\" ]`，这条按它找）");
   }
 
+  {
+    const stageSrc = fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8");
+    ok("分片摊不摊由语料说了算（缓存挂在构建节点上，语料没变就复用）",
+      /volumes:\s*\n\s*- \/tmp\/poem-shard-cache/.test(cnb)
+        && (cnb.match(/node scripts\/shard-stage\.js \/tmp\/poem-shard-cache/g) || []).length === 2,
+      "读不到分片缓存那一步 —— 语料没变的部署每推一次都要重新 build-data + gzip 121 轮");
+    ok("摊的是压缩后那份，且只摊 t001…t121，不摊 idx",
+      /SHARD_RE = \/\^t\\d\{3\}\\\.js\$\//.test(stageSrc) && /gzipSync/.test(stageSrc)
+        && cnb.indexOf("t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/") > 0,
+      "摊原文的话每次上下文从 0.3MB 变成 25MB；摊的时候得排除 idx —— 那一片服务端一次都不发");
+  }
+
   ok("流水线默认就摊分片（`:-1`，不是只有 `=1` 才摊）",
     /if \[ "\$\{COPY_SHREDS:-1\}" != "0" \]/.test(cnb),
     "摊分片那步还是「只有 =1 才摊」—— main push 拿到的镜像里没有分片，" +
       "课外正文只剩 404 E_NO_SHARDS，而那是给调试镜像留的话");
-  ok("摊的是压缩后那份（.gz），不是 25MB 原文",
-    /gzip -9 -c "\$f" > "\/tmp\/ctx\/shard-src\//.test(cnb),
-    "摊原文的话，每次构建上下文从 0.3MB 变成 25MB");
-
-  ok("摊出来的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
-    /basename "\$f" \.js\)/.test(cnb) && /\.js\.gz"/.test(cnb),
-    "摊成了 `basename \"$f\".js.gz`（t001.js.gz）—— shard-api 的 fileOf" +
-      " 找 `t001.js` 找不到，于是目录非空、E_NO_SHARDS 不响、每一片 404");
+  ok("台账上的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
+    /gzipSync\(fs\.readFileSync\(path\.join\(TEXTS, f\)\)/.test(
+      fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8"))
+      && /f \+ "\.gz"/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8")),
+    "摊出来的名字不是 t001.js.gz —— shard-api 的 fileOf 找 `t001.js` 找不到，" +
+      "于是目录非空、E_NO_SHARDS 不响、每一片 404");
   ok("分片在流水线里现生成（构建产物，checkout 里没有）",
     /node scripts\/build-data\.js/.test(cnb));
   ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",
@@ -7827,6 +7915,7 @@ function gapped(items, max) {
   const coreSrc = fs.readFileSync(path.join(api, "_lib", "core.js"), "utf8");
   const httpMod = require(path.join(api, "_lib", "http.js"));
   const avatarStore = require(path.join(api, "_lib", "avatar-store.js"));
+  const cfgSrc2 = fs.readFileSync(path.join(api, "_lib", "config.js"), "utf8");
 
   {
     const shown = JSON.stringify(httpMod.redact({
@@ -7851,6 +7940,19 @@ function gapped(items, max) {
     ok("头像内存档有总量上限（放 200 张 1MB 只留得下 64MB 的量）",
       kept > 0 && bytes <= 64 * 1024 * 1024, "留了 " + kept + " 张 / " + Math.round(bytes / 1048576) + "MB");
   }
+
+  ok("头像落在库里（重启不丢、多实例之间不用互相同步）",
+    /function storedAvatar\s*\(/.test(fs.readFileSync(path.join(api, "_lib", "avatar-store.js"), "utf8"))
+      && /store\.putAvatar\s*\(/.test(fs.readFileSync(path.join(api, "_lib", "avatar-store.js"), "utf8"))
+      && /CREATE TABLE IF NOT EXISTS `avatars`/.test(
+        fs.readFileSync(path.join(ROOT, "..", "deploy", "sql", "mysql-schema.sql"), "utf8")),
+    "头像还只进实例内存 —— 容器一重启全丢，而 prod 是多实例");
+
+  ok("头像有读回的路（GET /api/avatar/<uid>，与 avatarPublicUrl 指的同一个地址）",
+    /"GET \/avatar\/:uid"/.test(fs.readFileSync(path.join(api, "_lib", "routes.js"), "utf8"))
+      && fs.existsSync(path.join(api, "_routes", "avatar", "file.js"))
+      && /"\/api\/avatar\/" \+ u/.test(cfgSrc2),
+    "给了头像地址却没有下载它的路由 —— 页面拿到的每一张都是 404");
 
   {
     const head = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
@@ -7957,6 +8059,84 @@ function gapped(items, max) {
       after - Date.now() > 86400000 * 25,
       "after - now = " + (after - Date.now()) + " 毫秒（/api/me 那份没有 expiresIn 时这里停在登录那一刻的 1 天）");
   })());
+}
+
+{
+
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+  const guarded = (src, call) => {
+    const at = src.indexOf(call);
+    if (at < 0) return false;
+    const near = src.slice(Math.max(0, at - 200), at + 200);
+    return near.indexOf("guard") >= 0 || near.indexOf(".once(") >= 0;
+  };
+
+  const guardMod = require(path.join(ROOT, "utils", "guard.js"));
+  ok("防重复的闸门有「占位中」与「刚点过」两种",
+    typeof guardMod.once === "function" && typeof guardMod.gap === "function"
+      && typeof guardMod.mark === "function",
+    "没有 utils/guard.js 的 once / gap，防重复就只能各页各写一份");
+  ok("同一把闸门第二次进来拿不到",
+    guardMod.enter("check:once") === true && guardMod.enter("check:once") === false,
+    "连进两次都放行 —— 连点十几下就是十几份请求");
+  guardMod.leave("check:once");
+  ok("闸门放开之后又能进来", guardMod.enter("check:once") === true, "放不开就等于一次失败之后再点不动");
+  guardMod.reset("check:once");
+  guardMod.mark("check:gap");
+  ok("刚点过的那一下还拦着，隔一会儿就放", guardMod.gap("check:gap") === true
+    && guardMod.gap("check:gap", 0) === false, "间隔判据没生效");
+
+  const reports = [
+    ["packages/game/exam/exam.js", "exam:report"],
+    ["packages/game/feihua/feihua.js", "feihua:report"]
+  ];
+  reports.forEach(([file, key]) => {
+    ok("交到榜上的成绩只发一次 " + file, guarded(read(file), "once(\"" + key + "\""),
+      "交成绩没过闸门 —— 连点就落成多条记录，而榜单只取每人最好的一条");
+  });
+
+  const entries = [
+    ["packages/ranking/index/index.js", ".once(", "load"],
+    ["utils/login-flow.js", ".once(", "run"]
+  ].concat(reports.map(([file, key]) => [file, "once(\"" + key + "\"", "report"]));
+  entries.forEach(([file, key, fn]) => {
+    ok("提交型入口只走一次 " + file + " · " + fn, guarded(read(file), key),
+      fn + " 没过闸门 —— 连点就是重复提交");
+  });
+
+  ok("登录卡连点不会叠出第二次登录",
+    /guard\.busy\(\"login\"\)/.test(read("utils/login-flow.js")),
+    "两次 showLoading 叠在一起，先回来的那次就把后一次的遮罩关了");
+
+  const single = [
+    ["pages/home/home.js", "home:face"],
+    ["pages/home/home.js", "home:extra"],
+    ["packages/settings/collections/collections.js", "cols:create"],
+    ["packages/settings/collections/collections.js", "cols:add"]
+  ];
+  single.forEach(([file, key]) => {
+    ok("落盘的入口占住就不放第二下 " + file + " · " + key,
+      read(file).indexOf("guard.enter(\"" + key) >= 0,
+      "两下连点各写一次 —— 复习次数、加背首数都会翻倍");
+  });
+
+  ok("题库连点「下一题」不会把两题的判定叠在同一题上",
+    /onNext\(\)\s*\{\s*if \(this\.data\.stage !== \"running\"\) return;/
+      .test(read("packages/game/quiz/quiz.js")),
+    "没拦阶段就往下走，漏答也能翻页");
+  ok("交卷只结算一次（计时器归零与点「交卷」不能各算一遍）",
+    /finish\(\)\s*\{[\s\S]{0,120}?if \(this\.endedAt \|\| this\.data\.stage !== \"running\"\) return;/
+      .test(read("packages/game/exam/exam.js")),
+    "两条路各自结算 —— 成绩与榜单各落一次");
+  ok("交卷之后点「再看结果」不再走一遍结算",
+    /onNext\(\)\s*\{\s*if \(this\.data\.stage !== \"running\"\) return;/.test(read("packages/game/exam/exam.js")),
+    "结算画面上的按钮仍然通到 finish() —— 成绩与榜单各再落一次");
+  ok("弹出层的「忘记 / 模糊 / 记住」连点只记一次",
+    /onResult\(e\)\s*\{\s*if \(guard\.gap\(/.test(read("components/recite-sheet/recite-sheet.js")),
+    "两下连点各写一次，复习次数翻倍");
+  ok("浏览模式的阅读页不记复习（连点会把复习次数刷上去）",
+    /onResult\(e\)\s*\{\s*if \(!this\.data\.reciteMode\) return;/.test(read("pages/reader/reader.js")),
+    "浏览模式也记了一次复习");
 }
 
 Promise.all(pending).then(() => {

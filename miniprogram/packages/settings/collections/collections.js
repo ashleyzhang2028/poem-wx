@@ -8,6 +8,7 @@ const sync = require("../../../utils/sync");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -165,7 +166,9 @@ Page({
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
+        if (!guard.enter("cols:create")) return;
         const r = cols.create(res.content);
+        guard.leave("cols:create");
         if (!r.ok) {
           wx.showToast({ title: "最多 " + this.data.cap + " 个集合", icon: "none" });
           return;
@@ -176,6 +179,11 @@ Page({
         wx.showToast({ title: "已新建", icon: "none" });
       }
     });
+  },
+
+  onProgress(e) {
+    const id = (e.currentTarget.dataset || {}).id;
+    wx.navigateTo({ url: "/packages/progress/coll/coll?coll=" + encodeURIComponent(id) });
   },
 
   onToggleList(e) {
@@ -197,7 +205,9 @@ Page({
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
+        if (!guard.enter("cols:rename:" + id)) return;
         const r = cols.rename(id, res.content);
+        guard.leave("cols:rename:" + id);
         if (!r.ok) {
           wx.showToast({ title: r.code === "E_EMPTY_NAME" ? "名称不能为空" : "集合不存在", icon: "none" });
           return;
@@ -220,7 +230,9 @@ Page({
       confirmColor: "#a83b32",
       success: (res) => {
         if (!res.confirm) return;
+        if (!guard.enter("cols:remove:" + id)) return;
         cols.remove(id);
+        guard.leave("cols:remove:" + id);
         sync.markDirty();
         this.refresh();
         wx.showToast({ title: "已删除", icon: "none" });
@@ -239,7 +251,9 @@ Page({
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
+        if (!guard.enter("cols:clear:" + id)) return;
         const r = cols.clearItems(id);
+        guard.leave("cols:clear:" + id);
         sync.markDirty();
         this.refresh();
         wx.showToast({ title: "已移出 " + r.count + " 首", icon: "none" });
@@ -284,9 +298,13 @@ Page({
 
   onAddOne(e) {
     const id = this.data.searchId;
+    if (!guard.enter("cols:add:" + id)) return;
     const pid = e.currentTarget.dataset.id;
     const c = cols.find(id);
-    if (!c) return;
+    if (!c) {
+      guard.leave("cols:add:" + id);
+      return;
+    }
     const inside = cols.idsOf(c).indexOf(pid) >= 0;
     const r = inside ? cols.removeItems(c.id, [pid]) : cols.add(c.id, [pid]);
     if (!inside && !r.ok) {
@@ -294,8 +312,10 @@ Page({
         ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
         : "添加失败";
       wx.showToast({ title: msg, icon: "none" });
+      guard.leave("cols:add:" + id);
       return;
     }
+    guard.leave("cols:add:" + id);
     sync.markDirty();
     this.refresh();
     this.suggest(this.data.keyword);
@@ -339,7 +359,9 @@ Page({
       confirmColor: "#a83b32",
       success: (res) => {
         if (!res.confirm) return;
+        if (!guard.enter("cols:unpick:" + id)) return;
         cols.removeItems(id, ids);
+        guard.leave("cols:unpick:" + id);
         sync.markDirty();
         this.refresh();
         wx.showToast({ title: "已移出 " + ids.length + " 首", icon: "none" });

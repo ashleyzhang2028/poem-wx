@@ -3,6 +3,7 @@ const store = require("../../utils/store");
 const textSearch = require("../../utils/text-search");
 const gate = require("../../utils/gate");
 const loginFlow = require("../../utils/login-flow");
+const guard = require("../../utils/guard");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
@@ -196,6 +197,8 @@ Page({
   onPick(e) {
     e.stopPropagation && e.stopPropagation();
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+    if (guard.gap("search:pick")) return;
+    guard.mark("search:pick");
     const id = e.currentTarget.dataset.id;
     const list = cols.list();
     if (!list.length) {

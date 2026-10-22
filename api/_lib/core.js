@@ -45,7 +45,7 @@ function rateWindow(cfg, bucket) {
 
 function rateCode(bucket) {
   if (bucket === "email" || bucket === "phone") return "E_RATE_EMAIL";
-  if (bucket === "device") return "E_RATE_DEVICE";
+  if (bucket === "device" || bucket === "uid") return "E_RATE_DEVICE";
   if (bucket === "ip") return "E_RATE_IP";
   return "E_RATE_GLOBAL";
 }
@@ -2727,24 +2727,37 @@ function feedbackIdentity(deps) {
   return null;
 }
 
+function feedbackDeviceKey(deps) {
+  var id = String((deps && deps.deviceId) || "");
+  return /^d_[0-9a-f]{8}$/.test(id) ? id : "";
+}
+
 function feedbackThreadFilterOf(identity) {
   return { uid: identity.uid };
 }
 
-function ownsFeedbackThread(identity, row) {
+function feedbackThreadVisible(identity, deviceKey, row) {
   if (!row) return false;
-  return String(row.uid || "") === identity.uid;
+  if (String(row.uid || "") === identity.uid) return true;
+  return !!deviceKey && String(row.uid || "") === "" && String(row.device_id || "") === deviceKey;
 }
 
-function ownsFeedbackComment(identity, row) {
+function ownsFeedbackThread(identity, deviceKey, row) {
+  return feedbackThreadVisible(identity, deviceKey, row);
+}
+
+function ownsFeedbackComment(identity, deviceKey, row) {
   if (!row || row.author_role !== "user") return false;
-  return String(row.uid || "") === identity.uid;
+  if (String(row.uid || "") === identity.uid) return true;
+  return !!deviceKey && String(row.uid || "") === "" && String(row.device_id || "") === deviceKey;
 }
 
-function feedbackThreadPublic(row, comments) {
+function feedbackThreadPublic(row, comments, canDelete) {
   if (!row) return null;
+  var mine = comments || [];
   return {
     tid: String(row.tid || ""),
+    canDelete: !!canDelete,
     kind: isFeedbackKind(row.kind) ? String(row.kind) : "other",
     status: FEEDBACK_STATUSES.indexOf(row.status) >= 0 ? row.status : "open",
     resolution: isFeedbackResolution(row.resolution) ? String(row.resolution) : "pending",
@@ -2753,18 +2766,19 @@ function feedbackThreadPublic(row, comments) {
     createdAt: Number(row.created_at) || 0,
     updatedAt: Number(row.updated_at) || 0,
     mine: true,
-    comments: (comments || []).map(feedbackCommentPublic)
+    comments: mine
   };
 }
 
-function feedbackCommentPublic(row) {
+function feedbackCommentPublic(row, canDelete) {
   if (!row) return null;
   return {
     cid: String(row.cid || ""),
     tid: String(row.tid || ""),
     role: row.author_role === "admin" ? "admin" : "user",
     content: String(row.content || ""),
-    createdAt: Number(row.created_at) || 0
+    createdAt: Number(row.created_at) || 0,
+    canDelete: !!canDelete
   };
 }
 
@@ -2786,11 +2800,14 @@ function feedbackCommentAdmin(row) {
   return pub;
 }
 
-function feedbackRateGate(deps, key) {
+function feedbackRateGate(deps, uid) {
   var cfg = deps.cfg, t = deps.now();
-  var g = deps.limiter.check(cfg, "device", key, t);
-  if (!g.ok) return err(429, "E_RATE_DEVICE", "发得有点快，稍后再试", { retryAfter: g.retryAfter });
-  deps.limiter.hit("device", key, t);
+  var g = deps.limiter.check(cfg, "uid", uid, t);
+  if (!g.ok) {
+    return err(429, "E_RATE_DEVICE", "提得有点快，约 " + Math.max(1, Math.ceil(g.retryAfter / 60))
+      + " 分钟后再试；同一句话点两次只算一次", { retryAfter: g.retryAfter });
+  }
+  deps.limiter.hit("uid", uid, t);
   return null;
 }
 
@@ -2803,14 +2820,16 @@ function feedbackCreate(deps, input) {
   var identity = feedbackIdentity(deps);
   if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "登录之后才能提意见"));
 
-  var kind = isFeedbackKind(input && input.kind) ? input.kind : "other";
+  var kind = String((input && input.kind) || "other");
+  if (!isFeedbackKind(kind)) {
+    return Promise.resolve(err(400, "E_KIND", "类别只认 " + FEEDBACK_KINDS.join(" / ")));
+  }
   var title = clip(input && input.title, FEEDBACK_LIMITS.title).trim();
   if (!title) return Promise.resolve(err(400, "E_TITLE", "写一句标题"));
   var content = clip(input && input.content, FEEDBACK_LIMITS.content).trim();
   if (!content) return Promise.resolve(err(400, "E_EMPTY", "写一句想法再发（哪怕一句话）"));
 
-  var rateKey = "feedback:" + identity.uid;
-  var gate = feedbackRateGate(deps, rateKey);
+  var gate = feedbackRateGate(deps, identity.uid);
   if (gate) return Promise.resolve(gate);
 
   var dedupe = feedbackDedupeHash(identity, kind, title, content);
@@ -2820,14 +2839,17 @@ function feedbackCreate(deps, input) {
 
     return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), 5)).then(function (recent) {
       var same = (recent || []).filter(function (r) {
-        return String(r.dedupe_hash || "") === dedupe && t - (Number(r.created_at) || 0) < FEEDBACK_DEDUPE_MS;
+        if (t - (Number(r.created_at) || 0) >= FEEDBACK_DEDUPE_MS) return false;
+        if (String(r.dedupe_hash || "")) return String(r.dedupe_hash) === dedupe;
+        return String(r.kind || "") === kind && String(r.title || "") === title
+          && String(r.content || "") === content;
       })[0];
-      if (same) return ok({ thread: feedbackThreadPublic(same, []), duplicate: true });
+      if (same) return ok({ thread: feedbackThreadPublic(same, [], true), duplicate: true });
 
       var row = {
         tid: id.newFeedbackId(),
         uid: identity.uid,
-        device_id: "",
+        device_id: feedbackDeviceKey(deps),
         email: String((me && me.email) || ""),
         nickname: String((me && me.nickname) || ""),
         kind: kind,
@@ -2835,7 +2857,6 @@ function feedbackCreate(deps, input) {
         content: content,
         status: "open",
         resolution: "pending",
-        dedupe_hash: dedupe,
         created_at: t,
         updated_at: t
       };
@@ -2854,16 +2875,42 @@ function feedbackMine(deps, input) {
   var identity = feedbackIdentity(deps);
   if (!identity) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
 
+  var deviceKey = feedbackDeviceKey(deps);
   var limit = Math.max(1, Math.min(200, Number(input && input.limit) || 100));
-  return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), limit)).then(function (rows) {
+
+  function collect(rows) {
     var list = rows || [];
     var tids = list.map(function (r) { return r.tid; });
-    if (!tids.length) return ok({ threads: [] });
+    if (!tids.length) return Promise.resolve([]);
     return Promise.resolve(store.listFeedbackComments({ tids: tids }, 5000)).then(function (comments) {
       var byTid = {};
       (comments || []).forEach(function (c) { (byTid[c.tid] || (byTid[c.tid] = [])).push(c); });
-      return ok({ threads: list.map(function (r) { return feedbackThreadPublic(r, byTid[r.tid]); }) });
+      return list.map(function (r) {
+        var canDelete = ownsFeedbackThread(identity, deviceKey, r);
+        var talks = (byTid[r.tid] || []).map(function (c) {
+          return feedbackCommentPublic(c, canDelete && ownsFeedbackComment(identity, deviceKey, c));
+        });
+        return feedbackThreadPublic(r, talks, canDelete);
+      }).filter(Boolean);
     });
+  }
+
+  return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), limit)).then(function (mine) {
+    if (!deviceKey) return collect(mine);
+    return Promise.resolve(store.listFeedbackThreads({ deviceId: deviceKey }, limit)).then(function (byDevice) {
+      var seen = {};
+      var merged = [];
+      (mine || []).concat(byDevice || []).forEach(function (r) {
+        if (!feedbackThreadVisible(identity, deviceKey, r)) return;
+        if (seen[r.tid]) return;
+        seen[r.tid] = true;
+        merged.push(r);
+      });
+      merged.sort(function (a, b) { return (Number(b.updated_at) || 0) - (Number(a.updated_at) || 0); });
+      return collect(merged.slice(0, limit));
+    });
+  }).then(function (threads) {
+    return ok({ threads: threads });
   });
 }
 
@@ -2880,18 +2927,19 @@ function feedbackComment(deps, input) {
   var content = clip(input && input.content, FEEDBACK_LIMITS.comment).trim();
   if (!content) return Promise.resolve(err(400, "E_EMPTY", "写一句再发"));
 
-  var rateKey = "feedback-comment:" + identity.uid;
-  var gate = feedbackRateGate(deps, rateKey);
+  var gate = feedbackRateGate(deps, identity.uid);
   if (gate) return Promise.resolve(gate);
 
+  var deviceKey = feedbackDeviceKey(deps);
+
   return Promise.resolve(store.getFeedbackThread(tid)).then(function (thread) {
-    if (!ownsFeedbackThread(identity, thread)) return err(404, "E_NO_THREAD", "没有这一条（可能已经删了）");
+    if (!ownsFeedbackThread(identity, deviceKey, thread)) return err(404, "E_NO_THREAD", "没有这一条（可能已经删了）");
 
     var row = {
       cid: id.newFeedbackCommentId(),
       tid: tid,
       uid: identity.uid,
-      device_id: "",
+      device_id: String(thread.device_id || deviceKey || ""),
       author_role: "user",
       nickname: String(thread.nickname || ""),
       content: content,
@@ -2899,11 +2947,12 @@ function feedbackComment(deps, input) {
     };
     var patch = { updated_at: t };
 
-    if (thread.status !== "open") patch.status = "open";
+    if (!thread.uid && deviceKey) patch.uid = identity.uid;
+    if (thread.status === "closed") patch.status = "open";
 
     return Promise.resolve(store.putFeedbackComment(row)).then(function () {
       return Promise.resolve(store.patchFeedbackThread(tid, patch)).then(function () {
-        return ok({ comment: feedbackCommentPublic(row) });
+        return ok({ comment: feedbackCommentPublic(row, true) });
       });
     });
   });
@@ -2920,9 +2969,11 @@ function feedbackDelete(deps, input) {
   var tid = clip(input && input.tid, 64).trim();
   var cid = clip(input && input.cid, 64).trim();
 
+  var deviceKey = feedbackDeviceKey(deps);
+
   if (tid) {
     return Promise.resolve(store.getFeedbackThread(tid)).then(function (thread) {
-      if (!ownsFeedbackThread(identity, thread)) return err(404, "E_NO_THREAD", "没有这一条（可能已经删了）");
+      if (!ownsFeedbackThread(identity, deviceKey, thread)) return err(404, "E_NO_THREAD", "没有这一条（可能已经删了）");
       return Promise.resolve(store.deleteFeedbackThread(tid)).then(function () {
         return ok({ deleted: "thread", tid: tid });
       });
@@ -2930,7 +2981,7 @@ function feedbackDelete(deps, input) {
   }
   if (cid) {
     return Promise.resolve(store.getFeedbackComment(cid)).then(function (comment) {
-      if (!ownsFeedbackComment(identity, comment)) return err(404, "E_NO_COMMENT", "没有这一条（可能已经删了，或者是管理员回的，删不掉）");
+      if (!ownsFeedbackComment(identity, deviceKey, comment)) return err(404, "E_NO_COMMENT", "没有这一条（可能已经删了，或者是管理员回的，删不掉）");
       return Promise.resolve(store.deleteFeedbackComment(cid)).then(function () {
         return ok({ deleted: "comment", cid: cid });
       });
@@ -3416,11 +3467,14 @@ function boardList(deps, input) {
       var shown = ranked.slice(0, size);
       var pick = shown.concat(beyond ? [beyond] : []);
 
-      return Promise.all(pick.map(function (r) {
-        return Promise.resolve(deps.store.getAccount(r.uid)).then(function (acc) {
+      return Promise.resolve(
+        typeof deps.store.getAccounts === "function"
+          ? deps.store.getAccounts(pick.map(function (r) { return r.uid; }))
+          : Promise.all(pick.map(function (r) { return deps.store.getAccount(r.uid); }))
+      ).then(function (found) {
+        var accs = (found || []).map(function (acc) {
           return acc && acc.status !== "deleted" ? acc : null;
         });
-      })).then(function (accs) {
         var board = [];
         shown.forEach(function (r, i) {
           if (!accs[i]) return;

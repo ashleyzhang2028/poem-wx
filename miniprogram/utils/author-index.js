@@ -317,7 +317,27 @@ function firstDynasty(w) {
   return best;
 }
 
+let collator = null;
+
+function collatorOf() {
+  if (collator !== null) return collator;
+  try {
+    collator = new Intl.Collator("zh-Hans-CN", { sensitivity: "base" });
+  } catch (e) {
+    collator = false;
+  }
+  return collator;
+}
+
 function byPinyin(a, b) {
+  const c = collatorOf();
+  if (c) {
+    try {
+      return c.compare(String(a), String(b));
+    } catch (e) {
+
+    }
+  }
   try {
     return String(a).localeCompare(String(b), "zh-Hans-CN", { sensitivity: "base" });
   } catch (e) {

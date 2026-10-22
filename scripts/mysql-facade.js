@@ -13,6 +13,7 @@ const db = {
   feedback_comments: new Map(),
   exam_records: new Map(),
   score_records: new Map(),
+  avatars: new Map(),
   app_settings: new Map(),
   progress: new Map()
 };
@@ -30,6 +31,7 @@ const PK = {
   feedback_comments: ["cid"],
   exam_records: ["eid"],
   score_records: ["srid"],
+  avatars: ["uid"],
   app_settings: ["skey"],
   progress: ["uid", "child_id", "poem_id"]
 };
@@ -197,7 +199,7 @@ const facade = {
           const all = t ? [...db[t].values()] : [];
           const hit = all.filter((r) => hits(r, sql, params));
 
-          return Promise.resolve([hit.length ? [hit[0]] : [], []]);
+          return Promise.resolve([/\bLIMIT\s+1\b/i.test(sql) ? (hit.length ? [hit[0]] : []) : hit, []]);
         }
 
         if (/^\s*INSERT\s+INTO/i.test(sql)) {

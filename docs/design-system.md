@@ -155,15 +155,27 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 #### 自选：换的是 banner 那张图，Max 起
 
 第三张卡「自选」不换色，换的是 banner 那张图（能力键 `ownbanner`，max 起）。
-用户可以自己传一张图，图按 banner 的原比例（916 / 1717）折到 1200px 宽，
-jpg 质量 72，`wx.compressImage` 压完读成 base64 存进 `kb_settings_v1` 的 `banner`。
+选完图先进选区（`components/banner-crop`）：画布按 750 × 360 摆，
+双指或「放大 / 缩小」缩，单指拖，框里看到的就是要留下的那一段。
+
+选区打开时 `custom.suggest()` 给一版初值：把图缩到 250px 宽的网格，
+按列统计边缘，拿最大的那一列的活动区当首图范围（放大后铺满框），
+再对底边那一行的边缘做一次贴合。判不出行线（照片式整图）时按原样框住整张，
+不让一次猜错把竖幅裁成一条。这份判据在 `utils/banner-crop.js`。
+
+截取走 `canvas 2d`：原图先按比例缩到目标宽度的 1/4 再画，
+`drawImage` 带源矩形把选区抠出来铺满 1200 × 576，jpg 质量 72，
+base64 存进 `kb_settings_v1` 的 `banner`。画布与网格共用一枚隐藏 canvas（`id="crop"`）。
 
 **只存本机。** `banner` 与 `lastSearch` 一样进 `store.LOCAL_ONLY`，
 `cloudSettings()` 不给它，所以换台设备就回到默认那张 `icons/hero.png`；
 档位掉下来时 `current()` 退回默认那支，图还在本机但不再用。
-界面上一句「图只存在这台手机上，不同步到服务器，换设备就回到默认 banner」。
+色卡上那句只说一件事：「图片存于本机，不同步到服务器」。
 
-banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按比例折，
+这张卡的排法：缩略图与「有没有图」那一句靠左，提示语占一行，
+一排按钮靠右（`.own-acts` 上 `justify-content: flex-end`）。
+
+banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按 916 / 1717 折，
 `mode="widthFix"`；自选那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
 `aspectFill` 裁进去，不算 banner 本身。
 
@@ -1253,8 +1265,27 @@ V39 守着撤干净的这几处，并**反着守一条**：选头像那条路不
 - **条与柱子走 `--strong`，逾期走 `--amber`**。前者是重点色，后者是状态色，
   与全站那条线一致（见第二节）。
 
-`check.js` 守的是**结构事实**：四块读数都在、都走 `S.overview` / `S.dueList`、
-点得开背诵弹层、条的形状与配色走令牌。柱子多高、条多长、字号多大，由人看。
+### 课内与自选分开两页，四块只画一份（Issue #588）
+
+四块读数原来只长在课内进度页上，自选集合挤在同一页底部，到期日历与掌握度分布各画了一份简版。
+现在它们是**一个组件**（`components/progress-view`），课内与每个自选集合都拿它画：
+
+| 页 | 画的是 | 入口 |
+|---|---|---|
+| `packages/progress/index` | 本册那四块 | 我的 → 背诵进度 |
+| `packages/progress/coll` | 每个自选集合各一组四块 | 首页集合标题栏 / 我的 → 自选背诵每行的 `›` / 课内进度页下方那一行 |
+
+- **集子之间的区别只在标题栏右侧那一枚色点**，颜色取自 `pv.DOTS`（一处），
+  顺序按集合在列表里的位置取模 —— 同一个集合在首页与这一页是同一个颜色。
+- 卡内的小标题跟着集合名走（`labels.title`），其余四块的标题由组件给默认值。
+  界面不出现「本册 / 自选」这类分类词当标题，集合名本身就是标题。
+- 点一行就地开背诵弹层，与课内同一套（`recite-sheet` 挂在页面里，组件只抛 `open` / `defer`）。
+- 定位到某个集合用 `anchor`（=`coll-<集子 id>`），不再靠页面级的 `scroll-into-view`。
+
+`check.js` 守的是**结构事实**：四块读数都在、两页都只经 `progress-view` 画、
+都走 `S.overview` / `S.dueList` / `S.collectionProgress`、点得开背诵弹层、
+两个入口都落到 `coll?coll=<id>` 且锚点对得上、色点取色只有一处。
+柱子多高、条多长、字号多大、色点几 px，由人看。
 
 ## 七、组件清单（`app.wxss`）
 

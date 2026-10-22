@@ -75,6 +75,7 @@ var CONFIG = {
 
   rate: {
     email: [[3600000, 5], [86400000, 10]],
+    uid: [[3600000, 10], [86400000, 30]],
     device: [[3600000, 10], [86400000, 30]],
     ip: [[3600000, 30], [86400000, 100]],
     global: [[3600000, 200], [86400000, 800]]
@@ -109,8 +110,10 @@ CONFIG.avatarPath = function (uid) {
   return u.slice(0, 2) + "/" + u + "/avatar.jpg";
 };
 
-CONFIG.avatarPublicUrl = function () {
-  return "";
+CONFIG.avatarPublicUrl = function (uid) {
+  var u = String(uid || "").replace(/[^A-Za-z0-9_-]/g, "");
+  if (u.length < 2) return "";
+  return "/api/avatar/" + u;
 };
 
 CONFIG.hasDb = function () {

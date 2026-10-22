@@ -9,6 +9,7 @@ const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
 const gate = require("../../utils/gate");
+const guard = require("../../utils/guard");
 
 Page({
   data: {
@@ -104,8 +105,9 @@ Page({
       return;
     }
     wx.showLoading({ title: "正在同步" });
-    sync.now(true).then((res) => {
+    guard.once("sync:now", () => sync.now(true)).then((res) => {
       wx.hideLoading();
+      if (!res || res.skipped === true) return;
       let title = "同步完成";
       if (res.error) title = sync.state().later ? "同步过于频繁，请稍后再试" : "同步失败：" + res.error;
       else if (res.skipped === "busy") title = "正在同步，请稍候";

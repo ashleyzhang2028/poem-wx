@@ -2,6 +2,7 @@ const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -20,7 +21,8 @@ Page({
     offline: false,
     submitting: false,
     reply: {},
-    sending: false
+    sending: false,
+    replyMax: fb.COMMENT_MAX
   },
 
   onShow() {
@@ -62,20 +64,53 @@ Page({
       return;
     }
     this.setData({ submitting: true });
-    fb.submit({ kind: this.data.kind, title: checked.title, content: checked.content }).then((res) => {
-      this.setData({ submitting: false });
-      if (!res.ok) {
-        wx.showToast({ title: res.reason, icon: "none" });
-        return;
-      }
-      this.setData({ title: "", content: "" });
-      wx.showToast({ title: res.duplicate ? "刚刚已经发过" : "已提交", icon: "none" });
-      this.load();
-    });
+    guard
+      .once("feedback:submit", () => fb.submit({ kind: this.data.kind, title: checked.title, content: checked.content }))
+      .then((res) => {
+        this.setData({ submitting: false });
+        if (!res || !res.ok) {
+          wx.showToast({ title: (res && res.reason) || "没发出去，稍后再试", icon: "none" });
+          return;
+        }
+        this.setData({ title: "", content: "" });
+        wx.showToast({ title: res.duplicate ? "刚刚已经发过" : "已提交", icon: "none" });
+        this.load();
+      });
   },
 
   onReplyInput(e) {
     this.setData({ ["reply." + e.currentTarget.dataset.tid]: e.detail.value });
+  },
+
+  onDeleteThread(e) {
+    const tid = e.currentTarget.dataset.tid;
+    if (!tid) return;
+    this.confirm("删掉这一条？连同下面的沟通记录一起删。", () =>
+      guard.once("feedback:delete:" + tid, () => fb.remove(tid, ""))
+    );
+  },
+
+  onDeleteComment(e) {
+    const { tid, cid } = e.currentTarget.dataset;
+    if (!tid || !cid) return;
+    this.confirm("删掉这一段？", () => guard.once("feedback:delete:" + cid, () => fb.remove("", cid)));
+  },
+
+  confirm(content, run) {
+    wx.showModal({
+      title: "确认",
+      content: content,
+      success: (r) => {
+        if (!r.confirm) return;
+        run().then((res) => {
+          if (!res || !res.ok) {
+            wx.showToast({ title: (res && res.reason) || "没删成，稍后再试", icon: "none" });
+            return;
+          }
+          this.load();
+        });
+      }
+    });
   },
 
   onReplySend(e) {
@@ -83,10 +118,10 @@ Page({
     const tid = e.currentTarget.dataset.tid;
     if (!tid) return;
     this.setData({ sending: true });
-    fb.comment(tid, this.data.reply[tid]).then((res) => {
+    guard.once("feedback:comment:" + tid, () => fb.comment(tid, this.data.reply[tid])).then((res) => {
       this.setData({ sending: false });
-      if (!res.ok) {
-        wx.showToast({ title: res.reason, icon: "none" });
+      if (!res || !res.ok) {
+        wx.showToast({ title: (res && res.reason) || "没发出去，稍后再试", icon: "none" });
         return;
       }
       this.setData({ ["reply." + tid]: "" });

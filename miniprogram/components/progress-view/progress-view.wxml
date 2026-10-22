@@ -1,0 +1,108 @@
+<view class="pv" id="{{anchor}}">
+  <text class="hint lead" wx:if="{{lead}}">{{lead}}</text>
+
+  <view class="card overview">
+    <view class="ov-head">
+      <view class="ring">
+        <view class="ring-track"></view>
+        <view class="ring-fill" style="--p:{{percent}}"></view>
+        <text class="ring-text">{{percent}}%</text>
+      </view>
+      <view class="ov-main">
+        <text class="ov-title">{{labels.title}}</text>
+        <text class="ov-sub">{{ringText}}</text>
+      </view>
+    </view>
+
+    <view class="stats ov-row">
+      <view class="stat">
+        <text class="stat-v">{{learned}}</text>
+        <text class="stat-k">{{labels.stats[0]}}</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v">{{mastered}}</text>
+        <text class="stat-k">{{labels.stats[1]}}</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v">{{dueToday}}</text>
+        <text class="stat-k">{{labels.stats[2]}}</text>
+      </view>
+      <view class="stat">
+        <text class="stat-v">{{avgMastery}}%</text>
+        <text class="stat-k">{{labels.stats[3]}}</text>
+      </view>
+    </view>
+
+    <text class="hint warn" wx:if="{{backlog}}">逾期 {{backlog}} 首 · 会优先排进今天</text>
+  </view>
+
+  <view class="empty" wx:if="{{!learned}}">
+    <text class="empty-mark">始</text>
+    <text class="empty-text">{{empty}}</text>
+  </view>
+
+  <block wx:if="{{learned}}">
+    <view class="card">
+      <view class="card-title">{{labels.calendar}}<text class="card-sub" wx:if="{{busy}}">{{busy}} 天有复习</text><text class="card-sub" wx:else>七天内无到期</text></view>
+      <view class="cal">
+        <view class="cal-cell {{item.today ? 'today' : ''}} {{item.has ? 'has' : ''}}"
+              wx:for="{{cells}}" wx:key="offset">
+          <text class="cal-count">{{item.has ? item.count : ''}}</text>
+          <view class="cal-bar"><view class="cal-bar-fill" style="height:{{item.height}}%"></view></view>
+          <text class="cal-day">{{item.label}}</text>
+          <text class="cal-date">{{item.date}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{panels.length}}">
+      <view class="card-title">{{labels.due}}</view>
+      <view class="panel" wx:for="{{panels}}" wx:key="offset" wx:for-item="d">
+        <view class="panel-head">
+          <text class="panel-when {{d.today ? 'today' : ''}} {{d.late ? 'late' : ''}}">{{d.label}}<text class="panel-date">{{d.date}}</text></text>
+          <text class="panel-count">{{d.count}} 篇</text>
+        </view>
+        <view class="due" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{d.rows}}" wx:key="id" data-id="{{item.id}}" data-day="{{d.offset}}" catchtap="onOpen">
+          <view class="due-main">
+            <text class="due-title">{{item.title}}</text>
+            <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+          </view>
+          <text class="due-state">{{item.mastery}}</text>
+          <text class="due-when {{item.late ? 'late' : ''}}">{{item.due}}</text>
+        </view>
+      </view>
+      <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
+    </view>
+
+    <view class="card" wx:if="{{groups.length}}">
+      <view class="card-title">{{labels.defer}}</view>
+      <text class="hint defer-lead">点过的这几首按日子压着，到日子自己回到今日计划</text>
+      <view class="panel" wx:for="{{groups}}" wx:key="key" wx:for-item="lv">
+        <view class="panel-head">
+          <text class="panel-when">{{lv.label}}</text>
+          <text class="panel-count">{{lv.count}} 篇</text>
+        </view>
+        <view class="due" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{lv.rows}}" wx:key="id" data-id="{{item.id}}" data-key="{{lv.key}}" catchtap="onOpenDefer">
+          <view class="due-main">
+            <text class="due-title">{{item.title}}</text>
+            <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+          </view>
+          <text class="due-when">{{item.due}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">{{labels.buckets}}<text class="card-sub">平均 {{avgMastery}}%</text></view>
+      <view class="bar-row {{item.cls}} {{item.count ? '' : 'zero'}}" wx:for="{{bars}}" wx:key="label">
+        <text class="bar-label">{{item.label}}</text>
+        <view class="bar-track"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
+        <text class="bar-count">{{item.count}}</text>
+      </view>
+    </view>
+  </block>
+
+  <slot />
+</view>

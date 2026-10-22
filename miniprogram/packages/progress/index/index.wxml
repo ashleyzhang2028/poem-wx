@@ -1,177 +1,20 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}" scroll-into-view="{{anchor}}">
-  <view class="card overview">
-    <view class="ov-head">
-      <view class="ring">
-        <view class="ring-track"></view>
-        <view class="ring-fill" style="--p:{{masteryPercent}}"></view>
-        <text class="ring-text">{{masteryPercent}}%</text>
-      </view>
-      <view class="ov-main">
-        <text class="ov-title">背诵进度</text>
-        <text class="ov-sub">已掌握 {{overview.mastered}} / 已学 {{overview.learned}}</text>
-      </view>
-    </view>
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <progress-view view="{{view}}" defers="{{defers}}" ring-text="{{ringText}}"
+                 bind:open="onOpen" bind:defer="onOpenDefer" />
 
-    <view class="stats ov-row">
-      <view class="stat">
-        <text class="stat-v">{{overview.learned}}</text>
-        <text class="stat-k">已学</text>
-      </view>
-      <view class="stat">
-        <text class="stat-v">{{overview.mastered}}</text>
-        <text class="stat-k">已掌握</text>
-      </view>
-      <view class="stat">
-        <text class="stat-v">{{overview.dueToday}}</text>
-        <text class="stat-k">今日到期</text>
-      </view>
-      <view class="stat">
-        <text class="stat-v">{{overview.avgMastery}}%</text>
-        <text class="stat-k">平均掌握</text>
-      </view>
-    </view>
-
-    <text class="hint warn" wx:if="{{backlogCount}}">逾期 {{backlogCount}} 首 · 会优先排进今天</text>
-  </view>
-
-  <view class="empty" wx:if="{{!overview.learned && !selfRows.length}}">
-    <text class="empty-mark">始</text>
-    <text class="empty-text">还没有背诵记录</text>
-  </view>
-
-  <block wx:if="{{overview.learned}}">
-  <view class="card">
-    <view class="card-title">到期日历<text class="card-sub" wx:if="{{calSub}}">{{calSub}}</text></view>
-    <view class="cal">
-      <view class="cal-cell {{item.today ? 'today' : ''}} {{item.has ? 'has' : ''}}"
-            wx:for="{{calendar}}" wx:key="offset">
-        <text class="cal-count">{{item.has ? item.count : ''}}</text>
-        <view class="cal-bar"><view class="cal-bar-fill" style="height:{{item.height}}%"></view></view>
-        <text class="cal-day">{{item.label}}</text>
-        <text class="cal-date">{{item.date}}</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="card" wx:if="{{panels.length}}">
-    <view class="card-title">全部到期篇目</view>
-    <view class="panel" wx:for="{{panels}}" wx:key="offset" wx:for-item="d">
-      <view class="panel-head">
-        <text class="panel-when {{d.today ? 'today' : ''}} {{d.late ? 'late' : ''}}">{{d.label}}<text class="panel-date">{{d.date}}</text></text>
-        <text class="panel-count">{{d.count}} 篇</text>
-      </view>
-      <view class="due" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{d.rows}}" wx:key="id" data-id="{{item.id}}" data-day="{{d.offset}}" bindtap="onOpen">
-        <view class="due-main">
-          <text class="due-title">{{item.title}}</text>
-          <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
-        </view>
-        <text class="due-state">{{item.mastery}}</text>
-        <text class="due-when {{item.late ? 'late' : ''}}">{{item.due}}</text>
-      </view>
-    </view>
-    <text class="hint" wx:if="{{farther}}">另有 {{farther}} 首排在七天之外</text>
-  </view>
-
-  <view class="card" wx:if="{{defers.length}}">
-    <view class="card-title">延后再背</view>
-    <text class="hint defer-lead">点过的这几首按日子压着，到日子自己回到今日计划</text>
-    <view class="panel" wx:for="{{defers}}" wx:key="key" wx:for-item="lv">
-      <view class="panel-head">
-        <text class="panel-when">{{lv.label}}</text>
-        <text class="panel-count">{{lv.count}} 篇</text>
-      </view>
-      <view class="due" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{lv.rows}}" wx:key="id" data-id="{{item.id}}" data-key="{{lv.key}}" bindtap="onOpenDefer">
-        <view class="due-main">
-          <text class="due-title">{{item.title}}</text>
-          <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
-        </view>
-        <text class="due-when">{{item.due}}</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="card-title">掌握度分布<text class="card-sub" wx:if="{{bucketsSub}}">{{bucketsSub}}</text></view>
-    <view class="bar-row {{item.cls}} {{item.count ? '' : 'zero'}}" wx:for="{{buckets}}" wx:key="label">
-      <text class="bar-label">{{item.label}}</text>
-      <view class="bar-track"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
-      <text class="bar-count">{{item.count}}</text>
-    </view>
-  </view>
-  </block>
-
-  <block wx:if="{{selfRows.length}}">
-  <view class="card">
-    <view class="card-title">自选背诵<text class="card-sub">{{selfRows.length}} 个集合</text></view>
-    <text class="hint self-lead">每个集合各排一份计划，读数与本册同一口径</text>
-
-    <view class="self" wx:for="{{selfRows}}" wx:key="id" id="self-{{item.id}}">
-      <view class="self-head">
-        <view class="ring">
-          <view class="ring-track"></view>
-          <view class="ring-fill" style="--p:{{item.percent}}"></view>
-          <text class="ring-text">{{item.percent}}%</text>
-        </view>
-        <view class="self-main">
-          <text class="self-name poem">{{item.title}}</text>
-          <text class="self-sub">{{item.sub}}</text>
-        </view>
-        <view class="self-nums">
-          <text class="self-num">{{item.dueToday}}</text>
-          <text class="self-num-k">今日到期</text>
-        </view>
-      </view>
-
-      <view class="stats self-row">
-        <view class="stat">
-          <text class="stat-v">{{item.total}}</text>
-          <text class="stat-k">篇目</text>
-        </view>
-        <view class="stat">
-          <text class="stat-v">{{item.learned}}</text>
-          <text class="stat-k">已学</text>
-        </view>
-        <view class="stat">
-          <text class="stat-v">{{item.mastered}}</text>
-          <text class="stat-k">已掌握</text>
-        </view>
-        <view class="stat">
-          <text class="stat-v">{{item.avgMastery}}%</text>
-          <text class="stat-k">平均掌握</text>
-        </view>
-      </view>
-
-      <text class="hint warn" wx:if="{{item.backlog}}">逾期 {{item.backlog}} 首 · 会优先排进今天</text>
-      <text class="hint self-far" wx:if="{{item.farther}}">另有 {{item.farther}} 首排在七天之外</text>
-
-      <view class="cal" wx:if="{{item.learned}}">
-        <view class="cal-cell {{day.has ? 'has' : ''}}" wx:for="{{item.calendar}}" wx:for-item="day" wx:key="label">
-          <text class="cal-count">{{day.has ? day.count : ''}}</text>
-          <text class="cal-day">{{day.label}}</text>
-        </view>
-      </view>
-
-      <view class="bar-row {{bk.cls}} {{bk.count ? '' : 'zero'}}" wx:for="{{item.buckets}}" wx:for-item="bk" wx:key="label">
-        <text class="bar-label">{{bk.label}}</text>
-        <view class="bar-track"><view class="bar-fill" style="width:{{bk.percent}}%"></view></view>
-        <text class="bar-count">{{bk.count}}</text>
-      </view>
-    </view>
-
-    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
+  <view class="card" wx:if="{{selfOn}}">
+    <text class="card-title">自选背诵</text>
+    <text class="hint self-lead">自选集合的进度另有一页，每个集合一份读数</text>
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSelf">
       <view class="row-main">
-        <text class="row-title">管理自选集合</text>
-        <text class="row-sub">新建 · 改名 · 增删篇目</text>
+        <text class="row-title">自选集合的背诵进度</text>
+        <text class="row-sub">{{selfSub}}</text>
       </view>
       <text class="row-go">›</text>
     </view>
   </view>
 
-  </block>
-
-  <view class="card" wx:if="{{!selfRows.length && selfOn}}">
+  <view class="card" wx:if="{{selfOn && !selfCount}}">
     <view class="empty">
       <text class="empty-mark">选</text>
       <text class="empty-text say">还没有自选集合</text>

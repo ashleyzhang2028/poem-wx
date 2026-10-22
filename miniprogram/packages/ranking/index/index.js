@@ -4,6 +4,7 @@ const ranking = require("../../../utils/ranking");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const gate = require("../../../utils/gate");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -56,19 +57,23 @@ Page({
       this.setData({ state: "login", reason: "" });
       return;
     }
+    const query = ranking.queryOf(this.data);
+    const key = "rank:" + this.data.game;
+    if (guard.busy(key)) return;
     sfx.play("tick");
     this.setData({ state: "loading" });
-    const query = ranking.queryOf(this.data);
-    remote
-      .rankingList({
+    this.query = query;
+    guard
+      .once(key, () => remote.rankingList({
         game: this.data.game,
         stage: query.stage,
         grade: query.grade,
         term: query.term,
         period: query.period,
         size: ranking.DEFAULT_SIZE
-      })
+      }))
       .then((res) => {
+        if (this.query !== query) return;
         if (res.ok) {
           const board = (res.board || []).map(ranking.maskRow);
           const me = res.me ? ranking.maskRow(res.me) : null;
@@ -90,6 +95,7 @@ Page({
         this.setData({ state: "offline", reason: res.reason || "榜单没读上来，稍后再试" });
       })
       ["catch"](() => {
+        if (this.query !== query) return;
         this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });
       });
   },

@@ -638,6 +638,45 @@ function makeWx(port, mem) {
     const blank2 = await adminFb.reply(first.thread.tid, "   ", "open", "pending");
     ok("空回复不发", blank2.ok === false, JSON.stringify(blank2));
 
+    const other = await fbApi.submit({ kind: "feature", title: "希望能导出", content: "把背诵记录导出成图片。" });
+    ok("类别原样落到服务端（不是一律记成「其他」）",
+      !!other.ok && other.thread.kind === "feature", JSON.stringify(other.thread && other.thread.kind));
+
+    const badKind = await fbApi.submit({ kind: "zzz", title: "认不出的类别", content: "应当被挡回来。" });
+    ok("认不出的类别回 400，不悄悄改成「其他」", badKind.ok === false, JSON.stringify(badKind));
+
+    const listed = await fbApi.mine();
+    const withDelete = listed.threads.filter((t) => t.canDelete).length;
+    ok("自己提的每一条都标着可删（页面据此摆入口）",
+      withDelete === listed.threads.length && listed.threads.length >= 2, JSON.stringify([withDelete, listed.threads.length]));
+
+    const followComment = listed.threads.filter((t) => t.tid === first.thread.tid)[0];
+    const mineComment = (followComment.comments || []).filter((c) => !c.admin)[0];
+    const removedComment = await fbApi.remove("", mineComment.cid);
+    ok("用户删得掉自己那一段跟进", removedComment.ok === true, JSON.stringify(removedComment));
+    const goneComment = (await fbApi.mine()).threads.filter((t) => t.tid === first.thread.tid)[0];
+    ok("删完之后那段真的不在了（不是只回了个 ok）",
+      !(goneComment.comments || []).some((c) => c.cid === mineComment.cid),
+      JSON.stringify((goneComment.comments || []).map((c) => c.cid)));
+
+    const adminSaid = (goneComment.comments || []).filter((c) => c.admin)[0];
+    if (adminSaid) {
+      const notMine = await fbApi.remove("", adminSaid.cid);
+      ok("管理员那一段用户删不掉", notMine.ok === false, JSON.stringify(notMine));
+    }
+
+    const removedThread = await fbApi.remove(other.thread.tid, "");
+    ok("用户删得掉自己提的那一条", removedThread.ok === true, JSON.stringify(removedThread));
+    const afterRemove = await fbApi.mine();
+    ok("删完之后列表里没有它了",
+      !afterRemove.threads.some((t) => t.tid === other.thread.tid),
+      JSON.stringify(afterRemove.threads.map((t) => t.tid)));
+
+    const adminRemoved = await adminFb.remove(first.thread.tid, "");
+    ok("管理员也删得掉（后台详情那条路）", adminRemoved.ok === true, JSON.stringify(adminRemoved));
+    ok("删完之后连沟通记录一起没了",
+      !(await svStore.listFeedbackComments({ tid: first.thread.tid }, 50)).length);
+
     await svStore.patchAccount(store.profile().userId, { role: me.role || "user" });
   }
 

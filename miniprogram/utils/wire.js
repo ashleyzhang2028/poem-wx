@@ -141,12 +141,17 @@ function keepRecordEdge(id, rec) {
 function mergeMark(slim, edge) {
   const out = {};
   Object.keys(slim).forEach((id) => { out[id] = { at: slim[id].at, times: slim[id].times }; });
+  keepNewer(out, edge);
+  return out;
+}
+
+function keepNewer(box, edge) {
   Object.keys(edge || {}).forEach((id) => {
     const a = Number(edge[id] && edge[id].at) || 0;
     const t = Number(edge[id] && edge[id].times) || 0;
-    if (!out[id] || a > out[id].at) out[id] = { at: a, times: t };
+    if (!box[id] || a > box[id].at) box[id] = { at: a, times: t };
   });
-  return out;
+  return box;
 }
 
 function packRecords() {
@@ -363,7 +368,7 @@ function applyRecords(recs) {
           applied += 1;
         }
       });
-      readEdges[book] = mergeMark(marks, readEdges[book]);
+      keepNewer(readEdges[book] || (readEdges[book] = {}), marks);
       return;
     }
 
@@ -464,7 +469,7 @@ function applyRecords(recs) {
       box[id] = at;
       applied += 1;
     }
-    readEdges[book] = mergeMark({ [id]: { at: at, times: 1 } }, readEdges[book]);
+    keepNewer(readEdges[book] || (readEdges[book] = {}), { [id]: { at: at, times: 1 } });
   });
 
   store.write(store.KEYS.progress, progress);
@@ -528,6 +533,7 @@ module.exports = {
   recordStamp,
   latestAt,
   mergeMark,
+  keepNewer,
   packRecords,
   applyRecords
 };
