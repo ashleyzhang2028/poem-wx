@@ -615,12 +615,21 @@ function setPinyinFixes(fixes, at) {
   write(KEYS.pinyinFix, { list: fixes || [], at: Number(at) || Date.now() });
 }
 
+const DEVICE_SHAPE = /^d_[0-9a-f]{8}$/;
+
+function newDeviceId() {
+  const hex = "0123456789abcdef";
+  let s = "";
+  while (s.length < 8) s += hex.charAt(Math.floor(Math.random() * 16));
+  return "d_" + s;
+}
+
 function deviceId() {
-  let id = read(KEYS.device, "");
-  if (id) return id;
-  id = "d" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-  write(KEYS.device, id);
-  return id;
+  const id = read(KEYS.device, "");
+  if (DEVICE_SHAPE.test(id)) return id;
+  const fresh = newDeviceId();
+  write(KEYS.device, fresh);
+  return fresh;
 }
 
 function stats() {
