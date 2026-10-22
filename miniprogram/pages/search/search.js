@@ -195,7 +195,7 @@ Page({
 
   onPick(e) {
     e.stopPropagation && e.stopPropagation();
-    if (!entitlement.block("collections", { page: this })) return;
+    if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const id = e.currentTarget.dataset.id;
     const list = cols.list();
     if (!list.length) {

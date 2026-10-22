@@ -156,7 +156,7 @@ Page({
   },
 
   onCreate() {
-    if (!entitlement.block("collections", { page: this })) return;
+    if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     if (this.data.count >= this.data.cap) {
       wx.showToast({ title: "最多 " + this.data.cap + " 个集合，先删一个", icon: "none" });
       return;

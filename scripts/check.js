@@ -2875,6 +2875,18 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
   ok("同一时刻只弹一个登录框",
     /let asking\s*=\s*false/.test(flowSrc) && /if \(auth\.logged\(\) \|\| asking\)/.test(flowSrc),
     "askLogin 不拦重入 —— 登录框没关时再点一下又叠一个");
+
+  const startBody = (flowSrc.match(/function start\(page, action\) \{[\s\S]*?\n\}/) || [""])[0];
+  ok("没带 action 也照弹登录框（登录按钮走的就是这条）",
+    startBody.indexOf("action") < 0 || startBody.indexOf("if (!action)") < 0,
+    "start 见 action 是空的就直接返回 —— 登录按钮点了不出框，"
+      + "auth.login 一次也不调，人卡在未登录（Issue #502 回归）");
+
+  const toastLine = (blockBody.match(/wx\.showToast\(\{ title: [^\n]*\)/) || [""])[0];
+  ok("登录提示不重复拼接",
+    toastLine.indexOf('"登录" +') < 0,
+    "block 里把「登录」和 hint() 的「登录可用」又拼了一遍 —— 弹出「登录登录可用后可用」。"
+      + "行：" + toastLine);
 }
 
 {

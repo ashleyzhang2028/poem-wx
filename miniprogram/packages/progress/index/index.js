@@ -238,13 +238,15 @@ Page({
 
   onCollections() {
     if (!this.requireLogin()) return;
-    entitlement.block("collections", { page: this, loginPrompt: false });
-    if (!entitlement.can("collections")) return;
+    if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
   requireLogin() {
-    entitlement.block("daily", { page: this, loginPrompt: false });
-    return entitlement.loggedIn();
+    return entitlement.block("daily", { page: this });
+  },
+
+  onTierGate() {
+    entitlement.openTierPage();
   }
 });

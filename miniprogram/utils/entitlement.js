@@ -293,7 +293,7 @@ function showLogin(name, ctx) {
 
 function onLoginGate(name, ctx) {
   if (typeof ctx.onLoginGate === "function") ctx.onLoginGate(name);
-  else ctx.onLogin();
+  else if (typeof ctx.onLogin === "function") ctx.onLogin(name);
 }
 
 function showTier(name, ctx) {
@@ -332,18 +332,18 @@ function block(name, opt) {
   const page = o.page;
   if (r.login) {
     if (o.loginPrompt === false || !page) {
-      wx.showToast({ title: "登录" + hint(name, o) + "后可用", icon: "none" });
+      wx.showToast({ title: "「" + r.name + "」登录后可用", icon: "none" });
       return false;
     }
     showLogin(name, page);
     return false;
   }
 
-  if (o.loginPrompt === false || !page || typeof page.onTierGate !== "function") {
-    showTierToast(name);
+  if (o.loginPrompt === true && page) {
+    showTier(name, page);
     return false;
   }
-  showTier(name, page);
+  showTierToast(name);
   return false;
 }
 
