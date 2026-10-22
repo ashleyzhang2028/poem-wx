@@ -7586,7 +7586,7 @@ function gapped(items, max) {
   ok("课内 / 自选胶囊由篇目所属集子定，标签互斥（一首只落一个）",
     /const SOURCE_TEXT = \{ course: "课内", own: "自选" \}/.test(homeSrc4)
       && /function sourceKey\(id\)/.test(homeSrc4)
-      && /meta\.b === "poems" \? "course" : "own"/.test(homeSrc4)
+      && /corpus\.bookOf\(id\) === "poems" \? "course" : "own"/.test(homeSrc4)
       && (homeWxml4.match(/\{\{item\.source\}\}/g) || []).length === 2);
   ok("今日计划与自选集合的篇目行带来源与原因胶囊，全部诗词那张卡只带名次与进度",
     (homeWxml4.match(/\{\{item\.source === '课内' \? 'course' : 'own'\}\}/g) || []).length === 2

@@ -75,6 +75,10 @@ const TIER_GAP_MS = 60 * 60 * 1000;
 
 let hot = {};
 let hotWx = null;
+let progressCache = null;
+let progressWx = null;
+let readsCache = null;
+let readsWx = null;
 
 function isHot(key) {
   return key === KEYS.profile || key === KEYS.auth || key === KEYS.caps;
@@ -106,6 +110,8 @@ function write(key, value) {
   try {
     wx.setStorageSync(key, value);
     delete hot[key];
+    if (key === KEYS.progress) dropProgressCache();
+    if (key === KEYS.reads) dropReadsCache();
     return true;
   } catch (e) {
     return false;
@@ -119,6 +125,8 @@ function drop(key) {
 
   }
   delete hot[key];
+  if (key === KEYS.progress) dropProgressCache();
+  if (key === KEYS.reads) dropReadsCache();
 }
 
 function migrate() {
@@ -239,7 +247,15 @@ function tierDue(now) {
 }
 
 function progress() {
-  return read(KEYS.progress, {}) || {};
+  if (progressCache && progressWx === wx) return progressCache;
+  const all = read(KEYS.progress, {}) || {};
+  progressCache = all;
+  progressWx = wx;
+  return all;
+}
+
+function dropProgressCache() {
+  progressCache = null;
 }
 
 function getRecord(id) {
@@ -251,6 +267,7 @@ function setRecord(id, rec) {
   all[id] = rec;
   shrinkIfNeeded(all);
   write(KEYS.progress, all);
+  progressCache = all;
   require("./wire").keepRecordEdge(id, rec);
   return rec;
 }
@@ -262,6 +279,7 @@ function setRecords(list) {
   });
   shrinkIfNeeded(all);
   write(KEYS.progress, all);
+  progressCache = all;
 }
 
 function shrinkIfNeeded(all) {
@@ -316,15 +334,23 @@ function dropClearMarks() {
 }
 
 function reads(book) {
-  const all = read(KEYS.reads, {}) || {};
-  return book ? all[book] || {} : all;
+  if (!readsCache || readsWx !== wx) {
+    readsCache = read(KEYS.reads, {}) || {};
+    readsWx = wx;
+  }
+  return book ? readsCache[book] || {} : readsCache;
+}
+
+function dropReadsCache() {
+  readsCache = null;
 }
 
 function markRead(book, id) {
-  const all = read(KEYS.reads, {}) || {};
+  const all = reads();
   const m = all[book] || (all[book] = {});
   m[id] = Date.now();
   write(KEYS.reads, all);
+  readsCache = all;
   keepReadsEdge(book, { [id]: m[id] });
 }
 

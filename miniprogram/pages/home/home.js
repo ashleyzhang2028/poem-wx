@@ -81,8 +81,7 @@ function pickedToday(rec) {
 }
 
 function sourceKey(id) {
-  const meta = corpus.indexById(id);
-  return meta && meta.b === "poems" ? "course" : "own";
+  return corpus.bookOf(id) === "poems" ? "course" : "own";
 }
 
 function dailyOnIds() {
@@ -92,8 +91,7 @@ function dailyOnIds() {
 }
 
 function sourceBook(id) {
-  const meta = corpus.indexById(id);
-  return (meta && meta.b) || "poems";
+  return corpus.bookOf(id) || "poems";
 }
 
 const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -568,12 +566,11 @@ Page({
   },
 
   readOf() {
-    const reads = {};
+    const seen = {};
     return (id) => {
-      const meta = corpus.indexById(id);
-      const book = (meta && meta.b) || "poems";
-      if (!reads[book]) reads[book] = store.reads(book);
-      return !!reads[book][id];
+      const book = corpus.bookOf(id) || "poems";
+      if (!seen[book]) seen[book] = store.reads(book);
+      return !!seen[book][id];
     };
   },
 

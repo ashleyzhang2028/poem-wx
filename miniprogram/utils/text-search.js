@@ -149,12 +149,12 @@ function shardsOf(keyword, book) {
     picks.push.apply(picks, candidates);
   }
 
-  picks.forEach((name) => {
-    const ids = [];
-    Object.keys(manifest.map || {}).forEach((id) => {
-      if (manifest.map[id] === name) ids.push(id);
-    });
-    byBucket[name] = ids;
+  const wanted = {};
+  picks.forEach((name) => { wanted[name] = true; });
+  Object.keys(manifest.map || {}).forEach((id) => {
+    const name = manifest.map[id];
+    if (!wanted[name]) return;
+    (byBucket[name] || (byBucket[name] = [])).push(id);
   });
 
   return { buckets: picks, byBucket: byBucket, capped: capped };

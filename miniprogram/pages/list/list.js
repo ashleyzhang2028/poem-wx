@@ -59,25 +59,24 @@ Page({
 
   apply() {
     const { bookId, keyword, filter } = this.data;
-    let list = corpus.ofBook(bookId);
-
-    if (keyword) list = corpus.search(keyword, { book: bookId, limit: 2000 }).items;
+    const all = corpus.ofBook(bookId);
+    const base = keyword ? this.matched(bookId, keyword) : all;
 
     const reads = store.reads(bookId);
-    if (filter === "未读") list = list.filter((p) => !reads[p.id]);
+    const list = filter === "未读" ? base.filter((p) => !reads[p.id]) : base;
 
     const picked = this.pickedMap();
     const groups = corpus.grouped(list);
-    let index = 0;
+    let seq = 0;
     groups.forEach((g) => {
       g.items = g.items.map((p) => {
-        index += 1;
+        seq += 1;
         return {
           id: p.id,
           title: p.t,
           author: p.a,
           dynasty: p.d,
-          seq: index,
+          seq: seq,
           read: !!reads[p.id],
           picked: !!picked[p.id]
         };
@@ -87,13 +86,27 @@ Page({
     this.setData({
       groups,
       matched: list.length,
-      total: corpus.ofBook(bookId).length,
-
+      total: all.length,
       groupCount: groups.length
     });
   },
 
+  matched(bookId, keyword) {
+    const key = bookId + "\u0000" + keyword;
+    if (this.matchKey === key) return this.matchList;
+    const list = corpus.search(keyword, { book: bookId, limit: 2000 }).items;
+    this.matchKey = key;
+    this.matchList = list;
+    return list;
+  },
+
+  forgetMatch() {
+    this.matchKey = "";
+    this.matchList = null;
+  },
+
   onSearch(e) {
+    this.forgetMatch();
     this.setData({ keyword: e.detail.value }, () => this.apply());
   },
 
