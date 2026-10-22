@@ -3413,11 +3413,14 @@ function boardList(deps, input) {
       var shown = ranked.slice(0, size);
       var pick = shown.concat(beyond ? [beyond] : []);
 
-      return Promise.all(pick.map(function (r) {
-        return Promise.resolve(deps.store.getAccount(r.uid)).then(function (acc) {
+      return Promise.resolve(
+        typeof deps.store.getAccounts === "function"
+          ? deps.store.getAccounts(pick.map(function (r) { return r.uid; }))
+          : Promise.all(pick.map(function (r) { return deps.store.getAccount(r.uid); }))
+      ).then(function (found) {
+        var accs = (found || []).map(function (acc) {
           return acc && acc.status !== "deleted" ? acc : null;
         });
-      })).then(function (accs) {
         var board = [];
         shown.forEach(function (r, i) {
           if (!accs[i]) return;

@@ -199,7 +199,7 @@ const facade = {
           const all = t ? [...db[t].values()] : [];
           const hit = all.filter((r) => hits(r, sql, params));
 
-          return Promise.resolve([hit.length ? [hit[0]] : [], []]);
+          return Promise.resolve([/\bLIMIT\s+1\b/i.test(sql) ? (hit.length ? [hit[0]] : []) : hit, []]);
         }
 
         if (/^\s*INSERT\s+INTO/i.test(sql)) {

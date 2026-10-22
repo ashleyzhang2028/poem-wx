@@ -27,6 +27,9 @@ function memoryStore() {
       return null;
     },
     getAccount: function (uid) { return db.accounts[uid] || null; },
+    getAccounts: function (uids) {
+      return Promise.resolve((uids || []).map(function (u) { return db.accounts[u] || null; }));
+    },
     putAccount: function (acc) { db.accounts[acc.uid] = acc; return acc; },
 
     degrade: function () { return []; },
