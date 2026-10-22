@@ -1,0 +1,38 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <view class="card" wx:if="{{!cards.length}}">
+    <view class="empty">
+      <text class="empty-mark">选</text>
+      <text class="empty-text say">{{logged ? '还没有自选集合' : '自选集合要登录后才看得到'}}</text>
+      <text class="hint empty-tip">在课外阅读或搜索里看到好诗，加进自己的集合</text>
+      <button class="btn ghost mini empty-btn" wx:if="{{!logged}}" bindtap="onLogin">登录</button>
+      <button class="btn ghost mini empty-btn" wx:else bindtap="onCollections">管理自选集合</button>
+    </view>
+  </view>
+
+  <view wx:for="{{cards}}" wx:key="id" wx:for-item="coll">
+    <view class="card-open coll-head">
+      <text class="card-title poem">{{coll.name}}</text>
+      <text class="card-sub">{{coll.sub}}</text>
+      <view class="dot" style="background:{{coll.color}}"></view>
+    </view>
+
+    <progress-view id="pv-{{coll.id}}" view="{{coll.view}}" defers="{{coll.defers}}"
+                   ring-text="{{coll.ringText}}" anchor="coll-{{coll.id}}"
+                   labels="{{coll.labels}}"
+                   bind:open="onOpen" bind:defer="onOpenDefer" />
+  </view>
+
+  <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections" wx:if="{{cards.length}}">
+    <view class="row-main">
+      <text class="row-title">管理自选集合</text>
+      <text class="row-sub">新建 · 改名 · 增删篇目</text>
+    </view>
+    <text class="row-go">›</text>
+  </view>
+
+  <recite-sheet id="sheet" theme-style="{{themeStyle}}"
+                queue="{{sheetRows}}" bind:finish="onSheetFinish" bind:defer="onDeferChange" />
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

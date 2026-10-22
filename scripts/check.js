@@ -1417,6 +1417,7 @@ const GATED = {
   "packages/game/exam/exam": "allowed",
   "packages/game/feihua/feihua": "allowed",
   "packages/progress/index/index": "gate",
+  "packages/progress/coll/coll": "gate",
   "packages/settings/recite/recite": "gate",
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
@@ -3652,32 +3653,57 @@ function mountFull(pg, query) {
 
   const progWxml = strip(read("packages/progress/index/index.wxml"));
   const progJs = strip(read("packages/progress/index/index.js"));
+  const collWxml = strip(read("packages/progress/coll/coll.wxml"));
+  const collJs = strip(read("packages/progress/coll/coll.js"));
+  const pvJs = strip(read("components/progress-view/progress-view.js"));
+  const pvWxml = strip(read("components/progress-view/progress-view.wxml"));
+
   ok("进度页不再有「记忆阶段」那张卡（stageRows 数据也撤了）",
     progJs.indexOf("stageRows") < 0);
 
+  ok("课内与自选两块读数的画法只有一份（components/progress-view 里那四块）",
+    ["calendar", "due", "buckets", "defer"].every((k) => pvWxml.indexOf("labels." + k) >= 0)
+      && /<progress-view\b/.test(progWxml) && /<progress-view\b/.test(collWxml)
+      && progWxml.indexOf("cal-bar") < 0 && collWxml.indexOf("cal-bar") < 0
+      && progWxml.indexOf("bar-row") < 0 && collWxml.indexOf("bar-row") < 0,
+    "两条进度各自摊开画了一遍 —— 同一块读数会有第二个出处");
 
-  ok("那几块读数不自己算（本册与自选都走 scheduler 的 overview / dueList）",
-    /S\.overview\(/.test(progJs) && /S\.dueList\(/.test(progJs)
-      && /S\.collectionsProgress\(/.test(progJs)
-      && progJs.indexOf("store.progress") < 0
-      && progJs.indexOf("nextReviewAt") < 0,
+  ok("那几块读数不自己算（本册与每个集合都走 scheduler 的 overview / dueList / collectionProgress）",
+    /S\.overview\(/.test(pvJs) && /S\.dueList\(/.test(pvJs)
+      && /S\.collectionProgress\(/.test(pvJs)
+      && /collectionView\(/.test(collJs)
+      && [progJs, collJs, pvJs].every((src) => src.indexOf("store.progress") < 0
+        && src.indexOf("nextReviewAt") < 0),
     "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
 
   ok("点篇目走背诵弹层（进度页那几行能背，不只是看）",
-    /<recite-sheet/.test(progWxml) && /data-id="\{\{item\.id\}\}"/.test(progWxml)
-      && /openSheet\(/.test(progJs) === false
-      && /sheet\.open\(/.test(progJs)
-      && /onOpen\b/.test(progJs));
+    /<recite-sheet/.test(pvWxml) === false
+      && /<recite-sheet/.test(progWxml) && /<recite-sheet/.test(collWxml)
+      && /data-id="\{\{item\.id\}\}"/.test(pvWxml)
+      && /sheet\.open\(/.test(progJs) && /sheet\.open\(/.test(collJs)
+      && /onOpen\b/.test(pvJs));
 
-  ok("自选集合的标题点得动，落到进度页那一个集合上",
-    /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(
-      fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8"))
-      && /wx\.navigateTo\(\{ url: "\/packages\/progress\/index\/index\?coll="/.test(
-        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8"))
-      && /onLoad\(query\)/.test(progJs)
-      && /scroll-into-view="\{\{anchor\}\}"/.test(progWxml)
-      && /id="self-\{\{item\.id\}\}"/.test(progWxml)
-      && /this\.setData\(\{ anchor: "self-" \+ id \}\)/.test(progJs));
+  ok("自选集合的标题点得动，落到自选进度页那一个集合上",
+    /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(read("pages/home/home.wxml"))
+      && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(read("pages/home/home.js"))
+      && /data-id="\{\{c\.id\}\}"[^>]*bindtap="onProgress"/.test(
+        read("packages/settings/collections/collections.wxml"))
+      && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(
+        read("packages/settings/collections/collections.js"))
+      && /onLoad\(query\)/.test(collJs)
+      && /this\.setData\(\{ anchor: "coll-" \+ id \}\)/.test(collJs)
+      && /anchor="coll-\{\{coll\.id\}\}"/.test(collWxml)
+      && /id="\{\{anchor\}\}"/.test(pvWxml),
+    "首页 / 管理页那一下没落到自选进度页的集合位置上");
+
+  ok("多个集子靠标题栏右侧那枚色点分开，取色只有一处",
+    /<view class="dot" style="background:\{\{coll\.color\}\}">/.test(collWxml)
+      && /coll\.color/.test(read("pages/home/home.wxml"))
+      && /pv\.DOTS\[/.test(collJs)
+      && /pv\.DOTS\[/.test(strip(
+        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8")))
+      && (pvJs.match(/const DOTS = \[/g) || []).length === 1,
+    "色点自己另排了一份色 —— 同一个集合在首页与进度页会是两个颜色");
 
   {
     const declared = {};

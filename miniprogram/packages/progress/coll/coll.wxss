@@ -1,0 +1,20 @@
+.coll-head {
+  padding: var(--sp-1) var(--sp-1) var(--sp-2);
+}
+
+.coll-head > .card-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  flex: none;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+}
+
+.empty-btn {
+  margin: var(--sp-3) auto 0;
+}

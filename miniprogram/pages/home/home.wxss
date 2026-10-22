@@ -260,3 +260,11 @@
 .seasonal-btns .round-btn.on .glyph {
   color: var(--strong-text);
 }
+
+.coll-dot {
+  flex: none;
+  width: 16rpx;
+  height: 16rpx;
+  margin: 0 var(--sp-1);
+  border-radius: 50%;
+}

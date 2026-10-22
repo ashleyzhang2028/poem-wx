@@ -40,6 +40,11 @@
   font-weight: 400;
 }
 
+.coll-head .row-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .coll-empty {
   padding: var(--sp-4) var(--sp-2);
 }

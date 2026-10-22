@@ -16,6 +16,7 @@ const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
 const guard = require("../../utils/guard");
+const pv = require("../../components/progress-view/progress-view");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
 
@@ -527,7 +528,7 @@ Page({
 
   collectionRows() {
     const all = corpus.course();
-    return cols.list().map((c) => {
+    return cols.list().map((c, i) => {
       const plan = S.collectionPlan(c, {
         count: cols.countOf(c),
         allPoems: all,
@@ -549,6 +550,7 @@ Page({
         done: done,
         doneNow: doneNow,
         doneToday: plan.length > 0 && doneNow >= plan.length,
+        color: pv.DOTS[i % pv.DOTS.length],
         praise: plan.length > 0 && doneNow >= plan.length ? praiseOf("own") : "",
         rows: this.collectionCardRows(plan)
       };
@@ -645,7 +647,7 @@ Page({
   onProgress(e) {
     const id = datasetOf(e).id;
     if (!this.requireLogin("collections")) return;
-    wx.navigateTo({ url: "/packages/progress/index/index?coll=" + encodeURIComponent(id) });
+    wx.navigateTo({ url: "/packages/progress/coll/coll?coll=" + encodeURIComponent(id) });
   },
 
   scopeRows() {
