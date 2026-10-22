@@ -86,30 +86,36 @@
   color: var(--ink-3);
 }
 
-.tier-chip {
+.identity-acts {
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
   margin-left: var(--sp-2);
-  padding: var(--pad-opt-y) var(--pad-opt-x);
+}
+
+.tier-chip,
+.identity-acts .btn.pill {
+  flex: none;
+  height: auto;
+  padding: var(--pad-opt-y) var(--sp-2);
   border: 1rpx solid var(--line-strong);
   border-radius: var(--radius-pill);
   font-size: var(--fs-caption);
   line-height: 1.4;
-  color: var(--ink-2);
   letter-spacing: 1rpx;
+  color: var(--ink-2);
 }
 
-.tier-chip-hover {
+.identity-acts .btn.pill {
+  width: auto;
+  min-width: 0;
+}
+
+.tier-chip-hover,
+.identity-acts .btn.pill.button-hover {
   background: var(--line);
-}
-
-.identity-acts {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-3);
-}
-.identity-acts .btn {
-  width: 100%;
+  opacity: 1;
 }
 
 .login-box {
