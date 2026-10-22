@@ -1,6 +1,3 @@
 {
-  "component": true,
-  "usingComponents": {
-    "tier-tag": "/components/tier-tag/tier-tag"
-  }
+  "component": true
 }

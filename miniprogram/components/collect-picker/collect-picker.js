@@ -1,7 +1,5 @@
 const cols = require("../../utils/collections");
 const corpus = require("../../utils/corpus");
-const entitlement = require("../../utils/entitlement");
-const guard = require("../../utils/guard");
 
 Component({
   options: {
@@ -14,13 +12,9 @@ Component({
     poemId: "",
     title: "",
     rows: [],
-    creating: false,
-    draft: "",
     itemsMax: cols.ITEMS_MAX,
     total: 0,
-    cap: 0,
-    tier: "pro",
-    full: false
+    cap: 0
   },
 
   methods: {
@@ -31,7 +25,7 @@ Component({
       this.setData({ open: true });
     },
 
-    paint(id, title, creating, draft) {
+    paint(id, title) {
       const list = cols.list().map((c) => ({
         id: c.id,
         name: cols.nameOf(c),
@@ -43,16 +37,12 @@ Component({
         title: title === undefined ? this.data.title : title,
         rows: list,
         total: list.length,
-        cap: cols.capOf(),
-        tier: entitlement.tierOf("collections"),
-        full: list.length >= cols.capOf(),
-        creating: !!creating,
-        draft: draft === undefined ? "" : draft
+        cap: cols.capOf()
       });
     },
 
     close() {
-      this.setData({ open: false, creating: false, draft: "" });
+      this.setData({ open: false });
     },
 
     onMask() {
@@ -60,45 +50,6 @@ Component({
     },
 
     onStop() {},
-
-    onGoCreate() {
-      this.close();
-      this.triggerEvent("goCreate");
-    },
-
-    onStartCreate() {
-      if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
-      if (cols.capOf() <= cols.list().length) {
-        wx.showToast({ title: "最多 " + cols.capOf() + " 个集合，先删一个", icon: "none" });
-        return;
-      }
-      this.setData({ creating: true, draft: "" });
-    },
-
-    onDraft(e) {
-      this.setData({ draft: e.detail.value });
-    },
-
-    onSubmitCreate() {
-      if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
-      if (!guard.enter("picker:create")) return;
-      const r = cols.create(this.data.draft);
-      if (!r.ok) {
-        guard.leave("picker:create");
-        if (r.code === "E_LIMIT") {
-          wx.showToast({ title: "最多 " + cols.capOf() + " 个集合，先删一个", icon: "none" });
-        }
-        return;
-      }
-      guard.leave("picker:create");
-      this.addTo(r.collection.id, r.collection.name);
-      this.setData({ creating: false, draft: "" });
-      this.triggerEvent("created", { collectionId: r.collection.id, name: r.collection.name });
-    },
-
-    onTierGate() {
-      entitlement.openTierPage();
-    },
 
     onPick(e) {
       const id = e.currentTarget.dataset.id;
