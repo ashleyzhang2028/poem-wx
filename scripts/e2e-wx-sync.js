@@ -293,6 +293,49 @@ function makeWx(port, mem) {
   }
 
   {
+    const core = require(path.join(POEM, "_lib", "core.js"));
+    const codeMod = require(path.join(POEM, "_lib", "identity.js"));
+    const holder = require(path.join(POEM, "_lib", "store.js"));
+    const shared = holder.getStore(config);
+    const codeDeps = {
+      cfg: Object.assign({}, config, { allowCodeEcho: true }),
+      store: shared,
+      limiter: core.makeRateLimiter(),
+      now: () => Date.now(),
+      account: null,
+      ip: "127.0.0.1",
+      deviceId: "devicesecurityprobe"
+    };
+    const codeEmail = "code-probe-" + Date.now() + "@example.com";
+
+    let issuedCalls = 0;
+    const newCode = codeMod.newCode;
+    codeMod.newCode = function (n) { issuedCalls++; return newCode(n); };
+
+    const sent = await core.sendCode(codeDeps, {
+      channel: "email", value: codeEmail, deviceId: "devicesecurityprobe", ip: "127.0.0.1",
+      code: "000000"
+    });
+    codeMod.newCode = newCode;
+
+    const issued = sent && sent.body ? sent.body.devCode : "";
+    ok("调用方自己指的验证码不被采纳、码一律由服务端现生成",
+      sent.status === 200 && issuedCalls === 1 && issued !== "000000" && /^\d{6}$/.test(issued),
+      JSON.stringify({ status: sent.status, devCode: issued, issuedCalls: issuedCalls }));
+
+    const bad = await core.verifyCode(codeDeps, {
+      codeId: sent.body.codeId, code: "000001", deviceId: "devicesecurityprobe", ip: "127.0.0.1"
+    });
+    const good = await core.verifyCode(codeDeps, {
+      codeId: sent.body.codeId, code: issued, deviceId: "devicesecurityprobe", ip: "127.0.0.1"
+    });
+    ok("猜错只扣一次、猜对还能用（对的那次不被自己前面那次失败抵扣）",
+      bad.status === 400 && bad.body.code === "E_CODE_WRONG" && bad.body.remaining === config.codeMaxAttempts - 1
+        && good.status === 200 && !!good._session,
+      JSON.stringify({ bad: bad.body, good: good.status }));
+  }
+
+  {
     const holder = require(path.join(POEM, "_lib", "store.js"));
     const origGet = holder.getStore;
     const shared = holder.getStore(config);

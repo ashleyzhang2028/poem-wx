@@ -250,6 +250,12 @@ function makeWx(port, mem) {
       !!patched && patched.status === "closed" && patched.resolution === "adopted",
       JSON.stringify(patched));
 
+    await s.patchFeedbackThread("fb_probe_1", JSON.parse('{"__proto__":{"status":"open"},"title":"改过的"}'));
+    const clean = await s.getFeedbackThread("fb_probe_1");
+    ok("请求里夹带的原型字段被剔掉、正常的列照旧写进去",
+      !!clean && clean.status === "closed" && clean.title === "改过的",
+      JSON.stringify(clean && { status: clean.status, title: clean.title }));
+
     const listed = await s.listFeedbackThreads({ uid: UID }, 50);
     ok("按人筛得准，按最后处理时间倒序", listed.length === 1 && listed[0].tid === "fb_probe_1",
       JSON.stringify(listed.map((r) => r.tid)));

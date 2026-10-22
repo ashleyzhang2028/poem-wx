@@ -1290,14 +1290,16 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("排行榜两行紧跟考试、写的是「参与 / 不参与」",
+  ok("排行榜两行紧跟考试、按参与 / 不参与各占一行",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
       const at = rows.findIndex((r) => r.cap === "exam");
       const [join, off] = rows.slice(at + 1, at + 3);
-      return join && off && /排行榜$/.test(join.name) && /排行榜\(不参与\)$/.test(off.name)
-        && join.cells.map((c) => c.on).join() === "false,false,true"
-        && off.cells.map((c) => c.on).join() === "false,false,true";
+      const lit = (r) => r.cells.map((c) => c.on).join();
+      return join && off
+        && join.cap === "league:join" && off.cap === "league:off"
+        && join.name !== off.name
+        && lit(join) === "false,false,true" && lit(off) === "false,false,true";
     })(),
     "两行没跟着考试排、或者 Max 之外也亮了");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
