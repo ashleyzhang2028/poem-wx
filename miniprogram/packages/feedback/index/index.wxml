@@ -1,0 +1,72 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <lock-card wx:if="{{!logged}}" title="意见建议" note="登录后才能提交" mark="议" bind:login="onLogin" />
+
+  <block wx:else>
+
+    <view class="card">
+      <text class="card-title">意见类型</text>
+      <radio-group class="fb-pick" bindchange="onKind">
+        <label class="fb-pick-item {{kind === item.key ? 'on' : ''}}" wx:for="{{kinds}}" wx:key="key">
+          <radio class="fb-pick-radio" value="{{item.key}}" checked="{{kind === item.key}}" />
+          <text class="fb-pick-t">{{item.name}}</text>
+        </label>
+      </radio-group>
+
+      <text class="field-label fb-gap">标题</text>
+      <input class="fb-input" value="{{title}}" maxlength="{{titleMax}}" placeholder="一句话说清"
+             placeholder-class="fb-ph" bindinput="onTitle" />
+
+      <text class="field-label fb-gap">正文</text>
+      <textarea class="fb-area" value="{{content}}" maxlength="{{contentMax}}" placeholder="具体情况、复现步骤或建议"
+                placeholder-class="fb-ph" bindinput="onContent"></textarea>
+      <text class="fb-count">{{content.length}}/{{contentMax}}</text>
+
+      <view class="actions">
+        <button class="btn primary" bindtap="onSubmit" disabled="{{submitting}}">提交</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="card-title">沟通记录</text>
+
+      <view class="empty" wx:if="{{!threads.length}}">
+        <text class="empty-mark">空</text>
+        <text class="empty-text">还没有提过意见</text>
+        <text class="empty-tip hint">上面填完提交，之后在这里跟进</text>
+      </view>
+
+      <view class="fb-thread" wx:for="{{threads}}" wx:key="tid" wx:for-item="item" wx:for-index="itemIndex">
+        <view class="fb-thread-head">
+          <text class="fb-thread-title">{{item.title}}</text>
+          <text class="tag {{item.tone}}">{{item.statusName}}</text>
+        </view>
+
+        <view class="fb-thread-meta">
+          <text class="fb-meta-t">{{item.kindName}}</text>
+          <text class="fb-meta-t">·</text>
+          <text class="fb-meta-t">{{item.createdText}}</text>
+        </view>
+
+        <text class="fb-thread-body">{{item.content}}</text>
+
+        <view class="fb-talk" wx:if="{{item.comments.length}}">
+          <view class="fb-said {{said.admin ? '' : 'mine'}}" wx:for="{{item.comments}}" wx:for-item="said" wx:key="cid">
+            <text class="fb-said-who">{{said.admin ? '管理员' : '我'}}</text>
+            <text class="fb-bubble">{{said.content}}</text>
+            <text class="fb-said-stamp">{{said.stampText}}</text>
+          </view>
+        </view>
+
+        <view class="fb-reply">
+          <input class="fb-input" value="{{reply[item.tid]}}" maxlength="500" placeholder="接着说"
+                 placeholder-class="fb-ph" data-tid="{{item.tid}}" bindinput="onReplyInput" />
+          <button class="btn primary" data-tid="{{item.tid}}" bindtap="onReplySend" disabled="{{sending}}">发送</button>
+        </view>
+      </view>
+    </view>
+
+  </block>
+
+  <view class="safe-bottom"></view>
+</view>

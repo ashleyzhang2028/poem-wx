@@ -15,6 +15,6 @@ module.exports = handler.make("feedback", ["GET", "POST"], function (d, body, re
     return handler.core.feedbackDelete(d, { tid: body.tid, cid: body.cid, deviceId: body.deviceId || d.deviceId });
   }
   return handler.core.feedbackCreate(d, {
-    kind: body.kind, content: body.content, deviceId: body.deviceId || d.deviceId
+    kind: body.kind, title: body.title, content: body.content, deviceId: body.deviceId || d.deviceId
   });
 });

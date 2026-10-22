@@ -140,6 +140,9 @@ const APP_CSS = flattenCss(path.join(ROOT, "app.wxss")).replace(/@import[^;]+;/g
 const COMP_CSS = flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
+  + flattenCss(path.join(ROOT, "packages/feedback/index/index.wxss"))
+  + flattenCss(path.join(ROOT, "packages/admin/feedback/index.wxss"))
+  + flattenCss(path.join(ROOT, "packages/admin/feedback/detail/detail.wxss"))
 
   + flattenCss(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"))
 
@@ -178,13 +181,16 @@ const NATIVE_CSS = `
 .n-slider-track{position:relative;height:4px;border-radius:2px;background:#ececef;width:100%;margin:0 var(--n-slider-inset)}
 .n-slider-fill{position:absolute;left:0;top:0;height:4px;border-radius:2px;background:#1c1c1e}
 .n-slider-knob{position:absolute;top:50%;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #e0d8c8;box-shadow:0 1px 4px rgba(0,0,0,.18);transform:translate(-50%,-50%)}
-/* 原生 <button> 自带粗体（微信里就是 700）。只给它外观、不给字重 ——
-   真机的字重由 app.wxss 的 button 规则统一压到 400，预览里再现一遍
-   就等于「页面有没有把字重压回去」永远测不出来。 */
-.n-button{border:none;background:none;color:inherit;letter-spacing:normal;font-family:inherit;cursor:pointer}
-.n-button[disabled]{cursor:default}
+/* 按钮在预览里落成 <div role="button">：原生 <button> 的边框、底色与粗体
+   会把页面的 .btn 规则盖掉（同优先级下先到先得），预览就成了「按钮没底色」。
+   真机上这条由 app.wxss 的 button 规则压回 400，预览里再现一遍
+   就等于「页面有没有把字重压回去」永远测不出来，所以这里也不碰字重。 */
+.n-dis{opacity:.4;cursor:default}
+
 .n-ph{color:#9ca3af}
-.n-input{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
+.n-input,.n-textarea{display:flex;align-items:center;font-size:14px;color:#1c1c1e;min-height:22px;width:100%}
+.n-input>span,.n-textarea>span{width:100%}
+.n-textarea{align-items:flex-start;white-space:pre-wrap}
 .n-image{background:#f2f2f4}
 img.n-image{background:none}
 /* WXML 标签 → HTML div 之后，默认块级；但页面样式里的 display:flex
@@ -216,13 +222,35 @@ body{background:#e8e6e1;font-family:-apple-system,"PingFang SC","Microsoft YaHei
 .caption{font-size:12px;color:#5a5a5a;text-align:center;margin-top:8px}
 `;
 
+function overrideOf(css) {
+  const out = [];
+  const n = css.length;
+  let i = 0;
+  while (i < n) {
+    const open = css.indexOf("{", i);
+    if (open < 0) break;
+    const close = css.indexOf("}", open + 1);
+    if (close < 0) break;
+    const sel = css.slice(i, open).trim();
+    const body = css.slice(open + 1, close);
+    i = close + 1;
+    if (!sel || !/^[-.a-zA-Z]/.test(sel)) continue;
+    if (body.indexOf("--") < 0) continue;
+    if (body.indexOf("{") >= 0) continue;
+    out.push(".screen " + sel + "{" + body + "}");
+  }
+  return out.length ? out.join("\n") + "\n" : "";
+}
+
 function screenCss(cfg, pageCss) {
   const raw = TOKENS + APP_CSS + COMP_CSS + NATIVE_CSS + pageCss
 
     + "\n.screen{--layout-w:100%;}";
 
   const scoped = raw.replace(/(?<![\w.-])page\s*\{/g, ".screen{");
-  return rpx2px(scoped);
+  const screens = (scoped.match(/\.screen\s*\{/g) || []).length;
+  const px = rpx2px(scoped);
+  return px + overrideOf(px);
 }
 
 const DEVICE_FONT_SIZE = ".device{font-size:16px}";
@@ -340,6 +368,33 @@ function expandTierView(wxml, data) {
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<tier-view\s*\/>/g, comp);
+}
+
+function seedFeedback(list) {
+  const st = require(path.join(ROOT, "utils", "store.js"));
+  st.write(st.KEYS.auth, Object.assign({}, st.read(st.KEYS.auth, {}) || {}, {
+    feedback: list, feedbackAt: Date.now()
+  }));
+}
+
+function withSeedFeedback(cfg, data) {
+  if (!cfg.seedFeedback) return data;
+  const st = require(path.join(ROOT, "utils", "store.js"));
+  const box = st.read(st.KEYS.auth, {}) || {};
+  if (!box.feedback || Date.now() - Number(box.feedbackAt || 0) > 60000) return data;
+  const fb = require(path.join(ROOT, "utils", "feedback-api.js"));
+  const rows = (box.feedback || []).map(fb.decorate);
+  return Object.assign({}, data, {
+    threads: rows,
+    groups: cfg.seedGroups
+      ? require(path.join(ROOT, "utils", "admin-feedback.js")).GROUPS.map((key) => ({
+        key: key,
+        name: fb.statusOf(key).name,
+        tone: fb.statusOf(key).tone,
+        threads: rows.filter((t) => t.status === key).sort((a, b) => b.createdAt - a.createdAt)
+      }))
+      : data.groups
+  });
 }
 
 function expandDailyExtra(wxml, data) {
@@ -517,8 +572,15 @@ cases.forEach((cfg) => {
       store2.write(store2.KEYS.auth, {});
     }
 
+    if (cfg.seedFeedback) seedFeedback(cfg.seedFeedback);
+
     const data = rt.mount(cfg.page, cfg.query || {});
     if (!data) { console.log("skip (no Page) " + cfg.page); return; }
+
+    if (cfg.seedFeedback) {
+      const seeded = withSeedFeedback(cfg, data);
+      Object.keys(seeded).forEach((k) => { data[k] = seeded[k]; });
+    }
 
     if (cfg.seedStats) {
       const page = rt.current();

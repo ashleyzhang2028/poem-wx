@@ -193,7 +193,7 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   }
   const v = makeVal(data);
   const cls = a.class ? interp(a.class, v).replace(/\s+/g, " ").trim() : "";
-  const style = a.style ? interp(a.style, v) : "";
+  const style = a.style ? cutVar(interp(a.style, v)).split('"').join("&quot;") : "";
   const extra = Object.keys(a)
     .filter((k) => k !== "class" && k !== "style" && k.indexOf("wx:") !== 0 && k !== "id" && k !== "checked")
     .map((k) => " " + k + '="' + interp(a[k], v) + '"')
@@ -210,6 +210,12 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
     out.push(`<div data-tag="image" class="n-image ${cls}" style="${extra}${style}"></div>`);
     return;
   }
+  if (n.tag === "textarea") {
+    const ph = a.placeholder ? interp(a.placeholder, v) : "";
+    const val = a.value ? interp(a.value, v) : "";
+    out.push(`<div data-tag="textarea" class="n-textarea ${cls}" style="${style}">${val ? `<span>${val}</span>` : `<span class="n-ph">${ph}</span>`}</div>`);
+    return;
+  }
   if (n.tag === "input") {
     const ph = a.placeholder ? interp(a.placeholder, v) : "";
     const val = a.value ? interp(a.value, v) : "";
@@ -221,7 +227,7 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
     const dis = interp(a.disabled || "false", v) === "true";
     const buf = [];
     render(bodyNodes, data, buf);
-    out.push(`<button data-tag="button" class="n-button ${cls}"${dis ? " disabled" : ""} style="${style}">${buf.join("")}</button>`);
+    out.push(`<div class="${cls}${dis ? " n-dis" : ""}" style="${style}">${buf.join("")}</div>`);
     return;
   }
   if (n.tag === "slider") {
@@ -273,6 +279,28 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
 
   if (n.tag === "block") { out.push(inner); return; }
   out.push(`<div data-tag="${n.tag}" class="${cls}" style="${style}"${extra}>${inner}</div>`);
+}
+
+function cutVar(style) {
+  if (style.indexOf("--") < 0) return style;
+  const parts = [];
+  let quote = false;
+  let cur = "";
+  for (let i = 0; i < style.length; i += 1) {
+    const ch = style.charAt(i);
+    if (ch === '"' || ch === "'") quote = !quote;
+    if (ch === ";" && !quote) { parts.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  parts.push(cur);
+  const live = parts.filter((one) => {
+    const t = one.trim();
+    if (!t) return false;
+    if (!/^--[\w-]+/.test(t)) return true;
+    return !/^--[\w-]+\s*:?$/.test(t);
+  });
+
+  return live.map((one) => one.trim()).join(";");
 }
 
 function compile(wxml, data) {

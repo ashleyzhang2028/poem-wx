@@ -230,6 +230,47 @@ function makeWx(port, mem) {
       !!off && String(off.svalue) === "0", JSON.stringify(off));
   }
 
+  {
+    const storeMod = require(path.join(CTX, "api", "_lib", "store.js"));
+    const cfgMod = require(path.join(CTX, "api", "_lib", "config.js"));
+    const s = storeMod.getStore(cfgMod);
+    const UID = "probe-uid";
+    const now = Date.now();
+    const row = (tid, extra) => Object.assign({
+      tid: tid, uid: UID, device_id: "", email: "", nickname: "探针",
+      kind: "bug", title: "标题", content: "正文", status: "open", resolution: "pending",
+      dedupe_hash: "", created_at: now, updated_at: now
+    }, extra || {});
+
+    await s.putFeedbackThread(row("fb_probe_1", { title: "第一条" }));
+    const got = await s.getFeedbackThread("fb_probe_1");
+    ok("反馈标题与处理方式真的落进列里（不是只在报文里）",
+      !!got && got.title === "第一条" && got.resolution === "pending", JSON.stringify(got));
+    ok("去重哈希不进库（线上那一列不一定有，写了会整条写不进去；去重靠应用层）",
+      !!got && got.dedupe_hash === "", JSON.stringify(got));
+
+    await s.patchFeedbackThread("fb_probe_1", { status: "closed", resolution: "adopted", updated_at: now + 10 });
+    const patched = await s.getFeedbackThread("fb_probe_1");
+    ok("处理结果与处理方式改得回来",
+      !!patched && patched.status === "closed" && patched.resolution === "adopted",
+      JSON.stringify(patched));
+
+    const listed = await s.listFeedbackThreads({ uid: UID }, 50);
+    ok("按人筛得准，按最后处理时间倒序", listed.length === 1 && listed[0].tid === "fb_probe_1",
+      JSON.stringify(listed.map((r) => r.tid)));
+
+    await s.putFeedbackComment({
+      cid: "fc_probe_1", tid: "fb_probe_1", uid: UID, device_id: "",
+      author_role: "admin", nickname: "管理员", content: "已修", created_at: now + 20
+    });
+    const talks = await s.listFeedbackComments({ tid: "fb_probe_1" }, 10);
+    ok("单条反馈的沟通记录取得回来", talks.length === 1 && talks[0].content === "已修",
+      JSON.stringify(talks));
+
+    const counts = await s.countFeedbackThreads({});
+    ok("计数按状态给（后台那几个分组标题用它）", counts.closed === 1 && counts.all >= 1, JSON.stringify(counts));
+  }
+
   server.close();
   fs.rmSync(CTX, { recursive: true, force: true });
   const bad = results.filter((r) => !r).length;

@@ -1,5 +1,6 @@
 "use strict";
 
+var crypto = require("crypto");
 var id = require("./identity");
 var mail = require("./mail");
 var session = require("./session");
@@ -2695,12 +2696,21 @@ function pinyinFixesPublic(deps) {
   });
 }
 
-var FEEDBACK_KINDS = ["feature", "problem", "other"];
+var FEEDBACK_KINDS = ["bug", "typo", "feature", "experience", "recommend", "performance", "account", "payment", "other"];
 var FEEDBACK_STATUSES = ["open", "replied", "closed"];
-var FEEDBACK_LIMITS = { content: 2000, comment: 2000 };
+var FEEDBACK_RESOLUTIONS = ["pending", "adopted", "planned", "rejected", "duplicate"];
+var FEEDBACK_LIMITS = { title: 40, content: 2000, comment: 2000 };
+var FEEDBACK_DEDUPE_MS = 60 * 1000;
 var DEVICE_ID_SHAPE = /^d_[0-9a-f]{8}$/;
 
 function isFeedbackKind(k) { return FEEDBACK_KINDS.indexOf(String(k || "")) >= 0; }
+function isFeedbackResolution(v) { return FEEDBACK_RESOLUTIONS.indexOf(String(v || "")) >= 0; }
+
+function feedbackDedupeHash(identity, kind, title, content) {
+  return crypto.createHash("sha256")
+    .update([identity.uid || identity.deviceId, kind, title, content].join("\u0001"), "utf8")
+    .digest("hex");
+}
 
 function feedbackIdentity(deps, input) {
   if (deps.account && deps.account.uid) return { uid: deps.account.uid, deviceId: "" };
@@ -2731,6 +2741,8 @@ function feedbackThreadPublic(row, comments) {
     tid: String(row.tid || ""),
     kind: isFeedbackKind(row.kind) ? String(row.kind) : "other",
     status: FEEDBACK_STATUSES.indexOf(row.status) >= 0 ? row.status : "open",
+    resolution: isFeedbackResolution(row.resolution) ? String(row.resolution) : "pending",
+    title: String(row.title || ""),
     content: String(row.content || ""),
     createdAt: Number(row.created_at) || 0,
     updatedAt: Number(row.updated_at) || 0,
@@ -2789,6 +2801,8 @@ function feedbackCreate(deps, input) {
   }
 
   var kind = isFeedbackKind(input && input.kind) ? input.kind : "other";
+  var title = clip(input && input.title, FEEDBACK_LIMITS.title).trim();
+  if (!title) return Promise.resolve(err(400, "E_TITLE", "写一句标题"));
   var content = clip(input && input.content, FEEDBACK_LIMITS.content).trim();
   if (!content) return Promise.resolve(err(400, "E_EMPTY", "写一句想法再发（哪怕一句话）"));
 
@@ -2796,25 +2810,34 @@ function feedbackCreate(deps, input) {
   var gate = feedbackRateGate(deps, rateKey);
   if (gate) return Promise.resolve(gate);
 
+  var dedupe = feedbackDedupeHash(identity, kind, title, content);
+
   return Promise.resolve(identity.uid ? store.getAccount(identity.uid) : null).then(function (me) {
     if (identity.uid && (!me || me.status === "deleted")) return err(401, "E_NO_SESSION", "还没有登录");
 
-    var row = {
-      tid: id.newFeedbackId(),
-      uid: identity.uid || null,
-      device_id: identity.deviceId || "",
-      email: String((me && me.email) || ""),
-      nickname: String((me && me.nickname) || ""),
-      kind: kind,
-      content: content,
-      status: "open",
-      created_at: t,
-      updated_at: t
-    };
-    return Promise.resolve(store.putFeedbackThread(row)).then(function () {
-      return ok({
-        thread: feedbackThreadPublic(row, []),
-        note: "已发送，管理员看到会在这里回复。"
+    return Promise.resolve(store.listFeedbackThreads(feedbackThreadFilterOf(identity), 5)).then(function (recent) {
+      var same = (recent || []).filter(function (r) {
+        return String(r.dedupe_hash || "") === dedupe && t - (Number(r.created_at) || 0) < FEEDBACK_DEDUPE_MS;
+      })[0];
+      if (same) return ok({ thread: feedbackThreadPublic(same, []), duplicate: true });
+
+      var row = {
+        tid: id.newFeedbackId(),
+        uid: identity.uid || null,
+        device_id: identity.deviceId || "",
+        email: String((me && me.email) || ""),
+        nickname: String((me && me.nickname) || ""),
+        kind: kind,
+        title: title,
+        content: content,
+        status: "open",
+        resolution: "pending",
+        dedupe_hash: dedupe,
+        created_at: t,
+        updated_at: t
+      };
+      return Promise.resolve(store.putFeedbackThread(row)).then(function () {
+        return ok({ thread: feedbackThreadPublic(row, []) });
       });
     });
   });
@@ -2947,6 +2970,27 @@ function adminFeedbackList(deps, input) {
   });
 }
 
+function adminFeedbackGet(deps, input) {
+  var cfg = deps.cfg, store = deps.store;
+  var gate = adminGate(deps, cfg);
+  if (gate) return Promise.resolve(gate);
+
+  var tid = clip(input && input.tid, 64).trim();
+  if (!tid) return Promise.resolve(err(400, "E_TID", "缺 tid"));
+
+  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
+
+    return Promise.resolve(store.getFeedbackThread(tid)).then(function (thread) {
+      if (!thread) return err(404, "E_NO_THREAD", "没有 tid 是 " + tid + " 的那一条");
+      return Promise.resolve(store.listFeedbackComments({ tid: tid }, 500)).then(function (comments) {
+        return ok({ thread: feedbackThreadAdmin(thread, comments) });
+      });
+    });
+  });
+}
+
 function adminFeedbackReply(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var gate = adminGate(deps, cfg);
@@ -2970,10 +3014,28 @@ function adminFeedbackReply(deps, input) {
         nickname: String(me.nickname || me.email || ""),
         content: content, created_at: t
       };
-      var status = FEEDBACK_STATUSES.indexOf(input && input.status) >= 0 ? input.status : "replied";
+      var patch = { updated_at: t };
+      if (input && input.status != null && input.status !== "") {
+        if (FEEDBACK_STATUSES.indexOf(input.status) < 0) {
+          return err(400, "E_STATUS", "状态只认 " + FEEDBACK_STATUSES.join(" / "));
+        }
+        patch.status = String(input.status);
+      } else if (thread.status === "open") {
+        patch.status = "replied";
+      }
+      if (input && input.resolution != null && input.resolution !== "") {
+        if (!isFeedbackResolution(input.resolution)) {
+          return err(400, "E_RESOLUTION", "处理方式只认 " + FEEDBACK_RESOLUTIONS.join(" / "));
+        }
+        patch.resolution = String(input.resolution);
+      }
       return Promise.resolve(store.putFeedbackComment(row)).then(function () {
-        return Promise.resolve(store.patchFeedbackThread(tid, { status: status, updated_at: t })).then(function () {
-          return ok({ comment: feedbackCommentAdmin(row), status: status });
+        return Promise.resolve(store.patchFeedbackThread(tid, patch)).then(function () {
+          return ok({
+            comment: feedbackCommentAdmin(row),
+            status: patch.status || thread.status,
+            resolution: patch.resolution || thread.resolution || "pending"
+          });
         });
       });
     });
@@ -2987,17 +3049,33 @@ function adminFeedbackStatus(deps, input) {
 
   var tid = clip(input && input.tid, 64).trim();
   if (!tid) return Promise.resolve(err(400, "E_TID", "缺 tid"));
-  var status = String(input && input.status || "");
-  if (FEEDBACK_STATUSES.indexOf(status) < 0) {
-    return Promise.resolve(err(400, "E_STATUS", "状态只认 " + FEEDBACK_STATUSES.join(" / ")));
+  var patch = { updated_at: t };
+  if (input && input.status != null && input.status !== "") {
+    if (FEEDBACK_STATUSES.indexOf(String(input.status)) < 0) {
+      return Promise.resolve(err(400, "E_STATUS", "状态只认 " + FEEDBACK_STATUSES.join(" / ")));
+    }
+    patch.status = String(input.status);
+  }
+  if (input && input.resolution != null && input.resolution !== "") {
+    if (!isFeedbackResolution(input.resolution)) {
+      return Promise.resolve(err(400, "E_RESOLUTION", "处理方式只认 " + FEEDBACK_RESOLUTIONS.join(" / ")));
+    }
+    patch.resolution = String(input.resolution);
+  }
+  if (Object.keys(patch).length < 2) {
+    return Promise.resolve(err(400, "E_NO_CHANGE", "要说清改什么：status 或 resolution"));
   }
 
   return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
     if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
     if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
-    return Promise.resolve(store.patchFeedbackThread(tid, { status: status, updated_at: t })).then(function (row) {
+    return Promise.resolve(store.patchFeedbackThread(tid, patch)).then(function (row) {
       if (!row) return err(404, "E_NO_THREAD", "没有 tid 是 " + tid + " 的那一条");
-      return ok({ tid: tid, status: status });
+      return ok({
+        tid: tid,
+        status: patch.status || String(row.status || ""),
+        resolution: patch.resolution || String(row.resolution || "")
+      });
     });
   });
 }
@@ -3652,12 +3730,14 @@ module.exports = {
   feedbackComment: feedbackComment,
   feedbackDelete: feedbackDelete,
   adminFeedbackList: adminFeedbackList,
+  adminFeedbackGet: adminFeedbackGet,
   adminFeedbackReply: adminFeedbackReply,
   adminFeedbackStatus: adminFeedbackStatus,
   adminFeedbackDeleteThread: adminFeedbackDeleteThread,
   adminFeedbackDeleteComment: adminFeedbackDeleteComment,
   FEEDBACK_KINDS: FEEDBACK_KINDS,
   FEEDBACK_STATUSES: FEEDBACK_STATUSES,
+  FEEDBACK_RESOLUTIONS: FEEDBACK_RESOLUTIONS,
   FEEDBACK_LIMITS: FEEDBACK_LIMITS,
 
   boardVisible: boardVisible,

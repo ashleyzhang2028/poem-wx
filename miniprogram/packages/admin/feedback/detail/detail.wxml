@@ -1,0 +1,85 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <lock-card wx:if="{{!logged}}" title="反馈详情" note="登录后才能看" mark="馈" bind:login="onLogin" />
+
+  <block wx:elif="{{thread}}">
+
+    <view class="card">
+      <view class="fb-thread-head">
+        <text class="fb-thread-title">{{thread.title}}</text>
+        <text class="tag {{thread.tone}}">{{thread.statusName}}</text>
+      </view>
+
+      <view class="fb-rows">
+        <view class="fb-kv">
+          <text class="fb-kv-k">提交人</text>
+          <text class="fb-kv-v">{{thread.nickname || thread.uid || thread.deviceId}}</text>
+        </view>
+        <view class="fb-kv">
+          <text class="fb-kv-k">类型</text>
+          <text class="fb-kv-v">{{thread.kindName}}</text>
+        </view>
+        <view class="fb-kv">
+          <text class="fb-kv-k">创建时间</text>
+          <text class="fb-kv-v">{{thread.createdText}}</text>
+        </view>
+        <view class="fb-kv">
+          <text class="fb-kv-k">最后处理</text>
+          <text class="fb-kv-v">{{thread.updatedText}}</text>
+        </view>
+        <view class="fb-kv">
+          <text class="fb-kv-k">处理方式</text>
+          <text class="fb-kv-v">{{thread.resolutionName}}</text>
+        </view>
+      </view>
+
+      <text class="fb-thread-body">{{thread.content}}</text>
+    </view>
+
+    <view class="card">
+      <text class="card-title">沟通记录</text>
+
+      <view class="fb-talk">
+        <view class="fb-said {{said.admin ? '' : 'mine'}}" wx:for="{{thread.comments}}" wx:key="cid">
+          <text class="fb-said-who">{{said.admin ? (said.nickname || '管理员') : '用户'}}</text>
+          <text class="fb-bubble">{{said.content}}</text>
+          <text class="fb-said-stamp">{{said.stampText}}</text>
+        </view>
+      </view>
+
+      <block wx:if="{{canWrite}}">
+        <text class="field-label fb-gap">处理结果</text>
+        <radio-group class="fb-pick" bindchange="onStatus">
+          <label class="fb-pick-item {{status === item.key ? 'on' : ''}}" wx:for="{{statuses}}" wx:key="key">
+            <radio class="fb-pick-radio" value="{{item.key}}" checked="{{status === item.key}}" />
+            <text class="fb-pick-t">{{item.name}}</text>
+          </label>
+        </radio-group>
+
+        <text class="field-label fb-gap">处理方式</text>
+        <radio-group class="fb-pick" bindchange="onResolution">
+          <label class="fb-pick-item {{resolution === item.key ? 'on' : ''}}" wx:for="{{resolutions}}" wx:key="key">
+            <radio class="fb-pick-radio" value="{{item.key}}" checked="{{resolution === item.key}}" />
+            <text class="fb-pick-t">{{item.name}}</text>
+          </label>
+        </radio-group>
+
+        <text class="field-label fb-gap">处理意见</text>
+        <textarea class="fb-area" value="{{replyText}}" maxlength="2000" placeholder="回给用户"
+                  placeholder-class="fb-ph" bindinput="onReplyInput"></textarea>
+
+        <view class="actions">
+          <button class="btn primary" bindtap="onSend" disabled="{{sending}}">回复并更新</button>
+        </view>
+      </block>
+
+      <text class="hint fb-gap" wx:else>只读</text>
+    </view>
+
+  </block>
+
+  <text class="hint fb-reason" wx:if="{{reason}}">{{reason}}</text>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

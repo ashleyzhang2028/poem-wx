@@ -491,6 +491,43 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 `owner` / `admin` 才有那一枚改档按钮，其余人一行「只读」。
 改角色**不在这页做** —— 授权走 `OWNER_EMAILS`，名录里摆一枚「角色」只会误导。
 
+### 意见反馈（Issue #520）
+
+两条入口：**我的 → 意见建议**（登录可见，`packages/feedback/index`）与
+**后台管理 → 用户反馈**（`packages/admin/feedback/index`，详情在
+`packages/admin/feedback/detail/detail`）。两页共用 `utils/feedback-api.js`
+（类别 / 状态 / 处理方式三张表 + 校验 + 装饰）与 `utils/admin-feedback.js`
+（分组与回复），不在页面里各抄一遍名单。
+
+| 维度 | 取值 | 谁定 |
+|---|---|---|
+| 类别 | Bug 反馈 / 内容纠错 / 功能建议 / 体验优化 / 篇目推荐 / 性能问题 / 账号问题 / 虚拟支付 / 其他 | 用户提交时选 |
+| 处理结果 | 未处理 `open` / 处理中 `replied` / 已处理 `closed` | 管理员 |
+| 处理方式 | 待定 / 已采纳 / 排期中 / 不采纳 / 重复 | 管理员 |
+
+三件事落在服务端，不在客户端：
+
+1. **重复提交只落一条**。`feedbackCreate` 按「谁 + 类别 + 标题 + 正文」算一枚
+   `sha256`，一分钟内撞上同一枚就不再写行，回 `duplicate: true`。
+   页面上的按钮另加一次 `submitting` 锁 —— 那是手感，不是判据。
+2. **能改哪一条由服务端判**。用户那条路径只认自己的 `uid`；
+   管理员那条路径先认角色（`isAdminRole`），别的人来了回 403。
+   客户端 `canWrite` 只管「界面给谁看」。
+3. **用户跟进会把这条件打回未处理**。`feedbackComment` 写给用户的那条路
+   会把 `status` 折回 `open` —— 已处理之后用户又说了一句，就不该继续挂着「已处理」。
+
+后台列表**按处理结果分三张卡**（未处理 / 处理中 / 已处理），组内按创建时间倒序；
+卡片上是主题、用户名、创建时间与最后处理时间。点进详情才带上处理意见、
+处理方式与全部沟通记录 —— 列表那一路不拉评论。
+
+`feedback_threads` 加了两列：`title`（标题）与 `resolution`（处理方式），
+建表语句在 `deploy/sql/mysql-schema.sql`，线上库照那一份补
+（`CREATE TABLE IF NOT EXISTS` 不会改已有表，得单独 `ALTER TABLE ... ADD COLUMN`）。
+
+`dedupe_hash` **不落库**：线上那张表不一定有这一列，带上它就是整条写不进去
+（`Unknown column`），而去重本来就是应用层这六十秒的事 ——
+建表语句里有这一列，写入时跳过。
+
 后端地址与云调用两栏**不在界面上**：两个都是运维配置，不该给普通用户。
 值由部署方写在 `miniprogram/utils/server.js`（构建期由密钥仓库
 `CLOUD_ENV` / `CLOUD_SERVICE` 覆写），随包走。要换后端就改代码库里那份
@@ -554,6 +591,8 @@ wx.login() 拿 code
 | `/api/admin/accounts` | POST | 本仓库 `api/` | 名录 |
 | `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |
 | `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |
+| `/api/feedback` | GET / POST | 本仓库 `api/` | 自己的意见反馈：`GET` 列自己的（含沟通记录），`POST` 新建 / `op: "comment"` 追加一句 / `op: "delete"` 删自己的 |
+| `/api/admin/feedback` | POST | 本仓库 `api/` | `op: "list"` 全量（带各状态计数）/ `"thread"` 单条 / `"reply"` 回复并改处理结果与处理方式 / `"status"` 只改状态与方式 |
 
 **登录这道门不依赖后端**：`utils/auth.js` 在服务器没接上时落一个本机身份，
 门一样开、登录照旧能点，只是不同步。别把「没后端」变成新的一道墙 ——

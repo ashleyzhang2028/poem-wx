@@ -68,7 +68,28 @@ if (!fs.existsSync(PREVIEW)) fail("没有预览页，先跑 node scripts/shots/r
   const wanted = only.length ? screens.filter((s) => only.some((k) => s.key.indexOf(k) >= 0)) : screens;
   if (!wanted.length) fail("没有匹配的屏：" + only.join(", "));
 
+  const full = !!process.env.FULL;
+
   for (const s of wanted) {
+    if (full) {
+      await page.evaluate((key) => {
+        const el = document.querySelector('[data-screen="' + key + '"]');
+        const scr = el && el.querySelector(".screen");
+        if (scr) scr.style.height = "auto";
+      }, s.key);
+      const box = await page.evaluate((key) => {
+        const el = document.querySelector('[data-screen="' + key + '"]');
+        const d = el.getBoundingClientRect();
+        return { x: d.x + window.scrollX, y: d.y + window.scrollY, w: d.width, h: d.height };
+      }, s.key);
+      await page.screenshot({ path: path.join(OUT, s.key + "-full.png"),
+        clip: { x: box.x, y: box.y, width: box.w, height: box.h } });
+      await page.evaluate((key) => {
+        const el = document.querySelector('[data-screen="' + key + '"]');
+        const scr = el && el.querySelector(".screen");
+        if (scr) scr.style.height = "";
+      }, s.key);
+    }
     await page.screenshot({ path: path.join(OUT, s.key + ".png"),
       clip: { x: s.x, y: s.y, width: s.w, height: s.h } });
     console.log("✓ " + s.key + "  " + Math.round(s.w) + "x" + Math.round(s.h));
