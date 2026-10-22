@@ -8,6 +8,7 @@ const theme = require("../../utils/theme");
 const tabbar = require("../../utils/tabbar");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
+const guard = require("../../utils/guard");
 
 const FILTERS = [
   { key: "全部", label: "全部" },
@@ -139,6 +140,8 @@ Page({
 
   onPick(e) {
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+    if (guard.gap("list:pick")) return;
+    guard.mark("list:pick");
     const id = e.currentTarget.dataset.id;
     const list = cols.list();
     if (!list.length) {
