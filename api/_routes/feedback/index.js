@@ -11,9 +11,6 @@ module.exports = handler.make("feedback", ["GET", "POST"], function (d, body, re
   if (op === "comment") {
     return handler.core.feedbackComment(d, { tid: body.tid, content: body.content, deviceId: body.deviceId || d.deviceId });
   }
-  if (op === "delete") {
-    return handler.core.feedbackDelete(d, { tid: body.tid, cid: body.cid, deviceId: body.deviceId || d.deviceId });
-  }
   return handler.core.feedbackCreate(d, {
     kind: body.kind, title: body.title, content: body.content, deviceId: body.deviceId || d.deviceId
   });

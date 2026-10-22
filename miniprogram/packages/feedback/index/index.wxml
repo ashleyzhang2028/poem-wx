@@ -40,10 +40,6 @@
           <text class="tag {{item.tone}}">{{item.statusName}}</text>
         </view>
 
-        <view class="fb-thread-ops" wx:if="{{item.canDelete}}">
-          <text class="fb-op" data-tid="{{item.tid}}" bindtap="onDeleteThread">删除这一条</text>
-        </view>
-
         <view class="fb-thread-meta">
           <text class="fb-meta-t">{{item.kindName}}</text>
           <text class="fb-meta-t">·</text>
@@ -57,7 +53,6 @@
             <text class="fb-said-who">{{said.admin ? '管理员' : '我'}}</text>
             <text class="fb-bubble">{{said.content}}</text>
             <text class="fb-said-stamp">{{said.stampText}}</text>
-            <text class="fb-op" wx:if="{{said.canDelete}}" data-tid="{{item.tid}}" data-cid="{{said.cid}}" bindtap="onDeleteComment">删除</text>
           </view>
         </view>
 

@@ -1874,18 +1874,6 @@ button, textarea {
   font-variant-numeric: tabular-nums;
 }
 
-.fb-thread-ops {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--sp-1);
-}
-
-.fb-op {
-  font-size: var(--fs-caption);
-  color: var(--ink-4);
-  padding: var(--sp-1) var(--sp-2);
-}
-
 .fb-reply {
   display: flex;
   align-items: flex-end;
