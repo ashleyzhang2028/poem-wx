@@ -18,7 +18,7 @@
               data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onGrade">{{item.name}}</view>
       </view>
 
-      <view class="lb-seg" wx:if="{{grades.length}}">
+      <view class="lb-seg" wx:if="{{grade}}">
         <view class="lb-chip {{term === item.key ? 'on' : ''}}" wx:for="{{terms}}" wx:key="key"
               data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onTerm">{{item.name}}</view>
       </view>
@@ -32,7 +32,7 @@
     <view class="card" wx:if="{{state === 'board' || state === 'empty'}}">
       <view class="lb-head">
         <text class="card-title plain lb-title">{{label}}</text>
-        <text class="lb-sub">前三名上台 · 只列前 {{size}} 名</text>
+        <text class="lb-sub">前三名上台 · 只列前 100 名</text>
       </view>
 
       <view class="podium">

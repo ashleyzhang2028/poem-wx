@@ -24,7 +24,6 @@ Page({
     podium: [],
     rest: [],
     me: null,
-    size: ranking.DEFAULT_SIZE,
     beyond: 0,
     label: "",
     empty: ranking.emptyOf("exam"),
@@ -74,13 +73,12 @@ Page({
           const board = (res.board || []).map(ranking.maskRow);
           const me = res.me ? ranking.maskRow(res.me) : null;
           const mineOnBoard = !!me && board.filter((r) => r.uid === me.uid).length > 0;
-          const size = res.size || this.data.size;
+          const self = mineOnBoard ? null : me;
           this.setData({
-            state: board.length || me ? "board" : "empty",
+            state: board.length || self ? "board" : "empty",
             board: board,
-            size: size,
-            me: mineOnBoard ? null : me,
-            beyond: ranking.beyondOf(board, size, res.total),
+            me: self,
+            beyond: ranking.beyondOf(board, res.total),
             podium: ranking.podiumOf(board),
             rest: ranking.restOf(board),
             label: res.label || ranking.labelOf(this.data),
@@ -110,21 +108,21 @@ Page({
     const stage = e.currentTarget.dataset.k;
     if (!stage || stage === this.data.stage) return;
     const grades = ranking.gradesOf(stage);
-    const grade = grades.length ? grades[0].key : 0;
     this.setData({
-      stage: stage, grades: grades, grade: grade, term: 0, label: ranking.labelOf({ stage: stage })
+      stage: stage, grades: grades, grade: 0, term: 0, label: ranking.labelOf({ stage: stage })
     });
     this.load();
   },
 
   onGrade(e) {
     const grade = Number(e.currentTarget.dataset.k) || 0;
-    if (grade === this.data.grade) return;
+    if (!grade || grade === this.data.grade) return;
     this.setData({ grade: grade, label: ranking.labelOf({ stage: this.data.stage, grade: grade, term: this.data.term }) });
     this.load();
   },
 
   onTerm(e) {
+    if (!this.data.grade) return;
     const raw = Number(e.currentTarget.dataset.k) || 0;
     const term = raw === this.data.term ? 0 : raw;
     this.setData({ term: term, label: ranking.labelOf({ stage: this.data.stage, grade: this.data.grade, term: term }) });

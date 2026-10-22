@@ -70,12 +70,10 @@ function queryOf(input) {
   const s = input || {};
   const stage = STAGES.filter((x) => x.key === s.stage)[0] ? s.stage : "all";
   const period = PERIODS.filter((x) => x.key === s.period)[0] ? s.period : "day";
-  return {
-    stage: stage,
-    period: period,
-    grade: stage === "all" ? 0 : Number(s.grade) || 0,
-    term: stage === "all" ? 0 : Number(s.term) || 0
-  };
+  const grades = gradesOf(stage);
+  const grade = grades.filter((g) => g.key === Number(s.grade))[0] ? Number(s.grade) : 0;
+  const term = grade && (Number(s.term) === 1 || Number(s.term) === 2) ? Number(s.term) : 0;
+  return { stage: stage, period: period, grade: grade, term: term };
 }
 
 function labelOf(q) {
@@ -125,7 +123,7 @@ function restOf(board) {
   return (board || []).filter((r) => r.rank > 3);
 }
 
-function beyondOf(board, size, total) {
+function beyondOf(board, total) {
   const rows = board || [];
   if (!rows.length) return 0;
   return Math.max(0, (Number(total) || 0) - rows.length);
