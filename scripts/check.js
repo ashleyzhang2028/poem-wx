@@ -1524,9 +1524,13 @@ const GATED = {
       KINDS);
 
     const coreKinds = /var FEEDBACK_KINDS = \[([^\]]*)\]/.exec(serverCore);
-    ok("服务端认的类别与客户端同一份（发一个它不认的会被悄悄记成「其他」）",
+    ok("服务端认的类别与客户端同一份",
       !!coreKinds && coreKinds[1].replace(/[\s"]/g, "") === KINDS,
       coreKinds ? coreKinds[1] : "服务端没有 FEEDBACK_KINDS");
+
+    ok("不认的类别退回 400，不悄悄记成「其他」",
+      /E_KIND/.test(serverCore) && /!isFeedbackKind\(kind\)/.test(serverCore),
+      "服务端把不认的类别改成 other 落库 —— 类型里的信息就这么丢了");
 
     ok("标题进得去也回得来（服务端存了才画得出列表）",
       /clip\(input && input\.title, FEEDBACK_LIMITS\.title\)/.test(serverCore)
@@ -1539,8 +1543,7 @@ const GATED = {
         && adminFbLib.indexOf("resolution") >= 0);
 
     ok("重复提交不发第二遍（内容相同且一分钟内只落一条）",
-      /FEEDBACK_DEDUPE_MS/.test(serverCore) && /dedupe_hash/.test(serverCore)
-        && /duplicate/.test(serverCore) && /E_EMPTY/.test(serverCore));
+      /FEEDBACK_DEDUPE_MS/.test(serverCore) && /duplicate/.test(serverCore) && /E_EMPTY/.test(serverCore));
 
     ok("后台详情单取一条（不是把整张列表拉下来再筛）",
       /op === "thread"/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8"))
@@ -1567,6 +1570,25 @@ const GATED = {
       !/deviceId/.test(fbLib) && /function feedbackIdentity\(deps\)/.test(serverCore)
         && !/identity\.deviceId/.test(serverCore),
       "服务端还留着按设备标识认人的路");
+
+    ok("用户能删自己那一条（服务端 already 有路，页面给得出入口）",
+      /fb\.remove\(/.test(fbPageJs) && /bindtap="onDeleteThread"/.test(read("packages/feedback/index/index.wxml"))
+        && /^\s*feedbackDelete,$/m.test(remoteSrc),
+      "服务端有 op: delete，页面上没有删的入口 —— 提过的话撤不回来");
+
+    ok("后台详情能给用户删（那条管理路径也接上）",
+      /adminFeedbackDelete/.test(adminFbLib) && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js")));
+
+    ok("限流按人算，不按设备算（uid 换成设备号等于删掉限流）",
+      /function feedbackRateGate\(deps, uid\)[\s\S]{0,200}"uid"/.test(serverCore)
+        && /uid: \[\[3600000, 10\], \[86400000, 30\]\]/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "config.js"), "utf8")),
+      "feedbackRateGate 还在拿 uid 当设备键 —— 与「不按设备认人」同一条错");
+
+    ok("跟进不再顺手改类别（后端只动 status 与 updated_at）",
+      (() => {
+        const fn = /function feedbackComment\(deps, input\)[\s\S]*?\n}/.exec(serverCore);
+        return !!fn && !/patch\.kind/.test(fn[0]) && /patch\.status = "open"/.test(fn[0]);
+      })());
   }
 
   {

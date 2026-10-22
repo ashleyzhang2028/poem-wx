@@ -314,14 +314,12 @@ CREATE TABLE IF NOT EXISTS `feedback_threads` (
   `content`    TEXT         NULL,
   `status`     VARCHAR(16)  NOT NULL DEFAULT 'open',
   `resolution` VARCHAR(16)  NOT NULL DEFAULT 'pending',
-  `dedupe_hash` CHAR(64)    NOT NULL DEFAULT '',
   `created_at` BIGINT       NOT NULL,
   `updated_at` BIGINT       NOT NULL,
   PRIMARY KEY (`tid`),
   KEY `feedback_threads_uid_idx` (`uid`),
   KEY `feedback_threads_device_idx` (`device_id`),
   KEY `feedback_threads_status_idx` (`status`, `updated_at`),
-  KEY `feedback_threads_dedupe_idx` (`dedupe_hash`, `created_at`),
   CONSTRAINT `feedback_threads_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
