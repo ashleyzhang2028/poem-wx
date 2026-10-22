@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "我的 · 主题和字体",
   "usingComponents": {
+    "page-banner": "/components/page-banner/page-banner",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

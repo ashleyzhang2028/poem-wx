@@ -1,4 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <page-banner src="{{banner}}" />
+
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:else>

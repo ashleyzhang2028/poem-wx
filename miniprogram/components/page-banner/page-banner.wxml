@@ -1,0 +1,3 @@
+<view class="banner" style="height: calc({{barHeight}}px + {{imageHeight}}px)">
+  <image class="banner-img" src="{{src}}" mode="aspectFill" />
+</view>

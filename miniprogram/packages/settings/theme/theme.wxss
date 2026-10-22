@@ -170,3 +170,7 @@
   display: block;
   margin-top: var(--sp-2);
 }
+
+.group-card:first-of-type {
+  margin-top: calc(-5 * var(--sp-5));
+}

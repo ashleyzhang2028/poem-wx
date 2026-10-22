@@ -5,26 +5,6 @@
   background: var(--surface);
 }
 
-.banner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: calc(var(--status-h) + var(--nav-h) + min(100vw / 1.875, 360px));
-  overflow: hidden;
-  background: var(--surface);
-}
-
-.banner-img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.banner-space {
-  pointer-events: none;
-}
-
 .home .de {
   margin-bottom: var(--sp-2);
 }

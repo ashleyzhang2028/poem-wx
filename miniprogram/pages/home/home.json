@@ -2,6 +2,7 @@
   "navigationBarTitleText": "跬步诗词",
   "navigationStyle": "custom",
   "usingComponents": {
+    "page-banner": "/components/page-banner/page-banner",
     "recite-sheet": "/components/recite-sheet/recite-sheet",
     "daily-extra": "/components/daily-extra/daily-extra",
     "collect-picker": "/components/collect-picker/collect-picker"
