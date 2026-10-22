@@ -3317,7 +3317,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
     ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
-    ["qingmingshanghetu", "清明上河图", [2, 54, 51], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [2, 54, 51], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
