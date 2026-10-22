@@ -169,14 +169,9 @@
       </view>
     </view>
 
-    <view class="card" wx:if="{{!collectionCount && (collectionOn || collectionHint)}}">
-      <text class="hint" wx:if="{{collectionHint}}" bindtap="onPermissions">{{collectionHint}}</text>
-
-      <view class="empty" wx:if="{{collectionOn}}">
-        <text class="empty-mark">选</text>
-        <text class="empty-text say">还没有自选集合</text>
-        <text class="hint empty-tip">在课外阅读或搜索里看到好诗，加进自己的集合</text>
-      </view>
+    <view class="card" wx:if="{{!collectionCount}}">
+      <text class="card-title">自选背诵</text>
+      <text class="hint">还没有自选集合，在课外阅读或搜索里看到好诗，收进自己的集合</text>
     </view>
 
     <block wx:if="{{collectionOn}}">

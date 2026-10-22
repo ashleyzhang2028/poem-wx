@@ -51,14 +51,6 @@ function cellFor(cap, tier) {
 
 const CAP_KEYS = CAPS.map((c) => c.key);
 
-function tierOf(profile) {
-  const server = auth.serverTier();
-  if (tiers.isTier(server)) return server;
-
-  const local = profile && profile.tier;
-  return tiers.isTier(local) ? local : tiers.DEFAULT_TIER;
-}
-
 function grant() {
   const g = store.read(store.KEYS.grant, null);
   if (!g || !g.code || !g.tier) return null;
@@ -141,7 +133,7 @@ function hint(key, ctx) {
   const s = status();
   if (s.blocked === "cloud") return "还没接上同步服务器（云调用两栏没填或填错了）—— 进度只在这台手机";
   if (s.blocked === "unsigned") return "连不上服务器，档位暂按 Free 算，稍后再试";
-  return cap.name + "需要 " + tiers.nameOf(cap.tier) + " 权限";
+  return tiers.nameOf(cap.tier) + " 起可用";
 }
 
 function compareCols(snap) {
@@ -300,7 +292,7 @@ function showTier(name, ctx) {
   const why = hint(name);
   const content = can(name)
     ? "「" + capName(name) + "」现在是开着的，重新进一次这个功能就行。"
-    : (why && why !== "登录可用" ? why + "。" : "「" + capName(name) + "」需要 " + tierNeed(name) + " 权限。")
+    : (why && why !== "登录可用" ? why + "。" : tierOf(name) + " 起可用。")
       + "\n\n可用的档位与逐项对照在用户权限页。";
 
   wx.showModal({
@@ -315,10 +307,10 @@ function showTier(name, ctx) {
 }
 
 function showTierToast(name) {
-  wx.showToast({ title: "「" + capName(name) + "」需要 " + tierNeed(name) + " 权限", icon: "none" });
+  wx.showToast({ title: tierOf(name) + " 起可用", icon: "none" });
 }
 
-function tierNeed(name) {
+function tierOf(name) {
   const cap = CAPS.find((c) => c.key === name);
   return tiers.nameOf(cap ? cap.tier : "pro");
 }

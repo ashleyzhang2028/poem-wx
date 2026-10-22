@@ -20,8 +20,9 @@
           <view class="mode-head">
             <text class="gc-name">{{item.name}}</text>
             <text class="tag theme" wx:if="{{item.bestText}}">最好 {{item.bestText}}</text>
+            <tier-tag wx:if="{{!item.ok}}" tier="{{item.tier}}" />
           </view>
-          <text class="mode-desc">{{item.ok ? item.desc : item.note}}</text>
+          <text class="mode-desc">{{item.desc}}</text>
         </view>
         <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>
       </view>

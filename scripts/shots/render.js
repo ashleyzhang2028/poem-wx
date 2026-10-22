@@ -141,6 +141,7 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/page-banner/page-banner.
   + flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
+  + flattenCss(path.join(ROOT, "components/tier-tag/tier-tag.wxss"))
   + flattenCss(path.join(ROOT, "packages/feedback/index/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/detail/detail.wxss"))
@@ -398,6 +399,10 @@ function withSeedFeedback(cfg, data) {
   });
 }
 
+function expandTierTag(wxml) {
+  return String(wxml).replace(/<tier-tag\b[^>]*?\/>/g, '<text tier-tag="1">Pro 起</text>');
+}
+
 function expandPageBanner(wxml, data) {
   if (wxml.indexOf("<page-banner") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/page-banner/page-banner.wxml"), "utf8");
@@ -500,6 +505,7 @@ function pageHtml(cfg, data) {
     for (let i = 0; i < n; i++) s += '<view class="sk-block sk-line w80"></view>';
     return s + "</view>";
   });
+  wxml = expandTierTag(wxml);
   wxml = expandPageBanner(wxml, data);
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);

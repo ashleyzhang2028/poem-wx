@@ -3328,7 +3328,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     tierOf("free");
     ok("Free 手里「大好河山」那张卡是灰的，「中国传统」照旧能点",
       groupOf("landscape").locked === true
-        && groupOf("landscape").lockNote !== ""
+        && groupOf("landscape").tier === "pro"
         && groupOf("landscape").items.every((i) => i.locked)
         && groupOf("tradition").locked === false
         && groupOf("tradition").items.every((i) => !i.locked),
@@ -3343,7 +3343,7 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     ok("Pro 起大好河山整张卡亮起来（同一份清单，只是不再灰）",
       groupOf("landscape").locked === false
         && groupOf("landscape").items.every((i) => !i.locked)
-        && groupOf("landscape").lockNote === "");
+        && groupOf("landscape").tier === "pro");
     themeMod.set("yangzhoushxihu");
     ok("Pro 点得进大好河山那一支", themeMod.current() === "yangzhoushxihu", themeMod.current());
 
@@ -3354,9 +3354,9 @@ const courseKb = fs.statSync(path.join(dataDir, "course.js")).size / 1024;
     store.drop(store.KEYS.grant);
     store.drop(store.KEYS.auth);
     store.saveProfile({ logged: false });
-    ok("未登录也读得到清单（灰着，连同提示）",
-      groupOf("landscape").locked === true && groupOf("landscape").lockNote.indexOf("登录") >= 0,
-      groupOf("landscape").lockNote);
+    ok("未登录也读得到清单（灰着，卡上照样能标出档位）",
+      groupOf("landscape").locked === true && groupOf("landscape").tier === "pro",
+      groupOf("landscape").tier);
   }
 
   const tDef = /--theme\s*:\s*var\(--c-(\w+)\)\s*;/.exec(tokens);

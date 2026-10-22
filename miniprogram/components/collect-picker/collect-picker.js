@@ -15,8 +15,11 @@ Component({
     rows: [],
     creating: false,
     draft: "",
-    tierOpen: false,
-    itemsMax: cols.ITEMS_MAX
+    itemsMax: cols.ITEMS_MAX,
+    total: 0,
+    cap: 0,
+    tier: "pro",
+    full: false
   },
 
   methods: {
@@ -38,6 +41,10 @@ Component({
         poemId: id,
         title: title === undefined ? this.data.title : title,
         rows: list,
+        total: list.length,
+        cap: cols.capOf(),
+        tier: entitlement.tierOf("collections"),
+        full: list.length >= cols.capOf(),
         creating: !!creating,
         draft: draft === undefined ? "" : draft
       });
@@ -56,7 +63,7 @@ Component({
     onStartCreate() {
       if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       if (cols.capOf() <= cols.list().length) {
-        this.setData({ tierOpen: true });
+        wx.showToast({ title: "最多 " + cols.capOf() + " 个集合，先删一个", icon: "none" });
         return;
       }
       this.setData({ creating: true, draft: "" });
@@ -70,7 +77,9 @@ Component({
       if (!entitlement.block("collections", { page: this, loginPrompt: false })) return;
       const r = cols.create(this.data.draft);
       if (!r.ok) {
-        if (r.code === "E_LIMIT") this.setData({ tierOpen: true });
+        if (r.code === "E_LIMIT") {
+          wx.showToast({ title: "最多 " + cols.capOf() + " 个集合，先删一个", icon: "none" });
+        }
         return;
       }
       this.addTo(r.collection.id, r.collection.name);
@@ -100,10 +109,6 @@ Component({
       }
       this.close();
       this.triggerEvent("done", { id: this.data.poemId, collectionId: collectionId, name: name });
-    },
-
-    onTierClose() {
-      this.setData({ tierOpen: false });
     }
   }
 });

@@ -16,7 +16,10 @@
   </view>
   <view class="card poem-card" wx:else>
     <view class="poem-head">
-      <text class="poem-title">{{title}}</text>
+      <view class="poem-head-row">
+        <text class="poem-title">{{title}}</text>
+        <tier-tag wx:if="{{!dailyOn}}" tier="{{extraTier}}" />
+      </view>
 
       <view class="poem-meta-row">
         <text class="poem-meta">{{dynasty}}</text>

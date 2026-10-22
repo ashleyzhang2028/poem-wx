@@ -30,7 +30,10 @@
   </view>
 
   <view class="card">
-    <view class="card-title">自选背诵</view>
+    <view class="card-head">
+      <text class="card-title">自选背诵</text>
+      <tier-tag wx:if="{{!selfOnlyOn}}" tier="{{selfOnlyTier}}" />
+    </view>
 
     <view class="row">
       <view class="row-main">
@@ -43,10 +46,7 @@
       </view>
     </view>
 
-    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">
-      已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首
-    </text>
-    <text class="hint self-only-note" wx:else>{{selfOnlyHint}}</text>
+    <text class="hint self-only-note" wx:if="{{selfOnlyOn}}">已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首</text>
   </view>
 
   <view class="card">
@@ -111,11 +111,11 @@
         <view class="algo-head">
           <text class="algo-name">{{item.name}}</text>
           <text class="algo-years">{{item.years}}</text>
+          <tier-tag wx:if="{{!item.allowed}}" tier="{{item.tier}}" />
         </view>
         <view class="algo-lines">
           <text class="algo-line" wx:for="{{item.describe}}" wx:for-item="line" wx:key="*this">{{line}}</text>
         </view>
-        <text class="algo-locked" wx:if="{{!item.allowed}}">{{item.lockHint}}</text>
       </label>
     </radio-group>
 
