@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "我的 · 自选背诵",
+  "navigationBarTitleText": "我的 · 自选集合管理",
   "usingComponents": {
     "tier-tag": "/components/tier-tag/tier-tag",
     "tab-bar": "/custom-tab-bar/index"

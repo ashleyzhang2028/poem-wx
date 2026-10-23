@@ -65,8 +65,8 @@
         <view class="due" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{d.rows}}" wx:key="id" data-id="{{item.id}}" data-day="{{d.offset}}" catchtap="onOpen">
           <view class="due-main">
-            <text class="due-title">{{item.title}}</text>
-            <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+            <text class="due-name">{{item.title}}</text>
+            <text class="due-sub" wx:if="{{item.meta}}">{{item.meta}}</text>
           </view>
           <text class="due-state">{{item.mastery}}</text>
           <text class="due-when {{item.late ? 'late' : ''}}">{{item.due}}</text>
@@ -86,8 +86,8 @@
         <view class="due" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{lv.rows}}" wx:key="id" data-id="{{item.id}}" data-key="{{lv.key}}" catchtap="onOpenDefer">
           <view class="due-main">
-            <text class="due-title">{{item.title}}</text>
-            <text class="due-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+            <text class="due-name">{{item.title}}</text>
+            <text class="due-sub" wx:if="{{item.meta}}">{{item.meta}}</text>
           </view>
           <text class="due-when">{{item.due}}</text>
         </view>

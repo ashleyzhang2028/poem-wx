@@ -1,4 +1,6 @@
-.self-lead {
-  display: block;
-  padding: var(--sp-1) 0 var(--sp-2);
+.sect-lead {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+  padding-bottom: var(--sp-2);
 }

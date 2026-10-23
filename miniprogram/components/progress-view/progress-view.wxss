@@ -163,7 +163,6 @@
   align-items: center;
   padding: var(--sp-2) 0;
   border-top: 1rpx solid var(--line-2);
-  border-radius: var(--radius-sm);
 }
 
 .due-main {
@@ -171,7 +170,7 @@
   min-width: 0;
 }
 
-.due-title {
+.due-name {
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-body);
@@ -181,7 +180,7 @@
   white-space: nowrap;
 }
 
-.due-meta {
+.due-sub {
   display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);
@@ -434,7 +433,7 @@
   min-width: 0;
 }
 
-.due-title {
+.due-name {
   display: block;
   font-family: var(--font-poem);
   font-size: var(--fs-body);
@@ -444,7 +443,7 @@
   white-space: nowrap;
 }
 
-.due-meta {
+.due-sub {
   display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);

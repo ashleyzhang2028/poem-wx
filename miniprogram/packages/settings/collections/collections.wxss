@@ -30,7 +30,6 @@
 .coll-tools {
   flex-wrap: nowrap;
   padding: var(--sp-2) 0;
-  border-bottom: 1rpx solid var(--line-2);
 }
 
 .coll-tools .btn.mini,
@@ -157,20 +156,5 @@
 }
 
 .coll-meter {
-  display: flex;
-  align-items: center;
   margin-top: var(--sp-2);
-}
-
-.coll-meter .meter {
-  flex: 1;
-  min-width: 0;
-}
-
-.coll-meter-t {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  padding-left: var(--sp-2);
-  font-variant-numeric: tabular-nums;
 }

@@ -1,5 +1,5 @@
-.coll-head {
-  padding: var(--sp-1) var(--sp-1) var(--sp-2);
+.card-open.coll-head {
+  padding: var(--sp-2) var(--card-x);
 }
 
 .coll-head > .card-title {
