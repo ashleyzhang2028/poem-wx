@@ -6,8 +6,6 @@ const HUE_STEP = 15;
 
 const LIGHT = [96, 94, 90, 84, 74, 64, 54, 45, 37, 30, 24, 18];
 
-const neutral = [128, 128, 128];
-
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
 }
@@ -56,19 +54,35 @@ function rgbToHsl(rgb) {
   return { h: (h * 60 + 360) % 360, s: clamp(s, 0, 1), l: l };
 }
 
+function saturationOf(tone) {
+  return tone.s < 0.08 ? 0.42 : tone.s;
+}
+
 function hueGrid(base) {
-  const tone = rgbToHsl(base || neutral);
-  const s = tone.s < 0.08 ? 0.42 : tone.s;
+  const tone = rgbToHsl(base || hslToRgb(0, 0.42, LIGHT[7] / 100));
+  const s = saturationOf(tone);
   const out = [];
-  for (let i = 0; i < 24; i += 1) out.push(hex(hslToRgb(i * HUE_STEP, s, 0.44)));
+  for (let i = 0; i < 24; i += 1) out.push(hex(hslToRgb(i * HUE_STEP, s, LIGHT[7] / 100)));
   return out;
 }
 
 function lightGrid(base, hue) {
-  const tone = rgbToHsl(base || hslToRgb(hue, 0.5, 0.44));
+  const tone = rgbToHsl(base || hslToRgb(Number(hue) || 0, 0.42, LIGHT[7] / 100));
   const h = Number(hue) || 0;
-  const s = tone.s < 0.08 ? 0.42 : tone.s;
+  const s = saturationOf(tone);
   return LIGHT.map((v) => hex(hslToRgb(h, s, v / 100)));
+}
+
+function pick(text) {
+  const rgb = parseHex(text);
+  if (!rgb) return null;
+  const tone = rgbToHsl(rgb);
+  return {
+    hex: hex(rgb),
+    hue: Math.round(tone.h),
+    light: Math.round(tone.l * 100),
+    saturation: Math.round(tone.s * 100)
+  };
 }
 
 function current() {
@@ -88,4 +102,4 @@ function clear() {
   store.saveSettings({ [KEY]: "" });
 }
 
-module.exports = { KEY, parseHex, hex, hueGrid, lightGrid, current, set, clear };
+module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, pick, hueGrid, lightGrid, current, set, clear };

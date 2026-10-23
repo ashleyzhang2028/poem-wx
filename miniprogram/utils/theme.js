@@ -174,31 +174,26 @@ function parseHex(v) {
   return tone.parseHex(v);
 }
 
+const TONE_PICK = "linear-gradient(135deg, #f0a, #fa0, #0a8, #08f, #a0f)";
+
 function toneData() {
   const picked = tone.current();
   const rgb = tone.parseHex(picked);
   const grid = rgb || OWN_THEME.rgb;
+  const at = tone.pick(picked ? picked : tone.hex(grid));
   return {
     toneOn: !!picked,
     toneHex: picked ? picked.toUpperCase() : "",
     toneRgba: picked ? rgba(rgb, 1) : "",
     toneSoft: picked ? rgba(rgb, WASH) : "",
     toneOnInk: picked ? rgba(inkOn(rgb), 1) : "",
+    tonePick: TONE_PICK,
     toneHues: tone.hueGrid(grid),
-    toneLights: tone.lightGrid(grid, rgb ? rgbToHue(rgb) : 0),
-    toneText: picked ? "标题、大数字换成这个色" : "挑一个色，标题与按钮跟着换"
+    toneLights: tone.lightGrid(grid, at.hue),
+    toneHueAt: at.hue,
+    toneLightAt: at.light,
+    toneRead: picked ? at.hue + "° · " + at.saturation + "% · " + at.light + "%" : ""
   };
-}
-
-function rgbToHue(rgb) {
-  const max = Math.max(rgb[0], rgb[1], rgb[2]);
-  const min = Math.min(rgb[0], rgb[1], rgb[2]);
-  const d = max - min;
-  if (!d) return 0;
-  const h = max === rgb[0]
-    ? ((rgb[1] - rgb[2]) / d) % 6
-    : (max === rgb[1] ? (rgb[2] - rgb[0]) / d + 2 : (rgb[0] - rgb[1]) / d + 4);
-  return Math.round((h * 60 + 360) % 360);
 }
 
 function variables() {
@@ -207,7 +202,7 @@ function variables() {
     rgba: owned.rgba, soft: owned.soft, on: owned.on, depth: owned.depth
   };
   return THEMES.concat([OWN_THEME]).map((t) => {
-    const v = t.key === OWN_KEY ? own : tint(t);
+    const v = t.key === OWN_KEY ? own : t;
     return VAR_OF[t.key] + ":" + v.rgba
       + ";" + VAR_OF[t.key] + "-soft:" + v.soft
       + ";" + VAR_OF[t.key] + "-on:" + v.on
@@ -263,9 +258,16 @@ function currentTheme() {
   return get(current());
 }
 
-function currentRgb() {
-  if (current() !== OWN_KEY) return null;
+function toneOf() {
+  if (!groupOpen(GROUPS.filter((g) => g.key === OWN)[0])) return null;
   return tone.parseHex(store.settings().toneColor);
+}
+
+function currentRgb() {
+  const rgb = toneOf();
+  if (!rgb) return null;
+  if (current() === OWN_KEY || !BY_KEY[current()]) return rgb;
+  return null;
 }
 
 function tint(theme) {
@@ -282,9 +284,11 @@ function tint(theme) {
 
 function style(key, fontKey) {
   const t = tint(key ? get(key) : currentTheme());
+  const lit = toneOf();
 
   return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) +
-    ";--theme:" + t.rgba + ";--theme-deep:" + t.rgba +
+    ";--theme:" + (lit ? rgba(lit, 1) : t.rgba) +
+    ";--theme-deep:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +
     ";--strong:" + t.rgba + ";--strong-soft:" + t.soft + ";--strong-text:" + t.rgba +
     ";--ink-strong:" + t.rgba + ";--on-ink:" + t.on + ";--on-ink-soft:"

@@ -38,6 +38,7 @@ const CAPS = [
   { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
   { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
   { key: "ownbanner", name: "自选主题 banner", desc: "换成自己的一张图 · 只存本机", tier: "max" },
+  { key: "themetone", name: "自选主题色", desc: "从色相与明度里挑一个 · 标题与按钮跟着换", tier: "max" },
   { key: "font", name: "字体", desc: "汇文明朝 · 寒蝉正楷，正文题名一起换", tier: "pro" },
   { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
@@ -162,6 +163,7 @@ const VIEW_NAME = {
   league: "大会·排行榜",
   sights: "主题·大好河山",
   ownbanner: "主题·自选 banner",
+  themetone: "主题·自选主题色",
   font: "主题·字体选择",
   coursefree: "我的·只背自选",
   sync: "我的·同步进度"
@@ -174,7 +176,7 @@ const COMPARE_ORDER = [
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "search",
   "quiz", "feihualing", "exam", "league",
-  "sights", "ownbanner", "font", "coursefree", "sync"
+  "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
 ];
 
 function compareNameOf(cap) {

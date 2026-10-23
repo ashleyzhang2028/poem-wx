@@ -4,11 +4,11 @@ page {
   --ink: #1c1c1e;
 
   --strong: var(--theme);
-  --strong-soft: var(--c-daiqing-soft);
-  --depth: var(--c-daiqing-depth);
+  --strong-soft: rgba(2, 54, 51, .05);
+  --depth: rgba(83, 118, 116, 1);
   --strong-text: var(--theme);
 
-  --theme-deep: var(--c-daiqing);
+  --theme-deep: var(--theme);
   --ink-strong: var(--theme-deep);
 
   --ink-2: #6b7280;
