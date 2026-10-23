@@ -2,13 +2,9 @@ const tone = require("./color-tone");
 
 const HUE_STEP = 6;
 
-const SAT = [100, 92, 84, 76, 68, 60, 52, 44, 36, 28, 20, 12, 6, 0];
+const SAT = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
-const LIGHT = [100, 96, 91, 85, 79, 73, 67, 61, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0];
-
-const GRAY = 0;
-
-const MID = 50;
+const LIGHT = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
 function range(step, from, to) {
   const out = [];
@@ -16,20 +12,12 @@ function range(step, from, to) {
   return out;
 }
 
-function hueAt(hue) {
-  return at(hue, 100, MID);
+function hueTrack(sat, light) {
+  return range(HUE_STEP, 0, 354).map((h) => at(h, sat, light));
 }
 
-function hueBand() {
-  return {
-    hue: range(HUE_STEP, 0, 330).map(hueAt),
-    sat: range(10, 0, 100).map((v) => at(GRAY, v, MID)),
-    light: range(10, 0, 100).map((l) => at(GRAY, 0, l))
-  };
-}
-
-function satTrack(hue) {
-  return SAT.map((s) => at(hue, s, MID));
+function satTrack(hue, light) {
+  return SAT.map((s) => at(hue, s, light));
 }
 
 function lightTrack(hue, sat) {
@@ -44,20 +32,24 @@ function nearest(list, pick) {
   ), 0);
 }
 
-function plane(hue) {
-  return LIGHT.map((l) => SAT.map((s) => at(hue, s, l)));
-}
-
 function pick(hex) {
   const rgb = tone.parseHex(hex);
   if (!rgb) return null;
   const hsl = tone.rgbToHsl(rgb);
   return {
     hex: tone.hex(rgb),
-    hue: Math.round(hsl.h) % 360,
-    sat: Math.round(hsl.s * 100),
-    light: Math.round(hsl.l * 100)
+    hue: snap(range(HUE_STEP, 0, 354), Math.round(hsl.h) % 360),
+    sat: snap(SAT, Math.round(hsl.s * 100)),
+    light: snap(LIGHT, Math.round(hsl.l * 100))
   };
+}
+
+function pct(index, count) {
+  return Math.round((index + 0.5) * 1000 / Math.max(1, count)) / 10 + "%";
+}
+
+function snap(list, pick) {
+  return list[nearest(list, pick)];
 }
 
 function at(hue, sat, light) {
@@ -66,22 +58,22 @@ function at(hue, sat, light) {
 
 function read(hex) {
   const at0 = pick(hex);
-  const now = at0 || { hue: 0, sat: 42, light: 37 };
+  const now = at0 || { hue: 0, sat: 40, light: 40 };
   const rgb = at0 ? tone.parseHex(at0.hex) : null;
+  const hue = range(HUE_STEP, 0, 354);
   return {
     on: !!at0,
     hex: at0 ? at0.hex : "",
     rgba: rgb ? "rgba(" + rgb.join(", ") + ", 1)" : "",
     soft: rgb ? "rgba(" + rgb.join(", ") + ", 0.05)" : "",
     read: at0 ? now.hue + "° · " + now.sat + "% · " + now.light + "%" : "",
-    bands: hueBand(),
-    hueAt: nearest(range(HUE_STEP, 0, 330), now.hue),
-    satAt: nearest(SAT, now.sat),
-    lightAt: nearest(LIGHT, now.light),
-    satTrack: satTrack(now.hue),
-    lightTrack: lightTrack(now.hue, now.sat),
-    plane: plane(now.hue)
+    hue: hueTrack(now.sat, now.light),
+    sat: satTrack(now.hue, now.light),
+    light: lightTrack(now.hue, now.sat),
+    hueAt: pct(nearest(hue, now.hue), hue.length),
+    satAt: pct(nearest(SAT, now.sat), SAT.length),
+    lightAt: pct(nearest(LIGHT, now.light), LIGHT.length)
   };
 }
 
-module.exports = { HUE_STEP, SAT, LIGHT, hueBand, satTrack, lightTrack, plane, pick, at, read };
+module.exports = { HUE_STEP, SAT, LIGHT, hueTrack, satTrack, lightTrack, pick, at, read };

@@ -3616,7 +3616,7 @@ function mountFull(pg, query) {
     .map((i) => parseInt(h.slice(i, i + 2), 16)).join(", ") + ", 1)";
 
   const toneData = themeMod.toneData();
-  const toneCell = toneData.toneBands.hue[0];
+  const toneCell = toneData.toneHue[0];
   ok("点一格就落到 toneColor，页内 --theme / --strong 当场跟着换",
     toneMod.set(toneCell) === true
       && store.settings().toneColor === toneCell
@@ -3625,53 +3625,63 @@ function mountFull(pg, query) {
     "点完 toneColor=" + store.settings().toneColor + "，style 里没换");
 
   const pickerMod = require(path.join(ROOT, "utils", "color-picker.js"));
-  const hsl = (hex) => {
-    const v = pickerMod.pick(hex);
-    return v ? v.hue + "/" + v.sat + "/" + v.light : "";
-  };
-  const cellCount = (v) => {
-    const planes = v.tonePlane.reduce((all, row) => all + row.length, 0);
-    return v.toneBands.hue.length + v.toneBands.sat.length + v.toneBands.light.length
-      + v.toneSat.length + v.toneLight.length + planes;
-  };
-  const blank = pickerMod.read("");
+  const picker = (hex) => pickerMod.pick(hex);
   store.saveSettings({ toneColor: "#E23A2E" });
   const wide = themeMod.toneData();
   store.saveSettings({ toneColor: "#5E6A4C" });
   const other = themeMod.toneData();
-  ok("可点的格是三条通道各自铺开再叠一片深浅×浓淡，比原来 24 行 × 12 格宽一截",
-    cellCount(wide) > 300 && cellCount(other) === cellCount(wide),
-    "可点的格一共 " + cellCount(wide) + " 个");
 
-  const distinct = (key, cells) => {
-    const seen = {};
-    cells.forEach((hex) => { seen[hsl(hex).split("/")[key]] = 1; });
-    return Object.keys(seen).length;
+  const inLine = (track, fix) => {
+    const held = picker(fix.hex);
+    const wants = fix.fields.map((f) => held[f]);
+    return track.every((hex) => {
+      const v = picker(hex);
+      if (v.sat === 0) return true;
+      return fix.fields.every((f, i) => v[f] === wants[i]);
+    });
   };
-  const bands = wide.toneBands;
-  const planes = pickerMod.LIGHT.reduce((all, light) => all.concat(
-    pickerMod.SAT.map((sat) => pickerMod.at(200, sat, light))), []);
-  ok("色域里同时有纯色、暗色、亮色与不带饱和度的灰（不再只在中明度那一圈）",
-    bands.hue.length >= 48 && distinct(0, bands.hue) >= 48
-      && distinct(1, bands.sat) >= 11 && distinct(2, bands.light) >= 11
-      && distinct(0, planes) >= 11 && distinct(1, planes) >= 12 && distinct(2, planes) >= 16
-      && distinct(2, planes) >= 16,
-    "三通道 " + bands.hue.length + "/" + distinct(1, bands.sat) + "/" + distinct(2, bands.light)
-      + "，色域里色相 " + distinct(0, planes) + " 档");
+  const anchor = { hex: wide.toneHex.toLowerCase(), fields: [] };
+  ok("三条轴分开：色相行只改色相，饱和行只改饱和，明度行只改明度",
+    inLine(wide.toneHue, { ...anchor, fields: ["sat", "light"] })
+      && inLine(wide.toneSat, { ...anchor, fields: ["hue", "light"] })
+      && inLine(wide.toneLight, { ...anchor, fields: ["hue", "sat"] }),
+    "色相行里混进了别的饱和或明度");
 
-  const at2 = pickerMod.read("#E23A2E");
-  ok("取色落位对得上：同一支色再取一次，三条通道指回同一格",
-    at2.hex === "#e23a2e" && pickerMod.SAT[at2.satAt] === 76
-      && pickerMod.read(at2.hex).hueAt === at2.hueAt
-      && pickerMod.read(at2.hex).satAt === at2.satAt
-      && pickerMod.read(at2.hex).lightAt === at2.lightAt
-      && at2.plane[at2.lightAt].length === pickerMod.SAT.length,
-    "同一支色没指回原来的格：" + at2.hueAt + "/" + at2.satAt + "/" + at2.lightAt);
+  const spread = (cells, field) => (
+    Object.keys(cells.reduce((all, hex) => {
+      all[picker(hex)[field]] = 1;
+      return all;
+    }, {})).length
+  );
+  ok("三条轴各自走到底：色相能到全圈，饱和从 0 到 100，明度从 0 到 100",
+    spread(wide.toneHue, "hue") >= 48
+      && spread(wide.toneSat, "sat") >= 11 && spread(wide.toneSat, "sat") === spread(other.toneSat, "sat")
+      && wide.toneSat.some((hex) => picker(hex).sat === 0)
+      && wide.toneSat.some((hex) => picker(hex).sat === 100)
+      && wide.toneLight.some((hex) => picker(hex).light === 0)
+      && wide.toneLight.some((hex) => picker(hex).light === 100),
+    "色相 " + spread(wide.toneHue, "hue") + " 档，饱和 " + spread(wide.toneSat, "sat")
+      + " 档，明度 " + spread(wide.toneLight, "light") + " 档");
+
+  store.saveSettings({ toneColor: "#E23A2E" });
+  const at2 = themeMod.toneData();
+  const markOf = (track, at) => Math.round(parseFloat(at) * track.length / 100 - 0.5);
+  const here = picker(at2.toneHex.toLowerCase());
+  const atMark = [
+    picker(at2.toneHue[markOf(at2.toneHue, at2.toneHueAt)]),
+    picker(at2.toneSat[markOf(at2.toneSat, at2.toneSatAt)]),
+    picker(at2.toneLight[markOf(at2.toneLight, at2.toneLightAt)])
+  ];
+  ok("取色落位对得上：三条轴上的标记都落在当前色那一格",
+    atMark[0].hue === here.hue && atMark[1].sat === here.sat && atMark[2].light === here.light,
+    "标记指的位置不是当前色：" + at2.toneHueAt + "/" + at2.toneSatAt + "/" + at2.toneLightAt
+      + "，指到 " + atMark.map((v) => v.hue + "/" + v.sat + "/" + v.light).join(" "));
 
   store.saveSettings({ toneColor: "" });
+  const blank = pickerMod.read("");
   ok("没选过主题色时取色盘照样铺得开，圆点不显示成某个色",
     blank.on === false
-      && blank.plane.length === pickerMod.LIGHT.length
+      && blank.hue.length > 1 && blank.sat.length === pickerMod.SAT.length
       && themeMod.toneData().toneOn === false
       && themeMod.toneData().toneRgba === ""
       && themeMod.toneData().toneHex === "",
