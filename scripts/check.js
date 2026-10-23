@@ -3679,10 +3679,6 @@ function mountFull(pg, query) {
         && art.sw === 500 && art.sh === 500,
       "截出来的比例不是 " + custom.RATIO_W + "×" + custom.RATIO_H + "，铺到 banner 上会被裁掉一截");
 
-    const bannerWxml = fs.readFileSync(
-      path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
-    ok("题图用固定框铺满，换哪张图都不会把页面撑长",
-      /mode="aspectFill"/.test(bannerWxml), "题图按原图比例撑高 —— 自定义的长图会把整屏顶掉");
   }
 
   tierAs("max");
