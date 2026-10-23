@@ -26,7 +26,7 @@ const PROMISES = [
 ];
 
 function actionOf(plan, tier) {
-  if (tier === plan) return { text: "续订 " + pay.tierName(plan), disabled: false };
+  if (tier === plan) return { text: "订阅 " + pay.tierName(plan), disabled: false };
   if (tier === "max") return { text: "已是 Max", disabled: true };
   if (plan === "max" && tier === "pro") return { text: "升级到 Max", disabled: false };
   return { text: "开通 " + pay.tierName(plan), disabled: false };
@@ -104,6 +104,8 @@ Page({
 
     const plans = ["free", "pro", "max"].map((key) => {
       const paid = key !== "free";
+      const isRec = paid && recommended === key;
+      const tone = key === "max" ? "gold" : "theme";
       const cell = paid && prices && prices[key] && prices[key][period];
       const act = paid ? actionOf(key, tier) : { text: "", disabled: true };
       const all = pay.newFeatures(key);
@@ -119,7 +121,9 @@ Page({
         features: all.slice(0, FEATURE_SHOWN),
         more: Math.max(0, all.length - FEATURE_SHOWN),
         current: tier === key,
-        recommended: paid && recommended === key,
+        recommended: isRec,
+        tone: tone,
+        buyClass: key === "max" ? "gold" : (isRec ? "primary" : "ghost"),
         actionText: act.text,
         disabled: act.disabled || (paid && !cell)
       };

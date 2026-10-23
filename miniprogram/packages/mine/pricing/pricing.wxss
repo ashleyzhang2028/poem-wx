@@ -1,5 +1,5 @@
 .pr-hero {
-  padding: var(--sp-3) var(--sp-1) var(--sp-4);
+  padding: 0 0 var(--sp-4);
 }
 
 .pr-eyebrow {
@@ -52,14 +52,18 @@
   padding-bottom: var(--sp-4);
 }
 
-.pr-plan.is-rec {
+.pr-plan.is-rec,
+.pr-plan.is-max {
   border: 2rpx solid var(--strong);
   box-shadow: var(--shadow-lift);
 }
 
-.pr-plan.is-free {
-  background: var(--bg);
-  border-style: dashed;
+.pr-plan.is-max {
+  border-color: var(--gold);
+}
+
+.pr-badge-tag {
+  margin-right: 0;
 }
 
 .pr-head {
@@ -176,14 +180,30 @@
   margin-top: var(--sp-3);
 }
 
+.btn.gold {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.btn.gold.button-hover {
+  opacity: .9;
+}
+
+.btn.gold[disabled] {
+  background: var(--gold-soft);
+  border-color: var(--gold-soft);
+  color: var(--ink-2);
+}
+
 .pr-promise {
-  padding: var(--sp-2) var(--sp-1) var(--sp-4);
+  padding: var(--sp-2) var(--card-x) var(--sp-4);
 }
 
 .pr-promise-row {
   display: flex;
   align-items: center;
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1);
 }
 
 .pr-promise-t {
@@ -192,15 +212,11 @@
   line-height: var(--lh-body);
 }
 
-.pr-link {
-  display: block;
-  margin-top: var(--sp-3);
-  font-size: var(--fs-hint);
-  color: var(--strong-text);
-}
-
 .pr-welcome {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
   border: 2rpx solid var(--strong);
+  border-radius: var(--radius);
   background: var(--strong-soft);
 }
 
@@ -228,4 +244,9 @@
   display: block;
   margin-bottom: var(--sp-3);
   color: var(--amber);
+}
+
+.pr-orders {
+  padding-top: 0;
+  padding-bottom: 0;
 }

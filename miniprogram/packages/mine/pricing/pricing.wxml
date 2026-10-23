@@ -1,26 +1,28 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
-  <view class="pr-hero">
-    <text class="pr-eyebrow">会员</text>
-    <text class="pr-title poem">选一个适合你的档位</text>
-    <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
-    <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
-    <text class="pr-sub" wx:else>按月或按年，随时可以续订</text>
+  <view class="card pr-intro">
+    <view class="pr-hero">
+      <text class="pr-eyebrow">会员</text>
+      <text class="pr-title poem">选一个适合你的档位</text>
+      <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
+      <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
+      <text class="pr-sub" wx:else>按月或按年，随时可以续订</text>
+    </view>
+
+    <text class="hint pr-note" wx:if="{{sandbox}}">当前是沙箱环境，仅用于测试，不会真实扣款。</text>
+
+    <view class="pr-welcome tier-{{welcome.tier}}" wx:if="{{welcome}}">
+      <text class="pr-w-title poem">{{welcome.title}}</text>
+      <text class="pr-w-sub">{{welcome.sub}}</text>
+    </view>
+
+    <view wx:if="{{!logged}}">
+      <text class="hint">请先用微信登录，再选择档位。</text>
+      <button class="btn primary block pr-login" bindtap="onLogin">去登录</button>
+    </view>
   </view>
 
-  <text class="hint pr-note" wx:if="{{sandbox}}">当前是沙箱环境，仅用于测试，不会真实扣款。</text>
-
-  <view class="card pr-welcome tier-{{welcome.tier}}" wx:if="{{welcome}}">
-    <text class="pr-w-title poem">{{welcome.title}}</text>
-    <text class="pr-w-sub">{{welcome.sub}}</text>
-  </view>
-
-  <view class="card" wx:if="{{!logged}}">
-    <text class="hint">请先用微信登录，再选择档位。</text>
-    <button class="btn primary block pr-login" bindtap="onLogin">去登录</button>
-  </view>
-
-  <block wx:else>
+  <block wx:if="{{logged}}">
     <view class="seg pr-period">
       <radio-group class="seg-group" bindchange="onPeriod">
         <label class="seg-item {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key">
@@ -31,15 +33,15 @@
       </radio-group>
     </view>
 
-    <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'free' ? 'is-free' : ''}}"
+    <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'max' ? 'is-max' : ''}}"
           wx:for="{{plans}}" wx:key="key">
       <view class="pr-head">
         <view class="pr-head-l">
           <text class="pr-name">{{item.name}}</text>
           <text class="pr-tagline">{{item.tagline}}</text>
         </view>
-        <text class="tag theme" wx:if="{{item.current}}">当前</text>
-        <text class="tag theme" wx:elif="{{item.recommended}}">推荐</text>
+        <text class="tag pr-badge-tag {{item.tone}}" wx:if="{{item.current}}">当前</text>
+        <text class="tag pr-badge-tag {{item.tone}}" wx:elif="{{item.recommended}}">推荐</text>
       </view>
 
       <view class="pr-price">
@@ -59,7 +61,7 @@
         <text class="pr-more" wx:if="{{item.more}}">另含 {{item.more}} 项</text>
       </view>
 
-      <button class="btn block pr-buy {{item.recommended ? 'primary' : 'ghost'}}" wx:if="{{item.actionText}}"
+      <button class="btn block pr-buy {{item.buyClass}}" wx:if="{{item.actionText}}"
               disabled="{{item.disabled || busy}}" data-plan="{{item.key}}" bindtap="onBuy">{{item.actionText}}</button>
     </view>
 
@@ -68,7 +70,16 @@
         <view class="pr-ck pr-ck-s" style="mask-image:url('{{yes}}');-webkit-mask-image:url('{{yes}}');"></view>
         <text class="pr-promise-t">{{item}}</text>
       </view>
-      <text class="pr-link" bindtap="onOrders">查看支付记录</text>
+    </view>
+
+    <view class="card pr-orders">
+      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onOrders">
+        <view class="row-main">
+          <text class="row-title poem">支付记录</text>
+          <text class="row-sub">每一笔订单 · 金额 · 支付单号</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
     </view>
   </block>
 
