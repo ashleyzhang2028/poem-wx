@@ -3080,6 +3080,18 @@ function mountFull(pg, query) {
     toastLine.indexOf('"登录" +') < 0,
     "block 里把「登录」和 hint() 的「登录可用」又拼了一遍 —— 弹出「登录登录可用后可用」。"
       + "行：" + toastLine);
+
+    ok("登录：回来重走一遍 onShow（落在本页时，页面得重新过自己的入口）",
+      /function run\(page\) \{[\s\S]*?mark\(page\)/.test(flowSrc)
+        && /then\(\(res\) => \{[\s\S]*?reboot\(page\)/.test(flowSrc),
+      "登录成了不重走 onShow —— 这一页的门禁停在未登录那屏，整页空白（Issue #599）");
+    ok("登录失败也重走一次（提示框照旧弹在它上面）",
+      /catch\(\(err\) => \{[\s\S]*?reboot\(page\)[\s\S]*?prompt\(err\)/.test(flowSrc),
+      "失败分支只弹框、不重走 onShow —— 页面停在打不开的那一屏");
+    ok("重走只给登录发起时正开着的那一页，用完撤掉",
+      /function mark\(page\)[\s\S]*?shownAt = \{ page/.test(flowSrc)
+        && /function reboot\(page\) \{[\s\S]*?shownAt = null;[\s\S]*?held\.page !== page[\s\S]*?return false;/.test(flowSrc),
+      "记的不是「哪一页发起的」、或者用完不撤 —— 登录回来了这页也不会再重走一次");
 }
 
 {

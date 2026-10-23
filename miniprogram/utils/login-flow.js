@@ -180,8 +180,24 @@ function settle(res, page) {
   return res;
 }
 
+let shownAt = null;
+
+function mark(page) {
+  if (!page || typeof page.onShow !== "function") return;
+  if (!shownAt) shownAt = { page, at: Date.now() };
+}
+
+function reboot(page) {
+  const held = shownAt;
+  shownAt = null;
+  if (!held || held.page !== page) return false;
+  page.onShow();
+  return true;
+}
+
 function run(page) {
   if (guard.busy("login")) return Promise.resolve(null);
+  mark(page);
   wx.showLoading({ title: "正在登录" });
   return guard
     .once("login", () => auth.login())
@@ -189,10 +205,12 @@ function run(page) {
       wx.hideLoading();
       if (res && res.skipped) return null;
       done(res);
+      reboot(page);
       return settle(res, page);
     })
     .catch((err) => {
       wx.hideLoading();
+      reboot(page);
       prompt(err);
       resume(page);
       throw err;
