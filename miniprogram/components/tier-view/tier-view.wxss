@@ -104,7 +104,7 @@
 .tier-cell-ic {
   width: var(--glyph-round);
   height: var(--glyph-round);
-  color: var(--strong-soft);
+  color: var(--ink-2);
   background-color: currentColor;
   mask-repeat: no-repeat;
   mask-position: center;
@@ -114,20 +114,8 @@
   -webkit-mask-size: contain;
 }
 
-.tier-cell-ic.yes {
-  color: var(--ink-2);
-}
-
 .tier-cell.is-now .tier-cell-ic {
-  box-sizing: border-box;
-  padding: var(--glyph-edge);
-  border-radius: 50%;
-  background: var(--strong);
-  color: var(--strong-text);
-}
-
-.tier-cell.is-now .tier-cell-ic.yes {
-  color: var(--on-ink);
+  color: var(--strong);
 }
 
 .tier-head .tier-cell.is-now::after {
