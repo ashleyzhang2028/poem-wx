@@ -126,18 +126,26 @@
   line-height: 1.6;
 }
 
-.mode-go {
+.mode-side {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.mode-side > .mode-go {
   flex: none;
   font-size: var(--fs-caption);
   color: var(--ink-2);
   letter-spacing: var(--ls-title);
+  line-height: 1.2;
 }
 
 .mode-off {
   opacity: .55;
 }
 
-.mode-off .mode-go {
+.mode-off .mode-side > .mode-go {
   color: var(--ink-3);
 }
 
