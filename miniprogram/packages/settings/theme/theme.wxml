@@ -51,12 +51,11 @@
 
     <view class="tone">
       <view class="tone-preview" style="--tone:{{toneView.toneRgba || '#c7c9cd'}}">
-        <view class="tone-preview-chip">{{toneView.toneOn ? '主题色' : '还没设'}}</view>
-        <text class="tone-preview-t">{{toneView.toneOn ? '字、选中底、图标都换成这个色' : '挑一个色，整页跟着变'}}</text>
+        <view class="tone-preview-chip">{{toneView.toneOn ? '底色' : '还没设'}}</view>
+        <text class="tone-preview-t">{{toneView.toneOn ? '卡片、色块的浅底换成这个色的 0.05' : '挑一个色，浅底跟着换'}}</text>
       </view>
 
       <view class="tone-row">
-        <view class="tone-dot {{toneView.toneOn ? 'on' : ''}}" style="--tone:{{toneView.toneRgba}}"></view>
         <input class="tone-hex" type="text" maxlength="7" value="{{toneView.toneHex}}"
                placeholder="#8C2F2D" placeholder-class="tone-hex-ph"
                confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />

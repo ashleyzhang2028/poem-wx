@@ -154,13 +154,13 @@ function groups() {
 function ownSwatch() {
   const t = OWN_THEME;
   const banner = custom.src();
-  const rgb = tone.current() || t.rgba;
+  const rgb = parseHex(tone.current());
   return {
     key: t.key,
     name: t.name,
     group: t.group,
-    rgb: banner ? rgb : "",
-    soft: banner ? softOf(t.key, tone.parseHex(tone.current())) : "",
+    rgb: banner ? t.rgba : "",
+    soft: banner ? t.soft : "",
     on: t.on,
     mark: t.mark,
     depth: rgba(t.depth, 1),
@@ -177,13 +177,14 @@ function parseHex(v) {
 function toneData() {
   const picked = tone.current();
   const rgb = tone.parseHex(picked);
+  const grid = rgb || OWN_THEME.rgb;
   return {
     toneOn: !!picked,
     toneHex: picked ? picked.toUpperCase() : "",
     toneRgba: picked ? rgba(rgb, 1) : "",
     toneSoft: picked ? rgba(rgb, WASH) : "",
-    toneHues: tone.hueGrid(picked ? rgb : ownSwatch().rgb),
-    toneLights: tone.lightGrid(picked ? rgb : ownSwatch().rgb, rgb ? rgbToHue(rgb) : 0)
+    toneHues: tone.hueGrid(grid),
+    toneLights: tone.lightGrid(grid, rgb ? rgbToHue(rgb) : 0)
   };
 }
 
@@ -201,13 +202,12 @@ function rgbToHue(rgb) {
 function variables() {
   const rgb = parseHex(store.settings().toneColor);
   return THEMES.concat([OWN_THEME]).map((t) => VAR_OF[t.key] + ":" + t.rgba
-    + ";" + VAR_OF[t.key] + "-soft:" + softOf(t.key, rgb)
+    + ";" + VAR_OF[t.key] + "-soft:" + (t.key === OWN_KEY ? toneSoft(rgb) : t.soft)
     + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
 }
 
-function softOf(key, rgb) {
-  if (rgb && key === OWN_KEY) return rgba(rgb, WASH);
-  return get(key).soft;
+function toneSoft(rgb) {
+  return rgba(rgb || OWN_THEME.rgb, WASH);
 }
 
 OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
