@@ -17,7 +17,7 @@
 
   <text class="guest-note" wx:if="{{expiry}}">{{expiry.title}}，{{expiry.sub}}</text>
 
-  <button class="btn primary block grant-pay" wx:if="{{logged}}" bindtap="onPricing">{{paid ? '续订 / 升级' : '开通 Pro / Max'}}</button>
+  <button class="btn primary block grant-pay" wx:if="{{logged}}" bindtap="onPricing">{{paid ? '订阅 / 升级' : '开通 Pro / Max'}}</button>
 </view>
 
 <view class="card">

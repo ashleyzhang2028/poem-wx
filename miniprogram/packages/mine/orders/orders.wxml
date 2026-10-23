@@ -6,7 +6,7 @@
     <text class="od-plan-sub" wx:if="{{plan.paid && plan.forever}}">长期有效</text>
     <text class="od-plan-sub" wx:elif="{{plan.paid}}">{{plan.untilText}} 到期 · 还剩 {{plan.days}} 天</text>
     <text class="od-plan-sub" wx:else>开通后可解锁更多功能</text>
-    <button class="btn primary block od-go" bindtap="onPricing">{{plan.paid ? '续订 / 升级' : '开通 Pro / Max'}}</button>
+    <button class="btn primary block od-go" bindtap="onPricing">{{plan.paid ? '订阅 / 升级' : '开通 Pro / Max'}}</button>
   </view>
 
   <view class="card" wx:if="{{logged}}">

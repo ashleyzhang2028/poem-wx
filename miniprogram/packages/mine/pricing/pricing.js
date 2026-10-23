@@ -26,7 +26,7 @@ const PROMISES = [
 ];
 
 function actionOf(plan, tier) {
-  if (tier === plan) return { text: "续订 " + pay.tierName(plan), disabled: false };
+  if (tier === plan) return { text: "订阅 " + pay.tierName(plan), disabled: false };
   if (tier === "max") return { text: "已是 Max", disabled: true };
   if (plan === "max" && tier === "pro") return { text: "升级到 Max", disabled: false };
   return { text: "开通 " + pay.tierName(plan), disabled: false };
