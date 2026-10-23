@@ -7,22 +7,32 @@
         <view class="cp-close-x"></view>
       </view>
     </view>
+
     <text class="hint cp-sub" wx:if="{{title}}">{{title}}</text>
 
     <view class="cp-list">
-      <view class="row row-flush cp-row" hover-class="row-hover" hover-stay-time="60"
+      <view class="cp-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{rows}}" wx:key="id"
             data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onPick">
-        <view class="row-main">
-          <text class="row-title">{{item.name}}</text>
-          <text class="row-sub">{{item.has ? '已经在里面' : item.count + ' 首 / ' + itemsMax + ' 首'}}</text>
+        <view class="cp-main">
+          <text class="cp-name">{{item.name}}</text>
+          <text class="cp-meta">{{item.meta}}</text>
         </view>
-        <text class="row-state {{item.has ? 'on' : 'idle'}}">{{item.has ? '已加入' : '加入'}}</text>
+        <text class="cp-state {{item.has ? 'on' : ''}}">{{item.has ? '已加入' : '加入'}}</text>
       </view>
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
         <text class="hint empty-tip">在「我的 → 自选背诵」新建，把这首加进去</text>
+      </view>
+    </view>
+
+    <view class="cp-foot" wx:if="{{rows.length}}">
+      <view class="cp-new" hover-class="cp-new-hover" hover-stay-time="60" bindtap="onNew">
+        <view class="cp-new-plus"></view>
+        <text class="cp-new-text" wx:if="{{total < cap}}">新建集合，把这首放进去</text>
+        <text class="cp-new-text" wx:elif="{{cap}}">已有 {{cap}} 个集合，删掉一个才能再建</text>
+        <text class="cp-new-text" wx:else>当前档位还不能建集合</text>
       </view>
     </view>
   </view>

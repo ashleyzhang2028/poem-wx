@@ -17,6 +17,7 @@ global.wx = {
 
 let CURRENT = null;
 let extraRef = () => null;
+let collectRef = () => null;
 
 function runtime() {
   const saved = { Page: global.Page, Component: global.Component, getApp: global.getApp, getCurrentPages: global.getCurrentPages };
@@ -63,7 +64,9 @@ function runtime() {
       page.data = JSON.parse(JSON.stringify(opt.data || {}));
 
       let extra = null;
+      let collect = null;
       extraRef = () => extra;
+      collectRef = () => collect;
       page.setData = function (obj, cb) {
         Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
         if (cb) cb();
@@ -93,6 +96,25 @@ function runtime() {
           extra = comp;
           return comp;
         }
+        if (sel === "#collect") {
+          const mod = path.join(ROOT, "components/collect-picker/collect-picker.js");
+          let opt = null;
+          const savedComp = global.Component;
+          global.Component = (o) => { opt = o; };
+          delete require.cache[require.resolve(mod)];
+          require(mod);
+          global.Component = savedComp;
+          if (!opt) return null;
+          const comp = Object.assign({}, opt.methods);
+          comp.data = JSON.parse(JSON.stringify(opt.data || {}));
+          comp.setData = function (obj, cb) {
+            Object.keys(obj).forEach((k) => { this.data[k] = obj[k]; });
+            if (typeof cb === "function") cb.call(this);
+          };
+          comp.triggerEvent = function () {};
+          collect = comp;
+          return comp;
+        }
         if (sel !== "#sheet") return null;
         const self = this;
         return {
@@ -112,6 +134,7 @@ function runtime() {
 
     current() { return CURRENT; },
     extra() { return extraRef(); },
+    collect() { return collectRef(); },
     done() { Object.assign(global, { Page: saved.Page, Component: saved.Component, getApp: saved.getApp, getCurrentPages: saved.getCurrentPages }); }
   };
 }
@@ -150,6 +173,8 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/nav-bar/nav-bar.wxss"))
   + flattenCss(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"))
 
   + flattenCss(path.join(ROOT, "components/daily-extra/daily-extra.wxss"))
+
+  + flattenCss(path.join(ROOT, "components/collect-picker/collect-picker.wxss"))
 
   + flattenCss(path.join(ROOT, "custom-tab-bar/index.wxss"));
 
@@ -471,6 +496,13 @@ function navbarOf(cfg) {
   }
 }
 
+function expandCollectPicker(wxml, data) {
+  if (wxml.indexOf("<collect-picker") < 0) return wxml;
+  const comp = fs.readFileSync(path.join(ROOT, "components/collect-picker/collect-picker.wxml"), "utf8");
+  const box = data.collectBox || {};
+  return wxml.replace(/<collect-picker[^>]*\/>/g, () => compile(comp, Object.assign({}, data, box)));
+}
+
 function expandDailyExtra(wxml, data) {
   if (wxml.indexOf("<daily-extra") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/daily-extra/daily-extra.wxml"), "utf8");
@@ -560,6 +592,7 @@ function pageHtml(cfg, data) {
   wxml = expandNavBar(wxml, data, navbarOf(cfg));
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
+  wxml = expandCollectPicker(wxml, data);
   wxml = expandReciteSheet(wxml, data);
   wxml = expandSpark(wxml, data);
   const pageCss = flattenCss(path.join(ROOT, cfg.page + ".wxss"));
@@ -679,6 +712,8 @@ cases.forEach((cfg) => {
         if (typeof fn === "function") fn.call(page, step.with || {});
         const box = rt.extra();
         if (box && box.data) page.data.extraBox = box.data;
+        const picker = rt.collect();
+        if (picker && picker.data) page.data.collectBox = picker.data;
       });
     }
     html.push(pageHtml(cfg, data));

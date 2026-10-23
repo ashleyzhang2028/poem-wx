@@ -1,5 +1,8 @@
 const cols = require("../../utils/collections");
 const corpus = require("../../utils/corpus");
+const entitlement = require("../../utils/entitlement");
+
+const TOAST_MS = 2000;
 
 Component({
   options: {
@@ -30,6 +33,7 @@ Component({
         id: c.id,
         name: cols.nameOf(c),
         count: c.items.length,
+        meta: c.items.length + " 首 / " + cols.ITEMS_MAX + " 首",
         has: cols.idsOf(c).indexOf(id) >= 0
       }));
       this.setData({
@@ -45,6 +49,10 @@ Component({
       this.setData({ open: false });
     },
 
+    show(title) {
+      wx.showToast({ title: title, icon: "none", duration: TOAST_MS });
+    },
+
     onMask() {
       this.close();
     },
@@ -52,24 +60,59 @@ Component({
     onStop() {},
 
     onPick(e) {
-      const id = e.currentTarget.dataset.id;
-      const name = e.currentTarget.dataset.name;
-      this.addTo(id, name);
+      if (!this.data.total) {
+        this.load(() => this.onNew());
+        return;
+      }
+      this.addTo(e.currentTarget.dataset.id, e.currentTarget.dataset.name);
+    },
+
+    load(job) {
+      if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+      this.paint(this.data.poemId);
+      if (job) job();
     },
 
     addTo(collectionId, name) {
       const r = cols.add(collectionId, [this.data.poemId]);
       if (r.code === "E_FULL") {
-        wx.showToast({ title: "该集合已达 " + cols.ITEMS_MAX + " 首上限", icon: "none" });
+        this.show("该集合已达 " + cols.ITEMS_MAX + " 首上限");
         return;
       }
       if (r.code === "E_DUP") {
-        wx.showToast({ title: "「" + name + "」中已有本篇", icon: "none" });
-        this.close();
+        this.show("「" + name + "」中已有本篇");
         return;
       }
       this.close();
       this.triggerEvent("done", { id: this.data.poemId, collectionId: collectionId, name: name });
+    },
+
+    onNew() {
+      if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+      if (!this.data.total) {
+        this.load(() => this.onNew());
+        return;
+      }
+      if (this.data.total >= this.data.cap || !this.data.cap) {
+        this.show("当前档位最多 " + this.data.cap + " 个集合");
+        return;
+      }
+      wx.showModal({
+        title: "新建集合",
+        editable: true,
+        placeholderText: cols.DEFAULT_NAME,
+        confirmText: "新建",
+        cancelText: "取消",
+        success: (res) => {
+          if (!res.confirm) return;
+          const made = cols.create(res.content);
+          if (!made.ok) {
+            this.show("最多 " + cols.capOf() + " 个集合");
+            return;
+          }
+          this.addTo(made.collection.id, cols.nameOf(made.collection));
+        }
+      });
     }
   }
 });
