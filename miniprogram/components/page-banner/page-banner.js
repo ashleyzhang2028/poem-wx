@@ -1,6 +1,6 @@
 const bannerPage = require("../../utils/page-banner");
 
-const RATIO = 750 / 360;
+const RATIO = 916 / 1717;
 
 const MAX_H = 360;
 
