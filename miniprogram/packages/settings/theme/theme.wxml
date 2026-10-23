@@ -65,16 +65,12 @@
         <text class="tone-preview-read">{{toneView.toneRead || '点下方任意一格'}}</text>
       </view>
 
-      <view class="tone-grid">
-        <view class="tone-cell tone-hue {{item === toneView.toneHex ? 'on' : ''}}"
-              wx:for="{{toneView.toneHues}}" wx:key="*this"
-              style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
-      </view>
-
-      <view class="tone-grid">
-        <view class="tone-cell tone-light {{item === toneView.toneHex ? 'on' : ''}}"
-              wx:for="{{toneView.toneLights}}" wx:key="*this"
-              style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+      <view class="tone-rows">
+        <view class="tone-strip" wx:for="{{toneView.toneRows}}" wx:for-item="row" wx:key="hue">
+          <view class="tone-cell tone-band {{item === toneView.toneHex ? 'on' : ''}}"
+                wx:for="{{row.light}}" wx:key="*this"
+                style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+        </view>
       </view>
     </view>
   </view>
