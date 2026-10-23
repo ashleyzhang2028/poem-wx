@@ -195,6 +195,7 @@ function toneData() {
     tonePick: TONE_PICK,
     toneHues: tone.hueGrid(grid),
     toneLights: tone.lightGrid(grid, at.hue),
+    toneRows: tone.hueRows(grid),
     toneHueAt: at.hue,
     toneLightAt: at.light,
     toneRead: picked ? at.hue + "° · " + at.saturation + "% · " + at.light + "%" : ""

@@ -73,6 +73,20 @@ function lightGrid(base, hue) {
   return LIGHT.map((v) => hex(hslToRgb(h, s, v / 100)));
 }
 
+function hueRows(base) {
+  const tone = rgbToHsl(base || hslToRgb(0, 0.42, LIGHT[7] / 100));
+  const s = saturationOf(tone);
+  const rows = [];
+  for (let i = 0; i < 24; i += 1) {
+    const hue = i * HUE_STEP;
+    rows.push({
+      hue: hue,
+      light: LIGHT.map((v) => hex(hslToRgb(hue, s, v / 100)))
+    });
+  }
+  return rows;
+}
+
 function pick(text) {
   const rgb = parseHex(text);
   if (!rgb) return null;
@@ -102,4 +116,4 @@ function clear() {
   store.saveSettings({ [KEY]: "" });
 }
 
-module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, pick, hueGrid, lightGrid, current, set, clear };
+module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, pick, hueGrid, lightGrid, hueRows, current, set, clear };
