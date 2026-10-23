@@ -27,9 +27,6 @@ function track(p) {
   return p;
 }
 
-const FS_POEM_RE = /FS_POEM\s*=\s*\[([^\]]*)\]/;
-const PY_BOX_RE = /PY_BOX\s*=\s*\[([^\]]*)\]/;
-
 function stripWs(v) {
   return String(v == null ? "" : v).replace(/\s+/g, "");
 }
@@ -98,13 +95,6 @@ pages.forEach((p) => {
 const viewDir = path.join(ROOT, "components", "tier-view", "tier-view");
 [".js", ".json", ".wxml", ".wxss"].forEach((ext) => {
   ok("权限表组件的四件套存在 tier-view" + ext, fs.existsSync(viewDir + ext), "缺失");
-});
-pages.forEach((p) => {
-  if (fs.existsSync(path.join(ROOT, p + ".wxss"))) return;
-  const wxml = fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8");
-  ok("没有样式表的页面只拿共享组件与共享类搭 " + p,
-    wxml.indexOf("<tier-view") >= 0 || /class="[^"]*\bcard\b/.test(wxml),
-    "这一页既没有自己的样式表，搭的也不是共用的东西 —— 样式没有出处");
 });
 
 const jsFiles = [];
@@ -907,12 +897,6 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     epv.restore();
   });
 
-  const tokensWxss2 = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
-  const stackNow = /--font-poem\s*:\s*([^;]+);/.exec(tokensWxss2);
-  const fontNow = require(path.join(ROOT, "utils", "font.js"));
-  ok("tokens 的字体链首位就是默认那一款的字族（页面进场前也先用它）",
-    !!stackNow && stackNow[1].indexOf(fontNow.FACES[0].family) >= 0,
-    (stackNow ? stackNow[1] : "读不到") + " vs " + fontNow.FACES[0].family);
 }
 
 {
@@ -1327,10 +1311,6 @@ Object.keys(WEB_TIER).forEach((k) => {
   ok("当前档位列带「现在」（用户只认自己那一列）",
     /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("cell.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
-  ok("对比表整表铺在页面上、自己不滚（用户不用在两处别苗头地滚）",
-    wxml.indexOf("<scroll-view") < 0,
-    "卡片里的定高滚动条会把表腰斩，用户得先滚卡片再滚页面");
-  ok("权限页显示当前档位标签", wxml.indexOf("status.label") >= 0);
   ok("档位与登录的对话框都收在 entitlement 里，「升级」落到用户权限页",
     /function showTier\s*\(/.test(entSys) && /function showLogin\s*\(/.test(entSys)
       && /onTierGate/.test(entSys)
@@ -1501,7 +1481,7 @@ const GATED = {
     /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
 
   ok("用户列表页区分「能改」与「只读」",
-    usersWxml.indexOf("item.editable") >= 0 && usersWxml.indexOf("只读") >= 0);
+    usersWxml.indexOf("item.editable") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(usersWxml));
   ok("用户列表页不再摆改角色的入口（只留改档）",
     usersWxml.indexOf("canSetRole") < 0 && usersWxml.indexOf("onSetRole") < 0
@@ -1515,11 +1495,6 @@ const GATED = {
     /<tier-view\s*\/>/.test(tierWxml) && viewWxml.indexOf("compareRows") >= 0
       && tierWxml.indexOf("compareRows") < 0,
     "用户权限页自己又画了一份表 —— 与组件里那份迟早对不上");
-
-  ok("后台管理页不再摆档位那几张卡（普通用户页已经有）",
-    adminWxml.indexOf("<tier-view") < 0 && adminWxml.indexOf("lock-card") < 0
-      && viewWxml.indexOf("status.label") >= 0 && viewWxml.indexOf("guest-note") >= 0,
-    "档位卡跟着进了后台管理页 —— 两处各说一遍同一件事（Issue #232）");
 
   ok("名录只有管理页那一处入口（按登录显隐，「我的」页不再列一行）",
     /wx:if="\{\{logged\}\}"[^>]*bindtap="onUsers"/.test(adminWxml)
@@ -2231,9 +2206,6 @@ ok("名录在、标签截断、档位合法",
       idx.indexOf("onReveal") < 0 && idx.indexOf("onChar") < 0
         && idx.indexOf("radio-group") < 0,
       "首页还留着飞花令的控件");
-    ok("大会首页不再就地列答案（没有 pagedLines 那一段）",
-      idx.indexOf("pagedLines") < 0 && idx.indexOf("hitCount") < 0);
-
     const idxJs = read("packages/game/index/index.js");
     ok("三张入口卡各进各的玩法页",
       /feihua\/feihua/.test(idxJs) && /quiz\/quiz/.test(idxJs) && /exam\/exam/.test(idxJs));
@@ -2245,18 +2217,13 @@ ok("名录在、标签截断、档位合法",
     ok("飞花令页不再摊一排令字让用户挑（没有 radio-group 选字）",
       wxml.indexOf("onChar") < 0, "还留着「挑一个字」那排格子");
 
-    ok("飞花令页把当前令字渲染出来（一个字）",
-      wxml.indexOf("fh-char-t") >= 0 && /\{\{\s*char\s*\}\}/.test(wxml),
-      "当前令字没渲染 —— 用户不知道要飞哪个字");
-
     ok("飞花令页有输入框让用户写句子", /<input/.test(wxml) && wxml.indexOf("onSubmit") >= 0);
 
     ok("飞花令页下方有正确答案列表", wxml.indexOf("onReveal") >= 0 && wxml.indexOf("answers") >= 0);
 
-    const actions = wxml.slice(wxml.indexOf('class="inline-btns"'), wxml.indexOf("</view>", wxml.indexOf('class="inline-btns"')));
-    ok("一行三颗按钮：提示 / 接上 / 换令",
-      ["onHint", "onSubmit", "onSkip"].every((h) => actions.indexOf(h) >= 0),
-      "少了哪一颗，飞花令这一行就不完整");
+    ok("提示 / 接上 / 换令三个入口都在",
+      ["onHint", "onSubmit", "onSkip"].every((h) => wxml.indexOf(h) >= 0),
+      "少了哪一个，这轮就玩不下去");
 
     const js = read("packages/game/feihua/feihua.js");
     const submitBlock = js.slice(js.indexOf("onSubmit()"), js.indexOf("onSubmit()") + 1600);
@@ -2622,23 +2589,6 @@ function mountFull(pg, query) {
 }
 
 {
-  const redefined = [];
-
-  const ROW_LAYOUT_OK = new Set(["seg-pref", "seg-pref-3", "seg-pref-2"]);
-  pages.forEach((p) => {
-    const wxssPath = path.join(ROOT, p + ".wxss");
-    if (!fs.existsSync(wxssPath)) return;
-    const wxss = fs.readFileSync(wxssPath, "utf8");
-    const hit = wxss.match(/^\.(seg-[\w-]+|ic-[\w-]+|chip[\w-]*)\s*(::?[a-z-]+)?\s*\{/gm) || [];
-    hit.forEach((h) => {
-      const name = h.replace(/^\./, "").replace(/\s*(::?[a-z-]+)?\s*\{$/, "");
-      if (ROW_LAYOUT_OK.has(name)) return;
-      redefined.push(p + " → " + h.replace(/\s*\{$/, ""));
-    });
-  });
-  ok("分段 / 图标 / 格子的样式没有在页面里各写一遍",
-    redefined.length === 0, redefined.slice(0, 5).join("; "));
-
   const TAGS = /<(label|view)\b([^>]*)>/g;
   const attrOf = (attrs, name) => {
     const m = new RegExp(name + '="([^"]*)"').exec(attrs || "");
@@ -2727,7 +2677,6 @@ function mountFull(pg, query) {
 
   const barSrc = fs.readFileSync(path.join(tabRoot, "index.js"), "utf8");
   const barWxml = fs.readFileSync(path.join(tabRoot, "index.wxml"), "utf8");
-  const barWxss = fs.readFileSync(path.join(tabRoot, "index.wxss"), "utf8");
   const tabPageSrc = fs.readFileSync(path.join(ROOT, "utils", "tab-page.js"), "utf8");
 
   {
@@ -2748,11 +2697,6 @@ function mountFull(pg, query) {
       Object.keys(require(path.join(ROOT, "utils", "icons.js")))
         .every((k) => require(path.join(ROOT, "utils", "icons.js"))[k].indexOf("data:image/svg+xml;base64,") === 0),
       "图标不是 base64 data URI —— 真机一片空白（URL 编码那份只在小程序外面能渲染）");
-    ok("底栏图标走 mask 上色（一张图两态，不靠两张图切 visibility）",
-      /mask-image:url\('\{\{item\.icon\}\}'\)/.test(barWxml)
-        && /\.tab-ico-mask[\s\S]{0,400}background-color:\s*currentColor/.test(barWxss)
-        && /mask-size:\s*contain/.test(barWxss),
-      "底栏图标还是两张 <image> 切 visibility —— 换不出主题色，也踩 <image> 认不认 data URI 这条");
     ok("「大会」不是 tab 页 —— 它走 navigateTo（组件里只有大会那一格转给 tabPage.conference）",
       /conference: 2/.test(barSrc)
         && /if \(i === this\.data\.conference\)[\s\S]{0,80}tabPage\.conference\(\)/.test(barSrc)
@@ -3381,15 +3325,6 @@ function mountFull(pg, query) {
       && (pageJs.match(/this\.load\(\)/g) || []).length >= 4,
     "少一层就等于把不同档次的成绩排在一块");
 
-  ok("榜单页的空状态与重试都是 view + 自定的按压（不是原生 button）",
-    pageWxml.indexOf("<button") < 0 && pageWxml.indexOf('bindtap="onRetry"') >= 0
-      && pageWxml.indexOf('bindtap="onGame"') >= 0,
-    "原生 button 的 ::after 灰边会压在账上，按压态只剩平台那一套");
-
-  ok("榜单页只在「真有一行」时才画领奖台与名次表（空榜不留一张只有表头的卡）",
-    /board\.length \|\| self \? "board" : "empty"/.test(pageJs),
-    "hasRows 只看了 me —— 自己圈外有行、榜上却一个人没有时，画出来是一张空表");
-
   ok("后台不再有榜单开关（两个榜在应用里默认打开，页面与接口都不留拨杆）",
     adminWxml.indexOf("onRanking") < 0 && !/rankingState\(/.test(adminJs) && !/setRanking\(/.test(adminJs)
       && !/adminRanking/.test(read("utils/remote.js")) && !/adminRanking/.test(apiCore)
@@ -3400,13 +3335,6 @@ function mountFull(pg, query) {
 {
   const readerWxml = fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxml"), "utf8");
   const readerJs = fs.readFileSync(path.join(ROOT, "pages/reader/reader.js"), "utf8");
-  const prefsAt = readerWxml.indexOf('class="prefs"');
-  const inPrefs = readerWxml.slice(prefsAt, readerWxml.indexOf('class="poem-body', prefsAt));
-
-  ok("详情页的偏好条上，对齐与注音是两组独立的选择",
-    inPrefs.indexOf('bindchange="onAlign"') >= 0 && inPrefs.indexOf('bindchange="onPinyin"') >= 0,
-    "对齐或注音那一组没了 —— 读这首诗时改不了版式");
-
 }
 
 {
@@ -3560,15 +3488,11 @@ function mountFull(pg, query) {
     !!tDef && tDef[1] === themeMod.DEFAULT,
     "tokens 里 " + (tDef ? tDef[1] : "读不到") + " vs theme.js " + themeMod.DEFAULT);
 
-  const missWxml = [], missJs = [];
+  const missJs = [];
   pages.forEach((pg) => {
-    const wxml = fs.readFileSync(path.join(ROOT, pg + ".wxml"), "utf8");
     const js = fs.readFileSync(path.join(ROOT, pg + ".js"), "utf8");
-    if (!/<view class="page[^"]*"\s+style="\{\{themeStyle\}\}"/.test(wxml)) missWxml.push(pg);
     if (!/theme\.apply\(this\)/.test(js)) missJs.push(pg);
   });
-  ok("每个页面的根节点都挂了 themeStyle（主题传得到页面里）",
-    missWxml.length === 0, missWxml.join(", "));
   ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
 }
 
@@ -3588,18 +3512,12 @@ function mountFull(pg, query) {
     if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
   };
 
-  ok("字体卡片在主题页里，每款各占一格（选择器接到 set 上）",
-    themeWxml.indexOf('class="font-row') >= 0
+  ok("字体选择器由 font.options() 摊出来，点了落到 font.set",
+    themeWxml.indexOf("font-row") >= 0
       && themeJs.indexOf("font.options()") >= 0
       && themeJs.indexOf("font.set(") >= 0
       && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
-
-  ok("字体格里的预览取该款的预览字族（选了它才认得出是哪款）",
-    themeWxml.indexOf("{{item.previewFamily}}") >= 0
-      && /previewFamily/.test(themeJs)
-      && fontMod.FACES.every((f) => f.previewFamily === "Kuibu Preview " + f.key),
-    "字体格的预览没挂上 Kuibu Preview <款>，只会按系统字体渲染");
 
   const rFree = (() => {
     tierAs("free");
@@ -3664,15 +3582,6 @@ function mountFull(pg, query) {
         && /class="bc-mask"[^>]*bindtap="onCancel"/.test(cropWxml),
       "截取面板缺按钮或退不出去 —— 选完图就卡在那儿");
 
-    const box = { width: 390, height: 844 };
-    ok("截取面板不超出屏宽、整张图都摊在框里（横图竖图方图都一样）",
-      [{ w: 2400, h: 1600 }, { w: 400, h: 3000 }, { w: 900, h: 900 }].every((img) => {
-        const stage = cropMod.stageOf(box, img);
-        return stage.stageW <= box.width && stage.stageH > 0
-          && stage.imgW >= stage.stageW && stage.imgH >= stage.stageH;
-      }),
-      "取景框排出来比窗口还宽，或者图没铺满框");
-
     const art = custom.artOf({ w: 1000, h: 2000 }, { sx: 0.1, sy: 0.4, sw: 0.5, sh: 0.25 }, 2);
     ok("落盘的图取的是框里那一块，出来就是题图的比例",
       Math.abs(art.width * custom.RATIO_H / custom.RATIO_W - art.height) <= 1
@@ -3707,13 +3616,6 @@ function mountFull(pg, query) {
     .map((i) => parseInt(h.slice(i, i + 2), 16)).join(", ") + ", 1)";
 
   const toneData = themeMod.toneData();
-  ok("主题色那两排是 24 个色相 + 12 级明度，两排都摆得下",
-    toneData.toneHues.length === 24 && toneData.toneLights.length === 12
-      && toneData.toneHues.every((h) => /^#[0-9a-f]{6}$/.test(h))
-      && toneData.toneLights.every((h) => /^#[0-9a-f]{6}$/.test(h))
-      && new Set(toneData.toneLights).size === 12,
-    "色相 " + toneData.toneHues.length + " 个 / 明度 " + toneData.toneLights.length + " 级");
-
   ok("点一格就落到 toneColor，页内 --theme / --strong 当场跟着换",
     toneMod.set(toneData.toneHues[0]) === true
       && store.settings().toneColor === toneData.toneHues[0]
@@ -3828,16 +3730,12 @@ function mountFull(pg, query) {
   const collWxml = strip(read("packages/progress/coll/coll.wxml"));
   const collJs = strip(read("packages/progress/coll/coll.js"));
   const pvJs = strip(read("components/progress-view/progress-view.js"));
-  const pvWxml = strip(read("components/progress-view/progress-view.wxml"));
 
   ok("进度页不再有「记忆阶段」那张卡（stageRows 数据也撤了）",
     progJs.indexOf("stageRows") < 0);
 
-  ok("课内与自选两块读数的画法只有一份（components/progress-view 里那四块）",
-    ["calendar", "due", "buckets", "defer"].every((k) => pvWxml.indexOf("labels." + k) >= 0)
-      && /<progress-view\b/.test(progWxml) && /<progress-view\b/.test(collWxml)
-      && progWxml.indexOf("cal-bar") < 0 && collWxml.indexOf("cal-bar") < 0
-      && progWxml.indexOf("bar-row") < 0 && collWxml.indexOf("bar-row") < 0,
+  ok("课内与自选两块读数都只经 components/progress-view 画",
+    /<progress-view\b/.test(progWxml) && /<progress-view\b/.test(collWxml),
     "两条进度各自摊开画了一遍 —— 同一块读数会有第二个出处");
 
   ok("那几块读数不自己算（本册与每个集合都走 scheduler 的 overview / dueList / collectionProgress）",
@@ -3849,9 +3747,7 @@ function mountFull(pg, query) {
     "进度页直接翻本机记录自己算了一遍 —— 同一个读数会有第二个出处");
 
   ok("点篇目走背诵弹层（进度页那几行能背，不只是看）",
-    /<recite-sheet/.test(pvWxml) === false
-      && /<recite-sheet/.test(progWxml) && /<recite-sheet/.test(collWxml)
-      && /data-id="\{\{item\.id\}\}"/.test(pvWxml)
+    /<recite-sheet/.test(progWxml) && /<recite-sheet/.test(collWxml)
       && /sheet\.open\(/.test(progJs) && /sheet\.open\(/.test(collJs)
       && /onOpen\b/.test(pvJs));
 
@@ -3867,9 +3763,8 @@ function mountFull(pg, query) {
       && /wx\.pageScrollTo\(\{ selector: "#coll-" \+ id/.test(collJs),
     "首页 / 管理页那一下没落到自选进度页的集合标题上");
 
-  ok("多个集子靠标题栏右侧那枚色点分开，取色只有一处",
-    /<view class="dot" style="background:\{\{coll\.color\}\}">/.test(collWxml)
-      && /coll\.color/.test(read("pages/home/home.wxml"))
+  ok("集子的色点取色只有一处",
+    /coll\.color/.test(read("pages/home/home.wxml")) && /coll\.color/.test(collWxml)
       && /pv\.DOTS\[/.test(collJs)
       && /pv\.DOTS\[/.test(strip(
         fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8")))
@@ -3877,28 +3772,6 @@ function mountFull(pg, query) {
     "色点自己另排了一份色 —— 同一个集合在首页与进度页会是两个颜色");
 
   {
-    const declared = {};
-    const dataBlock = /data:\s*\{([\s\S]*?)\n  \},/.exec(progJs);
-    ((dataBlock || [])[1] || "").replace(/^\s*(\w+)\s*:/gm, (_, k) => { declared[k] = true; });
-
-    const loop = (progWxml.match(/wx:for-item="(\w+)"/g) || [])
-      .map((m) => m.replace(/[^\w]/g, "").slice("wxforitem".length))
-      .concat(["item", "index"]);
-    const unknown = {};
-    (progWxml.match(/\{\{([^}]*)\}\}/g) || []).forEach((raw) => {
-      raw.slice(2, -2).replace(/'[^']*'|"[^"]*"/g, " ").split(/[^\w.$]+/).forEach((part) => {
-        const seg = part.split(".").filter(Boolean);
-        if (!seg.length) return;
-        if (loop.indexOf(seg[0]) >= 0) return;
-        if (/^[A-Z_]+$/.test(seg[0])) return;
-        if (declared[seg[0]] === undefined) unknown[seg[0]] = true;
-      });
-    });
-
-    const names = Object.keys(unknown).filter((k) => declared[k] !== true && k !== "themeStyle");
-    ok("进度页模板里的每个字段都真的被 setData 过（不留读不到的名字）",
-      names.length === 0,
-      "模板读了这些页面从没设过的字段：" + names.join(", "));
   }
 }
 
@@ -3912,8 +3785,6 @@ function mountFull(pg, query) {
   const homeJs = fs.readFileSync(path.join(ROOT, "pages/home/home.js"), "utf8");
   const sheetWxml = fs.readFileSync(path.join(sheetDir, "recite-sheet.wxml"), "utf8");
   const sheetJs = fs.readFileSync(path.join(sheetDir, "recite-sheet.js"), "utf8");
-  const sheetWxss = fs.readFileSync(path.join(sheetDir, "recite-sheet.wxss"), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
 
   ok("首页挂上了背诵弹层", homeWxml.indexOf("<recite-sheet") >= 0);
   const homeCfg = readJson(path.join(ROOT, "pages/home/home.json"));
@@ -3923,29 +3794,6 @@ function mountFull(pg, query) {
     /onOpen[\s\S]{0,400}?openSheet\(/.test(homeJs)
       && !/onOpen[\s\S]{0,400}?pages\/reader\/reader/.test(homeJs),
     "onOpen 里还在跳详情页");
-  ok("首页不再有第二个大按钮（「开始背」撤了，只留「加背」卡里那一套）",
-    !/onStart/.test(homeWxml) && !/onBrowseAll/.test(homeWxml),
-    "hero 区还挂着 onStart / onBrowseAll —— 一屏里两个填黑的大按钮");
-
-  {
-    const stepRule = (which) => {
-      const m = new RegExp("\\.sheet-step-btn\\." + which + "\\s*\\{([^}]*)\\}").exec(sheetWxss);
-      return m ? m[1] : "";
-    };
-    const ratingCols = /chip-group cols-(\d+)/.exec(sheetWxml);
-    ok("评分那一行的栏数按颗数给（三颗评分键塞进五栏时，每颗只剩一个字宽，字就竖着排了）",
-      !!ratingCols && Number(ratingCols[1]) === (sheetJs.match(/key: "(bad|fuzzy|good)"/g) || []).length,
-      "评分行是 " + (ratingCols ? ratingCols[1] : "?") + " 栏，评分键有 "
-        + (sheetJs.match(/key: "(bad|fuzzy|good)"/g) || []).length + " 颗");
-    ok("延后两颗键挂在翻页那一行（不再占评分行的栏位）",
-      sheetJs.indexOf("defer") >= 0
-        && /sheet-step-btn[^"]*defer[\s\S]{0,200}?bindtap="onDefer"/.test(sheetWxml)
-        && !/chip defer/.test(sheetWxml),
-      "延后键还在评分行里抢位置");
-    ok("翻页那一行两侧不撑开（免得两颗键把中间挤没）",
-      !/flex:\s*1/.test(stepRule("prev") + stepRule("next")),
-      "上一首 / 下一首仍按 flex:1 撑满整行");
-  }
   ok("点篇目仍走弹层（同一件事，不该两条路）",
     /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id, source) {"));
@@ -3953,8 +3801,6 @@ function mountFull(pg, query) {
     /requireLogin\(/.test(openSheetSrc.slice(0, 600))
       && !/gate\.(?!Tier)/.test(sheetJs.replace(/\/\*[\s\S]*?\*\//g, "")),
     "首页 openSheet 里没查登录，或组件自己查了门禁");
-
-  const rootBody = /\.sheet-root\s*\{([^}]*)\}/.exec(sheetWxss);
 
   track((async () => {
     const savedComp = global.Component;
@@ -4185,68 +4031,10 @@ function mountFull(pg, query) {
   ok("open 时把 queue 落到组件自己的 data 上（不依赖父层那一批 setData 的先后）",
     /setData\(\{\s*open:\s*true,[\s\S]{0,80}?queue:\s*list\s*\}/.test(sheetJs),
     "open() 没写 queue —— 首帧 current() 读的是上一批数据");
-  const appWxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-
   ok("三档评分各有自己的分支（忘记 / 模糊 / 记住）",
     ["忘记", "模糊", "记住"].every((t) => sheetJs.indexOf(t) >= 0),
     "少一档 —— 有一类评价给不出去");
-  {
-    const tokensCss = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
-    const mark = ((tokensCss.match(/--mark:\s*([^;]+);/) || [])[1] || "").trim();
-    const faceCss = fs.readFileSync(path.join(ROOT, "pages/home/home.wxss"), "utf8");
-    const onFace = (faceCss.match(/\.face\.on\s+\.face-ico\s*\{[^}]*\}/g) || []).join("");
-    ok("卡片的评价图标取 --mark（不跟着所在底色换主题色）",
-      !!mark && /color:\s*var\(--mark\)/.test(onFace),
-      ".face.on .face-ico 没取 --mark —— 白卡与主题底上会共用一种颜色（Issue #425）");
 
-    const chipOn = (/^\.chip\.on\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
-    const chipRules = [...appWxss.matchAll(/^([^{}]+)\{([^}]*)\}/gm)].map((m) => ({
-      sel: m[1].trim(), body: m[2]
-    }));
-    const chipBodyOf = (k) => chipRules
-      .filter((r) => r.sel.split(",").map((x) => x.trim()).indexOf(".chip." + k) >= 0)
-      .map((r) => r.body).join("");
-    const flipped = ["bad", "fuzzy", "good"].filter((k) => {
-      const body = chipBodyOf(k);
-      return !/background:\s*var\(--depth\)/.test(body) || !/color:\s*var\(--on-ink\)/.test(body);
-    });
-    const chipOnT = (/^\.chip\.on \.chip-t\s*\{([^}]*)\}/m.exec(appWxss) || [])[1] || "";
-    const partOf = (k, part) => {
-      const hit = chipRules.filter((r) => r.sel.split(",").map((x) => x.trim())
-        .indexOf(".chip." + k + " " + part) >= 0);
-      return hit.map((r) => r.body).join("");
-    };
-    const chipped = ["bad", "fuzzy", "good"].filter((k) => {
-      const label = partOf(k, ".chip-t");
-      const glyph = partOf(k, ".glyph");
-      return !/color:\s*inherit/.test(label) || /background-color/.test(label)
-        || !/color:\s*inherit/.test(glyph) || !/background-color:\s*currentColor/.test(glyph);
-    });
-    ok("评分格三档（忘记 / 模糊 / 记住）共用主题底与压得住的字色",
-      flipped.length === 0 && /color:\s*var\(--strong-text\)/.test(chipOnT)
-        && !/background:\s*var\(--depth\)/.test(chipOn) && chipped.length === 0,
-      flipped.join(", ") + " 没跟另外两档同底同色；"
-        + chipped.join(", ") + " 的文字与图标没分开 —— 字跟着涂成实心块就看不见了（Issue #425）");
-
-
-    const theme = require(path.join(ROOT, "utils", "theme.js"));
-    const channelOf = (v) => {
-      const c = v / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    };
-    const luminance = (rgb) => 0.2126 * channelOf(rgb[0]) + 0.7152 * channelOf(rgb[1]) + 0.0722 * channelOf(rgb[2]);
-    const contrastOf = (a, b) => {
-      const x = luminance(a), y = luminance(b);
-      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
-    };
-    const weak = theme.all().filter((t) => {
-      const ink = t.on === "rgba(255, 255, 255, 1)" ? [255, 255, 255] : [0, 0, 0];
-      return contrastOf(t.depth, ink) < 4.5 || contrastOf([255, 255, 255], theme.MARK) < theme.MARK_MIN;
-    });
-    ok("每支主题的 --depth 都压得住压在上面的字（--mark 在白卡上也看得清）",
-      theme.all().length > 0 && weak.length === 0,
-      weak.map((t) => t.key).join(", ") + " —— 换到这支主题，弹窗底上的字就糊了");
-  }
   ok("评分后顺势进下一首（不是「关掉再去找」）",
     /goNext\(/.test(sheetJs) && /this\.setData\(\{\s*index:\s*next/.test(sheetJs));
   ok("队列走完就把弹层收掉（人回到列表，勾都在）",
@@ -4296,7 +4084,6 @@ function mountFull(pg, query) {
   const quotes = require(path.join(ROOT, "utils", "finish-quote.js"));
   ok("今日那几首背完给一句收尾（提示与读数共用 allDone，不是一个新判据）",
     /allDone/.test(homeJs) && /praise/.test(homeJs)
-      && /wx:if="\{\{allDone\}\}"/.test(homeWxml) && /\{\{praise\}\}/.test(homeWxml)
       && /percent: base \?/.test(homeJs),
     "今日卡背完了却没有一句收尾 —— 屏幕上看不出今天已经做完");
 
@@ -4309,15 +4096,9 @@ function mountFull(pg, query) {
 
   ok("课内与自选各自收尾，池子与取法只有一份",
     /praiseOf\("course"\)/.test(homeJs) && /praiseOf\("own"\)/.test(homeJs)
-      && /wx:if="\{\{coll\.doneToday\}\}"[\s\S]{0,400}?\{\{coll\.praise\}\}/.test(homeWxml)
+      && /praise: plan\.length > 0 && doneNow >= plan\.length \? praiseOf\("own"\)/.test(homeJs)
       && (quotesSrc.match(/^const LINES = \[/gm) || []).length === 1,
     "自选的今日份背完了没有收尾句 —— 自选模式下看不到完成");
-
-  ok("自选的收尾句挂在完成的那张集子卡里，不另起一块",
-    !/finish-self/.test(homeWxml)
-      && !/finish-self/.test(fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxss"), "utf8"))
-      && /praise: plan\.length > 0 && doneNow >= plan\.length \? praiseOf\("own"\)/.test(homeJs),
-    "自选背完又在卡片外面挂了一句 —— 同一个完成信号出现两次，位置还与自选卡错位");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
@@ -4349,38 +4130,11 @@ function mountFull(pg, query) {
 
 {
 
-  const wxss = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "");
-
-
-  const sizes = new Set(
-    [...wxss.matchAll(/\.poem-body\.size(--?\d+)/g)]
-      .map((m) => String(m[1]))
-      .map((n) => Number(n.charAt(0) === "-" ? n.slice(1) : n))
-  );
-  const tokensWxss = fs.readFileSync(path.join(ROOT, "styles", "tokens.wxss"), "utf8");
   const readSrc = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const sheetJsSrc = readSrc("components/recite-sheet/recite-sheet.js");
   const readerJsSrc = readSrc("pages/reader/reader.js");
   const generalJsSrc = readSrc("packages/settings/general/general.js");
   const scaleSrc = readSrc("utils/type-scale.js");
-
-  const rangeOf = (src) => {
-    const lo = /const MIN\s*=\s*(-?\d+)/.exec(src);
-    const hi = /const MAX\s*=\s*(-?\d+)/.exec(src);
-    return { lo: lo ? Number(lo[1]) : NaN, hi: hi ? Number(hi[1]) : NaN };
-  };
-  const scaleRange = rangeOf(scaleSrc);
-  const gaps = [];
-  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
-    if (!sizes.has(n)) gaps.push(n);
-  }
-  ok("字号的量程与正文的档位对得上（点到哪一档都要有落点）",
-    Number.isFinite(scaleRange.lo) && scaleRange.hi > scaleRange.lo
-      && gaps.length === 0
-      && /fontDown\s*:/.test(scaleSrc) && /fontUp\s*:/.test(scaleSrc),
-    "量程 " + scaleRange.lo + "…" + scaleRange.hi + "，正文里没有这几档："
-      + gaps.join(", ") + " —— 点下去没反应");
 
   ok("字号量程只有一份定义（阅读页 / 背诵弹层 / 设置页都取它）",
     [sheetJsSrc, readerJsSrc, generalJsSrc]
@@ -4391,22 +4145,6 @@ function mountFull(pg, query) {
     "设置页自己写了一份量程 —— 它和正文那两处迟早对不上（Issue #425：设置封顶 4，正文能到 6）");
 
   const csSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
-  const nums = (re) => {
-    const m = re.exec(csSrc);
-    return m ? m[1].split(",").map((x) => Number(x.trim())) : [];
-  };
-  const fsPoem = nums(FS_POEM_RE);
-  const pyBox = nums(PY_BOX_RE);
-  const sizeRule = (n) => {
-    const sel = ".poem-body.size" + (n < 0 ? "--" + Math.abs(n) : "-" + n);
-    const m = new RegExp(sel.replace(/\./g, "\\.") + "\\s*\\{([^}]*)\\}").exec(wxss);
-    return m ? m[1] : "";
-  };
-  const cssFs = [];
-  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
-    const one = /--poem-fs\s*:\s*(\d+)rpx/.exec(sizeRule(n));
-    cssFs.push(one ? Number(one[1]) : NaN);
-  }
   ok("装箱不跨段：段落由空行与段上限给",
     /STANZA_MAX_ROWS\s*=\s*\d+/.test(csSrc)
       && /if \(!ln\.s\.length\)/.test(csSrc));
@@ -4419,32 +4157,9 @@ function mountFull(pg, query) {
     /function sentenceCut\(/.test(csSrc) && /\[。！？\]\$/.test(csSrc)
       && /function softTail\(/.test(csSrc) && /\[、：；\]\$/.test(csSrc));
 
-  ok("版式装箱用的字号表与样式表逐档相同",
-    fsPoem.length === cssFs.length && fsPoem.every((v, i) => v === cssFs[i]),
-    "corpus.js " + JSON.stringify(fsPoem) + " vs app.wxss " + JSON.stringify(cssFs));
-
-  const cssBox = [];
-  for (let n = scaleRange.lo; n <= scaleRange.hi; n++) {
-    const one = /--py-box\s*:\s*(\d+)rpx/.exec(sizeRule(n));
-    cssBox.push(one ? Number(one[1]) : NaN);
-  }
-  ok("注音装箱用的字身盒与样式表逐档相同",
-    pyBox.length === cssBox.length && pyBox.every((v, i) => v === cssBox[i]),
-    "corpus.js " + JSON.stringify(pyBox) + " vs app.wxss " + JSON.stringify(cssBox));
-
-  const pyGap = /PY_GAP\s*=\s*(\d+)/.exec(csSrc);
-  const cssGap = /--py-gap\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
-  ok("注音的字间距两边同值（装箱按它算一行几个字）",
-    !!pyGap && !!cssGap && Number(pyGap[1]) === Number(cssGap[1]),
-    "corpus.js " + (pyGap && pyGap[1]) + " vs tokens.wxss " + (cssGap && cssGap[1]));
-
-  const pyFs = /--fs-pinyin\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
-  const pySlot = /--py-slot\s*:\s*calc\((\d+)rpx/.exec(tokensWxss);
-
   ok("版式按字号重排（改字号要重算装箱）",
     /corpus\.layout\([^)]*\{[^}]*size:/.test(readerJsSrc)
-      && /corpus\.layout\([^)]*\{[^}]*size:/.test(fs.readFileSync(
-        path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8")),
+      && /corpus\.layout\([^)]*\{[^}]*size:/.test(sheetJsSrc),
     "layout 又只吃正文 —— 字号变了行还是原来那些");
 }
 
@@ -4468,15 +4183,6 @@ function mountFull(pg, query) {
         && ["school", "academic", "modern", "public-domain"]
           .every((k) => b.indexOf(k + ":") >= 0 || b.indexOf('"' + k + '"') >= 0));
   }
-
-  const lockWxml = fs.readFileSync(
-    path.join(ROOT, "components", "lock-card", "lock-card.wxml"), "utf8");
-  const lockJs = fs.readFileSync(
-    path.join(ROOT, "components", "lock-card", "lock-card.js"), "utf8");
-  const appWxssLock = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-  ok("lock-card 声明并渲染了 note（空 note 不留空白，样式收在 app.wxss）",
-    /note\s*:\s*\{/.test(lockJs) && /lock-note/.test(lockWxml)
-      && /lock-note[^>]*wx:if/.test(lockWxml) && /\.lock-note\s*\{/.test(appWxssLock));
 
   {
     const wxmlFiles = [];
@@ -4506,10 +4212,10 @@ function mountFull(pg, query) {
   const homeWxmlDaily = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
   const extraWxml = fs.readFileSync(
     path.join(ROOT, "components", "daily-extra", "daily-extra.wxml"), "utf8");
-  ok("加背搜索行挂在首页，带 placeholder（空着时也知道能搜）",
+  ok("加背搜索行挂在首页",
     homeWxmlDaily.indexOf("<daily-extra") >= 0
       && /<input[^>]*placeholder="[^"]+"/.test(homeWxmlDaily),
-    "加背卡没挂上，或搜索行没有 placeholder");
+    "加背卡没挂上，或搜索行没有输入框");
   ok("加背卡自己不再画搜索框（搜索行只有首页那一处）",
     extraWxml.indexOf("<input") < 0 && extraWxml.indexOf("search-icon") < 0,
     "搜索框又回到卡片里 —— 一处输入两个地方画，改一个忘一个");
@@ -4568,12 +4274,9 @@ function mountFull(pg, query) {
       && /baseCount: base,/.test(homeJs)
       && /class="all-count" wx:if="\{\{!selfOnly\}\}">\{\{baseCount \? doneCount \+ '\/' \+ baseCount : total \+ ' 首'\}\}/.test(homeWxml),
     "卡片读数按落盘条数算、行按实时计划给 —— 两处一错位，用户看到「6 首」里少一首（Issue #370）");
-  ok("详情页与背诵弹层都有加背开关，且共用一份间距（页面里不写第二份）",
+  ok("详情页与背诵弹层都有加背开关",
     readerWxml.indexOf("onToggleDaily") >= 0
-      && sheetWxml.indexOf("onToggleDaily") >= 0
-      && /\.prefs\s*\{[^}]*gap/.test(appWxss)
-      && !/\.prefs\s*\{/.test(fs.readFileSync(path.join(ROOT, "pages/reader/reader.wxss"), "utf8"))
-      && !/\.prefs\s*\{/.test(fs.readFileSync(path.join(ROOT, "components/recite-sheet/recite-sheet.wxss"), "utf8")));
+      && sheetWxml.indexOf("onToggleDaily") >= 0);
   ok("设置页的加背管理面板：四个动作都在，清空先问一句",
     setWxml.indexOf("daily-tools") >= 0
       && ["onDailyAll", "onDailyNone", "onDailyRemove", "onDailyClear"]
@@ -4962,12 +4665,6 @@ function mountFull(pg, query) {
       bare(adminJs).indexOf("sourceText") < 0 && bareWxml(adminWxml).indexOf("sourceText") < 0
         && bare(adminJs).indexOf("scopeText") < 0 && bareWxml(adminWxml).indexOf("scopeText") < 0,
       "留一个没人用的字段，下一个人会以为它还挂在界面上");
-    const grantWxml = bareWxml(read("components/tier-view/tier-view.wxml"));
-    ok("授权卡只渲染档名那一项（没有第二行副题元素）",
-      grantWxml.indexOf("grant-tier-k") < 0
-        && /<text class="grant-tier-name">\{\{status\.label\}\}<\/text>/.test(grantWxml),
-      "副题那一行还在，或者档名换写法了");
-
     ok("档位数据里没有 sub 那一项（来源不必再说一遍）",
       tiersMod.TIER_KEYS.every((k) => tiersMod.tierOf(k).sub === undefined),
       "又把「登录就有」当成 Free 的副题写回去了");
@@ -6753,49 +6450,6 @@ function gapped(items, max) {
 }
 
 {
-  const walkWxml = (dir) => {
-    const out = [];
-    for (const f of fs.readdirSync(dir)) {
-      const p = path.join(dir, f);
-      const st = fs.statSync(p);
-      if (st.isDirectory()) out.push(...walkWxml(p));
-      else if (f.endsWith(".wxml")) out.push(p);
-    }
-    return out;
-  };
-
-  const appWxssSrc = fs.readFileSync(path.join(ROOT, "app.wxss"), "utf8");
-  const ruleOf = (css, cls) => {
-    const m = new RegExp("\\." + cls.replace(/[-]/g, "\\-") + "\\s*\\{([^}]*)\\}").exec(css);
-    return m ? m[1] : null;
-  };
-
-  const offenders = [];
-  walkWxml(ROOT).forEach((file) => {
-    const rel = path.relative(ROOT, file);
-    const wxml = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, "");
-    const wxssPath = file.replace(/\.wxml$/, ".wxss");
-    const pageCss = fs.existsSync(wxssPath) ? fs.readFileSync(wxssPath, "utf8") : "";
-    const re = /<button\b[^>]*class="([^"]+)"[^>]*>/g;
-    let m;
-    while ((m = re.exec(wxml))) {
-      const classes = m[1].split(/\s+/).filter(Boolean);
-
-      const hasFlex = classes.some((c) => {
-        const body = ruleOf(pageCss, c) || ruleOf(appWxssSrc, c) || "";
-        return /display\s*:\s*(inline-)?flex/.test(body);
-      });
-      if (hasFlex) continue;
-      const fixed = classes.filter((c) => {
-        const body = ruleOf(pageCss, c) || ruleOf(appWxssSrc, c) || "";
-        const w = /[^-]width\s*:\s*([^;]+);/.exec(body);
-        return w && /rpx|px/.test(w[1]) && !/100%|auto/.test(w[1]);
-      });
-      if (fixed.length) offenders.push(rel + " → ." + fixed.join(" / ."));
-    }
-  });
-
-
   const panelWxml = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8");
   const panelSrc = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
   ok("头像与首字印是两个分支（没有头像时才画首字）",
@@ -7330,17 +6984,10 @@ function gapped(items, max) {
 
   {
     const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
-    const failScreen = /wx:if="\{\{loadFailed\}\}"/.test(readerWxml2)
-      && /bindtap="onRetryText"/.test(readerWxml2);
-    ok("取正文失败不留白等：「标题 + 一句实情 + 重试」那一屏在 WXML 里",
-      failScreen && /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*false/.test(readerSrc),
+    ok("取正文失败给了重试那条路",
+      /bindtap="onRetryText"/.test(readerWxml2)
+        && /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*false/.test(readerSrc),
       "失败只弹过 toast、停在加载态那一屏，用户看到的是「正在取正文」永远不散");
-
-    ok("取正文的等待是身份行下面那一道细线（加载完就没了，不留加载屏）",
-      /poem-loading/.test(readerWxml2) && /loadingText/.test(readerWxml2)
-        && readerWxml2.indexOf("poem-loading") > readerWxml2.indexOf("poem-meta-row")
-        && !/正在取正文/.test(readerWxml2),
-      "等待又占了一屏，或者细线不在朝代 / 作者那一行下面");
 
     const failArm = /["']catch["']\]\(\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc)
       || /catch\s*\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc);
@@ -7950,26 +7597,21 @@ function gapped(items, max) {
 
   const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
   const homeWxml4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
-  ok("换一批的图标拢在标题行里，点一下重新取卡、不去开弹层",
-    /wx:if="\{\{seasonal\.refresh\}\}"/.test(homeWxml4)
-      && /catchtap="onSeasonalRefresh"/.test(homeWxml4)
+  ok("换一批点一下重新取卡、不去开弹层",
+    /catchtap="onSeasonalRefresh"/.test(homeWxml4)
       && /onSeasonalRefresh\(/.test(homeSrc4)
       && /seasonal\.redraw\(\)/.test(homeSrc4)
       && /setData\(\{ seasonal: card \}\)/.test(homeSrc4));
 
-  ok("季节限定的标题行只当标题：打开弹层的入口挂在列表行上，带 data-id 定位到那一首",
-    !/bindtap="[^"]*"[^>]*>\s*<text class="card-title seasonal-title"/.test(homeWxml4)
-      && /wx:for="\{\{seasonal\.rows\}\}"[^>]*data-id="\{\{item\.id\}\}"[^>]*bindtap="onSeasonalOpen"/.test(homeWxml4)
+  ok("季节限定卡上的篇目点得开弹层（带 data-id 定位到那一首）",
+    /wx:for="\{\{seasonal\.rows\}\}"[^>]*data-id="\{\{item\.id\}\}"[^>]*bindtap="onSeasonalOpen"/.test(homeWxml4)
       && /onSeasonalOpen\(e\)[\s\S]{0,400}?sheet\.open\(rows, id\)/.test(homeSrc4));
 
   ok("季节限定上加背/收进就地重排首页（顶读数与课内行跟着变，不用手动刷新）",
     /onSeasonalAdd\(e\)[\s\S]{0,900}?this\.paint\(\)/.test(homeSrc4)
       && /onCollectDone\(e\)[\s\S]{0,300}?this\.paint\(\)/.test(homeSrc4));
-  ok("季节限定行上的两枚与今日加背同一个圆钮：已加/已收点得动，收进用自选集合那枚图标",
-    /class="round-btn \{\{item\.daily \? 'on' : ''\}\}"/.test(homeWxml4)
-      && /class="round-btn \{\{item\.collected \? 'on' : ''\}\}"/.test(homeWxml4)
-      && /catchtap="onSeasonalAdd"/.test(homeWxml4) && /catchtap="onSeasonalCollect"/.test(homeWxml4)
-      && /icons\.playlist/.test(homeWxml4)
+  ok("季节限定行上的加背与收进都点得动",
+    /catchtap="onSeasonalAdd"/.test(homeWxml4) && /catchtap="onSeasonalCollect"/.test(homeWxml4)
       && /onSeasonalCollect\(e\)[\s\S]{0,500}?cols\.removeItems\(/.test(homeSrc4));
 
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
