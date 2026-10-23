@@ -3091,6 +3091,32 @@ function adminFeedbackStatus(deps, input) {
   });
 }
 
+function adminFeedbackDelete(deps, input) {
+  var cfg = deps.cfg, store = deps.store;
+  var gate = adminGate(deps, cfg);
+  if (gate) return Promise.resolve(gate);
+
+  var tid = clip(input && input.tid, 64).trim();
+  var cid = clip(input && input.cid, 64).trim();
+  if (!tid && !cid) return Promise.resolve(err(400, "E_BAD_TARGET", "要删哪一条没说清楚"));
+
+  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
+
+    if (tid) {
+      return Promise.resolve(store.deleteFeedbackThread(tid)).then(function (done) {
+        if (!done) return err(404, "E_NO_THREAD", "没有 tid 是 " + tid + " 的那一条");
+        return ok({ deleted: "thread", tid: tid });
+      });
+    }
+    return Promise.resolve(store.deleteFeedbackComment(cid)).then(function (done) {
+      if (!done) return err(404, "E_NO_COMMENT", "没有 cid 是 " + cid + " 的那一条");
+      return ok({ deleted: "comment", cid: cid });
+    });
+  });
+}
+
 var GAME_CAP = { fly: "feihualing", paper: "exam.paper", review: "quiz.review" };
 
 function gameAllowed(cfg, tier, cap) {
@@ -3701,6 +3727,7 @@ module.exports = {
   adminFeedbackGet: adminFeedbackGet,
   adminFeedbackReply: adminFeedbackReply,
   adminFeedbackStatus: adminFeedbackStatus,
+  adminFeedbackDelete: adminFeedbackDelete,
   FEEDBACK_KINDS: FEEDBACK_KINDS,
   FEEDBACK_STATUSES: FEEDBACK_STATUSES,
   FEEDBACK_RESOLUTIONS: FEEDBACK_RESOLUTIONS,

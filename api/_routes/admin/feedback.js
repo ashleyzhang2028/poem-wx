@@ -2,7 +2,7 @@
 
 var handler = require("../../_lib/handler");
 
-var ADMIN_OPS = ["list", "thread", "reply", "status"];
+var ADMIN_OPS = ["list", "thread", "reply", "status", "delete"];
 
 module.exports = handler.make("admin.feedback", ["POST"], function (d, body) {
   if (d.cfg && !d.cfg.hasSession()) {
@@ -22,6 +22,9 @@ module.exports = handler.make("admin.feedback", ["POST"], function (d, body) {
   }
   if (op === "status") {
     return handler.core.adminFeedbackStatus(d, { tid: body.tid, status: body.status, resolution: body.resolution });
+  }
+  if (op === "delete") {
+    return handler.core.adminFeedbackDelete(d, { tid: body.tid, cid: body.cid });
   }
   return handler.core.adminFeedbackList(d, { status: body.status, limit: body.limit });
 });

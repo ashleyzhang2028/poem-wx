@@ -554,6 +554,17 @@ function adminFeedbackThread(tid) {
   );
 }
 
+function adminFeedbackDelete(tid, cid) {
+  if (!adminReady()) return Promise.resolve({ ok: false });
+  const body = { op: "delete" };
+  if (tid) body.tid = tid;
+  if (cid) body.cid = cid;
+  return request(PATHS.adminFeedback, body).then(
+    (res) => ({ ok: true, deleted: res && res.deleted }),
+    (err) => ({ ok: false, reason: (err && err.message) || "没删成" })
+  );
+}
+
 function adminFeedbackReply(entry) {
   if (!adminReady()) return Promise.resolve({ ok: false });
   return request(PATHS.adminFeedback, Object.assign({ op: "reply" }, entry || {})).then(
@@ -591,5 +602,6 @@ module.exports = {
   feedbackComment,
   adminFeedbackList,
   adminFeedbackThread,
-  adminFeedbackReply
+  adminFeedbackReply,
+  adminFeedbackDelete
 };

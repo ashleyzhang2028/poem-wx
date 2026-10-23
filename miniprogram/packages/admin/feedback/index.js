@@ -3,6 +3,7 @@ const admin = require("../../../utils/admin");
 const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
+const guard = require("../../../utils/guard");
 
 Page({
   data: {
@@ -42,5 +43,24 @@ Page({
     const tid = e.currentTarget.dataset.tid;
     if (!tid) return;
     wx.navigateTo({ url: "/packages/admin/feedback/detail/detail?tid=" + encodeURIComponent(tid) });
+  },
+
+  onDelete(e) {
+    const tid = e.currentTarget.dataset.tid;
+    if (!tid || !this.data.canWrite) return;
+    wx.showModal({
+      title: "确认",
+      content: "删掉这一条？连同下面的沟通记录一起删。",
+      success: (r) => {
+        if (!r.confirm) return;
+        guard.once("admin:delete:" + tid, () => adminFb.remove(tid, "")).then((res) => {
+          if (!res || !res.ok) {
+            this.setData({ reason: (res && res.reason) || "没删成，稍后再试" });
+            return;
+          }
+          this.load();
+        });
+      }
+    });
   }
 });

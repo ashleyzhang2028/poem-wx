@@ -1573,18 +1573,23 @@ const GATED = {
         && !/identity\.deviceId/.test(serverCore),
       "服务端还留着按设备标识认人的路");
 
-    const fbWxml = read("packages/feedback/index/index.wxml");
-    ok("反馈记录谁都不删（用户撤不回，管理员也删不掉，台账留着）",
+    ok("用户撤不回自己提的反馈与跟帖（页面没有入口，接口也没有这条 op）",
       !/op === "delete"/.test(fbRouteSrc)
-        && !/deleteThread|deleteComment/.test(adminFbRouteSrc)
-        && /ADMIN_OPS\.indexOf\(op\) < 0/.test(adminFbRouteSrc)
         && !/feedbackDelete|remove/.test(fbLib)
-        && !/feedbackDelete|remove/.test(adminFbLib)
-        && !/feedbackDelete|adminFeedbackDelete/.test(remoteSrc)
-        && !/fb\.remove\(|onDeleteThread|onDeleteComment/.test(fbPageJs)
-        && !/onDeleteThread|onDeleteComment/.test(read("packages/admin/feedback/detail/detail.js"))
-        && !/onDeleteThread|onDeleteComment|canDelete/.test(fbWxml),
-      "反馈页或后台又摆出了删除入口 —— 记录是台账，删了就对不上账");
+        && !/fb\.remove\(|onDeleteThread|onDeleteComment|canDelete/.test(fbPageJs)
+        && !/onDeleteThread|onDeleteComment|canDelete/.test(read("packages/feedback/index/index.wxml")),
+      "用户侧又摆出了删除入口 —— 记录是台账，撤了就对不上账");
+
+    ok("管理员在后台删得掉反馈与讨论（列表行内与详情各一条路）",
+      /delete/.test(adminFbRouteSrc) && /adminFeedbackDelete/.test(serverCore)
+        && /deleteFeedbackThread|deleteFeedbackComment/.test(serverCore)
+        && /adminFeedbackDelete/.test(remoteSrc)
+        && /remove/.test(adminFbLib)
+        && /catchtap="onDelete"/.test(read("packages/admin/feedback/index.wxml"))
+        && /bindlongpress="onDelete"/.test(read("packages/admin/feedback/index.wxml"))
+        && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js"))
+        && /onDeleteComment/.test(read("packages/admin/feedback/detail/detail.js")),
+      "后台没有删除入口，或服务端那条 op 没接上 —— 管理员清不掉违规的反馈");
 
     ok("登录回来就把服务端给的角色记进本机会话（重启后后台那些按钮才出得来）",
       /saveSession\(\{[^}]*role: role\s*\}/.test(read("utils/auth.js"))

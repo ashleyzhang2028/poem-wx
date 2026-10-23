@@ -534,11 +534,12 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 3. **用户跟进会把这条打回未处理**（只对 `closed` 生效）。`feedbackComment`
    写给用户的那条路只动 `status` 与 `updated_at`，不碰类别与其他列 ——
    管理员正在处理的那条，不该因为用户补一句就换了类型。
-4. **记录不提供删除**。用户撤不回自己提的那一条，管理员也删不掉；
-   两条路径都没有删除 op（`/api/feedback` 只认建 / 读 / `op: "comment"`，
-   `/api/admin/feedback` 只认 `list` / `thread` / `reply` / `status`，其余 op 回
-   `400 E_BAD_OP`）。存储层的 `deleteFeedbackThread` / `deleteFeedbackComment`
-   留在接口里，那不是用户路径。
+4. **删除只归管理员**。用户撤不回自己提的那一条，也删不掉自己跟的那几句：
+   `/api/feedback` 只认建 / 读 / `op: "comment"`，页面不摆删除入口，
+   服务端下发的字段里也没有 `canDelete`。管理员删得掉整条与单段讨论，走
+   `/api/admin/feedback` 的 `op: "delete"`（带 `tid` 删整条并级联沟通记录，
+   带 `cid` 只删那一段），先认角色，其余人回 403；不认的 op 回 `400 E_BAD_OP`。
+   入口在后台列表行内（点「删除」或长按）与详情页各一处。
 
 后台列表**按处理结果分三张卡**（未处理 / 处理中 / 已处理），组内按创建时间倒序；
 卡片上是主题、用户名、创建时间与最后处理时间。点进详情才带上处理意见、
@@ -617,7 +618,7 @@ wx.login() 拿 code
 | `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |
 | `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |
 | `/api/feedback` | GET / POST | 本仓库 `api/` | 自己的意见反馈：`GET` 列自己的（含沟通记录），`POST` 新建 / `op: "comment"` 追加一句 |
-| `/api/admin/feedback` | POST | 本仓库 `api/` | `op: "list"` 全量（带各状态计数）/ `"thread"` 单条 / `"reply"` 回复并改处理结果与处理方式 / `"status"` 只改状态与方式 |
+| `/api/admin/feedback` | POST | 本仓库 `api/` | `op: "list"` 全量（带各状态计数）/ `"thread"` 单条 / `"reply"` 回复并改处理结果与处理方式 / `"status"` 只改状态与方式 / `"delete"` 删整条或单段讨论 |
 
 **登录这道门不依赖后端**：`utils/auth.js` 在服务器没接上时落一个本机身份，
 门一样开、登录照旧能点，只是不同步。别把「没后端」变成新的一道墙 ——
