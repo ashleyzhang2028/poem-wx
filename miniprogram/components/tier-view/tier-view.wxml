@@ -1,6 +1,10 @@
 <view class="card grant">
   <view class="grant-top">
-    <text class="grant-eyebrow">当前档位</text>
+    <view class="grant-title">
+      <text class="grant-eyebrow">当前档位</text>
+      <view class="pay-chip" wx:if="{{logged && paid}}" hover-class="pay-chip-hover" hover-stay-time="60"
+            bindtap="onOrders">支付记录</view>
+    </view>
     <text class="grant-tier-name">{{status.label}}</text>
     <text class="guest-note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
     <text class="guest-note" wx:elif="{{note}}">{{note}}</text>
@@ -14,7 +18,6 @@
   <text class="guest-note" wx:if="{{expiry}}">{{expiry.title}}，{{expiry.sub}}</text>
 
   <button class="btn primary block grant-pay" wx:if="{{logged}}" bindtap="onPricing">{{paid ? '续订 / 升级' : '开通 Pro / Max'}}</button>
-  <button class="btn ghost block grant-pay" wx:if="{{logged && paid}}" bindtap="onOrders">支付记录</button>
 </view>
 
 <view class="card">

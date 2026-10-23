@@ -6,6 +6,12 @@
   display: block;
 }
 
+.grant-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .grant-eyebrow {
   display: block;
   font-size: var(--fs-caption);
@@ -20,6 +26,20 @@
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
+}
+
+.pay-chip {
+  flex: none;
+  padding: 0 var(--sp-2);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.pay-chip-hover {
+  background: var(--line);
 }
 
 .guest-note {
