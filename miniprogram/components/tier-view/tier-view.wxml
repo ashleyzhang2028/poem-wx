@@ -25,7 +25,7 @@
 
     <view class="tier-line" wx:for="{{compareRows}}" wx:key="cap">
       <text class="tier-cap">{{item.name}}</text>
-      <view class="tier-cell {{cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
+      <view class="tier-cell {{cell.on && cell.now ? 'is-now' : ''}}" wx:for="{{item.cells}}" wx:for-item="cell" wx:key="tier">
         <text class="tier-cell-t {{cell.cls}}" wx:if="{{cell.text}}">{{cell.text}}</text>
         <view class="tier-cell-ic {{cell.cls}}" wx:else
               style="mask-image:url('{{cell.icon}}');-webkit-mask-image:url('{{cell.icon}}');"></view>

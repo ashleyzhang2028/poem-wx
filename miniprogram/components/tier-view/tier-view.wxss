@@ -114,10 +114,6 @@
   -webkit-mask-size: contain;
 }
 
-.tier-cell-ic.no {
-  color: var(--strong-soft);
-}
-
 .tier-cell-ic.yes {
   color: var(--ink-2);
 }
