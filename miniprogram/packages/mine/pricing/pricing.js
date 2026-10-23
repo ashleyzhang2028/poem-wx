@@ -58,6 +58,7 @@ Page({
     promises: PROMISES,
     yes: icons.yes,
     welcome: null,
+    sandbox: false,
     busy: false,
     loadFailed: false
   },
@@ -77,6 +78,7 @@ Page({
         const plan = (res && res.plan) || {};
         this.setData({
           prices: res.plans,
+          sandbox: !!res.sandbox,
           tier: plan.tier || "free",
           untilText: plan.tier !== "free" && plan.until ? pay.dateText(plan.until) : "",
           loadFailed: false

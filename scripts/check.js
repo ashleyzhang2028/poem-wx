@@ -8330,6 +8330,10 @@ function gapped(items, max) {
     ok("退款推送：回收那一单的时长", (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.month,
       "退款之后会员时长还在");
 
+    ok("沙箱环境用沙箱 AppKey，现网用现网 AppKey（两把钥匙不混用）",
+      baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 1 }) === "s"
+        && baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 0 }) === "p",
+      "沙箱单拿现网密钥签名，或现网单拿沙箱密钥签名");
     ok("到期立刻按 Free 算（planTier）",
       corePay.planTier({ plan: "max", plan_until: Date.now() - 1 }) === "free", "过期的 Max 还在放行");
     ok("后台支付接口只认管理员", (await payMod.payAdmin(deps(), { op: "orders" })).status === 403, "普通用户能看全部订单");

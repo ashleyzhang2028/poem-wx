@@ -63,8 +63,9 @@ var CONFIG = {
 
   payOfferId: env("WX_PAY_OFFER_ID"),
   payAppKey: env("WX_PAY_APPKEY"),
+  paySandboxAppKey: env("WX_PAY_SANDBOX_APPKEY"),
   payPushToken: env("WX_PAY_PUSH_TOKEN"),
-  payEnv: 0,
+  payEnv: env("WX_PAY_ENV", "0") === "1" ? 1 : 0,
 
   cookieName: env("COOKIE_NAME", "kbsid"),
 
@@ -105,9 +106,14 @@ CONFIG.turnstileReady = function () {
   return c.turnstileEnabled === true && String(c.turnstileSecretKey || "").length > 0;
 };
 
+CONFIG.payKeyOf = function () {
+  var c = (this && this.payAppKey !== undefined) ? this : CONFIG;
+  return String((c.payEnv === 1 ? c.paySandboxAppKey : c.payAppKey) || "");
+};
+
 CONFIG.hasPay = function () {
   var c = (this && this.payAppKey !== undefined) ? this : CONFIG;
-  return !!(c.payOfferId && c.payAppKey && c.wxAppId && c.wxSecret);
+  return !!(c.payOfferId && CONFIG.payKeyOf.call(c) && c.wxAppId && c.wxSecret);
 };
 
 CONFIG.hasAvatarStore = function () {

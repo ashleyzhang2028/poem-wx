@@ -102,6 +102,8 @@ MYSQL_DATABASE=poem
 WX_APPID=wx200a0c667fc67fcb
 WX_SECRET=<小程序 appsecret>
 WX_PAY_APPKEY=<虚拟支付现网 AppKey>
+WX_PAY_SANDBOX_APPKEY=<虚拟支付沙箱 AppKey>
+WX_PAY_ENV=<0 现网 / 1 沙箱>
 WX_PAY_PUSH_TOKEN=<发货推送令牌>
 WX_PAY_OFFER_ID=<虚拟支付 OfferID>
 ```

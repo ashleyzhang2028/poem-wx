@@ -210,7 +210,7 @@ function wxQueryOrder(deps, order) {
   return accessToken(deps).then(function (token) {
     if (!token) return null;
     var body = JSON.stringify({ openid: order.openid, env: cfg.payEnv, order_id: order.out_trade_no });
-    var paySig = hmac(cfg.payAppKey, "/xpay/query_order&" + body);
+    var paySig = hmac(cfg.payKeyOf(), "/xpay/query_order&" + body);
     var url = wxBase(cfg) + "/xpay/query_order?access_token=" + encodeURIComponent(token) + "&pay_sig=" + paySig;
     return wxFetchJson(deps, url, { method: "POST", headers: { "Content-Type": "application/json" }, body: body });
   });
@@ -278,7 +278,7 @@ function payCatalog(deps) {
   if (gate) return Promise.resolve(gate);
   return Promise.all([loadCatalog(deps.store), deps.store.getAccount(deps.account.uid)]).then(function (r) {
     if (!r[1] || r[1].status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    return ok({ plans: publicCatalog(r[0]), plan: currentPlan(r[1]), payReady: deps.cfg.hasPay() });
+    return ok({ plans: publicCatalog(r[0]), plan: currentPlan(r[1]), payReady: deps.cfg.hasPay(), sandbox: deps.cfg.payEnv === 1 });
   });
 }
 
@@ -338,7 +338,7 @@ function payOrder(deps, input) {
             payData: {
               mode: "short_series_goods",
               signData: signData,
-              paySig: hmac(cfg.payAppKey, "requestVirtualPayment&" + signData),
+              paySig: hmac(cfg.payKeyOf(), "requestVirtualPayment&" + signData),
               signature: hmac(s.body.sessionKey, signData)
             }
           });

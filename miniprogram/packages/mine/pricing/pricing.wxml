@@ -8,6 +8,8 @@
     <text class="pr-sub" wx:else>按月或按年，随时可以续订</text>
   </view>
 
+  <text class="hint pr-note" wx:if="{{sandbox}}">当前是沙箱环境，仅用于测试，不会真实扣款。</text>
+
   <view class="card pr-welcome tier-{{welcome.tier}}" wx:if="{{welcome}}">
     <text class="pr-w-title poem">{{welcome.title}}</text>
     <text class="pr-w-sub">{{welcome.sub}}</text>

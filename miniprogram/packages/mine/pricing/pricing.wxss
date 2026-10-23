@@ -223,3 +223,9 @@
   color: var(--ink-2);
   line-height: var(--lh-body);
 }
+
+.pr-note {
+  display: block;
+  margin-bottom: var(--sp-3);
+  color: var(--amber);
+}
