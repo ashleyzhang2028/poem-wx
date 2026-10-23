@@ -56,9 +56,9 @@
 「黛青」用的是 `rgba(2, 54, 51, 1)`，取自首页 banner 那幅画上的墨绿，
 淡淡一档 `rgba(2, 54, 51, 0.05)`。它是默认那一项。
 
-色卡分三张：**中国传统**、**大好河山**（Issue #442）与**自选**（Issue #541）。
+色卡分三张：**中国传统**、**大好河山**（Issue #442）与**自定义题图**（Issue #541）。
 分组写在 `THEMES` 每一项的 `group` 字段上，页面上三张卡由 `theme.groups()` 给出，
-不另抄一份名单；「自选」不是一个色，是一项能力，`items` 只有一项
+不另抄一份名单；「自定义题图」不是一个色，是一项能力，`items` 只有一项
 （`theme.ownSwatchData()`）。
 
 大好河山七支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
@@ -152,9 +152,9 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 `set()` 与 `current()` 各自挡一道 —— 点不动，且档位掉回 Free 时
 停在那一支上的用户退回默认那支，页面不会挂在够不着的颜色上。
 
-#### 自选：换的是 banner 那张图，Max 起
+#### 自定义题图：换的是 banner 那张图，Max 起
 
-第三张卡「自选」不换色，换的是 banner 那张图（能力键 `ownbanner`，max 起）。
+第三张卡「自定义题图」不换色，换的是 banner 那张图（能力键 `ownbanner`，max 起）。
 选完图先进选区（`components/banner-crop`）：画布按 750 × 360 摆，
 双指或「放大 / 缩小」缩，单指拖，框里看到的就是要留下的那一段。
 
@@ -176,21 +176,21 @@ base64 存进 `kb_settings_v1` 的 `banner`。画布与网格共用一枚隐藏 
 一排按钮靠右（`.own-acts` 上 `justify-content: flex-end`）。
 
 banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按 916 / 1717 折，
-`mode="widthFix"`；自选那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
+`mode="widthFix"`；「自定义题图」那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
 `aspectFill` 裁进去，不算 banner 本身。
 
 清空（恢复默认）一并清掉 `theme` 那一格里的 `own`，否则会停在一条没有图的主题上。
 `check.js` 守着三件事：这一项归 max、图不进云端报文、清空之后回到默认那支。
 
-#### 主题色：一支色，页内当场见效（Issue #579）
+#### 自定义主题色：一支色，页内当场见效（Issue #579）
 
-「自选」色卡下面另有一张「主题色」卡（能力键 `themetone`，Max 起；`toneColor` 跟账号走，
-不进 `LOCAL_ONLY`）。它换的是**当前这套主题那一支色**，不是只换 0.05 的淡底：
-`--theme` / `--theme-deep` / `--strong` / `--strong-text` / `--ink-strong` /
-`--depth` 指向这个色的 1.0，`--strong-soft` 指向它的 0.05，`--on-ink` 按相对明度
-在黑白里挑（与内置各色同一套判据）。
+「自定义题图」那张卡下面另有一张「自定义主题色」卡（能力键 `themetone`，Max 起；
+`toneColor` 跟账号走，不进 `LOCAL_ONLY`）。它换的是**当前这套主题那一支色**，
+不是只换 0.05 的淡底：`--theme` / `--theme-deep` / `--strong` / `--strong-text` /
+`--ink-strong` / `--depth` 指向这个色的 1.0，`--strong-soft` 指向它的 0.05，
+`--on-ink` 按相对明度在黑白里挑（与内置各色同一套判据）。
 
-能生效的只有一条路：**档位够**。与自选 banner 不同，主题色不要求本机有图 ——
+能生效的只有一条路：**档位够**。与「自定义题图」不同，主题色不要求本机有图 ——
 它是颜色偏好，挑的是页面重点长什么样，与 banner 那张图是两件事。
 取值在 `toneOf()`（档位不够返回 null），`tint()` 与 `style()` 都读它，
 所以 `variables()` 铺的 `--c-own-*` 与 `style()` 铺的当前主题那一串是同一个来源。
