@@ -1,9 +1,21 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
 
+  <view class="pr-hero">
+    <text class="pr-eyebrow">会员</text>
+    <text class="pr-title poem">选一个适合你的档位</text>
+    <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
+    <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
+    <text class="pr-sub" wx:else>按月或按年，随时可以续订</text>
+  </view>
+
+  <view class="card pr-welcome tier-{{welcome.tier}}" wx:if="{{welcome}}">
+    <text class="pr-w-title poem">{{welcome.title}}</text>
+    <text class="pr-w-sub">{{welcome.sub}}</text>
+  </view>
+
   <view class="card" wx:if="{{!logged}}">
-    <text class="card-title">开通会员</text>
     <text class="hint">请先用微信登录，再选择档位。</text>
-    <button class="btn primary block" bindtap="onLogin">去登录</button>
+    <button class="btn primary block pr-login" bindtap="onLogin">去登录</button>
   </view>
 
   <block wx:else>
@@ -12,39 +24,49 @@
         <label class="seg-item {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{period === item.key}}" />
           <text class="seg-text">{{item.name}}</text>
+          <text class="pr-badge" wx:if="{{item.badge}}">{{item.badge}}</text>
         </label>
       </radio-group>
     </view>
 
-    <text class="hint pr-note" wx:if="{{loadFailed}}">价格没取到，请检查网络后重新进入。</text>
-    <text class="hint pr-note" wx:elif="{{untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}}，到期 {{untilText}}，续订在原到期日后顺延。</text>
-
-    <view class="card pr-plan {{item.current ? 'is-current' : ''}}" wx:for="{{plans}}" wx:key="key">
+    <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'free' ? 'is-free' : ''}}"
+          wx:for="{{plans}}" wx:key="key">
       <view class="pr-head">
-        <text class="pr-name">{{item.name}}</text>
-        <text class="tag green" wx:if="{{item.current}}">当前</text>
+        <view class="pr-head-l">
+          <text class="pr-name">{{item.name}}</text>
+          <text class="pr-tagline">{{item.tagline}}</text>
+        </view>
+        <text class="tag theme" wx:if="{{item.current}}">当前</text>
+        <text class="tag theme" wx:elif="{{item.recommended}}">推荐</text>
       </view>
+
       <view class="pr-price">
         <text class="pr-yen">¥</text>
         <text class="pr-num">{{item.priceText}}</text>
         <text class="pr-unit">{{item.unit}}</text>
-        <text class="pr-was" wx:if="{{item.originalText}}">¥{{item.originalText}}</text>
+        <text class="pr-was" wx:if="{{item.originalText}}">{{item.originalText}}</text>
       </view>
-      <view class="pr-feat" wx:for="{{item.features}}" wx:for-item="f" wx:key="*this">
-        <text class="pr-dot">·</text>
-        <text class="pr-feat-t">{{f}}</text>
+      <text class="pr-permonth" wx:if="{{item.perMonth}}">{{item.perMonth}}</text>
+
+      <view class="pr-list">
+        <text class="pr-inc" wx:if="{{item.includes}}">{{item.includes}}</text>
+        <view class="pr-feat" wx:for="{{item.features}}" wx:for-item="f" wx:key="*this">
+          <view class="pr-ck" style="mask-image:url('{{yes}}');-webkit-mask-image:url('{{yes}}');"></view>
+          <text class="pr-feat-t">{{f}}</text>
+        </view>
+        <text class="pr-more" wx:if="{{item.more}}">另含 {{item.more}} 项</text>
       </view>
-      <button class="btn primary block pr-buy" wx:if="{{item.actionText}}"
+
+      <button class="btn block pr-buy {{item.recommended ? 'primary' : 'ghost'}}" wx:if="{{item.actionText}}"
               disabled="{{item.disabled || busy}}" data-plan="{{item.key}}" bindtap="onBuy">{{item.actionText}}</button>
     </view>
 
-    <view class="card">
-      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onOrders">
-        <view class="row-main">
-          <text class="row-title">支付记录</text>
-        </view>
-        <text class="row-go">›</text>
+    <view class="pr-promise">
+      <view class="pr-promise-row" wx:for="{{promises}}" wx:key="*this">
+        <view class="pr-ck pr-ck-s" style="mask-image:url('{{yes}}');-webkit-mask-image:url('{{yes}}');"></view>
+        <text class="pr-promise-t">{{item}}</text>
       </view>
+      <text class="pr-link" bindtap="onOrders">查看支付记录</text>
     </view>
   </block>
 

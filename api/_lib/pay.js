@@ -24,8 +24,8 @@ var DEFAULT_CATALOG = {
   products: [
     { productId: "pro_month", plan: "pro", period: "month", priceCents: 1200 },
     { productId: "pro_year", plan: "pro", period: "year", priceCents: 9800 },
-    { productId: "max_month", plan: "max", period: "month", priceCents: 2800 },
-    { productId: "max_year", plan: "max", period: "year", priceCents: 23800 }
+    { productId: "max_month", plan: "max", period: "month", priceCents: 2500 },
+    { productId: "max_year", plan: "max", period: "year", priceCents: 19800 }
   ],
   active: { "pro.month": "pro_month", "pro.year": "pro_year", "max.month": "max_month", "max.year": "max_year" }
 };
@@ -153,10 +153,10 @@ function adminOrder(row) {
 }
 
 function currentPlan(acc) {
-  return {
-    tier: core.planTier(acc),
-    until: acc.plan_until == null ? null : Number(acc.plan_until)
-  };
+  var tier = core.planTier(acc);
+  var until = acc.plan_until == null ? null : Number(acc.plan_until);
+  var lapsed = tier === "free" && RANK[acc.plan] > 0 && until != null && until <= Date.now();
+  return { tier: tier, until: until, expired: lapsed ? { tier: acc.plan, until: until } : null };
 }
 
 function loginGate(deps) {

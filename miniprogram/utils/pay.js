@@ -137,12 +137,53 @@ function buy(plan, period) {
         .then(() => settle(outTradeNo, CONFIRM_TRIES), () => settle(outTradeNo, 1))
         .then((order) => {
           if (order && order.status === "paid") {
+            expiryCache = { at: 0, plan: null };
             return entitlement.sync().then(() => ({ ok: true, order: order }));
           }
           return failure("没有完成支付", { outTradeNo: outTradeNo });
         });
     })
     .catch((err) => failure((err && err.message) || "下单失败"));
+}
+
+const EXPIRY_WARN_DAYS = 7;
+const EXPIRED_SHOW_DAYS = 30;
+const EXPIRY_CACHE_MS = 5 * 60 * 1000;
+const DAY_MS = 24 * 3600 * 1000;
+
+let expiryCache = { at: 0, plan: null };
+
+function expiryOf(plan) {
+  if (!plan) return null;
+  if (plan.expired && Date.now() - Number(plan.expired.until) < EXPIRED_SHOW_DAYS * DAY_MS) {
+    return { kind: "expired", tier: plan.expired.tier, days: 0 };
+  }
+  if (plan.tier === "free" || !plan.until) return null;
+  const days = Math.ceil((Number(plan.until) - Date.now()) / DAY_MS);
+  if (days < 1 || days > EXPIRY_WARN_DAYS) return null;
+  return { kind: "soon", tier: plan.tier, days: days };
+}
+
+function expiryText(e) {
+  if (!e) return null;
+  const name = tierName(e.tier);
+  if (e.kind === "expired") return { title: name + " 已到期", sub: "重新开通即可恢复" };
+  return { title: name + " 还有 " + e.days + " 天到期", sub: "去续订，在原到期日后顺延" };
+}
+
+function planInfo() {
+  if (Date.now() - expiryCache.at < EXPIRY_CACHE_MS) return Promise.resolve(expiryCache.plan);
+  return catalog().then(
+    (res) => {
+      expiryCache = { at: Date.now(), plan: (res && res.plan) || null };
+      return expiryCache.plan;
+    },
+    () => null
+  );
+}
+
+function expiry() {
+  return planInfo().then(expiryOf);
 }
 
 function reconcile() {
@@ -193,6 +234,9 @@ module.exports = {
   orders,
   buy,
   reconcile,
+  planInfo,
+  expiry,
+  expiryText,
   newFeatures,
   tierName,
   adminOrders,

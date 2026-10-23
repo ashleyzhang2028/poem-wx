@@ -1,6 +1,7 @@
 const entitlement = require("../../utils/entitlement");
 const icons = require("../../utils/icons");
 const view = require("../../utils/tier-view");
+const pay = require("../../utils/pay");
 
 function noteOf(snap) {
   if (!snap.logged) return "未登录，暂按 Free";
@@ -20,6 +21,7 @@ Component({
     heads: [],
     logged: false,
     paid: false,
+    expiry: null,
     compareRows: [],
     stats: { caps: 0, enabled: 0, percent: 0 }
   },
@@ -73,6 +75,8 @@ Component({
         compareRows: rows,
         stats: view.stats()
       });
+
+      if (snap.logged) pay.expiry().then((e) => this.setData({ expiry: pay.expiryText(e) }));
     }
   }
 });

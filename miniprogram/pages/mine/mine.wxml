@@ -5,6 +5,16 @@
                  bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
                  bind:login="onLogin" bind:tier="onTier" />
 
+    <view class="card" wx:if="{{expiry}}">
+      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onPricing">
+        <view class="row-main">
+          <text class="row-title">{{expiry.title}}</text>
+          <text class="row-sub">{{expiry.sub}}</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+    </view>
+
     <view class="card">
       <view class="stats">
         <view class="stat">

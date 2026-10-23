@@ -16,8 +16,8 @@
 |---|---|
 | `pro_month` | ¥12 |
 | `pro_year` | ¥98 |
-| `max_month` | ¥28 |
-| `max_year` | ¥238 |
+| `max_month` | ¥25 |
+| `max_year` | ¥198 |
 
 价格与 MP 后台不一致时，微信会拒绝该笔支付。
 
