@@ -2,10 +2,6 @@ const store = require("./store");
 
 const KEY = "toneColor";
 
-const HUE_STEP = 15;
-
-const LIGHT = [96, 94, 90, 84, 74, 64, 54, 45, 37, 30, 24, 18];
-
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
 }
@@ -83,4 +79,4 @@ function clear() {
   store.saveSettings({ [KEY]: "" });
 }
 
-module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, hslToRgb, rgbToHsl, pick, current, set, clear };
+module.exports = { KEY, parseHex, hex, hslToRgb, rgbToHsl, pick, current, set, clear };

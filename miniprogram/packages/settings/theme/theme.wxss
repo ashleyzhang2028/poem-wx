@@ -200,29 +200,6 @@
   gap: var(--sp-2);
 }
 
-.tone-swatch {
-  flex: none;
-  width: var(--h-btn-mini);
-  height: var(--h-btn-mini);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1rpx var(--line-strong);
-}
-
-.tone-hex {
-  flex: none;
-  min-width: 132rpx;
-  height: var(--h-btn-mini);
-  padding: 0 var(--sp-3);
-  border-radius: var(--radius-pill);
-  background: var(--sink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--fs-caption);
-  color: var(--ink-2);
-  letter-spacing: 1rpx;
-  line-height: var(--h-btn-mini);
-  text-align: center;
-}
-
 .tone-input {
   flex: 1;
   min-width: 0;
@@ -269,6 +246,11 @@
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-pill);
   background: var(--sink);
+  transition: background-color var(--t-press);
+}
+
+.tone-preview-hover {
+  background: var(--line);
 }
 
 .tone-preview-title {
@@ -301,6 +283,13 @@
   text-align: right;
 }
 
+.tone-axis {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
 .tone-label {
   flex: none;
   width: 64rpx;
@@ -310,30 +299,17 @@
   line-height: 1.2;
 }
 
-.tone-axis {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-2);
+.tone-value {
+  flex: none;
+  width: 72rpx;
+  text-align: right;
 }
 
-.tone-axes {
-  display: flex;
-  gap: var(--sp-3);
-  margin-top: var(--sp-2);
-}
-
-.tone-axis-col {
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6rpx;
-  margin-top: 0;
-}
-
-.tone-axis-col .tone-label {
-  width: auto;
+.tone-value-num {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
 .tone-slider {
@@ -342,62 +318,21 @@
   min-width: 0;
 }
 
-.tone-strip {
-  display: flex;
-  gap: 2rpx;
-}
-
-.tone-cell {
-  flex: 1;
-  min-width: 0;
-  border-radius: 4rpx;
-  transition: transform var(--t-press);
-}
-
-.tone-cell:active {
-  transform: scale(.9);
-}
-
 .tone-band {
-  height: 44rpx;
-}
-
-.tone-track {
-  height: 40rpx;
-}
-
-.tone-plane {
-  margin-top: var(--sp-3);
-  padding: 2rpx;
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.tone-plane .tone-strip {
-  gap: 1rpx;
-}
-
-.tone-plane .tone-cell {
-  height: 18rpx;
-  border-radius: 0;
-}
-
-.tone-plane .tone-strip:first-child .tone-cell {
-  border-radius: 8rpx 8rpx 0 0;
-}
-
-.tone-plane .tone-strip:last-child .tone-cell {
-  border-radius: 0 0 8rpx 8rpx;
+  position: relative;
+  height: 48rpx;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
 }
 
 .tone-mark {
   position: absolute;
-  top: 0;
+  top: -2rpx;
+  bottom: -2rpx;
   width: 4rpx;
-  height: 100%;
+  margin-left: -2rpx;
   border-radius: 2rpx;
   background: var(--ink);
   box-shadow: 0 0 0 2rpx var(--surface);
-  transform: translateX(-2rpx);
   pointer-events: none;
 }

@@ -180,10 +180,6 @@ function parseHex(v) {
   return tone.parseHex(v);
 }
 
-function pct(index, count) {
-  return Math.round((index + 0.5) * 1000 / Math.max(1, count)) / 10 + "%";
-}
-
 function toneData() {
   const view = picker.read(tone.current());
   return {
@@ -192,13 +188,15 @@ function toneData() {
     toneRgba: view.rgba,
     toneSoft: view.soft,
     toneOnInk: view.on ? rgba(inkOn(tone.parseHex(view.hex)), 1) : "",
-    toneHueAt: pct(view.hueAt, view.bands.hue.length),
-    toneSatAt: pct(view.satAt, picker.SAT.length),
-    toneLightAt: pct(view.lightAt, picker.LIGHT.length),
-    toneBands: view.bands,
-    toneSat: view.satTrack,
-    toneLight: view.lightTrack,
-    tonePlane: view.plane,
+    toneHue: view.hue,
+    toneSat: view.sat,
+    toneLight: view.light,
+    toneHueAt: view.hueAt,
+    toneSatAt: view.satAt,
+    toneLightAt: view.lightAt,
+    toneHueRead: view.hueRead,
+    toneSatRead: view.satRead,
+    toneLightRead: view.lightRead,
     toneRead: view.read
   };
 }
