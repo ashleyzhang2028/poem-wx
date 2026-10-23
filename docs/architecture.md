@@ -769,7 +769,7 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
    + CDN），由 `wx.loadFontFace` 在真机上注册一次，落在这条链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
 
-**线上四款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
+**线上九款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
 清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
 | 款 | 键 | 字族 | 子集地址 |
@@ -778,14 +778,19 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 | 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved/huiwenmincho-improved-{free,pro}.{woff2,woff}` |
 | 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai/chillkai-{free,pro}.{woff2,woff}` |
 | 汇迹正楷 | `cooper` | `Kuibu Poem cooper` | `cooperzhengkai/cooperzhengkai-{free,pro}.{woff2,woff}` |
+| 霞鹜文楷 | `wenkai` | `Kuibu Poem wenkai` | `lxgwwenkai-regular/lxgwwenkai-regular-{free,pro}.{woff2,woff}` |
+| 京华老宋 | `oldsong` | `Kuibu Poem oldsong` | `kinghwa_oldsong_v3/kinghwa_oldsong_v3-{free,pro}.{woff2,woff}` |
+| 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro/chilljinshusongpro_regular-{free,pro}.{woff2,woff}` |
+| 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular/yozai-regular-{free,pro}.{woff2,woff}` |
+| 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular/chilllongcangkai_regular-{free,pro}.{woff2,woff}` |
 
 另有一份 7 字的预览子集（`-7.woff2` / `-7.woff`，只含「烟花三月下扬州」，约 3KB），
-只给主题页那四个字体格用，不进诗词正文的字体链。
+只给主题页那些字体格用，不进诗词正文的字体链。
 
-四款各注册一个字族，`--font-poem` 的首位跟着 `settings.font` 换名字 ——
+每款各注册一个字族，`--font-poem` 的首位跟着 `settings.font` 换名字 ——
 换字体不重排正文，也不影响后面那串系统衬线兜底。
 
-免费那档只能停在朱雀仿宋，用的也是它的 free 子集；Pro / Max 四款都能选，
+免费那档只能停在朱雀仿宋，用的也是它的 free 子集；Pro / Max 每款都能选，
 取的是所选那款的 pro 子集（字表更大）。所以「换款」与「换子集」是两件事，
 各由 `FONTS` 的键与 `pickable()` 定，不在字体这边另立一套档位判据。
 
@@ -816,11 +821,11 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 **全站只留一条字体链。** 详情页的题名、身份行、诗句正文，与列表里的书名、
 词牌、诗句摘句同取 `--font-poem`：行与行、页与页之间不该有两种宋体，
 同一批字在两张页面上字形不同，看起来是「两种字体」而不是「两个来源」。
-`--font-poem` 首位是所选那款，之后排另外三款已注册的字族，再往后才是系统衬线。
+`--font-poem` 首位是所选那款，之后再排其余各款已注册的字族，再往后才是系统衬线。
 
 **预览与正文是两套字族。** 主题页每个字体格里的「烟花三月下扬州」取 `font.preview(key)`，
 注册的是该款的 `-7` 子集，字族名为 `Kuibu Preview <款>`，与正文的
-`Kuibu Poem <款>` 不相干：一屏四款全部注册也只是四份 3KB，进页面先把四款都注册好，
+`Kuibu Poem <款>` 不相干：一屏九款全部注册也只是九份 3KB，进页面先把各款都注册好，
 点哪款、选哪款都不用等一次网络。选中后 `font.load()` 才注册完整那一份
 （free / pro），预览子集不参与正文排版。
 
