@@ -72,7 +72,7 @@
       </view>
     </view>
 
-    <view class="card pr-orders">
+    <view class="card">
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onOrders">
         <view class="row-main">
           <text class="row-title poem">支付记录</text>
