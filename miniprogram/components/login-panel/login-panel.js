@@ -67,7 +67,7 @@ Component({
     onLogout() {
       wx.showModal({
         title: "辞别",
-        content: "君之吟咏笔录，积日累月，皆藏云笈。此行暂歇，他日重至，诗章犹在。",
+        content: "吟咏笔录，积日累月，皆藏云笈。此行暂歇，他日重至，诗章犹在。",
         confirmText: "辞别",
         cancelText: "留步",
         success: (r) => (r && r.confirm ? this.leave() : null)
