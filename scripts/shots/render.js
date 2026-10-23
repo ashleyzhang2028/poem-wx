@@ -433,12 +433,14 @@ function expandPageBanner(wxml, data, navbar, pageWxss) {
     full,
     pagePadding: pageOwnPadding(pageWxss),
     cover: full ? banner.coverOf() : 0,
-    imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
+    imageHeight: Math.min(Math.round(width * 750 / 360), 360)
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<page-banner[^>]*\/>/g, (tag) => {
     const src = /src\s*=\s*"([^"]*)"/.exec(tag);
-    return comp.replace(/src="\{\{src\}\}"/, 'src="' + (src ? src[1] : "") + '"');
+    const fill = /mode\s*=\s*"aspectFill"/.test(comp) ? "object-fit:cover;" : "";
+    return comp.replace(/src="\{\{src\}\}"/, 'src="' + (src ? src[1] : "") + '"')
+      .replace(/<img /, '<img style="' + fill + '" ');
   });
 }
 
