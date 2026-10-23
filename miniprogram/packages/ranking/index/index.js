@@ -5,12 +5,15 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const gate = require("../../../utils/gate");
 const guard = require("../../../utils/guard");
+const entitlement = require("../../../utils/entitlement");
 
 Page({
   data: {
     themeStyle: "",
     barBelow: true,
     logged: false,
+    allowed: true,
+    tier: "max",
     games: ranking.GAMES,
     game: "exam",
     stages: ranking.STAGES,
@@ -45,14 +48,29 @@ Page({
 
   onShow() {
     theme.apply(this);
+    const allowed = entitlement.can("league");
     this.setData({
       barBelow: !!tabbar.pick(this),
-      logged: gate.logged()
+      logged: gate.logged(),
+      allowed: allowed,
+      tier: entitlement.tierOf("league")
     });
     this.load();
   },
 
+  onTier() {
+    entitlement.showTier("league", this);
+  },
+
+  onTierGate() {
+    wx.navigateTo({ url: "/packages/mine/tier/tier" });
+  },
+
   load() {
+    if (!this.data.allowed) {
+      this.setData({ state: "tier", reason: "" });
+      return;
+    }
     if (!this.data.logged) {
       this.setData({ state: "login", reason: "" });
       return;

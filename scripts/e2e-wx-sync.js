@@ -345,6 +345,7 @@ function makeWx(port, mem) {
       !(await shared.getSetting("ranking:fly")), "默认值落在库里 —— 换台机器、清一次库就变成关");
 
     await shared.patchAccount(store.profile().userId, { plan: "max" });
+    require(path.join(REPO, "miniprogram", "utils", "auth.js")).applySession({ tier: "max" });
 
     const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
     const relay = submitter.submitPlay("exam", { score: 7, total: 10, durationSec: 120 });

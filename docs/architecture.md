@@ -230,10 +230,15 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 `ranking:<game>` 缺行按**开**算，只有显式写 `0` 才算关，要关只能直接改库里那一行，
 `boardGate` 会挡住列表（提交仍照收）。
 
+看榜与参与都随 `league` 这一项能力门禁走（Max 起，`utils/league.js` 是唯一判据：
+`canJoin` 管看榜、`optedIn` 管上报、`canSwitch` 管设置里那颗开关）。
+Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗开关是灰的。
+
 参与与否由用户在「设置 · 综合」自己定，落在本机设置的 `leagueBoard` 键
 （随账号同步，服务端 `SETTINGS_KEYS` 里有这一项）。关掉之后
 `ranking-submit.submitPlay` 直接在端上返回，请求根本不发 —— 隐私政策里
 「关掉这个开关就不再上报」这句说的是这件事，别把它又挪到服务端去拦。
+`optedIn` 读的是 `league.optedIn`，档位与开关在同一处判定，不各写一份。
 
 接口一律 `POST /api/ranking` + `op`（`visible` / `list` / `submit`），
 与 `exam/records` 那种「一个口几件事」同形，不另立一套风格。
