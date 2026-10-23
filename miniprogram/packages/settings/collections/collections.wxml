@@ -9,7 +9,7 @@
       <text class="card-title">自选背诵</text>
       <tier-tag wx:if="{{!on}}" tier="{{tier}}" />
     </view>
-    <text class="hint coll-lead">把课外阅读或搜索里看到的篇目加入自己的集合，按选定算法跟着背。</text>
+    <text class="hint coll-lead">从课外阅读或搜索页添加篇目，按既定算法复习。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
@@ -26,11 +26,8 @@
         <view class="row-main" hover-class="row-main-hover" hover-stay-time="60"
               data-id="{{c.id}}" bindtap="onToggleList">
           <text class="row-title poem">{{c.name}}</text>
-          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}%</text>
-          <view class="coll-meter">
-            <view class="meter"><view class="meter-fill" style="width:{{c.masteredPercent}}%"></view></view>
-            <text class="coll-meter-t">今日 {{c.planned}} 首</text>
-          </view>
+          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}% · 今日 {{c.planned}} 首</text>
+          <view class="meter coll-meter"><view class="meter-fill" style="width:{{c.masteredPercent}}%"></view></view>
         </view>
         <text class="row-go" data-id="{{c.id}}" bindtap="onProgress">›</text>
         <text class="all-toggle {{c.open ? 'open' : ''}}" data-id="{{c.id}}" bindtap="onToggleList"></text>
