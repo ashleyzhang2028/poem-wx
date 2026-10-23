@@ -1586,6 +1586,11 @@ const GATED = {
         && !/onDeleteThread|onDeleteComment|canDelete/.test(fbWxml),
       "反馈页或后台又摆出了删除入口 —— 记录是台账，删了就对不上账");
 
+    ok("登录回来就把服务端给的角色记进本机会话（重启后后台那些按钮才出得来）",
+      /saveSession\(\{[^}]*role: role\s*\}/.test(read("utils/auth.js"))
+        && /store\.profile\(\)\.role/.test(read("utils/auth.js")),
+      "角色只落在 auth 那份里，profile 侧的 isAdmin() 重启后读不到 —— 按钮被自己藏起来");
+
     ok("限流按人算，不按设备算（uid 换成设备号等于删掉限流）",
       /function feedbackRateGate\(deps, uid\)[\s\S]{0,200}"uid"/.test(serverCore)
         && /uid: \[\[3600000, 10\], \[86400000, 30\]\]/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "config.js"), "utf8")),

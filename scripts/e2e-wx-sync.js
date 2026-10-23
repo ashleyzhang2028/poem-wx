@@ -670,6 +670,12 @@ function makeWx(port, mem) {
           === (listed.threads.filter((t) => t.tid === first.thread.tid)[0].comments || []).length,
       JSON.stringify(stillThere.threads.map((t) => t.tid)));
 
+    await auth2.refresh();
+    const adminSession = require(path.join(REPO, "miniprogram", "utils", "admin.js"));
+    ok("刷新会话后本机认得出管理员（重启后后台那些按钮才出得来）",
+      adminSession.canWrite() === true && adminSession.loggedIn() === true,
+      JSON.stringify({ role: store.profile().role, ready: adminSession.canWrite() }));
+
     await svStore.patchAccount(store.profile().userId, { role: me.role || "user" });
   }
 
