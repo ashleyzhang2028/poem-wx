@@ -1,0 +1,42 @@
+.od-eyebrow {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.od-plan-name {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-hero);
+  color: var(--strong-text);
+  line-height: var(--lh-tight);
+}
+
+.od-plan-sub {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.od-go {
+  margin-top: var(--sp-3);
+}
+
+.od-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+}
+
+.od-price {
+  font-family: var(--font-num);
+  font-size: var(--fs-title);
+  color: var(--ink-strong);
+  margin-bottom: var(--sp-1);
+}
+
+.od-id {
+  word-break: break-all;
+}

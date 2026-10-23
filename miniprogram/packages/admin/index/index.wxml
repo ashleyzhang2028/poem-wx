@@ -89,7 +89,17 @@
       <text class="row-go">›</text>
     </view>
 
-    <text class="hint note" wx:else>管理要登录</text>
+    <view class="row row-flush" wx:if="{{logged}}"
+          hover-class="row-hover" hover-stay-time="60" bindtap="onPay">
+      <view class="row-icon">付</view>
+      <view class="row-main">
+        <text class="row-title">支付与价格</text>
+        <text class="row-sub">购买记录 · 价格 · 促销</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+
+    <text class="hint note" wx:if="{{!logged}}">管理要登录</text>
   </view>
 
   <view class="safe-bottom"></view>

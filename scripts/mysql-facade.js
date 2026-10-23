@@ -12,6 +12,7 @@ const db = {
   feedback_threads: new Map(),
   feedback_comments: new Map(),
   exam_records: new Map(),
+  pay_orders: new Map(),
   score_records: new Map(),
   avatars: new Map(),
   app_settings: new Map(),
@@ -30,6 +31,7 @@ const PK = {
   feedback_threads: ["tid"],
   feedback_comments: ["cid"],
   exam_records: ["eid"],
+  pay_orders: ["out_trade_no"],
   score_records: ["srid"],
   avatars: ["uid"],
   app_settings: ["skey"],
@@ -226,7 +228,8 @@ const facade = {
           const keyParams = params.slice(sets.length);
           let n = 0;
           all.forEach((r) => {
-            const hit = !whereTerms(sql).length || whereTerms(sql).every((t2) => testTerm(r, t2, keyParams.slice()));
+            const rowParams = keyParams.slice();
+            const hit = !whereTerms(sql).length || whereTerms(sql).every((t2) => testTerm(r, t2, rowParams));
             if (!hit) return;
             sets.forEach((c) => {
               if (pkCols.indexOf(c) < 0) r[c] = setParams.shift();

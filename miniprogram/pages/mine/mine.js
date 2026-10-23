@@ -10,6 +10,7 @@ const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
 const gate = require("../../utils/gate");
 const guard = require("../../utils/guard");
+const pay = require("../../utils/pay");
 
 Page({
   data: {
@@ -26,6 +27,7 @@ Page({
     tierLabel: "Free",
 
     manageOn: false,
+    expiry: null,
 
     syncSub: "",
     themeName: "",
@@ -70,6 +72,19 @@ Page({
     });
 
     this.syncClass();
+    this.loadExpiry();
+  },
+
+  loadExpiry() {
+    if (!this.data.logged) {
+      if (this.data.expiry) this.setData({ expiry: null });
+      return;
+    }
+    pay.expiry().then((e) => this.setData({ expiry: pay.expiryText(e) }));
+  },
+
+  onPricing() {
+    wx.navigateTo({ url: "/packages/mine/pricing/pricing" });
   },
 
   syncClass() {

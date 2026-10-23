@@ -1,6 +1,7 @@
 const store = require("../../utils/store");
 const auth = require("../../utils/auth");
 const loginFlow = require("../../utils/login-flow");
+const pay = require("../../utils/pay");
 
 Component({
   options: {
@@ -11,7 +12,18 @@ Component({
     tierLabel: { type: String, value: "" }
   },
 
+  observers: {
+    tierLabel(label) {
+      const key = String(label || "").toLowerCase();
+      const tierKey = key === "pro" || key === "max" ? key : "free";
+      this.setData({ tierKey: tierKey });
+      this.loadSub(tierKey);
+    }
+  },
+
   data: {
+    tierKey: "free",
+    sub: "",
     logged: false,
     nickname: "",
     avatarUrl: "",
@@ -23,6 +35,17 @@ Component({
   },
 
   methods: {
+    loadSub(tierKey) {
+      if (tierKey === "free" || !this.data.logged) {
+        if (this.data.sub) this.setData({ sub: "" });
+        return;
+      }
+      pay.planInfo().then((plan) => {
+        const until = plan && plan.until;
+        this.setData({ sub: pay.tierName(tierKey) + (until ? " · 至 " + pay.dateText(until) : " · 长期有效") });
+      });
+    },
+
     refresh() {
       const profile = store.profile();
       this.setData({

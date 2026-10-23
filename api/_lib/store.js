@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, scoreRecords: {}, avatars: {}, settings: {} };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {} };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -341,6 +341,28 @@ function memoryStore() {
       return Promise.resolve(true);
     },
 
+    putPayOrder: function (row) { db.payOrders[row.out_trade_no] = row; return Promise.resolve(row); },
+    getPayOrder: function (outTradeNo) { return Promise.resolve(db.payOrders[outTradeNo] || null); },
+    patchPayOrder: function (outTradeNo, patch) {
+      var cur = db.payOrders[outTradeNo];
+      if (!cur) return Promise.resolve(null);
+      Object.keys(patch).forEach(function (k) { cur[k] = patch[k]; });
+      return Promise.resolve(cur);
+    },
+    claimPayOrder: function (outTradeNo, fromStatus, patch) {
+      var cur = db.payOrders[outTradeNo];
+      if (!cur || cur.status !== fromStatus) return Promise.resolve(false);
+      Object.keys(patch).forEach(function (k) { cur[k] = patch[k]; });
+      return Promise.resolve(true);
+    },
+    listPayOrders: function (filter, limit) {
+      var f = filter || {};
+      var out = Object.keys(db.payOrders).map(function (k) { return db.payOrders[k]; }).filter(function (r) {
+        return (!f.uid || r.uid === f.uid) && (!f.status || r.status === f.status);
+      });
+      out.sort(function (a, b) { return b.created_at - a.created_at; });
+      return Promise.resolve(out.slice(0, limit || 50));
+    },
     getSetting: function (key) { return Promise.resolve(db.settings[key] || null); },
     putSetting: function (key, value) {
       db.settings[key] = { key: key, value: value == null ? null : value };

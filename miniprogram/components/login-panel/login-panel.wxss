@@ -122,3 +122,29 @@
   height: var(--h-field);
   margin-top: var(--sp-4);
 }
+
+.tier-pro .avatar-wrap {
+  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--strong);
+}
+
+.tier-max .avatar-wrap {
+  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--gold), 0 0 24rpx var(--gold-soft);
+}
+
+.tier-pro .tier-chip {
+  color: var(--strong-text);
+  background: var(--strong-soft);
+  border-color: var(--strong);
+}
+
+.tier-max .tier-chip {
+  color: var(--ink);
+  background: var(--gold-soft);
+  border-color: var(--gold);
+}
+
+.tier-max .tier-chip::before {
+  content: "✦";
+  margin-right: 6rpx;
+  color: var(--gold);
+}

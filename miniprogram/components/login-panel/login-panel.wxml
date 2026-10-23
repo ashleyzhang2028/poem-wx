@@ -1,5 +1,5 @@
 <view class="card identity" wx:if="{{logged}}">
-  <view class="identity-row">
+  <view class="identity-row tier-{{tierKey}}">
     <view class="avatar-wrap">
       <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
       <view class="avatar-fallback" wx:else>{{avatarChar}}</view>
@@ -11,7 +11,7 @@
       <view class="identity-main-text" bindtap="onName">
         <text class="identity-name">{{nickname}}</text>
       </view>
-      <text class="identity-sub">已登录 · 微信账号</text>
+      <text class="identity-sub">{{sub || '已登录 · 微信账号'}}</text>
     </view>
 
     <view class="identity-acts">

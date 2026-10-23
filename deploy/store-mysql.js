@@ -379,6 +379,26 @@ function mysqlStore(cfg) {
       return query("DELETE FROM exam_records WHERE eid = ?", [String(eid || "")]).then(function () { return true; });
     },
 
+    putPayOrder: function (row) { return insertRow("pay_orders", row, ["out_trade_no"]); },
+    getPayOrder: function (outTradeNo) { return getRow("pay_orders", "out_trade_no", outTradeNo); },
+    patchPayOrder: function (outTradeNo, patch) { return patchRow("pay_orders", "out_trade_no", outTradeNo, patch, true); },
+    claimPayOrder: function (outTradeNo, fromStatus, patch) {
+      var cols = safeCols(nonProto(patch));
+      var sets = cols.map(function (c) { return "`" + c + "` = ?"; }).join(", ");
+      var values = cols.map(function (c) { return patch[c]; }).concat([String(outTradeNo || ""), String(fromStatus)]);
+      return query("UPDATE pay_orders SET " + sets + " WHERE out_trade_no = ? AND status = ?", values)
+        .then(function (r) { return Number(r && r.affectedRows) === 1; });
+    },
+    listPayOrders: function (filter, limit) {
+      var f = filter || {};
+      var where = [], params = [];
+      if (f.uid) { where.push("uid = ?"); params.push(String(f.uid)); }
+      if (f.status) { where.push("status = ?"); params.push(String(f.status)); }
+      var sql = "SELECT * FROM pay_orders" + (where.length ? " WHERE " + where.join(" AND ") : "")
+        + " ORDER BY created_at DESC LIMIT " + Number(limit || 50);
+      return query(sql, params).then(function (rows) { return rows || []; });
+    },
+
     putScoreRecord: function (row) {
       return insertRow("score_records", row, ["srid"]).then(function () { return { srid: row.srid }; });
     },

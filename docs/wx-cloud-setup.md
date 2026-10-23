@@ -444,6 +444,10 @@ curl -s -X POST https://<域>/api/sync/pull \
 
 ---
 
+## 八点七、虚拟支付
+
+配置步骤见 [`virtual-pay-setup.md`](virtual-pay-setup.md)。
+
 ## 出问题了先看这里
 
 | 现象 | 原因 | 处理 |

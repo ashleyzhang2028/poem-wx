@@ -61,6 +61,12 @@ var CONFIG = {
   wxSecret: env("WX_SECRET"),
   wxApiBase: env("WX_API_BASE", "https://api.weixin.qq.com"),
 
+  payOfferId: env("WX_PAY_OFFER_ID"),
+  payAppKey: env("WX_PAY_APPKEY"),
+  paySandboxAppKey: env("WX_PAY_SANDBOX_APPKEY"),
+  payPushToken: env("WX_PAY_PUSH_TOKEN"),
+  payEnv: env("WX_PAY_ENV", "0") === "1" ? 1 : 0,
+
   cookieName: env("COOKIE_NAME", "kbsid"),
 
   mailRetryMax: intEnv("MAIL_RETRY_MAX", 2),
@@ -98,6 +104,16 @@ CONFIG.turnstileReady = function () {
   if (c.turnstileBypass === true) return false;
   if (!String(c.turnstileSiteKey || "").trim()) return false;
   return c.turnstileEnabled === true && String(c.turnstileSecretKey || "").length > 0;
+};
+
+CONFIG.payKeyOf = function () {
+  var c = (this && this.payAppKey !== undefined) ? this : CONFIG;
+  return String((c.payEnv === 1 ? c.paySandboxAppKey : c.payAppKey) || "");
+};
+
+CONFIG.hasPay = function () {
+  var c = (this && this.payAppKey !== undefined) ? this : CONFIG;
+  return !!(c.payOfferId && CONFIG.payKeyOf.call(c) && c.wxAppId && c.wxSecret);
 };
 
 CONFIG.hasAvatarStore = function () {

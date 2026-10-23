@@ -2,15 +2,15 @@
 
   <view class="card">
     <view class="card-title">隐私政策</view>
-    <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，一切只在这台手机上，不向外发送。登录后，背诵记录会同步到服务器，换手机可以接着背；昵称也会存到服务器，并可能以打码形式出现在排行榜上。</text>
+    <text class="policy-lede">跬步是一款古诗词背诵工具。不登录时，数据只在这台手机上，不向我们发送。登录后，学习记录会同步到服务器；你购买会员、提交意见、参与排行榜时，相应信息也会存到服务器。本政策说明这些信息的处理规则，请你在使用前认真阅读。</text>
     <text class="policy-meta">更新日期：{{updated}}</text>
   </view>
 
   <view class="card">
-    <view class="card-title">一、我们是谁</view>
+    <view class="card-title">一、运营者</view>
     <text class="policy-p">运营者：跬步个人开发者。</text>
     <text class="policy-p">联系邮箱：{{contact}}</text>
-    <text class="policy-p">对本政策或你的个人信息有任何疑问、意见或投诉，请发邮件联系。</text>
+    <text class="policy-p">对本政策或你的个人信息有疑问、意见或投诉，请发邮件联系，我们将在核实身份后的合理期限内答复。</text>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCopyContact">
       <view class="row-main"><text class="row-title">复制联系邮箱</text></view>
       <text class="row-go">›</text>
@@ -18,30 +18,33 @@
   </view>
 
   <view class="card">
-    <view class="card-title">二、我们处理哪些信息</view>
-    <text class="policy-p">不登录：不收集任何个人信息。阅读、背诵、搜索等功能照常使用，记录只存在这台手机上。</text>
-    <text class="policy-p">登录时：我们把微信提供的登录凭证交给服务器，由服务器向微信换取你的 openid（你在本小程序内的匿名标识），用来认出这份记录是你的。同时会上传一个本小程序首次运行时在手机上随机生成的设备编号，用于区分同一账号的不同设备，它不是系统设备标识。</text>
-    <text class="policy-p">昵称：由你主动填写（也可一键使用微信昵称），不填则不收集。登录后昵称保存到服务器，用于换手机后显示，以及排行榜显示。</text>
-    <text class="policy-p">头像：由你主动选择，只保存在这台手机上，不上传，别人看不到。</text>
-    <text class="policy-p">学习数据：背诵进度、各书已读标记、今日加背、自选集合，以及学段、年级、学期、每日数量、复习算法、字号、对齐、注音、主题等设置。登录后同步到服务器。音效开关与最近搜索只留在本机。</text>
-    <text class="policy-p">排行榜成绩：设置里打开「参与古诗文大会排行榜」后，你完成考试或飞花令时，会上报玩法、学段、年级、学期、成绩、总数、用时与时间。关掉这个开关就不再上报。</text>
-    <text class="policy-p">功能档位：Free / Pro / Max 由服务器按账号下发，与支付无关，本小程序不具备收款功能。</text>
-    <text class="policy-p">我们不收集手机号、位置、通讯录、相册、麦克风，不读取剪贴板；点「复制联系邮箱」时只向剪贴板写入邮箱。我们不接入第三方统计、广告或其他第三方 SDK。</text>
+    <view class="card-title">二、我们处理的信息</view>
+    <text class="policy-p">未登录：我们不收集任何个人信息。阅读、背诵、搜索等功能照常使用，记录只存于本机。</text>
+    <text class="policy-p">登录：我们将微信登录凭证交给服务器，由服务器向微信换取你的 openid（你在本小程序内的标识，如微信返回也包括 unionid），用于识别账号。同时上传本小程序首次运行时随机生成的设备编号，用于区分同一账号的不同设备，它不是系统设备标识。</text>
+    <text class="policy-p">昵称：由你主动填写（可一键使用微信昵称），不填则不收集。登录后保存到服务器，用于换机后显示与排行榜显示。</text>
+    <text class="policy-p">头像：由你主动选择，只保存在本机，不上传。</text>
+    <text class="policy-p">学习数据：背诵进度、已读标记、今日加背、自选集合，以及学段、年级、学期、每日数量、复习算法、字号、对齐、注音、主题等设置。登录后同步到服务器；音效开关与最近搜索只留在本机。</text>
+    <text class="policy-p">排行榜成绩：开启「参与古诗文大会排行榜」后，你完成考试或飞花令时，会上报玩法、学段、年级、学期、成绩、总数、用时与时间。关闭开关后不再上报。</text>
+    <text class="policy-p">意见建议：你提交意见时，我们保存你填写的类别、标题与正文、后续往来回复，以及账号标识、设备编号与昵称。请勿在其中填写手机号、住址、证件号等敏感信息。</text>
+    <text class="policy-p">会员订单：你购买会员时，我们记录业务单号、支付平台单号、openid、账号标识、档位与周期、金额、支付状态、下单 / 支付 / 退款时间，以及支付平台推送的订单通知内容。银行卡号、支付密码等支付工具信息由微信支付或 Apple 处理，我们不接触、不保存。登录时取得的会话密钥仅用于本次下单签名，不保存。</text>
+    <text class="policy-p">我们不收集手机号、位置、通讯录、相册、麦克风，不读取剪贴板（点「复制联系邮箱」只写入邮箱）。我们不接入第三方统计、广告或其他第三方 SDK。</text>
   </view>
 
   <view class="card">
     <view class="card-title">三、使用目的</view>
-    <text class="policy-p">openid 与设备编号：登录、识别账号、跨设备同步。</text>
-    <text class="policy-p">昵称：显示称呼，排行榜显示。</text>
-    <text class="policy-p">学习数据：安排复习计划，换手机后恢复进度。</text>
-    <text class="policy-p">排行榜成绩：生成按学段、年级、学期、日周月年划分的榜单。</text>
+    <text class="policy-p">openid、设备编号：登录、识别账号、跨设备同步。</text>
+    <text class="policy-p">昵称：显示称呼与排行榜显示。</text>
+    <text class="policy-p">学习数据：安排复习计划，换机后恢复进度。</text>
+    <text class="policy-p">排行榜成绩：生成按学段、年级、学期与日周月年划分的榜单。</text>
+    <text class="policy-p">意见建议：受理、答复、改进产品，并识别重复或滥用提交。</text>
+    <text class="policy-p">会员订单：开通与续订会员、对账、处理退款与支付异常、防范欺诈，以及履行法定留存义务。</text>
     <text class="policy-p">我们不用这些信息做用户画像、广告或营销。</text>
   </view>
 
   <view class="card">
     <view class="card-title">四、存储与保存期限</view>
-    <text class="policy-p">本机数据存在手机里，卸载小程序时一并清除。</text>
-    <text class="policy-p">服务器数据存放在中国境内的腾讯云（上海地域），在你的账号存续期间保存。在「我的 → 设置 → 清空数据」中清空后，本机与服务器上的学习记录一并删除，无法找回。</text>
+    <text class="policy-p">本机数据存于手机，卸载小程序时一并清除。</text>
+    <text class="policy-p">服务器数据存放于中国境内的腾讯云，在账号存续期间保存。在「我的 → 设置 → 清空数据」清空后，本机与服务器上的学习记录一并删除，无法找回。</text>
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onMine">
       <view class="row-main">
         <text class="row-title">去「我的」清除记录</text>
@@ -49,39 +52,45 @@
       </view>
       <text class="row-go">›</text>
     </view>
+    <text class="policy-p">会员订单：依照《电子商务法》等法律法规，交易信息自交易完成之日起保存不少于三年。注销账号不删除订单记录，保存期满后删除或匿名化。</text>
+    <text class="policy-p">意见建议：注销账号后，意见与账号标识解除关联；你可发邮件要求我们删除该内容。</text>
     <text class="policy-p">字体与主题图片从腾讯云存储下载，请求不携带你的账号与学习数据。托管平台可能按行业惯例生成常规访问日志（时间、来源 IP 等），我们仅在排查故障与处置安全问题时使用。</text>
   </view>
 
   <view class="card">
-    <view class="card-title">五、共享与披露</view>
-    <text class="policy-p">我们不出售、不出租你的信息，也不把你的头像给任何人。</text>
-    <text class="policy-p">处理方：微信负责登录；腾讯云提供服务器与存储。它们只按提供服务所必需的范围处理数据。</text>
-    <text class="policy-p">排行榜是唯一会向其他用户展示你信息的地方：榜上显示昵称的首末字，中间一律星号（「张三」显示为「张**三」），以及名次、成绩与用时；看不到头像，看不到你背了哪些篇目。未填昵称或昵称含违规内容时，以「诗友」加编号后四位显示，并同样打码。管理员在后台可见完整昵称，仅用于核对与处理问题。</text>
-    <text class="policy-p">排行榜参与开关默认打开，可以在「设置 · 综合」里关掉；关掉之后成绩不再上报，榜上也看不到你。分享给微信好友的只是固定页面或某一首诗，不带你的标识、昵称与记录。依法需要提供时，我们按法律办理。</text>
+    <view class="card-title">五、共享、委托处理与披露</view>
+    <text class="policy-p">我们不出售、不出租你的个人信息。</text>
+    <text class="policy-p">处理方：微信（登录）、微信支付与 Apple（iOS 端支付结算）、腾讯云（服务器与存储）。它们按各自的规则和提供服务所必需的范围处理数据，其处理行为适用其自身的隐私政策，我们对其独立的处理行为不承担责任。</text>
+    <text class="policy-p">排行榜是唯一向其他用户展示你信息的地方：榜上显示昵称的首末字，中间一律为星号（“张三”显示为“张**三”），以及名次、成绩与用时；看不到头像，看不到你背了哪些篇目。未填昵称或昵称含违规内容时，以“诗友”加编号后四位显示，并同样打码。</text>
+    <text class="policy-p">管理员在后台可查看完整昵称、订单信息与意见内容，仅用于核对与处理问题。</text>
+    <text class="policy-p">排行榜开关默认开启，可在「设置 · 综合」中关闭，关闭后成绩不再上报。分享给微信好友的只是固定页面或某一首诗，不带你的标识、昵称与记录。</text>
+    <text class="policy-p">依法需要时，我们会按法律法规、司法机关或行政机关的要求提供，并在法律允许的范围内告知你。</text>
   </view>
 
   <view class="card">
     <view class="card-title">六、你的权利</view>
-    <text class="policy-p">查看与更正：在「我的」页可查看并随时修改昵称，修改后榜上立即更新。</text>
-    <text class="policy-p">删除：「清空数据」可随时删除本机与服务器上的学习记录。注销账号，请发邮件至联系邮箱，我们核实后处理；注销后账号及其服务器数据一并删除。</text>
-    <text class="policy-p">撤回：可在「我的」中退出登录，之后数据不再同步。</text>
-    <text class="policy-p">拒绝提供昵称、头像等非必需信息，不影响背诵、复习、搜索等核心功能。</text>
+    <text class="policy-p">查看与更正：在「我的」页可查看并随时修改昵称；在「支付记录」可查看自己的订单；在「意见建议」可查看自己提交的意见与回复。</text>
+    <text class="policy-p">删除与注销：「清空数据」可删除本机与服务器上的学习记录。注销账号请发邮件至联系邮箱，我们核实身份后处理；注销后账号及其学习数据从服务器删除，订单记录按第四条保留。</text>
+    <text class="policy-p">撤回：可在「我的」中退出登录，之后数据不再同步；可关闭排行榜开关，之后成绩不再上报。已完成的处理不受撤回影响。</text>
+    <text class="policy-p">拒绝提供昵称、头像等非必需信息，不影响背诵、复习、搜索等核心功能。拒绝提供订单所需信息的，将无法购买会员。</text>
   </view>
 
   <view class="card">
     <view class="card-title">七、未成年人</view>
-    <text class="policy-p">未满十八周岁的用户，请在监护人的同意和指导下使用；不满十四周岁的，须由监护人代为登录并同意本政策。我们不设未成年人独立账号，不要求填写生日、真实姓名、学校或班级，不推送广告。</text>
+    <text class="policy-p">未满十八周岁的用户，应在监护人的同意和指导下使用；不满十四周岁的，须由监护人代为登录并同意本政策。我们不设未成年人独立账号，不要求填写生日、真实姓名、学校或班级，不推送广告。未成年人购买会员须取得监护人同意。</text>
     <text class="policy-p">监护人有权查看、更正、删除未成年人的记录，可发邮件要求我们处理。</text>
   </view>
 
   <view class="card">
-    <view class="card-title">八、安全</view>
-    <text class="policy-p">服务器仅开放必要访问，限制管理权限，妥善保管凭证。互联网没有绝对安全，也请你保管好自己的手机与微信。</text>
+    <view class="card-title">八、安全与责任范围</view>
+    <text class="policy-p">我们采取合理的技术与管理措施保护你的信息：服务器仅开放必要访问，限制管理权限，妥善保管凭证。</text>
+    <text class="policy-p">互联网不存在绝对安全。因第三方服务故障、不可抗力或你自身保管不善（如设备、微信账号被他人使用）造成的信息泄露，在法律允许的范围内，我们不承担责任；发生个人信息安全事件时，我们将依法采取补救措施并通知你。</text>
   </view>
 
   <view class="card">
-    <view class="card-title">九、政策更新</view>
-    <text class="policy-p">功能或法律变化时我们会更新本政策，并更新页首日期。涉及收集范围或用途变化的，会在使用时另行提示。</text>
+    <view class="card-title">九、政策更新与适用法律</view>
+    <text class="policy-p">功能或法律变化时我们会更新本政策与页首日期。涉及收集范围或用途重大变化的，会在使用时另行提示。继续使用即视为接受更新后的政策。</text>
+    <text class="policy-p">本政策适用中华人民共和国大陆地区法律；争议处理方式见《用户协议》。</text>
   </view>
 
   <view class="safe-bottom"></view>

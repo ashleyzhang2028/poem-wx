@@ -1,0 +1,161 @@
+const theme = require("../../../utils/theme");
+const tabbar = require("../../../utils/tabbar");
+const admin = require("../../../utils/admin");
+const pay = require("../../../utils/pay");
+
+const SLOTS = [
+  { plan: "pro", period: "month" },
+  { plan: "pro", period: "year" },
+  { plan: "max", period: "month" },
+  { plan: "max", period: "year" }
+];
+
+const PLAN_CHOICES = ["pro", "max"];
+const PERIOD_CHOICES = ["month", "year"];
+
+function slotKey(s) {
+  return s.plan + "." + s.period;
+}
+
+function slotViews(catalog) {
+  return SLOTS.map((s) => {
+    const options = catalog.products.filter((p) => p.plan === s.plan && p.period === s.period);
+    const activeId = catalog.active[slotKey(s)];
+    const active = options.filter((p) => p.productId === activeId)[0];
+    return {
+      key: slotKey(s),
+      title: pay.tierName(s.plan) + " " + pay.periodName(s.period),
+      activeText: active ? active.productId + " · ¥" + pay.yuan(active.priceCents) : "未设置",
+      labels: options.map((p) => p.productId + " · ¥" + pay.yuan(p.priceCents)),
+      ids: options.map((p) => p.productId)
+    };
+  });
+}
+
+function orderViews(list) {
+  return list.map((o) => ({
+    outTradeNo: o.outTradeNo,
+    head: pay.tierName(o.plan) + " " + pay.periodName(o.period) + " · ¥" + pay.yuan(o.priceCents),
+    statusTone: pay.statusTone(o.status),
+    statusText: pay.statusName(o.status) + (o.status === "paid" && !o.applied ? "（未发货）" : ""),
+    uid: o.uid,
+    openid: o.openid,
+    productId: o.productId,
+    wxOrderId: o.wxOrderId,
+    source: o.source,
+    createdText: pay.timeText(o.createdAt),
+    paidText: pay.timeText(o.paidAt),
+    untilText: pay.dateText(o.planUntilAfter),
+    refundedText: pay.timeText(o.refundedAt)
+  }));
+}
+
+Page({
+  data: {
+    themeStyle: "",
+    barBelow: true,
+    canWrite: false,
+    reason: "",
+    catalog: null,
+    slots: [],
+    orders: [],
+    summary: { count: 0, paidCount: 0, paidText: "0" },
+    filter: "all",
+    filters: [
+      { key: "all", name: "全部" },
+      { key: "paid", name: "已支付" },
+      { key: "pending", name: "待支付" },
+      { key: "refunded", name: "已退款" }
+    ],
+    draft: { productId: "", planIndex: 0, periodIndex: 0, price: "" },
+    planChoices: PLAN_CHOICES,
+    periodChoices: PERIOD_CHOICES
+  },
+
+  onShow() {
+    theme.apply(this);
+    this.setData({ barBelow: tabbar.below(this), canWrite: admin.canWrite() });
+    if (admin.canWrite()) this.load();
+  },
+
+  load() {
+    pay.adminCatalog().then((res) => {
+      if (!res.ok) {
+        this.setData({ reason: res.reason });
+        return;
+      }
+      this.setData({ catalog: res.catalog, slots: slotViews(res.catalog), reason: "" });
+    });
+    this.loadOrders();
+  },
+
+  loadOrders() {
+    const filter = this.data.filter === "all" ? {} : { status: this.data.filter };
+    pay.adminOrders(filter).then((res) => {
+      if (!res.ok) {
+        this.setData({ reason: res.reason });
+        return;
+      }
+      this.setData({
+        orders: orderViews(res.orders),
+        summary: {
+          count: res.summary.count,
+          paidCount: res.summary.paidCount,
+          paidText: pay.yuan(res.summary.paidCents)
+        }
+      });
+    });
+  },
+
+  onFilter(e) {
+    this.setData({ filter: e.detail.value });
+    this.loadOrders();
+  },
+
+  save(next) {
+    pay.adminSaveCatalog(next).then((res) => {
+      if (!res.ok) {
+        wx.showToast({ title: res.reason, icon: "none" });
+        return;
+      }
+      this.setData({ catalog: res.catalog, slots: slotViews(res.catalog) });
+      wx.showToast({ title: "已保存", icon: "success" });
+    });
+  },
+
+  onPickActive(e) {
+    const slot = this.data.slots[e.currentTarget.dataset.index];
+    const picked = slot.ids[Number(e.detail.value)];
+    if (!picked) return;
+    const active = Object.assign({}, this.data.catalog.active);
+    active[slot.key] = picked;
+    this.save({ products: this.data.catalog.products, active: active });
+  },
+
+  onDraft(e) {
+    const field = e.currentTarget.dataset.field;
+    this.setData({ ["draft." + field]: e.detail.value });
+  },
+
+  onAddProduct() {
+    const d = this.data.draft;
+    const priceCents = Math.round(Number(d.price) * 100);
+    if (!d.productId || !(priceCents > 0)) {
+      wx.showToast({ title: "道具 ID 和价格要填", icon: "none" });
+      return;
+    }
+    const products = this.data.catalog.products.concat([{
+      productId: String(d.productId).trim(),
+      plan: PLAN_CHOICES[Number(d.planIndex)],
+      period: PERIOD_CHOICES[Number(d.periodIndex)],
+      priceCents: priceCents
+    }]);
+    this.save({ products: products, active: this.data.catalog.active });
+    this.setData({ draft: { productId: "", planIndex: 0, periodIndex: 0, price: "" } });
+  },
+
+  onCopy(e) {
+    const text = e.currentTarget.dataset.text;
+    if (text) wx.setClipboardData({ data: text });
+  }
+});
