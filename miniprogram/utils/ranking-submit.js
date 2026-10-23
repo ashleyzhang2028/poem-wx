@@ -1,6 +1,7 @@
 const store = require("./store");
 const remote = require("./remote");
 const ranking = require("./ranking");
+const league = require("./league");
 
 function entryOf(game) {
   const self = ranking.selfGrade(store.settings());
@@ -19,7 +20,7 @@ function submit(entry) {
 }
 
 function optedIn() {
-  return store.settings().leagueBoard !== false;
+  return league.optedIn();
 }
 
 function submitPlay(game, fact) {

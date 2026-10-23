@@ -41,7 +41,8 @@ const CAPS = [
   { key: "font", name: "字体", desc: "汇文明朝 · 寒蝉正楷，正文题名一起换", tier: "pro" },
   { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
-  { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" }
+  { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" },
+  { key: "league", name: "排行榜", desc: "考试成绩与飞花令成绩上榜，分学段比", tier: "max" }
 ];
 
 function cellFor(cap, tier) {
@@ -158,6 +159,7 @@ const VIEW_NAME = {
   quiz: "大会·题库",
   feihualing: "大会·飞花令",
   exam: "大会·考试",
+  league: "大会·排行榜",
   sights: "主题·大好河山",
   ownbanner: "主题·自选 banner",
   font: "主题·字体选择",
@@ -171,7 +173,7 @@ const COMPARE_ORDER = [
   "daily", "extra", "collections", "progress", "seasonal", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "search",
-  "quiz", "feihualing", "exam",
+  "quiz", "feihualing", "exam", "league",
   "sights", "ownbanner", "font", "coursefree", "sync"
 ];
 
@@ -180,7 +182,7 @@ function compareNameOf(cap) {
 }
 
 function leagueRow(join) {
-  const on = rankOf(tiers.TIERS[tiers.TIERS.length - 1].key);
+  const on = rankOf(leagueTier());
   return {
     cap: "league:" + (join ? "join" : "off"),
     name: LEAGUE_NAME + (join ? "" : "·不参与"),
@@ -191,6 +193,11 @@ function leagueRow(join) {
       on: rankOf(t.key) >= on
     }))
   };
+}
+
+function leagueTier() {
+  const cap = CAPS.find((c) => c.key === "league");
+  return cap ? cap.tier : "max";
 }
 
 function capRow(cap, now) {
@@ -217,7 +224,7 @@ function compareRows(snap) {
     const cap = CAPS.find((c) => c.key === key);
     if (!cap) return;
     rows.push(capRow(cap, now));
-    if (key === "exam") rows.push(leagueRow(true), leagueRow(false));
+    if (key === "league") rows.push(leagueRow(true), leagueRow(false));
   });
   CAPS.forEach((c) => {
     if (COMPARE_ORDER.indexOf(c.key) < 0) rows.push(capRow(c, now));
@@ -419,6 +426,7 @@ module.exports = {
   TIER_RANK,
   rankOf,
   tierOf,
+  leagueTier,
   status,
   snapshot,
   can,

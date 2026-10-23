@@ -7,6 +7,7 @@ const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
+const league = require("../../../utils/league");
 const icons = require("../../../utils/icons");
 const scale = require("../../../utils/type-scale");
 const corpus = require("../../../utils/corpus");
@@ -50,7 +51,9 @@ Page({
     seasonalLock: false,
     seasonalTier: "pro",
 
-    leagueBoardOn: true
+    leagueBoardOn: true,
+    leagueLock: false,
+    leagueTier: "max"
   },
 
   onShow() {
@@ -74,7 +77,9 @@ Page({
         seasonalOn: !seasonal.switched(),
         seasonalLock: !seasonal.canSwitch(),
         seasonalTier: seasonal.tier(),
-        leagueBoardOn: settings.leagueBoard !== false,
+        leagueBoardOn: league.canJoin() && settings.leagueBoard !== false,
+        leagueLock: !league.canSwitch(),
+        leagueTier: league.tier(),
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
         sampleTokens: this.sample(prOn ? settings.pinyin : "off", size)
@@ -118,10 +123,10 @@ Page({
   },
 
   onLeagueBoard(e) {
-    const on = !!e.detail.value;
-    store.saveSettings({ leagueBoard: on });
-    this.setData({ leagueBoardOn: on });
-    sync.markDirty();
+    const r = league.setOn(e.detail.value);
+    if (!r.ok) wx.showToast({ title: league.tier() + " 起可用", icon: "none" });
+    this.setData({ leagueBoardOn: league.canJoin() && !league.switched(), leagueLock: !league.canSwitch() });
+    if (r.ok) sync.markDirty();
   },
 
   onSfx(e) {

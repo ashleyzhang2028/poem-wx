@@ -1263,7 +1263,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 16], ["max", 20]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 16], ["max", 21]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -1319,17 +1319,20 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("排行榜两行紧跟考试、只亮在最高档",
+  ok("排行榜两行紧跟排行榜能力、只亮在最高档",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
-      const at = rows.findIndex((r) => r.cap === "exam");
+      const at = rows.findIndex((r) => r.cap === "league");
       const [join, off] = rows.slice(at + 1, at + 3);
-      const top = tiersMod.TIER_KEYS[tiersMod.TIER_KEYS.length - 1];
-      return join && off && join.name !== off.name
+      const top = E.leagueTier();
+      const leagueRowIt = rows.filter((r) => r.cap === "league")[0];
+      return join && off && join.name !== off.name && leagueRowIt
+        && leagueRowIt.cells.map((c) => c.on).join()
+          === tiersMod.TIER_KEYS.map((k) => k === top).join()
         && [join, off].every((r) => r.cells.map((c) => c.on).join()
           === tiersMod.TIER_KEYS.map((k) => String(k === top)).join());
     })(),
-    "两行没跟着考试排，或者最高档之外也亮了");
+    "两行没跟着排行榜能力排，或者最高档之外也亮了");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
@@ -4872,6 +4875,7 @@ function mountFull(pg, query) {
   const generalWxml = read("packages/settings/general/general.wxml");
   const generalJs = read("packages/settings/general/general.js");
   const storeJs = read("utils/store.js");
+  const leagueJs = read("utils/league.js");
 
   ok("通用设置的「背完自动下一首」整块撤了（模板与处理函数都不留）",
     generalWxml.indexOf("onAutoNext") < 0 && !/onAutoNext/.test(generalJs),
@@ -4881,12 +4885,20 @@ function mountFull(pg, query) {
   ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
     /setTimeout\(\(\) => this\.goNext\(/.test(read("components/recite-sheet/recite-sheet.js")));
 
-  ok("古诗词大会那张卡在危险操作上方，开关落在 leagueBoard 上",
+  ok("古诗词大会那张卡在危险操作上方，开关落在 leagueBoard 上并且跟着档位走",
     generalWxml.indexOf("leagueBoardOn") >= 0
       && generalWxml.indexOf("leagueBoardOn") < generalWxml.indexOf("danger-zone")
-      && /onLeagueBoard[\s\S]{0,200}?saveSettings\(\{\s*leagueBoard/.test(generalJs)
-      && /leagueBoardOn:\s*settings\.leagueBoard !== false/.test(generalJs),
-    "卡片不在危险操作上方，或者开关没落到 leagueBoard（写死一个 true 等于没开关）");
+      && /function setOn[\s\S]{0,200}?saveSettings\(\{\s*leagueBoard/.test(leagueJs)
+      && /onLeagueBoard[\s\S]{0,300}?league\.setOn\(/.test(generalJs)
+      && /leagueLock:\s*!league\.canSwitch\(\)/.test(generalJs)
+      && /onLeagueBoard[\s\S]{0,300}?league\.canJoin\(\)/.test(generalJs),
+    "卡片不在危险操作上方，或者开关没落到 leagueBoard（写死一个 true 等于没开关），"
+      + "或者 Free 也能拨");
+
+  ok("设置里那个开关关掉之后成绩真的不再往榜单交（同一处口径）",
+    /function optedIn[\s\S]{0,100}?league\.optedIn\(\)/.test(read("utils/ranking-submit.js"))
+      && /function optedIn[\s\S]{0,120}?canJoin\(\)[\s\S]{0,120}?leagueBoard !== false/.test(leagueJs),
+    "开关写着有、提交那条路却没读同一处 —— 关掉照样上榜");
 
 }
 
@@ -7766,13 +7778,24 @@ function gapped(items, max) {
         && store3.cloudSettings().seasonal === false);
 
     const LEAGUE = require(path.join(ROOT, "utils", "ranking-submit.js"));
+    const LEAGUE_SET = require(path.join(ROOT, "utils", "league.js"));
+    asTier3("free");
+    store3.saveSettings({ leagueBoard: false });
+    ok("排行榜是 Max 起的一项门禁，Free 拨不动也不上报",
+      LEAGUE_SET.CAP === "league" && LEAGUE_SET.canSwitch() === false
+        && LEAGUE_SET.setOn(true).ok === false
+        && LEAGUE.optedIn() === false
+        && E.CAPS.filter((c) => c.key === "league")[0].tier === "max");
+
+    asTier3("max");
     store3.saveSettings({ leagueBoard: false });
     ok("参与排行榜默认为开、关掉之后成绩不再往榜单交",
       store3.DEFAULTS.leagueBoard === true && !store3.LOCAL_ONLY.leagueBoard
         && LEAGUE.optedIn() === false
         && store3.cloudSettings().leagueBoard === false);
     store3.saveSettings({ leagueBoard: true });
-    ok("开关打开时照常交榜（拦截只认那个键）", LEAGUE.optedIn() === true);
+    ok("开关打开时照常交榜（拦截只认那个键）",
+      LEAGUE_SET.setOn(true).ok === true && LEAGUE.optedIn() === true);
 
     asTier3("pro");
     SEASON.setOn(true);

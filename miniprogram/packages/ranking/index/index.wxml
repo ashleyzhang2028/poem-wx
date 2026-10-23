@@ -1,7 +1,16 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <lock-card wx:if="{{state === 'login'}}" title="排行榜" note="登录后才能看" mark="榜" bind:login="onLogin" />
 
-  <block wx:else>
+  <view class="card" wx:if="{{state === 'tier'}}">
+    <view class="empty">
+      <view class="empty-mark">榜</view>
+      <text class="empty-text">排行榜 {{tier}} 起可用</text>
+      <view class="btn ghost mini lb-retry" hover-class="button-hover" hover-stay-time="60"
+            bindtap="onTier">看看差别</view>
+    </view>
+  </view>
+
+  <block wx:elif="{{state !== 'tier'}}">
     <view class="lb-tabs">
       <view class="lb-tab {{game === item.key ? 'on' : ''}}" wx:for="{{games}}" wx:key="key"
             data-k="{{item.key}}" hover-class="lb-tap" hover-stay-time="60" bindtap="onGame">{{item.name}}</view>
