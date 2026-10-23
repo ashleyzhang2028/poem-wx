@@ -3741,10 +3741,9 @@ function mountFull(pg, query) {
       && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(
         read("packages/settings/collections/collections.js"))
       && /onLoad\(query\)/.test(collJs)
-      && /this\.setData\(\{ anchor: "coll-" \+ id \}\)/.test(collJs)
-      && /anchor="coll-\{\{coll\.id\}\}"/.test(collWxml)
-      && /id="\{\{anchor\}\}"/.test(pvWxml),
-    "首页 / 管理页那一下没落到自选进度页的集合位置上");
+      && /<view class="card-open coll-head" id="coll-\{\{coll\.id\}\}">/.test(collWxml)
+      && /wx\.pageScrollTo\(\{ selector: "#coll-" \+ id/.test(collJs),
+    "首页 / 管理页那一下没落到自选进度页的集合标题上");
 
   ok("多个集子靠标题栏右侧那枚色点分开，取色只有一处",
     /<view class="dot" style="background:\{\{coll\.color\}\}">/.test(collWxml)

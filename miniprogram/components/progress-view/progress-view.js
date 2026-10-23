@@ -170,8 +170,6 @@ if (typeof Component === "function") {
 
       lead: { type: String, value: "" },
 
-      anchor: { type: String, value: "" },
-
       labels: { type: Object, value: LABELS }
     },
 
