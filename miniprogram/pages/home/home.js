@@ -538,19 +538,18 @@ Page({
         allPoems: all,
         getRecord: store.getRecord
       });
-      const dueRows = S.collectionDue(c, { allPoems: all, getRecord: store.getRecord });
-      const done = dueRows.filter((p) => S.isLearned(store.getRecord(p.id))).length;
-      const doneNow = dueRows.filter((p) => S.doneToday(store.getRecord(p.id))).length;
+      const recOf = (it) => store.getRecord(it.poem.id);
+      const doneNow = plan.filter((it) => S.doneToday(recOf(it))).length;
       return {
         id: c.id,
         title: cols.nameOf(c),
         count: c.items.length,
-        planned: dueRows.length,
-        done: done,
+        planned: plan.length,
+        done: plan.filter((it) => S.isLearned(recOf(it))).length,
         doneNow: doneNow,
-        doneToday: dueRows.length > 0 && doneNow >= dueRows.length,
+        doneToday: plan.length > 0 && doneNow >= plan.length,
         color: pv.DOTS[i % pv.DOTS.length],
-        praise: dueRows.length > 0 && doneNow >= dueRows.length ? praiseOf("own") : "",
+        praise: plan.length > 0 && doneNow >= plan.length ? praiseOf("own") : "",
         rows: this.collectionCardRows(plan)
       };
     });

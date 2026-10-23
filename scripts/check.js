@@ -4240,6 +4240,22 @@ function mountFull(pg, query) {
       && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
     "三个状态没有统一的出处 —— 未读必然未背，按顺序往下走就够了");
 
+  {
+    const bannerComp = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
+    const bannerUtil = require(path.join(ROOT, "utils", "page-banner.js"));
+    const saves = global.wx;
+    global.wx = Object.assign({}, saves, {
+      getWindowInfo: () => ({ windowWidth: 390, statusBarHeight: 20 }),
+      getMenuButtonBoundingClientRect: () => ({ top: 24, height: 32 })
+    });
+    const pad = bannerUtil.pagePadding();
+    const cover = bannerUtil.coverOf();
+    global.wx = saves;
+    ok("题图的上移只在页面自己把顶内距归零时生效（首页与主题页同一个判据）",
+      bannerComp.indexOf("cover && pagePadding ?") >= 0 && pad > cover,
+      "上移量不小于页面顶内距，或上移不看页面顶内距 —— 两条一叠，题图顶边就跑到屏幕外（Issue #620）");
+  }
+
   const quotesSrc = fs.readFileSync(path.join(ROOT, "utils", "finish-quote.js"), "utf8");
   const quotes = require(path.join(ROOT, "utils", "finish-quote.js"));
   ok("今日那几首背完给一句收尾（提示与读数共用 allDone，不是一个新判据）",
@@ -4264,7 +4280,7 @@ function mountFull(pg, query) {
   ok("自选的收尾句挂在完成的那张集子卡里，不另起一块",
     !/finish-self/.test(homeWxml)
       && !/finish-self/.test(fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxss"), "utf8"))
-      && /praise: dueRows\.length > 0 && doneNow >= dueRows\.length \? praiseOf\("own"\)/.test(homeJs),
+      && /praise: plan\.length > 0 && doneNow >= plan\.length \? praiseOf\("own"\)/.test(homeJs),
     "自选背完又在卡片外面挂了一句 —— 同一个完成信号出现两次，位置还与自选卡错位");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
@@ -7917,11 +7933,11 @@ function gapped(items, max) {
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
   ok("自选集子的今日份背完给一次提示",
-    /doneToday: dueRows\.length > 0 && doneNow >= dueRows\.length/.test(homeSrc4)
+    /doneToday: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4)
       && /cheerCollection\(/.test(homeSrc4)
-      && homeSrc4.indexOf("S.collectionDue(") >= 0
+      && /const doneNow = plan\.filter\(\(it\) => S\.doneToday\(recOf\(it\)\)\)/.test(homeSrc4)
       && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
-      && /praise: dueRows\.length > 0 && doneNow >= dueRows\.length/.test(homeSrc4));
+      && /praise: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4));
 
   ok("首页收尾只有一处判据：自选的鼓励语不再另立一套 planDone",
     !/planDone/.test(homeSrc4)

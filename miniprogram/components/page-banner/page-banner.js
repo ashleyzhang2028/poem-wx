@@ -31,6 +31,7 @@ Component({
 
   data: {
     full: false,
+    pagePadding: 0,
     cover: 0,
     imageHeight: 0
   },
@@ -39,6 +40,6 @@ Component({
     const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
     const page = pages[pages.length - 1];
     const full = !!page && pages.length === 1;
-    this.setData({ full, cover: full ? bannerPage.coverOf() : 0, imageHeight: imageHeight() });
+    this.setData({ full, pagePadding: bannerPage.pagePadding(), cover: full ? bannerPage.coverOf() : 0, imageHeight: imageHeight() });
   }
 });

@@ -914,12 +914,17 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 
 页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移
 `utils/page-banner.coverOf()` 算出的那段（导航行高的两成，4~10px），
-把盒顶推过 `.page` 的内边距、齐到屏幕顶沿往下一点，盖住刘海区与导航行，
-微信胶囊浮在画上。上移量按屏幕与胶囊位置算，
-不再按 `--sp-3`（22px）算 —— 那会推过头，把画的顶边甩到屏幕外（Issue #610）。
+盖住刘海区与导航行，微信胶囊浮在画上。上移量按屏幕与胶囊位置算，
+不再按 `--sp-3` 算 —— 那会推过头，把画的顶边甩到屏幕外（Issue #610）。
+
+上移是否生效由 `utils/page-banner.pagePadding()` 判：页面自己把顶内距归零
+（`.home` / `.theme-page` 的 `padding-top: 0`），上移才是「推过空内距」；
+页面留着 `.page` 的整份顶内距时不做上移 —— 两条叠起来盒顶就跑到屏幕外
+（Issue #620）。同一口径下首页与主题页 banner 顶边都在屏幕顶，首卡同高。
+
 页面自有导航（`components/nav-bar`）绝对定位在画里，标题压在画上。
 画里的标题行占掉画的上一段，首卡因此不再压到画的下沿，改为让出
-`--banner-lead-gap`（`96rpx`）落在画里，并自带 `position: relative; z-index: 1`，
+`--banner-lead-gap`（`-60rpx`）落在画里，并自带 `position: relative; z-index: 1`，
 否则会被导航行盖住。
 主题页（`packages/settings/theme`）与首页同一套：banner、导航行、首卡位置一致，
 切主题时图与配色同时换；页面底色取 `--surface`，卡片去底留框线。
