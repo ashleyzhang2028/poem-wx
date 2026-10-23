@@ -160,7 +160,7 @@ function ownSwatch() {
     name: t.name,
     group: t.group,
     rgb: banner ? t.rgba : "",
-    soft: banner ? t.soft : "",
+    soft: banner ? toneSoft(rgb) : "",
     on: t.on,
     mark: t.mark,
     depth: rgba(t.depth, 1),
@@ -183,8 +183,10 @@ function toneData() {
     toneHex: picked ? picked.toUpperCase() : "",
     toneRgba: picked ? rgba(rgb, 1) : "",
     toneSoft: picked ? rgba(rgb, WASH) : "",
+    toneOnInk: picked ? rgba(inkOn(rgb), 1) : "",
     toneHues: tone.hueGrid(grid),
-    toneLights: tone.lightGrid(grid, rgb ? rgbToHue(rgb) : 0)
+    toneLights: tone.lightGrid(grid, rgb ? rgbToHue(rgb) : 0),
+    toneText: picked ? "标题、大数字换成这个色" : "挑一个色，标题与按钮跟着换"
   };
 }
 
@@ -200,10 +202,17 @@ function rgbToHue(rgb) {
 }
 
 function variables() {
-  const rgb = parseHex(store.settings().toneColor);
-  return THEMES.concat([OWN_THEME]).map((t) => VAR_OF[t.key] + ":" + t.rgba
-    + ";" + VAR_OF[t.key] + "-soft:" + (t.key === OWN_KEY ? toneSoft(rgb) : t.soft)
-    + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
+  const owned = tint(OWN_THEME);
+  const own = {
+    rgba: owned.rgba, soft: owned.soft, on: owned.on, depth: owned.depth
+  };
+  return THEMES.concat([OWN_THEME]).map((t) => {
+    const v = t.key === OWN_KEY ? own : tint(t);
+    return VAR_OF[t.key] + ":" + v.rgba
+      + ";" + VAR_OF[t.key] + "-soft:" + v.soft
+      + ";" + VAR_OF[t.key] + "-on:" + v.on
+      + ";" + VAR_OF[t.key] + "-depth:" + rgba(v.depth, 1);
+  });
 }
 
 function toneSoft(rgb) {
@@ -254,8 +263,25 @@ function currentTheme() {
   return get(current());
 }
 
+function currentRgb() {
+  if (current() !== OWN_KEY) return null;
+  return tone.parseHex(store.settings().toneColor);
+}
+
+function tint(theme) {
+  const rgb = currentRgb();
+  if (!rgb) return theme;
+  return {
+    rgba: rgba(rgb, 1),
+    soft: toneSoft(rgb),
+    on: rgba(inkOn(rgb), 1),
+    mark: rgba(rgb, 1),
+    depth: deepOf(rgb)
+  };
+}
+
 function style(key, fontKey) {
-  const t = get(key || current());
+  const t = tint(key ? get(key) : currentTheme());
 
   return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) +
     ";--theme:" + t.rgba + ";--theme-deep:" + t.rgba +

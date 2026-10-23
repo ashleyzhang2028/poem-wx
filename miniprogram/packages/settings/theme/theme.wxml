@@ -50,26 +50,27 @@
     </view>
 
     <view class="tone">
-      <view class="tone-preview" style="--tone:{{toneView.toneRgba || '#c7c9cd'}}">
-        <view class="tone-preview-chip">{{toneView.toneOn ? '底色' : '还没设'}}</view>
-        <text class="tone-preview-t">{{toneView.toneOn ? '卡片、色块的浅底换成这个色的 0.05' : '挑一个色，浅底跟着换'}}</text>
-      </view>
-
       <view class="tone-row">
+        <view class="tone-chip" style="background: {{toneView.toneRgba || '#c7c9cd'}}; color: {{toneView.toneOnInk || '#ffffff'}}">{{toneView.toneHex || '自选'}}</view>
         <input class="tone-hex" type="text" maxlength="7" value="{{toneView.toneHex}}"
                placeholder="#8C2F2D" placeholder-class="tone-hex-ph"
                confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />
-        <text class="tone-soft" wx:if="{{toneView.toneOn}}">底色 {{toneView.toneSoft}}</text>
         <button class="tone-clear" wx:if="{{toneView.toneOn}}" hover-class="none" bindtap="onToneReset">清掉</button>
       </view>
 
+      <view class="tone-bar" style="background: {{toneView.toneRgba || '#c7c9cd'}}">
+        <text class="tone-bar-t" style="color: {{toneView.toneOnInk || '#ffffff'}}">{{toneView.toneText}}</text>
+      </view>
+
       <view class="tone-grid">
-        <view class="tone-cell tone-hue" wx:for="{{toneView.toneHues}}" wx:key="*this"
+        <view class="tone-cell tone-hue {{toneView.toneHex === item ? 'on' : ''}}"
+              wx:for="{{toneView.toneHues}}" wx:key="*this"
               style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
       </view>
 
       <view class="tone-grid">
-        <view class="tone-cell tone-light" wx:for="{{toneView.toneLights}}" wx:key="*this"
+        <view class="tone-cell tone-light {{toneView.toneHex === item ? 'on' : ''}}"
+              wx:for="{{toneView.toneLights}}" wx:key="*this"
               style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
       </view>
     </view>

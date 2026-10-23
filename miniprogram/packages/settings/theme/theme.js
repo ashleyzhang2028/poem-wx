@@ -105,14 +105,17 @@ Page({
   onToneReset() {
     tone.clear();
     this.paint();
-    wx.showToast({ title: "底色已恢复", icon: "none" });
+    wx.showToast({ title: "已恢复默认主题色", icon: "none" });
   },
 
   claim() {
     const before = this.data.theme;
     this.paint();
-    if (before === this.data.theme) return;
-    wx.showToast({ title: "底色已换", icon: "none" });
+    if (before !== this.data.theme) {
+      wx.showToast({ title: "主题已换", icon: "none" });
+      return;
+    }
+    wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onOwnPick() {

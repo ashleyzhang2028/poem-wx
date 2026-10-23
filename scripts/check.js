@@ -3635,6 +3635,21 @@ function mountFull(pg, query) {
       && themeMod.bannerSrc().indexOf(custom.IMAGE) === 0,
     themeMod.current() + " / " + themeMod.bannerSrc().slice(0, 24));
 
+  store.saveSettings({ toneColor: "#2E6A67" });
+  const ownVars = themeMod.variables().filter((v) => v.indexOf("--c-own:") === 0)[0] || "";
+  const ownStyle = themeMod.style().split(";");
+  ok("主题色选中的那一支，自选的整支色跟着换（不是只换 0.05 的淡底）",
+    ownVars.indexOf("--c-own:rgba(46, 106, 103, 1)") >= 0
+      && ownVars.indexOf("--c-own-soft:rgba(46, 106, 103, 0.05)") >= 0
+      && ownStyle.indexOf("--strong:rgba(46, 106, 103, 1)") >= 0
+      && ownStyle.indexOf("--strong-text:rgba(46, 106, 103, 1)") >= 0
+      && ownStyle.indexOf("--strong-soft:rgba(46, 106, 103, 0.05)") >= 0,
+    "自选那一支没按 toneColor 重算：" + ownVars);
+
+  store.saveSettings({ toneColor: "" });
+  ok("清掉主题色，自选那一支回到清单里的墨色",
+    themeMod.style().split(";").indexOf("--strong:rgba(8, 8, 10, 1)") >= 0);
+
   ok("自选图只在本机（不进云端设置报文）",
     !("banner" in store.cloudSettings()) && store.LOCAL_ONLY.banner === true,
     "banner 混进了 cloudSettings —— 换台设备就不该带过去");
