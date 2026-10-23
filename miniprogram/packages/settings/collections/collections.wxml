@@ -26,7 +26,7 @@
         <view class="row-main" hover-class="row-main-hover" hover-stay-time="60"
               data-id="{{c.id}}" bindtap="onToggleList">
           <text class="row-title poem">{{c.name}}</text>
-          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}% · 今日 {{c.planned}} 首</text>
+          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}% · 今日 {{c.planned ? c.done + '/' + c.planned : c.count}} 首</text>
           <view class="meter coll-meter"><view class="meter-fill" style="width:{{c.masteredPercent}}%"></view></view>
         </view>
         <text class="row-go" data-id="{{c.id}}" bindtap="onProgress">›</text>

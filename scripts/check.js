@@ -635,19 +635,14 @@ const plainOpt = {
   extraPoems: [],
   getRecord: () => null
 };
+store.drop(store.KEYS.dayPlan);
 const plain = S.generateDailyPlan(plainOpt);
-ok("加背不占那 5 个名额（设 5 首，按设置排出来的仍是 5 首）",
-  plain.length === 5 && plan5.filter((p) => p.reason !== "pinned").length === 5);
-store.drop(store.KEYS.dayPlan);
-
-store.drop(store.KEYS.dayPlan);
-const plainAgain = S.generateDailyPlan(plainOpt);
+store.saveDayPlan(S.planKeyOf(Object.assign({}, plainOpt, { extraPoems: [extraPoem] })), plain);
 const outOfCourse = S.generateDailyPlan(Object.assign({}, plainOpt, { extraPoems: [extraPoem] }));
-ok("课外的加背不挪动按设置排出来的那几首（只在末尾接上）",
-  outOfCourse.slice(0, 5).map((p) => p.poem.id).join(",")
-    === plainAgain.map((p) => p.poem.id).join(",")
-    && plain.length === 5
-    && outOfCourse.length === 6);
+ok("加背不占那 5 个名额，也不挪动按设置排出来的那几首（只在末尾接上）",
+  plain.length === 5 && outOfCourse.length === 6
+    && outOfCourse.slice(0, 5).map((p) => p.poem.id).join(",") === plain.map((p) => p.poem.id).join(",")
+    && outOfCourse[5].reason === "pinned");
 
 ok("没背过的不算到期", !S.isDue(null) && !S.isDue({ level: 0, learned: false }));
 
@@ -709,13 +704,25 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
 
   {
     const defer = require(path.join(ROOT, "utils", "defer.js"));
+    const quotaRows = (list) => list.filter((it) => it.reason !== "pinned");
     const heldOne = withExtra[0].poem.id;
     defer.put(heldOne, "tomorrow");
     const held = S.generateDailyPlan(opt({ extraPoems: [extra] }));
     const named = defer.isHeld(store.deferList().filter((it) => it.wid === heldOne)[0]);
     ok("压着的那一首不上今天的榜，空出来的位置补一首新的（条数不变）",
-      held.length === withExtra.length && held.every((it) => it.poem.id !== heldOne),
-      held.map((it) => it.poem.id).join(","));
+      held.length === withExtra.length && held.every((it) => it.poem.id !== heldOne)
+        && quotaRows(held).length === quotaRows(withExtra).length,
+      "压着 " + heldOne + " 之后：" + held.map((it) => it.poem.id + ":" + it.reason).join(" ")
+        + "；之前：" + withExtra.map((it) => it.poem.id + ":" + it.reason).join(" "));
+    ok("压着的是加背那首，它不再带出今天没排过的篇目（名额不跟着挤）",
+      (() => {
+        const before = S.generateDailyPlan(opt({ extraPoems: [extra] }));
+        const ids = (list) => list.map((it) => it.poem.id).sort().join(",");
+        defer.put(extra.id, "tomorrow");
+        const after = S.generateDailyPlan(opt({ extraPoems: [extra] }));
+        return ids(quotaRows(after)) === ids(quotaRows(before)) && after.length === before.length;
+      })(),
+      "压掉加背后 plan 还在长");
     ok("压着的那一条认得出「哪天回来」", named === true);
     ok("到期当天就回来（不是多压一天）",
       defer.isHeld({ wid: heldOne, day: store.dayKey(), until: store.dayKey(), span: 1 }) === false);
@@ -725,6 +732,32 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
           === defer.daysLeftOf({ wid: heldOne, day: store.dayKey(), until: "2099-1-2" }));
     defer.drop(heldOne);
   }
+
+  {
+    store.dropDayPlan();
+    const base = S.generateDailyPlan(opt());
+    const withExtra2 = S.generateDailyPlan(opt({ extraPoems: [extra] }));
+    const key = S.planKeyOf(opt({ extraPoems: [extra] }));
+    const counted = S.todaySet(key, withExtra2.filter((it) => it.reason !== "pinned").length);
+    ok("今日的「今日 / 已背 / 待背」只数按设置排的那几首，加背不在分母里",
+      counted.length === base.length && counted.indexOf(extra.id) < 0,
+      "数出来 " + counted.join(",") + "，按设置排的是 " + base.map((it) => it.poem.id).join(","));
+  }
+
+  {
+    const defer = require(path.join(ROOT, "utils", "defer.js"));
+    const full = S.generateDailyPlan(opt({ count: 5 }));
+    defer.put(full[0].poem.id, "tomorrow");
+    const once = S.generateDailyPlan(opt({ count: 5 }));
+    const twice = S.generateDailyPlan(opt({ count: 5 }));
+    defer.drop(full[0].poem.id);
+    ok("压着的那一首只在第一次补位，补进来的不再被算成缺额（名单不会越排越长）",
+      once.length === 5 && twice.map((it) => it.poem.id).join(",") === once.map((it) => it.poem.id).join(",")
+        && once.map((it) => it.poem.id).indexOf(full[0].poem.id) < 0,
+      full.length + " -> " + once.length + " -> " + twice.length);
+  }
+
+  store.dropDayPlan();
 
   {
     const defer = require(path.join(ROOT, "utils", "defer.js"));
@@ -4193,7 +4226,7 @@ function mountFull(pg, query) {
   ok("自选的收尾句挂在完成的那张集子卡里，不另起一块",
     !/finish-self/.test(homeWxml)
       && !/finish-self/.test(fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxss"), "utf8"))
-      && /praise: plan\.length > 0 && doneNow >= plan\.length \? praiseOf\("own"\)/.test(homeJs),
+      && /praise: dueRows\.length > 0 && doneNow >= dueRows\.length \? praiseOf\("own"\)/.test(homeJs),
     "自选背完又在卡片外面挂了一句 —— 同一个完成信号出现两次，位置还与自选卡错位");
 
   ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
@@ -7846,11 +7879,11 @@ function gapped(items, max) {
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
   ok("自选集子的今日份背完给一次提示",
-    /doneToday: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4)
+    /doneToday: dueRows\.length > 0 && doneNow >= dueRows\.length/.test(homeSrc4)
       && /cheerCollection\(/.test(homeSrc4)
-      && homeSrc4.indexOf("S.doneToday(rec)") >= 0
+      && homeSrc4.indexOf("S.collectionDue(") >= 0
       && /wx:if="\{\{coll\.doneToday\}\}"/.test(homeWxml4)
-      && /praise: plan\.length > 0 && doneNow >= plan\.length/.test(homeSrc4));
+      && /praise: dueRows\.length > 0 && doneNow >= dueRows\.length/.test(homeSrc4));
 
   ok("首页收尾只有一处判据：自选的鼓励语不再另立一套 planDone",
     !/planDone/.test(homeSrc4)
