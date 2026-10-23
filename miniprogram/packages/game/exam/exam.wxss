@@ -28,6 +28,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.exam-note {
+  font-size: var(--fs-body);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
 .exam-timer {
   font-size: var(--fs-body);
   color: var(--amber);
@@ -35,30 +41,33 @@
 }
 
 .stem {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(3 * var(--fs-hero) * 1.9);
   font-family: var(--font-poem);
   font-size: var(--fs-hero);
   color: var(--ink);
   line-height: 1.9;
   text-align: center;
-  padding: var(--sp-2) 0;
+  padding: var(--sp-1) 0;
 }
 
 .stem-row {
-  display: block;
-  white-space: pre-line;
+  white-space: nowrap;
 }
 
 .stem-sub {
   display: block;
   text-align: center;
-  padding-top: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 
 .options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--sp-2);
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-3);
 }
 
 .option {
@@ -77,20 +86,15 @@
 }
 
 .option-k {
-  flex: none;
-  width: 32rpx;
   font-family: var(--font-poem);
   font-size: var(--fs-hint);
+  line-height: 1.5;
   color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
 }
 
 .option-t {
-  flex: 1;
-  min-width: 0;
   font-family: var(--font-poem);
   line-height: 1.5;
-  white-space: pre-line;
 }
 
 .option:active {
@@ -113,16 +117,16 @@
   color: var(--strong-text);
 }
 
-.option.right .option-k,
-.option.wrong .option-k {
-  color: inherit;
-  opacity: .72;
-}
-
 .option.wrong {
   border-color: var(--red-edge);
   background: var(--red-light);
   color: var(--red);
+}
+
+.option.right .option-k,
+.option.wrong .option-k {
+  color: inherit;
+  opacity: .72;
 }
 
 .result {
@@ -210,7 +214,7 @@
 
 .grade-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--sp-2);
 }
 
@@ -237,8 +241,6 @@
 }
 
 .grade-stem {
-  flex: 1;
-  min-width: 0;
   font-family: var(--font-poem);
   font-size: var(--fs-title);
   color: var(--strong-text);
@@ -259,6 +261,10 @@
 
 .next-btn {
   margin-top: var(--sp-3);
+}
+
+.again-btn {
+  margin-top: var(--sp-4);
 }
 
 .quit-line {
