@@ -2,3 +2,9 @@
   display: block;
   padding: var(--sp-2) var(--sp-1);
 }
+
+.fb-op {
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  padding: var(--sp-1) var(--sp-2);
+}

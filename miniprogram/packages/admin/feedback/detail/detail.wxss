@@ -1,13 +1,10 @@
-.fb-gap {
-  margin-top: var(--sp-3);
-}
-
-.fb-ph {
+.fb-op {
+  font-size: var(--fs-caption);
   color: var(--ink-4);
+  padding: var(--sp-1) var(--sp-2);
 }
 
-.fb-reason {
-  display: block;
-  padding: var(--sp-2) var(--sp-1);
-  color: var(--red);
+.fb-ops {
+  display: flex;
+  justify-content: flex-end;
 }

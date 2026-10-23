@@ -10,6 +10,10 @@
         <text class="tag {{thread.tone}}">{{thread.statusName}}</text>
       </view>
 
+      <view class="fb-ops" wx:if="{{canWrite}}">
+        <text class="fb-op" bindtap="onDeleteThread">删除这一条</text>
+      </view>
+
       <view class="fb-rows">
         <view class="fb-kv">
           <text class="fb-kv-k">提交人</text>
@@ -44,6 +48,7 @@
           <text class="fb-said-who">{{said.admin ? (said.nickname || '管理员') : '用户'}}</text>
           <text class="fb-bubble">{{said.content}}</text>
           <text class="fb-said-stamp">{{said.stampText}}</text>
+          <text class="fb-op" wx:if="{{canWrite}}" data-cid="{{said.cid}}" bindtap="onDeleteComment">删除</text>
         </view>
       </view>
 

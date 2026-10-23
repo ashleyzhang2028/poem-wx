@@ -49,9 +49,18 @@ function reply(tid, content, status, resolution) {
   }));
 }
 
+function remove(tid, cid) {
+  if (!tid && !cid) return Promise.resolve({ ok: false, reason: "要删哪一条没说清楚" });
+  return remote.adminFeedbackDelete(tid, cid).then((res) => ({
+    ok: !!res.ok,
+    reason: res.reason || "没删成，稍后再试"
+  }));
+}
+
 module.exports = {
   GROUPS,
   list,
   thread,
-  reply
+  reply,
+  remove
 };

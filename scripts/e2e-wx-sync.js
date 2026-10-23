@@ -655,20 +655,33 @@ function makeWx(port, mem) {
       () => ({ ok: true }),
       (err) => ({ ok: false, code: err.code })
     );
-    ok("用户走反馈接口删不掉记录（这条 op 已经没了）", rawDelete.ok === false, JSON.stringify(rawDelete));
+    ok("用户走反馈接口删不掉记录（这条 op 不认）", rawDelete.ok === false, JSON.stringify(rawDelete));
 
-    const rawAdminDelete = await remote.request("/api/admin/feedback", { op: "deleteThread", tid: listed.threads[0].tid }).then(
-      () => ({ ok: true }),
-      (err) => ({ ok: false, code: err.code })
-    );
-    ok("后台接口同样删不掉（管理员也不动台账）", rawAdminDelete.ok === false, JSON.stringify(rawAdminDelete));
+    const adminRemoved = await adminFb.remove(other.thread.tid, "");
+    ok("管理员删得掉用户提的那一条", adminRemoved.ok === true, JSON.stringify(adminRemoved));
+    const afterAdmin = await fbApi.mine();
+    ok("删完之后用户那边也看不到它了（不是只回了个 ok）",
+      !afterAdmin.threads.some((t) => t.tid === other.thread.tid),
+      JSON.stringify(afterAdmin.threads.map((t) => t.tid)));
 
-    const stillThere = await fbApi.mine();
-    ok("两次删除尝试之后记录原样都在",
-      stillThere.threads.length === listed.threads.length
-        && (stillThere.threads.filter((t) => t.tid === first.thread.tid)[0].comments || []).length
-          === (listed.threads.filter((t) => t.tid === first.thread.tid)[0].comments || []).length,
-      JSON.stringify(stillThere.threads.map((t) => t.tid)));
+    const kept = listed.threads.filter((t) => t.tid === first.thread.tid)[0];
+    const userSaid = (kept.comments || []).filter((c) => !c.admin)[0];
+    const adminSaid = (kept.comments || []).filter((c) => c.admin)[0];
+    ok("单删一段也删得掉（删掉一条讨论不动别条）",
+      (await adminFb.remove("", userSaid.cid)).ok === true
+        && (await adminFb.remove("", adminSaid.cid)).ok === true,
+      JSON.stringify([userSaid.cid, adminSaid.cid]));
+    const afterTalk = await fbApi.mine();
+    ok("删完之后那两段真的不在了，这条反馈还留着",
+      afterTalk.threads.some((t) => t.tid === first.thread.tid)
+        && !afterTalk.threads.filter((t) => t.tid === first.thread.tid)[0].comments
+          .some((c) => c.cid === userSaid.cid || c.cid === adminSaid.cid),
+      JSON.stringify(afterTalk.threads.filter((t) => t.tid === first.thread.tid)[0].comments.map((c) => c.cid)));
+
+    const afterRaw = await fbApi.mine();
+    ok("用户绕过页面直连删也删不掉（那条记录还在）",
+      afterRaw.threads.some((t) => t.tid === first.thread.tid),
+      JSON.stringify(afterRaw.threads.map((t) => t.tid)));
 
     await auth2.refresh();
     const adminSession = require(path.join(REPO, "miniprogram", "utils", "admin.js"));
