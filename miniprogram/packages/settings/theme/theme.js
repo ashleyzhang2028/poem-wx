@@ -22,6 +22,7 @@ Page({
     ownLocked: true,
 
     toneView: {},
+    toneLocked: true,
 
     fonts: [],
     font: font.DEFAULT,
@@ -61,6 +62,7 @@ Page({
       fontLocked: !pickable,
       fontTier: font.tier(),
       ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
+      toneLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
       toneView: theme.toneData()
     };
   },
@@ -82,16 +84,25 @@ Page({
       groups: theme.groups(),
       ownSet: swatch.set,
       ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
+      toneLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
       toneView: theme.toneData()
     });
   },
 
+  toneBlocked() {
+    if (theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0])) return false;
+    wx.showToast({ title: tiers.nameOf("max") + " 起可用", icon: "none" });
+    return true;
+  },
+
   onTonePick(e) {
+    if (this.toneBlocked()) return;
     tone.set(e.currentTarget.dataset.hex);
     this.claim();
   },
 
   onToneHex(e) {
+    if (this.toneBlocked()) return;
     const v = String(e.detail.value == null ? "" : e.detail.value).trim();
     if (!tone.parseHex(v)) {
       wx.showToast({ title: "HEX 要写成 #8C2F2D", icon: "none" });
@@ -103,18 +114,17 @@ Page({
   },
 
   onToneReset() {
-    tone.clear();
+    if (!tone.current()) {
+      wx.showToast({ title: "还没选过主题色", icon: "none" });
+      return;
+    }
+    if (theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0])) tone.clear();
     this.paint();
     wx.showToast({ title: "已恢复默认主题色", icon: "none" });
   },
 
   claim() {
-    const before = this.data.theme;
     this.paint();
-    if (before !== this.data.theme) {
-      wx.showToast({ title: "主题已换", icon: "none" });
-      return;
-    }
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 

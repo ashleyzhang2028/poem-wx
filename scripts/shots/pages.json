@@ -264,6 +264,17 @@
     "back": true,
     "logged": true
   },
+  "settings-theme-tone": {
+    "page": "packages/settings/theme/theme",
+    "title": "主题",
+    "back": true,
+    "logged": true,
+    "tier": "max",
+    "settings": {
+      "theme": "own",
+      "toneColor": "#2E6A67"
+    }
+  },
   "settings-theme-sights": {
     "page": "packages/settings/theme/theme",
     "title": "主题",

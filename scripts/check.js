@@ -1296,7 +1296,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 16], ["max", 21]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 16], ["max", 22]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -3679,9 +3679,46 @@ function mountFull(pg, query) {
       && ownStyle.indexOf("--strong-soft:rgba(46, 106, 103, 0.05)") >= 0,
     "自选那一支没按 toneColor 重算：" + ownVars);
 
+  const toneMod = require(path.join(ROOT, "utils", "color-tone.js"));
+
+  const toRgba = (h) => "rgba(" + [1, 3, 5]
+    .map((i) => parseInt(h.slice(i, i + 2), 16)).join(", ") + ", 1)";
+
+  const toneData = themeMod.toneData();
+  ok("主题色那两排是 24 个色相 + 12 级明度，两排都摆得下",
+    toneData.toneHues.length === 24 && toneData.toneLights.length === 12
+      && toneData.toneHues.every((h) => /^#[0-9a-f]{6}$/.test(h))
+      && toneData.toneLights.every((h) => /^#[0-9a-f]{6}$/.test(h))
+      && new Set(toneData.toneLights).size === 12,
+    "色相 " + toneData.toneHues.length + " 个 / 明度 " + toneData.toneLights.length + " 级");
+
+  ok("点一格就落到 toneColor，页内 --theme / --strong 当场跟着换",
+    toneMod.set(toneData.toneHues[0]) === true
+      && store.settings().toneColor === toneData.toneHues[0]
+      && themeMod.style().indexOf("--theme:" + toRgba(toneData.toneHues[0])) >= 0
+      && themeMod.style().indexOf("--strong:" + toRgba(toneData.toneHues[0])) >= 0,
+    "点完 toneColor=" + store.settings().toneColor + "，style 里没换");
+
   store.saveSettings({ toneColor: "" });
   ok("清掉主题色，自选那一支回到清单里的墨色",
     themeMod.style().split(";").indexOf("--strong:rgba(8, 8, 10, 1)") >= 0);
+
+  const toneCap = E.CAPS.filter((c) => c.key === "themetone")[0];
+  tierAs("pro");
+  ok("Pro 改不了主题色（这一项 Max 起，权限对比页也这么写）",
+    !!toneCap && toneCap.tier === "max"
+      && E.can("themetone") === false
+      && E.compareRows(E.snapshot()).some((r) => r.cap === "themetone")
+      && themePageWxml.indexOf("toneLocked") >= 0
+      && themePageJs.indexOf('nameOf("max")') >= 0,
+    toneCap ? toneCap.tier + " / can=" + E.can("themetone") : "能力表里没有 themetone");
+
+  tierAs("max");
+  store.saveSettings({ toneColor: "#8C2F2D" });
+  ok("Max 手上那一项亮着，且这个色真的铺到 --theme 上",
+    E.can("themetone") === true
+      && themeMod.style().indexOf("--theme:rgba(140, 47, 45, 1)") >= 0,
+    themeMod.style().split(";").filter((v) => v.indexOf("--theme:") === 0).join());
 
   ok("自选图只在本机（不进云端设置报文）",
     !("banner" in store.cloudSettings()) && store.LOCAL_ONLY.banner === true,
