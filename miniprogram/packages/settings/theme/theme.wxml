@@ -51,7 +51,7 @@
 
     <view class="tone {{toneLocked ? 'locked' : ''}}">
       <view class="tone-row">
-        <view class="tone-swatch" style="background: {{toneView.toneOn ? toneView.toneRgba : toneView.tonePick}}"></view>
+        <view class="tone-swatch" style="background: {{toneView.toneRgba}}"></view>
         <text class="tone-hex">{{toneView.toneOn ? toneView.toneHex : '未选'}}</text>
         <input class="tone-input" type="text" maxlength="7" value="{{toneView.toneHex}}"
                placeholder="#8C2F2D" placeholder-class="tone-input-ph"
@@ -62,13 +62,62 @@
       <view class="tone-preview">
         <text class="tone-preview-title">标题与按钮</text>
         <text class="tone-preview-btn">这个色</text>
-        <text class="tone-preview-read">{{toneView.toneRead || '点下方任意一格'}}</text>
+        <text class="tone-preview-read">{{toneView.toneRead || '取下面任意一处'}}</text>
       </view>
 
-      <view class="tone-rows">
-        <view class="tone-strip" wx:for="{{toneView.toneRows}}" wx:for-item="row" wx:key="hue">
-          <view class="tone-cell tone-band {{item === toneView.toneHex ? 'on' : ''}}"
-                wx:for="{{row.light}}" wx:key="*this"
+      <view class="tone-axis">
+        <text class="tone-label">色相</text>
+        <view class="tone-slider">
+          <view class="tone-strip tone-band">
+            <view class="tone-cell" wx:for="{{toneView.toneBands.hue}}" wx:key="*this"
+                  style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+          </view>
+          <view class="tone-mark" style="left: {{toneView.toneHueAt}}"></view>
+        </view>
+      </view>
+
+      <view class="tone-axis">
+        <text class="tone-label">饱和</text>
+        <view class="tone-slider">
+          <view class="tone-strip tone-band">
+            <view class="tone-cell" wx:for="{{toneView.toneBands.sat}}" wx:key="*this"
+                  style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+          </view>
+          <view class="tone-mark" style="left: {{toneView.toneSatAt}}"></view>
+        </view>
+      </view>
+
+      <view class="tone-axis">
+        <text class="tone-label">明度</text>
+        <view class="tone-slider">
+          <view class="tone-strip tone-band">
+            <view class="tone-cell" wx:for="{{toneView.toneBands.light}}" wx:key="*this"
+                  style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+          </view>
+          <view class="tone-mark" style="left: {{toneView.toneLightAt}}"></view>
+        </view>
+      </view>
+
+      <view class="tone-axes">
+        <view class="tone-axis tone-axis-col">
+          <text class="tone-label">深浅</text>
+          <view class="tone-strip tone-track">
+            <view class="tone-cell" wx:for="{{toneView.toneLight}}" wx:key="*this"
+                  style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+          </view>
+        </view>
+        <view class="tone-axis tone-axis-col">
+          <text class="tone-label">浓淡</text>
+          <view class="tone-strip tone-track">
+            <view class="tone-cell" wx:for="{{toneView.toneSat}}" wx:key="*this"
+                  style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="tone-plane">
+        <view class="tone-strip" wx:for="{{toneView.tonePlane}}" wx:for-item="row" wx:key="*this">
+          <view class="tone-cell" wx:for="{{row}}" wx:key="*this"
                 style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
         </view>
       </view>
