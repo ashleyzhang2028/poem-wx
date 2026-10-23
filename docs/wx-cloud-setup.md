@@ -27,9 +27,16 @@
 - `api/**` —— 后端本体
 - `deploy/**` —— Dockerfile、SQL、MySQL 存储层
 - `deploy-api-serve/**` —— 云托管那层服务壳与分片路由
+- `scripts/corpus/**` —— 语料本体
+- `scripts/build-data.js` —— 语料编译
+- `scripts/shard-stage.js` —— 分片摊平与 gzip
 - `.cnb.yml` —— 流水线自身
 
-只改 `miniprogram/**`、`docs/**`、`scripts/**` 时流水线**不跑**，镜像停在上一版 ——
+`miniprogram/data/texts/` 在 `packOptions.ignore` 里，课外正文不进包，一律向
+`/api/shard/<name>` 取；镜像里的分片由 `scripts/shard-stage.js` 从 `scripts/corpus/`
+现构建，因此改语料必须重出镜像，否则线上分片停在上一版。
+
+只改 `miniprogram/**`、`docs/**` 时流水线**不跑**，镜像停在上一版 ——
 这类改动由体验版验证，不用等镜像。手动点一次发布（`web_trigger_release`）不受这份名单约束。
 
 ```bash
