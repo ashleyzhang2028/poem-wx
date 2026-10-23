@@ -167,8 +167,6 @@ const VIEW_NAME = {
   sync: "我的·同步进度"
 };
 
-const LEAGUE_NAME = "大会·排行榜";
-
 const COMPARE_ORDER = [
   "daily", "extra", "collections", "progress", "seasonal", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
@@ -179,25 +177,6 @@ const COMPARE_ORDER = [
 
 function compareNameOf(cap) {
   return VIEW_NAME[cap.key] || cap.name;
-}
-
-function leagueRow(join) {
-  const on = rankOf(leagueTier());
-  return {
-    cap: "league:" + (join ? "join" : "off"),
-    name: LEAGUE_NAME + (join ? "" : "·不参与"),
-    cells: tiers.TIERS.map((t) => ({
-      tier: t.key,
-      text: "",
-      now: false,
-      on: rankOf(t.key) >= on
-    }))
-  };
-}
-
-function leagueTier() {
-  const cap = CAPS.find((c) => c.key === "league");
-  return cap ? cap.tier : "max";
 }
 
 function capRow(cap, now) {
@@ -224,7 +203,6 @@ function compareRows(snap) {
     const cap = CAPS.find((c) => c.key === key);
     if (!cap) return;
     rows.push(capRow(cap, now));
-    if (key === "league") rows.push(leagueRow(true), leagueRow(false));
   });
   CAPS.forEach((c) => {
     if (COMPARE_ORDER.indexOf(c.key) < 0) rows.push(capRow(c, now));
@@ -426,7 +404,6 @@ module.exports = {
   TIER_RANK,
   rankOf,
   tierOf,
-  leagueTier,
   status,
   snapshot,
   can,

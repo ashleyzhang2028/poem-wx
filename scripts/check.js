@@ -1318,11 +1318,11 @@ Object.keys(WEB_TIER).forEach((k) => {
     wxml.indexOf("heads") >= 0 && js.indexOf("entitlement.compareCols(") >= 0
       && E.compareCols({ logged: false, tier: "free" }).map((c) => c.tier).join() === tiersMod.TIER_KEYS.join(),
     "列头写死、或只挑几档列出来，都会跟档位表走散");
-  ok("权限对比表的行铺满能力表（一行一项，一项不漏，另加排行榜两行）",
+  ok("权限对比表的行铺满能力表（一行一项，一项不漏）",
     wxml.indexOf("compareRows") >= 0 && js.indexOf("entitlement.compareRows(") >= 0
-      && E.compareRows({ logged: false, tier: "free" }).length === E.CAP_KEYS.length + 2
-      && E.CAP_KEYS.every((k) => E.compareRows({ logged: false, tier: "free" }).some((r) => r.cap === k)),
-    "只挑几项列出来，用户就看不到自己缺哪几样");
+      && E.compareRows({ logged: false, tier: "free" }).map((r) => r.cap).sort().join()
+        === E.CAP_KEYS.slice().sort().join(),
+    "只挑几项列出来，用户就看不到自己缺哪几样；多列一行，同一项就说了两遍");
   ok("当前档位列带「现在」（用户只认自己那一列）",
     /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("cell.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
@@ -1352,20 +1352,6 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("排行榜两行紧跟排行榜能力、只亮在最高档",
-    (() => {
-      const rows = E.compareRows({ logged: false, tier: "free" });
-      const at = rows.findIndex((r) => r.cap === "league");
-      const [join, off] = rows.slice(at + 1, at + 3);
-      const top = E.leagueTier();
-      const leagueRowIt = rows.filter((r) => r.cap === "league")[0];
-      return join && off && join.name !== off.name && leagueRowIt
-        && leagueRowIt.cells.map((c) => c.on).join()
-          === tiersMod.TIER_KEYS.map((k) => k === top).join()
-        && [join, off].every((r) => r.cells.map((c) => c.on).join()
-          === tiersMod.TIER_KEYS.map((k) => String(k === top)).join());
-    })(),
-    "两行没跟着排行榜能力排，或者最高档之外也亮了");
   ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
