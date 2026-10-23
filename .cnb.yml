@@ -21,6 +21,9 @@ main:
         - "api/**"
         - "deploy/**"
         - "deploy-api-serve/**"
+        - "scripts/corpus/**"
+        - "scripts/build-data.js"
+        - "scripts/shard-stage.js"
         - ".cnb.yml"
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml

@@ -7030,13 +7030,19 @@ function gapped(items, max) {
         !!pushSeg && !!wtSeg,
         "缺一个 —— 没有 `push` 则推 main 不发版；没有 `web_trigger_release` 则按钮点了没反应");
 
-      const withoutIfModify = (t) => t
-        .split("\n")
-        .filter((l) => !/^\s*ifModify:\s*$/.test(l) &&
-          !/^\s*-\s*"(api|deploy|deploy-api-serve)\/\*\*"\s*$/.test(l) &&
-          !/^\s*-\s*"\.cnb\.yml"\s*$/.test(l))
-        .map((l) => l.replace(/^  (push|web_trigger_release):$/, "  EVENT:"))
-        .join("\n").trim();
+      const withoutIfModify = (t) => {
+        const out = [];
+        let inBlock = false;
+        String(t).split("\n").forEach((l) => {
+          if (/^\s*ifModify:\s*$/.test(l)) { inBlock = true; return; }
+          if (inBlock) {
+            if (/^\s*-\s*"/.test(l)) return;
+            inBlock = false;
+          }
+          out.push(l);
+        });
+        return out.map((l) => l.replace(/^  (push|web_trigger_release):$/, "  EVENT:")).join("\n").trim();
+      };
 
       ok("手动发布那一步与推 main 那一步是同一份脚本（各改各的迟早对不上）",
         !!pushSeg && !!wtSeg && withoutIfModify(pushSeg) === withoutIfModify(wtSeg),
