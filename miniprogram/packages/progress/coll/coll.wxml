@@ -10,14 +10,14 @@
   </view>
 
   <view wx:for="{{cards}}" wx:key="id" wx:for-item="coll">
-    <view class="card-open coll-head">
+    <view class="card-open coll-head" id="coll-{{coll.id}}">
       <text class="card-title poem">{{coll.name}}</text>
       <text class="card-sub">{{coll.sub}}</text>
       <view class="dot" style="background:{{coll.color}}"></view>
     </view>
 
     <progress-view id="pv-{{coll.id}}" view="{{coll.view}}" defers="{{coll.defers}}"
-                   ring-text="{{coll.ringText}}" anchor="coll-{{coll.id}}"
+                   ring-text="{{coll.ringText}}"
                    labels="{{coll.labels}}"
                    bind:open="onOpen" bind:defer="onOpenDefer" />
   </view>

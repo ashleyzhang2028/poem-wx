@@ -21,13 +21,16 @@ Page({
     cards: [],
     defers: [],
 
-    sheetRows: [],
-
-    anchor: ""
+    sheetRows: []
   },
 
   onLoad(query) {
     this.focusId = (query && query.coll) || "";
+  },
+
+  onReady() {
+    this.ready = true;
+    this.focusSelf();
   },
 
   onShow() {
@@ -59,19 +62,22 @@ Page({
       defers: defers,
       sheetRows: this.sheetQueue(cards)
     });
-    this.focusSelf(cards);
+    this.focusSelf();
   },
 
-  focusSelf(cards) {
-    if (this.focused) return;
+  focusSelf() {
+    if (this.focused || !this.ready) return;
     const id = this.focusId;
     if (!id) return;
-    if (!cards.some((c) => c.id === id)) {
-      this.focused = true;
-      return;
-    }
+    if (!(this.data.cards || []).some((c) => c.id === id)) return;
     this.focused = true;
-    this.setData({ anchor: "coll-" + id });
+    wx.pageScrollTo({ selector: "#coll-" + id, offsetTop: -this.headKeep(), duration: 200 });
+  },
+
+  headKeep() {
+    const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+    const rpx = (win.windowWidth || 375) / 750;
+    return (win.statusBarHeight || 0) + 44 + 108 * rpx;
   },
 
   sheetQueue(cards) {
