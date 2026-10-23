@@ -11,7 +11,7 @@ function rankOf(tier) {
 
 function collectionCell(tier) {
   const n = tiers.COLLECTION_LIMITS[tier];
-  if (!n) return { text: "无", on: false };
+  if (!n) return { text: "", on: false };
   return { text: n + " 个集合", on: true };
 }
 
