@@ -84,6 +84,7 @@ page {
   --fs-title: calc(32rpx * var(--ui-scale));
   --fs-lead: calc(38rpx * var(--ui-scale));
   --fs-hero: calc(46rpx * var(--ui-scale));
+  --fs-logo-sub: calc(52rpx * var(--ui-scale));
   --fs-brand: calc(60rpx * var(--ui-scale));
   --fs-head: calc(46rpx * var(--ui-scale));
   --fs-stat: calc(64rpx * var(--ui-scale));
