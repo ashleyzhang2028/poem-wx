@@ -74,7 +74,7 @@
                   placeholder-class="fb-ph" bindinput="onReplyInput"></textarea>
 
         <view class="actions">
-          <button class="btn primary" bindtap="onSend" disabled="{{sending}}">回复并更新</button>
+          <button class="btn primary block" bindtap="onSend" disabled="{{sending}}">回复并更新</button>
         </view>
       </block>
 
