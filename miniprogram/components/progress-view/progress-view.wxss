@@ -44,14 +44,6 @@
   padding-top: var(--sp-3);
 }
 
-.card-sub {
-  flex: none;
-  font-size: var(--fs-caption);
-  font-weight: 400;
-  color: var(--ink-3);
-  padding-left: var(--sp-2);
-}
-
 .cal {
   display: flex;
   align-items: flex-end;
@@ -304,14 +296,6 @@
   display: block;
   color: var(--amber);
   padding-top: var(--sp-3);
-}
-
-.card-sub {
-  flex: none;
-  font-size: var(--fs-caption);
-  font-weight: 400;
-  color: var(--ink-3);
-  padding-left: var(--sp-2);
 }
 
 .cal {
