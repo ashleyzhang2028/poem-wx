@@ -39,7 +39,7 @@ const THEMES = [
 
 const OWN_THEME = {
   key: OWN_KEY,
-  name: "自选",
+  name: "自定义题图",
   rgb: [8, 8, 10],
   group: OWN
 };
@@ -126,7 +126,7 @@ function palette() {
 const GROUPS = [
   { key: TRADITION, title: "中国传统", tier: "free" },
   { key: LANDSCAPE, title: "大好河山", tier: "pro", cap: "sights" },
-  { key: OWN, title: "自选", tier: "max", cap: "ownbanner" }
+  { key: OWN, title: "自定义题图", tier: "max", cap: "ownbanner" }
 ];
 
 function groupOpen(group) {

@@ -45,13 +45,13 @@
 
   <view class="card group-card">
     <view class="card-head">
-      <text class="card-title group-title">主题色</text>
+      <text class="card-title group-title">自定义主题色</text>
       <tier-tag wx:if="{{ownLocked}}" tier="max" />
     </view>
 
     <view class="tone">
       <view class="tone-row">
-        <view class="tone-chip" style="background: {{toneView.toneRgba || '#c7c9cd'}}; color: {{toneView.toneOnInk || '#ffffff'}}">{{toneView.toneHex || '自选'}}</view>
+        <view class="tone-chip" style="background: {{toneView.toneRgba || '#c7c9cd'}}; color: {{toneView.toneOnInk || '#ffffff'}}">{{toneView.toneHex || '自定义'}}</view>
         <input class="tone-hex" type="text" maxlength="7" value="{{toneView.toneHex}}"
                placeholder="#8C2F2D" placeholder-class="tone-hex-ph"
                confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />

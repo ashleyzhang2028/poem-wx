@@ -3508,9 +3508,9 @@ function mountFull(pg, query) {
     const hit = groupMod.find((x) => x.items.some((i) => i.key === k));
     return !hit || hit.key !== g;
   });
-  ok("每支主题都归到自己那张卡上（中国传统 / 大好河山 / 自选）",
+  ok("每支主题都归到自己那张卡上（中国传统 / 大好河山 / 自定义题图）",
     badGroup.length === 0 && groupMod.length === 3
-      && groupMod.map((x) => x.title).join() === "中国传统,大好河山,自选"
+      && groupMod.map((x) => x.title).join() === "中国传统,大好河山,自定义题图"
       && groupMod[0].items.length + groupMod[1].items.length === all.length,
     badGroup.map((m) => m[1]).join(", ") + " 没归位；卡片 " + groupMod.map((x) => x.title).join(" / "));
 
@@ -3643,7 +3643,7 @@ function mountFull(pg, query) {
     path.join(ROOT, "packages", "settings", "theme", "theme.json"), "utf8"));
   const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
 
-  ok("自选那张色卡排在「大好河山」之后，页面上有选图 / 换图与恢复默认的接法",
+  ok("自定义题图那张卡排在「大好河山」之后，页面上有选图 / 换图与恢复默认的接法",
     themeMod.groups().map((g) => g.key).indexOf(themeMod.OWN) === 2
       && ownGroup().items.length === 1
       && ownGroup().items[0].key === themeMod.OWN_KEY
@@ -3653,7 +3653,7 @@ function mountFull(pg, query) {
       && /banner-crop/.test(themePageJson.usingComponents["banner-crop"] || ""));
 
   tierAs("pro");
-  ok("Pro 手上还没有自选 banner（这一项 Max 起，权限对比页也这么写）",
+  ok("Pro 手上还没有自定义题图（这一项 Max 起，权限对比页也这么写）",
     ownGroup().locked === true && ownGroup().tier === "max"
       && E.can("ownbanner") === false
       && (E.CAPS.filter((c) => c.key === "ownbanner")[0] || {}).tier === "max"
@@ -3661,7 +3661,7 @@ function mountFull(pg, query) {
 
   tierAs("max");
   store.saveSettings({ banner: custom.IMAGE + "AAAA", theme: themeMod.OWN_KEY });
-  ok("Max 手上那项亮着，选的自选主题真的落到 banner 上",
+  ok("Max 手上那项亮着，选的自定义题图真的落到 banner 上",
     E.can("ownbanner") === true
       && ownGroup().locked === false
       && themeMod.current() === themeMod.OWN_KEY
