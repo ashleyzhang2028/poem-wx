@@ -43,6 +43,7 @@ const DEFAULTS = {
   font: "zhuque",
   pinyin: "off",
   banner: "",
+  toneColor: "",
 
   selfOnly: false,
 

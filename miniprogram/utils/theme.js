@@ -3,6 +3,7 @@ const font = require("./font");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 const custom = require("./custom-banner");
+const tone = require("./color-tone");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
@@ -153,12 +154,13 @@ function groups() {
 function ownSwatch() {
   const t = OWN_THEME;
   const banner = custom.src();
+  const rgb = parseHex(tone.current());
   return {
     key: t.key,
     name: t.name,
     group: t.group,
     rgb: banner ? t.rgba : "",
-    soft: banner ? t.soft : "",
+    soft: banner ? toneSoft(rgb) : "",
     on: t.on,
     mark: t.mark,
     depth: rgba(t.depth, 1),
@@ -168,10 +170,53 @@ function ownSwatch() {
   };
 }
 
+function parseHex(v) {
+  return tone.parseHex(v);
+}
+
+function toneData() {
+  const picked = tone.current();
+  const rgb = tone.parseHex(picked);
+  const grid = rgb || OWN_THEME.rgb;
+  return {
+    toneOn: !!picked,
+    toneHex: picked ? picked.toUpperCase() : "",
+    toneRgba: picked ? rgba(rgb, 1) : "",
+    toneSoft: picked ? rgba(rgb, WASH) : "",
+    toneOnInk: picked ? rgba(inkOn(rgb), 1) : "",
+    toneHues: tone.hueGrid(grid),
+    toneLights: tone.lightGrid(grid, rgb ? rgbToHue(rgb) : 0),
+    toneText: picked ? "标题、大数字换成这个色" : "挑一个色，标题与按钮跟着换"
+  };
+}
+
+function rgbToHue(rgb) {
+  const max = Math.max(rgb[0], rgb[1], rgb[2]);
+  const min = Math.min(rgb[0], rgb[1], rgb[2]);
+  const d = max - min;
+  if (!d) return 0;
+  const h = max === rgb[0]
+    ? ((rgb[1] - rgb[2]) / d) % 6
+    : (max === rgb[1] ? (rgb[2] - rgb[0]) / d + 2 : (rgb[0] - rgb[1]) / d + 4);
+  return Math.round((h * 60 + 360) % 360);
+}
+
 function variables() {
-  return THEMES.map((t) => VAR_OF[t.key] + ":" + t.rgba
-    + ";" + VAR_OF[t.key] + "-soft:" + t.soft
-    + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
+  const owned = tint(OWN_THEME);
+  const own = {
+    rgba: owned.rgba, soft: owned.soft, on: owned.on, depth: owned.depth
+  };
+  return THEMES.concat([OWN_THEME]).map((t) => {
+    const v = t.key === OWN_KEY ? own : tint(t);
+    return VAR_OF[t.key] + ":" + v.rgba
+      + ";" + VAR_OF[t.key] + "-soft:" + v.soft
+      + ";" + VAR_OF[t.key] + "-on:" + v.on
+      + ";" + VAR_OF[t.key] + "-depth:" + rgba(v.depth, 1);
+  });
+}
+
+function toneSoft(rgb) {
+  return rgba(rgb || OWN_THEME.rgb, WASH);
 }
 
 OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
@@ -218,8 +263,25 @@ function currentTheme() {
   return get(current());
 }
 
+function currentRgb() {
+  if (current() !== OWN_KEY) return null;
+  return tone.parseHex(store.settings().toneColor);
+}
+
+function tint(theme) {
+  const rgb = currentRgb();
+  if (!rgb) return theme;
+  return {
+    rgba: rgba(rgb, 1),
+    soft: toneSoft(rgb),
+    on: rgba(inkOn(rgb), 1),
+    mark: rgba(rgb, 1),
+    depth: deepOf(rgb)
+  };
+}
+
 function style(key, fontKey) {
-  const t = get(key || current());
+  const t = tint(key ? get(key) : currentTheme());
 
   return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) +
     ";--theme:" + t.rgba + ";--theme-deep:" + t.rgba +
@@ -283,5 +345,5 @@ module.exports = {
   OWN, OWN_KEY, OWN_THEME,
   all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
   variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply,
-  clearOwn
+  clearOwn, toneData
 };
