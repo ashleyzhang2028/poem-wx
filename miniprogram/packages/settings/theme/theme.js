@@ -1,4 +1,5 @@
 const theme = require("../../../utils/theme");
+const tone = require("../../../utils/color-tone");
 const custom = require("../../../utils/custom-banner");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
@@ -18,6 +19,9 @@ Page({
 
     groups: theme.groups(),
     theme: theme.DEFAULT,
+    ownLocked: true,
+
+    toneView: {},
 
     fonts: [],
     font: font.DEFAULT,
@@ -29,7 +33,7 @@ Page({
 
   onShow() {
     theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc() });
+    this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     if (!gate.logged()) {
       this.setData({ locked: true });
       return;
@@ -50,12 +54,14 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, {
         locked: !pickable && f.key !== font.DEFAULT,
-        tone: "Kuibu Preview " + f.key
+        family: "Kuibu Preview " + f.key
       })),
       font: font.current(),
       previewFamilyOf: font.face().previewFamily,
       fontLocked: !pickable,
-      fontTier: font.tier()
+      fontTier: font.tier(),
+      ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
+      toneView: theme.toneData()
     };
   },
 
@@ -69,18 +75,50 @@ Page({
 
   paint() {
     theme.apply(this);
+    const swatch = theme.ownSwatchData();
     this.setData({
       theme: theme.current(),
       banner: theme.bannerSrc(),
       groups: theme.groups(),
-      ownSet: theme.ownSwatchData().set
+      ownSet: swatch.set,
+      ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
+      toneView: theme.toneData()
     });
+  },
+
+  onTonePick(e) {
+    tone.set(e.currentTarget.dataset.hex);
+    this.claim();
+  },
+
+  onToneHex(e) {
+    const v = String(e.detail.value == null ? "" : e.detail.value).trim();
+    if (!tone.parseHex(v)) {
+      wx.showToast({ title: "HEX 要写成 #8C2F2D", icon: "none" });
+      this.setData({ toneView: theme.toneData() });
+      return;
+    }
+    tone.set(v);
+    this.claim();
+  },
+
+  onToneReset() {
+    tone.clear();
+    this.paint();
+    wx.showToast({ title: "主题色已清掉", icon: "none" });
+  },
+
+  claim() {
+    const before = this.data.theme;
+    this.paint();
+    if (before === this.data.theme) return;
+    wx.showToast({ title: "已换上这个主题色", icon: "none" });
   },
 
   onOwnPick() {
     const item = theme.ownSwatchData();
     if (!item.set) {
-      wx.showToast({ title: "先选一张图", icon: "none" });
+      wx.showToast({ title: "先选图", icon: "none" });
       return;
     }
     if (!theme.ownUsable()) {

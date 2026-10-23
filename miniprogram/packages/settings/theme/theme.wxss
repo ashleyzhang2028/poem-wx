@@ -185,3 +185,124 @@
   letter-spacing: 1rpx;
   line-height: var(--lh-body);
 }
+
+.tone {
+  padding-top: var(--sp-2);
+}
+
+.tone-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1rpx var(--tone);
+}
+
+.tone-preview-chip {
+  flex: none;
+  padding: 4rpx var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: var(--tone);
+  color: var(--on-theme);
+  font-size: var(--fs-caption);
+  letter-spacing: 1rpx;
+  line-height: 1.5;
+}
+
+.tone-preview-t {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+.tone-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.tone-dot {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: var(--sink);
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
+}
+
+.tone-dot.on {
+  background: var(--tone);
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
+}
+
+.tone-hex {
+  flex: 1;
+  min-width: 0;
+  height: var(--h-opt);
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-hint);
+  color: var(--ink);
+  letter-spacing: 1rpx;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.tone-hex-ph {
+  color: var(--ink-4);
+  letter-spacing: 1rpx;
+}
+
+.tone-soft {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.tone-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--h-btn-mini);
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: 1rpx solid var(--line-strong);
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  line-height: 1.2;
+}
+
+.tone-clear::after {
+  border: none;
+}
+
+.tone-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+
+.tone-cell {
+  height: 40rpx;
+  border-radius: 8rpx;
+  transition: transform var(--t-press);
+}
+
+.tone-cell:active {
+  transform: scale(.86);
+}
+
+.tone-hue {
+  height: 56rpx;
+}

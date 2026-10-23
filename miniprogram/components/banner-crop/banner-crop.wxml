@@ -1,11 +1,11 @@
 <view class="bc-root" wx:if="{{open}}">
   <view class="bc-panel" style="{{themeStyle}}">
     <view class="bc-head">
-      <text class="bc-title">截一张当题图</text>
+      <text class="bc-title">图片截取</text>
       <text class="bc-ratio">{{ratioW}} × {{ratioH}}</text>
     </view>
 
-    <view class="bc-stage" id="stage" style="width: {{stageW}}px; height: {{stageH}}px">
+    <view class="bc-stage" style="width: {{stageW}}px; height: {{stageH}}px">
       <image class="bc-img" wx:if="{{src}}" src="{{src}}" mode="scaleToFill"
              style="width: {{imgW}}px; height: {{imgH}}px; left: {{imgX}}px; top: {{imgY}}px" />
       <view class="bc-frame"></view>
@@ -17,7 +17,7 @@
       <button class="btn ghost mini" bindtap="onCancel">取消</button>
       <button class="btn ghost mini" hover-class="none" bindtap="onZoomOut">缩小</button>
       <button class="btn ghost mini" hover-class="none" bindtap="onZoomIn">放大</button>
-      <button class="btn mini primary" bindtap="onConfirm">截取</button>
+      <button class="btn mini primary" loading="{{busy}}" bindtap="onConfirm">截取</button>
     </view>
   </view>
 </view>

@@ -35,17 +35,17 @@ function shrink(path, width, height) {
   });
 }
 
-function node(comp, id) {
+function node(host, id) {
   return new Promise((resolve, reject) => {
-    wx.createSelectorQuery().in(comp).select("#" + id).fields({ node: true }, (res) => {
+    wx.createSelectorQuery().in(host).select("#" + id).fields({ node: true }, (res) => {
       if (res && res.node) resolve(res.node);
       else reject(new Error("no canvas"));
     }).exec();
   });
 }
 
-function pixels(comp, id, src, width, height) {
-  return node(comp, id).then((canvas) => new Promise((resolve, reject) => {
+function pixels(host, id, src, width, height) {
+  return node(host, id).then((canvas) => new Promise((resolve, reject) => {
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
@@ -100,11 +100,11 @@ function exportTemp(canvas, art) {
   });
 }
 
-async function prepare(path, img, comp, id, box, scale) {
+async function prepare(path, img, host, id, box, scale) {
   try {
     const art = artOf(img, box, scale);
     const small = await shrink(path, img.w * scale / SCALE, img.h * scale / SCALE);
-    const canvas = await node(comp, id);
+    const canvas = await node(host, id);
     if (!canvas) return "";
     return new Promise((resolve) => {
       const image = canvas.createImage();
@@ -123,8 +123,8 @@ async function prepare(path, img, comp, id, box, scale) {
   }
 }
 
-async function put(path, img, comp, id, box, scale) {
-  const file = await prepare(path, img, comp, id, crop.clampBox(box), scale);
+async function put(path, img, host, id, box, scale) {
+  const file = await prepare(path, img, host, id, crop.clampBox(box), scale);
   if (!file) return { ok: false, reason: "read" };
   const data = await read(file).catch(() => "");
   if (data.length <= IMAGE.length) return { ok: false, reason: "read" };
@@ -141,11 +141,11 @@ function src() {
   return typeof v === "string" && v.indexOf(IMAGE) === 0 ? v : "";
 }
 
-function probe(path, img, comp, id) {
+function probe(path, img, host, id) {
   const width = GRID;
   const height = Math.max(8, Math.round(GRID * img.h / img.w));
   return shrink(path, width, height)
-    .then((small) => pixels(comp, id, small.tempFilePath || path, width, height))
+    .then((small) => pixels(host, id, small.tempFilePath || path, width, height))
     .then((data) => ({ w: width, h: height, data: data }))
     .catch(() => null);
 }
@@ -178,9 +178,9 @@ function choose() {
   });
 }
 
-function suggest(path, img, comp, id, box) {
+function suggest(path, img, host, id, box) {
   const scale = RATIO_W * img.h / (RATIO_H * img.w);
-  return probe(path, img, comp, id)
+  return probe(path, img, host, id)
     .then((grid) => crop.snap(box, grid ? grid.data : null, grid ? grid.w : 0, grid ? grid.h : 0))
     .then((fit) => ({ box: fit, scale: Math.min(1, scale) }));
 }

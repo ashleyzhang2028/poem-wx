@@ -1921,7 +1921,7 @@ var PROFILE_ROW_ID = "profile:v1";
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", theme: "str",
-  font: "str", pinyin: "str",
+  font: "str", pinyin: "str", toneColor: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool", selfOnly: "bool",
   seasonal: "bool", leagueBoard: "bool"
 };

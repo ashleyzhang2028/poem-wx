@@ -37,8 +37,41 @@
       <text class="own-note">图片存于本机，不同步到服务器</text>
 
       <view class="own-acts">
-        <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换一张' : '选一张图'}}</button>
+        <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换图' : '选图'}}</button>
         <button class="btn ghost mini" wx:if="{{ownSet}}" bindtap="onOwnClear">恢复默认</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="card group-card">
+    <view class="card-head">
+      <text class="card-title group-title">主题色</text>
+      <tier-tag wx:if="{{ownLocked}}" tier="max" />
+    </view>
+
+    <view class="tone">
+      <view class="tone-preview" style="--tone:{{toneView.toneRgba || '#c7c9cd'}}">
+        <view class="tone-preview-chip">{{toneView.toneOn ? '主题色' : '还没设'}}</view>
+        <text class="tone-preview-t">{{toneView.toneOn ? '字、选中底、图标都换成这个色' : '挑一个色，整页跟着变'}}</text>
+      </view>
+
+      <view class="tone-row">
+        <view class="tone-dot {{toneView.toneOn ? 'on' : ''}}" style="--tone:{{toneView.toneRgba}}"></view>
+        <input class="tone-hex" type="text" maxlength="7" value="{{toneView.toneHex}}"
+               placeholder="#8C2F2D" placeholder-class="tone-hex-ph"
+               confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />
+        <text class="tone-soft" wx:if="{{toneView.toneOn}}">底色 {{toneView.toneSoft}}</text>
+        <button class="tone-clear" wx:if="{{toneView.toneOn}}" hover-class="none" bindtap="onToneReset">清掉</button>
+      </view>
+
+      <view class="tone-grid">
+        <view class="tone-cell tone-hue" wx:for="{{toneView.toneHues}}" wx:key="*this"
+              style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
+      </view>
+
+      <view class="tone-grid">
+        <view class="tone-cell tone-light" wx:for="{{toneView.toneLights}}" wx:key="*this"
+              style="background: {{item}}" data-hex="{{item}}" bindtap="onTonePick"></view>
       </view>
     </view>
   </view>

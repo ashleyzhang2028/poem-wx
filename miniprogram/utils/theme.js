@@ -3,6 +3,7 @@ const font = require("./font");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 const custom = require("./custom-banner");
+const tone = require("./color-tone");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
@@ -153,12 +154,13 @@ function groups() {
 function ownSwatch() {
   const t = OWN_THEME;
   const banner = custom.src();
+  const rgb = tone.current() || t.rgba;
   return {
     key: t.key,
     name: t.name,
     group: t.group,
-    rgb: banner ? t.rgba : "",
-    soft: banner ? t.soft : "",
+    rgb: banner ? rgb : "",
+    soft: banner ? softOf(t.key, tone.parseHex(tone.current())) : "",
     on: t.on,
     mark: t.mark,
     depth: rgba(t.depth, 1),
@@ -168,10 +170,44 @@ function ownSwatch() {
   };
 }
 
+function parseHex(v) {
+  return tone.parseHex(v);
+}
+
+function toneData() {
+  const picked = tone.current();
+  const rgb = tone.parseHex(picked);
+  return {
+    toneOn: !!picked,
+    toneHex: picked ? picked.toUpperCase() : "",
+    toneRgba: picked ? rgba(rgb, 1) : "",
+    toneSoft: picked ? rgba(rgb, WASH) : "",
+    toneHues: tone.hueGrid(picked ? rgb : ownSwatch().rgb),
+    toneLights: tone.lightGrid(picked ? rgb : ownSwatch().rgb, rgb ? rgbToHue(rgb) : 0)
+  };
+}
+
+function rgbToHue(rgb) {
+  const max = Math.max(rgb[0], rgb[1], rgb[2]);
+  const min = Math.min(rgb[0], rgb[1], rgb[2]);
+  const d = max - min;
+  if (!d) return 0;
+  const h = max === rgb[0]
+    ? ((rgb[1] - rgb[2]) / d) % 6
+    : (max === rgb[1] ? (rgb[2] - rgb[0]) / d + 2 : (rgb[0] - rgb[1]) / d + 4);
+  return Math.round((h * 60 + 360) % 360);
+}
+
 function variables() {
-  return THEMES.map((t) => VAR_OF[t.key] + ":" + t.rgba
-    + ";" + VAR_OF[t.key] + "-soft:" + t.soft
+  const rgb = parseHex(store.settings().toneColor);
+  return THEMES.concat([OWN_THEME]).map((t) => VAR_OF[t.key] + ":" + t.rgba
+    + ";" + VAR_OF[t.key] + "-soft:" + softOf(t.key, rgb)
     + ";" + VAR_OF[t.key] + "-depth:" + rgba(t.depth, 1));
+}
+
+function softOf(key, rgb) {
+  if (rgb && key === OWN_KEY) return rgba(rgb, WASH);
+  return get(key).soft;
 }
 
 OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
@@ -283,5 +319,5 @@ module.exports = {
   OWN, OWN_KEY, OWN_THEME,
   all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
   variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply,
-  clearOwn
+  clearOwn, toneData
 };

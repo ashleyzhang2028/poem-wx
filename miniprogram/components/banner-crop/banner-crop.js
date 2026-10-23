@@ -7,8 +7,16 @@ const MIN_SPAN = 0.24;
 
 const C = "crop";
 
+const PANEL_SIDE = 128;
+
+const DESIGN_W = 750;
+
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
+}
+
+function rpx(px) {
+  return Number(px) * DESIGN_W / 375;
 }
 
 function distanceOf(touches) {
@@ -35,6 +43,7 @@ Component({
     ratioH: custom.RATIO_H,
     stageW: 0,
     stageH: 0,
+    busy: false,
     imgW: 0,
     imgH: 0,
     imgX: 0,
@@ -49,31 +58,39 @@ Component({
     open(pick) {
       this.pick = pick;
       this.photo = pick.img;
-      this.span = 1;
       this.offset = { x: 0, y: 0 };
       this.laying = null;
       this.pinch = null;
       this.pan = null;
-      this.busy = false;
-      this.setData({ open: true, src: pick.path });
+      this.setData({ open: true, src: pick.path, busy: false });
       const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-      const stageW = Math.min(Number(win.windowWidth) - 64, 640);
-      this.base = Math.max(stageW / this.photo.w, Math.round(stageW * custom.RATIO_H / custom.RATIO_W) / this.photo.h);
+      const stageW = Math.min(win.windowWidth - PANEL_SIDE * rpx(win.windowWidth) / DESIGN_W, 640);
+      const stageH = Math.round(stageW * custom.RATIO_H / custom.RATIO_W);
+      this.base = Math.max(stageW / this.photo.w, stageH / this.photo.h);
       this.span = 1 / this.base;
-      this.setData({ stageW: stageW, stageH: Math.round(stageW * custom.RATIO_H / custom.RATIO_W) });
-      this.lay();
-      this.settle();
+      this.setData({ stageW: stageW, stageH: stageH }, () => {
+        this.lay();
+        this.warm();
+      });
     },
 
-    settle() {
+    warm() {
+      custom.suggest(this.pick.path, this.photo, this, C, { sx: 0.5, sy: 0.5, sw: 1, sh: 1 })
+        .then((r) => {
+          if (!this.data.open || this.laying) return;
+          this.snap(r);
+        }, () => {});
+    },
+
+    snap(r) {
       const stageW = this.data.stageW;
       const stageH = this.data.stageH;
-      custom.suggest(this.pick.path, this.photo, C, { sx: 0.5, sy: 0.5, sw: 1, sh: 1 }).then((r) => {
-        if (!this.data.open || this.laying) return;
-        this.span = clamp(r.scale / this.base, MIN_SPAN, 1 / this.base);
-        this.offset = { x: -stageW * (r.box.sx + r.box.sw / 2 - 0.5), y: -stageH * (r.box.sy + r.box.sh / 2 - 0.5) };
-        this.lay();
-      });
+      this.span = clamp(r.scale / this.base, MIN_SPAN, 1 / this.base);
+      this.offset = {
+        x: -stageW * (r.box.sx + r.box.sw / 2 - 0.5),
+        y: -stageH * (r.box.sy + r.box.sh / 2 - 0.5)
+      };
+      this.lay();
     },
 
     lay() {
@@ -152,9 +169,9 @@ Component({
     },
 
     onConfirm() {
-      if (!this.photo || this.busy) return;
+      if (!this.photo || this.data.busy) return;
       this.laying = true;
-      this.busy = true;
+      this.setData({ busy: true });
       const w = this.data.imgW, h = this.data.imgH;
       const box = {
         sx: -this.data.imgX / w,
@@ -162,8 +179,8 @@ Component({
         sw: this.data.stageW / w,
         sh: this.data.stageH / h
       };
-      custom.put(this.pick.path, this.photo, C, box, this.span * this.base).then((r) => {
-        this.busy = false;
+      custom.put(this.pick.path, this.photo, this, C, box, this.span * this.base).then((r) => {
+        this.setData({ busy: false });
         if (r.ok) this.close();
         this.triggerEvent("done", r);
       });
