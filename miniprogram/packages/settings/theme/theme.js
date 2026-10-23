@@ -55,7 +55,7 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, {
         locked: !pickable && f.key !== font.DEFAULT,
-        family: "Kuibu Preview " + f.key
+        previewFamily: "Kuibu Preview " + f.key
       })),
       font: font.current(),
       previewFamilyOf: font.face().previewFamily,

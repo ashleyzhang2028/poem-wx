@@ -7,7 +7,12 @@ const FONTS = [
   { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", stem: "zhuquefangsong-regular/zhuquefangsong-regular-" },
   { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", stem: "huiwenmincho-improved/huiwenmincho-improved-" },
   { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", stem: "chillkai/chillkai-" },
-  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", stem: "cooperzhengkai/cooperzhengkai-" }
+  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", stem: "cooperzhengkai/cooperzhengkai-" },
+  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", stem: "lxgwwenkai-regular/lxgwwenkai-regular-" },
+  { key: "oldsong", name: "京华老宋", note: "老宋 · 旧籍纸墨", stem: "kinghwa_oldsong_v3/kinghwa_oldsong_v3-" },
+  { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", stem: "chilljinshusongpro/chilljinshusongpro_regular-" },
+  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", stem: "yozai-regular/yozai-regular-" },
+  { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", stem: "chilllongcangkai_regular/chilllongcangkai_regular-" }
 ];
 
 const PREVIEW = "烟花三月下扬州";

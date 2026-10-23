@@ -90,7 +90,7 @@
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onFont">
-        <text class="font-sample" style="font-family:'{{item.tone}}'">{{fontSample}}</text>
+        <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
         <text class="font-name">{{item.name}}</text>
       </view>
     </view>

@@ -827,9 +827,9 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   asTier("free");
   const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
-  ok("Free 换不了字体（四款摆着，只有默认那款可选）",
+  ok("Free 换不了字体（九款摆着，只有默认那款可选）",
     picked.font.pickable() === false
-      && picked.font.options().length === 4
+      && picked.font.options().length === 9
       && picked.font.set("huiwen").ok === false,
     JSON.stringify(picked.font.options()) + " / pickable=" + picked.font.pickable());
   picked.font.set("huiwen");
@@ -848,9 +848,10 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     return ep.font.load();
   }).then(() => {
     ok("同一款注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
-    ok("四款字各有各的字族与地址（不是同一份换个名字）",
+    ok("每款字各有各的字族与地址（不是同一份换个名字）",
       ep.font.FACES.map((f) => f.family).join()
-        === "Kuibu Poem zhuque,Kuibu Poem huiwen,Kuibu Poem chillkai,Kuibu Poem cooper"
+        === "Kuibu Poem zhuque,Kuibu Poem huiwen,Kuibu Poem chillkai,Kuibu Poem cooper,"
+          + "Kuibu Poem wenkai,Kuibu Poem oldsong,Kuibu Poem jinshu,Kuibu Poem yozai,Kuibu Poem longcang"
         && ep.font.FACES.every((f) => f.pro[0] !== ep.font.FACES[0].pro[0]),
       ep.font.FACES.map((f) => f.family + " " + f.pro[0]).join(" | "));
     proSeen.length = 0;
@@ -3582,18 +3583,18 @@ function mountFull(pg, query) {
     if (t !== "free") store.write(store.KEYS.grant, { code: t.toUpperCase() + "-ABCD-1234", tier: t, at: Date.now() });
   };
 
-  ok("字体卡片在主题页里，四款各占一格（选择器接到 set 上）",
+  ok("字体卡片在主题页里，每款各占一格（选择器接到 set 上）",
     themeWxml.indexOf('class="font-row') >= 0
       && themeJs.indexOf("font.options()") >= 0
       && themeJs.indexOf("font.set(") >= 0
-      && fontMod.options().length === 4,
+      && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
-  const themeWxss = fs.readFileSync(
-    path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8");
-  ok("字体卡不为预览注册另外两款字族（名字走系统字体）",
-    themeWxss.indexOf("--font-") < 0 && themeWxml.indexOf("fontStyle") < 0,
-    "字体卡还在拿另外两款的字族渲染行名");
+  ok("字体格里的预览取该款的预览字族（选了它才认得出是哪款）",
+    themeWxml.indexOf("{{item.previewFamily}}") >= 0
+      && /previewFamily/.test(themeJs)
+      && fontMod.FACES.every((f) => f.previewFamily === "Kuibu Preview " + f.key),
+    "字体格的预览没挂上 Kuibu Preview <款>，只会按系统字体渲染");
 
   const rFree = (() => {
     tierAs("free");
