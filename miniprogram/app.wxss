@@ -685,6 +685,14 @@ button, textarea {
   margin-bottom: 0;
 }
 
+.card-open > .card-sub {
+  flex: none;
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+}
+
 .card-head {
   display: flex;
   align-items: baseline;
