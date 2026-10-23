@@ -1,3 +1,7 @@
+.roster-head .head-title {
+  font-size: var(--fs-lead);
+}
+
 .index-total {
   flex: none;
   font-size: var(--fs-caption);
