@@ -1,0 +1,29 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card">
+    <button class="btn primary block" bindtap="onPricing">查看档位 · 续订</button>
+  </view>
+
+  <view class="card" wx:if="{{logged}}">
+    <text class="card-title">支付记录</text>
+
+    <text class="hint" wx:if="{{loaded && failed}}">记录没取到，请检查网络后重新进入。</text>
+    <text class="hint" wx:elif="{{loaded && !list.length}}">还没有支付记录。</text>
+
+    <view class="row od-row" wx:for="{{list}}" wx:key="outTradeNo">
+      <view class="row-main">
+        <text class="row-title">{{item.title}}</text>
+        <text class="row-sub">{{item.timeText}}</text>
+        <text class="row-sub" wx:if="{{item.untilText}}">会员至 {{item.untilText}}</text>
+        <text class="row-sub od-id" wx:if="{{item.wxOrderId}}" data-id="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}（点按复制）</text>
+      </view>
+      <view class="od-side">
+        <text class="od-price">¥{{item.price}}</text>
+        <text class="tag {{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

@@ -23,7 +23,12 @@ const PATHS = {
   ranking: "/api/ranking",
   feedback: "/api/feedback",
   adminFeedback: "/api/admin/feedback",
-  me: "/api/me"
+  me: "/api/me",
+  payCatalog: "/api/pay/catalog",
+  payOrder: "/api/pay/order",
+  payConfirm: "/api/pay/confirm",
+  payOrders: "/api/pay/orders",
+  adminPay: "/api/admin/pay"
 };
 
 function session() {

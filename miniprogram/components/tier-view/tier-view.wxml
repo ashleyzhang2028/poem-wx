@@ -10,6 +10,9 @@
     <view class="meter-fill" style="width:{{stats.percent}}%"></view>
   </view>
   <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项功能</text>
+
+  <button class="btn primary block grant-pay" wx:if="{{logged}}" bindtap="onPricing">{{paid ? '续订 / 升级' : '开通 Pro / Max'}}</button>
+  <button class="btn ghost block grant-pay" wx:if="{{logged && paid}}" bindtap="onOrders">支付记录</button>
 </view>
 
 <view class="card">

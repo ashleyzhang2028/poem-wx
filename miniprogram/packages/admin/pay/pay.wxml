@@ -1,0 +1,74 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card" wx:if="{{!canWrite}}">
+    <text class="hint">需要管理员登录。</text>
+  </view>
+
+  <block wx:else>
+    <text class="hint ap-note" wx:if="{{reason}}">{{reason}}</text>
+
+    <view class="card" wx:if="{{catalog}}">
+      <text class="card-title">价格与促销</text>
+      <text class="hint ap-note">价格必须与 MP 后台「道具管理」里的道具一致。促销：先在 MP 后台建促销价道具，下面添加后选择生效。</text>
+
+      <picker wx:for="{{slots}}" wx:key="key" data-index="{{index}}" range="{{item.labels}}" bindchange="onPickActive">
+        <view class="row row-flush">
+          <view class="row-main">
+            <text class="row-title">{{item.title}}</text>
+            <text class="row-sub">生效：{{item.activeText}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="card" wx:if="{{catalog}}">
+      <text class="card-title">添加道具</text>
+      <input class="ap-input" placeholder="道具 ID（与 MP 后台一致）" value="{{draft.productId}}"
+             data-field="productId" bindinput="onDraft" />
+      <picker range="{{planChoices}}" value="{{draft.planIndex}}" data-field="planIndex" bindchange="onDraft">
+        <view class="ap-input">档位：{{planChoices[draft.planIndex]}}</view>
+      </picker>
+      <picker range="{{periodChoices}}" value="{{draft.periodIndex}}" data-field="periodIndex" bindchange="onDraft">
+        <view class="ap-input">周期：{{periodChoices[draft.periodIndex]}}</view>
+      </picker>
+      <input class="ap-input" type="digit" placeholder="价格（元）" value="{{draft.price}}"
+             data-field="price" bindinput="onDraft" />
+      <button class="btn primary block" bindtap="onAddProduct">添加</button>
+    </view>
+
+    <view class="card">
+      <text class="card-title">购买记录</text>
+      <text class="hint ap-note">共 {{summary.count}} 笔，已支付 {{summary.paidCount}} 笔，合计 ¥{{summary.paidText}}</text>
+
+      <view class="seg ap-filter">
+        <radio-group class="seg-group" bindchange="onFilter">
+          <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}" />
+            <text class="seg-text">{{item.name}}</text>
+          </label>
+        </radio-group>
+      </view>
+
+      <view class="row ap-order" wx:for="{{orders}}" wx:key="outTradeNo">
+        <view class="row-main">
+          <view class="ap-order-head">
+            <text class="row-title">{{item.head}}</text>
+            <text class="tag {{item.statusTone}}">{{item.statusText}}</text>
+          </view>
+          <text class="row-sub ap-id" data-text="{{item.uid}}" bindtap="onCopy">uid {{item.uid}}</text>
+          <text class="row-sub ap-id" data-text="{{item.openid}}" bindtap="onCopy">openid {{item.openid}}</text>
+          <text class="row-sub ap-id" data-text="{{item.outTradeNo}}" bindtap="onCopy">业务单号 {{item.outTradeNo}}</text>
+          <text class="row-sub ap-id" wx:if="{{item.wxOrderId}}" data-text="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}</text>
+          <text class="row-sub">道具 {{item.productId}}{{item.source ? ' · 经' + item.source : ''}}</text>
+          <text class="row-sub">下单 {{item.createdText}}</text>
+          <text class="row-sub" wx:if="{{item.paidText}}">支付 {{item.paidText}}，会员至 {{item.untilText || '永久'}}</text>
+          <text class="row-sub" wx:if="{{item.refundedText}}">退款 {{item.refundedText}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

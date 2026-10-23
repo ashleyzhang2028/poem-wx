@@ -1,0 +1,17 @@
+.od-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+}
+
+.od-price {
+  font-family: var(--font-num);
+  font-size: var(--fs-title);
+  color: var(--ink-strong);
+  margin-bottom: var(--sp-1);
+}
+
+.od-id {
+  word-break: break-all;
+}

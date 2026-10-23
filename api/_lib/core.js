@@ -3757,6 +3757,7 @@ module.exports = {
   channelFacts: channelFacts,
   featuresFor: featuresFor,
   planTier: planTier,
+  isAdminRole: isAdminRole,
   normalizeGrants: normalizeGrants,
   sanitizePayload: sanitizePayload,
   SETTINGS_ROW_ID: SETTINGS_ROW_ID,

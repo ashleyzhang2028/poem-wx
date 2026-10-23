@@ -356,6 +356,32 @@ CREATE TABLE IF NOT EXISTS `exam_records` (
   CONSTRAINT `exam_records_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------ pay_orders
+CREATE TABLE IF NOT EXISTS `pay_orders` (
+  `out_trade_no`    VARCHAR(40)   NOT NULL,
+  `uid`             VARCHAR(64)   NOT NULL,
+  `openid`          VARCHAR(128)  NOT NULL,
+  `product_id`      VARCHAR(64)   NOT NULL,
+  `plan`            VARCHAR(16)   NOT NULL,
+  `period`          VARCHAR(16)   NOT NULL,
+  `price_cents`     INT           NOT NULL,
+  `status`          VARCHAR(16)   NOT NULL DEFAULT 'pending',
+  `wx_order_id`     VARCHAR(64)   NULL,
+  `source`          VARCHAR(16)   NOT NULL DEFAULT '',
+  `plan_after`      VARCHAR(16)   NOT NULL DEFAULT '',
+  `plan_until_after` BIGINT       NULL,
+  `applied`         TINYINT       NOT NULL DEFAULT 0,
+  `notify_raw`      TEXT          NULL,
+  `created_at`      BIGINT        NOT NULL,
+  `paid_at`         BIGINT        NULL,
+  `refunded_at`     BIGINT        NULL,
+  PRIMARY KEY (`out_trade_no`),
+  UNIQUE KEY `pay_orders_wx_order_idx` (`wx_order_id`),
+  KEY `pay_orders_uid_idx` (`uid`, `created_at`),
+  KEY `pay_orders_status_idx` (`status`, `created_at`),
+  CONSTRAINT `pay_orders_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ------------------------------------------------------------ score_records
 -- 排行榜的成绩底账。一行 = 一次交卷。`game` 区分飞花令（fly）与考试（exam）。
 -- 分档口径（学段 / 年级 / 学期）在写这一行时定死：用户之后改自己的年级，

@@ -127,6 +127,12 @@ function make(name, methods, run, opts) {
             return;
           }
 
+          if (out.text !== undefined) {
+            H.log("api.ok", { api: name, status: out.status });
+            H.binary(res, out.status, Buffer.from(out.text, "utf8"), { "Content-Type": "text/plain; charset=utf-8" });
+            return;
+          }
+
           if (out.body && out.body.code === "E_TURNSTILE") {
             H.log("api.turnstile_blocked", {
               api: name,

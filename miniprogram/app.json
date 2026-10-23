@@ -43,7 +43,9 @@
       "root": "packages/mine",
       "name": "mine",
       "pages": [
-        "tier/tier"
+        "tier/tier",
+        "pricing/pricing",
+        "orders/orders"
       ]
     },
     {
@@ -51,6 +53,7 @@
       "name": "admin",
       "pages": [
         "index/index",
+        "pay/pay",
         "feedback/index",
         "feedback/detail/detail"
       ]

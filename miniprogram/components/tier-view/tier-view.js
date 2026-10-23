@@ -19,6 +19,7 @@ Component({
     note: "",
     heads: [],
     logged: false,
+    paid: false,
     compareRows: [],
     stats: { caps: 0, enabled: 0, percent: 0 }
   },
@@ -34,6 +35,14 @@ Component({
   },
 
   methods: {
+    onPricing() {
+      wx.navigateTo({ url: "/packages/mine/pricing/pricing" });
+    },
+
+    onOrders() {
+      wx.navigateTo({ url: "/packages/mine/orders/orders" });
+    },
+
     refresh() {
       const snap = entitlement.snapshot();
       const sums = entitlement.compareSummary();
@@ -57,6 +66,7 @@ Component({
 
       this.setData({
         logged: snap.logged,
+        paid: snap.logged && snap.tier !== "free",
         status: snap,
         note: noteOf(snap),
         heads: heads,

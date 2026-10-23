@@ -1,0 +1,69 @@
+.pr-period {
+  margin-bottom: var(--sp-3);
+}
+
+.pr-note {
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.pr-plan.is-current {
+  border-color: var(--strong);
+}
+
+.pr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pr-name {
+  font-size: var(--fs-head);
+  color: var(--ink-strong);
+}
+
+.pr-price {
+  display: flex;
+  align-items: baseline;
+  margin: var(--sp-2) 0 var(--sp-3);
+}
+
+.pr-yen,
+.pr-unit {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+}
+
+.pr-num {
+  font-family: var(--font-num);
+  font-size: var(--fs-hero);
+  color: var(--ink-strong);
+  margin: 0 4rpx;
+}
+
+.pr-was {
+  margin-left: var(--sp-3);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.pr-feat {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: var(--sp-1);
+}
+
+.pr-dot {
+  margin-right: var(--sp-2);
+  color: var(--strong);
+}
+
+.pr-feat-t {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+}
+
+.pr-buy {
+  margin-top: var(--sp-3);
+}

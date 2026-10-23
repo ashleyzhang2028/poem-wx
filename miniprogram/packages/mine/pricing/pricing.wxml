@@ -1,0 +1,53 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card" wx:if="{{!logged}}">
+    <text class="card-title">开通会员</text>
+    <text class="hint">请先用微信登录，再选择档位。</text>
+    <button class="btn primary block" bindtap="onLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <view class="seg pr-period">
+      <radio-group class="seg-group" bindchange="onPeriod">
+        <label class="seg-item {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{period === item.key}}" />
+          <text class="seg-text">{{item.name}}</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <text class="hint pr-note" wx:if="{{loadFailed}}">价格没取到，请检查网络后重新进入。</text>
+    <text class="hint pr-note" wx:elif="{{untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}}，到期 {{untilText}}，续订在原到期日后顺延。</text>
+
+    <view class="card pr-plan {{item.current ? 'is-current' : ''}}" wx:for="{{plans}}" wx:key="key">
+      <view class="pr-head">
+        <text class="pr-name">{{item.name}}</text>
+        <text class="tag green" wx:if="{{item.current}}">当前</text>
+      </view>
+      <view class="pr-price">
+        <text class="pr-yen">¥</text>
+        <text class="pr-num">{{item.priceText}}</text>
+        <text class="pr-unit">{{item.unit}}</text>
+        <text class="pr-was" wx:if="{{item.originalText}}">¥{{item.originalText}}</text>
+      </view>
+      <view class="pr-feat" wx:for="{{item.features}}" wx:for-item="f" wx:key="*this">
+        <text class="pr-dot">·</text>
+        <text class="pr-feat-t">{{f}}</text>
+      </view>
+      <button class="btn primary block pr-buy" wx:if="{{item.actionText}}"
+              disabled="{{item.disabled || busy}}" data-plan="{{item.key}}" bindtap="onBuy">{{item.actionText}}</button>
+    </view>
+
+    <view class="card">
+      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onOrders">
+        <view class="row-main">
+          <text class="row-title">支付记录</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

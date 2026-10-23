@@ -76,6 +76,10 @@ Page({
     wx.navigateTo({ url: "/packages/users/index/index" });
   },
 
+  onPay() {
+    wx.navigateTo({ url: "/packages/admin/pay/pay" });
+  },
+
   onFeedback() {
     wx.navigateTo({ url: "/packages/admin/feedback/index" });
   }

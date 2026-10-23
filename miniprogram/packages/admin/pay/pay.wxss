@@ -1,0 +1,30 @@
+.ap-note {
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.ap-input {
+  display: flex;
+  align-items: center;
+  height: var(--h-field);
+  padding: 0 var(--sp-3);
+  margin-bottom: var(--sp-2);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-ctl);
+  font-size: var(--fs-body);
+  color: var(--ink);
+}
+
+.ap-filter {
+  margin-bottom: var(--sp-3);
+}
+
+.ap-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ap-id {
+  word-break: break-all;
+}
