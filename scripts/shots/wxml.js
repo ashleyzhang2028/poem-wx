@@ -170,6 +170,21 @@ function renderMembers(nodes, data, out, pickOf) {
   }
 }
 
+const SRC_SHAPE = {
+  "/icons/hero.png": [1027, 558]
+};
+
+let SRC_PREFIX = "";
+function setSrcPrefix(prefix) { SRC_PREFIX = prefix || ""; }
+
+const AR_OF = (src) => {
+  const shape = SRC_SHAPE[src] || (function () {
+    const m = /^data:image\/svg\+xml,.*?width='(\d+)'.*?height='(\d+)'/.exec(src || "");
+    return m ? [m[1], m[2]] : null;
+  })();
+  return shape ? ` width="${shape[0]}" height="${shape[1]}"` : "";
+};
+
 let IMAGE_INTRINSIC = null;
 function setImageIntrinsic(fn) { IMAGE_INTRINSIC = fn; }
 
@@ -202,7 +217,7 @@ function renderNode(n, a, bodyNodes, data, out, pickOf) {
   if (n.tag === "image") {
     const src = a.src ? interp(a.src, v) : "";
     if (src) {
-      out.push(`<img data-tag="image" class="n-image ${cls}" src="${src}" style="${style}">`);
+      out.push(`<img data-tag="image" class="n-image ${cls}" src="${/^\//.test(src) ? SRC_PREFIX + src : src}" style="${style}"${AR_OF(src)}>`);
       return;
     }
     let extra = "";
@@ -310,4 +325,4 @@ function compile(wxml, data) {
   return out.join("");
 }
 
-module.exports = { compile, setImageIntrinsic, restoreHoles: holeRestore };
+module.exports = { compile, setImageIntrinsic, setSrcPrefix, restoreHoles: holeRestore };

@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { compile, setImageIntrinsic, restoreHoles } = require("./wxml.js");
+const { compile, setImageIntrinsic, setSrcPrefix, restoreHoles } = require("./wxml.js");
 const ROOT = path.join(__dirname, "..", "..", "miniprogram");
 
 const THEME = process.env.THEME || "";
@@ -409,17 +409,30 @@ function expandTierTag(wxml) {
   return String(wxml).replace(/<tier-tag\b[^>]*?\/>/g, '<text tier-tag="1">Pro 起</text>');
 }
 
-function expandPageBanner(wxml, data, navbar) {
+function pageOwnPadding(file) {
+  if (!fs.existsSync(file)) return 0;
+  const rules = fs.readFileSync(file, "utf8").split("}").map((d) => {
+    const at = d.indexOf("{");
+    const body = at < 0 ? "" : d.slice(at + 1);
+    const pad = /padding-top\s*:\s*0/.test(body) ? 0 : (/padding\s*:\s*[^;]+/.test(body) ? 1 : -1);
+    return { sel: at < 0 ? "" : d.slice(0, at).trim(), pad };
+  });
+  const own = rules.filter((r) => /^\.[\w-]+$/.test(r.sel) && r.pad >= 0);
+  const reset = own.filter((r) => r.pad === 0).length;
+  return reset ? 0 : 1;
+}
+
+function expandPageBanner(wxml, data, navbar, pageWxss) {
   if (wxml.indexOf("<page-banner") < 0) return wxml;
   const comp = fs.readFileSync(path.join(ROOT, "components/page-banner/page-banner.wxml"), "utf8");
   const width = Number((global.wx.getWindowInfo && global.wx.getWindowInfo().windowWidth)
     || global.wx.getSystemInfoSync().windowWidth) || 375;
-  const nav = require(path.join(ROOT, "utils", "nav.js"));
-  const box = nav.top();
+  const banner = require(path.join(ROOT, "utils", "page-banner.js"));
   const full = navbar === "custom";
   const merged = Object.assign({}, data, {
     full,
-    cover: full ? Number(((box.navBottom - box.navTop) * 0.2).toFixed(2)) : 0,
+    pagePadding: pageOwnPadding(pageWxss),
+    cover: full ? banner.coverOf() : 0,
     imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
@@ -478,7 +491,7 @@ function imageIntrinsicResolver(pageCss) {
     return m ? m[1] : "";
   };
   return (cls) => cls.split(/\s+/).filter(Boolean).some((c) => {
-    const body = ruleOf(pageCss, c) || ruleOf(appCss, c);
+    const body = ruleOf(pageCss, c) || ruleOf(appCss, c) || ruleOf(COMP_CSS, c);
     return /[^-]height\s*:\s*[\d.]+%\s*;/.test(body);
   });
 }
@@ -543,7 +556,7 @@ function pageHtml(cfg, data) {
     return s + "</view>";
   });
   wxml = expandTierTag(wxml);
-  wxml = expandPageBanner(wxml, data, navbarOf(cfg));
+  wxml = expandPageBanner(wxml, data, navbarOf(cfg), path.join(ROOT, cfg.page + ".wxss"));
   wxml = expandNavBar(wxml, data, navbarOf(cfg));
   wxml = expandTierView(wxml, data);
   wxml = expandDailyExtra(wxml, data);
@@ -553,6 +566,7 @@ function pageHtml(cfg, data) {
 
   const adminCss = flattenCss(path.join(ROOT, "packages", "admin", "index", "index.wxss"));
 
+  setSrcPrefix("file://" + ROOT);
   setImageIntrinsic(imageIntrinsicResolver(pageCss));
   const body = compile(wxml, data);
   const screenCssStr = screenCss(cfg, pageCss + adminCss);
