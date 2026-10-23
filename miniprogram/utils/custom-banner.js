@@ -37,10 +37,12 @@ function shrink(path, width, height) {
 
 function node(host, id) {
   return new Promise((resolve, reject) => {
-    wx.createSelectorQuery().in(host).select("#" + id).fields({ node: true }, (res) => {
-      if (res && res.node) resolve(res.node);
-      else reject(new Error("no canvas"));
-    }).exec();
+    wx.createSelectorQuery().in(host).select("#" + id).node({ node: true, size: true })
+      .exec((res) => {
+        const field = res && res[0];
+        if (field && field.node) resolve(field.node);
+        else reject(new Error("no canvas"));
+      });
   });
 }
 
@@ -185,4 +187,4 @@ function suggest(path, img, host, id, box) {
     .then((fit) => ({ box: fit, scale: Math.min(1, scale) }));
 }
 
-module.exports = { src, put, clear, choose, suggest, IMAGE, WIDTH, RATIO_W, RATIO_H };
+module.exports = { src, put, clear, choose, suggest, artOf, IMAGE, WIDTH, RATIO_W, RATIO_H };

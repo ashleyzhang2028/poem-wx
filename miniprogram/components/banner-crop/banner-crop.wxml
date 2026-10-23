@@ -1,4 +1,6 @@
-<view class="bc-root" wx:if="{{open}}">
+<view class="bc-root" wx:if="{{open}}" catchtouchmove="onLock">
+  <view class="bc-mask" bindtap="onCancel"></view>
+
   <view class="bc-panel" style="{{themeStyle}}">
     <view class="bc-head">
       <text class="bc-title">图片截取</text>
@@ -21,4 +23,5 @@
     </view>
   </view>
 </view>
+
 <canvas class="bc-canvas" type="2d" id="{{canvasId}}"></canvas>

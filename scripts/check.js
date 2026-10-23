@@ -3651,6 +3651,40 @@ function mountFull(pg, query) {
       && (E.CAPS.filter((c) => c.key === "ownbanner")[0] || {}).tier === "max"
       && E.compareRows(E.snapshot()).some((r) => r.cap === "ownbanner"));
 
+  {
+    const cropMod = require(path.join(ROOT, "components", "banner-crop", "banner-crop.js"));
+    const cropDir = path.join(ROOT, "components", "banner-crop");
+    const cropJs = fs.readFileSync(path.join(cropDir, "banner-crop.js"), "utf8");
+    const cropWxml = fs.readFileSync(path.join(cropDir, "banner-crop.wxml"), "utf8");
+
+    ok("选完图弹出的是截取面板：四个按钮都挂着处理函数，面板之外点一下能退",
+      ["onCancel", "onZoomIn", "onZoomOut", "onConfirm"]
+        .every((fn) => cropWxml.indexOf('bindtap="' + fn + '"') >= 0
+          && new RegExp(fn + "\\s*\\(").test(cropJs))
+        && /class="bc-mask"[^>]*bindtap="onCancel"/.test(cropWxml),
+      "截取面板缺按钮或退不出去 —— 选完图就卡在那儿");
+
+    const box = { width: 390, height: 844 };
+    ok("截取面板不超出屏宽、整张图都摊在框里（横图竖图方图都一样）",
+      [{ w: 2400, h: 1600 }, { w: 400, h: 3000 }, { w: 900, h: 900 }].every((img) => {
+        const stage = cropMod.stageOf(box, img);
+        return stage.stageW <= box.width && stage.stageH > 0
+          && stage.imgW >= stage.stageW && stage.imgH >= stage.stageH;
+      }),
+      "取景框排出来比窗口还宽，或者图没铺满框");
+
+    const art = custom.artOf({ w: 1000, h: 2000 }, { sx: 0.1, sy: 0.4, sw: 0.5, sh: 0.25 }, 2);
+    ok("落盘的图取的是框里那一块，出来就是题图的比例",
+      Math.abs(art.width * custom.RATIO_H / custom.RATIO_W - art.height) <= 1
+        && art.sw === 500 && art.sh === 500,
+      "截出来的比例不是 " + custom.RATIO_W + "×" + custom.RATIO_H + "，铺到 banner 上会被裁掉一截");
+
+    const bannerWxml = fs.readFileSync(
+      path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
+    ok("题图用固定框铺满，换哪张图都不会把页面撑长",
+      /mode="aspectFill"/.test(bannerWxml), "题图按原图比例撑高 —— 自定义的长图会把整屏顶掉");
+  }
+
   tierAs("max");
   store.saveSettings({ banner: custom.IMAGE + "AAAA", theme: themeMod.OWN_KEY });
   ok("Max 手上那项亮着，选的自定义题图真的落到 banner 上",
