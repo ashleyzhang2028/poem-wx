@@ -32,6 +32,11 @@
   padding: var(--sp-2) 0;
 }
 
+.coll-tools + .coll-search,
+.coll-search + .coll-tools {
+  border-top: 1rpx solid var(--line-2);
+}
+
 .coll-tools .btn.mini,
 .coll-head .row-title,
 .coll-head .row-sub {
@@ -70,11 +75,7 @@
   align-items: center;
   min-height: var(--h-row);
   padding: var(--sp-2) var(--sp-1);
-  border-bottom: 1rpx solid var(--line-2);
-}
-
-.daily-row:last-child {
-  border-bottom: none;
+  border-top: 1rpx solid var(--line-2);
 }
 
 .daily-box {
@@ -105,11 +106,12 @@
   padding: var(--sp-2) 0 var(--sp-3);
 }
 
+.coll-search:last-child {
+  border-top: none;
+}
+
 .coll-found {
-  margin-top: var(--sp-2);
-  border: 1rpx solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  border-top: 1rpx solid var(--line-2);
 }
 
 .coll-found-row {
@@ -117,12 +119,12 @@
   align-items: center;
   min-height: var(--h-row);
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1rpx solid var(--line-2);
+  border-top: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
 }
 
-.coll-found-row:last-child {
-  border-bottom: none;
+.coll-found-row:first-child {
+  border-top: none;
 }
 
 .coll-found-btn {
