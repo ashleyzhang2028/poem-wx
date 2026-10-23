@@ -7,10 +7,6 @@
   background: var(--surface);
 }
 
-.banner-full {
-  margin-top: calc(-1 * var(--page-gutter));
-}
-
 .banner-img {
   display: block;
   width: 100%;

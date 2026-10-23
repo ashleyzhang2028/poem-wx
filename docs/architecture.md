@@ -912,8 +912,11 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 `icons/hero.png` 四周没有透明边，所以盒子按 PNG 的 1027×558 取比，
 不再用「导航两段 + 折高」——那会让每一屏顶部多出一块空白。
 
-页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移一个
-`--sp-3` 把盒顶推到屏幕最上沿，盖住刘海区与导航行，微信胶囊浮在画上；
+页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移
+`utils/page-banner.coverOf()` 算出的那段（导航行高的两成，4~10px），
+把盒顶推过 `.page` 的内边距、齐到屏幕顶沿往下一点，盖住刘海区与导航行，
+微信胶囊浮在画上。上移量按屏幕与胶囊位置算，
+不再按 `--sp-3`（22px）算 —— 那会推过头，把画的顶边甩到屏幕外（Issue #610）。
 页面自有导航（`components/nav-bar`）绝对定位在画里，标题压在画上。
 画里的标题行占掉画的上一段，首卡因此不再压到画的下沿，改为让出
 `--banner-lead-gap`（`96rpx`）落在画里，并自带 `position: relative; z-index: 1`，

@@ -1,3 +1,5 @@
+const bannerPage = require("../../utils/page-banner");
+
 const RATIO = 916 / 1717;
 
 const MAX_H = 360;
@@ -29,6 +31,7 @@ Component({
 
   data: {
     full: false,
+    cover: 0,
     imageHeight: 0
   },
 
@@ -36,6 +39,6 @@ Component({
     const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
     const page = pages[pages.length - 1];
     const full = !!page && pages.length === 1;
-    this.setData({ full, imageHeight: imageHeight() });
+    this.setData({ full, cover: full ? bannerPage.coverOf() : 0, imageHeight: imageHeight() });
   }
 });

@@ -414,8 +414,12 @@ function expandPageBanner(wxml, data, navbar) {
   const comp = fs.readFileSync(path.join(ROOT, "components/page-banner/page-banner.wxml"), "utf8");
   const width = Number((global.wx.getWindowInfo && global.wx.getWindowInfo().windowWidth)
     || global.wx.getSystemInfoSync().windowWidth) || 375;
+  const nav = require(path.join(ROOT, "utils", "nav.js"));
+  const box = nav.top();
+  const full = navbar === "custom";
   const merged = Object.assign({}, data, {
-    full: navbar === "custom",
+    full,
+    cover: full ? Number(((box.navBottom - box.navTop) * 0.2).toFixed(2)) : 0,
     imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
