@@ -6,7 +6,7 @@
   <block wx:if="{{!author}}">
 
     <view class="card roster-head">
-      <text class="head-title">{{totalPeople}} 位作者</text>
+      <text class="head-title poem">{{totalPeople}} 位作者</text>
       <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
     </view>
 
