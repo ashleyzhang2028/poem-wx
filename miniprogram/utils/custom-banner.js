@@ -7,8 +7,6 @@ const WIDTH = 1200;
 
 const QUALITY = 0.72;
 
-const GRID = 250;
-
 const SCALE = 4;
 
 const RATIO_W = crop.RATIO_W;
@@ -113,8 +111,10 @@ async function prepare(path, img, host, id, box, scale) {
       image.onload = () => {
         canvas.width = art.width;
         canvas.height = art.height;
-        canvas.getContext("2d").drawImage(image, art.sx, art.sy, art.sw, art.sh,
-          0, 0, art.width, art.height);
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, art.width, art.height);
+        ctx.drawImage(image, art.sx, art.sy, art.sw, art.sh, 0, 0, art.width, art.height);
         exportTemp(canvas, art).then(resolve);
       };
       image.onerror = () => resolve("");
@@ -141,15 +141,6 @@ function clear() {
 function src() {
   const v = store.settings().banner;
   return typeof v === "string" && v.indexOf(IMAGE) === 0 ? v : "";
-}
-
-function probe(path, img, host, id) {
-  const width = GRID;
-  const height = Math.max(8, Math.round(GRID * img.h / img.w));
-  return shrink(path, width, height)
-    .then((small) => pixels(host, id, small.tempFilePath || path, width, height))
-    .then((data) => ({ w: width, h: height, data: data }))
-    .catch(() => null);
 }
 
 function choose() {
@@ -180,11 +171,9 @@ function choose() {
   });
 }
 
-function suggest(path, img, host, id, box) {
+function suggest(img, box) {
   const scale = RATIO_W * img.h / (RATIO_H * img.w);
-  return probe(path, img, host, id)
-    .then((grid) => crop.snap(box, grid ? grid.data : null, grid ? grid.w : 0, grid ? grid.h : 0))
-    .then((fit) => ({ box: fit, scale: Math.min(1, scale) }));
+  return Promise.resolve({ box: crop.clampBox(box), scale: Math.min(1, scale) });
 }
 
 module.exports = { src, put, clear, choose, suggest, artOf, IMAGE, WIDTH, RATIO_W, RATIO_H };

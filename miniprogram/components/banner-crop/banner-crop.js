@@ -88,32 +88,10 @@ function define() {
         const stage = stageOf({ width: win.windowWidth, height: win.windowHeight }, this.photo);
         this.base = stage.base;
         this.span = 1 / this.base;
-        this.setData({ stageW: stage.stageW, stageH: stage.stageH }, () => {
-          this.lay();
-          this.warm();
-        });
+        this.setData({ stageW: stage.stageW, stageH: stage.stageH }, () => this.lay());
       },
 
       onLock() {},
-
-      warm() {
-        custom.suggest(this.pick.path, this.photo, this, C, { sx: 0.5, sy: 0.5, sw: 1, sh: 1 })
-          .then((r) => {
-            if (!this.data.open || this.laying) return;
-            this.snap(r);
-          }, () => {});
-      },
-
-      snap(r) {
-        const stageW = this.data.stageW;
-        const stageH = this.data.stageH;
-        this.span = clamp(r.scale / this.base, MIN_SPAN, 1 / this.base);
-        this.offset = {
-          x: -stageW * (r.box.sx + r.box.sw / 2 - 0.5),
-          y: -stageH * (r.box.sy + r.box.sh / 2 - 0.5)
-        };
-        this.lay();
-      },
 
       lay() {
         const p = this.photo;
