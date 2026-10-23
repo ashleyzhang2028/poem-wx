@@ -4,6 +4,7 @@ const tiers = require("./tiers");
 const entitlement = require("./entitlement");
 const custom = require("./custom-banner");
 const tone = require("./color-tone");
+const picker = require("./color-picker");
 
 const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
 
@@ -179,26 +180,26 @@ function parseHex(v) {
   return tone.parseHex(v);
 }
 
-const TONE_PICK = "linear-gradient(135deg, #f0a, #fa0, #0a8, #08f, #a0f)";
+function pct(index, count) {
+  return Math.round((index + 0.5) * 1000 / Math.max(1, count)) / 10 + "%";
+}
 
 function toneData() {
-  const picked = tone.current();
-  const rgb = tone.parseHex(picked);
-  const grid = rgb || OWN_THEME.rgb;
-  const at = tone.pick(picked ? picked : tone.hex(grid));
+  const view = picker.read(tone.current());
   return {
-    toneOn: !!picked,
-    toneHex: picked ? picked.toUpperCase() : "",
-    toneRgba: picked ? rgba(rgb, 1) : "",
-    toneSoft: picked ? rgba(rgb, WASH) : "",
-    toneOnInk: picked ? rgba(inkOn(rgb), 1) : "",
-    tonePick: TONE_PICK,
-    toneHues: tone.hueGrid(grid),
-    toneLights: tone.lightGrid(grid, at.hue),
-    toneRows: tone.hueRows(grid),
-    toneHueAt: at.hue,
-    toneLightAt: at.light,
-    toneRead: picked ? at.hue + "° · " + at.saturation + "% · " + at.light + "%" : ""
+    toneOn: view.on,
+    toneHex: view.hex.toUpperCase(),
+    toneRgba: view.rgba,
+    toneSoft: view.soft,
+    toneOnInk: view.on ? rgba(inkOn(tone.parseHex(view.hex)), 1) : "",
+    toneHueAt: pct(view.hueAt, view.bands.hue.length),
+    toneSatAt: pct(view.satAt, picker.SAT.length),
+    toneLightAt: pct(view.lightAt, picker.LIGHT.length),
+    toneBands: view.bands,
+    toneSat: view.satTrack,
+    toneLight: view.lightTrack,
+    tonePlane: view.plane,
+    toneRead: view.read
   };
 }
 

@@ -54,39 +54,6 @@ function rgbToHsl(rgb) {
   return { h: (h * 60 + 360) % 360, s: clamp(s, 0, 1), l: l };
 }
 
-function saturationOf(tone) {
-  return tone.s < 0.08 ? 0.42 : tone.s;
-}
-
-function hueGrid(base) {
-  const tone = rgbToHsl(base || hslToRgb(0, 0.42, LIGHT[7] / 100));
-  const s = saturationOf(tone);
-  const out = [];
-  for (let i = 0; i < 24; i += 1) out.push(hex(hslToRgb(i * HUE_STEP, s, LIGHT[7] / 100)));
-  return out;
-}
-
-function lightGrid(base, hue) {
-  const tone = rgbToHsl(base || hslToRgb(Number(hue) || 0, 0.42, LIGHT[7] / 100));
-  const h = Number(hue) || 0;
-  const s = saturationOf(tone);
-  return LIGHT.map((v) => hex(hslToRgb(h, s, v / 100)));
-}
-
-function hueRows(base) {
-  const tone = rgbToHsl(base || hslToRgb(0, 0.42, LIGHT[7] / 100));
-  const s = saturationOf(tone);
-  const rows = [];
-  for (let i = 0; i < 24; i += 1) {
-    const hue = i * HUE_STEP;
-    rows.push({
-      hue: hue,
-      light: LIGHT.map((v) => hex(hslToRgb(hue, s, v / 100)))
-    });
-  }
-  return rows;
-}
-
 function pick(text) {
   const rgb = parseHex(text);
   if (!rgb) return null;
@@ -116,4 +83,4 @@ function clear() {
   store.saveSettings({ [KEY]: "" });
 }
 
-module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, pick, hueGrid, lightGrid, hueRows, current, set, clear };
+module.exports = { KEY, HUE_STEP, LIGHT, parseHex, hex, hslToRgb, rgbToHsl, pick, current, set, clear };

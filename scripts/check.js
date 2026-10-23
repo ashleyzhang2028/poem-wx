@@ -3616,12 +3616,66 @@ function mountFull(pg, query) {
     .map((i) => parseInt(h.slice(i, i + 2), 16)).join(", ") + ", 1)";
 
   const toneData = themeMod.toneData();
+  const toneCell = toneData.toneBands.hue[0];
   ok("点一格就落到 toneColor，页内 --theme / --strong 当场跟着换",
-    toneMod.set(toneData.toneHues[0]) === true
-      && store.settings().toneColor === toneData.toneHues[0]
-      && themeMod.style().indexOf("--theme:" + toRgba(toneData.toneHues[0])) >= 0
-      && themeMod.style().indexOf("--strong:" + toRgba(toneData.toneHues[0])) >= 0,
+    toneMod.set(toneCell) === true
+      && store.settings().toneColor === toneCell
+      && themeMod.style().indexOf("--theme:" + toRgba(toneCell)) >= 0
+      && themeMod.style().indexOf("--strong:" + toRgba(toneCell)) >= 0,
     "点完 toneColor=" + store.settings().toneColor + "，style 里没换");
+
+  const pickerMod = require(path.join(ROOT, "utils", "color-picker.js"));
+  const hsl = (hex) => {
+    const v = pickerMod.pick(hex);
+    return v ? v.hue + "/" + v.sat + "/" + v.light : "";
+  };
+  const cellCount = (v) => {
+    const planes = v.tonePlane.reduce((all, row) => all + row.length, 0);
+    return v.toneBands.hue.length + v.toneBands.sat.length + v.toneBands.light.length
+      + v.toneSat.length + v.toneLight.length + planes;
+  };
+  const blank = pickerMod.read("");
+  store.saveSettings({ toneColor: "#E23A2E" });
+  const wide = themeMod.toneData();
+  store.saveSettings({ toneColor: "#5E6A4C" });
+  const other = themeMod.toneData();
+  ok("可点的格是三条通道各自铺开再叠一片深浅×浓淡，比原来 24 行 × 12 格宽一截",
+    cellCount(wide) > 300 && cellCount(other) === cellCount(wide),
+    "可点的格一共 " + cellCount(wide) + " 个");
+
+  const distinct = (key, cells) => {
+    const seen = {};
+    cells.forEach((hex) => { seen[hsl(hex).split("/")[key]] = 1; });
+    return Object.keys(seen).length;
+  };
+  const bands = wide.toneBands;
+  const planes = pickerMod.LIGHT.reduce((all, light) => all.concat(
+    pickerMod.SAT.map((sat) => pickerMod.at(200, sat, light))), []);
+  ok("色域里同时有纯色、暗色、亮色与不带饱和度的灰（不再只在中明度那一圈）",
+    bands.hue.length >= 48 && distinct(0, bands.hue) >= 48
+      && distinct(1, bands.sat) >= 11 && distinct(2, bands.light) >= 11
+      && distinct(0, planes) >= 11 && distinct(1, planes) >= 12 && distinct(2, planes) >= 16
+      && distinct(2, planes) >= 16,
+    "三通道 " + bands.hue.length + "/" + distinct(1, bands.sat) + "/" + distinct(2, bands.light)
+      + "，色域里色相 " + distinct(0, planes) + " 档");
+
+  const at2 = pickerMod.read("#E23A2E");
+  ok("取色落位对得上：同一支色再取一次，三条通道指回同一格",
+    at2.hex === "#e23a2e" && pickerMod.SAT[at2.satAt] === 76
+      && pickerMod.read(at2.hex).hueAt === at2.hueAt
+      && pickerMod.read(at2.hex).satAt === at2.satAt
+      && pickerMod.read(at2.hex).lightAt === at2.lightAt
+      && at2.plane[at2.lightAt].length === pickerMod.SAT.length,
+    "同一支色没指回原来的格：" + at2.hueAt + "/" + at2.satAt + "/" + at2.lightAt);
+
+  store.saveSettings({ toneColor: "" });
+  ok("没选过主题色时取色盘照样铺得开，圆点不显示成某个色",
+    blank.on === false
+      && blank.plane.length === pickerMod.LIGHT.length
+      && themeMod.toneData().toneOn === false
+      && themeMod.toneData().toneRgba === ""
+      && themeMod.toneData().toneHex === "",
+    "没选色时取色盘是空的");
 
   store.saveSettings({ toneColor: "" });
   ok("清掉主题色，自选那一支回到清单里的墨色",

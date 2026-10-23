@@ -301,8 +301,45 @@
   text-align: right;
 }
 
-.tone-rows {
+.tone-label {
+  flex: none;
+  width: 64rpx;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: 1rpx;
+  line-height: 1.2;
+}
+
+.tone-axis {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   margin-top: var(--sp-2);
+}
+
+.tone-axes {
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.tone-axis-col {
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6rpx;
+  margin-top: 0;
+}
+
+.tone-axis-col .tone-label {
+  width: auto;
+}
+
+.tone-slider {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .tone-strip {
@@ -310,33 +347,57 @@
   gap: 2rpx;
 }
 
-.tone-strip:not(:first-child) {
-  margin-top: 2rpx;
-}
-
 .tone-cell {
   flex: 1;
   min-width: 0;
-  border-radius: 0;
+  border-radius: 4rpx;
   transition: transform var(--t-press);
-}
-
-.tone-strip:first-child .tone-cell {
-  border-radius: 10rpx 10rpx 0 0;
-}
-
-.tone-strip:last-child .tone-cell {
-  border-radius: 0 0 10rpx 10rpx;
 }
 
 .tone-cell:active {
   transform: scale(.9);
 }
 
-.tone-cell.on {
-  box-shadow: inset 0 0 0 3rpx var(--surface), inset 0 0 0 6rpx var(--ink-2);
+.tone-band {
+  height: 44rpx;
 }
 
-.tone-band {
-  height: 52rpx;
+.tone-track {
+  height: 40rpx;
+}
+
+.tone-plane {
+  margin-top: var(--sp-3);
+  padding: 2rpx;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tone-plane .tone-strip {
+  gap: 1rpx;
+}
+
+.tone-plane .tone-cell {
+  height: 18rpx;
+  border-radius: 0;
+}
+
+.tone-plane .tone-strip:first-child .tone-cell {
+  border-radius: 8rpx 8rpx 0 0;
+}
+
+.tone-plane .tone-strip:last-child .tone-cell {
+  border-radius: 0 0 8rpx 8rpx;
+}
+
+.tone-mark {
+  position: absolute;
+  top: 0;
+  width: 4rpx;
+  height: 100%;
+  border-radius: 2rpx;
+  background: var(--ink);
+  box-shadow: 0 0 0 2rpx var(--surface);
+  transform: translateX(-2rpx);
+  pointer-events: none;
 }
