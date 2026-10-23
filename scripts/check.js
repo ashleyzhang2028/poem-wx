@@ -4248,6 +4248,8 @@ function mountFull(pg, query) {
 
   {
     const bannerComp = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
+    const bannerCss = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.wxss"), "utf8");
+    const bannerJs = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.js"), "utf8");
     const bannerUtil = require(path.join(ROOT, "utils", "page-banner.js"));
     const saves = global.wx;
     global.wx = Object.assign({}, saves, {
@@ -4260,6 +4262,11 @@ function mountFull(pg, query) {
     ok("题图的上移只在页面自己把顶内距归零时生效（首页与主题页同一个判据）",
       bannerComp.indexOf("cover && pagePadding ?") >= 0 && pad > cover,
       "上移量不小于页面顶内距，或上移不看页面顶内距 —— 两条一叠，题图顶边就跑到屏幕外（Issue #620）");
+    ok("题图铺满盒子：按盒高等比裁切，不按原图比例落高（两页题图顶边同高）",
+      bannerComp.indexOf('mode="aspectFill"') >= 0
+        && /\.banner-img\s*\{[^}]*height:\s*100%/.test(bannerCss)
+        && /const RATIO = 750 \/ 360;/.test(bannerJs),
+      "题图按原图比例落高 —— 落不到盒子高，少掉的那几像素由下面一张卡的上负边距顶上去，首页就比主题页高（Issue #620）");
   }
 
   const quotesSrc = fs.readFileSync(path.join(ROOT, "utils", "finish-quote.js"), "utf8");
