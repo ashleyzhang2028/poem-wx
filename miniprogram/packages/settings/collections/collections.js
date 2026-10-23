@@ -54,11 +54,6 @@ Page({
     const all = corpus.course();
     const closed = this.closedList();
     const rows = list.map((c) => {
-      const plan = S.collectionPlan(c, {
-        count: cols.countOf(c),
-        allPoems: all,
-        getRecord: store.getRecord
-      });
       const progress = S.collectionProgress(c, {
         allPoems: all,
         getRecord: store.getRecord,
@@ -74,7 +69,8 @@ Page({
         mastered: stat.mastered,
         avgMastery: stat.avgMastery,
         masteredPercent: stat.learned ? Math.round((stat.mastered / stat.learned) * 100) : 0,
-        planned: plan.length,
+        done: progress.doneNow,
+        planned: progress.planned,
         dailyCount: cols.countOf(c),
         items: this.itemRows(c.id, (this.kept || {})[c.id]),
         open: closed.indexOf(c.id) < 0

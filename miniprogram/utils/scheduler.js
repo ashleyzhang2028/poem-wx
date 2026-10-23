@@ -160,9 +160,10 @@ function coursePlanKeyOf(opt) {
 }
 
 function todaySet(planKey, base) {
-  const saved = store.dayPlan(planKey).ids;
+  const saved = store.dayPlan(planKey);
   if (base <= 0) return [];
-  return saved.length ? saved.slice(0, base) : [];
+  const quota = saved.ids.filter((id) => saved.rows[id].reason !== "pinned");
+  return quota.length >= base ? quota.slice(0, base) : saved.ids.slice(0, base);
 }
 
 function todayDone(ids, recited) {
@@ -196,14 +197,13 @@ function todayAdded(placed, opt) {
   (opt.extraPoems || []).forEach((p) => {
     taken[p.id] = true;
   });
+  (opt.droppedIds || []).forEach((id) => {
+    taken[id] = true;
+  });
   return (opt.allPoems || [])
     .filter((p) => !held[p.id] && !taken[p.id] && isDue(getRecord(p.id), now))
     .sort(dueOrder(getRecord))
     .map((p) => dueRow(p, getRecord(p.id)));
-}
-
-function heldCount(ids, held) {
-  return (ids || []).filter((id) => held[id]).length;
 }
 
 function placedPlan(opt) {
@@ -216,12 +216,12 @@ function placedPlan(opt) {
   const key = planKeyOf(opt);
   const saved = store.dayPlan(key);
   const placed = [];
-  let kept = 0;
+  const droppedIds = [];
   (saved.ids || []).forEach((id) => {
+    if (held[id]) droppedIds.push(id);
     const poem = byId[id];
     const row = saved.rows[id];
     if (!poem || !row || held[id]) return;
-    kept += 1;
     placed.push({
       poem: poem,
       reason: row.reason,
@@ -229,26 +229,36 @@ function placedPlan(opt) {
     });
   });
 
-  if (!placed.length || kept !== saved.ids.length - heldCount(saved.ids, held)) {
+  if (!placed.length) {
     store.dropDayPlan(key);
     return null;
   }
 
-  const added = todayAdded(placed, opt).concat(refillPlan(placed, opt, saved.ids.length));
+  const quota = placed.filter((it) => it.reason !== "pinned").length;
+  const vacated = droppedIds.filter((id) => saved.rows[id].reason !== "pinned").length;
+  const due = todayAdded(placed, {
+    getRecord: opt.getRecord,
+    allPoems: opt.allPoems,
+    extraPoems: opt.extraPoems,
+    droppedIds: droppedIds
+  });
+  const added = (vacated ? due.slice(0, quota + vacated) : due)
+    .concat(refillPlan(placed, opt, quota + vacated, droppedIds));
   const withAdded = placed.concat(added);
   const merged = mergePinned(withAdded, opt.extraPoems, opt.getRecord);
-  if (!added.length && merged.length === withAdded.length) return withAdded;
+  if (!added.length && merged.length === withAdded.length && !droppedIds.length) return withAdded;
   store.saveDayPlan(key, merged);
   return merged;
 }
 
-function refillPlan(placed, opt, target) {
-  const missing = target - placed.length;
-  if (missing <= 0) return [];
+function refillPlan(placed, opt, quota, skip) {
   const held = defer.heldIds();
   const taken = {};
   (placed || []).forEach((it) => { taken[it.poem.id] = true; });
   (opt.extraPoems || []).forEach((p) => { taken[p.id] = true; });
+  (skip || []).forEach((id) => { taken[id] = true; });
+  const missing = quota - placed.filter((it) => it.reason !== "pinned").length;
+  if (missing <= 0) return [];
   return (poolForScope({
     grade: Number(opt.grade),
     term: Number(opt.term),
