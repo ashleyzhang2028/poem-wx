@@ -194,6 +194,9 @@ function toneData() {
     toneHueAt: view.hueAt,
     toneSatAt: view.satAt,
     toneLightAt: view.lightAt,
+    toneHueRead: view.hueRead,
+    toneSatRead: view.satRead,
+    toneLightRead: view.lightRead,
     toneRead: view.read
   };
 }

@@ -3616,76 +3616,89 @@ function mountFull(pg, query) {
     .map((i) => parseInt(h.slice(i, i + 2), 16)).join(", ") + ", 1)";
 
   const toneData = themeMod.toneData();
-  const toneCell = toneData.toneHue[0];
-  ok("点一格就落到 toneColor，页内 --theme / --strong 当场跟着换",
-    toneMod.set(toneCell) === true
-      && store.settings().toneColor === toneCell
-      && themeMod.style().indexOf("--theme:" + toRgba(toneCell)) >= 0
-      && themeMod.style().indexOf("--strong:" + toRgba(toneCell)) >= 0,
-    "点完 toneColor=" + store.settings().toneColor + "，style 里没换");
+  const tonePick = toneData.toneHex.toLowerCase();
+  ok("选完就落到 toneColor，页内 --theme / --strong 当场跟着换",
+    toneMod.set(tonePick) === true
+      && store.settings().toneColor === tonePick
+      && themeMod.style().indexOf("--theme:" + toRgba(tonePick)) >= 0
+      && themeMod.style().indexOf("--strong:" + toRgba(tonePick)) >= 0,
+    "选完 toneColor=" + store.settings().toneColor + "，style 里没换");
 
   const pickerMod = require(path.join(ROOT, "utils", "color-picker.js"));
   const picker = (hex) => pickerMod.pick(hex);
+  const stopsOf = (css) => String(css || "").split(",").map((s) => s.trim().split(" ")[0]);
+
   store.saveSettings({ toneColor: "#E23A2E" });
   const wide = themeMod.toneData();
-  store.saveSettings({ toneColor: "#5E6A4C" });
-  const other = themeMod.toneData();
 
-  const inLine = (track, fix) => {
-    const held = picker(fix.hex);
-    const wants = fix.fields.map((f) => held[f]);
-    return track.every((hex) => {
+  const inLine = (track, fields) => {
+    const held = picker(wide.toneHex.toLowerCase());
+    return stopsOf(track).every((hex) => {
       const v = picker(hex);
-      if (v.sat === 0) return true;
-      return fix.fields.every((f, i) => v[f] === wants[i]);
+      if (v.sat === 0 || v.light === 0 || v.light === 100) return true;
+      return fields.every((f) => Math.abs(v[f] - held[f]) <= 4);
     });
   };
-  const anchor = { hex: wide.toneHex.toLowerCase(), fields: [] };
-  ok("三条轴分开：色相行只改色相，饱和行只改饱和，明度行只改明度",
-    inLine(wide.toneHue, { ...anchor, fields: ["sat", "light"] })
-      && inLine(wide.toneSat, { ...anchor, fields: ["hue", "light"] })
-      && inLine(wide.toneLight, { ...anchor, fields: ["hue", "sat"] }),
-    "色相行里混进了别的饱和或明度");
+  ok("三条轴分开：色相带只改色相，饱和带只改饱和，明度带只改明度",
+    inLine(wide.toneHue, ["sat", "light"])
+      && inLine(wide.toneSat, ["hue", "light"])
+      && inLine(wide.toneLight, ["hue", "sat"]),
+    "色相带里混进了别的饱和或明度");
 
-  const spread = (cells, field) => (
-    Object.keys(cells.reduce((all, hex) => {
-      all[picker(hex)[field]] = 1;
-      return all;
-    }, {})).length
-  );
-  ok("三条轴各自走到底：色相能到全圈，饱和从 0 到 100，明度从 0 到 100",
-    spread(wide.toneHue, "hue") >= 48
-      && spread(wide.toneSat, "sat") >= 11 && spread(wide.toneSat, "sat") === spread(other.toneSat, "sat")
-      && wide.toneSat.some((hex) => picker(hex).sat === 0)
-      && wide.toneSat.some((hex) => picker(hex).sat === 100)
-      && wide.toneLight.some((hex) => picker(hex).light === 0)
-      && wide.toneLight.some((hex) => picker(hex).light === 100),
-    "色相 " + spread(wide.toneHue, "hue") + " 档，饱和 " + spread(wide.toneSat, "sat")
-      + " 档，明度 " + spread(wide.toneLight, "light") + " 档");
+  const ends = (track) => stopsOf(track).reduce((all, hex) => {
+    const v = picker(hex);
+    return [Math.min(all[0], v.sat), Math.min(all[1], v.light), Math.max(all[2], v.sat), Math.max(all[3], v.light)];
+  }, [100, 100, 0, 0]);
+  const turns = (track) => stopsOf(track).reduce((all, hex) => {
+    const v = picker(hex);
+    return [Math.min(all[0], v.hue), Math.max(all[1], v.hue)];
+  }, [359, 0]);
+  store.saveSettings({ toneColor: "#E23A2E" });
+  const red = turns(themeMod.toneData().toneHue);
+  store.saveSettings({ toneColor: "#2E6A67" });
+  const teal = turns(themeMod.toneData().toneHue);
+  const sat = ends(wide.toneSat);
+  const light = ends(wide.toneLight);
+  ok("三条带各自走到底：色相铺满整圈，饱和与明度都从 0 到 100",
+    red[0] <= 8 && red[1] >= 340 && teal[0] <= 8 && teal[1] >= 340
+      && sat[0] === 0 && sat[2] === 100
+      && light[1] === 0 && light[3] === 100,
+    "色相 " + red + " / " + teal + "，饱和 [最低 " + sat[0] + ", 最高 " + sat[2]
+      + "]，明度 [最低 " + light[1] + ", 最高 " + light[3] + "]");
 
   store.saveSettings({ toneColor: "#E23A2E" });
   const at2 = themeMod.toneData();
-  const markOf = (track, at) => Math.round(parseFloat(at) * track.length / 100 - 0.5);
   const here = picker(at2.toneHex.toLowerCase());
-  const atMark = [
-    picker(at2.toneHue[markOf(at2.toneHue, at2.toneHueAt)]),
-    picker(at2.toneSat[markOf(at2.toneSat, at2.toneSatAt)]),
-    picker(at2.toneLight[markOf(at2.toneLight, at2.toneLightAt)])
-  ];
-  ok("取色落位对得上：三条轴上的标记都落在当前色那一格",
-    atMark[0].hue === here.hue && atMark[1].sat === here.sat && atMark[2].light === here.light,
-    "标记指的位置不是当前色：" + at2.toneHueAt + "/" + at2.toneSatAt + "/" + at2.toneLightAt
-      + "，指到 " + atMark.map((v) => v.hue + "/" + v.sat + "/" + v.light).join(" "));
+  ok("取色落位对得上：三条带上的标记分别停在当前色相 / 饱和 / 明度",
+    Math.abs(parseFloat(at2.toneHueAt) / 100 * 360 - here.hue) <= 1
+      && Math.abs(parseFloat(at2.toneSatAt) - here.sat) <= 1
+      && Math.abs(parseFloat(at2.toneLightAt) - here.light) <= 1,
+    "标记位置不是当前色：" + at2.toneHueAt + "% / " + at2.toneSatAt + "% / " + at2.toneLightAt + "%");
+
+  const dragged = pickerMod.fromAxis("hue", 0.5, "#E23A2E");
+  const grayed = pickerMod.fromAxis("sat", 0, "#E23A2E");
+  const lit = pickerMod.fromAxis("light", 1, "#E23A2E");
+  ok("色带上按位置取色：横拖到哪就取哪一档，只动这一轴的量",
+    Math.abs(picker(dragged).hue - 180) <= 2 && picker(dragged).sat === here.sat
+      && picker(grayed).sat === 0 && picker(grayed).light === here.light
+      && picker(lit).light === 100 && Math.abs(picker(lit).hue - here.hue) <= 4,
+    "拖到中点取到 " + dragged + "，拖到最左取到 " + grayed + "，拖到最右取到 " + lit);
+
+  ok("顶上的预览就是已应用的主题色：点一下那一块，落进 toneColor 的还是它",
+    themePageWxml.indexOf('class="tone-preview"') >= 0
+      && /class="tone-preview"[^>]*bindtap="onToneTap"/.test(themePageWxml)
+      && /onToneTap\([\s\S]{0,600}?tone\.set\(hex\)/.test(themePageJs),
+    "预览块点下去没接到 tone.set");
 
   store.saveSettings({ toneColor: "" });
   const blank = pickerMod.read("");
-  ok("没选过主题色时取色盘照样铺得开，圆点不显示成某个色",
+  ok("没选过主题色时三条带照样铺得开，标记不落在某个色上",
     blank.on === false
-      && blank.hue.length > 1 && blank.sat.length === pickerMod.SAT.length
+      && stopsOf(blank.hue).length > 1 && stopsOf(blank.sat).length > 1
       && themeMod.toneData().toneOn === false
       && themeMod.toneData().toneRgba === ""
       && themeMod.toneData().toneHex === "",
-    "没选色时取色盘是空的");
+    "没选色时取色带是空的");
 
   store.saveSettings({ toneColor: "" });
   ok("清掉主题色，自选那一支回到清单里的墨色",

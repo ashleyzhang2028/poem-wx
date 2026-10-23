@@ -1,5 +1,6 @@
 const theme = require("../../../utils/theme");
 const tone = require("../../../utils/color-tone");
+const picker = require("../../../utils/color-picker");
 const custom = require("../../../utils/custom-banner");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
@@ -95,9 +96,35 @@ Page({
     return true;
   },
 
-  onTonePick(e) {
+  onToneDrag(e) {
     if (this.toneBlocked()) return;
-    tone.set(e.currentTarget.dataset.hex);
+    const axis = String(e.currentTarget.dataset.axis || "");
+    const touch = (e.touches || [])[0] || (e.changedTouches || [])[0];
+    if (!touch || !picker.AXES[axis]) return;
+    if (!this.bands) this.bands = {};
+    const box = this.bands[axis];
+    if (!box) {
+      wx.createSelectorQuery().in(this).select("#tone-" + axis).boundingClientRect((r) => {
+        if (!r || !r.width) return;
+        this.bands[axis] = { left: r.left, width: r.width };
+      }).exec();
+      return;
+    }
+    const hex = picker.fromAxis(axis, (touch.clientX - box.left) / box.width, tone.current());
+    if (!hex || hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
+    tone.set(hex);
+    this.paint();
+  },
+
+  onToneTap(e) {
+    if (this.toneBlocked()) return;
+    const hex = String(e.currentTarget.dataset.hex || "");
+    if (!tone.parseHex(hex)) {
+      wx.showToast({ title: "左右滑色带挑一个色", icon: "none" });
+      return;
+    }
+    if (hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
+    tone.set(hex);
     this.claim();
   },
 
