@@ -1584,24 +1584,6 @@ button, textarea {
   flex: none;
 }
 
-.trans-toggle-arrow {
-  flex: none;
-  box-sizing: border-box;
-  width: 14rpx;
-  height: 14rpx;
-  margin: 0 var(--sp-1) 6rpx var(--sp-2);
-  border-right: 2rpx solid var(--ink-3);
-  border-bottom: 2rpx solid var(--ink-3);
-  transform: rotate(45deg);
-  transition: transform var(--t-move) var(--ease);
-}
-
-.trans-toggle-arrow.open {
-  margin-bottom: 0;
-  margin-top: 6rpx;
-  transform: rotate(-135deg);
-}
-
 .trans-text {
   display: block;
   font-size: var(--fs-body);
