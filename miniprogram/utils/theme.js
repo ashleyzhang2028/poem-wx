@@ -34,7 +34,12 @@ const THEMES = [
   { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
   { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
   { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
-  { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE }
+  { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE },
+  { key: "ganziyading", name: "甘孜亚丁", rgb: [236, 158, 1], banner: CITY_BANNER + "ganzhi_yading.png", group: LANDSCAPE },
+  { key: "lijiangluguhu", name: "丽江泸沽湖", rgb: [25, 91, 108], banner: CITY_BANNER + "lijiang_luguhu.png", group: LANDSCAPE },
+  { key: "jiayuguan", name: "嘉峪关", rgb: [249, 139, 57], banner: CITY_BANNER + "jiayuguan.png", group: LANDSCAPE },
+  { key: "eergunashidi", name: "额尔古纳", rgb: [205, 83, 63], banner: CITY_BANNER + "eerguna_shidi.png", group: LANDSCAPE },
+  { key: "hulunbeiershiwei", name: "呼伦贝尔室韦", rgb: [53, 131, 166], banner: CITY_BANNER + "hulunbeier_shiwei.png", group: LANDSCAPE }
 ];
 
 const OWN_THEME = {

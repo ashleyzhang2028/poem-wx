@@ -61,7 +61,7 @@
 不另抄一份名单；「自定义题图」不是一个色，是一项能力，`items` 只有一项
 （`theme.ownSwatchData()`）。
 
-大好河山七支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
+大好河山各支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
 （`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `theme.js` 的 `CITY_BANNER`），
 不进包；其余主题一律包内 `icons/hero.png`。
 
@@ -74,6 +74,11 @@
 | 丽江虎跳峡 | `rgba(44, 62, 62, 1)` | `yunnan_hutiaoxia.png` |
 | 南平武夷山 | `rgba(14, 133, 118, 1)` | `nanping_wuyishan.png` |
 | 富阳富春江 | `rgba(26, 37, 35, 1)` | `fuyang_fuchunjiang.png` |
+| 甘孜亚丁 | `rgba(236, 158, 1, 1)` | `ganzhi_yading.png` |
+| 丽江泸沽湖 | `rgba(25, 91, 108, 1)` | `lijiang_luguhu.png` |
+| 嘉峪关 | `rgba(249, 139, 57, 1)` | `jiayuguan.png` |
+| 额尔古纳 | `rgba(205, 83, 63, 1)` | `eerguna_shidi.png` |
+| 呼伦贝尔室韦 | `rgba(53, 131, 166, 1)` | `hulunbeier_shiwei.png` |
 
 前两支与黛青同色，色卡上那两枚圆点长得一样，名字是唯一的分辨依据。
 

@@ -3477,7 +3477,12 @@ function mountFull(pg, query) {
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
     ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
-    ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"]
+    ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"],
+    ["ganziyading", "甘孜亚丁", [236, 158, 1], "landscape"],
+    ["lijiangluguhu", "丽江泸沽湖", [25, 91, 108], "landscape"],
+    ["jiayuguan", "嘉峪关", [249, 139, 57], "landscape"],
+    ["eergunashidi", "额尔古纳", [205, 83, 63], "landscape"],
+    ["hulunbeiershiwei", "呼伦贝尔室韦", [53, 131, 166], "landscape"]
   ];
 
   const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
@@ -3486,7 +3491,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 19 项（十二个传统色 + 七张大好河山）",
+  ok("清单就是这 24 项（十二个传统色 + 十二张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
