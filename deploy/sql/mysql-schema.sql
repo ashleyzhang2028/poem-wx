@@ -378,8 +378,7 @@ CREATE TABLE IF NOT EXISTS `pay_orders` (
   PRIMARY KEY (`out_trade_no`),
   UNIQUE KEY `pay_orders_wx_order_idx` (`wx_order_id`),
   KEY `pay_orders_uid_idx` (`uid`, `created_at`),
-  KEY `pay_orders_status_idx` (`status`, `created_at`),
-  CONSTRAINT `pay_orders_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE RESTRICT
+  KEY `pay_orders_status_idx` (`status`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------ score_records

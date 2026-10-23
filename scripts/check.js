@@ -8336,6 +8336,10 @@ function gapped(items, max) {
       "沙箱单拿现网密钥签名，或现网单拿沙箱密钥签名");
     ok("到期立刻按 Free 算（planTier）",
       corePay.planTier({ plan: "max", plan_until: Date.now() - 1 }) === "free", "过期的 Max 还在放行");
+    ok("pay_orders 不外键到 accounts（注销账号是硬删除，订单要按法定期限留存，不能被它挡住或连带删掉）",
+      !/pay_orders[\s\S]{0,1200}?FOREIGN KEY[\s\S]{0,200}?REFERENCES `accounts`/.test(
+        read("../deploy/sql/mysql-schema.sql").split("-- ------------------------------------------------------------ pay_orders")[1].split("-- ------------------------------------------------------------ score_records")[0]),
+      "付过费的用户注销账号会被订单卡住，或订单随账号一起没了");
     ok("后台支付接口只认管理员", (await payMod.payAdmin(deps(), { op: "orders" })).status === 403, "普通用户能看全部订单");
     ok("价目表：生效道具必须指向同档位同周期的道具",
       !!payMod.normCatalog({ products: payMod.DEFAULT_CATALOG.products, active: Object.assign({}, payMod.DEFAULT_CATALOG.active, { "pro.month": "max_year" }) }).bad,
