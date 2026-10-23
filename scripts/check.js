@@ -1510,6 +1510,8 @@ const GATED = {
     const fbLib = read("utils/feedback-api.js");
     const adminFbLib = read("utils/admin-feedback.js");
     const remoteSrc = read("utils/remote.js");
+    const fbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "feedback", "index.js"), "utf8");
+    const adminFbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8");
     const serverCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
     const minePage = read("pages/mine/mine.wxml");
     const adminPage = read("packages/admin/index/index.wxml");
@@ -1571,21 +1573,20 @@ const GATED = {
         && !/identity\.deviceId/.test(serverCore),
       "服务端还留着按设备标识认人的路");
 
-    ok("用户能删自己那一条（服务端 already 有路，页面给得出入口）",
-      /fb\.remove\(/.test(fbPageJs) && /bindtap="onDeleteThread"/.test(read("packages/feedback/index/index.wxml"))
-        && /^\s*feedbackDelete,$/m.test(remoteSrc),
-      "服务端有 op: delete，页面上没有删的入口 —— 提过的话撤不回来");
+    const fbWxml = read("packages/feedback/index/index.wxml");
+    ok("反馈记录谁都不删（用户撤不回，管理员也删不掉，台账留着）",
+      !/op === "delete"/.test(fbRouteSrc)
+        && !/deleteThread|deleteComment/.test(adminFbRouteSrc)
+        && /ADMIN_OPS\.indexOf\(op\) < 0/.test(adminFbRouteSrc)
+        && !/feedbackDelete|remove/.test(fbLib)
+        && !/feedbackDelete|remove/.test(adminFbLib)
+        && !/feedbackDelete|adminFeedbackDelete/.test(remoteSrc)
+        && !/fb\.remove\(|onDeleteThread|onDeleteComment/.test(fbPageJs)
+        && !/onDeleteThread|onDeleteComment/.test(read("packages/admin/feedback/detail/detail.js"))
+        && !/onDeleteThread|onDeleteComment|canDelete/.test(fbWxml),
+      "反馈页或后台又摆出了删除入口 —— 记录是台账，删了就对不上账");
 
-    ok("后台详情能给用户删（那条管理路径也接上）",
-      /adminFeedbackDelete/.test(adminFbLib) && /onDeleteThread/.test(read("packages/admin/feedback/detail/detail.js")));
-
-    ok("后台列表也能删（不用先点进详情）",
-      /onDelete/.test(read("packages/admin/feedback/index.js"))
-        && /bindlongpress="onDelete"/.test(read("packages/admin/feedback/index.wxml"))
-        && /data-tid="\{\{row\.tid\}\}"[^>]*catchtap="onDelete"/.test(read("packages/admin/feedback/index.wxml")),
-      "列表页删不了，管理员得逐条点进详情 —— 一次清理十几条就是这么耗光的");
-
-    ok("登录回来就把服务端给的角色记进本机会话（重启后改档位/删反馈的按钮才出得来）",
+    ok("登录回来就把服务端给的角色记进本机会话（重启后后台那些按钮才出得来）",
       /saveSession\(\{[^}]*role: role\s*\}/.test(read("utils/auth.js"))
         && /store\.profile\(\)\.role/.test(read("utils/auth.js")),
       "角色只落在 auth 那份里，profile 侧的 isAdmin() 重启后读不到 —— 按钮被自己藏起来");
@@ -3280,9 +3281,20 @@ function mountFull(pg, query) {
     "只关列表不关提交，用户交完成绩却发现榜上没有自己");
 
   ok("往榜上灌成绩的两条路都限流（成绩底账只增不减）",
-    /function boardSubmit[\s\S]{0,1600}?limiter\.take\(cfg, "device", "board:"/.test(apiCore)
+    /function boardSubmit[\s\S]{0,1600}?limiter\.take\(cfg, "board", "dev:"/.test(apiCore)
       && /function examRecordCreate[\s\S]{0,1600}?limiter\.take\(cfg, "device", "examrec:"/.test(apiCore),
     "去掉限流之后一个 deviceId 能在几秒内往 score_records / exam_records 里灌满行");
+
+  ok("交成绩的额度走自己那一格（设备那格是给登录验证码用的 10 次/小时，一轮飞花令交一次就撞顶）",
+    /if \(bucket === "board"\) return cfg\.rateBoard/.test(apiCore)
+      && /rateBoard:\s*\[\[/.test(fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "config.js"), "utf8"))
+      && /"board", "uid:"/.test(apiCore),
+    "交成绩吃的是 rate.device —— 连不上的那几次都在服务端扣额度，玩到第 11 轮起就回 429 且没人告诉用户");
+
+  ok("登录那几条额度只挡「成功的登录」（成功才计数，上游失败与已过期的一分不扣）",
+    /if \(r\.status !== 200\) return r;\s*limiter\.hit\("device", "wxlogin:"/.test(apiCore)
+      && !/limiter\.take\(cfg, "device", "wxlogin:/.test(apiCore),
+    "take() 先扣再看真伪：code2session 一挂，用户怎么点都是白扣，扣满 30 次当天就登不进来");
 
   ok("两个榜默认开着（没有那一行就是开，只有显式写 0 才算关）",
     /return String\(v == null \? "" : String\(v\)\.trim\(\)\) !== "0"/.test(apiCore),
@@ -3788,6 +3800,26 @@ function mountFull(pg, query) {
   ok("首页不再有第二个大按钮（「开始背」撤了，只留「加背」卡里那一套）",
     !/onStart/.test(homeWxml) && !/onBrowseAll/.test(homeWxml),
     "hero 区还挂着 onStart / onBrowseAll —— 一屏里两个填黑的大按钮");
+
+  {
+    const stepRule = (which) => {
+      const m = new RegExp("\\.sheet-step-btn\\." + which + "\\s*\\{([^}]*)\\}").exec(sheetWxss);
+      return m ? m[1] : "";
+    };
+    const ratingCols = /chip-group cols-(\d+)/.exec(sheetWxml);
+    ok("评分那一行的栏数按颗数给（三颗评分键塞进五栏时，每颗只剩一个字宽，字就竖着排了）",
+      !!ratingCols && Number(ratingCols[1]) === (sheetJs.match(/key: "(bad|fuzzy|good)"/g) || []).length,
+      "评分行是 " + (ratingCols ? ratingCols[1] : "?") + " 栏，评分键有 "
+        + (sheetJs.match(/key: "(bad|fuzzy|good)"/g) || []).length + " 颗");
+    ok("延后两颗键挂在翻页那一行（不再占评分行的栏位）",
+      sheetJs.indexOf("defer") >= 0
+        && /sheet-step-btn[^"]*defer[\s\S]{0,200}?bindtap="onDefer"/.test(sheetWxml)
+        && !/chip defer/.test(sheetWxml),
+      "延后键还在评分行里抢位置");
+    ok("翻页那一行两侧不撑开（免得两颗键把中间挤没）",
+      !/flex:\s*1/.test(stepRule("prev") + stepRule("next")),
+      "上一首 / 下一首仍按 flex:1 撑满整行");
+  }
   ok("点篇目仍走弹层（同一件事，不该两条路）",
     /onOpen[\s\S]{0,300}?openSheet\(/.test(homeJs));
   const openSheetSrc = homeJs.slice(homeJs.indexOf("openSheet(id, source) {"));
@@ -5576,7 +5608,6 @@ function gapped(items, max) {
   }
 
   void remoteSrc;
-  void authSrc;
 })();
 
 {
@@ -8016,6 +8047,31 @@ function gapped(items, max) {
   }));
 }
 
+{
+  const memProbe = {};
+  const store = require(path.join(ROOT, "utils", "store.js"));
+  const auth = require(path.join(ROOT, "utils", "auth.js"));
+
+  global.wx = {
+    getStorageSync: (k) => (k in memProbe ? JSON.parse(JSON.stringify(memProbe[k])) : ""),
+    setStorageSync: (k, v) => { memProbe[k] = JSON.parse(JSON.stringify(v)); },
+    removeStorageSync: (k) => { delete memProbe[k]; },
+    request: (opt) => opt.success({ statusCode: 200, data: { uid: "wx_1", nickname: "诗友", plan: { tier: "pro" }, expiresIn: 2592000 } }),
+    login: (opt) => opt.success({ code: "C" })
+  };
+
+  track((async () => {
+    const mem = store.read(store.KEYS.auth, {}) || {};
+    auth.configure({ baseUrl: "https://probe.test" });
+    auth.applySession({ accessToken: "A1", expiresIn: 86400, tier: "pro" });
+    store.write(store.KEYS.auth, Object.assign({}, store.read(store.KEYS.auth, {}) || {}, { refreshToken: "" }));
+    await auth.refresh();
+    const after = (store.read(store.KEYS.auth, {}) || {}).expiresAt || 0;
+    ok("没有刷新令牌时走 /api/me，回的那份也带 expiresIn（不带就续不上期）",
+      after - Date.now() > 86400000 * 25,
+      "after - now = " + (after - Date.now()) + " 毫秒（/api/me 那份没有 expiresIn 时这里停在登录那一刻的 1 天）");
+  })());
+}
 
 {
 

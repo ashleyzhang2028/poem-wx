@@ -79,11 +79,9 @@ function decorate(thread) {
     resolutionName: resolutionName(thread.resolution),
     createdText: stampOf(thread.createdAt),
     updatedText: stampOf(thread.updatedAt),
-    canDelete: !!thread.canDelete,
     comments: (thread.comments || []).map((c) => Object.assign({}, c, {
       stampText: stampOf(c.createdAt),
-      admin: c.role === "admin",
-      canDelete: !!c.canDelete
+      admin: c.role === "admin"
     }))
   });
 }
@@ -132,15 +130,6 @@ function comment(tid, text) {
   }));
 }
 
-function remove(tid, cid) {
-  if (!tid && !cid) return Promise.resolve({ ok: false, reason: "要删哪一条没说清楚" });
-  return remote.feedbackDelete(tid, cid).then((res) => ({
-    ok: !!res.ok,
-    offline: !!res.offline,
-    reason: res.reason || "没删成，稍后再试"
-  }));
-}
-
 module.exports = {
   KINDS,
   STATUSES,
@@ -156,6 +145,5 @@ module.exports = {
   validate,
   submit,
   mine,
-  comment,
-  remove
+  comment
 };

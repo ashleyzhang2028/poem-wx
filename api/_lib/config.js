@@ -85,6 +85,8 @@ var CONFIG = {
     phone: [[3600000, 2], [86400000, 5], [2592000000, 15]]
   },
 
+  rateBoard: [[3600000, 40], [86400000, 120]],
+
   avatarMaxBytes: intEnv("AVATAR_MAX_BYTES", 1024 * 1024),
   rateAvatar: [[3600000, 10], [86400000, 30]],
 

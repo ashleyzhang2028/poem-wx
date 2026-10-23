@@ -534,17 +534,6 @@ function feedbackComment(tid, content) {
   );
 }
 
-function feedbackDelete(tid, cid) {
-  if (!configured()) return Promise.resolve({ ok: false, offline: true });
-  const body = { op: "delete", deviceId: store.deviceId() };
-  if (tid) body.tid = tid;
-  if (cid) body.cid = cid;
-  return request(PATHS.feedback, body).then(
-    (res) => ({ ok: true, deleted: res && res.deleted }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没删成" })
-  );
-}
-
 function adminFeedbackList(status) {
   if (!adminReady()) return Promise.resolve({ ok: false, threads: [], counts: {} });
   return request(PATHS.adminFeedback, { op: "list", status: status || "all" }).then(
@@ -562,17 +551,6 @@ function adminFeedbackThread(tid) {
   return request(PATHS.adminFeedback, { op: "thread", tid: tid }).then(
     (res) => ({ ok: true, thread: res && res.thread }),
     (err) => ({ ok: false, reason: (err && err.message) || "" })
-  );
-}
-
-function adminFeedbackDelete(tid, cid) {
-  if (!adminReady()) return Promise.resolve({ ok: false });
-  const body = { op: cid ? "deleteComment" : "deleteThread" };
-  if (tid) body.tid = tid;
-  if (cid) body.cid = cid;
-  return request(PATHS.adminFeedback, body).then(
-    (res) => ({ ok: true, deleted: res && res.deleted }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没删成" })
   );
 }
 
@@ -611,9 +589,7 @@ module.exports = {
   feedbackMine,
   feedbackCreate,
   feedbackComment,
-  feedbackDelete,
   adminFeedbackList,
   adminFeedbackThread,
-  adminFeedbackReply,
-  adminFeedbackDelete
+  adminFeedbackReply
 };

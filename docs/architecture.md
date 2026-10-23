@@ -507,7 +507,7 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 **后台管理 → 用户反馈**（`packages/admin/feedback/index`，详情在
 `packages/admin/feedback/detail/detail`）。
 
-反馈只认登录身份：四条用户路径（建 / 读 / 跟帖 / 删）都以 `uid` 认人，
+反馈只认登录身份：三条用户路径（建 / 读 / 跟帖）都以 `uid` 认人，
 没有会话回 `401 E_NO_SESSION`。页面进来先过 `gate.open`，登录流程走完再画。
 限流也按 `uid`（`cfg.rate.uid`），不按设备号：拿设备当桶等于删掉限流。
 两页共用 `utils/feedback-api.js`
@@ -520,7 +520,7 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 | 处理结果 | 未处理 `open` / 处理中 `replied` / 已处理 `closed` | 管理员 |
 | 处理方式 | 待定 / 已采纳 / 排期中 / 不采纳 / 重复 | 管理员 |
 
-三件事落在服务端，不在客户端：
+几件事落在服务端，不在客户端：
 
 1. **重复提交只落一条**。`feedbackCreate` 按「谁 + 类别 + 标题 + 正文」算一枚
    `sha256`，与这位用户一分钟内的最近五条比，撞上就不再写行，回 `duplicate: true`。
@@ -534,9 +534,11 @@ free / pro / max 都是管理员在用户列表页里按人分的，界面上一
 3. **用户跟进会把这条打回未处理**（只对 `closed` 生效）。`feedbackComment`
    写给用户的那条路只动 `status` 与 `updated_at`，不碰类别与其他列 ——
    管理员正在处理的那条，不该因为用户补一句就换了类型。
-4. **删自己在服务端判**。用户删得掉自己提的那一条与自己跟的那几句，
-   管理员回的那几句删不掉；后台详情另有一条管理路径。
-   可删与否由服务端下发（`canDelete`），页面只管照它摆不摆入口。
+4. **记录不提供删除**。用户撤不回自己提的那一条，管理员也删不掉；
+   两条路径都没有删除 op（`/api/feedback` 只认建 / 读 / `op: "comment"`，
+   `/api/admin/feedback` 只认 `list` / `thread` / `reply` / `status`，其余 op 回
+   `400 E_BAD_OP`）。存储层的 `deleteFeedbackThread` / `deleteFeedbackComment`
+   留在接口里，那不是用户路径。
 
 后台列表**按处理结果分三张卡**（未处理 / 处理中 / 已处理），组内按创建时间倒序；
 卡片上是主题、用户名、创建时间与最后处理时间。点进详情才带上处理意见、
@@ -614,7 +616,7 @@ wx.login() 拿 code
 | `/api/admin/accounts` | POST | 本仓库 `api/` | 名录 |
 | `/api/admin/grant` | POST/DELETE | 本仓库 `api/` | 改档 / 回收 |
 | `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |
-| `/api/feedback` | GET / POST | 本仓库 `api/` | 自己的意见反馈：`GET` 列自己的（含沟通记录），`POST` 新建 / `op: "comment"` 追加一句 / `op: "delete"` 删自己的 |
+| `/api/feedback` | GET / POST | 本仓库 `api/` | 自己的意见反馈：`GET` 列自己的（含沟通记录），`POST` 新建 / `op: "comment"` 追加一句 |
 | `/api/admin/feedback` | POST | 本仓库 `api/` | `op: "list"` 全量（带各状态计数）/ `"thread"` 单条 / `"reply"` 回复并改处理结果与处理方式 / `"status"` 只改状态与方式 |
 
 **登录这道门不依赖后端**：`utils/auth.js` 在服务器没接上时落一个本机身份，
@@ -912,6 +914,8 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 否则会被导航行盖住。
 主题页（`packages/settings/theme`）与首页同一套：banner、导航行、首卡位置一致，
 切主题时图与配色同时换；页面底色取 `--surface`，卡片去底留框线。
+首卡只留 `.card` 那一份内距与横向外边距，外加上面那笔 `--banner-lead-gap`，
+不再叠页头自己的内距与底 —— 两处各写一份就会差出几像素（Issue #588）。
 
 画随主题换一张：`THEMES` 每一项带 `banner` 字段，页面读 `theme.bannerOf(key)`。
 大好河山那七张走云托管对象存储的 `themes/city/` 路径（包内不放这几张，
