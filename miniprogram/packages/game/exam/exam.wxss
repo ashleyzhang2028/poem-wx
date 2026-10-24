@@ -189,9 +189,21 @@
 
 .exam-nav {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--sp-2);
   margin-top: var(--sp-3);
+}
+
+.prev-btn {
+  align-self: flex-start;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+}
+
+.prev-btn[disabled] {
+  color: var(--ink-3);
+  opacity: .6;
 }
 
 .wrong {
@@ -260,6 +272,7 @@
 }
 
 .next-btn {
+  width: var(--w-btn);
   margin-top: var(--sp-3);
 }
 
@@ -283,12 +296,6 @@
   line-height: var(--lh-loose);
   margin-top: var(--sp-3);
   padding: 0 var(--sp-2);
-}
-
-.exam-nav .next-btn {
-  flex: 1;
-  width: auto;
-  margin-top: 0;
 }
 
 .ranked {

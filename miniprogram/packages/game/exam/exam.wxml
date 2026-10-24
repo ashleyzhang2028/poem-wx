@@ -65,7 +65,7 @@
     <text class="quit-line" wx:if="{{quitLine}}">{{quitLine}}</text>
 
     <view class="exam-nav">
-      <button class="btn ghost mini" bindtap="onPrev" disabled="{{index === 0}}">上一题</button>
+      <button class="prev-btn" bindtap="onPrev" disabled="{{index === 0}}">上一题</button>
       <button class="btn primary next-btn" bindtap="onNext">
         {{index + 1 >= questions.length ? '交卷' : '下一题'}}
       </button>
