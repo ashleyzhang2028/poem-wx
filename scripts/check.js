@@ -1515,11 +1515,13 @@ const GATED = {
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(usersWxml));
   ok("改档把到期日一起交上去（日历选了日期，不是只传档位）",
     /mode="date"[^>]*bindchange="onDueChange"/.test(usersWxml)
+      && /onDueChange/.test(usersJs)
+      && /dueDate/.test(usersWxml)
       && /admin\.setTier\(userId, tier, until\)/.test(usersJs)
       && /remote\.setUserTier\(userId, tier, until/.test(adminLib),
     "到期日停在界面上没送到服务端 —— plan_until 不会被写");
   ok("名录每一行回显到期日（档位标签旁边那一列）",
-    /item\.untilText/.test(usersWxml) && /u\.tier === t \? untilText\(u\.until\)/.test(adminLib));
+    /item\.untilText/.test(usersWxml) && /u\.tier === t \? dueText\(u\.until\)/.test(adminLib));
   ok("用户列表页不再摆改角色的入口（只留改档）",
     usersWxml.indexOf("canSetRole") < 0 && usersWxml.indexOf("onSetRole") < 0
       && usersJs.indexOf("onSetRole") < 0 && adminLib.indexOf("setRole") < 0,

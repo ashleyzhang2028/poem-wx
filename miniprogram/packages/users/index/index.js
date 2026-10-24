@@ -24,6 +24,7 @@ Page({
     dueTierLabel: "",
     dueNote: "",
     dueDate: "",
+    dueHolder: "",
     dueMin: ""
   },
 
@@ -94,48 +95,57 @@ Page({
   },
 
   openDue(uid, tier, user) {
-    const today = admin.today();
+    const keep = user.tier === tier ? user.untilText : "";
+    const date = admin.dateInput(user.untilText);
     this.setData({
       dueOpen: true,
       dueUid: uid,
       dueTier: tier,
       dueTierLabel: tiers.nameOf(tier),
       dueNote: "",
-      dueDate: user.tier === tier ? user.untilText || "" : "",
-      dueMin: today
+      dueDate: date ? user.untilText : "",
+      dueHolder: !date && keep ? keep : "",
+      dueMin: admin.today()
     });
   },
 
   onDueChange(e) {
-    this.setData({ dueDate: String((e.detail && e.detail.value) || "") });
+    const pick = e.detail.value || {};
+    const day = [pick.year, pick.month, pick.day].map((n) => String(n).padStart(2, "0")).join("-");
+    this.setData({ dueDate: day, dueHolder: "", dueNote: admin.checkDay(day) });
   },
 
   onDueForever() {
+    if (this.data.busy) return;
+    const uid = this.data.dueUid;
+    const tier = this.data.dueTier;
     this.closeDue();
-    this.applyTier(this.data.dueUid, this.data.dueTier, null);
+    this.applyTier(uid, tier, null);
   },
 
   onDueStop() {},
 
   onDueCancel() {
+    if (this.data.busy) return;
     this.closeDue();
   },
 
   onDueConfirm() {
     if (this.data.busy) return;
-    const until = admin.dayEnd(this.data.dueDate);
-    if (!until) {
-      this.setData({ dueNote: "先选到期日，或选「不设到期」" });
+    const day = this.data.dueDate;
+    const note = admin.checkDay(day);
+    if (note) {
+      this.setData({ dueNote: note });
       return;
     }
     const uid = this.data.dueUid;
     const tier = this.data.dueTier;
     this.closeDue();
-    this.applyTier(uid, tier, until);
+    this.applyTier(uid, tier, admin.dayEnd(day));
   },
 
   closeDue() {
-    this.setData({ dueOpen: false, dueNote: "" });
+    this.setData({ dueOpen: false, dueNote: "", dueHolder: "" });
   },
 
   applyTier(userId, tier, until) {
