@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "考试成绩记录",
+  "usingComponents": {
+    "tab-bar": "/custom-tab-bar/index"
+  }
+}

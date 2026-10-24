@@ -3140,6 +3140,54 @@ function mountFull(pg, query) {
   }
 
   {
+    const examLog = require(path.join(ROOT, "utils", "exam-log.js"));
+    const fb = require(path.join(ROOT, "utils", "feedback.js"));
+    const examJs = read("packages/game/exam/exam.js");
+    const examWxml = read("packages/game/exam/exam.wxml");
+    const logJs = read("packages/game/log/log.js");
+    const logWxml = read("packages/game/log/log.wxml");
+    const idxJs = read("packages/game/index/index.js");
+    const savedLog = store.read(examLog.KEY, null);
+
+    const a = examLog.add({ pct: 100, correct: 10, total: 10, span: 62 });
+    const b = examLog.add({ pct: 42, correct: 4, total: 10, span: 600 });
+    const bad = examLog.add({ pct: "abc", correct: -1 });
+    const kept = examLog.rows();
+    const topRow = kept.find((r) => r.id === a.id);
+    ok("一次考试留一条，脏值收成 0，段位与三甲标记按分算出来",
+      kept.length === 3 && bad.pct === 0 && bad.correct === 0
+        && topRow.rankName === fb.rankPercent(100).name && topRow.crowned === true
+        && kept.find((r) => r.id === b.id).crowned === false,
+      JSON.stringify(kept.map((r) => [r.pct, r.rankName, r.crowned])));
+    ok("最好的一次跟着分数走，不跟着先来后到；删掉它之后让给下一条",
+      examLog.summary(kept).best.id === a.id && examLog.latest().id === a.id
+        && examLog.remove([a.id, bad.id]) === 2
+        && examLog.summary().best.id === b.id && examLog.list().length === 1);
+
+    if (savedLog === null) store.drop(examLog.KEY);
+    else store.write(examLog.KEY, savedLog);
+
+    ok("考试页「开始考试」下面挂着一张成绩记录卡，点它去成绩页",
+      examWxml.indexOf('bindtap="onStart"') < examWxml.indexOf('bindtap="onLog"')
+        && /onLog\(\)[\s\S]{0,120}?\/packages\/game\/log\/log/.test(examJs),
+      "记录页没有入口，或者入口跑到开始考试上面去了");
+    ok("交卷那一刻就落一条（finish 里写，不等用户去记录页）",
+      /finish\(\)[\s\S]{0,1600}?examLog\.add\(/.test(examJs));
+    ok("成绩页能单选、全选、批量删、单条删，四个入口都在模板里",
+      logWxml.indexOf('bindtap="onToggle"') >= 0 && logWxml.indexOf('bindtap="onPickAll"') >= 0
+        && logWxml.indexOf('bindtap="onDeletePicked"') >= 0 && logWxml.indexOf('catchtap="onDelete"') >= 0
+        && /remove\(ids/.test(logJs) && /onDeletePicked/.test(logJs),
+      "少一个入口，删一次或删一批就做不成");
+    ok("三甲那一档在成绩页上有独立的类名可钩（状元 / 榜眼 / 探花）",
+      logWxml.indexOf('{{item.crowned ?') >= 0 && /\.lg-row\.top|\.lg-rank\.on/.test(read("packages/game/log/log.wxss")),
+      "考得最好的几场与平常一模一样，翻十页也认不出来");
+    ok("大会首页考试那一栏的段位取最后一次考试的记录",
+      /examLog/.test(idxJs) && /examLog\.latest\(\)/.test(idxJs)
+        && !/best:\s*fb\.KEYS\.exam/.test(idxJs),
+      "首页还挂着旧的单份最好成绩，与记录页对不上");
+  }
+
+  {
     const examJs = read("packages/game/exam/exam.js");
     const examWxml = read("packages/game/exam/exam.wxml");
     const iPick = examJs.indexOf("onPick(e)");

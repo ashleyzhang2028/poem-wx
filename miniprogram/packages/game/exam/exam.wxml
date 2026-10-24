@@ -32,6 +32,18 @@
 
     </view>
     <button class="btn primary block" bindtap="onStart">开始考试</button>
+
+    <view class="card log-card" hover-class="log-hover" hover-stay-time="60" bindtap="onLog">
+      <view class="log-glyph">录</view>
+      <view class="log-main">
+        <view class="log-head">
+          <text class="gc-name">成绩记录</text>
+          <text class="tag theme" wx:if="{{log.count}}">最好 {{log.best.rankName}}</text>
+        </view>
+        <text class="log-sub">{{log.line}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
   </block>
 
   <block wx:elif="{{stage === 'running'}}">

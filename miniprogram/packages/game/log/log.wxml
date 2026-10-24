@@ -1,0 +1,65 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card lg-hero" wx:if="{{summary.count}}">
+    <view class="lg-hero-l">
+      <text class="lg-eyebrow">共 {{summary.count}} 次</text>
+      <text class="lg-best">{{summary.best.pct}}<text class="lg-best-k">分</text></text>
+      <text class="lg-best-line">最好一次 · {{summary.best.rankName}}</text>
+    </view>
+    <text class="lg-seal {{summary.best.crowned ? 'on' : ''}}">{{summary.best.rankName}}</text>
+  </view>
+
+  <view class="card" wx:if="{{summary.count}}">
+    <view class="lg-bar">
+      <view class="lg-bar-l" hover-class="lg-bar-hover" hover-stay-time="60" bindtap="onPickAll">
+        <text class="lg-check {{allPicked ? 'on' : ''}}">{{allPicked ? '✓' : ''}}</text>
+        <text class="lg-bar-t">{{picking ? '已选 ' + picked.length + ' 条' : '全选'}}</text>
+      </view>
+      <view class="lg-bar-r">
+        <button class="btn ghost mini" wx:if="{{picking}}" bindtap="onCancel">取消</button>
+        <button class="btn danger mini" wx:if="{{picking}}" bindtap="onDeletePicked">删除选中</button>
+      </view>
+    </view>
+
+    <view class="lg-row {{item.crowned ? 'top' : ''}}" wx:for="{{rows}}" wx:key="id"
+          hover-class="lg-row-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="onToggle">
+      <text class="lg-check {{picked.indexOf(item.id) >= 0 ? 'on' : ''}}">{{picked.indexOf(item.id) >= 0 ? '✓' : ''}}</text>
+
+      <view class="lg-main">
+        <view class="lg-line">
+          <text class="lg-rank {{item.crowned ? 'on' : ''}}">{{item.rankName}}</text>
+          <text class="tag gold" wx:if="{{item.pct === bestPct}}">最好</text>
+          <text class="lg-scope">{{item.scopeName}}</text>
+        </view>
+        <view class="lg-sub">
+          <text class="lg-time">{{item.timeText}}</text>
+          <text class="lg-meta">{{item.correct}}/{{item.total}} 题 · {{item.spanText}}</text>
+        </view>
+      </view>
+
+      <view class="lg-side">
+        <text class="lg-pct {{item.crowned ? 'on' : ''}}">{{item.pct}}</text>
+        <text class="lg-del" data-id="{{item.id}}" catchtap="onDelete">删</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:else>
+    <view class="empty">
+      <text class="empty-mark">录</text>
+      <text class="empty-text say">还没有考试记录</text>
+      <text class="hint empty-tip">交卷就留一条，历次成绩都在这页</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{summary.count}}">
+    <text class="card-title">段位</text>
+    <view class="lg-legend" wx:for="{{ranks}}" wx:key="name">
+      <text class="lg-legend-name {{index === 0 ? 'on' : ''}}">{{item.name}}</text>
+      <text class="lg-legend-note">{{item.note}}</text>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="2" />
+</view>

@@ -9,6 +9,7 @@ const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const guard = require("../../../utils/guard");
 const rankingSelf = require("../../../utils/ranking");
+const examLog = require("../../../utils/exam-log");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -62,7 +63,9 @@ Page({
     tier: "max",
     ranked: false,
     rankSent: false,
-    rankWhere: ""
+    rankWhere: "",
+
+    log: { count: 0, line: "", best: null }
   },
 
   onHide() {
@@ -76,6 +79,7 @@ Page({
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
     this.setData({ allowed: ok, tier: entitlement.tierOf("exam") });
+    this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;
 
@@ -86,6 +90,24 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
+  },
+
+  loadLog() {
+    const sum = examLog.summary();
+    this.setData({
+      log: {
+        count: sum.count,
+        best: sum.best,
+        line: sum.count
+          ? "共 " + sum.count + " 次 · 最近 " + sum.last.timeText + " · " + sum.last.pct + " 分"
+          : "还没有记录，考完一场就留在这里"
+      }
+    });
+  },
+
+  onLog() {
+    sfx.play("tap");
+    wx.navigateTo({ url: "/packages/game/log/log" });
   },
 
   onToggleForm(e) {
@@ -274,6 +296,15 @@ Page({
     const score = Math.round((correct / total) * 100);
     const rank = feedback.rankPercent(score);
     const kept = feedback.keep(feedback.KEYS.exam, { pct: score, at: Date.now(), rank: rank });
+    examLog.add({
+      pct: score,
+      correct,
+      total: questions.length,
+      scope: this.data.scope || "",
+      scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope),
+      span: Math.round((this.endedAt - (this.startedAt || this.endedAt)) / 1000)
+    });
+    this.loadLog();
 
     sfx.rank(correct, total);
     this.setData({

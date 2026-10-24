@@ -28,7 +28,8 @@
         "index/index",
         "quiz/quiz",
         "feihua/feihua",
-        "exam/exam"
+        "exam/exam",
+        "log/log"
       ]
     },
     {
