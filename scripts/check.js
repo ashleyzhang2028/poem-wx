@@ -2236,6 +2236,46 @@ ok("名录在、标签截断、档位合法",
   ok("太短的作答不算（免得单字蒙对）", feihua.judge("月", "月", []).ok === false);
 }
 {
+  const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const storeMod = require(path.join(ROOT, "utils", "store.js"));
+  const quizLib = require(path.join(ROOT, "packages", "game", "quiz", "lib.js"));
+  const saved = { grade: storeMod.settings().grade, term: storeMod.settings().term };
+
+  ok("「课内诗词·当前学段」排在出题范围的第一项（三个游戏默认就选它）",
+    scopes.list()[0].id === scopes.STAGE_SCOPE);
+  ok("它的名字先写自己是谁，明细交给选完之后那一行（三年级下学期不必塞进格子里）",
+    scopes.list()[0].name.indexOf("课内诗词") === 0);
+
+  const course = require(path.join(ROOT, "utils", "corpus.js")).course();
+  const outside = (grade, term) => scopes.pool(scopes.STAGE_SCOPE)
+    .filter((p) => !(p.gr < grade || (p.gr === grade && p.tm <= term)))
+    .map((p) => p.id);
+
+  storeMod.saveSettings({ grade: 3, term: 2 });
+  const cut3 = outside(3, 2);
+  const pool3 = scopes.pool(scopes.STAGE_SCOPE).length;
+  ok("选了三年级下学期就只到三年级下学期（四年级往后的不出）",
+    cut3.length === 0 && pool3 === course.filter((p) => p.gr < 3 || (p.gr === 3 && p.tm <= 2)).length,
+    "越界 " + cut3.slice(0, 5).join("、") + "，共 " + pool3 + " 首");
+
+  storeMod.saveSettings({ grade: 6, term: 2 });
+  ok("学段跟着背诵选项走（六年级下学期比三年级下学期多）",
+    scopes.pool(scopes.STAGE_SCOPE).length > pool3
+      && outside(6, 2).length === 0);
+
+  storeMod.saveSettings({ grade: 6, term: 2 });
+  ok("题库按这个范围出得了题", quizLib.build({
+    scope: scopes.STAGE_SCOPE, count: 10, forms: quizLib.FORM_KEYS
+  }).length === 10);
+
+  storeMod.saveSettings(saved);
+
+  const pages = ["feihua", "quiz", "exam"].map((k) => fs.readFileSync(
+    path.join(ROOT, "packages", "game", k, k + ".js"), "utf8"));
+  ok("三个游戏进页面都默认选中它",
+    pages.every((src) => /scope:\s*gameScopes\.STAGE_SCOPE/.test(src)));
+}
+{
   const tagMod = require(path.join(ROOT, "utils", "tier-tag.js"));
 
   ok("档位标注只标当前够不着的（Free 看得到 Pro 起与 Max 起）",

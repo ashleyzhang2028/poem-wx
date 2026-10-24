@@ -25,7 +25,7 @@ Page({
     themeStyle: "",
     stage: "setup",
     scopes: [],
-    scope: "",
+    scope: gameScopes.STAGE_SCOPE,
     needTitle: false,
     count: QUESTION_COUNT,
     questions: [],

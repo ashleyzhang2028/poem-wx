@@ -1,20 +1,34 @@
 const corpus = require("./corpus");
+const store = require("./store");
+const S = require("./scheduler");
 
 const POEM_BOOKS = ["poems", "yuefu", "tangshi", "gushi", "songci", "yuanqu", "jinxiandai"];
 
+const STAGE_SCOPE = "stage";
+
 let scopeCache = null;
+
+function scopeId(key) {
+  return key === STAGE_SCOPE ? "poems" : key;
+}
 
 function list() {
   if (!scopeCache) {
-    scopeCache = corpus
+    const scopes = [{ id: STAGE_SCOPE, name: "课内诗词·当前学段" }];
+    corpus
       .books()
       .filter((b) => POEM_BOOKS.indexOf(b.id) >= 0)
-      .map((b) => ({ id: b.id, name: b.name }));
+      .forEach((b) => scopes.push({ id: b.id, name: b.name }));
+    scopeCache = scopes;
   }
   return scopeCache;
 }
 
 function nameOf(scopes, id) {
+  if (id === STAGE_SCOPE) {
+    const s = store.settings();
+    return S.gradeName(s.grade) + S.termName(s.term) + "学期";
+  }
   const hit = (scopes || []).find((s) => s.id === id);
   return hit ? hit.name : (scopes && scopes[0] ? scopes[0].name : "");
 }
@@ -22,6 +36,8 @@ function nameOf(scopes, id) {
 let poolCache = null;
 
 let fieldCache = null;
+
+let stageCache = null;
 
 function hasText(id) {
   if (corpus.courseTexts()[id]) return true;
@@ -44,11 +60,28 @@ function collect(ids) {
   return out;
 }
 
-function pool(scopeId) {
-  if (POEM_BOOKS.indexOf(scopeId) < 0) return field();
+function pool(key) {
+  if (key === STAGE_SCOPE) return stagePool();
+  const id = scopeId(key);
+  if (POEM_BOOKS.indexOf(id) < 0) return field();
   if (!poolCache) poolCache = {};
-  if (!poolCache[scopeId]) poolCache[scopeId] = collect(["poems", scopeId]);
-  return poolCache[scopeId];
+  if (!poolCache[id]) poolCache[id] = collect(["poems", id]);
+  return poolCache[id];
+}
+
+function stagePool() {
+  const s = store.settings();
+  const cacheKey = Number(s.grade) + "|" + Number(s.term);
+  if (!stageCache || stageCache.key !== cacheKey) {
+    const grade = Number(s.grade);
+    const term = Number(s.term);
+    const all = corpus.course();
+    stageCache = {
+      key: cacheKey,
+      list: all.filter((p) => p.gr < grade || (p.gr === grade && p.tm <= term))
+    };
+  }
+  return stageCache.list;
 }
 
 function field() {
@@ -56,4 +89,4 @@ function field() {
   return fieldCache;
 }
 
-module.exports = { POEM_BOOKS, list, nameOf, pool, field };
+module.exports = { POEM_BOOKS, STAGE_SCOPE, list, nameOf, pool, field };
