@@ -24,46 +24,49 @@
 
   <block wx:if="{{logged}}">
     <view class="seg pr-period">
-      <radio-group class="seg-group" bindchange="onPeriod">
-        <label class="seg-item {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{period === item.key}}" />
+      <radio-group class="seg-group" bindchange="onTab">
+        <label class="seg-item {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
+          <radio class="seg-radio" value="{{item.key}}" checked="{{tab === item.key}}" />
           <text class="seg-text">{{item.name}}</text>
         </label>
       </radio-group>
     </view>
 
-    <view class="pr-grid">
-      <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'max' ? 'is-max' : ''}}"
-          wx:for="{{plans}}" wx:key="key">
+    <view class="card pr-plan {{shown.recommended ? 'is-rec' : ''}} {{shown.key === 'max' ? 'is-max' : ''}}">
       <view class="pr-head">
         <view class="pr-head-l">
-          <text class="pr-name">{{item.name}}</text>
-          <text class="pr-tagline">{{item.tagline}}</text>
+          <text class="pr-name">{{shown.name}}</text>
+          <text class="pr-tagline">{{shown.tagline}}</text>
         </view>
-        <text class="tag pr-badge-tag {{item.tone}}" wx:if="{{item.current}}">当前</text>
-        <text class="tag pr-badge-tag {{item.tone}}" wx:elif="{{item.recommended}}">推荐</text>
+        <text class="tag pr-badge-tag {{shown.tone}}" wx:if="{{shown.current}}">当前</text>
+        <text class="tag pr-badge-tag {{shown.tone}}" wx:elif="{{shown.recommended}}">推荐</text>
       </view>
 
-      <view class="pr-price">
-        <text class="pr-yen">¥</text>
-        <text class="pr-num">{{item.priceText}}</text>
-        <text class="pr-unit">{{item.unit}}</text>
-        <text class="pr-was" wx:if="{{item.originalText}}">{{item.originalText}}</text>
-        <text class="pr-save" wx:if="{{item.saveText}}">{{item.saveText}}</text>
+      <view class="pr-opts">
+        <view class="pr-opt {{item.on ? 'on' : ''}}" wx:for="{{shown.options}}" wx:key="key"
+              hover-class="row-hover" hover-stay-time="60" data-key="{{item.key}}" bindtap="onPick">
+          <view class="pr-opt-l">
+            <text class="pr-opt-name">{{item.name}}</text>
+            <text class="pr-opt-sub">{{item.perDay}}</text>
+          </view>
+          <text class="pr-save" wx:if="{{item.saveText}}">{{item.saveText}}</text>
+          <view class="pr-opt-r">
+            <text class="pr-opt-price">¥{{item.priceText}}</text>
+            <text class="pr-was" wx:if="{{item.originalText}}">{{item.originalText}}</text>
+          </view>
+        </view>
       </view>
-      <text class="pr-permonth" wx:if="{{item.perMonth}}">{{item.perMonth}}</text>
+
+      <button class="btn block pr-buy {{shown.buyClass}}" 
+              disabled="{{shown.disabled || busy}}" bindtap="onBuy">{{shown.actionText}}</button>
 
       <view class="pr-list">
-        <text class="pr-inc" wx:if="{{item.includes}}">{{item.includes}}</text>
-        <view class="pr-feat" wx:for="{{item.features}}" wx:for-item="f" wx:key="*this">
+        <text class="pr-inc" wx:if="{{shown.includes}}">{{shown.includes}}</text>
+        <view class="pr-feat" wx:for="{{shown.features}}" wx:for-item="f" wx:key="*this">
           <view class="pr-ck" style="mask-image:url('{{yes}}');-webkit-mask-image:url('{{yes}}');"></view>
           <text class="pr-feat-t">{{f}}</text>
         </view>
-        <text class="pr-more" wx:if="{{item.more}}">另含 {{item.more}} 项</text>
-      </view>
-
-      <button class="btn block pr-buy {{item.buyClass}}" wx:if="{{item.actionText}}"
-              disabled="{{item.disabled || busy}}" data-plan="{{item.key}}" bindtap="onBuy">{{item.actionText}}</button>
+        <text class="pr-more" wx:if="{{shown.more}}">另含 {{shown.more}} 项</text>
       </view>
     </view>
 
