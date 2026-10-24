@@ -289,6 +289,50 @@ function makeWx(port, mem) {
     ok("计数按状态给（后台那几个分组标题用它）", counts.closed === 1 && counts.all >= 1, JSON.stringify(counts));
   }
 
+  {
+    const core = require(path.join(CTX, "api", "_lib", "core.js"));
+    const targetUid = [...facade._db.accounts.keys()].filter((k) => k !== "probe-admin")[0];
+    const until = Date.UTC(2030, 0, 1);
+    await facade._db.accounts.set("probe-admin", {
+      uid: "probe-admin", email: "probe-admin@e2e.local", nickname: "探针管理员",
+      plan: "free", plan_until: null, role: "admin", status: "active", created_at: Date.now()
+    });
+
+    const deps = {
+      cfg: Object.assign({}, require(path.join(CTX, "api", "_lib", "config.js")), { hasSession: () => true }),
+      store: require(path.join(CTX, "api", "_lib", "store.js"))
+        .getStore(require(path.join(CTX, "api", "_lib", "config.js"))),
+      now: () => Date.now(),
+      account: { uid: "probe-admin" },
+      limiter: { check: () => ({ ok: true }), hit: () => {} }
+    };
+
+    await core.adminGrant(deps, { uid: targetUid, tier: "pro", until: until, deviceId: "e2e-due" });
+    const row = facade._db.accounts.get(targetUid);
+    ok("后台改档把到期时刻一并写进 accounts.plan_until（不是只写了 plan）",
+      !!row && row.plan === "pro" && Number(row.plan_until) === until,
+      JSON.stringify(row && { plan: row.plan, plan_until: row.plan_until }));
+
+    const mine = (await core.adminAccounts(Object.assign({}, deps, {
+      account: { uid: "probe-admin" }
+    }))).body.accounts.filter((a) => a.uid === targetUid)[0];
+    ok("名录读回来的到期时刻与写进去的一致（后台那一列日期打这儿来）",
+      !!mine && Number(mine.until) === until && mine.tier === "pro", JSON.stringify(mine));
+
+    const forever = await core.adminGrant(deps, { uid: targetUid, tier: "max", until: null, deviceId: "e2e-due" });
+    const cleared = facade._db.accounts.get(targetUid);
+    ok("留空到期就写成长期（plan_until 回 null）",
+      !!cleared && cleared.plan === "max" && cleared.plan_until === null,
+      JSON.stringify(cleared && { plan: cleared.plan, plan_until: cleared.plan_until }));
+    ok("这一轮确实改了（changed 不是恒为真）", forever.body && forever.body.changed === true,
+      JSON.stringify(forever.body && forever.body.changed));
+
+    await core.adminGrant(deps, { uid: targetUid, tier: "max", until: null, deviceId: "e2e-due" });
+    const same = await core.adminGrant(deps, { uid: targetUid, tier: "max", until: null, deviceId: "e2e-due" });
+    ok("档位与到期都没变时如实说没改", same.body && same.body.changed === false,
+      JSON.stringify(same.body && same.body.changed));
+  }
+
   server.close();
   fs.rmSync(CTX, { recursive: true, force: true });
   const bad = results.filter((r) => !r).length;

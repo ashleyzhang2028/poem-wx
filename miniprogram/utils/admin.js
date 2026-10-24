@@ -195,6 +195,30 @@ function list() {
     }));
 }
 
+function pad(n) {
+  return (n < 10 ? "0" : "") + n;
+}
+
+function untilText(until) {
+  if (!until) return "";
+  const d = new Date(Number(until));
+  return [d.getFullYear(), pad(d.getMonth() + 1), pad(d.getDate())].join("-");
+}
+
+function today() {
+  return untilText(Date.now());
+}
+
+function dayStart(text) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(text || ""));
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime() : 0;
+}
+
+function dayEnd(text) {
+  const start = dayStart(text);
+  return start ? start + 86400000 - 1 : 0;
+}
+
 function _normalizeRemote(rows) {
   return (rows || []).map((u) => {
     const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
@@ -204,6 +228,7 @@ function _normalizeRemote(rows) {
       tier: t,
       tierLabel: tiers.nameOf(t),
       until: u.until || null,
+      untilText: u.tier === t ? untilText(u.until) : "",
       status: u.status || "active",
       createdAt: Number(u.createdAt) || 0,
       source: "remote",
@@ -232,7 +257,7 @@ function _merge(a, b, c) {
   return users;
 }
 
-function setTier(userId, tier) {
+function setTier(userId, tier, until) {
   if (!tiers.isTier(tier)) return Promise.resolve({ ok: false, msg: "档位不合法" });
 
   if (!loggedIn()) {
@@ -244,13 +269,15 @@ function setTier(userId, tier) {
       msg: "改不了：要么服务器没接上，要么您不是管理员"
     });
   }
-  return remote.setUserTier(userId, tier).then((res) => ({
+  return remote.setUserTier(userId, tier, until || null).then((res) => ({
     ok: res.ok,
     remote: true,
     msg: res.ok
       ? res.changed === false
-        ? "本来就是 " + tiers.nameOf(tier) + "，没改动"
-        : "已把「" + userId.slice(0, 8) + "」改成 " + tiers.nameOf(tier) + "，对方下次打开生效"
+        ? "本来就是 " + tiers.nameOf(tier) + (until ? "、到期 " + untilText(until) : "") + "，没改动"
+        : "已把「" + userId.slice(0, 8) + "」改成 " + tiers.nameOf(tier)
+          + (until ? "，到期 " + untilText(until) : "，长期有效")
+          + "，对方下次打开生效"
       : "服务器拒绝，权限不足"
   }));
 }
@@ -275,6 +302,8 @@ module.exports = {
     return DEFAULT_RANGE;
   },
   setTier,
+  today,
+  dayEnd,
   revokeTier,
   canWrite,
   roster
