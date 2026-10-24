@@ -23,10 +23,6 @@
   font-size: var(--fs-lead);
 }
 
-.ap-filter {
-  margin-bottom: var(--sp-3);
-}
-
 .ap-order-head {
   display: flex;
   align-items: center;

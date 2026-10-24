@@ -3,7 +3,7 @@ const tabbar = require("../../../utils/tabbar");
 const admin = require("../../../utils/admin");
 const pay = require("../../../utils/pay");
 
-const STATUS_TABS = [
+const STATUS_ROWS = [
   { key: "paid", name: "已支付" },
   { key: "pending", name: "待支付" },
   { key: "refunded", name: "已退款" }
@@ -11,9 +11,8 @@ const STATUS_TABS = [
 
 const SEARCH_DELAY = 350;
 
-function nameOf(key) {
-  const hit = STATUS_TABS.filter((t) => t.key === key)[0];
-  return hit ? hit.name : STATUS_TABS[0].name;
+function rowOf(key) {
+  return STATUS_ROWS.filter((t) => t.key === key)[0] || STATUS_ROWS[0];
 }
 
 function orderView(o) {
@@ -55,7 +54,6 @@ Page({
     reason: "",
     status: "paid",
     name: "已支付",
-    statusTabs: STATUS_TABS,
     q: "",
     page: 1,
     pages: 1,
@@ -63,12 +61,12 @@ Page({
     list: [],
     raw: [],
     summary: null,
-    matched: { count: 0, paid: 0, paidText: "0" }
+    matched: { count: 0, paid: 0, paidText: "0", pending: 0, pendingText: "0", refunded: 0, refundedText: "0" }
   },
 
   onLoad(query) {
-    const status = query && query.status;
-    this.setData({ status: nameOf(status) === status ? status : "paid", name: nameOf(status) });
+    const row = rowOf(query && query.status);
+    this.setData({ status: row.key, name: row.name });
   },
 
   onShow() {
@@ -103,11 +101,6 @@ Page({
   reset(patch) {
     this.setData(Object.assign({ page: 1 }, patch));
     this.load();
-  },
-
-  onStatus(e) {
-    const status = e.detail.value;
-    this.reset({ status: status, name: nameOf(status) });
   },
 
   onSearch(e) {
