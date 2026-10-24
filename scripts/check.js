@@ -991,6 +991,11 @@ const rebuild = Object.keys(corpus.courseTexts()).every((k) => {
     String(raw).split("\n").map((l) => l.split(/[\s]/).join("")).join("");
 });
 ok("全部课内正文切句后拼得回原文", rebuild);
+const quotedTail = splitLines("苏子曰：「客亦知夫水与月乎？」");
+ok("切句不把收尾引号切成单独一句（「」里的句号算在引语内）",
+  quotedTail[0].s.join("") === "苏子曰：「客亦知夫水与月乎？」"
+    && quotedTail[0].s[quotedTail[0].s.length - 1] === "「客亦知夫水与月乎？」",
+  JSON.stringify(quotedTail[0].s));
 ok("splitLines 保留空行", splitLines("a\n\nb").length === 3 && splitLines("a\n\nb")[1].s.length === 0);
 ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null).length === 1);
 
@@ -4757,6 +4762,21 @@ function mountFull(pg, query) {
     ok("真跑 300 轮出题：题干按句读拆成多行，逗号也断，拼回等于原句（上限内）",
       !unbroken.length && maxAnswer > 0 && maxAnswer <= capN,
       "没拆开的 " + unbroken.length + " 条，例如 " + JSON.stringify(unbroken.slice(0, 3)));
+
+    const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+    const textual = (v) => /[0-9A-Za-z\u3400-\u4dbf\u4e00-\u9fff]/.test(v || "");
+    const punctOnly = [];
+    scopeMod.list().forEach((s) => {
+      for (let round = 0; round < 40; round++) {
+        quizMod.build({ count: 10, forms: quizMod.FORM_KEYS, scope: s.id }).forEach((q) => {
+          q.options.forEach((o) => {
+            if (!textual(o.text)) punctOnly.push(s.id + ":" + q.form + ":" + o.text);
+          });
+        });
+      }
+    });
+    ok("整库每种题型真跑一遍：没有一个选项只剩标点",
+      !punctOnly.length, JSON.stringify(punctOnly.slice(0, 5)));
 
     const course = readModule(path.join(dataDir, "course.js"));
     const proseIds = Object.keys(course).filter((id) => String(course[id].text).length > 100);

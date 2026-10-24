@@ -35,6 +35,12 @@ function _quiz_shuffle(arr) {
 
 const MAX_LINE = 24;
 
+const TEXTUAL = /[0-9A-Za-z\u3400-\u4dbf\u4e00-\u9fff]/;
+
+function _quiz_usable(v) {
+  return typeof v === "string" && TEXTUAL.test(v);
+}
+
 function _quiz_linesOf(p) {
   const e = corpus.entry(p.id);
   if (!e || !e.text) return [];
@@ -88,11 +94,11 @@ function _quiz_makeQuestion(form, p, lines, pool) {
   if (form === "next") {
     const idx = Math.floor(Math.random() * (lines.length - 1));
     const answer = lines[idx + 1];
+    if (!_quiz_usable(answer)) return null;
     const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
       const ls = _quiz_linesOf(q);
       return ls.length ? _quiz_pick(ls) : "";
     });
-    if (!answer) return null;
     return {
       form: "next",
       stem: lines[idx],
@@ -107,6 +113,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
     if (lines.length < 2) return null;
     const idx = Math.floor(Math.random() * (lines.length - 1)) + 1;
     const answer = lines[idx - 1];
+    if (!_quiz_usable(answer)) return null;
     const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
       const ls = _quiz_linesOf(q);
       return ls.length ? _quiz_pick(ls) : "";
@@ -123,7 +130,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
 
   if (form === "title") {
     if (!p.t || p.t.length > MAX_LINE || !lines.length) return null;
-    const pool2 = pool.filter((q) => q.t && q.t !== p.t).map((q) => q.t);
+    const pool2 = pool.filter((q) => q.t && q.t !== p.t).map((q) => q.t).filter(_quiz_usable);
     const distractors = _quiz_uniqueSample(pool2, 3);
     if (distractors.length < 3) return null;
     return {
@@ -138,7 +145,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
 
   if (form === "author") {
     if (!p.a || !lines.length) return null;
-    const distractorPool = pool.filter((q) => q.a && q.a !== p.a).map((q) => q.a);
+    const distractorPool = pool.filter((q) => q.a && q.a !== p.a).map((q) => q.a).filter(_quiz_usable);
     const distractors = _quiz_uniqueSample(distractorPool, 3);
     if (distractors.length < 3) return null;
     return {
@@ -152,7 +159,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
   }
 
   if (!p.d || !p.a) return null;
-  const dynastyPool = pool.filter((q) => q.d && q.d !== p.d).map((q) => q.d);
+  const dynastyPool = pool.filter((q) => q.d && q.d !== p.d).map((q) => q.d).filter(_quiz_usable);
   const distractors = _quiz_uniqueSample(dynastyPool, 3);
   if (distractors.length < 3) return null;
   return {
@@ -189,7 +196,7 @@ function _quiz_sampleFrom(pool, excludeId, n, project) {
     const p = _quiz_pick(pool);
     if (!p || p.id === excludeId) continue;
     const v = project(p);
-    if (!v || out.indexOf(v) >= 0) continue;
+    if (!_quiz_usable(v) || out.indexOf(v) >= 0) continue;
     out.push(v);
   }
   return out;
