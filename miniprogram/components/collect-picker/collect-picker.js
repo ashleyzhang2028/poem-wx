@@ -93,8 +93,8 @@ Component({
         this.load(() => this.onNew());
         return;
       }
-      if (this.data.total >= this.data.cap || !this.data.cap) {
-        this.show("当前档位最多 " + this.data.cap + " 个集合");
+      if (!this.data.cap || this.data.total >= this.data.cap) {
+        this.show(cols.quotaNote());
         return;
       }
       wx.showModal({
@@ -107,7 +107,7 @@ Component({
           if (!res.confirm) return;
           const made = cols.create(res.content);
           if (!made.ok) {
-            this.show("最多 " + cols.capOf() + " 个集合");
+            this.show(cols.quotaNote());
             return;
           }
           this.addTo(made.collection.id, cols.nameOf(made.collection));

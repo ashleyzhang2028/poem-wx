@@ -29,6 +29,10 @@ function selfOnlyOn() {
   return usable().length > 0;
 }
 
+function quotaNote() {
+  return tiers.collectionQuota();
+}
+
 function capOf() {
   const tier = entitlement.status().tier;
   const n = LIMITS[tier];
@@ -226,6 +230,7 @@ module.exports = {
   selfOnlyOn,
   DEFAULT_NAME,
   capOf,
+  quotaNote,
   nameOf,
   trimName,
   normalize,
