@@ -55,6 +55,7 @@
       "pages": [
         "index/index",
         "pay/pay",
+        "pay-orders/pay-orders",
         "feedback/index",
         "feedback/detail/detail"
       ]

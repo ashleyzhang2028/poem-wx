@@ -8274,8 +8274,9 @@ function gapped(items, max) {
 
   const appJsonPay = JSON.parse(read("app.json"));
   const subPages = [].concat.apply([], appJsonPay.subPackages.map((sp) => sp.pages.map((pg) => sp.root + "/" + pg)));
-  ok("定价页、支付记录页、后台支付页都登记在 app.json",
-    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay"].every((pg) => subPages.indexOf(pg) >= 0),
+  ok("定价页、支付记录页、后台支付页与购买记录子页都登记在 app.json",
+    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay",
+      "packages/admin/pay-orders/pay-orders"].every((pg) => subPages.indexOf(pg) >= 0),
     "页面没登记，navigateTo 会找不到");
   ok("权限页有进定价页与支付记录页的处理函数",
     /onPricing\(/.test(read("components/tier-view/tier-view.js")) && /onOrders\(/.test(read("components/tier-view/tier-view.js")),
