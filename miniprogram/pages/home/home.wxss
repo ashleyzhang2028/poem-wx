@@ -259,10 +259,6 @@
   color: var(--strong-text);
 }
 
-.coll-title {
-  margin-bottom: 0;
-}
-
 .coll-mark {
   flex: none;
   display: flex;

@@ -81,6 +81,24 @@ button, textarea {
   margin-bottom: var(--card-title-gap);
 }
 
+.card-open > .card-title,
+.card-head > .card-title {
+  margin-bottom: 0;
+}
+
+.card-open > .card-title {
+  padding: var(--card-row-pad) 0;
+}
+
+.card-open > .card-sub {
+  padding: var(--card-row-pad) 0;
+}
+
+.card-open > .row-go,
+.card-open > .all-count {
+  align-self: center;
+}
+
 .card-title.plain {
   font-weight: 400;
 }
@@ -685,14 +703,13 @@ button, textarea {
 
 .card-open {
   display: flex;
-  align-items: center;
+  align-items: baseline;
 }
 
 .card-open > .card-title,
 .card-head > .card-title {
   flex: 1;
   min-width: 0;
-  margin-bottom: var(--card-title-gap);
 }
 
 .card-open > .card-sub {
@@ -700,7 +717,7 @@ button, textarea {
   font-size: var(--fs-caption);
   font-weight: 400;
   color: var(--ink-3);
-  padding-left: var(--sp-2);
+  padding: var(--card-row-pad) 0 var(--card-row-pad) var(--sp-2);
 }
 
 .card-head {
