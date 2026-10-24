@@ -15,6 +15,12 @@ function collectionCell(tier) {
   return { text: n + " 个集合", on: true };
 }
 
+function recordCell(tier, cap) {
+  const n = tiers.RECORD_LIMITS[tier];
+  if (!n) return { text: "", on: false };
+  return { text: n + " 条", on: rankOf(cap.tier) <= rankOf(tier) };
+}
+
 function courseFreeCell(tier) {
   const on = rankOf(tier) >= rankOf("pro");
   return { text: "", on: on };
@@ -43,13 +49,14 @@ const CAPS = [
   { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
   { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
   { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" },
-  { key: "league", name: "排行榜", desc: "考试成绩与飞花令成绩上榜，分学段比", tier: "max" }
+  { key: "league", name: "排行榜", desc: "考试成绩与飞花令成绩上榜，分学段比", tier: "max" },
+  { key: "records", name: "成绩记录", desc: "历次成绩上云 · " + tiers.recordQuota() + "，超了删最久那条", cell: recordCell, tier: "pro" }
 ];
 
 function cellFor(cap, tier) {
-  if (cap.cell) return cap.cell(tier);
+  if (cap.cell) return cap.cell(tier, cap);
   const on = rankOf(cap.tier) <= rankOf(tier);
-  return { text: "", on: on };
+  return { text: on ? "不限" : "", on: on };
 }
 
 const CAP_KEYS = CAPS.map((c) => c.key);
@@ -165,6 +172,7 @@ const VIEW_NAME = {
   feihualing: "大会·飞花令",
   exam: "大会·考试",
   league: "大会·排行榜",
+  records: "大会·成绩记录",
   sights: "主题·大好河山",
   ownbanner: "主题·自选 banner",
   themetone: "主题·自选主题色",
@@ -177,7 +185,7 @@ const COMPARE_ORDER = [
   "daily", "extra", "collections", "progress", "seasonal", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "search",
-  "quiz", "feihualing", "exam", "league",
+  "quiz", "feihualing", "exam", "records", "league",
   "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
 ];
 
@@ -220,7 +228,7 @@ function compareSummary() {
   return tiers.TIERS.map((t) => ({
     tier: t.key,
     total: CAPS.length,
-    on: CAPS.filter((c) => rankOf(c.tier) <= rankOf(t.key)).length
+    on: CAPS.filter((c) => cellFor(c, t.key).on).length
   }));
 }
 

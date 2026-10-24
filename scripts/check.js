@@ -1281,7 +1281,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 16], ["max", 22]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 17], ["max", 23]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -1333,16 +1333,14 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
+  ok("对比表里带量的格子写的是 tiers 里的数（改档位，格子跟着变）",
     (() => {
-      const rows = E.compareRows({ logged: false, tier: "free" });
-      const row = rows.filter((r) => r.cap === "collections")[0];
-      const tiersRow = row.cells.map((c) => c.text);
-      const silent = rows.filter((r) => r.cap === "daily")[0];
-      return tiersRow.join(",") === ",1 个集合,200 个集合"
-        && silent.cells.every((c) => c.text === "");
+      const cells = (key) => (E.compareRows({ logged: false, tier: "free" })
+        .filter((r) => r.cap === key)[0] || { cells: [] }).cells.map((c) => c.text);
+      return cells("collections").indexOf(tiersMod.COLLECTION_LIMITS.max + " 个集合") >= 0
+        && cells("records").indexOf(tiersMod.RECORD_LIMITS.max + " 条") >= 0;
     })(),
-    "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
+    "格子里写死的数没跟着 tiers 走");
 }
 
 {
@@ -1650,7 +1648,7 @@ const GATED = {
   }
 
   ok("对比表的每一格由能力表的档位算出来（不写死）",
-    /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
+    /rankOf\(cap\.tier\)\s*<=\s*rankOf\(tier\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
@@ -3177,6 +3175,80 @@ function mountFull(pg, query) {
     const ts = read("utils/text-search.js");
     ok("分批接口由搜索页驱动，不是一次扫完全站",
       /function makeSession/.test(ts) && /function nextBatch/.test(ts) && /session\.done/.test(ts));
+  }
+
+  {
+    const scoreLog = require(path.join(ROOT, "utils", "score-log.js"));
+    const tiersEarly = require(path.join(ROOT, "utils", "tiers.js"));
+    const entEarly = require(path.join(ROOT, "utils", "entitlement.js"));
+    const keptStatus = entEarly.status;
+    const tierAs = (t) => { entEarly.status = () => ({ tier: t, source: "selfcheck", label: t, blocked: "", signed: true }); };
+    tierAs("max");
+    const KEY = scoreLog.MODES.exam.key;
+    const FKEY = scoreLog.MODES.feihua.key;
+    const savedLog = store.read(KEY, null);
+    const savedFh = store.read(FKEY, null);
+    store.drop(KEY);
+    store.drop(FKEY);
+
+    const a = scoreLog.add("exam", { pct: 100, correct: 10, total: 10, span: 62 });
+    const b = scoreLog.add("exam", { pct: 42, correct: 4, total: 10, span: 600 });
+    const bad = scoreLog.add("exam", { pct: "abc", correct: -1 });
+    ok("一次考试留一条，脏值收成 0",
+      scoreLog.list("exam").length === 3 && bad.pct === 0 && bad.correct === 0,
+      JSON.stringify(scoreLog.list("exam")));
+    ok("最好的一次跟着分数走，不跟着先来后到；删掉它之后让给下一条",
+      scoreLog.summary("exam").best.id === a.id
+        && scoreLog.remove("exam", [a.id, bad.id]) === 2
+        && scoreLog.summary("exam").best.id === b.id && scoreLog.list("exam").length === 1);
+
+    scoreLog.add("feihua", { hit: 6, span: 90 });
+    const r2 = scoreLog.add("feihua", { hit: 13, span: 90 });
+    scoreLog.add("feihua", { hit: "abc" });
+    ok("一轮飞花令留一条，与考试的记录各存一份",
+      scoreLog.list("feihua").length === 3 && scoreLog.list("exam").length === 1,
+      JSON.stringify(scoreLog.rows("feihua").map((r) => r.hit)));
+    ok("飞花令删掉一条之后就少一条",
+      scoreLog.remove("feihua", [r2.id]) === 1 && scoreLog.list("feihua").length === 2);
+
+    store.drop(KEY);
+    store.drop(FKEY);
+
+    tierAs("pro");
+    for (let i = 0; i <= tiersEarly.RECORD_LIMITS.pro; i += 1) {
+      scoreLog.add("exam", { pct: 60, scope: "s" + i, at: 1000 + i });
+    }
+    const keptRows = scoreLog.rows("exam");
+    ok("本机记录条数停在档位上限，多出来的挤掉最久那条",
+      keptRows.length === tiersEarly.RECORD_LIMITS.pro && !keptRows.some((r) => r.scope === "s0"),
+      "条数 " + keptRows.length + "，最久那条还在 " + keptRows.some((r) => r.scope === "s0"));
+    store.drop(KEY);
+
+    tierAs("free");
+    scoreLog.add("exam", { pct: 100 });
+    ok("没开通时一条也不落", scoreLog.list("exam").length === 0,
+      "Free 也在本机攒记录 —— 与「Pro " + tiersEarly.RECORD_LIMITS.pro + " / Max " + tiersEarly.RECORD_LIMITS.max + "」对不上");
+
+    entEarly.status = keptStatus;
+    if (savedLog !== null) store.write(KEY, savedLog);
+    if (savedFh !== null) store.write(FKEY, savedFh);
+
+    const examJs = read("packages/game/exam/exam.js");
+    const fhJs = read("packages/game/feihua/feihua.js");
+    ok("交卷那一刻就落一条（finish 里写，不等用户去记录页）",
+      /finish\(\)[\s\S]{0,1600}?scoreLog\.add\("exam"/.test(examJs));
+    ok("一轮飞花令收尾就落一条，两种收尾都走同一个写入",
+      (fhJs.match(/scoreLog\.add\("feihua"/g) || []).length === 1
+        && /endRound\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs)
+        && /onSkip\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs),
+      "只写了一条路，另一种收尾方式那一轮就不会留下记录");
+    ok("题库不记成绩：交卷不落记录，结果页也没有「最好的一次」",
+      !/scoreLog/.test(read("packages/game/quiz/quiz.js"))
+        && read("packages/game/quiz/quiz.wxml").indexOf("best-line") < 0,
+      "题库是平时学习，学完就结束，不该留档位也不该有「最好的一次」");
+    ok("成绩页能单选、全选、批量删、单条删",
+      read("packages/game/log/log.wxml").indexOf('bindtap="onDeletePicked"') >= 0
+        && /remove\(ids/.test(read("packages/game/log/log.js")));
   }
 
   {

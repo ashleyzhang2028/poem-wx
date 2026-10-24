@@ -1,0 +1,244 @@
+.lg-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-3);
+}
+
+.lg-hero-l {
+  flex: 1;
+  min-width: 0;
+}
+
+.lg-eyebrow {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.lg-best {
+  display: block;
+  margin-top: var(--sp-1);
+  font-family: var(--font-num);
+  font-size: var(--fs-stat);
+  line-height: 1.1;
+  color: var(--strong-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-best-line {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.lg-seal {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: var(--radius);
+  background: var(--sink);
+  color: var(--ink-3);
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  line-height: 1.2;
+  text-align: center;
+  transform: rotate(-4deg);
+}
+
+.lg-seal.on {
+  background: var(--gold-soft);
+  color: var(--amber);
+}
+
+.lg-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.lg-bar-l {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1) 0;
+}
+
+.lg-bar-hover {
+  opacity: .6;
+}
+
+.lg-bar-t {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+}
+
+.lg-bar-r {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.lg-bar-r .btn.mini {
+  flex: none;
+}
+
+.lg-check {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--line-strong);
+  background: var(--surface);
+  font-size: var(--fs-caption);
+  line-height: 1;
+  color: transparent;
+  transition: background-color var(--t-press), border-color var(--t-press);
+}
+
+.lg-check.on {
+  background: var(--strong);
+  border-color: var(--strong);
+  color: var(--on-ink);
+}
+
+.lg-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.lg-row:last-child {
+  border-bottom: none;
+}
+
+.lg-row-hover {
+  opacity: .6;
+}
+
+.lg-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.lg-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.lg-rank {
+  flex: none;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink);
+  letter-spacing: var(--ls-caption);
+}
+
+.lg-rank.on {
+  color: var(--amber);
+}
+
+.lg-scope {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-sub {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 6rpx;
+}
+
+.lg-time {
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-meta {
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-side {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.lg-pct {
+  font-family: var(--font-num);
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-pct.on {
+  color: var(--strong-text);
+}
+
+.lg-del {
+  flex: none;
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  border-radius: var(--radius-pill);
+  background: var(--sink);
+}
+
+.lg-legend {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.lg-legend:last-child {
+  border-bottom: none;
+}
+
+.lg-legend-name {
+  flex: none;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-caption);
+}
+
+.lg-legend-name.on {
+  color: var(--amber);
+}
+
+.lg-legend-note {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+}

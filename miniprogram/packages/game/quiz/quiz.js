@@ -39,8 +39,6 @@ Page({
     streaks: [],
     streakFlags: [],
     rank: null,
-    best: null,
-    newBest: false,
 
     allowed: false
   },
@@ -116,8 +114,7 @@ Page({
         combo: feedback.comboOf(0),
         streaks: [],
         streakFlags: [],
-        rank: null,
-        newBest: false
+        rank: null
       }
     );
   },
@@ -192,26 +189,15 @@ Page({
     const total = this.data.questions.length;
     const pct = this.pctOf(this.data.correct, total);
     const rank = feedback.rankPercent(pct);
-    const kept = feedback.keep(feedback.KEYS.quiz, {
-      pct: pct,
-      at: Date.now(),
-      rank: rank
-    });
 
     sfx.rank(this.data.correct, total);
 
-    this.setData({
-      stage: "result",
-      pct: pct,
-      rank: rank,
-      newBest: kept.best,
-      best: kept.before ? kept.before.rank.name : ""
-    });
+    this.setData({ stage: "result", pct: pct, rank: rank });
   },
 
   onAgain() {
     feedback.close(this);
-    this.setData({ stage: "setup", questions: [], wrong: [], rank: null, newBest: false, flash: "" });
+    this.setData({ stage: "setup", questions: [], wrong: [], rank: null, flash: "" });
   },
 
   onUnload() {

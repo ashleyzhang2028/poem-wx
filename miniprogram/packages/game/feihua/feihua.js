@@ -9,6 +9,7 @@ const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const rankingSelf = require("../../../utils/ranking");
 const guard = require("../../../utils/guard");
+const scoreLog = require("../../../utils/score-log");
 
 const ANSWER_LIMIT = 80;
 const ROUND_LIMIT = 90;
@@ -62,7 +63,9 @@ Page({
 
     scopeName: "",
 
-    allowed: true
+    allowed: true,
+
+    log: { count: 0, line: "" }
   },
 
   onShow() {
@@ -70,9 +73,39 @@ Page({
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
     this.setData({ allowed: ok });
+    this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;
     this.next();
+  },
+
+  loadLog() {
+    const sum = scoreLog.summary("feihua");
+    this.setData({
+      log: {
+        count: sum.count,
+        line: sum.count
+          ? "共 " + sum.count + " 轮 · 最近 " + sum.last.timeText + " · " + sum.last.hitText
+          : "暂无记录"
+      }
+    });
+  },
+
+  onLog() {
+    sfx.play("tap");
+    wx.navigateTo({ url: "/packages/game/log/log?mode=feihua" });
+  },
+
+  keepRound() {
+    const hit = this.data.done.length;
+    if (!hit) return;
+    scoreLog.add("feihua", {
+      hit: hit,
+      scope: this.data.scope || "",
+      scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope),
+      span: this.roundSec()
+    });
+    this.loadLog();
   },
 
   scopeOpt() {
@@ -177,6 +210,7 @@ Page({
     }
     sfx.pass();
     this.markRound();
+    this.keepRound();
     this.report(this.data.done.length);
     this.setData({ locked: true, message: "时间到 · 这一轮 " + this.data.done.length + " 句", messageOk: true });
   },
@@ -298,6 +332,7 @@ Page({
     this.ended = true;
     if (this.data.done.length) {
       this.markRound();
+      this.keepRound();
       this.report(this.data.done.length);
     }
     this.next();

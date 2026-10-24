@@ -402,9 +402,13 @@ function mysqlStore(cfg) {
     putScoreRecord: function (row) {
       return insertRow("score_records", row, ["srid"]).then(function () { return { srid: row.srid }; });
     },
+    deleteScoreRecord: function (srid) {
+      return query("DELETE FROM score_records WHERE srid = ?", [String(srid || "")]).then(function () { return true; });
+    },
     listScoreRecords: function (filter, limit) {
       var f = filter || {};
       var where = [], params = [];
+      if (f.uid) { where.push("uid = ?"); params.push(String(f.uid)); }
       if (f.game) { where.push("game = ?"); params.push(String(f.game)); }
       if (f.stage && f.stage !== "all") { where.push("stage = ?"); params.push(String(f.stage)); }
       if (f.grade) { where.push("grade = ?"); params.push(Number(f.grade)); }

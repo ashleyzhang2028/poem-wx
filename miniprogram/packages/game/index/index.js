@@ -1,14 +1,14 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
-const feedback = require("../../../utils/feedback");
+const scoreLog = require("../../../utils/score-log");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = [
-  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua, cap: "feihualing" },
-  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz, cap: "quiz" },
-  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", best: feedback.KEYS.exam, cap: "exam" }
+  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", log: "feihua", cap: "feihualing" },
+  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", cap: "quiz" },
+  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", log: "exam", cap: "exam" }
 ];
 
 const PAGE = {
@@ -16,6 +16,11 @@ const PAGE = {
   quiz: "/packages/game/quiz/quiz",
   exam: "/packages/game/exam/exam"
 };
+
+function lastTextOf(box) {
+  if (!box || !box.rank || !box.rank.name) return "";
+  return box.rank.name;
+}
 
 function topRank(boxes) {
   return boxes.reduce((top, box) => (box && (!top || box.rank.rank > top.rank.rank) ? box : top), null);
@@ -41,7 +46,7 @@ Page({
       return;
     }
 
-    const boxes = MODES.map((m) => (entitlement.can(m.cap) ? feedback.read(m.best) : null));
+    const boxes = MODES.map((m) => (m.log && entitlement.can(m.cap) ? scoreLog.latest(m.log) : null));
     const now = entitlement.status().tier;
     const cards = MODES.map((m, i) => {
       const ok = entitlement.can(m.cap);
@@ -50,7 +55,7 @@ Page({
         ok,
         tier,
         locked: !ok && entitlement.reachable(tier, now),
-        bestText: boxes[i] ? boxes[i].rank.name : ""
+        lastText: lastTextOf(boxes[i])
       });
     });
     const top = topRank(boxes);

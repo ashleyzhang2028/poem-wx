@@ -10,6 +10,12 @@ const COLLECTION_LIMITS = { free: 0, pro: 1, max: 200 };
 
 const COLLECTION_ITEMS_MAX = 100;
 
+const RECORD_LIMITS = { free: 0, pro: 200, max: 500 };
+
+function recordQuota() {
+  return "Pro " + RECORD_LIMITS.pro + " 条 / Max " + RECORD_LIMITS.max + " 条";
+}
+
 function collectionQuota() {
   return "Pro " + COLLECTION_LIMITS.pro + " 个 / Max " + COLLECTION_LIMITS.max
     + " 个，每个最多 " + COLLECTION_ITEMS_MAX + " 首";
@@ -52,6 +58,8 @@ module.exports = {
   COLLECTION_LIMITS,
   COLLECTION_ITEMS_MAX,
   collectionQuota,
+  RECORD_LIMITS,
+  recordQuota,
   isTier,
   nameOf,
   tierOf,

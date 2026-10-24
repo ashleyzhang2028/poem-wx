@@ -513,6 +513,14 @@ function rankingSubmit(entry) {
   );
 }
 
+function rankingDelete(game, srid) {
+  if (!configured()) return Promise.resolve({ ok: false, offline: true });
+  return request(PATHS.ranking, { op: "delete", game: game, srid: srid }).then(
+    (res) => ({ ok: !!(res && res.deleted), offline: false }),
+    (err) => ({ ok: false, offline: !!(err && err.statusCode === 503) })
+  );
+}
+
 function feedbackMine() {
   if (!configured()) return Promise.resolve({ threads: [], offline: true });
   return request(PATHS.feedback, { deviceId: store.deviceId() }, "GET").then(
@@ -602,6 +610,7 @@ module.exports = {
   rankingVisible,
   rankingList,
   rankingSubmit,
+  rankingDelete,
   feedbackMine,
   feedbackCreate,
   feedbackComment,

@@ -362,6 +362,69 @@ function makeWx(port, mem) {
       saved.length === 1 && saved[0].stage === self.stage && saved[0].grade === self.grade
         && saved[0].term === self.term,
       JSON.stringify(saved[0]) + " 本机 " + JSON.stringify(self));
+
+    const del = await new Promise((resolve) => {
+      const req = http.request({
+        port, method: "POST", path: "/api/ranking",
+        headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
+      }, (res) => {
+        let buf = "";
+        res.on("data", (d) => (buf += d));
+        res.on("end", () => {
+          let out = null;
+          try { out = JSON.parse(buf); } catch (e) { out = buf; }
+          resolve({ status: res.statusCode, body: out });
+        });
+      });
+      req.write(JSON.stringify({ op: "delete", game: "exam", srid: saved[0].srid }));
+      req.end();
+    });
+    const afterDel = (await shared.listScoreRecords({ game: "exam" }, 20)).filter((r) => r.uid === store.profile().userId);
+    ok("删自己那一条，服务器上跟着没了", del.status === 200 && del.body.deleted === saved[0].srid && afterDel.length === 0,
+      JSON.stringify(del.body) + " 剩下 " + afterDel.length);
+
+    const strangerRow = { srid: "sc_stranger_1", uid: "u_stranger", game: "exam", scope_id: "", stage: "all",
+      grade: 0, term: 0, score: 9, total: 10, duration_sec: 60, created_at: Date.now() };
+    await shared.putScoreRecord(strangerRow);
+    const wrong = await new Promise((resolve) => {
+      const req = http.request({
+        port, method: "POST", path: "/api/ranking",
+        headers: { "content-type": "application/json", authorization: "Bearer " + auth.token() }
+      }, (res) => {
+        let buf = "";
+        res.on("data", (d) => (buf += d));
+        res.on("end", () => {
+          let out = null;
+          try { out = JSON.parse(buf); } catch (e) { out = buf; }
+          resolve({ status: res.statusCode, body: out });
+        });
+      });
+      req.write(JSON.stringify({ op: "delete", game: "exam", srid: strangerRow.srid }));
+      req.end();
+    });
+    ok("别人的记录删不动（回 404，那一行还在）",
+      wrong.status === 404 && !!(await shared.listScoreRecords({ game: "exam" }, 20)).filter((r) => r.srid === strangerRow.srid).length,
+      JSON.stringify(wrong.body));
+    await shared.deleteScoreRecord(strangerRow.srid);
+
+    const coreMod = require(path.join(POEM, "_lib", "core.js"));
+    const uid = store.profile().userId;
+    for (let i = 0; i < 502; i += 1) {
+      await shared.putScoreRecord({
+        srid: "sc_keep_" + String(i).padStart(6, "0"), uid: uid, game: "exam", scope_id: "",
+        stage: "all", grade: 0, term: 0, score: 5, total: 10, duration_sec: 60, created_at: 1000 + i
+      });
+    }
+    const trimmed = await coreMod.boardSubmit({
+      cfg: config, store: shared, limiter: coreMod.makeRateLimiter(),
+      now: () => Date.now(), account: { uid: uid }, ip: "127.0.0.1", deviceId: "d_trim_probe"
+    }, { game: "exam", score: 8, total: 10, durationSec: 60 });
+    const allMine = (await shared.listScoreRecords({ uid: uid, game: "exam" }, 5000)).filter((r) => r.srid.indexOf("sc_keep_") === 0);
+
+    ok("落库那一下按档位裁到上限，多出来的按时间从最久那头删",
+      trimmed.status === 200 && trimmed.body.keep === 500 && allMine.length <= 502
+        && allMine.some((r) => r.srid === "sc_keep_000501"),
+      "剩 " + allMine.length + " 条 " + JSON.stringify(trimmed.body));
   }
 
   {

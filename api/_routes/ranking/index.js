@@ -5,6 +5,7 @@ var handler = require("../../_lib/handler");
 module.exports = handler.make("ranking", ["POST"], function (d, body) {
   var op = String(body.op || "list");
   if (op === "visible") return handler.core.boardVisible(d, { game: body.game });
+  if (op === "delete") return handler.core.boardDelete(d, { game: body.game, srid: body.srid });
   if (op === "submit") {
     return handler.core.boardSubmit(d, {
       game: body.game,

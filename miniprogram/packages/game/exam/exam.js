@@ -9,6 +9,7 @@ const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const guard = require("../../../utils/guard");
 const rankingSelf = require("../../../utils/ranking");
+const scoreLog = require("../../../utils/score-log");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -61,7 +62,9 @@ Page({
     allowed: false,
     ranked: false,
     rankSent: false,
-    rankWhere: ""
+    rankWhere: "",
+
+    log: { count: 0, line: "", best: null }
   },
 
   onHide() {
@@ -75,6 +78,7 @@ Page({
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
     this.setData({ allowed: ok });
+    this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;
 
@@ -85,6 +89,24 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
+  },
+
+  loadLog() {
+    const sum = scoreLog.summary("exam");
+    this.setData({
+      log: {
+        count: sum.count,
+        best: sum.best,
+        line: sum.count
+          ? "共 " + sum.count + " 次 · 最近 " + sum.last.timeText + " · " + sum.last.pct + " 分"
+          : "暂无记录"
+      }
+    });
+  },
+
+  onLog() {
+    sfx.play("tap");
+    wx.navigateTo({ url: "/packages/game/log/log?mode=exam" });
   },
 
   onToggleForm(e) {
@@ -272,7 +294,17 @@ Page({
     const total = questions.length || 1;
     const score = Math.round((correct / total) * 100);
     const rank = feedback.rankPercent(score);
-    const kept = feedback.keep(feedback.KEYS.exam, { pct: score, at: Date.now(), rank: rank });
+    const sum = scoreLog.summary("exam");
+    const prevBest = sum.best ? sum.best.pct : 0;
+    scoreLog.add("exam", {
+      pct: score,
+      correct,
+      total: questions.length,
+      scope: this.data.scope || "",
+      scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope),
+      span: Math.round((this.endedAt - (this.startedAt || this.endedAt)) / 1000)
+    });
+    this.loadLog();
 
     sfx.rank(correct, total);
     this.setData({
@@ -289,8 +321,8 @@ Page({
       correct,
       score,
       rank,
-      newBest: kept.best,
-      best: kept.before ? kept.before.rank.name : ""
+      newBest: score > prevBest,
+      best: sum.best ? sum.best.rankName : ""
     });
     this.report(correct, questions.length);
   },

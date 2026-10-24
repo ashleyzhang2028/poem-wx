@@ -316,9 +316,14 @@ function memoryStore() {
     },
 
     putScoreRecord: function (row) { db.scoreRecords[row.srid] = row; return Promise.resolve({ srid: row.srid }); },
+    deleteScoreRecord: function (srid) {
+      delete db.scoreRecords[srid];
+      return Promise.resolve(true);
+    },
     listScoreRecords: function (filter, limit) {
       var f = filter || {};
       var out = Object.keys(db.scoreRecords).map(function (k) { return db.scoreRecords[k]; });
+      if (f.uid) out = out.filter(function (r) { return r.uid === f.uid; });
       if (f.game) out = out.filter(function (r) { return r.game === f.game; });
       if (f.stage && f.stage !== "all") out = out.filter(function (r) { return r.stage === f.stage; });
       if (f.grade) out = out.filter(function (r) { return Number(r.grade) === Number(f.grade); });
