@@ -221,6 +221,7 @@
 }
 
 .btn.pr-buy {
+  width: var(--w-btn-wide);
   background: var(--tier);
   border-color: var(--tier);
   color: var(--on-theme);

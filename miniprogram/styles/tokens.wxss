@@ -121,6 +121,7 @@ page {
 
   --h-btn: calc(88rpx * var(--ui-scale));
   --w-btn: calc(50% * var(--ui-scale));
+  --w-btn-wide: calc(80% * var(--ui-scale));
   --h-btn-mini: calc(60rpx * var(--ui-scale));
   --card-x: calc(28rpx * var(--ui-scale));
   --card-y: calc(24rpx * var(--ui-scale));
