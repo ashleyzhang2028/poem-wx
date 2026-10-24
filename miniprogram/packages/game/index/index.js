@@ -25,7 +25,7 @@ function lastOf(mode) {
 
 function lastTextOf(box) {
   if (!box || !box.rank || !box.rank.name) return "";
-  return Number(box.pct) >= 100 ? box.rank.name : "上次 " + box.rank.name;
+  return box.rank.name;
 }
 
 function topRank(boxes) {

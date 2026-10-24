@@ -3224,9 +3224,8 @@ function mountFull(pg, query) {
         && (idxJs.match(/log:\s*"/g) || []).length === 2
         && !/log:\s*"quiz"/.test(idxJs) && idxWxml.indexOf("{{item.lastText}}") >= 0,
       "题库只是平常练习，不该有档位胶囊；飞花令与考试该各读自己最后一次");
-    ok("首页胶囊说的是「上次」而不是「最好」",
-      /"上次 "/.test(idxJs) && !/"最好 "/.test(idxJs),
-      "首页写着最好，读的却可能是最后一次，两句话对不上");
+    ok("首页胶囊只报档位名，不挂「上次」「最好」这类前缀",
+      !/"上次 "/.test(idxJs) && !/"最好 "/.test(idxJs));
   }
 
   {
