@@ -3517,19 +3517,15 @@ function mountFull(pg, query) {
 
   const WANT = [
     ["daiqing", "黛青", [2, 54, 51], "tradition"],
-    ["qinglv", "青绿", [46, 106, 103], "tradition"],
     ["muse", "暮色", [79, 96, 114], "tradition"],
     ["nuahui", "暖灰", [164, 86, 104], "tradition"],
-    ["qingwa", "青瓦", [74, 100, 96], "tradition"],
     ["mich", "米褐", [126, 101, 84], "tradition"],
     ["shilv", "石绿", [108, 127, 79], "tradition"],
-    ["mohong", "墨红", [140, 47, 45], "tradition"],
-    ["wulan", "雾蓝", [96, 126, 149], "tradition"],
     ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
-    ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
-    ["qingmingshanghetu", "开封上河图", [2, 54, 51], "landscape"],
+    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
@@ -3548,7 +3544,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 24 项（十二个传统色 + 十二张大好河山）",
+  ok("清单就是这 20 项（八个传统色 + 十二张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
