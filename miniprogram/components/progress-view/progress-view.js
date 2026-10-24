@@ -53,7 +53,7 @@ function metaOf(row) {
 function rowsOf(items) {
   return items.map((it) => ({
     id: it.id,
-    title: it.t,
+    title: it.title,
     meta: metaOf(it),
     mastery: it.mastery + "%",
     due: dueText(it.daysLeft),

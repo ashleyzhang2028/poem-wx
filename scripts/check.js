@@ -3950,6 +3950,27 @@ function mountFull(pg, query) {
       && /sheet\.open\(/.test(progJs) && /sheet\.open\(/.test(collJs)
       && /onOpen\b/.test(pvJs));
 
+  {
+    const pvPath = require.resolve(path.join(ROOT, "components", "progress-view", "progress-view.js"));
+    delete require.cache[pvPath];
+    const pvMod = require(pvPath);
+    const now = Date.now();
+    const recs = {
+      late: { learned: true, level: 2, nextReviewAt: now - 10 * 86400000, history: [{ at: now }] },
+      soon: { learned: true, level: 1, nextReviewAt: now + 2 * 86400000, history: [{ at: now }] }
+    };
+    const poems = [
+      { id: "late", t: "静夜思", a: "李白", d: "唐" },
+      { id: "soon", t: "咏鹅", a: "骆宾王", d: "唐" }
+    ];
+    const due = require(path.join(ROOT, "utils", "scheduler.js")).dueList(
+      poems, 7, (id) => recs[id]);
+    const rows = pvMod.panelsOf(due).reduce((a, p) => a.concat(p.rows), []);
+    ok("全部到期篇目每行的标题来自计划行，不是空着",
+      rows.length === poems.length && rows.every((r) => r.title),
+      "到期行的 title 取错了字段 —— 第一列会是空白");
+  }
+
   ok("自选集合的标题点得动，落到自选进度页那一个集合上",
     /data-id="\{\{coll\.id\}\}"[^>]*bindtap="onProgress"/.test(read("pages/home/home.wxml"))
       && /coll\?coll=" \+ encodeURIComponent\(id\)/.test(read("pages/home/home.js"))
