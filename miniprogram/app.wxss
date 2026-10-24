@@ -692,7 +692,7 @@ button, textarea {
 .card-head > .card-title {
   flex: 1;
   min-width: 0;
-  margin-bottom: 0;
+  margin-bottom: var(--card-title-gap);
 }
 
 .card-open > .card-sub {
