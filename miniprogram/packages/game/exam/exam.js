@@ -60,7 +60,6 @@ Page({
     newBest: false,
 
     allowed: false,
-    tier: "max",
     ranked: false,
     rankSent: false,
     rankWhere: "",
@@ -78,7 +77,7 @@ Page({
     this.setData({ barBelow: !!tabbar.pick(this) });
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
-    this.setData({ allowed: ok, tier: entitlement.tierOf("exam") });
+    this.setData({ allowed: ok });
     this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;

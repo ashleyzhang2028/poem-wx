@@ -2195,6 +2195,46 @@ ok("名录在、标签截断、档位合法",
   ok("太短的作答不算（免得单字蒙对）", feihua.judge("月", "月", []).ok === false);
 }
 {
+  const tagMod = require(path.join(ROOT, "utils", "tier-tag.js"));
+
+  ok("档位标注只标当前够不着的（Free 看得到 Pro 起与 Max 起）",
+    tagMod.shown("pro", "free") === true && tagMod.shown("max", "free") === true);
+  ok("Pro 手上不再标「Pro 起」，只标「Max 起」",
+    tagMod.shown("pro", "pro") === false && tagMod.shown("max", "pro") === true);
+  ok("Max 手上任何档位都不再标（权限对比页那几栏不跟着这条走）",
+    tagMod.shown("pro", "max") === false && tagMod.shown("max", "max") === false);
+
+  const tagWxml = fs.readFileSync(
+    path.join(ROOT, "components", "tier-tag", "tier-tag.wxml"), "utf8");
+  const tagJs = fs.readFileSync(
+    path.join(ROOT, "components", "tier-tag", "tier-tag.js"), "utf8");
+  ok("标注组件自己按当前档位决定出不出现（页面不必各写一遍判据）",
+    tagWxml.indexOf("show") >= 0 && /tag\.shown\(/.test(tagJs));
+
+  const feihuaWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "game", "feihua", "feihua.wxml"), "utf8");
+  ok("飞花令页内的两处卡片不再挂档位标注（门禁只落在大会首页那一张卡上）",
+    feihuaWxml.indexOf("tier-tag") < 0 && feihuaWxml.indexOf("出题范围") >= 0
+      && feihuaWxml.indexOf("看看还有哪些") >= 0);
+
+  const indexJs = fs.readFileSync(
+    path.join(ROOT, "packages", "game", "index", "index.js"), "utf8");
+  const indexWxml = fs.readFileSync(
+    path.join(ROOT, "packages", "game", "index", "index.wxml"), "utf8");
+  ok("大会首页三张卡里够不着的那张标档位（Max 起），够得着的只写「开始」",
+    /locked:\s*!ok\s*&&\s*entitlement\.reachable\(/.test(indexJs)
+      && indexWxml.indexOf("item.locked") >= 0);
+
+  ok("大会首页卡片上的档位从 entitlement.CAPS 取，不在 MODES 里另写一份",
+    !/tier:\s*"(pro|max|free)"/.test(indexJs)
+      && /entitlement\.tierKey\(/.test(indexJs)
+      && E.tierKey("feihualing") === "max");
+
+  ok("页面不再出现「未开放」（够不着是档位不够，不是功能没开放）",
+    [indexWxml, feihuaWxml].every((w) => w.indexOf("未开放") < 0));
+}
+
+{
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const visibleWxml = (p) => read(p + ".wxml").replace(/<!--[\s\S]*?-->/g, "");
 
@@ -4925,7 +4965,7 @@ function mountFull(pg, query) {
       && generalWxml.indexOf("leagueBoardOn") < generalWxml.indexOf("danger-zone")
       && /function setOn[\s\S]{0,200}?saveSettings\(\{\s*leagueBoard/.test(leagueJs)
       && /onLeagueBoard[\s\S]{0,300}?league\.setOn\(/.test(generalJs)
-      && /leagueLock:\s*!league\.canSwitch\(\)/.test(generalJs)
+      && /leagueLock:\s*league\.locked\(\)/.test(generalJs)
       && /onLeagueBoard[\s\S]{0,300}?league\.canJoin\(\)/.test(generalJs),
     "卡片不在危险操作上方，或者开关没落到 leagueBoard（写死一个 true 等于没开关），"
       + "或者 Free 也能拨");

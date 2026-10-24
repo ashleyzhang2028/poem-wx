@@ -23,14 +23,14 @@
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
-        <text class="hint empty-tip">在「我的 → 自选背诵」新建，把这首加进去</text>
+        <text class="hint empty-tip">在「我的 → 自选背诵」新建，加入此首</text>
       </view>
     </view>
 
     <view class="cp-foot" wx:if="{{rows.length}}">
       <view class="cp-new" hover-class="cp-new-hover" hover-stay-time="60" bindtap="onNew">
         <view class="cp-new-plus"></view>
-        <text class="cp-new-text" wx:if="{{total < cap}}">新建集合，把这首放进去</text>
+        <text class="cp-new-text" wx:if="{{total < cap}}">新建集合，加入此首</text>
         <text class="cp-new-text" wx:elif="{{cap}}">已有 {{cap}} 个集合，删掉一个才能再建</text>
         <text class="cp-new-text" wx:else>当前档位还不能建集合</text>
       </view>

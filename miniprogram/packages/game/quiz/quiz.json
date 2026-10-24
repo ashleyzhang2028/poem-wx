@@ -1,7 +1,6 @@
 {
   "navigationBarTitleText": "古诗文大会 · 题库",
   "usingComponents": {
-    "tier-tag": "/components/tier-tag/tier-tag",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

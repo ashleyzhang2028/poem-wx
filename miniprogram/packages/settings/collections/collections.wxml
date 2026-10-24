@@ -7,7 +7,7 @@
   <view class="card">
     <view class="card-head">
       <text class="card-title">自选背诵</text>
-      <tier-tag wx:if="{{!on}}" tier="{{tier}}" />
+      <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" />
     </view>
     <text class="hint coll-lead">从课外阅读或搜索页添加篇目，按既定算法复习。</text>
 

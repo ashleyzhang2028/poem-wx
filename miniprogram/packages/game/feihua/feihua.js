@@ -64,7 +64,6 @@ Page({
     scopeName: "",
 
     allowed: true,
-    tier: "max",
 
     log: { count: 0, line: "" }
   },
@@ -73,7 +72,7 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
-    this.setData({ allowed: ok, tier: entitlement.tierOf("feihualing") });
+    this.setData({ allowed: ok });
     this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;

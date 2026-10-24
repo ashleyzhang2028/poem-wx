@@ -6,12 +6,10 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = [
-  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", log: "feihua", tier: "max" },
-  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", tier: "pro" },
-  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", log: "exam", tier: "max" }
+  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", log: "feihua", cap: "feihualing" },
+  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", cap: "quiz" },
+  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", log: "exam", cap: "exam" }
 ];
-
-const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
 
 const PAGE = {
   feihua: "/packages/game/feihua/feihua",
@@ -48,11 +46,18 @@ Page({
       return;
     }
 
-    const boxes = MODES.map((m) => (m.log && entitlement.can(CAP[m.key]) ? scoreLog.latest(m.log) : null));
-    const cards = MODES.map((m, i) => Object.assign({}, m, {
-      ok: entitlement.can(CAP[m.key]),
-      lastText: lastTextOf(boxes[i])
-    }));
+    const boxes = MODES.map((m) => (m.log && entitlement.can(m.cap) ? scoreLog.latest(m.log) : null));
+    const now = entitlement.status().tier;
+    const cards = MODES.map((m, i) => {
+      const ok = entitlement.can(m.cap);
+      const tier = entitlement.tierKey(m.cap);
+      return Object.assign({}, m, {
+        ok,
+        tier,
+        locked: !ok && entitlement.reachable(tier, now),
+        lastText: lastTextOf(boxes[i])
+      });
+    });
     const top = topRank(boxes);
     this.setData({
       locked: false,
@@ -75,8 +80,9 @@ Page({
       return;
     }
     const key = e.currentTarget.dataset.k;
-    const cap = CAP[key];
-    if (!cap) return;
+    const mode = MODES.filter((m) => m.key === key)[0];
+    if (!mode) return;
+    const cap = mode.cap;
 
     if (!entitlement.can(cap)) {
       wx.showToast({ title: entitlement.hint(cap), icon: "none" });
