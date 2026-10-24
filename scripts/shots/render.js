@@ -679,6 +679,7 @@ cases.forEach((cfg) => {
       auth.tier = cfg.tier || "max";
       auth.role = cfg.role || "owner";
       auth.local = false;
+      if (cfg.seedOrders) auth.baseUrl = auth.baseUrl || "https://preview.invalid";
       store2.write(store2.KEYS.auth, auth);
     } else {
       store2.write(store2.KEYS.auth, {});
@@ -692,6 +693,24 @@ cases.forEach((cfg) => {
     if (cfg.seedFeedback) {
       const seeded = withSeedFeedback(cfg, data);
       Object.keys(seeded).forEach((k) => { data[k] = seeded[k]; });
+    }
+
+    if (cfg.seedOrders) {
+      const page = rt.current();
+      const payMod = require(path.join(ROOT, "utils", "pay.js"));
+      const summary = cfg.seedOrders;
+      if (cfg.page.indexOf("pay-orders") >= 0) {
+        page.data.matched = payMod.adminCount(summary);
+      } else {
+        page.data.summary = summary;
+        page.data.statusRows = ["paid", "pending", "refunded"].map((key) => ({
+          key: key,
+          name: { paid: "已支付", pending: "待支付", refunded: "已退款" }[key],
+          count: summary[key],
+          text: payMod.yuan(summary[key + "Cents"])
+        }));
+      }
+      if (page.paint) page.paint();
     }
 
     if (cfg.seedStats) {

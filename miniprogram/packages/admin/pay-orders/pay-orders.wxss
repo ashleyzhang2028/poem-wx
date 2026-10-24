@@ -19,8 +19,8 @@
   margin-bottom: 0;
 }
 
-.ap-yen {
-  font-size: var(--fs-lead);
+.ap-amount {
+  font-family: var(--font-num);
 }
 
 .ap-filter {
@@ -55,4 +55,10 @@
   font-family: var(--font-num);
   font-size: var(--fs-hint);
   color: var(--ink-2);
+}
+
+@media (max-width: 350px) {
+  .ap-stats .stat-v {
+    font-size: var(--fs-head);
+  }
 }

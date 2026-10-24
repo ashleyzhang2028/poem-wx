@@ -20,7 +20,7 @@
           <text class="stat-k">已支付</text>
         </view>
         <view class="stat">
-          <text class="stat-v ap-yen">¥{{summary.paidText}}</text>
+          <text class="stat-v"><text class="ap-amount">¥{{summary.paidText}}</text></text>
           <text class="stat-k">合计金额</text>
         </view>
       </view>
