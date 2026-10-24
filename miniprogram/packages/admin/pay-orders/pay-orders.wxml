@@ -14,11 +14,7 @@
           <text class="stat-k">{{q ? '命中笔数' : '全部笔数'}}</text>
         </view>
         <view class="stat">
-          <text class="stat-v">{{matched.paid}}</text>
-          <text class="stat-k">已支付</text>
-        </view>
-        <view class="stat">
-          <text class="stat-v ap-yen">¥{{matched.paidText}}</text>
+          <text class="stat-v ap-yen">¥{{matched[status + 'Text']}}</text>
           <text class="stat-k">合计金额</text>
         </view>
       </view>
@@ -26,15 +22,6 @@
 
     <view class="card">
       <text class="hint ap-note" wx:if="{{reason}}">{{reason}}</text>
-
-      <view class="seg ap-filter">
-        <radio-group class="seg-group" bindchange="onStatus">
-          <label class="seg-item {{status === item.key ? 'on' : ''}}" wx:for="{{statusTabs}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{status === item.key}}" />
-            <text class="seg-text">{{item.name}}</text>
-          </label>
-        </radio-group>
-      </view>
 
       <input class="ap-input" placeholder="搜索单号 / uid / openid / 道具" value="{{q}}"
              confirm-type="search" bindinput="onSearch" bindconfirm="onSearchNow" />
