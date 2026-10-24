@@ -97,8 +97,8 @@
 
 banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自带
 `banner` 字段（缺省落 `BANNER`），首页 `onShow` 里跟着主题一起读一次。
-图片一律 `mode="aspectFill"`：按盒子那 750:360 填满，只裁掉多出来的一条边，
-不拉伸 —— 城名画进图里，拉歪了字就废了（见 `docs/architecture.md`）。
+图片一律 `mode="widthFix"`：城名画进图里，裁切或拉伸都会把字压歪，
+所以 banner 高度照原比例折（见 `docs/architecture.md`）。
 
 `--theme` / `--strong` / `--theme-deep` 指向当前那个色的 1.0，
 `--strong-soft` 指向它的 0.05，所以在页面里写 `var(--strong-soft)` 就跟着主题走
@@ -183,9 +183,8 @@ base64 存进 `kb_settings_v1` 的 `banner`，存完再读回来核一遍长度�
 这张卡的排法：缩略图与「有没有图」那一句靠左，提示语占一行，
 一排按钮靠右（`.own-acts` 上 `justify-content: flex-end`）。
 
-banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，盒高照旧由组件给；
-截取面板的 750:360 就是 banner 盒子本身的比，所以换上来的图不会变形。
-「自定义题图」那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
+banner 的长度、宽度、位置都不动：`page-banner` 只换 `src`，高度照旧按 916 / 1717 折，
+`mode="widthFix"`；「自定义题图」那张走 `own-thumb` 那枚方缩略图是色卡上的预览，
 `aspectFill` 裁进去，不算 banner 本身。
 
 清空（恢复默认）一并清掉 `theme` 那一格里的 `own`，否则会停在一条没有图的主题上。
