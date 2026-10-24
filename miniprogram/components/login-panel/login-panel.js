@@ -3,6 +3,9 @@ const auth = require("../../utils/auth");
 const loginFlow = require("../../utils/login-flow");
 const pay = require("../../utils/pay");
 
+const KIND_TEXTS = { free: "基础卡", pro: "铂金卡", max: "金卡" };
+const FOREVER_TEXT = "长期有效";
+
 Component({
   options: {
     addGlobalClass: true
@@ -16,14 +19,15 @@ Component({
     tierLabel(label) {
       const key = String(label || "").toLowerCase();
       const tierKey = key === "pro" || key === "max" ? key : "free";
-      this.setData({ tierKey: tierKey });
-      this.loadSub(tierKey);
+      this.setData({ tierKey: tierKey, kindText: KIND_TEXTS[tierKey] });
+      this.loadValid(tierKey);
     }
   },
 
   data: {
     tierKey: "free",
-    sub: "",
+    kindText: KIND_TEXTS.free,
+    validText: FOREVER_TEXT,
     logged: false,
     nickname: "",
     avatarUrl: "",
@@ -35,14 +39,14 @@ Component({
   },
 
   methods: {
-    loadSub(tierKey) {
+    loadValid(tierKey) {
       if (tierKey === "free" || !this.data.logged) {
-        if (this.data.sub) this.setData({ sub: "" });
+        if (this.data.validText !== FOREVER_TEXT) this.setData({ validText: FOREVER_TEXT });
         return;
       }
       pay.planInfo().then((plan) => {
         const until = plan && plan.until;
-        this.setData({ sub: pay.tierName(tierKey) + (until ? " · 至 " + pay.dateText(until) : " · 长期有效") });
+        this.setData({ validText: until ? pay.dateText(until) : FOREVER_TEXT });
       });
     },
 

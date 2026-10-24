@@ -5,9 +5,15 @@ var core = require("./core");
 var H = require("./http");
 
 var DAY = 86400000;
+var PERIOD_DAYS = { d30: 30, d90: 90, d180: 180, d365: 365 };
+var PERIODS = Object.keys(PERIOD_DAYS);
 var PERIOD_MS = { month: 31 * DAY, year: 366 * DAY };
+PERIODS.forEach(function (k) { PERIOD_MS[k] = PERIOD_DAYS[k] * DAY; });
 var PLANS = ["pro", "max"];
-var PERIODS = ["month", "year"];
+var LIST_PRICE_CENTS = {
+  pro: { d30: 1500, d90: 3500, d180: 5900, d365: 9800 },
+  max: { d30: 2900, d90: 6900, d180: 11900, d365: 19800 }
+};
 var RANK = { free: 0, pro: 1, max: 2 };
 var CATALOG_KEY = "pay.catalog";
 var PAID_STATUS = [2, 3, 4];
@@ -20,15 +26,14 @@ var WX_TIMEOUT_MS = 6000;
 var NOTIFY_RAW_MAX = 4000;
 var CONFIRM_BATCH = 3;
 
-var DEFAULT_CATALOG = {
-  products: [
-    { productId: "pro_month", plan: "pro", period: "month", priceCents: 1200 },
-    { productId: "pro_year", plan: "pro", period: "year", priceCents: 9800 },
-    { productId: "max_month", plan: "max", period: "month", priceCents: 2500 },
-    { productId: "max_year", plan: "max", period: "year", priceCents: 19800 }
-  ],
-  active: { "pro.month": "pro_month", "pro.year": "pro_year", "max.month": "max_month", "max.year": "max_year" }
-};
+var DEFAULT_CATALOG = { products: [], active: {} };
+PLANS.forEach(function (plan) {
+  PERIODS.forEach(function (period) {
+    var productId = plan + "_" + PERIOD_DAYS[period];
+    DEFAULT_CATALOG.products.push({ productId: productId, plan: plan, period: period, priceCents: LIST_PRICE_CENTS[plan][period] });
+    DEFAULT_CATALOG.active[plan + "." + period] = productId;
+  });
+});
 
 var tokenCache = { value: "", expiresAt: 0 };
 var lastQueryAt = {};
@@ -494,5 +499,6 @@ module.exports = {
   payAdmin: payAdmin,
   normCatalog: normCatalog,
   DEFAULT_CATALOG: DEFAULT_CATALOG,
-  PERIOD_MS: PERIOD_MS
+  PERIOD_MS: PERIOD_MS,
+  PERIODS: PERIODS
 };

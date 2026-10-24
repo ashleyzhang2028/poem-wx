@@ -8175,24 +8175,24 @@ function gapped(items, max) {
     const query = { timestamp: "1", nonce: "2" };
     query.signature = sign(query);
 
-    const order = await payMod.payOrder(deps(), { plan: "pro", period: "month", code: "c" });
+    const order = await payMod.payOrder(deps(), { plan: "pro", period: "d30", code: "c" });
     const sd = order.status === 200 ? order.body.payData.signData : "{}";
     ok("下单：签名 paySig 是 AppKey 对 requestVirtualPayment&signData 的 HMAC-SHA256",
       order.status === 200 && order.body.payData.paySig ===
         cryptoPay.createHmac("sha256", "k").update("requestVirtualPayment&" + sd).digest("hex"),
       "paySig 对不上，微信会拒掉这笔支付");
-    ok("下单：金额取服务端价目，不取客户端", JSON.parse(sd).goodsPrice === 1200 && JSON.parse(sd).outTradeNo === order.body.outTradeNo,
+    ok("下单：金额取服务端价目，不取客户端", JSON.parse(sd).goodsPrice === 1500 && JSON.parse(sd).outTradeNo === order.body.outTradeNo,
       "金额或单号不在签名里");
     ok("下单：未登录 401、没绑微信的账号 403",
-      (await payMod.payOrder(deps(null), { plan: "pro", period: "month", code: "c" })).status === 401
+      (await payMod.payOrder(deps(null), { plan: "pro", period: "d30", code: "c" })).status === 401
         && (await (async () => {
           await store.putAccount({ uid: "u2", email: "b@b.c", plan: "free", plan_until: null, role: "user", status: "active", created_at: 1 });
-          return (await payMod.payOrder(deps("u2"), { plan: "pro", period: "month", code: "c" })).status;
+          return (await payMod.payOrder(deps("u2"), { plan: "pro", period: "d30", code: "c" })).status;
         })()) === 403,
       "任何人都能替别的账号下单");
 
     const msg = { Event: "xpay_goods_deliver_notify", OpenId: "OID", OutTradeNo: order.body.outTradeNo,
-      WeChatPayInfo: { MchOrderNo: "WX1" }, GoodsInfo: { ProductId: "pro_month", OrderFee: 1200 } };
+      WeChatPayInfo: { MchOrderNo: "WX1" }, GoodsInfo: { ProductId: "pro_30", OrderFee: 1500 } };
     ok("发货推送：验签不过 403，不改账号",
       (await payMod.payNotify(deps(), { method: "POST", query: Object.assign({}, query, { signature: "bad" }), body: msg })).status === 403
         && (await store.getAccount("u1")).plan === "free", "伪造的推送能升档");
@@ -8200,22 +8200,22 @@ function gapped(items, max) {
     await payMod.payNotify(deps(), { method: "POST", query, body: msg });
     const afterPush = await store.getAccount("u1");
     ok("发货推送：立刻升 Pro，重复推送只顺延一次",
-      afterPush.plan === "pro" && afterPush.plan_until === now + payMod.PERIOD_MS.month, "重复推送顺延了多次或没升档");
+      afterPush.plan === "pro" && afterPush.plan_until === now + payMod.PERIOD_MS.d30, "重复推送顺延了多次或没升档");
 
-    const renew = await payMod.payOrder(deps(), { plan: "pro", period: "year", code: "c" });
+    const renew = await payMod.payOrder(deps(), { plan: "pro", period: "d365", code: "c" });
     await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
-      OutTradeNo: renew.body.outTradeNo, GoodsInfo: { ProductId: "pro_year", OrderFee: 9800 } }) });
+      OutTradeNo: renew.body.outTradeNo, GoodsInfo: { ProductId: "pro_365", OrderFee: 9800 } }) });
     ok("续订：在原到期日之后顺延",
-      (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.month + payMod.PERIOD_MS.year, "续订吃掉了剩余天数");
+      (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.d30 + payMod.PERIOD_MS.d365, "续订吃掉了剩余天数");
 
-    const wrongFee = await payMod.payOrder(deps(), { plan: "max", period: "month", code: "c" });
+    const wrongFee = await payMod.payOrder(deps(), { plan: "max", period: "d30", code: "c" });
     const mismatch = await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
-      OutTradeNo: wrongFee.body.outTradeNo, GoodsInfo: { ProductId: "max_month", OrderFee: 1 } }) });
+      OutTradeNo: wrongFee.body.outTradeNo, GoodsInfo: { ProductId: "max_30", OrderFee: 1 } }) });
     ok("发货推送：金额对不上不发货", mismatch.body.ErrCode !== 0 && (await store.getAccount("u1")).plan === "pro",
       "少付也能升 Max");
 
     await payMod.payNotify(deps(), { method: "POST", query, body: { Event: "xpay_refund_notify", OutTradeNo: renew.body.outTradeNo } });
-    ok("退款推送：回收那一单的时长", (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.month,
+    ok("退款推送：回收那一单的时长", (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.d30,
       "退款之后会员时长还在");
 
     ok("沙箱环境用沙箱 AppKey，现网用现网 AppKey（两把钥匙不混用）",
@@ -8230,7 +8230,7 @@ function gapped(items, max) {
       "付过费的用户注销账号会被订单卡住，或订单随账号一起没了");
     ok("后台支付接口只认管理员", (await payMod.payAdmin(deps(), { op: "orders" })).status === 403, "普通用户能看全部订单");
     ok("价目表：生效道具必须指向同档位同周期的道具",
-      !!payMod.normCatalog({ products: payMod.DEFAULT_CATALOG.products, active: Object.assign({}, payMod.DEFAULT_CATALOG.active, { "pro.month": "max_year" }) }).bad,
+      !!payMod.normCatalog({ products: payMod.DEFAULT_CATALOG.products, active: Object.assign({}, payMod.DEFAULT_CATALOG.active, { "pro.d30": "max_365" }) }).bad,
       "后台能把包月价指到包年道具上");
   })());
 

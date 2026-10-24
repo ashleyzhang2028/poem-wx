@@ -33,19 +33,15 @@
   margin-bottom: var(--sp-3);
 }
 
-.pr-badge {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--strong-text);
-  background: var(--strong-soft);
+.pr-save {
+  margin-left: auto;
+  padding: 4rpx var(--sp-2);
   border-radius: var(--radius-pill);
-  padding: 0 var(--sp-2);
-  line-height: 1.6;
-}
-
-.seg-item.on .pr-badge {
-  color: var(--strong-text);
-  background: var(--on-ink);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--on-theme);
+  background: var(--red);
 }
 
 .pr-plan {

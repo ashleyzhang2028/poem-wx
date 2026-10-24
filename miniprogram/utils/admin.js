@@ -241,7 +241,7 @@ function setTier(userId, tier) {
   if (!canWrite()) {
     return Promise.resolve({
       ok: false,
-      msg: "改不了：要么服务器没接上，要么你不是管理员"
+      msg: "改不了：要么服务器没接上，要么您不是管理员"
     });
   }
   return remote.setUserTier(userId, tier).then((res) => ({

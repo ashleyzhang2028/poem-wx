@@ -86,16 +86,8 @@
   color: var(--ink-3);
 }
 
-.identity-acts {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  margin-left: var(--sp-2);
-}
-
 .tier-chip,
-.identity-acts .btn.pill {
+.id-foot .btn.pill {
   flex: none;
   height: auto;
   padding: var(--pad-opt-y) var(--sp-2);
@@ -107,13 +99,13 @@
   color: var(--ink-2);
 }
 
-.identity-acts .btn.pill {
+.id-foot .btn.pill {
   width: auto;
   min-width: 0;
 }
 
 .tier-chip-hover,
-.identity-acts .btn.pill.button-hover {
+.id-foot .btn.pill.button-hover {
   background: var(--line);
   opacity: 1;
 }
@@ -123,28 +115,91 @@
   margin-top: var(--sp-4);
 }
 
-.tier-pro .avatar-wrap {
-  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--strong);
+.id-card {
+  position: relative;
+  overflow: hidden;
 }
 
+.id-top,
+.id-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.id-top {
+  margin-bottom: var(--sp-3);
+}
+
+.id-foot {
+  margin-top: var(--sp-3);
+}
+
+.id-kind,
+.id-valid-k {
+  font-size: var(--fs-caption);
+  letter-spacing: 4rpx;
+  color: var(--ink-3);
+}
+
+.id-valid-k {
+  display: block;
+  letter-spacing: 2rpx;
+}
+
+.id-valid-v {
+  display: block;
+  font-size: var(--fs-body);
+  letter-spacing: 2rpx;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tier-pro,
+.tier-max {
+  border: none;
+}
+
+.tier-pro {
+  background: var(--card-platinum);
+}
+
+.tier-max {
+  background: var(--card-gold);
+}
+
+.tier-pro .identity-name,
+.tier-max .identity-name,
+.tier-pro .id-valid-v,
+.tier-max .id-valid-v {
+  color: var(--card-metal-ink);
+}
+
+.tier-pro .identity-sub,
+.tier-max .identity-sub,
+.tier-pro .id-kind,
+.tier-max .id-kind,
+.tier-pro .id-valid-k,
+.tier-max .id-valid-k {
+  color: var(--card-metal-ink);
+  opacity: .65;
+}
+
+.tier-pro .tier-chip,
+.tier-max .tier-chip,
+.tier-pro .id-foot .btn.pill,
+.tier-max .id-foot .btn.pill {
+  color: var(--card-metal-ink);
+  background: transparent;
+  border-color: var(--card-metal-line);
+}
+
+.tier-pro .avatar-wrap,
 .tier-max .avatar-wrap {
-  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--gold), 0 0 24rpx var(--gold-soft);
-}
-
-.tier-pro .tier-chip {
-  color: var(--strong-text);
-  background: var(--strong-soft);
-  border-color: var(--strong);
-}
-
-.tier-max .tier-chip {
-  color: var(--ink);
-  background: var(--gold-soft);
-  border-color: var(--gold);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, .7), 0 0 0 6rpx var(--card-metal-line);
 }
 
 .tier-max .tier-chip::before {
   content: "✦";
   margin-right: 6rpx;
-  color: var(--gold);
 }
