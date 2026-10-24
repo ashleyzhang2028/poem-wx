@@ -103,16 +103,31 @@ Page({
       dueTier: tier,
       dueTierLabel: tiers.nameOf(tier),
       dueNote: "",
-      dueDate: date ? user.untilText : "",
+      dueDate: date ? admin.dayText(date) : "",
       dueHolder: !date && keep ? keep : "",
       dueMin: admin.today()
     });
   },
 
-  onDueChange(e) {
-    const pick = e.detail.value || {};
-    const day = [pick.year, pick.month, pick.day].map((n) => String(n).padStart(2, "0")).join("-");
-    this.setData({ dueDate: day, dueHolder: "", dueNote: admin.checkDay(day) });
+  onDuePick() {
+    const min = this.data.dueMin || admin.today();
+    const picked = this.data.dueDate && this.data.dueDate >= min ? this.data.dueDate : min;
+    wx.showModal({
+      title: "选到期日",
+      editable: true,
+      placeholderText: "YYYY-MM-DD",
+      content: picked,
+      confirmText: "确定",
+      success: (res) => {
+        if (!res.confirm) return;
+        const day = admin.dayInput(res.content);
+        if (!day) {
+          this.setData({ dueNote: "日期按 YYYY-MM-DD 填，例如 " + min });
+          return;
+        }
+        this.setData({ dueDate: day, dueHolder: "", dueNote: admin.checkDay(day) });
+      }
+    });
   },
 
   onDueForever() {
