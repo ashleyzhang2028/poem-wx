@@ -36,6 +36,18 @@ function manifestOf(dir) {
     .map((f) => f + " " + fs.readFileSync(path.join(dir, f)).length).join("\n");
 }
 
+function writeMeta(outDir) {
+  const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "miniprogram", "data", "shards.js"), "utf8").replace(/^module\.exports = /, "").replace(/;\s*$/, ""));
+  fs.writeFileSync(path.join(outDir, "manifest.js"), "module.exports = " + JSON.stringify({
+    rev: meta.v,
+    buckets: meta.buckets
+  }) + ";\n");
+  fs.writeFileSync(path.join(outDir, "__meta.js"), "module.exports = " + JSON.stringify({
+    rev: meta.v,
+    buckets: meta.buckets
+  }) + ";\n");
+}
+
 function stage(outDir) {
   fs.mkdirSync(outDir, { recursive: true });
   execFileSync(process.execPath, [path.join(__dirname, "build-data.js")], {
@@ -46,6 +58,7 @@ function stage(outDir) {
     throw new Error("分片只摊出 " + names.length + " 片 —— 语料没生成（scripts/corpus/ 在不在？）");
   }
   const manifest = manifestOf(TEXTS);
+  writeMeta(outDir);
   for (const f of names) {
     const gz = zlib.gzipSync(fs.readFileSync(path.join(TEXTS, f)), { level: 9 });
     fs.writeFileSync(path.join(outDir, f + ".gz"), gz);
@@ -77,6 +90,7 @@ function main() {
       cwd: ROOT, stdio: ["ignore", "ignore", "inherit"]
     });
     if (actual === manifestOf(TEXTS) && fs.existsSync(path.join(outDir, "upload.manifest"))) {
+      writeMeta(outDir);
       console.log("✓ 命中缓存：" + actual.split("\n").length + " 片，省掉 gzip -9");
       return;
     }

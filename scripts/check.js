@@ -7100,6 +7100,9 @@ function gapped(items, max) {
   const remoteSrc = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
   const corpusSrc2 = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
   const readerSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  const stageSrc = fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8");
+  const configSrc = fs.readFileSync(path.join(ROOT, "..", "api", "_routes", "config.js"), "utf8");
+  const revSrc = fs.readFileSync(path.join(ROOT, "..", "api", "_lib", "shard-rev.js"), "utf8");
 
   ok("镜像里的时区写死成东八区（不随基础镜像漂）",
     /^ENV TZ=Asia\/Shanghai$/m.test(dockerfile));
@@ -7131,8 +7134,8 @@ function gapped(items, max) {
 
   ok("分片名只认 t\\d{3}（不接受 ../、斜杠、别的形状）",
     /\^t\\d\{3\}\$/.test(shardSrc));
-  ok("只有清单是特殊名（倒排索引 idx 不进镜像，客户端也不打它）",
-    /SPECIAL\s*=\s*\[\s*MANIFEST\s*\]/.test(shardSrc),
+  ok("特殊名只有清单与版本号（倒排索引 idx 不进镜像，客户端也不打它）",
+    /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*META\s*\]/.test(shardSrc),
     "SPECIAL 里还留着 INDEX —— 服务端从来的路由只有 t\\d{3}，idx 那一片没人会请求" +
       "（2MB 原文 / 466KB gzip 白跟着镜像走一趟）");
   ok("拼路径只走 fileOf（校验之后再拼）",
@@ -7169,6 +7172,13 @@ function gapped(items, max) {
       "（Back-off restarting failed container）。它是 serve-api.js 启动期 require 的，" +
       "与 store-mysql.js 一样得有一条自己的 COPY。");
 
+  ok("分片版本是一份独立的小文件（rev + buckets，不含正文）",
+    /manifest\.js/.test(stageSrc) && /__meta\.js/.test(stageSrc) && /rev:\s*meta\.v/.test(stageSrc),
+    "镜像得能自报它装的是哪一版语料 —— 没有这份就没法区分「服务端落后」与「这一片真缺」");
+  ok("配置接口报出服务端语料版本（小程序不必先取一片才知道）",
+    /corpus:\s*\{[^}]*rev:\s*shardRev\.rev\(\)/.test(configSrc) && /shard-rev/.test(configSrc));
+  ok("语料版本算的是正文本身（与 build-data 的 textHash 同一口径）",
+    /id \+ "\\u0000" \+ JSON\.stringify/.test(revSrc) && /slice\(0, 12\)/.test(revSrc));
   ok("流水线把 shard-api.js 摆进上下文那一层",
     /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
   ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
@@ -7267,7 +7277,7 @@ function gapped(items, max) {
   }
 
   ok("remote 暴露了 shard 与 shardReady",
-    /shard,\s*\n\s*shardReady/.test(remoteSrc));
+    /shard,\s*\n\s*shardRev,\s*\n\s*shardReady/.test(remoteSrc));
   ok("分片走的是 /api/shard/（云调用，不是 wx.downloadFile）",
     /SHARD_PATH = "\/api\/shard\/"/.test(remoteSrc));
   ok("分片请求**不写进 outbox**（那是给进度用的队列）",

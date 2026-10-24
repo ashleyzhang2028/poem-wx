@@ -98,6 +98,10 @@ COPY --chown=node:node store-mysql.js ./
 #    看着像服务要重启，其实是镜像里从来没有过这个文件。
 COPY --chown=node:node shard-api.js ./
 
+# 语料版本（shard-api 与 api 共用）：镜像得能自报它装的是哪一版语料，
+# 否则「服务端落后」与「这一片真缺」在小程序里分不开。同样是启动期 require。
+COPY --chown=node:node shard-rev.js ./
+
 # 正文分片（Issue #121 方案 A）：分片跟主包一起走云托管容器下发，**仍然免备案**。
 #
 # 为什么可以这样：云调用（wx.cloud.callContainer）走微信内网，不经过

@@ -167,6 +167,24 @@ env:
   `npu-gpu-cpu/poem-wechat-mini-program`，当场复制
 - 凭据不是环境变量，别和 § 3 混
 
+### 二点五、核对线上是哪一版语料
+
+镜像和小程序包各自带一份语料，只有一致时课外正文才对得上。两边都能自报版本号：
+
+- 镜像：`GET /api/config` 的 `corpus.rev`（也可以打 `/api/shard/__meta`）
+- 小程序：启动日志那行 `[跬步] 版本 …` 之前会打印 `语料 <rev>`；`miniprogram/data/shards.js`
+  的 `v` 是同一个值（`node -e "console.log(require('./miniprogram/data/shards.js').v)"`）
+
+两个值相同 = 这一版镜像装的就是这一版语料。不同 = 镜像落后于小程序包，
+`/api/shard/*` 的响应头会带 `X-Corpus-Rev`（镜像那份）与 `X-Corpus-Stale: 1`
+（请求带 `?v=` 且与镜像那份不等时才有），小程序把这种失败报成
+「服务端语料比这一版旧」，而不是「这一片正文不完整」。
+
+看到了 `X-Corpus-Stale` 该做什么：按 § 一 重新触发一次发布流水线，
+确认 `stage context` 那步打出 `✓ 摊出 N 片`，回控制台把 tag 换成新的短 sha
+重新部署（见 § 二）。`/api/config` 的 `corpus.rev` 变成小程序包里那个值，
+这一步才算完。
+
 ## 三、配环境变量
 
 云托管 → 服务设置 → **环境变量**：

@@ -58,6 +58,11 @@ function baseUrl() {
   return session().baseUrl || "";
 }
 
+function shardRev(path) {
+  if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
+  return sendTraced(path, {}, "GET");
+}
+
 function shardReady() {
   return configured();
 }
@@ -595,6 +600,7 @@ module.exports = {
   baseUrl,
   useCloud,
   shard,
+  shardRev,
   shardReady,
   cloudConfig,
   request,
