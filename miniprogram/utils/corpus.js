@@ -3,7 +3,7 @@ const CLAUSE_SPLIT = /[\n，。！？；：、]/;
 const CLOSING = /[」』”’）》〉]/;
 
 function isClauseEnd(ch, next) {
-  return CLAUSE_SPLIT.test(ch) && !(CLOSING.test(next) && !CLAUSE_SPLIT.test(next));
+  return CLAUSE_SPLIT.test(ch) && !CLOSING.test(next);
 }
 
 function splitClauses(line) {

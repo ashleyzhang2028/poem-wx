@@ -240,5 +240,5 @@ function optionClass(row, picked, answer) {
 
 module.exports = {
   FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass,
-  stemRows, titleSpoiled
+  stemRows, titleSpoiled, usable: _quiz_usable
 };
