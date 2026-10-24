@@ -33,7 +33,8 @@ const NAMES = [
   ["chart", "CilChartBar.svg"],
   ["trend", "CilChartLine.svg"],
   ["tomorrow", "CilCalendarTomorrow.svg"],
-  ["month", "CilCalendarMonth.svg"]
+  ["month", "CilCalendarMonth.svg"],
+  ["crest", "TangBaoxiang.svg"]
 ];
 
 function flatten(svg) {

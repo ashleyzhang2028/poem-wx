@@ -113,6 +113,38 @@
   overflow: hidden;
 }
 
+.id-crest {
+  position: absolute;
+  right: -72rpx;
+  bottom: -84rpx;
+  width: 360rpx;
+  height: 360rpx;
+  background: rgba(255, 255, 255, .16);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  pointer-events: none;
+}
+
+.id-top,
+.identity-row,
+.id-motto,
+.id-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.id-motto {
+  display: block;
+  margin-top: var(--sp-3);
+  font-size: var(--fs-hint);
+  letter-spacing: 2rpx;
+  color: var(--ink-3);
+}
+
 .id-top,
 .id-foot {
   display: flex;
@@ -154,40 +186,46 @@
 }
 
 .tier-pro {
-  background: var(--card-gold);
+  background: var(--card-fei);
 }
 
 .tier-max {
-  background: var(--card-platinum);
+  background: var(--card-zi);
 }
 
 .tier-pro .identity-name,
 .tier-max .identity-name,
 .tier-pro .id-valid-v,
 .tier-max .id-valid-v {
-  color: var(--card-metal-ink);
+  color: var(--on-theme);
 }
 
 .tier-pro .identity-sub,
 .tier-max .identity-sub,
 .tier-pro .id-kind,
 .tier-max .id-kind,
+.tier-pro .id-motto,
+.tier-max .id-motto,
 .tier-pro .id-valid-k,
 .tier-max .id-valid-k {
-  color: var(--card-metal-ink);
-  opacity: .65;
+  color: var(--on-theme-soft);
 }
 
 .tier-pro .tier-chip,
 .tier-max .tier-chip {
-  color: var(--card-metal-ink);
+  color: var(--on-theme);
   background: transparent;
-  border-color: var(--card-metal-line);
+  border-color: rgba(255, 255, 255, .5);
+}
+
+.tier-pro .tier-chip-hover,
+.tier-max .tier-chip-hover {
+  background: rgba(255, 255, 255, .16);
 }
 
 .tier-pro .avatar-wrap,
 .tier-max .avatar-wrap {
-  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, .7), 0 0 0 6rpx var(--card-metal-line);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, .35);
 }
 
 .tier-pro .tier-chip::before {

@@ -1,16 +1,12 @@
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const pay = require("../../../utils/pay");
+const tiers = require("../../../utils/tiers");
 const auth = require("../../../utils/auth");
 const icons = require("../../../utils/icons");
 const tabPage = require("../../../utils/tab-page");
 
 const FEATURE_SHOWN = 6;
-
-const TAGLINES = {
-  pro: "每天背得更稳",
-  max: "考试与飞花令全开"
-};
 
 const INCLUDES = {
   pro: "包含 Free 的全部功能",
@@ -51,6 +47,7 @@ Page({
     shown: {},
     promises: PROMISES,
     yes: icons.yes,
+    crest: icons.crest,
     welcome: null,
     sandbox: false,
     busy: false,
@@ -114,7 +111,8 @@ Page({
       shown: {
         key: tab,
         name: pay.tierName(tab),
-        tagline: TAGLINES[tab],
+        tagline: tiers.mottoOf(tab).verse,
+        blessing: tiers.mottoOf(tab).line,
         options: options,
         note: bonus && bonus[period] > 0 ? "感谢一路相伴。您的 Pro 还剩 " + upgrade.proLeftDays + " 天，我们按您的实付价折算，升级后另赠 " + bonus[period] + " 天，到期日顺延。" : "",
         includes: INCLUDES[tab],
@@ -122,8 +120,7 @@ Page({
         more: Math.max(0, all.length - FEATURE_SHOWN),
         current: tier === tab,
         recommended: isRec,
-        tone: tab === "max" ? "gold" : "theme",
-        buyClass: tab === "max" ? "gold" : "primary",
+        tone: tab === "max" ? "zi" : "fei",
         actionText: cell ? act.text + " · ¥" + pay.yuan(cell.priceCents) + " / " + periodNow.name : act.text,
         disabled: act.disabled || !cell
       }

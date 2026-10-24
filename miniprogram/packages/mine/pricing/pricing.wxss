@@ -42,17 +42,29 @@
   font-weight: 600;
   line-height: 1.4;
   color: var(--on-theme);
-  background: var(--red);
+  background: var(--tier);
 }
 
-.pr-plan.is-rec,
-.pr-plan.is-max {
-  border: 2rpx solid var(--strong);
-  box-shadow: var(--shadow-lift);
+.tier-pro {
+  --tier: var(--fei);
+  --tier-soft: var(--fei-soft);
 }
 
-.pr-plan.is-max {
-  border-color: var(--gold);
+.tier-max {
+  --tier: var(--zi);
+  --tier-soft: var(--zi-soft);
+}
+
+.pr-plan {
+  border: 2rpx solid var(--tier);
+}
+
+.pr-plan .pr-name {
+  color: var(--tier);
+}
+
+.pr-plan .pr-ck {
+  background: var(--tier);
 }
 
 .pr-badge-tag {
@@ -105,13 +117,8 @@
 }
 
 .pr-opt.on {
-  border-color: var(--strong);
-  background: var(--strong-soft);
-}
-
-.pr-plan.is-max .pr-opt.on {
-  border-color: var(--gold);
-  background: var(--gold-soft);
+  border-color: var(--tier);
+  background: var(--tier-soft);
 }
 
 .pr-opt-l {
@@ -142,7 +149,7 @@
 .pr-opt-price {
   font-family: var(--font-num);
   font-size: var(--fs-lead);
-  color: var(--strong-text);
+  color: var(--tier);
   line-height: var(--lh-tight);
 }
 
@@ -213,20 +220,52 @@
   margin-top: var(--sp-3);
 }
 
-.btn.gold {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--ink);
+.btn.pr-buy {
+  background: var(--tier);
+  border-color: var(--tier);
+  color: var(--on-theme);
 }
 
-.btn.gold.button-hover {
+.btn.pr-buy {
+  position: relative;
+  overflow: hidden;
+}
+
+.pr-buy-t {
+  position: relative;
+  z-index: 1;
+}
+
+.pr-buy-crest {
+  position: absolute;
+  right: -28rpx;
+  top: 50%;
+  width: 150rpx;
+  height: 150rpx;
+  margin-top: -75rpx;
+  background: rgba(255, 255, 255, .2);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  pointer-events: none;
+}
+
+.btn.pr-buy[disabled] .pr-buy-crest {
+  display: none;
+}
+
+.btn.pr-buy.button-hover {
   opacity: .9;
 }
 
-.btn.gold[disabled] {
-  background: var(--gold-soft);
-  border-color: var(--gold-soft);
+.btn.pr-buy[disabled] {
+  background: var(--tier-soft);
+  border-color: var(--tier-soft);
   color: var(--ink-2);
+  opacity: 1;
 }
 
 .pr-promise {
@@ -248,14 +287,9 @@
 .pr-welcome {
   margin-top: var(--sp-3);
   padding: var(--sp-3);
-  border: 2rpx solid var(--strong);
+  border: 2rpx solid var(--tier);
   border-radius: var(--radius);
-  background: var(--strong-soft);
-}
-
-.pr-welcome.tier-max {
-  border-color: var(--gold);
-  background: var(--gold-soft);
+  background: var(--tier-soft);
 }
 
 .pr-w-title {

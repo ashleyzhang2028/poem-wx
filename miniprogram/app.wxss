@@ -516,6 +516,16 @@ button, textarea {
   background: var(--gold-soft);
 }
 
+.tag.fei {
+  color: var(--fei);
+  background: var(--fei-soft);
+}
+
+.tag.zi {
+  color: var(--zi);
+  background: var(--zi-soft);
+}
+
 .tag.course {
   color: var(--strong-text);
   background: var(--strong-soft);

@@ -41,10 +41,12 @@ page {
 
   --gold: #d9b061;
   --gold-soft: rgba(217, 176, 97, .28);
-  --card-platinum: linear-gradient(135deg, #f4f6f8 0%, #c9d1d8 46%, #eef1f4 70%, #aeb8c1 100%);
-  --card-gold: linear-gradient(135deg, #f7e3a8 0%, #d9b061 46%, #f3dc9a 70%, #b98a34 100%);
-  --card-metal-ink: #2a2a2e;
-  --card-metal-line: rgba(42, 42, 46, .22);
+  --fei: rgba(179, 38, 45, 1);
+  --fei-soft: rgba(179, 38, 45, .08);
+  --zi: rgba(91, 58, 135, 1);
+  --zi-soft: rgba(91, 58, 135, .09);
+  --card-fei: linear-gradient(135deg, rgba(204, 64, 62, 1) 0%, rgba(168, 35, 43, 1) 48%, rgba(190, 56, 58, 1) 72%, rgba(138, 28, 36, 1) 100%);
+  --card-zi: linear-gradient(135deg, rgba(113, 78, 160, 1) 0%, rgba(82, 48, 124, 1) 48%, rgba(102, 66, 146, 1) 72%, rgba(60, 33, 96, 1) 100%);
   --celadon: #2e7d5b;
   --green-light: var(--green-soft);
   --green-edge: rgba(46, 125, 91, .2);

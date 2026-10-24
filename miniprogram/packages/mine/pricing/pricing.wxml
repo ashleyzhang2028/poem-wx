@@ -32,11 +32,12 @@
       </radio-group>
     </view>
 
-    <view class="card pr-plan {{shown.recommended ? 'is-rec' : ''}} {{shown.key === 'max' ? 'is-max' : ''}}">
+    <view class="card pr-plan tier-{{shown.key}}">
       <view class="pr-head">
         <view class="pr-head-l">
           <text class="pr-name">{{shown.name}}</text>
-          <text class="pr-tagline">{{shown.tagline}}</text>
+          <text class="pr-tagline poem">{{shown.tagline}}</text>
+          <text class="pr-tagline poem">{{shown.blessing}}</text>
         </view>
         <text class="tag pr-badge-tag {{shown.tone}}" wx:if="{{shown.current}}">当前</text>
         <text class="tag pr-badge-tag {{shown.tone}}" wx:elif="{{shown.recommended}}">推荐</text>
@@ -58,8 +59,11 @@
       </view>
       <text class="pr-credit" wx:if="{{shown.note}}">{{shown.note}}</text>
 
-      <button class="btn block pr-buy {{shown.buyClass}}"
-              disabled="{{shown.disabled || busy}}" bindtap="onBuy">{{shown.actionText}}</button>
+      <button class="btn block pr-buy"
+              disabled="{{shown.disabled || busy}}" bindtap="onBuy">
+        <text class="pr-buy-t">{{shown.actionText}}</text>
+        <view class="pr-buy-crest" style="mask-image:url('{{crest}}');-webkit-mask-image:url('{{crest}}');"></view>
+      </button>
 
       <view class="pr-list">
         <text class="pr-inc" wx:if="{{shown.includes}}">{{shown.includes}}</text>
