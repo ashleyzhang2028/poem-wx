@@ -107,9 +107,7 @@ Page({
   },
 
   onDueChange(e) {
-    const pick = e.detail.value || {};
-    const day = [pick.year, pick.month, pick.day].map((n) => String(n).padStart(2, "0")).join("-");
-    this.setData({ dueDate: day });
+    this.setData({ dueDate: String((e.detail && e.detail.value) || "") });
   },
 
   onDueForever() {
@@ -127,7 +125,7 @@ Page({
     if (this.data.busy) return;
     const until = admin.dayEnd(this.data.dueDate);
     if (!until) {
-      this.setData({ dueNote: "先在上面的日历里选一个到期日" });
+      this.setData({ dueNote: "先选到期日，或选「不设到期」" });
       return;
     }
     const uid = this.data.dueUid;

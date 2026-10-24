@@ -94,11 +94,25 @@
   padding-bottom: var(--sp-2);
 }
 
-.due-day {
-  display: block;
+.due-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
   padding: var(--sp-2) 0;
+}
+
+.due-label {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+}
+
+.due-day {
+  flex: 1;
+  padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-body);
   color: var(--strong-text);
+  background: var(--sink);
+  border-radius: var(--radius-ctl);
 }
 
 .due-btn {

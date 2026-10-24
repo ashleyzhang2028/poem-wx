@@ -37,9 +37,12 @@
   <view class="due-mask" wx:if="{{dueOpen}}" bindtap="onDueCancel">
     <view class="due" catchtap="onDueStop">
       <text class="due-title">改成 {{dueTierLabel}}</text>
-      <picker mode="date" value="{{dueDate}}" start="{{dueMin}}" bindchange="onDueChange">
-        <view class="due-day">到期日：{{dueDate || '从日历里选'}}</view>
-      </picker>
+      <view class="due-field">
+        <text class="due-label">到期日</text>
+        <picker mode="date" value="{{dueDate}}" start="{{dueMin}}" bindchange="onDueChange">
+          <view class="due-day">{{dueDate || '点这里选日期'}}</view>
+        </picker>
+      </view>
       <text class="hint note error" wx:if="{{dueNote}}">{{dueNote}}</text>
       <button class="btn primary block" bindtap="onDueConfirm">确定</button>
       <button class="due-btn" bindtap="onDueForever">不设到期，长期有效</button>
