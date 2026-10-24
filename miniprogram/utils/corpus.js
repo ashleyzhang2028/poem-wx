@@ -387,10 +387,6 @@ function manifest() {
   return manifestCache;
 }
 
-function textsRev() {
-  return String(manifest().v || "");
-}
-
 function dropStaleShards() {
   if (!textsRev()) return;
   dropOldShardKeys();
