@@ -40,3 +40,7 @@
 .od-id {
   word-break: break-all;
 }
+
+.od-acts {
+  margin-top: var(--sp-2);
+}

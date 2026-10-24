@@ -28,6 +28,7 @@ var ROUTES = {
   "GET /pay/catalog": "./../_routes/pay/catalog.js",
   "POST /pay/order": "./../_routes/pay/order.js",
   "POST /pay/confirm": "./../_routes/pay/confirm.js",
+  "POST /pay/manage": "./../_routes/pay/manage.js",
   "GET /pay/orders": "./../_routes/pay/orders.js",
   "GET /pay/notify": "./../_routes/pay/notify.js",
   "POST /pay/notify": "./../_routes/pay/notify.js",

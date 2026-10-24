@@ -545,7 +545,7 @@ function ensureBucket(name) {
   const remote = require("./remote");
   if (!remote.shardReady()) return Promise.reject(shardError("E_NO_SHARD_SERVICE", "分片服务没接上"));
 
-  return remote.shard(name).then(function (data) {
+  return remote.shard(name, textsRev()).then(function (data) {
     const payload = (data && data.t) || data || {};
     if (!payload || !Object.keys(payload).length) throw shardError("E_EMPTY_SHARD", "这一片是空的");
     armBucket(name, payload);
@@ -561,10 +561,18 @@ function ensureEntry(id) {
   const name = bucketOf(id);
   if (!name) return Promise.reject(shardError("E_NO_ENTRY", "分片清单里没有这一条：" + id));
 
-  return ensureBucket(name).then(function (r) {
+  const take = function (r) {
     const hit = r.data[id] || null;
-    if (!hit || !hit.text) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
-    return arm(indexById(id), hit) || hit;
+    return hit && hit.text ? { hit: hit, from: r.from } : { hit: null, from: r.from };
+  };
+
+  return ensureBucket(name).then(take).then(function (got) {
+    if (got.hit || got.from === "remote") return got;
+    forgetText(id);
+    return ensureBucket(name).then(take);
+  }).then(function (got) {
+    if (!got.hit) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
+    return arm(indexById(id), got.hit) || got.hit;
   });
 }
 
