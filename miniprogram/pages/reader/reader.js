@@ -91,6 +91,7 @@ Page({
     reciteMode: false,
 
     dailyOn: false,
+    dailyLocked: false,
     pickOn: false,
     extraTier: "pro",
     pickTier: "pro",
@@ -132,11 +133,12 @@ Page({
 
   syncDaily() {
     const on = store.dailyExtra().indexOf(this.data.id) >= 0;
-    if (on !== this.data.dailyOn) this.setData({ dailyOn: on });
-    const picked = cols.collectionsOf(this.data.id).length > 0;
-    if (picked !== this.data.pickOn) this.setData({ pickOn: picked });
+    const extraTier = entitlement.tierOf("extra");
     this.setData({
-      extraTier: entitlement.tierOf("extra"),
+      dailyOn: on,
+      extraTier: extraTier,
+      dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
+      pickOn: cols.collectionsOf(this.data.id).length > 0,
       pickTier: entitlement.tierOf("collections")
     });
   },

@@ -5,7 +5,6 @@
     <view class="card">
       <view class="card-head">
         <text class="card-title">考试范围</text>
-        <tier-tag tier="{{tier}}" />
       </view>
 
       <radio-group class="opt-group inline tight cols-3" bindchange="onScope">

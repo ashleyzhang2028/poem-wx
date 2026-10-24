@@ -1,1 +1,1 @@
-<text class="tier-tag">{{text}}</text>
+<text class="tier-tag" wx:if="{{show}}">{{text}}</text>

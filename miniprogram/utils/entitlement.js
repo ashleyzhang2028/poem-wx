@@ -111,6 +111,10 @@ function switchedOff(key) {
   return !!(s && s[key] === false);
 }
 
+function reachable(tier, now) {
+  return rankOf(tier) > rankOf(now);
+}
+
 function can(key) {
   const cap = CAPS.find((c) => c.key === key);
   if (!cap) return false;
@@ -356,6 +360,11 @@ function tierOf(name) {
   return tiers.nameOf(cap ? cap.tier : "pro");
 }
 
+function tierKey(name) {
+  const cap = CAPS.find((c) => c.key === name);
+  return cap ? cap.tier : "pro";
+}
+
 function block(name, opt) {
   const o = opt || {};
   const r = decide(name, o);
@@ -406,8 +415,10 @@ module.exports = {
   TIER_RANK,
   rankOf,
   tierOf,
+  tierKey,
   status,
   snapshot,
+  reachable,
   can,
   hint,
   loggedIn,

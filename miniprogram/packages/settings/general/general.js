@@ -75,10 +75,10 @@ Page({
         sfxVisible: fx.visible,
         sfxOn: sfx.enabled(),
         seasonalOn: !seasonal.switched(),
-        seasonalLock: !seasonal.canSwitch(),
+        seasonalLock: seasonal.locked(),
         seasonalTier: seasonal.tier(),
         leagueBoardOn: league.canJoin() && settings.leagueBoard !== false,
-        leagueLock: !league.canSwitch(),
+        leagueLock: league.locked(),
         leagueTier: league.tier(),
         pinyin: prOn ? settings.pinyin : "off",
         pinyinOn: prOn,
@@ -118,14 +118,14 @@ Page({
     if (!r.ok) {
       wx.showToast({ title: tiers.nameOf(seasonal.tier()) + " 起可用", icon: "none" });
     }
-    this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: !seasonal.canSwitch() });
+    this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: seasonal.locked() });
     if (r.ok) sync.markDirty();
   },
 
   onLeagueBoard(e) {
     const r = league.setOn(e.detail.value);
     if (!r.ok) wx.showToast({ title: league.tier() + " 起可用", icon: "none" });
-    this.setData({ leagueBoardOn: league.canJoin() && !league.switched(), leagueLock: !league.canSwitch() });
+    this.setData({ leagueBoardOn: league.canJoin() && !league.switched(), leagueLock: league.locked() });
     if (r.ok) sync.markDirty();
   },
 

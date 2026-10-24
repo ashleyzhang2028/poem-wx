@@ -18,7 +18,7 @@
     <view class="poem-head">
       <view class="poem-head-row">
         <text class="poem-title">{{title}}</text>
-        <tier-tag wx:if="{{!dailyOn}}" tier="{{extraTier}}" />
+        <tier-tag wx:if="{{dailyLocked}}" tier="{{extraTier}}" />
       </view>
 
       <view class="poem-meta-row">

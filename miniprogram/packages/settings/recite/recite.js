@@ -84,6 +84,7 @@ Page({
       selfOnlyOn: on,
       selfOnly: on && !!store.settings().selfOnly,
       selfOnlyTier: E.can("collections") ? E.tierOf("coursefree") : E.tierOf("collections"),
+      selfOnlyLocked: !on && E.reachable(E.tierOf("coursefree"), E.status().tier),
       selfOnlyRows: rows.length,
       selfOnlyPoems: rows.reduce((n, c) => n + c.items.length, 0)
     });
@@ -186,7 +187,6 @@ Page({
         years: m.years,
         describe: m.describe,
         allowed,
-        tier: E.tierOf(m.key),
         active: m.key === current
       };
     });
