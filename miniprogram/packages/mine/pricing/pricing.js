@@ -21,7 +21,7 @@ const INCLUDES = {
 
 const PROMISES = [
   "微信支付，支付成功立即生效",
-  "一次性购买，到期不会自动扣费",
+  "按天数一次性购买，到期不会自动扣费",
   "提前续订在原到期日后顺延，不损失天数"
 ];
 
@@ -32,16 +32,10 @@ function actionOf(plan, tier) {
   return { text: "开通 " + pay.tierName(plan), disabled: false };
 }
 
-function saveText(prices) {
-  const cell = prices && prices.pro;
-  if (!cell || !cell.month || !cell.year) return "";
-  const pct = Math.round((1 - cell.year.priceCents / (cell.month.priceCents * 12)) * 100);
+function saveText(cells, p) {
+  if (!cells || !cells.d30 || !cells[p.key] || p.days === 30) return "";
+  const pct = Math.round((1 - cells[p.key].priceCents / (cells.d30.priceCents * p.days / 30)) * 100);
   return pct > 0 ? "省 " + pct + "%" : "";
-}
-
-function perMonthText(cell) {
-  const v = cell.priceCents / 12 / 100;
-  return "折合每月 ¥" + Math.round(v * 10) / 10;
 }
 
 Page({
@@ -51,7 +45,7 @@ Page({
     logged: false,
     tier: "free",
     untilText: "",
-    period: "month",
+    period: "d90",
     periods: [],
     prices: null,
     plans: [],
@@ -94,12 +88,8 @@ Page({
 
   paint() {
     const { prices, period, tier } = this.data;
-    const badge = saveText(prices);
-    const periods = pay.PERIODS.map((p) => ({
-      key: p.key,
-      name: p.name,
-      badge: p.key === "year" ? badge : ""
-    }));
+    const periods = pay.PERIODS.map((p) => ({ key: p.key, name: p.name }));
+    const periodNow = pay.PERIODS.filter((p) => p.key === period)[0];
     const recommended = tier === "free" ? "pro" : tier;
 
     const plans = ["free", "pro", "max"].map((key) => {
@@ -114,9 +104,10 @@ Page({
         name: pay.tierName(key),
         tagline: TAGLINES[key],
         priceText: paid ? (cell ? pay.yuan(cell.priceCents) : "—") : "0",
-        unit: paid ? pay.periodUnit(period) : "",
+        unit: paid ? "/" + pay.periodName(period) : "",
         originalText: cell && cell.originalCents ? "¥" + pay.yuan(cell.originalCents) : "",
-        perMonth: cell && period === "year" ? perMonthText(cell) : "",
+        saveText: paid ? saveText(prices && prices[key], periodNow) : "",
+        perMonth: cell ? pay.perDayText(cell.priceCents, period) : "",
         includes: INCLUDES[key],
         features: all.slice(0, FEATURE_SHOWN),
         more: Math.max(0, all.length - FEATURE_SHOWN),

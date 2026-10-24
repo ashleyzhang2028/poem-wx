@@ -109,7 +109,7 @@
           <text class="grade-stem">{{item.stem}}</text>
         </view>
         <text class="grade-line">正确答案：{{item.answer}}</text>
-        <text class="grade-line picked-line" wx:if="{{!item.ok}}">你选的：{{item.picked}}</text>
+        <text class="grade-line picked-line" wx:if="{{!item.ok}}">您选的：{{item.picked}}</text>
       </view>
     </view>
 

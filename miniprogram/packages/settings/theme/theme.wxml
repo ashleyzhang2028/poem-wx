@@ -31,7 +31,7 @@
         <view class="own-thumb swatch-dot {{item.set ? 'has-img' : ''}}">
           <image class="own-thumb-img" wx:if="{{item.set}}" src="{{item.banner}}" mode="aspectFill" />
         </view>
-        <text class="swatch-name">{{ownSet ? '已换上你的图' : '还没有图'}}</text>
+        <text class="swatch-name">{{ownSet ? '已换上您的图' : '还没有图'}}</text>
       </view>
 
       <text class="own-note">图片存于本机，不同步到服务器</text>

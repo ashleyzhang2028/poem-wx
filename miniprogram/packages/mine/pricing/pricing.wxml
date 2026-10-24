@@ -3,10 +3,10 @@
   <view class="card pr-intro">
     <view class="pr-hero">
       <text class="pr-eyebrow">会员</text>
-      <text class="pr-title poem">选一个适合你的档位</text>
+      <text class="pr-title poem">与您共同成长</text>
       <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
       <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
-      <text class="pr-sub" wx:else>按月或按年，随时可以续订</text>
+      <text class="pr-sub" wx:else>30 / 90 / 180 / 365 天，随时可以续订</text>
     </view>
 
     <text class="hint pr-note" wx:if="{{sandbox}}">当前是沙箱环境，仅用于测试，不会真实扣款。</text>
@@ -28,7 +28,6 @@
         <label class="seg-item {{period === item.key ? 'on' : ''}}" wx:for="{{periods}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{period === item.key}}" />
           <text class="seg-text">{{item.name}}</text>
-          <text class="pr-badge" wx:if="{{item.badge}}">{{item.badge}}</text>
         </label>
       </radio-group>
     </view>
@@ -49,6 +48,7 @@
         <text class="pr-num">{{item.priceText}}</text>
         <text class="pr-unit">{{item.unit}}</text>
         <text class="pr-was" wx:if="{{item.originalText}}">{{item.originalText}}</text>
+        <text class="pr-save" wx:if="{{item.saveText}}">{{item.saveText}}</text>
       </view>
       <text class="pr-permonth" wx:if="{{item.perMonth}}">{{item.perMonth}}</text>
 

@@ -3,15 +3,9 @@ const tabbar = require("../../../utils/tabbar");
 const admin = require("../../../utils/admin");
 const pay = require("../../../utils/pay");
 
-const SLOTS = [
-  { plan: "pro", period: "month" },
-  { plan: "pro", period: "year" },
-  { plan: "max", period: "month" },
-  { plan: "max", period: "year" }
-];
-
 const PLAN_CHOICES = ["pro", "max"];
-const PERIOD_CHOICES = ["month", "year"];
+const PERIOD_CHOICES = pay.PERIODS.map((p) => p.key);
+const SLOTS = [].concat(...PLAN_CHOICES.map((plan) => PERIOD_CHOICES.map((period) => ({ plan, period }))));
 
 function slotKey(s) {
   return s.plan + "." + s.period;

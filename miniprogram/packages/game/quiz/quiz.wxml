@@ -91,7 +91,7 @@
       <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
         <text class="wrong-stem">{{item.stem}}</text>
         <text class="wrong-line">正确答案：{{item.answer}}</text>
-        <text class="wrong-line picked-line">你选的：{{item.picked}}</text>
+        <text class="wrong-line picked-line">您选的：{{item.picked}}</text>
       </view>
     </view>
 

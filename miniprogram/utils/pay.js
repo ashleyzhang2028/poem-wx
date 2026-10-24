@@ -5,9 +5,13 @@ const tiers = require("./tiers");
 const P = remote.PATHS;
 
 const PERIODS = [
-  { key: "month", name: "包月", unit: "/月" },
-  { key: "year", name: "包年", unit: "/年" }
+  { key: "d30", name: "30 天", days: 30 },
+  { key: "d90", name: "90 天", days: 90 },
+  { key: "d180", name: "180 天", days: 180 },
+  { key: "d365", name: "365 天", days: 365 }
 ];
+
+const LEGACY_PERIOD_NAMES = { month: "包月", year: "包年" };
 
 const PAID_TIERS = ["pro", "max"];
 
@@ -43,15 +47,17 @@ function timeText(ts) {
 }
 
 function periodOf(period) {
-  return PERIODS.filter((p) => p.key === period)[0] || PERIODS[0];
-}
-
-function periodUnit(period) {
-  return periodOf(period).unit;
+  return PERIODS.filter((p) => p.key === period)[0] || null;
 }
 
 function periodName(period) {
-  return periodOf(period).name;
+  const p = periodOf(period);
+  return p ? p.name : LEGACY_PERIOD_NAMES[period] || String(period);
+}
+
+function perDayText(cents, period) {
+  const p = periodOf(period);
+  return p ? "折合每天 ¥" + (Math.round(cents / p.days) / 100).toFixed(2) : "";
 }
 
 const STATUS_TONES = {
@@ -227,7 +233,7 @@ module.exports = {
   dateText,
   timeText,
   periodName,
-  periodUnit,
+  perDayText,
   statusName,
   statusTone,
   catalog,

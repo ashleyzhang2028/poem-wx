@@ -1,5 +1,11 @@
-<view class="card identity" wx:if="{{logged}}">
-  <view class="identity-row tier-{{tierKey}}">
+<view class="card identity id-card tier-{{tierKey}}" wx:if="{{logged}}">
+  <view class="id-top">
+    <text class="id-kind">{{kindText}}</text>
+    <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
+          bindtap="onTier">{{tierLabel}}</view>
+  </view>
+
+  <view class="identity-row">
     <view class="avatar-wrap">
       <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
       <view class="avatar-fallback" wx:else>{{avatarChar}}</view>
@@ -11,14 +17,16 @@
       <view class="identity-main-text" bindtap="onName">
         <text class="identity-name">{{nickname}}</text>
       </view>
-      <text class="identity-sub">{{sub || '已登录 · 微信账号'}}</text>
+      <text class="identity-sub">已登录 · 微信账号</text>
     </view>
+  </view>
 
-    <view class="identity-acts">
-      <button class="btn ghost pill" bindtap="onLogout">辞别</button>
-      <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
-            bindtap="onTier">{{tierLabel}}</view>
+  <view class="id-foot">
+    <view class="id-valid">
+      <text class="id-valid-k">有效期</text>
+      <text class="id-valid-v">{{validText}}</text>
     </view>
+    <button class="btn ghost pill" bindtap="onLogout">辞别</button>
   </view>
 </view>
 

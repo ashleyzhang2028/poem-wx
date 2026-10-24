@@ -205,7 +205,7 @@ function cloudFailError(err, conf) {
 
 function cloudFailHint(say) {
   if (/invalid host/i.test(say)) {
-    return "平台按上面那个服务名找不到可路由的服务 —— 你这个小程序的云托管里没有这个名字" +
+    return "平台按上面那个服务名找不到可路由的服务 —— 您这个小程序的云托管里没有这个名字" +
       "（没建，或建在别的环境里）。服务名逐字取自云托管「服务管理」，不是云开发环境 ID。";
   }
   if (/102002/.test(say)) {
