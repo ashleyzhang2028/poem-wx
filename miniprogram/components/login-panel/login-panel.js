@@ -1,5 +1,4 @@
 const store = require("../../utils/store");
-const auth = require("../../utils/auth");
 const loginFlow = require("../../utils/login-flow");
 const pay = require("../../utils/pay");
 
@@ -89,22 +88,6 @@ Component({
     done() {
       this.refresh();
       this.triggerEvent("changed");
-    },
-
-    onLogout() {
-      wx.showModal({
-        title: "辞别",
-        content: "吟咏笔录，积日累月，皆藏云笈。\n此行暂歇，他日重至，诗章犹在。",
-        confirmText: "辞别",
-        cancelText: "留步",
-        success: (r) => (r && r.confirm ? this.leave() : null)
-      });
-    },
-
-    leave() {
-      auth.logout();
-      this.refresh();
-      loginFlow.report();
     },
 
     onTier() {

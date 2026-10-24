@@ -26,7 +26,6 @@
       <text class="id-valid-k">有效期</text>
       <text class="id-valid-v">{{validText}}</text>
     </view>
-    <button class="btn ghost pill" bindtap="onLogout">辞别</button>
   </view>
 </view>
 

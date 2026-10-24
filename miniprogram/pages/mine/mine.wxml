@@ -2,7 +2,7 @@
 
   <view class="mine-main">
     <login-panel class="my-login" id="login" tier-label="{{tierLabel}}"
-                 bind:changed="onIdentityChanged" bind:logout="onIdentityChanged"
+                 bind:changed="onIdentityChanged"
                  bind:login="onLogin" bind:tier="onTier" />
 
     <view class="card" wx:if="{{expiry}}">
