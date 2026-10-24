@@ -86,8 +86,7 @@
   color: var(--ink-3);
 }
 
-.tier-chip,
-.id-foot .btn.pill {
+.tier-chip {
   flex: none;
   height: auto;
   padding: var(--pad-opt-y) var(--sp-2);
@@ -99,13 +98,7 @@
   color: var(--ink-2);
 }
 
-.id-foot .btn.pill {
-  width: auto;
-  min-width: 0;
-}
-
-.tier-chip-hover,
-.id-foot .btn.pill.button-hover {
+.tier-chip-hover {
   background: var(--line);
   opacity: 1;
 }
@@ -186,9 +179,7 @@
 }
 
 .tier-pro .tier-chip,
-.tier-max .tier-chip,
-.tier-pro .id-foot .btn.pill,
-.tier-max .id-foot .btn.pill {
+.tier-max .tier-chip {
   color: var(--card-metal-ink);
   background: transparent;
   border-color: var(--card-metal-line);

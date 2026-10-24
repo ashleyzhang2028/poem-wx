@@ -3021,7 +3021,7 @@ function mountFull(pg, query) {
     const minePage = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
     const homePage = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
     const barCode = fs.readFileSync(path.join(ROOT, "custom-tab-bar", "index.js"), "utf8");
-    const panelCode = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
+    const aboutSrc = fs.readFileSync(path.join(ROOT, "packages", "settings", "about", "about.js"), "utf8");
     const watched = (src) => /loginFlow\.watch\(/.test(src) && /loginFlow\.unwatch\(/.test(src);
 
     ok("登录收尾会通知订阅方（关在页面里的那次登录，页面得知道它成了）",
@@ -3033,11 +3033,9 @@ function mountFull(pg, query) {
         homePage.indexOf("loginFlow.watch") < 0 ? "首页" : "",
         barCode.indexOf("loginFlow.watch") < 0 ? "底栏" : ""].filter(Boolean).join("、")
         + " 没订上 —— 登录完了界面不会自己换那一屏");
-    ok("退出就地对齐界面，不再靠 switchTab 重进自己这一页",
-      /leave\(\) \{[\s\S]{0,200}?auth\.logout\(\)[\s\S]{0,200}?loginFlow\.report\(\)/.test(panelCode)
-        && panelCode.indexOf("tabPage") < 0,
-      "退出后又 switchTab 回「我的」—— 已经在「我的」时 switchTab 是空操作，"
-        + "界面就停在已登录那一屏（Issue #502）");
+    ok("退出会通知订阅方，并回到「我的」（不留在关于页看一个已退出的自己）",
+      /leave\(\) \{[\s\S]{0,200}?auth\.logout\(\)[\s\S]{0,200}?loginFlow\.report\(\)[\s\S]{0,200}?tabPage\.mine\(\)/.test(aboutSrc),
+      "关于页点了退出：没广播登录状态，或没回「我的」—— 身份卡与底栏停在已登录那一屏（Issue #663）");
   }
 }
 
@@ -4687,7 +4685,7 @@ function mountFull(pg, query) {
     const flowSrc9 = fs.readFileSync(path.join(ROOT, "utils", "login-flow.js"), "utf8");
     const panelCode9 = fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8");
 
-    ok("登录不再追问，也不留多余入口（身份卡只剩头像圆、昵称行、辞别）",
+    ok("登录不再追问，也不留多余入口（身份卡只剩头像圆、昵称行、有效期）",
       !/askWechat|goIdentity/.test(flowSrc9)
         && !/wechat-go|onWechat\(\)|bindtap="onWechat"|picking/.test(panelCode9
           + fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8")),

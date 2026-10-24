@@ -18,6 +18,10 @@
       <view class="row-main"><text class="row-title">意见建议</text></view>
       <text class="row-go">›</text>
     </view>
+    <view class="row" wx:if="{{logged}}" hover-class="row-hover" hover-stay-time="60" bindtap="onLogout">
+      <view class="row-main"><text class="row-title">退出登录</text></view>
+      <text class="row-go">›</text>
+    </view>
   </view>
 
   <view class="safe-bottom"></view>
