@@ -7182,6 +7182,9 @@ function gapped(items, max) {
   ok("流水线把 shard-api.js 摆进上下文那一层",
     /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
   ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
+  ok("白名单放行了 shard-rev.js（与 shard-api.js 同为启动期 require，遗漏时容器起不来）",
+    dockerignore.indexOf("!shard-rev.js") >= 0,
+    "白名单少了这一行 —— 发布链的 build & push 会对着它 grep，当场红在「白名单里没有」");
   ok("白名单放行了 shard-src/", /!shard-src/.test(dockerignore));
 
   {
@@ -7260,7 +7263,7 @@ function gapped(items, max) {
   }
 
   {
-    const mustAllow = ["!shard-api.js", "!shard-src/**", "!serve-api.js",
+    const mustAllow = ["!shard-api.js", "!shard-rev.js", "!shard-src/**", "!serve-api.js",
       "!store-mysql.js", "!api/**", "!Dockerfile"];
     const notAllowed = mustAllow.filter((line) => dockerignore.indexOf(line) < 0);
     ok("白名单放行了构建与启动真的要用到的每一样（缺一行 = 那样东西一个字都进不去）",
