@@ -206,10 +206,12 @@
   min-width: 0;
 }
 
-.tone-acts {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--sp-2);
+.tone-field-hex {
+  flex: 3 1 0;
+}
+
+.tone-field-rgba {
+  flex: 5 1 0;
 }
 
 .tone-chip {
