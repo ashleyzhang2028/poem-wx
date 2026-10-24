@@ -432,7 +432,11 @@ R.ORDER.forEach((key) => {
 }
 
 let r10 = null;
-for (let i = 0; i < 12; i++) r10 = R.review(r10, "good", "ebbinghaus");
+let r10At = Date.now();
+for (let i = 0; i < 12; i++) {
+  r10At = r10 ? r10.nextReviewAt + 24 * 3600 * 1000 : r10At;
+  r10 = R.review(r10, "good", "ebbinghaus", r10At);
+}
 ok("艾宾浩斯档位封顶不越界", r10.level === R.LEVEL_MAX, "level=" + r10.level);
 
 {
@@ -499,12 +503,20 @@ ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.
   let good = R.review(null, "good", "ebbinghaus", day1);
   good = R.review(good, "fuzzy", "ebbinghaus", day1 + 120000);
   ok("同日改判，掌握度按最后一次算",
-    good.level === same.level && same.level === R.review(null, "good", "ebbinghaus", day1).level,
+    good.level === same.level && same.level === 0,
     "level " + same.level + " / " + good.level);
 
   let lapse = R.review(null, "bad", "ebbinghaus", day1);
   lapse = R.review(lapse, "fuzzy", "ebbinghaus", day1 + 120000);
   ok("同日改判，忘过的次数跟着退回去", lapse.lapses === 0, "lapses=" + lapse.lapses);
+
+  const once = R.review(null, "good", "ebbinghaus", day1);
+  let clicks = once;
+  for (let i = 0; i < 4; i++) clicks = R.review(clicks, "good", "ebbinghaus", day1 + 1000 * (i + 1));
+  ok("同一天连点同一个按钮，记忆周期仍是那一天的第一个周期",
+    clicks.level === once.level && clicks.nextReviewAt === once.nextReviewAt,
+    "连点 5 下停在 level " + clicks.level + " / " + R.stageName(clicks, "ebbinghaus")
+      + "，只点一下是 level " + once.level + " / " + R.stageName(once, "ebbinghaus"));
 
   let twice = R.review(null, "bad", "ebbinghaus", day1);
   twice = R.review(twice, "fuzzy", "ebbinghaus", day1 + 60000);

@@ -253,6 +253,7 @@ function withoutLastMark(r) {
   if (last && last.result) {
     without.history = without.history.slice(0, -1);
     if (last.result === "bad") without.lapses = Math.max(0, (without.lapses || 0) - 1);
+    if (last.level !== undefined) without.level = last.level;
   }
   without.reviewCount = Math.max(0, (without.reviewCount || 0) - 1);
   without.algo = null;
@@ -266,8 +267,9 @@ function review(rec, result, key, now) {
 
   const first = rec && !reviewedToday(rec, t) ? rec : null;
   const base = first || (rec ? withoutLastMark(rec) : null);
+  const from = base ? adopt(base, modelKey) : null;
 
-  let r = base ? adopt(base, modelKey) : null;
+  let r = from;
   if (!r) {
     r = { level: 0, nextReviewAt: t, lastReviewAt: null, reviewCount: 0, lapses: 0, learned: false, history: [] };
     Object.assign(r, model.init());
@@ -281,10 +283,11 @@ function review(rec, result, key, now) {
   const spot = first || r;
 
   const elapsedDays = spot.lastReviewAt ? Math.max(0, (t - spot.lastReviewAt) / DAY) : 0;
+  const levelBefore = from ? from.level : 0;
 
   if (result === "fuzzy") {
     r.nextReviewAt = nextSlot(t);
-    pushHistory(r, result, t);
+    pushHistory(r, result, t, levelBefore);
     return r;
   }
 
@@ -292,13 +295,13 @@ function review(rec, result, key, now) {
     r.lapses = (r.lapses || 0) + 1;
     advance(modelKey, r, result, elapsedDays);
     r.nextReviewAt = nextSlot(t);
-    pushHistory(r, result, t);
+    pushHistory(r, result, t, levelBefore);
     return r;
   }
 
   advance(modelKey, r, "good", elapsedDays);
   r.nextReviewAt = dayAt(t, daysFor(modelKey, r));
-  pushHistory(r, result, t);
+  pushHistory(r, result, t, levelBefore);
   return r;
 }
 
@@ -347,10 +350,10 @@ function daysFor(modelKey, r) {
   return model.intervalOf(r.stability);
 }
 
-function pushHistory(r, result, t) {
+function pushHistory(r, result, t, level) {
   if (!Array.isArray(r.history)) r.history = [];
 
-  r.history.push({ at: t, result, level: r.level });
+  r.history.push({ at: t, result, level: level === undefined ? r.level : level });
   if (r.history.length > 20) r.history = r.history.slice(-20);
 }
 
