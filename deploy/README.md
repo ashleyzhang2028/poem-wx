@@ -123,8 +123,9 @@
 3. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
    以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）。
    摊分片走 `scripts/shard-stage.js`，缓存目录挂在 `docker.volumes: /tmp/poem-shard-cache`
-4. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js` 与 `!shard-src/**`
-   —— 白名单那一行少了，构建与部署照样绿，而容器起不来（Issue #115）。
+4. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js`、`!shard-rev.js` 与
+   `!shard-src/**` —— 白名单那一行少了，构建与部署照样绿，而容器起不来
+   （Issue #115；`shard-rev.js` 是启动期 require 的同一种，漏了就是同一种症状）。
 
 `.cnb.yml` 的 build & push 在 build 前逐条断上面 2 / 3 / 4（缺了当场退出）；
 `scripts/check.js` V53 逐条守着上面四点 + 客户端那一半；

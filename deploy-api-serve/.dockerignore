@@ -45,9 +45,13 @@
 #        看着像服务要重启，其实是构建时就少了这一样。
 #    同一个坑的另一半在 store-mysql.js（少 `!store-mysql.js` 时同样是启动期
 #    require 不到，只是那句 COPY 会先红在 checksum 上，比这个好查）。
-#    `.cnb.yml` 的 build & push 现在会逐行 grep 这两条放行，缺了当场退出 ——
+#    `.cnb.yml` 的 build & push 现在会逐行 grep 这几条放行，缺了当场退出 ——
 #    别把判据只留在注释里。
 !shard-api.js
+
+# ⚠️ 语料版本 `shard-rev.js` 与 shard-api.js 同一类：都是 serve-api.js 启动期
+#    require 的，不在上面那份 `api/` 放行里（它躺在上下文根上）。
+!shard-rev.js
 
 # 正文分片（Issue #121 方案 A）：流水线**默认就摊**（`${COPY_SHREDS:-1}`），
 # 走的是 shard-src/ 这一层（构建时 COPY 到 /app/shards）。
