@@ -1333,16 +1333,14 @@ Object.keys(WEB_TIER).forEach((k) => {
         && wxmlT.indexOf("cell.icon") >= 0 && cols === 0;
     })(),
     "格子里的图标不是从图标模块取的，或者 compareRows 自己长出了 icon（那一格会没有图）");
-  ok("每一格写的是档位差（有差别的项写具体数，有的是多少就是多少）",
+  ok("每一格写的是档位差（有差别的项写具体数，有多少写多少，没档位上限的写「不限」）",
     (() => {
       const rows = E.compareRows({ logged: false, tier: "free" });
-      const row = rows.filter((r) => r.cap === "collections")[0];
-      const tiersRow = row.cells.map((c) => c.text);
-      const silent = rows.filter((r) => r.cap === "daily")[0];
-      return tiersRow.join(",") === ",1 个集合,200 个集合"
-        && silent.cells.every((c) => c.text === "");
+      const cellsOf = (key) => rows.filter((r) => r.cap === key)[0].cells.map((c) => c.on + ":" + c.text).join(",");
+      return cellsOf("collections") === "false:,true:1 个集合,true:200 个集合"
+        && cellsOf("daily") === "true:不限,true:不限,true:不限";
     })(),
-    "「有量」的那一项没写出数、「有没有」的那一项反而写了一段话");
+    "「有量」的那一项没写出数、Free 那一格没打叉、或者没有「有没有」这类项了");
 }
 
 {
@@ -1650,7 +1648,7 @@ const GATED = {
   }
 
   ok("对比表的每一格由能力表的档位算出来（不写死）",
-    /rankOf\(c\.tier\)\s*<=\s*rankOf\(t\.key\)/.test(
+    /rankOf\(cap\.tier\)\s*<=\s*rankOf\(tier\)/.test(
       fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8")),
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
@@ -3194,12 +3192,12 @@ function mountFull(pg, query) {
     store.drop(KEY);
     store.drop(FKEY);
 
-    ok("记录上限按档位定：Pro 200 / Max 500 / Free 不留，权限表里写的就是这两个数",
+    ok("记录上限按档位定：Pro 200 / Max 500 / Free 不留，权限表里 Free 一格打叉",
       tiersEarly.RECORD_LIMITS.pro === 200 && tiersEarly.RECORD_LIMITS.max === 500
         && tiersEarly.RECORD_LIMITS.free === 0
         && (() => {
           const row = E.compareRows({ logged: true, tier: "pro" }).filter((r) => r.cap === "records")[0];
-          return !!row && row.cells.map((c) => c.text).join(",") === ",200 条,500 条";
+          return !!row && row.cells.map((c) => c.on + ":" + c.text).join(",") === "false:,true:200 条,true:500 条";
         })(),
       JSON.stringify({ limits: tiersEarly.RECORD_LIMITS, rows: E.compareRows({ logged: true, tier: "pro" })
         .filter((r) => r.cap === "records") }));

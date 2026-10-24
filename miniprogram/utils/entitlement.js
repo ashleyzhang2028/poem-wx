@@ -15,10 +15,10 @@ function collectionCell(tier) {
   return { text: n + " 个集合", on: true };
 }
 
-function recordCell(tier) {
+function recordCell(tier, cap) {
   const n = tiers.RECORD_LIMITS[tier];
   if (!n) return { text: "", on: false };
-  return { text: n + " 条", on: true };
+  return { text: n + " 条", on: rankOf(cap.tier) <= rankOf(tier) };
 }
 
 function courseFreeCell(tier) {
@@ -54,9 +54,9 @@ const CAPS = [
 ];
 
 function cellFor(cap, tier) {
-  if (cap.cell) return cap.cell(tier);
+  if (cap.cell) return cap.cell(tier, cap);
   const on = rankOf(cap.tier) <= rankOf(tier);
-  return { text: "", on: on };
+  return { text: on ? "不限" : "", on: on };
 }
 
 const CAP_KEYS = CAPS.map((c) => c.key);
@@ -224,7 +224,7 @@ function compareSummary() {
   return tiers.TIERS.map((t) => ({
     tier: t.key,
     total: CAPS.length,
-    on: CAPS.filter((c) => rankOf(c.tier) <= rankOf(t.key)).length
+    on: CAPS.filter((c) => cellFor(c, t.key).on).length
   }));
 }
 
