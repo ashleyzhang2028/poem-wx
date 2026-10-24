@@ -19,7 +19,7 @@
         <view class="mode-main">
           <view class="mode-head">
             <text class="gc-name">{{item.name}}</text>
-            <text class="tag theme" wx:if="{{item.bestText}}">最好 {{item.bestText}}</text>
+            <text class="tag theme" wx:if="{{item.bestText}}">{{item.bestText}}</text>
           </view>
           <text class="mode-desc">{{item.desc}}</text>
         </view>

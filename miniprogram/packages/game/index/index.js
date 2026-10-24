@@ -19,6 +19,11 @@ const PAGE = {
   exam: "/packages/game/exam/exam"
 };
 
+function bestTextOf(box) {
+  if (!box || !box.rank || !box.rank.name) return "";
+  return Number(box.pct) >= 100 ? box.rank.name : "最好 " + box.rank.name;
+}
+
 function topRank(boxes) {
   return boxes.reduce((top, box) => (box && (!top || box.rank.rank > top.rank.rank) ? box : top), null);
 }
@@ -46,7 +51,7 @@ Page({
     const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? feedback.read(m.best) : null));
     const cards = MODES.map((m, i) => Object.assign({}, m, {
       ok: entitlement.can(CAP[m.key]),
-      bestText: boxes[i] ? boxes[i].rank.name : ""
+      bestText: bestTextOf(boxes[i])
     }));
     const top = topRank(boxes);
     this.setData({
