@@ -8,11 +8,15 @@ const zlib = require("zlib");
 
 const NAME_RE = /^t\d{3}$/;
 
+const META = "__meta";
+
 const MANIFEST = "manifest";
 
-const SPECIAL = [MANIFEST];
+const SPECIAL = [MANIFEST, META];
 
-const ROOT = path.join(__dirname, "shards");
+const ROOT = process.env.SHARD_DIR || path.join(__dirname, "shards");
+
+const shardRev = require(path.join(__dirname, "shard-rev.js"));
 
 const HEAD = "module.exports = ";
 
@@ -29,6 +33,12 @@ function dirReady() {
 function fileOf(name) {
   if (!NAME_RE.test(name) && SPECIAL.indexOf(name) < 0) return null;
   return path.join(ROOT, name + ".js");
+}
+
+function metaOf() {
+  const payload = shardRev.of(META);
+  if (!payload) return null;
+  return Object.assign({ rev: shardRev.rev(), ready: shardRev.ready() }, payload);
 }
 
 function gzipped(file) {
@@ -83,10 +93,27 @@ function send(res, status, headers, body) {
   res.writeHead(status, headers).end(body);
 }
 
-function handle(req, res, urlPath) {
+function handle(req, res, urlPath, query) {
   if (urlPath.indexOf("/api/shard/") !== 0) return false;
 
   const name = urlPath.slice("/api/shard/".length).replace(/\/+$/, "");
+  if (name === META) {
+    const body = metaOf();
+    if (!body) {
+      send(res, 503, { "Content-Type": "application/json; charset=utf-8" },
+        JSON.stringify({
+          error: shardRev.error() || "E_NO_SHARDS",
+          message: "这个镜像里没带分片版本（构建时没给 COPY_SHREDS=1）"
+        }));
+      return true;
+    }
+    send(res, 200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    }, JSON.stringify(body));
+    return true;
+  }
+
   if (!fileOf(name)) {
     send(res, 400, { "Content-Type": "application/json; charset=utf-8" },
       JSON.stringify({ error: "E_BAD_SHARD", message: "分片名不合法" }));
@@ -110,6 +137,10 @@ function handle(req, res, urlPath) {
       "ETag": item.etag,
       "Vary": "Accept-Encoding"
     };
+    const served = shardRev.rev();
+    if (served) headers["X-Corpus-Rev"] = served;
+    const asked = String((query && query.v) || "");
+    if (served && asked && asked !== served) headers["X-Corpus-Stale"] = "1";
     if (notModified(req, item.etag)) {
       send(res, 304, headers, "");
       return true;

@@ -42,6 +42,7 @@ main:
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
+            cp deploy-api-serve/shard-rev.js /tmp/ctx/shard-rev.js
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
               node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
@@ -67,7 +68,7 @@ main:
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            for need in "!shard-api.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
+            for need in "!shard-api.js" "!shard-rev.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
                 echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
@@ -75,11 +76,13 @@ main:
                 exit 1
               }
             done
-            if [ ! -f /tmp/ctx/shard-api.js ]; then
-              echo "✗ 上下文里没有 shard-api.js —— serve-api.js require 它，容器起不来" >&2
-              exit 1
-            fi
-            for shell in serve-api.js store-mysql.js shard-api.js; do
+            for shell in shard-api.js shard-rev.js; do
+              if [ ! -f "/tmp/ctx/$shell" ]; then
+                echo "✗ 上下文里没有 $shell —— serve-api.js require 它，容器起不来" >&2
+                exit 1
+              fi
+            done
+            for shell in serve-api.js store-mysql.js shard-api.js shard-rev.js; do
               grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
                 echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
                 echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2
@@ -187,6 +190,7 @@ main:
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
             cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
+            cp deploy-api-serve/shard-rev.js /tmp/ctx/shard-rev.js
             if [ "${COPY_SHREDS:-1}" != "0" ]; then
               echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
               node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
@@ -212,7 +216,7 @@ main:
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            for need in "!shard-api.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
+            for need in "!shard-api.js" "!shard-rev.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
                 echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
@@ -220,11 +224,13 @@ main:
                 exit 1
               }
             done
-            if [ ! -f /tmp/ctx/shard-api.js ]; then
-              echo "✗ 上下文里没有 shard-api.js —— serve-api.js require 它，容器起不来" >&2
-              exit 1
-            fi
-            for shell in serve-api.js store-mysql.js shard-api.js; do
+            for shell in shard-api.js shard-rev.js; do
+              if [ ! -f "/tmp/ctx/$shell" ]; then
+                echo "✗ 上下文里没有 $shell —— serve-api.js require 它，容器起不来" >&2
+                exit 1
+              fi
+            done
+            for shell in serve-api.js store-mysql.js shard-api.js shard-rev.js; do
               grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
                 echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
                 echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2

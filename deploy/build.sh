@@ -24,6 +24,8 @@ cp -R "$REPO/api" "$CTX/api"
 cp "$HERE/Dockerfile" "$CTX/Dockerfile"
 cp "$REPO/deploy-api-serve/serve-api.js" "$CTX/serve-api.js"
 cp "$REPO/deploy/store-mysql.js" "$CTX/store-mysql.js"
+cp "$REPO/deploy-api-serve/shard-api.js" "$CTX/shard-api.js"
+cp "$REPO/deploy-api-serve/shard-rev.js" "$CTX/shard-rev.js"
 
 mkdir -p "$CTX/shard-src"
 if [ "${COPY_SHREDS:-1}" != "0" ]; then

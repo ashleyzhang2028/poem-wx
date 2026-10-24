@@ -184,6 +184,7 @@ Component({
       const code = this.textErr;
       if (code === "E_NO_ENTRY") return "本篇不在正文分片清单中。";
       if (code === "E_NO_TEXT") return "该分片正文不完整。";
+      if (code === "E_SHARD_STALE") return "服务端语料比这一版旧。";
       if (code === "E_NO_SHARDS") return "服务端当前版本未包含正文分片。";
       if (code === "E_NO_SHARD_SERVICE") return "当前版本未配置正文服务。";
       if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时，服务可能刚被唤醒。";

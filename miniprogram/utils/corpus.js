@@ -554,6 +554,32 @@ function ensureBucket(name) {
   });
 }
 
+const CORPUS_PATH = "/api/config";
+
+const REV_TTL_MS = 5 * 60 * 1000;
+
+let servedRev = { rev: "", at: 0 };
+
+function servedTextsRev() {
+  if (servedRev.at && Date.now() - servedRev.at < REV_TTL_MS) return Promise.resolve(servedRev.rev);
+  const remote = require("./remote");
+  if (!remote.shardReady()) return Promise.resolve("");
+  return remote.shardRev(CORPUS_PATH).then(function (res) {
+    const rev = String(((res || {}).corpus || {}).rev || "");
+    servedRev = { rev: rev, at: Date.now() };
+    return rev;
+  }, function () {
+    servedRev = { rev: "", at: Date.now() };
+    return "";
+  });
+}
+
+function staleError(served, mine) {
+  const e = shardError("E_SHARD_STALE", "服务端语料版本落后：" + served + " ≠ " + mine);
+  e.expected = true;
+  return e;
+}
+
 function ensureEntry(id) {
   const inPack = courseTexts()[id];
   if (inPack) return Promise.resolve(inPack);
@@ -571,7 +597,13 @@ function ensureEntry(id) {
     forgetText(id);
     return ensureBucket(name).then(take);
   }).then(function (got) {
-    if (!got.hit) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
+    if (got.hit) return got;
+    return servedTextsRev().then(function (served) {
+      const mine = textsRev();
+      if (served && mine && served !== mine) throw staleError(served, mine);
+      throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
+    });
+  }).then(function (got) {
     return arm(indexById(id), got.hit) || got.hit;
   });
 }
@@ -756,6 +788,7 @@ module.exports = {
   bucket,
   ensureBucket,
   ensureEntry,
+  servedTextsRev,
   forgetText,
   onBucketReady,
   entry,
