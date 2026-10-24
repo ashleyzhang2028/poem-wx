@@ -26,7 +26,7 @@ Page({
     levels: feihua.LEVELS,
     level: "normal",
     scopes: gameScopes.list(),
-    scope: "",
+    scope: gameScopes.STAGE_SCOPE,
 
     barBelow: true,
     char: "",

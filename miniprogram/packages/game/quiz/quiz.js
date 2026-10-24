@@ -15,7 +15,7 @@ Page({
     forms: [],
     pickedForms: [],
     scopes: [],
-    scope: "",
+    scope: gameScopes.STAGE_SCOPE,
     needTitle: false,
     count: COUNT,
     questions: [],

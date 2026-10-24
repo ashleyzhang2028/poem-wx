@@ -17,6 +17,11 @@
   letter-spacing: var(--ls-caption);
 }
 
+.fh-scope .scope-name {
+  font-size: var(--fs-caption);
+  letter-spacing: var(--ls-caption);
+}
+
 .fh-clock {
   flex: none;
   font-family: var(--font-num);
