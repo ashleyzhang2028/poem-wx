@@ -44,6 +44,17 @@
       </button>
     </view>
 
+    <view class="card log-card" hover-class="log-hover" hover-stay-time="60" bindtap="onLog">
+      <view class="log-glyph">录</view>
+      <view class="log-main">
+        <view class="log-head">
+          <text class="gc-name">成绩记录</text>
+        </view>
+        <text class="log-sub">{{log.line}}</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+
     <view class="card" wx:if="{{done.length}}">
       <view class="card-title">这一轮接上的</view>
       <view class="qa-line" wx:for="{{done}}" wx:key="index">

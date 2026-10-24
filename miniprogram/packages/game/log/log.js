@@ -1,13 +1,21 @@
-const examLog = require("../../../utils/exam-log");
+const scoreLog = require("../../../utils/score-log");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
+const MODES = {
+  exam: { title: "考试成绩记录", empty: "还没有考试记录", tip: "交卷就留一条，历次成绩都在这页", score: "分" },
+  feihua: { title: "飞花令成绩记录", empty: "还没有飞花令记录", tip: "一轮结束就留一条，每轮接上的句数都在这页", score: "句" }
+};
+
 Page({
   data: {
     themeStyle: "",
     barBelow: true,
+    mode: "exam",
+    copy: MODES.exam,
+    unit: "分",
     rows: [],
     picked: [],
     picking: false,
@@ -17,6 +25,12 @@ Page({
     ranks: []
   },
 
+  onLoad(query) {
+    const mode = query && MODES[query.mode] ? query.mode : "exam";
+    this.setData({ mode: mode, copy: MODES[mode], unit: MODES[mode].score });
+    wx.setNavigationBarTitle({ title: MODES[mode].title });
+  },
+
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
@@ -24,8 +38,9 @@ Page({
   },
 
   load() {
-    const rows = examLog.rows();
-    const sum = examLog.summary(rows);
+    const mode = this.data.mode;
+    const rows = scoreLog.rows(mode);
+    const sum = scoreLog.summary(mode, rows);
     const alive = this.data.picked.filter((id) => rows.some((r) => r.id === id));
     this.setData({
       rows,
@@ -65,7 +80,7 @@ Page({
   },
 
   remove(ids, done) {
-    const n = examLog.remove(ids);
+    const n = scoreLog.remove(this.data.mode, ids);
     this.load();
     if (!n) return;
     wx.showToast({ title: "已删除 " + n + " 条", icon: "none" });
@@ -88,7 +103,7 @@ Page({
     const row = this.data.rows.find((r) => r.id === id);
     if (!row) return;
     sfx.play("tap");
-    this.confirm("删除这一条？", row.timeText + " · " + row.pct + " 分 · " + row.rankName, () => {
+    this.confirm("删除这一条？", row.timeText + " · " + row.hitText + " · " + row.rankName, () => {
       this.remove([id]);
     });
   },

@@ -9,7 +9,7 @@ const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const guard = require("../../../utils/guard");
 const rankingSelf = require("../../../utils/ranking");
-const examLog = require("../../../utils/exam-log");
+const scoreLog = require("../../../utils/score-log");
 
 const DURATION = 20 * 60;
 const QUESTION_COUNT = 10;
@@ -93,21 +93,21 @@ Page({
   },
 
   loadLog() {
-    const sum = examLog.summary();
+    const sum = scoreLog.summary("exam");
     this.setData({
       log: {
         count: sum.count,
         best: sum.best,
         line: sum.count
           ? "共 " + sum.count + " 次 · 最近 " + sum.last.timeText + " · " + sum.last.pct + " 分"
-          : "还没有记录，考完一场就留在这里"
+          : "暂无记录"
       }
     });
   },
 
   onLog() {
     sfx.play("tap");
-    wx.navigateTo({ url: "/packages/game/log/log" });
+    wx.navigateTo({ url: "/packages/game/log/log?mode=exam" });
   },
 
   onToggleForm(e) {
@@ -295,8 +295,9 @@ Page({
     const total = questions.length || 1;
     const score = Math.round((correct / total) * 100);
     const rank = feedback.rankPercent(score);
-    const kept = feedback.keep(feedback.KEYS.exam, { pct: score, at: Date.now(), rank: rank });
-    examLog.add({
+    const sum = scoreLog.summary("exam");
+    const prevBest = sum.best ? sum.best.pct : 0;
+    scoreLog.add("exam", {
       pct: score,
       correct,
       total: questions.length,
@@ -321,8 +322,8 @@ Page({
       correct,
       score,
       rank,
-      newBest: kept.best,
-      best: kept.before ? kept.before.rank.name : ""
+      newBest: score > prevBest,
+      best: sum.best ? sum.best.rankName : ""
     });
     this.report(correct, questions.length);
   },

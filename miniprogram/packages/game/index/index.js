@@ -1,15 +1,14 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
-const feedback = require("../../../utils/feedback");
-const examLog = require("../../../utils/exam-log");
+const scoreLog = require("../../../utils/score-log");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = [
-  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", best: feedback.KEYS.feihua, tier: "max" },
-  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", best: feedback.KEYS.quiz, tier: "pro" },
-  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", tier: "max" }
+  { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", log: "feihua", tier: "max" },
+  { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", tier: "pro" },
+  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", log: "exam", tier: "max" }
 ];
 
 const CAP = { feihua: "feihualing", quiz: "quiz", exam: "exam" };
@@ -20,15 +19,13 @@ const PAGE = {
   exam: "/packages/game/exam/exam"
 };
 
-function bestOf(mode) {
-  if (mode.key !== "exam") return feedback.read(mode.best);
-  const best = examLog.latest();
-  return best ? { pct: best.pct, rank: feedback.rankPercent(best.pct) } : null;
+function lastOf(mode) {
+  return mode.log ? scoreLog.latest(mode.log) : null;
 }
 
-function bestTextOf(box) {
+function lastTextOf(box) {
   if (!box || !box.rank || !box.rank.name) return "";
-  return Number(box.pct) >= 100 ? box.rank.name : "最好 " + box.rank.name;
+  return Number(box.pct) >= 100 ? box.rank.name : "上次 " + box.rank.name;
 }
 
 function topRank(boxes) {
@@ -55,10 +52,10 @@ Page({
       return;
     }
 
-    const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? bestOf(m) : null));
+    const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? lastOf(m) : null));
     const cards = MODES.map((m, i) => Object.assign({}, m, {
       ok: entitlement.can(CAP[m.key]),
-      bestText: bestTextOf(boxes[i])
+      lastText: lastTextOf(boxes[i])
     }));
     const top = topRank(boxes);
     this.setData({

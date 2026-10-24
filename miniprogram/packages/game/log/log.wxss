@@ -28,12 +28,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.lg-best-k {
-  font-size: var(--fs-hint);
-  color: var(--ink-3);
-  padding-left: var(--sp-1);
-}
-
 .lg-best-line {
   display: block;
   margin-top: var(--sp-1);

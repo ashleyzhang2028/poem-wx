@@ -3140,39 +3140,72 @@ function mountFull(pg, query) {
   }
 
   {
-    const examLog = require(path.join(ROOT, "utils", "exam-log.js"));
+    const scoreLog = require(path.join(ROOT, "utils", "score-log.js"));
     const fb = require(path.join(ROOT, "utils", "feedback.js"));
     const examJs = read("packages/game/exam/exam.js");
     const examWxml = read("packages/game/exam/exam.wxml");
+    const fhJs = read("packages/game/feihua/feihua.js");
+    const fhWxml = read("packages/game/feihua/feihua.wxml");
     const logJs = read("packages/game/log/log.js");
     const logWxml = read("packages/game/log/log.wxml");
     const idxJs = read("packages/game/index/index.js");
-    const savedLog = store.read(examLog.KEY, null);
+    const idxWxml = read("packages/game/index/index.wxml");
+    const KEY = scoreLog.MODES.exam.key;
+    const FKEY = scoreLog.MODES.feihua.key;
+    const savedLog = store.read(KEY, null);
+    const savedFh = store.read(FKEY, null);
+    store.drop(KEY);
+    store.drop(FKEY);
 
-    const a = examLog.add({ pct: 100, correct: 10, total: 10, span: 62 });
-    const b = examLog.add({ pct: 42, correct: 4, total: 10, span: 600 });
-    const bad = examLog.add({ pct: "abc", correct: -1 });
-    const kept = examLog.rows();
+    const a = scoreLog.add("exam", { pct: 100, correct: 10, total: 10, span: 62 });
+    const b = scoreLog.add("exam", { pct: 42, correct: 4, total: 10, span: 600 });
+    const bad = scoreLog.add("exam", { pct: "abc", correct: -1 });
+    const kept = scoreLog.rows("exam");
     const topRow = kept.find((r) => r.id === a.id);
     ok("一次考试留一条，脏值收成 0，段位与三甲标记按分算出来",
-      kept.length === 3 && bad.pct === 0 && bad.correct === 0
+      scoreLog.MODES.exam.key !== scoreLog.MODES.feihua.key
+        && kept.length === 3 && bad.pct === 0 && bad.correct === 0
         && topRow.rankName === fb.rankPercent(100).name && topRow.crowned === true
         && kept.find((r) => r.id === b.id).crowned === false,
       JSON.stringify(kept.map((r) => [r.pct, r.rankName, r.crowned])));
     ok("最好的一次跟着分数走，不跟着先来后到；删掉它之后让给下一条",
-      examLog.summary(kept).best.id === a.id && examLog.latest().id === a.id
-        && examLog.remove([a.id, bad.id]) === 2
-        && examLog.summary().best.id === b.id && examLog.list().length === 1);
+      scoreLog.summary("exam", kept).best.id === a.id
+        && scoreLog.remove("exam", [a.id, bad.id]) === 2
+        && scoreLog.summary("exam").best.id === b.id && scoreLog.list("exam").length === 1);
 
-    if (savedLog === null) store.drop(examLog.KEY);
-    else store.write(examLog.KEY, savedLog);
+    const r1 = scoreLog.add("feihua", { hit: 6, span: 90 });
+    const r2 = scoreLog.add("feihua", { hit: 13, span: 90 });
+    scoreLog.add("feihua", { hit: "abc" });
+    ok("一轮飞花令留一条，档位按接上的句数折算，与考试的记录各存一份",
+      scoreLog.list("feihua").length === 3 && scoreLog.list("exam").length === 1
+        && scoreLog.rows("feihua").find((r) => r.id === r2.id).rankName === fb.rankPercent(100).name
+        && scoreLog.rows("feihua").find((r) => r.id === r1.id).hitText === "6 句"
+        && scoreLog.rows("feihua").filter((r) => r.hit === 0).length === 1,
+      JSON.stringify(scoreLog.rows("feihua").map((r) => [r.hit, r.rankName])));
+    ok("飞花令的最后一次就是最近那一轮，删掉它之后让给前一轮",
+      scoreLog.latest("feihua").hit === 0 && scoreLog.remove("feihua", [scoreLog.list("feihua")[0].id]) === 1
+        && scoreLog.latest("feihua").hit === 13 && scoreLog.summary("feihua").best.hit === 13);
+
+    store.drop(KEY);
+    store.drop(FKEY);
+    if (savedLog !== null) store.write(KEY, savedLog);
+    if (savedFh !== null) store.write(FKEY, savedFh);
 
     ok("考试页「开始考试」下面挂着一张成绩记录卡，点它去成绩页",
       examWxml.indexOf('bindtap="onStart"') < examWxml.indexOf('bindtap="onLog"')
-        && /onLog\(\)[\s\S]{0,120}?\/packages\/game\/log\/log/.test(examJs),
+        && /onLog\(\）|onLog\(\)[\s\S]{0,160}?mode=exam/.test(examJs),
       "记录页没有入口，或者入口跑到开始考试上面去了");
+    ok("飞花令页也挂一张成绩记录卡，点它去飞花令的成绩页",
+      fhWxml.indexOf('bindtap="onLog"') >= 0
+        && /onLog\(\)[\s\S]{0,160}?mode=feihua/.test(fhJs),
+      "飞花令没有记录入口，或者入口去的不是飞花令那一份记录");
     ok("交卷那一刻就落一条（finish 里写，不等用户去记录页）",
-      /finish\(\)[\s\S]{0,1600}?examLog\.add\(/.test(examJs));
+      /finish\(\)[\s\S]{0,1600}?scoreLog\.add\("exam"/.test(examJs));
+    ok("一轮飞花令收尾就落一条（到点与换令两条路都写，写入只在一处）",
+      (fhJs.match(/scoreLog\.add\("feihua"/g) || []).length === 1
+        && /endRound\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs)
+        && /onSkip\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs),
+      "只写了一条路，另一种收尾方式那一轮就不会留下记录");
     ok("成绩页能单选、全选、批量删、单条删，四个入口都在模板里",
       logWxml.indexOf('bindtap="onToggle"') >= 0 && logWxml.indexOf('bindtap="onPickAll"') >= 0
         && logWxml.indexOf('bindtap="onDeletePicked"') >= 0 && logWxml.indexOf('catchtap="onDelete"') >= 0
@@ -3181,10 +3214,19 @@ function mountFull(pg, query) {
     ok("三甲那一档在成绩页上有独立的类名可钩（状元 / 榜眼 / 探花）",
       logWxml.indexOf('{{item.crowned ?') >= 0 && /\.lg-row\.top|\.lg-rank\.on/.test(read("packages/game/log/log.wxss")),
       "考得最好的几场与平常一模一样，翻十页也认不出来");
-    ok("大会首页考试那一栏的段位取最后一次考试的记录",
-      /examLog/.test(idxJs) && /examLog\.latest\(\)/.test(idxJs)
-        && !/best:\s*fb\.KEYS\.exam/.test(idxJs),
-      "首页还挂着旧的单份最好成绩，与记录页对不上");
+    ok("成绩页按模式取各自的记录，同一页给考试与飞花令两用",
+      /MODES\[query\.mode\]/.test(logJs) && /scoreLog\.(rows|summary|remove)\(this\.data\.mode/.test(logJs)
+        && logWxml.indexOf("{{mode ===") >= 0,
+      "成绩页写死只读考试那一份，飞花令的记录进去是空的");
+    ok("大会首页只剩考试与飞花令两栏读记录，题库不挂档位胶囊",
+      /scoreLog/.test(idxJs) && /scoreLog\.latest\(/.test(idxJs)
+        && !/best:\s*[a-z]+\.KEYS/.test(idxJs)
+        && (idxJs.match(/log:\s*"/g) || []).length === 2
+        && !/log:\s*"quiz"/.test(idxJs) && idxWxml.indexOf("{{item.lastText}}") >= 0,
+      "题库只是平常练习，不该有档位胶囊；飞花令与考试该各读自己最后一次");
+    ok("首页胶囊说的是「上次」而不是「最好」",
+      /"上次 "/.test(idxJs) && !/"最好 "/.test(idxJs),
+      "首页写着最好，读的却可能是最后一次，两句话对不上");
   }
 
   {

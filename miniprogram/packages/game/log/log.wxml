@@ -3,7 +3,7 @@
   <view class="card lg-hero" wx:if="{{summary.count}}">
     <view class="lg-hero-l">
       <text class="lg-eyebrow">共 {{summary.count}} 次</text>
-      <text class="lg-best">{{summary.best.pct}}<text class="lg-best-k">分</text></text>
+      <text class="lg-best">{{summary.best.hitText}}</text>
       <text class="lg-best-line">最好一次 · {{summary.best.rankName}}</text>
     </view>
     <text class="lg-seal {{summary.best.crowned ? 'on' : ''}}">{{summary.best.rankName}}</text>
@@ -33,12 +33,13 @@
         </view>
         <view class="lg-sub">
           <text class="lg-time">{{item.timeText}}</text>
-          <text class="lg-meta">{{item.correct}}/{{item.total}} 题 · {{item.spanText}}</text>
+          <text class="lg-meta" wx:if="{{mode === 'exam'}}">{{item.correct}}/{{item.total}} 题 · {{item.spanText}}</text>
+          <text class="lg-meta" wx:else>用时 {{item.spanText}}</text>
         </view>
       </view>
 
       <view class="lg-side">
-        <text class="lg-pct {{item.crowned ? 'on' : ''}}">{{item.pct}}</text>
+        <text class="lg-pct {{item.crowned ? 'on' : ''}}">{{item.hitText}}</text>
         <text class="lg-del" data-id="{{item.id}}" catchtap="onDelete">删</text>
       </view>
     </view>
@@ -47,8 +48,8 @@
   <view class="card" wx:else>
     <view class="empty">
       <text class="empty-mark">录</text>
-      <text class="empty-text say">还没有考试记录</text>
-      <text class="hint empty-tip">交卷就留一条，历次成绩都在这页</text>
+      <text class="empty-text say">{{copy.empty}}</text>
+      <text class="hint empty-tip">{{copy.tip}}</text>
     </view>
   </view>
 
