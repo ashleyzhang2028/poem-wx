@@ -458,7 +458,7 @@ function expandPageBanner(wxml, data, navbar, pageWxss) {
     full,
     pagePadding: pageOwnPadding(pageWxss),
     cover: full ? banner.coverOf() : 0,
-    imageHeight: Math.min(Math.round(width * 916 / 1717), 360)
+    imageHeight: Math.min(Math.round(width * 360 / 750), 360)
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<page-banner[^>]*\/>/g, (tag) => {
