@@ -196,24 +196,24 @@
 .tier-pro .identity-name,
 .tier-max .identity-name,
 .tier-pro .id-valid-v,
-.tier-max .id-valid-v {
-  color: var(--on-theme);
+.tier-max .id-valid-v,
+.tier-pro .id-kind,
+.tier-max .id-kind {
+  color: var(--on-ink);
 }
 
 .tier-pro .identity-sub,
 .tier-max .identity-sub,
-.tier-pro .id-kind,
-.tier-max .id-kind,
 .tier-pro .id-motto,
 .tier-max .id-motto,
 .tier-pro .id-valid-k,
 .tier-max .id-valid-k {
-  color: var(--on-theme-soft);
+  color: var(--on-ink-soft);
 }
 
 .tier-pro .tier-chip,
 .tier-max .tier-chip {
-  color: var(--on-theme);
+  color: var(--on-ink);
   background: transparent;
   border-color: rgba(255, 255, 255, .5);
 }

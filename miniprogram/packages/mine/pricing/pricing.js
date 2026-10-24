@@ -47,7 +47,7 @@ Page({
     shown: {},
     promises: PROMISES,
     yes: icons.yes,
-    crest: icons.crest,
+    badge: icons.badge,
     welcome: null,
     sandbox: false,
     busy: false,
