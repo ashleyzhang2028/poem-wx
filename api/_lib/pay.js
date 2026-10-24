@@ -507,7 +507,7 @@ function payAdmin(deps, input) {
         pages: pages,
         total: hit.length,
         summary: countOrders(all),
-        matched: countOrders(hit)
+        matched: countOrders(filter.status ? hit.filter(function (o) { return o.status === filter.status; }) : hit)
       });
     });
   });
