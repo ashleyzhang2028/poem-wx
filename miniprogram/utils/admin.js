@@ -230,8 +230,22 @@ function dateInput(value) {
   return m ? { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) } : null;
 }
 
+function dayText(parts) {
+  if (!parts) return "";
+  return [parts.year, parts.month, parts.day].map(pad).join("-");
+}
+
+function dayInput(raw) {
+  const m = /^(\d{4})\D?(\d{1,2})\D?(\d{1,2})$/.exec(String(raw || "").trim());
+  if (!m) return "";
+  const text = dayText({ year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) });
+  const back = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return back.getMonth() + 1 === Number(m[2]) && back.getDate() === Number(m[3]) ? text : "";
+}
+
 function checkDay(text) {
-  if (!text) return "先在上面选一个到期日";
+  if (!text) return "先选一个到期日";
+  if (!dateInput(text)) return "日期格式不对，按 YYYY-MM-DD 填";
   if (text < today()) return "到期日不能早于今天";
   return "";
 }
@@ -323,6 +337,8 @@ module.exports = {
   dayEnd,
   dueText,
   dateInput,
+  dayText,
+  dayInput,
   checkDay,
   revokeTier,
   canWrite,

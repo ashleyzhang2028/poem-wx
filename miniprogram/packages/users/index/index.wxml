@@ -43,15 +43,13 @@
         </view>
       </view>
 
-      <picker mode="date" value="{{dueDate}}" start="{{dueMin}}" bindchange="onDueChange">
-        <view class="due-pick">
-          <view class="due-main">
-            <text class="due-label">到期日</text>
-            <text class="due-value">{{dueDate || dueHolder || '选一个日期'}}</text>
-          </view>
-          <text class="due-go">›</text>
+      <view class="due-pick" bindtap="onDuePick">
+        <view class="due-main">
+          <text class="due-label">到期日</text>
+          <text class="due-value">{{dueDate || dueHolder || '选一个日期'}}</text>
         </view>
-      </picker>
+        <text class="due-go">›</text>
+      </view>
 
       <text class="hint note error" wx:if="{{dueNote}}">{{dueNote}}</text>
       <text class="hint note" wx:else>到期当天仍可用，次日起自动回到 Free。</text>

@@ -1513,13 +1513,20 @@ const GATED = {
   ok("用户列表页区分「能改」与「只读」",
     usersWxml.indexOf("item.editable") >= 0);
   ok("改档入口是原生按钮", /<button[^>]*bindtap="onSetTier"/.test(usersWxml));
-  ok("改档把到期日一起交上去（日历选了日期，不是只传档位）",
-    /mode="date"[^>]*bindchange="onDueChange"/.test(usersWxml)
-      && /onDueChange/.test(usersJs)
+  ok("改档把到期日一起交上去（选好的日期送到服务端，不是只传档位）",
+    /bindtap="onDuePick"/.test(usersWxml)
+      && /onDuePick/.test(usersJs)
       && /dueDate/.test(usersWxml)
       && /admin\.setTier\(userId, tier, until\)/.test(usersJs)
       && /remote\.setUserTier\(userId, tier, until/.test(adminLib),
     "到期日停在界面上没送到服务端 —— plan_until 不会被写");
+  ok("选完日期后面板显示完整年月日（不显示 undefined 组成的串）",
+    (() => {
+      const adm = require(path.join(ROOT, "utils", "admin.js"));
+      const day = adm.dayText(adm.dateInput("2026-03-05"));
+      return day === "2026-03-05" && /dueDate \|\| dueHolder/.test(usersWxml);
+    })(),
+    "日期读数是从 picker 的 {year,month,day} 直接拼出来的 —— 会显示 undefined-undefined-undefined");
   ok("名录每一行回显到期日（档位标签旁边那一列）",
     /item\.untilText/.test(usersWxml) && /u\.tier === t \? dueText\(u\.until\)/.test(adminLib));
   ok("用户列表页不再摆改角色的入口（只留改档）",
