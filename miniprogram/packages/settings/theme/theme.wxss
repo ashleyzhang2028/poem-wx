@@ -197,11 +197,21 @@
 .tone-fold {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  justify-content: flex-start;
+  gap: var(--sp-2);
+}
+
+.tone-field {
+  flex: none;
+}
+
+.tone-field-rgba {
+  min-width: 0;
 }
 
 .tone-chip {
   flex: none;
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 8rpx;
@@ -237,7 +247,8 @@
 }
 
 .tone-input {
-  flex: none;
+  display: block;
+  box-sizing: border-box;
   width: 156rpx;
   height: var(--h-btn-mini);
   border-radius: var(--radius-sm);
@@ -245,7 +256,8 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-caption);
   color: var(--ink);
-  letter-spacing: 1rpx;
+  letter-spacing: 0;
+  line-height: var(--h-btn-mini);
   text-align: center;
 }
 
@@ -255,18 +267,11 @@
 }
 
 .tone-read {
-  flex: 1;
-  min-width: 300rpx;
+  width: 236rpx;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-  text-align: right;
 }
 
 .tone-axis {

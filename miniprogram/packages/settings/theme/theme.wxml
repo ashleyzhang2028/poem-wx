@@ -51,14 +51,18 @@
 
     <view class="tone {{toneLocked ? 'locked' : ''}}">
       <view class="tone-fold">
-        <text class="tone-read">{{toneView.toneRgba || 'r, g, b, a'}}</text>
+        <view class="tone-field tone-field-hex">
+          <input class="tone-input" type="text" maxlength="7" value="{{toneView.toneHex}}"
+                 placeholder="#8C2F2D" placeholder-class="tone-input-ph"
+                 confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />
+        </view>
+        <view class="tone-field tone-field-rgba" wx:if="{{toneView.toneRgba}}">
+          <text class="tone-input tone-read">{{toneView.toneRgba}}</text>
+        </view>
         <view class="tone-chip {{toneView.toneOn ? 'on' : ''}}" hover-class="none" bindtap="onToneReset">
           <view class="tone-chip-dot"></view>
           <text class="tone-chip-reset">恢复</text>
         </view>
-        <input class="tone-input" type="text" maxlength="7" value="{{toneView.toneHex}}"
-               placeholder="#8C2F2D" placeholder-class="tone-input-ph"
-               confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />
       </view>
 
       <view class="tone-axis">
