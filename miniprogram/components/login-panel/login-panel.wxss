@@ -154,11 +154,11 @@
 }
 
 .tier-pro {
-  background: var(--card-platinum);
+  background: var(--card-gold);
 }
 
 .tier-max {
-  background: var(--card-gold);
+  background: var(--card-platinum);
 }
 
 .tier-pro .identity-name,
@@ -190,7 +190,7 @@
   box-shadow: 0 0 0 4rpx rgba(255, 255, 255, .7), 0 0 0 6rpx var(--card-metal-line);
 }
 
-.tier-max .tier-chip::before {
+.tier-pro .tier-chip::before {
   content: "✦";
   margin-right: 6rpx;
 }

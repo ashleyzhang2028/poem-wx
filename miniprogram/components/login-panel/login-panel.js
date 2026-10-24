@@ -2,7 +2,7 @@ const store = require("../../utils/store");
 const loginFlow = require("../../utils/login-flow");
 const pay = require("../../utils/pay");
 
-const KIND_TEXTS = { free: "基础卡", pro: "铂金卡", max: "金卡" };
+const KIND_TEXTS = { free: "基础卡", pro: "金卡", max: "铂金卡" };
 const FOREVER_TEXT = "长期有效";
 
 Component({
