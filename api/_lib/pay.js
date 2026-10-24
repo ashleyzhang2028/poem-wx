@@ -17,6 +17,7 @@ var LIST_PRICE_CENTS = {
 var RANK = { free: 0, pro: 1, max: 2 };
 var CATALOG_KEY = "pay.catalog";
 var PAID_STATUS = [2, 3, 4];
+var UNPAID = ["pending", "canceled", "deleted"];
 var PENDING_WINDOW_MS = DAY;
 var QUERY_GAP_MS = 2500;
 var PRODUCT_ID = /^[A-Za-z0-9_]{1,64}$/;
@@ -235,17 +236,17 @@ function nextPlan(acc, order, t) {
 function deliver(deps, order, info) {
   var store = deps.store, t = deps.now();
   if (order.status === "paid" && Number(order.applied) === 1) return Promise.resolve(order);
-  if (order.status !== "pending" && order.status !== "paid") return Promise.resolve(order);
+  if (order.status !== "paid" && UNPAID.indexOf(order.status) < 0) return Promise.resolve(order);
   return Promise.resolve(store.getAccount(order.uid)).then(function (acc) {
     if (!acc || acc.status === "deleted") return order;
     var plan = order.plan_after;
     var until = order.plan_until_after == null ? null : Number(order.plan_until_after);
     var claim = Promise.resolve(true);
-    if (order.status === "pending") {
+    if (order.status !== "paid") {
       var next = nextPlan(acc, order, t);
       plan = next.plan;
       until = next.until;
-      claim = store.claimPayOrder(order.out_trade_no, "pending", {
+      claim = store.claimPayOrder(order.out_trade_no, order.status, {
         status: "paid",
         wx_order_id: String((info && info.wxOrderId) || "").slice(0, 64) || null,
         source: String((info && info.source) || "").slice(0, 16),
@@ -396,12 +397,55 @@ function payConfirm(deps, input) {
   });
 }
 
+var MANAGE_FROM = { cancel: ["pending"], delete: ["pending", "canceled"] };
+var MANAGE_TO = { cancel: "canceled", delete: "deleted" };
+
+function stateConflict(order, what) {
+  return err(409, "E_PAY_ORDER_STATE", order.status === "paid" ? "这笔订单已经支付，不能" + what : "这笔订单当前不能" + what);
+}
+
+function manageDone(deps, order, op) {
+  var what = op === "cancel" ? "取消" : "删除";
+  if (order.status === MANAGE_TO[op]) return Promise.resolve(ok({ status: order.status }));
+  if (MANAGE_FROM[op].indexOf(order.status) < 0) return Promise.resolve(stateConflict(order, what));
+  return Promise.resolve(deps.store.claimPayOrder(order.out_trade_no, order.status, { status: MANAGE_TO[op] })).then(function (won) {
+    return won ? ok({ status: MANAGE_TO[op] }) : err(409, "E_PAY_ORDER_STATE", "订单状态刚刚变了，请刷新后再试");
+  });
+}
+
+function manageResume(deps, order, code) {
+  if (order.status !== "pending" || deps.now() - Number(order.created_at) >= PENDING_WINDOW_MS) {
+    return Promise.resolve(stateConflict(order, "继续支付"));
+  }
+  return payOrder(deps, { plan: order.plan, period: order.period, code: code }).then(function (res) {
+    if (res.status !== 200) return res;
+    return Promise.resolve(deps.store.claimPayOrder(order.out_trade_no, "pending", { status: "canceled" })).then(function (won) {
+      return won ? res : err(409, "E_PAY_ORDER_STATE", "这笔订单已经支付");
+    });
+  });
+}
+
+function payManage(deps, input) {
+  var gate = loginGate(deps) || payGate(deps);
+  if (gate) return Promise.resolve(gate);
+  var op = String((input && input.op) || "");
+  var out = String((input && input.outTradeNo) || "").trim();
+  if (op !== "resume" && !MANAGE_TO[op]) return Promise.resolve(err(400, "E_PAY_OP", "操作不对"));
+  return Promise.resolve(deps.store.getPayOrder(out)).then(function (order) {
+    if (!order || order.uid !== deps.account.uid || order.status === "deleted") return err(404, "E_PAY_ORDER", "没有这笔订单");
+    var fresh = order.status === "pending" ? settleFromWx(deps, order) : Promise.resolve(order);
+    return fresh.then(function (cur) {
+      return op === "resume" ? manageResume(deps, cur, String((input && input.code) || "").trim()) : manageDone(deps, cur, op);
+    });
+  });
+}
+
 function payOrdersMine(deps, input) {
   var gate = loginGate(deps);
   if (gate) return Promise.resolve(gate);
   var limit = Math.max(1, Math.min(100, Number(input && input.limit) || 50));
   return Promise.resolve(deps.store.listPayOrders({ uid: deps.account.uid }, limit)).then(function (rows) {
-    return ok({ orders: (rows || []).map(publicOrder) });
+    return ok({ orders: (rows || []).filter(function (r) { return r.status !== "deleted"; }).map(publicOrder) });
   });
 }
 
@@ -517,6 +561,7 @@ module.exports = {
   payCatalog: payCatalog,
   payOrder: payOrder,
   payConfirm: payConfirm,
+  payManage: payManage,
   payOrdersMine: payOrdersMine,
   payNotify: payNotify,
   payAdmin: payAdmin,

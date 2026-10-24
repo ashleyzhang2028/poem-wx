@@ -27,6 +27,7 @@ const PATHS = {
   payCatalog: "/api/pay/catalog",
   payOrder: "/api/pay/order",
   payConfirm: "/api/pay/confirm",
+  payManage: "/api/pay/manage",
   payOrders: "/api/pay/orders",
   adminPay: "/api/admin/pay"
 };

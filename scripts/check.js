@@ -8291,6 +8291,27 @@ function gapped(items, max) {
     ok("退款推送：回收那一单的时长", (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.d30,
       "退款之后会员时长还在");
 
+    const open = await payMod.payOrder(deps(), { plan: "pro", period: "d90", code: "c" });
+    const openNo = open.body.outTradeNo;
+    const manage = (op, extra, uid) => payMod.payManage(deps(uid), Object.assign({ op, outTradeNo: openNo }, extra));
+    const resumed = await manage("resume", { code: "c" });
+    ok("待支付订单：继续支付另起新单号（单号不复用），旧单作废，别人的单 404",
+      resumed.status === 200 && resumed.body.outTradeNo !== openNo
+        && JSON.parse(resumed.body.payData.signData).outTradeNo === resumed.body.outTradeNo
+        && (await store.getPayOrder(openNo)).status === "canceled"
+        && (await manage("cancel", {}, "u2")).status === 404, "继续支付复用了旧单号、旧单还开着，或能动别人的订单");
+    ok("订单：作废的单不能再继续支付，已支付的单不能取消也不能删除",
+      (await manage("resume", { code: "c" })).status === 409
+        && (await payMod.payManage(deps(), { op: "cancel", outTradeNo: renew.body.outTradeNo })).status === 409
+        && (await payMod.payManage(deps(), { op: "delete", outTradeNo: renew.body.outTradeNo })).status === 409, "作废的单还能付，或已付的单被取消、删除");
+    ok("未完成订单：删除后不再出现在支付记录里",
+      (await manage("delete", {})).status === 200
+        && (await payMod.payOrdersMine(deps(), {})).body.orders.every((o) => o.outTradeNo !== openNo), "删除的订单还在列表里");
+    await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
+      OutTradeNo: openNo, GoodsInfo: { ProductId: "pro_90", OrderFee: 3500 } }) });
+    ok("取消或删除之后才到的支付推送照常发货（不收钱不发货）",
+      (await store.getPayOrder(openNo)).status === "paid", "已付款的订单因为本地取消而没发货");
+
     ok("沙箱环境用沙箱 AppKey，现网用现网 AppKey（两把钥匙不混用）",
       baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 1 }) === "s"
         && baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 0 }) === "p",
