@@ -219,6 +219,23 @@ function dayEnd(text) {
   return start ? start + 86400000 - 1 : 0;
 }
 
+function dueText(until) {
+  if (!until) return "";
+  if (Number(until) <= Date.now()) return "已到期";
+  return "至 " + untilText(until);
+}
+
+function dateInput(value) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+  return m ? { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) } : null;
+}
+
+function checkDay(text) {
+  if (!text) return "先在上面选一个到期日";
+  if (text < today()) return "到期日不能早于今天";
+  return "";
+}
+
 function _normalizeRemote(rows) {
   return (rows || []).map((u) => {
     const t = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
@@ -228,7 +245,7 @@ function _normalizeRemote(rows) {
       tier: t,
       tierLabel: tiers.nameOf(t),
       until: u.until || null,
-      untilText: u.tier === t ? untilText(u.until) : "",
+      untilText: u.tier === t ? dueText(u.until) : "",
       status: u.status || "active",
       createdAt: Number(u.createdAt) || 0,
       source: "remote",
@@ -304,6 +321,9 @@ module.exports = {
   setTier,
   today,
   dayEnd,
+  dueText,
+  dateInput,
+  checkDay,
   revokeTier,
   canWrite,
   roster

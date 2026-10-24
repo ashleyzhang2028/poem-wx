@@ -17,7 +17,7 @@
 
         <view class="acct-acts">
           <text class="tag acct-tier" wx:if="{{item.tierLabel}}">{{item.tierLabel}}</text>
-          <text class="acct-until" wx:if="{{item.untilText}}">至 {{item.untilText}}</text>
+          <text class="acct-until" wx:if="{{item.untilText}}">{{item.untilText}}</text>
           <button class="btn mini acct-act" wx:if="{{canWrite && item.editable}}" data-u="{{item.id}}"
                   bindtap="onSetTier">改档</button>
           <text class="acct-lock" wx:if="{{!canWrite}}">只读</text>
@@ -34,16 +34,32 @@
 
   </block>
 
-  <view class="due-mask" wx:if="{{dueOpen}}" bindtap="onDueCancel">
-    <view class="due" catchtap="onDueStop">
-      <text class="due-title">改成 {{dueTierLabel}}</text>
+  <view class="due-mask" wx:if="{{dueOpen}}" catchtap="onDueCancel">
+    <view class="due" style="{{themeStyle}}" catchtap="onDueStop">
+      <view class="due-head">
+        <text class="due-title">改成 {{dueTierLabel}}</text>
+        <view class="due-close" hover-class="due-close-hover" hover-stay-time="60" bindtap="onDueCancel">
+          <view class="due-close-x"></view>
+        </view>
+      </view>
+
       <picker mode="date" value="{{dueDate}}" start="{{dueMin}}" bindchange="onDueChange">
-        <view class="due-day">到期日：{{dueDate || '从日历里选'}}</view>
+        <view class="due-pick">
+          <view class="due-main">
+            <text class="due-label">到期日</text>
+            <text class="due-value">{{dueDate || dueHolder || '选一个日期'}}</text>
+          </view>
+          <text class="due-go">›</text>
+        </view>
       </picker>
+
       <text class="hint note error" wx:if="{{dueNote}}">{{dueNote}}</text>
-      <button class="btn primary block" bindtap="onDueConfirm">确定</button>
-      <button class="due-btn" bindtap="onDueForever">不设到期，长期有效</button>
-      <button class="due-btn" bindtap="onDueCancel">取消</button>
+      <text class="hint note" wx:else>到期当天仍可用，次日起自动回到 Free。</text>
+
+      <view class="due-acts">
+        <button class="btn ghost block" disabled="{{busy}}" bindtap="onDueForever">长期有效</button>
+        <button class="btn primary block" disabled="{{busy}}" bindtap="onDueConfirm">确定</button>
+      </view>
     </view>
   </view>
 
