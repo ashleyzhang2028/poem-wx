@@ -41,7 +41,12 @@
   font-size: var(--fs-caption);
   font-weight: 600;
   line-height: 1.4;
-  color: var(--on-theme);
+  color: var(--on-ink);
+  background: var(--strong);
+}
+
+.pr-plan .pr-save {
+  color: var(--on-ink);
   background: var(--tier);
 }
 
@@ -224,7 +229,7 @@
   width: var(--w-btn-wide);
   background: var(--tier);
   border-color: var(--tier);
-  color: var(--on-theme);
+  color: var(--on-ink);
 }
 
 .btn.pr-buy {
@@ -237,14 +242,14 @@
   z-index: 1;
 }
 
-.pr-buy-crest {
+.pr-buy-badge {
   position: absolute;
   right: -28rpx;
   top: 50%;
   width: 150rpx;
   height: 150rpx;
   margin-top: -75rpx;
-  background: rgba(255, 255, 255, .2);
+  background: var(--on-ink-soft);
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -254,7 +259,7 @@
   pointer-events: none;
 }
 
-.btn.pr-buy[disabled] .pr-buy-crest {
+.btn.pr-buy[disabled] .pr-buy-badge {
   display: none;
 }
 

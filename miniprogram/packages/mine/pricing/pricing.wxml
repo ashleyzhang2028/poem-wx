@@ -3,7 +3,7 @@
   <view class="card pr-intro">
     <view class="pr-hero">
       <text class="pr-eyebrow">会员</text>
-      <text class="pr-title poem">与您共同成长</text>
+      <text class="pr-title poem">不积跬步，无以至千里</text>
       <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
       <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
     </view>
@@ -61,7 +61,7 @@
       <button class="btn block pr-buy"
               disabled="{{shown.disabled || busy}}" bindtap="onBuy">
         <text class="pr-buy-t">{{shown.actionText}}</text>
-        <view class="pr-buy-crest" style="mask-image:url('{{crest}}');-webkit-mask-image:url('{{crest}}');"></view>
+        <view class="pr-buy-badge" style="mask-image:url('{{badge}}');-webkit-mask-image:url('{{badge}}');"></view>
       </button>
 
       <view class="pr-list">
