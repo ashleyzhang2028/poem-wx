@@ -22,7 +22,8 @@ Page({
     allPicked: false,
     summary: { count: 0, best: null },
     bestPct: 0,
-    ranks: []
+    ranks: [],
+    cloud: ""
   },
 
   onLoad(query) {
@@ -42,6 +43,7 @@ Page({
     const rows = scoreLog.rows(mode);
     const sum = scoreLog.summary(mode, rows);
     const alive = this.data.picked.filter((id) => rows.some((r) => r.id === id));
+    const keep = scoreLog.limit();
     this.setData({
       rows,
       picked: alive,
@@ -49,7 +51,10 @@ Page({
       allPicked: rows.length > 0 && alive.length === rows.length,
       summary: sum,
       bestPct: sum.best ? sum.best.pct : 0,
-      ranks: feedback.RANKS.slice(0, 3)
+      ranks: feedback.RANKS.slice(0, 3),
+      cloud: keep
+        ? "上云 " + rows.length + " / " + keep + " 条 · 超了删最久的一条 · 删本地同步删云上"
+        : "成绩只留本机 · 登录并开通 Pro / Max 后记在账号上"
     });
   },
 

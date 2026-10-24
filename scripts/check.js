@@ -1281,7 +1281,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 16], ["max", 22]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 17], ["max", 23]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -3141,6 +3141,11 @@ function mountFull(pg, query) {
 
   {
     const scoreLog = require(path.join(ROOT, "utils", "score-log.js"));
+    const tiersEarly = require(path.join(ROOT, "utils", "tiers.js"));
+    const entEarly = require(path.join(ROOT, "utils", "entitlement.js"));
+    const keptStatus = entEarly.status;
+    const tierAs = (t) => { entEarly.status = () => ({ tier: t, source: "selfcheck", label: t, blocked: "", signed: true }); };
+    tierAs("max");
     const fb = require(path.join(ROOT, "utils", "feedback.js"));
     const examJs = read("packages/game/exam/exam.js");
     const examWxml = read("packages/game/exam/exam.wxml");
@@ -3188,6 +3193,37 @@ function mountFull(pg, query) {
 
     store.drop(KEY);
     store.drop(FKEY);
+
+    ok("记录上限按档位定：Pro 200 / Max 500 / Free 不留，权限表里写的就是这两个数",
+      tiersEarly.RECORD_LIMITS.pro === 200 && tiersEarly.RECORD_LIMITS.max === 500
+        && tiersEarly.RECORD_LIMITS.free === 0
+        && (() => {
+          const row = E.compareRows({ logged: true, tier: "pro" }).filter((r) => r.cap === "records")[0];
+          return !!row && row.cells.map((c) => c.text).join(",") === ",200 条,500 条";
+        })(),
+      JSON.stringify({ limits: tiersEarly.RECORD_LIMITS, rows: E.compareRows({ logged: true, tier: "pro" })
+        .filter((r) => r.cap === "records") }));
+
+    tierAs("pro");
+    const proFull = [];
+    for (let i = 0; i <= tiersEarly.RECORD_LIMITS.pro; i += 1) {
+      proFull.push(scoreLog.add("exam", { pct: 60, scope: "s" + i, at: 1000 + i }));
+    }
+    const proIds = scoreLog.list("exam").map((r) => r.id);
+    ok("第 201 条进来时挤掉的是最久那条，条数停在 200",
+      proIds.length === tiersEarly.RECORD_LIMITS.pro
+        && proIds.indexOf(proFull[0].id) < 0 && proIds.indexOf(proFull[1].id) >= 0
+        && proIds[0] === proFull[proFull.length - 1].id,
+      "条数 " + proIds.length + "，最久那条还在不在 " + (proIds.indexOf(proFull[0].id) >= 0));
+    store.drop(KEY);
+
+    tierAs("free");
+    scoreLog.add("exam", { pct: 100 });
+    ok("没开通时一条也不落（Free 没有上云这一层）",
+      scoreLog.list("exam").length === 0,
+      "Free 也在本机攒记录 —— 与「Pro 200 / Max 500」的口径对不上");
+
+    entEarly.status = keptStatus;
     if (savedLog !== null) store.write(KEY, savedLog);
     if (savedFh !== null) store.write(FKEY, savedFh);
 

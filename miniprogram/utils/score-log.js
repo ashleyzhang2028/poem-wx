@@ -1,12 +1,14 @@
 const store = require("./store");
 const feedback = require("./feedback");
+const entitlement = require("./entitlement");
+const tiers = require("./tiers");
+const remote = require("./remote");
 
 const MODES = {
-  exam: { key: "kb_exam_log_v1", unit: "分", total: 100 },
-  feihua: { key: "kb_feihua_log_v1", unit: "句", total: 0 }
+  exam: { key: "kb_exam_log_v1", game: "exam", unit: "分", total: 100 },
+  feihua: { key: "kb_feihua_log_v1", game: "fly", unit: "句", total: 0 }
 };
 
-const MAX = 100;
 const TOP = 3;
 
 function modeOf(name) {
@@ -31,6 +33,19 @@ function spanOf(sec) {
 function pctOf(mode, box) {
   if (mode === "feihua") return Math.min(100, (Number(box && box.hit) || 0) * 10);
   return box && box.pct;
+}
+
+function keep(tier) {
+  const n = tiers.RECORD_LIMITS[tier];
+  return Number(n) > 0 ? Number(n) : 0;
+}
+
+function limit() {
+  return keep(entitlement.status().tier);
+}
+
+function syncOn() {
+  return remote.configured() && entitlement.loggedIn() && limit() > 0;
 }
 
 function list(name) {
@@ -64,8 +79,13 @@ function latest(name) {
   return { pct: pctOf(name, raw), hit: row.hit, rank: feedback.rankPercent(pctOf(name, raw)) };
 }
 
+function push(name, row) {
+  const cap = limit();
+  if (!cap) return;
+  store.write(modeOf(name).key, [row].concat(list(name)).slice(0, cap));
+}
+
 function add(name, box) {
-  const mode = modeOf(name);
   const row = {
     id: "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     at: Number(box && box.at) || Date.now(),
@@ -77,17 +97,34 @@ function add(name, box) {
     scopeName: String((box && box.scopeName) || ""),
     span: Math.max(0, Math.round(Number(box && box.span) || 0))
   };
-  store.write(mode.key, [row].concat(list(name)).slice(0, MAX));
+  push(name, row);
   return row;
 }
 
-function remove(name, ids) {
+function forget(name, ids) {
   const gone = (Array.isArray(ids) ? ids : [ids]).filter(Boolean);
   if (!gone.length) return 0;
   const all = list(name);
   const left = all.filter((r) => gone.indexOf(r.id) < 0);
   const n = all.length - left.length;
   if (n) store.write(modeOf(name).key, left);
+  return n;
+}
+
+function remove(name, ids) {
+  const gone = (Array.isArray(ids) ? ids : [ids]).filter(Boolean);
+  const n = forget(name, gone);
+  if (!n || !syncOn()) return n;
+  const game = modeOf(name).game;
+  gone.forEach((id) => {
+    remote.rankingDelete(game, id).then((res) => {
+      if (res && res.ok) return null;
+      const back = list(name);
+      const row = back.filter((r) => r.id === id)[0];
+      if (row) push(name, row);
+      return null;
+    });
+  });
   return n;
 }
 
@@ -98,4 +135,4 @@ function summary(name, all) {
   return { count: src.length, best: best, last: src[0] };
 }
 
-module.exports = { MODES, MAX, modeOf, list, rows, latest, add, remove, summary, timeOf, spanOf };
+module.exports = { MODES, modeOf, keep, list, rows, latest, add, remove, summary, timeOf, spanOf, limit };

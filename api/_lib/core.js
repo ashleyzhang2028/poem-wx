@@ -3230,12 +3230,19 @@ function examRecordDelete(deps, input) {
   });
 }
 
+var RECORD_KEEP = { free: 0, pro: 200, max: 500 };
+
+function recordKeep(tier) {
+  var n = Number(RECORD_KEEP[tier]) || 0;
+  return n > 0 ? n : 0;
+}
+
 var BOARD_GAMES = ["fly", "exam"];
 var BOARD_STAGES = ["all", "primary", "middle", "high"];
 var BOARD_STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
 var BOARD_PERIODS = ["day", "week", "month", "year"];
 var BOARD_SIZES = [100];
-var BOARD_LIMITS = { scopeId: 64, records: 20000 };
+var BOARD_LIMITS = { scopeId: 64, records: 20000, mine: 1000 };
 var BOARD_NICK_MAX = 12;
 var BOARD_GRADE_LABELS = { 1: "一年级", 2: "二年级", 3: "三年级", 4: "四年级", 5: "五年级", 6: "六年级",
   7: "七年级", 8: "八年级", 9: "九年级", 10: "高一", 11: "高二", 12: "高三" };
@@ -3446,6 +3453,42 @@ function boardList(deps, input) {
   });
 }
 
+function trimScoreRecords(store, uid, game, keep) {
+  if (!keep) return Promise.resolve(0);
+  return Promise.resolve(store.listScoreRecords({ uid: uid, game: game }, BOARD_LIMITS.mine)).then(function (mine) {
+    var rows = mine || [];
+    var gone = rows.slice(keep);
+    return gone.reduce(function (p, r) {
+      return p.then(function (n) {
+        return Promise.resolve(store.deleteScoreRecord(r.srid)).then(function (done) {
+          return n + (done ? 1 : 0);
+        });
+      });
+    }, Promise.resolve(0));
+  });
+}
+
+function boardDelete(deps, input) {
+  var store = deps.store;
+  var game = String((input && input.game) || "exam").toLowerCase();
+  if (BOARD_GAMES.indexOf(game) < 0) {
+    return Promise.resolve(err(400, "E_GAME", "榜单只认 fly / exam 两种"));
+  }
+  if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "删成绩要登录"));
+  var srid = clip(input && input.srid, 64).trim();
+  if (!srid) return Promise.resolve(err(400, "E_BAD_TARGET", "没说清楚删哪一条"));
+
+  return Promise.resolve(store.listScoreRecords({ uid: deps.account.uid, game: game }, BOARD_LIMITS.mine))
+    .then(function (rows) {
+      var hit = (rows || []).filter(function (r) { return r.srid === srid; })[0];
+      if (!hit) return err(404, "E_NOT_FOUND", "服务器上没有这一条（可能已经删了）");
+      return Promise.resolve(store.deleteScoreRecord(srid)).then(function (done) {
+        if (!done) return err(404, "E_NOT_FOUND", "服务器上没有这一条（可能已经删了）");
+        return ok({ deleted: srid });
+      });
+    });
+}
+
 function boardSubmit(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var gate = boardGate(deps, input, false);
@@ -3487,8 +3530,11 @@ function boardSubmit(deps, input) {
         duration_sec: Math.max(0, Math.min(24 * 3600, Number(input && input.durationSec) || 0)),
         created_at: t
       };
+      var keep = recordKeep(tier);
       return Promise.resolve(store.putScoreRecord(row)).then(function () {
-        return ok({ recorded: row.srid, score: score, total: total, on: !!g.on });
+        return trimScoreRecords(store, me.uid, g.game, keep);
+      }).then(function () {
+        return ok({ recorded: row.srid, score: score, total: total, on: !!g.on, keep: keep });
       });
     });
   });
@@ -3691,6 +3737,9 @@ module.exports = {
   findAccountByEmail: findAccountByEmail,
   gameAnswer: gameAnswer,
   gameAllowed: gameAllowed,
+  boardDelete: boardDelete,
+  recordKeep: recordKeep,
+  RECORD_KEEP: RECORD_KEEP,
   GAME_CAP: GAME_CAP,
   adminGrant: adminGrant,
   adminGrants: adminGrants,

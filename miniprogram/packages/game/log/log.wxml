@@ -9,6 +9,10 @@
     <text class="lg-seal {{summary.best.crowned ? 'on' : ''}}">{{summary.best.rankName}}</text>
   </view>
 
+  <view class="card">
+    <text class="hint">{{cloud}}</text>
+  </view>
+
   <view class="card" wx:if="{{summary.count}}">
     <view class="lg-bar">
       <view class="lg-bar-l" hover-class="lg-bar-hover" hover-stay-time="60" bindtap="onPickAll">
