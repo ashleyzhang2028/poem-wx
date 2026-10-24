@@ -32,7 +32,7 @@
   <view class="card">
     <view class="card-head">
       <text class="card-title">自选背诵</text>
-      <tier-tag wx:if="{{!selfOnlyOn}}" tier="{{selfOnlyTier}}" />
+      <tier-tag wx:if="{{selfOnlyLocked}}" tier="{{selfOnlyTier}}" />
     </view>
 
     <view class="row">
@@ -116,7 +116,6 @@
         <view class="algo-head">
           <text class="algo-name">{{item.name}}</text>
           <text class="algo-years">{{item.years}}</text>
-          <tier-tag wx:if="{{!item.allowed}}" tier="{{item.tier}}" />
         </view>
         <view class="algo-lines">
           <text class="algo-line" wx:for="{{item.describe}}" wx:for-item="line" wx:key="*this">{{line}}</text>

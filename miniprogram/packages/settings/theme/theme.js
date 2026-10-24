@@ -20,7 +20,6 @@ Page({
 
     groups: theme.groups(),
     theme: theme.DEFAULT,
-    ownLocked: true,
 
     toneView: {},
     toneLocked: true,
@@ -53,6 +52,7 @@ Page({
     return {
       groups: theme.groups(),
       ownSet: theme.ownSwatchData().set,
+      toneLocked: !theme.reachable(theme.OWN_KEY),
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, {
         locked: !pickable && f.key !== font.DEFAULT,
@@ -62,8 +62,6 @@ Page({
       previewFamilyOf: font.face().previewFamily,
       fontLocked: !pickable,
       fontTier: font.tier(),
-      ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
-      toneLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
       toneView: theme.toneData()
     };
   },
@@ -84,8 +82,7 @@ Page({
       banner: theme.bannerSrc(),
       groups: theme.groups(),
       ownSet: swatch.set,
-      ownLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
-      toneLocked: !theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0]),
+      toneLocked: !theme.reachable(theme.OWN_KEY),
       toneView: theme.toneData()
     });
   },

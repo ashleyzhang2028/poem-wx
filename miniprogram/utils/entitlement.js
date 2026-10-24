@@ -111,6 +111,10 @@ function switchedOff(key) {
   return !!(s && s[key] === false);
 }
 
+function reachable(tier, now) {
+  return rankOf(tier) > rankOf(now);
+}
+
 function can(key) {
   const cap = CAPS.find((c) => c.key === key);
   if (!cap) return false;
@@ -408,6 +412,7 @@ module.exports = {
   tierOf,
   status,
   snapshot,
+  reachable,
   can,
   hint,
   loggedIn,

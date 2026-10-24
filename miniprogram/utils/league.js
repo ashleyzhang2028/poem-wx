@@ -29,4 +29,8 @@ function tier() {
   return entitlement.tierOf(CAP);
 }
 
-module.exports = { CAP, canJoin, optedIn, canSwitch, switched, setOn, tier };
+function locked() {
+  return !canSwitch() && entitlement.reachable(tier(), entitlement.status().tier);
+}
+
+module.exports = { CAP, canJoin, optedIn, canSwitch, switched, setOn, tier, locked };

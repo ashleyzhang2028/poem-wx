@@ -24,8 +24,8 @@
           <text class="mode-desc">{{item.desc}}</text>
         </view>
         <view class="mode-side">
-          <tier-tag wx:if="{{!item.ok}}" tier="{{item.tier}}" />
-          <text class="mode-go">{{item.ok ? '开始' : '未开放'}}</text>
+          <tier-tag wx:if="{{item.locked}}" tier="{{item.tier}}" />
+          <text class="mode-go">{{item.ok || item.locked ? '开始' : '未开放'}}</text>
         </view>
       </view>
     </view>

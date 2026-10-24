@@ -44,10 +44,15 @@ Page({
     }
 
     const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? feedback.read(m.best) : null));
-    const cards = MODES.map((m, i) => Object.assign({}, m, {
-      ok: entitlement.can(CAP[m.key]),
-      bestText: boxes[i] ? boxes[i].rank.name : ""
-    }));
+    const now = entitlement.status().tier;
+    const cards = MODES.map((m, i) => {
+      const ok = entitlement.can(CAP[m.key]);
+      return Object.assign({}, m, {
+        ok,
+        locked: !ok && entitlement.reachable(m.tier, now),
+        bestText: boxes[i] ? boxes[i].rank.name : ""
+      });
+    });
     const top = topRank(boxes);
     this.setData({
       locked: false,

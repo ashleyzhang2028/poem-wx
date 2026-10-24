@@ -1,16 +1,28 @@
-const tiers = require("../../utils/tiers");
+const tag = require("../../utils/tier-tag");
+const entitlement = require("../../utils/entitlement");
 
 Component({
   properties: {
     tier: { type: String, value: "pro" }
   },
 
-  data: { text: "Pro 起" },
+  data: { text: "", show: false },
 
   observers: {
     tier(v) {
-      const key = tiers.isTier(v) ? v : "pro";
-      this.setData({ text: tiers.nameOf(key) + " 起" });
+      this.setData({ text: tag.textOf(v), show: tag.shown(v, this.currentTier()) });
+    }
+  },
+
+  pageLifetimes: {
+    show() {
+      this.setData({ show: tag.shown(this.data.tier, this.currentTier()) });
+    }
+  },
+
+  methods: {
+    currentTier() {
+      return entitlement.status().tier;
     }
   }
 });

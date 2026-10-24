@@ -79,6 +79,7 @@ Page({
     this.setData({
       on: entitlement.can("collections"),
       tier: entitlement.tierOf("collections"),
+      tierLocked: entitlement.reachable(entitlement.tierOf("collections"), entitlement.status().tier),
       cap: cols.capOf(),
       count: list.length,
       collections: rows,

@@ -353,6 +353,10 @@ function tier() {
   return entitlement.tierOf(CAP);
 }
 
+function locked() {
+  return !canSwitch() && entitlement.reachable(tier(), entitlement.status().tier);
+}
+
 function tagOf(hit) {
   return (KIND_NAME[hit.kind] || "") + " · " + hit.key;
 }
@@ -385,6 +389,7 @@ module.exports = {
   currentKey,
   isOn,
   canSwitch,
+  locked,
   switched,
   setOn,
   tier,
