@@ -378,6 +378,15 @@ function manifest() {
   return manifestCache;
 }
 
+function textsRev() {
+  return String(manifest().v || "");
+}
+
+function dropStaleShards() {
+  if (!textsRev()) return;
+  dropOldShardKeys();
+}
+
 const PROBE_KEY = "kb_probe_v1";
 
 let probeCache = null;
@@ -435,18 +444,41 @@ function bucket(name) {
   return bucketCache[name];
 }
 
-const SHARD_CACHE_KEY = "shards";
+const SHARD_CACHE_PREFIX = "shards";
 const SHARD_CACHE_MAX = 40;
 
 let shardBox = null;
 let shardBoxWx = null;
+let shardBoxKey = "";
+
+function textsRev() {
+  return String(manifest().v || "");
+}
+
+function shardCacheKey() {
+  const rev = textsRev();
+  return rev ? SHARD_CACHE_PREFIX + ":" + rev : SHARD_CACHE_PREFIX;
+}
+
+function dropOldShardKeys() {
+  try {
+    const keys = wx.getStorageInfoSync().keys || [];
+    keys.forEach((k) => {
+      if (k.indexOf(SHARD_CACHE_PREFIX + ":") === 0 && k !== shardCacheKey()) wx.removeStorageSync(k);
+    });
+  } catch (e) {
+    return;
+  }
+}
 
 function shardCache() {
-  if (shardBox && shardBoxWx === wx) return shardBox;
+  const key = shardCacheKey();
+  if (shardBox && shardBoxWx === wx && shardBoxKey === key) return shardBox;
   const store = require("./store");
-  const raw = store.read(SHARD_CACHE_KEY, {});
+  const raw = store.read(key, {});
   shardBox = raw && typeof raw === "object" ? raw : {};
   shardBoxWx = wx;
+  shardBoxKey = key;
   return shardBox;
 }
 
@@ -460,11 +492,12 @@ function saveShard(name, payload) {
     keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
   }
   all[name] = { at: Date.now(), data: payload };
-  if (store.write(SHARD_CACHE_KEY, all)) return;
+  if (store.write(shardCacheKey(), all)) return;
   delete all[name];
   if (shardBox === all) {
     shardBox = null;
     shardBoxWx = null;
+    shardBoxKey = "";
   }
 }
 
@@ -577,9 +610,10 @@ function forgetText(id) {
   const all = shardCache();
   if (!all[name]) return;
   delete all[name];
-  if (require("./store").write(SHARD_CACHE_KEY, all)) return;
+  if (require("./store").write(shardCacheKey(), all)) return;
   shardBox = null;
   shardBoxWx = null;
+  shardBoxKey = "";
 }
 
 function entries(ids) {
@@ -703,6 +737,8 @@ module.exports = {
   courseTexts,
   withTranslation,
   manifest,
+  textsRev,
+  dropStaleShards,
   bucketOf,
   bucket,
   ensureBucket,

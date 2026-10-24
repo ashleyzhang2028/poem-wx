@@ -1,5 +1,6 @@
 "use strict";
 
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
@@ -147,6 +148,14 @@ function main() {
   console.log("正文分片 " + Object.keys(texts).length + " 条走云端");
 }
 
+function textHash(texts) {
+  const h = crypto.createHash("sha1");
+  Object.keys(texts).sort().forEach(function (id) {
+    h.update(id + "\u0000" + JSON.stringify(texts[id]) + "\u0001");
+  });
+  return h.digest("hex").slice(0, 12);
+}
+
 function writeBuckets(texts) {
   const dir = path.join(OUT_DIR, "texts");
   fs.rmSync(dir, { recursive: true, force: true });
@@ -189,7 +198,7 @@ function writeBuckets(texts) {
     manifest.push({ n: name, c: ids.length, kb: Math.round(fs.statSync(file).size / 1024) });
   });
 
-  writeModule(path.join(OUT_DIR, "shards.js"), { buckets: manifest, map: map });
+  writeModule(path.join(OUT_DIR, "shards.js"), { v: textHash(texts), buckets: manifest, map: map });
 
   const total = manifest.reduce(function (a, b) { return a + b.kb; }, 0);
   console.log("正文分片 " + manifest.length + " 个，" + total + "KB（未压缩）");
