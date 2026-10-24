@@ -50,57 +50,48 @@
     </view>
 
     <view class="tone {{toneLocked ? 'locked' : ''}}">
-      <view class="tone-row">
+      <view class="tone-fold">
+        <text class="tone-read">{{toneView.toneRgba || 'r, g, b, a'}}</text>
+        <view class="tone-chip {{toneView.toneOn ? 'on' : ''}}" hover-class="none" bindtap="onToneReset">
+          <view class="tone-chip-dot"></view>
+          <text class="tone-chip-reset">恢复</text>
+        </view>
         <input class="tone-input" type="text" maxlength="7" value="{{toneView.toneHex}}"
                placeholder="#8C2F2D" placeholder-class="tone-input-ph"
                confirm-type="done" bindinput="onToneHex" bindconfirm="onToneHex" bindblur="onToneHex" />
-        <text class="tone-clear {{toneView.toneOn ? 'on' : ''}}" hover-class="none" bindtap="onToneReset">清掉</text>
-      </view>
-
-      <view class="tone-preview" hover-class="tone-preview-hover" hover-stay-time="60"
-            data-hex="{{toneView.toneHex}}" bindtap="onToneTap">
-        <text class="tone-preview-title">标题与按钮</text>
-        <text class="tone-preview-btn">这个色</text>
-        <text class="tone-preview-read">{{toneView.toneRead || '滑动下面的色带'}}</text>
       </view>
 
       <view class="tone-axis">
         <text class="tone-label">色相</text>
         <view class="tone-slider">
           <view class="tone-band" id="tone-hue" style="background: linear-gradient(90deg, {{toneView.toneHue}})" data-axis="hue"
-                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag">
+                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag" bindtouchcancel="onToneDrag">
             <view class="tone-mark" style="left: {{toneView.toneHueAt}}%"></view>
           </view>
         </view>
-        <view class="tone-value">
-          <text class="tone-value-num">{{toneView.toneHueRead}}</text>
-        </view>
+        <text class="tone-value">{{toneView.toneHueRead}}</text>
       </view>
 
       <view class="tone-axis">
         <text class="tone-label">饱和</text>
         <view class="tone-slider">
           <view class="tone-band" id="tone-sat" style="background: linear-gradient(90deg, {{toneView.toneSat}})" data-axis="sat"
-                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag">
+                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag" bindtouchcancel="onToneDrag">
             <view class="tone-mark" style="left: {{toneView.toneSatAt}}%"></view>
           </view>
         </view>
-        <view class="tone-value">
-          <text class="tone-value-num">{{toneView.toneSatRead}}</text>
-        </view>
+        <text class="tone-value">{{toneView.toneSatRead}}</text>
       </view>
 
       <view class="tone-axis">
         <text class="tone-label">明度</text>
         <view class="tone-slider">
           <view class="tone-band" id="tone-light" style="background: linear-gradient(90deg, {{toneView.toneLight}})" data-axis="light"
-                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag">
+                bindtouchstart="onToneDrag" bindtouchmove="onToneDrag" bindtouchend="onToneDrag" bindtouchcancel="onToneDrag">
             <view class="tone-mark" style="left: {{toneView.toneLightAt}}%"></view>
           </view>
         </view>
-        <view class="tone-value">
-          <text class="tone-value-num">{{toneView.toneLightRead}}</text>
-        </view>
+        <text class="tone-value">{{toneView.toneLightRead}}</text>
       </view>
     </view>
   </view>

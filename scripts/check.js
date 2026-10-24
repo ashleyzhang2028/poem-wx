@@ -3694,6 +3694,7 @@ function mountFull(pg, query) {
     path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
   const themePageJs = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const themeUtilsJs = fs.readFileSync(path.join(ROOT, "utils", "theme.js"), "utf8");
   const themePageJson = JSON.parse(fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.json"), "utf8"));
   const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
@@ -3829,11 +3830,11 @@ function mountFull(pg, query) {
       && picker(lit).light === 100 && Math.abs(picker(lit).hue - here.hue) <= 4,
     "拖到中点取到 " + dragged + "，拖到最左取到 " + grayed + "，拖到最右取到 " + lit);
 
-  ok("顶上的预览就是已应用的主题色：点一下那一块，落进 toneColor 的还是它",
-    themePageWxml.indexOf('class="tone-preview"') >= 0
-      && /class="tone-preview"[^>]*bindtap="onToneTap"/.test(themePageWxml)
-      && /onToneTap\([\s\S]{0,600}?tone\.set\(hex\)/.test(themePageJs),
-    "预览块点下去没接到 tone.set");
+  const dragBody = (themePageJs.split("onToneDrag(e) {")[1] || "").split("onToneHex(e) {")[0];
+  ok("拖色带当场落到 toneColor 并重算整页样式（不是等松手才反应）",
+    /tone\.set\(hex\)[\s\S]{0,80}?this\.paint\(\)/.test(dragBody)
+      && /function apply\(page\) \{[\s\S]{0,120}?page\.setData\(\{ theme: key, themeStyle: style\(key\) \}\)/.test(themeUtilsJs),
+    "拖动的处理里没有 tone.set + paint，色只在你松手那一刻才认");
 
   store.saveSettings({ toneColor: "" });
   const blank = pickerMod.read("");
