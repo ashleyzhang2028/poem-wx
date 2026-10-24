@@ -1,7 +1,7 @@
 const store = require("./store");
 const sfx = require("./sfx");
 
-const KEYS = { quiz: "kb_game_quiz_v1", exam: "kb_game_exam_v1", feihua: "kb_game_feihua_v1" };
+const KEYS = { exam: "kb_game_exam_v1", feihua: "kb_game_feihua_v1" };
 
 const RANKS = [
   { from: 100, name: "状元", note: "一字不差，这一场没有可挑的" },
