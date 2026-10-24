@@ -17,8 +17,8 @@ function recordQuota() {
 }
 
 function collectionQuota() {
-  return "Pro " + COLLECTION_LIMITS.pro + " 个 / Max " + COLLECTION_LIMITS.max
-    + " 个，每个最多 " + COLLECTION_ITEMS_MAX + " 首";
+  return "Pro 用户支持 " + COLLECTION_LIMITS.pro + " 个自定义集合，每个集合 " + COLLECTION_ITEMS_MAX
+    + " 首古诗词；升级到 Max 可以创建 " + COLLECTION_LIMITS.max + " 个集合";
 }
 
 const TIER_KEYS = TIERS.map((t) => t.key);
