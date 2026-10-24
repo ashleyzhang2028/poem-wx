@@ -1,4 +1,6 @@
 <view class="card identity id-card tier-{{tierKey}}" wx:if="{{logged}}">
+  <view class="id-crest" wx:if="{{tierKey !== 'free'}}"
+        style="mask-image:url('{{crest}}');-webkit-mask-image:url('{{crest}}');"></view>
   <view class="id-top">
     <text class="id-kind">{{kindText}}</text>
     <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
@@ -20,6 +22,8 @@
       <text class="identity-sub">已登录 · 微信账号</text>
     </view>
   </view>
+
+  <text class="id-motto poem">{{motto}}</text>
 
   <view class="id-foot">
     <view class="id-valid">

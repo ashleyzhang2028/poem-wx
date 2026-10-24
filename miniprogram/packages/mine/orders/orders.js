@@ -12,7 +12,9 @@ function view(o) {
     statusText: pay.statusName(o.status),
     timeText: pay.timeText(o.paidAt || o.createdAt),
     untilText: o.planUntilAfter ? pay.dateText(o.planUntilAfter) : "",
-    wxOrderId: o.wxOrderId
+    wxOrderId: o.wxOrderId,
+    pending: o.status === "pending",
+    removable: o.status === "pending" || o.status === "canceled"
   };
 }
 
@@ -24,6 +26,7 @@ Page({
     plan: null,
     loaded: false,
     failed: false,
+    busy: false,
     list: []
   },
 
@@ -56,6 +59,44 @@ Page({
   onCopy(e) {
     const id = e.currentTarget.dataset.id;
     if (id) wx.setClipboardData({ data: id });
+  },
+
+  onResume(e) {
+    this.run("正在拉起支付", (id) => pay.resume(id).then((res) => {
+      if (!res.ok) wx.showModal({ title: "没有完成支付", content: res.reason, showCancel: false });
+      return res;
+    }), e);
+  },
+
+  onCancel(e) {
+    this.confirmThen("取消订单", "取消后这笔订单不能再支付。", "cancel", e);
+  },
+
+  onRemove(e) {
+    this.confirmThen("删除订单", "删除后这笔订单不再显示。", "delete", e);
+  },
+
+  confirmThen(title, content, op, e) {
+    wx.showModal({
+      title: title,
+      content: content,
+      success: (r) => {
+        if (r.confirm) this.run(title, (id) => pay.manage(op, id), e);
+      }
+    });
+  },
+
+  run(loading, action, e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id || this.data.busy) return;
+    this.setData({ busy: true });
+    wx.showLoading({ title: loading, mask: true });
+    action(id).then((res) => {
+      wx.hideLoading();
+      this.setData({ busy: false });
+      if (!res.ok && res.reason) wx.showToast({ title: res.reason, icon: "none" });
+      this.load();
+    });
   },
 
   onPricing() {

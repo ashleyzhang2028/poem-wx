@@ -3,8 +3,6 @@ const theme = require("../../utils/theme");
 
 const ZOOM_STEP = 1.3;
 
-const MIN_SPAN = 0.24;
-
 const C = "crop";
 
 const RATIO_W = custom.RATIO_W;
@@ -87,7 +85,8 @@ function define() {
         const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
         const stage = stageOf({ width: win.windowWidth, height: win.windowHeight }, this.photo);
         this.base = stage.base;
-        this.span = 1 / this.base;
+        this.span = 1;
+        this.maxSpan = Math.max(1, 1 / this.base);
         this.setData({ stageW: stage.stageW, stageH: stage.stageH }, () => this.lay());
       },
 
@@ -97,6 +96,7 @@ function define() {
         const p = this.photo;
         const sw = this.data.stageW, sh = this.data.stageH;
         if (!p || !sw || !this.base) return;
+        this.span = clamp(this.span, 1, this.maxSpan);
         const k = this.base * this.span;
         const w = p.w * k, h = p.h * k;
         const x = clamp((sw - w) / 2 + this.offset.x, sw - w, 0);
@@ -107,7 +107,7 @@ function define() {
 
       zoom(factor) {
         if (!this.photo) return;
-        this.span = clamp(this.span * factor, MIN_SPAN / this.base, 1 / this.base);
+        this.span *= factor;
         this.laying = true;
         this.lay();
       },
@@ -179,7 +179,7 @@ function define() {
           sw: this.data.stageW / w,
           sh: this.data.stageH / h
         };
-        custom.put(this.pick.path, this.photo, this, C, box, this.span * this.base).then((r) => {
+        custom.put(this.pick.path, this.photo, this, C, box).then((r) => {
           this.setData({ busy: false });
           if (r.ok) this.close();
           this.triggerEvent("done", r);

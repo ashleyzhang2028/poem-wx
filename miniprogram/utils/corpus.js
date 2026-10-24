@@ -1,11 +1,19 @@
 const CLAUSE_SPLIT = /[\n，。！？；：、]/;
 
+const CLOSING = /[」』”’）》〉]/;
+
+function isClauseEnd(ch, next) {
+  return CLAUSE_SPLIT.test(ch) && !CLOSING.test(next);
+}
+
 function splitClauses(line) {
 
   const s = [];
+  const chars = Array.from(String(line));
   let buf = "";
-  for (const ch of String(line)) {
-    if (CLAUSE_SPLIT.test(ch)) {
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (isClauseEnd(ch, chars[i + 1] || "")) {
       const cl = (buf + ch).trim();
       if (cl) s.push(cl);
       buf = "";
@@ -24,10 +32,11 @@ function splitDisplay(text) {
     .map((line) => line.trim())
     .filter(Boolean)
     .forEach((line) => {
+      const chars = Array.from(line);
       let buf = "";
-      for (const ch of line) {
-        buf += ch;
-        if (CLAUSE_SPLIT.test(ch)) {
+      for (let i = 0; i < chars.length; i++) {
+        buf += chars[i];
+        if (isClauseEnd(chars[i], chars[i + 1] || "")) {
           rows.push(buf);
           buf = "";
         }
@@ -378,6 +387,11 @@ function manifest() {
   return manifestCache;
 }
 
+function dropStaleShards() {
+  if (!textsRev()) return;
+  dropOldShardKeys();
+}
+
 const PROBE_KEY = "kb_probe_v1";
 
 let probeCache = null;
@@ -435,18 +449,41 @@ function bucket(name) {
   return bucketCache[name];
 }
 
-const SHARD_CACHE_KEY = "shards";
+const SHARD_CACHE_PREFIX = "shards";
 const SHARD_CACHE_MAX = 40;
 
 let shardBox = null;
 let shardBoxWx = null;
+let shardBoxKey = "";
+
+function textsRev() {
+  return String(manifest().v || "");
+}
+
+function shardCacheKey() {
+  const rev = textsRev();
+  return rev ? SHARD_CACHE_PREFIX + ":" + rev : SHARD_CACHE_PREFIX;
+}
+
+function dropOldShardKeys() {
+  try {
+    const keys = wx.getStorageInfoSync().keys || [];
+    keys.forEach((k) => {
+      if (k.indexOf(SHARD_CACHE_PREFIX + ":") === 0 && k !== shardCacheKey()) wx.removeStorageSync(k);
+    });
+  } catch (e) {
+    return;
+  }
+}
 
 function shardCache() {
-  if (shardBox && shardBoxWx === wx) return shardBox;
+  const key = shardCacheKey();
+  if (shardBox && shardBoxWx === wx && shardBoxKey === key) return shardBox;
   const store = require("./store");
-  const raw = store.read(SHARD_CACHE_KEY, {});
+  const raw = store.read(key, {});
   shardBox = raw && typeof raw === "object" ? raw : {};
   shardBoxWx = wx;
+  shardBoxKey = key;
   return shardBox;
 }
 
@@ -460,11 +497,12 @@ function saveShard(name, payload) {
     keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
   }
   all[name] = { at: Date.now(), data: payload };
-  if (store.write(SHARD_CACHE_KEY, all)) return;
+  if (store.write(shardCacheKey(), all)) return;
   delete all[name];
   if (shardBox === all) {
     shardBox = null;
     shardBoxWx = null;
+    shardBoxKey = "";
   }
 }
 
@@ -507,7 +545,7 @@ function ensureBucket(name) {
   const remote = require("./remote");
   if (!remote.shardReady()) return Promise.reject(shardError("E_NO_SHARD_SERVICE", "分片服务没接上"));
 
-  return remote.shard(name).then(function (data) {
+  return remote.shard(name, textsRev()).then(function (data) {
     const payload = (data && data.t) || data || {};
     if (!payload || !Object.keys(payload).length) throw shardError("E_EMPTY_SHARD", "这一片是空的");
     armBucket(name, payload);
@@ -523,10 +561,18 @@ function ensureEntry(id) {
   const name = bucketOf(id);
   if (!name) return Promise.reject(shardError("E_NO_ENTRY", "分片清单里没有这一条：" + id));
 
-  return ensureBucket(name).then(function (r) {
+  const take = function (r) {
     const hit = r.data[id] || null;
-    if (!hit || !hit.text) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
-    return arm(indexById(id), hit) || hit;
+    return hit && hit.text ? { hit: hit, from: r.from } : { hit: null, from: r.from };
+  };
+
+  return ensureBucket(name).then(take).then(function (got) {
+    if (got.hit || got.from === "remote") return got;
+    forgetText(id);
+    return ensureBucket(name).then(take);
+  }).then(function (got) {
+    if (!got.hit) throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
+    return arm(indexById(id), got.hit) || got.hit;
   });
 }
 
@@ -577,9 +623,10 @@ function forgetText(id) {
   const all = shardCache();
   if (!all[name]) return;
   delete all[name];
-  if (require("./store").write(SHARD_CACHE_KEY, all)) return;
+  if (require("./store").write(shardCacheKey(), all)) return;
   shardBox = null;
   shardBoxWx = null;
+  shardBoxKey = "";
 }
 
 function entries(ids) {
@@ -703,6 +750,8 @@ module.exports = {
   courseTexts,
   withTranslation,
   manifest,
+  textsRev,
+  dropStaleShards,
   bucketOf,
   bucket,
   ensureBucket,

@@ -991,6 +991,26 @@ const rebuild = Object.keys(corpus.courseTexts()).every((k) => {
     String(raw).split("\n").map((l) => l.split(/[\s]/).join("")).join("");
 });
 ok("全部课内正文切句后拼得回原文", rebuild);
+const quotedTail = splitLines("苏子曰：「客亦知夫水与月乎？」");
+ok("切句不把收尾引号切成单独一句（「」里的句号算在引语内）",
+  quotedTail[0].s.join("") === "苏子曰：「客亦知夫水与月乎？」"
+    && quotedTail[0].s[quotedTail[0].s.length - 1] === "「客亦知夫水与月乎？」",
+  JSON.stringify(quotedTail[0].s));
+{
+  const unpaired = [];
+  allEntries.forEach((p) => {
+    const e = corpus.entry(p.id);
+    if (!e || !e.text) return;
+    let depth = 0;
+    for (const ch of e.text) {
+      if (ch === "\u300c") depth++;
+      else if (ch === "\u300d") depth--;
+    }
+    if (depth !== 0) unpaired.push(p.id + ":" + depth);
+  });
+  ok("整库正文的「」成对（引语不漏收尾引号）", !unpaired.length,
+    unpaired.slice(0, 5).join(" "));
+}
 ok("splitLines 保留空行", splitLines("a\n\nb").length === 3 && splitLines("a\n\nb")[1].s.length === 0);
 ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null).length === 1);
 
@@ -3519,19 +3539,15 @@ function mountFull(pg, query) {
 
   const WANT = [
     ["daiqing", "黛青", [2, 54, 51], "tradition"],
-    ["qinglv", "青绿", [46, 106, 103], "tradition"],
     ["muse", "暮色", [79, 96, 114], "tradition"],
     ["nuahui", "暖灰", [164, 86, 104], "tradition"],
-    ["qingwa", "青瓦", [74, 100, 96], "tradition"],
     ["mich", "米褐", [126, 101, 84], "tradition"],
     ["shilv", "石绿", [108, 127, 79], "tradition"],
-    ["mohong", "墨红", [140, 47, 45], "tradition"],
-    ["wulan", "雾蓝", [96, 126, 149], "tradition"],
     ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
-    ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
-    ["qingmingshanghetu", "开封上河图", [2, 54, 51], "landscape"],
+    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
@@ -3550,7 +3566,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 24 项（十二个传统色 + 十二张大好河山）",
+  ok("清单就是这 20 项（八个传统色 + 十二张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
@@ -3680,6 +3696,7 @@ function mountFull(pg, query) {
     path.join(ROOT, "packages", "settings", "theme", "theme.wxml"), "utf8");
   const themePageJs = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.js"), "utf8");
+  const themeUtilsJs = fs.readFileSync(path.join(ROOT, "utils", "theme.js"), "utf8");
   const themePageJson = JSON.parse(fs.readFileSync(
     path.join(ROOT, "packages", "settings", "theme", "theme.json"), "utf8"));
   const ownGroup = () => themeMod.groups().filter((g) => g.key === themeMod.OWN)[0];
@@ -3719,15 +3736,19 @@ function mountFull(pg, query) {
         && art.sw === 500 && art.sh === 500,
       "截出来的比例不是 " + custom.RATIO_W + "×" + custom.RATIO_H + "，铺到 banner 上会被裁掉一截");
 
+    const art2 = custom.artOf({ w: 1000, h: 2000 }, { sx: 0, sy: 0, sw: 1, sh: 1 }, 4);
+    ok("长宽比 1:2 的照片截完仍在一条 key 装得下的尺寸里",
+      art2.width <= custom.WIDTH && Math.abs(art2.width * custom.RATIO_H / custom.RATIO_W - art2.height) <= 1,
+      "落出来的边长 " + art2.width + "×" + art2.height);
   }
 
   tierAs("max");
-  store.saveSettings({ banner: custom.IMAGE + "AAAA", theme: themeMod.OWN_KEY });
+  store.saveSettings({ banner: custom.JPEG + "AAAA", theme: themeMod.OWN_KEY });
   ok("Max 手上那项亮着，选的自定义题图真的落到 banner 上",
     E.can("ownbanner") === true
       && ownGroup().locked === false
       && themeMod.current() === themeMod.OWN_KEY
-      && themeMod.bannerSrc().indexOf(custom.IMAGE) === 0,
+      && themeMod.bannerSrc().indexOf(custom.JPEG) === 0,
     themeMod.current() + " / " + themeMod.bannerSrc().slice(0, 24));
 
   store.saveSettings({ toneColor: "#2E6A67" });
@@ -3815,11 +3836,11 @@ function mountFull(pg, query) {
       && picker(lit).light === 100 && Math.abs(picker(lit).hue - here.hue) <= 4,
     "拖到中点取到 " + dragged + "，拖到最左取到 " + grayed + "，拖到最右取到 " + lit);
 
-  ok("顶上的预览就是已应用的主题色：点一下那一块，落进 toneColor 的还是它",
-    themePageWxml.indexOf('class="tone-preview"') >= 0
-      && /class="tone-preview"[^>]*bindtap="onToneTap"/.test(themePageWxml)
-      && /onToneTap\([\s\S]{0,600}?tone\.set\(hex\)/.test(themePageJs),
-    "预览块点下去没接到 tone.set");
+  const dragBody = (themePageJs.split("onToneDrag(e) {")[1] || "").split("onToneHex(e) {")[0];
+  ok("拖色带当场落到 toneColor 并重算整页样式（不是等松手才反应）",
+    /tone\.set\(hex\)[\s\S]{0,80}?this\.paint\(\)/.test(dragBody)
+      && /function apply\(page\) \{[\s\S]{0,120}?page\.setData\(\{ theme: key, themeStyle: style\(key\) \}\)/.test(themeUtilsJs),
+    "拖动的处理里没有 tone.set + paint，色只在你松手那一刻才认");
 
   store.saveSettings({ toneColor: "" });
   const blank = pickerMod.read("");
@@ -4787,6 +4808,20 @@ function mountFull(pg, query) {
     ok("真跑 300 轮出题：题干按句读拆成多行，逗号也断，拼回等于原句（上限内）",
       !unbroken.length && maxAnswer > 0 && maxAnswer <= capN,
       "没拆开的 " + unbroken.length + " 条，例如 " + JSON.stringify(unbroken.slice(0, 3)));
+
+    const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+    const punctOnly = [];
+    scopeMod.list().forEach((s) => {
+      for (let round = 0; round < 40; round++) {
+        quizMod.build({ count: 10, forms: quizMod.FORM_KEYS, scope: s.id }).forEach((q) => {
+          q.options.forEach((o) => {
+            if (!quizMod.usable(o.text)) punctOnly.push(s.id + ":" + q.form + ":" + o.text);
+          });
+        });
+      }
+    });
+    ok("整库每种题型真跑一遍：没有一个选项只剩标点",
+      !punctOnly.length, JSON.stringify(punctOnly.slice(0, 5)));
 
     const course = readModule(path.join(dataDir, "course.js"));
     const proseIds = Object.keys(course).filter((id) => String(course[id].text).length > 100);
@@ -8258,6 +8293,62 @@ function gapped(items, max) {
     ok("退款推送：回收那一单的时长", (await store.getAccount("u1")).plan_until === now + payMod.PERIOD_MS.d30,
       "退款之后会员时长还在");
 
+    const open = await payMod.payOrder(deps(), { plan: "pro", period: "d90", code: "c" });
+    const openNo = open.body.outTradeNo;
+    const manage = (op, extra, uid) => payMod.payManage(deps(uid), Object.assign({ op, outTradeNo: openNo }, extra));
+    const resumed = await manage("resume", { code: "c" });
+    ok("待支付订单：继续支付另起新单号（单号不复用），旧单作废，别人的单 404",
+      resumed.status === 200 && resumed.body.outTradeNo !== openNo
+        && JSON.parse(resumed.body.payData.signData).outTradeNo === resumed.body.outTradeNo
+        && (await store.getPayOrder(openNo)).status === "canceled"
+        && (await manage("cancel", {}, "u2")).status === 404, "继续支付复用了旧单号、旧单还开着，或能动别人的订单");
+    ok("订单：作废的单不能再继续支付，已支付的单不能取消也不能删除",
+      (await manage("resume", { code: "c" })).status === 409
+        && (await payMod.payManage(deps(), { op: "cancel", outTradeNo: renew.body.outTradeNo })).status === 409
+        && (await payMod.payManage(deps(), { op: "delete", outTradeNo: renew.body.outTradeNo })).status === 409, "作废的单还能付，或已付的单被取消、删除");
+    ok("未完成订单：删除后不再出现在支付记录里",
+      (await manage("delete", {})).status === 200
+        && (await payMod.payOrdersMine(deps(), {})).body.orders.every((o) => o.outTradeNo !== openNo), "删除的订单还在列表里");
+    await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
+      OutTradeNo: openNo, GoodsInfo: { ProductId: "pro_90", OrderFee: 3500 } }) });
+    ok("取消或删除之后才到的支付推送照常发货（不收钱不发货）",
+      (await store.getPayOrder(openNo)).status === "paid", "已付款的订单因为本地取消而没发货");
+
+    const proUntil = now + 20 * 86400000;
+    const upgraded = async (uid, tag) => {
+      await store.putAccount({ uid: uid, email: uid + "@b.c", plan: "pro", plan_until: proUntil, role: "user", status: "active", created_at: 1 });
+      await store.putPayOrder({ out_trade_no: "P" + tag, uid: uid, openid: "O" + tag, product_id: "pro_30", plan: "pro", period: "d30",
+        price_cents: 1500, status: "paid", applied: 1, plan_after: "pro", plan_until_after: proUntil,
+        created_at: now - 10 * 86400000, paid_at: now - 10 * 86400000 });
+      await store.putPayOrder({ out_trade_no: "M" + tag, uid: uid, openid: "OID", product_id: "max_30", plan: "max", period: "d30",
+        price_cents: 2900, status: "pending", applied: 0, created_at: now, paid_at: null });
+      await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
+        OutTradeNo: "M" + tag, GoodsInfo: { ProductId: "max_30", OrderFee: 2900 } }) });
+    };
+    const refund = (tag) => payMod.payNotify(deps(), { method: "POST", query, body: { Event: "xpay_refund_notify", OutTradeNo: tag } });
+    await store.putAccount({ uid: "u3", email: "c@b.c", plan: "pro", plan_until: proUntil, role: "user", status: "active", created_at: 1 });
+    await store.putPayOrder({ out_trade_no: "P3", uid: "u3", openid: "O3", product_id: "pro_30", plan: "pro", period: "d30",
+      price_cents: 1500, status: "paid", applied: 1, created_at: now - 10 * 86400000, paid_at: now - 10 * 86400000 });
+    const offer = (await payMod.payCatalog(deps("u3"))).body.upgrade;
+    ok("Pro 升 Max：按 Pro 实付价折算剩余天数",
+      offer && offer.proLeftDays === 20 && offer.bonus.d30 === 10 && offer.bonus.d365 === 18, "折算天数与实付价对不上");
+    await upgraded("u4", "4");
+    ok("Pro 升 Max：Max 到期 = 购买时刻 + 所买时长 + 折算赠送天数",
+      (await store.getAccount("u4")).plan_until === now + payMod.PERIOD_MS.d30 + 10 * 86400000, "升级没有顺延折算天数");
+    await refund("M4");
+    const afterMax = await store.getAccount("u4");
+    ok("退款 Max：回到 Pro，到期日是原 Pro 的到期日，赠送天数一并收回",
+      afterMax.plan === "pro" && afterMax.plan_until === proUntil, "退了 Max 还留着 Max 或赠送天数");
+    await refund("P4");
+    ok("再退 Pro：回到 Free", (await store.getAccount("u4")).plan === "free", "两单都退了还有会员");
+    await upgraded("u5", "5");
+    await refund("P5");
+    const maxOnly = await store.getAccount("u5");
+    ok("先退 Pro：Max 保留，但折算赠送天数收回",
+      maxOnly.plan === "max" && maxOnly.plan_until === now + payMod.PERIOD_MS.d30, "先退 Pro 之后赠送天数还在");
+    await refund("M5");
+    ok("再退 Max：回到 Free", (await store.getAccount("u5")).plan === "free", "两单都退了还有会员");
+
     ok("沙箱环境用沙箱 AppKey，现网用现网 AppKey（两把钥匙不混用）",
       baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 1 }) === "s"
         && baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 0 }) === "p",
@@ -8276,8 +8367,9 @@ function gapped(items, max) {
 
   const appJsonPay = JSON.parse(read("app.json"));
   const subPages = [].concat.apply([], appJsonPay.subPackages.map((sp) => sp.pages.map((pg) => sp.root + "/" + pg)));
-  ok("定价页、支付记录页、后台支付页都登记在 app.json",
-    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay"].every((pg) => subPages.indexOf(pg) >= 0),
+  ok("定价页、支付记录页、后台支付页与购买记录子页都登记在 app.json",
+    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay",
+      "packages/admin/pay-orders/pay-orders"].every((pg) => subPages.indexOf(pg) >= 0),
     "页面没登记，navigateTo 会找不到");
   ok("权限页有进定价页与支付记录页的处理函数",
     /onPricing\(/.test(read("components/tier-view/tier-view.js")) && /onOrders\(/.test(read("components/tier-view/tier-view.js")),

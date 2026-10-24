@@ -6,6 +6,12 @@ const TIERS = [
 
 const DEFAULT_TIER = "free";
 
+const MOTTOS = {
+  free: { verse: "青青子衿，悠悠我心", line: "初入长安，笔墨尚新" },
+  pro: { verse: "春风得意马蹄疾", line: "绯衣在身，一日看尽长安花" },
+  max: { verse: "会当凌绝顶", line: "紫袍金印，诗书满腹" }
+};
+
 const COLLECTION_LIMITS = { free: 0, pro: 1, max: 200 };
 
 const COLLECTION_ITEMS_MAX = 100;
@@ -30,6 +36,10 @@ function isTier(key) {
 function nameOf(key) {
   if (!isTier(key)) return "Free";
   return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function mottoOf(key) {
+  return MOTTOS[isTier(key) ? key : DEFAULT_TIER];
 }
 
 function tierOf(key) {
@@ -62,6 +72,7 @@ module.exports = {
   recordQuota,
   isTier,
   nameOf,
+  mottoOf,
   tierOf,
   strong,
   rank,

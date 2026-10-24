@@ -7,19 +7,34 @@
   <block wx:else>
     <text class="hint ap-note" wx:if="{{reason}}">{{reason}}</text>
 
-    <view class="card" wx:if="{{catalog}}">
-      <text class="card-title">价格与促销</text>
-      <text class="hint ap-note">价格必须与 MP 后台「道具管理」里的道具一致。促销：先在 MP 后台建促销价道具，下面添加后选择生效。</text>
+    <view class="card" wx:if="{{summary}}">
+      <text class="card-title">购买记录</text>
 
-      <picker wx:for="{{slots}}" wx:key="key" data-index="{{index}}" range="{{item.labels}}" bindchange="onPickActive">
-        <view class="row row-flush">
+      <view class="stats ap-stats">
+        <view class="stat">
+          <text class="stat-v">{{summary.count}}</text>
+          <text class="stat-k">全部笔数</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{summary.paid}}</text>
+          <text class="stat-k">已支付</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v"><text class="ap-amount">¥{{summary.paidText}}</text></text>
+          <text class="stat-k">合计金额</text>
+        </view>
+      </view>
+
+      <view class="ap-status">
+        <view class="row row-flush" wx:for="{{statusRows}}" wx:key="key"
+              hover-class="row-hover" hover-stay-time="60" data-key="{{item.key}}" bindtap="onStatus">
           <view class="row-main">
-            <text class="row-title">{{item.title}}</text>
-            <text class="row-sub">生效：{{item.activeText}}</text>
+            <text class="row-title">{{item.name}}</text>
+            <text class="row-sub">{{item.count}} 笔 · ¥{{item.text}}</text>
           </view>
           <text class="row-go">›</text>
         </view>
-      </picker>
+      </view>
     </view>
 
     <view class="card" wx:if="{{catalog}}">
@@ -37,34 +52,17 @@
       <button class="btn primary block" bindtap="onAddProduct">添加</button>
     </view>
 
-    <view class="card">
-      <text class="card-title">购买记录</text>
-      <text class="hint ap-note">共 {{summary.count}} 笔，已支付 {{summary.paidCount}} 笔，合计 ¥{{summary.paidText}}</text>
+    <view class="card" wx:if="{{catalog}}">
+      <text class="card-title">价格与促销</text>
+      <text class="hint ap-note">价格必须与 MP 后台「道具管理」里的道具一致。促销：先在 MP 后台建促销价道具，下面添加后选择生效。</text>
 
-      <view class="seg ap-filter">
-        <radio-group class="seg-group" bindchange="onFilter">
-          <label class="seg-item {{filter === item.key ? 'on' : ''}}" wx:for="{{filters}}" wx:key="key">
-            <radio class="seg-radio" value="{{item.key}}" checked="{{filter === item.key}}" />
-            <text class="seg-text">{{item.name}}</text>
-          </label>
-        </radio-group>
-      </view>
-
-      <view class="row ap-order" wx:for="{{orders}}" wx:key="outTradeNo">
-        <view class="row-main">
-          <view class="ap-order-head">
-            <text class="row-title">{{item.head}}</text>
-            <text class="tag {{item.statusTone}}">{{item.statusText}}</text>
+      <view class="ap-slots">
+        <picker wx:for="{{slots}}" wx:key="key" data-index="{{index}}" range="{{item.labels}}" bindchange="onPickActive">
+          <view class="ap-slot">
+            <text class="ap-slot-t">{{item.title}}</text>
+            <text class="ap-slot-v">{{item.activeText}}</text>
           </view>
-          <text class="row-sub ap-id" data-text="{{item.uid}}" bindtap="onCopy">uid {{item.uid}}</text>
-          <text class="row-sub ap-id" data-text="{{item.openid}}" bindtap="onCopy">openid {{item.openid}}</text>
-          <text class="row-sub ap-id" data-text="{{item.outTradeNo}}" bindtap="onCopy">业务单号 {{item.outTradeNo}}</text>
-          <text class="row-sub ap-id" wx:if="{{item.wxOrderId}}" data-text="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}</text>
-          <text class="row-sub">道具 {{item.productId}}{{item.source ? ' · 经' + item.source : ''}}</text>
-          <text class="row-sub">下单 {{item.createdText}}</text>
-          <text class="row-sub" wx:if="{{item.paidText}}">支付 {{item.paidText}}，会员至 {{item.untilText || '永久'}}</text>
-          <text class="row-sub" wx:if="{{item.refundedText}}">退款 {{item.refundedText}}</text>
-        </view>
+        </picker>
       </view>
     </view>
   </block>

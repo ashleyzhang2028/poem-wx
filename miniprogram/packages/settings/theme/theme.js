@@ -111,30 +111,23 @@ Page({
     if (!hex || hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
     tone.set(hex);
     this.paint();
-  },
-
-  onToneTap(e) {
-    if (this.toneBlocked()) return;
-    const hex = String(e.currentTarget.dataset.hex || "");
-    if (!tone.parseHex(hex)) {
-      wx.showToast({ title: "左右滑色带挑一个色", icon: "none" });
-      return;
-    }
-    if (hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
-    tone.set(hex);
-    this.claim();
+    if (e.type === "touchend" || e.type === "touchcancel") wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onToneHex(e) {
     if (this.toneBlocked()) return;
     const v = String(e.detail.value == null ? "" : e.detail.value).trim();
     if (!tone.parseHex(v)) {
-      wx.showToast({ title: "HEX 要写成 #8C2F2D", icon: "none" });
+      if (e.type === "blur" || e.type === "confirm") {
+        wx.showToast({ title: "HEX 要写成 #8C2F2D", icon: "none" });
+      }
       this.setData({ toneView: theme.toneData() });
       return;
     }
+    if (String(tone.current()).toLowerCase() === v.toLowerCase()) return;
     tone.set(v);
-    this.claim();
+    this.paint();
+    if (e.type === "confirm") wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onToneReset() {
@@ -145,11 +138,6 @@ Page({
     if (theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0])) tone.clear();
     this.paint();
     wx.showToast({ title: "已恢复默认主题色", icon: "none" });
-  },
-
-  claim() {
-    this.paint();
-    wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onOwnPick() {

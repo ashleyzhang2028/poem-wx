@@ -22,7 +22,8 @@ const CONFIRM_GAP_MS = 1500;
 const STATUS_NAMES = {
   pending: "待支付",
   paid: "已支付",
-  refunded: "已退款"
+  refunded: "已退款",
+  canceled: "已取消"
 };
 
 function pad(n) {
@@ -63,7 +64,8 @@ function perDayText(cents, period) {
 const STATUS_TONES = {
   pending: "amber",
   paid: "green",
-  refunded: "red"
+  refunded: "red",
+  canceled: "ghost"
 };
 
 function statusTone(key) {
@@ -133,10 +135,10 @@ function failure(reason, extra) {
   return Object.assign({ ok: false, reason: reason }, extra || {});
 }
 
-function buy(plan, period) {
+function checkout(start) {
   if (wechatTooOld()) return Promise.resolve(failure("请先把微信更新到 8.0.68 及以上再支付"));
   return loginCode()
-    .then((code) => remote.request(P.payOrder, { plan: plan, period: period, code: code }))
+    .then(start)
     .then((res) => {
       const outTradeNo = res.outTradeNo;
       return requestPayment(res.payData)
@@ -150,6 +152,21 @@ function buy(plan, period) {
         });
     })
     .catch((err) => failure((err && err.message) || "下单失败"));
+}
+
+function buy(plan, period) {
+  return checkout((code) => remote.request(P.payOrder, { plan: plan, period: period, code: code }));
+}
+
+function resume(outTradeNo) {
+  return checkout((code) => remote.request(P.payManage, { op: "resume", outTradeNo: outTradeNo, code: code }));
+}
+
+function manage(op, outTradeNo) {
+  return remote.request(P.payManage, { op: op, outTradeNo: outTradeNo }).then(
+    () => ({ ok: true }),
+    (err) => failure((err && err.message) || "没成功")
+  );
 }
 
 const EXPIRY_WARN_DAYS = 7;
@@ -218,6 +235,19 @@ function adminOrders(filter) {
   return adminCall(Object.assign({ op: "orders" }, filter || {}));
 }
 
+function adminCount(summary) {
+  const s = summary || {};
+  return {
+    count: Number(s.count) || 0,
+    paid: Number(s.paid) || 0,
+    pending: Number(s.pending) || 0,
+    refunded: Number(s.refunded) || 0,
+    paidText: yuan(s.paidCents),
+    pendingText: yuan(s.pendingCents),
+    refundedText: yuan(s.refundedCents)
+  };
+}
+
 function adminCatalog() {
   return adminCall({ op: "catalog" });
 }
@@ -239,6 +269,8 @@ module.exports = {
   catalog,
   orders,
   buy,
+  resume,
+  manage,
   reconcile,
   planInfo,
   expiry,
@@ -246,6 +278,7 @@ module.exports = {
   newFeatures,
   tierName,
   adminOrders,
+  adminCount,
   adminCatalog,
   adminSaveCatalog
 };

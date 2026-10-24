@@ -90,7 +90,7 @@
     "syncedAt": 4102444800000,
     "settings": {
       "grade": 7,
-      "theme": "qinglv"
+      "theme": "daiqing"
     }
   },
   "progress": {
@@ -325,15 +325,6 @@
     "tier": "pro",
     "settings": {
       "theme": "yangzhoushxihu"
-    }
-  },
-  "home-qinglv": {
-    "page": "pages/home/home",
-    "title": "跬步",
-    "tab": 1,
-    "logged": true,
-    "settings": {
-      "theme": "qinglv"
     }
   },
   "home-yuqing": {
@@ -693,15 +684,6 @@
       "theme": "ink"
     }
   },
-  "home-mohong": {
-    "page": "pages/home/home",
-    "title": "跬步",
-    "tab": 1,
-    "logged": true,
-    "settings": {
-      "theme": "mohong"
-    }
-  },
   "home-shilv": {
     "page": "pages/home/home",
     "title": "跬步",
@@ -720,15 +702,6 @@
       "theme": "yanzhi"
     }
   },
-  "home-qingwa": {
-    "page": "pages/home/home",
-    "title": "跬步",
-    "tab": 1,
-    "logged": true,
-    "settings": {
-      "theme": "qingwa"
-    }
-  },
   "home-muse": {
     "page": "pages/home/home",
     "title": "跬步",
@@ -736,15 +709,6 @@
     "logged": true,
     "settings": {
       "theme": "muse"
-    }
-  },
-  "home-wulan": {
-    "page": "pages/home/home",
-    "title": "跬步",
-    "tab": 1,
-    "logged": true,
-    "settings": {
-      "theme": "wulan"
     }
   },
   "home-faced": {
@@ -1071,5 +1035,38 @@
     "title": "意见建议",
     "back": true,
     "logged": false
+  },
+  "admin-pay": {
+    "page": "packages/admin/pay/pay",
+    "title": "支付与价格",
+    "back": true,
+    "logged": true,
+    "seedOrders": {
+      "count": 128,
+      "paid": 116,
+      "pending": 9,
+      "refunded": 3,
+      "paidCents": 268800,
+      "pendingCents": 19800,
+      "refundedCents": 5900
+    }
+  },
+  "admin-pay-orders": {
+    "page": "packages/admin/pay-orders/pay-orders",
+    "title": "已支付",
+    "back": true,
+    "logged": true,
+    "query": {
+      "status": "paid"
+    },
+    "seedOrders": {
+      "count": 128,
+      "paid": 116,
+      "pending": 9,
+      "refunded": 3,
+      "paidCents": 268800,
+      "pendingCents": 19800,
+      "refundedCents": 5900
+    }
   }
 }

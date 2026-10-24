@@ -1,13 +1,15 @@
 const store = require("./store");
 const crop = require("./banner-crop");
 
-const IMAGE = "data:image/jpeg;base64,";
+const MIME = "data:image/";
+
+const JPEG = "data:image/jpeg;base64,";
+
+const PNG = "data:image/png;base64,";
 
 const WIDTH = 1200;
 
 const QUALITY = 0.72;
-
-const SCALE = 4;
 
 const RATIO_W = crop.RATIO_W;
 
@@ -64,25 +66,25 @@ function read(file) {
     wx.getFileSystemManager().readFile({
       filePath: file,
       encoding: "base64",
-      success: (res) => resolve(IMAGE + String(res.data || "")),
+      success: (res) => resolve(JPEG + String(res.data || "")),
       fail: reject
     });
   });
 }
 
-function artOf(img, box, scale) {
-  const width = Math.min(WIDTH, Math.max(1, Math.round(img.w * box.sw * scale)));
+function artOf(img, box) {
+  const sw = Math.max(1, Math.round(img.w * box.sw));
   return {
     sx: Math.round(img.w * box.sx),
     sy: Math.round(img.h * box.sy),
-    sw: Math.max(1, Math.round(img.w * box.sw)),
+    sw: sw,
     sh: Math.max(1, Math.round(img.h * box.sh)),
-    width: width,
-    height: Math.max(1, Math.round(width * RATIO_H / RATIO_W))
+    width: Math.min(WIDTH, sw),
+    height: Math.max(1, Math.round(Math.min(WIDTH, sw) * RATIO_H / RATIO_W))
   };
 }
 
-function exportTemp(canvas, art) {
+function exportTemp(canvas, art, fileType) {
   return new Promise((resolve) => {
     wx.canvasToTempFilePath({
       canvas: canvas,
@@ -92,44 +94,74 @@ function exportTemp(canvas, art) {
       height: art.height,
       destWidth: art.width,
       destHeight: art.height,
-      fileType: "jpg",
+      fileType: fileType,
       quality: QUALITY,
-      success: (r) => resolve(r.tempFilePath || ""),
+      success: (r) => resolve(r.tempFilePath || dataUrl(canvas, fileType)),
       fail: () => resolve("")
     });
   });
 }
 
-async function prepare(path, img, host, id, box, scale) {
+function dataUrl(canvas, fileType) {
   try {
-    const art = artOf(img, box, scale);
-    const small = await shrink(path, img.w * scale / SCALE, img.h * scale / SCALE);
-    const canvas = await node(host, id);
-    if (!canvas) return "";
-    return new Promise((resolve) => {
-      const image = canvas.createImage();
-      image.onload = () => {
-        canvas.width = art.width;
-        canvas.height = art.height;
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, art.width, art.height);
-        ctx.drawImage(image, art.sx, art.sy, art.sw, art.sh, 0, 0, art.width, art.height);
-        exportTemp(canvas, art).then(resolve);
-      };
-      image.onerror = () => resolve("");
-      image.src = small.tempFilePath || path;
-    });
+    return typeof canvas.toDataURL === "function" ? canvas.toDataURL("image/" + fileType) : "";
   } catch (e) {
     return "";
   }
 }
 
-async function put(path, img, host, id, box, scale) {
-  const file = await prepare(path, img, host, id, crop.clampBox(box), scale);
+function artwork(canvas, image, art, fileType) {
+  canvas.width = art.width;
+  canvas.height = art.height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, art.width, art.height);
+  ctx.drawImage(image, art.sx, art.sy, art.sw, art.sh, 0, 0, art.width, art.height);
+  return exportTemp(canvas, art, fileType).then((file) => file || dataUrl(canvas, fileType));
+}
+
+function draw(canvas, source, art, fileType) {
+  return new Promise((resolve) => {
+    const image = canvas.createImage();
+    image.onload = () => artwork(canvas, image, art, fileType).then(resolve, () => resolve(""));
+    image.onerror = () => resolve("");
+    image.src = source;
+  });
+}
+
+async function prepare(path, img, host, id, box) {
+  try {
+    const art = artOf(img, box);
+    const keep = Math.min(1, art.width / art.sw);
+    const small = await shrink(path, img.w * keep, img.h * keep);
+    const source = small.tempFilePath || path;
+    const size = await photo(source).then(
+      (info) => ({ w: Number(info.width) || img.w, h: Number(info.height) || img.h }),
+      () => img
+    );
+    const fx = size.w / img.w;
+    const fy = size.h / img.h;
+    const fitted = Object.assign({}, art, {
+      sx: art.sx * fx,
+      sy: art.sy * fy,
+      sw: art.sw * fx,
+      sh: art.sh * fy
+    });
+    const canvas = await node(host, id);
+    if (!canvas) return "";
+    const jpeg = await draw(canvas, source, fitted, "jpg");
+    if (jpeg) return jpeg;
+    return draw(canvas, source, fitted, "png");
+  } catch (e) {
+    return "";
+  }
+}
+
+async function put(path, img, host, id, box) {
+  const file = await prepare(path, img, host, id, crop.clampBox(box));
   if (!file) return { ok: false, reason: "read" };
-  const data = await read(file).catch(() => "");
-  if (data.length <= IMAGE.length) return { ok: false, reason: "read" };
+  const data = file.indexOf(MIME) === 0 ? file : await read(file).catch(() => "");
+  if (data.length <= PNG.length) return { ok: false, reason: "read" };
   if (!store.saveSettings({ banner: data })) return { ok: false, reason: "storage" };
   return { ok: true };
 }
@@ -140,7 +172,7 @@ function clear() {
 
 function src() {
   const v = store.settings().banner;
-  return typeof v === "string" && v.indexOf(IMAGE) === 0 ? v : "";
+  return typeof v === "string" && v.indexOf(MIME) === 0 ? v : "";
 }
 
 function choose() {
@@ -176,4 +208,4 @@ function suggest(img, box) {
   return Promise.resolve({ box: crop.clampBox(box), scale: Math.min(1, scale) });
 }
 
-module.exports = { src, put, clear, choose, suggest, artOf, IMAGE, WIDTH, RATIO_W, RATIO_H };
+module.exports = { src, put, clear, choose, suggest, artOf, MIME, JPEG, PNG, WIDTH, RATIO_W, RATIO_H };

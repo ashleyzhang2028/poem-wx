@@ -1,20 +1,14 @@
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const pay = require("../../../utils/pay");
+const tiers = require("../../../utils/tiers");
 const auth = require("../../../utils/auth");
 const icons = require("../../../utils/icons");
 const tabPage = require("../../../utils/tab-page");
 
 const FEATURE_SHOWN = 6;
 
-const TAGLINES = {
-  free: "先用起来",
-  pro: "每天背得更稳",
-  max: "考试与飞花令全开"
-};
-
 const INCLUDES = {
-  free: "",
   pro: "包含 Free 的全部功能",
   max: "包含 Pro 的全部功能"
 };
@@ -45,12 +39,15 @@ Page({
     logged: false,
     tier: "free",
     untilText: "",
+    tab: "pro",
+    tabs: [],
     period: "d90",
-    periods: [],
     prices: null,
-    plans: [],
+    upgrade: null,
+    shown: {},
     promises: PROMISES,
     yes: icons.yes,
+    crest: icons.crest,
     welcome: null,
     sandbox: false,
     busy: false,
@@ -70,8 +67,10 @@ Page({
     pay.catalog().then(
       (res) => {
         const plan = (res && res.plan) || {};
+        if (!this.tabChosen) this.setData({ tab: plan.tier === "max" ? "max" : "pro" });
         this.setData({
           prices: res.plans,
+          upgrade: res.upgrade || null,
           sandbox: !!res.sandbox,
           tier: plan.tier || "free",
           untilText: plan.tier !== "free" && plan.until ? pay.dateText(plan.until) : "",
@@ -87,49 +86,61 @@ Page({
   },
 
   paint() {
-    const { prices, period, tier } = this.data;
-    const periods = pay.PERIODS.map((p) => ({ key: p.key, name: p.name }));
+    const { prices, period, tier, tab, upgrade } = this.data;
+    const bonus = tab === "max" && upgrade ? upgrade.bonus : null;
     const periodNow = pay.PERIODS.filter((p) => p.key === period)[0];
-    const recommended = tier === "free" ? "pro" : tier;
-
-    const plans = ["free", "pro", "max"].map((key) => {
-      const paid = key !== "free";
-      const isRec = paid && recommended === key;
-      const tone = key === "max" ? "gold" : "theme";
-      const cell = paid && prices && prices[key] && prices[key][period];
-      const act = paid ? actionOf(key, tier) : { text: "", disabled: true };
-      const all = pay.newFeatures(key);
+    const cells = prices && prices[tab];
+    const cell = cells && cells[period];
+    const act = actionOf(tab, tier);
+    const all = pay.newFeatures(tab);
+    const isRec = (tier === "free" ? "pro" : tier) === tab;
+    const options = pay.PERIODS.map((p) => {
+      const c = cells && cells[p.key];
       return {
-        key: key,
-        name: pay.tierName(key),
-        tagline: TAGLINES[key],
-        priceText: paid ? (cell ? pay.yuan(cell.priceCents) : "—") : "0",
-        unit: paid ? "/" + pay.periodName(period) : "",
-        originalText: cell && cell.originalCents ? "¥" + pay.yuan(cell.originalCents) : "",
-        saveText: paid ? saveText(prices && prices[key], periodNow) : "",
-        perMonth: cell ? pay.perDayText(cell.priceCents, period) : "",
-        includes: INCLUDES[key],
-        features: all.slice(0, FEATURE_SHOWN),
-        more: Math.max(0, all.length - FEATURE_SHOWN),
-        current: tier === key,
-        recommended: isRec,
-        tone: tone,
-        buyClass: key === "max" ? "gold" : (isRec ? "primary" : "ghost"),
-        actionText: act.text,
-        disabled: act.disabled || (paid && !cell)
+        key: p.key,
+        name: p.name,
+        on: p.key === period,
+        priceText: c ? pay.yuan(c.priceCents) : "—",
+        originalText: c && c.originalCents ? "¥" + pay.yuan(c.originalCents) : "",
+        saveText: saveText(cells, p),
+        perDay: c ? pay.perDayText(c.priceCents, p.key) + (bonus && bonus[p.key] > 0 ? " · 另赠 " + bonus[p.key] + " 天" : "") : ""
       };
     });
-    this.setData({ periods: periods, plans: plans });
+    this.setData({
+      tabs: pay.PAID_TIERS.map((key) => ({ key: key, name: pay.tierName(key) })),
+      shown: {
+        key: tab,
+        name: pay.tierName(tab),
+        tagline: tiers.mottoOf(tab).verse,
+        blessing: tiers.mottoOf(tab).line,
+        options: options,
+        note: bonus && bonus[period] > 0 ? "感谢一路相伴。您的 Pro 还剩 " + upgrade.proLeftDays + " 天，我们按您的实付价折算，升级后另赠 " + bonus[period] + " 天，到期日顺延。" : "",
+        includes: INCLUDES[tab],
+        features: all.slice(0, FEATURE_SHOWN),
+        more: Math.max(0, all.length - FEATURE_SHOWN),
+        current: tier === tab,
+        recommended: isRec,
+        tone: tab === "max" ? "zi" : "fei",
+        actionText: cell ? act.text + " · ¥" + pay.yuan(cell.priceCents) + " / " + periodNow.name : act.text,
+        disabled: act.disabled || !cell
+      }
+    });
   },
 
-  onPeriod(e) {
-    this.setData({ period: e.detail.value });
+  onTab(e) {
+    this.tabChosen = true;
+    this.setData({ tab: e.detail.value });
+    this.paint();
+  },
+
+  onPick(e) {
+    this.setData({ period: e.currentTarget.dataset.key });
     this.paint();
   },
 
   onBuy(e) {
     if (this.data.busy) return;
-    const plan = e.currentTarget.dataset.plan;
+    const plan = this.data.tab;
     this.setData({ busy: true });
     wx.showLoading({ title: "正在下单", mask: true });
     pay.buy(plan, this.data.period).then((res) => {
