@@ -16,7 +16,15 @@ Page({
     adminReady: false,
     canWrite: false,
     busy: false,
-    msg: ""
+    msg: "",
+
+    dueOpen: false,
+    dueUid: "",
+    dueTier: "",
+    dueTierLabel: "",
+    dueNote: "",
+    dueDate: "",
+    dueMin: ""
   },
 
   onShow() {
@@ -75,13 +83,69 @@ Page({
       success: (res) => {
         const pick = items[res.tapIndex];
         if (!pick) return;
-        this.setData({ busy: true, msg: "" });
-        const job = pick.key ? admin.setTier(userId, pick.key) : admin.revokeTier(userId);
-        guard.once("users:tier:" + userId, () => job).then((r) => {
-          this.setData({ busy: false, msg: r.msg });
-          this.refresh();
-        });
+        if (!pick.key) {
+          this.applyTier(userId, "", null);
+          return;
+        }
+        const user = this.data.users.filter((u) => u.id === userId)[0] || {};
+        this.openDue(userId, pick.key, user);
       }
+    });
+  },
+
+  openDue(uid, tier, user) {
+    const today = admin.today();
+    this.setData({
+      dueOpen: true,
+      dueUid: uid,
+      dueTier: tier,
+      dueTierLabel: tiers.nameOf(tier),
+      dueNote: "",
+      dueDate: user.tier === tier ? user.untilText || "" : "",
+      dueMin: today
+    });
+  },
+
+  onDueChange(e) {
+    const pick = e.detail.value || {};
+    const day = [pick.year, pick.month, pick.day].map((n) => String(n).padStart(2, "0")).join("-");
+    this.setData({ dueDate: day });
+  },
+
+  onDueForever() {
+    this.closeDue();
+    this.applyTier(this.data.dueUid, this.data.dueTier, null);
+  },
+
+  onDueStop() {},
+
+  onDueCancel() {
+    this.closeDue();
+  },
+
+  onDueConfirm() {
+    if (this.data.busy) return;
+    const until = admin.dayEnd(this.data.dueDate);
+    if (!until) {
+      this.setData({ dueNote: "先在上面的日历里选一个到期日" });
+      return;
+    }
+    const uid = this.data.dueUid;
+    const tier = this.data.dueTier;
+    this.closeDue();
+    this.applyTier(uid, tier, until);
+  },
+
+  closeDue() {
+    this.setData({ dueOpen: false, dueNote: "" });
+  },
+
+  applyTier(userId, tier, until) {
+    this.setData({ busy: true, msg: "" });
+    const job = tier ? admin.setTier(userId, tier, until) : admin.revokeTier(userId);
+    guard.once("users:tier:" + userId, () => job).then((r) => {
+      this.setData({ busy: false, msg: r.msg });
+      this.refresh();
     });
   }
 });
