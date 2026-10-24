@@ -360,6 +360,11 @@ function tierOf(name) {
   return tiers.nameOf(cap ? cap.tier : "pro");
 }
 
+function tierKey(name) {
+  const cap = CAPS.find((c) => c.key === name);
+  return cap ? cap.tier : "pro";
+}
+
 function block(name, opt) {
   const o = opt || {};
   const r = decide(name, o);
@@ -410,6 +415,7 @@ module.exports = {
   TIER_RANK,
   rankOf,
   tierOf,
+  tierKey,
   status,
   snapshot,
   reachable,

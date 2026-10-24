@@ -2223,9 +2223,17 @@ ok("名录在、标签截断、档位合法",
     path.join(ROOT, "packages", "game", "index", "index.js"), "utf8");
   const indexWxml = fs.readFileSync(
     path.join(ROOT, "packages", "game", "index", "index.wxml"), "utf8");
-  ok("大会首页三张卡里够不着的那张标「Max 起」，够着的标「开始」、够不上的只写「未开放」",
+  ok("大会首页三张卡里够不着的那张标档位（Max 起），够得着的只写「开始」",
     /locked:\s*!ok\s*&&\s*entitlement\.reachable\(/.test(indexJs)
       && indexWxml.indexOf("item.locked") >= 0);
+
+  ok("大会首页卡片上的档位从 entitlement.CAPS 取，不在 MODES 里另写一份",
+    !/tier:\s*"(pro|max|free)"/.test(indexJs)
+      && /entitlement\.tierKey\(/.test(indexJs)
+      && E.tierKey("feihualing") === "max");
+
+  ok("页面不再出现「未开放」（够不着是档位不够，不是功能没开放）",
+    [indexWxml, feihuaWxml].every((w) => w.indexOf("未开放") < 0));
 }
 
 {
