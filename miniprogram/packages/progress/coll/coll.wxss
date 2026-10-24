@@ -10,6 +10,7 @@
 
 .dot {
   flex: none;
+  margin-left: 0.5em;
   width: 18rpx;
   height: 18rpx;
   border-radius: 50%;
