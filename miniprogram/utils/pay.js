@@ -218,6 +218,19 @@ function adminOrders(filter) {
   return adminCall(Object.assign({ op: "orders" }, filter || {}));
 }
 
+function adminCount(summary) {
+  const s = summary || {};
+  return {
+    count: Number(s.count) || 0,
+    paid: Number(s.paid) || 0,
+    pending: Number(s.pending) || 0,
+    refunded: Number(s.refunded) || 0,
+    paidText: yuan(s.paidCents),
+    pendingText: yuan(s.pendingCents),
+    refundedText: yuan(s.refundedCents)
+  };
+}
+
 function adminCatalog() {
   return adminCall({ op: "catalog" });
 }
@@ -246,6 +259,7 @@ module.exports = {
   newFeatures,
   tierName,
   adminOrders,
+  adminCount,
   adminCatalog,
   adminSaveCatalog
 };

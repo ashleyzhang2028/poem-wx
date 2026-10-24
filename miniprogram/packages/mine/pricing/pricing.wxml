@@ -32,7 +32,8 @@
       </radio-group>
     </view>
 
-    <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'max' ? 'is-max' : ''}}"
+    <view class="pr-grid">
+      <view class="card pr-plan {{item.recommended ? 'is-rec' : ''}} {{item.key === 'max' ? 'is-max' : ''}}"
           wx:for="{{plans}}" wx:key="key">
       <view class="pr-head">
         <view class="pr-head-l">
@@ -63,6 +64,7 @@
 
       <button class="btn block pr-buy {{item.buyClass}}" wx:if="{{item.actionText}}"
               disabled="{{item.disabled || busy}}" data-plan="{{item.key}}" bindtap="onBuy">{{item.actionText}}</button>
+      </view>
     </view>
 
     <view class="pr-promise">

@@ -26,21 +26,16 @@ function slotViews(catalog) {
   });
 }
 
-function orderViews(list) {
-  return list.map((o) => ({
-    outTradeNo: o.outTradeNo,
-    head: pay.tierName(o.plan) + " " + pay.periodName(o.period) + " · ¥" + pay.yuan(o.priceCents),
-    statusTone: pay.statusTone(o.status),
-    statusText: pay.statusName(o.status) + (o.status === "paid" && !o.applied ? "（未发货）" : ""),
-    uid: o.uid,
-    openid: o.openid,
-    productId: o.productId,
-    wxOrderId: o.wxOrderId,
-    source: o.source,
-    createdText: pay.timeText(o.createdAt),
-    paidText: pay.timeText(o.paidAt),
-    untilText: pay.dateText(o.planUntilAfter),
-    refundedText: pay.timeText(o.refundedAt)
+const STATUS_ROWS = [
+  { key: "paid", name: "已支付" },
+  { key: "pending", name: "待支付" },
+  { key: "refunded", name: "已退款" }
+];
+
+function statusViews(summary) {
+  return STATUS_ROWS.map((row) => Object.assign({}, row, {
+    count: summary[row.key],
+    text: summary[row.key + "Text"]
   }));
 }
 
@@ -52,15 +47,8 @@ Page({
     reason: "",
     catalog: null,
     slots: [],
-    orders: [],
-    summary: { count: 0, paidCount: 0, paidText: "0" },
-    filter: "all",
-    filters: [
-      { key: "all", name: "全部" },
-      { key: "paid", name: "已支付" },
-      { key: "pending", name: "待支付" },
-      { key: "refunded", name: "已退款" }
-    ],
+    summary: null,
+    statusRows: [],
     draft: { productId: "", planIndex: 0, periodIndex: 0, price: "" },
     planChoices: PLAN_CHOICES,
     periodChoices: PERIOD_CHOICES
@@ -80,30 +68,22 @@ Page({
       }
       this.setData({ catalog: res.catalog, slots: slotViews(res.catalog), reason: "" });
     });
-    this.loadOrders();
+    this.loadSummary();
   },
 
-  loadOrders() {
-    const filter = this.data.filter === "all" ? {} : { status: this.data.filter };
-    pay.adminOrders(filter).then((res) => {
+  loadSummary() {
+    pay.adminOrders({ size: 1 }).then((res) => {
       if (!res.ok) {
         this.setData({ reason: res.reason });
         return;
       }
-      this.setData({
-        orders: orderViews(res.orders),
-        summary: {
-          count: res.summary.count,
-          paidCount: res.summary.paidCount,
-          paidText: pay.yuan(res.summary.paidCents)
-        }
-      });
+      const summary = pay.adminCount(res.summary);
+      this.setData({ summary: summary, statusRows: statusViews(summary) });
     });
   },
 
-  onFilter(e) {
-    this.setData({ filter: e.detail.value });
-    this.loadOrders();
+  onStatus(e) {
+    wx.navigateTo({ url: "/packages/admin/pay-orders/pay-orders?status=" + e.currentTarget.dataset.key });
   },
 
   save(next) {
