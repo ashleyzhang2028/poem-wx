@@ -47,6 +47,7 @@ Page({
     tabs: [],
     period: "d90",
     prices: null,
+    upgrade: null,
     shown: {},
     promises: PROMISES,
     yes: icons.yes,
@@ -72,6 +73,7 @@ Page({
         if (!this.tabChosen) this.setData({ tab: plan.tier === "max" ? "max" : "pro" });
         this.setData({
           prices: res.plans,
+          upgrade: res.upgrade || null,
           sandbox: !!res.sandbox,
           tier: plan.tier || "free",
           untilText: plan.tier !== "free" && plan.until ? pay.dateText(plan.until) : "",
@@ -87,7 +89,8 @@ Page({
   },
 
   paint() {
-    const { prices, period, tier, tab } = this.data;
+    const { prices, period, tier, tab, upgrade } = this.data;
+    const bonus = tab === "max" && upgrade ? upgrade.bonus : null;
     const periodNow = pay.PERIODS.filter((p) => p.key === period)[0];
     const cells = prices && prices[tab];
     const cell = cells && cells[period];
@@ -103,7 +106,7 @@ Page({
         priceText: c ? pay.yuan(c.priceCents) : "—",
         originalText: c && c.originalCents ? "¥" + pay.yuan(c.originalCents) : "",
         saveText: saveText(cells, p),
-        perDay: c ? pay.perDayText(c.priceCents, p.key) : ""
+        perDay: c ? pay.perDayText(c.priceCents, p.key) + (bonus && bonus[p.key] > 0 ? " · 另赠 " + bonus[p.key] + " 天" : "") : ""
       };
     });
     this.setData({
@@ -113,6 +116,7 @@ Page({
         name: pay.tierName(tab),
         tagline: TAGLINES[tab],
         options: options,
+        note: bonus && bonus[period] > 0 ? "感谢一路相伴。您的 Pro 还剩 " + upgrade.proLeftDays + " 天，我们按您的实付价折算，升级后另赠 " + bonus[period] + " 天，到期日顺延。" : "",
         includes: INCLUDES[tab],
         features: all.slice(0, FEATURE_SHOWN),
         more: Math.max(0, all.length - FEATURE_SHOWN),

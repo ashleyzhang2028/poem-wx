@@ -222,15 +222,79 @@ function wxQueryOrder(deps, order) {
   });
 }
 
-function nextPlan(acc, order, t) {
-  var cur = currentPlan(acc);
+function creditFrom(rowsNewestFirst, cur, t) {
+  if (cur.tier !== "pro" || cur.until == null || cur.until <= t) return 0;
+  var left = cur.until - t, value = 0;
+  rowsNewestFirst.forEach(function (o) {
+    if (left <= 0 || o.plan !== "pro" || Number(o.applied) !== 1) return;
+    var span = PERIOD_MS[o.period];
+    var take = Math.min(left, span);
+    value += Number(o.price_cents) * take / span;
+    left -= take;
+  });
+  return value;
+}
+
+function proCreditCents(store, uid, acc, t) {
+  return Promise.resolve(store.listPayOrders({ uid: uid, status: "paid" }, 100)).then(function (rows) {
+    return creditFrom(rows || [], currentPlan(acc), t);
+  });
+}
+
+function bonusDaysOf(creditCents, priceCents, period) {
+  if (!(creditCents > 0) || !(priceCents > 0)) return 0;
+  return Math.floor(creditCents * (PERIOD_MS[period] / DAY) / priceCents);
+}
+
+function upgradeBonusMs(store, acc, order, t) {
+  if (order.plan !== "max") return Promise.resolve(0);
+  return proCreditCents(store, order.uid, acc, t).then(function (credit) {
+    return bonusDaysOf(credit, Number(order.price_cents), order.period) * DAY;
+  });
+}
+
+function upgradeOffer(store, uid, acc, plans, t) {
+  return proCreditCents(store, uid, acc, t).then(function (credit) {
+    if (!(credit > 0)) return null;
+    var bonus = {};
+    PERIODS.forEach(function (period) { bonus[period] = bonusDaysOf(credit, plans.max[period].priceCents, period); });
+    return { proLeftDays: Math.ceil((currentPlan(acc).until - t) / DAY), bonus: bonus };
+  });
+}
+
+function nextOf(cur, order, t, bonusMs) {
   if (RANK[cur.tier] > RANK[order.plan]) return { plan: cur.tier, until: cur.until };
   var span = PERIOD_MS[order.period];
   if (cur.tier === order.plan) {
     if (cur.until == null) return { plan: order.plan, until: null };
     return { plan: order.plan, until: Math.max(t, cur.until) + span };
   }
-  return { plan: order.plan, until: t + span };
+  return { plan: order.plan, until: t + span + (bonusMs || 0) };
+}
+
+function paidOrder(a, b) {
+  return Number(a.paid_at) - Number(b.paid_at)
+    || (a.plan_until_after == null ? 1 : b.plan_until_after == null ? -1 : Number(a.plan_until_after) - Number(b.plan_until_after));
+}
+
+function replayPlan(orders) {
+  var state = { plan: "free", until: null }, done = [];
+  orders.forEach(function (o) {
+    var t = Number(o.paid_at);
+    var live = state.plan !== "free" && (state.until == null || state.until > t);
+    var cur = { tier: live ? state.plan : "free", until: live ? state.until : null };
+    var bonusMs = o.plan === "max"
+      ? bonusDaysOf(creditFrom(done.slice().reverse(), cur, t), Number(o.price_cents), o.period) * DAY
+      : 0;
+    var next = nextOf(cur, o, t, bonusMs);
+    state = { plan: next.plan, until: next.until };
+    done.push(o);
+  });
+  return state;
+}
+
+function sameUntil(a, b) {
+  return (a == null && b == null) || (a != null && b != null && Number(a) === Number(b));
 }
 
 function deliver(deps, order, info) {
@@ -243,18 +307,20 @@ function deliver(deps, order, info) {
     var until = order.plan_until_after == null ? null : Number(order.plan_until_after);
     var claim = Promise.resolve(true);
     if (order.status !== "paid") {
-      var next = nextPlan(acc, order, t);
-      plan = next.plan;
-      until = next.until;
-      claim = store.claimPayOrder(order.out_trade_no, order.status, {
-        status: "paid",
-        wx_order_id: String((info && info.wxOrderId) || "").slice(0, 64) || null,
-        source: String((info && info.source) || "").slice(0, 16),
-        plan_after: plan,
-        plan_until_after: until,
-        applied: 0,
-        paid_at: t,
-        notify_raw: info && info.raw ? String(info.raw).slice(0, NOTIFY_RAW_MAX) : null
+      claim = upgradeBonusMs(store, acc, order, t).then(function (bonusMs) {
+        var next = nextOf(currentPlan(acc), order, t, bonusMs);
+        plan = next.plan;
+        until = next.until;
+        return store.claimPayOrder(order.out_trade_no, order.status, {
+          status: "paid",
+          wx_order_id: String((info && info.wxOrderId) || "").slice(0, 64) || null,
+          source: String((info && info.source) || "").slice(0, 16),
+          plan_after: plan,
+          plan_until_after: until,
+          applied: 0,
+          paid_at: t,
+          notify_raw: info && info.raw ? String(info.raw).slice(0, NOTIFY_RAW_MAX) : null
+        });
       });
     }
     return Promise.resolve(claim).then(function (won) {
@@ -270,11 +336,19 @@ function revoke(deps, order) {
   return Promise.resolve(store.claimPayOrder(order.out_trade_no, "paid", { status: "refunded", refunded_at: t }))
     .then(function (won) {
       if (!won || Number(order.applied) !== 1) return null;
-      return Promise.resolve(store.getAccount(order.uid)).then(function (acc) {
-        if (!acc || acc.plan !== order.plan || acc.plan_until == null) return null;
+      return Promise.all([store.getAccount(order.uid), store.listPayOrders({ uid: order.uid, status: "paid" }, 100)]).then(function (r) {
+        var acc = r[0];
+        if (!acc) return null;
+        var rest = (r[1] || []).filter(function (o) { return Number(o.applied) === 1; }).sort(paidOrder);
+        var last = rest.concat([order]).sort(paidOrder).pop();
+        if (last.plan_after === acc.plan && sameUntil(last.plan_until_after, acc.plan_until)) {
+          var s = replayPlan(rest);
+          var live = s.plan !== "free" && (s.until == null || s.until > t);
+          return store.patchAccount(order.uid, live ? { plan: s.plan, plan_until: s.until } : { plan: "free", plan_until: null });
+        }
+        if (acc.plan !== order.plan || acc.plan_until == null) return null;
         var left = Number(acc.plan_until) - PERIOD_MS[order.period];
-        var patch = left > t ? { plan: acc.plan, plan_until: left } : { plan: "free", plan_until: null };
-        return store.patchAccount(order.uid, patch);
+        return store.patchAccount(order.uid, left > t ? { plan: acc.plan, plan_until: left } : { plan: "free", plan_until: null });
       });
     });
 }
@@ -284,7 +358,10 @@ function payCatalog(deps) {
   if (gate) return Promise.resolve(gate);
   return Promise.all([loadCatalog(deps.store), deps.store.getAccount(deps.account.uid)]).then(function (r) {
     if (!r[1] || r[1].status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    return ok({ plans: publicCatalog(r[0]), plan: currentPlan(r[1]), payReady: deps.cfg.hasPay(), sandbox: deps.cfg.payEnv === 1 });
+    var plans = publicCatalog(r[0]);
+    return upgradeOffer(deps.store, deps.account.uid, r[1], plans, deps.now()).then(function (upgrade) {
+      return ok({ plans: plans, plan: currentPlan(r[1]), upgrade: upgrade, payReady: deps.cfg.hasPay(), sandbox: deps.cfg.payEnv === 1 });
+    });
   });
 }
 

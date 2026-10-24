@@ -8312,6 +8312,41 @@ function gapped(items, max) {
     ok("取消或删除之后才到的支付推送照常发货（不收钱不发货）",
       (await store.getPayOrder(openNo)).status === "paid", "已付款的订单因为本地取消而没发货");
 
+    const proUntil = now + 20 * 86400000;
+    const upgraded = async (uid, tag) => {
+      await store.putAccount({ uid: uid, email: uid + "@b.c", plan: "pro", plan_until: proUntil, role: "user", status: "active", created_at: 1 });
+      await store.putPayOrder({ out_trade_no: "P" + tag, uid: uid, openid: "O" + tag, product_id: "pro_30", plan: "pro", period: "d30",
+        price_cents: 1500, status: "paid", applied: 1, plan_after: "pro", plan_until_after: proUntil,
+        created_at: now - 10 * 86400000, paid_at: now - 10 * 86400000 });
+      await store.putPayOrder({ out_trade_no: "M" + tag, uid: uid, openid: "OID", product_id: "max_30", plan: "max", period: "d30",
+        price_cents: 2900, status: "pending", applied: 0, created_at: now, paid_at: null });
+      await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
+        OutTradeNo: "M" + tag, GoodsInfo: { ProductId: "max_30", OrderFee: 2900 } }) });
+    };
+    const refund = (tag) => payMod.payNotify(deps(), { method: "POST", query, body: { Event: "xpay_refund_notify", OutTradeNo: tag } });
+    await store.putAccount({ uid: "u3", email: "c@b.c", plan: "pro", plan_until: proUntil, role: "user", status: "active", created_at: 1 });
+    await store.putPayOrder({ out_trade_no: "P3", uid: "u3", openid: "O3", product_id: "pro_30", plan: "pro", period: "d30",
+      price_cents: 1500, status: "paid", applied: 1, created_at: now - 10 * 86400000, paid_at: now - 10 * 86400000 });
+    const offer = (await payMod.payCatalog(deps("u3"))).body.upgrade;
+    ok("Pro 升 Max：按 Pro 实付价折算剩余天数",
+      offer && offer.proLeftDays === 20 && offer.bonus.d30 === 10 && offer.bonus.d365 === 18, "折算天数与实付价对不上");
+    await upgraded("u4", "4");
+    ok("Pro 升 Max：Max 到期 = 购买时刻 + 所买时长 + 折算赠送天数",
+      (await store.getAccount("u4")).plan_until === now + payMod.PERIOD_MS.d30 + 10 * 86400000, "升级没有顺延折算天数");
+    await refund("M4");
+    const afterMax = await store.getAccount("u4");
+    ok("退款 Max：回到 Pro，到期日是原 Pro 的到期日，赠送天数一并收回",
+      afterMax.plan === "pro" && afterMax.plan_until === proUntil, "退了 Max 还留着 Max 或赠送天数");
+    await refund("P4");
+    ok("再退 Pro：回到 Free", (await store.getAccount("u4")).plan === "free", "两单都退了还有会员");
+    await upgraded("u5", "5");
+    await refund("P5");
+    const maxOnly = await store.getAccount("u5");
+    ok("先退 Pro：Max 保留，但折算赠送天数收回",
+      maxOnly.plan === "max" && maxOnly.plan_until === now + payMod.PERIOD_MS.d30, "先退 Pro 之后赠送天数还在");
+    await refund("M5");
+    ok("再退 Max：回到 Free", (await store.getAccount("u5")).plan === "free", "两单都退了还有会员");
+
     ok("沙箱环境用沙箱 AppKey，现网用现网 AppKey（两把钥匙不混用）",
       baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 1 }) === "s"
         && baseCfg.payKeyOf.call({ payAppKey: "p", paySandboxAppKey: "s", payEnv: 0 }) === "p",

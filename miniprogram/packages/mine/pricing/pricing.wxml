@@ -56,8 +56,9 @@
           </view>
         </view>
       </view>
+      <text class="pr-credit" wx:if="{{shown.note}}">{{shown.note}}</text>
 
-      <button class="btn block pr-buy {{shown.buyClass}}" 
+      <button class="btn block pr-buy {{shown.buyClass}}"
               disabled="{{shown.disabled || busy}}" bindtap="onBuy">{{shown.actionText}}</button>
 
       <view class="pr-list">

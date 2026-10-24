@@ -150,6 +150,14 @@
   margin-left: 0;
 }
 
+.pr-credit {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
+}
+
 .pr-list {
   margin-top: var(--sp-3);
   padding-top: var(--sp-3);
