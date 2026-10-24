@@ -3734,15 +3734,19 @@ function mountFull(pg, query) {
         && art.sw === 500 && art.sh === 500,
       "截出来的比例不是 " + custom.RATIO_W + "×" + custom.RATIO_H + "，铺到 banner 上会被裁掉一截");
 
+    const art2 = custom.artOf({ w: 1000, h: 2000 }, { sx: 0, sy: 0, sw: 1, sh: 1 }, 4);
+    ok("长宽比 1:2 的照片截完仍在一条 key 装得下的尺寸里",
+      art2.width <= custom.WIDTH && Math.abs(art2.width * custom.RATIO_H / custom.RATIO_W - art2.height) <= 1,
+      "落出来的边长 " + art2.width + "×" + art2.height);
   }
 
   tierAs("max");
-  store.saveSettings({ banner: custom.IMAGE + "AAAA", theme: themeMod.OWN_KEY });
+  store.saveSettings({ banner: custom.JPEG + "AAAA", theme: themeMod.OWN_KEY });
   ok("Max 手上那项亮着，选的自定义题图真的落到 banner 上",
     E.can("ownbanner") === true
       && ownGroup().locked === false
       && themeMod.current() === themeMod.OWN_KEY
-      && themeMod.bannerSrc().indexOf(custom.IMAGE) === 0,
+      && themeMod.bannerSrc().indexOf(custom.JPEG) === 0,
     themeMod.current() + " / " + themeMod.bannerSrc().slice(0, 24));
 
   store.saveSettings({ toneColor: "#2E6A67" });
