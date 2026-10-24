@@ -1,11 +1,19 @@
 const CLAUSE_SPLIT = /[\n，。！？；：、]/;
 
+const CLOSING = /[」』”’）》〉]/;
+
+function isClauseEnd(ch, next) {
+  return CLAUSE_SPLIT.test(ch) && !CLOSING.test(next);
+}
+
 function splitClauses(line) {
 
   const s = [];
+  const chars = Array.from(String(line));
   let buf = "";
-  for (const ch of String(line)) {
-    if (CLAUSE_SPLIT.test(ch)) {
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (isClauseEnd(ch, chars[i + 1] || "")) {
       const cl = (buf + ch).trim();
       if (cl) s.push(cl);
       buf = "";
@@ -24,10 +32,11 @@ function splitDisplay(text) {
     .map((line) => line.trim())
     .filter(Boolean)
     .forEach((line) => {
+      const chars = Array.from(line);
       let buf = "";
-      for (const ch of line) {
-        buf += ch;
-        if (CLAUSE_SPLIT.test(ch)) {
+      for (let i = 0; i < chars.length; i++) {
+        buf += chars[i];
+        if (isClauseEnd(chars[i], chars[i + 1] || "")) {
           rows.push(buf);
           buf = "";
         }

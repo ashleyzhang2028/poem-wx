@@ -44,8 +44,79 @@
   background: var(--red);
 }
 
-.pr-plan {
-  padding-bottom: var(--sp-4);
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.pr-grid .pr-plan {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  padding: var(--sp-3);
+}
+
+.pr-grid .pr-head {
+  flex-direction: column;
+}
+
+.pr-grid .pr-badge-tag {
+  margin-top: var(--sp-1);
+}
+
+.pr-grid .pr-price {
+  flex-wrap: wrap;
+  margin-top: var(--sp-2);
+}
+
+.pr-grid .pr-num {
+  margin: 0 2rpx;
+  font-size: var(--fs-lead);
+}
+
+.pr-grid .pr-was {
+  flex-basis: 100%;
+  margin-left: 0;
+  margin-top: 2rpx;
+}
+
+.pr-grid .pr-save {
+  margin-left: 0;
+  margin-top: 4rpx;
+}
+
+.pr-grid .pr-list {
+  flex: 1;
+}
+
+.pr-grid .pr-feat {
+  align-items: flex-start;
+  margin-bottom: var(--sp-1);
+}
+
+.pr-grid .pr-ck {
+  width: 24rpx;
+  height: 24rpx;
+  margin-top: 6rpx;
+}
+
+.pr-grid .pr-feat-t {
+  font-size: var(--fs-hint);
+}
+
+.pr-grid .pr-tagline,
+.pr-grid .pr-unit,
+.pr-grid .pr-permonth {
+  font-size: var(--fs-caption);
+}
+
+.pr-grid .pr-buy {
+  width: 100%;
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-hint);
 }
 
 .pr-plan.is-rec,

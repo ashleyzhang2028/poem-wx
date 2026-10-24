@@ -1,0 +1,72 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+
+  <view class="card" wx:if="{{!canWrite}}">
+    <text class="hint">需要管理员登录。</text>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <text class="card-title">{{name}}</text>
+
+      <view class="stats ap-stats">
+        <view class="stat">
+          <text class="stat-v">{{matched.count}}</text>
+          <text class="stat-k">{{q ? '命中笔数' : '全部笔数'}}</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{matched.paid}}</text>
+          <text class="stat-k">已支付</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v ap-yen">¥{{matched.paidText}}</text>
+          <text class="stat-k">合计金额</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="hint ap-note" wx:if="{{reason}}">{{reason}}</text>
+
+      <view class="seg ap-filter">
+        <radio-group class="seg-group" bindchange="onStatus">
+          <label class="seg-item {{status === item.key ? 'on' : ''}}" wx:for="{{statusTabs}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{status === item.key}}" />
+            <text class="seg-text">{{item.name}}</text>
+          </label>
+        </radio-group>
+      </view>
+
+      <input class="ap-input" placeholder="搜索单号 / uid / openid / 道具" value="{{q}}"
+             confirm-type="search" bindinput="onSearch" bindconfirm="onSearchNow" />
+
+      <text class="hint ap-note" wx:if="{{loaded && !list.length}}">{{q ? '没有匹配的订单。' : '这里还没有订单。'}}</text>
+
+      <view class="row ap-order" wx:for="{{list}}" wx:key="outTradeNo"
+            hover-class="row-hover" hover-stay-time="60" bindtap="onCopyAll" data-index="{{index}}">
+        <view class="row-main">
+          <view class="ap-order-head">
+            <text class="row-title">{{item.head}}</text>
+            <text class="tag {{item.statusTone}}">{{item.statusText}}</text>
+          </view>
+          <text class="row-sub ap-id">uid {{item.uid}}</text>
+          <text class="row-sub ap-id">openid {{item.openid}}</text>
+          <text class="row-sub ap-id">业务单号 {{item.outTradeNo}}</text>
+          <text class="row-sub ap-id" wx:if="{{item.wxOrderId}}">支付单号 {{item.wxOrderId}}</text>
+          <text class="row-sub">道具 {{item.productId}}{{item.source ? ' · 经' + item.source : ''}}</text>
+          <text class="row-sub">下单 {{item.createdText}}</text>
+          <text class="row-sub" wx:if="{{item.paidText}}">支付 {{item.paidText}}，会员至 {{item.untilText || '永久'}}</text>
+          <text class="row-sub" wx:if="{{item.refundedText}}">退款 {{item.refundedText}}</text>
+        </view>
+      </view>
+
+      <view class="ap-pager" wx:if="{{pages > 1}}">
+        <button class="btn mini ap-page" disabled="{{page <= 1}}" data-delta="-1" bindtap="onPage">上一页</button>
+        <text class="ap-page-n">{{page}} / {{pages}}</text>
+        <button class="btn mini ap-page" disabled="{{page >= pages}}" data-delta="1" bindtap="onPage">下一页</button>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>

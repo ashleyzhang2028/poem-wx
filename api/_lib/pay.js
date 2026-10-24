@@ -447,6 +447,26 @@ function payNotify(deps, input) {
   });
 }
 
+var ADMIN_SCAN = 500;
+var ADMIN_PAGE_SIZE = 20;
+var ADMIN_COUNTED = ["paid", "pending", "refunded"];
+
+function countOrders(list) {
+  var out = { count: list.length };
+  ADMIN_COUNTED.forEach(function (st) {
+    var rows = list.filter(function (o) { return o.status === st; });
+    out[st] = rows.length;
+    out[st + "Cents"] = rows.reduce(function (s, o) { return s + o.priceCents; }, 0);
+  });
+  return out;
+}
+
+function orderMatches(o, q) {
+  return [o.outTradeNo, o.wxOrderId, o.uid, o.openid, o.productId].some(function (v) {
+    return v && String(v).toLowerCase().indexOf(q) >= 0;
+  });
+}
+
 function adminOnly(deps) {
   var gate = loginGate(deps);
   if (gate) return Promise.resolve(gate);
@@ -471,20 +491,23 @@ function payAdmin(deps, input) {
       return Promise.resolve(store.putSetting(CATALOG_KEY, JSON.stringify(n.catalog)))
         .then(function () { return ok({ catalog: n.catalog }); });
     }
-    var limit = Math.max(1, Math.min(500, Number((input && input.limit)) || 200));
     var filter = {};
     if (input && input.status) filter.status = String(input.status);
     if (input && input.uid) filter.uid = String(input.uid);
-    return Promise.resolve(store.listPayOrders(filter, limit)).then(function (rows) {
-      var list = (rows || []).map(adminOrder);
-      var paid = list.filter(function (o) { return o.status === "paid"; });
+    return Promise.resolve(store.listPayOrders(filter, ADMIN_SCAN)).then(function (rows) {
+      var all = (rows || []).map(adminOrder);
+      var q = String((input && input.q) || "").trim().toLowerCase();
+      var hit = q ? all.filter(function (o) { return orderMatches(o, q); }) : all;
+      var size = Math.max(1, Math.min(100, Number((input && input.size)) || ADMIN_PAGE_SIZE));
+      var pages = Math.max(1, Math.ceil(hit.length / size));
+      var page = Math.max(1, Math.min(pages, Number((input && input.page)) || 1));
       return ok({
-        orders: list,
-        summary: {
-          count: list.length,
-          paidCount: paid.length,
-          paidCents: paid.reduce(function (s, o) { return s + o.priceCents; }, 0)
-        }
+        orders: hit.slice((page - 1) * size, page * size),
+        page: page,
+        pages: pages,
+        total: hit.length,
+        summary: countOrders(all),
+        matched: countOrders(hit)
       });
     });
   });

@@ -991,6 +991,26 @@ const rebuild = Object.keys(corpus.courseTexts()).every((k) => {
     String(raw).split("\n").map((l) => l.split(/[\s]/).join("")).join("");
 });
 ok("全部课内正文切句后拼得回原文", rebuild);
+const quotedTail = splitLines("苏子曰：「客亦知夫水与月乎？」");
+ok("切句不把收尾引号切成单独一句（「」里的句号算在引语内）",
+  quotedTail[0].s.join("") === "苏子曰：「客亦知夫水与月乎？」"
+    && quotedTail[0].s[quotedTail[0].s.length - 1] === "「客亦知夫水与月乎？」",
+  JSON.stringify(quotedTail[0].s));
+{
+  const unpaired = [];
+  allEntries.forEach((p) => {
+    const e = corpus.entry(p.id);
+    if (!e || !e.text) return;
+    let depth = 0;
+    for (const ch of e.text) {
+      if (ch === "\u300c") depth++;
+      else if (ch === "\u300d") depth--;
+    }
+    if (depth !== 0) unpaired.push(p.id + ":" + depth);
+  });
+  ok("整库正文的「」成对（引语不漏收尾引号）", !unpaired.length,
+    unpaired.slice(0, 5).join(" "));
+}
 ok("splitLines 保留空行", splitLines("a\n\nb").length === 3 && splitLines("a\n\nb")[1].s.length === 0);
 ok("splitLines 空正文不炸", splitLines("").length === 1 && splitLines(null).length === 1);
 
@@ -3517,19 +3537,15 @@ function mountFull(pg, query) {
 
   const WANT = [
     ["daiqing", "黛青", [2, 54, 51], "tradition"],
-    ["qinglv", "青绿", [46, 106, 103], "tradition"],
     ["muse", "暮色", [79, 96, 114], "tradition"],
     ["nuahui", "暖灰", [164, 86, 104], "tradition"],
-    ["qingwa", "青瓦", [74, 100, 96], "tradition"],
     ["mich", "米褐", [126, 101, 84], "tradition"],
     ["shilv", "石绿", [108, 127, 79], "tradition"],
-    ["mohong", "墨红", [140, 47, 45], "tradition"],
-    ["wulan", "雾蓝", [96, 126, 149], "tradition"],
     ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
-    ["yangzhoushxihu", "扬州瘦西湖", [2, 54, 51], "landscape"],
-    ["qingmingshanghetu", "开封上河图", [2, 54, 51], "landscape"],
+    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
@@ -3548,7 +3564,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 24 项（十二个传统色 + 十二张大好河山）",
+  ok("清单就是这 20 项（八个传统色 + 十二张大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
@@ -4785,6 +4801,20 @@ function mountFull(pg, query) {
     ok("真跑 300 轮出题：题干按句读拆成多行，逗号也断，拼回等于原句（上限内）",
       !unbroken.length && maxAnswer > 0 && maxAnswer <= capN,
       "没拆开的 " + unbroken.length + " 条，例如 " + JSON.stringify(unbroken.slice(0, 3)));
+
+    const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+    const punctOnly = [];
+    scopeMod.list().forEach((s) => {
+      for (let round = 0; round < 40; round++) {
+        quizMod.build({ count: 10, forms: quizMod.FORM_KEYS, scope: s.id }).forEach((q) => {
+          q.options.forEach((o) => {
+            if (!quizMod.usable(o.text)) punctOnly.push(s.id + ":" + q.form + ":" + o.text);
+          });
+        });
+      }
+    });
+    ok("整库每种题型真跑一遍：没有一个选项只剩标点",
+      !punctOnly.length, JSON.stringify(punctOnly.slice(0, 5)));
 
     const course = readModule(path.join(dataDir, "course.js"));
     const proseIds = Object.keys(course).filter((id) => String(course[id].text).length > 100);
@@ -8274,8 +8304,9 @@ function gapped(items, max) {
 
   const appJsonPay = JSON.parse(read("app.json"));
   const subPages = [].concat.apply([], appJsonPay.subPackages.map((sp) => sp.pages.map((pg) => sp.root + "/" + pg)));
-  ok("定价页、支付记录页、后台支付页都登记在 app.json",
-    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay"].every((pg) => subPages.indexOf(pg) >= 0),
+  ok("定价页、支付记录页、后台支付页与购买记录子页都登记在 app.json",
+    ["packages/mine/pricing/pricing", "packages/mine/orders/orders", "packages/admin/pay/pay",
+      "packages/admin/pay-orders/pay-orders"].every((pg) => subPages.indexOf(pg) >= 0),
     "页面没登记，navigateTo 会找不到");
   ok("权限页有进定价页与支付记录页的处理函数",
     /onPricing\(/.test(read("components/tier-view/tier-view.js")) && /onOrders\(/.test(read("components/tier-view/tier-view.js")),
