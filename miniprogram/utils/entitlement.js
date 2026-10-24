@@ -55,8 +55,7 @@ const CAPS = [
 
 function cellFor(cap, tier) {
   if (cap.cell) return cap.cell(tier, cap);
-  const on = rankOf(cap.tier) <= rankOf(tier);
-  return { text: on ? "不限" : "", on: on };
+  return { text: "", on: rankOf(cap.tier) <= rankOf(tier) };
 }
 
 const CAP_KEYS = CAPS.map((c) => c.key);
