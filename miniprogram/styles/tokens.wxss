@@ -126,6 +126,7 @@ page {
   --card-x: calc(28rpx * var(--ui-scale));
   --card-y: calc(24rpx * var(--ui-scale));
   --card-title-gap: calc(16rpx * var(--ui-scale));
+  --card-row-pad: calc(4rpx * var(--ui-scale));
   --h-act: calc(96rpx * var(--ui-scale));
   --h-row: calc(96rpx * var(--ui-scale));
   --h-field: calc(84rpx * var(--ui-scale));

@@ -175,7 +175,7 @@
     <block wx:if="{{collectionOn}}">
       <view class="card" wx:for="{{collections}}" wx:key="id" wx:for-item="coll">
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
-          <text class="card-title coll-title">{{coll.title}}</text>
+          <text class="card-title">{{coll.title}}</text>
           <view class="coll-mark">
             <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
             <view class="coll-dot" style="background:{{coll.color}}"></view>
