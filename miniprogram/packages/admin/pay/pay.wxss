@@ -19,8 +19,8 @@
   margin-bottom: var(--sp-2);
 }
 
-.ap-yen {
-  font-size: var(--fs-lead);
+.ap-amount {
+  font-family: var(--font-num);
 }
 
 .ap-slots {
@@ -49,4 +49,10 @@
   font-size: var(--fs-caption);
   color: var(--ink-3);
   word-break: break-all;
+}
+
+@media (max-width: 350px) {
+  .ap-stats .stat-v {
+    font-size: var(--fs-head);
+  }
 }

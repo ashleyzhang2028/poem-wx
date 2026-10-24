@@ -14,7 +14,7 @@
           <text class="stat-k">{{q ? '命中笔数' : '全部笔数'}}</text>
         </view>
         <view class="stat">
-          <text class="stat-v ap-yen">¥{{matched[status + 'Text']}}</text>
+          <text class="stat-v"><text class="ap-amount">¥{{matched[status + 'Text']}}</text></text>
           <text class="stat-k">合计金额</text>
         </view>
       </view>
