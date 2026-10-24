@@ -27,6 +27,7 @@ Page({
     board: [],
     podium: [],
     rest: [],
+    player: 0,
     me: null,
     beyond: 0,
     label: "",
@@ -97,6 +98,7 @@ Page({
           const me = res.me ? ranking.maskRow(res.me) : null;
           const mineOnBoard = !!me && board.filter((r) => r.uid === me.uid).length > 0;
           const self = mineOnBoard ? null : me;
+          const player = board.filter((r) => r.me)[0];
           this.setData({
             state: board.length || self ? "board" : "empty",
             board: board,
@@ -104,6 +106,7 @@ Page({
             beyond: ranking.beyondOf(board, res.total),
             podium: ranking.podiumOf(board),
             rest: ranking.restOf(board),
+            player: player ? player.rank : 0,
             label: res.label || ranking.labelOf(this.data),
             empty: ranking.emptyOf(this.data.game)
           });

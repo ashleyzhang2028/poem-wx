@@ -3362,15 +3362,16 @@ function mountFull(pg, query) {
 
   ok("同分同名次，下一名跳号（一人一行不变，名次不再按行号数）",
     rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 1, nick: "乙", score: 9, total: 10 }])[0].tied === true
-      && rank.restOf([{ rank: 1 }, { rank: 2 }, { rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
+      && rank.restOf([{ rank: 1 }, { rank: 2 }, { rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "1,2,3,4,5",
     "同分的人各占一行名次，第 2 名凭空消失；或同一个人被抄成两行");
 
-  ok("领奖台只认前三名，第四名起进列表",
+  ok("领奖台只认前三名，状元在列表里也有一行",
     rank.podiumOf([{ rank: 1, nick: "甲", score: 9, total: 10 }, { rank: 2, nick: "乙", score: 8, total: 10 }])
       .filter((m) => m.filled).length === 2
       && rank.podiumOf([]).length === 3
-      && rank.restOf([{ rank: 3 }, { rank: 4 }, { rank: 5 }]).map((r) => r.rank).join() === "4,5",
-    "领奖台与列表的切分不在第 3 名上，同一个人会既上台又上榜");
+      && rank.restOf([{ rank: 1 }, { rank: 4 }]).map((r) => r.rank).join() === "1,4"
+      && /wx:if="\{\{player\}\}"/.test(pageWxml),
+    "状元只活在一块奖牌上，换个时间口径就找不到自己排第几");
 
   ok("榜单只发服务端认得的档位（全部学段不带年级，年级要落在本学段里）",
     rank.queryOf({ stage: "all", grade: 3, term: 1 }).grade === 0

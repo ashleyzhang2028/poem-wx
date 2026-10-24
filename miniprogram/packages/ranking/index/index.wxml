@@ -65,6 +65,7 @@
         <text class="lb-score">成绩</text>
       </view>
       <view class="lb-row {{item.me ? 'me' : ''}}" wx:for="{{rest}}" wx:key="rank">
+        <text class="lb-me-mark" wx:if="{{item.me}}">我</text>
         <text class="lb-rank">{{item.rank}}</text>
         <text class="lb-nick">{{item.nick}}</text>
         <text class="lb-score">{{item.score}}/{{item.total}}</text>
@@ -78,7 +79,8 @@
         <text class="lb-nick">{{me.nick}}</text>
         <text class="lb-score">{{me.score}}/{{me.total}}</text>
       </view>
-      <text class="hint note">只把昵称的首末字留着，中间一律星号</text>
+      <text class="hint note" wx:if="{{player}}">第 {{player}} 名是你</text>
+      <text class="hint note" wx:else>只把昵称的首末字留着，中间一律星号</text>
     </view>
 
     <view class="card" wx:if="{{state === 'empty'}}">
