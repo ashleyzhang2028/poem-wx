@@ -3783,6 +3783,21 @@ function mountFull(pg, query) {
       "落出来的边长 " + art2.width + "×" + art2.height);
   }
 
+  {
+    const art = custom.artOf({ w: 1000, h: 2000 }, { sx: 0, sy: 0, sw: 1, sh: 1 }, 4);
+    const deep = custom.fadePixels(art);
+    const tall = art.height;
+    ok("底边渐隐：从 20px 那道往下落到全透明，webp 那条读得回来",
+      deep >= 4 && deep < art.height / 2
+        && custom.fadeAt(tall, tall, deep) === 0
+        && custom.fadeAt(tall - deep, tall, deep) > 0.99
+        && custom.MIME.test(custom.WEBP),
+      "渐隐没接上：那条渐变没落到全透明，或者 webp 的 MIME 读不回来");
+    ok("底边那道按图宽折算，1200 宽的图上正好 20px",
+      custom.FADE_SPAN === 20 && Math.round(600 * custom.FADE_SPAN / custom.FADE_REF) === 10
+        && Math.round(2400 * custom.FADE_SPAN / custom.FADE_REF) === 40);
+  }
+
   tierAs("max");
   store.saveSettings({ banner: custom.JPEG + "AAAA", theme: themeMod.OWN_KEY });
   ok("Max 手上那项亮着，选的自定义题图真的落到 banner 上",

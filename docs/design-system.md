@@ -171,9 +171,14 @@ banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自�
 截取走 `canvas 2d`：原图先按比例缩到目标宽度的 1/4 再画，
 `drawImage` 带源矩形把选区抠出来铺满 1200 × 576（宽封 1200、高封 2400，
 超了就按同一系数缩），jpg 质量 72；导出失败时退到 png，白底照样铺。
+底边一条渐隐：图最下方按 1200 宽折 20px 的一段，alpha 从 1 落到 0
+（曲线 `1.8` 次方，比线性收得更快），让 banner 落到下方白色背景时不切一刀。
+alpha 只能在 webp 里落盘，所以渐隐那一版导出 `webp`，落完把底条读回来核一遍
+—— 全透明被铺成不透明白就说明这层不吃 alpha，退回铺满整张的 jpg。
+画布与网格共用一枚隐藏 canvas（`id="crop"`）。
+
 base64 存进 `kb_settings_v1` 的 `banner`，存完再读回来核一遍长度与 MIME，
 超出一条微信 key 的 1MB 就退回「换一张」而不是存成一条空图。
-画布与网格共用一枚隐藏 canvas（`id="crop"`）。
 
 **只存本机。** `banner` 与 `lastSearch` 一样进 `store.LOCAL_ONLY`，
 `cloudSettings()` 不给它，所以换台设备就回到默认那张 `icons/hero.png`；
