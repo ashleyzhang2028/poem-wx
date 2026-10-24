@@ -81,9 +81,6 @@
         <text class="rank-note">{{rank.note}}</text>
       </view>
 
-      <text class="hint best-line" wx:if="{{newBest}}">这一档比之前高，记下了</text>
-      <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
-
       <view class="dots" wx:if="{{questions.length}}">
         <view class="dot {{item ? 'on' : ''}}" wx:for="{{streakFlags}}" wx:key="index"
               hover-class="dot-hover">{{index + 1}}</view>

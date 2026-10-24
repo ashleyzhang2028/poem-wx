@@ -19,10 +19,6 @@ const PAGE = {
   exam: "/packages/game/exam/exam"
 };
 
-function lastOf(mode) {
-  return mode.log ? scoreLog.latest(mode.log) : null;
-}
-
 function lastTextOf(box) {
   if (!box || !box.rank || !box.rank.name) return "";
   return box.rank.name;
@@ -52,7 +48,7 @@ Page({
       return;
     }
 
-    const boxes = MODES.map((m) => (entitlement.can(CAP[m.key]) ? lastOf(m) : null));
+    const boxes = MODES.map((m) => (m.log && entitlement.can(CAP[m.key]) ? scoreLog.latest(m.log) : null));
     const cards = MODES.map((m, i) => Object.assign({}, m, {
       ok: entitlement.can(CAP[m.key]),
       lastText: lastTextOf(boxes[i])

@@ -3219,11 +3219,14 @@ function mountFull(pg, query) {
         && logWxml.indexOf("{{mode ===") >= 0,
       "成绩页写死只读考试那一份，飞花令的记录进去是空的");
     ok("大会首页只剩考试与飞花令两栏读记录，题库不挂档位胶囊",
-      /scoreLog/.test(idxJs) && /scoreLog\.latest\(/.test(idxJs)
-        && !/best:\s*[a-z]+\.KEYS/.test(idxJs)
-        && (idxJs.match(/log:\s*"/g) || []).length === 2
+      /scoreLog\.latest\(/.test(idxJs) && (idxJs.match(/log:\s*"/g) || []).length === 2
         && !/log:\s*"quiz"/.test(idxJs) && idxWxml.indexOf("{{item.lastText}}") >= 0,
       "题库只是平常练习，不该有档位胶囊；飞花令与考试该各读自己最后一次");
+    ok("题库不记成绩：交卷不落记录，结果页只有本局段位",
+      !/scoreLog/.test(read("packages/game/quiz/quiz.js"))
+        && !/feedback\.(keep|read)\(/.test(read("packages/game/quiz/quiz.js"))
+        && read("packages/game/quiz/quiz.wxml").indexOf("best-line") < 0,
+      "题库是平时学习，学完就结束，不该留档位也不该有「最好的一次」");
     ok("首页胶囊只报档位名，不挂「上次」「最好」这类前缀",
       !/"上次 "/.test(idxJs) && !/"最好 "/.test(idxJs));
   }

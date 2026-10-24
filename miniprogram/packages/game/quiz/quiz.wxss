@@ -156,10 +156,6 @@
   line-height: var(--lh-body);
 }
 
-.best-line {
-  margin-top: var(--sp-1);
-}
-
 .result .dots {
   justify-content: center;
   margin-top: var(--sp-3);
