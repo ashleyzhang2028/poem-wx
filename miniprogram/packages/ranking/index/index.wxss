@@ -227,6 +227,10 @@
   color: var(--ink-3);
 }
 
+.lb-row-head .lb-nick {
+  color: var(--ink-3);
+}
+
 .lb-row.me .lb-nick {
   color: var(--strong-text);
 }
@@ -251,7 +255,7 @@
   flex: 1;
   min-width: 0;
   font-size: var(--fs-body);
-  color: var(--ink);
+  color: var(--ink-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

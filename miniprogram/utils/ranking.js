@@ -120,7 +120,7 @@ function podiumOf(board) {
 }
 
 function restOf(board) {
-  return (board || []).filter((r) => r.rank > 3);
+  return board || [];
 }
 
 function beyondOf(board, total) {
