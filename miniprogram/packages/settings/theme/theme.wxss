@@ -202,16 +202,18 @@
 }
 
 .tone-field {
-  flex: none;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
-.tone-field-rgba {
-  min-width: 0;
+.tone-acts {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-2);
 }
 
 .tone-chip {
   flex: none;
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 8rpx;
@@ -249,16 +251,18 @@
 .tone-input {
   display: block;
   box-sizing: border-box;
-  width: 156rpx;
+  width: 100%;
   height: var(--h-btn-mini);
+  padding: 0 var(--sp-2);
   border-radius: var(--radius-sm);
-  background: var(--sink);
+  background: var(--surface);
+  border: 1rpx solid var(--line-strong);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-caption);
   color: var(--ink);
   letter-spacing: 0;
   line-height: var(--h-btn-mini);
-  text-align: center;
+  text-align: left;
 }
 
 .tone-input-ph {
@@ -267,7 +271,6 @@
 }
 
 .tone-read {
-  width: 236rpx;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

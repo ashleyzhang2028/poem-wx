@@ -59,6 +59,9 @@
         <view class="tone-field tone-field-rgba" wx:if="{{toneView.toneRgba}}">
           <text class="tone-input tone-read">{{toneView.toneRgba}}</text>
         </view>
+      </view>
+
+      <view class="tone-acts">
         <view class="tone-chip {{toneView.toneOn ? 'on' : ''}}" hover-class="none" bindtap="onToneReset">
           <view class="tone-chip-dot"></view>
           <text class="tone-chip-reset">恢复</text>
