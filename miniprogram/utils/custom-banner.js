@@ -9,11 +9,7 @@ const PNG = "data:image/png;base64,";
 
 const WIDTH = 1200;
 
-const TALL = 2400;
-
 const QUALITY = 0.72;
-
-const SCALE = 4;
 
 const RATIO_W = crop.RATIO_W;
 
@@ -76,16 +72,15 @@ function read(file) {
   });
 }
 
-function artOf(img, box, scale) {
-  const fit = Math.min(WIDTH / (img.w * box.sw * scale), TALL / (img.h * box.sh * scale));
-  const width = Math.max(1, Math.round(img.w * box.sw * scale * Math.min(1, fit)));
+function artOf(img, box) {
+  const sw = Math.max(1, Math.round(img.w * box.sw));
   return {
     sx: Math.round(img.w * box.sx),
     sy: Math.round(img.h * box.sy),
-    sw: Math.max(1, Math.round(img.w * box.sw)),
+    sw: sw,
     sh: Math.max(1, Math.round(img.h * box.sh)),
-    width: width,
-    height: Math.max(1, Math.round(width * RATIO_H / RATIO_W))
+    width: Math.min(WIDTH, sw),
+    height: Math.max(1, Math.round(Math.min(WIDTH, sw) * RATIO_H / RATIO_W))
   };
 }
 
@@ -134,23 +129,36 @@ function draw(canvas, source, art, fileType) {
   });
 }
 
-async function prepare(path, img, host, id, box, scale) {
+async function prepare(path, img, host, id, box) {
   try {
-    const art = artOf(img, box, scale);
-    const small = await shrink(path, img.w * scale / SCALE, img.h * scale / SCALE);
+    const art = artOf(img, box);
+    const keep = Math.min(1, art.width / art.sw);
+    const small = await shrink(path, img.w * keep, img.h * keep);
+    const source = small.tempFilePath || path;
+    const size = await photo(source).then(
+      (info) => ({ w: Number(info.width) || img.w, h: Number(info.height) || img.h }),
+      () => img
+    );
+    const fx = size.w / img.w;
+    const fy = size.h / img.h;
+    const fitted = Object.assign({}, art, {
+      sx: art.sx * fx,
+      sy: art.sy * fy,
+      sw: art.sw * fx,
+      sh: art.sh * fy
+    });
     const canvas = await node(host, id);
     if (!canvas) return "";
-    const source = small.tempFilePath || path;
-    const jpeg = await draw(canvas, source, art, "jpg");
+    const jpeg = await draw(canvas, source, fitted, "jpg");
     if (jpeg) return jpeg;
-    return draw(canvas, source, art, "png");
+    return draw(canvas, source, fitted, "png");
   } catch (e) {
     return "";
   }
 }
 
-async function put(path, img, host, id, box, scale) {
-  const file = await prepare(path, img, host, id, crop.clampBox(box), scale);
+async function put(path, img, host, id, box) {
+  const file = await prepare(path, img, host, id, crop.clampBox(box));
   if (!file) return { ok: false, reason: "read" };
   const data = file.indexOf(MIME) === 0 ? file : await read(file).catch(() => "");
   if (data.length <= PNG.length) return { ok: false, reason: "read" };

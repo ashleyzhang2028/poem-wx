@@ -17,6 +17,7 @@ var LIST_PRICE_CENTS = {
 var RANK = { free: 0, pro: 1, max: 2 };
 var CATALOG_KEY = "pay.catalog";
 var PAID_STATUS = [2, 3, 4];
+var UNPAID = ["pending", "canceled", "deleted"];
 var PENDING_WINDOW_MS = DAY;
 var QUERY_GAP_MS = 2500;
 var PRODUCT_ID = /^[A-Za-z0-9_]{1,64}$/;
@@ -221,39 +222,105 @@ function wxQueryOrder(deps, order) {
   });
 }
 
-function nextPlan(acc, order, t) {
-  var cur = currentPlan(acc);
+function creditFrom(rowsNewestFirst, cur, t) {
+  if (cur.tier !== "pro" || cur.until == null || cur.until <= t) return 0;
+  var left = cur.until - t, value = 0;
+  rowsNewestFirst.forEach(function (o) {
+    if (left <= 0 || o.plan !== "pro" || Number(o.applied) !== 1) return;
+    var span = PERIOD_MS[o.period];
+    var take = Math.min(left, span);
+    value += Number(o.price_cents) * take / span;
+    left -= take;
+  });
+  return value;
+}
+
+function proCreditCents(store, uid, acc, t) {
+  return Promise.resolve(store.listPayOrders({ uid: uid, status: "paid" }, 100)).then(function (rows) {
+    return creditFrom(rows || [], currentPlan(acc), t);
+  });
+}
+
+function bonusDaysOf(creditCents, priceCents, period) {
+  if (!(creditCents > 0) || !(priceCents > 0)) return 0;
+  return Math.floor(creditCents * (PERIOD_MS[period] / DAY) / priceCents);
+}
+
+function upgradeBonusMs(store, acc, order, t) {
+  if (order.plan !== "max") return Promise.resolve(0);
+  return proCreditCents(store, order.uid, acc, t).then(function (credit) {
+    return bonusDaysOf(credit, Number(order.price_cents), order.period) * DAY;
+  });
+}
+
+function upgradeOffer(store, uid, acc, plans, t) {
+  return proCreditCents(store, uid, acc, t).then(function (credit) {
+    if (!(credit > 0)) return null;
+    var bonus = {};
+    PERIODS.forEach(function (period) { bonus[period] = bonusDaysOf(credit, plans.max[period].priceCents, period); });
+    return { proLeftDays: Math.ceil((currentPlan(acc).until - t) / DAY), bonus: bonus };
+  });
+}
+
+function nextOf(cur, order, t, bonusMs) {
   if (RANK[cur.tier] > RANK[order.plan]) return { plan: cur.tier, until: cur.until };
   var span = PERIOD_MS[order.period];
   if (cur.tier === order.plan) {
     if (cur.until == null) return { plan: order.plan, until: null };
     return { plan: order.plan, until: Math.max(t, cur.until) + span };
   }
-  return { plan: order.plan, until: t + span };
+  return { plan: order.plan, until: t + span + (bonusMs || 0) };
+}
+
+function paidOrder(a, b) {
+  return Number(a.paid_at) - Number(b.paid_at)
+    || (a.plan_until_after == null ? 1 : b.plan_until_after == null ? -1 : Number(a.plan_until_after) - Number(b.plan_until_after));
+}
+
+function replayPlan(orders) {
+  var state = { plan: "free", until: null }, done = [];
+  orders.forEach(function (o) {
+    var t = Number(o.paid_at);
+    var live = state.plan !== "free" && (state.until == null || state.until > t);
+    var cur = { tier: live ? state.plan : "free", until: live ? state.until : null };
+    var bonusMs = o.plan === "max"
+      ? bonusDaysOf(creditFrom(done.slice().reverse(), cur, t), Number(o.price_cents), o.period) * DAY
+      : 0;
+    var next = nextOf(cur, o, t, bonusMs);
+    state = { plan: next.plan, until: next.until };
+    done.push(o);
+  });
+  return state;
+}
+
+function sameUntil(a, b) {
+  return (a == null && b == null) || (a != null && b != null && Number(a) === Number(b));
 }
 
 function deliver(deps, order, info) {
   var store = deps.store, t = deps.now();
   if (order.status === "paid" && Number(order.applied) === 1) return Promise.resolve(order);
-  if (order.status !== "pending" && order.status !== "paid") return Promise.resolve(order);
+  if (order.status !== "paid" && UNPAID.indexOf(order.status) < 0) return Promise.resolve(order);
   return Promise.resolve(store.getAccount(order.uid)).then(function (acc) {
     if (!acc || acc.status === "deleted") return order;
     var plan = order.plan_after;
     var until = order.plan_until_after == null ? null : Number(order.plan_until_after);
     var claim = Promise.resolve(true);
-    if (order.status === "pending") {
-      var next = nextPlan(acc, order, t);
-      plan = next.plan;
-      until = next.until;
-      claim = store.claimPayOrder(order.out_trade_no, "pending", {
-        status: "paid",
-        wx_order_id: String((info && info.wxOrderId) || "").slice(0, 64) || null,
-        source: String((info && info.source) || "").slice(0, 16),
-        plan_after: plan,
-        plan_until_after: until,
-        applied: 0,
-        paid_at: t,
-        notify_raw: info && info.raw ? String(info.raw).slice(0, NOTIFY_RAW_MAX) : null
+    if (order.status !== "paid") {
+      claim = upgradeBonusMs(store, acc, order, t).then(function (bonusMs) {
+        var next = nextOf(currentPlan(acc), order, t, bonusMs);
+        plan = next.plan;
+        until = next.until;
+        return store.claimPayOrder(order.out_trade_no, order.status, {
+          status: "paid",
+          wx_order_id: String((info && info.wxOrderId) || "").slice(0, 64) || null,
+          source: String((info && info.source) || "").slice(0, 16),
+          plan_after: plan,
+          plan_until_after: until,
+          applied: 0,
+          paid_at: t,
+          notify_raw: info && info.raw ? String(info.raw).slice(0, NOTIFY_RAW_MAX) : null
+        });
       });
     }
     return Promise.resolve(claim).then(function (won) {
@@ -269,11 +336,19 @@ function revoke(deps, order) {
   return Promise.resolve(store.claimPayOrder(order.out_trade_no, "paid", { status: "refunded", refunded_at: t }))
     .then(function (won) {
       if (!won || Number(order.applied) !== 1) return null;
-      return Promise.resolve(store.getAccount(order.uid)).then(function (acc) {
-        if (!acc || acc.plan !== order.plan || acc.plan_until == null) return null;
+      return Promise.all([store.getAccount(order.uid), store.listPayOrders({ uid: order.uid, status: "paid" }, 100)]).then(function (r) {
+        var acc = r[0];
+        if (!acc) return null;
+        var rest = (r[1] || []).filter(function (o) { return Number(o.applied) === 1; }).sort(paidOrder);
+        var last = rest.concat([order]).sort(paidOrder).pop();
+        if (last.plan_after === acc.plan && sameUntil(last.plan_until_after, acc.plan_until)) {
+          var s = replayPlan(rest);
+          var live = s.plan !== "free" && (s.until == null || s.until > t);
+          return store.patchAccount(order.uid, live ? { plan: s.plan, plan_until: s.until } : { plan: "free", plan_until: null });
+        }
+        if (acc.plan !== order.plan || acc.plan_until == null) return null;
         var left = Number(acc.plan_until) - PERIOD_MS[order.period];
-        var patch = left > t ? { plan: acc.plan, plan_until: left } : { plan: "free", plan_until: null };
-        return store.patchAccount(order.uid, patch);
+        return store.patchAccount(order.uid, left > t ? { plan: acc.plan, plan_until: left } : { plan: "free", plan_until: null });
       });
     });
 }
@@ -283,7 +358,10 @@ function payCatalog(deps) {
   if (gate) return Promise.resolve(gate);
   return Promise.all([loadCatalog(deps.store), deps.store.getAccount(deps.account.uid)]).then(function (r) {
     if (!r[1] || r[1].status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
-    return ok({ plans: publicCatalog(r[0]), plan: currentPlan(r[1]), payReady: deps.cfg.hasPay(), sandbox: deps.cfg.payEnv === 1 });
+    var plans = publicCatalog(r[0]);
+    return upgradeOffer(deps.store, deps.account.uid, r[1], plans, deps.now()).then(function (upgrade) {
+      return ok({ plans: plans, plan: currentPlan(r[1]), upgrade: upgrade, payReady: deps.cfg.hasPay(), sandbox: deps.cfg.payEnv === 1 });
+    });
   });
 }
 
@@ -396,12 +474,55 @@ function payConfirm(deps, input) {
   });
 }
 
+var MANAGE_FROM = { cancel: ["pending"], delete: ["pending", "canceled"] };
+var MANAGE_TO = { cancel: "canceled", delete: "deleted" };
+
+function stateConflict(order, what) {
+  return err(409, "E_PAY_ORDER_STATE", order.status === "paid" ? "这笔订单已经支付，不能" + what : "这笔订单当前不能" + what);
+}
+
+function manageDone(deps, order, op) {
+  var what = op === "cancel" ? "取消" : "删除";
+  if (order.status === MANAGE_TO[op]) return Promise.resolve(ok({ status: order.status }));
+  if (MANAGE_FROM[op].indexOf(order.status) < 0) return Promise.resolve(stateConflict(order, what));
+  return Promise.resolve(deps.store.claimPayOrder(order.out_trade_no, order.status, { status: MANAGE_TO[op] })).then(function (won) {
+    return won ? ok({ status: MANAGE_TO[op] }) : err(409, "E_PAY_ORDER_STATE", "订单状态刚刚变了，请刷新后再试");
+  });
+}
+
+function manageResume(deps, order, code) {
+  if (order.status !== "pending" || deps.now() - Number(order.created_at) >= PENDING_WINDOW_MS) {
+    return Promise.resolve(stateConflict(order, "继续支付"));
+  }
+  return payOrder(deps, { plan: order.plan, period: order.period, code: code }).then(function (res) {
+    if (res.status !== 200) return res;
+    return Promise.resolve(deps.store.claimPayOrder(order.out_trade_no, "pending", { status: "canceled" })).then(function (won) {
+      return won ? res : err(409, "E_PAY_ORDER_STATE", "这笔订单已经支付");
+    });
+  });
+}
+
+function payManage(deps, input) {
+  var gate = loginGate(deps) || payGate(deps);
+  if (gate) return Promise.resolve(gate);
+  var op = String((input && input.op) || "");
+  var out = String((input && input.outTradeNo) || "").trim();
+  if (op !== "resume" && !MANAGE_TO[op]) return Promise.resolve(err(400, "E_PAY_OP", "操作不对"));
+  return Promise.resolve(deps.store.getPayOrder(out)).then(function (order) {
+    if (!order || order.uid !== deps.account.uid || order.status === "deleted") return err(404, "E_PAY_ORDER", "没有这笔订单");
+    var fresh = order.status === "pending" ? settleFromWx(deps, order) : Promise.resolve(order);
+    return fresh.then(function (cur) {
+      return op === "resume" ? manageResume(deps, cur, String((input && input.code) || "").trim()) : manageDone(deps, cur, op);
+    });
+  });
+}
+
 function payOrdersMine(deps, input) {
   var gate = loginGate(deps);
   if (gate) return Promise.resolve(gate);
   var limit = Math.max(1, Math.min(100, Number(input && input.limit) || 50));
   return Promise.resolve(deps.store.listPayOrders({ uid: deps.account.uid }, limit)).then(function (rows) {
-    return ok({ orders: (rows || []).map(publicOrder) });
+    return ok({ orders: (rows || []).filter(function (r) { return r.status !== "deleted"; }).map(publicOrder) });
   });
 }
 
@@ -517,6 +638,7 @@ module.exports = {
   payCatalog: payCatalog,
   payOrder: payOrder,
   payConfirm: payConfirm,
+  payManage: payManage,
   payOrdersMine: payOrdersMine,
   payNotify: payNotify,
   payAdmin: payAdmin,

@@ -516,6 +516,16 @@ button, textarea {
   background: var(--gold-soft);
 }
 
+.tag.fei {
+  color: var(--fei);
+  background: var(--fei-soft);
+}
+
+.tag.zi {
+  color: var(--zi);
+  background: var(--zi-soft);
+}
+
 .tag.course {
   color: var(--strong-text);
   background: var(--strong-soft);
@@ -682,7 +692,7 @@ button, textarea {
 .card-head > .card-title {
   flex: 1;
   min-width: 0;
-  margin-bottom: 0;
+  margin-bottom: var(--card-title-gap);
 }
 
 .card-open > .card-sub {

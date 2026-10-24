@@ -79,7 +79,7 @@
   font-family: var(--font-poem);
   font-size: calc(var(--fs-glyph) * .8);
   line-height: 1;
-  color: var(--ink);
+  color: var(--strong);
 }
 
 .fh-ask {

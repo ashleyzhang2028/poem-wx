@@ -27,6 +27,7 @@ const PATHS = {
   payCatalog: "/api/pay/catalog",
   payOrder: "/api/pay/order",
   payConfirm: "/api/pay/confirm",
+  payManage: "/api/pay/manage",
   payOrders: "/api/pay/orders",
   adminPay: "/api/admin/pay"
 };
@@ -61,9 +62,9 @@ function shardReady() {
   return configured();
 }
 
-function shard(name) {
+function shard(name, rev) {
   if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
-  return sendTraced(SHARD_PATH + name, {}, "GET");
+  return sendTraced(SHARD_PATH + name + (rev ? "?v=" + encodeURIComponent(rev) : ""), {}, "GET");
 }
 
 function useCloud() {
