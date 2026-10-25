@@ -1549,7 +1549,7 @@ button, textarea {
   height: var(--py-slot);
   font-family: var(--font-ui);
   font-size: var(--fs-pinyin);
-  color: var(--celadon);
+  color: var(--strong-text);
   line-height: 1;
   white-space: nowrap;
 }
