@@ -2792,6 +2792,38 @@ function mountFull(pg, query) {
         && scan.filter((p) => rel(p) !== "utils/tab-page.js")
           .every((p) => !/switchTab\(\{\s*url:\s*"\/pages\/mine\/mine"/.test(fs.readFileSync(p, "utf8"))),
       "又多了一处手写 switchTab 去「我的」");
+
+    ok("底栏的「我的」不按当前页算：点下去先看是不是已经站在「我的」",
+      /me:\s*\d/.test(barSrc)
+        && /tabPage\.mine\(\)/.test(barSrc)
+        && /if \(!landed\(\)\)[\s\S]{0,80}go\(MINE\)/.test(helper),
+      "底栏又把「已在这一格就不动」套到「我的」上 —— 站在任何一页都点不动（Issue #709）");
+
+    const tabPageMod = require(path.join(ROOT, "utils", "tab-page.js"));
+    const savedStack = global.getCurrentPages;
+    const savedWx = global.wx;
+    const tries = (stack) => {
+      const calls = [];
+      global.getCurrentPages = () => stack.map((r) => ({ route: r }));
+      global.wx = {
+        switchTab: (o) => calls.push("switchTab " + o.url),
+        navigateBack: (o) => calls.push("back " + o.delta),
+        navigateTo: (o) => calls.push("to " + o.url)
+      };
+      tabPageMod.mine();
+      return calls.join(" | ");
+    };
+    const fromMine = tries(["pages/mine/mine"]);
+    const fromTheme = tries(["pages/mine/mine", "packages/settings/theme/theme"]);
+    const fromHome = tries(["pages/home/home"]);
+    ok("点在「我的」上回到「我的」的首页：不在那页就切过去，叠着子页就退回来",
+      fromTheme === "switchTab /pages/mine/mine"
+        && fromHome === "switchTab /pages/mine/mine"
+        && fromMine === ""
+        && tries(["pages/mine/mine", "pages/mine/mine"]) === "back 1",
+      [fromMine, fromTheme, fromHome].join(" ／ "));
+    global.getCurrentPages = savedStack;
+    global.wx = savedWx;
   }
 }
 
@@ -3563,6 +3595,12 @@ function mountFull(pg, query) {
       && themeJs.indexOf("font.preview(") >= 0
       && fontMod.FACES.every((f) => f.previewFamily && f.previewFamily !== f.family),
     "预览字族又落回 page-meta 里当可见文字了，或者预览与正文共用一个字族");
+
+  ok("预热壳排在 banner 前面且压到负层（后画的兄弟节点盖住它，九格预览才会只剩空白）",
+    themeWxml.indexOf("font-warm") < themeWxml.indexOf("<page-banner")
+      && /\.font-warm \{[^}]*z-index: -1/.test(
+        fs.readFileSync(path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8")),
+    "壳落到 banner 或卡片后面去了 —— 那九个字族的字形根本没被画过一次（Issue #709）");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)

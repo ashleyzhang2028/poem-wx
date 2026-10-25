@@ -5,6 +5,12 @@ function go(url) {
   wx.switchTab({ url: url });
 }
 
+function landed() {
+  const pages = getCurrentPages();
+  const page = pages[pages.length - 1];
+  return !!page && page.route === MINE.slice(1);
+}
+
 function conference() {
   wx.navigateTo({ url: GAME });
 }
@@ -20,7 +26,12 @@ function hub() {
 }
 
 function mine() {
-  go(MINE);
+  if (!landed()) {
+    go(MINE);
+    return;
+  }
+  const pages = getCurrentPages();
+  if (pages.length > 1) wx.navigateBack({ delta: 1 });
 }
 
 function back(url) {
