@@ -6,7 +6,7 @@
       <view class="empty-mark">榜</view>
       <text class="empty-text">排行榜 {{tier}} 起可用</text>
       <view class="btn ghost mini lb-retry" hover-class="button-hover" hover-stay-time="60"
-            bindtap="onTier">看看差别</view>
+            bindtap="onTierGate">看看差别</view>
     </view>
   </view>
 
