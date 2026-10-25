@@ -49,6 +49,7 @@ function copyText(o) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     canWrite: false,
     reason: "",

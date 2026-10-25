@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="搜索" note="登录后才能搜" mark="寻" bind:login="onLogin" />
 
   <block wx:else>

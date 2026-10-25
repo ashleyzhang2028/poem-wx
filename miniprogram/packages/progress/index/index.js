@@ -8,6 +8,7 @@ const pv = require("../../../components/progress-view/progress-view");
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
 
     view: null,

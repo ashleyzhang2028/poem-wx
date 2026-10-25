@@ -1,6 +1,7 @@
 const cols = require("../../utils/collections");
 const corpus = require("../../utils/corpus");
 const entitlement = require("../../utils/entitlement");
+const theme = require("../../utils/theme");
 
 const TOAST_MS = 2000;
 
@@ -11,6 +12,7 @@ Component({
 
   data: {
     themeStyle: "",
+    name: "",
     open: false,
     poemId: "",
     title: "",
@@ -18,6 +20,10 @@ Component({
     itemsMax: cols.ITEMS_MAX,
     total: 0,
     cap: 0
+  },
+
+  attached() {
+    this.setData({ name: theme.name() });
   },
 
   methods: {

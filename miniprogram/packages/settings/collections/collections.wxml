@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
   <lock-card wx:if="{{locked}}" title="自选背诵" note="登录后才能建集合" mark="选" bind:login="onLogin" />
 

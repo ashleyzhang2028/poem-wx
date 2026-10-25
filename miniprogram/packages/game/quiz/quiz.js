@@ -11,6 +11,7 @@ const COUNT = 10;
 Page({
   data: {
     themeStyle: "",
+    name: "",
     stage: "setup",
     forms: [],
     pickedForms: [],

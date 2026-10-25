@@ -3,7 +3,7 @@ const tabbar = require("../../../utils/tabbar");
 const entitlement = require("../../../utils/entitlement");
 
 Page({
-  data: { themeStyle: "" },
+  data: { themeStyle: "", name: "" },
 
   onShow() {
     theme.apply(this);

@@ -20,6 +20,7 @@ const PACK_MAX = 80;
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     keyword: "",
 

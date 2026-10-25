@@ -15,6 +15,7 @@ function labelOf(name) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
 
     logged: false,

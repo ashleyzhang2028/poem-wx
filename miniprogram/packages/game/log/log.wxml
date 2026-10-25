@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
   <view class="card lg-hero" wx:if="{{summary.count}}">
     <view class="lg-hero-l">
