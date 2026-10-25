@@ -6688,9 +6688,10 @@ const K = {
   ok("全文检索模块已删（课外正文不进包，扫不了全书）",
     !fs.existsSync(path.join(ROOT, "utils", "text-search.js")));
   ok("本机残留的分片缓存会自己清掉（升级上来的手机不背着 40 片正文）",
-    /function\s+dropLegacy/.test(corpusSrc2) && /shards/.test(corpusSrc2)
+    /function\s+dropLegacy/.test(corpusSrc2) && /"shards[^"]*"/.test(corpusSrc2)
       && /corpus\.dropLegacy\(\)/.test(
-        fs.readFileSync(path.join(ROOT, "app.js"), "utf8")));
+        fs.readFileSync(path.join(ROOT, "app.js"), "utf8")),
+    "清的是本机键名，与已删的 /api/shard 路由无关");
 }
 
 {

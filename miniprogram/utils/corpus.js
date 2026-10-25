@@ -269,9 +269,7 @@ function buildProbe() {
   return typeof buildCache === "object" && buildCache ? buildCache : {};
 }
 
-const LEGACY = ["kb_probe_v1"];
-
-const LEGACY_PREFIX = "shards";
+const LEGACY = ["kb_probe_v1", "shards"];
 
 function dropLegacy() {
   let keys = LEGACY.slice();
@@ -281,7 +279,7 @@ function dropLegacy() {
     keys = LEGACY.slice();
   }
   keys.forEach(function (k) {
-    if (LEGACY.indexOf(k) < 0 && String(k).indexOf(LEGACY_PREFIX) !== 0) return;
+    if (LEGACY.indexOf(k) < 0) return;
     try { wx.removeStorageSync(k); } catch (e) { return; }
   });
 }
