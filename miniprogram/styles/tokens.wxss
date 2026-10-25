@@ -47,7 +47,6 @@ page {
   --zi-soft: rgba(91, 58, 135, .09);
   --card-fei: linear-gradient(135deg, rgba(204, 64, 62, 1) 0%, rgba(168, 35, 43, 1) 48%, rgba(190, 56, 58, 1) 72%, rgba(138, 28, 36, 1) 100%);
   --card-zi: linear-gradient(135deg, rgba(113, 78, 160, 1) 0%, rgba(82, 48, 124, 1) 48%, rgba(102, 66, 146, 1) 72%, rgba(60, 33, 96, 1) 100%);
-  --celadon: #2e7d5b;
   --green-light: var(--green-soft);
   --green-edge: rgba(46, 125, 91, .2);
   --green-dark: #23624a;
