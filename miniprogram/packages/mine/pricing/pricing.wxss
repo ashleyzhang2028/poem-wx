@@ -29,8 +29,47 @@
   margin-top: var(--sp-3);
 }
 
-.pr-period {
+.pr-tabs {
   margin-bottom: var(--sp-3);
+}
+
+.pr-tab-group {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.pr-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: var(--h-opt);
+}
+
+.pr-tab-t {
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-title);
+  transition: color var(--t-press);
+}
+
+.pr-tab.on .pr-tab-t {
+  color: var(--tier);
+  font-weight: 600;
+}
+
+.pr-tab.on::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1rpx;
+  width: var(--tab-under-w);
+  height: 4rpx;
+  margin-left: calc(-1 * var(--tab-under-w) / 2);
+  border-radius: var(--radius-pill);
+  background: var(--tier);
 }
 
 .pr-save {
@@ -58,6 +97,14 @@
 .tier-max {
   --tier: var(--zi);
   --tier-soft: var(--zi-soft);
+}
+
+.tier-pro {
+  --tab-under-w: calc(96rpx * var(--ui-scale));
+}
+
+.tier-max {
+  --tab-under-w: calc(120rpx * var(--ui-scale));
 }
 
 .pr-plan {
@@ -295,7 +342,12 @@
   padding: var(--sp-3);
   border: 2rpx solid var(--tier);
   border-radius: var(--radius);
-  background: var(--tier-soft);
+  background: var(--tier);
+}
+
+.pr-welcome .pr-w-title,
+.pr-welcome .pr-w-sub {
+  color: var(--on-ink);
 }
 
 .pr-w-title {

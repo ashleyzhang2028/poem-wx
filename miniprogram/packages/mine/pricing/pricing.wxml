@@ -22,11 +22,11 @@
   </view>
 
   <block wx:if="{{logged}}">
-    <view class="seg pr-period">
-      <radio-group class="seg-group" bindchange="onTab">
-        <label class="seg-item {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
+    <view class="pr-tabs">
+      <radio-group class="pr-tab-group" bindchange="onTab">
+        <label class="pr-tab tier-{{item.key}} {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
           <radio class="seg-radio" value="{{item.key}}" checked="{{tab === item.key}}" />
-          <text class="seg-text">{{item.name}}</text>
+          <text class="pr-tab-t">{{item.name}}</text>
         </label>
       </radio-group>
     </view>
