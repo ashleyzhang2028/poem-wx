@@ -1,5 +1,6 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
+const source = require("../../utils/poem-source");
 const gate = require("../../utils/gate");
 const loginFlow = require("../../utils/login-flow");
 const guard = require("../../utils/guard");
@@ -97,6 +98,82 @@ Page({
       searching: false,
       resultWhere: "篇名作者 · 课内"
     }, () => this.refreshPicked());
+  },
+
+  runSource(kw) {
+    const token = (this.sourceToken || 0) + 1;
+    this.sourceToken = token;
+    this.fromPack = false;
+    this.busy = false;
+    this.session = null;
+    this.got = {};
+
+    const ask = (type) => source.search(kw, { type: type, page: 1, size: BATCH });
+
+    ask("all")
+      .then((r) => (r.total ? r : ask("content")))
+      .then((r) => {
+        if (token !== this.sourceToken) return;
+        if (!r.items.length) {
+          this.setData({
+            results: [], total: 0, searched: true, searching: false,
+            more: false, loading: false, partial: false, fromFull: false,
+            resultWhere: "篇名作者 · 全站"
+          });
+          return;
+        }
+        this.sourceTotal = r.total;
+        this.sourcePage = 1;
+        this.setData({
+          results: this.decorate(r.items.map((p) => source.asResult(p, kw))),
+          total: r.total,
+          more: r.total > r.items.length,
+          searched: true,
+          searching: false,
+          loading: false,
+          partial: false,
+          fromFull: true,
+          resultWhere: "诗泉 · 全文",
+          resultMore: r.total > r.items.length ? "每次 20 篇，往下拉接着出" : "就这些了"
+        });
+      })
+      ["catch"](() => {
+        if (token !== this.sourceToken) return;
+        this.setData({
+          results: [], total: 0, searched: true, searching: false,
+          more: false, loading: false, partial: false
+        });
+      });
+  },
+
+  moreSource() {
+    const kw = this.data.keyword.trim();
+    const page = (this.sourcePage || 1) + 1;
+    const token = this.sourceToken;
+    this.setData({ loading: true });
+    source.search(kw, { type: "all", page: page, size: BATCH }).then((r) => {
+      if (token !== this.sourceToken) return;
+      const seen = this.got || (this.got = {});
+      const rows = [];
+      r.items.forEach((p) => {
+        const row = source.asResult(p, kw);
+        if (seen[row.id]) return;
+        seen[row.id] = 1;
+        rows.push(row);
+      });
+      const results = this.data.results.concat(this.decorate(rows));
+      this.sourcePage = page;
+      this.setData({
+        results: results,
+        total: this.sourceTotal || r.total,
+        loading: false,
+        more: results.length < (this.sourceTotal || r.total),
+        resultMore: results.length < (this.sourceTotal || r.total) ? "每次 20 篇，往下拉接着出" : "就这些了"
+      });
+    }, () => {
+      if (token !== this.sourceToken) return;
+      this.setData({ loading: false, more: false });
+    });
   },
 
   byIndex(kw, limit) {

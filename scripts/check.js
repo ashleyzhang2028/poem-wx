@@ -744,8 +744,15 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
     ok("未登录取默认那一款的 free 子集，woff2 在前、woff 兜底",
       seen[0].source === e.font.FACES[0].free[0]
-        && /-free\.woff2$/.test(seen[0].source) && /-free\.woff$/.test(e.font.FACES[0].free[1]),
+        && /\/zhuquefangsong-regular\/free\.woff2$/.test(seen[0].source)
+        && /\/free\.woff$/.test(e.font.FACES[0].free[1]),
       seen[0].source);
+    ok("子集地址按目录 + 档位取名，文件名里只有档位一个词",
+      e.font.FACES.every((f) => ["free", "pro", "max"].every((size) => f[size].every((u) => {
+        const parts = u.replace(e.font.BASE, "").split("/");
+        return parts.length === 2 && parts[0] === f.dir && parts[1] === size + (/woff2$/.test(u) ? ".woff2" : ".woff");
+      }))),
+      e.font.FACES[0].free.join(" | "));
   });
   e.restore();
 
@@ -765,7 +772,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
     ok("Pro 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0]
-      && /-pro\.woff2$/.test(proSeen[0]), proSeen[0]);
+      && /\/zhuquefangsong-regular\/pro\.woff2$/.test(proSeen[0]), proSeen[0]);
     ok("Free / Pro / Max 是同一款的三份",
       ep.font.FACES[0].free[0] !== ep.font.FACES[0].pro[0]
         && ep.font.FACES[0].pro[0] !== ep.font.FACES[0].max[0]
@@ -797,11 +804,11 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const em = bootFont({}, { loadFontFace: (o) => { maxSeen.push(o.source); o.success && o.success(); } });
   em.font.load().then(() => {
     ok("Max 取 max 那一份", maxSeen.length === 1 && maxSeen[0] === em.font.addresses(em.font.DEFAULT)[0]
-      && /-max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
+      && /\/zhuquefangsong-regular\/max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
     maxSeen.length = 0;
     const r = em.font.set("yozai");
     ok("Pro 升 Max 后换一款，注册的是这款的 max 子集",
-      r.ok === true && maxSeen.length === 1 && /yozai-regular\/yozai-regular-max\.woff2$/.test(maxSeen[0]),
+      r.ok === true && maxSeen.length === 1 && /\/yozai-regular\/max\.woff2$/.test(maxSeen[0]),
       maxSeen.join(" | "));
   });
   em.restore();
@@ -832,17 +839,16 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const previewSeen = [];
   asTier("pro");
   const epv = bootFont({}, { loadFontFace: (o) => { previewSeen.push(o); o.success && o.success(); } });
-  epv.font.preview("chillkai").then((hit) => {
-    ok("字体卡那行预览取的是 -7 那两份，不是 free / pro / max",
+  epv.font.preview().then((hit) => {
+    ok("字体卡那行预览取的是 7 那一份，不是 free / pro / max",
       hit === true && previewSeen.length === 1
-        && previewSeen[0].source === epv.font.FACES[2].preview[0]
-        && previewSeen[0].family === epv.font.FACES[2].previewFamily
-        && epv.font.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0
-          && f.preview[0] !== f.free[0] && f.preview[0] !== f.pro[0] && f.preview[0] !== f.max[0]),
+        && previewSeen[0].source === epv.font.PREVIEW_FILES[0]
+        && previewSeen[0].family === epv.font.PREVIEW_FAMILY
+        && epv.font.PREVIEW_FILES.every((u) => new RegExp("/" + epv.font.PREVIEW_DIR + "/7\\.woff2?$").test(u)),
       previewSeen.map((o) => o.family + " " + o.source).join(" | "));
-    return epv.font.preview("chillkai");
+    return epv.font.preview();
   }).then((again) => {
-    ok("同一款的预览注册过就不再注册一次",
+    ok("预览注册过就不再注册一次",
       again === true && previewSeen.length === 1, previewSeen.map((o) => o.family).join(" | "));
     epv.restore();
   });
@@ -3538,16 +3544,10 @@ function mountFull(pg, query) {
     /<page-meta\s*\/>/.test(themeWxml)
       && !/<page-meta[^>]*>[\s\S]*?\S[\s\S]*?<\/page-meta>/.test(themeWxml)
       && /page-font-size/.test(themeWxml)
-      && themeJs.indexOf("previewFamilies") >= 0
+      && themeJs.indexOf("previewFamily") >= 0
       && themeJs.indexOf("font.preview(") >= 0
-      && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
+      && fontMod.PREVIEW_FAMILY,
     "预览字族又落回 page-meta 里当可见文字了");
-
-  ok("字体卡顶上那行样本取正文那一份，不是 7 子集",
-    /class="font-strip"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
-      && themeJs.indexOf("font.face(font.current()).family") >= 0
-      && fontMod.face().family !== fontMod.face().previewFamily,
-    "样本那行没用 load() 注册的那个字族");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)
@@ -5301,9 +5301,10 @@ const K = {
       "界面只能弹一行被截断的 toast，用户看不出是 env 填错还是没开通云开发");
 
   ok("云调用带齐 X-WX-SERVICE / config.env / authorization（少一个都是平台错或静默 401）",
-    /"X-WX-SERVICE":\s*conf\.service/.test(remoteSrc) &&
+    /"X-WX-SERVICE":\s*service/.test(remoteSrc) &&
+      /const service = o\.agent \|\| conf\.service/.test(remoteSrc) &&
       /config:\s*\{\s*env:\s*conf\.env/.test(remoteSrc) &&
-      /sendCloud\(path, data, method\)[\s\S]{0,900}?authorization:/.test(remoteSrc),
+      /function cloudCall\(conf, path, data, method, opt\)[\s\S]{0,900}?authorization:/.test(remoteSrc),
     "云调用的头/配置少了东西：`X-WX-SERVICE` 少了回 service not found，" +
       "`config.env` 少了回 env not exists，`authorization` 少了服务端认不出人（401）");
 
@@ -5416,8 +5417,8 @@ const K = {
   ok("云调用失败时把「实际用的环境 / 服务」带出来（102002 这类话才好自查）",
     /function cloudFailError\(/.test(remoteSrc) &&
       /err2\.env\s*=\s*conf\.env/.test(remoteSrc) &&
-      /err2\.service\s*=\s*conf\.service/.test(remoteSrc) &&
-      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf\)\)/.test(remoteSrc),
+      /err2\.service\s*=\s*agent \|\| conf\.service/.test(remoteSrc) &&
+      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf, service\)\)/.test(remoteSrc),
     "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
       "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
       "一次就能看出「包里的 env 不是我这个小程序的那个」");

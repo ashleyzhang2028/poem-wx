@@ -13,7 +13,7 @@ const FONTS = [
   { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" }
 ];
 
-const PREVIEW = "烟花三月下扬州";
+const SAMPLE = "烟花三月下扬州";
 
 const DEFAULT = "zhuque";
 
@@ -22,22 +22,25 @@ const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts
 const SUBSETS = ["woff2", "woff"];
 
 function files(dir, size) {
-  return SUBSETS.map((ext) => BASE + dir + "/" + dir + "-" + size + "." + ext);
+  return SUBSETS.map((ext) => BASE + dir + "/" + size + "." + ext);
 }
+
+const PREVIEW_DIR = "lxgwwenkai-regular";
+
+const PREVIEW_FAMILY = "Kuibu Preview";
+
+const PREVIEW_FILES = files(PREVIEW_DIR, "7");
 
 const FACES = FONTS.map((f) => ({
   key: f.key,
   name: f.name,
   note: f.note,
+  dir: f.dir,
   family: "Kuibu Poem " + f.key,
-  previewFamily: "Kuibu Preview " + f.key,
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
-  max: files(f.dir, "max"),
-  preview: files(f.dir, "7")
+  max: files(f.dir, "max")
 }));
-
-const FAMILIES = FACES.map((f) => f.family);
 
 const BY_KEY = {};
 FACES.forEach((f) => { BY_KEY[f.key] = f; });
@@ -71,9 +74,7 @@ const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Sou
   + '"Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB", "FangSong", serif';
 
 function stack(key) {
-  const first = face(key || current()).family;
-  return [first].concat(FAMILIES.filter((f) => f !== first)).map((f) => '"' + f + '"').join(", ")
-    + ", " + STACK;
+  return '"' + familyOf(key) + '", ' + STACK;
 }
 
 function shelf() {
@@ -84,12 +85,12 @@ function shelf() {
 }
 
 function addresses(key) {
-  return face(key)[shelf()].slice();
+  return face(key || current())[shelf()].slice();
 }
 
-function configured() {
+function configured(key) {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  if (auth.fontUrl === undefined) return addresses(current());
+  if (auth.fontUrl === undefined) return addresses(key);
   const list = Array.isArray(auth.fontUrl) ? auth.fontUrl : [auth.fontUrl];
   return list.map((it) => String(it || "")).filter(Boolean);
 }
@@ -105,12 +106,12 @@ function options() {
   return FACES.map((f) => ({ key: f.key, name: f.name }));
 }
 
-function attempt(face0, source) {
+function attempt(family, source) {
   return new Promise((resolve) => {
     wx.loadFontFace({
       global: true,
       scopes: ["webview"],
-      family: face0.family,
+      family,
       source,
       success: () => resolve(true),
       fail: () => resolve(false)
@@ -118,17 +119,23 @@ function attempt(face0, source) {
   });
 }
 
-function sequence(face0, list) {
+function sequence(family, list) {
   return list.reduce(
-    (prev, source) => prev.then((done) => (done ? true : attempt(face0, source))),
+    (prev, source) => prev.then((done) => (done ? true : attempt(family, source))),
     Promise.resolve(false)
   );
 }
 
 const loaded = {};
 
-function faceOf(source) {
-  return FACES.filter((f) => f.free.concat(f.pro, f.max).indexOf(source) >= 0)[0] || null;
+function register(f, list) {
+  const key = f.key + " " + shelf() + " " + list.join(" ");
+  if (loaded[key]) return loaded[key];
+  loaded[key] = sequence(f.family, list).then((ok) => {
+    if (!ok) delete loaded[key];
+    return ok;
+  });
+  return loaded[key];
 }
 
 function load() {
@@ -136,42 +143,31 @@ function load() {
   const list = configured();
 
   if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-
-  const key = f.key + " " + shelf() + " " + list.join(" ");
-  if (loaded[key]) return loaded[key];
-
-  loaded[key] = sequence(f, list).then((ok) => {
-    if (!ok) delete loaded[key];
-    return ok;
-  });
-  return loaded[key];
+  return register(f, list);
 }
 
 const previews = {};
 
-function preview(key) {
-  const f = BY_KEY[key];
-  if (!f || !previewsReady()) return Promise.resolve(false);
-  if (previews[f.key]) return previews[f.key];
+function preview() {
+  if (!previewsReady()) return Promise.resolve(false);
+  if (previews.face) return previews.face;
 
-  previews[f.key] = sequence({ family: f.previewFamily }, f.preview).then((ok) => {
-    if (!ok) delete previews[f.key];
+  previews.face = sequence(PREVIEW_FAMILY, PREVIEW_FILES).then((ok) => {
+    if (!ok) delete previews.face;
     return ok;
   });
-  return previews[f.key];
+  return previews.face;
 }
 
-function sourcesOf(f) {
-  return configured().map((s) => {
-    const from = faceOf(s);
-    return from ? s.replace(from.family, f.family).replace(from.dir, f.dir) : s;
-  });
+function familyOf(key) {
+  return face(key || current()).family;
 }
 
 function loadAll() {
-  if (!previewsReady()) return;
-  FACES.filter((f) => f.key !== face().key)
-    .forEach((f) => { sequence(f, sourcesOf(f)).catch(() => {}); });
+  if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
+  const chosen = face().key;
+  FACES.filter((f) => f.key !== chosen)
+    .forEach((f) => { register(f, f[shelf()].slice()).catch(() => {}); });
 }
 
 function previewsReady() {
@@ -180,6 +176,7 @@ function previewsReady() {
 
 function refresh() {
   load().catch(() => {});
+  preview().catch(() => {});
   loadAll();
 }
 
@@ -200,7 +197,8 @@ function set(key) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, PREVIEW, readiness, options,
-  paid, pickable, tier, current, face, stack, shelf,
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW_FAMILY, PREVIEW_DIR, PREVIEW_FILES, SUBSETS,
+  readiness, options,
+  paid, pickable, tier, current, face, familyOf, stack, shelf,
   addresses, configured, load, loadAll, preview, set, refresh
 };

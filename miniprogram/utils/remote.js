@@ -9,6 +9,12 @@ function packedCloud() {
   }
 }
 
+const SOURCE_PATH = "/api/v1";
+
+const SOURCE_AGENT = "poem-source";
+
+const SOURCE_TIMEOUT_MS = 10000;
+
 const SESSION_FRESH_MS = 60 * 1000;
 
 const PATHS = {
@@ -57,19 +63,52 @@ function baseUrl() {
   return session().baseUrl || "";
 }
 
+function sourceReady() {
+  return configured();
+}
+
+function sourceQuery(params) {
+  const parts = [];
+  Object.keys(params || {}).forEach((k) => {
+    const v = params[k];
+    if (v === undefined || v === null || v === "") return;
+    if (Array.isArray(v)) {
+      v.forEach((x) => parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(String(x))));
+      return;
+    }
+    parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(String(v)));
+  });
+  return parts.length ? "?" + parts.join("&") : "";
+}
+
+function source(path, params, opt) {
+  const trail = sourceQuery(params);
+  if (!sourceReady()) return Promise.reject(sourceOffError());
+
+  const timeout = Number((opt && opt.timeout) || SOURCE_TIMEOUT_MS);
+
+  return sendTraced(
+    SOURCE_PATH + path + trail,
+    {},
+    "GET",
+    { agent: SOURCE_AGENT, timeout: timeout }
+  );
+}
+
 function useCloud() {
   return !session().baseUrl && !!cloudOf();
 }
 
-function send(path, data, method) {
-  if (useCloud()) return sendCloud(path, data, method);
-  return sendHttp(path, data, method);
+function send(path, data, method, opt) {
+  const o = opt || {};
+  if (useCloud()) return sendCloud(path, data, method, o);
+  return sendHttp(path, data, method, o);
 }
 
-function traceTarget(path) {
+function traceTarget(path, agent) {
   if (useCloud()) {
     const c = cloudConfig();
-    return "cloud env=" + c.env + " service=" + c.service + " path=" + path;
+    return "cloud env=" + c.env + " service=" + (agent || c.service) + " path=" + path;
   }
   return "http " + baseUrl() + path;
 }
@@ -82,12 +121,13 @@ function traceBody(data) {
   }
 }
 
-function sendTraced(path, data, method) {
+function sendTraced(path, data, method, opt) {
   const verb = method || "POST";
+  const o = opt || {};
   const started = Date.now();
-  const head = "[remote] " + verb + " " + traceTarget(path);
+  const head = "[remote] " + verb + " " + traceTarget(path, o.agent);
   console.log(head, "body=" + traceBody(data), "auth=" + (session().accessToken ? "Bearer" : "none"));
-  const pending = send(path, data, method);
+  const pending = send(path, data, method, o);
   return pending.then(
     (res) => {
       console.log(head, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
@@ -151,16 +191,19 @@ function cloudReady(env) {
   return null;
 }
 
-function sendCloud(path, data, method) {
+function sendCloud(path, data, method, opt) {
   const conf = cloudConfig();
   const gate = cloudReady(conf.env);
   if (gate) return gate;
-  return cloudCall(conf, path, data, method);
+  const o = opt || {};
+  return cloudCall(conf, path, data, method, o);
 }
 
 const CLOUD_TIMEOUT_MS = 15000;
 
-function cloudCall(conf, path, data, method) {
+function cloudCall(conf, path, data, method, opt) {
+  const o = opt || {};
+  const service = o.agent || conf.service;
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
       config: { env: conf.env },
@@ -168,28 +211,35 @@ function cloudCall(conf, path, data, method) {
       method: method || "POST",
       header: {
         "content-type": "application/json",
-        "X-WX-SERVICE": conf.service,
+        "X-WX-SERVICE": service,
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       data: data,
-      timeout: CLOUD_TIMEOUT_MS,
+      timeout: Number(o.timeout) || CLOUD_TIMEOUT_MS,
       success: (res) => (res.statusCode >= 200 && res.statusCode < 300
         ? resolve(res.data)
         : reject(httpError(res.statusCode, res.data))),
-      fail: (err) => reject(cloudFailError(err, conf))
+      fail: (err) => reject(cloudFailError(err, conf, service))
     });
   });
 }
 
-function cloudFailError(err, conf) {
+function sourceOffError() {
+  const e = new Error("还没接上诗泉（取诗的那个服务）—— 这个包没配同步服务器");
+  e.code = "E_POEM_SOURCE_OFF";
+  e.expected = true;
+  return e;
+}
+
+function cloudFailError(err, conf, agent) {
   const say = (err && err.errMsg) || "云调用不通";
   const err2 = new Error(
-    say + "\n  调用目标：环境 " + (conf.env || "(空)") + " / 服务 " + (conf.service || "(空)") +
+    say + "\n  调用目标：环境 " + (conf.env || "(空)") + " / 服务 " + (agent || conf.service || "(空)") +
     " —— " + cloudFailHint(say)
   );
   err2.errMsg = say;
   err2.env = conf.env || "";
-  err2.service = conf.service || "";
+  err2.service = agent || conf.service || "";
   err2.cloudFail = true;
   return err2;
 }
@@ -236,14 +286,16 @@ function plainStatusError(statusCode) {
   return "HTTP " + statusCode;
 }
 
-function sendHttp(path, data, method) {
+function sendHttp(path, data, method, opt) {
   const verb = String(method || "POST").toUpperCase();
   const body = verb === "GET" ? undefined : data;
+  const o = opt || {};
   return new Promise((resolve, reject) => {
     wx.request({
       url: baseUrl() + path,
       method: verb,
       data: body,
+      timeout: Number(o.timeout) || 0,
       header: {
         "content-type": "application/json",
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
@@ -579,11 +631,14 @@ function adminFeedbackReply(entry) {
 
 module.exports = {
   PATHS,
+  SOURCE_AGENT,
   credentialBody,
   wire,
   configured,
   baseUrl,
   useCloud,
+  source,
+  sourceReady,
   cloudConfig,
   request,
   sync,

@@ -1,5 +1,6 @@
 const corpus = require("../../../utils/corpus");
 const gameScopes = require("../../../utils/game-scopes");
+const source = require("../../../utils/poem-source");
 
 const LIMIT = 60;
 
@@ -27,6 +28,78 @@ function _feihua_segsOf(text, gated) {
 
 function _feihua_allPoems() {
   return gameScopes.field();
+}
+
+function onSource() {
+  return source.usable();
+}
+
+function inputClauses(input) {
+  return String(input || "")
+    .split(/[\n，。！？；：、,.!?;:]/)
+    .map(_feihua_strip)
+    .filter((x) => x.length >= 2);
+}
+
+function judgeAtSource(char, input, said) {
+  const ch = String(char || "").trim();
+  if (!ch) return Promise.resolve({ ok: false, why: "empty", reason: "先出一个令字" });
+
+  const clauses = inputClauses(input);
+  const mine = clauses.join("");
+  if (mine.length < 4) return Promise.resolve(null);
+  if (mine.indexOf(ch) < 0) return Promise.resolve(null);
+
+  const used = {};
+  (said || []).forEach((s) => {
+    used[_feihua_strip(s)] = 1;
+  });
+  if (used[mine]) return Promise.resolve({ ok: false, why: "said", reason: "这一句说过了" });
+
+  const want = clauses[clauses.length - 1];
+  return source.search(want, { type: "content", size: 20 }).then((r) => {
+    const hit = (r.items || []).find((p) => _feihua_strip(source.textOf(p)).indexOf(mine) >= 0);
+    if (!hit) return null;
+    return { ok: true, hit: { id: String(hit.id), title: hit.title }, seg: mine };
+  });
+}
+
+function segsWith(char, poem) {
+  const out = [];
+  source.linesOf(poem).forEach((line) => {
+    String(line)
+      .split(/[，。！？；：、,.!?;:]/)
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .forEach((seg) => {
+        if (seg.indexOf(char) < 0) return;
+        if (seg.length < 5 || seg.length > 20) return;
+        out.push(seg);
+      });
+  });
+  return out;
+}
+
+function lookAtSource(char, opt) {
+  const ch = String(char || "").trim();
+  if (!ch) return Promise.resolve([]);
+  const limit = (opt && opt.limit) || LIMIT;
+  return source.search(ch, { type: "content", size: Math.min(limit, 100) }).then((r) => {
+    const out = [];
+    (r.items || []).forEach((p) => {
+      segsWith(ch, p).forEach((seg) => {
+        if (out.length >= limit) return;
+        out.push({
+          id: String(p.id),
+          title: p.title,
+          author: (p.author || {}).name || "",
+          dynasty: (p.dynasty || {}).name || "",
+          seg: seg
+        });
+      });
+    });
+    return out;
+  });
 }
 
 function _feihua_scopedPoems(opt) {
@@ -111,6 +184,10 @@ function hint(char, opt) {
 
 function _feihua_strip(s) {
   return String(s).replace(/[^\u3400-\u9fff]/g, "");
+}
+
+function judgeAsync(char, input, said) {
+  return judgeAtSource(char, input, said).then((r) => r || judge(char, input, said));
 }
 
 function judge(char, input, said) {
@@ -227,6 +304,9 @@ function charSetOf(seg) {
 
 module.exports = {
   LEVELS,
+  onSource,
+  judgeAsync,
+  lookAtSource,
   pool,
   levelOf,
   pick,

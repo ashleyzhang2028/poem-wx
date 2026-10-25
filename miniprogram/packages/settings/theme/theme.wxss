@@ -93,6 +93,8 @@
 
 .font-sample {
   max-width: 100%;
+  font-family: 'Kuibu Preview', "Songti SC", "STSong", "STZhongsong",
+    "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif;
   overflow: hidden;
   white-space: nowrap;
   font-size: var(--fs-hint);
@@ -105,27 +107,16 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 1rpx;
-  height: 1rpx;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
-  opacity: 0;
   pointer-events: none;
+  clip-path: inset(50%);
 }
 
 .font-warm-cell {
   font-size: var(--fs-body);
   white-space: nowrap;
-}
-
-.font-strip {
-  margin-top: var(--sp-1);
-  padding-bottom: var(--sp-2);
-  border-bottom: 1rpx solid var(--line-2);
-  font-size: var(--fs-lead);
-  color: var(--ink);
-  letter-spacing: 0;
-  line-height: 1.4;
-  text-align: center;
 }
 
 .font-name {

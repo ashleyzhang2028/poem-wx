@@ -137,6 +137,18 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
 `GET /api/config` 回 `turnstile` 与 `mail` 两项。想看这一版是哪个短 sha，
 在控制台看服务详情里的镜像 tag。
 
+### 二点六、课外正文与检索：另有一个服务 `poem-source`
+
+课外正文、全文检索、飞花令判句不再读打包的分片，改问云托管里另一个服务
+（`poem-source`，同一环境、另一个服务名）。它**不需要任何环境变量**，
+但要求两件事：
+
+- 服务名逐字是 `poem-source`（写在 `miniprogram/utils/remote.js` 的 `SOURCE_AGENT` 里）
+- 最小实例数设 **1**，否则冷启动的第一个请求会超时
+
+`wechat-ci.yml` 里**不用为它加任何变量** —— 它复用同一条云调用通道，
+`CLOUD_ENV` 那格已经指到它所在的环境。部署与排错见 [`poem-source.md`](poem-source.md)。
+
 ## 三、配环境变量
 
 云托管 → 服务设置 → **环境变量**：
