@@ -3738,12 +3738,14 @@ function mountFull(pg, query) {
       && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
-  ok("预览那几份字族写进 page-meta，九格与正文样本同一页认得出（换了页面就没有了）",
-    themeWxml.indexOf("<page-meta page-font-size>") === 0
+  ok("预览字族只挂在屏蔽了的节点上，是页面根上的隐藏层，不是 page-meta 的内容",
+    /<page-meta\s*\/>/.test(themeWxml)
+      && !/<page-meta[^>]*>[\s\S]*?\S[\s\S]*?<\/page-meta>/.test(themeWxml)
+      && /page-font-size/.test(themeWxml)
       && themeJs.indexOf("previewFamilies") >= 0
       && themeJs.indexOf("font.preview(") >= 0
       && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
-    "预览字族没落到页面级的 page-meta 上");
+    "预览字族又落回 page-meta 里当可见文字了");
 
   ok("字体卡顶上那行样本取正文那一份，不是 7 子集",
     /class="font-strip"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
