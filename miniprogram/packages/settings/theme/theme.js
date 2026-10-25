@@ -36,7 +36,8 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     if (!gate.logged()) {
-      this.setData({ locked: true });
+      this.setData(Object.assign({ locked: true }, this.view()));
+      this.warmPreview();
       return;
     }
     this.setData(Object.assign({ locked: false }, this.view()));
