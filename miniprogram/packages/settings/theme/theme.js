@@ -26,11 +26,13 @@ Page({
 
     fonts: [],
     font: font.DEFAULT,
-    fontSample: font.PREVIEW,
-    bodyFamily: font.face(font.DEFAULT).family,
+    fontSample: font.SAMPLE,
+    bodyFamily: font.familyOf(font.DEFAULT),
     previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
     fontLocked: true,
-    fontTier: "pro"
+    fontTier: "pro",
+    fontReady: false,
+    sampleReady: true
   },
 
   onShow() {
@@ -43,8 +45,13 @@ Page({
 
   loadSample() {
     const key = font.current();
-    font.load().then((ok) => {
-      if (ok && this.data.font === key) this.setData({ bodyFamily: font.face(key).family });
+    if (this.data.font !== key) this.setData({ fontReady: false });
+    font.ready(key).then((ok) => {
+      this.setData({
+        bodyFamily: font.familyOf(key),
+        fontReady: ok,
+        sampleReady: true
+      });
     }).catch(() => {});
   },
 
@@ -61,7 +68,7 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
-      bodyFamily: font.face(font.current()).family,
+      bodyFamily: font.familyOf(font.current()),
       previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
       fontLocked: !pickable,
       fontTier: font.tier(),
@@ -206,8 +213,8 @@ Page({
       return;
     }
     if (!r.changed) return;
-    this.setData(this.view());
-    this.warmPreview();
+    this.setData(Object.assign({ sampleReady: false }, this.view()));
+    this.loadSample();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

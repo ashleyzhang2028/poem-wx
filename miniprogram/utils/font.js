@@ -13,7 +13,7 @@ const FONTS = [
   { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" }
 ];
 
-const PREVIEW = "烟花三月下扬州";
+const SAMPLE = "烟花三月下扬州";
 
 const DEFAULT = "zhuque";
 
@@ -34,7 +34,8 @@ const FACES = FONTS.map((f) => ({
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
   max: files(f.dir, "max"),
-  preview: files(f.dir, "7")
+  preview: files(f.dir, "7"),
+  glyphs: {}
 }));
 
 const FAMILIES = FACES.map((f) => f.family);
@@ -87,9 +88,9 @@ function addresses(key) {
   return face(key)[shelf()].slice();
 }
 
-function configured() {
+function configured(key) {
   const auth = store.read(store.KEYS.auth, {}) || {};
-  if (auth.fontUrl === undefined) return addresses(current());
+  if (auth.fontUrl === undefined) return addresses(key);
   const list = Array.isArray(auth.fontUrl) ? auth.fontUrl : [auth.fontUrl];
   return list.map((it) => String(it || "")).filter(Boolean);
 }
@@ -105,12 +106,12 @@ function options() {
   return FACES.map((f) => ({ key: f.key, name: f.name }));
 }
 
-function attempt(face0, source) {
+function attempt(family, source) {
   return new Promise((resolve) => {
     wx.loadFontFace({
       global: true,
       scopes: ["webview"],
-      family: face0.family,
+      family,
       source,
       success: () => resolve(true),
       fail: () => resolve(false)
@@ -118,17 +119,23 @@ function attempt(face0, source) {
   });
 }
 
-function sequence(face0, list) {
+function sequence(family, list) {
   return list.reduce(
-    (prev, source) => prev.then((done) => (done ? true : attempt(face0, source))),
+    (prev, source) => prev.then((done) => (done ? true : attempt(family, source))),
     Promise.resolve(false)
   );
 }
 
 const loaded = {};
 
-function faceOf(source) {
-  return FACES.filter((f) => f.free.concat(f.pro, f.max).indexOf(source) >= 0)[0] || null;
+function register(f, list) {
+  const key = f.key + " " + shelf() + " " + list.join(" ");
+  if (loaded[key]) return loaded[key];
+  loaded[key] = sequence(f.family, list).then((ok) => {
+    if (!ok) delete loaded[key];
+    return ok;
+  });
+  return loaded[key];
 }
 
 function load() {
@@ -136,15 +143,7 @@ function load() {
   const list = configured();
 
   if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-
-  const key = f.key + " " + shelf() + " " + list.join(" ");
-  if (loaded[key]) return loaded[key];
-
-  loaded[key] = sequence(f, list).then((ok) => {
-    if (!ok) delete loaded[key];
-    return ok;
-  });
-  return loaded[key];
+  return register(f, list);
 }
 
 const previews = {};
@@ -154,24 +153,51 @@ function preview(key) {
   if (!f || !previewsReady()) return Promise.resolve(false);
   if (previews[f.key]) return previews[f.key];
 
-  previews[f.key] = sequence({ family: f.previewFamily }, f.preview).then((ok) => {
+  previews[f.key] = sequence(f.previewFamily, f.preview).then((ok) => {
     if (!ok) delete previews[f.key];
     return ok;
   });
   return previews[f.key];
 }
 
-function sourcesOf(f) {
-  return configured().map((s) => {
-    const from = faceOf(s);
-    return from ? s.replace(from.family, f.family).replace(from.dir, f.dir) : s;
+function glyphs(f, list) {
+  if (!f.glyphs[list.join(" ")]) f.glyphs[list.join(" ")] = sequence(f.family, list);
+  return f.glyphs[list.join(" ")];
+}
+
+function paint(f, list) {
+  const box = wx.createOffscreenCanvas ? wx.createOffscreenCanvas({ type: "2d", width: 64, height: 64 }) : null;
+  const ctx = box && box.getContext ? box.getContext("2d") : null;
+  if (!ctx) return true;
+  ctx.font = '40px "' + f.family + '", monospace';
+  return SAMPLE.split("").every((c) => ctx.measureText(c).width !== 0);
+}
+
+function ready(key) {
+  const f = face(key);
+  const list = configured(f.key);
+  if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
+  if (!glyphsReady()) return load();
+  return glyphs(f, list).then((ok) => (ok ? paint(f, list) : false)).then((ok) => {
+    if (ok) return true;
+    delete loaded[f.key + " " + shelf() + " " + list.join(" ")];
+    return load();
   });
 }
 
+function glyphsReady() {
+  return typeof wx.createOffscreenCanvas === "function";
+}
+
+function familyOf(key) {
+  return face(key).family;
+}
+
 function loadAll() {
-  if (!previewsReady()) return;
-  FACES.filter((f) => f.key !== face().key)
-    .forEach((f) => { sequence(f, sourcesOf(f)).catch(() => {}); });
+  if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
+  const chosen = face().key;
+  FACES.filter((f) => f.key !== chosen)
+    .forEach((f) => { register(f, f[shelf()].slice()).catch(() => {}); });
 }
 
 function previewsReady() {
@@ -200,7 +226,7 @@ function set(key) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, PREVIEW, readiness, options,
-  paid, pickable, tier, current, face, stack, shelf,
-  addresses, configured, load, loadAll, preview, set, refresh
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, readiness, options,
+  paid, pickable, tier, current, face, familyOf, stack, shelf,
+  addresses, configured, load, loadAll, preview, ready, set, refresh
 };

@@ -105,11 +105,11 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 1rpx;
-  height: 1rpx;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
-  opacity: 0;
   pointer-events: none;
+  clip-path: inset(50%);
 }
 
 .font-warm-cell {
@@ -126,6 +126,10 @@
   letter-spacing: 0;
   line-height: 1.4;
   text-align: center;
+}
+
+.font-strip.pending {
+  opacity: 0;
 }
 
 .font-name {

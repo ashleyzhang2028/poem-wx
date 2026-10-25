@@ -18,7 +18,7 @@
       <tier-tag tier="{{fontTier}}" />
     </view>
 
-    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
+    <view class="font-strip {{fontReady && sampleReady ? '' : 'pending'}}" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
@@ -131,7 +131,7 @@
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
 
-    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
+    <view class="font-strip {{fontReady && sampleReady ? '' : 'pending'}}" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"

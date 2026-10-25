@@ -3747,11 +3747,13 @@ function mountFull(pg, query) {
       && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
     "预览字族又落回 page-meta 里当可见文字了");
 
-  ok("字体卡顶上那行样本取正文那一份，不是 7 子集",
-    /class="font-strip"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
-      && themeJs.indexOf("font.face(font.current()).family") >= 0
+  ok("字体卡顶上那行样本取正文那一份，注册成功后才露出来",
+    /class="font-strip\b[^"]*"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
+      && themeJs.indexOf("font.familyOf(font.current())") >= 0
+      && themeJs.indexOf("font.ready(") >= 0
+      && themeJs.indexOf("sampleReady: false") >= 0
       && fontMod.face().family !== fontMod.face().previewFamily,
-    "样本那行没用 load() 注册的那个字族");
+    "样本那行没用 load() 注册成功才认的那个字族，或者先画出来再等字体");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)
