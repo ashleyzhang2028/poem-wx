@@ -2,7 +2,10 @@ const store = require("./store");
 const R = require("./review-models");
 
 const READ_ROW = {
-  poems: "poem_poems_read_v1",
+  poems: "poem_poems_read_v1"
+};
+
+const RETIRED_READ_ROW = {
   classic: "poem_classic_read_v1",
   yuefu: "poem_yuefu_read_v1",
   tangshi: "poem_tangshi_read_v1",
@@ -24,6 +27,9 @@ const READ_ROW = {
 const ROW_BOOK = {};
 Object.keys(READ_ROW).forEach((k) => {
   ROW_BOOK[READ_ROW[k]] = k;
+});
+Object.keys(RETIRED_READ_ROW).forEach((k) => {
+  ROW_BOOK[RETIRED_READ_ROW[k]] = k;
 });
 
 const DAILY_EXTRA_ROW = "daily_extra:v1";
@@ -350,6 +356,12 @@ function applyRecords(recs) {
     if (id.indexOf(READ_PREFIX) === 0) {
       const book = ROW_BOOK[id.slice(READ_PREFIX.length)];
       if (!book) return;
+      if (!READ_ROW[book]) {
+        delete reads[book];
+        delete readEdges[book];
+        applied += 1;
+        return;
+      }
       if (row.deleted) {
         if (reads[book]) {
           delete reads[book];

@@ -15,6 +15,12 @@ const SERVER_KEYS = ["env", "service"];
 
 const COURSE_BOOK = "poems";
 
+const EMPTY_BOOKS = [
+  "classic", "yuefu", "season", "tangshi", "gushi", "songci", "yuanqu",
+  "guwen", "jinxiandai", "zhaoming", "chengyu", "changshi", "mingshu",
+  "mingren", "mingren-waiguo", "dwang", "dwang-waiguo"
+];
+
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
@@ -81,7 +87,9 @@ function main() {
   });
 
   const siteIndex = W.SITE_INDEX || [];
-  const books = W.SITE_BOOKS || [];
+  const books = (W.SITE_BOOKS || []).filter(function (b) {
+    return EMPTY_BOOKS.indexOf(b.id) < 0;
+  });
 
   const index = [];
   const courseTexts = {};

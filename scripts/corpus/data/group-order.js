@@ -27,8 +27,6 @@
 
     zhaoming: window.ZHAOMING_GROUP_ORDER || null,
 
-    yuefu: window.YUEFU_GROUP_ORDER || null,
-
     yuanqu: window.YUANQU_GROUP_ORDER || null,
 
     jinxiandai: window.JINXIANDAI_GROUP_ORDER || null,
@@ -40,10 +38,7 @@
     mingshu: window.MINGSHU_GROUP_ORDER || null,
 
     mingren: window.MINGREN_GROUP_ORDER || null,
-    "mingren-waiguo": window.MINGREN_GROUP_ORDER || null,
-
-    dwang: window.DWANG_GROUP_ORDER || null,
-    "dwang-waiguo": window.DWANG_WAIGUO_GROUP_ORDER || null
+    "mingren-waiguo": window.MINGREN_GROUP_ORDER || null
   };
 
   window.GROUP_ORDER = GROUPS;

@@ -139,7 +139,8 @@ const dataDir = path.join(ROOT, "data");
 const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
 
-ok("集子表 18 部", (booksTable || []).length === 18, "实际 " + (booksTable || []).length);
+ok("集子表只剩课内一部", (booksTable || []).length === 1 && booksTable[0].id === "poems",
+  "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
 
 var corpus = require(path.join(ROOT, "utils", "corpus.js"));
 const perBook = {};
@@ -1616,9 +1617,9 @@ ok("search 总数与不做限流时一致", sw.total === swAll.items.length,
 ok("search 没命中时总数是 0", corpus.search("这几个字不会有", { limit: 80 }).total === 0);
 ok("search 空关键词给空结果", corpus.search("  ", { limit: 80 }).total === 0);
 
-ok("ownerOf 取最长前缀", corpus.ownerOf("mingren-waiguo-mr-1") === "mingren-waiguo",
-  "实际 " + corpus.ownerOf("mingren-waiguo-mr-1"));
 ok("ownerOf 认得课内前缀", corpus.ownerOf("poems-xx1-01") === "poems");
+ok("ownerOf 不认已下线的集子前缀", corpus.ownerOf("chengyu-cy-1") === "",
+  "实际 " + corpus.ownerOf("chengyu-cy-1"));
 
 const subs = {};
 (app.subPackages || []).forEach((sp) => {
