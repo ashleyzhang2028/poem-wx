@@ -41,7 +41,8 @@ let stageCache = null;
 
 function hasText(id) {
   if (corpus.courseTexts()[id]) return true;
-  return !!corpus.manifest().map[id];
+  if (corpus.manifest().map[id]) return true;
+  return !!corpus.sourceIdOf(id);
 }
 
 function collect(ids) {

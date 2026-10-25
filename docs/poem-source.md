@@ -1,0 +1,203 @@
+# 诗泉：课外正文与检索的新来源
+
+> 课内 251 首照旧在包里（正文、注音、朝代作者、出处）。课外的正文、检索、
+> 飞花令判句、今日加背搜索、自选集合找诗，一律**问服务端**，不再读打包的分片。
+>
+> 服务是 `spovk/wx-kb-chinese-poetry-api`（源码 [belem/chinese-poetry-api](https://github.com/belem/chinese-poetry-api)，
+> 上游 palemoky/chinese-poetry-api），部署在微信云托管，服务名 **`poem-source`**。
+
+## 一、为什么换
+
+旧路是「语料编译成 121 个分片 → 跟镜像走云托管 → 客户端按需取」。它有两个毛病：
+
+1. **两端版本必须一致。** 分片由本仓库的 `scripts/corpus/` 编译，客户端按分片清单算片号。
+   镜像落后一个提交，客户端就会取到旧正文，或者取不到 —— 现场是「一直停在正在取正文」。
+2. **范围就那么大。** 5677 条课外 + 251 条课内。飞花令的判句在本地诗词集里查，
+   答得出、集子里没有的句子一律判错 —— 明明是对的，说人家不在范围。
+
+诗泉是 37 万首的全量库（唐、宋、元、金、先秦至清），带全文检索与单字倒排索引。
+换过去之后：
+
+| 事 | 旧 | 新 |
+|---|---|---|
+| 课外正文 | 取分片（44 KB/片） | `GET /api/v1/poems/{id}` |
+| 全文检索 | 本机倒排索引 + 扫分片 | `GET /api/v1/poems/search?q=` |
+| 飞花令判句 | 本地集子里逐句比 | `search?type=content` 命中即为真 |
+| 令字池 / 给答案看 | 本地集子 | 同一个 search 接口 |
+
+## 二、接口清单（服务实际提供的全部 REST）
+
+基址 `http://<服务>.<环境>.sh.run.tcloudbase.com/api/v1`，客户端（小程序）走云调用，
+路径从 `/api/v1` 起。所有 GET 接口都支持 `lang=zh-Hans`（默认）/ `zh-Hant`。
+
+| 方法 | 路径 | 参数 | 回什么 |
+|---|---|---|---|
+| GET | `/health` | — | `{"status":"healthy"}`；库不可用回 503 |
+| GET | `/stats` | — | `total_poems` / `total_authors` / `total_dynasties` / `poems_by_dynasty[]` / `poems_by_type[]` |
+| GET | `/poems` | `page` `page_size`(≤100) `after`(游标) `author` `author_id` `dynasty` `dynasty_id` `type` `type_id`(可重复，OR) | `{data:[poem], pagination:{page,page_size,total,total_pages,has_next_page,next_cursor}}` |
+| GET | `/poems/{id}` | — | 单首 `poem` |
+| GET | `/poems/search` | `q`（必填）`type`=all/title/content/author `page` `page_size` | 同上分页形状 |
+| GET | `/poems/random` | 与 `/poems` 同一组过滤；**或** `char`（单字） | 单首 `poem`；`char` 只能与 `lang` 同用 |
+| GET | `/authors` | `page` `page_size` | `{data:[{id,name,dynasty,poem_count}], pagination}` |
+| GET | `/authors/{id}` | — | `{data:{id,name,dynasty,description}}` |
+| GET | `/dynasties` | — | `{data:[{id,name,name_en,start_year,end_year,poem_count,author_count}]}` |
+| GET | `/dynasties/{id}` | — | `{data:{id,name,name_en,start_year,end_year}}` |
+| GET | `/types` | — | `{data:[{id,name,category,lines,chars_per_line,poem_count}]}` |
+| GET | `/types/{id}` | — | `{data:{…}}` |
+| POST | `/graphql` | GraphQL 查询 | 同一批数据的另一种形状 —— **小程序不用** |
+
+`poem` 的形状（就是客户端认的那一份）：
+
+```json
+{
+  "id": 309946,
+  "title": "静夜思",
+  "content": ["床前看月光，疑是地上霜。", "举头望山月，低头思故乡。"],
+  "author": { "id": 2045, "name": "李白" },
+  "dynasty": { "id": 6, "name": "唐" },
+  "type": { "id": 11, "name": "五言绝句" }
+}
+```
+
+几条硬规矩：
+
+- **未知的查询参数一律 400**（`unknown query parameter(s)`）。写错一个参数名不会静默降级成全量。
+- `page * page_size > 10000` 直接 400，翻深了要用 `after` 游标。
+- `char` 只接单字，且不能与作者 / 体裁 / 朝代同用（400）。
+- 库内没有匹配时 404（`no poems found …`），不是空列表。
+- 数据只在发布时更新，可缓存接口带 `Cache-Control` + 弱 `ETag`。
+
+## 三、客户端怎么接
+
+`miniprogram/utils/poem-source.js` 是唯一出口，`utils/remote.js` 的 `source()` 是唯一通道：
+
+```
+pages/search  ─┐
+feihua/lib    ─┤
+corpus        ─┼→ utils/poem-source.js → utils/remote.js source()
+game-scopes   ─┘                          → wx.cloud.callContainer
+                                            X-WX-SERVICE: poem-source
+                                            path: /api/v1/...
+```
+
+- **服务名只有一处**：`remote.js` 的 `SOURCE_AGENT`。改部署就改那一行，别在别处再写一遍。
+- 走云调用，**不经过 request 合法域名名单**，仍然免备案（同后端那条路，见 `wx-cloud-setup.md`）。
+- 只读接口不进离线队列（`PATHS` 那套 outbox 只装用户数据）。
+- 结果按 `path+query` 缓在本机，上限 60 条、过期 24 小时；`random` / `health` 不缓存。
+
+### 能力就绪
+
+`readiness()` 同步返回，界面拿它决定显不显示：
+
+```js
+{ visible: true, usable: true,  state: "ready"    }   // 通
+{ visible: true, usable: false, state: "awaiting" }   // 配了但连不上（掉线 / 冷启动）
+{ visible: true, usable: false, state: "denied"   }   // 这一版没配后端
+```
+
+### 正文的取法（课内不变，课外换源）
+
+```
+corpus.ensureEntry(id)
+  ├─ 包内课内正文 courseTexts()[id]        → 直接给
+  ├─ corpus.ensureSource(id)               → GET /poems/{id}   ← 新
+  └─ corpus.ensureShardEntry(id)           → 旧分片，只在诗泉取不到时兜底
+```
+
+诗泉的 id 从本仓库篇目 id 的尾巴取（`tangshi-309946` → `309946`）。
+本机没有对得上的篇目时 `sourceIdOf` 回空，直接走兜底，不白发一次请求。
+
+**分片没有拆掉**：镜像里那份 `/api/shard/*` 与客户端清单都留着。诗泉挂着的时候它一次都不被请求；
+诗泉不可用时课外仍能按旧路取到 —— 这条兜底是给「新服务还没起来」那一小段时间留的。
+
+### 界面上的话
+
+| 情况 | 说的话 |
+|---|---|
+| 这一篇正文不在库里 | 这一篇的正文不在库里，换一篇看看 |
+| 这一篇分片里缺这一段 | 这一篇的正文不完整，换一篇看看 |
+| 加了背但没配后端 | 还没接上诗泉（取诗的那个服务），退出重进再看 |
+| 冷启动超时（`102002`） | 取正文超时了 —— 多半是服务实例刚被唤醒，重试一次 |
+
+## 四、运维：云托管与密钥仓库
+
+### 4.1 云托管那边要什么
+
+服务与后端那个 `poem-wx` **是同一个环境、两个服务**。诗泉那一格：
+
+| 字段 | 值 |
+|---|---|
+| 归属环境 | `poem-d9g1bqeq978682c58`（与 `poem-wx` 同一个） |
+| 服务名称 | **`poem-source`** —— 与 `remote.js` 的 `SOURCE_AGENT` 逐字相同 |
+| 部署方式 | 从地址拉取镜像 |
+| 镜像地址 | `docker.io/spovk/wx-kb-chinese-poetry-api:latest` |
+| 端口 | `1279` |
+| 最小实例数 | **1**（免费档缩容到 0 时，第一次请求要等冷启动，客户端会报超时） |
+
+这个镜像**不需要任何环境变量**也能起来：`config.yaml` 里的默认值够用，数据库是容器内
+`data/poetry.db`，启动脚本从 GitHub Release 下载并校验。要调的只有下面几项，可选：
+
+| 变量 | 默认 | 什么时候改 |
+|---|---|---|
+| `PORT` | `1279` | 不改 —— 云托管那格填的是同一个数 |
+| `RATE_LIMIT_RPS` / `RATE_LIMIT_BURST` | `10` / `20` | 用户量上来后按 IP 限流会误伤（同一出口 IP 的多个用户共享配额），必要时调高 |
+| `DB_PATH` | `data/poetry.db` | 不改 |
+| `TRUSTED_PROXIES` | 回环 + 私网段 | 不改 —— 云托管在同一私网里，`X-Forwarded-For` 的客户端 IP 才认 |
+
+⚠️ **首启要能出网**：`startup.sh` 从 `github.com` 下载 `poetry.db`（约 100 MB）。
+云托管实例若不允许出网，容器会一直重启（日志里 `ERROR: Failed to download checksums`）。
+真遇到了就把数据库打进镜像、或换一个可达的 `DATA_RELEASE_URL`。
+
+⚠️ **镜像体积与冷启动**：库在容器内的 `data/` 卷里，实例扩缩容不会重建；
+但**首次拉起的第一个请求**要等下载与解压完，实际观测是几十秒到几分钟。
+所以最小实例数设 1，并且部署完先用 `/api/v1/stats` 打一次确认。
+（题库的库文件很小时 `/api/v1/stats` 会立刻回，这也正是任务里那一步验证做的。）
+
+### 4.2 密钥仓库里要配什么
+
+结论先说：**`wechat-ci.yml` 一行都不用加。**
+
+诗泉那一路不占任何新变量。要用它，只需要让包里的云调用两栏指向**同一个云开发环境**：
+
+```yaml
+CLOUD_ENV=poem-d9g1bqeq978682c58      # 云开发环境 ID（不是云托管那个 326045-4-… 数字环境 ID）
+CLOUD_SERVICE=poem-wx                 # 「登录 / 同步」那个后端服务名
+```
+
+- `CLOUD_ENV` 是**环境**，两个服务（`poem-wx`、`poem-source`）都在这一个环境里，
+  所以同一格 env 两处通用。
+- `CLOUD_SERVICE` 只给「登录 / 同步 / 管理」用。诗泉的服务名 **不放进包**，
+  它固定写在 `remote.js` 的 `SOURCE_AGENT` 里 —— 服务名是部署方的事，
+  但它同时是「诗泉在哪」这件事的唯一一处，不需要密钥。
+- 也就是说：**云调用两栏配好，两路就都通了；诗泉挂了不影响登录与同步**（反过来亦然）。
+
+⚠️ 别在 `.cnb.yml` 的 `env:` 里再声明这几个变量 —— `imports` 的变量在 `env:` 求值时尚不可见，
+`${VAR}` 会原样留在包里（Issue #175 的现场）。
+
+### 4.3 验
+
+```bash
+# ① 服务活着，且这一版带了全量库
+curl -s https://poem-source-<环境>.sh.run.tcloudbase.com/api/v1/stats
+#    → {"total_poems":371313,"total_authors":13577,...} 量级对得上才算数据下完了
+
+# ② 检索通（正文命中）
+curl -s "https://poem-source-<环境>.sh.run.tcloudbase.com/api/v1/poems/search?q=床前明月光&type=content"
+
+# ③ 单字出诗（飞花令那条路）
+curl -s "https://poem-source-<环境>.sh.run.tcloudbase.com/api/v1/poems/random?char=春"
+```
+
+真机上再看一眼控制台那行 `[remote] GET cloud env=… service=poem-source path=/api/v1/…`。
+`service=poem-source` 才对得上；回 `invalid host` 就是云托管里没有这个名字。
+
+## 五、踩过的坑
+
+| 现象 | 真因 |
+|---|---|
+| 点课外诗一律「取不到正文」，日志里一个请求都没有 | 篇目 id 的尾巴不是纯数字（`sourceIdOf` 回空）—— 新收录但没编进索引的条目才会这样，兜底走分片 |
+| 回 `invalid host` | `SOURCE_AGENT` 与云托管里那个服务名不一致，或服务建在别的环境 |
+| 回 `102002` | 实例缩容到 0，冷启动超过 15 秒。最小实例数设 1，或重试 |
+| 检索一次要好几秒 | 单字 / 两字的检索靠单字倒排索引，正常是毫秒级；慢说明库刚下完索引还没建，或实例在冷启动 |
+| 飞花令判「不在集子里」 | 客户端还在用本地判句（`feihua.judge`）。`onSource()` 为真时必须走 `judgeAsync` |
+| 前端拿到了 40 万首的列表 | `page_size` 没有截到 100 —— 服务端会 400，客户端也不该发 |

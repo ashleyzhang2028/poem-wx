@@ -1148,6 +1148,35 @@ if (fs.existsSync(idxFile)) {
   ok("全文索引未生成时检索整块关闭", tsearch.readiness().visible === false);
 }
 
+{
+  const src = fs.readFileSync(path.join(ROOT, "utils", "poem-source.js"), "utf8");
+  const remoteSrc3 = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
+  const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
+
+  ok("诗泉服务名单格只在一处（小程序那格与云托管服务名逐字对上）",
+    /const SOURCE_AGENT = "poem-source"/.test(remoteSrc3) && !/poem-source"\s*[,;]/.test(src),
+    "服务名写了两遍就一定会漂：一处改了另一处没改，回的是 invalid host");
+
+  ok("诗泉的接口表与诗泉仓库的 REST 路由逐条对得上",
+    ["/poems", "/poems/search", "/poems/random", "/authors", "/dynasties", "/types", "/stats", "/health"].every(
+      (p) => src.indexOf('"' + p + '"') >= 0),
+    "认错了路径的客户端只会在真机上回 404，本地自检看不出来");
+
+  ok("诗泉没接上时先是 visible 再分 awaiting / denied（不假装能用）",
+    /function readiness\(\)/.test(src) && /state: "denied"/.test(src) &&
+      /state: "awaiting"/.test(src) && /state: "ready"/.test(src),
+    "把「没配」与「配了但连不上」混成一档，界面就只会说一句「加载失败」");
+
+  ok("课外正文先问诗泉、分片只做兜底（两端版本不一致那条根因）",
+    /function ensureEntry\(id\)[\s\S]{0,400}?ensureSource\(id\)[\s\S]{0,200}?ensureShardEntry\(id\)/.test(corpusSrc),
+    "顺序反了就等于新服务一点没接上 —— 分片能答的一律还答分片那份");
+
+  ok("诗泉取不到正文时回 null 落兜底（不把加载态留在屏幕上，也不跳过老分片）",
+    /source[\s\S]{0,200}?\.search\(meta\.t[\s\S]{0,600}?return null;/.test(corpusSrc) &&
+      /ensureEntry\(id\)[\s\S]{0,300}?if \(hit\) return hit;/.test(corpusSrc),
+    "取不到要回 null 让上层落空态 / 走兜底，而不是抛在 then 里连分片一起跳过");
+}
+
 const sync = require(path.join(ROOT, "utils", "sync.js"));
 ok("未配置后端时同步不就绪", sync.ready() === false);
 sync.now(true).then((res) => {
@@ -5904,9 +5933,10 @@ function gapped(items, max) {
       "界面只能弹一行被截断的 toast，用户看不出是 env 填错还是没开通云开发");
 
   ok("云调用带齐 X-WX-SERVICE / config.env / authorization（少一个都是平台错或静默 401）",
-    /"X-WX-SERVICE":\s*conf\.service/.test(remoteSrc) &&
+    /"X-WX-SERVICE":\s*service/.test(remoteSrc) &&
+      /const service = o\.agent \|\| conf\.service/.test(remoteSrc) &&
       /config:\s*\{\s*env:\s*conf\.env/.test(remoteSrc) &&
-      /sendCloud\(path, data, method\)[\s\S]{0,900}?authorization:/.test(remoteSrc),
+      /function cloudCall\(conf, path, data, method, opt\)[\s\S]{0,900}?authorization:/.test(remoteSrc),
     "云调用的头/配置少了东西：`X-WX-SERVICE` 少了回 service not found，" +
       "`config.env` 少了回 env not exists，`authorization` 少了服务端认不出人（401）");
 
@@ -6019,8 +6049,8 @@ function gapped(items, max) {
   ok("云调用失败时把「实际用的环境 / 服务」带出来（102002 这类话才好自查）",
     /function cloudFailError\(/.test(remoteSrc) &&
       /err2\.env\s*=\s*conf\.env/.test(remoteSrc) &&
-      /err2\.service\s*=\s*conf\.service/.test(remoteSrc) &&
-      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf\)\)/.test(remoteSrc),
+      /err2\.service\s*=\s*agent \|\| conf\.service/.test(remoteSrc) &&
+      /fail:\s*\(err\)\s*=>\s*reject\(cloudFailError\(err, conf, service\)\)/.test(remoteSrc),
     "云调用 fail 只回一句裸 errMsg 的话，用户看到的 102002 与环境/服务名对不上号 —— " +
       "而这两格的值构建期就注进包里，用户手上没有对照物。把实际用的两格带在错误里，" +
       "一次就能看出「包里的 env 不是我这个小程序的那个」");
