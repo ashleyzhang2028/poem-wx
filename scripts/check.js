@@ -3714,6 +3714,12 @@ function mountFull(pg, query) {
       && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
+  ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
+    /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)
+      && themeJs.indexOf("warmPreview()") >= 0
+      && fontMod.pickable({ logged: false }) === false,
+    "未登录那一支没有字体卡，或者没预热预览");
+
   const rFree = (() => {
     tierAs("free");
     return fontMod.set("huiwen");
