@@ -28,11 +28,11 @@ function courseFreeCell(tier) {
 
 const CAPS = [
   { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
-  { key: "library", name: "课外阅读", desc: "十七部集合随选随读", tier: "free" },
+  { key: "library", name: "课内阅读", desc: "按册翻读那 251 首", tier: "free" },
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
   { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
-  { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处 / 正文", tier: "free" },
+  { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处", tier: "free" },
   { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "pro" },
   { key: "leitner", name: "莱特纳盒 Leitner Box", desc: "分级盒子复习", tier: "pro" },
 
@@ -165,7 +165,7 @@ const VIEW_NAME = {
   leitner: "复习算法·莱特纳盒",
   sm2: "复习算法·SM-2",
   fsrs: "复习算法·FSRS",
-  library: "课外阅读",
+  library: "课内阅读",
   search: "全站搜索",
   quiz: "大会·题库",
   feihualing: "大会·飞花令",

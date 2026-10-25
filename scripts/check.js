@@ -138,7 +138,6 @@ jsFiles.forEach((file) => {
 const dataDir = path.join(ROOT, "data");
 const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
-const manifest = readModule(path.join(dataDir, "shards.js"));
 
 ok("集子表 18 部", (booksTable || []).length === 18, "实际 " + (booksTable || []).length);
 
@@ -156,24 +155,28 @@ ok(
   allEntries.every((p) => p.text === undefined && p.translation === undefined)
 );
 
-const bookFiles = fs.readdirSync(path.join(dataDir, "books"));
 const bookPack = readModule(path.join(dataDir, "books", "index.js"));
-ok("集子索引落在一份合表里（books/index.js）",
-  Object.keys(bookPack.books).length === booksTable.length
-    && Object.keys(bookPack.rows).length === booksTable.length,
-  "合表里的集子数与 books.js 对不上");
+ok("集子索引只装课内那一部（books/index.js 里没有课外集子）",
+  Object.keys(bookPack.books).join() === "poems"
+    && Object.keys(bookPack.rows).join() === "poems",
+  "合表里还有 " + JSON.stringify(Object.keys(bookPack.books)));
 
-booksTable.forEach((b) => {
-  ok("集子索引归属正确 " + b.id,
-    perBook[b.id].length === bookPack.books[b.id]
-      && perBook[b.id].every((p) => p.b === b.id && p.n === b.name),
-    "b / n 与实际集子对不上");
-});
+ok("集子索引归属正确",
+  perBook.poems.length === bookPack.books.poems
+    && perBook.poems.every((p) => p.b === "poems" && p.n === "课内诗词"),
+  "b / n 与实际集子对不上");
 
 {
-  const wide = bookPack.rows.tangshi.filter((r) => r.length !== 12);
+  const wide = bookPack.rows.poems.filter((r) => r.length !== 11);
   ok("索引落盘只存列（无名、不存正文）", wide.length === 0,
     wide.length + " 行形状不对 —— 薄索引把字段名与集子名都省了（见 scripts/build-data.js）");
+}
+
+{
+  const texts = Object.keys(perBook).filter((id) => id !== "poems");
+  ok("只有课内那一部带索引（课外集子一条都不进包）",
+    texts.every((id) => perBook[id].length === 0),
+    "这些集子还有条目：" + texts.filter((id) => perBook[id].length).join("、"));
 }
 
 const courseTexts = readModule(path.join(dataDir, "course.js"));
@@ -190,63 +193,16 @@ ok(
   Object.keys(courseTexts).every((id) => courseIds.has(id)),
   "混进了非课内条目"
 );
-ok(
-  "包内正文与分片不重叠",
-  Object.keys(courseTexts).every((id) => manifest.map[id] === undefined),
-  "同一份正文在包内和分片各存一份"
-);
-
-const sampleMissing = allEntries.filter(
-  (p) => manifest.map[p.id] === undefined && courseTexts[p.id] === undefined
-);
-ok("所有条目都有正文可取", sampleMissing.length === 0, sampleMissing.length + " 条取不到");
-
-let sampled = 0;
-let bad = 0;
-Object.keys(manifest.map).slice(0, 60).forEach((id) => {
-  const name = manifest.map[id];
-  const bucket = readModule(path.join(dataDir, "texts", name + ".js"));
-  sampled += 1;
-  if (!bucket[id] || typeof bucket[id].text !== "string") bad += 1;
-});
-ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条取不到");
-
-{
-  const misses = [];
-  let checked = 0;
-  allEntries.forEach((p) => {
-    if (manifest.map[p.id] === undefined) return;
-    if (p.at < 0) {
-      misses.push(p.id);
-      return;
-    }
-    checked += 1;
-    const ids = Object.keys(readModule(path.join(dataDir, "texts", manifest.map[p.id] + ".js")));
-    if (ids[p.at] !== p.id) misses.push(p.id);
-  });
-  ok("薄索引里的分片序号指得准（译文按它回填，共 " + checked + " 条）",
-    checked > 1000 && misses.length === 0,
-    misses.length + " 条按序号取到的是别人 —— 编译期算序号与落盘顺序不一致，" +
-    "详情页的译文会串到别的篇目上：" + JSON.stringify(misses.slice(0, 3)));
-
-  const wrong = allEntries.filter((p) => (manifest.map[p.id] === undefined) !== (p.at < 0));
-  ok("索引记的「有没有分片」与分片清单互补", wrong.length === 0,
-    wrong.length + " 条对不上：" + JSON.stringify(wrong.slice(0, 3).map((p) => p.id)) +
-    " —— 课内 251 条在 course.js、其余在分片");
-}
+ok("课内那 251 条每一条都取得到正文",
+  perBook.poems.every((p) => courseTexts[p.id] && courseTexts[p.id].text),
+  "有 " + perBook.poems.filter((p) => !courseTexts[p.id]).length + " 条没有正文");
+ok("包里不再有正文分片与分片清单",
+  !fs.existsSync(path.join(dataDir, "texts")) && !fs.existsSync(path.join(dataDir, "shards.js")),
+  "data/texts/ 或 data/shards.js 还在 —— 课外正文已经整体删掉了");
 
 {
   const pcfg = readJson(path.join(ROOT, "project.config.json")) || {};
   const ignored = ((pcfg.packOptions || {}).ignore || []).map((r) => String(r.value || ""));
-
-  const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
-  const manPath = (corpusSrc.match(/const\s+MANIFEST\s*=\s*["']([^"']+)["']/) || [])[1] || "";
-  ok("分片清单在主包里（corpus 指向的路径未被 packOptions.ignore 排掉）",
-    !!manPath
-      && !ignored.some((ig) => manPath.indexOf(ig) === 0)
-      && fs.existsSync(path.join(dataDir, manPath.replace(/^data\//, ""))),
-    "corpus 读的是 " + (manPath || "(没找到 MANIFEST 常量)") +
-      " —— 它落在 ignore 名单里或不存在，真机上 bucketOf() 会回空，课外正文一律取不到");
 
   {
     const rel = "data/books/index.js";
@@ -255,48 +211,11 @@ ok("抽查分片可取正文（" + sampled + " 条）", bad === 0, bad + " 条�
       rel + " 被 ignore 了 —— 列表页与按题名检索会空");
   }
 
-  const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
-  ok("被 ignore 的 texts/idx.json 有兜底（读不到 = 全文检索不可用，不炸）",
-    /INDEX\s*=\s*["']data\/texts\/idx\.js["']/.test(tsSrc)
-      && /function\s+index\(\)[\s\S]{0,400}try\s*{[\s\S]{0,200}require/.test(tsSrc)
-      && /function\s+readiness/.test(tsSrc) && /usable/.test(tsSrc),
-    "text-search 读不到 idx.js 时必须走 readiness() 降级，不能抛");
-
-  const bucketDir = (corpusSrc.match(/const\s+BUCKET_DIR\s*=\s*["']([^"']+)["']/) || [])[1] || "";
-  const bucketRead = new RegExp(
-    'readJson\\(\\s*BUCKET_DIR\\s*\\+\\s*name\\s*\\+\\s*["\']\\.js["\']\\s*,\\s*\\{\\}\\s*\\)'
-  ).test(corpusSrc);
-  ok("被 ignore 的 texts/<片> 有兜底（读不到 = 空对象，不炸）",
-    /function\s+readJson\([\s\S]{0,300}return\s+fallback/.test(corpusSrc)
-      && bucketDir === "data/texts/"
-      && bucketRead,
-    "corpus.bucket() 读的是 " + (bucketDir || "(没找到 BUCKET_DIR 常量)") +
-      "，而它在 packOptions.ignore 里 —— 真机上 require 抛 MODULE_NOT_FOUND，" +
-      "课外正文一律取不到，且异常从 onShow 直接冒出去（白屏）。" +
-      "readJson 必须把 require 的失败都兜住（含开发者工具那句 " +
-      "`module '….json.js' is not defined`），bucket() 才拿得到空对象继续往分片缓存走");
-
-  ok("分片在磁盘上时 corpus 能直接读它（开发者工具打开 miniprogram/ 也能读课外）",
-    /function\s+shardFromDisk\s*\(/.test(corpusSrc)
-      && /const\s+disk\s*=\s*shardFromDisk\(name\)/.test(corpusSrc)
-      && /from:\s*"disk"/.test(corpusSrc)
-      && /function\s+shardFromDisk[\s\S]{0,200}readFileSync[\s\S]{0,200}catch/.test(corpusSrc),
-    "corpus 只在 require() 命中时读得到分片；开发者工具里 data/texts 被 ignore 掉、" +
-      "require 抛 MODULE_NOT_FOUND，于是课外正文在工具里一律取不到 —— " +
-      "而那个目录就在磁盘上。要在 bucket() 回空之后、走远端之前补一条磁盘兜底");
-
-  ok("进包的语料与分片一律是 .js（开发者工具不把 .json 当模块打包）",
-    /BUCKET_DIR\s*\+\s*name\s*\+\s*"\.js"/.test(corpusSrc),
-    "有地方还在 require `….json`。开发者工具 2.02.2607271 RC 起不把 .json 当模块打包，" +
-      "任何 require('.json') 都抛 `module '….json.js' is not defined`（Issue #224）—— " +
-      "而开发者工具里读分片正是靠 require，于是课外正文整块取不到。" +
-      "进包的语料产物与分片都写成 `module.exports = …` 的 .js");
-
   ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
     /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
     ),
-    "reader.js 的 corpus.entry(id) 不在 try 里，且排在 ensureEntry 之前 —— 它一抛就连 textFailMsg 那套都说不上");
+    "reader.js 的 corpus.entry(id) 不在 try 里 —— 它一抛就连 failText 那套都说不上");
 
   const readerAdvance = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   const sheetAdvance = fs.readFileSync(
@@ -1067,116 +986,6 @@ const hasMulti = Object.keys(longLine).some((k) => {
 });
 ok("语料里确实有一行多句的篇目（切句不是白做）", hasMulti === true);
 
-const tsearch = require(path.join(ROOT, "utils", "text-search.js"));
-const idxFile = path.join(dataDir, "texts", "idx.js");
-if (fs.existsSync(idxFile)) {
-  ok("全文检索就绪", tsearch.readiness().usable === true);
-  const hits = tsearch.search("明月", { limit: 5 });
-  ok("全文检索能命中正文", hits.length > 0, "查不到「明月」");
-  ok("全文检索带出命中句", hits.every((h) => h.lines.length > 0));
-  ok("全文检索给出来源（包内 / 分片）", hits.every((h) => h.where === "pack" || h.where === "cloud"));
-  ok("查询切成单字", tsearch.termsOf("明月").length === 2);
-  {
-    const ids = tsearch.search("月", { limit: 20 }).map((h) => h.entry.id);
-    ok("正文命中的篇目在名录里查得到（查不到就没法列出结果）", ids.length === 20);
-    ok("分批取与一次取给同序同量（20 条一批是截断，不是重排）",
-      JSON.stringify(ids) === JSON.stringify(tsearch.search("月", { limit: 20 }).map((h) => h.entry.id)),
-      "同一关键词两次取到的前 20 条不一致 —— 下拉续取会与首屏对不上");
-  }
-  {
-    const session = tsearch.makeSession("明月", {});
-    const first = tsearch.nextBatch(session, 19);
-    const second = tsearch.nextBatch(session, 19);
-    ok("nextBatch 按批给结果（要 20 条给 20 条，多取一条用来判还有没有）",
-      first.length === 20 || session.done, "首批 " + first.length + " 条");
-    ok("续取接着上一批往后出，不从头再来",
-      second.length === 0 || first[0].entry.id !== second[0].entry.id,
-      "第二批又从「" + (first[0] && first[0].entry.t) + "」开头 —— 下拉一次重复一屏");
-    ok("分批会话到末尾会自己报 done", typeof session.done === "boolean");
-  }
-  {
-    const scan = tsearch.search("月", { limit: 20 });
-    const done = [];
-    const session = tsearch.makeSession("月", { stop: () => done.length });
-    ok("分批会话认停止信号（搜索页退出后不再往下扫）",
-      typeof session.done === "boolean" && typeof tsearch.nextBatch(session, 20) === "object");
-  }
-  const b1 = tsearch.candidateBuckets(tsearch.termsOf("明月"));
-  const b2 = tsearch.candidateBuckets(tsearch.termsOf("床前明月光"));
-  ok("候选分片取交集后收敛", b2.length <= b1.length, b1.length + " → " + b2.length);
-  ok("候选分片不空（除非真没有）", b1.length > 0);
-
-  ok("高频字的候选片被截到上限内（一个「月」不该拉全量正文）",
-    b1.length <= tsearch.SCAN_CAP && b1.total > tsearch.SCAN_CAP,
-    "命中 " + b1.total + " 片，返回 " + b1.length + " 片 —— 超过 " + tsearch.SCAN_CAP +
-      " 就该只扫最少的那几片（全量分片约 23MB，用户敲一个字要等它落完盘）");
-
-  const capped = tsearch.search("月", { limit: 10 });
-  ok("截断时如实说明「只扫了部分」", capped.partial === true && capped.scanned <= tsearch.SCAN_CAP,
-    "扫了 " + capped.scanned + " 片，partial=" + capped.partial +
-      " —— 不说明就默认用户看到了全部命中");
-
-  ok("命中片多时也只扫上限内的那几片（不把 23MB 分片全拉下来）",
-    capped.scanned <= tsearch.SCAN_CAP,
-    "扫了 " + capped.scanned + " 片");
-
-  const searchJs = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
-  ok("会话如实说明「只扫了部分」（截断那面旗从分片挑选传到页面）",
-    /session\.partial/.test(searchJs) && /partial:\s*session\.partial/.test(searchJs),
-    "search.js 读不到会话上的 partial —— 候选片被截到 " + tsearch.SCAN_CAP +
-      " 片之后，界面还说「全站」，等于默认用户看到了全部命中");
-
-  ok("会话记着扫了几片，不是把总数一次算完",
-    tsearch.makeSession("月", {}).scanned <= tsearch.SCAN_CAP,
-    "makeSession 一开口就摊开全部候选片 —— 那正是会话式取数要避免的");
-
-  {
-    const idx = readModule(idxFile);
-    const kw = "明月";
-    const cand = tsearch.candidateBuckets(tsearch.termsOf(kw));
-    const scoreOf = (b) => tsearch.termsOf(kw).reduce(
-      (n, t) => n + (((idx.postings[t] || {})[b]) || 0), 0);
-    const sorted = cand.slice().sort((a, b) => scoreOf(a) - scoreOf(b));
-    ok("候选片按命中字频降序取（先扫最可能是那一句的片）",
-      scoreOf(cand[0]) > scoreOf(sorted[0]),
-      "取到的是命中字频最低的那几片（" + cand[0] + "=" + scoreOf(cand[0]) +
-        "，全站最低的是 " + sorted[0] + "=" + scoreOf(sorted[0]) + "）—— " +
-        "一页正文里「月」出现 24 次不等于它写着「明月」：" +
-        "《静夜思》所在的那片在「明月」里排到第 103，永远轮不到");
-  }
-} else {
-  ok("全文索引未生成时检索整块关闭", tsearch.readiness().visible === false);
-}
-
-{
-  const src = fs.readFileSync(path.join(ROOT, "utils", "poem-source.js"), "utf8");
-  const remoteSrc3 = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
-  const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
-
-  ok("诗泉服务名单格只在一处（小程序那格与云托管服务名逐字对上）",
-    /const SOURCE_AGENT = "poem-source"/.test(remoteSrc3) && !/poem-source"\s*[,;]/.test(src),
-    "服务名写了两遍就一定会漂：一处改了另一处没改，回的是 invalid host");
-
-  ok("诗泉的接口表与诗泉仓库的 REST 路由逐条对得上",
-    ["/poems", "/poems/search", "/poems/random", "/authors", "/dynasties", "/types", "/stats", "/health"].every(
-      (p) => src.indexOf('"' + p + '"') >= 0),
-    "认错了路径的客户端只会在真机上回 404，本地自检看不出来");
-
-  ok("诗泉没接上时先是 visible 再分 awaiting / denied（不假装能用）",
-    /function readiness\(\)/.test(src) && /state: "denied"/.test(src) &&
-      /state: "awaiting"/.test(src) && /state: "ready"/.test(src),
-    "把「没配」与「配了但连不上」混成一档，界面就只会说一句「加载失败」");
-
-  ok("课外正文先问诗泉、分片只做兜底（两端版本不一致那条根因）",
-    /function ensureEntry\(id\)[\s\S]{0,400}?ensureSource\(id\)[\s\S]{0,200}?ensureShardEntry\(id\)/.test(corpusSrc),
-    "顺序反了就等于新服务一点没接上 —— 分片能答的一律还答分片那份");
-
-  ok("诗泉取不到正文时回 null 落兜底（不把加载态留在屏幕上，也不跳过老分片）",
-    /source[\s\S]{0,200}?\.search\(meta\.t[\s\S]{0,600}?return null;/.test(corpusSrc) &&
-      /ensureEntry\(id\)[\s\S]{0,300}?if \(hit\) return hit;/.test(corpusSrc),
-    "取不到要回 null 让上层落空态 / 走兜底，而不是抛在 then 里连分片一起跳过");
-}
-
 const sync = require(path.join(ROOT, "utils", "sync.js"));
 ok("未配置后端时同步不就绪", sync.ready() === false);
 sync.now(true).then((res) => {
@@ -1310,10 +1119,6 @@ pages.forEach((p) => {
 
 const courseEntry = corpus.entry(perBook.poems[0].id);
 ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text === "string");
-ok("课内正文不走分片", corpus.bucketOf(perBook.poems[0].id) === "");
-
-const outsideId = allEntries.find((p) => p.b !== "poems" && manifest.map[p.id]).id;
-ok("课外正文仍走分片", corpus.bucketOf(outsideId) !== "" && !!corpus.entry(outsideId).text);
 
 {
   const p = "pages/mine/mine";
@@ -1779,22 +1584,15 @@ ok("indexById 能命中条目", corpus.indexById(sampleId) && corpus.indexById(s
 ok("indexById 找不到时回 null", corpus.indexById("不存在的-id") === null);
 
 const foreignMiss = allEntries.filter((p) => !corpus.indexById(p.id));
-ok("每条索引都查得回自己（集子 id 比条目 id 长的两部外国集子也要认）",
+ok("每条索引都查得回自己（集子 id 比条目 id 长的也要认）",
   foreignMiss.length === 0,
   "查不回的还有 " + foreignMiss.length + " 条：" + foreignMiss.slice(0, 3).map((p) => p.id).join("、"));
-const foreignOwner = corpus.indexById("dwang-em-w-03");
-ok("外国集子的条目落在自己那一部集子上",
-  !!foreignOwner && foreignOwner.b === "dwang-waiguo",
-  "实际 " + (foreignOwner ? foreignOwner.b : "查不到"));
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
-ok("全站搜索能跨集子", corpus.search("李白", { limit: 5 }).items.length === 5);
-
-const outside = allEntries.find((p) => p.b === "zhaoming" && p.t.length > 2);
-ok("搜索能命中课外集子", corpus.search(outside.t, { limit: 200 }).items.some((p) => p.id === outside.id),
-  "查不到 " + outside.t);
+ok("搜索只在课内那 251 首里找", corpus.search("李白", { limit: 500 }).items.every((p) => p.b === "poems"));
 ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).items.every((p) => p.b === "poems"));
+ok("课外集子不在包里，搜不到", corpus.search("昭明", { limit: 200 }).total === 0);
 
-const sw = corpus.search("春", { limit: 80 });
+const sw = corpus.search("春", { limit: 5 });
 ok("search 报出截断前总数", sw.total > sw.items.length,
   "「春」全站命中 " + sw.total + "，列出 " + sw.items.length);
 const swAll = corpus.search("春", { limit: 99999 });
@@ -2203,26 +2001,29 @@ ok("名录在、标签截断、档位合法",
 {
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
   const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const stageStore = require(path.join(ROOT, "utils", "store.js"));
+  const stageSaved = { grade: stageStore.settings().grade, term: stageStore.settings().term };
+  stageStore.saveSettings({ grade: 12, term: 2 });
 
   {
     const picks = [];
     for (let i = 0; i < 30; i++) {
-      const p = feihua.pick({ level: "normal", scope: "tangshi" });
+      const p = feihua.pick({ level: "normal", scope: scopes.STAGE_SCOPE });
       if (p) picks.push(p.char);
     }
-    ok("飞花令出得了令字（范围内随机）", picks.length === 30, "只有 " + picks.length + " 次出字");
+    ok("飞花令出得了令字（课内范围内随机）", picks.length === 30, "只有 " + picks.length + " 次出字");
     ok("随机出来的令字都能随机到不止一个（不是钉死一个）",
       new Set(picks).size > 1, "30 次只出了 " + new Set(picks).size + " 个字");
 
     const blind = [];
     scopes.list().forEach((s) => {
-      ["easy", "normal", "hard"].forEach((lv) => {
+      feihua.LEVELS.forEach((lv) => {
         const asked = [];
         for (let i = 0; i < 400; i++) {
-          const p = feihua.pick({ level: lv, scope: s.id, exclude: asked });
+          const p = feihua.pick({ level: lv.id, scope: s.id, exclude: asked });
           if (!p) break;
           asked.push(p.char);
-          if (!feihua.look(p.char, { scope: s.id, limit: 1 }).length) blind.push(s.id + "/" + lv + ":" + p.char);
+          if (!feihua.look(p.char, { scope: s.id, limit: 1 }).length) blind.push(s.id + "/" + lv.id + ":" + p.char);
         }
       });
     });
@@ -2232,35 +2033,22 @@ ok("名录在、标签截断、档位合法",
 
   {
     const names = scopes.list().map((s) => s.id);
-    ok("出题范围只列诗词集子（改编成文章、辞书、故事集的那几部不进来）",
-      names.indexOf("poems") >= 0 && names.indexOf("tangshi") >= 0
-        && names.indexOf("songci") >= 0 && names.indexOf("yuefu") >= 0
-        && names.indexOf("season") < 0 && names.indexOf("chengyu") < 0
-        && names.indexOf("changshi") < 0 && names.indexOf("mingshu") < 0
-        && names.indexOf("classic") < 0 && names.indexOf("guwen") < 0,
-      "范围里有非诗词的集子：" + names.join("、"));
+    ok("出题范围只剩课内那一项（课外集子一条都不在包里）",
+      names.length === 1 && names[0] === scopes.STAGE_SCOPE,
+      "范围里有 " + names.join("、"));
 
-    const booksMod = require(path.join(ROOT, "utils", "corpus.js"));
+    const corpusMod = require(path.join(ROOT, "utils", "corpus.js"));
+    const settingsMod = require(path.join(ROOT, "utils", "store.js"));
+    const kept = { grade: settingsMod.settings().grade, term: settingsMod.settings().term };
+    settingsMod.saveSettings({ grade: 12, term: 2 });
     const missing = [];
-    scopes.list().forEach((s) => {
-      booksMod.ofBook(s.id).forEach((p) => {
-        const e = booksMod.entry(p.id);
-        if (e && e.text && !scopes.pool(s.id).some((q) => q.id === p.id)) {
-          missing.push(s.id + ":" + p.id);
-        }
-      });
+    corpusMod.course().forEach((p) => {
+      const e = corpusMod.entry(p.id);
+      if (e && e.text && !scopes.pool(scopes.STAGE_SCOPE).some((q) => q.id === p.id)) missing.push(p.id);
     });
-    ok("每个集子里凡有正文的条目都进得了这个范围（课内 251 首也算，正文在主包里）",
+    ok("学段放到最高时课内 251 首全进得了这个范围",
       missing.length === 0, "漏了 " + missing.slice(0, 5).join("、"));
-
-    const leak = [];
-    scopes.list().forEach((s) => {
-      scopes.pool(s.id).forEach((p) => {
-        if (p.b !== "poems" && p.b !== s.id) leak.push(s.id + ":" + p.id + "(" + p.b + ")");
-      });
-    });
-    ok("选某个集子就只出那本（课内那 251 首照旧带上，别的集子不许混进来）",
-      leak.length === 0, "混进来了 " + leak.slice(0, 5).join("、"));
+    settingsMod.saveSettings(kept);
 
     const empty = [];
     scopes.list().forEach((s) => {
@@ -2273,20 +2061,9 @@ ok("名录在、标签截断、档位合法",
   }
 
   {
-    const all = feihua.look("月", { limit: 9999 }).map((r) => r.seg);
-    const inTang = feihua.look("月", { scope: "tangshi", limit: 9999 }).map((r) => r.seg);
     const say = feihua.judge("月", "床前明月光", []);
-    ok("作答能超出出题范围（范围选唐诗，答课内的静夜思照样对）",
-      say.ok === true, say.reason || "判成了错");
-
-    ok("看答案按范围收窄（范围内的句子少于全部）",
-      inTang.length < all.length,
-      "范围内 " + inTang.length + " vs 全部 " + all.length);
+    ok("作答落在课内正文里就算对", say.ok === true, say.reason || "判成了错");
   }
-
-  ok("作答在全部诗词集子里找（课内没收录的那首也算对）",
-    feihua.judge("城", "一片孤城万仞山", []).ok === true
-      && feihua.judge("河", "黄河远上白云间", []).ok === true);
 
   ok("作答必须含令字", feihua.judge("月", "床前明月光", []).ok === true
     && feihua.judge("月", "白日依山尽", []).ok === false);
@@ -2295,6 +2072,8 @@ ok("名录在、标签截断、档位合法",
   ok("同一句不能在一轮里说两遍",
     feihua.judge("月", "床前明月光", ["床前明月光"]).ok === false);
   ok("太短的作答不算（免得单字蒙对）", feihua.judge("月", "月", []).ok === false);
+
+  stageStore.saveSettings(stageSaved);
 }
 {
   const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
@@ -2319,10 +2098,11 @@ ok("名录在、标签截断、档位合法",
     cut3.length === 0 && pool3 === course.filter((p) => p.gr < 3 || (p.gr === 3 && p.tm <= 2)).length,
     "越界 " + cut3.slice(0, 5).join("、") + "，共 " + pool3 + " 首");
 
-  storeMod.saveSettings({ grade: 6, term: 2 });
-  ok("学段跟着背诵选项走（六年级下学期比三年级下学期多）",
-    scopes.pool(scopes.STAGE_SCOPE).length > pool3
-      && outside(6, 2).length === 0);
+  storeMod.saveSettings({ grade: 1, term: 1 });
+  ok("学段跟着背诵选项走（一年级下学期比三年级下学期少）",
+    scopes.pool(scopes.STAGE_SCOPE).length < pool3
+      && outside(1, 1).length === 0,
+    "一年级下学期 " + scopes.pool(scopes.STAGE_SCOPE).length + " 首，三年级下学期 " + pool3 + " 首");
 
   storeMod.saveSettings({ grade: 6, term: 2 });
   ok("题库按这个范围出得了题", quizLib.build({
@@ -3291,30 +3071,17 @@ function mountFull(pg, query) {
 
   {
     const js = read("pages/search/search.js");
-    ok("搜索先按篇名作者找，无结果才落到正文全文",
-      /byIndex\(kw\)/.test(js) && js.indexOf("byIndex(kw)") < js.indexOf("runFull(kw)"));
+    ok("搜索走课程索引（corpus.search），不再扫正文",
+      /byIndex\(kw\)/.test(js) && !/runFull/.test(js) && !/text-search/.test(js));
     ok("搜索结果一次只列 20 条",
-      /const BATCH = 20;/.test(js) && /nextBatch\(session, BATCH\)/.test(js),
+      /const BATCH = 20;/.test(js) && /slice\(0, BATCH\)/.test(js),
       "每批 20 条这个数只该在一处写死 —— 散在两个地方，下拉与首屏就会各出各的数");
     ok("触底才接下一批（onReachBottom 里才续取）",
-      /onReachBottom\s*\(\)\s*\{[\s\S]{0,260}?(pushBatch|byIndex)/.test(js),
+      /onReachBottom\s*\(\)\s*\{[\s\S]{0,260}?byIndex/.test(js),
       "没有 onReachBottom —— 列表拉到底不会续取，20 条就是全部");
-    ok("列表还有后续时不写「已到末尾」",
-      /more:\s*more\s*&&\s*!session\.done/.test(js));
-    ok("索引那一路也一样分页（首屏只给前 20，触底再取下一批）",
-      /results:\s*r\.items\.slice\(0, BATCH\)/.test(js) &&
-        /more:\s*r\.total > BATCH/.test(js) &&
-        /this\.total > want/.test(js),
-      "索引命中一大片时照样一次只列 20 —— 首屏塞几千条，与分页的初衷正相反");
-    ok("重搜与清空都掐断上一轮的会话（否则旧批次会追加到新结果里）",
-      /this\.session = null;/.test(js) && /this\.busy = false;/.test(js));
-    ok("退出搜索页不再往下扫",
-      /onUnload\s*\(\)\s*\{[\s\S]{0,160}?this\.busy = false/.test(js),
-      "没有 onUnload 掐断 —— 退出后仍会把正文分片一片片读完");
-
-    const ts = read("utils/text-search.js");
-    ok("分批接口由搜索页驱动，不是一次扫完全站",
-      /function makeSession/.test(ts) && /function nextBatch/.test(ts) && /session\.done/.test(ts));
+    ok("列表还有后续时才写「往下拉」",
+      /this\.total > want/.test(js) && /more:\s*r\.total > BATCH/.test(js)
+        && read("pages/search/search.wxml").indexOf('wx:if="{{more}}"') > 0);
   }
 
   {
@@ -5165,470 +4932,71 @@ function mountFull(pg, query) {
 }
 
 const K = {
-
-  counts: {
-    poems: 251, classic: 284, yuefu: 103, tangshi: 430, gushi: 109, songci: 330,
-    yuanqu: 31, guwen: 234, jinxiandai: 24, zhaoming: 480,
-    chengyu: 948, changshi: 221, mingshu: 808,
-    mingren: 392, "mingren-waiguo": 523, dwang: 609, "dwang-waiguo": 68
-  },
-
-  seqMax: { gushi: 126, songci: 331, tangshi: 469 },
-
   course: 251,
-  buckets: 120,
 
-  selection: { tangshi: 337, songci: 288, yuanqu: 31, zhaoming: 480 }
+  dynasties: ["先秦", "秦", "汉", "三国", "西晋", "东晋", "南北朝", "隋", "唐", "五代",
+    "宋", "元", "明", "清", "现代"]
 };
 
-function gapped(items, max) {
-  const have = {};
-  items.forEach((p) => {
-    const m = /(\d+)$/.exec(String(p.id));
-    if (m) have[Number(m[1])] = 1;
+{
+  ok("课内诗词 251 首（与上游语料同一口径）", perBook.poems.length === K.course,
+    "语料 " + perBook.poems.length + "，表里写 " + K.course);
+
+  const emptyDyn = perBook.poems.filter((p) => !String(p.d || "").trim());
+  ok("课内 251 首没有空朝代", emptyDyn.length === 0,
+    emptyDyn.length + " 条 —— " + emptyDyn.slice(0, 5).map((p) => p.id + " " + p.t).join("；"));
+
+  const noAuthor = perBook.poems.filter((p) => !String(p.a || "").trim());
+  ok("课内 251 首没有空作者", noAuthor.length === 0,
+    noAuthor.slice(0, 5).map((p) => p.id + " " + p.t).join("；"));
+
+  const offAxis = perBook.poems.filter((p) => K.dynasties.indexOf(String(p.d || "").trim()) < 0);
+  ok("朝代写法都在同一个轴上", offAxis.length === 0,
+    "认不得：" + offAxis.slice(0, 8).map((p) => p.d).join("、"));
+
+  const noGrade = perBook.poems.filter((p) => !p.gr);
+  ok("课内 251 首都带年级（每日计划按它排）", noGrade.length === 0,
+    noGrade.slice(0, 5).map((p) => p.id + " " + p.t).join("；"));
+
+  const named = perBook.poems.filter((p) => {
+    const a = String(p.a || "").trim();
+    return /^《.+》$/.test(a) || a === "国语" || a === "战国策";
   });
-  const miss = [];
-  for (let i = 1; i <= max; i++) if (!have[i]) miss.push(i);
-  return miss;
+  ok("作者一格填书名的几条都认得出是结集",
+    named.every((p) => require(path.join(ROOT, "utils", "author-index.js")).isCollective(p.a)),
+    "认成了一位作者：" + named.slice(0, 5).map((p) => p.a + "（" + p.id + "）").join("、"));
+
+  {
+    const withAka = perBook.poems.filter((p) => p.aka);
+    const want = ["燕歌行", "燕歌行·并序"];
+    const all = withAka.reduce((acc, p) => acc.concat(p.aka), []);
+    ok("题名异写搬进来了（" + withAka.length + " 条）", want.every((t) => all.indexOf(t) >= 0),
+      "少了：" + want.filter((t) => all.indexOf(t) < 0).join("、") + " —— 构建脚本里的 `aka` 没搬？");
+  }
 }
 
 {
-
-  Object.keys(K.counts).forEach((id) => {
-    ok("篇数对得上网页版 · " + id, perBook[id].length === K.counts[id],
-      "语料 " + perBook[id].length + "，表里写 " + K.counts[id] + "（补录之后回来对一次）");
-  });
-
-  const shelfIds = Object.keys(K.counts).filter((id) => id !== "poems");
-  const shelfCount = shelfIds.reduce((n, id) => n + perBook[id].length, 0);
-  ok("课外十七部合计与各集子篇数一致", shelfCount === 5594,
-    "各集子加起来 " + shelfCount + "（补录之后回来对一次）");
-
-  const qb = allEntries.filter((p) => p.t === "七步诗");
-  ok("《七步诗》在《古诗「非唐代」》", qb.length === 1 && qb[0].b === "gushi");
-
-  const KNOWN_NON_TANG = { "tangshi-ts-390": 1 };
-  const nonTang = perBook.tangshi.filter((p) => String(p.d).trim() !== "唐");
-  const freshNonTang = nonTang.filter((p) => !KNOWN_NON_TANG[p.id]);
-  ok("《唐诗》里非唐的条目只有记着的那几条", freshNonTang.length === 0,
-    "新出现 " + freshNonTang.map((p) => p.id + " " + p.t + "(" + p.d + ")").join("、") +
-    " —— 是通用名篇那一段收的，还是真混进来了？");
-  const goneNonTang = Object.keys(KNOWN_NON_TANG).filter((id) => !nonTang.some((p) => p.id === id));
-  ok("记着的非唐条目没有悄悄消失（没了就回来删）", goneNonTang.length === 0,
-    "已不见 " + goneNonTang.join("、"));
-
-  const litBooks = ["poems", "classic", "guwen", "yuefu", "tangshi", "gushi",
-    "songci", "yuanqu", "jinxiandai", "zhaoming"];
-
-  const emptyDyn = [];
-  litBooks.forEach((id) => {
-    perBook[id].forEach((p) => {
-      if (!String(p.d || "").trim()) emptyDyn.push(p.id + " " + p.t);
-    });
-  });
-  ok("收作品的十部集子里没有空朝代", emptyDyn.length === 0,
-    emptyDyn.length + " 条 —— " + emptyDyn.slice(0, 5).join("；"));
-
-  const zmByAuthor = {};
-  let collided = 0;
-  perBook.zhaoming.forEach((p) => {
-    if (!p.a) return;
-    if (zmByAuthor[p.a] === undefined) zmByAuthor[p.a] = p.d;
-    else if (zmByAuthor[p.a] !== p.d) collided += 1;
-  });
-  ok("《昭明文选》同一位作者只落一个朝代", collided === 0, collided + " 处冲突");
-
-  const webAuthor = path.join(__dirname, "corpus", "data", "author-index.js");
-  const miniAuthor = path.join(ROOT, "utils", "author-index.js");
-
-  if (!fs.existsSync(webAuthor) || !fs.existsSync(miniAuthor)) {
-    console.log("· 作者索引时间轴没得比（语料或小程序端的 author-index.js 不在）—— 跳过两条");
-  } else {
-    const erasOf = (src) => {
-
-      const m = /(?:var|const) ERAS = \[([\s\S]*?)\n\s*\];/.exec(src);
-      if (!m) return null;
-      const out = [];
-      const re = /\{\s*at:\s*(\d+)\s*,\s*name:\s*"([^"]+)"/g;
-      let g;
-      while ((g = re.exec(m[1]))) out.push(g[1] + ":" + g[2]);
-      return out;
-    };
-    const a = erasOf(fs.readFileSync(webAuthor, "utf8"));
-    const b = erasOf(fs.readFileSync(miniAuthor, "utf8"));
-    ok("两端的朝代时间轴抠得出来", !!a && !!b, "ERAS 表没匹配上，正则要跟着改");
-    if (a && b) {
-      ok("朝代时间轴与网页版逐段一致（" + a.length + " 段）",
-        a.join("|") === b.join("|"),
-        "网页版 " + a.join(" ") + " ／ 小程序 " + b.join(" "));
-    }
-
-    const aliasOf = (src) => {
-      const m = /(?:var|const) ALIAS = \{([\s\S]*?)\n\s*\};/.exec(src);
-      if (!m) return null;
-      const out = {};
-      const re = /"([^"]+)":\s*"([^"]+)"/g;
-      let g;
-      while ((g = re.exec(m[1]))) out[g[1]] = g[2];
-      return out;
-    };
-    const wa = aliasOf(fs.readFileSync(webAuthor, "utf8"));
-    const ma = aliasOf(fs.readFileSync(miniAuthor, "utf8"));
-    ok("两端的异名表抠得出来", !!wa && !!ma, "ALIAS 表没匹配上，正则要跟着改");
-    if (wa && ma) {
-
-      const diff = Object.keys(wa).filter((k) => k in ma && wa[k] !== ma[k])
-        .map((k) => k + "：网页版→" + wa[k] + "／小程序→" + ma[k]);
-      const remapOf = (m) => new Set(Object.keys(m).map((k) => k + "→" + m[k]));
-      const remapMiss = Object.keys(wa).map((k) => k + "→" + wa[k])
-        .filter((x) => !remapOf(ma).has(x));
-      ok("异名表的归一结果与网页版一致（" + Object.keys(wa).length + " 条）",
-        remapMiss.length === 0 && diff.length === 0,
-        "网页版有、小程序里归到别处：" + remapMiss.join("、") +
-        "；同名归到两处：" + diff.join("、"));
-    }
-
-    const attribOf = (src) => {
-      const m = /(?:var|const) ATTRIB = \{([\s\S]*?)\n[ \t]*\};/.exec(src);
-      if (!m) return null;
-      const out = {};
-      const re = /"([^"]+)":\s*\{\s*person:\s*"([^"]+)"\s*,\s*dynasty:\s*"([^"]+)"\s*\}/g;
-      let g;
-      while ((g = re.exec(m[1]))) out[g[1]] = g[2] + "|" + g[3];
-      return out;
-    };
-    const wt = attribOf(fs.readFileSync(webAuthor, "utf8"));
-    const mt = attribOf(fs.readFileSync(miniAuthor, "utf8"));
-    ok("合编归属表与网页版逐条一致（" + Object.keys(wt || {}).length + " 条）",
-      !!wt && !!mt && Object.keys(mt).length === Object.keys(wt).length
-        && Object.keys(wt).every((k) => mt[k] === wt[k]),
-      "抠不出来，或两端对不上");
-  }
-
   const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  const roster = AI.build(perBook.poems);
+
+  ok("课内的作者都进得了名册", roster.total > 0 && Object.keys(roster.people).length > 0);
+  ok("名册上每一位都落在某一段里",
+    roster.eras.reduce((n, e) => n + e.people.length, 0) === roster.total,
+    "有人悬空");
+
+  const libai = roster.people["李白"];
+  ok("李白在名册里，名下有《静夜思》且只算一次",
+    !!libai && libai.items.filter((p) => p.t === "静夜思").length === 1,
+    libai ? "名下 " + libai.items.length + " 条" : "名册里没有李白");
+
   ok("认不得的朝代写法回落到最末一段（不静默丢掉）",
     AI.eraOf("__探针__") === AI.TAIL,
     "eraOf 对表外写法返回了 " + AI.eraOf("__探针__"));
 
-  const unknown = [];
-  const seenD = {};
-  litBooks.forEach((id) => {
-    perBook[id].forEach((p) => {
-      const d = String(p.d || "").trim();
-      if (!d || seenD[d]) return;
-      seenD[d] = 1;
-      if (AI.eraOf(d) === 18) unknown.push(d);
-    });
-  });
-  ok("收作品的十部里 " + Object.keys(seenD).length + " 种朝代写法都在时间轴上", unknown.length === 0,
-    "认不得：" + unknown.slice(0, 8).join("、") +
-    (unknown.length > 8 ? " …共 " + unknown.length + " 种" : "") + "（去 utils/author-index.js 的 ERAS 里补）");
-
-  const named = [];
-  allEntries.forEach((p) => {
-    const a = String(p.a || "").trim();
-    const wrap = /^《.+》$/.test(a);
-    if ((wrap || a === "国语" || a === "战国策") && !AI.isCollective(a)) {
-      named.push(a + "（" + p.id + "）");
-    }
-  });
-  ok("作者一格填书名的四条都认得出是结集", named.length === 0,
-    "认成了一位作者：" + named.join("、") + " —— 它们会变成「《礼记》写了《大学之道》」");
-  ok("isCollective 对真作者返回假（李白 / 曹植 / 佚名）",
-    !AI.isCollective("李白") && !AI.isCollective("曹植") && !AI.isCollective("佚名"));
-
-  {
-    const selNoSrc = [];
-    Object.keys(K.selection).forEach((id) => {
-      (perBook[id] || []).forEach((p) => {
-        if (String(p.sel || "").trim() && !String(p.s || "").trim()) selNoSrc.push(p.id);
-      });
-    });
-    const selMiss = [];
-    const selFlat = [];
-    Object.keys(K.selection).forEach((id) => {
-      const n = (perBook[id] || []).filter((p) => String(p.sel || "").trim()).length;
-      if (n !== K.selection[id]) selMiss.push(id);
-      const rows = (perBook[id] || []).filter((p) => p.s && p.sel);
-      if (!rows.length || rows.every((p) => p.s === p.sel)) selFlat.push(id);
-    });
-    ok("选本出处搬全了，且两重出处真的拆开了（counts " + JSON.stringify(K.selection) + "）",
-      selMiss.length === 0 && selFlat.length === 0,
-      "没搬全：" + selMiss.join("、") + "；没拆开：" + selFlat.join("、"));
-    ok("有选本出处的条目都有所出之书", selNoSrc.length === 0,
-      selNoSrc.slice(0, 5).join("、"));
-  }
-
-  {
-    const withAka = allEntries.filter((p) => p.aka);
-    const want = ["秋登万山寄张五", "秋浦歌", "燕歌行并序", "燕歌行·并序",
-      "山中送别", "赠范晔诗"];
-    ok("题名异写搬进来了（" + withAka.length + " 条）",
-      want.every((t) => withAka.some((p) => p.t === t)),
-      "只有 " + withAka.length + " 条有 alias —— 构建脚本里的 `aka` 没搬？");
-
-    const got = withAka.map((p) => p.t);
-    const miss = want.filter((t) => got.indexOf(t) < 0);
-    ok("点名的那几条题名异写都在", miss.length === 0, "少了：" + miss.join("、"));
-  }
-}
-
-{
-  const AI = require(path.join(ROOT, "utils", "author-index.js"));
-  const lit = AI.LIT_BOOKS;
-
-  const wantLit = ["poems", "classic", "guwen", "yuefu", "tangshi",
-    "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"];
-  ok("作者索引收作品的十部（与网页版同一份名单）",
-    lit.slice().sort().join(",") === wantLit.slice().sort().join(","),
-    "实际 " + lit.join("、"));
-
-  const litEntries = [];
-  lit.forEach((b) => { if (perBook[b]) litEntries.push.apply(litEntries, perBook[b]); });
-  const roster = AI.build(litEntries);
-
-  {
-    const webAuthor = path.join(__dirname, "corpus", "data", "author-index.js");
-    if (!fs.existsSync(webAuthor)) {
-      console.log("· 作者名册没得比（语料的 data/author-index.js 不在）—— 跳过一条");
-    } else {
-      let webPeople = null;
-      try {
-        const vm = require("vm");
-
-        const webDir = path.join(__dirname, "corpus");
-        const loader = fs.readFileSync(path.join(webDir, "scripts", "build-works-map.js"), "utf8");
-        const m = /const LOAD = \[([\s\S]*?)\];/.exec(loader);
-        const list = m ? eval("[" + m[1] + "]") : [];
-        const sb = { window: {}, console: console };
-        sb.window = sb;
-        vm.createContext(sb);
-        list.forEach((f) => {
-          try { vm.runInContext(fs.readFileSync(path.join(webDir, f), "utf8"), sb, { filename: f }); } catch (e) { }
-        });
-        ["data/zhaoming-dynasty.js", "data/author-index.js"].forEach((f) => {
-          try { vm.runInContext(fs.readFileSync(path.join(webDir, f), "utf8"), sb, { filename: f }); } catch (e) { }
-        });
-        webPeople = sb.window.AuthorIndex ? sb.window.AuthorIndex.people().map((p) => p.name) : null;
-        if (webPeople) webPeople = webPeople.map((n) => n === "扬雄" ? n : AI.aliasOf(n)).filter((n) => n && !AI.isCollective(n));
-      } catch (e) {
-        webPeople = null;
-      }
-
-      if (!webPeople || webPeople.length < 400) {
-        console.log("· 作者名册没得比（poem 那边的 AuthorIndex 挂不上）—— 跳过一条");
-      } else {
-        const mine = Object.keys(roster.people);
-        const webSet = new Set(webPeople);
-        const mineSet = new Set(mine);
-        const onlyWeb = webPeople.filter((n) => !mineSet.has(n));
-        const onlyMine = mine.filter((n) => !webSet.has(n));
-
-        const KNOWN_ONLY_MINE = ["崔护", "刘歆", "庄周", "项羽", "王十朋", "杨基", "陶潜"];
-        const knownHere = KNOWN_ONLY_MINE.filter((n) => !webSet.has(AI.aliasOf(n)));
-        const freshMine = onlyMine.filter((n) => knownHere.indexOf(n) < 0);
-        const patchedMine = knownHere.filter((n) => onlyMine.indexOf(n) < 0);
-        ok("两端名册的差集就是记着的那几位",
-          freshMine.length === 0 && patchedMine.length === 0,
-          "新多出：" + freshMine.join("、") + "；已不见：" + patchedMine.join("、") +
-          "（多出的是判重口径的差，少了就说明这边并得比网页版还狠 —— 回来对一次）");
-        ok("两端名册只差崔护一位（网页版那边一位都不多）",
-          onlyWeb.length === 0,
-          "网页版多出：" + onlyWeb.join("、") +
-          " —— 多半是小程序端的 ALIAS 表落后了（去 utils/author-index.js 补）");
-      }
-    }
-  }
-
-  const mergePairs = [
-    ["曹子建", "曹植"], ["班孟坚", "班固"], ["屈平", "屈原"],
-    ["谢玄晖", "谢朓"], ["诸葛孔明", "诸葛亮"], ["左太冲", "左思"]
-  ];
-  mergePairs.forEach((p) => {
-    const w = roster.people[p[1]];
-    ok("异名归一 · " + p[0] + " 并在 " + p[1] + " 名下", !!w,
-      "名册里找不到「" + p[1] + "」—— 异名没并，或被拆成两位");
-
-    if (w) {
-      const fromZm = w.items.filter((it) => it.b === "zhaoming");
-      ok("异名归一 · " + p[1] + " 名下有《文选》条目", fromZm.length > 0,
-        "0 条 —— 异名没并过来");
-    }
-  });
-
-  mergePairs.forEach((p) => {
-    ok("异名不单独立位 · " + p[0], !roster.people[p[0]],
-      "「" + p[0] + "」自己占了一格 —— 归一没生效");
-  });
-
-  ["礼记", "论语", "国语", "战国策"].forEach((n) => {
-    ok("结集不进名册 · " + n, !roster.people[n]);
-  });
-
-  ["礼记", "论语"].forEach((n) => {
-    const raw = litEntries.filter((p) => AI.aliasOf(p.a) === n);
-    ok("结集条目仍在语料里 · " + n, raw.length > 0, "语料里一条都没有了");
-  });
-
-  {
-    const jing = roster.people["李白"];
-    if (jing) {
-      const same = jing.items.filter((p) => p.t === "静夜思");
-      ok("同一首跨集只算一次 · 《静夜思》", same.length === 1,
-        "李白名下 " + same.length + " 条《静夜思》—— 判重没生效");
-      ok("判重留下的是课内那条 · 《静夜思》",
-        same.length === 1 && same[0].b === "poems",
-        "留下的不是课内那条（" + (same[0] || {}).b + "）");
-    } else {
-      ok("李白在名册里", false, "名册里没有李白");
-    }
-  }
-
-  {
-    const li = roster.people["李煜"];
-    if (li) {
-      ok("课内没有的篇目不被误判重复 · 李煜有作品", li.items.length > 0);
-    } else {
-      ok("李煜在名册里", false, "《词》里 30 余首的作者不在名册里");
-    }
-  }
-
-  {
-    const placed = roster.eras.reduce((n, e) => n + e.people.length, 0);
-    ok("名册上每一位都落在某一段里", placed === roster.total,
-      "摊开 " + placed + " 位，名册有 " + roster.total + " 位 —— 有人悬空");
-
-    const rawNames = ["北宋", "南宋", "南朝宋", "东晋", "盛唐"];
-    const bad = roster.eras.filter((e) => rawNames.indexOf(e.name) >= 0).map((e) => e.name);
-    ok("段的标题是归并后的朝名（不是原写法）", bad.length === 0,
-      "出现了原写法：" + bad.join("、"));
-  }
-
-  {
-    const savedWx = global.wx;
-    const savedPage = global.Page;
-    const savedGetApp = global.getApp;
-    const savedPages = global.getCurrentPages;
-
-    const mem = {};
-    global.wx = {
-      showToast() {}, showModal() {}, showLoading() {}, hideLoading() {},
-      showActionSheet(o) { o && o.success && o.success({ tapIndex: 0 }); },
-      navigateTo() {}, switchTab() {}, redirectTo() {}, navigateBack() {},
-      pageScrollTo() {}, nextTick(f) { if (f) f(); },
-      setNavigationBarTitle() {}, vibrateShort() {}, stopPullDownRefresh() {},
-      getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375, platform: "devtools" }),
-      getStorageSync: (k) => (k in mem ? mem[k] : ""),
-      setStorageSync: (k, v) => { mem[k] = v; },
-      removeStorageSync: (k) => { delete mem[k]; },
-      getStorageInfoSync: () => ({ keys: Object.keys(mem), currentSize: 0, limitSize: 10240 }),
-      login(o) { o && o.fail && o.fail({}); },
-      getUserProfile(o) { o && o.fail && o.fail({}); },
-      request(o) { o && o.fail && o.fail({ errmsg: "offline" }); }
-    };
-    global.Component = () => {};
-    global.getApp = () => ({ globalData: {} });
-    global.getCurrentPages = () => [];
-
-    const storeMod = require(path.join(ROOT, "utils", "store.js"));
-    storeMod.saveProfile({ logged: true, nickname: "自检" });
-
-    function mountReader(query) {
-      let opt = null;
-      global.Page = (o) => { opt = o; };
-      const file = path.join(ROOT, "pages", "reader", "reader.js");
-      delete require.cache[require.resolve(file)];
-      require(file);
-      if (!opt) return null;
-      const page = Object.assign({}, opt);
-      page.data = JSON.parse(JSON.stringify(opt.data || {}));
-      page.setData = function (o, cb) {
-        Object.keys(o).forEach((k) => { this.data[k] = o[k]; });
-        if (cb) cb();
-      };
-      page.onLoad(query || {});
-      page.onShow();
-      return page;
-    }
-
-    try {
-
-      const libai = roster.people["李白"];
-      if (libai) {
-        const first = mountReader({ id: libai.items[0].id, from: "李白" });
-        ok("从作者索引进来时带上作者", first && first.data.creator === "李白");
-
-        let hops = 0;
-        const seen = {};
-        let cur = first;
-        let off = "";
-        while (hops < 5 && cur) {
-          seen[cur.data.id] = 1;
-          if (AI.aliasOf(cur.data.author) !== "李白") { off = "作者「" + cur.data.author + "」"; break; }
-          if (lit.indexOf(cur.data.bookId) < 0) { off = "词条「" + cur.data.bookId + "」"; break; }
-          const next = cur.siblingInAuthor(1);
-          if (!next) break;
-          if (seen[next]) { off = "原地打转回 " + next; break; }
-          cur = mountReader({ id: next, from: "李白" });
-          hops += 1;
-        }
-        ok("从作者索引连翻五首：不跨作者、不跳进词条、不回头，且真的翻动了",
-          !off && hops > 0, off || "一次都没跳");
-
-        const rosterIds = libai.items.map((p) => p.id);
-        const chain = [];
-        const seenChain = {};
-        let cursor = rosterIds[0];
-        while (cursor && !seenChain[cursor]) {
-          chain.push(cursor);
-          seenChain[cursor] = 1;
-          const pg = mountReader({ id: cursor, from: "李白" });
-          if (!pg) break;
-          cursor = pg.siblingInAuthor(1);
-        }
-        ok("上一篇 / 下一篇的整条链与名册同序（" + rosterIds.length + " 条）",
-          chain.length === rosterIds.length && chain.every((id, i) => id === rosterIds[i]),
-          "链条 " + chain.length + " 条 —— 多半是阅读页自己筛了一遍，没走名册那份判重");
-
-        const rosterWithReads = AI.build(litEntries, { readIds: { [rosterIds[0]]: 1 } });
-        ok("作品的 id 列表不随已读状态变（阅读页的缓存靠这条）",
-          AI.worksOf(roster, "李白").join(",") === AI.worksOf(rosterWithReads, "李白").join(","));
-
-        let back = rosterIds[rosterIds.length - 1];
-        const backChain = [];
-        const seenBack = {};
-        while (back && !seenBack[back]) {
-          backChain.unshift(back);
-          seenBack[back] = 1;
-          const pg = mountReader({ id: back, from: "李白" });
-          if (!pg) break;
-          back = pg.siblingInAuthor(-1);
-        }
-        ok("逆序链条与名册同序", JSON.stringify(backChain) === JSON.stringify(rosterIds));
-
-        const plain = mountReader({ id: libai.items[0].id });
-        ok("从集子列表进来时不带作者", plain && plain.data.creator === "");
-      } else {
-        ok("李白在名册里（阅读页那一组的前提）", false);
-      }
-    } finally {
-      storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });
-      global.wx = savedWx;
-      global.Page = savedPage;
-      global.getApp = savedGetApp;
-      global.getCurrentPages = savedPages;
-    }
-  }
-
-  {
-    const searchWxml = fs.readFileSync(path.join(ROOT, "pages", "search", "search.wxml"), "utf8");
-    const searchJs = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
-    ok("搜索页有作者索引入口", searchWxml.indexOf("onAuthors") >= 0);
-    ok("作者索引入口指向分包", /\/packages\/authors\/index\/index/.test(searchJs));
-    const libWxml = fs.readFileSync(path.join(ROOT, "pages", "library", "library.wxml"), "utf8");
-    ok("课外阅读页不放作者索引入口", libWxml.indexOf("authors") < 0,
-      "入口两边都有，用户会不知道从哪进（网页版裁过这一条）");
-  }
+  const rawNames = ["北宋", "南宋", "南朝宋", "东晋", "盛唐"];
+  const bad = roster.eras.filter((e) => rawNames.indexOf(e.name) >= 0).map((e) => e.name);
+  ok("段的标题是归并后的朝名（不是原写法）", bad.length === 0,
+    "出现了原写法：" + bad.join("、"));
 }
 
 (async () => {
@@ -6979,8 +6347,8 @@ function gapped(items, max) {
       if (bare) {
         let blew = "";
         try {
-          bare.books(); bare.course(); bare.courseTexts(); bare.manifest();
-          bare.bucketOf("x"); bare.entry("x"); bare.search("李白");
+          bare.books(); bare.course(); bare.courseTexts();
+          bare.entry("x"); bare.search("李白");
         } catch (e) {
           blew = (e && e.message) || String(e);
         }
@@ -7176,16 +6544,12 @@ function gapped(items, max) {
 
 {
   const serveSrc = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", "serve-api.js"), "utf8");
-  const shardSrc = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", "shard-api.js"), "utf8");
   const dockerfile = fs.readFileSync(path.join(ROOT, "..", "deploy", "Dockerfile"), "utf8");
   const dockerignore = fs.readFileSync(path.join(ROOT, "..", "deploy-api-serve", ".dockerignore"), "utf8");
   const cnb = fs.readFileSync(path.join(ROOT, "..", ".cnb.yml"), "utf8");
   const remoteSrc = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
   const corpusSrc2 = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
   const readerSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
-  const stageSrc = fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8");
-  const configSrc = fs.readFileSync(path.join(ROOT, "..", "api", "_routes", "config.js"), "utf8");
-  const revSrc = fs.readFileSync(path.join(ROOT, "..", "api", "_lib", "shard-rev.js"), "utf8");
 
   ok("镜像里的时区写死成东八区（不随基础镜像漂）",
     /^ENV TZ=Asia\/Shanghai$/m.test(dockerfile));
@@ -7202,73 +6566,13 @@ function gapped(items, max) {
         "（改发布链时名单要跟着动）");
   }
 
-  ok("服务壳把 /api/shard/* 交给了分片路由",
-    /shardApi\.handle\(req, res, urlPath\)/.test(serveSrc));
-  ok("服务壳 require 了 shard-api（与 store-mysql 一样从上下文根取）",
-    /require\(\"\.\/shard-api\.js\"\)/.test(serveSrc));
+  ok("服务壳不再挂分片路由（课外正文整体删掉了）",
+    !/shard/i.test(serveSrc) && !fs.existsSync(path.join(ROOT, "..", "deploy-api-serve", "shard-api.js")),
+    "serve-api.js 里还留着 shard 那一支，或 shard-api.js 还在");
 
-  {
-    const bare = serveSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-    ok("shardApi 的 require 在 apiHandler 之前",
-      bare.indexOf('require("./shard-api.js")') >= 0 &&
-      bare.indexOf('require("./shard-api.js")') < bare.indexOf('require("./api/handler.js")'),
-      "顺序反了 → /api/shard/* 落到 poem 的 handler 上，静默 404");
-  }
-
-  ok("分片名只认 t\\d{3}（不接受 ../、斜杠、别的形状）",
-    /\^t\\d\{3\}\$/.test(shardSrc));
-  ok("特殊名只有清单与版本号（倒排索引 idx 不进镜像，客户端也不打它）",
-    /SPECIAL\s*=\s*\[\s*MANIFEST\s*,\s*META\s*\]/.test(shardSrc),
-    "SPECIAL 里还留着 INDEX —— 服务端从来的路由只有 t\\d{3}，idx 那一片没人会请求" +
-      "（2MB 原文 / 466KB gzip 白跟着镜像走一趟）");
-  ok("拼路径只走 fileOf（校验之后再拼）",
-    /function fileOf\s*\(/.test(shardSrc) && /path\.join\(ROOT, name \+ "\.js"\)/.test(shardSrc));
-  ok("没有分片时回 404 E_NO_SHARDS，不静默回空 body",
-    /E_NO_SHARDS/.test(shardSrc));
-
-  ok("分片本体是 .js，发出去的是 JSON 报文（解开 gz、剥掉 module.exports = 那一层）",
-    /function decode\s*\(/.test(shardSrc)
-      && /zlib\.gunzipSync\(raw\)/.test(shardSrc)
-      && /JSON\.stringify\(decode\(plain\)\)/.test(shardSrc),
-    "分片是 `module.exports = {...}` 的 .js（Issue #224：开发者工具不把 .json 当模块打包），" +
-      "服务端得自己把它解回 JSON —— 客户端照旧只认 JSON，这一层是服务端的事");
-
-  ok("一片只在第一次请求时解一遍（之后走内存那份）",
-    /const index = \{\}/.test(shardSrc) && /function entryOf\s*\(/.test(shardSrc)
-      && /if \(index\[name\]\) return index\[name\]/.test(shardSrc),
-    "没有内存索引 —— 每片每次请求都要 gunzipSync + 解析 + 重新序列化，" +
-      "0.25 核的实例上这一项就是实打实的 CPU");
-  ok("ETag 与 If-None-Match 对上就回 304（不是只发个 ETag 就算数）",
-    /function notModified\s*\(/.test(shardSrc) && /"if-none-match"/.test(shardSrc)
-      && /send\(res, 304/.test(shardSrc),
-    "ETag 发了却不看 If-None-Match —— 那只是响应头里多一行字，省不下一次序列化");
-
-  ok("Dockerfile 接受 COPY_SHREDS 开关",
-    /ARG COPY_SHREDS=/.test(dockerfile));
-  ok("Dockerfile 的 COPY 源是 shard-src（上下文根那一层）",
-    /COPY --chown=node:node shard-src \/tmp\/shard-src/.test(dockerfile));
-
-  ok("Dockerfile 把 shard-api.js 拷进镜像（放行 ≠ 进镜像，启动期 require 它）",
-    /COPY --chown=node:node shard-api\.js \.\//.test(dockerfile),
-    "白名单放行、流水线摆进上下文都不等于它进了镜像 —— 没有这句 COPY 时" +
-      "构建与部署都是绿的，容器起来才 `Cannot find module './shard-api.js'`" +
-      "（Back-off restarting failed container）。它是 serve-api.js 启动期 require 的，" +
-      "与 store-mysql.js 一样得有一条自己的 COPY。");
-
-  ok("分片版本是一份独立的小文件（rev + buckets，不含正文）",
-    /manifest\.js/.test(stageSrc) && /__meta\.js/.test(stageSrc) && /rev:\s*meta\.v/.test(stageSrc),
-    "镜像得能自报它装的是哪一版语料 —— 没有这份就没法区分「服务端落后」与「这一片真缺」");
-  ok("配置接口报出服务端语料版本（小程序不必先取一片才知道）",
-    /corpus:\s*\{[^}]*rev:\s*shardRev\.rev\(\)/.test(configSrc) && /shard-rev/.test(configSrc));
-  ok("语料版本算的是正文本身（与 build-data 的 textHash 同一口径）",
-    /id \+ "\\u0000" \+ JSON\.stringify/.test(revSrc) && /slice\(0, 12\)/.test(revSrc));
-  ok("流水线把 shard-api.js 摆进上下文那一层",
-    /cp deploy-api-serve\/shard-api\.js \/tmp\/ctx\/shard-api\.js/.test(cnb));
-  ok("白名单放行了 shard-api.js", /!shard-api\.js/.test(dockerignore));
-  ok("白名单放行了 shard-rev.js（与 shard-api.js 同为启动期 require，遗漏时容器起不来）",
-    dockerignore.indexOf("!shard-rev.js") >= 0,
-    "白名单少了这一行 —— 发布链的 build & push 会对着它 grep，当场红在「白名单里没有」");
-  ok("白名单放行了 shard-src/", /!shard-src/.test(dockerignore));
+  ok("Dockerfile 不带分片（没有 shard-src 那一层，也没有分片开关）",
+    !/shard/i.test(dockerfile) && !/COPY_SHREDS/.test(dockerfile),
+    "Dockerfile 里还留着分片那一层 —— 上下文里已经没有它了，COPY 会直接红");
 
   {
     const rules = dockerignore.split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
@@ -7294,60 +6598,13 @@ function gapped(items, max) {
         "（Issue #134）。实际规则：" + JSON.stringify(rules.filter((r) => r.charAt(0) === "!")));
   }
 
-  {
-    const mk = cnb.indexOf("mkdir -p /tmp/ctx /tmp/ctx/shard-src");
-    const flag = cnb.indexOf('if [ "${COPY_SHREDS:-1}" != "0" ]');
-    ok("流水线**无条件**建成 shard-src/（否则不打旗时 COPY 直接红，Issue #115）",
-      mk >= 0 && flag >= 0 && mk < flag,
-      "`shard-src/` 得在判旗之前就 mkdir —— COPY 是无条件的，空目录才是它的合法来源" +
-      "（判旗那句现在是 `if [ \"${COPY_SHREDS:-1}\" != \"0\" ]`，这条按它找）");
-  }
+  ok("发布链不再摊分片、也不再递 COPY_SHREDS",
+    !/shard/i.test(cnb) && !/COPY_SHREDS/.test(cnb),
+    "流水线里还留着分片那一步 —— 上下文里已经没有它了，构建会红在 CHECKSUM 上");
 
   {
-    const stageSrc = fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8");
-    ok("分片摊不摊由语料说了算（缓存挂在构建节点上，语料没变就复用）",
-      /volumes:\s*\n\s*- \/tmp\/poem-shard-cache/.test(cnb)
-        && (cnb.match(/node scripts\/shard-stage\.js \/tmp\/poem-shard-cache/g) || []).length === 2,
-      "读不到分片缓存那一步 —— 语料没变的部署每推一次都要重新 build-data + gzip 121 轮");
-    ok("摊的是压缩后那份，且只摊 t001…t121，不摊 idx",
-      /SHARD_RE = \/\^t\\d\{3\}\\\.js\$\//.test(stageSrc) && /gzipSync/.test(stageSrc)
-        && cnb.indexOf("t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/") > 0,
-      "摊原文的话每次上下文从 0.3MB 变成 25MB；摊的时候得排除 idx —— 那一片服务端一次都不发");
-  }
-
-  ok("流水线默认就摊分片（`:-1`，不是只有 `=1` 才摊）",
-    /if \[ "\$\{COPY_SHREDS:-1\}" != "0" \]/.test(cnb),
-    "摊分片那步还是「只有 =1 才摊」—— main push 拿到的镜像里没有分片，" +
-      "课外正文只剩 404 E_NO_SHARDS，而那是给调试镜像留的话");
-  ok("台账上的名字是 t001.js.gz（fileOf 找 <name>.js + .gz，多留一个 .js 就每一片 404）",
-    /gzipSync\(fs\.readFileSync\(path\.join\(TEXTS, f\)\)/.test(
-      fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8"))
-      && /f \+ "\.gz"/.test(fs.readFileSync(path.join(ROOT, "..", "scripts", "shard-stage.js"), "utf8")),
-    "摊出来的名字不是 t001.js.gz —— shard-api 的 fileOf 找 `t001.js` 找不到，" +
-      "于是目录非空、E_NO_SHARDS 不响、每一片 404");
-  ok("分片在流水线里现生成（构建产物，checkout 里没有）",
-    /node scripts\/build-data\.js/.test(cnb));
-  ok("build 时把 COPY_SHREDS 递进去（同一条默认 `:-1`）",
-    /--build-arg "COPY_SHREDS=\$\{COPY_SHREDS:-1\}"/.test(cnb),
-    "递的是 `${COPY_SHREDS:-}` —— 流水线没定义那面旗时递过去一个空串，" +
-      "Dockerfile 里 `ARG COPY_SHREDS=1` 会被这个空串盖掉");
-
-  ok("Dockerfile 的 ARG 默认值也是 1（没递参数 = 有分片，只有显式 0 才关）",
-    /ARG COPY_SHREDS=1/.test(dockerfile) && /if \[ "\$COPY_SHREDS" != "0" \]/.test(dockerfile),
-    "Dockerfile 那句还是 `ARG COPY_SHREDS=` / `= \"1\"` —— 忘了递参数的构建会静默" +
-      "产出一个没分片的镜像");
-
-  {
-    const pushTask = cnb.slice(cnb.indexOf("main:"), cnb.indexOf("crontab:"));
-    const envBlock = (/:\n(?:.*\n)*?\s{8}(?:stages|imports|services):/.exec(pushTask)) || ["", ""];
-    ok("`.cnb.yml` 的 env 表里**没有** COPY_SHREDS（默认值只住在代码里，一处）",
-      envBlock[0].indexOf("COPY_SHREDS") < 0,
-      "env 表里写死了 COPY_SHREDS —— 那与摊分片那步的默认值成了两处，迟早各说各的）");
-  }
-
-  {
-    const mustAllow = ["!shard-api.js", "!shard-rev.js", "!shard-src/**", "!serve-api.js",
-      "!store-mysql.js", "!api/**", "!Dockerfile"];
+    const mustAllow = ["!serve-api.js", "!store-mysql.js", "!api/handler.js",
+      "!api/_lib/**", "!api/_routes/**", "!Dockerfile"];
     const notAllowed = mustAllow.filter((line) => dockerignore.indexOf(line) < 0);
     ok("白名单放行了构建与启动真的要用到的每一样（缺一行 = 那样东西一个字都进不去）",
       notAllowed.length === 0,
@@ -7355,95 +6612,32 @@ function gapped(items, max) {
         "。白名单先 `**` 排掉一切再逐条放行 —— 少一行不会报错，" +
         "少的是**启动期 require 的那个文件**时，症状是容器 Back-off 重启");
 
-    const inRepo = ["deploy-api-serve/shard-api.js", "deploy-api-serve/serve-api.js",
-      "deploy/store-mysql.js"];
+    const inRepo = ["deploy-api-serve/serve-api.js", "deploy/store-mysql.js"];
     const missingInRepo = inRepo.filter((f) => !fs.existsSync(path.join(ROOT, "..", f)));
     ok("放行的那几样真的在仓库里（放行一个不存在的名字 = 白名单形同虚设）",
       missingInRepo.length === 0, "找不到：" + JSON.stringify(missingInRepo));
   }
 
-  ok("remote 暴露了 shard 与 shardReady",
-    /shard,\s*\n\s*shardRev,\s*\n\s*shardReady/.test(remoteSrc));
-  ok("分片走的是 /api/shard/（云调用，不是 wx.downloadFile）",
-    /SHARD_PATH = "\/api\/shard\/"/.test(remoteSrc));
-  ok("分片请求**不写进 outbox**（那是给进度用的队列）",
-    !/PATHS\.shard/.test(remoteSrc));
-  ok("corpus 暴露了 ensureBucket / ensureEntry",
-    /ensureBucket,\s*\n\s*ensureEntry,/.test(corpusSrc2));
-  {
-    const fn = corpusSrc2.slice(corpusSrc2.indexOf("function ensureEntry"));
-    const atPack = fn.indexOf("courseTexts()[id]");
-    const atBucket = fn.indexOf("ensureBucket(name)");
-    ok("ensureEntry 的顺序是 课内 → 本机分片 → 云端",
-      atPack >= 0 && atBucket >= 0 && atPack < atBucket,
-      "顺序反了的话，课内那 251 首（本就在主包里）也要过一次网络");
-  }
-  ok("分片缓存有上限（不许无限占用户手机）",
-    /SHARD_CACHE_MAX\s*=\s*\d+/.test(corpusSrc2));
-  {
-    const fn = corpusSrc2.slice(corpusSrc2.indexOf("function ensureEntry"));
-    ok("清单里没有这一条时抛 E_NO_ENTRY（不是静默 resolve(null)）",
-      /shardError\("E_NO_ENTRY"/.test(fn.slice(0, fn.indexOf("ensureBucket(name)"))),
-      "resolve(null) 把「清单缺这一条」与「本来就没有正文」混成一句 —— " +
-        "两个位置都只能报「取不到」，说不出是哪一环断的");
-  }
-  ok("取不到时抛的是带 code 的错（界面据此说人话）",
-    /shardError\("E_NO_SHARD_SERVICE"/.test(corpusSrc2));
+  ok("remote 里没有分片入口了", !/shard/i.test(remoteSrc));
+  ok("前端不再读分片清单 / 分片目录",
+    !/data\/shards/.test(corpusSrc2) && !/data\/texts/.test(corpusSrc2),
+    "corpus.js 还在读 data/shards.js 或 data/texts/ —— 这两样已经不产出了");
+  ok("ensureEntry 只查包内，取不到就抛 E_NO_TEXT",
+    /courseTexts\(\)\[id\][\s\S]{0,200}E_NO_TEXT/.test(corpusSrc2));
+  ok("阅读页取不到正文时给一句人话 + 重试",
+    /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*true/.test(readerSrc)
+      && /正文不在这个包里/.test(readerSrc));
+  ok("背诵弹层不再有「重新获取正文」那条路",
+    !/onSyncText|ensureEntry/.test(
+      fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8")),
+    "正文全在包里了，取不到只有一种因：这一篇本来就不在这个包里");
 
-  ok("阅读页走 corpus.ensureEntry（不是只同步查一次）",
-    /corpus\s*\n?\.ensureEntry\(id\)/.test(readerSrc) || /ensureEntry\(id\)/.test(readerSrc));
-  ok("阅读页有空态那一屏（不是空卡片）",
-    /loadingText/.test(readerSrc) &&
-    /loadingText/.test(fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8")));
-  ok("阅读页把「没接上服务器」与「这一篇取不到」分开说",
-    /E_NO_SHARD_SERVICE/.test(readerSrc) && /E_NO_SHARDS/.test(readerSrc));
-
-  {
-    const readerWxml2 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
-    ok("取正文失败给了重试那条路",
-      /bindtap="onRetryText"/.test(readerWxml2)
-        && /onRetryText\s*\(/.test(readerSrc) && /loadFailed:\s*false/.test(readerSrc),
-      "失败只弹过 toast、停在加载态那一屏，用户看到的是「正在取正文」永远不散");
-
-    const failArm = /["']catch["']\]\(\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc)
-      || /catch\s*\(err\)[\s\S]{0,300}?loadFailed:\s*true/.test(readerSrc);
-    ok("失败路径把加载态落回、并换成失败态（不是只出声）",
-      failArm && /loadingText:\s*false[\s\S]{0,80}?loadFailed:\s*true/.test(readerSrc),
-      "catch 里只 setData({loadingText:false})：屏幕回到空卡片，什么都没说");
-
-    {
-      global.Page = (o) => { opt = o; };
-      let opt = null;
-      const readerFile = path.join(ROOT, "pages", "reader", "reader.js");
-      delete require.cache[require.resolve(readerFile)];
-      require(readerFile);
-      const msg = opt.textFailMsg.bind(opt);
-      const cases = [
-        [{ errMsg: "cloud.callContainer:fail 102002" }, /超时/],
-        [{ errMsg: "cloud.callContainer:fail invalid host" }, /服务名/],
-        [{ code: "E_NO_SHARDS" }, /这个版本里没有课外正文/],
-        [{ code: "E_NO_SHARD_SERVICE" }, /没接上同步服务器/]
-      ];
-      const off = cases.filter(([e, re]) => !re.test(msg(e)));
-      ok("失败的四种因各有各的说法（超时 / 服务名 / 镜像没分片 / 没配服务器）",
-        off.length === 0,
-        "这几种落回了兜底那句：" + JSON.stringify(off.map(([e]) => msg(e))) +
-          " —— 四种因指向的下一步动作不同，兜底那句等于没说");
-    }
-  }
-
-  {
-    const tsSrc = fs.readFileSync(path.join(ROOT, "utils", "text-search.js"), "utf8");
-    ok("分片取回时补进倒排索引（取过的那几片下一次能按正文搜）",
-      /corpus\.onBucketReady\(/.test(tsSrc) && /postings/.test(tsSrc)
-        && /function\s+armShardWriter/.test(tsSrc),
-      "idx.json 在包外永远读不到，而分片取回来只进 bucket 缓存 —— " +
-        "全文检索永远停在「按篇名作者检索」");
-    ok("补索引写盘失败不牵连取正文（catch 里降级，不抛）",
-      /function\s+armShardWriter[\s\S]{0,400}?catch\s*\(e\)[\s\S]{0,120}?missing\s*=\s*true/.test(tsSrc),
-      "写 idx.json 抛出来会从 onBucketReady 冒进 ensureBucket 的 then 里，" +
-        "取分片成功却报失败");
-  }
+  ok("全文检索模块已删（课外正文不进包，扫不了全书）",
+    !fs.existsSync(path.join(ROOT, "utils", "text-search.js")));
+  ok("本机残留的分片缓存会自己清掉（升级上来的手机不背着 40 片正文）",
+    /function\s+dropLegacy/.test(corpusSrc2) && /shards/.test(corpusSrc2)
+      && /corpus\.dropLegacy\(\)/.test(
+        fs.readFileSync(path.join(ROOT, "app.js"), "utf8")));
 }
 
 {
@@ -7839,126 +7033,19 @@ function gapped(items, max) {
 
     const SEASON = require(path.join(ROOT, "utils", "seasonal.js"));
     const corpusSeason = require(path.join(ROOT, "utils", "corpus.js"));
-    const ghost = SEASON.WORKS.filter((w) => !corpusSeason.indexById(w[0]));
-    ok("季节限定表里的每一首都指得到语料里的作品",
-      SEASON.WORKS.length > 0 && ghost.length === 0,
-      "指向不存在的：" + ghost.slice(0, 5).map((w) => w[0]).join("、"));
 
-    const unknownFest = SEASON.WORKS.filter((w) => SEASON.TERMS.indexOf(w[1]) < 0
-      && !SEASON.TRADITIONAL.some((x) => x.key === w[1])
-      && SEASON.SEASONS.indexOf(w[1]) < 0);
-    ok("季节限定表里只出现这张表认得的节日与节气", unknownFest.length === 0,
-      "认不得：" + unknownFest.slice(0, 5).map((w) => w[1]).join("、"));
+    ok("课内一首都没挂进季节限定表（课外那部集子整体删掉了）",
+      SEASON.WORKS.length === 0,
+      "还挂着 " + SEASON.WORKS.length + " 首 —— 它们的正文已经不在包里，点开是空的");
 
-    ok("季节限定每一条都取到作品", SEASON.WORKS.every((w) => !!SEASON.entryOf(w[0])));
-
-    ok("节日节气那部集子里逐首都带正文，题名与作者不留空",
-      corpusSeason.ofBook("season").every((p) => !!p.t && !!p.a && !!p.text));
-
-    ok("季节限定这一层需要的正文都在包里（不必走分片、也不问服务端起没起）",
-      (() => {
-        const need = {};
-        SEASON.WORKS.forEach((w) => { need[w[0]] = 1; });
-        let d = new Date(2026, 0, 1);
-        for (let i = 0; i < 366; i += 1) {
-          const c = SEASON.card(d);
-          if (c) c.poems.forEach((p) => { need[p.id] = 1; });
-          d = new Date(d.getTime() + 86400000);
-        }
-        const off = Object.keys(need).filter((id) => {
-          const e = corpusSeason.entry(id);
-          return !e || !e.text;
-        });
-        return off.length === 0;
-      })(),
-      "这几首的正文只在分片里，点开要先过一次云端：" +
-        SEASON.WORKS.filter((w) => corpusSeason.bucketOf(w[0])).map((w) => w[0]).slice(0, 8).join("、"));
-
-    ok("季节限定里带译文的篇目，译文都挂得上来源档",
-      SEASON.WORKS.every((w) => {
-        const hit = SEASON.entryOf(w[0]);
-        return !hit || !hit.tr || !!hit.src;
-      }));
-
-    ok("季节限定表里没有同一首挂两遍",
-      Object.keys(SEASON.WORKS.reduce((m, w) => Object.assign(m, { [w[1] + w[0]]: 1 }), {}))
-        .length === SEASON.WORKS.length);
+    ok("正文不在包里时首页不出这张卡（不留一张点开是空的卡）",
+      SEASON.card(new Date(2026, 9, 18)) === null);
 
     ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
       SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
 
-    const dayOf = (y, m, d) => new Date(y, m - 1, d);
-    const at = (y, m, d) => SEASON.card(dayOf(y, m, d));
-    ok("节日前两天与当天都列（重阳 2026-10-18，前两天起）",
-      [16, 17, 18].every((d) => {
-        const c = at(2026, 10, d);
-        return !!c && c.key === "重阳节" && c.days === 3;
-      }) && (at(2026, 10, 15) || { key: "" }).key !== "重阳节",
-      "实际 " + [15, 16, 17, 18, 19].map((d) => {
-        const c = at(2026, 10, d);
-        return d + ":" + (c ? c.key : "无");
-      }).join(" "));
-
-    ok("节日当天只说节日名，往前说「明日」「N 日后」",
-      (at(2026, 10, 18) || {}).tip === "重阳节"
-        && (at(2026, 10, 17) || {}).tip === "明日 · 重阳节"
-        && (at(2026, 10, 16) || {}).tip === "2日后 · 重阳节",
-      "实际 " + [16, 17, 18].map((d) => d + ":" + ((at(2026, 10, d) || {}).tip || "无")).join(" "));
-
-    ok("传统节日走完三天交回给所在节气，中间不断档",
-      (() => {
-        const keys = [19, 20, 21, 22, 23].map((d) => (at(2026, 10, d) || {}).key || "");
-        return keys.every((k) => !!k);
-      })(),
-      "实际 " + [19, 20, 21, 22, 23].map((d) => d + ":" + ((at(2026, 10, d) || {}).key || "无")).join(" "));
-
-    ok("卡片胶囊按节日 / 节气给名，与当天日期无关",
-      [16, 18].every((d) => (at(2026, 10, d) || {}).tag === "节日 · 重阳节")
-        && (at(2026, 10, 15) || {}).tag === "节气 · 寒露",
-      "实际 " + [15, 16, 18].map((d) => d + ":" + ((at(2026, 10, d) || {}).tag || "无")).join(" "));
-
-    ok("节气在自己的周期内一直列，到下一个节气才换",
-      (() => {
-        const hit = (m, d) => SEASON.active(dayOf(2026, m, d)).filter((h) => h.kind === "term")[0];
-        const from = hit(5, 21);
-        const next = hit(6, 5);
-        return !!from && !!next && from.key === "小满" && from.elapsed === 1
-          && next.key === "芒种" && next.elapsed === 1;
-      })(),
-      "实际 " + JSON.stringify(SEASON.active(dayOf(2026, 5, 21)).map((h) => h.key)));
-
-    ok("卡片上的篇目都来自这一天挂得上的节日与节气，节日那类最多三首、不重样",
-      (() => {
-        const c = at(2026, 10, 18);
-        if (!c || c.more !== true) return false;
-        const want = SEASON.WORKS.filter((w) => w[1] === "重阳节").map((w) => w[0]);
-        const ids = c.poems.map((p) => p.id);
-        return c.poems.every((p) => want.indexOf(p.id) >= 0)
-          && ids.length === 3
-          && ids.filter((id, i) => ids.indexOf(id) === i).length === 3;
-      })(),
-      "实际 " + ((at(2026, 10, 18) || {}).poems || []).map((p) => p.id).join("、"));
-
-    ok("挂得不够三首就全列，且不出去换的图标",
-      (() => {
-        const c = at(2026, 5, 21);
-        return !!c && c.key === "小满" && c.poems.length === 1 && c.more === false && c.refresh === false;
-      })(),
-      "实际 " + JSON.stringify(at(2026, 5, 21) || null).slice(0, 120));
-
-    ok("换一批只换当天这张卡上的那一类，换出来的还是三首且不重样",
-      (() => {
-        const day = dayOf(2026, 10, 18);
-        const before = (SEASON.card(day) || {}).poems || [];
-        if (!SEASON.redraw(day)) return false;
-        const next = SEASON.card(day) || {};
-        const ids = (next.poems || []).map((p) => p.id);
-        if (before.length !== 3 || next.refresh !== true || ids.length !== 3) return false;
-        return ids.filter((id, i) => ids.indexOf(id) === i).length === 3;
-      })());
-
-    ok("挂得不够三首时换不了，刷新图标也就不出来",
-      SEASON.card(dayOf(2026, 5, 21)).refresh === false && SEASON.redraw(dayOf(2026, 5, 21)) === false);
+    ok("挂得上节日的篇目只从课内那 251 首里找",
+      SEASON.WORKS.every((w) => corpusSeason.courseTexts()[w[0]]));
 
     const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
     ok("隐藏季节限定是 Pro 起的一项门禁，Free 开不了",
@@ -7966,13 +7053,13 @@ function gapped(items, max) {
         && E.compareSummary().filter((x) => x.tier === "free")[0].on < E.CAP_KEYS.length);
 
     asTier3("free");
-    ok("Free 手里那开关按不动，卡片照旧显示",
+    ok("Free 手里那开关按不动",
       SEASON.canSwitch() === false && SEASON.setOn(false).ok === false && SEASON.isOn() === true);
 
     asTier3("pro");
     ok("Pro 关得掉，关掉之后首页不再出这张卡",
       SEASON.setOn(false).ok === true && SEASON.switched() === true
-        && SEASON.isOn() === false && SEASON.card(dayOf(2026, 10, 19)) === null);
+        && SEASON.isOn() === false);
 
     ok("默认为开（新装的 Free 与 Pro 都看得见）",
       store3.DEFAULTS.seasonal === true && !store3.LOCAL_ONLY.seasonal);
@@ -8084,36 +7171,16 @@ function gapped(items, max) {
   const readerWxml4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
   const sheetWxml4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.wxml"), "utf8");
   const sheetSrc4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
-  const tableCases = ["changshi-cs-218", "dwang-em-c-legend-06", "mingren-mr-c-06", "mingshu-ms-230"];
-  const parsed = tableCases.filter(function (id) {
-    const entry = corpus.entry(id);
-    if (!entry || !entry.text) return false;
-    const t = tableMod.parseText(entry.text);
-    if (!t || t.parts.length < 2 || !t.blocks.length) return false;
-    return t.blocks.every(function (b) {
-      return b.widths.length >= 2
-        && b.rows.every(function (r) { return r.cells.every(function (c) { return c.text.length > 0; }); })
-        && !JSON.stringify(b).match(/[│┌├└┬┼┴┐┤┘─]/);
-    });
-  });
-  ok("详情页把语料里的框线表格解析成行列（文学常识 / 帝王 / 名家 / 名著导读各一条）",
-    parsed.length === tableCases.length);
+  const tableCases = corpus.course().filter((p) => tableMod.hasTable(corpus.courseTexts()[p.id].text));
+  ok("课内正文里没有框线表时，详情页的表格路径就不该被撑起来（有也照样解析得开）",
+    tableCases.every(function (p) {
+      const t = tableMod.parseText(corpus.courseTexts()[p.id].text);
+      return t && t.blocks.length && t.blocks.every(function (b) { return b.widths.length >= 2; });
+    }),
+    "这几条的表格没解析出行列：" + tableCases.slice(0, 5).map((p) => p.id).join("、"));
   ok("表格块有独立的渲染路径（不注音），详情页与弹层共用",
     /md-table/.test(readerWxml4) && /tableView/.test(readerSrc4)
       && /md-table/.test(sheetWxml4) && /table\.hasTable\(/.test(sheetSrc4));
-
-  const wideCases = ["changshi-cs-218", "changshi-cs-221", "mingren-mr-w-93"];
-  const wideOk = wideCases.filter(function (id) {
-    const entry = corpus.entry(id);
-    const t = entry && entry.text ? tableMod.parseText(entry.text) : null;
-    if (!t || !t.blocks.length) return false;
-    return t.blocks.every(function (b) {
-      return b.rows.every(function (r) { return r.cells.length === b.widths.length; });
-    });
-  });
-  ok("正文行比框线宽（补空格没补齐 / 一格塞了两格）时，多出来的字并进末格，不另起一格",
-    wideOk.length === wideCases.length,
-    "逐格数对不上的还有：" + wideCases.filter(function (id) { return wideOk.indexOf(id) < 0; }).join("、"));
 
   ok("正文没取到时标题与作者跟着那一首走（不沿用上一篇的）",
     /markMissing\(item\)/.test(sheetSrc4)
@@ -8130,20 +7197,6 @@ function gapped(items, max) {
   ok("自选集子落在设置分包里（不占主包）",
     (app.subPackages || []).some((sp) => sp.root === "packages/settings"
       && sp.pages.indexOf("collections/collections") >= 0));
-
-  {
-    const tableMod = require(path.join(ROOT, "utils", "table.js"));
-    const foreign = ["dwang-waiguo", "mingren-waiguo"];
-    const foreignRows = foreign.reduce((acc, id) => acc.concat(perBook[id] || []), []);
-    const broken = foreignRows.filter((p) => {
-      const e = corpus.entry(p.id);
-      const t = e && e.text ? tableMod.parseText(e.text) : null;
-      return !t || !t.blocks.length || t.blocks.some((b) => b.widths.length < 2 || !b.rows.length);
-    });
-    ok("帝王与名家的「外国」两卷带正文（" + foreignRows.length + " 条，正文里的框线表解析成两列以上）",
-      broken.length === 0,
-      "这几条取不到正文或表格没有解析出行列：" + broken.map((p) => p.id).slice(0, 8).join("、"));
-  }
 
   void R4;
 }

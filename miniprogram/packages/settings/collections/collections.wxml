@@ -9,7 +9,7 @@
       <text class="card-title">自选背诵</text>
       <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" />
     </view>
-    <text class="hint coll-lead">从课外阅读或搜索页添加篇目，按既定算法复习。</text>
+    <text class="hint coll-lead">从课内目录或搜索页添加篇目，按既定算法复习。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>

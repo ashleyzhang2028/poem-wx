@@ -231,22 +231,12 @@ function layoutOf(text, size, pinyin) {
 
 const COURSE = "data/course.js";
 
-const MANIFEST = "data/shards.js";
-
-const BUCKET_DIR = "data/texts/";
-
-const SHARD_FILE_RE = /^t\d{3}$/;
-
-let sourceMap = null;
-
 let booksCache = null;
 const idIndex = {};
 const idBook = {};
 let indexCache = null;
 let courseCache = null;
-let manifestCache = null;
 const bookCache = {};
-const bucketCache = {};
 
 const PACKED = {
   books: function () {
@@ -257,15 +247,61 @@ const PACKED = {
   },
   course: function () {
     return require("../data/course.js");
-  },
-  manifest: function () {
-    return require("../data/shards.js");
   }
 };
 
 const FIELDS = ["id", "t", "a", "d", "at", "s", "g", "sel", "gr", "tm", "aka", "an"];
 
 let dataReady = null;
+
+const BUILD_KEY = "kb_build_v1";
+
+let buildCache = null;
+
+function buildProbe() {
+  if (!buildCache) {
+    try {
+      buildCache = JSON.parse(wx.getStorageSync(BUILD_KEY) || "");
+    } catch (e) {
+      buildCache = {};
+    }
+  }
+  return typeof buildCache === "object" && buildCache ? buildCache : {};
+}
+
+const LEGACY = ["kb_probe_v1"];
+
+const LEGACY_PREFIX = "shards";
+
+function dropLegacy() {
+  let keys = LEGACY.slice();
+  try {
+    keys = keys.concat(wx.getStorageInfoSync().keys || []);
+  } catch (e) {
+    keys = LEGACY.slice();
+  }
+  keys.forEach(function (k) {
+    if (LEGACY.indexOf(k) < 0 && String(k).indexOf(LEGACY_PREFIX) !== 0) return;
+    try { wx.removeStorageSync(k); } catch (e) { return; }
+  });
+}
+
+function stamp(rev) {
+  const r = String(rev || "");
+  if (r) {
+    const p = buildProbe();
+    if (p.rev !== r) {
+      p.rev = r;
+      buildCache = p;
+      try {
+        wx.setStorageSync(BUILD_KEY, JSON.stringify(p));
+      } catch (e) {
+        buildCache = {};
+      }
+    }
+  }
+  return buildProbe();
+}
 
 function hasData() {
   if (dataReady === null) {
@@ -381,293 +417,13 @@ function courseTexts() {
   return courseCache;
 }
 
-function manifest() {
-  if (!manifestCache) {
-    const m = packed("manifest");
-    manifestCache = m && m.map ? m : readJson(MANIFEST, { map: {}, buckets: [] });
-  }
-  return manifestCache;
-}
-
-function dropStaleShards() {
-  if (!textsRev()) return;
-  dropOldShardKeys();
-}
-
-const PROBE_KEY = "kb_probe_v1";
-
-let probeCache = null;
-
-function probe() {
-  if (!probeCache) {
-    try {
-      probeCache = JSON.parse(wx.getStorageSync(PROBE_KEY) || "");
-    } catch (e) {
-      probeCache = {};
-    }
-  }
-  return typeof probeCache === "object" && probeCache ? probeCache : {};
-}
-
-function stamp(rev) {
-  const r = String(rev || "");
-  if (r) {
-    const p = probe();
-    if (p.rev !== r) {
-      p.rev = r;
-      probeCache = p;
-      try {
-        wx.setStorageSync(PROBE_KEY, JSON.stringify(p));
-      } catch (e) {
-        probeCache = {};
-      }
-    }
-  }
-  return probe();
-}
-
-function bucketOf(id) {
-  return (manifest().map || {})[id] || "";
-}
-
-const BUCKET_ARMED = [];
-
-function onBucketReady(fn) {
-  if (typeof fn === "function" && BUCKET_ARMED.indexOf(fn) < 0) BUCKET_ARMED.push(fn);
-}
-
-function armBucket(name, payload) {
-  bucketCache[name] = payload;
-  books().forEach(function (b) { armBook(b.id, payload); });
-  BUCKET_ARMED.forEach(function (fn) { fn(name, payload); });
-}
-
-function bucket(name) {
-  if (!bucketCache[name]) {
-    const data = readJson(BUCKET_DIR + name + ".js", {});
-    if (Object.keys(data).length) armBucket(name, data);
-    else bucketCache[name] = data;
-  }
-  return bucketCache[name];
-}
-
-const SHARD_CACHE_PREFIX = "shards";
-const SHARD_CACHE_MAX = 40;
-
-let shardBox = null;
-let shardBoxWx = null;
-let shardBoxKey = "";
-
-function textsRev() {
-  return String(manifest().v || "");
-}
-
-function shardCacheKey() {
-  const rev = textsRev();
-  return rev ? SHARD_CACHE_PREFIX + ":" + rev : SHARD_CACHE_PREFIX;
-}
-
-function dropOldShardKeys() {
-  try {
-    const keys = wx.getStorageInfoSync().keys || [];
-    keys.forEach((k) => {
-      if (k.indexOf(SHARD_CACHE_PREFIX + ":") === 0 && k !== shardCacheKey()) wx.removeStorageSync(k);
-    });
-  } catch (e) {
-    return;
-  }
-}
-
-function shardCache() {
-  const key = shardCacheKey();
-  if (shardBox && shardBoxWx === wx && shardBoxKey === key) return shardBox;
-  const store = require("./store");
-  const raw = store.read(key, {});
-  shardBox = raw && typeof raw === "object" ? raw : {};
-  shardBoxWx = wx;
-  shardBoxKey = key;
-  return shardBox;
-}
-
-function saveShard(name, payload) {
-  const store = require("./store");
-  const all = shardCache();
-  const keys = Object.keys(all);
-
-  if (keys.length >= SHARD_CACHE_MAX) {
-    keys.sort((a, b) => (all[a].at || 0) - (all[b].at || 0));
-    keys.slice(0, keys.length - SHARD_CACHE_MAX + 1).forEach((k) => delete all[k]);
-  }
-  all[name] = { at: Date.now(), data: payload };
-  if (store.write(shardCacheKey(), all)) return;
-  delete all[name];
-  if (shardBox === all) {
-    shardBox = null;
-    shardBoxWx = null;
-    shardBoxKey = "";
-  }
-}
-
-function shardFile(name) {
-  if (!name || !SHARD_FILE_RE.test(name)) return "";
-  return BUCKET_DIR + name + ".js";
-}
-
-function shardFromDisk(name) {
-  const rel = shardFile(name);
-  if (!rel) return null;
-  if (!hasData()) return null;
-  try {
-    const raw = require("fs").readFileSync(require("path").join(__dirname, "..", rel), "utf8");
-    const data = JSON.parse(raw);
-    return data && Object.keys(data).length ? data : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function ensureBucket(name) {
-  if (!name) return Promise.reject(shardError("E_NO_BUCKET", "没有这一片的名字"));
-  const local = bucket(name);
-  if (Object.keys(local).length) return Promise.resolve({ data: local, from: "local" });
-
-  const cached = shardCache()[name];
-  if (cached && cached.data) {
-    armBucket(name, cached.data);
-    return Promise.resolve({ data: cached.data, from: "local" });
-  }
-
-  const disk = shardFromDisk(name);
-  if (disk) {
-    armBucket(name, disk);
-    saveShard(name, disk);
-    return Promise.resolve({ data: disk, from: "disk" });
-  }
-
-  const remote = require("./remote");
-  if (!remote.shardReady()) return Promise.reject(shardError("E_NO_SHARD_SERVICE", "分片服务没接上"));
-
-  return remote.shard(name, textsRev()).then(function (data) {
-    const payload = (data && data.t) || data || {};
-    if (!payload || !Object.keys(payload).length) throw shardError("E_EMPTY_SHARD", "这一片是空的");
-    armBucket(name, payload);
-    saveShard(name, payload);
-    return { data: payload, from: "remote" };
-  });
-}
-
-const CORPUS_PATH = "/api/config";
-
-const REV_TTL_MS = 5 * 60 * 1000;
-
-let servedRev = { rev: "", at: 0 };
-
-function servedTextsRev() {
-  if (servedRev.at && Date.now() - servedRev.at < REV_TTL_MS) return Promise.resolve(servedRev.rev);
-  const remote = require("./remote");
-  if (!remote.shardReady()) return Promise.resolve("");
-  return remote.shardRev(CORPUS_PATH).then(function (res) {
-    const rev = String(((res || {}).corpus || {}).rev || "");
-    servedRev = { rev: rev, at: Date.now() };
-    return rev;
-  }, function () {
-    servedRev = { rev: "", at: Date.now() };
-    return "";
-  });
-}
-
-function staleError(served, mine) {
-  const e = shardError("E_SHARD_STALE", "服务端语料版本落后：" + served + " ≠ " + mine);
-  e.expected = true;
-  return e;
-}
-
-function hanOnly(text) {
-  let out = "";
-  for (const ch of String(text || "")) if (HAN.test(ch)) out += ch;
-  return out;
-}
-
-function sourceMapOf() {
-  if (sourceMap) return sourceMap;
-  sourceMap = {};
-  if (!hasData()) return sourceMap;
-  books().forEach(function (b) {
-    ofBook(b.id).forEach(function (p) {
-      const key = String(p.t || "").trim();
-      if (key && sourceMap[key] === undefined) sourceMap[key] = p.id;
-    });
-  });
-  return sourceMap;
-}
-
-function sourceIdOf(id) {
-  const meta = indexById(id);
-  const map = sourceMapOf();
-  const title = meta ? meta.t : "";
-  if (!title) return "";
-  const hit = map[title];
-  return typeof hit === "string" ? hit : "";
-}
-
-function ensureSource(id) {
-  const meta = indexById(id);
-  if (!meta) return Promise.resolve(null);
-
-  const source = require("./poem-source");
-  if (!source.usable()) return Promise.resolve(null);
-
-  return source
-    .search(meta.t, { type: "title", size: 20 })
-    .then(function (r) {
-      const want = hanOnly(meta.t);
-      const hit = (r.items || []).find(function (p) {
-        return hanOnly(p.title) === want && (!meta.a || String((p.author || {}).name || "") === meta.a);
-      }) || (r.items || []).find(function (p) {
-        return hanOnly(p.title) === want;
-      });
-      return hit ? source.withMeta(meta, hit) : null;
-    }, function () {
-      return null;
-    });
-}
-
 function ensureEntry(id) {
   const inPack = courseTexts()[id];
-  if (inPack) return Promise.resolve(inPack);
-
-  return ensureSource(id).then(function (hit) {
-    if (hit) return hit;
-    return ensureShardEntry(id);
-  });
+  if (inPack) return Promise.resolve(withTranslation(indexById(id), inPack) || inPack);
+  return Promise.reject(missError("E_NO_TEXT", "这一篇的正文不在这个包里：" + id));
 }
 
-function ensureShardEntry(id) {
-  const name = bucketOf(id);
-  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "这一篇不在分片清单里，也没从诗泉取到：" + id));
-
-  const take = function (r) {
-    const hit = r.data[id] || null;
-    return hit && hit.text ? { hit: hit, from: r.from } : { hit: null, from: r.from };
-  };
-
-  return ensureBucket(name).then(take).then(function (got) {
-    if (got.hit || got.from === "remote") return got;
-    forgetText(id);
-    return ensureBucket(name).then(take);
-  }).then(function (got) {
-    if (got.hit) return got;
-    return servedTextsRev().then(function (served) {
-      const mine = textsRev();
-      if (served && mine && served !== mine) throw staleError(served, mine);
-      throw shardError("E_NO_TEXT", "这一片里没有这一条的正文：" + id);
-    });
-  }).then(function (got) {
-    return arm(indexById(id), got.hit) || got.hit;
-  });
-}
-
-function shardError(code, message) {
+function missError(code, message) {
   const e = new Error(message);
   e.code = code;
   e.expected = true;
@@ -683,41 +439,10 @@ function withTranslation(p, payload) {
   return p;
 }
 
-function arm(p, payload) {
-  return p && payload && p.at >= 0 ? withTranslation(p, payload) : p;
-}
-
-function armBook(bookId, payload) {
-  const rows = bookCache[bookId];
-  if (!rows || !payload) return;
-  const ids = Object.keys(payload);
-  rows.forEach(function (p) {
-    if (p.at >= 0 && ids[p.at] === p.id) arm(p, payload[p.id]);
-  });
-}
-
 function entry(id) {
   const inPack = courseTexts()[id];
   if (inPack) return withTranslation(indexById(id), inPack) || inPack;
-  const name = bucketOf(id);
-  if (!name) return null;
-  const hit = bucket(name)[id] || null;
-  if (!hit) return null;
-  const meta = indexById(id);
-  return meta ? arm(meta, hit) : hit;
-}
-
-function forgetText(id) {
-  const name = bucketOf(id);
-  if (!name || !bucketCache[name]) return;
-  delete bucketCache[name];
-  const all = shardCache();
-  if (!all[name]) return;
-  delete all[name];
-  if (require("./store").write(shardCacheKey(), all)) return;
-  shardBox = null;
-  shardBoxWx = null;
-  shardBoxKey = "";
+  return null;
 }
 
 function entries(ids) {
@@ -840,19 +565,8 @@ module.exports = {
   course,
   courseTexts,
   withTranslation,
-  manifest,
-  textsRev,
-  dropStaleShards,
-  bucketOf,
-  bucket,
-  ensureBucket,
+  dropLegacy,
   ensureEntry,
-  ensureSource,
-  ensureShardEntry,
-  sourceIdOf,
-  servedTextsRev,
-  forgetText,
-  onBucketReady,
   entry,
   entries,
   indexById,

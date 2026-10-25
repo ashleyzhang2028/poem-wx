@@ -24,26 +24,6 @@ cp -R "$REPO/api" "$CTX/api"
 cp "$HERE/Dockerfile" "$CTX/Dockerfile"
 cp "$REPO/deploy-api-serve/serve-api.js" "$CTX/serve-api.js"
 cp "$REPO/deploy/store-mysql.js" "$CTX/store-mysql.js"
-cp "$REPO/deploy-api-serve/shard-api.js" "$CTX/shard-api.js"
-cp "$REPO/deploy-api-serve/shard-rev.js" "$CTX/shard-rev.js"
-
-mkdir -p "$CTX/shard-src"
-if [ "${COPY_SHREDS:-1}" != "0" ]; then
-  if [ -d "$REPO/scripts/corpus/data" ]; then
-    mkdir -p "$CTX/shard-cache"
-    node "$REPO/scripts/shard-stage.js" "$CTX/shard-cache" "$CTX/shard-cache/.fingerprint"
-    cp "$CTX"/shard-cache/t[0-9][0-9][0-9].js.gz "$CTX/shard-cache/upload.manifest" "$CTX/shard-src/"
-    echo "  分片已摊进上下文：$(ls "$CTX"/shard-src/t[0-9][0-9][0-9].js.gz | wc -l) 片（COPY_SHREDS=${COPY_SHREDS:-1}）"
-    echo "  分片清单 $(sha256sum "$CTX/shard-src/upload.manifest" | cut -c1-20)（与上一版相同 = 这次不重传那 5.3MB）"
-  else
-    echo "· 本机没有 scripts/corpus/ —— 分片那层留空"
-    echo "  这一步**不影响**建镜像：镜像里的 /app/shards/ 会是空的，"
-    echo "  /api/shard/* 回 404 E_NO_SHARDS，与线上那份正式镜像不是一回事"
-  fi
-else
-  echo "  跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
-fi
-
 cp "$REPO/deploy-api-serve/.dockerignore" "$CTX/.dockerignore"
 
 echo "构建上下文： $CTX"
@@ -59,7 +39,6 @@ if [ "$DRY_RUN" = "1" ]; then
 fi
 
 docker build \
-  --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
   --build-arg "API_REV=$REV" \
   --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --build-arg "API_SOURCE=https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program.git" \

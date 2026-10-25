@@ -25,8 +25,6 @@ const DEFERS = [
 
 const REOPEN_MS = 400;
 
-const TRANSIENT_ERR = /1020|timeout|timed? ?out|ETIMEDOUT|ENET|网络|超时|请稍后|-1\b/i;
-
 const ALIGNS = [
   { key: "left", label: "左对齐", icon: icons.left },
   { key: "center", label: "居中", icon: icons.center }
@@ -96,9 +94,7 @@ Component({
 
     selection: "",
     aliasText: "",
-    loadingText: false,
     textMiss: "",
-    syncable: false,
     stage: "",
     rawText: "",
     tableView: false,
@@ -134,15 +130,10 @@ Component({
     this.pushed = false;
     this.closedAt = 0;
     this.lastPush = "";
-    this.loadToken = 0;
-    this.textErr = "";
-    this.errSay = "";
-    this.missAt = -1;
   },
 
   detached() {
     this.cancelAdvance();
-    this.cancelLoad();
   },
 
   methods: {
@@ -156,7 +147,6 @@ Component({
       this.cancelAdvance();
       this.pushed = true;
       this.lastPush = idsOf(list);
-      this.cancelLoad();
       guard.reset("sheet:result");
       this.setData({ open: true, index: idx, queue: list });
       this.loadCurrent();
@@ -167,35 +157,7 @@ Component({
       this.cancelAdvance();
       this.closedAt = Date.now();
       this.pushed = false;
-      this.cancelLoad();
-      this.setData({ open: false, loadingText: false, showTranslation: false, hint: "" });
-    },
-
-    cancelLoad() {
-      this.loadToken = (this.loadToken || 0) + 1;
-    },
-
-    failText() {
-      if (!sync.ready()) return "登录后可获取本篇正文";
-      return "重新获取";
-    },
-
-    whyText() {
-      const code = this.textErr;
-      if (code === "E_NO_ENTRY") return "本篇不在正文分片清单中。";
-      if (code === "E_NO_TEXT") return "该分片正文不完整。";
-      if (code === "E_SHARD_STALE") return "服务端语料比这一版旧。";
-      if (code === "E_NO_SHARDS") return "服务端当前版本未包含正文分片。";
-      if (code === "E_NO_SHARD_SERVICE") return "当前版本未配置正文服务。";
-      if (/102002|timed? ?out/i.test(this.errSay)) return "取正文超时，服务可能刚被唤醒。";
-      if (/invalid host|env not exists|service not found/i.test(this.errSay)) return "平台按服务名找不到正文服务。";
-      if (/网络|不通/.test(this.errSay)) return "网络不通。";
-      return "";
-    },
-
-    retryable() {
-      if (!sync.ready()) return false;
-      return TRANSIENT_ERR.test(this.textErr + " " + this.errSay);
+      this.setData({ open: false, showTranslation: false, hint: "" });
     },
 
     missHead(item) {
@@ -220,54 +182,35 @@ Component({
     },
 
     missText() {
-      if (!sync.ready()) return "本篇正文获取失败，登录后可获取。";
-      const why = this.whyText();
-      if (why) return "本篇正文获取失败。" + why + (this.retryable() ? "请重新获取。" : "");
-      return "本篇正文获取失败，可能因网络不通，请重新获取。";
+      return "本篇正文不在这个包里。";
     },
 
     markMissing(item) {
       this.setData(Object.assign(
-        {
-          loadingText: false,
-          blocks: [],
-          tokens: [],
-          textMiss: this.missText(),
-          syncable: this.retryable()
-        },
+        { blocks: [], tokens: [], textMiss: this.missText() },
         item ? this.missHead(item) : {}
       ));
-      if (this.data.id && this.missAt === this.data.index) return;
-      this.missAt = this.data.index;
-      this.askMissing(item);
     },
 
-    askMissing(item) {
-      const why = this.whyText();
-      const name = (item && item.title) || "";
-      wx.showModal({
-        title: "正文获取失败",
-        content: "第 " + (this.data.index + 1) + " / " + this.data.queue.length + " 首"
-          + (name ? "「" + name + "」" : "") + "正文获取失败。"
-          + (why ? "\n\n" + why : "")
-          + "\n\n" + (sync.ready() ? "请点击「同步」重试。" : "登录后可获取本篇正文。"),
-        confirmText: "同步",
-        cancelText: "取消",
-        success: (res) => {
-          if (res.confirm) this.onSyncText();
-        }
-      });
-    },
-
-    onSyncText() {
-      if (!sync.ready()) {
-        wx.showToast({ title: this.failText(), icon: "none" });
-        return;
-      }
-      const item = this.current();
-      if (!item || this.data.loadingText) return;
-      corpus.forgetText(item.id);
-      this.fetchText(item);
+    missHead(item) {
+      const meta = corpus.indexById(item.id) || item;
+      return {
+        id: item.id,
+        navText: (this.data.index + 1) + " / " + this.data.queue.length,
+        bookId: meta.b || item.b || "",
+        title: meta.t || "",
+        author: meta.a || "",
+        dynasty: meta.d || "",
+        source: meta.s || meta.n || "",
+        selection: meta.sel || "",
+        aliasText: aliasTextOf(meta),
+        stage: "",
+        mastery: 0,
+        hasTranslation: false,
+        translation: "",
+        translationSource: "",
+        showTranslation: false
+      };
     },
 
     current() {
@@ -280,47 +223,14 @@ Component({
         this.onClose();
         return;
       }
-      this.cancelLoad();
       const meta = corpus.indexById(item.id);
       const hit = corpus.entry(item.id);
-      if (hit && meta) {
+      if (hit && meta && hit.text) {
         this.renderCurrent(item, hit, meta);
         return;
       }
-      this.fetchText(item);
-    },
-
-    fetchText(item) {
-      this.cancelLoad();
-      const token = this.loadToken;
-      this.setData({
-        open: true,
-        loadingText: true,
-        showTranslation: false,
-        hint: "",
-        blocks: [],
-        tokens: [],
-        textMiss: "",
-        syncable: sync.ready()
-      });
-
-      corpus
-        .ensureEntry(item.id)
-        .then((entry) => {
-          if (token !== this.loadToken) return;
-          const got = entry || corpus.entry(item.id);
-          const now = corpus.indexById(item.id);
-          if (!got || !now) throw new Error("这一首的正文没取到");
-          this.cancelLoad();
-          this.renderCurrent(item, got, now);
-        })
-        ["catch"]((err) => {
-          if (token !== this.loadToken) return;
-          this.cancelLoad();
-          this.textErr = (err && err.code) || "";
-          this.errSay = (err && err.message) || "";
-          this.markMissing(item);
-        });
+      this.setData({ open: true });
+      this.markMissing(item);
     },
 
     renderCurrent(item, entry, meta) {
@@ -337,9 +247,7 @@ Component({
         source: meta.s || meta.n || "",
         selection: meta.sel || "",
         aliasText: aliasTextOf(meta),
-        loadingText: false,
         textMiss: "",
-        syncable: sync.ready(),
         rawText: entry.text,
         tableView: table.hasTable(entry.text),
         translation: entry.tr || "",

@@ -2,7 +2,7 @@
 #
 # 后端代码在本仓库根的 `api/`。这份文件由 **CNB 流水线**用来构建镜像
 # （见 `.cnb.yml` 的 `main` 流水线）：源码上下文是流水线在 `/tmp/ctx` 摊出来的
-# （`api/` + 下面那三个服务壳文件 + 分片），Dockerfile 从本仓库取。
+# （`api/` + 下面两个服务壳文件），Dockerfile 从本仓库取。
 #
 # ⚠️ **别在云托管控制台里选「部署方式 = 代码仓库」。** 那儿的「容器目录」按被部署的
 #    仓库根取，而这个仓库根上没有构建这份镜像的上下文（`api/` 是摊出来的，
@@ -31,14 +31,6 @@
 #    也就是说：照文档做也能「不报错地错」，只是错的方向换了。
 #
 #    所以别再把白名单挪走 —— 判据在自检 V43 里钉着（摆错位置会红）。
-#
-# ⚠️ **分片那一层的内容由语料决定，不由 commit 决定。** 流水线把它摊在一个挂在构建
-#    节点上的缓存目录里（`.cnb.yml` 的 `docker.volumes`），语料 hash 没变就直接复用
-#    上一版摊好的 `t001.js.gz` —— 省掉一整轮 `build-data.js` 与 `gzip -9`。
-#    但 Docker 只按**文件内容**算 COPY 层的缓存键：上一版是 t001，这一版是 t002，
-#    哪怕语料没变，COPY 层也会失效、重传 5.3MB。所以摊分片那步把
-#    `sha256(分片清单)` 写成 `shard-src/upload.manifest`，并在上下文体积之前打出来：
-#    两次日志里那一串相同 = 这一版没重传；不同 = 语料变了，本来就该重传。
 #
 # 基础镜像走 `BASE_IMAGE`，**默认是 Docker Hub 的 node:20-alpine**。
 # 多这一层不是为了好看：国内构建机上 Docker Hub 慢／不通时，命令行加
@@ -86,78 +78,6 @@ COPY --chown=node:node serve-api.js ./
 # 而「用哪台数据库」是这份部署自己的选择。放本仓库、由流水线摆进上下文，
 # 与 serve-api.js 同一层、同一个名字（COPY 的源按上下文根取）。
 COPY --chown=node:node store-mysql.js ./
-
-# 分片路由（Issue #115 / #134）。与 store-mysql.js 同一层、同一个名字，
-# 由流水线从 deploy-api-serve/ 摆进上下文根。
-#
-# ⚠️ 这一行**必须有**：serve-api.js 在**启动那一刻** require("./shard-api.js")，
-#    而上面 `.dockerignore` 把它放行、`.cnb.yml` 也把它摆进了上下文 ——
-#    放行 ≠ 进镜像。少这一句时构建与部署**都是绿的**（没有任何 COPY 会点它的名），
-#    容器起来之后立刻 `Cannot find module './shard-api.js'`，
-#    云托管报「Back-off restarting failed container」——
-#    看着像服务要重启，其实是镜像里从来没有过这个文件。
-COPY --chown=node:node shard-api.js ./
-
-# 语料版本（shard-api 与 api 共用）：镜像得能自报它装的是哪一版语料，
-# 否则「服务端落后」与「这一片真缺」在小程序里分不开。同样是启动期 require。
-COPY --chown=node:node shard-rev.js ./
-
-# 正文分片（Issue #121 方案 A）：分片跟主包一起走云托管容器下发，**仍然免备案**。
-#
-# 为什么可以这样：云调用（wx.cloud.callContainer）走微信内网，不经过
-# request / downloadFile 合法域名那张名单 —— 而那张名单**只收已备案的域**，
-# 所以「分片走公网」这条路绕不开备案；走容器则域名、证书、备案三样一起免。
-#
-# 代价（两条，都要认）：
-#   1) 节点到节点的公网/内网流量同样计费；而 CDN 那条是从边缘下发，
-#      同量下通常更便宜 —— 换来的是「不办备案」与「不养一套 CDN」；
-#   2) 容器是唯一缓存层，冷启动后第一波请求要现压一次 gzip。
-#
-# ⚠️ **`COPY_SHREDS=1` 是默认**（流水线给的是 `${COPY_SHREDS:-1}`）。
-#    只有显式写 `COPY_SHREDS=0` 才不拷内容 —— 那一档 /api/shard/* 回 404
-#    E_NO_SHARDS（出声，不静默回空语料），是给**本地调试**用的：
-#    25MB 分片压缩后 5.3MB（22.5%），调后端那几条路由时用不上它。
-#    线上正式版要发的就是课外正文，所以默认这一档必须带分片 ——
-#    不带的话用户看到的是「这个版本里没有课外正文」，而那不是缺陷，
-#    是**发错了镜像**。两档的差别见 deploy/README.md 那张表。
-#
-# ⚠️ 上下文里那层摊的是 `t001.js.gz` 这**一个**名字（不是 `t001.js.gz`
-#    配一份 `t001.js`）：下面 cp 进 /app/shards 之后就叫 `t001.js.gz`，
-#    shard-api.js 发那份 gz 时找的正是它。只摊 gz 是刻意的 —— 25MB 原文
-#    一个字节都不用进上下文。
-#    分片本体是 `module.exports = {...}` 的 **.js**：开发者工具 2.02.2607271 RC
-#    起不把 .json 当模块打包，任何 require(".json") 都抛
-#    `module '….json.js' is not defined`（Issue #224），而开发者工具里读分片
-#    正是靠 require。shard-api 读回 gz、解开、回 JSON 报文 —— 客户端照旧
-#    只认 JSON，这一层是服务端的事。
-#
-# ⚠️ 但**上下文里那一层 `shard-src/` 每次都要在**（打了旗有内容，没打旗是空目录）
-#    —— 因为下面那句 COPY 是**无条件**的，它前面没有 if，只有后面那句 RUN 才看旗。
-#    上下文里没有这一层时，构建压根走不到 RUN，红在 COPY 上（Issue #115）：
-#      COPY --chown=node:node shard-src /tmp/shard-src
-#      ERROR: failed to calculate checksum ... "/shard-src": not found
-#    看着像「路径写错 / 文件没提交」，其实是**源目录不在上下文里**。空目录是
-#    COPY 的合法来源（拷过去就是个空目录），所以摊上下文的两个地方
-#    （.cnb.yml 的 stage context、deploy/build.sh）都**永远 mkdir** 这一层，
-#    内容才按旗摊。这样「不打旗 → 构建绿 + 404 E_NO_SHARDS」才和文档一致。
-# ⚠️ 上下文里那层叫 `shard-src/`，**且每个文件都是 .gz** —— 流水线摊的时候
-#    只摊压缩后那份（22.5%）。容器里发的就是这些 gz 字节，一个都不用解。
-COPY --chown=node:node shard-src /tmp/shard-src
-RUN node -e "const fs=require('fs');console.log('  分片清单 ' + (fs.existsSync('/tmp/shard-src/upload.manifest') ? require('crypto').createHash('sha256').update(fs.readFileSync('/tmp/shard-src/upload.manifest')).digest('hex').slice(0,20) : '（没有分片）'))"
-# ⚠️ 默认值也要是 1：`ARG COPY_SHREDS=` 是「没给 --build-arg 就空」，
-#    而那会让**忘了递参数**的构建静默产出一个没分片的镜像 ——
-#    构建绿、部署绿、`/api/shard/*` 404，而这一版是要发出去的正式版。
-#    `ARG COPY_SHREDS=1` 让「没递」与「递了 1」等价，只有显式 0 才关。
-ARG COPY_SHREDS=1
-RUN if [ "$COPY_SHREDS" != "0" ]; then \
-      mkdir -p /app/shards \
-      && cp /tmp/shard-src/*.js /app/shards/ 2>/dev/null || true \
-      && cp /tmp/shard-src/*.js.gz /app/shards/ \
-      && rm -rf /tmp/shard-src \
-      && du -sh /app/shards; \
-    else \
-      rm -rf /tmp/shard-src; \
-    fi
 
 # mysql2 是**唯一**多出来的运行时依赖（上面那份实现只用它的连接池，不引 ORM）。
 # 装在 /app 里，让 serve-api.js 的 require("./store-mysql.js") → require("mysql2/promise")

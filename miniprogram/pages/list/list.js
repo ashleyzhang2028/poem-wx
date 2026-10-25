@@ -54,7 +54,7 @@ Page({
 
     const book = corpus.bookById(this.data.bookId) || { name: "课内诗词", unit: "首" };
     this.setData({ bookName: book.name, unit: book.unit });
-    wx.setNavigationBarTitle({ title: "课外阅读 · " + book.name });
+    wx.setNavigationBarTitle({ title: book.name });
     this.apply();
   },
 
@@ -198,6 +198,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "课外阅读 · " + this.data.bookName, path: "/pages/list/list?book=" + this.data.bookId };
+    return { title: this.data.bookName, path: "/pages/list/list?book=" + this.data.bookId };
   }
 });

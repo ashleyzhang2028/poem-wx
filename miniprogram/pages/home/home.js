@@ -403,7 +403,7 @@ Page({
 
   seasonalCard() {
     const card = seasonal.card();
-    if (!card) return null;
+    if (!card || !card.poems.length) return null;
     const readOf = this.readOf();
     const extra = store.dailyExtra();
     const collected = {};
@@ -443,15 +443,6 @@ Page({
     this.collectionId = "";
     this.setData({ sheetRows: rows });
     sheet.open(rows, id);
-    this.attachSeasonal(rows);
-  },
-
-  attachSeasonal(rows) {
-    rows.forEach((row) => {
-      const item = seasonal.entryOf(row.id);
-      if (!item) return;
-      corpus.withTranslation(row, item);
-    });
   },
 
   onSeasonalAdd(e) {

@@ -1,6 +1,5 @@
 "use strict";
 
-const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
@@ -8,11 +7,13 @@ const vm = require("vm");
 const CORPUS_DIR = path.join(__dirname, "corpus");
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
+const STALE = ["texts", "shards.js"];
+
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 
 const SERVER_KEYS = ["env", "service"];
 
-const BUCKET_KB = 200;
+const COURSE_BOOK = "poems";
 
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
@@ -83,12 +84,12 @@ function main() {
   const books = W.SITE_BOOKS || [];
 
   const index = [];
-  const texts = {};
-
   const courseTexts = {};
 
   siteIndex.forEach(function (p) {
     if (p.isBook) return;
+    if (p.book !== COURSE_BOOK) return;
+
     const m = byId[p.id] || byId[p.originId] || null;
     const text = p.text || (m && m.text) || "";
     const translation = p.translation || (m && m.translation) || "";
@@ -114,99 +115,41 @@ function main() {
     });
 
     if (text || translation) {
-
-      const payload = {
+      courseTexts[p.id] = {
         text: text,
         translation: translation,
         src: TRANSLATION_SOURCES[p.translationSource] || ""
       };
-      if (p.grade || p.term) courseTexts[p.id] = payload;
-      else texts[p.id] = payload;
     }
   });
-
-  const shards = writeBuckets(texts);
 
   const byBook = {};
   index.forEach(function (p) {
     (byBook[p.book] = byBook[p.book] || []).push(p);
   });
 
-  writeBookIndex(byBook, shards);
+  dropStale();
+  writeBookIndex(byBook);
 
   writeModule(path.join(OUT_DIR, "books", "books.js"), books);
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
-  writePinyin(W, index, courseTexts, texts);
-  writeTextIndex(courseTexts, texts, W);
+  writePinyin(W, courseTexts);
   writeRoster();
   writeServer();
 
-  console.log("索引 " + index.length + " 条，按 " + Object.keys(byBook).length + " 部集子拆分");
+  console.log("索引 " + index.length + " 条");
   const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.js")).size / 1024);
   console.log("课内正文 " + Object.keys(courseTexts).length + " 条进主包，course.js " + courseKb + "KB");
-  console.log("正文分片 " + Object.keys(texts).length + " 条走云端");
 }
 
-function textHash(texts) {
-  const h = crypto.createHash("sha1");
-  Object.keys(texts).sort().forEach(function (id) {
-    h.update(id + "\u0000" + JSON.stringify(texts[id]) + "\u0001");
+function dropStale() {
+  STALE.forEach(function (name) {
+    fs.rmSync(path.join(OUT_DIR, name), { recursive: true, force: true });
   });
-  return h.digest("hex").slice(0, 12);
 }
 
-function writeBuckets(texts) {
-  const dir = path.join(OUT_DIR, "texts");
-  fs.rmSync(dir, { recursive: true, force: true });
-  fs.mkdirSync(dir, { recursive: true });
-
-  const all = Object.keys(texts).sort();
-  const buckets = [];
-  let cur = [];
-  let curSize = 0;
-
-  const ordered = all.slice().sort(function (a, b) {
-    return JSON.stringify(texts[b]).length - JSON.stringify(texts[a]).length;
-  });
-
-  ordered.forEach(function (id) {
-    const size = Buffer.byteLength(JSON.stringify(texts[id]), "utf8") / 1024;
-    if (curSize + size > BUCKET_KB && cur.length) {
-      buckets.push(cur);
-      cur = [];
-      curSize = 0;
-    }
-    cur.push(id);
-    curSize += size;
-  });
-  if (cur.length) buckets.push(cur);
-
-  const map = {};
-  const manifest = [];
-
-  buckets.forEach(function (ids, i) {
-    const name = "t" + String(i + 1).padStart(3, "0");
-    const payload = {};
-    ids.forEach(function (id) {
-      payload[id] = texts[id];
-      map[id] = name;
-    });
-
-    const file = path.join(dir, name + ".js");
-    writeModule(file, payload);
-    manifest.push({ n: name, c: ids.length, kb: Math.round(fs.statSync(file).size / 1024) });
-  });
-
-  writeModule(path.join(OUT_DIR, "shards.js"), { v: textHash(texts), buckets: manifest, map: map });
-
-  const total = manifest.reduce(function (a, b) { return a + b.kb; }, 0);
-  console.log("正文分片 " + manifest.length + " 个，" + total + "KB（未压缩）");
-
-  return { manifest: manifest, map: map };
-}
-
-function packBooks(byBook, shards) {
+function packBooks(byBook) {
   const dict = { d: [], g: [], sel: [], s: [] };
   const shared = {};
   const put = function (key, v) {
@@ -217,18 +160,8 @@ function packBooks(byBook, shards) {
     return (shared[key + "\u0000" + v] = dict[key].length - 1);
   };
 
-  const at = {};
-  const inBucket = {};
   const books = {};
   const rows = {};
-
-  Object.keys(shards.map).sort(function (a, b) {
-    return (shards.map[a] < shards.map[b] ? -1 : 1);
-  }).forEach(function (id) {
-    const name = shards.map[id];
-    inBucket[name] = (inBucket[name] || 0) + 1;
-    at[id] = inBucket[name] - 1;
-  });
 
   Object.keys(byBook).forEach(function (b) {
     books[b] = byBook[b].length;
@@ -238,14 +171,13 @@ function packBooks(byBook, shards) {
         p.t,
         p.a || p.an || null,
         put("d", p.d),
-        at[p.id] === undefined ? -1 : at[p.id],
         put("s", p.s),
         put("g", p.g),
         put("sel", p.sel),
         p.gr || 0,
         p.tm || 0,
-        p.aka && p.aka.length ? p.aka : null,
-        p.an || null
+        p.an || null,
+        p.aka && p.aka.length ? p.aka : null
       ];
     });
   });
@@ -254,8 +186,8 @@ function packBooks(byBook, shards) {
   return Object.keys(books);
 }
 
-function writeBookIndex(byBook, shards) {
-  const books = packBooks(byBook, shards);
+function writeBookIndex(byBook) {
+  const books = packBooks(byBook);
   const dir = path.join(OUT_DIR, "books");
 
   fs.readdirSync(dir).forEach(function (f) {
@@ -263,14 +195,12 @@ function writeBookIndex(byBook, shards) {
     fs.rmSync(path.join(dir, f));
   });
 
-  console.log("集子索引 " + books.length + " 部，" +
-    Math.round(fs.statSync(path.join(dir, "index.js")).size / 1024) +
-    "KB（薄索引：正文与译文按分片内序号补）");
+  console.log("集子索引 " + books.join(" / ") + "，" +
+    Math.round(fs.statSync(path.join(dir, "index.js")).size / 1024) + "KB");
 }
 
-function writePinyin(W, index, courseTexts, texts) {
+function writePinyin(W, courseTexts) {
   const table = W.PINYIN_TABLE || null;
-  const common = W.COMMON_CHARS || null;
 
   if (!table) {
     console.log("读音表未生成：网页版没有 data/pinyin-table.js，注音功能整体关闭");
@@ -281,23 +211,16 @@ function writePinyin(W, index, courseTexts, texts) {
 
   const words = extractWords(path.join(CORPUS_DIR, "js", "pinyin.js"), W);
 
-  let commonSet = {};
-  if (common) {
-    Object.keys(common).forEach(function (ch) { commonSet[ch] = 1; });
-  } else {
-    const freq = {};
-    const count = function (text) {
-      String(text || "").split("").forEach(function (ch) {
-        if (isHan(ch)) freq[ch] = (freq[ch] || 0) + 1;
-      });
-    };
-    Object.keys(courseTexts).forEach(function (id) { count(courseTexts[id].text); });
-    Object.keys(texts).forEach(function (id) { count(texts[id].text); });
-    Object.keys(freq).forEach(function (ch) {
-      if (freq[ch] > 2) commonSet[ch] = 1;
+  const commonSet = {};
+  const freq = {};
+  Object.keys(courseTexts).forEach(function (id) {
+    String(courseTexts[id].text || "").split("").forEach(function (ch) {
+      if (isHan(ch)) freq[ch] = (freq[ch] || 0) + 1;
     });
-    console.log("常用字表缺失，生僻字改用频次判据");
-  }
+  });
+  Object.keys(freq).forEach(function (ch) {
+    if (freq[ch] > 2) commonSet[ch] = 1;
+  });
 
   writeModule(path.join(OUT_DIR, "pinyin-table.js"), {
     chars: chars,
@@ -340,28 +263,6 @@ function extractWords(file, W) {
     console.log("词组表解析失败：" + e.message);
     return {};
   }
-}
-
-function writeTextIndex(courseTexts, texts, W) {
-
-  const manifest = require(path.join(OUT_DIR, "shards.js"));
-  const postings = {};
-
-  Object.keys(texts).forEach(function (id) {
-    const payload = texts[id];
-    if (!payload || !payload.text) return;
-    const bucket = manifest.map[id];
-    if (!bucket) return;
-    String(payload.text).split("").forEach(function (ch) {
-      if (!isHan(ch)) return;
-      const row = postings[ch] || (postings[ch] = {});
-      row[bucket] = (row[bucket] || 0) + 1;
-    });
-  });
-
-  const size = Buffer.byteLength(JSON.stringify({ postings: postings }), "utf8");
-  writeModule(path.join(OUT_DIR, "texts", "idx.js"), { postings: postings });
-  console.log("全文倒排索引 " + Object.keys(postings).length + " 字，" + Math.round(size / 1024) + "KB（走云端）");
 }
 
 function writeRoster() {
@@ -446,11 +347,6 @@ function writeModule(file, data) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, "module.exports = " + JSON.stringify(data) + ";\n");
   fs.rmSync(file.replace(/\.js$/, ".json"), { force: true });
-}
-
-function writeJson(file, data) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(data));
 }
 
 main();
