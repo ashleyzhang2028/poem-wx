@@ -74,8 +74,8 @@
 ```
 pages/search  ─┐
 feihua/lib    ─┤
-corpus        ─┼→ utils/poem-source.js → utils/remote.js source()
-game-scopes   ─┘                          → wx.cloud.callContainer
+game-scopes   ─┼→ utils/poem-source.js → utils/remote.js source()
+               ┘                          → wx.cloud.callContainer
                                             X-WX-SERVICE: poem-source
                                             path: /api/v1/...
 ```
@@ -95,27 +95,19 @@ game-scopes   ─┘                          → wx.cloud.callContainer
 { visible: true, usable: false, state: "denied"   }   // 这一版没配后端
 ```
 
-### 正文的取法（课内不变，课外换源）
+### 正文的取法
 
-```
-corpus.ensureEntry(id)
-  ├─ 包内课内正文 courseTexts()[id]        → 直接给
-  ├─ corpus.ensureSource(id)               → GET /poems/{id}   ← 新
-  └─ corpus.ensureShardEntry(id)           → 旧分片，只在课外库取不到时兜底
-```
+正文全在包里：`corpus.entry(id)` 与 `corpus.ensureEntry(id)` 都只查
+`data/course.js`，取不到就报 `E_NO_TEXT`。阅读页照此显示
+「这一篇的正文不在这个包里」并给一个重试。
 
-它的 id 从本仓库篇目 id 的尾巴取（`tangshi-309946` → `309946`）。
-本机没有对得上的篇目时 `sourceIdOf` 回空，直接走兜底，不白发一次请求。
-
-**分片没有拆掉**：镜像里那份 `/api/shard/*` 与客户端清单都留着。课外库挂着的时候它一次都不被请求；
-课外库不可用时课外仍能按旧路取到 —— 这条兜底是给「新服务还没起来」那一小段时间留的。
+课外正文、检索、飞花令判句走本文件的接口，与 `corpus` 无关。
 
 ### 界面上的话
 
 | 情况 | 说的话 |
 |---|---|
-| 这一篇正文不在库里 | 这一篇的正文不在库里，换一篇看看 |
-| 这一篇分片里缺这一段 | 这一篇的正文不完整，换一篇看看 |
+| 这一篇正文不在包里 | 这一篇的正文不在这个包里 |
 | 加了背但没配后端 | 还没接上课外库（取诗的那个服务），退出重进再看 |
 | 冷启动超时（`102002`） | 取正文超时了 —— 多半是服务实例刚被唤醒，重试一次 |
 
@@ -195,7 +187,7 @@ curl -s "https://poem-source-<环境>.sh.run.tcloudbase.com/api/v1/poems/random?
 
 | 现象 | 真因 |
 |---|---|
-| 点课外诗一律「取不到正文」，日志里一个请求都没有 | 篇目 id 的尾巴不是纯数字（`sourceIdOf` 回空）—— 新收录但没编进索引的条目才会这样，兜底走分片 |
+| 点课外诗一律「取不到正文」，日志里一个请求都没有 | 课外篇目没进本机索引，`sourceIdOf` 回空；不再有兜底 |
 | 回 `invalid host` | `SOURCE_AGENT` 与云托管里那个服务名不一致，或服务建在别的环境 |
 | 回 `102002` | 实例缩容到 0，冷启动超过 15 秒。最小实例数设 1，或重试 |
 | 检索一次要好几秒 | 单字 / 两字的检索靠单字倒排索引，正常是毫秒级；慢说明库刚下完索引还没建，或实例在冷启动 |
