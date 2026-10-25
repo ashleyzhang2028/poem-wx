@@ -81,7 +81,10 @@ button, textarea {
   margin-bottom: var(--card-title-gap);
 }
 
-.card-open > .card-title,
+.card-open > .card-title {
+  margin-bottom: 0;
+}
+
 .card-head > .card-title {
   margin-bottom: 0;
 }
@@ -724,6 +727,7 @@ button, textarea {
   display: flex;
   align-items: baseline;
   min-width: 0;
+  margin-bottom: var(--card-title-gap);
 }
 
 .card-hover {
