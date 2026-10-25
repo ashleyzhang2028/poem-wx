@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "课外阅读",
+  "navigationBarTitleText": "课内诗词",
   "usingComponents": {
     "tab-bar": "/custom-tab-bar/index"
   }

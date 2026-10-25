@@ -13,8 +13,6 @@ main:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
       docker:
         image: node:20
-        volumes:
-          - /tmp/poem-shard-cache
       services:
         - docker
       ifModify:
@@ -23,7 +21,6 @@ main:
         - "deploy-api-serve/**"
         - "scripts/corpus/**"
         - "scripts/build-data.js"
-        - "scripts/shard-stage.js"
         - ".cnb.yml"
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
@@ -36,28 +33,11 @@ main:
         - name: stage context
           script: |
             set -eu
-            mkdir -p /tmp/ctx /tmp/ctx/shard-src
+            mkdir -p /tmp/ctx
             cp -R api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
-            cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            cp deploy-api-serve/shard-rev.js /tmp/ctx/shard-rev.js
-            if [ "${COPY_SHREDS:-1}" != "0" ]; then
-              echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
-              node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
-              cp /tmp/poem-shard-cache/t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/
-              du -sh /tmp/ctx/shard-src
-              echo "  分片清单 $(sha256sum /tmp/ctx/shard-src/upload.manifest | cut -c1-20)（与上一版相同 = 这次不重传那 5.3MB）"
-              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
-              if [ "$n" -lt 2 ]; then
-                echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
-                exit 1
-              fi
-              echo "  $n 片"
-            else
-              echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
-            fi
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
             du -sh /tmp/ctx
@@ -68,21 +48,15 @@ main:
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            for need in "!shard-api.js" "!shard-rev.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
+            for need in "!api/handler.js" "!api/_lib/**" "!api/_routes/**" "!serve-api.js" "!store-mysql.js"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
-                echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
-                echo "  缺了容器起不来（MODULE_NOT_FOUND），而构建与部署都是绿的。" >&2
+                echo "  这一样是启动期要的东西，缺了容器起不来（MODULE_NOT_FOUND），" >&2
+                echo "  而构建与部署都是绿的。" >&2
                 exit 1
               }
             done
-            for shell in shard-api.js shard-rev.js; do
-              if [ ! -f "/tmp/ctx/$shell" ]; then
-                echo "✗ 上下文里没有 $shell —— serve-api.js require 它，容器起不来" >&2
-                exit 1
-              fi
-            done
-            for shell in serve-api.js store-mysql.js shard-api.js shard-rev.js; do
+            for shell in serve-api.js store-mysql.js; do
               grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
                 echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
                 echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2
@@ -97,7 +71,6 @@ main:
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
-              --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
               --build-arg "API_REV=${REV}" \
               --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
               --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -169,8 +142,6 @@ main:
     - name: 发布（自检 → 镜像 → GHCR → 体验版）
       docker:
         image: node:20
-        volumes:
-          - /tmp/poem-shard-cache
       services:
         - docker
       imports:
@@ -184,28 +155,11 @@ main:
         - name: stage context
           script: |
             set -eu
-            mkdir -p /tmp/ctx /tmp/ctx/shard-src
+            mkdir -p /tmp/ctx
             cp -R api /tmp/ctx/api
             cp deploy/Dockerfile /tmp/ctx/Dockerfile
             cp deploy-api-serve/serve-api.js /tmp/ctx/serve-api.js
             cp deploy/store-mysql.js /tmp/ctx/store-mysql.js
-            cp deploy-api-serve/shard-api.js /tmp/ctx/shard-api.js
-            cp deploy-api-serve/shard-rev.js /tmp/ctx/shard-rev.js
-            if [ "${COPY_SHREDS:-1}" != "0" ]; then
-              echo "摊分片进上下文（COPY_SHREDS=${COPY_SHREDS:-1}）"
-              node scripts/shard-stage.js /tmp/poem-shard-cache /tmp/poem-shard-cache/.fingerprint
-              cp /tmp/poem-shard-cache/t[0-9][0-9][0-9].js.gz /tmp/poem-shard-cache/upload.manifest /tmp/ctx/shard-src/
-              du -sh /tmp/ctx/shard-src
-              echo "  分片清单 $(sha256sum /tmp/ctx/shard-src/upload.manifest | cut -c1-20)（与上一版相同 = 这次不重传那 5.3MB）"
-              n=$(ls /tmp/ctx/shard-src/t[0-9][0-9][0-9].js.gz 2>/dev/null | wc -l)
-              if [ "$n" -lt 2 ]; then
-                echo "✗ 分片只摊出 $n 片 —— 语料没生成（scripts/corpus/ 在不在？）" >&2
-                exit 1
-              fi
-              echo "  $n 片"
-            else
-              echo "跳过分片（COPY_SHREDS=0）—— 这个镜像里不会有 /app/shards/"
-            fi
             cp deploy-api-serve/.dockerignore /tmp/ctx/.dockerignore
             echo "上下文体积（白名单生效约 0.3MB，没生效约 38MB）："
             du -sh /tmp/ctx
@@ -216,21 +170,15 @@ main:
               echo "✗ 上下文根上没有 .dockerignore —— 白名单没摆到生效的位置。" >&2
               exit 1
             fi
-            for need in "!shard-api.js" "!shard-rev.js" "!shard-src/**" "!api/handler.js" "!api/_lib/**" "!api/_routes/**"; do
+            for need in "!api/handler.js" "!api/_lib/**" "!api/_routes/**" "!serve-api.js" "!store-mysql.js"; do
               grep -qF "$need" /tmp/ctx/.dockerignore || {
                 echo "✗ 白名单里没有 $need —— 上下文会把它挡在外面。" >&2
-                echo "  这一样是 serve-api.js / shard-api 在**启动时**要的东西，" >&2
-                echo "  缺了容器起不来（MODULE_NOT_FOUND），而构建与部署都是绿的。" >&2
+                echo "  这一样是启动期要的东西，缺了容器起不来（MODULE_NOT_FOUND），" >&2
+                echo "  而构建与部署都是绿的。" >&2
                 exit 1
               }
             done
-            for shell in shard-api.js shard-rev.js; do
-              if [ ! -f "/tmp/ctx/$shell" ]; then
-                echo "✗ 上下文里没有 $shell —— serve-api.js require 它，容器起不来" >&2
-                exit 1
-              fi
-            done
-            for shell in serve-api.js store-mysql.js shard-api.js shard-rev.js; do
+            for shell in serve-api.js store-mysql.js; do
               grep -qF "COPY --chown=node:node ${shell} ./" /tmp/ctx/Dockerfile || {
                 echo "✗ Dockerfile 没有 COPY ${shell} —— 上下文里有它，镜像里却没有。" >&2
                 echo "  启动期 require 的那个文件少了这条 COPY，构建与部署都是绿的，" >&2
@@ -245,7 +193,6 @@ main:
             echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker login -u "${CNB_TOKEN_USER_NAME}" -p "${CNB_TOKEN}" "${CNB_DOCKER_REGISTRY}"
             docker build \
-              --build-arg "COPY_SHREDS=${COPY_SHREDS:-1}" \
               --build-arg "API_REV=${REV}" \
               --build-arg "BASE_IMAGE=${BASE_IMAGE:-node:20-alpine}" \
               --build-arg "API_SYNCED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

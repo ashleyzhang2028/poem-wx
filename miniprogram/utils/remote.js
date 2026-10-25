@@ -9,7 +9,6 @@ function packedCloud() {
   }
 }
 
-const SHARD_PATH = "/api/shard/";
 const SESSION_FRESH_MS = 60 * 1000;
 
 const PATHS = {
@@ -56,20 +55,6 @@ function cloudConfig() {
 
 function baseUrl() {
   return session().baseUrl || "";
-}
-
-function shardRev(path) {
-  if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
-  return sendTraced(path, {}, "GET");
-}
-
-function shardReady() {
-  return configured();
-}
-
-function shard(name, rev) {
-  if (!shardReady()) return Promise.reject(new Error("分片服务没接上"));
-  return sendTraced(SHARD_PATH + name + (rev ? "?v=" + encodeURIComponent(rev) : ""), {}, "GET");
 }
 
 function useCloud() {
@@ -599,9 +584,6 @@ module.exports = {
   configured,
   baseUrl,
   useCloud,
-  shard,
-  shardRev,
-  shardReady,
   cloudConfig,
   request,
   sync,

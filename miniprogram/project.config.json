@@ -1,13 +1,10 @@
 {
   "description": "古诗词背诵微信小程序",
   "packOptions": {
-    "ignore": [
-      { "type": "folder", "value": "data/texts" }
-    ],
+    "ignore": [],
     "include": [
       { "type": "folder", "value": "data/books" },
       { "type": "file", "value": "data/course.js" },
-      { "type": "file", "value": "data/shards.js" },
       { "type": "file", "value": "data/pinyin-table.js" },
       { "type": "file", "value": "data/roster.js" }
     ]
