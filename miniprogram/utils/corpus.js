@@ -644,7 +644,7 @@ function ensureEntry(id) {
 
 function ensureShardEntry(id) {
   const name = bucketOf(id);
-  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "这一篇不在分片清单里，也没从诗泉取到：" + id));
+  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "这一篇不在分片清单里，也没从课外库取到：" + id));
 
   const take = function (r) {
     const hit = r.data[id] || null;

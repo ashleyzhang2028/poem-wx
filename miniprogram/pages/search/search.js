@@ -190,7 +190,7 @@ Page({
           loading: false,
           partial: false,
           fromFull: true,
-          resultWhere: "诗泉 · 全文",
+          resultWhere: "课外全文 · 全站",
           resultMore: r.total > r.items.length ? "每次 20 篇，往下拉接着出" : "就这些了"
         });
       })

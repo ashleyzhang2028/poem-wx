@@ -1153,25 +1153,25 @@ if (fs.existsSync(idxFile)) {
   const remoteSrc3 = fs.readFileSync(path.join(ROOT, "utils", "remote.js"), "utf8");
   const corpusSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
 
-  ok("诗泉服务名单格只在一处（小程序那格与云托管服务名逐字对上）",
+  ok("课外库的服务名只在一处（小程序那格与云托管服务名逐字对上）",
     /const SOURCE_AGENT = "poem-source"/.test(remoteSrc3) && !/poem-source"\s*[,;]/.test(src),
     "服务名写了两遍就一定会漂：一处改了另一处没改，回的是 invalid host");
 
-  ok("诗泉的接口表与诗泉仓库的 REST 路由逐条对得上",
+  ok("课外库的接口表与它那份 REST 路由逐条对得上",
     ["/poems", "/poems/search", "/poems/random", "/authors", "/dynasties", "/types", "/stats", "/health"].every(
       (p) => src.indexOf('"' + p + '"') >= 0),
     "认错了路径的客户端只会在真机上回 404，本地自检看不出来");
 
-  ok("诗泉没接上时先是 visible 再分 awaiting / denied（不假装能用）",
+  ok("课外库没接上时先是 visible 再分 awaiting / denied（不假装能用）",
     /function readiness\(\)/.test(src) && /state: "denied"/.test(src) &&
       /state: "awaiting"/.test(src) && /state: "ready"/.test(src),
     "把「没配」与「配了但连不上」混成一档，界面就只会说一句「加载失败」");
 
-  ok("课外正文先问诗泉、分片只做兜底（两端版本不一致那条根因）",
+  ok("课外正文先问课外库、分片只做兜底（两端版本不一致那条根因）",
     /function ensureEntry\(id\)[\s\S]{0,400}?ensureSource\(id\)[\s\S]{0,200}?ensureShardEntry\(id\)/.test(corpusSrc),
     "顺序反了就等于新服务一点没接上 —— 分片能答的一律还答分片那份");
 
-  ok("诗泉取不到正文时回 null 落兜底（不把加载态留在屏幕上，也不跳过老分片）",
+  ok("课外库取不到正文时回 null 落兜底（不把加载态留在屏幕上，也不跳过老分片）",
     /source[\s\S]{0,200}?\.search\(meta\.t[\s\S]{0,600}?return null;/.test(corpusSrc) &&
       /ensureEntry\(id\)[\s\S]{0,300}?if \(hit\) return hit;/.test(corpusSrc),
     "取不到要回 null 让上层落空态 / 走兜底，而不是抛在 then 里连分片一起跳过");

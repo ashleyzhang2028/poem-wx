@@ -115,7 +115,7 @@ corpus.ensureEntry(id)   → course.js 没有再走分片（下一节）
 ## 四、③ 段：课外 5604 首怎么走
 
 课外正文不在包里，只有一份**清单**（`data/shards.js`）在包里。
-点开一首课外诗时**先问诗泉**（`corpus.ensureSource` → `GET /api/v1/poems/{id}`），
+点开一首课外诗时**先问课外库**（`corpus.ensureSource` → `GET /api/v1/poems/{id}`），
 取不到才落到下面这条分片路（见 [`poem-source.md`](poem-source.md)）。
 
 分片那条路：
