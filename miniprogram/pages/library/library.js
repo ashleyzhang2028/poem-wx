@@ -7,21 +7,17 @@ const theme = require("../../utils/theme");
 const GROUPS = [
   {
     key: "course",
-    name: "课内诗词",
+    name: "课内阅读",
     note: "一至高三 · 按年级分册",
     books: ["poems"]
   },
   {
     key: "classics",
-    name: "课外集子",
-    note: "目录在包里 · 正文即时取",
+    name: "课外阅读",
+    note: "诗经、楚辞、唐诗、宋词、古文与四大名著",
     catalog: true
   }
 ];
-
-function groupDesc(g) {
-  return g.note || "";
-}
 
 Page({
   data: {
@@ -54,7 +50,8 @@ Page({
       return {
         key: g.key,
         name: g.name,
-        desc: groupDesc(g),
+        desc: g.note || "",
+        wide: !g.catalog,
         books: books.map((b) => ({
           id: b.id,
           name: b.name,
@@ -78,6 +75,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "课内诗词", path: "/pages/library/library" };
+    return { title: "课内阅读与课外阅读", path: "/pages/library/library" };
   }
 });

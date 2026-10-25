@@ -31,8 +31,6 @@ Page({
     searching: false,
     locked: true,
 
-    resultWhere: "",
-
     more: false,
 
     icons: { search: icons.search, clear: icons.clear, playlist: icons.playlist }
@@ -95,8 +93,7 @@ Page({
       total: r.total,
       more: r.total > BATCH,
       searched: true,
-      searching: false,
-      resultWhere: "篇名作者 · 课内"
+      searching: false
     }, () => this.refreshPicked());
   },
 
@@ -117,8 +114,7 @@ Page({
         if (!r.items.length) {
           this.setData({
             results: [], total: 0, searched: true, searching: false,
-            more: false, loading: false, partial: false, fromFull: false,
-            resultWhere: "篇名作者 · 全站"
+            more: false, loading: false, partial: false, fromFull: false
           });
           return;
         }
@@ -132,9 +128,7 @@ Page({
           searching: false,
           loading: false,
           partial: false,
-          fromFull: true,
-          resultWhere: "课外全文 · 全站",
-          resultMore: r.total > r.items.length ? "每次 20 篇，往下拉接着出" : "就这些了"
+          fromFull: true
         });
       })
       ["catch"](() => {
@@ -167,8 +161,7 @@ Page({
         results: results,
         total: this.sourceTotal || r.total,
         loading: false,
-        more: results.length < (this.sourceTotal || r.total),
-        resultMore: results.length < (this.sourceTotal || r.total) ? "每次 20 篇，往下拉接着出" : "就这些了"
+        more: results.length < (this.sourceTotal || r.total)
       });
     }, () => {
       if (token !== this.sourceToken) return;
