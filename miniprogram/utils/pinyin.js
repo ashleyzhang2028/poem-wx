@@ -51,32 +51,41 @@ function readings(ch) {
   return raw ? String(raw).split("/") : [];
 }
 
-const WORD_HEAD = {};
+const WORD_INDEX = {};
 
 let wordTable = null;
 
-function wordsByHead(t) {
-  if (wordTable && wordTable.t === t) return WORD_HEAD;
+function wordsAtChar(t) {
+  if (wordTable && wordTable.t === t) return WORD_INDEX;
   wordTable = { t: t };
-  Object.keys(WORD_HEAD).forEach((k) => delete WORD_HEAD[k]);
+  Object.keys(WORD_INDEX).forEach((k) => delete WORD_INDEX[k]);
   Object.keys((t && t.words) || {}).forEach((w) => {
-    const head = w.charAt(0);
-    (WORD_HEAD[head] || (WORD_HEAD[head] = [])).push(w);
+    const chars = Array.from(w);
+    chars.forEach((ch, off) => {
+      const slot = chars.length + "|" + off + "|" + w;
+      (WORD_INDEX[ch] || (WORD_INDEX[ch] = [])).push(slot);
+    });
   });
-  Object.keys(WORD_HEAD).forEach((k) => WORD_HEAD[k].sort((a, b) => b.length - a.length));
-  return WORD_HEAD;
+  Object.keys(WORD_INDEX).forEach((k) => {
+    WORD_INDEX[k].sort((a, b) => parseInt(b, 10) - parseInt(a, 10) || (a < b ? -1 : 1));
+  });
+  return WORD_INDEX;
 }
 
 function wordAt(text, i) {
   const t = table();
   if (!t || !t.words) return "";
-  const list = wordsByHead(t)[String(text).charAt(i)];
+  const list = wordsAtChar(t)[String(text).charAt(i)];
   if (!list) return "";
   for (let k = 0; k < list.length; k++) {
-    const w = list[k];
-    const start = i - (w.length - 1);
+    const slot = list[k];
+    const cut = slot.indexOf("|");
+    const len = parseInt(slot.slice(0, cut), 10);
+    const off = parseInt(slot.slice(cut + 1, slot.indexOf("|", cut + 1)), 10);
+    const w = slot.slice(slot.indexOf("|", cut + 1) + 1);
+    const start = i - off;
     if (start < 0) continue;
-    if (text.substr(start, w.length) === w) return t.words[w][w.length - 1];
+    if (text.substr(start, len) === w) return t.words[w][off];
   }
   return "";
 }
@@ -92,13 +101,8 @@ function pickTone(list, tone) {
 }
 
 function isTone4(ch, text, i) {
-  const list = readings(ch);
-  if (list.length === 1) return TONE_MARK[4].test(list[0]);
-  if (list.length < 2) return false;
-
-  const hit = wordAt(text, i);
-  const p = hit || list[0];
-  return TONE_MARK[4].test(p);
+  const p = readOf(ch, text, i);
+  return !!p && TONE_MARK[4].test(p);
 }
 
 function isOrdinal(text, i) {
@@ -117,10 +121,11 @@ function isOrdinal(text, i) {
 function readOf(ch, text, i) {
   const list = readings(ch);
   if (!list.length) return "";
-  if (list.length === 1) return list[0];
 
   const hit = wordAt(text, i);
   if (hit && ch !== "一" && ch !== "不") return hit;
+
+  if (list.length === 1) return list[0];
 
   const next = text[i + 1];
   if (ch === "不") {
