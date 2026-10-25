@@ -15,6 +15,7 @@ Component({
     themeStyle: "",
     meAvatar: "",
     meChar: "诗",
+    me: 4,
     conference: 2,
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
@@ -72,6 +73,10 @@ Component({
       if (i === this.data.conference) {
         if (i === this.data.active) tabPage.hub();
         else tabPage.conference();
+        return;
+      }
+      if (i === this.data.me) {
+        tabPage.mine();
         return;
       }
       if (i === this.data.active) return;
