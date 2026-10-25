@@ -695,6 +695,8 @@ cases.forEach((cfg) => {
       Object.keys(seeded).forEach((k) => { data[k] = seeded[k]; });
     }
 
+    if (cfg.seedList) data.list = JSON.parse(JSON.stringify(cfg.seedList));
+
     if (cfg.seedOrders) {
       const page = rt.current();
       const payMod = require(path.join(ROOT, "utils", "pay.js"));

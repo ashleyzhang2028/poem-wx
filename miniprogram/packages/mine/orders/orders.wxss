@@ -23,18 +23,26 @@
   margin-top: var(--sp-3);
 }
 
+.od-row {
+  flex-wrap: wrap;
+}
+
 .od-side {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  gap: var(--sp-1);
   flex: none;
+  margin-left: var(--sp-2);
+}
+
+.od-tag {
+  margin-right: 0;
 }
 
 .od-price {
   font-family: var(--font-num);
   font-size: var(--fs-title);
   color: var(--ink-strong);
-  margin-bottom: var(--sp-1);
 }
 
 .od-id {
@@ -42,5 +50,6 @@
 }
 
 .od-acts {
+  flex: 1 1 100%;
   margin-top: var(--sp-2);
 }
