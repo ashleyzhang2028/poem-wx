@@ -127,7 +127,7 @@ Page({
 
 
   onTierGate() {
-    entitlement.openTierPage();
+    entitlement.openPricing();
   },
 
   pickedMap() {

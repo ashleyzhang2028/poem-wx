@@ -184,7 +184,7 @@ Page({
   },
 
   onTierGate() {
-    this.onTier();
+    this.onPricing();
   }
 
 });

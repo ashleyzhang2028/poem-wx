@@ -77,7 +77,7 @@ Page({
   },
 
   onTierGate() {
-    E.openTierPage();
+    E.openPricing();
   },
 
   onOpenBook(e) {

@@ -62,7 +62,7 @@ Page({
   },
 
   onTierGate() {
-    entitlement.openTierPage();
+    entitlement.openPricing();
   },
 
   onInput(e) {

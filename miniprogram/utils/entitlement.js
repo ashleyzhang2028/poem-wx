@@ -333,19 +333,22 @@ function onLoginGate(name, ctx) {
   else if (typeof ctx.onLogin === "function") ctx.onLogin(name);
 }
 
+function openPricing() {
+  wx.navigateTo({ url: "/packages/mine/pricing/pricing" });
+}
+
 function showTier(name, ctx) {
   if (can(name)) {
     wx.showModal({
       title: "请重新进入",
-      content: "「" + capName(name) + "」已开通，重新进入该功能即可使用。\n\n各档位权益详见「用户权限」页。",
+      content: "「" + capName(name) + "」已开通，重新进入该功能即可使用。",
       showCancel: false,
       confirmText: "知悉"
     });
     return;
   }
   const why = hint(name);
-  const content = (why && why !== "登录可用" ? why + "。" : tierOf(name) + " 起可用。")
-    + "\n\n各档位权益详见「用户权限」页。";
+  const content = (why && why !== "登录可用" ? why + "。" : tierOf(name) + " 起可用。");
 
   wx.showModal({
     title: "权限不足",
@@ -353,7 +356,9 @@ function showTier(name, ctx) {
     confirmText: "升级",
     cancelText: "取消",
     success: (res) => {
-      if (res.confirm && ctx && typeof ctx.onTierGate === "function") ctx.onTierGate(name);
+      if (!res.confirm) return;
+      if (ctx && typeof ctx.onTierGate === "function") ctx.onTierGate(name);
+      else openPricing();
     }
   });
 }
@@ -405,10 +410,6 @@ function gateTier(name, opt) {
   return false;
 }
 
-function openTierPage() {
-  wx.navigateTo({ url: "/packages/mine/tier/tier" });
-}
-
 function guestScope() {
   return { grade: GUEST_GRADE, term: 1, scope: "term", readOnly: true, title: "一年级诗词" };
 }
@@ -443,6 +444,6 @@ module.exports = {
   cap,
   block,
   gateTier,
-  openTierPage,
+  openPricing,
   guestScope
 };
