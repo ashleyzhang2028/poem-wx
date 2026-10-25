@@ -60,7 +60,7 @@ Page({
   },
 
   onTierGate() {
-    wx.navigateTo({ url: "/packages/mine/tier/tier" });
+    wx.navigateTo({ url: "/packages/mine/pricing/pricing" });
   },
 
   load() {

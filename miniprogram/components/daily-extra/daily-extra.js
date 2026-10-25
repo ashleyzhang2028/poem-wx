@@ -81,7 +81,7 @@ Component({
     },
 
     onTierGate() {
-      entitlement.openTierPage();
+      entitlement.openPricing();
     },
 
     onOpen(e) {

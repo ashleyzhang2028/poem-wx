@@ -221,7 +221,7 @@ Page({
   },
 
   onTierGate() {
-    entitlement.openTierPage();
+    entitlement.openPricing();
   },
 
   dailyMsg(r) {

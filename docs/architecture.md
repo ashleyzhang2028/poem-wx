@@ -501,7 +501,8 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 
 门禁的两种对话框都由 `utils/entitlement.js` 出（`block()` / `gateTier()`）：
 登录那道是「登录 / 取消」，档位那道是「升级 / 取消」，确认后走页面自己的
-`onLoginGate` / `onTierGate`。`onTierGate` 一律落到本页，页面不另写文案。
+`onLoginGate` / `onTierGate`。`onTierGate` 一律落到开通会员页
+（`packages/mine/pricing`，通道是 `entitlement.openPricing()`），页面不另写文案。
 
 版式**照网页版 `/plans/`**：列头就是档位名，三档各占等宽、功能名一栏占左约四成，
 表格跟着页面滚。这三条都由 `check.js` 钉着 —— 退回「三列挤在右侧、卡片里定高滚」

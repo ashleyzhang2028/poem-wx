@@ -1343,10 +1343,10 @@ Object.keys(WEB_TIER).forEach((k) => {
   ok("当前档位列带「现在」（用户只认自己那一列）",
     /now:\s*t\.key === now/.test(entSys) && wxml.indexOf("cell.now") >= 0,
     "没有「现在」这枚标记时，用户看不出哪一列是自己");
-  ok("档位与登录的对话框都收在 entitlement 里，「升级」落到用户权限页",
+  ok("档位与登录的对话框都收在 entitlement 里，「升级」落到开通会员页",
     /function showTier\s*\(/.test(entSys) && /function showLogin\s*\(/.test(entSys)
       && /onTierGate/.test(entSys)
-      && /url:\s*"\/packages\/mine\/tier\/tier"/.test(entSys)
+      && /function openPricing\s*\([\s\S]{0,120}?url:\s*"\/packages\/mine\/pricing\/pricing"/.test(entSys)
       && !/askDailyUpgrade|askUpgrade/.test(entSys),
     "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
   ok("确认与取消两枚按钮的说法各只有一种（Issue #370 / #502）",
@@ -3512,10 +3512,10 @@ function mountFull(pg, query) {
       && pageJs.indexOf("rankingList") >= 0,
     "榜单挂在考试结果页里的话，飞花令那一半就没有入口");
 
-  ok("榜外那句「看看差别」点下去落到权限对比表上",
+  ok("榜外那句「看看差别」点下去落到开通会员页",
     /bindtap="onTierGate"[^>]*>看看差别</.test(pageWxml)
-      && /onTierGate\s*\(\)\s*\{[\s\S]{0,80}?url:\s*"\/packages\/mine\/tier\/tier"/.test(pageJs),
-    "档位不够时那枚胶囊是死的 —— 用户看着「Max 起可用」却看不到自己缺哪几样（Issue #686）");
+      && /onTierGate\s*\(\)\s*\{[\s\S]{0,80}?url:\s*"\/packages\/mine\/pricing\/pricing"/.test(pageJs),
+    "档位不够时那枚胶囊是死的 —— 用户看着「Max 起可用」却买不到（Issue #686 / #662）");
 
   ok("切学段不替用户预选年级，册次只在选了年级之后才出现",
     !/grade: grade, term: 0, label/.test(pageJs)
