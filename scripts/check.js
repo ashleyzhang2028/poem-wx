@@ -3827,7 +3827,7 @@ function mountFull(pg, query) {
   const dragBody = (themePageJs.split("onToneDrag(e) {")[1] || "").split("onToneHex(e) {")[0];
   ok("拖色带当场落到 toneColor 并重算整页样式（不是等松手才反应）",
     /tone\.set\(hex\)[\s\S]{0,80}?this\.paint\(\)/.test(dragBody)
-      && /function apply\(page\) \{[\s\S]{0,120}?page\.setData\(\{ theme: key, themeStyle: style\(key\) \}\)/.test(themeUtilsJs),
+      && /function apply\(page\) \{[\s\S]{0,160}?page\.setData\(\{[\s\S]{0,80}?themeStyle: style\(key\)/.test(themeUtilsJs),
     "拖动的处理里没有 tone.set + paint，色只在你松手那一刻才认");
 
   store.saveSettings({ toneColor: "" });

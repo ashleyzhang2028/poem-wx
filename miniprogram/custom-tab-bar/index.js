@@ -13,6 +13,7 @@ Component({
   data: {
     active: -1,
     themeStyle: "",
+    name: "",
     meAvatar: "",
     meChar: "诗",
     me: 4,
@@ -55,7 +56,7 @@ Component({
     },
 
     paint() {
-      return { themeStyle: theme.style() };
+      return { themeStyle: theme.style(), name: theme.name() };
     },
 
     paintMe() {

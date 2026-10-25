@@ -1,7 +1,7 @@
 <view class="sheet-root" wx:if="{{open}}">
   <view class="sheet-mask" bindtap="onClose"></view>
 
-  <view class="sheet" style="{{themeStyle}}">
+  <view class="sheet {{name}}" style="{{themeStyle}}">
 
     <view class="sheet-grip"></view>
 

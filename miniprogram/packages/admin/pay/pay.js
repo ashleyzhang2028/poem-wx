@@ -42,6 +42,7 @@ function statusViews(summary) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     canWrite: false,
     reason: "",

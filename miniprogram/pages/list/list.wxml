@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <lock-card wx:if="{{locked}}" title="课内阅读" note="登录后才能看" mark="目" bind:login="onLogin" />
 
   <block wx:else>

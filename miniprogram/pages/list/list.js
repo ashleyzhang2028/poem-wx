@@ -18,6 +18,7 @@ const FILTERS = [
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     bookId: "",
     bookName: "",

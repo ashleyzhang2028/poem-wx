@@ -11,6 +11,7 @@ const loginFlow = require("../../../utils/login-flow");
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     locked: false,
 

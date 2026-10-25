@@ -12,6 +12,7 @@ const MODES = {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     mode: "exam",
     copy: MODES.exam,

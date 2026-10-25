@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <lock-card wx:if="{{state === 'login'}}" title="排行榜" note="登录后才能看" mark="榜" bind:login="onLogin" />
 
   <view class="card" wx:if="{{state === 'tier'}}">

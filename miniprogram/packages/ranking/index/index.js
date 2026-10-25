@@ -10,6 +10,7 @@ const entitlement = require("../../../utils/entitlement");
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     logged: false,
     allowed: true,

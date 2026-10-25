@@ -319,10 +319,21 @@ function markDirty() {
   }
 }
 
+const TIER_CLASS = { pro: "theme-pro", max: "theme-max" };
+
+function tierClass() {
+  const tier = entitlement.status().tier;
+  return TIER_CLASS[tier] || "";
+}
+
+function name() {
+  return tierClass();
+}
+
 function apply(page) {
   const key = current();
 
-  page.setData({ theme: key, themeStyle: style(key) });
+  page.setData({ theme: key, themeStyle: style(key), name: tierClass() });
   return key;
 }
 
@@ -349,6 +360,6 @@ module.exports = {
   THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
   OWN, OWN_KEY, OWN_THEME,
   all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
-  variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply,
+  variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply, name,
   clearOwn, toneData
 };

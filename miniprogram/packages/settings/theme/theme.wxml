@@ -1,6 +1,6 @@
 <page-meta />
 
-<view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <view class="font-warm" page-font-size>
     <view class="font-warm-cell" wx:for="{{fonts}}" wx:key="key" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</view>
   </view>

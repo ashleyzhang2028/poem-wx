@@ -22,6 +22,7 @@ const GROUPS = [
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     groups: [],
     locked: true,

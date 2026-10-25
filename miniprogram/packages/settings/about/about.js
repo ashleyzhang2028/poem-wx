@@ -5,7 +5,7 @@ const loginFlow = require("../../../utils/login-flow");
 const tabPage = require("../../../utils/tab-page");
 
 Page({
-  data: { themeStyle: "", barBelow: true, version: "1.0.0", logged: false },
+  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false },
 
   onShow() {
     theme.apply(this);
