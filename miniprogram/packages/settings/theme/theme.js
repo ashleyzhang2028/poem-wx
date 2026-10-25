@@ -27,7 +27,8 @@ Page({
     fonts: [],
     font: font.DEFAULT,
     fontSample: font.PREVIEW,
-    previewFamilyOf: "Kuibu Preview " + font.DEFAULT,
+    bodyFamily: font.face(font.DEFAULT).family,
+    previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
     fontLocked: true,
     fontTier: "pro"
   },
@@ -35,12 +36,16 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
-    if (!gate.logged()) {
-      this.setData({ locked: true });
-      return;
-    }
-    this.setData(Object.assign({ locked: false }, this.view()));
+    this.loadSample();
+    this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
+  },
+
+  loadSample() {
+    const key = font.current();
+    font.load().then((ok) => {
+      if (ok && this.data.font === key) this.setData({ bodyFamily: font.face(key).family });
+    }).catch(() => {});
   },
 
   warmPreview() {
@@ -54,12 +59,10 @@ Page({
       ownSet: theme.ownSwatchData().set,
       toneLocked: !theme.reachable(theme.OWN_KEY),
       theme: theme.current(),
-      fonts: font.options().map((f) => Object.assign({}, f, {
-        locked: !pickable && f.key !== font.DEFAULT,
-        previewFamily: "Kuibu Preview " + f.key
-      })),
+      fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
-      previewFamilyOf: font.face().previewFamily,
+      bodyFamily: font.face(font.current()).family,
+      previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
       fontLocked: !pickable,
       fontTier: font.tier(),
       toneView: theme.toneData()
@@ -204,8 +207,6 @@ Page({
     }
     if (!r.changed) return;
     this.setData(this.view());
-    font.load().catch(() => {});
-    font.loadAll();
     this.warmPreview();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }

@@ -1,9 +1,32 @@
+<page-meta page-font-size>
+  <view wx:for="{{previewFamilies}}" wx:key="*this" style="font-family:'{{item}}'">{{fontSample}}</view>
+</page-meta>
+
 <view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
 
   <nav-bar />
 
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
+
+  <block wx:if="{{locked}}">
+  <view class="card group-card">
+    <view class="card-head">
+      <text class="card-title group-title">字体</text>
+      <tier-tag tier="{{fontTier}}" />
+    </view>
+
+    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
+
+    <view class="font-list">
+      <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
+            data-key="{{item.key}}" bindtap="onFont">
+        <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
+        <text class="font-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+  </block>
 
   <block wx:else>
   <view class="card group-card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
@@ -105,6 +128,8 @@
       <text class="card-title group-title">字体</text>
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
+
+    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"

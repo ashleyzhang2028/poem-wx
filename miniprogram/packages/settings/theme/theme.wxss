@@ -101,6 +101,17 @@
   line-height: 1.2;
 }
 
+.font-strip {
+  margin-top: var(--sp-1);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1rpx solid var(--line-2);
+  font-size: var(--fs-lead);
+  color: var(--ink);
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .font-name {
   font-size: var(--fs-caption);
   color: var(--ink-3);

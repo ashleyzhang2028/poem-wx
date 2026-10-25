@@ -781,27 +781,36 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 **线上九款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
 清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
-| 款 | 键 | 字族 | 子集地址 |
+| 款 | 键 | 字族 | 目录 |
 |---|---|---|---|
-| 朱雀仿宋（默认） | `zhuque` | `Kuibu Poem zhuque` | `zhuquefangsong-regular/zhuquefangsong-regular-{free,pro}.{woff2,woff}` |
-| 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved/huiwenmincho-improved-{free,pro}.{woff2,woff}` |
-| 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai/chillkai-{free,pro}.{woff2,woff}` |
-| 汇迹正楷 | `cooper` | `Kuibu Poem cooper` | `cooperzhengkai/cooperzhengkai-{free,pro}.{woff2,woff}` |
-| 霞鹜文楷 | `wenkai` | `Kuibu Poem wenkai` | `lxgwwenkai-regular/lxgwwenkai-regular-{free,pro}.{woff2,woff}` |
-| 京华老宋 | `oldsong` | `Kuibu Poem oldsong` | `kinghwa_oldsong_v3/kinghwa_oldsong_v3-{free,pro}.{woff2,woff}` |
-| 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro/chilljinshusongpro_regular-{free,pro}.{woff2,woff}` |
-| 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular/yozai-regular-{free,pro}.{woff2,woff}` |
-| 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular/chilllongcangkai_regular-{free,pro}.{woff2,woff}` |
+| 朱雀仿宋（默认） | `zhuque` | `Kuibu Poem zhuque` | `zhuquefangsong-regular` |
+| 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved` |
+| 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai` |
+| 汇迹正楷 | `cooper` | `Kuibu Poem cooper` | `cooperzhengkai` |
+| 霞鹜文楷 | `wenkai` | `Kuibu Poem wenkai` | `lxgwwenkai-regular` |
+| 京华老宋 | `oldsong` | `Kuibu Poem oldsong` | `kinghwa_oldsong_v3` |
+| 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro_regular` |
+| 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular` |
+| 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular` |
 
-另有一份 7 字的预览子集（`-7.woff2` / `-7.woff`，只含「烟花三月下扬州」，约 3KB），
-只给主题页那些字体格用，不进诗词正文的字体链。
+每款目录下四份裁剪，文件名统一为 `<size>.{woff2,woff}`，
+`<size>` 取 `7` / `free` / `pro` / `max`：
+
+- `7` —— 7 字预览子集（只含「烟花三月下扬州」，约 3KB），只给主题页那些字体格用，
+  不进诗词正文的字体链。
+- `free` —— 未登录与 Free 用户取的子集。
+- `pro` —— Pro 用户取的子集。
+- `max` —— Max 用户取的子集。
+
+文件名不分款，款由所在目录区分；`utils/font.js` 的 `files(dir, size)` 只拼这一处。
+换一款、换一份裁剪都不用动页面。
 
 每款各注册一个字族，`--font-poem` 的首位跟着 `settings.font` 换名字 ——
 换字体不重排正文，也不影响后面那串系统衬线兜底。
 
-免费那档只能停在朱雀仿宋，用的也是它的 free 子集；Pro / Max 每款都能选，
-取的是所选那款的 pro 子集（字表更大）。所以「换款」与「换子集」是两件事，
-各由 `FONTS` 的键与 `pickable()` 定，不在字体这边另立一套档位判据。
+字体档与可选档是两件事：`shelf()` 只管取哪一份子集（随当前档位走），
+`pickable()` 管能不能换款（pro 起）。未登录与 Free 落在默认那款的 `free` 子集，
+Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一份。
 
 - 谁可选：`font.pickable()` 取 `entitlement.status().tier`，pro 起。
   Free 那里 `font.set()` 直接拒（`{ ok: false, reason: "tier" }`），
@@ -812,19 +821,20 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 - `auth.fontUrl` 仍可覆盖（字符串或数组），显式给空串就是不启用这条链。
 
 档位与所选那款都会在一次启动内变（登录、刷新拿到 `plan.tier`、登出、在主题页
-点另一款），所以 `app.js` 每两秒比对一次「款 + 档位」，变了才重注册；
-`font.load()` 按「款 + 地址」去重，同一款连着调用只发一次 `wx.loadFontFace`。
+点另一款），`font.load()` 按「款 + 档位 + 地址」去重，同一款连着调用只发一次
+`wx.loadFontFace`；`app.js` 在启动、回前台、登录回调与整点档位刷新后都走
+`font.refresh()`。
 
 **`wx.loadFontFace` 一次只吃一份文件**，所以 `@font-face` 那种「woff2 在前、woff 兜底」
 的多 `src` 写法用不上 —— 小程序不解析页面里的 `@font-face`，兜底只能写在 JS 里排队试。
 
 **字表有洞，按「显示不好拉倒」处理**：仍缺的字不走这份字族，落到后面的系统宋体；
-系统也没有的，才是豆腐。要补就重新裁一份、换 `FONTS` 里的地址，页面一处不用动。
+系统也没有的，才是豆腐。要补就重新裁一份、换 `FACES` 里的地址，页面一处不用动。
 生成脚本 `scripts/font-subset.js`。
 
 **地址里不带 `sign` / `t`。** 带签名的下载链是会过期的一次性地址，
 写进代码就是给线上埋一颗定时炸弹；云存储桶上的文件默认公开读，
-`SETS` 用的是公开域名那四条。挑字表由前端按档位决定，服务端不校验 ——
+`FACES` 用的是公开域名那几份。挑字表由前端按档位决定，服务端不校验 ——
 这是观感增强，不是权限边界。
 
 **全站只留一条字体链。** 详情页的题名、身份行、诗句正文，与列表里的书名、
@@ -833,10 +843,21 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 `--font-poem` 首位是所选那款，之后再排其余各款已注册的字族，再往后才是系统衬线。
 
 **预览与正文是两套字族。** 主题页每个字体格里的「烟花三月下扬州」取 `font.preview(key)`，
-注册的是该款的 `-7` 子集，字族名为 `Kuibu Preview <款>`，与正文的
+注册的是该款目录下的 `7.woff2` / `7.woff`，字族名为 `Kuibu Preview <款>`，与正文的
 `Kuibu Poem <款>` 不相干：一屏九款全部注册也只是九份 3KB，进页面先把各款都注册好，
 点哪款、选哪款都不用等一次网络。选中后 `font.load()` 才注册完整那一份
-（free / pro），预览子集不参与正文排版。
+（按档位取 free / pro / max），预览子集不参与正文排版。
+
+**字体卡上另有一行样本，取的是正文那一份。** 卡顶那行「烟花三月下扬州」用
+`load()` 真注册成功的那款（`bodyFamily`），CSS 里写的是 `Kuibu Poem <款>`，
+所以它显示的就是详情页正文的字形；九格里那些是 `7` 子集，只说明「这款长什么样」。
+两者共用一次 `loadFontFace`（同款同档同地址只注册一遍），不多发请求。
+
+**预览子集的字族必须在页面级注册。** `wx.loadFontFace` 带 `global: true` 时，
+字族名只在调用那一刻的页面作用域里认得出，换一页就没了 —— 所以主题页把九款的
+`Kuibu Preview <款>` 写成页面根上的 `<page-meta page-font-size>` 里的一行隐式文本，
+作用域跟着整页走；没这层壳，只有写在页面根节点上的正文样本认得出，卡里那九格
+会安静地退回系统衬线，看着像「预览没生效」。
 
 **字族在启动时一次注册齐。** 早先只注册所选那一款，`--font-poem`
 一换名字就是换到一个从未 `wx.loadFontFace` 过的字族，`load()` 的网络请求

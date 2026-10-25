@@ -823,7 +823,10 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     ok("诗词文本只注册一个字族（详情页题名与正文取的是同一个）",
       seen.length === 1 && seen[0].family === e.font.face().family,
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
-    ok("没登录取默认那一款的 free 子集", /-free\.woff2$/.test(seen[0].source || ""), seen[0].source);
+    ok("未登录取默认那一款的 free 子集，woff2 在前、woff 兜底",
+      seen[0].source === e.font.FACES[0].free[0]
+        && /-free\.woff2$/.test(seen[0].source) && /-free\.woff$/.test(e.font.FACES[0].free[1]),
+      seen[0].source);
   });
   e.restore();
 
@@ -842,9 +845,11 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   asTier("pro");
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
-    ok("Pro / Max 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0], proSeen[0]);
-    ok("Pro 与 Free 是两套地址",
-      ep.font.FACES[0].pro[0] !== ep.font.FACES[0].free[0]
+    ok("Pro 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0]
+      && /-pro\.woff2$/.test(proSeen[0]), proSeen[0]);
+    ok("Free / Pro / Max 是同一款的三份",
+      ep.font.FACES[0].free[0] !== ep.font.FACES[0].pro[0]
+        && ep.font.FACES[0].pro[0] !== ep.font.FACES[0].max[0]
         && ep.font.FACES[0].free[0] !== ep.font.FACES[1].free[0]);
     proSeen.length = 0;
     return ep.font.load();
@@ -867,6 +872,20 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     });
   });
   ep.restore();
+
+  const maxSeen = [];
+  asTier("max");
+  const em = bootFont({}, { loadFontFace: (o) => { maxSeen.push(o.source); o.success && o.success(); } });
+  em.font.load().then(() => {
+    ok("Max 取 max 那一份", maxSeen.length === 1 && maxSeen[0] === em.font.addresses(em.font.DEFAULT)[0]
+      && /-max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
+    maxSeen.length = 0;
+    const r = em.font.set("yozai");
+    ok("Pro 升 Max 后换一款，注册的是这款的 max 子集",
+      r.ok === true && maxSeen.length === 1 && /yozai-regular\/yozai-regular-max\.woff2$/.test(maxSeen[0]),
+      maxSeen.join(" | "));
+  });
+  em.restore();
 
   const fallback = [];
   asTier("free");
@@ -895,12 +914,12 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   asTier("pro");
   const epv = bootFont({}, { loadFontFace: (o) => { previewSeen.push(o); o.success && o.success(); } });
   epv.font.preview("chillkai").then((hit) => {
-    ok("字体卡那行预览取的是 -7 那两份，不是 free / pro",
+    ok("字体卡那行预览取的是 -7 那两份，不是 free / pro / max",
       hit === true && previewSeen.length === 1
         && previewSeen[0].source === epv.font.FACES[2].preview[0]
         && previewSeen[0].family === epv.font.FACES[2].previewFamily
         && epv.font.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0
-          && f.preview[0] !== f.free[0] && f.preview[0] !== f.pro[0]),
+          && f.preview[0] !== f.free[0] && f.preview[0] !== f.pro[0] && f.preview[0] !== f.max[0]),
       previewSeen.map((o) => o.family + " " + o.source).join(" | "));
     return epv.font.preview("chillkai");
   }).then((again) => {
@@ -3718,6 +3737,25 @@ function mountFull(pg, query) {
       && themeJs.indexOf("font.set(") >= 0
       && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
+
+  ok("预览那几份字族写进 page-meta，九格与正文样本同一页认得出（换了页面就没有了）",
+    themeWxml.indexOf("<page-meta page-font-size>") === 0
+      && themeJs.indexOf("previewFamilies") >= 0
+      && themeJs.indexOf("font.preview(") >= 0
+      && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
+    "预览字族没落到页面级的 page-meta 上");
+
+  ok("字体卡顶上那行样本取正文那一份，不是 7 子集",
+    /class="font-strip"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
+      && themeJs.indexOf("font.face(font.current()).family") >= 0
+      && fontMod.face().family !== fontMod.face().previewFamily,
+    "样本那行没用 load() 注册的那个字族");
+
+  ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
+    /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)
+      && themeJs.indexOf("warmPreview()") >= 0
+      && fontMod.pickable({ logged: false }) === false,
+    "未登录那一支没有字体卡，或者没预热预览");
 
   const rFree = (() => {
     tierAs("free");
