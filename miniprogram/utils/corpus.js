@@ -242,6 +242,9 @@ const PACKED = {
   books: function () {
     return require("../data/books/books.js");
   },
+  catalogs: function () {
+    return require("../data/books/catalogs.js");
+  },
   index: function () {
     return require("../data/books/index.js");
   },
@@ -350,7 +353,7 @@ function books() {
 }
 
 function bookById(id) {
-  const all = books();
+  const all = booksOf();
   for (let i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
   return null;
 }
@@ -364,6 +367,50 @@ function indexPack() {
     }
   }
   return indexCache || null;
+}
+
+let catalogCache = null;
+
+function catalogs() {
+  if (catalogCache === null) {
+    const pack = packed("catalogs");
+    catalogCache = pack && pack.books ? pack : false;
+  }
+  return catalogCache || null;
+}
+
+function booksOf() {
+  const pack = catalogs();
+  if (!pack) return books();
+  const counts = {};
+  pack.books.forEach(function (b) { counts[b.id] = b.count; });
+  return books().map(function (b) {
+    if (counts[b.id] === undefined) return b;
+    return { id: b.id, name: b.name, page: b.page, unit: b.unit, count: counts[b.id], remote: true };
+  });
+}
+
+function catalog(bookId) {
+  const pack = catalogs();
+  if (!pack || !pack.rows[bookId]) return null;
+  const meta = pack.books.filter(function (b) { return b.id === bookId; })[0] || null;
+  if (!meta) return null;
+  const rows = pack.rows[bookId].map(function (raw, i) {
+    const id = bookId + "-" + (i + 1);
+    return {
+      id: id,
+      sid: pack.ids[id] || "",
+      t: raw[0],
+      a: field(pack.dict, "a", raw[1]),
+      an: field(pack.dict, "d", raw[2]),
+      d: "",
+      n: meta.name,
+      b: bookId,
+      g: "",
+      remote: true
+    };
+  });
+  return { id: bookId, name: meta.name, unit: meta.unit, count: meta.count, rows: rows };
 }
 
 function field(dict, key, at) {
@@ -390,6 +437,11 @@ function rowOf(dict, raw, bookId) {
 
 function ofBook(bookId) {
   if (!bookCache[bookId]) {
+    const built = catalog(bookId);
+    if (built) {
+      bookCache[bookId] = built.rows;
+      return built.rows;
+    }
     const meta = bookById(bookId);
     const pack = indexPack();
     const rows = pack && pack.rows[bookId] ? pack.rows[bookId] : [];
@@ -453,7 +505,7 @@ function entries(ids) {
 }
 
 function ownerOf(id) {
-  const all = books();
+  const all = booksOf();
   let best = "";
   const s = String(id || "");
   for (let i = 0; i < all.length; i++) {
@@ -494,7 +546,7 @@ function search(keyword, opt) {
   if (!kw) return { items: [], total: 0 };
   const bookId = opt && opt.book;
   const limit = (opt && opt.limit) || 60;
-  const sources = bookId ? [bookId] : books().map((b) => b.id);
+  const sources = bookId ? [bookId] : booksOf().map((b) => b.id);
   const items = [];
   let total = 0;
 
@@ -556,6 +608,8 @@ module.exports = {
   splitDisplay,
   layout,
   books,
+  booksOf,
+  catalog,
   bookById,
   ownerOf,
   bookOf,

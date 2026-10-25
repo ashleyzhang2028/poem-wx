@@ -73,6 +73,7 @@
 
 ```
 pages/search  ─┐
+pages/reader  ─┤
 feihua/lib    ─┤
 game-scopes   ─┼→ utils/poem-source.js → utils/remote.js source()
                ┘                          → wx.cloud.callContainer
@@ -97,17 +98,27 @@ game-scopes   ─┼→ utils/poem-source.js → utils/remote.js source()
 
 ### 正文的取法
 
-正文全在包里：`corpus.entry(id)` 与 `corpus.ensureEntry(id)` 都只查
-`data/course.js`，取不到就报 `E_NO_TEXT`。阅读页照此显示
-「这一篇的正文不在这个包里」并给一个重试。
+```
+corpus.entry(id)          → 课内 251 条，读 data/course.js，取不到报 E_NO_TEXT
+poem-source.byId(sid)     → 十部集子的每一篇，GET /poems/{id} 即时取
+```
 
-课外正文、检索、飞花令判句走本文件的接口，与 `corpus` 无关。
+十部集子的目录在包里（`data/books/catalogs.js`，见 `docs/parity.md` 一），正文不在。
+阅读页拿到目录那一行的 `sid`（`tangshi300-11` 这样）后调 `GET /poems/{id}`，
+把 `content` 逐行拼成正文；译文献空 —— 课外库不带译文，那一段本来也不出。
+一次只取点开的那一篇，不预取整本。
+
+`data/site-catalogs.js` 里每部书的 `src` 决定 `sid` 的前缀（`tangshi300s` → `tangshi300`）。
+前缀换了等于换一套 id，本机「已读」与自选集合里的引用会跟着断，改之前先想清楚。
+
+检索与飞花令判句仍走本文件的 search 接口，与 `corpus` 无关。
 
 ### 界面上的话
 
 | 情况 | 说的话 |
 |---|---|
 | 这一篇正文不在包里 | 这一篇的正文不在这个包里 |
+| 集子里那一篇没取到 | 这一篇的正文没取到，点一下重试 |
 | 加了背但没配后端 | 还没接上课外库（取诗的那个服务），退出重进再看 |
 | 冷启动超时（`102002`） | 取正文超时了 —— 多半是服务实例刚被唤醒，重试一次 |
 

@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const source = require("../../utils/poem-source");
 const table = require("../../utils/table");
 const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
@@ -250,7 +251,31 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
+    if (meta.sid) return this.loadRemote(id, meta);
+
     this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里" });
+  },
+
+  loadRemote(id, meta) {
+    const token = (this.loadToken || 0) + 1;
+    this.loadToken = token;
+    this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
+
+    source.byId(meta.sid).then(
+      (poem) => {
+        if (token !== this.loadToken) return;
+        const text = source.textOf(poem);
+        if (!text) {
+          this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
+          return;
+        }
+        this.renderEntry(id, { text: text, tr: "", src: "" }, meta);
+      },
+      () => {
+        if (token !== this.loadToken) return;
+        this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文没取到，点一下重试" });
+      }
+    );
   },
 
   onRetryText() {

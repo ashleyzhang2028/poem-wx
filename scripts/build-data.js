@@ -44,6 +44,7 @@ const POEM_FILES = [
   "data/index.js",
   "data/site-books.js",
   "data/site-index.js",
+  "data/site-catalogs.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -138,8 +139,9 @@ function main() {
 
   dropStale();
   writeBookIndex(byBook);
+  const catalogs = writeCatalogs(W);
 
-  writeModule(path.join(OUT_DIR, "books", "books.js"), books);
+  writeModule(path.join(OUT_DIR, "books", "books.js"), books.concat(catalogs));
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
@@ -205,6 +207,49 @@ function writeBookIndex(byBook) {
 
   console.log("集子索引 " + books.join(" / ") + "，" +
     Math.round(fs.statSync(path.join(dir, "index.js")).size / 1024) + "KB");
+}
+
+function writeCatalogs(W) {
+  const catalogs = W.SITE_CATALOGS || null;
+  const order = W.SITE_CATALOG_ORDER || [];
+  if (!catalogs) throw noCorpus(path.join(CORPUS_DIR, "data", "site-catalogs.js"));
+
+  const dict = { a: [], d: [] };
+  const shared = {};
+  const put = function (key, v) {
+    if (!v) return -1;
+    const at = shared[key + "\u0000" + v];
+    if (at !== undefined) return at;
+    dict[key].push(v);
+    return (shared[key + "\u0000" + v] = dict[key].length - 1);
+  };
+
+  const books = [];
+  const rows = {};
+  const ids = {};
+
+  order.forEach(function (bookId) {
+    const c = catalogs[bookId];
+    if (!c || !c.rows || !c.rows.length) {
+      throw new Error("集子 " + bookId + " 在 data/site-catalogs.js 里没有 rows");
+    }
+    const prefix = String(c.src).replace(/s$/, "");
+    rows[bookId] = c.rows.map(function (r, i) {
+      ids[bookId + "-" + (i + 1)] = prefix + "-" + (i + 1);
+      return [r[0], put("a", r[1]), put("d", r[2])];
+    });
+    books.push({ id: bookId, name: c.name, unit: c.unit, count: c.rows.length });
+  });
+
+  writeModule(path.join(OUT_DIR, "books", "catalogs.js"), { books: books, rows: rows, ids: ids, dict: dict });
+
+  const total = books.reduce(function (n, b) { return n + b.count; }, 0);
+  console.log("集子目录 " + books.length + " 部 " + total + " 条，" +
+    Math.round(fs.statSync(path.join(OUT_DIR, "books", "catalogs.js")).size / 1024) + "KB");
+
+  return books.map(function (b) {
+    return { id: b.id, name: b.name, page: "/pages/list/list?book=" + b.id, unit: b.unit };
+  });
 }
 
 function writePinyin(W, courseTexts) {
