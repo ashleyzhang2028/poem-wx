@@ -1,7 +1,6 @@
 "use strict";
 
 var handler = require("./../_lib/handler");
-var shardRev = require("./../_lib/shard-rev");
 
 module.exports = handler.make("config", ["GET"], function (d) {
   var cfg = d.cfg;
@@ -13,9 +12,7 @@ module.exports = handler.make("config", ["GET"], function (d) {
   var out = {
     turnstile: turnstile,
 
-    mail: { delivered: String(cfg.mail ? cfg.mail() : "console") !== "console" },
-
-    corpus: { rev: shardRev.rev(), shards: shardRev.names().length }
+    mail: { delivered: String(cfg.mail ? cfg.mail() : "console") !== "console" }
   };
 
   return {

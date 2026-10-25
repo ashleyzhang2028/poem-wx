@@ -49,9 +49,6 @@ const CTX = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-mysql-"));
 fs.copyFileSync(path.join(REPO, "deploy-api-serve", "serve-api.js"), path.join(CTX, "serve-api.js"));
 fs.copyFileSync(path.join(REPO, "deploy", "store-mysql.js"), path.join(CTX, "store-mysql.js"));
 
-fs.copyFileSync(path.join(REPO, "deploy-api-serve", "shard-api.js"), path.join(CTX, "shard-api.js"));
-fs.copyFileSync(path.join(REPO, "deploy-api-serve", "shard-rev.js"), path.join(CTX, "shard-rev.js"));
-
 fs.mkdirSync(path.join(CTX, "node_modules", "mysql2"), { recursive: true });
 fs.copyFileSync(path.join(__dirname, "mysql-facade.js"), path.join(CTX, "node_modules", "mysql2", "promise.js"));
 fs.writeFileSync(path.join(CTX, "node_modules", "mysql2", "package.json"),

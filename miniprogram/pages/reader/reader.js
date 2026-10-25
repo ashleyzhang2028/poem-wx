@@ -246,49 +246,15 @@ Page({
       hit = null;
     }
     if (hit && hit.text) {
-      if (this.data.loadFailed) this.setData({ loadFailed: false, failText: "" });
+      this.setData({ loadFailed: false, failText: "", loadingText: false });
       return this.renderEntry(id, hit, meta);
     }
 
-    const token = (this.loadToken || 0) + 1;
-    this.loadToken = token;
-    this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
-    return corpus
-      .ensureEntry(id)
-      .then((entry) => {
-        if (token !== this.loadToken) return;
-        if (!entry) throw new Error("这一条不在任何分片里");
-        this.renderEntry(id, entry, this.findMeta(id));
-      })
-      ["catch"]((err) => {
-        if (token !== this.loadToken) return;
-        this.setData({ loadingText: false, loadFailed: true, failText: this.textFailMsg(err) });
-      });
+    this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里" });
   },
 
   onRetryText() {
     this.loadEntry();
-  },
-
-  textFailMsg(err) {
-    const code = (err && err.code) || "";
-    const say = this.errSay(err);
-    if (code === "E_NO_ENTRY") return "这一篇的正文不在库里，换一篇看看";
-    if (code === "E_NO_TEXT") return "这一篇的正文不完整，换一篇看看";
-    if (code === "E_SHARD_STALE") return "服务端语料比这一版旧，重新取一次";
-    if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器，退出重进再看";
-    if (code === "E_POEM_SOURCE_OFF") return "还没接上课外库（取诗的那个服务），退出重进再看";
-    if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
-    if (/102002|timed? ?out/i.test(say)) return "取正文超时了 —— 多半是服务实例刚被唤醒，重试一次";
-    if (/invalid host/i.test(say)) return "平台按服务名找不到取正文的服务（云托管里没有这个服务）";
-    if (/fail|Cloud API isn|service not found|env not exists/i.test(say)) return "连不上取正文的服务，重试一次";
-    if (/网络|不通/.test(say)) return "网络不通，稍后再试";
-    return "这一篇取不到正文";
-  },
-
-  errSay(err) {
-    if (!err) return "";
-    return String(err.errMsg || err.message || "");
   },
 
   renderEntry(id, entry, meta) {

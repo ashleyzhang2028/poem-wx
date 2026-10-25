@@ -4,7 +4,7 @@
 
 | 文件 | 干什么 |
 |---|---|
-| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080；里面装一个 `mysql2`；默认再拷一份正文分片（`COPY_SHREDS=0` 才不拷） |
+| `Dockerfile` | 只拷 `api/` 的运行时镜像，端口 8080；里面装一个 `mysql2` |
 | `store-mysql.js` | **服务端存储层的 MySQL 实现**（Issue #111）：那组 `getX/putX` 的另一种落地 |
 | `sql/mysql-schema.sql` | 建表语句（全部表，幂等）。⚠️ 它建的是**表**，落点那个**库要自己建**（`CREATE DATABASE \`poem\``），且执行前要 `USE \`poem\`;` —— 见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 3.1 / § 四 |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
@@ -98,52 +98,14 @@
 
 镜像名用 `${CNB_REPO_SLUG_LOWERCASE}`（本仓库）。**别写成 `${CNB_ROOT_SLUG}`**。
 
-## 正文分片（Issue #121 方案 A）
+## 镜像里没有语料
 
-分片跟主包一起走这个容器下发 —— **仍然免备案**。开关是构建参数 `COPY_SHREDS`：
+这份镜像只跑 `/api/*`。课内正文随小程序包下发，课外那部分语料连同正文分片、
+分片路由、语料版本一并删除（Issue #723），所以：
 
-| | 不写（**默认**） | `COPY_SHREDS=0` |
-|---|---|---|
-| 上下文里 | `shard-src/t001…t121.js.gz`（**只摊压缩后那份**，5.3MB）+ `upload.manifest` | 空目录（`shard-src/` 本身仍在，见下） |
-| 镜像里 | `/app/shards/`（5.3MB） | 没有 `/app/shards/` |
-| `/api/shard/*` | 200 + `Content-Encoding: gzip`（每片约 44KB） | `404 E_NO_SHARDS` |
-
-⚠️ **默认是「有」。** 正式版要发的就是课外正文，不带分片的镜像是给本地调试的。
-两档的语义要分清：`COPY_SHREDS` **没定义** → 走默认；`COPY_SHREDS: "0"` → 显式关。
-写成空串（`""`）是第三档，别用 —— 那既不是「没定义」也不是「明确不要」。
-
-四件事一起改才算接上，缺一样都是**不报错地坏**：
-
-1. `deploy-api-serve/shard-api.js` —— 路由本体（名字白名单 + gzip 下发 + 内存索引）
-2. `deploy/Dockerfile` 里 `COPY --chown=node:node shard-api.js ./` —— 把它从
-   上下文根拷进 `/app`。**放行 ≠ 进镜像**：少了这条 COPY 时上下文里有它、
-   构建与部署都是绿的，容器起来才 `Cannot find module './shard-api.js'`
-   （Issue #134）。它是 `serve-api.js` 启动期 require 的，与 `store-mysql.js`
-   一样得有一条自己的 COPY —— 另两句 COPY 不会顺手把它带上。
-3. `.cnb.yml` 的 stage context 里 `cp deploy-api-serve/shard-api.js /tmp/ctx/`，
-   以及 `if [ "${COPY_SHREDS:-1}" != "0" ]` 那段摊分片（**默认就摊**）。
-   摊分片走 `scripts/shard-stage.js`，缓存目录挂在 `docker.volumes: /tmp/poem-shard-cache`
-4. `deploy-api-serve/.dockerignore` 放行 `!shard-api.js`、`!shard-rev.js` 与
-   `!shard-src/**` —— 白名单那一行少了，构建与部署照样绿，而容器起不来
-   （Issue #115；`shard-rev.js` 是启动期 require 的同一种，漏了就是同一种症状）。
-
-`.cnb.yml` 的 build & push 在 build 前逐条断上面 2 / 3 / 4（缺了当场退出）；
-`scripts/check.js` V53 逐条守着上面四点 + 客户端那一半；
-`scripts/e2e-mysql.js` 也摊一遍上下文（它曾经因为少摊 `shard-api.js` 而炸过）。
-
-**为什么分片只摊 gzip 那份**：上下文里 5.3MB vs 25MB。容器发的就是这些字节，
-一个都不用解 —— 见 `shard-api.js` 的 `gzipped()`。倒排索引 `idx.js` 不摊：
-客户端只打 `t\d{3}`，服务端没有它的路由。
-
-**摊分片为什么有缓存**：分片内容由语料决定，不由 commit 决定。`shard-stage.js`
-按 `sha256(语料清单 + 编译脚本)` 判断能不能直接复用上一版摊好的那份，省掉一轮
-`build-data.js` 与 121 次 gzip。Docker 按文件内容算 COPY 层的缓存键，语料变了
-（`t001`→`t002`）那 5.3MB 仍然要传，这一步省不掉；日志里那行 `分片清单 <hash>`
-相同才说明这次真的没重传。
-
-要瘦镜像才在 `.cnb.yml` 的 `env:` 加 `COPY_SHREDS: "0"`（字面量，别写 `${…:-…}`）。
-
-账（体积 / 流量 / 实例 / 与 CDN 的对比）见 [`../docs/shard-delivery.md`](../docs/shard-delivery.md)。
+- 构建上下文只有 `api/` 与两个服务壳文件（约 0.3MB），没有 `shard-src/` 那一层
+- 没有 `COPY_SHREDS` 这面旗，也没有 `/app/shards/`
+- 没有 `/api/shard/*` 这条路由；`GET /api/config` 只回 `turnstile` 与 `mail`
 
 ## 瘦身省了什么
 
@@ -164,6 +126,6 @@
 ## 本机怎么构建
 
 ```bash
-bash deploy/build.sh            # 构建并报体积（分片由 scripts/shard-stage.js 现摊）
+bash deploy/build.sh            # 构建并报体积
 bash deploy/build.sh --dry-run  # 只看上下文，不构建
 ```

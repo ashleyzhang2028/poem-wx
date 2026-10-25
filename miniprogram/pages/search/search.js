@@ -1,6 +1,5 @@
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
-const textSearch = require("../../utils/text-search");
 const source = require("../../utils/poem-source");
 const gate = require("../../utils/gate");
 const loginFlow = require("../../utils/login-flow");
@@ -24,7 +23,6 @@ Page({
     barBelow: true,
     keyword: "",
 
-    fullOn: false,
     results: [],
 
     total: 0,
@@ -36,11 +34,6 @@ Page({
     resultWhere: "",
 
     more: false,
-    loading: false,
-
-    fromFull: false,
-    partial: false,
-    resultMore: "",
 
     icons: { search: icons.search, clear: icons.clear, playlist: icons.playlist }
   },
@@ -54,12 +47,9 @@ Page({
       return;
     }
     const saved = store.settings();
-    const fr = textSearch.readiness();
-    const sr = source.readiness();
     this.setData({
       locked: false,
-      keyword: this.data.keyword || saved.lastSearch || "",
-      fullOn: fr.usable || sr.usable
+      keyword: this.data.keyword || saved.lastSearch || ""
     });
   },
 
@@ -71,28 +61,14 @@ Page({
     this.setData({ keyword: e.detail.value });
   },
 
-  onUnload() {
-    this.busy = false;
-    this.session = null;
-    this.sourceToken = (this.sourceToken || 0) + 1;
-    clearTimeout(this.fullTimer);
-    this.fullTimer = null;
-  },
-
   onClear() {
-    this.busy = false;
-    this.session = null;
-    this.sourceToken = (this.sourceToken || 0) + 1;
-    clearTimeout(this.fullTimer);
     this.setData({
       keyword: "",
       results: [],
       total: 0,
       searched: false,
       searching: false,
-      more: false,
-      loading: false,
-      partial: false
+      more: false
     });
   },
 
@@ -112,49 +88,16 @@ Page({
     }
     store.saveSettings({ lastSearch: kw });
 
-    this.busy = false;
-    this.session = null;
-    this.sourceToken = (this.sourceToken || 0) + 1;
-
     const r = this.byIndex(kw);
-    if (r.total >= (this.data.fullOn ? BATCH : 1)) {
-      this.fromPack = true;
-      this.total = r.total;
-      this.setData({
-        results: r.items.slice(0, BATCH),
-        total: r.total,
-        more: r.total > BATCH,
-        searched: true,
-        searching: false,
-        loading: false,
-        fromFull: false,
-        resultWhere: "篇名作者 · 全站"
-      }, () => this.refreshPicked());
-      return;
-    }
-
-    if (!this.data.fullOn) {
-      this.setData({
-        results: [],
-        total: 0,
-        more: false,
-        searched: true,
-        searching: false,
-        loading: false,
-        fromFull: false,
-        resultWhere: "篇名作者 · 全站"
-      });
-      return;
-    }
-
-    this.setData({ searching: true, searched: false, more: false, loading: false, partial: false });
-
-    clearTimeout(this.fullTimer);
-    if (source.usable()) {
-      this.fullTimer = setTimeout(() => this.runSource(kw), 16);
-      return;
-    }
-    this.fullTimer = setTimeout(() => this.runFull(kw), 16);
+    this.total = r.total;
+    this.setData({
+      results: r.items.slice(0, BATCH),
+      total: r.total,
+      more: r.total > BATCH,
+      searched: true,
+      searching: false,
+      resultWhere: "篇名作者 · 课内"
+    }, () => this.refreshPicked());
   },
 
   runSource(kw) {
@@ -248,24 +191,6 @@ Page({
     };
   },
 
-  runFull(kw) {
-    let session = null;
-    try {
-      session = textSearch.makeSession(kw, {});
-    } catch (e) {
-      session = null;
-    }
-    if (!session) {
-      this.setData({ results: [], total: 0, searched: true, searching: false, more: false, loading: false });
-      return;
-    }
-    this.session = session;
-    this.busy = true;
-    this.fromPack = false;
-    this.got = {};
-    this.pushBatch();
-  },
-
   pickedMap() {
     const map = {};
     cols.list().forEach((c) => {
@@ -329,71 +254,10 @@ Page({
   },
 
   onReachBottom() {
-    if (!this.data.more || this.data.loading) return;
-    if (this.data.fromFull && source.usable()) {
-      this.moreSource();
-      return;
-    }
-    if (this.fromPack) {
-      const want = this.data.results.length + BATCH;
-      const r = this.byIndex(this.data.keyword.trim(), want);
-      this.setData({ results: r.items.slice(0, want), more: this.total > want }, () => this.refreshPicked());
-      return;
-    }
-    this.pushBatch();
-  },
-
-  pushBatch() {
-    const session = this.session;
-    if (!this.busy || !session) return;
-
-    this.setData({ loading: true });
-
-    let batch = [];
-    try {
-      batch = textSearch.nextBatch(session, BATCH);
-    } catch (e) {
-      batch = [];
-    }
-    if (!this.busy || this.session !== session) return;
-
-    const more = batch.length > BATCH;
-    const rows = [];
-    const seen = this.got || (this.got = {});
-    const fullHit = this.gotFull || batch.some((h) => h.where !== "pack");
-    this.gotFull = fullHit;
-    (more ? batch.slice(0, BATCH) : batch).forEach((h) => {
-      if (seen[h.entry.id]) return;
-      seen[h.entry.id] = 1;
-      rows.push({
-        id: h.entry.id,
-        title: h.entry.t,
-        author: h.entry.a,
-        dynasty: h.entry.d,
-        bookName: h.entry.n,
-        lines: h.lines,
-        where: h.where === "pack" ? "课内" : "课外"
-      });
-    });
-
-    const results = this.data.results.concat(this.decorate(rows));
-
-    this.setData({
-      results: results,
-      total: results.length,
-      more: more && !session.done,
-      loading: false,
-      searched: true,
-      searching: false,
-      fromFull: true,
-      partial: session.partial,
-      resultMore: more
-        ? "每次 20 篇，往下拉接着出"
-        : session.partial
-        ? "命中的片很多，先扫了命中字最多的那几片"
-        : "就这些了",
-      resultWhere: fullHit ? "正文全文 · 全站" : "篇名作者 · 全站"
-    });
+    if (!this.data.more) return;
+    const want = this.data.results.length + BATCH;
+    const r = this.byIndex(this.data.keyword.trim(), want);
+    this.setData({ results: r.items.slice(0, want), more: this.total > want }, () => this.refreshPicked());
   },
 
   onOpen(e) {

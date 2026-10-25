@@ -36,7 +36,7 @@
           <text class="poem-note-t">{{aliasText}}</text>
         </view>
 
-        <view class="poem-loading" wx:if="{{loadingText}}"></view>
+
       </view>
 
       <view class="prefs">
@@ -107,10 +107,7 @@
           </view>
         </block>
         <view class="poem-miss" wx:else>
-          <text class="hint poem-miss-t">{{loadingText ? '正在取这一首的正文' : textMiss}}</text>
-          <view class="btn primary mini poem-miss-btn" wx:if="{{!loadingText && textMiss && syncable}}"
-                hover-class="button-hover" hover-stay-time="60"
-                bindtap="onSyncText">重新获取</view>
+          <text class="hint poem-miss-t">{{textMiss}}</text>
         </view>
       </view>
 

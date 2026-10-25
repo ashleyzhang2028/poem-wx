@@ -26,15 +26,12 @@
 
 - `api/**` —— 后端本体
 - `deploy/**` —— Dockerfile、SQL、MySQL 存储层
-- `deploy-api-serve/**` —— 云托管那层服务壳与分片路由
+- `deploy-api-serve/**` —— 云托管那层服务壳
 - `scripts/corpus/**` —— 语料本体
 - `scripts/build-data.js` —— 语料编译
-- `scripts/shard-stage.js` —— 分片摊平与 gzip
 - `.cnb.yml` —— 流水线自身
 
-`miniprogram/data/texts/` 在 `packOptions.ignore` 里，课外正文不进包，一律向
-`/api/shard/<name>` 取；镜像里的分片由 `scripts/shard-stage.js` 从 `scripts/corpus/`
-现构建，因此改语料必须重出镜像，否则线上分片停在上一版。
+这份镜像只跑 `/api/*`（登录 / 同步 / 管理 / 支付）。语料不进镜像：课内正文随小程序包下发。
 
 只改 `miniprogram/**`、`docs/**` 时流水线**不跑**，镜像停在上一版 ——
 这类改动由体验版验证，不用等镜像。手动点一次发布（`web_trigger_release`）不受这份名单约束。
@@ -88,44 +85,11 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
   建 classic：[这个链接](https://github.com/settings/tokens/new?scopes=write:packages)
 - 两组 token 不能互相顶替（`contents` 与 `packages` 在两个体系里分开）
 
-## 一点五、镜像里要不要带正文分片
+## 一点五、镜像里不带语料
 
-**默认带。** 课外那 5604 首的正文分片（gzip 后 5.3MB）随镜像走，
-由一面旗决定要不要关掉：
-
-| 构建参数 `COPY_SHREDS` | 镜像 | `/api/shard/*` | 什么时候用 |
-|---|---|---|---|
-| 不写（默认） | **含分片**（+5.3MB） | 200 gzip | 正式版 —— 用户要能背课外那 5604 首 |
-| `=0` | 不含分片 | `404 E_NO_SHARDS` | 调后端、试登录、回滚验证 |
-
-⚠️ **别把它读反。** 这里以前写的是「默认不带」，而线上正式版因此少了一半功能：
-课外正文一直回 `E_NO_SHARDS`，界面上说的是「这个版本里没有课外正文」——
-那句话是给调试镜像留的，不是给用户看的。
-
-开着它，就是从 `<服务名>-<环境ID>.sh.run.tcloudbase.com` 的容器直接把分片发给
-小程序 —— **仍然免备案**（云调用不走那份域名名单）。为什么可以这样、
-代价是什么、一个月大概多少钱，见 [`shard-delivery.md`](shard-delivery.md)。
-
-**默认那一档不用做任何事** —— 不写就是带分片。要瘦镜像才在 `.cnb.yml` 的 `env:` 里关：
-
-```yaml
-env:
-  COPY_SHREDS: "0"
-```
-
-⚠️ 值是**字面量**，别写 `${VAR:-1}` —— CNB 的变量替换只认 `$VAR`，
-另外两种写法既不报错也不清空，会原样拼进参数，直到 docker 才炸。
-
-⚠️ 关掉这面旗时，小程序里点开一首课外诗会看到「这个版本里没有课外正文」——
-**这时是对的，不是坏了**。课内那 251 首不受影响（它们在主包里）。
-
-### 这条路与「后端走云调用免备案」是同一条口径
-
-| | 走哪条通道 | 要备案吗 |
-|---|---|---|
-| 登录 / 同步 / 管理 | 云调用（`/api/*`） | 不要 |
-| **正文分片** | 云调用（`/api/shard/*`） | **不要** |
-| 走公网的 CDN / 自有域 | request / downloadFile | **要**（`todo.md` 第 13 条） |
+镜像只跑 `/api/*`（登录 / 同步 / 管理 / 支付）。课内正文随小程序包下发，
+课外那部分语料连同正文分片整体删掉（Issue #723），所以镜像里既没有分片、
+也没有 `COPY_SHREDS` 这面旗，构建上下文约 0.3MB。
 
 ## 二、建服务
 
@@ -167,23 +131,11 @@ env:
   `npu-gpu-cpu/poem-wechat-mini-program`，当场复制
 - 凭据不是环境变量，别和 § 3 混
 
-### 二点五、核对线上是哪一版语料
+### 二点五、线上这一版是哪一版
 
-镜像和小程序包各自带一份语料，只有一致时课外正文才对得上。两边都能自报版本号：
-
-- 镜像：`GET /api/config` 的 `corpus.rev`（也可以打 `/api/shard/__meta`）
-- 小程序：启动日志那行 `[跬步] 版本 …` 之前会打印 `语料 <rev>`；`miniprogram/data/shards.js`
-  的 `v` 是同一个值（`node -e "console.log(require('./miniprogram/data/shards.js').v)"`）
-
-两个值相同 = 这一版镜像装的就是这一版语料。不同 = 镜像落后于小程序包，
-`/api/shard/*` 的响应头会带 `X-Corpus-Rev`（镜像那份）与 `X-Corpus-Stale: 1`
-（请求带 `?v=` 且与镜像那份不等时才有），小程序把这种失败报成
-「服务端语料比这一版旧」，而不是「这一片正文不完整」。
-
-看到了 `X-Corpus-Stale` 该做什么：按 § 一 重新触发一次发布流水线，
-确认 `stage context` 那步打出 `✓ 摊出 N 片`，回控制台把 tag 换成新的短 sha
-重新部署（见 § 二）。`/api/config` 的 `corpus.rev` 变成小程序包里那个值，
-这一步才算完。
+镜像只跑 `/api/*`，镜头上没有语料。`GET /api/count` 回 `ok` 加一张接口清单，
+`GET /api/config` 回 `turnstile` 与 `mail` 两项。想看这一版是哪个短 sha，
+在控制台看服务详情里的镜像 tag。
 
 ### 二点六、课外正文与检索：另有一个服务 `poem-source`
 
@@ -518,7 +470,6 @@ curl -s -X POST https://<域>/api/sync/pull \
 | 服务日志报 `配了 MYSQL_HOST 但镜像里没有 mysql2` | 镜像里那个依赖没装上 | 那是 `deploy/Dockerfile` 的 `npm install … mysql2` 那步；重推一次 `main` 出镜像 |
 | 服务日志报 `ER_NO_SUCH_TABLE` | 建表语句没跑（或只跑了一半） | § 四，把 `deploy/sql/mysql-schema.sql` 整段重跑一遍（幂等） |
 | 容器起不来，报 `Back-off restarting failed container`，日志里是 `Cannot find module './_lib/…'` 或 `'./_routes/…'` | 镜像里的 `api/` 是**空壳** —— 构建上下文的白名单只放行了 `api/` 根那层（`!api/**` 不跨层），底下没进去 | 这一版已修（白名单逐条放行 `api/_lib/**` 与 `api/_routes/**`，`.cnb.yml` 在 build 前按 `api/_lib/routes.js` 那张表核一遍）。旧镜像要**重推一次 `main`** 取新的；别去改容器的启动命令，它救不了缺文件 |
-| 同上，但报的是 `Cannot find module './shard-api.js'` | 白名单没放行那一个文件（Issue #115） | 同上，重推 `main`。`shard-api.js` 是 `serve-api.js` 在**启动那一刻** require 的，`/healthz` 探活看不到这一份 |
 | **DMS 里只能选系统库**（`information_schema` / `mysql` / `sys` / `performance_schema` / `__cdb_recycle_bin__`） | 库压根没建 —— 那五个是 MySQL 自己的 | § 3.1，先 `CREATE DATABASE \`poem\``。**别将就在 `mysql` 库里建表** |
 | SQL 窗口报 `No database selected` | 没切当前库 | § 四：执行前 `USE \`poem\`;`（`SELECT DATABASE();` 确认） |
 | 服务日志报 `ER_BAD_DB_ERROR` | `MYSQL_DATABASE` 与真建的库名不是同一个 | § 3.1：建的库名与环境变量逐字对上，然后**重部署**让新变量生效 |

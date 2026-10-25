@@ -10,27 +10,11 @@ const GROUPS = [
     name: "课内诗词",
     note: "一至高三 · 按年级分册",
     books: ["poems"]
-  },
-  {
-    key: "texts",
-    name: "诗文典籍",
-    books: ["classic", "guwen", "yuefu", "tangshi", "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"]
-  },
-  {
-    key: "people",
-    name: "人物",
-    books: ["dwang", "dwang-waiguo", "mingren", "mingren-waiguo"]
-  },
-  {
-    key: "common",
-    name: "文史常识",
-    books: ["chengyu", "changshi", "mingshu"]
   }
 ];
 
-function groupDesc(g, books) {
-  if (g.note) return g.note;
-  return books.map((b) => String(b.name).replace(/[「」]/g, "")).join(" / ");
+function groupDesc(g) {
+  return g.note || "";
 }
 
 Page({
@@ -62,7 +46,7 @@ Page({
       return {
         key: g.key,
         name: g.name,
-        desc: groupDesc(g, books),
+        desc: groupDesc(g),
         books: books.map((b) => ({
           id: b.id,
           name: b.name,
@@ -86,6 +70,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "课外阅读", path: "/pages/library/library" };
+    return { title: "课内诗词", path: "/pages/library/library" };
   }
 });
