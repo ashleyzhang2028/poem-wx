@@ -3733,6 +3733,19 @@ function mountFull(pg, query) {
       && fontMod.options().length === fontMod.FACES.length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
+  ok("预览那几份字族写进 page-meta，九格与正文样本同一页认得出（换了页面就没有了）",
+    themeWxml.indexOf("<page-meta page-font-size>") === 0
+      && themeJs.indexOf("previewFamilies") >= 0
+      && themeJs.indexOf("font.preview(") >= 0
+      && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
+    "预览字族没落到页面级的 page-meta 上");
+
+  ok("字体卡顶上那行样本取正文那一份，不是 7 子集",
+    /class="font-strip"[^>]*font-family:'\{\{bodyFamily\}\}'/.test(themeWxml)
+      && themeJs.indexOf("font.face(font.current()).family") >= 0
+      && fontMod.face().family !== fontMod.face().previewFamily,
+    "样本那行没用 load() 注册的那个字族");
+
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)
       && themeJs.indexOf("warmPreview()") >= 0

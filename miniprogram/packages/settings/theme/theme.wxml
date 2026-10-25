@@ -1,3 +1,7 @@
+<page-meta page-font-size>
+  <view wx:for="{{previewFamilies}}" wx:key="*this" style="font-family:'{{item}}'">{{fontSample}}</view>
+</page-meta>
+
 <view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
 
@@ -11,6 +15,8 @@
       <text class="card-title group-title">字体</text>
       <tier-tag tier="{{fontTier}}" />
     </view>
+
+    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
@@ -122,6 +128,8 @@
       <text class="card-title group-title">字体</text>
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
+
+    <view class="font-strip" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
