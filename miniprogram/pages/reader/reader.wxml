@@ -137,7 +137,7 @@
       <view class="meter-fill" style="width:{{mastery}}%"></view>
     </view>
 
-    <text class="hint hint-line result-hint" wx:if="{{hint}}">{{hint}}</text>
+    <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">

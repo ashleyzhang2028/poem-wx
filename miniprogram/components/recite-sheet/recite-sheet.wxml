@@ -159,7 +159,7 @@
         </view>
       </view>
 
-      <text class="hint hint-line result-hint" wx:if="{{hint}}">{{hint}}</text>
+      <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
     </view>
   </view>
 </view>
