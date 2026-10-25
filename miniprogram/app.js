@@ -55,8 +55,7 @@ App({
   },
 
   reloadFont() {
-    font.load().catch(() => {});
-    font.loadAll();
+    font.refresh();
   },
 
   stampBuild() {

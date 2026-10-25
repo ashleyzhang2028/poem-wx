@@ -1,18 +1,16 @@
 const store = require("./store");
 const entitlement = require("./entitlement");
 
-const TIER = "pro";
-
 const FONTS = [
-  { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", stem: "zhuquefangsong-regular/zhuquefangsong-regular-" },
-  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", stem: "huiwenmincho-improved/huiwenmincho-improved-" },
-  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", stem: "chillkai/chillkai-" },
-  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", stem: "cooperzhengkai/cooperzhengkai-" },
-  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", stem: "lxgwwenkai-regular/lxgwwenkai-regular-" },
-  { key: "oldsong", name: "京华老宋", note: "老宋 · 旧籍纸墨", stem: "kinghwa_oldsong_v3/kinghwa_oldsong_v3-" },
-  { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", stem: "chilljinshusongpro/chilljinshusongpro_regular-" },
-  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", stem: "yozai-regular/yozai-regular-" },
-  { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", stem: "chilllongcangkai_regular/chilllongcangkai_regular-" }
+  { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", dir: "zhuquefangsong-regular" },
+  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", dir: "huiwenmincho-improved" },
+  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", dir: "chillkai" },
+  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", dir: "cooperzhengkai" },
+  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", dir: "lxgwwenkai-regular" },
+  { key: "oldsong", name: "京华老宋", note: "老宋 · 旧籍纸墨", dir: "kinghwa_oldsong_v3" },
+  { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", dir: "chilljinshusongpro_regular" },
+  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", dir: "yozai-regular" },
+  { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" }
 ];
 
 const PREVIEW = "烟花三月下扬州";
@@ -21,14 +19,21 @@ const DEFAULT = "zhuque";
 
 const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/";
 
+const SUBSETS = ["woff2", "woff"];
+
+function files(dir, size) {
+  return SUBSETS.map((ext) => BASE + dir + "/" + dir + "-" + size + "." + ext);
+}
+
 const FACES = FONTS.map((f) => ({
   key: f.key,
   name: f.name,
   note: f.note,
   family: "Kuibu Poem " + f.key,
-  free: [BASE + f.stem + "free.woff2", BASE + f.stem + "free.woff"],
-  pro: [BASE + f.stem + "pro.woff2", BASE + f.stem + "pro.woff"],
-  preview: [BASE + f.stem + "7.woff2", BASE + f.stem + "7.woff"],
+  free: files(f.dir, "free"),
+  pro: files(f.dir, "pro"),
+  max: files(f.dir, "max"),
+  preview: files(f.dir, "7"),
   previewFamily: "Kuibu Preview " + f.key
 }));
 
@@ -48,7 +53,7 @@ function pickable() {
 }
 
 function tier() {
-  return TIER;
+  return "pro";
 }
 
 function current() {
@@ -71,9 +76,15 @@ function stack(key) {
     + ", " + STACK;
 }
 
+function shelf() {
+  const tier0 = entitlement.status().tier;
+  if (tier0 === "max") return "max";
+  if (tier0 === "pro") return "pro";
+  return "free";
+}
+
 function addresses(key) {
-  const f = BY_KEY[key] || FREE_FACE;
-  return pickable() ? f.pro.slice() : f.free.slice();
+  return face(key)[shelf()].slice();
 }
 
 function configured() {
@@ -114,10 +125,10 @@ function sequence(face0, list) {
   );
 }
 
-let loaded = {};
+const loaded = {};
 
 function familyOf(source) {
-  const hit = FACES.filter((f) => f.pro.concat(f.free).indexOf(source) >= 0)[0];
+  const hit = FACES.filter((f) => f.free.concat(f.pro, f.max).indexOf(source) >= 0)[0];
   return hit ? hit.family : "";
 }
 
@@ -127,7 +138,7 @@ function load() {
 
   if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
 
-  const key = f.key + " " + list.join(" ");
+  const key = f.key + " " + shelf() + " " + list.join(" ");
   if (loaded[key]) return loaded[key];
 
   loaded[key] = sequence(f, list).then((ok) => {
@@ -137,7 +148,7 @@ function load() {
   return loaded[key];
 }
 
-let previews = {};
+const previews = {};
 
 function preview(key) {
   const f = BY_KEY[key];
@@ -161,6 +172,11 @@ function loadAll() {
     .forEach((f) => { sequence(f, sourcesOf(f)).catch(() => {}); });
 }
 
+function refresh() {
+  load().catch(() => {});
+  loadAll();
+}
+
 function set(key) {
   const f = BY_KEY[key];
   if (!f) return { ok: false, reason: "unknown" };
@@ -173,11 +189,12 @@ function set(key) {
   } catch (e) {
 
   }
+  refresh();
   return { ok: true, changed: true, font: key };
 }
 
 module.exports = {
   FONTS, FACES, DEFAULT, BASE, PREVIEW, readiness, options,
-  paid, pickable, tier, current, face, stack,
-  addresses, configured, load, loadAll, preview, set
+  paid, pickable, tier, current, face, stack, shelf,
+  addresses, configured, load, loadAll, preview, set, refresh
 };
