@@ -885,6 +885,18 @@ if (fs.existsSync(pinyinTable)) {
     pinyin.annotate("白发三千丈", "rare").every((c) => !c.mark));
 
   ok("多音字按词组消歧 白发→fà", pinyin.readOf("发", "白发", 1) === "fà", pinyin.readOf("发", "白发", 1));
+
+  const wordMiss = [];
+  Object.keys(pt.words || {}).forEach((w) => {
+    const chars = Array.from(w);
+    chars.forEach((ch, off) => {
+      if (!pinyin.readings(ch).length || ch === "一") return;
+      const got = pinyin.readOf(ch, w, off);
+      if (got !== pt.words[w][off]) wordMiss.push(w + chars[off] + got);
+    });
+  });
+  ok("词组表逐字生效（词内每个字都按表读）", wordMiss.length === 0,
+    wordMiss.slice(0, 5).join(" ") + (wordMiss.length > 5 ? " …共 " + wordMiss.length : ""));
   ok("关掉注音就不切词", pinyin.annotate("床前明月光", "off").every((c) => !c.mark));
 
   const csplit = require(path.join(ROOT, "utils", "corpus.js")).splitLines;
