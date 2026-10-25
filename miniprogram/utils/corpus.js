@@ -407,6 +407,7 @@ function catalog(bookId) {
       n: meta.name,
       b: bookId,
       g: "",
+      inCourse: raw[3] === 1,
       remote: true
     };
   });

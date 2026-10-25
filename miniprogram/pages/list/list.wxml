@@ -49,7 +49,10 @@
             wx:for="{{item.items}}" wx:for-item="p" wx:key="id" data-id="{{p.id}}" bindtap="onOpen">
       <text class="seq">{{p.seq}}</text>
       <view class="row-main">
-        <text class="row-title row-poem">{{p.title}}</text>
+        <view class="row-head">
+          <text class="row-title row-poem">{{p.title}}</text>
+          <text class="tag row-tag course" wx:if="{{p.inCourse}}">课内</text>
+        </view>
         <text class="row-sub">{{p.dynasty ? p.dynasty + ' · ' : ''}}{{p.author || '佚名'}}</text>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>

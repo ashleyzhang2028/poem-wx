@@ -83,3 +83,19 @@
   padding-left: var(--sp-2);
   font-variant-numeric: tabular-nums;
 }
+
+.row-head {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.row-head .row-title {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.row-head .tag {
+  margin-left: 10rpx;
+  margin-right: 0;
+}
