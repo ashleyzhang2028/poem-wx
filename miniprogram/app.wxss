@@ -1601,6 +1601,10 @@ button, textarea {
   padding-top: var(--sp-2);
 }
 
+.result-hint {
+  white-space: nowrap;
+}
+
 .trans-head {
   display: flex;
   align-items: center;

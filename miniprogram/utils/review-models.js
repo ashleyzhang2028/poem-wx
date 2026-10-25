@@ -360,7 +360,7 @@ function pushHistory(r, result, t, level) {
 function resultHint(key, result, rec) {
   if (!rec || !rec.nextReviewAt) return "已记录";
   const d = new Date(rec.nextReviewAt);
-  return "下次复习：" + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
+  return "下次复习 " + (d.getMonth() + 1) + "-" + d.getDate();
 }
 
 function list() {

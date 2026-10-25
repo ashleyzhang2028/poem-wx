@@ -3475,7 +3475,7 @@ function mountFull(pg, query) {
       const at = new Date(2025, 0, 7, 9, 0, 0).getTime();
       const hint = rm.resultHint("k", "good", { nextReviewAt: at });
       const other = rm.resultHint("k", "good", { nextReviewAt: at + 86400000 });
-      return hint.indexOf("1 月 7 日") >= 0 && other.indexOf("1 月 8 日") >= 0;
+      return hint.indexOf("1-7") >= 0 && other.indexOf("1-8") >= 0;
     })(),
     "提示若自己按结果类型算「N 小时 / N 分钟后」，就和记录上的 nextReviewAt 对不上 —— "
       + "用户照着提示去等，等到的不是排期里那一天");
