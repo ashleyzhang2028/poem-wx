@@ -26,9 +26,8 @@ Page({
 
     fonts: [],
     font: font.DEFAULT,
-    fontSample: font.PREVIEW,
-    bodyFamily: font.face(font.DEFAULT).family,
-    previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
+    fontSample: font.SAMPLE,
+    previewFamily: font.PREVIEW_FAMILY,
     fontLocked: true,
     fontTier: "pro"
   },
@@ -36,20 +35,12 @@ Page({
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
-    this.loadSample();
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
   },
 
-  loadSample() {
-    const key = font.current();
-    font.load().then((ok) => {
-      if (ok && this.data.font === key) this.setData({ bodyFamily: font.face(key).family });
-    }).catch(() => {});
-  },
-
   warmPreview() {
-    font.options().forEach((f) => { font.preview(f.key).catch(() => {}); });
+    font.preview().catch(() => {});
   },
 
   view() {
@@ -61,8 +52,7 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
-      bodyFamily: font.face(font.current()).family,
-      previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
+      previewFamily: font.PREVIEW_FAMILY,
       fontLocked: !pickable,
       fontTier: font.tier(),
       toneView: theme.toneData()
@@ -206,8 +196,7 @@ Page({
       return;
     }
     if (!r.changed) return;
-    this.setData(this.view());
-    this.warmPreview();
+    this.setData({ font: font.current() });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });
