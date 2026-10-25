@@ -39,8 +39,7 @@ const FACES = FONTS.map((f) => ({
   family: "Kuibu Poem " + f.key,
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
-  max: files(f.dir, "max"),
-  glyphs: {}
+  max: files(f.dir, "max")
 }));
 
 const BY_KEY = {};
@@ -160,35 +159,6 @@ function preview() {
   return previews.face;
 }
 
-function glyphs(f, list) {
-  if (!f.glyphs[list.join(" ")]) f.glyphs[list.join(" ")] = sequence(f.family, list);
-  return f.glyphs[list.join(" ")];
-}
-
-function paint(f, list) {
-  const box = wx.createOffscreenCanvas ? wx.createOffscreenCanvas({ type: "2d", width: 64, height: 64 }) : null;
-  const ctx = box && box.getContext ? box.getContext("2d") : null;
-  if (!ctx) return true;
-  ctx.font = '40px "' + f.family + '", monospace';
-  return SAMPLE.split("").every((c) => ctx.measureText(c).width !== 0);
-}
-
-function ready(key) {
-  const f = face(key);
-  const list = configured(f.key);
-  if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-  if (!glyphsReady()) return load();
-  return glyphs(f, list).then((ok) => (ok ? paint(f, list) : false)).then((ok) => {
-    if (ok) return true;
-    delete loaded[f.key + " " + shelf() + " " + list.join(" ")];
-    return load();
-  });
-}
-
-function glyphsReady() {
-  return typeof wx.createOffscreenCanvas === "function";
-}
-
 function familyOf(key) {
   return face(key || current()).family;
 }
@@ -230,5 +200,5 @@ module.exports = {
   FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW_FAMILY, PREVIEW_DIR, PREVIEW_FILES, SUBSETS,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, shelf,
-  addresses, configured, load, loadAll, preview, ready, set, refresh
+  addresses, configured, load, loadAll, preview, set, refresh
 };

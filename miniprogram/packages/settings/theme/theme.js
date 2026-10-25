@@ -27,32 +27,16 @@ Page({
     fonts: [],
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
-    bodyFamily: font.familyOf(font.DEFAULT),
     previewFamily: font.PREVIEW_FAMILY,
     fontLocked: true,
-    fontTier: "pro",
-    fontReady: false,
-    sampleReady: true
+    fontTier: "pro"
   },
 
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
-    this.loadSample();
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
-  },
-
-  loadSample() {
-    const key = font.current();
-    if (this.data.font !== key) this.setData({ fontReady: false });
-    font.ready(key).then((ok) => {
-      this.setData({
-        bodyFamily: font.familyOf(key),
-        fontReady: ok,
-        sampleReady: true
-      });
-    }).catch(() => {});
   },
 
   warmPreview() {
@@ -68,7 +52,6 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
-      bodyFamily: font.familyOf(font.current()),
       previewFamily: font.PREVIEW_FAMILY,
       fontLocked: !pickable,
       fontTier: font.tier(),
@@ -213,8 +196,7 @@ Page({
       return;
     }
     if (!r.changed) return;
-    this.setData(Object.assign({ sampleReady: false }, this.view()));
-    this.loadSample();
+    this.setData({ font: font.current() });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

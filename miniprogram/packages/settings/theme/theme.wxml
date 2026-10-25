@@ -18,8 +18,6 @@
       <tier-tag tier="{{fontTier}}" />
     </view>
 
-    <view class="font-strip {{fontReady && sampleReady ? '' : 'pending'}}" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
-
     <view class="font-list">
       <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
             data-key="{{item.key}}" bindtap="onFont">
@@ -130,8 +128,6 @@
       <text class="card-title group-title">字体</text>
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
     </view>
-
-    <view class="font-strip {{fontReady && sampleReady ? '' : 'pending'}}" style="font-family:'{{bodyFamily}}'">{{fontSample}}</view>
 
     <view class="font-list">
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
