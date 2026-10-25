@@ -3512,6 +3512,11 @@ function mountFull(pg, query) {
       && pageJs.indexOf("rankingList") >= 0,
     "榜单挂在考试结果页里的话，飞花令那一半就没有入口");
 
+  ok("榜外那句「看看差别」点下去落到权限对比表上",
+    /bindtap="onTierGate"[^>]*>看看差别</.test(pageWxml)
+      && /onTierGate\s*\(\)\s*\{[\s\S]{0,80}?url:\s*"\/packages\/mine\/tier\/tier"/.test(pageJs),
+    "档位不够时那枚胶囊是死的 —— 用户看着「Max 起可用」却看不到自己缺哪几样（Issue #686）");
+
   ok("切学段不替用户预选年级，册次只在选了年级之后才出现",
     !/grade: grade, term: 0, label/.test(pageJs)
       && /wx:if="\{\{grade\}\}"/.test(pageWxml)

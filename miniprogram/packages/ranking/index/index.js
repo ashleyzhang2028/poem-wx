@@ -59,10 +59,6 @@ Page({
     this.load();
   },
 
-  onTier() {
-    entitlement.showTier("league", this);
-  },
-
   onTierGate() {
     wx.navigateTo({ url: "/packages/mine/tier/tier" });
   },
