@@ -1,9 +1,11 @@
-<page-meta page-font-size>
-  <view wx:for="{{previewFamilies}}" wx:key="*this" style="font-family:'{{item}}'">{{fontSample}}</view>
-</page-meta>
+<page-meta />
 
 <view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
+
+  <view class="font-warm" page-font-size>
+    <view class="font-warm-cell" wx:for="{{previewFamilies}}" wx:key="*this" style="font-family:'{{item}}'">{{fontSample}}</view>
+  </view>
 
   <nav-bar />
 

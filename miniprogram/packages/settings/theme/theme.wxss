@@ -101,6 +101,22 @@
   line-height: 1.2;
 }
 
+.font-warm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1rpx;
+  height: 1rpx;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.font-warm-cell {
+  font-size: var(--fs-body);
+  white-space: nowrap;
+}
+
 .font-strip {
   margin-top: var(--sp-1);
   padding-bottom: var(--sp-2);
@@ -133,6 +149,7 @@
 }
 
 .theme-page {
+  position: relative;
   padding-top: 0;
   background: var(--surface);
 }

@@ -30,11 +30,11 @@ const FACES = FONTS.map((f) => ({
   name: f.name,
   note: f.note,
   family: "Kuibu Poem " + f.key,
+  previewFamily: "Kuibu Preview " + f.key,
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
   max: files(f.dir, "max"),
-  preview: files(f.dir, "7"),
-  previewFamily: "Kuibu Preview " + f.key
+  preview: files(f.dir, "7")
 }));
 
 const FAMILIES = FACES.map((f) => f.family);
@@ -127,9 +127,8 @@ function sequence(face0, list) {
 
 const loaded = {};
 
-function familyOf(source) {
-  const hit = FACES.filter((f) => f.free.concat(f.pro, f.max).indexOf(source) >= 0)[0];
-  return hit ? hit.family : "";
+function faceOf(source) {
+  return FACES.filter((f) => f.free.concat(f.pro, f.max).indexOf(source) >= 0)[0] || null;
 }
 
 function load() {
@@ -152,7 +151,7 @@ const previews = {};
 
 function preview(key) {
   const f = BY_KEY[key];
-  if (!f || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
+  if (!f || !previewsReady()) return Promise.resolve(false);
   if (previews[f.key]) return previews[f.key];
 
   previews[f.key] = sequence({ family: f.previewFamily }, f.preview).then((ok) => {
@@ -163,13 +162,20 @@ function preview(key) {
 }
 
 function sourcesOf(f) {
-  return configured().map((s) => (familyOf(s) ? s.replace(familyOf(s), f.family) : s));
+  return configured().map((s) => {
+    const from = faceOf(s);
+    return from ? s.replace(from.family, f.family).replace(from.dir, f.dir) : s;
+  });
 }
 
 function loadAll() {
-  if (!configured().length || typeof wx.loadFontFace !== "function") return;
+  if (!previewsReady()) return;
   FACES.filter((f) => f.key !== face().key)
     .forEach((f) => { sequence(f, sourcesOf(f)).catch(() => {}); });
+}
+
+function previewsReady() {
+  return configured().length > 0 && typeof wx.loadFontFace === "function";
 }
 
 function refresh() {
