@@ -2126,10 +2126,10 @@ ok("名录在、标签截断、档位合法",
   const quizLib = require(path.join(ROOT, "packages", "game", "quiz", "lib.js"));
   const saved = { grade: storeMod.settings().grade, term: storeMod.settings().term };
 
-  ok("「课内诗词·当前学段」排在出题范围的第一项（三个游戏默认就选它）",
+  ok("「课内·当前学段」排在出题范围的第一项（三个游戏默认就选它）",
     scopes.list()[0].id === scopes.STAGE_SCOPE);
   ok("它的名字先写自己是谁，明细交给选完之后那一行（三年级下学期不必塞进格子里）",
-    scopes.list()[0].name.indexOf("课内诗词") === 0);
+    scopes.list()[0].name.indexOf("课内·当前学段") === 0);
 
   const course = require(path.join(ROOT, "utils", "corpus.js")).course();
   const outside = (grade, term) => scopes.pool(scopes.STAGE_SCOPE)

@@ -169,7 +169,7 @@
 
     <view class="card" wx:if="{{!collectionCount}}">
       <text class="card-title">自选背诵</text>
-      <text class="hint">还没有自选集合，在课内目录或搜索里看到好诗，加入自己的集合</text>
+      <text class="hint">还没有自选集合，看到想背的诗，加进自己的集合</text>
     </view>
 
     <block wx:if="{{collectionOn}}">
@@ -213,7 +213,7 @@
         <view class="empty" wx:if="{{!coll.rows.length}}">
           <text class="empty-mark">选</text>
           <text class="empty-text">这个集合还是空的</text>
-          <text class="hint empty-tip">在课内目录或搜索里看到好诗，加进自己的集合</text>
+          <text class="hint empty-tip">看到想背的诗，加进自己的集合</text>
         </view>
       </view>
     </block>

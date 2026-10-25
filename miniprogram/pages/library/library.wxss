@@ -25,6 +25,11 @@
   margin-top: var(--sp-3);
 }
 
+.book-grid-wide {
+  flex-direction: column;
+  row-gap: 0;
+}
+
 .book-cell {
   display: flex;
   align-items: center;
@@ -33,6 +38,10 @@
   padding: var(--sp-2) 0;
   border-bottom: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
+}
+
+.book-cell-wide {
+  width: 100%;
 }
 
 .book-hover {

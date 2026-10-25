@@ -38,7 +38,7 @@
     <view class="row">
       <view class="row-main">
         <text class="row-title">只背自选</text>
-        <text class="row-sub">首页不列课内诗词，只列自选诗词集合进行背诵</text>
+        <text class="row-sub">今日只排自选集合，课内暂不排</text>
       </view>
       <view class="sw">
         <switch checked="{{selfOnly}}" bindchange="onSelfOnly"

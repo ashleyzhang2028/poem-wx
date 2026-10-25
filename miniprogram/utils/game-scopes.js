@@ -7,7 +7,7 @@ const STAGE_SCOPE = "stage";
 let scopeCache = null;
 
 function list() {
-  if (!scopeCache) scopeCache = [{ id: STAGE_SCOPE, name: "课内诗词·当前学段" }];
+  if (!scopeCache) scopeCache = [{ id: STAGE_SCOPE, name: "课内·当前学段" }];
   return scopeCache;
 }
 

@@ -57,7 +57,7 @@
         <text class="swatch-name">{{ownSet ? '已换上您的图' : '还没有图'}}</text>
       </view>
 
-      <text class="own-note">图片存于本机，不同步到服务器</text>
+      <text class="own-note">图片只在这台手机上，换机不会带过去</text>
 
       <view class="own-acts">
         <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换图' : '选图'}}</button>

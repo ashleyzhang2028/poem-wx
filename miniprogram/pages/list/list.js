@@ -61,7 +61,7 @@ Page({
     }
     this.setData({ locked: false });
 
-    const book = corpus.bookById(this.data.bookId) || { name: "课内诗词", unit: "首" };
+    const book = corpus.bookById(this.data.bookId) || { name: "课内阅读", unit: "首" };
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
