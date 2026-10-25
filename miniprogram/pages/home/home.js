@@ -370,7 +370,7 @@ Page({
     this.setData({
       logged: true,
       guest: false,
-      gradeName: S.gradeName(settings.grade) + S.termName(settings.term),
+      gradeName: S.gradeName(settings.grade) + S.termName(settings.term) + "册",
       termName: S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       plan: rows,

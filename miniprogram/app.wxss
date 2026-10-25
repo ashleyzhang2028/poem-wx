@@ -507,6 +507,25 @@ button, textarea {
   margin-left: 10rpx;
 }
 
+.pill {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  white-space: nowrap;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  padding: var(--pad-opt-y) var(--pad-opt-x);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+}
+
+.pill.on {
+  color: var(--strong-text);
+  background: var(--strong-soft);
+  border-color: var(--strong);
+}
+
 .tag.amber {
   color: var(--amber);
   background: var(--amber-soft);

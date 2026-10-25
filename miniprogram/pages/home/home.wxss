@@ -29,14 +29,29 @@
   margin-bottom: var(--sp-2);
 }
 
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
 .hero-title {
   display: block;
+  flex: none;
   font-family: var(--font-poem);
   font-size: var(--fs-head);
   font-weight: 400;
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
   line-height: var(--lh-tight);
+}
+
+.hero-pills {
+  display: flex;
+  flex: none;
+  gap: var(--sp-1);
+  margin-left: auto;
 }
 
 .hero-sub {
