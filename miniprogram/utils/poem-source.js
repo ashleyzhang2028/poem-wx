@@ -1,7 +1,7 @@
 const remote = require("./remote");
 const store = require("./store");
 
-const NAME = "诗泉";
+const NAME = "课外库";
 
 const CAPS = {
   poems: "/poems",
@@ -116,7 +116,7 @@ function qs(params) {
 }
 
 function failure(err) {
-  const e = new Error((err && (err.errMsg || err.message)) || "取不到诗泉");
+  const e = new Error((err && (err.errMsg || err.message)) || "取不到课外库");
   e.code = (err && err.code) || "E_POEM_SOURCE";
   e.expected = true;
   e.statusCode = Number(err && err.statusCode) || 0;
