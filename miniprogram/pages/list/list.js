@@ -42,9 +42,17 @@ Page({
     this.setData({ bookId: (query && query.book) || "poems" });
   },
 
+  resetFilters() {
+    this.forgetMatch();
+    this.setData({ keyword: "", filter: "全部" });
+  },
+
   onShow() {
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
+
+    if (this.data.bookId !== this.shownBook) this.resetFilters();
+    this.shownBook = this.data.bookId;
 
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -60,8 +68,10 @@ Page({
 
   apply() {
     const { bookId, keyword, filter } = this.data;
-    const all = corpus.ofBook(bookId);
-    const at = keyword ? this.matched(bookId, keyword) : null;
+    const book = corpus.bookById(bookId);
+    const cataloged = !!(book && book.remote);
+    const all = cataloged ? this.catalogRows(bookId) : corpus.ofBook(bookId);
+    const at = !cataloged && keyword ? this.matched(bookId, keyword) : null;
 
     const reads = store.reads(bookId);
     const picked = this.pickedMap();
@@ -82,18 +92,11 @@ Page({
         order.push(g);
       }
       seq += 1;
-      map[g].push({
-        id: p.id,
-        title: p.t,
-        author: p.a,
-        dynasty: p.d,
-        seq: seq,
-        read: !!reads[p.id],
-        picked: !!picked[p.id]
-      });
+      map[g].push(this.rowOf(p, seq, reads, picked));
     });
 
     const groups = order.map((g) => ({ group: g, items: map[g] }));
+    cataloged && groups.forEach((g) => g.items.forEach((p, i) => { p.seq = i + 1; }));
 
     this.setData({
       groups,
@@ -101,6 +104,24 @@ Page({
       total: all.length,
       groupCount: groups.length
     });
+  },
+
+  rowOf(p, seq, reads, picked) {
+    return {
+      id: p.id,
+      title: p.t,
+      author: p.a,
+      dynasty: p.d,
+      seq: seq,
+      read: !!reads[p.id],
+      picked: !!picked[p.id]
+    };
+  },
+
+  catalogRows(bookId) {
+    const keyword = this.data.keyword.trim().toLowerCase();
+    const all = corpus.ofBook(bookId);
+    return keyword ? all.filter((p) => corpus.matchEntry(p, keyword)) : all;
   },
 
   matched(bookId, keyword) {

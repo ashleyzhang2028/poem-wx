@@ -50,7 +50,7 @@
       <text class="seq">{{p.seq}}</text>
       <view class="row-main">
         <text class="row-title row-poem">{{p.title}}</text>
-        <text class="row-sub">{{p.dynasty}} · {{p.author}}</text>
+        <text class="row-sub">{{p.dynasty ? p.dynasty + ' · ' : ''}}{{p.author || '佚名'}}</text>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
       <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"

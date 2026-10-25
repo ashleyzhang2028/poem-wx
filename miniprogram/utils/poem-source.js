@@ -235,6 +235,11 @@ function byChar(char) {
   return call(CAPS.random, { char: char }, { fresh: true }).then(data);
 }
 
+function byId(id) {
+  if (!id) return Promise.reject(failure({ message: "没有给正文 id", code: "E_BAD_ID" }));
+  return call("/poems/" + encodeURIComponent(String(id)), {}).then(data);
+}
+
 function linesOf(poem) {
   const c = poem && poem.content;
   if (Array.isArray(c)) return c.map((x) => String(x == null ? "" : x).trim()).filter(Boolean);
@@ -360,6 +365,7 @@ module.exports = {
   search,
   random,
   poem,
+  byId,
   byChar,
   charCount,
   linesOf,

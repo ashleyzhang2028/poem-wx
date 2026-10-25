@@ -10,6 +10,12 @@ const GROUPS = [
     name: "课内诗词",
     note: "一至高三 · 按年级分册",
     books: ["poems"]
+  },
+  {
+    key: "classics",
+    name: "课外集子",
+    note: "目录在包里 · 正文即时取",
+    catalog: true
   }
 ];
 
@@ -35,14 +41,16 @@ Page({
       return;
     }
     this.setData({ locked: false, reason: "" });
-    const all = corpus.books();
+    const all = corpus.booksOf();
     const byId = {};
     all.forEach((b) => {
       byId[b.id] = b;
     });
 
     const groups = GROUPS.map((g) => {
-      const books = g.books.map((id) => byId[id]).filter(Boolean);
+      const books = g.catalog
+        ? all.filter((b) => b.remote)
+        : g.books.map((id) => byId[id]).filter(Boolean);
       return {
         key: g.key,
         name: g.name,

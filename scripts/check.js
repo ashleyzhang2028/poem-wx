@@ -139,7 +139,12 @@ const dataDir = path.join(ROOT, "data");
 const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
 
-ok("集子表只剩课内一部", (booksTable || []).length === 1 && booksTable[0].id === "poems",
+const catalogPack = readModule(path.join(dataDir, "books", "catalogs.js"));
+const catalogTable = (catalogPack && catalogPack.books) || [];
+const catalogIds = catalogTable.map((b) => b.id);
+
+ok("集子表 = 课内一部 + 目录里那十部", (booksTable || []).length === 1 + catalogIds.length
+  && booksTable[0].id === "poems",
   "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
 
 var corpus = require(path.join(ROOT, "utils", "corpus.js"));
@@ -174,10 +179,31 @@ ok("集子索引归属正确",
 }
 
 {
-  const texts = Object.keys(perBook).filter((id) => id !== "poems");
-  ok("只有课内那一部带索引（课外集子一条都不进包）",
+  const texts = Object.keys(perBook).filter((id) => id !== "poems" && catalogIds.indexOf(id) < 0);
+  ok("除课内与目录那十部，别的集子一条都不进包（索引里一条都没有）",
     texts.every((id) => perBook[id].length === 0),
     "这些集子还有条目：" + texts.filter((id) => perBook[id].length).join("、"));
+}
+
+ok("目录十部，每部的条数与落盘的 count 对得上",
+  catalogIds.length === 10
+    && catalogIds.every((id, i) => perBook[id].length === catalogTable[i].count && perBook[id].length > 0),
+  "实际 " + JSON.stringify(catalogIds.map((id, i) => id + ":" + perBook[id].length + "/" + catalogTable[i].count)));
+
+{
+  const rows = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
+  ok("目录里每一条都有源 id（正文靠它去课外库取）",
+    rows.every((p) => p.sid) && new Set(rows.map((p) => p.id)).size === rows.length,
+    "缺源 id 或 id 撞车的：" + rows.filter((p) => !p.sid).slice(0, 3).map((p) => p.id).join("、"));
+
+  ok("目录只装书名、标题、作者、出处（正文一个字都不在包里）",
+    rows.every((p) => p.text === undefined && p.translation === undefined && p.n),
+    "目录条目混进了正文或没带书名");
+
+  ok("目录落盘只存列（书名在集子表里，不在这份里重写一遍）",
+    catalogPack.books.every((b) => Object.keys(b).sort().join() === "count,id,name,unit")
+      && Object.keys(catalogPack).sort().join() === "books,dict,ids,rows",
+    "形状不对：" + JSON.stringify(Object.keys(catalogPack)));
 }
 
 const courseTexts = readModule(path.join(dataDir, "course.js"));
@@ -1604,9 +1630,12 @@ ok("每条索引都查得回自己（集子 id 比条目 id 长的也要认）",
   foreignMiss.length === 0,
   "查不回的还有 " + foreignMiss.length + " 条：" + foreignMiss.slice(0, 3).map((p) => p.id).join("、"));
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
-ok("搜索只在课内那 251 首里找", corpus.search("李白", { limit: 500 }).items.every((p) => p.b === "poems"));
+ok("全站搜索只落在课内与目录那十部里",
+  corpus.search("李白", { limit: 2000 }).items.every((p) => p.b === "poems" || catalogIds.indexOf(p.b) >= 0));
 ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).items.every((p) => p.b === "poems"));
-ok("课外集子不在包里，搜不到", corpus.search("昭明", { limit: 200 }).total === 0);
+ok("目录里的条目也搜得到（篇名与作者）",
+  corpus.search("关雎", { book: "shijing", limit: 10 }).items.length > 0
+    && corpus.search("王维", { book: "tangshi300", limit: 500 }).items.length > 0);
 
 const sw = corpus.search("春", { limit: 5 });
 ok("search 报出截断前总数", sw.total > sw.items.length,
