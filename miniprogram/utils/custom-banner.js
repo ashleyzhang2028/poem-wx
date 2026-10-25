@@ -13,7 +13,7 @@ const WIDTH = 1200;
 
 const QUALITY = 0.72;
 
-const FADE_SPAN = 40;
+const FADE_SPAN = 80;
 
 const FADE_REF = 1200;
 

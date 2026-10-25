@@ -3787,15 +3787,16 @@ function mountFull(pg, query) {
     const art = custom.artOf({ w: 1000, h: 2000 }, { sx: 0, sy: 0, sw: 1, sh: 1 }, 4);
     const deep = custom.fadePixels(art);
     const tall = art.height;
-    ok("底边渐隐：从 40px 那道往下落到全透明，webp 那条读得回来",
+    ok("底边渐隐：从 80px 那道往下落到全透明，webp 那条读得回来",
       deep >= 4 && deep < art.height / 2
         && custom.fadeAt(tall, tall, deep) === 0
         && custom.fadeAt(tall - deep, tall, deep) > 0.99
         && custom.MIME.test(custom.WEBP),
       "渐隐没接上：那条渐变没落到全透明，或者 webp 的 MIME 读不回来");
-    ok("底边那道按图宽折算，1200 宽的图上正好 40px",
-      custom.FADE_SPAN === 40 && Math.round(600 * custom.FADE_SPAN / custom.FADE_REF) === 20
-        && Math.round(2400 * custom.FADE_SPAN / custom.FADE_REF) === 80);
+    ok("底边那道按图宽折算，1200 宽的图上正好 80px",
+      custom.FADE_SPAN === 80 && custom.FADE_REF === 1200
+        && Math.round(600 * custom.FADE_SPAN / custom.FADE_REF) === 40
+        && Math.round(2400 * custom.FADE_SPAN / custom.FADE_REF) === 160);
   }
 
   tierAs("max");
