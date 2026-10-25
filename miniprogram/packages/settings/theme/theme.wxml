@@ -4,7 +4,7 @@
   <page-banner src="{{banner}}" />
 
   <view class="font-warm" page-font-size>
-    <view class="font-warm-cell" wx:for="{{previewFamilies}}" wx:key="*this" style="font-family:'{{item}}'">{{fontSample}}</view>
+    <view class="font-warm-cell" style="font-family:'{{previewFamily}}'">{{fontSample}}</view>
   </view>
 
   <nav-bar />
@@ -23,7 +23,7 @@
     <view class="font-list">
       <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
             data-key="{{item.key}}" bindtap="onFont">
-        <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
+        <text class="font-sample" style="font-family:'{{previewFamily}}'">{{fontSample}}</text>
         <text class="font-name">{{item.name}}</text>
       </view>
     </view>
@@ -138,7 +138,7 @@
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onFont">
-        <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
+        <text class="font-sample" style="font-family:'{{previewFamily}}'">{{fontSample}}</text>
         <text class="font-name">{{item.name}}</text>
       </view>
     </view>

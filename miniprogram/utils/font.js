@@ -22,23 +22,26 @@ const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts
 const SUBSETS = ["woff2", "woff"];
 
 function files(dir, size) {
-  return SUBSETS.map((ext) => BASE + dir + "/" + dir + "-" + size + "." + ext);
+  return SUBSETS.map((ext) => BASE + dir + "/" + size + "." + ext);
 }
+
+const PREVIEW_DIR = "lxgwwenkai-regular";
+
+const PREVIEW_FAMILY = "Kuibu Preview";
+
+const PREVIEW_FILES = files(PREVIEW_DIR, "7");
 
 const FACES = FONTS.map((f) => ({
   key: f.key,
   name: f.name,
   note: f.note,
+  dir: f.dir,
   family: "Kuibu Poem " + f.key,
-  previewFamily: "Kuibu Preview " + f.key,
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
   max: files(f.dir, "max"),
-  preview: files(f.dir, "7"),
   glyphs: {}
 }));
-
-const FAMILIES = FACES.map((f) => f.family);
 
 const BY_KEY = {};
 FACES.forEach((f) => { BY_KEY[f.key] = f; });
@@ -72,9 +75,7 @@ const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Sou
   + '"Noto Serif CJK SC", "Noto Serif SC", "SimSun", "SimSun-ExtB", "FangSong", serif';
 
 function stack(key) {
-  const first = face(key || current()).family;
-  return [first].concat(FAMILIES.filter((f) => f !== first)).map((f) => '"' + f + '"').join(", ")
-    + ", " + STACK;
+  return '"' + familyOf(key) + '", ' + STACK;
 }
 
 function shelf() {
@@ -85,7 +86,7 @@ function shelf() {
 }
 
 function addresses(key) {
-  return face(key)[shelf()].slice();
+  return face(key || current())[shelf()].slice();
 }
 
 function configured(key) {
@@ -148,16 +149,15 @@ function load() {
 
 const previews = {};
 
-function preview(key) {
-  const f = BY_KEY[key];
-  if (!f || !previewsReady()) return Promise.resolve(false);
-  if (previews[f.key]) return previews[f.key];
+function preview() {
+  if (!previewsReady()) return Promise.resolve(false);
+  if (previews.face) return previews.face;
 
-  previews[f.key] = sequence(f.previewFamily, f.preview).then((ok) => {
-    if (!ok) delete previews[f.key];
+  previews.face = sequence(PREVIEW_FAMILY, PREVIEW_FILES).then((ok) => {
+    if (!ok) delete previews.face;
     return ok;
   });
-  return previews[f.key];
+  return previews.face;
 }
 
 function glyphs(f, list) {
@@ -190,7 +190,7 @@ function glyphsReady() {
 }
 
 function familyOf(key) {
-  return face(key).family;
+  return face(key || current()).family;
 }
 
 function loadAll() {
@@ -206,6 +206,7 @@ function previewsReady() {
 
 function refresh() {
   load().catch(() => {});
+  preview().catch(() => {});
   loadAll();
 }
 
@@ -226,7 +227,8 @@ function set(key) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, SAMPLE, readiness, options,
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW_FAMILY, PREVIEW_DIR, PREVIEW_FILES, SUBSETS,
+  readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, shelf,
   addresses, configured, load, loadAll, preview, ready, set, refresh
 };

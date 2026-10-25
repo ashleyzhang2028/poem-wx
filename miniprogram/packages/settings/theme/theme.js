@@ -28,7 +28,7 @@ Page({
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
     bodyFamily: font.familyOf(font.DEFAULT),
-    previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
+    previewFamily: font.PREVIEW_FAMILY,
     fontLocked: true,
     fontTier: "pro",
     fontReady: false,
@@ -56,7 +56,7 @@ Page({
   },
 
   warmPreview() {
-    font.options().forEach((f) => { font.preview(f.key).catch(() => {}); });
+    font.preview().catch(() => {});
   },
 
   view() {
@@ -69,7 +69,7 @@ Page({
       fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
       font: font.current(),
       bodyFamily: font.familyOf(font.current()),
-      previewFamilies: font.options().map((f) => font.face(f.key).previewFamily),
+      previewFamily: font.PREVIEW_FAMILY,
       fontLocked: !pickable,
       fontTier: font.tier(),
       toneView: theme.toneData()

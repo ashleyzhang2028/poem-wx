@@ -825,8 +825,15 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
     ok("未登录取默认那一款的 free 子集，woff2 在前、woff 兜底",
       seen[0].source === e.font.FACES[0].free[0]
-        && /-free\.woff2$/.test(seen[0].source) && /-free\.woff$/.test(e.font.FACES[0].free[1]),
+        && /\/zhuquefangsong-regular\/free\.woff2$/.test(seen[0].source)
+        && /\/free\.woff$/.test(e.font.FACES[0].free[1]),
       seen[0].source);
+    ok("子集地址按目录 + 档位取名，文件名里只有档位一个词",
+      e.font.FACES.every((f) => ["free", "pro", "max"].every((size) => f[size].every((u) => {
+        const parts = u.replace(e.font.BASE, "").split("/");
+        return parts.length === 2 && parts[0] === f.dir && parts[1] === size + (/woff2$/.test(u) ? ".woff2" : ".woff");
+      }))),
+      e.font.FACES[0].free.join(" | "));
   });
   e.restore();
 
@@ -846,7 +853,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
     ok("Pro 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0]
-      && /-pro\.woff2$/.test(proSeen[0]), proSeen[0]);
+      && /\/zhuquefangsong-regular\/pro\.woff2$/.test(proSeen[0]), proSeen[0]);
     ok("Free / Pro / Max 是同一款的三份",
       ep.font.FACES[0].free[0] !== ep.font.FACES[0].pro[0]
         && ep.font.FACES[0].pro[0] !== ep.font.FACES[0].max[0]
@@ -878,11 +885,11 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const em = bootFont({}, { loadFontFace: (o) => { maxSeen.push(o.source); o.success && o.success(); } });
   em.font.load().then(() => {
     ok("Max 取 max 那一份", maxSeen.length === 1 && maxSeen[0] === em.font.addresses(em.font.DEFAULT)[0]
-      && /-max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
+      && /\/zhuquefangsong-regular\/max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
     maxSeen.length = 0;
     const r = em.font.set("yozai");
     ok("Pro 升 Max 后换一款，注册的是这款的 max 子集",
-      r.ok === true && maxSeen.length === 1 && /yozai-regular\/yozai-regular-max\.woff2$/.test(maxSeen[0]),
+      r.ok === true && maxSeen.length === 1 && /\/yozai-regular\/max\.woff2$/.test(maxSeen[0]),
       maxSeen.join(" | "));
   });
   em.restore();
@@ -913,17 +920,16 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const previewSeen = [];
   asTier("pro");
   const epv = bootFont({}, { loadFontFace: (o) => { previewSeen.push(o); o.success && o.success(); } });
-  epv.font.preview("chillkai").then((hit) => {
-    ok("字体卡那行预览取的是 -7 那两份，不是 free / pro / max",
+  epv.font.preview().then((hit) => {
+    ok("字体卡那行预览取的是 7 那一份，不是 free / pro / max",
       hit === true && previewSeen.length === 1
-        && previewSeen[0].source === epv.font.FACES[2].preview[0]
-        && previewSeen[0].family === epv.font.FACES[2].previewFamily
-        && epv.font.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0
-          && f.preview[0] !== f.free[0] && f.preview[0] !== f.pro[0] && f.preview[0] !== f.max[0]),
+        && previewSeen[0].source === epv.font.PREVIEW_FILES[0]
+        && previewSeen[0].family === epv.font.PREVIEW_FAMILY
+        && epv.font.PREVIEW_FILES.every((u) => new RegExp("/" + epv.font.PREVIEW_DIR + "/7\\.woff2?$").test(u)),
       previewSeen.map((o) => o.family + " " + o.source).join(" | "));
-    return epv.font.preview("chillkai");
+    return epv.font.preview();
   }).then((again) => {
-    ok("同一款的预览注册过就不再注册一次",
+    ok("预览注册过就不再注册一次",
       again === true && previewSeen.length === 1, previewSeen.map((o) => o.family).join(" | "));
     epv.restore();
   });
@@ -3742,9 +3748,9 @@ function mountFull(pg, query) {
     /<page-meta\s*\/>/.test(themeWxml)
       && !/<page-meta[^>]*>[\s\S]*?\S[\s\S]*?<\/page-meta>/.test(themeWxml)
       && /page-font-size/.test(themeWxml)
-      && themeJs.indexOf("previewFamilies") >= 0
+      && themeJs.indexOf("previewFamily") >= 0
       && themeJs.indexOf("font.preview(") >= 0
-      && fontMod.FACES.every((f) => f.preview[0].indexOf("-7.woff2") > 0),
+      && fontMod.PREVIEW_FAMILY,
     "预览字族又落回 page-meta 里当可见文字了");
 
   ok("字体卡顶上那行样本取正文那一份，注册成功后才露出来",
@@ -3752,7 +3758,7 @@ function mountFull(pg, query) {
       && themeJs.indexOf("font.familyOf(font.current())") >= 0
       && themeJs.indexOf("font.ready(") >= 0
       && themeJs.indexOf("sampleReady: false") >= 0
-      && fontMod.face().family !== fontMod.face().previewFamily,
+      && fontMod.face().family !== fontMod.PREVIEW_FAMILY,
     "样本那行没用 load() 注册成功才认的那个字族，或者先画出来再等字体");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",

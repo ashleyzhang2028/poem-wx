@@ -93,6 +93,8 @@
 
 .font-sample {
   max-width: 100%;
+  font-family: 'Kuibu Preview', "Songti SC", "STSong", "STZhongsong",
+    "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif;
   overflow: hidden;
   white-space: nowrap;
   font-size: var(--fs-hint);
