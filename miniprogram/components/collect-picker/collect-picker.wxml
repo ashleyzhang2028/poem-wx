@@ -1,5 +1,5 @@
 <view class="cp-mask" wx:if="{{open}}" bindtap="onMask">
-  <view class="cp" catchtap="onStop" style="{{themeStyle}}">
+  <view class="cp {{name}}" catchtap="onStop" style="{{themeStyle}}">
     <view class="cp-head">
       <text class="cp-title">加入自选集</text>
       <text class="cp-count">已建 {{total}} / {{cap}} 个</text>

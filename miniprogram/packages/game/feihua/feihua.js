@@ -23,6 +23,7 @@ function clockPatch(left, text) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     levels: feihua.LEVELS,
     level: "normal",
     scopes: gameScopes.list(),

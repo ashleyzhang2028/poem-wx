@@ -21,6 +21,7 @@ function view(o) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     logged: false,
     plan: null,

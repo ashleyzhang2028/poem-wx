@@ -1,4 +1,4 @@
-<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <progress-view view="{{view}}" defers="{{defers}}" ring-text="{{ringText}}"
                  bind:open="onOpen" bind:defer="onOpenDefer">
     <view class="card" wx:if="{{selfOn}}">

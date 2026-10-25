@@ -1,7 +1,7 @@
 <view class="bc-root" wx:if="{{open}}" catchtouchmove="onLock">
   <view class="bc-mask" bindtap="onCancel"></view>
 
-  <view class="bc-panel" style="{{themeStyle}}">
+  <view class="bc-panel {{name}}" style="{{themeStyle}}">
     <view class="bc-head">
       <text class="bc-title">图片截取</text>
       <text class="bc-ratio">{{ratioW}} × {{ratioH}}</text>

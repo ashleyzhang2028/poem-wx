@@ -49,6 +49,7 @@ function aliasTextOf(meta) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     id: "",
 

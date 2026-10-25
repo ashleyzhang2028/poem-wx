@@ -29,6 +29,7 @@ function topRank(boxes) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     locked: true,
     cards: [],

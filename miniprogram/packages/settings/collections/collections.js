@@ -13,6 +13,7 @@ const guard = require("../../../utils/guard");
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
 
     locked: false,

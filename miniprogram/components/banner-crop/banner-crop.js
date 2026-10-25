@@ -53,6 +53,7 @@ function define() {
     data: {
       canvasId: C,
       themeStyle: "",
+      name: "",
       open: false,
       src: "",
       ratioW: RATIO_W,
@@ -67,7 +68,7 @@ function define() {
     },
 
     attached() {
-      this.setData({ themeStyle: theme.style() });
+      this.setData({ themeStyle: theme.style(), name: theme.name() });
     },
 
     methods: {

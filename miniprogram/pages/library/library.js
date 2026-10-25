@@ -26,6 +26,7 @@ function groupDesc(g) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     groups: [],
     locked: true,

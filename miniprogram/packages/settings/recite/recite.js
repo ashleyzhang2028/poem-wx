@@ -29,6 +29,7 @@ const TERMS = [
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     grades: [],
     terms: TERMS,

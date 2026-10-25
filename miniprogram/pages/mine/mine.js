@@ -15,6 +15,7 @@ const pay = require("../../utils/pay");
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     guestClass: "",
     logged: false,

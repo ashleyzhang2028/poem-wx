@@ -7,6 +7,7 @@ const CONTACT = "kuibuapp@163.com";
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     updated: UPDATED,
     contact: CONTACT

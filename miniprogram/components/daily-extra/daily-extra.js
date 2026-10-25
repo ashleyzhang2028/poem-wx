@@ -13,7 +13,8 @@ Component({
 
   properties: {
 
-    themeStyle: { type: String, value: "" }
+    themeStyle: { type: String, value: "" },
+    name: { type: String, value: "" }
   },
 
   data: {

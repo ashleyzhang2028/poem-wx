@@ -35,6 +35,7 @@ function saveText(cells, p) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     barBelow: true,
     logged: false,
     tier: "free",

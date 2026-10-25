@@ -23,6 +23,7 @@ function blankAnswers(n) {
 Page({
   data: {
     themeStyle: "",
+    name: "",
     stage: "setup",
     scopes: [],
     scope: gameScopes.STAGE_SCOPE,

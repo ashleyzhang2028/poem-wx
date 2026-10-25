@@ -192,6 +192,8 @@ Page({
   data: {
 
     themeStyle: "",
+
+    name: "",
     barBelow: true,
 
     banner: theme.BANNER,
