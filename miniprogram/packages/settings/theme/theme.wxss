@@ -93,8 +93,6 @@
 
 .font-sample {
   max-width: 100%;
-  font-family: 'Kuibu Preview', "Songti SC", "STSong", "STZhongsong",
-    "Source Han Serif SC", "Noto Serif CJK SC", "SimSun", serif;
   overflow: hidden;
   white-space: nowrap;
   font-size: var(--fs-hint);
@@ -221,16 +219,16 @@
 }
 
 .tone-field {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: none;
 }
 
 .tone-field-hex {
-  flex: 3 1 0;
+  width: 152rpx;
 }
 
 .tone-field-rgba {
-  flex: 5 1 0;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .tone-chip {
@@ -274,10 +272,9 @@
   box-sizing: border-box;
   width: 100%;
   height: var(--h-btn-mini);
-  padding: 0 var(--sp-2);
+  padding: 0 var(--sp-1);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  border: 1rpx solid var(--line-strong);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-caption);
   color: var(--ink);

@@ -25,11 +25,7 @@ function files(dir, size) {
   return SUBSETS.map((ext) => BASE + dir + "/" + size + "." + ext);
 }
 
-const PREVIEW_DIR = "lxgwwenkai-regular";
-
-const PREVIEW_FAMILY = "Kuibu Preview";
-
-const PREVIEW_FILES = files(PREVIEW_DIR, "7");
+const PREVIEW = "7";
 
 const FACES = FONTS.map((f) => ({
   key: f.key,
@@ -37,6 +33,8 @@ const FACES = FONTS.map((f) => ({
   note: f.note,
   dir: f.dir,
   family: "Kuibu Poem " + f.key,
+  previewFamily: "Kuibu Preview " + f.key,
+  preview: files(f.dir, PREVIEW),
   free: files(f.dir, "free"),
   pro: files(f.dir, "pro"),
   max: files(f.dir, "max")
@@ -146,17 +144,15 @@ function load() {
   return register(f, list);
 }
 
-const previews = {};
+function previewing() {
+  if (!previewsReady()) return [];
+  return FACES.map((f) => register(f, f.preview).then((ok) => (ok ? f.key : "")));
+}
 
 function preview() {
-  if (!previewsReady()) return Promise.resolve(false);
-  if (previews.face) return previews.face;
-
-  previews.face = sequence(PREVIEW_FAMILY, PREVIEW_FILES).then((ok) => {
-    if (!ok) delete previews.face;
-    return ok;
-  });
-  return previews.face;
+  const list = previewing();
+  if (!list.length) return Promise.resolve(false);
+  return Promise.all(list).then((keys) => keys.filter(Boolean).length > 0);
 }
 
 function familyOf(key) {
@@ -167,7 +163,10 @@ function loadAll() {
   if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
   const chosen = face().key;
   FACES.filter((f) => f.key !== chosen)
-    .forEach((f) => { register(f, f[shelf()].slice()).catch(() => {}); });
+    .forEach((f) => {
+      register(f, f[shelf()].slice()).catch(() => {});
+      register(f, f.preview).catch(() => {});
+    });
 }
 
 function previewsReady() {
@@ -197,7 +196,7 @@ function set(key) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW_FAMILY, PREVIEW_DIR, PREVIEW_FILES, SUBSETS,
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, shelf,
   addresses, configured, load, loadAll, preview, set, refresh
