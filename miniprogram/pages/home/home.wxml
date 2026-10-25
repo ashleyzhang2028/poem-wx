@@ -3,8 +3,16 @@
   <block wx:if="{{guest}}">
     <view class="card hero-lead">
       <text class="hero-eyebrow">今日</text>
-      <text class="hero-title">{{gradeName}}</text>
-      <text class="hero-sub">{{scopeName}} · 共 {{catalogCount}} 首</text>
+
+      <view class="hero-head">
+        <text class="hero-title">{{gradeName}}</text>
+
+        <view class="hero-pills">
+          <text class="pill on">{{scopeName}}</text>
+        </view>
+      </view>
+
+      <text class="hero-sub">共 {{catalogCount}} 首</text>
     </view>
 
     <view class="card">
@@ -41,9 +49,17 @@
 
     <view class="card hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>
-      <text class="hero-title">今日背诵</text>
+
+      <view class="hero-head">
+        <text class="hero-title">今日背诵</text>
+
+        <view class="hero-pills">
+          <text class="pill on">{{gradeName}}</text>
+          <text class="pill on">{{scopeName}}</text>
+        </view>
+      </view>
+
       <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
-      <text class="hero-sub" wx:else>{{gradeName}} · {{scopeName}}</text>
 
       <view class="stats hero-stats">
         <view class="stat">
