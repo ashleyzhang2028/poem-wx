@@ -840,16 +840,19 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   asTier("pro");
   const epv = bootFont({}, { loadFontFace: (o) => { previewSeen.push(o); o.success && o.success(); } });
   epv.font.preview().then((hit) => {
-    ok("字体卡那行预览取的是 7 那一份，不是 free / pro / max",
-      hit === true && previewSeen.length === 1
-        && previewSeen[0].source === epv.font.PREVIEW_FILES[0]
-        && previewSeen[0].family === epv.font.PREVIEW_FAMILY
-        && epv.font.PREVIEW_FILES.every((u) => new RegExp("/" + epv.font.PREVIEW_DIR + "/7\\.woff2?$").test(u)),
+    ok("字体卡每格预览取该款目录下的 7 那一份，不是 free / pro / max",
+      hit === true && previewSeen.length === epv.font.FACES.length
+        && epv.font.FACES.every((f) => {
+          const seen0 = previewSeen.filter((o) => o.family === f.previewFamily)[0];
+          return seen0 && seen0.source === f.preview[0]
+            && new RegExp("/" + f.dir + "/7\\.woff2?$").test(seen0.source);
+        }),
       previewSeen.map((o) => o.family + " " + o.source).join(" | "));
     return epv.font.preview();
   }).then((again) => {
     ok("预览注册过就不再注册一次",
-      again === true && previewSeen.length === 1, previewSeen.map((o) => o.family).join(" | "));
+      again === true && previewSeen.length === epv.font.FACES.length,
+      previewSeen.map((o) => o.family).join(" | "));
     epv.restore();
   });
 
@@ -3546,8 +3549,8 @@ function mountFull(pg, query) {
       && /page-font-size/.test(themeWxml)
       && themeJs.indexOf("previewFamily") >= 0
       && themeJs.indexOf("font.preview(") >= 0
-      && fontMod.PREVIEW_FAMILY,
-    "预览字族又落回 page-meta 里当可见文字了");
+      && fontMod.FACES.every((f) => f.previewFamily && f.previewFamily !== f.family),
+    "预览字族又落回 page-meta 里当可见文字了，或者预览与正文共用一个字族");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)

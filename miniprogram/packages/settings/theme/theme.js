@@ -27,7 +27,6 @@ Page({
     fonts: [],
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
-    previewFamily: font.PREVIEW_FAMILY,
     fontLocked: true,
     fontTier: "pro"
   },
@@ -50,9 +49,11 @@ Page({
       ownSet: theme.ownSwatchData().set,
       toneLocked: !theme.reachable(theme.OWN_KEY),
       theme: theme.current(),
-      fonts: font.options().map((f) => Object.assign({}, f, { locked: !pickable && f.key !== font.DEFAULT })),
+      fonts: font.options().map((f) => Object.assign({}, f, {
+        locked: !pickable && f.key !== font.DEFAULT,
+        previewFamily: font.face(f.key).previewFamily
+      })),
       font: font.current(),
-      previewFamily: font.PREVIEW_FAMILY,
       fontLocked: !pickable,
       fontTier: font.tier(),
       toneView: theme.toneData()
