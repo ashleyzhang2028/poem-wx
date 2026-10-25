@@ -16,4 +16,5 @@ npm test          # 编译语料 + 跑自检（只需 node ≥18，不必 npm in
 - 页面与分包：`miniprogram/app.json`
 - 后端与部署：`api/`、`deploy/`
 - 流水线：`.cnb.yml`
-- 文档：`docs/`（对照与未做项分别见 [`docs/parity.md`](docs/parity.md)、[`docs/todo.md`](docs/todo.md)）
+- 文档：`docs/`（对照与未做项分别见 [`docs/parity.md`](docs/parity.md)、[`docs/todo.md`](docs/todo.md)；
+  课外正文与检索的来源见 [`docs/poem-source.md`](docs/poem-source.md)）

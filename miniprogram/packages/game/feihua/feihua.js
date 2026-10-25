@@ -245,7 +245,24 @@ Page({
   onSubmit() {
     if (this.data.locked || !this.data.char || guard.gap("feihua:say")) return;
     guard.mark("feihua:say");
-    const r = feihua.judge(this.data.char, this.data.input, this.data.done.map((d) => d.seg));
+    const said = this.data.done.map((d) => d.seg);
+    const local = () => feihua.judge(this.data.char, this.data.input, said);
+    if (!feihua.onSource()) {
+      this.settle(local());
+      return;
+    }
+    const token = (this.judgeToken || 0) + 1;
+    this.judgeToken = token;
+    feihua.judgeAsync(this.data.char, this.data.input, said).then((r) => {
+      if (token !== this.judgeToken) return;
+      this.settle(r);
+    }, () => {
+      if (token !== this.judgeToken) return;
+      this.settle(local());
+    });
+  },
+
+  settle(r) {
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);
 
@@ -312,6 +329,8 @@ Page({
   onUnload() {
     if (this.timer) clearTimeout(this.timer);
     this.stopClock();
+    this.judgeToken = (this.judgeToken || 0) + 1;
+    this.revealToken = (this.revealToken || 0) + 1;
     feedback.close(this);
   },
 
@@ -321,6 +340,18 @@ Page({
       return;
     }
     const opt = this.scopeOpt();
+    if (feihua.onSource()) {
+      const token = (this.revealToken || 0) + 1;
+      this.revealToken = token;
+      feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT }).then((answers) => {
+        if (token !== this.revealToken) return;
+        this.setData({ revealed: true, answers: answers });
+      }, () => {
+        if (token !== this.revealToken) return;
+        this.setData({ revealed: true, answers: feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt)) });
+      });
+      return;
+    }
     const answers = feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt));
     this.setData({ revealed: true, answers });
   },

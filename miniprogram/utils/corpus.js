@@ -237,6 +237,8 @@ const BUCKET_DIR = "data/texts/";
 
 const SHARD_FILE_RE = /^t\d{3}$/;
 
+let sourceMap = null;
+
 let booksCache = null;
 const idIndex = {};
 const idBook = {};
@@ -580,12 +582,69 @@ function staleError(served, mine) {
   return e;
 }
 
+function hanOnly(text) {
+  let out = "";
+  for (const ch of String(text || "")) if (HAN.test(ch)) out += ch;
+  return out;
+}
+
+function sourceMapOf() {
+  if (sourceMap) return sourceMap;
+  sourceMap = {};
+  if (!hasData()) return sourceMap;
+  books().forEach(function (b) {
+    ofBook(b.id).forEach(function (p) {
+      const key = String(p.t || "").trim();
+      if (key && sourceMap[key] === undefined) sourceMap[key] = p.id;
+    });
+  });
+  return sourceMap;
+}
+
+function sourceIdOf(id) {
+  const meta = indexById(id);
+  const map = sourceMapOf();
+  const title = meta ? meta.t : "";
+  if (!title) return "";
+  const hit = map[title];
+  return typeof hit === "string" ? hit : "";
+}
+
+function ensureSource(id) {
+  const meta = indexById(id);
+  if (!meta) return Promise.resolve(null);
+
+  const source = require("./poem-source");
+  if (!source.usable()) return Promise.resolve(null);
+
+  return source
+    .search(meta.t, { type: "title", size: 20 })
+    .then(function (r) {
+      const want = hanOnly(meta.t);
+      const hit = (r.items || []).find(function (p) {
+        return hanOnly(p.title) === want && (!meta.a || String((p.author || {}).name || "") === meta.a);
+      }) || (r.items || []).find(function (p) {
+        return hanOnly(p.title) === want;
+      });
+      return hit ? source.withMeta(meta, hit) : null;
+    }, function () {
+      return null;
+    });
+}
+
 function ensureEntry(id) {
   const inPack = courseTexts()[id];
   if (inPack) return Promise.resolve(inPack);
 
+  return ensureSource(id).then(function (hit) {
+    if (hit) return hit;
+    return ensureShardEntry(id);
+  });
+}
+
+function ensureShardEntry(id) {
   const name = bucketOf(id);
-  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "分片清单里没有这一条：" + id));
+  if (!name) return Promise.reject(shardError("E_NO_ENTRY", "这一篇不在分片清单里，也没从诗泉取到：" + id));
 
   const take = function (r) {
     const hit = r.data[id] || null;
@@ -788,6 +847,9 @@ module.exports = {
   bucket,
   ensureBucket,
   ensureEntry,
+  ensureSource,
+  ensureShardEntry,
+  sourceIdOf,
   servedTextsRev,
   forgetText,
   onBucketReady,

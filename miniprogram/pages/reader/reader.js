@@ -273,10 +273,11 @@ Page({
   textFailMsg(err) {
     const code = (err && err.code) || "";
     const say = this.errSay(err);
-    if (code === "E_NO_ENTRY") return "分片清单里没有这一篇";
-    if (code === "E_NO_TEXT") return "这一片的正文不完整，换一篇看看";
+    if (code === "E_NO_ENTRY") return "这一篇的正文不在库里，换一篇看看";
+    if (code === "E_NO_TEXT") return "这一篇的正文不完整，换一篇看看";
     if (code === "E_SHARD_STALE") return "服务端语料比这一版旧，重新取一次";
     if (code === "E_NO_SHARD_SERVICE") return "还没接上同步服务器，退出重进再看";
+    if (code === "E_POEM_SOURCE_OFF") return "还没接上诗泉（取诗的那个服务），退出重进再看";
     if (code === "E_NO_SHARDS") return "这个版本里没有课外正文";
     if (/102002|timed? ?out/i.test(say)) return "取正文超时了 —— 多半是服务实例刚被唤醒，重试一次";
     if (/invalid host/i.test(say)) return "平台按服务名找不到取正文的服务（云托管里没有这个服务）";
