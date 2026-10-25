@@ -21,15 +21,15 @@
         <text class="row-sub">{{item.timeText}}</text>
         <text class="row-sub" wx:if="{{item.untilText}}">会员至 {{item.untilText}}</text>
         <text class="row-sub od-id" wx:if="{{item.wxOrderId}}" data-id="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}（点按复制）</text>
-        <view class="inline-btns od-acts" wx:if="{{item.removable}}">
-          <button class="btn primary mini" wx:if="{{item.pending}}" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onResume">继续支付</button>
-          <button class="btn ghost mini" wx:if="{{item.pending}}" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onCancel">取消订单</button>
-          <button class="btn danger mini" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onRemove">删除</button>
-        </view>
       </view>
       <view class="od-side">
+        <view class="tag od-tag {{item.statusTone}}">{{item.statusText}}</view>
         <text class="od-price">¥{{item.price}}</text>
-        <text class="tag {{item.statusTone}}">{{item.statusText}}</text>
+      </view>
+      <view class="inline-btns od-acts" wx:if="{{item.removable}}">
+        <button class="btn primary mini" wx:if="{{item.pending}}" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onResume">继续支付</button>
+        <button class="btn ghost mini" wx:if="{{item.pending}}" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onCancel">取消订单</button>
+        <button class="btn danger mini" disabled="{{busy}}" data-id="{{item.outTradeNo}}" bindtap="onRemove">删除</button>
       </view>
     </view>
   </view>

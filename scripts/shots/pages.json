@@ -1036,6 +1036,34 @@
     "back": true,
     "logged": false
   },
+  "orders": {
+    "page": "packages/mine/orders/orders",
+    "title": "支付记录",
+    "back": true,
+    "logged": true,
+    "query": {},
+    "seedList": [
+      {
+        "title": "Pro · 30 天",
+        "timeText": "2026-02-11 09:12",
+        "price": "12",
+        "statusText": "待支付",
+        "statusTone": "amber",
+        "pending": true,
+        "removable": true
+      },
+      {
+        "title": "Max · 365 天",
+        "timeText": "2026-01-30 20:41",
+        "price": "198",
+        "statusText": "已取消",
+        "statusTone": "ghost",
+        "pending": false,
+        "removable": true
+      }
+    ],
+    "_note": "支付记录：待支付是三按钮、已取消是单按钮。看按钮行是否左对齐并与三按钮等长，胶囊+价格是否与左侧两行垂直居中"
+  },
   "admin-pay": {
     "page": "packages/admin/pay/pay",
     "title": "支付与价格",
