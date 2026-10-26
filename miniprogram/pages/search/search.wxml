@@ -20,6 +20,7 @@
 
   <view class="result-bar" wx:if="{{searched && results.length}}">
     <text class="result-count">命中 {{total}} 篇</text>
+    <text class="result-more" wx:if="{{more && loading}}">往下找…</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
@@ -38,7 +39,7 @@
       <text class="row-go">›</text>
     </view>
     <text class="hint more-tip" wx:if="{{more}}">往下拉，再接 20 篇</text>
-    <text class="hint more-tip" wx:else>共 {{total}} 篇</text>
+    <text class="hint more-tip" wx:elif="{{full}}">全库就这些了</text>
   </view>
 
   <view class="empty" wx:if="{{searched && !results.length}}">
@@ -56,6 +57,8 @@
       <text class="row-go">›</text>
     </view>
   </view>
+
+  <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
   <view class="safe-bottom"></view>
   </block>

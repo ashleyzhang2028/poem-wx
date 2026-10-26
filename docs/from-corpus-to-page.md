@@ -41,7 +41,7 @@ npm run build:data
 |---|---|---|
 | `data/books/index.js` | 列表页、检索、作者索引（只有课内那一部） | 18 KB |
 | `data/books/books.js` | 集子表（11 条：课内一部 + 目录那十部） | 4 KB |
-| `data/books/catalogs.js` | 十部集子的目录（书名 + 标题 + 作者或出处，正文一个字不在里面） | 84 KB |
+| `data/books/catalogs.js` | 十部集子的目录（书名 + 标题 + 作者或出处，正文一个字不在里面） | 45 KB |
 | `data/course.js` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB |
 | `data/pinyin-table.js` | 注音 | 62 KB |
 | `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |

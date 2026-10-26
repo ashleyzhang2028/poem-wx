@@ -166,5 +166,7 @@
 
   <view class="safe-bottom"></view>
   </block>
+  <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
+
   <tab-bar id="tabbar" />
 </view>

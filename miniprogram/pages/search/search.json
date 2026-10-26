@@ -1,1 +1,6 @@
-{ "navigationBarTitleText": "搜索", "usingComponents": {} }
+{
+  "navigationBarTitleText": "搜索",
+  "usingComponents": {
+    "collect-picker": "/components/collect-picker/collect-picker"
+  }
+}

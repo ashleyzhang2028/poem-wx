@@ -6,6 +6,9 @@ const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
+const source = require("../../../utils/poem-source");
+
+const BATCH = 20;
 
 Page({
   data: {
@@ -30,7 +33,12 @@ Page({
       { key: "未读", label: "未读", icon: icons.off }
     ],
     matched: 0,
-    unread: 0
+    unread: 0,
+
+    remote: false,
+    remoteMore: false,
+    remoteTotal: 0,
+    remoteNote: ""
   },
 
   onShow() {
@@ -52,6 +60,10 @@ Page({
     const out = [];
     AI.LIT_BOOKS.forEach((b) => {
       corpus.ofBook(b).forEach((p) => out.push(p));
+    });
+    corpus.booksOf().forEach((b) => {
+      if (!b.remote) return;
+      corpus.ofBook(b.id).forEach((p) => out.push(p));
     });
     return out;
   },
@@ -100,44 +112,89 @@ Page({
 
     if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
     wx.setNavigationBarTitle({ title: "作者索引 · " + name });
-    this.applyWorks();
+    this.sourceRows = null;
+    this.srcToken = (this.srcToken || 0) + 1;
+    if (!this.askSource()) this.applyWorks();
   },
 
   onFilter(e) {
     this.setData({ filter: e.detail.value }, () => this.applyWorks());
   },
 
-  applyWorks() {
+  onMoreFromSource() {
+    if (!this.data.remoteMore) return;
+    this.askSource(this.data.works.length + BATCH);
+  },
+
+  askSource(want) {
+    const name = this.data.author;
+    if (!name) return null;
+    const w = this.roster && this.roster.people[name];
+    if (!w || !w.remote) {
+      this.setData({ remote: false, remoteMore: false, remoteNote: "" });
+      return null;
+    }
+    const token = (this.srcToken || 0) + 1;
+    this.srcToken = token;
+    this.setData({ remote: true });
+    return source.poems({ author: name, page_size: source.PAGE_MAX }).then((r) => {
+      if (token !== this.srcToken) return;
+      const rows = r.items.map((p) => source.asWork(p));
+      this.sourceRows = rows;
+      this.setData({
+        remoteTotal: r.total,
+        remoteNote: r.total > rows.length ? "先看 " + rows.length + " 首，共 " + r.total + " 首" : ""
+      });
+      this.applyWorks(want || r.items.length);
+    }, () => {
+      if (token !== this.srcToken) return;
+      this.setData({ remote: true, remoteMore: false, remoteNote: "课外库没连上，先显示包内的" });
+    });
+  },
+
+  applyWorks(want) {
     const name = this.data.author;
     const w = this.roster && this.roster.people[name];
     if (!w) return;
 
-    const readIds = {};
-    AI.LIT_BOOKS.forEach((b) => {
-      const m = store.reads(b);
-      Object.keys(m).forEach((id) => { readIds[id] = 1; });
-    });
-
+    const readIds = this.readIds();
     const filter = this.data.filter;
-    const list = w.items.filter((p) => filter !== "未读" || !readIds[p.id]);
+    const rows = this.sourceRows || w.items;
+    const list = rows.filter((p) => filter !== "未读" || !readIds[p.id]);
+    const limit = want || list.length;
 
     this.setData({
-      works: list.map((p) => ({
+      works: list.slice(0, limit).map((p) => ({
         id: p.id,
         title: p.t,
         dynasty: p.d,
         bookName: p.n,
+        sub: p.b === "source" ? p.d : p.d + " · " + p.n,
+        source: p.b === "source",
         read: !!readIds[p.id]
       })),
+      remoteMore: this.data.remote && list.length > limit,
       matched: list.length,
       unread: w.unread
     });
   },
 
+  readIds() {
+    const readIds = {};
+    AI.LIT_BOOKS.forEach((b) => {
+      const m = store.reads(b);
+      Object.keys(m).forEach((id) => { readIds[id] = 1; });
+    });
+    const remote = store.reads("source");
+    Object.keys(remote).forEach((id) => { readIds[id] = 1; });
+    return readIds;
+  },
+
   onOpen(e) {
     const id = e.currentTarget.dataset.id;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +
-      "&mode=browse&from=" + encodeURIComponent(this.data.author);
+      "&mode=browse&from=" + encodeURIComponent(this.data.author) +
+      (e.currentTarget.dataset.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
   },
 

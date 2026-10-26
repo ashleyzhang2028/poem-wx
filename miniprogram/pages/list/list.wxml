@@ -58,7 +58,7 @@
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
       <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
             style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"
-            data-id="{{p.id}}" catchtap="onPick"></view>
+            data-id="{{p.id}}" data-title="{{p.title}}" catchtap="onPick"></view>
       <text class="row-go">›</text>
     </view>
   </view>
@@ -68,6 +68,8 @@
     <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集合里还没有篇目'}}</text>
     <text class="hint empty-tip" wx:if="{{keyword}}">换个词或切到「全部」</text>
   </view>
+
+  <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
   <view class="safe-bottom"></view>
   </block>

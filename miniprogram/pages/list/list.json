@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "课内阅读",
   "usingComponents": {
+    "collect-picker": "/components/collect-picker/collect-picker",
     "tab-bar": "/custom-tab-bar/index"
   }
 }
