@@ -2078,8 +2078,8 @@ ok("名录在、标签截断、档位合法",
 
   {
     const names = scopes.list().map((s) => s.id);
-    ok("出题范围三档：课内当前学段、课内全部、不限（本地题源一律是课内行，课外集子不在包里）",
-      names.join() === [scopes.STAGE_SCOPE, scopes.COURSE_ALL_SCOPE, scopes.ANY_SCOPE].join() &&
+    ok("出题范围四档：课内当前学段、课内、课外阅读、不限（本地题源一律是课内行，课外集子不在包里）",
+      names.join() === [scopes.STAGE_SCOPE, scopes.COURSE_ALL_SCOPE, scopes.EXTRA_SCOPE, scopes.ANY_SCOPE].join() &&
         names.every((id) => scopes.pool(id).every((p) => p.b === "poems")),
       "范围里有 " + names.join("、"));
 
@@ -2232,12 +2232,15 @@ ok("名录在、标签截断、档位合法",
       "少了哪一个，这轮就玩不下去");
 
     const js = read("packages/game/feihua/feihua.js");
-    const submitBlock = js.slice(js.indexOf("onSubmit()"), js.indexOf("onSubmit()") + 1600);
-    const advanceCalls = (submitBlock.match(/this\.advance\(/g) || []).length;
-    ok("答对自动下一题", advanceCalls >= 1, "onSubmit 里没有 advance");
-    ok("答错也自动下一题（设了 locked 再 advance）",
-      /!r\.ok[\s\S]{0,200}?advance\(/.test(submitBlock),
-      "答错那条路没有 advance");
+    const settleBlock = js.slice(js.indexOf("settle(r) {"), js.indexOf("advance(ms) {"));
+    ok("答对后令字不变，自动续接下一句（advance 走 resume，不走 next）",
+      /this\.advance\(/.test(settleBlock)
+        && /advance\(ms\)[\s\S]{0,200}?this\.resume\(\)/.test(js)
+        && !/resume\(\) \{[\s\S]{0,400}?this\.next\(\)/.test(js),
+      "答对后又换了令字，或没有续接");
+    ok("答错即收令（接不上这一令就结束，不再自动换字）",
+      /!r\.ok[\s\S]{0,200}?this\.endRound\(/.test(settleBlock),
+      "答错那条路没有 endRound");
     ok("自动翻题用计时器，页面走了要清掉",
       /setTimeout/.test(js) && /onUnload[\s\S]{0,120}?clearTimeout/.test(js));
     ok("换令先清掉待翻的计时器，再出下一个令字",
@@ -2249,7 +2252,7 @@ ok("名录在、标签截断、档位合法",
       })());
 
     ok("一轮有倒计时，到点收轮（不再是一题接一题无限连）",
-      /startClock\(\)[\s\S]{0,200}?setInterval/.test(js) && /endRound\(\)/.test(js),
+      /startClock\(\)[\s\S]{0,200}?setInterval/.test(js) && /endRound\(/.test(js),
       "少了计时那一层 —— 飞花令又变回没有输赢的填空题");
     ok("离开页面把两条计时器都停掉",
       /onUnload[\s\S]{0,160}?clearTimeout/.test(js) && /onUnload[\s\S]{0,160}?stopClock/.test(js));
@@ -3227,7 +3230,7 @@ function mountFull(pg, query) {
       /finish\(\)[\s\S]{0,1600}?scoreLog\.add\("exam"/.test(examJs));
     ok("一轮飞花令收尾就落一条，两种收尾都走同一个写入",
       (fhJs.match(/scoreLog\.add\("feihua"/g) || []).length === 1
-        && /endRound\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs)
+        && /endRound\([^)]*\) \{[\s\S]{0,400}?keepRound\(\)/.test(fhJs)
         && /onSkip\(\)[\s\S]{0,400}?keepRound\(\)/.test(fhJs),
       "只写了一条路，另一种收尾方式那一轮就不会留下记录");
     ok("题库不记成绩：交卷不落记录，结果页也没有「最好的一次」",

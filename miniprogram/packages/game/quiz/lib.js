@@ -66,7 +66,8 @@ function _quiz_linesOf(p) {
 
 function build(opt) {
   const extra = (opt.extra || []).filter((p) => p.hasT);
-  const pool = gameScopes.pool(opt.scope).filter((p) => p.hasT).concat(extra);
+  const base = opt.scope === gameScopes.ANY_SCOPE && extra.length ? [] : gameScopes.pool(opt.scope);
+  const pool = base.filter((p) => p.hasT).concat(extra);
   const count = opt.count || 10;
   const forms = opt.forms && opt.forms.length ? opt.forms : FORM_KEYS;
   const start = opt.start || 0;
@@ -111,7 +112,15 @@ function remoteEntry(poem) {
   return { id: m.id, t: m.t, a: m.a, d: m.d, text: m.text, hasT: true, remote: true, b: "source" };
 }
 
-function fetchRemote() {
+function fetchRandom() {
+  const run = (n) => Promise.all(Array.from({ length: n }, () =>
+    source.withTimeout(source.random(), REMOTE_MS).then(remoteEntry, () => null)));
+  return run(REMOTE_BATCH)
+    .then((first) => run(REMOTE_PICK - REMOTE_BATCH).then((second) => first.concat(second)))
+    .then((list) => list.filter(Boolean));
+}
+
+function fetchCatalog() {
   const picked = _quiz_shuffle(remoteRows()).slice(0, REMOTE_PICK);
   const run = (batch) => Promise.all(batch.map((r) =>
     source.withTimeout(source.byId(r.sid, r), REMOTE_MS).then(remoteEntry, () => null)));
@@ -120,11 +129,17 @@ function fetchRemote() {
     .then((list) => list.filter(Boolean));
 }
 
+const FETCH_BY_SCOPE = {
+  [gameScopes.EXTRA_SCOPE]: fetchCatalog,
+  [gameScopes.ANY_SCOPE]: fetchRandom
+};
+
 function buildAsync(opt) {
   const local = (degraded) => ({ questions: build(opt), remote: 0, degraded: degraded });
-  if (opt.scope !== gameScopes.ANY_SCOPE) return Promise.resolve(local(false));
+  const fetchExtra = FETCH_BY_SCOPE[opt.scope];
+  if (!fetchExtra) return Promise.resolve(local(false));
   if (!source.usable()) return Promise.resolve(local(true));
-  return fetchRemote().then((extra) => {
+  return fetchExtra().then((extra) => {
     if (extra.length < REMOTE_MIN) return local(true);
     return { questions: build(Object.assign({}, opt, { extra: extra })), remote: extra.length, degraded: false };
   }, () => local(true));

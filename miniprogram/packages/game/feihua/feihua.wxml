@@ -41,7 +41,7 @@
 
       <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
 
-      <button class="btn ghost block restart" wx:if="{{locked && done.length}}" bindtap="onRestart">
+      <button class="btn ghost block restart" wx:if="{{over}}" bindtap="onRestart">
         再开一轮
       </button>
     </view>

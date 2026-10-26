@@ -118,7 +118,7 @@
 }
 
 .face.on .face-ico {
-  color: var(--mark);
+  color: var(--strong-text);
 }
 
 .all-title {
