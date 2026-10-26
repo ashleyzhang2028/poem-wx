@@ -6,7 +6,8 @@
       { "type": "folder", "value": "data/books" },
       { "type": "file", "value": "data/course.js" },
       { "type": "file", "value": "data/pinyin-table.js" },
-      { "type": "file", "value": "data/roster.js" }
+      { "type": "file", "value": "data/roster.js" },
+      { "type": "file", "value": "data/roster-extra.js" }
     ]
   },
   "setting": {

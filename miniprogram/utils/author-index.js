@@ -191,6 +191,32 @@ const ATTRIB = {
   "classic-gw-10": { person: "朱熹", dynasty: "宋" }
 };
 
+const extra = (() => {
+  try {
+    return require("../data/roster-extra.js") || {};
+  } catch (e) {
+    return {};
+  }
+})();
+
+const EXTRA_NAME = extra.name || {};
+
+function extraRoster(byPerson, order) {
+  Object.keys(EXTRA_NAME).forEach(function (n) {
+    if (byPerson[n]) return;
+    byPerson[n] = {
+      name: n,
+      at: Number(EXTRA_NAME[n]) || TAIL,
+      items: [],
+      dynasties: {},
+      count: 0,
+      unread: 0,
+      external: true
+    };
+    order.push(n);
+  });
+}
+
 function build(entries, opt) {
   const readIds = (opt && opt.readIds) || {};
   const byBook = {};
@@ -235,6 +261,8 @@ function build(entries, opt) {
     const d = String((fix && fix.dynasty) || p.d || "").trim();
     if (d) w.dynasties[d] = true;
   });
+
+  extraRoster(byPerson, order);
 
   const people = {};
   order.forEach(function (n) {
@@ -285,6 +313,38 @@ function build(entries, opt) {
     total: order.length,
     unread: order.reduce(function (n, k) { return n + (people[k].unread ? 1 : 0); }, 0)
   };
+}
+
+function query(roster, keyword) {
+  const kw = String(keyword || "").trim();
+  if (!kw || !roster || !roster.people) return [];
+  const hit = [];
+  Object.keys(roster.people).forEach(function (n) {
+    if (n.indexOf(kw) < 0) return;
+    const w = roster.people[n];
+    hit.push({
+      name: n,
+      at: w.at,
+      era: eraOfName(w.at),
+      count: w.count,
+      sid: "",
+      marked: !!w.external,
+      external: false
+    });
+  });
+  hit.sort(function (a, b) {
+    const ka = a.name.indexOf(kw) === 0 ? 0 : 1;
+    const kb = b.name.indexOf(kw) === 0 ? 0 : 1;
+    if (ka !== kb) return ka - kb;
+    if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+    if (a.at !== b.at) return a.at - b.at;
+    return byPinyin(a.name, b.name);
+  });
+  return hit;
+}
+
+function eraOfName(at) {
+  return ERA_NAME[at] || "其他";
 }
 
 function orderItems(items) {
@@ -349,9 +409,11 @@ module.exports = {
   ERAS: ERAS,
   TAIL: TAIL,
   LIT_BOOKS: LIT_BOOKS,
+  extraCount: Object.keys(EXTRA_NAME).length,
   eraOf: eraOf,
   eraName: eraName,
   aliasOf: aliasOf,
+  query: function (roster, keyword) { return query(roster, keyword); },
   isCollective: isCollective,
   build: build,
   orderItems: orderItems,

@@ -252,6 +252,7 @@ node scripts/build-data.js
           · data/course.js         课内 251 首正文 + 译文       → 进主包
           · data/pinyin-table.js   读音表（离线注音）           → 进包
           · data/roster.js         名录                       → 进包
+          · data/roster-extra.js   集子目录里的作者（名字 → 朝代）  → 进包
 
      ⚠️ 编译这一步**不在 checkout 里**：产物不进 git，CI 上传体验版之前会重跑一次
      （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑

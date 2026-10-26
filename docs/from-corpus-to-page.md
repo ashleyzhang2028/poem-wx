@@ -35,7 +35,7 @@ scripts/corpus/data/*.js（语料，随仓库走）
 npm run build:data
 ```
 
-`build-data.js` 一次产出六样，**全部进主包**：
+`build-data.js` 一次产出七样，**全部进主包**：
 
 | 产物 | 谁读它 | 体积 |
 |---|---|---|
@@ -44,6 +44,7 @@ npm run build:data
 | `data/books/catalogs.js` | 十部集子的目录（书名 + 标题 + 作者或出处，正文一个字不在里面） | 84 KB |
 | `data/course.js` | 首页「每日背诵」、详情页 | 课内 251 首，约 235 KB |
 | `data/pinyin-table.js` | 注音 | 62 KB |
+| `data/roster-extra.js` | 作者索引（只在十部集子目录里出现的 210 位：名字 → 朝代） | 3 KB |
 | `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
 课内那 235 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——
@@ -129,7 +130,7 @@ corpus.ensureEntry(id)   → 同一条，回 Promise；包内没有就抛 E_NO_T
 
 两只 `ignore*UnusedFiles` 是**两个**开关，关一只另一条路照样摇。`include` 是
 「无论分析器怎么想都带上」的那一档，`check.js` 钉着它必须覆盖 `data/books` /
-`course.js` / `pinyin-table.js` / `roster.js`。
+`course.js` / `pinyin-table.js` / `roster.js` / `roster-extra.js`。
 
 这三处都只是保险。真正的判据在上一节：**每一份该进包的语料都要在模块图上**。
 

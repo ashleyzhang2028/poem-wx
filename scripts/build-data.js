@@ -45,6 +45,7 @@ const POEM_FILES = [
   "data/site-books.js",
   "data/site-index.js",
   "data/site-catalogs.js",
+  "data/site-roster.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -145,6 +146,7 @@ function main() {
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
+  writeRosterExtra(W);
   writeRoster();
   writeServer();
 
@@ -333,6 +335,28 @@ function extractWords(file, W) {
     console.log("词组表解析失败：" + e.message);
     return {};
   }
+}
+
+function writeRosterExtra(W) {
+  const roster = W.SITE_ROSTER || null;
+  if (!roster || !roster.length) {
+    throw noCorpus(path.join(CORPUS_DIR, "data", "site-roster.js"));
+  }
+
+  const name = {};
+  let total = 0;
+
+  roster.forEach(function (row) {
+    total += row[1].length;
+    row[1].forEach(function (n) {
+      if (name[n]) throw new Error("data/site-roster.js 里 " + n + " 出现了两次");
+      name[n] = row[0];
+    });
+  });
+
+  writeModule(path.join(OUT_DIR, "roster-extra.js"), { name: name });
+  console.log("集子名册 " + total + " 位（不在课内那 251 首里），" +
+    Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
 }
 
 function writeRoster() {

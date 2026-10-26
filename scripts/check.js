@@ -5085,6 +5085,33 @@ const K = {
     "出现了原写法：" + bad.join("、"));
 }
 
+{
+  const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  const roster = AI.build(perBook.poems);
+  ok("集子目录里的作者都进得了名册（" + AI.extraCount + " 位）",
+    AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
+    "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
+
+  const missing = ["韩非", "脱脱等", "岳飞"].filter((n) => !roster.people[n]);
+  ok("草稿里点到的几位在名册上（他们只在集子目录里出现）",
+    missing.length === 0, "名册里没有：" + missing.join("、"));
+
+  const only = roster.people["韩非"];
+  ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,
+    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有韩非");
+
+  {
+    const hits = AI.query(roster, "李");
+    ok("作者搜索是只在作者名上匹（搜「李」出李白，不出《李凭箜篌引》）",
+      hits.length > 0 && hits.every((h) => h.name.indexOf("李") >= 0)
+        && hits.some((h) => h.name === "李白"),
+      JSON.stringify(hits.slice(0, 5).map((h) => h.name)));
+    ok("搜索是前缀优先（搜「李」时李白排在建名之前）",
+      hits[0].name.indexOf("李") === 0,
+      "第一位是 " + (hits[0] && hits[0].name));
+  }
+}
+
 (async () => {
   const readSrc = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const remoteSrc = readSrc("utils/remote.js");
