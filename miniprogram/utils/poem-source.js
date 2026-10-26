@@ -1,7 +1,8 @@
 const remote = require("./remote");
+const remotePoems = require("./remote-poems");
 const store = require("./store");
 
-const NAME = "课外库";
+const NAME = "课外阅读";
 
 const CAPS = {
   poems: "/poems",
@@ -123,7 +124,7 @@ function withTimeout(task, ms) {
 }
 
 function failure(err) {
-  const e = new Error((err && (err.errMsg || err.message)) || "取不到课外库");
+  const e = new Error((err && (err.errMsg || err.message)) || "取不到课外阅读");
   e.code = (err && err.code) || "E_POEM_SOURCE";
   e.expected = true;
   e.statusCode = Number(err && err.statusCode) || 0;
@@ -207,7 +208,7 @@ function types() {
 }
 
 function authors(page, size) {
-  return call(CAPS.authors, { page: page || 1, page_size: Math.min(PAGE_MAX, size || 20) }).then(paged);
+  return call(CAPS.authors, { page: page || 1, page_size: Math.min(PAGE_MAX, size || 20) }, { fresh: true }).then(paged);
 }
 
 function author(id) {
@@ -254,11 +255,41 @@ function remember(page) {
   page.items.forEach((p) => {
     if (p && p.id !== undefined) seen[String(p.id)] = p;
   });
+  remotePoems.keep(page.items);
   return page;
 }
 
-function sameTitle(p, title) {
-  return String(p.title || "").trim() === String(title || "").trim();
+const B64URL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+function cursorBefore(id) {
+  const s = "poem:" + (Number(id) - 1);
+  let out = "";
+  for (let i = 0; i < s.length; i += 3) {
+    const a = s.charCodeAt(i);
+    const b = s.charCodeAt(i + 1);
+    const c = s.charCodeAt(i + 2);
+    out += B64URL[a >> 2] + B64URL[((a & 3) << 4) | ((b || 0) >> 4)];
+    if (!isNaN(b)) out += B64URL[((b & 15) << 2) | ((c || 0) >> 6)];
+    if (!isNaN(c)) out += B64URL[c & 63];
+  }
+  return out;
+}
+
+function byNumericId(id) {
+  return poems({ after: cursorBefore(id), page_size: 1 }).then((r) => {
+    const hit = r.items[0];
+    if (!hit || String(hit.id) !== String(id)) throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
+    return hit;
+  });
+}
+
+const PART_SUFFIX = /^[\s\u3000·]*([一二三四五六七八九十]+首)?[\s\u3000·]*(其?[一二三四五六七八九十\d]+)?$/;
+
+function titleRank(p, title) {
+  const got = String(p.title || "").trim();
+  const want = String(title || "").trim();
+  if (got === want) return 2;
+  return want && got.indexOf(want) === 0 && PART_SUFFIX.test(got.slice(want.length)) ? 1 : 0;
 }
 
 function sameAuthor(p, name) {
@@ -267,19 +298,39 @@ function sameAuthor(p, name) {
 
 function byTitle(meta) {
   return search(meta.t, { type: "title", size: PAGE_MAX }).then((r) => {
-    const hits = r.items.filter((p) => sameTitle(p, meta.t) && sameAuthor(p, meta.a));
+    const named = r.items.filter((p) => titleRank(p, meta.t) > 0 && sameAuthor(p, meta.a));
+    const exact = named.filter((p) => titleRank(p, meta.t) === 2);
+    const hits = exact.length ? exact : named;
     const authors = {};
     hits.forEach((p) => { authors[(p.author && p.author.name) || ""] = 1; });
     if (!hits.length || Object.keys(authors).length > 1) {
-      throw failure({ message: "课外库里没对上这一篇", code: "E_NO_POEM" });
+      throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
     }
-    return hits[0];
+    return exact.length ? hits[0] : joinParts(meta.t, hits);
+  });
+}
+
+function partLabel(p, title, at) {
+  const tail = String(p.title || "").trim().slice(String(title).trim().length);
+  const mark = tail.match(/其?[一二三四五六七八九十\d]+$/);
+  if (!mark) return "其" + (at + 1);
+  return mark[0].charAt(0) === "其" ? mark[0] : "其" + mark[0];
+}
+
+function joinParts(title, parts) {
+  const sorted = parts.slice().sort((a, b) => Number(a.id) - Number(b.id));
+  const blocks = sorted.map((p, i) => [partLabel(p, title, i)].concat(linesOf(p)));
+  return Object.assign({}, sorted[0], {
+    title: title,
+    parts: blocks,
+    content: [].concat.apply([], blocks)
   });
 }
 
 function byId(id, meta) {
   const hit = id && seen[String(id)];
   if (hit) return Promise.resolve(hit);
+  if (/^\d+$/.test(String(id))) return byNumericId(id);
   if (meta && meta.t) return byTitle(meta);
   return Promise.reject(failure({ message: "没有可用的正文 id", code: "E_BAD_ID" }));
 }
@@ -294,6 +345,7 @@ function linesOf(poem) {
 }
 
 function textOf(poem) {
+  if (poem && Array.isArray(poem.parts)) return poem.parts.map((b) => b.join("\n")).join("\n\n");
   return linesOf(poem).join("\n");
 }
 

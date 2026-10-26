@@ -33,7 +33,7 @@
   </view>
 
   <recite-sheet id="sheet" theme-style="{{themeStyle}}"
-                queue="{{sheetRows}}" bind:finish="onSheetFinish" bind:defer="onDeferChange" />
+                queue="{{sheetRows}}" bind:need="onSheetNeed" bind:finish="onSheetFinish" bind:defer="onDeferChange" />
 
   <view class="safe-bottom"></view>
   <tab-bar id="tabbar" current="4" />

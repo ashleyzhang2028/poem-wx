@@ -25,7 +25,7 @@ Page({
     themeStyle: "",
     name: "",
     levels: feihua.LEVELS,
-    level: "normal",
+    level: "easy",
     scopes: gameScopes.list(),
     scope: gameScopes.STAGE_SCOPE,
 
@@ -206,7 +206,7 @@ Page({
       {
         char: char,
         locked: !char || !this.data.started,
-        ask: char ? "写一句带「" + char + "」的诗词" : "这一档的令字出完了，换一档难度再来",
+        ask: char ? "" : "这一档的令字出完了，换一档难度再来",
         input: "",
         message: "",
         messageOk: false,
@@ -302,7 +302,7 @@ Page({
     const token = (this.judgeToken || 0) + 1;
     this.judgeToken = token;
     if (feihua.onSource()) {
-      this.setData({ judging: true, msgHint: true, message: "正在核对课外库…", messageOk: false });
+      this.setData({ judging: true, msgHint: true, message: "正在核对课外阅读…", messageOk: false });
     }
     feihua.judgeAsync(this.data.char, this.data.input, said, opt).then((r) => {
       if (token !== this.judgeToken) return;
@@ -315,7 +315,7 @@ Page({
 
   settle(r) {
     if (this.ended) return;
-    if (r.degraded) wx.showToast({ title: "课外库没回应，已按课内判定", icon: "none" });
+    if (r.degraded) wx.showToast({ title: "课外阅读没回应，已按课内判定", icon: "none" });
     this.setData({ judging: false, msgHint: false });
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);

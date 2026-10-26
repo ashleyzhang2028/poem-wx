@@ -191,7 +191,8 @@ Page({
     const id = this.data.id;
     const meta = this.findMeta(id);
 
-    if (!meta && !this.data.remote) {
+    const remoteId = /^\d+$/.test(String(id));
+    if (!meta && !this.data.remote && !remoteId) {
       this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
@@ -211,7 +212,7 @@ Page({
       return;
     }
 
-    if (this.data.remote) return this.loadRemote(id, null, "这一篇的正文没取到，点一下重试");
+    if (this.data.remote || remoteId) return this.loadRemote(id, null, "这一篇的正文没取到，点一下重试");
 
     this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
   },
