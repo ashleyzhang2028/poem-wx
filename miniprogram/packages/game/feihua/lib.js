@@ -4,6 +4,12 @@ const source = require("../../../utils/poem-source");
 
 const LIMIT = 60;
 
+const SEARCH_PAGE = 50;
+
+const LOOK_PAGES = 4;
+
+const QUERY_MAX = 20;
+
 const LEVELS = [
   { id: "easy", name: "常见字", min: 25 },
   { id: "normal", name: "一般字", min: 6 },
@@ -48,7 +54,9 @@ function judgeAtSource(char, input, said) {
   const clauses = inputClauses(input);
   const mine = clauses.join("");
   if (mine.length < 4) return Promise.resolve(null);
-  if (mine.indexOf(ch) < 0) return Promise.resolve(null);
+  if (clauses.length < 2 && mine.indexOf(ch) < 0) {
+    return Promise.resolve({ ok: false, why: "char", reason: "这句里没有「" + ch + "」" });
+  }
 
   const used = {};
   (said || []).forEach((s) => {
@@ -56,8 +64,13 @@ function judgeAtSource(char, input, said) {
   });
   if (used[mine]) return Promise.resolve({ ok: false, why: "said", reason: "这一句说过了" });
 
-  const want = clauses[clauses.length - 1];
-  return source.search(want, { type: "content", size: 20 }).then((r) => {
+  return findAtSource(clauses[clauses.length - 1], mine);
+}
+
+function findAtSource(want, mine) {
+  const q = String(want || "").slice(0, QUERY_MAX);
+  if (!q) return Promise.resolve(null);
+  return source.search(q, { type: "content", size: SEARCH_PAGE }).then((r) => {
     const hit = (r.items || []).find((p) => _feihua_strip(source.textOf(p)).indexOf(mine) >= 0);
     if (!hit) return null;
     return { ok: true, hit: { id: String(hit.id), title: hit.title }, seg: mine };
@@ -84,11 +97,19 @@ function lookAtSource(char, opt) {
   const ch = String(char || "").trim();
   if (!ch) return Promise.resolve([]);
   const limit = (opt && opt.limit) || LIMIT;
-  return source.search(ch, { type: "content", size: Math.min(limit, 100) }).then((r) => {
-    const out = [];
+  const seen = {};
+  ((opt && opt.exclude) || []).forEach((seg) => {
+    seen[_feihua_strip(seg)] = 1;
+  });
+  const out = [];
+  const hop = (page) => source.search(ch, { type: "content", size: SEARCH_PAGE, page: page }).then((r) => {
     (r.items || []).forEach((p) => {
+      if (out.length >= limit) return;
       segsWith(ch, p).forEach((seg) => {
         if (out.length >= limit) return;
+        const key = _feihua_strip(seg);
+        if (seen[key]) return;
+        seen[key] = 1;
         out.push({
           id: String(p.id),
           title: p.title,
@@ -98,8 +119,10 @@ function lookAtSource(char, opt) {
         });
       });
     });
-    return out;
+    if (out.length >= limit || !r.more || page >= LOOK_PAGES) return out;
+    return hop(page + 1);
   });
+  return hop(1);
 }
 
 function _feihua_scopedPoems(opt) {
