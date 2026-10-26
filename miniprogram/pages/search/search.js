@@ -16,6 +16,10 @@ const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
 const BATCH = 20;
 
+function workKey(row) {
+  return String(row.title || "").trim() + "\u0000" + String(row.author || "").trim();
+}
+
 Page({
   data: {
     themeStyle: "",
@@ -111,12 +115,12 @@ Page({
       loading: false
     }, () => this.refreshPicked());
 
-    this.askSource(kw, 1, token);
+    if (pack.total <= BATCH) this.askSource(kw, 1, token);
   },
 
   askSource(kw, page, token) {
     if (!source.usable()) {
-      if (token === this.token) this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
+      if (token === this.token) this.setData({ loading: false, more: this.packLeft() > 0 });
       return;
     }
     this.setData({ loading: true });
@@ -126,19 +130,20 @@ Page({
       this.appendSource(r.items, kw, r.more);
     }, () => {
       if (token !== this.token) return;
-      this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
+      this.setData({ loading: false, more: this.packLeft() > 0 || (this.sourcePage > 0 && this.data.more) });
     });
   },
 
   appendSource(items, kw, hasNext) {
     const seen = this.sourceIds;
     const have = {};
-    (this.data.results || []).forEach((r) => { have[r.id] = 1; });
+    (this.data.results || []).forEach((r) => { have[workKey(r)] = 1; });
     const rows = [];
     (items || []).forEach((p) => {
       const row = source.asResult(p, kw);
-      if (!row.id || seen[row.id] || have[row.id]) return;
+      if (!row.id || seen[row.id] || have[workKey(row)]) return;
       seen[row.id] = 1;
+      have[workKey(row)] = 1;
       rows.push(row);
     });
     const list = this.decorate(this.data.results.concat(rows));
@@ -210,16 +215,16 @@ Page({
   onReachBottom() {
     if (this.data.loading || !this.data.more) return;
     const kw = this.data.keyword.trim();
-    const page = (this.sourcePage || 0) + 1;
-    if (page > 1) return this.askSource(kw, page, this.token);
+    if (this.packLeft() === 0) return this.askSource(kw, (this.sourcePage || 0) + 1, this.token);
     const want = Math.min(this.packTotal || 0, (this.data.results || []).length + BATCH);
     const pack = this.byIndex(kw);
     const rows = pack.items.slice(0, want);
     this.setData({
       results: this.decorate(rows),
       total: rows.length,
-      more: this.packLeft() > 0 || this.data.more
+      more: true
     }, () => this.refreshPicked());
+    if (rows.length >= (this.packTotal || 0)) this.askSource(kw, 1, this.token);
   },
 
   onOpen(e) {

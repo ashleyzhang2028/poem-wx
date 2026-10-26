@@ -2,6 +2,8 @@ node_modules/
 .DS_Store
 *.log
 
+reference/
+
 # 微信开发者工具的本地私有配置
 miniprogram/project.private.config.json
 

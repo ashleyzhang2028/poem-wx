@@ -12,7 +12,8 @@ const guard = require("../../../utils/guard");
 const SUGGEST_MAX = 12;
 const REMOTE_WAIT = 600;
 const REMOTE_PAGE = 50;
-const BATCH = 20;
+const REMOTE_PAGES = 3;
+const REMOTE_MAX = 30;
 
 Page({
   data: {
@@ -45,10 +46,9 @@ Page({
     matched: 0,
     unread: 0,
 
-    remote: false,
     remoteMore: false,
-    remoteTotal: 0,
-    remoteNote: ""
+    remoteNote: "",
+    moreNote: ""
   },
 
   onShow() {
@@ -62,7 +62,7 @@ Page({
     this.setData({ locked: false });
 
     this.buildRoster();
-    if (this.data.author) this.showAuthor(this.data.author);
+    if (this.data.author) this.applyWorks();
   },
 
   allEntries() {
@@ -130,11 +130,35 @@ Page({
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       if (tick !== this.tick) return;
-      source.search(kw, { type: "author", page: 1, size: REMOTE_PAGE }).then((r) => {
-        if (tick !== this.tick) return;
-        this.fillRemote(kw, r.items);
-      }, () => {});
+      this.pullAuthors(kw, 1, [], tick);
     }, REMOTE_WAIT);
+  },
+
+  pullAuthors(kw, page, poems, tick) {
+    source.search(kw, { type: "author", page: page, size: REMOTE_PAGE }).then((r) => {
+      if (tick !== this.tick) return;
+      const all = poems.concat(r.items);
+      const enough = this.remoteAuthors(kw, all).length >= REMOTE_MAX;
+      if (r.more && !enough && page < REMOTE_PAGES) return this.pullAuthors(kw, page + 1, all, tick);
+      this.fillRemote(kw, all);
+    }, () => {
+      if (tick === this.tick && poems.length) this.fillRemote(kw, poems);
+    });
+  },
+
+  remoteAuthors(kw, poems) {
+    const seen = {};
+    const rows = [];
+    (poems || []).forEach((p) => {
+      const a = (p && p.author) || {};
+      const name = String(a.name || "").trim();
+      if (!name) return;
+      if (kw.length === 1 && name.indexOf(kw) !== 0) return;
+      if (seen[name]) return;
+      seen[name] = 1;
+      rows.push({ name: name, dynasty: String((p.dynasty && p.dynasty.name) || ""), id: a.id });
+    });
+    return rows;
   },
 
   fillRemote(kw, poems) {
@@ -142,13 +166,12 @@ Page({
     const local = this.data.suggests || [];
     local.forEach((s) => { seen[s.name] = 1; });
     const rows = [];
-    (poems || []).forEach((p) => {
-      const a = (p && p.author) || {};
-      const name = String(a.name || "").trim();
-      if (!name || seen[name]) return;
-      if (local.length + rows.length >= SUGGEST_MAX) return;
+    this.remoteAuthors(kw, poems).forEach((a) => {
+      const name = a.name;
+      if (seen[name]) return;
+      if (rows.length >= REMOTE_MAX) return;
       seen[name] = 1;
-      const dynasty = String((p.dynasty && p.dynasty.name) || "");
+      const dynasty = a.dynasty;
       rows.push({
         name: name,
         at: AI.eraOf(dynasty),
@@ -191,31 +214,30 @@ Page({
   openAuthor(name) {
     const w = this.roster && this.roster.people[name];
     if (!w) return false;
-    this.showAuthor(name);
+    this.enter(w);
     return true;
-  },
-
-  showAuthor(name) {
-    const w = this.roster && this.roster.people[name];
-    if (!w) return;
-    this.current = w;
-    if (w.external) {
-      this.openRemote(w);
-      return;
-    }
-    if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
-    wx.setNavigationBarTitle({ title: "作者索引 · " + name });
-    this.askSource();
   },
 
   openRemote(w) {
     if (!w || !w.name) return;
-    if (this.current !== w) this.sourceRows = null;
+    this.enter(w);
+  },
+
+  personOf(name) {
+    const listed = this.roster && this.roster.people[name];
+    if (listed) return listed;
+    return this.current && this.current.name === name ? this.current : null;
+  },
+
+  enter(w) {
     this.current = w;
-    this.setData({ author: w.name, filter: "全部", keyword: "", suggests: [], remoteNote: "" });
+    this.srcToken = (this.srcToken || 0) + 1;
+    this.remote = { page: 0, more: false, failed: false, busy: false, total: 0, rows: [] };
+    this.setData({ author: w.name, filter: "全部", keyword: "", suggests: [], remoteNote: "", moreNote: "" });
     wx.setNavigationBarTitle({ title: "作者索引 · " + w.name });
-    if (this.askSource()) return;
+    wx.pageScrollTo({ scrollTop: 0, duration: 0 });
     this.applyWorks();
+    this.pullWorks();
   },
 
   onFilter(e) {
@@ -223,56 +245,59 @@ Page({
   },
 
   onMoreFromSource() {
-    if (!this.data.remoteMore) return;
-    this.askSource(this.data.works.length + BATCH);
+    this.pullWorks();
   },
 
-  askSource(want) {
-    const name = this.data.author;
-    if (!name) return null;
-    const w = this.roster && this.roster.people[name];
-    if (!w || !source.usable()) {
-      if (w) this.setData({ remote: false, remoteMore: false, remoteNote: "" });
-      return null;
-    }
-    const token = (this.srcToken || 0) + 1;
-    this.srcToken = token;
-    if (!this.sourceRows && w.external) this.setData({ loading: true });
-    return source.poems({ author: (w.external && w.sid) || name, page_size: source.PAGE_MAX }).then((r) => {
+  pullWorks() {
+    const w = this.personOf(this.data.author);
+    const rem = this.remote;
+    if (!w || !rem || rem.busy || !source.usable()) return;
+    if (rem.page > 0 && !rem.more && !rem.failed) return;
+    const token = this.srcToken;
+    const page = rem.page + 1;
+    const who = w.sid ? { author_id: w.sid } : { author: w.name };
+    rem.busy = true;
+    rem.failed = false;
+    this.setData({ loading: true, moreNote: "" });
+    source.poems(Object.assign({ page: page, page_size: source.PAGE_MAX }, who)).then((r) => {
       if (token !== this.srcToken) return;
-      const rows = r.items.map((p) => source.asWork(p));
-      this.sourceRows = (w.external ? [] : w.items).concat(rows);
-      this.setData({
-        remote: true,
-        loading: false,
-        remoteTotal: r.total,
-        remoteNote: r.total > rows.length && !want
-          ? "课外库共 " + r.total + " 首，先看 " + rows.length + " 首"
-          : ""
-      });
-      this.applyWorks(want || this.sourceRows.length);
-    }, () => {
+      rem.busy = false;
+      rem.page = page;
+      rem.more = r.more;
+      rem.total = r.total;
+      rem.rows = rem.rows.concat(r.items.map((p) => source.asWork(p)));
+      this.setData({ loading: false });
+      this.applyWorks();
+    }, (err) => {
       if (token !== this.srcToken) return;
-      this.setData({ remote: false, remoteMore: false, loading: false, remoteNote: "" });
+      rem.busy = false;
+      rem.failed = !(err && err.statusCode === 404);
+      this.setData({ loading: false });
       this.applyWorks();
     });
   },
 
-  applyWorks(want) {
-    const name = this.data.author;
-    const w = this.roster && this.roster.people[name];
+  applyWorks() {
+    const w = this.personOf(this.data.author);
     if (!w) return;
+    const rem = this.remote || { rows: [], more: false, failed: false, total: 0 };
+
+    const local = w.items || [];
+    const have = {};
+    local.forEach((p) => { have[p.t] = 1; });
+    const rows = local.concat(rem.rows.filter((p) => !have[p.t]));
 
     const readIds = this.readIds();
     const filter = this.data.filter;
-    const rows = this.sourceRows || w.items;
     const list = rows.filter((p) => filter !== "未读" || !readIds[p.id]);
-    const limit = want || list.length;
+
+    let moreNote = "";
+    if (rem.failed) moreNote = "课外库没取到，点一下重试";
+    else if (rem.more) moreNote = "课外库共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
 
     this.setData({
-      works: list.slice(0, limit).map((p) => ({
+      works: list.map((p) => ({
         id: p.id,
-        sid: p.sid || "",
         title: p.t,
         dynasty: p.d,
         bookName: p.n,
@@ -280,9 +305,10 @@ Page({
         source: p.b === "source",
         read: !!readIds[p.id]
       })),
-      remoteMore: !!this.sourceRows && list.length > limit,
+      remoteMore: !!rem.more,
+      moreNote: moreNote,
       matched: list.length,
-      unread: w.unread
+      unread: rows.filter((p) => !readIds[p.id]).length
     });
   },
 
@@ -301,8 +327,7 @@ Page({
     if (guard.gap("authors:open")) return;
     guard.mark("authors:open");
     const ds = e.currentTarget.dataset;
-    const id = ds.sid || ds.id;
-    const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +
+    const url = "/pages/reader/reader?id=" + encodeURIComponent(ds.id) +
       "&mode=browse&from=" + encodeURIComponent(this.data.author) +
       (ds.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
@@ -310,18 +335,22 @@ Page({
 
   onBack() {
     this.current = null;
-    this.sourceRows = null;
+    this.remote = null;
     this.srcToken = (this.srcToken || 0) + 1;
     this.setData({
       author: "", filter: "全部", works: [], matched: 0, unread: 0,
-      remote: false, remoteMore: false, remoteTotal: 0, remoteNote: "", loading: false
-    });
+      remoteMore: false, remoteNote: "", moreNote: "", loading: false
+    }, () => wx.pageScrollTo({ scrollTop: this.rosterTop || 0, duration: 0 }));
     wx.setNavigationBarTitle({ title: "作者索引" });
   },
 
+  onPageScroll(e) {
+    if (!this.data.author) this.rosterTop = e.scrollTop;
+  },
+
   onReachBottom() {
-    if (!this.data.remoteMore) return;
-    this.onMoreFromSource();
+    if (!this.data.author || !this.data.remoteMore) return;
+    this.pullWorks();
   },
 
   onShareAppMessage() {
