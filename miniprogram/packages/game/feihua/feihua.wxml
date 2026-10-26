@@ -1,12 +1,12 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{!allowed}}" title="飞花令" note="登录后才能玩" mark="令" bind:login="onLogin" />
+  <lock-card wx:if="{{!allowed}}" title="飞花令" note="{{lockNote}}" mark="令" bind:login="onLogin" />
 
   <block wx:else>
 
     <view class="card fh-stage {{flash ? 'flash ' + flash : ''}}">
       <view class="fh-head">
         <text class="fh-scope">{{scopeName}}</text>
-        <text class="combo {{streak >= 5 ? 'hot' : ''}}" wx:if="{{streak >= 2}}">{{streak}} 连对</text>
+        <text class="combo {{streak >= 5 ? 'hot' : ''}}" wx:if="{{streak >= 2}}">{{streak}} 连</text>
         <text class="fh-clock {{urgent ? 'urgent' : ''}}">{{leftText}}</text>
       </view>
 
@@ -18,7 +18,9 @@
       </view>
       <text class="fh-ask">{{ask}}</text>
 
-      <view class="field fh-field {{flash ? 'flash ' + flash : ''}}">
+      <button class="btn primary block fh-start" wx:if="{{!started}}" bindtap="onStart" disabled="{{!char}}">开始计时</button>
+
+      <view class="field fh-field">
         <input class="field-input" value="{{input}}" placeholder="例如：云深不知处"
                confirm-type="done" focus="{{!locked}}"
                bindinput="onInput" bindconfirm="onSubmit" />
@@ -26,15 +28,15 @@
 
       <view class="inline-btns">
         <button class="btn ghost" bindtap="onHint" disabled="{{locked || hinted}}">提示</button>
-        <button class="btn primary" bindtap="onSubmit" disabled="{{locked}}">接令</button>
-        <button class="btn ghost" bindtap="onSkip">换令</button>
+        <button class="btn primary" bindtap="onSubmit" disabled="{{locked || judging}}">接令</button>
+        <button class="btn ghost" bindtap="onSkip" disabled="{{!started || over}}">换令</button>
       </view>
 
-      <text class="fh-msg {{messageOk ? 'ok' : 'no'}}" wx:if="{{message}}">{{message}}</text>
+      <text class="fh-msg {{messageOk ? 'ok' : 'no'}} {{msgHint ? 'wait' : ''}}" wx:if="{{message}}">{{message}}</text>
 
       <text class="fh-cheer" wx:if="{{cheerLine}}">{{cheerLine}}</text>
 
-      <text class="fh-note" wx:if="{{streak}}">连对 {{streak}} 句 · 最好 {{best}} 句</text>
+      <text class="fh-note" wx:if="{{streak}}">连续 {{streak}} 句 · 最好 {{best}} 句</text>
       <text class="fh-note ranked" wx:if="{{ranked}}">这一轮 {{lastScore}} 句已上榜 · {{rankWhere}}</text>
 
       <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
@@ -61,12 +63,13 @@
         <text class="fh-open">{{revealed ? '收起' : '展开'}}</text>
       </view>
       <view wx:if="{{revealed}}">
+        <text class="fh-loading" wx:if="{{revealing}}">正在翻找…</text>
         <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
           <text class="fh-seg">{{item.seg}}</text>
           <text class="fh-src">{{item.title}} · {{item.author}}</text>
         </view>
-        <view class="empty" wx:if="{{!answers.length}}">
+        <view class="empty" wx:if="{{!revealing && !answers.length}}">
           <text class="empty-mark">字</text>
           <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
         </view>

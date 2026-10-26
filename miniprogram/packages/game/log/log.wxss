@@ -204,7 +204,10 @@
 
 .lg-del {
   flex: none;
-  padding: var(--sp-1) var(--sp-2);
+  display: flex;
+  align-items: center;
+  min-height: var(--h-btn-mini);
+  padding: 0 var(--sp-3);
   font-size: var(--fs-caption);
   color: var(--ink-3);
   border-radius: var(--radius-pill);

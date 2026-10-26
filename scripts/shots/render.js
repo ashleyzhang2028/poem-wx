@@ -338,9 +338,9 @@ function expandReciteSheet(wxml, data) {
     pinyinMode: "off",
     pinyinOn: false,
     results: [
-      { key: "bad", icon: icons.frown, label: "忘记", cls: "bad" },
-      { key: "fuzzy", icon: icons.meh, label: "模糊", cls: "fuzzy" },
-      { key: "good", icon: icons.smile, label: "记住", cls: "good" }
+      { key: "bad", icon: icons.moonNew, label: "忘记", cls: "bad" },
+      { key: "fuzzy", icon: icons.moonHalf, label: "模糊", cls: "fuzzy" },
+      { key: "good", icon: icons.moonFull, label: "记住", cls: "good" }
     ],
     defers: [
       { key: "tomorrow", icon: icons.tomorrow, label: "明日再背", cls: "defer" },

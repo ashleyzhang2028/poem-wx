@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{!allowed}}" title="考试" note="登录后才能考" mark="考" bind:login="onLogin" />
+  <lock-card wx:if="{{!allowed}}" title="考试" note="{{lockNote}}" mark="考" bind:login="onLogin" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
@@ -30,7 +30,7 @@
       </view>
 
     </view>
-    <button class="btn primary block" bindtap="onStart">开始考试</button>
+    <button class="btn primary block" bindtap="onStart" disabled="{{preparing}}">{{preparing ? '正在备题…' : '开始考试'}}</button>
 
     <view class="card log-card" hover-class="log-hover" hover-stay-time="60" bindtap="onLog">
       <view class="log-glyph">录</view>
@@ -48,7 +48,7 @@
     <view class="exam-bar">
       <text class="exam-progress">{{index + 1}} / {{questions.length}}</text>
       <text class="exam-note">已答 {{marked}} 题</text>
-      <text class="exam-timer">{{remainText}}</text>
+      <text class="exam-timer {{urgent ? 'urgent' : ''}}">{{remainText}}</text>
     </view>
 
     <view class="dots exam-slots">
@@ -58,7 +58,7 @@
 
     <view class="card">
       <view class="stem">
-        <text class="stem-row" wx:for="{{stemRows}}" wx:key="*this">{{item}}</text>
+        <text class="stem-row" wx:for="{{stemRows}}" wx:key="index">{{item}}</text>
       </view>
 
       <text class="hint stem-sub">{{metaLine}}</text>
@@ -76,7 +76,7 @@
 
     <view class="exam-nav">
       <button class="prev-btn" bindtap="onPrev" disabled="{{index === 0}}">上一题</button>
-      <button class="btn primary next-btn" bindtap="onNext">
+      <button class="btn primary next-btn" bindtap="onNextTap" data-i="{{index}}">
         {{index + 1 >= questions.length ? '交卷' : '下一题'}}
       </button>
     </view>
@@ -103,7 +103,7 @@
 
     <view class="card">
       <view class="card-title">逐题</view>
-      <view class="grade" wx:for="{{graded}}" wx:key="stem">
+      <view class="grade" wx:for="{{graded}}" wx:key="index">
         <view class="grade-head">
           <text class="grade-mark {{item.ok ? 'ok' : 'no'}}">{{item.ok ? '对' : '错'}}</text>
           <text class="grade-stem">{{item.stem}}</text>

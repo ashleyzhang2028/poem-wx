@@ -48,6 +48,12 @@ Page({
     message: "",
     messageOk: false,
 
+    started: false,
+    over: false,
+    judging: false,
+    revealing: false,
+    msgHint: false,
+
     locked: false,
     flash: "",
     mark: "",
@@ -73,11 +79,30 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
-    this.setData({ allowed: ok });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("feihualing") || "登录后才能玩" });
     this.loadLog();
-    if (!ok || this.ready) return;
-    this.ready = true;
-    this.next();
+    if (!ok) return;
+    if (!this.ready) {
+      this.ready = true;
+      this.next();
+      return;
+    }
+    if (this.data.started && !this.ended && !this.clock) this.startClock();
+  },
+
+  onHide() {
+    this.stopClock();
+  },
+
+  guardLeave() {
+    const live = this.data.started && !this.ended;
+    if (live && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "这一轮还在计时，现在离开不会记成绩" });
+    if (!live && wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
+  },
+
+  bump() {
+    this.judgeToken = (this.judgeToken || 0) + 1;
+    this.revealToken = (this.revealToken || 0) + 1;
   },
 
   loadLog() {
@@ -99,7 +124,8 @@ Page({
 
   keepRound() {
     const hit = this.data.done.length;
-    if (!hit) return;
+    if (!hit || this.kept) return;
+    this.kept = true;
     scoreLog.add("feihua", {
       hit: hit,
       scope: this.data.scope || "",
@@ -117,23 +143,56 @@ Page({
     this.setData({ scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope) });
   },
 
+  closeOpenRound() {
+    if (this.ended || !this.data.done.length) return;
+    this.keepRound();
+    this.report(this.data.done.length);
+  },
+
+  freshRound() {
+    this.stopClock();
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    this.bump();
+    this.ended = false;
+    this.kept = false;
+    this.reported = false;
+    this.roundAt = Date.now();
+    this.setData(Object.assign({
+      done: [], streak: 0, best: 0, message: "", msgHint: false, remark: "", cheerLine: "",
+      ranked: false, lastScore: 0, over: false, judging: false
+    }, clockPatch(ROUND_LIMIT, this.format(ROUND_LIMIT))));
+    if (this.data.started) this.startClock();
+    this.guardLeave();
+  },
+
   onScope(e) {
     this.setData({ scope: e.detail.value || "" }, () => {
-      this.setData({ done: [], streak: 0, best: 0 });
+      this.closeOpenRound();
+      this.freshRound();
       this.next();
     });
   },
-
 
   onLevel(e) {
     this.setData({ level: e.detail.value }, () => {
-      this.done = [];
-      this.setData({ done: [], streak: 0, best: 0 });
+      this.closeOpenRound();
+      this.freshRound();
       this.next();
     });
   },
 
+  onStart() {
+    if (this.data.started || !this.data.char) return;
+    this.ended = false;
+    this.roundAt = Date.now();
+    this.setData({ started: true, locked: false });
+    this.startClock();
+    this.guardLeave();
+  },
+
   next() {
+    this.bump();
     this.refreshScopeName();
     const opt = this.scopeOpt();
     const exclude = this.data.done.map((d) => d.char);
@@ -146,24 +205,21 @@ Page({
     this.setData(
       {
         char: char,
-        locked: !char,
+        locked: !char || !this.data.started,
         ask: char ? "写一句带「" + char + "」的诗词" : "这一档的令字出完了，换一档难度再来",
         input: "",
         message: "",
         messageOk: false,
+        msgHint: false,
+        judging: false,
         cheerLine: "",
         remark: "",
         flash: "",
         mark: "",
         hinted: false,
         revealed: false,
+        revealing: false,
         answers: []
-      },
-      () => {
-        if (!char) return;
-        this.ended = false;
-        this.roundAt = Date.now();
-        this.startClock();
       }
     );
   },
@@ -204,16 +260,20 @@ Page({
     this.stopClock();
     if (this.ended) return;
     this.ended = true;
-    if (!this.data.done.length) {
-      sfx.play("gong");
-      this.setData({ locked: true, message: "时间到，一句也没接上", messageOk: false });
-      return;
+    this.bump();
+    const said = this.data.done.length;
+    if (said) {
+      this.markRound();
+      this.keepRound();
+      this.report(said);
     }
-    sfx.pass();
-    this.markRound();
-    this.keepRound();
-    this.report(this.data.done.length);
-    this.setData({ locked: true, message: "时间到 · 这一轮 " + this.data.done.length + " 句", messageOk: true });
+    if (said) sfx.pass();
+    else sfx.play("gong");
+    this.guardLeave();
+    this.setData({
+      locked: true, over: true, judging: false, msgHint: false, messageOk: !!said,
+      message: said ? "时间到 · 这一轮 " + said + " 句" : "时间到，一句也没接上"
+    });
   },
 
   onLoad() {
@@ -226,17 +286,8 @@ Page({
   },
 
   onRestart() {
-    if (this.timer) clearTimeout(this.timer);
-    if (this.clock) this.stopClock();
-    this.timer = null;
-    this.ended = false;
-    this.setData({
-      done: [], streak: 0, best: 0, message: "", remark: "", locked: false,
-      ranked: false, lastScore: 0
-    }, () => {
-      this.restartClock();
-      this.next();
-    });
+    this.freshRound();
+    this.next();
   },
 
   onInput(e) {
@@ -244,26 +295,28 @@ Page({
   },
 
   onSubmit() {
-    if (this.data.locked || !this.data.char || guard.gap("feihua:say")) return;
+    if (this.data.locked || this.data.judging || !this.data.char || guard.gap("feihua:say")) return;
     guard.mark("feihua:say");
     const said = this.data.done.map((d) => d.seg);
-    const local = () => feihua.judge(this.data.char, this.data.input, said);
-    if (!feihua.onSource()) {
-      this.settle(local());
-      return;
-    }
+    const opt = this.scopeOpt();
     const token = (this.judgeToken || 0) + 1;
     this.judgeToken = token;
-    feihua.judgeAsync(this.data.char, this.data.input, said).then((r) => {
+    if (feihua.onSource()) {
+      this.setData({ judging: true, msgHint: true, message: "正在核对课外库…", messageOk: false });
+    }
+    feihua.judgeAsync(this.data.char, this.data.input, said, opt).then((r) => {
       if (token !== this.judgeToken) return;
       this.settle(r);
     }, () => {
       if (token !== this.judgeToken) return;
-      this.settle(local());
+      this.settle(feihua.judge(this.data.char, this.data.input, said, opt.scope));
     });
   },
 
   settle(r) {
+    if (this.ended) return;
+    if (r.degraded) wx.showToast({ title: "课外库没回应，已按课内判定", icon: "none" });
+    this.setData({ judging: false, msgHint: false });
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);
 
@@ -304,7 +357,8 @@ Page({
   },
 
   report(said) {
-    if (said < REPORT_MIN) return;
+    if (said < REPORT_MIN || this.reported) return;
+    this.reported = true;
     guard
       .once("feihua:report", () => rankingSubmit.submitPlay("fly", {
         scopeId: this.data.scope || "",
@@ -313,6 +367,7 @@ Page({
         durationSec: this.roundSec()
       }))
       .then((res) => {
+        if (this.unloaded) return;
         const sent = !!(res && res.ok);
         this.setData({
           ranked: sent && !!res.on,
@@ -330,46 +385,48 @@ Page({
   onUnload() {
     if (this.timer) clearTimeout(this.timer);
     this.stopClock();
-    this.judgeToken = (this.judgeToken || 0) + 1;
-    this.revealToken = (this.revealToken || 0) + 1;
+    this.unloaded = true;
+    this.ended = true;
+    this.guardLeave();
+    this.bump();
     feedback.close(this);
   },
 
   onReveal() {
     if (this.data.revealed) {
-      this.setData({ revealed: false, answers: [] });
+      this.revealToken = (this.revealToken || 0) + 1;
+      this.setData({ revealed: false, revealing: false, answers: [] });
       return;
     }
     const opt = this.scopeOpt();
-    if (feihua.onSource()) {
-      const token = (this.revealToken || 0) + 1;
-      this.revealToken = token;
-      const asked = this.data.done.map((d) => d.seg);
-      feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT, exclude: asked }).then((answers) => {
-        if (token !== this.revealToken) return;
-        this.setData({ revealed: true, answers: answers });
-      }, () => {
-        if (token !== this.revealToken) return;
-        this.setData({ revealed: true, answers: feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, { exclude: asked })) });
-      });
+    const asked = this.data.done.map((d) => d.seg);
+    const local = () => feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, { exclude: asked }));
+    if (!feihua.onSource()) {
+      this.setData({ revealed: true, answers: local() });
       return;
     }
-    const answers = feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, {
-      exclude: this.data.done.map((d) => d.seg)
-    }));
-    this.setData({ revealed: true, answers });
+    const token = (this.revealToken || 0) + 1;
+    this.revealToken = token;
+    this.setData({ revealed: true, revealing: true, answers: [] });
+    feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT, exclude: asked }).then((answers) => {
+      if (token !== this.revealToken) return;
+      this.setData({ revealing: false, answers: answers });
+    }, () => {
+      if (token !== this.revealToken) return;
+      this.setData({ revealing: false, answers: local() });
+    });
   },
 
   onSkip() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.stopClock();
-    this.ended = true;
-    if (this.data.done.length) {
+    if (!this.ended && this.data.done.length) {
       this.markRound();
       this.keepRound();
       this.report(this.data.done.length);
     }
+    this.freshRound();
     this.next();
   },
 
@@ -385,7 +442,7 @@ Page({
       return;
     }
     feedback.buzz("light");
-    this.setData({ hinted: true, message: h.head + "…… 共 " + h.total + " 字", messageOk: false });
+    this.setData({ hinted: true, msgHint: true, message: h.head + "…… 共 " + h.total + " 字", messageOk: false });
   },
 
   onOpen(e) {

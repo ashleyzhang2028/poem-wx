@@ -253,7 +253,7 @@ const PACKED = {
   }
 };
 
-const FIELDS = ["id", "t", "a", "d", "at", "s", "g", "sel", "gr", "tm", "aka", "an"];
+const FIELDS = ["id", "t", "a", "d", "s", "g", "sel", "gr", "tm", "an", "aka"];
 
 let dataReady = null;
 
