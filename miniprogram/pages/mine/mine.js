@@ -26,6 +26,7 @@ Page({
     stats: { learned: 0, mastered: 0, readCount: 0 },
 
     tierLabel: "Free",
+    tint: "",
 
     manageOn: false,
     expiry: null,
@@ -66,6 +67,7 @@ Page({
       dailyCount: settings.dailyCount,
       stats,
       tierLabel: e.label,
+      tint: e.tier === "pro" || e.tier === "max" ? e.tier : "",
       manageOn: !!profile.logged && ["owner", "admin"].indexOf(auth.role()) >= 0,
       syncSub: this.syncSub(sy),
       themeName: theme.currentTheme().name,

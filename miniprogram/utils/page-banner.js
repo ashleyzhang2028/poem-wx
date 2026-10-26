@@ -1,6 +1,6 @@
 const navbar = require("./nav-bar");
 
-const COVER = 0.2;
+const COVER = 0;
 
 const SP_3 = 24;
 

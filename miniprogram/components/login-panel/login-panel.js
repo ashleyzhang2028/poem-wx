@@ -5,6 +5,7 @@ const icons = require("../../utils/icons");
 const tiers = require("../../utils/tiers");
 
 const KIND_TEXTS = { free: "青衫", pro: "银鱼袋", max: "金鱼袋" };
+const UPGRADE_TEXTS = { free: "订阅", pro: "升级", max: "续订" };
 const FOREVER_TEXT = "长期有效";
 
 Component({
@@ -20,13 +21,14 @@ Component({
     tierLabel(label) {
       const key = String(label || "").toLowerCase();
       const tierKey = key === "pro" || key === "max" ? key : "free";
-      this.setData({ tierKey: tierKey, kindText: KIND_TEXTS[tierKey], motto: tiers.mottoOf(tierKey).line });
+      this.setData({ tierKey: tierKey, kindText: KIND_TEXTS[tierKey], upgradeText: UPGRADE_TEXTS[tierKey], motto: tiers.mottoOf(tierKey).line });
       this.loadValid(tierKey);
     }
   },
 
   data: {
     tierKey: "free",
+    upgradeText: UPGRADE_TEXTS.free,
     crest: icons.crest,
     kindText: KIND_TEXTS.free,
     motto: tiers.mottoOf("free").line,
@@ -92,6 +94,10 @@ Component({
     done() {
       this.refresh();
       this.triggerEvent("changed");
+    },
+
+    onUpgrade() {
+      this.triggerEvent("upgrade");
     },
 
     onTier() {
