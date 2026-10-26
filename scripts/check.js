@@ -5101,6 +5101,26 @@ const K = {
     only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有韩非");
 
   {
+    const webSrc = fs.readFileSync(
+      path.join(__dirname, "corpus", "data", "author-index.js"), "utf8");
+    const at = webSrc.indexOf("var ALIAS = {");
+    let depth = 0;
+    let end = webSrc.indexOf("{", at);
+    const start = end;
+    while (end < webSrc.length) {
+      const c = webSrc[end];
+      if (c === "{") depth += 1;
+      else if (c === "}") { depth -= 1; if (depth === 0) break; }
+      end += 1;
+    }
+    const webAlias = new Function("return (" + webSrc.slice(start, end + 1) + ")")();
+    const drift = Object.keys(webAlias).filter((k) => AI.aliasOf(k) !== webAlias[k]);
+    ok("异名表两端逐条相同（网页版 " + Object.keys(webAlias).length + " 条）",
+      drift.length === 0,
+      "小程序端没跟上：" + drift.slice(0, 8).map((k) => k + "→" + webAlias[k]).join("、"));
+  }
+
+  {
     const hits = AI.query(roster, "李");
     ok("作者搜索是只在作者名上匹（搜「李」出李白，不出《李凭箜篌引》）",
       hits.length > 0 && hits.every((h) => h.name.indexOf("李") >= 0)
