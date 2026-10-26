@@ -1,5 +1,5 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{!allowed}}" title="题库" note="登录后才能练" mark="题" bind:login="onLogin" />
+  <lock-card wx:if="{{!allowed}}" title="题库" note="{{lockNote}}" mark="题" bind:login="onLogin" />
 
   <block wx:elif="{{stage === 'setup'}}">
     <view class="card">
@@ -30,7 +30,7 @@
 
     </view>
 
-    <button class="btn primary block" bindtap="onStart">开始</button>
+    <button class="btn primary block" bindtap="onStart" disabled="{{preparing}}">{{preparing ? '正在备题…' : '开始'}}</button>
   </block>
 
   <block wx:elif="{{stage === 'running'}}">
@@ -42,7 +42,7 @@
 
     <view class="card {{flash ? 'flash ' + flash : ''}}">
       <view class="stem">
-        <text class="stem-row" wx:for="{{stemRows}}" wx:key="*this">{{item}}</text>
+        <text class="stem-row" wx:for="{{stemRows}}" wx:key="index">{{item}}</text>
       </view>
 
       <text class="hint stem-sub">{{metaLine}}</text>
@@ -88,7 +88,7 @@
 
     <view class="card" wx:if="{{wrong.length}}">
       <view class="card-title">错题</view>
-      <view class="wrong" wx:for="{{wrong}}" wx:key="stem">
+      <view class="wrong" wx:for="{{wrong}}" wx:key="index">
         <text class="wrong-stem">{{item.stem}}</text>
         <text class="wrong-line">正确答案：{{item.answer}}</text>
         <text class="wrong-line picked-line">您选的：{{item.picked}}</text>

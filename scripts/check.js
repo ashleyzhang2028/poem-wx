@@ -2078,8 +2078,9 @@ ok("名录在、标签截断、档位合法",
 
   {
     const names = scopes.list().map((s) => s.id);
-    ok("出题范围只剩课内那一项（课外集子一条都不在包里）",
-      names.length === 1 && names[0] === scopes.STAGE_SCOPE,
+    ok("出题范围三档：课内当前学段、课内全部、不限（本地题源一律是课内行，课外集子不在包里）",
+      names.join() === [scopes.STAGE_SCOPE, scopes.COURSE_ALL_SCOPE, scopes.ANY_SCOPE].join() &&
+        names.every((id) => scopes.pool(id).every((p) => p.b === "poems")),
       "范围里有 " + names.join("、"));
 
     const corpusMod = require(path.join(ROOT, "utils", "corpus.js"));

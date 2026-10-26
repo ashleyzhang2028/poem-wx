@@ -10,6 +10,12 @@ const LOOK_PAGES = 4;
 
 const QUERY_MAX = 20;
 
+const JUDGE_PAGES = 2;
+
+const JUDGE_MS = 6000;
+
+const LOOK_MS = 8000;
+
 const LEVELS = [
   { id: "easy", name: "常见字", min: 25 },
   { id: "normal", name: "一般字", min: 6 },
@@ -32,9 +38,11 @@ function _feihua_segsOf(text, gated) {
   return out;
 }
 
-function _feihua_allPoems() {
-  return gameScopes.field();
+function _feihua_allPoems(scope) {
+  return gameScopes.field(scope);
 }
+
+const raceTimeout = source.withTimeout;
 
 function onSource() {
   return source.usable();
@@ -47,34 +55,37 @@ function inputClauses(input) {
     .filter((x) => x.length >= 2);
 }
 
-function judgeAtSource(char, input, said) {
+function judgeAtSource(char, input) {
   const ch = String(char || "").trim();
-  if (!ch) return Promise.resolve({ ok: false, why: "empty", reason: "先出一个令字" });
-
   const clauses = inputClauses(input);
-  const mine = clauses.join("");
-  if (mine.length < 4) return Promise.resolve(null);
-  if (clauses.length < 2 && mine.indexOf(ch) < 0) {
-    return Promise.resolve({ ok: false, why: "char", reason: "这句里没有「" + ch + "」" });
-  }
-
-  const used = {};
-  (said || []).forEach((s) => {
-    used[_feihua_strip(s)] = 1;
-  });
-  if (used[mine]) return Promise.resolve({ ok: false, why: "said", reason: "这一句说过了" });
-
-  return findAtSource(clauses[clauses.length - 1], mine);
+  const lead = clauses.filter((c) => c.indexOf(ch) >= 0).sort((x, y) => y.length - x.length)[0];
+  if (!ch || !lead) return Promise.resolve(null);
+  return findAtSource(lead.slice(0, QUERY_MAX), clauses);
 }
 
-function findAtSource(want, mine) {
-  const q = String(want || "").slice(0, QUERY_MAX);
-  if (!q) return Promise.resolve(null);
-  return source.search(q, { type: "content", size: SEARCH_PAGE }).then((r) => {
-    const hit = (r.items || []).find((p) => _feihua_strip(source.textOf(p)).indexOf(mine) >= 0);
-    if (!hit) return null;
-    return { ok: true, hit: { id: String(hit.id), title: hit.title }, seg: mine };
+function segsOfPoem(poem) {
+  const out = [];
+  source.linesOf(poem).forEach((line) => {
+    String(line).split(/[，。！？；：、,.!?;:]/).map(_feihua_strip).filter(Boolean).forEach((seg) => out.push(seg));
   });
+  return out;
+}
+
+function runAt(segs, clauses) {
+  for (let i = 0; i + clauses.length <= segs.length; i++) {
+    if (clauses.every((c, j) => segs[i + j] === c)) return i;
+  }
+  return -1;
+}
+
+function findAtSource(q, clauses) {
+  const hop = (page) => source.search(q, { type: "content", size: SEARCH_PAGE, page: page }).then((r) => {
+    const hit = (r.items || []).find((p) => runAt(segsOfPoem(p), clauses) >= 0);
+    if (hit) return { ok: true, hit: { id: String(hit.id), title: hit.title }, seg: clauses.join("，") };
+    if (!r.more || page >= JUDGE_PAGES) return null;
+    return hop(page + 1);
+  });
+  return hop(1);
 }
 
 function segsWith(char, poem) {
@@ -131,13 +142,14 @@ function _feihua_scopedPoems(opt) {
   return out && out.length ? out : _feihua_allPoems();
 }
 
-let poolCache = null;
+let poolCache = {};
 
-function pool() {
-  if (poolCache) return poolCache;
+function pool(scope) {
+  const cacheKey = gameScopes.cacheKeyOf(scope);
+  if (poolCache[cacheKey]) return poolCache[cacheKey];
 
   const counts = {};
-  _feihua_allPoems().forEach((p) => {
+  _feihua_allPoems(scope).forEach((p) => {
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
     _feihua_segsOf(e.text).forEach((s) => {
@@ -157,12 +169,12 @@ function pool() {
     const level = n >= 25 ? "easy" : n >= 6 ? "normal" : "hard";
     out[ch] = { char: ch, count: n, level };
   });
-  poolCache = out;
+  poolCache[cacheKey] = out;
   return out;
 }
 
-function _feihua_chars(levelId, limit) {
-  const all = pool();
+function _feihua_chars(levelId, limit, scope) {
+  const all = pool(scope);
   const lv = LEVELS.find((l) => l.id === levelId) || LEVELS[1];
   const list = Object.keys(all)
     .map((c) => all[c])
@@ -209,18 +221,25 @@ function _feihua_strip(s) {
   return String(s).replace(/[^\u3400-\u9fff]/g, "");
 }
 
-function judgeAsync(char, input, said) {
-  return judgeAtSource(char, input, said).then((r) => r || judge(char, input, said));
+function judgeAsync(char, input, said, opt) {
+  const scope = opt && opt.scope;
+  const local = judge(char, input, said, scope);
+  if (local.ok || local.why !== "absent" || !onSource()) return Promise.resolve(local);
+  return raceTimeout(judgeAtSource(char, input), JUDGE_MS).then(
+    (r) => r || local,
+    () => Object.assign({}, local, { degraded: true })
+  );
 }
 
-function judge(char, input, said) {
+function judge(char, input, said, scope) {
   const ch = String(char || "").trim();
   const raw = String(input || "").trim();
   if (!ch) return { ok: false, why: "empty", reason: "先出一个令字" };
   if (!raw) return { ok: false, why: "empty", reason: "写一句带这个字的诗" };
   if (raw.indexOf(ch) < 0) return { ok: false, why: "char", reason: "这句里没有「" + ch + "」" };
 
-  const mine = _feihua_strip(raw);
+  const clauses = inputClauses(raw);
+  const mine = clauses.join("");
   if (mine.length < 4) return { ok: false, why: "short", reason: "太短了，至少写四字" };
 
   const used = {};
@@ -230,18 +249,17 @@ function judge(char, input, said) {
   if (used[mine]) return { ok: false, why: "said", reason: "这一句说过了" };
 
   let hit = null;
-  _feihua_allPoems().forEach((p) => {
+  _feihua_allPoems(scope).forEach((p) => {
     if (hit) return;
     const e = corpus.entry(p.id);
     if (!e || !e.text) return;
-    _feihua_segsOf(e.text, false).forEach((seg) => {
-      if (hit) return;
-      if (_feihua_strip(seg) === mine) hit = { id: p.id, title: p.t, author: p.a, seg: seg };
-    });
+    const segs = _feihua_segsOf(e.text, false);
+    const at = runAt(segs.map(_feihua_strip), clauses);
+    if (at >= 0) hit = { id: p.id, title: p.t, author: p.a, seg: segs.slice(at, at + clauses.length).join("，") };
   });
 
   if (!hit) {
-    return { ok: false, why: "absent", reason: "诗词集里查不到这一句，换一句试试" };
+    return { ok: false, why: "absent", reason: onSource() ? "诗词集里查不到这一句，换一句试试" : "这个范围里查不到这一句，换一句试试" };
   }
   return { ok: true, hit, seg: hit.seg };
 }
@@ -259,7 +277,7 @@ function pick(opt) {
 }
 
 function collect(o, byScope) {
-  const all = pool();
+  const all = pool(o.scope);
   const lv = levelOf(o.level);
 
   const match = (scopeOnly, levelOnly) => Object.keys(all).filter((c) => {
@@ -281,7 +299,7 @@ function collect(o, byScope) {
 let segsCache = null;
 
 function segsOfScope(scopeId) {
-  const key = scopeId || "";
+  const key = gameScopes.cacheKeyOf(scopeId);
   if (!segsCache) segsCache = {};
   if (segsCache[key]) return segsCache[key];
 
@@ -301,7 +319,7 @@ function segsOfScope(scopeId) {
 let byScopeCache = null;
 
 function poolOfScope(scopeId) {
-  const key = scopeId || "";
+  const key = gameScopes.cacheKeyOf(scopeId);
   if (!byScopeCache) byScopeCache = {};
   if (byScopeCache[key]) return byScopeCache[key];
 
@@ -329,7 +347,7 @@ module.exports = {
   LEVELS,
   onSource,
   judgeAsync,
-  lookAtSource,
+  lookAtSource: (char, opt) => raceTimeout(lookAtSource(char, opt), LOOK_MS),
   pool,
   levelOf,
   pick,

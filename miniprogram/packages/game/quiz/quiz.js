@@ -13,6 +13,7 @@ Page({
     themeStyle: "",
     name: "",
     stage: "setup",
+    preparing: false,
     forms: [],
     pickedForms: [],
     scopes: [],
@@ -48,7 +49,7 @@ Page({
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
-    this.setData({ allowed: ok });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("quiz") || "登录后才能练" });
     if (!ok || this.ready) return;
     this.ready = true;
 
@@ -84,14 +85,24 @@ Page({
   },
 
   onStart() {
-    if (this.data.stage !== "setup") return;
-    const scope = this.data.scope;
-    const questions = quiz.build({
-      scope,
+    if (this.data.stage !== "setup" || this.data.preparing) return;
+    const token = (this.prepToken || 0) + 1;
+    this.prepToken = token;
+    this.setData({ preparing: true });
+    quiz.buildAsync({
+      scope: this.data.scope,
       count: this.data.count,
       forms: this.data.pickedForms,
       sequential: false
+    }).then((r) => {
+      if (token !== this.prepToken) return;
+      this.setData({ preparing: false });
+      if (r.degraded) wx.showToast({ title: "课外库没取到，已用课内出题", icon: "none" });
+      this.begin(r.questions);
     });
+  },
+
+  begin(questions) {
     if (!questions.length) {
       wx.showToast({ title: "当前范围无法出题", icon: "none" });
       return;
@@ -167,6 +178,7 @@ Page({
 
   onNext() {
     if (this.data.stage !== "running") return;
+    if (!this.data.picked) return;
     const index = this.data.index + 1;
     if (index >= this.data.questions.length) {
       this.finish();
@@ -202,12 +214,13 @@ Page({
   },
 
   onUnload() {
+    this.prepToken = (this.prepToken || 0) + 1;
     feedback.close(this);
   },
 
   onOpen(e) {
     const q = this.data.questions[this.data.index] || {};
     if (!q.id) return;
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(q.id) + "&mode=browse" });
+    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(q.id) + "&mode=browse" + (q.remote ? "&src=1" : "") });
   }
 });

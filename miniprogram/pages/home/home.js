@@ -33,9 +33,9 @@ const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 const SOURCE_TEXT = { course: "课内", own: "自选" };
 
 const FACES = [
-  { key: "bad", icon: icons.frown, cls: "bad", label: "忘记" },
-  { key: "fuzzy", icon: icons.meh, cls: "fuzzy", label: "模糊" },
-  { key: "good", icon: icons.smile, cls: "good", label: "记住" }
+  { key: "bad", icon: icons.moonNew, cls: "bad", label: "忘记" },
+  { key: "fuzzy", icon: icons.moonHalf, cls: "fuzzy", label: "模糊" },
+  { key: "good", icon: icons.moonFull, cls: "good", label: "记住" }
 ];
 
 const PAGE_ICONS = {
