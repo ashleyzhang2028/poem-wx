@@ -92,6 +92,8 @@ feihua/lib    ─┼→ utils/poem-source.js → utils/remote.js source()
   再并上 `search?type=all` 的全文命中；命中的服务端 id 不带集子前缀，
   开阅读页时以 `src=1` 标记，正文直接取会话里记下的那一首（`seen`）。
 - **作者索引**：名册只从包里收人（课内 + 十部目录，112 位）。
+  作者搜索框另有一份课外库作者名册（`utils/author-directory.js`）：进页面后按 `GET /authors` 逐页（每页 100，服务端最深翻到第 100 页，按作品数降序）补全，
+  存本机并可续传；输入关键字时按「名字含关键字」匹配，补全期间随页数增加刷新结果，尾部作者再由 `search?type=author` 兜底。
   点开一位时用 `GET /poems?author=<名>`（有 id 则 `author_id=`）拉他的全部作品，
   一页 100 首，`page_size` 上限即 `PAGE_MAX`。
 

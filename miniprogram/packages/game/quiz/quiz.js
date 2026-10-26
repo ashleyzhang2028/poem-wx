@@ -97,7 +97,7 @@ Page({
     }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "课外库没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "课外阅读没取到，已用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

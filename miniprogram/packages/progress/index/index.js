@@ -1,3 +1,4 @@
+const sheetText = require("../../../utils/sheet-text");
 const cols = require("../../../utils/collections");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
@@ -61,6 +62,10 @@ Page({
     this.sheetIds = rows.map((r) => r.id);
     this.setData({ sheetRows: rows });
     sheet.open(rows, ds.id);
+  },
+
+  onSheetNeed(e) {
+    sheetText.fill(this.selectComponent("#sheet"), e.detail.id);
   },
 
   onSheetFinish() {

@@ -1,3 +1,9 @@
+let indexFallback = null;
+
+function useIndexFallback(fn) {
+  indexFallback = fn;
+}
+
 const CLAUSE_SPLIT = /[\n，。！？；：、]/;
 
 const CLOSING = /[」』”’）》〉]/;
@@ -537,7 +543,7 @@ function indexById(id) {
     const other = pick(ofBook(all[i].id), id);
     if (other) return other;
   }
-  return null;
+  return indexFallback ? indexFallback(id) : null;
 }
 
 function bookOf(id) {
@@ -635,6 +641,7 @@ module.exports = {
   entries,
   courseTwin,
   indexById,
+  useIndexFallback,
   search,
   searchAt,
   grouped,

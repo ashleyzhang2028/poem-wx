@@ -17,7 +17,7 @@ const SCOPES = [
 const LABELS = {
   [COURSE_ALL_SCOPE]: "小学·初中·高中",
   [EXTRA_SCOPE]: "课内 + 课外十部集子",
-  [ANY_SCOPE]: "课外库随机，不限范围"
+  [ANY_SCOPE]: "课外阅读随机，不限范围"
 };
 
 function list() {
