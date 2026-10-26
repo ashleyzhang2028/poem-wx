@@ -204,6 +204,11 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
+    if (meta && meta.b) {
+      this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
+      return;
+    }
+
     if (this.data.remote) return this.loadRemote(id, null, "这一篇的正文没取到，点一下重试");
 
     this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
@@ -223,7 +228,7 @@ Page({
           return;
         }
         this.setData({ hasTranslation: false, remote: true });
-        this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem));
+        this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
       },
       () => {
         if (token !== this.loadToken) return;
@@ -232,9 +237,9 @@ Page({
     );
   },
 
-  remoteMeta(poem) {
+  remoteMeta(poem, sid) {
     const m = source.metaOf(poem);
-    return { id: m.id, t: m.t, a: m.a, d: m.d, b: "", n: source.NAME, s: "", g: "" };
+    return { id: m.id, sid: String(sid), t: m.t, a: m.a, d: m.d, b: "", n: source.NAME, s: "", g: "" };
   },
 
   onRetryText() {

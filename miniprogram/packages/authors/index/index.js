@@ -272,6 +272,7 @@ Page({
     this.setData({
       works: list.slice(0, limit).map((p) => ({
         id: p.id,
+        sid: p.sid || "",
         title: p.t,
         dynasty: p.d,
         bookName: p.n,
@@ -299,10 +300,11 @@ Page({
   onOpen(e) {
     if (guard.gap("authors:open")) return;
     guard.mark("authors:open");
-    const id = e.currentTarget.dataset.id;
+    const ds = e.currentTarget.dataset;
+    const id = ds.sid || ds.id;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +
       "&mode=browse&from=" + encodeURIComponent(this.data.author) +
-      (e.currentTarget.dataset.src ? "&src=1" : "");
+      (ds.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
   },
 
