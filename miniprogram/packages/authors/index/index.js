@@ -86,7 +86,7 @@ Page({
       count: e.count,
       works: e.works,
 
-      people: e.people.map((w) => ({ name: w.name, count: w.count, dynasty: w.dynasty || "" }))
+      people: e.people.map((w) => ({ name: w.name, count: w.count }))
     }));
 
     this.roster = r;

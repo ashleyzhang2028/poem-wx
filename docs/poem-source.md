@@ -20,7 +20,7 @@
 
 | 事 | 旧 | 新 |
 |---|---|---|
-| 课外正文 | 取分片（44 KB/片） | `GET /api/v1/poems/{id}` |
+| 课外正文 | 取分片（44 KB/片） | `GET /api/v1/poems/search?type=title` 或 `GET /api/v1/poems?author=` 取整首（没有按 id 取单篇的接口） |
 | 全文检索 | 本机倒排索引 + 扫分片 | `GET /api/v1/poems/search?q=` |
 | 飞花令判句 | 本地集子里逐句比 | `search?type=content` 命中即为真 |
 | 令字池 / 给答案看 | 本地集子 | 同一个 search 接口 |
@@ -28,22 +28,21 @@
 ## 二、接口清单（服务实际提供的全部 REST）
 
 基址 `http://<服务>.<环境>.sh.run.tcloudbase.com/api/v1`，客户端（小程序）走云调用，
-路径从 `/api/v1` 起。所有 GET 接口都支持 `lang=zh-Hans`（默认）/ `zh-Hant`。
+路径从 `/api/v1` 起。接口源码见 `reference/chinese-poetry-api`。只读接口一律 GET（同时接 HEAD）；除 `/health`、`/stats` 外都支持 `lang=zh-Hans`（默认）/ `zh-Hant`。
 
 | 方法 | 路径 | 参数 | 回什么 |
 |---|---|---|---|
 | GET | `/health` | — | `{"status":"healthy"}`；库不可用回 503 |
-| GET | `/stats` | — | `total_poems` / `total_authors` / `total_dynasties` / `poems_by_dynasty[]` / `poems_by_type[]` |
+| GET | `/stats` | —（不接受任何参数，含 `lang`） | `total_poems` / `total_authors` / `total_dynasties` / `poems_by_dynasty[]` / `poems_by_type[]` |
 | GET | `/poems` | `page` `page_size`(≤100) `after`(游标) `author` `author_id` `dynasty` `dynasty_id` `type` `type_id`(可重复，OR) | `{data:[poem], pagination:{page,page_size,total,total_pages,has_next_page,next_cursor}}` |
-| GET | `/poems/{id}` | — | 单首 `poem` |
-| GET | `/poems/search` | `q`（必填）`type`=all/title/content/author `page` `page_size` | 同上分页形状 |
-| GET | `/poems/random` | 与 `/poems` 同一组过滤；**或** `char`（单字） | 单首 `poem`；`char` 只能与 `lang` 同用 |
-| GET | `/authors` | `page` `page_size` | `{data:[{id,name,dynasty,poem_count}], pagination}` |
-| GET | `/authors/{id}` | — | `{data:{id,name,dynasty,description}}` |
-| GET | `/dynasties` | — | `{data:[{id,name,name_en,start_year,end_year,poem_count,author_count}]}` |
-| GET | `/dynasties/{id}` | — | `{data:{id,name,name_en,start_year,end_year}}` |
-| GET | `/types` | — | `{data:[{id,name,category,lines,chars_per_line,poem_count}]}` |
-| GET | `/types/{id}` | — | `{data:{…}}` |
+| GET | `/poems/search` | `q`（必填）`type`=all/title/content/author `page` `page_size` `lang` | `{data:[poem], pagination:{page,page_size,total,total_pages}}`，**没有 `has_next_page` / `next_cursor`**；无命中回 200 与空数组 |
+| GET | `/poems/random` | `lang`，与 `/poems` 同一组过滤（不含分页）；**或** `char`（单字） | 单首 `poem`，**直接是 poem 对象，没有 `data` 包裹**；`char` 只能与 `lang` 同用 |
+| GET | `/authors` | `page` `page_size` `lang` | `{data:[{id,name,dynasty,poem_count}], pagination:{page,page_size,total,total_pages}}`，`dynasty` 是朝代名字符串，分页同样没有 `has_next_page` |
+| GET | `/authors/{id}` | `lang` | `{data:{id,name,dynasty,description}}`；查无此人 404 |
+| GET | `/dynasties` | `lang` | `{data:[{id,name,name_en,start_year,end_year,poem_count,author_count}]}` |
+| GET | `/dynasties/{id}` | `lang` | `{data:{id,name,name_en,start_year,end_year}}` |
+| GET | `/types` | `lang` | `{data:[{id,name,category,lines,chars_per_line,poem_count}]}` |
+| GET | `/types/{id}` | `lang` | `{data:{…}}` |
 | POST | `/graphql` | GraphQL 查询 | 同一批数据的另一种形状 —— **小程序不用** |
 
 `poem` 的形状（就是客户端认的那一份）：
@@ -55,16 +54,24 @@
   "content": ["床前看月光，疑是地上霜。", "举头望山月，低头思故乡。"],
   "author": { "id": 2045, "name": "李白" },
   "dynasty": { "id": 6, "name": "唐" },
-  "type": { "id": 11, "name": "五言绝句" }
+  "type": { "id": 11, "name": "五言绝句", "category": "诗" }
 }
 ```
 
 几条硬规矩：
 
 - **未知的查询参数一律 400**（`unknown query parameter(s)`）。写错一个参数名不会静默降级成全量。
-- `page * page_size > 10000` 直接 400，翻深了要用 `after` 游标。
+- `page_size` 取值 1–100，越界或非整数一律 400，不会被截断；`page * page_size > 10000` 同样 400。
+  只有 `/poems` 有 `after` 游标可以翻得更深，且与 `page` 互斥。
 - `char` 只接单字，且不能与作者 / 体裁 / 朝代同用（400）。
-- 库内没有匹配时 404（`no poems found …`），不是空列表。
+- 404 只出现在：`/poems`、`/poems/random` 的 `author` / `dynasty` / `type` 按名称查不到，
+  `random` 没有符合条件的诗，`/authors/{id}` 等详情接口查无此条。
+  **`/poems/search` 无命中是 200 空数组**，不是 404。
+- 翻页是否还有下一页：`/poems` 看 `has_next_page`；`/poems/search` 与 `/authors` 没有这个字段，
+  只能比 `page` 与 `total_pages`（`utils/poem-source.js` 的 `paged()`）。
+- 按 IP 限流，默认 10 次/秒、突发 20（`config.yaml`）；超了回 429。云托管出口 IP 是共用的，
+  并发请求别铺得太开。
+- 单个请求服务端 10 秒超时；数据库首启要下载，期间 `/health` 可能 503。
 - 数据只在发布时更新，可缓存接口带 `Cache-Control` + 弱 `ETag`。
 
 ## 三、客户端怎么接
@@ -83,15 +90,18 @@ feihua/lib    ─┼→ utils/poem-source.js → utils/remote.js source()
 
 - **搜索**：先出包内命中（篇名 / 作者 / 书名，一次扫全、按 20 条分批绘制），
   再并上 `search?type=all` 的全文命中；命中的服务端 id 不带集子前缀，
-  开阅读页时以 `src=1` 标记，正文照 `GET /poems/{id}` 取。
+  开阅读页时以 `src=1` 标记，正文直接取会话里记下的那一首（`seen`）。
 - **作者索引**：名册只从包里收人（课内 + 十部目录，112 位）。
-  点开一位时若他知道在目录里出现过，用 `GET /poems?author=` 拉他的全部作品，
+  点开一位时用 `GET /poems?author=<名>`（有 id 则 `author_id=`）拉他的全部作品，
   一页 100 首，`page_size` 上限即 `PAGE_MAX`。
 
 - **服务名只有一处**：`remote.js` 的 `SOURCE_AGENT`。改部署就改那一行，别在别处再写一遍。
 - 走云调用，**不经过 request 合法域名名单**，仍然免备案（同后端那条路，见 `wx-cloud-setup.md`）。
 - 只读接口不进离线队列（`PATHS` 那套 outbox 只装用户数据）。
 - 结果按 `path+query` 缓在本机，上限 60 条、过期 24 小时；`random` / `health` 不缓存。
+- 每次请求都在控制台打一行 `[remote] GET … HTTP <状态码>`（`remote.js` 的 `sendTraced`），失败带 `FAIL`。
+- 只有网络层失败（无状态码）与 5xx 才把课外库标成不可用（10 分钟内搜索 / 作者远端 / 飞花令 / 题库不再发请求）；
+  4xx 与「没对上这一篇」只让这一次失败。`/poems` 的 404 当空页处理。
 
 ### 能力就绪
 
@@ -124,7 +134,7 @@ poem-source.byId(sid, meta) → 先查本次会话里搜索 / 列表见过的那
 `data/site-catalogs.js` 里每部书的 `src` 决定 `sid` 的前缀（`tangshi300s` → `tangshi300`）。
 前缀换了等于换一套 id，本机「已读」与自选集合里的引用会跟着断，改之前先想清楚。
 
-检索与飞花令判句仍走本文件的 search 接口，与 `corpus` 无关。
+检索与飞花令判句走 `/poems/search`，与 `corpus` 无关。
 
 ### 界面上的话
 

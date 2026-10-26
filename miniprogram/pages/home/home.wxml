@@ -54,8 +54,8 @@
         <text class="hero-title">今日背诵</text>
 
         <view class="hero-pills">
-          <text class="pill on">{{gradeName}}</text>
-          <text class="pill on">{{scopeName}}</text>
+          <text class="pill">{{gradeName}}</text>
+          <text class="pill">{{scopeName}}</text>
         </view>
       </view>
 
