@@ -91,89 +91,23 @@ const ALIAS = {
   "荆卿": "荆轲",
   "魏武帝": "曹操",
   "曹子建": "曹植",
-
   "孔子及其弟子": "孔子及弟子",
-
   "吕不韦等": "吕不韦",
   "刘安等": "刘安",
 
-  "张平子": "张衡",
-  "杨子云": "杨雄",
-  "潘安仁": "潘岳",
-  "司马长卿": "司马相如",
-  "班叔皮": "班彪",
-  "曹大家": "班昭",
-  "王仲宣": "王粲",
-  "鲍明远": "鲍照",
-  "张茂先": "张华",
-  "颜延年": "颜延之",
-  "向子期": "向秀",
-  "陆士衡": "陆机",
-  "江文通": "江淹",
-  "王子渊": "王褒",
-  "傅武仲": "傅毅",
-  "马季长": "马融",
-  "嵇叔夜": "嵇康",
-  "成公子安": "成公绥",
-  "束广微": "束皙",
-  "刘公干": "刘桢",
-  "应德琏": "应玚",
-  "陆士龙": "陆云",
-  "丘希范": "丘迟",
-  "沈休文": "沈约",
-  "孙子荆": "孙楚",
-  "张景阳": "张协",
-  "卢子谅": "卢谌",
-  "应休琏": "应璩",
-  "魏文帝": "曹丕",
-  "谢叔源": "谢混",
-  "徐敬业": "徐悱",
-  "阮嗣宗": "阮籍",
-  "范彦龙": "范云",
-  "汉高祖": "刘邦",
-  "李少卿": "李陵",
-  "苏子卿": "苏武",
-  "王正长": "王赞",
-  "枣道彦": "枣据",
-  "张季鹰": "张翰",
-  "王景玄": "王玄之",
-  "袁阳源": "袁淑",
-  "刘休玄": "刘铄",
-  "枚叔": "枚乘",
-  "汉武帝": "刘彻",
-  "潘元茂": "潘勗",
-  "傅季友": "傅亮",
-  "王元长": "王融",
-  "孔文举": "孔融",
-  "羊叔子": "羊祜",
-  "李令伯": "李密",
-  "杨德祖": "杨修",
-  "陈孔璋": "陈琳",
-  "吴季重": "吴质",
-  "司马子长": "司马迁",
-  "杨子幼": "杨恽",
-  "朱叔元": "朱浮",
-  "阮元瑜": "阮瑀",
-  "赵景真": "赵至",
-  "刘孝标": "刘峻",
-  "刘子骏": "刘歆",
-  "孔德璋": "孔稚珪",
-  "钟士季": "钟会",
-  "卜子夏": "卜商",
-  "杜元凯": "杜预",
-  "史孝山": "史岑",
-  "刘伯伦": "刘伶",
-  "曹元首": "曹冏",
-  "李萧远": "李康",
-  "蔡伯喈": "蔡邕",
-  "王仲宝": "王俭",
-  "王简栖": "王巾"
+  "孟轲": "孟子",
+  "戴圣编": "戴圣",
+  "刘向编": "刘向"
 };
 
 const COLLECTIVE = { 礼记: 1, 论语: 1, 国语: 1, 战国策: 1 };
 
+function personName(name) {
+  return String(name == null ? "" : name).trim().replace(/等$/, "");
+}
+
 function aliasOf(name) {
-  const n = String(name == null ? "" : name).trim();
+  const n = personName(name);
   if (!n) return "";
   return ALIAS[n] || n;
 }
@@ -187,6 +121,32 @@ const LIT_BOOKS = ["poems"];
 const ATTRIB = {
   "classic-gw-10": { person: "朱熹", dynasty: "宋" }
 };
+
+const extra = (() => {
+  try {
+    return require("../data/roster-extra.js") || {};
+  } catch (e) {
+    return {};
+  }
+})();
+
+const EXTRA_NAME = extra.name || {};
+
+function extraRoster(byPerson, order) {
+  Object.keys(EXTRA_NAME).forEach(function (n) {
+    if (byPerson[n]) return;
+    byPerson[n] = {
+      name: n,
+      at: Number(EXTRA_NAME[n]) || TAIL,
+      items: [],
+      dynasties: {},
+      count: 0,
+      unread: 0,
+      external: true
+    };
+    order.push(n);
+  });
+}
 
 function build(entries, opt) {
   const readIds = (opt && opt.readIds) || {};
@@ -232,6 +192,8 @@ function build(entries, opt) {
     const d = String((fix && fix.dynasty) || p.d || "").trim();
     if (d) w.dynasties[d] = true;
   });
+
+  extraRoster(byPerson, order);
 
   const people = {};
   order.forEach(function (n) {
@@ -282,6 +244,38 @@ function build(entries, opt) {
     total: order.length,
     unread: order.reduce(function (n, k) { return n + (people[k].unread ? 1 : 0); }, 0)
   };
+}
+
+function query(roster, keyword) {
+  const kw = String(keyword || "").trim();
+  if (!kw || !roster || !roster.people) return [];
+  const hit = [];
+  Object.keys(roster.people).forEach(function (n) {
+    if (n.indexOf(kw) < 0) return;
+    const w = roster.people[n];
+    hit.push({
+      name: n,
+      at: w.at,
+      era: eraOfName(w.at),
+      count: w.count,
+      sid: "",
+      marked: !!w.external,
+      external: false
+    });
+  });
+  hit.sort(function (a, b) {
+    const ka = a.name.indexOf(kw) === 0 ? 0 : 1;
+    const kb = b.name.indexOf(kw) === 0 ? 0 : 1;
+    if (ka !== kb) return ka - kb;
+    if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+    if (a.at !== b.at) return a.at - b.at;
+    return byPinyin(a.name, b.name);
+  });
+  return hit;
+}
+
+function eraOfName(at) {
+  return ERA_NAME[at] || "其他";
 }
 
 function orderItems(items) {
@@ -346,9 +340,11 @@ module.exports = {
   ERAS: ERAS,
   TAIL: TAIL,
   LIT_BOOKS: LIT_BOOKS,
+  extraCount: Object.keys(EXTRA_NAME).length,
   eraOf: eraOf,
   eraName: eraName,
   aliasOf: aliasOf,
+  query: function (roster, keyword) { return query(roster, keyword); },
   isCollective: isCollective,
   build: build,
   orderItems: orderItems,

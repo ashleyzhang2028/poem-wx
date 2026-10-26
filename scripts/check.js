@@ -5085,6 +5085,57 @@ const K = {
     "出现了原写法：" + bad.join("、"));
 }
 
+{
+  const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  const roster = AI.build(perBook.poems);
+  ok("集子目录里的作者都进得了名册（" + AI.extraCount + " 位）",
+    AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
+    "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
+
+  const missing = ["韩非", "脱脱", "岳飞"].filter((n) => !roster.people[n]);
+  ok("草稿里点到的几位在名册上（他们只在集子目录里出现）",
+    missing.length === 0, "名册里没有：" + missing.join("、"));
+
+  const withDeng = Object.keys(roster.people).filter((n) => /等$/.test(n));
+  ok("名册上的名字都进得了课外库（不带「等」）", withDeng.length === 0,
+    "还挂着：" + withDeng.join("、") + " —— 课外库里只有「宋濂」，没有「宋濂等」");
+
+  const only = roster.people["韩非"];
+  ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,
+    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有韩非");
+
+  {
+    const webSrc = fs.readFileSync(
+      path.join(__dirname, "corpus", "data", "author-index.js"), "utf8");
+    const at = webSrc.indexOf("var ALIAS = {");
+    let depth = 0;
+    let end = webSrc.indexOf("{", at);
+    const start = end;
+    while (end < webSrc.length) {
+      const c = webSrc[end];
+      if (c === "{") depth += 1;
+      else if (c === "}") { depth -= 1; if (depth === 0) break; }
+      end += 1;
+    }
+    const webAlias = new Function("return (" + webSrc.slice(start, end + 1) + ")")();
+    const drift = Object.keys(webAlias).filter((k) => AI.aliasOf(k) !== webAlias[k]);
+    ok("异名表两端逐条相同（网页版 " + Object.keys(webAlias).length + " 条）",
+      drift.length === 0,
+      "小程序端没跟上：" + drift.slice(0, 8).map((k) => k + "→" + webAlias[k]).join("、"));
+  }
+
+  {
+    const hits = AI.query(roster, "李");
+    ok("作者搜索是只在作者名上匹（搜「李」出李白，不出《李凭箜篌引》）",
+      hits.length > 0 && hits.every((h) => h.name.indexOf("李") >= 0)
+        && hits.some((h) => h.name === "李白"),
+      JSON.stringify(hits.slice(0, 5).map((h) => h.name)));
+    ok("搜索是前缀优先（搜「李」时李白排在建名之前）",
+      hits[0].name.indexOf("李") === 0,
+      "第一位是 " + (hits[0] && hits[0].name));
+  }
+}
+
 (async () => {
   const readSrc = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
   const remoteSrc = readSrc("utils/remote.js");

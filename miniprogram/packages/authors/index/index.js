@@ -7,7 +7,11 @@ const theme = require("../../../utils/theme");
 const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
 const source = require("../../../utils/poem-source");
+const guard = require("../../../utils/guard");
 
+const SUGGEST_MAX = 12;
+const REMOTE_WAIT = 600;
+const REMOTE_PAGE = 50;
 const BATCH = 20;
 
 Page({
@@ -23,6 +27,12 @@ Page({
 
     totalPeople: 0,
     totalWorks: 0,
+
+    keyword: "",
+    suggests: [],
+    loading: false,
+
+    icons: { search: icons.search, clear: icons.clear },
 
     author: "",
     works: [],
@@ -52,9 +62,8 @@ Page({
     this.setData({ locked: false });
 
     this.buildRoster();
-    if (this.data.author) this.openAuthor(this.data.author);
+    if (this.data.author) this.showAuthor(this.data.author);
   },
-
 
   allEntries() {
     const out = [];
@@ -69,13 +78,7 @@ Page({
   },
 
   buildRoster() {
-
-    const readIds = {};
-    const all = store.reads();
-    Object.keys(all).forEach((b) => {
-      Object.keys(all[b]).forEach((id) => { readIds[id] = 1; });
-    });
-
+    const readIds = this.readIds();
     const r = AI.build(this.allEntries(), { readIds: readIds });
     const sections = r.eras.map((e) => ({
       at: e.at,
@@ -95,6 +98,85 @@ Page({
       totalWorks: r.eras.reduce((n, e) => n + e.works, 0),
       unread: r.unread
     });
+    if (this.data.keyword) this.suggest(this.data.keyword);
+  },
+
+  onInput(e) {
+    const kw = String(e.detail.value || "");
+    this.setData({ keyword: kw }, () => this.suggest(kw));
+  },
+
+  onClear() {
+    this.tick = (this.tick || 0) + 1;
+    clearTimeout(this.timer);
+    this.setData({ keyword: "", suggests: [], remoteNote: "" });
+  },
+
+  suggest(raw) {
+    const kw = raw.trim();
+    this.tick = (this.tick || 0) + 1;
+    if (!kw) {
+      clearTimeout(this.timer);
+      this.setData({ suggests: [], remoteNote: "" });
+      return;
+    }
+    this.setData({ suggests: AI.query(this.roster, kw).slice(0, SUGGEST_MAX), remoteNote: "" });
+    this.remoteSuggest(kw);
+  },
+
+  remoteSuggest(kw) {
+    if (!entitlement.can("search") || !source.usable()) return;
+    const tick = this.tick;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      if (tick !== this.tick) return;
+      source.search(kw, { type: "author", page: 1, size: REMOTE_PAGE }).then((r) => {
+        if (tick !== this.tick) return;
+        this.fillRemote(kw, r.items);
+      }, () => {});
+    }, REMOTE_WAIT);
+  },
+
+  fillRemote(kw, poems) {
+    const seen = {};
+    const local = this.data.suggests || [];
+    local.forEach((s) => { seen[s.name] = 1; });
+    const rows = [];
+    (poems || []).forEach((p) => {
+      const a = (p && p.author) || {};
+      const name = String(a.name || "").trim();
+      if (!name || seen[name]) return;
+      if (local.length + rows.length >= SUGGEST_MAX) return;
+      seen[name] = 1;
+      const dynasty = String((p.dynasty && p.dynasty.name) || "");
+      rows.push({
+        name: name,
+        at: AI.eraOf(dynasty),
+        era: AI.eraName(dynasty),
+        sid: a.id === undefined ? "" : String(a.id),
+        count: 0,
+        marked: false,
+        external: false
+      });
+    });
+    const note = rows.length ? "课外库里还有 " + rows.length + " 位，点一位看他的作品" : "";
+    this.setData({ suggests: local.concat(rows), remoteNote: note });
+  },
+
+  onSuggest(e) {
+    const name = e.currentTarget.dataset.name;
+    const at = Number(e.currentTarget.dataset.at);
+    const row = (this.data.suggests || []).filter((s) => s.name === name)[0];
+    if (row && row.marked) {
+      this.openAuthor(name);
+      return;
+    }
+    if (row && row.sid) {
+      this.openRemote({ name: name, at: row.at, sid: row.sid });
+      return;
+    }
+    if (this.openAuthor(name)) return;
+    this.openRemote({ name: name, at: row ? row.at : 0, sid: "" });
   },
 
   onJump(e) {
@@ -108,13 +190,32 @@ Page({
 
   openAuthor(name) {
     const w = this.roster && this.roster.people[name];
-    if (!w) return;
+    if (!w) return false;
+    this.showAuthor(name);
+    return true;
+  },
 
+  showAuthor(name) {
+    const w = this.roster && this.roster.people[name];
+    if (!w) return;
+    this.current = w;
+    if (w.external) {
+      this.openRemote(w);
+      return;
+    }
     if (this.data.author !== name) this.setData({ author: name, filter: "全部" });
     wx.setNavigationBarTitle({ title: "作者索引 · " + name });
-    this.sourceRows = null;
-    this.srcToken = (this.srcToken || 0) + 1;
-    if (!this.askSource()) this.applyWorks();
+    this.askSource();
+  },
+
+  openRemote(w) {
+    if (!w || !w.name) return;
+    if (this.current !== w) this.sourceRows = null;
+    this.current = w;
+    this.setData({ author: w.name, filter: "全部", keyword: "", suggests: [], remoteNote: "" });
+    wx.setNavigationBarTitle({ title: "作者索引 · " + w.name });
+    if (this.askSource()) return;
+    this.applyWorks();
   },
 
   onFilter(e) {
@@ -130,25 +231,30 @@ Page({
     const name = this.data.author;
     if (!name) return null;
     const w = this.roster && this.roster.people[name];
-    if (!w || !w.remote) {
-      this.setData({ remote: false, remoteMore: false, remoteNote: "" });
+    if (!w || !source.usable()) {
+      if (w) this.setData({ remote: false, remoteMore: false, remoteNote: "" });
       return null;
     }
     const token = (this.srcToken || 0) + 1;
     this.srcToken = token;
-    this.setData({ remote: true });
-    return source.poems({ author: name, page_size: source.PAGE_MAX }).then((r) => {
+    if (!this.sourceRows && w.external) this.setData({ loading: true });
+    return source.poems({ author: (w.external && w.sid) || name, page_size: source.PAGE_MAX }).then((r) => {
       if (token !== this.srcToken) return;
       const rows = r.items.map((p) => source.asWork(p));
-      this.sourceRows = rows;
+      this.sourceRows = (w.external ? [] : w.items).concat(rows);
       this.setData({
+        remote: true,
+        loading: false,
         remoteTotal: r.total,
-        remoteNote: r.total > rows.length ? "先看 " + rows.length + " 首，共 " + r.total + " 首" : ""
+        remoteNote: r.total > rows.length && !want
+          ? "课外库共 " + r.total + " 首，先看 " + rows.length + " 首"
+          : ""
       });
-      this.applyWorks(want || r.items.length);
+      this.applyWorks(want || this.sourceRows.length);
     }, () => {
       if (token !== this.srcToken) return;
-      this.setData({ remote: true, remoteMore: false, remoteNote: "课外库没连上，先显示包内的" });
+      this.setData({ remote: false, remoteMore: false, loading: false, remoteNote: "" });
+      this.applyWorks();
     });
   },
 
@@ -173,7 +279,7 @@ Page({
         source: p.b === "source",
         read: !!readIds[p.id]
       })),
-      remoteMore: this.data.remote && list.length > limit,
+      remoteMore: !!this.sourceRows && list.length > limit,
       matched: list.length,
       unread: w.unread
     });
@@ -191,11 +297,29 @@ Page({
   },
 
   onOpen(e) {
+    if (guard.gap("authors:open")) return;
+    guard.mark("authors:open");
     const id = e.currentTarget.dataset.id;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(id) +
       "&mode=browse&from=" + encodeURIComponent(this.data.author) +
       (e.currentTarget.dataset.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
+  },
+
+  onBack() {
+    this.current = null;
+    this.sourceRows = null;
+    this.srcToken = (this.srcToken || 0) + 1;
+    this.setData({
+      author: "", filter: "全部", works: [], matched: 0, unread: 0,
+      remote: false, remoteMore: false, remoteTotal: 0, remoteNote: "", loading: false
+    });
+    wx.setNavigationBarTitle({ title: "作者索引" });
+  },
+
+  onReachBottom() {
+    if (!this.data.remoteMore) return;
+    this.onMoreFromSource();
   },
 
   onShareAppMessage() {

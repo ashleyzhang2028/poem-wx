@@ -118,3 +118,62 @@
   padding: var(--sp-3) 0 var(--sp-2);
   font-size: var(--fs-caption);
 }
+
+.author-search .author-field {
+  margin-bottom: 0;
+}
+
+.suggest {
+  margin-top: var(--sp-2);
+  border-top: 1rpx solid var(--line-2);
+}
+
+.suggest-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-opt);
+  border-bottom: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
+}
+
+.suggest-row:last-child {
+  border-bottom: none;
+}
+
+.suggest-name {
+  flex: 1;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  color: var(--strong-text);
+}
+
+.suggest-era {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+}
+
+.suggest-mark {
+  flex: none;
+  margin-left: var(--sp-2);
+}
+
+.suggest-count {
+  flex: none;
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.suggest-note {
+  display: block;
+  margin-top: var(--sp-2);
+}
+
+.back-link {
+  display: block;
+  margin-top: var(--sp-2);
+}

@@ -10,6 +10,30 @@
       <text class="head-sub">{{totalWorks}} 条作品 · {{eras.length}} 个朝代</text>
     </view>
 
+    <view class="card author-search">
+      <view class="search author-field">
+        <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
+        <input placeholder="搜作者" value="{{keyword}}" bindinput="onInput" confirm-type="search" />
+        <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onClear">
+          <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
+        </view>
+      </view>
+
+      <view class="suggest" wx:if="{{suggests.length}}">
+        <view class="suggest-row" hover-class="row-hover" hover-stay-time="60"
+              wx:for="{{suggests}}" wx:key="name"
+              data-name="{{item.name}}" data-at="{{item.at}}" bindtap="onSuggest">
+          <text class="a-name ellipsis suggest-name">{{item.name}}</text>
+          <text class="suggest-era">{{item.era}}</text>
+          <text class="tag course suggest-mark" wx:if="{{item.marked}}">课内</text>
+          <text class="suggest-count" wx:elif="{{item.count}}">{{item.count}} 条</text>
+          <text class="row-go">›</text>
+        </view>
+      </view>
+
+      <text class="hint suggest-note" wx:if="{{remoteNote}}">{{remoteNote}}</text>
+    </view>
+
     <view class="card index-card">
       <view class="card-open">
         <text class="card-title">朝代</text>
@@ -47,6 +71,7 @@
     <view class="card">
       <text class="head-title">{{author}}</text>
       <text class="head-sub">{{unread ? '还有 ' + unread + ' 条没读' : '都读过了'}}</text>
+      <text class="hint back-link" hover-class="clear-hover" hover-stay-time="60" bindtap="onBack">← 回到名册</text>
     </view>
 
     <view class="seg filter-group">
@@ -76,11 +101,18 @@
       <text class="hint more-tip" wx:elif="{{remoteNote}}">{{remoteNote}}</text>
     </view>
 
-    <view class="empty" wx:if="{{!works.length}}">
+    <view class="empty" wx:if="{{!works.length && loading}}">
+      <text class="empty-mark">等</text>
+      <text class="empty-text">正在取这一位的作品</text>
+    </view>
+
+    <view class="empty" wx:if="{{!works.length && !loading}}">
       <text class="empty-mark">空</text>
       <text class="empty-text">{{filter === '未读' ? '这一位的作品都读过了' : '这一位还没有收作品'}}</text>
       <text class="hint empty-tip" wx:if="{{filter === '未读'}}">切到「全部」看看</text>
     </view>
+
+    <text class="hint more-tip" wx:if="{{more}}">往下拉，接着取</text>
 
     <view class="safe-bottom"></view>
   </block>
