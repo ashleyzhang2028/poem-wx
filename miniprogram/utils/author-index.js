@@ -100,7 +100,10 @@ const ALIAS = {
   "刘向编": "刘向"
 };
 
-const COLLECTIVE = { 礼记: 1, 论语: 1, 国语: 1, 战国策: 1 };
+const COLLECTIVE = {
+  礼记: 1, 论语: 1, 公羊传: 1, 谷梁传: 1, "礼记·檀弓": 1,
+  国语: 1, 战国策: 1, 戴圣编: 1, 求那毗地译: 1
+};
 
 function personName(name) {
   return String(name == null ? "" : name).trim().replace(/等$/, "");
@@ -134,6 +137,7 @@ const EXTRA_ERA = extra.era || {};
 
 function extraRoster(byPerson, order) {
   Object.keys(EXTRA_ERA).forEach(function (n) {
+    if (isCollective(n)) return;
     const row = EXTRA_ERA[n] || {};
     if (byPerson[n]) {
       byPerson[n].at = Number(row.at) || TAIL;
