@@ -1,5 +1,12 @@
 const corpus = require("../../../utils/corpus");
 const gameScopes = require("../../../utils/game-scopes");
+const source = require("../../../utils/poem-source");
+
+const REMOTE_PICK = 12;
+const REMOTE_MIN = 6;
+const REMOTE_MS = 6000;
+const REMOTE_BATCH = 6;
+const REMOTE_SHARE = 0.4;
 
 const FORMS = [
   { key: "next", name: "下句" },
@@ -42,7 +49,7 @@ function _quiz_usable(v) {
 }
 
 function _quiz_linesOf(p) {
-  const e = corpus.entry(p.id);
+  const e = p.text ? { text: p.text } : corpus.entry(p.id);
   if (!e || !e.text) return [];
 
   const out = [];
@@ -58,7 +65,8 @@ function _quiz_linesOf(p) {
 }
 
 function build(opt) {
-  const pool = gameScopes.pool(opt.scope).filter((p) => p.hasT);
+  const extra = (opt.extra || []).filter((p) => p.hasT);
+  const pool = gameScopes.pool(opt.scope).filter((p) => p.hasT).concat(extra);
   const count = opt.count || 10;
   const forms = opt.forms && opt.forms.length ? opt.forms : FORM_KEYS;
   const start = opt.start || 0;
@@ -69,7 +77,7 @@ function build(opt) {
 
   while (questions.length < count && guard < count * 40) {
     guard += 1;
-    const p = _quiz_pick(pool);
+    const p = extra.length && Math.random() < REMOTE_SHARE ? _quiz_pick(extra) : _quiz_pick(pool);
     if (!p || used[p.id]) continue;
     const lines = _quiz_linesOf(p);
     if (lines.length < 2 && forms.indexOf("next") >= 0) continue;
@@ -78,11 +86,48 @@ function build(opt) {
     const q = _quiz_makeQuestion(form, p, lines, pool);
     if (!q) continue;
     used[p.id] = true;
+    q.remote = !!p.remote;
     q.index = start + questions.length;
     questions.push(q);
   }
 
   return questions;
+}
+
+function remoteRows() {
+  const rows = [];
+  corpus.booksOf().forEach((b) => {
+    if (!b.remote) return;
+    corpus.ofBook(b.id).forEach((r) => {
+      if (r.sid && r.a) rows.push(r);
+    });
+  });
+  return rows;
+}
+
+function remoteEntry(poem) {
+  const m = source.metaOf(poem);
+  if (!m.text || !m.t) return null;
+  return { id: m.id, t: m.t, a: m.a, d: m.d, text: m.text, hasT: true, remote: true, b: "source" };
+}
+
+function fetchRemote() {
+  const picked = _quiz_shuffle(remoteRows()).slice(0, REMOTE_PICK);
+  const run = (batch) => Promise.all(batch.map((r) =>
+    source.withTimeout(source.byId(r.sid, r), REMOTE_MS).then(remoteEntry, () => null)));
+  return run(picked.slice(0, REMOTE_BATCH))
+    .then((first) => run(picked.slice(REMOTE_BATCH)).then((second) => first.concat(second)))
+    .then((list) => list.filter(Boolean));
+}
+
+function buildAsync(opt) {
+  const local = (degraded) => ({ questions: build(opt), remote: 0, degraded: degraded });
+  if (opt.scope !== gameScopes.ANY_SCOPE) return Promise.resolve(local(false));
+  if (!source.usable()) return Promise.resolve(local(true));
+  return fetchRemote().then((extra) => {
+    if (extra.length < REMOTE_MIN) return local(true);
+    return { questions: build(Object.assign({}, opt, { extra: extra })), remote: extra.length, degraded: false };
+  }, () => local(true));
 }
 
 function pickedForm(forms, index, opt) {
@@ -98,7 +143,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
     const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
       const ls = _quiz_linesOf(q);
       return ls.length ? _quiz_pick(ls) : "";
-    });
+    }, [answer]);
     return {
       form: "next",
       stem: lines[idx],
@@ -117,7 +162,7 @@ function _quiz_makeQuestion(form, p, lines, pool) {
     const distractors = _quiz_sampleFrom(pool, p.id, 3, (q) => {
       const ls = _quiz_linesOf(q);
       return ls.length ? _quiz_pick(ls) : "";
-    });
+    }, [answer]);
     return {
       form: "prev",
       stem: lines[idx],
@@ -188,7 +233,7 @@ function optionRows(list) {
     typeof v === "string" ? { key: "", text: v } : { key: v.key || "", text: v.text });
 }
 
-function _quiz_sampleFrom(pool, excludeId, n, project) {
+function _quiz_sampleFrom(pool, excludeId, n, project, skip) {
   const out = [];
   let guard = 0;
   while (out.length < n && guard < 200) {
@@ -196,7 +241,7 @@ function _quiz_sampleFrom(pool, excludeId, n, project) {
     const p = _quiz_pick(pool);
     if (!p || p.id === excludeId) continue;
     const v = project(p);
-    if (!_quiz_usable(v) || out.indexOf(v) >= 0) continue;
+    if (!_quiz_usable(v) || out.indexOf(v) >= 0 || (skip && skip.indexOf(v) >= 0)) continue;
     out.push(v);
   }
   return out;
@@ -239,6 +284,6 @@ function optionClass(row, picked, answer) {
 }
 
 module.exports = {
-  FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, judge, optionRows, optionClass,
+  FORMS, FORM_KEYS, DEFAULT_FORM_KEYS, formOf, formRows, build, buildAsync, judge, optionRows, optionClass,
   stemRows, titleSpoiled, usable: _quiz_usable
 };

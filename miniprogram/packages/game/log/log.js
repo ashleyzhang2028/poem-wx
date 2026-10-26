@@ -22,7 +22,7 @@ Page({
     picking: false,
     allPicked: false,
     summary: { count: 0, best: null },
-    bestPct: 0,
+    bestId: "",
     ranks: [],
     cloud: ""
   },
@@ -51,7 +51,7 @@ Page({
       picking: alive.length > 0,
       allPicked: rows.length > 0 && alive.length === rows.length,
       summary: sum,
-      bestPct: sum.best ? sum.best.pct : 0,
+      bestId: sum.best ? sum.best.id : "",
       ranks: feedback.RANKS.slice(0, 3),
       cloud: keep
         ? "上云 " + rows.length + " / " + keep + " 条 · 超了删最久的一条 · 删本地同步删云上"

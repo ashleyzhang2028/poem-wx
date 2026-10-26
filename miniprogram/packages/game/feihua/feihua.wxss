@@ -17,11 +17,6 @@
   letter-spacing: var(--ls-caption);
 }
 
-.fh-scope .scope-name {
-  font-size: var(--fs-caption);
-  letter-spacing: var(--ls-caption);
-}
-
 .fh-clock {
   flex: none;
   font-family: var(--font-num);
@@ -97,7 +92,6 @@
 .fh-stage .inline-btns .btn,
 .fh-stage .inline-btns .btn.mini {
   flex: 1;
-  height: var(--h-opt-tight);
   padding: 0;
   font-size: var(--fs-title);
   letter-spacing: var(--ls-title);
@@ -121,6 +115,21 @@
 
 .fh-msg.no {
   color: var(--red);
+}
+
+.fh-msg.wait {
+  color: var(--ink-3);
+}
+
+.fh-start {
+  margin: var(--sp-2) 0;
+}
+
+.fh-loading {
+  display: block;
+  padding: var(--sp-3) 0;
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
 }
 
 .fh-remark {

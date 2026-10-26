@@ -115,6 +115,13 @@ function qs(params) {
   return parts.length ? "?" + parts.join("&") : "";
 }
 
+function withTimeout(task, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Object.assign(new Error("timeout"), { code: "E_TIMEOUT" })), ms);
+    task.then((v) => { clearTimeout(timer); resolve(v); }, (e) => { clearTimeout(timer); reject(e); });
+  });
+}
+
 function failure(err) {
   const e = new Error((err && (err.errMsg || err.message)) || "取不到课外库");
   e.code = (err && err.code) || "E_POEM_SOURCE";
@@ -395,6 +402,7 @@ module.exports = {
   SEO_MAX,
   readiness,
   usable,
+  withTimeout,
   probe,
   health,
   stats,
