@@ -58,7 +58,7 @@
               hover-class="a-cell-hover" hover-stay-time="60"
               data-name="{{a.name}}" bindtap="onAuthor">
           <text class="a-name ellipsis">{{a.name}}</text>
-          <text class="a-num">{{a.count || a.dynasty}}</text>
+          <text class="a-num">{{a.count}}</text>
         </view>
       </view>
     </view>

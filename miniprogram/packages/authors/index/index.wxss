@@ -65,14 +65,14 @@
 .a-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-2) 12rpx;
+  gap: var(--sp-2) var(--sp-4);
   margin-top: var(--card-title-gap);
 }
 
 .a-cell {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 
   min-height: 64rpx;
   padding: 8rpx 0;

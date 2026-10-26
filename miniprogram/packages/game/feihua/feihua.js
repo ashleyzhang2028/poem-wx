@@ -195,7 +195,7 @@ Page({
     this.bump();
     this.refreshScopeName();
     const opt = this.scopeOpt();
-    const exclude = this.data.done.map((d) => d.char);
+    const exclude = this.data.char ? [this.data.char] : [];
     let p = feihua.pick({ level: this.data.level, scope: opt.scope, exclude: exclude });
 
     if (!p && exclude.length) {
@@ -231,7 +231,7 @@ Page({
       if (left <= 0) {
         this.stopClock();
         this.setData(clockPatch(0, "0:00"));
-        this.endRound();
+        this.endRound("时间到", "时间到，一句也没接上");
         return;
       }
       this.setData(clockPatch(left, this.format(left)));
@@ -254,7 +254,7 @@ Page({
     return m + ":" + (s < 10 ? "0" : "") + s;
   },
 
-  endRound() {
+  endRound(lead, bare) {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.stopClock();
@@ -272,7 +272,7 @@ Page({
     this.guardLeave();
     this.setData({
       locked: true, over: true, judging: false, msgHint: false, messageOk: !!said,
-      message: said ? "时间到 · 这一轮 " + said + " 句" : "时间到，一句也没接上"
+      message: said ? lead + " · 这一轮 " + said + " 句" : bare || lead
     });
   },
 
@@ -321,14 +321,8 @@ Page({
     const fb = feedback.mark(this, r.ok, streak);
 
     if (!r.ok) {
-      this.setData({
-        message: cheer.ofSay(r.why, this.data.done.length),
-        messageOk: false,
-        locked: true,
-        mark: "✗",
-        flash: fb.flash
-      });
-      this.advance(1400);
+      this.setData({ mark: "✗", flash: fb.flash });
+      this.endRound(cheer.ofSay(r.why, this.data.done.length));
       return;
     }
 
@@ -352,8 +346,26 @@ Page({
     if (this.timer) clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.timer = null;
-      this.next();
+      this.resume();
     }, ms);
+  },
+
+  resume() {
+    this.bump();
+    this.setData({
+      locked: false,
+      input: "",
+      message: "",
+      messageOk: false,
+      msgHint: false,
+      cheerLine: "",
+      flash: "",
+      mark: "",
+      hinted: false,
+      revealed: false,
+      revealing: false,
+      answers: []
+    });
   },
 
   report(said) {

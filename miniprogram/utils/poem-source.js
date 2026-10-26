@@ -128,7 +128,6 @@ function failure(err) {
   e.expected = true;
   e.statusCode = Number(err && err.statusCode) || 0;
   e.source = NAME;
-  markDown(e.message);
   return e;
 }
 
@@ -150,7 +149,9 @@ function call(path, params, opt) {
       cachePut(key, res);
       return res;
     }, (err) => {
-      throw failure(err);
+      const e = failure(err);
+      if (!e.statusCode || e.statusCode >= 500) markDown(e.message);
+      throw e;
     });
 }
 
@@ -180,7 +181,9 @@ function paged(res) {
     size: Number(page.page_size) || 0,
     pages: Number(page.total_pages) || 0,
     cursor: String(page.next_cursor || ""),
-    more: !!page.has_next_page
+    more: page.has_next_page === undefined
+      ? Number(page.page) > 0 && Number(page.page) < Number(page.total_pages)
+      : !!page.has_next_page
   };
 }
 
@@ -212,10 +215,17 @@ function author(id) {
   return call(CAPS.authors + "/" + encodeURIComponent(String(id)), {}).then(data);
 }
 
+function emptyOn404(task) {
+  return task.catch((err) => {
+    if (err && err.statusCode === 404) return { data: [], pagination: {} };
+    throw err;
+  });
+}
+
 function poems(query) {
   const q = Object.assign({ page_size: 20 }, query || {});
   q.page_size = Math.min(PAGE_MAX, Number(q.page_size) || 20);
-  return call(CAPS.poems, q).then(paged).then(remember);
+  return emptyOn404(call(CAPS.poems, q)).then(paged).then(remember);
 }
 
 function search(keyword, opt) {
