@@ -127,14 +127,15 @@ function sendTraced(path, data, method, opt) {
   const started = Date.now();
   const head = "[remote] " + verb + " " + traceTarget(path, o.agent);
   console.log(head, "body=" + traceBody(data), "auth=" + (session().accessToken ? "Bearer" : "none"));
-  const pending = send(path, data, method, o);
+  let status = 0;
+  const pending = send(path, data, method, Object.assign({}, o, { onStatus: (code) => { status = code; } }));
   return pending.then(
     (res) => {
-      console.log(head, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
+      console.log(head, "HTTP " + status, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
       return res;
     },
     (err) => {
-      console.error(head, "FAIL", Date.now() - started + "ms", {
+      console.error(head, "HTTP " + ((err && err.statusCode) || 0), "FAIL", Date.now() - started + "ms", {
         statusCode: err && err.statusCode,
         code: err && err.code,
         errMsg: err && err.errMsg,
@@ -216,9 +217,11 @@ function cloudCall(conf, path, data, method, opt) {
       },
       data: data,
       timeout: Number(o.timeout) || CLOUD_TIMEOUT_MS,
-      success: (res) => (res.statusCode >= 200 && res.statusCode < 300
-        ? resolve(res.data)
-        : reject(httpError(res.statusCode, res.data))),
+      success: (res) => {
+        if (o.onStatus) o.onStatus(res.statusCode);
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
+        else reject(httpError(res.statusCode, res.data));
+      },
       fail: (err) => reject(cloudFailError(err, conf, service))
     });
   });
@@ -301,8 +304,8 @@ function sendHttp(path, data, method, opt) {
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       success: (res) => {
+        if (o.onStatus) o.onStatus(res.statusCode);
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
-
         else reject(httpError(res.statusCode, res.data));
       },
       fail: (err) => reject(hostError(err, baseUrl()))

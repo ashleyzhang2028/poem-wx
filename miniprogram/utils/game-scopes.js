@@ -4,17 +4,20 @@ const S = require("./scheduler");
 
 const STAGE_SCOPE = "stage";
 const COURSE_ALL_SCOPE = "course_all";
+const EXTRA_SCOPE = "extra";
 const ANY_SCOPE = "any";
 
 const SCOPES = [
   { id: STAGE_SCOPE, name: "课内·当前学段" },
-  { id: COURSE_ALL_SCOPE, name: "课内·全部" },
+  { id: COURSE_ALL_SCOPE, name: "课内" },
+  { id: EXTRA_SCOPE, name: "课外阅读" },
   { id: ANY_SCOPE, name: "不限" }
 ];
 
 const LABELS = {
   [COURSE_ALL_SCOPE]: "小学·初中·高中",
-  [ANY_SCOPE]: "课内全部 + 课外十部集子"
+  [EXTRA_SCOPE]: "课内 + 课外十部集子",
+  [ANY_SCOPE]: "课外库随机，不限范围"
 };
 
 function list() {
@@ -34,7 +37,7 @@ function nameOf(scopes, id) {
 let stageCache = null;
 
 function pool(key) {
-  if (key === COURSE_ALL_SCOPE || key === ANY_SCOPE) return corpus.course();
+  if (key === COURSE_ALL_SCOPE || key === EXTRA_SCOPE || key === ANY_SCOPE) return corpus.course();
   return stagePool();
 }
 
@@ -65,6 +68,6 @@ function stagePool() {
 }
 
 module.exports = {
-  STAGE_SCOPE, COURSE_ALL_SCOPE, ANY_SCOPE,
+  STAGE_SCOPE, COURSE_ALL_SCOPE, EXTRA_SCOPE, ANY_SCOPE,
   list, nameOf, pool, field, cacheKeyOf
 };

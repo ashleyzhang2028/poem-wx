@@ -232,7 +232,8 @@ Page({
         this.setData({ hasTranslation: false, remote: true });
         this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
       },
-      () => {
+      (err) => {
+        console.error("[reader] 正文取失败 sid=" + sid, "HTTP " + ((err && err.statusCode) || 0), (err && err.message) || "");
         if (token !== this.loadToken) return;
         this.setData({ loadingText: false, loadFailed: true, failText: failText });
       }
