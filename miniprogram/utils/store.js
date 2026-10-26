@@ -1,4 +1,5 @@
 const corpus = require("./corpus");
+require("./remote-poems");
 
 const KEYS = {
   progress: "kb_progress_v1",

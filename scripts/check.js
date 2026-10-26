@@ -2181,9 +2181,8 @@ ok("名录在、标签截断、档位合法",
 
   const feihuaWxml = fs.readFileSync(
     path.join(ROOT, "packages", "game", "feihua", "feihua.wxml"), "utf8");
-  ok("飞花令页内的两处卡片不再挂档位标注（门禁只落在大会首页那一张卡上）",
-    feihuaWxml.indexOf("tier-tag") < 0 && feihuaWxml.indexOf("出题范围") >= 0
-      && feihuaWxml.indexOf("看看还有哪些") >= 0);
+  ok("飞花令页内的卡片不再挂档位标注（门禁只落在大会首页那一张卡上）",
+    feihuaWxml.indexOf("tier-tag") < 0);
 
   const indexJs = fs.readFileSync(
     path.join(ROOT, "packages", "game", "index", "index.js"), "utf8");

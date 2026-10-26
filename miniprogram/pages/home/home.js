@@ -1,3 +1,4 @@
+const sheetText = require("../../utils/sheet-text");
 const corpus = require("../../utils/corpus");
 const store = require("../../utils/store");
 const S = require("../../utils/scheduler");
@@ -742,6 +743,10 @@ Page({
     if (!box) return;
     if (paint) box.onSearch(keyword);
     else box.onInput({ detail: { value: keyword } });
+  },
+
+  onSheetNeed(e) {
+    sheetText.fill(this.selectComponent("#sheet"), e.detail.id);
   },
 
   onSheetFinish() {

@@ -228,7 +228,7 @@ function cloudCall(conf, path, data, method, opt) {
 }
 
 function sourceOffError() {
-  const e = new Error("还没接上课外库（取诗的那个服务）—— 这个包没配同步服务器");
+  const e = new Error("还没接上课外阅读（取诗的那个服务）—— 这个包没配同步服务器");
   e.code = "E_POEM_SOURCE_OFF";
   e.expected = true;
   return e;

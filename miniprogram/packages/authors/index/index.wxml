@@ -27,6 +27,7 @@
           <text class="suggest-era">{{item.era}}</text>
           <text class="tag course suggest-mark" wx:if="{{item.marked}}">课内</text>
           <text class="suggest-count" wx:elif="{{item.count}}">{{item.count}} 条</text>
+          <text class="tag own suggest-mark" wx:else>课外阅读</text>
         </view>
       </view>
 

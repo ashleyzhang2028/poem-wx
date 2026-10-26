@@ -8,12 +8,13 @@ const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
 const source = require("../../../utils/poem-source");
 const guard = require("../../../utils/guard");
+const directory = require("../../../utils/author-directory");
 
 const SUGGEST_MAX = 12;
 const REMOTE_WAIT = 600;
 const REMOTE_PAGE = 50;
 const REMOTE_PAGES = 3;
-const REMOTE_MAX = 30;
+const REMOTE_MAX = 200;
 
 Page({
   data: {
@@ -101,6 +102,12 @@ Page({
     if (this.data.keyword) this.suggest(this.data.keyword);
   },
 
+  onUnload() {
+    this.tick = (this.tick || 0) + 1;
+    clearTimeout(this.timer);
+    if (this.onDirectory) directory.release(this.onDirectory);
+  },
+
   onInput(e) {
     const kw = String(e.detail.value || "");
     this.setData({ keyword: kw }, () => this.suggest(kw));
@@ -127,6 +134,8 @@ Page({
   remoteSuggest(kw) {
     if (!entitlement.can("search") || !source.usable()) return;
     const tick = this.tick;
+    this.searched = [];
+    this.watchDirectory(kw, tick);
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       if (tick !== this.tick) return;
@@ -134,10 +143,21 @@ Page({
     }, REMOTE_WAIT);
   },
 
+  watchDirectory(kw, tick) {
+    if (this.onDirectory) directory.release(this.onDirectory);
+    this.onDirectory = () => {
+      if (tick !== this.tick) return;
+      this.fillRemote(kw, this.searched || []);
+    };
+    directory.ensure(this.onDirectory);
+    if (directory.find(kw).length) this.onDirectory();
+  },
+
   pullAuthors(kw, page, poems, tick) {
     source.search(kw, { type: "author", page: page, size: REMOTE_PAGE }).then((r) => {
       if (tick !== this.tick) return;
       const all = poems.concat(r.items);
+      this.searched = all;
       const enough = this.remoteAuthors(kw, all).length >= REMOTE_MAX;
       if (r.more && !enough && page < REMOTE_PAGES) return this.pullAuthors(kw, page + 1, all, tick);
       this.fillRemote(kw, all);
@@ -153,7 +173,7 @@ Page({
       const a = (p && p.author) || {};
       const name = String(a.name || "").trim();
       if (!name) return;
-      if (kw.length === 1 && name.indexOf(kw) !== 0) return;
+      if (name.indexOf(kw) < 0) return;
       if (seen[name]) return;
       seen[name] = 1;
       rows.push({ name: name, dynasty: String((p.dynasty && p.dynasty.name) || ""), id: a.id });
@@ -163,10 +183,10 @@ Page({
 
   fillRemote(kw, poems) {
     const seen = {};
-    const local = this.data.suggests || [];
+    const local = AI.query(this.roster, kw).slice(0, SUGGEST_MAX);
     local.forEach((s) => { seen[s.name] = 1; });
     const rows = [];
-    this.remoteAuthors(kw, poems).forEach((a) => {
+    directory.find(kw).concat(this.remoteAuthors(kw, poems)).forEach((a) => {
       const name = a.name;
       if (seen[name]) return;
       if (rows.length >= REMOTE_MAX) return;
@@ -182,7 +202,8 @@ Page({
         external: false
       });
     });
-    const note = rows.length ? "课外库里还有 " + rows.length + " 位，点一位看他的作品" : "";
+    const filling = directory.complete() ? "" : "，名册还在补全";
+    const note = rows.length ? "课外阅读里还有 " + rows.length + " 位（带「课外阅读」标记的行），点一位看他的作品" + filling : "";
     this.setData({ suggests: local.concat(rows), remoteNote: note });
   },
 
@@ -292,8 +313,8 @@ Page({
     const list = rows.filter((p) => filter !== "未读" || !readIds[p.id]);
 
     let moreNote = "";
-    if (rem.failed) moreNote = "课外库没取到，点一下重试";
-    else if (rem.more) moreNote = "课外库共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
+    if (rem.failed) moreNote = "课外阅读没取到，点一下重试";
+    else if (rem.more) moreNote = "课外阅读共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
 
     this.setData({
       works: list.map((p) => ({

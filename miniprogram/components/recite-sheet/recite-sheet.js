@@ -231,7 +231,33 @@ Component({
         return;
       }
       this.setData({ open: true });
+      if ((meta && meta.sid) || /^\d+$/.test(String(item.id))) {
+        this.askText(item);
+        return;
+      }
       this.markMissing(item);
+    },
+
+    askText(item) {
+      this.setData(Object.assign({ blocks: [], tokens: [], textMiss: "正在取这一篇的正文…" }, this.missHead(item)));
+      this.triggerEvent("need", { id: item.id });
+    },
+
+    showText(id, text, failText, found) {
+      const item = this.current();
+      if (!item || item.id !== id) return;
+      const meta = corpus.indexById(id) ||
+        (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "课外阅读", b: "", g: "", s: "" });
+      if (!text || !meta) {
+        this.setData({ textMiss: failText || "这一篇的正文没取到，点一下重试" });
+        return;
+      }
+      this.renderCurrent(item, { text: text, tr: "", src: "" }, meta);
+    },
+
+    onRetryText() {
+      const item = this.current();
+      if (item) this.askText(item);
     },
 
     renderCurrent(item, entry, meta) {

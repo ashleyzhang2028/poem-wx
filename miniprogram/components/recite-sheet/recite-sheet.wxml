@@ -107,7 +107,7 @@
           </view>
         </block>
         <view class="poem-miss" wx:else>
-          <text class="hint poem-miss-t">{{textMiss}}</text>
+          <text class="hint poem-miss-t" bindtap="onRetryText">{{textMiss}}</text>
         </view>
       </view>
 
