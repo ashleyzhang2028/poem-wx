@@ -62,6 +62,7 @@ page {
   --blue-light: var(--blue-soft);
   --ink-on-dark: var(--on-ink);
 
+  --radius-xs: calc(8rpx * var(--ui-scale));
   --radius-sm: calc(16rpx * var(--ui-scale));
 
   --radius-ctl: calc(16rpx * var(--ui-scale));

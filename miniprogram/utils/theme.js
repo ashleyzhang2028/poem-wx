@@ -264,15 +264,8 @@ function toneOf() {
   return tone.parseHex(store.settings().toneColor);
 }
 
-function currentRgb() {
-  const rgb = toneOf();
-  if (!rgb) return null;
-  if (current() === OWN_KEY || !BY_KEY[current()]) return rgb;
-  return null;
-}
-
 function tint(theme) {
-  const rgb = currentRgb();
+  const rgb = toneOf();
   if (!rgb) return theme;
   return {
     rgba: rgba(rgb, 1),

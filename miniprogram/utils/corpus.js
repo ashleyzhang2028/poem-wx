@@ -497,6 +497,16 @@ function entry(id) {
   return null;
 }
 
+function courseTwin(meta) {
+  if (!meta || !meta.inCourse) return null;
+  const rows = ofBook("poems");
+  for (let i = 0; i < rows.length; i++) {
+    const names = [rows[i].t].concat(rows[i].aka || []);
+    if (rows[i].a === meta.a && names.indexOf(meta.t) >= 0) return rows[i];
+  }
+  return null;
+}
+
 function entries(ids) {
   const out = {};
   (ids || []).forEach((id) => {
@@ -623,6 +633,7 @@ module.exports = {
   ensureEntry,
   entry,
   entries,
+  courseTwin,
   indexById,
   search,
   searchAt,

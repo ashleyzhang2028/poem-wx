@@ -64,7 +64,8 @@ Page({
 
   onPick(e) {
     const key = e.currentTarget.dataset.key;
-    if (key === this.data.theme) return;
+    if (key === this.data.theme && !tone.current()) return;
+    tone.clear();
     theme.set(key);
     this.paint();
   },

@@ -208,7 +208,7 @@ function author(id) {
 function poems(query) {
   const q = Object.assign({ page_size: 20 }, query || {});
   q.page_size = Math.min(PAGE_MAX, Number(q.page_size) || 20);
-  return call(CAPS.poems, q).then(paged);
+  return call(CAPS.poems, q).then(paged).then(remember);
 }
 
 function search(keyword, opt) {
@@ -219,15 +219,11 @@ function search(keyword, opt) {
     page: o.page || 1,
     page_size: Math.min(PAGE_MAX, Number(o.size) || 20)
   };
-  return call(CAPS.search, q).then(paged);
+  return call(CAPS.search, q).then(paged).then(remember);
 }
 
 function random(opt) {
   return call(CAPS.random, opt || {}, { fresh: true }).then(data);
-}
-
-function poem(id) {
-  return call("/poems/" + encodeURIComponent(String(id)), {}).then(data);
 }
 
 function byChar(char) {
@@ -235,9 +231,40 @@ function byChar(char) {
   return call(CAPS.random, { char: char }, { fresh: true }).then(data);
 }
 
-function byId(id) {
-  if (!id) return Promise.reject(failure({ message: "没有给正文 id", code: "E_BAD_ID" }));
-  return call("/poems/" + encodeURIComponent(String(id)), {}).then(data);
+const seen = {};
+
+function remember(page) {
+  page.items.forEach((p) => {
+    if (p && p.id !== undefined) seen[String(p.id)] = p;
+  });
+  return page;
+}
+
+function sameTitle(p, title) {
+  return String(p.title || "").trim() === String(title || "").trim();
+}
+
+function sameAuthor(p, name) {
+  return !name || String((p.author && p.author.name) || "") === name;
+}
+
+function byTitle(meta) {
+  return search(meta.t, { type: "title", size: PAGE_MAX }).then((r) => {
+    const hits = r.items.filter((p) => sameTitle(p, meta.t) && sameAuthor(p, meta.a));
+    const authors = {};
+    hits.forEach((p) => { authors[(p.author && p.author.name) || ""] = 1; });
+    if (!hits.length || Object.keys(authors).length > 1) {
+      throw failure({ message: "课外库里没对上这一篇", code: "E_NO_POEM" });
+    }
+    return hits[0];
+  });
+}
+
+function byId(id, meta) {
+  const hit = id && seen[String(id)];
+  if (hit) return Promise.resolve(hit);
+  if (meta && meta.t) return byTitle(meta);
+  return Promise.reject(failure({ message: "没有可用的正文 id", code: "E_BAD_ID" }));
 }
 
 function linesOf(poem) {
@@ -378,7 +405,6 @@ module.exports = {
   poems,
   search,
   random,
-  poem,
   byId,
   byChar,
   charCount,
