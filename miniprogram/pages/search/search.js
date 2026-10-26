@@ -116,7 +116,7 @@ Page({
 
   askSource(kw, page, token) {
     if (!source.usable()) {
-      if (token === this.token) this.setData({ loading: false, more: this.packLeft() > 0 || this.data.full });
+      if (token === this.token) this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
       return;
     }
     this.setData({ loading: true });
@@ -126,7 +126,7 @@ Page({
       this.appendSource(r.items, kw, r.more);
     }, () => {
       if (token !== this.token) return;
-      this.setData({ loading: false, more: this.packLeft() > 0 || this.data.full });
+      this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
     });
   },
 
@@ -144,9 +144,9 @@ Page({
     const list = this.decorate(this.data.results.concat(rows));
     this.setData({
       results: list,
-      total: list.length,
-      more: rows.length > 0 && !!hasNext,
-      full: true,
+      total: (this.packTotal || 0) + Object.keys(seen).length,
+      more: this.packLeft() > 0 || !!hasNext,
+      full: !hasNext,
       loading: false
     });
   },
@@ -157,10 +157,10 @@ Page({
   },
 
   byIndex(kw) {
-    const pack = corpus.search(kw, { limit: Infinity });
+    const found = corpus.search(kw, { limit: Infinity });
     return {
-      total: pack.total,
-      items: pack.items.map((p) => ({
+      total: found.total,
+      items: found.items.map((p) => ({
         id: p.id,
         title: p.t,
         author: p.a,
@@ -218,7 +218,7 @@ Page({
     this.setData({
       results: this.decorate(rows),
       total: rows.length,
-      more: this.packLeft() > 0 || this.data.full
+      more: this.packLeft() > 0 || this.data.more
     }, () => this.refreshPicked());
   },
 

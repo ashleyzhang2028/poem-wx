@@ -344,16 +344,19 @@ Page({
     if (feihua.onSource()) {
       const token = (this.revealToken || 0) + 1;
       this.revealToken = token;
-      feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT }).then((answers) => {
+      const asked = this.data.done.map((d) => d.seg);
+      feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT, exclude: asked }).then((answers) => {
         if (token !== this.revealToken) return;
         this.setData({ revealed: true, answers: answers });
       }, () => {
         if (token !== this.revealToken) return;
-        this.setData({ revealed: true, answers: feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt)) });
+        this.setData({ revealed: true, answers: feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, { exclude: asked })) });
       });
       return;
     }
-    const answers = feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt));
+    const answers = feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, {
+      exclude: this.data.done.map((d) => d.seg)
+    }));
     this.setData({ revealed: true, answers });
   },
 
