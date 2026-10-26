@@ -5092,9 +5092,13 @@ const K = {
     AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
     "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
 
-  const missing = ["韩非", "脱脱等", "岳飞"].filter((n) => !roster.people[n]);
+  const missing = ["韩非", "脱脱", "岳飞"].filter((n) => !roster.people[n]);
   ok("草稿里点到的几位在名册上（他们只在集子目录里出现）",
     missing.length === 0, "名册里没有：" + missing.join("、"));
+
+  const withDeng = Object.keys(roster.people).filter((n) => /等$/.test(n));
+  ok("名册上的名字都进得了课外库（不带「等」）", withDeng.length === 0,
+    "还挂着：" + withDeng.join("、") + " —— 课外库里只有「宋濂」，没有「宋濂等」");
 
   const only = roster.people["韩非"];
   ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,

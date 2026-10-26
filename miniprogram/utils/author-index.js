@@ -102,8 +102,12 @@ const ALIAS = {
 
 const COLLECTIVE = { 礼记: 1, 论语: 1, 国语: 1, 战国策: 1 };
 
+function personName(name) {
+  return String(name == null ? "" : name).trim().replace(/等$/, "");
+}
+
 function aliasOf(name) {
-  const n = String(name == null ? "" : name).trim();
+  const n = personName(name);
   if (!n) return "";
   return ALIAS[n] || n;
 }
