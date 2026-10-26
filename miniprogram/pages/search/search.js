@@ -26,6 +26,9 @@ Page({
     results: [],
 
     total: 0,
+    packTotal: 0,
+    full: false,
+    loading: false,
     hot: HOT,
     searched: false,
     searching: false,
@@ -60,13 +63,18 @@ Page({
   },
 
   onClear() {
+    this.token = (this.token || 0) + 1;
+    this.sourcePage = 0;
+    this.packTotal = 0;
     this.setData({
       keyword: "",
       results: [],
       total: 0,
       searched: false,
       searching: false,
-      more: false
+      more: false,
+      full: false,
+      loading: false
     });
   },
 
@@ -81,92 +89,71 @@ Page({
     }
     const kw = this.data.keyword.trim();
     if (!kw) {
-      this.setData({ results: [], total: 0, searched: false, more: false });
+      this.setData({ results: [], total: 0, searched: false, more: false, full: false, loading: false });
       return;
     }
     store.saveSettings({ lastSearch: kw });
 
-    const r = this.byIndex(kw);
-    this.total = r.total;
+    this.token = (this.token || 0) + 1;
+    this.sourcePage = 0;
+    this.sourceIds = {};
+    const token = this.token;
+
+    const pack = this.byIndex(kw);
     this.setData({
-      results: r.items.slice(0, BATCH),
-      total: r.total,
-      more: r.total > BATCH,
+      results: this.decorate(pack.items.slice(0, BATCH)),
+      packTotal: pack.total,
+      total: pack.total,
+      more: pack.total > BATCH,
       searched: true,
-      searching: false
+      searching: false,
+      full: false,
+      loading: false
     }, () => this.refreshPicked());
+
+    this.askSource(kw, 1, token);
   },
 
-  runSource(kw) {
-    const token = (this.sourceToken || 0) + 1;
-    this.sourceToken = token;
-    this.fromPack = false;
-    this.busy = false;
-    this.session = null;
-    this.got = {};
-
-    const ask = (type) => source.search(kw, { type: type, page: 1, size: BATCH });
-
-    ask("all")
-      .then((r) => (r.total ? r : ask("content")))
-      .then((r) => {
-        if (token !== this.sourceToken) return;
-        if (!r.items.length) {
-          this.setData({
-            results: [], total: 0, searched: true, searching: false,
-            more: false, loading: false, partial: false, fromFull: false
-          });
-          return;
-        }
-        this.sourceTotal = r.total;
-        this.sourcePage = 1;
-        this.setData({
-          results: this.decorate(r.items.map((p) => source.asResult(p, kw))),
-          total: r.total,
-          more: r.total > r.items.length,
-          searched: true,
-          searching: false,
-          loading: false,
-          partial: false,
-          fromFull: true
-        });
-      })
-      ["catch"](() => {
-        if (token !== this.sourceToken) return;
-        this.setData({
-          results: [], total: 0, searched: true, searching: false,
-          more: false, loading: false, partial: false
-        });
-      });
-  },
-
-  moreSource() {
-    const kw = this.data.keyword.trim();
-    const page = (this.sourcePage || 1) + 1;
-    const token = this.sourceToken;
+  askSource(kw, page, token) {
+    if (!source.usable()) {
+      if (token === this.token) this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
+      return;
+    }
     this.setData({ loading: true });
     source.search(kw, { type: "all", page: page, size: BATCH }).then((r) => {
-      if (token !== this.sourceToken) return;
-      const seen = this.got || (this.got = {});
-      const rows = [];
-      r.items.forEach((p) => {
-        const row = source.asResult(p, kw);
-        if (seen[row.id]) return;
-        seen[row.id] = 1;
-        rows.push(row);
-      });
-      const results = this.data.results.concat(this.decorate(rows));
+      if (token !== this.token) return;
       this.sourcePage = page;
-      this.setData({
-        results: results,
-        total: this.sourceTotal || r.total,
-        loading: false,
-        more: results.length < (this.sourceTotal || r.total)
-      });
+      this.appendSource(r.items, kw, r.more);
     }, () => {
-      if (token !== this.sourceToken) return;
-      this.setData({ loading: false, more: false });
+      if (token !== this.token) return;
+      this.setData({ loading: false, more: this.packLeft() > 0 || this.data.more });
     });
+  },
+
+  appendSource(items, kw, hasNext) {
+    const seen = this.sourceIds;
+    const have = {};
+    (this.data.results || []).forEach((r) => { have[r.id] = 1; });
+    const rows = [];
+    (items || []).forEach((p) => {
+      const row = source.asResult(p, kw);
+      if (!row.id || seen[row.id] || have[row.id]) return;
+      seen[row.id] = 1;
+      rows.push(row);
+    });
+    const list = this.decorate(this.data.results.concat(rows));
+    this.setData({
+      results: list,
+      total: (this.packTotal || 0) + Object.keys(seen).length,
+      more: this.packLeft() > 0 || !!hasNext,
+      full: !hasNext,
+      loading: false
+    });
+  },
+
+  packLeft() {
+    const rest = (this.packTotal || 0) - (this.data.results || []).length;
+    return rest > 0 ? rest : 0;
   },
 
   byIndex(kw) {
@@ -203,43 +190,17 @@ Page({
     if (guard.gap("search:pick")) return;
     guard.mark("search:pick");
     const id = e.currentTarget.dataset.id;
-    const list = cols.list();
-    if (!list.length) {
-      wx.showModal({
-        title: "暂无自选集合",
-        content: "请前往「我的 → 自选背诵」新建集合。",
-        confirmText: "前往",
-        cancelText: "取消",
-        success: (res) => {
-          if (res.confirm) wx.navigateTo({ url: "/packages/settings/collections/collections" });
-        }
-      });
-      return;
-    }
-    if (list.length === 1) {
-      this.toggleIn(list[0], id);
-      return;
-    }
-    wx.showActionSheet({
-      itemList: list.map((c) => cols.nameOf(c) + "（" + cols.idsOf(c).length + " 首）"),
-      success: (res) => this.toggleIn(list[res.tapIndex], id),
-      fail: () => {}
-    });
+    const row = (this.data.results || []).filter((p) => p.id === id)[0] || {};
+    const box = this.selectComponent("#collect");
+    if (box) box.ask(id, row.title || "");
   },
 
-  toggleIn(c, poemId) {
-    const inside = cols.idsOf(c).indexOf(poemId) >= 0;
-    const r = inside ? cols.removeItems(c.id, [poemId]) : cols.add(c.id, [poemId]);
-    if (!inside && !r.ok) {
-      const msg = r.code === "E_FULL"
-        ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : "添加失败";
-      wx.showToast({ title: msg, icon: "none" });
-      return;
-    }
+  onCollectDone(e) {
+    const d = (e && e.detail) || {};
+    if (!d.id) return;
     sync.markDirty();
-    wx.showToast({ title: inside ? "已移出「" + cols.nameOf(c) + "」" : "已加入「" + cols.nameOf(c) + "」", icon: "none" });
     this.refreshPicked();
+    wx.showToast({ title: "已加入「" + d.name + "」", icon: "none" });
   },
 
   refreshPicked() {
@@ -247,20 +208,26 @@ Page({
   },
 
   onReachBottom() {
-    if (!this.data.more || this.data.loading) return;
-    const want = this.data.results.length + BATCH;
-    const r = this.byIndex(this.data.keyword.trim());
+    if (this.data.loading || !this.data.more) return;
+    const kw = this.data.keyword.trim();
+    const page = (this.sourcePage || 0) + 1;
+    if (page > 1) return this.askSource(kw, page, this.token);
+    const want = Math.min(this.packTotal || 0, (this.data.results || []).length + BATCH);
+    const pack = this.byIndex(kw);
+    const rows = pack.items.slice(0, want);
     this.setData({
-      results: r.items.slice(0, want),
-      total: r.total,
-      more: r.total > want
+      results: this.decorate(rows),
+      total: rows.length,
+      more: this.packLeft() > 0 || this.data.more
     }, () => this.refreshPicked());
   },
 
   onOpen(e) {
+    const id = e.currentTarget.dataset.id;
     trail.set(this.data.results.map((p) => p.id));
     wx.navigateTo({
-      url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) + "&mode=browse"
+      url: "/pages/reader/reader?id=" + encodeURIComponent(id) + "&mode=browse" +
+        (corpus.indexById(id) ? "" : "&src=1")
     });
   },
 
@@ -269,6 +236,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "全站搜索", path: "/pages/search/search" };
+    return { title: "搜索", path: "/pages/search/search" };
   }
 });

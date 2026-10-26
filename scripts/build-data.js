@@ -241,7 +241,7 @@ function writeCatalogs(W, courseRows) {
 
   const books = [];
   const rows = {};
-  const ids = {};
+  const prefixes = [];
   const inCourse = courseKeys(courseRows || []);
   let courseHits = 0;
 
@@ -251,8 +251,8 @@ function writeCatalogs(W, courseRows) {
       throw new Error("集子 " + bookId + " 在 data/site-catalogs.js 里没有 rows");
     }
     const prefix = String(c.src).replace(/s$/, "");
+    prefixes.push(prefix);
     rows[bookId] = c.rows.map(function (r, i) {
-      ids[bookId + "-" + (i + 1)] = prefix + "-" + (i + 1);
       const hit = inCourse[catalogKey(r[0], r[1])] ? 1 : 0;
       if (hit) courseHits += 1;
       return [r[0], put("a", r[1]), put("d", r[2]), hit];
@@ -260,7 +260,12 @@ function writeCatalogs(W, courseRows) {
     books.push({ id: bookId, name: c.name, unit: c.unit, count: c.rows.length });
   });
 
-  writeModule(path.join(OUT_DIR, "books", "catalogs.js"), { books: books, rows: rows, ids: ids, dict: dict });
+  const drifted = order.filter(function (bookId, i) { return prefixes[i] !== bookId; });
+
+  writeModule(path.join(OUT_DIR, "books", "catalogs.js"), {
+    books: books, rows: rows, prefixes: prefixes, dict: dict, drifted: drifted
+  });
+
 
   const total = books.reduce(function (n, b) { return n + b.count; }, 0);
   console.log("集子目录 " + books.length + " 部 " + total + " 条（其中课内 " + courseHits + " 条），" +

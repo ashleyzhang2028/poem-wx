@@ -202,7 +202,7 @@ ok("目录十部，每部的条数与落盘的 count 对得上",
 
   ok("目录落盘只存列（书名在集子表里，不在这份里重写一遍）",
     catalogPack.books.every((b) => Object.keys(b).sort().join() === "count,id,name,unit")
-      && Object.keys(catalogPack).sort().join() === "books,dict,ids,rows",
+      && Object.keys(catalogPack).sort().join() === "books,dict,drifted,prefixes,rows",
     "形状不对：" + JSON.stringify(Object.keys(catalogPack)));
 }
 
@@ -238,11 +238,11 @@ ok("包里不再有正文分片与分片清单",
       rel + " 被 ignore 了 —— 列表页与按题名检索会空");
   }
 
-  ok("课文阅读页取正文不裸调 corpus.entry（真机上它抛 = 整屏白）",
-    /try\s*{[\s\S]{0,120}corpus\.entry\(/.test(
+  ok("课文阅读页取正文先看有没有这一篇（不拿取不到的 id 去问 corpus.entry）",
+    /meta\s*\?\s*corpus\.entry\(id\)\s*:\s*null/.test(
       fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8")
     ),
-    "reader.js 的 corpus.entry(id) 不在 try 里 —— 它一抛就连 failText 那套都说不上");
+    "reader.js 拿一个包里没有的 id 去 corpus.entry —— 真机上它抛，整屏白");
 
   const readerAdvance = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   const sheetAdvance = fs.readFileSync(
@@ -3154,10 +3154,10 @@ function mountFull(pg, query) {
       /const BATCH = 20;/.test(js) && /slice\(0, BATCH\)/.test(js),
       "每批 20 条这个数只该在一处写死 —— 散在两个地方，下拉与首屏就会各出各的数");
     ok("触底才接下一批（onReachBottom 里才续取）",
-      /onReachBottom\s*\(\)\s*\{[\s\S]{0,260}?byIndex/.test(js),
+      /onReachBottom\s*\(\)\s*\{[\s\S]{0,320}?askSource/.test(js),
       "没有 onReachBottom —— 列表拉到底不会续取，20 条就是全部");
     ok("列表还有后续时才写「往下拉」",
-      /more:\s*r\.total > BATCH/.test(js)
+      /more:\s*this\.packLeft\(\) > 0/.test(js) && /more:\s*pack\.total > BATCH/.test(js)
         && read("pages/search/search.wxml").indexOf('wx:if="{{more}}"') > 0);
     ok("分批只切显示，不切命中池（不设上限截断，命中数才算得准）",
       /corpus\.search\(kw, \{ limit: Infinity \}\)/.test(js) && !/PACK_MAX/.test(js),
@@ -7274,8 +7274,8 @@ const K = {
 
   const readerSrc4 = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
   ok("阅读页能加进集子（进的是服务端那一行，走 markDirty）",
-    /onAddToCollection/.test(readerSrc4) && /cols\.add\(/.test(readerSrc4)
-      && /sync\.markDirty\(\)/.test(readerSrc4));
+    /onAddToCollection/.test(readerSrc4) && /#collect/.test(readerSrc4)
+      && /onCollectDone[\s\S]{0,200}sync\.markDirty\(\)/.test(readerSrc4));
 
   const listSrc4 = fs.readFileSync(path.join(ROOT, "pages", "list", "list.js"), "utf8");
   const searchSrc4 = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");

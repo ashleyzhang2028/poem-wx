@@ -88,14 +88,17 @@
 
     <view class="card">
       <view class="row" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpen">
+            wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" data-src="{{item.source}}"
+            bindtap="onOpen">
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
-          <text class="row-sub">{{item.dynasty}} · {{item.bookName}}</text>
+          <text class="row-sub">{{item.sub}}</text>
         </view>
         <text class="read-dot" wx:if="{{item.read}}">已读</text>
         <text class="row-go">›</text>
       </view>
+      <text class="hint more-tip" wx:if="{{remoteMore}}" bindtap="onMoreFromSource">还有 {{matched - works.length}} 条，接着看</text>
+      <text class="hint more-tip" wx:elif="{{remoteNote}}">{{remoteNote}}</text>
     </view>
 
     <view class="empty" wx:if="{{!works.length && loading}}">

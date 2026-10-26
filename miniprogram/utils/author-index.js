@@ -182,10 +182,7 @@ function isCollective(name) {
   return !!COLLECTIVE[aliasOf(name)];
 }
 
-const LIT_BOOKS = [
-  "poems", "classic", "guwen", "yuefu", "tangshi",
-  "gushi", "songci", "yuanqu", "jinxiandai", "zhaoming"
-];
+const LIT_BOOKS = ["poems"];
 
 const ATTRIB = {
   "classic-gw-10": { person: "朱熹", dynasty: "宋" }

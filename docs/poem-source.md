@@ -74,12 +74,19 @@
 ```
 pages/search  ─┐
 pages/reader  ─┤
-feihua/lib    ─┤
-game-scopes   ─┼→ utils/poem-source.js → utils/remote.js source()
+authors/index ─┤
+feihua/lib    ─┼→ utils/poem-source.js → utils/remote.js source()
                ┘                          → wx.cloud.callContainer
                                             X-WX-SERVICE: poem-source
                                             path: /api/v1/...
 ```
+
+- **搜索**：先出包内命中（篇名 / 作者 / 书名，一次扫全、按 20 条分批绘制），
+  再并上 `search?type=all` 的全文命中；命中的服务端 id 不带集子前缀，
+  开阅读页时以 `src=1` 标记，正文照 `GET /poems/{id}` 取。
+- **作者索引**：名册只从包里收人（课内 + 十部目录，112 位）。
+  点开一位时若他知道在目录里出现过，用 `GET /poems?author=` 拉他的全部作品，
+  一页 100 首，`page_size` 上限即 `PAGE_MAX`。
 
 - **服务名只有一处**：`remote.js` 的 `SOURCE_AGENT`。改部署就改那一行，别在别处再写一遍。
 - 走云调用，**不经过 request 合法域名名单**，仍然免备案（同后端那条路，见 `wx-cloud-setup.md`）。

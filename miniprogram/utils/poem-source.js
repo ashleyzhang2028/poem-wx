@@ -253,6 +253,20 @@ function textOf(poem) {
   return linesOf(poem).join("\n");
 }
 
+function asWork(poem, bookName) {
+  const p = poem || {};
+  return {
+    id: p.id === undefined ? "" : String(p.id),
+    t: String(p.title || ""),
+    a: String((p.author && p.author.name) || ""),
+    d: String((p.dynasty && p.dynasty.name) || ""),
+    n: String(bookName || NAME),
+    b: "source",
+    g: "",
+    text: textOf(p)
+  };
+}
+
 function metaOf(poem) {
   const p = poem || {};
   return {
@@ -372,6 +386,7 @@ module.exports = {
   textOf,
   metaOf,
   asEntry,
+  asWork,
   withMeta,
   asResult,
   segments,
