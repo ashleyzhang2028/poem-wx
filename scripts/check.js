@@ -3157,8 +3157,11 @@ function mountFull(pg, query) {
       /onReachBottom\s*\(\)\s*\{[\s\S]{0,260}?byIndex/.test(js),
       "没有 onReachBottom —— 列表拉到底不会续取，20 条就是全部");
     ok("列表还有后续时才写「往下拉」",
-      /this\.total > want/.test(js) && /more:\s*r\.total > BATCH/.test(js)
+      /more:\s*r\.total > BATCH/.test(js)
         && read("pages/search/search.wxml").indexOf('wx:if="{{more}}"') > 0);
+    ok("分批只切显示，不切命中池（不设上限截断，命中数才算得准）",
+      /corpus\.search\(kw, \{ limit: Infinity \}\)/.test(js) && !/PACK_MAX/.test(js),
+      "byIndex 给了 limit —— 命中数会被截在那一档，界面上的「命中 N 篇」就不准了");
   }
 
   {

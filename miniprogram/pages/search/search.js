@@ -15,7 +15,6 @@ const trail = require("../../utils/trail");
 const HOT = ["李白", "杜甫", "苏轼", "春", "月", "登高"];
 
 const BATCH = 20;
-const PACK_MAX = 80;
 
 Page({
   data: {
@@ -170,11 +169,11 @@ Page({
     });
   },
 
-  byIndex(kw, limit) {
-    const r = corpus.search(kw, { limit: limit || PACK_MAX });
+  byIndex(kw) {
+    const found = corpus.search(kw, { limit: Infinity });
     return {
-      total: r.total,
-      items: r.items.map((p) => ({
+      total: found.total,
+      items: found.items.map((p) => ({
         id: p.id,
         title: p.t,
         author: p.a,
@@ -248,10 +247,14 @@ Page({
   },
 
   onReachBottom() {
-    if (!this.data.more) return;
+    if (!this.data.more || this.data.loading) return;
     const want = this.data.results.length + BATCH;
-    const r = this.byIndex(this.data.keyword.trim(), want);
-    this.setData({ results: r.items.slice(0, want), more: this.total > want }, () => this.refreshPicked());
+    const r = this.byIndex(this.data.keyword.trim());
+    this.setData({
+      results: r.items.slice(0, want),
+      total: r.total,
+      more: r.total > want
+    }, () => this.refreshPicked());
   },
 
   onOpen(e) {
