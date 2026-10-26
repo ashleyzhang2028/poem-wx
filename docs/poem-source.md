@@ -107,23 +107,19 @@ feihua/lib    ─┼→ utils/poem-source.js → utils/remote.js source()
 
 ```
 corpus.entry(id)          → 课内 251 条，读 data/course.js，取不到报 E_NO_TEXT
-poem-source.byId(sid)     → 十部集子的每一篇，GET /poems/{id} 即时取
+poem-source.byId(sid, meta) → 先查本次会话里搜索 / 列表见过的那一首；
+                              没有再按目录行的标题与作者精确检索
 ```
 
+课外库的 REST 没有按 id 取单篇的接口，只有 `/poems`、`/poems/search`、`/poems/random`。
 十部集子的目录在包里（`data/books/catalogs.js`，见 `docs/parity.md` 一），正文不在。
-阅读页拿到目录那一行的 `sid`（`tangshi300-11` 这样）后调 `GET /poems/{id}`，
-把 `content` 逐行拼成正文；译文献空 —— 课外库不带译文，那一段本来也不出。
-一次只取点开的那一篇，不预取整本。
+目录行的 `sid`（`tangshi300-11`）是包内编号，不是课外库的 id，不能拼进接口。
 
-两边各有一套 id，别混：
+- 搜索页、作者索引点开的诗：id 是课外库返回的整数，`search` / `poems` 返回时已记下整首，阅读页直接取用。
+- 集子里的篇目：`/poems/search?type=title` 取回后，标题与作者须精确相等；作者缺省时，命中里出现多位作者即视为没对上。
+- 译文献空 —— 课外库不带译文，那一段本来也不出。一次只取点开的那一篇，不预取整本。
 
-| 用在哪 | 值 | 谁给的 |
-|---|---|---|
-| 阅读页路由、已读、自选集合 | `tangshi300-11`（目录那一行的 `id`） | 包里 |
-| `GET /poems/{id}` 的 `{id}` | `prefix-序号`（那一行的 `sid`） | `build-data.js` 由 `src` 推前缀 |
-
-`src=1` 只说明「正文得问课外库」，仍然要拿 `sid` 去问。
-把路由上的 `id` 直接拼进接口就是 404（`tangshi300-1`、`tangshi300-11` 都是站内编号）。
+会话记录不跨启动：冷启动后直接重开一首只有课外库 id 的诗，取不到，走重试提示。
 
 `data/site-catalogs.js` 里每部书的 `src` 决定 `sid` 的前缀（`tangshi300s` → `tangshi300`）。
 前缀换了等于换一套 id，本机「已读」与自选集合里的引用会跟着断，改之前先想清楚。

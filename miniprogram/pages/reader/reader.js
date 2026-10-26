@@ -196,13 +196,15 @@ Page({
       return;
     }
 
-    if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
-
-    const hit = meta ? corpus.entry(id) : null;
+    const own = meta ? corpus.entry(id) : null;
+    const twin = !own && meta && meta.sid ? corpus.courseTwin(meta) : null;
+    const hit = own || (twin ? corpus.entry(twin.id) : null);
     if (hit && hit.text) {
       this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!hit.tr });
       return this.renderEntry(id, hit, meta);
     }
+
+    if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
 
     if (meta && meta.b) {
       this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
@@ -219,7 +221,7 @@ Page({
     this.loadToken = token;
     this.setData({ id: this.data.id, loadingText: true, loadFailed: false, failText: "" });
 
-    source.byId(sid).then(
+    source.byId(sid, meta).then(
       (poem) => {
         if (token !== this.loadToken) return;
         const text = source.textOf(poem);

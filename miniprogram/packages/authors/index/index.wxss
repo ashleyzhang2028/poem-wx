@@ -124,6 +124,8 @@
 }
 
 .suggest {
+  display: flex;
+  flex-wrap: wrap;
   margin-top: var(--sp-2);
   border-top: 1rpx solid var(--line-2);
 }
@@ -131,13 +133,20 @@
 .suggest-row {
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  width: 50%;
   min-height: var(--h-opt);
   border-bottom: 1rpx solid var(--line-2);
   transition: background-color var(--t-press);
 }
 
-.suggest-row:last-child {
-  border-bottom: none;
+.suggest-row:nth-child(odd) {
+  padding-right: var(--sp-2);
+}
+
+.suggest-row:nth-child(even) {
+  padding-left: var(--sp-2);
+  border-left: 1rpx solid var(--line-2);
 }
 
 .suggest-name {

@@ -224,7 +224,7 @@
 }
 
 .tone-field-hex {
-  width: 132rpx;
+  width: 100rpx;
 }
 
 .tone-field-rgba {
@@ -276,7 +276,6 @@
   padding: 0 var(--sp-1);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: 0;
@@ -332,7 +331,7 @@
 .tone-band {
   position: relative;
   height: 48rpx;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   box-shadow: inset 0 0 0 1rpx var(--line-strong);
 }
 
