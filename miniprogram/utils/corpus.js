@@ -395,11 +395,12 @@ function catalog(bookId) {
   if (!pack || !pack.rows[bookId]) return null;
   const meta = pack.books.filter(function (b) { return b.id === bookId; })[0] || null;
   if (!meta) return null;
+  const prefix = (pack.prefixes && pack.prefixes[pack.books.indexOf(meta)]) || bookId;
   const rows = pack.rows[bookId].map(function (raw, i) {
     const id = bookId + "-" + (i + 1);
     return {
       id: id,
-      sid: pack.ids[id] || "",
+      sid: prefix + "-" + (i + 1),
       t: raw[0],
       a: field(pack.dict, "a", raw[1]),
       an: field(pack.dict, "d", raw[2]),

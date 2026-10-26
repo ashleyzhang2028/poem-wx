@@ -99,6 +99,8 @@ Page({
     pickTier: "pro",
     icons: PAGE_ICONS,
 
+    remote: false,
+
     locked: true,
     lockTitle: "诗词详情",
     lockNote: "登录后才能看正文与进度",
@@ -111,6 +113,7 @@ Page({
     this.setData({
       id: query.id || "",
       from: query.from || "",
+      remote: query.src === "1",
       reciteMode: query.mode === "recite"
     });
   },
@@ -147,64 +150,16 @@ Page({
 
   onAddToCollection() {
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
-    const id = this.data.id;
-    const inList = cols.collectionsOf(id);
-    const list = cols.list();
-    const names = list.map((c) => cols.nameOf(c));
-    wx.showActionSheet({
-      itemList: list.map((c) => cols.nameOf(c) + "（" + cols.idsOf(c).length + " 首）").concat(["新建集合"]),
-      success: (res) => {
-        if (res.tapIndex >= names.length) {
-          this.newCollection(id);
-          return;
-        }
-        const c = list[res.tapIndex];
-        const r = cols.add(c.id, [id]);
-        this.afterPick(r, c);
-      },
-      fail: () => {
-        if (!inList.length) return;
-      }
-    });
+    const box = this.selectComponent("#collect");
+    if (box) box.ask(this.data.id, this.data.title || "");
   },
 
-  newCollection(poemId) {
-    const cap = cols.capOf();
-    if (!entitlement.gateTier("collections", { page: this })) return;
-    if (cols.list().length >= cap) {
-      wx.showToast({ title: "集合已达上限（" + cap + " 个），请先删除一个", icon: "none" });
-      return;
-    }
-    wx.showModal({
-      title: "新建集合",
-      editable: true,
-      placeholderText: cols.DEFAULT_NAME,
-      confirmText: "新建",
-      cancelText: "取消",
-      success: (res) => {
-        if (!res.confirm) return;
-        const made = cols.create(res.content);
-        if (!made.ok) {
-          wx.showToast({ title: "最多 " + cap + " 个集合", icon: "none" });
-          return;
-        }
-        const r = cols.add(made.collection.id, [poemId]);
-        this.afterPick(r, made.collection);
-      }
-    });
-  },
-
-  afterPick(r, c) {
-    if (!r.ok) {
-      const msg = r.code === "E_FULL"
-        ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : r.code === "E_DUP" ? "已在「" + cols.nameOf(c) + "」中" : "添加失败";
-      wx.showToast({ title: msg, icon: "none" });
-      return;
-    }
+  onCollectDone(e) {
+    const d = (e && e.detail) || {};
+    if (!d.id) return;
     sync.markDirty();
     this.syncDaily();
-    wx.showToast({ title: "已加入「" + cols.nameOf(c) + "」", icon: "none" });
+    wx.showToast({ title: "已加入「" + d.name + "」", icon: "none" });
   },
 
   onToggleDaily() {
@@ -236,33 +191,30 @@ Page({
     const id = this.data.id;
     const meta = this.findMeta(id);
 
-    if (!meta) {
+    if (!meta && !this.data.remote) {
       this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
 
-    let hit = null;
-    try {
-      hit = corpus.entry(id);
-    } catch (e) {
-      hit = null;
-    }
+    if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
+
+    const hit = meta ? corpus.entry(id) : null;
     if (hit && hit.text) {
-      this.setData({ loadFailed: false, failText: "", loadingText: false });
+      this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!hit.tr });
       return this.renderEntry(id, hit, meta);
     }
 
-    if (meta.sid) return this.loadRemote(id, meta);
+    if (this.data.remote) return this.loadRemote(id, null, "这一篇的正文没取到，点一下重试");
 
-    this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里" });
+    this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
   },
 
-  loadRemote(id, meta) {
+  loadRemote(sid, meta, failText) {
     const token = (this.loadToken || 0) + 1;
     this.loadToken = token;
-    this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
+    this.setData({ id: this.data.id, loadingText: true, loadFailed: false, failText: "" });
 
-    source.byId(meta.sid).then(
+    source.byId(sid).then(
       (poem) => {
         if (token !== this.loadToken) return;
         const text = source.textOf(poem);
@@ -270,13 +222,19 @@ Page({
           this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
           return;
         }
-        this.renderEntry(id, { text: text, tr: "", src: "" }, meta);
+        this.setData({ hasTranslation: false, remote: true });
+        this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem));
       },
       () => {
         if (token !== this.loadToken) return;
-        this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文没取到，点一下重试" });
+        this.setData({ loadingText: false, loadFailed: true, failText: failText });
       }
     );
+  },
+
+  remoteMeta(poem) {
+    const m = source.metaOf(poem);
+    return { id: m.id, t: m.t, a: m.a, d: m.d, b: "", n: source.NAME, s: "", g: "" };
   },
 
   onRetryText() {
@@ -296,7 +254,8 @@ Page({
       rawText: entry.text,
       tableView: table.hasTable(entry.text),
       loadingText: false,
-      bookId: meta.b,
+      remote: !!this.data.remote,
+      bookId: meta.b || "",
       title: meta.t,
       author: meta.a,
       dynasty: meta.d,
@@ -314,7 +273,7 @@ Page({
     });
 
     wx.setNavigationBarTitle({ title: meta.t });
-    store.markRead(meta.b, id);
+    if (meta.b) store.markRead(meta.b, id);
     this.loaded = true;
     this.setData({ creator: this.data.from || "" });
     this.refreshPager();
@@ -477,6 +436,7 @@ Page({
   readerUrl(id, creator) {
     let url = "/pages/reader/reader?id=" + encodeURIComponent(id);
     if (this.data.reciteMode) url += "&mode=recite";
+    if (this.data.remote) url += "&src=1";
     if (creator) url += "&from=" + encodeURIComponent(creator);
     return url;
   },
@@ -514,6 +474,9 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: this.data.title + " · " + this.data.author, path: "/pages/reader/reader?id=" + this.data.id };
+    return {
+      title: this.data.title + " · " + this.data.author,
+      path: "/pages/reader/reader?id=" + this.data.id + (this.data.remote ? "&src=1" : "")
+    };
   }
 });

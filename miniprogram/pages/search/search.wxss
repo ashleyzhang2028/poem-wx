@@ -4,7 +4,15 @@
 }
 
 .result-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   padding: 4rpx var(--sp-4) var(--sp-2);
+}
+
+.result-more {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
 }
 
 .result-count {

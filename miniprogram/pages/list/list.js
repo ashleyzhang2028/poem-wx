@@ -111,6 +111,7 @@ Page({
     return {
       id: p.id,
       title: p.t,
+      inCourse: !!p.inCourse,
       author: p.a,
       dynasty: p.d,
       seq: seq,
@@ -164,44 +165,16 @@ Page({
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     if (guard.gap("list:pick")) return;
     guard.mark("list:pick");
-    const id = e.currentTarget.dataset.id;
-    const list = cols.list();
-    if (!list.length) {
-      wx.showModal({
-        title: "暂无自选集合",
-        content: "请前往「我的 → 自选背诵」新建集合。",
-        confirmText: "前往",
-        cancelText: "取消",
-        success: (res) => {
-          if (res.confirm) wx.navigateTo({ url: "/packages/settings/collections/collections" });
-        }
-      });
-      return;
-    }
-    if (list.length === 1) {
-      this.toggleIn(list[0], id);
-      return;
-    }
-    wx.showActionSheet({
-      itemList: list.map((c) => cols.nameOf(c) + "（" + cols.idsOf(c).length + " 首）"),
-      success: (res) => this.toggleIn(list[res.tapIndex], id),
-      fail: () => {}
-    });
+    const box = this.selectComponent("#collect");
+    if (box) box.ask(e.currentTarget.dataset.id, e.currentTarget.dataset.title || "");
   },
 
-  toggleIn(c, poemId) {
-    const inside = cols.idsOf(c).indexOf(poemId) >= 0;
-    const r = inside ? cols.removeItems(c.id, [poemId]) : cols.add(c.id, [poemId]);
-    if (!inside && !r.ok) {
-      const msg = r.code === "E_FULL"
-        ? "「" + cols.nameOf(c) + "」已满 " + cols.ITEMS_MAX + " 首"
-        : "添加失败";
-      wx.showToast({ title: msg, icon: "none" });
-      return;
-    }
+  onCollectDone(e) {
+    const d = (e && e.detail) || {};
+    if (!d.id) return;
     sync.markDirty();
-    wx.showToast({ title: inside ? "已移出「" + cols.nameOf(c) + "」" : "已加入「" + cols.nameOf(c) + "」", icon: "none" });
     this.apply();
+    wx.showToast({ title: "已加入「" + d.name + "」", icon: "none" });
   },
 
   onOpen(e) {
