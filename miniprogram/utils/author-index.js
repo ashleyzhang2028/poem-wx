@@ -130,14 +130,20 @@ const extra = (() => {
   }
 })();
 
-const EXTRA_NAME = extra.name || {};
+const EXTRA_ERA = extra.era || {};
 
 function extraRoster(byPerson, order) {
-  Object.keys(EXTRA_NAME).forEach(function (n) {
-    if (byPerson[n]) return;
+  Object.keys(EXTRA_ERA).forEach(function (n) {
+    const row = EXTRA_ERA[n] || {};
+    if (byPerson[n]) {
+      byPerson[n].at = Number(row.at) || TAIL;
+      byPerson[n].dynasty = row.era || "";
+      return;
+    }
     byPerson[n] = {
       name: n,
-      at: Number(EXTRA_NAME[n]) || TAIL,
+      at: Number(row.at) || TAIL,
+      dynasty: row.era || "",
       items: [],
       dynasties: {},
       count: 0,
@@ -201,7 +207,7 @@ function build(entries, opt) {
     w.items = orderItems(w.items);
     w.count = w.items.length;
     w.unread = w.items.filter(function (p) { return !readIds[p.id]; }).length;
-    w.dynasty = firstDynasty(w);
+    w.dynasty = w.dynasty || eraLabel(w.at);
     people[n] = w;
   });
 
@@ -214,6 +220,7 @@ function build(entries, opt) {
 
     let row = tail;
     for (let i = 0; i < rows.length; i++) if (rows[i].at === w.at) row = rows[i];
+    if (w.at === TAIL) row = tail;
     row.count += 1;
     row.works += w.count;
   });
@@ -297,15 +304,9 @@ function dedupKey(title, author) {
     "|" + String(author || "");
 }
 
-function firstDynasty(w) {
-  let best = "";
-  let bestAt = TAIL + 1;
-  Object.keys(w.dynasties || {}).forEach(function (d) {
-    const at = eraOf(d);
-    const v = at === 0 ? TAIL : at;
-    if (v < bestAt) { bestAt = v; best = d; }
-  });
-  return best;
+function eraLabel(at) {
+  if (!at || at >= TAIL) return "";
+  return ERA_NAME[at] || "";
 }
 
 let collator = null;
@@ -340,7 +341,7 @@ module.exports = {
   ERAS: ERAS,
   TAIL: TAIL,
   LIT_BOOKS: LIT_BOOKS,
-  extraCount: Object.keys(EXTRA_NAME).length,
+  extraCount: Object.keys(EXTRA_ERA).length,
   eraOf: eraOf,
   eraName: eraName,
   aliasOf: aliasOf,

@@ -5125,6 +5125,37 @@ const K = {
   }
 
   {
+    const extra = readModule(path.join(dataDir, "roster-extra.js")).era || {};
+    const catalogs = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
+    const noEra = catalogs.filter((p) => p.a && !extra[p.a]).map((p) => p.a);
+    ok("集子目录里每一位作者都对得上朝代（书名、作者名这两个字段之外不靠猜）",
+      noEra.length === 0, "没有朝代的作者：" + Array.from(new Set(noEra)).slice(0, 8).join("、"));
+  }
+
+  {
+    const landed = (name, era) => {
+      const w = roster.people[name];
+      return !!w && w.at === AI.eraOf(era) && AI.eraName(era) === era;
+    };
+    const want = [
+      ["李白", "唐"], ["苏轼", "宋"], ["关汉卿", "元"], ["韩非", "先秦"],
+      ["屈原", "先秦"], ["曹操", "三国"], ["陶渊明", "晋"], ["刘禹锡", "唐"]
+    ];
+    const wrong = want.filter(([n, e]) => !landed(n, e))
+      .map(([n]) => n + "落到了 " + ((roster.people[n] || {}).dynasty || "没朝代"));
+    ok("一位作者只占一段，且落在他的名字该在的那一段",
+      wrong.length === 0, wrong.join("；"));
+
+    const all = AI.ERAS.map((e) => e.name);
+    const off = Object.keys(roster.people).filter((n) => {
+      const w = roster.people[n];
+      return w.at !== AI.TAIL && all.indexOf(w.dynasty) < 0;
+    });
+    ok("名册里没有一件「朝代写在表外」的作者", off.length === 0,
+      off.slice(0, 5).map((n) => n + "：" + roster.people[n].dynasty).join("、"));
+  }
+
+  {
     const hits = AI.query(roster, "李");
     ok("作者搜索是只在作者名上匹（搜「李」出李白，不出《李凭箜篌引》）",
       hits.length > 0 && hits.every((h) => h.name.indexOf("李") >= 0)
