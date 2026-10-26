@@ -46,6 +46,9 @@ const POEM_FILES = [
   "data/site-index.js",
   "data/site-catalogs.js",
   "data/site-roster.js",
+  "data/catalog-dynasty.js",
+  "data/catalog-fix.js",
+  "data/author-index.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -347,21 +350,71 @@ function writeRosterExtra(W) {
   if (!roster || !roster.length) {
     throw noCorpus(path.join(CORPUS_DIR, "data", "site-roster.js"));
   }
+  const catalogs = W.SITE_CATALOGS;
+  const order = W.SITE_CATALOG_ORDER || [];
+  const own = W.CATALOG_DYNASTY;
+  const fix = W.CATALOG_FIX;
+  if (!catalogs || !own || !fix) {
+    throw noCorpus(path.join(CORPUS_DIR, "data", "catalog-dynasty.js"));
+  }
 
-  const name = {};
+  const eraAt = W.AuthorIndex && W.AuthorIndex.eraOf;
+
+  const known = dynastyIndex(W.SITE_INDEX || []);
+  const meta = Object.create(null);
+  const drift = [];
+
+  const label = function (at) {
+    const hit = (W.AuthorIndex ? W.AuthorIndex.eras() : []).filter(function (e) {
+      return e.at === at;
+    })[0];
+    return hit ? hit.name : String(at);
+  };
+
+  const put = function (name, raw, at) {
+    if (!name || Object.prototype.hasOwnProperty.call(meta, name)) return;
+    if (!raw) throw new Error("作者 " + name + " 没有朝代");
+    meta[name] = { era: label(at), at: at };
+  };
+
   let total = 0;
-
   roster.forEach(function (row) {
     total += row[1].length;
-    row[1].forEach(function (n) {
-      if (name[n]) throw new Error("data/site-roster.js 里 " + n + " 出现了两次");
-      name[n] = row[0];
+    row[1].forEach(function (n) { put(n, row[0], row[0]); });
+  });
+
+  order.forEach(function (bookId) {
+    const ownList = own[bookId] || {};
+    catalogs[bookId].rows.forEach(function (r) {
+      const a = String(r[1] || "").trim();
+      if (!a || Object.prototype.hasOwnProperty.call(meta, a)) return;
+      const pick = ownList[a] || fix[a] || known[a] || "";
+      if (known[a] && fix[a] && fix[a] !== known[a]) drift.push(a + "：" + known[a] + " → " + fix[a]);
+      put(a, pick, eraAt(pick));
     });
   });
 
-  writeModule(path.join(OUT_DIR, "roster-extra.js"), { name: name });
-  console.log("集子名册 " + total + " 位（不在课内那 251 首里），" +
-    Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
+  writeModule(path.join(OUT_DIR, "roster-extra.js"), { era: meta });
+  console.log("集子名册 " + Object.keys(meta).length + " 位（" + total + " 位自带朝代），与旧集子记的朝代不同 " +
+    drift.length + " 位，" + Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
+}
+
+function dynastyIndex(siteIndex) {
+  const votes = {};
+  siteIndex.forEach(function (p) {
+    if (p.isBook || p.book === COURSE_BOOK) return;
+    const a = String(p.author || "").trim();
+    const d = String(p.dynasty || "").trim();
+    if (!a || !d) return;
+    const bag = votes[a] = votes[a] || {};
+    bag[d] = (bag[d] || 0) + 1;
+  });
+  const out = {};
+  Object.keys(votes).forEach(function (a) {
+    const bag = votes[a];
+    out[a] = Object.keys(bag).sort(function (x, y) { return bag[y] - bag[x]; })[0];
+  });
+  return out;
 }
 
 function writeRoster() {
