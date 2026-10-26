@@ -5091,6 +5091,15 @@ const K = {
 {
   const AI = require(path.join(ROOT, "utils", "author-index.js"));
   const roster = AI.build(perBook.poems);
+  const books = ["公羊传", "谷梁传", "礼记·檀弓", "国语", "战国策", "戴圣编", "求那毗地译", "墨翟及弟子"];
+  const shown = books.filter((n) => roster.people[n]);
+  ok("名册上没有书目与编者占的格（" + books.join("、") + "）",
+    shown.length === 0, "还挂着：" + shown.join("、"));
+}
+
+{
+  const AI = require(path.join(ROOT, "utils", "author-index.js"));
+  const roster = AI.build(perBook.poems);
   ok("集子目录里的作者都进得了名册（" + AI.extraCount + " 位）",
     AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
     "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
