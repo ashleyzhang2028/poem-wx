@@ -359,6 +359,7 @@ function writeRosterExtra(W) {
   }
 
   const eraAt = W.AuthorIndex && W.AuthorIndex.eraOf;
+  const person = W.AuthorIndex && W.AuthorIndex.aliasOf;
 
   const known = dynastyIndex(W.SITE_INDEX || []);
   const meta = Object.create(null);
@@ -386,10 +387,12 @@ function writeRosterExtra(W) {
   order.forEach(function (bookId) {
     const ownList = own[bookId] || {};
     catalogs[bookId].rows.forEach(function (r) {
-      const a = String(r[1] || "").trim();
-      if (!a || Object.prototype.hasOwnProperty.call(meta, a)) return;
-      const pick = ownList[a] || fix[a] || known[a] || "";
-      if (known[a] && fix[a] && fix[a] !== known[a]) drift.push(a + "：" + known[a] + " → " + fix[a]);
+      const raw = String(r[1] || "").trim();
+      if (!raw) return;
+      const a = person(raw);
+      if (Object.prototype.hasOwnProperty.call(meta, a)) return;
+      const pick = ownList[raw] || fix[raw] || known[raw] || "";
+      if (known[raw] && fix[raw] && fix[raw] !== known[raw]) drift.push(raw + "：" + known[raw] + " → " + fix[raw]);
       put(a, pick, eraAt(pick));
     });
   });
