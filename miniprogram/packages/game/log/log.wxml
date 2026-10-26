@@ -32,7 +32,7 @@
       <view class="lg-main">
         <view class="lg-line">
           <text class="lg-rank {{item.crowned ? 'on' : ''}}">{{item.rankName}}</text>
-          <text class="tag gold" wx:if="{{item.pct === bestPct}}">最好</text>
+          <text class="tag gold" wx:if="{{item.id === bestId}}">最好</text>
           <text class="lg-scope">{{item.scopeName}}</text>
         </view>
         <view class="lg-sub">

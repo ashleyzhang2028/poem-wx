@@ -12,6 +12,7 @@ const rankingSelf = require("../../../utils/ranking");
 const scoreLog = require("../../../utils/score-log");
 
 const DURATION = 20 * 60;
+const URGENT_FROM = 60;
 const QUESTION_COUNT = 10;
 
 function blankAnswers(n) {
@@ -25,6 +26,7 @@ Page({
     themeStyle: "",
     name: "",
     stage: "setup",
+    preparing: false,
     scopes: [],
     scope: gameScopes.STAGE_SCOPE,
     needTitle: false,
@@ -48,6 +50,7 @@ Page({
     cheerLine: "",
     quitLine: "",
     remain: DURATION,
+    urgent: false,
     remainText: "20:00",
     score: 0,
     forms: [],
@@ -78,7 +81,7 @@ Page({
     this.setData({ barBelow: !!tabbar.pick(this) });
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
-    this.setData({ allowed: ok });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("exam") || "登录后才能考" });
     this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;
@@ -128,8 +131,15 @@ Page({
   },
 
 
+  guardLeave(on) {
+    if (on && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "考试还在进行，现在离开这场不会计分" });
+    if (!on && wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
+  },
+
   onUnload() {
+    this.prepToken = (this.prepToken || 0) + 1;
     this.stopTimer();
+    this.guardLeave(false);
     feedback.close(this);
   },
 
@@ -138,9 +148,19 @@ Page({
   },
 
   onStart() {
-    if (this.data.stage !== "setup") return;
-    const scope = this.data.scope;
-    const questions = quiz.build({ scope, count: QUESTION_COUNT, forms: this.data.pickedForms });
+    if (this.data.stage !== "setup" || this.data.preparing) return;
+    const token = (this.prepToken || 0) + 1;
+    this.prepToken = token;
+    this.setData({ preparing: true });
+    quiz.buildAsync({ scope: this.data.scope, count: QUESTION_COUNT, forms: this.data.pickedForms }).then((r) => {
+      if (token !== this.prepToken) return;
+      this.setData({ preparing: false });
+      if (r.degraded) wx.showToast({ title: "课外库没取到，已用课内出题", icon: "none" });
+      this.begin(r.questions);
+    });
+  },
+
+  begin(questions) {
     if (!questions.length) {
       wx.showToast({ title: "当前范围无法出题", icon: "none" });
       return;
@@ -164,6 +184,7 @@ Page({
         cheerLine: "",
         quitLine: "",
         remain: DURATION,
+        urgent: false,
         remainText: "20:00",
         slots: this.slotsOf(answers, 0),
         marked: 0,
@@ -171,7 +192,10 @@ Page({
         best: "",
         newBest: false
       },
-      () => this.startTimer()
+      () => {
+        this.guardLeave(true);
+        this.startTimer();
+      }
     );
   },
 
@@ -199,7 +223,7 @@ Page({
       return;
     }
     if (remain === this.data.remain) return;
-    this.setData({ remain, remainText: this.format(remain) });
+    this.setData({ remain, remainText: this.format(remain), urgent: remain <= URGENT_FROM });
   },
 
   stopTimer() {
@@ -240,6 +264,7 @@ Page({
       stemRows: quiz.stemRows(next),
       metaLine: this.metaLineOf(next),
       picked: this.data.answers[index] || "",
+      quitLine: "",
       slots: this.slotsOf(this.data.answers, index)
     });
   },
@@ -265,6 +290,11 @@ Page({
     return false;
   },
 
+  onNextTap(e) {
+    if (Number(e.currentTarget.dataset.i) !== this.data.index) return;
+    this.onNext();
+  },
+
   onNext() {
     if (this.data.stage !== "running") return;
     if (this.data.index + 1 >= this.data.questions.length) {
@@ -286,6 +316,7 @@ Page({
     if (this.endedAt || this.data.stage !== "running") return;
     this.endedAt = Date.now();
     this.stopTimer();
+    this.guardLeave(false);
     const questions = this.data.questions;
     const answers = this.data.answers;
     const judge = quiz.judge;
