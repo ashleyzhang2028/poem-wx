@@ -148,7 +148,7 @@
   background: transparent;
 }
 
-.theme-page .group-card:first-of-type {
+.theme-page .group-lead {
   position: relative;
   z-index: 1;
   margin-top: var(--banner-lead-gap);
@@ -224,7 +224,7 @@
 }
 
 .tone-field-hex {
-  width: 152rpx;
+  width: 132rpx;
 }
 
 .tone-field-rgba {
@@ -278,7 +278,7 @@
   background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-caption);
-  color: var(--ink);
+  color: var(--ink-3);
   letter-spacing: 0;
   line-height: var(--h-btn-mini);
   text-align: left;

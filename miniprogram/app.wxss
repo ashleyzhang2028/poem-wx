@@ -561,6 +561,36 @@ button, textarea {
   background: var(--fei-soft);
 }
 
+.tint-pro,
+.tint-max {
+  --on-theme: #ffffff;
+  --on-theme-soft: rgba(255, 255, 255, .7);
+  --on-ink: #ffffff;
+  --on-ink-soft: rgba(255, 255, 255, .7);
+}
+
+.tint-pro {
+  --theme: var(--fei);
+  --theme-deep: var(--fei);
+  --strong: var(--fei);
+  --strong-soft: var(--fei-soft);
+  --strong-text: var(--fei);
+  --ink-strong: var(--fei);
+  --mark: var(--fei);
+  --depth: var(--fei);
+}
+
+.tint-max {
+  --theme: var(--zi);
+  --theme-deep: var(--zi);
+  --strong: var(--zi);
+  --strong-soft: var(--zi-soft);
+  --strong-text: var(--zi);
+  --ink-strong: var(--zi);
+  --mark: var(--zi);
+  --depth: var(--zi);
+}
+
 .tag.zi {
   color: var(--zi);
   background: var(--zi-soft);

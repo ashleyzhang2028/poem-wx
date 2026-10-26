@@ -3,8 +3,12 @@
         style="mask-image:url('{{crest}}');-webkit-mask-image:url('{{crest}}');"></view>
   <view class="id-top">
     <text class="id-kind poem">{{kindText}}</text>
-    <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
-          bindtap="onTier">{{tierLabel}}</view>
+    <view class="id-chips">
+      <view class="tier-chip tier-act" hover-class="tier-chip-hover" hover-stay-time="60"
+            bindtap="onUpgrade">{{upgradeText}}</view>
+      <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
+            bindtap="onTier">{{tierLabel}}</view>
+    </view>
   </view>
 
   <view class="identity-row">

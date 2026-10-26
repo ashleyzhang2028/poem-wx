@@ -93,20 +93,17 @@ Page({
     const axis = String(e.currentTarget.dataset.axis || "");
     const touch = (e.touches || [])[0] || (e.changedTouches || [])[0];
     if (!touch || !picker.AXES[axis]) return;
-    if (!this.bands) this.bands = {};
-    const box = this.bands[axis];
-    if (!box) {
-      wx.createSelectorQuery().in(this).select("#tone-" + axis).boundingClientRect((r) => {
-        if (!r || !r.width) return;
-        this.bands[axis] = { left: r.left, width: r.width };
-      }).exec();
-      return;
-    }
-    const hex = picker.fromAxis(axis, (touch.clientX - box.left) / box.width, tone.current());
-    if (!hex || hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
-    tone.set(hex);
-    this.paint();
-    if (e.type === "touchend" || e.type === "touchcancel") wx.vibrateShort && wx.vibrateShort({ type: "light" });
+    const end = e.type === "touchend" || e.type === "touchcancel";
+    const apply = (box) => {
+      const hex = picker.fromAxis(axis, (touch.clientX - box.left) / box.width, tone.current());
+      if (!hex || hex.toLowerCase() === String(tone.current()).toLowerCase()) return;
+      tone.set(hex);
+      this.paint();
+      if (end && wx.vibrateShort) wx.vibrateShort({ type: "light" });
+    };
+    wx.createSelectorQuery().in(this).select("#tone-" + axis).boundingClientRect((r) => {
+      if (r && r.width) apply(r);
+    }).exec();
   },
 
   onToneHex(e) {

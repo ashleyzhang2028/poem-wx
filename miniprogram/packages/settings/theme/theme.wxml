@@ -12,7 +12,7 @@
   <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
 
   <block wx:if="{{locked}}">
-  <view class="card group-card">
+  <view class="card group-card group-lead">
     <view class="card-head">
       <text class="card-title group-title">字体</text>
       <tier-tag tier="{{fontTier}}" />
@@ -29,7 +29,7 @@
   </block>
 
   <block wx:else>
-  <view class="card group-card" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+  <view class="card group-card {{index === 0 ? 'group-lead' : ''}}" wx:for="{{groups}}" wx:for-item="group" wx:for-index="index" wx:key="key">
     <view class="card-head">
       <text class="card-title group-title">{{group.title}}</text>
       <tier-tag wx:if="{{group.locked}}" tier="{{group.tier}}" />

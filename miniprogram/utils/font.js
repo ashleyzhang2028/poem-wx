@@ -126,10 +126,10 @@ function sequence(family, list) {
 
 const loaded = {};
 
-function register(f, list) {
-  const key = f.key + " " + shelf() + " " + list.join(" ");
+function register(family, list) {
+  const key = family + " " + shelf() + " " + list.join(" ");
   if (loaded[key]) return loaded[key];
-  loaded[key] = sequence(f.family, list).then((ok) => {
+  loaded[key] = sequence(family, list).then((ok) => {
     if (!ok) delete loaded[key];
     return ok;
   });
@@ -141,12 +141,12 @@ function load() {
   const list = configured();
 
   if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-  return register(f, list);
+  return register(f.family, list);
 }
 
 function previewing() {
   if (!previewsReady()) return [];
-  return FACES.map((f) => register(f, f.preview).then((ok) => (ok ? f.key : "")));
+  return FACES.map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
 }
 
 function preview() {
@@ -164,8 +164,8 @@ function loadAll() {
   const chosen = face().key;
   FACES.filter((f) => f.key !== chosen)
     .forEach((f) => {
-      register(f, f[shelf()].slice()).catch(() => {});
-      register(f, f.preview).catch(() => {});
+      register(f.family, f[shelf()].slice()).catch(() => {});
+      register(f.previewFamily, f.preview).catch(() => {});
     });
 }
 

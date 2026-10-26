@@ -98,6 +98,17 @@
   color: var(--ink-2);
 }
 
+.id-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.tier-act {
+  color: var(--strong-text);
+  border-color: var(--strong);
+}
+
 .tier-chip-hover {
   background: var(--line);
   opacity: 1;
@@ -209,6 +220,18 @@
 .tier-pro .id-valid-k,
 .tier-max .id-valid-k {
   color: var(--on-ink-soft);
+}
+
+.tier-pro .avatar-fallback,
+.tier-max .avatar-fallback {
+  background: rgba(255, 255, 255, .2);
+  color: var(--on-ink);
+}
+
+.tier-pro .tier-act,
+.tier-max .tier-act {
+  background: rgba(255, 255, 255, .22);
+  border-color: rgba(255, 255, 255, .7);
 }
 
 .tier-pro .tier-chip,

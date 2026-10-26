@@ -17,8 +17,6 @@ const FADE_SPAN = 80;
 
 const FADE_REF = 1200;
 
-const FADE_CURVE = 1.8;
-
 const FADE_OPAQUE = 0.35;
 
 const RATIO_W = crop.RATIO_W;
@@ -126,7 +124,8 @@ function fadePixels(art) {
 
 function fadeAt(y, height, deep) {
   const t = (y - (height - deep)) / deep;
-  return Math.pow(1 - Math.max(0, Math.min(1, t)), FADE_CURVE);
+  const k = Math.max(0, Math.min(1, t));
+  return 1 - k * k * k * (k * (6 * k - 15) + 10);
 }
 
 function layerOf(width, height) {
