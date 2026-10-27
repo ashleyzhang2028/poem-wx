@@ -283,30 +283,74 @@ function byNumericId(id) {
   });
 }
 
+const PART_MIN = 2;
+
 const PART_SUFFIX = /^[\s\u3000·]*([一二三四五六七八九十]+首)?[\s\u3000·]*(其?[一二三四五六七八九十\d]+)?$/;
 
 function titleRank(p, title) {
   const got = String(p.title || "").trim();
   const want = String(title || "").trim();
   if (got === want) return 2;
-  return want && got.indexOf(want) === 0 && PART_SUFFIX.test(got.slice(want.length)) ? 1 : 0;
+  if (!want || want.length < PART_MIN) return 0;
+  if (got.indexOf(want) === 0 && PART_SUFFIX.test(got.slice(want.length))) return 1;
+  const at = want.lastIndexOf("·");
+  return at > 0 && got.indexOf(want.slice(0, at)) === 0 ? 1 : 0;
 }
 
-function sameAuthor(p, name) {
-  return !name || String((p.author && p.author.name) || "") === name;
+const TITLE_NOISE = /[\s\u3000·・・,，.。、!！?？:：;；'"“”‘’()（）\[\]【】《》<>—－-]/g;
+
+function titleKeys(title) {
+  const raw = String(title || "").trim();
+  const keys = [raw];
+  const flat = raw.replace(TITLE_NOISE, "");
+  if (flat && flat !== raw) keys.push(flat);
+  if (raw.indexOf("·") > 0) {
+    const head = raw.split("·")[0].trim();
+    if (head && keys.indexOf(head) < 0) keys.push(head);
+  }
+  return keys;
+}
+
+function authorRank(p, name) {
+  const want = String(name || "").trim();
+  const got = String((p.author && p.author.name) || "").trim();
+  if (!want || !got) return got === want ? 2 : 1;
+  if (got === want) return 2;
+  const a = got.replace(TITLE_NOISE, "");
+  const b = want.replace(TITLE_NOISE, "");
+  if (a === b) return 2;
+  return a.indexOf(b) >= 0 || b.indexOf(a) >= 0 ? 1 : 0;
+}
+
+function pickHits(items, meta) {
+  let best = [];
+  titleKeys(meta.t).forEach((key) => {
+    const named = items.filter((p) => titleRank(p, key) > 0);
+    if (!named.length) return;
+    const ranked = named.map((p) => ({ p: p, r: authorRank(p, meta.a) })).filter((x) => x.r > 0);
+    const exact = ranked.filter((x) => x.r === 2).map((x) => x.p);
+    const hits = exact.length ? exact : (ranked.length ? ranked.map((x) => x.p) : named);
+    if (hits.length > best.length || !best.length) best = hits;
+  });
+  const authors = {};
+  best.forEach((p) => { authors[(p.author && p.author.name) || ""] = 1; });
+  return Object.keys(authors).length > 1 ? [] : best;
 }
 
 function byTitle(meta) {
-  return search(meta.t, { type: "title", size: PAGE_MAX }).then((r) => {
-    const named = r.items.filter((p) => titleRank(p, meta.t) > 0 && sameAuthor(p, meta.a));
-    const exact = named.filter((p) => titleRank(p, meta.t) === 2);
-    const hits = exact.length ? exact : named;
-    const authors = {};
-    hits.forEach((p) => { authors[(p.author && p.author.name) || ""] = 1; });
-    if (!hits.length || Object.keys(authors).length > 1) {
-      throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
-    }
-    return exact.length ? hits[0] : joinParts(meta.t, hits);
+  return titleKeys(meta.t).reduce(
+    (found, key) => found.then((hit) => {
+      if (hit) return hit;
+      return search(key, { type: "title", size: PAGE_MAX }).then((r) => {
+        const hits = pickHits(r.items, meta);
+        if (!hits.length) return null;
+        return titleRank(hits[0], meta.t) === 2 ? hits[0] : joinParts(meta.t, hits);
+      });
+    }),
+    Promise.resolve(null)
+  ).then((hit) => {
+    if (!hit) throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
+    return hit;
   });
 }
 
