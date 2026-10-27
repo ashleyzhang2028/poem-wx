@@ -87,7 +87,7 @@
 
     <view class="card">
       <view class="row" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" data-src="{{item.source}}"
+            wx:for="{{works}}" wx:key="id" data-id="{{item.id}}" data-sid="{{item.sid}}" data-src="{{item.source}}"
             bindtap="onOpen">
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>

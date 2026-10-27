@@ -4862,6 +4862,12 @@ function mountFull(pg, query) {
       "有入口没带上 mode=browse，那个入口进详情页会亮出评分");
     ok("背诵场景翻篇不丢 mode（readerUrl 把 mode 续上）",
       /readerUrl\(/.test(readerJs) && /mode=recite/.test(readerJs));
+    ok("作者索引点开目录里的那一篇，源 id 跟着进详情页（丢了只能按标题猜）",
+      /data-sid="\{\{item\.sid\}\}"/.test(read("packages/authors/index/index.wxml"))
+      && /&sid=" \+ encodeURIComponent\(ds\.sid\)/.test(read("packages/authors/index/index.js")),
+      "作者索引那一行没带 sid，阅读页只好拿包内编号去猜标题");
+    ok("详情页认路带来的 sid（翻篇与分享都续上）",
+      /query\.sid/.test(readerJs) && /&sid=" \+ encodeURIComponent\(sid\)/.test(readerJs));
   }
 
 

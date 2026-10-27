@@ -52,6 +52,7 @@ Page({
     name: "",
     barBelow: true,
     id: "",
+    sid: "",
 
     loadingText: false,
     loadFailed: false,
@@ -112,6 +113,7 @@ Page({
   onLoad(query) {
     this.setData({
       id: query.id || "",
+      sid: query.sid ? decodeURIComponent(query.sid) : "",
       from: query.from || "",
       remote: query.src === "1",
       reciteMode: query.mode === "recite"
@@ -190,9 +192,10 @@ Page({
   loadEntry() {
     const id = this.data.id;
     const meta = this.findMeta(id);
+    const onlySid = this.data.sid && !meta ? this.data.sid : "";
 
     const remoteId = /^\d+$/.test(String(id));
-    if (!meta && !this.data.remote && !remoteId) {
+    if (!meta && !this.data.remote && !remoteId && !onlySid) {
       this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
@@ -206,6 +209,7 @@ Page({
     }
 
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
+    if (onlySid) return this.loadRemote(onlySid, null, "这一篇的正文没取到，点一下重试");
 
     if (meta && meta.b) {
       this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
@@ -230,7 +234,7 @@ Page({
           this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
           return;
         }
-        this.setData({ hasTranslation: false, remote: true });
+        this.setData({ hasTranslation: false, remote: true, sid: String(sid) });
         this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
       },
       (err) => {
@@ -443,11 +447,19 @@ Page({
   },
 
   readerUrl(id, creator) {
+    const sid = this.sidOf(id);
     let url = "/pages/reader/reader?id=" + encodeURIComponent(id);
     if (this.data.reciteMode) url += "&mode=recite";
+    if (sid) url += "&sid=" + encodeURIComponent(sid);
     if (this.data.remote) url += "&src=1";
     if (creator) url += "&from=" + encodeURIComponent(creator);
     return url;
+  },
+
+  sidOf(id) {
+    if (id === this.data.id && this.data.sid) return this.data.sid;
+    const meta = corpus.indexById(id);
+    return (meta && meta.sid) || "";
   },
 
   refreshPager() {
@@ -485,7 +497,9 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.title + " · " + this.data.author,
-      path: "/pages/reader/reader?id=" + this.data.id + (this.data.remote ? "&src=1" : "")
+      path: "/pages/reader/reader?id=" + this.data.id +
+        (this.data.sid ? "&sid=" + encodeURIComponent(this.data.sid) : "") +
+        (this.data.remote ? "&src=1" : "")
     };
   }
 });

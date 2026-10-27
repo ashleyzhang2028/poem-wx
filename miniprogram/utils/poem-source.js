@@ -331,7 +331,8 @@ function byId(id, meta) {
   const hit = id && seen[String(id)];
   if (hit) return Promise.resolve(hit);
   if (/^\d+$/.test(String(id))) return byNumericId(id);
-  if (meta && meta.t) return byTitle(meta);
+  const title = (meta && meta.t) || remotePoems.titleOf(id);
+  if (title) return byTitle({ t: title, a: (meta && meta.a) || remotePoems.authorOf(id) });
   return Promise.reject(failure({ message: "没有可用的正文 id", code: "E_BAD_ID" }));
 }
 

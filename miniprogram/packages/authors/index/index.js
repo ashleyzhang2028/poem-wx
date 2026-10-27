@@ -319,6 +319,7 @@ Page({
     this.setData({
       works: list.map((p) => ({
         id: p.id,
+        sid: String(p.sid || ""),
         title: p.t,
         dynasty: p.d,
         bookName: p.n,
@@ -350,6 +351,7 @@ Page({
     const ds = e.currentTarget.dataset;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(ds.id) +
       "&mode=browse&from=" + encodeURIComponent(this.data.author) +
+      (ds.sid ? "&sid=" + encodeURIComponent(ds.sid) : "") +
       (ds.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
   },
