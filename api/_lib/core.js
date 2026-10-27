@@ -1369,6 +1369,10 @@ function wxPlaceholderEmail(uid) {
   return "wx-" + String(uid || "").replace(/[^A-Za-z0-9_-]/g, "") + "@wx.local";
 }
 
+function wxPlaceholderHash(uid) {
+  return "wx:" + String(uid || "");
+}
+
 function wxEnsureAccount(deps, info, row, t) {
   var store = deps.store, cfg = deps.cfg;
 
@@ -1388,7 +1392,7 @@ function wxEnsureAccount(deps, info, row, t) {
       rebuilt.uid = String(row.uid);
       rebuilt.nickname = String(row.nickname || "");
       rebuilt.status = "active";
-      delete rebuilt.email_hash;
+      rebuilt.email_hash = wxPlaceholderHash(rebuilt.uid);
       return Promise.resolve(store.putAccount(rebuilt)).then(function (saved) { return saved || rebuilt; });
     });
   }
@@ -1396,7 +1400,7 @@ function wxEnsureAccount(deps, info, row, t) {
   var acc = accountRow(wxPlaceholderEmail("pending"), null, t);
   acc.email = wxPlaceholderEmail(acc.uid);
   acc.status = "active";
-  delete acc.email_hash;
+  acc.email_hash = wxPlaceholderHash(acc.uid);
 
   return Promise.resolve(store.putAccount(acc)).then(function (saved) {
     var real = saved || acc;
