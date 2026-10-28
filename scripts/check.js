@@ -3503,19 +3503,27 @@ function mountFull(pg, query) {
     ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
-    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
-    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
+    ["datongxuankongsi", "大同悬空寺", [203, 142, 79], "landscape"],
+    ["eergunashidi", "额尔古纳", [205, 83, 63], "landscape"],
+    ["hulunbeiershiwei", "呼伦贝尔室韦", [53, 131, 166], "landscape"],
+    ["dandongyalujiang", "丹东鸭绿江", [16, 50, 59], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
-    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
-    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
-    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["changchunnanling", "长春南岭", [243, 61, 104], "landscape"],
+    ["baishanchangbaishan", "白山长白山", [11, 41, 74], "landscape"],
+    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
     ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"],
+    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
+    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["qingdaolaoshan", "青岛崂山", [33, 56, 63], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["ganziyading", "甘孜亚丁", [236, 158, 1], "landscape"],
+    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
     ["lijiangluguhu", "丽江泸沽湖", [25, 91, 108], "landscape"],
     ["jiayuguan", "嘉峪关", [249, 139, 57], "landscape"],
-    ["eergunashidi", "额尔古纳", [205, 83, 63], "landscape"],
-    ["hulunbeiershiwei", "呼伦贝尔室韦", [53, 131, 166], "landscape"]
+    ["dunhuangmogaoku", "敦煌莫高窟", [91, 54, 41], "landscape"],
+    ["aletailhemu", "阿勒泰禾木", [35, 60, 75], "landscape"]
   ];
+
 
   const rgbaOf = (c) => "rgba(" + c[0] + ", " + c[1] + ", " + c[2] + ", 1)";
 
@@ -3523,7 +3531,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 20 项（八个传统色 + 十二张大好河山）",
+  ok("清单就是这 27 项（八个传统色 + 十九大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
