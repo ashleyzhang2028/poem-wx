@@ -31,12 +31,14 @@ Page({
     fontLocked: true,
     fontTier: "pro",
     fontGlobal: false,
+    fontScope: -1,
 
     themeColor: theme.currentTheme().rgba
   },
 
   onShow() {
-    theme.apply(this);
+    font.restore();
+    this.applyFont();
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
@@ -44,6 +46,14 @@ Page({
 
   warmPreview() {
     font.preview().catch(() => {});
+  },
+
+  applyFont() {
+    this.setData(Object.assign({
+      fontScope: font.scope(),
+      fontGlobal: font.globalOn()
+    }, font.bind(theme.style()).page));
+    font.registerHere().catch(() => {});
   },
 
   view() {
@@ -61,6 +71,7 @@ Page({
       fontLocked: !pickable,
       fontTier: font.tier(),
       fontGlobal: font.globalOn(),
+      fontScope: font.scope(),
       toneView: theme.toneData()
     };
   },
@@ -197,8 +208,7 @@ Page({
       this.setData({ fontGlobal: font.globalOn() });
       return;
     }
-    this.setData({ fontGlobal: font.globalOn() });
-    theme.apply(this);
+    this.applyFont();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
@@ -212,8 +222,8 @@ Page({
       return;
     }
     if (!r.changed) return;
+    this.applyFont();
     this.setData({ font: font.current() });
-    theme.apply(this);
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

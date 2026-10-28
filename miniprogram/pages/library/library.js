@@ -3,6 +3,7 @@ const gate = require("../../utils/gate");
 const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 
 const GROUPS = [
   {
@@ -29,8 +30,14 @@ Page({
     reason: ""
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: !!tabbar.sync(this, 1) });
 
     if (!gate.logged() || !E.can("library")) {

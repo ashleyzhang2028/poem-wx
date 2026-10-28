@@ -11,6 +11,7 @@ const loginFlow = require("../../utils/login-flow");
 const tabPage = require("../../utils/tab-page");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const LUNAR = require("../../utils/lunar");
 const seasonal = require("../../utils/seasonal");
 const sfx = require("../../utils/sfx");
@@ -193,6 +194,7 @@ Page({
   data: {
 
     themeStyle: "",
+    fontScope: -1,
 
     name: "",
     barBelow: true,
@@ -253,8 +255,14 @@ Page({
     loginFlow.unwatch(this.onLoginSettled);
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle, fontScope: font.scope() });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.toasted = false;
 
     this.setData({

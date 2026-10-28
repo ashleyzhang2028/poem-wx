@@ -36,8 +36,14 @@ Page({
     fontName: ""
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: !!tabbar.sync(this, 4) });
     this.refresh();
   },

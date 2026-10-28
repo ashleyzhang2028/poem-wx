@@ -1,4 +1,5 @@
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const pay = require("../../../utils/pay");
 const tiers = require("../../../utils/tiers");
@@ -55,8 +56,13 @@ Page({
     loadFailed: false
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
     this.load();
   },

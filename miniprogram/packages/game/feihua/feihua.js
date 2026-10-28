@@ -5,6 +5,7 @@ const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const rankingSelf = require("../../../utils/ranking");
@@ -75,8 +76,13 @@ Page({
     log: { count: 0, line: "" }
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
     this.setData({ allowed: ok, lockNote: entitlement.hint("feihualing") || "登录后才能玩" });
