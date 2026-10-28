@@ -477,7 +477,7 @@ function expandNavBar(wxml, data, navbar) {
     height: box.statusBarHeight + box.navHeight,
     top: box.navTop,
     row: box.navBottom - box.navTop,
-    font: font.stack()
+    font: font.uiStack() || font.stack()
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<nav-bar([^>]*)\/>/g, (_, attrs) => {

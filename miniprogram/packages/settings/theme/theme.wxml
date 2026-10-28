@@ -138,6 +138,16 @@
         <text class="font-name">{{item.name}}</text>
       </view>
     </view>
+
+    <view class="row font-global-row {{fontLocked ? 'locked' : ''}}">
+      <view class="row-main">
+        <text class="row-title">应用选中字体到全局</text>
+        <text class="row-sub">标题、正文之外的部分也换成这款字</text>
+      </view>
+      <view class="sw">
+        <switch checked="{{fontGlobal}}" disabled="{{fontLocked}}" color="{{themeColor}}" bindchange="onFontGlobal" />
+      </view>
+    </view>
   </view>
 
   <view class="safe-bottom gap-bottom"></view>

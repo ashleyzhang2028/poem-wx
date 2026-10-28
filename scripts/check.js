@@ -3644,6 +3644,34 @@ function mountFull(pg, query) {
       && fontMod.pickable({ logged: false }) === false,
     "未登录那一支没有字体卡，或者没预热预览");
 
+  ok("字体卡底下那一行是「应用选中字体到全局」，开关落在 fontGlobal 上",
+    themeWxml.indexOf("onFontGlobal") >= 0
+      && themeWxml.indexOf("onFontGlobal") > themeWxml.indexOf("font-list")
+      && themeJs.indexOf("font.setGlobal(") >= 0
+      && fontMod.globalOn() === false,
+    "字体卡里没有这一行，或者开关没落到 font.setGlobal（写死一个 false 等于没开关）");
+
+  const uiOff = themeMod.style();
+  tierAs("pro");
+  fontMod.setGlobal(true);
+  const uiOn = themeMod.style();
+  fontMod.set("wenkai");
+  const uiPicked = themeMod.style();
+  const uiOf = (css) => (/--font-ui:([^;]+)/.exec(css) || [])[1] || "";
+  ok("关着时 --font-ui 不动，开了就跟着选中字体走（正文那份另外算）",
+    uiOff.indexOf('--font-ui:-apple-system') > 0
+      && uiOn.replace(/[\s"]/g, "").indexOf("KuibuPoemzhuque") > 0
+      && uiPicked.replace(/[\s"]/g, "").indexOf("KuibuPoemwenkai") > 0
+      && uiPicked.indexOf(uiOn) !== 0,
+    "关着时 " + uiOf(uiOff).slice(0, 30) + " / 开着时 " + uiOf(uiOn).slice(0, 40)
+      + " / 换款之后 " + uiOf(uiPicked).slice(0, 40));
+
+  tierAs("free");
+  const rFreeGlobal = fontMod.setGlobal(true);
+  ok("Free 拨不动这个开关（setGlobal 直接拒，不静默改）",
+    rFreeGlobal.ok === false && rFreeGlobal.reason === "tier" && fontMod.globalOn() === false,
+    JSON.stringify(rFreeGlobal));
+
   const rFree = (() => {
     tierAs("free");
     return fontMod.set("huiwen");
@@ -4870,6 +4898,11 @@ function mountFull(pg, query) {
       /query\.sid/.test(readerJs) && /&sid=" \+ encodeURIComponent\(sid\)/.test(readerJs));
   }
 
+
+  ok("排版样张不注音也只用一行（多出来的那层行包裹会把行高留到下一行）",
+    /align-\{\{align\}\}[\s\S]{0,120}?wx:for="\{\{sampleTokens\}\}"/.test(generalWxml)
+      && /sample\(mode, size\)[\s\S]{0,160}?pinyin\.render\([\s\S]{0,120}?\[0\]/.test(generalJs),
+    "样张又按段落包了一层 —— .token-line 是 flex 行，多包一层就多撑出一行高");
 
   ok("通用设置里有注音那一栏", /onPinyin/.test(generalWxml));
   ok("通用设置的注音读的是同一份设置（走 pinyin.setMode）",

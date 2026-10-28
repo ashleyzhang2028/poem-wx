@@ -19,7 +19,7 @@ Component({
       height: box.height,
       top: box.top,
       row: box.row,
-      font: font.stack()
+      font: font.uiStack() || font.stack()
     });
   },
 

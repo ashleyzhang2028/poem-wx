@@ -29,7 +29,10 @@ Page({
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
     fontLocked: true,
-    fontTier: "pro"
+    fontTier: "pro",
+    fontGlobal: false,
+
+    themeColor: theme.currentTheme().rgba
   },
 
   onShow() {
@@ -57,6 +60,7 @@ Page({
       font: font.current(),
       fontLocked: !pickable,
       fontTier: font.tier(),
+      fontGlobal: font.globalOn(),
       toneView: theme.toneData()
     };
   },
@@ -186,6 +190,18 @@ Page({
     loginFlow.run(this);
   },
 
+  onFontGlobal(e) {
+    const r = font.setGlobal(e.detail.value);
+    if (!r.ok) {
+      wx.showToast({ title: tiers.nameOf(font.tier()) + " 起可用", icon: "none" });
+      this.setData({ fontGlobal: font.globalOn() });
+      return;
+    }
+    this.setData({ fontGlobal: font.globalOn() });
+    theme.apply(this);
+    wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
   onFont(e) {
     const key = e.currentTarget.dataset.key;
     const r = font.set(key);
@@ -197,6 +213,7 @@ Page({
     }
     if (!r.changed) return;
     this.setData({ font: font.current() });
+    theme.apply(this);
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });
