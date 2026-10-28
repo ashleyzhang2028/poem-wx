@@ -42,6 +42,7 @@ const DEFAULTS = {
 
   theme: "ink",
   font: "zhuque",
+  fontGlobal: false,
   pinyin: "off",
   banner: "",
   toneColor: "",

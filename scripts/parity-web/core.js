@@ -1980,7 +1980,7 @@ var SETTINGS_KEYS = {
   font: "str", pinyin: "str", toneColor: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool",
   selfOnly: "bool",
-  seasonal: "bool", leagueBoard: "bool"
+  seasonal: "bool", leagueBoard: "bool", fontGlobal: "bool"
 };
 
 function sanitizeSettings(p) {

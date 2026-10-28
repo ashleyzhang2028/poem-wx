@@ -138,6 +138,18 @@
   opacity: .45;
 }
 
+.font-global-row {
+  border-bottom: none;
+}
+
+.font-global-row.locked {
+  opacity: .45;
+}
+
+.font-global-row .row-title {
+  white-space: normal;
+}
+
 .theme-page {
   position: relative;
   padding-top: 0;

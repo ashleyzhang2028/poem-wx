@@ -1565,6 +1565,12 @@ button, textarea {
   line-height: 1;
 }
 
+.poem-clause {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
 .poem-line.token-line {
   line-height: 1;
 }

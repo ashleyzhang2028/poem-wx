@@ -228,6 +228,9 @@ BY_KEY[OWN_THEME.key] = OWN_THEME;
 
 const VAR_DECLS = variables().join(";");
 
+const UI_STACK = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", '
+  + '"Microsoft YaHei", sans-serif';
+
 function all() {
   return THEMES;
 }
@@ -280,7 +283,8 @@ function style(key, fontKey) {
   const t = tint(key ? get(key) : currentTheme());
   const lit = toneOf();
 
-  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) +
+  const ui = font.uiStack(fontKey);
+  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) + ";--font-ui:" + (ui || UI_STACK) +
     ";--theme:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--theme-deep:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +

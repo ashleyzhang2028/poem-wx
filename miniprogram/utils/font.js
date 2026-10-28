@@ -159,6 +159,28 @@ function familyOf(key) {
   return face(key || current()).family;
 }
 
+function globalOn() {
+  return paid() && store.settings().fontGlobal === true;
+}
+
+function uiStack(key) {
+  if (!globalOn()) return "";
+  return stack(key);
+}
+
+function setGlobal(on) {
+  if (on && !paid()) return { ok: false, reason: "tier" };
+  const next = !!on;
+  if (next === globalOn()) return { ok: true, changed: false };
+  store.saveSettings({ fontGlobal: next });
+  try {
+    require("./sync").markDirty();
+  } catch (e) {
+
+  }
+  return { ok: true, changed: true };
+}
+
 function loadAll() {
   if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
   const chosen = face().key;
@@ -199,5 +221,6 @@ module.exports = {
   FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, shelf,
-  addresses, configured, load, loadAll, preview, set, refresh
+  addresses, configured, load, loadAll, preview, set, refresh,
+  globalOn, uiStack, setGlobal
 };

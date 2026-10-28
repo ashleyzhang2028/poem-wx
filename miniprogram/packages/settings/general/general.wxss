@@ -2,19 +2,19 @@
   margin-top: var(--sp-2);
 }
 
-.font-row {
-  margin-top: var(--sp-2);
+.font-sample {
+  margin: 0 calc(-1 * var(--sp-1)) var(--sp-3);
+  padding-top: var(--sp-4);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1rpx solid var(--line-2);
 }
 
-.font-sample {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: calc(var(--h-opt) * 3);
+.font-slider-row {
+  min-height: var(--h-opt-compact);
+}
+
+.font-row {
   margin-top: var(--sp-1);
-  margin-bottom: var(--sp-4);
-  padding-bottom: var(--sp-3);
-  border-bottom: 1rpx solid var(--line-2);
 }
 
 .sfx-test {

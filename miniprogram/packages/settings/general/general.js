@@ -90,7 +90,7 @@ Page({
 
 
   sample(mode, size) {
-    return pinyin.render(corpus.layout(SAMPLE, { size, pinyin: mode === "all" }).paras, mode);
+    return pinyin.render(corpus.layout(SAMPLE, { size, pinyin: mode === "all" }).paras, mode)[0];
   },
 
   onAlign(e) {
