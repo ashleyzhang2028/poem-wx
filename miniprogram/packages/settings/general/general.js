@@ -87,6 +87,10 @@ Page({
     }
   },
 
+  onAbout() {
+    wx.navigateTo({ url: "/packages/settings/about/about" });
+  },
+
   onClearData() {
     wx.showModal({
       title: "清空数据",

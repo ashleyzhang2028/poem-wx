@@ -2,9 +2,9 @@
   <lock-card wx:if="{{locked}}" title="设置" note="登录后才能改" mark="设" bind:login="onLogin" />
 
   <block wx:else>
-  <view class="card" wx:if="{{sfxVisible}}">
-    <view class="card-title">声音</view>
-    <view class="row">
+  <view class="card">
+    <view class="card-title">设置</view>
+    <view class="row" wx:if="{{sfxVisible}}">
       <view class="row-main">
         <text class="row-title">答对答错出声</text>
         <text class="row-sub">背诵三态 · 题库 · 考试 · 飞花令共用</text>
@@ -14,34 +14,22 @@
         <switch checked="{{sfxOn}}" color="{{themeColor}}" bindchange="onSfx" />
       </view>
     </view>
-  </view>
-
-  <view class="card">
-    <view class="card-head">
-      <text class="card-title">季节限定</text>
-      <tier-tag wx:if="{{seasonalLock}}" tier="{{seasonalTier}}" />
-    </view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">显示季节限定</text>
         <text class="row-sub">节日前两天与当天、节气周期内列出应景诗词</text>
       </view>
+      <tier-tag wx:if="{{seasonalLock}}" tier="{{seasonalTier}}" />
       <view class="sw">
         <switch checked="{{seasonalOn}}" disabled="{{seasonalLock}}" color="{{themeColor}}" bindchange="onSeasonal" />
       </view>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="card-head">
-      <text class="card-title">古诗文大会</text>
-      <tier-tag wx:if="{{leagueLock}}" tier="{{leagueTier}}" />
     </view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">参与排行榜</text>
         <text class="row-sub">考试与飞花令的成绩记进排行榜，按学段比</text>
       </view>
+      <tier-tag wx:if="{{leagueLock}}" tier="{{leagueTier}}" />
       <view class="sw">
         <switch checked="{{leagueBoardOn}}" disabled="{{leagueLock}}" color="{{themeColor}}" bindchange="onLeagueBoard" />
       </view>
@@ -52,6 +40,16 @@
     <view class="card-title danger-title">危险操作</view>
     <text class="hint danger-note">背诵进度、已读标记、今日加背都会删除，这台手机与账号上的记录一起清，且无法恢复。</text>
     <button class="btn danger block danger-clear" bindtap="onClearData">清空数据</button>
+  </view>
+
+  <view class="card">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
+      <view class="row-main">
+        <text class="row-title">关于</text>
+        <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见建议</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
   </view>
 
   <view class="safe-bottom"></view>
