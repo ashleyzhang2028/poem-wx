@@ -28,14 +28,12 @@ Component({
 
   methods: {
     paint() {
-      const app = typeof getApp === "function" ? getApp() : null;
-      const g = (app && app.globalData) || {};
-      if (!font.globalOn() || g.fontScope !== this.data.scope) {
+      if (!font.globalOn()) {
         this.setData({ font: font.STACK });
         return;
       }
       font.registerHere().then((family) => {
-        if (family && font.globalOn()) this.setData({ font: font.groupOf(family) });
+        this.setData({ font: family && font.globalOn() ? font.groupOf(family) : font.STACK });
       }).catch(() => {});
     },
 

@@ -142,7 +142,7 @@
     <view class="row font-global-row {{fontLocked ? 'locked' : ''}}">
       <view class="row-main">
         <text class="row-title">应用选中字体到全局</text>
-        <text class="row-sub">标题、正文之外，导航与搜索这些也跟着换</text>
+        <text class="row-sub">所有页面、所有用字都换成这一款</text>
       </view>
       <view class="sw">
         <switch checked="{{fontGlobal}}" disabled="{{fontLocked}}" color="{{themeColor}}" bindchange="onFontGlobal" />
