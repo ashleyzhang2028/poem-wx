@@ -1175,10 +1175,10 @@ ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text ==
     "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
   const general = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
-  ok("设置那一页装着版式 / 声音两样（主题已搬去自己那一页）",
-    /onAlign/.test(general) && /onPinyin/.test(general) && /onFontSlide/.test(general)
-      && /onSfx/.test(general) && !/onPick|swatch/.test(general),
-    "版式 / 声音没并到一页上，或主题卡片还留在设置里");
+  ok("设置那一页只留字号与声音（对齐与注音跟着正文走，主题在自己那一页）",
+    /onFontSlide/.test(general) && /onSfx/.test(general)
+      && !/onAlign|onPinyin|onAlignToggle/.test(general) && !/onPick|swatch/.test(general),
+    "设置页又摆了一份对齐或注音 —— 与正文里那两枚按钮说的是同一件事");
 
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
@@ -4735,8 +4735,8 @@ function mountFull(pg, query) {
   ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
 
   const DIRTY = [
-    ["通用设置", "packages/settings/general/general.js", /onAlign[\s\S]{0,200}?markDirty/],
     ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
+    ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
@@ -4958,24 +4958,23 @@ function mountFull(pg, query) {
   }
 
 
-  ok("排版样张不注音也只用一行（多出来的那层行包裹会把行高留到下一行）",
-    /align-\{\{align\}\}[\s\S]{0,120}?wx:for="\{\{sampleTokens\}\}"/.test(generalWxml)
-      && /sample\(mode, size\)[\s\S]{0,160}?pinyin\.render\([\s\S]{0,120}?\[0\]/.test(generalJs),
-    "样张又按段落包了一层 —— .token-line 是 flex 行，多包一层就多撑出一行高");
+  ok("对齐只在正文那两处切（阅读页与背诵弹层各一枚，设置页不再摆一份）",
+    /bindtap="onAlignToggle"/.test(read("pages/reader/reader.wxml"))
+      && /bindtap="onAlignToggle"/.test(sheetWxml)
+      && !/onAlign\b/.test(generalWxml),
+    "阅读页或弹层没地方切对齐，或者设置页还留着第二处");
 
-  ok("通用设置里有注音那一栏", /onPinyin/.test(generalWxml));
-  ok("通用设置的注音读的是同一份设置（走 pinyin.setMode）",
-    /pinyin\.setMode\(/.test(generalJs), "自己写了一份 store.saveSettings，两页会分叉");
   {
     const keysOf = (src) => {
       const block = /const PINYIN_MODES = \[([\s\S]*?)\];/.exec(src);
       return block ? [...block[1].matchAll(/key\s*:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
     };
-    const a = keysOf(generalJs);
     const b = keysOf(read("pages/reader/reader.js"));
-    ok("注音与阅读设置同一档位表（两档，不是另起一套）",
-      a.length === 2 && a.join(",") === b.join(","),
-      "通用设置 " + JSON.stringify(a) + " / 详情页 " + JSON.stringify(b));
+    ok("注音同一条设置（阅读页与弹层都走 pinyin.setMode，设置页不再另开一处）",
+      /pinyin\.setMode\(/.test(read("pages/reader/reader.js"))
+        && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js"))
+        && !/onPinyin/.test(generalWxml) && b.length === 2,
+      "别处另写了一份 store.saveSettings，几处会分叉");
   }
 
   {

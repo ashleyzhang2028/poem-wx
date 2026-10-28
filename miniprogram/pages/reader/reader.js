@@ -22,11 +22,6 @@ const RESULTS = [
   { key: "good", label: "记住", cls: "good" }
 ];
 
-const ALIGNS = [
-  { key: "left", label: "左对齐", icon: icons.left },
-  { key: "center", label: "居中", icon: icons.center }
-];
-
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off },
   { key: "all", label: "全文", icon: icons.all }
@@ -77,7 +72,6 @@ Page({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
-    aligns: ALIGNS,
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -285,7 +279,7 @@ Page({
       translation: entry.tr || "",
       translationSource: entry.src || "",
       hasTranslation: !!entry.tr,
-      align: settings.align,
+      align: settings.align === "left" ? "left" : "center",
       fontSize: size,
       ...scale.flags(size),
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
@@ -353,6 +347,14 @@ Page({
     return corpus.indexById(id);
   },
 
+  onAlignToggle() {
+    const align = this.data.align === "center" ? "left" : "center";
+    this.setData({ align });
+    store.saveSettings({ align });
+
+    sync.markDirty();
+  },
+
   onToggleTranslation() {
     this.setData({ showTranslation: !this.data.showTranslation });
   },
@@ -365,14 +367,6 @@ Page({
     }
     this.setData({ pinyinMode: mode });
     this.applyReading();
-
-    sync.markDirty();
-  },
-
-  onAlign(e) {
-    const align = e.detail.value;
-    this.setData({ align });
-    store.saveSettings({ align });
 
     sync.markDirty();
   },

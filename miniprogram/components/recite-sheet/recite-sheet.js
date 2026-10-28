@@ -25,11 +25,6 @@ const DEFERS = [
 
 const REOPEN_MS = 400;
 
-const ALIGNS = [
-  { key: "left", label: "左对齐", icon: icons.left },
-  { key: "center", label: "居中", icon: icons.center }
-];
-
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off },
   { key: "all", label: "全文", icon: icons.all }
@@ -106,7 +101,6 @@ Component({
     hasTranslation: false,
     showTranslation: false,
 
-    aligns: ALIGNS,
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -281,7 +275,7 @@ Component({
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
         showTranslation: false,
-        align: settings.align,
+        align: settings.align === "left" ? "left" : "center",
         fontSize,
         ...scale.flags(fontSize),
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
@@ -385,14 +379,14 @@ Component({
       return "添加失败";
     },
 
-    onToggleTranslation() {
-      this.setData({ showTranslation: !this.data.showTranslation });
-    },
-
-    onAlign(e) {
-      const align = e.detail.value;
+    onAlignToggle() {
+      const align = this.data.align === "center" ? "left" : "center";
       this.setData({ align });
       store.saveSettings({ align });
+    },
+
+    onToggleTranslation() {
+      this.setData({ showTranslation: !this.data.showTranslation });
     },
 
     onPinyin(e) {
