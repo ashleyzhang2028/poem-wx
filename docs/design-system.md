@@ -66,18 +66,27 @@
 
 | 主题 | 色 | banner |
 |---|---|---|
-| 扬州瘦西湖 | `rgba(145, 207, 8, 1)` | `yangzhou.png` |
-| 开封上河图 | `rgba(107, 153, 7, 1)` | `kaifeng.png` |
-| 本溪关门山 | `rgba(205, 20, 11, 1)` | `benxi_guanmenshan.png` |
-| 温州雁荡山 | `rgba(22, 53, 46, 1)` | `wenzhou_yandangshan.png` |
-| 丽江虎跳峡 | `rgba(44, 62, 62, 1)` | `yunnan_hutiaoxia.png` |
-| 南平武夷山 | `rgba(14, 133, 118, 1)` | `nanping_wuyishan.png` |
-| 富阳富春江 | `rgba(26, 37, 35, 1)` | `fuyang_fuchunjiang.png` |
-| 甘孜亚丁 | `rgba(236, 158, 1, 1)` | `ganzhi_yading.png` |
-| 丽江泸沽湖 | `rgba(25, 91, 108, 1)` | `lijiang_luguhu.png` |
-| 嘉峪关 | `rgba(249, 139, 57, 1)` | `jiayuguan.png` |
+| 大同悬空寺 | `rgba(203, 142, 79, 1)` | `datong_xuankongsi.png` |
 | 额尔古纳 | `rgba(205, 83, 63, 1)` | `eerguna_shidi.png` |
 | 呼伦贝尔室韦 | `rgba(53, 131, 166, 1)` | `hulunbeier_shiwei.png` |
+| 丹东鸭绿江 | `rgba(16, 50, 59, 1)` | `dandong_yalujiang.png` |
+| 本溪关门山 | `rgba(205, 20, 11, 1)` | `benxi_guanmenshan.png` |
+| 长春南岭 | `rgba(243, 61, 104, 1)` | `changchun_nanling.png` |
+| 白山长白山 | `rgba(11, 41, 74, 1)` | `baishan_changbaishan.png` |
+| 扬州瘦西湖 | `rgba(145, 207, 8, 1)` | `yangzhou.png` |
+| 富阳富春江 | `rgba(26, 37, 35, 1)` | `fuyang_fuchunjiang.png` |
+| 温州雁荡山 | `rgba(22, 53, 46, 1)` | `wenzhou_yandangshan.png` |
+| 南平武夷山 | `rgba(14, 133, 118, 1)` | `nanping_wuyishan.png` |
+| 青岛崂山 | `rgba(33, 56, 63, 1)` | `qingdao_laoshan.png` |
+| 开封上河图 | `rgba(107, 153, 7, 1)` | `kaifeng.png` |
+| 甘孜亚丁 | `rgba(236, 158, 1, 1)` | `ganzhi_yading.png` |
+| 丽江虎跳峡 | `rgba(44, 62, 62, 1)` | `yunnan_hutiaoxia.png` |
+| 丽江泸沽湖 | `rgba(25, 91, 108, 1)` | `lijiang_luguhu.png` |
+| 嘉峪关 | `rgba(249, 139, 57, 1)` | `jiayuguan.png` |
+| 敦煌莫高窟 | `rgba(91, 54, 41, 1)` | `dunhuang_mogaoku.png` |
+| 阿勒泰禾木 | `rgba(35, 60, 75, 1)` | `aletai_hemu.png` |
+
+表内次序即页面次序（Issue #744）。
 
 扬州瘦西湖与开封上河图是两支亮黄绿（Issue #637），色值明显亮于其余各支，
 压在上面的字落在黑字上。
