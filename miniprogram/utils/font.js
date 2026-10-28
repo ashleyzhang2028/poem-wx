@@ -135,27 +135,34 @@ function sequence(family, list) {
 }
 
 const loaded = {};
-const scoped = {};
+let scoped = {};
+
+function mark(family, list) {
+  return family + " " + shelf() + " " + list.join(" ");
+}
 
 function register(family, list) {
-  const key = family + " " + shelf() + " " + list.join(" ");
+  const key = mark(family, list);
   if (loaded[key]) return loaded[key];
   loaded[key] = sequence(family, list).then((ok) => {
-    if (!ok) {
-      delete loaded[key];
-      delete scoped[family];
-    }
+    if (!ok) delete loaded[key];
     return ok;
   });
   return loaded[key];
 }
 
-function scopedLoad(family, list) {
-  const mark = shelf() + " " + list.join(" ");
-  if (scoped[family] === mark && loaded[family + " " + mark]) return Promise.resolve(true);
+function scopeMark() {
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  const top = pages && pages[pages.length - 1];
+  return scopeEpoch + "@" + (top ? String(top.route) : "");
+}
+
+function registerPage(family, list) {
+  const key = mark(family, list);
+  if (scoped[key] === scopeMark()) return Promise.resolve(true);
   return register(family, list).then((ok) => {
-    if (ok) scoped[family] = mark;
-    else delete scoped[family];
+    if (ok) scoped[key] = scopeMark();
+    else delete scoped[key];
     return ok;
   });
 }
@@ -215,7 +222,7 @@ function registerHere() {
   if (!globalOn() || !previewsReady()) return Promise.resolve("");
   const f = face();
   const list = configured();
-  return scopedLoad(f.family, list).then((ok) => (ok ? f.family : ""));
+  return registerPage(f.family, list).then((ok) => (ok ? f.family : ""));
 }
 
 function publish(family) {
@@ -231,7 +238,6 @@ function republish() {
   const app = getApp();
   app.globalData = app.globalData || {};
   app.globalData.fontScope = scopeEpoch;
-  app.globalData.fontPinned = registerHere().then(publish).catch(() => "");
 }
 
 function repaint() {
@@ -249,7 +255,10 @@ function announce() {
 function restore() {
   const app = typeof getApp === "function" ? getApp() : null;
   const g = (app && app.globalData) || {};
-  if (g.fontScope === scopeEpoch) return;
+  const stale = g.fontScope !== scopeEpoch;
+  const page = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  const top = page && page[page.length - 1];
+  if (!stale && top && typeof top.applyFont === "function") top.applyFont();
   announce();
 }
 
@@ -281,6 +290,7 @@ function set(key) {
   if (key === current()) return { ok: true, changed: false };
   store.saveSettings({ font: key });
   scopeEpoch += 1;
+  scoped = {};
 
   try {
     require("./sync").markDirty();

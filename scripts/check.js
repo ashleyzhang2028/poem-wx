@@ -3692,12 +3692,19 @@ function mountFull(pg, query) {
       return /font\.registerHere\(\)/.test(src) && themeWxml.indexOf("nav-bar scope=") >= 0;
     });
 
-    ok("全局字族的注册在页面作用域里落地：页面与导航栏各自注册一次",
-      barHosts.length > 0 && hostsLoad && hostsRepaint
+    const fontSrc = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
+    ok("页面作用域的记账对得上「当前页 + 版本号」才算注册过（换页重发一次，同页不重发）",
+      /function registerPage\(family, list\)[\s\S]*?scoped\[key\] === scopeMark\(\)[\s\S]*?scoped\[key\] = scopeMark\(\)/.test(
+        fontSrc)
+        && /function scopeMark\(\)[\s\S]*?scopeEpoch[\s\S]*?route/.test(fontSrc),
+      "注册去了页面作用域的账却按字族名记，换一页就不再注册 —— 全局开关第二页就失效");
+
+    ok("自绘导航栏的字跟着全局走：内联字族，且不再按页面传来的 scope 才认",
+      barHosts.length > 0 && hostsLoad
         && /registerHere/.test(barJs)
-        && /class="nav-title"/.test(barWxml)
-        && /nav-bar scope=/.test(homeWxml),
-      "全局开着时导航栏没自己注册那款字，或者没有页面挂 nav-bar（换页就退回系统黑体）");
+        && /nav-title" style="font-family: \{\{font\}\}"/.test(barWxml)
+        && !/fontScope !== this\.data\.scope/.test(barJs),
+      "全局开着时导航栏还是系统字，或者作用域对不上就退回系统字库");
     ok("开关与换款都推一次作用域，回前台补一次（globalData 认版本号，旧的不算）",
       /scopeEpoch \+= 1[\s\S]{0,200}?announce\(\)/.test(
         fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8"))
@@ -3705,6 +3712,17 @@ function mountFull(pg, query) {
         && /repaintFont/.test(appJs)
         && pageFiles.every((f) => /this\.applyFont\(\)/.test(fs.readFileSync(f, "utf8"))),
       "拨开关后没有重注册也没有回刷页面，或者回前台没补注册");
+
+    const barFontJs = fs.readFileSync(
+      path.join(ROOT, "custom-tab-bar", "index.js"), "utf8");
+    const barFontWxml = fs.readFileSync(
+      path.join(ROOT, "custom-tab-bar", "index.wxml"), "utf8");
+    ok("底栏的字也跟着换：换页有人在 App 层补注册，底栏按当前款重算",
+      /font\.registerHere\(\)/.test(appJs)
+        && /onPageShow/.test(appJs)
+        && /fontStyle/.test(barFontWxml)
+        && /groupOf/.test(barFontJs),
+      "全局字族换到下一页没人补注册，或者底栏还是系统字");
   }
 
   tierAs("free");

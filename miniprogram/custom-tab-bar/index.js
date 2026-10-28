@@ -14,6 +14,7 @@ Component({
   data: {
     active: -1,
     themeStyle: "",
+    fontStyle: "",
     name: "",
     meAvatar: "",
     meChar: "诗",
@@ -29,7 +30,7 @@ Component({
   },
 
   attached() {
-    this.painted = theme.current() + " " + font.scope();
+    this.painted = "";
     const patch = Object.assign(this.paint(), this.paintMe());
     const fixed = parseInt(this.data.current, 10);
     if (fixed >= 0) patch.active = fixed;
@@ -49,7 +50,7 @@ Component({
       Object.assign(patch, this.paintMe());
 
       const key = theme.current() + " " + font.scope();
-      if (this.painted !== key) {
+      if (this.painted !== key || this.data.fontStyle !== this.paint().fontStyle) {
         this.painted = key;
         Object.assign(patch, this.paint());
       }
@@ -57,7 +58,8 @@ Component({
     },
 
     paint() {
-      return { themeStyle: theme.style(), name: theme.name() };
+      const face = font.globalOn() ? font.groupOf(font.current()) : "";
+      return { themeStyle: theme.style(), name: theme.name(), fontStyle: face };
     },
 
     paintMe() {

@@ -65,6 +65,11 @@ App({
     });
   },
 
+  onPageShow() {
+    if (!font.globalOn()) return;
+    font.registerHere().catch(() => {});
+  },
+
   stampBuild() {
     let info = null;
     try {
