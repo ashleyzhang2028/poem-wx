@@ -55,8 +55,8 @@
       </view>
     </view>
 
-    <view class="card" wx:if="{{logged}}">
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme">
+    <view class="card">
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTheme" wx:if="{{logged}}">
         <view class="row-icon">主</view>
         <view class="row-main">
           <text class="row-title">主题和字体</text>
@@ -64,14 +64,19 @@
         </view>
         <text class="row-go">›</text>
       </view>
-    </view>
-
-    <view class="card">
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onTier">
         <view class="row-icon">档</view>
         <view class="row-main">
           <text class="row-title poem">用户权限</text>
           <text class="row-sub">自己那一档 · 功能对照 · 升档</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
+        <view class="row-icon">云</view>
+        <view class="row-main">
+          <text class="row-title">同步</text>
+          <text class="row-sub">{{syncSub}}</text>
         </view>
         <text class="row-go">›</text>
       </view>
@@ -88,14 +93,6 @@
         <view class="row-main">
           <text class="row-title">后台管理</text>
           <text class="row-sub">用户列表 · 改档位</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSync" wx:if="{{logged}}">
-        <view class="row-icon">云</view>
-        <view class="row-main">
-          <text class="row-title">同步</text>
-          <text class="row-sub">{{syncSub}}</text>
         </view>
         <text class="row-go">›</text>
       </view>
