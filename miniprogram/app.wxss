@@ -812,6 +812,26 @@ button, textarea {
   padding: 0;
 }
 
+.opt-group.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+
+.opt-group.grid .opt-row {
+  justify-content: center;
+  min-height: var(--h-opt-tight);
+  padding-left: var(--sp-2);
+  padding-right: var(--sp-2);
+  text-align: center;
+}
+
+.opt-group.grid .opt-main {
+  flex: none;
+  min-width: 0;
+  padding: 0;
+}
+
 .opt-group.inline.cols-2 {
   grid-template-columns: repeat(2, 1fr);
 }
