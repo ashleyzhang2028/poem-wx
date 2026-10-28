@@ -80,14 +80,6 @@
         </view>
         <text class="row-go">›</text>
       </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback" wx:if="{{logged}}">
-        <view class="row-icon">议</view>
-        <view class="row-main">
-          <text class="row-title">意见建议</text>
-          <text class="row-sub">反馈问题 · 查看处理进度</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onManage" wx:if="{{manageOn}}">
         <view class="row-icon">管</view>
         <view class="row-main">

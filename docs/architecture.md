@@ -495,9 +495,9 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 
 ### 意见反馈（Issue #520）
 
-两条入口：**我的 → 意见建议**（登录可见，`packages/feedback/index`）与
-**后台管理 → 用户反馈**（`packages/admin/feedback/index`，详情在
-`packages/admin/feedback/detail/detail`）。
+用户入口只有一条：**设置 → 关于 → 意见建议**（`packages/settings/about`，
+`packages/feedback/index`）。管理员入口是**后台管理 → 用户反馈**
+（`packages/admin/feedback/index`，详情在 `packages/admin/feedback/detail/detail`）。
 
 反馈只认登录身份：三条用户路径（建 / 读 / 跟帖）都以 `uid` 认人，
 没有会话回 `401 E_NO_SESSION`。页面进来先过 `gate.open`，登录流程走完再画。
