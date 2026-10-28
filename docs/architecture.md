@@ -849,6 +849,17 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 同一批字在两张页面上字形不同，看起来是「两种字体」而不是「两个来源」。
 `--font-poem` 只排所选那一款，之后就是系统衬线。
 
+**「应用选中字体到全局」只在页面作用域里作数。** `wx.loadFontFace({ global: true })`
+把字族注册在当前页面的作用域里，换一页就不再认这个名字。所以开关打开后：
+`font.registerHere()` 在页面自己的 `applyFont()` 里注册一次，导航栏组件在
+`attached` 与 `scope` 变化时各注册一次，两处都拿 `font.groupOf()` 拼 `font-family`；
+`globalData.fontScope` 是这个作用域的版本号，`setGlobal` / `set` 各推一次，
+`app.repaintFont()` 逐个页 `applyFont()`，回前台由 `font.restore()` 补一次。
+页面只注册当前那一款，九款全量注册会把九个上兆的子集压进单页的内存。
+
+原生外壳（`navigationBarTitleText` 与原生 tabBar）由微信绘制，页面里的字族够不到，
+那里一律系统字。全站自定义导航栏只有 `pages/home` 与主题页两处，其余页面用原生标题栏。
+
 **预览与正文是两套字族。** 主题页的字体格与预览壳里那七个字取 `font.preview()`，
 每款注册的是自己目录下的 `7.woff2` / `7.woff`，字族名为 `Kuibu Preview <款>`，
 与正文的 `Kuibu Poem <款>` 不相干。进页面把九份 7 子集各注册一次，

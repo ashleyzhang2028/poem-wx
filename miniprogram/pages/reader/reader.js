@@ -10,6 +10,7 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
@@ -120,8 +121,14 @@ Page({
     });
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
     if (!this.data.reciteMode) {
       this.setData({ hint: "" });

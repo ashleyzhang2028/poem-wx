@@ -3595,9 +3595,10 @@ function mountFull(pg, query) {
   const missJs = [];
   pages.forEach((pg) => {
     const js = fs.readFileSync(path.join(ROOT, pg + ".js"), "utf8");
-    if (!/theme\.apply\(this\)/.test(js)) missJs.push(pg);
+    if (!/this\.applyFont\(\);/.test(js)) missJs.push(pg);
+    else if (!/font\.bind\(theme\.style\(\)\)/.test(js)) missJs.push(pg + "(未取主题)");
   });
-  ok("每个页面都在 onShow 里调了 theme.apply(this)", missJs.length === 0, missJs.join(", "));
+  ok("每个页面 onShow 都走 applyFont，主题与全局字族从同一处取", missJs.length === 0, missJs.join(", "));
 }
 
 {
@@ -3665,6 +3666,38 @@ function mountFull(pg, query) {
       && uiPicked.indexOf(uiOn) !== 0,
     "关着时 " + uiOf(uiOff).slice(0, 30) + " / 开着时 " + uiOf(uiOn).slice(0, 40)
       + " / 换款之后 " + uiOf(uiPicked).slice(0, 40));
+
+  {
+    const pageFiles = pages.map((p) => path.join(ROOT, p + ".js"));
+    const barJs = fs.readFileSync(
+      path.join(ROOT, "components", "nav-bar", "nav-bar.js"), "utf8");
+    const barWxml = fs.readFileSync(
+      path.join(ROOT, "components", "nav-bar", "nav-bar.wxml"), "utf8");
+    const homeWxml = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+    const appJs = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
+    const barHosts = pages.filter((p) => fs.readFileSync(path.join(ROOT, p + ".wxml"), "utf8")
+      .indexOf("<nav-bar") >= 0);
+    const hostsLoad = barHosts.every((p) => /"nav-bar":\s*"\/components\/nav-bar\/nav-bar"/.test(
+      fs.readFileSync(path.join(ROOT, p + ".json"), "utf8")));
+    const hostsRepaint = barHosts.every((p) => {
+      const src = fs.readFileSync(path.join(ROOT, p + ".js"), "utf8");
+      return /font\.registerHere\(\)/.test(src) && themeWxml.indexOf("nav-bar scope=") >= 0;
+    });
+
+    ok("全局字族的注册在页面作用域里落地：页面与导航栏各自注册一次",
+      barHosts.length > 0 && hostsLoad && hostsRepaint
+        && /registerHere/.test(barJs)
+        && /class="nav-title"/.test(barWxml)
+        && /nav-bar scope=/.test(homeWxml),
+      "全局开着时导航栏没自己注册那款字，或者没有页面挂 nav-bar（换页就退回系统黑体）");
+    ok("开关与换款都推一次作用域，回前台补一次（globalData 认版本号，旧的不算）",
+      /scopeEpoch \+= 1[\s\S]{0,200}?announce\(\)/.test(
+        fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8"))
+        && /font\.restore\(\)/.test(appJs)
+        && /repaintFont/.test(appJs)
+        && pageFiles.every((f) => /this\.applyFont\(\)/.test(fs.readFileSync(f, "utf8"))),
+      "拨开关后没有重注册也没有回刷页面，或者回前台没补注册");
+  }
 
   tierAs("free");
   const rFreeGlobal = fontMod.setGlobal(true);

@@ -1,4 +1,5 @@
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const auth = require("../../../utils/auth");
 const loginFlow = require("../../../utils/login-flow");
@@ -7,8 +8,13 @@ const tabPage = require("../../../utils/tab-page");
 Page({
   data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: tabbar.below(this), logged: auth.logged() });
   },
 

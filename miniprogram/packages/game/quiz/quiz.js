@@ -4,6 +4,7 @@ const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 
 const COUNT = 10;
@@ -45,8 +46,13 @@ Page({
     allowed: false
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
     this.setData({ allowed: ok, lockNote: entitlement.hint("quiz") || "登录后才能练" });

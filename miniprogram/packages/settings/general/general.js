@@ -3,6 +3,7 @@ const pinyin = require("../../../utils/pinyin");
 const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
@@ -57,8 +58,13 @@ Page({
     leagueTier: "max"
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
-    theme.apply(this);
+    this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });

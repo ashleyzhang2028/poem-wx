@@ -1,4 +1,5 @@
 const theme = require("../utils/theme");
+const font = require("../utils/font");
 const store = require("../utils/store");
 const icons = require("../utils/icons");
 const gate = require("../utils/gate");
@@ -28,7 +29,7 @@ Component({
   },
 
   attached() {
-    this.painted = theme.current();
+    this.painted = theme.current() + " " + font.scope();
     const patch = Object.assign(this.paint(), this.paintMe());
     const fixed = parseInt(this.data.current, 10);
     if (fixed >= 0) patch.active = fixed;
@@ -47,7 +48,7 @@ Component({
       if (this.data.active !== index) patch.active = index;
       Object.assign(patch, this.paintMe());
 
-      const key = theme.current();
+      const key = theme.current() + " " + font.scope();
       if (this.painted !== key) {
         this.painted = key;
         Object.assign(patch, this.paint());

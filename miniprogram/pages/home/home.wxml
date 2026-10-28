@@ -1,5 +1,6 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
+  <nav-bar scope="{{fontScope}}" />
   <block wx:if="{{guest}}">
     <view class="card hero-lead">
       <text class="hero-eyebrow">今日</text>

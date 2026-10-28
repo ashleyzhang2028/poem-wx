@@ -38,6 +38,7 @@ App({
 
   onShow() {
     store.touchDaily();
+    font.restore();
     this.reloadFont();
     this.refreshTierHourly();
   },
@@ -55,6 +56,13 @@ App({
 
   reloadFont() {
     font.refresh();
+  },
+
+  repaintFont(epoch) {
+    if (epoch !== font.scope()) return;
+    getCurrentPages().forEach((page) => {
+      if (page && typeof page.applyFont === "function") page.applyFont();
+    });
   },
 
   stampBuild() {
