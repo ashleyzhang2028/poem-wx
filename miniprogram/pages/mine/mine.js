@@ -188,10 +188,6 @@ Page({
     return E.block("daily", { page: this });
   },
 
-  onAbout() {
-    wx.navigateTo({ url: "/packages/settings/about/about" });
-  },
-
   onTierGate() {
     this.onPricing();
   }

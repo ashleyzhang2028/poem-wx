@@ -1680,6 +1680,18 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
       + "点下去必须落在对比表上（Issue #234）");
   ok("档位与权限在「我的」页另有一行（胶囊之外的第二条路）",
     /bindtap="onTier"/.test(mineWxml));
+  const panelGear = /<view\b[^>]*class="gear"[^>]*>/.exec(
+    fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.wxml"), "utf8"));
+  ok("设置那枚齿轮挂在身份卡顶部、胶囊右侧，点它进设置页",
+    !!panelGear && /bindtap="onSettings"/.test(panelGear[0])
+      && /onSettings\s*\(\)\s*\{[\s\S]{0,80}?triggerEvent\("settings"\)/.test(
+        fs.readFileSync(path.join(ROOT, "components", "login-panel", "login-panel.js"), "utf8"))
+      && /bind:settings="onSettings"/.test(mineWxml)
+      && mineJs.indexOf('url: "/packages/settings/general/general"') >= 0,
+    "齿轮没挂上，或者点下去没落到设置页");
+  ok("「我的」页不再留设置那一行（入口只有齿轮一枚）",
+    mineWxml.indexOf("bindtap=\"onSettings\"") < 0,
+    "菜单里又列了一行设置 —— 同一个去处两条路");
   ok("权限表那一块只有一份（两张页面共用同一个组件）",
     /<tier-view\s*\/>/.test(tierWxml) && tierWxml.indexOf("compareRows") < 0
       && (subs.mine || []).indexOf("tier/tier") >= 0,
@@ -1696,10 +1708,15 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
 
   const aboutWxml = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "about", "about.wxml"), "utf8");
-  ok("关于只在「用户权限」那一张卡的最末一行，「我的」页不再单列用户协议 / 隐私政策",
-    /bindtap="onAbout"/.test(mineWxml) && /onAbout\s*\(/.test(mineJs)
+  const generalWxmlAbout = fs.readFileSync(
+    path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
+  ok("关于只有一条路：设置页那一行进关于，关于里再进协议与隐私",
+    /bindtap="onAbout"/.test(generalWxmlAbout)
+      && /\/packages\/settings\/about\/about/.test(
+        fs.readFileSync(path.join(ROOT, "packages", "settings", "general", "general.js"), "utf8"))
+      && mineWxml.indexOf("onAbout") < 0 && mineJs.indexOf("onAbout") < 0
       && mineJs.indexOf("terms/terms") < 0 && mineJs.indexOf("privacy/privacy") < 0,
-    "协议与隐私又在「我的」页各占一行 —— 同一个入口两条路");
+    "「我的」页又长出一条关于，或者设置页没有那一行 —— 同一个入口两条路");
   ok("用户协议与隐私政策落在关于页的菜单里",
     /bindtap="onTerms"/.test(aboutWxml) && /bindtap="onPrivacy"/.test(aboutWxml),
     "关于页少了协议或隐私那一行 —— 从「我的」撤掉之后就没有别的出口了");
@@ -5075,7 +5092,7 @@ function mountFull(pg, query) {
   ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
     /setTimeout\(\(\) => this\.goNext\(/.test(read("components/recite-sheet/recite-sheet.js")));
 
-  ok("古诗词大会那张卡在危险操作上方，开关落在 leagueBoard 上并且跟着档位走",
+  ok("排行榜那一条在危险操作上方，开关落在 leagueBoard 上并且跟着档位走",
     generalWxml.indexOf("leagueBoardOn") >= 0
       && generalWxml.indexOf("leagueBoardOn") < generalWxml.indexOf("danger-zone")
       && /function setOn[\s\S]{0,200}?saveSettings\(\{\s*leagueBoard/.test(leagueJs)

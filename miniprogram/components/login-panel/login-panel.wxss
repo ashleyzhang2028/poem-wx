@@ -255,3 +255,34 @@
   content: "✦";
   margin-right: 6rpx;
 }
+
+.gear {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: var(--pad-opt-y) var(--sp-1);
+  margin-left: var(--sp-1);
+  border-radius: var(--radius-pill);
+}
+
+.gear-icon {
+  width: var(--fs-body);
+  height: var(--fs-body);
+  opacity: .55;
+}
+
+.gear-hover {
+  background: var(--line);
+}
+
+.tier-pro .gear-hover,
+.tier-max .gear-hover {
+  background: rgba(255, 255, 255, .16);
+}
+
+.tier-pro .gear-icon,
+.tier-max .gear-icon {
+  opacity: 1;
+}
