@@ -4738,6 +4738,7 @@ function mountFull(pg, query) {
 
   const DIRTY = [
     ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
+    ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
@@ -4958,6 +4959,12 @@ function mountFull(pg, query) {
       /query\.sid/.test(readerJs) && /&sid=" \+ encodeURIComponent\(sid\)/.test(readerJs));
   }
 
+
+  ok("对齐只在正文那两处切（阅读页与背诵弹层各一枚，设置页不再摆一份）",
+    /bindtap="onAlignToggle"/.test(read("pages/reader/reader.wxml"))
+      && /bindtap="onAlignToggle"/.test(sheetWxml)
+      && !/onAlign\b/.test(generalWxml),
+    "阅读页或弹层没地方切对齐，或者设置页还留着第二处");
 
   {
     const keysOf = (src) => {

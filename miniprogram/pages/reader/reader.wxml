@@ -47,13 +47,13 @@
     </view>
 
     <view class="prefs">
-      <radio-group class="pref-seg" bindchange="onAlign">
-        <label class="pref-opt in-seg {{align === item.key ? 'on' : ''}}"
-               wx:for="{{aligns}}" wx:key="key" aria-label="{{item.label}}">
-          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" />
-          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-        </label>
-      </radio-group>
+      <view class="pref-seg">
+        <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
+              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
+          <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
+        </view>
+      </view>
 
       <radio-group class="pref-seg" bindchange="onPinyin">
         <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
