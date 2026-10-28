@@ -1,5 +1,4 @@
 const store = require("../../../utils/store");
-const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
@@ -8,7 +7,6 @@ const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const seasonal = require("../../../utils/seasonal");
 const league = require("../../../utils/league");
-const scale = require("../../../utils/type-scale");
 const tiers = require("../../../utils/tiers");
 const cols = require("../../../utils/collections");
 
@@ -17,9 +15,6 @@ Page({
     themeStyle: "",
     name: "",
     barBelow: true,
-    fontSize: 0,
-    fontMin: scale.MIN,
-    fontMax: scale.MAX,
     locked: false,
 
     themeColor: theme.currentTheme().rgba,
@@ -51,27 +46,19 @@ Page({
 
     const settings = store.settings();
     const fx = sfx.readiness();
-    this.setData({
-      locked: false,
-      fontSize: scale.clamp(settings.fontSize),
-      themeColor: theme.currentTheme().rgba,
-      sfxVisible: fx.visible,
-      sfxOn: sfx.enabled(),
-      seasonalOn: !seasonal.switched(),
-      seasonalLock: seasonal.locked(),
-      seasonalTier: seasonal.tier(),
-      leagueBoardOn: league.canJoin() && settings.leagueBoard !== false,
-      leagueLock: league.locked(),
-      leagueTier: league.tier()
-    });
-  },
-
-  onFontSlide(e) {
-    const fontSize = scale.clamp(e.detail.value);
-    if (fontSize === this.data.fontSize) return;
-    store.saveSettings({ fontSize });
-    this.setData({ fontSize });
-    sync.markDirty();
+    this.setData(
+      Object.assign({ locked: false }, settings, {
+        themeColor: theme.currentTheme().rgba,
+        sfxVisible: fx.visible,
+        sfxOn: sfx.enabled(),
+        seasonalOn: !seasonal.switched(),
+        seasonalLock: seasonal.locked(),
+        seasonalTier: seasonal.tier(),
+        leagueBoardOn: league.canJoin() && settings.leagueBoard !== false,
+        leagueLock: league.locked(),
+        leagueTier: league.tier()
+      })
+    );
   },
 
   onSeasonal(e) {

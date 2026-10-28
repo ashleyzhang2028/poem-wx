@@ -1175,10 +1175,10 @@ ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text ==
     "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
   const general = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
-  ok("设置那一页只留字号与声音（对齐与注音跟着正文走，主题在自己那一页）",
-    /onFontSlide/.test(general) && /onSfx/.test(general)
-      && !/onAlign|onPinyin|onAlignToggle/.test(general) && !/onPick|swatch/.test(general),
-    "设置页又摆了一份对齐或注音 —— 与正文里那两枚按钮说的是同一件事");
+  ok("设置那一页只装声音与开关，版式偏好不在这（主题已搬去自己那一页）",
+    /onSfx/.test(general) && !/onAlign|onPinyin|onFontSlide|onFontDown|onFontUp/.test(general)
+      && !/onPick|swatch/.test(general),
+    "版式偏好又回到设置页了 —— 正文旁边已经有一处入口，这是第二条路");
 
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
@@ -4465,15 +4465,17 @@ function mountFull(pg, query) {
   const sheetJsSrc = readSrc("components/recite-sheet/recite-sheet.js");
   const readerJsSrc = readSrc("pages/reader/reader.js");
   const generalJsSrc = readSrc("packages/settings/general/general.js");
-  const scaleSrc = readSrc("utils/type-scale.js");
 
-  ok("字号量程只有一份定义（阅读页 / 背诵弹层 / 设置页都取它）",
-    [sheetJsSrc, readerJsSrc, generalJsSrc]
-      .every((src) => /require\(("\.\.\/\.\.\/utils\/type-scale"|"\.\.\/\.\.\/\.\.\/utils\/type-scale")\)/.test(src)
-        && !/FONT_(MIN|MAX)\s*=/.test(src) && !/\bconst (MIN|MAX)\s*=/.test(src))
-      && /fontMin:\s*scale\.MIN/.test(generalJsSrc)
-      && /fontMax:\s*scale\.MAX/.test(generalJsSrc),
-    "设置页自己写了一份量程 —— 它和正文那两处迟早对不上（Issue #425：设置封顶 4，正文能到 6）");
+  ok("字号量程只有一份定义（阅读页与背诵弹层都取它）",
+    [sheetJsSrc, readerJsSrc]
+      .every((src) => /require\("\.\.\/\.\.\/utils\/type-scale"\)/.test(src)
+        && !/FONT_(MIN|MAX)\s*=/.test(src) && !/\bconst (MIN|MAX)\s*=/.test(src)),
+    "正文两处各自写了一份量程 —— 迟早对不上（Issue #425：设置封顶 4，正文能到 6）");
+
+  ok("设置页不再留字号那条滑杆（正文旁边点一下就是全部入口）",
+    generalJsSrc.indexOf("fontSize") < 0
+      && readSrc("packages/settings/general/general.wxml").indexOf("<slider") < 0,
+    "字号在设置页又长出一条路 —— 同一件事两个入口，改一个以为另一个会跟");
 
   const csSrc = fs.readFileSync(path.join(ROOT, "utils", "corpus.js"), "utf8");
   ok("装箱不跨段：段落由空行与段上限给",
@@ -4735,14 +4737,14 @@ function mountFull(pg, query) {
   ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
 
   const DIRTY = [
-    ["通用设置-字号", "packages/settings/general/general.js", /onFontSlide[\s\S]{0,300}?markDirty/],
+    ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
     ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
     ["昵称", "utils/login-flow.js", /function takeNickname\([\s\S]{0,500}?markDirty/]
   ];
-  ok("改了设置就该传：六个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
+  ok("改了设置就该传：五个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
       && /function markDirty\(\)[\s\S]{0,600}?now\(\)/.test(syncSrc)
       && !/function markDirty\(\)[\s\S]{0,600}?wx\.request/.test(syncSrc),
@@ -4969,12 +4971,13 @@ function mountFull(pg, query) {
       const block = /const PINYIN_MODES = \[([\s\S]*?)\];/.exec(src);
       return block ? [...block[1].matchAll(/key\s*:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
     };
-    const b = keysOf(read("pages/reader/reader.js"));
-    ok("注音同一条设置（阅读页与弹层都走 pinyin.setMode，设置页不再另开一处）",
-      /pinyin\.setMode\(/.test(read("pages/reader/reader.js"))
-        && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js"))
-        && !/onPinyin/.test(generalWxml) && b.length === 2,
-      "别处另写了一份 store.saveSettings，几处会分叉");
+    const a = keysOf(read("pages/reader/reader.js"));
+    const b = keysOf(read("components/recite-sheet/recite-sheet.js"));
+    ok("注音只有一份档位表（详情页与背诵弹层两档、同一个 settings.pinyin）",
+      a.length === 2 && a.join(",") === b.join(",")
+        && /pinyin\.setMode\(/.test(read("pages/reader/reader.js"))
+        && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js")),
+      "详情页 " + JSON.stringify(a) + " / 弹层 " + JSON.stringify(b));
   }
 
   {

@@ -2,17 +2,6 @@
   <lock-card wx:if="{{locked}}" title="设置" note="登录后才能改" mark="设" bind:login="onLogin" />
 
   <block wx:else>
-  <view class="card">
-    <view class="card-title">字号</view>
-    <view class="font-row">
-      <text class="font-a small">A</text>
-      <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="12" backgroundColor="#ececef" activeColor="{{themeColor}}"
-              bindchanging="onFontSlide" bindchange="onFontSlide" />
-      <text class="font-a big">A</text>
-    </view>
-  </view>
-
   <view class="card" wx:if="{{sfxVisible}}">
     <view class="card-title">声音</view>
     <view class="row">
