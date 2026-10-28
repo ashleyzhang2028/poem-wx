@@ -728,31 +728,6 @@ button, textarea {
   margin-right: var(--sp-2);
 }
 
-.font-row {
-  display: flex;
-  align-items: center;
-}
-
-.font-slider {
-  flex: 1;
-  min-width: 0;
-  margin: 0 var(--sp-3);
-}
-
-.font-a {
-  flex: none;
-  font-family: var(--font-poem);
-  color: var(--ink-3);
-}
-
-.font-a.small {
-  font-size: var(--fs-hint);
-}
-
-.font-a.big {
-  font-size: var(--fs-lead);
-}
-
 .card-open {
   display: flex;
   align-items: baseline;
