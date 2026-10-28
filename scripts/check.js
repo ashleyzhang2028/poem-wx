@@ -1501,12 +1501,17 @@ const GATED = {
       adminFbLib.indexOf("GROUPS") >= 0
         && read("packages/admin/feedback/index.wxml").indexOf("wx:for=\"{{groups}}\"") >= 0);
 
-    ok("意见建议那一行在「我的」，点下去先过登录",
-      /onFeedback\(\)\s*\{[^}]*gate\.open\(/.test(read("pages/mine/mine.js")),
-      "未登录点头像那一行没走登录流程");
+    const aboutWxml = read("packages/settings/about/about.wxml");
+    const aboutJs = read("packages/settings/about/about.js");
+    ok("意见建议只有一条用户入口：在「关于」",
+      /bindtap="onFeedback"/.test(aboutWxml)
+        && /packages\/feedback\/index\/index/.test(aboutJs)
+        && !/onFeedback/.test(read("pages/mine/mine.wxml"))
+        && !/onFeedback/.test(read("pages/mine/mine.js")),
+      "「我的」与「关于」各摆一行，同一个去处两条路（Issue #744）");
     ok("后台管理页有用户反馈那一行", /bindtap="onFeedback"/.test(adminPage));
-    ok("两条入口都落到真页面（跳转目标在 app.json 里）",
-      /\/packages\/feedback\/index\/index/.test(read("pages/mine/mine.js"))
+    ok("入口落到真页面（跳转目标在 app.json 里）",
+      /\/packages\/feedback\/index\/index/.test(read("packages/settings/about/about.js"))
         && /\/packages\/admin\/feedback\/index/.test(read("packages/admin/index/index.js")));
 
     const fbPageJs = read("packages/feedback/index/index.js");

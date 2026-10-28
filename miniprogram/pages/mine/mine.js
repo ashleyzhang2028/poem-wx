@@ -8,7 +8,6 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
-const gate = require("../../utils/gate");
 const guard = require("../../utils/guard");
 const pay = require("../../utils/pay");
 
@@ -149,11 +148,6 @@ Page({
 
   onManage() {
     wx.navigateTo({ url: "/packages/admin/index/index" });
-  },
-
-  onFeedback() {
-    if (!gate.open(null, this)) return;
-    wx.navigateTo({ url: "/packages/feedback/index/index" });
   },
 
   syncBar() {
