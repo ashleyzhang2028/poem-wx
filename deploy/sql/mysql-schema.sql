@@ -150,82 +150,13 @@ CREATE TABLE IF NOT EXISTS `progress` (
   CONSTRAINT `progress_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 已有的库补 `synced_at`（服务器收到这一行的时刻，增量拉取按它走；幂等，可重复跑）。
-SET @kb_has_synced := (SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'progress' AND COLUMN_NAME = 'synced_at');
-SET @kb_ddl := IF(@kb_has_synced = 0,
-  'ALTER TABLE `progress` ADD COLUMN `synced_at` BIGINT NOT NULL DEFAULT 0, ADD KEY `progress_uid_child_synced_idx` (`uid`, `child_id`, `synced_at`), DROP KEY `progress_uid_child_updated_idx`',
-  'SELECT 1');
-PREPARE kb_stmt FROM @kb_ddl;
-EXECUTE kb_stmt;
-DEALLOCATE PREPARE kb_stmt;
-UPDATE `progress` SET `synced_at` = `updated_at` WHERE `synced_at` = 0;
-
--- ==========================================================================
--- 条件 upsert：「新的赢，旧的到了也不许覆盖」
--- ==========================================================================
--- ⚠️ **这是整个库唯一一条不许「等价改写」的语句。**
---
--- Postgres 版长这样（条件写在 `WHERE` 上）：
---
---   insert into progress (...) values (...)
---   on conflict (uid, child_id, poem_id) do update
---      set payload = excluded.payload, updated_at = excluded.updated_at, deleted = excluded.deleted
---    where excluded.updated_at >= progress.updated_at;
---
--- MySQL 的 `ON DUPLICATE KEY UPDATE` **没有 `WHERE`**，条件只能塞进赋值表达式，
--- 而且**每一列都要写**：只给 payload 加 `IF(...)`、把 updated_at 无条件盖上去，
--- 就会造出「payload 是旧的、updated_at 是新的」这种一半新一半旧的行 ——
--- 它下一次还会把真正的新值顶掉，而且**到处都不报错**。
---
--- 为什么必须是数据库层的一句话，而不是应用层的「读-比-写」：
--- 断网重连后一批旧数据补发时，两条请求并发会互相穿插，
--- 读到的 `updated_at` 可能已经过时 —— 那就会用旧值盖新值。
--- InnoDB 的行锁在，所以这一句仍然是原子的。
---
--- 下面这个存储过程只是把这条不变式**落在数据库里**，供 DBA 手动核对 / 冷启动
--- 补数据用；服务端实际走的是 `deploy/store-mysql.js` 里拼好的那条多值
--- `INSERT ... ON DUPLICATE KEY UPDATE`（同一个语义，形如）：
---
---   INSERT INTO progress (uid, child_id, poem_id, payload, updated_at, deleted, synced_at)
---   VALUES (?,?,?,?,?,?,?)
---   ON DUPLICATE KEY UPDATE
---     payload    = IF(VALUES(updated_at) >= updated_at, VALUES(payload), payload),
---     synced_at  = IF(VALUES(updated_at) >= updated_at, VALUES(synced_at), synced_at),
---     updated_at = GREATEST(updated_at, VALUES(updated_at)),
---     deleted    = IF(VALUES(updated_at) >= updated_at, VALUES(deleted), deleted)
---
--- ⚠️ `VALUES(col)` 在 MySQL 8.0.20 起被标记为过时（8.4 仍能用，只是警告）。
--- 保留它是因为它从 5.7 起就可用，而云托管那台 MySQL 的版本不一定在 8.0.20 以上。
--- 哪天整个迁到 8.4+，换成 `INSERT ... AS new ON DUPLICATE KEY UPDATE payload = IF(new.updated_at >= updated_at, new.payload, payload) …`。
-DROP PROCEDURE IF EXISTS `kb_upsert_progress`;
-DELIMITER $$
-CREATE PROCEDURE `kb_upsert_progress`(IN p_uid VARCHAR(64), IN p_child_id VARCHAR(64),
-                                       IN p_poem_id VARCHAR(80), IN p_payload JSON,
-                                       IN p_updated_at BIGINT, IN p_deleted INT)
-BEGIN
-  INSERT INTO `progress` (`uid`, `child_id`, `poem_id`, `payload`, `updated_at`, `deleted`, `synced_at`)
-  VALUES (p_uid, p_child_id, p_poem_id, p_payload, p_updated_at, p_deleted, UNIX_TIMESTAMP(NOW(3)) * 1000)
-  ON DUPLICATE KEY UPDATE
-    `payload`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`payload`), `payload`),
-    `synced_at`  = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`synced_at`), `synced_at`),
-    `updated_at` = GREATEST(`updated_at`, VALUES(`updated_at`)),
-    `deleted`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`deleted`), `deleted`);
-END$$
-DELIMITER ;
-
--- -------------------------------------------------------------- 过期清理
--- 对应 Postgres 版的 `kb_purge_expired`。定时探活顺手调一次即可（可选）。
-DROP PROCEDURE IF EXISTS `kb_purge_expired`;
-DELIMITER $$
-CREATE PROCEDURE `kb_purge_expired`(IN now_ms BIGINT)
-BEGIN
-  DELETE FROM `codes`         WHERE `expires_at` < now_ms;
-  DELETE FROM `verifications` WHERE `expires_at` < now_ms;
-  DELETE FROM `resets`        WHERE `expires_at` < now_ms;
-  DELETE FROM `sessions`      WHERE `exp`        < now_ms;
-END$$
-DELIMITER ;
+-- 已有的库（建表时还没有 `synced_at`）要手动补一次，下面两句各执行一次即可；
+-- 新库上面的建表已带这一列，不需要。已经补过再执行会报 Duplicate column，忽略即可。
+--   ALTER TABLE `progress`
+--     ADD COLUMN `synced_at` BIGINT NOT NULL DEFAULT 0,
+--     ADD KEY `progress_uid_child_synced_idx` (`uid`, `child_id`, `synced_at`),
+--     DROP KEY `progress_uid_child_updated_idx`;
+--   UPDATE `progress` SET `synced_at` = `updated_at` WHERE `synced_at` = 0;
 
 -- --------------------------------------------------------- verifications
 CREATE TABLE IF NOT EXISTS `verifications` (
@@ -442,6 +373,72 @@ CREATE TABLE IF NOT EXISTS `app_settings` (
   `updated_at` BIGINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`skey`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================================================
+-- 条件 upsert：「新的赢，旧的到了也不许覆盖」
+-- ==========================================================================
+-- ⚠️ **这是整个库唯一一条不许「等价改写」的语句。**
+--
+-- Postgres 版长这样（条件写在 `WHERE` 上）：
+--
+--   insert into progress (...) values (...)
+--   on conflict (uid, child_id, poem_id) do update
+--      set payload = excluded.payload, updated_at = excluded.updated_at, deleted = excluded.deleted
+--    where excluded.updated_at >= progress.updated_at;
+--
+-- MySQL 的 `ON DUPLICATE KEY UPDATE` **没有 `WHERE`**，条件只能塞进赋值表达式，
+-- 而且**每一列都要写**：只给 payload 加 `IF(...)`、把 updated_at 无条件盖上去，
+-- 就会造出「payload 是旧的、updated_at 是新的」这种一半新一半旧的行 ——
+-- 它下一次还会把真正的新值顶掉，而且**到处都不报错**。
+--
+-- 为什么必须是数据库层的一句话，而不是应用层的「读-比-写」：
+-- 断网重连后一批旧数据补发时，两条请求并发会互相穿插，
+-- 读到的 `updated_at` 可能已经过时 —— 那就会用旧值盖新值。
+-- InnoDB 的行锁在，所以这一句仍然是原子的。
+--
+-- 下面这个存储过程只是把这条不变式**落在数据库里**，供 DBA 手动核对 / 冷启动
+-- 补数据用；服务端实际走的是 `deploy/store-mysql.js` 里拼好的那条多值
+-- `INSERT ... ON DUPLICATE KEY UPDATE`（同一个语义，形如）：
+--
+--   INSERT INTO progress (uid, child_id, poem_id, payload, updated_at, deleted, synced_at)
+--   VALUES (?,?,?,?,?,?,?)
+--   ON DUPLICATE KEY UPDATE
+--     payload    = IF(VALUES(updated_at) >= updated_at, VALUES(payload), payload),
+--     synced_at  = IF(VALUES(updated_at) >= updated_at, VALUES(synced_at), synced_at),
+--     updated_at = GREATEST(updated_at, VALUES(updated_at)),
+--     deleted    = IF(VALUES(updated_at) >= updated_at, VALUES(deleted), deleted)
+--
+-- ⚠️ `VALUES(col)` 在 MySQL 8.0.20 起被标记为过时（8.4 仍能用，只是警告）。
+-- 保留它是因为它从 5.7 起就可用，而云托管那台 MySQL 的版本不一定在 8.0.20 以上。
+-- 哪天整个迁到 8.4+，换成 `INSERT ... AS new ON DUPLICATE KEY UPDATE payload = IF(new.updated_at >= updated_at, new.payload, payload) …`。
+DROP PROCEDURE IF EXISTS `kb_upsert_progress`;
+DELIMITER $$
+CREATE PROCEDURE `kb_upsert_progress`(IN p_uid VARCHAR(64), IN p_child_id VARCHAR(64),
+                                       IN p_poem_id VARCHAR(80), IN p_payload JSON,
+                                       IN p_updated_at BIGINT, IN p_deleted INT)
+BEGIN
+  INSERT INTO `progress` (`uid`, `child_id`, `poem_id`, `payload`, `updated_at`, `deleted`, `synced_at`)
+  VALUES (p_uid, p_child_id, p_poem_id, p_payload, p_updated_at, p_deleted, UNIX_TIMESTAMP(NOW(3)) * 1000)
+  ON DUPLICATE KEY UPDATE
+    `payload`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`payload`), `payload`),
+    `synced_at`  = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`synced_at`), `synced_at`),
+    `updated_at` = GREATEST(`updated_at`, VALUES(`updated_at`)),
+    `deleted`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`deleted`), `deleted`);
+END$$
+DELIMITER ;
+
+-- -------------------------------------------------------------- 过期清理
+-- 对应 Postgres 版的 `kb_purge_expired`。定时探活顺手调一次即可（可选）。
+DROP PROCEDURE IF EXISTS `kb_purge_expired`;
+DELIMITER $$
+CREATE PROCEDURE `kb_purge_expired`(IN now_ms BIGINT)
+BEGIN
+  DELETE FROM `codes`         WHERE `expires_at` < now_ms;
+  DELETE FROM `verifications` WHERE `expires_at` < now_ms;
+  DELETE FROM `resets`        WHERE `expires_at` < now_ms;
+  DELETE FROM `sessions`      WHERE `exp`        < now_ms;
+END$$
+DELIMITER ;
 
 -- ==========================================================================
 -- 建完表之后：第一个管理员

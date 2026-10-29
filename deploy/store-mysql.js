@@ -368,7 +368,10 @@ function mysqlStore(cfg) {
       return query("DELETE FROM feedback_comments WHERE cid = ?", [String(cid || "")]).then(function () { return true; });
     },
 
-    putExamRecord: function (row) { return insertRow("exam_records", row, ["eid"]).then(function () { return { eid: row.eid }; }); },
+    putExamRecord: function (row) {
+      var stored = Object.assign({}, row, { items: JSON.stringify(row.items === undefined ? [] : row.items) });
+      return insertRow("exam_records", stored, ["eid"]).then(function () { return { eid: row.eid }; });
+    },
     getExamRecord: function (eid) { return getRow("exam_records", "eid", eid); },
     listExamRecords: function (filter, limit) {
       var f = filter || {};
