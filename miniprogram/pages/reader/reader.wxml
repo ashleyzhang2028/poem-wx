@@ -144,24 +144,29 @@
   </view>
 
   <view class="card gloss-card" wx:if="{{glossRows.length}}">
-    <text class="card-title">生字生词</text>
-    <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
-      <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
-        <text class="gloss-w">{{cell.w}}</text>
-        <text class="gloss-d">{{cell.d}}</text>
-      </view>
+    <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleGloss">
+      <text class="card-title">注释</text>
+      <text class="all-toggle {{showGloss ? 'open' : ''}}"></text>
     </view>
+    <block wx:if="{{showGloss}}">
+      <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
+        <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
+          <text class="gloss-w">{{cell.w}}</text>
+          <text class="gloss-d">{{cell.d}}</text>
+        </view>
+      </view>
+    </block>
   </view>
 
   <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-      <text class="trans-toggle">译文</text>
-      <view class="all-toggle {{showTranslation ? 'open' : ''}}"></view>
+    <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleTranslation">
+      <text class="card-title">译文</text>
+      <text class="all-toggle {{showTranslation ? 'open' : ''}}"></text>
     </view>
-    <view wx:if="{{showTranslation}}">
+    <block wx:if="{{showTranslation}}">
       <text class="trans-text">{{translation}}</text>
       <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
-    </view>
+    </block>
   </view>
 
   <view class="pager" wx:if="{{pager.show}}">

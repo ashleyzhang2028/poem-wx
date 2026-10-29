@@ -1686,20 +1686,6 @@ button, input, textarea {
   margin-bottom: var(--sp-2);
 }
 
-.gloss-title {
-  display: block;
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  line-height: var(--lh-tight);
-  margin-bottom: var(--sp-2);
-}
-
-.card > .gloss-title {
-  font-size: var(--fs-title);
-  color: var(--strong-text);
-  margin-bottom: var(--card-title-gap);
-}
-
 .gloss-row {
   display: flex;
   align-items: flex-start;
@@ -1752,7 +1738,6 @@ button, input, textarea {
   font-size: var(--fs-body);
   color: var(--ink-2);
   line-height: var(--lh-body);
-  padding-top: var(--sp-2);
 }
 
 .trans-src {
