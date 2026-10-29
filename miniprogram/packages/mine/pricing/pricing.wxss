@@ -30,23 +30,22 @@
   margin-top: var(--sp-3);
 }
 
-.pr-tabs {
-  margin-bottom: var(--sp-3);
-}
-
-.pr-tab-group {
+.pr-seg {
   display: flex;
-  align-items: stretch;
-  border-bottom: 1rpx solid var(--line);
+  gap: 8rpx;
+  padding: 8rpx;
+  border-radius: var(--radius-pill);
+  background: var(--sink);
 }
 
 .pr-tab {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
   min-height: var(--h-opt);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--t-press);
 }
 
 .pr-tab-t {
@@ -56,21 +55,13 @@
   transition: color var(--t-press);
 }
 
-.pr-tab.on .pr-tab-t {
-  color: var(--tier);
-  font-weight: 600;
+.pr-tab.on {
+  background: var(--tier);
 }
 
-.pr-tab.on::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -1rpx;
-  width: var(--tab-under-w);
-  height: 4rpx;
-  margin-left: calc(-1 * var(--tab-under-w) / 2);
-  border-radius: var(--radius-pill);
-  background: var(--tier);
+.pr-tab.on .pr-tab-t {
+  color: var(--on-ink);
+  font-weight: 600;
 }
 
 .pr-save {
@@ -104,29 +95,11 @@
   --tier-glow: rgba(91, 58, 135, .3);
 }
 
-.tier-pro {
-  --tab-under-w: calc(96rpx * var(--ui-scale));
-}
-
-.tier-max {
-  --tab-under-w: calc(120rpx * var(--ui-scale));
-}
-
 .pr-plan {
   position: relative;
   overflow: hidden;
   border: 2rpx solid var(--tier);
   box-shadow: 0 12rpx 40rpx var(--tier-glow);
-}
-
-.pr-plan::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 8rpx;
-  background: var(--tier-grad);
 }
 
 .pr-plan .pr-name {

@@ -162,7 +162,6 @@
 
 .theme-page .group-lead {
   position: relative;
-  z-index: 1;
   margin-top: var(--banner-lead-gap);
 }
 

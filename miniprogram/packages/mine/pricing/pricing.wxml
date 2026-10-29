@@ -16,6 +16,13 @@
       <text class="pr-w-sub">{{welcome.sub}}</text>
     </view>
 
+    <radio-group class="pr-seg" wx:if="{{logged}}" bindchange="onTab">
+      <label class="pr-tab tier-{{item.key}} {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
+        <radio class="seg-radio" value="{{item.key}}" checked="{{tab === item.key}}" />
+        <text class="pr-tab-t">{{item.name}}</text>
+      </label>
+    </radio-group>
+
     <view wx:if="{{!logged}}">
       <text class="hint">请先用微信登录，再选择档位。</text>
       <button class="btn primary block pr-login" bindtap="onLogin">去登录</button>
@@ -23,15 +30,6 @@
   </view>
 
   <block wx:if="{{logged}}">
-    <view class="pr-tabs">
-      <radio-group class="pr-tab-group" bindchange="onTab">
-        <label class="pr-tab tier-{{item.key}} {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{tab === item.key}}" />
-          <text class="pr-tab-t">{{item.name}}</text>
-        </label>
-      </radio-group>
-    </view>
-
     <view class="card pr-plan tier-{{shown.key}}">
       <view class="pr-head">
         <view class="pr-head-l">
