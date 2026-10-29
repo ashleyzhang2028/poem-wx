@@ -2,6 +2,7 @@ const admin = require("./lib");
 const tiers = require("../../../utils/tiers");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
+const dots = require("../../../utils/dots");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
@@ -53,6 +54,7 @@ Page({
 
     if (!logged) return;
     guard.once("users:list", () => admin.list()).then((res) => {
+      dots.see("users", res.newest);
       this.setData({ users: this.decorate(res.users, canWrite) });
     });
   },

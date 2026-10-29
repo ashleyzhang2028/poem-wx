@@ -18,7 +18,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title">今日背诵</text>
+        <text class="card-title">今日诵读</text>
       </view>
 
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -29,7 +29,7 @@
         </view>
 
         <view class="row-end">
-          <text class="tag idle">未背</text>
+          <text class="tag idle">待温习</text>
           <text class="row-go">›</text>
         </view>
       </view>
@@ -52,7 +52,7 @@
       <text class="hero-eyebrow">{{todayLabel}}</text>
 
       <view class="hero-head">
-        <text class="hero-title">今日背诵</text>
+        <text class="hero-title">今日诵读</text>
 
         <view class="hero-pills">
           <text class="pill">{{gradeName}}</text>
@@ -69,11 +69,11 @@
         </view>
         <view class="stat">
           <text class="stat-v">{{doneCount}}</text>
-          <text class="stat-k">已背</text>
+          <text class="stat-k">已温习</text>
         </view>
         <view class="stat">
           <text class="stat-v">{{stats.left}}</text>
-          <text class="stat-k">待背</text>
+          <text class="stat-k">待温习</text>
         </view>
         <view class="stat stat-ring">
           <view class="ring-cap">
@@ -111,7 +111,7 @@
           <view class="seasonal-btns">
             <view class="round-btn {{item.daily ? 'on' : ''}}" hover-class="round-btn-hover" hover-stay-time="60"
                   data-id="{{item.id}}" catchtap="onSeasonalAdd"
-                  aria-label="{{item.daily ? '移出今日加背' : '加入今日加背'}}">
+                  aria-label="{{item.daily ? '移出新增温习' : '加入新增温习'}}">
               <view class="glyph" style="mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');"></view>
             </view>
             <view class="round-btn {{item.collected ? 'on' : ''}}" hover-class="round-btn-hover" hover-stay-time="60"
@@ -129,7 +129,7 @@
       <view class="search">
         <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
 
-        <input placeholder="今日加背 · 搜篇名 / 作者 / 朝代" value="{{extraKeyword}}" bindinput="onExtraInput"
+        <input placeholder="新增温习 · 搜篇名 / 作者 / 朝代" value="{{extraKeyword}}" bindinput="onExtraInput"
                confirm-type="search" bindconfirm="onExtraSearch" />
         <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{extraKeyword}}" bindtap="onExtraClear">
           <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
@@ -139,7 +139,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title">{{selfOnly ? '今日加背' : '今日课内'}}</text>
+        <text class="card-title">{{selfOnly ? '新增温习' : '课内小读'}}</text>
         <text class="all-count" wx:if="{{!selfOnly}}">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
       </view>
 
@@ -180,12 +180,12 @@
           <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
         </view>
         <text class="finish-text">{{praise}}</text>
-        <text class="hint finish-tip">想多背一首，搜今日加背</text>
+        <text class="hint finish-tip">想多温习一首，搜新增温习</text>
       </view>
     </view>
 
     <view class="card" wx:if="{{!collectionCount}}">
-      <text class="card-title">自选背诵</text>
+      <text class="card-title">自选温习</text>
       <text class="hint">还没有自选集合，看到想背的诗，加进自己的集合</text>
     </view>
 
@@ -193,10 +193,7 @@
       <view class="card" wx:for="{{collections}}" wx:key="id" wx:for-item="coll">
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
           <text class="card-title">{{coll.title}}</text>
-          <view class="coll-mark">
-            <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
-            <view class="coll-dot" style="background:{{coll.color}}"></view>
-          </view>
+          <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
           <text class="row-go coll-go">›</text>
         </view>
 

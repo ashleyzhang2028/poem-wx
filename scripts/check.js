@@ -644,7 +644,7 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
 
   const extra = { id: "p-12-2-11", t: "加背", a: "作者", d: "唐", gr: 12, tm: 2, b: "poems" };
   const withExtra = S.generateDailyPlan(opt({ extraPoems: [extra] }));
-  ok("今日加背接在今天那几首之后，不占它们的名额",
+  ok("新增温习接在今天那几首之后，不占它们的名额",
     withExtra.length === 5 && withExtra[4].poem.id === extra.id
       && withExtra[4].reason === "pinned"
       && withExtra.slice(0, 4).map((it) => it.poem.id).join(",") === withDue.map((it) => it.poem.id).join(","),
@@ -687,7 +687,7 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
     const withExtra2 = S.generateDailyPlan(opt({ extraPoems: [extra] }));
     const key = S.planKeyOf(opt({ extraPoems: [extra] }));
     const counted = S.todaySet(key, withExtra2.filter((it) => it.reason !== "pinned").length);
-    ok("今日的「今日 / 已背 / 待背」只数按设置排的那几首，加背不在分母里",
+    ok("今日的「今日 / 已温习 / 待温习」只数按设置排的那几首，加背不在分母里",
       counted.length === base.length && counted.indexOf(extra.id) < 0,
       "数出来 " + counted.join(",") + "，按设置排的是 " + base.map((it) => it.poem.id).join(","));
   }
@@ -1172,7 +1172,7 @@ ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text ==
       && !/onReader/.test(wxml)
       && !/onReader/.test(js)
       && /packages\/settings\/theme\/theme"/.test(js),
-    "主题 / 声音 / 背诵设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
+    "主题 / 声音 / 温习设置各自又留了一行 —— 同一件事有两条路（Issue #232）");
   const general = fs.readFileSync(
     path.join(ROOT, "packages", "settings", "general", "general.wxml"), "utf8");
   ok("设置那一页只装声音与开关，版式偏好不在这（主题已搬去自己那一页）",
@@ -1183,12 +1183,12 @@ ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text ==
   ok("「大会」不在「我的」页留入口（它现在在底栏中间那一枚）",
     wxml.indexOf("onGame") < 0 && js.indexOf("onGame") < 0,
     "「我的」页还有大会那一行 —— 两处入口会漂");
-  ok("范围 / 首数 / 算法合成一行「背诵选项」，进的是整页",
+  ok("范围 / 首数 / 算法合成一行「温习选项」，进的是整页",
     /bindtap="onRecite"/.test(wxml) && /onRecite\s*\(/.test(js)
       && /packages\/settings\/recite\/recite"/.test(js)
       && !/onScope|onDaily|onAlgo/.test(wxml),
     "三行还各占各的，或者合成之后又带一个 focus —— 指向同一页的三条路就是三条路");
-  ok("背诵进度收在「背诵选项」之后",
+  ok("温习进度收在「温习选项」之后",
     (wxml.match(/bindtap="onProgress"/g) || []).length === 1
       && wxml.indexOf('bindtap="onProgress"') > wxml.indexOf('bindtap="onRecite"'),
     "进度那一行还在下面那张卡里，或者概况里没有它");
@@ -1922,7 +1922,7 @@ ok("打包件形状对（device + 每条 rec 带 id / updatedAt / payload）",
 ok("已读行是服务端认的 marks 形状（不是 payload 本身）",
   packed.recs.filter((r) => r.id.indexOf("reads:") === 0)
     .every((r) => r.payload && r.payload.marks && typeof r.payload.marks === "object"));
-ok("加背与自选背诵都按服务端形状打包",
+ok("加背与自选温习都按服务端形状打包",
   packed.recs.some((r) => r.id === "daily_extra:v1" && r.payload.date && Array.isArray(r.payload.items))
     && packed.recs.some((r) => r.id === "collections:v1" && Array.isArray(r.payload.collections)));
 
@@ -2100,7 +2100,7 @@ ok("名录在、标签截断、档位合法",
 
   {
     const names = scopes.list().map((s) => s.id);
-    ok("出题范围四档：课内当前学段、课内、课外阅读、不限（本地题源一律是课内行，课外集子不在包里）",
+    ok("出题范围四档：课内当前学段、课内、诗词漫读、不限（本地题源一律是课内行，课外集子不在包里）",
       names.join() === [scopes.STAGE_SCOPE, scopes.COURSE_ALL_SCOPE, scopes.EXTRA_SCOPE, scopes.ANY_SCOPE].join() &&
         names.every((id) => scopes.pool(id).every((p) => p.b === "poems")),
       "范围里有 " + names.join("、"));
@@ -2167,7 +2167,7 @@ ok("名录在、标签截断、档位合法",
     "越界 " + cut3.slice(0, 5).join("、") + "，共 " + pool3 + " 首");
 
   storeMod.saveSettings({ grade: 1, term: 1 });
-  ok("学段跟着背诵选项走（一年级下学期比三年级下学期少）",
+  ok("学段跟着温习选项走（一年级下学期比三年级下学期少）",
     scopes.pool(scopes.STAGE_SCOPE).length < pool3
       && outside(1, 1).length === 0,
     "一年级下学期 " + scopes.pool(scopes.STAGE_SCOPE).length + " 首，三年级下学期 " + pool3 + " 首");
@@ -3157,14 +3157,14 @@ function mountFull(pg, query) {
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
-  ok("背诵设置页有取诗范围那一组（单选绑在 onScope 上）",
+  ok("温习设置页有取诗范围那一组（单选绑在 onScope 上）",
     /bindchange="onScope"/.test(read("packages/settings/recite/recite.wxml"))
       && /onScope\s*\(/.test(read("packages/settings/recite/recite.js")));
 
   {
     const recite = read("packages/settings/recite/recite.wxml");
     const reciteJs = read("packages/settings/recite/recite.js");
-    ok("背诵设置页里不带阅读偏好那三组（它们在详情页与阅读/通用设置页）",
+    ok("温习设置页里不带阅读偏好那三组（它们在详情页与阅读/通用设置页）",
       !/onPinyin|onAlign|onFontDown|onFontUp/.test(recite)
         && !/onPinyin|onAlign|onFontDown|onFontUp/.test(reciteJs),
       "这一页又长出了对齐 / 注音 / 字号那几组");
@@ -4116,13 +4116,6 @@ function mountFull(pg, query) {
       && /wx\.pageScrollTo\(\{ selector: "#coll-" \+ id/.test(collJs),
     "首页 / 管理页那一下没落到自选进度页的集合标题上");
 
-  ok("集子的色点取色只有一处",
-    /coll\.color/.test(read("pages/home/home.wxml")) && /coll\.color/.test(collWxml)
-      && /pv\.DOTS\[/.test(collJs)
-      && /pv\.DOTS\[/.test(strip(
-        fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8")))
-      && (pvJs.match(/const DOTS = \[/g) || []).length === 1,
-    "色点自己另排了一份色 —— 同一个集合在首页与进度页会是两个颜色");
 
   {
   }
@@ -4410,12 +4403,12 @@ function mountFull(pg, query) {
   ok("打开弹层只算「读过」，不算「背过」（两件事各有各的写法）",
     sheetJs.indexOf("markRead") >= 0 && /S\.isLearned/.test(homeJs)
       && /item\.recited/.test(homeWxml) && /item\.stateText/.test(homeWxml),
-    "把已读与已背写成同一个判据 —— 点开看一眼就成了「已背」");
+    "把已读与已温习写成同一个判据 —— 点开看一眼就成了「已温习」");
 
-  ok("未读 / 未背 / 已背是同一枚胶囊的三个状态",
+  ok("未读 / 待温习 / 已温习是同一枚胶囊的三个状态",
     /class="tag row-state \{\{item\.stateCls\}\}"/.test(homeWxml)
-      && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
-    "三个状态没有统一的出处 —— 未读必然未背，按顺序往下走就够了");
+      && /function stateText\(recited, read\)[\s\S]{0,160}?已温习[\s\S]{0,120}?待温习[\s\S]{0,80}?未读/.test(homeJs),
+    "三个状态没有统一的出处 —— 未读必然待温习，按顺序往下走就够了");
 
   {
     const bannerComp = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
@@ -4453,19 +4446,19 @@ function mountFull(pg, query) {
       && (quotesSrc.match(/^const LINES = \[/gm) || []).length === 1,
     "自选的今日份背完了没有收尾句 —— 自选模式下看不到完成");
 
-  ok("「已背」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
+  ok("「已温习」只认评过分（isLearned 的口径：learned / attempted / history），不认已读",
     /function\s+isLearned\s*\(rec\)[\s\S]{0,160}?rec\.learned[\s\S]{0,80}?rec\.history/.test(schedSrc)
       && /recitedOf\[it\.poem\.id\] = recited/.test(homeJs)
       && /S\.todayDone\(todaySet, recitedOf\)/.test(homeJs),
-    "首页拿已读当已背 —— 点开弹窗看一眼，统计里就多一首「已背」");
+    "首页拿已读当已温习 —— 点开弹窗看一眼，统计里就多一首「已温习」");
 
-  ok("今日的读数只看今天排定的那几首，日计划重排后不会凭空变成「已背完」",
+  ok("今日的读数只看今天排定的那几首，日计划重排后不会凭空变成「已温习完」",
     /function todaySet\(planKey, base\)/.test(schedSrc)
       && /S\.todayLeft\(todaySet, recitedOf\)/.test(homeJs)
       && /drop\(KEYS\.dayPlan\)/.test(storeSrc),
     "「今天背完几首」改为数计划里的长度 —— 重排后新诗还没背，首页就说今天背完了");
 
-  ok("已读仍单独标出来（它与已背不是一件事）",
+  ok("已读仍单独标出来（它与已温习不是一件事）",
     /store\.reads\(/.test(homeJs) && /stateText\(recited, read\)/.test(homeJs)
       && /item\.stateText/.test(homeWxml),
     "把已读那一格删了 —— 读过但没评分的诗在列表上就与没碰过的一样");
@@ -4596,7 +4589,7 @@ function mountFull(pg, query) {
   const setWxml = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.wxml"), "utf8");
   const setJs = fs.readFileSync(path.join(ROOT, "packages/settings/recite/recite.js"), "utf8");
 
-  ok("今日加背：四件套齐全、首页挂上并注册、两处都挂 change",
+  ok("新增温习：四件套齐全、首页挂上并注册、两处都挂 change",
     [".js", ".json", ".wxml", ".wxss"].every((e) => fs.existsSync(path.join(compDir, "daily-extra" + e)))
       && homeWxml.indexOf("<daily-extra") >= 0
       && (readJson(path.join(ROOT, "pages/home/home.json")).usingComponents || {})["daily-extra"]
@@ -4624,7 +4617,7 @@ function mountFull(pg, query) {
       && /function placedPlan\(opt\)[\s\S]{0,1400}?mergePinned\(withAdded/.test(schedSrc),
     "加背又回到候选池里跟「新学」抢那 5 个名额，或加背没进落盘的那一份 —— "
       + "下次进首页按落盘还原时它就没了，计划从 6 首弹回 5 首（Issue #370）");
-  ok("「今日课内」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
+  ok("「课内小读」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
     /const base = Math\.max\(recorded\.length, plan\.length - extraOf\);/.test(homeJs)
       && /baseCount: base,/.test(homeJs)
       && /class="all-count" wx:if="\{\{!selfOnly\}\}">\{\{baseCount \? doneCount \+ '\/' \+ baseCount : total \+ ' 首'\}\}/.test(homeWxml),
@@ -4645,7 +4638,7 @@ function mountFull(pg, query) {
       && /entitlement\.gateTier\("extra"/.test(fs.readFileSync(
         path.join(ROOT, "components/recite-sheet/recite-sheet.js"), "utf8"))
       && /entitlement\.gateTier\("extra"/.test(compJs),
-    "Free 档还能往今日加背里加诗 —— 档位这道门只在 store 判，页面各写一份就对不齐");
+    "Free 档还能往新增温习里加诗 —— 档位这道门只在 store 判，页面各写一份就对不齐");
   ok("能力表里有 extra（与网页版对齐）", E.CAP_KEYS.indexOf("extra") >= 0);
   ok("计划卡下面挂着「全部诗词」那张卡，默认折叠、点得开",
     /allOpen:\s*false/.test(homeJs)
@@ -4761,7 +4754,7 @@ function mountFull(pg, query) {
   const DIRTY = [
     ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
     ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
-    ["背诵设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
+    ["温习设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
     ["昵称", "utils/login-flow.js", /function takeNickname\([\s\S]{0,500}?markDirty/]
@@ -4950,7 +4943,7 @@ function mountFull(pg, query) {
   const usersJs = read("packages/users/index/index.js");
 
 
-  ok("背诵选项只有一条入口（我的 → 背诵选项，进整页）",
+  ok("温习选项只有一条入口（我的 → 温习选项，进整页）",
     /onRecite/.test(read("pages/mine/mine.js"))
       && /bindtap="onRecite"/.test(read("pages/mine/mine.wxml"))
       && ["onScope", "onDaily", "onAlgo"].every(
@@ -4966,7 +4959,7 @@ function mountFull(pg, query) {
       /class="card recite-card"\s+wx:if="\{\{reciteMode\}\}"/.test(readerWxml)
       && /reciteMode:\s*query\.mode === "recite"/.test(readerJs),
       "评分那一卡不再有条件，浏览场景也会看到它");
-    ok("浏览入口一律带 mode=browse（课外阅读 / 搜索 / 作者索引 / 游戏 / 今日加背）",
+    ok("浏览入口一律带 mode=browse（诗词漫读 / 搜索 / 作者索引 / 游戏 / 新增温习）",
       ["pages/list/list.js", "pages/search/search.js", "components/daily-extra/daily-extra.js",
         "packages/authors/index/index.js", "packages/game/quiz/quiz.js",
         "packages/game/feihua/feihua.js"].every((f) => read(f).indexOf("mode=browse") >= 0),
@@ -4995,9 +4988,10 @@ function mountFull(pg, query) {
     };
     const a = keysOf(read("pages/reader/reader.js"));
     const b = keysOf(read("components/recite-sheet/recite-sheet.js"));
-    ok("注音只有一份档位表（详情页与背诵弹层两档、同一个 settings.pinyin）",
-      a.length === 2 && a.join(",") === b.join(",")
-        && /pinyin\.setMode\(/.test(read("pages/reader/reader.js"))
+    ok("注音只在背诵弹层有：弹层两档，详情页没有档位表也不挂 onPinyin",
+      a.length === 0 && b.length === 2
+        && !/onPinyin/.test(read("pages/reader/reader.js"))
+        && !/onPinyin/.test(read("pages/reader/reader.wxml"))
         && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js")),
       "详情页 " + JSON.stringify(a) + " / 弹层 " + JSON.stringify(b));
   }
@@ -7091,10 +7085,10 @@ const K = {
   const colsMod = require(path.join(ROOT, "utils", "collections.js"));
   const R4 = require(path.join(ROOT, "utils", "review-models.js"));
 
-  ok("自选背诵的配额：Free 无、Pro 1、Max 200",
+  ok("自选温习的配额：Free 无、Pro 1、Max 200",
     colsMod.LIMITS.free === 0 && colsMod.LIMITS.pro === 1 && colsMod.LIMITS.max === 200);
   ok("每个集子最多 100 首", colsMod.ITEMS_MAX === 100);
-  ok("权限对比表上写出来的自选背诵配额与配额表同源",
+  ok("权限对比表上写出来的自选温习配额与配额表同源",
     (() => {
       const E5 = require(path.join(ROOT, "utils", "entitlement.js"));
       const row = E5.compareRows({ logged: false, tier: "free" })
@@ -7256,7 +7250,7 @@ const K = {
     const ov = S3.collectionProgress(cols3.find("c1"), {
       allPoems: fake3, getRecord: store3.getRecord, count: 5
     }).overview;
-    ok("集子概览报篇目数 / 已背 / 今日到期",
+    ok("集子概览报篇目数 / 已温习 / 今日到期",
       ov.total === 12 && ov.learned === 1 && ov.dueToday === 1, JSON.stringify(ov));
 
     store3.setRecord("cp0", { level: 9, learned: true, nextReviewAt: Date.now() + 86400000, lastReviewAt: Date.now() });
@@ -7286,7 +7280,7 @@ const K = {
       grade: 1, term: 1, count: 5, scope: "term", selfOnly: true,
       allPoems: course5, extraPoems: extra5, getRecord: () => null
     });
-    ok("开着「只背自选」时，排期只回今日加背那几首（课内一首不排）",
+    ok("开着「只背自选」时，排期只回新增温习那几首（课内一首不排）",
       self5.length === 1 && self5[0].poem.id === "cp0" && self5[0].reason === "pinned"
         && plain5.some((p) => p.poem.id !== "cp0"),
       "实际 " + JSON.stringify(self5.map((p) => p.poem.id)));

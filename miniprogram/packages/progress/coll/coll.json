@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "自选集合背诵进度",
+  "navigationBarTitleText": "自选集合温习进度",
   "usingComponents": {
     "progress-view": "/components/progress-view/progress-view",
     "recite-sheet": "/components/recite-sheet/recite-sheet",

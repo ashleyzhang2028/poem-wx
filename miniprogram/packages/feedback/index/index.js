@@ -1,6 +1,7 @@
 const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const dots = require("../../../utils/dots");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
@@ -47,6 +48,7 @@ Page({
 
   load() {
     fb.mine().then((res) => {
+      dots.see("reply", fb.latestReply(res.threads));
       this.setData({ threads: res.threads, offline: res.offline });
     });
   },

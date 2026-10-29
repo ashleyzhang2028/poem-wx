@@ -161,7 +161,7 @@ Page({
     quiz.buildAsync({ scope: this.data.scope, count: QUESTION_COUNT, forms: this.data.pickedForms }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "课外阅读没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "诗词漫读没取到，已用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

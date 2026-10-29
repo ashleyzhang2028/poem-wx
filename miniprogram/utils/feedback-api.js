@@ -1,4 +1,5 @@
 const remote = require("./remote");
+const dots = require("./dots");
 
 const KINDS = [
   { key: "bug", name: "Bug 反馈" },
@@ -86,6 +87,16 @@ function decorate(thread) {
   });
 }
 
+function replyAt(thread) {
+  const admins = (thread.comments || []).filter((c) => c.role === "admin");
+  const at = admins.reduce((top, c) => Math.max(top, Number(c.createdAt) || 0), 0);
+  return thread.resolution ? Math.max(at, Number(thread.updatedAt) || 0) : at;
+}
+
+function latestReply(threads) {
+  return dots.newest(threads, replyAt);
+}
+
 function validate(draft) {
   const title = String((draft && draft.title) || "").trim();
   const content = String((draft && draft.content) || "").trim();
@@ -145,5 +156,6 @@ module.exports = {
   validate,
   submit,
   mine,
-  comment
+  comment,
+  latestReply
 };

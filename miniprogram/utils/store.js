@@ -61,7 +61,8 @@ const DEFAULTS = {
 
 const DEVICE_DEFAULTS = {
 
-  sfx: true
+  sfx: true,
+  lineGap: 0
 };
 
 const LOCAL_ONLY = {

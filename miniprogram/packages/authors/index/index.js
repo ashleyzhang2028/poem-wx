@@ -209,7 +209,7 @@ Page({
       });
     });
     const filling = directory.complete() ? "" : "，名册还在补全";
-    const note = rows.length ? "课外阅读里还有 " + rows.length + " 位（带「课外阅读」标记的行），点一位看他的作品" + filling : "";
+    const note = rows.length ? "诗词漫读里还有 " + rows.length + " 位（带「诗词漫读」标记的行），点一位看他的作品" + filling : "";
     this.setData({ suggests: local.concat(rows), remoteNote: note });
   },
 
@@ -319,8 +319,8 @@ Page({
     const list = rows.filter((p) => filter !== "未读" || !readIds[p.id]);
 
     let moreNote = "";
-    if (rem.failed) moreNote = "课外阅读没取到，点一下重试";
-    else if (rem.more) moreNote = "课外阅读共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
+    if (rem.failed) moreNote = "诗词漫读没取到，点一下重试";
+    else if (rem.more) moreNote = "诗词漫读共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
 
     this.setData({
       works: list.map((p) => ({

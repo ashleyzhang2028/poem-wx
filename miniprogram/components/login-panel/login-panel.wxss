@@ -100,7 +100,7 @@
 
 .id-chips {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--sp-2);
 }
 
@@ -258,19 +258,22 @@
 
 .gear {
   flex: none;
+  align-self: stretch;
+  aspect-ratio: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: auto;
-  padding: var(--pad-opt-y) var(--sp-1);
-  margin-left: var(--sp-1);
   border-radius: var(--radius-pill);
 }
 
 .gear-icon {
-  width: var(--fs-body);
-  height: var(--fs-body);
-  opacity: .55;
+  width: 100%;
+  height: 100%;
+  background: var(--line-strong);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .gear-hover {
@@ -284,5 +287,5 @@
 
 .tier-pro .gear-icon,
 .tier-max .gear-icon {
-  opacity: 1;
+  background: rgba(255, 255, 255, .5);
 }

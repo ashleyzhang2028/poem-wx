@@ -60,7 +60,7 @@ function rowOf(id) {
   const key = String(id);
   const row = /^\d+$/.test(key) ? load().rows[key] : null;
   if (!row) return null;
-  return { id: key, sid: key, t: row[0], a: row[1], d: row[2], n: "课外阅读", b: "", g: "", s: "" };
+  return { id: key, sid: key, t: row[0], a: row[1], d: row[2], n: "诗词漫读", b: "", g: "", s: "" };
 }
 
 require("./corpus").useIndexFallback(rowOf);
