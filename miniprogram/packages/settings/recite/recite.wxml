@@ -1,7 +1,7 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
   <view class="card">
-    <view class="card-title">新增温习</view>
+    <view class="card-title">今日加背</view>
 
     <view wx:if="{{!daily.length}}" class="hint">暂无加背</view>
 
@@ -31,7 +31,7 @@
 
   <view class="card">
     <view class="card-head">
-      <text class="card-title">自选温习</text>
+      <text class="card-title">自选背诵</text>
       <tier-tag wx:if="{{selfOnlyLocked}}" tier="{{selfOnlyTier}}" />
     </view>
 
@@ -81,7 +81,7 @@
 
   <view class="card">
 
-    <view class="card-title">温习范围</view>
+    <view class="card-title">背诵范围</view>
 
     <radio-group class="opt-group inline cols-2" bindchange="onScope">
       <label class="opt-row {{scope === item.key ? 'active' : ''}}" wx:for="{{scopes}}" wx:key="key">

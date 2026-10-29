@@ -247,8 +247,9 @@ function makeWx(port, mem) {
     !store2.getRecord("poem_x"), JSON.stringify(store2.getRecord("poem_x")));
 
   {
-    const saved = { syncFree: config.rate.syncFree, syncPro: config.rate.syncPro, syncMax: config.rate.syncMax };
-    Object.keys(saved).forEach((k) => { config.rate[k] = [[saved[k][0][0], 1]]; });
+    const limit = config.rate.device[0];
+    const saved = config.rate.device;
+    config.rate.device = [[limit[0], 1]];
     await remote.pull().catch(() => {});
 
     const called = [];
@@ -273,7 +274,7 @@ function makeWx(port, mem) {
       JSON.stringify(called.slice(calledBefore)) + " 打了 " + (marked - markBefore) + " 次");
     ok("被限流之后界面不再显示已同步", st.pendingStatus !== "已同步" && st.failed, JSON.stringify(st));
     ok("被限流之后给出重试倒计时（按服务端给的窗口等，再叠自身的退避）",
-      st.later >= saved.syncMax[0][0] / 1000 && st.pendingText.indexOf("后重试") > 0, JSON.stringify(st));
+      st.later >= limit[0] / 1000 && st.pendingText.indexOf("后重试") > 0, JSON.stringify(st));
 
     const beforeRetry = hits.filter((u) => String(u).indexOf("/api/sync/pull") >= 0).length;
     syncModule.resetThrottle();
@@ -287,7 +288,7 @@ function makeWx(port, mem) {
 
     syncModule.now = realNow;
     syncModule.flush = realFlush;
-    Object.assign(config.rate, saved);
+    config.rate.device = saved;
     hits.length = 0;
   }
 

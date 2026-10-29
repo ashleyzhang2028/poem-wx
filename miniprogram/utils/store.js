@@ -42,7 +42,6 @@ const DEFAULTS = {
 
   theme: "ink",
   font: "zhuque",
-  fontGlobal: false,
   pinyin: "off",
   banner: "",
   toneColor: "",
@@ -61,8 +60,7 @@ const DEFAULTS = {
 
 const DEVICE_DEFAULTS = {
 
-  sfx: true,
-  lineGap: 0
+  sfx: true
 };
 
 const LOCAL_ONLY = {

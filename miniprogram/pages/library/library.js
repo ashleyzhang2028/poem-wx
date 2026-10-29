@@ -3,7 +3,6 @@ const gate = require("../../utils/gate");
 const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const font = require("../../utils/font");
 
 const GROUPS = [
   {
@@ -14,7 +13,7 @@ const GROUPS = [
   },
   {
     key: "classics",
-    name: "诗词漫读",
+    name: "课外阅读",
     note: "诗经、楚辞、唐诗、宋词、古文与四大名著",
     catalog: true
   }
@@ -30,14 +29,8 @@ Page({
     reason: ""
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 1) });
 
     if (!gate.logged() || !E.can("library")) {
@@ -83,6 +76,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "课内阅读与诗词漫读", path: "/pages/library/library" };
+    return { title: "课内阅读与课外阅读", path: "/pages/library/library" };
   }
 });

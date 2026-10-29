@@ -27,20 +27,20 @@ function courseFreeCell(tier) {
 }
 
 const CAPS = [
-  { key: "daily", name: "每日温习", desc: "按计划温习今天这几首", tier: "free" },
-  { key: "library", name: "课内与诗词漫读", desc: "课内 251 首按册翻读，课外的十部集子随点随读", tier: "free" },
+  { key: "daily", name: "每日背诵", desc: "按计划背今天这几首", tier: "free" },
+  { key: "library", name: "课内与课外阅读", desc: "课内 251 首按册翻读，课外的十部集子随点随读", tier: "free" },
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
   { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
   { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处", tier: "free" },
-  { key: "extra", name: "新增温习", desc: "今天想多背几首，自己加", tier: "pro" },
+  { key: "extra", name: "今日加背", desc: "今天想多背几首，自己加", tier: "pro" },
   { key: "leitner", name: "莱特纳盒 Leitner Box", desc: "分级盒子复习", tier: "pro" },
 
   { key: "sync", name: "同步进度", desc: "进度与设置跟着微信账号走", tier: "free" },
   { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
-  { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
-  { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
+  { key: "collections", name: "自选背诵", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
+  { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与今日加背", cell: courseFreeCell, tier: "pro" },
   { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
   { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
   { key: "ownbanner", name: "自选主题 banner", desc: "换成自己的一张图 · 只存本机", tier: "max" },
@@ -155,17 +155,17 @@ function compareCols(snap) {
 }
 
 const VIEW_NAME = {
-  daily: "首页·课内阅读",
-  extra: "首页·新增温习",
-  collections: "首页·自选温习",
-  progress: "首页·温习进度",
+  daily: "首页·今日课内",
+  extra: "首页·今日加背",
+  collections: "首页·自选背诵",
+  progress: "首页·背诵进度",
   seasonal: "首页·季节限定隐藏",
   pinyin: "我的·正文排版",
   ebbinghaus: "复习算法·艾宾浩斯",
   leitner: "复习算法·莱特纳盒",
   sm2: "复习算法·SM-2",
   fsrs: "复习算法·FSRS",
-  library: "课内与诗词漫读",
+  library: "课内与课外阅读",
   search: "全站搜索",
   quiz: "大会·题库",
   feihualing: "大会·飞花令",

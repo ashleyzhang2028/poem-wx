@@ -41,7 +41,6 @@
 }
 
 .daily-box.on {
-  color: var(--on-ink);
   background: var(--strong);
   border-color: var(--strong);
 }

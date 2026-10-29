@@ -93,7 +93,7 @@ Component({
       if (!id) return { ok: false, msg: "" };
       const r = store.toggleDailyExtra(id);
       if (!r.ok) return { ok: false, on: false, code: r.code, msg: this.msgOf(r.code) };
-      return { ok: true, on: r.on, msg: r.on ? "已加入新增温习" : "已移出新增温习" };
+      return { ok: true, on: r.on, msg: r.on ? "已加入今日加背" : "已移出今日加背" };
     },
 
     msgOf(code) {

@@ -1,8 +1,6 @@
 const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
-const dots = require("../../../utils/dots");
-const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
 
@@ -28,13 +26,8 @@ Page({
     replyMax: fb.COMMENT_MAX
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     if (!this.enter()) return;
     this.setData({ barBelow: tabbar.below(this), logged: true });
     this.load();
@@ -48,7 +41,6 @@ Page({
 
   load() {
     fb.mine().then((res) => {
-      dots.see("reply", fb.latestReply(res.threads));
       this.setData({ threads: res.threads, offline: res.offline });
     });
   },

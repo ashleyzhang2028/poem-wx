@@ -34,10 +34,7 @@ const NAMES = [
   ["trend", "CilChartLine.svg"],
   ["tomorrow", "CilCalendarTomorrow.svg"],
   ["month", "CilCalendarMonth.svg"],
-  ["crest", "TangBaoxiang.svg"],
-  ["settings", "CilSettings.svg"],
-  ["lineUp", "CilLineUp.svg"],
-  ["lineDown", "CilLineDown.svg"]
+  ["crest", "TangBaoxiang.svg"]
 ];
 
 function flatten(svg) {
@@ -45,7 +42,6 @@ function flatten(svg) {
     .replace(HEX, "currentColor")
     .replace(/<\?xml[^>]*\?>/g, "")
     .replace(/>\s+</g, "><")
-    .replace(/<svg(?![^>]*\swidth=)/, '<svg width="1em" height="1em"')
     .trim();
 }
 

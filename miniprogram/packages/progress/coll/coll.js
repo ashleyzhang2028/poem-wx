@@ -5,7 +5,6 @@ const store = require("../../../utils/store");
 const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
-const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const defer = require("../../../utils/defer");
 const pv = require("../../../components/progress-view/progress-view");
@@ -36,14 +35,9 @@ Page({
     this.focusSelf();
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-  },
-
   onShow() {
     this.sheetIds = this.sheetIds || [];
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
   },
@@ -52,11 +46,12 @@ Page({
     const all = corpus.course();
     const defers = defer.lists();
     const list = entitlement.can("collections") ? cols.usable() : [];
-    const cards = list.map((c) => {
+    const cards = list.map((c, i) => {
       const view = pv.collectionView(c, all, store.getRecord);
       return {
         id: c.id,
         name: c.name,
+        color: pv.DOTS[i % pv.DOTS.length],
         labels: labelOf(c.name),
         ringText: "已掌握 " + view.mastered + " / 已学 " + view.learned + " · 共 " + view.total + " 首",
         sub: view.total + " 首",

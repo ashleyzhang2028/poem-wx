@@ -15,9 +15,10 @@ const BUCKETS = [
   { label: "80-100% 牢固", cls: "b4" }
 ];
 
+const DOTS = ["#8c2f2d", "#2e7d5b", "#2f6f9f", "#b26a00", "#6b5b95", "#3d7d7a"];
 
 const LABELS = {
-  title: "温习进度",
+  title: "背诵进度",
   stats: ["已学", "已掌握", "今日到期", "平均掌握"],
   calendar: "到期日历",
   due: "全部到期篇目",
@@ -125,7 +126,7 @@ function viewOf(overview, due, empty) {
 
 function courseView() {
   const all = corpus.course();
-  return viewOf(S.overview(all, SPAN), S.dueList(all, SPAN), "还没有温习记录");
+  return viewOf(S.overview(all, SPAN), S.dueList(all, SPAN), "还没有背诵记录");
 }
 
 function collectionView(c, allPoems, getRecord) {
@@ -231,6 +232,7 @@ module.exports = {
   SPAN,
   FLOOR,
   BUCKETS,
+  DOTS,
   LABELS,
   rowsOf,
   bucketsOf,

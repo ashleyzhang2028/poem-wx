@@ -10,14 +10,14 @@ const ANY_SCOPE = "any";
 const SCOPES = [
   { id: STAGE_SCOPE, name: "课内·当前学段" },
   { id: COURSE_ALL_SCOPE, name: "课内" },
-  { id: EXTRA_SCOPE, name: "诗词漫读" },
+  { id: EXTRA_SCOPE, name: "课外阅读" },
   { id: ANY_SCOPE, name: "不限" }
 ];
 
 const LABELS = {
   [COURSE_ALL_SCOPE]: "小学·初中·高中",
-  [EXTRA_SCOPE]: "课内 + 诗词漫读十部集子",
-  [ANY_SCOPE]: "诗词漫读随机，不限范围"
+  [EXTRA_SCOPE]: "课内 + 课外十部集子",
+  [ANY_SCOPE]: "课外阅读随机，不限范围"
 };
 
 function list() {

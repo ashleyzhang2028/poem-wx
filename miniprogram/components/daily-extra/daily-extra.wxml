@@ -7,7 +7,7 @@
       <view class="round-btn de-btn {{item.on ? 'on' : ''}}"
             hover-class="round-btn-hover" hover-stay-time="60"
             data-id="{{item.id}}" catchtap="onToggle"
-            aria-label="{{item.on ? '移出今日诵读' : '加入今日诵读'}}">
+            aria-label="{{item.on ? '移出今日背诵' : '加入今日背诵'}}">
         <view class="glyph" style="mask-image:url('{{icons[item.on ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.on ? 'added' : 'add']}}');"></view>
       </view>
       <view class="row-main">

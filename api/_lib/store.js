@@ -152,19 +152,19 @@ function memoryStore() {
         var r = db.progress[k];
         if (r.uid !== uid) return;
         if (String(r.child_id || "") !== cid) return;
-        if (since && r.synced_at <= since) return;
+        if (since && r.updated_at <= since) return;
         out.push({ poem_id: r.poem_id, payload: r.payload, updated_at: r.updated_at, deleted: r.deleted });
       });
       return out;
     },
-    putProgress: function (uid, child, recs, syncedAt) {
+    putProgress: function (uid, child, recs) {
       var cid = child == null ? "" : String(child);
       recs.forEach(function (r) {
         var key = uid + "|" + cid + "|" + r.poem_id;
         var cur = db.progress[key];
 
         if (cur && cur.updated_at > r.updated_at) return;
-        db.progress[key] = { uid: uid, child_id: cid, poem_id: r.poem_id, payload: r.payload, updated_at: r.updated_at, deleted: r.deleted ? 1 : 0, synced_at: Number(syncedAt) || r.updated_at };
+        db.progress[key] = { uid: uid, child_id: cid, poem_id: r.poem_id, payload: r.payload, updated_at: r.updated_at, deleted: r.deleted ? 1 : 0 };
       });
       return true;
     },

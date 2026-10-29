@@ -10,7 +10,6 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
-const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
@@ -22,8 +21,17 @@ const RESULTS = [
   { key: "good", label: "记住", cls: "good" }
 ];
 
+const ALIGNS = [
+  { key: "left", label: "左对齐", icon: icons.left },
+  { key: "center", label: "居中", icon: icons.center }
+];
+
+const PINYIN_MODES = [
+  { key: "off", label: "不注音", icon: icons.off },
+  { key: "all", label: "全文", icon: icons.all }
+];
+
 const PAGE_ICONS = {
-  left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, playlist: icons.playlist
 };
 
@@ -44,7 +52,6 @@ Page({
     name: "",
     barBelow: true,
     id: "",
-    sid: "",
 
     loadingText: false,
     loadFailed: false,
@@ -68,15 +75,14 @@ Page({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
+    aligns: ALIGNS,
     align: "center",
     fontDown: false,
     fontUp: true,
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    lineGap: 0,
-    lineDown: true,
-    lineUp: true,
+    pinyinModes: PINYIN_MODES,
     pinyinMode: "off",
     pinyinOn: false,
     stage: "新学",
@@ -106,21 +112,14 @@ Page({
   onLoad(query) {
     this.setData({
       id: query.id || "",
-      sid: query.sid ? decodeURIComponent(query.sid) : "",
       from: query.from || "",
       remote: query.src === "1",
       reciteMode: query.mode === "recite"
     });
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!this.data.reciteMode) {
       this.setData({ hint: "" });
@@ -174,7 +173,7 @@ Page({
       return;
     }
     this.setData({ dailyOn: r.on });
-    wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
+    wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
     sync.markDirty();
   },
 
@@ -191,10 +190,9 @@ Page({
   loadEntry() {
     const id = this.data.id;
     const meta = this.findMeta(id);
-    const onlySid = this.data.sid && !meta ? this.data.sid : "";
 
     const remoteId = /^\d+$/.test(String(id));
-    if (!meta && !this.data.remote && !remoteId && !onlySid) {
+    if (!meta && !this.data.remote && !remoteId) {
       this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
@@ -208,7 +206,6 @@ Page({
     }
 
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
-    if (onlySid) return this.loadRemote(onlySid, null, "这一篇的正文没取到，点一下重试");
 
     if (meta && meta.b) {
       this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
@@ -233,7 +230,7 @@ Page({
           this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
           return;
         }
-        this.setData({ hasTranslation: false, remote: true, sid: String(sid) });
+        this.setData({ hasTranslation: false, remote: true });
         this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
       },
       (err) => {
@@ -277,11 +274,9 @@ Page({
       translation: entry.tr || "",
       translationSource: entry.src || "",
       hasTranslation: !!entry.tr,
-      align: settings.align === "left" ? "left" : "center",
+      align: settings.align,
       fontSize: size,
       ...scale.flags(size),
-      lineGap: scale.clampGap(settings.lineGap),
-      ...scale.gapFlags(settings.lineGap),
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
       mastery: R.mastery(rec)
     });
@@ -330,7 +325,7 @@ Page({
     const pr = pinyin.readiness();
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
-    const mode = "off";
+    const mode = usable ? store.settings().pinyin : "off";
     const tableBlocks = usable && this.data.tableView;
 
     this.setData({
@@ -347,31 +342,28 @@ Page({
     return corpus.indexById(id);
   },
 
-  onAlignToggle() {
-    const align = this.data.align === "center" ? "left" : "center";
-    this.setData({ align });
-    store.saveSettings({ align });
-
-    sync.markDirty();
-  },
-
   onToggleTranslation() {
     this.setData({ showTranslation: !this.data.showTranslation });
   },
 
-  onLineDown() {
-    this.stepGap(-1);
+  onPinyin(e) {
+    const mode = e.detail.value;
+    if (!pinyin.setMode(mode)) {
+      wx.showToast({ title: "读音表尚未生成", icon: "none" });
+      return;
+    }
+    this.setData({ pinyinMode: mode });
+    this.applyReading();
+
+    sync.markDirty();
   },
 
-  onLineUp() {
-    this.stepGap(1);
-  },
+  onAlign(e) {
+    const align = e.detail.value;
+    this.setData({ align });
+    store.saveSettings({ align });
 
-  stepGap(delta) {
-    const lineGap = scale.clampGap(this.data.lineGap + delta);
-    if (lineGap === this.data.lineGap) return;
-    this.setData(Object.assign({ lineGap }, scale.gapFlags(lineGap)));
-    store.saveSettings({ lineGap });
+    sync.markDirty();
   },
 
   onFontDown() {
@@ -451,19 +443,11 @@ Page({
   },
 
   readerUrl(id, creator) {
-    const sid = this.sidOf(id);
     let url = "/pages/reader/reader?id=" + encodeURIComponent(id);
     if (this.data.reciteMode) url += "&mode=recite";
-    if (sid) url += "&sid=" + encodeURIComponent(sid);
     if (this.data.remote) url += "&src=1";
     if (creator) url += "&from=" + encodeURIComponent(creator);
     return url;
-  },
-
-  sidOf(id) {
-    if (id === this.data.id && this.data.sid) return this.data.sid;
-    const meta = corpus.indexById(id);
-    return (meta && meta.sid) || "";
   },
 
   refreshPager() {
@@ -501,9 +485,7 @@ Page({
   onShareAppMessage() {
     return {
       title: this.data.title + " · " + this.data.author,
-      path: "/pages/reader/reader?id=" + this.data.id +
-        (this.data.sid ? "&sid=" + encodeURIComponent(this.data.sid) : "") +
-        (this.data.remote ? "&src=1" : "")
+      path: "/pages/reader/reader?id=" + this.data.id + (this.data.remote ? "&src=1" : "")
     };
   }
 });

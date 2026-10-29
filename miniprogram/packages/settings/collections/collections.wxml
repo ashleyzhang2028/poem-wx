@@ -1,12 +1,12 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选温习" note="登录后才能建集合" mark="选" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="自选背诵" note="登录后才能建集合" mark="选" bind:login="onLogin" />
 
   <block wx:else>
 
   <view class="card">
     <view class="card-head">
-      <text class="card-title">自选温习</text>
+      <text class="card-title">自选背诵</text>
       <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" />
     </view>
     <text class="hint coll-lead">看到想背的，加进集合，按你的复习节奏排起来。</text>
@@ -26,7 +26,7 @@
         <view class="row-main" hover-class="row-main-hover" hover-stay-time="60"
               data-id="{{c.id}}" bindtap="onToggleList">
           <text class="row-title poem">{{c.name}}</text>
-          <text class="row-sub">{{c.count}} 首 · 已温习 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}% · 今日 {{c.planned ? c.done + '/' + c.planned : c.count}} 首</text>
+          <text class="row-sub">{{c.count}} 首 · 已背 {{c.learned}} · 已掌握 {{c.mastered}} · 平均 {{c.avgMastery}}% · 今日 {{c.planned ? c.done + '/' + c.planned : c.count}} 首</text>
           <view class="meter coll-meter"><view class="meter-fill" style="width:{{c.masteredPercent}}%"></view></view>
         </view>
         <text class="row-go" data-id="{{c.id}}" bindtap="onProgress">›</text>

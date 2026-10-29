@@ -13,6 +13,7 @@
     <view class="card-open coll-head" id="coll-{{coll.id}}">
       <text class="card-title poem">{{coll.name}}</text>
       <text class="card-sub">{{coll.sub}}</text>
+      <view class="dot" style="background:{{coll.color}}"></view>
     </view>
 
     <progress-view id="pv-{{coll.id}}" view="{{coll.view}}" defers="{{coll.defers}}"
