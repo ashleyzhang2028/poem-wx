@@ -139,7 +139,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title">{{selfOnly ? '新增温习' : '课内小读'}}</text>
+        <text class="card-title">{{selfOnly ? '新增温习' : '课内阅读'}}</text>
         <text class="all-count" wx:if="{{!selfOnly}}">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
       </view>
 
@@ -194,7 +194,6 @@
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
           <text class="card-title">{{coll.title}}</text>
           <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
-          <text class="row-go coll-go">›</text>
         </view>
 
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -236,7 +235,6 @@
       <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleAll">
         <text class="card-title all-title">{{allLabel}}</text>
         <text class="all-count">{{allCount}}</text>
-        <view class="all-toggle {{allOpen ? 'open' : ''}}"></view>
       </view>
 
       <block wx:if="{{allOpen}}">

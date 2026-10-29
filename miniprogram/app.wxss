@@ -8,7 +8,12 @@ button, textarea {
   font-weight: 400;
 }
 
+button, input, textarea {
+  font-family: inherit;
+}
+
 .page {
+  font-family: var(--font-ui);
   min-height: 100vh;
   padding: var(--sp-3) var(--sp-3);
 }
@@ -1087,7 +1092,6 @@ button, textarea {
 .mastery-num,
 .ring-text,
 .num-v,
-.grant-meter-t,
 .day-count,
 .stage-count,
 .exam-progress,
