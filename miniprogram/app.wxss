@@ -712,7 +712,17 @@ button, input, textarea {
 }
 
 .stat + .stat {
-  border-left: 1rpx solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat + .stat::before {
+  content: "";
+  align-self: center;
+  width: 1rpx;
+  height: 75%;
+  background: var(--line);
 }
 
 .stat-v {
