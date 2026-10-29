@@ -148,6 +148,7 @@ ok("集子表 = 课内一部 + 目录里那十部", (booksTable || []).length ==
   "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
 
 var corpus = require(path.join(ROOT, "utils", "corpus.js"));
+var glossModule = require(path.join(ROOT, "utils", "gloss.js"));
 const perBook = {};
 booksTable.forEach((b) => {
   perBook[b.id] = corpus.ofBook(b.id);
@@ -223,6 +224,29 @@ ok(
 ok("课内那 251 条每一条都取得到正文",
   perBook.poems.every((p) => courseTexts[p.id] && courseTexts[p.id].text),
   "有 " + perBook.poems.filter((p) => !courseTexts[p.id]).length + " 条没有正文");
+{
+  const glossBad = [];
+  Object.keys(courseTexts).forEach((id) => {
+    const list = courseTexts[id].gloss;
+    if (!Array.isArray(list) || !list.length) {
+      glossBad.push(id + " 无注释");
+      return;
+    }
+    list.forEach((it) => {
+      if (!Array.isArray(it) || it.length !== 2) glossBad.push(id + " 形状不对");
+      else if (!String(it[0] || "").trim() || !String(it[1] || "").trim()) glossBad.push(id + " 空词条");
+    });
+  });
+  ok("课内 251 篇每篇都带生字生词注释，逐条是「词、释义」两栏",
+    glossBad.length === 0, glossBad.slice(0, 3).join(" | "));
+
+  const rows = glossModule.rows(courseTexts[perBook.poems[0].id].gloss);
+  ok("注释按每行两条排（词条与释义分开给模板）",
+    rows.every((r) => r.cells.length >= 1 && r.cells.length <= 2
+      && r.cells.every((c) => c.w && c.d && c.d.indexOf("：") < 0 && c.d.indexOf(":") < 0)),
+    "行形状不对：" + JSON.stringify(rows.slice(0, 2)));
+}
+
 ok("包里不再有正文分片与分片清单",
   !fs.existsSync(path.join(dataDir, "texts")) && !fs.existsSync(path.join(dataDir, "shards.js")),
   "data/texts/ 或 data/shards.js 还在 —— 课外正文已经整体删掉了");

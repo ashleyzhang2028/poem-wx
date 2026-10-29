@@ -49,6 +49,7 @@ const POEM_FILES = [
   "data/catalog-dynasty.js",
   "data/catalog-fix.js",
   "data/author-index.js",
+  "data/gloss-notes.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -96,6 +97,8 @@ function main() {
     return EMPTY_BOOKS.indexOf(b.id) < 0;
   });
 
+  const notes = W.GLOSS_NOTES || {};
+
   const index = [];
   const courseTexts = {};
 
@@ -128,11 +131,13 @@ function main() {
     });
 
     if (text || translation) {
-      courseTexts[p.id] = {
+      const entry = {
         text: text,
         translation: translation,
         src: TRANSLATION_SOURCES[p.translationSource] || ""
       };
+      if (notes[p.id]) entry.gloss = notes[p.id];
+      courseTexts[p.id] = entry;
     }
   });
 
@@ -156,6 +161,9 @@ function main() {
   console.log("索引 " + index.length + " 条");
   const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.js")).size / 1024);
   console.log("课内正文 " + Object.keys(courseTexts).length + " 条进主包，course.js " + courseKb + "KB");
+  const noted = Object.keys(courseTexts).filter(function (id) { return courseTexts[id].gloss; });
+  const noteCount = noted.reduce(function (n, id) { return n + courseTexts[id].gloss.length; }, 0);
+  console.log("生字生词注释 " + noted.length + " 篇 " + noteCount + " 条");
 }
 
 function dropStale() {

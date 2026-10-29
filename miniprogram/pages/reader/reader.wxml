@@ -143,6 +143,16 @@
     <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
   </view>
 
+  <view class="card gloss-card" wx:if="{{glossRows.length}}">
+    <text class="card-title">生字生词</text>
+    <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
+      <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
+        <text class="gloss-w">{{cell.w}}</text>
+        <text class="gloss-d">{{cell.d}}</text>
+      </view>
+    </view>
+  </view>
+
   <view class="card trans-card" wx:if="{{hasTranslation}}">
     <view class="trans-head {{showTranslation ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
       <text class="trans-toggle">译文</text>

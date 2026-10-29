@@ -15,6 +15,7 @@ const tabbar = require("../../utils/tabbar");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
+const gloss = require("../../utils/gloss");
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -68,6 +69,7 @@ Page({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
+    glossRows: [],
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -277,6 +279,7 @@ Page({
       translation: entry.tr || "",
       translationSource: entry.src || "",
       hasTranslation: !!entry.tr,
+      glossRows: gloss.rows(entry.gloss),
       align: settings.align === "left" ? "left" : "center",
       fontSize: size,
       ...scale.flags(size),

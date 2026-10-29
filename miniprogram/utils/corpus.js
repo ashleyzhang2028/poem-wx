@@ -494,6 +494,7 @@ function withTranslation(p, payload) {
   p.translation = payload.translation || "";
   p.src = payload.src || "";
   p.tr = p.translation;
+  p.gloss = payload.gloss || null;
   return p;
 }
 
