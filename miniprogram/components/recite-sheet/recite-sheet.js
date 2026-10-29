@@ -11,6 +11,7 @@ const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
 const defer = require("../../utils/defer");
 const guard = require("../../utils/guard");
+const gloss = require("../../utils/gloss");
 
 const RESULTS = [
   { key: "bad", icon: icons.moonNew, label: "忘记", cls: "bad" },
@@ -100,6 +101,7 @@ Component({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
+    glossRows: [],
 
     align: "center",
     fontDown: false,
@@ -172,7 +174,8 @@ Component({
         hasTranslation: false,
         translation: "",
         translationSource: "",
-        showTranslation: false
+        showTranslation: false,
+        glossRows: []
       };
     },
 
@@ -204,7 +207,8 @@ Component({
         hasTranslation: false,
         translation: "",
         translationSource: "",
-        showTranslation: false
+        showTranslation: false,
+        glossRows: []
       };
     },
 
@@ -275,6 +279,7 @@ Component({
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
         showTranslation: false,
+        glossRows: gloss.rows(entry.gloss),
         align: settings.align === "left" ? "left" : "center",
         fontSize,
         ...scale.flags(fontSize),

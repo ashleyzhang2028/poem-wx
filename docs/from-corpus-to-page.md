@@ -42,12 +42,13 @@ npm run build:data
 | `data/books/index.js` | 列表页、检索、作者索引（只有课内那一部） | 18 KB |
 | `data/books/books.js` | 集子表（11 条：课内一部 + 目录那十部） | 4 KB |
 | `data/books/catalogs.js` | 十部集子的目录（书名 + 标题 + 作者或出处，正文一个字不在里面） | 45 KB |
-| `data/course.js` | 首页「每日温习」、详情页 | 课内 251 首，约 235 KB |
+| `data/course.js` | 首页「每日温习」、详情页 | 课内 251 首的正文、译文与生字生词注释，约 312 KB |
 | `data/pinyin-table.js` | 注音 | 62 KB |
 | `data/roster-extra.js` | 作者索引（十部集子目录里的作者：名字 → 朝代，一位一条） | 13 KB |
 | `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
-课内那 235 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——
+课内那 312 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——
+注释（`gloss-notes.js`，一篇一组「词、释义」）与正文同一处落盘，体积一并算在这笔账里 ——
 账在 [`architecture.md`](architecture.md) § 三。编译同时删掉上一版的
 `data/texts/` 与 `data/shards.js`（课外正文那套已经不产出了）。
 

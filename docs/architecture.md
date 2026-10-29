@@ -269,7 +269,9 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 
 1. **包内（免网络）**
    - 集子索引 `data/books/index.js`（篇名/作者/朝代/出处/分组，不含正文）
-   - **课内 251 首的正文与译文 `data/course.js`**
+   - **课内 251 首的正文、译文与生字生词注释 `data/course.js`**
+     （注释语料在 `scripts/corpus/data/gloss-notes.js`，一篇一组「词、释义」，
+     只收课内这 251 篇；`utils/gloss.js` 把组按每行两条排给模板）
    - 集子表 `data/books/books.js`、读音表 `data/pinyin-table.js`、名录 `data/roster.js`、
      作者索引里只在集子目录出现的那些名字 `data/roster-extra.js`
    - 索引里**不带正文**，这是主包能压住的前提

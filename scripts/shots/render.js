@@ -368,6 +368,11 @@ function pickSheetPoem(data) {
     showTranslation: false,
     translation: "",
     translationSource: "",
+    glossRows: require(path.join(ROOT, "utils", "gloss.js")).rows([
+      ["曲项", "弯着脖子。项，脖子"],
+      ["拨", "拨动，划动"],
+      ["清波", "清清的水波"]
+    ]),
     paras: [[["鹅，鹅，鹅，"], ["曲项向天歌。"]], [["白毛浮绿水，"], ["红掌拨清波。"]]],
     tokens: []
   };

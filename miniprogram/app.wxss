@@ -1682,6 +1682,48 @@ button, input, textarea {
   padding-top: var(--sp-2);
 }
 
+.gloss-card {
+  margin-bottom: var(--sp-2);
+}
+
+.gloss-title {
+  display: block;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--sp-2);
+}
+
+.card > .gloss-title {
+  font-size: var(--fs-title);
+  color: var(--strong-text);
+  margin-bottom: var(--card-title-gap);
+}
+
+.gloss-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.gloss-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) 0;
+  word-break: break-word;
+}
+
+.gloss-w {
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
+  margin-right: var(--sp-1);
+}
+
+.gloss-d {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
+}
+
 .trans-head {
   display: flex;
   align-items: center;
