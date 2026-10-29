@@ -90,21 +90,6 @@
   font-size: var(--fs-lead);
 }
 
-.glyph-quiz {
-  background: var(--blue-soft);
-  color: var(--blue);
-}
-
-.glyph-exam {
-  background: var(--amber-soft);
-  color: var(--amber);
-}
-
-.glyph-ranking {
-  background: var(--green-soft);
-  color: var(--green);
-}
-
 .mode-head {
   display: flex;
   align-items: center;

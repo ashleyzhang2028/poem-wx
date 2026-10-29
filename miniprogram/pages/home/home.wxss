@@ -12,7 +12,6 @@
 
 .home .hero-lead {
   position: relative;
-  z-index: 1;
   margin-top: var(--banner-lead-gap);
   background: transparent;
 }

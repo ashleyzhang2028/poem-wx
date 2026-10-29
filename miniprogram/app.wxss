@@ -1515,7 +1515,7 @@ button, input, textarea {
 }
 
 .poem-line.token-line + .poem-line.token-line {
-  margin-top: calc(var(--py-slot) * -0.2);
+  margin-top: calc(var(--py-slot) * -0.2 + (var(--lh-poem) - 1.4) * var(--poem-fs));
 }
 
 .md-table {
