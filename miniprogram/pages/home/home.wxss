@@ -62,7 +62,7 @@
 }
 
 .hero-stats {
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-2);
 }
 
 .hero-stats .stat-ring {
@@ -141,7 +141,7 @@
   box-sizing: border-box;
   width: 14rpx;
   height: 14rpx;
-  margin: 0 var(--sp-1) 6rpx var(--sp-3);
+  margin: 0 var(--sp-1) 12rpx var(--sp-3);
   border-right: 2rpx solid var(--ink-3);
   border-bottom: 2rpx solid var(--ink-3);
   transform: rotate(45deg);
@@ -272,24 +272,6 @@
 
 .seasonal-btns .round-btn.on .glyph {
   color: var(--strong-text);
-}
-
-.coll-mark {
-  flex: none;
-  display: flex;
-  align-items: center;
-}
-
-.coll-mark .all-count {
-  padding-left: 0;
-}
-
-.coll-dot {
-  flex: none;
-  width: 16rpx;
-  height: 16rpx;
-  margin-left: var(--sp-1);
-  border-radius: 50%;
 }
 
 .coll-go {

@@ -14,7 +14,7 @@ const GROUPS = [
   },
   {
     key: "classics",
-    name: "课外阅读",
+    name: "诗词漫读",
     note: "诗经、楚辞、唐诗、宋词、古文与四大名著",
     catalog: true
   }
@@ -83,6 +83,6 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: "课内阅读与课外阅读", path: "/pages/library/library" };
+    return { title: "课内阅读与诗词漫读", path: "/pages/library/library" };
   }
 });

@@ -185,7 +185,8 @@ function list() {
       sim: false,
       note: res.note || "",
       total: res.total,
-      stats: summarize(_createdAts(res), res.total)
+      stats: summarize(_createdAts(res), res.total),
+      newest: Math.max.apply(null, [0].concat(_createdAts(res).map(Number).filter(Boolean)))
     }))
     .catch((err) => ({
       users: _merge(_rosterUsers(), _localUsers(), []),

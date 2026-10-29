@@ -118,7 +118,7 @@ function attempt(family, source) {
   return new Promise((resolve) => {
     wx.loadFontFace({
       global: true,
-      scopes: ["webview"],
+      scopes: globalOn() ? ["webview", "native"] : ["webview"],
       family,
       source,
       success: () => resolve(true),
@@ -138,7 +138,7 @@ const loaded = {};
 let scoped = {};
 
 function mark(family, list) {
-  return family + " " + shelf() + " " + list.join(" ");
+  return family + " " + shelf() + " " + globalOn() + " " + list.join(" ");
 }
 
 function register(family, list) {
@@ -160,7 +160,7 @@ function scopeMark() {
 function registerPage(family, list) {
   const key = mark(family, list);
   if (scoped[key] === scopeMark()) return Promise.resolve(true);
-  return register(family, list).then((ok) => {
+  return sequence(family, list).then((ok) => {
     if (ok) scoped[key] = scopeMark();
     else delete scoped[key];
     return ok;
@@ -210,6 +210,7 @@ function setGlobal(on) {
 
   }
   scopeEpoch += 1;
+  scoped = {};
   announce();
   return { ok: true, changed: true };
 }

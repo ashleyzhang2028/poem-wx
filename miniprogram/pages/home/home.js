@@ -70,8 +70,8 @@ function reasonCls(key) {
 }
 
 function stateText(recited, read) {
-  if (recited) return "已背";
-  return read ? "未背" : "未读";
+  if (recited) return "已温习";
+  return read ? "待温习" : "未读";
 }
 
 function stateCls(recited) {
@@ -470,7 +470,7 @@ Page({
       wx.showToast({ title: r.code === "E_LIMIT" ? "今日已加背 " + store.DAILY_EXTRA_MAX + " 首" : "添加失败", icon: "none" });
       return;
     }
-    wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
+    wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
     this.syncDailyExtra(id, r.on);
     this.paint();
     if (box) box.refresh();
@@ -530,7 +530,7 @@ Page({
 
   collectionRows() {
     const all = corpus.course();
-    return cols.list().map((c, i) => {
+    return cols.list().map((c) => {
       const plan = S.collectionPlan(c, {
         count: cols.countOf(c),
         allPoems: all,
@@ -546,7 +546,6 @@ Page({
         done: plan.filter((it) => S.isLearned(recOf(it))).length,
         doneNow: doneNow,
         doneToday: plan.length > 0 && doneNow >= plan.length,
-        color: pv.DOTS[i % pv.DOTS.length],
         praise: plan.length > 0 && doneNow >= plan.length ? praiseOf("own") : "",
         rows: this.collectionCardRows(plan)
       };
@@ -560,7 +559,7 @@ Page({
     sfx.pass();
     if (Date.now() - this.toastAt() < TOAST_GAP) return;
     this.toastedAt = Date.now();
-    wx.showToast({ title: "「" + hit.title + "」今日已背完 · " + hit.planned + " 首", icon: "none", duration: TOAST_MS });
+    wx.showToast({ title: "「" + hit.title + "」今日已温习完 · " + hit.planned + " 首", icon: "none", duration: TOAST_MS });
   },
 
   collectionCardRows(plan) {

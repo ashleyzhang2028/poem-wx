@@ -23,7 +23,7 @@
 
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">还没有自选集合</text>
-        <text class="hint empty-tip">在「我的 → 自选背诵」新建，加入此首</text>
+        <text class="hint empty-tip">在「我的 → 自选温习」新建，加入此首</text>
       </view>
     </view>
 

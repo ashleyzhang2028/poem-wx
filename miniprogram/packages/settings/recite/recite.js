@@ -155,7 +155,7 @@ Page({
     }
     const n = store.removeDailyExtra(ids);
     this.refreshDaily();
-    wx.showToast({ title: n ? "已移出 " + n + " 首" : "所选篇目已不在今日加背中", icon: "none" });
+    wx.showToast({ title: n ? "已移出 " + n + " 首" : "所选篇目已不在新增温习中", icon: "none" });
     sync.markDirty();
   },
 
@@ -163,15 +163,15 @@ Page({
     const n = store.dailyExtra().length;
     if (!n) return;
     wx.showModal({
-      title: "清空今日加背",
-      content: "移出今日加背的全部 " + n + " 首？已背进度与掌握度不受影响。",
+      title: "清空新增温习",
+      content: "移出新增温习的全部 " + n + " 首？已温习进度与掌握度不受影响。",
       confirmText: "清空",
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
         const gone = store.clearDailyExtra();
         this.refreshDaily();
-        wx.showToast({ title: gone ? "已清空今日加背 " + gone + " 首" : "所选篇目已不在今日加背中", icon: "none" });
+        wx.showToast({ title: gone ? "已清空新增温习 " + gone + " 首" : "所选篇目已不在新增温习中", icon: "none" });
         sync.markDirty();
       }
     });

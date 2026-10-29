@@ -40,7 +40,7 @@
   },
   "library": {
     "page": "pages/library/library",
-    "title": "课外阅读",
+    "title": "诗词漫读",
     "tab": 2,
     "logged": true
   },

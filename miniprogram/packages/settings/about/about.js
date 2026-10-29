@@ -4,9 +4,11 @@ const tabbar = require("../../../utils/tabbar");
 const auth = require("../../../utils/auth");
 const loginFlow = require("../../../utils/login-flow");
 const tabPage = require("../../../utils/tab-page");
+const fb = require("../../../utils/feedback-api");
+const dots = require("../../../utils/dots");
 
 Page({
-  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false },
+  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false, replyDot: false },
 
   applyFont() {
     const hit = font.bind(theme.style());
@@ -16,6 +18,17 @@ Page({
   onShow() {
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this), logged: auth.logged() });
+    this.loadDot();
+  },
+
+  loadDot() {
+    if (!auth.logged()) {
+      this.setData({ replyDot: false });
+      return;
+    }
+    fb.mine().then((res) => {
+      this.setData({ replyDot: dots.fresh("reply", fb.latestReply(res.threads)) });
+    });
   },
 
   onFeedback() {

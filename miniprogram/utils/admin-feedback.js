@@ -1,5 +1,6 @@
 const remote = require("./remote");
 const fb = require("./feedback-api");
+const dots = require("./dots");
 
 const GROUPS = ["open", "replied", "closed"];
 
@@ -17,10 +18,14 @@ function group(threads) {
   }));
 }
 
+function latest(threads) {
+  return dots.newest((threads || []).filter((t) => t.status === "open"), (t) => t.updatedAt || t.createdAt);
+}
+
 function list() {
   return remote.adminFeedbackList("all").then((res) => {
     if (!res.ok) return { ok: false, groups: [], counts: {}, reason: res.reason || "读不到反馈" };
-    return { ok: true, groups: group(res.threads), counts: res.counts || {} };
+    return { ok: true, groups: group(res.threads), counts: res.counts || {}, latest: latest(res.threads) };
   });
 }
 
