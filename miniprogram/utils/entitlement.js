@@ -155,7 +155,7 @@ function compareCols(snap) {
 }
 
 const VIEW_NAME = {
-  daily: "首页·课内小读",
+  daily: "首页·课内阅读",
   extra: "首页·新增温习",
   collections: "首页·自选温习",
   progress: "首页·温习进度",

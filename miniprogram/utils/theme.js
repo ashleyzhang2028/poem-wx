@@ -106,7 +106,7 @@ function deepOf(rgb) {
 THEMES.forEach((t) => {
   t.rgba = rgba(t.rgb, 1);
   t.soft = rgba(t.rgb, WASH);
-  t.on = rgba(inkOn(t.rgb), 1);
+  t.on = rgba(WHITE, 1);
   t.depth = deepOf(t.rgb);
   t.mark = rgba(MARK, 1);
   t.banner = t.banner || BANNER;
@@ -190,7 +190,7 @@ function toneData() {
     toneHex: view.hex.toUpperCase(),
     toneRgba: view.rgba,
     toneSoft: view.soft,
-    toneOnInk: view.on ? rgba(inkOn(tone.parseHex(view.hex)), 1) : "",
+    toneOnInk: view.on ? rgba(WHITE, 1) : "",
     toneHue: view.hue,
     toneSat: view.sat,
     toneLight: view.light,
@@ -224,7 +224,7 @@ function toneSoft(rgb) {
 
 OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
 OWN_THEME.soft = rgba(OWN_THEME.rgb, WASH);
-OWN_THEME.on = rgba(inkOn(OWN_THEME.rgb), 1);
+OWN_THEME.on = rgba(WHITE, 1);
 OWN_THEME.depth = deepOf(OWN_THEME.rgb);
 OWN_THEME.mark = rgba(MARK, 1);
 VAR_OF[OWN_THEME.key] = "--c-" + OWN_THEME.key;
@@ -282,7 +282,7 @@ function tint(theme) {
   return {
     rgba: rgba(rgb, 1),
     soft: toneSoft(rgb),
-    on: rgba(inkOn(rgb), 1),
+    on: rgba(WHITE, 1),
     mark: rgba(rgb, 1),
     depth: deepOf(rgb)
   };

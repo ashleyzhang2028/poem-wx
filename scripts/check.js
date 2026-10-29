@@ -4053,8 +4053,7 @@ function mountFull(pg, query) {
   const swatchPalette = require(path.join(ROOT, "utils", "theme.js")).palette();
   ok("页面上每个色拿到的是「本色 + 淡淡一档 + 压在上面的墨」三件",
     swatchPalette.every((x) => x.rgb && x.soft && x.on)
-      && swatchPalette.some((x) => x.on.indexOf("255, 255, 255") >= 0)
-      && swatchPalette.some((x) => x.on.indexOf("0, 0, 0") >= 0),
+      && swatchPalette.every((x) => x.on.indexOf("255, 255, 255") >= 0),
     "palette() 少给了一件 —— 界面上有一处会算出透明或读不出的字");
 
   const progWxml = strip(read("packages/progress/index/index.wxml"));
@@ -4617,7 +4616,7 @@ function mountFull(pg, query) {
       && /function placedPlan\(opt\)[\s\S]{0,1400}?mergePinned\(withAdded/.test(schedSrc),
     "加背又回到候选池里跟「新学」抢那 5 个名额，或加背没进落盘的那一份 —— "
       + "下次进首页按落盘还原时它就没了，计划从 6 首弹回 5 首（Issue #370）");
-  ok("「课内小读」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
+  ok("「课内阅读」卡片挂的是落盘后那一份计划（baseCount 与行数同源）",
     /const base = Math\.max\(recorded\.length, plan\.length - extraOf\);/.test(homeJs)
       && /baseCount: base,/.test(homeJs)
       && /class="all-count" wx:if="\{\{!selfOnly\}\}">\{\{baseCount \? doneCount \+ '\/' \+ baseCount : total \+ ' 首'\}\}/.test(homeWxml),
@@ -7728,6 +7727,39 @@ const K = {
 }
 
 {
+  const apiLib = (n) => require(path.join(ROOT, "..", "api", "_lib", n));
+  track((async () => {
+    const core = apiLib("core");
+    const store = apiLib("store").memoryStore();
+    const cfg = apiLib("config");
+    await store.putAccount({ uid: "s1", email: "s@b.c", plan: "max", plan_until: null, role: "user", status: "active", created_at: 1 });
+    const limiter = core.makeRateLimiter();
+    const now = Date.now();
+    let last = null;
+    for (let i = 0; i < 40; i++) {
+      last = await core.syncPull({ cfg, store, limiter, now: () => now, account: { uid: "s1" }, deviceId: "d" + i, ip: "1" }, { since: 0, deviceId: "d" + i });
+    }
+    const early = Date.now() - 3 * 86400000;
+    const pulled = await core.syncPull({ cfg, store, limiter: core.makeRateLimiter(), now: () => now, account: { uid: "s1" }, deviceId: "a" }, { since: 0, deviceId: "a" });
+    await core.syncPush({ cfg, store, limiter: core.makeRateLimiter(), now: () => now + 60000, account: { uid: "s1" }, deviceId: "b" },
+      { deviceId: "b", recs: [{ id: "late-poem", updatedAt: early, payload: { level: 1 } }] });
+    const next = await core.syncPull({ cfg, store, limiter: core.makeRateLimiter(), now: () => now + 120000, account: { uid: "s1" }, deviceId: "a" },
+      { since: pulled.body.serverTime, deviceId: "a" });
+    ok("同步：离线改动晚到，即便改动时间早于对方上次拉取，对方下一次拉取仍拿得到（游标按服务器收到的时刻）",
+      next.body.recs.some((r) => r.id === "late-poem"), "增量拉取按客户端 updated_at 走 —— 晚到的旧改动会永远漏掉");
+    ok("同步：Max 账号一小时内连续拉取 40 次不被限流（按账号计，换设备号也不绕开）", last.status === 200,
+      "同步限额太小或按设备号计 —— 日常使用就会「同步失败」");
+    await store.putAccount({ uid: "s2", email: "s2@b.c", plan: "free", plan_until: null, role: "user", status: "active", created_at: 1 });
+    const freeLimiter = core.makeRateLimiter();
+    const freePull = () => core.syncPull({ cfg, store, limiter: freeLimiter, now: () => now, account: { uid: "s2" }, deviceId: "d" }, { since: 0, deviceId: "d" });
+    let freeStatus = 200;
+    for (let i = 0; i < 10; i++) await freePull();
+    freeStatus = (await freePull()).status;
+    ok("同步：Free 账号每小时 10 次，第 11 次 429", freeStatus === 429, "各档同步限额没按档位分开");
+  })());
+}
+
+{
   const cryptoPay = require("crypto");
   const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
   const apiLib = (n) => require(path.join(ROOT, "..", "api", "_lib", n));
@@ -7739,18 +7771,30 @@ const K = {
     const store = apiLib("store").memoryStore();
     const cfg = Object.assign(Object.create(Object.getPrototypeOf(baseCfg)), baseCfg, {
       sessionSecret: "x".repeat(32), payOfferId: "offer", payAppKey: "k", payPushToken: "tok", wxAppId: "a", wxSecret: "s",
-      wxFetch: async (url) => ({
-        json: async () => (url.indexOf("jscode2session") >= 0 ? { openid: "OID", session_key: "SK" } : { access_token: "T", expires_in: 7200 })
+      wxFetch: async (url, init) => ({
+        json: async () => {
+          if (url.indexOf("jscode2session") >= 0) return { openid: "OID", session_key: "SK" };
+          if (url.indexOf("query_order") >= 0) {
+            const row = await store.getPayOrder(JSON.parse(init.body).order_id);
+            return row && !wxUnpaid.has(row.out_trade_no)
+              ? { errcode: 0, order: { status: 2, order_fee: row.price_cents } }
+              : { errcode: 0, order: { status: 1 } };
+          }
+          return { access_token: "T", expires_in: 7200 };
+        }
       })
     });
+    const wxUnpaid = new Set();
     await store.putAccount({ uid: "u1", email: "a@b.c", plan: "free", plan_until: null, role: "user", status: "active", created_at: 1 });
     await store.putWxAccount({ uid: "u1", openid: "OID", plan: "free" });
     const now = Date.now();
     const limiter = corePay.makeRateLimiter();
     const deps = (uid) => ({ cfg, store, limiter, now: () => now, account: uid === null ? null : { uid: uid || "u1" }, deviceId: "d", ip: "1" });
     const sign = (q) => cryptoPay.createHash("sha1").update(["tok", q.timestamp, q.nonce].sort().join("")).digest("hex");
-    const query = { timestamp: "1", nonce: "2" };
+    const query = { timestamp: String(Math.floor(now / 1000)), nonce: "2" };
     query.signature = sign(query);
+    const stale = { timestamp: "1", nonce: "2" };
+    stale.signature = sign(stale);
 
     const order = await payMod.payOrder(deps(), { plan: "pro", period: "d30", code: "c" });
     const sd = order.status === 200 ? order.body.payData.signData : "{}";
@@ -7773,6 +7817,15 @@ const K = {
     ok("发货推送：验签不过 403，不改账号",
       (await payMod.payNotify(deps(), { method: "POST", query: Object.assign({}, query, { signature: "bad" }), body: msg })).status === 403
         && (await store.getAccount("u1")).plan === "free", "伪造的推送能升档");
+    ok("发货推送：时间戳过期 403，不改账号",
+      (await payMod.payNotify(deps(), { method: "POST", query: stale, body: msg })).status === 403
+        && (await store.getAccount("u1")).plan === "free", "录下来的旧推送能重放");
+    wxUnpaid.add(order.body.outTradeNo);
+    await payMod.payNotify(deps(), { method: "POST", query, body: msg });
+    ok("发货推送：微信查单没付款就不发货，账号不动",
+      (await store.getAccount("u1")).plan === "free" && (await store.getPayOrder(order.body.outTradeNo)).status === "pending",
+      "只凭推送报文（不核实微信那边已付）就升了档");
+    wxUnpaid.delete(order.body.outTradeNo);
     await payMod.payNotify(deps(), { method: "POST", query, body: msg });
     await payMod.payNotify(deps(), { method: "POST", query, body: msg });
     const afterPush = await store.getAccount("u1");
@@ -7797,6 +7850,7 @@ const K = {
 
     const open = await payMod.payOrder(deps(), { plan: "pro", period: "d90", code: "c" });
     const openNo = open.body.outTradeNo;
+    wxUnpaid.add(openNo);
     const manage = (op, extra, uid) => payMod.payManage(deps(uid), Object.assign({ op, outTradeNo: openNo }, extra));
     const resumed = await manage("resume", { code: "c" });
     ok("待支付订单：继续支付另起新单号（单号不复用），旧单作废，别人的单 404",
@@ -7811,6 +7865,7 @@ const K = {
     ok("未完成订单：删除后不再出现在支付记录里",
       (await manage("delete", {})).status === 200
         && (await payMod.payOrdersMine(deps(), {})).body.orders.every((o) => o.outTradeNo !== openNo), "删除的订单还在列表里");
+    wxUnpaid.delete(openNo);
     await payMod.payNotify(deps(), { method: "POST", query, body: Object.assign({}, msg, {
       OutTradeNo: openNo, GoodsInfo: { ProductId: "pro_90", OrderFee: 3500 } }) });
     ok("取消或删除之后才到的支付推送照常发货（不收钱不发货）",

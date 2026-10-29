@@ -247,25 +247,26 @@ function mysqlStore(cfg) {
       var sql = "SELECT poem_id, payload, updated_at, deleted FROM progress WHERE uid = ? AND child_id = ?";
       var params = [String(uid || ""), cid];
       if (since) {
-        sql += " AND updated_at > ?";
+        sql += " AND synced_at > ?";
         params.push(Number(since));
       }
       return query(sql, params).then(function (rows) { return (rows || []).map(progressRow); });
     },
 
-    putProgress: function (uid, child, recs) {
+    putProgress: function (uid, child, recs, syncedAt) {
       var cid = child == null ? "" : String(child);
       var rows = (recs || []).map(function (r) {
         return [String(uid || ""), cid, String(r.poem_id), JSON.stringify(r.payload === undefined ? {} : r.payload),
-          Number(r.updated_at) || 0, r.deleted ? 1 : 0];
+          Number(r.updated_at) || 0, r.deleted ? 1 : 0, Number(syncedAt) || Number(r.updated_at) || 0];
       });
       if (!rows.length) return Promise.resolve(true);
 
       var SQL = ""
-        + "INSERT INTO `progress` (`uid`,`child_id`,`poem_id`,`payload`,`updated_at`,`deleted`) VALUES "
-        + rows.map(function () { return "(?,?,?,?,?,?)"; }).join(",")
+        + "INSERT INTO `progress` (`uid`,`child_id`,`poem_id`,`payload`,`updated_at`,`deleted`,`synced_at`) VALUES "
+        + rows.map(function () { return "(?,?,?,?,?,?,?)"; }).join(",")
         + " ON DUPLICATE KEY UPDATE "
         + "`payload`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`payload`), `payload`), "
+        + "`synced_at`  = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`synced_at`), `synced_at`), "
         + "`updated_at` = GREATEST(`updated_at`, VALUES(`updated_at`)), "
         + "`deleted`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`deleted`), `deleted`)";
 

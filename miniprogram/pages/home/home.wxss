@@ -136,24 +136,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.all-toggle {
-  flex: none;
-  box-sizing: border-box;
-  width: 14rpx;
-  height: 14rpx;
-  margin: 0 var(--sp-1) 12rpx var(--sp-3);
-  border-right: 2rpx solid var(--ink-3);
-  border-bottom: 2rpx solid var(--ink-3);
-  transform: rotate(45deg);
-  transition: transform var(--t-move) var(--ease);
-}
-
-.all-toggle.open {
-  margin-bottom: 0;
-  margin-top: 6rpx;
-  transform: rotate(-135deg);
-}
-
 .row-end {
   flex: none;
   display: flex;
@@ -272,8 +254,4 @@
 
 .seasonal-btns .round-btn.on .glyph {
   color: var(--strong-text);
-}
-
-.coll-go {
-  padding-left: var(--sp-1);
 }

@@ -429,10 +429,22 @@ function failure(err) {
   };
 }
 
+function transient(err) {
+  const status = Number(err && err.statusCode) || 0;
+  return !status || status >= 502;
+}
+
+function once(job) {
+  return job()["catch"]((err) => {
+    if (!transient(err)) throw err;
+    return job();
+  });
+}
+
 function sync() {
   if (!configured()) return Promise.resolve({ sim: true, pulled: 0, pushed: 0 });
-  return pull()
-    .then((a) => push().then((b) => ({ sim: false, pulled: a.applied, pushed: b.pushed })))
+  return once(pull)
+    .then((a) => once(push).then((b) => ({ sim: false, pulled: a.applied, pushed: b.pushed })))
     ["catch"]((err) => failure(err));
 }
 
