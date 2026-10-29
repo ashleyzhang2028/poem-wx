@@ -1,23 +1,26 @@
 <view class="card grant">
-  <view class="grant-top">
-    <view class="grant-title">
-      <text class="grant-eyebrow">当前档位</text>
-      <view class="pay-chip" wx:if="{{logged && paid}}" hover-class="pay-chip-hover" hover-stay-time="60"
-            bindtap="onOrders">支付记录</view>
-    </view>
-    <text class="grant-tier-name">{{status.label}}</text>
-    <text class="guest-note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
-    <text class="guest-note" wx:elif="{{note}}">{{note}}</text>
-  </view>
+  <text class="grant-eyebrow">当前档位</text>
+  <text class="grant-tier-name">{{status.label}}</text>
+  <text class="guest-note" wx:if="{{!logged}}">未登录 · 暂按 Free</text>
+  <text class="guest-note" wx:elif="{{note}}">{{note}}</text>
 
+  <view class="grant-stat">
+    <text class="grant-stat-t">已开 {{stats.enabled}} / {{stats.caps}} 项功能</text>
+    <text class="grant-stat-n">{{stats.percent}}%</text>
+  </view>
   <view class="meter grant-meter">
     <view class="meter-fill" style="width:{{stats.percent}}%"></view>
   </view>
-  <text class="grant-meter-t">已开 {{stats.enabled}} / {{stats.caps}} 项功能</text>
 
-  <text class="guest-note" wx:if="{{expiry}}">{{expiry.title}}，{{expiry.sub}}</text>
+  <view class="grant-expiry" wx:if="{{expiry}}">
+    <text class="grant-expiry-t">{{expiry.title}}</text>
+    <text class="grant-expiry-s">{{expiry.sub}}</text>
+  </view>
 
-  <button class="btn primary block grant-pay" wx:if="{{logged}}" bindtap="onPricing">{{paid ? '订阅 / 升级' : '开通 Pro / Max'}}</button>
+  <view class="grant-acts" wx:if="{{logged}}">
+    <button class="btn primary grant-pay" bindtap="onPricing">{{paid ? '订阅 / 升级' : '开通 Pro / Max'}}</button>
+    <button class="btn ghost grant-orders" wx:if="{{paid}}" bindtap="onOrders">支付记录</button>
+  </view>
 </view>
 
 <view class="card">

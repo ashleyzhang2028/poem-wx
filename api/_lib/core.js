@@ -1482,9 +1482,14 @@ function wxLogin(deps, input) {
   var g = limiter.check(cfg, "device", "wxlogin:" + device, t);
   if (!g.ok) return Promise.resolve(err(429, "E_RATE_DEVICE", "登录太频繁了，稍等片刻再试", { retryAfter: g.retryAfter }));
 
+  var wxIp = String(body.ip || "unknown");
+  var gi = limiter.check(cfg, "ip", "wxlogin:" + wxIp, t);
+  if (!gi.ok) return Promise.resolve(err(429, "E_RATE_IP", "登录太频繁了，稍等片刻再试", { retryAfter: gi.retryAfter }));
+
   return wxCode2Session(deps, code).then(function (r) {
     if (r.status !== 200) return r;
     limiter.hit("device", "wxlogin:" + device, t);
+    limiter.hit("ip", "wxlogin:" + wxIp, t);
     return wxFindAccount(store, r.body.openid, r.body.unionid).then(function (row) {
       wxRow = row;
       return wxEnsureAccount(deps, r.body, row, t);
@@ -1843,14 +1848,19 @@ function exportAllProgress(deps, uid) {
   });
 }
 
+var SYNC_BUCKET = { free: "syncFree", pro: "syncPro", max: "syncMax" };
+
 function syncTierGate(deps, input) {
   var store = deps.store;
   if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
   return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
     if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    deps.syncBucket = SYNC_BUCKET[planTier(me)] || SYNC_BUCKET.free;
     return null;
   });
 }
+
+var PULL_OVERLAP_MS = 5000;
 
 function syncPull(deps, input) {
   var store = deps.store, cfg = deps.cfg, t = deps.now();
@@ -1864,9 +1874,10 @@ function syncPullInner(deps, input) {
   if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
   var since = Number(input.since) || 0;
   var child = childId(input.child);
-  var g = deps.limiter.check(cfg, "device", "pull:" + String(input.deviceId || "unknown"), t);
+  var pullKey = "pull:" + deps.account.uid;
+  var g = deps.limiter.check(cfg, deps.syncBucket, pullKey, t);
   if (!g.ok) return Promise.resolve(err(429, "E_RATE_DEVICE", "同步太频繁了，请稍后再试", { retryAfter: g.retryAfter }));
-  deps.limiter.hit("device", "pull:" + String(input.deviceId || "unknown"), t);
+  deps.limiter.hit(deps.syncBucket, pullKey, t);
 
   return Promise.resolve(store.listProgress(deps.account.uid, child, since)).then(function (rows) {
     return ok({
@@ -1875,7 +1886,7 @@ function syncPullInner(deps, input) {
       recs: (rows || []).map(function (r) {
         return { id: r.poem_id, payload: r.payload, updatedAt: Number(r.updated_at), deleted: !!r.deleted };
       }),
-      serverTime: t
+      serverTime: t - PULL_OVERLAP_MS
     });
   });
 }
@@ -1890,7 +1901,8 @@ function syncPushInner(deps, input) {
   var store = deps.store, cfg = deps.cfg, t = deps.now();
   if (!deps.account) return Promise.resolve(err(401, "E_NO_SESSION", "还没有登录"));
 
-  var g = deps.limiter.check(cfg, "device", "push:" + String(input.deviceId || "unknown"), t);
+  var pushKey = "push:" + deps.account.uid;
+  var g = deps.limiter.check(cfg, deps.syncBucket, pushKey, t);
   if (!g.ok) return Promise.resolve(err(429, "E_RATE_DEVICE", "同步太频繁了，请稍后再试", { retryAfter: g.retryAfter }));
 
   var child = childId(input.child);
@@ -1910,12 +1922,12 @@ function syncPushInner(deps, input) {
       deleted: r.deleted ? 1 : 0
     });
   });
-  if (dropped) return Promise.resolve(err(400, "E_BAD_REC", "有 " + dropped + " 条记录缺 id 或时间戳"));
+  if (dropped) logFacts("sync.push_dropped", { uid: deps.account.uid, dropped: dropped });
 
-  deps.limiter.hit("device", "push:" + String(input.deviceId || "unknown"), t);
+  deps.limiter.hit(deps.syncBucket, pushKey, t);
 
-  return Promise.resolve(store.putProgress(deps.account.uid, child, clean)).then(function () {
-    return ok({ applied: clean.length, child: child, conflicts: [], serverTime: t });
+  return Promise.resolve(store.putProgress(deps.account.uid, child, clean, t)).then(function () {
+    return ok({ applied: clean.length, dropped: dropped, child: child, conflicts: [], serverTime: t });
   });
 }
 
@@ -2123,7 +2135,10 @@ function adminGrant(deps, input) {
       };
       if (same) return done();
       return Promise.resolve(store.patchAccount(target.uid, { plan: who.tier, plan_until: who.until }))
-        .then(done);
+        .then(function (res) {
+          logFacts("admin.grant", { by: me.uid, uid: target.uid, before: before, tier: who.tier, until: who.until });
+          return res;
+        }).then(done);
     });
   });
 }
@@ -2222,6 +2237,7 @@ function adminSetRole(deps, input) {
       var before = String(target.role || "user").toLowerCase();
       var changed = before !== role;
       return Promise.resolve(changed ? store.patchAccount(uid, { role: role }) : null).then(function () {
+        if (changed) logFacts("admin.role", { by: me.uid, uid: uid, before: before, role: role });
         return ok({
           uid: uid,
           email: String(target.email || ""),
@@ -2258,6 +2274,7 @@ function adminRevoke(deps, input) {
       }
       return Promise.resolve(store.patchAccount(uid, { plan: "free", plan_until: null }))
         .then(function () {
+          logFacts("admin.revoke", { by: me.uid, uid: uid });
           return ok({ matched: 1, changed: true, uid: uid, email: String(target.email || ""), tier: "free", by: me.uid, at: t });
         });
     });
