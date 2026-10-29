@@ -48,13 +48,13 @@
           </view>
         </view>
 
-        <radio-group class="pref-seg" bindchange="onPinyin">
-          <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
-                 wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
-            <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" />
-            <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          </label>
-        </radio-group>
+        <view class="pref-seg" wx:if="{{pinyinOn}}">
+          <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
+                aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
+            <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
+          </view>
+        </view>
 
         <view class="pref-size">
           <view class="pref-opt ic {{fontDown ? '' : 'off'}}"

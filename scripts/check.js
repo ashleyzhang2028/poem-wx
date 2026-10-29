@@ -4348,17 +4348,25 @@ function mountFull(pg, query) {
   }
 
   {
-    const keysOf = (src) => {
-      const block = /const PINYIN_MODES = \[([\s\S]*?)\];/.exec(src);
-      return block ? [...block[1].matchAll(/key\s*:\s*"([^"]+)"/g)].map((m) => m[1]) : [];
+    const readerJs = read("pages/reader/reader.js");
+    const readerWxml = read("pages/reader/reader.wxml");
+    const sheetJs = read("components/recite-sheet/recite-sheet.js");
+    const sheetWxml = read("components/recite-sheet/recite-sheet.wxml");
+    const toggleOf = (src) => {
+      const body = /onPinyinToggle\s*\(\)\s*\{([\s\S]*?)\n\s{2,4}\}/.exec(src);
+      return body ? body[1] : "";
     };
-    const a = keysOf(read("pages/reader/reader.js"));
-    const b = keysOf(read("components/recite-sheet/recite-sheet.js"));
-    ok("注音只在背诵弹层有：弹层两档，详情页没有档位表也不挂 onPinyin",
-      a.length === 0 && b.length === 2
-        && !/onPinyin/.test(read("pages/reader/reader.js"))
-        && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js")),
-      "详情页 " + JSON.stringify(a) + " / 弹层 " + JSON.stringify(b));
+    const once = (js, wxml) => /bindtap="onPinyinToggle"/.test(wxml)
+      && /pinyin\.setMode\(/.test(js)
+      && /"all"/.test(toggleOf(js)) && /"off"/.test(toggleOf(js))
+      && !/<radio/.test(wxml.replace(/<radio-group class="chip-group[\s\S]*?<\/radio-group>/, ""));
+    ok("注音是一枚按钮，阅读页与背诵弹层各一处，点一下在全文与不注音之间轮回",
+      once(readerJs, readerWxml) && once(sheetJs, sheetWxml),
+      "哪一处还留着 radio 组，或者按钮没接上 onPinyinToggle");
+
+    ok("阅读页与弹层共用同一个注音开关（阅读页不把档位写死成 off）",
+      /pinyin\.getMode\(\)/.test(readerJs) && /settings\(\)\.pinyin/.test(sheetJs),
+      "阅读页把 mode 写死了 —— 弹层里点开注音，翻到详情页又没了");
   }
 
   {
