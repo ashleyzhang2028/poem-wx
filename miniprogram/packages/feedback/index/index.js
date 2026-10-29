@@ -1,6 +1,7 @@
 const fb = require("../../../utils/feedback-api");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
 
@@ -27,10 +28,17 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     if (!this.enter()) return;
     this.setData({ barBelow: tabbar.below(this), logged: true });
     this.load();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   enter() {

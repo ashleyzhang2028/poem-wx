@@ -2,52 +2,6 @@
   <lock-card wx:if="{{locked}}" title="设置" note="登录后才能改" mark="设" bind:login="onLogin" />
 
   <block wx:else>
-  <view class="card">
-    <view class="card-title">正文排版</view>
-
-    <view class="poem-body align-{{align}} size-{{fontSize}} font-sample">
-      <view class="poem-stanza" wx:for="{{sampleTokens}}" wx:key="index" wx:for-item="para">
-        <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-          <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-            <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
-              <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-              <text class="tk-ch">{{tk.ch}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="seg fill">
-      <radio-group class="seg-group" bindchange="onAlign">
-        <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" />
-          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
-
-    <view class="seg fill pinyin-row" wx:if="{{pinyinOn}}">
-      <radio-group class="seg-group" bindchange="onPinyin">
-        <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}" />
-          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
-
-    <view class="font-row">
-      <text class="font-a small">A</text>
-      <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="12" backgroundColor="#ececef" activeColor="{{themeColor}}"
-              bindchanging="onFontSlide" bindchange="onFontSlide" />
-      <text class="font-a big">A</text>
-    </view>
-
-  </view>
-
   <view class="card" wx:if="{{sfxVisible}}">
     <view class="card-title">声音</view>
     <view class="row">
@@ -91,6 +45,16 @@
       <view class="sw">
         <switch checked="{{leagueBoardOn}}" disabled="{{leagueLock}}" color="{{themeColor}}" bindchange="onLeagueBoard" />
       </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
+      <view class="row-main">
+        <text class="row-title">关于</text>
+        <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见建议</text>
+      </view>
+      <text class="row-go">›</text>
     </view>
   </view>
 

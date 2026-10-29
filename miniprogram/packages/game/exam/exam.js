@@ -5,6 +5,7 @@ const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const rankingSubmit = require("../../../utils/ranking-submit");
 const guard = require("../../../utils/guard");
@@ -77,6 +78,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     if (this.data.stage === "running" && !this.timer) this.startTimer();
@@ -93,6 +95,12 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   loadLog() {

@@ -3,6 +3,7 @@ const gate = require("../../utils/gate");
 const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 
 const GROUPS = [
   {
@@ -30,6 +31,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 1) });
 
@@ -64,6 +66,12 @@ Page({
     }).filter((g) => g.books.length);
 
     this.setData({ groups });
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onTierGate() {

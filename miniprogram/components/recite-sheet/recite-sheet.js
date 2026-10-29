@@ -393,6 +393,7 @@ Component({
       const align = e.detail.value;
       this.setData({ align });
       store.saveSettings({ align });
+      sync.markDirty();
     },
 
     onPinyin(e) {

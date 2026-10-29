@@ -6,6 +6,7 @@ const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const sync = require("../../../utils/sync");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
 const guard = require("../../../utils/guard");
@@ -39,6 +40,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
@@ -47,6 +49,12 @@ Page({
     }
     this.setData({ locked: false });
     this.refresh();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   refresh() {

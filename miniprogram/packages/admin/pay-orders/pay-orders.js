@@ -1,4 +1,5 @@
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const admin = require("../../../utils/admin");
 const pay = require("../../../utils/pay");
@@ -71,9 +72,16 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), canWrite: admin.canWrite() });
     if (admin.canWrite()) this.load();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onUnload() {

@@ -8,7 +8,6 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const loginFlow = require("../../utils/login-flow");
-const gate = require("../../utils/gate");
 const guard = require("../../utils/guard");
 const pay = require("../../utils/pay");
 
@@ -37,9 +36,16 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 4) });
     this.refresh();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onLoad() {
@@ -145,11 +151,6 @@ Page({
     wx.navigateTo({ url: "/packages/admin/index/index" });
   },
 
-  onFeedback() {
-    if (!gate.open(null, this)) return;
-    wx.navigateTo({ url: "/packages/feedback/index/index" });
-  },
-
   syncBar() {
     tabbar.sync(this, 4);
   },
@@ -180,10 +181,6 @@ Page({
 
   requireRecite() {
     return E.block("daily", { page: this });
-  },
-
-  onAbout() {
-    wx.navigateTo({ url: "/packages/settings/about/about" });
   },
 
   onTierGate() {

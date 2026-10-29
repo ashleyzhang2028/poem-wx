@@ -8,6 +8,6 @@
       <view class="tab-ico-mask" wx:else
             style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
     </view>
-    <text class="tab-text">{{item.text}}</text>
+    <text class="tab-text" style="{{fontStyle ? 'font-family:' + fontStyle : ''}}">{{item.text}}</text>
   </view>
 </view>

@@ -10,6 +10,7 @@ const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
 const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
@@ -52,6 +53,7 @@ Page({
     name: "",
     barBelow: true,
     id: "",
+    sid: "",
 
     loadingText: false,
     loadFailed: false,
@@ -112,6 +114,7 @@ Page({
   onLoad(query) {
     this.setData({
       id: query.id || "",
+      sid: query.sid ? decodeURIComponent(query.sid) : "",
       from: query.from || "",
       remote: query.src === "1",
       reciteMode: query.mode === "recite"
@@ -119,6 +122,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!this.data.reciteMode) {
@@ -134,6 +138,12 @@ Page({
     this.applyReading();
 
     this.syncDaily();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   syncDaily() {
@@ -190,9 +200,10 @@ Page({
   loadEntry() {
     const id = this.data.id;
     const meta = this.findMeta(id);
+    const onlySid = this.data.sid && !meta ? this.data.sid : "";
 
     const remoteId = /^\d+$/.test(String(id));
-    if (!meta && !this.data.remote && !remoteId) {
+    if (!meta && !this.data.remote && !remoteId && !onlySid) {
       this.setData({ id, loadFailed: true, failText: "篇目数据缺失" });
       return;
     }
@@ -206,6 +217,7 @@ Page({
     }
 
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
+    if (onlySid) return this.loadRemote(onlySid, null, "这一篇的正文没取到，点一下重试");
 
     if (meta && meta.b) {
       this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
@@ -230,7 +242,7 @@ Page({
           this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
           return;
         }
-        this.setData({ hasTranslation: false, remote: true });
+        this.setData({ hasTranslation: false, remote: true, sid: String(sid) });
         this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
       },
       (err) => {
@@ -445,6 +457,7 @@ Page({
   readerUrl(id, creator) {
     let url = "/pages/reader/reader?id=" + encodeURIComponent(id);
     if (this.data.reciteMode) url += "&mode=recite";
+    if (this.data.sid) url += "&sid=" + encodeURIComponent(this.data.sid);
     if (this.data.remote) url += "&src=1";
     if (creator) url += "&from=" + encodeURIComponent(creator);
     return url;

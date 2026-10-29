@@ -8,6 +8,10 @@
             bindtap="onUpgrade">{{upgradeText}}</view>
       <view class="tier-chip" hover-class="tier-chip-hover" hover-stay-time="60"
             bindtap="onTier">{{tierLabel}}</view>
+      <view class="gear" hover-class="gear-hover" hover-stay-time="60" bindtap="onSettings">
+        <view class="gear-icon" aria-label="设置"
+              style="mask-image:url('{{gearIcon}}');-webkit-mask-image:url('{{gearIcon}}');"></view>
+      </view>
     </view>
   </view>
 

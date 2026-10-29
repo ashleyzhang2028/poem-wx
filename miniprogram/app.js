@@ -4,6 +4,7 @@ const sync = require("./utils/sync");
 const entitlement = require("./utils/entitlement");
 const gate = require("./utils/gate");
 const font = require("./utils/font");
+const theme = require("./utils/theme");
 const loginFlow = require("./utils/login-flow");
 const sfx = require("./utils/sfx");
 
@@ -38,6 +39,7 @@ App({
 
   onShow() {
     store.touchDaily();
+    font.restore();
     this.reloadFont();
     this.refreshTierHourly();
   },
@@ -55,6 +57,21 @@ App({
 
   reloadFont() {
     font.refresh();
+  },
+
+  repaintFont(epoch) {
+    if (epoch !== font.scope()) return;
+    const themeStyle = theme.style();
+    getCurrentPages().forEach((page) => {
+      if (!page) return;
+      if (typeof page.applyFont === "function") page.applyFont();
+      else if (page.data && page.data.themeStyle !== undefined) page.setData({ themeStyle });
+    });
+  },
+
+  onPageShow() {
+    if (!font.globalOn()) return;
+    font.registerHere().catch(() => {});
   },
 
   stampBuild() {

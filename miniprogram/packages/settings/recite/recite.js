@@ -7,6 +7,7 @@ const E = require("../../../utils/entitlement");
 const cols = require("../../../utils/collections");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 
 const STAGES = S.STAGE_KEYS.map((k) => ({ key: k, name: S.STAGES[k].name }));
@@ -58,6 +59,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     const settings = store.settings();
@@ -76,6 +78,12 @@ Page({
         this.updateSelfOnly();
       }
     );
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   updateSelfOnly() {

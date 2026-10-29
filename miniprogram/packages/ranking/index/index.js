@@ -2,6 +2,7 @@ const remote = require("../../../utils/remote");
 const sfx = require("../../../utils/sfx");
 const ranking = require("../../../utils/ranking");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const gate = require("../../../utils/gate");
 const guard = require("../../../utils/guard");
@@ -49,6 +50,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     const allowed = entitlement.can("league");
     this.setData({
@@ -58,6 +60,12 @@ Page({
       tier: entitlement.tierOf("league")
     });
     this.load();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onTierGate() {

@@ -4,6 +4,7 @@ const entitlement = require("../../../utils/entitlement");
 const feedback = require("../../../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 
 const COUNT = 10;
@@ -46,6 +47,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
@@ -60,6 +62,12 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
 
