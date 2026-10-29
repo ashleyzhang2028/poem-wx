@@ -76,6 +76,7 @@
         <text class="row-title">用户反馈</text>
         <text class="row-sub">{{feedbackSub}}</text>
       </view>
+      <view class="row-dot" wx:if="{{feedbackDot}}"></view>
       <text class="row-go">›</text>
     </view>
 
@@ -86,6 +87,7 @@
         <text class="row-title">用户列表</text>
         <text class="row-sub">{{usersSub}}</text>
       </view>
+      <view class="row-dot" wx:if="{{usersDot}}"></view>
       <text class="row-go">›</text>
     </view>
 

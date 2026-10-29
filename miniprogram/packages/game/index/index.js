@@ -39,9 +39,13 @@ Page({
     heroSub: ""
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     sfx.warm();
     if (!gate.logged()) {
@@ -69,12 +73,6 @@ Page({
       heroTitle: top ? top.rank.name : "",
       heroSub: top ? top.rank.note : "三个擂台，先挑一个上场"
     });
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   onRanking() {

@@ -34,17 +34,15 @@ Page({
     wx.setNavigationBarTitle({ title: MODES[mode].title });
   },
 
-  onShow() {
-    this.applyFont();
-    theme.apply(this);
-    this.setData({ barBelow: !!tabbar.pick(this) });
-    this.load();
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.applyFont();
+    this.setData({ barBelow: !!tabbar.pick(this) });
+    this.load();
   },
 
   load() {

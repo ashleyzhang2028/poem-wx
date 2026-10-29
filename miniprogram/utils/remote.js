@@ -228,7 +228,7 @@ function cloudCall(conf, path, data, method, opt) {
 }
 
 function sourceOffError() {
-  const e = new Error("还没接上课外阅读（取诗的那个服务）—— 这个包没配同步服务器");
+  const e = new Error("还没接上诗词漫读（取诗的那个服务）—— 这个包没配同步服务器");
   e.code = "E_POEM_SOURCE_OFF";
   e.expected = true;
   return e;
@@ -429,10 +429,22 @@ function failure(err) {
   };
 }
 
+function transient(err) {
+  const status = Number(err && err.statusCode) || 0;
+  return !status || status >= 502;
+}
+
+function once(job) {
+  return job()["catch"]((err) => {
+    if (!transient(err)) throw err;
+    return job();
+  });
+}
+
 function sync() {
   if (!configured()) return Promise.resolve({ sim: true, pulled: 0, pushed: 0 });
-  return pull()
-    .then((a) => push().then((b) => ({ sim: false, pulled: a.applied, pushed: b.pushed })))
+  return once(pull)
+    .then((a) => once(push).then((b) => ({ sim: false, pulled: a.applied, pushed: b.pushed })))
     ["catch"]((err) => failure(err));
 }
 

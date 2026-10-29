@@ -27,7 +27,7 @@
           <text class="suggest-era">{{item.era}}</text>
           <text class="tag course suggest-mark" wx:if="{{item.marked}}">课内</text>
           <text class="suggest-count" wx:elif="{{item.count}}">{{item.count}} 条</text>
-          <text class="tag own suggest-mark" wx:else>课外阅读</text>
+          <text class="tag own suggest-mark" wx:else>诗词漫读</text>
         </view>
       </view>
 
@@ -59,7 +59,6 @@
               hover-class="a-cell-hover" hover-stay-time="60"
               data-name="{{a.name}}" bindtap="onAuthor">
           <text class="a-name ellipsis">{{a.name}}</text>
-          <text class="a-num">{{a.count}}</text>
         </view>
       </view>
     </view>

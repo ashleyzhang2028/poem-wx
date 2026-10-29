@@ -166,6 +166,7 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/nav-bar/nav-bar.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-tag/tier-tag.wxss"))
+  + flattenCss(path.join(ROOT, "components/login-panel/login-panel.wxss"))
   + flattenCss(path.join(ROOT, "packages/feedback/index/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/detail/detail.wxss"))
@@ -477,7 +478,7 @@ function expandNavBar(wxml, data, navbar) {
     height: box.statusBarHeight + box.navHeight,
     top: box.navTop,
     row: box.navBottom - box.navTop,
-    font: font.stack()
+    font: font.uiStack() || font.stack()
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<nav-bar([^>]*)\/>/g, (_, attrs) => {

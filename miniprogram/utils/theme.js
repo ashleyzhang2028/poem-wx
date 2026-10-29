@@ -25,18 +25,25 @@ const THEMES = [
   { key: "shilv", name: "石绿", rgb: [108, 127, 79], group: TRADITION },
   { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51], group: TRADITION },
   { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85], group: TRADITION },
-  { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [145, 207, 8], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
-  { key: "qingmingshanghetu", name: "开封上河图", rgb: [107, 153, 7], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
+  { key: "datongxuankongsi", name: "大同悬空寺", rgb: [203, 142, 79], banner: CITY_BANNER + "datong_xuankongsi.png", group: LANDSCAPE },
+  { key: "eergunashidi", name: "额尔古纳", rgb: [205, 83, 63], banner: CITY_BANNER + "eerguna_shidi.png", group: LANDSCAPE },
+  { key: "hulunbeiershiwei", name: "呼伦贝尔室韦", rgb: [53, 131, 166], banner: CITY_BANNER + "hulunbeier_shiwei.png", group: LANDSCAPE },
+  { key: "dandongyalujiang", name: "丹东鸭绿江", rgb: [16, 50, 59], banner: CITY_BANNER + "dandong_yalujiang.png", group: LANDSCAPE },
   { key: "benxiguanmenshan", name: "本溪关门山", rgb: [205, 20, 11], banner: CITY_BANNER + "benxi_guanmenshan.png", group: LANDSCAPE },
-  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
-  { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
-  { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
+  { key: "changchunnanling", name: "长春南岭", rgb: [243, 61, 104], banner: CITY_BANNER + "changchun_nanling.png", group: LANDSCAPE },
+  { key: "baishanchangbaishan", name: "白山长白山", rgb: [11, 41, 74], banner: CITY_BANNER + "baishan_changbaishan.png", group: LANDSCAPE },
+  { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [145, 207, 8], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
   { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE },
+  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
+  { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
+  { key: "qingdaolaoshan", name: "青岛崂山", rgb: [33, 56, 63], banner: CITY_BANNER + "qingdao_laoshan.png", group: LANDSCAPE },
+  { key: "qingmingshanghetu", name: "开封上河图", rgb: [107, 153, 7], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
   { key: "ganziyading", name: "甘孜亚丁", rgb: [236, 158, 1], banner: CITY_BANNER + "ganzhi_yading.png", group: LANDSCAPE },
+  { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
   { key: "lijiangluguhu", name: "丽江泸沽湖", rgb: [25, 91, 108], banner: CITY_BANNER + "lijiang_luguhu.png", group: LANDSCAPE },
   { key: "jiayuguan", name: "嘉峪关", rgb: [249, 139, 57], banner: CITY_BANNER + "jiayuguan.png", group: LANDSCAPE },
-  { key: "eergunashidi", name: "额尔古纳", rgb: [205, 83, 63], banner: CITY_BANNER + "eerguna_shidi.png", group: LANDSCAPE },
-  { key: "hulunbeiershiwei", name: "呼伦贝尔室韦", rgb: [53, 131, 166], banner: CITY_BANNER + "hulunbeier_shiwei.png", group: LANDSCAPE }
+  { key: "dunhuangmogaoku", name: "敦煌莫高窟", rgb: [91, 54, 41], banner: CITY_BANNER + "dunhuang_mogaoku.png", group: LANDSCAPE },
+  { key: "aletailhemu", name: "阿勒泰禾木", rgb: [35, 60, 75], banner: CITY_BANNER + "aletai_hemu.png", group: LANDSCAPE }
 ];
 
 const OWN_THEME = {
@@ -99,7 +106,7 @@ function deepOf(rgb) {
 THEMES.forEach((t) => {
   t.rgba = rgba(t.rgb, 1);
   t.soft = rgba(t.rgb, WASH);
-  t.on = rgba(inkOn(t.rgb), 1);
+  t.on = rgba(WHITE, 1);
   t.depth = deepOf(t.rgb);
   t.mark = rgba(MARK, 1);
   t.banner = t.banner || BANNER;
@@ -183,7 +190,7 @@ function toneData() {
     toneHex: view.hex.toUpperCase(),
     toneRgba: view.rgba,
     toneSoft: view.soft,
-    toneOnInk: view.on ? rgba(inkOn(tone.parseHex(view.hex)), 1) : "",
+    toneOnInk: view.on ? rgba(WHITE, 1) : "",
     toneHue: view.hue,
     toneSat: view.sat,
     toneLight: view.light,
@@ -217,7 +224,7 @@ function toneSoft(rgb) {
 
 OWN_THEME.rgba = rgba(OWN_THEME.rgb, 1);
 OWN_THEME.soft = rgba(OWN_THEME.rgb, WASH);
-OWN_THEME.on = rgba(inkOn(OWN_THEME.rgb), 1);
+OWN_THEME.on = rgba(WHITE, 1);
 OWN_THEME.depth = deepOf(OWN_THEME.rgb);
 OWN_THEME.mark = rgba(MARK, 1);
 VAR_OF[OWN_THEME.key] = "--c-" + OWN_THEME.key;
@@ -227,6 +234,11 @@ THEMES.forEach((t) => { BY_KEY[t.key] = t; });
 BY_KEY[OWN_THEME.key] = OWN_THEME;
 
 const VAR_DECLS = variables().join(";");
+
+const UI_STACK = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", '
+  + '"Microsoft YaHei", sans-serif';
+
+const NUM_STACK = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 
 function all() {
   return THEMES;
@@ -270,7 +282,7 @@ function tint(theme) {
   return {
     rgba: rgba(rgb, 1),
     soft: toneSoft(rgb),
-    on: rgba(inkOn(rgb), 1),
+    on: rgba(WHITE, 1),
     mark: rgba(rgb, 1),
     depth: deepOf(rgb)
   };
@@ -281,7 +293,7 @@ function style(key, fontKey) {
   const lit = toneOf();
 
   const ui = font.uiStack(fontKey);
-  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) + ";--font-ui:" + (ui || font.UI_STACK) +
+  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) + ";--font-ui:" + (ui || UI_STACK) + ";--font-num:" + (ui || NUM_STACK) +
     ";--theme:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--theme-deep:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +

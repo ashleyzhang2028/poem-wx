@@ -34,17 +34,15 @@ Page({
     this.setData({ tid: String((query && query.tid) || "") });
   },
 
-  onShow() {
-    this.applyFont();
-    theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), logged: admin.loggedIn(), canWrite: admin.canWrite() });
-    this.load();
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.applyFont();
+    this.setData({ barBelow: tabbar.below(this), logged: admin.loggedIn(), canWrite: admin.canWrite() });
+    this.load();
   },
 
   load() {

@@ -22,7 +22,7 @@ Component({
     conference: 2,
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
-      { pagePath: "/pages/library/library", text: "阅读", icon: icons.library, login: true },
+      { pagePath: "/pages/library/library", text: "漫读", icon: icons.library, login: true },
       { pagePath: "/packages/game/index/index", text: "大会", icon: icons.conference, login: true },
       { pagePath: "/pages/search/search", text: "搜索", icon: icons.search, login: true },
       { pagePath: "/pages/mine/mine", text: "我的", icon: icons.mine, me: true }
@@ -58,8 +58,8 @@ Component({
     },
 
     paint() {
-      const family = font.globalOn() ? font.groupOf(font.current()) : "";
-      return { themeStyle: theme.style(), name: theme.name(), fontStyle: family };
+      const face = font.globalOn() ? font.groupOf(font.current()) : "";
+      return { themeStyle: theme.style(), name: theme.name(), fontStyle: face };
     },
 
     paintMe() {

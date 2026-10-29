@@ -4,28 +4,9 @@ const picker = require("../../../utils/color-picker");
 const custom = require("../../../utils/custom-banner");
 const font = require("../../../utils/font");
 const gate = require("../../../utils/gate");
-const pinyin = require("../../../utils/pinyin");
-const entitlement = require("../../../utils/entitlement");
-const scale = require("../../../utils/type-scale");
-const corpus = require("../../../utils/corpus");
-const store = require("../../../utils/store");
-const sync = require("../../../utils/sync");
-const icons = require("../../../utils/icons");
 const tabbar = require("../../../utils/tabbar");
 const tiers = require("../../../utils/tiers");
 const loginFlow = require("../../../utils/login-flow");
-
-const ALIGNS = [
-  { key: "left", label: "左对齐", icon: icons.left },
-  { key: "center", label: "居中", icon: icons.center }
-];
-
-const SAMPLE = "举头望明月，低头思故乡。";
-
-const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: icons.off, desc: "正文不带拼音" },
-  { key: "all", label: "全文", icon: icons.all, desc: "逐字标音" }
-];
 
 Page({
   data: {
@@ -44,57 +25,40 @@ Page({
     toneView: {},
     toneLocked: true,
 
-    themeColor: theme.currentTheme().rgba,
-    aligns: ALIGNS,
-    align: "center",
-    fontSize: 0,
-    fontMin: scale.MIN,
-    fontMax: scale.MAX,
-    pinyinModes: PINYIN_MODES,
-    pinyin: "off",
-    pinyinOn: false,
-    sampleTokens: [],
-
     fonts: [],
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
     fontLocked: true,
     fontTier: "pro",
-    fontGlobal: false
+    fontGlobal: false,
+    fontScope: -1,
+
+    themeColor: theme.currentTheme().rgba
   },
 
   onShow() {
+    font.restore();
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   warmPreview() {
     font.preview().catch(() => {});
   },
 
+  applyFont() {
+    this.setData(Object.assign({
+      fontScope: font.scope(),
+      fontGlobal: font.globalOn()
+    }, font.bind(theme.style()).page));
+    font.registerHere().catch(() => {});
+  },
+
   view() {
     const pickable = font.pickable();
-    const settings = store.settings();
-    const pr = pinyin.readiness();
-    const prOn = pr.usable && entitlement.can("pinyin");
-    const size = scale.clamp(settings.fontSize);
-    const mode = prOn ? settings.pinyin : "off";
     return {
-      align: settings.align || "center",
-      fontSize: size,
-      pinyin: mode,
-      pinyinOn: prOn,
-      sampleTokens: this.sample(mode, size),
-      themeColor: theme.currentTheme().rgba,
       groups: theme.groups(),
       ownSet: theme.ownSwatchData().set,
       toneLocked: !theme.reachable(theme.OWN_KEY),
@@ -106,35 +70,12 @@ Page({
       font: font.current(),
       fontLocked: !pickable,
       fontTier: font.tier(),
-      fontGlobal: font.globalOn()
+      fontGlobal: font.globalOn(),
+      fontScope: font.scope(),
+      toneView: theme.toneData()
     };
   },
 
-
-  sample(mode, size) {
-    return pinyin.render(corpus.layout(SAMPLE, { size, pinyin: mode === "all" }).paras, mode);
-  },
-
-  onAlign(e) {
-    const align = e.detail.value;
-    store.saveSettings({ align });
-    this.setData({ align });
-    sync.markDirty();
-  },
-
-  onFontSlide(e) {
-    const fontSize = scale.clamp(e.detail.value);
-    if (fontSize === this.data.fontSize) return;
-    store.saveSettings({ fontSize });
-    this.setData({ fontSize, sampleTokens: this.sample(this.data.pinyin, fontSize) });
-    sync.markDirty();
-  },
-
-  onPinyin(e) {
-    const mode = e.detail.value;
-    if (!pinyin.setMode(mode)) return;
-    this.setData({ pinyin: mode, sampleTokens: this.sample(mode, this.data.fontSize) });
-  },
 
   onPick(e) {
     const key = e.currentTarget.dataset.key;
@@ -264,9 +205,11 @@ Page({
     const r = font.setGlobal(e.detail.value);
     if (!r.ok) {
       wx.showToast({ title: tiers.nameOf(font.tier()) + " 起可用", icon: "none" });
+      this.setData({ fontGlobal: font.globalOn() });
+      return;
     }
-    this.setData({ fontGlobal: font.globalOn() });
     this.applyFont();
+    wx.vibrateShort && wx.vibrateShort({ type: "light" });
   },
 
   onFont(e) {
@@ -279,8 +222,8 @@ Page({
       return;
     }
     if (!r.changed) return;
-    this.setData({ font: font.current() });
     this.applyFont();
+    this.setData({ font: font.current() });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }
 });

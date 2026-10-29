@@ -76,9 +76,13 @@ Page({
     log: { count: 0, line: "" }
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
     this.setData({ allowed: ok, lockNote: entitlement.hint("feihualing") || "登录后才能玩" });
@@ -90,12 +94,6 @@ Page({
       return;
     }
     if (this.data.started && !this.ended && !this.clock) this.startClock();
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   onHide() {
@@ -310,7 +308,7 @@ Page({
     const token = (this.judgeToken || 0) + 1;
     this.judgeToken = token;
     if (feihua.onSource()) {
-      this.setData({ judging: true, msgHint: true, message: "正在核对课外阅读…", messageOk: false });
+      this.setData({ judging: true, msgHint: true, message: "正在核对诗词漫读…", messageOk: false });
     }
     feihua.judgeAsync(this.data.char, this.data.input, said, opt).then((r) => {
       if (token !== this.judgeToken) return;
@@ -323,7 +321,7 @@ Page({
 
   settle(r) {
     if (this.ended) return;
-    if (r.degraded) wx.showToast({ title: "课外阅读没回应，已按课内判定", icon: "none" });
+    if (r.degraded) wx.showToast({ title: "诗词漫读没回应，已按课内判定", icon: "none" });
     this.setData({ judging: false, msgHint: false });
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);

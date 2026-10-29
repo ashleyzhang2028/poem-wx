@@ -100,7 +100,7 @@
 
 .id-chips {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--sp-2);
 }
 

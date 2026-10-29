@@ -17,9 +17,6 @@ const SAMPLE = "烟花三月下扬州";
 
 const DEFAULT = "zhuque";
 
-const UI_STACK = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", '
-  + '"Microsoft YaHei", sans-serif';
-
 const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/";
 
 const SUBSETS = ["woff2", "woff"];
@@ -87,15 +84,6 @@ function shelf() {
   if (tier0 === "max") return "max";
   if (tier0 === "pro") return "pro";
   return "free";
-}
-
-function globalOn() {
-  return paid() && store.settings().fontGlobal === true;
-}
-
-function uiStack(key) {
-  if (!globalOn()) return "";
-  return stack(key);
 }
 
 function addresses(key) {
@@ -179,14 +167,63 @@ function registerPage(family, list) {
   });
 }
 
-function registerHere() {
-  if (!globalOn() || !previewsReady()) return Promise.resolve("");
+function load() {
   const f = face();
-  return registerPage(f.family, configured()).then((ok) => (ok ? f.family : ""));
+  const list = configured();
+
+  if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
+  return register(f.family, list);
+}
+
+function previewing() {
+  if (!previewsReady()) return [];
+  return FACES.map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
+}
+
+function preview() {
+  const list = previewing();
+  if (!list.length) return Promise.resolve(false);
+  return Promise.all(list).then((keys) => keys.filter(Boolean).length > 0);
+}
+
+function familyOf(key) {
+  return face(key || current()).family;
+}
+
+function globalOn() {
+  return paid() && store.settings().fontGlobal === true;
+}
+
+function uiStack(key) {
+  if (!globalOn()) return "";
+  return stack(key);
+}
+
+function setGlobal(on) {
+  if (on && !paid()) return { ok: false, reason: "tier" };
+  const next = !!on;
+  if (next === globalOn()) return { ok: true, changed: false };
+  store.saveSettings({ fontGlobal: next });
+  try {
+    require("./sync").markDirty();
+  } catch (e) {
+
+  }
+  scopeEpoch += 1;
+  scoped = {};
+  announce();
+  return { ok: true, changed: true };
 }
 
 function rooted() {
   return typeof getApp === "function" && !!getApp();
+}
+
+function registerHere() {
+  if (!globalOn() || !previewsReady()) return Promise.resolve("");
+  const f = face();
+  const list = configured();
+  return registerPage(f.family, list).then((ok) => (ok ? f.family : ""));
 }
 
 function publish(family) {
@@ -224,49 +261,6 @@ function restore() {
   const top = page && page[page.length - 1];
   if (!stale && top && typeof top.applyFont === "function") top.applyFont();
   announce();
-}
-
-function setGlobal(on) {
-  if (on && !paid()) return { ok: false, reason: "tier" };
-  const next = !!on;
-  if (next === globalOn()) return { ok: true, changed: false };
-  store.saveSettings({ fontGlobal: next });
-  try {
-    require("./sync").markDirty();
-  } catch (e) {
-
-  }
-  scopeEpoch += 1;
-  scoped = {};
-  announce();
-  return { ok: true, changed: true };
-}
-
-function bind(style) {
-  return { page: { themeStyle: style } };
-}
-
-function load() {
-  const f = face();
-  const list = configured();
-
-  if (!list.length || typeof wx.loadFontFace !== "function") return Promise.resolve(false);
-  return register(f.family, list);
-}
-
-function previewing() {
-  if (!previewsReady()) return [];
-  return FACES.map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
-}
-
-function preview() {
-  const list = previewing();
-  if (!list.length) return Promise.resolve(false);
-  return Promise.all(list).then((keys) => keys.filter(Boolean).length > 0);
-}
-
-function familyOf(key) {
-  return face(key || current()).family;
 }
 
 function loadAll() {
@@ -308,8 +302,12 @@ function set(key) {
   return { ok: true, changed: true, font: key };
 }
 
+function bind(style) {
+  return { page: { themeStyle: style } };
+}
+
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, UI_STACK,
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, groupOf, shelf,
   addresses, configured, load, loadAll, preview, set, refresh,

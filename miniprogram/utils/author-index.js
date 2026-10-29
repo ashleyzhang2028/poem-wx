@@ -97,21 +97,13 @@ const ALIAS = {
 
   "孟轲": "孟子",
   "戴圣编": "戴圣",
-  "刘向编": "刘向",
-  "墨翟及弟子": "墨子"
+  "刘向编": "刘向"
 };
 
-const COLLECTIVE = { 礼记: 1, 论语: 1, 国语: 1, 战国策: 1, 左传: 1, 公羊传: 1, 谷梁传: 1, "礼记·檀弓": 1, 史记: 1, 汉书: 1, 楚辞: 1, 新书: 1, 后汉书: 1 };
-
-const ROLE_TAIL = /(编|译|撰|注|辑)$/;
-
-function authorName(name) {
-  const n = String(name == null ? "" : name).trim();
-  if (!n) return "";
-  const mapped = ALIAS[n] || n;
-  if (isCollective(mapped) || ROLE_TAIL.test(mapped)) return "";
-  return mapped;
-}
+const COLLECTIVE = {
+  礼记: 1, 论语: 1, 公羊传: 1, 谷梁传: 1, "礼记·檀弓": 1,
+  国语: 1, 战国策: 1, 戴圣编: 1, 求那毗地译: 1
+};
 
 function personName(name) {
   return String(name == null ? "" : name).trim().replace(/等$/, "");
@@ -144,10 +136,9 @@ const extra = (() => {
 const EXTRA_ERA = extra.era || {};
 
 function extraRoster(byPerson, order) {
-  Object.keys(EXTRA_ERA).forEach(function (raw) {
-    const n = authorName(raw);
-    if (!n) return;
-    const row = EXTRA_ERA[raw] || {};
+  Object.keys(EXTRA_ERA).forEach(function (n) {
+    if (isCollective(n)) return;
+    const row = EXTRA_ERA[n] || {};
     if (byPerson[n]) {
       byPerson[n].at = Number(row.at) || TAIL;
       byPerson[n].dynasty = row.era || "";
@@ -180,7 +171,7 @@ function build(entries, opt) {
   const personOf = function (p) {
     const fix = ATTRIB[p.id];
     if (fix) return fix.person;
-    return authorName(aliasOf(p.a));
+    return aliasOf(p.a);
   };
 
   (entries || []).forEach(function (p) {
