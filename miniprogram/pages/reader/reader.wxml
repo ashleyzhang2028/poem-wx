@@ -77,6 +77,14 @@
         </view>
       </view>
 
+      <view class="pref-seg" wx:if="{{pinyinOn}}">
+        <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
+              aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
+          <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
+        </view>
+      </view>
+
       <view class="pref-act">
         <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"

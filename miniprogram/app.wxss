@@ -1632,13 +1632,14 @@ button, input, textarea {
   line-height: 1;
 }
 
+.poem-body.gap--5 { --lh-poem: 0.9; }
+.poem-body.gap--4 { --lh-poem: 1.0; }
 .poem-body.gap--3 { --lh-poem: 1.1; }
 .poem-body.gap--2 { --lh-poem: 1.2; }
 .poem-body.gap--1 { --lh-poem: 1.3; }
 .poem-body.gap-1  { --lh-poem: 1.5; }
 .poem-body.gap-2  { --lh-poem: 1.6; }
 .poem-body.gap-3  { --lh-poem: 1.7; }
-.poem-body.gap-4  { --lh-poem: 1.8; }
 
 .poem-body.size--2 { --py-box: 34rpx; --py-line: 72rpx; --poem-fs: 30rpx; }
 .poem-body.size--1 { --py-box: 37rpx; --py-line: 75rpx; --poem-fs: 33rpx; }

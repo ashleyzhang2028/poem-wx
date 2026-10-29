@@ -26,12 +26,10 @@ const DEFERS = [
 
 const REOPEN_MS = 400;
 
-const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: icons.off },
-  { key: "all", label: "全文", icon: icons.all }
-];
-
-const PAGE_ICONS = { left: icons.left, center: icons.center, add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
+const PAGE_ICONS = {
+  left: icons.left, center: icons.center, add: icons.add, added: icons.added,
+  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all
+};
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
@@ -110,7 +108,6 @@ Component({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    pinyinModes: PINYIN_MODES,
     pinyinMode: "off",
     pinyinOn: false,
 
@@ -402,8 +399,8 @@ Component({
       this.setData({ showGloss: !this.data.showGloss });
     },
 
-    onPinyin(e) {
-      const mode = e.detail.value;
+    onPinyinToggle() {
+      const mode = this.data.pinyinMode === "all" ? "off" : "all";
       if (!pinyin.setMode(mode)) {
         wx.showToast({ title: "读音表尚未生成", icon: "none" });
         return;

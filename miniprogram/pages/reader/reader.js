@@ -25,7 +25,8 @@ const RESULTS = [
 
 const PAGE_ICONS = {
   left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
-  add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, playlist: icons.playlist
+  add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
+  playlist: icons.playlist, off: icons.off, all: icons.all
 };
 
 function aliasTextOf(meta) {
@@ -77,7 +78,7 @@ Page({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    lineGap: 0,
+    lineGap: scale.DEFAULT_GAP,
     lineDown: true,
     lineUp: true,
     pinyinMode: "off",
@@ -331,10 +332,8 @@ Page({
   },
 
   applyReading() {
-    const pr = pinyin.readiness();
-    const allowed = entitlement.can("pinyin");
-    const usable = pr.usable && allowed;
-    const mode = "off";
+    const usable = pinyin.readiness().usable && entitlement.can("pinyin");
+    const mode = usable ? pinyin.getMode() : "off";
     const tableBlocks = usable && this.data.tableView;
 
     this.setData({
@@ -345,6 +344,16 @@ Page({
     });
     if (this.data.rawText) this.relayout();
     if (!tableBlocks) this.setData({ tokens: pinyin.render(this.data.paras, mode) });
+  },
+
+  onPinyinToggle() {
+    const mode = this.data.pinyinMode === "all" ? "off" : "all";
+    if (!pinyin.setMode(mode)) {
+      wx.showToast({ title: "读音表尚未生成", icon: "none" });
+      return;
+    }
+    this.setData({ pinyinMode: mode });
+    this.applyReading();
   },
 
   findMeta(id) {
