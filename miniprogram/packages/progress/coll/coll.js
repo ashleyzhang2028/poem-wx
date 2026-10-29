@@ -52,12 +52,11 @@ Page({
     const all = corpus.course();
     const defers = defer.lists();
     const list = entitlement.can("collections") ? cols.usable() : [];
-    const cards = list.map((c, i) => {
+    const cards = list.map((c) => {
       const view = pv.collectionView(c, all, store.getRecord);
       return {
         id: c.id,
         name: c.name,
-        color: pv.DOTS[i % pv.DOTS.length],
         labels: labelOf(c.name),
         ringText: "已掌握 " + view.mastered + " / 已学 " + view.learned + " · 共 " + view.total + " 首",
         sub: view.total + " 首",

@@ -7,7 +7,7 @@
     <view class="row" wx:if="{{sfxVisible}}">
       <view class="row-main">
         <text class="row-title">答对答错出声</text>
-        <text class="row-sub">背诵三态 · 题库 · 考试 · 飞花令共用</text>
+        <text class="row-sub">温习三态 · 题库 · 考试 · 飞花令共用</text>
       </view>
       <button class="btn mini ghost sfx-test" bindtap="onSfxTest">试听</button>
       <view class="sw">
@@ -40,7 +40,7 @@
     <view class="card-title danger-title">危险操作</view>
     <view class="row danger-row">
       <view class="row-main">
-        <text class="row-title">删除个人所有数据，无法恢复</text>
+        <text class="row-sub">删除个人所有数据，无法恢复</text>
       </view>
       <button class="btn danger mini danger-clear" bindtap="onClearData">清空数据</button>
     </view>

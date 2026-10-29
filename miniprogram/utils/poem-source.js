@@ -2,7 +2,7 @@ const remote = require("./remote");
 const remotePoems = require("./remote-poems");
 const store = require("./store");
 
-const NAME = "课外阅读";
+const NAME = "诗词漫读";
 
 const CAPS = {
   poems: "/poems",
@@ -124,7 +124,7 @@ function withTimeout(task, ms) {
 }
 
 function failure(err) {
-  const e = new Error((err && (err.errMsg || err.message)) || "取不到课外阅读");
+  const e = new Error((err && (err.errMsg || err.message)) || "取不到诗词漫读");
   e.code = (err && err.code) || "E_POEM_SOURCE";
   e.expected = true;
   e.statusCode = Number(err && err.statusCode) || 0;
@@ -278,7 +278,7 @@ function cursorBefore(id) {
 function byNumericId(id) {
   return poems({ after: cursorBefore(id), page_size: 1 }).then((r) => {
     const hit = r.items[0];
-    if (!hit || String(hit.id) !== String(id)) throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
+    if (!hit || String(hit.id) !== String(id)) throw failure({ message: "诗词漫读里没对上这一篇", code: "E_NO_POEM" });
     return hit;
   });
 }
@@ -349,7 +349,7 @@ function byTitle(meta) {
     }),
     Promise.resolve(null)
   ).then((hit) => {
-    if (!hit) throw failure({ message: "课外阅读里没对上这一篇", code: "E_NO_POEM" });
+    if (!hit) throw failure({ message: "诗词漫读里没对上这一篇", code: "E_NO_POEM" });
     return hit;
   });
 }

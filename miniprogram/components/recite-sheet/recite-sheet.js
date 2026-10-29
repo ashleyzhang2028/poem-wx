@@ -30,7 +30,7 @@ const PINYIN_MODES = [
   { key: "all", label: "全文", icon: icons.all }
 ];
 
-const PAGE_ICONS = { add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
+const PAGE_ICONS = { left: icons.left, center: icons.center, add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
@@ -241,7 +241,7 @@ Component({
       const item = this.current();
       if (!item || item.id !== id) return;
       const meta = corpus.indexById(id) ||
-        (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "课外阅读", b: "", g: "", s: "" });
+        (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "诗词漫读", b: "", g: "", s: "" });
       if (!text || !meta) {
         this.setData({ textMiss: failText || "这一篇的正文没取到，点一下重试" });
         return;
@@ -364,7 +364,7 @@ Component({
         return;
       }
       this.setData({ dailyOn: r.on });
-      wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
+      wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
 
       this.triggerEvent("change", { count: store.dailyExtra().length });
     },

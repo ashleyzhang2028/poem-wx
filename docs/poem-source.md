@@ -1,7 +1,7 @@
 # 课外正文与检索的来源
 
 > 课内 251 首照旧在包里（正文、注音、朝代作者、出处）。课外的正文、检索、
-> 飞花令判句、今日加背搜索、自选集合找诗，一律**问服务端**，不再读打包的分片。
+> 飞花令判句、新增温习搜索、自选集合找诗，一律**问服务端**，不再读打包的分片。
 >
 > 服务是 `spovk/wx-kb-chinese-poetry-api`（源码 [belem/chinese-poetry-api](https://github.com/belem/chinese-poetry-api)，
 > 上游 palemoky/chinese-poetry-api），部署在微信云托管，服务名 **`poem-source`**。

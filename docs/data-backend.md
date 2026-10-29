@@ -259,7 +259,7 @@ node scripts/build-data.js
      `node scripts/build-data.js`，见 README「快速开始」。
 
 ② 本机（每台手机自己一份，不上云）
-   wx.setStorageSync 存：背诵进度、设置、已读标记、今日加背、自选背诵、离线队列
+   wx.setStorageSync 存：温习进度、设置、已读标记、新增温习、自选温习、离线队列
 
 ③ 云端（跟账号走，登录即可用）
    我们的后端（云托管容器，走微信云调用）

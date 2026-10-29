@@ -2,6 +2,7 @@ const adminFb = require("../../../utils/admin-feedback");
 const admin = require("../../../utils/admin");
 const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
+const dots = require("../../../utils/dots");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
@@ -38,6 +39,7 @@ Page({
     if (!this.data.logged) return;
     this.setData({ reason: "" });
     adminFb.list().then((res) => {
+      if (res.ok) dots.see("adminFeedback", res.latest);
       this.setData({
         groups: res.groups,
         counts: res.counts,

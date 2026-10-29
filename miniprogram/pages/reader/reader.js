@@ -22,12 +22,8 @@ const RESULTS = [
   { key: "good", label: "记住", cls: "good" }
 ];
 
-const PINYIN_MODES = [
-  { key: "off", label: "不注音", icon: icons.off },
-  { key: "all", label: "全文", icon: icons.all }
-];
-
 const PAGE_ICONS = {
+  left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, playlist: icons.playlist
 };
 
@@ -78,7 +74,9 @@ Page({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    pinyinModes: PINYIN_MODES,
+    lineGap: 0,
+    lineDown: true,
+    lineUp: true,
     pinyinMode: "off",
     pinyinOn: false,
     stage: "新学",
@@ -176,7 +174,7 @@ Page({
       return;
     }
     this.setData({ dailyOn: r.on });
-    wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
+    wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
     sync.markDirty();
   },
 
@@ -282,6 +280,8 @@ Page({
       align: settings.align === "left" ? "left" : "center",
       fontSize: size,
       ...scale.flags(size),
+      lineGap: scale.clampGap(settings.lineGap),
+      ...scale.gapFlags(settings.lineGap),
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
       mastery: R.mastery(rec)
     });
@@ -330,7 +330,7 @@ Page({
     const pr = pinyin.readiness();
     const allowed = entitlement.can("pinyin");
     const usable = pr.usable && allowed;
-    const mode = usable ? store.settings().pinyin : "off";
+    const mode = "off";
     const tableBlocks = usable && this.data.tableView;
 
     this.setData({
@@ -359,16 +359,19 @@ Page({
     this.setData({ showTranslation: !this.data.showTranslation });
   },
 
-  onPinyin(e) {
-    const mode = e.detail.value;
-    if (!pinyin.setMode(mode)) {
-      wx.showToast({ title: "读音表尚未生成", icon: "none" });
-      return;
-    }
-    this.setData({ pinyinMode: mode });
-    this.applyReading();
+  onLineDown() {
+    this.stepGap(-1);
+  },
 
-    sync.markDirty();
+  onLineUp() {
+    this.stepGap(1);
+  },
+
+  stepGap(delta) {
+    const lineGap = scale.clampGap(this.data.lineGap + delta);
+    if (lineGap === this.data.lineGap) return;
+    this.setData(Object.assign({ lineGap }, scale.gapFlags(lineGap)));
+    store.saveSettings({ lineGap });
   },
 
   onFontDown() {
