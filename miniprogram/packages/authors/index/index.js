@@ -4,6 +4,7 @@ const AI = require("../../../utils/author-index");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
 const source = require("../../../utils/poem-source");
@@ -53,6 +54,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
 
@@ -64,6 +66,12 @@ Page({
 
     this.buildRoster();
     if (this.data.author) this.applyWorks();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   allEntries() {
@@ -319,6 +327,7 @@ Page({
     this.setData({
       works: list.map((p) => ({
         id: p.id,
+        sid: String(p.sid || ""),
         title: p.t,
         dynasty: p.d,
         bookName: p.n,
@@ -350,6 +359,7 @@ Page({
     const ds = e.currentTarget.dataset;
     const url = "/pages/reader/reader?id=" + encodeURIComponent(ds.id) +
       "&mode=browse&from=" + encodeURIComponent(this.data.author) +
+      (ds.sid ? "&sid=" + encodeURIComponent(ds.sid) : "") +
       (ds.src ? "&src=1" : "");
     wx.navigateTo({ url: url });
   },

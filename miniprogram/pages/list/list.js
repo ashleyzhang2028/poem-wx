@@ -5,6 +5,7 @@ const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
@@ -49,6 +50,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
 
@@ -65,6 +67,12 @@ Page({
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   apply() {

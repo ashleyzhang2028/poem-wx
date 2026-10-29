@@ -25,6 +25,7 @@ var PRODUCT_MAX = 40;
 var PRICE_MAX_CENTS = 1000000;
 var WX_TIMEOUT_MS = 6000;
 var NOTIFY_RAW_MAX = 4000;
+var NOTIFY_SKEW_MS = 5 * 60 * 1000;
 var CONFIRM_BATCH = 3;
 
 var DEFAULT_CATALOG = { products: [], active: {} };
@@ -431,9 +432,13 @@ function payOrder(deps, input) {
   });
 }
 
+function force(deps) {
+  return Object.assign({}, deps, { force: true });
+}
+
 function settleFromWx(deps, order) {
   var t = deps.now();
-  if (lastQueryAt[order.out_trade_no] && t - lastQueryAt[order.out_trade_no] < QUERY_GAP_MS) {
+  if (!deps.force && lastQueryAt[order.out_trade_no] && t - lastQueryAt[order.out_trade_no] < QUERY_GAP_MS) {
     return Promise.resolve(order);
   }
   lastQueryAt[order.out_trade_no] = t;
@@ -526,12 +531,15 @@ function payOrdersMine(deps, input) {
   });
 }
 
-function pushSigned(cfg, query) {
+function pushSigned(cfg, query, now) {
   var token = String(cfg.payPushToken || "");
   if (!token) return false;
   var q = query || {};
   var expect = crypto.createHash("sha1").update([token, String(q.timestamp || ""), String(q.nonce || "")].sort().join("")).digest("hex");
-  return sameText(expect, String(q.signature || ""));
+  if (!sameText(expect, String(q.signature || ""))) return false;
+  var at = Number(q.timestamp) * 1000;
+  if (!at || Math.abs(Number(now) - at) > NOTIFY_SKEW_MS) return false;
+  return true;
 }
 
 function pushAck(code, msg) {
@@ -541,7 +549,7 @@ function pushAck(code, msg) {
 function payNotify(deps, input) {
   var cfg = deps.cfg, store = deps.store;
   var query = (input && input.query) || {};
-  if (!pushSigned(cfg, query)) return Promise.resolve({ status: 403, text: "" });
+  if (!pushSigned(cfg, query, deps.now())) return Promise.resolve({ status: 403, text: "" });
   if (String(input.method).toUpperCase() === "GET") {
     return Promise.resolve({ status: 200, text: String(query.echostr || "") });
   }
@@ -557,14 +565,14 @@ function payNotify(deps, input) {
       return revoke(deps, order).then(function () { return pushAck(0, "success"); });
     }
     var goods = msg.GoodsInfo || {};
-    var wxPay = msg.WeChatPayInfo || {};
     var feeOk = goods.OrderFee == null || Number(goods.OrderFee) === Number(order.price_cents);
     if (String(msg.OpenId || "") !== order.openid || String(goods.ProductId || "") !== order.product_id || !feeOk) {
       H.log("pay.notify_mismatch", { out: out });
       return pushAck(1, "mismatch");
     }
-    return deliver(deps, order, { source: "notify", wxOrderId: wxPay.MchOrderNo || "", raw: JSON.stringify(msg) })
-      .then(function (o) { return o && o.status === "paid" ? pushAck(0, "success") : pushAck(1, "retry"); });
+    return settleFromWx(force(deps), order).then(function (settled) {
+      return pushAck(settled && settled.status === "paid" ? 0 : 1, settled && settled.status === "paid" ? "success" : "retry");
+    });
   });
 }
 

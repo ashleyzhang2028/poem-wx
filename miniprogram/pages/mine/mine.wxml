@@ -3,7 +3,8 @@
   <view class="mine-main tint-{{tint}}">
     <login-panel class="my-login" id="login" tier-label="{{tierLabel}}"
                  bind:changed="onIdentityChanged"
-                 bind:login="onLogin" bind:tier="onTier" bind:upgrade="onPricing" />
+                 bind:login="onLogin" bind:tier="onTier" bind:upgrade="onPricing"
+                 bind:settings="onSettings" />
 
     <view class="card" wx:if="{{expiry}}">
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onPricing">
@@ -63,14 +64,6 @@
         </view>
         <text class="row-go">›</text>
       </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSettings">
-        <view class="row-icon">设</view>
-        <view class="row-main">
-          <text class="row-title">设置</text>
-          <text class="row-sub">版式 · 声音 · 季节</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
     </view>
 
     <view class="card">
@@ -79,14 +72,6 @@
         <view class="row-main">
           <text class="row-title poem">用户权限</text>
           <text class="row-sub">自己那一档 · 功能对照 · 升档</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onFeedback" wx:if="{{logged}}">
-        <view class="row-icon">议</view>
-        <view class="row-main">
-          <text class="row-title">意见建议</text>
-          <text class="row-sub">反馈问题 · 查看处理进度</text>
         </view>
         <text class="row-go">›</text>
       </view>
@@ -103,14 +88,6 @@
         <view class="row-main">
           <text class="row-title">同步</text>
           <text class="row-sub">{{syncSub}}</text>
-        </view>
-        <text class="row-go">›</text>
-      </view>
-      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAbout">
-        <view class="row-icon">关</view>
-        <view class="row-main">
-          <text class="row-title">关于</text>
-          <text class="row-sub">版本 · 用户协议 · 隐私政策 · 意见建议</text>
         </view>
         <text class="row-go">›</text>
       </view>

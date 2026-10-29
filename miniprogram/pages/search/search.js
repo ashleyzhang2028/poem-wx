@@ -9,6 +9,7 @@ const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
 
@@ -44,6 +45,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 3) });
 
@@ -56,6 +58,12 @@ Page({
       locked: false,
       keyword: this.data.keyword || saved.lastSearch || ""
     });
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onTierGate() {

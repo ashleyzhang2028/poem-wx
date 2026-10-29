@@ -3,6 +3,7 @@ const entitlement = require("../../../utils/entitlement");
 const scoreLog = require("../../../utils/score-log");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = [
@@ -39,6 +40,7 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     sfx.warm();
@@ -67,6 +69,12 @@ Page({
       heroTitle: top ? top.rank.name : "",
       heroSub: top ? top.rank.note : "三个擂台，先挑一个上场"
     });
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   onRanking() {

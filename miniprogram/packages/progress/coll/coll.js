@@ -5,6 +5,7 @@ const store = require("../../../utils/store");
 const entitlement = require("../../../utils/entitlement");
 const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
+const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const defer = require("../../../utils/defer");
 const pv = require("../../../components/progress-view/progress-view");
@@ -36,10 +37,17 @@ Page({
   },
 
   onShow() {
+    this.applyFont();
     this.sheetIds = this.sheetIds || [];
     theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
+  },
+
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
   },
 
   refresh() {
