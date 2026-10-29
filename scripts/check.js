@@ -785,9 +785,9 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   asTier("free");
   const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
-  ok("Free 换不了字体（九款摆着，只有默认那款可选）",
+  ok("Free 换不了字体（十三款摆着，只有默认那款可选）",
     picked.font.pickable() === false
-      && picked.font.options().length === 9
+      && picked.font.options().length === picked.font.FACES.length
       && picked.font.set("huiwen").ok === false,
     JSON.stringify(picked.font.options()) + " / pickable=" + picked.font.pickable());
   picked.font.set("huiwen");
@@ -809,10 +809,8 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   }).then(() => {
     ok("同一款注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
     ok("每款字各有各的字族与地址（不是同一份换个名字）",
-      ep.font.FACES.map((f) => f.family).join()
-        === "Kuibu Poem zhuque,Kuibu Poem huiwen,Kuibu Poem chillkai,Kuibu Poem cooper,"
-          + "Kuibu Poem wenkai,Kuibu Poem oldsong,Kuibu Poem jinshu,Kuibu Poem yozai,Kuibu Poem longcang"
-        && ep.font.FACES.every((f) => f.pro[0] !== ep.font.FACES[0].pro[0]),
+      ep.font.FACES.every((f, i) => ep.font.FACES.every((g, j) => i === j
+        || (f.family !== g.family && f.pro[0] !== g.pro[0]))),
       ep.font.FACES.map((f) => f.family + " " + f.pro[0]).join(" | "));
     proSeen.length = 0;
     const r = ep.font.set("huiwen");
@@ -3663,11 +3661,11 @@ function mountFull(pg, query) {
       && fontMod.FACES.every((f) => f.previewFamily && f.previewFamily !== f.family),
     "预览字族又落回 page-meta 里当可见文字了，或者预览与正文共用一个字族");
 
-  ok("预热壳排在 banner 前面且压到负层（后画的兄弟节点盖住它，九格预览才会只剩空白）",
+  ok("预热壳排在 banner 前面且压到负层（后画的兄弟节点盖住它，各格预览才会只剩空白）",
     themeWxml.indexOf("font-warm") < themeWxml.indexOf("<page-banner")
       && /\.font-warm \{[^}]*z-index: -1/.test(
         fs.readFileSync(path.join(ROOT, "packages", "settings", "theme", "theme.wxss"), "utf8")),
-    "壳落到 banner 或卡片后面去了 —— 那九个字族的字形根本没被画过一次（Issue #709）");
+    "壳落到 banner 或卡片后面去了 —— 那几款预览字族的字形根本没被画过一次（Issue #709）");
 
   ok("未登录也摊开字体卡并预热预览（预览用 7 那份，选了仍被拒）",
     /wx:if="\{\{locked\}\}"[\s\S]*?font-row[\s\S]*?wx:else/.test(themeWxml)

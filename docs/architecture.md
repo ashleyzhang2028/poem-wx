@@ -788,7 +788,7 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
    + CDN），由 `wx.loadFontFace` 在真机上注册一次，落在这条链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
 
-**线上九款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
+**线上十三款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
 清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
 | 款 | 键 | 字族 | 目录 |
@@ -802,12 +802,16 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 | 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro_regular` |
 | 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular` |
 | 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular` |
+| 芫荽 | `iansui` | `Kuibu Poem iansui` | `iansui-regular` |
+| 乐米清砚方墨 | `qingyan` | `Kuibu Poem qingyan` | `lemi-qingyanfangmo` |
+| 黄令东齐伋 | `qiji` | `Kuibu Poem qiji` | `qiji` |
+| 演示春风楷 | `chunfeng` | `Kuibu Poem chunfeng` | `yanshichunfengkai` |
 
 每款目录下三份裁剪，文件名统一为 `<size>.{woff2,woff}`：
 `free` / `pro` / `max` 分别给未登录与 Free、Pro、Max 取用。
 
 每款目录下另有一份 `7` 子集（只含「烟花三月下扬州」，约 3KB），供主题页的字体格与
-预览壳用：格子里那七个字要跟着所在的款走，共用一份就成了九格同一个字形。
+预览壳用：格子里那七个字要跟着所在的款走，共用一份就成了每格同一个字形。
 
 文件名只有档位一个词，款由所在目录区分；`utils/font.js` 的 `files(dir, size)`
 只拼这一处。换一款、换一份裁剪都不用动页面。
@@ -861,7 +865,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
   跳过注册 —— 字族在那页根本没注册过，全局开关就只在第一页作数，这正是 Issue #744。
 - `globalData.fontScope` 是版本号，`setGlobal` / `set` 各推一次，`app.repaintFont()`
   逐个页 `applyFont()`，回前台由 `font.restore()` 补一次。
-- 页面只注册当前那一款，九款全量注册会把九个上兆的子集压进单页的内存。
+- 页面只注册当前那一款，全量注册会把十几份上兆的子集压进单页的内存。
 
 **自绘导航栏与底栏**（`components/nav-bar`、`custom-tab-bar`）是组件，页面根上的
 `--font-*` 变量继承不下来，两处各自内联 `font.groupOf()` 拿到的那串字族；
@@ -872,25 +876,25 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 **预览与正文是两套字族。** 主题页的字体格与预览壳里那七个字取 `font.preview()`，
 每款注册的是自己目录下的 `7.woff2` / `7.woff`，字族名为 `Kuibu Preview <款>`，
-与正文的 `Kuibu Poem <款>` 不相干。进页面把九份 7 子集各注册一次，
+与正文的 `Kuibu Poem <款>` 不相干。进页面把各款的 7 子集各注册一次，
 点哪款、换哪款都不等网络。正文与预览是两条链，选哪款都不改预览那一份。
 预览子集只含七个字，拿它排正文其余的字会落到系统衬线。预览字族不带系统兜底名，
 只靠这一份子集：掉下来就是「预览没生效」那一格。
 
 **预览字族的注册在页面作用域里。** `wx.loadFontFace` 带 `global: true` 时，
 字族名只在调用那一刻的页面作用域里认得出，换一页就没了 —— 所以主题页把
-那九个 `Kuibu Preview <款>` 挂在一层 `page-font-size` 的节点上，作用域跟着整页走；
-没这层壳，卡里那九格会安静地退回系统衬线，看着像「预览没生效」。
+各款的 `Kuibu Preview <款>` 挂在一层 `page-font-size` 的节点上，作用域跟着整页走；
+没这层壳，卡里那几格会安静地退回系统衬线，看着像「预览没生效」。
 
 **那层壳是隐藏的，不放 `<page-meta>` 里。** `page-meta` 只能是页面第一个节点、
 只能有一个子节点，`page-font-size` 这属性又只供标记，所以里面写什么都是渲染得出来的
-普通文字 —— 九行 `Kuibu Preview <款>` 会实打实铺在 banner 上。壳改挂在页面根里、
+普通文字 —— 每款一行 `Kuibu Preview <款>` 会实打实铺在 banner 上。壳改挂在页面根里、
 绝对定位、`1px` 见方、`overflow: hidden` 加 `clip-path: inset(50%)`：既不占位，
 也不在无障碍树里念字。`opacity: 0` 不算数 —— 那是「透明」，不是「没画」。
 
 **壳排在最前头，压在自己那一层。** 它必须排在 `page-banner` 之前，并且 `z-index: -1`：
 字形得真的画过一次才算注册成，而排在 banner 之后、又没定层级的绝对定位节点
-会被后面画的兄弟节点整块盖住。遮住了就等于没画，九格照样是系统衬线。
+会被后面画的兄弟节点整块盖住。遮住了就等于没画，那几格照样是系统衬线。
 
 **字族在启动时一次注册齐。** 早先只注册所选那一款，`--font-poem`
 一换名字就是换到一个从未 `wx.loadFontFace` 过的字族，`load()` 的网络请求
