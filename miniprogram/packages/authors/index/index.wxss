@@ -90,6 +90,15 @@
   color: var(--strong-text);
 }
 
+.a-num {
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  padding-left: var(--sp-1);
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .filter-group {
   margin: var(--sp-3) 0 var(--sp-2);
 }

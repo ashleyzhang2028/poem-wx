@@ -47,24 +47,21 @@
     </view>
 
     <view class="prefs">
-      <view class="pref-seg">
-        <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
-              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
-          <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
-        </view>
-      </view>
+      <radio-group class="pref-seg" bindchange="onAlign">
+        <label class="pref-opt in-seg {{align === item.key ? 'on' : ''}}"
+               wx:for="{{aligns}}" wx:key="key" aria-label="{{item.label}}">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{align === item.key}}" />
+          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
+        </label>
+      </radio-group>
 
-      <view class="pref-size">
-        <view class="pref-opt ic {{lineDown ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineDown" aria-label="缩小行间距">
-          <view class="glyph" style="mask-image:url('{{icons.lineDown}}');-webkit-mask-image:url('{{icons.lineDown}}');"></view>
-        </view>
-        <view class="pref-opt ic {{lineUp ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineUp" aria-label="增加行间距">
-          <view class="glyph" style="mask-image:url('{{icons.lineUp}}');-webkit-mask-image:url('{{icons.lineUp}}');"></view>
-        </view>
-      </view>
+      <radio-group class="pref-seg" bindchange="onPinyin">
+        <label class="pref-opt in-seg {{pinyinMode === item.key ? 'on' : ''}}"
+               wx:for="{{pinyinModes}}" wx:key="key" aria-label="{{item.label}}">
+          <radio class="opt-radio" value="{{item.key}}" checked="{{pinyinMode === item.key}}" />
+          <view class="glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
+        </label>
+      </radio-group>
 
       <view class="pref-size">
         <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
@@ -80,7 +77,7 @@
       <view class="pref-act">
         <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
-              aria-label="{{dailyOn ? '移出今日诵读' : '加入今日诵读'}}">
+              aria-label="{{dailyOn ? '移出今日背诵' : '加入今日背诵'}}">
           <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
         </view>
         <view class="pref-opt ic {{pickOn ? 'on' : ''}}"
@@ -91,7 +88,7 @@
       </view>
     </view>
 
-    <view class="poem-body align-{{align}} size-{{fontSize}} gap-{{lineGap}}">
+    <view class="poem-body align-{{align}} size-{{fontSize}}">
       <block wx:if="{{blocksOn}}">
         <block wx:for="{{blocks}}" wx:key="key" wx:for-item="blk">
           <view class="poem-stanza" wx:if="{{blk.k === 'p'}}">

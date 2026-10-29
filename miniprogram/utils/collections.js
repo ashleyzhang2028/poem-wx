@@ -13,7 +13,7 @@ const DAILY_COUNTS = [3, 5, 10, 20];
 
 const DAILY_DEFAULT = 5;
 
-const DEFAULT_NAME = "自选温习";
+const DEFAULT_NAME = "自选背诵";
 
 function usable() {
   return list().filter((c) => c.items.length > 0);

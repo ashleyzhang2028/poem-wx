@@ -46,23 +46,13 @@ function keep(poems) {
   if (changed) save();
 }
 
-function titleOf(id) {
-  const row = load().rows[String(id)];
-  return (row && row[0]) || "";
-}
-
-function authorOf(id) {
-  const row = load().rows[String(id)];
-  return (row && row[1]) || "";
-}
-
 function rowOf(id) {
   const key = String(id);
   const row = /^\d+$/.test(key) ? load().rows[key] : null;
   if (!row) return null;
-  return { id: key, sid: key, t: row[0], a: row[1], d: row[2], n: "诗词漫读", b: "", g: "", s: "" };
+  return { id: key, sid: key, t: row[0], a: row[1], d: row[2], n: "课外阅读", b: "", g: "", s: "" };
 }
 
 require("./corpus").useIndexFallback(rowOf);
 
-module.exports = { keep, rowOf, titleOf, authorOf };
+module.exports = { keep, rowOf };

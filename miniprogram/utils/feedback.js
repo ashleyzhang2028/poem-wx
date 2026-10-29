@@ -9,7 +9,7 @@ const RANKS = [
   { from: 80, name: "探花", note: "错的几处正好是下一次要补的" },
   { from: 60, name: "进士", note: "过了这一档，剩下的在详情页里找" },
   { from: 40, name: "举人", note: "认得出篇，还背不下来" },
-  { from: 20, name: "秀才", note: "刚认脸，先回今日诵读" },
+  { from: 20, name: "秀才", note: "刚认脸，先回今日背诵" },
   { from: 0, name: "童生", note: "不急，从今天那几首开始" }
 ];
 

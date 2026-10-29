@@ -2,11 +2,20 @@
   margin-top: var(--sp-3);
 }
 
+.grant-top {
+  display: block;
+}
+
+.grant-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .grant-eyebrow {
   display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  letter-spacing: var(--ls-title);
 }
 
 .grant-tier-name {
@@ -19,6 +28,20 @@
   line-height: var(--lh-tight);
 }
 
+.pay-chip {
+  flex: none;
+  padding: 0 var(--sp-2);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.pay-chip-hover {
+  background: var(--line);
+}
+
 .guest-note {
   display: block;
   margin-top: var(--sp-1);
@@ -27,65 +50,17 @@
   line-height: var(--lh-body);
 }
 
-.grant-stat {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-top: var(--sp-4);
-  font-variant-numeric: tabular-nums;
-}
-
-.grant-stat-t {
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-}
-
-.grant-stat-n {
-  font-size: var(--fs-hint);
-  color: var(--strong-text);
-}
-
 .grant-meter {
+  margin-top: var(--sp-4);
+}
+
+.grant-meter-t {
+  display: block;
   margin-top: var(--sp-2);
-}
-
-.grant-expiry {
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-  margin-top: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--radius-block);
-  background: var(--strong-soft);
-}
-
-.grant-expiry-t {
-  font-size: var(--fs-hint);
-  color: var(--strong-text);
-}
-
-.grant-expiry-s {
   font-size: var(--fs-caption);
   color: var(--ink-3);
-}
-
-.grant-acts {
-  display: flex;
-  gap: var(--sp-2);
-  margin-top: var(--sp-4);
-}
-
-.grant-acts .btn {
-  margin: 0;
-  width: auto;
-}
-
-.grant-pay {
-  flex: 2;
-}
-
-.grant-orders {
-  flex: 1;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .tier-table {

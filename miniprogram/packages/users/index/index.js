@@ -2,8 +2,6 @@ const admin = require("./lib");
 const tiers = require("../../../utils/tiers");
 const remote = require("../../../utils/remote");
 const theme = require("../../../utils/theme");
-const dots = require("../../../utils/dots");
-const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
 
@@ -31,13 +29,8 @@ Page({
     dueMin: ""
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
   },
@@ -54,7 +47,6 @@ Page({
 
     if (!logged) return;
     guard.once("users:list", () => admin.list()).then((res) => {
-      dots.see("users", res.newest);
       this.setData({ users: this.decorate(res.users, canWrite) });
     });
   },

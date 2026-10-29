@@ -29,16 +29,11 @@ Page({
     font: font.DEFAULT,
     fontSample: font.SAMPLE,
     fontLocked: true,
-    fontTier: "pro",
-    fontGlobal: false,
-    fontScope: -1,
-
-    themeColor: theme.currentTheme().rgba
+    fontTier: "pro"
   },
 
   onShow() {
-    font.restore();
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
     this.warmPreview();
@@ -46,14 +41,6 @@ Page({
 
   warmPreview() {
     font.preview().catch(() => {});
-  },
-
-  applyFont() {
-    this.setData(Object.assign({
-      fontScope: font.scope(),
-      fontGlobal: font.globalOn()
-    }, font.bind(theme.style()).page));
-    font.registerHere().catch(() => {});
   },
 
   view() {
@@ -70,8 +57,6 @@ Page({
       font: font.current(),
       fontLocked: !pickable,
       fontTier: font.tier(),
-      fontGlobal: font.globalOn(),
-      fontScope: font.scope(),
       toneView: theme.toneData()
     };
   },
@@ -201,17 +186,6 @@ Page({
     loginFlow.run(this);
   },
 
-  onFontGlobal(e) {
-    const r = font.setGlobal(e.detail.value);
-    if (!r.ok) {
-      wx.showToast({ title: tiers.nameOf(font.tier()) + " 起可用", icon: "none" });
-      this.setData({ fontGlobal: font.globalOn() });
-      return;
-    }
-    this.applyFont();
-    wx.vibrateShort && wx.vibrateShort({ type: "light" });
-  },
-
   onFont(e) {
     const key = e.currentTarget.dataset.key;
     const r = font.set(key);
@@ -222,7 +196,6 @@ Page({
       return;
     }
     if (!r.changed) return;
-    this.applyFont();
     this.setData({ font: font.current() });
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
   }

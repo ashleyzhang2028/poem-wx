@@ -9,7 +9,6 @@ const cols = require("../../utils/collections");
 const sync = require("../../utils/sync");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
-const font = require("../../utils/font");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
 
@@ -44,14 +43,8 @@ Page({
     icons: { search: icons.search, clear: icons.clear, playlist: icons.playlist }
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 3) });
 
     if (!gate.logged() || !entitlement.can("search")) {

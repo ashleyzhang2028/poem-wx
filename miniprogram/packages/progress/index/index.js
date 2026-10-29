@@ -2,7 +2,6 @@ const sheetText = require("../../../utils/sheet-text");
 const cols = require("../../../utils/collections");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
-const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const defer = require("../../../utils/defer");
 const pv = require("../../../components/progress-view/progress-view");
@@ -25,14 +24,9 @@ Page({
     sheetRows: []
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-  },
-
   onShow() {
     this.sheetIds = this.sheetIds || [];
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     this.refresh();
   },

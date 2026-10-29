@@ -1,5 +1,4 @@
 const theme = require("../../../utils/theme");
-const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const pay = require("../../../utils/pay");
 const auth = require("../../../utils/auth");
@@ -32,13 +31,8 @@ Page({
     list: []
   },
 
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-  },
-
   onShow() {
-    this.applyFont();
+    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this), logged: auth.logged() });
     if (auth.logged()) this.load();
   },

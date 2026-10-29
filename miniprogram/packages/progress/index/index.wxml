@@ -2,11 +2,11 @@
   <progress-view view="{{view}}" defers="{{defers}}" ring-text="{{ringText}}"
                  bind:open="onOpen" bind:defer="onOpenDefer">
     <view class="card" wx:if="{{selfOn}}">
-      <view class="card-title">自选温习</view>
+      <view class="card-title">自选背诵</view>
       <view class="sect-lead" wx:if="{{selfCount}}">每个集合一份读数</view>
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onSelf">
         <view class="row-main">
-          <text class="row-title">自选集合温习进度</text>
+          <text class="row-title">自选集合背诵进度</text>
           <text class="row-sub">{{selfSub}}</text>
         </view>
         <text class="row-go">›</text>

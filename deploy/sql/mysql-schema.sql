@@ -46,7 +46,7 @@
 --   2. 账号表里 `email` 是明文（显示与管理员认人用），登录查找走 `email_hash`。
 --   3. 索引按查询必用列建：`email_hash` 唯一（登录）、
 --      `progress(uid, child_id, poem_id)` 唯一（条件 upsert 用）、
---      `progress(uid, child_id, synced_at)`（增量拉取）。
+--      `progress(uid, child_id, updated_at)`（增量拉取）。
 -- ==========================================================================
 
 -- ---------------------------------------------------------------- accounts
@@ -144,22 +144,10 @@ CREATE TABLE IF NOT EXISTS `progress` (
   `payload`    JSON        NOT NULL,
   `updated_at` BIGINT      NOT NULL,
   `deleted`    INT         NOT NULL DEFAULT 0,
-  `synced_at`  BIGINT      NOT NULL DEFAULT 0,
   PRIMARY KEY (`uid`, `child_id`, `poem_id`),
-  KEY `progress_uid_child_synced_idx` (`uid`, `child_id`, `synced_at`),
+  KEY `progress_uid_child_updated_idx` (`uid`, `child_id`, `updated_at`),
   CONSTRAINT `progress_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 已有的库补 `synced_at`（服务器收到这一行的时刻，增量拉取按它走；幂等，可重复跑）。
-SET @kb_has_synced := (SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'progress' AND COLUMN_NAME = 'synced_at');
-SET @kb_ddl := IF(@kb_has_synced = 0,
-  'ALTER TABLE `progress` ADD COLUMN `synced_at` BIGINT NOT NULL DEFAULT 0, ADD KEY `progress_uid_child_synced_idx` (`uid`, `child_id`, `synced_at`), DROP KEY `progress_uid_child_updated_idx`',
-  'SELECT 1');
-PREPARE kb_stmt FROM @kb_ddl;
-EXECUTE kb_stmt;
-DEALLOCATE PREPARE kb_stmt;
-UPDATE `progress` SET `synced_at` = `updated_at` WHERE `synced_at` = 0;
 
 -- ==========================================================================
 -- 条件 upsert：「新的赢，旧的到了也不许覆盖」
@@ -187,11 +175,10 @@ UPDATE `progress` SET `synced_at` = `updated_at` WHERE `synced_at` = 0;
 -- 补数据用；服务端实际走的是 `deploy/store-mysql.js` 里拼好的那条多值
 -- `INSERT ... ON DUPLICATE KEY UPDATE`（同一个语义，形如）：
 --
---   INSERT INTO progress (uid, child_id, poem_id, payload, updated_at, deleted, synced_at)
---   VALUES (?,?,?,?,?,?,?)
+--   INSERT INTO progress (uid, child_id, poem_id, payload, updated_at, deleted)
+--   VALUES (?,?,?,?,?,?)
 --   ON DUPLICATE KEY UPDATE
 --     payload    = IF(VALUES(updated_at) >= updated_at, VALUES(payload), payload),
---     synced_at  = IF(VALUES(updated_at) >= updated_at, VALUES(synced_at), synced_at),
 --     updated_at = GREATEST(updated_at, VALUES(updated_at)),
 --     deleted    = IF(VALUES(updated_at) >= updated_at, VALUES(deleted), deleted)
 --
@@ -204,11 +191,10 @@ CREATE PROCEDURE `kb_upsert_progress`(IN p_uid VARCHAR(64), IN p_child_id VARCHA
                                        IN p_poem_id VARCHAR(80), IN p_payload JSON,
                                        IN p_updated_at BIGINT, IN p_deleted INT)
 BEGIN
-  INSERT INTO `progress` (`uid`, `child_id`, `poem_id`, `payload`, `updated_at`, `deleted`, `synced_at`)
-  VALUES (p_uid, p_child_id, p_poem_id, p_payload, p_updated_at, p_deleted, UNIX_TIMESTAMP(NOW(3)) * 1000)
+  INSERT INTO `progress` (`uid`, `child_id`, `poem_id`, `payload`, `updated_at`, `deleted`)
+  VALUES (p_uid, p_child_id, p_poem_id, p_payload, p_updated_at, p_deleted)
   ON DUPLICATE KEY UPDATE
     `payload`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`payload`), `payload`),
-    `synced_at`  = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`synced_at`), `synced_at`),
     `updated_at` = GREATEST(`updated_at`, VALUES(`updated_at`)),
     `deleted`    = IF(VALUES(`updated_at`) >= `updated_at`, VALUES(`deleted`), `deleted`);
 END$$

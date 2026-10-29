@@ -30,7 +30,6 @@ Component({
     tierKey: "free",
     upgradeText: UPGRADE_TEXTS.free,
     crest: icons.crest,
-    gearIcon: icons.settings,
     kindText: KIND_TEXTS.free,
     motto: tiers.mottoOf("free").line,
     validText: FOREVER_TEXT,
@@ -103,10 +102,6 @@ Component({
 
     onTier() {
       this.triggerEvent("tier");
-    },
-
-    onSettings() {
-      this.triggerEvent("settings");
     }
   }
 });

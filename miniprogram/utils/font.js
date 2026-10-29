@@ -75,10 +75,6 @@ function stack(key) {
   return '"' + familyOf(key) + '", ' + STACK;
 }
 
-function groupOf(family) {
-  return '"' + family + '", ' + STACK;
-}
-
 function shelf() {
   const tier0 = entitlement.status().tier;
   if (tier0 === "max") return "max";
@@ -108,17 +104,11 @@ function options() {
   return FACES.map((f) => ({ key: f.key, name: f.name }));
 }
 
-let scopeEpoch = 0;
-
-function scope() {
-  return scopeEpoch;
-}
-
 function attempt(family, source) {
   return new Promise((resolve) => {
     wx.loadFontFace({
       global: true,
-      scopes: globalOn() ? ["webview", "native"] : ["webview"],
+      scopes: ["webview"],
       family,
       source,
       success: () => resolve(true),
@@ -135,36 +125,15 @@ function sequence(family, list) {
 }
 
 const loaded = {};
-let scoped = {};
-
-function mark(family, list) {
-  return family + " " + shelf() + " " + globalOn() + " " + list.join(" ");
-}
 
 function register(family, list) {
-  const key = mark(family, list);
+  const key = family + " " + shelf() + " " + list.join(" ");
   if (loaded[key]) return loaded[key];
   loaded[key] = sequence(family, list).then((ok) => {
     if (!ok) delete loaded[key];
     return ok;
   });
   return loaded[key];
-}
-
-function scopeMark() {
-  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
-  const top = pages && pages[pages.length - 1];
-  return scopeEpoch + "@" + (top ? String(top.route) : "");
-}
-
-function registerPage(family, list) {
-  const key = mark(family, list);
-  if (scoped[key] === scopeMark()) return Promise.resolve(true);
-  return sequence(family, list).then((ok) => {
-    if (ok) scoped[key] = scopeMark();
-    else delete scoped[key];
-    return ok;
-  });
 }
 
 function load() {
@@ -190,79 +159,6 @@ function familyOf(key) {
   return face(key || current()).family;
 }
 
-function globalOn() {
-  return paid() && store.settings().fontGlobal === true;
-}
-
-function uiStack(key) {
-  if (!globalOn()) return "";
-  return stack(key);
-}
-
-function setGlobal(on) {
-  if (on && !paid()) return { ok: false, reason: "tier" };
-  const next = !!on;
-  if (next === globalOn()) return { ok: true, changed: false };
-  store.saveSettings({ fontGlobal: next });
-  try {
-    require("./sync").markDirty();
-  } catch (e) {
-
-  }
-  scopeEpoch += 1;
-  scoped = {};
-  announce();
-  return { ok: true, changed: true };
-}
-
-function rooted() {
-  return typeof getApp === "function" && !!getApp();
-}
-
-function registerHere() {
-  if (!globalOn() || !previewsReady()) return Promise.resolve("");
-  const f = face();
-  const list = configured();
-  return registerPage(f.family, list).then((ok) => (ok ? f.family : ""));
-}
-
-function publish(family) {
-  if (!rooted() || !family) return family;
-  const app = getApp();
-  app.globalData = app.globalData || {};
-  app.globalData.fontGroup = family + " " + scopeEpoch;
-  return family;
-}
-
-function republish() {
-  if (!rooted()) return;
-  const app = getApp();
-  app.globalData = app.globalData || {};
-  app.globalData.fontScope = scopeEpoch;
-}
-
-function repaint() {
-  if (!rooted()) return;
-  const app = getApp();
-  if (typeof app.repaintFont !== "function") return;
-  app.repaintFont(scopeEpoch);
-}
-
-function announce() {
-  republish();
-  repaint();
-}
-
-function restore() {
-  const app = typeof getApp === "function" ? getApp() : null;
-  const g = (app && app.globalData) || {};
-  const stale = g.fontScope !== scopeEpoch;
-  const page = typeof getCurrentPages === "function" ? getCurrentPages() : [];
-  const top = page && page[page.length - 1];
-  if (!stale && top && typeof top.applyFont === "function") top.applyFont();
-  announce();
-}
-
 function loadAll() {
   if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
   const chosen = face().key;
@@ -281,7 +177,6 @@ function refresh() {
   load().catch(() => {});
   preview().catch(() => {});
   loadAll();
-  announce();
 }
 
 function set(key) {
@@ -290,8 +185,6 @@ function set(key) {
   if (!pickable()) return { ok: false, reason: "tier" };
   if (key === current()) return { ok: true, changed: false };
   store.saveSettings({ font: key });
-  scopeEpoch += 1;
-  scoped = {};
 
   try {
     require("./sync").markDirty();
@@ -302,14 +195,9 @@ function set(key) {
   return { ok: true, changed: true, font: key };
 }
 
-function bind(style) {
-  return { page: { themeStyle: style } };
-}
-
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
+  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS,
   readiness, options,
-  paid, pickable, tier, current, face, familyOf, stack, groupOf, shelf,
-  addresses, configured, load, loadAll, preview, set, refresh,
-  globalOn, uiStack, setGlobal, scope, registerHere, restore, bind
+  paid, pickable, tier, current, face, familyOf, stack, shelf,
+  addresses, configured, load, loadAll, preview, set, refresh
 };
