@@ -49,9 +49,14 @@ Page({
     this.setData({ keyword: "", filter: "全部" });
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
 
     if (this.data.bookId !== this.shownBook) this.resetFilters();
@@ -67,12 +72,6 @@ Page({
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   apply() {

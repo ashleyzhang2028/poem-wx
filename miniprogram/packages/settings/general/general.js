@@ -31,9 +31,13 @@ Page({
     leagueTier: "max"
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -56,13 +60,6 @@ Page({
       })
     );
   },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
-  },
-
 
   onSeasonal(e) {
     const r = seasonal.setOn(e.detail.value);
@@ -97,7 +94,7 @@ Page({
   onClearData() {
     wx.showModal({
       title: "清空数据",
-      content: "背诵进度、已读标记、今日加背及自选集合里的篇目将被删除，本机与云端记录一并清除，且不可恢复。",
+      content: "温习进度、已读标记、新增温习及自选集合里的篇目将被删除，本机与云端记录一并清除，且不可恢复。",
       confirmText: "清空",
       cancelText: "取消",
       confirmColor: "#a83b32",

@@ -2,6 +2,7 @@ const adminFb = require("../../../utils/admin-feedback");
 const admin = require("../../../utils/admin");
 const loginFlow = require("../../../utils/login-flow");
 const theme = require("../../../utils/theme");
+const dots = require("../../../utils/dots");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
@@ -23,23 +24,22 @@ Page({
     loginFlow.run(this);
   },
 
-  onShow() {
-    this.applyFont();
-    theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), logged: admin.loggedIn(), canWrite: admin.canWrite() });
-    this.load();
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.applyFont();
+    this.setData({ barBelow: tabbar.below(this), logged: admin.loggedIn(), canWrite: admin.canWrite() });
+    this.load();
   },
 
   load() {
     if (!this.data.logged) return;
     this.setData({ reason: "" });
     adminFb.list().then((res) => {
+      if (res.ok) dots.see("adminFeedback", res.latest);
       this.setData({
         groups: res.groups,
         counts: res.counts,

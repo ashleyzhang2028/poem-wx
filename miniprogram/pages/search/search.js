@@ -44,9 +44,14 @@ Page({
     icons: { search: icons.search, clear: icons.clear, playlist: icons.playlist }
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+    font.registerHere().catch(() => {});
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: !!tabbar.sync(this, 3) });
 
     if (!gate.logged() || !entitlement.can("search")) {
@@ -58,12 +63,6 @@ Page({
       locked: false,
       keyword: this.data.keyword || saved.lastSearch || ""
     });
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   onTierGate() {

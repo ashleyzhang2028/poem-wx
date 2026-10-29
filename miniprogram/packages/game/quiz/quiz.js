@@ -46,9 +46,13 @@ Page({
     allowed: false
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
     this.setData({ allowed: ok, lockNote: entitlement.hint("quiz") || "登录后才能练" });
@@ -62,12 +66,6 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
 
@@ -105,7 +103,7 @@ Page({
     }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "课外阅读没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "诗词漫读没取到，已用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

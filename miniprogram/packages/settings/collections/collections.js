@@ -39,9 +39,13 @@ Page({
     itemsMax: cols.ITEMS_MAX
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: tabbar.below(this) });
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -49,12 +53,6 @@ Page({
     }
     this.setData({ locked: false });
     this.refresh();
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   refresh() {
@@ -230,7 +228,7 @@ Page({
     if (!c) return;
     wx.showModal({
       title: "删除集合",
-      content: "删除「" + cols.nameOf(c) + "」及其中 " + c.items.length + " 首篇目？背诵进度不受影响。",
+      content: "删除「" + cols.nameOf(c) + "」及其中 " + c.items.length + " 首篇目？温习进度不受影响。",
       confirmText: "删除",
       cancelText: "取消",
       confirmColor: "#a83b32",
@@ -359,7 +357,7 @@ Page({
     }
     wx.showModal({
       title: "移出篇目",
-      content: "将所选 " + ids.length + " 首移出「" + cols.nameOf(c) + "」？背诵进度不受影响。",
+      content: "将所选 " + ids.length + " 首移出「" + cols.nameOf(c) + "」？温习进度不受影响。",
       confirmText: "移出",
       cancelText: "取消",
       confirmColor: "#a83b32",

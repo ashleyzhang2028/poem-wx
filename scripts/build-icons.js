@@ -45,6 +45,7 @@ function flatten(svg) {
     .replace(HEX, "currentColor")
     .replace(/<\?xml[^>]*\?>/g, "")
     .replace(/>\s+</g, "><")
+    .replace(/<svg(?![^>]*\swidth=)/, '<svg width="1em" height="1em"')
     .trim();
 }
 

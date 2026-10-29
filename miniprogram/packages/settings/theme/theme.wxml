@@ -124,51 +124,6 @@
   </view>
 
   <view class="card group-card">
-    <view class="card-title">正文排版</view>
-
-    <view class="poem-body align-{{align}} size-{{fontSize}} font-sample">
-      <view class="poem-stanza" wx:for="{{sampleTokens}}" wx:key="index" wx:for-item="para">
-        <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
-          <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
-            <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
-              <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>
-              <text class="tk-ch">{{tk.ch}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="seg fill">
-      <radio-group class="seg-group" bindchange="onAlign">
-        <label class="seg-item {{align === item.key ? 'on' : ''}}" wx:for="{{aligns}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{align === item.key}}" />
-          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
-
-    <view class="seg fill pinyin-row" wx:if="{{pinyinOn}}">
-      <radio-group class="seg-group" bindchange="onPinyin">
-        <label class="seg-item {{pinyin === item.key ? 'on' : ''}}" wx:for="{{pinyinModes}}" wx:key="key">
-          <radio class="seg-radio" value="{{item.key}}" checked="{{pinyin === item.key}}" />
-          <view class="seg-icon" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
-          <text class="seg-text">{{item.label}}</text>
-        </label>
-      </radio-group>
-    </view>
-
-    <view class="font-row">
-      <text class="font-a small">A</text>
-      <slider class="font-slider" min="{{fontMin}}" max="{{fontMax}}" step="1" value="{{fontSize}}"
-              block-size="12" backgroundColor="#ececef" activeColor="{{themeColor}}"
-              bindchanging="onFontSlide" bindchange="onFontSlide" />
-      <text class="font-a big">A</text>
-    </view>
-  </view>
-
-  <view class="card group-card">
     <view class="card-head">
       <text class="card-title group-title">字体</text>
       <tier-tag wx:if="{{fontLocked}}" tier="{{fontTier}}" />
@@ -184,13 +139,13 @@
       </view>
     </view>
 
-    <view class="row font-global">
+    <view class="row font-global-row {{fontLocked ? 'locked' : ''}}">
       <view class="row-main">
         <text class="row-title">应用选中字体到全局</text>
-        <text class="row-sub">导航栏与按钮的字一并换成这款</text>
+        <text class="row-sub">所有页面、所有用字都换成这一款</text>
       </view>
       <view class="sw">
-        <switch checked="{{fontGlobal}}" color="{{themeColor}}" bindchange="onFontGlobal" />
+        <switch checked="{{fontGlobal}}" disabled="{{fontLocked}}" color="{{themeColor}}" bindchange="onFontGlobal" />
       </view>
     </view>
   </view>

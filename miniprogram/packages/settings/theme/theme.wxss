@@ -1,22 +1,3 @@
-.font-global {
-  margin-top: var(--sp-2);
-}
-
-.pinyin-row {
-  margin-top: var(--sp-2);
-}
-
-.font-sample {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: calc(var(--h-opt) * 3);
-  margin-top: var(--sp-1);
-  margin-bottom: var(--sp-4);
-  padding-bottom: var(--sp-3);
-  border-bottom: 1rpx solid var(--line-2);
-}
-
 .group-title {
   flex: 1;
   min-width: 0;
@@ -155,6 +136,18 @@
 
 .font-row.locked {
   opacity: .45;
+}
+
+.font-global-row {
+  border-bottom: none;
+}
+
+.font-global-row.locked {
+  opacity: .45;
+}
+
+.font-global-row .row-title {
+  white-space: normal;
 }
 
 .theme-page {

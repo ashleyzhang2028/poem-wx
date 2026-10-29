@@ -192,7 +192,7 @@ ok("目录十部，每部的条数与落盘的 count 对得上",
 
 {
   const rows = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
-  ok("目录里每一条都有源 id（正文靠它去课外库取）",
+  ok("目录里每一条都有源 id（正文靠它去诗词漫读取）",
     rows.every((p) => p.sid) && new Set(rows.map((p) => p.id)).size === rows.length,
     "缺源 id 或 id 撞车的：" + rows.filter((p) => !p.sid).slice(0, 3).map((p) => p.id).join("、"));
 
@@ -3525,18 +3525,25 @@ function mountFull(pg, query) {
     ["yanzhi", "胭脂", [157, 41, 51], "tradition"],
     ["yuqing", "雨过天青", [47, 96, 85], "tradition"],
     ["ink", "墨色", [8, 8, 10], "tradition"],
-    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
-    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
+    ["datongxuankongsi", "大同悬空寺", [203, 142, 79], "landscape"],
+    ["eergunashidi", "额尔古纳", [205, 83, 63], "landscape"],
+    ["hulunbeiershiwei", "呼伦贝尔室韦", [53, 131, 166], "landscape"],
+    ["dandongyalujiang", "丹东鸭绿江", [16, 50, 59], "landscape"],
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
-    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
-    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
-    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["changchunnanling", "长春南岭", [243, 61, 104], "landscape"],
+    ["baishanchangbaishan", "白山长白山", [11, 41, 74], "landscape"],
+    ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
     ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"],
+    ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
+    ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["qingdaolaoshan", "青岛崂山", [33, 56, 63], "landscape"],
+    ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["ganziyading", "甘孜亚丁", [236, 158, 1], "landscape"],
+    ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
     ["lijiangluguhu", "丽江泸沽湖", [25, 91, 108], "landscape"],
     ["jiayuguan", "嘉峪关", [249, 139, 57], "landscape"],
-    ["eergunashidi", "额尔古纳", [205, 83, 63], "landscape"],
-    ["hulunbeiershiwei", "呼伦贝尔室韦", [53, 131, 166], "landscape"]
+    ["dunhuangmogaoku", "敦煌莫高窟", [91, 54, 41], "landscape"],
+    ["aletailhemu", "阿勒泰禾木", [35, 60, 75], "landscape"]
   ];
 
 
@@ -3546,7 +3553,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 20 项（八个传统色 + 十二支大好河山）",
+  ok("清单就是这 27 项（八个传统色 + 十九大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 
@@ -4046,7 +4053,7 @@ function mountFull(pg, query) {
   const swatchPalette = require(path.join(ROOT, "utils", "theme.js")).palette();
   ok("页面上每个色拿到的是「本色 + 淡淡一档 + 压在上面的墨」三件",
     swatchPalette.every((x) => x.rgb && x.soft && x.on)
-      && swatchPalette.every((x) => /rgba\((0, 0, 0|255, 255, 255), 1\)/.test(x.on)),
+      && swatchPalette.every((x) => x.on.indexOf("255, 255, 255") >= 0),
     "palette() 少给了一件 —— 界面上有一处会算出透明或读不出的字");
 
   const progWxml = strip(read("packages/progress/index/index.wxml"));
@@ -4397,10 +4404,10 @@ function mountFull(pg, query) {
       && /item\.recited/.test(homeWxml) && /item\.stateText/.test(homeWxml),
     "把已读与已温习写成同一个判据 —— 点开看一眼就成了「已温习」");
 
-  ok("未读 / 未温习 / 已温习是同一枚胶囊的三个状态",
+  ok("未读 / 待温习 / 已温习是同一枚胶囊的三个状态",
     /class="tag row-state \{\{item\.stateCls\}\}"/.test(homeWxml)
-      && /function stateText\(recited, read\)[\s\S]{0,160}?已背[\s\S]{0,120}?未背[\s\S]{0,80}?未读/.test(homeJs),
-    "三个状态没有统一的出处 —— 未读必然未温习，按顺序往下走就够了");
+      && /function stateText\(recited, read\)[\s\S]{0,160}?已温习[\s\S]{0,120}?待温习[\s\S]{0,80}?未读/.test(homeJs),
+    "三个状态没有统一的出处 —— 未读必然待温习，按顺序往下走就够了");
 
   {
     const bannerComp = fs.readFileSync(path.join(ROOT, "components", "page-banner", "page-banner.wxml"), "utf8");
@@ -4745,14 +4752,13 @@ function mountFull(pg, query) {
 
   const DIRTY = [
     ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
-    ["正文对齐", "pages/reader/reader.js", /onAlign\s*\([\s\S]{0,200}?markDirty/],
-    ["背面对齐", "components/recite-sheet/recite-sheet.js", /onAlign\s*\([\s\S]{0,200}?markDirty/],
+    ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["温习设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
     ["注音口径", "utils/pinyin.js", /function setMode[\s\S]{0,400}?markDirty/],
     ["昵称", "utils/login-flow.js", /function takeNickname\([\s\S]{0,500}?markDirty/]
   ];
-  ok("改了设置就该传：每个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
+  ok("改了设置就该传：五个入口都挂了记账（记账之后自己推一程，不再靠用户点）",
     DIRTY.every(([, file, re]) => re.test(fs.readFileSync(path.join(ROOT, file), "utf8")))
       && /function markDirty\(\)[\s\S]{0,600}?now\(\)/.test(syncSrc)
       && !/function markDirty\(\)[\s\S]{0,600}?wx\.request/.test(syncSrc),
@@ -4960,17 +4966,17 @@ function mountFull(pg, query) {
     ok("背诵场景翻篇不丢 mode（readerUrl 把 mode 续上）",
       /readerUrl\(/.test(readerJs) && /mode=recite/.test(readerJs));
     ok("作者索引点开目录里的那一篇，源 id 跟着进详情页（丢了只能按标题猜）",
-      /data-id="\{\{item\.id\}\}"/.test(read("packages/authors/index/index.wxml"))
-      && /author_id/.test(read("packages/authors/index/index.js")),
-      "作者索引那一行没带源 id，阅读页只好拿包内编号去猜标题");
-    ok("详情页认路带来的源 id（翻篇与分享都续上）",
-      /query\.sid/.test(readerJs) && /&sid=" \+ encodeURIComponent\(this\.data\.sid\)/.test(readerJs));
+      /data-sid="\{\{item\.sid\}\}"/.test(read("packages/authors/index/index.wxml"))
+      && /&sid=" \+ encodeURIComponent\(ds\.sid\)/.test(read("packages/authors/index/index.js")),
+      "作者索引那一行没带 sid，阅读页只好拿包内编号去猜标题");
+    ok("详情页认路带来的 sid（翻篇与分享都续上）",
+      /query\.sid/.test(readerJs) && /&sid=" \+ encodeURIComponent\(sid\)/.test(readerJs));
   }
 
 
   ok("对齐只在正文那两处切（阅读页与背诵弹层各一枚，设置页不再摆一份）",
-    /bindchange="onAlign"/.test(read("pages/reader/reader.wxml"))
-      && /bindchange="onAlign"/.test(sheetWxml)
+    /bindtap="onAlignToggle"/.test(read("pages/reader/reader.wxml"))
+      && /bindtap="onAlignToggle"/.test(sheetWxml)
       && !/onAlign\b/.test(generalWxml),
     "阅读页或弹层没地方切对齐，或者设置页还留着第二处");
 
@@ -4981,14 +4987,12 @@ function mountFull(pg, query) {
     };
     const a = keysOf(read("pages/reader/reader.js"));
     const b = keysOf(read("components/recite-sheet/recite-sheet.js"));
-    ok("注音的档位表只有一份：正文两处各挂一枚开关，档位取同一处",
-      b.length === 2
-        && /onPinyin/.test(read("pages/reader/reader.js"))
-        && /bindchange="onPinyin"/.test(read("pages/reader/reader.wxml"))
-        && /bindchange="onPinyin"/.test(read("components/recite-sheet/recite-sheet.wxml"))
-        && /pinyin\.setMode\(/.test(read("pages/reader/reader.js"))
+    ok("注音只在背诵弹层有：弹层两档，详情页没有档位表也不挂 onPinyin",
+      a.length === 0 && b.length === 2
+        && !/onPinyin/.test(read("pages/reader/reader.js"))
+        && !/onPinyin/.test(read("pages/reader/reader.wxml"))
         && /pinyin\.setMode\(/.test(read("components/recite-sheet/recite-sheet.js")),
-      "阅读页 " + JSON.stringify(a) + " / 弹层 " + JSON.stringify(b));
+      "详情页 " + JSON.stringify(a) + " / 弹层 " + JSON.stringify(b));
   }
 
   {
@@ -5220,8 +5224,8 @@ const K = {
     missing.length === 0, "名册里没有：" + missing.join("、"));
 
   const withDeng = Object.keys(roster.people).filter((n) => /等$/.test(n));
-  ok("名册上的名字都进得了课外库（不带「等」）", withDeng.length === 0,
-    "还挂着：" + withDeng.join("、") + " —— 课外库里只有「宋濂」，没有「宋濂等」");
+  ok("名册上的名字都进得了诗词漫读（不带「等」）", withDeng.length === 0,
+    "还挂着：" + withDeng.join("、") + " —— 诗词漫读里只有「宋濂」，没有「宋濂等」");
 
   const only = roster.people["韩非"];
   ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,
@@ -7720,6 +7724,39 @@ const K = {
   ok("浏览模式的阅读页不记复习（连点会把复习次数刷上去）",
     /onResult\(e\)\s*\{\s*if \(!this\.data\.reciteMode\) return;/.test(read("pages/reader/reader.js")),
     "浏览模式也记了一次复习");
+}
+
+{
+  const apiLib = (n) => require(path.join(ROOT, "..", "api", "_lib", n));
+  track((async () => {
+    const core = apiLib("core");
+    const store = apiLib("store").memoryStore();
+    const cfg = apiLib("config");
+    await store.putAccount({ uid: "s1", email: "s@b.c", plan: "max", plan_until: null, role: "user", status: "active", created_at: 1 });
+    const limiter = core.makeRateLimiter();
+    const now = Date.now();
+    let last = null;
+    for (let i = 0; i < 40; i++) {
+      last = await core.syncPull({ cfg, store, limiter, now: () => now, account: { uid: "s1" }, deviceId: "d" + i, ip: "1" }, { since: 0, deviceId: "d" + i });
+    }
+    const early = Date.now() - 3 * 86400000;
+    const pulled = await core.syncPull({ cfg, store, limiter: core.makeRateLimiter(), now: () => now, account: { uid: "s1" }, deviceId: "a" }, { since: 0, deviceId: "a" });
+    await core.syncPush({ cfg, store, limiter: core.makeRateLimiter(), now: () => now + 60000, account: { uid: "s1" }, deviceId: "b" },
+      { deviceId: "b", recs: [{ id: "late-poem", updatedAt: early, payload: { level: 1 } }] });
+    const next = await core.syncPull({ cfg, store, limiter: core.makeRateLimiter(), now: () => now + 120000, account: { uid: "s1" }, deviceId: "a" },
+      { since: pulled.body.serverTime, deviceId: "a" });
+    ok("同步：离线改动晚到，即便改动时间早于对方上次拉取，对方下一次拉取仍拿得到（游标按服务器收到的时刻）",
+      next.body.recs.some((r) => r.id === "late-poem"), "增量拉取按客户端 updated_at 走 —— 晚到的旧改动会永远漏掉");
+    ok("同步：Max 账号一小时内连续拉取 40 次不被限流（按账号计，换设备号也不绕开）", last.status === 200,
+      "同步限额太小或按设备号计 —— 日常使用就会「同步失败」");
+    await store.putAccount({ uid: "s2", email: "s2@b.c", plan: "free", plan_until: null, role: "user", status: "active", created_at: 1 });
+    const freeLimiter = core.makeRateLimiter();
+    const freePull = () => core.syncPull({ cfg, store, limiter: freeLimiter, now: () => now, account: { uid: "s2" }, deviceId: "d" }, { since: 0, deviceId: "d" });
+    let freeStatus = 200;
+    for (let i = 0; i < 10; i++) await freePull();
+    freeStatus = (await freePull()).status;
+    ok("同步：Free 账号每小时 10 次，第 11 次 429", freeStatus === 429, "各档同步限额没按档位分开");
+  })());
 }
 
 {

@@ -20,12 +20,13 @@ var PAID_STATUS = [2, 3, 4];
 var UNPAID = ["pending", "canceled", "deleted"];
 var PENDING_WINDOW_MS = DAY;
 var QUERY_GAP_MS = 2500;
+var LAST_QUERY_MAX = 2000;
+var PUSH_SKEW_MS = 10 * 60 * 1000;
 var PRODUCT_ID = /^[A-Za-z0-9_]{1,64}$/;
 var PRODUCT_MAX = 40;
 var PRICE_MAX_CENTS = 1000000;
 var WX_TIMEOUT_MS = 6000;
 var NOTIFY_RAW_MAX = 4000;
-var NOTIFY_SKEW_MS = 5 * 60 * 1000;
 var CONFIRM_BATCH = 3;
 
 var DEFAULT_CATALOG = { products: [], active: {} };
@@ -432,25 +433,29 @@ function payOrder(deps, input) {
   });
 }
 
-function force(deps) {
-  return Object.assign({}, deps, { force: true });
+function wxPaidOrder(deps, order) {
+  return wxQueryOrder(deps, order).then(function (data) {
+    var o = data && data.order;
+    if (!o || Number(data.errcode || 0) !== 0 || PAID_STATUS.indexOf(Number(o.status)) < 0) return null;
+    if (o.order_fee != null && Number(o.order_fee) !== Number(order.price_cents)) {
+      H.log("pay.query_fee_mismatch", { out: order.out_trade_no });
+      return null;
+    }
+    return o;
+  }, function () { return null; });
 }
 
 function settleFromWx(deps, order) {
   var t = deps.now();
-  if (!deps.force && lastQueryAt[order.out_trade_no] && t - lastQueryAt[order.out_trade_no] < QUERY_GAP_MS) {
+  if (lastQueryAt[order.out_trade_no] && t - lastQueryAt[order.out_trade_no] < QUERY_GAP_MS) {
     return Promise.resolve(order);
   }
+  if (Object.keys(lastQueryAt).length > LAST_QUERY_MAX) lastQueryAt = {};
   lastQueryAt[order.out_trade_no] = t;
-  return wxQueryOrder(deps, order).then(function (data) {
-    var o = data && data.order;
-    if (!o || Number(data.errcode || 0) !== 0 || PAID_STATUS.indexOf(Number(o.status)) < 0) return order;
-    if (o.order_fee != null && Number(o.order_fee) !== Number(order.price_cents)) {
-      H.log("pay.query_fee_mismatch", { out: order.out_trade_no });
-      return order;
-    }
+  return wxPaidOrder(deps, order).then(function (o) {
+    if (!o) return order;
     return deliver(deps, order, { source: "query", wxOrderId: o.wx_order_id || o.order_id_wx || "", raw: JSON.stringify(o) });
-  }, function () { return order; });
+  });
 }
 
 function payConfirm(deps, input) {
@@ -502,7 +507,9 @@ function manageResume(deps, order, code) {
   return payOrder(deps, { plan: order.plan, period: order.period, code: code }).then(function (res) {
     if (res.status !== 200) return res;
     return Promise.resolve(deps.store.claimPayOrder(order.out_trade_no, "pending", { status: "canceled" })).then(function (won) {
-      return won ? res : err(409, "E_PAY_ORDER_STATE", "这笔订单已经支付");
+      if (won) return res;
+      return Promise.resolve(deps.store.claimPayOrder(res.body.outTradeNo, "pending", { status: "canceled" }))
+        .then(function () { return err(409, "E_PAY_ORDER_STATE", "这笔订单已经支付"); });
     });
   });
 }
@@ -531,15 +538,14 @@ function payOrdersMine(deps, input) {
   });
 }
 
-function pushSigned(cfg, query, now) {
+function pushSigned(cfg, query, t) {
   var token = String(cfg.payPushToken || "");
   if (!token) return false;
   var q = query || {};
+  var sentAt = Number(q.timestamp) * 1000;
+  if (!isFinite(sentAt) || Math.abs(t - sentAt) > PUSH_SKEW_MS) return false;
   var expect = crypto.createHash("sha1").update([token, String(q.timestamp || ""), String(q.nonce || "")].sort().join("")).digest("hex");
-  if (!sameText(expect, String(q.signature || ""))) return false;
-  var at = Number(q.timestamp) * 1000;
-  if (!at || Math.abs(Number(now) - at) > NOTIFY_SKEW_MS) return false;
-  return true;
+  return sameText(expect, String(q.signature || ""));
 }
 
 function pushAck(code, msg) {
@@ -565,14 +571,19 @@ function payNotify(deps, input) {
       return revoke(deps, order).then(function () { return pushAck(0, "success"); });
     }
     var goods = msg.GoodsInfo || {};
+    var wxPay = msg.WeChatPayInfo || {};
     var feeOk = goods.OrderFee == null || Number(goods.OrderFee) === Number(order.price_cents);
     if (String(msg.OpenId || "") !== order.openid || String(goods.ProductId || "") !== order.product_id || !feeOk) {
       H.log("pay.notify_mismatch", { out: out });
       return pushAck(1, "mismatch");
     }
-    return settleFromWx(force(deps), order).then(function (settled) {
-      return pushAck(settled && settled.status === "paid" ? 0 : 1, settled && settled.status === "paid" ? "success" : "retry");
-    });
+    var settled = order.status === "paid" && Number(order.applied) === 1
+      ? Promise.resolve(order)
+      : wxPaidOrder(deps, order).then(function (paid) {
+        if (!paid) return null;
+        return deliver(deps, order, { source: "notify", wxOrderId: wxPay.MchOrderNo || "", raw: JSON.stringify(msg) });
+      });
+    return settled.then(function (o) { return o && o.status === "paid" ? pushAck(0, "success") : pushAck(1, "retry"); });
   });
 }
 
@@ -618,7 +629,10 @@ function payAdmin(deps, input) {
       var n = normCatalog(input && input.catalog);
       if (n.bad) return err(400, n.bad, n.message);
       return Promise.resolve(store.putSetting(CATALOG_KEY, JSON.stringify(n.catalog)))
-        .then(function () { return ok({ catalog: n.catalog }); });
+        .then(function () {
+          H.log("pay.catalog_saved", { by: deps.account.uid });
+          return ok({ catalog: n.catalog });
+        });
     }
     var filter = {};
     if (input && input.status) filter.status = String(input.status);

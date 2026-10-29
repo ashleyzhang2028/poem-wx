@@ -6,16 +6,14 @@ const entitlement = require("../../../utils/entitlement");
 Page({
   data: { themeStyle: "", name: "" },
 
-  onShow() {
-    this.applyFont();
-    theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this) });
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.applyFont();
+    this.setData({ barBelow: tabbar.below(this) });
   },
 
   onTierGate() {}

@@ -77,9 +77,13 @@ Page({
     if (this.data.stage === "running") this.tick();
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     this.setData({ barBelow: !!tabbar.pick(this) });
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
@@ -95,12 +99,6 @@ Page({
       forms: quiz.formRows(pickedForms),
       needTitle: !quiz.titleSpoiled(pickedForms)
     });
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   loadLog() {
@@ -163,7 +161,7 @@ Page({
     quiz.buildAsync({ scope: this.data.scope, count: QUESTION_COUNT, forms: this.data.pickedForms }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "课外阅读没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "诗词漫读没取到，已用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

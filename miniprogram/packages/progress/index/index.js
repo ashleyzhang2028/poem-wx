@@ -25,18 +25,16 @@ Page({
     sheetRows: []
   },
 
-  onShow() {
-    this.applyFont();
-    this.sheetIds = this.sheetIds || [];
-    theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this) });
-    this.refresh();
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.sheetIds = this.sheetIds || [];
+    this.applyFont();
+    this.setData({ barBelow: tabbar.below(this) });
+    this.refresh();
   },
 
   refresh() {

@@ -3,6 +3,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "page-banner": "/components/page-banner/page-banner",
+    "nav-bar": "/components/nav-bar/nav-bar",
     "recite-sheet": "/components/recite-sheet/recite-sheet",
     "daily-extra": "/components/daily-extra/daily-extra",
     "collect-picker": "/components/collect-picker/collect-picker"

@@ -25,17 +25,12 @@ const DEFERS = [
 
 const REOPEN_MS = 400;
 
-const ALIGNS = [
-  { key: "left", label: "左对齐", icon: icons.left },
-  { key: "center", label: "居中", icon: icons.center }
-];
-
 const PINYIN_MODES = [
   { key: "off", label: "不注音", icon: icons.off },
   { key: "all", label: "全文", icon: icons.all }
 ];
 
-const PAGE_ICONS = { add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
+const PAGE_ICONS = { left: icons.left, center: icons.center, add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn };
 
 function idsOf(rows) {
   return (rows || []).map((it) => it.id).join("|");
@@ -106,7 +101,6 @@ Component({
     hasTranslation: false,
     showTranslation: false,
 
-    aligns: ALIGNS,
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -247,7 +241,7 @@ Component({
       const item = this.current();
       if (!item || item.id !== id) return;
       const meta = corpus.indexById(id) ||
-        (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "课外阅读", b: "", g: "", s: "" });
+        (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "诗词漫读", b: "", g: "", s: "" });
       if (!text || !meta) {
         this.setData({ textMiss: failText || "这一篇的正文没取到，点一下重试" });
         return;
@@ -281,7 +275,7 @@ Component({
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
         showTranslation: false,
-        align: settings.align,
+        align: settings.align === "left" ? "left" : "center",
         fontSize,
         ...scale.flags(fontSize),
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
@@ -370,7 +364,7 @@ Component({
         return;
       }
       this.setData({ dailyOn: r.on });
-      wx.showToast({ title: r.on ? "已加入今日加背" : "已移出今日加背", icon: "none" });
+      wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
 
       this.triggerEvent("change", { count: store.dailyExtra().length });
     },
@@ -385,15 +379,14 @@ Component({
       return "添加失败";
     },
 
-    onToggleTranslation() {
-      this.setData({ showTranslation: !this.data.showTranslation });
-    },
-
-    onAlign(e) {
-      const align = e.detail.value;
+    onAlignToggle() {
+      const align = this.data.align === "center" ? "left" : "center";
       this.setData({ align });
       store.saveSettings({ align });
-      sync.markDirty();
+    },
+
+    onToggleTranslation() {
+      this.setData({ showTranslation: !this.data.showTranslation });
     },
 
     onPinyin(e) {

@@ -40,7 +40,7 @@
   },
   "library": {
     "page": "pages/library/library",
-    "title": "课外阅读",
+    "title": "诗词漫读",
     "tab": 2,
     "logged": true
   },
@@ -305,6 +305,16 @@
     "title": "主题",
     "back": true,
     "logged": true
+  },
+  "settings-theme-global": {
+    "page": "packages/settings/theme/theme",
+    "title": "主题",
+    "back": true,
+    "logged": true,
+    "tier": "pro",
+    "settings": {
+      "fontGlobal": true
+    }
   },
   "settings-theme-tone": {
     "page": "packages/settings/theme/theme",
@@ -844,7 +854,7 @@
     "title": "作者索引",
     "back": true,
     "logged": true,
-    "_note": "作者索引①层：朝代表 + 一段一段的作者。488 位 / 15 段，见 check.js V41"
+    "_note": "作者索引①层：朝代表 + 一段一段的作者（人数与段数按 utils/author-index.js 现算）"
   },
   "authors-author": {
     "page": "packages/authors/index/index",

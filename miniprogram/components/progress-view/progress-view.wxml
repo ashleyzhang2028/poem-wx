@@ -34,11 +34,11 @@
     </view>
 
     <text class="hint warn" wx:if="{{backlog}}">逾期 {{backlog}} 首 · 会优先排进今天</text>
-  </view>
 
-  <view class="empty" wx:if="{{!learned}}">
-    <text class="empty-mark">始</text>
-    <text class="empty-text">{{empty}}</text>
+    <view class="empty" wx:if="{{!learned}}">
+      <text class="empty-mark">始</text>
+      <text class="empty-text">{{empty}}</text>
+    </view>
   </view>
 
   <block wx:if="{{learned}}">

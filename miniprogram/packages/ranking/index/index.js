@@ -49,9 +49,13 @@ Page({
     });
   },
 
+  applyFont() {
+    const hit = font.bind(theme.style());
+    this.setData({ themeStyle: hit.page.themeStyle });
+  },
+
   onShow() {
     this.applyFont();
-    theme.apply(this);
     const allowed = entitlement.can("league");
     this.setData({
       barBelow: !!tabbar.pick(this),
@@ -60,12 +64,6 @@ Page({
       tier: entitlement.tierOf("league")
     });
     this.load();
-  },
-
-  applyFont() {
-    const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
   },
 
   onTierGate() {

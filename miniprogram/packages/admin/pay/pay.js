@@ -56,17 +56,15 @@ Page({
     periodChoices: PERIOD_CHOICES
   },
 
-  onShow() {
-    this.applyFont();
-    theme.apply(this);
-    this.setData({ barBelow: tabbar.below(this), canWrite: admin.canWrite() });
-    if (admin.canWrite()) this.load();
-  },
-
   applyFont() {
     const hit = font.bind(theme.style());
     this.setData({ themeStyle: hit.page.themeStyle });
-    font.registerHere().catch(() => {});
+  },
+
+  onShow() {
+    this.applyFont();
+    this.setData({ barBelow: tabbar.below(this), canWrite: admin.canWrite() });
+    if (admin.canWrite()) this.load();
   },
 
   load() {
