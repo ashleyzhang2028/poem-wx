@@ -144,11 +144,16 @@
   </view>
 
   <view class="card gloss-card" wx:if="{{glossRows.length}}">
-    <text class="card-title">生字生词</text>
-    <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
-      <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
-        <text class="gloss-w">{{cell.w}}</text>
-        <text class="gloss-d">{{cell.d}}</text>
+    <view class="trans-head {{showGloss ? '' : 'closed'}}" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleGloss">
+      <text class="trans-toggle">注释</text>
+      <view class="all-toggle {{showGloss ? 'open' : ''}}"></view>
+    </view>
+    <view wx:if="{{showGloss}}">
+      <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
+        <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
+          <text class="gloss-w">{{cell.w}}</text>
+          <text class="gloss-d">{{cell.d}}</text>
+        </view>
       </view>
     </view>
   </view>

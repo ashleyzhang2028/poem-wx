@@ -101,6 +101,7 @@ Component({
     translationSource: "",
     hasTranslation: false,
     showTranslation: false,
+    showGloss: false,
     glossRows: [],
 
     align: "center",
@@ -154,7 +155,7 @@ Component({
       this.cancelAdvance();
       this.closedAt = Date.now();
       this.pushed = false;
-      this.setData({ open: false, showTranslation: false, hint: "" });
+      this.setData({ open: false, showTranslation: false, showGloss: false, hint: "" });
     },
 
     missHead(item) {
@@ -175,6 +176,7 @@ Component({
         translation: "",
         translationSource: "",
         showTranslation: false,
+        showGloss: false,
         glossRows: []
       };
     },
@@ -208,6 +210,7 @@ Component({
         translation: "",
         translationSource: "",
         showTranslation: false,
+        showGloss: false,
         glossRows: []
       };
     },
@@ -279,6 +282,7 @@ Component({
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
         showTranslation: false,
+        showGloss: false,
         glossRows: gloss.rows(entry.gloss),
         align: settings.align === "left" ? "left" : "center",
         fontSize,
@@ -392,6 +396,10 @@ Component({
 
     onToggleTranslation() {
       this.setData({ showTranslation: !this.data.showTranslation });
+    },
+
+    onToggleGloss() {
+      this.setData({ showGloss: !this.data.showGloss });
     },
 
     onPinyin(e) {

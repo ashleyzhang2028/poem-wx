@@ -70,6 +70,7 @@ Page({
     hasTranslation: false,
     showTranslation: false,
     glossRows: [],
+    showGloss: false,
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -360,6 +361,10 @@ Page({
 
   onToggleTranslation() {
     this.setData({ showTranslation: !this.data.showTranslation });
+  },
+
+  onToggleGloss() {
+    this.setData({ showGloss: !this.data.showGloss });
   },
 
   onLineDown() {
