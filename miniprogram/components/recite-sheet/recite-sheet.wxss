@@ -226,3 +226,19 @@
   height: var(--h-btn);
   font-size: var(--fs-body);
 }
+
+.sheet-body .trans-head {
+  justify-content: flex-end;
+  align-items: baseline;
+  padding: var(--sp-1) 0;
+}
+
+.sheet-body .trans-toggle {
+  order: 1;
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+}
+
+.sheet-body .trans-head .all-toggle {
+  order: 2;
+}
