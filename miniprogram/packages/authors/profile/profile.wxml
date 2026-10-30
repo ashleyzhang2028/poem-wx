@@ -22,7 +22,7 @@
     </view>
 
     <view class="card prof-body" wx:elif="{{state === 'ready'}}">
-      <text class="card-title poem">生平</text>
+      <text class="card-title">生平</text>
       <text class="prof-para" wx:for="{{paras}}" wx:key="index">{{item}}</text>
     </view>
 

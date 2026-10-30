@@ -1,5 +1,5 @@
-const MIN = -2;
-const MAX = 6;
+const MIN = -3;
+const MAX = 7;
 
 function clamp(size) {
   return Math.max(MIN, Math.min(MAX, Number(size) || 0));
