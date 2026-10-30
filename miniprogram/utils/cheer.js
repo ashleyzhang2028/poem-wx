@@ -13,7 +13,7 @@ const KEEP = {
   80: ["错的那一题，恰是下次的长进。", "差之毫厘，再念几遍便稳了。"],
   60: ["诗已入心，只欠一遍细读。", "半卷寒山，半卷春色，皆在途中。"],
   40: ["认得一半，欠一半火候。", "今日之误，明日之熟。"],
-  0: ["今天先认下这几句，明天再认几句。", "不认得，才值得认识。"]
+  0: ["今日先识数句，明日再识数句。", "不认得，才值得认识。"]
 };
 
 const STREAK = {
@@ -78,7 +78,7 @@ function ofScore(pct, seed) {
 function ofStreak(n) {
   const hit = (n || 0) >= MILESTONE && n % MILESTONE === 0;
   if (STREAK[n]) return STREAK[n];
-  return hit ? "连对 " + n + " 句，接着来。" : "";
+  return hit ? "连对 " + n + " 句，再接再厉。" : "";
 }
 
 function ofRun(answered, correct) {
@@ -88,8 +88,8 @@ function ofRun(answered, correct) {
 }
 
 function ofQuit(answered, total) {
-  if (!answered) return "交了白卷，下一回先认两三句也好。";
-  if (answered < total) return "还剩 " + (total - answered) + " 题空着，不答不得分。";
+  if (!answered) return "白卷交出，下回先识数句亦可。";
+  if (answered < total) return "尚有 " + (total - answered) + " 题未答，不答不得分。";
   return "";
 }
 
@@ -97,9 +97,9 @@ const SAY = {
   hit: ["对上了", "接住了", "这一句，是您的了", "和古人对上了"],
   char: ["这一句里没有这个字。", "字未入句，再寻一次。"],
   empty: ["先写一句诗。", "一句未出，纸上还空。"],
-  short: ["太短了，诗要四字以上。", "再写长些，才认得出是诗。"],
+  short: ["字数不足，诗句须四字以上。", "再写长些，才认得出是诗。"],
   said: ["这一句方才说过了。", "旧句不重出，换一句。"],
-  absent: ["这一句不在诗文集里。", "没对上，换一句试试。"]
+  absent: ["这一句不在诗文集里。", "未能对上，请换一句。"]
 };
 
 function _cheer_lingFrom(n) {

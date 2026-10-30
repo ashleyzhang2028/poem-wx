@@ -85,7 +85,7 @@ Page({
     this.applyFont();
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("feihualing");
-    this.setData({ allowed: ok, lockNote: entitlement.hint("feihualing") || "登录后才能玩" });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("feihualing") || "登录后使用" });
     this.loadLog();
     if (!ok) return;
     if (!this.ready) {
@@ -102,7 +102,7 @@ Page({
 
   guardLeave() {
     const live = this.data.started && !this.ended;
-    if (live && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "这一轮还在计时，现在离开不会记成绩" });
+    if (live && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "本轮计时中，离开将不记成绩" });
     if (!live && wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
   },
 
@@ -164,6 +164,7 @@ Page({
     this.kept = false;
     this.reported = false;
     this.roundAt = Date.now();
+    if (this.data.started) rankingSubmit.begin("fly");
     this.setData(Object.assign({
       done: [], streak: 0, best: 0, message: "", msgHint: false, remark: "", cheerLine: "",
       ranked: false, lastScore: 0, over: false, judging: false
@@ -192,6 +193,7 @@ Page({
     if (this.data.started || !this.data.char) return;
     this.ended = false;
     this.roundAt = Date.now();
+    rankingSubmit.begin("fly");
     this.setData({ started: true, locked: false });
     this.startClock();
     this.guardLeave();
@@ -212,7 +214,7 @@ Page({
       {
         char: char,
         locked: !char || !this.data.started,
-        ask: char ? "" : "这一档的令字出完了，换一档难度再来",
+        ask: char ? "" : "本档令字已尽，请更换难度",
         input: "",
         message: "",
         messageOk: false,
@@ -237,7 +239,7 @@ Page({
       if (left <= 0) {
         this.stopClock();
         this.setData(clockPatch(0, "0:00"));
-        this.endRound("时间到", "时间到，一句也没接上");
+        this.endRound("时间到", "时间到，未接上一句");
         return;
       }
       this.setData(clockPatch(left, this.format(left)));
@@ -278,7 +280,7 @@ Page({
     this.guardLeave();
     this.setData({
       locked: true, over: true, judging: false, msgHint: false, messageOk: !!said,
-      message: said ? lead + " · 这一轮 " + said + " 句" : bare || lead
+      message: said ? lead + " · 本轮 " + said + " 句" : bare || lead
     });
   },
 
@@ -321,7 +323,7 @@ Page({
 
   settle(r) {
     if (this.ended) return;
-    if (r.degraded) wx.showToast({ title: "诗词漫读没回应，已按课内判定", icon: "none" });
+    if (r.degraded) wx.showToast({ title: "诗词漫读未响应，已按课内判定", icon: "none" });
     this.setData({ judging: false, msgHint: false });
     const streak = r.ok ? this.data.streak + 1 : 0;
     const fb = feedback.mark(this, r.ok, streak);

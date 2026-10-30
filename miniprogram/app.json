@@ -15,6 +15,7 @@
         "general/general",
         "theme/theme",
         "collections/collections",
+        "bookmarks/bookmarks",
         "recite/recite",
         "about/about",
         "terms/terms",
@@ -85,7 +86,8 @@
       "root": "packages/authors",
       "name": "authors",
       "pages": [
-        "index/index"
+        "index/index",
+        "profile/profile"
       ]
     }
   ],

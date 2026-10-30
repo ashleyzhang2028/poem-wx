@@ -82,13 +82,6 @@ function login() {
   return new Promise((resolve, reject) => {
     wx.login({
       success: (res) => {
-        console.log("[auth] wx.login ok", {
-          hasCode: !!res.code,
-          configured: configured(),
-          useCloud: useCloud(),
-          baseUrl: baseUrl(),
-          cloud: cloudConfig()
-        });
         if (!res.code) {
           reject(new Error("wx.login 未返回 code"));
           return;
@@ -104,7 +97,7 @@ function login() {
           delete auth.local;
           store.write(store.KEYS.auth, auth);
           store.saveSession({ logged: false, tier: "", tierFromServer: false });
-          const e = new Error("这个包没配同步服务器，登录得先接上它");
+          const e = new Error("未配置同步服务器，无法登录");
           e.code = "E_NOT_CONFIGURED";
           e.expected = true;
           reject(e);

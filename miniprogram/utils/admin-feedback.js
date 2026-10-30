@@ -24,23 +24,23 @@ function latest(threads) {
 
 function list() {
   return remote.adminFeedbackList("all").then((res) => {
-    if (!res.ok) return { ok: false, groups: [], counts: {}, reason: res.reason || "读不到反馈" };
+    if (!res.ok) return { ok: false, groups: [], counts: {}, reason: res.reason || "反馈读取失败" };
     return { ok: true, groups: group(res.threads), counts: res.counts || {}, latest: latest(res.threads) };
   });
 }
 
 function thread(tid) {
   return remote.adminFeedbackThread(tid).then((res) => {
-    if (!res.ok || !res.thread) return { ok: false, reason: res.reason || "读不到这一条" };
+    if (!res.ok || !res.thread) return { ok: false, reason: res.reason || "该条反馈读取失败" };
     return { ok: true, thread: fb.decorate(res.thread) };
   });
 }
 
 function reply(tid, content, status, resolution) {
   const text = String(content || "").trim();
-  if (!tid) return Promise.resolve({ ok: false, reason: "缺少编号" });
-  if (!text) return Promise.resolve({ ok: false, reason: "写一句再回" });
-  if (text.length > fb.COMMENT_MAX) return Promise.resolve({ ok: false, reason: "一条最多 " + fb.COMMENT_MAX + " 字" });
+  if (!tid) return Promise.resolve({ ok: false, reason: "缺少反馈编号" });
+  if (!text) return Promise.resolve({ ok: false, reason: "请输入回复内容" });
+  if (text.length > fb.COMMENT_MAX) return Promise.resolve({ ok: false, reason: "回复最多 " + fb.COMMENT_MAX + " 字" });
   return remote.adminFeedbackReply({
     tid: tid,
     content: text,
@@ -48,17 +48,17 @@ function reply(tid, content, status, resolution) {
     resolution: resolution
   }).then((res) => ({
     ok: !!res.ok,
-    reason: res.reason || "没回成，稍后再试",
+    reason: res.reason || "回复失败，请稍后重试",
     status: res.status,
     resolution: res.resolution
   }));
 }
 
 function remove(tid, cid) {
-  if (!tid && !cid) return Promise.resolve({ ok: false, reason: "要删哪一条没说清楚" });
+  if (!tid && !cid) return Promise.resolve({ ok: false, reason: "未指定要删除的条目" });
   return remote.adminFeedbackDelete(tid, cid).then((res) => ({
     ok: !!res.ok,
-    reason: res.reason || "没删成，稍后再试"
+    reason: res.reason || "删除失败，请稍后重试"
   }));
 }
 

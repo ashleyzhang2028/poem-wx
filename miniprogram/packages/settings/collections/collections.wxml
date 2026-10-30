@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选温习" note="登录后才能建集合" mark="选" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="自选温习" note="登录后可新建集合" mark="选" bind:login="onLogin" />
 
   <block wx:else>
 
@@ -9,7 +9,7 @@
       <text class="card-title">自选温习</text>
       <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" />
     </view>
-    <text class="hint coll-lead">看到想温习的，加进集合，按你的复习节奏排起来。</text>
+    <text class="hint coll-lead">将想温习的篇目加入集合，按自己的节奏安排复习。</text>
 
     <view class="coll-quota" wx:if="{{on}}">
       <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
@@ -53,7 +53,7 @@
       <view class="coll-search" wx:if="{{c.open && searchId === c.id}}">
         <view class="search">
           <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
-          <input placeholder="搜篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" />
+          <input placeholder="搜索篇名 / 作者 / 朝代" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" />
           <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onSuggestClear">
             <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
           </view>
@@ -73,8 +73,8 @@
         </view>
 
         <view class="empty coll-empty" wx:if="{{searched && !found.length}}">
-          <text class="empty-text">没找到「{{keyword}}」</text>
-          <text class="hint empty-tip">换个篇名、作者或朝代试试</text>
+          <text class="empty-text">未找到「{{keyword}}」</text>
+          <text class="hint empty-tip">可更换篇名、作者或朝代再试</text>
         </view>
       </view>
 
@@ -97,8 +97,8 @@
         </view>
 
         <view class="empty coll-empty" wx:else>
-          <text class="empty-text">这个集合还是空的</text>
-          <text class="hint empty-tip">点「加篇目」去搜索里找</text>
+          <text class="empty-text">集合暂无篇目</text>
+          <text class="hint empty-tip">点击「加篇目」搜索添加</text>
         </view>
       </block>
     </block>
@@ -107,8 +107,8 @@
   <view class="card" wx:elif="{{on}}">
     <view class="empty">
       <text class="empty-mark">选</text>
-      <text class="empty-text say">还没有自选集合</text>
-      <text class="hint empty-tip">在上面点「新建集合」开一个</text>
+      <text class="empty-text say">暂无自选集合</text>
+      <text class="hint empty-tip">点击上方「新建集合」创建</text>
     </view>
   </view>
 

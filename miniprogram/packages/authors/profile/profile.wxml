@@ -1,0 +1,47 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="作者介绍" note="登录后可查看" mark="人" bind:login="onLogin" />
+
+  <block wx:else>
+    <view class="card prof-head">
+      <text class="head-title poem">{{who}}</text>
+      <text class="head-sub" wx:if="{{dynasty}}">{{dynasty}}</text>
+    </view>
+
+    <view class="card">
+      <view class="row row-flush" hover-class="row-hover" hover-stay-time="60" bindtap="onWorks">
+        <view class="row-main">
+          <text class="row-title poem">查看作品</text>
+          <text class="row-sub">{{who}} · 作品列表</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{state === 'loading'}}">
+      <skeleton rows="4" />
+    </view>
+
+    <view class="card prof-body" wx:elif="{{state === 'ready'}}">
+      <text class="card-title poem">生平</text>
+      <text class="prof-para" wx:for="{{paras}}" wx:key="index">{{item}}</text>
+    </view>
+
+    <view class="card" wx:elif="{{state === 'empty'}}">
+      <view class="empty">
+        <text class="empty-mark">人</text>
+        <text class="empty-text">暂无生平介绍</text>
+      </view>
+    </view>
+
+    <view class="card" wx:else>
+      <view class="empty">
+        <text class="empty-mark">等</text>
+        <text class="empty-text">未能获取介绍</text>
+        <button class="btn primary mini empty-btn" bindtap="onRetry">重试</button>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </block>
+  <tab-bar id="tabbar" current="3" />
+</view>

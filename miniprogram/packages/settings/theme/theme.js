@@ -127,7 +127,7 @@ Page({
     const v = String(e.detail.value == null ? "" : e.detail.value).trim();
     if (!tone.parseHex(v)) {
       if (e.type === "blur" || e.type === "confirm") {
-        wx.showToast({ title: "HEX 要写成 #8C2F2D", icon: "none" });
+        wx.showToast({ title: "HEX 格式如 #8C2F2D", icon: "none" });
       }
       this.setData({ toneView: theme.toneData() });
       return;
@@ -140,7 +140,7 @@ Page({
 
   onToneReset() {
     if (!tone.current()) {
-      wx.showToast({ title: "还没选过主题色", icon: "none" });
+      wx.showToast({ title: "尚未选择主题色", icon: "none" });
       return;
     }
     if (theme.groupOpen(theme.GROUPS.filter((g) => g.key === theme.OWN)[0])) tone.clear();
@@ -151,7 +151,7 @@ Page({
   onOwnPick() {
     const item = theme.ownSwatchData();
     if (!item.set) {
-      wx.showToast({ title: "先选图", icon: "none" });
+      wx.showToast({ title: "请先选择图片", icon: "none" });
       return;
     }
     if (!theme.ownUsable()) {
@@ -171,7 +171,7 @@ Page({
     }
     custom.choose().then((r) => {
       if (!r.ok) {
-        if (r.reason !== "cancel") wx.showToast({ title: "这张图读不出来，换一张试试", icon: "none" });
+        if (r.reason !== "cancel") wx.showToast({ title: "图片读取失败，请更换", icon: "none" });
         return;
       }
       const crop = this.selectComponent("#crop");
@@ -183,18 +183,18 @@ Page({
   onCropDone(e) {
     const r = e.detail || {};
     if (!r.ok) {
-      wx.showToast({ title: "这张图截不出来，换一张试试", icon: "none" });
+      wx.showToast({ title: "图片处理失败，请更换", icon: "none" });
       return;
     }
     theme.set(theme.OWN_KEY);
     this.paint();
-    wx.showToast({ title: "已换成这一张", icon: "none" });
+    wx.showToast({ title: "已更换", icon: "none" });
   },
 
   onOwnClear() {
     theme.clearOwn();
     this.paint();
-    wx.showToast({ title: "已恢复默认 banner", icon: "none" });
+    wx.showToast({ title: "已恢复默认图片", icon: "none" });
   },
 
   onLogin() {
@@ -216,7 +216,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     const r = font.set(key);
     if (!r.ok) {
-      const title = r.reason === "tier" ? tiers.nameOf(font.tier()) + " 起可用" : "这款字体不存在";
+      const title = r.reason === "tier" ? tiers.nameOf(font.tier()) + " 起可用" : "字体不存在";
       wx.showToast({ title, icon: "none" });
       this.setData(this.view());
       return;

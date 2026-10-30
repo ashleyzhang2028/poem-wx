@@ -114,6 +114,7 @@ function clearCookieHeader(cfg) {
 }
 
 module.exports = {
+  keyOf: keyOf,
   issue: issue,
   read: read,
   shouldRenew: shouldRenew,

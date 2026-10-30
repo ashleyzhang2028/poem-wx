@@ -95,8 +95,8 @@
         <text class="rank-note">{{rank.note}}</text>
       </view>
 
-      <text class="hint best-line" wx:if="{{newBest}}">这一档比之前高，记下了</text>
-      <text class="hint best-line" wx:elif="{{best}}">最好的一次是{{best}}</text>
+      <text class="hint best-line" wx:if="{{newBest}}">刷新最好成绩</text>
+      <text class="hint best-line" wx:elif="{{best}}">历史最好：{{best}}</text>
 
       <text class="ranked" wx:if="{{ranked}}">已上榜 · {{rankWhere}}</text>
     </view>

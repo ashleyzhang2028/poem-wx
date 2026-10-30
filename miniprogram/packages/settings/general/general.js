@@ -5,7 +5,7 @@ const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
-const seasonal = require("../../../utils/seasonal");
+const dailyPoem = require("../../../utils/daily-poem");
 const league = require("../../../utils/league");
 const tiers = require("../../../utils/tiers");
 const cols = require("../../../utils/collections");
@@ -22,9 +22,9 @@ Page({
     sfxVisible: false,
     sfxOn: true,
 
-    seasonalOn: true,
-    seasonalLock: false,
-    seasonalTier: "pro",
+    dailyPoemOn: true,
+    dailyPoemLock: false,
+    dailyPoemTier: "pro",
 
     leagueBoardOn: true,
     leagueLock: false,
@@ -51,9 +51,9 @@ Page({
         themeColor: theme.currentTheme().rgba,
         sfxVisible: fx.visible,
         sfxOn: sfx.enabled(),
-        seasonalOn: !seasonal.switched(),
-        seasonalLock: seasonal.locked(),
-        seasonalTier: seasonal.tier(),
+        dailyPoemOn: !dailyPoem.switched(),
+        dailyPoemLock: dailyPoem.locked(),
+        dailyPoemTier: dailyPoem.tier(),
         leagueBoardOn: league.canJoin() && settings.leagueBoard !== false,
         leagueLock: league.locked(),
         leagueTier: league.tier()
@@ -61,12 +61,12 @@ Page({
     );
   },
 
-  onSeasonal(e) {
-    const r = seasonal.setOn(e.detail.value);
+  onDailyPoem(e) {
+    const r = dailyPoem.setOn(e.detail.value);
     if (!r.ok) {
-      wx.showToast({ title: tiers.nameOf(seasonal.tier()) + " 起可用", icon: "none" });
+      wx.showToast({ title: tiers.nameOf(dailyPoem.tier()) + " 起可用", icon: "none" });
     }
-    this.setData({ seasonalOn: !seasonal.switched(), seasonalLock: seasonal.locked() });
+    this.setData({ dailyPoemOn: !dailyPoem.switched(), dailyPoemLock: dailyPoem.locked() });
     if (r.ok) sync.markDirty();
   },
 
@@ -94,7 +94,7 @@ Page({
   onClearData() {
     wx.showModal({
       title: "清空数据",
-      content: "温习进度、已读标记、新增温习及自选集合里的篇目将被删除，本机与云端记录一并清除，且不可恢复。",
+      content: "温习进度、已读标记与新增温习将被清除，本机与云端一并删除，不可恢复。自选集合与书签不受影响。",
       confirmText: "清空",
       cancelText: "取消",
       confirmColor: "#a83b32",

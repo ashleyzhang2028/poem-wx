@@ -6,8 +6,8 @@ const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 
 const MODES = {
-  exam: { title: "考试成绩记录", empty: "还没有考试记录", tip: "交卷就留一条，历次成绩都在这页", score: "分" },
-  feihua: { title: "飞花令成绩记录", empty: "还没有飞花令记录", tip: "一轮结束就留一条，每轮接上的句数都在这页", score: "句" }
+  exam: { title: "考试成绩记录", empty: "暂无考试记录", tip: "交卷后自动记录", score: "分" },
+  feihua: { title: "飞花令成绩记录", empty: "暂无飞花令记录", tip: "每轮结束后自动记录", score: "句" }
 };
 
 Page({
@@ -60,8 +60,8 @@ Page({
       bestId: sum.best ? sum.best.id : "",
       ranks: feedback.RANKS.slice(0, 3),
       cloud: keep
-        ? "上云 " + rows.length + " / " + keep + " 条 · 超了删最久的一条 · 删本地同步删云上"
-        : "成绩只留本机 · 登录并开通 Pro / Max 后记在账号上"
+        ? "云端 " + rows.length + " / " + keep + " 条 · 超出自动删除最早记录 · 本地删除同步至云端"
+        : "成绩仅存本机 · 登录并开通 Pro / Max 后同步至账号"
     });
   },
 
@@ -124,7 +124,7 @@ Page({
     const ids = this.data.picked.slice();
     if (!ids.length) return;
     sfx.play("tap");
-    this.confirm("删除选中的 " + ids.length + " 条？", "删掉之后不能恢复", () => {
+    this.confirm("删除选中的 " + ids.length + " 条？", "删除后不可恢复", () => {
       this.remove(ids, () => this.setData({ picked: [], picking: false, allPicked: false }));
     });
   }

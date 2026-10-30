@@ -138,7 +138,7 @@ Page({
         id: pid,
         seq: i + 1,
         title: p ? p.t : pid,
-        meta: p ? [p.d, p.a, p.n].filter(Boolean).join(" · ") : "这一条不在语料里",
+        meta: p ? [p.d, p.a, p.n].filter(Boolean).join(" · ") : "不在语料库中",
         picked: !!on[pid]
       };
     });

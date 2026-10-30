@@ -88,7 +88,7 @@ function readiness() {
   if (hard) return { visible: true, usable: false, state: "denied", reason: hard };
   const down = state();
   if (down.ok === false && Date.now() - (down.at || 0) < HEALTH_STALE_MS) {
-    return { visible: true, usable: false, state: "awaiting", reason: down.reason || "通道还没接上" };
+    return { visible: true, usable: false, state: "awaiting", reason: down.reason || "诗词漫读通道未连接" };
   }
   return { visible: true, usable: true, state: "ready", reason: "" };
 }
@@ -98,7 +98,7 @@ function usable() {
 }
 
 function hardOff() {
-  if (!remote.configured()) return "还没接上同步服务器";
+  if (!remote.configured()) return "未连接同步服务器";
   return "";
 }
 
@@ -124,7 +124,7 @@ function withTimeout(task, ms) {
 }
 
 function failure(err) {
-  const e = new Error((err && (err.errMsg || err.message)) || "取不到诗词漫读");
+  const e = new Error((err && (err.errMsg || err.message)) || "诗词漫读获取失败");
   e.code = (err && err.code) || "E_POEM_SOURCE";
   e.expected = true;
   e.statusCode = Number(err && err.statusCode) || 0;
@@ -191,7 +191,7 @@ function paged(res) {
 function health() {
   return call(CAPS.health, {}, { fresh: true, timeout: 8000 }).then(
     (res) => ({ ok: true, note: (res && res.status) || "healthy" }),
-    (err) => ({ ok: false, note: err.message || "通道还没接上" })
+    (err) => ({ ok: false, note: err.message || "诗词漫读通道未连接" })
   );
 }
 
@@ -212,7 +212,7 @@ function authors(page, size) {
 }
 
 function author(id) {
-  if (!id) return Promise.reject(failure({ message: "没有给作者 id", code: "E_BAD_ID" }));
+  if (!id) return Promise.reject(failure({ message: "缺少作者 id", code: "E_BAD_ID" }));
   return call(CAPS.authors + "/" + encodeURIComponent(String(id)), {}).then(data);
 }
 
@@ -245,7 +245,7 @@ function random(opt) {
 }
 
 function byChar(char) {
-  if (!char) return Promise.reject(failure({ message: "没有给令字", code: "E_BAD_CHAR" }));
+  if (!char) return Promise.reject(failure({ message: "缺少令字", code: "E_BAD_CHAR" }));
   return call(CAPS.random, { char: char }, { fresh: true }).then(data);
 }
 
@@ -278,7 +278,7 @@ function cursorBefore(id) {
 function byNumericId(id) {
   return poems({ after: cursorBefore(id), page_size: 1 }).then((r) => {
     const hit = r.items[0];
-    if (!hit || String(hit.id) !== String(id)) throw failure({ message: "诗词漫读里没对上这一篇", code: "E_NO_POEM" });
+    if (!hit || String(hit.id) !== String(id)) throw failure({ message: "诗词漫读中未找到该篇", code: "E_NO_POEM" });
     return hit;
   });
 }
@@ -349,7 +349,7 @@ function byTitle(meta) {
     }),
     Promise.resolve(null)
   ).then((hit) => {
-    if (!hit) throw failure({ message: "诗词漫读里没对上这一篇", code: "E_NO_POEM" });
+    if (!hit) throw failure({ message: "诗词漫读中未找到该篇", code: "E_NO_POEM" });
     return hit;
   });
 }
@@ -377,7 +377,7 @@ function byId(id, meta) {
   if (/^\d+$/.test(String(id))) return byNumericId(id);
   const title = (meta && meta.t) || remotePoems.titleOf(id);
   if (title) return byTitle({ t: title, a: (meta && meta.a) || remotePoems.authorOf(id) });
-  return Promise.reject(failure({ message: "没有可用的正文 id", code: "E_BAD_ID" }));
+  return Promise.reject(failure({ message: "缺少有效的正文 id", code: "E_BAD_ID" }));
 }
 
 function linesOf(poem) {

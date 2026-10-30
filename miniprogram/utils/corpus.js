@@ -478,7 +478,7 @@ function courseTexts() {
 function ensureEntry(id) {
   const inPack = courseTexts()[id];
   if (inPack) return Promise.resolve(withTranslation(indexById(id), inPack) || inPack);
-  return Promise.reject(missError("E_NO_TEXT", "这一篇的正文不在这个包里：" + id));
+  return Promise.reject(missError("E_NO_TEXT", "本篇正文不在当前版本中：" + id));
 }
 
 function missError(code, message) {

@@ -82,7 +82,7 @@ Component({
       wx.showModal({
         title: "设置昵称",
         editable: true,
-        placeholderText: "可选用键盘上方的微信昵称",
+        placeholderText: "可使用键盘上方的微信昵称",
         confirmText: "确认",
         cancelText: "取消",
         success: (r) => {

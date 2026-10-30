@@ -10,6 +10,10 @@ const tabbar = require("../../utils/tabbar");
 const icons = require("../../utils/icons");
 const trail = require("../../utils/trail");
 const guard = require("../../utils/guard");
+const marks = require("../../utils/bookmarks");
+const lastRead = require("../../utils/last-read");
+
+const PAGE_SIZE = 50;
 
 const FILTERS = [
   { key: "全部", label: "全部" },
@@ -36,6 +40,9 @@ Page({
     collapsed: false,
 
     pickId: "",
+    page: 1,
+    pages: 1,
+    last: null,
     locked: true,
     icons: { search: icons.search, playlist: icons.playlist }
   },
@@ -46,7 +53,7 @@ Page({
 
   resetFilters() {
     this.forgetMatch();
-    this.setData({ keyword: "", filter: "全部" });
+    this.setData({ keyword: "", filter: "全部", page: 1 });
   },
 
   applyFont() {
@@ -72,6 +79,13 @@ Page({
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
+    const last = lastRead.get();
+    this.setData({ last: last && last.b === this.data.bookId ? { title: last.t } : null });
+  },
+
+  onContinue() {
+    const last = lastRead.get();
+    if (last) wx.navigateTo({ url: marks.readerUrl(last) });
   },
 
   apply() {
@@ -85,32 +99,49 @@ Page({
     const picked = this.pickedMap();
     const inMatch = {};
     (at || []).forEach((i) => { inMatch[i] = true; });
+    const kept = all.filter((p, i) => (!at || inMatch[i]) && !(filter === "未读" && reads[p.id]));
+
+    const pages = cataloged ? Math.max(1, Math.ceil(kept.length / PAGE_SIZE)) : 1;
+    const page = Math.min(this.data.page, pages);
+    const offset = cataloged ? (page - 1) * PAGE_SIZE : 0;
+    const shown = cataloged ? kept.slice(offset, offset + PAGE_SIZE) : kept;
+
     const order = [];
     const map = {};
-    let seq = 0;
-    let matched = 0;
-
-    all.forEach((p, i) => {
-      if (at && !inMatch[i]) return;
-      if (filter === "未读" && reads[p.id]) return;
-      matched += 1;
+    shown.forEach((p, i) => {
       const g = p.g || "";
       if (!map[g]) {
         map[g] = [];
         order.push(g);
       }
-      seq += 1;
-      map[g].push(this.rowOf(p, seq, reads, picked));
+      map[g].push(this.rowOf(p, offset + i + 1, reads, picked));
     });
 
     const groups = order.map((g) => ({ group: g, items: map[g] }));
-    cataloged && groups.forEach((g) => g.items.forEach((p, i) => { p.seq = i + 1; }));
 
     this.setData({
       groups,
-      matched,
+      page,
+      pages,
+      matched: kept.length,
       total: all.length,
       groupCount: groups.length
+    });
+  },
+
+  onPrev() {
+    this.turnPage(this.data.page - 1);
+  },
+
+  onNext() {
+    this.turnPage(this.data.page + 1);
+  },
+
+  turnPage(page) {
+    if (page < 1 || page > this.data.pages) return;
+    this.setData({ page }, () => {
+      this.apply();
+      wx.pageScrollTo({ scrollTop: 0, duration: 0 });
     });
   },
 
@@ -148,11 +179,11 @@ Page({
 
   onSearch(e) {
     this.forgetMatch();
-    this.setData({ keyword: e.detail.value }, () => this.apply());
+    this.setData({ keyword: e.detail.value, page: 1 }, () => this.apply());
   },
 
   onFilter(e) {
-    this.setData({ filter: e.detail.value }, () => this.apply());
+    this.setData({ filter: e.detail.value, page: 1 }, () => this.apply());
   },
 
 

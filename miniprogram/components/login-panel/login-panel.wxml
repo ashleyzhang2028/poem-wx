@@ -19,7 +19,7 @@
     <view class="avatar-wrap">
       <image class="avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
       <view class="avatar-fallback" wx:else>{{avatarChar}}</view>
-      <button class="wechat-choose" open-type="chooseAvatar" aria-label="换成微信头像"
+      <button class="wechat-choose" open-type="chooseAvatar" aria-label="使用微信头像"
               bindchooseavatar="onWechatAvatar"></button>
     </view>
 

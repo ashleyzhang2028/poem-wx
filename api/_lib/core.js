@@ -1731,6 +1731,35 @@ function sanitizeCollections(p) {
   return out;
 }
 
+var BOOKMARKS_ROW_ID = "bookmarks:v1";
+
+var BOOKMARKS_MAX = 1000;
+
+function sanitizeBookmarks(p) {
+  var out = { v: 1, updatedAt: Number((p && p.updatedAt) || 0) };
+  out.updatedAt = isFinite(out.updatedAt) && out.updatedAt > 0 ? Math.round(out.updatedAt) : 0;
+  out.items = [];
+  var seen = {};
+  var list = (p && Array.isArray(p.items)) ? p.items.slice(0, BOOKMARKS_MAX) : [];
+  list.forEach(function (b) {
+    if (!b || typeof b !== "object") return;
+    var id = refText(b.id, 80).trim();
+    if (!id || seen[id]) return;
+    seen[id] = 1;
+    var at = Number(b.at);
+    out.items.push({
+      id: id,
+      sid: refText(b.sid, 80).trim(),
+      src: b.src === true,
+      t: refText(b.t, 60),
+      a: refText(b.a, 30),
+      n: refText(b.n, 30),
+      at: isFinite(at) && at > 0 ? Math.round(at) : 0
+    });
+  });
+  return out;
+}
+
 var DEFER_ROW_ID = "defer:v1";
 
 var DEFER_MAX = 400;
@@ -1977,6 +2006,7 @@ function sanitizePayload(p, poemId) {
   if (poemId === DAILY_EXTRA_ROW_ID) return sanitizeDailyExtra(p);
   if (poemId === COLLECTIONS_ROW_ID) return sanitizeCollections(p);
   if (poemId === DEFER_ROW_ID) return sanitizeDefer(p);
+  if (poemId === BOOKMARKS_ROW_ID) return sanitizeBookmarks(p);
   if (poemId === PINYIN_FIX_ROW_ID) return sanitizePinyinFix(p);
 
   if (poemId === SETTINGS_ROW_ID) return sanitizeSettings(p);
@@ -3538,26 +3568,40 @@ function boardSubmit(deps, input) {
       var grade = Math.max(0, Math.min(12, Number(input && input.grade) || 0));
       var term = Math.max(0, Math.min(2, Number(input && input.term) || 0));
 
-      var row = {
-        srid: id.newScoreRecordId(),
-        uid: deps.account.uid,
-        game: g.game,
-        scope_id: clip(input && input.scopeId, BOARD_LIMITS.scopeId),
-        stage: stage,
-        grade: stage === "all" ? 0 : grade,
-        term: stage === "all" ? 0 : term,
-        score: score,
-        total: total,
-        duration_sec: Math.max(0, Math.min(24 * 3600, Number(input && input.durationSec) || 0)),
-        created_at: t
-      };
-      var keep = recordKeep(tier);
-      return Promise.resolve(store.putScoreRecord(row)).then(function () {
-        return trimScoreRecords(store, me.uid, g.game, keep);
-      }).then(function () {
-        return ok({ recorded: row.srid, score: score, total: total, on: !!g.on, keep: keep });
+      return require("./board-guard").admit(deps, me, g.game, input, score).then(function (v) {
+        if (!v.ok) return err(v.code === "E_RISK" ? 403 : 400, v.code, v.message);
+        var row = {
+          srid: id.newScoreRecordId(),
+          uid: deps.account.uid,
+          game: g.game,
+          scope_id: clip(input && input.scopeId, BOARD_LIMITS.scopeId),
+          stage: stage,
+          grade: stage === "all" ? 0 : grade,
+          term: stage === "all" ? 0 : term,
+          score: score,
+          total: total,
+          duration_sec: v.durationSec,
+          created_at: t
+        };
+        var keep = recordKeep(tier);
+        return Promise.resolve(store.putScoreRecord(row)).then(function () {
+          return trimScoreRecords(store, me.uid, g.game, keep);
+        }).then(function () {
+          return ok({ recorded: row.srid, score: score, total: total, on: !!g.on, keep: keep });
+        });
       });
     });
+  });
+}
+
+function boardStart(deps, input) {
+  var cfg = deps.cfg, t = deps.now();
+  return Promise.resolve(boardGate(deps, input, false)).then(function (g) {
+    if (g && g.status) return g;
+    if (!deps.account) return err(401, "E_NO_SESSION", "开局要登录");
+    var rg = deps.limiter.take(cfg, "board", "start:" + deps.account.uid, t);
+    if (!rg.ok) return err(429, "E_RATE_DEVICE", "开局太频繁了，请稍后再试", { retryAfter: rg.retryAfter });
+    return ok({ ticket: require("./board-guard").issue(cfg, deps.account.uid, g.game, t), startedAt: t });
   });
 }
 
@@ -3733,6 +3777,8 @@ module.exports = {
   COLLECTIONS_ITEMS_MAX: COLLECTIONS_ITEMS_MAX,
   sanitizeCollections: sanitizeCollections,
   DEFER_ROW_ID: DEFER_ROW_ID,
+  BOOKMARKS_ROW_ID: BOOKMARKS_ROW_ID,
+  sanitizeBookmarks: sanitizeBookmarks,
   DEFER_MAX: DEFER_MAX,
   sanitizeDefer: sanitizeDefer,
   READ_ROW_PREFIX: READ_ROW_PREFIX,
@@ -3806,6 +3852,7 @@ module.exports = {
   boardVisible: boardVisible,
   boardList: boardList,
   boardSubmit: boardSubmit,
+  boardStart: boardStart,
   boardPeriodStart: boardPeriodStart,
   boardMaskNick: boardMaskNick,
   boardStageOfGrade: boardStageOfGrade,

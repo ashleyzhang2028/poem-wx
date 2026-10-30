@@ -156,6 +156,10 @@ function mysqlStore(cfg) {
       return query("SELECT * FROM wx_accounts WHERE openid = ? LIMIT 1", [String(openid || "")])
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
     },
+    getWxAccountByUid: function (uid) {
+      return query("SELECT * FROM wx_accounts WHERE uid = ? LIMIT 1", [String(uid || "")])
+        .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
+    },
     getWxAccountByUnionid: function (unionid) {
       if (!unionid) return null;
       return query("SELECT * FROM wx_accounts WHERE unionid = ? LIMIT 1", [String(unionid)])
@@ -226,6 +230,17 @@ function mysqlStore(cfg) {
         [at, String(uid || "")]).then(function () { return true; });
     },
 
+    bumpCounter: function (subject, spanMs, nowMs) {
+      var win = Math.floor(nowMs / spanMs);
+      return query(
+        "INSERT INTO `rate_counters` (`subject`, `span_ms`, `win`, `n`, `expires_at`) VALUES (?, ?, ?, 1, ?)"
+          + " ON DUPLICATE KEY UPDATE `n` = LAST_INSERT_ID(`n` + 1)",
+        [String(subject), spanMs, win, (win + 1) * spanMs]
+      ).then(function (r) { return Number(r && r.insertId) || 1; });
+    },
+    purgeCounters: function (nowMs) {
+      return query("DELETE FROM `rate_counters` WHERE `expires_at` < ?", [nowMs]).then(function () { return true; });
+    },
     putSession: function (s) {
       return insertRow("sessions", s, ["sid"]);
     },

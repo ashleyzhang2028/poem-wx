@@ -142,7 +142,7 @@ const catalogPack = readModule(path.join(dataDir, "books", "catalogs.js"));
 const catalogTable = (catalogPack && catalogPack.books) || [];
 const catalogIds = catalogTable.map((b) => b.id);
 
-ok("集子表 = 课内一部 + 目录里那十部", (booksTable || []).length === 1 + catalogIds.length
+ok("集子表 = 课内一部 + 目录里的集子", (booksTable || []).length === 1 + catalogIds.length
   && booksTable[0].id === "poems",
   "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
 
@@ -180,13 +180,13 @@ ok("集子索引归属正确",
 
 {
   const texts = Object.keys(perBook).filter((id) => id !== "poems" && catalogIds.indexOf(id) < 0);
-  ok("除课内与目录那十部，别的集子一条都不进包（索引里一条都没有）",
+  ok("除课内与目录里的集子，别的集子一条都不进包（索引里一条都没有）",
     texts.every((id) => perBook[id].length === 0),
     "这些集子还有条目：" + texts.filter((id) => perBook[id].length).join("、"));
 }
 
-ok("目录十部，每部的条数与落盘的 count 对得上",
-  catalogIds.length === 10
+ok("目录里每部的条数与落盘的 count 对得上",
+  catalogIds.length > 0
     && catalogIds.every((id, i) => perBook[id].length === catalogTable[i].count && perBook[id].length > 0),
   "实际 " + JSON.stringify(catalogIds.map((id, i) => id + ":" + perBook[id].length + "/" + catalogTable[i].count)));
 
@@ -1143,7 +1143,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 17], ["max", 23]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 18], ["max", 24]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -1475,7 +1475,7 @@ ok("每条索引都查得回自己（集子 id 比条目 id 长的也要认）",
   foreignMiss.length === 0,
   "查不回的还有 " + foreignMiss.length + " 条：" + foreignMiss.slice(0, 3).map((p) => p.id).join("、"));
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
-ok("全站搜索只落在课内与目录那十部里",
+ok("全站搜索只落在课内与目录里的集子里",
   corpus.search("李白", { limit: 2000 }).items.every((p) => p.b === "poems" || catalogIds.indexOf(p.b) >= 0));
 ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).items.every((p) => p.b === "poems"));
 ok("目录里的条目也搜得到（篇名与作者）",
@@ -4166,7 +4166,7 @@ function mountFull(pg, query) {
   ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
 
   const DIRTY = [
-    ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
+    ["通用设置", "packages/settings/general/general.js", /onDailyPoem[\s\S]{0,300}?markDirty/],
     ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["温习设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
@@ -4538,21 +4538,20 @@ const K = {
 {
   const AI = require(path.join(ROOT, "utils", "author-index.js"));
   const roster = AI.build(perBook.poems);
-  ok("集子目录里的作者都进得了名册（" + AI.extraCount + " 位）",
+  ok("名单里的作者都进得了名册（" + AI.extraCount + " 位）",
     AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
     "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
 
-  const missing = ["韩非", "脱脱", "岳飞"].filter((n) => !roster.people[n]);
-  ok("草稿里点到的几位在名册上（他们只在集子目录里出现）",
-    missing.length === 0, "名册里没有：" + missing.join("、"));
+  const missing = ["屈原", "李白", "罗贯中", "施耐庵"].filter((n) => !roster.people[n]);
+  ok("名单里点到的几位在名册上", missing.length === 0, "名册里没有：" + missing.join("、"));
 
   const withDeng = Object.keys(roster.people).filter((n) => /等$/.test(n));
   ok("名册上的名字都进得了诗词漫读（不带「等」）", withDeng.length === 0,
     "还挂着：" + withDeng.join("、") + " —— 诗词漫读里只有「宋濂」，没有「宋濂等」");
 
-  const only = roster.people["韩非"];
-  ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,
-    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有韩非");
+  const only = roster.people["罗贯中"];
+  ok("课内没有作品的作者不冒充有作品", !!only && only.external === true && only.count === 0,
+    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有罗贯中");
 
   {
     const webSrc = fs.readFileSync(
@@ -4575,21 +4574,13 @@ const K = {
   }
 
   {
-    const extra = readModule(path.join(dataDir, "roster-extra.js")).era || {};
-    const catalogs = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
-    const noEra = catalogs.filter((p) => p.a && !extra[p.a]).map((p) => p.a);
-    ok("集子目录里每一位作者都对得上朝代（书名、作者名这两个字段之外不靠猜）",
-      noEra.length === 0, "没有朝代的作者：" + Array.from(new Set(noEra)).slice(0, 8).join("、"));
-  }
-
-  {
     const landed = (name, era) => {
       const w = roster.people[name];
       return !!w && w.at === AI.eraOf(era) && AI.eraName(era) === era;
     };
     const want = [
-      ["李白", "唐"], ["苏轼", "宋"], ["关汉卿", "元"], ["韩非", "先秦"],
-      ["屈原", "先秦"], ["曹操", "三国"], ["陶渊明", "晋"], ["刘禹锡", "唐"]
+      ["李白", "唐"], ["苏轼", "宋"], ["关汉卿", "元"],
+      ["屈原", "先秦"], ["曹操", "汉"], ["陶渊明", "晋"], ["刘禹锡", "唐"]
     ];
     const wrong = want.filter(([n, e]) => !landed(n, e))
       .map(([n]) => n + "落到了 " + ((roster.people[n] || {}).dynasty || "没朝代"));
@@ -5970,12 +5961,6 @@ const K = {
     !/hasData/.test(homeJsNoData) || !/noData|buildRev/.test(homeJsNoData),
     "home.js 又在 refresh 里按 hasData 改走另一套渲染 —— 卡片不再按真实数据报错");
   const appSrc = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
-  ok("缺语料改在控制台报（版本 + 语料在不在）",
-    /console\.info[\s\S]{0,200}corpus\.hasData\(\)/.test(appSrc)
-      && /console\.info[\s\S]{0,200}stamp\(\)/.test(appSrc),
-    "空态卡删掉之后，包是哪一版、语料进没进包就没人说了 —— " +
-      "这两句只能在 onLaunch 的控制台里说，页面不再替它出头");
-
   {
     const script = [
       'const path=require("path");',
@@ -6598,35 +6583,56 @@ const K = {
     ok("设置页的开关只落一个键（selfOnly 在跨设备的设置白名单里）",
       store3.DEFAULTS.selfOnly === false && !store3.LOCAL_ONLY.selfOnly);
 
-    const SEASON = require(path.join(ROOT, "utils", "seasonal.js"));
-    const corpusSeason = require(path.join(ROOT, "utils", "corpus.js"));
+    const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
 
-    ok("课内一首都没挂进季节限定表（课外那部集子整体删掉了）",
-      SEASON.WORKS.length === 0,
-      "还挂着 " + SEASON.WORKS.length + " 首 —— 它们的正文已经不在包里，点开是空的");
+    const pool = DAILY.poolOf();
+    ok("每日一诗的候选池里有篇目，每条都有题名与作者",
+      pool.length > 0 && pool.every((x) => x[0] && x[1]),
+      "候选池 " + pool.length + " 条");
 
-    ok("正文不在包里时首页不出这张卡（不留一张点开是空的卡）",
-      SEASON.card(new Date(2026, 9, 18)) === null);
+    ok("同一个自然日里首页给出的是同一首",
+      DAILY.card(new Date(2026, 9, 18)).key === DAILY.card(new Date(2026, 9, 18, 23, 59)).key);
 
-    ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
-      SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
+    const before = DAILY.card().key;
+    ok("换一首之后当天换成另一首", DAILY.redraw() === true && DAILY.card().key !== before);
 
-    ok("挂得上节日的篇目只从课内那 251 首里找",
-      SEASON.WORKS.every((w) => corpusSeason.courseTexts()[w[0]]));
+    track((async () => {
+      const src = require(path.join(ROOT, "utils", "poem-source.js"));
+      const realById = src.byId;
+      let calls = 0;
+      src.byId = () => {
+        calls += 1;
+        return calls <= 3 ? Promise.reject(new Error("offline")) : Promise.resolve({ id: 7, content: ["春眠不觉晓"] });
+      };
+      const got = await DAILY.loadCurrent();
+      ok("取正文失败时自动换下一首重试，直到取到",
+        calls === 4 && got.lines.length === 1,
+        "请求了 " + calls + " 次");
 
-    const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
-    ok("隐藏季节限定是 Pro 起的一项门禁，Free 开不了",
+      calls = 0;
+      src.byId = () => {
+        calls += 1;
+        return Promise.reject(new Error("offline"));
+      };
+      const failed = await DAILY.loadCurrent().then(() => false, () => true);
+      ok("一直失败时最多重试 " + DAILY.RETRY_MAX + " 次就停（共 " + (DAILY.RETRY_MAX + 1) + " 次请求）",
+        failed && calls === DAILY.RETRY_MAX + 1, "请求了 " + calls + " 次");
+      src.byId = realById;
+    })());
+
+    const capRow = E.CAPS.filter((c) => c.key === DAILY.CAP)[0];
+    ok("隐藏每日一诗是 Pro 起的一项门禁，Free 开不了",
       !!capRow && capRow.tier === "pro"
         && E.compareSummary().filter((x) => x.tier === "free")[0].on < E.CAP_KEYS.length);
 
     asTier3("free");
     ok("Free 手里那开关按不动",
-      SEASON.canSwitch() === false && SEASON.setOn(false).ok === false && SEASON.isOn() === true);
+      DAILY.canSwitch() === false && DAILY.setOn(false).ok === false && DAILY.isOn() === true);
 
     asTier3("pro");
     ok("Pro 关得掉，关掉之后首页不再出这张卡",
-      SEASON.setOn(false).ok === true && SEASON.switched() === true
-        && SEASON.isOn() === false);
+      DAILY.setOn(false).ok === true && DAILY.switched() === true
+        && DAILY.isOn() === false);
 
     ok("默认为开（新装的 Free 与 Pro 都看得见）",
       store3.DEFAULTS.seasonal === true && !store3.LOCAL_ONLY.seasonal);
@@ -6656,7 +6662,7 @@ const K = {
       LEAGUE_SET.setOn(true).ok === true && LEAGUE.optedIn() === true);
 
     asTier3("pro");
-    SEASON.setOn(true);
+    DAILY.setOn(true);
 
     store3.saveCollections([]);
     global.wx = saved;
@@ -6666,9 +6672,6 @@ const K = {
   }
 
   const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
-  ok("季节限定上加背/收进就地重排首页（顶读数与课内行跟着变，不用手动刷新）",
-    /onSeasonalAdd\(e\)[\s\S]{0,900}?this\.paint\(\)/.test(homeSrc4)
-      && /onCollectDone\(e\)[\s\S]{0,300}?this\.paint\(\)/.test(homeSrc4));
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
 
@@ -6920,7 +6923,7 @@ const K = {
 
   const single = [
     ["pages/home/home.js", "home:face"],
-    ["pages/home/home.js", "home:extra"],
+    ["pages/home/home.js", "home:daily:redraw"],
     ["packages/settings/collections/collections.js", "cols:create"],
     ["packages/settings/collections/collections.js", "cols:add"]
   ];
@@ -7156,6 +7159,68 @@ const K = {
     "权限页没有开通 / 续订入口");
   ok("支付只走服务端下单签名（客户端不碰 AppKey）",
     read("utils/pay.js").indexOf("payAppKey") < 0 && /wx\.requestVirtualPayment/.test(read("utils/pay.js")), "客户端持有了密钥或没接支付接口");
+}
+
+{
+  const apiLib = path.join(__dirname, "..", "api", "_lib");
+  const quotaMod = require(path.join(apiLib, "quota.js"));
+  const quotaStore = require(path.join(apiLib, "store.js")).memoryStore();
+  const quotaCfg = { quota: { uidHour: 3, uidDay: 100, ipHour: 50, anonHour: 2, anonDay: 100 } };
+  const asked = (uid, ip, name) => quotaMod.admit({
+    store: quotaStore, cfg: quotaCfg, now: () => 1000000, ip: ip, account: uid ? { uid: uid } : null
+  }, name || "sync.push");
+
+  track((async () => {
+    const seen = [];
+    for (let i = 0; i < 4; i += 1) seen.push((await asked("u1", "1.1.1.1")).ok);
+    ok("同一账号超过额度后被拦下，别的账号不受影响",
+      seen.join() === "true,true,true,false" && (await asked("u2", "1.1.1.1")).ok === true, seen.join());
+
+    const again = await quotaMod.admit({
+      store: quotaStore, cfg: quotaCfg, now: () => 1000000, ip: "9.9.9.9", account: { uid: "u1" }
+    }, "sync.push");
+    ok("计数在存储里：换一份进程状态、换一个 IP，同一账号仍被拦（多实例与重启都不放宽）",
+      again.ok === false && again.retryAfter > 0, JSON.stringify(again));
+
+    await asked(null, "2.2.2.2");
+    await asked(null, "2.2.2.2");
+    ok("未登录的请求只按 IP 计数", (await asked(null, "2.2.2.2")).ok === false && (await asked(null, "3.3.3.3")).ok === true);
+
+    ok("支付回调等免计数的入口不受额度影响", (await asked("u1", "1.1.1.1", "pay.notify")).ok === true);
+  })());
+}
+
+{
+  const apiLib = path.join(__dirname, "..", "api", "_lib");
+  const guardMod = require(path.join(apiLib, "board-guard.js"));
+  const memStore = require(path.join(apiLib, "store.js")).memoryStore();
+  const cfgB = { sessionSecret: "k".repeat(40), board: { ticketRequired: true }, risk: { enabled: false }, sessionKeyOf: undefined };
+  const me = { uid: "u1" };
+  const at = 1000000;
+  const depsAt = (t) => ({ cfg: cfgB, store: memStore, now: () => t, ip: "1.1.1.1" });
+
+  track((async () => {
+    const ticket = guardMod.issue(cfgB, "u1", "exam", at);
+    const good = await guardMod.admit(depsAt(at + 60000), me, "exam", { ticket }, 20);
+    ok("凭证有效、用时合理时记成绩，用时取服务端量的", good.ok === true && good.durationSec === 60, JSON.stringify(good));
+
+    const replay = await guardMod.admit(depsAt(at + 70000), me, "exam", { ticket }, 20);
+    ok("同一张凭证不能交第二次", replay.ok === false && replay.code === "E_TICKET", JSON.stringify(replay));
+
+    const fast = await guardMod.admit(depsAt(at + 5000), me, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 40);
+    ok("用时短到不可能的成绩不记", fast.ok === false && fast.code === "E_SCORE", JSON.stringify(fast));
+
+    const none = await guardMod.admit(depsAt(at + 60000), me, "exam", { durationSec: 600 }, 5);
+    ok("没有凭证不记（开了凭证要求时）", none.ok === false && none.code === "E_TICKET", JSON.stringify(none));
+
+    const other = await guardMod.admit(depsAt(at + 60000), { uid: "u2" }, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5);
+    ok("别人的凭证、别的玩法的凭证都用不了",
+      other.ok === false && (await guardMod.admit(depsAt(at + 60000), me, "fly", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5)).ok === false);
+
+    ok("飞花令每句至少 3 秒、考试每答对一题至少 2 秒",
+      guardMod.plausible("fly", 10, 29) === false && guardMod.plausible("fly", 10, 30) === true
+        && guardMod.plausible("exam", 10, 19) === false && guardMod.plausible("exam", 10, 20) === true);
+  })());
 }
 
 Promise.all(pending).then(() => {

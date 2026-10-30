@@ -1,11 +1,12 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="课内阅读" note="登录后才能看" mark="目" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="课内阅读" note="登录后查看" mark="目" bind:login="onLogin" />
 
   <block wx:else>
 
   <view class="card book-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
+    <text class="head-sub" wx:if="{{last}}" bindtap="onContinue">上次读到：{{last.title}} ›</text>
   </view>
 
   <view class="card index-card" wx:if="{{groups.length > 1}}">
@@ -63,10 +64,16 @@
     </view>
   </view>
 
+  <view class="pager" wx:if="{{pages > 1}}">
+    <button class="btn mini" disabled="{{page <= 1}}" bindtap="onPrev">上一页</button>
+    <text class="hint pager-text">第 {{page}} / {{pages}} 页</text>
+    <button class="btn mini" disabled="{{page >= pages}}" bindtap="onNext">下一页</button>
+  </view>
+
   <view class="empty" wx:if="{{!groups.length}}">
     <text class="empty-mark">空</text>
-    <text class="empty-text">{{keyword ? '没有匹配的篇目' : '这部集合里还没有篇目'}}</text>
-    <text class="hint empty-tip" wx:if="{{keyword}}">换个词或切到「全部」</text>
+    <text class="empty-text">{{keyword ? '无匹配篇目' : '此部暂无篇目'}}</text>
+    <text class="hint empty-tip" wx:if="{{keyword}}">请更换关键词或切换至「全部」</text>
   </view>
 
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />

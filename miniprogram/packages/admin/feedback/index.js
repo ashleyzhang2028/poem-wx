@@ -59,12 +59,12 @@ Page({
     if (!tid || !this.data.canWrite) return;
     wx.showModal({
       title: "确认",
-      content: "删掉这一条？连同下面的沟通记录一起删。",
+      content: "删除该条反馈？沟通记录将一并删除。",
       success: (r) => {
         if (!r.confirm) return;
         guard.once("admin:delete:" + tid, () => adminFb.remove(tid, "")).then((res) => {
           if (!res || !res.ok) {
-            this.setData({ reason: (res && res.reason) || "没删成，稍后再试" });
+            this.setData({ reason: (res && res.reason) || "删除失败，请稍后重试" });
             return;
           }
           this.load();

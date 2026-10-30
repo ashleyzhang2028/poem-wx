@@ -1,0 +1,54 @@
+.mark-lead {
+  display: block;
+}
+
+.mark-quota {
+  margin-top: var(--sp-2);
+}
+
+.mark-tools {
+  flex-wrap: nowrap;
+  padding: var(--sp-2) 0;
+}
+
+.mark-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.mark-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark-meta {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark-search {
+  margin-bottom: var(--sp-2);
+}
+
+.mark-empty {
+  padding: var(--sp-3) var(--sp-2);
+}
+
+.mark-pager {
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0 var(--sp-1);
+}
+
+.mark-page {
+  flex: 1;
+  text-align: center;
+}

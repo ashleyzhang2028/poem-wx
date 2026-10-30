@@ -71,3 +71,27 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.reader .card.poem-card {
+  padding-top: var(--sp-6);
+  padding-bottom: var(--sp-6);
+}
+
+.reader .poem-card .prefs {
+  padding-bottom: 0;
+}
+
+.reader .poem-card .poem-body {
+  padding-top: var(--sp-4);
+  padding-bottom: 0;
+}
+
+.reader .poem-link {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 6rpx;
+}
+
+.reader .poem-link-hover {
+  opacity: .6;
+}

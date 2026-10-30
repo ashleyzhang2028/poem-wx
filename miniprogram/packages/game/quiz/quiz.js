@@ -55,7 +55,7 @@ Page({
     this.applyFont();
     this.setData({ barBelow: !!tabbar.pick(this) });
     const ok = entitlement.can("quiz");
-    this.setData({ allowed: ok, lockNote: entitlement.hint("quiz") || "登录后才能练" });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("quiz") || "登录后使用" });
     if (!ok || this.ready) return;
     this.ready = true;
 
@@ -103,7 +103,7 @@ Page({
     }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "诗词漫读没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "诗词漫读未能获取，已改用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

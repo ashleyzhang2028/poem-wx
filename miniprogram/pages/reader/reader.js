@@ -9,6 +9,8 @@ const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
+const marks = require("../../utils/bookmarks");
+const lastRead = require("../../utils/last-read");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
@@ -26,7 +28,7 @@ const RESULTS = [
 const PAGE_ICONS = {
   left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
-  playlist: icons.playlist, off: icons.off, all: icons.all
+  playlist: icons.playlist, bookmark: icons.bookmark, off: icons.off, all: icons.all
 };
 
 function aliasTextOf(meta) {
@@ -93,6 +95,7 @@ Page({
     dailyOn: false,
     dailyLocked: false,
     pickOn: false,
+    markOn: false,
     extraTier: "pro",
     pickTier: "pro",
     icons: PAGE_ICONS,
@@ -101,7 +104,7 @@ Page({
 
     locked: true,
     lockTitle: "诗词详情",
-    lockNote: "登录后才能看正文与进度",
+    lockNote: "登录后查看正文与进度",
 
     creator: "",
     pager: { show: false, prev: null, next: null }
@@ -149,6 +152,7 @@ Page({
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
       pickOn: cols.collectionsOf(this.data.id).length > 0,
+      markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
     });
   },
@@ -157,6 +161,24 @@ Page({
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const box = this.selectComponent("#collect");
     if (box) box.ask(this.data.id, this.data.title || "");
+  },
+
+  onAuthor() {
+    const name = this.data.author;
+    if (!name || name === "佚名" || name === "无名氏") return;
+    wx.navigateTo({ url: "/packages/authors/profile/profile?name=" + encodeURIComponent(name) });
+  },
+
+  onToggleMark() {
+    if (!entitlement.block("bookmarks", { page: this, loginPrompt: true })) return;
+    const d = this.data;
+    const r = marks.toggle({ id: d.id, sid: d.sid, src: !!d.remote, t: d.title, a: d.author, n: d.source });
+    if (r.ok) sync.markDirty();
+    this.setData({ markOn: r.on });
+    wx.showToast({
+      title: r.on ? (r.dropped ? "已加书签，最早一枚已移出" : "已加书签") : "已移出书签",
+      icon: "none"
+    });
   },
 
   onCollectDone(e) {
@@ -187,7 +209,7 @@ Page({
   },
 
   dailyMsg(r) {
-    if (r.code === "E_LIMIT") return "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+    if (r.code === "E_LIMIT") return "今日新增上限 " + store.DAILY_EXTRA_MAX + " 首，请先完成温习";
     if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
     return "添加失败";
   },
@@ -211,17 +233,17 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
-    if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "这一篇的正文没取到，点一下重试");
-    if (onlySid) return this.loadRemote(onlySid, null, "这一篇的正文没取到，点一下重试");
+    if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
+    if (onlySid) return this.loadRemote(onlySid, null, "未能获取正文，点击重试");
 
     if (meta && meta.b) {
-      this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
+      this.setData({ id, loadingText: false, loadFailed: true, failText: "本篇正文不在当前版本中", remote: false });
       return;
     }
 
-    if (this.data.remote || remoteId) return this.loadRemote(id, null, "这一篇的正文没取到，点一下重试");
+    if (this.data.remote || remoteId) return this.loadRemote(id, null, "未能获取正文，点击重试");
 
-    this.setData({ id, loadingText: false, loadFailed: true, failText: "这一篇的正文不在这个包里", remote: false });
+    this.setData({ id, loadingText: false, loadFailed: true, failText: "本篇正文不在当前版本中", remote: false });
   },
 
   loadRemote(sid, meta, failText) {
@@ -234,7 +256,7 @@ Page({
         if (token !== this.loadToken) return;
         const text = source.textOf(poem);
         if (!text) {
-          this.setData({ loadingText: false, loadFailed: true, failText: "这一篇的正文是空的，换一篇看看" });
+          this.setData({ loadingText: false, loadFailed: true, failText: "本篇正文为空" });
           return;
         }
         this.setData({ hasTranslation: false, remote: true, sid: String(sid) });
@@ -259,6 +281,9 @@ Page({
 
   renderEntry(id, entry, meta) {
     const settings = store.settings();
+    if (!this.data.reciteMode) {
+      lastRead.put({ id: id, sid: this.data.sid || meta.sid, src: !!this.data.remote, t: meta.t, a: meta.a, n: meta.n || meta.s, b: meta.b });
+    }
     const size = scale.clamp(settings.fontSize);
 
     const rec = store.getRecord(id);

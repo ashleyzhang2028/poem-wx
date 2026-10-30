@@ -21,6 +21,12 @@ function recordCell(tier, cap) {
   return { text: n + " 条", on: rankOf(cap.tier) <= rankOf(tier) };
 }
 
+function bookmarkCell(tier, cap) {
+  const n = tiers.BOOKMARK_LIMITS[tier];
+  if (!n) return { text: "", on: false };
+  return { text: n + " 个", on: rankOf(cap.tier) <= rankOf(tier) };
+}
+
 function courseFreeCell(tier) {
   const on = rankOf(tier) >= rankOf("pro");
   return { text: "", on: on };
@@ -28,29 +34,30 @@ function courseFreeCell(tier) {
 
 const CAPS = [
   { key: "daily", name: "每日温习", desc: "按计划温习今天这几首", tier: "free" },
-  { key: "library", name: "课内与诗词漫读", desc: "课内 251 首按册翻读，课外的十部集子随点随读", tier: "free" },
+  { key: "library", name: "课内与诗词漫读", desc: "课内篇目按册翻读，课外集子随点随读", tier: "free" },
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
   { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
-  { key: "search", name: "全站搜索", desc: "搜篇名 / 作者 / 朝代 / 出处", tier: "free" },
-  { key: "extra", name: "新增温习", desc: "今天想多背几首，自己加", tier: "pro" },
+  { key: "search", name: "全站搜索", desc: "按篇名、作者、朝代、出处检索", tier: "free" },
+  { key: "extra", name: "新增温习", desc: "当日自行追加温习篇目", tier: "pro" },
   { key: "leitner", name: "莱特纳盒 Leitner Box", desc: "分级盒子复习", tier: "pro" },
 
-  { key: "sync", name: "同步进度", desc: "进度与设置跟着微信账号走", tier: "free" },
+  { key: "sync", name: "同步进度", desc: "进度与设置随微信账号同步", tier: "free" },
   { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
+  { key: "bookmarks", name: "书签", desc: "于详情页收藏，在设置中统一管理 · " + tiers.bookmarkQuota() + "，超出时移除最早一条", cell: bookmarkCell, tier: "pro" },
   { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
-  { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
+  { key: "dailypoem", name: "隐藏每日一诗", desc: "可在首页隐藏每日一诗卡片", tier: "pro" },
   { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
-  { key: "ownbanner", name: "自选主题 banner", desc: "换成自己的一张图 · 只存本机", tier: "max" },
-  { key: "themetone", name: "自选主题色", desc: "从色相与明度里挑一个 · 标题与按钮跟着换", tier: "max" },
-  { key: "font", name: "字体", desc: "汇文明朝 · 寒蝉正楷，正文题名一起换", tier: "pro" },
+  { key: "ownbanner", name: "自选主题 banner", desc: "使用自己的图片 · 仅存于本机", tier: "max" },
+  { key: "themetone", name: "自选主题色", desc: "自选色相与明度 · 标题与按钮同步变化", tier: "max" },
+  { key: "font", name: "字体", desc: "汇文明朝 · 寒蝉正楷，正文与题名同步更换", tier: "pro" },
   { key: "fsrs", name: "FSRS 自由间隔重复调度", desc: "难度 / 稳定性排期", tier: "max" },
-  { key: "feihualing", name: "飞花令", desc: "给一个字轮流接句", tier: "max" },
-  { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一批", tier: "max" },
-  { key: "league", name: "排行榜", desc: "考试成绩与飞花令成绩上榜，分学段比", tier: "max" },
-  { key: "records", name: "成绩记录", desc: "历次成绩上云 · " + tiers.recordQuota() + "，超了删最久那条", cell: recordCell, tier: "pro" }
+  { key: "feihualing", name: "飞花令", desc: "以指定字轮流接句", tier: "max" },
+  { key: "exam", name: "考试", desc: "限时 20 分钟，交卷后统一评分", tier: "max" },
+  { key: "league", name: "排行榜", desc: "考试与飞花令成绩上榜，按学段排名", tier: "max" },
+  { key: "records", name: "成绩记录", desc: "历次成绩上云 · " + tiers.recordQuota() + "，超出时移除最早一条", cell: recordCell, tier: "pro" }
 ];
 
 function cellFor(cap, tier) {
@@ -140,12 +147,12 @@ function hint(key, ctx) {
   if (!in2) return "登录可用";
 
   const cap = CAPS.find((c) => c.key === key);
-  if (!cap) return "这个功能不存在";
+  if (!cap) return "功能不存在";
   if (can(key)) return "";
   if (switchedOff(key)) return "「" + cap.name + "」已关闭";
   const s = status();
-  if (s.blocked === "cloud") return "同步服务未连接（云调用两栏未填或填错），进度仅存于本机";
-  if (s.blocked === "unsigned") return "无法连接服务器，档位暂按 Free 计，请稍后再试";
+  if (s.blocked === "cloud") return "同步服务未连接（云调用配置缺失或有误），进度仅存于本机";
+  if (s.blocked === "unsigned") return "无法连接服务器，档位暂按 Free 计，请稍后重试";
   return tiers.nameOf(cap.tier) + " 起可用";
 }
 
@@ -159,7 +166,7 @@ const VIEW_NAME = {
   extra: "首页·新增温习",
   collections: "首页·自选温习",
   progress: "首页·温习进度",
-  seasonal: "首页·季节限定隐藏",
+  dailypoem: "首页·每日一诗隐藏",
   pinyin: "我的·正文排版",
   ebbinghaus: "复习算法·艾宾浩斯",
   leitner: "复习算法·莱特纳盒",
@@ -176,16 +183,17 @@ const VIEW_NAME = {
   ownbanner: "主题·自选 banner",
   themetone: "主题·自选主题色",
   font: "主题·字体选择",
+  bookmarks: "详情·书签",
   coursefree: "我的·只背自选",
   sync: "我的·同步进度"
 };
 
 const COMPARE_ORDER = [
-  "daily", "extra", "collections", "progress", "seasonal", "pinyin",
+  "daily", "extra", "collections", "progress", "dailypoem", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "search",
   "quiz", "feihualing", "exam", "records", "league",
-  "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
+  "sights", "ownbanner", "themetone", "font", "bookmarks", "coursefree", "sync"
 ];
 
 function compareNameOf(cap) {
@@ -256,7 +264,7 @@ function snapshot() {
 function redeem(code) {
   const c = String(code || "").trim().toUpperCase();
   if (!/^(PRO|MAX)-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(c)) {
-    return { ok: false, msg: "提权码格式不对，形如 PRO-XXXX-XXXX" };
+    return { ok: false, msg: "提权码格式有误，应为 PRO-XXXX-XXXX" };
   }
   store.write(store.KEYS.grant, { code: c, tier: c.slice(0, 3).toLowerCase(), at: Date.now() });
   return { ok: true, tier: c.slice(0, 3).toLowerCase() };

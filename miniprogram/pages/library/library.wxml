@@ -1,7 +1,38 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="漫读" note="登录后才能看" mark="漫" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="漫读" note="登录后查看" mark="漫" bind:login="onLogin" />
 
   <block wx:else>
+
+    <view class="card" wx:if="{{last}}">
+      <view class="gc-head">
+        <text class="gc-name">上次读到</text>
+      </view>
+      <view class="book-grid book-grid-wide">
+        <view class="book-cell book-cell-wide" hover-class="book-hover" hover-stay-time="60" bindtap="onContinue">
+          <view class="book-main">
+            <text class="book-name">{{last.title}}</text>
+            <text class="book-sub">{{last.sub}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{markCount}}">
+      <view class="gc-head">
+        <text class="gc-name">我的书签</text>
+        <text class="gc-count" bindtap="onAllMarks">全部 {{markCount}} 个 ›</text>
+      </view>
+      <view class="book-grid">
+        <view class="book-cell" hover-class="book-hover" hover-stay-time="60"
+              wx:for="{{marks}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenMark">
+          <view class="book-main">
+            <text class="book-name">{{item.title}}</text>
+          </view>
+          <text class="row-go">›</text>
+        </view>
+      </view>
+    </view>
 
     <view class="card" wx:for="{{groups}}" wx:key="key">
       <view class="gc-head">

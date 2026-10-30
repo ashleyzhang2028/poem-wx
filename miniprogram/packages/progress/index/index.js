@@ -46,7 +46,7 @@ Page({
       defers: defer.lists(),
       selfOn: entitlement.can("collections"),
       selfCount: list.length,
-      selfSub: list.length ? list.length + " 个集合 · 逐集合摊开" : "还没有自选集合",
+      selfSub: list.length ? list.length + " 个集合 · 逐集合查看" : "暂无自选集合",
       sheetRows: this.sheetQueue(view.panels)
     });
   },

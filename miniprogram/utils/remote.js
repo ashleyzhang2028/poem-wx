@@ -87,7 +87,7 @@ function source(path, params, opt) {
 
   const timeout = Number((opt && opt.timeout) || SOURCE_TIMEOUT_MS);
 
-  return sendTraced(
+  return dispatch(
     SOURCE_PATH + path + trail,
     {},
     "GET",
@@ -113,29 +113,12 @@ function traceTarget(path, agent) {
   return "http " + baseUrl() + path;
 }
 
-function traceBody(data) {
-  try {
-    return JSON.stringify(data, (k, v) => (/token|code$/i.test(k) && typeof v === "string" ? v.slice(0, 6) + "…(" + v.length + ")" : v));
-  } catch (e) {
-    return String(data);
-  }
-}
-
-function sendTraced(path, data, method, opt) {
-  const verb = method || "POST";
-  const o = opt || {};
+function dispatch(path, data, method, opt) {
   const started = Date.now();
-  const head = "[remote] " + verb + " " + traceTarget(path, o.agent);
-  console.log(head, "body=" + traceBody(data), "auth=" + (session().accessToken ? "Bearer" : "none"));
-  let status = 0;
-  const pending = send(path, data, method, Object.assign({}, o, { onStatus: (code) => { status = code; } }));
-  return pending.then(
-    (res) => {
-      console.log(head, "HTTP " + status, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
-      return res;
-    },
+  return send(path, data, method, opt).then(
+    (res) => res,
     (err) => {
-      console.error(head, "HTTP " + ((err && err.statusCode) || 0), "FAIL", Date.now() - started + "ms", {
+      console.error("[remote] " + (method || "POST") + " " + traceTarget(path, opt && opt.agent), "HTTP " + ((err && err.statusCode) || 0), "FAIL", Date.now() - started + "ms", {
         statusCode: err && err.statusCode,
         code: err && err.code,
         errMsg: err && err.errMsg,
@@ -218,7 +201,6 @@ function cloudCall(conf, path, data, method, opt) {
       data: data,
       timeout: Number(o.timeout) || CLOUD_TIMEOUT_MS,
       success: (res) => {
-        if (o.onStatus) o.onStatus(res.statusCode);
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(httpError(res.statusCode, res.data));
       },
@@ -228,7 +210,7 @@ function cloudCall(conf, path, data, method, opt) {
 }
 
 function sourceOffError() {
-  const e = new Error("还没接上诗词漫读（取诗的那个服务）—— 这个包没配同步服务器");
+  const e = new Error("诗词漫读服务未连接：当前版本未配置同步服务器");
   e.code = "E_POEM_SOURCE_OFF";
   e.expected = true;
   return e;
@@ -285,7 +267,7 @@ function plainStatusError(statusCode) {
   if (statusCode === 400) {
     return "这次请求没被收下（HTTP 400）—— 云调用两栏多半没配对（环境 / 服务名）。";
   }
-  if (statusCode === 404) return "这个接口没找到（HTTP 404）—— 装上来的这一版和那头不是同一版。";
+  if (statusCode === 404) return "接口未找到（HTTP 404）：客户端与服务端版本不一致。";
   return "HTTP " + statusCode;
 }
 
@@ -304,7 +286,6 @@ function sendHttp(path, data, method, opt) {
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       success: (res) => {
-        if (o.onStatus) o.onStatus(res.statusCode);
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(httpError(res.statusCode, res.data));
       },
@@ -334,7 +315,7 @@ function request(path, data, method, retried) {
   if (!configured()) return Promise.reject(new Error("同步服务未开通"));
   const isCredential = path === PATHS.login || path === PATHS.refresh;
 
-  return sendTraced(path, data, method)["catch"]((err) => {
+  return dispatch(path, data, method)["catch"]((err) => {
     if (retried || isCredential) throw err;
     if (err.statusCode !== 401) throw err;
     if (SESSION_GONE.indexOf(err.code) < 0) throw err;
@@ -548,7 +529,7 @@ function rankingList(query) {
       offline: !!(err && err.statusCode && err.statusCode === 503),
       off: !!(err && err.code === "E_RANKING_OFF"),
       board: [],
-      reason: (err && err.message) || "榜单没读上来"
+      reason: (err && err.message) || "榜单读取失败"
     })
   );
 }
@@ -591,7 +572,7 @@ function feedbackCreate(entry) {
   if (!configured()) return Promise.resolve({ ok: false, offline: true });
   return request(PATHS.feedback, Object.assign({ deviceId: store.deviceId() }, entry || {})).then(
     (res) => ({ ok: true, thread: res && res.thread, duplicate: !!(res && res.duplicate) }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没发出先去", code: (err && err.code) || "" })
+    (err) => ({ ok: false, reason: (err && err.message) || "提交失败", code: (err && err.code) || "" })
   );
 }
 
@@ -601,7 +582,7 @@ function feedbackComment(tid, content) {
     op: "comment", tid: tid, content: content, deviceId: store.deviceId()
   }).then(
     (res) => ({ ok: true, comment: res && res.comment }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没发出去" })
+    (err) => ({ ok: false, reason: (err && err.message) || "提交失败" })
   );
 }
 
@@ -632,7 +613,7 @@ function adminFeedbackDelete(tid, cid) {
   if (cid) body.cid = cid;
   return request(PATHS.adminFeedback, body).then(
     (res) => ({ ok: true, deleted: res && res.deleted }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没删成" })
+    (err) => ({ ok: false, reason: (err && err.message) || "删除失败" })
   );
 }
 

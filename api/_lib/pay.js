@@ -657,6 +657,9 @@ function payAdmin(deps, input) {
 }
 
 module.exports = {
+  accessToken: accessToken,
+  wxFetchJson: wxFetchJson,
+  wxBase: wxBase,
   payCatalog: payCatalog,
   payOrder: payOrder,
   payConfirm: payConfirm,

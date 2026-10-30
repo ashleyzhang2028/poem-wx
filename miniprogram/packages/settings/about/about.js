@@ -47,9 +47,9 @@ Page({
     if (!auth.logged()) return;
     wx.showModal({
       title: "退出登录",
-      content: "吟咏笔录，积日累月，皆藏云笈。\n此行暂歇，他日重至，诗章犹在。",
+      content: "退出后数据保留在云端，重新登录即可恢复。",
       confirmText: "退出",
-      cancelText: "留步",
+      cancelText: "取消",
       success: (r) => (r && r.confirm ? this.leave() : null)
     });
   },

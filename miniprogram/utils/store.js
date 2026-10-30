@@ -9,6 +9,7 @@ const KEYS = {
   deviceSettings: "kb_device_settings_v1",
   reads: "kb_reads_v1",
   collections: "kb_collections_v1",
+  bookmarks: "kb_bookmarks_v1",
   defer: "kb_recite_defer_v1",
   pinyinFix: "kb_pinyin_fix_v1",
   dailyExtra: "kb_daily_extra_v1",
@@ -619,6 +620,21 @@ function saveCollections(list, at) {
   return list || [];
 }
 
+function bookmarks() {
+  const raw = read(KEYS.bookmarks, null);
+  return raw && Array.isArray(raw.list) ? raw.list : [];
+}
+
+function saveBookmarks(list, at) {
+  write(KEYS.bookmarks, { list: list || [], at: Number(at) || Date.now() });
+  return list || [];
+}
+
+function bookmarksAt() {
+  const raw = read(KEYS.bookmarks, null);
+  return raw ? Number(raw.at || 0) : 0;
+}
+
 function collectionsAt() {
   const raw = read(KEYS.collections, null);
   if (!raw) return 0;
@@ -753,6 +769,9 @@ module.exports = {
   avatarChar,
   collections,
   saveCollections,
+  bookmarks,
+  saveBookmarks,
+  bookmarksAt,
   collectionsAt,
   progressEdge,
   keepProgressEdge,

@@ -36,6 +36,7 @@ const DAILY_EXTRA_ROW = "daily_extra:v1";
 const DEFER_ROW = "defer:v1";
 const PINYIN_FIX_ROW = "pinyin_fix:v1";
 const COLLECTIONS_ROW = "collections:v1";
+const BOOKMARKS_ROW = "bookmarks:v1";
 
 const SETTINGS_ROW = "settings:v1";
 
@@ -254,6 +255,16 @@ function packRecords() {
     });
   }
 
+  const marksAt = store.bookmarksAt();
+  if (marksAt) {
+    rows.push({
+      id: BOOKMARKS_ROW,
+      payload: { v: 1, items: clone(store.bookmarks()), updatedAt: marksAt },
+      updatedAt: marksAt,
+      deleted: false
+    });
+  }
+
   const sAt = store.settingsAt();
   if (sAt) {
     rows.push({
@@ -433,6 +444,14 @@ function applyRecords(recs) {
       return;
     }
 
+    if (id === BOOKMARKS_ROW) {
+      const items = row.payload && row.payload.items;
+      if (at <= store.bookmarksAt() || !Array.isArray(items)) return;
+      store.saveBookmarks(items, at);
+      applied += 1;
+      return;
+    }
+
     if (id === COLLECTIONS_ROW) {
       const payload = row.payload || {};
       const localAt = store.collectionsAt() || 0;
@@ -537,6 +556,7 @@ module.exports = {
   DEFER_ROW,
   PINYIN_FIX_ROW,
   COLLECTIONS_ROW,
+  BOOKMARKS_ROW,
   SETTINGS_ROW,
   RECORD_ROW,
   slimRecord,

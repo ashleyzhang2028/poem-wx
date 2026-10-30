@@ -14,6 +14,16 @@ function entryOf(game) {
   };
 }
 
+const tickets = {};
+
+function begin(game) {
+  tickets[game] = "";
+  if (!remote.configured() || !optedIn()) return Promise.resolve();
+  return remote.rankingStart(game).then((ticket) => {
+    tickets[game] = ticket;
+  });
+}
+
 function submit(entry) {
   if (!remote.configured()) return Promise.resolve({ ok: false, offline: true });
   return remote.rankingSubmit(entry);
@@ -33,9 +43,16 @@ function submitPlay(game, fact) {
       scopeId: f.scopeId || "",
       score: Math.max(0, Math.min(total, Number(f.score) || 0)),
       total: total,
-      durationSec: Number(f.durationSec) || 0
+      durationSec: Number(f.durationSec) || 0,
+      ticket: takeTicket(game)
     })
   );
 }
 
-module.exports = { submit, submitPlay, entryOf, optedIn };
+function takeTicket(game) {
+  const ticket = tickets[game] || "";
+  tickets[game] = "";
+  return ticket;
+}
+
+module.exports = { begin, submit, submitPlay, entryOf, optedIn };

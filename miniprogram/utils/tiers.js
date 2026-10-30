@@ -18,13 +18,19 @@ const COLLECTION_ITEMS_MAX = 100;
 
 const RECORD_LIMITS = { free: 0, pro: 200, max: 500 };
 
+const BOOKMARK_LIMITS = { free: 0, pro: 100, max: 1000 };
+
 function recordQuota() {
   return "Pro " + RECORD_LIMITS.pro + " 条 / Max " + RECORD_LIMITS.max + " 条";
 }
 
+function bookmarkQuota() {
+  return "Pro " + BOOKMARK_LIMITS.pro + " 个 / Max " + BOOKMARK_LIMITS.max + " 个";
+}
+
 function collectionQuota() {
-  return "Pro 用户支持 " + COLLECTION_LIMITS.pro + " 个自定义集合，每个集合 " + COLLECTION_ITEMS_MAX
-    + " 首古诗词；升级到 Max 可以创建 " + COLLECTION_LIMITS.max + " 个集合";
+  return "Pro 支持 " + COLLECTION_LIMITS.pro + " 个自选集合，每个集合 " + COLLECTION_ITEMS_MAX
+    + " 首；Max 支持 " + COLLECTION_LIMITS.max + " 个集合";
 }
 
 const TIER_KEYS = TIERS.map((t) => t.key);
@@ -70,6 +76,8 @@ module.exports = {
   collectionQuota,
   RECORD_LIMITS,
   recordQuota,
+  BOOKMARK_LIMITS,
+  bookmarkQuota,
   isTier,
   nameOf,
   mottoOf,

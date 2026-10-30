@@ -3,7 +3,7 @@ const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const tabPage = require("../../../utils/tab-page");
 
-const UPDATED = "2026-10-23";
+const UPDATED = "2026-10-30";
 const CONTACT = "kuibuapp@163.com";
 
 Page({

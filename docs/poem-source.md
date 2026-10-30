@@ -91,7 +91,7 @@ feihua/lib    ─┼→ utils/poem-source.js → utils/remote.js source()
 - **搜索**：先出包内命中（篇名 / 作者 / 书名，一次扫全、按 20 条分批绘制），
   再并上 `search?type=all` 的全文命中；命中的服务端 id 不带集子前缀，
   开阅读页时以 `src=1` 标记，正文直接取会话里记下的那一首（`seen`）。
-- **作者索引**：名册只从包里收人（课内 + 十部目录，112 位）。
+- **作者索引**：名册只从包里收人（课内 + 集子目录）。
   作者搜索框另有一份诗词漫读作者名册（`utils/author-directory.js`）：进页面后按 `GET /authors` 逐页（每页 100，服务端最深翻到第 100 页，按作品数降序）补全，
   存本机并可续传；输入关键字时按「名字含关键字」匹配，补全期间随页数增加刷新结果，尾部作者再由 `search?type=author` 兜底。
   点开一位时用 `GET /poems?author=<名>`（有 id 则 `author_id=`）拉他的全部作品，
@@ -124,7 +124,7 @@ poem-source.byId(sid, meta) → 先查本次会话里搜索 / 列表见过的那
 ```
 
 诗词漫读的 REST 没有按 id 取单篇的接口，只有 `/poems`、`/poems/search`、`/poems/random`。
-十部集子的目录在包里（`data/books/catalogs.js`，见 `docs/parity.md` 一），正文不在。
+集子的目录在包里（`data/books/catalogs.js`，见 `docs/parity.md` 一），正文不在。
 目录行的 `sid`（`tangshi300-11`）是包内编号，不是诗词漫读的 id，不能拼进接口。
 
 - 搜索页、作者索引点开的诗：id 是诗词漫读返回的整数，`search` / `poems` 返回时已记下整首，阅读页直接取用。

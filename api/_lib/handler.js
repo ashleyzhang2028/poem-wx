@@ -7,6 +7,7 @@ var core = require("./core");
 var game = require("./game");
 var H = require("./http");
 var upstream = require("./upstream");
+var quota = require("./quota");
 
 var limiter = core.makeRateLimiter();
 
@@ -103,7 +104,15 @@ function make(name, methods, run, opts) {
         var d = deps(req, body);
         d.params = params || null;
         return withSession(req, d).then(function (d2) {
-          return run(d2, body || {}, req);
+          return quota.admit(d2, name).then(function (g) {
+            if (g.ok) return run(d2, body || {}, req);
+            H.log("api.quota_blocked", { api: name, scope: g.scope });
+            return {
+              status: 429,
+              body: { code: "E_RATE_QUOTA", message: "请求过于频繁，请稍后重试", retryAfter: g.retryAfter },
+              headers: { "Retry-After": String(g.retryAfter) }
+            };
+          });
         }).then(function (out) {
 
           var headers = out.headers || null;

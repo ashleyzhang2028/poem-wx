@@ -10,7 +10,7 @@ function roster() {
   try {
     rosterCache = require("../data/roster.js");
   } catch (e) {
-    rosterCache = { users: [], note: "名册未生成" };
+    rosterCache = { users: [], note: "名册尚未生成" };
   }
   return rosterCache;
 }
@@ -166,7 +166,7 @@ function summarize(at, total) {
 
 function list() {
   if (!loggedIn()) {
-    return Promise.resolve({ users: [], sim: true, note: "登录后才能看名录" });
+    return Promise.resolve({ users: [], sim: true, note: "登录后可查看名录" });
   }
 
   if (!remote.adminReady()) {
@@ -174,7 +174,7 @@ function list() {
     return Promise.resolve({
       users: _merge(_rosterUsers(), _localUsers(), []),
       sim: true,
-      note: roster().note || "服务器未接上，名录只读"
+      note: roster().note || "服务器未连接，名录只读"
     });
   }
 
@@ -192,7 +192,7 @@ function list() {
       users: _merge(_rosterUsers(), _localUsers(), []),
       sim: true,
       error: err.message,
-      note: "读取名录失败：" + err.message
+      note: "名录读取失败：" + err.message
     }));
 }
 
@@ -245,8 +245,8 @@ function dayInput(raw) {
 }
 
 function checkDay(text) {
-  if (!text) return "先选一个到期日";
-  if (!dateInput(text)) return "日期格式不对，按 YYYY-MM-DD 填";
+  if (!text) return "请选择到期日";
+  if (!dateInput(text)) return "日期格式应为 YYYY-MM-DD";
   if (text < today()) return "到期日不能早于今天";
   return "";
 }
@@ -290,15 +290,15 @@ function _merge(a, b, c) {
 }
 
 function setTier(userId, tier, until) {
-  if (!tiers.isTier(tier)) return Promise.resolve({ ok: false, msg: "档位不合法" });
+  if (!tiers.isTier(tier)) return Promise.resolve({ ok: false, msg: "档位无效" });
 
   if (!loggedIn()) {
-    return Promise.resolve({ ok: false, msg: "先登录才能改档位" });
+    return Promise.resolve({ ok: false, msg: "请先登录后再修改档位" });
   }
   if (!canWrite()) {
     return Promise.resolve({
       ok: false,
-      msg: "改不了：要么服务器没接上，要么您不是管理员"
+      msg: "无法修改：服务器未连接或无管理权限"
     });
   }
   return remote.setUserTier(userId, tier, until || null).then((res) => ({
@@ -306,19 +306,19 @@ function setTier(userId, tier, until) {
     remote: true,
     msg: res.ok
       ? res.changed === false
-        ? "本来就是 " + tiers.nameOf(tier) + (until ? "、到期 " + untilText(until) : "") + "，没改动"
-        : "已把「" + userId.slice(0, 8) + "」改成 " + tiers.nameOf(tier)
+        ? "当前已是 " + tiers.nameOf(tier) + (until ? "，到期 " + untilText(until) : "") + "，未作改动"
+        : "已将「" + userId.slice(0, 8) + "」调整为 " + tiers.nameOf(tier)
           + (until ? "，到期 " + untilText(until) : "，长期有效")
-          + "，对方下次打开生效"
-      : "服务器拒绝，权限不足"
+          + "，对方下次打开时生效"
+      : "服务器拒绝：权限不足"
   }));
 }
 
 function revokeTier(userId) {
-  if (!canWrite()) return Promise.resolve({ ok: false, msg: "改不了：服务器未接上或权限不足" });
+  if (!canWrite()) return Promise.resolve({ ok: false, msg: "无法修改：服务器未连接或权限不足" });
   return remote.revokeUserTier(userId).then((res) => ({
     ok: true,
-    msg: (res && res.note) || "已收回，重置为 Free"
+    msg: (res && res.note) || "已收回，档位重置为 Free"
   }));
 }
 

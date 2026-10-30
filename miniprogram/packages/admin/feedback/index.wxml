@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{!logged}}" title="用户反馈" note="登录后才能看" mark="馈" bind:login="onLogin" />
+  <lock-card wx:if="{{!logged}}" title="用户反馈" note="登录后可查看" mark="馈" bind:login="onLogin" />
 
   <block wx:else>
 
@@ -12,7 +12,7 @@
 
       <view class="empty" wx:if="{{!item.threads.length}}">
         <text class="empty-mark">空</text>
-        <text class="empty-text">这一类没有</text>
+        <text class="empty-text">该类暂无反馈</text>
       </view>
 
       <view class="fb-card" wx:for="{{item.threads}}" wx:for-item="row" wx:key="tid"

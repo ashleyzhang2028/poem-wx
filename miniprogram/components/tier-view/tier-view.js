@@ -5,8 +5,8 @@ const pay = require("../../utils/pay");
 
 function noteOf(snap) {
   if (!snap.logged) return "未登录，暂按 Free";
-  if (snap.blocked === "unsigned") return "连不上服务器，暂按 Free";
-  if (snap.blocked === "cloud") return "未接上同步服务器";
+  if (snap.blocked === "unsigned") return "无法连接服务器，暂按 Free";
+  if (snap.blocked === "cloud") return "未连接同步服务器";
   return "";
 }
 

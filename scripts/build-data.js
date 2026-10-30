@@ -33,7 +33,7 @@ const POEM_FILES = [
   "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
   "data/poems-9.js", "data/poems-10.js", "data/poems-11.js", "data/poems-12.js",
   "data/text-master.js",
-  "data/poems-classic.js", "data/poems-yuefu.js", "data/poems-seasonal-361.js",
+  "data/poems-classic.js", "data/poems-yuefu.js",
   "data/poems-tangshi.js",
   "data/poems-gushi.js", "data/poems-songci.js", "data/poems-yuanqu.js",
   "data/poems-guwen.js", "data/poems-jinxiandai.js", "data/poems-zhaoming.js",
@@ -46,8 +46,7 @@ const POEM_FILES = [
   "data/site-index.js",
   "data/site-catalogs.js",
   "data/site-roster.js",
-  "data/catalog-dynasty.js",
-  "data/catalog-fix.js",
+  "data/site-daily.js",
   "data/author-index.js",
   "data/gloss-notes.js",
   "data/common-chars.js",
@@ -154,6 +153,7 @@ function main() {
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
+  writeDailyPool(W);
   writeRosterExtra(W);
   writeRoster();
   writeServer();
@@ -353,79 +353,37 @@ function extractWords(file, W) {
   }
 }
 
+function writeDailyPool(W) {
+  const pool = W.SITE_DAILY || null;
+  if (!pool) throw noCorpus(path.join(CORPUS_DIR, "data", "site-daily.js"));
+  const bad = pool.filter(function (x) {
+    return !Array.isArray(x) || x.length !== 4 || x.slice(0, 2).some(function (v) { return !v; });
+  });
+  if (bad.length) throw new Error("每日一诗候选池里有 " + bad.length + " 条不是「题名、作者、朝代、来源」四项");
+  writeModule(path.join(OUT_DIR, "daily-pool.js"), pool);
+  console.log("每日一诗候选池 " + pool.length + " 首");
+}
+
 function writeRosterExtra(W) {
   const roster = W.SITE_ROSTER || null;
   if (!roster || !roster.length) {
     throw noCorpus(path.join(CORPUS_DIR, "data", "site-roster.js"));
   }
-  const catalogs = W.SITE_CATALOGS;
-  const order = W.SITE_CATALOG_ORDER || [];
-  const own = W.CATALOG_DYNASTY;
-  const fix = W.CATALOG_FIX;
-  if (!catalogs || !own || !fix) {
-    throw noCorpus(path.join(CORPUS_DIR, "data", "catalog-dynasty.js"));
-  }
 
-  const eraAt = W.AuthorIndex && W.AuthorIndex.eraOf;
-  const person = W.AuthorIndex && W.AuthorIndex.aliasOf;
-
-  const known = dynastyIndex(W.SITE_INDEX || []);
   const meta = Object.create(null);
-  const drift = [];
-
-  const label = function (at) {
-    const hit = (W.AuthorIndex ? W.AuthorIndex.eras() : []).filter(function (e) {
-      return e.at === at;
-    })[0];
-    return hit ? hit.name : String(at);
-  };
-
-  const put = function (name, raw, at) {
-    if (!name || Object.prototype.hasOwnProperty.call(meta, name)) return;
-    if (!raw) throw new Error("作者 " + name + " 没有朝代");
-    meta[name] = { era: label(at), at: at };
-  };
-
-  let total = 0;
   roster.forEach(function (row) {
-    total += row[1].length;
-    row[1].forEach(function (n) { put(n, row[0], row[0]); });
-  });
-
-  order.forEach(function (bookId) {
-    const ownList = own[bookId] || {};
-    catalogs[bookId].rows.forEach(function (r) {
-      const raw = String(r[1] || "").trim();
-      if (!raw) return;
-      const a = person(raw);
-      if (Object.prototype.hasOwnProperty.call(meta, a)) return;
-      const pick = ownList[raw] || fix[raw] || known[raw] || "";
-      if (known[raw] && fix[raw] && fix[raw] !== known[raw]) drift.push(raw + "：" + known[raw] + " → " + fix[raw]);
-      put(a, pick, eraAt(pick));
+    const hit = (W.AuthorIndex ? W.AuthorIndex.eras() : []).filter(function (e) {
+      return e.at === row[0];
+    })[0];
+    const era = hit ? hit.name : String(row[0]);
+    row[1].forEach(function (n) {
+      if (!Object.prototype.hasOwnProperty.call(meta, n)) meta[n] = { era: era, at: row[0] };
     });
   });
 
   writeModule(path.join(OUT_DIR, "roster-extra.js"), { era: meta });
-  console.log("集子名册 " + Object.keys(meta).length + " 位（" + total + " 位自带朝代），与旧集子记的朝代不同 " +
-    drift.length + " 位，" + Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
-}
-
-function dynastyIndex(siteIndex) {
-  const votes = {};
-  siteIndex.forEach(function (p) {
-    if (p.isBook || p.book === COURSE_BOOK) return;
-    const a = String(p.author || "").trim();
-    const d = String(p.dynasty || "").trim();
-    if (!a || !d) return;
-    const bag = votes[a] = votes[a] || {};
-    bag[d] = (bag[d] || 0) + 1;
-  });
-  const out = {};
-  Object.keys(votes).forEach(function (a) {
-    const bag = votes[a];
-    out[a] = Object.keys(bag).sort(function (x, y) { return bag[y] - bag[x]; })[0];
-  });
-  return out;
+  console.log("名册补充 " + Object.keys(meta).length + " 位，" +
+    Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
 }
 
 function writeRoster() {
