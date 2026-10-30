@@ -1,5 +1,4 @@
 const corpus = require("../../utils/corpus");
-const table = require("../../utils/table");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
 const pinyin = require("../../utils/pinyin");
@@ -93,8 +92,6 @@ Component({
     textMiss: "",
     stage: "",
     rawText: "",
-    tableView: false,
-    blocks: [],
     verse: true,
     tokens: [],
     translation: "",
@@ -186,7 +183,7 @@ Component({
 
     markMissing(item) {
       this.setData(Object.assign(
-        { blocks: [], tokens: [], textMiss: this.missText() },
+        { tokens: [], textMiss: this.missText() },
         item ? this.missHead(item) : {}
       ));
     },
@@ -237,7 +234,7 @@ Component({
     },
 
     askText(item) {
-      this.setData(Object.assign({ blocks: [], tokens: [], textMiss: "正在获取正文…" }, this.missHead(item)));
+      this.setData(Object.assign({ tokens: [], textMiss: "正在获取正文…" }, this.missHead(item)));
       this.triggerEvent("need", { id: item.id });
     },
 
@@ -275,7 +272,6 @@ Component({
         aliasText: aliasTextOf(meta),
         textMiss: "",
         rawText: entry.text,
-        tableView: table.hasTable(entry.text),
         translation: entry.tr || "",
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
@@ -304,36 +300,13 @@ Component({
     applyReading() {
       const usable = pinyin.readiness().usable && entitlement.can("pinyin");
       const mode = usable ? store.settings().pinyin : "off";
-      const blocks = this.tableBlocks();
       const laid = corpus.layout(this.data.rawText, { size: this.data.fontSize, pinyin: usable });
       this.setData({
         pinyinOn: usable,
         pinyinMode: mode,
         verse: laid.verse,
-        blocks,
-        tokens: blocks.length ? [] : pinyin.render(laid.paras, mode)
+        tokens: pinyin.render(laid.paras, mode)
       });
-    },
-
-    tableBlocks() {
-      if (!this.data.tableView) return [];
-      const parsed = table.parseText(this.data.rawText);
-      if (!parsed) return [];
-      const out = [];
-      parsed.parts.forEach((part, i) => {
-        if (part.k === "table") {
-          out.push({ k: "table", key: "t" + i, table: parsed.blocks[part.i] });
-          return;
-        }
-        const rows = this.paragraphRows(part.s);
-        if (rows.length) out.push({ k: "p", key: "p" + i, rows });
-      });
-      return out;
-    },
-
-    paragraphRows(text) {
-      if (!String(text == null ? "" : text).trim()) return [];
-      return corpus.layout(text, { size: this.data.fontSize, pinyin: false }).paras;
     },
 
     syncDaily() {

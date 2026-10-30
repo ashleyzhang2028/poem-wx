@@ -1378,7 +1378,6 @@ button, input, textarea {
   padding: var(--sp-1) 0 var(--sp-2);
 }
 
-
 .pref-seg,
 .pref-size,
 .pref-act {
@@ -1516,44 +1515,6 @@ button, input, textarea {
   line-height: calc(var(--poem-fs) * var(--lh-poem));
   color: var(--ink);
   letter-spacing: 0;
-}
-
-.md-table {
-  width: 100%;
-  margin: var(--sp-3) 0;
-}
-
-.md-row {
-  display: flex;
-  align-items: stretch;
-}
-
-.md-cell {
-  flex: 1 1 0;
-  min-width: 0;
-  box-sizing: border-box;
-  padding: var(--sp-1) calc(8rpx * var(--ui-scale));
-  border-right: 1rpx solid var(--line-strong);
-  border-bottom: 1rpx solid var(--line-strong);
-  font-family: var(--font-ui);
-  font-size: var(--fs-hint);
-  line-height: 1.5;
-  color: var(--ink);
-  white-space: normal;
-  word-break: break-word;
-}
-
-.md-row:first-child .md-cell {
-  border-top: 1rpx solid var(--line-strong);
-  color: var(--ink-2);
-}
-
-.md-cell:first-child {
-  border-left: 1rpx solid var(--line-strong);
-}
-
-.md-line {
-  display: inline;
 }
 
 .poem-body.align-left .poem-line {

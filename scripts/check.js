@@ -6703,15 +6703,7 @@ const K = {
   const searchSrc4 = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
   ok("列表与搜索结果行上都能收诗", /onPick\(/.test(listSrc4) && /onPick\(/.test(searchSrc4));
 
-  const tableMod = require(path.join(ROOT, "utils", "table.js"));
   const sheetSrc4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
-  const tableCases = corpus.course().filter((p) => tableMod.hasTable(corpus.courseTexts()[p.id].text));
-  ok("课内正文里没有框线表时，详情页的表格路径就不该被撑起来（有也照样解析得开）",
-    tableCases.every(function (p) {
-      const t = tableMod.parseText(corpus.courseTexts()[p.id].text);
-      return t && t.blocks.length && t.blocks.every(function (b) { return b.widths.length >= 2; });
-    }),
-    "这几条的表格没解析出行列：" + tableCases.slice(0, 5).map((p) => p.id).join("、"));
   ok("正文没取到时标题与作者跟着那一首走（不沿用上一篇的）",
     /markMissing\(item\)/.test(sheetSrc4)
       && /missHead\(item\)[\s\S]{0,80}corpus\.indexById\(item\.id\)/.test(sheetSrc4));
