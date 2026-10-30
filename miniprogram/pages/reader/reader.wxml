@@ -130,6 +130,28 @@
         </view>
       </block>
     </view>
+
+    <view class="poem-foot" wx:if="{{hasNotes}}">
+      <view class="note-tabs">
+        <view class="note-tab {{noteTab === 'gloss' ? 'on' : ''}}" wx:if="{{glossRows.length}}"
+              hover-class="note-tab-hover" hover-stay-time="60" data-tab="gloss" bindtap="onNoteTab">注释</view>
+        <view class="note-tab {{noteTab === 'trans' ? 'on' : ''}}" wx:if="{{hasTranslation}}"
+              hover-class="note-tab-hover" hover-stay-time="60" data-tab="trans" bindtap="onNoteTab">译文</view>
+      </view>
+
+      <view class="gloss-list" wx:if="{{noteTab === 'gloss' && glossRows.length}}">
+        <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
+          <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
+            <text class="gloss-w">{{cell.w}}</text><text class="gloss-d">：{{cell.d}}</text>
+          </view>
+        </view>
+      </view>
+
+      <block wx:elif="{{noteTab === 'trans' && hasTranslation}}">
+        <text class="trans-text">{{translation}}</text>
+        <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
+      </block>
+    </view>
   </view>
 
   <view class="card recite-card" wx:if="{{reciteMode}}">
@@ -149,31 +171,6 @@
     </view>
 
     <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
-  </view>
-
-  <view class="card gloss-card" wx:if="{{glossRows.length}}">
-    <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleGloss">
-      <text class="card-title">注释</text>
-      <text class="all-toggle {{showGloss ? 'open' : ''}}"></text>
-    </view>
-    <view class="gloss-list" wx:if="{{showGloss}}">
-      <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
-        <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
-          <text class="gloss-w">{{cell.w}}</text><text class="gloss-d">：{{cell.d}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <view class="card trans-card" wx:if="{{hasTranslation}}">
-    <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-      <text class="card-title">译文</text>
-      <text class="all-toggle {{showTranslation ? 'open' : ''}}"></text>
-    </view>
-    <block wx:if="{{showTranslation}}">
-      <text class="trans-text">{{translation}}</text>
-      <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
-    </block>
   </view>
 
   <view class="pager" wx:if="{{pager.show}}">

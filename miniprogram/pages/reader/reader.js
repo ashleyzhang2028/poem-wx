@@ -29,6 +29,13 @@ const PAGE_ICONS = {
   playlist: icons.playlist, off: icons.off, all: icons.all
 };
 
+function noteState(entry, want) {
+  const glossRows = gloss.rows(entry.gloss);
+  const hasTranslation = !!entry.tr;
+  const ok = want === "trans" && hasTranslation ? "trans" : (glossRows.length ? "gloss" : (hasTranslation ? "trans" : "gloss"));
+  return { glossRows, hasTranslation, hasNotes: !!glossRows.length || hasTranslation, noteTab: ok };
+}
+
 function aliasTextOf(meta) {
   const raw = meta && meta.aka;
   if (!raw) return "";
@@ -69,9 +76,9 @@ Page({
     translation: "",
     translationSource: "",
     hasTranslation: false,
-    showTranslation: false,
+    hasNotes: false,
+    noteTab: "gloss",
     glossRows: [],
-    showGloss: false,
     align: "center",
     fontDown: false,
     fontUp: true,
@@ -280,8 +287,7 @@ Page({
       aliasText: aliasTextOf(meta),
       translation: entry.tr || "",
       translationSource: entry.src || "",
-      hasTranslation: !!entry.tr,
-      glossRows: gloss.rows(entry.gloss),
+      ...noteState(entry, this.data.noteTab),
       align: settings.align === "left" ? "left" : "center",
       fontSize: size,
       ...scale.flags(size),
@@ -368,12 +374,8 @@ Page({
     sync.markDirty();
   },
 
-  onToggleTranslation() {
-    this.setData({ showTranslation: !this.data.showTranslation });
-  },
-
-  onToggleGloss() {
-    this.setData({ showGloss: !this.data.showGloss });
+  onNoteTab(e) {
+    this.setData({ noteTab: e.currentTarget.dataset.tab });
   },
 
   onLineDown() {

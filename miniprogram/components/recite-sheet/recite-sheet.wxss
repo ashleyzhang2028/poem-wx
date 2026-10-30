@@ -223,42 +223,6 @@
 }
 
 .note-card {
-  margin-top: var(--sp-3);
-  padding-top: var(--sp-2);
-  border-top: 1rpx solid var(--line);
+  margin-top: var(--sp-2);
 }
 
-.note-tabs {
-  display: flex;
-  gap: var(--sp-4);
-}
-
-.note-tab {
-  position: relative;
-  padding: var(--sp-1) 0 var(--sp-2);
-  font-size: var(--fs-title);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--ls-title);
-  color: var(--ink-3);
-  transition: color var(--t-press);
-}
-
-.note-tab.on {
-  color: var(--strong-text);
-}
-
-.note-tab.on::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 32rpx;
-  height: 4rpx;
-  margin-left: -16rpx;
-  border-radius: var(--radius-pill);
-  background: var(--strong);
-}
-
-.note-tab-hover {
-  opacity: .7;
-}
