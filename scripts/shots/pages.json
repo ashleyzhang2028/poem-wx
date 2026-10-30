@@ -233,6 +233,33 @@
     ],
     "_note": "自选背诵的管理页：配额、我的集合、删除 / 清空 / 加篇目"
   },
+  "settings-bookmarks": {
+    "page": "packages/settings/bookmarks/bookmarks",
+    "title": "书签管理",
+    "back": true,
+    "logged": true,
+    "bookmarks": [
+      { "id": "poems-xx1-01", "t": "静夜思", "a": "李白", "n": "唐诗三百首", "at": 1793000000000 },
+      { "id": "poems-xx1-03", "t": "春晓", "a": "孟浩然", "n": "唐诗三百首", "at": 1792900000000 },
+      { "id": "songci-sc-1", "t": "水调歌头 · 明月几时有", "a": "苏轼", "n": "宋词选", "at": 1792800000000 }
+    ],
+    "do": [
+      { "call": "onEdit" },
+      { "call": "onPickAll" }
+    ],
+    "_note": "书签管理全选之后：勾选格、篇名、改名按钮在同一行"
+  },
+  "settings-bookmarks-plain": {
+    "page": "packages/settings/bookmarks/bookmarks",
+    "title": "书签管理",
+    "back": true,
+    "logged": true,
+    "bookmarks": [
+      { "id": "poems-xx1-01", "t": "静夜思", "a": "李白", "n": "唐诗三百首", "at": 1793000000000 },
+      { "id": "songci-sc-1", "t": "水调歌头 · 明月几时有", "a": "苏轼", "n": "宋词选", "at": 1792800000000 }
+    ],
+    "_note": "书签管理的常态：没有勾选格与改名按钮时，篇名与作者同一行、右侧收拢"
+  },
   "settings-recite-middle": {
     "page": "packages/settings/recite/recite",
     "title": "背诵设置",
