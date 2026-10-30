@@ -1,6 +1,5 @@
 const corpus = require("../../utils/corpus");
 const source = require("../../utils/poem-source");
-const table = require("../../utils/table");
 const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
 const R = require("../../utils/review-models");
@@ -66,9 +65,6 @@ Page({
     paras: [],
     verse: true,
     tokens: [],
-    blocks: [],
-    blocksOn: false,
-    tableView: false,
     translation: "",
     translationSource: "",
     hasTranslation: false,
@@ -294,7 +290,6 @@ Page({
     this.setData({
       id,
       rawText: entry.text,
-      tableView: table.hasTable(entry.text),
       loadingText: false,
       remote: !!this.data.remote,
       bookId: meta.b || "",
@@ -336,40 +331,13 @@ Page({
     this.setData({ paras: laid.paras, verse: laid.verse });
   },
 
-  paragraphRows(text) {
-    if (!String(text == null ? "" : text).trim()) return [];
-    return corpus.layout(text, { size: this.data.fontSize, pinyin: false }).paras;
-  },
-
-  renderBlocks() {
-    const parsed = table.parseText(this.data.rawText);
-    if (!parsed) return [];
-    const out = [];
-    parsed.parts.forEach((part, i) => {
-      if (part.k === "table") {
-        out.push({ k: "table", key: "t" + i, table: parsed.blocks[part.i] });
-        return;
-      }
-      const rows = this.paragraphRows(part.s);
-      if (!rows.length) return;
-      out.push({ k: "p", key: "p" + i, rows: rows });
-    });
-    return out;
-  },
-
   applyReading() {
     const usable = pinyin.readiness().usable && entitlement.can("pinyin");
     const mode = usable ? pinyin.getMode() : "off";
-    const tableBlocks = usable && this.data.tableView;
 
-    this.setData({
-      pinyinOn: usable,
-      pinyinMode: mode,
-      blocksOn: tableBlocks,
-      blocks: tableBlocks ? this.renderBlocks() : []
-    });
+    this.setData({ pinyinOn: usable, pinyinMode: mode });
     if (this.data.rawText) this.relayout();
-    if (!tableBlocks) this.setData({ tokens: pinyin.render(this.data.paras, mode) });
+    this.setData({ tokens: pinyin.render(this.data.paras, mode) });
   },
 
   onPinyinToggle() {

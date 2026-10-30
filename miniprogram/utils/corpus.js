@@ -60,8 +60,6 @@ function splitLines(text) {
 
 const HAN = /[\u3400-\u4dbf\u4e00-\u9fff]/;
 
-const BOX_DRAWING = /[─━│┃┌┬┐├┼┤└┴┘┏┳┓┣╋┫┗┻┛═║╔╦╗╠╬╣╚╩╝]/;
-
 const FS_POEM = [27, 30, 33, 36, 39, 42, 46, 52, 58, 64, 72];
 
 const PY_BOX = [31, 34, 37, 40, 44, 47, 51, 58, 64, 70, 78];
@@ -210,14 +208,6 @@ function layoutOf(text, size, pinyin) {
   lines.forEach((ln) => {
     if (!ln.s.length) {
       commit();
-      closeStanza();
-      return;
-    }
-
-    if (BOX_DRAWING.test(ln.line)) {
-      commit();
-      closeStanza();
-      pushRows([[ln.line]]);
       closeStanza();
       return;
     }
