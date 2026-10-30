@@ -239,7 +239,7 @@
 .daily-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-lead);
+  font-size: var(--fs-hero);
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }

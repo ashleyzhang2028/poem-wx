@@ -87,7 +87,7 @@ page {
   --fs-caption: calc(22rpx * var(--ui-scale));
   --fs-hint: calc(25rpx * var(--ui-scale));
   --fs-body: calc(29rpx * var(--ui-scale));
-  --fs-title: calc(37rpx * var(--ui-scale));
+  --fs-title: calc(32rpx * var(--ui-scale));
   --fs-lead: calc(38rpx * var(--ui-scale));
   --fs-hero: calc(46rpx * var(--ui-scale));
   --fs-brand: calc(60rpx * var(--ui-scale));

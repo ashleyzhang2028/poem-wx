@@ -394,7 +394,7 @@ button, input, textarea {
 
 .row-poem {
   font-family: var(--font-poem);
-
+  font-size: var(--fs-lead);
   color: var(--ink);
 }
 
