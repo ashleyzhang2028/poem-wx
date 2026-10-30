@@ -247,9 +247,7 @@
 .daily-meta {
   display: block;
   margin: var(--sp-1) 0 var(--sp-3);
-  font-family: var(--font-poem);
-  font-weight: 400;
-  font-size: var(--fs-hint);
+  font-size: var(--fs-caption);
   color: var(--ink-3);
 }
 

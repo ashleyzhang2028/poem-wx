@@ -400,6 +400,7 @@ button, input, textarea {
 
 .row-sub {
   font-size: var(--fs-caption);
+  font-weight: 400;
   color: var(--ink-3);
   margin-top: 6rpx;
   display: block;
