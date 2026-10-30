@@ -56,7 +56,7 @@
 .book-name {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-title);
+  font-size: var(--fs-lead);
   color: var(--strong-text);
   overflow: hidden;
   text-overflow: ellipsis;

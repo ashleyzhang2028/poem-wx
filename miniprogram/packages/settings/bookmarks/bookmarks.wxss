@@ -33,6 +33,11 @@
   white-space: nowrap;
 }
 
+.mark-rename {
+  flex: none;
+  margin-left: auto;
+}
+
 .mark-search {
   margin-bottom: var(--sp-2);
 }

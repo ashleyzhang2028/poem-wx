@@ -89,7 +89,7 @@
 
     <view class="card daily-poem" wx:if="{{daily}}">
       <view class="card-open">
-        <text class="card-title poem">每日一诗</text>
+        <text class="card-title">每日一诗</text>
         <view class="daily-refresh" hover-class="daily-refresh-hover" hover-stay-time="60"
               catchtap="onDailyRefresh" aria-label="换一首">
           <view class="glyph" style="mask-image:url('{{icons.swap}}');-webkit-mask-image:url('{{icons.swap}}');"></view>

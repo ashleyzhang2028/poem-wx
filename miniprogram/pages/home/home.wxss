@@ -214,44 +214,41 @@
   margin-top: var(--sp-2);
 }
 
-.daily-refresh {
-  flex: none;
-  width: 48rpx;
-  height: 48rpx;
-  margin-left: auto;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-3);
+.daily-poem .daily-refresh {
+  width: 56rpx;
+  height: 56rpx;
+  margin: 0 calc(-1 * var(--sp-2)) 0 auto;
 }
 
-.daily-refresh-hover {
-  transform: scale(.94);
+.daily-poem .daily-refresh-hover {
+  background: var(--sink);
 }
 
 .daily-refresh .glyph {
   width: 30rpx;
   height: 30rpx;
-  color: var(--ink-3);
+  color: var(--line-strong);
 }
 
 .daily-body {
   margin-top: var(--sp-2);
+  padding-bottom: var(--sp-2);
   text-align: center;
 }
 
 .daily-title {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-title);
+  font-size: var(--fs-lead);
   color: var(--strong-text);
   letter-spacing: var(--ls-title);
 }
 
 .daily-meta {
   display: block;
-  margin: var(--sp-1) 0 var(--sp-2);
+  margin: var(--sp-1) 0 var(--sp-3);
+  font-family: var(--font-poem);
+  font-weight: 400;
   font-size: var(--fs-hint);
   color: var(--ink-3);
 }
@@ -259,7 +256,7 @@
 .daily-line {
   display: block;
   font-family: var(--font-poem);
-  font-size: var(--fs-body);
+  font-size: var(--fs-title);
   line-height: var(--lh-body);
   color: var(--ink);
 }
