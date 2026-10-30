@@ -534,6 +534,14 @@ function rankingList(query) {
   );
 }
 
+function rankingStart(game) {
+  if (!configured()) return Promise.resolve("");
+  return request(PATHS.ranking, { op: "start", game: game }).then(
+    (res) => (res && res.ticket) || "",
+    () => ""
+  );
+}
+
 function rankingSubmit(entry) {
   if (!configured()) return Promise.resolve({ ok: false, offline: true, off: false });
   return request(PATHS.ranking, Object.assign({ op: "submit" }, entry || {})).then(
@@ -649,6 +657,7 @@ module.exports = {
   setUserRole,
   rankingVisible,
   rankingList,
+  rankingStart,
   rankingSubmit,
   rankingDelete,
   feedbackMine,

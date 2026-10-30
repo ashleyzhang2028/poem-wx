@@ -9,7 +9,9 @@ var DAY = 86400000;
 
 var TICKET_TTL_MS = 3 * 3600000;
 
-var SEC_PER_POINT = { exam: 2, fly: 3 };
+var ROUND_GRACE_SEC = 3;
+
+var SEC_PER_POINT = { exam: 2, fly: 2 };
 
 var RISK_TTL_MS = 3600000;
 
@@ -50,8 +52,9 @@ function read(cfg, ticket, uid, game, t) {
 }
 
 function plausible(game, score, seconds) {
+  if (!seconds) return false;
   var per = SEC_PER_POINT[game] || 2;
-  return seconds >= Math.ceil(score * per);
+  return Number(score) * per <= Math.max(seconds, ROUND_GRACE_SEC);
 }
 
 function riskRank(deps, openid) {
@@ -96,7 +99,7 @@ function admit(deps, me, game, input, score) {
   }
 
   if (ticket.ok) {
-    seconds = Math.round((t - ticket.startedAt) / 1000);
+    seconds = Math.max(1, Math.round((t - ticket.startedAt) / 1000));
   } else if (board.ticketRequired) {
     return Promise.resolve(bad("E_TICKET", "成绩凭证无效，请重新开局后再提交"));
   }
