@@ -21,7 +21,7 @@ const GROUPS = [
     key: "anthology",
     name: "诗词选本",
     note: "唐诗、宋词、古文与乐府",
-    books: ["tangshi300", "songci300", "gwgz", "wenxuan", "yuefuji", "huajianji", "chuci"]
+    books: ["tangshi300", "songci300", "tongxin", "gwgz", "wenxuan", "yuefuji", "huajianji", "chuci"]
   },
   {
     key: "pre-qin",

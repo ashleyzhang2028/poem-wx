@@ -174,6 +174,7 @@ Page({
     const answers = blankAnswers(questions.length);
     this.endedAt = 0;
     this.startedAt = Date.now();
+    rankingSubmit.begin("exam");
     this.setData(
       {
         stage: "running",

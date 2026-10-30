@@ -94,6 +94,23 @@ var CONFIG = {
     phone: [[3600000, 2], [86400000, 5], [2592000000, 15]]
   },
 
+  quota: {
+    uidHour: intEnv("QUOTA_UID_HOUR", 1200),
+    uidDay: intEnv("QUOTA_UID_DAY", 12000),
+    ipHour: intEnv("QUOTA_IP_HOUR", 3000),
+    anonHour: intEnv("QUOTA_ANON_HOUR", 600),
+    anonDay: intEnv("QUOTA_ANON_DAY", 6000)
+  },
+
+  board: {
+    ticketRequired: env("BOARD_TICKET", "1") !== "0"
+  },
+
+  risk: {
+    enabled: env("RISK_RANK", "0") === "1",
+    blockRank: intEnv("RISK_BLOCK_RANK", 3)
+  },
+
   rateBoard: [[3600000, 40], [86400000, 120]],
 
   avatarMaxBytes: intEnv("AVATAR_MAX_BYTES", 1024 * 1024),

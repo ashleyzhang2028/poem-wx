@@ -87,7 +87,7 @@ function source(path, params, opt) {
 
   const timeout = Number((opt && opt.timeout) || SOURCE_TIMEOUT_MS);
 
-  return sendTraced(
+  return dispatch(
     SOURCE_PATH + path + trail,
     {},
     "GET",
@@ -113,29 +113,12 @@ function traceTarget(path, agent) {
   return "http " + baseUrl() + path;
 }
 
-function traceBody(data) {
-  try {
-    return JSON.stringify(data, (k, v) => (/token|code$/i.test(k) && typeof v === "string" ? v.slice(0, 6) + "…(" + v.length + ")" : v));
-  } catch (e) {
-    return String(data);
-  }
-}
-
-function sendTraced(path, data, method, opt) {
-  const verb = method || "POST";
-  const o = opt || {};
+function dispatch(path, data, method, opt) {
   const started = Date.now();
-  const head = "[remote] " + verb + " " + traceTarget(path, o.agent);
-  console.log(head, "body=" + traceBody(data), "auth=" + (session().accessToken ? "Bearer" : "none"));
-  let status = 0;
-  const pending = send(path, data, method, Object.assign({}, o, { onStatus: (code) => { status = code; } }));
-  return pending.then(
-    (res) => {
-      console.log(head, "HTTP " + status, "OK", Date.now() - started + "ms", "res=" + traceBody(res));
-      return res;
-    },
+  return send(path, data, method, opt).then(
+    (res) => res,
     (err) => {
-      console.error(head, "HTTP " + ((err && err.statusCode) || 0), "FAIL", Date.now() - started + "ms", {
+      console.error("[remote] " + (method || "POST") + " " + traceTarget(path, opt && opt.agent), "HTTP " + ((err && err.statusCode) || 0), "FAIL", Date.now() - started + "ms", {
         statusCode: err && err.statusCode,
         code: err && err.code,
         errMsg: err && err.errMsg,
@@ -218,7 +201,6 @@ function cloudCall(conf, path, data, method, opt) {
       data: data,
       timeout: Number(o.timeout) || CLOUD_TIMEOUT_MS,
       success: (res) => {
-        if (o.onStatus) o.onStatus(res.statusCode);
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(httpError(res.statusCode, res.data));
       },
@@ -304,7 +286,6 @@ function sendHttp(path, data, method, opt) {
         authorization: session().accessToken ? "Bearer " + session().accessToken : ""
       },
       success: (res) => {
-        if (o.onStatus) o.onStatus(res.statusCode);
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data);
         else reject(httpError(res.statusCode, res.data));
       },
@@ -334,7 +315,7 @@ function request(path, data, method, retried) {
   if (!configured()) return Promise.reject(new Error("同步服务未开通"));
   const isCredential = path === PATHS.login || path === PATHS.refresh;
 
-  return sendTraced(path, data, method)["catch"]((err) => {
+  return dispatch(path, data, method)["catch"]((err) => {
     if (retried || isCredential) throw err;
     if (err.statusCode !== 401) throw err;
     if (SESSION_GONE.indexOf(err.code) < 0) throw err;

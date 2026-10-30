@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 
 from opencc import OpenCC
@@ -11,6 +12,7 @@ T2S = OpenCC("t2s")
 BOOKS = [
     ("tangshi300", "唐诗三百首", "首", "唐", ("tag", "唐诗三百首", ["唐/诗/全唐诗"])),
     ("songci300", "宋词三百首", "首", "宋", ("tag", "宋词三百首", ["宋/宋词"])),
+    ("tongxin", "童心诗话", "首", "", ("haitang", "给孩子的诗")),
     ("gwgz", "古文观止", "篇", "", ("outline", "汇编/古文观止/古文观止·选目.json")),
     ("wenxuan", "昭明文选", "篇", "", ("dirs", ["汇编/昭明文选"])),
     ("yuefuji", "乐府诗集", "首", "", ("dirs", ["汇编/乐府诗集"])),
@@ -48,6 +50,7 @@ BOOKS = [
 
 DAILY_MAX_CHARS = 64
 DAILY_MAX_ROWS = 800
+INDEX_MAX_CHARS = 600
 HAITANG = "reference/mit_licence_haitangshishe"
 FAMILIAR = ["唐诗三百首", "给孩子的诗", "千家诗", "古诗十九首"]
 SKIP_TOP = {"reference", "docs", "scripts", "loader", "images", "strains", "rank", "authors", "dynasties", "anthologies", ".git"}
@@ -105,6 +108,8 @@ def collect(kind):
         return [r for rel in kind[1] for r in records(rel)]
     if mode == "dirs":
         return [r for d in kind[1] for rel in json_files(d) for r in records(rel)]
+    if mode == "haitang":
+        return haitang_collection(kind[1])
     if mode == "tag":
         return [r for d in kind[2] for rel in json_files(d) for r in records(rel) if kind[1] in (r.get("tags") or [])]
     out = []
@@ -134,48 +139,97 @@ def paragraphs_text(r):
     return lines if isinstance(lines, str) else "".join(str(x) for x in lines)
 
 
-def build_daily():
-    base = os.path.join(HAITANG)
-    quotes = {str(x["work_id"]) for x in load(base + "/quotes.json")}
-    collection_works = load(base + "/collection_works.json")
-    textbook = {c["name"] for c in load(base + "/collections.json") if c.get("kind") == "课本"}
-    familiar = set()
-    for cw in collection_works:
-        if cw["collection"] in FAMILIAR or cw["collection"] in textbook:
-            familiar.add(str(cw["work_id"]))
-    wanted = []
-    for n in range(1, 9):
-        for w in load(base + "/works_%d.json" % n):
-            if str(w["id"]) in quotes and str(w["id"]) not in familiar and w.get("kind") in ("shi", "ci"):
-                if han_count({"paragraphs": w.get("content") or ""}) <= DAILY_MAX_CHARS:
-                    wanted.append(w)
+_INDEX = {}
 
+
+def corpus_index():
+    if _INDEX:
+        return _INDEX
+    texts = [(r, paragraphs_text(r)) for _, r in all_records()]
     chars = set()
-    texts = []
-    for rel, r in all_records():
-        text = paragraphs_text(r)
-        texts.append((rel, r, text))
+    for _, text in texts:
         chars.update(ch for ch in text if "一" <= ch <= "鿿")
-    for w in wanted:
+    for w in haitang_works().values():
         chars.update(ch for ch in w["content"] if "一" <= ch <= "鿿")
     cmap = {ch: T2S.convert(ch) for ch in chars}
-
     by_content = {}
     by_title = {}
-    for rel, r, text in texts:
+    for r, text in texts:
         k = row(r)
         by_title[k] = by_title.get(k, 0) + 1
-        if han_count(r) <= DAILY_MAX_CHARS:
+        if han_count(r) <= INDEX_MAX_CHARS:
             by_content.setdefault(han_key(text, cmap), []).append(r)
+    _INDEX.update({"cmap": cmap, "by_content": by_content, "by_title": by_title})
+    return _INDEX
 
+
+_WORKS = {}
+
+
+def haitang_works():
+    if not _WORKS:
+        for n in range(1, 9):
+            for w in load(HAITANG + "/works_%d.json" % n):
+                _WORKS[str(w["id"])] = w
+    return _WORKS
+
+
+def title_key(text):
+    return re.sub(r"[\s·・()（）]", "", text)
+
+
+def haitang_collection(name):
+    idx = corpus_index()
+    works = haitang_works()
+    by_norm = {}
+    for k in idx["by_title"]:
+        by_norm.setdefault((title_key(k[0]), k[1]), []).append(k)
+    items = [cw for cw in load(HAITANG + "/collection_works.json") if cw["collection"] == name]
+    items.sort(key=lambda cw: int(cw.get("show_order") or 0))
     out = []
     seen = set()
-    for w in wanted:
-        hits = by_content.get(han_key(w["content"], cmap), [])
+    for cw in items:
+        w = works.get(str(cw["work_id"]))
+        if not w:
+            continue
+        hits = idx["by_content"].get(han_key(w["content"], idx["cmap"]), [])
+        key = None
+        if len(hits) == 1 and idx["by_title"].get(row(hits[0])) == 1:
+            key = row(hits[0])
+        if key is None:
+            wt, wa = T2S.convert(w["title"]), T2S.convert(w["author"])
+            near = by_norm.get((title_key(wt), wa), [])
+            if len(near) == 1 and idx["by_title"].get(near[0]) == 1:
+                key = near[0]
+        if key is None:
+            key = (re.sub(r"\s*[·・]\s*", "·", T2S.convert(w["title"]).strip()), T2S.convert(w["author"]).strip() or "佚名")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"title": key[0], "author": key[1], "paragraphs": ["-"]})
+    return out
+
+
+def build_daily():
+    quotes = {str(x["work_id"]) for x in load(HAITANG + "/quotes.json")}
+    textbook = {c["name"] for c in load(HAITANG + "/collections.json") if c.get("kind") == "课本"}
+    familiar = set()
+    for cw in load(HAITANG + "/collection_works.json"):
+        if cw["collection"] in FAMILIAR or cw["collection"] in textbook:
+            familiar.add(str(cw["work_id"]))
+    idx = corpus_index()
+    out = []
+    seen = set()
+    for wid, w in haitang_works().items():
+        if wid not in quotes or wid in familiar or w.get("kind") not in ("shi", "ci"):
+            continue
+        if han_count({"paragraphs": w.get("content") or ""}) > DAILY_MAX_CHARS:
+            continue
+        hits = idx["by_content"].get(han_key(w["content"], idx["cmap"]), [])
         if len(hits) != 1:
             continue
         t, a = row(hits[0])
-        if not t or not a or by_title.get((t, a)) != 1 or (t, a) in seen:
+        if not t or not a or idx["by_title"].get((t, a)) != 1 or (t, a) in seen:
             continue
         seen.add((t, a))
         out.append([t, a, w.get("dynasty") or "", "名句"])

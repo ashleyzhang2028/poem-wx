@@ -21,11 +21,6 @@ App({
     corpus.course();
     corpus.dropLegacy();
 
-    console.info(
-      "[跬步] 版本 " + (corpus.stamp().rev || "本地打开 · 未上传") +
-      " · 语料 " + (corpus.hasData() ? "已载入" : "没进这个包")
-    );
-
     this.reloadFont();
     loginFlow.watch(() => this.reloadFont());
     sfx.warm();

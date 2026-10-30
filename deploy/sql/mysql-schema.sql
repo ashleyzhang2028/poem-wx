@@ -135,6 +135,18 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   CONSTRAINT `sessions_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------- rate_counters
+-- 请求配额的固定窗口计数：同一账号 / IP 在多个实例间共用一份，重启不清零。
+CREATE TABLE IF NOT EXISTS `rate_counters` (
+  `subject`    VARCHAR(80) NOT NULL,
+  `span_ms`    BIGINT      NOT NULL,
+  `win`        BIGINT      NOT NULL,
+  `n`          INT         NOT NULL DEFAULT 0,
+  `expires_at` BIGINT      NOT NULL,
+  PRIMARY KEY (`subject`, `span_ms`, `win`),
+  KEY `rate_counters_expires_idx` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---------------------------------------------------------------- progress
 -- 一行 = 一个账号 + 一个孩子 + 一篇。`payload` 整取整存（见文件头上那条 ①）。
 CREATE TABLE IF NOT EXISTS `progress` (

@@ -164,6 +164,7 @@ Page({
     this.kept = false;
     this.reported = false;
     this.roundAt = Date.now();
+    if (this.data.started) rankingSubmit.begin("fly");
     this.setData(Object.assign({
       done: [], streak: 0, best: 0, message: "", msgHint: false, remark: "", cheerLine: "",
       ranked: false, lastScore: 0, over: false, judging: false
@@ -192,6 +193,7 @@ Page({
     if (this.data.started || !this.data.char) return;
     this.ended = false;
     this.roundAt = Date.now();
+    rankingSubmit.begin("fly");
     this.setData({ started: true, locked: false });
     this.startClock();
     this.guardLeave();

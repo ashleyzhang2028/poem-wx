@@ -3568,26 +3568,40 @@ function boardSubmit(deps, input) {
       var grade = Math.max(0, Math.min(12, Number(input && input.grade) || 0));
       var term = Math.max(0, Math.min(2, Number(input && input.term) || 0));
 
-      var row = {
-        srid: id.newScoreRecordId(),
-        uid: deps.account.uid,
-        game: g.game,
-        scope_id: clip(input && input.scopeId, BOARD_LIMITS.scopeId),
-        stage: stage,
-        grade: stage === "all" ? 0 : grade,
-        term: stage === "all" ? 0 : term,
-        score: score,
-        total: total,
-        duration_sec: Math.max(0, Math.min(24 * 3600, Number(input && input.durationSec) || 0)),
-        created_at: t
-      };
-      var keep = recordKeep(tier);
-      return Promise.resolve(store.putScoreRecord(row)).then(function () {
-        return trimScoreRecords(store, me.uid, g.game, keep);
-      }).then(function () {
-        return ok({ recorded: row.srid, score: score, total: total, on: !!g.on, keep: keep });
+      return require("./board-guard").admit(deps, me, g.game, input, score).then(function (v) {
+        if (!v.ok) return err(v.code === "E_RISK" ? 403 : 400, v.code, v.message);
+        var row = {
+          srid: id.newScoreRecordId(),
+          uid: deps.account.uid,
+          game: g.game,
+          scope_id: clip(input && input.scopeId, BOARD_LIMITS.scopeId),
+          stage: stage,
+          grade: stage === "all" ? 0 : grade,
+          term: stage === "all" ? 0 : term,
+          score: score,
+          total: total,
+          duration_sec: v.durationSec,
+          created_at: t
+        };
+        var keep = recordKeep(tier);
+        return Promise.resolve(store.putScoreRecord(row)).then(function () {
+          return trimScoreRecords(store, me.uid, g.game, keep);
+        }).then(function () {
+          return ok({ recorded: row.srid, score: score, total: total, on: !!g.on, keep: keep });
+        });
       });
     });
+  });
+}
+
+function boardStart(deps, input) {
+  var cfg = deps.cfg, t = deps.now();
+  return Promise.resolve(boardGate(deps, input, false)).then(function (g) {
+    if (g && g.status) return g;
+    if (!deps.account) return err(401, "E_NO_SESSION", "开局要登录");
+    var rg = deps.limiter.take(cfg, "board", "start:" + deps.account.uid, t);
+    if (!rg.ok) return err(429, "E_RATE_DEVICE", "开局太频繁了，请稍后再试", { retryAfter: rg.retryAfter });
+    return ok({ ticket: require("./board-guard").issue(cfg, deps.account.uid, g.game, t), startedAt: t });
   });
 }
 
@@ -3838,6 +3852,7 @@ module.exports = {
   boardVisible: boardVisible,
   boardList: boardList,
   boardSubmit: boardSubmit,
+  boardStart: boardStart,
   boardPeriodStart: boardPeriodStart,
   boardMaskNick: boardMaskNick,
   boardStageOfGrade: boardStageOfGrade,

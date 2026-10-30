@@ -184,6 +184,28 @@ SHOW TABLES;             -- 要看到 accounts / wx_accounts / progress / sessio
 UPDATE accounts SET role = 'owner' WHERE uid = '<你的 uid>';
 ```
 
+
+### 3.4 请求配额（`api/_lib/quota.js`）
+
+每个经 `handler.make` 的接口，在业务逻辑之前先过一道固定窗口计数：已登录按账号（小时与日）为主，再按 IP（小时）为辅；未登录只按 IP。计数存在 `rate_counters` 表，多个实例共用一份、重启不清零。额度见 `api/_lib/config.js` 的 `quota`，可由环境变量 `QUOTA_*` 覆盖。
+
+- 超额返回 429 与 `E_RATE_QUOTA`，带 `Retry-After`。
+- 存储读写失败时放行并记 `api.quota_failed`，不因计数库故障拦住正常用户。
+- 支付回调、探活、配置、头像文件不计数。
+- 原有按设备 / 邮箱 / 登录失败次数的细粒度限流仍在进程内存里，只作第二层。
+- 部署前需在 MySQL 执行 `deploy/sql/mysql-schema.sql` 中的 `rate_counters` 建表语句。
+
+### 3.5 成绩校验与风险等级（`api/_lib/board-guard.js`）
+
+排行榜的成绩由客户端上报，服务端只能验证「这一局是否真实发生过、速度是否可能」，不重放答题：
+
+- 开局 `POST /api/ranking {op:"start"}` 取一张签名凭证（含账号、玩法、开局时间），交成绩时带回。服务端按凭证量用时，不采信客户端上报的用时。
+- 凭证只能用一次（计数存在 `rate_counters`），3 小时内有效，换账号、换玩法都用不了。
+- 速度下限：飞花令每句 ≥ 3 秒，考试每答对一题 ≥ 2 秒，低于则不记。
+- `BOARD_TICKET=0` 可临时放开「必须带凭证」（旧版本客户端过渡期使用），默认要求。
+- 风险等级：`RISK_RANK=1` 时，交成绩前向微信 `wxa/getuserriskrank` 查账号风险，不低于 `RISK_BLOCK_RANK`（默认 3）则不上榜。需要小程序已开通该接口，查询失败放行，结果缓存 1 小时。默认关闭。
+- 仍不能防：客户端伪造答对数量，只要用时合理就会被记入。要彻底防需要把判分放到服务端。
+
 ---
 
 ## 四、跨仓库那条依赖已经撤掉（2026-10-12）

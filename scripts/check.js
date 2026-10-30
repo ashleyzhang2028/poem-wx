@@ -5961,12 +5961,6 @@ const K = {
     !/hasData/.test(homeJsNoData) || !/noData|buildRev/.test(homeJsNoData),
     "home.js 又在 refresh 里按 hasData 改走另一套渲染 —— 卡片不再按真实数据报错");
   const appSrc = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
-  ok("缺语料改在控制台报（版本 + 语料在不在）",
-    /console\.info[\s\S]{0,200}corpus\.hasData\(\)/.test(appSrc)
-      && /console\.info[\s\S]{0,200}stamp\(\)/.test(appSrc),
-    "空态卡删掉之后，包是哪一版、语料进没进包就没人说了 —— " +
-      "这两句只能在 onLaunch 的控制台里说，页面不再替它出头");
-
   {
     const script = [
       'const path=require("path");',
@@ -7165,6 +7159,68 @@ const K = {
     "权限页没有开通 / 续订入口");
   ok("支付只走服务端下单签名（客户端不碰 AppKey）",
     read("utils/pay.js").indexOf("payAppKey") < 0 && /wx\.requestVirtualPayment/.test(read("utils/pay.js")), "客户端持有了密钥或没接支付接口");
+}
+
+{
+  const apiLib = path.join(__dirname, "..", "api", "_lib");
+  const quotaMod = require(path.join(apiLib, "quota.js"));
+  const quotaStore = require(path.join(apiLib, "store.js")).memoryStore();
+  const quotaCfg = { quota: { uidHour: 3, uidDay: 100, ipHour: 50, anonHour: 2, anonDay: 100 } };
+  const asked = (uid, ip, name) => quotaMod.admit({
+    store: quotaStore, cfg: quotaCfg, now: () => 1000000, ip: ip, account: uid ? { uid: uid } : null
+  }, name || "sync.push");
+
+  track((async () => {
+    const seen = [];
+    for (let i = 0; i < 4; i += 1) seen.push((await asked("u1", "1.1.1.1")).ok);
+    ok("同一账号超过额度后被拦下，别的账号不受影响",
+      seen.join() === "true,true,true,false" && (await asked("u2", "1.1.1.1")).ok === true, seen.join());
+
+    const again = await quotaMod.admit({
+      store: quotaStore, cfg: quotaCfg, now: () => 1000000, ip: "9.9.9.9", account: { uid: "u1" }
+    }, "sync.push");
+    ok("计数在存储里：换一份进程状态、换一个 IP，同一账号仍被拦（多实例与重启都不放宽）",
+      again.ok === false && again.retryAfter > 0, JSON.stringify(again));
+
+    await asked(null, "2.2.2.2");
+    await asked(null, "2.2.2.2");
+    ok("未登录的请求只按 IP 计数", (await asked(null, "2.2.2.2")).ok === false && (await asked(null, "3.3.3.3")).ok === true);
+
+    ok("支付回调等免计数的入口不受额度影响", (await asked("u1", "1.1.1.1", "pay.notify")).ok === true);
+  })());
+}
+
+{
+  const apiLib = path.join(__dirname, "..", "api", "_lib");
+  const guardMod = require(path.join(apiLib, "board-guard.js"));
+  const memStore = require(path.join(apiLib, "store.js")).memoryStore();
+  const cfgB = { sessionSecret: "k".repeat(40), board: { ticketRequired: true }, risk: { enabled: false }, sessionKeyOf: undefined };
+  const me = { uid: "u1" };
+  const at = 1000000;
+  const depsAt = (t) => ({ cfg: cfgB, store: memStore, now: () => t, ip: "1.1.1.1" });
+
+  track((async () => {
+    const ticket = guardMod.issue(cfgB, "u1", "exam", at);
+    const good = await guardMod.admit(depsAt(at + 60000), me, "exam", { ticket }, 20);
+    ok("凭证有效、用时合理时记成绩，用时取服务端量的", good.ok === true && good.durationSec === 60, JSON.stringify(good));
+
+    const replay = await guardMod.admit(depsAt(at + 70000), me, "exam", { ticket }, 20);
+    ok("同一张凭证不能交第二次", replay.ok === false && replay.code === "E_TICKET", JSON.stringify(replay));
+
+    const fast = await guardMod.admit(depsAt(at + 5000), me, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 40);
+    ok("用时短到不可能的成绩不记", fast.ok === false && fast.code === "E_SCORE", JSON.stringify(fast));
+
+    const none = await guardMod.admit(depsAt(at + 60000), me, "exam", { durationSec: 600 }, 5);
+    ok("没有凭证不记（开了凭证要求时）", none.ok === false && none.code === "E_TICKET", JSON.stringify(none));
+
+    const other = await guardMod.admit(depsAt(at + 60000), { uid: "u2" }, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5);
+    ok("别人的凭证、别的玩法的凭证都用不了",
+      other.ok === false && (await guardMod.admit(depsAt(at + 60000), me, "fly", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5)).ok === false);
+
+    ok("飞花令每句至少 3 秒、考试每答对一题至少 2 秒",
+      guardMod.plausible("fly", 10, 29) === false && guardMod.plausible("fly", 10, 30) === true
+        && guardMod.plausible("exam", 10, 19) === false && guardMod.plausible("exam", 10, 20) === true);
+  })());
 }
 
 Promise.all(pending).then(() => {

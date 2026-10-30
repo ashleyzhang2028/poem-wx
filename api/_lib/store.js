@@ -15,11 +15,24 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {} };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {} };
   var api = {
     kind: "memory",
     ready: function () { return true; },
     _db: db,
+    bumpCounter: function (subject, spanMs, nowMs) {
+      var win = Math.floor(nowMs / spanMs);
+      var key = subject + "|" + spanMs + "|" + win;
+      var row = db.counters[key] || (db.counters[key] = { n: 0, expires_at: (win + 1) * spanMs });
+      row.n += 1;
+      return row.n;
+    },
+    purgeCounters: function (nowMs) {
+      Object.keys(db.counters).forEach(function (k) {
+        if (db.counters[k].expires_at < nowMs) delete db.counters[k];
+      });
+      return true;
+    },
 
     getAccountByHash: function (hash) {
       var ids = Object.keys(db.accounts);
@@ -39,6 +52,13 @@ function memoryStore() {
       var ids = Object.keys(db.wxAccounts || {});
       for (var i = 0; i < ids.length; i++) {
         if (db.wxAccounts[ids[i]].openid === openid) return db.wxAccounts[ids[i]];
+      }
+      return null;
+    },
+    getWxAccountByUid: function (uid) {
+      var ids = Object.keys(db.wxAccounts || {});
+      for (var i = 0; i < ids.length; i++) {
+        if (db.wxAccounts[ids[i]].uid === uid) return db.wxAccounts[ids[i]];
       }
       return null;
     },
