@@ -247,12 +247,12 @@ node scripts/build-data.js
    scripts/corpus/（语料，随本仓库走）
      └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
           · data/books/index.js    课内那一部的索引（不含正文）  → 进包
-          · data/books/books.js    集子表（11 条：课内一部 + 目录那十部）→ 进包
-          · data/books/catalogs.js 十部集子的目录（标题与作者，不含正文）→ 进包
+          · data/books/books.js    集子表（课内一部 + 目录里的集子）→ 进包
+          · data/books/catalogs.js 集子的目录（标题与作者，不含正文）→ 进包
           · data/course.js         课内 251 首正文 + 译文       → 进主包
           · data/pinyin-table.js   读音表（离线注音）           → 进包
           · data/roster.js         名录                       → 进包
-          · data/roster-extra.js   集子目录里的作者（名字 → 朝代）  → 进包
+          · data/roster-extra.js   名单里的作者（名字 → 朝代）  → 进包
 
      ⚠️ 编译这一步**不在 checkout 里**：产物不进 git，CI 上传体验版之前会重跑一次
      （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑

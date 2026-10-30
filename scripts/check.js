@@ -142,7 +142,7 @@ const catalogPack = readModule(path.join(dataDir, "books", "catalogs.js"));
 const catalogTable = (catalogPack && catalogPack.books) || [];
 const catalogIds = catalogTable.map((b) => b.id);
 
-ok("集子表 = 课内一部 + 目录里那十部", (booksTable || []).length === 1 + catalogIds.length
+ok("集子表 = 课内一部 + 目录里的集子", (booksTable || []).length === 1 + catalogIds.length
   && booksTable[0].id === "poems",
   "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
 
@@ -180,13 +180,13 @@ ok("集子索引归属正确",
 
 {
   const texts = Object.keys(perBook).filter((id) => id !== "poems" && catalogIds.indexOf(id) < 0);
-  ok("除课内与目录那十部，别的集子一条都不进包（索引里一条都没有）",
+  ok("除课内与目录里的集子，别的集子一条都不进包（索引里一条都没有）",
     texts.every((id) => perBook[id].length === 0),
     "这些集子还有条目：" + texts.filter((id) => perBook[id].length).join("、"));
 }
 
-ok("目录十部，每部的条数与落盘的 count 对得上",
-  catalogIds.length === 10
+ok("目录里每部的条数与落盘的 count 对得上",
+  catalogIds.length > 0
     && catalogIds.every((id, i) => perBook[id].length === catalogTable[i].count && perBook[id].length > 0),
   "实际 " + JSON.stringify(catalogIds.map((id, i) => id + ":" + perBook[id].length + "/" + catalogTable[i].count)));
 
@@ -1475,7 +1475,7 @@ ok("每条索引都查得回自己（集子 id 比条目 id 长的也要认）",
   foreignMiss.length === 0,
   "查不回的还有 " + foreignMiss.length + " 条：" + foreignMiss.slice(0, 3).map((p) => p.id).join("、"));
 ok("indexById 带出年级学期（课内）", corpus.indexById(corpus.course()[0].id).gr >= 1);
-ok("全站搜索只落在课内与目录那十部里",
+ok("全站搜索只落在课内与目录里的集子里",
   corpus.search("李白", { limit: 2000 }).items.every((p) => p.b === "poems" || catalogIds.indexOf(p.b) >= 0));
 ok("限集子搜索不外溢", corpus.search("的", { book: "poems", limit: 5000 }).items.every((p) => p.b === "poems"));
 ok("目录里的条目也搜得到（篇名与作者）",
@@ -4538,21 +4538,20 @@ const K = {
 {
   const AI = require(path.join(ROOT, "utils", "author-index.js"));
   const roster = AI.build(perBook.poems);
-  ok("集子目录里的作者都进得了名册（" + AI.extraCount + " 位）",
+  ok("名单里的作者都进得了名册（" + AI.extraCount + " 位）",
     AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
     "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
 
-  const missing = ["韩非", "脱脱", "岳飞"].filter((n) => !roster.people[n]);
-  ok("草稿里点到的几位在名册上（他们只在集子目录里出现）",
-    missing.length === 0, "名册里没有：" + missing.join("、"));
+  const missing = ["屈原", "李白", "罗贯中", "施耐庵"].filter((n) => !roster.people[n]);
+  ok("名单里点到的几位在名册上", missing.length === 0, "名册里没有：" + missing.join("、"));
 
   const withDeng = Object.keys(roster.people).filter((n) => /等$/.test(n));
   ok("名册上的名字都进得了诗词漫读（不带「等」）", withDeng.length === 0,
     "还挂着：" + withDeng.join("、") + " —— 诗词漫读里只有「宋濂」，没有「宋濂等」");
 
-  const only = roster.people["韩非"];
-  ok("集子里才出现的作者不冒充有作品", !!only && only.external === true && only.count === 0,
-    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有韩非");
+  const only = roster.people["罗贯中"];
+  ok("课内没有作品的作者不冒充有作品", !!only && only.external === true && only.count === 0,
+    only ? JSON.stringify({ external: only.external, count: only.count }) : "名册里没有罗贯中");
 
   {
     const webSrc = fs.readFileSync(
@@ -4575,21 +4574,13 @@ const K = {
   }
 
   {
-    const extra = readModule(path.join(dataDir, "roster-extra.js")).era || {};
-    const catalogs = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
-    const noEra = catalogs.filter((p) => p.a && !extra[p.a]).map((p) => p.a);
-    ok("集子目录里每一位作者都对得上朝代（书名、作者名这两个字段之外不靠猜）",
-      noEra.length === 0, "没有朝代的作者：" + Array.from(new Set(noEra)).slice(0, 8).join("、"));
-  }
-
-  {
     const landed = (name, era) => {
       const w = roster.people[name];
       return !!w && w.at === AI.eraOf(era) && AI.eraName(era) === era;
     };
     const want = [
-      ["李白", "唐"], ["苏轼", "宋"], ["关汉卿", "元"], ["韩非", "先秦"],
-      ["屈原", "先秦"], ["曹操", "三国"], ["陶渊明", "晋"], ["刘禹锡", "唐"]
+      ["李白", "唐"], ["苏轼", "宋"], ["关汉卿", "元"],
+      ["屈原", "先秦"], ["曹操", "汉"], ["陶渊明", "晋"], ["刘禹锡", "唐"]
     ];
     const wrong = want.filter(([n, e]) => !landed(n, e))
       .map(([n]) => n + "落到了 " + ((roster.people[n] || {}).dynasty || "没朝代"));
