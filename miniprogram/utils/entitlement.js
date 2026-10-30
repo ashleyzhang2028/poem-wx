@@ -21,6 +21,12 @@ function recordCell(tier, cap) {
   return { text: n + " 条", on: rankOf(cap.tier) <= rankOf(tier) };
 }
 
+function bookmarkCell(tier, cap) {
+  const n = tiers.BOOKMARK_LIMITS[tier];
+  if (!n) return { text: "", on: false };
+  return { text: n + " 个", on: rankOf(cap.tier) <= rankOf(tier) };
+}
+
 function courseFreeCell(tier) {
   const on = rankOf(tier) >= rankOf("pro");
   return { text: "", on: on };
@@ -40,6 +46,7 @@ const CAPS = [
   { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
+  { key: "bookmarks", name: "书签", desc: "详情页收藏一篇，设置里统一管理 · " + tiers.bookmarkQuota() + "，超了删最久那条", cell: bookmarkCell, tier: "pro" },
   { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
   { key: "seasonal", name: "隐藏季节限定", desc: "首页那张季节限定卡可以自己收起来", tier: "pro" },
   { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
@@ -176,6 +183,7 @@ const VIEW_NAME = {
   ownbanner: "主题·自选 banner",
   themetone: "主题·自选主题色",
   font: "主题·字体选择",
+  bookmarks: "详情·书签",
   coursefree: "我的·只背自选",
   sync: "我的·同步进度"
 };
@@ -185,7 +193,7 @@ const COMPARE_ORDER = [
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "search",
   "quiz", "feihualing", "exam", "records", "league",
-  "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
+  "sights", "ownbanner", "themetone", "font", "bookmarks", "coursefree", "sync"
 ];
 
 function compareNameOf(cap) {

@@ -17,19 +17,23 @@
         <text class="poem-title">{{title}}</text>
 
         <view class="poem-meta-row">
-          <text class="poem-meta">{{dynasty}}</text>
-          <text class="poem-dot">·</text>
-          <text class="poem-meta">{{author}}</text>
+          <text class="poem-meta" wx:if="{{dynasty}}">{{dynasty}}</text>
+          <block wx:if="{{author}}">
+            <text class="poem-dot" wx:if="{{dynasty}}">·</text>
+            <text class="poem-meta">{{author}}</text>
+          </block>
           <block wx:if="{{source}}">
-            <text class="poem-dot">·</text>
+            <text class="poem-dot" wx:if="{{dynasty || author}}">·</text>
             <text class="poem-meta">{{source}}</text>
           </block>
           <block wx:if="{{selection}}">
-            <text class="poem-dot">·</text>
+            <text class="poem-dot" wx:if="{{dynasty || author || source}}">·</text>
             <text class="poem-meta">{{selection}}</text>
           </block>
-          <text class="poem-dot">·</text>
-          <text class="poem-meta">{{stage}}</text>
+          <block wx:if="{{stage}}">
+            <text class="poem-dot" wx:if="{{dynasty || author || source || selection}}">·</text>
+            <text class="poem-meta">{{stage}}</text>
+          </block>
         </view>
 
         <view class="poem-note" wx:if="{{aliasText}}">

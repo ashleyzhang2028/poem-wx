@@ -22,19 +22,21 @@
       </view>
 
       <view class="poem-meta-row">
-        <text class="poem-meta">{{dynasty}}</text>
-        <text class="poem-dot">·</text>
-        <text class="poem-meta">{{author}}</text>
+        <text class="poem-meta" wx:if="{{dynasty}}">{{dynasty}}</text>
+        <block wx:if="{{author}}">
+          <text class="poem-dot" wx:if="{{dynasty}}">·</text>
+          <text class="poem-meta">{{author}}</text>
+        </block>
         <block wx:if="{{source}}">
-          <text class="poem-dot">·</text>
+          <text class="poem-dot" wx:if="{{dynasty || author}}">·</text>
           <text class="poem-meta">{{source}}</text>
         </block>
         <block wx:if="{{selection}}">
-          <text class="poem-dot">·</text>
+          <text class="poem-dot" wx:if="{{dynasty || author || source}}">·</text>
           <text class="poem-meta">{{selection}}</text>
         </block>
-        <block wx:if="{{reciteMode}}">
-          <text class="poem-dot">·</text>
+        <block wx:if="{{reciteMode && stage}}">
+          <text class="poem-dot" wx:if="{{dynasty || author || source || selection}}">·</text>
           <text class="poem-meta">{{stage}}</text>
         </block>
       </view>
@@ -95,6 +97,11 @@
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAddToCollection"
               aria-label="加入自选集合">
           <view class="glyph" style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"></view>
+        </view>
+        <view class="pref-opt ic {{markOn ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleMark"
+              aria-label="{{markOn ? '移出书签' : '加入书签'}}">
+          <view class="glyph" style="mask-image:url('{{icons[markOn ? 'bookmarked' : 'bookmark']}}');-webkit-mask-image:url('{{icons[markOn ? 'bookmarked' : 'bookmark']}}');"></view>
         </view>
       </view>
     </view>

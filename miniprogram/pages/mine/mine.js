@@ -178,6 +178,12 @@ Page({
     wx.navigateTo({ url: "/packages/settings/collections/collections" });
   },
 
+  onBookmarks() {
+    if (!this.requireRecite()) return;
+    if (!E.block("bookmarks", { page: this })) return;
+    wx.navigateTo({ url: "/packages/settings/bookmarks/bookmarks" });
+  },
+
   requireRecite() {
     return E.block("daily", { page: this });
   },

@@ -223,6 +223,12 @@
 }
 
 .note-card {
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.sheet .note-tab,
+.sheet .gloss-cell,
+.sheet .trans-text {
+  font-size: var(--fs-hint);
 }
 

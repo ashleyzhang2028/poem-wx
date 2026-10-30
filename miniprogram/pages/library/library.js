@@ -4,6 +4,10 @@ const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
+const marks = require("../../utils/bookmarks");
+const lastRead = require("../../utils/last-read");
+
+const RECENT_MAX = 4;
 
 const GROUPS = [
   {
@@ -45,6 +49,9 @@ Page({
     name: "",
     barBelow: true,
     groups: [],
+    marks: [],
+    markCount: 0,
+    last: null,
     locked: true,
     reason: ""
   },
@@ -87,11 +94,32 @@ Page({
       };
     }).filter((g) => g.books.length);
 
-    this.setData({ groups });
+    const all2 = E.can("bookmarks") ? marks.list() : [];
+    const last = lastRead.get();
+    this.setData({
+      groups,
+      last: last ? { id: last.id, title: last.t, sub: [last.a, last.n].filter(Boolean).join(" · ") } : null,
+      markCount: all2.length,
+      marks: all2.slice(0, RECENT_MAX).map((b) => ({ id: b.id, title: b.t }))
+    });
   },
 
   onTierGate() {
     E.openPricing();
+  },
+
+  onContinue() {
+    const last = lastRead.get();
+    if (last) wx.navigateTo({ url: marks.readerUrl(last) });
+  },
+
+  onOpenMark(e) {
+    const hit = marks.list().filter((b) => b.id === e.currentTarget.dataset.id)[0];
+    if (hit) wx.navigateTo({ url: marks.readerUrl(hit) });
+  },
+
+  onAllMarks() {
+    wx.navigateTo({ url: "/packages/settings/bookmarks/bookmarks" });
   },
 
   onOpenBook(e) {

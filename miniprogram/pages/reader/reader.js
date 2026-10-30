@@ -9,6 +9,8 @@ const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
+const marks = require("../../utils/bookmarks");
+const lastRead = require("../../utils/last-read");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
@@ -26,7 +28,7 @@ const RESULTS = [
 const PAGE_ICONS = {
   left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
-  playlist: icons.playlist, off: icons.off, all: icons.all
+  playlist: icons.playlist, bookmark: icons.bookmark, bookmarked: icons.bookmarked, off: icons.off, all: icons.all
 };
 
 function aliasTextOf(meta) {
@@ -93,6 +95,7 @@ Page({
     dailyOn: false,
     dailyLocked: false,
     pickOn: false,
+    markOn: false,
     extraTier: "pro",
     pickTier: "pro",
     icons: PAGE_ICONS,
@@ -149,6 +152,7 @@ Page({
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
       pickOn: cols.collectionsOf(this.data.id).length > 0,
+      markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
     });
   },
@@ -157,6 +161,18 @@ Page({
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const box = this.selectComponent("#collect");
     if (box) box.ask(this.data.id, this.data.title || "");
+  },
+
+  onToggleMark() {
+    if (!entitlement.block("bookmarks", { page: this, loginPrompt: true })) return;
+    const d = this.data;
+    const r = marks.toggle({ id: d.id, sid: d.sid, src: !!d.remote, t: d.title, a: d.author, n: d.source });
+    if (r.ok) sync.markDirty();
+    this.setData({ markOn: r.on });
+    wx.showToast({
+      title: r.on ? (r.dropped ? "已加书签，最旧的一个已移出" : "已加书签") : "已移出书签",
+      icon: "none"
+    });
   },
 
   onCollectDone(e) {
@@ -259,6 +275,9 @@ Page({
 
   renderEntry(id, entry, meta) {
     const settings = store.settings();
+    if (!this.data.reciteMode) {
+      lastRead.put({ id: id, sid: this.data.sid || meta.sid, src: !!this.data.remote, t: meta.t, a: meta.a, n: meta.n || meta.s, b: meta.b });
+    }
     const size = scale.clamp(settings.fontSize);
 
     const rec = store.getRecord(id);

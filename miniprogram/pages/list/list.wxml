@@ -6,6 +6,7 @@
   <view class="card book-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
+    <text class="head-sub" wx:if="{{last}}" bindtap="onContinue">上次读到：{{last.title}} ›</text>
   </view>
 
   <view class="card index-card" wx:if="{{groups.length > 1}}">
@@ -61,6 +62,12 @@
             data-id="{{p.id}}" data-title="{{p.title}}" catchtap="onPick"></view>
       <text class="row-go">›</text>
     </view>
+  </view>
+
+  <view class="pager" wx:if="{{pages > 1}}">
+    <button class="btn mini" disabled="{{page <= 1}}" bindtap="onPrev">上一页</button>
+    <text class="hint pager-text">第 {{page}} / {{pages}} 页</text>
+    <button class="btn mini" disabled="{{page >= pages}}" bindtap="onNext">下一页</button>
   </view>
 
   <view class="empty" wx:if="{{!groups.length}}">

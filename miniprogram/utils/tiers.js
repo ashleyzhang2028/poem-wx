@@ -18,8 +18,14 @@ const COLLECTION_ITEMS_MAX = 100;
 
 const RECORD_LIMITS = { free: 0, pro: 200, max: 500 };
 
+const BOOKMARK_LIMITS = { free: 0, pro: 100, max: 1000 };
+
 function recordQuota() {
   return "Pro " + RECORD_LIMITS.pro + " 条 / Max " + RECORD_LIMITS.max + " 条";
+}
+
+function bookmarkQuota() {
+  return "Pro " + BOOKMARK_LIMITS.pro + " 个 / Max " + BOOKMARK_LIMITS.max + " 个";
 }
 
 function collectionQuota() {
@@ -70,6 +76,8 @@ module.exports = {
   collectionQuota,
   RECORD_LIMITS,
   recordQuota,
+  BOOKMARK_LIMITS,
+  bookmarkQuota,
   isTier,
   nameOf,
   mottoOf,

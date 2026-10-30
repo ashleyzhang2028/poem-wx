@@ -53,6 +53,13 @@
         </view>
         <text class="row-go">›</text>
       </view>
+      <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onBookmarks">
+        <view class="row-main">
+          <text class="row-title poem">书签管理</text>
+          <text class="row-sub">收藏的篇章 · 查看 · 编辑 · 批量删除</text>
+        </view>
+        <text class="row-go">›</text>
+      </view>
     </view>
 
     <view class="card">

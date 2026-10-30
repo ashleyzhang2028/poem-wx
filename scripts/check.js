@@ -1143,7 +1143,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 17], ["max", 23]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 18], ["max", 24]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));

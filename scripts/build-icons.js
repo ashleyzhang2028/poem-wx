@@ -23,6 +23,8 @@ const NAMES = [
   ["add", "CilPlus.svg"],
   ["added", "CilCheckAlt.svg"],
   ["playlist", "CilPlaylistAdd.svg"],
+  ["bookmark", "CilBookmark.svg"],
+  ["bookmarked", "CilBookmarkFill.svg"],
   ["left", "CilJustifyLeft.svg"],
   ["center", "CilJustifyCenter.svg"],
   ["off", "CilText.svg"],
