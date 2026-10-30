@@ -2,10 +2,6 @@
   margin: var(--sp-3) auto 0;
 }
 
-.poem-card {
-  padding-top: var(--sp-4);
-}
-
 .poem-loading {
   position: relative;
   height: 2rpx;
