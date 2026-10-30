@@ -28,7 +28,8 @@ const REOPEN_MS = 400;
 
 const PAGE_ICONS = {
   left: icons.left, center: icons.center, add: icons.add, added: icons.added,
-  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all
+  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all,
+  lineUp: icons.lineUp, lineDown: icons.lineDown
 };
 
 function idsOf(rows) {
@@ -98,8 +99,7 @@ Component({
     translation: "",
     translationSource: "",
     hasTranslation: false,
-    showTranslation: false,
-    showGloss: false,
+    noteTab: "gloss",
     glossRows: [],
 
     align: "center",
@@ -108,6 +108,9 @@ Component({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
+    lineGap: scale.GAP_DEFAULT,
+    lineDown: true,
+    lineUp: true,
     pinyinMode: "off",
     pinyinOn: false,
 
@@ -152,7 +155,7 @@ Component({
       this.cancelAdvance();
       this.closedAt = Date.now();
       this.pushed = false;
-      this.setData({ open: false, showTranslation: false, showGloss: false, hint: "" });
+      this.setData({ open: false, hint: "" });
     },
 
     missHead(item) {
@@ -172,8 +175,6 @@ Component({
         hasTranslation: false,
         translation: "",
         translationSource: "",
-        showTranslation: false,
-        showGloss: false,
         glossRows: []
       };
     },
@@ -206,8 +207,6 @@ Component({
         hasTranslation: false,
         translation: "",
         translationSource: "",
-        showTranslation: false,
-        showGloss: false,
         glossRows: []
       };
     },
@@ -262,6 +261,7 @@ Component({
       const settings = store.settings();
       const rec = store.getRecord(item.id);
       const fontSize = scale.clamp(settings.fontSize);
+      const glossRows = gloss.rows(entry.gloss);
 
       this.setData({
         id: item.id,
@@ -278,12 +278,13 @@ Component({
         translation: entry.tr || "",
         translationSource: entry.src || "",
         hasTranslation: !!entry.tr,
-        showTranslation: false,
-        showGloss: false,
-        glossRows: gloss.rows(entry.gloss),
+        glossRows,
+        noteTab: glossRows.length ? "gloss" : "trans",
         align: settings.align === "left" ? "left" : "center",
         fontSize,
         ...scale.flags(fontSize),
+        lineGap: scale.clampGap(settings.lineGap),
+        ...scale.gapFlags(settings.lineGap),
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
         mastery: R.mastery(rec),
         index: this.data.index,
@@ -391,12 +392,23 @@ Component({
       store.saveSettings({ align });
     },
 
-    onToggleTranslation() {
-      this.setData({ showTranslation: !this.data.showTranslation });
+    onNoteTab(e) {
+      this.setData({ noteTab: e.currentTarget.dataset.tab });
     },
 
-    onToggleGloss() {
-      this.setData({ showGloss: !this.data.showGloss });
+    onLineDown() {
+      this.stepGap(-1);
+    },
+
+    onLineUp() {
+      this.stepGap(1);
+    },
+
+    stepGap(delta) {
+      const lineGap = scale.clampGap(this.data.lineGap + delta);
+      if (lineGap === this.data.lineGap) return;
+      this.setData(Object.assign({ lineGap }, scale.gapFlags(lineGap)));
+      store.saveSettings({ lineGap });
     },
 
     onPinyinToggle() {

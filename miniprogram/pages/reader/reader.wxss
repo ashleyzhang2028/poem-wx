@@ -75,7 +75,3 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.trans-text {
-  padding-top: var(--sp-2);
-}

@@ -35,7 +35,7 @@ const NAMES = [
   ["tomorrow", "CilCalendarTomorrow.svg"],
   ["month", "CilCalendarMonth.svg"],
   ["crest", "TangBaoxiang.svg"],
-  ["settings", "CilSettings.svg"],
+  ["settings", "CilCog.svg"],
   ["lineUp", "CilLineUp.svg"],
   ["lineDown", "CilLineDown.svg"]
 ];

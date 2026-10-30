@@ -1513,17 +1513,9 @@ button, input, textarea {
 .poem-line {
   display: block;
   font-size: var(--poem-fs);
-  line-height: calc(var(--poem-fs) * var(--lh-poem) + var(--poem-fold));
+  line-height: calc(var(--poem-fs) * var(--lh-poem));
   color: var(--ink);
   letter-spacing: 0;
-}
-
-.poem-line:not(.token-line) + .poem-line:not(.token-line) {
-  margin-top: calc(-1 * var(--poem-fold));
-}
-
-.poem-line.token-line + .poem-line.token-line {
-  margin-top: calc(var(--py-slot) * -0.2 + (var(--lh-poem) - 1.4) * var(--poem-fs));
 }
 
 .md-table {
@@ -1602,7 +1594,7 @@ button, input, textarea {
   justify-content: flex-end;
   width: var(--py-box);
   height: calc(var(--py-slot) + var(--poem-fs));
-  margin: 0 var(--py-gap);
+  margin: 0 var(--py-gap) calc(var(--py-slot) * -0.2 + (var(--lh-poem) - 1.4) * var(--poem-fs));
   flex: none;
 
   vertical-align: bottom;
@@ -1630,6 +1622,7 @@ button, input, textarea {
   line-height: 1;
 }
 
+.poem-body.gap--6 { --lh-poem: 0.8; }
 .poem-body.gap--5 { --lh-poem: 0.9; }
 .poem-body.gap--4 { --lh-poem: 1.0; }
 .poem-body.gap--3 { --lh-poem: 1.1; }
@@ -1681,8 +1674,8 @@ button, input, textarea {
   padding-top: var(--sp-2);
 }
 
-.gloss-card {
-  margin-bottom: var(--sp-2);
+.gloss-list {
+  padding-top: var(--sp-2);
 }
 
 .gloss-row {
@@ -1690,53 +1683,18 @@ button, input, textarea {
   align-items: flex-start;
 }
 
-.gloss-row.gap {
-  margin-top: var(--sp-2);
-}
-
 .gloss-cell {
   flex: 1 1 0;
   min-width: 0;
   padding-right: var(--sp-2);
+  font-size: var(--fs-body);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
   word-break: break-word;
 }
 
 .gloss-w {
-  display: block;
-  font-size: var(--fs-hint);
   color: var(--strong-text);
-  line-height: var(--lh-tight);
-}
-
-.gloss-d {
-  display: block;
-  margin-top: var(--sp-1);
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  line-height: var(--lh-body);
-}
-
-.trans-head {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: var(--sp-1) 0;
-  border-radius: var(--radius-sm);
-  transition: background-color var(--t-press);
-}
-
-.trans-head.closed {
-  min-height: var(--h-btn-mini);
-}
-
-.trans-hover {
-  background: var(--strong-soft);
-}
-
-.trans-toggle {
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  flex: none;
 }
 
 .trans-text {
@@ -1744,6 +1702,7 @@ button, input, textarea {
   font-size: var(--fs-body);
   color: var(--ink-2);
   line-height: var(--lh-body);
+  padding-top: var(--sp-2);
 }
 
 .trans-src {

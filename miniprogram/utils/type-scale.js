@@ -10,7 +10,7 @@ function flags(size) {
   return { fontDown: size2 > MIN, fontUp: size2 < MAX };
 }
 
-const GAP_MIN = -5;
+const GAP_MIN = -6;
 const GAP_MAX = 3;
 const GAP_DEFAULT = -1;
 
