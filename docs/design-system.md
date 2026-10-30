@@ -518,7 +518,7 @@ Free 看得到「Pro 起」与「Max 起」，Pro 只看得到「Max 起」，Ma
 --fs-caption 22  脚注、单位
 --fs-hint    25  说明、次级信息、标签
 --fs-body    29  正文、列表副题
---fs-title   32  列表标题、字段名、按钮
+--fs-title   37  列表标题、字段名、按钮
 --fs-lead    38  页头、卡片主标题
 --fs-hero    46  一屏只有一处的大标题
 ```
