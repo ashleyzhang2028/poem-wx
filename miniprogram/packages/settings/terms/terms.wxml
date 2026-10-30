@@ -44,10 +44,14 @@
 
   <view class="card">
     <view class="card-title">五、内容与知识产权</view>
-    <text class="policy-p">古诗文原文属公共领域（现当代作品除外）。课内篇目的白话译文、注音、注释、内容分组，以及界面设计与程序代码，其权利归运营者所有，可免费用于个人学习与非商业教学；商业使用须事先取得书面授权。页面标注了来源的内容，以标注为准。</text>
-    <text class="policy-p">诗词漫读与作者介绍：正文与小传由在线语料服务按需提供，语料源自开源语料库（MIT 协议）。其内容可能有错字、缺漏、版本差异或归属不当，我们不保证其准确、完整与持续可用。</text>
-    <text class="policy-p">课内篇目的文本、注音与译文经人工整理，仍可能有疏漏，仅供学习参考，以学校教材与教师讲授为准；年级学期编排参照统编版教材通行安排，各地进度不同，以实际使用的教材为准。本小程序是辅助记忆工具，不替代课堂教学，不对学习成绩或考试结果作任何承诺。</text>
-    <text class="policy-p">纠错与权利通知：发现内容错误，或认为内容侵犯了您的合法权益，请发邮件并附权属证明与具体位置，我们核实后处理。</text>
+    <text class="policy-p">古诗文原文属公共领域（现当代作品除外）。课内篇目的译文、注音、注释，以及界面与代码，权利归运营者所有，可免费用于个人学习与非商业教学，商业使用须书面授权。</text>
+    <text class="policy-p">内容来源：诗词与作者小传取自下列开源语料，均依 MIT 协议使用，版权归原作者与整理者所有。诗词漫读由在线服务按需提供，不保证持续可用；收录不代表认同其观点。</text>
+    <text class="policy-p" user-select>chinese-poetry：https://github.com/chinese-poetry/chinese-poetry</text>
+    <text class="policy-p" user-select>palemoky/chinese-poetry：https://github.com/palemoky/chinese-poetry</text>
+    <text class="policy-p">海棠诗社：致力于古诗词的网站。</text>
+    <text class="policy-p policy-key">增补与勘误：跬步诗词在上述语料基础上作了大量增补和勘误，补充篇目与作者小传，校正错字、缺字与异体写法；仍不保证权属、准确与完整。</text>
+    <text class="policy-p">课内篇目仅供学习参考，以教材与教师讲授为准；年级学期编排参照统编版，各地进度不同。本小程序是辅助工具，不替代课堂教学，不对学习成绩作任何承诺。</text>
+    <text class="policy-p">权利通知与纠错：认为内容侵权或有误的，请发邮件至联系邮箱，附权属证明、篇目位置与联系方式。我们核实后及时下架、更正或删除，并在合理期限内答复。</text>
   </view>
 
   <view class="card">

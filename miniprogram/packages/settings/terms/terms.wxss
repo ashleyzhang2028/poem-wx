@@ -23,3 +23,7 @@
 .policy-p:last-child {
   margin-bottom: 0;
 }
+
+.policy-key {
+  color: var(--strong-text);
+}
