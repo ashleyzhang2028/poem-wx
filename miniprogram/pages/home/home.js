@@ -439,11 +439,15 @@ Page({
   },
 
   dailyOf(card, lines, apiId, state) {
+    const laid = lines && lines.length
+      ? corpus.layout(lines.join("\n"), { size: 0, pinyin: false })
+      : null;
     return {
       id: card.key,
       title: card.shown,
       meta: [card.dynasty, card.author].filter(Boolean).join(" · "),
       lines: lines,
+      verse: laid ? laid.verse : true,
       apiId: apiId,
       state: state
     };

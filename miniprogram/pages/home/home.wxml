@@ -96,7 +96,7 @@
         </view>
       </view>
 
-      <view class="daily-body" hover-class="row-hover" hover-stay-time="60" bindtap="onDailyOpen">
+      <view class="daily-body {{daily.verse ? '' : 'daily-wrap'}}" hover-class="row-hover" hover-stay-time="60" bindtap="onDailyOpen">
         <text class="daily-title">{{daily.title}}</text>
         <text class="daily-meta" wx:if="{{daily.meta}}">{{daily.meta}}</text>
         <block wx:if="{{daily.state === 'ready'}}">
