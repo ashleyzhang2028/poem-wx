@@ -20,8 +20,8 @@ const RESULTS = [
 ];
 
 const DEFERS = [
-  { key: "tomorrow", icon: icons.tomorrow, label: "明日再背", cls: "defer" },
-  { key: "month", icon: icons.month, label: "月后再背", cls: "defer" }
+  { key: "tomorrow", icon: icons.tomorrow, label: "明日温习", cls: "defer" },
+  { key: "month", icon: icons.month, label: "月后温习", cls: "defer" }
 ];
 
 const REOPEN_MS = 400;
