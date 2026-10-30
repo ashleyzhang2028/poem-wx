@@ -20,7 +20,7 @@ const icons = require("../../utils/icons");
 const guard = require("../../utils/guard");
 const pv = require("../../components/progress-view/progress-view");
 
-const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "加背" };
+const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "温习" };
 
 const TOAST_GAP = 2400;
 
@@ -467,7 +467,7 @@ Page({
       return;
     }
     if (!r.ok) {
-      wx.showToast({ title: r.code === "E_LIMIT" ? "今日已加背 " + store.DAILY_EXTRA_MAX + " 首" : "添加失败", icon: "none" });
+      wx.showToast({ title: r.code === "E_LIMIT" ? "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首" : "添加失败", icon: "none" });
       return;
     }
     wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });

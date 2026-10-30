@@ -170,7 +170,7 @@
 
       <view class="empty" wx:if="{{!loading && !(selfOnly ? coursePlan.length : total)}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">{{selfOnly ? '今天没有加背' : '今日未排计划'}}</text>
+        <text class="empty-text">{{selfOnly ? '今天没有要温习的' : '今日未排计划'}}</text>
 
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>
@@ -186,7 +186,7 @@
 
     <view class="card" wx:if="{{!collectionCount}}">
       <text class="card-title">自选温习</text>
-      <text class="hint">还没有自选集合，看到想背的诗，加进自己的集合</text>
+      <text class="hint">还没有自选集合，看到想温习的诗，加进自己的集合</text>
     </view>
 
     <block wx:if="{{collectionOn}}">
@@ -226,7 +226,7 @@
         <view class="empty" wx:if="{{!coll.rows.length}}">
           <text class="empty-mark">选</text>
           <text class="empty-text">这个集合还是空的</text>
-          <text class="hint empty-tip">看到想背的诗，加进自己的集合</text>
+          <text class="hint empty-tip">看到想温习的诗，加进自己的集合</text>
         </view>
       </view>
     </block>

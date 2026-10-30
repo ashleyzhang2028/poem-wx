@@ -3,7 +3,7 @@
     <view class="empty">
       <text class="empty-mark">选</text>
       <text class="empty-text say">{{logged ? '还没有自选集合' : '自选集合要登录后才看得到'}}</text>
-      <text class="hint empty-tip">看到想背的，加进集合，按你的复习节奏排起来</text>
+      <text class="hint empty-tip">看到想温习的，加进集合，按你的复习节奏排起来</text>
       <button class="btn ghost mini empty-btn" wx:if="{{!logged}}" bindtap="onLogin">登录</button>
       <button class="btn ghost mini empty-btn" wx:else bindtap="onCollections">管理自选集合</button>
     </view>
