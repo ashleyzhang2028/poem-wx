@@ -6822,6 +6822,8 @@ const K = {
         "回的是 " + body.expiresIn + " 秒，会话是 " + (row ? Math.round((row.exp - row.iat) / 1000) : "?") + " 秒"
           + " —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
 
+      ok("新微信账号建号即带一个随机昵称，不留空", /^诗友[A-Z2-9]{6}$/.test(String(body.nickname || "")), JSON.stringify(body.nickname));
+
       clock += ((Number(body.expiresIn) || 0) - 5) * 1000;
       return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" })
         .then((rr) => {
@@ -7220,9 +7222,9 @@ const K = {
     ok("别人的凭证、别的玩法的凭证都用不了",
       other.ok === false && (await guardMod.admit(depsAt(at + 60000), me, "fly", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5)).ok === false);
 
-    ok("每句每答对一题按 2 秒算，一秒交上来的不记",
-      guardMod.plausible("fly", 10, 18) === false && guardMod.plausible("fly", 10, 20) === true
-        && guardMod.plausible("exam", 10, 18) === false && guardMod.plausible("exam", 10, 20) === true
+    ok("飞花令每句至少 3 秒、考试每答对一题至少 2 秒，另给 3 秒宽限",
+      guardMod.plausible("fly", 10, 26) === false && guardMod.plausible("fly", 10, 27) === true
+        && guardMod.plausible("exam", 10, 16) === false && guardMod.plausible("exam", 10, 17) === true
         && guardMod.plausible("fly", 1, 1) === true && guardMod.plausible("exam", 40, 1) === false);
   })());
 }

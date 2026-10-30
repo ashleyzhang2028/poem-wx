@@ -127,6 +127,14 @@ function makeRateLimiter() {
   };
 }
 
+var NICK_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function randomNickname() {
+  var bytes = crypto.randomBytes(6), out = "诗友";
+  for (var i = 0; i < bytes.length; i++) out += NICK_CHARS[bytes[i] % NICK_CHARS.length];
+  return out;
+}
+
 function accountRow(identityValue, hash, now) {
   var plain = id.normalizeEmailForStore(identityValue);
   return {
@@ -1400,6 +1408,7 @@ function wxEnsureAccount(deps, info, row, t) {
   var acc = accountRow(wxPlaceholderEmail("pending"), null, t);
   acc.email = wxPlaceholderEmail(acc.uid);
   acc.status = "active";
+  acc.nickname = randomNickname();
   acc.email_hash = wxPlaceholderHash(acc.uid);
 
   return Promise.resolve(store.putAccount(acc)).then(function (saved) {
