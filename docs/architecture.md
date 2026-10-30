@@ -111,7 +111,7 @@ scripts/
 所以「已掌握」「平均掌握」「掌握度分布」「今日到期」在自选与课内是同一次计算。
 进度页与自选管理页都只读这个函数的返回，不自己翻本机记录。
 
-**画也只有一份。** `components/progress-view` 把一块「环 + 四数 / 七天日历 / 到期篇目与延后再背 /
+**画也只有一份。** `components/progress-view` 把一块「环 + 四数 / 七天日历 / 到期篇目与延后温习 /
 五档分布」摊成组件，页传 `view` 进场：课内那页传 `courseView()`，自选那页对每个集合传
 `collectionView(c, allPoems, getRecord)`（内部就是 `collectionProgress`）。组件只管画，
 背诵弹层仍挂在页上，行上抛 `open` / `defer` 事件；读数与记录一条都不在组件里算。

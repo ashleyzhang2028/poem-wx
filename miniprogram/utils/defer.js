@@ -3,8 +3,8 @@ const R = require("./review-models");
 const corpus = require("./corpus");
 
 const LEVELS = [
-  { key: "tomorrow", label: "明日再背", span: 1, cls: "tomorrow" },
-  { key: "month", label: "月后再背", span: 30, cls: "month" }
+  { key: "tomorrow", label: "明日温习", span: 1, cls: "tomorrow" },
+  { key: "month", label: "月后温习", span: 30, cls: "month" }
 ];
 
 const DAY = R.DAY;
@@ -97,7 +97,7 @@ function rowsOf(ids, list) {
         id: id,
         title: meta.t,
         meta: [meta.a, meta.d].filter((v, i, all) => v && all.indexOf(v) === i).join(" · "),
-        label: (levelOfSpan(item.span) === levelOf("month") ? "月后再背" : "明日再背"),
+        label: (levelOfSpan(item.span) === levelOf("month") ? "月后温习" : "明日温习"),
         due: left <= 0 ? "今天回来" : "还有 " + left + " 天",
         until: untilOn(item)
       };
