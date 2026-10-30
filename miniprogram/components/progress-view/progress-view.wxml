@@ -77,7 +77,7 @@
 
     <view class="card" wx:if="{{groups.length}}">
       <view class="card-title">{{labels.defer}}</view>
-      <text class="hint defer-lead">这几首今天先不背，到日子自己回到今日计划</text>
+      <text class="hint defer-lead">这几首今天先不温习，到日子自己回到今日计划</text>
       <view class="panel" wx:for="{{groups}}" wx:key="key" wx:for-item="lv">
         <view class="panel-head">
           <text class="panel-when">{{lv.label}}</text>

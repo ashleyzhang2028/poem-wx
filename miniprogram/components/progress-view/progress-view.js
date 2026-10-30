@@ -22,7 +22,7 @@ const LABELS = {
   calendar: "到期日历",
   due: "全部到期篇目",
   buckets: "掌握度分布",
-  defer: "延后再背"
+  defer: "延后温习"
 };
 
 function md(ts) {

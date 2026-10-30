@@ -735,7 +735,7 @@ ok("要的比池子多也不重复", new Set(plan4.map((p) => p.poem.id)).size =
     const stamp = store.deferAt() - 60000;
     store.setDefer(store.deferList(), stamp);
     defer.put(withExtra[1].poem.id, "tomorrow");
-    ok("点一次「再背」就把台账当成新的（不会被服务端当成旧行丢掉）",
+    ok("点一次「温习」就把台账当成新的（不会被服务端当成旧行丢掉）",
       store.deferAt() > stamp, stamp + " -> " + store.deferAt());
     defer.drop(withExtra[1].poem.id);
   }
