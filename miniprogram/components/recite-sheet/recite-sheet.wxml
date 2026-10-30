@@ -48,11 +48,14 @@
           </view>
         </view>
 
-        <view class="pref-seg" wx:if="{{pinyinOn}}">
-          <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
-                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
-                aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
-            <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
+        <view class="pref-size">
+          <view class="pref-opt ic {{lineDown ? '' : 'off'}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineDown" aria-label="缩小行间距">
+            <view class="glyph" style="mask-image:url('{{icons.lineDown}}');-webkit-mask-image:url('{{icons.lineDown}}');"></view>
+          </view>
+          <view class="pref-opt ic {{lineUp ? '' : 'off'}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineUp" aria-label="增加行间距">
+            <view class="glyph" style="mask-image:url('{{icons.lineUp}}');-webkit-mask-image:url('{{icons.lineUp}}');"></view>
           </view>
         </view>
 
@@ -67,6 +70,14 @@
           </view>
         </view>
 
+        <view class="pref-seg" wx:if="{{pinyinOn}}">
+          <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
+                aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
+            <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
+          </view>
+        </view>
+
         <view class="pref-act">
           <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
                 hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
@@ -76,7 +87,7 @@
         </view>
       </view>
 
-      <view class="poem-body align-{{align}} size-{{fontSize}}">
+      <view class="poem-body align-{{align}} size-{{fontSize}} gap-{{lineGap}}">
         <block wx:if="{{blocks.length}}">
           <block wx:for="{{blocks}}" wx:key="key" wx:for-item="blk">
             <view class="poem-stanza" wx:if="{{blk.k === 'p'}}">
@@ -111,27 +122,21 @@
         </view>
       </view>
 
-      <view class="gloss-card" wx:if="{{glossRows.length}}">
-        <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleGloss">
-          <text class="all-toggle {{showGloss ? 'open' : ''}}"></text>
-          <text class="trans-toggle">注释</text>
+      <view class="note-card" wx:if="{{glossRows.length || hasTranslation}}">
+        <view class="note-tabs">
+          <view class="note-tab {{noteTab === 'gloss' ? 'on' : ''}}" wx:if="{{glossRows.length}}"
+                hover-class="note-tab-hover" hover-stay-time="60" data-tab="gloss" bindtap="onNoteTab">注释</view>
+          <view class="note-tab {{noteTab === 'trans' ? 'on' : ''}}" wx:if="{{hasTranslation}}"
+                hover-class="note-tab-hover" hover-stay-time="60" data-tab="trans" bindtap="onNoteTab">译文</view>
         </view>
-        <view wx:if="{{showGloss}}">
-          <view class="gloss-row {{row.gap ? 'gap' : ''}}" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
+        <view class="gloss-list" wx:if="{{noteTab === 'gloss' && glossRows.length}}">
+          <view class="gloss-row" wx:for="{{glossRows}}" wx:key="key" wx:for-item="row">
             <view class="gloss-cell" wx:for="{{row.cells}}" wx:key="w" wx:for-item="cell">
-              <text class="gloss-w">{{cell.w}}</text>
-              <text class="gloss-d">{{cell.d}}</text>
+              <text class="gloss-w">{{cell.w}}</text><text class="gloss-d">：{{cell.d}}</text>
             </view>
           </view>
         </view>
-      </view>
-
-      <view class="trans-card" wx:if="{{hasTranslation}}">
-        <view class="trans-head" hover-class="trans-hover" hover-stay-time="60" bindtap="onToggleTranslation">
-          <text class="all-toggle {{showTranslation ? 'open' : ''}}"></text>
-          <text class="trans-toggle">译文</text>
-        </view>
-        <view wx:if="{{showTranslation}}">
+        <view wx:elif="{{noteTab === 'trans' && hasTranslation}}">
           <text class="trans-text">{{translation}}</text>
           <text class="trans-src" wx:if="{{translationSource}}">{{translationSource}}</text>
         </view>

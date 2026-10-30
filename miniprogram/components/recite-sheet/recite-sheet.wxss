@@ -174,11 +174,6 @@
   width: 100%;
 }
 
-.sheet-body > .gloss-card,
-.sheet-body > .trans-card {
-  margin-bottom: 0;
-}
-
 .sheet-foot .chip-group.actions {
   margin-top: var(--sp-2);
 }
@@ -227,18 +222,43 @@
   font-size: var(--fs-body);
 }
 
-.sheet-body .trans-head {
-  justify-content: flex-end;
-  align-items: baseline;
-  padding: var(--sp-1) 0;
+.note-card {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1rpx solid var(--line);
 }
 
-.sheet-body .trans-toggle {
-  order: 1;
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
+.note-tabs {
+  display: flex;
+  gap: var(--sp-4);
 }
 
-.sheet-body .trans-head .all-toggle {
-  order: 2;
+.note-tab {
+  position: relative;
+  padding: var(--sp-1) 0 var(--sp-2);
+  font-size: var(--fs-title);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-title);
+  color: var(--ink-3);
+  transition: color var(--t-press);
+}
+
+.note-tab.on {
+  color: var(--strong-text);
+}
+
+.note-tab.on::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 32rpx;
+  height: 4rpx;
+  margin-left: -16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--strong);
+}
+
+.note-tab-hover {
+  opacity: .7;
 }

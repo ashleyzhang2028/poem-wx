@@ -14,7 +14,7 @@ function rows(list) {
 
   const lines = [];
   for (let i = 0; i < out.length; i += PAIRS) {
-    lines.push({ key: "g" + i, cells: out.slice(i, i + PAIRS), gap: lines.length > 0 });
+    lines.push({ key: "g" + i, cells: out.slice(i, i + PAIRS) });
   }
   return lines;
 }
