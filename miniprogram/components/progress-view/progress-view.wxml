@@ -33,7 +33,7 @@
       </view>
     </view>
 
-    <text class="hint warn" wx:if="{{backlog}}">逾期 {{backlog}} 首 · 会优先排进今天</text>
+    <text class="hint warn" wx:if="{{backlog}}">逾期 {{backlog}} 首 · 优先排入今日</text>
 
     <view class="empty" wx:if="{{!learned}}">
       <text class="empty-mark">始</text>
@@ -77,7 +77,7 @@
 
     <view class="card" wx:if="{{groups.length}}">
       <view class="card-title">{{labels.defer}}</view>
-      <text class="hint defer-lead">这几首今天不温习，到日子自己回到今日计划</text>
+      <text class="hint defer-lead">以下篇目今日不温习，到期自动回归今日计划</text>
       <view class="panel" wx:for="{{groups}}" wx:key="key" wx:for-item="lv">
         <view class="panel-head">
           <text class="panel-when">{{lv.label}}</text>

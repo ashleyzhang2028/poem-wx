@@ -6,10 +6,10 @@
       <text class="pr-eyebrow">会员</text>
       <text class="pr-title poem">积跬步，至千里</text>
       <text class="pr-sub" wx:if="{{logged && untilText}}">当前 {{tier === 'max' ? 'Max' : 'Pro'}} · 到期 {{untilText}}</text>
-      <text class="pr-sub" wx:elif="{{loadFailed}}">价格没取到，请检查网络后重新进入</text>
+      <text class="pr-sub" wx:elif="{{loadFailed}}">未能获取价格，请检查网络后重新进入</text>
     </view>
 
-    <text class="hint pr-note" wx:if="{{sandbox}}">当前是沙箱环境，仅用于测试，不会真实扣款。</text>
+    <text class="hint pr-note" wx:if="{{sandbox}}">当前为沙箱环境，仅供测试，不会真实扣款。</text>
 
     <view class="pr-welcome tier-{{welcome.tier}}" wx:if="{{welcome}}">
       <text class="pr-w-title poem">{{welcome.title}}</text>
@@ -25,7 +25,7 @@
 
     <view wx:if="{{!logged}}">
       <text class="hint">请先用微信登录，再选择档位。</text>
-      <button class="btn primary block pr-login" bindtap="onLogin">去登录</button>
+      <button class="btn primary block pr-login" bindtap="onLogin">登录</button>
     </view>
   </view>
 

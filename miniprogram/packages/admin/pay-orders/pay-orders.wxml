@@ -26,7 +26,7 @@
       <input class="ap-input" placeholder="搜索单号 / uid / openid / 道具" value="{{q}}"
              confirm-type="search" bindinput="onSearch" bindconfirm="onSearchNow" />
 
-      <text class="hint ap-note" wx:if="{{loaded && !list.length}}">{{q ? '没有匹配的订单。' : '这里还没有订单。'}}</text>
+      <text class="hint ap-note" wx:if="{{loaded && !list.length}}">{{q ? '无匹配订单。' : '暂无订单。'}}</text>
 
       <view class="row ap-order" wx:for="{{list}}" wx:key="outTradeNo"
             hover-class="row-hover" hover-stay-time="60" bindtap="onCopyAll" data-index="{{index}}">

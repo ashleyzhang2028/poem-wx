@@ -85,3 +85,13 @@
   padding-top: var(--sp-4);
   padding-bottom: 0;
 }
+
+.reader .poem-link {
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 6rpx;
+}
+
+.reader .poem-link-hover {
+  opacity: .6;
+}

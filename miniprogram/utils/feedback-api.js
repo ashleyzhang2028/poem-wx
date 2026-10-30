@@ -117,7 +117,7 @@ function submit(draft) {
       content: checked.content
     })
     .then((res) => {
-      if (!res.ok) return { ok: false, offline: !!res.offline, reason: res.reason || "没发出去，稍后再试" };
+      if (!res.ok) return { ok: false, offline: !!res.offline, reason: res.reason || "提交失败，请稍后重试" };
       return { ok: true, thread: decorate(res.thread), duplicate: !!res.duplicate };
     });
 }
@@ -131,13 +131,13 @@ function mine() {
 
 function comment(tid, text) {
   const content = String(text || "").trim();
-  if (!tid) return Promise.resolve({ ok: false, reason: "缺少编号" });
-  if (!content) return Promise.resolve({ ok: false, reason: "写一句再发" });
-  if (content.length > COMMENT_MAX) return Promise.resolve({ ok: false, reason: "一条最多 " + COMMENT_MAX + " 字" });
+  if (!tid) return Promise.resolve({ ok: false, reason: "缺少反馈编号" });
+  if (!content) return Promise.resolve({ ok: false, reason: "请输入内容" });
+  if (content.length > COMMENT_MAX) return Promise.resolve({ ok: false, reason: "内容最多 " + COMMENT_MAX + " 字" });
   return remote.feedbackComment(tid, content).then((res) => ({
     ok: !!res.ok,
     offline: !!res.offline,
-    reason: res.reason || "没发出去，稍后再试"
+    reason: res.reason || "提交失败，请稍后重试"
   }));
 }
 

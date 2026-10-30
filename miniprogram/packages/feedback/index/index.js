@@ -78,11 +78,11 @@ Page({
       .then((res) => {
         this.setData({ submitting: false });
         if (!res || !res.ok) {
-          wx.showToast({ title: (res && res.reason) || "没发出去，稍后再试", icon: "none" });
+          wx.showToast({ title: (res && res.reason) || "提交失败，请稍后重试", icon: "none" });
           return;
         }
         this.setData({ title: "", content: "" });
-        wx.showToast({ title: res.duplicate ? "刚刚已经发过" : "已提交", icon: "none" });
+        wx.showToast({ title: res.duplicate ? "请勿重复提交" : "已提交", icon: "none" });
         this.load();
       });
   },
@@ -99,7 +99,7 @@ Page({
     guard.once("feedback:comment:" + tid, () => fb.comment(tid, this.data.reply[tid])).then((res) => {
       this.setData({ sending: false });
       if (!res || !res.ok) {
-        wx.showToast({ title: (res && res.reason) || "没发出去，稍后再试", icon: "none" });
+        wx.showToast({ title: (res && res.reason) || "提交失败，请稍后重试", icon: "none" });
         return;
       }
       this.setData({ ["reply." + tid]: "" });

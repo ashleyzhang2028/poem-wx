@@ -175,48 +175,6 @@
     ],
     "_note": "首页的自选集子：每个集子一张卡，标题「集合名 · 自选」，篇目平铺，篇名后挂状态与出身两枚胶囊"
   },
-  "home-collect-picker": {
-    "page": "pages/home/home",
-    "title": "跬步",
-    "tab": 1,
-    "logged": true,
-    "collections": [
-      {
-        "id": "c1",
-        "name": "唐诗三百",
-        "items": [
-          {
-            "id": "poems-xx1-01"
-          },
-          {
-            "id": "poems-xx1-03"
-          }
-        ]
-      },
-      {
-        "id": "c2",
-        "name": "宋词里的长调与慢词",
-        "items": [
-          {
-            "id": "songci-sc-1"
-          }
-        ]
-      }
-    ],
-    "do": [
-      {
-        "call": "onSeasonalCollect",
-        "with": {
-          "currentTarget": {
-            "dataset": {
-              "id": "poems-xx1-05"
-            }
-          }
-        }
-      }
-    ],
-    "_note": "首页「季节限定」右枚圆钮点开的加入自选集弹层：集合名与加入同一行，底部给底栏留出位置"
-  },
   "tier": {
     "page": "packages/mine/tier/tier",
     "title": "用户权限",

@@ -1,11 +1,11 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{!logged}}" title="用户列表" note="登录后才能看" mark="人" bind:login="onLogin" />
+  <lock-card wx:if="{{!logged}}" title="用户列表" note="登录后可查看" mark="人" bind:login="onLogin" />
 
   <block wx:else>
 
     <view class="card">
-      <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未接上</text>
+      <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未连接</text>
       <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
 
       <view class="acct" wx:for="{{users}}" wx:key="id">
@@ -26,7 +26,7 @@
 
       <view class="empty" wx:if="{{!users.length}}">
         <text class="empty-mark">名</text>
-        <text class="empty-text">名录里还没有人</text>
+        <text class="empty-text">名录暂无用户</text>
       </view>
 
       <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>
@@ -37,7 +37,7 @@
   <view class="due-mask" wx:if="{{dueOpen}}" catchtap="onDueCancel">
     <view class="due" style="{{themeStyle}}" catchtap="onDueStop">
       <view class="due-head">
-        <text class="due-title">改成 {{dueTierLabel}}</text>
+        <text class="due-title">改为 {{dueTierLabel}}</text>
         <view class="due-close" hover-class="due-close-hover" hover-stay-time="60" bindtap="onDueCancel">
           <view class="due-close-x"></view>
         </view>
@@ -46,13 +46,13 @@
       <view class="due-pick" bindtap="onDuePick">
         <view class="due-main">
           <text class="due-label">到期日</text>
-          <text class="due-value">{{dueDate || dueHolder || '选一个日期'}}</text>
+          <text class="due-value">{{dueDate || dueHolder || '选择日期'}}</text>
         </view>
         <text class="due-go">›</text>
       </view>
 
       <text class="hint note error" wx:if="{{dueNote}}">{{dueNote}}</text>
-      <text class="hint note" wx:else>到期当天仍可用，次日起自动回到 Free。</text>
+      <text class="hint note" wx:else>到期当日仍可用，次日起自动恢复为 Free。</text>
 
       <view class="due-acts">
         <button class="btn ghost block" disabled="{{busy}}" bindtap="onDueForever">长期有效</button>

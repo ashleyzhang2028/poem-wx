@@ -30,8 +30,8 @@
 
       <view class="empty" wx:if="{{!threads.length}}">
         <text class="empty-mark">空</text>
-        <text class="empty-text">还没有提过意见</text>
-        <text class="empty-tip hint">上面填完提交，之后在这里跟进</text>
+        <text class="empty-text">暂无意见记录</text>
+        <text class="empty-tip hint">提交后可在此跟进</text>
       </view>
 
       <view class="fb-thread" wx:for="{{threads}}" wx:key="tid" wx:for-item="item" wx:for-index="itemIndex">
@@ -57,7 +57,7 @@
         </view>
 
         <view class="fb-reply">
-          <input class="fb-input" value="{{reply[item.tid]}}" maxlength="{{replyMax}}" placeholder="接着说"
+          <input class="fb-input" value="{{reply[item.tid]}}" maxlength="{{replyMax}}" placeholder="继续补充"
                  placeholder-class="fb-ph" data-tid="{{item.tid}}" bindinput="onReplyInput" />
           <button class="btn primary" data-tid="{{item.tid}}" bindtap="onReplySend" disabled="{{sending}}">发送</button>
         </view>

@@ -1,12 +1,12 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="设置" note="登录后才能改" mark="设" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="设置" note="登录后可修改" mark="设" bind:login="onLogin" />
 
   <block wx:else>
   <view class="card">
     <view class="card-title">设置</view>
     <view class="row" wx:if="{{sfxVisible}}">
       <view class="row-main">
-        <text class="row-title">答对答错出声</text>
+        <text class="row-title">答题音效</text>
         <text class="row-sub">温习三态 · 题库 · 考试 · 飞花令共用</text>
       </view>
       <button class="btn mini ghost sfx-test" bindtap="onSfxTest">试听</button>
@@ -16,18 +16,18 @@
     </view>
     <view class="row">
       <view class="row-main">
-        <text class="row-title">显示季节限定</text>
-        <text class="row-sub">节日前两天与当天、节气周期内列出应景诗词</text>
+        <text class="row-title">显示每日一诗</text>
+        <text class="row-sub">首页按自然日显示一首，可更换</text>
       </view>
-      <tier-tag wx:if="{{seasonalLock}}" tier="{{seasonalTier}}" />
+      <tier-tag wx:if="{{dailyPoemLock}}" tier="{{dailyPoemTier}}" />
       <view class="sw">
-        <switch checked="{{seasonalOn}}" disabled="{{seasonalLock}}" color="{{themeColor}}" bindchange="onSeasonal" />
+        <switch checked="{{dailyPoemOn}}" disabled="{{dailyPoemLock}}" color="{{themeColor}}" bindchange="onDailyPoem" />
       </view>
     </view>
     <view class="row">
       <view class="row-main">
         <text class="row-title">参与排行榜</text>
-        <text class="row-sub">考试与飞花令的成绩记进排行榜，按学段比</text>
+        <text class="row-sub">考试与飞花令成绩计入排行榜，按学段排名</text>
       </view>
       <tier-tag wx:if="{{leagueLock}}" tier="{{leagueTier}}" />
       <view class="sw">

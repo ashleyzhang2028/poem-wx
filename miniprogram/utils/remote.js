@@ -228,7 +228,7 @@ function cloudCall(conf, path, data, method, opt) {
 }
 
 function sourceOffError() {
-  const e = new Error("还没接上诗词漫读（取诗的那个服务）—— 这个包没配同步服务器");
+  const e = new Error("诗词漫读服务未连接：当前版本未配置同步服务器");
   e.code = "E_POEM_SOURCE_OFF";
   e.expected = true;
   return e;
@@ -285,7 +285,7 @@ function plainStatusError(statusCode) {
   if (statusCode === 400) {
     return "这次请求没被收下（HTTP 400）—— 云调用两栏多半没配对（环境 / 服务名）。";
   }
-  if (statusCode === 404) return "这个接口没找到（HTTP 404）—— 装上来的这一版和那头不是同一版。";
+  if (statusCode === 404) return "接口未找到（HTTP 404）：客户端与服务端版本不一致。";
   return "HTTP " + statusCode;
 }
 
@@ -548,7 +548,7 @@ function rankingList(query) {
       offline: !!(err && err.statusCode && err.statusCode === 503),
       off: !!(err && err.code === "E_RANKING_OFF"),
       board: [],
-      reason: (err && err.message) || "榜单没读上来"
+      reason: (err && err.message) || "榜单读取失败"
     })
   );
 }
@@ -591,7 +591,7 @@ function feedbackCreate(entry) {
   if (!configured()) return Promise.resolve({ ok: false, offline: true });
   return request(PATHS.feedback, Object.assign({ deviceId: store.deviceId() }, entry || {})).then(
     (res) => ({ ok: true, thread: res && res.thread, duplicate: !!(res && res.duplicate) }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没发出先去", code: (err && err.code) || "" })
+    (err) => ({ ok: false, reason: (err && err.message) || "提交失败", code: (err && err.code) || "" })
   );
 }
 
@@ -601,7 +601,7 @@ function feedbackComment(tid, content) {
     op: "comment", tid: tid, content: content, deviceId: store.deviceId()
   }).then(
     (res) => ({ ok: true, comment: res && res.comment }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没发出去" })
+    (err) => ({ ok: false, reason: (err && err.message) || "提交失败" })
   );
 }
 
@@ -632,7 +632,7 @@ function adminFeedbackDelete(tid, cid) {
   if (cid) body.cid = cid;
   return request(PATHS.adminFeedback, body).then(
     (res) => ({ ok: true, deleted: res && res.deleted }),
-    (err) => ({ ok: false, reason: (err && err.message) || "没删成" })
+    (err) => ({ ok: false, reason: (err && err.message) || "删除失败" })
   );
 }
 

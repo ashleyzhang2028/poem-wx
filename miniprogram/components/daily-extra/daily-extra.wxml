@@ -19,7 +19,7 @@
   </view>
 
   <view class="empty de-empty" wx:if="{{searched && !rows.length}}">
-    <text class="empty-text">没找到「{{keyword}}」</text>
-    <text class="hint empty-tip">换个篇名、作者或朝代试试</text>
+    <text class="empty-text">未找到「{{keyword}}」</text>
+    <text class="hint empty-tip">请更换篇名、作者或朝代重试</text>
   </view>
 </view>

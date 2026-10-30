@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{!logged}}" title="反馈详情" note="登录后才能看" mark="馈" bind:login="onLogin" />
+  <lock-card wx:if="{{!logged}}" title="反馈详情" note="登录后可查看" mark="馈" bind:login="onLogin" />
 
   <block wx:elif="{{thread}}">
 
@@ -11,7 +11,7 @@
       </view>
 
       <view class="fb-ops" wx:if="{{canWrite}}">
-        <text class="fb-op" bindtap="onDeleteThread">删除这一条</text>
+        <text class="fb-op" bindtap="onDeleteThread">删除该条</text>
       </view>
 
       <view class="fb-rows">
@@ -70,7 +70,7 @@
         </radio-group>
 
         <text class="field-label fb-gap">处理意见</text>
-        <textarea class="fb-area" value="{{replyText}}" maxlength="2000" placeholder="回给用户"
+        <textarea class="fb-area" value="{{replyText}}" maxlength="2000" placeholder="回复内容"
                   placeholder-class="fb-ph" bindinput="onReplyInput"></textarea>
 
         <view class="actions">

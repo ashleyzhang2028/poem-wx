@@ -46,6 +46,14 @@ BOOKS = [
     ("soushen", "搜神记", "卷", "晋", ("files", ["晋/小说/搜神记/soushenji.json"])),
 ]
 
+DAILY_MAX_CHARS = 64
+DAILY_MAX_ROWS = 800
+HAITANG = "reference/mit_licence_haitangshishe"
+FAMILIAR = ["唐诗三百首", "给孩子的诗", "千家诗", "古诗十九首"]
+SKIP_TOP = {"reference", "docs", "scripts", "loader", "images", "strains", "rank", "authors", "dynasties", "anthologies", ".git"}
+OUT_DAILY = os.path.join(os.path.dirname(__file__), "..", "data", "site-daily.js")
+
+
 def load(rel):
     with open(os.path.join(DATA, rel), encoding="utf-8") as f:
         return json.load(f)
@@ -79,6 +87,12 @@ def title_of(r):
     return title or (r.get("chapter") or "").strip()
 
 
+def han_count(r):
+    lines = r.get("paragraphs") or []
+    text = lines if isinstance(lines, str) else "".join(str(x) for x in lines)
+    return sum(1 for ch in text if "一" <= ch <= "鿿")
+
+
 def row(r):
     t = T2S.convert(title_of(r))
     a = T2S.convert((r.get("author") or "").strip()) or "佚名"
@@ -102,6 +116,73 @@ def collect(kind):
     return out
 
 
+def han_key(text, cmap):
+    return "".join(cmap.get(ch, ch) for ch in text if "一" <= ch <= "鿿")
+
+
+def all_records():
+    for top in sorted(os.listdir(DATA)):
+        if top in SKIP_TOP or not os.path.isdir(os.path.join(DATA, top)):
+            continue
+        for rel in json_files(top):
+            for r in records(rel):
+                yield rel, r
+
+
+def paragraphs_text(r):
+    lines = r.get("paragraphs") or []
+    return lines if isinstance(lines, str) else "".join(str(x) for x in lines)
+
+
+def build_daily():
+    base = os.path.join(HAITANG)
+    quotes = {str(x["work_id"]) for x in load(base + "/quotes.json")}
+    collection_works = load(base + "/collection_works.json")
+    textbook = {c["name"] for c in load(base + "/collections.json") if c.get("kind") == "课本"}
+    familiar = set()
+    for cw in collection_works:
+        if cw["collection"] in FAMILIAR or cw["collection"] in textbook:
+            familiar.add(str(cw["work_id"]))
+    wanted = []
+    for n in range(1, 9):
+        for w in load(base + "/works_%d.json" % n):
+            if str(w["id"]) in quotes and str(w["id"]) not in familiar and w.get("kind") in ("shi", "ci"):
+                if han_count({"paragraphs": w.get("content") or ""}) <= DAILY_MAX_CHARS:
+                    wanted.append(w)
+
+    chars = set()
+    texts = []
+    for rel, r in all_records():
+        text = paragraphs_text(r)
+        texts.append((rel, r, text))
+        chars.update(ch for ch in text if "一" <= ch <= "鿿")
+    for w in wanted:
+        chars.update(ch for ch in w["content"] if "一" <= ch <= "鿿")
+    cmap = {ch: T2S.convert(ch) for ch in chars}
+
+    by_content = {}
+    by_title = {}
+    for rel, r, text in texts:
+        k = row(r)
+        by_title[k] = by_title.get(k, 0) + 1
+        if han_count(r) <= DAILY_MAX_CHARS:
+            by_content.setdefault(han_key(text, cmap), []).append(r)
+
+    out = []
+    seen = set()
+    for w in wanted:
+        hits = by_content.get(han_key(w["content"], cmap), [])
+        if len(hits) != 1:
+            continue
+        t, a = row(hits[0])
+        if not t or not a or by_title.get((t, a)) != 1 or (t, a) in seen:
+            continue
+        seen.add((t, a))
+        out.append([t, a, w.get("dynasty") or "", "名句"])
+    step = len(out) / float(DAILY_MAX_ROWS) if len(out) > DAILY_MAX_ROWS else 1
+    return [out[int(i * step)] for i in range(min(len(out), DAILY_MAX_ROWS))]
+
+
 def build():
     result = {}
     for bid, name, unit, dynasty, kind in BOOKS:
@@ -114,7 +195,14 @@ def build():
             seen.add((t, a))
             rows.append([t, a, dynasty])
         result[bid] = (name, unit, rows)
-    return result
+    return result, build_daily()
+
+
+def write_daily(daily):
+    body = ",\n".join("    " + json.dumps(x, ensure_ascii=False, separators=(",", ":")) for x in daily)
+    text = '(function () {\n  "use strict";\n\n  window.SITE_DAILY = [\n' + body + '\n  ];\n})();\n'
+    with open(OUT_DAILY, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
 
 def write(result):
@@ -140,7 +228,9 @@ def write(result):
 
 
 if __name__ == "__main__":
-    res = build()
+    res, daily = build()
     write(res)
+    write_daily(daily)
+    print("daily", len(daily))
     for bid, name, unit, _, _ in BOOKS:
         print(bid, name, len(res[bid][2]))

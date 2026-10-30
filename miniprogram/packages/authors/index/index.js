@@ -58,6 +58,10 @@ Page({
     this.setData({ themeStyle: hit.page.themeStyle });
   },
 
+  onLoad(query) {
+    this.pendingAuthor = query && query.author ? decodeURIComponent(query.author) : "";
+  },
+
   onShow() {
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
@@ -69,6 +73,12 @@ Page({
     this.setData({ locked: false });
 
     this.buildRoster();
+    if (this.pendingAuthor && !this.data.author) {
+      const name = this.pendingAuthor;
+      this.pendingAuthor = "";
+      if (!this.openAuthor(name)) this.openRemote({ name: name, at: 0, sid: "" });
+      return;
+    }
     if (this.data.author) this.applyWorks();
   },
 
@@ -209,7 +219,7 @@ Page({
       });
     });
     const filling = directory.complete() ? "" : "，名册还在补全";
-    const note = rows.length ? "诗词漫读里还有 " + rows.length + " 位（带「诗词漫读」标记的行），点一位看他的作品" + filling : "";
+    const note = rows.length ? "诗词漫读另有 " + rows.length + " 位（标有「诗词漫读」的条目），点击作者查看作品" + filling : "";
     this.setData({ suggests: local.concat(rows), remoteNote: note });
   },
 
@@ -227,6 +237,13 @@ Page({
     }
     if (this.openAuthor(name)) return;
     this.openRemote({ name: name, at: row ? row.at : 0, sid: "" });
+  },
+
+  onProfile() {
+    const w = this.current || {};
+    let url = "/packages/authors/profile/profile?name=" + encodeURIComponent(this.data.author);
+    if (w.id) url += "&id=" + encodeURIComponent(w.id);
+    wx.navigateTo({ url: url });
   },
 
   onJump(e) {
@@ -319,8 +336,8 @@ Page({
     const list = rows.filter((p) => filter !== "未读" || !readIds[p.id]);
 
     let moreNote = "";
-    if (rem.failed) moreNote = "诗词漫读没取到，点一下重试";
-    else if (rem.more) moreNote = "诗词漫读共 " + rem.total + " 首，已取 " + rem.rows.length + " 首，往下拉接着取";
+    if (rem.failed) moreNote = "诗词漫读获取失败，点击重试";
+    else if (rem.more) moreNote = "诗词漫读共 " + rem.total + " 首，已获取 " + rem.rows.length + " 首，下拉继续获取";
 
     this.setData({
       works: list.map((p) => ({

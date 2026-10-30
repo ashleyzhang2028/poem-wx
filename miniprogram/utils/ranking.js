@@ -131,9 +131,9 @@ function beyondOf(board, total) {
 
 function emptyOf(game) {
   return {
-    exam: { mark: "榜", text: "这一档还没有成绩", tip: "考一回，成绩自己上榜" },
-    fly: { mark: "令", text: "这一档还没有接句", tip: "接上一句，成绩自己上榜" }
-  }[game] || { mark: "榜", text: "这一档还没有成绩", tip: "" };
+    exam: { mark: "榜", text: "暂无成绩", tip: "完成考试后自动上榜" },
+    fly: { mark: "令", text: "暂无接句成绩", tip: "完成接句后自动上榜" }
+  }[game] || { mark: "榜", text: "暂无成绩", tip: "" };
 }
 
 module.exports = {

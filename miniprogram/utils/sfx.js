@@ -63,7 +63,7 @@ function setEnabled(on) {
 
 function readiness() {
   if (!supported()) {
-    return { visible: false, usable: false, state: "unsupported", reason: "当前环境没有 Web Audio，答题不出声" };
+    return { visible: false, usable: false, state: "unsupported", reason: "当前环境不支持 Web Audio，答题音效不可用" };
   }
   if (!enabled()) {
     return { visible: true, usable: false, state: "denied", reason: "答题音效已关闭" };

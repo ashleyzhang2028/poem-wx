@@ -101,7 +101,7 @@
       <text class="row-go">›</text>
     </view>
 
-    <text class="hint note" wx:if="{{!logged}}">管理要登录</text>
+    <text class="hint note" wx:if="{{!logged}}">管理需登录</text>
   </view>
 
   <view class="safe-bottom"></view>

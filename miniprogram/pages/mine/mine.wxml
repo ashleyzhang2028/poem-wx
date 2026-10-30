@@ -49,14 +49,14 @@
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
         <view class="row-main">
           <text class="row-title poem">自选温习</text>
-          <text class="row-sub">自己加的集合 · 改名 · 增删篇目</text>
+          <text class="row-sub">自选集合 · 重命名 · 增删篇目</text>
         </view>
         <text class="row-go">›</text>
       </view>
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onBookmarks">
         <view class="row-main">
           <text class="row-title poem">书签管理</text>
-          <text class="row-sub">收藏的篇章 · 查看 · 编辑 · 批量删除</text>
+          <text class="row-sub">书签 · 查看 · 编辑 · 批量删除</text>
         </view>
         <text class="row-go">›</text>
       </view>
@@ -75,7 +75,7 @@
         <view class="row-icon">档</view>
         <view class="row-main">
           <text class="row-title poem">用户权限</text>
-          <text class="row-sub">自己那一档 · 功能对照 · 升档</text>
+          <text class="row-sub">当前档位 · 功能对照 · 升级</text>
         </view>
         <text class="row-go">›</text>
       </view>
@@ -91,7 +91,7 @@
         <view class="row-icon">管</view>
         <view class="row-main">
           <text class="row-title">后台管理</text>
-          <text class="row-sub">用户列表 · 改档位</text>
+          <text class="row-sub">用户列表 · 调整档位</text>
         </view>
         <text class="row-go">›</text>
       </view>

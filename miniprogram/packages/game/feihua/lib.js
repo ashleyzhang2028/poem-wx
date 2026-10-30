@@ -235,18 +235,18 @@ function judge(char, input, said, scope) {
   const ch = String(char || "").trim();
   const raw = String(input || "").trim();
   if (!ch) return { ok: false, why: "empty", reason: "先出一个令字" };
-  if (!raw) return { ok: false, why: "empty", reason: "写一句带这个字的诗" };
-  if (raw.indexOf(ch) < 0) return { ok: false, why: "char", reason: "这句里没有「" + ch + "」" };
+  if (!raw) return { ok: false, why: "empty", reason: "请输入含令字的诗句" };
+  if (raw.indexOf(ch) < 0) return { ok: false, why: "char", reason: "该句不含「" + ch + "」" };
 
   const clauses = inputClauses(raw);
   const mine = clauses.join("");
-  if (mine.length < 4) return { ok: false, why: "short", reason: "太短了，至少写四字" };
+  if (mine.length < 4) return { ok: false, why: "short", reason: "不足四字" };
 
   const used = {};
   (said || []).forEach((s) => {
     used[_feihua_strip(s)] = 1;
   });
-  if (used[mine]) return { ok: false, why: "said", reason: "这一句说过了" };
+  if (used[mine]) return { ok: false, why: "said", reason: "该句已接过" };
 
   let hit = null;
   _feihua_allPoems(scope).forEach((p) => {
@@ -259,7 +259,7 @@ function judge(char, input, said, scope) {
   });
 
   if (!hit) {
-    return { ok: false, why: "absent", reason: onSource() ? "诗词集里查不到这一句，换一句试试" : "这个范围里查不到这一句，换一句试试" };
+    return { ok: false, why: "absent", reason: onSource() ? "诗词集中未收录该句" : "当前范围未收录该句" };
   }
   return { ok: true, hit, seg: hit.seg };
 }

@@ -87,7 +87,7 @@ Page({
     this.setData({ barBelow: !!tabbar.pick(this) });
     if (this.data.stage === "running" && !this.timer) this.startTimer();
     const ok = entitlement.can("exam");
-    this.setData({ allowed: ok, lockNote: entitlement.hint("exam") || "登录后才能考" });
+    this.setData({ allowed: ok, lockNote: entitlement.hint("exam") || "登录后使用" });
     this.loadLog();
     if (!ok || this.ready) return;
     this.ready = true;
@@ -138,7 +138,7 @@ Page({
 
 
   guardLeave(on) {
-    if (on && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "考试还在进行，现在离开这场不会计分" });
+    if (on && wx.enableAlertBeforeUnload) wx.enableAlertBeforeUnload({ message: "考试进行中，离开将不计分" });
     if (!on && wx.disableAlertBeforeUnload) wx.disableAlertBeforeUnload();
   },
 
@@ -161,7 +161,7 @@ Page({
     quiz.buildAsync({ scope: this.data.scope, count: QUESTION_COUNT, forms: this.data.pickedForms }).then((r) => {
       if (token !== this.prepToken) return;
       this.setData({ preparing: false });
-      if (r.degraded) wx.showToast({ title: "诗词漫读没取到，已用课内出题", icon: "none" });
+      if (r.degraded) wx.showToast({ title: "诗词漫读未能获取，已改用课内出题", icon: "none" });
       this.begin(r.questions);
     });
   },

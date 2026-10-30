@@ -4166,7 +4166,7 @@ function mountFull(pg, query) {
   ok("同步层不再问档位", syncSrc.indexOf("entitlement") < 0);
 
   const DIRTY = [
-    ["通用设置", "packages/settings/general/general.js", /onSeasonal[\s\S]{0,300}?markDirty/],
+    ["通用设置", "packages/settings/general/general.js", /onDailyPoem[\s\S]{0,300}?markDirty/],
     ["正文对齐", "pages/reader/reader.js", /onAlignToggle[\s\S]{0,200}?markDirty/],
     ["温习设置（年级/范围/首数/算法）", "packages/settings/recite/recite.js", /save\(patch\)[\s\S]{0,300}?markDirty/],
     ["主题", "utils/theme.js", /function set\(key\)[\s\S]{0,400}?markDirty/],
@@ -6589,35 +6589,56 @@ const K = {
     ok("设置页的开关只落一个键（selfOnly 在跨设备的设置白名单里）",
       store3.DEFAULTS.selfOnly === false && !store3.LOCAL_ONLY.selfOnly);
 
-    const SEASON = require(path.join(ROOT, "utils", "seasonal.js"));
-    const corpusSeason = require(path.join(ROOT, "utils", "corpus.js"));
+    const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
 
-    ok("课内一首都没挂进季节限定表（课外那部集子整体删掉了）",
-      SEASON.WORKS.length === 0,
-      "还挂着 " + SEASON.WORKS.length + " 首 —— 它们的正文已经不在包里，点开是空的");
+    const pool = DAILY.poolOf();
+    ok("每日一诗的候选池里有篇目，每条都有题名与作者",
+      pool.length > 0 && pool.every((x) => x[0] && x[1]),
+      "候选池 " + pool.length + " 条");
 
-    ok("正文不在包里时首页不出这张卡（不留一张点开是空的卡）",
-      SEASON.card(new Date(2026, 9, 18)) === null);
+    ok("同一个自然日里首页给出的是同一首",
+      DAILY.card(new Date(2026, 9, 18)).key === DAILY.card(new Date(2026, 9, 18, 23, 59)).key);
 
-    ok("节气说明表 24 个、传统节日 11 个（农历与节气各占一类）",
-      SEASON.TERMS.length === 24 && SEASON.TRADITIONAL.length === 11);
+    const before = DAILY.card().key;
+    ok("换一首之后当天换成另一首", DAILY.redraw() === true && DAILY.card().key !== before);
 
-    ok("挂得上节日的篇目只从课内那 251 首里找",
-      SEASON.WORKS.every((w) => corpusSeason.courseTexts()[w[0]]));
+    track((async () => {
+      const src = require(path.join(ROOT, "utils", "poem-source.js"));
+      const realById = src.byId;
+      let calls = 0;
+      src.byId = () => {
+        calls += 1;
+        return calls <= 3 ? Promise.reject(new Error("offline")) : Promise.resolve({ id: 7, content: ["春眠不觉晓"] });
+      };
+      const got = await DAILY.loadCurrent();
+      ok("取正文失败时自动换下一首重试，直到取到",
+        calls === 4 && got.lines.length === 1,
+        "请求了 " + calls + " 次");
 
-    const capRow = E.CAPS.filter((c) => c.key === SEASON.CAP)[0];
-    ok("隐藏季节限定是 Pro 起的一项门禁，Free 开不了",
+      calls = 0;
+      src.byId = () => {
+        calls += 1;
+        return Promise.reject(new Error("offline"));
+      };
+      const failed = await DAILY.loadCurrent().then(() => false, () => true);
+      ok("一直失败时最多重试 " + DAILY.RETRY_MAX + " 次就停（共 " + (DAILY.RETRY_MAX + 1) + " 次请求）",
+        failed && calls === DAILY.RETRY_MAX + 1, "请求了 " + calls + " 次");
+      src.byId = realById;
+    })());
+
+    const capRow = E.CAPS.filter((c) => c.key === DAILY.CAP)[0];
+    ok("隐藏每日一诗是 Pro 起的一项门禁，Free 开不了",
       !!capRow && capRow.tier === "pro"
         && E.compareSummary().filter((x) => x.tier === "free")[0].on < E.CAP_KEYS.length);
 
     asTier3("free");
     ok("Free 手里那开关按不动",
-      SEASON.canSwitch() === false && SEASON.setOn(false).ok === false && SEASON.isOn() === true);
+      DAILY.canSwitch() === false && DAILY.setOn(false).ok === false && DAILY.isOn() === true);
 
     asTier3("pro");
     ok("Pro 关得掉，关掉之后首页不再出这张卡",
-      SEASON.setOn(false).ok === true && SEASON.switched() === true
-        && SEASON.isOn() === false);
+      DAILY.setOn(false).ok === true && DAILY.switched() === true
+        && DAILY.isOn() === false);
 
     ok("默认为开（新装的 Free 与 Pro 都看得见）",
       store3.DEFAULTS.seasonal === true && !store3.LOCAL_ONLY.seasonal);
@@ -6647,7 +6668,7 @@ const K = {
       LEAGUE_SET.setOn(true).ok === true && LEAGUE.optedIn() === true);
 
     asTier3("pro");
-    SEASON.setOn(true);
+    DAILY.setOn(true);
 
     store3.saveCollections([]);
     global.wx = saved;
@@ -6657,9 +6678,6 @@ const K = {
   }
 
   const homeSrc4 = fs.readFileSync(path.join(ROOT, "pages", "home", "home.js"), "utf8");
-  ok("季节限定上加背/收进就地重排首页（顶读数与课内行跟着变，不用手动刷新）",
-    /onSeasonalAdd\(e\)[\s\S]{0,900}?this\.paint\(\)/.test(homeSrc4)
-      && /onCollectDone\(e\)[\s\S]{0,300}?this\.paint\(\)/.test(homeSrc4));
   ok("首页把自选集子的今日份算进顶部读数", /collectionPlan\(/.test(homeSrc4)
     && /selfTotal/.test(homeSrc4) && /stats/.test(homeSrc4));
 
@@ -6911,7 +6929,7 @@ const K = {
 
   const single = [
     ["pages/home/home.js", "home:face"],
-    ["pages/home/home.js", "home:extra"],
+    ["pages/home/home.js", "home:daily:redraw"],
     ["packages/settings/collections/collections.js", "cols:create"],
     ["packages/settings/collections/collections.js", "cols:add"]
   ];

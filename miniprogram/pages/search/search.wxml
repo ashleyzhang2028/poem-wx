@@ -1,11 +1,11 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{locked}}" title="搜索" note="登录后才能搜" mark="寻" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="搜索" note="登录后使用搜索" mark="寻" bind:login="onLogin" />
 
   <block wx:else>
   <view class="card search-card">
     <view class="search search-page">
       <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
-      <input placeholder="搜篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
+      <input placeholder="搜索篇名 / 作者 / 正文" value="{{keyword}}" bindinput="onInput"
              confirm-type="search" bindconfirm="doSearch" focus="{{true}}" />
       <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onClear">
         <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
@@ -20,7 +20,7 @@
 
   <view class="result-bar" wx:if="{{searched && results.length}}">
     <text class="result-count">命中 {{total}} 篇</text>
-    <text class="result-more" wx:if="{{more && loading}}">往下找…</text>
+    <text class="result-more" wx:if="{{more && loading}}">加载中…</text>
   </view>
 
   <view class="card" wx:if="{{searched && results.length}}">
@@ -38,21 +38,21 @@
             data-id="{{item.id}}" catchtap="onPick"></view>
       <text class="row-go">›</text>
     </view>
-    <text class="hint more-tip" wx:if="{{more}}">往下拉，再接 20 篇</text>
-    <text class="hint more-tip" wx:elif="{{full}}">全库就这些了</text>
+    <text class="hint more-tip" wx:if="{{more}}">上拉加载 20 篇</text>
+    <text class="hint more-tip" wx:elif="{{full}}">已至末尾</text>
   </view>
 
   <view class="empty" wx:if="{{searched && !results.length}}">
     <text class="empty-mark">无</text>
-    <text class="empty-text">「{{keyword}}」没有匹配的篇目</text>
-    <text class="hint empty-tip">换一个字或一位作者再试</text>
+    <text class="empty-text">未找到「{{keyword}}」相关篇目</text>
+    <text class="hint empty-tip">请更换关键词或作者重试</text>
   </view>
 
   <view class="card author-entry">
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onAuthors">
       <view class="row-main">
         <text class="gc-name">作者索引</text>
-        <text class="row-sub">按朝代排，点一位读他的全部作品</text>
+        <text class="row-sub">按朝代排列，点击作者查看全部作品</text>
       </view>
       <text class="row-go">›</text>
     </view>

@@ -4,7 +4,7 @@
     <text class="od-eyebrow">当前档位</text>
     <text class="od-plan-name">{{plan.name}}</text>
     <text class="od-plan-sub" wx:if="{{plan.paid && plan.forever}}">长期有效</text>
-    <text class="od-plan-sub" wx:elif="{{plan.paid}}">{{plan.untilText}} 到期 · 还剩 {{plan.days}} 天</text>
+    <text class="od-plan-sub" wx:elif="{{plan.paid}}">{{plan.untilText}} 到期 · 剩余 {{plan.days}} 天</text>
     <text class="od-plan-sub" wx:else>开通后可解锁更多功能</text>
     <button class="btn primary block od-go" bindtap="onPricing">{{plan.paid ? '订阅 / 升级' : '开通 Pro / Max'}}</button>
   </view>
@@ -12,15 +12,15 @@
   <view class="card" wx:if="{{logged}}">
     <text class="card-title">支付记录</text>
 
-    <text class="hint" wx:if="{{loaded && failed}}">记录没取到，请检查网络后重新进入。</text>
-    <text class="hint" wx:elif="{{loaded && !list.length}}">还没有支付记录。</text>
+    <text class="hint" wx:if="{{loaded && failed}}">未能获取记录，请检查网络后重新进入。</text>
+    <text class="hint" wx:elif="{{loaded && !list.length}}">暂无支付记录。</text>
 
     <view class="row od-row" wx:for="{{list}}" wx:key="outTradeNo">
       <view class="row-main">
         <text class="row-title">{{item.title}}</text>
         <text class="row-sub">{{item.timeText}}</text>
         <text class="row-sub" wx:if="{{item.untilText}}">会员至 {{item.untilText}}</text>
-        <text class="row-sub od-id" wx:if="{{item.wxOrderId}}" data-id="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}（点按复制）</text>
+        <text class="row-sub od-id" wx:if="{{item.wxOrderId}}" data-id="{{item.wxOrderId}}" bindtap="onCopy">支付单号 {{item.wxOrderId}}（点击复制）</text>
       </view>
       <view class="od-side">
         <view class="tag od-tag {{item.statusTone}}">{{item.statusText}}</view>

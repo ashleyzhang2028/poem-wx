@@ -91,8 +91,8 @@ function confirm(outTradeNo) {
 function loginCode() {
   return new Promise((resolve, reject) => {
     wx.login({
-      success: (r) => (r && r.code ? resolve(r.code) : reject(new Error("拿不到微信登录凭证"))),
-      fail: () => reject(new Error("拿不到微信登录凭证"))
+      success: (r) => (r && r.code ? resolve(r.code) : reject(new Error("未能获取微信登录凭证"))),
+      fail: () => reject(new Error("未能获取微信登录凭证"))
     });
   });
 }
@@ -111,7 +111,7 @@ function wechatTooOld() {
 function requestPayment(payData) {
   return new Promise((resolve, reject) => {
     if (typeof wx.requestVirtualPayment !== "function") {
-      reject(new Error("当前微信版本不支持支付，请先更新微信"));
+      reject(new Error("当前微信版本不支持支付，请更新微信"));
       return;
     }
     wx.requestVirtualPayment(Object.assign({}, payData, { success: resolve, fail: reject }));
@@ -136,7 +136,7 @@ function failure(reason, extra) {
 }
 
 function checkout(start) {
-  if (wechatTooOld()) return Promise.resolve(failure("请先把微信更新到 8.0.68 及以上再支付"));
+  if (wechatTooOld()) return Promise.resolve(failure("请将微信更新至 8.0.68 及以上版本后支付"));
   return loginCode()
     .then(start)
     .then((res) => {
@@ -148,10 +148,10 @@ function checkout(start) {
             expiryCache = { at: 0, plan: null };
             return entitlement.sync().then(() => ({ ok: true, order: order }));
           }
-          return failure("没有完成支付", { outTradeNo: outTradeNo });
+          return failure("支付未完成",{ outTradeNo: outTradeNo });
         });
     })
-    .catch((err) => failure((err && err.message) || "下单失败"));
+    .catch((err) => failure((err && err.message) || "下单失败，请稍后重试"));
 }
 
 function buy(plan, period) {
@@ -165,7 +165,7 @@ function resume(outTradeNo) {
 function manage(op, outTradeNo) {
   return remote.request(P.payManage, { op: op, outTradeNo: outTradeNo }).then(
     () => ({ ok: true }),
-    (err) => failure((err && err.message) || "没成功")
+    (err) => failure((err && err.message) || "操作失败，请稍后重试")
   );
 }
 
@@ -190,8 +190,8 @@ function expiryOf(plan) {
 function expiryText(e) {
   if (!e) return null;
   const name = tierName(e.tier);
-  if (e.kind === "expired") return { title: name + " 已到期", sub: "重新开通即可恢复" };
-  return { title: name + " 还有 " + e.days + " 天到期", sub: "去续订，在原到期日后顺延" };
+  if (e.kind === "expired") return { title: name + " 已到期", sub: "重新开通后恢复使用" };
+  return { title: name + " 还有 " + e.days + " 天到期", sub: "续订后在原到期日基础上顺延" };
 }
 
 function planInfo() {
@@ -224,10 +224,10 @@ function tierName(key) {
 }
 
 function adminCall(body) {
-  if (!remote.adminReady()) return Promise.resolve({ ok: false, reason: "没有管理权限" });
+  if (!remote.adminReady()) return Promise.resolve({ ok: false, reason: "无管理权限" });
   return remote.request(P.adminPay, body).then(
     (res) => Object.assign({ ok: true }, res),
-    (err) => ({ ok: false, reason: (err && err.message) || "没成功" })
+    (err) => ({ ok: false, reason: (err && err.message) || "操作失败，请稍后重试" })
   );
 }
 

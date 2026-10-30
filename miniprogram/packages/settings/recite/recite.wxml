@@ -7,7 +7,7 @@
 
     <block wx:else>
 
-      <text class="hint daily-count">今天加了 {{daily.length}} / {{dailyMax}} 首</text>
+      <text class="hint daily-count">今日新增{{daily.length}} / {{dailyMax}} 首</text>
 
       <view class="inline-btns daily-tools">
         <button class="btn mini" bindtap="onDailyAll">全选</button>
@@ -38,7 +38,7 @@
     <view class="row">
       <view class="row-main">
         <text class="row-title">只背自选</text>
-        <text class="row-sub">今日只排自选集合，课内暂不排</text>
+        <text class="row-sub">今日仅安排自选集合，课内暂不安排</text>
       </view>
       <view class="sw">
         <switch checked="{{selfOnly}}" bindchange="onSelfOnly"

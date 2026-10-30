@@ -86,7 +86,8 @@
       "root": "packages/authors",
       "name": "authors",
       "pages": [
-        "index/index"
+        "index/index",
+        "profile/profile"
       ]
     }
   ],

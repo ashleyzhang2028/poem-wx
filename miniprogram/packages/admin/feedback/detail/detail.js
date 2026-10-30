@@ -74,7 +74,7 @@ Page({
   },
 
   onDeleteThread() {
-    this.confirm("删掉这一条？连同下面的沟通记录一起删。", () =>
+    this.confirm("删除该条反馈？沟通记录将一并删除。", () =>
       guard.once("admin:delete:" + this.data.tid, () => adminFb.remove(this.data.tid, ""))
     );
   },
@@ -82,7 +82,7 @@ Page({
   onDeleteComment(e) {
     const cid = e.currentTarget.dataset.cid;
     if (!cid) return;
-    this.confirm("删掉这一段？", () => guard.once("admin:delete:" + cid, () => adminFb.remove("", cid)));
+    this.confirm("删除该条回复？", () => guard.once("admin:delete:" + cid, () => adminFb.remove("", cid)));
   },
 
   confirm(content, run) {
@@ -93,7 +93,7 @@ Page({
         if (!r.confirm) return;
         run().then((res) => {
           if (!res || !res.ok) {
-            this.setData({ reason: (res && res.reason) || "没删成，稍后再试" });
+            this.setData({ reason: (res && res.reason) || "删除失败，请稍后重试" });
             return;
           }
           this.load();

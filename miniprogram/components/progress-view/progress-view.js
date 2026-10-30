@@ -125,7 +125,7 @@ function viewOf(overview, due, empty) {
 
 function courseView() {
   const all = corpus.course();
-  return viewOf(S.overview(all, SPAN), S.dueList(all, SPAN), "还没有温习记录");
+  return viewOf(S.overview(all, SPAN), S.dueList(all, SPAN), "暂无温习记录");
 }
 
 function collectionView(c, allPoems, getRecord) {
@@ -134,7 +134,7 @@ function collectionView(c, allPoems, getRecord) {
     getRecord: getRecord,
     days: SPAN
   });
-  return Object.assign(viewOf(row.overview, row.due, row.count ? "这个集合还没开始背" : "这个集合是空的"), {
+  return Object.assign(viewOf(row.overview, row.due, row.count ? "此集合尚未开始温习" : "此集合暂无篇目"), {
     id: row.id,
     name: row.name
   });

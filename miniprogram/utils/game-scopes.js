@@ -16,7 +16,7 @@ const SCOPES = [
 
 const LABELS = {
   [COURSE_ALL_SCOPE]: "小学·初中·高中",
-  [EXTRA_SCOPE]: "课内 + 诗词漫读十部集子",
+  [EXTRA_SCOPE]: "课内 + 诗词漫读集子",
   [ANY_SCOPE]: "诗词漫读随机，不限范围"
 };
 

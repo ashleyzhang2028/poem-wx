@@ -25,7 +25,7 @@
         <text class="poem-meta" wx:if="{{dynasty}}">{{dynasty}}</text>
         <block wx:if="{{author}}">
           <text class="poem-dot" wx:if="{{dynasty}}">·</text>
-          <text class="poem-meta">{{author}}</text>
+          <text class="poem-meta poem-link" hover-class="poem-link-hover" hover-stay-time="60" bindtap="onAuthor">{{author}}</text>
         </block>
         <block wx:if="{{source}}">
           <text class="poem-dot" wx:if="{{dynasty || author}}">·</text>
@@ -101,7 +101,7 @@
         <view class="pref-opt ic {{markOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleMark"
               aria-label="{{markOn ? '移出书签' : '加入书签'}}">
-          <view class="glyph" style="mask-image:url('{{icons[markOn ? 'bookmarked' : 'bookmark']}}');-webkit-mask-image:url('{{icons[markOn ? 'bookmarked' : 'bookmark']}}');"></view>
+          <view class="glyph" style="mask-image:url('{{icons.bookmark}}');-webkit-mask-image:url('{{icons.bookmark}}');"></view>
         </view>
       </view>
     </view>

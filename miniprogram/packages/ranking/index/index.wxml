@@ -1,12 +1,12 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
-  <lock-card wx:if="{{state === 'login'}}" title="排行榜" note="登录后才能看" mark="榜" bind:login="onLogin" />
+  <lock-card wx:if="{{state === 'login'}}" title="排行榜" note="登录后可查看" mark="榜" bind:login="onLogin" />
 
   <view class="card" wx:if="{{state === 'tier'}}">
     <view class="empty">
       <view class="empty-mark">榜</view>
       <text class="empty-text">排行榜 {{tier}} 起可用</text>
       <view class="btn ghost mini lb-retry" hover-class="button-hover" hover-stay-time="60"
-            bindtap="onTierGate">看看差别</view>
+            bindtap="onTierGate">查看差异</view>
     </view>
   </view>
 
@@ -41,7 +41,7 @@
     <view class="card" wx:if="{{state === 'board' || state === 'empty'}}">
       <view class="lb-head">
         <text class="card-title plain lb-title">{{label}}</text>
-        <text class="lb-sub">前三名上台 · 只列前 100 名</text>
+        <text class="lb-sub">前三名上台 · 仅列前 100 名</text>
       </view>
 
       <view class="podium">
@@ -79,8 +79,8 @@
         <text class="lb-nick">{{me.nick}}</text>
         <text class="lb-score">{{me.score}}/{{me.total}}</text>
       </view>
-      <text class="hint note" wx:if="{{player}}">第 {{player}} 名是你</text>
-      <text class="hint note" wx:else>只把昵称的首末字留着，中间一律星号</text>
+      <text class="hint note" wx:if="{{player}}">您位列第 {{player}} 名</text>
+      <text class="hint note" wx:else>昵称仅显示首末字，中间以星号代替</text>
     </view>
 
     <view class="card" wx:if="{{state === 'empty'}}">
@@ -101,7 +101,7 @@
     </view>
 
     <view class="card" wx:if="{{state === 'loading'}}">
-      <text class="hint note">正在读榜单…</text>
+      <text class="hint note">正在加载榜单…</text>
     </view>
 
     <view class="safe-bottom"></view>

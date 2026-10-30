@@ -54,7 +54,7 @@
 
     <view class="card" wx:if="{{catalog}}">
       <text class="card-title">价格与促销</text>
-      <text class="hint ap-note">价格必须与 MP 后台「道具管理」里的道具一致。促销：先在 MP 后台建促销价道具，下面添加后选择生效。</text>
+      <text class="hint ap-note">价格必须与 MP 后台「道具管理」里的道具一致。促销：先在 MP 后台建立促销价道具，再于下方添加并选择生效。</text>
 
       <view class="ap-slots">
         <picker wx:for="{{slots}}" wx:key="key" data-index="{{index}}" range="{{item.labels}}" bindchange="onPickActive">

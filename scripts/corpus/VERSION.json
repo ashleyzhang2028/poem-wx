@@ -11,12 +11,6 @@
   "note": "语料随本仓库走，构建不再 clone 另一个仓库。要换一版就把本目录整份换掉，并把 upstreamRef 与 syncedAt 改过来。",
   "localAdditions": [
     {
-      "file": "data/poems-seasonal-361.js",
-      "issue": 361,
-      "source": "https://www.guwendao.net （原古诗文网 gushiwen.cn）逐首署名页",
-      "note": "随上游换版时这份要单独留下，不要被整份覆盖掉。"
-    },
-    {
       "file": "data/text-master.js（chengyu-cy-13、chengyu-cy-18 两条正文）",
       "issue": 374,
       "source": "《淮南子·天文训》《淮南子·览冥训》《史记·夏本纪》",

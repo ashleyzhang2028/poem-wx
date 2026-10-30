@@ -1,6 +1,6 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="书签" note="登录后才能用书签" mark="签" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="书签" note="登录后可使用书签" mark="签" bind:login="onLogin" />
 
   <block wx:else>
 
@@ -9,7 +9,7 @@
       <text class="card-title">书签管理</text>
       <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" bindtap="onTierGate" />
     </view>
-    <text class="hint mark-lead">在诗词详情页点书签图标收藏一篇，这里统一查看与整理。</text>
+    <text class="hint mark-lead">在诗词详情页点击书签图标收藏，于此统一查看与整理。</text>
     <view class="mark-quota" wx:if="{{on}}">
       <text class="hint">已存 {{count}} / {{cap}} 个 · 超出后自动移出最久的一个</text>
     </view>
@@ -18,7 +18,7 @@
   <view class="card" wx:if="{{count}}">
     <view class="search mark-search">
       <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
-      <input placeholder="搜篇名 / 作者 / 书名" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" />
+      <input placeholder="搜索篇名 / 作者 / 书名" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" />
       <view class="clear" hover-class="clear-hover" hover-stay-time="60" wx:if="{{keyword}}" bindtap="onKeywordClear">
         <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
       </view>
@@ -42,7 +42,7 @@
     </view>
 
     <view class="empty mark-empty" wx:if="{{!matched}}">
-      <text class="empty-text">没找到「{{keyword}}」</text>
+      <text class="empty-text">未找到「{{keyword}}」</text>
     </view>
 
     <view class="inline-btns mark-pager" wx:if="{{pages > 1}}">
@@ -55,8 +55,8 @@
   <view class="card" wx:elif="{{on}}">
     <view class="empty">
       <text class="empty-mark">签</text>
-      <text class="empty-text say">还没有书签</text>
-      <text class="hint empty-tip">在诗词详情页点书签图标就能收藏</text>
+      <text class="empty-text say">暂无书签</text>
+      <text class="hint empty-tip">在诗词详情页点击书签图标即可收藏</text>
     </view>
   </view>
 

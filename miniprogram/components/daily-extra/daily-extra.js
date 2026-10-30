@@ -99,7 +99,7 @@ Component({
     msgOf(code) {
       if (code === "E_TIER") return "";
       if (code === "E_LIMIT") {
-        return "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+        return "今日新增上限 " + store.DAILY_EXTRA_MAX + " 首，请先完成温习";
       }
       if (code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
       return "添加失败";

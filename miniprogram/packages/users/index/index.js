@@ -122,7 +122,7 @@ Page({
     const min = this.data.dueMin || admin.today();
     const picked = this.data.dueDate && this.data.dueDate >= min ? this.data.dueDate : min;
     wx.showModal({
-      title: "选到期日",
+      title: "选择到期日",
       editable: true,
       placeholderText: "YYYY-MM-DD",
       content: picked,
@@ -131,7 +131,7 @@ Page({
         if (!res.confirm) return;
         const day = admin.dayInput(res.content);
         if (!day) {
-          this.setData({ dueNote: "日期按 YYYY-MM-DD 填，例如 " + min });
+          this.setData({ dueNote: "日期格式 YYYY-MM-DD，例如 " + min });
           return;
         }
         this.setData({ dueDate: day, dueHolder: "", dueNote: admin.checkDay(day) });

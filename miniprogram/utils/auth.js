@@ -104,7 +104,7 @@ function login() {
           delete auth.local;
           store.write(store.KEYS.auth, auth);
           store.saveSession({ logged: false, tier: "", tierFromServer: false });
-          const e = new Error("这个包没配同步服务器，登录得先接上它");
+          const e = new Error("未配置同步服务器，无法登录");
           e.code = "E_NOT_CONFIGURED";
           e.expected = true;
           reject(e);

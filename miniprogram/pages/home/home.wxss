@@ -214,7 +214,7 @@
   margin-top: var(--sp-2);
 }
 
-.seasonal-refresh {
+.daily-refresh {
   flex: none;
   width: 48rpx;
   height: 48rpx;
@@ -226,31 +226,44 @@
   color: var(--ink-3);
 }
 
-.seasonal-refresh-hover {
+.daily-refresh-hover {
   transform: scale(.94);
 }
 
-.seasonal-refresh .glyph {
+.daily-refresh .glyph {
   width: 30rpx;
   height: 30rpx;
   color: var(--ink-3);
 }
 
-.seasonal-list {
+.daily-body {
   margin-top: var(--sp-2);
+  text-align: center;
 }
 
-.seasonal-btns {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-}
-
-.seasonal-btns .glyph {
-  color: var(--ink-4);
-}
-
-.seasonal-btns .round-btn.on .glyph {
+.daily-title {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
   color: var(--strong-text);
+  letter-spacing: var(--ls-title);
+}
+
+.daily-meta {
+  display: block;
+  margin: var(--sp-1) 0 var(--sp-2);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.daily-line {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+.daily-tip {
+  display: block;
 }

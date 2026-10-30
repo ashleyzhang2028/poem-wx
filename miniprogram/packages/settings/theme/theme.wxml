@@ -9,7 +9,7 @@
 
   <nav-bar scope="{{fontScope}}" />
 
-  <lock-card wx:if="{{locked}}" title="主题" note="登录后才能改" mark="主" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="主题" note="登录后可修改" mark="主" bind:login="onLogin" />
 
   <block wx:if="{{locked}}">
   <view class="card group-card group-lead">
@@ -54,10 +54,10 @@
         <view class="own-thumb swatch-dot {{item.set ? 'has-img' : ''}}">
           <image class="own-thumb-img" wx:if="{{item.set}}" src="{{item.banner}}" mode="aspectFill" />
         </view>
-        <text class="swatch-name">{{ownSet ? '已换上您的图' : '还没有图'}}</text>
+        <text class="swatch-name">{{ownSet ? '已使用自选图片' : '未设置图片'}}</text>
       </view>
 
-      <text class="own-note">图片只在这台手机上，换机不会带过去</text>
+      <text class="own-note">图片仅保存于本机，换机不会同步</text>
 
       <view class="own-acts">
         <button class="btn ghost mini" bindtap="onOwnUpload">{{ownSet ? '换图' : '选图'}}</button>
@@ -142,7 +142,7 @@
     <view class="row font-global-row {{fontLocked ? 'locked' : ''}}">
       <view class="row-main">
         <text class="row-title">应用选中字体到全局</text>
-        <text class="row-sub">所有页面、所有用字都换成这一款</text>
+        <text class="row-sub">全部页面统一使用该字体</text>
       </view>
       <view class="sw">
         <switch checked="{{fontGlobal}}" disabled="{{fontLocked}}" color="{{themeColor}}" bindchange="onFontGlobal" />

@@ -37,7 +37,7 @@
       <text class="fh-cheer" wx:if="{{cheerLine}}">{{cheerLine}}</text>
 
       <text class="fh-note" wx:if="{{streak}}">连续 {{streak}} 句 · 最好 {{best}} 句</text>
-      <text class="fh-note ranked" wx:if="{{ranked}}">这一轮 {{lastScore}} 句已上榜 · {{rankWhere}}</text>
+      <text class="fh-note ranked" wx:if="{{ranked}}">本轮 {{lastScore}} 句已上榜 · {{rankWhere}}</text>
 
       <text class="fh-remark" wx:if="{{remark}}">{{remark}}</text>
 
@@ -47,7 +47,7 @@
     </view>
 
     <view class="card" wx:if="{{done.length}}">
-      <view class="card-title">这一轮接上的</view>
+      <view class="card-title">本轮已接</view>
       <view class="qa-line" wx:for="{{done}}" wx:key="index">
         <text class="qa-n">{{index + 1}}</text>
         <view class="qa-body">
@@ -59,11 +59,11 @@
 
     <view class="card">
       <view class="card-open" bindtap="onReveal" hover-class="card-hover" hover-stay-time="60">
-        <text class="card-title">看看还有哪些</text>
+        <text class="card-title">查看其他诗句</text>
         <text class="fh-open">{{revealed ? '收起' : '展开'}}</text>
       </view>
       <view wx:if="{{revealed}}">
-        <text class="fh-loading" wx:if="{{revealing}}">正在翻找…</text>
+        <text class="fh-loading" wx:if="{{revealing}}">正在检索…</text>
         <view class="fh-line" hover-class="row-hover" hover-stay-time="60"
               wx:for="{{answers}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
           <text class="fh-seg">{{item.seg}}</text>
@@ -71,7 +71,7 @@
         </view>
         <view class="empty" wx:if="{{!revealing && !answers.length}}">
           <text class="empty-mark">字</text>
-          <text class="empty-text">这个范围里没有含「{{char}}」的句子</text>
+          <text class="empty-text">当前范围无含「{{char}}」的诗句</text>
         </view>
       </view>
     </view>

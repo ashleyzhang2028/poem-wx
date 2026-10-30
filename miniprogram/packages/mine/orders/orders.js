@@ -69,18 +69,18 @@ Page({
   },
 
   onResume(e) {
-    this.run("正在拉起支付", (id) => pay.resume(id).then((res) => {
-      if (!res.ok) wx.showModal({ title: "没有完成支付", content: res.reason, showCancel: false });
+    this.run("正在发起支付", (id) => pay.resume(id).then((res) => {
+      if (!res.ok) wx.showModal({ title: "支付未完成", content: res.reason, showCancel: false });
       return res;
     }), e);
   },
 
   onCancel(e) {
-    this.confirmThen("取消订单", "取消后这笔订单不能再支付。", "cancel", e);
+    this.confirmThen("取消订单", "取消后该订单不可再支付。", "cancel", e);
   },
 
   onRemove(e) {
-    this.confirmThen("删除订单", "删除后这笔订单不再显示。", "delete", e);
+    this.confirmThen("删除订单", "删除后该订单不再显示。", "delete", e);
   },
 
   confirmThen(title, content, op, e) {

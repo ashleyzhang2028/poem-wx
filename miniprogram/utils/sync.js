@@ -54,8 +54,8 @@ function state() {
       ? (waiting() ? pending + " 项待重试" : late ? "待同步" : pending + " 项待同步")
       : "已同步",
     pendingText: pending
-      ? (waiting() ? pending + " 项改动将在 " + waitText(retryIn()) + "后重试" : late ? "本次未同步成功，稍后自动重试" : pending + " 项改动待同步")
-      : at ? "上次同步未成功，稍后自动重试" : "进度跟随微信账号，无需手动同步"
+      ? (waiting() ? pending + " 项改动将在 " + waitText(retryIn()) + "后重试" : late ? "本次同步未成功，将自动重试" : pending + " 项改动待同步")
+      : at ? "上次同步未成功，将自动重试" : "进度跟随微信账号，无需手动同步"
   };
 }
 

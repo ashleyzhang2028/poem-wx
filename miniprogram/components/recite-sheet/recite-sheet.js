@@ -180,7 +180,7 @@ Component({
     },
 
     missText() {
-      return "本篇正文不在这个包里。";
+      return "本篇正文不在当前版本中。";
     },
 
     markMissing(item) {
@@ -236,7 +236,7 @@ Component({
     },
 
     askText(item) {
-      this.setData(Object.assign({ blocks: [], tokens: [], textMiss: "正在取这一篇的正文…" }, this.missHead(item)));
+      this.setData(Object.assign({ blocks: [], tokens: [], textMiss: "正在获取正文…" }, this.missHead(item)));
       this.triggerEvent("need", { id: item.id });
     },
 
@@ -246,7 +246,7 @@ Component({
       const meta = corpus.indexById(id) ||
         (found && { id: String(id), t: found.t, a: found.a, d: found.d, n: "诗词漫读", b: "", g: "", s: "" });
       if (!text || !meta) {
-        this.setData({ textMiss: failText || "这一篇的正文没取到，点一下重试" });
+        this.setData({ textMiss: failText || "未能获取正文，点击重试" });
         return;
       }
       this.renderCurrent(item, { text: text, tr: "", src: "" }, meta);
@@ -381,7 +381,7 @@ Component({
     },
 
     dailyMsg(r) {
-      if (r.code === "E_LIMIT") return "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+      if (r.code === "E_LIMIT") return "今日新增上限 " + store.DAILY_EXTRA_MAX + " 首，请先完成温习";
       if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
       return "添加失败";
     },

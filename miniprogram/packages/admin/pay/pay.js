@@ -122,7 +122,7 @@ Page({
     const d = this.data.draft;
     const priceCents = Math.round(Number(d.price) * 100);
     if (!d.productId || !(priceCents > 0)) {
-      wx.showToast({ title: "道具 ID 和价格要填", icon: "none" });
+      wx.showToast({ title: "请填写道具 ID 与价格", icon: "none" });
       return;
     }
     const products = this.data.catalog.products.concat([{

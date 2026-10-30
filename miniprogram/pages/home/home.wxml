@@ -87,42 +87,24 @@
       </view>
     </view>
 
-    <view class="card seasonal" wx:if="{{seasonal}}">
+    <view class="card daily-poem" wx:if="{{daily}}">
       <view class="card-open">
-        <text class="card-title seasonal-title">季节限定</text>
-        <text class="all-count">{{seasonal.rows.length}}</text>
-        <view class="seasonal-refresh" hover-class="seasonal-refresh-hover" hover-stay-time="60"
-              wx:if="{{seasonal.refresh}}" catchtap="onSeasonalRefresh" aria-label="换一批">
-          <view class="glyph" style="mask-image:url('{{icons.refresh}}');-webkit-mask-image:url('{{icons.refresh}}');"></view>
+        <text class="card-title poem">每日一诗</text>
+        <view class="daily-refresh" hover-class="daily-refresh-hover" hover-stay-time="60"
+              catchtap="onDailyRefresh" aria-label="换一首">
+          <view class="glyph" style="mask-image:url('{{icons.swap}}');-webkit-mask-image:url('{{icons.swap}}');"></view>
         </view>
       </view>
 
-      <view class="seasonal-list">
-        <view class="row row-flush seasonal-row" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{seasonal.rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onSeasonalOpen">
-          <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
-          <view class="row-main">
-            <text class="row-title row-poem">{{item.title}}</text>
-            <view class="row-sub">
-              <text class="row-sub-t">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}</text>
-              <text class="tag row-tag row-cat theme" wx:if="{{seasonal.tag}}">{{seasonal.tag}}</text>
-            </view>
-          </view>
-          <view class="seasonal-btns">
-            <view class="round-btn {{item.daily ? 'on' : ''}}" hover-class="round-btn-hover" hover-stay-time="60"
-                  data-id="{{item.id}}" catchtap="onSeasonalAdd"
-                  aria-label="{{item.daily ? '移出新增温习' : '加入新增温习'}}">
-              <view class="glyph" style="mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[item.daily ? 'added' : 'add']}}');"></view>
-            </view>
-            <view class="round-btn {{item.collected ? 'on' : ''}}" hover-class="round-btn-hover" hover-stay-time="60"
-                  data-id="{{item.id}}" catchtap="onSeasonalCollect"
-                  aria-label="{{item.collected ? '移出自选集' : '加入自选集'}}">
-              <view class="glyph" style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"></view>
-            </view>
-          </view>
-        </view>
+      <view class="daily-body" hover-class="row-hover" hover-stay-time="60" bindtap="onDailyOpen">
+        <text class="daily-title">{{daily.title}}</text>
+        <text class="daily-meta" wx:if="{{daily.meta}}">{{daily.meta}}</text>
+        <block wx:if="{{daily.state === 'ready'}}">
+          <text class="daily-line" wx:for="{{daily.lines}}" wx:key="index">{{item}}</text>
+        </block>
+        <text class="hint daily-tip" wx:elif="{{daily.state === 'failed'}}">未能获取正文，点击重试</text>
+        <text class="hint daily-tip" wx:else>正在获取正文…</text>
       </view>
-
     </view>
 
     <view class="extra-search">
@@ -170,7 +152,7 @@
 
       <view class="empty" wx:if="{{!loading && !(selfOnly ? coursePlan.length : total)}}">
         <text class="empty-mark">诗</text>
-        <text class="empty-text">{{selfOnly ? '今天没有要温习的' : '今日未排计划'}}</text>
+        <text class="empty-text">{{selfOnly ? '今日无需温习' : '今日未排计划'}}</text>
 
         <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
       </view>
@@ -180,13 +162,13 @@
           <view class="finish-ico" style="mask-image:url('{{icons.checked}}');-webkit-mask-image:url('{{icons.checked}}');"></view>
         </view>
         <text class="finish-text">{{praise}}</text>
-        <text class="hint finish-tip">想多温习一首，搜新增温习</text>
+        <text class="hint finish-tip">如需加练，可搜索新增温习</text>
       </view>
     </view>
 
     <view class="card" wx:if="{{!collectionCount}}">
       <text class="card-title">自选温习</text>
-      <text class="hint">还没有自选集合，看到想温习的诗，加进自己的集合</text>
+      <text class="hint">暂无自选集合，可将诗词加入自选集合</text>
     </view>
 
     <block wx:if="{{collectionOn}}">
@@ -225,8 +207,8 @@
 
         <view class="empty" wx:if="{{!coll.rows.length}}">
           <text class="empty-mark">选</text>
-          <text class="empty-text">这个集合还是空的</text>
-          <text class="hint empty-tip">看到想温习的诗，加进自己的集合</text>
+          <text class="empty-text">此集合暂无篇目</text>
+          <text class="hint empty-tip">可将诗词加入此集合</text>
         </view>
       </view>
     </block>
@@ -252,7 +234,6 @@
       </block>
     </view>
 
-    <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:need="onSheetNeed" bind:finish="onSheetFinish"

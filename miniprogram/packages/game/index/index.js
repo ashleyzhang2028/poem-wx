@@ -9,7 +9,7 @@ const tabbar = require("../../../utils/tabbar");
 const MODES = [
   { key: "feihua", glyph: "令", name: "飞花令", desc: "九十秒里，一个令字接到底", log: "feihua", cap: "feihualing" },
   { key: "quiz", glyph: "题", name: "题库", desc: "十题一组，答完立刻揭晓", cap: "quiz" },
-  { key: "exam", glyph: "考", name: "考试", desc: "二十钟一卷，交卷才判", log: "exam", cap: "exam" }
+  { key: "exam", glyph: "考", name: "考试", desc: "二十分钟一卷，交卷判分", log: "exam", cap: "exam" }
 ];
 
 const PAGE = {
@@ -71,7 +71,7 @@ Page({
       cards,
       heroMark: top ? top.rank.name.slice(0, 1) : "会",
       heroTitle: top ? top.rank.name : "",
-      heroSub: top ? top.rank.note : "三个擂台，先挑一个上场"
+      heroSub: top ? top.rank.note : "三种玩法，任选其一"
     });
   },
 

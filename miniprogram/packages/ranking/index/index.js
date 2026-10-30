@@ -116,11 +116,11 @@ Page({
           if (me && me.rank >= 1 && me.rank <= 3) sfx.play("rank");
           return;
         }
-        this.setData({ state: "offline", reason: res.reason || "榜单没读上来，稍后再试" });
+        this.setData({ state: "offline", reason: res.reason || "榜单加载失败，请稍后重试" });
       })
       ["catch"](() => {
         if (this.query !== query) return;
-        this.setData({ state: "offline", reason: "榜单没读上来，稍后再试" });
+        this.setData({ state: "offline", reason: "榜单加载失败，请稍后重试" });
       });
   },
 

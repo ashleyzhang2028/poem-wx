@@ -13,7 +13,7 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const LUNAR = require("../../utils/lunar");
-const seasonal = require("../../utils/seasonal");
+const dailyPoem = require("../../utils/daily-poem");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
@@ -47,7 +47,7 @@ const PAGE_ICONS = {
   add: icons.add,
   added: icons.added,
   playlist: icons.playlist,
-  refresh: icons.refresh
+  swap: icons.swap
 };
 
 function datasetOf(e) {
@@ -178,11 +178,11 @@ function guestCatalog() {
     percent: 0,
     catalog,
     catalogCount: catalog.length,
-    catalogLead: catalog.length ? "" : "这一版没带上语料",
+    catalogLead: catalog.length ? "" : "此版本未含语料",
     catalogMiss: catalog.length
       ? ""
-      : "语料是本仓库的一部分。在项目目录跑 npm run build:data，"
-        + "再在开发者工具里点「编译」（不是「刷新」）",
+      : "请在项目目录运行 npm run build:data，"
+        + "再于开发者工具点击「编译」（非「刷新」）",
     stats: { today: 0, done: 0, left: 0, extra: 0 },
     coursePlan: [],
     courseBase: 0,
@@ -229,8 +229,7 @@ Page({
 
     todayLabel: "",
 
-    seasonal: null,
-    seasonalOn: false,
+    daily: null,
 
     stats: { today: 0, done: 0, left: 0, extra: 0 },
     coursePlan: [],
@@ -275,7 +274,8 @@ Page({
 
   refresh(force) {
     if (!gate.logged()) {
-      this.setData(Object.assign(guestCatalog(), { seasonal: this.seasonalCard() }));
+      this.setData(guestCatalog());
+      this.loadDaily();
       return;
     }
 
@@ -405,126 +405,75 @@ Page({
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
-      seasonal: this.seasonalCard(),
       loading: false
     });
+    this.loadDaily();
 
     this.cheerCollection(colRows);
   },
 
-  seasonalCard() {
-    const card = seasonal.card();
-    if (!card || !card.poems.length) return null;
-    const readOf = this.readOf();
-    const extra = store.dailyExtra();
-    const collected = {};
-    cols.list().forEach((c) => cols.idsOf(c).forEach((id) => { collected[id] = true; }));
-    return Object.assign({}, card, {
-      rows: card.poems.map((p, i) => Object.assign(this.poemRow(p, i, "", readOf), {
-        daily: extra.indexOf(p.id) >= 0,
-        collected: !!collected[p.id]
-      }))
-    });
-  },
-
-  seasonalRow(id) {
-    const rows = this.seasonalRows();
-    const at = rows.map((x) => x.id).indexOf(id);
-    return { at: at, row: at >= 0 ? rows[at] : null };
-  },
-
-  onSeasonalRefresh(e) {
-    if (!seasonal.redraw()) return;
-    const card = this.seasonalCard();
-    if (card) this.setData({ seasonal: card });
-  },
-
-  seasonalRows() {
-    const card = this.data.seasonal;
-    return card ? card.rows : [];
-  },
-
-  onSeasonalOpen(e) {
-    const rows = this.seasonalRows();
-    if (!rows.length) return;
-    const sheet = this.selectComponent("#sheet");
-    if (!sheet) return;
-    const id = (e && e.currentTarget && e.currentTarget.dataset.id) || rows[0].id;
-    this.sheetSource = "seasonal";
-    this.collectionId = "";
-    this.setData({ sheetRows: rows });
-    sheet.open(rows, id);
-  },
-
-  onSeasonalAdd(e) {
-    const id = e.currentTarget.dataset.id;
-    if (!guard.enter("home:extra:" + id)) return;
-    const r = store.toggleDailyExtra(id);
-    guard.leave("home:extra:" + id);
-    const box = this.selectComponent("#extra");
-    if (r.code === "E_TIER") {
-      entitlement.gateTier("extra", { page: this });
+  loadDaily() {
+    if (!dailyPoem.isOn()) {
+      if (this.data.daily) this.setData({ daily: null });
       return;
     }
-    if (!r.ok) {
-      wx.showToast({ title: r.code === "E_LIMIT" ? "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首" : "添加失败", icon: "none" });
+    const card = dailyPoem.card();
+    if (!card) {
+      this.setData({ daily: null });
       return;
     }
-    wx.showToast({ title: r.on ? "已加入新增温习" : "已移出新增温习", icon: "none" });
-    this.syncDailyExtra(id, r.on);
-    this.paint();
-    if (box) box.refresh();
+    const keep = this.data.daily && this.data.daily.id === card.key ? this.data.daily : null;
+    if (keep && keep.state !== "failed") return;
+    this.setData({ daily: this.dailyOf(card, keep ? keep.lines : [], "", "loading") });
+    const token = (this.dailyToken = (this.dailyToken || 0) + 1);
+    dailyPoem.loadCurrent().then(
+      (got) => {
+        if (token !== this.dailyToken) return;
+        this.setData({ daily: this.dailyOf(got.card, got.lines, got.apiId, "ready") });
+      },
+      () => {
+        if (token !== this.dailyToken || !this.data.daily) return;
+        this.setData({ ["daily.state"]: "failed" });
+      }
+    );
   },
 
-  syncDailyExtra(id, on) {
-    const at = this.seasonalRow(id).at;
-    if (at >= 0) this.setData({ ["seasonal.rows[" + at + "].daily"]: !!on });
+  dailyOf(card, lines, apiId, state) {
+    return {
+      id: card.key,
+      title: card.shown,
+      meta: [card.dynasty, card.author].filter(Boolean).join(" · "),
+      lines: lines,
+      apiId: apiId,
+      state: state
+    };
   },
 
-  onSeasonalCollect(e) {
-    const id = e.currentTarget.dataset.id;
-    if (!this.requireLogin("collections")) return;
-    const have = cols.collectionsOf(id);
-    if (have.length === 1) {
-      this.dropFromCollection(id, have[0]);
+  onDailyRefresh() {
+    if (!guard.enter("home:daily:redraw")) return;
+    const ok = dailyPoem.redraw();
+    guard.leave("home:daily:redraw");
+    if (ok) this.loadDaily();
+  },
+
+  onDailyOpen() {
+    const d = this.data.daily;
+    if (!d) return;
+    if (d.state !== "ready" || !d.apiId) {
+      this.loadDaily();
       return;
     }
-    const box = this.selectComponent("#collect");
-    if (box) box.ask(id);
-  },
-
-  dropFromCollection(id, c) {
-    const r = cols.removeItems(c.id, [id]);
-    if (!r.ok) return;
-    this.syncCollected(id, false);
-    this.paint();
-    sync.markDirty();
-    wx.showToast({ title: "已移出「" + c.name + "」", icon: "none" });
-  },
-
-  syncCollected(id, on) {
-    const hit = this.seasonalRow(id);
-    if (hit.at < 0) return;
-    this.setData({ ["seasonal.rows[" + hit.at + "].collected"]: !!on });
+    const id = encodeURIComponent(d.apiId);
+    wx.navigateTo({ url: "/pages/reader/reader?id=" + id + "&sid=" + id + "&src=1" });
   },
 
   requireLogin(name) {
     return entitlement.block(name, { page: this, loginPrompt: true });
   },
 
-  onCollectDone(e) {
-    const d = (e && e.detail) || {};
-    if (!d.id || !d.collectionId) return;
-    this.syncCollected(d.id, true);
-    this.paint();
-    sync.markDirty();
-    wx.showToast({ title: "已加入「" + d.name + "」", icon: "none" });
-  },
-
   sheetRowsOf(plan) {
     if (this.collectionId) return this.collectionSheetRows(this.collectionId);
     if (this.sheetSource === "all") return this.scopeRows();
-    if (this.sheetSource === "seasonal") return this.seasonalRows();
     return plan;
   },
 
@@ -767,7 +716,7 @@ Page({
     this.toasted = true;
     if (Date.now() - this.toastAt() < TOAST_GAP) return;
     this.toastedAt = Date.now();
-    wx.showToast({ title: "今日篇目已全部背完", icon: "none", duration: TOAST_MS });
+    wx.showToast({ title: "今日篇目已全部温习", icon: "none", duration: TOAST_MS });
   },
 
   toastAt() {
@@ -796,10 +745,10 @@ Page({
 
   onShareAppMessage() {
 
-    return { title: "每天背一首古诗文", path: "/pages/home/home" };
+    return { title: "每日一首古诗文", path: "/pages/home/home" };
   },
 
   onShareTimeline() {
-    return { title: "每天背一首古诗文" };
+    return { title: "每日一首古诗文" };
   }
 });

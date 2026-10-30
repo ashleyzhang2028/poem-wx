@@ -121,7 +121,7 @@ Page({
         tagline: tiers.mottoOf(tab).verse,
         blessing: tiers.mottoOf(tab).line,
         options: options,
-        note: bonus && bonus[period] > 0 ? "感谢一路相伴。您的 Pro 还剩 " + upgrade.proLeftDays + " 天，我们按您的实付价折算，升级后另赠 " + bonus[period] + " 天，到期日顺延。" : "",
+        note: bonus && bonus[period] > 0 ? "感谢一路相伴。您的 Pro 剩余 " + upgrade.proLeftDays + " 天，按实付价折算，升级后另赠 " + bonus[period] + " 天，到期日顺延。" : "",
         includes: INCLUDES[tab],
         features: all.slice(0, FEATURE_SHOWN),
         more: Math.max(0, all.length - FEATURE_SHOWN),
@@ -156,7 +156,7 @@ Page({
       if (res.ok) {
         this.celebrate(plan, res.order);
       } else {
-        wx.showModal({ title: "没有完成支付", content: res.reason, showCancel: false });
+        wx.showModal({ title: "支付未完成", content: res.reason, showCancel: false });
       }
       this.load();
     });
@@ -169,7 +169,7 @@ Page({
       welcome: {
         tier: plan,
         title: "欢迎加入 " + pay.tierName(plan),
-        sub: "已开通" + until + "。现在可以用：" + unlocked + " 等"
+        sub: "已开通" + until + "。现可使用：" + unlocked + " 等"
       }
     });
     wx.vibrateShort({ type: "light", fail() {} });
