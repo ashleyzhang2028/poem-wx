@@ -3,7 +3,7 @@
   <view class="card">
     <view class="card-title">新增温习</view>
 
-    <view wx:if="{{!daily.length}}" class="hint">暂无加背</view>
+    <view wx:if="{{!daily.length}}" class="hint">暂无新增温习</view>
 
     <block wx:else>
 

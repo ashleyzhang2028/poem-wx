@@ -187,7 +187,7 @@ Page({
   },
 
   dailyMsg(r) {
-    if (r.code === "E_LIMIT") return "今日已加背 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
+    if (r.code === "E_LIMIT") return "今日最多新增 " + store.DAILY_EXTRA_MAX + " 首，请先背完再添加";
     if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
     return "添加失败";
   },
