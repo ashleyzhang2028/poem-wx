@@ -1562,29 +1562,38 @@ button, input, textarea {
 }
 
 .token-line {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-end;
+  display: block;
   width: 100%;
   border-radius: var(--radius-sm);
   transition: background-color var(--t-move);
-  height: auto;
-  line-height: 1;
 }
 
 .poem-clause {
-  display: flex;
-  align-items: flex-end;
-  min-width: 0;
+  display: inline;
 }
 
 .poem-line.token-line {
   line-height: 1;
 }
 
-.poem-body.align-left .token-line {
+.token-line.token-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  line-height: normal;
+}
+
+.poem-body.align-left .token-line.token-wrap {
   justify-content: flex-start;
+}
+
+.token-wrap .token {
+  height: auto;
+  margin: 0 var(--py-gap) calc(var(--py-slot) * 0.6);
+}
+
+.token-wrap .tk-ch {
+  line-height: var(--lh-poem);
 }
 
 .token {

@@ -261,6 +261,10 @@
   color: var(--ink);
 }
 
+.daily-wrap {
+  text-align: left;
+}
+
 .daily-tip {
   display: block;
 }

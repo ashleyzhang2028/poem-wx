@@ -111,7 +111,7 @@
         </block>
         <block wx:elif="{{tokens.length}}">
           <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
-            <view class="poem-line token-line" wx:for="{{para}}" wx:key="index" wx:for-item="row">
+            <view class="poem-line token-line {{verse ? '' : 'token-wrap'}}" wx:for="{{para}}" wx:key="index" wx:for-item="row">
               <view class="poem-clause" wx:for="{{row}}" wx:for-item="cl" wx:key="index">
                 <view class="token {{tk.han ? '' : 'punc'}}" wx:for="{{cl.tokens}}" wx:for-item="tk" wx:key="index">
                   <text class="tk-py" wx:if="{{tk.mark}}">{{tk.py}}</text>

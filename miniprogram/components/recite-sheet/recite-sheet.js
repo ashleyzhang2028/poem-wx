@@ -95,6 +95,7 @@ Component({
     rawText: "",
     tableView: false,
     blocks: [],
+    verse: true,
     tokens: [],
     translation: "",
     translationSource: "",
@@ -308,6 +309,7 @@ Component({
       this.setData({
         pinyinOn: usable,
         pinyinMode: mode,
+        verse: laid.verse,
         blocks,
         tokens: blocks.length ? [] : pinyin.render(laid.paras, mode)
       });

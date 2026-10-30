@@ -64,6 +64,7 @@ Page({
     aliasText: "",
     rawText: "",
     paras: [],
+    verse: true,
     tokens: [],
     blocks: [],
     blocksOn: false,
@@ -332,7 +333,7 @@ Page({
       size: this.data.fontSize,
       pinyin: this.data.pinyinOn
     });
-    this.setData({ paras: laid.paras });
+    this.setData({ paras: laid.paras, verse: laid.verse });
   },
 
   paragraphRows(text) {

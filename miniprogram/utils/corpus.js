@@ -232,7 +232,7 @@ function layoutOf(text, size, pinyin) {
   commit();
   closeStanza();
 
-  return { rows: flat.map((row) => row.join("")), paras: paras };
+  return { rows: flat.map((row) => row.join("")), paras: paras, verse: cap !== Infinity };
 }
 
 const COURSE = "data/course.js";
