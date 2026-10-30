@@ -1498,10 +1498,6 @@ button, input, textarea {
   font-family: var(--font-poem);
 }
 
-.poem-card > .poem-body {
-  margin-bottom: var(--poem-half);
-}
-
 .poem-body.align-center {
   text-align: center;
 }
@@ -1636,15 +1632,15 @@ button, input, textarea {
 .poem-body.gap-2  { --lh-poem: 1.6; }
 .poem-body.gap-3  { --lh-poem: 1.7; }
 
-.poem-body.size--2 { --py-box: 34rpx; --py-line: 72rpx; --poem-fs: 30rpx; --poem-half: 15rpx; }
-.poem-body.size--1 { --py-box: 37rpx; --py-line: 75rpx; --poem-fs: 33rpx; --poem-half: 17rpx; }
-.poem-body.size-0  { --py-box: 40rpx; --py-line: 78rpx; --poem-fs: 36rpx; --poem-half: 18rpx; }
-.poem-body.size-1  { --py-box: 44rpx; --py-line: 82rpx; --poem-fs: 39rpx; --poem-half: 20rpx; }
-.poem-body.size-2  { --py-box: 47rpx; --py-line: 85rpx; --poem-fs: 42rpx; --poem-half: 21rpx; }
-.poem-body.size-3  { --py-box: 51rpx; --py-line: 89rpx; --poem-fs: 46rpx; --poem-half: 23rpx; }
-.poem-body.size-4  { --py-box: 58rpx; --py-line: 96rpx; --poem-fs: 52rpx; --poem-half: 26rpx; }
-.poem-body.size-5  { --py-box: 64rpx; --py-line: 102rpx; --poem-fs: 58rpx; --poem-half: 29rpx; }
-.poem-body.size-6  { --py-box: 70rpx; --py-line: 108rpx; --poem-fs: 64rpx; --poem-half: 32rpx; }
+.poem-body.size--2 { --py-box: 34rpx; --py-line: 72rpx; --poem-fs: 30rpx; }
+.poem-body.size--1 { --py-box: 37rpx; --py-line: 75rpx; --poem-fs: 33rpx; }
+.poem-body.size-0  { --py-box: 40rpx; --py-line: 78rpx; --poem-fs: 36rpx; }
+.poem-body.size-1  { --py-box: 44rpx; --py-line: 82rpx; --poem-fs: 39rpx; }
+.poem-body.size-2  { --py-box: 47rpx; --py-line: 85rpx; --poem-fs: 42rpx; }
+.poem-body.size-3  { --py-box: 51rpx; --py-line: 89rpx; --poem-fs: 46rpx; }
+.poem-body.size-4  { --py-box: 58rpx; --py-line: 96rpx; --poem-fs: 52rpx; }
+.poem-body.size-5  { --py-box: 64rpx; --py-line: 102rpx; --poem-fs: 58rpx; }
+.poem-body.size-6  { --py-box: 70rpx; --py-line: 108rpx; --poem-fs: 64rpx; }
 
 .token {
   letter-spacing: 0;

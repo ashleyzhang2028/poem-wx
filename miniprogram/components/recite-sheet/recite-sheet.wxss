@@ -223,6 +223,6 @@
 }
 
 .note-card {
-  margin-top: var(--sp-2);
+  margin-top: var(--sp-3);
 }
 
