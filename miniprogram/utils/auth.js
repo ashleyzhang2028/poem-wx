@@ -62,7 +62,6 @@ function applySession(data) {
   };
   const nick = data.nickname || store.profile().nickname;
   if (nick && nick !== store.profile().nickname) patch.nickname = nick;
-  if (!store.profile().nickname && !nick) patch.nickname = "我的古诗词";
   store.saveSession(patch);
   return data;
 }
