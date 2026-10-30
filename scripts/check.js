@@ -7207,8 +7207,11 @@ const K = {
     const replay = await guardMod.admit(depsAt(at + 70000), me, "exam", { ticket }, 20);
     ok("同一张凭证不能交第二次", replay.ok === false && replay.code === "E_TICKET", JSON.stringify(replay));
 
-    const fast = await guardMod.admit(depsAt(at + 5000), me, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 40);
+    const fast = await guardMod.admit(depsAt(at + 1000), me, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 40);
     ok("用时短到不可能的成绩不记", fast.ok === false && fast.code === "E_SCORE", JSON.stringify(fast));
+
+    const quick = await guardMod.admit(depsAt(at + 1000), me, "exam", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 1);
+    ok("一题一秒的短局不因取整成 0 秒就判死", quick.ok === true && quick.durationSec === 1, JSON.stringify(quick));
 
     const none = await guardMod.admit(depsAt(at + 60000), me, "exam", { durationSec: 600 }, 5);
     ok("没有凭证不记（开了凭证要求时）", none.ok === false && none.code === "E_TICKET", JSON.stringify(none));
@@ -7217,9 +7220,10 @@ const K = {
     ok("别人的凭证、别的玩法的凭证都用不了",
       other.ok === false && (await guardMod.admit(depsAt(at + 60000), me, "fly", { ticket: guardMod.issue(cfgB, "u1", "exam", at) }, 5)).ok === false);
 
-    ok("飞花令每句至少 3 秒、考试每答对一题至少 2 秒",
-      guardMod.plausible("fly", 10, 29) === false && guardMod.plausible("fly", 10, 30) === true
-        && guardMod.plausible("exam", 10, 19) === false && guardMod.plausible("exam", 10, 20) === true);
+    ok("每句每答对一题按 2 秒算，一秒交上来的不记",
+      guardMod.plausible("fly", 10, 18) === false && guardMod.plausible("fly", 10, 20) === true
+        && guardMod.plausible("exam", 10, 18) === false && guardMod.plausible("exam", 10, 20) === true
+        && guardMod.plausible("fly", 1, 1) === true && guardMod.plausible("exam", 40, 1) === false);
   })());
 }
 

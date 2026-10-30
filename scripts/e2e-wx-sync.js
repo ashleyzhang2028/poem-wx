@@ -347,8 +347,11 @@ function makeWx(port, mem) {
     require(path.join(REPO, "miniprogram", "utils", "auth.js")).applySession({ tier: "max" });
 
     const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
-    const relay = submitter.submitPlay("exam", { score: 7, total: 10, durationSec: 120 });
-    await new Promise((r) => setTimeout(r, 120));
+    const opened = await remote.rankingStart("exam");
+    ok("开局拿到成绩凭证（交成绩那一步要它，服务端才认这一局）", !!opened, String(opened).slice(0, 12));
+    const relay = submitter.submit(Object.assign(submitter.entryOf("exam"), {
+      score: 1, total: 10, durationSec: 120, ticket: opened
+    }));
     const got = await relay;
     holder.getStore = origGet;
 
@@ -414,10 +417,11 @@ function makeWx(port, mem) {
         stage: "all", grade: 0, term: 0, score: 5, total: 10, duration_sec: 60, created_at: 1000 + i
       });
     }
+    const trimTicket = require(path.join(POEM, "_lib", "board-guard.js")).issue(config, uid, "exam", Date.now());
     const trimmed = await coreMod.boardSubmit({
       cfg: config, store: shared, limiter: coreMod.makeRateLimiter(),
       now: () => Date.now(), account: { uid: uid }, ip: "127.0.0.1", deviceId: "d_trim_probe"
-    }, { game: "exam", score: 8, total: 10, durationSec: 60 });
+    }, { game: "exam", score: 1, total: 10, durationSec: 60, ticket: trimTicket });
     const allMine = (await shared.listScoreRecords({ uid: uid, game: "exam" }, 5000)).filter((r) => r.srid.indexOf("sc_keep_") === 0);
 
     ok("落库那一下按档位裁到上限，多出来的按时间从最久那头删",
@@ -466,8 +470,10 @@ function makeWx(port, mem) {
 
     await svStore.patchAccount(store.profile().userId, { nickname: "测试某某", plan: "max" });
 
+    const onTicket = (await api({ op: "start", game: "exam" })).body.ticket;
     const onSubmit = await api({
-      op: "submit", game: "exam", score: 9, total: 10, stage: "primary", grade: 3, term: 1, durationSec: 300
+      op: "submit", game: "exam", score: 1, total: 10, stage: "primary", grade: 3, term: 1, durationSec: 300,
+      ticket: onTicket
     });
     ok("开着的时候成绩收得下，回一句 on:true",
       onSubmit.status === 200 && !!onSubmit.body.recorded && onSubmit.body.on === true,
