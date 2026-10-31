@@ -186,8 +186,6 @@ function guestCatalog() {
       : "请在项目目录运行 npm run build:data，"
         + "再于开发者工具点击「编译」（非「刷新」）",
     stats: { today: 0, done: 0, left: 0, extra: 0 },
-    coursePlan: [],
-    courseBase: 0,
     loading: false
   };
 }
@@ -234,8 +232,6 @@ Page({
     daily: null,
 
     stats: { today: 0, done: 0, left: 0, extra: 0 },
-    coursePlan: [],
-    courseBase: 0,
     faces: FACES,
     icons: PAGE_ICONS,
     baseCount: 0,
@@ -331,11 +327,6 @@ Page({
 
     const plan = S.generateDailyPlan(Object.assign({ selfOnly: selfOnly }, planOpt));
 
-    const coursePlan = selfOnly ? S.generateDailyPlan(planOpt) : [];
-    const courseRecorded = selfOnly
-      ? store.dayPlan(S.coursePlanKeyOf(planOpt)).ids.length
-      : 0;
-
     const allList = selfOnly ? [] : scopeList(all, view, scope);
     const allMode = this.data.allOpen || this.sheetSource === "all";
     const allRows = allMode ? rowsOfScope(allList, scope) : [];
@@ -410,8 +401,6 @@ Page({
         left: selfOnly ? Math.max(selfTotal - selfDone, 0) : left,
         extra: extraOf
       },
-      coursePlan: selfOnly ? coursePlan.filter((it) => it.reason !== "pinned").map((it, i) => this.poemRow(it.poem, i, it.reason, readOf)) : [],
-      courseBase: selfOnly ? Math.max(courseRecorded, coursePlan.length - coursePlan.filter((it) => it.reason === "pinned").length) : 0,
       allCount: allList.length,
       allLabel: scopeLabel(scope),
       allRows: this.data.allOpen ? allRows : [],

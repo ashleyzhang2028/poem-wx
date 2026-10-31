@@ -137,7 +137,7 @@
         ]
       }
     ],
-    "_note": "开着「只背自选」的首页：只剩自选集子，课内「全部诗词」那张卡与排期都收起"
+    "_note": "开着「只温习自选」的首页：只剩自选集子，课内「全部诗词」那张卡与今日温习卡都收起"
   },
   "home-collections": {
     "page": "pages/home/home",
@@ -209,7 +209,7 @@
         ]
       }
     ],
-    "_note": "「只背自选」那一开关：集子里有篇目才亮"
+    "_note": "「只温习自选」那一开关：集子里有篇目才亮"
   },
   "settings-collections": {
     "page": "packages/settings/collections/collections",

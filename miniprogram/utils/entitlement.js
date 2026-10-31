@@ -47,7 +47,7 @@ const CAPS = [
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
   { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "bookmarks", name: "书签", desc: "于详情页收藏，在设置中统一管理 · " + tiers.bookmarkQuota() + "，超出时移除最早一条", cell: bookmarkCell, tier: "pro" },
-  { key: "coursefree", name: "只背自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
+  { key: "coursefree", name: "只温习自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
   { key: "dailypoem", name: "隐藏每日一诗", desc: "可在首页隐藏每日一诗卡片", tier: "pro" },
   { key: "sights", name: "大好河山主题", desc: "四张山水题名卡 · 每张带城景 banner", tier: "pro" },
   { key: "ownbanner", name: "自选主题 banner", desc: "使用自己的图片 · 仅存于本机", tier: "max" },
@@ -184,7 +184,7 @@ const VIEW_NAME = {
   themetone: "主题·自选主题色",
   font: "主题·字体选择",
   bookmarks: "详情·书签",
-  coursefree: "我的·只背自选",
+  coursefree: "我的·只温习自选",
   sync: "我的·同步进度"
 };
 

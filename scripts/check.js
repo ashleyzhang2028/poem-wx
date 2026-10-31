@@ -6621,15 +6621,15 @@ const K = {
       grade: 1, term: 1, count: 5, scope: "term", selfOnly: true,
       allPoems: course5, extraPoems: extra5, getRecord: () => null
     });
-    ok("开着「只背自选」时，排期只回新增温习那几首（课内一首不排）",
+    ok("开着「只温习自选」时，排期只回新增温习那几首（课内一首不排）",
       self5.length === 1 && self5[0].poem.id === "cp0" && self5[0].reason === "pinned"
         && plain5.some((p) => p.poem.id !== "cp0"),
       "实际 " + JSON.stringify(self5.map((p) => p.poem.id)));
-    ok("「只背自选」的名单与课内那份分开落盘（两份名单各有各的键）",
+    ok("「只温习自选」的名单与课内那份分开落盘（两份名单各有各的键）",
       S5.planKeyOf({ grade: 1, term: 1, scope: "term", count: 5, selfOnly: true })
         !== S5.coursePlanKeyOf({ grade: 1, term: 1, scope: "term", count: 5 }),
       "自选那份和课内那份共用了同一个名单位 —— 开一次开关就把课内名单换成自选那几首");
-    ok("「只背自选」期间课内那份名单照旧（关掉开关不用重排，加背那几首也不占它的名额）",
+    ok("「只温习自选」期间课内那份名单照旧（关掉开关不用重排，加背那几首也不占它的名额）",
       (() => {
         const extraIds = ["cp0", "cp1"];
         const extraPoems = extraIds.map((id) => ({ id: id }));
@@ -6647,7 +6647,7 @@ const K = {
     ok("没开时排期照旧（这条开关不改默认行为）",
       plain5.filter((p) => p.reason === "pinned").length === 1 && plain5.length === 6);
 
-    ok("「只背自选」认集子里有没有篇目（空集子不算数）",
+    ok("「只温习自选」认集子里有没有篇目（空集子不算数）",
       (() => {
         store3.saveCollections([{ id: "c2", name: "空", items: [] }]);
         const off = cols3.selfOnlyOn();
@@ -6659,8 +6659,8 @@ const K = {
       })(),
       "开关自己说了算、不看集子里有没有东西 —— 首页会净空");
 
-    ok("「只背自选」要 pro（Free 开不了）",
-      E.CAPS.filter((c) => c.key === "coursefree")[0].tier === "pro" && E.capName("coursefree") === "只背自选");
+    ok("「只温习自选」要 pro（Free 开不了）",
+      E.CAPS.filter((c) => c.key === "coursefree")[0].tier === "pro" && E.capName("coursefree") === "只温习自选");
 
     ok("这两项能力各占能力表一行，不是同一项（一个是建集子，一个是停课内）",
       E.CAP_KEYS.indexOf("coursefree") >= 0 && E.CAP_KEYS.indexOf("collections") >= 0
@@ -6679,15 +6679,19 @@ const K = {
       const colsWxml = pageRead("packages/settings/collections/collections.wxml");
       const colsJs = pageRead("packages/settings/collections/collections.js");
       const homeJs = pageRead("pages/home/home.js");
-      ok("「首页隐藏自选」与「只背自选」同一张卡，且它在前",
+      ok("「首页隐藏自选」与「只温习自选」同一张卡，且它在前",
         colsWxml.indexOf('bindchange="onHomeHide"') >= 0
           && colsWxml.indexOf('bindchange="onHomeHide"') < colsWxml.indexOf('bindchange="onSelfOnly"'));
-      ok("开「首页隐藏自选」就把「只背自选」关掉并禁用",
+      ok("开「首页隐藏自选」就把「只温习自选」关掉并禁用",
         /onHomeHide\(e\)[\s\S]{0,200}homehide: on, selfOnly: false/.test(colsJs)
           && /const on = entitlement\.can\("collections"\) && entitlement\.can\("coursefree"\) && !homeHide/.test(colsJs));
+      const homeWxml = pageRead("pages/home/home.wxml");
       ok("首页按 homehide 收起自选集合卡与自选排期",
         /const colRows = showCollections \? this\.collectionRows\(\) : \[\]/.test(homeJs)
           && /const showCollections = !settings\.homehide/.test(homeJs));
+      ok("「今日温习」卡在没排到篇目时整张不出（只温习自选开着、集子又排不上时，页面上不留一张空的今日温习）",
+        homeWxml.indexOf('wx:if="{{total || loading}}"') >= 0
+          && homeWxml.indexOf('coursePlan') < 0);
     }
 
     const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
