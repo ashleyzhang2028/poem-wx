@@ -6,8 +6,14 @@
 
     <view class="rs-head">
       <text class="rs-title">继续读</text>
-      <view class="rs-close" hover-class="rs-close-hover" hover-stay-time="60" bindtap="close">
-        <view class="rs-close-x"></view>
+      <view class="rs-head-right">
+        <view class="rs-more" hover-class="rs-more-hover" hover-stay-time="60"
+              wx:if="{{markCount}}" bindtap="onOpenAll">
+          <text class="rs-more-t">书签管理 · {{markCount}}</text>
+        </view>
+        <view class="rs-close" hover-class="rs-close-hover" hover-stay-time="60" bindtap="close">
+          <view class="rs-close-x"></view>
+        </view>
       </view>
     </view>
 
@@ -15,6 +21,7 @@
       <view class="rs-row" hover-class="rs-row-hover" hover-stay-time="60" wx:if="{{last}}"
             bindtap="onContinue">
         <text class="rs-name">{{last.title}}</text>
+        <text class="tag theme rs-tag">继续读</text>
         <text class="rs-meta" wx:if="{{last.meta}}">{{last.meta}}</text>
         <text class="row-go">›</text>
       </view>
@@ -22,13 +29,9 @@
       <view class="rs-row" hover-class="rs-row-hover" hover-stay-time="60"
             wx:for="{{marks}}" wx:key="id" data-id="{{item.id}}" bindtap="onOpenMark">
         <text class="rs-name">{{item.title}}</text>
+        <text class="tag theme rs-tag" wx:if="{{item.marked}}">书签</text>
         <text class="rs-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
         <text class="row-go">›</text>
-      </view>
-
-      <view class="rs-more" hover-class="rs-more-hover" hover-stay-time="60"
-            wx:if="{{markCount}}" bindtap="onOpenAll">
-        <text class="rs-more-t">书签管理 · {{markCount}}</text>
       </view>
 
       <view class="empty" wx:if="{{!last && !markCount}}">

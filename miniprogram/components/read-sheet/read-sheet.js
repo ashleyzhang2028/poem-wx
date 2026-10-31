@@ -3,7 +3,13 @@ const lastRead = require("../../utils/last-read");
 const theme = require("../../utils/theme");
 
 function markRow(b) {
-  return { id: b.id, title: b.t, meta: [b.a, b.n].filter(Boolean).join(" · ") };
+  const last = lastRead.get();
+  return {
+    id: b.id,
+    title: b.t,
+    meta: [b.a, b.n].filter(Boolean).join(" · "),
+    marked: !(last && last.id === b.id)
+  };
 }
 
 function lastRow() {
