@@ -6,6 +6,20 @@ const gate = require("../utils/gate");
 const loginFlow = require("../utils/login-flow");
 const tabPage = require("../utils/tab-page");
 
+function topPage() {
+  const pages = getCurrentPages();
+  return pages.slice(-1)[0];
+}
+
+function resetLibrary() {
+  wx.pageScrollTo({ scrollTop: 0, duration: 200 });
+}
+
+function resetSearch() {
+  const page = topPage();
+  if (page && page.onReset) page.onReset();
+}
+
 Component({
   properties: {
     current: { type: String, value: "" }
@@ -20,6 +34,8 @@ Component({
     meChar: "诗",
     me: 4,
     conference: 2,
+    library: 1,
+    search: 3,
     list: [
       { pagePath: "/pages/home/home", text: "今日", icon: icons.home },
       { pagePath: "/pages/library/library", text: "漫读", icon: icons.library, login: true },
@@ -81,6 +97,14 @@ Component({
       }
       if (i === this.data.me) {
         tabPage.mine();
+        return;
+      }
+      if (i === this.data.library) {
+        tabPage.home(item.pagePath, resetLibrary);
+        return;
+      }
+      if (i === this.data.search) {
+        tabPage.home(item.pagePath, resetSearch);
         return;
       }
       if (i === this.data.active) return;

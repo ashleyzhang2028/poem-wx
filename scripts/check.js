@@ -2587,7 +2587,7 @@ function mountFull(pg, query) {
     const tabPageMod = require(path.join(ROOT, "utils", "tab-page.js"));
     const savedStack = global.getCurrentPages;
     const savedWx = global.wx;
-    const tries = (stack) => {
+    const tries = (stack, job) => {
       const calls = [];
       global.getCurrentPages = () => stack.map((r) => ({ route: r }));
       global.wx = {
@@ -2595,7 +2595,7 @@ function mountFull(pg, query) {
         navigateBack: (o) => calls.push("back " + o.delta),
         navigateTo: (o) => calls.push("to " + o.url)
       };
-      tabPageMod.mine();
+      (job || tabPageMod.mine)();
       return calls.join(" | ");
     };
     const fromMine = tries(["pages/mine/mine"]);
@@ -2607,6 +2607,14 @@ function mountFull(pg, query) {
         && fromMine === ""
         && tries(["pages/mine/mine", "pages/mine/mine"]) === "back 1",
       [fromMine, fromTheme, fromHome].join(" ／ "));
+
+    let resets = 0;
+    const homeOf = (stack) => tries(stack, () => tabPageMod.home("/pages/search/search", () => { resets += 1; }));
+    const offSearch = homeOf(["pages/search/search", "pages/reader/reader"]);
+    const onSearch = homeOf(["pages/search/search"]);
+    ok("底栏点「漫读」「搜索」：不在那一页就切过去，已经站在那一页就回到它的首页",
+      offSearch === "switchTab /pages/search/search" && resets === 1 && onSearch === "",
+      "不在那页：" + offSearch + "；在那页：" + (onSearch || "留在原地，回收 " + resets + " 次"));
     global.getCurrentPages = savedStack;
     global.wx = savedWx;
   }
