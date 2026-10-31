@@ -95,9 +95,21 @@
   min-width: 0;
 }
 
+.row-author {
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
 .row-head .tag {
   margin-left: 10rpx;
   margin-right: 0;
+}
+
+.row-compact {
+  min-height: var(--h-opt-tight);
 }
 
 .more {
