@@ -4058,6 +4058,16 @@ function mountFull(pg, query) {
       && added.length === 0 && !layered.test(sheetCss),
     "有一层行距还在往 --poem-fs + --poem-gap 上加数 —— 折行与句读分行看着不一样");
 
+  const letterOf = (sel) => {
+    const rule = (sheetCss.match(new RegExp("^" + sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + " \\{[^}]*\\}", "m")) || [])[0] || "";
+    return ((rule.match(/letter-spacing:\s*([^;]+);/) || [])[1] || "").trim();
+  };
+  ok("长文散文与长句折行不加字距，整行成句才加",
+    letterOf(".poem-body.prose .poem-line:not(.token-line)") === "0"
+      && letterOf(".poem-body.loose .poem-line:not(.token-line)") === "0"
+      && !!letterOf(".poem-body:not(.prose) .poem-line:not(.token-line)"),
+    "散文那一路又叠了字距 —— 折行连绵的段落被拉开，行显得更散");
+
   ok("字身不再带纵向余白（行距只由行高决定）",
     /\.token-wrap \.token \{[^}]*margin:\s*0 var\(--py-gap\)/m.test(sheetCss)
       && /\.token \{[^}]*margin:\s*0 var\(--py-gap\)/m.test(sheetCss),
