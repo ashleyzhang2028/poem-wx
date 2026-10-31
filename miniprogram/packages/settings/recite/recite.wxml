@@ -30,31 +30,6 @@
   </view>
 
   <view class="card">
-    <view class="card-head">
-      <text class="card-title">自选温习</text>
-      <tier-tag wx:if="{{selfOnlyLocked}}" tier="{{selfOnlyTier}}" />
-    </view>
-
-    <view class="row">
-      <view class="row-main">
-        <text class="row-title">只背自选</text>
-        <text class="row-sub">今日仅安排自选集合，课内暂不安排</text>
-      </view>
-      <view class="sw">
-        <switch checked="{{selfOnly}}" bindchange="onSelfOnly"
-                disabled="{{!selfOnlyOn}}" />
-      </view>
-    </view>
-
-    <view class="row self-only-row" hover-class="row-hover" hover-stay-time="60" wx:if="{{selfOnlyOn}}" bindtap="onCollections">
-      <view class="row-main">
-        <text class="hint self-only-note">已建 {{selfOnlyRows}} 个集合 · 共 {{selfOnlyPoems}} 首</text>
-      </view>
-      <text class="row-go">›</text>
-    </view>
-  </view>
-
-  <view class="card">
     <view class="card-title">当前学段</view>
 
     <radio-group class="chip-group cols-3" data-k="stage" bindchange="onStage">

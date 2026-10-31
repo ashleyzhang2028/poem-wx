@@ -9,7 +9,8 @@
 
   <view class="card book-head">
     <text class="head-title">{{bookName}}</text>
-    <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
+    <text class="head-sub" wx:if="{{collId}}">共 {{matched}} {{unit}}</text>
+    <text class="head-sub" wx:else>{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
     <text class="head-sub" wx:if="{{last}}" bindtap="onContinue">上次读到：{{last.title}} ›</text>
   </view>
 
@@ -43,7 +44,7 @@
     </view>
   </view>
 
-  <view class="count hint">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>
+  <view class="count hint" wx:if="{{!collId}}">共 {{matched}} {{unit}}{{matched < total ? '（全部 ' + total + ' ' + unit + '）' : ''}}</view>
 
   <view class="card" wx:for="{{groups}}" wx:key="group" id="g-{{index}}">
     <view class="group-head" wx:if="{{item.group}}">
@@ -76,7 +77,8 @@
 
   <view class="empty" wx:if="{{!groups.length}}">
     <text class="empty-mark">空</text>
-    <text class="empty-text">{{keyword ? '无匹配篇目' : '此部暂无篇目'}}</text>
+    <text class="empty-text">无匹配篇目</text>
+    <text class="empty-text" wx:if="{{!keyword}}">{{collId ? '此集合暂无篇目' : '此部暂无篇目'}}</text>
     <text class="hint empty-tip" wx:if="{{keyword}}">请更换关键词或切换至「全部」</text>
   </view>
 

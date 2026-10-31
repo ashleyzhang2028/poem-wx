@@ -23,6 +23,11 @@ Page({
     cap: 0,
     count: 0,
 
+    selfOnlyOn: false,
+    selfOnly: false,
+    selfOnlyLocked: false,
+    selfOnlyTier: "pro",
+
     collections: [],
 
     searchId: "",
@@ -57,6 +62,7 @@ Page({
 
   refresh() {
     this.keepPicks();
+    this.refreshSelfOnly();
     const list = cols.list();
     const all = corpus.course();
     const closed = this.closedList();
@@ -92,6 +98,31 @@ Page({
       collections: rows,
       searchId: list.some((c) => c.id === this.data.searchId) ? this.data.searchId : ""
     });
+  },
+
+  refreshSelfOnly() {
+    const on = entitlement.can("collections") && entitlement.can("coursefree");
+    this.setData({
+      selfOnlyOn: on,
+      selfOnly: on && !!store.settings().selfOnly,
+      selfOnlyTier: entitlement.can("collections")
+        ? entitlement.tierOf("coursefree")
+        : entitlement.tierOf("collections"),
+      selfOnlyLocked: !on && entitlement.reachable(entitlement.tierOf("coursefree"), entitlement.status().tier)
+    });
+  },
+
+  onSelfOnly(e) {
+    const want = !!e.detail.value;
+    if (want && !cols.usable().length) {
+      this.setData({ selfOnly: false });
+      wx.showToast({ title: "请先新建集合并添加篇目", icon: "none" });
+      return;
+    }
+    store.saveSettings({ selfOnly: want });
+    store.dropDayPlan();
+    sync.markDirty();
+    this.setData({ selfOnly: want });
   },
 
   closedList() {

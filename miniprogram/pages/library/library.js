@@ -6,11 +6,19 @@ const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const marks = require("../../utils/bookmarks");
+const cols = require("../../utils/collections");
 const lastRead = require("../../utils/last-read");
 
 const RECENT_MAX = 4;
 
 const GROUPS = [
+  {
+    key: "mine",
+    name: "我的自选",
+    note: "自建的集合与其中的篇目",
+    wide: true,
+    books: []
+  },
   {
     key: "course",
     name: "课内阅读",
@@ -44,6 +52,10 @@ Page({
     name: "",
     barBelow: true,
     groups: [],
+    mineOn: false,
+    mineTier: "pro",
+    mine: [],
+    mineCount: 0,
     marks: [],
     markCount: 0,
     last: null,
@@ -78,6 +90,14 @@ Page({
     corpusGate.close(this);
   },
 
+  mineRows() {
+    return cols.list().map((c) => ({
+      id: c.id,
+      name: cols.nameOf(c),
+      count: c.items.length
+    }));
+  },
+
   showShelves() {
     const all = corpus.booksOf();
     const byId = {};
@@ -85,6 +105,7 @@ Page({
       byId[b.id] = b;
     });
 
+    const mine = this.mineRows();
     const groups = GROUPS.map((g) => {
       const books = g.books.map((id) => byId[id]).filter(Boolean);
       return {
@@ -100,12 +121,16 @@ Page({
         })),
         count: books.length
       };
-    }).filter((g) => g.books.length);
+    }).filter((g) => g.key === "mine" || g.books.length);
 
     const all2 = E.can("bookmarks") ? marks.list() : [];
     const last = lastRead.get();
     this.setData({
       groups,
+      mineOn: E.can("collections"),
+      mineTier: E.tierOf("collections"),
+      mine,
+      mineCount: mine.length,
       last: last ? { id: last.id, title: last.t, sub: [last.a, last.n].filter(Boolean).join(" · ") } : null,
       markCount: all2.length,
       marks: all2.slice(0, RECENT_MAX).map((b) => ({ id: b.id, title: b.t }))
@@ -128,6 +153,11 @@ Page({
 
   onAllMarks() {
     wx.navigateTo({ url: "/packages/settings/bookmarks/bookmarks" });
+  },
+
+  onOpenMine(e) {
+    if (!E.block("collections", { page: this })) return;
+    wx.navigateTo({ url: "/pages/list/list?coll=" + encodeURIComponent(e.currentTarget.dataset.c) });
   },
 
   onOpenBook(e) {
