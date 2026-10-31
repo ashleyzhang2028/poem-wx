@@ -100,14 +100,7 @@
   margin-right: 0;
 }
 
-.pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.more {
   padding: var(--sp-3) var(--sp-2);
-}
-
-.pager-text {
-  flex: 1;
   text-align: center;
 }
