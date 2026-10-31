@@ -108,6 +108,7 @@ Page({
     const mine = this.mineRows();
     const groups = GROUPS.map((g) => {
       const books = g.books.map((id) => byId[id]).filter(Boolean);
+      const selfMade = g.key === "mine";
       return {
         key: g.key,
         name: g.name,
@@ -119,7 +120,8 @@ Page({
           unit: b.unit,
           count: b.count
         })),
-        count: books.length
+        unit: selfMade ? "个" : "部",
+        count: selfMade ? mine.length : books.length
       };
     }).filter((g) => g.key === "mine" || g.books.length);
 

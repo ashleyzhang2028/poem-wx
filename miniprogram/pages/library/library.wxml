@@ -39,7 +39,7 @@
     <view class="card" wx:for="{{groups}}" wx:key="key">
       <view class="gc-head">
         <text class="gc-name">{{item.name}}</text>
-        <text class="gc-count">{{item.count}} 部</text>
+        <text class="gc-count">{{item.count}} {{item.unit}}</text>
       </view>
       <text class="gc-desc">{{item.desc}}</text>
       <block wx:if="{{item.key === 'mine'}}">
