@@ -140,24 +140,22 @@ Page({
     this.refresh();
   },
 
-  onRename(e) {
+  onDelete(e) {
     const id = e.currentTarget.dataset.id;
     const row = this.data.rows.filter((r) => r.id === id)[0];
     if (!row) return;
     wx.showModal({
-      title: "修改书签名",
-      editable: true,
-      placeholderText: row.title,
-      confirmText: "保存",
+      title: "删除书签",
+      content: "删除「" + row.title + "」？",
+      confirmText: "删除",
       cancelText: "取消",
       success: (res) => {
         if (!res.confirm) return;
-        if (!marks.retitle(id, res.content)) {
-          wx.showToast({ title: "名称不能为空", icon: "none" });
-          return;
-        }
+        marks.remove([id]);
+        delete this.pickedIds[id];
         sync.markDirty();
         this.refresh();
+        wx.showToast({ title: "已删除", icon: "none" });
       }
     });
   },
