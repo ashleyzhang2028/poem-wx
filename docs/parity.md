@@ -26,7 +26,7 @@
 | 十七部课外集子（5677 条正文） | ✅ | ❌ | **整体删除**（Issue #723、#738）：课外语料、正文分片、分片清单、全书倒排索引一并下线，只用课内那 251 首。那十七部的名字也从集子表里下线 —— 包里既没有条目、也没有正文与释义，留着只会让人点进去看空页 |
 | 经典集子的目录（书名 / 标题 / 作者，Issue #738） | ✅ | ✅ | 集子清单与篇数以 MySQL `corpus_books` 为准（经 `GET /api/corpus/books` / `catalogs` 下发并缓存在本机，不进包），入口在「课内 → 课外集子」。目录的标题、作者取自诗词漫读的语料（`scripts/corpus/scripts/build-site-catalogs.py` 从 poetry-data 生成，繁转简与接口同口径）；正文与译文**能绑的已落库**（`corpus_texts`，按目录次序挂，经 `GET /api/corpus/texts?book=` 下发），绑不上的仍即时问诗词漫读（按标题 `GET /poems/search?type=title` 精确检索）。语料在 `scripts/corpus/data/site-catalogs.js`、`catalog-texts.js` 与 `tongxin-notes.js` |
 | 集子顶上的索引卡 | ✅ | ✅ | 按年级册 / 卷次 / 词牌 / 文体分组，点一格就地滚过去 |
-| 四个集子的注释（Issue #841） | ❌ | ✅ | 唐诗三百首、宋词三百首、古文观止、童心诗话按目录次序挂注释，语料在 `scripts/corpus/data/catalog-notes.js` 与 `tongxin-notes.js`，落 `corpus_gloss`、经 `GET /api/corpus/gloss?book=` 下发 |
+| 四个集子的注释（Issue #841） | ❌ | ✅ | 唐诗三百首、宋词三百首、古文观止、童心诗话按目录次序挂注释，四部**全部篇目**（含古文观止的 152 篇长文）都有，语料在 `scripts/corpus/data/catalog-notes.js` 与 `tongxin-notes.js`，落 `corpus_gloss`、经 `GET /api/corpus/gloss?book=` 下发。篇数与自检口径的取数入口是 `node scripts/corpus/scripts/check-catalog-notes.js` |
 | 详情页（标题 / 作者 / 朝代 / 出处 / 译文） | ✅ | ⚠️ | 出处与译文折叠收起。**出处是两重**（#512）：`source` 记所出之书、《唐诗》《词》《曲》《文选》另有 `selection` 记选本 —— 网页版把两枚标签并排放在身份行上；小程序端身份行只有一条（nowrap，量过：并进去《唐诗》37 条、《词》48 条超宽），所以**第二重另起一行小字**，与「又名」同一行 |
 | 题名异写（「又名 xxxx」，#516） | ✅ | ✅ | 11 条篇目在标题底下补一句「又名：xxx」，与网页版同口径、同一句话 |
 | 生字注音 / 全文注音 / 不注音 | ✅ | ⚠️ | 小程序端只留两档（不注音 / 全文），生字档下线。读音表离线进包，多音字按词组消歧 |
