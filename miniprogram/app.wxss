@@ -1386,6 +1386,7 @@ button, input, textarea {
   align-items: center;
   flex: none;
   box-sizing: border-box;
+  flex-wrap: nowrap;
   border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -1408,7 +1409,7 @@ button, input, textarea {
 }
 
 .pref-opt.in-seg {
-  height: 52rpx;
+  height: var(--h-pref);
   padding: 0 var(--sp-2);
   margin: 0;
   border-radius: 0;
@@ -1416,7 +1417,7 @@ button, input, textarea {
 
 .pref-size .pref-opt.ic {
   width: 64rpx;
-  height: 52rpx;
+  height: var(--h-pref);
   margin: 0;
   border-radius: 0;
 }
@@ -1429,7 +1430,7 @@ button, input, textarea {
 .pref-opt.ic {
   position: relative;
   width: 52rpx;
-  height: 52rpx;
+  height: var(--h-pref);
 }
 
 .pref-opt .glyph {
@@ -1451,10 +1452,11 @@ button, input, textarea {
 .pref-opt.aa {
   width: auto;
   min-width: 64rpx;
-  height: 52rpx;
+  height: var(--h-pref);
   margin: 0;
   padding: 0 var(--sp-2);
   border: 1rpx solid var(--line);
+  box-sizing: border-box;
 }
 
 .pref-opt.aa.on {

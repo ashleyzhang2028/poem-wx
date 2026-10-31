@@ -132,6 +132,8 @@ page {
   --h-opt-compact: calc(61rpx * var(--ui-scale));
   --h-opt-tight: calc(64rpx * var(--ui-scale));
 
+  --h-pref: calc(52rpx * var(--ui-scale));
+
   --h-round: calc(60rpx * var(--ui-scale));
   --h-round-ico: calc(40rpx * var(--ui-scale));
 
