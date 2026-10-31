@@ -4035,8 +4035,7 @@ function mountFull(pg, query) {
   const scaleMod = require(path.join(ROOT, "utils", "type-scale.js"));
   const sizes = [];
   for (let size = scaleMod.MIN; size <= scaleMod.MAX; size++) sizes.push(size);
-  const sheetGap = sizes.map((size) => scaleMod.gap(size, false));
-  const sheetGapPy = sizes.map((size) => scaleMod.gap(size, true));
+  const scaleGap = sizes.map((size) => scaleMod.gap(size));
   const sheetClass = sizes.map((size) => (size < 0 ? "size--" + Math.abs(size) : "size-" + size));
   const sheetCss = readSrc("app.wxss");
   const cssRow = (cls, name) => {
@@ -4044,13 +4043,25 @@ function mountFull(pg, query) {
     return m ? Number(m[1]) : NaN;
   };
   const cssGap = sheetClass.map((cls) => cssRow(cls, "poem-gap"));
-  const cssGapPy = sheetClass.map((cls) => cssRow(cls, "poem-gap-py"));
   const rising = (arr) => arr.every((v, i) => i === 0 || v >= arr[i - 1]);
 
-  ok("行间距按字号档给（无注音与有注音各一张表，样式与取值的表同源）",
-    cssGap.join(",") === sheetGap.join(",") && cssGapPy.join(",") === sheetGapPy.join(",")
-      && rising(sheetGap) && rising(sheetGapPy) && sheetGapPy.every((v, i) => v > sheetGap[i]),
-    "两份表对不上 —— 改一处另一处不跟，同档字号的行距会说两套话");
+  ok("行间距按字号档给，只有一张表（样式与取值同源，不分注音与否）",
+    cssGap.join(",") === scaleGap.join(",") && rising(scaleGap),
+    "两张表对不上 —— 改一处另一处不跟，同档字号的行距会说两套话");
+
+  const lineRule = (sheetCss.match(/^\.poem-line \{[^}]*\}/m) || [])[0] || "";
+  const lineHeight = (lineRule.match(/line-height:\s*([^;]+);/) || [])[1] || "";
+  const added = sheetCss.match(/(?:^|[;{])\s*line-height:[^;}]*(?:--poem-gap-py|\*\s*var\(--poem-fs\))/g) || [];
+  const layered = /\.poem-line\.token-line,[\s\S]*?\{[^}]*line-height:|\.token-line\.token-wrap[^{,]*\{[^}]*line-height:\s+(?!calc)[^;]*/m;
+  ok("折行、句读分行、注音分行取同一个行高（只认 --poem-fs + var(--poem-gap)）",
+    lineHeight.replace(/\s+/g, "") === "calc(var(--poem-fs)+var(--poem-gap))"
+      && added.length === 0 && !layered.test(sheetCss),
+    "有一层行距还在往 --poem-fs + --poem-gap 上加数 —— 折行与句读分行看着不一样");
+
+  ok("字身不再带纵向余白（行距只由行高决定）",
+    /\.token-wrap \.token \{[^}]*margin:\s*0 var\(--py-gap\)/m.test(sheetCss)
+      && /\.token \{[^}]*margin:\s*0 var\(--py-gap\)/m.test(sheetCss),
+    "字身还挂着上下余白 —— 折行那一行比句读分行多出一截");
 
   ok("行间距不再留加减的入口（只跟字号走）",
     !/line[Gg]ap|onLineUp|onLineDown/.test(sheetJsSrc + readerJsSrc + readSrc("utils/store.js")),
