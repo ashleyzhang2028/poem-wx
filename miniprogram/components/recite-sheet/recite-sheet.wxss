@@ -236,3 +236,7 @@
   padding-top: var(--sp-2);
 }
 
+
+.sheet .poem-body {
+  padding-bottom: var(--sp-1);
+}

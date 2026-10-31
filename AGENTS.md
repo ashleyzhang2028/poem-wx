@@ -7,8 +7,8 @@
 - **源码里不写注释**，一行都不写。判据由 `scripts/check.js` 守着（`api/`、`deploy/`、
   `deploy-api-serve/`、`scripts/`、`miniprogram/` 逐份扫），构建期生成的文件同样。
 - 表达意图靠命名、结构与拆分。名字说不清的地方，先把结构改到能说清。
-- 语料（`scripts/corpus/`）与服务端契约的只读副本（`scripts/parity-web/`）
-  照原样摆着，不在这条范围内，也不去改。
+- 语料（`scripts/corpus/`）与服务端契约的副本（`scripts/parity-web/`）
+  不在这条范围内。语料不改；契约副本只在服务端契约变了时，跟着 `api/_lib/` 同步那一处。
 - 「为什么是这样」属于文档或 PR 描述，不属于代码。
 
 ## 微信小程序规范

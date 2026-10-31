@@ -1448,6 +1448,34 @@ button, input, textarea {
   background: var(--strong-soft);
 }
 
+.pref-opt.aa {
+  width: auto;
+  min-width: 64rpx;
+  height: 52rpx;
+  margin: 0;
+  padding: 0 var(--sp-2);
+  border: 1rpx solid var(--line);
+}
+
+.pref-opt.aa.on {
+  background: var(--strong-soft);
+}
+
+.aa-t {
+  font-family: var(--font-ui);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: 0;
+}
+
+.pref-opt.aa.on .aa-t {
+  color: var(--strong-text);
+}
+
+.prefs-panel {
+  padding-top: 0;
+}
+
 .pref-opt-hover {
   background: var(--sink);
 }
@@ -1521,6 +1549,54 @@ button, input, textarea {
 .poem-body.align-left .poem-line {
   padding-left: var(--sp-2);
   border-left: 3rpx solid transparent;
+}
+
+.poem-body:not(.prose) .poem-line:not(.token-line) {
+  letter-spacing: 0.06em;
+}
+
+.poem-body.align-center .token-line.token-wrap {
+  justify-content: center;
+}
+
+.poem-body.prose .poem-stanza + .poem-stanza {
+  margin-top: calc(var(--poem-fs) * 0.8);
+}
+
+.poem-body.prose .poem-line:not(.token-line) {
+  padding-left: 0;
+  border-left: 0;
+  text-align: justify;
+  text-indent: 2em;
+  line-height: calc(var(--poem-fs) * (var(--lh-poem) + 0.45));
+  line-break: strict;
+}
+
+.poem-body.prose .poem-clause,
+.poem-body.loose .poem-clause {
+  display: contents;
+}
+
+.poem-body.prose .token-line.token-wrap::before {
+  content: "";
+  flex: none;
+  width: calc((var(--py-box) + var(--py-gap) * 2) * 2);
+}
+
+.poem-body.prose.align-left .token-line.token-wrap,
+.poem-body.loose.align-left .token-line.token-wrap {
+  justify-content: flex-start;
+}
+
+.poem-body.loose .poem-line:not(.token-line) {
+  line-height: calc(var(--poem-fs) * (var(--lh-poem) + 0.2));
+  line-break: strict;
+}
+
+.poem-body.loose.align-left .poem-line:not(.token-line) {
+  padding-left: 1em;
+  border-left: 0;
+  text-indent: -1em;
 }
 
 .token-line {

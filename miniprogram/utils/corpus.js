@@ -76,6 +76,34 @@ const FIXED_MAX = 9;
 
 const STANZA_MAX_ROWS = 12;
 
+const PROSE_LINE_HAN = 40;
+
+const PROSE_MULTI_SENTENCE = 0.25;
+
+const PROSE_QUOTE_MULTI = 0.2;
+
+const PROSE_SPREAD = 0.2;
+
+const PROSE_MIN_HAN = 60;
+
+const PROSE_LONG_LINE_SHARE = 0.5;
+
+const LONG_TEXT_HAN = 250;
+
+const LONG_TEXT_LINE_HAN = 24;
+
+const LONG_TEXT_SPREAD = 0.3;
+
+const PINYIN_MAX_HAN = 1200;
+
+const CI_TITLE = /^[^·]+·[^·]+$/;
+
+const PROSE_PARA_HAN = 80;
+
+const QUOTE = /[“”「」『』]/;
+
+const SENTENCE_END = /[。！？”」』]$/;
+
 function charWidth(size, pinyin) {
   const at = Math.max(0, Math.min(FS_POEM.length - 1, Number(size) + 2));
   return pinyin ? PY_BOX[at] + PY_GAP * 2 : FS_POEM[at];
@@ -166,17 +194,90 @@ function layout(text, opts) {
   const size = opts && opts.size !== undefined ? Number(opts.size) || 0 : 0;
   const pinyin = !!(opts && opts.pinyin);
   const raw = String(text == null ? "" : text);
-  const memoKey = size + "|" + (pinyin ? 1 : 0) + "|" + raw;
+  const title = String((opts && opts.title) || "");
+  const memoKey = size + "|" + (pinyin ? 1 : 0) + "|" + title + "|" + raw;
   if (layoutMemo[memoKey]) return layoutMemo[memoKey];
-  const out = layoutOf(raw, size, pinyin);
+  const out = layoutOf(raw, size, pinyin, title);
   layoutMemo[memoKey] = out;
   layoutMemoKeys.push(memoKey);
   if (layoutMemoKeys.length > LAYOUT_MEMO_MAX) delete layoutMemo[layoutMemoKeys.shift()];
   return out;
 }
 
-function layoutOf(text, size, pinyin) {
+function clauseSpread(all) {
+  const lens = all.map(hanLen).filter((n) => n > 0);
+  if (!lens.length) return 0;
+  const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const variance = lens.reduce((a, b) => a + (b - mean) * (b - mean), 0) / lens.length;
+  return Math.sqrt(variance) / mean;
+}
+
+function multiSentenceShare(lines) {
+  const body = lines.filter((ln) => ln.s.length);
+  if (!body.length) return 0;
+  return body.filter((ln) => /[。！？][^。！？”」』]/.test(ln.line)).length / body.length;
+}
+
+function isProse(text, lines, all, title) {
+  const body = lines.filter((ln) => ln.s.length);
+  const total = hanLen(text);
+  const bulky = total >= LONG_TEXT_HAN;
+  if (!all.length || fixedVerse(all) > 0) return false;
+  if (bulky && total / body.length >= LONG_TEXT_LINE_HAN) return true;
+  const named = CI_TITLE.test(title);
+  if (bulky && !named && clauseSpread(all) >= LONG_TEXT_SPREAD) return true;
+  const long = body.filter((ln) => hanLen(ln.line) > PROSE_LINE_HAN).length;
+  if (!named && body.length && long / body.length >= PROSE_LONG_LINE_SHARE) return true;
+  if (named || total < PROSE_MIN_HAN) return false;
+  const multi = multiSentenceShare(lines);
+  if (QUOTE.test(text) && multi >= PROSE_QUOTE_MULTI) return true;
+  return multi >= PROSE_MULTI_SENTENCE && clauseSpread(all) >= PROSE_SPREAD;
+}
+
+function proseOf(lines, merge) {
+  const paras = [];
+  let pending = [];
+  let han = 0;
+  const close = () => {
+    if (pending.length) paras.push([pending]);
+    pending = [];
+    han = 0;
+  };
+  lines.forEach((ln) => {
+    if (!ln.s.length) {
+      close();
+      return;
+    }
+    if (!hanLen(ln.line)) {
+      if (pending.length) pending[pending.length - 1] += ln.line.trim();
+      return;
+    }
+    pending = pending.concat(ln.s);
+    han += hanLen(ln.line);
+    if (!merge || (han >= PROSE_PARA_HAN && SENTENCE_END.test(pending[pending.length - 1]))) close();
+  });
+  close();
+  return paras;
+}
+
+function plainOf(paras) {
+  return paras.map((para) => para.map((row) => row.join("")));
+}
+
+function layoutOf(text, size, pinyin, title) {
   const lines = splitLines(text);
+  const clauses = lines.reduce((acc, ln) => acc.concat(ln.s), []);
+  if (isProse(text, lines, clauses, title)) {
+    const prosePara = proseOf(lines, hanLen(text) / Math.max(1, lines.filter((ln) => ln.s.length).length) < LONG_TEXT_LINE_HAN);
+    return {
+      rows: prosePara.map((p) => p[0].join("")),
+      paras: prosePara,
+      plain: plainOf(prosePara),
+      verse: false,
+      prose: true,
+      loose: false
+    };
+  }
   const flat = [];
   const paras = [];
 
@@ -214,15 +315,20 @@ function layoutOf(text, size, pinyin) {
 
     if (!hanLen(ln.line)) {
       if (pending.length) pending[pending.length - 1] += ln.line.trim();
+      else if (stanza.length) stanza[stanza.length - 1][stanza[stanza.length - 1].length - 1] += ln.line.trim();
       return;
     }
 
-    pending = pending.concat(ln.s);
+    if (cap === Infinity) pushRows([ln.s]);
+    else pending = pending.concat(ln.s);
   });
   commit();
   closeStanza();
 
-  return { rows: flat.map((row) => row.join("")), paras: paras, verse: cap !== Infinity };
+  const limit = Math.max(1, Math.floor(MEASURE / charWidth(size, pinyin)));
+  const loose = cap === Infinity && flat.some((row) => row.reduce((n, cl) => n + costOf(cl), 0) > limit);
+
+  return { rows: flat.map((row) => row.join("")), paras: paras, plain: plainOf(paras), verse: cap !== Infinity, prose: false, loose: loose };
 }
 
 const COURSE = "data/course.js";
@@ -611,6 +717,8 @@ function grouped(list) {
 }
 
 module.exports = {
+  PINYIN_MAX_HAN,
+  hanCount: hanLen,
   CLAUSE_SPLIT,
   splitLines,
   splitClauses,

@@ -40,6 +40,7 @@ const DEFAULTS = {
   algo: "ebbinghaus",
 
   align: "center",
+  proseAlign: "left",
   fontSize: 0,
 
   theme: "ink",

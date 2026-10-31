@@ -93,6 +93,9 @@ Component({
     stage: "",
     rawText: "",
     verse: true,
+    prose: false,
+    prefsOpen: false,
+    loose: false,
     tokens: [],
     translation: "",
     translationSource: "",
@@ -277,7 +280,6 @@ Component({
         hasTranslation: !!entry.tr,
         glossRows,
         noteTab: glossRows.length ? "gloss" : "trans",
-        align: settings.align === "left" ? "left" : "center",
         fontSize,
         ...scale.flags(fontSize),
         lineGap: scale.clampGap(settings.lineGap),
@@ -298,13 +300,18 @@ Component({
     },
 
     applyReading() {
-      const usable = pinyin.readiness().usable && entitlement.can("pinyin");
+      const usable = pinyin.readiness().usable && entitlement.can("pinyin")
+        && corpus.hanCount(this.data.rawText) <= corpus.PINYIN_MAX_HAN;
       const mode = usable ? store.settings().pinyin : "off";
-      const laid = corpus.layout(this.data.rawText, { size: this.data.fontSize, pinyin: usable });
+      const laid = corpus.layout(this.data.rawText, { size: this.data.fontSize, pinyin: usable, title: this.data.title });
+      this.alignKey = scale.alignKey(laid);
       this.setData({
         pinyinOn: usable,
         pinyinMode: mode,
         verse: laid.verse,
+        prose: laid.prose,
+        loose: laid.loose,
+        align: scale.alignOf(laid, store.settings()),
         tokens: pinyin.render(laid.paras, mode)
       });
     },
@@ -361,10 +368,14 @@ Component({
       return "添加失败";
     },
 
+    onTogglePrefs() {
+      this.setData({ prefsOpen: !this.data.prefsOpen });
+    },
+
     onAlignToggle() {
       const align = this.data.align === "center" ? "left" : "center";
       this.setData({ align });
-      store.saveSettings({ align });
+      store.saveSettings({ [this.alignKey || "align"]: align });
     },
 
     onNoteTab(e) {
