@@ -267,14 +267,12 @@ node scripts/build-data.js
 ```
 ① 内容（诗、译文、索引、注音表）
    scripts/corpus/（语料，随本仓库走）
+     ├─ gen-corpus-sql.js 生成 deploy/sql/corpus.sql → 入 MySQL（corpus_* 四张表）
+     │    经 GET /api/corpus/:part 下发，客户端缓存在本机
      └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
-          · data/books/index.js    课内那一部的索引（不含正文）  → 进包
-          · data/books/books.js    集子表（课内一部 + 目录里的集子）→ 进包
-          · data/books/catalogs.js 集子的目录（标题与作者，不含正文）→ 进包
           · data/course.js         课内 251 首正文 + 译文       → 进主包
           · data/pinyin-table.js   读音表（离线注音）           → 进包
           · data/roster.js         名录                       → 进包
-          · data/roster-extra.js   名单里的作者（名字 → 朝代）  → 进包
 
      ⚠️ 编译这一步**不在 checkout 里**：产物不进 git，CI 上传体验版之前会重跑一次
      （见 .cnb.yml）。本地 clone 下来直接开开发者工具必然白屏 —— 先跑

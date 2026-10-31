@@ -76,6 +76,34 @@ const FIXED_MAX = 9;
 
 const STANZA_MAX_ROWS = 12;
 
+const PROSE_LINE_HAN = 40;
+
+const PROSE_MULTI_SENTENCE = 0.25;
+
+const PROSE_QUOTE_MULTI = 0.2;
+
+const PROSE_SPREAD = 0.2;
+
+const PROSE_MIN_HAN = 60;
+
+const PROSE_LONG_LINE_SHARE = 0.5;
+
+const LONG_TEXT_HAN = 250;
+
+const LONG_TEXT_LINE_HAN = 24;
+
+const LONG_TEXT_SPREAD = 0.3;
+
+const PINYIN_MAX_HAN = 1200;
+
+const CI_TITLE = /^[^·]+·[^·]+$/;
+
+const PROSE_PARA_HAN = 80;
+
+const QUOTE = /[“”「」『』]/;
+
+const SENTENCE_END = /[。！？”」』]$/;
+
 function charWidth(size, pinyin) {
   const at = Math.max(0, Math.min(FS_POEM.length - 1, Number(size) + 2));
   return pinyin ? PY_BOX[at] + PY_GAP * 2 : FS_POEM[at];
@@ -166,17 +194,90 @@ function layout(text, opts) {
   const size = opts && opts.size !== undefined ? Number(opts.size) || 0 : 0;
   const pinyin = !!(opts && opts.pinyin);
   const raw = String(text == null ? "" : text);
-  const memoKey = size + "|" + (pinyin ? 1 : 0) + "|" + raw;
+  const title = String((opts && opts.title) || "");
+  const memoKey = size + "|" + (pinyin ? 1 : 0) + "|" + title + "|" + raw;
   if (layoutMemo[memoKey]) return layoutMemo[memoKey];
-  const out = layoutOf(raw, size, pinyin);
+  const out = layoutOf(raw, size, pinyin, title);
   layoutMemo[memoKey] = out;
   layoutMemoKeys.push(memoKey);
   if (layoutMemoKeys.length > LAYOUT_MEMO_MAX) delete layoutMemo[layoutMemoKeys.shift()];
   return out;
 }
 
-function layoutOf(text, size, pinyin) {
+function clauseSpread(all) {
+  const lens = all.map(hanLen).filter((n) => n > 0);
+  if (!lens.length) return 0;
+  const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+  const variance = lens.reduce((a, b) => a + (b - mean) * (b - mean), 0) / lens.length;
+  return Math.sqrt(variance) / mean;
+}
+
+function multiSentenceShare(lines) {
+  const body = lines.filter((ln) => ln.s.length);
+  if (!body.length) return 0;
+  return body.filter((ln) => /[。！？][^。！？”」』]/.test(ln.line)).length / body.length;
+}
+
+function isProse(text, lines, all, title) {
+  const body = lines.filter((ln) => ln.s.length);
+  const total = hanLen(text);
+  const bulky = total >= LONG_TEXT_HAN;
+  if (!all.length || fixedVerse(all) > 0) return false;
+  if (bulky && total / body.length >= LONG_TEXT_LINE_HAN) return true;
+  const named = CI_TITLE.test(title);
+  if (bulky && !named && clauseSpread(all) >= LONG_TEXT_SPREAD) return true;
+  const long = body.filter((ln) => hanLen(ln.line) > PROSE_LINE_HAN).length;
+  if (!named && body.length && long / body.length >= PROSE_LONG_LINE_SHARE) return true;
+  if (named || total < PROSE_MIN_HAN) return false;
+  const multi = multiSentenceShare(lines);
+  if (QUOTE.test(text) && multi >= PROSE_QUOTE_MULTI) return true;
+  return multi >= PROSE_MULTI_SENTENCE && clauseSpread(all) >= PROSE_SPREAD;
+}
+
+function proseOf(lines, merge) {
+  const paras = [];
+  let pending = [];
+  let han = 0;
+  const close = () => {
+    if (pending.length) paras.push([pending]);
+    pending = [];
+    han = 0;
+  };
+  lines.forEach((ln) => {
+    if (!ln.s.length) {
+      close();
+      return;
+    }
+    if (!hanLen(ln.line)) {
+      if (pending.length) pending[pending.length - 1] += ln.line.trim();
+      return;
+    }
+    pending = pending.concat(ln.s);
+    han += hanLen(ln.line);
+    if (!merge || (han >= PROSE_PARA_HAN && SENTENCE_END.test(pending[pending.length - 1]))) close();
+  });
+  close();
+  return paras;
+}
+
+function plainOf(paras) {
+  return paras.map((para) => para.map((row) => row.join("")));
+}
+
+function layoutOf(text, size, pinyin, title) {
   const lines = splitLines(text);
+  const clauses = lines.reduce((acc, ln) => acc.concat(ln.s), []);
+  if (isProse(text, lines, clauses, title)) {
+    const prosePara = proseOf(lines, hanLen(text) / Math.max(1, lines.filter((ln) => ln.s.length).length) < LONG_TEXT_LINE_HAN);
+    return {
+      rows: prosePara.map((p) => p[0].join("")),
+      paras: prosePara,
+      plain: plainOf(prosePara),
+      verse: false,
+      prose: true,
+      loose: false
+    };
+  }
   const flat = [];
   const paras = [];
 
@@ -214,44 +315,154 @@ function layoutOf(text, size, pinyin) {
 
     if (!hanLen(ln.line)) {
       if (pending.length) pending[pending.length - 1] += ln.line.trim();
+      else if (stanza.length) stanza[stanza.length - 1][stanza[stanza.length - 1].length - 1] += ln.line.trim();
       return;
     }
 
-    pending = pending.concat(ln.s);
+    if (cap === Infinity) pushRows([ln.s]);
+    else pending = pending.concat(ln.s);
   });
   commit();
   closeStanza();
 
-  return { rows: flat.map((row) => row.join("")), paras: paras, verse: cap !== Infinity };
+  const limit = Math.max(1, Math.floor(MEASURE / charWidth(size, pinyin)));
+  const loose = cap === Infinity && flat.some((row) => row.reduce((n, cl) => n + costOf(cl), 0) > limit);
+
+  return { rows: flat.map((row) => row.join("")), paras: paras, plain: plainOf(paras), verse: cap !== Infinity, prose: false, loose: loose };
 }
 
-const COURSE = "data/course.js";
+const COURSE_BOOK = "poems";
 
-let booksCache = null;
+let courseCache = null;
 const idIndex = {};
 const idBook = {};
-let indexCache = null;
-let courseCache = null;
 const bookCache = {};
-
-const PACKED = {
-  books: function () {
-    return require("../data/books/books.js");
-  },
-  catalogs: function () {
-    return require("../data/books/catalogs.js");
-  },
-  index: function () {
-    return require("../data/books/index.js");
-  },
-  course: function () {
-    return require("../data/course.js");
-  }
-};
 
 const FIELDS = ["id", "t", "a", "d", "s", "g", "sel", "gr", "tm", "an", "aka"];
 
-let dataReady = null;
+const SCOPES = {
+  core: ["books", "poems"],
+  catalogs: ["books", "poems", "catalogs"],
+  authors: ["books", "poems", "catalogs", "authors"]
+};
+
+const STALE_MS = 6 * 3600 * 1000;
+
+const parts = {};
+const inflight = {};
+
+function cacheKey(part) {
+  return "kb_corpus_" + part + "_v1";
+}
+
+function held(part) {
+  if (parts[part] === undefined) {
+    let raw = null;
+    try {
+      raw = typeof wx !== "undefined" ? wx.getStorageSync(cacheKey(part)) : null;
+    } catch (e) {
+      raw = null;
+    }
+    parts[part] = raw && typeof raw === "object" && raw.rev && raw.data ? raw : null;
+  }
+  return parts[part];
+}
+
+function dataOf(part) {
+  const h = held(part);
+  return h ? h.data : null;
+}
+
+function forget() {
+  Object.keys(idIndex).forEach((k) => delete idIndex[k]);
+  Object.keys(idBook).forEach((k) => delete idBook[k]);
+  Object.keys(bookCache).forEach((k) => delete bookCache[k]);
+}
+
+function install(part, payload) {
+  const data = Object.assign({}, payload);
+  delete data.rev;
+  parts[part] = { rev: String(payload.rev), at: Date.now(), data: data };
+  forget();
+}
+
+function persist(part) {
+  try {
+    wx.setStorageSync(cacheKey(part), parts[part]);
+  } catch (e) {
+    return;
+  }
+}
+
+function missing(scope) {
+  return (SCOPES[scope || "core"] || SCOPES.core).filter((part) => !held(part));
+}
+
+function isReady(scope) {
+  return missing(scope).length === 0;
+}
+
+function corpusError(part, cause) {
+  const e = new Error("语料「" + part + "」没取到：" + ((cause && cause.message) || "网络不可用"));
+  e.code = "E_NO_CORPUS";
+  e.expected = true;
+  return e;
+}
+
+function shaped(part, res) {
+  if (!res || typeof res !== "object" || !res.rev) return false;
+  if (part === "books") return Array.isArray(res.books) && res.books.length > 0;
+  if (part === "poems") return Array.isArray(res.rows) && !!res.dict;
+  if (part === "catalogs") return !!res.rows && !!res.dict;
+  return !!res.era;
+}
+
+function fetchPart(part) {
+  if (inflight[part]) return inflight[part];
+  const have = held(part);
+  const query = have ? "?rev=" + encodeURIComponent(have.rev) : "";
+  const settle = () => { delete inflight[part]; };
+  inflight[part] = Promise.resolve().then(() => {
+    const remote = require("./remote");
+    return remote.request(remote.PATHS.corpus + "/" + part + query, {}, "GET");
+  }).then((res) => {
+    if (res && res.same === true && have) {
+      have.at = Date.now();
+      persist(part);
+      return false;
+    }
+    if (!shaped(part, res)) throw new Error("应答不完整");
+    install(part, res);
+    persist(part);
+    return true;
+  }).then((changed) => {
+    settle();
+    return changed;
+  }, (err) => {
+    settle();
+    throw corpusError(part, err);
+  });
+  return inflight[part];
+}
+
+function ready(scope) {
+  const need = missing(scope);
+  if (!need.length) return Promise.resolve(true);
+  return Promise.all(need.map(fetchPart)).then(() => true);
+}
+
+function refresh() {
+  const now = Date.now();
+  const due = Object.keys(parts).filter((part) => parts[part] && now - parts[part].at > STALE_MS);
+  return Promise.all(due.map((part) => fetchPart(part).catch(() => false)));
+}
+
+function warm() {
+  return ready("core")
+    .then(() => ready("authors"))
+    .catch(() => false)
+    .then(() => refresh());
+}
 
 const BUILD_KEY = "kb_build_v1";
 
@@ -301,101 +512,32 @@ function stamp(rev) {
 }
 
 function hasData() {
-  if (dataReady === null) {
-    try {
-      PACKED.books();
-      dataReady = true;
-    } catch (e) {
-      dataReady = false;
-    }
-  }
-  return dataReady;
-}
-
-function loadJson(rel) {
-  if (!hasData()) {
-    const err = new Error(
-      "包里没有 data/books/books.js —— 这一版没带上语料。\n" +
-      "在开发者工具里重新编译一次（读的是打包结果，不是磁盘上的目录）。"
-    );
-    err.code = "E_NO_DATA";
-
-    err.expected = true;
-    throw err;
-  }
-  return require("../" + rel);
-}
-
-function packed(name) {
-  try {
-    return PACKED[name]();
-  } catch (e) {
-    return null;
-  }
-}
-
-function readJson(rel, fallback) {
-  try {
-    return loadJson(rel);
-  } catch (e) {
-    if (e && e.code === "E_NO_DATA") return fallback;
-    return fallback;
-  }
+  return isReady("core");
 }
 
 function books() {
-  if (!booksCache) booksCache = packed("books") || [];
-  return booksCache;
+  const pack = dataOf("books");
+  return pack ? pack.books : [];
+}
+
+function booksOf() {
+  return books();
 }
 
 function bookById(id) {
-  const all = booksOf();
+  const all = books();
   for (let i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
   return null;
 }
 
-function indexPack() {
-  if (indexCache === null) {
-    try {
-      indexCache = PACKED.index();
-    } catch (e) {
-      indexCache = false;
-    }
-  }
-  return indexCache || null;
-}
-
-let catalogCache = null;
-
-function catalogs() {
-  if (catalogCache === null) {
-    const pack = packed("catalogs");
-    catalogCache = pack && pack.books ? pack : false;
-  }
-  return catalogCache || null;
-}
-
-function booksOf() {
-  const pack = catalogs();
-  if (!pack) return books();
-  const counts = {};
-  pack.books.forEach(function (b) { counts[b.id] = b.count; });
-  return books().map(function (b) {
-    if (counts[b.id] === undefined) return b;
-    return { id: b.id, name: b.name, page: b.page, unit: b.unit, count: counts[b.id], remote: true };
-  });
-}
-
 function catalog(bookId) {
-  const pack = catalogs();
-  if (!pack || !pack.rows[bookId]) return null;
-  const meta = pack.books.filter(function (b) { return b.id === bookId; })[0] || null;
-  if (!meta) return null;
-  const prefix = (pack.prefixes && pack.prefixes[pack.books.indexOf(meta)]) || bookId;
+  const pack = dataOf("catalogs");
+  const meta = bookById(bookId);
+  if (!pack || !meta || !meta.remote || !pack.rows[bookId]) return null;
+  const prefix = meta.prefix || bookId;
   const rows = pack.rows[bookId].map(function (raw, i) {
-    const id = bookId + "-" + (i + 1);
     return {
-      id: id,
+      id: bookId + "-" + (i + 1),
       sid: prefix + "-" + (i + 1),
       t: raw[0],
       a: field(pack.dict, "a", raw[1]),
@@ -434,34 +576,45 @@ function rowOf(dict, raw, bookId) {
 }
 
 function ofBook(bookId) {
-  if (!bookCache[bookId]) {
-    const built = catalog(bookId);
-    if (built) {
-      bookCache[bookId] = built.rows;
-      return built.rows;
-    }
-    const meta = bookById(bookId);
-    const pack = indexPack();
-    const rows = pack && pack.rows[bookId] ? pack.rows[bookId] : [];
-    const list = rows.map(function (raw) {
-      const p = rowOf(pack.dict, raw, bookId);
-      p.n = meta ? meta.name : bookId;
-      idIndex[p.id] = p;
-      if (idBook[p.id] === undefined) idBook[p.id] = bookId;
-      p.lb = matchTextOf(p);
-      return p;
-    });
-    bookCache[bookId] = list;
+  if (bookCache[bookId]) return bookCache[bookId];
+  const meta = bookById(bookId);
+  if (!meta) return [];
+  const built = catalog(bookId);
+  if (built) {
+    bookCache[bookId] = built.rows;
+    return built.rows;
   }
-  return bookCache[bookId];
+  const pack = bookId === COURSE_BOOK ? dataOf("poems") : null;
+  if (!pack) return [];
+  const list = pack.rows.map(function (raw) {
+    const p = rowOf(pack.dict, raw, bookId);
+    p.n = meta.name;
+    idIndex[p.id] = p;
+    if (idBook[p.id] === undefined) idBook[p.id] = bookId;
+    p.lb = matchTextOf(p);
+    return p;
+  });
+  bookCache[bookId] = list;
+  return list;
 }
 
 function course() {
-  return ofBook("poems");
+  return ofBook(COURSE_BOOK);
+}
+
+function authorEras() {
+  const pack = dataOf("authors");
+  return pack ? pack.era : {};
 }
 
 function courseTexts() {
-  if (!courseCache) courseCache = packed("course") || readJson(COURSE, {});
+  if (!courseCache) {
+    try {
+      courseCache = require("../data/course.js");
+    } catch (e) {
+      courseCache = {};
+    }
+  }
   return courseCache;
 }
 
@@ -611,6 +764,8 @@ function grouped(list) {
 }
 
 module.exports = {
+  PINYIN_MAX_HAN,
+  hanCount: hanLen,
   CLAUSE_SPLIT,
   splitLines,
   splitClauses,
@@ -639,4 +794,10 @@ module.exports = {
   matchEntry,
   hasData,
   stamp,
+  install,
+  isReady,
+  ready,
+  refresh,
+  warm,
+  authorEras,
 };

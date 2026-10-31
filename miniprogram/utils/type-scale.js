@@ -23,4 +23,14 @@ function gapFlags(gap) {
   return { lineDown: gap2 > GAP_MIN, lineUp: gap2 < GAP_MAX };
 }
 
-module.exports = { MIN, MAX, clamp, flags, GAP_DEFAULT, clampGap, gapFlags };
+function alignKey(laid) {
+  return laid && (laid.prose || laid.loose) ? "proseAlign" : "align";
+}
+
+function alignOf(laid, settings) {
+  const s = settings || {};
+  if (alignKey(laid) === "proseAlign") return s.proseAlign === "center" ? "center" : "left";
+  return s.align === "left" ? "left" : "center";
+}
+
+module.exports = { alignKey, alignOf, MIN, MAX, clamp, flags, GAP_DEFAULT, clampGap, gapFlags };

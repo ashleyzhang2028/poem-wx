@@ -669,8 +669,6 @@ cases.forEach((cfg) => {
       storeMod.write(storeMod.KEYS.progress, seedRecords(seed));
     } else storeMod.write(storeMod.KEYS.progress, {});
 
-    storeMod.saveBookmarks(cfg.bookmarks || []);
-
     if (cfg.dailyExtra) storeMod.setDailyExtra(cfg.dailyExtra);
     else storeMod.clearDailyExtra();
 

@@ -62,7 +62,7 @@ miniprogram/
 │   ├── review-models.js             # 四套复习算法
 │   ├── scheduler.js                 # 每日计划与进度总览
 │   ├── pinyin.js                    # 注音（多音字消歧，与网页版同口径）
-│   ├── sfx.js                       # 音效：温习三态与答题（Web Audio 现场合成，零音频文件）
+│   ├── sfx.js                       # 音效：温习三态与答题（Web Audio；云托管 `audio/effect/*.mp3` 取到前现场合成，包内不放音频）
 │   ├── entitlement.js / tiers.js    # 门禁：登录门（block）+ 三档分层
 │   ├── author-index.js              # 作者索引：朝代归一 / 异名归一 / 名册构建
 │   ├── tab-page.js                  # 跳 tab 页的唯一出口（navigateTo 去 tab 页静默失败）
@@ -251,8 +251,8 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 | 项 | 实测 |
 |---|---|
 | 课内正文（251 条，`data/course.js`） | **235 KB** |
-| 集子目录（`data/books/catalogs.js`） | 构建时以 `scripts/build-data.js` 输出为准 |
-| 全部索引（不含正文，课内那一部一张合表） | 18 KB |
+| 集子目录（MySQL `corpus_catalog`，经 `GET /api/corpus/catalogs` 下发） | 不进包，首次取后缓存在本机 |
+| 全部索引（不含正文，课内那一部） | 不进包，经 `GET /api/corpus/poems` 下发 |
 | 读音表（`data/pinyin-table.js`） | 62 KB |
 | 代码与样式 | 104 KB |
 | 小程序主包上限 / 总包上限 | 2 MB / 20 MB |
@@ -267,27 +267,28 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 于是按两层落：
 
 1. **包内（免网络）**
-   - 集子索引 `data/books/index.js`（篇名/作者/朝代/出处/分组，不含正文）
    - **课内 251 首的正文、译文与生字生词注释 `data/course.js`**
      （注释语料在 `scripts/corpus/data/gloss-notes.js`，一篇一组「词、释义」，
      只收课内这 251 篇；`utils/gloss.js` 把组按每行两条排给模板）
-   - 集子表 `data/books/books.js`、读音表 `data/pinyin-table.js`、名录 `data/roster.js`、
-     作者索引里课内之外的名单 `data/roster-extra.js`
-   - 索引里**不带正文**，这是主包能压住的前提
+   - 读音表 `data/pinyin-table.js`、名录 `data/roster.js`
 
-   ⚠️ 落盘的索引是**薄索引**：一行只有「id / 篇名 / 作者 / 朝代 / 出处 / 分组 /
-   选本 / 年级学期 / 异名」这些列表页真要用的字段，**不带正文与译文**，也不带
-   集子 id、集子名、`hasT` 与空字段。`utils/corpus.js` 的 `ofBook()` 读进来时
-   按集子表把这几样填回去，语料的每一层都走 `ofBook()`（列表 / 检索 / 阅读 /
-   作者索引 / 试题），外面看到的形状与从前一致。
+   ⚠️ 索引不在包里（见下一条）。课内正文取到后还要靠索引补篇名、作者，
+   所以**第一次启动必须联网一次**；之后读本机缓存，断网也能读课内。
 
-   ⚠️ 索引**只装课内那一部**：`books` 与 `rows` 都只有 `poems` 一张表。
+2. **索引与目录在 MySQL**，表是 `corpus_books` / `corpus_poems` / `corpus_catalog` /
+   `corpus_authors`（建表见 `deploy/sql/mysql-schema.sql`，数据由
+   `node scripts/gen-corpus-sql.js` 从 `scripts/corpus/` 生成 `deploy/sql/corpus.sql`，
+   语料变了要重新生成并在库里执行一次）。
+   经 `GET /api/corpus/:part` 下发，`part` 取 `books` / `poems` / `catalogs` / `authors`：
+   页面要什么取什么（书架只要 `books`，课内页要 `poems`，非课内集子要 `catalogs`，
+   作者索引要 `authors`），每份只查自己那张表、只选用到的列。
+   应答带 `rev`，客户端带 `?rev=` 再问时未变则只回 `{ rev, same: true }`。
 
-2. **集子目录另起一份**：`data/books/catalogs.js` 装课外集子的
-   「书名 + 标题 + 作者或出处」，一行三个短字段，作者与出处各自去重成字典。
-   条目 id 是 `<书名>-<次序>`，源 id 由 `data/site-catalogs.js` 里那部书的 `src`
-   加同一次序拼成（`tangshi300-11`），按部存前缀、读时拼，不逐条落盘。集子表 `books.js`
-   带这些集子的名字与单位，列表页与入口卡要用。
+   客户端 `utils/corpus.js` 把每份存进 `wx.setStorageSync`（键 `kb_corpus_<part>_v1`），
+   启动时同步读回来，所以 `course()` / `ofBook()` / `indexById()` 这些同步取数的形状不变；
+   没有缓存时页面经 `utils/corpus-gate.js` 先给骨架屏，取不到给「重试」。
+   `app.js` 启动调 `corpus.warm()`，超过 6 小时的缓存在后台带 `rev` 校一次。
+   条目 id 是 `<书名>-<次序>`，源 id 由 `corpus_books.prefix` 加同一次序拼成（`tangshi300-11`）。
 
 3. **不在包里的**：集子的正文，以及课内那 251 首之外的一切正文。
    目录里没有源 id 的条目取不到正文，界面按「没取到」处理并给一次重试 ——
@@ -585,7 +586,7 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 V40 拿两端逐段比。
 
 **名册收谁**：课内那 251 首里的作者（`items` 就是他的作品，点开直接列），
-加上 `data/roster-extra.js` 里的人 —— 取自 `scripts/corpus/data/site-roster.js` 的名单，
+加上 `corpus_authors` 里的人（`GET /api/corpus/authors`）—— 取自 `scripts/corpus/data/site-roster.js` 的名单，
 包里没有作品行。这些人在名册上照常占一格（名字 + 朝代），点开时按名字
 现问诗词漫读：先 `GET /authors` 找 id，再 `GET /poems?author=<id>` 一页 100 首。
 
@@ -966,7 +967,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 原先的写法里 `size--1` 与 `size-1` 贴在一起，很容易看漏一个减号。
 现在负档统一两个减号，样式表里也按档位顺序排列，读起来是一条线。
 
-**页面顶部是那张画。** `icons/hero.png`（1717×916）铺满屏宽，`mode="widthFix"`
+**页面顶部是那张画。** `themes/city/hero.png`（1717×916）铺满屏宽，`mode="widthFix"`
 按原比例落高 —— 它是带文字的成品画（图里已有「跬步诗词」四个字），
 拉伸或裁切都会把字压歪，所以只许等比缩放。宽度铺满后左右不留白，
 否则页面底色会在两侧各露一条；高度取 `min(屏宽 × 916/1717, 360px)`，
@@ -974,7 +975,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 几何由 `components/page-banner` 一个组件给：盒宽 = 屏宽（用页面左右各一个
 `--sp-3` 的负 margin 抵消 `.page` 的内边距），画高由组件自己算。
-`icons/hero.png` 四周没有透明边，所以盒子按 PNG 的 1027×558 取比，
+`hero.png` 四周没有透明边，所以盒子按 PNG 的 1027×558 取比，
 不再用「导航两段 + 折高」——那会让每一屏顶部多出一块空白。
 
 页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移
@@ -998,7 +999,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 画随主题换一张：`THEMES` 每一项带 `banner` 字段，页面读 `theme.bannerOf(key)`。
 大好河山那几张走云托管对象存储的 `themes/city/` 路径（包内不放这几张，
-`banner` 字段存完整 URL），其余一律包内的 `/icons/hero.png`。
+`banner` 字段存完整 URL），默认那张 `hero.png` 同在此路径，包内不放图。
 
 城景与包内那张画同法：盒宽同样是屏宽，画按等比落高（`widthFix`），盒高由组件
 按原画的比算出并封顶 360px。城景的长宽比与原画接近，所以盒高、首卡压画下沿的

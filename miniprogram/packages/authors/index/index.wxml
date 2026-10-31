@@ -3,7 +3,9 @@
 
   <block wx:else>
 
-  <block wx:if="{{!author}}">
+  <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
+
+  <block wx:if="{{!corpusState && !author}}">
 
     <view class="card roster-head">
       <text class="head-title poem">{{totalPeople}} 位作者</text>
@@ -66,7 +68,7 @@
     <view class="safe-bottom"></view>
   </block>
 
-  <block wx:else>
+  <block wx:elif="{{!corpusState}}">
     <view class="card">
       <text class="head-title">{{author}}</text>
       <text class="head-sub">{{unread ? '还有 ' + unread + ' 条未读' : '已全部读完'}}</text>

@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const corpusGate = require("../../utils/corpus-gate");
 const store = require("../../utils/store");
 const gate = require("../../utils/gate");
 const entitlement = require("../../utils/entitlement");
@@ -44,6 +45,7 @@ Page({
     pages: 1,
     last: null,
     locked: true,
+    corpusState: "",
     icons: { search: icons.search, playlist: icons.playlist }
   },
 
@@ -75,6 +77,22 @@ Page({
     }
     this.setData({ locked: false });
 
+    corpusGate.open(this, this.scopeOf(), () => this.showBook());
+  },
+
+  scopeOf() {
+    return this.data.bookId === "poems" ? "core" : "catalogs";
+  },
+
+  onCorpusRetry() {
+    corpusGate.open(this, this.scopeOf(), () => this.showBook());
+  },
+
+  onUnload() {
+    corpusGate.close(this);
+  },
+
+  showBook() {
     const book = corpus.bookById(this.data.bookId) || { name: "课内阅读", unit: "首" };
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });

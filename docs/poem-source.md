@@ -124,7 +124,7 @@ poem-source.byId(sid, meta) → 先查本次会话里搜索 / 列表见过的那
 ```
 
 诗词漫读的 REST 没有按 id 取单篇的接口，只有 `/poems`、`/poems/search`、`/poems/random`。
-集子的目录在包里（`data/books/catalogs.js`，见 `docs/parity.md` 一），正文不在。
+集子的目录在 MySQL（`corpus_catalog`，经 `GET /api/corpus/catalogs` 下发，见 `docs/parity.md` 一），正文不在。
 目录行的 `sid`（`tangshi300-11`）是包内编号，不是诗词漫读的 id，不能拼进接口。
 
 - 搜索页、作者索引点开的诗：id 是诗词漫读返回的整数，`search` / `poems` 返回时已记下整首，阅读页直接取用。

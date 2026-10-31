@@ -62,7 +62,7 @@
 
 大好河山各支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
 （`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `theme.js` 的 `CITY_BANNER`），
-不进包；其余主题一律包内 `icons/hero.png`。
+不进包；默认主题的 `hero.png` 同在 `themes/city/`。
 
 | 主题 | 色 | banner |
 |---|---|---|
@@ -190,7 +190,7 @@ base64 存进 `kb_settings_v1` 的 `banner`，存完再读回来核一遍长度�
 超出一条微信 key 的 1MB 就退回「换一张」而不是存成一条空图。
 
 **只存本机。** `banner` 与 `lastSearch` 一样进 `store.LOCAL_ONLY`，
-`cloudSettings()` 不给它，所以换台设备就回到默认那张 `icons/hero.png`；
+`cloudSettings()` 不给它，所以换台设备就回到默认那张 `hero.png`；
 档位掉下来时 `current()` 退回默认那支，图还在本机但不再用。
 色卡上那句只说一件事：「图片存于本机，不同步到服务器」。
 

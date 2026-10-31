@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const corpusGate = require("../../utils/corpus-gate");
 const source = require("../../utils/poem-source");
 const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
@@ -17,6 +18,12 @@ const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
 const gloss = require("../../utils/gloss");
+
+const FIRST_CHUNK = 24;
+
+const CHUNK = 60;
+
+const CHUNK_GAP = 60;
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -62,8 +69,11 @@ Page({
 
     aliasText: "",
     rawText: "",
-    paras: [],
     verse: true,
+    prose: false,
+    prefsOpen: false,
+    loose: false,
+    plain: [],
     tokens: [],
     translation: "",
     translationSource: "",
@@ -103,6 +113,8 @@ Page({
     lockTitle: "诗词详情",
     lockNote: "登录后查看正文与进度",
 
+    corpusState: "",
+
     creator: "",
     pager: { show: false, prev: null, next: null }
   },
@@ -135,10 +147,29 @@ Page({
     }
 
     if (this.data.locked) this.setData({ locked: false });
-    if (!this.loaded) this.loadEntry();
+    if (!this.loaded) this.openEntry();
     this.applyReading();
 
     this.syncDaily();
+  },
+
+  corpusScope() {
+    const id = String(this.data.id);
+    if (/^\d+$/.test(id)) return "";
+    return /^poems-/.test(id) ? "core" : "catalogs";
+  },
+
+  openEntry() {
+    const scope = this.corpusScope();
+    if (!scope) {
+      this.loadEntry();
+      return;
+    }
+    corpusGate.open(this, scope, () => this.loadEntry());
+  },
+
+  onCorpusRetry() {
+    this.openEntry();
   },
 
   syncDaily() {
@@ -303,7 +334,6 @@ Page({
       translationSource: entry.src || "",
       hasTranslation: !!entry.tr,
       glossRows: gloss.rows(entry.gloss),
-      align: settings.align === "left" ? "left" : "center",
       fontSize: size,
       ...scale.flags(size),
       lineGap: scale.clampGap(settings.lineGap),
@@ -326,18 +356,41 @@ Page({
   relayout() {
     const laid = corpus.layout(this.data.rawText, {
       size: this.data.fontSize,
-      pinyin: this.data.pinyinOn
+      pinyin: this.data.pinyinOn,
+      title: this.data.title
     });
-    this.setData({ paras: laid.paras, verse: laid.verse });
+    this.laidParas = laid.paras;
+    this.alignKey = scale.alignKey(laid);
+    this.chunkToken = (this.chunkToken || 0) + 1;
+    this.setData({
+      plain: laid.plain.slice(0, FIRST_CHUNK),
+      verse: laid.verse,
+      prose: laid.prose,
+      loose: laid.loose,
+      align: scale.alignOf(laid, store.settings())
+    });
+    this.appendRest(laid.plain, FIRST_CHUNK, this.chunkToken);
+  },
+
+  appendRest(plain, from, token) {
+    if (from >= plain.length) return;
+    setTimeout(() => {
+      if (token !== this.chunkToken) return;
+      const patch = {};
+      plain.slice(from, from + CHUNK).forEach((para, i) => { patch["plain[" + (from + i) + "]"] = para; });
+      this.setData(patch);
+      this.appendRest(plain, from + CHUNK, token);
+    }, CHUNK_GAP);
   },
 
   applyReading() {
-    const usable = pinyin.readiness().usable && entitlement.can("pinyin");
+    const usable = pinyin.readiness().usable && entitlement.can("pinyin")
+      && corpus.hanCount(this.data.rawText) <= corpus.PINYIN_MAX_HAN;
     const mode = usable ? pinyin.getMode() : "off";
 
     this.setData({ pinyinOn: usable, pinyinMode: mode });
     if (this.data.rawText) this.relayout();
-    this.setData({ tokens: pinyin.render(this.data.paras, mode) });
+    this.setData({ tokens: usable ? pinyin.render(this.laidParas, mode) : [] });
   },
 
   onPinyinToggle() {
@@ -354,10 +407,14 @@ Page({
     return corpus.indexById(id);
   },
 
+  onTogglePrefs() {
+    this.setData({ prefsOpen: !this.data.prefsOpen });
+  },
+
   onAlignToggle() {
     const align = this.data.align === "center" ? "left" : "center";
     this.setData({ align });
-    store.saveSettings({ align });
+    store.saveSettings({ [this.alignKey || "align"]: align });
 
     sync.markDirty();
   },
@@ -428,8 +485,10 @@ Page({
   },
 
   onUnload() {
+    corpusGate.close(this);
     if (this.advance) clearTimeout(this.advance);
     this.loadToken = (this.loadToken || 0) + 1;
+    this.chunkToken = (this.chunkToken || 0) + 1;
   },
 
   goNext() {

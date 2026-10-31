@@ -18,7 +18,7 @@ App({
     store.migrate();
     this.stampBuild();
 
-    corpus.course();
+    corpus.warm();
     corpus.dropLegacy();
 
     this.reloadFont();

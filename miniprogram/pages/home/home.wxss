@@ -232,7 +232,7 @@
 
 .daily-body {
   margin-top: var(--sp-2);
-  padding-bottom: var(--sp-2);
+  padding-bottom: var(--sp-3);
   text-align: center;
 }
 

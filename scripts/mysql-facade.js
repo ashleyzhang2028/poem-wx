@@ -16,6 +16,11 @@ const db = {
   score_records: new Map(),
   avatars: new Map(),
   app_settings: new Map(),
+  daily_poems: new Map(),
+  corpus_books: new Map(),
+  corpus_poems: new Map(),
+  corpus_catalog: new Map(),
+  corpus_authors: new Map(),
   progress: new Map()
 };
 
@@ -35,6 +40,11 @@ const PK = {
   score_records: ["srid"],
   avatars: ["uid"],
   app_settings: ["skey"],
+  daily_poems: ["pos"],
+  corpus_books: ["book_id"],
+  corpus_poems: ["id"],
+  corpus_catalog: ["book_id", "pos"],
+  corpus_authors: ["name"],
   progress: ["uid", "child_id", "poem_id"]
 };
 
@@ -200,6 +210,7 @@ const facade = {
         if (/^\s*SELECT/i.test(sql)) {
           const all = t ? [...db[t].values()] : [];
           const hit = all.filter((r) => hits(r, sql, params));
+          if (/^\s*SELECT\s+COUNT\(\*\)\s+AS\s+n\b/i.test(sql)) return Promise.resolve([[{ n: hit.length }], []]);
 
           return Promise.resolve([/\bLIMIT\s+1\b/i.test(sql) ? (hit.length ? [hit[0]] : []) : hit, []]);
         }

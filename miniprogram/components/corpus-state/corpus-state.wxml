@@ -1,0 +1,10 @@
+<view class="card" wx:if="{{state === 'loading'}}">
+  <skeleton rows="4" />
+</view>
+<view class="card" wx:elif="{{state === 'failed'}}">
+  <view class="empty">
+    <text class="empty-mark">等</text>
+    <text class="empty-text">诗词目录未取到</text>
+    <button class="btn primary mini empty-btn" bindtap="onRetry">重试</button>
+  </view>
+</view>

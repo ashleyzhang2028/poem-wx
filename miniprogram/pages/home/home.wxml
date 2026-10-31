@@ -1,7 +1,8 @@
 <view class="page home {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <page-banner src="{{banner}}" />
   <nav-bar scope="{{fontScope}}" />
-  <block wx:if="{{guest}}">
+  <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
+  <block wx:if="{{!corpusState && guest}}">
     <view class="card hero-lead">
       <text class="hero-eyebrow">今日</text>
 
@@ -46,7 +47,7 @@
     <view class="safe-bottom"></view>
   </block>
 
-  <block wx:else>
+  <block wx:elif="{{!corpusState}}">
 
     <view class="card hero-lead">
       <text class="hero-eyebrow">{{todayLabel}}</text>

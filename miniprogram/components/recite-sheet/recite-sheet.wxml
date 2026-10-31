@@ -44,6 +44,19 @@
       </view>
 
       <view class="prefs">
+      <view class="pref-act">
+          <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
+                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
+                aria-label="{{dailyOn ? '移出今日诵读' : '加入今日诵读'}}">
+            <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
+          </view>
+        </view>
+      <view class="pref-opt aa {{prefsOpen ? 'on' : ''}}" hover-class="pref-opt-hover" hover-stay-time="60"
+            bindtap="onTogglePrefs" aria-label="阅读设置">
+        <text class="aa-t">Aa</text>
+      </view>
+    </view>
+    <view class="prefs prefs-panel" wx:if="{{prefsOpen}}">
         <view class="pref-seg">
           <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
                 hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
@@ -81,17 +94,9 @@
             <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
           </view>
         </view>
+    </view>
 
-        <view class="pref-act">
-          <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
-                hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
-                aria-label="{{dailyOn ? '移出今日诵读' : '加入今日诵读'}}">
-            <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
-          </view>
-        </view>
-      </view>
-
-      <view class="poem-body align-{{align}} size-{{fontSize}} gap-{{lineGap}}">
+      <view class="poem-body align-{{align}} size-{{fontSize}} gap-{{lineGap}} {{prose ? 'prose' : ''}} {{loose ? 'loose' : ''}}">
         <block wx:if="{{tokens.length}}">
           <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
             <view class="poem-line token-line {{verse ? '' : 'token-wrap'}}" wx:for="{{para}}" wx:key="index" wx:for-item="row">

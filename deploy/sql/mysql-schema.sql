@@ -235,6 +235,67 @@ CREATE TABLE IF NOT EXISTS `reports` (
   CONSTRAINT `reports_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------ daily_poems
+CREATE TABLE IF NOT EXISTS `daily_poems` (
+  `pos`     INT          NOT NULL,
+  `title`   VARCHAR(255) NOT NULL,
+  `author`  VARCHAR(64)  NOT NULL,
+  `dynasty` VARCHAR(32)  NOT NULL DEFAULT '',
+  PRIMARY KEY (`pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------ corpus_books
+CREATE TABLE IF NOT EXISTS `corpus_books` (
+  `book_id` VARCHAR(32)  NOT NULL,
+  `name`    VARCHAR(64)  NOT NULL,
+  `unit`    VARCHAR(8)   NOT NULL DEFAULT '',
+  `page`    VARCHAR(128) NOT NULL DEFAULT '',
+  `prefix`  VARCHAR(32)  NOT NULL DEFAULT '',
+  `kind`    VARCHAR(8)   NOT NULL DEFAULT 'catalog',
+  `pos`     INT          NOT NULL DEFAULT 0,
+  `total`   INT          NOT NULL DEFAULT 0,
+  PRIMARY KEY (`book_id`),
+  KEY `corpus_books_pos_idx` (`pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------ corpus_poems
+CREATE TABLE IF NOT EXISTS `corpus_poems` (
+  `id`          VARCHAR(80)  NOT NULL,
+  `book_id`     VARCHAR(32)  NOT NULL,
+  `pos`         INT          NOT NULL DEFAULT 0,
+  `title`       VARCHAR(255) NOT NULL,
+  `author`      VARCHAR(128) NOT NULL DEFAULT '',
+  `author_alt`  VARCHAR(128) NOT NULL DEFAULT '',
+  `dynasty`     VARCHAR(32)  NOT NULL DEFAULT '',
+  `source`      VARCHAR(128) NOT NULL DEFAULT '',
+  `aliases`     VARCHAR(512) NOT NULL DEFAULT '',
+  `selection`   VARCHAR(64)  NOT NULL DEFAULT '',
+  `grade_group` VARCHAR(64)  NOT NULL DEFAULT '',
+  `grade`       TINYINT      NOT NULL DEFAULT 0,
+  `term`        TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `corpus_poems_book_idx` (`book_id`, `pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------- corpus_catalog
+CREATE TABLE IF NOT EXISTS `corpus_catalog` (
+  `book_id`   VARCHAR(32)  NOT NULL,
+  `pos`       INT          NOT NULL,
+  `title`     VARCHAR(255) NOT NULL,
+  `author`    VARCHAR(128) NOT NULL DEFAULT '',
+  `note`      VARCHAR(128) NOT NULL DEFAULT '',
+  `in_course` TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`book_id`, `pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------- corpus_authors
+CREATE TABLE IF NOT EXISTS `corpus_authors` (
+  `name`   VARCHAR(64) NOT NULL,
+  `era`    VARCHAR(32) NOT NULL DEFAULT '',
+  `era_at` INT         NOT NULL DEFAULT 0,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- --------------------------------------------------------- pinyin_proposals
 CREATE TABLE IF NOT EXISTS `pinyin_proposals` (
   `fid`              VARCHAR(64)  NOT NULL,

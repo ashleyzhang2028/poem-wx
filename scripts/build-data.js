@@ -2,24 +2,16 @@
 
 const fs = require("fs");
 const path = require("path");
-const vm = require("vm");
+const seed = require("./corpus-seed");
 
-const CORPUS_DIR = path.join(__dirname, "corpus");
+const CORPUS_DIR = seed.CORPUS_DIR;
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
-const STALE = ["texts", "shards.js"];
+const STALE = ["texts", "shards.js", "books", "roster-extra.js"];
 
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 
 const SERVER_KEYS = ["env", "service"];
-
-const COURSE_BOOK = "poems";
-
-const EMPTY_BOOKS = [
-  "classic", "yuefu", "season", "tangshi", "gushi", "songci", "yuanqu",
-  "guwen", "jinxiandai", "zhaoming", "chengyu", "changshi", "mingshu",
-  "mingren", "mingren-waiguo", "dwang", "dwang-waiguo"
-];
 
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
@@ -28,62 +20,11 @@ const TRANSLATION_SOURCES = {
   modern: "依据现行通用选本与通行讲法"
 };
 
-const POEM_FILES = [
-  "data/poems-1.js", "data/poems-2.js", "data/poems-3.js", "data/poems-4.js",
-  "data/poems-5.js", "data/poems-6.js", "data/poems-7.js", "data/poems-8.js",
-  "data/poems-9.js", "data/poems-10.js", "data/poems-11.js", "data/poems-12.js",
-  "data/text-master.js",
-  "data/poems-classic.js", "data/poems-yuefu.js",
-  "data/poems-tangshi.js",
-  "data/poems-gushi.js", "data/poems-songci.js", "data/poems-yuanqu.js",
-  "data/poems-guwen.js", "data/poems-jinxiandai.js", "data/poems-zhaoming.js",
-  "data/poems-chengyu.js", "data/poems-changshi.js", "data/poems-mingshu.js",
-  "data/poems-mingren-cn.js", "data/poems-mingren-foreign.js",
-  "data/poems-emperor-cn.js", "data/poems-emperor-waiguo.js",
-  "data/group-order.js",
-  "data/index.js",
-  "data/site-books.js",
-  "data/site-index.js",
-  "data/site-catalogs.js",
-  "data/site-roster.js",
-  "data/site-daily.js",
-  "data/author-index.js",
-  "data/gloss-notes.js",
-  "data/common-chars.js",
-  "data/pinyin-table.js"
-];
-
-function noCorpus(file) {
-  return new Error(
-    "读不到 " + file + " —— 语料是本仓库的一部分，缺了说明 scripts/corpus/ 不完整，\n" +
-    "把 poem 那一版的 data/ 与 js/ 整份拷回来即可（见 docs/from-corpus-to-page.md § 二）。"
-  );
-}
-
-function loadCorpus(rels) {
-  const sandbox = { window: {}, console: console, Date: Date, JSON: JSON };
-  sandbox.window.window = sandbox.window;
-  sandbox.window.document = undefined;
-  vm.createContext(sandbox);
-  rels.forEach(function (rel) {
-    const file = path.join(CORPUS_DIR, rel);
-    let src;
-    try {
-      src = fs.readFileSync(file, "utf8");
-    } catch (e) {
-      throw noCorpus(file);
-    }
-    vm.runInContext(src, sandbox, { filename: rel });
-  });
-  return sandbox.window;
-}
-
 function main() {
-
-  const W = loadCorpus(POEM_FILES);
+  const W = seed.loadCorpus();
 
   const master = W.TEXT_MASTER || [];
-  if (!master.length) throw noCorpus(path.join(CORPUS_DIR, "data", "text-master.js"));
+  if (!master.length) throw seed.noCorpus(path.join(CORPUS_DIR, "data", "text-master.js"));
 
   const byId = {};
   master.forEach(function (m) {
@@ -91,70 +32,30 @@ function main() {
     (m.entries || []).forEach(function (e) { if (!byId[e]) byId[e] = m; });
   });
 
-  const siteIndex = W.SITE_INDEX || [];
-  const books = (W.SITE_BOOKS || []).filter(function (b) {
-    return EMPTY_BOOKS.indexOf(b.id) < 0;
-  });
-
   const notes = W.GLOSS_NOTES || {};
 
-  const index = [];
+  const index = seed.courseIndex(W);
   const courseTexts = {};
 
-  siteIndex.forEach(function (p) {
-    if (p.isBook) return;
-    if (p.book !== COURSE_BOOK) return;
-
+  index.forEach(function (x) {
+    const p = x.source;
     const m = byId[p.id] || byId[p.originId] || null;
     const text = p.text || (m && m.text) || "";
     const translation = p.translation || (m && m.translation) || "";
-
-    index.push({
-      id: p.id,
-      t: p.title,
-      a: p.authorName || p.author || "",
-      an: p.authorName && p.authorName !== p.author ? p.author : "",
-      d: p.dynasty || "",
-      s: p.source || "",
-
-      aka: p.aliases || null,
-
-      sel: p.selection || "",
-      g: p.group || p.gradeGroup || "",
-      book: p.book,
-      bookName: p.bookName,
-
-      gr: p.grade || 0,
-      tm: p.term || 0
-
-    });
-
-    if (text || translation) {
-      const entry = {
-        text: text,
-        translation: translation,
-        src: TRANSLATION_SOURCES[p.translationSource] || ""
-      };
-      if (notes[p.id]) entry.gloss = notes[p.id];
-      courseTexts[p.id] = entry;
-    }
-  });
-
-  const byBook = {};
-  index.forEach(function (p) {
-    (byBook[p.book] = byBook[p.book] || []).push(p);
+    if (!text && !translation) return;
+    const entry = {
+      text: text,
+      translation: translation,
+      src: TRANSLATION_SOURCES[p.translationSource] || ""
+    };
+    if (notes[p.id]) entry.gloss = notes[p.id];
+    courseTexts[p.id] = entry;
   });
 
   dropStale();
-  writeBookIndex(byBook);
-  const catalogs = writeCatalogs(W, index);
-
-  writeModule(path.join(OUT_DIR, "books", "books.js"), books.concat(catalogs));
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
-  writeDailyPool(W);
-  writeRosterExtra(W);
   writeRoster();
   writeServer();
 
@@ -169,121 +70,6 @@ function main() {
 function dropStale() {
   STALE.forEach(function (name) {
     fs.rmSync(path.join(OUT_DIR, name), { recursive: true, force: true });
-  });
-}
-
-function packBooks(byBook) {
-  const dict = { d: [], g: [], sel: [], s: [] };
-  const shared = {};
-  const put = function (key, v) {
-    if (!v) return -1;
-    const at = shared[key + "\u0000" + v];
-    if (at !== undefined) return at;
-    dict[key].push(v);
-    return (shared[key + "\u0000" + v] = dict[key].length - 1);
-  };
-
-  const books = {};
-  const rows = {};
-
-  Object.keys(byBook).forEach(function (b) {
-    books[b] = byBook[b].length;
-    rows[b] = byBook[b].map(function (p) {
-      return [
-        p.id,
-        p.t,
-        p.a || p.an || null,
-        put("d", p.d),
-        put("s", p.s),
-        put("g", p.g),
-        put("sel", p.sel),
-        p.gr || 0,
-        p.tm || 0,
-        p.an || null,
-        p.aka && p.aka.length ? p.aka : null
-      ];
-    });
-  });
-
-  writeModule(path.join(OUT_DIR, "books", "index.js"), { dict: dict, books: books, rows: rows });
-  return Object.keys(books);
-}
-
-function writeBookIndex(byBook) {
-  const books = packBooks(byBook);
-  const dir = path.join(OUT_DIR, "books");
-
-  fs.readdirSync(dir).forEach(function (f) {
-    if (/^index\.js$/.test(f) || /^books\.js$/.test(f)) return;
-    fs.rmSync(path.join(dir, f));
-  });
-
-  console.log("集子索引 " + books.join(" / ") + "，" +
-    Math.round(fs.statSync(path.join(dir, "index.js")).size / 1024) + "KB");
-}
-
-function catalogKey(title, author) {
-  return (title || "").trim() + "\u0000" + (author || "").trim();
-}
-
-function courseKeys(courseRows) {
-  const keys = {};
-  courseRows.forEach(function (p) {
-    keys[catalogKey(p.t, p.a || p.an)] = true;
-    if (p.aka) p.aka.forEach(function (name) { keys[catalogKey(name, p.a || p.an)] = true; });
-  });
-  return keys;
-}
-
-function writeCatalogs(W, courseRows) {
-  const catalogs = W.SITE_CATALOGS || null;
-  const order = W.SITE_CATALOG_ORDER || [];
-  if (!catalogs) throw noCorpus(path.join(CORPUS_DIR, "data", "site-catalogs.js"));
-
-  const dict = { a: [], d: [] };
-  const shared = {};
-  const put = function (key, v) {
-    if (!v) return -1;
-    const at = shared[key + "\u0000" + v];
-    if (at !== undefined) return at;
-    dict[key].push(v);
-    return (shared[key + "\u0000" + v] = dict[key].length - 1);
-  };
-
-  const books = [];
-  const rows = {};
-  const prefixes = [];
-  const inCourse = courseKeys(courseRows || []);
-  let courseHits = 0;
-
-  order.forEach(function (bookId) {
-    const c = catalogs[bookId];
-    if (!c || !c.rows || !c.rows.length) {
-      throw new Error("集子 " + bookId + " 在 data/site-catalogs.js 里没有 rows");
-    }
-    const prefix = String(c.src).replace(/s$/, "");
-    prefixes.push(prefix);
-    rows[bookId] = c.rows.map(function (r, i) {
-      const hit = inCourse[catalogKey(r[0], r[1])] ? 1 : 0;
-      if (hit) courseHits += 1;
-      return [r[0], put("a", r[1]), put("d", r[2]), hit];
-    });
-    books.push({ id: bookId, name: c.name, unit: c.unit, count: c.rows.length });
-  });
-
-  const drifted = order.filter(function (bookId, i) { return prefixes[i] !== bookId; });
-
-  writeModule(path.join(OUT_DIR, "books", "catalogs.js"), {
-    books: books, rows: rows, prefixes: prefixes, dict: dict, drifted: drifted
-  });
-
-
-  const total = books.reduce(function (n, b) { return n + b.count; }, 0);
-  console.log("集子目录 " + books.length + " 部 " + total + " 条（其中课内 " + courseHits + " 条），" +
-    Math.round(fs.statSync(path.join(OUT_DIR, "books", "catalogs.js")).size / 1024) + "KB");
-
-  return books.map(function (b) {
-    return { id: b.id, name: b.name, page: "/pages/list/list?book=" + b.id, unit: b.unit };
   });
 }
 
@@ -351,39 +137,6 @@ function extractWords(file, W) {
     console.log("词组表解析失败：" + e.message);
     return {};
   }
-}
-
-function writeDailyPool(W) {
-  const pool = W.SITE_DAILY || null;
-  if (!pool) throw noCorpus(path.join(CORPUS_DIR, "data", "site-daily.js"));
-  const bad = pool.filter(function (x) {
-    return !Array.isArray(x) || x.length !== 4 || x.slice(0, 2).some(function (v) { return !v; });
-  });
-  if (bad.length) throw new Error("每日一诗候选池里有 " + bad.length + " 条不是「题名、作者、朝代、来源」四项");
-  writeModule(path.join(OUT_DIR, "daily-pool.js"), pool);
-  console.log("每日一诗候选池 " + pool.length + " 首");
-}
-
-function writeRosterExtra(W) {
-  const roster = W.SITE_ROSTER || null;
-  if (!roster || !roster.length) {
-    throw noCorpus(path.join(CORPUS_DIR, "data", "site-roster.js"));
-  }
-
-  const meta = Object.create(null);
-  roster.forEach(function (row) {
-    const hit = (W.AuthorIndex ? W.AuthorIndex.eras() : []).filter(function (e) {
-      return e.at === row[0];
-    })[0];
-    const era = hit ? hit.name : String(row[0]);
-    row[1].forEach(function (n) {
-      if (!Object.prototype.hasOwnProperty.call(meta, n)) meta[n] = { era: era, at: row[0] };
-    });
-  });
-
-  writeModule(path.join(OUT_DIR, "roster-extra.js"), { era: meta });
-  console.log("名册补充 " + Object.keys(meta).length + " 位，" +
-    Math.round(fs.statSync(path.join(OUT_DIR, "roster-extra.js")).size / 1024) + "KB");
 }
 
 function writeRoster() {
