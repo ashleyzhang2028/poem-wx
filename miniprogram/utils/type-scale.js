@@ -1,9 +1,9 @@
 const MIN = -3;
 const MAX = 7;
 
-const GAP_GAP = [14, 14, 15, 15, 16, 16, 17, 19, 20, 22, 25];
+const GAP_GAP = [7, 7, 7, 7, 8, 8, 9, 9, 10, 11, 12];
 
-const GAP_GAP_PINYIN = [37, 39, 41, 44, 46, 48, 51, 56, 60, 65, 71];
+const GAP_GAP_PINYIN = [18, 19, 20, 22, 23, 24, 25, 28, 30, 32, 35];
 
 function clamp(size) {
   return Math.max(MIN, Math.min(MAX, Number(size) || 0));
