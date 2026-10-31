@@ -17,7 +17,7 @@ const OWN = "own";
 const OWN_KEY = "own";
 
 const THEMES = [
-  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: "/icons/hero.png", group: TRADITION },
+  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: CITY_BANNER + "hero.png", group: TRADITION },
   { key: "ink", name: "墨色", rgb: [8, 8, 10], group: TRADITION },
   { key: "muse", name: "暮色", rgb: [79, 96, 114], group: TRADITION },
   { key: "nuahui", name: "暖灰", rgb: [164, 86, 104], group: TRADITION },
@@ -55,7 +55,7 @@ const OWN_THEME = {
 
 const DEFAULT = "daiqing";
 
-const BANNER = "/icons/hero.png";
+const BANNER = CITY_BANNER + "hero.png";
 
 const WASH = 0.05;
 

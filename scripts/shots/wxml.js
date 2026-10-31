@@ -171,7 +171,7 @@ function renderMembers(nodes, data, out, pickOf) {
 }
 
 const SRC_SHAPE = {
-  "/icons/hero.png": [1027, 558]
+  "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/hero.png": [1027, 558]
 };
 
 let SRC_PREFIX = "";

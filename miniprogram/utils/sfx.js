@@ -2,6 +2,8 @@ const store = require("./store");
 
 const COMBO_FROM = 5;
 
+const AUDIO_BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/effect/";
+
 const VOICES = {
   tap: [{ f: 880, ms: 40, gap: 0, v: 0.1 }],
   tick: [{ f: 1400, ms: 30, gap: 0, v: 0.08 }],
@@ -102,10 +104,17 @@ function tone(c, freq, ms, at, vol) {
 }
 
 function load(c, name) {
-  wx.getFileSystemManager().readFile({
-    filePath: "/audio/" + name + ".wav",
-    success: (res) => {
-      c.decodeAudioData(res.data, (buf) => { buffers[name] = buf; }, () => {});
+  wx.downloadFile({
+    url: AUDIO_BASE + name + ".mp3",
+    success: (down) => {
+      if (down.statusCode !== 200) return;
+      wx.getFileSystemManager().readFile({
+        filePath: down.tempFilePath,
+        success: (res) => {
+          c.decodeAudioData(res.data, (buf) => { buffers[name] = buf; }, () => {});
+        },
+        fail: () => {}
+      });
     },
     fail: () => {}
   });
