@@ -48,8 +48,8 @@
       </view>
       <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
         <view class="row-main">
-          <text class="row-title poem">自选温习</text>
-          <text class="row-sub">自选集合 · 重命名 · 增删篇目</text>
+          <text class="row-title poem">我的自选</text>
+          <text class="row-sub">我的集合 · 新建 · 重命名 · 增删篇目</text>
         </view>
         <text class="row-go">›</text>
       </view>

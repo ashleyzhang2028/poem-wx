@@ -55,7 +55,7 @@
         </view>
         <view class="empty" wx:elif="{{!mineCount}}">
           <text class="empty-text">{{mineOn ? '暂无自选集合' : '自选集合 ' + mineTier + ' 起可用'}}</text>
-          <text class="hint empty-tip">{{mineOn ? '在「我的 → 自选温习」新建集合' : '升级后可新建集合'}}</text>
+          <text class="hint empty-tip">{{mineOn ? '在「我的 → 我的自选」新建集合' : '升级后可新建集合'}}</text>
         </view>
       </block>
 

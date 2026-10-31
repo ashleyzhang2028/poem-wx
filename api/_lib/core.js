@@ -1977,7 +1977,7 @@ var SETTINGS_KEYS = {
   scope: "str", algo: "str", align: "str", proseAlign: "str", theme: "str",
   font: "str", pinyin: "str", toneColor: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool", selfOnly: "bool",
-  seasonal: "bool", leagueBoard: "bool", fontGlobal: "bool"
+  homehide: "bool", seasonal: "bool", leagueBoard: "bool", fontGlobal: "bool"
 };
 
 function sanitizeSettings(p) {
