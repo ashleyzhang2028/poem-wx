@@ -27,6 +27,8 @@ Page({
     name: "",
     barBelow: true,
     bookId: "",
+    collId: "",
+    collName: "",
     bookName: "",
     unit: "篇",
 
@@ -50,7 +52,11 @@ Page({
   },
 
   onLoad(query) {
-    this.setData({ bookId: (query && query.book) || "poems" });
+    const collId = String((query && query.coll) || "");
+    this.setData({
+      collId,
+      bookId: collId ? "" : (query && query.book) || "poems"
+    });
   },
 
   resetFilters() {
@@ -68,8 +74,9 @@ Page({
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
 
-    if (this.data.bookId !== this.shownBook) this.resetFilters();
-    this.shownBook = this.data.bookId;
+    const shown = this.data.collId || this.data.bookId;
+    if (shown !== this.shownBook) this.resetFilters();
+    this.shownBook = shown;
 
     if (!gate.logged()) {
       this.setData({ locked: true });
@@ -81,6 +88,7 @@ Page({
   },
 
   scopeOf() {
+    if (this.data.collId) return "catalogs";
     return this.data.bookId === "poems" ? "core" : "catalogs";
   },
 
@@ -93,6 +101,14 @@ Page({
   },
 
   showBook() {
+    const coll = this.data.collId ? cols.find(this.data.collId) : null;
+    if (coll) {
+      const name = cols.nameOf(coll);
+      this.setData({ collName: name, bookName: name, unit: "首", last: null });
+      wx.setNavigationBarTitle({ title: name });
+      this.apply();
+      return;
+    }
     const book = corpus.bookById(this.data.bookId) || { name: "课内阅读", unit: "首" };
     this.setData({ bookName: book.name, unit: book.unit });
     wx.setNavigationBarTitle({ title: book.name });
@@ -107,6 +123,10 @@ Page({
   },
 
   apply() {
+    if (this.data.collId) {
+      this.applyCollection();
+      return;
+    }
     const { bookId, keyword, filter } = this.data;
     const book = corpus.bookById(bookId);
     const cataloged = !!(book && book.remote);
@@ -145,6 +165,37 @@ Page({
       total: all.length,
       groupCount: groups.length
     });
+  },
+
+  applyCollection() {
+    const keyword = this.data.keyword.trim().toLowerCase();
+    const coll = cols.find(this.data.collId);
+    const all = coll
+      ? cols.idsOf(coll).map((id) => corpus.indexById(id)).filter(Boolean)
+      : [];
+    const kept = keyword ? all.filter((p) => corpus.matchEntry(p, keyword)) : all;
+    const reads = this.readsAnywhere();
+    const picked = this.pickedMap();
+    const groups = kept.length
+      ? [{ group: "", items: kept.map((p, i) => this.rowOf(p, i + 1, reads, picked)) }]
+      : [];
+    this.setData({
+      groups,
+      page: 1,
+      pages: 1,
+      matched: kept.length,
+      total: all.length,
+      groupCount: groups.length
+    });
+  },
+
+  readsAnywhere() {
+    const seen = {};
+    return (id) => {
+      const book = corpus.bookOf(id) || "poems";
+      if (!seen[book]) seen[book] = store.reads(book);
+      return !!seen[book][id];
+    };
   },
 
   onPrev() {
@@ -249,6 +300,9 @@ Page({
   },
 
   onShareAppMessage() {
+    if (this.data.collId) {
+      return { title: this.data.collName, path: "/pages/library/library" };
+    }
     return { title: this.data.bookName, path: "/pages/list/list?book=" + this.data.bookId };
   }
 });

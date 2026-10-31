@@ -4,8 +4,6 @@ const sync = require("../../../utils/sync");
 const S = require("../../../utils/scheduler");
 const R = require("../../../utils/review-models");
 const E = require("../../../utils/entitlement");
-const cols = require("../../../utils/collections");
-const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
@@ -49,13 +47,7 @@ Page({
 
     daily: [],
     dailyMax: 20,
-    poolSize: 0,
-
-    selfOnlyOn: false,
-    selfOnly: false,
-    selfOnlyTier: "pro",
-    selfOnlyRows: 0,
-    selfOnlyPoems: 0
+    poolSize: 0
   },
 
   applyFont() {
@@ -77,39 +69,8 @@ Page({
         daily: this.dailyRows(),
         dailyMax: store.DAILY_EXTRA_MAX
       }),
-      () => {
-        this.updatePool();
-        this.updateSelfOnly();
-      }
+      () => this.updatePool()
     );
-  },
-
-  updateSelfOnly() {
-    const rows = cols.usable();
-    const on = E.can("collections") && E.can("coursefree");
-    this.setData({
-      selfOnlyOn: on,
-      selfOnly: on && !!store.settings().selfOnly,
-      selfOnlyTier: E.can("collections") ? E.tierOf("coursefree") : E.tierOf("collections"),
-      selfOnlyLocked: !on && E.reachable(E.tierOf("coursefree"), E.status().tier),
-      selfOnlyRows: rows.length,
-      selfOnlyPoems: rows.reduce((n, c) => n + c.items.length, 0)
-    });
-  },
-
-  onSelfOnly(e) {
-    const want = !!e.detail.value;
-    if (want && !cols.usable().length) {
-      this.setData({ selfOnly: false });
-      wx.showToast({ title: "请先新建集合并添加篇目", icon: "none" });
-      return;
-    }
-    this.setData({ selfOnly: want });
-    this.save({ selfOnly: want });
-  },
-
-  onCollections() {
-    gate.open(() => wx.navigateTo({ url: "/packages/settings/collections/collections" }), this);
   },
 
   dailyRows() {

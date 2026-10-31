@@ -42,7 +42,24 @@
         <text class="gc-count">{{item.count}} 部</text>
       </view>
       <text class="gc-desc">{{item.desc}}</text>
-      <view class="book-grid {{item.wide ? 'book-grid-wide' : ''}}">
+      <block wx:if="{{item.key === 'mine'}}">
+        <view class="book-grid" wx:if="{{mineOn}}">
+          <view class="book-cell" hover-class="book-hover" hover-stay-time="60"
+                wx:for="{{mine}}" wx:for-item="c" wx:key="id" data-c="{{c.id}}" bindtap="onOpenMine">
+            <view class="book-main">
+              <text class="book-name">{{c.name}}</text>
+              <text class="book-sub">共 {{c.count}} 首</text>
+            </view>
+            <text class="row-go">›</text>
+          </view>
+        </view>
+        <view class="empty" wx:elif="{{!mineCount}}">
+          <text class="empty-text">{{mineOn ? '暂无自选集合' : '自选集合 ' + mineTier + ' 起可用'}}</text>
+          <text class="hint empty-tip">{{mineOn ? '在「我的 → 自选温习」新建集合' : '升级后可新建集合'}}</text>
+        </view>
+      </block>
+
+      <view class="book-grid {{item.wide ? 'book-grid-wide' : ''}}" wx:else>
         <view class="book-cell {{item.wide ? 'book-cell-wide' : ''}}" hover-class="book-hover" hover-stay-time="60"
               wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
           <view class="book-main">
