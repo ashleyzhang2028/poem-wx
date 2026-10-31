@@ -15,13 +15,6 @@ main:
         image: node:20
       services:
         - docker
-      ifModify:
-        - "api/**"
-        - "deploy/**"
-        - "deploy-api-serve/**"
-        - "scripts/corpus/**"
-        - "scripts/build-data.js"
-        - ".cnb.yml"
       imports:
         - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
       env:
@@ -127,11 +120,10 @@ main:
               code=$?
               echo "" >&2
               echo "✗✗✗ 上传体验版没成功（退出码 ${code}） ✗✗✗" >&2
-              echo "  这步是 allow_failure：流水线不会红，别以为绿了就传上去了。" >&2
+              echo "  体验版没传上去就停在这 —— 后面的「同步到 GitHub」也不会跑。" >&2
               exit "${code}"
             }
             echo "✓✓✓ 体验版已上传 ${TAG} ✓✓✓"
-          allow_failure: true
         - name: 同步到 GitHub
           imports:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml
@@ -249,11 +241,10 @@ main:
               code=$?
               echo "" >&2
               echo "✗✗✗ 上传体验版没成功（退出码 ${code}） ✗✗✗" >&2
-              echo "  这步是 allow_failure：流水线不会红，别以为绿了就传上去了。" >&2
+              echo "  体验版没传上去就停在这 —— 后面的「同步到 GitHub」也不会跑。" >&2
               exit "${code}"
             }
             echo "✓✓✓ 体验版已上传 ${TAG} ✓✓✓"
-          allow_failure: true
         - name: 同步到 GitHub
           imports:
             - https://cnb.cool/npu-gpu-cpu/poem-wechat-mini-program-secrets/-/blob/main/wechat-ci.yml

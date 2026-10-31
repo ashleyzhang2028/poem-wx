@@ -5234,15 +5234,19 @@ const K = {
   const at = yml.indexOf("- name: 上传体验版");
   const body = at < 0 ? "" : yml.slice(at);
 
-  const isOneBlock = /allow_failure:\s*true/.test(body);
+  const step = body.split(/^        - name:/m)[0];
 
   ok("`上传体验版` 那步还在（它被删掉的话，体验版不会再更新，而流水线是绿的）",
     at >= 0, "`.cnb.yml` 里找不到「上传体验版」这个任务名");
 
-  ok("上传失败时会打一块能搜到的横幅（这步 allow_failure，红了流水线也是绿的）",
+  ok("这一步不是 allow_failure（失败要红，别让流水线颜色替它撒谎）",
+    step.trim().length > 0 && !/allow_failure/.test(step),
+    "「上传体验版」又挂上了 allow_failure —— 传没传上去流水线都是绿的，这一次提交等于没进体验版");
+
+  ok("上传失败时会打一块能搜到的横幅",
     /✗✗✗/.test(body), "失败横幅没了 —— 失败会静默，只能靠人肉眼翻 50 秒日志");
 
-  ok("上传成功时也会打一句（allow_failure 的成功同样没信号）",
+  ok("上传成功时也会打一句",
     /✓✓✓/.test(body), "成功没有回执 —— 传没传上去没有任何线索");
 
   ok("失败横幅里写的退出码是 `$?` 当场取的，不是硬编码的 0",
@@ -5258,8 +5262,9 @@ const K = {
     "真命令行里没加 --loglevel=error（注释里写着不算），真错会被 40 行 npm warn 盖住：" +
       JSON.stringify(npmLine.trim().slice(0, 80)));
 
-  ok("上传那步仍然只声明 name/script/allow_failure（script 一整块，不是 list）",
-    isOneBlock, "这一步的 script 结构变了 —— 混成 list 会被 CNB 用 `&&` 串崩");
+  ok("上传那步的 script 是一整块（混成 list 会被 CNB 用 `&&` 串崩）",
+    /- name: 上传体验版\n\s+script: \|/.test(body),
+    "这一步的 script 结构变了 —— 混成 list 会被 CNB 用 `&&` 串崩");
 }
 
 {
@@ -6149,15 +6154,11 @@ const K = {
     /^ENV TZ=Asia\/Shanghai$/m.test(dockerfile));
 
   {
-    const doc = fs.readFileSync(path.join(ROOT, "..", "docs", "wx-cloud-setup.md"), "utf8");
     const seg = cnb.slice(cnb.indexOf("\nmain:")).split(/^  web_trigger_release:/m)[0];
-    const listed = [...seg.matchAll(/^\s*-\s*"([^"]+)"\s*$/gm)].map((m) => m[1]).sort();
-    const documented = [...doc.matchAll(/^\s*-\s*`([^`]+)`\s+——/gm)].map((m) => m[1]).sort();
-    ok("「哪些改动要重出镜像」那份名单与 .cnb.yml 的 ifModify 一致",
-      listed.length > 0 && listed.join() === documented.join(),
-      "两处要对得上 —— 流水线挂的 ifModify 是 " + JSON.stringify(listed) +
-        "，docs/wx-cloud-setup.md 写的是 " + JSON.stringify(documented) +
-        "（改发布链时名单要跟着动）");
+    ok("推 main 的发布链不挂 ifModify（每次提交都重出镜像、都传体验版）",
+      !/^\s*ifModify:/m.test(seg),
+      "又挂上了 ifModify —— 只改 miniprogram/ 的提交不会跑发布链，体验版停在上一版，" +
+        "而流水线看起来一切正常");
   }
 
   ok("服务壳不再挂分片路由（课外正文整体删掉了）",

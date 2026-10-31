@@ -19,22 +19,15 @@
 
 ## 一、出镜像
 
-### 哪些改动要重出镜像
+### 每次推 main 都出镜像、都传体验版
 
-`main` 的发布流水线挂着 `ifModify`，只有碰到下列路径的提交才会重出镜像
-（名单在 `.cnb.yml`，两处要一致）：
-
-- `api/**` —— 后端本体
-- `deploy/**` —— Dockerfile、SQL、MySQL 存储层
-- `deploy-api-serve/**` —— 云托管那层服务壳
-- `scripts/corpus/**` —— 语料本体
-- `scripts/build-data.js` —— 语料编译
-- `.cnb.yml` —— 流水线自身
+`main` 的发布流水线不挂 `ifModify`：任何一次推 `main` 都会重出镜像并上传体验版，
+按当前代码而不是按「这次改动碰没碰后端」。
 
 这份镜像只跑 `/api/*`（登录 / 同步 / 管理 / 支付）。语料不进镜像：课内正文随小程序包下发。
 
-只改 `miniprogram/**`、`docs/**` 时流水线**不跑**，镜像停在上一版 ——
-这类改动由体验版验证，不用等镜像。手动点一次发布（`web_trigger_release`）不受这份名单约束。
+「上传体验版」那一步失败**会**让流水线红（原文是 `allow_failure: true`，Issue #824 去掉了），
+因为它在「同步到 GitHub」之前，红了就等于这一次提交没进体验版。
 
 ```bash
 git checkout main && git pull     # 推 main 触发发布流水线
@@ -397,8 +390,8 @@ curl -s -X POST https://<域>/api/sync/pull \
 | `WX_PRIVATE_KEY_B64` | 同上，**代码上传密钥**的 base64 | 同上；解码不是 PEM 时当场说清（不会拿「密钥无效」糊过去） |
 | 密钥与 appid **对得上号** | 公众平台 | 平台回 `20003 … appIdToAppuin failed`，见下 |
 
-⚠️ **那一步是 `allow_failure: true`** —— 它红了**流水线照样是绿的**。别拿流水线颜色
-当判据，要翻那一步的日志找 `✗✗✗` / `✓✓✓` 两块横幅（自检 V46b 守着这两块横幅）。
+那一步失败**会让流水线红**（不是 `allow_failure`），日志里另有 `✗✗✗` / `✓✓✓`
+两块横幅可以 grep（自检守着这两块横幅）。
 
 ### 平台回 `20003 checkIpInWhiteList Failed: "appIdToAppuin failed"`
 

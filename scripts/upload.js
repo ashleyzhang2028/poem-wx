@@ -44,14 +44,19 @@ if (keyFile === keyPath && (!keyPath || !fs.existsSync(keyPath))) {
   die("WX_PRIVATE_KEY 指向的文件不存在：" + keyPath);
 }
 
-if (!fs.existsSync(path.join(MP, "data", "books", "books.js"))) {
-  die("语料还没生成，先跑 node scripts/build-data.js");
-}
-
 {
   const cfg = JSON.parse(fs.readFileSync(path.join(MP, "project.config.json"), "utf8"));
   if (cfg.appid !== appid) {
     die("project.config.json 里的 appid（" + cfg.appid + "）与 WX_APPID（" + appid + "）不一致");
+  }
+
+  const include = ((cfg.packOptions || {}).include || [])
+    .map((x) => String((x && x.value) || ""))
+    .filter(Boolean);
+  const lost = include.filter((v) => !fs.existsSync(path.join(MP, v)));
+  if (!include.length || lost.length) {
+    die("语料还没生成，先跑 node scripts/build-data.js（包内缺 " +
+        (lost.join("、") || "packOptions.include 清单") + "）");
   }
 }
 
@@ -68,7 +73,7 @@ const project = new ci.Project({
   type: "miniProgram",
   projectPath: MP,
   privateKeyPath: keyFile,
-  ignores: ["node_modules/**/*", "data/texts/*"]
+  ignores: ["node_modules/**/*"]
 });
 
 function explain(msg) {
