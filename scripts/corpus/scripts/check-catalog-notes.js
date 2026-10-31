@@ -76,6 +76,33 @@ function main() {
     });
   });
 
+  Object.keys(notes).forEach(function (book) {
+    const texts = bodies()[book] || {};
+    const rows = Array.isArray(texts) ? texts : Object.keys(texts).map(function (k) { return texts[k]; });
+    const bySid = {};
+    rows.forEach(function (r) {
+      const sid = Array.isArray(r) ? String(r[1] || "") : "";
+      if (sid) (bySid[sid] = bySid[sid] || []).push(String(r[0]));
+    });
+    Object.keys(bySid).forEach(function (sid) {
+      const same = bySid[sid];
+      if (same.length < 2) return;
+      const want = [];
+      same.forEach(function (pos) {
+        const list = (notes[book] || {})[pos] || [];
+        list.forEach(function (it) {
+          const word = String(it[0] || "").trim();
+          if (word && want.indexOf(word) < 0) want.push(word);
+        });
+      });
+      same.forEach(function (pos) {
+        const got = ((notes[book] || {})[pos] || []).map(function (it) { return String(it[0] || "").trim(); });
+        const miss = want.filter(function (w) { return got.indexOf(w) < 0; });
+        if (miss.length) bad.push(book + " #" + pos + " 与同正文的 " + same.join("、") + " 注释不齐，缺：" + miss.slice(0, 6).join("、"));
+      });
+    });
+  });
+
   const counts = Object.keys(notes).map(function (book) {
     const box = texts[book] || {};
     return book + " " + Object.keys(notes[book] || {}).length + " / " + Object.keys(box).length;
