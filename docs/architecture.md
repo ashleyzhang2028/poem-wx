@@ -62,7 +62,7 @@ miniprogram/
 │   ├── review-models.js             # 四套复习算法
 │   ├── scheduler.js                 # 每日计划与进度总览
 │   ├── pinyin.js                    # 注音（多音字消歧，与网页版同口径）
-│   ├── sfx.js                       # 音效：温习三态与答题（Web Audio 现场合成，零音频文件）
+│   ├── sfx.js                       # 音效：温习三态与答题（Web Audio；云托管 `audio/effect/*.mp3` 取到前现场合成，包内不放音频）
 │   ├── entitlement.js / tiers.js    # 门禁：登录门（block）+ 三档分层
 │   ├── author-index.js              # 作者索引：朝代归一 / 异名归一 / 名册构建
 │   ├── tab-page.js                  # 跳 tab 页的唯一出口（navigateTo 去 tab 页静默失败）
@@ -966,7 +966,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 原先的写法里 `size--1` 与 `size-1` 贴在一起，很容易看漏一个减号。
 现在负档统一两个减号，样式表里也按档位顺序排列，读起来是一条线。
 
-**页面顶部是那张画。** `icons/hero.png`（1717×916）铺满屏宽，`mode="widthFix"`
+**页面顶部是那张画。** `themes/city/hero.png`（1717×916）铺满屏宽，`mode="widthFix"`
 按原比例落高 —— 它是带文字的成品画（图里已有「跬步诗词」四个字），
 拉伸或裁切都会把字压歪，所以只许等比缩放。宽度铺满后左右不留白，
 否则页面底色会在两侧各露一条；高度取 `min(屏宽 × 916/1717, 360px)`，
@@ -974,7 +974,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 几何由 `components/page-banner` 一个组件给：盒宽 = 屏宽（用页面左右各一个
 `--sp-3` 的负 margin 抵消 `.page` 的内边距），画高由组件自己算。
-`icons/hero.png` 四周没有透明边，所以盒子按 PNG 的 1027×558 取比，
+`hero.png` 四周没有透明边，所以盒子按 PNG 的 1027×558 取比，
 不再用「导航两段 + 折高」——那会让每一屏顶部多出一块空白。
 
 页面级 `navigationStyle: "custom"` 时组件带 `banner-full`，再上移
@@ -998,7 +998,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 画随主题换一张：`THEMES` 每一项带 `banner` 字段，页面读 `theme.bannerOf(key)`。
 大好河山那几张走云托管对象存储的 `themes/city/` 路径（包内不放这几张，
-`banner` 字段存完整 URL），其余一律包内的 `/icons/hero.png`。
+`banner` 字段存完整 URL），默认那张 `hero.png` 同在此路径，包内不放图。
 
 城景与包内那张画同法：盒宽同样是屏宽，画按等比落高（`widthFix`），盒高由组件
 按原画的比算出并封顶 360px。城景的长宽比与原画接近，所以盒高、首卡压画下沿的
