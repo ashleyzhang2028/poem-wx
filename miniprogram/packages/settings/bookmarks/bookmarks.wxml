@@ -34,8 +34,10 @@
           wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onRow">
       <view class="daily-box {{item.picked ? 'on' : ''}}" wx:if="{{editing}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
       <view class="row-main mark-line">
-        <text class="row-title row-poem mark-title">{{item.title}}</text>
-        <text class="row-sub mark-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
+        <view class="mark-text">
+          <text class="row-title row-poem">{{item.title}}</text>
+          <text class="row-sub" wx:if="{{item.meta}}">{{item.meta}}</text>
+        </view>
         <button class="btn mini mark-rename" wx:if="{{editing}}" data-id="{{item.id}}" catchtap="onRename">改名</button>
       </view>
     </view>
