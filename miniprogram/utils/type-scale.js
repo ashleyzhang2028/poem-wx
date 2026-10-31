@@ -1,8 +1,16 @@
 const MIN = -3;
 const MAX = 7;
 
+const GAP_GAP = [14, 14, 15, 15, 16, 16, 17, 19, 20, 22, 25];
+
+const GAP_GAP_PINYIN = [37, 39, 41, 44, 46, 48, 51, 56, 60, 65, 71];
+
 function clamp(size) {
   return Math.max(MIN, Math.min(MAX, Number(size) || 0));
+}
+
+function at(size) {
+  return clamp(size) - MIN;
 }
 
 function flags(size) {
@@ -10,17 +18,9 @@ function flags(size) {
   return { fontDown: size2 > MIN, fontUp: size2 < MAX };
 }
 
-const GAP_MIN = -6;
-const GAP_MAX = 3;
-const GAP_DEFAULT = -1;
-
-function clampGap(gap) {
-  return Math.max(GAP_MIN, Math.min(GAP_MAX, Number(gap) || 0));
-}
-
-function gapFlags(gap) {
-  const gap2 = clampGap(gap);
-  return { lineDown: gap2 > GAP_MIN, lineUp: gap2 < GAP_MAX };
+function gap(size, pinyin) {
+  const rows = pinyin ? GAP_GAP_PINYIN : GAP_GAP;
+  return rows[at(size)];
 }
 
 function alignKey(laid) {
@@ -33,4 +33,4 @@ function alignOf(laid, settings) {
   return s.align === "left" ? "left" : "center";
 }
 
-module.exports = { alignKey, alignOf, MIN, MAX, clamp, flags, GAP_DEFAULT, clampGap, gapFlags };
+module.exports = { alignKey, alignOf, MIN, MAX, clamp, at, flags, gap };

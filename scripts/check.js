@@ -4002,6 +4002,30 @@ function mountFull(pg, query) {
     /corpus\.layout\([^)]*\{[^}]*size:/.test(readerJsSrc)
       && /corpus\.layout\([^)]*\{[^}]*size:/.test(sheetJsSrc),
     "layout 又只吃正文 —— 字号变了行还是原来那些");
+
+  const scaleMod = require(path.join(ROOT, "utils", "type-scale.js"));
+  const sizes = [];
+  for (let size = scaleMod.MIN; size <= scaleMod.MAX; size++) sizes.push(size);
+  const sheetGap = sizes.map((size) => scaleMod.gap(size, false));
+  const sheetGapPy = sizes.map((size) => scaleMod.gap(size, true));
+  const sheetClass = sizes.map((size) => (size < 0 ? "size--" + Math.abs(size) : "size-" + size));
+  const sheetCss = readSrc("app.wxss");
+  const cssRow = (cls, name) => {
+    const m = sheetCss.match(new RegExp("\\.poem-body\\." + cls + "\\s*\\{[^}]*--" + name + ":\\s*(\\d+)rpx"));
+    return m ? Number(m[1]) : NaN;
+  };
+  const cssGap = sheetClass.map((cls) => cssRow(cls, "poem-gap"));
+  const cssGapPy = sheetClass.map((cls) => cssRow(cls, "poem-gap-py"));
+  const rising = (arr) => arr.every((v, i) => i === 0 || v >= arr[i - 1]);
+
+  ok("行间距按字号档给（无注音与有注音各一张表，样式与取值的表同源）",
+    cssGap.join(",") === sheetGap.join(",") && cssGapPy.join(",") === sheetGapPy.join(",")
+      && rising(sheetGap) && rising(sheetGapPy) && sheetGapPy.every((v, i) => v > sheetGap[i]),
+    "两份表对不上 —— 改一处另一处不跟，同档字号的行距会说两套话");
+
+  ok("行间距不再留加减的入口（只跟字号走）",
+    !/line[Gg]ap|onLineUp|onLineDown/.test(sheetJsSrc + readerJsSrc + readSrc("utils/store.js")),
+    "行距又长出一条可调的路 —— 定下来的值与手动档位迟早各说一套");
 }
 
 {

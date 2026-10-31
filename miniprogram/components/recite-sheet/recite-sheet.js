@@ -27,8 +27,7 @@ const REOPEN_MS = 400;
 
 const PAGE_ICONS = {
   left: icons.left, center: icons.center, add: icons.add, added: icons.added,
-  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all,
-  lineUp: icons.lineUp, lineDown: icons.lineDown
+  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all
 };
 
 function idsOf(rows) {
@@ -109,9 +108,6 @@ Component({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    lineGap: scale.GAP_DEFAULT,
-    lineDown: true,
-    lineUp: true,
     pinyinMode: "off",
     pinyinOn: false,
 
@@ -282,8 +278,6 @@ Component({
         noteTab: glossRows.length ? "gloss" : "trans",
         fontSize,
         ...scale.flags(fontSize),
-        lineGap: scale.clampGap(settings.lineGap),
-        ...scale.gapFlags(settings.lineGap),
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
         mastery: R.mastery(rec),
         index: this.data.index,
@@ -380,21 +374,6 @@ Component({
 
     onNoteTab(e) {
       this.setData({ noteTab: e.currentTarget.dataset.tab });
-    },
-
-    onLineDown() {
-      this.stepGap(-1);
-    },
-
-    onLineUp() {
-      this.stepGap(1);
-    },
-
-    stepGap(delta) {
-      const lineGap = scale.clampGap(this.data.lineGap + delta);
-      if (lineGap === this.data.lineGap) return;
-      this.setData(Object.assign({ lineGap }, scale.gapFlags(lineGap)));
-      store.saveSettings({ lineGap });
     },
 
     onPinyinToggle() {
