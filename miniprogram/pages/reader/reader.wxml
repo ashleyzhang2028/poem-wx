@@ -53,6 +53,30 @@
     </view>
 
     <view class="prefs">
+      <view class="pref-seg">
+        <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
+              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
+          <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
+        </view>
+      </view>
+      <view class="pref-size">
+        <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
+          <view class="glyph" style="mask-image:url('{{icons.zoomOut}}');-webkit-mask-image:url('{{icons.zoomOut}}');"></view>
+        </view>
+        <view class="pref-opt ic {{fontUp ? '' : 'off'}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp" aria-label="加大字号">
+          <view class="glyph" style="mask-image:url('{{icons.zoomIn}}');-webkit-mask-image:url('{{icons.zoomIn}}');"></view>
+        </view>
+      </view>
+      <view class="pref-seg" wx:if="{{pinyinOn}}">
+        <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
+              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
+              aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
+          <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
+        </view>
+      </view>
       <view class="pref-act">
         <view class="pref-opt ic {{dailyOn ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleDaily"
@@ -68,37 +92,6 @@
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onToggleMark"
               aria-label="{{markOn ? '移出书签' : '加入书签'}}">
           <view class="glyph" style="mask-image:url('{{icons.bookmark}}');-webkit-mask-image:url('{{icons.bookmark}}');"></view>
-        </view>
-      </view>
-      <view class="pref-seg">
-        <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
-              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
-          <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
-        </view>
-      </view>
-      <view class="pref-opt aa {{prefsOpen ? 'on' : ''}}" hover-class="pref-opt-hover" hover-stay-time="60"
-            bindtap="onTogglePrefs" aria-label="阅读设置">
-        <text class="aa-t">Aa</text>
-      </view>
-    </view>
-    <view class="prefs prefs-panel" wx:if="{{prefsOpen}}">
-      <view class="pref-size">
-        <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
-          <view class="glyph" style="mask-image:url('{{icons.zoomOut}}');-webkit-mask-image:url('{{icons.zoomOut}}');"></view>
-        </view>
-        <view class="pref-opt ic {{fontUp ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp" aria-label="加大字号">
-          <view class="glyph" style="mask-image:url('{{icons.zoomIn}}');-webkit-mask-image:url('{{icons.zoomIn}}');"></view>
-        </view>
-      </view>
-
-      <view class="pref-seg" wx:if="{{pinyinOn}}">
-        <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
-              aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
-          <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
         </view>
       </view>
     </view>
