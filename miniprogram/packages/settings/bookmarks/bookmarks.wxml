@@ -36,8 +36,8 @@
       <view class="row-main mark-line">
         <text class="row-title row-poem mark-title">{{item.title}}</text>
         <text class="row-sub mark-meta" wx:if="{{item.meta}}">{{item.meta}}</text>
-        <button class="btn mini mark-rename" wx:if="{{editing}}" data-id="{{item.id}}" catchtap="onRename">改名</button>
       </view>
+      <button class="btn mini mark-rename" wx:if="{{editing}}" data-id="{{item.id}}" catchtap="onRename">改名</button>
     </view>
 
     <view class="empty mark-empty" wx:if="{{!matched}}">
