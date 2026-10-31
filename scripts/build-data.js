@@ -46,7 +46,6 @@ const POEM_FILES = [
   "data/site-index.js",
   "data/site-catalogs.js",
   "data/site-roster.js",
-  "data/site-daily.js",
   "data/author-index.js",
   "data/gloss-notes.js",
   "data/common-chars.js",
@@ -153,7 +152,6 @@ function main() {
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
-  writeDailyPool(W);
   writeRosterExtra(W);
   writeRoster();
   writeServer();
@@ -351,17 +349,6 @@ function extractWords(file, W) {
     console.log("词组表解析失败：" + e.message);
     return {};
   }
-}
-
-function writeDailyPool(W) {
-  const pool = W.SITE_DAILY || null;
-  if (!pool) throw noCorpus(path.join(CORPUS_DIR, "data", "site-daily.js"));
-  const bad = pool.filter(function (x) {
-    return !Array.isArray(x) || x.length !== 4 || x.slice(0, 2).some(function (v) { return !v; });
-  });
-  if (bad.length) throw new Error("每日一诗候选池里有 " + bad.length + " 条不是「题名、作者、朝代、来源」四项");
-  writeModule(path.join(OUT_DIR, "daily-pool.js"), pool);
-  console.log("每日一诗候选池 " + pool.length + " 首");
 }
 
 function writeRosterExtra(W) {

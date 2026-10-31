@@ -6585,39 +6585,92 @@ const K = {
 
     const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
 
-    const pool = DAILY.poolOf();
-    ok("每日一诗的候选池里有篇目，每条都有题名与作者",
-      pool.length > 0 && pool.every((x) => x[0] && x[1]),
-      "候选池 " + pool.length + " 条");
-
-    ok("同一个自然日里首页给出的是同一首",
-      DAILY.card(new Date(2026, 9, 18)).key === DAILY.card(new Date(2026, 9, 18, 23, 59)).key);
-
-    const before = DAILY.card().key;
-    ok("换一首之后当天换成另一首", DAILY.redraw() === true && DAILY.card().key !== before);
+    const dailyRemote = require(path.join(ROOT, "utils", "remote.js"));
+    const dailySrc = require(path.join(ROOT, "utils", "poem-source.js"));
+    const realRequest = dailyRemote.request;
+    const realById = dailySrc.byId;
+    const DAILY_KEY = "kb_daily_poem_v2";
+    const dailyCache = {};
+    const realRead = store3.read;
+    const realWrite = store3.write;
+    store3.read = (k, d) => (k === DAILY_KEY ? (dailyCache[k] === undefined ? d : dailyCache[k]) : realRead(k, d));
+    store3.write = (k, v) => { if (k === DAILY_KEY) dailyCache[k] = v; else realWrite(k, v); };
+    const rowAt = (pos) => ({ pos: pos, size: 5, title: "题" + pos, author: "某" + pos, dynasty: "唐", label: "名句" });
+    let asked = [];
+    let serverDown = false;
+    let badRow = null;
+    dailyRemote.request = (p) => {
+      const q = Object.fromEntries(new URLSearchParams(p.split("?")[1] || ""));
+      asked.push({ path: p.split("?")[0], query: q });
+      if (serverDown) return Promise.reject(new Error("offline"));
+      return Promise.resolve(badRow || rowAt(q.pos === undefined ? 2 : Number(q.pos)));
+    };
+    let bodyCalls = 0;
+    let bodyFails = 0;
+    dailySrc.byId = () => {
+      bodyCalls += 1;
+      return bodyCalls <= bodyFails
+        ? Promise.reject(new Error("offline"))
+        : Promise.resolve({ id: 7, content: ["春眠不觉晓"] });
+    };
+    const dailyReset = (fails) => {
+      dailyCache[DAILY_KEY] = null;
+      asked = [];
+      bodyCalls = 0;
+      bodyFails = fails;
+      serverDown = false;
+      badRow = null;
+    };
 
     track((async () => {
-      const src = require(path.join(ROOT, "utils", "poem-source.js"));
-      const realById = src.byId;
-      let calls = 0;
-      src.byId = () => {
-        calls += 1;
-        return calls <= 3 ? Promise.reject(new Error("offline")) : Promise.resolve({ id: 7, content: ["春眠不觉晓"] });
-      };
-      const got = await DAILY.loadCurrent();
-      ok("取正文失败时自动换下一首重试，直到取到",
-        calls === 4 && got.lines.length === 1,
-        "请求了 " + calls + " 次");
+      dailyReset(0);
+      ok("候选池在服务端：本机没有缓存时才去问，且走 /api/daily-poems",
+        DAILY.card() === null);
+      const first = await DAILY.loadCurrent();
+      ok("第一次按自然日向服务端要一首，取回后落本机缓存",
+        asked.length === 1 && asked[0].path === dailyRemote.PATHS.dailyPoems && !!asked[0].query.day
+          && first.card.key === "daily-2" && DAILY.card().key === "daily-2",
+        JSON.stringify(asked));
+      await DAILY.loadCurrent();
+      ok("同一个自然日之后读缓存，不再请求候选池", asked.length === 1, "请求了 " + asked.length + " 次");
 
-      calls = 0;
-      src.byId = () => {
-        calls += 1;
-        return Promise.reject(new Error("offline"));
-      };
+      const before = DAILY.card().key;
+      const redrew = await DAILY.redraw();
+      ok("换一首向服务端要另一个位置，当天换成另一首",
+        redrew === true && DAILY.card().key !== before && asked[asked.length - 1].query.pos !== undefined);
+
+      dailyReset(3);
+      const got = await DAILY.loadCurrent();
+      ok("取正文失败时向服务端要下一个位置重试，直到取到",
+        bodyCalls === 4 && got.lines.length === 1 && asked.length === 4,
+        "取正文 " + bodyCalls + " 次，问候选池 " + asked.length + " 次");
+
+      dailyReset(99);
       const failed = await DAILY.loadCurrent().then(() => false, () => true);
       ok("一直失败时最多重试 " + DAILY.RETRY_MAX + " 次就停（共 " + (DAILY.RETRY_MAX + 1) + " 次请求）",
-        failed && calls === DAILY.RETRY_MAX + 1, "请求了 " + calls + " 次");
-      src.byId = realById;
+        failed && bodyCalls === DAILY.RETRY_MAX + 1, "请求了 " + bodyCalls + " 次");
+
+      dailyReset(0);
+      serverDown = true;
+      const noPool = await DAILY.loadCurrent().then(() => false, () => true);
+      ok("候选池请求失败且没有缓存：报错、不去取正文", noPool && bodyCalls === 0);
+
+      dailyReset(0);
+      await DAILY.loadCurrent();
+      serverDown = true;
+      const offline = await DAILY.loadCurrent().then(() => true, () => false);
+      ok("候选池请求失败但当天已缓存：照样能取正文", offline);
+
+      dailyReset(0);
+      badRow = { pos: 1, size: 5, title: "题", author: "" };
+      const bad = await DAILY.loadCurrent().then(() => false, (e) => /不完整/.test(e.message));
+      ok("服务端给的条目缺作者：当作失败，不缓存、不取正文",
+        bad && bodyCalls === 0 && DAILY.card() === null);
+
+      dailyRemote.request = realRequest;
+      dailySrc.byId = realById;
+      store3.read = realRead;
+      store3.write = realWrite;
     })());
 
     const capRow = E.CAPS.filter((c) => c.key === DAILY.CAP)[0];

@@ -414,24 +414,27 @@ Page({
 
   loadDaily() {
     if (!dailyPoem.isOn()) {
+      this.dailyToken = (this.dailyToken || 0) + 1;
       if (this.data.daily) this.setData({ daily: null });
       return;
     }
+    if (this.dailyFlight) return;
     const card = dailyPoem.card();
-    if (!card) {
-      this.setData({ daily: null });
-      return;
-    }
-    const keep = this.data.daily && this.data.daily.id === card.key ? this.data.daily : null;
-    if (keep && keep.state !== "failed") return;
-    this.setData({ daily: this.dailyOf(card, keep ? keep.lines : [], "", "loading") });
+    const cur = this.data.daily;
+    if (cur && cur.state === "ready" && card && cur.id === card.key) return;
+    const keep = cur && card && cur.id === card.key ? cur.lines : [];
+    this.setData({ daily: this.dailyOf(card, keep, "", "loading") });
     const token = (this.dailyToken = (this.dailyToken || 0) + 1);
+    this.dailyFlight = true;
     dailyPoem.loadCurrent().then(
       (got) => {
+        this.dailyFlight = false;
         if (token !== this.dailyToken) return;
         this.setData({ daily: this.dailyOf(got.card, got.lines, got.apiId, "ready") });
       },
-      () => {
+      (err) => {
+        this.dailyFlight = false;
+        console.error("[daily] 取每日一诗失败", (err && err.message) || "");
         if (token !== this.dailyToken || !this.data.daily) return;
         this.setData({ ["daily.state"]: "failed" });
       }
@@ -443,9 +446,9 @@ Page({
       ? corpus.layout(lines.join("\n"), { size: 0, pinyin: false })
       : null;
     return {
-      id: card.key,
-      title: card.shown,
-      meta: [card.dynasty, card.author].filter(Boolean).join(" · "),
+      id: card ? card.key : "",
+      title: card ? card.shown : "",
+      meta: card ? [card.dynasty, card.author].filter(Boolean).join(" · ") : "",
       lines: lines,
       verse: laid ? laid.verse : true,
       apiId: apiId,
@@ -454,10 +457,12 @@ Page({
   },
 
   onDailyRefresh() {
-    if (!guard.enter("home:daily:redraw")) return;
-    const ok = dailyPoem.redraw();
-    guard.leave("home:daily:redraw");
-    if (ok) this.loadDaily();
+    if (this.dailyFlight || !guard.enter("home:daily:redraw")) return;
+    dailyPoem.redraw().then((ok) => {
+      guard.leave("home:daily:redraw");
+      if (ok) this.loadDaily();
+      else wx.showToast({ title: "换一首失败，请稍后再试", icon: "none" });
+    });
   },
 
   onDailyOpen() {

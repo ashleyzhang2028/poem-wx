@@ -6,7 +6,7 @@ var HOUR = 3600000;
 
 var DAY = 86400000;
 
-var FREE = { "pay.notify": 1, "diag": 1, "config": 1, "avatar-file": 1 };
+var FREE = { "pay.notify": 1, "diag": 1, "config": 1, "daily.poems": 1, "avatar-file": 1 };
 
 var PURGE_ONE_IN = 200;
 

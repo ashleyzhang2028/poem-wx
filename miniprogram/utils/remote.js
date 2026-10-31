@@ -34,7 +34,8 @@ const PATHS = {
   payConfirm: "/api/pay/confirm",
   payManage: "/api/pay/manage",
   payOrders: "/api/pay/orders",
-  adminPay: "/api/admin/pay"
+  adminPay: "/api/admin/pay",
+  dailyPoems: "/api/daily-poems"
 };
 
 function session() {

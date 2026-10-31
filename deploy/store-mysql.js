@@ -320,6 +320,14 @@ function mysqlStore(cfg) {
         [String(uid || ""), day]).then(function (rows) { return (rows || []).length; });
     },
 
+    countDailyPoems: function () {
+      return query("SELECT COUNT(*) AS n FROM daily_poems").then(function (rows) { return rows && rows[0] ? num(rows[0].n) : 0; });
+    },
+    getDailyPoem: function (pos) {
+      return query("SELECT * FROM daily_poems WHERE pos = ? LIMIT 1", [Number(pos)])
+        .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
+    },
+
     putPinyinProposal: function (row) { return insertRow("pinyin_proposals", row, ["fid"]).then(function () { return { fid: row.fid }; }); },
     getPinyinProposal: function (fid) { return getRow("pinyin_proposals", "fid", fid); },
     listPinyinProposals: function (filter, limit) {

@@ -235,6 +235,16 @@ CREATE TABLE IF NOT EXISTS `reports` (
   CONSTRAINT `reports_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------ daily_poems
+CREATE TABLE IF NOT EXISTS `daily_poems` (
+  `pos`     INT          NOT NULL,
+  `title`   VARCHAR(255) NOT NULL,
+  `author`  VARCHAR(64)  NOT NULL,
+  `dynasty` VARCHAR(32)  NOT NULL DEFAULT '',
+  `label`   VARCHAR(32)  NOT NULL DEFAULT '',
+  PRIMARY KEY (`pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- --------------------------------------------------------- pinyin_proposals
 CREATE TABLE IF NOT EXISTS `pinyin_proposals` (
   `fid`              VARCHAR(64)  NOT NULL,

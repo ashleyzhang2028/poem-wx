@@ -761,6 +761,37 @@ function makeWx(port, mem) {
     await svStore.patchAccount(store.profile().userId, { role: me.role || "user" });
   }
 
+  {
+    const call = (q) => remote.request(remote.PATHS.dailyPoems + "?" + new URLSearchParams(q).toString(), {}, "GET").then(
+      (body) => ({ ok: true, body: body }),
+      (e) => ({ ok: false, status: e.statusCode, code: e.code })
+    );
+    const empty = await call({ day: "2026-10-31" });
+    ok("每日一诗表还是空的：404 E_DAILY_EMPTY（客户端据此报失败，不是空白）",
+      !empty.ok && empty.status === 404 && empty.code === "E_DAILY_EMPTY", JSON.stringify(empty));
+
+    const DAILY_ROWS = [["春晓","孟浩然","唐","名句"],["登鹳雀楼","王之涣","唐","名句"],["静夜思","李白","唐","名句"]];
+    svStore._db.dailyPoems = DAILY_ROWS.map((r) => ({ title: r[0], author: r[1], dynasty: r[2], label: r[3] }));
+    const a = await call({ day: "2026-10-31" });
+    const b = await call({ day: "2026-10-31" });
+    ok("按自然日取：同一天两次是同一首，带 pos 与 size",
+      a.ok && b.ok && a.body.pos === b.body.pos && a.body.size === 3 && !!a.body.title && !!a.body.author,
+      JSON.stringify([a, b]));
+
+    const byPos = await call({ pos: 1 });
+    ok("按 pos 取：位置 1 就是第二首", byPos.ok && byPos.body.pos === 1 && byPos.body.title === "登鹳雀楼", JSON.stringify(byPos));
+
+    const far = await call({ pos: 9 });
+    ok("pos 越界：404 E_DAILY_RANGE", !far.ok && far.status === 404 && far.code === "E_DAILY_RANGE", JSON.stringify(far));
+
+    const noArgs = await call({});
+    const badPos = await call({ pos: -1 });
+    const badDay = await call({ day: "昨天" });
+    ok("缺参数或参数不合法：400 E_BAD_REQUEST",
+      [noArgs, badPos, badDay].every((r) => !r.ok && r.status === 400 && r.code === "E_BAD_REQUEST"),
+      JSON.stringify([noArgs, badPos, badDay]));
+  }
+
   server.close();
   const bad = results.filter((r) => !r).length;
   console.log("\n" + results.length + " 项，失败 " + bad + " 项");

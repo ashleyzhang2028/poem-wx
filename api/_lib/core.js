@@ -2767,6 +2767,45 @@ function pinyinFixesPublic(deps) {
   });
 }
 
+var DAILY_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+function dailyHash(text) {
+  var h = 2166136261;
+  for (var i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function dailyPoemPublic(deps, query) {
+  var q = query || {};
+  var day = String(q.day || "");
+  var byPos = q.pos !== undefined && q.pos !== "";
+  var pos = Number(q.pos);
+  if (byPos ? !(Number.isInteger(pos) && pos >= 0) : !DAILY_DAY.test(day)) {
+    return Promise.resolve(err(400, "E_BAD_REQUEST", "需要 day（YYYY-MM-DD）或非负整数 pos"));
+  }
+  var store = deps.store;
+  return Promise.resolve(store.countDailyPoems()).then(function (size) {
+    size = Number(size) || 0;
+    if (size < 1) return err(404, "E_DAILY_EMPTY", "每日一诗候选池还没有数据");
+    var at = byPos ? pos : dailyHash(day) % size;
+    if (at >= size) return err(404, "E_DAILY_RANGE", "pos 超出候选池（共 " + size + " 首）");
+    return Promise.resolve(store.getDailyPoem(at)).then(function (row) {
+      if (!row) return err(404, "E_DAILY_RANGE", "候选池第 " + at + " 首缺失");
+      return ok({
+        pos: at,
+        size: size,
+        title: String(row.title || ""),
+        author: String(row.author || ""),
+        dynasty: String(row.dynasty || ""),
+        label: String(row.label || "")
+      });
+    });
+  });
+}
+
 var FEEDBACK_KINDS = ["bug", "typo", "feature", "experience", "recommend", "performance", "account", "payment", "other"];
 var FEEDBACK_STATUSES = ["open", "replied", "closed"];
 var FEEDBACK_RESOLUTIONS = ["pending", "adopted", "planned", "rejected", "duplicate"];
@@ -3841,6 +3880,7 @@ module.exports = {
   pinyinProposalList: pinyinProposalList,
   pinyinProposalReview: pinyinProposalReview,
   pinyinFixesPublic: pinyinFixesPublic,
+  dailyPoemPublic: dailyPoemPublic,
   pinyinProposalPublic: pinyinProposalPublic,
   PINYIN_PROPOSAL_STATUSES: PINYIN_PROPOSAL_STATUSES,
   PINYIN_PROPOSAL_LIMITS: PINYIN_PROPOSAL_LIMITS,

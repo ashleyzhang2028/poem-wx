@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {} };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [] };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -237,6 +237,9 @@ function memoryStore() {
       });
       return Promise.resolve(n);
     },
+
+    countDailyPoems: function () { return Promise.resolve(db.dailyPoems.length); },
+    getDailyPoem: function (pos) { return Promise.resolve(db.dailyPoems[pos] || null); },
 
     putPinyinProposal: function (row) { db.pinyinProposals[row.fid] = row; return Promise.resolve({ fid: row.fid }); },
     getPinyinProposal: function (fid) { return Promise.resolve(db.pinyinProposals[fid] || null); },
