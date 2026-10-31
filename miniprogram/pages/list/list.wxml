@@ -69,11 +69,7 @@
     </view>
   </view>
 
-  <view class="pager" wx:if="{{pages > 1}}">
-    <button class="btn mini" disabled="{{page <= 1}}" bindtap="onPrev">上一页</button>
-    <text class="hint pager-text">第 {{page}} / {{pages}} 页</text>
-    <button class="btn mini" disabled="{{page >= pages}}" bindtap="onNext">下一页</button>
-  </view>
+  <view class="more hint" wx:if="{{shown && shown < matched}}">上滑加载更多</view>
 
   <view class="empty" wx:if="{{!groups.length}}">
     <text class="empty-mark">空</text>

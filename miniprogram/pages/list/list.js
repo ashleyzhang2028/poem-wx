@@ -9,8 +9,8 @@ const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const tabbar = require("../../utils/tabbar");
 const icons = require("../../utils/icons");
-const trail = require("../../utils/trail");
 const guard = require("../../utils/guard");
+const trail = require("../../utils/trail");
 const marks = require("../../utils/bookmarks");
 const lastRead = require("../../utils/last-read");
 
@@ -43,8 +43,7 @@ Page({
     collapsed: false,
 
     pickId: "",
-    page: 1,
-    pages: 1,
+    shown: 0,
     last: null,
     locked: true,
     corpusState: "",
@@ -61,7 +60,7 @@ Page({
 
   resetFilters() {
     this.forgetMatch();
-    this.setData({ keyword: "", filter: "全部", page: 1 });
+    this.setData({ keyword: "", filter: "全部", shown: 0 });
   },
 
   applyFont() {
@@ -139,28 +138,25 @@ Page({
     (at || []).forEach((i) => { inMatch[i] = true; });
     const kept = all.filter((p, i) => (!at || inMatch[i]) && !(filter === "未读" && reads[p.id]));
 
-    const pages = cataloged ? Math.max(1, Math.ceil(kept.length / PAGE_SIZE)) : 1;
-    const page = Math.min(this.data.page, pages);
-    const offset = cataloged ? (page - 1) * PAGE_SIZE : 0;
-    const shown = cataloged ? kept.slice(offset, offset + PAGE_SIZE) : kept;
+    const want = cataloged ? Math.max(this.data.shown, PAGE_SIZE) : kept.length;
+    const limit = Math.min(kept.length, want);
 
     const order = [];
     const map = {};
-    shown.forEach((p, i) => {
+    kept.slice(0, limit).forEach((p, i) => {
       const g = p.g || "";
       if (!map[g]) {
         map[g] = [];
         order.push(g);
       }
-      map[g].push(this.rowOf(p, offset + i + 1, reads, picked));
+      map[g].push(this.rowOf(p, i + 1, reads, picked));
     });
 
     const groups = order.map((g) => ({ group: g, items: map[g] }));
 
     this.setData({
       groups,
-      page,
-      pages,
+      shown: limit,
       matched: kept.length,
       total: all.length,
       groupCount: groups.length
@@ -181,8 +177,7 @@ Page({
       : [];
     this.setData({
       groups,
-      page: 1,
-      pages: 1,
+      shown: kept.length,
       matched: kept.length,
       total: all.length,
       groupCount: groups.length
@@ -198,20 +193,9 @@ Page({
     };
   },
 
-  onPrev() {
-    this.turnPage(this.data.page - 1);
-  },
-
-  onNext() {
-    this.turnPage(this.data.page + 1);
-  },
-
-  turnPage(page) {
-    if (page < 1 || page > this.data.pages) return;
-    this.setData({ page }, () => {
-      this.apply();
-      wx.pageScrollTo({ scrollTop: 0, duration: 0 });
-    });
+  onReachBottom() {
+    if (this.data.shown >= this.data.matched) return;
+    this.setData({ shown: this.data.shown + PAGE_SIZE }, () => this.apply());
   },
 
   rowOf(p, seq, reads, picked) {
@@ -248,11 +232,11 @@ Page({
 
   onSearch(e) {
     this.forgetMatch();
-    this.setData({ keyword: e.detail.value, page: 1 }, () => this.apply());
+    this.setData({ keyword: e.detail.value, shown: 0 }, () => this.apply());
   },
 
   onFilter(e) {
-    this.setData({ filter: e.detail.value, page: 1 }, () => this.apply());
+    this.setData({ filter: e.detail.value, shown: 0 }, () => this.apply());
   },
 
 
@@ -285,8 +269,15 @@ Page({
   },
 
   onOpen(e) {
-    trail.set(this.data.groups.reduce((ids, g) => ids.concat(g.items.map((p) => p.id)), []));
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(e.currentTarget.dataset.id) + "&mode=browse" });
+    const id = e.currentTarget.dataset.id;
+    trail.set(this.shownIds(id));
+    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(id) + "&mode=browse" });
+  },
+
+  shownIds(id) {
+    const ids = this.data.groups.reduce((acc, g) => acc.concat(g.items.map((p) => p.id)), []);
+    const at = ids.indexOf(id);
+    return at < 0 ? [id] : ids.slice(at);
   },
 
   onJump(e) {
