@@ -6679,6 +6679,7 @@ const K = {
       const colsWxml = pageRead("packages/settings/collections/collections.wxml");
       const colsJs = pageRead("packages/settings/collections/collections.js");
       const homeJs = pageRead("pages/home/home.js");
+      const homeWxml = pageRead("pages/home/home.wxml");
       ok("「首页隐藏自选」与「只背自选」同一张卡，且它在前",
         colsWxml.indexOf('bindchange="onHomeHide"') >= 0
           && colsWxml.indexOf('bindchange="onHomeHide"') < colsWxml.indexOf('bindchange="onSelfOnly"'));
@@ -6688,6 +6689,9 @@ const K = {
       ok("首页按 homehide 收起自选集合卡与自选排期",
         /const colRows = showCollections \? this\.collectionRows\(\) : \[\]/.test(homeJs)
           && /const showCollections = !settings\.homehide/.test(homeJs));
+      ok("收起自选时首页连「暂无自选集合」那张空卡也不出（藏了不等于没有）",
+        homeWxml.indexOf('<view class="card" wx:if="{{!homehide && !collectionCount}}">') >= 0
+          && /homehide: settings\.homehide/.test(homeJs));
     }
 
     const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
