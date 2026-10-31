@@ -235,3 +235,7 @@
   font-size: var(--fs-caption);
   color: var(--ink-3);
 }
+
+.fh-scopes + .seg {
+  margin-top: var(--sp-2);
+}
