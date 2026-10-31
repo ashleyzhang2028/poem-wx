@@ -17,32 +17,35 @@
   gap: var(--sp-2);
 }
 
-.mark-text {
+.mark-title {
   flex: 1;
-  min-width: 0;
-}
-
-.mark-head {
   display: flex;
   align-items: baseline;
   min-width: 0;
-  overflow: hidden;
 }
 
-.mark-head .row-title {
+.mark-title-t {
   flex: 0 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mark-author {
   flex: none;
-  margin-left: 10rpx;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
+  max-width: 40%;
+  margin-left: var(--sp-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  color: var(--ink-3);
 }
 
-.mark-rename {
+.mark-del {
   flex: none;
 }
 
