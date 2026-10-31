@@ -6624,6 +6624,27 @@ const K = {
     ok("设置页的开关只落一个键（selfOnly 在跨设备的设置白名单里）",
       store3.DEFAULTS.selfOnly === false && !store3.LOCAL_ONLY.selfOnly);
 
+    ok("「首页隐藏自选」默认关，与 selfOnly 一起跨设备",
+      store3.DEFAULTS.homehide === false && !store3.LOCAL_ONLY.homehide
+        && (store3.saveSettings({ homehide: true }), store3.settings().homehide === true)
+        && (store3.saveSettings({ homehide: false }), store3.settings().homehide === false));
+
+    {
+      const pageRead = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
+      const colsWxml = pageRead("packages/settings/collections/collections.wxml");
+      const colsJs = pageRead("packages/settings/collections/collections.js");
+      const homeJs = pageRead("pages/home/home.js");
+      ok("「首页隐藏自选」与「只背自选」同一张卡，且它在前",
+        colsWxml.indexOf('bindchange="onHomeHide"') >= 0
+          && colsWxml.indexOf('bindchange="onHomeHide"') < colsWxml.indexOf('bindchange="onSelfOnly"'));
+      ok("开「首页隐藏自选」就把「只背自选」关掉并禁用",
+        /onHomeHide\(e\)[\s\S]{0,200}homehide: on, selfOnly: false/.test(colsJs)
+          && /const on = entitlement\.can\("collections"\) && entitlement\.can\("coursefree"\) && !homeHide/.test(colsJs));
+      ok("首页按 homehide 收起自选集合卡与自选排期",
+        /const colRows = showCollections \? this\.collectionRows\(\) : \[\]/.test(homeJs)
+          && /const showCollections = !settings\.homehide/.test(homeJs));
+    }
+
     const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));
 
     const dailyRemote = require(path.join(ROOT, "utils", "remote.js"));

@@ -1,30 +1,29 @@
 <view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
 
-  <lock-card wx:if="{{locked}}" title="自选温习" note="登录后可新建集合" mark="选" bind:login="onLogin" />
+  <lock-card wx:if="{{locked}}" title="我的自选" note="登录后可新建集合" mark="选" bind:login="onLogin" />
 
   <block wx:else>
 
   <view class="card">
-    <view class="card-title">自选温习</view>
-    <text class="hint coll-lead">将想温习的篇目加入集合，按自己的节奏安排复习。</text>
-
-    <view class="coll-quota" wx:if="{{on}}">
-      <text class="hint">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
-    </view>
-
-    <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
-  </view>
-
-  <view class="card">
     <view class="card-head">
-      <text class="card-title">只背自选</text>
+      <text class="card-title">选项</text>
       <tier-tag wx:if="{{selfOnlyLocked}}" tier="{{selfOnlyTier}}" />
     </view>
 
     <view class="row">
       <view class="row-main">
+        <text class="row-title">首页隐藏自选</text>
+        <text class="row-sub">首页只留今日温习</text>
+      </view>
+      <view class="sw">
+        <switch checked="{{homeHide}}" bindchange="onHomeHide" />
+      </view>
+    </view>
+
+    <view class="row">
+      <view class="row-main">
         <text class="row-title">只背自选</text>
-        <text class="row-sub">今日仅安排自选集合，课内暂不安排</text>
+        <text class="row-sub">{{homeHide ? '首页已隐藏自选，此项已关闭' : '仅显示我的自选集合，今日温习将被隐藏'}}</text>
       </view>
       <view class="sw">
         <switch checked="{{selfOnly}}" bindchange="onSelfOnly" disabled="{{!selfOnlyOn}}" />
@@ -32,8 +31,13 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{count}}">
-    <view class="card-title">我的集合</view>
+  <view class="card">
+    <view class="card-head">
+      <text class="card-title">我的集合</text>
+      <text class="card-sub" wx:if="{{on}}">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
+    </view>
+
+    <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
 
     <block wx:for="{{collections}}" wx:key="id" wx:for-item="c">
       <view class="coll-head">

@@ -52,6 +52,8 @@ const DEFAULTS = {
 
   selfOnly: false,
 
+  homehide: false,
+
   seasonal: true,
 
   leagueBoard: true,

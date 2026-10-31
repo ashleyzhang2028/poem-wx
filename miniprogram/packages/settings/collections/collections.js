@@ -23,6 +23,8 @@ Page({
     cap: 0,
     count: 0,
 
+    homeHide: false,
+
     selfOnlyOn: false,
     selfOnly: false,
     selfOnlyLocked: false,
@@ -101,8 +103,10 @@ Page({
   },
 
   refreshSelfOnly() {
-    const on = entitlement.can("collections") && entitlement.can("coursefree");
+    const homeHide = !!store.settings().homehide;
+    const on = entitlement.can("collections") && entitlement.can("coursefree") && !homeHide;
     this.setData({
+      homeHide: homeHide,
       selfOnlyOn: on,
       selfOnly: on && !!store.settings().selfOnly,
       selfOnlyTier: entitlement.can("collections")
@@ -112,6 +116,15 @@ Page({
     });
   },
 
+  onHomeHide(e) {
+    const on = !!e.detail.value;
+    store.saveSettings({ homehide: on, selfOnly: false });
+    store.dropDayPlan();
+    sync.markDirty();
+    this.refreshSelfOnly();
+    if (on) wx.showToast({ title: "首页已隐藏自选", icon: "none" });
+  },
+
   onSelfOnly(e) {
     const want = !!e.detail.value;
     if (want && !cols.usable().length) {
@@ -119,10 +132,10 @@ Page({
       wx.showToast({ title: "请先新建集合并添加篇目", icon: "none" });
       return;
     }
-    store.saveSettings({ selfOnly: want });
+    store.saveSettings({ selfOnly: want, homehide: want ? false : !!store.settings().homehide });
     store.dropDayPlan();
     sync.markDirty();
-    this.setData({ selfOnly: want });
+    this.refreshSelfOnly();
   },
 
   closedList() {

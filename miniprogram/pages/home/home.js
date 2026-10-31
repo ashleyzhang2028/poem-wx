@@ -315,6 +315,7 @@ Page({
     const view = { grade: settings.grade, term: settings.term, scope: settings.scope };
     const scope = S.scopeOf(view.scope);
 
+    const showCollections = !settings.homehide;
     const selfOnly = cols.selfOnlyOn();
 
     const planOpt = {
@@ -384,7 +385,7 @@ Page({
     const done = S.todayDone(todaySet, recitedOf);
     const allDone = done >= base;
     const left = S.todayLeft(todaySet, recitedOf);
-    const colRows = this.collectionRows();
+    const colRows = showCollections ? this.collectionRows() : [];
     const selfTotal = colRows.reduce((n, c) => n + c.planned, 0);
     const selfDone = colRows.reduce((n, c) => n + c.done, 0);
     const selfToday = colRows.reduce((n, c) => n + c.doneNow, 0);
@@ -423,7 +424,7 @@ Page({
     });
     this.loadDaily();
 
-    this.cheerCollection(colRows);
+    if (showCollections) this.cheerCollection(colRows);
   },
 
   loadDaily() {
