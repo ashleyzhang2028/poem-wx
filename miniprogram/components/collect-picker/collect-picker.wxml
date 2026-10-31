@@ -1,7 +1,7 @@
 <view class="cp-mask" wx:if="{{open}}" bindtap="onMask">
   <view class="cp {{name}}" catchtap="onStop" style="{{themeStyle}}">
     <view class="cp-head">
-      <text class="cp-title">加入自选集</text>
+      <text class="cp-title">我的自选</text>
       <text class="cp-count">已建 {{total}} / {{cap}} 个</text>
       <view class="cp-close" hover-class="cp-close-hover" hover-stay-time="60" bindtap="close">
         <view class="cp-close-x"></view>
