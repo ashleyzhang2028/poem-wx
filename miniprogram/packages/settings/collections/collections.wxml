@@ -31,7 +31,7 @@
     </view>
   </view>
 
-  <view class="card">
+  <view class="card" wx:if="{{count}}">
     <view class="card-head">
       <text class="card-title">我的集合</text>
       <text class="card-sub" wx:if="{{on}}">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
