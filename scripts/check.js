@@ -6679,19 +6679,22 @@ const K = {
       const colsWxml = pageRead("packages/settings/collections/collections.wxml");
       const colsJs = pageRead("packages/settings/collections/collections.js");
       const homeJs = pageRead("pages/home/home.js");
+      const homeWxml = pageRead("pages/home/home.wxml");
       ok("「首页隐藏自选」与「只温习自选」同一张卡，且它在前",
         colsWxml.indexOf('bindchange="onHomeHide"') >= 0
           && colsWxml.indexOf('bindchange="onHomeHide"') < colsWxml.indexOf('bindchange="onSelfOnly"'));
       ok("开「首页隐藏自选」就把「只温习自选」关掉并禁用",
         /onHomeHide\(e\)[\s\S]{0,200}homehide: on, selfOnly: false/.test(colsJs)
           && /const on = entitlement\.can\("collections"\) && entitlement\.can\("coursefree"\) && !homeHide/.test(colsJs));
-      const homeWxml = pageRead("pages/home/home.wxml");
       ok("首页按 homehide 收起自选集合卡与自选排期",
         /const colRows = showCollections \? this\.collectionRows\(\) : \[\]/.test(homeJs)
           && /const showCollections = !settings\.homehide/.test(homeJs));
-      ok("「今日温习」卡在没排到篇目时整张不出（只温习自选开着、集子又排不上时，页面上不留一张空的今日温习）",
+      ok("「今日温习」卡在没排到篇目时整张不出",
         homeWxml.indexOf('wx:if="{{total || loading}}"') >= 0
           && homeWxml.indexOf('coursePlan') < 0);
+      ok("收起自选时首页连「暂无自选集合」那张空卡也不出（藏了不等于没有）",
+        homeWxml.indexOf('<view class="card" wx:if="{{!homehide && !collectionCount}}">') >= 0
+          && /homehide: settings\.homehide/.test(homeJs));
     }
 
     const DAILY = require(path.join(ROOT, "utils", "daily-poem.js"));

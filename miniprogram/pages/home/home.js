@@ -226,6 +226,7 @@ Page({
     collections: [],
     collectionCount: 0,
     collectionOn: false,
+    homehide: false,
 
     todayLabel: "",
 
@@ -409,6 +410,7 @@ Page({
       collections: colRows,
       collectionCount: colRows.length,
       collectionOn: entitlement.can("collections"),
+      homehide: settings.homehide,
       loading: false
     });
     this.loadDaily();
