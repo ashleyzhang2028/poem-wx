@@ -13,29 +13,17 @@
 
 .mark-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--sp-2);
 }
 
-.mark-title {
+.mark-text {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mark-meta {
-  flex: none;
-  max-width: 40%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .mark-rename {
   flex: none;
-  margin-left: auto;
 }
 
 .mark-search {
