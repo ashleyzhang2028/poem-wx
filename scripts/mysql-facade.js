@@ -17,6 +17,10 @@ const db = {
   avatars: new Map(),
   app_settings: new Map(),
   daily_poems: new Map(),
+  corpus_books: new Map(),
+  corpus_poems: new Map(),
+  corpus_catalog: new Map(),
+  corpus_authors: new Map(),
   progress: new Map()
 };
 
@@ -37,6 +41,10 @@ const PK = {
   avatars: ["uid"],
   app_settings: ["skey"],
   daily_poems: ["pos"],
+  corpus_books: ["book_id"],
+  corpus_poems: ["id"],
+  corpus_catalog: ["book_id", "pos"],
+  corpus_authors: ["name"],
   progress: ["uid", "child_id", "poem_id"]
 };
 

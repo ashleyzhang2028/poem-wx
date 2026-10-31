@@ -3,6 +3,8 @@
 
   <block wx:else>
 
+    <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
+
     <view class="card" wx:if="{{last}}">
       <view class="gc-head">
         <text class="gc-name">上次读到</text>

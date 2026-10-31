@@ -27,8 +27,7 @@ function cardOf(res) {
     title: title,
     shown: shownTitle(title),
     author: author,
-    dynasty: String(res.dynasty || ""),
-    label: String(res.label || "")
+    dynasty: String(res.dynasty || "")
   };
 }
 

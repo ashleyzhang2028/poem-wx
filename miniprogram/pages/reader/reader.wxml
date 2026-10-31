@@ -4,6 +4,10 @@
 
   <block wx:else>
 
+  <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
+
+  <block wx:if="{{!corpusState}}">
+
   <view class="card poem-card" wx:if="{{loadFailed}}">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
@@ -190,6 +194,7 @@
   </view>
 
   <view class="safe-bottom"></view>
+  </block>
   </block>
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 

@@ -3,6 +3,10 @@
 
   <block wx:else>
 
+  <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
+
+  <block wx:if="{{!corpusState}}">
+
   <view class="card book-head">
     <text class="head-title">{{bookName}}</text>
     <text class="head-sub">{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
@@ -79,6 +83,7 @@
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
   <view class="safe-bottom"></view>
+  </block>
   </block>
   <tab-bar id="tabbar" current="1" />
 </view>

@@ -2,6 +2,7 @@ const corpus = require("../../../utils/corpus");
 const store = require("../../../utils/store");
 const AI = require("../../../utils/author-index");
 const gate = require("../../../utils/gate");
+const corpusGate = require("../../../utils/corpus-gate");
 const entitlement = require("../../../utils/entitlement");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
@@ -23,6 +24,7 @@ Page({
     name: "",
     barBelow: true,
     locked: true,
+    corpusState: "",
 
     eras: [],
 
@@ -72,6 +74,14 @@ Page({
     }
     this.setData({ locked: false });
 
+    corpusGate.open(this, "authors", () => this.showRoster());
+  },
+
+  onCorpusRetry() {
+    corpusGate.open(this, "authors", () => this.showRoster());
+  },
+
+  showRoster() {
     this.buildRoster();
     if (this.pendingAuthor && !this.data.author) {
       const name = this.pendingAuthor;
@@ -96,7 +106,7 @@ Page({
 
   buildRoster() {
     const readIds = this.readIds();
-    const r = AI.build(this.allEntries(), { readIds: readIds });
+    const r = AI.build(this.allEntries(), { readIds: readIds, eras: corpus.authorEras() });
     const sections = r.eras.map((e) => ({
       at: e.at,
       name: e.name,
@@ -119,6 +129,7 @@ Page({
   },
 
   onUnload() {
+    corpusGate.close(this);
     this.tick = (this.tick || 0) + 1;
     clearTimeout(this.timer);
     if (this.onDirectory) directory.release(this.onDirectory);

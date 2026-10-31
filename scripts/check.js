@@ -136,15 +136,41 @@ jsFiles.forEach((file) => {
 });
 
 const dataDir = path.join(ROOT, "data");
-const booksTable = readModule(path.join(dataDir, "books", "books.js"));
 
-const catalogPack = readModule(path.join(dataDir, "books", "catalogs.js"));
-const catalogTable = (catalogPack && catalogPack.books) || [];
+const corpusSeed = require("./corpus-seed");
+const corpusApi = require("../api/_lib/corpus");
+const genCorpusSql = require("./gen-corpus-sql");
+const seedRows = corpusSeed.seedRows(corpusSeed.loadCorpus());
+const SEED_OF = { books: "books", poems: "poems", catalogs: "catalog", authors: "authors" };
+const corpusPayloads = {};
+corpusApi.PARTS.forEach((part) => {
+  corpusPayloads[part] = corpusApi.payload(part, seedRows[SEED_OF[part]]);
+});
+
+const booksTable = corpusPayloads.books.books;
+const catalogPack = corpusPayloads.catalogs;
+const catalogTable = booksTable.filter((b) => b.remote);
 const catalogIds = catalogTable.map((b) => b.id);
 
 ok("集子表 = 课内一部 + 目录里的集子", (booksTable || []).length === 1 + catalogIds.length
   && booksTable[0].id === "poems",
   "实际 " + JSON.stringify((booksTable || []).map((b) => b.id)));
+
+const seededCorpus = new WeakSet();
+{
+  const Module = require("module");
+  const loadModule = Module._load;
+  Module._load = function () {
+    const exported = loadModule.apply(this, arguments);
+    const fresh = exported && typeof exported.install === "function" && typeof exported.hasData === "function"
+      && !seededCorpus.has(exported);
+    if (fresh && !global.__corpusBare) {
+      seededCorpus.add(exported);
+      corpusApi.PARTS.forEach((part) => exported.install(part, corpusPayloads[part]));
+    }
+    return exported;
+  };
+}
 
 var corpus = require(path.join(ROOT, "utils", "corpus.js"));
 var glossModule = require(path.join(ROOT, "utils", "gloss.js"));
@@ -155,40 +181,39 @@ booksTable.forEach((b) => {
 const allEntries = booksTable.reduce((acc, b) => acc.concat(perBook[b.id]), []);
 const allIds = new Set(allEntries.map((p) => p.id));
 ok("集子索引合计覆盖全站", allIds.size === allEntries.length, "有重复 id");
-ok("课内诗词 251 首", perBook.poems.length === 251, "实际 " + perBook.poems.length);
+ok("课内诗词 251 首", perBook.poems.length === 251 && seedRows.poems.length === 251, "实际 " + perBook.poems.length);
 ok(
   "索引不带正文",
   allEntries.every((p) => p.text === undefined && p.translation === undefined)
 );
 
-const bookPack = readModule(path.join(dataDir, "books", "index.js"));
-ok("集子索引只装课内那一部（books/index.js 里没有课外集子）",
-  Object.keys(bookPack.books).join() === "poems"
-    && Object.keys(bookPack.rows).join() === "poems",
-  "合表里还有 " + JSON.stringify(Object.keys(bookPack.books)));
+ok("课内那部的索引只含课内，目录里没有课内那一部",
+  seedRows.poems.every((p) => p.book_id === "poems")
+    && Object.keys(catalogPack.rows).indexOf("poems") < 0
+    && corpusPayloads.poems.rows.length === seedRows.poems.length,
+  "课内索引与目录的归属对不上");
 
 ok("集子索引归属正确",
-  perBook.poems.length === bookPack.books.poems
+  perBook.poems.length === booksTable[0].count
     && perBook.poems.every((p) => p.b === "poems" && p.n === "课内诗词"),
   "b / n 与实际集子对不上");
 
 {
-  const wide = bookPack.rows.poems.filter((r) => r.length !== 11);
-  ok("索引落盘只存列（无名、不存正文）", wide.length === 0,
-    wide.length + " 行形状不对 —— 薄索引把字段名与集子名都省了（见 scripts/build-data.js）");
+  const wide = corpusPayloads.poems.rows.filter((r) => r.length !== 11);
+  ok("索引下发只存列（无名、不存正文）", wide.length === 0,
+    wide.length + " 行形状不对 —— 薄索引把字段名与集子名都省了（见 api/_lib/corpus.js）");
 }
 
 {
-  const texts = Object.keys(perBook).filter((id) => id !== "poems" && catalogIds.indexOf(id) < 0);
-  ok("除课内与目录里的集子，别的集子一条都不进包（索引里一条都没有）",
-    texts.every((id) => perBook[id].length === 0),
-    "这些集子还有条目：" + texts.filter((id) => perBook[id].length).join("、"));
+  ok("目录里的集子都登记在集子表里（别的集子一条都不下发）",
+    Object.keys(catalogPack.rows).every((id) => catalogIds.indexOf(id) >= 0),
+    "这些集子没登记：" + Object.keys(catalogPack.rows).filter((id) => catalogIds.indexOf(id) < 0).join("、"));
 }
 
-ok("目录里每部的条数与落盘的 count 对得上",
+ok("目录里每部的条数与集子表的 count 对得上",
   catalogIds.length > 0
-    && catalogIds.every((id, i) => perBook[id].length === catalogTable[i].count && perBook[id].length > 0),
-  "实际 " + JSON.stringify(catalogIds.map((id, i) => id + ":" + perBook[id].length + "/" + catalogTable[i].count)));
+    && catalogTable.every((b) => perBook[b.id].length === b.count && perBook[b.id].length > 0),
+  "实际 " + JSON.stringify(catalogTable.map((b) => b.id + ":" + perBook[b.id].length + "/" + b.count)));
 
 {
   const rows = catalogIds.reduce((acc, id) => acc.concat(perBook[id]), []);
@@ -200,9 +225,9 @@ ok("目录里每部的条数与落盘的 count 对得上",
     rows.every((p) => p.text === undefined && p.translation === undefined && p.n),
     "目录条目混进了正文或没带书名");
 
-  ok("目录落盘只存列（书名在集子表里，不在这份里重写一遍）",
-    catalogPack.books.every((b) => Object.keys(b).sort().join() === "count,id,name,unit")
-      && Object.keys(catalogPack).sort().join() === "books,dict,drifted,prefixes,rows",
+  ok("目录下发只存列（书名在集子表里，不在这份里重写一遍）",
+    Object.keys(catalogPack).sort().join() === "dict,rev,rows"
+      && booksTable.every((b) => Object.keys(b).every((k) => ["id", "name", "page", "unit", "count", "prefix", "remote"].indexOf(k) >= 0)),
     "形状不对：" + JSON.stringify(Object.keys(catalogPack)));
 }
 
@@ -255,10 +280,20 @@ ok("包里不再有正文分片与分片清单",
   const ignored = ((pcfg.packOptions || {}).ignore || []).map((r) => String(r.value || ""));
 
   {
-    const rel = "data/books/index.js";
-    ok("集子索引在包里 " + rel,
-      fs.existsSync(path.join(ROOT, rel)) && !ignored.some((ig) => rel.indexOf(ig) === 0),
-      rel + " 被 ignore 了 —— 列表页与按题名检索会空");
+    ok("\u76ee\u5f55\u548c\u4f5c\u8005\u540d\u518c\u4e0d\u518d\u968f\u5305\uff08\u53ea\u5728 MySQL\uff0c\u7ecf /api/corpus \u4e0b\u53d1\uff09",
+      !fs.existsSync(path.join(dataDir, "books")) && !fs.existsSync(path.join(dataDir, "roster-extra.js"))
+        && !(((pcfg.packOptions || {}).include || []).some((r) => /data\/(books|roster-extra)/.test(String(r.value || "")))),
+      "data/books \u6216 data/roster-extra.js \u8fd8\u5728\uff0c\u6216 project.config.json \u8fd8\u5728\u5f80\u5305\u91cc\u5e26\u5b83\u4eec");
+
+    const sqlFile = path.join(__dirname, "..", "deploy", "sql", "corpus.sql");
+    ok("deploy/sql/corpus.sql \u4e0e\u8bed\u6599\u4e00\u81f4\uff08\u91cd\u65b0\u8dd1 node scripts/gen-corpus-sql.js \u5373\u53ef\uff09",
+      fs.existsSync(sqlFile) && fs.readFileSync(sqlFile, "utf8") === genCorpusSql.render(seedRows),
+      "\u8bed\u6599\u53d8\u4e86\u4f46\u79cd\u5b50 SQL \u6ca1\u91cd\u751f\u6210\uff0c\u5e93\u91cc\u7684\u76ee\u5f55\u4f1a\u8ddf\u8bed\u6599\u5bf9\u4e0d\u4e0a");
+
+    const schema = fs.readFileSync(path.join(__dirname, "..", "deploy", "sql", "mysql-schema.sql"), "utf8");
+    ok("\u5efa\u8868\u8bed\u53e5\u91cc\u6709\u8bed\u6599\u56db\u5f20\u8868",
+      genCorpusSql.TABLES.every((t) => schema.indexOf("CREATE TABLE IF NOT EXISTS `" + t.table + "`") >= 0),
+      "mysql-schema.sql \u7f3a\u8bed\u6599\u8868");
   }
 
   ok("课文阅读页取正文先看有没有这一篇（不拿取不到的 id 去问 corpus.entry）",
@@ -2223,8 +2258,7 @@ function mountFull(pg, query) {
 
 {
 
-  const dataDir = path.join(ROOT, "data");
-  const hasData = fs.existsSync(path.join(dataDir, "books", "books.js"));
+  const hasData = corpus.hasData();
 
   if (!hasData) {
     ok("门禁开合（包里没有语料，跳过真跑）", true);
@@ -4276,8 +4310,7 @@ function mountFull(pg, query) {
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const dataDir = path.join(ROOT, "data");
-  if (!fs.existsSync(path.join(dataDir, "books", "books.js"))) {
+  if (!corpus.hasData()) {
     ok("出题口径（包里没有语料，跳过真跑）", true);
   } else {
     const quizSrc = read("packages/game/quiz/lib.js");
@@ -4537,9 +4570,9 @@ const K = {
 
 {
   const AI = require(path.join(ROOT, "utils", "author-index.js"));
-  const roster = AI.build(perBook.poems);
-  ok("名单里的作者都进得了名册（" + AI.extraCount + " 位）",
-    AI.extraCount > 0 && roster.total === Object.keys(roster.people).length,
+  const roster = AI.build(perBook.poems, { eras: corpusPayloads.authors.era });
+  ok("名单里的作者都进得了名册（" + seedRows.authors.length + " 位）",
+    seedRows.authors.length > 0 && roster.total === Object.keys(roster.people).length,
     "名册 " + Object.keys(roster.people).length + " 位，算成 " + roster.total + " 位");
 
   const missing = ["屈原", "李白", "罗贯中", "施耐庵"].filter((n) => !roster.people[n]);
@@ -5418,6 +5451,8 @@ const K = {
       fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
       fs.copyFileSync(path.join(repo3, "scripts", "build-data.js"),
         path.join(tmp, "scripts", "build-data.js"));
+      fs.copyFileSync(path.join(repo3, "scripts", "corpus-seed.js"),
+        path.join(tmp, "scripts", "corpus-seed.js"));
       let err = "";
       try {
         execFileSync(process.execPath, [path.join(tmp, "scripts", "build-data.js")],
@@ -5903,20 +5938,19 @@ const K = {
   ok("corpus 有「数据在不在」的探针", /function hasData\s*\(/.test(corpusSrc));
   ok("corpus 暴露了 hasData（页面据此走空态）",
     /hasData\s*,/.test(corpusSrc.slice(corpusSrc.indexOf("module.exports"))));
-  ok("hasData 判的是「包内的 books.js 在不在」，不是磁盘上那个目录",
-    !/existsSync/.test(corpusSrc) && /hasData[\s\S]{0,300}PACKED\.books\(\)/.test(corpusSrc),
-    "真机没有 fs，且 data/ 目录会被 packOptions 拆着打 —— 目录在、包内文件缺时，"
-      + "看目录的探针一律回「有数据」，首页于是跳过空态，渲染出一个空目录");
+  ok("hasData 判的是「课内索引与目录装进来没有」，不是磁盘上的文件",
+    !/existsSync/.test(corpusSrc) && /function hasData\(\)\s*\{\s*return isReady\("core"\)/.test(corpusSrc));
   ok("app.js 把运行版本记进本机（首页空态要说得清「这个包是哪一版」）",
     /stampBuild/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8"))
       && /getAccountInfoSync/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8")));
-  ok("语料读取统一过 readJson（拿不到就回默认值，不当崩溃）",
-    /function readJson\s*\(/.test(corpusSrc));
+  ok("app.js 启动就把语料热起来（warm），不再同步等本地文件",
+    /corpus\.warm\(\)/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8")));
 
-  const rawLoads = corpusSrc.match(/=\s*loadJson\(/g) || [];
-  ok("没有裸用 loadJson 的入口（都走 readJson 兜底）",
-    rawLoads.length === 0,
-    rawLoads.length + " 处还在裸 loadJson：" + (corpusSrc.match(/[^\n]*loadJson\([^\n]*/g) || []).join(" / "));
+  {
+    const dataRequires = (corpusSrc.match(/require\("[^"]+"\)/g) || []).filter((r) => /data\//.test(r));
+    ok("corpus 只剩课内正文一份本地数据（course.js），索引与目录都走接口",
+      dataRequires.join() === 'require("../data/course.js")', dataRequires.join());
+  }
 
   {
     const os = require("os");
@@ -5929,25 +5963,32 @@ const K = {
 
       const modPath = path.join(tmp, "utils", "corpus.js");
       let bare = null;
+      global.__corpusBare = true;
       try {
         bare = require(modPath);
       } catch (e) {
         bare = null;
       }
-      ok("没有 data/ 时 corpus 仍能被 require（不是一上来就炸）", !!bare);
+      global.__corpusBare = false;
+      ok("语料没装进来时 corpus 仍能被 require（不是一上来就炸）", !!bare);
       if (bare) {
         let blew = "";
         try {
           bare.books(); bare.course(); bare.courseTexts();
-          bare.entry("x"); bare.search("李白");
+          bare.entry("x"); bare.search("李白"); bare.authorEras();
         } catch (e) {
           blew = (e && e.message) || String(e);
         }
-        ok("没有 data/ 时各入口都回空值、不抛异常", blew === "",
+        ok("语料没装进来时各入口都回空值、不抛异常", blew === "",
           "炸在：" + blew + " —— 这正是 Issue #121 的白屏");
-        ok("没有 data/ 时 course() 回空（首页渲染空态）", bare.course().length === 0);
-        ok("没有 data/ 时 books() 回空", bare.books().length === 0);
-        ok("没有 data/ 时 hasData() 说真话", bare.hasData() === false);
+        ok("语料没装进来时 course() 回空（首页走加载态）", bare.course().length === 0);
+        ok("语料没装进来时 books() 回空", bare.books().length === 0);
+        ok("语料没装进来时 hasData() / isReady() 说真话", bare.hasData() === false && bare.isReady("core") === false);
+        track(bare.ready("core").then(
+          () => ok("接口不通又没有缓存：ready() 要拒绝，不能假装好了", false),
+          (e) => ok("接口不通又没有缓存：ready() 拒绝并带 E_NO_CORPUS，页面据此给重试",
+            e && e.code === "E_NO_CORPUS" && bare.isReady("core") === false, e && e.code)
+        ));
       }
       global.wx = savedWx;
       delete require.cache[require.resolve(modPath)];
@@ -5974,18 +6015,17 @@ const K = {
       '  loadFontFace(){},navigateTo(){},switchTab(){},stopPullDownRefresh(){}};',
       'global.getApp=()=>({globalData:{}});global.getCurrentPages=()=>[];',
       'const c=require(path.join(ROOT,"utils","corpus.js"));',
-      'c.books=()=>[];c.course=()=>[];c.courseTexts=()=>({});',
-      'c.manifest=()=>({map:{},buckets:[]});c.hasData=()=>false;',
       'require(path.join(ROOT,"utils","store.js")).saveProfile({logged:true,nickname:"t"});',
       'let opt=null;global.Page=(o)=>{opt=o;};',
       'require(path.join(ROOT,"pages","home","home.js"));',
       'const p=Object.assign({},opt);p.data=JSON.parse(JSON.stringify(opt.data||{}));',
       'p.setData=function(o){Object.keys(o).forEach((k)=>{this.data[k]=o[k];});};',
       'p.onShow.call(p);',
-      'if(p.data.noData!==undefined) throw new Error("home.js 还有 noData 分支");',
-      'if(p.data.logged!==true) throw new Error("登录态没渲染出来");',
-      'if(!Array.isArray(p.data.plan)||p.data.plan.length!==0) throw new Error("plan 不是空数组");',
-      'console.log("ok");'
+      'if(p.data.corpusState!=="loading") throw new Error("没语料时首页没进加载态");',
+      'setTimeout(()=>{',
+      '  if(p.data.corpusState!=="failed") throw new Error("取不到语料时首页没给重试");',
+      '  console.log("ok");',
+      '},50);'
     ].join("\n");
 
     let blew = "";
@@ -5994,7 +6034,7 @@ const K = {
     } catch (e) {
       blew = String((e.stderr && e.stderr.toString()) || e.message).split("\n").slice(0, 3).join(" | ");
     }
-    ok("没有语料时首页也照常跑完 refresh（不抛、不留空态分支）", blew === "", blew);
+    ok("没有语料时首页先给加载态，取不到再给重试（不抛）", blew === "", blew);
   }
 
 }
@@ -6306,7 +6346,7 @@ const K = {
     "还有注释：" + dirty.slice(0, 8).join("、") +
       " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
 
-  const generated = ["miniprogram/data/books/books.js"];
+  const generated = ["miniprogram/data/course.js"];
   const leaked = generated.filter((rel) => {
     if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);
@@ -6595,7 +6635,7 @@ const K = {
     const realWrite = store3.write;
     store3.read = (k, d) => (k === DAILY_KEY ? (dailyCache[k] === undefined ? d : dailyCache[k]) : realRead(k, d));
     store3.write = (k, v) => { if (k === DAILY_KEY) dailyCache[k] = v; else realWrite(k, v); };
-    const rowAt = (pos) => ({ pos: pos, size: 5, title: "题" + pos, author: "某" + pos, dynasty: "唐", label: "名句" });
+    const rowAt = (pos) => ({ pos: pos, size: 5, title: "题" + pos, author: "某" + pos, dynasty: "唐" });
     let asked = [];
     let serverDown = false;
     let badRow = null;

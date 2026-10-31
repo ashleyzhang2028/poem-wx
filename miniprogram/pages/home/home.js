@@ -14,6 +14,7 @@ const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const LUNAR = require("../../utils/lunar");
 const dailyPoem = require("../../utils/daily-poem");
+const corpusGate = require("../../utils/corpus-gate");
 const sfx = require("../../utils/sfx");
 const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
@@ -242,6 +243,8 @@ Page({
 
     extraKeyword: "",
 
+    corpusState: "",
+
     loading: true
   },
 
@@ -251,6 +254,7 @@ Page({
   },
 
   onUnload() {
+    corpusGate.close(this);
     loginFlow.unwatch(this.onLoginSettled);
   },
 
@@ -273,6 +277,14 @@ Page({
   },
 
   refresh(force) {
+    corpusGate.open(this, "core", () => this.draw(force));
+  },
+
+  onCorpusRetry() {
+    this.refresh();
+  },
+
+  draw(force) {
     if (!gate.logged()) {
       this.setData(guestCatalog());
       this.loadDaily();

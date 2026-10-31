@@ -110,6 +110,17 @@ Page({
     this.sourceIds = {};
     const token = this.token;
 
+    if (corpus.isReady("catalogs")) {
+      this.runSearch(kw, token);
+      return;
+    }
+    this.setData({ loading: true });
+    corpus.ready("catalogs").catch(() => null).then(() => {
+      if (token === this.token) this.runSearch(kw, token);
+    });
+  },
+
+  runSearch(kw, token) {
     const pack = this.byIndex(kw);
     this.setData({
       results: this.decorate(pack.items.slice(0, BATCH)),

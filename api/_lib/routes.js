@@ -42,6 +42,7 @@ var ROUTES = {
   "POST /admin/pinyin": "./../_routes/admin/pinyin.js",
   "GET /pinyin-fixes": "./../_routes/pinyin-fixes.js",
   "GET /daily-poems": "./../_routes/daily-poems.js",
+  "GET /corpus/:part": "./../_routes/corpus.js",
   "POST /admin/feedback": "./../_routes/admin/feedback.js",
 
   "GET /feedback": "./../_routes/feedback/index.js",

@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const corpusGate = require("../../utils/corpus-gate");
 const gate = require("../../utils/gate");
 const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
@@ -47,7 +48,8 @@ Page({
     markCount: 0,
     last: null,
     locked: true,
-    reason: ""
+    reason: "",
+    corpusState: ""
   },
 
   applyFont() {
@@ -65,6 +67,18 @@ Page({
       return;
     }
     this.setData({ locked: false, reason: "" });
+    corpusGate.open(this, "core", () => this.showShelves());
+  },
+
+  onCorpusRetry() {
+    corpusGate.open(this, "core", () => this.showShelves());
+  },
+
+  onUnload() {
+    corpusGate.close(this);
+  },
+
+  showShelves() {
     const all = corpus.booksOf();
     const byId = {};
     all.forEach((b) => {
@@ -82,7 +96,7 @@ Page({
           id: b.id,
           name: b.name,
           unit: b.unit,
-          count: corpus.ofBook(b.id).length
+          count: b.count
         })),
         count: books.length
       };

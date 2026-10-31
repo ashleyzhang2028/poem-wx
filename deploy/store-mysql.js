@@ -328,6 +328,23 @@ function mysqlStore(cfg) {
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
     },
 
+    listCorpusBooks: function () {
+      return query("SELECT book_id, name, unit, page, prefix, kind, total FROM corpus_books ORDER BY pos")
+        .then(function (rows) { return rows || []; });
+    },
+    listCorpusPoems: function (bookId) {
+      return query("SELECT id, title, author, author_alt, dynasty, source, aliases, selection, grade_group, grade, term"
+        + " FROM corpus_poems WHERE book_id = ? ORDER BY pos", [String(bookId || "")])
+        .then(function (rows) { return rows || []; });
+    },
+    listCorpusCatalog: function () {
+      return query("SELECT book_id, title, author, note, in_course FROM corpus_catalog ORDER BY book_id, pos")
+        .then(function (rows) { return rows || []; });
+    },
+    listCorpusAuthors: function () {
+      return query("SELECT name, era, era_at FROM corpus_authors").then(function (rows) { return rows || []; });
+    },
+
     putPinyinProposal: function (row) { return insertRow("pinyin_proposals", row, ["fid"]).then(function () { return { fid: row.fid }; }); },
     getPinyinProposal: function (fid) { return getRow("pinyin_proposals", "fid", fid); },
     listPinyinProposals: function (filter, limit) {

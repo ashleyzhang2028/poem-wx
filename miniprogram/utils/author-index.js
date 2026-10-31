@@ -125,20 +125,10 @@ const ATTRIB = {
   "classic-gw-10": { person: "朱熹", dynasty: "宋" }
 };
 
-const extra = (() => {
-  try {
-    return require("../data/roster-extra.js") || {};
-  } catch (e) {
-    return {};
-  }
-})();
-
-const EXTRA_ERA = extra.era || {};
-
-function extraRoster(byPerson, order) {
-  Object.keys(EXTRA_ERA).forEach(function (n) {
+function extraRoster(byPerson, order, eras) {
+  Object.keys(eras).forEach(function (n) {
     if (isCollective(n)) return;
-    const row = EXTRA_ERA[n] || {};
+    const row = eras[n] || {};
     if (byPerson[n]) {
       byPerson[n].at = Number(row.at) || TAIL;
       byPerson[n].dynasty = row.era || "";
@@ -203,7 +193,7 @@ function build(entries, opt) {
     if (d) w.dynasties[d] = true;
   });
 
-  extraRoster(byPerson, order);
+  extraRoster(byPerson, order, (opt && opt.eras) || {});
 
   const people = {};
   order.forEach(function (n) {
@@ -345,7 +335,6 @@ module.exports = {
   ERAS: ERAS,
   TAIL: TAIL,
   LIT_BOOKS: LIT_BOOKS,
-  extraCount: Object.keys(EXTRA_ERA).length,
   eraOf: eraOf,
   eraName: eraName,
   aliasOf: aliasOf,

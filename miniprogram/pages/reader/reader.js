@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const corpusGate = require("../../utils/corpus-gate");
 const source = require("../../utils/poem-source");
 const AI = require("../../utils/author-index");
 const store = require("../../utils/store");
@@ -112,6 +113,8 @@ Page({
     lockTitle: "诗词详情",
     lockNote: "登录后查看正文与进度",
 
+    corpusState: "",
+
     creator: "",
     pager: { show: false, prev: null, next: null }
   },
@@ -144,10 +147,29 @@ Page({
     }
 
     if (this.data.locked) this.setData({ locked: false });
-    if (!this.loaded) this.loadEntry();
+    if (!this.loaded) this.openEntry();
     this.applyReading();
 
     this.syncDaily();
+  },
+
+  corpusScope() {
+    const id = String(this.data.id);
+    if (/^\d+$/.test(id)) return "";
+    return /^poems-/.test(id) ? "core" : "catalogs";
+  },
+
+  openEntry() {
+    const scope = this.corpusScope();
+    if (!scope) {
+      this.loadEntry();
+      return;
+    }
+    corpusGate.open(this, scope, () => this.loadEntry());
+  },
+
+  onCorpusRetry() {
+    this.openEntry();
   },
 
   syncDaily() {
@@ -463,6 +485,7 @@ Page({
   },
 
   onUnload() {
+    corpusGate.close(this);
     if (this.advance) clearTimeout(this.advance);
     this.loadToken = (this.loadToken || 0) + 1;
     this.chunkToken = (this.chunkToken || 0) + 1;

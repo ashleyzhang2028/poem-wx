@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [] };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [], corpus: { books: [], poems: [], catalog: [], authors: [] } };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -240,6 +240,13 @@ function memoryStore() {
 
     countDailyPoems: function () { return Promise.resolve(db.dailyPoems.length); },
     getDailyPoem: function (pos) { return Promise.resolve(db.dailyPoems[pos] || null); },
+
+    listCorpusBooks: function () { return Promise.resolve(db.corpus.books.slice()); },
+    listCorpusPoems: function (bookId) {
+      return Promise.resolve(db.corpus.poems.filter(function (r) { return r.book_id === bookId; }));
+    },
+    listCorpusCatalog: function () { return Promise.resolve(db.corpus.catalog.slice()); },
+    listCorpusAuthors: function () { return Promise.resolve(db.corpus.authors.slice()); },
 
     putPinyinProposal: function (row) { db.pinyinProposals[row.fid] = row; return Promise.resolve({ fid: row.fid }); },
     getPinyinProposal: function (fid) { return Promise.resolve(db.pinyinProposals[fid] || null); },

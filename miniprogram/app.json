@@ -158,6 +158,7 @@
   "sitemapLocation": "sitemap.json",
   "usingComponents": {
     "lock-card": "/components/lock-card/lock-card",
-    "skeleton": "/components/skeleton/skeleton"
+    "skeleton": "/components/skeleton/skeleton",
+    "corpus-state": "/components/corpus-state/corpus-state"
   }
 }

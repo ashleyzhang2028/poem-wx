@@ -17,12 +17,12 @@ if (!pool.length || bad.length) {
 
 const quote = (v) => "'" + String(v).split("\\").join("\\\\").split("'").join("''") + "'";
 
-const rows = pool.map((x, i) => "  (" + [i, quote(x[0]), quote(x[1]), quote(x[2]), quote(x[3])].join(", ") + ")");
+const rows = pool.map((x, i) => "  (" + [i, quote(x[0]), quote(x[1]), quote(x[2])].join(", ") + ")");
 
 fs.writeFileSync(
   OUT,
   "DELETE FROM `daily_poems`;\n" +
-    "INSERT INTO `daily_poems` (`pos`, `title`, `author`, `dynasty`, `label`) VALUES\n" +
+    "INSERT INTO `daily_poems` (`pos`, `title`, `author`, `dynasty`) VALUES\n" +
     rows.join(",\n") + ";\n"
 );
 console.log("每日一诗 " + pool.length + " 首 → " + path.relative(process.cwd(), OUT));

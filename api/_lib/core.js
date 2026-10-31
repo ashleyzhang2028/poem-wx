@@ -2799,8 +2799,7 @@ function dailyPoemPublic(deps, query) {
         size: size,
         title: String(row.title || ""),
         author: String(row.author || ""),
-        dynasty: String(row.dynasty || ""),
-        label: String(row.label || "")
+        dynasty: String(row.dynasty || "")
       });
     });
   });

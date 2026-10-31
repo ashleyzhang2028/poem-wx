@@ -340,8 +340,8 @@ function makeWx(port, mem) {
     ok("每日一诗表还是空的：404 E_DAILY_EMPTY（客户端据此报失败，不是空白）",
       !empty.ok && empty.status === 404 && empty.code === "E_DAILY_EMPTY", JSON.stringify(empty));
 
-    const DAILY_ROWS = [["春晓","孟浩然","唐","名句"],["登鹳雀楼","王之涣","唐","名句"],["静夜思","李白","唐","名句"]];
-    DAILY_ROWS.forEach((r, i) => facade._db.daily_poems.set(String(i), { pos: i, title: r[0], author: r[1], dynasty: r[2], label: r[3] }));
+    const DAILY_ROWS = [["春晓","孟浩然","唐"],["登鹳雀楼","王之涣","唐"],["静夜思","李白","唐"]];
+    DAILY_ROWS.forEach((r, i) => facade._db.daily_poems.set(String(i), { pos: i, title: r[0], author: r[1], dynasty: r[2] }));
     const a = await call({ day: "2026-10-31" });
     const b = await call({ day: "2026-10-31" });
     ok("按自然日取：同一天两次是同一首，带 pos 与 size",
