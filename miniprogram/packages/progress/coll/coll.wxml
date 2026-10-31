@@ -5,7 +5,7 @@
       <text class="empty-text say">{{logged ? '暂无自选集合' : '登录后可查看自选集合'}}</text>
       <text class="hint empty-tip">将想温习的篇目加入集合，按自己的节奏安排复习</text>
       <button class="btn ghost mini empty-btn" wx:if="{{!logged}}" bindtap="onLogin">登录</button>
-      <button class="btn ghost mini empty-btn" wx:else bindtap="onCollections">管理自选集合</button>
+      <button class="btn ghost mini empty-btn" wx:else bindtap="onCollections">管理我的自选</button>
     </view>
   </view>
 
@@ -24,7 +24,7 @@
   <view class="card" wx:if="{{cards.length}}">
     <view class="row" hover-class="row-hover" hover-stay-time="60" bindtap="onCollections">
       <view class="row-main">
-        <text class="row-title">管理自选集合</text>
+        <text class="row-title">管理我的自选</text>
         <text class="row-sub">新建 · 改名 · 增删篇目</text>
       </view>
       <text class="row-go">›</text>
