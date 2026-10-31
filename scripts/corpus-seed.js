@@ -34,6 +34,8 @@ const POEM_FILES = [
   "data/site-roster.js",
   "data/author-index.js",
   "data/gloss-notes.js",
+  "data/catalog-texts.js",
+  "data/catalog-notes.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -157,10 +159,50 @@ function seedRows(W) {
     return { name: name, era: meta[name].era, era_at: meta[name].at };
   });
 
-  return { books: books, poems: poems, catalog: catalog, authors: authors };
+  return { books: books, poems: poems, catalog: catalog, authors: authors, texts: catalogTexts(catalogs, order), gloss: catalogGloss(catalogs, order, W) };
+}
+
+function catalogTexts(catalogs, order) {
+  const source = (loadCorpus(["data/catalog-texts.js"]).CATALOG_TEXTS) || {};
+  const out = [];
+  Object.keys(source).forEach(function (bookId) {
+    if (order.indexOf(bookId) < 0) throw new Error("正文绑在了不在目录里的集子：" + bookId);
+    const rows = (catalogs[bookId] || {}).rows || [];
+    source[bookId].forEach(function (r) {
+      const pos = Number(r[0]);
+      if (!(pos >= 1 && pos <= rows.length)) {
+        throw new Error(bookId + " 第 " + pos + " 条不在目录里（目录共 " + rows.length + " 条）");
+      }
+      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], sid: r[1], text: r[3], translation: r[4], translation_src: r[2] || "" });
+    });
+  });
+  return out;
+}
+
+function catalogGloss(catalogs, order, W) {
+  const source = W.CATALOG_NOTES || {};
+  const out = [];
+  Object.keys(source).forEach(function (bookId) {
+    if (order.indexOf(bookId) < 0) throw new Error("注释挂在了不在目录里的集子：" + bookId);
+    const rows = (catalogs[bookId] || {}).rows || [];
+    const mine = source[bookId] || {};
+    Object.keys(mine).forEach(function (key) {
+      const pos = Number(key);
+      if (!(pos >= 1 && pos <= rows.length)) {
+        throw new Error(bookId + " 第 " + pos + " 条的注释不在目录里（目录共 " + rows.length + " 条）");
+      }
+      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], gloss: mine[key] });
+    });
+  });
+  return out;
+}
+
+function seedStatements(rows) {
+  return require("./gen-corpus-sql").statements(rows, { params: true });
 }
 
 module.exports = {
+  seedStatements: seedStatements,
   CORPUS_DIR: CORPUS_DIR,
   COURSE_BOOK: COURSE_BOOK,
   POEM_FILES: POEM_FILES,

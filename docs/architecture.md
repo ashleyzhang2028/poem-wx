@@ -276,13 +276,20 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    所以**第一次启动必须联网一次**；之后读本机缓存，断网也能读课内。
 
 2. **索引与目录在 MySQL**，表是 `corpus_books` / `corpus_poems` / `corpus_catalog` /
-   `corpus_authors`（建表见 `deploy/sql/mysql-schema.sql`，数据由
-   `node scripts/gen-corpus-sql.js` 从 `scripts/corpus/` 生成 `deploy/sql/corpus.sql`，
+   `corpus_authors` / `corpus_texts` / `corpus_gloss`（建表见 `deploy/sql/mysql-schema.sql`，
+   数据由 `node scripts/gen-corpus-sql.js` 从 `scripts/corpus/` 生成 `deploy/sql/corpus.sql`，
    语料变了要重新生成并在库里执行一次）。
-   经 `GET /api/corpus/:part` 下发，`part` 取 `books` / `poems` / `catalogs` / `authors`：
-   页面要什么取什么（书架只要 `books`，课内页要 `poems`，非课内集子要 `catalogs`，
-   作者索引要 `authors`），每份只查自己那张表、只选用到的列。
+   经 `GET /api/corpus/:part` 下发，`part` 取 `books` / `poems` / `catalogs` / `authors` /
+   `texts` / `gloss`：页面要什么取什么（书架只要 `books`，课内页要 `poems`，非课内集子要
+   `catalogs`，作者索引要 `authors`；`texts` / `gloss` 一次一部，带 `?book=`），
+   每份只查自己那张表、只选用到的列。
    应答带 `rev`，客户端带 `?rev=` 再问时未变则只回 `{ rev, same: true }`。
+
+   `texts` 与 `gloss` 是按目录次序（`book_id` + `pos`）挂上去的正文与注释：
+   语料在 `scripts/corpus/data/catalog-texts.js`（由 `build-catalog-texts.js` 把目录条目
+   与分卷里的正文、译文按「题名 + 作者」绑成一条，绑不上的一条不写）与
+   `catalog-notes.js`（注释，逐条对正文核过）。客户端 `corpus.catalogText(meta)` /
+   `catalogGloss(meta)` 取到就用，取不到才回落到问诗词漫读。
 
    客户端 `utils/corpus.js` 把每份存进 `wx.setStorageSync`（键 `kb_corpus_<part>_v1`），
    启动时同步读回来，所以 `course()` / `ofBook()` / `indexById()` 这些同步取数的形状不变；

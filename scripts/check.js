@@ -291,9 +291,26 @@ ok("包里不再有正文分片与分片清单",
       "\u8bed\u6599\u53d8\u4e86\u4f46\u79cd\u5b50 SQL \u6ca1\u91cd\u751f\u6210\uff0c\u5e93\u91cc\u7684\u76ee\u5f55\u4f1a\u8ddf\u8bed\u6599\u5bf9\u4e0d\u4e0a");
 
     const schema = fs.readFileSync(path.join(__dirname, "..", "deploy", "sql", "mysql-schema.sql"), "utf8");
-    ok("\u5efa\u8868\u8bed\u53e5\u91cc\u6709\u8bed\u6599\u56db\u5f20\u8868",
+    ok("\u5efa\u8868\u8bed\u53e5\u91cc\u6709\u8bed\u6599\u8868",
       genCorpusSql.TABLES.every((t) => schema.indexOf("CREATE TABLE IF NOT EXISTS `" + t.table + "`") >= 0),
       "mysql-schema.sql \u7f3a\u8bed\u6599\u8868");
+
+    const cached = fs.readFileSync(path.join(__dirname, "corpus", "data", "catalog-texts.js"), "utf8");
+    execFileSync(process.execPath, [path.join(__dirname, "corpus", "scripts", "build-catalog-texts.js")],
+      { stdio: "pipe" });
+    ok("catalog-texts.js 与语料一致（重新跑 node scripts/corpus/scripts/build-catalog-texts.js 即可）",
+      fs.readFileSync(path.join(__dirname, "corpus", "data", "catalog-texts.js"), "utf8") === cached,
+      "分卷与目录改了但绑定没重生成");
+
+    const bound = seedRows.texts;
+    const books = {};
+    bound.forEach((r) => { books[r.book_id] = (books[r.book_id] || 0) + 1; });
+    ok("目录绑定了正文与译文" + Object.keys(books).map((b) => "：" + b + " " + books[b]).join(""),
+      bound.every((r) => r.sid && r.text && r.translation),
+      "有绑定条目的正文或译文是空的");
+
+    const keys = new Set(bound.map((r) => r.book_id + "\u0000" + r.pos));
+    ok("一篇目录只绑一次正文与译文", keys.size === bound.length, "有重复的 book_id + pos");
   }
 
   ok("课文阅读页取正文先看有没有这一篇（不拿取不到的 id 去问 corpus.entry）",

@@ -344,6 +344,23 @@ function mysqlStore(cfg) {
     listCorpusAuthors: function () {
       return query("SELECT name, era, era_at FROM corpus_authors").then(function (rows) { return rows || []; });
     },
+    listCorpusTexts: function (bookId) {
+      return query("SELECT book_id, pos, title, sid, `text`, translation, translation_src"
+        + " FROM corpus_texts WHERE book_id = ? ORDER BY pos", [String(bookId || "")])
+        .then(function (rows) { return rows || []; });
+    },
+    listCorpusGloss: function (bookId) {
+      return query("SELECT book_id, pos, title, gloss FROM corpus_gloss WHERE book_id = ? ORDER BY pos",
+        [String(bookId || "")]).then(function (rows) {
+          return (rows || []).map(function (r) {
+            var items = r.gloss;
+            if (typeof items === "string") {
+              try { items = JSON.parse(items); } catch (e) { items = null; }
+            }
+            return { book_id: r.book_id, pos: num(r.pos) || 0, title: r.title, gloss: items };
+          });
+        });
+    },
 
     putPinyinProposal: function (row) { return insertRow("pinyin_proposals", row, ["fid"]).then(function () { return { fid: row.fid }; }); },
     getPinyinProposal: function (fid) { return getRow("pinyin_proposals", "fid", fid); },
