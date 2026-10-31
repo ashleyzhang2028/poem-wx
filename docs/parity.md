@@ -24,7 +24,7 @@
 | 译文 | ✅ | ✅ | 逐个条目带 `translation` + 出处口径 |
 | 生字生词注释（Issue #790） | ❌ | ✅ | 小程序端独有：每篇一组「词条：释义」，依据教材、教师用书与通行注本的课后释义整理，语料在 `scripts/corpus/data/gloss-notes.js`，编译进 `data/course.js` 的 `gloss`。背诵弹窗与详情页都出这一块，位置在译文（全文注释）之上，标头「注释」，详情页与译文各为一张可折叠卡片（卡片标题行右端折标），弹窗内与译文同款右对齐折头（文案在左、折标在其右），默认收起。词条一行、释义换行缩在下方（两列各占一半，词条与释义各占一行，右列首行不因左列词条变长而为缩进） |
 | 十七部课外集子（5677 条正文） | ✅ | ❌ | **整体删除**（Issue #723、#738）：课外语料、正文分片、分片清单、全书倒排索引一并下线，只用课内那 251 首。那十七部的名字也从集子表里下线 —— 包里既没有条目、也没有正文与释义，留着只会让人点进去看空页 |
-| 经典集子的目录（书名 / 标题 / 作者，Issue #738） | ✅ | ✅ | 集子清单与篇数以 MySQL `corpus_books` 为准（经 `GET /api/corpus/books` / `catalogs` 下发并缓存在本机，不进包），入口在「课内 → 课外集子」。目录的标题、作者取自诗词漫读的语料（`scripts/corpus/scripts/build-site-catalogs.py` 从 poetry-data 生成，繁转简与接口同口径）；**正文一律即时问诗词漫读**（按标题 `GET /poems/search?type=title` 精确检索），不落库。语料在 `scripts/corpus/data/site-catalogs.js` |
+| 经典集子的目录（书名 / 标题 / 作者，Issue #738） | ✅ | ✅ | 集子清单与篇数以 MySQL `corpus_books` 为准（经 `GET /api/corpus/books` / `catalogs` 下发并缓存在本机，不进包），入口在「课内 → 课外集子」。目录的标题、作者取自诗词漫读的语料（`scripts/corpus/scripts/build-site-catalogs.py` 从 poetry-data 生成，繁转简与接口同口径）；正文与译文**能绑的已落库**（`corpus_texts`，按目录次序挂，经 `GET /api/corpus/texts?book=` 下发），绑不上的仍即时问诗词漫读（按标题 `GET /poems/search?type=title` 精确检索）。语料在 `scripts/corpus/data/site-catalogs.js` 与 `catalog-texts.js` |
 | 集子顶上的索引卡 | ✅ | ✅ | 按年级册 / 卷次 / 词牌 / 文体分组，点一格就地滚过去 |
 | 详情页（标题 / 作者 / 朝代 / 出处 / 译文） | ✅ | ⚠️ | 出处与译文折叠收起。**出处是两重**（#512）：`source` 记所出之书、《唐诗》《词》《曲》《文选》另有 `selection` 记选本 —— 网页版把两枚标签并排放在身份行上；小程序端身份行只有一条（nowrap，量过：并进去《唐诗》37 条、《词》48 条超宽），所以**第二重另起一行小字**，与「又名」同一行 |
 | 题名异写（「又名 xxxx」，#516） | ✅ | ✅ | 11 条篇目在标题底下补一句「又名：xxx」，与网页版同口径、同一句话 |

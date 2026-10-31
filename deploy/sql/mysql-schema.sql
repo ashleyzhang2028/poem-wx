@@ -288,6 +288,27 @@ CREATE TABLE IF NOT EXISTS `corpus_catalog` (
   PRIMARY KEY (`book_id`, `pos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------- corpus_texts
+CREATE TABLE IF NOT EXISTS `corpus_texts` (
+  `book_id`         VARCHAR(32)  NOT NULL,
+  `pos`             INT          NOT NULL,
+  `title`           VARCHAR(255) NOT NULL DEFAULT '',
+  `sid`             VARCHAR(80)  NOT NULL DEFAULT '',
+  `text`            MEDIUMTEXT   NOT NULL,
+  `translation`     MEDIUMTEXT   NOT NULL,
+  `translation_src` VARCHAR(32)  NOT NULL DEFAULT '',
+  PRIMARY KEY (`book_id`, `pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------- corpus_gloss
+CREATE TABLE IF NOT EXISTS `corpus_gloss` (
+  `book_id` VARCHAR(32)  NOT NULL,
+  `pos`     INT          NOT NULL,
+  `title`   VARCHAR(255) NOT NULL DEFAULT '',
+  `gloss`   MEDIUMTEXT   NOT NULL,
+  PRIMARY KEY (`book_id`, `pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- --------------------------------------------------------- corpus_authors
 CREATE TABLE IF NOT EXISTS `corpus_authors` (
   `name`   VARCHAR(64) NOT NULL,

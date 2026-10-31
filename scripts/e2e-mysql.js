@@ -362,6 +362,51 @@ function makeWx(port, mem) {
       JSON.stringify([noArgs, badPos, badDay]));
   }
 
+  {
+    const seed = require(path.join(REPO, "scripts", "corpus-seed"));
+    const rows = seed.seedRows(seed.loadCorpus());
+    const facadeQuery = (sql, params) => facade.createPool().query(sql, params);
+    for (const st of seed.seedStatements(rows)) await facadeQuery(st.sql, st.params);
+
+    const get = (q) => remote.request(remote.PATHS.corpus + "/" + q, {}, "GET").then(
+      (body) => ({ ok: true, body: body }),
+      (e) => ({ ok: false, status: e.statusCode, code: e.code })
+    );
+
+    const texts = await get("texts?book=tangshi300");
+    ok("正文与译文经 /api/corpus/texts 下发（按集子取，形状是 rows + dict）",
+      texts.ok && texts.body.rows && texts.body.rows.tangshi300 && texts.body.dict,
+      JSON.stringify(texts).slice(0, 200));
+
+    const sample = texts.ok && texts.body.rows.tangshi300 ? texts.body.rows.tangshi300[0] : null;
+    ok("每一行带 pos / 标题 / 源 id / 正文 / 译文 / 出处",
+      !!sample && sample.length === 6 && Number(sample[0]) > 0 && String(sample[3]).length > 0
+        && String(sample[4]).length > 0 && typeof sample[5] === "number",
+      JSON.stringify(sample).slice(0, 200));
+
+    const only = await get("texts?book=gwgz");
+    ok("只回问的那一部（别的集子一条不带）",
+      only.ok && Object.keys(only.body.rows).length === 1 && only.body.rows.gwgz,
+      JSON.stringify(Object.keys((only.body && only.body.rows) || {})));
+
+    const noBook = await get("texts");
+    ok("不带 book：400 E_CORPUS_BOOK（不是把全部集子一次吐出来）",
+      !noBook.ok && noBook.status === 400 && noBook.code === "E_CORPUS_BOOK", JSON.stringify(noBook));
+
+    const emptyGloss = await get("gloss?book=tongxin");
+    ok("注释还没入库的集子：404 E_CORPUS_EMPTY", !emptyGloss.ok && emptyGloss.status === 404,
+      JSON.stringify(emptyGloss));
+
+    facade._db.corpus_gloss.set("tangshi300\u00001", {
+      book_id: "tangshi300", pos: 1, title: "感遇·其一", gloss: JSON.stringify([["兰", "兰草"], ["葳蕤", "枝叶繁茂的样子"]])
+    });
+    const gloss = await get("gloss?book=tangshi300");
+    const row = gloss.ok && gloss.body.rows.tangshi300 ? gloss.body.rows.tangshi300[0] : null;
+    ok("注释存的是 JSON，读出来逐条是「词、释义」两栏",
+      !!row && Array.isArray(row[2]) && row[2].length === 2 && row[2][1][0] === "葳蕤",
+      JSON.stringify(row));
+  }
+
   server.close();
   fs.rmSync(CTX, { recursive: true, force: true });
   const bad = results.filter((r) => !r).length;

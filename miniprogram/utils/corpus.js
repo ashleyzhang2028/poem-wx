@@ -350,22 +350,28 @@ const STALE_MS = 6 * 3600 * 1000;
 
 const parts = {};
 const inflight = {};
+const bookTexts = {};
 
 function cacheKey(part) {
   return "kb_corpus_" + part + "_v1";
 }
 
-function held(part) {
-  if (parts[part] === undefined) {
+function partKey(part, book) {
+  return book ? part + ":" + book : part;
+}
+
+function held(part, book) {
+  const key = partKey(part, book);
+  if (parts[key] === undefined) {
     let raw = null;
     try {
-      raw = typeof wx !== "undefined" ? wx.getStorageSync(cacheKey(part)) : null;
+      raw = typeof wx !== "undefined" ? wx.getStorageSync(cacheKey(key)) : null;
     } catch (e) {
       raw = null;
     }
-    parts[part] = raw && typeof raw === "object" && raw.rev && raw.data ? raw : null;
+    parts[key] = raw && typeof raw === "object" && raw.rev && raw.data ? raw : null;
   }
-  return parts[part];
+  return parts[key];
 }
 
 function dataOf(part) {
@@ -377,18 +383,21 @@ function forget() {
   Object.keys(idIndex).forEach((k) => delete idIndex[k]);
   Object.keys(idBook).forEach((k) => delete idBook[k]);
   Object.keys(bookCache).forEach((k) => delete bookCache[k]);
+  Object.keys(bookTexts).forEach((k) => delete bookTexts[k]);
 }
 
-function install(part, payload) {
+function install(part, payload, book) {
+  const key = partKey(part, book);
   const data = Object.assign({}, payload);
   delete data.rev;
-  parts[part] = { rev: String(payload.rev), at: Date.now(), data: data };
+  parts[key] = { rev: String(payload.rev), at: Date.now(), data: data };
   forget();
 }
 
-function persist(part) {
+function persist(part, book) {
+  const key = partKey(part, book);
   try {
-    wx.setStorageSync(cacheKey(part), parts[part]);
+    wx.setStorageSync(cacheKey(key), parts[key]);
   } catch (e) {
     return;
   }
@@ -414,26 +423,30 @@ function shaped(part, res) {
   if (part === "books") return Array.isArray(res.books) && res.books.length > 0;
   if (part === "poems") return Array.isArray(res.rows) && !!res.dict;
   if (part === "catalogs") return !!res.rows && !!res.dict;
+  if (part === "texts") return !!res.rows && !!res.dict;
+  if (part === "gloss") return !!res.rows && !!res.dict;
   return !!res.era;
 }
 
-function fetchPart(part) {
-  if (inflight[part]) return inflight[part];
-  const have = held(part);
-  const query = have ? "?rev=" + encodeURIComponent(have.rev) : "";
-  const settle = () => { delete inflight[part]; };
-  inflight[part] = Promise.resolve().then(() => {
+function fetchPart(part, book) {
+  const key = partKey(part, book);
+  if (inflight[key]) return inflight[key];
+  const have = held(part, book);
+  const query = "?" + (book ? "book=" + encodeURIComponent(book) + "&" : "") +
+    (have ? "rev=" + encodeURIComponent(have.rev) : "");
+  const settle = () => { delete inflight[key]; };
+  inflight[key] = Promise.resolve().then(() => {
     const remote = require("./remote");
     return remote.request(remote.PATHS.corpus + "/" + part + query, {}, "GET");
   }).then((res) => {
     if (res && res.same === true && have) {
       have.at = Date.now();
-      persist(part);
+      persist(part, book);
       return false;
     }
     if (!shaped(part, res)) throw new Error("应答不完整");
-    install(part, res);
-    persist(part);
+    install(part, res, book);
+    persist(part, book);
     return true;
   }).then((changed) => {
     settle();
@@ -442,7 +455,7 @@ function fetchPart(part) {
     settle();
     throw corpusError(part, err);
   });
-  return inflight[part];
+  return inflight[key];
 }
 
 function ready(scope) {
@@ -647,6 +660,63 @@ function entry(id) {
   return null;
 }
 
+function textsOf(bookId) {
+  if (bookTexts[bookId] !== undefined) return bookTexts[bookId];
+  const pack = dataOf("texts:" + bookId);
+  if (!pack || !pack.rows) {
+    bookTexts[bookId] = null;
+    return null;
+  }
+  const map = {};
+  (pack.rows[bookId] || []).forEach((raw) => {
+    const translation = raw[4] || "";
+    if (!raw[3]) return;
+    map[raw[0]] = {
+      t: raw[1],
+      sid: raw[2],
+      text: raw[3],
+      tr: translation,
+      src: field(pack.dict, "s", raw[5]) || "",
+      gloss: null
+    };
+  });
+  bookTexts[bookId] = map;
+  return map;
+}
+
+function notesOf(bookId) {
+  const pack = dataOf("gloss:" + bookId);
+  if (!pack || !pack.rows) return null;
+  const map = {};
+  (pack.rows[bookId] || []).forEach((raw) => {
+    if (Array.isArray(raw[2]) && raw[2].length) map[raw[0]] = raw[2];
+  });
+  return map;
+}
+
+function catalogText(meta) {
+  const book = meta && meta.b;
+  if (!book || !meta.remote) return null;
+  if (!held("texts", book)) {
+    fetchPart("texts", book).catch(() => false);
+    return null;
+  }
+  const map = textsOf(book);
+  const row = map && map[meta.id];
+  return row || null;
+}
+
+function catalogGloss(meta) {
+  const book = meta && meta.b;
+  if (!book || !meta.remote) return null;
+  if (!held("gloss", book)) {
+    fetchPart("gloss", book).catch(() => false);
+    return null;
+  }
+  const map = notesOf(book);
+  return (map && map[meta.id]) || null;
+}
+
 function courseTwin(meta) {
   if (!meta || !meta.inCourse) return null;
   const rows = ofBook("poems");
@@ -784,6 +854,8 @@ module.exports = {
   dropLegacy,
   ensureEntry,
   entry,
+  catalogText,
+  catalogGloss,
   entries,
   courseTwin,
   indexById,

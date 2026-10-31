@@ -258,6 +258,14 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
+    if (meta) {
+      const packed = corpus.catalogText(meta);
+      if (packed) {
+        this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
+        return this.renderEntry(id, Object.assign({ gloss: corpus.catalogGloss(meta) }, packed), meta);
+      }
+    }
+
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
     if (onlySid) return this.loadRemote(onlySid, null, "未能获取正文，点击重试");
 

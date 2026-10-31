@@ -21,6 +21,8 @@ const db = {
   corpus_poems: new Map(),
   corpus_catalog: new Map(),
   corpus_authors: new Map(),
+  corpus_texts: new Map(),
+  corpus_gloss: new Map(),
   progress: new Map()
 };
 
@@ -45,6 +47,8 @@ const PK = {
   corpus_poems: ["id"],
   corpus_catalog: ["book_id", "pos"],
   corpus_authors: ["name"],
+  corpus_texts: ["book_id", "pos"],
+  corpus_gloss: ["book_id", "pos"],
   progress: ["uid", "child_id", "poem_id"]
 };
 

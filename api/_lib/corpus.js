@@ -90,6 +90,37 @@ function packAuthors(authors) {
   return { era: era };
 }
 
+function packTexts(list) {
+  var pack = packer(["s"]);
+  var rows = {};
+  (list || []).forEach(function (t) {
+    var id = text(t.book_id);
+    (rows[id] = rows[id] || []).push([
+      Number(t.pos) || 0,
+      text(t.title),
+      text(t.sid),
+      text(t.text),
+      text(t.translation),
+      pack.put("s", text(t.translation_src))
+    ]);
+  });
+  return { dict: pack.dict, rows: rows };
+}
+
+function packGloss(list) {
+  var rows = {};
+  (list || []).forEach(function (g) {
+    var id = text(g.book_id);
+    var items = g.gloss;
+    if (typeof items === "string") {
+      try { items = JSON.parse(items); } catch (e) { items = null; }
+    }
+    if (!Array.isArray(items) || !items.length) return;
+    (rows[id] = rows[id] || []).push([Number(g.pos) || 0, text(g.title), items]);
+  });
+  return { dict: {}, rows: rows };
+}
+
 var PARTS = {
   books: function (store) {
     return Promise.resolve(store.listCorpusBooks()).then(function (books) {
@@ -110,6 +141,16 @@ var PARTS = {
     return Promise.resolve(store.listCorpusAuthors()).then(function (authors) {
       return authors.length ? packAuthors(authors) : null;
     });
+  },
+  texts: function (store, query) {
+    return Promise.resolve(store.listCorpusTexts(text((query && query.book) || ""))).then(function (texts) {
+      return texts.length ? packTexts(texts) : null;
+    });
+  },
+  gloss: function (store, query) {
+    return Promise.resolve(store.listCorpusGloss(text((query && query.book) || ""))).then(function (list) {
+      return list.length ? packGloss(list) : null;
+    });
   }
 };
 
@@ -123,20 +164,21 @@ function revOf(data) {
   return (h >>> 0).toString(16) + "-" + raw.length.toString(16);
 }
 
-var PACK = { books: packBooks, poems: packPoems, catalogs: packCatalog, authors: packAuthors };
+var PACK = { books: packBooks, poems: packPoems, catalogs: packCatalog, authors: packAuthors, texts: packTexts, gloss: packGloss };
 
 function payload(part, rows) {
   var data = PACK[part](rows);
   return Object.assign({ rev: revOf(data) }, data);
 }
 
-function load(deps, part) {
-  var hit = memo[part];
+function load(deps, part, query) {
+  var key = part + "\u0000" + text((query && query.book) || "");
+  var hit = memo[key];
   var now = deps.now();
   if (hit && hit.store === deps.store && now - hit.at < TTL_MS) return Promise.resolve(hit.value);
-  return PARTS[part](deps.store).then(function (data) {
+  return PARTS[part](deps.store, query).then(function (data) {
     var value = data ? Object.assign({ rev: revOf(data) }, data) : null;
-    if (value) memo[part] = { store: deps.store, at: now, value: value };
+    if (value) memo[key] = { store: deps.store, at: now, value: value };
     return value;
   });
 }
@@ -149,7 +191,10 @@ function corpusPublic(deps, part, query) {
   if (!Object.prototype.hasOwnProperty.call(PARTS, part)) {
     return Promise.resolve({ status: 404, body: { code: "E_CORPUS_PART", message: "没有这一份语料：" + part } });
   }
-  return load(deps, part).then(function (value) {
+  if (SCOPED[part] && !text(query && query.book)) {
+    return Promise.resolve({ status: 400, body: { code: "E_CORPUS_BOOK", message: "语料「" + part + "」要带 book 参数" } });
+  }
+  return load(deps, part, query).then(function (value) {
     if (!value) {
       return { status: 404, body: { code: "E_CORPUS_EMPTY", message: "语料「" + part + "」还没有入库" } };
     }
@@ -158,4 +203,6 @@ function corpusPublic(deps, part, query) {
   });
 }
 
-module.exports = { PARTS: Object.keys(PARTS), corpusPublic: corpusPublic, payload: payload, reset: reset };
+var SCOPED = { texts: true, gloss: true };
+
+module.exports = { PARTS: Object.keys(PARTS), SCOPED: SCOPED, corpusPublic: corpusPublic, payload: payload, reset: reset };

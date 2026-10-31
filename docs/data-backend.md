@@ -267,7 +267,7 @@ node scripts/build-data.js
 ```
 ① 内容（诗、译文、索引、注音表）
    scripts/corpus/（语料，随本仓库走）
-     ├─ gen-corpus-sql.js 生成 deploy/sql/corpus.sql → 入 MySQL（corpus_* 四张表）
+     ├─ gen-corpus-sql.js 生成 deploy/sql/corpus.sql → 入 MySQL（corpus_* 六张表）
      │    经 GET /api/corpus/:part 下发，客户端缓存在本机
      └─ build-data.js 编译 → miniprogram/data/**（构建产物，不进 git）
           · data/course.js         课内 251 首正文 + 译文       → 进主包

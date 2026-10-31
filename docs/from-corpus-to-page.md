@@ -45,7 +45,8 @@ npm run build:data
 | `data/roster.js` | 用户列表页名录 | 没设 `POEM_ROSTER` 就是空名册 |
 
 集子表、课内索引、集子目录、作者名册不再编进包：`node scripts/gen-corpus-sql.js` 从语料生成
-`deploy/sql/corpus.sql`，在库里执行一次即入 `corpus_*` 四张表。编译同时会删掉上一版留在本地的
+`deploy/sql/corpus.sql`，在库里执行一次即入 `corpus_*` 六张表（集子、课内索引、目录、作者、
+目录条目的正文与译文、目录条目的注释）。编译同时会删掉上一版留在本地的
 `data/books/` 与 `data/roster-extra.js`。
 
 课内那 312 KB 进包，是因为首页出题与详情页都要它，进包等于省掉一次网络往返 ——

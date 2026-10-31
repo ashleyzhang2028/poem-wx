@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [], corpus: { books: [], poems: [], catalog: [], authors: [] } };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [], corpus: { books: [], poems: [], catalog: [], authors: [], texts: [], gloss: [] } };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -247,6 +247,12 @@ function memoryStore() {
     },
     listCorpusCatalog: function () { return Promise.resolve(db.corpus.catalog.slice()); },
     listCorpusAuthors: function () { return Promise.resolve(db.corpus.authors.slice()); },
+    listCorpusTexts: function (bookId) {
+      return Promise.resolve(db.corpus.texts.filter(function (r) { return r.book_id === bookId; }));
+    },
+    listCorpusGloss: function (bookId) {
+      return Promise.resolve(db.corpus.gloss.filter(function (r) { return r.book_id === bookId; }));
+    },
 
     putPinyinProposal: function (row) { db.pinyinProposals[row.fid] = row; return Promise.resolve({ fid: row.fid }); },
     getPinyinProposal: function (fid) { return Promise.resolve(db.pinyinProposals[fid] || null); },
