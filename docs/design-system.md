@@ -830,6 +830,18 @@ Free 看得到「Pro 起」与「Max 起」，Pro 只看得到「Max 起」，Ma
 | `add` / `added` | 加入 / 已在今日诵读 | `CilPlus.svg` / `CilCheckAlt.svg` |
 | `playlist` | 加入自选集合 | `CilPlaylistAdd.svg` |
 
+**一行四段，段高统一（Issue #827）。** 工具栏是「加背 ｜ 自选 ｜ 书签」的组合、
+「对齐」一枚、「Aa」一枚；详情页与背诵弹层同一排法。三段都**立在一行里**：
+对齐不再排在 `Aa` 下面那一行（`.prefs` 与 `.prefs-panel` 两行的老结构已撤），
+`.prefs` 的 `flex-wrap: nowrap` 兜着。
+
+外框高度一律取 `--h-pref`（52rpx）。此前组合按钮与 `Aa` 各写各的：
+`.pref-act` 的内项裸高 52rpx、自己只有一道 1rpx 边框，量出来 43.8rpx；
+`Aa` 因为 `box-sizing` 没写死而撑到 52rpx 外框。两者差 8rpx，一眼能看出来。
+现在 `.pref-opt.ic` / `.pref-opt.in-seg` / `.pref-opt.aa` 都取 `--h-pref`，
+`.pref-opt.aa` 补了 `border-box`，组合按钮的内项与它同高，
+于是每个外框都是 53.8rpx（52 + 两道 1rpx 边）—— 量过，四段相等。
+
 三处和别的地方不一样，都写明了理由：
 
 | 事 | 这里 | 别处 | 为什么 |

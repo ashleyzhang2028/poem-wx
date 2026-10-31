@@ -70,12 +70,6 @@
           <view class="glyph" style="mask-image:url('{{icons.bookmark}}');-webkit-mask-image:url('{{icons.bookmark}}');"></view>
         </view>
       </view>
-      <view class="pref-opt aa {{prefsOpen ? 'on' : ''}}" hover-class="pref-opt-hover" hover-stay-time="60"
-            bindtap="onTogglePrefs" aria-label="阅读设置">
-        <text class="aa-t">Aa</text>
-      </view>
-    </view>
-    <view class="prefs prefs-panel" wx:if="{{prefsOpen}}">
       <view class="pref-seg">
         <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
@@ -83,7 +77,12 @@
           <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
         </view>
       </view>
-
+      <view class="pref-opt aa {{prefsOpen ? 'on' : ''}}" hover-class="pref-opt-hover" hover-stay-time="60"
+            bindtap="onTogglePrefs" aria-label="阅读设置">
+        <text class="aa-t">Aa</text>
+      </view>
+    </view>
+    <view class="prefs prefs-panel" wx:if="{{prefsOpen}}">
       <view class="pref-size">
         <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
