@@ -4011,7 +4011,7 @@ function mountFull(pg, query) {
   const sheetClass = sizes.map((size) => (size < 0 ? "size--" + Math.abs(size) : "size-" + size));
   const sheetCss = readSrc("app.wxss");
   const cssRow = (cls, name) => {
-    const m = sheetCss.match(new RegExp("\\.poem-body\\." + cls + "\\s*\\{[^}]*--" + name + ":\\s*(\\d+)rpx"));
+    const m = sheetCss.match(new RegExp("\\.poem-body\\." + cls + "\\s*\\{[^}]*?--" + name + ":\\s*(\\d+)rpx"));
     return m ? Number(m[1]) : NaN;
   };
   const cssGap = sheetClass.map((cls) => cssRow(cls, "poem-gap"));
