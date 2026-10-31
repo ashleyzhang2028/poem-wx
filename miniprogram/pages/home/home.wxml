@@ -167,7 +167,7 @@
       </view>
     </view>
 
-    <view class="card" wx:if="{{!collectionCount}}">
+    <view class="card" wx:if="{{!homehide && !collectionCount}}">
       <text class="card-title">自选温习</text>
       <text class="hint">暂无自选集合，可将诗词加入自选集合</text>
     </view>
