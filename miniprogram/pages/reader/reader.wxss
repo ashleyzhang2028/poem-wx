@@ -84,6 +84,9 @@
 .reader .poem-card .poem-body {
   padding-top: var(--sp-4);
   padding-bottom: 0;
+  padding-left: var(--sp-2);
+  padding-right: var(--sp-2);
+  margin: 0 calc(-1 * var(--sp-2));
 }
 
 .reader .poem-link {
