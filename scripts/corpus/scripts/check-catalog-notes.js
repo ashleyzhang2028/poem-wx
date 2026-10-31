@@ -23,61 +23,62 @@ function hanOnly(text) {
   return String(text || "").replace(/[^\u3400-\u9fff]/g, "");
 }
 
+function bodies() {
+  const catalog = load("data/catalog-texts.js").CATALOG_TEXTS || {};
+  const tongxin = load("data/tongxin-notes.js").TONGXIN_TEXT || {};
+  return Object.assign({}, catalog, tongxin);
+}
+
+function check(book, text, list, where) {
+  const bad = [];
+  if (!Array.isArray(list) || !list.length) return [where + " 空注释"];
+  const seen = {};
+  list.forEach(function (it) {
+    if (!Array.isArray(it) || it.length !== 2) return bad.push(where + " 形状不对");
+    const word = String(it[0] || "").trim();
+    const note = String(it[1] || "").trim();
+    if (!word || !note) return bad.push(where + " 空词条或空释义");
+    if (seen[word]) bad.push(where + " 词条重复：" + word);
+    seen[word] = true;
+    if (text.indexOf(hanOnly(word) || word) < 0) bad.push(where + " 正文里没有「" + word + "」");
+    if (/[：:]/.test(note)) bad.push(where + " 释义里带冒号：" + word);
+    if (word.length > 8) bad.push(where + " 词条超过 8 字：" + word);
+    if (note.length > 40) bad.push(where + " 释义超过 40 字：" + word);
+  });
+  return bad;
+}
+
+function rowText(book, pos) {
+  const box = bodies()[book] || {};
+  if (Array.isArray(box)) {
+    const row = box.filter(function (r) { return r[0] === Number(pos); })[0];
+    return row ? String(row[3] || "") : "";
+  }
+  const row = box[Number(pos)];
+  return Array.isArray(row) ? String(row[2] || "") : "";
+}
+
 function main() {
-  const texts = load("data/catalog-texts.js").CATALOG_TEXTS || {};
-  const notes = load("data/catalog-notes.js").CATALOG_NOTES || {};
+  const texts = bodies();
+  const notes = Object.assign({}, load("data/catalog-notes.js").CATALOG_NOTES || {},
+    load("data/tongxin-notes.js").TONGXIN_NOTES || {});
 
   const bad = [];
   Object.keys(notes).forEach(function (book) {
-    const rows = texts[book] || [];
     const mine = notes[book] || {};
-    const byPos = {};
-    rows.forEach(function (r) { byPos[r[0]] = r; });
-
     Object.keys(mine).forEach(function (pos) {
-      const row = byPos[pos];
-      if (!row) {
+      const text = rowText(book, pos);
+      if (!text) {
         bad.push(book + " #" + pos + " 目录里没有这一篇");
         return;
       }
-      const text = String(row[3] || "");
-      const list = mine[pos];
-      if (!Array.isArray(list) || !list.length) {
-        bad.push(book + " #" + pos + " 空注释");
-        return;
-      }
-      const seen = {};
-      list.forEach(function (it) {
-        if (!Array.isArray(it) || it.length !== 2) {
-          bad.push(book + " #" + pos + " 形状不对");
-          return;
-        }
-        const word = String(it[0] || "").trim();
-        const note = String(it[1] || "").trim();
-        if (!word || !note) {
-          bad.push(book + " #" + pos + " 空词条或空释义");
-          return;
-        }
-        if (seen[word]) bad.push(book + " #" + pos + " 词条重复：" + word);
-        seen[word] = true;
-        if (text.indexOf(hanOnly(word) || word) < 0) {
-          bad.push(book + " #" + pos + " 正文里没有「" + word + "」");
-        }
-        if (note.indexOf("：") >= 0 || note.indexOf(":") >= 0) {
-          bad.push(book + " #" + pos + " 释义里带冒号：" + word);
-        }
-        if (word.length > 8) {
-          bad.push(book + " #" + pos + " 词条超过 8 字：" + word);
-        }
-        if (note.length > 40) {
-          bad.push(book + " #" + pos + " 释义超过 40 字：" + word);
-        }
-      });
+      check(book, text, mine[pos], book + " #" + pos).forEach(function (b) { bad.push(b); });
     });
   });
 
   const counts = Object.keys(notes).map(function (book) {
-    return book + " " + Object.keys(notes[book] || {}).length + " / " + (texts[book] || []).length;
+    const box = texts[book] || {};
+    return book + " " + Object.keys(notes[book] || {}).length + " / " + Object.keys(box).length;
   });
 
   if (bad.length) {

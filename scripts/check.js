@@ -306,8 +306,12 @@ ok("包里不再有正文分片与分片清单",
     const books = {};
     bound.forEach((r) => { books[r.book_id] = (books[r.book_id] || 0) + 1; });
     ok("目录绑定了正文与译文" + Object.keys(books).map((b) => "：" + b + " " + books[b]).join(""),
-      bound.every((r) => r.sid && r.text && r.translation),
+      bound.every((r) => r.text && r.translation),
       "有绑定条目的正文或译文是空的");
+
+    const outside = bound.filter((r) => !r.sid && r.book_id !== "tongxin");
+    ok("\u9664\u7ae5\u5fc3\u8bd7\u8bdd\u5916\u7684\u76ee\u5f55\u6761\u76ee\u90fd\u6302\u4e0a\u4e86\u5206\u5377\u7d22\u5f15", outside.length === 0,
+      "\u8fd9\u4e9b\u76ee\u5f55\u6761\u76ee\u6ca1\u6709\u5206\u5377\u7d22\u5f15\uff0c\u5374\u4e0d\u662f\u7ae5\u5fc3\u8bd7\u8bdd\uff1a" + outside.slice(0, 5).map((r) => r.book_id + "#" + r.pos).join("\u3001"));
 
     const keys = new Set(bound.map((r) => r.book_id + "\u0000" + r.pos));
     ok("一篇目录只绑一次正文与译文", keys.size === bound.length, "有重复的 book_id + pos");
