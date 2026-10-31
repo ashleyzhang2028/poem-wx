@@ -192,17 +192,37 @@ function catalogBoxes(byBook) {
 
 function catalogGloss(catalogs, order, W) {
   const source = Object.assign({}, W.CATALOG_NOTES || {}, W.TONGXIN_NOTES || {});
+  const sidByPos = {};
+  Object.keys(W.CATALOG_TEXTS || {}).forEach(function (bookId) {
+    sidByPos[bookId] = {};
+    (W.CATALOG_TEXTS[bookId] || []).forEach(function (r) {
+      sidByPos[bookId][Number(r[0])] = String(r[1] || "");
+    });
+  });
   const out = [];
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("注释挂在了不在目录里的集子：" + bookId);
     const rows = (catalogs[bookId] || {}).rows || [];
     const mine = source[bookId] || {};
+    const bySid = {};
+    Object.keys(mine).forEach(function (key) {
+      const sid = (sidByPos[bookId] || {})[Number(key)];
+      if (!sid) return;
+      const seen = {};
+      bySid[sid] = (bySid[sid] || []).concat(mine[key]).filter(function (it) {
+        const word = String(it[0] || "").trim();
+        if (seen[word]) return false;
+        seen[word] = true;
+        return true;
+      });
+    });
     Object.keys(mine).forEach(function (key) {
       const pos = Number(key);
       if (!(pos >= 1 && pos <= rows.length)) {
         throw new Error(bookId + " 第 " + pos + " 条的注释不在目录里（目录共 " + rows.length + " 条）");
       }
-      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], gloss: mine[key] });
+      const sid = (sidByPos[bookId] || {})[pos];
+      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], gloss: sid ? bySid[sid] : mine[key] });
     });
   });
   return out;
