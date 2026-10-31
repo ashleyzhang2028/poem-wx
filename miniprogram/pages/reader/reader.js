@@ -71,7 +71,6 @@ Page({
     rawText: "",
     verse: true,
     prose: false,
-    prefsOpen: false,
     loose: false,
     plain: [],
     tokens: [],
@@ -408,10 +407,6 @@ Page({
 
   findMeta(id) {
     return corpus.indexById(id);
-  },
-
-  onTogglePrefs() {
-    this.setData({ prefsOpen: !this.data.prefsOpen });
   },
 
   onAlignToggle() {

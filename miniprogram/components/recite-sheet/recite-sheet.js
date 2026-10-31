@@ -93,7 +93,6 @@ Component({
     rawText: "",
     verse: true,
     prose: false,
-    prefsOpen: false,
     loose: false,
     tokens: [],
     translation: "",
@@ -360,10 +359,6 @@ Component({
       if (r.code === "E_LIMIT") return "今日新增上限 " + store.DAILY_EXTRA_MAX + " 首，请先完成温习";
       if (r.code === "E_STORAGE") return "添加失败：本机存储空间不足或未开启存储";
       return "添加失败";
-    },
-
-    onTogglePrefs() {
-      this.setData({ prefsOpen: !this.data.prefsOpen });
     },
 
     onAlignToggle() {

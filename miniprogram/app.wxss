@@ -1410,18 +1410,12 @@ button, input, textarea {
 
 .pref-opt.in-seg {
   height: var(--h-pref);
-  padding: 0 var(--sp-2);
+  padding: 0 var(--sp-1);
   margin: 0;
   border-radius: 0;
 }
 
-.pref-size .pref-opt.ic {
-  width: 64rpx;
-  height: var(--h-pref);
-  margin: 0;
-  border-radius: 0;
-}
-
+.pref-size .pref-opt.ic,
 .pref-act .pref-opt.ic {
   margin: 0;
   border-radius: 0;
@@ -1447,35 +1441,6 @@ button, input, textarea {
 
 .pref-opt.in-seg.on {
   background: var(--strong-soft);
-}
-
-.pref-opt.aa {
-  width: auto;
-  min-width: 64rpx;
-  height: var(--h-pref);
-  margin: 0;
-  padding: 0 var(--sp-2);
-  border: 1rpx solid var(--line);
-  box-sizing: border-box;
-}
-
-.pref-opt.aa.on {
-  background: var(--strong-soft);
-}
-
-.aa-t {
-  font-family: var(--font-ui);
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: 0;
-}
-
-.pref-opt.aa.on .aa-t {
-  color: var(--strong-text);
-}
-
-.prefs-panel {
-  padding-top: 0;
 }
 
 .pref-opt-hover {
