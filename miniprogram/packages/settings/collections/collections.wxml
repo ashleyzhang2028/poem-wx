@@ -22,7 +22,7 @@
 
     <view class="row">
       <view class="row-main">
-        <text class="row-title">只背自选</text>
+        <text class="row-title">只温习自选</text>
         <text class="row-sub">{{homeHide ? '首页已隐藏自选，此项已关闭' : '仅显示我的自选集合，今日温习将被隐藏'}}</text>
       </view>
       <view class="sw">

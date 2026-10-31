@@ -61,7 +61,7 @@
         </view>
       </view>
 
-      <text class="hero-sub" wx:if="{{selfOnly}}">只背自选 · 课内暂停</text>
+      <text class="hero-sub" wx:if="{{selfOnly}}">只温习自选 · 课内暂停</text>
 
       <view class="stats hero-stats">
         <view class="stat">
@@ -120,18 +120,18 @@
       </view>
     </view>
 
-    <view class="card">
+    <view class="card" wx:if="{{total || loading}}">
       <view class="card-open">
         <text class="card-title">今日温习</text>
-        <text class="all-count" wx:if="{{!selfOnly}}">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
+        <text class="all-count">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
       </view>
 
-      <daily-extra id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
+      <daily-extra wx:if="{{!selfOnly}}" id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
 
       <skeleton rows="3" wx:if="{{loading}}" />
       <block wx:else>
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
-              wx:for="{{selfOnly ? coursePlan : plan}}" wx:key="id">
+              wx:for="{{plan}}" wx:key="id">
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="onOpen">
             <text class="row-title row-poem">{{item.title}}</text>
@@ -150,13 +150,6 @@
           </view>
         </view>
       </block>
-
-      <view class="empty" wx:if="{{!loading && !(selfOnly ? coursePlan.length : total)}}">
-        <text class="empty-mark">诗</text>
-        <text class="empty-text">{{selfOnly ? '今日无需温习' : '今日未排计划'}}</text>
-
-        <button class="btn ghost mini empty-btn" bindtap="onSettings">设置</button>
-      </view>
 
       <view class="card-done" wx:if="{{allDone}}">
         <view class="finish-mark">
