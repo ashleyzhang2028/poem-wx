@@ -1535,6 +1535,7 @@ button, input, textarea {
   border-left: 0;
   text-align: justify;
   text-indent: 2em;
+  letter-spacing: 0;
   line-break: strict;
 }
 
@@ -1555,6 +1556,7 @@ button, input, textarea {
 }
 
 .poem-body.loose .poem-line:not(.token-line) {
+  letter-spacing: 0;
   line-break: strict;
 }
 
