@@ -5,11 +5,10 @@ const E = require("../../utils/entitlement");
 const tabbar = require("../../utils/tabbar");
 const theme = require("../../utils/theme");
 const font = require("../../utils/font");
-const marks = require("../../utils/bookmarks");
 const cols = require("../../utils/collections");
 const lastRead = require("../../utils/last-read");
 
-const RECENT_MAX = 4;
+const SHEET = "#read-sheet";
 
 const GROUPS = [
   {
@@ -56,8 +55,6 @@ Page({
     mineTier: "pro",
     mine: [],
     mineCount: 0,
-    marks: [],
-    markCount: 0,
     last: null,
     locked: true,
     reason: "",
@@ -80,6 +77,11 @@ Page({
     }
     this.setData({ locked: false, reason: "" });
     corpusGate.open(this, "core", () => this.showShelves());
+  },
+
+  onPullDownRefresh() {
+    this.onOpenRead();
+    wx.stopPullDownRefresh();
   },
 
   onCorpusRetry() {
@@ -125,7 +127,6 @@ Page({
       };
     }).filter((g) => g.key === "mine" || g.books.length);
 
-    const all2 = E.can("bookmarks") ? marks.list() : [];
     const last = lastRead.get();
     this.setData({
       groups,
@@ -133,9 +134,7 @@ Page({
       mineTier: E.tierOf("collections"),
       mine,
       mineCount: mine.length,
-      last: last ? { id: last.id, title: last.t, sub: [last.a, last.n].filter(Boolean).join(" · ") } : null,
-      markCount: all2.length,
-      marks: all2.slice(0, RECENT_MAX).map((b) => ({ id: b.id, title: b.t }))
+      last: last ? { id: last.id, title: last.t } : null
     });
   },
 
@@ -143,18 +142,13 @@ Page({
     E.openPricing();
   },
 
-  onContinue() {
-    const last = lastRead.get();
-    if (last) wx.navigateTo({ url: marks.readerUrl(last) });
+  onOpenRead() {
+    const sheet = this.selectComponent(SHEET);
+    if (sheet) sheet.open();
   },
 
-  onOpenMark(e) {
-    const hit = marks.list().filter((b) => b.id === e.currentTarget.dataset.id)[0];
-    if (hit) wx.navigateTo({ url: marks.readerUrl(hit) });
-  },
-
-  onAllMarks() {
-    wx.navigateTo({ url: "/packages/settings/bookmarks/bookmarks" });
+  onReadOpened() {
+    wx.pageScrollTo({ scrollTop: 0, duration: 200 });
   },
 
   onOpenMine(e) {

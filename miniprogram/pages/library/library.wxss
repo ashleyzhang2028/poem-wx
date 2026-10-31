@@ -69,3 +69,39 @@
   color: var(--ink-3);
   margin-top: 6rpx;
 }
+
+.read-strip {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  transition: background-color var(--t-press);
+}
+
+.read-strip-hover {
+  background: var(--sink);
+}
+
+.read-strip-t {
+  flex: none;
+  font-size: var(--fs-hint);
+  color: var(--strong-text);
+}
+
+.read-strip-meta {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sp-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-poem);
+  font-size: var(--fs-hint);
+  color: var(--ink-3);
+}
+
+.read-strip-go {
+  flex: none;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+}

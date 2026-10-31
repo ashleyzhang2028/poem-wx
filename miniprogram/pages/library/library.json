@@ -1,1 +1,8 @@
-{ "navigationBarTitleText": "漫读", "usingComponents": {} }
+{
+  "navigationBarTitleText": "漫读",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "read-sheet": "/components/read-sheet/read-sheet"
+  }
+}
