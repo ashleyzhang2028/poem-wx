@@ -95,3 +95,11 @@
 .reader .poem-link-hover {
   opacity: .6;
 }
+
+.reader .poem-body .token-line.token-wrap {
+  line-height: calc(var(--poem-fs) + var(--poem-gap));
+}
+
+.reader .poem-body .token-line.token-wrap .token {
+  margin-bottom: var(--poem-gap-py);
+}
