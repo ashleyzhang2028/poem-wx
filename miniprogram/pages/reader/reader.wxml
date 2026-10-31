@@ -85,17 +85,6 @@
       </view>
 
       <view class="pref-size">
-        <view class="pref-opt ic {{lineDown ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineDown" aria-label="缩小行间距">
-          <view class="glyph" style="mask-image:url('{{icons.lineDown}}');-webkit-mask-image:url('{{icons.lineDown}}');"></view>
-        </view>
-        <view class="pref-opt ic {{lineUp ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onLineUp" aria-label="增加行间距">
-          <view class="glyph" style="mask-image:url('{{icons.lineUp}}');-webkit-mask-image:url('{{icons.lineUp}}');"></view>
-        </view>
-      </view>
-
-      <view class="pref-size">
         <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
               hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
           <view class="glyph" style="mask-image:url('{{icons.zoomOut}}');-webkit-mask-image:url('{{icons.zoomOut}}');"></view>
@@ -115,7 +104,7 @@
       </view>
     </view>
 
-    <view class="poem-body align-{{align}} size-{{fontSize}} gap-{{lineGap}} {{prose ? 'prose' : ''}} {{loose ? 'loose' : ''}}">
+    <view class="poem-body align-{{align}} size-{{fontSize}} {{prose ? 'prose' : ''}} {{loose ? 'loose' : ''}}">
       <block wx:if="{{pinyinOn}}">
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
           <view class="poem-line token-line {{verse ? '' : 'token-wrap'}}" wx:for="{{para}}" wx:key="index" wx:for-item="row">

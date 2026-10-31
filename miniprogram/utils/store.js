@@ -1,5 +1,4 @@
 const corpus = require("./corpus");
-const scale = require("./type-scale");
 require("./remote-poems");
 
 const KEYS = {
@@ -66,8 +65,7 @@ const DEFAULTS = {
 
 const DEVICE_DEFAULTS = {
 
-  sfx: true,
-  lineGap: scale.GAP_DEFAULT
+  sfx: true
 };
 
 const LOCAL_ONLY = {

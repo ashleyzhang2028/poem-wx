@@ -32,7 +32,7 @@ const RESULTS = [
 ];
 
 const PAGE_ICONS = {
-  left: icons.left, center: icons.center, lineUp: icons.lineUp, lineDown: icons.lineDown,
+  left: icons.left, center: icons.center,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
   playlist: icons.playlist, bookmark: icons.bookmark, off: icons.off, all: icons.all
 };
@@ -87,9 +87,6 @@ Page({
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
-    lineGap: scale.DEFAULT_GAP,
-    lineDown: true,
-    lineUp: true,
     pinyinMode: "off",
     pinyinOn: false,
     stage: "新学",
@@ -336,8 +333,6 @@ Page({
       glossRows: gloss.rows(entry.gloss),
       fontSize: size,
       ...scale.flags(size),
-      lineGap: scale.clampGap(settings.lineGap),
-      ...scale.gapFlags(settings.lineGap),
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
       mastery: R.mastery(rec)
     });
@@ -425,21 +420,6 @@ Page({
 
   onToggleGloss() {
     this.setData({ showGloss: !this.data.showGloss });
-  },
-
-  onLineDown() {
-    this.stepGap(-1);
-  },
-
-  onLineUp() {
-    this.stepGap(1);
-  },
-
-  stepGap(delta) {
-    const lineGap = scale.clampGap(this.data.lineGap + delta);
-    if (lineGap === this.data.lineGap) return;
-    this.setData(Object.assign({ lineGap }, scale.gapFlags(lineGap)));
-    store.saveSettings({ lineGap });
   },
 
   onFontDown() {
