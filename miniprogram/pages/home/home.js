@@ -33,7 +33,7 @@ const GUEST_SEED = 20240301;
 
 const REASON_CLS = { review: "theme", new: "theme", pinned: "theme" };
 
-const SOURCE_TEXT = { course: "课内", own: "自选" };
+const SOURCE_TEXT = { course: "课内", own: "新增" };
 
 const FACES = [
   { key: "bad", icon: icons.moonNew, cls: "bad", label: "忘记" },
@@ -146,7 +146,8 @@ function rowsOfScope(list, scope) {
       recited: S.isLearned(rec),
       stateText: stateText(S.isLearned(rec), !!read[p.id]),
       stateCls: stateCls(S.isLearned(rec)),
-      source: SOURCE_TEXT[sourceKey(p.id)]
+      source: SOURCE_TEXT[sourceKey(p.id)],
+      course: sourceKey(p.id) === "course"
     };
   });
 }
@@ -374,7 +375,8 @@ Page({
         recited,
         stateText: stateText(recited, read),
         stateCls: stateCls(recited),
-        source: SOURCE_TEXT[sourceKey(it.poem.id)]
+        source: SOURCE_TEXT[sourceKey(it.poem.id)],
+        course: sourceKey(it.poem.id) === "course"
       };
     });
 
@@ -566,7 +568,8 @@ Page({
       recited: recited,
       stateText: stateText(recited, read),
       stateCls: stateCls(recited),
-      source: SOURCE_TEXT[sourceKey(p.id)]
+      source: SOURCE_TEXT[sourceKey(p.id)],
+      course: sourceKey(p.id) === "course"
     };
   },
 

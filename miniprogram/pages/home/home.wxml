@@ -19,7 +19,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title">今日诵读</text>
+        <text class="card-title">跬步诗词</text>
       </view>
 
       <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -53,7 +53,7 @@
       <text class="hero-eyebrow">{{todayLabel}}</text>
 
       <view class="hero-head">
-        <text class="hero-title">今日诵读</text>
+        <text class="hero-title">跬步诗词</text>
 
         <view class="hero-pills">
           <text class="pill">{{gradeName}}</text>
@@ -122,7 +122,7 @@
 
     <view class="card">
       <view class="card-open">
-        <text class="card-title">{{selfOnly ? '新增温习' : '课内阅读'}}</text>
+        <text class="card-title">今日温习</text>
         <text class="all-count" wx:if="{{!selfOnly}}">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
       </view>
 
@@ -137,7 +137,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
@@ -186,7 +186,7 @@
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
               <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
-              <text class="tag row-tag row-cat {{item.source === '课内' ? 'course' : 'own'}}">{{item.source}}</text>
+              <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
           </view>
