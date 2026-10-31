@@ -33,13 +33,7 @@ const GROUPS = [
     key: "novel",
     name: "名著小说",
     note: "四大名著与章回、话本",
-    books: ["sanguo", "shuihu", "xiyou", "honglou", "rulin", "jinghua", "fengshen", "dongzhou", "yushi", "jingshi", "erke"]
-  },
-  {
-    key: "notes",
-    name: "笔记杂著",
-    note: "志怪、笔记与小品",
-    books: ["liaozhai", "yuewei", "fusheng", "taoan", "yuchu", "xiaochuang", "rongzhai", "soushen"]
+    books: ["sanguo", "shuihu", "xiyou", "honglou", "rulin", "jinghua", "fengshen", "dongzhou", "yushi", "jingshi", "erke", "liaozhai"]
   }
 ];
 
