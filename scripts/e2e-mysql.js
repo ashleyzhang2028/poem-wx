@@ -393,7 +393,7 @@ function makeWx(port, mem) {
     ok("不带 book：400 E_CORPUS_BOOK（不是把全部集子一次吐出来）",
       !noBook.ok && noBook.status === 400 && noBook.code === "E_CORPUS_BOOK", JSON.stringify(noBook));
 
-    const emptyGloss = await get("gloss?book=tongxin");
+    const emptyGloss = await get("gloss?book=shanhaijing");
     ok("注释还没入库的集子：404 E_CORPUS_EMPTY", !emptyGloss.ok && emptyGloss.status === 404,
       JSON.stringify(emptyGloss));
 
@@ -401,7 +401,9 @@ function makeWx(port, mem) {
       book_id: "tangshi300", pos: 1, title: "感遇·其一", gloss: JSON.stringify([["兰", "兰草"], ["葳蕤", "枝叶繁茂的样子"]])
     });
     const gloss = await get("gloss?book=tangshi300");
-    const row = gloss.ok && gloss.body.rows.tangshi300 ? gloss.body.rows.tangshi300[0] : null;
+    const row = gloss.ok && gloss.body.rows.tangshi300
+      ? gloss.body.rows.tangshi300.filter((r) => r[0] === 1)[0]
+      : null;
     ok("注释存的是 JSON，读出来逐条是「词、释义」两栏",
       !!row && Array.isArray(row[2]) && row[2].length === 2 && row[2][1][0] === "葳蕤",
       JSON.stringify(row));

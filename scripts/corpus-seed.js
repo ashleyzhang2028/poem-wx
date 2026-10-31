@@ -36,6 +36,7 @@ const POEM_FILES = [
   "data/gloss-notes.js",
   "data/catalog-texts.js",
   "data/catalog-notes.js",
+  "data/tongxin-notes.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -163,7 +164,8 @@ function seedRows(W) {
 }
 
 function catalogTexts(catalogs, order) {
-  const source = (loadCorpus(["data/catalog-texts.js"]).CATALOG_TEXTS) || {};
+  const W = loadCorpus(["data/catalog-texts.js", "data/tongxin-notes.js"]);
+  const source = Object.assign({}, W.CATALOG_TEXTS || {}, catalogBoxes(W.TONGXIN_TEXT));
   const out = [];
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("正文绑在了不在目录里的集子：" + bookId);
@@ -179,8 +181,17 @@ function catalogTexts(catalogs, order) {
   return out;
 }
 
+function catalogBoxes(byBook) {
+  const out = {};
+  Object.keys(byBook || {}).forEach(function (bookId) {
+    const mine = byBook[bookId] || {};
+    out[bookId] = Object.keys(mine).map(function (pos) { return [Number(pos)].concat(mine[pos]); });
+  });
+  return out;
+}
+
 function catalogGloss(catalogs, order, W) {
-  const source = W.CATALOG_NOTES || {};
+  const source = Object.assign({}, W.CATALOG_NOTES || {}, W.TONGXIN_NOTES || {});
   const out = [];
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("注释挂在了不在目录里的集子：" + bookId);

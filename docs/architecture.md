@@ -287,8 +287,11 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 
    `texts` 与 `gloss` 是按目录次序（`book_id` + `pos`）挂上去的正文与注释：
    语料在 `scripts/corpus/data/catalog-texts.js`（由 `build-catalog-texts.js` 把目录条目
-   与分卷里的正文、译文按「题名 + 作者」绑成一条，绑不上的一条不写）与
-   `catalog-notes.js`（注释，逐条对正文核过）。客户端 `corpus.catalogText(meta)` /
+   与分卷里的正文、译文按「题名 + 作者」绑成一条，绑不上的一条不写）、
+   `catalog-notes.js`（唐诗三百首、宋词三百首、古文观止的注释）与
+   `tongxin-notes.js`（童心诗话 213 篇的正文、译文与注释；与课内同题同文的那批
+   由 `gloss-notes.js` 的条目直接取来，不另写一份）。注释逐条对正文核过，判据在
+   `scripts/corpus/scripts/check-catalog-notes.js`。客户端 `corpus.catalogText(meta)` /
    `catalogGloss(meta)` 取到就用，取不到才回落到问诗词漫读。
 
    客户端 `utils/corpus.js` 把每份存进 `wx.setStorageSync`（键 `kb_corpus_<part>_v1`），
