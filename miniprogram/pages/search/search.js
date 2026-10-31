@@ -69,6 +69,11 @@ Page({
     entitlement.openPricing();
   },
 
+  onReset() {
+    this.onClear();
+    wx.pageScrollTo({ scrollTop: 0, duration: 200 });
+  },
+
   onInput(e) {
     this.setData({ keyword: e.detail.value });
   },

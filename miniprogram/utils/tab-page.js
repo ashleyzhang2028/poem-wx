@@ -5,10 +5,13 @@ function go(url) {
   wx.switchTab({ url: url });
 }
 
-function landed() {
+function here() {
   const pages = getCurrentPages();
-  const page = pages[pages.length - 1];
-  return !!page && page.route === MINE.slice(1);
+  return pages.length ? pages[pages.length - 1].route : "";
+}
+
+function landed() {
+  return here() === MINE.slice(1);
 }
 
 function conference() {
@@ -34,6 +37,14 @@ function mine() {
   if (pages.length > 1) wx.navigateBack({ delta: 1 });
 }
 
+function home(url, reset) {
+  if (here() !== url.slice(1)) {
+    go(url);
+    return;
+  }
+  if (reset) reset();
+}
+
 function back(url) {
   if (!url) {
     mine();
@@ -50,4 +61,4 @@ function back(url) {
   });
 }
 
-module.exports = { go, conference, hub, mine, back };
+module.exports = { go, conference, hub, mine, home, back };
