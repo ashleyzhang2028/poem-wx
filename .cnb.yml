@@ -115,7 +115,7 @@ main:
             done
             node scripts/build-data.js
             node scripts/check.js
-            npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
+            node scripts/ci-install-uploader.js
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
               echo "" >&2
@@ -236,7 +236,7 @@ main:
             done
             node scripts/build-data.js
             node scripts/check.js
-            npm i -D miniprogram-ci --no-audit --no-fund --loglevel=error
+            node scripts/ci-install-uploader.js
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
               code=$?
               echo "" >&2
