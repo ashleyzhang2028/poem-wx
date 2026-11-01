@@ -428,6 +428,37 @@ function makeWx(port, mem) {
       JSON.stringify(row));
   }
 
+  {
+    const corpus = require(path.join(REPO, "miniprogram", "utils", "corpus.js"));
+    const remote = require(path.join(REPO, "miniprogram", "utils", "remote.js"));
+    const load = (part, book) => remote.request(remote.PATHS.corpus + "/" + part + (book ? "?book=" + book : ""), {}, "GET")
+      .then((body) => corpus.install(part, body, book));
+    await load("poems", "poems");
+    await load("books");
+    await load("catalogs");
+
+    const spotOf = (id) => {
+      const meta = corpus.indexById(id);
+      return corpus.catalogSpot(id, meta ? meta.sid : "");
+    };
+
+    const withGloss = spotOf("tangshi300-18");
+    ok("目录条目一打开就有位置可查（不再等本机先有正文缓存）",
+      !!withGloss && withGloss.b === "tangshi300", JSON.stringify(withGloss));
+
+    await corpus.fetchCatalog("tangshi300");
+    const packed = corpus.catalogText(withGloss || {});
+    const notes = corpus.catalogGloss(withGloss || {});
+    ok("库里有的篇目，第一次打开就取得到正文与注释（注释卡不是空的）",
+      !!packed && String(packed.text).length > 0 && Array.isArray(notes) && notes.length > 0,
+      JSON.stringify({ text: packed && String(packed.text).slice(0, 8), notes: notes && notes.length }));
+
+    const gap = spotOf("tangshi300-1");
+    ok("库里没有的篇目照旧交回「取不到」，回落问诗词漫读",
+      !!gap && corpus.catalogText(gap) === null,
+      JSON.stringify({ spot: gap, text: corpus.catalogText(gap || {}) }));
+  }
+
   server.close();
   fs.rmSync(CTX, { recursive: true, force: true });
   const bad = results.filter((r) => !r).length;
