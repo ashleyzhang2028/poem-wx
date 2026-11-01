@@ -1,8 +1,7 @@
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
 
-const NEXT_DAY_HOUR = 9;
-const REVIEW_WINDOW_HOURS = 16;
+const NEXT_DAY_HOUR = 5;
 
 const EBBINGHAUS_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60, 120, 240];
 
@@ -21,8 +20,8 @@ function dayAt(ts, days) {
 }
 
 function nextSlot(ts) {
-  const at = dayAt(ts, 1);
-  return ts + REVIEW_WINDOW_HOURS * HOUR > at ? at : dayAt(ts, 2);
+  const ahead = Math.ceil((ts + NEXT_DAY_HOUR * HOUR - dayAt(ts, 1)) / DAY);
+  return dayAt(ts, Math.max(1, ahead) + 1);
 }
 
 function clampLevel(lv) {
