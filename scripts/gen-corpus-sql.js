@@ -49,9 +49,9 @@ function statements(rows, opts) {
   return out;
 }
 
-function placeholders(row, cols) {
-  return cols.map(function (c) {
-    return typeof row[c] === "number" ? String(row[c]) : "?";
+function placeholders(cols) {
+  return cols.map(function () {
+    return "?";
   });
 }
 
@@ -63,8 +63,9 @@ function parameterized(rows) {
     const step = t.batch || BATCH;
     for (let i = 0; i < list.length; i += step) {
       const slice = list.slice(i, i + step);
-      const body = slice.map(function (r) {
-        return "  (" + placeholders(r, t.cols).join(", ") + ")";
+      const marks = "  (" + placeholders(t.cols).join(", ") + ")";
+      const body = slice.map(function () {
+        return marks;
       });
       const params = [];
       slice.forEach(function (r) {
