@@ -1,4 +1,5 @@
 const store = require("./store");
+const spot = require("./read-spot");
 
 const KEY = "kb_last_read_v1";
 
@@ -17,6 +18,8 @@ function put(entry) {
     a: String(entry.a || ""),
     n: String(entry.n || ""),
     b: String(entry.b || ""),
+    p: spot.paraOf(entry),
+    y: spot.offsetOf(entry),
     at: Date.now()
   });
 }

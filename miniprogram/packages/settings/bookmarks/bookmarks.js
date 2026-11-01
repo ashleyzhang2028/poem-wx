@@ -72,7 +72,9 @@ Page({
       id: b.id,
       title: b.t,
       meta: metaOf(b),
-      picked: !!this.pickedIds[b.id]
+      picked: !!this.pickedIds[b.id],
+      p: b.p,
+      y: b.y
     }));
     const tier = entitlement.tierOf("bookmarks");
     this.setData({
@@ -131,7 +133,7 @@ Page({
   onRow(e) {
     const id = e.currentTarget.dataset.id;
     if (!this.data.editing) {
-      const hit = marks.list().filter((b) => b.id === id)[0];
+      const hit = this.data.rows.filter((b) => b.id === id)[0];
       if (hit) wx.navigateTo({ url: marks.readerUrl(hit) });
       return;
     }

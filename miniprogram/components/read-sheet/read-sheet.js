@@ -8,14 +8,16 @@ function markRow(b) {
     id: b.id,
     title: b.t,
     meta: [b.a, b.n].filter(Boolean).join(" · "),
-    marked: !(last && last.id === b.id)
+    marked: !(last && last.id === b.id),
+    p: b.p,
+    y: b.y
   };
 }
 
 function lastRow() {
   const hit = lastRead.get();
   if (!hit) return null;
-  return { id: hit.id, title: hit.t, meta: [hit.a, hit.n].filter(Boolean).join(" · ") };
+  return { id: hit.id, title: hit.t, meta: [hit.a, hit.n].filter(Boolean).join(" · "), p: hit.p, y: hit.y };
 }
 
 Component({
@@ -75,7 +77,7 @@ Component({
     },
 
     onOpenMark(e) {
-      const hit = marks.list().filter((b) => b.id === e.currentTarget.dataset.id)[0];
+      const hit = this.data.marks.filter((b) => b.id === e.currentTarget.dataset.id)[0];
       if (hit) this.follow(marks.readerUrl(hit));
     },
 
