@@ -2,6 +2,7 @@ const cols = require("../../utils/collections");
 const corpus = require("../../utils/corpus");
 const entitlement = require("../../utils/entitlement");
 const theme = require("../../utils/theme");
+const tabPage = require("../../utils/tab-page");
 
 const TOAST_MS = 2000;
 
@@ -64,6 +65,12 @@ Component({
     },
 
     onStop() {},
+
+    onGo() {
+      if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+      this.close();
+      tabPage.go("/pages/mine/mine");
+    },
 
     onPick(e) {
       if (!this.data.total) {

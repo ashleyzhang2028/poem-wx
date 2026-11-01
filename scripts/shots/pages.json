@@ -29,6 +29,28 @@
       "id": "poems-xx1-01"
     }
   },
+  "list-collect-empty": {
+    "page": "pages/list/list",
+    "title": "课内诗词",
+    "back": true,
+    "logged": true,
+    "query": {
+      "book": "poems"
+    },
+    "do": [
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "id": "poems-xx1-01",
+              "title": "咏鹅"
+            }
+          }
+        }
+      }
+    ]
+  },
   "list": {
     "page": "pages/list/list",
     "title": "课内诗词",
@@ -210,6 +232,13 @@
       }
     ],
     "_note": "「只温习自选」那一开关：集子里有篇目才亮"
+  },
+  "settings-collections-empty": {
+    "page": "packages/settings/collections/collections",
+    "title": "自选背诵",
+    "back": true,
+    "logged": true,
+    "collections": []
   },
   "settings-collections": {
     "page": "packages/settings/collections/collections",

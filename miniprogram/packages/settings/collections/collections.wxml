@@ -31,13 +31,19 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{count}}">
+  <view class="card" wx:if="{{count || on}}">
     <view class="card-head">
       <text class="card-title">我的集合</text>
       <text class="card-sub" wx:if="{{on}}">已建 {{count}} / {{cap}} 个 · 每个最多 {{itemsMax}} 首</text>
     </view>
 
     <button class="btn primary block coll-new" wx:if="{{on}}" bindtap="onCreate">新建集合</button>
+
+    <view class="empty" wx:if="{{!count}}">
+      <text class="empty-mark">选</text>
+      <text class="empty-text say">暂无自选集合</text>
+      <text class="hint empty-tip">点击上方「新建集合」创建</text>
+    </view>
 
     <block wx:for="{{collections}}" wx:key="id" wx:for-item="c">
       <view class="coll-head">
@@ -120,14 +126,6 @@
         </view>
       </block>
     </block>
-  </view>
-
-  <view class="card" wx:elif="{{on}}">
-    <view class="empty">
-      <text class="empty-mark">选</text>
-      <text class="empty-text say">暂无自选集合</text>
-      <text class="hint empty-tip">点击上方「新建集合」创建</text>
-    </view>
   </view>
 
   <view class="safe-bottom"></view>
