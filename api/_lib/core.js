@@ -1762,6 +1762,8 @@ function sanitizeBookmarks(p) {
     if (!id || seen[id]) return;
     seen[id] = 1;
     var at = Number(b.at);
+    var para = Number(b.p);
+    var off = Number(b.y);
     out.items.push({
       id: id,
       sid: refText(b.sid, 80).trim(),
@@ -1769,7 +1771,9 @@ function sanitizeBookmarks(p) {
       t: refText(b.t, 60),
       a: refText(b.a, 30),
       n: refText(b.n, 30),
-      at: isFinite(at) && at > 0 ? Math.round(at) : 0
+      at: isFinite(at) && at > 0 ? Math.round(at) : 0,
+      p: isFinite(para) && para > 0 ? Math.round(para) : 0,
+      y: isFinite(off) && off > 0 ? Math.round(off) : 0
     });
   });
   return out;

@@ -18,12 +18,23 @@ const trail = require("../../utils/trail");
 const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
 const gloss = require("../../utils/gloss");
+const spot = require("../../utils/read-spot");
 
 const FIRST_CHUNK = 24;
 
 const CHUNK = 60;
 
 const CHUNK_GAP = 60;
+
+const SAVE_GAP = 400;
+
+function seekOf(raw) {
+  const m = String(raw == null ? "" : raw).match(/^(\d+)(?:\.(\d+))?$/);
+  if (!m) return null;
+  const p = Number(m[1]);
+  if (!(p > 0)) return null;
+  return { p: p, y: Number(m[2]) || 0 };
+}
 
 const RESULTS = [
   { key: "bad", label: "忘记", cls: "bad" },
@@ -123,6 +134,7 @@ Page({
       remote: query.src === "1",
       reciteMode: query.mode === "recite"
     });
+    this.seekTo = this.data.reciteMode ? null : seekOf(query.at);
   },
 
   applyFont() {
@@ -342,7 +354,12 @@ Page({
   renderEntry(id, entry, meta) {
     const settings = store.settings();
     if (!this.data.reciteMode) {
-      lastRead.put({ id: id, sid: this.data.sid || meta.sid, src: !!this.data.remote, t: meta.t, a: meta.a, n: meta.n || meta.s, b: meta.b });
+      const here = this.here(id);
+      lastRead.put({
+        id: id, sid: this.data.sid || meta.sid, src: !!this.data.remote,
+        t: meta.t, a: meta.a, n: meta.n || meta.s, b: meta.b,
+        p: here ? here.p : 0, y: here ? here.y : 0
+      });
     }
     const size = scale.clamp(settings.fontSize);
 
@@ -380,16 +397,21 @@ Page({
     this.syncDaily();
 
     this.applyReading();
+    this.seekPlan = this.seekTo;
+    this.seekTo = null;
+    if (this.seekPlan) this.seekPara();
   },
 
 
   relayout() {
+    const keep = this.data.rawText ? (this.seekPlan || this.pendingSpot) : null;
     const laid = corpus.layout(this.data.rawText, {
       size: this.data.fontSize,
       pinyin: this.data.pinyinOn,
       title: this.data.title
     });
     this.laidParas = laid.paras;
+    this.laidPlain = laid.plain;
     this.alignKey = scale.alignKey(laid);
     this.chunkToken = (this.chunkToken || 0) + 1;
     this.setData({
@@ -400,6 +422,10 @@ Page({
       align: scale.alignOf(laid, store.settings())
     });
     this.appendRest(laid.plain, FIRST_CHUNK, this.chunkToken);
+    if (keep) {
+      this.seekPlan = keep;
+      this.seekPara();
+    }
   },
 
   appendRest(plain, from, token) {
@@ -495,9 +521,52 @@ Page({
     this.advance = setTimeout(() => this.goNext(), 700);
   },
 
+  onPageScroll(e) {
+    const top = Math.max(0, Math.round(Number(e && e.scrollTop) || 0));
+    if (!this.data.rawText || this.data.reciteMode) return;
+    const at = spot.locate(top, this.data.fontSize, this.laidPlain);
+    if (at.p === spot.paraOf(this.pendingSpot) && at.y === spot.offsetOf(this.pendingSpot)) return;
+    this.pendingSpot = at;
+    if (this.saveTimer) return;
+    this.saveTimer = setTimeout(() => this.saveSpot(), SAVE_GAP);
+  },
+
+  here(id) {
+    const mine = id && id === this.data.id && this.pendingSpot;
+    if (mine) return mine;
+    const hit = this.data.reciteMode ? null : lastRead.get();
+    if (hit && hit.id === id && spot.paraOf(hit)) return { p: spot.paraOf(hit), y: spot.offsetOf(hit) };
+    return null;
+  },
+
+  saveSpot() {
+    this.saveTimer = null;
+    const at = this.pendingSpot;
+    if (!at || !this.data.rawText) return;
+    lastRead.put({
+      id: this.data.id, sid: this.data.sid, src: !!this.data.remote,
+      t: this.data.title, a: this.data.author, n: this.data.source, b: this.data.bookId,
+      p: at.p, y: at.y
+    });
+    if (marks.seek(this.data.id, at)) sync.markDirty();
+  },
+
+  seekPara() {
+    const at = this.seekPlan;
+    if (!at) return;
+    this.pendingSpot = at;
+    this.seekPlan = null;
+    wx.pageScrollTo({
+      scrollTop: spot.topOf(at.p - 1, at.y, this.data.fontSize, this.laidPlain),
+      duration: 0
+    });
+  },
+
   onUnload() {
     corpusGate.close(this);
     if (this.advance) clearTimeout(this.advance);
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    if (this.pendingSpot && this.data.rawText) this.saveSpot();
     this.loadToken = (this.loadToken || 0) + 1;
     this.chunkToken = (this.chunkToken || 0) + 1;
   },

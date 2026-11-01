@@ -1,11 +1,17 @@
 const store = require("./store");
 const tiers = require("./tiers");
 const entitlement = require("./entitlement");
+const spot = require("./read-spot");
 
 const TITLE_MAX = 60;
 
 function clip(v, n) {
   return String(v == null ? "" : v).trim().slice(0, n);
+}
+
+function spotOf(raw) {
+  const p = spot.paraOf(raw);
+  return p ? { p: p, y: spot.offsetOf(raw) } : null;
 }
 
 function normalize(raw) {
@@ -15,6 +21,7 @@ function normalize(raw) {
     const id = clip(b && b.id, 80);
     if (!id || seen[id]) return;
     seen[id] = true;
+    const at = spotOf(b);
     out.push({
       id: id,
       sid: clip(b.sid, 80),
@@ -22,7 +29,9 @@ function normalize(raw) {
       t: clip(b.t, TITLE_MAX) || id,
       a: clip(b.a, 30),
       n: clip(b.n, 30),
-      at: Number(b.at) > 0 ? Math.round(Number(b.at)) : 0
+      at: Number(b.at) > 0 ? Math.round(Number(b.at)) : 0,
+      p: at ? at.p : 0,
+      y: at ? at.y : 0
     });
   });
   return out;
@@ -79,11 +88,26 @@ function toggle(entry) {
   return Object.assign({ on: r.ok }, r);
 }
 
+function seek(id, raw) {
+  const at = spotOf(raw);
+  if (!id || !at) return false;
+  const all = list();
+  const hit = all.filter((b) => b.id === id)[0];
+  if (!hit) return false;
+  if (hit.p === at.p && hit.y === at.y) return false;
+  hit.p = at.p;
+  hit.y = at.y;
+  store.saveBookmarks(all);
+  return true;
+}
+
 function readerUrl(b) {
   let url = "/pages/reader/reader?id=" + encodeURIComponent(b.id);
   if (b.sid) url += "&sid=" + encodeURIComponent(b.sid);
   if (b.src) url += "&src=1";
+  const at = spotOf(b);
+  if (at) url += "&at=" + at.p + (at.y ? "." + at.y : "");
   return url;
 }
 
-module.exports = { TITLE_MAX, list, capOf, has, add, remove, retitle, toggle, readerUrl };
+module.exports = { TITLE_MAX, list, capOf, has, add, remove, retitle, toggle, seek, readerUrl };

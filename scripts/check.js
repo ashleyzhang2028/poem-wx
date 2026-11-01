@@ -7456,6 +7456,57 @@ const K = {
   })());
 }
 
+{
+
+  const spotMod = require(path.join(ROOT, "utils", "read-spot.js"));
+  const moduleCorpus = require(path.join(ROOT, "utils", "corpus.js"));
+
+  const lays = ["poems-gz10-06", "poems-gz10-03"].map((id) => {
+    const entry = moduleCorpus.entry(id);
+    return entry ? moduleCorpus.layout(entry.text, { size: 0, title: id }).plain : null;
+  }).filter(Boolean);
+  const spotBad = [];
+  lays.forEach((paras) => {
+    for (let size = -3; size <= 7; size++) {
+      const end = spotMod.topOf(paras.length - 1, 0, size, paras);
+      for (let top = 0; top < end; top += 5) {
+        const at = spotMod.locate(top, size, paras);
+        const back = spotMod.topOf(at.p - 1, at.y, size, paras);
+        const again = spotMod.locate(back, size, paras);
+        if (again.p !== at.p || Math.abs(again.y - at.y) > 1) spotBad.push(size + "@" + top);
+      }
+    }
+  });
+  ok("阅读位置按字号换算成「第几段 + 段内余量」，存回来还是同一处",
+    lays.length > 0 && spotBad.length === 0,
+    spotBad.slice(0, 5).join(","));
+
+  const offAt = spotMod.locate(120, 0, lays[0]);
+  ok("换字号后仍落在同一处（位置存的是段与段内余量，不是像素）",
+    spotMod.locate(spotMod.topOf(offAt.p - 1, offAt.y, 4, lays[0]), 4, lays[0]).p === offAt.p
+      && spotMod.topOf(offAt.p - 1, offAt.y, 4, lays[0]) !== spotMod.topOf(offAt.p - 1, offAt.y, 0, lays[0]));
+
+  const bmMod = require(path.join(ROOT, "utils", "bookmarks.js"));
+  const urlAt = bmMod.readerUrl({ id: "p1", p: 7, y: 12 });
+  const urlStart = bmMod.readerUrl({ id: "p1" });
+  const readerSrc = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  ok("书签与继续读的入口把阅读位置带进 reader（没位置就不带）",
+    /at=7\.12/.test(urlAt) && urlStart.indexOf("at=") < 0
+      && /last-read/.test(readerSrc) && /"p"|\bp: /.test(readerSrc),
+    "入口只带 id —— 点书签还是回到篇首");
+
+  ok("翻页时记下读到哪一段（书签跟着更新）",
+    /onPageScroll\s*\(e\)\s*\{[\s\S]{0,400}?spot\.locate\(/.test(readerSrc)
+      && /saveSpot\s*\(\)\s*\{[\s\S]{0,400}?marks\.seek\(/.test(readerSrc),
+    "正文滚动没有回写 —— 下次进来还是篇首");
+
+  const coreSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
+  const item = coreSrc.slice(coreSrc.indexOf("function sanitizeBookmarks"));
+  ok("服务端 sanitize 留住书签上的阅读位置",
+    /p: .*isFinite\(para\)/.test(item) && /y: .*isFinite\(off\)/.test(item),
+    "服务端把 p / y 抹掉 —— 同步一圈回来位置就没了");
+}
+
 Promise.all(pending).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");
