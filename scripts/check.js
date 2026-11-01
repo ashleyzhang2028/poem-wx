@@ -339,7 +339,7 @@ const R = require(path.join(ROOT, "utils", "review-models.js"));
 ok("四套算法都在", R.ORDER.length === 4 && R.ORDER.every((k) => R.MODELS[k]));
 
 {
-  const DUE_HOUR = 5;
+  const slotOf = (at) => R.dayAt(at, 0);
   const nextAt = (t, result) => R.review(null, result, "ebbinghaus", t).nextReviewAt;
   const fmt = (at) => new Date(at).toLocaleString("zh-CN");
   const cases = [];
@@ -351,30 +351,28 @@ ok("四套算法都在", R.ORDER.length === 4 && R.ORDER.every((k) => R.MODELS[k
   cases.forEach((t) => {
     ["bad", "fuzzy"].forEach((result) => {
       const at = nextAt(t, result);
-      const day = R.startOfDay(at);
+      const days = Math.round((R.startOfDay(at) - R.startOfDay(t)) / R.DAY);
       if (at - t <= 0) missed.push({ t, result, at, why: "排到了此刻之前" });
-      if (at !== day + DUE_HOUR * R.HOUR) missed.push({ t, result, at, why: "不在当天的到期点上" });
-      const days = Math.round((day - R.startOfDay(t)) / R.DAY);
+      if (at !== slotOf(at)) missed.push({ t, result, at, why: "不在当天的到期点上" });
       if (days < 1) missed.push({ t, result, at, why: "隔天之前就到期了" });
-      if (t < day + DUE_HOUR * R.HOUR && days === 1) missed.push({ t, result, at, why: "还没到今天的到期点就算一天" });
+      if (t < slotOf(t) && days === 1) missed.push({ t, result, at, why: "还没到今天的到期点就算一天" });
     });
   });
   ok("忘记 / 模糊：下一次落在隔天的到期点上，且只在到期点之后才算过了一天",
     missed.length === 0,
     missed.slice(0, 3).map((m) => "评为「" + m.result + "」的 " + fmt(m.t) + " 排到 "
-      + fmt(m.at) + "：" + m.why).join("；")
-      + "。到期点是 " + DUE_HOUR + " 点，不是半夜");
+      + fmt(m.at) + "：" + m.why).join("；"));
 
   const offSlot = [];
   cases.forEach((t) => {
     ["bad", "fuzzy", "good"].forEach((result) => {
       const at = nextAt(t, result);
-      if (at !== R.startOfDay(at) + DUE_HOUR * R.HOUR) offSlot.push(fmt(t) + " 评「" + result + "」→ " + fmt(at));
+      if (at !== slotOf(at)) offSlot.push(fmt(t) + " 评「" + result + "」→ " + fmt(at));
     });
   });
   ok("隔天的复习都排在同一天的同一刻，日历上的到期日与排期不打架",
     offSlot.length === 0,
-    "有个结果排到了 " + DUE_HOUR + " 点以外：" + offSlot.slice(0, 3).join("；"));
+    "有个结果排到了到期点以外：" + offSlot.slice(0, 3).join("；"));
 }
 
 R.ORDER.forEach((key) => {

@@ -1,7 +1,7 @@
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
 
-const NEXT_DAY_HOUR = 5;
+const NEXT_DAY_HOUR = 0;
 
 const EBBINGHAUS_INTERVALS = [0, 1, 2, 4, 7, 15, 30, 60, 120, 240];
 
