@@ -24,7 +24,7 @@
       <view class="empty cp-empty" wx:if="{{!rows.length}}">
         <text class="empty-text say">暂无自选集合</text>
         <view class="cp-empty-go" hover-class="cp-empty-go-hover" hover-stay-time="60" bindtap="onGo">
-          <text class="hint cp-empty-go-t">在「我的 → 我的自选」新建，加入此首</text>
+          <text class="hint cp-empty-go-t">新建集合，加入此首</text>
           <text class="cp-empty-go-arrow">›</text>
         </view>
       </view>

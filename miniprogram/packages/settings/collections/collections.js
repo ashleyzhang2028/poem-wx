@@ -51,6 +51,11 @@ Page({
     this.setData({ themeStyle: hit.page.themeStyle });
   },
 
+  onLoad(query) {
+    const id = (query || {}).create;
+    if (id && corpus.indexById(id)) this.pendingId = id;
+  },
+
   onShow() {
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
@@ -60,6 +65,13 @@ Page({
     }
     this.setData({ locked: false });
     this.refresh();
+    this.takePending();
+  },
+
+  takePending() {
+    const id = this.pendingId;
+    this.pendingId = "";
+    if (id) this.createWith(id);
   },
 
   refresh() {
@@ -227,6 +239,42 @@ Page({
         wx.showToast({ title: "已新建", icon: "none" });
       }
     });
+  },
+
+  createWith(poemId) {
+    wx.showModal({
+      title: "新建集合",
+      editable: true,
+      placeholderText: cols.DEFAULT_NAME,
+      confirmText: "新建",
+      cancelText: "取消",
+      success: (res) => {
+        if (!res.confirm) return;
+        const made = cols.create(res.content);
+        if (!made.ok) {
+          wx.showToast({ title: cols.quotaNote(), icon: "none" });
+          return;
+        }
+        this.setClosed(this.closedList().filter((x) => x !== made.collection.id));
+        this.addOne(made.collection.id, poemId);
+      }
+    });
+  },
+
+  addOne(collectionId, poemId) {
+    const c = cols.find(collectionId);
+    if (!c) return;
+    if (cols.idsOf(c).indexOf(poemId) >= 0) {
+      sync.markDirty();
+      this.refresh();
+      return;
+    }
+    const r = cols.add(collectionId, [poemId]);
+    sync.markDirty();
+    this.refresh();
+    const name = cols.nameOf(c);
+    const title = r.ok ? "已加入「" + name + "」" : "「" + name + "」已满 " + cols.ITEMS_MAX + " 首";
+    wx.showToast({ title: title, icon: "none" });
   },
 
   onProgress(e) {
