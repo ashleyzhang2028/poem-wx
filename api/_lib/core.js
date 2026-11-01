@@ -27,6 +27,12 @@ function err(status, code, message, extra) {
 
 function dayKey(ts) { return new Date(ts).toISOString().slice(0, 10); }
 
+function dayPad(day) {
+  var parts = String(day || "").split("-");
+  if (parts.length !== 3) return "";
+  return parts[0] + "-" + ("0" + parts[1]).slice(-2) + "-" + ("0" + parts[2]).slice(-2);
+}
+
 function uniqueId(taken, base) {
   if (!taken || !taken[base]) return base;
   for (var i = 1; i <= 32; i++) if (!taken[base + "-" + i]) return base + "-" + i;
@@ -2780,7 +2786,7 @@ function dailyHash(text) {
 
 function dailyPoemPublic(deps, query) {
   var q = query || {};
-  var day = String(q.day || "");
+  var day = dayPad(q.day);
   var byPos = q.pos !== undefined && q.pos !== "";
   var pos = Number(q.pos);
   if (byPos ? !(Number.isInteger(pos) && pos >= 0) : !DAILY_DAY.test(day)) {
