@@ -6967,6 +6967,16 @@ const K = {
         && avatarStore.sniffImage(Buffer.concat([jpegHead, Buffer.from("xx")])) === "");
   }
 
+  {
+    const dailyCore = require(path.join(api, "_lib", "core.js"));
+    const pool = { countDailyPoems: () => Promise.resolve(5), getDailyPoem: (i) => Promise.resolve({ title: "题" + i, author: "某", dynasty: "唐" }) };
+    track((async () => {
+      const got = await dailyCore.dailyPoemPublic({ store: pool }, { day: "2026-11-1" });
+      ok("每日一诗收客户端那种不补零的 day（2026-11-1），不当 400 打回",
+        got.status === 200, "回了 " + got.status + "：" + ((got.body && got.body.message) || ""));
+    })());
+  }
+
 }
 
 {
