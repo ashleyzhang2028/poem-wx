@@ -1453,6 +1453,24 @@ const GATED = {
       && /onDeleteComment/.test(read("packages/admin/feedback/detail/detail.js")),
     "后台没有删除入口，或服务端那条 op 没接上 —— 管理员清不掉违规的反馈");
 
+  {
+    const routeSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "maintenance.js"), "utf8");
+    const mysqlStore = fs.readFileSync(path.join(__dirname, "..", "deploy", "store-mysql.js"), "utf8");
+    const scopeKeys = (() => {
+      const m = /var PURGE_SCOPES = \[([\s\S]*?)\n\];/.exec(serverCore);
+      return m ? (m[1].match(/key: "([a-z_]+)"/g) || []).map((x) => x.replace(/key: "|"/g, "")) : [];
+    })();
+    ok("数据清理只清过期行：白名单与服务端那份名单同一处，前端传不进 SQL",
+      scopeKeys.length === 5
+        && scopeKeys.every((k) => new RegExp("^  " + k + ": \"DELETE FROM `[a-z_]+` WHERE `[a-z_]+` < ", "m").test(mysqlStore))
+        && !/input\.where|input\.sql/i.test(serverCore)
+        && /adminMaintenance/.test(routeSrc));
+    ok("清理接口要管理员身份，且只在后台页里点得到",
+      /adminGate\(deps, cfg\)[\s\S]{0,400}isAdminRole\(me\.role\)/.test(serverCore)
+        && /remote\.adminMaintenancePurge/.test(read("packages/admin/maintenance/maintenance.js"))
+        && /onMaintenance/.test(read("packages/admin/index/index.js")));
+  }
+
     ok("登录回来就把服务端给的角色记进本机会话（重启后后台那些按钮才出得来）",
       /saveSession\(\{[^}]*role: role\s*\}/.test(read("utils/auth.js"))
         && /store\.profile\(\)\.role/.test(read("utils/auth.js")),

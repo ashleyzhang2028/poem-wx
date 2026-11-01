@@ -33,6 +33,30 @@ function memoryStore() {
       });
       return true;
     },
+    maintenanceTables: function () {
+      return Promise.resolve(["accounts", "codes", "verifications", "resets", "sessions", "rate_counters"]
+        .map(function (k) { return { table: k, rows: Object.keys(db[k] || {}).length, bytes: 0 }; }));
+    },
+    purgeExpired: function (scopes, nowMs) {
+      var rules = {
+        codes: { box: db.codes, key: "expires_at" },
+        verifications: { box: db.verifications, key: "expires_at" },
+        resets: { box: db.resets, key: "expires_at" },
+        sessions: { box: db.sessions, key: "exp" },
+        rate_counters: { box: db.counters, key: "expires_at" }
+      };
+      var out = {};
+      (scopes || []).forEach(function (sc) {
+        var r = rules[sc];
+        if (!r) return;
+        var n = 0;
+        Object.keys(r.box || {}).forEach(function (k) {
+          if (Number(r.box[k][r.key] || 0) < nowMs) { delete r.box[k]; n += 1; }
+        });
+        out[sc] = n;
+      });
+      return Promise.resolve(out);
+    },
 
     getAccountByHash: function (hash) {
       var ids = Object.keys(db.accounts);

@@ -35,6 +35,7 @@ const PATHS = {
   payManage: "/api/pay/manage",
   payOrders: "/api/pay/orders",
   adminPay: "/api/admin/pay",
+  adminMaintenance: "/api/admin/maintenance",
   dailyPoems: "/api/daily-poems",
   corpus: "/api/corpus"
 };
@@ -596,6 +597,31 @@ function feedbackComment(tid, content) {
   );
 }
 
+function adminMaintenanceOverview() {
+  if (!adminReady()) return Promise.resolve({ ok: false, tables: [], scopes: [], reason: "需要管理员登录" });
+  return request(PATHS.adminMaintenance, { op: "overview", device: store.deviceId() }).then(
+    (res) => ({
+      ok: true,
+      tables: (res && res.tables) || [],
+      totalRows: (res && res.totalRows) || 0,
+      totalBytes: (res && res.totalBytes) || 0,
+      scopes: (res && res.scopes) || [],
+      sim: false
+    }),
+    (err) => ({ ok: false, tables: [], scopes: [], reason: (err && err.message) || "取不到库况" })
+  );
+}
+
+function adminMaintenancePurge(scope) {
+  if (!adminReady()) return Promise.resolve({ ok: false, reason: "需要管理员登录" });
+  return request(PATHS.adminMaintenance, {
+    op: "purge", scope: scope || "all", device: store.deviceId()
+  }).then(
+    (res) => ({ ok: true, scope: (res && res.scope) || scope, deleted: (res && res.deleted) || {}, sim: false }),
+    (err) => ({ ok: false, reason: (err && err.message) || "清理失败" })
+  );
+}
+
 function adminFeedbackList(status) {
   if (!adminReady()) return Promise.resolve({ ok: false, threads: [], counts: {} });
   return request(PATHS.adminFeedback, { op: "list", status: status || "all" }).then(
@@ -665,6 +691,8 @@ module.exports = {
   feedbackMine,
   feedbackCreate,
   feedbackComment,
+  adminMaintenanceOverview,
+  adminMaintenancePurge,
   adminFeedbackList,
   adminFeedbackThread,
   adminFeedbackReply,

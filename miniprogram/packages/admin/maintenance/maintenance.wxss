@@ -1,0 +1,24 @@
+.mn-note {
+  display: block;
+  padding: var(--sp-2) var(--sp-1);
+}
+
+.mn-stats {
+  margin-bottom: var(--sp-2);
+}
+
+.mn-rows {
+  display: block;
+}
+
+.mn-go {
+  font-size: var(--fs-caption);
+  color: var(--strong);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-ctl);
+}
+
+.mn-go.off {
+  color: var(--ink-4);
+}

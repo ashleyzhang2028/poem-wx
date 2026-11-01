@@ -1,0 +1,49 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
+
+  <lock-card wx:if="{{!logged}}" title="数据清理" note="登录后可查看" mark="清" bind:login="onLogin" />
+
+  <block wx:else>
+    <text class="hint mn-note" wx:if="{{reason}}">{{reason}}</text>
+
+    <view class="card">
+      <text class="card-title">库况</text>
+      <view class="stats mn-stats">
+        <view class="stat">
+          <text class="stat-v">{{totalRows}}</text>
+          <text class="stat-k">总行数（估算）</text>
+        </view>
+        <view class="stat">
+          <text class="stat-v">{{totalBytes}}</text>
+          <text class="stat-k">数据与索引</text>
+        </view>
+      </view>
+
+      <view class="mn-rows">
+        <view class="row row-flush" wx:for="{{tables}}" wx:key="table">
+          <view class="row-main">
+            <text class="row-title">{{item.table}}</text>
+            <text class="row-sub">{{item.rows}} 行 · {{item.sizeText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="card-title">可清理</text>
+      <text class="hint mn-note" wx:if="{{!canWrite}}">只读：这一页要管理员身份。</text>
+
+      <view class="row row-flush" wx:for="{{scopes}}" wx:key="key">
+        <view class="row-main">
+          <text class="row-title">{{item.name}}</text>
+          <text class="row-sub">{{item.result || item.why}}</text>
+        </view>
+        <view class="mn-go {{canWrite ? '' : 'off'}}" data-key="{{item.key}}" catchtap="onPurge">{{busy === item.key ? '清理中' : '清理'}}</view>
+      </view>
+
+      <text class="hint mn-note">只删已过期、业务上等同于不存在的行。账号、进度、成绩、订单、台账一律不在这里删。</text>
+    </view>
+  </block>
+
+  <view class="safe-bottom"></view>
+  <tab-bar id="tabbar" current="4" />
+</view>
