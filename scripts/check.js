@@ -339,28 +339,40 @@ const R = require(path.join(ROOT, "utils", "review-models.js"));
 ok("四套算法都在", R.ORDER.length === 4 && R.ORDER.every((k) => R.MODELS[k]));
 
 {
-  const noon = new Date(2025, 0, 6, 12, 0, 0).getTime();
-  const evening = new Date(2025, 0, 6, 23, 0, 0).getTime();
+  const slotOf = (at) => R.dayAt(at, 0);
   const nextAt = (t, result) => R.review(null, result, "ebbinghaus", t).nextReviewAt;
-  const noonBad = nextAt(noon, "bad");
-  const noonFuzzy = nextAt(noon, "fuzzy");
-  const eveningBad = nextAt(evening, "bad");
-  const eveningFuzzy = nextAt(evening, "fuzzy");
-  ok("忘记 / 模糊：下一次落在复习时刻上，不落在半夜",
-    noonBad === R.startOfDay(noon) + 2 * R.DAY + 9 * R.HOUR
-      && noonFuzzy === noonBad
-      && eveningBad === R.startOfDay(evening) + R.DAY + 9 * R.HOUR
-      && eveningFuzzy === eveningBad,
-    "中午评「忘记」落在 " + new Date(noonBad).toLocaleString("zh-CN")
-      + "，评「模糊」落在 " + new Date(noonFuzzy).toLocaleString("zh-CN")
-      + "；夜里 23 点评「忘记」落在 " + new Date(eveningBad).toLocaleString("zh-CN")
-      + "。12 小时 / 30 分钟这样的短间隔照着结果类型硬加，就会把复习推到半夜或凌晨，"
-      + "而人在那个点上不会背诗");
+  const fmt = (at) => new Date(at).toLocaleString("zh-CN");
+  const cases = [];
+  for (let h = 0; h < 24; h++) {
+    cases.push(new Date(2025, 0, 6, h, 0, 0).getTime());
+    cases.push(new Date(2025, 0, 6, h, 59, 0).getTime());
+  }
+  const missed = [];
+  cases.forEach((t) => {
+    ["bad", "fuzzy"].forEach((result) => {
+      const at = nextAt(t, result);
+      const days = Math.round((R.startOfDay(at) - R.startOfDay(t)) / R.DAY);
+      if (at - t <= 0) missed.push({ t, result, at, why: "排到了此刻之前" });
+      if (at !== slotOf(at)) missed.push({ t, result, at, why: "不在当天的到期点上" });
+      if (days < 1) missed.push({ t, result, at, why: "隔天之前就到期了" });
+      if (t < slotOf(t) && days === 1) missed.push({ t, result, at, why: "还没到今天的到期点就算一天" });
+    });
+  });
+  ok("忘记 / 模糊：下一次落在隔天的到期点上，且只在到期点之后才算过了一天",
+    missed.length === 0,
+    missed.slice(0, 3).map((m) => "评为「" + m.result + "」的 " + fmt(m.t) + " 排到 "
+      + fmt(m.at) + "：" + m.why).join("；"));
+
+  const offSlot = [];
+  cases.forEach((t) => {
+    ["bad", "fuzzy", "good"].forEach((result) => {
+      const at = nextAt(t, result);
+      if (at !== slotOf(at)) offSlot.push(fmt(t) + " 评「" + result + "」→ " + fmt(at));
+    });
+  });
   ok("隔天的复习都排在同一天的同一刻，日历上的到期日与排期不打架",
-    [noonBad, noonFuzzy, eveningBad, eveningFuzzy, nextAt(noon, "good")].every((at) =>
-      at === R.startOfDay(at) + 9 * R.HOUR || at === R.startOfDay(at) + R.DAY + 9 * R.HOUR),
-    "有个结果排到了 9 点以外：" + [noonBad, noonFuzzy, eveningBad, eveningFuzzy]
-      .map((at) => new Date(at).toLocaleString("zh-CN")).join(" / "));
+    offSlot.length === 0,
+    "有个结果排到了到期点以外：" + offSlot.slice(0, 3).join("；"));
 }
 
 R.ORDER.forEach((key) => {
