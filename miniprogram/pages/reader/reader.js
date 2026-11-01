@@ -257,12 +257,10 @@ Page({
       return this.renderEntry(id, hit, meta);
     }
 
-    if (meta) {
-      const packed = corpus.catalogText(meta);
-      if (packed) {
-        this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
-        return this.renderEntry(id, Object.assign({ gloss: corpus.catalogGloss(meta) }, packed), meta);
-      }
+    const packed = this.catalogEntry(id, meta);
+    if (packed) {
+      this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
+      return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid));
     }
 
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
@@ -300,6 +298,16 @@ Page({
         this.setData({ loadingText: false, loadFailed: true, failText: failText });
       }
     );
+  },
+
+  catalogEntry(id, meta) {
+    const sid = String((meta && meta.sid) || this.data.sid || "");
+    if (!sid) return null;
+    const spot = corpus.catalogSpot(id, sid);
+    if (!spot) return null;
+    const packed = corpus.catalogText(spot);
+    if (!packed) return null;
+    return Object.assign({ gloss: corpus.catalogGloss(spot) }, packed);
   },
 
   remoteMeta(poem, sid) {

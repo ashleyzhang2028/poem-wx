@@ -368,6 +368,8 @@ function makeWx(port, mem) {
     const facadeQuery = (sql, params) => facade.createPool().query(sql, params);
     for (const st of seed.seedStatements(rows)) await facadeQuery(st.sql, st.params);
 
+    const seedTexts = rows.texts;
+
     const get = (q) => remote.request(remote.PATHS.corpus + "/" + q, {}, "GET").then(
       (body) => ({ ok: true, body: body }),
       (e) => ({ ok: false, status: e.statusCode, code: e.code })
@@ -396,6 +398,23 @@ function makeWx(port, mem) {
     const emptyGloss = await get("gloss?book=shanhaijing");
     ok("注释还没入库的集子：404 E_CORPUS_EMPTY", !emptyGloss.ok && emptyGloss.status === 404,
       JSON.stringify(emptyGloss));
+
+    const inDb = (table, key) => [...facade._db[table].values()].filter((r) => r.book_id === key);
+    const book = seedTexts[0].book_id;
+
+    const whole = await get("texts?book=" + book);
+    const gotTexts = whole.ok ? (whole.body.rows[book] || []) : [];
+    ok("入库的每一篇都带正文与译文（种子语句里的数字占位被当成字面量时，一部集子只会进 12 篇）",
+      gotTexts.length === inDb("corpus_texts", book).length
+        && gotTexts.every((r) => String(r[3]).length > 0 && String(r[4]).length > 0),
+      "取回 " + gotTexts.length + " 篇，库里 " + inDb("corpus_texts", book).length + " 篇");
+
+    const wholeGloss = await get("gloss?book=" + book);
+    const gotGloss = wholeGloss.ok ? (wholeGloss.body.rows[book] || []) : [];
+    ok("每一篇注释都真的进了库（不是只剩开头几篇）",
+      gotGloss.length === inDb("corpus_gloss", book).length
+        && gotGloss.every((r) => Array.isArray(r[2]) && r[2].length > 0),
+      "取回 " + gotGloss.length + " 篇，库里 " + inDb("corpus_gloss", book).length + " 篇");
 
     facade._db.corpus_gloss.set("tangshi300\u00001", {
       book_id: "tangshi300", pos: 1, title: "感遇·其一", gloss: JSON.stringify([["兰", "兰草"], ["葳蕤", "枝叶繁茂的样子"]])

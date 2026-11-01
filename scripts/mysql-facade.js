@@ -23,6 +23,7 @@ const db = {
   corpus_authors: new Map(),
   corpus_texts: new Map(),
   corpus_gloss: new Map(),
+  rate_counters: new Map(),
   progress: new Map()
 };
 
@@ -49,10 +50,11 @@ const PK = {
   corpus_authors: ["name"],
   corpus_texts: ["book_id", "pos"],
   corpus_gloss: ["book_id", "pos"],
+  rate_counters: ["subject", "span_ms", "win"],
   progress: ["uid", "child_id", "poem_id"]
 };
 
-const JSON_COLS = { progress: ["payload"], exam_records: ["items"] };
+const JSON_COLS = { progress: ["payload"], exam_records: ["items"], corpus_gloss: ["gloss"] };
 
 function tableName(sql) {
   const m = /^\s*(?:SELECT[\s\S]*?\bFROM|INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+`?([a-z_]+)`?/i.exec(sql);
@@ -62,6 +64,55 @@ function tableName(sql) {
 function columnsOf(sql) {
   const m = /\(([^)]+)\)\s*VALUES/i.exec(sql);
   return m ? m[1].split(",").map((c) => c.replace(/[`\s]/g, "")) : [];
+}
+
+function rowCells(sql, perRow) {
+  const at = sql.search(/\bVALUES\b/i);
+  const body = at < 0 ? "" : sql.slice(at);
+  const out = [];
+  let depth = 0;
+  let cur = "";
+  const flush = function () {
+    const cells = cur.split(",").map(function (c) { return c.trim(); });
+    if (cur && cells.length === perRow) out.push(cells);
+    cur = "";
+  };
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    if (ch === "(") {
+      depth += 1;
+      if (depth === 1) { cur = ""; continue; }
+    } else if (ch === ")") {
+      depth -= 1;
+      if (depth === 0) { flush(); continue; }
+    }
+    if (depth >= 1) cur += ch;
+  }
+  return out;
+}
+
+function rowsOf(cells, params) {
+  const marks = [];
+  cells.forEach(function (line, r) {
+    line.forEach(function (c, i) {
+      if (c === "?") marks.push([r, i]);
+    });
+  });
+  const filled = cells.map(function (line) {
+    return line.map(function (c) {
+      return c === "?" ? 0 : Number(c);
+    });
+  });
+  marks.forEach(function (slot, k) {
+    filled[slot[0]][slot[1]] = params[k];
+  });
+  return filled;
+}
+
+function isColumnList(cells, cols) {
+  return cells.length === cols.length && cells.every(function (c) {
+    return /^`[a-z_0-9]+`$/i.test(c);
+  });
 }
 
 function keyOf(table, row) {
@@ -222,17 +273,18 @@ const facade = {
         if (/^\s*INSERT\s+INTO/i.test(sql)) {
           const cols = columnsOf(sql);
           const perRow = cols.length;
-          const n = perRow ? Math.floor(params.length / perRow) : 0;
-          for (let i = 0; i < n; i += 1) {
+          const cells = rowCells(sql, perRow).filter(function (line) { return !isColumnList(line, perRow); });
+          const n = cells.length;
+          rowsOf(cells, params).forEach(function (line) {
             const vals = {};
-            cols.forEach((c, k) => { vals[c] = params[i * perRow + k]; });
+            cols.forEach((c, k) => { vals[c] = line[k]; });
             normalize(t, vals);
             const key = keyOf(t, vals);
             const cur = db[t] ? db[t].get(key) : null;
             if (cur) db[t].set(key, applyOnDuplicateKey(t, sql, cur, vals));
             else put(t, vals);
-          }
-          return Promise.resolve([{ affectedRows: n }, []]);
+          });
+          return Promise.resolve([{ affectedRows: n, insertId: n ? 1 : 0 }, []]);
         }
 
         if (/^\s*UPDATE/i.test(sql)) {

@@ -662,7 +662,7 @@ function entry(id) {
 
 function textsOf(bookId) {
   if (bookTexts[bookId] !== undefined) return bookTexts[bookId];
-  const pack = dataOf("texts:" + bookId);
+  const pack = dataOf(partKey("texts", bookId));
   if (!pack || !pack.rows) {
     bookTexts[bookId] = null;
     return null;
@@ -685,7 +685,7 @@ function textsOf(bookId) {
 }
 
 function notesOf(bookId) {
-  const pack = dataOf("gloss:" + bookId);
+  const pack = dataOf(partKey("gloss", bookId));
   if (!pack || !pack.rows) return null;
   const map = {};
   (pack.rows[bookId] || []).forEach((raw) => {
@@ -695,26 +695,58 @@ function notesOf(bookId) {
 }
 
 function catalogText(meta) {
-  const book = meta && meta.b;
-  if (!book || !meta.remote) return null;
-  if (!held("texts", book)) {
-    fetchPart("texts", book).catch(() => false);
-    return null;
-  }
-  const map = textsOf(book);
-  const row = map && map[meta.id];
-  return row || null;
+  const at = catalogSlot(meta);
+  if (!at) return null;
+  const map = textsOf(at.b);
+  const row = map && map[at.pos];
+  return row ? Object.assign({ sid: at.sid }, row, { b: at.b }) : null;
 }
 
 function catalogGloss(meta) {
+  const at = catalogSlot(meta);
+  if (!at) return null;
+  const map = notesOf(at.b);
+  return (map && map[at.pos]) || null;
+}
+
+function catalogSlot(meta) {
   const book = meta && meta.b;
-  if (!book || !meta.remote) return null;
-  if (!held("gloss", book)) {
-    fetchPart("gloss", book).catch(() => false);
-    return null;
+  const id = String((meta && meta.id) || "");
+  if (!book || !id || book === COURSE_BOOK) return null;
+  if (id.indexOf(book + "-") !== 0) return null;
+  const pos = id.slice(book.length + 1);
+  if (!pos) return null;
+  return { b: book, id: id, pos: pos, sid: String(meta.sid || book + "-" + pos) };
+}
+
+function catalogSpotAt(id, sid) {
+  const book = ownerOf(id);
+  if (!book || book === COURSE_BOOK) return null;
+  const pos = String(id).slice(book.length + 1);
+  if (!pos) return null;
+  const rows = ofBook(book);
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].id === id) return { b: book, id: id, pos: pos, sid: rows[i].sid || sid };
   }
-  const map = notesOf(book);
-  return (map && map[meta.id]) || null;
+  return { b: book, id: id, pos: pos, sid: sid };
+}
+
+function catalogSpot(id, sid) {
+  const at = catalogSpotAt(id, sid);
+  if (!at) return null;
+  return held("texts", at.b) ? at : null;
+}
+
+function catalogMeta(id, sid) {
+  const at = catalogSpotAt(id, sid);
+  if (!at) return null;
+  const meta = bookById(at.b);
+  const rows = ofBook(at.b);
+  const hit = rows.filter(function (r) { return r.id === at.id; })[0] || {};
+  return {
+    id: at.id, sid: at.sid, t: hit.t || "", a: hit.a || "", d: hit.d || "",
+    b: at.b, n: meta ? meta.name : "", s: "", g: "", remote: true
+  };
 }
 
 function courseTwin(meta) {
@@ -856,6 +888,8 @@ module.exports = {
   entry,
   catalogText,
   catalogGloss,
+  catalogSpot,
+  catalogMeta,
   entries,
   courseTwin,
   indexById,
