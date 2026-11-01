@@ -458,6 +458,11 @@ function fetchPart(part, book) {
   return inflight[key];
 }
 
+function fetchCatalog(book) {
+  return Promise.all(["texts", "gloss"].map((part) => fetchPart(part, book).catch(() => false)))
+    .then(() => true);
+}
+
 function ready(scope) {
   const need = missing(scope);
   if (!need.length) return Promise.resolve(true);
@@ -732,9 +737,7 @@ function catalogSpotAt(id, sid) {
 }
 
 function catalogSpot(id, sid) {
-  const at = catalogSpotAt(id, sid);
-  if (!at) return null;
-  return held("texts", at.b) ? at : null;
+  return catalogSpotAt(id, sid);
 }
 
 function catalogMeta(id, sid) {
@@ -889,6 +892,7 @@ module.exports = {
   catalogText,
   catalogGloss,
   catalogSpot,
+  fetchCatalog,
   catalogMeta,
   entries,
   courseTwin,

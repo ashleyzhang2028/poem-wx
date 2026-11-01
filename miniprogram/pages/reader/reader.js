@@ -263,6 +263,7 @@ Page({
       return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid));
     }
 
+    if (this.catalogBook(id, meta)) return this.loadPacked(id, meta);
     if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
     if (onlySid) return this.loadRemote(onlySid, null, "未能获取正文，点击重试");
 
@@ -308,6 +309,25 @@ Page({
     const packed = corpus.catalogText(spot);
     if (!packed) return null;
     return Object.assign({ gloss: corpus.catalogGloss(spot) }, packed);
+  },
+
+  catalogBook(id, meta) {
+    const spot = corpus.catalogSpot(id, String((meta && meta.sid) || this.data.sid || ""));
+    return spot ? spot.b : "";
+  },
+
+  loadPacked(id, meta) {
+    const book = this.catalogBook(id, meta);
+    this.setData({ id, loadingText: true, loadFailed: false, failText: "" });
+    corpus.fetchCatalog(book).then(() => {
+      const packed = this.catalogEntry(id, meta);
+      if (packed) {
+        this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
+        return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid));
+      }
+      if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
+      this.setData({ loadingText: false, loadFailed: true, failText: "本篇正文不在当前版本中", remote: false });
+    });
   },
 
   remoteMeta(poem, sid) {
