@@ -479,7 +479,8 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 
 三块页：**用户权限**（`packages/mine/tier`，从「我的 → 用户权限」进）把能力对照表
 摆一页，给人自己看；**后台管理**（`packages/admin/index`）是 `owner` / `admin`
-的入口，页上只有一张「用户列表」卡；**用户列表**（`packages/users/index`）看别人。
+的入口，页上是用户统计、用户反馈、用户列表、支付与价格、数据清理五行；
+**用户列表**（`packages/users/index`）看别人。
 
 那一块表是 `components/tier-view`，只有用户权限页写一个 `<tier-view />`。
 
@@ -557,6 +558,39 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 
 `dedupe_hash` **不落库**：线上那张表不一定有这一列，带上它就是整条写不进去
 （`Unknown column`），而去重本来就是应用层这六十秒的事。建表语句里也不再列它。
+
+### 数据清理（Issue #803）
+
+后台管理 → 数据清理（`packages/admin/maintenance/maintenance`），接口
+`POST /api/admin/maintenance`，`op` 只认 `overview` / `purge`。
+
+只清**过期即等同不存在**的行，六个 `scope` 各有一条固定条件：
+
+| `scope` | 表 | 条件 |
+|---|---|---|
+| `codes` | `codes` | `expires_at < now` |
+| `verifications` | `verifications` | `expires_at < now` |
+| `resets` | `resets` | `expires_at < now` |
+| `sessions` | `sessions` | `exp < now` |
+| `rate_counters` | `rate_counters` | `expires_at < now` |
+| `revoked_sessions` | `sessions` | `revoked = 1 AND exp < now` |
+
+`sessions` 与 `revoked_sessions` 落在同一张表上互补：`exp` 已过但 `revoked = 0` 的行
+刷新那条路还在读（见 `api/_lib/core.js` 的 `refresh`），`revoked = 1` 那批虽已验不过，
+令牌仍可能没过期，分开列才两条都是「过期即等同不存在」。
+
+白名单在 `api/_lib/core.js` 的 `PURGE_SCOPES`，SQL 在 `deploy/store-mysql.js` 的
+`PURGE_SQL`，两处同一批键；`scope` 只用来挑一条，**不接受前端传 SQL 或条件**，
+认不出的回 `400 E_SCOPE`。一次一表，返回该表删除的行数。这些条件都走
+`expires_at` / `exp` 索引，不需要分批。
+
+不清的：`accounts` / `wx_accounts` / `progress`（`deleted = 1` 那几行是软删标，
+客户端增量拉取靠它）、`score_records`（按 uid 留最近 N 条才不改月榜年榜口径）、
+`pay_orders`（那是账）、`reports` / `feedback_threads`（台账，人工判定）。
+
+这不是定时任务：云托管容器没有常驻定时器，仓库里也没有能连生产库的 crontab。
+入口就是这一页，由人点。`deploy/sql/mysql-schema.sql` 末尾那个 `kb_purge_expired`
+存储过程保留，服务端代码不调它。
 
 后端地址与云调用两栏**不在界面上**：两个都是运维配置，不该给普通用户。
 值由部署方写在 `miniprogram/utils/server.js`（构建期由密钥仓库
@@ -646,6 +680,7 @@ wx.login() 拿 code
 | `/api/admin/role` | POST | 本仓库 `api/` | 改角色（仅 owner） |
 | `/api/feedback` | GET / POST | 本仓库 `api/` | 自己的意见反馈：`GET` 列自己的（含沟通记录），`POST` 新建 / `op: "comment"` 追加一句 |
 | `/api/admin/feedback` | POST | 本仓库 `api/` | `op: "list"` 全量（带各状态计数）/ `"thread"` 单条 / `"reply"` 回复并改处理结果与处理方式 / `"status"` 只改状态与方式 / `"delete"` 删整条或单段讨论 |
+| `/api/admin/maintenance` | POST | 本仓库 `api/` | `op: "overview"` 各表行数与体积 / `"purge"` 清一张表的过期行（`scope` 见「数据清理」） |
 
 **登录这道门不依赖后端**：`utils/auth.js` 在服务器没接上时落一个本机身份，
 门一样开、登录照旧能点，只是不同步。别把「没后端」变成新的一道墙 ——

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "数据清理",
+  "usingComponents": {
+    "lock-card": "/components/lock-card/lock-card"
+  }
+}

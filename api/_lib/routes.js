@@ -44,6 +44,7 @@ var ROUTES = {
   "GET /daily-poems": "./../_routes/daily-poems.js",
   "GET /corpus/:part": "./../_routes/corpus.js",
   "POST /admin/feedback": "./../_routes/admin/feedback.js",
+  "POST /admin/maintenance": "./../_routes/admin/maintenance.js",
 
   "GET /feedback": "./../_routes/feedback/index.js",
   "POST /feedback": "./../_routes/feedback/index.js",

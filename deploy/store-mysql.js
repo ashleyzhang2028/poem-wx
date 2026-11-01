@@ -9,6 +9,15 @@ var PATCHABLE_ACCOUNT_COLS = ["plan", "plan_until", "role", "last_login_at", "lo
 
 var IDENT = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 
+var PURGE_SQL = {
+  codes: "DELETE FROM `codes` WHERE `expires_at` < ?",
+  verifications: "DELETE FROM `verifications` WHERE `expires_at` < ?",
+  resets: "DELETE FROM `resets` WHERE `expires_at` < ?",
+  sessions: "DELETE FROM `sessions` WHERE `exp` < ?",
+  rate_counters: "DELETE FROM `rate_counters` WHERE `expires_at` < ?",
+  revoked_sessions: "DELETE FROM `sessions` WHERE `revoked` = 1 AND `exp` < ?"
+};
+
 function assertIdent(name) {
   if (!IDENT.test(String(name || ""))) {
     throw new Error("不是合法的列名（拒绝拼进 SQL）：" + JSON.stringify(name));
@@ -240,6 +249,27 @@ function mysqlStore(cfg) {
     },
     purgeCounters: function (nowMs) {
       return query("DELETE FROM `rate_counters` WHERE `expires_at` < ?", [nowMs]).then(function () { return true; });
+    },
+    maintenanceTables: function () {
+      return query("SELECT table_name AS t, table_rows AS n, data_length + index_length AS b"
+        + " FROM information_schema.tables WHERE table_schema = DATABASE()")
+        .then(function (rows) {
+          return (rows || []).map(function (r) {
+            return { table: String(r.t || ""), rows: num(r.n) || 0, bytes: num(r.b) || 0 };
+          });
+        });
+    },
+    purgeExpired: function (scopes, nowMs) {
+      var jobs = {};
+      (scopes || []).forEach(function (sc) {
+        if (!PURGE_SQL[sc]) return;
+        jobs[sc] = query(PURGE_SQL[sc], [nowMs]).then(function (r) { return Number(r && r.affectedRows) || 0; });
+      });
+      return Promise.all(Object.keys(jobs).map(function (k) { return jobs[k]; })).then(function (counts) {
+        var out = {};
+        Object.keys(jobs).forEach(function (k, i) { out[k] = counts[i]; });
+        return out;
+      });
     },
     putSession: function (s) {
       return insertRow("sessions", s, ["sid"]);

@@ -58,7 +58,8 @@
         "pay/pay",
         "pay-orders/pay-orders",
         "feedback/index",
-        "feedback/detail/detail"
+        "feedback/detail/detail",
+        "maintenance/maintenance"
       ]
     },
     {

@@ -102,5 +102,9 @@ Page({
 
   onFeedback() {
     wx.navigateTo({ url: "/packages/admin/feedback/index" });
+  },
+
+  onMaintenance() {
+    wx.navigateTo({ url: "/packages/admin/maintenance/maintenance" });
   }
 });

@@ -2243,6 +2243,75 @@ function adminAccounts(deps) {
   });
 }
 
+var PURGE_SCOPES = [
+  { key: "codes", name: "过期验证码", why: "验证码过期即作废，删掉不丢东西" },
+  { key: "verifications", name: "过期邮箱确认", why: "确认令牌过期即作废" },
+  { key: "resets", name: "过期密码重设", why: "重设令牌过期即作废" },
+  { key: "sessions", name: "过期会话", why: "会话过期即验不过；已吊销的按到期时间一并走" },
+  { key: "rate_counters", name: "过期配额计数", why: "固定窗口已过，计数不再被读" },
+  { key: "revoked_sessions", name: "已吊销会话", why: "吊销的那枚令牌最多再验到过期，到点后一并删掉" }
+];
+
+var MAINTENANCE_TABLES = ["accounts", "codes", "verifications", "resets", "sessions", "rate_counters",
+  "progress", "reports", "feedback_threads", "feedback_comments", "exam_records", "pay_orders",
+  "score_records", "pinyin_proposals", "avatars"];
+
+function adminMaintenance(deps, input) {
+  var cfg = deps.cfg, store = deps.store, t = deps.now();
+  var gate = adminGate(deps, cfg);
+  if (gate) return Promise.resolve(gate);
+
+  var op = String((input && input.op) || "overview");
+  if (op !== "overview" && op !== "purge") {
+    return Promise.resolve(err(400, "E_OP", "op 只认 overview / purge"));
+  }
+
+  var scope = String((input && input.scope) || "").trim();
+  var wanted = [];
+  if (op === "purge") {
+    if (scope === "all") wanted = PURGE_SCOPES.map(function (x) { return x.key; });
+    else if (PURGE_SCOPES.some(function (x) { return x.key === scope; })) wanted = [scope];
+    if (!wanted.length) {
+      return Promise.resolve(err(400, "E_SCOPE", "scope 只认 " + PURGE_SCOPES.map(function (x) { return x.key; }).join(" / ") + " / all"));
+    }
+  }
+
+  return Promise.resolve(store.getAccount(deps.account.uid)).then(function (me) {
+    if (!me || me.status === "deleted") return err(401, "E_NO_SESSION", "还没有登录");
+    if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
+
+    if (op === "purge") {
+      return Promise.resolve(store.purgeExpired(wanted, t)).then(function (deleted) {
+        logFacts("admin.maintenance", {
+          by: me.uid,
+          scopes: wanted.join(","),
+          deleted: wanted.map(function (k) { return k + ":" + (deleted[k] || 0); }).join(",")
+        });
+        return ok({
+          op: op, scope: scope, deleted: deleted, scopes: PURGE_SCOPES, at: t, store: store.kind
+        });
+      });
+    }
+
+    return Promise.resolve(store.maintenanceTables()).then(function (rows) {
+      var byTable = {};
+      (rows || []).forEach(function (r) { if (r && r.table) byTable[r.table] = r; });
+      var tables = MAINTENANCE_TABLES.filter(function (k) { return byTable[k]; }).map(function (k) {
+        return { table: k, rows: Number(byTable[k].rows) || 0, bytes: Number(byTable[k].bytes) || 0 };
+      });
+      return ok({
+        op: op,
+        tables: tables,
+        totalRows: tables.reduce(function (n, x) { return n + x.rows; }, 0),
+        totalBytes: tables.reduce(function (n, x) { return n + x.bytes; }, 0),
+        scopes: PURGE_SCOPES,
+        at: t,
+        store: store.kind
+      });
+    });
+  });
+}
+
 var ROLE_TARGETS = ["user", "admin"];
 
 function adminSetRole(deps, input) {
@@ -3867,6 +3936,9 @@ module.exports = {
   adminSetRole: adminSetRole,
   adminRevoke: adminRevoke,
   isAdminRole: isAdminRole,
+  adminMaintenance: adminMaintenance,
+  PURGE_SCOPES: PURGE_SCOPES,
+  MAINTENANCE_TABLES: MAINTENANCE_TABLES,
 
   reportCreate: reportCreate,
   reportMine: reportMine,

@@ -101,6 +101,16 @@
       <text class="row-go">›</text>
     </view>
 
+    <view class="row row-flush" wx:if="{{logged}}"
+          hover-class="row-hover" hover-stay-time="60" bindtap="onMaintenance">
+      <view class="row-icon">清</view>
+      <view class="row-main">
+        <text class="row-title">数据清理</text>
+        <text class="row-sub">库况 · 清过期行</text>
+      </view>
+      <text class="row-go">›</text>
+    </view>
+
     <text class="hint note" wx:if="{{!logged}}">管理需登录</text>
   </view>
 
