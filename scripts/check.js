@@ -5358,14 +5358,12 @@ const K = {
     /code=\$\?/.test(body) && /exit "\$\{code\}"/.test(body),
     "退出码没原样透传 —— 这一步会永远「成功」");
 
-  const lines = body.split("\n")
-    .map((l) => l.replace(/\s+#.*$/, ""))
-    .filter((l) => !/^\s*(#|$)/.test(l));
-  const npmLine = lines.find((l) => /npm i .*miniprogram-ci/.test(l)) || "";
-  ok("npm 装包那行真收掉了 warn（默认 40 行 deprecated 会把真错埋掉）",
-    /--loglevel=error/.test(npmLine),
-    "真命令行里没加 --loglevel=error（注释里写着不算），真错会被 40 行 npm warn 盖住：" +
-      JSON.stringify(npmLine.trim().slice(0, 80)));
+  const inst = fs.readFileSync(path.join(path.dirname(__dirname), "scripts", "ci-install-uploader.js"), "utf8");
+  ok("装包走 ci-install-uploader.js，且它带重试与 --loglevel=error",
+    step.includes("node scripts/ci-install-uploader.js") &&
+      /process\.platform/.test(inst) && /for \(let round/.test(inst) && /--loglevel=error/.test(inst),
+    "上传那步没走带重试的 ci-install-uploader.js —— 上游刚发的传递依赖在 registry 上 404 时，" +
+      "一次装包失败就打断整条发布链（体验版不会再更新）");
 
   ok("上传那步的 script 是一整块（混成 list 会被 CNB 用 `&&` 串崩）",
     /- name: 上传体验版\n\s+script: \|/.test(body),
