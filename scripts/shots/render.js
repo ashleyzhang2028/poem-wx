@@ -141,6 +141,20 @@ function runtime() {
 
 const PAGE_TITLES = JSON.parse(fs.readFileSync(path.join(__dirname, "pages.json"), "utf8"));
 
+seedCorpus();
+
+
+function seedCorpus() {
+  const seed = require(path.join(__dirname, "..", "corpus-seed.js"));
+  const payload = require(path.join(__dirname, "..", "..", "api", "_lib", "corpus.js"));
+  const rows = seed.seedRows(seed.loadCorpus());
+  const of = { books: "books", poems: "poems", catalogs: "catalog", authors: "authors" };
+  payload.PARTS.forEach((part) => {
+    const key = "kb_corpus_" + part + "_v1";
+    MEM[key] = { rev: "preview", data: payload.payload(part, rows[of[part]]) };
+  });
+}
+
 const RPX = 390 / 750;
 function rpx2px(css) {
   return css.replace(/(-?[\d.]+)rpx/g, (_, n) => (Number(n) * RPX).toFixed(3) + "px");
