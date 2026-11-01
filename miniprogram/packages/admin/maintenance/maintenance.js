@@ -18,7 +18,8 @@ const SCOPE_ROWS = [
   { key: "verifications", name: "过期邮箱确认" },
   { key: "resets", name: "过期密码重设" },
   { key: "sessions", name: "过期会话" },
-  { key: "rate_counters", name: "过期配额计数" }
+  { key: "rate_counters", name: "过期配额计数" },
+  { key: "revoked_sessions", name: "已吊销会话" }
 ];
 
 function scopeViews(scopes) {

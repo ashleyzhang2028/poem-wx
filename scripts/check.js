@@ -1461,8 +1461,9 @@ const GATED = {
       return m ? (m[1].match(/key: "([a-z_]+)"/g) || []).map((x) => x.replace(/key: "|"/g, "")) : [];
     })();
     ok("数据清理只清过期行：白名单与服务端那份名单同一处，前端传不进 SQL",
-      scopeKeys.length === 5
-        && scopeKeys.every((k) => new RegExp("^  " + k + ": \"DELETE FROM `[a-z_]+` WHERE `[a-z_]+` < ", "m").test(mysqlStore))
+      scopeKeys.length === 6
+        && scopeKeys.every((k) => mysqlStore.includes('  ' + k + ': "DELETE FROM `sessions` WHERE `revoked`')
+          || new RegExp("^  " + k + ": \"DELETE FROM `[a-z_]+` WHERE `[a-z_]+` < ", "m").test(mysqlStore))
         && !/input\.where|input\.sql/i.test(serverCore)
         && /adminMaintenance/.test(routeSrc));
     ok("清理接口要管理员身份，且只在后台页里点得到",

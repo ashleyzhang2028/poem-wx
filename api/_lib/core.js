@@ -2247,17 +2247,14 @@ var PURGE_SCOPES = [
   { key: "codes", name: "过期验证码", why: "验证码过期即作废，删掉不丢东西" },
   { key: "verifications", name: "过期邮箱确认", why: "确认令牌过期即作废" },
   { key: "resets", name: "过期密码重设", why: "重设令牌过期即作废" },
-  { key: "sessions", name: "过期会话", why: "会话过期即验不过；吊销的按到期时间一并走" },
-  { key: "rate_counters", name: "过期配额计数", why: "固定窗口已过，计数不再被读" }
+  { key: "sessions", name: "过期会话", why: "会话过期即验不过；已吊销的按到期时间一并走" },
+  { key: "rate_counters", name: "过期配额计数", why: "固定窗口已过，计数不再被读" },
+  { key: "revoked_sessions", name: "已吊销会话", why: "吊销的那枚令牌最多再验到过期，到点后一并删掉" }
 ];
 
 var MAINTENANCE_TABLES = ["accounts", "codes", "verifications", "resets", "sessions", "rate_counters",
   "progress", "reports", "feedback_threads", "feedback_comments", "exam_records", "pay_orders",
   "score_records", "pinyin_proposals", "avatars"];
-
-var MAINTENANCE_PURGE_MIN_GAP = 60000;
-
-var maintenanceLastPurge = { at: 0 };
 
 function adminMaintenance(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
@@ -2284,11 +2281,6 @@ function adminMaintenance(deps, input) {
     if (!isAdminRole(me.role)) return err(403, "E_FORBIDDEN", "这一条只对管理员开放");
 
     if (op === "purge") {
-      if (t - maintenanceLastPurge.at < MAINTENANCE_PURGE_MIN_GAP) {
-        return err(429, "E_RATE_DEVICE", "清理太频繁了，一分钟后再试",
-          { retryAfter: Math.ceil((maintenanceLastPurge.at + MAINTENANCE_PURGE_MIN_GAP - t) / 1000) });
-      }
-      maintenanceLastPurge.at = t;
       return Promise.resolve(store.purgeExpired(wanted, t)).then(function (deleted) {
         logFacts("admin.maintenance", {
           by: me.uid,

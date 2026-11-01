@@ -39,21 +39,26 @@ function memoryStore() {
     },
     purgeExpired: function (scopes, nowMs) {
       var rules = {
-        codes: { box: db.codes, key: "expires_at" },
-        verifications: { box: db.verifications, key: "expires_at" },
-        resets: { box: db.resets, key: "expires_at" },
-        sessions: { box: db.sessions, key: "exp" },
-        rate_counters: { box: db.counters, key: "expires_at" }
+        codes: { box: db.codes, hit: function (r) { return Number(r.expires_at || 0) < nowMs; } },
+        verifications: { box: db.verifications, hit: function (r) { return Number(r.expires_at || 0) < nowMs; } },
+        resets: { box: db.resets, hit: function (r) { return Number(r.expires_at || 0) < nowMs; } },
+        sessions: { box: db.sessions, hit: function (r) { return Number(r.exp || 0) < nowMs; } },
+        rate_counters: { box: db.counters, hit: function (r) { return Number(r.expires_at || 0) < nowMs; } },
+        revoked_sessions: { box: db.sessions, hit: function (r) { return Number(r.revoked) === 1; } }
       };
       var out = {};
+      var sweep = {};
       (scopes || []).forEach(function (sc) {
         var r = rules[sc];
         if (!r) return;
-        var n = 0;
+        var dead = (sweep[sc] = sweep[sc] || []);
         Object.keys(r.box || {}).forEach(function (k) {
-          if (Number(r.box[k][r.key] || 0) < nowMs) { delete r.box[k]; n += 1; }
+          if (r.hit(r.box[k]) && dead.indexOf(k) < 0) dead.push(k);
         });
-        out[sc] = n;
+        out[sc] = dead.length;
+      });
+      Object.keys(sweep).forEach(function (sc) {
+        sweep[sc].forEach(function (k) { if (rules[sc].box[k] && rules[sc].hit(rules[sc].box[k])) delete rules[sc].box[k]; });
       });
       return Promise.resolve(out);
     },

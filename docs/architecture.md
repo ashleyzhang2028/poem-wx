@@ -564,20 +564,25 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 后台管理 → 数据清理（`packages/admin/maintenance/maintenance`），接口
 `POST /api/admin/maintenance`，`op` 只认 `overview` / `purge`。
 
-只清**过期即等同不存在**的行，五张表各有一条固定条件：
+只清**过期即等同不存在**的行，六个 `scope` 各有一条固定条件：
 
 | `scope` | 表 | 条件 |
 |---|---|---|
 | `codes` | `codes` | `expires_at < now` |
 | `verifications` | `verifications` | `expires_at < now` |
 | `resets` | `resets` | `expires_at < now` |
-| `sessions` | `sessions` | `exp < now`（吊销的行按到期时间一并走） |
+| `sessions` | `sessions` | `exp < now` |
 | `rate_counters` | `rate_counters` | `expires_at < now` |
+| `revoked_sessions` | `sessions` | `revoked = 1 AND exp < now` |
+
+`sessions` 与 `revoked_sessions` 落在同一张表上互补：`exp` 已过但 `revoked = 0` 的行
+刷新那条路还在读（见 `api/_lib/core.js` 的 `refresh`），`revoked = 1` 那批虽已验不过，
+令牌仍可能没过期，分开列才两条都是「过期即等同不存在」。
 
 白名单在 `api/_lib/core.js` 的 `PURGE_SCOPES`，SQL 在 `deploy/store-mysql.js` 的
 `PURGE_SQL`，两处同一批键；`scope` 只用来挑一条，**不接受前端传 SQL 或条件**，
-认不出的回 `400 E_SCOPE`。一次一表，返回该表删除的行数。这五张表都带 `expires_at` / `exp` 索引，
-按条件删走的是一段索引扫描，不需要分批。
+认不出的回 `400 E_SCOPE`。一次一表，返回该表删除的行数。这些条件都走
+`expires_at` / `exp` 索引，不需要分批。
 
 不清的：`accounts` / `wx_accounts` / `progress`（`deleted = 1` 那几行是软删标，
 客户端增量拉取靠它）、`score_records`（按 uid 留最近 N 条才不改月榜年榜口径）、

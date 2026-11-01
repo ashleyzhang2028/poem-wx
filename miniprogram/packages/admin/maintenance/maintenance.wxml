@@ -40,7 +40,7 @@
         <view class="mn-go {{canWrite ? '' : 'off'}}" data-key="{{item.key}}" catchtap="onPurge">{{busy === item.key ? '清理中' : '清理'}}</view>
       </view>
 
-      <text class="hint mn-note">只删已过期、业务上等同于不存在的行。账号、进度、成绩、订单、台账一律不在这里删。</text>
+      <text class="hint mn-note">只删已过期、到期后验不过的行。账号、进度、成绩、订单、台账不在这里删。</text>
     </view>
   </block>
 

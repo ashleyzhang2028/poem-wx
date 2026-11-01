@@ -14,7 +14,8 @@ var PURGE_SQL = {
   verifications: "DELETE FROM `verifications` WHERE `expires_at` < ?",
   resets: "DELETE FROM `resets` WHERE `expires_at` < ?",
   sessions: "DELETE FROM `sessions` WHERE `exp` < ?",
-  rate_counters: "DELETE FROM `rate_counters` WHERE `expires_at` < ?"
+  rate_counters: "DELETE FROM `rate_counters` WHERE `expires_at` < ?",
+  revoked_sessions: "DELETE FROM `sessions` WHERE `revoked` = 1 AND `exp` < ?"
 };
 
 function assertIdent(name) {
