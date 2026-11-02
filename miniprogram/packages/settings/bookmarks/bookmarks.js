@@ -24,8 +24,8 @@ Page({
     tierLocked: false,
     cap: 0,
     count: 0,
-    editing: false,
     picked: 0,
+    allPicked: false,
     matched: 0,
     keyword: "",
     page: 1,
@@ -76,6 +76,7 @@ Page({
       p: b.p,
       y: b.y
     }));
+    const picked = Object.keys(this.pickedIds).length;
     const tier = entitlement.tierOf("bookmarks");
     this.setData({
       on: entitlement.can("bookmarks"),
@@ -87,8 +88,8 @@ Page({
       page: page,
       pages: pages,
       rows: rows,
-      picked: Object.keys(this.pickedIds).length,
-      editing: every.length ? this.data.editing : false
+      picked: picked,
+      allPicked: !!hit.length && picked === hit.length
     });
   },
 
@@ -114,15 +115,9 @@ Page({
     this.refresh();
   },
 
-  onEdit() {
-    this.setData({ editing: !this.data.editing });
-    if (!this.data.editing) this.pickedIds = {};
-    this.refresh();
-  },
-
   onPickAll() {
     const hit = this.matchedList();
-    const all = hit.every((b) => this.pickedIds[b.id]);
+    const all = !!hit.length && hit.every((b) => this.pickedIds[b.id]);
     hit.forEach((b) => {
       if (all) delete this.pickedIds[b.id];
       else this.pickedIds[b.id] = true;
@@ -132,34 +127,9 @@ Page({
 
   onRow(e) {
     const id = e.currentTarget.dataset.id;
-    if (!this.data.editing) {
-      const hit = this.data.rows.filter((b) => b.id === id)[0];
-      if (hit) wx.navigateTo({ url: marks.readerUrl(hit) });
-      return;
-    }
     if (this.pickedIds[id]) delete this.pickedIds[id];
     else this.pickedIds[id] = true;
     this.refresh();
-  },
-
-  onDelete(e) {
-    const id = e.currentTarget.dataset.id;
-    const row = this.data.rows.filter((r) => r.id === id)[0];
-    if (!row) return;
-    wx.showModal({
-      title: "删除书签",
-      content: "删除「" + row.title + "」？",
-      confirmText: "删除",
-      cancelText: "取消",
-      success: (res) => {
-        if (!res.confirm) return;
-        marks.remove([id]);
-        delete this.pickedIds[id];
-        sync.markDirty();
-        this.refresh();
-        wx.showToast({ title: "已删除", icon: "none" });
-      }
-    });
   },
 
   onDeletePicked() {
