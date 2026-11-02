@@ -11,44 +11,6 @@
   padding: var(--sp-2) 0;
 }
 
-.mark-line {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.mark-title {
-  flex: 1;
-  display: flex;
-  align-items: baseline;
-  min-width: 0;
-}
-
-.mark-title-t {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mark-author {
-  flex: none;
-  max-width: 40%;
-  margin-left: var(--sp-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--font-ui);
-  font-size: var(--fs-caption);
-  font-weight: 400;
-  color: var(--ink-3);
-}
-
-.mark-del {
-  flex: none;
-}
-
 .mark-search {
   margin-bottom: var(--sp-2);
 }
