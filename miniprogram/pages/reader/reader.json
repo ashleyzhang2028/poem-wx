@@ -2,6 +2,7 @@
   "usingComponents": {
     "tier-tag": "/components/tier-tag/tier-tag",
     "collect-picker": "/components/collect-picker/collect-picker",
+    "operation-dock": "/components/operation-dock/operation-dock",
     "tab-bar": "/custom-tab-bar/index"
   }
 }
