@@ -193,6 +193,18 @@ Page({
     });
   },
 
+  onDockAct(e) {
+    const key = (e && e.detail && e.detail.key) || "";
+    if (key === "daily") this.onToggleDaily();
+    else if (key === "pick") this.onAddToCollection();
+    else if (key === "mark") this.onToggleMark();
+  },
+
+  foldDock() {
+    const dock = this.selectComponent("#dock");
+    if (dock) dock.onClose();
+  },
+
   onAddToCollection() {
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     const box = this.selectComponent("#collect");
@@ -522,6 +534,7 @@ Page({
   },
 
   onPageScroll(e) {
+    this.foldDock();
     const top = Math.max(0, Math.round(Number(e && e.scrollTop) || 0));
     if (!this.data.rawText || this.data.reciteMode) return;
     const at = spot.locate(top, this.data.fontSize, this.laidPlain);

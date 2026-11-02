@@ -1,0 +1,20 @@
+<view class="dock {{below ? 'above' : ''}}">
+  <view class="dock-mask {{open ? 'in' : ''}}" bindtap="onClose"></view>
+
+  <view class="dock-item {{open ? 'in' : ''}} {{item.on ? 'on' : ''}}"
+        wx:for="{{rows}}" wx:key="key" data-key="{{item.key}}"
+        hover-class="dock-item-hover" hover-stay-time="60" bindtap="onPick"
+        aria-label="{{item.label}}">
+    <view class="dock-fly">
+      <view class="dock-face">
+        <view class="dock-glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
+      </view>
+      <text class="dock-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="dock-trigger" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
+        aria-label="{{open ? '收起操作' : '展开操作'}}">
+    <view class="dock-trigger-glyph" style="mask-image:url('{{glyph}}');-webkit-mask-image:url('{{glyph}}');"></view>
+  </view>
+</view>
