@@ -17,9 +17,9 @@
       </view>
 
       <checkbox-group bindchange="onDailyPick">
-        <label class="daily-row" wx:for="{{daily}}" wx:key="id">
+        <label class="pick-row" wx:for="{{daily}}" wx:key="id">
           <checkbox class="opt-radio" value="{{item.id}}" checked="{{item.picked}}" />
-          <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
+          <view class="pick-box {{item.picked ? 'on' : ''}}"><text class="pick-tick">{{item.picked ? '✓' : ''}}</text></view>
           <view class="row-main">
             <text class="row-title row-poem">{{item.title}}</text>
             <text class="row-sub">{{item.meta}}</text>

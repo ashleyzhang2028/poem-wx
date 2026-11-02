@@ -29,36 +29,35 @@
       </view>
     </view>
 
-    <view class="inline-btns mark-tools">
-      <button class="btn mini" bindtap="onEdit">{{editing ? '完成' : '编辑'}}</button>
-      <button class="btn mini" wx:if="{{editing}}" bindtap="onPickAll">{{picked >= matched ? '取消全选' : '全选'}}</button>
-      <button class="btn mini danger" wx:if="{{editing}}" bindtap="onDeletePicked">移出所选{{picked ? ' ' + picked : ''}}</button>
+    <block wx:if="{{matched}}">
+      <view class="inline-btns mark-tools">
+        <button class="btn mini" bindtap="onPickAll">{{allPicked ? '取消全选' : '全选'}}</button>
+        <button class="btn mini danger" bindtap="onDeletePicked">移出选中{{picked ? ' ' + picked : ''}}</button>
+      </view>
+
+      <view class="pick-row mark-bulk" hover-class="row-hover" hover-stay-time="60" bindtap="onPickAll">
+        <view class="pick-box {{allPicked ? 'on' : ''}}"><text class="pick-tick">{{allPicked ? '✓' : ''}}</text></view>
+        <view class="row-main">
+          <text class="row-title">全选</text>
+          <text class="row-sub">已选 {{picked}} / {{matched}} 个</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty mark-empty" wx:if="{{!matched}}">
+      <text class="empty-text">未找到「{{keyword}}」</text>
     </view>
 
-    <block wx:if="{{editing}}">
-      <view class="daily-row" hover-class="row-hover" hover-stay-time="60"
+    <block wx:else>
+      <view class="pick-row" hover-class="row-hover" hover-stay-time="60"
             wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onRow">
-        <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
+        <view class="pick-box {{item.picked ? 'on' : ''}}"><text class="pick-tick">{{item.picked ? '✓' : ''}}</text></view>
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
           <text class="row-sub">{{item.meta}}</text>
         </view>
       </view>
     </block>
-
-    <view wx:else>
-      <view class="daily-row" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="onRow">
-        <view class="row-main">
-          <text class="row-title row-poem">{{item.title}}</text>
-          <text class="row-sub">{{item.meta}}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="empty mark-empty" wx:if="{{!matched}}">
-      <text class="empty-text">未找到「{{keyword}}」</text>
-    </view>
 
     <view class="inline-btns mark-pager" wx:if="{{pages > 1}}">
       <button class="btn mini" disabled="{{page <= 1}}" bindtap="onPrev">上一页</button>

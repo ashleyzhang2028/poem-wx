@@ -2200,3 +2200,37 @@ button, input, textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-row);
+  padding: var(--sp-2) var(--sp-1);
+  border-top: 1rpx solid var(--line-2);
+  transition: background-color var(--t-press);
+}
+
+.pick-box {
+  flex: none;
+  box-sizing: border-box;
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: var(--sp-3);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pick-box.on {
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.pick-tick {
+  font-size: var(--fs-caption);
+  line-height: 1;
+}

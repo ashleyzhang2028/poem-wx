@@ -109,9 +109,9 @@
         </view>
 
         <view wx:if="{{c.count}}">
-          <view class="daily-row" hover-class="row-hover" hover-stay-time="60"
+          <view class="pick-row" hover-class="row-hover" hover-stay-time="60"
                 wx:for="{{c.items}}" wx:key="id" data-id="{{c.id}}" data-pid="{{item.id}}" bindtap="onPick">
-            <view class="daily-box {{item.picked ? 'on' : ''}}"><text class="daily-tick">{{item.picked ? '✓' : ''}}</text></view>
+            <view class="pick-box {{item.picked ? 'on' : ''}}"><text class="pick-tick">{{item.picked ? '✓' : ''}}</text></view>
             <view class="row-main">
               <text class="row-title row-poem">{{item.title}}</text>
               <text class="row-sub">{{item.meta}}</text>
