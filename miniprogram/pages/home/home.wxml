@@ -26,7 +26,7 @@
             wx:for="{{catalog}}" wx:key="id" data-id="{{item.id}}" bindtap="onGuestOpen">
         <view class="row-main">
           <text class="row-title row-poem">{{item.title}}</text>
-          <text class="row-sub">{{item.dynasty}} · {{item.author}}</text>
+          <text class="row-sub">{{item.meta}}</text>
         </view>
 
         <view class="row-end">
@@ -136,7 +136,7 @@
           <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" bindtap="onOpen">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
-              <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
+              <text class="row-sub-t">{{item.meta}}</text>
               <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
@@ -178,7 +178,7 @@
           <view class="row-main row-main-tap" hover-class="row-main-hover" hover-stay-time="60" data-id="{{item.id}}" data-coll="{{coll.id}}" bindtap="onOpenCollection">
             <text class="row-title row-poem">{{item.title}}</text>
             <view class="row-sub">
-              <text class="row-sub-t">{{item.dynasty}} · {{item.author}}{{item.stage ? ' · ' + item.stage : ''}}</text>
+              <text class="row-sub-t">{{item.meta}}</text>
               <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
             </view>
@@ -219,7 +219,7 @@
           <text class="seq {{item.recited ? 'on' : ''}}">{{item.seq}}</text>
           <view class="row-main">
             <text class="row-title row-poem">{{item.title}}</text>
-            <text class="row-sub">{{item.dynasty}}{{item.author ? ' · ' + item.author : ''}}{{item.place ? ' · ' + item.place : ''}} · {{item.stage}}</text>
+            <text class="row-sub">{{item.meta}}</text>
           </view>
           <view class="row-end">
             <text class="tag row-state {{item.stateCls}}">{{item.stateText}}</text>

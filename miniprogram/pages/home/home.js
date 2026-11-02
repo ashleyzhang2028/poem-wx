@@ -66,6 +66,10 @@ function praiseOf(scope) {
   return quotes.pick(Date.now() / R.DAY, scope);
 }
 
+function metaText(list) {
+  return (list || []).filter(Boolean).join(" · ");
+}
+
 function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
 }
@@ -138,10 +142,12 @@ function rowsOfScope(list, scope) {
       id: p.id,
       seq: i + 1,
       title: p.t,
-      author: p.a,
-      dynasty: p.d,
-      place: scope.random ? S.gradeName(p.gr) + S.termName(p.tm) : "",
-      stage: S.isLearned(rec) ? S.stageName(rec) : "未学过",
+      meta: metaText([
+        p.d,
+        p.a,
+        scope.random ? S.gradeName(p.gr) + S.termName(p.tm) : "",
+        S.isLearned(rec) ? S.stageName(rec) : "未学过"
+      ]),
       read: !!read[p.id],
       recited: S.isLearned(rec),
       stateText: stateText(S.isLearned(rec), !!read[p.id]),
@@ -164,8 +170,7 @@ function guestCatalog() {
   const catalog = plan.map((it, i) => ({
     id: it.poem.id,
     title: it.poem.t,
-    author: it.poem.a,
-    dynasty: it.poem.d,
+    meta: metaText([it.poem.d, it.poem.a]),
     seq: i + 1
   }));
   return {
@@ -351,16 +356,16 @@ Page({
       const read = readOf(it.poem.id);
       const recited = S.isLearned(rec);
       recitedOf[it.poem.id] = recited;
+      const stage = S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec);
       return {
         id: it.poem.id,
         seq: i + 1,
         title: it.poem.t,
-        author: it.poem.a,
-        dynasty: it.poem.d,
+        meta: metaText([it.poem.d, it.poem.a, stage]),
         reason: REASON_TEXT[it.reason] || "",
         tagCls: reasonCls(it.reason),
 
-        stage: S.stageName(rec) === REASON_TEXT[it.reason] ? "" : S.stageName(rec),
+        stage: stage,
         mastery: S.mastery(rec),
         picked: pickedToday(rec),
         daily: !!dailyOn[it.poem.id],
@@ -545,15 +550,15 @@ Page({
     const stage = S.stageName(rec) || "";
     const read = readOf(p.id);
     const recited = S.isLearned(rec);
+    const shown = stage === REASON_TEXT[reason] ? "" : stage;
     return {
       id: p.id,
       seq: i + 1,
       title: p.t,
-      author: p.a,
-      dynasty: p.d,
+      meta: metaText([p.d, p.a, shown]),
       reason: REASON_TEXT[reason] || "",
       tagCls: reasonCls(reason),
-      stage: stage === REASON_TEXT[reason] ? "" : stage,
+      stage: shown,
       mastery: S.mastery(rec),
       picked: pickedToday(rec),
       read: read,
