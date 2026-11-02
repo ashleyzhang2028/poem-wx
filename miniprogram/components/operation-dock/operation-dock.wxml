@@ -1,4 +1,4 @@
-<view class="dock {{below ? 'above' : ''}}">
+<view class="dock {{below ? 'above' : ''}}" style="transform: translate({{shift}}px, -{{lift}}px)">
   <view class="dock-mask {{open ? 'in' : ''}}" bindtap="onClose"></view>
 
   <view class="dock-item {{open ? 'in' : ''}} {{item.on ? 'on' : ''}}"
@@ -14,7 +14,8 @@
   </view>
 
   <view class="dock-trigger" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
-        aria-label="{{open ? '收起操作' : '展开操作'}}">
+        bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"
+        bindtouchcancel="onTouchEnd" aria-label="{{open ? '收起操作' : '展开操作'}}">
     <view class="dock-trigger-glyph" style="mask-image:url('{{glyph}}');-webkit-mask-image:url('{{glyph}}');"></view>
   </view>
 </view>
