@@ -30,6 +30,14 @@ function git(args) {
   execFileSync("git", args, { stdio: "inherit", env });
 }
 
+function remoteHead() {
+  const out = execFileSync("git", ["ls-remote", url, "refs/heads/main"], {
+    env,
+    encoding: "utf8"
+  }).trim();
+  return out ? out.split(/\s+/)[0] : "";
+}
+
 try {
   const shallow = execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
     env,
@@ -41,7 +49,8 @@ try {
     git(["fetch", "--unshallow", "origin"]);
   }
 
-  git(["push", "--force", url, "HEAD:refs/heads/main"]);
+  const lease = remoteHead();
+  git(["push", `--force-with-lease=refs/heads/main:${lease}`, url, "HEAD:refs/heads/main"]);
   console.error("✓ 已同步到 https://github.com/" + repo + "（main ← " + shortHead() + "）");
 } catch (e) {
   console.error("");
@@ -50,5 +59,6 @@ try {
   console.error("  1. GH_PAT 过期 / 被撤销 → GitHub 回 403");
   console.error("  2. GH_PAT 的 Repository access 没勾上 " + repo + " → 404，看着像仓库不存在");
   console.error("  3. 权限没给 Contents: Read and write → 403");
+  console.error("  4. 远端 main 的当前头与推送前读到的不一致 → stale info，重跑一次");
   process.exit(1);
 }
