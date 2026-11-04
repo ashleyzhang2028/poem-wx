@@ -1,6 +1,7 @@
 const marks = require("../../utils/bookmarks");
 const lastRead = require("../../utils/last-read");
 const theme = require("../../utils/theme");
+const font = require("../../utils/font");
 
 function markRow(b, lastId) {
   return {
@@ -48,10 +49,7 @@ Component({
   },
 
   attached() {
-    this.setData({
-      name: theme.name(),
-      themeStyle: theme.style().page.themeStyle
-    });
+    this.setData({ name: theme.name(), themeStyle: font.bind(theme.style()).page.themeStyle });
   },
 
   methods: {
