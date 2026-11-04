@@ -562,12 +562,17 @@ Free 看得到「Pro 起」与「Max 起」，Pro 只看得到「Max 起」，Ma
 ```
 
 诗词正文不在这三档里：它按字号档给行间留白（`--poem-gap`，见 `app.wxss` 的
-`.poem-body.size--*`），只跟字号走，不再单独可调。诗句是整行成句的，用 `--lh-loose`
+`.poem-body.size--*`），再乘一个行距档 `--poem-gap-scale`。诗句是整行成句的，用 `--lh-loose`
 那样放开会把一首七绝摊成一屏半；用 `--lh-body` 又挤。这一段是「读一首诗」的行距，
 与 UI 文案的行距是两件事。
 
-**行间留白按「实心」算，不按字身算。** `.poem-line`、`.poem-line.token-line` 与
-`.token-line.token-wrap` 的 `line-height` 都是 `--poem-fs + --poem-gap`，留给字与字
+**行距档只在浮坞里加减。** `utils/type-scale.js` 的 `GAP_MIN..GAP_MAX` 是档位，
+默认档的系数是 1（即取 `--poem-gap` 的值），往上一档多 8%，最上一档 1.34 倍；
+`gapStep()` 给系数，`gapFlags()` 给两枚按钮的置灰，页面写进 `--poem-gap-scale`。
+字号决定基数、档位决定倍数，两者互不覆盖。
+
+**行间留白按「实心」算，不按字身算。** `.poem-line` 与 `.token-line` 的 `line-height`
+都是 `(var(--poem-fs) + var(--poem-gap)) * var(--poem-gap-scale)`，留给字与字
 之间的那部分是 `--poem-gap`。宋体汉字的实心高约为字身的 1.1 倍，字身本身还给不出
 字与字之间的白，所以按字身取 0.18~0.26 的余白，行距落在 1.18~1.26 倍字身。
 
@@ -580,7 +585,8 @@ Free 看得到「Pro 起」与「Max 起」，Pro 只看得到「Max 起」，Ma
 上述三条规则上，别处不往上加数。
 
 这张表的一致性由 `scripts/check.js` 钉住：`utils/type-scale.js` 的取值与 `app.wxss`
-里那一条必须逐位相同，且随字号单调不减。
+里那一条必须逐位相同，且随字号单调不减；`.poem-body` 上的默认 `--poem-gap-scale`
+必须等于 `gapStep(GAP_DEFAULT)`。
 
 ### 数字一律等宽
 
@@ -856,12 +862,10 @@ Free 看得到「Pro 起」与「Max 起」，Pro 只看得到「Max 起」，Ma
 | 段的外形 | `.pref-opt`，未选中就是**裸图标** | `.seg-item`（在浅灰轨道里） | 那一圈轨道底色在「三组挤一行」里是多余的一层 |
 | 图标的容器 | `.glyph`（24rpx，与文字同一视觉重量） | `.seg-icon`（与字并排） | 这里没有字，图标自己就是那一项 |
 
-**行间距那两枚按钮撤了。** 那一行原有「缩小行间距 / 增加行间距」一组，
-与 A− / A+ 并排。行间距的取值已按字号档定死（见上文「行高三档」，
-`utils/type-scale.js` 的两张表），逐档加减等于把定死的值又开一条口子：
-同一档字号点一下，别处的行距通知不到这一处；有注音与无注音两种情形
-本来就该是两个数，一个加减档位没法同时对上。两枚图标（`lineUp` / `lineDown`）
-连同 `onLineUp` / `onLineDown` / `settings.lineGap` 一并删除。
+**行间距那两枚按钮不在这一排，在浮坞里。** 这一排（`.prefs`）只留对齐、字号、注音；
+缩小 / 增加行间距（`lineDown` / `lineUp`）在详情页浮坞的 `.dock-seg` 里，与 A− / A+
+同一排法。行距本身按字号档给基数、按档位乘倍数（见上文），加减只改倍数，
+不动基数，所以有注音与无注音两条路一起动，不会只动一半。
 
 **选中态是淡底 + 图标转主题色**：`.pref-opt.on .glyph` 取 `--strong-text`，
 `.pref-opt.on` 铺 `--strong-soft` —— 一枚 40rpx 的线描图标被实心色块包着会糊成一团，

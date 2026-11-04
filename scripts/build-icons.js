@@ -30,6 +30,8 @@ const NAMES = [
   ["all", "CilTextSize.svg"],
   ["zoomOut", "CilZoomOut.svg"],
   ["zoomIn", "CilZoomIn.svg"],
+  ["lineDown", "CilLineDown.svg"],
+  ["lineUp", "CilLineUp.svg"],
   ["swap", "CilSwapVertical.svg"],
   ["chart", "CilChartBar.svg"],
   ["trend", "CilChartLine.svg"],

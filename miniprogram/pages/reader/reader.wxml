@@ -1,4 +1,4 @@
-<view class="page reader {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}{{bgStyle}}">
+<view class="page reader {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}{{bgStyle}}{{gapStyle}}">
 
   <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" bind:login="onLogin" />
 
@@ -135,6 +135,7 @@
 
   <operation-dock id="dock" swatches="{{bgList}}" bg="{{bgId}}" bind:bg="onDockBg"
                   align="{{align}}" font-down="{{fontDown}}" font-up="{{fontUp}}"
+                  gap-down="{{gapDown}}" gap-up="{{gapUp}}"
                   pinyin-on="{{pinyinOn}}" pinyin-mode="{{pinyinMode}}" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
                   pick-on="{{pickOn}}" mark-on="{{markOn}}" bind:act="onDockAct" />

@@ -1490,6 +1490,7 @@ button, input, textarea {
 }
 
 .poem-body {
+  --poem-gap-scale: 1;
   padding: 0 var(--sp-1) calc(var(--sp-1) * 2.5);
   font-family: var(--font-poem);
 }
@@ -1509,7 +1510,7 @@ button, input, textarea {
 .poem-line {
   display: block;
   font-size: var(--poem-fs);
-  line-height: calc(var(--poem-fs) + var(--poem-gap));
+  line-height: calc((var(--poem-fs) + var(--poem-gap)) * var(--poem-gap-scale));
   color: var(--ink);
   letter-spacing: 0;
 }
@@ -1579,14 +1580,14 @@ button, input, textarea {
 }
 
 .poem-line.token-line {
-  line-height: calc(var(--poem-fs) + var(--poem-gap));
+  line-height: calc((var(--poem-fs) + var(--poem-gap)) * var(--poem-gap-scale));
 }
 
 .token-line.token-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  line-height: calc(var(--poem-fs) + var(--poem-gap));
+  line-height: calc((var(--poem-fs) + var(--poem-gap)) * var(--poem-gap-scale));
 }
 
 .poem-body.align-left .token-line.token-wrap {

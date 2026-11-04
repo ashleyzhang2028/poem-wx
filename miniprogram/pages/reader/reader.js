@@ -98,6 +98,9 @@ Page({
     align: "center",
     fontDown: false,
     fontUp: true,
+    gapDown: true,
+    gapUp: true,
+    gapStyle: "",
     fontSize: 0,
     fontMin: scale.MIN,
     fontMax: scale.MAX,
@@ -205,6 +208,8 @@ Page({
     else if (key === "align") this.onAlignToggle();
     else if (key === "fontDown") this.onFontDown();
     else if (key === "fontUp") this.onFontUp();
+    else if (key === "gapDown") this.onGapDown();
+    else if (key === "gapUp") this.onGapUp();
     else if (key === "pinyin") this.onPinyinToggle();
   },
 
@@ -395,6 +400,7 @@ Page({
       });
     }
     const size = scale.clamp(settings.fontSize);
+    const gapStep = scale.clampGap(settings.gapStep);
 
     const rec = store.getRecord(id);
 
@@ -418,6 +424,9 @@ Page({
       glossRows: gloss.rows(entry.gloss),
       fontSize: size,
       ...scale.flags(size),
+      gapStep,
+      gapStyle: "--poem-gap-scale: " + scale.gapStep(gapStep),
+      ...scale.gapFlags(gapStep),
       stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
       mastery: R.mastery(rec)
     });
@@ -527,6 +536,29 @@ Page({
     store.saveSettings({ fontSize });
     if (this.data.rawText) this.applyReading();
     sync.markDirty();
+  },
+
+  onGapDown() {
+    this.stepGap(-1);
+  },
+
+  onGapUp() {
+    this.stepGap(1);
+  },
+
+  stepGap(delta) {
+    const gapStep = scale.clampGap(this.data.gapStep + delta);
+    if (gapStep === this.data.gapStep) return;
+    this.applyGap(gapStep);
+    store.saveSettings({ gapStep });
+    sync.markDirty();
+  },
+
+  applyGap(step) {
+    this.setData(Object.assign({
+      gapStep: step,
+      gapStyle: "--poem-gap-scale: " + scale.gapStep(step)
+    }, scale.gapFlags(step)));
   },
 
   onResult(e) {
