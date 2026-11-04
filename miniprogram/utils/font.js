@@ -265,16 +265,6 @@ function restore() {
   announce();
 }
 
-function loadAll() {
-  if (!previewsReady() || typeof wx.loadFontFace !== "function") return;
-  const chosen = face().key;
-  FACES.filter((f) => f.key !== chosen)
-    .forEach((f) => {
-      register(f.family, f[shelf()].slice()).catch(() => {});
-      register(f.previewFamily, f.preview).catch(() => {});
-    });
-}
-
 function previewsReady() {
   return configured().length > 0 && typeof wx.loadFontFace === "function";
 }
@@ -282,7 +272,6 @@ function previewsReady() {
 function refresh() {
   load().catch(() => {});
   preview().catch(() => {});
-  loadAll();
   announce();
 }
 
@@ -312,6 +301,6 @@ module.exports = {
   FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, groupOf, shelf,
-  addresses, configured, load, loadAll, preview, set, refresh,
+  addresses, configured, load, preview, set, refresh,
   globalOn, uiStack, setGlobal, scope, registerHere, restore, bind
 };
