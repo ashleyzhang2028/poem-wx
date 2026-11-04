@@ -26,8 +26,7 @@ const DEFERS = [
 const REOPEN_MS = 400;
 
 const PAGE_ICONS = {
-  left: icons.left, center: icons.center, add: icons.add, added: icons.added,
-  zoomOut: icons.zoomOut, zoomIn: icons.zoomIn, off: icons.off, all: icons.all
+  add: icons.add, added: icons.added, off: icons.off, all: icons.all
 };
 
 function idsOf(rows) {
@@ -102,11 +101,7 @@ Component({
     glossRows: [],
 
     align: "center",
-    fontDown: false,
-    fontUp: true,
     fontSize: 0,
-    fontMin: scale.MIN,
-    fontMax: scale.MAX,
     pinyinMode: "off",
     pinyinOn: false,
 
@@ -276,7 +271,6 @@ Component({
         glossRows,
         noteTab: glossRows.length ? "gloss" : "trans",
         fontSize,
-        ...scale.flags(fontSize),
         stage: R.stageName(rec, settings.algo) + " · 掌握 " + R.levelName(rec && rec.level),
         mastery: R.mastery(rec),
         index: this.data.index,
@@ -361,12 +355,6 @@ Component({
       return "添加失败";
     },
 
-    onAlignToggle() {
-      const align = this.data.align === "center" ? "left" : "center";
-      this.setData({ align });
-      store.saveSettings({ [this.alignKey || "align"]: align });
-    },
-
     onNoteTab(e) {
       this.setData({ noteTab: e.currentTarget.dataset.tab });
     },
@@ -379,22 +367,6 @@ Component({
       }
       this.setData({ pinyinMode: mode });
       this.applyReading();
-    },
-
-    onFontDown() {
-      this.stepFont(-1);
-    },
-
-    onFontUp() {
-      this.stepFont(1);
-    },
-
-    stepFont(delta) {
-      const fontSize = scale.clamp(this.data.fontSize + delta);
-      if (fontSize === this.data.fontSize) return;
-      this.setData(Object.assign({ fontSize }, scale.flags(fontSize)));
-      store.saveSettings({ fontSize });
-      if (this.data.rawText) this.applyReading();
     },
 
     onResult(e) {
