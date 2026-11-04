@@ -41,6 +41,7 @@ const DEFAULTS = {
   align: "center",
   proseAlign: "left",
   fontSize: 0,
+  readBg: "",
 
   theme: "ink",
   font: "zhuque",

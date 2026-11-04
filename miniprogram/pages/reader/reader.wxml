@@ -1,4 +1,4 @@
-<view class="page reader {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
+<view class="page reader {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}{{bgStyle}}">
 
   <lock-card wx:if="{{locked}}" title="{{lockTitle}}" note="{{lockNote}}" mark="阅" bind:login="onLogin" />
 
@@ -8,7 +8,7 @@
 
   <block wx:if="{{!corpusState}}">
 
-  <view class="card poem-card" wx:if="{{loadFailed}}">
+  <view class="sheet poem-card" wx:if="{{loadFailed}}">
     <view class="poem-head">
       <text class="poem-title">{{title}}</text>
     </view>
@@ -18,7 +18,7 @@
       <button class="btn primary mini empty-btn" bindtap="onRetryText">重试</button>
     </view>
   </view>
-  <view class="card poem-card" wx:else>
+  <view class="sheet poem-card" wx:else>
     <view class="poem-head">
       <view class="poem-head-row">
         <text class="poem-title">{{title}}</text>
@@ -50,6 +50,7 @@
       </view>
 
       <view class="poem-loading" wx:if="{{loadingText}}"></view>
+      <view class="poem-rule"><view class="poem-rule-dot"></view></view>
     </view>
 
     <view class="prefs">
@@ -100,7 +101,7 @@
     </view>
   </view>
 
-  <view class="card recite-card" wx:if="{{reciteMode}}">
+  <view class="sheet recite-card" wx:if="{{reciteMode}}">
     <radio-group class="chip-group cols-3 actions" bindchange="onResult">
       <label class="chip {{item.cls}}" wx:for="{{results}}" wx:key="key">
         <radio class="seg-radio" value="{{item.key}}" checked="{{item.cls === 'on'}}" />
@@ -119,7 +120,7 @@
     <text class="hint hint-line" wx:if="{{hint}}">{{hint}}</text>
   </view>
 
-  <view class="card gloss-card" wx:if="{{glossRows.length}}">
+  <view class="sheet gloss-card" wx:if="{{glossRows.length}}">
     <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleGloss">
       <text class="card-title">注释</text>
       <text class="all-toggle {{showGloss ? 'open' : ''}}"></text>
@@ -133,7 +134,7 @@
     </view>
   </view>
 
-  <view class="card trans-card" wx:if="{{hasTranslation}}">
+  <view class="sheet trans-card" wx:if="{{hasTranslation}}">
     <view class="card-open" hover-class="card-hover" hover-stay-time="60" bindtap="onToggleTranslation">
       <text class="card-title">译文</text>
       <text class="all-toggle {{showTranslation ? 'open' : ''}}"></text>
@@ -159,7 +160,7 @@
 
   <view class="safe-bottom"></view>
 
-  <operation-dock id="dock" below="{{barBelow}}" daily-on="{{dailyOn}}"
+  <operation-dock id="dock" swatches="{{bgList}}" bg="{{bgId}}" bind:bg="onDockBg" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
                   pick-on="{{pickOn}}" mark-on="{{markOn}}" bind:act="onDockAct" />
   </block>

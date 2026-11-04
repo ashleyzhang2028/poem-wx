@@ -1,19 +1,27 @@
-<view class="dock {{below ? 'above' : ''}}" style="transform: translate({{shift}}px, -{{lift}}px)">
+<view class="dock" style="transform: translate({{shift}}px, -{{lift}}px)">
   <view class="dock-mask {{open ? 'in' : ''}}" bindtap="onClose"></view>
+
+  <view class="dock-item {{open ? 'in' : ''}}">
+    <view class="dock-pill dock-swatches">
+      <view class="dock-swatch {{item.id === bg ? 'on' : ''}}" wx:for="{{swatches}}" wx:key="id"
+            data-id="{{item.id}}" style="background:{{item.color}}"
+            bindtap="onSwatch" aria-label="{{item.name}}"></view>
+    </view>
+  </view>
 
   <view class="dock-item {{open ? 'in' : ''}} {{item.on ? 'on' : ''}}"
         wx:for="{{rows}}" wx:key="key" data-key="{{item.key}}"
         hover-class="dock-item-hover" hover-stay-time="60" bindtap="onPick"
         aria-label="{{item.label}}">
-    <view class="dock-fly">
+    <view class="dock-pill">
+      <text class="dock-label">{{item.label}}</text>
       <view class="dock-face">
         <view class="dock-glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
       </view>
-      <text class="dock-label">{{item.label}}</text>
     </view>
   </view>
 
-  <view class="dock-trigger" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
+  <view class="dock-trigger {{open ? 'open' : ''}}" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
         bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"
         bindtouchcancel="onTouchEnd" aria-label="{{open ? '收起操作' : '展开操作'}}">
     <view class="dock-trigger-glyph" style="mask-image:url('{{glyph}}');-webkit-mask-image:url('{{glyph}}');"></view>
