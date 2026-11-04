@@ -1,7 +1,3 @@
-.mark-lead {
-  display: block;
-}
-
 .mark-quota {
   margin-top: var(--sp-2);
 }

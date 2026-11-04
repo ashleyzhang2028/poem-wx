@@ -9,7 +9,6 @@
       <text class="card-title">书签管理</text>
       <tier-tag wx:if="{{tierLocked}}" tier="{{tier}}" bindtap="onTierGate" />
     </view>
-    <text class="hint mark-lead">在诗词详情页点击书签图标收藏，于此统一查看与整理。</text>
     <view class="mark-quota" wx:if="{{on}}">
       <text class="hint">已存 {{count}} / {{cap}} 个 · 超出后自动移出最久的一个</text>
     </view>
