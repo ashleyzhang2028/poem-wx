@@ -352,6 +352,30 @@
     "back": true,
     "logged": true
   },
+  "game-ling": {
+    "page": "packages/game/ling/ling",
+    "title": "飞花令研习",
+    "back": true,
+    "logged": true
+  },
+  "game-ling-term": {
+    "page": "packages/game/ling/ling",
+    "title": "飞花令研习",
+    "back": true,
+    "logged": true,
+    "do": [
+      {
+        "call": "onPick",
+        "with": {
+          "currentTarget": {
+            "dataset": {
+              "ch": "月"
+            }
+          }
+        }
+      }
+    ]
+  },
   "game-quiz": {
     "page": "packages/game/quiz/quiz",
     "title": "题库",

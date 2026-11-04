@@ -12,6 +12,14 @@ const MODES = [
   { key: "exam", glyph: "考", name: "考试", desc: "二十分钟一卷，交卷判分", log: "exam", cap: "exam" }
 ];
 
+const STUDY = {
+  key: "ling",
+  glyph: "研",
+  name: "飞花令研习",
+  desc: "按令字翻遍诗句，选一个先背下来",
+  page: "/packages/game/ling/ling"
+};
+
 const PAGE = {
   feihua: "/packages/game/feihua/feihua",
   quiz: "/packages/game/quiz/quiz",
@@ -34,6 +42,7 @@ Page({
     barBelow: true,
     locked: true,
     cards: [],
+    study: STUDY,
     heroMark: "会",
     heroTitle: "",
     heroSub: ""
@@ -73,6 +82,19 @@ Page({
       heroTitle: top ? top.rank.name : "",
       heroSub: top ? top.rank.note : "三种玩法，任选其一"
     });
+  },
+
+  onStudy() {
+    if (!gate.logged()) {
+      entitlement.block("feihualing", { page: this });
+      return;
+    }
+    if (!entitlement.can("feihualing")) {
+      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
+      return;
+    }
+    sfx.play("tap");
+    wx.navigateTo({ url: STUDY.page });
   },
 
   onRanking() {

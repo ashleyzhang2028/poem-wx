@@ -1974,6 +1974,63 @@ ok("名录在、标签截断、档位合法",
 }
 
 {
+  const ling = require(path.join(ROOT, "utils", "ling-index.js"));
+  const ledger = require(path.join(ROOT, "data", "catalog-ledger.js"));
+  const savedSettings = store.settings();
+
+  ok("一行联句是「一逗一句」的两句，跨行也接得上",
+    ling.couplesOf("白日依山尽，\n黄河入海流。").join("|") === "白日依山尽，黄河入海流。"
+      && ling.couplesOf("鹅，鹅，鹅，\n曲项向天歌。").join("|") === "鹅，曲项向天歌。");
+
+  ok("不成句的不算：没有句号、或整段连标点都没有（古文正文不是联句）",
+    ling.couplesOf("白日依山尽").length === 0
+      && ling.couplesOf("花近高楼伤客心万方多难此登临锦江春色来天地").length === 0);
+
+  store.saveSettings({ grade: 12, term: 2 });
+  const stageCounts = ling.counts("月");
+  ok("按学段切得动：当前学段 ≤ 课内全部",
+    stageCounts.course > 0 && stageCounts.stage > 0 && stageCounts.stage <= stageCounts.course,
+    JSON.stringify(stageCounts));
+
+  ok("装了正文的档位点开都有句子（不装正文的那几部不算）",
+    ["stage", "primary", "middle", "high", "course", "tangshi300", "songci300"].every((id) => ling.find("月", { scope: id }).total > 0),
+    "有档位点开是空的");
+
+  const first = ling.find("月", { scope: "course" });
+  const second = ling.find("月", { scope: "course", from: first.items.length });
+  ok("一次 20 句，翻下去接着给（不重不漏）",
+    first.items.length === Math.min(20, first.total)
+      && second.items.length === Math.min(20, first.total - first.items.length)
+      && second.items.every((row) => first.items.indexOf(row) < 0),
+    first.total + " 句，第一页 " + first.items.length + "，第二页 " + second.items.length);
+
+  ok("每句都带得出范围胶囊",
+    first.items.every((row) => row.tags.length > 0));
+
+  ok("同一句只出一次（翻到第 20 条也不重复）",
+    (() => {
+      const seen = {};
+      return first.items.concat(second.items).every((row) => {
+        const key = row.title + "|" + row.author + "|" + row.seg;
+        if (seen[key]) return false;
+        seen[key] = 1;
+        return true;
+      });
+    })());
+
+  store.saveSettings(savedSettings);
+
+  const catBooks = Object.keys(corpusPayloads.catalogs.rows);
+  ok("集子台账与本机目录是同一份（多一部少一部都对不上）",
+    Object.keys(ledger.books).sort().join() === catBooks.slice().sort().join(),
+    Object.keys(ledger.books).length + " / " + catBooks.length);
+
+  ok("常用令字的分组只有一份，页面从它取（不另抄一遍）",
+    !/季节时序/.test(fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8"))
+      && /ling\.GROUPS/.test(fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8")));
+}
+
+{
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
   const feihuaJs = fs.readFileSync(path.join(ROOT, "packages", "game", "feihua", "lib.js"), "utf8");
   ok("飞花令断句走 corpus.splitLines（不另写一份标点表）",

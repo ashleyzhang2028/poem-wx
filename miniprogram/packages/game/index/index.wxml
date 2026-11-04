@@ -12,25 +12,41 @@
     </view>
 
     <view class="modes">
-      <view class="card mode {{item.ok ? '' : 'mode-off'}}" wx:for="{{cards}}" wx:key="key"
-            style="animation-delay:{{index * 70}}ms" data-k="{{item.key}}"
-            hover-class="mode-hover" hover-stay-time="40" bindtap="onMode">
-        <view class="mode-glyph glyph-{{item.key}}">{{item.glyph}}</view>
-        <view class="mode-main">
-          <view class="mode-head">
-            <text class="gc-name">{{item.name}}</text>
-            <text class="tag theme" wx:if="{{item.lastText}}">{{item.lastText}}</text>
+      <block wx:for="{{cards}}" wx:key="key">
+        <view class="card mode study" wx:if="{{item.key === 'feihua'}}"
+              style="animation-delay:{{index * 70}}ms" hover-class="mode-hover" hover-stay-time="40"
+              bindtap="onStudy">
+          <view class="mode-glyph glyph-feihua">{{study.glyph}}</view>
+          <view class="mode-main">
+            <view class="mode-head">
+              <text class="gc-name">{{study.name}}</text>
+              <text class="tag theme">复习</text>
+            </view>
+            <text class="mode-desc">{{study.desc}}</text>
           </view>
-          <text class="mode-desc">{{item.desc}}</text>
+          <text class="mode-go">查看</text>
         </view>
-        <view class="mode-side">
-          <tier-tag wx:if="{{item.locked}}" tier="{{item.tier}}" />
-          <text class="mode-go">开始</text>
+
+        <view class="card mode {{item.ok ? '' : 'mode-off'}}"
+              style="animation-delay:{{(index + 1) * 70}}ms" data-k="{{item.key}}"
+              hover-class="mode-hover" hover-stay-time="40" bindtap="onMode">
+          <view class="mode-glyph glyph-{{item.key}}">{{item.glyph}}</view>
+          <view class="mode-main">
+            <view class="mode-head">
+              <text class="gc-name">{{item.name}}</text>
+              <text class="tag theme" wx:if="{{item.lastText}}">{{item.lastText}}</text>
+            </view>
+            <text class="mode-desc">{{item.desc}}</text>
+          </view>
+          <view class="mode-side">
+            <tier-tag wx:if="{{item.locked}}" tier="{{item.tier}}" />
+            <text class="mode-go">开始</text>
+          </view>
         </view>
-      </view>
+      </block>
     </view>
 
-    <view class="card mode" style="animation-delay:210ms" hover-class="mode-hover" hover-stay-time="40"
+    <view class="card mode" style="animation-delay:280ms" hover-class="mode-hover" hover-stay-time="40"
           bindtap="onRanking">
       <view class="mode-glyph glyph-ranking">榜</view>
       <view class="mode-main">
