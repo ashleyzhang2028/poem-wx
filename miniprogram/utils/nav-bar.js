@@ -1,5 +1,6 @@
 const nav = require("./nav");
 const tabPage = require("./tab-page");
+const pageStack = require("./page-stack");
 
 function box() {
   const t = nav.top();
@@ -11,7 +12,7 @@ function box() {
 }
 
 function back() {
-  const pages = getCurrentPages();
+  const pages = pageStack.list();
   if (pages.length > 1) wx.navigateBack();
   else tabPage.mine();
 }

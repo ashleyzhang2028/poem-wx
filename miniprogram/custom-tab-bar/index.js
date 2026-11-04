@@ -5,10 +5,10 @@ const icons = require("../utils/icons");
 const gate = require("../utils/gate");
 const loginFlow = require("../utils/login-flow");
 const tabPage = require("../utils/tab-page");
+const pageStack = require("../utils/page-stack");
 
 function topPage() {
-  const pages = getCurrentPages();
-  return pages.slice(-1)[0];
+  return pageStack.top();
 }
 
 function resetLibrary() {

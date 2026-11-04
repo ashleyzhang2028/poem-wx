@@ -4,6 +4,8 @@ const tabbar = require("../../../utils/tabbar");
 const pay = require("../../../utils/pay");
 const auth = require("../../../utils/auth");
 
+const REFUSE_TOAST_MAX = 20;
+
 function view(o) {
   return {
     outTradeNo: o.outTradeNo,
@@ -93,6 +95,12 @@ Page({
     });
   },
 
+  refuse(reason) {
+    const text = String(reason || "").trim() || "操作未成功";
+    if (text.length <= REFUSE_TOAST_MAX) wx.showToast({ title: text, icon: "none" });
+    else wx.showModal({ title: "操作未成功", content: text, showCancel: false, confirmText: "知悉" });
+  },
+
   run(loading, action, e) {
     const id = e.currentTarget.dataset.id;
     if (!id || this.data.busy) return;
@@ -101,7 +109,7 @@ Page({
     action(id).then((res) => {
       wx.hideLoading();
       this.setData({ busy: false });
-      if (!res.ok && res.reason) wx.showToast({ title: res.reason, icon: "none" });
+      if (!res.ok) this.refuse(res.reason);
       this.load();
     });
   },

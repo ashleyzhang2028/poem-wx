@@ -19,6 +19,14 @@
       <view class="row-dot" wx:if="{{replyDot}}"></view>
       <text class="row-go">›</text>
     </view>
+    <view class="row" wx:if="{{faults}}" hover-class="row-hover" hover-stay-time="60" bindtap="onFaults">
+      <view class="row-main"><text class="row-title">本机故障记录</text></view>
+      <text class="row-go">{{faults}} 条 · 复制</text>
+    </view>
+    <view class="row" wx:if="{{faults}}" hover-class="row-hover" hover-stay-time="60" bindtap="onFaultsClear">
+      <view class="row-main"><text class="row-title">清空故障记录</text></view>
+      <text class="row-go">›</text>
+    </view>
     <view class="row" wx:if="{{logged}}" hover-class="row-hover" hover-stay-time="60" bindtap="onLogout">
       <view class="row-main"><text class="row-title">退出登录</text></view>
       <text class="row-go">›</text>

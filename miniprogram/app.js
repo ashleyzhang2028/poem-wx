@@ -7,11 +7,29 @@ const font = require("./utils/font");
 const theme = require("./utils/theme");
 const loginFlow = require("./utils/login-flow");
 const sfx = require("./utils/sfx");
+const errors = require("./utils/error-log");
+const pageStack = require("./utils/page-stack");
 
 App({
   globalData: {
 
     pending: null
+  },
+
+  onError(err) {
+    const detail = errors.say(err);
+    errors.add("error", detail.split("\n")[0], detail);
+    console.error("[app] 未捕获异常", detail);
+  },
+
+  onUnhandledRejection(res) {
+    const detail = errors.say(res && res.reason);
+    errors.add("rejection", detail.split("\n")[0], detail);
+    console.error("[app] 未处理的失败", detail);
+  },
+
+  onPageNotFound(res) {
+    errors.add("route", "页面不存在：" + ((res && res.path) || ""));
   },
 
   onLaunch() {
@@ -57,7 +75,7 @@ App({
   repaintFont(epoch) {
     if (epoch !== font.scope()) return;
     const themeStyle = theme.style();
-    getCurrentPages().forEach((page) => {
+    pageStack.list().forEach((page) => {
       if (!page) return;
       if (typeof page.applyFont === "function") page.applyFont();
       else if (page.data && page.data.themeStyle !== undefined) page.setData({ themeStyle });

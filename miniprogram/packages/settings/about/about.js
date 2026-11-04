@@ -6,9 +6,10 @@ const loginFlow = require("../../../utils/login-flow");
 const tabPage = require("../../../utils/tab-page");
 const fb = require("../../../utils/feedback-api");
 const dots = require("../../../utils/dots");
+const errors = require("../../../utils/error-log");
 
 Page({
-  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false, replyDot: false },
+  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false, replyDot: false, faults: 0 },
 
   applyFont() {
     const hit = font.bind(theme.style());
@@ -17,7 +18,7 @@ Page({
 
   onShow() {
     this.applyFont();
-    this.setData({ barBelow: tabbar.below(this), logged: auth.logged() });
+    this.setData({ barBelow: tabbar.below(this), logged: auth.logged(), faults: errors.count() });
     this.loadDot();
   },
 
@@ -41,6 +42,30 @@ Page({
 
   onPrivacy() {
     wx.navigateTo({ url: "/packages/settings/privacy/privacy" });
+  },
+
+  onFaults() {
+    const text = errors.dump();
+    if (!text) return;
+    wx.setClipboardData({
+      data: text,
+      success: () => wx.showToast({ title: "记录已复制", icon: "none" })
+    });
+  },
+
+  onFaultsClear() {
+    if (!errors.count()) return;
+    wx.showModal({
+      title: "清空记录",
+      content: "清空后这些记录不再保留，问题未复现时不必清空。",
+      confirmText: "清空",
+      cancelText: "取消",
+      success: (r) => {
+        if (!r || !r.confirm) return;
+        errors.clear();
+        this.setData({ faults: 0 });
+      }
+    });
   },
 
   onLogout() {

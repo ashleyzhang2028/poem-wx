@@ -3,6 +3,7 @@ const gate = require("../../../utils/gate");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
+const pageStack = require("../../../utils/page-stack");
 
 const NO_BIO = ["", "佚名", "无名氏"];
 
@@ -82,7 +83,7 @@ Page({
   },
 
   onWorks() {
-    const pages = getCurrentPages();
+    const pages = pageStack.list();
     const before = pages[pages.length - 2];
     if (before && before.route === "packages/authors/index/index" && before.data.author === this.who) {
       wx.navigateBack();

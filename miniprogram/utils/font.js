@@ -1,5 +1,6 @@
 const store = require("./store");
 const entitlement = require("./entitlement");
+const pageStack = require("./page-stack");
 
 const FONTS = [
   { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", dir: "zhuquefangsong-regular" },
@@ -156,9 +157,7 @@ function register(family, list) {
 }
 
 function scopeMark() {
-  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
-  const top = pages && pages[pages.length - 1];
-  return scopeEpoch + "@" + (top ? String(top.route) : "");
+  return scopeEpoch + "@" + pageStack.route();
 }
 
 function registerPage(family, list) {
@@ -261,8 +260,7 @@ function restore() {
   const app = typeof getApp === "function" ? getApp() : null;
   const g = (app && app.globalData) || {};
   const stale = g.fontScope !== scopeEpoch;
-  const page = typeof getCurrentPages === "function" ? getCurrentPages() : [];
-  const top = page && page[page.length - 1];
+  const top = pageStack.top();
   if (!stale && top && typeof top.applyFont === "function") top.applyFont();
   announce();
 }

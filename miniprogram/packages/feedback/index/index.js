@@ -6,6 +6,8 @@ const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const guard = require("../../../utils/guard");
 
+const REFUSE_TOAST_MAX = 20;
+
 Page({
   data: {
     themeStyle: "",
@@ -69,7 +71,7 @@ Page({
     if (this.data.submitting) return;
     const checked = fb.validate({ title: this.data.title, content: this.data.content });
     if (!checked.ok) {
-      wx.showToast({ title: checked.reason, icon: "none" });
+      this.refuse(checked.reason);
       return;
     }
     this.setData({ submitting: true });
@@ -78,13 +80,19 @@ Page({
       .then((res) => {
         this.setData({ submitting: false });
         if (!res || !res.ok) {
-          wx.showToast({ title: (res && res.reason) || "提交失败，请稍后重试", icon: "none" });
+          this.refuse((res && res.reason) || "提交失败，请稍后重试");
           return;
         }
         this.setData({ title: "", content: "" });
         wx.showToast({ title: res.duplicate ? "请勿重复提交" : "已提交", icon: "none" });
         this.load();
       });
+  },
+
+  refuse(reason) {
+    const text = String(reason || "").trim() || "提交失败，请稍后重试";
+    if (text.length <= REFUSE_TOAST_MAX) wx.showToast({ title: text, icon: "none" });
+    else wx.showModal({ title: "提交未成功", content: text, showCancel: false, confirmText: "知悉" });
   },
 
   onReplyInput(e) {
@@ -99,7 +107,7 @@ Page({
     guard.once("feedback:comment:" + tid, () => fb.comment(tid, this.data.reply[tid])).then((res) => {
       this.setData({ sending: false });
       if (!res || !res.ok) {
-        wx.showToast({ title: (res && res.reason) || "提交失败，请稍后重试", icon: "none" });
+        this.refuse((res && res.reason) || "提交失败，请稍后重试");
         return;
       }
       this.setData({ ["reply." + tid]: "" });

@@ -488,8 +488,14 @@ let buildCache = null;
 
 function buildProbe() {
   if (!buildCache) {
+    let raw = "";
     try {
-      buildCache = JSON.parse(wx.getStorageSync(BUILD_KEY) || "");
+      raw = typeof wx !== "undefined" ? wx.getStorageSync(BUILD_KEY) : "";
+    } catch (e) {
+      raw = "";
+    }
+    try {
+      buildCache = JSON.parse(raw || "");
     } catch (e) {
       buildCache = {};
     }
@@ -522,7 +528,7 @@ function stamp(rev) {
       try {
         wx.setStorageSync(BUILD_KEY, JSON.stringify(p));
       } catch (e) {
-        buildCache = {};
+        return buildProbe();
       }
     }
   }

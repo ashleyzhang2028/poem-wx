@@ -4,6 +4,8 @@ const sync = require("./sync");
 const tabPage = require("./tab-page");
 const guard = require("./guard");
 
+const NICK_TOAST_MAX = 20;
+
 function failText(err) {
   const code = (err && err.code) || "";
   if (code === "E_NOT_CONFIGURED") {
@@ -122,7 +124,9 @@ function takeNickname(name) {
   return auth.saveNickname(nickname).then((r) => {
     if (r && r.blocked) {
       store.saveProfile({ nickname: before });
-      wx.showToast({ title: r.reason || "昵称不可用，请更换", icon: "none" });
+      const why = String((r && r.reason) || "").trim() || "昵称不可用，请更换";
+      if (why.length <= NICK_TOAST_MAX) wx.showToast({ title: why, icon: "none" });
+      else wx.showModal({ title: "昵称未更新", content: why, showCancel: false, confirmText: "知悉" });
     } else {
       wx.showToast({ title: "昵称已更新", icon: "none" });
     }

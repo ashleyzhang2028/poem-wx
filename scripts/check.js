@@ -7529,6 +7529,122 @@ const K = {
     "服务端把 p / y 抹掉 —— 同步一圈回来位置就没了");
 }
 
+{
+  const logSrc = fs.readFileSync(path.join(ROOT, "utils", "error-log.js"), "utf8");
+  const appSrc3 = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
+
+  ok("app 挂上三处兜底：未捕获异常 / 未处理的失败 / 页面不存在",
+    /onError\s*\(/.test(appSrc3) && /onUnhandledRejection\s*\(/.test(appSrc3)
+      && /onPageNotFound\s*\(/.test(appSrc3) && /errors\.add\(/.test(appSrc3),
+    "真机报的错误只有一行 Script error，没有本机记录就无从查起 —— 三处缺一处就漏一类");
+
+  const mem = {};
+  const savedWx = global.wx;
+  global.wx = {
+    getStorageSync: (k) => (k in mem ? JSON.parse(JSON.stringify(mem[k])) : ""),
+    setStorageSync: (k, v) => { mem[k] = JSON.parse(JSON.stringify(v)); },
+    removeStorageSync: (k) => { delete mem[k]; }
+  };
+  try {
+    delete require.cache[require.resolve(path.join(ROOT, "utils", "error-log.js"))];
+    const log = require(path.join(ROOT, "utils", "error-log.js"));
+    log.clear();
+    log.add("error", "boom", "boom at a.js:1\n   at b.js:2");
+    log.add("error", "boom", "boom at a.js:1");
+    ok("同一条错连着报只留一行并记次数", log.count() === 1 && log.rows()[0].times === 2,
+      "记了 " + log.count() + " 行");
+    ok("长报文与换行都压成一行（复制出来能粘进 Issue）",
+      log.rows()[0].msg.indexOf("\n") < 0 && log.rows()[0].stack.indexOf("\n") < 0);
+    ok("记录只留最近若干条", /KEEP\s*=\s*\d+/.test(logSrc) && log.KEEP > 0);
+    log.add("rejection", "x", "");
+    ok("清空之后计数归零", log.clear() && log.count() === 0);
+    ok("没有记录时导出为空串（关于页据此不显示入口）", log.dump() === "");
+  } finally {
+    global.wx = savedWx;
+    delete require.cache[require.resolve(path.join(ROOT, "utils", "error-log.js"))];
+  }
+
+  const aboutJs = fs.readFileSync(path.join(ROOT, "packages", "settings", "about", "about.js"), "utf8");
+  const aboutWxml = fs.readFileSync(path.join(ROOT, "packages", "settings", "about", "about.wxml"), "utf8");
+  ok("关于页能导出与清空本机故障记录（用户不用连开发者工具才能取出）",
+    /errors\.dump\(/.test(aboutJs) && /setClipboardData/.test(aboutJs)
+      && /errors\.clear\(\)/.test(aboutJs)
+      && /bindtap="onFaults"/.test(aboutWxml) && /bindtap="onFaultsClear"/.test(aboutWxml));
+}
+
+{
+  const raw = [];
+  ["pages", "packages", "components", "custom-tab-bar", "utils"].forEach((dir) => {
+    (function walk(d) {
+      fs.readdirSync(d, { withFileTypes: true }).forEach((e) => {
+        const q = path.join(d, e.name);
+        if (e.isDirectory()) {
+          walk(q);
+          return;
+        }
+        if (!e.name.endsWith(".js")) return;
+        const rel = path.relative(ROOT, q).split(path.sep).join("/");
+        if (rel === "utils/page-stack.js") return;
+        if (/getCurrentPages\s*\(/.test(fs.readFileSync(q, "utf8"))) raw.push(rel);
+      });
+    })(path.join(ROOT, dir));
+  });
+
+  ok("页面栈只经 utils/page-stack.js 取（不在各处裸调 getCurrentPages）",
+    raw.length === 0,
+    raw.join("、") + " —— 裸调一处抛，整页的渲染就断在半路");
+  ok("page-stack 兜住「取不到页面栈」这种情况（没有它时回空）",
+    /typeof getCurrentPages !== "function"/.test(fs.readFileSync(path.join(ROOT, "utils", "page-stack.js"), "utf8")));
+}
+
+{
+  const files = [];
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+      const q = path.join(dir, e.name);
+      if (e.isDirectory()) walk(q);
+      else if (e.name.endsWith(".js")) files.push(q);
+    });
+  })(path.join(ROOT, "utils"));
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+      const q = path.join(dir, e.name);
+      if (e.isDirectory()) walk(q);
+      else if (e.name.endsWith(".js")) files.push(q);
+    });
+  })(path.join(ROOT, "pages"));
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+      const q = path.join(dir, e.name);
+      if (e.isDirectory()) walk(q);
+      else if (e.name.endsWith(".js")) files.push(q);
+    });
+  })(path.join(ROOT, "packages"));
+
+  const long = [];
+  files.forEach((f) => {
+    const src = fs.readFileSync(f, "utf8");
+    const re = /showToast\(\{\s*title:\s*([^,}]+)/g;
+    let m;
+    while ((m = re.exec(src))) {
+      const title = m[1].trim();
+      if (/^["'`]/.test(title)) continue;
+      if (!/(res|r|checked|why|text|reason)/.test(title)) continue;
+      if (new RegExp("title:\s*" + title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\b").test(src)) {
+        long.push(path.relative(ROOT, f).split(path.sep).join("/") + " → " + title);
+      }
+    }
+  });
+  ok("弹层标题不直接塞服务端那段长话（超长的走 modal，toast 只放短句）",
+    long.every((x) => {
+      const where = x.split(" → ")[0];
+      const src = fs.readFileSync(path.join(ROOT, where), "utf8");
+      return /showModal/.test(src);
+    }),
+    long.join("、")
+      + " —— 这条只认「同一处另有 showModal 兜长文」；文案本身由人看");
+}
+
 Promise.all(pending).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");

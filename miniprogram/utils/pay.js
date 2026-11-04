@@ -227,7 +227,7 @@ function adminCall(body) {
   if (!remote.adminReady()) return Promise.resolve({ ok: false, reason: "无管理权限" });
   return remote.request(P.adminPay, body).then(
     (res) => Object.assign({ ok: true }, res),
-    (err) => ({ ok: false, reason: (err && err.message) || "操作失败，请稍后重试" })
+    (err) => ({ ok: false, reason: (err && (err.message || err.statusCode)) || "操作失败，请稍后重试" })
   );
 }
 

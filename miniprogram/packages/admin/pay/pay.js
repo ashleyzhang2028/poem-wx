@@ -4,6 +4,8 @@ const tabbar = require("../../../utils/tabbar");
 const admin = require("../../../utils/admin");
 const pay = require("../../../utils/pay");
 
+const REFUSE_TOAST_MAX = 20;
+
 const PLAN_CHOICES = ["pro", "max"];
 const PERIOD_CHOICES = pay.PERIODS.map((p) => p.key);
 const SLOTS = [].concat(...PLAN_CHOICES.map((plan) => PERIOD_CHOICES.map((period) => ({ plan, period }))));
@@ -96,12 +98,18 @@ Page({
   save(next) {
     pay.adminSaveCatalog(next).then((res) => {
       if (!res.ok) {
-        wx.showToast({ title: res.reason, icon: "none" });
+        this.refuse(res.reason, "保存未成功");
         return;
       }
       this.setData({ catalog: res.catalog, slots: slotViews(res.catalog) });
       wx.showToast({ title: "已保存", icon: "success" });
     });
+  },
+
+  refuse(reason, title) {
+    const text = String(reason || "").trim() || "操作未成功";
+    if (text.length <= REFUSE_TOAST_MAX) wx.showToast({ title: text, icon: "none" });
+    else wx.showModal({ title: title, content: text, showCancel: false, confirmText: "知悉" });
   },
 
   onPickActive(e) {
