@@ -7,6 +7,7 @@ const theme = require("../../utils/theme");
 const font = require("../../utils/font");
 const cols = require("../../utils/collections");
 const lastRead = require("../../utils/last-read");
+const trail = require("../../utils/trail");
 
 const SHEET = "#read-sheet";
 
@@ -28,20 +29,38 @@ const GROUPS = [
   {
     key: "anthology",
     name: "诗词选本",
-    note: "唐诗、宋词、古文与乐府",
-    books: ["tangshi300", "songci300", "tongxin", "gwgz", "wenxuan", "yuefuji", "huajianji", "chuci"]
+    note: "唐诗、宋词、小古文与总集",
+    books: ["tangshi300", "songci300", "xiaoguwen", "tongxin", "qianjiashi", "huajianji", "gushiyuan", "yuefuji", "cizong", "chuci", "gwgz", "wenxuan"]
+  },
+  {
+    key: "primer",
+    name: "蒙学",
+    note: "启蒙识字与童蒙读物",
+    books: ["sanzijing", "baijiaxing", "dizigui", "qianziwen", "zengguang", "shenglv", "liweng", "youxue", "longwen", "jijiu", "lishi", "wuzijian"]
   },
   {
     key: "pre-qin",
     name: "先秦经典",
-    note: "诗经、四书、诸子与左传",
-    books: ["shijing", "sishu", "jingzhuan", "daodejing", "zhuangzi", "zhuzi", "zuozhuan", "bingfa", "shanhaijing"]
+    note: "四书、五经与诸子",
+    books: ["lunyu", "mengzi", "daxue", "zhongyong", "shijing", "shangshu", "zhouyi", "zuozhuan", "daodejing", "sunzi", "sanshiliuji", "shanhaijing"]
+  },
+  {
+    key: "fable",
+    name: "童话寓言",
+    note: "中外童话与寓言",
+    books: ["yisuo", "gelin", "andersen"]
+  },
+  {
+    key: "history",
+    name: "史籍",
+    note: "战国策、史记与三国志",
+    books: ["zhanguoce", "shiji", "sanguozhi"]
   },
   {
     key: "novel",
     name: "名著小说",
-    note: "四大名著与章回、话本",
-    books: ["sanguo", "shuihu", "xiyou", "honglou", "rulin", "jinghua", "fengshen", "dongzhou", "yushi", "jingshi", "erke", "liaozhai"]
+    note: "章回、话本与笔记",
+    books: ["honglou", "sanguo", "shuihu", "xiyou", "rulin", "liaozhai", "dongzhou", "fengshen", "jinghua", "yushi", "jingshi", "xingshi", "chuke", "erke", "suitang", "shuoyue", "xiaolin", "xiaofu"]
   }
 ];
 
@@ -158,7 +177,15 @@ Page({
 
   onOpenBook(e) {
     if (!E.block("library", { page: this, loginPrompt: true })) return;
-    wx.navigateTo({ url: "/pages/list/list?book=" + e.currentTarget.dataset.b });
+    const bookId = e.currentTarget.dataset.b;
+    const book = corpus.booksOf().filter((b) => b.id === bookId)[0];
+    if (book && book.count === 1) {
+      const id = bookId + "-1";
+      trail.set([id]);
+      wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(id) + "&mode=browse" });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/list/list?book=" + bookId });
   },
 
   onShareAppMessage() {

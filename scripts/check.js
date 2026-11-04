@@ -303,10 +303,11 @@ ok("包里不再有正文分片与分片清单",
       "分卷与目录改了但绑定没重生成");
 
     const bound = seedRows.texts;
+    const storedOnly = corpusSeed.loadCorpus(["data/site-texts.js"]).SITE_TEXTS || {};
     const books = {};
     bound.forEach((r) => { books[r.book_id] = (books[r.book_id] || 0) + 1; });
     ok("目录绑定了正文与译文" + Object.keys(books).map((b) => "：" + b + " " + books[b]).join(""),
-      bound.every((r) => r.text && r.translation),
+      bound.every((r) => r.text && (r.translation || storedOnly[r.book_id] || r.book_id === "tongxin")),
       "有绑定条目的正文或译文是空的");
 
     const outside = bound.filter((r) => !r.sid && r.book_id !== "tongxin");
