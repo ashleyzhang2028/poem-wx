@@ -179,7 +179,7 @@
   height: var(--h-dock);
   border-radius: 50%;
   background: var(--read-bg, var(--bg));
-  border: 1rpx solid var(--ink-3);
+  border: 1rpx solid transparent;
   transition: transform var(--t-press) var(--ease), background-color var(--t-press),
     border-color var(--t-press), box-shadow var(--t-press);
 }

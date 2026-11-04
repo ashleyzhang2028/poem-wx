@@ -4083,10 +4083,19 @@ function mountFull(pg, query) {
 
   const lineRule = (sheetCss.match(/^\.poem-line \{[^}]*\}/m) || [])[0] || "";
   const lineHeight = (lineRule.match(/line-height:\s*([^;]+);/) || [])[1] || "";
+  const scaleAt = (sheetCss.match(/^\.poem-body \{[^}]*--poem-gap-scale:\s*([\d.]+)/m) || [])[1] || "";
   const added = sheetCss.match(/(?:^|[;{])\s*line-height:[^;}]*(?:--poem-gap-py|\*\s*var\(--poem-fs\))/g) || [];
   const layered = /\.poem-line\.token-line,[\s\S]*?\{[^}]*line-height:|\.token-line\.token-wrap[^{,]*\{[^}]*line-height:\s+(?!calc)[^;]*/m;
-  ok("折行、句读分行、注音分行取同一个行高（只认 --poem-fs + var(--poem-gap)）",
-    lineHeight.replace(/\s+/g, "") === "calc(var(--poem-fs)+var(--poem-gap))"
+  const gapGrows = [];
+  for (let step = scaleMod.GAP_MIN; step <= scaleMod.GAP_MAX; step++) gapGrows.push(scaleMod.gapStep(step));
+  ok("行距档与默认档只有一份定义（默认档就是基数，各档递增）",
+    scaleAt === String(scaleMod.gapStep(scaleMod.GAP_DEFAULT))
+      && gapGrows[scaleMod.GAP_DEFAULT - scaleMod.GAP_MIN] === 1
+      && gapGrows.every((v, i) => i === 0 || v > gapGrows[i - 1]),
+    "样式里的默认行距系数与 type-scale.js 对不上 —— 不动时与点回去时行距是两套数");
+
+  ok("折行、句读分行、注音分行取同一个行高（--poem-fs + --poem-gap 乘系数）",
+    lineHeight.replace(/\s+/g, "") === "calc((var(--poem-fs)+var(--poem-gap))*var(--poem-gap-scale))"
       && added.length === 0 && !layered.test(sheetCss),
     "有一层行距还在往 --poem-fs + --poem-gap 上加数 —— 折行与句读分行看着不一样");
 
@@ -4105,8 +4114,12 @@ function mountFull(pg, query) {
       && /\.token \{[^}]*margin:\s*0 var\(--py-gap\)/m.test(sheetCss),
     "字身还挂着上下余白 —— 折行那一行比句读分行多出一截");
 
-  ok("行间距不再留加减的入口（只跟字号走）",
-    !/line[Gg]ap|onLineUp|onLineDown/.test(sheetJsSrc + readerJsSrc + readSrc("utils/store.js")),
+  const dockSrc = readSrc("components/operation-dock/operation-dock.js")
+    + readSrc("components/operation-dock/operation-dock.wxml");
+  ok("行距的加减只在浮坞一处，且与字号档共用同一个档位定义",
+    /gapDown/.test(dockSrc) && /gapUp/.test(dockSrc)
+      && /scale\.clampGap\(/.test(readerJsSrc) && /scale\.gapStep\(/.test(readerJsSrc)
+      && !/clampGap|gapStep/.test(sheetJsSrc),
     "行距又长出一条可调的路 —— 定下来的值与手动档位迟早各说一套");
 }
 

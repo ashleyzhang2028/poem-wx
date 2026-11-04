@@ -30,6 +30,8 @@ Component({
     align: { type: String, value: "center" },
     fontDown: { type: Boolean, value: false },
     fontUp: { type: Boolean, value: true },
+    gapDown: { type: Boolean, value: true },
+    gapUp: { type: Boolean, value: true },
     pinyinOn: { type: Boolean, value: false },
     pinyinMode: { type: String, value: "off" },
     dailyOn: { type: Boolean, value: false },
@@ -47,6 +49,8 @@ Component({
     pinyinGlyph: icons.off,
     zoomOut: icons.zoomOut,
     zoomIn: icons.zoomIn,
+    lineDown: icons.lineDown,
+    lineUp: icons.lineUp,
     lift: 0,
     shift: 0
   },

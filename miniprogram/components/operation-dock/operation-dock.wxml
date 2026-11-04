@@ -17,6 +17,16 @@
         </view>
       </view>
       <view class="dock-seg">
+        <view class="dock-tool {{gapDown ? '' : 'off'}}" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="gapDown" bindtap="onTool" aria-label="减小行间距">
+          <view class="dock-tool-glyph" style="mask-image:url('{{lineDown}}');-webkit-mask-image:url('{{lineDown}}');"></view>
+        </view>
+        <view class="dock-tool {{gapUp ? '' : 'off'}}" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="gapUp" bindtap="onTool" aria-label="增加行间距">
+          <view class="dock-tool-glyph" style="mask-image:url('{{lineUp}}');-webkit-mask-image:url('{{lineUp}}');"></view>
+        </view>
+      </view>
+      <view class="dock-seg">
         <view class="dock-tool {{fontDown ? '' : 'off'}}" hover-class="dock-tool-hover" hover-stay-time="60"
               data-key="fontDown" bindtap="onTool" aria-label="减小字号">
           <view class="dock-tool-glyph" style="mask-image:url('{{zoomOut}}');-webkit-mask-image:url('{{zoomOut}}');"></view>
