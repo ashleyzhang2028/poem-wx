@@ -6,6 +6,8 @@ const guard = require("../../../utils/guard");
 const loginFlow = require("../../../utils/login-flow");
 const remote = require("../../../utils/remote");
 
+const REFUSE_TOAST_MAX = 20;
+
 function sizeText(bytes) {
   const n = Number(bytes) || 0;
   if (n < 1024) return n + " B";
@@ -91,13 +93,19 @@ Page({
     });
   },
 
+  refuse(reason) {
+    const text = String(reason || "").trim() || "清理未成功";
+    if (text.length <= REFUSE_TOAST_MAX) wx.showToast({ title: text, icon: "none" });
+    else wx.showModal({ title: "清理未成功", content: text, showCancel: false, confirmText: "知悉" });
+  },
+
   purge(key) {
     if (this.data.busy) return;
     this.setData({ busy: key });
     remote.adminMaintenancePurge(key).then((res) => {
       this.setData({ busy: "" });
       if (!res.ok) {
-        wx.showToast({ title: res.reason, icon: "none" });
+        this.refuse(res.reason);
         return;
       }
       this.markResult(key, (res.deleted && res.deleted[key]) || 0);

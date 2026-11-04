@@ -1,4 +1,5 @@
 const bannerPage = require("../../utils/page-banner");
+const pageStack = require("../../utils/page-stack");
 
 const RATIO = 916 / 1717;
 
@@ -37,9 +38,8 @@ Component({
   },
 
   attached() {
-    const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
-    const page = pages[pages.length - 1];
-    const full = !!page && pages.length === 1;
+    const pages = pageStack.list();
+    const full = !!pageStack.top() && pages.length === 1;
     this.setData({ full, pagePadding: bannerPage.pagePadding(), cover: full ? bannerPage.coverOf() : 0, imageHeight: imageHeight() });
   }
 });

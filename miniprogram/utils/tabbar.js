@@ -1,3 +1,5 @@
+const pageStack = require("./page-stack");
+
 function barOf(page) {
   if (!page) return null;
   const native = typeof page.getTabBar === "function" ? page.getTabBar() : null;
@@ -22,9 +24,7 @@ function below(page) {
 }
 
 function exists() {
-  const pages = getCurrentPages();
-  const page = pages[pages.length - 1];
-  return !!barOf(page);
+  return !!barOf(pageStack.top());
 }
 
 module.exports = { sync, pick, below, exists };

@@ -5,6 +5,16 @@ const theme = require("../../utils/theme");
 
 const TOAST_MS = 2000;
 
+const TOAST_MAX = 20;
+
+function noteOf(title) {
+  const text = String(title == null ? "" : title).trim();
+  if (!text) return "";
+  if (text.length <= TOAST_MAX) return text;
+  wx.showModal({ title: "提示", content: text, showCancel: false, confirmText: "知悉" });
+  return "";
+}
+
 Component({
   options: {
     addGlobalClass: true
@@ -56,7 +66,8 @@ Component({
     },
 
     show(title) {
-      wx.showToast({ title: title, icon: "none", duration: TOAST_MS });
+      const text = noteOf(title);
+      if (text) wx.showToast({ title: text, icon: "none", duration: TOAST_MS });
     },
 
     onMask() {

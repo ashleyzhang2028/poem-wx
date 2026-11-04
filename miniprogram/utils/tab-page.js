@@ -1,3 +1,5 @@
+const pageStack = require("./page-stack");
+
 const MINE = "/pages/mine/mine";
 const GAME = "/packages/game/index/index";
 
@@ -6,8 +8,7 @@ function go(url) {
 }
 
 function here() {
-  const pages = getCurrentPages();
-  return pages.length ? pages[pages.length - 1].route : "";
+  return pageStack.route();
 }
 
 function landed() {
@@ -19,7 +20,7 @@ function conference() {
 }
 
 function hub() {
-  const pages = getCurrentPages();
+  const pages = pageStack.list();
   const at = pages.map((p) => p.route).lastIndexOf(GAME.slice(1));
   if (at < 0) {
     conference();
@@ -33,7 +34,7 @@ function mine() {
     go(MINE);
     return;
   }
-  const pages = getCurrentPages();
+  const pages = pageStack.list();
   if (pages.length > 1) wx.navigateBack({ delta: 1 });
 }
 

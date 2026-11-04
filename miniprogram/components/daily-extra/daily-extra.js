@@ -5,6 +5,8 @@ const icons = require("../../utils/icons");
 
 const SUGGEST_MAX = 8;
 
+const TOAST_MAX = 20;
+
 Component({
   options: {
 
@@ -76,7 +78,11 @@ Component({
       const id = e.currentTarget.dataset.id;
       const r = this.toggle(id);
       if (r.code === "E_TIER") entitlement.gateTier("extra", { page: this });
-      else if (r.msg) wx.showToast({ title: r.msg, icon: "none" });
+      else if (r.msg) {
+        const text = String(r.msg).trim();
+        if (text.length <= TOAST_MAX) wx.showToast({ title: text, icon: "none" });
+        else wx.showModal({ title: "未能加入", content: text, showCancel: false, confirmText: "知悉" });
+      }
       if (r.ok === false) return;
       this.afterChange();
     },
