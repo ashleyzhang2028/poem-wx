@@ -4494,12 +4494,15 @@ function mountFull(pg, query) {
       const body = /onPinyinToggle\s*\(\)\s*\{([\s\S]*?)\n\s{2,4}\}/.exec(src);
       return body ? body[1] : "";
     };
-    const once = (js, wxml) => /bindtap="onPinyinToggle"/.test(wxml)
+    const dockWxml = read("components/operation-dock/operation-dock.wxml");
+    const dockBound = /data-key="pinyin"/.test(dockWxml)
+      && /key === "pinyin"\) this\.onPinyinToggle\(\)/.test(readerJs);
+    const once = (js, wxml, bound) => (bound || /bindtap="onPinyinToggle"/.test(wxml))
       && /pinyin\.setMode\(/.test(js)
       && /"all"/.test(toggleOf(js)) && /"off"/.test(toggleOf(js))
       && !/<radio/.test(wxml.replace(/<radio-group class="chip-group[\s\S]*?<\/radio-group>/, ""));
     ok("注音是一枚按钮，阅读页与背诵弹层各一处，点一下在全文与不注音之间轮回",
-      once(readerJs, readerWxml) && once(sheetJs, sheetWxml),
+      once(readerJs, readerWxml, dockBound) && once(sheetJs, sheetWxml),
       "哪一处还留着 radio 组，或者按钮没接上 onPinyinToggle");
 
     ok("阅读页与弹层共用同一个注音开关（阅读页不把档位写死成 off）",

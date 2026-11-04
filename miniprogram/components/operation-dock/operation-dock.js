@@ -27,6 +27,11 @@ Component({
   properties: {
     swatches: { type: Array, value: [] },
     bg: { type: String, value: "" },
+    align: { type: String, value: "center" },
+    fontDown: { type: Boolean, value: false },
+    fontUp: { type: Boolean, value: true },
+    pinyinOn: { type: Boolean, value: false },
+    pinyinMode: { type: String, value: "off" },
     dailyOn: { type: Boolean, value: false },
     dailyIcon: { type: String, value: icons.add },
     pickOn: { type: Boolean, value: false },
@@ -37,11 +42,23 @@ Component({
     open: false,
     rows: ROWS,
     glyph: icons.actions,
+    dragging: false,
+    alignGlyph: icons.center,
+    pinyinGlyph: icons.off,
+    zoomOut: icons.zoomOut,
+    zoomIn: icons.zoomIn,
     lift: 0,
     shift: 0
   },
 
   observers: {
+    "align, pinyinMode": function (align, pinyinMode) {
+      this.setData({
+        alignGlyph: align === "center" ? icons.center : icons.left,
+        pinyinGlyph: pinyinMode === "all" ? icons.all : icons.off
+      });
+    },
+
     "dailyOn, dailyIcon, pickOn, markOn": function (dailyOn, dailyIcon, pickOn, markOn) {
       const on = { daily: dailyOn, pick: pickOn, mark: markOn };
       const shape = { daily: dailyIcon };
@@ -69,7 +86,7 @@ Component({
       const dy = t.clientY - this.from.y;
       if (!this.moved && Math.abs(dx) < DRAG_SLOP && Math.abs(dy) < DRAG_SLOP) return;
       this.moved = true;
-      if (this.data.open) this.setData({ open: false });
+      this.setData({ dragging: true, open: false });
       const win = viewport();
       const width = Number(win.windowWidth) || 375;
       const height = Number(win.windowHeight) || 667;
@@ -77,7 +94,7 @@ Component({
       const size = 92 * unit;
       const baseRight = 32 * unit;
       const baseBottom = 112 * unit + Math.max(0, height - ((win.safeArea || {}).bottom || height)) + 32 * unit;
-      const stack = (ROWS.length + 1) * (size + 16 * unit);
+      const stack = 3 * (size + 16 * unit);
       this.setData({
         lift: clamp(this.from.lift - dy, EDGE - baseBottom,Math.max(0, height - baseBottom - size - stack - EDGE)),
         shift: clamp(this.from.shift - dx, EDGE - baseRight, Math.max(0, width - baseRight - size - EDGE))
@@ -86,6 +103,7 @@ Component({
 
     onTouchEnd() {
       this.from = null;
+      if (this.data.dragging) this.setData({ dragging: false });
       if (this.moved) this.moved = false;
     },
 
@@ -102,6 +120,11 @@ Component({
     onSwatch(e) {
       if (!this.data.open) return;
       this.triggerEvent("bg", { id: e.currentTarget.dataset.id });
+    },
+
+    onTool(e) {
+      if (!this.data.open) return;
+      this.triggerEvent("act", { key: e.currentTarget.dataset.key });
     },
 
     onPick(e) {

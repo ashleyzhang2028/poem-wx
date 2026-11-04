@@ -10,155 +10,67 @@
 }
 
 .dock-mask {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  position: absolute;
+  left: -200vw;
+  top: -200vh;
+  right: -200vw;
+  bottom: -200vh;
   z-index: -1;
-  background: rgba(0, 0, 0, .12);
-  opacity: 0;
   pointer-events: none;
-  transition: opacity var(--t-move) var(--ease);
 }
 
 .dock-mask.in {
-  opacity: 1;
   pointer-events: auto;
 }
 
-.dock-item {
-  flex: none;
-  --out: 0s;
-  --in: 0s;
+.dock-panel {
+  width: 520rpx;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--radius-block);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  box-shadow: 0 8rpx 28rpx rgba(0, 0, 0, .1);
   opacity: 0;
-  transform: translateY(24rpx) scale(.88);
+  transform: translateY(24rpx) scale(.92);
   transform-origin: 100% 100%;
   pointer-events: none;
   visibility: hidden;
-  transition: opacity var(--t-move) var(--ease) var(--out),
-    transform var(--t-move) var(--ease) var(--out),
-    visibility 0s linear calc(var(--t-move) + var(--out));
+  transition: opacity var(--t-move) var(--ease),
+    transform var(--t-move) var(--ease),
+    visibility 0s linear var(--t-move);
 }
 
-.dock-item:nth-child(2) { --out: 0s; --in: .12s; }
-.dock-item:nth-child(3) { --out: .04s; --in: .08s; }
-.dock-item:nth-child(4) { --out: .08s; --in: .04s; }
-.dock-item:nth-child(5) { --out: .12s; --in: 0s; }
-
-.dock-item.in {
+.dock-panel.in {
   opacity: 1;
   transform: none;
   pointer-events: auto;
   visibility: visible;
-  transition: opacity var(--t-move) var(--ease) var(--in),
-    transform var(--t-move) var(--ease) var(--in),
+  transition: opacity var(--t-move) var(--ease),
+    transform var(--t-move) var(--ease),
     visibility 0s;
 }
 
-.dock-pill {
+.dock-row {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  padding: 8rpx 8rpx 8rpx var(--sp-3);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  border: 1rpx solid var(--line);
-  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, .1);
-  transition: background-color var(--t-press), border-color var(--t-press);
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateY(12rpx);
+  transition: opacity var(--t-press) var(--ease), transform var(--t-press) var(--ease);
 }
 
-.dock-label {
-  flex: none;
-  font-size: var(--fs-hint);
-  color: var(--ink-2);
-  letter-spacing: var(--ls-caption);
+.dock-panel.in .dock-row {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--t-move) var(--ease), transform var(--t-move) var(--ease);
 }
 
-.dock-face {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(var(--h-dock) - 16rpx);
-  height: calc(var(--h-dock) - 16rpx);
-  border-radius: 50%;
-  background: var(--sink);
-  transition: background-color var(--t-press);
-}
-
-.dock-glyph {
-  width: 40rpx;
-  height: 40rpx;
-  background-color: currentColor;
-  color: var(--ink-2);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-}
-
-.dock-item.on .dock-pill {
-  border-color: var(--strong);
-}
-
-.dock-item.on .dock-label {
-  color: var(--strong-text);
-}
-
-.dock-item.on .dock-face {
-  background: var(--strong);
-}
-
-.dock-item.on .dock-glyph {
-  color: var(--on-theme);
-}
-
-.dock-item-hover .dock-pill {
-  background: var(--sink);
-}
-
-.dock-trigger {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--h-dock);
-  height: var(--h-dock);
-  border-radius: 50%;
-  background: var(--strong);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .18);
-  transition: transform var(--t-press) var(--ease), background-color var(--t-press);
-}
-
-.dock-trigger-hover {
-  transform: scale(.94);
-}
-
-.dock-trigger-glyph {
-  width: 44rpx;
-  height: 44rpx;
-  background-color: currentColor;
-  color: var(--on-theme);
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  transition: transform var(--t-move) var(--ease);
-}
-
-.dock-trigger.open .dock-trigger-glyph {
-  transform: rotate(90deg);
-}
-
-.dock-swatches {
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-}
+.dock-panel.in .dock-row:nth-child(3) { transition-delay: .04s; }
+.dock-panel.in .dock-row:nth-child(2) { transition-delay: .08s; }
+.dock-panel.in .dock-row:nth-child(1) { transition-delay: .12s; }
 
 .dock-swatch {
   flex: none;
@@ -173,4 +85,127 @@
 .dock-swatch.on {
   box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--strong);
   transform: scale(1.05);
+}
+
+.dock-seg {
+  display: flex;
+  align-items: center;
+  flex: none;
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.dock-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: var(--h-pref);
+  transition: background-color var(--t-press), opacity var(--t-press);
+}
+
+.dock-tool.off {
+  opacity: .35;
+}
+
+.dock-tool.on {
+  background: var(--strong-soft);
+}
+
+.dock-tool-hover {
+  background: var(--sink);
+}
+
+.dock-tool-glyph,
+.dock-glyph,
+.dock-trigger-glyph {
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.dock-tool-glyph {
+  width: 36rpx;
+  height: 36rpx;
+  color: var(--ink-3);
+}
+
+.dock-tool.on .dock-tool-glyph {
+  color: var(--strong-text);
+}
+
+.dock-round {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--h-dock) - 16rpx);
+  height: calc(var(--h-dock) - 16rpx);
+  border-radius: 50%;
+  background: var(--sink);
+  transition: background-color var(--t-press), transform var(--t-press) var(--ease);
+}
+
+.dock-glyph {
+  width: 40rpx;
+  height: 40rpx;
+  color: var(--ink-2);
+}
+
+.dock-round.on {
+  background: var(--strong);
+}
+
+.dock-round.on .dock-glyph {
+  color: var(--on-theme);
+}
+
+.dock-round-hover {
+  transform: scale(.94);
+}
+
+.dock-trigger {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--h-dock);
+  height: var(--h-dock);
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1rpx solid var(--ink-3);
+  transition: transform var(--t-press) var(--ease), background-color var(--t-press),
+    border-color var(--t-press), box-shadow var(--t-press);
+}
+
+.dock-trigger-hover,
+.dock-trigger.drag {
+  background: var(--strong);
+  border-color: var(--strong);
+}
+
+.dock-trigger-hover {
+  transform: scale(.94);
+}
+
+.dock-trigger.drag {
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .18);
+}
+
+.dock-trigger-glyph {
+  width: 44rpx;
+  height: 44rpx;
+  color: var(--ink-3);
+  transition: color var(--t-press);
+}
+
+.dock-trigger-hover .dock-trigger-glyph,
+.dock-trigger.drag .dock-trigger-glyph {
+  color: var(--on-theme);
 }

@@ -202,11 +202,16 @@ Page({
     if (key === "daily") this.onToggleDaily();
     else if (key === "pick") this.onAddToCollection();
     else if (key === "mark") this.onToggleMark();
+    else if (key === "align") this.onAlignToggle();
+    else if (key === "fontDown") this.onFontDown();
+    else if (key === "fontUp") this.onFontUp();
+    else if (key === "pinyin") this.onPinyinToggle();
   },
 
   onDockBg(e) {
     const id = readBg.pick(e && e.detail && e.detail.id);
     this.setData({ bgStyle: readBg.style(), bgId: id });
+    sync.markDirty();
   },
 
   foldDock() {
