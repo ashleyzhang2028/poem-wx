@@ -11,10 +11,6 @@
   padding: var(--sp-2) 0;
 }
 
-.mark-bulk {
-  margin-top: var(--sp-1);
-}
-
 .mark-search {
   margin-bottom: var(--sp-2);
 }
