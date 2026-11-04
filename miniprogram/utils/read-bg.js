@@ -2,6 +2,7 @@ const store = require("./store");
 
 const LIST = [
   { id: "", name: "素白", color: "#ffffff" },
+  { id: "gray", name: "淡灰", color: "#f5f5f7" },
   { id: "paper", name: "米黄", color: "#f6efdc" },
   { id: "parchment", name: "羊皮", color: "#eadfc2" },
   { id: "green", name: "豆沙绿", color: "#cce8cf" },
@@ -17,7 +18,7 @@ function current() {
 }
 
 function style() {
-  return "--bg:" + find(current()).color + ";";
+  return "--read-bg:" + find(current()).color + ";";
 }
 
 function pick(id) {

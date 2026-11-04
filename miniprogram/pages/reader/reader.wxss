@@ -1,6 +1,6 @@
 .reader {
   --read-gap: var(--sp-5);
-  background: var(--bg);
+  background: var(--read-bg);
 }
 
 .poem-card .empty-btn {

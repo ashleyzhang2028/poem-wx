@@ -46,7 +46,7 @@ const RESULTS = [
 const PAGE_ICONS = {
   left: icons.left, center: icons.center,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
-  playlist: icons.playlist, bookmark: icons.bookmark, off: icons.off, all: icons.all
+  bookmark: icons.bookmark, off: icons.off, all: icons.all
 };
 
 function aliasTextOf(meta) {
@@ -112,7 +112,6 @@ Page({
 
     dailyOn: false,
     dailyLocked: false,
-    pickOn: false,
     markOn: false,
     extraTier: "pro",
     pickTier: "pro",
@@ -191,7 +190,6 @@ Page({
       dailyOn: on,
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
-      pickOn: cols.collectionsOf(this.data.id).length > 0,
       markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
     });
@@ -221,6 +219,13 @@ Page({
 
   onAddToCollection() {
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
+    if (cols.collectionsOf(this.data.id).length) {
+      cols.removeEverywhere(this.data.id);
+      sync.markDirty();
+      this.syncDaily();
+      wx.showToast({ title: "已移出自选", icon: "none" });
+      return;
+    }
     const box = this.selectComponent("#collect");
     if (box) box.ask(this.data.id, this.data.title || "");
   },

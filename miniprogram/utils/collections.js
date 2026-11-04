@@ -211,6 +211,24 @@ function prune() {
   return removed;
 }
 
+function removeEverywhere(poemId) {
+  const all = list();
+  const gone = String(poemId || "").trim();
+  if (!gone) return { ok: false, removed: 0, ids: [] };
+  const ids = [];
+  let removed = 0;
+  all.forEach((c) => {
+    const left = c.items.filter((it) => it.id !== gone);
+    const n = c.items.length - left.length;
+    if (!n) return;
+    c.items = left;
+    removed += n;
+    ids.push(c.id);
+  });
+  if (removed) save(all);
+  return { ok: removed > 0, removed: removed, ids: ids };
+}
+
 function collectionsOf(poemId) {
   return list()
     .filter((c) => idsOf(c).indexOf(poemId) >= 0)
@@ -220,6 +238,7 @@ function collectionsOf(poemId) {
 module.exports = {
   NAME_MAX,
   ITEMS_MAX,
+  removeEverywhere,
   LIMITS,
   DAILY_COUNTS,
   DAILY_DEFAULT,

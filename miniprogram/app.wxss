@@ -16,6 +16,7 @@ button, input, textarea {
   font-family: var(--font-ui);
   min-height: 100vh;
   padding: var(--sp-3) var(--sp-3);
+  background: var(--bg);
 }
 
 .page.has-tabbar {

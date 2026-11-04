@@ -1,4 +1,4 @@
-page {
+.page {
 
   --theme: var(--c-daiqing);
   --ink: #1c1c1e;
@@ -137,7 +137,7 @@ page {
   --h-round: calc(60rpx * var(--ui-scale));
   --h-round-ico: calc(40rpx * var(--ui-scale));
 
-  --h-dock: calc(92rpx * var(--ui-scale));
+  --h-dock: calc(76rpx * var(--ui-scale));
 
   --glyph-round: calc(32rpx * var(--ui-scale));
   --glyph-edge: calc(3rpx * var(--ui-scale));
@@ -159,7 +159,6 @@ page {
   --t-move: .28s;
   --ease: cubic-bezier(.22, .61, .36, 1);
 
-  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-body);
