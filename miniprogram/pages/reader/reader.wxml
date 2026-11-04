@@ -53,33 +53,6 @@
       <view class="poem-rule"><view class="poem-rule-dot"></view></view>
     </view>
 
-    <view class="prefs">
-      <view class="pref-seg">
-        <view class="pref-opt in-seg ic {{align === 'center' ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onAlignToggle"
-              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
-          <view class="glyph" style="mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');-webkit-mask-image:url('{{icons[align === 'center' ? 'center' : 'left']}}');"></view>
-        </view>
-      </view>
-      <view class="pref-size">
-        <view class="pref-opt ic {{fontDown ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontDown" aria-label="减小字号">
-          <view class="glyph" style="mask-image:url('{{icons.zoomOut}}');-webkit-mask-image:url('{{icons.zoomOut}}');"></view>
-        </view>
-        <view class="pref-opt ic {{fontUp ? '' : 'off'}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onFontUp" aria-label="加大字号">
-          <view class="glyph" style="mask-image:url('{{icons.zoomIn}}');-webkit-mask-image:url('{{icons.zoomIn}}');"></view>
-        </view>
-      </view>
-      <view class="pref-seg" wx:if="{{pinyinOn}}">
-        <view class="pref-opt in-seg ic {{pinyinMode === 'all' ? 'on' : ''}}"
-              hover-class="pref-opt-hover" hover-stay-time="60" bindtap="onPinyinToggle"
-              aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
-          <view class="glyph" style="mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');-webkit-mask-image:url('{{icons[pinyinMode === 'all' ? 'all' : 'off']}}');"></view>
-        </view>
-      </view>
-    </view>
-
     <view class="poem-body align-{{align}} size-{{fontSize}} {{prose ? 'prose' : ''}} {{loose ? 'loose' : ''}}">
       <block wx:if="{{pinyinOn}}">
         <view class="poem-stanza" wx:for="{{tokens}}" wx:key="index" wx:for-item="para">
@@ -160,7 +133,9 @@
 
   <view class="safe-bottom"></view>
 
-  <operation-dock id="dock" swatches="{{bgList}}" bg="{{bgId}}" bind:bg="onDockBg" daily-on="{{dailyOn}}"
+  <operation-dock id="dock" swatches="{{bgList}}" bg="{{bgId}}" bind:bg="onDockBg"
+                  align="{{align}}" font-down="{{fontDown}}" font-up="{{fontUp}}"
+                  pinyin-on="{{pinyinOn}}" pinyin-mode="{{pinyinMode}}" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
                   pick-on="{{pickOn}}" mark-on="{{markOn}}" bind:act="onDockAct" />
   </block>

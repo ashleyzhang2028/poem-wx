@@ -37,6 +37,7 @@ const NAMES = [
   ["month", "CilCalendarMonth.svg"],
   ["crest", "TangBaoxiang.svg"],
   ["settings", "CilCog.svg"],
+  ["actions", "CilOptions.svg"],
 ];
 
 function flatten(svg) {

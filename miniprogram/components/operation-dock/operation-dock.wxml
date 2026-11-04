@@ -1,27 +1,51 @@
 <view class="dock" style="transform: translate({{shift}}px, -{{lift}}px)">
   <view class="dock-mask {{open ? 'in' : ''}}" bindtap="onClose"></view>
 
-  <view class="dock-item {{open ? 'in' : ''}}">
-    <view class="dock-pill dock-swatches">
+  <view class="dock-panel {{open ? 'in' : ''}}">
+    <view class="dock-row">
       <view class="dock-swatch {{item.id === bg ? 'on' : ''}}" wx:for="{{swatches}}" wx:key="id"
             data-id="{{item.id}}" style="background:{{item.color}}"
             bindtap="onSwatch" aria-label="{{item.name}}"></view>
     </view>
-  </view>
 
-  <view class="dock-item {{open ? 'in' : ''}} {{item.on ? 'on' : ''}}"
-        wx:for="{{rows}}" wx:key="key" data-key="{{item.key}}"
-        hover-class="dock-item-hover" hover-stay-time="60" bindtap="onPick"
-        aria-label="{{item.label}}">
-    <view class="dock-pill">
-      <text class="dock-label">{{item.label}}</text>
-      <view class="dock-face">
+    <view class="dock-row">
+      <view class="dock-seg">
+        <view class="dock-tool" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="align" bindtap="onTool"
+              aria-label="{{align === 'center' ? '改为左对齐' : '改为居中'}}">
+          <view class="dock-tool-glyph" style="mask-image:url('{{alignGlyph}}');-webkit-mask-image:url('{{alignGlyph}}');"></view>
+        </view>
+      </view>
+      <view class="dock-seg">
+        <view class="dock-tool {{fontDown ? '' : 'off'}}" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="fontDown" bindtap="onTool" aria-label="减小字号">
+          <view class="dock-tool-glyph" style="mask-image:url('{{zoomOut}}');-webkit-mask-image:url('{{zoomOut}}');"></view>
+        </view>
+        <view class="dock-tool {{fontUp ? '' : 'off'}}" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="fontUp" bindtap="onTool" aria-label="加大字号">
+          <view class="dock-tool-glyph" style="mask-image:url('{{zoomIn}}');-webkit-mask-image:url('{{zoomIn}}');"></view>
+        </view>
+      </view>
+      <view class="dock-seg" wx:if="{{pinyinOn}}">
+        <view class="dock-tool {{pinyinMode === 'all' ? 'on' : ''}}" hover-class="dock-tool-hover" hover-stay-time="60"
+              data-key="pinyin" bindtap="onTool"
+              aria-label="{{pinyinMode === 'all' ? '关闭注音' : '全文注音'}}">
+          <view class="dock-tool-glyph" style="mask-image:url('{{pinyinGlyph}}');-webkit-mask-image:url('{{pinyinGlyph}}');"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="dock-row">
+      <view class="dock-round {{item.on ? 'on' : ''}}"
+            wx:for="{{rows}}" wx:key="key" data-key="{{item.key}}"
+            hover-class="dock-round-hover" hover-stay-time="60" bindtap="onPick"
+            aria-label="{{item.label}}">
         <view class="dock-glyph" style="mask-image:url('{{item.icon}}');-webkit-mask-image:url('{{item.icon}}');"></view>
       </view>
     </view>
   </view>
 
-  <view class="dock-trigger {{open ? 'open' : ''}}" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
+  <view class="dock-trigger {{dragging ? 'drag' : ''}}" hover-class="dock-trigger-hover" hover-stay-time="60" bindtap="onToggle"
         bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"
         bindtouchcancel="onTouchEnd" aria-label="{{open ? '收起操作' : '展开操作'}}">
     <view class="dock-trigger-glyph" style="mask-image:url('{{glyph}}');-webkit-mask-image:url('{{glyph}}');"></view>
