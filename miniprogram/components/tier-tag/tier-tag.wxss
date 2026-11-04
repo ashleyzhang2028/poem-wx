@@ -1,5 +1,4 @@
-.tier-tag,
-[data-tag="text"][tier-tag="1"] {
+.tier-tag {
   flex: none;
   margin-left: var(--sp-2);
   font-size: var(--fs-caption);
