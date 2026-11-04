@@ -137,7 +137,7 @@
                   align="{{align}}" font-down="{{fontDown}}" font-up="{{fontUp}}"
                   pinyin-on="{{pinyinOn}}" pinyin-mode="{{pinyinMode}}" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
-                  pick-on="{{pickOn}}" mark-on="{{markOn}}" bind:act="onDockAct" />
+                  mark-on="{{markOn}}" bind:act="onDockAct" />
   </block>
   </block>
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />

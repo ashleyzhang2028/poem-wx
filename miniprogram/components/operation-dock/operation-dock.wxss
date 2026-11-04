@@ -144,16 +144,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(var(--h-dock) - 16rpx);
-  height: calc(var(--h-dock) - 16rpx);
+  width: var(--h-dock);
+  height: var(--h-dock);
   border-radius: 50%;
   background: var(--sink);
   transition: background-color var(--t-press), transform var(--t-press) var(--ease);
 }
 
 .dock-glyph {
-  width: 40rpx;
-  height: 40rpx;
+  width: 28rpx;
+  height: 28rpx;
   color: var(--ink-2);
 }
 
@@ -178,7 +178,7 @@
   width: var(--h-dock);
   height: var(--h-dock);
   border-radius: 50%;
-  background: var(--bg);
+  background: var(--read-bg, var(--bg));
   border: 1rpx solid var(--ink-3);
   transition: transform var(--t-press) var(--ease), background-color var(--t-press),
     border-color var(--t-press), box-shadow var(--t-press);
@@ -199,8 +199,8 @@
 }
 
 .dock-trigger-glyph {
-  width: 44rpx;
-  height: 44rpx;
+  width: 30rpx;
+  height: 30rpx;
   color: var(--ink-3);
   transition: color var(--t-press);
 }
