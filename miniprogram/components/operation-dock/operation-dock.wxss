@@ -152,8 +152,8 @@
 }
 
 .dock-glyph {
-  width: 32rpx;
-  height: 32rpx;
+  width: 28rpx;
+  height: 28rpx;
   color: var(--ink-2);
 }
 
@@ -199,8 +199,8 @@
 }
 
 .dock-trigger-glyph {
-  width: 36rpx;
-  height: 36rpx;
+  width: 30rpx;
+  height: 30rpx;
   color: var(--ink-3);
   transition: color var(--t-press);
 }
