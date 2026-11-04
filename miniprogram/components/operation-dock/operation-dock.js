@@ -89,7 +89,7 @@ Component({
       const width = Number(win.windowWidth) || 375;
       const height = Number(win.windowHeight) || 667;
       const unit = width / 750;
-      const size = 92 * unit;
+      const size = 76 * unit;
       const baseRight = 32 * unit;
       const baseBottom = 112 * unit + Math.max(0, height - ((win.safeArea || {}).bottom || height)) + 32 * unit;
       const stack = 3 * (size + 16 * unit);
