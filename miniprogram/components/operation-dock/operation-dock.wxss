@@ -2,15 +2,11 @@
   position: fixed;
   right: var(--sp-4);
   bottom: calc(var(--tabbar-h) + var(--sp-4));
-  z-index: 90;
+  z-index: 10001;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: var(--sp-2);
-}
-
-.dock.above {
-  bottom: calc(env(safe-area-inset-bottom) + var(--sp-4));
 }
 
 .dock-mask {
@@ -20,7 +16,7 @@
   right: 0;
   bottom: 0;
   z-index: -1;
-  background: rgba(0, 0, 0, .06);
+  background: rgba(0, 0, 0, .12);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--t-move) var(--ease);
@@ -33,50 +29,50 @@
 
 .dock-item {
   flex: none;
+  --out: 0s;
+  --in: 0s;
   opacity: 0;
-  transform: translateY(28rpx) scale(.6);
-  transition-delay: 0s;
+  transform: translateY(24rpx) scale(.88);
   transform-origin: 100% 100%;
   pointer-events: none;
   visibility: hidden;
-  transition: opacity var(--t-move) var(--ease),
-    transform var(--t-move) var(--ease),
-    visibility 0s linear var(--t-move);
+  transition: opacity var(--t-move) var(--ease) var(--out),
+    transform var(--t-move) var(--ease) var(--out),
+    visibility 0s linear calc(var(--t-move) + var(--out));
 }
+
+.dock-item:nth-child(2) { --out: 0s; --in: .12s; }
+.dock-item:nth-child(3) { --out: .04s; --in: .08s; }
+.dock-item:nth-child(4) { --out: .08s; --in: .04s; }
+.dock-item:nth-child(5) { --out: .12s; --in: 0s; }
 
 .dock-item.in {
   opacity: 1;
   transform: none;
   pointer-events: auto;
   visibility: visible;
-  transition: opacity var(--t-move) var(--ease),
-    transform var(--t-move) var(--ease),
+  transition: opacity var(--t-move) var(--ease) var(--in),
+    transform var(--t-move) var(--ease) var(--in),
     visibility 0s;
 }
 
-.dock-item.in:nth-child(4) {
-  transition-delay: .12s;
-}
-
-.dock-item.in:nth-child(3) {
-  transition-delay: .06s;
-}
-
-.dock-fly {
+.dock-pill {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--sp-2);
+  padding: 8rpx 8rpx 8rpx var(--sp-3);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, .1);
+  transition: background-color var(--t-press), border-color var(--t-press);
 }
 
 .dock-label {
   flex: none;
-  font-size: var(--fs-caption);
+  font-size: var(--fs-hint);
   color: var(--ink-2);
   letter-spacing: var(--ls-caption);
-  background: var(--surface);
-  border-radius: var(--radius-pill);
-  padding: 4rpx var(--sp-2);
 }
 
 .dock-face {
@@ -84,17 +80,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--h-dock);
-  height: var(--h-dock);
+  width: calc(var(--h-dock) - 16rpx);
+  height: calc(var(--h-dock) - 16rpx);
   border-radius: 50%;
-  background: var(--surface);
-  border: 1rpx solid var(--line);
-  transition: background-color var(--t-press), border-color var(--t-press);
+  background: var(--sink);
+  transition: background-color var(--t-press);
 }
 
 .dock-glyph {
-  width: 44rpx;
-  height: 44rpx;
+  width: 40rpx;
+  height: 40rpx;
   background-color: currentColor;
   color: var(--ink-2);
   mask-repeat: no-repeat;
@@ -105,16 +100,23 @@
   -webkit-mask-size: contain;
 }
 
-.dock-item.on .dock-face {
-  background: var(--strong-soft);
+.dock-item.on .dock-pill {
   border-color: var(--strong);
 }
 
-.dock-item.on .dock-glyph {
+.dock-item.on .dock-label {
   color: var(--strong-text);
 }
 
-.dock-item-hover .dock-face {
+.dock-item.on .dock-face {
+  background: var(--strong);
+}
+
+.dock-item.on .dock-glyph {
+  color: var(--on-theme);
+}
+
+.dock-item-hover .dock-pill {
   background: var(--sink);
 }
 
@@ -127,7 +129,7 @@
   height: var(--h-dock);
   border-radius: 50%;
   background: var(--strong);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .16);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .18);
   transition: transform var(--t-press) var(--ease), background-color var(--t-press);
 }
 
@@ -146,4 +148,29 @@
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
+  transition: transform var(--t-move) var(--ease);
+}
+
+.dock-trigger.open .dock-trigger-glyph {
+  transform: rotate(90deg);
+}
+
+.dock-swatches {
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.dock-swatch {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 1rpx solid var(--line-strong);
+  box-sizing: border-box;
+  transition: transform var(--t-press) var(--ease), box-shadow var(--t-press);
+}
+
+.dock-swatch.on {
+  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 6rpx var(--strong);
+  transform: scale(1.05);
 }

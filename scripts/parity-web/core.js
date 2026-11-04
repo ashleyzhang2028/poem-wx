@@ -1977,7 +1977,7 @@ var PROFILE_ROW_ID = "profile:v1";
 var SETTINGS_KEYS = {
   grade: "int", term: "int", dailyCount: "int", fontSize: "int",
   scope: "str", algo: "str", align: "str", proseAlign: "str", theme: "str",
-  font: "str", pinyin: "str", toneColor: "str",
+  font: "str", pinyin: "str", toneColor: "str", readBg: "str",
   autoNext: "bool", speechRate: "num", speechAutoNext: "bool",
   selfOnly: "bool",
   homehide: "bool",

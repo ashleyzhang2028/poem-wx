@@ -25,7 +25,8 @@ Component({
   options: { multipleSlots: false },
 
   properties: {
-    below: { type: Boolean, value: true },
+    swatches: { type: Array, value: [] },
+    bg: { type: String, value: "" },
     dailyOn: { type: Boolean, value: false },
     dailyIcon: { type: String, value: icons.add },
     pickOn: { type: Boolean, value: false },
@@ -72,10 +73,14 @@ Component({
       const win = viewport();
       const width = Number(win.windowWidth) || 375;
       const height = Number(win.windowHeight) || 667;
-      const size = 46;
+      const unit = width / 750;
+      const size = 92 * unit;
+      const baseRight = 32 * unit;
+      const baseBottom = 112 * unit + Math.max(0, height - ((win.safeArea || {}).bottom || height)) + 32 * unit;
+      const stack = (ROWS.length + 1) * (size + 16 * unit);
       this.setData({
-        lift: clamp(this.from.lift - dy, EDGE, Math.max(EDGE, height - size - EDGE)),
-        shift: clamp(this.from.shift - dx, EDGE, Math.max(EDGE, width - size - EDGE))
+        lift: clamp(this.from.lift - dy, EDGE - baseBottom,Math.max(0, height - baseBottom - size - stack - EDGE)),
+        shift: clamp(this.from.shift - dx, EDGE - baseRight, Math.max(0, width - baseRight - size - EDGE))
       });
     },
 
@@ -92,6 +97,11 @@ Component({
     onClose() {
       if (!this.data.open) return;
       this.setData({ open: false });
+    },
+
+    onSwatch(e) {
+      if (!this.data.open) return;
+      this.triggerEvent("bg", { id: e.currentTarget.dataset.id });
     },
 
     onPick(e) {

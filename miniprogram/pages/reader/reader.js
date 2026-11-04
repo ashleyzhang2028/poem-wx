@@ -19,6 +19,7 @@ const icons = require("../../utils/icons");
 const scale = require("../../utils/type-scale");
 const gloss = require("../../utils/gloss");
 const spot = require("../../utils/read-spot");
+const readBg = require("../../utils/read-bg");
 
 const FIRST_CHUNK = 24;
 
@@ -62,6 +63,9 @@ function aliasTextOf(meta) {
 Page({
   data: {
     themeStyle: "",
+    bgStyle: "",
+    bgId: "",
+    bgList: readBg.LIST,
     name: "",
     barBelow: true,
     id: "",
@@ -139,7 +143,7 @@ Page({
 
   applyFont() {
     const hit = font.bind(theme.style());
-    this.setData({ themeStyle: hit.page.themeStyle });
+    this.setData({ themeStyle: hit.page.themeStyle, bgStyle: readBg.style(), bgId: readBg.current() });
     font.registerHere().catch(() => {});
   },
 
@@ -198,6 +202,11 @@ Page({
     if (key === "daily") this.onToggleDaily();
     else if (key === "pick") this.onAddToCollection();
     else if (key === "mark") this.onToggleMark();
+  },
+
+  onDockBg(e) {
+    const id = readBg.pick(e && e.detail && e.detail.id);
+    this.setData({ bgStyle: readBg.style(), bgId: id });
   },
 
   foldDock() {

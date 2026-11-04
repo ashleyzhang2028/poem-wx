@@ -28,19 +28,95 @@
   to { transform: translateX(250%); }
 }
 
+.sheet {
+  padding: var(--sp-5) 0 0;
+}
+
+.sheet + .sheet {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1rpx solid var(--line);
+}
+
+.reader .sheet .card-title {
+  position: relative;
+  padding-left: var(--sp-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.reader .sheet .card-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 6rpx;
+  height: 1em;
+  margin-top: -.5em;
+  border-radius: var(--radius-pill);
+  background: var(--strong);
+}
+
+.reader .poem-card {
+  padding-top: var(--sp-4);
+}
+
+.reader .poem-card .poem-head {
+  padding-bottom: 0;
+}
+
+.reader .poem-card .poem-title {
+  letter-spacing: .12em;
+}
+
+.poem-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.poem-rule::before,
+.poem-rule::after {
+  content: "";
+  width: 72rpx;
+  height: 1rpx;
+  background: var(--line-strong);
+}
+
+.poem-rule-dot {
+  width: 10rpx;
+  height: 10rpx;
+  background: var(--strong);
+  transform: rotate(45deg);
+}
+
+.reader .poem-card .prefs {
+  padding: var(--sp-3) 0 0;
+}
+
+.reader .poem-card .poem-body {
+  padding: var(--sp-4) 0 0;
+}
+
+.reader .poem-card .poem-body .poem-line {
+  letter-spacing: .06em;
+}
+
 .pager {
   display: flex;
-  gap: var(--sp-2);
-  margin: var(--sp-3) 0 var(--sp-4);
+  gap: var(--sp-3);
+  margin: var(--sp-6) 0 var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1rpx solid var(--line);
 }
 
 .pager-cell {
   flex: 1;
   min-width: 0;
-  padding: var(--sp-3);
-  border-radius: var(--radius);
-  background: var(--surface);
+  padding: var(--sp-2) 0;
   text-align: left;
+  transition: opacity var(--t-press);
 }
 
 .pager-cell.next {
@@ -52,41 +128,25 @@
 }
 
 .pager-hover {
-  background: var(--sink);
+  opacity: .55;
 }
 
 .pager-dir {
   display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);
-  letter-spacing: var(--ls-title);
+  letter-spacing: var(--ls-caption);
 }
 
 .pager-name {
   display: block;
   margin-top: var(--sp-1);
-  font-size: var(--fs-body);
+  font-size: var(--fs-title);
   color: var(--strong-text);
+  letter-spacing: var(--ls-title);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.reader .card.poem-card {
-  padding-top: var(--sp-6);
-  padding-bottom: var(--sp-6);
-}
-
-.reader .poem-card .prefs {
-  padding-bottom: 0;
-}
-
-.reader .poem-card .poem-body {
-  padding-top: var(--sp-4);
-  padding-bottom: 0;
-  padding-left: var(--sp-1);
-  padding-right: var(--sp-1);
-  margin: 0 calc(-1 * var(--sp-1));
 }
 
 .reader .poem-link {
