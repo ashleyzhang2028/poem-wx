@@ -46,7 +46,7 @@ const RESULTS = [
 const PAGE_ICONS = {
   left: icons.left, center: icons.center,
   add: icons.add, added: icons.added, zoomOut: icons.zoomOut, zoomIn: icons.zoomIn,
-  bookmark: icons.bookmark, off: icons.off, all: icons.all
+  playlist: icons.playlist, bookmark: icons.bookmark, off: icons.off, all: icons.all
 };
 
 function aliasTextOf(meta) {
@@ -112,6 +112,7 @@ Page({
 
     dailyOn: false,
     dailyLocked: false,
+    pickOn: false,
     markOn: false,
     extraTier: "pro",
     pickTier: "pro",
@@ -190,6 +191,7 @@ Page({
       dailyOn: on,
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
+      pickOn: cols.collectionsOf(this.data.id).length > 0,
       markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
     });
