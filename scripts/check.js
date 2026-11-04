@@ -5550,10 +5550,11 @@ const K = {
       && !/--mirror/.test(jsCode));
   ok("凭据形状是 `<token>:x-oauth-basic@`（另两种实测一种问密码、一种回 401）",
     /\$\{pat\}:x-oauth-basic@github\.com/.test(jsCode) && !/x-access-token/.test(jsCode));
-  ok("推 main 走的是带 lease 的 force（裸 --force 会被 GitHub 的 ref 校验挡下来）",
-    /--force-with-lease=refs\/heads\/main:/.test(jsCode) && /--force"|--force\]/.test(jsCode) === false,
-    "Issue #889：`--force` 覆盖上游 main 时 GitHub 回 `fatal error in commit_refs`，" +
-      "要读远端头再推");
+  ok("推之前把远端 main 头认成新提交的第二父提交（远端独有提交不再被覆盖丢掉）",
+    /commit-tree/.test(jsCode) && /merge-base", "--is-ancestor"/.test(jsCode)
+      && /push", `--force-with-lease=refs\/heads\/main:\$\{remoteHead\(\)\}`/.test(jsCode),
+    "Issue #889：直接 `--force` 覆盖上游 main 时 GitHub 回 `fatal error in commit_refs`；" +
+      "病根是远端独有提交被丢，推之前得先让它在本地历史里当祖先，推出去才是快进");
 
   {
     const repo3 = path.join(path.dirname(__dirname));
