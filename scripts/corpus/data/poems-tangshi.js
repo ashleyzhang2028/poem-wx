@@ -655,7 +655,7 @@ window.POEMS_TANGSHI = [
   {
     textRef: "tangshi-ts-66",
     id: "ts-66",
-    title: "烈女操",
+    title: "列女操",
     source: "孟东野诗集",
     dynasty: "唐",
     author: "孟郊",

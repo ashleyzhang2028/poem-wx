@@ -32,6 +32,7 @@ function bodies() {
 function check(book, text, list, where) {
   const bad = [];
   if (!Array.isArray(list) || !list.length) return [where + " 空注释"];
+  const body = hanOnly(text);
   const seen = {};
   list.forEach(function (it) {
     if (!Array.isArray(it) || it.length !== 2) return bad.push(where + " 形状不对");
@@ -40,7 +41,7 @@ function check(book, text, list, where) {
     if (!word || !note) return bad.push(where + " 空词条或空释义");
     if (seen[word]) bad.push(where + " 词条重复：" + word);
     seen[word] = true;
-    if (text.indexOf(hanOnly(word) || word) < 0) bad.push(where + " 正文里没有「" + word + "」");
+    if (body.indexOf(hanOnly(word)) < 0) bad.push(where + " 正文里没有「" + word + "」");
     if (/[：:]/.test(note)) bad.push(where + " 释义里带冒号：" + word);
     if (word.length > 8) bad.push(where + " 词条超过 8 字：" + word);
     if (note.length > 40) bad.push(where + " 释义超过 40 字：" + word);
