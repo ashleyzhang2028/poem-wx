@@ -327,6 +327,16 @@ ok("包里不再有正文分片与分片清单",
     ok("一篇目录只绑一次正文与译文", keys.size === bound.length, "有重复的 book_id + pos");
 
     {
+      const prose = seedRows.texts.filter((r) => r.book_id === "gwgz");
+      const punctuated = (r) => /[，。！？；：]/.test(String(r.text || ""));
+      const slips = prose.filter((r) => !punctuated(r));
+      const paras = prose.filter((r) => String(r.text || "").split("\n").length);
+      ok("古文观止每篇正文都带句读、都按底本分了段",
+        prose.length > 0 && slips.length === 0 && paras.length === prose.length,
+        "缺句读的：" + slips.slice(0, 5).map((r) => r.book_id + "#" + r.pos + "《" + r.title + "》").join("、"));
+    }
+
+    {
       const textsHoles = checkCatalogTexts.check(corpusSeed.loadCorpus(), seedRows);
       ok("\u76ee\u5f55、\u6b63\u6587\u3001\u8bd1\u6587\u3001\u6ce8\u91ca\u9010\u6761\u5bf9\u5f97\u4e0a\uff08\u5510\u8bd7\u3001\u5b8b\u8bcd\u3001\u7ae5\u5fc3\u8bd7\u8bdd\uff09",
         textsHoles.length === 0,
