@@ -37,7 +37,7 @@ git checkout main && git pull     # 推 main 触发发布流水线
 
 | 地址 | 云托管能直接拉吗 |
 |---|---|
-| `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>` | ✅ 公开包，**不用凭据** |
+| `ghcr.io/***/poem-wx/wx-api:<本仓库短 sha>` | ✅ 公开包，**不用凭据** |
 | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api:<本仓库短 sha>` | ⚠️ 私有，要配凭据 |
 
 **主路填 ghcr.io 那份。**
@@ -53,7 +53,7 @@ git checkout main && git pull     # 推 main 触发发布流水线
 GHCR 新包默认 Private，不设就拉不动。
 
 ```
-https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/settings
+https://github.com/users/***/packages/container/poem-wx%2Fwx-api/settings
 ```
 
 或者：GitHub 个人主页 → **Packages** → 包 `poem-wx/wx-api` → 右下角 `Package settings`
@@ -93,7 +93,7 @@ https://github.com/users/ashleyzhang2028/packages/container/poem-wx%2Fwx-api/set
 | 归属环境 | 没有就新建（地域就近） |
 | 服务名称 | 自己起一个，**记住它** —— 后面 § 6.1 要填进 `X-WX-SERVICE`。本套部署用的是 `poem-wx` |
 | 部署方式 | **镜像** |
-| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>` |
+| 镜像地址 | `ghcr.io/***/poem-wx/wx-api:<本仓库短 sha>` |
 | 端口 | `8080` |
 
 控制台那一栏是**六选一**（绑定 GitHub / GitLab / Gitee 仓库、手动上传代码包、
