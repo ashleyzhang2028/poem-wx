@@ -27,8 +27,8 @@ let poolCache = {};
 let poolStamp = "";
 
 function corpusStamp() {
-  const parts = ["books", "poems", "catalogs"];
-  return parts.map((part) => (corpus.isReady(part) ? "1" : "0")).join("");
+  const gone = ["books", "poems", "catalogs"].filter((part) => !corpus.isReady(part));
+  return gone.length ? "gap:" + gone.join(",") : "full";
 }
 
 function cacheAlive() {
@@ -186,7 +186,7 @@ function pool(scope) {
     const level = n >= 25 ? "easy" : n >= 6 ? "normal" : "hard";
     out[ch] = { char: ch, count: n, level };
   });
-  if (Object.keys(out).length) poolCache[cacheKey] = out;
+  poolCache[cacheKey] = out;
   return out;
 }
 
@@ -377,7 +377,7 @@ function segsOfScope(scopeId) {
     });
   });
 
-  if (out.length) segsCache[key] = out;
+  segsCache[key] = out;
   return out;
 }
 
@@ -397,7 +397,7 @@ function poolOfScope(scopeId) {
     });
   });
 
-  if (Object.keys(out).length) byScopeCache[key] = out;
+  byScopeCache[key] = out;
   return out;
 }
 
