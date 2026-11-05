@@ -1,10 +1,11 @@
 -- 童心诗话（tongxin）单集补丁，其余 60 部不动
 -- 由 node scripts/gen-corpus-sql.js 生成，语句与 deploy/sql/corpus.sql 同源
--- 正文与译文 216 篇、注释 216 篇；执行前先切库
+-- 目录与索引 216 条、正文与译文 216 篇、注释 216 篇；执行前先切库
 
 SET NAMES utf8mb4;
 
 START TRANSACTION;
+
 DELETE FROM `corpus_catalog` WHERE `book_id` = 'tongxin';
 INSERT INTO `corpus_catalog` (`book_id`, `pos`, `title`, `author`, `note`, `in_course`) VALUES
   ('tongxin', 0, '国风·秦风·蒹葭', '无名氏', '周', 0),

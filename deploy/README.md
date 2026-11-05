@@ -9,7 +9,7 @@
 | `sql/mysql-schema.sql` | 建表语句（全部表，幂等）。⚠️ 它建的是**表**，落点那个**库要自己建**（`CREATE DATABASE \`poem\``），且执行前要 `USE \`poem\`;` —— 见 [`../docs/wx-cloud-setup.md`](../docs/wx-cloud-setup.md) § 3.1 / § 四 |
 | `sql/daily-poems.sql` | 每日一诗候选池的数据（`daily_poems` 表，先 `DELETE` 再插入，可重复执行）。由 `node scripts/gen-daily-sql.js` 从语料生成；候选池变了要重新生成并在库里执行一次 |
 | `sql/corpus.sql` | 全部六张 `corpus_*` 表的数据（集子、课内索引、目录、作者、正文与译文、注释），整表 `DELETE` 再插入，可重复执行。由 `node scripts/gen-corpus-sql.js` 从语料生成，语料变了要重新生成并在库里执行一次；小程序经 `GET /api/corpus/:part` 取用 |
-| `sql/corpus-tongxin.sql` | `corpus_catalog` / `corpus_texts` / `corpus_gloss` 三张表的**单集补丁**，只删插 `book_id = 'tongxin'` 的行，其余集子不动。同一脚本生成，语句与 `corpus.sql` 同源，用于只改了一部集子时避免整份重灌 |
+| `sql/corpus-tangshi300.sql` / `sql/corpus-songci300.sql` / `sql/corpus-tongxin.sql` | 同一部集子的**增量补丁**：只删插指定 `book_id` 的行，其余集子不动。唐诗与宋词这两份按 `scripts/corpus-patch.js` 里列的 `pos` 删插，只覆盖改订过的篇目及其目录次序。同一脚本生成，语句与 `corpus.sql` 同源；只上线这次改动时跑这三份，整份重灌时只跑 `corpus.sql` |
 | `build.sh` | 本机构建 + 报体积（**部署链上不跑它**） |
 | `../deploy-api-serve/` | 只挂 `/api/*` 的服务壳 + 白名单（构建时摆进上下文） |
 | `../api/` | 后端运行时契约（本仓库根的 `api/`，构建时整棵拷进上下文） |
