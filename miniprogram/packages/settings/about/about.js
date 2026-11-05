@@ -4,8 +4,8 @@ const tabbar = require("../../../utils/tabbar");
 const auth = require("../../../utils/auth");
 const loginFlow = require("../../../utils/login-flow");
 const tabPage = require("../../../utils/tab-page");
-const fb = require("../../../utils/feedback-api");
-const dots = require("../../../utils/dots");
+const fb = require("../utils/feedback-api");
+const dots = require("../utils/dots");
 const errors = require("../../../utils/error-log");
 
 Page({
@@ -33,7 +33,7 @@ Page({
   },
 
   onFeedback() {
-    wx.navigateTo({ url: "/packages/feedback/index/index" });
+    wx.navigateTo({ url: "/packages/settings/feedback/index" });
   },
 
   onTerms() {

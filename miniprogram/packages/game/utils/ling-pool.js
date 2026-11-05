@@ -1,6 +1,6 @@
-const source = require("./poem-source");
+const source = require("../../../utils/poem-source");
 const ling = require("./ling-index");
-const corpus = require("./corpus");
+const corpus = require("../../../utils/corpus");
 
 const SCAN = 100;
 

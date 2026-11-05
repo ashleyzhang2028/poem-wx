@@ -1,5 +1,5 @@
-const store = require("./store");
-const remote = require("./remote");
+const store = require("../../../utils/store");
+const remote = require("../../../utils/remote");
 const ranking = require("./ranking");
 const league = require("./league");
 

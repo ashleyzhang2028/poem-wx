@@ -15,6 +15,11 @@ function sync(page, index) {
   return bar;
 }
 
+function repaint(page) {
+  const bar = barOf(page);
+  if (bar) bar.setActive(bar.data.active);
+}
+
 function pick(page) {
   return sync(page, 2);
 }
@@ -27,4 +32,4 @@ function exists() {
   return !!barOf(pageStack.top());
 }
 
-module.exports = { sync, pick, below, exists };
+module.exports = { sync, repaint, pick, below, exists };

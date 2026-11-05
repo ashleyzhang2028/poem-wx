@@ -6,7 +6,7 @@ const tabbar = require("../../../utils/tabbar");
 const sync = require("../../../utils/sync");
 const sfx = require("../../../utils/sfx");
 const dailyPoem = require("../../../utils/daily-poem");
-const league = require("../../../utils/league");
+const league = require("../utils/league");
 const tiers = require("../../../utils/tiers");
 const cols = require("../../../utils/collections");
 

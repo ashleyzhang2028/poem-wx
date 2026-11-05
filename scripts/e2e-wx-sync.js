@@ -381,7 +381,7 @@ function makeWx(port, mem) {
     await shared.patchAccount(store.profile().userId, { plan: "max" });
     require(path.join(REPO, "miniprogram", "utils", "auth.js")).applySession({ tier: "max" });
 
-    const submitter = require(path.join(REPO, "miniprogram", "utils", "ranking-submit.js"));
+    const submitter = require(path.join(REPO, "miniprogram", "packages", "game", "utils", "ranking-submit.js"));
     const opened = await remote.rankingStart("exam");
     ok("开局拿到成绩凭证（交成绩那一步要它，服务端才认这一局）", !!opened, String(opened).slice(0, 12));
     const relay = submitter.submit(Object.assign(submitter.entryOf("exam"), {
@@ -390,7 +390,7 @@ function makeWx(port, mem) {
     const got = await relay;
     holder.getStore = origGet;
 
-    const self = require(path.join(REPO, "miniprogram", "utils", "ranking.js")).selfGrade(store.settings());
+    const self = require(path.join(REPO, "miniprogram", "packages", "game", "utils", "ranking.js")).selfGrade(store.settings());
     const saved = (await shared.listScoreRecords({ game: "exam" }, 20)).filter((r) => r.uid === store.profile().userId);
     ok("交上来的成绩落库（开关管展示，不是开着才收）",
       !!got && got.ok === true && got.on === true && saved.length === 1,
@@ -466,7 +466,7 @@ function makeWx(port, mem) {
   }
 
   {
-    const rankMod = require(path.join(REPO, "miniprogram", "utils", "ranking.js"));
+    const rankMod = require(path.join(REPO, "miniprogram", "packages", "game", "utils", "ranking.js"));
     const rankingMask = (name) => rankMod.maskNick(name);
     const api = (body, method) => {
       const data = body || {};
@@ -662,8 +662,8 @@ function makeWx(port, mem) {
   }
 
   {
-    const fbApi = require(path.join(REPO, "miniprogram", "utils", "feedback-api.js"));
-    const adminFb = require(path.join(REPO, "miniprogram", "utils", "admin-feedback.js"));
+    const fbApi = require(path.join(REPO, "miniprogram", "packages", "settings", "utils", "feedback-api.js"));
+    const adminFb = require(path.join(REPO, "miniprogram", "packages", "admin", "utils", "admin-feedback.js"));
 
     const draft = { kind: "bug", title: "详情页注音错位", content: "三年级上册第三首，注音跑到下一行。" };
     const first = await fbApi.submit(draft);
@@ -788,7 +788,7 @@ function makeWx(port, mem) {
       JSON.stringify(afterRaw.threads.map((t) => t.tid)));
 
     await auth2.refresh();
-    const adminSession = require(path.join(REPO, "miniprogram", "utils", "admin.js"));
+    const adminSession = require(path.join(REPO, "miniprogram", "packages", "admin", "utils", "admin.js"));
     ok("刷新会话后本机认得出管理员（重启后后台那些按钮才出得来）",
       adminSession.canWrite() === true && adminSession.loggedIn() === true,
       JSON.stringify({ role: store.profile().role, ready: adminSession.canWrite() }));

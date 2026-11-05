@@ -178,10 +178,10 @@ const COMP_CSS = flattenCss(path.join(ROOT, "components/nav-bar/nav-bar.wxss"))
   + flattenCss(path.join(ROOT, "components/page-banner/page-banner.wxss"))
   + flattenCss(path.join(ROOT, "components/lock-card/lock-card.wxss"))
   + flattenCss(path.join(ROOT, "components/skeleton/skeleton.wxss"))
-  + flattenCss(path.join(ROOT, "components/tier-view/tier-view.wxss"))
+  + flattenCss(path.join(ROOT, "packages/mine/tier/components/tier-view/tier-view.wxss"))
   + flattenCss(path.join(ROOT, "components/tier-tag/tier-tag.wxss"))
   + flattenCss(path.join(ROOT, "components/login-panel/login-panel.wxss"))
-  + flattenCss(path.join(ROOT, "packages/feedback/index/index.wxss"))
+  + flattenCss(path.join(ROOT, "packages/settings/feedback/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/index.wxss"))
   + flattenCss(path.join(ROOT, "packages/admin/feedback/detail/detail.wxss"))
 
@@ -393,7 +393,7 @@ function pickSheetPoem(data) {
 
 function expandTierView(wxml, data) {
   if (wxml.indexOf("<tier-view") < 0) return wxml;
-  const comp = fs.readFileSync(path.join(ROOT, "components/tier-view/tier-view.wxml"), "utf8");
+  const comp = fs.readFileSync(path.join(ROOT, "packages/mine/tier/components/tier-view/tier-view.wxml"), "utf8");
 
   const entitlement = require(path.join(ROOT, "utils", "entitlement.js"));
   const tierIcons = require(path.join(ROOT, "utils", "icons.js"));
@@ -416,7 +416,7 @@ function expandTierView(wxml, data) {
     heads: entitlement.compareCols(snap),
     compareRows: rows,
     compareSummary: entitlement.compareSummary(snap),
-    stats: require(path.join(ROOT, "utils", "tier-view.js")).stats()
+    stats: require(path.join(ROOT, "packages", "mine", "tier", "tier-view.js")).stats()
   });
   Object.keys(merged).forEach((k) => { data[k] = merged[k]; });
   return wxml.replace(/<tier-view\s*\/>/g, comp);
@@ -434,12 +434,12 @@ function withSeedFeedback(cfg, data) {
   const st = require(path.join(ROOT, "utils", "store.js"));
   const box = st.read(st.KEYS.auth, {}) || {};
   if (!box.feedback || Date.now() - Number(box.feedbackAt || 0) > 60000) return data;
-  const fb = require(path.join(ROOT, "utils", "feedback-api.js"));
+  const fb = require(path.join(ROOT, "packages", "settings", "utils", "feedback-api.js"));
   const rows = (box.feedback || []).map(fb.decorate);
   return Object.assign({}, data, {
     threads: rows,
     groups: cfg.seedGroups
-      ? require(path.join(ROOT, "utils", "admin-feedback.js")).GROUPS.map((key) => ({
+      ? require(path.join(ROOT, "packages", "admin", "utils", "admin-feedback.js")).GROUPS.map((key) => ({
         key: key,
         name: fb.statusOf(key).name,
         tone: fb.statusOf(key).tone,
@@ -741,7 +741,7 @@ cases.forEach((cfg) => {
       cfg.seedStats.forEach((n, i) => {
         for (let k = 0; k < n; k++) ats.push(now - i * DAY - k * HOUR);
       });
-      page.data.stats = require(path.join(ROOT, "utils/admin.js")).summarize(ats, cfg.seedStatsTotal || ats.length);
+      page.data.stats = require(path.join(ROOT, "packages/admin/utils/admin.js")).summarize(ats, cfg.seedStatsTotal || ats.length);
       if (page.paint) page.paint();
     }
 

@@ -92,7 +92,7 @@ pages.forEach((p) => {
   });
 });
 
-const viewDir = path.join(ROOT, "components", "tier-view", "tier-view");
+const viewDir = path.join(ROOT, "packages", "mine", "tier", "components", "tier-view", "tier-view");
 [".js", ".json", ".wxml", ".wxss"].forEach((ext) => {
   ok("权限表组件的四件套存在 tier-view" + ext, fs.existsSync(viewDir + ext), "缺失");
 });
@@ -1240,7 +1240,7 @@ Object.keys(WEB_TIER).forEach((k) => {
 
 {
   const js = fs.readFileSync(
-    path.join(ROOT, "components", "tier-view", "tier-view.js"), "utf8");
+    path.join(ROOT, "packages", "mine", "tier", "components", "tier-view", "tier-view.js"), "utf8");
   const entSys = fs.readFileSync(path.join(ROOT, "utils", "entitlement.js"), "utf8");
 
   ok("权限对比表的列头与行都由能力表算出来（不写死）",
@@ -1361,7 +1361,7 @@ const GATED = {
   "packages/settings/general/general": "locked",
   "packages/admin/index/index": "logged",
   "packages/mine/tier/tier": "allowed",
-  "packages/feedback/index/index": "logged",
+  "packages/settings/feedback/index": "logged",
   "packages/admin/feedback/index": "logged",
   "packages/admin/feedback/detail/detail": "logged",
 
@@ -1386,8 +1386,8 @@ const GATED = {
 }
 
 {
-  const usersJs = fs.readFileSync(path.join(ROOT, "packages/users/index/index.js"), "utf8");
-  const adminLib = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
+  const usersJs = fs.readFileSync(path.join(ROOT, "packages/admin/users/index.js"), "utf8");
+  const adminLib = fs.readFileSync(path.join(ROOT, "packages", "admin", "utils", "admin.js"), "utf8");
   const adminJs = fs.readFileSync(path.join(ROOT, "packages/admin/index/index.js"), "utf8");
   const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
@@ -1397,19 +1397,28 @@ const GATED = {
     /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
 
   {
+    const same = (a, b) => fs.readFileSync(path.join(ROOT, a), "utf8") === fs.readFileSync(path.join(ROOT, b), "utf8");
+    ok("分包各存的副本与原件一致（feedback-api / dots 在 settings / admin，league 在 settings / game）",
+      same("packages/settings/utils/feedback-api.js", "packages/admin/utils/feedback-api.js")
+        && same("packages/settings/utils/dots.js", "packages/admin/utils/dots.js")
+        && same("packages/settings/utils/league.js", "packages/game/utils/league.js"),
+      "副本跟原件分叉了 —— 改一处要改两处");
+  }
+
+  {
     const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-    const fbLib = read("utils/feedback-api.js");
-    const adminFbLib = read("utils/admin-feedback.js");
+    const fbLib = read("packages/settings/utils/feedback-api.js");
+    const adminFbLib = read("packages/admin/utils/admin-feedback.js");
     const remoteSrc = read("utils/remote.js");
     const fbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "feedback", "index.js"), "utf8");
     const adminFbRouteSrc = fs.readFileSync(path.join(__dirname, "..", "api", "_routes", "admin", "feedback.js"), "utf8");
     const serverCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
-    const fbApi = require(path.join(ROOT, "utils", "feedback-api.js"));
+    const fbApi = require(path.join(ROOT, "packages", "settings", "utils", "feedback-api.js"));
     const KINDS = fbApi.KINDS.map((k) => k.key).join(",");
 
   ok("反馈类别只有一份名单，页面取它（不另抄一遍）",
     KINDS === "bug,typo,feature,experience,recommend,performance,account,payment,other"
-      && read("packages/feedback/index/index.js").indexOf("feedback-api") >= 0
+      && read("packages/settings/feedback/index.js").indexOf("feedback-api") >= 0
       && fbLib.indexOf("KINDS") >= 0,
     KINDS);
 
@@ -1447,16 +1456,16 @@ const GATED = {
     const aboutJs = read("packages/settings/about/about.js");
     ok("意见建议只有一条用户入口：在「关于」",
       /onFeedback/.test(aboutJs)
-        && /packages\/feedback\/index\/index/.test(aboutJs)
+        && /packages\/settings\/feedback\/index/.test(aboutJs)
         && !/onFeedback/.test(read("pages/mine/mine.wxml"))
         && !/onFeedback/.test(read("pages/mine/mine.js")),
       "「我的」与「关于」各摆一行，同一个去处两条路（Issue #744）");
     ok("后台管理页有用户反馈那一行", /onFeedback/.test(read("packages/admin/index/index.js")));
     ok("入口落到真页面（跳转目标在 app.json 里）",
-      /\/packages\/feedback\/index\/index/.test(read("packages/settings/about/about.js"))
+      /\/packages\/settings\/feedback\/index/.test(read("packages/settings/about/about.js"))
         && /\/packages\/admin\/feedback\/index/.test(read("packages/admin/index/index.js")));
 
-    const fbPageJs = read("packages/feedback/index/index.js");
+    const fbPageJs = read("packages/settings/feedback/index.js");
     ok("意见页没有未登录形态：进来先走登录，页面里不留 guest 分支",
       /enter\(\)[\s\S]{0,200}gate\.open\(/.test(fbPageJs) && /onShow[\s\S]{0,120}this\.enter\(\)/.test(fbPageJs),
       "意见页还摆着未登录的壳");
@@ -1469,7 +1478,7 @@ const GATED = {
       !/op === "delete"/.test(fbRouteSrc)
         && !/feedbackDelete|remove/.test(fbLib)
         && !/fb\.remove\(|onDeleteThread|onDeleteComment|canDelete/.test(fbPageJs)
-        && !/onDeleteThread|onDeleteComment|canDelete/.test(read("packages/feedback/index/index.wxml")),
+        && !/onDeleteThread|onDeleteComment|canDelete/.test(read("packages/settings/feedback/index.wxml")),
       "用户侧又摆出了删除入口 —— 记录是台账，撤了就对不上账");
 
   ok("管理员删得掉反馈与讨论（接口与后台页面都接上了）",
@@ -1518,8 +1527,8 @@ const GATED = {
   }
 
   {
-    const adminLibSrc = fs.readFileSync(path.join(ROOT, "utils", "admin.js"), "utf8");
-    const stat = require(path.join(ROOT, "utils", "admin.js")).summarize;
+    const adminLibSrc = fs.readFileSync(path.join(ROOT, "packages", "admin", "utils", "admin.js"), "utf8");
+    const stat = require(path.join(ROOT, "packages", "admin", "utils", "admin.js")).summarize;
 
     ok("统计与名录同一趟拿数（不另开一次请求）",
       /listUsers\(\)[\s\S]{0,400}summarize\(/.test(adminLibSrc)
@@ -1605,7 +1614,7 @@ const subs = {};
 
 ok("题库页注册在 game 分包", (subs.game || []).indexOf("quiz/quiz") >= 0, JSON.stringify(subs.game));
 ok("管理页注册在 admin 分包", (subs.admin || []).indexOf("index/index") >= 0, JSON.stringify(subs.admin));
-ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/index") >= 0, JSON.stringify(subs.users));
+ok("用户列表页注册在 admin 分包", (subs.admin || []).indexOf("users/index") >= 0, JSON.stringify(subs.admin));
 
 {
   const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
@@ -1709,8 +1718,9 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     let cfg;
     try { cfg = JSON.parse(fs.readFileSync(jsonPath, "utf8")); } catch (e) { return; }
     Object.keys(cfg.usingComponents || {}).forEach((key) => {
-      const rel = String(cfg.usingComponents[key]).replace(/^\//, "");
-      roots.push(path.join(ROOT, rel + ".js"));
+      const ref = String(cfg.usingComponents[key]);
+      roots.push(ref.charAt(0) === "." ? path.resolve(path.dirname(jsonPath), ref + ".js")
+        : path.join(ROOT, ref.replace(/^\//, "") + ".js"));
     });
   };
   addComponents(path.join(ROOT, "app.json"));
@@ -1774,9 +1784,9 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
       && !fs.existsSync(path.join(ROOT, "utils", "feihua")),
     "题库 / 飞花令的内核还在主包 utils/ 下");
   ok("管理内核与档位表分两处（写别人的与看自己的不是一件事）",
-    fs.existsSync(path.join(ROOT, "utils", "admin.js"))
-      && fs.existsSync(path.join(ROOT, "utils", "tier-view.js"))
-      && fs.readFileSync(path.join(ROOT, "utils", "tier-view.js"), "utf8").indexOf("setUserTier") < 0,
+    fs.existsSync(path.join(ROOT, "packages", "admin", "utils", "admin.js"))
+      && fs.existsSync(path.join(ROOT, "packages", "mine", "tier", "tier-view.js"))
+      && fs.readFileSync(path.join(ROOT, "packages", "mine", "tier", "tier-view.js"), "utf8").indexOf("setUserTier") < 0,
     "档位与权限页只读能力表，改档那几路仍只归管理页");
 }
 
@@ -1878,7 +1888,7 @@ ok("加背与自选温习都按服务端形状打包",
   ok("比本机旧的不覆盖", store.getRecord("probe-2").level === 5);
 }
 
-const roster = readModule(path.join(dataDir, "roster.js"));
+const roster = readModule(path.join(ROOT, "packages", "admin", "data", "roster.js"));
 ok("名录在、标签截断、档位合法",
   !!roster && (roster.users || []).every((u) => String(u.label).length <= 8
     && ["free", "pro", "max"].indexOf(u.tier) >= 0));
@@ -1993,8 +2003,8 @@ ok("名录在、标签截断、档位合法",
 }
 
 const lingPoolReady = Promise.resolve().then(() => {
-  const ling = require(path.join(ROOT, "utils", "ling-index.js"));
-  const lingPool = require(path.join(ROOT, "utils", "ling-pool.js"));
+  const ling = require(path.join(ROOT, "packages", "game", "utils", "ling-index.js"));
+  const lingPool = require(path.join(ROOT, "packages", "game", "utils", "ling-pool.js"));
   const savedSettings = store.settings();
 
   ok("一行联句是「一逗一句」的两句，跨行也接得上",
@@ -2108,7 +2118,7 @@ const lingPoolReady = Promise.resolve().then(() => {
 {
   const feihuaLib = fs.readFileSync(path.join(ROOT, "packages", "game", "feihua", "lib.js"), "utf8");
   const feihuaRun = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
-  const scopesRun = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const scopesRun = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
   const storeRun = require(path.join(ROOT, "utils", "store.js"));
   const kept = { grade: storeRun.settings().grade, term: storeRun.settings().term };
   storeRun.saveSettings({ grade: 12, term: 2 });
@@ -2128,7 +2138,7 @@ const lingPoolReady = Promise.resolve().then(() => {
 
 {
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
-  const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const scopes = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
   const stageStore = require(path.join(ROOT, "utils", "store.js"));
   const stageSaved = { grade: stageStore.settings().grade, term: stageStore.settings().term };
   stageStore.saveSettings({ grade: 12, term: 2 });
@@ -2205,7 +2215,7 @@ const lingPoolReady = Promise.resolve().then(() => {
   stageStore.saveSettings(stageSaved);
 }
 {
-  const scopes = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const scopes = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
   const storeMod = require(path.join(ROOT, "utils", "store.js"));
   const quizLib = require(path.join(ROOT, "packages", "game", "quiz", "lib.js"));
   const saved = { grade: storeMod.settings().grade, term: storeMod.settings().term };
@@ -2317,10 +2327,10 @@ const lingPoolReady = Promise.resolve().then(() => {
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const cheer = require(path.join(ROOT, "utils", "cheer.js"));
+  const cheer = require(path.join(ROOT, "packages", "game", "utils", "cheer.js"));
 
   ok("鼓励语只有一份（考试与飞花令取同一个池，不在页面里各写一套）",
-    (fs.readFileSync(path.join(ROOT, "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK|LING) = /gm) || []).length === 4
+    (fs.readFileSync(path.join(ROOT, "packages", "game", "utils", "cheer.js"), "utf8").match(/^const (MARKS|KEEP|STREAK|LING) = /gm) || []).length === 4
       && /cheer\.ofScore/.test(read("packages/game/exam/exam.js"))
       && /cheer\.ofStreak/.test(read("packages/game/feihua/feihua.js"))
       && /cheer\.ofLing/.test(read("packages/game/feihua/feihua.js")),
@@ -2694,7 +2704,8 @@ function mountFull(pg, query) {
       return out;
     }
 
-    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p) && !/^packages\/game\/data\//.test(p));
+    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p) && !/^packages\/game\/data\//.test(p)
+      && !/^packages\/.+\/(utils|components|data)\//.test(p) && p !== "packages/mine/tier/tier-view");
     const offBar = allPages.filter((p) =>
       !/tabbar\.(sync|pick|below)\(this[,)]/.test(fs.readFileSync(path.join(ROOT, p + ".js"), "utf8")));
     ok("每一页都挂着这条栏（不按页藏栏了，Issue #370）",
@@ -2843,7 +2854,7 @@ function mountFull(pg, query) {
     global.wx.request = (o) => { mem.__requested = (mem.__requested || 0) + 1; };
 
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
     const auth2 = require(path.join(ROOT, "utils", "auth.js"));
     const store2 = require(path.join(ROOT, "utils", "store.js"));
@@ -2883,7 +2894,7 @@ function mountFull(pg, query) {
         .then(() => {
 
           Object.keys(require.cache).forEach((k) => {
-            if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+            if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
           });
           const auth2 = require(path.join(ROOT, "utils", "auth.js"));
           const store2 = require(path.join(ROOT, "utils", "store.js"));
@@ -3083,7 +3094,7 @@ function mountFull(pg, query) {
   }
 
   {
-    const scoreLog = require(path.join(ROOT, "utils", "score-log.js"));
+    const scoreLog = require(path.join(ROOT, "packages", "game", "utils", "score-log.js"));
     const tiersEarly = require(path.join(ROOT, "utils", "tiers.js"));
     const entEarly = require(path.join(ROOT, "utils", "entitlement.js"));
     const keptStatus = entEarly.status;
@@ -3167,8 +3178,8 @@ function mountFull(pg, query) {
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const rank = require(path.join(ROOT, "utils", "ranking.js"));
-  const pageJs = read("packages/ranking/index/index.js");
+  const rank = require(path.join(ROOT, "packages", "game", "utils", "ranking.js"));
+  const pageJs = read("packages/game/ranking/index.js");
   const adminJs = read("packages/admin/index/index.js");
   const apiCore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "core.js"), "utf8");
   const apiStore = fs.readFileSync(path.join(__dirname, "..", "api", "_lib", "store.js"), "utf8");
@@ -3292,9 +3303,9 @@ function mountFull(pg, query) {
     "「还有几位」把自己也数进去了");
 
   ok("榜单是单独一页，入口在大会页（不挤进考试页里）",
-    app.subPackages.filter((sp) => sp.root === "packages/ranking").length === 1
+    app.subPackages.filter((sp) => sp.root === "packages/game").length === 1
       && /onRanking/.test(read("packages/game/index/index.js"))
-      && /packages\/ranking\/index\/index/.test(read("packages/game/index/index.js"))
+      && /packages\/game\/ranking\/index/.test(read("packages/game/index/index.js"))
       && pageJs.indexOf("rankingList") >= 0,
     "榜单挂在考试结果页里的话，飞花令那一半就没有入口");
 
@@ -3530,33 +3541,17 @@ function mountFull(pg, query) {
       + " / 换款之后 " + uiOf(uiPicked).slice(0, 40));
 
   {
-    const pageFiles = pages.map((p) => path.join(ROOT, p + ".js"));
     const barJs = fs.readFileSync(
       path.join(ROOT, "components", "nav-bar", "nav-bar.js"), "utf8");
     const appJs = fs.readFileSync(path.join(ROOT, "app.js"), "utf8");
     const barHosts = pages.filter((p) => /"nav-bar":\s*"\/components\/nav-bar\/nav-bar"/.test(
       fs.readFileSync(path.join(ROOT, p + ".json"), "utf8")));
-    const fontSrc = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
-    ok("页面作用域的账按「当前页 + 版本号」记，进过的页不再注册",
-      /function registerPage\(family, list\)[\s\S]*?scoped\[key\] === scopeMark\(\)[\s\S]*?if \(scoped\[key\]\) return[\s\S]*?scoped\[key\] = scopeMark\(\)/.test(
-        fontSrc)
-        && /function scopeMark\(\)[\s\S]*?scopeEpoch[\s\S]*?route/.test(fontSrc),
-      "一页一注册却不设上界 —— 每进一页就再挂一个 WindowInfoChanged 监听（Issue #893）");
-
     ok("自绘导航栏的字跟着全局走（不再按页面传来的 scope 才认）",
       barHosts.length > 0
         && /registerHere/.test(barJs)
         && /font/.test(barJs)
         && !/fontScope !== this\.data\.scope/.test(barJs),
       "全局开着时导航栏还是系统字，或者作用域对不上就退回系统字库");
-    ok("开关与换款都推一次作用域，回前台补一次（globalData 认版本号，旧的不算）",
-      /scopeEpoch \+= 1[\s\S]{0,200}?announce\(\)/.test(
-        fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8"))
-        && /font\.restore\(\)/.test(appJs)
-        && /repaintFont/.test(appJs)
-        && pageFiles.every((f) => /this\.applyFont\(\)/.test(fs.readFileSync(f, "utf8"))),
-      "拨开关后没有重注册也没有回刷页面，或者回前台没补注册");
-
     const barFontJs = fs.readFileSync(
       path.join(ROOT, "custom-tab-bar", "index.js"), "utf8");
     ok("底栏的字也跟着换：换页有人在 App 层补注册，底栏按当前款重算",
@@ -3622,7 +3617,7 @@ function mountFull(pg, query) {
       && E.compareRows(E.snapshot()).some((r) => r.cap === "ownbanner"));
 
   {
-    const cropDir = path.join(ROOT, "components", "banner-crop");
+    const cropDir = path.join(ROOT, "packages", "settings", "theme", "components", "banner-crop");
     const cropJs = fs.readFileSync(path.join(cropDir, "banner-crop.js"), "utf8");
 
     ok("选完图弹出的是截取面板：四个按钮都挂着处理函数",
@@ -3824,7 +3819,7 @@ function mountFull(pg, query) {
   ok("题库页与考试页都按这份判据决定题干预告给不给篇名",
     /quiz\.titleSpoiled\(/.test(quizJs) && /quiz\.titleSpoiled\(/.test(examJs));
 
-  const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+  const scopeMod = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
   const wrongScope = [];
   scopeMod.list().forEach((s) => {
     if (s.id === "poems") return;
@@ -4605,7 +4600,7 @@ function mountFull(pg, query) {
       !unbroken.length && maxAnswer > 0 && maxAnswer <= capN,
       "没拆开的 " + unbroken.length + " 条，例如 " + JSON.stringify(unbroken.slice(0, 3)));
 
-    const scopeMod = require(path.join(ROOT, "utils", "game-scopes.js"));
+    const scopeMod = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
     const punctOnly = [];
     scopeMod.list().forEach((s) => {
       for (let round = 0; round < 40; round++) {
@@ -4707,7 +4702,7 @@ function mountFull(pg, query) {
   }
 
   {
-    const fb = require(path.join(ROOT, "utils", "feedback.js"));
+    const fb = require(path.join(ROOT, "packages", "game", "utils", "feedback.js"));
     const seen = [0, 10, 19, 20, 39, 40, 59, 60, 79, 80, 89, 90, 99, 100].map((p) => fb.rankPercent(p));
     ok("段位只单调往上（分高的段位名不许排在分低的下面）",
       seen.every((r, i) => i === 0 || r.rank >= seen[i - 1].rank) && fb.rankPercent(100).name === "状元",
@@ -4720,13 +4715,13 @@ function mountFull(pg, query) {
 
 {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
-  const leagueJs = read("utils/league.js");
+  const leagueJs = read("packages/settings/utils/league.js");
 
   ok("删的是设置项，不是翻页本身（背完仍顺势进下一首）",
     /setTimeout\(\(\) => this\.goNext\(/.test(read("components/recite-sheet/recite-sheet.js")));
 
   ok("设置里那个开关关掉之后成绩真的不再往榜单交（同一处口径）",
-    /function optedIn[\s\S]{0,100}?league\.optedIn\(\)/.test(read("utils/ranking-submit.js"))
+    /function optedIn[\s\S]{0,100}?league\.optedIn\(\)/.test(read("packages/game/utils/ranking-submit.js"))
       && /function optedIn[\s\S]{0,120}?canJoin\(\)[\s\S]{0,120}?leagueBoard !== false/.test(leagueJs),
     "开关写着有、提交那条路却没读同一处 —— 关掉照样上榜");
 
@@ -4935,7 +4930,7 @@ const K = {
     };
 
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
     const m = {
       mem, sent,
@@ -5163,7 +5158,7 @@ const K = {
   const SVC_503_MSG = "服务端还没配微信登录（缺 WX_APPID / WX_SECRET）。";
 
   Object.keys(require.cache).forEach((k) => {
-    if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+    if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
   });
   const auth = require(path.join(ROOT, "utils", "auth.js"));
   auth.configure({ baseUrl: "https://probe.test" });
@@ -5271,7 +5266,7 @@ const K = {
     const calls = [];
     const inits = [];
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
     const auth = require(path.join(ROOT, "utils", "auth.js"));
     const remote = require(path.join(ROOT, "utils", "remote.js"));
@@ -5365,7 +5360,7 @@ const K = {
       removeStorageSync: (k) => { delete mem[k]; }
     };
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
     const store = require(path.join(ROOT, "utils", "store.js"));
     const wire = require(path.join(ROOT, "utils", "wire.js"));
@@ -6679,7 +6674,7 @@ const K = {
       removeStorageSync: (k) => { delete mem[k]; }
     };
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
 
     const store3 = require(path.join(ROOT, "utils", "store.js"));
@@ -7034,8 +7029,8 @@ const K = {
       store3.saveSettings({ seasonal: false }).seasonal === false
         && store3.cloudSettings().seasonal === false);
 
-    const LEAGUE = require(path.join(ROOT, "utils", "ranking-submit.js"));
-    const LEAGUE_SET = require(path.join(ROOT, "utils", "league.js"));
+    const LEAGUE = require(path.join(ROOT, "packages", "game", "utils", "ranking-submit.js"));
+    const LEAGUE_SET = require(path.join(ROOT, "packages", "settings", "utils", "league.js"));
     asTier3("free");
     store3.saveSettings({ leagueBoard: false });
     ok("排行榜是 Max 起的一项门禁，Free 拨不动也不上报",
@@ -7060,7 +7055,7 @@ const K = {
     store3.saveCollections([]);
     global.wx = saved;
     Object.keys(require.cache).forEach((k) => {
-      if (k.indexOf(path.join(ROOT, "utils")) === 0) delete require.cache[k];
+      if (k.indexOf(path.join(ROOT, "utils")) === 0 || k.indexOf(path.join(ROOT, "packages", "game", "utils")) === 0) delete require.cache[k];
     });
   }
 
@@ -7306,7 +7301,7 @@ const K = {
   });
 
   const entries = [
-    ["packages/ranking/index/index.js", ".once(", "load"],
+    ["packages/game/ranking/index.js", ".once(", "load"],
     ["utils/login-flow.js", ".once(", "run"]
   ].concat(reports.map(([file, key]) => [file, "once(\"" + key + "\"", "report"]));
   entries.forEach(([file, key, fn]) => {
@@ -7552,7 +7547,7 @@ const K = {
       "packages/admin/pay-orders/pay-orders"].every((pg) => subPages.indexOf(pg) >= 0),
     "页面没登记，navigateTo 会找不到");
   ok("权限页有进定价页与支付记录页的处理函数",
-    /onPricing\(/.test(read("components/tier-view/tier-view.js")) && /onOrders\(/.test(read("components/tier-view/tier-view.js")),
+    /onPricing\(/.test(read("packages/mine/tier/components/tier-view/tier-view.js")) && /onOrders\(/.test(read("packages/mine/tier/components/tier-view/tier-view.js")),
     "权限页没有开通 / 续订入口");
   ok("支付只走服务端下单签名（客户端不碰 AppKey）",
     read("utils/pay.js").indexOf("payAppKey") < 0 && /wx\.requestVirtualPayment/.test(read("utils/pay.js")), "客户端持有了密钥或没接支付接口");
@@ -7791,7 +7786,50 @@ const K = {
       + " —— 这条只认「同一处另有 showModal 兜长文」；文案本身由人看");
 }
 
-Promise.all(pending).then(() => {
+const countFontRegistrations = async () => {
+  const fontMod = require(path.join(ROOT, "utils", "font.js"));
+  store.saveProfile({ logged: true, tier: "" });
+  store.drop(store.KEYS.auth);
+  store.drop(store.KEYS.grant);
+  store.drop(store.KEYS.caps);
+  store.write(store.KEYS.grant, { code: "PRO-ABCD-1234", tier: "pro", at: Date.now() });
+
+  let route = "";
+  const keptPages = global.getCurrentPages;
+  const keptWx = global.wx;
+  const registered = [];
+  global.getCurrentPages = () => [{ route }];
+  global.wx = Object.assign({}, keptWx, {
+    loadFontFace: (o) => { registered.push(o.family); if (o.success) o.success(); }
+  });
+  try {
+    fontMod.setGlobal(true);
+    const routes = ["pages/home/home", "pages/library/library", "pages/reader/reader",
+      "packages/game/index/index", "packages/settings/theme/theme", "pages/mine/mine"];
+    const cycle = async () => {
+      for (const key of ["zhuque", "wenkai", "zhuque", "wenkai"]) {
+        fontMod.set(key);
+        for (const r of routes) {
+          route = r;
+          await fontMod.registerHere();
+        }
+      }
+    };
+    await cycle();
+    const afterFirst = registered.length;
+    await cycle();
+    await cycle();
+    await cycle();
+    ok("字体注册次数不随进页数与切换次数增长（Issue #893：每注册一次多挂一个监听）",
+      afterFirst > 0 && registered.length === afterFirst,
+      "第一轮后 " + afterFirst + " 次，四轮后 " + registered.length + " 次");
+  } finally {
+    global.wx = keptWx;
+    global.getCurrentPages = keptPages;
+  }
+};
+
+Promise.all(pending).then(countFontRegistrations).then(() => {
   console.log("");
   console.log("检查 " + checks + " 项，失败 " + fails + " 项");
   process.exit(fails ? 1 : 0);

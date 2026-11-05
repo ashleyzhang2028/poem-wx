@@ -1,7 +1,7 @@
-const entitlement = require("../../utils/entitlement");
-const icons = require("../../utils/icons");
-const view = require("../../utils/tier-view");
-const pay = require("../../utils/pay");
+const entitlement = require("../../../../../utils/entitlement");
+const icons = require("../../../../../utils/icons");
+const view = require("../../tier-view");
+const pay = require("../../../../../utils/pay");
 
 function noteOf(snap) {
   if (!snap.logged) return "未登录，暂按 Free";

@@ -10,7 +10,7 @@ const tabbar = require("../../../utils/tabbar");
 const icons = require("../../../utils/icons");
 const source = require("../../../utils/poem-source");
 const guard = require("../../../utils/guard");
-const directory = require("../../../utils/author-directory");
+const directory = require("../utils/author-directory");
 
 const SUGGEST_MAX = 12;
 const REMOTE_WAIT = 600;

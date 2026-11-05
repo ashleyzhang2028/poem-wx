@@ -68,7 +68,7 @@ function current() {
 }
 
 function face(key) {
-  return BY_KEY[key] || FREE_FACE;
+  return BY_KEY[key || current()] || FREE_FACE;
 }
 
 const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Source Han Serif CN", '
@@ -139,7 +139,7 @@ function sequence(family, list) {
 
 const loaded = {};
 const previewSeen = {};
-let scoped = {};
+const scoped = {};
 
 function mark(family, list) {
   return family + " " + shelf() + " " + globalOn() + " " + list.join(" ");
@@ -229,7 +229,6 @@ function setGlobal(on) {
 
   }
   scopeEpoch += 1;
-  scoped = {};
   announce();
   return { ok: true, changed: true };
 }
@@ -259,6 +258,8 @@ function republish() {
   app.globalData = app.globalData || {};
   app.globalData.fontScope = scopeEpoch;
 }
+
+let settled = "";
 
 let repaintQueued = false;
 
@@ -293,7 +294,12 @@ function previewsReady() {
 }
 
 function refresh() {
-  load().catch(() => {});
+  load().then((ok) => {
+    const key = mark(face().family, configured());
+    if (!ok || settled === key) return;
+    settled = key;
+    announce();
+  }).catch(() => {});
   preview().catch(() => {});
   announce();
 }
@@ -305,7 +311,6 @@ function set(key) {
   if (key === current()) return { ok: true, changed: false };
   store.saveSettings({ font: key });
   scopeEpoch += 1;
-  scoped = {};
 
   try {
     require("./sync").markDirty();
