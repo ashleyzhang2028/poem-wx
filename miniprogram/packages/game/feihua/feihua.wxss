@@ -236,69 +236,56 @@
   color: var(--ink-3);
 }
 
-
-.fh-field-trigger {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-2) 0;
+.pick {
+  padding-bottom: var(--sp-2);
 }
 
-.fh-field-char {
-  flex: none;
-  font-family: var(--font-poem);
-  font-size: calc(var(--fs-glyph) * .46);
-  line-height: 1;
-  color: var(--strong);
+.pick-search {
+  margin-bottom: var(--sp-1);
 }
 
-.fh-field-text {
+.pick-input {
   flex: 1;
   min-width: 0;
-  text-align: left;
-}
-
-.fh-field-name {
-  display: block;
-  font-size: var(--fs-title);
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
   color: var(--ink);
-  line-height: 1.4;
 }
 
-.fh-field-sub {
-  display: block;
+.pick-go {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--strong-text);
+  padding-left: var(--sp-2);
+}
+
+.pick-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: 0 2rpx var(--sp-1);
+}
+
+.pick-meta-t {
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
 }
 
-.fh-field-go {
-  flex: none;
-  font-size: var(--fs-caption);
-  color: var(--strong-text);
-}
-
-.fh-picker {
+.pick-panel {
   padding-top: var(--sp-2);
   border-top: 1rpx solid var(--line-2);
 }
 
-.fh-picker-note {
-  display: block;
-  padding-bottom: var(--sp-2);
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-}
-
-.fh-picker-scopes {
+.pick-scopes {
   margin-top: var(--sp-2);
 }
 
-.fh-picker-group {
+.pick-group {
   margin-top: var(--sp-3);
 }
 
-.fh-picker-group-name {
+.pick-group-name {
   display: block;
   font-size: var(--fs-caption);
   color: var(--ink-3);
@@ -306,13 +293,13 @@
   margin-bottom: var(--sp-1);
 }
 
-.fh-picker-chars {
+.pick-chars {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-1);
 }
 
-.fh-picker-chip {
+.pick-chip {
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -328,11 +315,11 @@
   color: var(--ink-2);
 }
 
-.fh-picker-chip.on {
+.pick-chip.on {
   background: var(--strong);
   color: var(--on-ink);
 }
 
-.fh-picker-chip.dim {
+.pick-chip.dim {
   opacity: .42;
 }
