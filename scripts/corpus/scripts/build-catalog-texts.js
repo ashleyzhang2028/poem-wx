@@ -79,6 +79,13 @@ function main() {
   });
 
   const catalogs = W.SITE_CATALOGS || {};
+  const patch = {};
+  Object.keys(W.CATALOG_TEXTS_PATCH || {}).forEach(function (bookId) {
+    const rows = W.CATALOG_TEXTS_PATCH[bookId] || [];
+    const list = Array.isArray(rows) ? rows : Object.keys(rows).map(function (k) { return rows[k]; });
+    patch[bookId] = {};
+    list.forEach(function (r) { patch[bookId][Number(r[0])] = r; });
+  });
   const books = {};
 
   Object.keys(SOURCE_BOOK).forEach(function (bookId) {
@@ -124,6 +131,11 @@ function main() {
       const master = byId[pick[0].textRef];
       const text = String((master && master.text) || "").trim();
       const translation = String((master && master.translation) || "").trim();
+      const over = (patch[bookId] || {})[pos + 1];
+      if (over) {
+        out.push([pos + 1, over[1], over[2] || "", tidy(over[3]), String(over[4] || "")]);
+        return;
+      }
       if (!text || !translation) return;
 
       out.push([
