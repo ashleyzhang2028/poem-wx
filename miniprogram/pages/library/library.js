@@ -13,18 +13,18 @@ const SHEET = "#read-sheet";
 
 const GROUPS = [
   {
+    key: "course",
+    name: "课内阅读",
+    wide: true,
+    bare: true,
+    books: ["poems"]
+  },
+  {
     key: "mine",
     name: "我的自选",
     note: "自建的集合与其中的篇目",
     wide: true,
     books: []
-  },
-  {
-    key: "course",
-    name: "课内阅读",
-    note: "一至高三 · 按年级分册",
-    wide: true,
-    books: ["poems"]
   },
   {
     key: "anthology",
@@ -34,30 +34,35 @@ const GROUPS = [
   },
   {
     key: "primer",
+    tri: true,
     name: "蒙学",
     note: "启蒙识字与童蒙读物",
     books: ["sanzijing", "baijiaxing", "dizigui", "qianziwen", "zengguang", "shenglv", "liweng", "youxue", "longwen", "jijiu", "lishi", "wuzijian"]
   },
   {
     key: "pre-qin",
+    tri: true,
     name: "先秦经典",
     note: "四书、五经与诸子",
     books: ["lunyu", "mengzi", "daxue", "zhongyong", "shijing", "shangshu", "zhouyi", "zuozhuan", "daodejing", "sunzi", "sanshiliuji", "shanhaijing"]
   },
   {
     key: "fable",
+    tri: true,
     name: "童话寓言",
     note: "中外童话与寓言",
     books: ["yisuo", "gelin", "andersen"]
   },
   {
     key: "history",
+    tri: true,
     name: "史籍",
     note: "战国策、史记与三国志",
     books: ["zhanguoce", "shiji", "sanguozhi"]
   },
   {
     key: "novel",
+    cap: "novels",
     name: "名著小说",
     note: "章回、话本与笔记",
     books: ["honglou", "sanguo", "shuihu", "xiyou", "rulin", "liaozhai", "dongzhou", "fengshen", "jinghua", "yushi", "jingshi", "xingshi", "chuke", "erke", "suitang", "shuoyue", "xiaolin", "xiaofu"]
@@ -74,6 +79,7 @@ Page({
     mineTier: "pro",
     mine: [],
     mineCount: 0,
+    mineWide: false,
     last: null,
     locked: true,
     reason: "",
@@ -135,6 +141,11 @@ Page({
         name: g.name,
         desc: g.note || "",
         wide: !!g.wide,
+        bare: !!g.bare,
+        tri: !!g.tri,
+        cap: g.cap || "",
+        locked: !!g.cap && !E.can(g.cap),
+        tier: g.cap ? E.tierOf(g.cap) : "",
         books: books.map((b) => ({
           id: b.id,
           name: b.name,
@@ -153,6 +164,7 @@ Page({
       mineTier: E.tierOf("collections"),
       mine,
       mineCount: mine.length,
+      mineWide: mine.length === 1,
       last: last ? { id: last.id, title: last.t } : null
     });
   },
@@ -177,6 +189,8 @@ Page({
 
   onOpenBook(e) {
     if (!E.block("library", { page: this, loginPrompt: true })) return;
+    const cap = e.currentTarget.dataset.cap;
+    if (cap && !E.block(cap, { page: this, loginPrompt: true })) return;
     const bookId = e.currentTarget.dataset.b;
     const book = corpus.booksOf().filter((b) => b.id === bookId)[0];
     if (book && book.count === 1) {

@@ -44,6 +44,23 @@
   width: 100%;
 }
 
+.book-cell-tri {
+  width: calc((100% - 2 * var(--sp-2)) / 3);
+}
+
+.card.card-bare {
+  padding-top: var(--card-y);
+}
+
+.card-bare .book-grid {
+  margin-top: 0;
+}
+
+.card-bare .book-cell {
+  padding: 0;
+  border-bottom: 0;
+}
+
 .book-hover {
   background: var(--sink);
 }
