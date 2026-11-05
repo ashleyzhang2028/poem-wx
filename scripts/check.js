@@ -140,6 +140,7 @@ const dataDir = path.join(ROOT, "data");
 const corpusSeed = require("./corpus-seed");
 const corpusApi = require("../api/_lib/corpus");
 const genCorpusSql = require("./gen-corpus-sql");
+const genCatalogTextsSql = require("./gen-catalog-texts-sql");
 const seedRows = corpusSeed.seedRows(corpusSeed.loadCorpus());
 const SEED_OF = { books: "books", poems: "poems", catalogs: "catalog", authors: "authors" };
 const corpusPayloads = {};
@@ -303,12 +304,19 @@ ok("包里不再有正文分片与分片清单",
       "分卷与目录改了但绑定没重生成");
 
     const bound = seedRows.texts;
-    const storedOnly = corpusSeed.loadCorpus(["data/site-texts.js"]).SITE_TEXTS || {};
     const books = {};
     bound.forEach((r) => { books[r.book_id] = (books[r.book_id] || 0) + 1; });
-    ok("目录绑定了正文与译文" + Object.keys(books).map((b) => "：" + b + " " + books[b]).join(""),
-      bound.every((r) => r.text && (r.translation || storedOnly[r.book_id] || r.book_id === "tongxin")),
-      "有绑定条目的正文或译文是空的");
+    ok("目录绑定了正文" + Object.keys(books).map((b) => "：" + b + " " + books[b]).join(""),
+      bound.every((r) => r.text), "有绑定条目的正文是空的");
+
+    {
+      const singles = genCatalogTextsSql.BOOKS.map((bookId) => {
+        const file = path.join(__dirname, "..", "deploy", "sql", "catalog-texts-" + bookId + ".sql");
+        return fs.existsSync(file) && fs.readFileSync(file, "utf8") === genCatalogTextsSql.build(seedRows, bookId).sql;
+      });
+      ok("deploy/sql/catalog-texts-*.sql 与语料一致（重新跑 node scripts/gen-catalog-texts-sql.js 即可）",
+        singles.every(Boolean), "单集正文补丁没跟着语料重生成");
+    }
 
     const outside = bound.filter((r) => !r.sid && r.book_id !== "tongxin");
     ok("\u9664\u7ae5\u5fc3\u8bd7\u8bdd\u5916\u7684\u76ee\u5f55\u6761\u76ee\u90fd\u6302\u4e0a\u4e86\u5206\u5377\u7d22\u5f15", outside.length === 0,
