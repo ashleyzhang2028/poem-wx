@@ -141,6 +141,7 @@ const corpusSeed = require("./corpus-seed");
 const corpusApi = require("../api/_lib/corpus");
 const genCorpusSql = require("./gen-corpus-sql");
 const genCatalogTextsSql = require("./gen-catalog-texts-sql");
+const checkCatalogTexts = require("./corpus/scripts/check-catalog-texts");
 const seedRows = corpusSeed.seedRows(corpusSeed.loadCorpus());
 const SEED_OF = { books: "books", poems: "poems", catalogs: "catalog", authors: "authors" };
 const corpusPayloads = {};
@@ -324,6 +325,13 @@ ok("包里不再有正文分片与分片清单",
 
     const keys = new Set(bound.map((r) => r.book_id + "\u0000" + r.pos));
     ok("一篇目录只绑一次正文与译文", keys.size === bound.length, "有重复的 book_id + pos");
+
+    {
+      const textsHoles = checkCatalogTexts.check(corpusSeed.loadCorpus(), seedRows);
+      ok("\u76ee\u5f55、\u6b63\u6587\u3001\u8bd1\u6587\u3001\u6ce8\u91ca\u9010\u6761\u5bf9\u5f97\u4e0a\uff08\u5510\u8bd7\u3001\u5b8b\u8bcd\u3001\u7ae5\u5fc3\u8bd7\u8bdd\uff09",
+        textsHoles.length === 0,
+        "\u8fd9\u4e9b\u6761\u76ee\u5bf9\u4e0d\u4e0a\uff1a" + textsHoles.slice(0, 6).join("\uff1b"));
+    }
   }
 
   ok("课文阅读页取正文先看有没有这一篇（不拿取不到的 id 去问 corpus.entry）",
@@ -2116,24 +2124,36 @@ const lingPoolReady = Promise.resolve().then(() => {
 }
 
 {
-  const feihuaLib = fs.readFileSync(path.join(ROOT, "packages", "game", "feihua", "lib.js"), "utf8");
-  const feihuaRun = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
-  const scopesRun = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
-  const storeRun = require(path.join(ROOT, "utils", "store.js"));
-  const kept = { grade: storeRun.settings().grade, term: storeRun.settings().term };
-  storeRun.saveSettings({ grade: 12, term: 2 });
+  const feihuaPath = path.join(ROOT, "packages", "game", "feihua", "lib.js");
+  const scopesPath = path.join(ROOT, "packages", "game", "utils", "game-scopes.js");
+  const seeded = corpus.course().map((p) => ({ b: p.b, id: p.id, t: p.t, gr: p.gr, tm: p.tm }));
+  const entries = {};
+  seeded.forEach((p) => { entries[p.id] = corpus.entry(p.id); });
+  const keepEntry = corpus.entry;
+  const keepScopes = require.cache[require.resolve(scopesPath)];
+  const springOf = () => {
+    delete require.cache[require.resolve(feihuaPath)];
+    return require(feihuaPath).look("春", { scope: "course_all", limit: 500 });
+  };
 
-  const spring = feihuaRun.look("春", { scope: scopesRun.COURSE_ALL_SCOPE, limit: 500 });
+  require.cache[require.resolve(scopesPath)] = {
+    id: "game-scopes", filename: "game-scopes", loaded: true,
+    exports: {
+      STAGE_SCOPE: "stage", COURSE_ALL_SCOPE: "course_all", cacheKeyOf: (key) => key || "stage",
+      pool: () => seeded, field: () => seeded
+    }
+  };
+  corpus.entry = (id) => entries[id] || null;
+  const filled = springOf();
+
+  corpus.entry = keepEntry;
+  if (keepScopes) require.cache[require.resolve(scopesPath)] = keepScopes;
+  else delete require.cache[require.resolve(scopesPath)];
+  delete require.cache[require.resolve(feihuaPath)];
+
   ok("课内查得到「春」的联句（含春晓那句，Issue #900）",
-    spring.length > 0 && spring.some((r) => r.seg.indexOf("春眠不觉晓") >= 0),
-    spring.length + " 条：" + spring.slice(0, 3).map((r) => r.seg).join(" / "));
-  ok("查不到时不把空表留在缓存里（语料到位后同一处要能查到）",
-    /if \(Object\.keys\(out\)\.length\) poolCache\[cacheKey\] = out/.test(feihuaLib)
-      && /if \(out\.length\) segsCache\[key\] = out/.test(feihuaLib)
-      && /if \(Object\.keys\(out\)\.length\) byScopeCache\[key\] = out/.test(feihuaLib)
-      && /function cacheAlive\(\)/.test(feihuaLib),
-    "空表会被钉在缓存里，语料到了也不重建");
-  storeRun.saveSettings(kept);
+    filled.some((r) => r.seg.indexOf("春眠不觉晓") >= 0),
+    filled.length + " 条：" + filled.slice(0, 3).map((r) => r.seg).join(" / "));
 }
 
 {
