@@ -37,6 +37,7 @@ const POEM_FILES = [
   "data/catalog-texts.js",
   "data/catalog-notes.js",
   "data/tongxin-notes.js",
+  "data/site-texts.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -164,7 +165,7 @@ function seedRows(W) {
 }
 
 function catalogTexts(catalogs, order) {
-  const W = loadCorpus(["data/catalog-texts.js", "data/tongxin-notes.js", "data/site-texts.js"]);
+  const W = loadCorpus();
   const source = Object.assign({}, W.CATALOG_TEXTS || {}, W.SITE_TEXTS || {}, catalogBoxes(W.TONGXIN_TEXT));
   const out = [];
   Object.keys(source).forEach(function (bookId) {
