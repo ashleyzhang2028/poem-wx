@@ -23,6 +23,8 @@ const CACHE_MAX = 60;
 
 const CACHE_KEY = "kb_poem_source_cache_v1";
 
+const SAVE_MS = 800;
+
 const STATE_KEY = "kb_poem_source_state_v1";
 
 const PAGE_MAX = 100;
@@ -33,6 +35,7 @@ const HEALTH_STALE_MS = 10 * 60 * 1000;
 
 let cache = null;
 let cacheWx = null;
+let saveTimer = null;
 
 function cacheBox() {
   if (cache && cacheWx === wx) return cache;
@@ -60,10 +63,18 @@ function cachePut(key, value) {
     keys.slice(0, keys.length - CACHE_MAX + 1).forEach((k) => delete box[k]);
   }
   box[key] = { at: Date.now(), v: value };
-  if (!store.write(CACHE_KEY, box)) {
-    cache = null;
-    cacheWx = null;
-  }
+  saveCache();
+}
+
+function saveCache() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    if (!store.write(CACHE_KEY, cacheBox())) {
+      cache = null;
+      cacheWx = null;
+    }
+  }, SAVE_MS);
 }
 
 function state() {
@@ -304,10 +315,6 @@ function titleKeys(title) {
   const keys = [raw];
   const flat = raw.replace(TITLE_NOISE, "");
   if (flat && flat !== raw) keys.push(flat);
-  if (raw.indexOf("·") > 0) {
-    const head = raw.split("·")[0].trim();
-    if (head && keys.indexOf(head) < 0) keys.push(head);
-  }
   return keys;
 }
 

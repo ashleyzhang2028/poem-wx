@@ -244,11 +244,18 @@ function republish() {
   app.globalData.fontScope = scopeEpoch;
 }
 
+let repaintQueued = false;
+
 function repaint() {
-  if (!rooted()) return;
-  const app = getApp();
-  if (typeof app.repaintFont !== "function") return;
-  app.repaintFont(scopeEpoch);
+  if (!rooted() || repaintQueued) return;
+  repaintQueued = true;
+  Promise.resolve().then(() => {
+    repaintQueued = false;
+    if (!rooted()) return;
+    const app = getApp();
+    if (typeof app.repaintFont !== "function") return;
+    app.repaintFont(scopeEpoch);
+  });
 }
 
 function announce() {

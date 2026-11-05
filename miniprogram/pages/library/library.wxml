@@ -11,15 +11,16 @@
 
     <corpus-state state="{{corpusState}}" bind:retry="onCorpusRetry" />
 
-    <view class="card" wx:for="{{groups}}" wx:key="key">
-      <view class="gc-head">
+    <view class="card {{item.bare ? 'card-bare' : ''}}" wx:for="{{groups}}" wx:key="key">
+      <view class="gc-head" wx:if="{{!item.bare}}">
         <text class="gc-name">{{item.name}}</text>
+        <tier-tag wx:if="{{item.locked}}" tier="{{item.tier}}" bindtap="onTierGate" />
         <text class="gc-count">{{item.count}} {{item.unit}}</text>
       </view>
-      <text class="gc-desc">{{item.desc}}</text>
+      <text class="gc-desc" wx:if="{{!item.bare}}">{{item.desc}}</text>
       <block wx:if="{{item.key === 'mine'}}">
-        <view class="book-grid" wx:if="{{mineOn}}">
-          <view class="book-cell" hover-class="book-hover" hover-stay-time="60"
+        <view class="book-grid {{mineWide ? 'book-grid-wide' : ''}}" wx:if="{{mineOn}}">
+          <view class="book-cell {{mineWide ? 'book-cell-wide' : ''}}" hover-class="book-hover" hover-stay-time="60"
                 wx:for="{{mine}}" wx:for-item="c" wx:key="id" data-c="{{c.id}}" bindtap="onOpenMine">
             <view class="book-main">
               <text class="book-name">{{c.name}}</text>
@@ -35,8 +36,8 @@
       </block>
 
       <view class="book-grid {{item.wide ? 'book-grid-wide' : ''}}" wx:else>
-        <view class="book-cell {{item.wide ? 'book-cell-wide' : ''}}" hover-class="book-hover" hover-stay-time="60"
-              wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" bindtap="onOpenBook">
+        <view class="book-cell {{item.wide ? 'book-cell-wide' : ''}} {{item.tri ? 'book-cell-tri' : ''}}" hover-class="book-hover" hover-stay-time="60"
+              wx:for="{{item.books}}" wx:for-item="b" wx:key="id" data-b="{{b.id}}" data-cap="{{item.cap}}" bindtap="onOpenBook">
           <view class="book-main">
             <text class="book-name">{{b.name}}</text>
             <text class="book-sub">共 {{b.count}} {{b.unit}}</text>

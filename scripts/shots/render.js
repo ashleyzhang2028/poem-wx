@@ -450,7 +450,7 @@ function withSeedFeedback(cfg, data) {
 }
 
 function expandTierTag(wxml) {
-  return String(wxml).replace(/<tier-tag\b[^>]*?\/>/g, '<text tier-tag="1">Pro 起</text>');
+  return String(wxml).replace(/<tier-tag\b[^>]*?\/>/g, '<text class="tier-tag">Pro 起</text>');
 }
 
 function pageOwnPadding(file) {
