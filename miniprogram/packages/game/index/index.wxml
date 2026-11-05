@@ -24,7 +24,10 @@
             </view>
             <text class="mode-desc">{{study.desc}}</text>
           </view>
-          <text class="mode-go">查看</text>
+          <view class="mode-side">
+            <tier-tag wx:if="{{study.locked}}" tier="{{study.tier}}" />
+            <text class="mode-go">查看</text>
+          </view>
         </view>
 
         <view class="card mode {{item.ok ? '' : 'mode-off'}}"
