@@ -8,7 +8,6 @@ const ROOT = path.join(__dirname, "..");
 const STEPS = [
   ["编译图标", "build-icons.js"],
   ["编译语料", "build-data.js"],
-  ["生成集子台账", "build-catalog-ledger.js"],
   ["离线自检", "check.js"],
   ["与网页版能力表对照", "parity.js"],
   ["登录 / 同步端到端", "e2e-wx-sync.js"],

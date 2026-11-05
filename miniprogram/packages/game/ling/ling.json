@@ -2,7 +2,6 @@
   "navigationBarTitleText": "飞花令研习",
   "usingComponents": {
     "lock-card": "/components/lock-card/lock-card",
-    "corpus-state": "/components/corpus-state/corpus-state",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

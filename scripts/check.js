@@ -1705,9 +1705,12 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
   });
   compDirs.forEach((d) => addComponents(path.join(d, path.basename(d) + ".json")));
 
+  const GENERATED = path.join(ROOT, "data") + path.sep;
+  const LING_DATA = path.join(ROOT, "packages", "game", "data") + path.sep;
+
   const canUse = {};
   jsFiles.forEach((f) => {
-    if (f.startsWith(path.join(ROOT, "data") + path.sep)) return;
+    if (f.startsWith(GENERATED)) return;
     canUse[f] = true;
   });
 
@@ -1728,6 +1731,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     while ((m = re.exec(src))) {
       if (m[1].charAt(0) !== ".") continue;
       const dep = resolveReq(file, m[1]);
+      if (dep.startsWith(LING_DATA)) continue;
       const to = entryOf(dep);
       if (to && to !== entryOf(file)) {
         leaked.push(path.relative(ROOT, file) + " → " + path.relative(ROOT, dep));
@@ -1744,7 +1748,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     path.join(ROOT, "utils", "font.js")
   ];
   const orphans = jsFiles
-    .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0)
+    .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0 && !f.startsWith(LING_DATA))
     .map((f) => path.relative(ROOT, f))
     .sort();
   ok("每个 .js 都被入口链引用到（不留没人 require 的孤儿）",
@@ -1975,8 +1979,9 @@ ok("名录在、标签截断、档位合法",
 
 {
   const ling = require(path.join(ROOT, "utils", "ling-index.js"));
-  const ledger = require(path.join(ROOT, "data", "catalog-ledger.js"));
   const savedSettings = store.settings();
+  const seed = corpusSeed.loadCorpus();
+  const box = ling.install(ling.build(seed.SITE_INDEX || [], seed.SITE_CATALOGS || {}).rows);
 
   ok("一行联句是「一逗一句」的两句，跨行也接得上",
     ling.couplesOf("白日依山尽，\n黄河入海流。").join("|") === "白日依山尽，黄河入海流。"
@@ -1992,15 +1997,24 @@ ok("名录在、标签截断、档位合法",
     stageCounts.course > 0 && stageCounts.stage > 0 && stageCounts.stage <= stageCounts.course,
     JSON.stringify(stageCounts));
 
-  ok("装了正文的档位点开都有句子（不装正文的那几部不算）",
-    ["stage", "primary", "middle", "high", "course", "tangshi300", "songci300"].every((id) => ling.find("月", { scope: id }).total > 0),
-    "有档位点开是空的");
+  ok("档位按序：学段四档 + 各选集 + 不限，课内与选集的档位都出句子",
+    (() => {
+      const want = ["stage", "primary", "middle", "high", "course"]
+        .concat(ling.SELECTIONS.map((s) => s.id)).concat(["any"]);
+      return ling.scopeTable().map((s) => s.id).join() === want.join()
+        && ["course", "tangshi300", "songci300", "tongxin"].every((id) => ling.find("月", { scope: id }).total > 0);
+    })(),
+    JSON.stringify(ling.scopeTable().map((s) => s.id)));
+
+  ok("选集算选集：宋词三百首里的句子不进课内档",
+    ling.find("相思", { scope: "songci300" }).total > 0
+      && ling.find("相思", { scope: "course" }).total === 0);
 
   const first = ling.find("月", { scope: "course" });
   const second = ling.find("月", { scope: "course", from: first.items.length });
   ok("一次 20 句，翻下去接着给（不重不漏）",
-    first.items.length === Math.min(20, first.total)
-      && second.items.length === Math.min(20, first.total - first.items.length)
+    first.items.length === Math.min(ling.PAGE, first.total)
+      && second.items.length === Math.min(ling.PAGE, first.total - first.items.length)
       && second.items.every((row) => first.items.indexOf(row) < 0),
     first.total + " 句，第一页 " + first.items.length + "，第二页 " + second.items.length);
 
@@ -2011,23 +2025,23 @@ ok("名录在、标签截断、档位合法",
     (() => {
       const seen = {};
       return first.items.concat(second.items).every((row) => {
-        const key = row.title + "|" + row.author + "|" + row.seg;
-        if (seen[key]) return false;
-        seen[key] = 1;
+        if (seen[row.seg]) return false;
+        seen[row.seg] = 1;
         return true;
       });
     })());
 
   store.saveSettings(savedSettings);
 
-  const catBooks = Object.keys(corpusPayloads.catalogs.rows);
-  ok("集子台账与本机目录是同一份（多一部少一部都对不上）",
-    Object.keys(ledger.books).sort().join() === catBooks.slice().sort().join(),
-    Object.keys(ledger.books).length + " / " + catBooks.length);
-
+  const lingJs = fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8");
   ok("常用令字的分组只有一份，页面从它取（不另抄一遍）",
-    !/季节时序/.test(fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8"))
-      && /ling\.GROUPS/.test(fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8")));
+    !/季节时序/.test(lingJs) && /ling\.GROUPS/.test(lingJs));
+
+  const lingData = require(path.join(ROOT, "packages", "game", "data", "ling-rows.js"));
+  const lingRows = [].concat.apply([], lingData.files.map((f) => require(path.join(ROOT, "packages", "game", "data", f + ".js"))));
+  ok("研习数据是构建产物，和语料一起出来（不入库）",
+    lingRows.length === box.rows.length,
+    box.rows.length + " / " + lingRows.length);
 }
 
 {
@@ -2605,7 +2619,7 @@ function mountFull(pg, query) {
       return out;
     }
 
-    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p));
+    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p) && !/^packages\/game\/data\//.test(p));
     const offBar = allPages.filter((p) =>
       !/tabbar\.(sync|pick|below)\(this[,)]/.test(fs.readFileSync(path.join(ROOT, p + ".js"), "utf8")));
     ok("每一页都挂着这条栏（不按页藏栏了，Issue #370）",

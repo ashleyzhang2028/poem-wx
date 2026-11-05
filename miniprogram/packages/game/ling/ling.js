@@ -1,7 +1,6 @@
 const ling = require("../../../utils/ling-index");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
-const corpusGate = require("../../../utils/corpus-gate");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
@@ -22,7 +21,6 @@ Page({
     scope: DEFAULT_SCOPE,
     scopeName: "",
     term: "",
-    corpusState: "",
     loading: false,
     searched: false,
     items: [],
@@ -53,7 +51,6 @@ Page({
   },
 
   onUnload() {
-    corpusGate.close(this);
     this.token = (this.token || 0) + 1;
   },
 
@@ -111,7 +108,6 @@ Page({
   },
 
   onClear() {
-    corpusGate.close(this);
     this.token = (this.token || 0) + 1;
     this.setData({ term: "", searched: false, loading: false, items: [], total: 0, left: 0, more: false, hint: "" });
     this.paintGroups();
@@ -125,17 +121,13 @@ Page({
     if (this.data.searched) this.run(this.data.term);
   },
 
-  onAll() {
-    this.run(this.data.term);
-  },
-
   run(term) {
     const key = String(term || "").trim();
     if (!key) return;
     this.token = (this.token || 0) + 1;
     const token = this.token;
     this.setData({ searched: true, loading: true });
-    corpusGate.open(this, "core", () => {
+    ling.load().then(() => {
       if (token !== this.token) return;
       this.paint(key, token);
     });
@@ -181,10 +173,14 @@ Page({
   },
 
   onOpen(e) {
-    const id = String(e.currentTarget.dataset.id || "");
+    const ds = e.currentTarget.dataset;
+    const id = String(ds.id || "");
     if (!id) return;
     sfx.play("tap");
-    wx.navigateTo({ url: "/pages/reader/reader?id=" + encodeURIComponent(id) + "&mode=browse" });
+    const src = ds.remote ? "&src=1" : "";
+    wx.navigateTo({
+      url: "/pages/reader/reader?id=" + encodeURIComponent(id) + "&mode=browse" + src
+    });
   },
 
   onShareAppMessage() {

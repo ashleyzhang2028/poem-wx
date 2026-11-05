@@ -7,7 +7,7 @@ const seed = require("./corpus-seed");
 const CORPUS_DIR = seed.CORPUS_DIR;
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
 
-const STALE = ["texts", "shards.js", "books", "roster-extra.js"];
+const STALE = ["texts", "shards.js", "books", "roster-extra.js", "ling-rows.js"];
 
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 
@@ -55,6 +55,7 @@ function main() {
   dropStale();
 
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
+  writeLingRows(W, index);
   writePinyin(W, courseTexts);
   writeRoster();
   writeServer();
@@ -65,6 +66,79 @@ function main() {
   const noted = Object.keys(courseTexts).filter(function (id) { return courseTexts[id].gloss; });
   const noteCount = noted.reduce(function (n, id) { return n + courseTexts[id].gloss.length; }, 0);
   console.log("生字生词注释 " + noted.length + " 篇 " + noteCount + " 条");
+}
+
+const LING_BOOK_CHARS = 1200;
+
+const LING_PAGE = "packages/game/ling/ling";
+
+function lingRoot() {
+  const app = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "miniprogram", "app.json"), "utf8"));
+  const hit = (app.subPackages || []).filter(function (sp) {
+    return (sp.pages || []).some(function (page) {
+      return sp.root + "/" + page === LING_PAGE;
+    });
+  })[0];
+  if (!hit) throw new Error("app.json 里找不到 " + LING_PAGE + " 所在的分包");
+  return path.join(__dirname, "..", "miniprogram", hit.root, "data");
+}
+
+function lingChunks(rows, books) {
+  const chunks = {};
+  let file = 0;
+  let cur = [];
+  let bytes = 0;
+  Object.keys(books).sort().forEach(function (key) {
+    const piece = books[key].map(function (at) { return rows[at]; });
+    const size = Buffer.byteLength(JSON.stringify(piece), "utf8");
+    if (cur.length && bytes + size > LING_BOOK_CHARS * 1024) {
+      chunks["ling-lib-" + file] = [].concat.apply([], cur);
+      file += 1;
+      cur = [];
+      bytes = 0;
+    }
+    cur.push(piece);
+    bytes += size;
+  });
+  if (cur.length) chunks["ling-lib-" + file] = [].concat.apply([], cur);
+  return chunks;
+}
+
+function writeLingRows(W, index) {
+  const ling = require("../miniprogram/utils/ling-index.js");
+  const box = ling.build(W.SITE_INDEX || [], W.SITE_CATALOGS || {});
+  const dir = lingRoot();
+  const books = {};
+  box.rows.forEach(function (row, at) {
+    if (!books[row.scope]) books[row.scope] = [];
+    books[row.scope].push(at);
+  });
+
+  fs.mkdirSync(dir, { recursive: true });
+  dropGlobs(dir, "ling-");
+  const chunks = lingChunks(box.rows, books);
+  const files = Object.keys(chunks);
+  let bytes = 0;
+  files.forEach(function (key) {
+    writeRawModule(path.join(dir, key + ".js"), chunks[key]);
+    bytes += fs.statSync(path.join(dir, key + ".js")).size;
+  });
+  const file = path.join(dir, "ling-rows.js");
+  fs.writeFileSync(file, "module.exports = " + JSON.stringify({ books: books, files: files }) + ";\n");
+  bytes += fs.statSync(file).size;
+
+  console.log("飞花令研习 " + box.rows.length + " 篇 / " + box.couples.length + " 联，" +
+    files.length + " 份 " + Math.round(bytes / 1024) + "KB 进 game 分包");
+}
+
+function writeRawModule(file, value) {
+  fs.writeFileSync(file, "module.exports = " + JSON.stringify(value) + ";\n");
+}
+
+function dropGlobs(dir, prefix) {
+  fs.readdirSync(dir).forEach(function (name) {
+    if (name.indexOf(prefix) === 0 && /\.js$/.test(name)) fs.rmSync(path.join(dir, name), { force: true });
+  });
 }
 
 function dropStale() {

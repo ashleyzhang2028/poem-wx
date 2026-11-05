@@ -114,7 +114,6 @@ main:
               esac
             done
             node scripts/build-data.js
-            node scripts/build-catalog-ledger.js
             node scripts/check.js
             node scripts/ci-install-uploader.js
             node scripts/upload.js "${TAG}" "main ${TAG}" || {
@@ -236,7 +235,6 @@ main:
               esac
             done
             node scripts/build-data.js
-            node scripts/build-catalog-ledger.js
             node scripts/check.js
             node scripts/ci-install-uploader.js
             node scripts/upload.js "${TAG}" "main ${TAG}" || {

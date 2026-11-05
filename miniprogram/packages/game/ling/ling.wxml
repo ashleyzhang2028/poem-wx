@@ -28,16 +28,14 @@
       </view>
     </scroll-view>
 
-    <corpus-state state="{{corpusState}}" bind:retry="onAll" />
-
-    <view class="tally" wx:if="{{searched && !corpusState}}">
+    <view class="tally" wx:if="{{searched}}">
       <text class="tally-main">「{{term}}」{{scopeName}} {{total}} 句</text>
       <text class="tally-note" wx:if="{{more}}">下拉继续</text>
     </view>
 
     <view class="card lines" wx:if="{{items.length}}">
       <view class="line" hover-class="row-hover" hover-stay-time="60"
-            wx:for="{{items}}" wx:key="index" data-id="{{item.id}}" bindtap="onOpen">
+            wx:for="{{items}}" wx:key="index" data-id="{{item.id}}" data-remote="{{item.scope !== 'course'}}" bindtap="onOpen">
         <view class="line-main">
           <view class="line-seg"><text class="line-t">{{item.head}}</text><text class="line-t line-hit">{{item.hit}}</text><text class="line-t">{{item.tail}}</text></view>
           <view class="line-by">
@@ -49,14 +47,14 @@
       </view>
     </view>
 
-    <view class="card" wx:if="{{searched && !loading && !total && !corpusState}}">
+    <view class="card" wx:if="{{searched && !loading && !total}}">
       <view class="empty">
         <text class="empty-mark">令</text>
         <text class="empty-text say">{{hint}}</text>
       </view>
     </view>
 
-    <view class="tally" wx:if="{{searched && total && !corpusState}}">
+    <view class="tally" wx:if="{{searched && total}}">
       <text class="tally-note" wx:if="{{more}}" bindtap="onMore">还有 {{left}} 句 · 点这里展开</text>
       <text class="tally-note" wx:else>「{{term}}」的联句到这里为止</text>
     </view>
