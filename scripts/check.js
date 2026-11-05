@@ -141,6 +141,7 @@ const corpusSeed = require("./corpus-seed");
 const corpusApi = require("../api/_lib/corpus");
 const genCorpusSql = require("./gen-corpus-sql");
 const genCatalogTextsSql = require("./gen-catalog-texts-sql");
+const checkCatalogTexts = require("./corpus/scripts/check-catalog-texts");
 const seedRows = corpusSeed.seedRows(corpusSeed.loadCorpus());
 const SEED_OF = { books: "books", poems: "poems", catalogs: "catalog", authors: "authors" };
 const corpusPayloads = {};
@@ -324,6 +325,13 @@ ok("包里不再有正文分片与分片清单",
 
     const keys = new Set(bound.map((r) => r.book_id + "\u0000" + r.pos));
     ok("一篇目录只绑一次正文与译文", keys.size === bound.length, "有重复的 book_id + pos");
+
+    {
+      const textsHoles = checkCatalogTexts.check(corpusSeed.loadCorpus(), seedRows);
+      ok("\u76ee\u5f55、\u6b63\u6587\u3001\u8bd1\u6587\u3001\u6ce8\u91ca\u9010\u6761\u5bf9\u5f97\u4e0a\uff08\u5510\u8bd7\u3001\u5b8b\u8bcd\u3001\u7ae5\u5fc3\u8bd7\u8bdd\uff09",
+        textsHoles.length === 0,
+        "\u8fd9\u4e9b\u6761\u76ee\u5bf9\u4e0d\u4e0a\uff1a" + textsHoles.slice(0, 6).join("\uff1b"));
+    }
   }
 
   ok("课文阅读页取正文先看有没有这一篇（不拿取不到的 id 去问 corpus.entry）",
