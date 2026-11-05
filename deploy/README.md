@@ -34,7 +34,7 @@
 | 字段 | 填什么 |
 |---|---|
 | 部署方式 | **镜像** |
-| 镜像地址 | `ghcr.io/ashleyzhang2028/poem-wx/wx-api:<本仓库短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
+| 镜像地址 | `ghcr.io/***/poem-wx/wx-api:<本仓库短 sha>`（**公开包，不用凭据**；CNB 槽位是备用，见下） |
 | 端口 | `8080` |
 | 环境变量 | `SESSION_SECRET` / `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` / `WX_APPID` / `WX_SECRET` |
 | 镜像拉取凭据 | 填 ghcr.io 那份就不用配。走 CNB 槽位才要：用户名 `cnb`、密码一枚 CNB 访问令牌 |
@@ -61,7 +61,7 @@
 
 | | 地址 | 可见性 | tag |
 |---|---|---|---|
-| GHCR（**云托管填这份**） | `ghcr.io/ashleyzhang2028/poem-wx/wx-api` | 公开包 | **本仓库**的短 sha |
+| GHCR（**云托管填这份**） | `ghcr.io/***/poem-wx/wx-api` | 公开包 | **本仓库**的短 sha |
 | CNB 制品库（备用 / 回滚） | `docker.cnb.cool/npu-gpu-cpu/poem-wechat-mini-program/wx-api` | 私有 | **本仓库**的短 sha |
 
 为什么要有 GHCR 那份：CNB 的 Docker 制品库可见性**跟着代码仓库走**，
