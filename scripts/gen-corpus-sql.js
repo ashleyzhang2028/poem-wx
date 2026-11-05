@@ -34,20 +34,23 @@ function literal(v) {
   return "'" + String(v).split("\\").join("\\\\").split("'").join("''") + "'";
 }
 
-function clear(t, bookId) {
-  return t.book && bookId ? "DELETE FROM `" + t.table + "` WHERE `book_id` = " + literal(bookId) + ";" :
-    "DELETE FROM `" + t.table + "`;";
+function clear(t, bookId, only) {
+  if (!(t.book && bookId)) return "DELETE FROM `" + t.table + "`;";
+  if (!only) return "DELETE FROM `" + t.table + "` WHERE `book_id` = " + literal(bookId) + ";";
+  return "DELETE FROM `" + t.table + "` WHERE `book_id` = " + literal(bookId) +
+    " AND `pos` IN (" + only.slice().sort(function (a, b) { return a - b; }).join(", ") + ");";
 }
 
 function statements(rows, opts) {
   const params = !!(opts && opts.params);
   if (params) return parameterized(rows);
   const bookId = (opts && opts.book) || "";
+  const only = (opts && opts.only) || null;
   const out = [];
   TABLES.forEach(function (t) {
     const list = rows[t.key];
     if (!list.length) return;
-    out.push(clear(t, bookId));
+    out.push(clear(t, bookId, only));
     const step = t.batch || BATCH;
     for (let i = 0; i < list.length; i += step) {
       const body = list.slice(i, i + step).map(function (r) {
@@ -103,42 +106,48 @@ function build() {
   return render(seed.seedRows(seed.loadCorpus()));
 }
 
-function bookRows(rows, bookId) {
+function bookRows(rows, bookId, only) {
   const out = {};
   TABLES.forEach(function (t) {
     out[t.key] = t.book ? rows[t.key].filter(function (r) {
-      return r.book_id === bookId;
+      if (r.book_id !== bookId) return false;
+      return !only || only.indexOf(r.pos) >= 0;
     }) : [];
   });
   return out;
 }
 
-function buildBook(rows, bookId) {
-  const list = bookRows(rows, bookId);
+function buildBook(rows, bookId, only) {
+  const list = bookRows(rows, bookId, only);
   const book = rows.books.filter(function (b) {
     return b.book_id === bookId;
   })[0];
-  const body = statements(list, { book: bookId });
+  const body = statements(list, { book: bookId, only: only });
+  const range = only ? bookRange(bookId) : null;
   return [
     "-- " + (book ? book.name : bookId) + "（" + bookId + "）单集补丁，其余 " + (rows.books.length - 1) +
       " 部不动",
     "-- 由 node scripts/gen-corpus-sql.js 生成，语句与 deploy/sql/corpus.sql 同源",
-    "-- 正文与译文 " + list.texts.length + " 篇、注释 " + list.gloss.length + " 篇；执行前先切库",
-    "",
-    "SET NAMES utf8mb4;",
-    "",
-    "START TRANSACTION;"
-  ].concat(body, ["", "COMMIT;"]).join("\n") + "\n";
+    "-- 目录与索引 " + list.catalog.length + " 条、正文与译文 " + list.texts.length + " 篇、注释 " +
+      list.gloss.length + " 篇；执行前先切库",
+    range ? "-- 只重灌第 " + range[0] + "–" + range[1] + " 条（改订过的篇目）：别的条目与别的集子一个不动" : ''
+  ].filter(function (line) { return line !== ''; }).concat(["", "SET NAMES utf8mb4;", "", "START TRANSACTION;", ""], body, ["", "COMMIT;"]).join("\n") + "\n";
 }
 
-const BOOKS = ["tongxin"];
+function bookRange(bookId) {
+  const patch = require("./corpus-patch")[bookId];
+  if (!patch) return null;
+  return [Math.min.apply(null, patch), Math.max.apply(null, patch)];
+}
+
+const BOOKS = ["tangshi300", "songci300", "tongxin"];
 
 if (require.main === module) {
   const rows = seed.seedRows(seed.loadCorpus());
   fs.writeFileSync(OUT, render(rows));
   BOOKS.forEach(function (bookId) {
     const out = path.join(SQL_DIR, "corpus-" + bookId + ".sql");
-    fs.writeFileSync(out, buildBook(rows, bookId));
+    fs.writeFileSync(out, buildBook(rows, bookId, require("./corpus-patch")[bookId]));
     console.log("单集补丁 → " + path.relative(process.cwd(), out));
   });
   console.log("语料入库 " + rows.books.length + " 部 / 课内 " + rows.poems.length + " 首 / 目录 " +
