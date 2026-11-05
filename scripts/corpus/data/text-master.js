@@ -48804,7 +48804,7 @@ window.TEXT_MASTER = [
   {
     work: "w-tangshi-ts-66",
     id: "tangshi-ts-66",
-    title: "烈女操",
+    title: "列女操",
     entries: ["tangshi-ts-66"],
     text: "梧桐相待老，鸳鸯会双死。\n贞妇贵殉夫，舍生亦如此。\n波澜誓不起，妾心井中水。",
     translation: "梧桐相守直到老，鸳鸯总是双双同死。贞洁的妇人贵在能为丈夫殉节，舍去生命也是如此。我发誓心中不再起波澜，我的心就像井中的水一样平静。",
