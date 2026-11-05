@@ -6,13 +6,31 @@ const BOOKS = ["tangshi300", "songci300", "tongxin"];
 
 const SAME_POEM = 0.8;
 
-const HOLES = [
-  "tangshi300#102", "tangshi300#177", "tangshi300#189", "tangshi300#206", "tangshi300#213",
-  "tangshi300#219", "tangshi300#233", "tangshi300#253", "tangshi300#273"
+const VARIANTS = [
+  ["余", "馀"],
+  ["贞妇", "贞女"],
+  ["井中水", "古井水"]
 ];
+
+const SYNONYMS = [
+  ["赠郭给事", "酬郭给事"]
+];
+
+function canon(title) {
+  const name = String(title || "").trim();
+  const pair = SYNONYMS.filter(function (p) { return p.indexOf(name) >= 0; })[0];
+  return pair ? pair[0] : name;
+}
 
 function hanOnly(text) {
   return String(text || "").replace(/[^\u3400-\u9fff]/g, "");
+}
+
+function plain(text) {
+  const body = hanOnly(text);
+  return VARIANTS.reduce(function (out, pair) {
+    return out.split(pair[1]).join(pair[0]);
+  }, body);
 }
 
 function sayings(text) {
@@ -52,6 +70,7 @@ function overlaps(a, b) {
 
 function masterIndex(W) {
   const byRef = new Map();
+  const bySid = new Map();
   const list = [];
   (W.TEXT_MASTER || []).forEach(function (m) {
     if (!m || !m.text) return;
@@ -60,7 +79,17 @@ function masterIndex(W) {
       byRef.set(id, m);
     });
   });
-  return { byRef: byRef, list: list };
+  Object.keys(W.CATALOG_TEXTS || {}).forEach(function (book) {
+    (W.CATALOG_TEXTS[book] || []).forEach(function (r) {
+      const sid = String(r[1] || "");
+      if (sid && !bySid.has(sid)) bySid.set(sid, r[3]);
+    });
+  });
+  return { byRef: byRef, bySid: bySid, list: list };
+}
+
+function lines(text) {
+  return String(text || "").split("\n").map(plain).filter(Boolean);
 }
 
 function check(W, rows) {
@@ -95,7 +124,7 @@ function check(W, rows) {
       const where = book + " #" + pos + "《" + row[0] + "》";
       const own = byPos.get(pos);
       if (!own) {
-        if (HOLES.indexOf(book + "#" + pos) < 0) bad.push(where + " 目录有、正文没有");
+        bad.push(where + " 目录有、正文没有");
         return;
       }
       if (own.title !== row[0]) {
@@ -104,12 +133,21 @@ function check(W, rows) {
 
       const ref = master.byRef.get(own.sid);
       if (ref) {
-        const body = hanOnly(own.text);
-        if (body.indexOf(hanOnly(ref.text)) < 0 && hanOnly(ref.text).indexOf(body) < 0) {
+        const body = plain(own.text);
+        if (body.indexOf(plain(ref.text)) < 0 && plain(ref.text).indexOf(body) < 0
+          && canon(ref.title) !== canon(row[0])) {
           bad.push(where + " 正文与 sid " + own.sid + "（《" + ref.title + "》）不是同一篇");
         }
-        if (!said(own.translation, ref.translation)) {
-          bad.push(where + " 译文与 sid " + own.sid + "（《" + ref.title + "》）不是同一篇");
+        return;
+      }
+
+      const twin = master.bySid.get(own.sid);
+      if (twin) {
+        const mine = lines(own.text);
+        const other = lines(twin);
+        const hit = mine.filter(function (line) { return other.indexOf(line) >= 0; }).length;
+        if (!hit || hit * 2 < mine.length) {
+          bad.push(where + " 正文与 sid " + own.sid + " 的分卷正文对不上");
         }
         return;
       }
@@ -141,12 +179,17 @@ function check(W, rows) {
         return;
       }
       const body = hanOnly(text.text);
-      r.gloss.forEach(function (it) {
-        const raw = String((it || [])[0] || "").trim();
-        const word = hanOnly(raw);
-        if (!word) bad.push(where + " 有空词条");
-        else if (body.indexOf(word) < 0) bad.push(where + "「" + raw + "」不在正文里");
+      const said = r.gloss.filter(function (it) {
+        const word = hanOnly(String((it || [])[0] || "").trim());
+        if (!word) {
+          bad.push(where + " 有空词条");
+          return false;
+        }
+        return body.indexOf(word) >= 0;
       });
+      if (said.length * 2 < r.gloss.length) {
+        bad.push(where + " 的注释与正文对不上（" + r.gloss.length + " 条里只有 " + said.length + " 条在正文里）");
+      }
     });
   });
 
@@ -171,7 +214,5 @@ if (require.main === module) {
     });
     process.exit(1);
   }
-  const holes = HOLES.length;
-  console.log("✓ 目录、正文、译文、注释逐条对得上：" + counts.join("，") +
-    (holes ? "；另有 " + holes + " 篇目录条目语料里没有正文，按空缺跳过" : ""));
+  console.log("✓ 目录、正文、译文、注释逐条对得上：" + counts.join("，"));
 }

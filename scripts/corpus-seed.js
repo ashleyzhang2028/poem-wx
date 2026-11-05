@@ -167,7 +167,7 @@ function seedRows(W) {
 
 function catalogTexts(catalogs, order) {
   const W = loadCorpus();
-  const source = mergeByPos([W.CATALOG_TEXTS_PATCH, W.CATALOG_TEXTS, W.SITE_TEXTS, catalogBoxes(W.TONGXIN_TEXT)]);
+  const source = mergeByPos([W.CATALOG_TEXTS, W.SITE_TEXTS, catalogBoxes(W.TONGXIN_TEXT), W.CATALOG_TEXTS_PATCH]);
   const out = [];
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("正文绑在了不在目录里的集子：" + bookId);
