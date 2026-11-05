@@ -24,3 +24,4 @@ deploy/.build/
 
 # 分片缓存指纹（scripts/shard-stage.js 写，构建节点上那份缓存对不对就靠它）
 .shard-fp
+

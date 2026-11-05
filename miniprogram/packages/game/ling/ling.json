@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "飞花令研习",
+  "usingComponents": {
+    "lock-card": "/components/lock-card/lock-card",
+    "tab-bar": "/custom-tab-bar/index"
+  }
+}

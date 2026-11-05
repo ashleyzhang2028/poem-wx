@@ -1,0 +1,183 @@
+.pick {
+  padding-bottom: var(--sp-3);
+}
+
+.pick-search.search {
+  margin-bottom: var(--sp-3);
+}
+
+.pick-clear {
+  margin-left: var(--sp-1);
+}
+
+.pick-group {
+  margin-top: var(--sp-2);
+}
+
+.pick-group:first-of-type {
+  margin-top: 0;
+}
+
+.pick-group-name {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  margin-bottom: 8rpx;
+}
+
+.pick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.pick-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60rpx;
+  height: 52rpx;
+  padding: 0 12rpx;
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  line-height: 1;
+  color: var(--ink-2);
+  transition: background-color var(--t-press), color var(--t-press);
+}
+
+.pick-chip.on {
+  background: var(--strong);
+  color: var(--on-theme);
+}
+
+.scopes {
+  width: 100%;
+  margin-bottom: var(--sp-2);
+}
+
+.scopes-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 0 2rpx var(--sp-1);
+}
+
+.scope {
+  font-size: var(--fs-hint);
+  padding: 8rpx var(--sp-3);
+}
+
+.tally {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4rpx var(--sp-1) var(--sp-2);
+}
+
+.tally-main {
+  font-size: var(--fs-hint);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-caption);
+}
+
+.tally-note {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.lines {
+  padding-top: var(--sp-1);
+  padding-bottom: var(--sp-1);
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--h-row);
+  padding: var(--sp-3) 0;
+  border-bottom: 1rpx solid var(--line-2);
+}
+
+.line:last-child {
+  border-bottom: none;
+}
+
+.line-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.line-seg {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-lead);
+  color: var(--ink);
+  letter-spacing: var(--ls-title);
+  line-height: var(--lh-body);
+}
+
+.line-t {
+  display: inline;
+}
+
+.line-hit {
+  color: var(--strong-text);
+}
+
+.line-by {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.line-by .tag {
+  margin-right: 0;
+}
+
+.line-who {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.pitch {
+  padding: var(--sp-6) var(--sp-4) var(--sp-5);
+  text-align: center;
+}
+
+.pitch-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 128rpx;
+  height: 128rpx;
+  margin: 0 auto var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--strong-soft);
+  font-family: var(--font-poem);
+  font-size: var(--fs-head);
+  line-height: 1;
+  color: var(--strong-text);
+}
+
+.pitch-line {
+  display: block;
+  font-family: var(--font-poem);
+  font-size: var(--fs-title);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-title);
+}
+
+.pitch-sub {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  line-height: var(--lh-body);
+}

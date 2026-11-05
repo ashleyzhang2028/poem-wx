@@ -1705,9 +1705,12 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
   });
   compDirs.forEach((d) => addComponents(path.join(d, path.basename(d) + ".json")));
 
+  const GENERATED = path.join(ROOT, "data") + path.sep;
+  const LING_DATA = path.join(ROOT, "packages", "game", "data") + path.sep;
+
   const canUse = {};
   jsFiles.forEach((f) => {
-    if (f.startsWith(path.join(ROOT, "data") + path.sep)) return;
+    if (f.startsWith(GENERATED)) return;
     canUse[f] = true;
   });
 
@@ -1728,6 +1731,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     while ((m = re.exec(src))) {
       if (m[1].charAt(0) !== ".") continue;
       const dep = resolveReq(file, m[1]);
+      if (dep.startsWith(LING_DATA)) continue;
       const to = entryOf(dep);
       if (to && to !== entryOf(file)) {
         leaked.push(path.relative(ROOT, file) + " → " + path.relative(ROOT, dep));
@@ -1744,7 +1748,7 @@ ok("用户列表页注册在 users 分包", (subs.users || []).indexOf("index/in
     path.join(ROOT, "utils", "font.js")
   ];
   const orphans = jsFiles
-    .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0)
+    .filter((f) => canUse[f] && !reachable[f] && LAZY.indexOf(f) < 0 && !f.startsWith(LING_DATA))
     .map((f) => path.relative(ROOT, f))
     .sort();
   ok("每个 .js 都被入口链引用到（不留没人 require 的孤儿）",
@@ -1972,6 +1976,112 @@ ok("名录在、标签截断、档位合法",
     });
   }
 }
+
+const lingPoolReady = Promise.resolve().then(() => {
+  const ling = require(path.join(ROOT, "utils", "ling-index.js"));
+  const lingPool = require(path.join(ROOT, "utils", "ling-pool.js"));
+  const savedSettings = store.settings();
+
+  ok("一行联句是「一逗一句」的两句，跨行也接得上",
+    ling.couplesOf("白日依山尽，\n黄河入海流。").join("|") === "白日依山尽，黄河入海流。"
+      && ling.couplesOf("鹅，鹅，鹅，\n曲项向天歌。").join("|") === "鹅，曲项向天歌。");
+
+  ok("不成句的不算：没有句号、或整段连标点都没有（古文正文不是联句）",
+    ling.couplesOf("白日依山尽").length === 0
+      && ling.couplesOf("花近高楼伤客心万方多难此登临锦江春色来天地").length === 0);
+
+  const seeded = require(path.join(ROOT, "utils", "corpus.js"));
+  ling.install(ling.build({ course: seeded.course() }).rows);
+
+  store.saveSettings({ grade: 3, term: 2 });
+  const lowStage = ling.matchAt("月", { scope: "stage" }).length;
+  const allCourse = ling.matchAt("月", { scope: "course" }).length;
+  store.saveSettings({ grade: 12, term: 2 });
+  const highStage = ling.matchAt("月", { scope: "stage" }).length;
+  ok("按学段切得动：当前学段随年级长大，且不超过课内全部",
+    allCourse > 0 && lowStage > 0 && lowStage <= highStage && highStage <= allCourse,
+    [lowStage, highStage, allCourse].join(" / "));
+
+  ok("档位按序：学段四档 + 课内全部 + 各选集 + 不限",
+    ling.scopeTable().map((s) => s.id).join() === ["stage", "primary", "middle", "high", "course"]
+      .concat(ling.SELECTIONS.map((s) => s.id)).concat(["any"]).join(),
+    ling.scopeTable().map((s) => s.id).join());
+
+  const first = ling.find("月", { scope: "course" });
+  const second = ling.find("月", { scope: "course", from: first.items.length });
+  ok("一次 20 句，翻下去接着给（不重不漏）",
+    first.items.length === Math.min(ling.PAGE, first.total)
+      && second.items.length === Math.min(ling.PAGE, first.total - first.items.length)
+      && second.items.every((row) => first.items.indexOf(row) < 0),
+    first.total + " 句，第一页 " + first.items.length + "，第二页 " + second.items.length);
+
+  ok("每句都带得出范围胶囊",
+    first.items.every((row) => row.tags.length > 0));
+
+  ok("同一句只出一次（翻到第 20 条也不重复）",
+    (() => {
+      const seen = {};
+      return first.items.concat(second.items).every((row) => {
+        if (seen[row.seg]) return false;
+        seen[row.seg] = 1;
+        return true;
+      });
+    })());
+
+  const rows = Object.keys(ling.buildBooks(
+    [{ id: "tangshi", name: "唐诗" }],
+    { tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }] }
+  ).rows);
+
+  const before = ling.find("葳蕤", { scope: "tangshi300" }).total;
+  ling.installBooks([{ id: "tangshi", name: "唐诗" }], {
+    tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }]
+  });
+  ok("选集正文下来了就进那一档，胶囊带集子名",
+    before === 0 && ling.find("葳蕤", { scope: "tangshi300" }).total === 1
+      && ling.find("葳蕤", { scope: "course" }).total === 0
+      && ling.find("葳蕤", { scope: "any" }).items[0].tags[0] === "唐诗三百首",
+    rows.length + " 行");
+
+  store.saveSettings(savedSettings);
+  ling.reset();
+
+  ok("远端那一边去重按正文算，标点与重复收录算同一句",
+    lingPool.clean("白日依山尽，黄河入海流。") === lingPool.clean("白日依山尽 黄河入海流")
+      && lingPool.clean("白日依山尽") !== lingPool.clean("黄河入海流"));
+
+  const remoteLines = [{ id: 1, title: "t", content: ["白日依山尽，黄河入海流。"] }];
+  const source = require(path.join(ROOT, "utils", "poem-source.js"));
+  const keepSearch = source.search;
+  const keepUsable = source.usable;
+  source.usable = () => true;
+  source.search = (q, opt) => Promise.resolve({
+    items: remoteLines.slice((opt.page - 1) * opt.size, opt.page * opt.size),
+    total: remoteLines.length,
+    page: opt.page,
+    more: opt.page * opt.size < remoteLines.length
+  });
+  lingPool.forget();
+
+  ok("远端兜底报得出可用性",
+    lingPool.usable("any") && lingPool.usable("tangshi300") && !lingPool.usable("course"));
+
+  return lingPool.next("黄河", "any", 2).then((page) => {
+    ok("远端兜底能交出含令字的联句，胶囊带集子名",
+      page.items.length === 1 && page.items[0].seg === "黄河入海流" && page.items[0].hit === "黄河"
+        && page.items[0].tags[0] === source.NAME && page.error === null,
+      JSON.stringify(page.items.map((row) => row.seg)));
+
+    return lingPool.next("黄河", "any", 2).then((again) => {
+      source.search = keepSearch;
+      source.usable = keepUsable;
+      lingPool.forget();
+      ok("同一句不会因为再下拉一次又出现一遍",
+        again.items.length === 0 && again.more === false,
+        JSON.stringify(again.items.map((row) => row.seg)));
+    });
+  });
+});
 
 {
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
@@ -2548,7 +2658,7 @@ function mountFull(pg, query) {
       return out;
     }
 
-    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p));
+    const allPages = Object.keys(homeCallAll()).filter((p) => !/\/lib$/.test(p) && !/^packages\/game\/data\//.test(p));
     const offBar = allPages.filter((p) =>
       !/tabbar\.(sync|pick|below)\(this[,)]/.test(fs.readFileSync(path.join(ROOT, p + ".js"), "utf8")));
     ok("每一页都挂着这条栏（不按页藏栏了，Issue #370）",

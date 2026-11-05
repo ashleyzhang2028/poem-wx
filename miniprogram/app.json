@@ -29,6 +29,7 @@
         "index/index",
         "quiz/quiz",
         "feihua/feihua",
+        "ling/ling",
         "exam/exam",
         "log/log"
       ]

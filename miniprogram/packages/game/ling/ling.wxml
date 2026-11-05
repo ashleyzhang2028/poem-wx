@@ -1,0 +1,75 @@
+<view class="page {{barBelow ? 'has-tabbar' : 'tall'}}" style="{{themeStyle}}">
+  <lock-card wx:if="{{locked}}" title="飞花令研习" note="登录后用 · 飞花令是 Max 能力" mark="令" bind:login="onLogin" />
+
+  <block wx:else>
+    <view class="card pick">
+      <view class="search pick-search">
+        <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
+        <input value="{{term}}" placeholder="搜一个令字，或两字词组" confirm-type="search"
+               bindinput="onInput" bindconfirm="onConfirm" />
+        <view class="clear pick-clear" wx:if="{{term}}" hover-class="clear-hover" hover-stay-time="60" bindtap="onClear">
+          <view class="clear-ico" style="mask-image:url('{{icons.clear}}');-webkit-mask-image:url('{{icons.clear}}');"></view>
+        </view>
+      </view>
+
+      <view class="pick-group" wx:for="{{groups}}" wx:key="name" wx:for-item="group">
+        <text class="pick-group-name">{{group.name}}</text>
+        <view class="pick-chips">
+          <text class="pick-chip {{item.on ? 'on' : ''}}" wx:for="{{group.chars}}" wx:key="ch"
+                data-ch="{{item.ch}}" bindtap="onPick">{{item.ch}}</text>
+        </view>
+      </view>
+    </view>
+
+    <scroll-view class="scopes" scroll-x enable-flex show-scrollbar="{{false}}" scroll-into-view="scope-{{scope}}" scroll-with-animation>
+      <view class="scopes-row">
+        <text class="pill scope {{scope === item.id ? 'on' : ''}}" id="scope-{{item.id}}"
+              wx:for="{{scopes}}" wx:key="id" data-id="{{item.id}}" bindtap="onScope">{{item.name}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="tally" wx:if="{{searched && items.length}}">
+      <text class="tally-main">「{{term}}」{{scopeName}} {{items.length}} 句</text>
+      <text class="tally-note" wx:if="{{more}}">本机还有</text>
+      <text class="tally-note" wx:elif="{{!remoteDone}}">下拉还有</text>
+    </view>
+
+    <view class="card lines" wx:if="{{items.length}}">
+      <view class="line" hover-class="row-hover" hover-stay-time="60"
+            wx:for="{{items}}" wx:key="index" data-id="{{item.id}}" data-remote="{{item.scope !== 'course'}}" bindtap="onOpen">
+        <view class="line-main">
+          <view class="line-seg"><text class="line-t">{{item.head}}</text><text class="line-t line-hit">{{item.hit}}</text><text class="line-t">{{item.tail}}</text></view>
+          <view class="line-by">
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+            <text class="line-who">{{item.dynasty}}{{item.author}}</text>
+          </view>
+        </view>
+        <text class="row-go">›</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{searched && !loading && !items.length && !pulling}}">
+      <view class="empty">
+        <text class="empty-mark">令</text>
+        <text class="empty-text say">{{hint}}</text>
+      </view>
+    </view>
+
+    <view class="tally" wx:if="{{searched && items.length}}">
+      <text class="tally-note" wx:if="{{pulling || loadingMore}}">正在找下一批…</text>
+      <text class="tally-note" wx:elif="{{more}}" bindtap="onMore">下拉继续，本机还有</text>
+      <text class="tally-note" wx:elif="{{!remoteDone}}" bindtap="onMore">下拉去诗词漫读接着找</text>
+      <text class="tally-note" wx:else>「{{term}}」的联句到这里为止</text>
+    </view>
+
+    <view class="pitch" wx:if="{{!searched}}">
+      <text class="pitch-mark">令</text>
+      <text class="pitch-line">挑一个令字，或自己搜一个</text>
+      <text class="pitch-sub">本机先出，下拉再往诗词漫读里找；每句都带一个逗号一个句号</text>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </block>
+
+  <tab-bar id="tabbar" current="2" />
+</view>
