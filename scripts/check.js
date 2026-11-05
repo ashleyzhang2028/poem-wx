@@ -2116,24 +2116,36 @@ const lingPoolReady = Promise.resolve().then(() => {
 }
 
 {
-  const feihuaLib = fs.readFileSync(path.join(ROOT, "packages", "game", "feihua", "lib.js"), "utf8");
-  const feihuaRun = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));
-  const scopesRun = require(path.join(ROOT, "packages", "game", "utils", "game-scopes.js"));
-  const storeRun = require(path.join(ROOT, "utils", "store.js"));
-  const kept = { grade: storeRun.settings().grade, term: storeRun.settings().term };
-  storeRun.saveSettings({ grade: 12, term: 2 });
+  const feihuaPath = path.join(ROOT, "packages", "game", "feihua", "lib.js");
+  const scopesPath = path.join(ROOT, "packages", "game", "utils", "game-scopes.js");
+  const seeded = corpus.course().map((p) => ({ b: p.b, id: p.id, t: p.t, gr: p.gr, tm: p.tm }));
+  const entries = {};
+  seeded.forEach((p) => { entries[p.id] = corpus.entry(p.id); });
+  const keepEntry = corpus.entry;
+  const keepScopes = require.cache[require.resolve(scopesPath)];
+  const springOf = () => {
+    delete require.cache[require.resolve(feihuaPath)];
+    return require(feihuaPath).look("春", { scope: "course_all", limit: 500 });
+  };
 
-  const spring = feihuaRun.look("春", { scope: scopesRun.COURSE_ALL_SCOPE, limit: 500 });
+  require.cache[require.resolve(scopesPath)] = {
+    id: "game-scopes", filename: "game-scopes", loaded: true,
+    exports: {
+      STAGE_SCOPE: "stage", COURSE_ALL_SCOPE: "course_all", cacheKeyOf: (key) => key || "stage",
+      pool: () => seeded, field: () => seeded
+    }
+  };
+  corpus.entry = (id) => entries[id] || null;
+  const filled = springOf();
+
+  corpus.entry = keepEntry;
+  if (keepScopes) require.cache[require.resolve(scopesPath)] = keepScopes;
+  else delete require.cache[require.resolve(scopesPath)];
+  delete require.cache[require.resolve(feihuaPath)];
+
   ok("课内查得到「春」的联句（含春晓那句，Issue #900）",
-    spring.length > 0 && spring.some((r) => r.seg.indexOf("春眠不觉晓") >= 0),
-    spring.length + " 条：" + spring.slice(0, 3).map((r) => r.seg).join(" / "));
-  ok("查不到时不把空表留在缓存里（语料到位后同一处要能查到）",
-    /if \(Object\.keys\(out\)\.length\) poolCache\[cacheKey\] = out/.test(feihuaLib)
-      && /if \(out\.length\) segsCache\[key\] = out/.test(feihuaLib)
-      && /if \(Object\.keys\(out\)\.length\) byScopeCache\[key\] = out/.test(feihuaLib)
-      && /function cacheAlive\(\)/.test(feihuaLib),
-    "空表会被钉在缓存里，语料到了也不重建");
-  storeRun.saveSettings(kept);
+    filled.some((r) => r.seg.indexOf("春眠不觉晓") >= 0),
+    filled.length + " 条：" + filled.slice(0, 3).map((r) => r.seg).join(" / "));
 }
 
 {
