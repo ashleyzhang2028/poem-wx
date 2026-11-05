@@ -17,6 +17,7 @@ const STUDY = {
   glyph: "研",
   name: "飞花令研习",
   desc: "按令字翻遍诗句，选一个先背下来",
+  cap: "feihualing",
   page: "/packages/game/ling/ling"
 };
 
@@ -64,6 +65,7 @@ Page({
 
     const boxes = MODES.map((m) => (m.log && entitlement.can(m.cap) ? scoreLog.latest(m.log) : null));
     const now = entitlement.status().tier;
+    const studyTier = entitlement.tierKey(STUDY.cap);
     const cards = MODES.map((m, i) => {
       const ok = entitlement.can(m.cap);
       const tier = entitlement.tierKey(m.cap);
@@ -78,6 +80,10 @@ Page({
     this.setData({
       locked: false,
       cards,
+      study: Object.assign({}, STUDY, {
+        tier: studyTier,
+        locked: !entitlement.can(STUDY.cap) && entitlement.reachable(studyTier, now)
+      }),
       heroMark: top ? top.rank.name.slice(0, 1) : "会",
       heroTitle: top ? top.rank.name : "",
       heroSub: top ? top.rank.note : "三种玩法，任选其一"
@@ -86,11 +92,11 @@ Page({
 
   onStudy() {
     if (!gate.logged()) {
-      entitlement.block("feihualing", { page: this });
+      entitlement.block(STUDY.cap, { page: this });
       return;
     }
-    if (!entitlement.can("feihualing")) {
-      wx.showToast({ title: entitlement.hint("feihualing"), icon: "none" });
+    if (!entitlement.can(STUDY.cap)) {
+      wx.showToast({ title: entitlement.hint(STUDY.cap), icon: "none" });
       return;
     }
     sfx.play("tap");
