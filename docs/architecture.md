@@ -290,13 +290,15 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    `texts` 与 `gloss` 是按目录次序（`book_id` + `pos`）挂上去的正文与注释：
    语料在 `scripts/corpus/data/catalog-texts.js`（由 `build-catalog-texts.js` 把目录条目
    与分卷里的正文、译文按「题名 + 作者」绑成一条，绑不上的一条不写）、
-   `catalog-texts-patch.js`（尚书、春秋左氏传与战国策的正文：目录里那三条集子的条目
-   在分卷里没有对应正文，这一份按目录「篇名 ⇐ 站点篇名」逐条绑好写进来，篇目以
-   `site-catalogs.js` 为准；尚书 79 条里 22 条只存篇目、无传世正文，战国策 501 条里
-   7 条同样缺文，这些不写，客户端按「没取到」处理）、
+   `catalog-texts-patch.js`（尚书、春秋左氏传、战国策，以及唐诗三百首里分卷对不上的
+   十几条：按目录「篇名 ⇐ 站点篇名」逐条绑好写进来，篇目以 `site-catalogs.js` 为准；
+   尚书 79 条里 22 条只存篇目、无传世正文，战国策 501 条里 7 条、春秋左氏传 4 条、
+   唐诗三百首 9 条同样缺文，这些不写，客户端按「没取到」处理）、
    `catalog-notes.js`（唐诗三百首、宋词三百首、古文观止的注释）与
    `tongxin-notes.js`（童心诗话全篇的正文、译文与注释，篇数以 `tongxin-list.tsv` 为准；与课内同题同文的那批
-   由 `gloss-notes.js` 的条目直接取来，不另写一份）。注释逐条对正文核过，判据在
+   由 `gloss-notes.js` 的条目直接取来，不另写一份）。目录、正文、译文、注释四者的
+   对应关系逐条核过，判据在 `scripts/corpus/scripts/check-catalog-texts.js`
+   （`scripts/check.js` 每次跑都调它）；注释词条对正文的判据在
    `scripts/corpus/scripts/check-catalog-notes.js`。客户端 `corpus.catalogText(meta)` /
    `catalogGloss(meta)` 取到就用，取不到才回落到问诗词漫读。
 

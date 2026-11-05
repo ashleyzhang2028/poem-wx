@@ -9,6 +9,7 @@ const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
+const icons = require("../../../utils/icons");
 const rankingSubmit = require("../utils/ranking-submit");
 const rankingSelf = require("../utils/ranking");
 const guard = require("../../../utils/guard");
@@ -35,6 +36,7 @@ Page({
     groups: [],
     picking: false,
     corpusReady: true,
+    icons: { search: icons.search },
 
     barBelow: true,
     char: "",
@@ -222,9 +224,11 @@ Page({
 
   onPickToggle() {
     sfx.play("tap");
-    this.setData({ picking: !this.data.picking }, () => {
-      if (this.data.picking) this.refreshGroups();
-    });
+    if (this.data.picking) {
+      this.setData({ picking: false });
+      return;
+    }
+    this.setData({ picking: true, answers: [], revealed: false, revealing: false }, () => this.refreshGroups());
   },
 
   onPickChar(e) {
