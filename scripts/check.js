@@ -876,7 +876,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
 
   asTier("free");
   const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
-  ok("Free 换不了字体（十三款摆着，只有默认那款可选）",
+  ok("Free 换不了字体（清单摆着，只有默认那款可选）",
     picked.font.pickable() === false
       && picked.font.options().length === picked.font.FACES.length
       && picked.font.set("huiwen").ok === false,
