@@ -67,16 +67,24 @@ function makeWx(port, mem) {
   const port = server.address().port;
   const mem = {};
   global.wx = makeWx(port, mem);
+  global.getCurrentPages = () => [];
 
   const store = require(path.join(REPO, "miniprogram", "utils", "store.js"));
   const auth = require(path.join(REPO, "miniprogram", "utils", "auth.js"));
   const remote = require(path.join(REPO, "miniprogram", "utils", "remote.js"));
 
   const wire = require(path.join(REPO, "miniprogram", "utils", "wire.js"));
+  const loginFlow = require(path.join(REPO, "miniprogram", "utils", "login-flow.js"));
   const syncModule = require(path.join(REPO, "miniprogram", "utils", "sync.js"));
   const wireRows = () => wire.packRecords();
 
   auth.configure({ baseUrl: "http://127.0.0.1:" + port });
+
+  const modals = [];
+  global.wx.showModal = (opt) => {
+    modals.push(opt || {});
+    if (opt && typeof opt.success === "function") opt.success({ confirm: false, cancel: true });
+  };
 
   store.saveSettings({ grade: 3, dailyCount: 7, theme: "ink", sfx: false });
   store.saveProfile({ avatarLocal: "wxfile://avatar-from-wechat.jpg" });
@@ -245,6 +253,33 @@ function makeWx(port, mem) {
   ok("另一台手机同步成功", !sync4.error, JSON.stringify(sync4));
   ok("另一台手机上的那条进度被删掉（清空跨设备生效）",
     !store2.getRecord("poem_x"), JSON.stringify(store2.getRecord("poem_x")));
+
+  {
+    const realKey = config.sessionKeyOf;
+    config.sessionKeyOf = () => "rotated-secret-".padEnd(40, "y");
+    syncModule.rearm();
+    syncModule.dropOnExpire(true);
+
+    const gone = await syncModule.now(true);
+    ok("服务端换了会话密钥之后，401 E_NO_SESSION 的原始码与状态带回客户端",
+      gone && gone.statusCode === 401 && gone.code === "E_NO_SESSION", JSON.stringify(gone));
+    ok("同步失败的原始码记在状态里（界面能说出是哪一条，不止一句「同步失败」）",
+      syncModule.state().code === "E_NO_SESSION" && syncModule.state().statusCode === 401,
+      JSON.stringify(syncModule.state()));
+    ok("同步遇到 401 就地把状态落到「未登录」，并弹一次「重新登录」说清原因",
+      !(store.read(store.KEYS.profile, {}) || {}).logged
+        && modals.length === 1 && modals[0].confirmText === "重新登录"
+        && String(modals[0].content || "").indexOf("SESSION_SECRET") >= 0,
+      JSON.stringify({ logged: (store.read(store.KEYS.profile, {}) || {}).logged,
+        modals: modals.map((m) => [m.title, m.confirmText]) }));
+
+    config.sessionKeyOf = realKey;
+    syncModule.dropOnExpire(false);
+    auth.configure({ baseUrl: "http://127.0.0.1:" + port });
+    await auth.login();
+    modals.length = 0;
+    syncModule.rearm();
+  }
 
   {
     const saved = { syncFree: config.rate.syncFree, syncPro: config.rate.syncPro, syncMax: config.rate.syncMax };

@@ -33,6 +33,15 @@ function failText(err) {
   return null;
 }
 
+function reenterText(err) {
+  if (!sync.sessionGone(err)) return null;
+  return {
+    title: "登录状态已失效",
+    content: "服务器不再认这台手机的登录（服务端换过 SESSION_SECRET、会话过期或已被吊销都会这样）。"
+      + "点一次登录即可继续同步，本机进度仍在。"
+  };
+}
+
 function sendFail(err) {
   if (err && err.cloudFail) {
     wx.showModal({
@@ -71,7 +80,7 @@ function sendFail(err) {
 function prompt(err) {
   if (sendFail(err)) return;
 
-  const box = failText(err);
+  const box = reenterText(err) || failText(err);
   if (!box) {
     wx.showToast({ title: (err && err.message) || "登录未完成", icon: "none" });
     return;
@@ -184,6 +193,34 @@ function settle(res, page) {
   return res;
 }
 
+function askReenter(page, err, drop) {
+  const at = (page && typeof page.refresh === "function") ? page : null;
+  const say = reenterText(err);
+  if (!say || asking) return null;
+  asking = true;
+  if (drop || !auth.logged()) store.saveSession({ logged: false, tier: "", tierFromServer: false });
+  if (at) at.refresh();
+  const ui = typeof wx === "undefined" || !wx ? null : wx;
+  if (!ui || typeof ui.showModal !== "function") {
+    asking = false;
+    return say;
+  }
+  ui.showModal({
+    title: say.title,
+    content: say.content,
+    confirmText: "重新登录",
+    cancelText: "取消",
+    complete: () => {
+      asking = false;
+    },
+    success: (r) => {
+      sync.rearm();
+      if (r && r.confirm) askLogin(null).catch(() => {});
+    }
+  });
+  return say;
+}
+
 let shownAt = null;
 
 function mark(page) {
@@ -229,6 +266,7 @@ module.exports = {
   settle,
   resume,
   report,
+  askReenter,
   takeAvatar,
   takeNickname,
   watch,

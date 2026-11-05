@@ -105,11 +105,14 @@ function read(key, fallback) {
         hot = {};
         hotWx = wx;
       }
-      if (!(key in hot)) {
-        const raw = wx.getStorageSync(key);
-        hot[key] = raw === "" || raw === null || raw === undefined ? null : JSON.stringify(raw);
+      const raw = wx.getStorageSync(key);
+      if (raw === "" || raw === null || raw === undefined) {
+        delete hot[key];
+        v = undefined;
+      } else {
+        hot[key] = JSON.stringify(raw);
+        v = raw;
       }
-      v = hot[key] === null ? undefined : JSON.parse(hot[key]);
     } else {
       v = wx.getStorageSync(key);
     }
