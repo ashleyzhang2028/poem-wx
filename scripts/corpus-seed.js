@@ -37,6 +37,8 @@ const POEM_FILES = [
   "data/catalog-texts.js",
   "data/catalog-notes.js",
   "data/tongxin-notes.js",
+  "data/site-texts.js",
+  "data/catalog-texts-patch.js",
   "data/common-chars.js",
   "data/pinyin-table.js"
 ];
@@ -164,18 +166,34 @@ function seedRows(W) {
 }
 
 function catalogTexts(catalogs, order) {
-  const W = loadCorpus(["data/catalog-texts.js", "data/tongxin-notes.js", "data/site-texts.js"]);
-  const source = Object.assign({}, W.CATALOG_TEXTS || {}, W.SITE_TEXTS || {}, catalogBoxes(W.TONGXIN_TEXT));
+  const W = loadCorpus();
+  const source = mergeByPos([W.CATALOG_TEXTS, W.SITE_TEXTS, catalogBoxes(W.TONGXIN_TEXT), W.CATALOG_TEXTS_PATCH]);
   const out = [];
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("正文绑在了不在目录里的集子：" + bookId);
     const rows = (catalogs[bookId] || {}).rows || [];
-    source[bookId].forEach(function (r) {
-      const pos = Number(r[0]);
+    Object.keys(source[bookId]).map(Number).sort(function (a, b) { return a - b; }).forEach(function (pos) {
+      const r = source[bookId][pos];
       if (!(pos >= 1 && pos <= rows.length)) {
         throw new Error(bookId + " 第 " + pos + " 条不在目录里（目录共 " + rows.length + " 条）");
       }
-      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], sid: r[1], text: r[3], translation: r[4], translation_src: r[2] || "" });
+      out.push({
+        book_id: bookId, pos: pos, title: rows[pos - 1][0], sid: r[1] || bookId + "-" + pos,
+        text: r[3], translation: r[4], translation_src: r[2] || ""
+      });
+    });
+  });
+  return out;
+}
+
+function mergeByPos(sources) {
+  const out = {};
+  sources.forEach(function (src) {
+    Object.keys(src || {}).forEach(function (bookId) {
+      const mine = out[bookId] || (out[bookId] = {});
+      (src[bookId] || []).forEach(function (r) {
+        mine[Number(r[0])] = r;
+      });
     });
   });
   return out;
