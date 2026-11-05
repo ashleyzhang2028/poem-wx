@@ -74,8 +74,8 @@ function reasonCls(key) {
   return REASON_CLS[key] || "ghost";
 }
 
-function stateText(recited, read) {
-  if (recited) return "已温习";
+function stateText(recited, read, replaced) {
+  if (recited) return replaced ? "已温习 · 当日重评覆盖" : "已温习";
   return read ? "待温习" : "未读";
 }
 
@@ -87,6 +87,10 @@ function pickedToday(rec) {
   if (!R.reviewedToday(rec, Date.now())) return "";
   const last = (rec.history || [])[rec.history.length - 1];
   return (last && last.result) || "";
+}
+
+function replacedToday(rec) {
+  return R.replacedToday(rec, Date.now());
 }
 
 function sourceKey(id) {
@@ -150,7 +154,7 @@ function rowsOfScope(list, scope) {
       ]),
       read: !!read[p.id],
       recited: S.isLearned(rec),
-      stateText: stateText(S.isLearned(rec), !!read[p.id]),
+      stateText: stateText(S.isLearned(rec), !!read[p.id], replacedToday(rec)),
       stateCls: stateCls(S.isLearned(rec)),
       source: SOURCE_TEXT[sourceKey(p.id)],
       course: sourceKey(p.id) === "course"
@@ -371,7 +375,7 @@ Page({
         daily: !!dailyOn[it.poem.id],
         read,
         recited,
-        stateText: stateText(recited, read),
+        stateText: stateText(recited, read, replacedToday(rec)),
         stateCls: stateCls(recited),
         source: SOURCE_TEXT[sourceKey(it.poem.id)],
         course: sourceKey(it.poem.id) === "course"
@@ -563,7 +567,7 @@ Page({
       picked: pickedToday(rec),
       read: read,
       recited: recited,
-      stateText: stateText(recited, read),
+      stateText: stateText(recited, read, replacedToday(rec)),
       stateCls: stateCls(recited),
       source: SOURCE_TEXT[sourceKey(p.id)],
       course: sourceKey(p.id) === "course"
