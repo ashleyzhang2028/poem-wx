@@ -1,5 +1,5 @@
-const ling = require("../../../utils/ling-index");
-const lingPool = require("../../../utils/ling-pool");
+const ling = require("../utils/ling-index");
+const lingPool = require("../utils/ling-pool");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");

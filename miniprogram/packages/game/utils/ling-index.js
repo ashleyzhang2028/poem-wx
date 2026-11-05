@@ -1,4 +1,4 @@
-const store = require("./store");
+const store = require("../../../utils/store");
 
 const GROUPS = [
   { name: "季节时序", chars: ["春", "秋", "夜", "晓", "暮", "朝", "霜", "雪", "露", "霞", "烟", "雾", "日", "月"] },
@@ -199,7 +199,7 @@ function install(rows) {
 
 function load() {
   if (ready()) return Promise.resolve(box);
-  const corpus = require("./corpus");
+  const corpus = require("../../../utils/corpus");
   return corpus.ready("core")
     .then(() => {
       if (ready()) return box;

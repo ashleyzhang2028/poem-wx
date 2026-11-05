@@ -1,0 +1,36 @@
+const store = require("../../../utils/store");
+const entitlement = require("../../../utils/entitlement");
+
+const CAP = "league";
+
+function canJoin() {
+  return entitlement.can(CAP);
+}
+
+function optedIn() {
+  return canJoin() && store.settings().leagueBoard !== false;
+}
+
+function canSwitch() {
+  return entitlement.can(CAP);
+}
+
+function switched() {
+  return canSwitch() && store.settings().leagueBoard === false;
+}
+
+function setOn(on) {
+  if (!canSwitch()) return entitlement.decide(CAP);
+  store.saveSettings({ leagueBoard: !!on });
+  return { ok: true, reason: "ok", name: CAP, login: false };
+}
+
+function tier() {
+  return entitlement.tierOf(CAP);
+}
+
+function locked() {
+  return !canSwitch() && entitlement.reachable(tier(), entitlement.status().tier);
+}
+
+module.exports = { CAP, canJoin, optedIn, canSwitch, switched, setOn, tier, locked };

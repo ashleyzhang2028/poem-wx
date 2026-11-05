@@ -9,6 +9,7 @@ const loginFlow = require("./utils/login-flow");
 const sfx = require("./utils/sfx");
 const errors = require("./utils/error-log");
 const pageStack = require("./utils/page-stack");
+const tabbar = require("./utils/tabbar");
 
 App({
   globalData: {
@@ -79,6 +80,7 @@ App({
       if (!page) return;
       if (typeof page.applyFont === "function") page.applyFont();
       else if (page.data && page.data.themeStyle !== undefined) page.setData({ themeStyle });
+      tabbar.repaint(page);
     });
   },
 

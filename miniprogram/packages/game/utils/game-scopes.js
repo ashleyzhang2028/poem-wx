@@ -1,6 +1,6 @@
-const corpus = require("./corpus");
-const store = require("./store");
-const S = require("./scheduler");
+const corpus = require("../../../utils/corpus");
+const store = require("../../../utils/store");
+const S = require("../../../utils/scheduler");
 
 const STAGE_SCOPE = "stage";
 const COURSE_ALL_SCOPE = "course_all";

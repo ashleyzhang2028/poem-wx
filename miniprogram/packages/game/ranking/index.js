@@ -1,6 +1,6 @@
 const remote = require("../../../utils/remote");
 const sfx = require("../../../utils/sfx");
-const ranking = require("../../../utils/ranking");
+const ranking = require("../utils/ranking");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
@@ -172,6 +172,6 @@ Page({
 
 
   onShareAppMessage() {
-    return { title: "古诗文大会排行榜", path: "/packages/ranking/index/index" };
+    return { title: "古诗文大会排行榜", path: "/packages/game/ranking/index" };
   }
 });

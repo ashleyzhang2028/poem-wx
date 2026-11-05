@@ -1,5 +1,5 @@
-const custom = require("../../utils/custom-banner");
-const theme = require("../../utils/theme");
+const custom = require("../../../../../utils/custom-banner");
+const theme = require("../../../../../utils/theme");
 
 const ZOOM_STEP = 1.3;
 

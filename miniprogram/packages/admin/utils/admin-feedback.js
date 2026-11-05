@@ -1,4 +1,4 @@
-const remote = require("./remote");
+const remote = require("../../../utils/remote");
 const fb = require("./feedback-api");
 const dots = require("./dots");
 

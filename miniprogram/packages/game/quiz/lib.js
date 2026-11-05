@@ -1,5 +1,5 @@
 const corpus = require("../../../utils/corpus");
-const gameScopes = require("../../../utils/game-scopes");
+const gameScopes = require("../utils/game-scopes");
 const source = require("../../../utils/poem-source");
 
 const REMOTE_PICK = 12;

@@ -1,4 +1,4 @@
-const remote = require("./remote");
+const remote = require("../../../utils/remote");
 const dots = require("./dots");
 
 const KINDS = [
