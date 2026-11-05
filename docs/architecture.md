@@ -914,14 +914,19 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 
 **预览与正文是两套字族。** 主题页的字体格与预览壳里那七个字取 `font.preview()`，
 每款注册的是自己目录下的 `7.woff2` / `7.woff`，字族名为 `Kuibu Preview <款>`，
-与正文的 `Kuibu Poem <款>` 不相干。进页面把各款的 7 子集各注册一次，
-点哪款、换哪款都不等网络。正文与预览是两条链，选哪款都不改预览那一份。
+与正文的 `Kuibu Poem <款>` 不相干。正文与预览是两条链，选哪款都不改预览那一份。
 预览子集只含七个字，拿它排正文其余的字会落到系统衬线。预览字族不带系统兜底名，
 只靠这一份子集：掉下来就是「预览没生效」那一格。
 
+**预览只注册选中那一款，点开的才补。** `font.preview()` 走 `wanted()`：
+当前款，加上点过的（`previewSeen`）。没点过的格先留着 `previewOn: false`，
+`font.previewOf()` 在按下的那一刻注册并置上，字形落了地再让它进预览壳。
+理由与正文同一条：一次 `loadFontFace` 给 webview 挂一个 `WindowInfoChanged` 监听，
+十三款预览一起注册就是十三个常驻监听（Issue #893）。
+
 **预览字族的注册在页面作用域里。** `wx.loadFontFace` 带 `global: true` 时，
 字族名只在调用那一刻的页面作用域里认得出，换一页就没了 —— 所以主题页把
-各款的 `Kuibu Preview <款>` 挂在一层 `page-font-size` 的节点上，作用域跟着整页走；
+`Kuibu Preview <款>` 挂在一层 `page-font-size` 的节点上，作用域跟着整页走；
 没这层壳，卡里那几格会安静地退回系统衬线，看着像「预览没生效」。
 
 **那层壳是隐藏的，不放 `<page-meta>` 里。** `page-meta` 只能是页面第一个节点、
@@ -935,12 +940,15 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 会被后面画的兄弟节点整块盖住。遮住了就等于没画，那几格照样是系统衬线。
 
 **只注册要用的那几款。** `font.refresh()` 走 `load()` 与 `preview()`：
-正文按档位取当前那款的 free / pro / max，预览注册各款的 `7`。
-启动期不把其余几款的正文子集一并注册 —— 一次 `loadFontFace` 会给 webview 挂一个
-`WindowInfoChanged` 监听，十几款乘两个子集上百次调用，换来的只是切到那款时少等一次网络，
-而这笔账记在启动与页面 `onShow` 上（`App.onLaunch` 与 `App.onShow` 都跑 `refresh()`）。
-切换交由 `set()` 走一次 `refresh()`：那一下只注册新选中的那款，
-`--font-poem` 一换名字就有字族可用，不停在后备链上。
+正文按档位取当前那款的 free / pro / max，预览只取当前款与点过的那几款的 `7`。
+一次 `loadFontFace` 会给 webview 挂一个 `WindowInfoChanged` 监听，注册多少款就挂多少，
+所以启动期的调用次数钉在两处：正文一款、预览一款。
+
+**全局字族按页注册，但每页只一次。** `registerHere()` 带着 `global: true`，
+作用域跟着页面走；记账按「版本号 + 路由」（`scopeMark`），而版本号只在
+`set()` / `setGlobal()` 时推 —— 所以进入过的页面一律不再重复注册，
+换款时 `scopeEpoch` 一加，下一次 `registerHere()` 才重新来过。
+按路由无限新开一条账，等于每进一页挂一个监听（Issue #893）。
 
 **题名与正文一律不做加粗**：详情页的标题、身份行、诗句正文都用常规，
 重点交给字号与留白。字号与字重是两个旋钮，一起拧就是「两处同时在喊」。

@@ -952,24 +952,31 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   });
   e2.restore();
 
-  const previewSeen = [];
+  const previewCalls = [];
   asTier("pro");
-  const epv = bootFont({}, { loadFontFace: (o) => { previewSeen.push(o); o.success && o.success(); } });
+  const epv = bootFont({}, { loadFontFace: (o) => { previewCalls.push(o); o.success && o.success(); } });
+  const previewFaces = () => previewCalls.filter((o) => /^Kuibu Preview /.test(o.family));
   epv.font.preview().then((hit) => {
+    const on = previewFaces();
+    const first = on[0] || {};
     ok("字体卡每格预览取该款目录下的 7 那一份，不是 free / pro / max",
-      hit === true && previewSeen.length === epv.font.FACES.length
-        && epv.font.FACES.every((f) => {
-          const seen0 = previewSeen.filter((o) => o.family === f.previewFamily)[0];
-          return seen0 && seen0.source === f.preview[0]
-            && new RegExp("/" + f.dir + "/7\\.woff2?$").test(seen0.source);
-        }),
-      previewSeen.map((o) => o.family + " " + o.source).join(" | "));
-    return epv.font.preview();
-  }).then((again) => {
+      hit === true && !!first.source
+        && new RegExp("/7\\.woff2?$").test(first.source)
+        && epv.font.FACES.some((f) => f.previewFamily === first.family && f.preview[0] === first.source),
+      previewCalls.map((o) => o.family + " " + o.source).join(" | "));
+    const settled = on.length;
+    return epv.font.preview().then((again) => ({ again, settled }));
+  }).then(({ again, settled }) => {
     ok("预览注册过就不再注册一次",
-      again === true && previewSeen.length === epv.font.FACES.length,
-      previewSeen.map((o) => o.family).join(" | "));
-    epv.restore();
+      again === true && previewFaces().length === settled,
+      previewFaces().map((o) => o.family).join(" | "));
+    const cap = settled;
+    return epv.font.previewOf(epv.font.FACES[epv.font.FACES.length - 1].key).then((okHit) => {
+      ok("没点过的款不注册预览，点过才补 —— 一次 loadFontFace 挂一个 WindowInfoChanged",
+        okHit === true && cap < epv.font.FACES.length && previewFaces().length === cap + 1,
+        "注册了 " + cap + " 款 / 共 " + epv.font.FACES.length + " 款，点过之后 " + previewFaces().length + " 款");
+      epv.restore();
+    });
   });
 
 }
@@ -3501,11 +3508,11 @@ function mountFull(pg, query) {
     const barHosts = pages.filter((p) => /"nav-bar":\s*"\/components\/nav-bar\/nav-bar"/.test(
       fs.readFileSync(path.join(ROOT, p + ".json"), "utf8")));
     const fontSrc = fs.readFileSync(path.join(ROOT, "utils", "font.js"), "utf8");
-    ok("页面作用域的记账对得上「当前页 + 版本号」才算注册过（换页重发一次，同页不重发）",
-      /function registerPage\(family, list\)[\s\S]*?scoped\[key\] === scopeMark\(\)[\s\S]*?scoped\[key\] = scopeMark\(\)/.test(
+    ok("页面作用域的账按「当前页 + 版本号」记，进过的页不再注册",
+      /function registerPage\(family, list\)[\s\S]*?scoped\[key\] === scopeMark\(\)[\s\S]*?if \(scoped\[key\]\) return[\s\S]*?scoped\[key\] = scopeMark\(\)/.test(
         fontSrc)
         && /function scopeMark\(\)[\s\S]*?scopeEpoch[\s\S]*?route/.test(fontSrc),
-      "注册去了页面作用域的账却按字族名记，换一页就不再注册 —— 全局开关第二页就失效");
+      "一页一注册却不设上界 —— 每进一页就再挂一个 WindowInfoChanged 监听（Issue #893）");
 
     ok("自绘导航栏的字跟着全局走（不再按页面传来的 scope 才认）",
       barHosts.length > 0
