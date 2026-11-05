@@ -317,7 +317,7 @@ INSERT INTO `corpus_poems` (`id`, `book_id`, `pos`, `title`, `author`, `author_a
 DELETE FROM `corpus_catalog`;
 INSERT INTO `corpus_catalog` (`book_id`, `pos`, `title`, `author`, `note`, `in_course`) VALUES
   ('tangshi300', 0, '经鲁祭孔子而叹之', '唐玄宗', '唐', 0),
-  ('tangshi300', 1, '出塞', '王之涣', '唐', 0),
+  ('tangshi300', 1, '出塞', '王昌龄', '唐', 1),
   ('tangshi300', 2, '江南曲', '李益', '唐', 0),
   ('tangshi300', 3, '从军行七首·其四', '李颀', '唐', 0),
   ('tangshi300', 4, '蜀道难', '李白', '唐', 1),
