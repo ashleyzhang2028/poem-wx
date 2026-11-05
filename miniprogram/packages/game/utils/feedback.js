@@ -1,5 +1,5 @@
-const store = require("./store");
-const sfx = require("./sfx");
+const store = require("../../../utils/store");
+const sfx = require("../../../utils/sfx");
 
 const KEYS = { exam: "kb_game_exam_v1", feihua: "kb_game_feihua_v1" };
 

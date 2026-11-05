@@ -1,6 +1,6 @@
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
-const scoreLog = require("../../../utils/score-log");
+const scoreLog = require("../utils/score-log");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
@@ -105,7 +105,7 @@ Page({
 
   onRanking() {
     sfx.play("tap");
-    wx.navigateTo({ url: "/packages/ranking/index/index" });
+    wx.navigateTo({ url: "/packages/game/ranking/index" });
   },
 
 

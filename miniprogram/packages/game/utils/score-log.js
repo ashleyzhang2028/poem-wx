@@ -1,8 +1,8 @@
-const store = require("./store");
+const store = require("../../../utils/store");
 const feedback = require("./feedback");
-const entitlement = require("./entitlement");
-const tiers = require("./tiers");
-const remote = require("./remote");
+const entitlement = require("../../../utils/entitlement");
+const tiers = require("../../../utils/tiers");
+const remote = require("../../../utils/remote");
 
 const MODES = {
   exam: { key: "kb_exam_log_v1", game: "exam", unit: "分", total: 100 },

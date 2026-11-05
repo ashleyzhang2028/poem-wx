@@ -540,13 +540,13 @@
     ]
   },
   "users": {
-    "page": "packages/users/index/index",
+    "page": "packages/admin/users/index",
     "title": "用户列表",
     "back": true,
     "logged": true
   },
   "users-guest": {
-    "page": "packages/users/index/index",
+    "page": "packages/admin/users/index",
     "title": "用户列表",
     "back": true,
     "logged": false,
@@ -907,13 +907,13 @@
     "_note": "名家「中国」里的《师旷》：左窄右宽的两列表，右列是长传记（见 check.js 表格解析那两条）"
   },
   "game-ranking": {
-    "page": "packages/ranking/index/index",
+    "page": "packages/game/ranking/index",
     "title": "排行榜",
     "back": true,
     "logged": true
   },
   "game-ranking-fly": {
-    "page": "packages/ranking/index/index",
+    "page": "packages/game/ranking/index",
     "title": "排行榜",
     "back": true,
     "logged": true,
@@ -932,7 +932,7 @@
     "_note": "切换到飞花令榜：看顶部那颗标签页里选中的那一格与下面那几排筛选是两件事"
   },
   "game-ranking-empty": {
-    "page": "packages/ranking/index/index",
+    "page": "packages/game/ranking/index",
     "title": "排行榜",
     "back": true,
     "logged": true,
@@ -951,7 +951,7 @@
     "_note": "换一个空学段：空状态那张卡"
   },
   "feedback": {
-    "page": "packages/feedback/index/index",
+    "page": "packages/settings/feedback/index",
     "title": "意见建议",
     "back": true,
     "logged": true,
@@ -1052,7 +1052,7 @@
     "seedGroups": true
   },
   "feedback-guest": {
-    "page": "packages/feedback/index/index",
+    "page": "packages/settings/feedback/index",
     "title": "意见建议",
     "back": true,
     "logged": false

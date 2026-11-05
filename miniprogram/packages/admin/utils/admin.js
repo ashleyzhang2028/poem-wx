@@ -1,7 +1,7 @@
-const store = require("./store");
-const tiers = require("./tiers");
-const entitlement = require("./entitlement");
-const remote = require("./remote");
+const store = require("../../../utils/store");
+const tiers = require("../../../utils/tiers");
+const entitlement = require("../../../utils/entitlement");
+const remote = require("../../../utils/remote");
 
 let rosterCache = null;
 

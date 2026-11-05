@@ -1,5 +1,5 @@
-const store = require("./store");
-const entitlement = require("./entitlement");
+const store = require("../../../utils/store");
+const entitlement = require("../../../utils/entitlement");
 
 const CAP = "league";
 

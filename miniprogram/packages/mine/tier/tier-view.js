@@ -1,4 +1,4 @@
-const entitlement = require("./entitlement");
+const entitlement = require("../../../utils/entitlement");
 
 function stats() {
   const s = entitlement.snapshot();

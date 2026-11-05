@@ -1,7 +1,7 @@
 {
   "navigationBarTitleText": "用户权限",
   "usingComponents": {
-    "tier-view": "../../../components/tier-view/tier-view",
+    "tier-view": "./components/tier-view/tier-view",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

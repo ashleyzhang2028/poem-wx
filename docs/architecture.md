@@ -192,7 +192,7 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 
 ## 二点八、排行榜：一次交卷一行，档位在写入时定死
 
-排行榜（`packages/ranking`）是**网页版没有**的那一层，所以它的口径只能自己定，
+排行榜（`packages/game/ranking`）是**网页版没有**的那一层，所以它的口径只能自己定，
 也就只能靠自检钉住。
 
 **一行 = 一次交卷**（`score_records`），不存昵称。榜单上的名字是读的时候从
@@ -228,7 +228,7 @@ Issue #12 的原话是「看看有没有缺失的」。这件事靠人逐页对�
 `ranking:<game>` 缺行按**开**算，只有显式写 `0` 才算关，要关只能直接改库里那一行，
 `boardGate` 会挡住列表（提交仍照收）。
 
-看榜与参与都随 `league` 这一项能力门禁走（Max 起，`utils/league.js` 是唯一判据：
+看榜与参与都随 `league` 这一项能力门禁走（Max 起，`packages/settings/utils/league.js` 是唯一判据（game 分包另存一份同样的副本，自检钉住两份一致；`dots.js` 同样各存一份）：
 `canJoin` 管看榜、`optedIn` 管上报、`canSwitch` 管设置里那颗开关）。
 Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗开关是灰的。
 
@@ -486,7 +486,7 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 三块页：**用户权限**（`packages/mine/tier`，从「我的 → 用户权限」进）把能力对照表
 摆一页，给人自己看；**后台管理**（`packages/admin/index`）是 `owner` / `admin`
 的入口，页上是用户统计、用户反馈、用户列表、支付与价格、数据清理五行；
-**用户列表**（`packages/users/index`）看别人。
+**用户列表**（`packages/admin/users`）看别人。
 
 那一块表是 `components/tier-view`，只有用户权限页写一个 `<tier-view />`。
 
@@ -509,7 +509,7 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 
 名录只有一处入口：后台管理页那张卡（登录后显隐），不按 `owner` / `admin` 分叉。
 
-`packages/users/index` 只管名录：每人一行，行首一枚序号胶囊（末位的号就是用户总数），
+`packages/admin/users` 只管名录：每人一行，行首一枚序号胶囊（末位的号就是用户总数），
 接着昵称与 uid，右侧是档位与「改档」按钮，按注册时间倒序；
 `owner` / `admin` 才有那一枚改档按钮，其余人一行「只读」。
 改角色**不在这页做** —— 授权走 `OWNER_EMAILS`，名录里摆一枚「角色」只会误导。
@@ -517,14 +517,14 @@ max   → FSRS / 飞花令 / 考试                        （管理员发放）
 ### 意见反馈（Issue #520）
 
 用户入口只有一条：**设置 → 关于 → 意见建议**（`packages/settings/about`，
-`packages/feedback/index`）。管理员入口是**后台管理 → 用户反馈**
+`packages/settings/feedback`）。管理员入口是**后台管理 → 用户反馈**
 （`packages/admin/feedback/index`，详情在 `packages/admin/feedback/detail/detail`）。
 
 反馈只认登录身份：三条用户路径（建 / 读 / 跟帖）都以 `uid` 认人，
 没有会话回 `401 E_NO_SESSION`。页面进来先过 `gate.open`，登录流程走完再画。
 限流也按 `uid`（`cfg.rate.uid`），不按设备号：拿设备当桶等于删掉限流。
-两页共用 `utils/feedback-api.js`
-（类别 / 状态 / 处理方式三张表 + 校验 + 装饰）与 `utils/admin-feedback.js`
+两页各用一份 `feedback-api.js`（`packages/settings/utils/` 与 `packages/admin/utils/`，自检钉住两份一致；`dots.js` 同样各存一份）
+（类别 / 状态 / 处理方式三张表 + 校验 + 装饰）与 `packages/admin/utils/admin-feedback.js`
 （分组与回复），不在页面里各抄一遍名单。
 
 | 维度 | 取值 | 谁定 |
@@ -1198,7 +1198,7 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
   - 「看看还有哪些」同样查全量库（`feihua.lookAtSource()`），按 `exclude` 剔掉这一轮已接上的，
     走 `page` 翻页凑够条数。
   - 一轮从点「开始计时」起算；连对到 3 / 5 / 10 / 20 / 30 句各多一句激励。
-- **三个游戏的出题范围**（`utils/game-scopes.js`）：四档。
+- **三个游戏的出题范围**（`packages/game/utils/game-scopes.js`）：四档。
   1. 课内·当前学段：按温习选项里的年级与册次，取课内 251 首里「本册及之前」，进页面默认选它；
   2. 课内：小学到高中全部；
   3. 诗词漫读：课内 + 课外集子；
@@ -1212,7 +1212,7 @@ V10 不是设计出来的，是**踩出来的**。写这一轮的时候顺手把
   `answers[index]`，所以跳回去改与顺着做是同一条路。交卷前若还空着题，
   先压一句提醒（`cheer.ofQuit()`）并把「交卷」留在原地，再点一次才交。
   评卷在 `finish()` 里一次性走 `quiz.judge()`，结果页给分、逐题摊开、再给一句按分数分的评语。
-- **鼓励语只有一份**（`utils/cheer.js`）：考试与飞花令都从这里取。分档看分数
+- **鼓励语只有一份**（`packages/game/utils/cheer.js`）：考试与飞花令都从这里取。分档看分数
   （满分 / 90 / 80 / 60 / 40 / 及格线下），每档两句按 `seed` 轮换；
   连对看里程碑。判据只有「分数落哪一档」一条，改档位只改 `MARKS`。
 - **大会首页是目录，不内嵌玩法**（`packages/game/index`）：只列三张入口卡
