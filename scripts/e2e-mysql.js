@@ -453,7 +453,17 @@ function makeWx(port, mem) {
       !!packed && String(packed.text).length > 0 && Array.isArray(notes) && notes.length > 0,
       JSON.stringify({ text: packed && String(packed.text).slice(0, 8), notes: notes && notes.length }));
 
-    const gap = spotOf("tangshi300-1");
+    const pickGap = () => {
+      const books = corpus.books ? corpus.books() : [];
+      for (const b of books) {
+        const list = corpus.ofBook(b.id);
+        const hit = list.filter((p) => !corpus.catalogText(corpus.catalogSpot(p.id, p.sid || "")))[0];
+        if (hit) return hit;
+      }
+      return null;
+    };
+    const hole = pickGap();
+    const gap = hole ? corpus.catalogSpot(hole.id, hole.sid || "") : null;
     ok("库里没有的篇目照旧交回「取不到」，回落问诗词漫读",
       !!gap && corpus.catalogText(gap) === null,
       JSON.stringify({ spot: gap, text: corpus.catalogText(gap || {}) }));
