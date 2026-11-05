@@ -205,6 +205,7 @@ Page({
     if (key === "daily") this.onToggleDaily();
     else if (key === "pick") this.onAddToCollection();
     else if (key === "mark") this.onToggleMark();
+    else if (key === "text") this.onCopyText();
     else if (key === "align") this.onAlignToggle();
     else if (key === "fontDown") this.onFontDown();
     else if (key === "fontUp") this.onFontUp();
@@ -252,6 +253,20 @@ Page({
     wx.showToast({
       title: r.on ? (r.dropped ? "已加书签，最早一枚已移出" : "已加书签") : "已移出书签",
       icon: "none"
+    });
+  },
+
+  onCopyText() {
+    const d = this.data;
+    const head = [d.title, [d.dynasty, d.author].filter(Boolean).join(" · ")].filter(Boolean).join("　");
+    const body = (d.rawText || "").trim();
+    if (!body) {
+      wx.showToast({ title: "正文还没取回来", icon: "none" });
+      return;
+    }
+    wx.setClipboardData({
+      data: head + "\n\n" + body,
+      success: () => wx.showToast({ title: "已复制本篇", icon: "none" })
     });
   },
 
