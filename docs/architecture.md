@@ -295,7 +295,7 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    `site-catalogs.js` 为准；尚书 79 条里 22 条只存篇目、无传世正文，战国策 501 条里
    7 条同样缺文，这些不写，客户端按「没取到」处理）、
    `catalog-notes.js`（唐诗三百首、宋词三百首、古文观止的注释）与
-   `tongxin-notes.js`（童心诗话 213 篇的正文、译文与注释；与课内同题同文的那批
+   `tongxin-notes.js`（童心诗话全篇的正文、译文与注释，篇数以 `tongxin-list.tsv` 为准；与课内同题同文的那批
    由 `gloss-notes.js` 的条目直接取来，不另写一份）。注释逐条对正文核过，判据在
    `scripts/corpus/scripts/check-catalog-notes.js`。客户端 `corpus.catalogText(meta)` /
    `catalogGloss(meta)` 取到就用，取不到才回落到问诗词漫读。
