@@ -236,6 +236,103 @@
   color: var(--ink-3);
 }
 
-.fh-scopes + .seg {
+
+.fh-field-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+
+.fh-field-char {
+  flex: none;
+  font-family: var(--font-poem);
+  font-size: calc(var(--fs-glyph) * .46);
+  line-height: 1;
+  color: var(--strong);
+}
+
+.fh-field-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.fh-field-name {
+  display: block;
+  font-size: var(--fs-title);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.fh-field-sub {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.fh-field-go {
+  flex: none;
+  font-size: var(--fs-caption);
+  color: var(--strong-text);
+}
+
+.fh-picker {
+  padding-top: var(--sp-2);
+  border-top: 1rpx solid var(--line-2);
+}
+
+.fh-picker-note {
+  display: block;
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+}
+
+.fh-picker-scopes {
   margin-top: var(--sp-2);
+}
+
+.fh-picker-group {
+  margin-top: var(--sp-3);
+}
+
+.fh-picker-group-name {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+  margin-bottom: var(--sp-1);
+}
+
+.fh-picker-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.fh-picker-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68rpx;
+  height: 60rpx;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-sm);
+  background: var(--sink);
+  font-family: var(--font-poem);
+  font-size: var(--fs-body);
+  line-height: 1;
+  color: var(--ink-2);
+}
+
+.fh-picker-chip.on {
+  background: var(--strong);
+  color: var(--on-ink);
+}
+
+.fh-picker-chip.dim {
+  opacity: .42;
 }
