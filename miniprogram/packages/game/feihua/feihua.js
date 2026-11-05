@@ -1,4 +1,6 @@
 const feihua = require("./lib");
+const corpus = require("../../../utils/corpus");
+const lingIndex = require("../../../utils/ling-index");
 const cheer = require("../../../utils/cheer");
 const gameScopes = require("../../../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
@@ -29,6 +31,10 @@ Page({
     level: "easy",
     scopes: gameScopes.list(),
     scope: gameScopes.STAGE_SCOPE,
+    levelName: "",
+    groups: [],
+    picking: false,
+    corpusReady: true,
 
     barBelow: true,
     char: "",
@@ -90,10 +96,22 @@ Page({
     if (!ok) return;
     if (!this.ready) {
       this.ready = true;
-      this.next();
+      this.boot();
       return;
     }
     if (this.data.started && !this.ended && !this.clock) this.startClock();
+  },
+
+  boot() {
+    const token = (this.bootToken || 0) + 1;
+    this.bootToken = token;
+    corpus.ready("core").catch(() => null).then(() => {
+      if (token !== this.bootToken) return;
+      this.setData({ corpusReady: corpus.isReady("core") }, () => {
+        this.next();
+        this.refreshGroups();
+      });
+    });
   },
 
   onHide() {
@@ -146,7 +164,10 @@ Page({
   },
 
   refreshScopeName() {
-    this.setData({ scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope) });
+    this.setData({
+      scopeName: gameScopes.nameOf(this.data.scopes, this.data.scope),
+      levelName: feihua.levelOf(this.data.level).name
+    });
   },
 
   closeOpenRound() {
@@ -178,6 +199,7 @@ Page({
       this.closeOpenRound();
       this.freshRound();
       this.next();
+      this.refreshGroups();
     });
   },
 
@@ -186,7 +208,35 @@ Page({
       this.closeOpenRound();
       this.freshRound();
       this.next();
+      this.refreshGroups();
     });
+  },
+
+  refreshGroups() {
+    const groups = feihua.groupedChars(lingIndex.GROUPS, this.data.level).map((g) => ({
+      name: g.name,
+      chars: g.chars.map((c) => Object.assign({}, c, { on: c.ch === this.data.char }))
+    }));
+    this.setData({ groups: groups, levelName: feihua.levelOf(this.data.level).name });
+  },
+
+  onPickToggle() {
+    sfx.play("tap");
+    this.setData({ picking: !this.data.picking }, () => {
+      if (this.data.picking) this.refreshGroups();
+    });
+  },
+
+  onPickChar(e) {
+    const ch = String(e.currentTarget.dataset.ch || "");
+    if (!ch) return;
+    sfx.play("tap");
+    this.closeOpenRound();
+    this.freshRound();
+    this.setData({ char: ch, picking: false, locked: !this.data.started, ask: "",
+      input: "", message: "", messageOk: false, msgHint: false, judging: false,
+      cheerLine: "", remark: "", flash: "", mark: "", hinted: false,
+      revealed: false, revealing: false, answers: [] }, () => this.refreshGroups());
   },
 
   onStart() {
@@ -420,20 +470,15 @@ Page({
     }
     const opt = this.scopeOpt();
     const asked = this.data.done.map((d) => d.seg);
-    const local = () => feihua.look(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, { exclude: asked }));
-    if (!feihua.onSource()) {
-      this.setData({ revealed: true, answers: local() });
-      return;
-    }
     const token = (this.revealToken || 0) + 1;
     this.revealToken = token;
     this.setData({ revealed: true, revealing: true, answers: [] });
-    feihua.lookAtSource(this.data.char, { limit: ANSWER_LIMIT, exclude: asked }).then((answers) => {
+    feihua.lookAsync(this.data.char, Object.assign({ limit: ANSWER_LIMIT }, opt, { exclude: asked })).then((answers) => {
       if (token !== this.revealToken) return;
       this.setData({ revealing: false, answers: answers });
     }, () => {
       if (token !== this.revealToken) return;
-      this.setData({ revealing: false, answers: local() });
+      this.setData({ revealing: false, answers: [] });
     });
   },
 
