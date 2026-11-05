@@ -564,6 +564,10 @@ ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.
     same.history.length === 1 && same.history[0].result === "fuzzy",
     "历史 " + same.history.map((h) => h.result).join(","));
 
+  ok("当日重评覆盖，末条自带标记（UI 只认这一条上写着的）",
+    same.history[0].dayCovered === R.dayStamp(day1) && R.replacedToday(same, day1 + 120000),
+    "末条 " + JSON.stringify(same.history[0]));
+
   let good = R.review(null, "good", "ebbinghaus", day1);
   good = R.review(good, "fuzzy", "ebbinghaus", day1 + 120000);
   ok("同日改判，掌握度按最后一次算",

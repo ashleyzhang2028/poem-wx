@@ -2060,6 +2060,7 @@ function sanitizePayload(p, poemId) {
       if (typeof h.at === "number") r.at = Math.round(h.at);
       if (typeof h.level === "number") r.level = Math.round(h.level);
       if (h.result === "good" || h.result === "fuzzy" || h.result === "bad") r.result = h.result;
+      if (typeof h.dayCovered === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(h.dayCovered)) r.dayCovered = h.dayCovered;
       return r;
     }).filter(Boolean);
   }

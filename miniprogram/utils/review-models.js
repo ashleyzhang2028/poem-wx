@@ -246,17 +246,26 @@ function reviewedToday(rec, t) {
   return rec.reviewedOn === dayStamp(t);
 }
 
-function withoutLastMark(r) {
-  const without = JSON.parse(JSON.stringify(r));
-  const last = (without.history || [])[without.history.length - 1];
-  if (last && last.result) {
-    without.history = without.history.slice(0, -1);
-    if (last.result === "bad") without.lapses = Math.max(0, (without.lapses || 0) - 1);
-    if (last.level !== undefined) without.level = last.level;
-  }
-  without.reviewCount = Math.max(0, (without.reviewCount || 0) - 1);
-  without.algo = null;
-  return without;
+function markOf(rec, t) {
+  if (!rec || !reviewedToday(rec, t)) return null;
+  const last = (rec.history || [])[rec.history.length - 1] || null;
+  return {
+    day: rec.reviewedOn,
+    reviewCount: rec.reviewCount || 0,
+    covered: !!(last && last.dayCovered)
+  };
+}
+
+function undoMark(rec, mark) {
+  const undone = JSON.parse(JSON.stringify(rec));
+  if (!mark) return undone;
+
+  const last = (undone.history || [])[undone.history.length - 1];
+  undone.history = (undone.history || []).slice(0, -1);
+  if (last && last.result === "bad") undone.lapses = Math.max(0, (undone.lapses || 0) - 1);
+  if (last && last.level !== undefined) undone.level = last.level;
+  undone.reviewCount = Math.max(0, (undone.reviewCount || 0) - 1);
+  return undone;
 }
 
 function review(rec, result, key, now) {
@@ -264,29 +273,28 @@ function review(rec, result, key, now) {
   const modelKey = ORDER.indexOf(key) >= 0 ? key : (rec && ORDER.indexOf(rec.algo) >= 0 ? rec.algo : DEFAULT_KEY);
   const model = modelOf(modelKey);
 
-  const first = rec && !reviewedToday(rec, t) ? rec : null;
-  const base = first || (rec ? withoutLastMark(rec) : null);
-  const from = base ? adopt(base, modelKey) : null;
+  const mark = markOf(rec, t);
+  const base = rec ? adopt(undoMark(rec, mark), modelKey) : null;
 
-  let r = from;
+  let r = base;
   if (!r) {
     r = { level: 0, nextReviewAt: t, lastReviewAt: null, reviewCount: 0, lapses: 0, learned: false, history: [] };
     Object.assign(r, model.init());
   }
 
   r.lastReviewAt = t;
-  r.reviewCount = (r.reviewCount || 0) + 1;
+  r.reviewCount = mark ? mark.reviewCount : (r.reviewCount || 0) + 1;
   r.learned = true;
   r.reviewedOn = dayStamp(t);
 
-  const spot = first || r;
+  const spot = r;
 
   const elapsedDays = spot.lastReviewAt ? Math.max(0, (t - spot.lastReviewAt) / DAY) : 0;
-  const levelBefore = from ? from.level : 0;
+  const levelBefore = base ? base.level : 0;
 
   if (result === "fuzzy") {
     r.nextReviewAt = nextSlot(t);
-    pushHistory(r, result, t, levelBefore);
+    pushHistory(r, result, t, levelBefore, mark);
     return r;
   }
 
@@ -294,13 +302,13 @@ function review(rec, result, key, now) {
     r.lapses = (r.lapses || 0) + 1;
     advance(modelKey, r, result, elapsedDays);
     r.nextReviewAt = nextSlot(t);
-    pushHistory(r, result, t, levelBefore);
+    pushHistory(r, result, t, levelBefore, mark);
     return r;
   }
 
   advance(modelKey, r, "good", elapsedDays);
   r.nextReviewAt = dayAt(t, daysFor(modelKey, r));
-  pushHistory(r, result, t, levelBefore);
+  pushHistory(r, result, t, levelBefore, mark);
   return r;
 }
 
@@ -349,11 +357,20 @@ function daysFor(modelKey, r) {
   return model.intervalOf(r.stability);
 }
 
-function pushHistory(r, result, t, level) {
+function pushHistory(r, result, t, level, mark) {
   if (!Array.isArray(r.history)) r.history = [];
 
-  r.history.push({ at: t, result, level: level === undefined ? r.level : level });
+  const entry = { at: t, result, level: level === undefined ? r.level : level };
+  const last = r.history[r.history.length - 1];
+
+  if (mark) entry.dayCovered = mark.covered && last ? String(last.dayCovered) : mark.day;
+  r.history.push(entry);
   if (r.history.length > 20) r.history = r.history.slice(-20);
+}
+
+function replacedToday(rec, t) {
+  const last = (rec && rec.history && rec.history[rec.history.length - 1]) || null;
+  return !!(last && last.dayCovered && reviewedToday(rec, t));
 }
 
 function resultHint(key, result, rec) {
@@ -393,6 +410,7 @@ module.exports = {
   adopt,
   review,
   reviewedToday,
+  replacedToday,
   resultHint,
   startOfDay,
   dayAt,
