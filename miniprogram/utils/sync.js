@@ -6,6 +6,7 @@ const wire = require("./wire");
 let running = false;
 let lastAt = 0;
 let packTimer = null;
+let noticeWanted = true;
 
 const MIN_GAP = 60 * 1000;
 const IDLE_GAP = 5 * 1000;
@@ -49,6 +50,9 @@ function state() {
     lastText: s.lastSyncAt ? timeText(s.lastSyncAt) : "尚未同步",
     failed: !!at,
     failedText: at ? timeText(at) : "",
+    reason: String(box().reason || ""),
+    statusCode: Number(box().statusCode || 0),
+    code: String(box().code || ""),
     later: waiting() ? retryIn() : 0,
     pendingStatus: pending
       ? (waiting() ? pending + " 项待重试" : late ? "待同步" : pending + " 项待同步")
@@ -119,6 +123,7 @@ function run(force, job) {
   return job()
     .then((res) => {
       running = false;
+      if (res && res.error && sessionGone(res)) notice(res);
       if (res && res.error) {
         settleFail(res);
         return res;
@@ -132,7 +137,13 @@ function run(force, job) {
     })
     .catch((err) => {
       running = false;
-      const res = { error: (err && err.message) || "同步失败" };
+      const res = {
+        error: (err && err.message) || "同步失败",
+        statusCode: Number((err && err.statusCode) || 0),
+        code: String((err && err.code) || ""),
+        retryAfter: Number((err && err.retryAfter) || 0)
+      };
+      if (sessionGone(res)) notice(res);
       settleFail(res);
       return res;
     });
@@ -143,7 +154,29 @@ function settleFail(res) {
   const tries = Number(box().fails || 0) + 1;
   const backoff = Math.min(RETRY_MAX, Math.max(after, RETRY_FIRST) * Math.pow(RETRY_STEP, tries - 1));
   const wait = Math.max(after, backoff);
-  patch({ failAt: Date.now(), fails: tries, retryAt: Date.now() + wait });
+  patch({
+    failAt: Date.now(),
+    fails: tries,
+    retryAt: Date.now() + wait,
+    reason: String((res && res.error) || ""),
+    statusCode: Number((res && res.statusCode) || 0),
+    code: String((res && res.code) || "")
+  });
+}
+
+let expireAfter = false;
+
+function notice(res) {
+  if (!noticeWanted) return;
+  noticeWanted = false;
+  const gone = res || {};
+  require("./login-flow").askReenter(require("./page-stack").top(), gone, expireAfter);
+}
+
+function sessionGone(res) {
+  const r = res || box();
+  const code = String(r.code || "");
+  return Number(r.statusCode || 0) === 401 && (code === "E_NO_SESSION" || code === "E_SESSION");
 }
 
 function markDirty() {
@@ -177,4 +210,12 @@ function resetThrottle() {
   lastAt = 0;
 }
 
-module.exports = { resetThrottle, ready, state, now, pullOnly, markDirty, flush, unsent, pendingCount, packMoment, waitText, MIN_GAP, RETRY_FIRST, RETRY_MAX };
+function rearm() {
+  noticeWanted = true;
+}
+
+function dropOnExpire(on) {
+  expireAfter = !!on;
+}
+
+module.exports = { rearm, dropOnExpire, resetThrottle, ready, state, now, pullOnly, markDirty, flush, unsent, pendingCount, packMoment, waitText, sessionGone, MIN_GAP, RETRY_FIRST, RETRY_MAX };

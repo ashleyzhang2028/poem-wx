@@ -117,8 +117,6 @@ Page({
       if (auth.offline() === "cloud") return "服务未连接 · 进度仅存于本机";
       return "同步未开启 · 进度仅存于本机";
     }
-    if (sy.later) return sy.lastText + " · " + sy.pendingText;
-    if (sy.failed) return sy.failedText + " 未同步成功 · " + sy.pendingText;
     return sy.lastText + " · " + sy.pendingStatus;
   },
 
@@ -138,6 +136,7 @@ Page({
       else if (res.skipped === "throttled") title = "刚已同步，请稍后重试";
       else if (res.skipped === "waiting") title = "上次同步未成功，" + sync.waitText(res.retryAfter) + "后自动重试";
       wx.showToast({ title, icon: "none" });
+      if (sync.sessionGone(res)) loginFlow.askReenter(this, res);
       this.refresh();
     });
   },
