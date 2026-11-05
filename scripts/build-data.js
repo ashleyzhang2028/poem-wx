@@ -6,8 +6,9 @@ const seed = require("./corpus-seed");
 
 const CORPUS_DIR = seed.CORPUS_DIR;
 const OUT_DIR = path.join(__dirname, "..", "miniprogram", "data");
+const ROSTER_DIR = path.join(__dirname, "..", "miniprogram", "packages", "admin", "data");
 
-const STALE = ["texts", "shards.js", "books", "roster-extra.js"];
+const STALE = ["texts", "shards.js", "books", "roster-extra.js", "roster.js"];
 
 const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.js");
 
@@ -141,7 +142,7 @@ function extractWords(file, W) {
 
 function writeRoster() {
   const raw = process.env.POEM_ROSTER;
-  const file = path.join(OUT_DIR, "roster.js");
+  const file = path.join(ROSTER_DIR, "roster.js");
 
   if (!raw) {
 

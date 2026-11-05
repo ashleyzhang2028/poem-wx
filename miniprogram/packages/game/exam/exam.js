@@ -1,16 +1,16 @@
 const quiz = require("../quiz/lib");
-const cheer = require("../../../utils/cheer");
-const gameScopes = require("../../../utils/game-scopes");
+const cheer = require("../utils/cheer");
+const gameScopes = require("../utils/game-scopes");
 const entitlement = require("../../../utils/entitlement");
-const feedback = require("../../../utils/feedback");
+const feedback = require("../utils/feedback");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
-const rankingSubmit = require("../../../utils/ranking-submit");
+const rankingSubmit = require("../utils/ranking-submit");
 const guard = require("../../../utils/guard");
-const rankingSelf = require("../../../utils/ranking");
-const scoreLog = require("../../../utils/score-log");
+const rankingSelf = require("../utils/ranking");
+const scoreLog = require("../utils/score-log");
 
 const DURATION = 20 * 60;
 const URGENT_FROM = 60;

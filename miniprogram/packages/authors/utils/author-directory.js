@@ -1,4 +1,4 @@
-const source = require("./poem-source");
+const source = require("../../../utils/poem-source");
 
 const KEY = "kb_author_dir_v1";
 const PAGE_SIZE = 100;

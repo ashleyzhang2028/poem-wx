@@ -19,7 +19,8 @@
         "recite/recite",
         "about/about",
         "terms/terms",
-        "privacy/privacy"
+        "privacy/privacy",
+        "feedback/index"
       ]
     },
     {
@@ -31,7 +32,8 @@
         "feihua/feihua",
         "ling/ling",
         "exam/exam",
-        "log/log"
+        "log/log",
+        "ranking/index"
       ]
     },
     {
@@ -60,28 +62,8 @@
         "pay-orders/pay-orders",
         "feedback/index",
         "feedback/detail/detail",
-        "maintenance/maintenance"
-      ]
-    },
-    {
-      "root": "packages/feedback",
-      "name": "feedback",
-      "pages": [
-        "index/index"
-      ]
-    },
-    {
-      "root": "packages/users",
-      "name": "users",
-      "pages": [
-        "index/index"
-      ]
-    },
-    {
-      "root": "packages/ranking",
-      "name": "ranking",
-      "pages": [
-        "index/index"
+        "maintenance/maintenance",
+        "users/index"
       ]
     },
     {
@@ -117,8 +99,7 @@
       "network": "all",
       "packages": [
         "mine",
-        "admin",
-        "users"
+        "admin"
       ]
     }
   },

@@ -3,11 +3,11 @@ const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
 const tabbar = require("../../../utils/tabbar");
 const entitlement = require("../../../utils/entitlement");
-const admin = require("../../../utils/admin");
+const admin = require("../utils/admin");
 const icons = require("../../../utils/icons");
 const guard = require("../../../utils/guard");
-const adminFb = require("../../../utils/admin-feedback");
-const dots = require("../../../utils/dots");
+const adminFb = require("../utils/admin-feedback");
+const dots = require("../utils/dots");
 
 Page({
   data: {
@@ -93,7 +93,7 @@ Page({
   },
 
   onUsers() {
-    wx.navigateTo({ url: "/packages/users/index/index" });
+    wx.navigateTo({ url: "/packages/admin/users/index" });
   },
 
   onPay() {

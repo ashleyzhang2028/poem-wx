@@ -1033,7 +1033,7 @@ node scripts/shots/prefs-width.js     # 量那一行在浏览器里到底多宽
 
 #### 大会三处反馈：一条色只有一个意思
 
-飞花令 / 题库 / 考试共用 `utils/feedback.js` 的三样东西，样式只在 `app.wxss` 定义一次：
+飞花令 / 题库 / 考试共用 `packages/game/utils/feedback.js` 的三样东西，样式只在 `app.wxss` 定义一次：
 
 | 东西 | 说的是 | 取色 |
 |---|---|---|

@@ -40,6 +40,7 @@ const NAMES = [
   ["crest", "TangBaoxiang.svg"],
   ["settings", "CilCog.svg"],
   ["actions", "CilOptions.svg"],
+  ["copy", "CilCopy.svg"],
 ];
 
 function flatten(svg) {
