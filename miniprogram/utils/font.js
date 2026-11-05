@@ -140,6 +140,7 @@ function sequence(family, list) {
 }
 
 const loaded = {};
+const previewSeen = {};
 let scoped = {};
 
 function mark(family, list) {
@@ -163,6 +164,7 @@ function scopeMark() {
 function registerPage(family, list) {
   const key = mark(family, list);
   if (scoped[key] === scopeMark()) return Promise.resolve(true);
+  if (scoped[key]) return Promise.resolve(true);
   return sequence(family, list).then((ok) => {
     if (ok) scoped[key] = scopeMark();
     else delete scoped[key];
@@ -178,15 +180,31 @@ function load() {
   return register(f.family, list);
 }
 
+function wanted(key) {
+  return key === current() || previewSeen[key] === true;
+}
+
 function previewing() {
   if (!previewsReady()) return [];
-  return FACES.map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
+  return FACES.filter((f) => wanted(f.key))
+    .map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
 }
 
 function preview() {
   const list = previewing();
   if (!list.length) return Promise.resolve(false);
   return Promise.all(list).then((keys) => keys.filter(Boolean).length > 0);
+}
+
+function previewed(key) {
+  return !!BY_KEY[key] && wanted(key);
+}
+
+function previewOf(key) {
+  const f = BY_KEY[key];
+  if (!f || !previewsReady()) return Promise.resolve(false);
+  previewSeen[key] = true;
+  return register(f.previewFamily, f.preview);
 }
 
 function familyOf(key) {
@@ -308,6 +326,6 @@ module.exports = {
   FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, groupOf, shelf,
-  addresses, configured, load, preview, set, refresh,
+  addresses, configured, load, preview, previewed, previewOf, set, refresh,
   globalOn, uiStack, setGlobal, scope, registerHere, restore, bind
 };

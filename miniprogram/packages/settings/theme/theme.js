@@ -65,7 +65,8 @@ Page({
       theme: theme.current(),
       fonts: font.options().map((f) => Object.assign({}, f, {
         locked: !pickable && f.key !== font.DEFAULT,
-        previewFamily: font.face(f.key).previewFamily
+        previewFamily: font.face(f.key).previewFamily,
+        previewOn: font.previewed(f.key)
       })),
       font: font.current(),
       fontLocked: !pickable,
@@ -210,6 +211,12 @@ Page({
     }
     this.applyFont();
     wx.vibrateShort && wx.vibrateShort({ type: "light" });
+  },
+
+  onFontPreview(e) {
+    const key = e.currentTarget.dataset.key;
+    if (!key || font.previewed(key)) return;
+    font.previewOf(key).then(() => this.setData({ fonts: this.view().fonts })).catch(() => {});
   },
 
   onFont(e) {

@@ -2,7 +2,7 @@
 
 <view class="page theme-page {{barBelow ? 'has-tabbar' : 'tall'}} {{name}}" style="{{themeStyle}}">
   <view class="font-warm" page-font-size>
-    <view class="font-warm-cell" wx:for="{{fonts}}" wx:key="key" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</view>
+    <view class="font-warm-cell" wx:for="{{fonts}}" wx:if="{{item.previewOn}}" wx:key="key" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</view>
   </view>
 
   <page-banner src="{{banner}}" />
@@ -20,7 +20,7 @@
 
     <view class="font-list">
       <view class="font-row locked" wx:for="{{fonts}}" wx:key="key" hover-class="none"
-            data-key="{{item.key}}" bindtap="onFont">
+            data-key="{{item.key}}" bindtouchstart="onFontPreview" bindtap="onFont">
         <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
         <text class="font-name">{{item.name}}</text>
       </view>
@@ -133,7 +133,7 @@
       <view class="font-row {{font === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{fonts}}" wx:key="key"
             hover-class="{{item.locked ? 'none' : 'font-hover'}}" hover-stay-time="60"
-            data-key="{{item.key}}" bindtap="onFont">
+            data-key="{{item.key}}" bindtouchstart="onFontPreview" bindtap="onFont">
         <text class="font-sample" style="font-family:'{{item.previewFamily}}'">{{fontSample}}</text>
         <text class="font-name">{{item.name}}</text>
       </view>
