@@ -38,6 +38,7 @@ const CAPS = [
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
   { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
+  { key: "novels", name: "名著小说", desc: "章回、话本与笔记的目录与正文", tier: "pro" },
   { key: "search", name: "全站搜索", desc: "按篇名、作者、朝代、出处检索", tier: "free" },
   { key: "extra", name: "新增温习", desc: "当日自行追加温习篇目", tier: "pro" },
   { key: "leitner", name: "莱特纳盒 Leitner Box", desc: "分级盒子复习", tier: "pro" },
@@ -173,6 +174,7 @@ const VIEW_NAME = {
   sm2: "复习算法·SM-2",
   fsrs: "复习算法·FSRS",
   library: "课内与诗词漫读",
+  novels: "漫读·名著小说",
   search: "全站搜索",
   quiz: "大会·题库",
   feihualing: "大会·飞花令",
@@ -191,7 +193,7 @@ const VIEW_NAME = {
 const COMPARE_ORDER = [
   "daily", "extra", "collections", "progress", "dailypoem", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
-  "library", "search",
+  "library", "novels", "search",
   "quiz", "feihualing", "exam", "records", "league",
   "sights", "ownbanner", "themetone", "font", "bookmarks", "coursefree", "sync"
 ];

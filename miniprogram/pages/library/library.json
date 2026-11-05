@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark",
   "usingComponents": {
-    "read-sheet": "/components/read-sheet/read-sheet"
+    "read-sheet": "/components/read-sheet/read-sheet",
+    "tier-tag": "/components/tier-tag/tier-tag"
   }
 }
