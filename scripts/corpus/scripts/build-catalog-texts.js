@@ -18,6 +18,36 @@ function norm(s) {
   return String(s == null ? "" : s).replace(NOISE, "");
 }
 
+function han(s) {
+  return String(s == null ? "" : s).replace(/[^\u3400-\u9fff]/g, "");
+}
+
+function uniqueRow(list, row, cites, opens) {
+  const pai = han(String(row[0] || "").split("·")[0]);
+  const cite = han(row[3]);
+  const head = han(String(row[0] || "").split("·")[1]).slice(0, 2);
+  const mine = list.filter(function (p) {
+    return han(String(p.title || "").split("·")[0]) === pai;
+  });
+  const only = function (xs) {
+    return xs.filter(function (p) { return opens[String(p.textRef || "")] === 1; });
+  };
+  const same = mine.filter(function (p) {
+    return han(String(p.title || "").split("·")[1]).slice(0, 2) === head;
+  });
+  const opened = mine.filter(function (p) {
+    const open = han(String(p.text || "")).slice(0, 2);
+    return open === head || open === cite.slice(0, 2);
+  });
+  const matched = mine.filter(function (p) { return cites[String(p.textRef || "")] === pai + "|" + cite.slice(0, 2); });
+  const pools = [cite ? matched : same, cite ? same : opened, cite ? opened : matched];
+  for (let i = 0; i < pools.length; i += 1) {
+    const hits = only(pools[i]);
+    if (hits.length === 1) return hits;
+  }
+  return [];
+}
+
 function loaded(rel) {
   return path.join(seed.CORPUS_DIR, rel);
 }
@@ -55,13 +85,31 @@ function main() {
       (index[key] = index[key] || []).push(p);
     });
 
+    const cites = {};
+    const byFirst = {};
+    list.forEach(function (p) {
+      const pai = han(String(p.title || "").split("·")[0]);
+      const head = han(String(p.title || "").split("·")[1]).slice(0, 2);
+      const cite = /^([^。，；！？《》「」（）]{2,14}(?:·[^。，；！？《》「」（）]{1,8})?)(?:并序)?[。，]/.exec(han(String(p.text || "")));
+      const body = han(String(p.text || ""));
+      cites[p.textRef] = pai + "|" + (cite ? han(cite[1]).slice(0, 2) : head);
+      const key = pai + "|" + body.slice(0, 2);
+      (byFirst[key] = byFirst[key] || []).push(p.textRef);
+    });
+    const opens = {};
+    list.forEach(function (p) {
+      const pai = han(String(p.title || "").split("·")[0]);
+      const key = pai + "|" + han(String(p.text || "")).slice(0, 2);
+      opens[p.textRef] = byFirst[key].length;
+    });
+
     const out = [];
     catalog.rows.forEach(function (row, pos) {
       const title = String(row[0] || "").trim();
       const author = String(row[1] || "").trim();
       const hits = index[norm(title)] || [];
-      const mine = hits.filter(function (p) { return String(p.author || "").trim() === author; });
-      const pick = mine.length === 1 ? mine : (hits.length === 1 ? hits : []);
+      const sameAuthor = hits.filter(function (p) { return String(p.author || "").trim() === author; });
+      const pick = sameAuthor.length ? sameAuthor : uniqueRow(list, row, cites, opens);
       if (pick.length !== 1) return;
       const master = byId[pick[0].textRef];
       const text = String((master && master.text) || "").trim();
