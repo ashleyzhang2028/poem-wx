@@ -13,7 +13,9 @@ const VARIANTS = [
 ];
 
 const SYNONYMS = [
-  ["赠郭给事", "酬郭给事"]
+  ["赠郭给事", "酬郭给事"],
+  ["清平调", "清平调·其一", "清平调·其二", "清平调·其三"],
+  ["凉州词", "出塞"]
 ];
 
 function canon(title) {
@@ -122,7 +124,7 @@ function check(W, rows) {
     catalog.rows.forEach(function (row, i) {
       const pos = i + 1;
       const where = book + " #" + pos + "《" + row[0] + "》";
-      const own = byPos.get(pos);
+      const own = byPos.get(i);
       if (!own) {
         bad.push(where + " 目录有、正文没有");
         return;
@@ -161,7 +163,7 @@ function check(W, rows) {
     });
 
     texts.forEach(function (r) {
-      if (r.pos >= 1 && r.pos <= catalog.rows.length) return;
+      if (r.pos >= 0 && r.pos < catalog.rows.length) return;
       bad.push(book + " 正文 #" + r.pos + "《" + r.title + "》不在目录里");
     });
 
@@ -169,7 +171,7 @@ function check(W, rows) {
       return r.book_id === book;
     }).forEach(function (r) {
       const text = byPos.get(r.pos);
-      const where = book + " #" + r.pos + "《" + r.title + "》注释";
+      const where = book + " #" + (r.pos + 1) + "《" + r.title + "》注释";
       if (!text) {
         bad.push(where + " 挂在一篇没有正文的目录上");
         return;

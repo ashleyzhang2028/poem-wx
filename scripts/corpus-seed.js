@@ -172,13 +172,13 @@ function catalogTexts(catalogs, order) {
   Object.keys(source).forEach(function (bookId) {
     if (order.indexOf(bookId) < 0) throw new Error("正文绑在了不在目录里的集子：" + bookId);
     const rows = (catalogs[bookId] || {}).rows || [];
-    Object.keys(source[bookId]).map(Number).sort(function (a, b) { return a - b; }).forEach(function (pos) {
-      const r = source[bookId][pos];
-      if (!(pos >= 1 && pos <= rows.length)) {
-        throw new Error(bookId + " 第 " + pos + " 条不在目录里（目录共 " + rows.length + " 条）");
+    Object.keys(source[bookId]).map(Number).sort(function (a, b) { return a - b; }).forEach(function (at) {
+      const r = source[bookId][at];
+      if (!(at >= 1 && at <= rows.length)) {
+        throw new Error(bookId + " 第 " + at + " 条不在目录里（目录共 " + rows.length + " 条）");
       }
       out.push({
-        book_id: bookId, pos: pos, title: rows[pos - 1][0], sid: r[1] || bookId + "-" + pos,
+        book_id: bookId, pos: at - 1, title: rows[at - 1][0], sid: r[1] || bookId + "-" + at,
         text: r[3], translation: r[4], translation_src: r[2] || ""
       });
     });
@@ -235,12 +235,12 @@ function catalogGloss(catalogs, order, W) {
       });
     });
     Object.keys(mine).forEach(function (key) {
-      const pos = Number(key);
-      if (!(pos >= 1 && pos <= rows.length)) {
-        throw new Error(bookId + " 第 " + pos + " 条的注释不在目录里（目录共 " + rows.length + " 条）");
+      const at = Number(key);
+      if (!(at >= 1 && at <= rows.length)) {
+        throw new Error(bookId + " 第 " + at + " 条的注释不在目录里（目录共 " + rows.length + " 条）");
       }
-      const sid = (sidByPos[bookId] || {})[pos];
-      out.push({ book_id: bookId, pos: pos, title: rows[pos - 1][0], gloss: sid ? bySid[sid] : mine[key] });
+      const sid = (sidByPos[bookId] || {})[at];
+      out.push({ book_id: bookId, pos: at - 1, title: rows[at - 1][0], gloss: sid ? bySid[sid] : mine[key] });
     });
   });
   return out;
