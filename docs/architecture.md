@@ -278,7 +278,9 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 2. **索引与目录在 MySQL**，表是 `corpus_books` / `corpus_poems` / `corpus_catalog` /
    `corpus_authors` / `corpus_texts` / `corpus_gloss`（建表见 `deploy/sql/mysql-schema.sql`，
    数据由 `node scripts/gen-corpus-sql.js` 从 `scripts/corpus/` 生成 `deploy/sql/corpus.sql`，
-   语料变了要重新生成并在库里执行一次）。
+   语料变了要重新生成并在库里执行一次；只补某一部的正文用
+   `node scripts/gen-catalog-texts-sql.js` 生成的 `deploy/sql/catalog-texts-<集子>.sql`，
+   它只动 `corpus_texts` 里那一部，目录与注释不动）。
    经 `GET /api/corpus/:part` 下发，`part` 取 `books` / `poems` / `catalogs` / `authors` /
    `texts` / `gloss`：页面要什么取什么（书架只要 `books`，课内页要 `poems`，非课内集子要
    `catalogs`，作者索引要 `authors`；`texts` / `gloss` 一次一部，带 `?book=`），
@@ -288,6 +290,10 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    `texts` 与 `gloss` 是按目录次序（`book_id` + `pos`）挂上去的正文与注释：
    语料在 `scripts/corpus/data/catalog-texts.js`（由 `build-catalog-texts.js` 把目录条目
    与分卷里的正文、译文按「题名 + 作者」绑成一条，绑不上的一条不写）、
+   `catalog-texts-patch.js`（尚书、春秋左氏传与战国策的正文：目录里那三条集子的条目
+   在分卷里没有对应正文，这一份按目录「篇名 ⇐ 站点篇名」逐条绑好写进来，篇目以
+   `site-catalogs.js` 为准；尚书 79 条里 22 条只存篇目、无传世正文，战国策 501 条里
+   7 条同样缺文，这些不写，客户端按「没取到」处理）、
    `catalog-notes.js`（唐诗三百首、宋词三百首、古文观止的注释）与
    `tongxin-notes.js`（童心诗话 213 篇的正文、译文与注释；与课内同题同文的那批
    由 `gloss-notes.js` 的条目直接取来，不另写一份）。注释逐条对正文核过，判据在
