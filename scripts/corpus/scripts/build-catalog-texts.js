@@ -12,10 +12,20 @@ const SOURCE_BOOK = {
   gwgz: "POEMS_GUWEN"
 };
 
-const NOISE = /[\s\u3000·・・,，.。、!！?？:：;；'"“”‘’()（）\[\]【】《》<>—－-]/g;
+const HALF = {
+  ",": "，", ".": "。", "!": "！", "?": "？", ":": "：", ";": "；"
+};
 
-function norm(s) {
-  return String(s == null ? "" : s).replace(NOISE, "");
+function tidy(s) {
+  return String(s == null ? "" : s)
+    .split("\u3000").join(" ")
+    .replace(/[ \t]+/g, " ")
+    .split("\n").map(function (line) { return line.trim(); }).filter(Boolean).join("\n")
+    .replace(/[,.:;!?]/g, function (c) { return HALF[c]; });
+}
+
+function matchKey(s) {
+  return String(s == null ? "" : s).replace(/[\s\u3000·・「」『』《》〈〉【】()（）\[\]"'“”‘’—－-]/g, "");
 }
 
 function loaded(rel) {
@@ -51,7 +61,7 @@ function main() {
     }
     const index = {};
     list.forEach(function (p) {
-      const key = norm(p.title);
+      const key = matchKey(p.title);
       (index[key] = index[key] || []).push(p);
     });
 
@@ -59,7 +69,7 @@ function main() {
     catalog.rows.forEach(function (row, pos) {
       const title = String(row[0] || "").trim();
       const author = String(row[1] || "").trim();
-      const hits = index[norm(title)] || [];
+      const hits = index[matchKey(title)] || [];
       const mine = hits.filter(function (p) { return String(p.author || "").trim() === author; });
       const pick = mine.length === 1 ? mine : (hits.length === 1 ? hits : []);
       if (pick.length !== 1) return;
@@ -72,7 +82,7 @@ function main() {
         pos + 1,
         pick[0].textRef,
         master.translationSource || "",
-        norm(text),
+        tidy(text),
         translation
       ]);
     });
