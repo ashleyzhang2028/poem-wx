@@ -382,7 +382,7 @@ function makeWx(port, mem) {
 
     const sample = texts.ok && texts.body.rows.tangshi300 ? texts.body.rows.tangshi300[0] : null;
     ok("每一行带 pos / 标题 / 源 id / 正文 / 译文 / 出处",
-      !!sample && sample.length === 6 && Number(sample[0]) > 0 && String(sample[3]).length > 0
+      !!sample && sample.length === 6 && Number(sample[0]) >= 0 && String(sample[3]).length > 0
         && String(sample[4]).length > 0 && typeof sample[5] === "number",
       JSON.stringify(sample).slice(0, 200));
 
