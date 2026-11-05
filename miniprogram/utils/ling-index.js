@@ -27,9 +27,14 @@ const COURSE_SCOPES = [
 ];
 
 const SELECTIONS = [
-  { id: "tangshi300", name: "唐诗三百首", source: "tangshi", kind: "selection" },
-  { id: "songci300", name: "宋词三百首", source: "songci", kind: "selection" },
-  { id: "tongxin", name: "童心诗话", source: "", kind: "catalog" }
+  { id: "tangshi300", name: "唐诗三百首", book: "tangshi" },
+  { id: "songci300", name: "宋词三百首", book: "songci" },
+  { id: "tongxin", name: "童心诗话", book: "tongxin" },
+  { id: "qianjiashi", name: "千家诗", book: "qianjiashi" },
+  { id: "huajianji", name: "花间集", book: "huajianji" },
+  { id: "gushiyuan", name: "古诗源", book: "gushiyuan" },
+  { id: "yuefuji", name: "乐府诗集", book: "yuefuji" },
+  { id: "cizong", name: "词综", book: "cizong" }
 ];
 
 const ANY = { id: "any", name: "不限", note: "课内加各选集" };
@@ -103,153 +108,122 @@ function selectionOf(id) {
   return SELECTIONS.filter((s) => s.id === id)[0] || null;
 }
 
-function courseRows(index) {
+function bookNameOf(bookId, books) {
+  const hit = (books || []).filter((b) => b.id === bookId)[0];
+  return hit ? String(hit.name || "") : "";
+}
+
+function courseRows(pack) {
   const out = [];
-  (index || []).forEach((p) => {
-    if (p.isBook || p.book !== "poems" || !p.text) return;
-    const stage = stageOfGrade(p.grade);
+  (pack || []).forEach((p) => {
+    const text = String((p && p.text) || "");
+    if (!text) return;
+    const stage = stageOfGrade(p.gr);
     out.push({
-      key: String(p.id),
       id: String(p.id),
       originId: String(p.originId || ""),
-      title: String(p.title || ""),
-      author: String(p.authorName || p.author || ""),
-      dynasty: String(p.dynasty || ""),
-      book: "poems",
+      book: String(p.b || ""),
+      title: String(p.t || ""),
+      author: String(p.a || ""),
+      dynasty: String(p.d || ""),
       scope: "course",
       stage: stage,
-      grade: gradeName(p.grade),
-      text: String(p.text)
+      grade: gradeName(p.gr),
+      text: text
     });
   });
   return out;
 }
 
-const TITLE_TAIL = /[\s\u3000]*(其)?[一二三四五六七八九十百\d]+$/;
-
-function headKey(title, author) {
-  const head = String(title || "").split("·")[0].replace(/[\s\u3000]/g, "");
-  return head + "\u0000" + String(author || "").trim();
-}
-
-function tailTitle(title) {
-  const parts = String(title || "").split("·");
-  if (parts.length < 2) return "";
-  const tail = parts[parts.length - 1].replace(TITLE_TAIL, "").replace(/[\s\u3000]/g, "");
-  return tail.length >= 3 ? tail : "";
-}
-
-function catalogRows(index, catalogs) {
-  const byHead = {};
-  (index || []).forEach((p) => {
-    if (p.isBook || !p.text) return;
-    const key = headKey(p.title, p.authorName || p.author);
-    const other = headKey(p.title, p.author);
-    if (!byHead[key]) byHead[key] = [];
-    byHead[key].push(p);
-    if (other !== key) byHead[other] = byHead[key];
-  });
-  const byTitle = {};
-  (index || []).forEach((p) => {
-    if (p.isBook || !p.text) return;
-    const key = String(p.title || "").trim();
-    if (!byTitle[key]) byTitle[key] = [];
-    byTitle[key].push(p);
-  });
-
+function bookRows(pack, selection, name) {
   const out = [];
-  SELECTIONS.forEach((s) => {
-    if (s.kind !== "catalog") return;
-    (((catalogs || {})[s.id] || {}).rows || []).forEach((r) => {
-      const pool = byHead[headKey(r[0], r[1])] || byTitle[tailTitle(r[0])] || [];
-      (pool.length ? [pool[0]] : []).forEach((p) => {
-        out.push({
-          key: String(p.book) + "|" + String(p.id || p.originId || p.title),
-          id: s.id,
-          originId: String(p.originId || p.id || ""),
-          title: String(r[0] || ""),
-          author: String(p.authorName || p.author || ""),
-          dynasty: String(p.dynasty || ""),
-          book: String(p.book || ""),
-          scope: s.id,
-          stage: "",
-          grade: "",
-          text: String(p.text)
-        });
-      });
-    });
-  });
-  return out;
-}
-
-function selectionRows(index) {
-  const out = [];
-  (index || []).forEach((p) => {
-    if (p.isBook || !p.text || !p.selection) return;
-    const hit = SELECTIONS.filter((s) => s.kind === "selection" && s.name === p.selection)[0];
-    if (!hit) return;
+  (pack || []).forEach((p) => {
+    const text = String((p && p.text) || "");
+    if (!text) return;
     out.push({
-      key: String(p.book) + "|" + String(p.id || p.originId || p.title),
-      id: hit.id,
-      originId: String(p.originId || p.id || ""),
-      title: String(p.title || ""),
-      author: String(p.authorName || p.author || ""),
-      dynasty: String(p.dynasty || ""),
-      book: String(p.book || ""),
-      scope: hit.id,
+      id: String(p.id),
+      originId: String(p.originId || ""),
+      book: String(p.b || ""),
+      title: String(p.t || ""),
+      author: String(p.a || ""),
+      dynasty: String(p.d || ""),
+      scope: selection.id,
       stage: "",
-      grade: "",
-      text: String(p.text)
+      grade: name,
+      text: text
     });
   });
   return out;
 }
 
-function indexRows(rows) {
+function rowOf(rows) {
   const seen = {};
   const couples = [];
-  rows.forEach((row) => {
+  (rows || []).forEach((row) => {
     couplesOf(row.text).forEach((seg) => {
       if (seen[seg]) return;
       seen[seg] = 1;
       couples.push({ row: row, seg: seg });
     });
   });
-  return { rows: rows, couples: couples };
+  return { rows: rows || [], couples: couples };
 }
 
-function build(index, catalogs) {
-  return indexRows(courseRows(index)
-    .concat(selectionRows(index))
-    .concat(catalogRows(index, catalogs)));
+function build(parts) {
+  const p = parts || {};
+  const course = courseRows(p.course);
+  return rowOf(course.concat(bookRows(p.tangshi, selectionOf("tangshi300")))
+    .concat(bookRows(p.songci, selectionOf("songci300"))));
+}
+
+function buildBooks(books, packs) {
+  const rows = [];
+  Object.keys(packs || {}).forEach((id) => {
+    const sel = selectionOf(id);
+    if (!sel) return;
+    rows.push.apply(rows, bookRows(packs[id], sel, bookNameOf(sel.book, books) || sel.name));
+  });
+  return rowOf(rows);
 }
 
 let box = null;
 
 function ready() {
-  return !!(box && box.couples && box.couples.length);
+  return !!(box && box.couples);
 }
 
 function install(rows) {
-  box = indexRows(rows || []);
+  box = rowOf(rows || []);
   return box;
 }
 
 function load() {
   if (ready()) return Promise.resolve(box);
-  const meta = require("../packages/game/data/ling-rows");
-  return Promise.all((meta.files || []).map(loadSub)).then((lists) => {
-    box = indexRows([].concat.apply([], lists));
-    return box;
-  }, () => box);
+  const corpus = require("./corpus");
+  return corpus.ready("core")
+    .then(() => {
+      if (ready()) return box;
+      install(courseRows(corpus.course()));
+      return box;
+    }, () => {
+      if (!ready()) box = rowOf([]);
+      return box;
+    });
 }
 
-function loadSub(name) {
-  try {
-    return Promise.resolve(require("../packages/game/data/" + name) || []);
-  } catch (e) {
-    return Promise.resolve([]);
-  }
+function installBooks(books, packs) {
+  const extra = buildBooks(books, packs);
+  box = box || rowOf([]);
+  const seen = {};
+  const couples = box.couples.slice();
+  box.couples.forEach((c) => { seen[c.seg] = 1; });
+  extra.couples.forEach((c) => {
+    if (seen[c.seg]) return;
+    seen[c.seg] = 1;
+    couples.push(c);
+  });
+  box = { rows: box.rows.concat(extra.rows), couples: couples };
+  return extra.couples.length;
 }
 
 function reset() {
@@ -267,57 +241,52 @@ function inScope(row, scope, grade) {
 function tagsOf(row) {
   if (row.scope === "course") return [STAGE_NAMES[row.stage] || "课内", row.grade].filter(Boolean);
   const hit = selectionOf(row.scope);
-  return [hit ? hit.name : row.scope];
+  return [hit ? hit.name : row.grade];
 }
 
-function pool(term) {
+function hitRow(row, seg, key) {
+  const at = seg.indexOf(key);
+  return {
+    id: row.id,
+    originId: row.originId,
+    book: row.scope === "course" ? "poems" : row.book,
+    scope: row.scope,
+    stage: row.stage,
+    seg: seg,
+    title: row.title,
+    author: row.author,
+    dynasty: row.dynasty,
+    tags: tagsOf(row),
+    head: seg.slice(0, at),
+    hit: key,
+    tail: seg.slice(at + key.length)
+  };
+}
+
+function matchAt(term, opt) {
+  const o = opt || {};
   const key = String(term == null ? "" : term).trim();
   if (!key || !ready()) return [];
+  const grade = o.grade;
   return box.couples
-    .filter((c) => c.seg.indexOf(key) >= 0)
-    .map((c) => {
-      const at = c.seg.indexOf(key);
-      return {
-        id: c.row.id,
-        originId: c.row.originId,
-        book: c.row.scope === "course" ? "poems" : c.row.book,
-        scope: c.row.scope,
-        stage: c.row.stage,
-        seg: c.seg,
-        title: c.row.title,
-        author: c.row.author,
-        dynasty: c.row.dynasty,
-        tags: tagsOf(c.row),
-        head: c.seg.slice(0, at),
-        hit: key,
-        tail: c.seg.slice(at + key.length)
-      };
-    });
+    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, o.scope || "stage", grade))
+    .map((c) => hitRow(c.row, c.seg, key));
 }
 
 function find(term, opt) {
   const o = opt || {};
-  const scope = o.scope || "stage";
-  const all = pool(term).filter((row) => inScope(row, scope, o.grade));
+  const all = matchAt(term, o);
   const from = Math.max(0, Number(o.from) || 0);
-  const page = all.slice(from, from + PAGE);
+  const size = Math.max(1, Number(o.size) || PAGE);
+  const page = all.slice(from, from + size);
   return {
     term: String(term == null ? "" : term),
-    scope: scope,
+    scope: o.scope || "stage",
     total: all.length,
     from: from,
     items: page,
     more: from + page.length < all.length
   };
-}
-
-function counts(term) {
-  const all = pool(term);
-  const out = {};
-  scopes().forEach((s) => {
-    out[s.id] = all.filter((row) => inScope(row, s.id, store.settings().grade)).length;
-  });
-  return out;
 }
 
 module.exports = {
@@ -330,10 +299,13 @@ module.exports = {
   clausesOf,
   couplesOf,
   build,
+  buildBooks,
   install,
+  installBooks,
   reset,
   ready,
   load,
   find,
-  counts
+  matchAt,
+  tagsOf
 };

@@ -1,4 +1,5 @@
 const ling = require("../../../utils/ling-index");
+const lingPool = require("../../../utils/ling-pool");
 const gate = require("../../../utils/gate");
 const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
@@ -24,9 +25,10 @@ Page({
     loading: false,
     searched: false,
     items: [],
-    total: 0,
-    left: 0,
     more: false,
+    loadingMore: false,
+    pulling: false,
+    remoteDone: false,
     hint: ""
   },
 
@@ -109,7 +111,10 @@ Page({
 
   onClear() {
     this.token = (this.token || 0) + 1;
-    this.setData({ term: "", searched: false, loading: false, items: [], total: 0, left: 0, more: false, hint: "" });
+    this.setData({
+      term: "", searched: false, loading: false, items: [],
+      more: false, loadingMore: false, pulling: false, remoteDone: false, hint: ""
+    });
     this.paintGroups();
   },
 
@@ -126,46 +131,88 @@ Page({
     if (!key) return;
     this.token = (this.token || 0) + 1;
     const token = this.token;
-    this.setData({ searched: true, loading: true });
-    ling.load().then(() => {
-      if (token !== this.token) return;
-      this.paint(key, token);
-    });
-  },
-
-  paint(key, token) {
-    const box = ling.find(key, {
-      scope: this.data.scope,
-      grade: store.settings().grade
-    });
-    if (token !== this.token) return;
+    lingPool.forget();
     this.setData({
-      loading: false,
-      items: box.items,
-      total: box.total,
-      left: Math.max(0, box.total - box.items.length),
-      more: box.more,
-      hint: box.total ? "" : this.missHint(key)
+      searched: true, loading: true, items: [],
+      more: false, loadingMore: false, pulling: false, remoteDone: false, hint: ""
+    });
+    ling.load().then(() => {
+      if (this.stale(token)) return;
+      const box = this.local(key, 0, ling.PAGE);
+      if (this.stale(token)) return;
+      this.setData({
+        loading: false,
+        items: box.items,
+        more: box.more,
+        hint: box.total ? "" : this.missHint()
+      });
+      if (box.items.length >= ling.PAGE) return;
+      this.pull(token, ling.PAGE - box.items.length);
     });
   },
 
-  missHint(key) {
-    return ling.counts(key).any
-      ? "这一档里没有含「" + key + "」的联句，换个档位或选「不限」"
-      : "诗词集子里没有含「" + key + "」的联句";
+  stale(token) {
+    return token !== this.token;
+  },
+
+  local(key, from, size) {
+    return ling.find(key, {
+      scope: this.data.scope,
+      grade: store.settings().grade,
+      from: from || 0,
+      size: size || ling.PAGE
+    });
+  },
+
+  pull(token, want) {
+    if (this.data.pulling || this.data.remoteDone) return;
+    const key = String(this.data.term || "").trim();
+    if (!key) return;
+    if (!lingPool.usable(this.data.scope)) {
+      this.setData({ pulling: false, remoteDone: true });
+      return;
+    }
+    this.setData({ pulling: true });
+    lingPool.next(key, this.data.scope, want || ling.PAGE).then((page) => {
+      if (this.stale(token)) return;
+      this.merge(page);
+    });
+  },
+
+  merge(page) {
+    const seen = {};
+    this.data.items.forEach((row) => { seen[lingPool.clean(row.seg)] = 1; });
+    const fresh = page.items.filter((row) => !seen[lingPool.clean(row.seg)]);
+    const items = this.data.items.concat(fresh);
+    this.setData({
+      items: items,
+      pulling: false,
+      remoteDone: !page.more,
+      hint: items.length ? "" : this.missHint()
+    });
+    if (!items.length) return;
+    if (fresh.length >= ling.PAGE || !page.more) return;
+    this.pull(this.token, ling.PAGE - fresh.length);
+  },
+
+  missHint() {
+    if (!lingPool.usable(this.data.scope)) return "这一档里没有含「" + this.data.term + "」的联句，换个档位或选「不限」";
+    if (!this.data.remoteDone) return "";
+    return "诗词漫读里也没找到含「" + this.data.term + "」的联句，换个令字试试";
   },
 
   onMore() {
-    if (!this.data.more) return;
+    const key = String(this.data.term || "").trim();
+    if (!key || this.data.loading || this.data.loadingMore || this.data.pulling) return;
+    if (!this.data.more && this.data.remoteDone) return;
     const token = this.token;
-    const box = ling.find(this.data.term, {
-      scope: this.data.scope,
-      grade: store.settings().grade,
-      from: this.data.items.length
-    });
-    if (token !== this.token) return;
-    const items = this.data.items.concat(box.items);
-    this.setData({ items: items, total: box.total, left: Math.max(0, box.total - items.length), more: box.more });
+    if (this.data.more) {
+      const box = this.local(key, this.data.items.length, ling.PAGE);
+      const items = this.data.items.concat(box.items);
+      this.setData({ items: items, more: box.more, loadingMore: false });
+      if (box.more || this.data.remoteDone) return;
+    }
+    this.pull(token, ling.PAGE);
   },
 
   onReachBottom() {

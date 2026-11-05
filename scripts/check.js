@@ -1977,11 +1977,10 @@ ok("名录在、标签截断、档位合法",
   }
 }
 
-{
+const lingPoolReady = Promise.resolve().then(() => {
   const ling = require(path.join(ROOT, "utils", "ling-index.js"));
+  const lingPool = require(path.join(ROOT, "utils", "ling-pool.js"));
   const savedSettings = store.settings();
-  const seed = corpusSeed.loadCorpus();
-  const box = ling.install(ling.build(seed.SITE_INDEX || [], seed.SITE_CATALOGS || {}).rows);
 
   ok("一行联句是「一逗一句」的两句，跨行也接得上",
     ling.couplesOf("白日依山尽，\n黄河入海流。").join("|") === "白日依山尽，黄河入海流。"
@@ -1991,24 +1990,22 @@ ok("名录在、标签截断、档位合法",
     ling.couplesOf("白日依山尽").length === 0
       && ling.couplesOf("花近高楼伤客心万方多难此登临锦江春色来天地").length === 0);
 
+  const seeded = require(path.join(ROOT, "utils", "corpus.js"));
+  ling.install(ling.build({ course: seeded.course() }).rows);
+
+  store.saveSettings({ grade: 3, term: 2 });
+  const lowStage = ling.matchAt("月", { scope: "stage" }).length;
+  const allCourse = ling.matchAt("月", { scope: "course" }).length;
   store.saveSettings({ grade: 12, term: 2 });
-  const stageCounts = ling.counts("月");
-  ok("按学段切得动：当前学段 ≤ 课内全部",
-    stageCounts.course > 0 && stageCounts.stage > 0 && stageCounts.stage <= stageCounts.course,
-    JSON.stringify(stageCounts));
+  const highStage = ling.matchAt("月", { scope: "stage" }).length;
+  ok("按学段切得动：当前学段随年级长大，且不超过课内全部",
+    allCourse > 0 && lowStage > 0 && lowStage <= highStage && highStage <= allCourse,
+    [lowStage, highStage, allCourse].join(" / "));
 
-  ok("档位按序：学段四档 + 各选集 + 不限，课内与选集的档位都出句子",
-    (() => {
-      const want = ["stage", "primary", "middle", "high", "course"]
-        .concat(ling.SELECTIONS.map((s) => s.id)).concat(["any"]);
-      return ling.scopeTable().map((s) => s.id).join() === want.join()
-        && ["course", "tangshi300", "songci300", "tongxin"].every((id) => ling.find("月", { scope: id }).total > 0);
-    })(),
-    JSON.stringify(ling.scopeTable().map((s) => s.id)));
-
-  ok("选集算选集：宋词三百首里的句子不进课内档",
-    ling.find("相思", { scope: "songci300" }).total > 0
-      && ling.find("相思", { scope: "course" }).total === 0);
+  ok("档位按序：学段四档 + 课内全部 + 各选集 + 不限",
+    ling.scopeTable().map((s) => s.id).join() === ["stage", "primary", "middle", "high", "course"]
+      .concat(ling.SELECTIONS.map((s) => s.id)).concat(["any"]).join(),
+    ling.scopeTable().map((s) => s.id).join());
 
   const first = ling.find("月", { scope: "course" });
   const second = ling.find("月", { scope: "course", from: first.items.length });
@@ -2031,18 +2028,60 @@ ok("名录在、标签截断、档位合法",
       });
     })());
 
+  const rows = Object.keys(ling.buildBooks(
+    [{ id: "tangshi", name: "唐诗" }],
+    { tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }] }
+  ).rows);
+
+  const before = ling.find("葳蕤", { scope: "tangshi300" }).total;
+  ling.installBooks([{ id: "tangshi", name: "唐诗" }], {
+    tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }]
+  });
+  ok("选集正文下来了就进那一档，胶囊带集子名",
+    before === 0 && ling.find("葳蕤", { scope: "tangshi300" }).total === 1
+      && ling.find("葳蕤", { scope: "course" }).total === 0
+      && ling.find("葳蕤", { scope: "any" }).items[0].tags[0] === "唐诗三百首",
+    rows.length + " 行");
+
   store.saveSettings(savedSettings);
+  ling.reset();
 
-  const lingJs = fs.readFileSync(path.join(ROOT, "packages", "game", "ling", "ling.js"), "utf8");
-  ok("常用令字的分组只有一份，页面从它取（不另抄一遍）",
-    !/季节时序/.test(lingJs) && /ling\.GROUPS/.test(lingJs));
+  ok("远端那一边去重按正文算，标点与重复收录算同一句",
+    lingPool.clean("白日依山尽，黄河入海流。") === lingPool.clean("白日依山尽 黄河入海流")
+      && lingPool.clean("白日依山尽") !== lingPool.clean("黄河入海流"));
 
-  const lingData = require(path.join(ROOT, "packages", "game", "data", "ling-rows.js"));
-  const lingRows = [].concat.apply([], lingData.files.map((f) => require(path.join(ROOT, "packages", "game", "data", f + ".js"))));
-  ok("研习数据是构建产物，和语料一起出来（不入库）",
-    lingRows.length === box.rows.length,
-    box.rows.length + " / " + lingRows.length);
-}
+  const remoteLines = [{ id: 1, title: "t", content: ["白日依山尽，黄河入海流。"] }];
+  const source = require(path.join(ROOT, "utils", "poem-source.js"));
+  const keepSearch = source.search;
+  const keepUsable = source.usable;
+  source.usable = () => true;
+  source.search = (q, opt) => Promise.resolve({
+    items: remoteLines.slice((opt.page - 1) * opt.size, opt.page * opt.size),
+    total: remoteLines.length,
+    page: opt.page,
+    more: opt.page * opt.size < remoteLines.length
+  });
+  lingPool.forget();
+
+  ok("远端兜底报得出可用性",
+    lingPool.usable("any") && lingPool.usable("tangshi300") && !lingPool.usable("course"));
+
+  return lingPool.next("黄河", "any", 2).then((page) => {
+    ok("远端兜底能交出含令字的联句，胶囊带集子名",
+      page.items.length === 1 && page.items[0].seg === "黄河入海流" && page.items[0].hit === "黄河"
+        && page.items[0].tags[0] === source.NAME && page.error === null,
+      JSON.stringify(page.items.map((row) => row.seg)));
+
+    return lingPool.next("黄河", "any", 2).then((again) => {
+      source.search = keepSearch;
+      source.usable = keepUsable;
+      lingPool.forget();
+      ok("同一句不会因为再下拉一次又出现一遍",
+        again.items.length === 0 && again.more === false,
+        JSON.stringify(again.items.map((row) => row.seg)));
+    });
+  });
+});
 
 {
   const feihua = require(path.join(ROOT, "packages", "game", "feihua", "lib.js"));

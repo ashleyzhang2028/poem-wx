@@ -28,9 +28,10 @@
       </view>
     </scroll-view>
 
-    <view class="tally" wx:if="{{searched}}">
-      <text class="tally-main">「{{term}}」{{scopeName}} {{total}} 句</text>
-      <text class="tally-note" wx:if="{{more}}">下拉继续</text>
+    <view class="tally" wx:if="{{searched && items.length}}">
+      <text class="tally-main">「{{term}}」{{scopeName}} {{items.length}} 句</text>
+      <text class="tally-note" wx:if="{{more}}">本机还有</text>
+      <text class="tally-note" wx:elif="{{!remoteDone}}">下拉还有</text>
     </view>
 
     <view class="card lines" wx:if="{{items.length}}">
@@ -47,22 +48,24 @@
       </view>
     </view>
 
-    <view class="card" wx:if="{{searched && !loading && !total}}">
+    <view class="card" wx:if="{{searched && !loading && !items.length && !pulling}}">
       <view class="empty">
         <text class="empty-mark">令</text>
         <text class="empty-text say">{{hint}}</text>
       </view>
     </view>
 
-    <view class="tally" wx:if="{{searched && total}}">
-      <text class="tally-note" wx:if="{{more}}" bindtap="onMore">还有 {{left}} 句 · 点这里展开</text>
+    <view class="tally" wx:if="{{searched && items.length}}">
+      <text class="tally-note" wx:if="{{pulling || loadingMore}}">正在找下一批…</text>
+      <text class="tally-note" wx:elif="{{more}}" bindtap="onMore">下拉继续，本机还有</text>
+      <text class="tally-note" wx:elif="{{!remoteDone}}" bindtap="onMore">下拉去诗词漫读接着找</text>
       <text class="tally-note" wx:else>「{{term}}」的联句到这里为止</text>
     </view>
 
     <view class="pitch" wx:if="{{!searched}}">
       <text class="pitch-mark">令</text>
       <text class="pitch-line">挑一个令字，或自己搜一个</text>
-      <text class="pitch-sub">按小学课内、初中课内、唐诗三百首、宋词三百首逐档翻，每句都带逗号与句号</text>
+      <text class="pitch-sub">本机先出，下拉再往诗词漫读里找；每句都带一个逗号一个句号</text>
     </view>
 
     <view class="safe-bottom"></view>
