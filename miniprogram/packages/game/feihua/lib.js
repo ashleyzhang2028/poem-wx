@@ -22,6 +22,24 @@ const LEVELS = [
   { id: "hard", name: "难字", min: 1, max: 5 }
 ];
 
+let poolCache = {};
+
+let poolStamp = "";
+
+function corpusStamp() {
+  const parts = ["books", "poems", "catalogs"];
+  return parts.map((part) => (corpus.isReady(part) ? "1" : "0")).join("");
+}
+
+function cacheAlive() {
+  const now = corpusStamp();
+  if (now === poolStamp) return;
+  poolStamp = now;
+  poolCache = {};
+  segsCache = null;
+  byScopeCache = null;
+}
+
 function _feihua_segsOf(text, gated) {
   const out = [];
 
@@ -142,9 +160,8 @@ function _feihua_scopedPoems(opt) {
   return out && out.length ? out : _feihua_allPoems();
 }
 
-let poolCache = {};
-
 function pool(scope) {
+  cacheAlive();
   const cacheKey = gameScopes.cacheKeyOf(scope);
   if (poolCache[cacheKey]) return poolCache[cacheKey];
 
@@ -169,7 +186,7 @@ function pool(scope) {
     const level = n >= 25 ? "easy" : n >= 6 ? "normal" : "hard";
     out[ch] = { char: ch, count: n, level };
   });
-  poolCache[cacheKey] = out;
+  if (Object.keys(out).length) poolCache[cacheKey] = out;
   return out;
 }
 
@@ -187,19 +204,66 @@ function levelOf(id) {
   return LEVELS.find((l) => l.id === id) || LEVELS[1];
 }
 
+function groupedChars(groups, levelId) {
+  const all = pool(gameScopes.COURSE_ALL_SCOPE);
+  const lv = levelOf(levelId);
+  return (groups || []).map((g) => ({
+    name: g.name,
+    chars: (g.chars || [])
+      .filter((ch) => ch.length > 1 || !!all[ch])
+      .map((ch) => ({
+        ch: ch,
+        on: false,
+        dim: ch.length > 1 ? true : lv.max ? all[ch].count > lv.max : all[ch].count < lv.min
+      }))
+  })).filter((g) => g.chars.length);
+}
+
 function look(char, opt) {
   const o = opt || {};
   const ch = String(char || "").trim();
   if (!ch) return [];
   const limit = o.limit || LIMIT;
+  const seen = {};
+  (o.exclude || []).forEach((seg) => {
+    seen[_feihua_strip(seg)] = 1;
+  });
   const out = [];
 
   (poolOfScope(o.scope)[ch] || []).forEach((r) => {
     if (out.length >= limit) return;
+    const key = _feihua_strip(r.seg);
+    if (seen[key]) return;
+    seen[key] = 1;
     out.push({ id: r.id, title: r.title, author: r.author, dynasty: r.dynasty, seg: r.seg });
   });
 
   return out;
+}
+
+function lookAsync(char, opt) {
+  const o = opt || {};
+  const limit = o.limit || LIMIT;
+  const local = look(char, o);
+  if (local.length >= limit || !onSource()) return Promise.resolve(local);
+  const seen = {};
+  local.forEach((r) => {
+    seen[_feihua_strip(r.seg)] = 1;
+  });
+  return raceTimeout(
+    lookAtSource(char, { limit: limit - local.length, exclude: (o.exclude || []).concat(local.map((r) => r.seg)) }),
+    LOOK_MS
+  ).then((rows) => {
+    const out = local.slice();
+    (rows || []).forEach((r) => {
+      if (out.length >= limit) return;
+      const key = _feihua_strip(r.seg);
+      if (seen[key]) return;
+      seen[key] = 1;
+      out.push(r);
+    });
+    return out;
+  }, () => local);
 }
 
 function hint(char, opt) {
@@ -299,6 +363,7 @@ function collect(o, byScope) {
 let segsCache = null;
 
 function segsOfScope(scopeId) {
+  cacheAlive();
   const key = gameScopes.cacheKeyOf(scopeId);
   if (!segsCache) segsCache = {};
   if (segsCache[key]) return segsCache[key];
@@ -312,13 +377,14 @@ function segsOfScope(scopeId) {
     });
   });
 
-  segsCache[key] = out;
+  if (out.length) segsCache[key] = out;
   return out;
 }
 
 let byScopeCache = null;
 
 function poolOfScope(scopeId) {
+  cacheAlive();
   const key = gameScopes.cacheKeyOf(scopeId);
   if (!byScopeCache) byScopeCache = {};
   if (byScopeCache[key]) return byScopeCache[key];
@@ -331,7 +397,7 @@ function poolOfScope(scopeId) {
     });
   });
 
-  byScopeCache[key] = out;
+  if (Object.keys(out).length) byScopeCache[key] = out;
   return out;
 }
 
@@ -347,9 +413,11 @@ module.exports = {
   LEVELS,
   onSource,
   judgeAsync,
+  lookAsync,
   lookAtSource: (char, opt) => raceTimeout(lookAtSource(char, opt), LOOK_MS),
   pool,
   levelOf,
+  groupedChars,
   pick,
   look,
   hint,

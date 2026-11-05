@@ -1550,16 +1550,6 @@ window.POEMS_SONGCI = [
     gradeGroup: "词牌 · 六州歌头",
   },
   {
-    textRef: "songci-sc-169",
-    id: "sc-169",
-    title: "瑞鹤仙·郊原初过雨",
-    source: "宣卿词",
-    selection: "宋词三百首",
-    dynasty: "宋",
-    author: "袁去华",
-    gradeGroup: "词牌 · 瑞鹤仙",
-  },
-  {
     textRef: "songci-sc-170",
     id: "sc-170",
     title: "剑器近·夜来雨",
@@ -1587,6 +1577,16 @@ window.POEMS_SONGCI = [
     selection: "宋词三百首",
     dynasty: "宋",
     author: "陆淞",
+    gradeGroup: "词牌 · 瑞鹤仙",
+  },
+  {
+    textRef: "songci-sc-169",
+    id: "sc-169",
+    title: "瑞鹤仙·郊原初过雨",
+    source: "宣卿词",
+    selection: "宋词三百首",
+    dynasty: "宋",
+    author: "袁去华",
     gradeGroup: "词牌 · 瑞鹤仙",
   },
   {
