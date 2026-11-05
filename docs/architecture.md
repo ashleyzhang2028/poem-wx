@@ -826,7 +826,7 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
    + CDN），由 `wx.loadFontFace` 在真机上注册一次，落在这条链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
 
-**线上十三款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
+**线上十一款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
 清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
 | 款 | 键 | 字族 | 目录 |
@@ -840,10 +840,8 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
 | 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro_regular` |
 | 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular` |
 | 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular` |
-| 芫荽 | `iansui` | `Kuibu Poem iansui` | `iansui-regular` |
 | 乐米清砚方墨 | `qingyan` | `Kuibu Poem qingyan` | `lemi-qingyanfangmo` |
 | 黄令东齐伋 | `qiji` | `Kuibu Poem qiji` | `qiji` |
-| 演示春风楷 | `chunfeng` | `Kuibu Poem chunfeng` | `yanshichunfengkai` |
 
 每款目录下三份裁剪，文件名统一为 `<size>.{woff2,woff}`：
 `free` / `pro` / `max` 分别给未登录与 Free、Pro、Max 取用。
@@ -922,7 +920,7 @@ Pro 取 `pro`，Max 取 `max`，档位变了下一轮 `font.refresh()` 就换一
 当前款，加上点过的（`previewSeen`）。没点过的格先留着 `previewOn: false`，
 `font.previewOf()` 在按下的那一刻注册并置上，字形落了地再让它进预览壳。
 理由与正文同一条：一次 `loadFontFace` 给 webview 挂一个 `WindowInfoChanged` 监听，
-十三款预览一起注册就是十三个常驻监听（Issue #893）。
+每款预览各注册一次，款数一多就是同数量的常驻监听（Issue #893）。
 
 **预览字族的注册在页面作用域里。** `wx.loadFontFace` 带 `global: true` 时，
 字族名只在调用那一刻的页面作用域里认得出，换一页就没了 —— 所以主题页把

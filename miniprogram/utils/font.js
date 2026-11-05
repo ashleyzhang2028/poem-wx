@@ -12,10 +12,8 @@ const FONTS = [
   { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", dir: "chilljinshusongpro_regular" },
   { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", dir: "yozai-regular" },
   { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" },
-  { key: "iansui", name: "芫荽", note: "楷体 · 抄经手写", dir: "iansui-regular" },
   { key: "qingyan", name: "乐米清砚方墨", note: "方墨 · 棱角分明", dir: "lemi-qingyanfangmo" },
-  { key: "qiji", name: "黄令东齐伋", note: "宋体 · 古本筋骨", dir: "qiji" },
-  { key: "chunfeng", name: "演示春风楷", note: "楷体 · 春风拂纸", dir: "yanshichunfengkai" }
+  { key: "qiji", name: "黄令东齐伋", note: "宋体 · 古本筋骨", dir: "qiji" }
 ];
 
 const SAMPLE = "烟花三月下扬州";
