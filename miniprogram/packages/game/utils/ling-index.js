@@ -7,12 +7,14 @@ const GROUPS = [
   { name: "鸟兽虫禽", chars: ["雁", "鸟", "蝶", "莺", "蝉", "马"] },
   { name: "色彩", chars: ["红", "白", "绿", "蓝", "黄", "紫", "青"] },
   { name: "数字", chars: ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "零"] },
-  { name: "人事情思", chars: ["人", "君", "情", "梦", "相思", "泪", "归", "别", "孤", "寒", "空", "幽", "远", "离", "合", "望", "忆", "寄", "送", "寻", "访", "醉", "醒", "新", "旧", "生", "死", "故"] },
+  { name: "人事情思", chars: ["人", "君", "情", "梦", "泪", "归", "别", "孤", "寒", "空", "幽", "远", "离", "合", "望", "忆", "寄", "送", "寻", "访", "醉", "醒", "新", "旧", "生", "死", "故", "相思"] },
   { name: "器物雅物", chars: ["酒", "书", "笛", "箫", "烛", "钟", "琴", "棋", "诗", "画"] },
   { name: "其他", chars: ["长", "深", "高", "凉", "暖"] }
 ];
 
-const CHARS = GROUPS.reduce((all, g) => all.concat(g.chars), []);
+const ALL_CHARS = GROUPS.reduce((all, g) => all.concat(g.chars), []);
+
+const CHARS = ALL_CHARS.filter((ch) => ch.length === 1).concat(ALL_CHARS.filter((ch) => ch.length > 1));
 
 const STAGE_NAMES = { primary: "小学", middle: "初中", high: "高中" };
 

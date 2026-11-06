@@ -209,7 +209,7 @@ function groupedChars(groups, levelId) {
   const lv = levelOf(levelId);
   return (groups || []).map((g) => ({
     name: g.name,
-    chars: (g.chars || [])
+    chars: singleFirst(g.chars || [])
       .filter((ch) => ch.length > 1 || !!all[ch])
       .map((ch) => ({
         ch: ch,
@@ -217,6 +217,10 @@ function groupedChars(groups, levelId) {
         dim: ch.length > 1 ? true : lv.max ? all[ch].count > lv.max : all[ch].count < lv.min
       }))
   })).filter((g) => g.chars.length);
+}
+
+function singleFirst(chars) {
+  return chars.filter((ch) => ch.length === 1).concat(chars.filter((ch) => ch.length > 1));
 }
 
 function look(char, opt) {

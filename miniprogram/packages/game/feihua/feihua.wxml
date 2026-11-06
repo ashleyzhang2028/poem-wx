@@ -8,7 +8,7 @@
         <view class="search-icon" style="mask-image:url('{{icons.search}}');-webkit-mask-image:url('{{icons.search}}');"></view>
         <input class="pick-input" value="{{char}}" placeholder="挑一个令字" disabled
                confirm-type="search" bindconfirm="onPickToggle" />
-        <text class="pick-go">{{picking ? '收起' : '换字'}}</text>
+        <text class="pick-go {{picking ? 'open' : ''}}">{{picking ? '收起' : '换字'}}</text>
       </view>
 
       <view class="pick-meta">
@@ -16,7 +16,14 @@
         <text class="pick-meta-t" wx:if="{{corpusReady === false}}">课内语料还没到位，先按诗词漫读找</text>
       </view>
 
-      <view class="pick-panel" wx:if="{{picking}}">
+      <view class="pick-panel {{picking ? 'open' : ''}}">
+        <view class="pick-head" hover-class="pick-head-hover" hover-stay-time="60" bindtap="onPickOpen">
+          <text class="pick-head-t">挑一个令字</text>
+          <text class="pick-fold">
+            <text class="pick-fold-t">收起</text>
+            <view class="pick-arrow up"></view>
+          </text>
+        </view>
         <view class="seg">
           <radio-group class="seg-group" bindchange="onLevel">
             <label class="seg-item mini {{level === item.id ? 'on' : ''}}" wx:for="{{levels}}" wx:key="id">
@@ -33,13 +40,17 @@
             </view>
           </label>
         </radio-group>
-        <view class="pick-group" wx:for="{{groups}}" wx:key="name" wx:for-item="group">
-          <text class="pick-group-name">{{group.name}}</text>
-          <view class="pick-chars">
+        <block wx:for="{{groups}}" wx:key="name" wx:for-item="group">
+          <view class="pick-group-head" data-name="{{group.name}}" hover-class="pick-head-hover" hover-stay-time="60" bindtap="onFold">
+            <text class="pick-group-name">{{group.name}}</text>
+            <text class="pick-count">{{group.chars.length}}</text>
+            <view class="pick-arrow {{folded[group.name] ? '' : 'up'}}"></view>
+          </view>
+          <view class="pick-chars {{folded[group.name] ? 'folded' : ''}}">
             <text class="pick-chip {{item.on ? 'on' : ''}} {{item.dim ? 'dim' : ''}}"
                   wx:for="{{group.chars}}" wx:key="ch" data-ch="{{item.ch}}" bindtap="onPickChar">{{item.ch}}</text>
           </view>
-        </view>
+        </block>
       </view>
     </view>
 

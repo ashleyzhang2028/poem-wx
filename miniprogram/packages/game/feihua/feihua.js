@@ -34,6 +34,7 @@ Page({
     scope: gameScopes.STAGE_SCOPE,
     levelName: "",
     groups: [],
+    folded: {},
     picking: false,
     corpusReady: true,
     icons: { search: icons.search },
@@ -229,11 +230,22 @@ Page({
 
   onPickToggle() {
     sfx.play("tap");
-    if (this.data.picking) {
-      this.setData({ picking: false });
-      return;
-    }
-    this.setData({ picking: true, answers: [], revealed: false, revealing: false }, () => this.refreshGroups());
+    this.setData({ picking: !this.data.picking });
+  },
+
+  onPickOpen() {
+    sfx.play("tap");
+    this.setData({ picking: true, folded: {}, answers: [], revealed: false, revealing: false });
+  },
+
+  onFold(e) {
+    const name = String(e.currentTarget.dataset.name || "");
+    if (!name) return;
+    sfx.play("tap");
+    const folded = Object.assign({}, this.data.folded);
+    if (folded[name]) delete folded[name];
+    else folded[name] = true;
+    this.setData({ folded: folded });
   },
 
   onPickChar(e) {
