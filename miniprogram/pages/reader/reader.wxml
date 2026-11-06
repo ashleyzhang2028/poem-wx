@@ -22,6 +22,7 @@
     <view class="poem-head">
       <view class="poem-head-row">
         <text class="poem-title">{{title}}</text>
+        <text class="poem-mark" wx:if="{{titleMark}}">{{titleMark}}</text>
         <tier-tag wx:if="{{dailyLocked}}" tier="{{extraTier}}" />
       </view>
 

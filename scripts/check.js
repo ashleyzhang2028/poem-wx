@@ -2672,6 +2672,29 @@ function mountFull(pg, query) {
 }
 
 {
+  const origin = require(path.join(ROOT, "utils", "corpus-origin.js"));
+  const courseId = Object.keys(require(path.join(ROOT, "data", "course.js")))[0];
+  ok("包内正文的读取标注是 PAC", origin.originOf(courseId, false) === "PAC", origin.originOf(courseId, false));
+  const shelf = require(path.join(ROOT, "utils", "corpus.js")).booksOf().filter((b) => b.remote && b.count)[0];
+  const shelfId = shelf ? shelf.id + "-1" : "";
+  ok("库里的正文按服务端回的标成 SQL，镜像的那份标成 MIR",
+    !!shelfId && origin.originOf(shelfId, true) === "SQL" && origin.originOf("309946", true) === "MIR",
+    shelfId + " → " + origin.originOf(shelfId, true) + " / 309946 → " + origin.originOf("309946", true));
+
+  const rjs = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  const mark = /applyTitleMark\(\)\s*\{([\s\S]*?)\n  \},/.exec(rjs);
+  ok("标题后的来源标注只给 owner / admin（user 与非登录一律空串）",
+    !!mark && /auth\.isAdmin\(\)/.test(mark[1]) && /:\s*""/.test(mark[1])
+      && /corpusOrigin\.originOf\(this\.data\.id, this\.data\.remote\)/.test(mark[1]),
+    "标题后缀没挂身份门 —— 这一枚是给 owner / admin 看的，不该落到 user 眼前");
+  ok("读着的那篇换了，标注跟着换（onShow 与正文落地都会重算）",
+    (rjs.match(/this\.applyTitleMark\(\)/g) || []).length >= 2);
+  const rwxml = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+  ok("标注落在标题行里、由 titleMark 决定出不出现",
+    /poem-head-row[\s\S]{0,200}?poem-mark[\s\S]{0,80}?titleMark/.test(rwxml));
+}
+
+{
 
   const cfg = readJson(path.join(ROOT, "project.config.json"));
   const tourist = !cfg.appid || cfg.appid === "touristappid";

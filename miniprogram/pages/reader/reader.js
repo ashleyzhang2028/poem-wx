@@ -1,4 +1,5 @@
 const corpus = require("../../utils/corpus");
+const corpusOrigin = require("../../utils/corpus-origin");
 const corpusGate = require("../../utils/corpus-gate");
 const source = require("../../utils/poem-source");
 const AI = require("../../utils/author-index");
@@ -7,6 +8,7 @@ const R = require("../../utils/review-models");
 const pinyin = require("../../utils/pinyin");
 const sync = require("../../utils/sync");
 const gate = require("../../utils/gate");
+const auth = require("../../utils/auth");
 const entitlement = require("../../utils/entitlement");
 const cols = require("../../utils/collections");
 const marks = require("../../utils/bookmarks");
@@ -76,6 +78,7 @@ Page({
     failText: "",
     bookId: "",
     title: "",
+    titleMark: "",
     author: "",
     dynasty: "",
     source: "",
@@ -164,6 +167,7 @@ Page({
     if (this.data.locked) this.setData({ locked: false });
     if (!this.loaded) this.openEntry();
     this.applyReading();
+    if (this.loaded) this.applyTitleMark();
 
     this.syncDaily();
   },
@@ -185,6 +189,13 @@ Page({
 
   onCorpusRetry() {
     this.openEntry();
+  },
+
+  applyTitleMark() {
+    const titleMark = auth.isAdmin()
+      ? corpusOrigin.originOf(this.data.id, this.data.remote)
+      : "";
+    if (titleMark !== this.data.titleMark) this.setData({ titleMark });
   },
 
   syncDaily() {
@@ -450,6 +461,7 @@ Page({
     if (meta.b) store.markRead(meta.b, id);
     this.loaded = true;
     this.setData({ creator: this.data.from || "" });
+    this.applyTitleMark();
     this.refreshPager();
     this.syncDaily();
 

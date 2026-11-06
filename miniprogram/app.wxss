@@ -1322,6 +1322,15 @@ button, input, textarea {
   min-width: 0;
 }
 
+.poem-mark {
+  flex: none;
+  margin-left: .5em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  letter-spacing: 0;
+}
+
 .poem-title {
   display: block;
   font-family: var(--font-poem);
