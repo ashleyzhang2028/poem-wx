@@ -12,12 +12,9 @@
         </view>
       </view>
 
-      <view class="pick-group" wx:for="{{groups}}" wx:key="name" wx:for-item="group">
-        <text class="pick-group-name">{{group.name}}</text>
-        <view class="pick-chips">
-          <text class="pick-chip {{item.on ? 'on' : ''}}" wx:for="{{group.chars}}" wx:key="ch"
-                data-ch="{{item.ch}}" bindtap="onPick">{{item.ch}}</text>
-        </view>
+      <view class="pick-chips">
+        <text class="pick-chip {{item.on ? 'on' : ''}}" wx:for="{{chars}}" wx:key="ch"
+              data-ch="{{item.ch}}" bindtap="onPick">{{item.ch}}</text>
       </view>
     </view>
 

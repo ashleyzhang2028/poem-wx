@@ -319,7 +319,7 @@ function judge(char, input, said, scope) {
     if (!e || !e.text) return;
     const segs = _feihua_segsOf(e.text, false);
     const at = runAt(segs.map(_feihua_strip), clauses);
-    if (at >= 0) hit = { id: p.id, title: p.t, author: p.a, seg: segs.slice(at, at + clauses.length).join("，") };
+    if (at >= 0) hit = { id: p.id, title: p.t, author: p.a, seg: segs.slice(at, at + clauses.length).join("") };
   });
 
   if (!hit) {

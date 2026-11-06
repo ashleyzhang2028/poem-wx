@@ -71,7 +71,9 @@ Page({
   },
 
   load() {
-    if (!this.data.allowed) {
+    const allowed = entitlement.can("league");
+    if (allowed !== this.data.allowed) this.setData({ allowed: allowed, tier: entitlement.tierOf("league") });
+    if (!allowed) {
       this.setData({ state: "tier", reason: "" });
       return;
     }

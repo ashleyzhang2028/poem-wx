@@ -17,7 +17,7 @@ const PAID_TIERS = ["pro", "max"];
 
 const IOS_MIN_WECHAT = [8, 0, 68];
 const CONFIRM_TRIES = 6;
-const CONFIRM_GAP_MS = 1500;
+const CONFIRM_GAP_MS = 2600;
 
 const STATUS_NAMES = {
   pending: "待支付",

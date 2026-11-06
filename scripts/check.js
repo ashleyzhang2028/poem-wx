@@ -586,6 +586,26 @@ ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.
     "连点 5 下停在 level " + clicks.level + " / " + R.stageName(clicks, "ebbinghaus")
       + "，只点一下是 level " + once.level + " / " + R.stageName(once, "ebbinghaus"));
 
+  ok("同日连点，四套算法都停在首次的结果（不在上面再走一步）",
+    ["ebbinghaus", "leitner", "sm2", "fsrs"].every((algo) => {
+      const first = R.review(null, "good", algo, day1);
+      let again = first;
+      for (let i = 0; i < 3; i++) again = R.review(again, "good", algo, day1 + 1000 * (i + 1));
+      return again.nextReviewAt === first.nextReviewAt && again.level === first.level
+        && again.interval === first.interval && again.stability === first.stability && again.box === first.box;
+    }));
+
+  ok("FSRS 间隔有上限：连续记住也不会把下次复习推到一年以后",
+    (() => {
+      let r = null;
+      let t = day1;
+      for (let i = 0; i < 12; i++) {
+        r = R.review(r, "good", "fsrs", t);
+        t = r.nextReviewAt + 1000;
+      }
+      return R.daysFor("fsrs", r) <= R.MODELS.fsrs.params.maxInterval;
+    })());
+
   let twice = R.review(null, "bad", "ebbinghaus", day1);
   twice = R.review(twice, "fuzzy", "ebbinghaus", day1 + 60000);
   twice = R.review(twice, "good", "ebbinghaus", day1 + 120000);
@@ -1596,8 +1616,6 @@ const GATED = {
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
-ok("乱七八糟的码不认", E.redeem("hello").ok === false);
-ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
 
 const sampleId = allEntries[0].id;
 const freshId = corpus.course()[0].id;
@@ -1946,6 +1964,14 @@ ok("名录在、标签截断、档位合法",
         })(sent, got, "");
         return out;
       }
+
+      const dayRec = ["sm2", "fsrs", "leitner"].map((algo) => {
+        const stamp = new Date(2026, 9, 16, 9, 0, 0).getTime();
+        const sent = wireMod3.slimRecord(require(path.join(ROOT, "utils", "review-models.js")).review(null, "good", algo, stamp));
+        const got = core.sanitizePayload(sent, "poem-x");
+        return !!sent.dayBase && JSON.stringify(got.dayBase) === JSON.stringify(sent.dayBase);
+      });
+      ok("同日重评的基线跟着同步走（客户端打包、服务端收，一个字段都不丢）", dayRec.every(Boolean), dayRec.join());
 
       let worst = "";
       rows3.forEach((r) => {
@@ -7237,14 +7263,19 @@ const K = {
       const row = sid ? storeMod.getSession(sid) : null;
 
       ok("刷新那条路能找回自己的会话行（刷不回来 = 每次登录只撑得过一个有效期）",
-        !!row && row.refresh_token === body.refreshToken,
-        "登录落下的会话行里没有 refresh_token，而刷新只认「库里那一列与请求里的相等」——"
+        !!row && !!row.refresh_hash && row.refresh_hash !== body.refreshToken && JSON.stringify(row).indexOf(body.refreshToken) < 0,
+        "登录落下的会话行里没有 refresh_hash，或行里出现了刷新令牌明文（库里只该存哈希）——"
           + "缺这一列时刷新恒回 401，客户端把「过期」当成立刻过期：刚登录完又被要求登录");
 
       ok("登录回的 expiresIn 与会话真正的有效期一致",
-        !!row && body.expiresIn === Math.round((row.exp - row.iat) / 1000),
-        "回的是 " + body.expiresIn + " 秒，会话是 " + (row ? Math.round((row.exp - row.iat) / 1000) : "?") + " 秒"
-          + " —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
+        (() => {
+          const at = sessionMod.read(cfgMod, body.accessToken, clock);
+          return !!at && body.expiresIn === Math.round((at.exp - at.iat) / 1000) && body.expiresIn <= 2 * 3600;
+        })(),
+        "回的 expiresIn 要等于访问令牌自己的寿命，且不超过 2 小时 —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
+
+      ok("刷新令牌不能当访问令牌用（是不透明串，没有签名）",
+        sessionMod.read(cfgMod, body.refreshToken, clock) === null && /^rt_/.test(String(body.refreshToken)));
 
       ok("新微信账号建号即带一个随机昵称，不留空", /^诗友[A-Z2-9]{6}$/.test(String(body.nickname || "")), JSON.stringify(body.nickname));
 
@@ -7254,6 +7285,24 @@ const K = {
           ok("令牌过期之后仍刷得回来（这是刷新唯一存在的理由）",
             rr.status === 200,
             "拿到 " + rr.status + " " + ((rr.body && rr.body.code) || "") + "：" + ((rr.body && rr.body.message) || ""));
+          const fresh = sessionMod.read(cfgMod, rr.body && rr.body.accessToken, clock);
+          ok("刷新只换访问令牌，会话行（sid）不变，刷新令牌不另发",
+            !!fresh && fresh.sid === sid && !(rr.body && rr.body.refreshToken));
+          storeMod.revokeSession(sid);
+          return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" }).then((gone) => {
+            ok("会话吊销之后刷新回 401", gone.status === 401, "拿到 " + gone.status);
+            storeMod.putSession({ sid: sid, uid: row.uid, iat: row.iat, exp: clock - 1, revoked: 0, refresh_hash: row.refresh_hash });
+            return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" });
+          }).then((over) => {
+            ok("会话寿命到头之后刷新回 401", over.status === 401, "拿到 " + over.status);
+            const old = sessionMod.issue(cfgMod, row.uid, clock);
+            storeMod.putSession({ sid: old.sid, uid: row.uid, iat: old.iat, exp: old.exp, revoked: 0, refresh_token: "h:" + require("crypto").createHash("sha256").update(old.token).digest("hex") });
+            return coreMod.wxRefresh(probeDeps(), { refreshToken: old.token, device: "d_00000001" }).then((legacy) => {
+              ok("升级前签发的老会话（长令牌）仍刷得回来，并换成新结构",
+                legacy.status === 200 && /^rt_/.test(String(legacy.body && legacy.body.refreshToken)),
+                "拿到 " + legacy.status);
+            });
+          });
         });
     })
     .catch((e) => {

@@ -178,6 +178,11 @@ Page({
     this.report(this.data.done.length);
   },
 
+  noteRestart() {
+    if (this.ended || !this.data.done.length) return;
+    wx.showToast({ title: "本轮将重新开始", icon: "none" });
+  },
+
   freshRound() {
     this.stopClock();
     if (this.timer) clearTimeout(this.timer);
@@ -198,7 +203,7 @@ Page({
 
   onScope(e) {
     this.setData({ scope: e.detail.value || "" }, () => {
-      this.closeOpenRound();
+      this.noteRestart();
       this.freshRound();
       this.next();
       this.refreshGroups();
@@ -207,7 +212,7 @@ Page({
 
   onLevel(e) {
     this.setData({ level: e.detail.value }, () => {
-      this.closeOpenRound();
+      this.noteRestart();
       this.freshRound();
       this.next();
       this.refreshGroups();

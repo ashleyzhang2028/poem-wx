@@ -113,6 +113,7 @@ Page({
     this.token = (this.token || 0) + 1;
     this.sourcePage = 0;
     this.sourceIds = {};
+    this.hits = null;
     const token = this.token;
 
     if (corpus.isReady("catalogs")) {
@@ -185,8 +186,9 @@ Page({
   },
 
   byIndex(kw) {
+    if (this.hits && this.hits.kw === kw) return this.hits.pack;
     const found = corpus.search(kw, { limit: Infinity });
-    return {
+    const pack = {
       total: found.total,
       items: found.items.map((p) => ({
         id: p.id,
@@ -197,6 +199,8 @@ Page({
         lines: []
       }))
     };
+    this.hits = { kw: kw, pack: pack };
+    return pack;
   },
 
   pickedMap() {
@@ -244,7 +248,7 @@ Page({
     const rows = pack.items.slice(0, want);
     this.setData({
       results: this.decorate(rows),
-      total: rows.length,
+      total: this.packTotal,
       more: true
     }, () => this.refreshPicked());
     if (rows.length >= (this.packTotal || 0)) this.askSource(kw, 1, this.token);
