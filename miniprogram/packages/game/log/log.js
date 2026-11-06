@@ -61,7 +61,7 @@ Page({
       ranks: feedback.RANKS.slice(0, 3),
       cloud: keep
         ? "云端 " + rows.length + " / " + keep + " 条 · 超出自动删除最早记录 · 本地删除同步至云端"
-        : "成绩仅存本机 · 登录并开通 Pro / Max 后同步至账号"
+        : "当前档位不保存成绩记录 · 开通 Pro / Max 后自动记录并同步至账号"
     });
   },
 

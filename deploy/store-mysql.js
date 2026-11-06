@@ -278,6 +278,10 @@ function mysqlStore(cfg) {
       return query("SELECT * FROM sessions WHERE sid = ? LIMIT 1", [String(sid || "")])
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
     },
+    getSessionByRefresh: function (hash) {
+      return query("SELECT * FROM sessions WHERE refresh_hash = ? LIMIT 1", [String(hash || "")])
+        .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
+    },
     revokeSession: function (sid) {
       return query("UPDATE sessions SET revoked = 1 WHERE sid = ?", [String(sid || "")])
         .then(function () { return true; });

@@ -12,6 +12,8 @@ const GROUPS = [
   { name: "其他", chars: ["长", "深", "高", "凉", "暖"] }
 ];
 
+const CHARS = GROUPS.reduce((all, g) => all.concat(g.chars), []);
+
 const STAGE_NAMES = { primary: "小学", middle: "初中", high: "高中" };
 
 const STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
@@ -188,11 +190,14 @@ function buildBooks(books, packs) {
 
 let box = null;
 
+let hitCache = null;
+
 function ready() {
   return !!(box && box.couples);
 }
 
 function install(rows) {
+  hitCache = null;
   box = rowOf(rows || []);
   return box;
 }
@@ -203,7 +208,10 @@ function load() {
   return corpus.ready("core")
     .then(() => {
       if (ready()) return box;
-      install(courseRows(corpus.course()));
+      const texts = corpus.courseTexts();
+      install(courseRows(corpus.course().map((p) => Object.assign({}, p, {
+        text: (texts[p.id] || {}).text
+      }))));
       return box;
     }, () => {
       if (!ready()) box = rowOf([]);
@@ -212,6 +220,7 @@ function load() {
 }
 
 function installBooks(books, packs) {
+  hitCache = null;
   const extra = buildBooks(books, packs);
   box = box || rowOf([]);
   const seen = {};
@@ -227,6 +236,7 @@ function installBooks(books, packs) {
 }
 
 function reset() {
+  hitCache = null;
   box = null;
 }
 
@@ -268,9 +278,14 @@ function matchAt(term, opt) {
   const key = String(term == null ? "" : term).trim();
   if (!key || !ready()) return [];
   const grade = o.grade;
-  return box.couples
-    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, o.scope || "stage", grade))
+  const scope = o.scope || "stage";
+  const stamp = [key, scope, grade].join("|");
+  if (hitCache && hitCache.stamp === stamp && hitCache.box === box) return hitCache.rows.slice();
+  const rows = box.couples
+    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, scope, grade))
     .map((c) => hitRow(c.row, c.seg, key));
+  hitCache = { stamp: stamp, box: box, rows: rows };
+  return rows.slice();
 }
 
 function find(term, opt) {
@@ -291,6 +306,7 @@ function find(term, opt) {
 
 module.exports = {
   GROUPS,
+  CHARS,
   PAGE,
   SELECTIONS,
   scopes,

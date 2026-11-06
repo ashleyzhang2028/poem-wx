@@ -10,22 +10,6 @@
   margin-left: var(--sp-1);
 }
 
-.pick-group {
-  margin-top: var(--sp-2);
-}
-
-.pick-group:first-of-type {
-  margin-top: 0;
-}
-
-.pick-group-name {
-  display: block;
-  font-size: var(--fs-caption);
-  color: var(--ink-3);
-  letter-spacing: var(--ls-caption);
-  margin-bottom: 8rpx;
-}
-
 .pick-chips {
   display: flex;
   flex-wrap: wrap;
