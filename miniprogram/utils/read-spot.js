@@ -44,8 +44,14 @@ function locate(top, fontSize, paras) {
   const reach = (paras || []).length;
   const at = Math.max(0, Math.round(top * RPX_PER_PX));
   let p = 1;
-  while (p < reach && at >= startRpx(paras, p, line)) p += 1;
-  return { p: p, y: Math.floor((at - startRpx(paras, p - 1, line)) / RPX_PER_PX) };
+  let from = 0;
+  let next = spanRpx(paras, 0, line);
+  while (p < reach && at >= next) {
+    from = next;
+    next += spanRpx(paras, p, line);
+    p += 1;
+  }
+  return { p: p, y: Math.floor((at - from) / RPX_PER_PX) };
 }
 
 function topOf(para, offset, fontSize, paras) {

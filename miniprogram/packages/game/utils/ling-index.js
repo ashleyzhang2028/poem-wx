@@ -190,11 +190,14 @@ function buildBooks(books, packs) {
 
 let box = null;
 
+let hitCache = null;
+
 function ready() {
   return !!(box && box.couples);
 }
 
 function install(rows) {
+  hitCache = null;
   box = rowOf(rows || []);
   return box;
 }
@@ -217,6 +220,7 @@ function load() {
 }
 
 function installBooks(books, packs) {
+  hitCache = null;
   const extra = buildBooks(books, packs);
   box = box || rowOf([]);
   const seen = {};
@@ -232,6 +236,7 @@ function installBooks(books, packs) {
 }
 
 function reset() {
+  hitCache = null;
   box = null;
 }
 
@@ -273,9 +278,14 @@ function matchAt(term, opt) {
   const key = String(term == null ? "" : term).trim();
   if (!key || !ready()) return [];
   const grade = o.grade;
-  return box.couples
-    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, o.scope || "stage", grade))
+  const scope = o.scope || "stage";
+  const stamp = [key, scope, grade].join("|");
+  if (hitCache && hitCache.stamp === stamp && hitCache.box === box) return hitCache.rows.slice();
+  const rows = box.couples
+    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, scope, grade))
     .map((c) => hitRow(c.row, c.seg, key));
+  hitCache = { stamp: stamp, box: box, rows: rows };
+  return rows.slice();
 }
 
 function find(term, opt) {

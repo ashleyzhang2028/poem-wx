@@ -1450,6 +1450,18 @@ function wxSessionBody(deps, acc) {
   };
 }
 
+var REFRESH_HASH_PREFIX = "h:";
+
+function refreshKeyOf(token) {
+  return REFRESH_HASH_PREFIX + crypto.createHash("sha256").update(String(token)).digest("hex");
+}
+
+function refreshMatches(stored, token) {
+  var s = String(stored || "");
+  if (s.indexOf(REFRESH_HASH_PREFIX) === 0) return id.timingSafeEqual(s, refreshKeyOf(token));
+  return s === token;
+}
+
 function wxIssueSession(deps, acc, device) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var s = session.issue(cfg, acc.uid, t);
@@ -1460,7 +1472,7 @@ function wxIssueSession(deps, acc, device) {
   // 于是刷新永远验不过（而客户端只会看到「登录过期了」，看不出是服务端的错）。
   if (device) {
     row.device = String(device).slice(0, 64);
-    row.refresh_token = s.token;
+    row.refresh_token = refreshKeyOf(s.token);
   }
 
   return Promise.resolve(store.putSession(row))["catch"](function (e) {
@@ -1542,7 +1554,7 @@ function wxRefresh(deps, input) {
     if (!row || Number(row.revoked) === 1 || String(row.uid) !== s.uid) {
       return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
     }
-    if (row.refresh_token && String(row.refresh_token) !== token) {
+    if (row.refresh_token && !refreshMatches(row.refresh_token, token)) {
       return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
     }
     return Promise.resolve(store.getAccount(s.uid)).then(function (acc) {

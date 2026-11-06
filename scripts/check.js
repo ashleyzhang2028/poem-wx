@@ -7263,8 +7263,8 @@ const K = {
       const row = sid ? storeMod.getSession(sid) : null;
 
       ok("刷新那条路能找回自己的会话行（刷不回来 = 每次登录只撑得过一个有效期）",
-        !!row && row.refresh_token === body.refreshToken,
-        "登录落下的会话行里没有 refresh_token，而刷新只认「库里那一列与请求里的相等」——"
+        !!row && !!row.refresh_token && row.refresh_token !== body.refreshToken,
+        "登录落下的会话行里没有 refresh_token，或那一列还是令牌明文（库里只该存哈希）——"
           + "缺这一列时刷新恒回 401，客户端把「过期」当成立刻过期：刚登录完又被要求登录");
 
       ok("登录回的 expiresIn 与会话真正的有效期一致",

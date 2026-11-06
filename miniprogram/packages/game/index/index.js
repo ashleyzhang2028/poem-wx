@@ -110,14 +110,14 @@ Page({
 
 
   onMode(e) {
-    if (!gate.logged()) {
-      entitlement.block("feihualing", { page: this });
-      return;
-    }
     const key = e.currentTarget.dataset.k;
     const mode = MODES.filter((m) => m.key === key)[0];
     if (!mode) return;
     const cap = mode.cap;
+    if (!gate.logged()) {
+      entitlement.block(cap, { page: this });
+      return;
+    }
 
     if (!entitlement.can(cap)) {
       wx.showToast({ title: entitlement.hint(cap), icon: "none" });

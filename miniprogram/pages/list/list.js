@@ -121,7 +121,7 @@ Page({
     if (last) wx.navigateTo({ url: marks.readerUrl(last) });
   },
 
-  apply() {
+  apply(minShown) {
     if (this.data.collId) {
       this.applyCollection();
       return;
@@ -138,7 +138,7 @@ Page({
     (at || []).forEach((i) => { inMatch[i] = true; });
     const kept = all.filter((p, i) => (!at || inMatch[i]) && !(filter === "未读" && reads[p.id]));
 
-    const want = cataloged ? Math.max(this.data.shown, PAGE_SIZE) : kept.length;
+    const want = cataloged ? Math.max(minShown || this.data.shown, PAGE_SIZE) : kept.length;
     const limit = Math.min(kept.length, want);
 
     const order = [];
@@ -195,7 +195,7 @@ Page({
 
   onReachBottom() {
     if (this.data.shown >= this.data.matched) return;
-    this.setData({ shown: this.data.shown + PAGE_SIZE }, () => this.apply());
+    this.apply(this.data.shown + PAGE_SIZE);
   },
 
   rowOf(p, seq, reads, picked) {
