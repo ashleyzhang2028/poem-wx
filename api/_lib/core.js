@@ -1452,18 +1452,6 @@ function wxSessionBody(deps, acc) {
   };
 }
 
-var REFRESH_HASH_PREFIX = "h:";
-
-function refreshKeyOf(token) {
-  return REFRESH_HASH_PREFIX + crypto.createHash("sha256").update(String(token)).digest("hex");
-}
-
-function refreshMatches(stored, token) {
-  var s = String(stored || "");
-  if (s.indexOf(REFRESH_HASH_PREFIX) === 0) return id.timingSafeEqual(s, refreshKeyOf(token));
-  return s === token;
-}
-
 var WX_ACCESS_MS = 2 * 60 * 60 * 1000;
 var REFRESH_PREFIX = "rt_";
 
@@ -1473,11 +1461,6 @@ function newRefreshToken() {
 
 function refreshHashOf(cfg, token) {
   return crypto.createHmac("sha256", session.keyOf(cfg)).update(String(token)).digest("hex");
-}
-
-function isColumnError(e) {
-  var msg = String((e && e.message) || e).toLowerCase();
-  return msg.indexOf("column") >= 0 || msg.indexOf("schema") >= 0 || msg.indexOf("42703") >= 0 || msg.indexOf("pgrst204") >= 0;
 }
 
 function wxIssueSession(deps, acc, device) {
@@ -1496,32 +1479,6 @@ function wxIssueSession(deps, acc, device) {
     body.expiresIn = access.ttlSec;
     body.accessToken = access.token;
     body.refreshToken = refresh;
-    return ok(body);
-  }, function (e) {
-    if (isColumnError(e)) return wxIssueLegacySession(deps, acc, device);
-    throw e;
-  });
-}
-
-function wxIssueLegacySession(deps, acc, device) {
-  var cfg = deps.cfg, store = deps.store, t = deps.now();
-  var s = session.issue(cfg, acc.uid, t);
-  var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
-
-  if (device) row.device = String(device).slice(0, 64);
-  row.refresh_token = refreshKeyOf(s.token);
-
-  return Promise.resolve(store.putSession(row))["catch"](function (e) {
-    var msg = String((e && e.message) || e).toLowerCase();
-    if (msg.indexOf("column") >= 0 || msg.indexOf("schema") >= 0 || msg.indexOf("42703") >= 0 || msg.indexOf("pgrst204") >= 0) {
-      return store.putSession({ sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 });
-    }
-    throw e;
-  }).then(function () {
-    var body = wxSessionBody(deps, acc);
-    body.expiresIn = s.ttlSec;
-    body.accessToken = s.token;
-    body.refreshToken = s.token;
     return ok(body);
   });
 }
@@ -1590,7 +1547,7 @@ function wxRefreshOpaque(deps, token, t) {
 }
 
 function wxRefresh(deps, input) {
-  var cfg = deps.cfg, store = deps.store, t = deps.now();
+  var cfg = deps.cfg, t = deps.now();
   var body = input || {};
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED",
@@ -1599,35 +1556,8 @@ function wxRefresh(deps, input) {
 
   var token = String(body.refreshToken || "").trim();
   if (!token) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
-  if (token.indexOf(REFRESH_PREFIX) === 0) return wxRefreshOpaque(deps, token, t);
 
-  var s = session.read(cfg, token, t);
-  if (!s) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
-
-  return Promise.resolve(store.getSession(s.sid)).then(function (row) {
-
-    if (!row || Number(row.revoked) === 1 || String(row.uid) !== s.uid) {
-      return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-    }
-    if (row.refresh_token && !refreshMatches(row.refresh_token, token)) {
-      return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-    }
-    return Promise.resolve(store.getAccount(s.uid)).then(function (acc) {
-      if (!acc || acc.status === "deleted") {
-        return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-      }
-      var device = String(body.device || row.device || "unknown").slice(0, 64);
-      return wxIssueSession(deps, acc, device).then(function (r) {
-        if (r.status === 200 && row.sid) {
-
-          return Promise.resolve(store.revokeSession(row.sid))["catch"](function () {
-            return Promise.resolve(store.patchSession ? store.patchSession(row.sid, { revoked: 1 }) : null);
-          }).then(function () { return r; });
-        }
-        return r;
-      });
-    });
-  });
+  return wxRefreshOpaque(deps, token, t);
 }
 
 function me(deps) {
@@ -2330,7 +2260,7 @@ var PURGE_SCOPES = [
   { key: "resets", name: "过期密码重设", why: "重设令牌过期即作废" },
   { key: "sessions", name: "过期会话", why: "会话过期即验不过；已吊销的按到期时间一并走" },
   { key: "rate_counters", name: "过期配额计数", why: "固定窗口已过，计数不再被读" },
-  { key: "revoked_sessions", name: "已吊销会话", why: "吊销的那枚令牌最多再验到过期，到点后一并删掉" }
+  { key: "revoked_sessions", name: "已吊销会话", why: "吊销即作废，行删了同样验不过，直接清掉" }
 ];
 
 var MAINTENANCE_TABLES = ["accounts", "codes", "verifications", "resets", "sessions", "rate_counters",

@@ -1450,18 +1450,6 @@ function wxSessionBody(deps, acc) {
   };
 }
 
-var REFRESH_HASH_PREFIX = "h:";
-
-function refreshKeyOf(token) {
-  return REFRESH_HASH_PREFIX + crypto.createHash("sha256").update(String(token)).digest("hex");
-}
-
-function refreshMatches(stored, token) {
-  var s = String(stored || "");
-  if (s.indexOf(REFRESH_HASH_PREFIX) === 0) return id.timingSafeEqual(s, refreshKeyOf(token));
-  return s === token;
-}
-
 var WX_ACCESS_MS = 2 * 60 * 60 * 1000;
 var REFRESH_PREFIX = "rt_";
 
@@ -1471,11 +1459,6 @@ function newRefreshToken() {
 
 function refreshHashOf(cfg, token) {
   return crypto.createHmac("sha256", session.keyOf(cfg)).update(String(token)).digest("hex");
-}
-
-function isColumnError(e) {
-  var msg = String((e && e.message) || e).toLowerCase();
-  return msg.indexOf("column") >= 0 || msg.indexOf("schema") >= 0 || msg.indexOf("42703") >= 0 || msg.indexOf("pgrst204") >= 0;
 }
 
 function wxIssueSession(deps, acc, device) {
@@ -1494,36 +1477,6 @@ function wxIssueSession(deps, acc, device) {
     body.expiresIn = access.ttlSec;
     body.accessToken = access.token;
     body.refreshToken = refresh;
-    return ok(body);
-  }, function (e) {
-    if (isColumnError(e)) return wxIssueLegacySession(deps, acc, device);
-    throw e;
-  });
-}
-
-function wxIssueLegacySession(deps, acc, device) {
-  var cfg = deps.cfg, store = deps.store, t = deps.now();
-  var s = session.issue(cfg, acc.uid, t);
-  var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
-
-  // 刷新那条路要能按 refreshToken 找回这一行 —— 它就是同一枚会话令牌。
-  // 不落两列的话，服务端只能拿 refreshToken 当「另一枚没存的令牌」，
-  // 于是刷新永远验不过（而客户端只会看到「登录过期了」，看不出是服务端的错）。
-  if (device) {
-    row.device = String(device).slice(0, 64);
-    row.refresh_token = refreshKeyOf(s.token);
-  }
-
-  return Promise.resolve(store.putSession(row))["catch"](function (e) {
-    var msg = String((e && e.message) || e).toLowerCase();
-    if (msg.indexOf("column") >= 0 || msg.indexOf("schema") >= 0 || msg.indexOf("42703") >= 0 || msg.indexOf("pgrst204") >= 0) {
-      return store.putSession({ sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 });
-    }
-    throw e;
-  }).then(function () {
-    var body = wxSessionBody(deps, acc);
-    body.accessToken = s.token;
-    body.refreshToken = s.token;
     return ok(body);
   });
 }
@@ -1591,7 +1544,7 @@ function wxRefreshOpaque(deps, token, t) {
 }
 
 function wxRefresh(deps, input) {
-  var cfg = deps.cfg, store = deps.store, t = deps.now();
+  var cfg = deps.cfg, t = deps.now();
   var body = input || {};
   if (!cfg.hasSession()) {
     return Promise.resolve(err(503, "E_NOT_CONFIGURED",
@@ -1600,37 +1553,8 @@ function wxRefresh(deps, input) {
 
   var token = String(body.refreshToken || "").trim();
   if (!token) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
-  if (token.indexOf(REFRESH_PREFIX) === 0) return wxRefreshOpaque(deps, token, t);
 
-  var s = session.read(cfg, token, t);
-  if (!s) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
-
-  return Promise.resolve(store.getSession(s.sid)).then(function (row) {
-    // 同一套校验，一步不省：验签只证明「这枚是我们签的」，
-    // row 才说明它**还在**（账号注销 / 主动登出之后 row 就没了）。
-    if (!row || Number(row.revoked) === 1 || String(row.uid) !== s.uid) {
-      return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-    }
-    if (row.refresh_token && !refreshMatches(row.refresh_token, token)) {
-      return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-    }
-    return Promise.resolve(store.getAccount(s.uid)).then(function (acc) {
-      if (!acc || acc.status === "deleted") {
-        return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。");
-      }
-      var device = String(body.device || row.device || "unknown").slice(0, 64);
-      return wxIssueSession(deps, acc, device).then(function (r) {
-        if (r.status === 200 && row.sid) {
-          // 旧的那一行当场吊销：双 token 这套东西的意义就是「换一枚，旧的作废」。
-          // 不吊销，一枚被偷走的 refreshToken 可以一直用下去。
-          return Promise.resolve(store.revokeSession(row.sid))["catch"](function () {
-            return Promise.resolve(store.patchSession ? store.patchSession(row.sid, { revoked: 1 }) : null);
-          }).then(function () { return r; });
-        }
-        return r;
-      });
-    });
-  });
+  return wxRefreshOpaque(deps, token, t);
 }
 
 function me(deps) {

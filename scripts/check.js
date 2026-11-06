@@ -1545,6 +1545,32 @@ const GATED = {
           || new RegExp("^  " + k + ": \"DELETE FROM `[a-z_]+` WHERE `[a-z_]+` < ", "m").test(mysqlStore))
         && !/input\.where|input\.sql/i.test(serverCore)
         && /adminMaintenance/.test(routeSrc));
+    {
+      const memory = require(path.join(__dirname, "..", "api", "_lib", "store.js")).memoryStore();
+      const now = 1000000;
+      memory.putSession({ sid: "old", uid: "u", iat: 1, exp: now - 1, revoked: 0 });
+      memory.putSession({ sid: "live", uid: "u", iat: 1, exp: now + 1, revoked: 0 });
+      memory.putSession({ sid: "gone", uid: "u", iat: 1, exp: now + 1, revoked: 1 });
+      track(Promise.resolve(memory.purgeExpired(["sessions", "revoked_sessions"], now)).then((out) => {
+        ok("过期会话与已吊销会话各清各的，没过期没吊销的那条留着",
+          out.sessions === 1 && out.revoked_sessions === 1
+            && !!memory.getSession("live") && !memory.getSession("old") && !memory.getSession("gone"),
+          JSON.stringify(out));
+        return memory.purgeExpired(["sessions"], now);
+      }).then((again) => {
+        ok("没有可清的行时回 0（0 行不等于没删成功，是没有过期的）", again.sessions === 0, JSON.stringify(again));
+      }));
+
+      const sqls = [];
+      const fake = require(path.join(__dirname, "..", "deploy", "store-mysql.js")).mysqlStore({
+        mysql: { query: (sql) => { sqls.push(sql); return Promise.resolve([{ affectedRows: 3 }, undefined]); } }
+      });
+      track(fake.purgeExpired(scopeKeys, now).then((out) => {
+        ok("MySQL 清理：每个范围一条 DELETE，回的是 affectedRows",
+          sqls.length === scopeKeys.length && scopeKeys.every((k) => out[k] === 3) && sqls.every((q) => /^DELETE FROM/.test(q)),
+          JSON.stringify(out));
+      }));
+    }
     ok("清理接口要管理员身份，且只在后台页里点得到",
       /adminGate\(deps, cfg\)[\s\S]{0,400}isAdminRole\(me\.role\)/.test(serverCore)
         && /remote\.adminMaintenancePurge/.test(read("packages/admin/maintenance/maintenance.js"))
@@ -6099,8 +6125,8 @@ const K = {
       /PRIMARY KEY \(`uid`, `child_id`, `poem_id`\)/.test(sql),
       "主键列不对 —— 条件 upsert 会变成「每来一条插一行」，而数据看着还在");
 
-    ok("sessions 表有 refresh_token 那一列（刷新那条路要靠它找回会话行）",
-      /`refresh_token`/.test(sql),
+    ok("sessions 表有 refresh_hash 那一列（刷新那条路要靠它找回会话行）",
+      /`refresh_hash`/.test(sql),
       "没有这一列，刷新永远验不过 —— 而客户端只会看到「登录过期了」");
   }
 
@@ -7295,13 +7321,6 @@ const K = {
             return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" });
           }).then((over) => {
             ok("会话寿命到头之后刷新回 401", over.status === 401, "拿到 " + over.status);
-            const old = sessionMod.issue(cfgMod, row.uid, clock);
-            storeMod.putSession({ sid: old.sid, uid: row.uid, iat: old.iat, exp: old.exp, revoked: 0, refresh_token: "h:" + require("crypto").createHash("sha256").update(old.token).digest("hex") });
-            return coreMod.wxRefresh(probeDeps(), { refreshToken: old.token, device: "d_00000001" }).then((legacy) => {
-              ok("升级前签发的老会话（长令牌）仍刷得回来，并换成新结构",
-                legacy.status === 200 && /^rt_/.test(String(legacy.body && legacy.body.refreshToken)),
-                "拿到 " + legacy.status);
-            });
           });
         });
     })
