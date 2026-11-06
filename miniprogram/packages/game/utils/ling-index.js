@@ -12,6 +12,8 @@ const GROUPS = [
   { name: "其他", chars: ["长", "深", "高", "凉", "暖"] }
 ];
 
+const CHARS = GROUPS.reduce((all, g) => all.concat(g.chars), []);
+
 const STAGE_NAMES = { primary: "小学", middle: "初中", high: "高中" };
 
 const STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10, 11, 12] };
@@ -203,7 +205,10 @@ function load() {
   return corpus.ready("core")
     .then(() => {
       if (ready()) return box;
-      install(courseRows(corpus.course()));
+      const texts = corpus.courseTexts();
+      install(courseRows(corpus.course().map((p) => Object.assign({}, p, {
+        text: (texts[p.id] || {}).text
+      }))));
       return box;
     }, () => {
       if (!ready()) box = rowOf([]);
@@ -291,6 +296,7 @@ function find(term, opt) {
 
 module.exports = {
   GROUPS,
+  CHARS,
   PAGE,
   SELECTIONS,
   scopes,

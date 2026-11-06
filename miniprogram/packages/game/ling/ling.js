@@ -17,7 +17,7 @@ Page({
     locked: true,
     barBelow: true,
     icons: { search: icons.search, clear: icons.clear },
-    groups: [],
+    chars: [],
     scopes: [],
     scope: DEFAULT_SCOPE,
     scopeName: "",
@@ -34,7 +34,7 @@ Page({
 
   onLoad(query) {
     this.applyFont();
-    this.paintGroups([]);
+    this.paintChars();
     this.setData({ scopes: ling.scopeTable(), scopeName: this.scopeName(DEFAULT_SCOPE) });
     const term = String((query && query.char) || "").trim();
     if (term) this.setData({ term: term });
@@ -48,7 +48,7 @@ Page({
       return;
     }
     this.setData({ locked: false, scopeName: this.scopeName(this.data.scope) });
-    this.paintGroups();
+    this.paintChars();
     if (this.data.term && !this.data.searched) this.run(this.data.term);
   },
 
@@ -69,13 +69,10 @@ Page({
     return hit ? hit.name : "";
   },
 
-  paintGroups() {
+  paintChars() {
     const term = String(this.data.term || "").trim();
     this.setData({
-      groups: ling.GROUPS.map((g) => ({
-        name: g.name,
-        chars: g.chars.map((ch) => ({ ch: ch, on: ch === term }))
-      }))
+      chars: ling.CHARS.map((ch) => ({ ch: ch, on: ch === term }))
     });
   },
 
@@ -91,7 +88,7 @@ Page({
     if (!term) return;
     sfx.play("tap");
     this.setData({ term: term });
-    this.paintGroups();
+    this.paintChars();
     this.run(term);
   },
 
@@ -105,7 +102,7 @@ Page({
       this.onClear();
       return;
     }
-    this.paintGroups();
+    this.paintChars();
     this.run(term);
   },
 
@@ -115,7 +112,7 @@ Page({
       term: "", searched: false, loading: false, items: [],
       more: false, loadingMore: false, pulling: false, remoteDone: false, hint: ""
     });
-    this.paintGroups();
+    this.paintChars();
   },
 
   onScope(e) {
