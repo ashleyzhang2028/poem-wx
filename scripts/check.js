@@ -6762,14 +6762,37 @@ const K = {
   tracked.filter((rel) => /^miniprogram\/.*\.wxml$/.test(rel)).forEach((rel) => {
     const src = fs.readFileSync(path.join(repoRoot, rel), "utf8");
     src.split("\n").forEach((line, i) => {
-      const blank = /\{\{[^}]*"[^"]*"[^}]*\}\}/.test(line);
-      if (blank) quoted.push(rel + ":" + (i + 1));
+      if (/\{\{[^}]*"[^"]*"[^}]*\}\}/.test(line)) quoted.push(rel + ":" + (i + 1));
     });
   });
   ok("WXML 的花括号表达式里没有裸双引号（上传编译会判 unexpected character）",
     quoted.length === 0,
     "这几行把双引号写在花括号里：" + quoted.slice(0, 6).join("、")
       + " —— 属性值用双引号包着，里面的分支字符串要用单引号（或丢掉空分支）");
+}
+
+{
+  const repoRoot = path.join(__dirname, "..");
+  const tracked = execFileSync("git", ["ls-files"], { cwd: repoRoot })
+    .toString().split("\n").filter(Boolean);
+  const clash = [];
+  tracked.filter((rel) => /^miniprogram\/.*\.wxml$/.test(rel)).forEach((rel) => {
+    const src = fs.readFileSync(path.join(repoRoot, rel), "utf8");
+    const tagRe = /<([a-zA-Z][\w-]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
+    let m;
+    while ((m = tagRe.exec(src))) {
+      const attrs = m[2];
+      if (!/\bwx:else\b/.test(attrs)) continue;
+      const peer = [/\bwx:for\b/, /\bwx:if\b/, /\bwx:elif\b/]
+        .map((re) => (re.exec(attrs) || [""])[0]).filter(Boolean)[0];
+      if (peer) clash.push(rel + " <" + m[1] + "> " + peer);
+    }
+  });
+  ok("wx:else 不跟 wx:for / wx:if 挤在同一个标签上（上传编译判 wx:if not found）",
+    clash.length === 0,
+    "这几处把分支与循环写进了一个标签：" + clash.slice(0, 6).join("、")
+      + " —— wx:else 只认紧邻的兄弟节点上的 wx:if；同一标签上的 wx:for 会把它挡住。"
+      + "换外观用表达式拼类名，元素取舍另起一个子元素去判");
 }
 
 {
