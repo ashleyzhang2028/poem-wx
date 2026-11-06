@@ -79,6 +79,7 @@ Page({
     bookId: "",
     title: "",
     titleMark: "",
+    textOrigin: "",
     author: "",
     dynasty: "",
     source: "",
@@ -193,7 +194,7 @@ Page({
 
   applyTitleMark() {
     const titleMark = auth.isAdmin()
-      ? corpusOrigin.originOf(this.data.id, this.data.remote)
+      ? corpusOrigin.originOf(this.data.textOrigin)
       : "";
     if (titleMark !== this.data.titleMark) this.setData({ titleMark });
   },
@@ -330,13 +331,13 @@ Page({
     const hit = own || (twin ? corpus.entry(twin.id) : null);
     if (hit && hit.text) {
       this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!hit.tr });
-      return this.renderEntry(id, hit, meta);
+      return this.renderEntry(id, hit, meta, "pack");
     }
 
     const packed = this.catalogEntry(id, meta);
     if (packed) {
       this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
-      return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid));
+      return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid), "mysql");
     }
 
     if (this.catalogBook(id, meta)) return this.loadPacked(id, meta);
@@ -367,7 +368,7 @@ Page({
           return;
         }
         this.setData({ hasTranslation: false, remote: true, sid: String(sid) });
-        this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid));
+        this.renderEntry(this.data.id, { text: text, tr: "", src: "" }, meta || this.remoteMeta(poem, sid), "mirror");
       },
       (err) => {
         console.error("[reader] 正文取失败 sid=" + sid, "HTTP " + ((err && err.statusCode) || 0), (err && err.message) || "");
@@ -399,7 +400,7 @@ Page({
       const packed = this.catalogEntry(id, meta);
       if (packed) {
         this.setData({ loadFailed: false, failText: "", loadingText: false, hasTranslation: !!packed.tr, remote: true });
-        return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid));
+        return this.renderEntry(id, packed, meta || corpus.catalogMeta(id, packed.sid), "mysql");
       }
       if (meta && meta.sid) return this.loadRemote(meta.sid, meta, "未能获取正文，点击重试");
       this.setData({ loadingText: false, loadFailed: true, failText: "本篇正文不在当前版本中", remote: false });
@@ -415,7 +416,7 @@ Page({
     this.loadEntry();
   },
 
-  renderEntry(id, entry, meta) {
+  renderEntry(id, entry, meta, origin) {
     const settings = store.settings();
     if (!this.data.reciteMode) {
       const here = this.here(id);
@@ -437,6 +438,7 @@ Page({
       rawText: entry.text,
       loadingText: false,
       remote: !!this.data.remote,
+      textOrigin: String(origin || ""),
       bookId: meta.b || "",
       title: meta.t,
       author: meta.a,
