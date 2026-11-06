@@ -33,6 +33,7 @@
 .pr-seg {
   display: flex;
   gap: 8rpx;
+  margin: var(--sp-3) 0;
   padding: 8rpx;
   border-radius: var(--radius-pill);
   background: var(--sink);
@@ -338,7 +339,6 @@
 }
 
 .pr-welcome {
-  margin-top: var(--sp-3);
   padding: var(--sp-3);
   border: 2rpx solid var(--tier);
   border-radius: var(--radius);
