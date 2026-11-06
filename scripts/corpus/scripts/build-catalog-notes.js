@@ -17,6 +17,8 @@ function load(rel) {
   return sandbox.window;
 }
 
+const KEEP = { tangshi300: true };
+
 function mergeBySid(texts, notes) {
   const merged = load("data/catalog-notes.js").CATALOG_NOTES || {};
   Object.keys(merged).forEach(function (book) {
@@ -39,6 +41,7 @@ function mergeBySid(texts, notes) {
       same.forEach(function (pos) {
         const list = merged[book] && merged[book][pos];
         if (!list) return;
+        if (KEEP[book]) return;
         const have = {};
         list.forEach(function (it) { have[String(it[0] || "").trim()] = true; });
         want.forEach(function (it) {
@@ -69,10 +72,7 @@ function main() {
 
   console.log(gaps.length ? gaps.join("；") : "三个集子的正文与译文齐了");
 
-  const notes = {};
-  Object.keys(texts).forEach(function (book) {
-    notes[book] = texts[book].length ? {} : null;
-  });
+  const notes = load("data/catalog-notes.js").CATALOG_NOTES || {};
   mergeBySid(texts, notes);
   fs.writeFileSync(OUT, "(function () {\n  \"use strict\";\n\n  window.CATALOG_NOTES = " +
     JSON.stringify(notes, null, 2).replace(/\n/g, "\n  ") + ";\n})();\n");
