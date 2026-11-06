@@ -2672,6 +2672,27 @@ function mountFull(pg, query) {
 }
 
 {
+  const origin = require(path.join(ROOT, "utils", "corpus-origin.js"));
+  ok("正文来源按这次读到的路径标注：包内 PAC、库里 SQL、镜像 MIR",
+    origin.originOf("pack") === "PAC" && origin.originOf("mysql") === "SQL"
+      && origin.originOf("mirror") === "MIR" && origin.originOf("") === "");
+
+  const rjs = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.js"), "utf8");
+  const mark = /applyTitleMark\(\)\s*\{([\s\S]*?)\n  \},/.exec(rjs);
+  ok("标题后的来源标注只给 owner / admin（user 与非登录一律空串）",
+    !!mark && /auth\.isAdmin\(\)/.test(mark[1]) && /:\s*""/.test(mark[1])
+      && /corpusOrigin\.originOf\(this\.data\.textOrigin\)/.test(mark[1]),
+    "标题后缀没挂身份门，或标注没跟着实际读到的正文走");
+  ok("读着的那篇换了，标注跟着换（onShow 与正文落地都会重算）",
+    (rjs.match(/this\.applyTitleMark\(\)/g) || []).length >= 2);
+  ok("三条取正文的路各报各的来源",
+    ["pack", "mysql", "mirror"].every((k) => new RegExp('renderEntry\\(.*"' + k + '"\\)').test(rjs)));
+  const rwxml = fs.readFileSync(path.join(ROOT, "pages", "reader", "reader.wxml"), "utf8");
+  ok("标注落在标题行里、由 titleMark 决定出不出现",
+    /poem-head-row[\s\S]{0,200}?poem-mark[\s\S]{0,80}?titleMark/.test(rwxml));
+}
+
+{
 
   const cfg = readJson(path.join(ROOT, "project.config.json"));
   const tourist = !cfg.appid || cfg.appid === "touristappid";
