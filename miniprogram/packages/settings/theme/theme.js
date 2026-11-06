@@ -17,6 +17,7 @@ Page({
 
     banner: theme.BANNER,
     own: theme.OWN,
+    landscape: theme.LANDSCAPE,
     ownSet: false,
 
     groups: theme.groups(),

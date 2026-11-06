@@ -38,11 +38,14 @@ const THEMES = [
   { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
   { key: "qingdaolaoshan", name: "青岛崂山", rgb: [33, 56, 63], banner: CITY_BANNER + "qingdao_laoshan.png", group: LANDSCAPE },
   { key: "qingmingshanghetu", name: "开封上河图", rgb: [107, 153, 7], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
+  { key: "beihaiweizhoudao", name: "北海涠洲岛", rgb: [29, 137, 175], banner: CITY_BANNER + "beihai-weizhoudao.png", group: LANDSCAPE },
   { key: "ganziyading", name: "甘孜亚丁", rgb: [236, 158, 1], banner: CITY_BANNER + "ganzhi_yading.png", group: LANDSCAPE },
   { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
   { key: "lijiangluguhu", name: "丽江泸沽湖", rgb: [25, 91, 108], banner: CITY_BANNER + "lijiang_luguhu.png", group: LANDSCAPE },
+  { key: "diqingpudacuo", name: "迪庆普达措", rgb: [20, 151, 190], banner: CITY_BANNER + "xianggelila_pudacuo.png", group: LANDSCAPE },
   { key: "jiayuguan", name: "嘉峪关", rgb: [249, 139, 57], banner: CITY_BANNER + "jiayuguan.png", group: LANDSCAPE },
   { key: "dunhuangmogaoku", name: "敦煌莫高窟", rgb: [91, 54, 41], banner: CITY_BANNER + "dunhuang_mogaoku.png", group: LANDSCAPE },
+  { key: "fuyunkeketuohai", name: "富蕴可可托海", rgb: [236, 145, 14], banner: CITY_BANNER + "fuyun_keketuohai.png", group: LANDSCAPE },
   { key: "aletailhemu", name: "阿勒泰禾木", rgb: [35, 60, 75], banner: CITY_BANNER + "aletai_hemu.png", group: LANDSCAPE }
 ];
 
@@ -364,7 +367,7 @@ function clearOwn() {
 
 module.exports = {
   THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
-  OWN, OWN_KEY, OWN_THEME,
+  TRADITION, LANDSCAPE, OWN, OWN_KEY, OWN_THEME,
   all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
   variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply, name,
   clearOwn, toneData

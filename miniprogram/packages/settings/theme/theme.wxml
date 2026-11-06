@@ -35,14 +35,15 @@
       <tier-tag wx:if="{{group.locked}}" tier="{{group.tier}}" />
     </view>
 
-    <view class="swatch-grid" wx:if="{{group.key !== own}}">
-      <view class="swatch {{theme === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
+    <view class="swatch-grid {{group.key === landscape ? 'swatch-grid-tile' : ''}}" wx:if="{{group.key !== own}}">
+      <view class="swatch {{group.key === landscape ? 'swatch-tile' : ''}} {{theme === item.key ? 'on' : ''}} {{item.locked ? 'locked' : ''}}"
             wx:for="{{group.items}}" wx:key="key"
             style="--sw:{{item.rgb}};--sw-soft:{{item.soft}};--sw-on:{{item.on}}"
             hover-class="{{item.locked ? 'none' : 'swatch-hover'}}" hover-stay-time="60"
             data-key="{{item.key}}" bindtap="onPick">
-        <view class="swatch-dot"></view>
-        <text class="swatch-name">{{item.name}}</text>
+        <view class="swatch-dot">
+          <text class="swatch-name">{{item.name}}</text>
+        </view>
       </view>
     </view>
 
