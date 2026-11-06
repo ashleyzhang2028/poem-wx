@@ -18,7 +18,7 @@ function selOf(scope) {
 
 function usable(scope) {
   if (!source.usable()) return false;
-  return !scope || scope === "any" || !!selOf(scope);
+  return scope === "any";
 }
 
 function linesOf(poem) {

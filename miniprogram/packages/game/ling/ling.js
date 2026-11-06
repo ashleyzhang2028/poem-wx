@@ -5,11 +5,10 @@ const entitlement = require("../../../utils/entitlement");
 const sfx = require("../../../utils/sfx");
 const theme = require("../../../utils/theme");
 const font = require("../../../utils/font");
-const store = require("../../../utils/store");
 const icons = require("../../../utils/icons");
 const tabbar = require("../../../utils/tabbar");
 
-const DEFAULT_SCOPE = "stage";
+const DEFAULT_SCOPE = "course";
 
 Page({
   data: {
@@ -18,6 +17,7 @@ Page({
     barBelow: true,
     icons: { search: icons.search, clear: icons.clear },
     chars: [],
+    charsOpen: true,
     scopes: [],
     scope: DEFAULT_SCOPE,
     scopeName: "",
@@ -84,10 +84,15 @@ Page({
     this.choose(String(e.currentTarget.dataset.ch || ""));
   },
 
+  onToggleChars() {
+    sfx.play("tap");
+    this.setData({ charsOpen: !this.data.charsOpen });
+  },
+
   choose(term) {
     if (!term) return;
     sfx.play("tap");
-    this.setData({ term: term });
+    this.setData({ term: term, charsOpen: false });
     this.paintChars();
     this.run(term);
   },
@@ -155,7 +160,6 @@ Page({
   local(key, from, size) {
     return ling.find(key, {
       scope: this.data.scope,
-      grade: store.settings().grade,
       from: from || 0,
       size: size || ling.PAGE
     });

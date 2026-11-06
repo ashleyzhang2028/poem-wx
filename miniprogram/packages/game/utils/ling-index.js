@@ -1,5 +1,3 @@
-const store = require("../../../utils/store");
-
 const GROUPS = [
   { name: "季节时序", chars: ["春", "秋", "夜", "晓", "暮", "朝", "霜", "雪", "露", "霞", "烟", "雾", "日", "月"] },
   { name: "山水风物", chars: ["山", "水", "江", "湖", "溪", "泉", "河", "海", "云", "风", "雨", "舟", "帆", "桥", "楼", "城"] },
@@ -22,12 +20,10 @@ const STAGE_GRADES = { primary: [1, 2, 3, 4, 5, 6], middle: [7, 8, 9], high: [10
 
 const STAGE_ORDER = ["primary", "middle", "high"];
 
-const COURSE_SCOPES = [
-  { id: "stage", name: "当前学段", note: "按「我的」里设的年级算" },
+const SCOPES = [
   { id: "primary", name: "小学课内", note: "一至六年级" },
-  { id: "middle", name: "初中课内", note: "七至九年级" },
-  { id: "high", name: "高中课内", note: "高一至高三" },
-  { id: "course", name: "课内全部", note: "小学到高中" }
+  { id: "course", name: "小初高课内", note: "小学到高中" },
+  { id: "any", name: "不限", note: "课内加诗词漫读" }
 ];
 
 const SELECTIONS = [
@@ -40,8 +36,6 @@ const SELECTIONS = [
   { id: "yuefuji", name: "乐府诗集", book: "yuefuji" },
   { id: "cizong", name: "词综", book: "cizong" }
 ];
-
-const ANY = { id: "any", name: "不限", note: "课内加各选集" };
 
 const PAGE = 20;
 
@@ -59,10 +53,6 @@ const GRADE_NAMES = {
 function stageOfGrade(grade) {
   const g = Number(grade) || 1;
   return STAGE_ORDER.filter((k) => STAGE_GRADES[k].indexOf(g) >= 0)[0] || "primary";
-}
-
-function stageAt(grade) {
-  return STAGE_ORDER.indexOf(stageOfGrade(grade));
 }
 
 function gradeName(grade) {
@@ -99,9 +89,7 @@ function couplesOf(text) {
 }
 
 function scopes() {
-  return COURSE_SCOPES
-    .concat(SELECTIONS.map((s) => ({ id: s.id, name: s.name })))
-    .concat([ANY]);
+  return SCOPES;
 }
 
 function scopeTable() {
@@ -242,11 +230,10 @@ function reset() {
   box = null;
 }
 
-function inScope(row, scope, grade) {
+function inScope(row, scope) {
   if (scope === "any") return true;
-  if (row.scope !== "course") return row.scope === scope;
+  if (row.scope !== "course") return false;
   if (scope === "course") return true;
-  if (scope === "stage") return stageAt(row.stage) <= stageAt(grade || store.settings().grade);
   return row.stage === scope;
 }
 
@@ -279,12 +266,11 @@ function matchAt(term, opt) {
   const o = opt || {};
   const key = String(term == null ? "" : term).trim();
   if (!key || !ready()) return [];
-  const grade = o.grade;
-  const scope = o.scope || "stage";
-  const stamp = [key, scope, grade].join("|");
+  const scope = o.scope || "course";
+  const stamp = [key, scope].join("|");
   if (hitCache && hitCache.stamp === stamp && hitCache.box === box) return hitCache.rows.slice();
   const rows = box.couples
-    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, scope, grade))
+    .filter((c) => c.seg.indexOf(key) >= 0 && inScope(c.row, scope))
     .map((c) => hitRow(c.row, c.seg, key));
   hitCache = { stamp: stamp, box: box, rows: rows };
   return rows.slice();
@@ -298,7 +284,7 @@ function find(term, opt) {
   const page = all.slice(from, from + size);
   return {
     term: String(term == null ? "" : term),
-    scope: o.scope || "stage",
+    scope: o.scope || "course",
     total: all.length,
     from: from,
     items: page,

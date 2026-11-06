@@ -2092,18 +2092,14 @@ const lingPoolReady = Promise.resolve().then(() => {
   const seeded = require(path.join(ROOT, "utils", "corpus.js"));
   ling.install(ling.build({ course: seeded.course() }).rows);
 
-  store.saveSettings({ grade: 3, term: 2 });
-  const lowStage = ling.matchAt("月", { scope: "stage" }).length;
+  const primaryOnly = ling.matchAt("月", { scope: "primary" }).length;
   const allCourse = ling.matchAt("月", { scope: "course" }).length;
-  store.saveSettings({ grade: 12, term: 2 });
-  const highStage = ling.matchAt("月", { scope: "stage" }).length;
-  ok("按学段切得动：当前学段随年级长大，且不超过课内全部",
-    allCourse > 0 && lowStage > 0 && lowStage <= highStage && highStage <= allCourse,
-    [lowStage, highStage, allCourse].join(" / "));
+  ok("小学课内是课内全部的子集",
+    allCourse > 0 && primaryOnly <= allCourse,
+    [primaryOnly, allCourse].join(" / "));
 
-  ok("档位按序：学段四档 + 课内全部 + 各选集 + 不限",
-    ling.scopeTable().map((s) => s.id).join() === ["stage", "primary", "middle", "high", "course"]
-      .concat(ling.SELECTIONS.map((s) => s.id)).concat(["any"]).join(),
+  ok("档位按序：小学课内、小初高课内、不限",
+    ling.scopeTable().map((s) => s.id).join() === "primary,course,any",
     ling.scopeTable().map((s) => s.id).join());
 
   const first = ling.find("月", { scope: "course" });
@@ -2132,12 +2128,12 @@ const lingPoolReady = Promise.resolve().then(() => {
     { tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }] }
   ).rows);
 
-  const before = ling.find("葳蕤", { scope: "tangshi300" }).total;
+  const before = ling.find("葳蕤", { scope: "any" }).total;
   ling.installBooks([{ id: "tangshi", name: "唐诗" }], {
     tangshi300: [{ id: "ts-1", t: "感遇", a: "张九龄", d: "唐", text: "兰叶春葳蕤，桂华秋皎洁。\n欣欣此生意，自尔为佳节。" }]
   });
-  ok("选集正文下来了就进那一档，胶囊带集子名",
-    before === 0 && ling.find("葳蕤", { scope: "tangshi300" }).total === 1
+  ok("选集正文下来了就进「不限」，胶囊带集子名",
+    before === 0 && ling.find("葳蕤", { scope: "any" }).total === 1
       && ling.find("葳蕤", { scope: "course" }).total === 0
       && ling.find("葳蕤", { scope: "any" }).items[0].tags[0] === "唐诗三百首",
     rows.length + " 行");
@@ -2163,7 +2159,7 @@ const lingPoolReady = Promise.resolve().then(() => {
   lingPool.forget();
 
   ok("远端兜底报得出可用性",
-    lingPool.usable("any") && lingPool.usable("tangshi300") && !lingPool.usable("course"));
+    lingPool.usable("any") && !lingPool.usable("primary") && !lingPool.usable("course"));
 
   return lingPool.next("黄河", "any", 2).then((page) => {
     ok("远端兜底能交出含令字的联句，胶囊带集子名",

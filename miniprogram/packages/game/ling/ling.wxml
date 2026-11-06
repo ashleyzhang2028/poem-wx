@@ -12,9 +12,20 @@
         </view>
       </view>
 
-      <view class="pick-chips">
-        <text class="pick-chip {{item.on ? 'on' : ''}}" wx:for="{{chars}}" wx:key="ch"
-              data-ch="{{item.ch}}" bindtap="onPick">{{item.ch}}</text>
+      <view class="pick-head" hover-class="row-hover" hover-stay-time="60" bindtap="onToggleChars">
+        <text class="pick-head-title">令字</text>
+        <text class="pick-head-now" wx:if="{{term}}">当前「{{term}}」</text>
+        <text class="pick-head-act">{{charsOpen ? '收起' : '展开'}}</text>
+        <text class="pick-head-arrow {{charsOpen ? 'open' : ''}}">›</text>
+      </view>
+
+      <view class="pick-fold {{charsOpen ? 'open' : ''}}">
+        <scroll-view class="pick-scroll" scroll-y show-scrollbar enhanced>
+          <view class="pick-chips">
+            <text class="pick-chip {{item.on ? 'on' : ''}}" wx:for="{{chars}}" wx:key="ch"
+                  data-ch="{{item.ch}}" bindtap="onPick">{{item.ch}}</text>
+          </view>
+        </scroll-view>
       </view>
     </view>
 
