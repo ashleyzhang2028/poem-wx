@@ -2092,12 +2092,12 @@ window.POEMS_SONGCI = [
   {
     textRef: "songci-sc-341",
     id: "sc-341",
-    title: "青玉案·年年跃马长安市",
+    title: "玉楼春·戏林推",
     source: "全宋词",
     selection: "宋词三百首",
     dynasty: "宋",
     author: "刘克庄",
-    gradeGroup: "词牌 · 青玉案",
+    gradeGroup: "词牌 · 玉楼春",
   },
   {
     textRef: "songci-sc-215",
