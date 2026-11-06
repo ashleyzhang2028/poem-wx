@@ -31,29 +31,28 @@
 }
 
 .swatch-tile {
+  min-height: 0;
   padding: 0;
 }
 
 .swatch-tile .swatch-dot {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 104rpx;
+  padding: 14rpx 4rpx;
   border-radius: var(--radius-xs);
   box-sizing: border-box;
   background: var(--sw-soft);
 }
 
 .swatch-tile .swatch-name {
+  flex: none;
   font-size: var(--fs-caption);
   color: var(--sw);
   letter-spacing: 0;
   text-align: center;
   line-height: 1.15;
-  min-height: 0;
-  padding: 0 2rpx;
 }
 
 .swatch-tile.on .swatch-name {
@@ -69,7 +68,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 104rpx;
+  padding: 14rpx 4rpx;
   border-radius: var(--radius-xs);
   box-sizing: border-box;
   color: var(--ink-4);
