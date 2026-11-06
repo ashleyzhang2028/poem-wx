@@ -453,6 +453,11 @@ function makeWx(port, mem) {
       !!packed && String(packed.text).length > 0 && Array.isArray(notes) && notes.length > 0,
       JSON.stringify({ text: packed && String(packed.text).slice(0, 8), notes: notes && notes.length }));
 
+    const wantTitle = (corpus.indexById("tangshi300-18") || {}).t;
+    ok("取回的正文与目录是同一篇（标题对得上）",
+      !!packed && !!wantTitle && packed.t === wantTitle,
+      JSON.stringify({ catalog: wantTitle, text: packed && packed.t }));
+
     const pickGap = () => {
       const books = corpus.books ? corpus.books() : [];
       for (const b of books) {
