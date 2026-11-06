@@ -4,16 +4,20 @@ const pageStack = require("./page-stack");
 
 const FONTS = [
   { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", dir: "zhuquefangsong-regular" },
-  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", dir: "huiwenmincho-improved" },
-  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", dir: "chillkai" },
-  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", dir: "cooperzhengkai" },
-  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", dir: "lxgwwenkai-regular" },
   { key: "oldsong", name: "京华老宋", note: "老宋 · 旧籍纸墨", dir: "kinghwa_oldsong_v3" },
   { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", dir: "chilljinshusongpro_regular" },
-  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", dir: "yozai-regular" },
+  { key: "zhenhei", name: "思源真黑", note: "黑体 · 笔画匀净", dir: "siyuan-zhenhei" },
+  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", dir: "huiwenmincho-improved" },
+  { key: "hanamina", name: "花园明朝", note: "明朝 · 平实端正", dir: "hanamina" },
+  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", dir: "chillkai" },
+  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", dir: "cooperzhengkai" },
   { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" },
+  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", dir: "lxgwwenkai-regular" },
+  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", dir: "yozai-regular" },
+  { key: "qiji", name: "黄令东齐伋", note: "宋体 · 古本筋骨", dir: "qiji" },
+  { key: "zhushi", name: "杨任东竹石", note: "行书 · 竹石清劲", dir: "yangrendong-zhushiti" },
   { key: "qingyan", name: "乐米清砚方墨", note: "方墨 · 棱角分明", dir: "lemi-qingyanfangmo" },
-  { key: "qiji", name: "黄令东齐伋", note: "宋体 · 古本筋骨", dir: "qiji" }
+  { key: "linhai", name: "临海隶书", note: "隶书 · 蚕头燕尾", dir: "linhai-lishu" }
 ];
 
 const SAMPLE = "烟花三月下扬州";

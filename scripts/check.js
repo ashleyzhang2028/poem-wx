@@ -3523,11 +3523,14 @@ function mountFull(pg, query) {
     ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
     ["qingdaolaoshan", "青岛崂山", [33, 56, 63], "landscape"],
     ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
+    ["beihaiweizhoudao", "北海涠洲岛", [29, 137, 175], "landscape"],
     ["ganziyading", "甘孜亚丁", [236, 158, 1], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
     ["lijiangluguhu", "丽江泸沽湖", [25, 91, 108], "landscape"],
+    ["diqingpudacuo", "迪庆普达措", [20, 151, 190], "landscape"],
     ["jiayuguan", "嘉峪关", [249, 139, 57], "landscape"],
     ["dunhuangmogaoku", "敦煌莫高窟", [91, 54, 41], "landscape"],
+    ["fuyunkeketuohai", "富蕴可可托海", [236, 145, 14], "landscape"],
     ["aletailhemu", "阿勒泰禾木", [35, 60, 75], "landscape"]
   ];
 
@@ -3537,7 +3540,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 27 项（八个传统色 + 十九大好河山）",
+  ok("清单就是这 30 项（八个传统色 + 二十二大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 

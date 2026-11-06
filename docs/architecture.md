@@ -834,22 +834,26 @@ ICP 备案 + 不带端口不写 IP）。云托管的默认域填不进去 ——
    + CDN），由 `wx.loadFontFace` 在真机上注册一次，落在这条链的**首位**：
    系统名命中时这笔根本用不到，没命中才有一次网络。
 
-**线上十一款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
+**线上十五款可选**（各 OFL 或等价的开放授权），一款一个字族、一档一份子集，
 清单写在 `utils/font.js` 的 `FONTS`（地址由 `BASE` 与各款目录名拼出来）：
 
 | 款 | 键 | 字族 | 目录 |
 |---|---|---|---|
 | 朱雀仿宋（默认） | `zhuque` | `Kuibu Poem zhuque` | `zhuquefangsong-regular` |
-| 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved` |
-| 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai` |
-| 汇迹正楷 | `cooper` | `Kuibu Poem cooper` | `cooperzhengkai` |
-| 霞鹜文楷 | `wenkai` | `Kuibu Poem wenkai` | `lxgwwenkai-regular` |
 | 京华老宋 | `oldsong` | `Kuibu Poem oldsong` | `kinghwa_oldsong_v3` |
 | 寒蝉锦书宋 | `jinshu` | `Kuibu Poem jinshu` | `chilljinshusongpro_regular` |
-| 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular` |
+| 思源真黑 | `zhenhei` | `Kuibu Poem zhenhei` | `siyuan-zhenhei` |
+| 汇文明朝 | `huiwen` | `Kuibu Poem huiwen` | `huiwenmincho-improved` |
+| 花园明朝 | `hanamina` | `Kuibu Poem hanamina` | `hanamina` |
+| 寒蝉正楷 | `chillkai` | `Kuibu Poem chillkai` | `chillkai` |
+| 汇迹正楷 | `cooper` | `Kuibu Poem cooper` | `cooperzhengkai` |
 | 寒蝉龙藏楷 | `longcang` | `Kuibu Poem longcang` | `chilllongcangkai_regular` |
-| 乐米清砚方墨 | `qingyan` | `Kuibu Poem qingyan` | `lemi-qingyanfangmo` |
+| 霞鹜文楷 | `wenkai` | `Kuibu Poem wenkai` | `lxgwwenkai-regular` |
+| 悠哉 | `yozai` | `Kuibu Poem yozai` | `yozai-regular` |
 | 黄令东齐伋 | `qiji` | `Kuibu Poem qiji` | `qiji` |
+| 杨任东竹石 | `zhushi` | `Kuibu Poem zhushi` | `yangrendong-zhushiti` |
+| 乐米清砚方墨 | `qingyan` | `Kuibu Poem qingyan` | `lemi-qingyanfangmo` |
+| 临海隶书 | `linhai` | `Kuibu Poem linhai` | `linhai-lishu` |
 
 每款目录下三份裁剪，文件名统一为 `<size>.{woff2,woff}`：
 `free` / `pro` / `max` 分别给未登录与 Free、Pro、Max 取用。

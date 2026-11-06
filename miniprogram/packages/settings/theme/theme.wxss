@@ -30,6 +30,52 @@
   transition: background-color var(--t-press), transform var(--t-press);
 }
 
+.swatch-tile {
+  padding: 0;
+}
+
+.swatch-tile .swatch-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 104rpx;
+  border-radius: var(--radius-xs);
+  box-sizing: border-box;
+  background: var(--sw-soft);
+}
+
+.swatch-tile .swatch-name {
+  font-size: var(--fs-caption);
+  color: var(--sw);
+  letter-spacing: 0;
+  text-align: center;
+  line-height: 1.15;
+  min-height: 0;
+  padding: 0 2rpx;
+}
+
+.swatch-tile.on .swatch-name {
+  color: var(--on-ink);
+}
+
+.swatch-tile.locked .swatch-dot {
+  display: none;
+}
+
+.swatch-tile.locked .swatch-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 104rpx;
+  border-radius: var(--radius-xs);
+  box-sizing: border-box;
+  color: var(--ink-4);
+  box-shadow: inset 0 0 0 1rpx var(--line-strong);
+}
+
 .swatch-hover .swatch-dot,
 .swatch-dot:focus,
 .swatch.on .swatch-dot {
