@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: center;
   gap: 6rpx;
-  padding: 6rpx 0;
+  padding: 4rpx 6rpx;
   min-height: 108rpx;
 }
 
