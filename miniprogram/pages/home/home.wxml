@@ -138,7 +138,7 @@
             <view class="row-sub">
               <text class="row-sub-t">{{item.meta}}</text>
               <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
-              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
+              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
           <view class="faces">
@@ -180,7 +180,7 @@
             <view class="row-sub">
               <text class="row-sub-t">{{item.meta}}</text>
               <text class="tag row-tag row-cat {{item.course ? 'course' : 'own'}}">{{item.source}}</text>
-              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reasonOn}}">{{item.reason}}</text>
+              <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
           <view class="faces">

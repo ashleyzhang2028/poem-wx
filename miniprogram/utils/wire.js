@@ -94,6 +94,12 @@ function slimRecord(rec) {
   if (typeof rec.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(rec.reviewedOn)) {
     out.reviewedOn = rec.reviewedOn;
   }
+  const dayBase = rec.dayBase;
+  if (dayBase && typeof dayBase === "object" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(String(dayBase.day))) {
+    out.dayBase = dayBase.fresh === true
+      ? { day: String(dayBase.day), fresh: true }
+      : { day: String(dayBase.day), fields: slimRecord(dayBase.fields) };
+  }
   if (Array.isArray(rec.history)) {
     out.history = rec.history
       .slice(-200)

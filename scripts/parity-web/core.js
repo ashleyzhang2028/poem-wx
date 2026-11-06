@@ -2053,6 +2053,13 @@ function sanitizePayload(p, poemId) {
 
   if (typeof p.reviewedOn === "string" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(p.reviewedOn)) out.reviewedOn = p.reviewedOn;
 
+  var dayBase = p.dayBase;
+  if (dayBase && typeof dayBase === "object" && /^\d{4}-\d{1,2}-\d{1,2}$/.test(String(dayBase.day))) {
+    out.dayBase = dayBase.fresh === true
+      ? { day: String(dayBase.day), fresh: true }
+      : { day: String(dayBase.day), fields: sanitizePayload(Object.assign({}, dayBase.fields, { dayBase: null }), "") };
+  }
+
   if (Array.isArray(p.history)) {
     out.history = p.history.slice(-200).map(function (h) {
       if (!h || typeof h !== "object") return null;

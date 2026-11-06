@@ -586,6 +586,26 @@ ok("历史只留最近 20 次", rh.history.length <= 20, "实际 " + rh.history.
     "连点 5 下停在 level " + clicks.level + " / " + R.stageName(clicks, "ebbinghaus")
       + "，只点一下是 level " + once.level + " / " + R.stageName(once, "ebbinghaus"));
 
+  ok("同日连点，四套算法都停在首次的结果（不在上面再走一步）",
+    ["ebbinghaus", "leitner", "sm2", "fsrs"].every((algo) => {
+      const first = R.review(null, "good", algo, day1);
+      let again = first;
+      for (let i = 0; i < 3; i++) again = R.review(again, "good", algo, day1 + 1000 * (i + 1));
+      return again.nextReviewAt === first.nextReviewAt && again.level === first.level
+        && again.interval === first.interval && again.stability === first.stability && again.box === first.box;
+    }));
+
+  ok("FSRS 间隔有上限：连续记住也不会把下次复习推到一年以后",
+    (() => {
+      let r = null;
+      let t = day1;
+      for (let i = 0; i < 12; i++) {
+        r = R.review(r, "good", "fsrs", t);
+        t = r.nextReviewAt + 1000;
+      }
+      return R.daysFor("fsrs", r) <= R.MODELS.fsrs.params.maxInterval;
+    })());
+
   let twice = R.review(null, "bad", "ebbinghaus", day1);
   twice = R.review(twice, "fuzzy", "ebbinghaus", day1 + 60000);
   twice = R.review(twice, "good", "ebbinghaus", day1 + 120000);
@@ -1944,6 +1964,14 @@ ok("名录在、标签截断、档位合法",
         })(sent, got, "");
         return out;
       }
+
+      const dayRec = ["sm2", "fsrs", "leitner"].map((algo) => {
+        const stamp = new Date(2026, 9, 16, 9, 0, 0).getTime();
+        const sent = wireMod3.slimRecord(require(path.join(ROOT, "utils", "review-models.js")).review(null, "good", algo, stamp));
+        const got = core.sanitizePayload(sent, "poem-x");
+        return !!sent.dayBase && JSON.stringify(got.dayBase) === JSON.stringify(sent.dayBase);
+      });
+      ok("同日重评的基线跟着同步走（客户端打包、服务端收，一个字段都不丢）", dayRec.every(Boolean), dayRec.join());
 
       let worst = "";
       rows3.forEach((r) => {

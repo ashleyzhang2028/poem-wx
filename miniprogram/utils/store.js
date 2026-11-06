@@ -705,7 +705,7 @@ function stats() {
     const r = p[id];
     if (!r || !r.learned) return;
     learned += 1;
-    if (r.level >= 7) mastered += 1;
+    if (require("./review-models").mastered(r)) mastered += 1;
   });
   const readsAll = read(KEYS.reads, {}) || {};
   const readCount = Object.keys(readsAll).reduce((n, b) => n + Object.keys(readsAll[b]).length, 0);

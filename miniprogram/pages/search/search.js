@@ -244,7 +244,7 @@ Page({
     const rows = pack.items.slice(0, want);
     this.setData({
       results: this.decorate(rows),
-      total: rows.length,
+      total: this.packTotal,
       more: true
     }, () => this.refreshPicked());
     if (rows.length >= (this.packTotal || 0)) this.askSource(kw, 1, this.token);

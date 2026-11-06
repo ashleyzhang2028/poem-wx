@@ -83,7 +83,8 @@ const MODELS = {
       return this.boxes[clampBox(box)];
     },
     stageName(rec) {
-      const b = clampBox(rec && rec.box);
+      if (!rec || !rec.learned) return "新学";
+      const b = clampBox(rec.box);
       return (b + 1) + " 号盒 · " + this.boxes[b] + " 天后";
     },
     describe() {
@@ -157,7 +158,8 @@ const MODELS = {
       minD: 1,
       maxD: 10,
       goodGain: 2.4,
-      minS: 1
+      minS: 1,
+      maxInterval: 365
     },
     init() {
       return { level: 1, difficulty: this.params.initD, stability: this.params.initS.good };
@@ -170,7 +172,7 @@ const MODELS = {
     intervalOf(stability, target) {
       const rt = target || 0.9;
       const days = stability * (Math.log(1 / rt) / Math.log(2));
-      return Math.max(1, Math.round(days));
+      return Math.min(this.params.maxInterval, Math.max(1, Math.round(days)));
     },
     difficultyAfter(d, result) {
       const step = this.params.dStep[result] || 0;
@@ -256,6 +258,24 @@ function markOf(rec, t) {
   };
 }
 
+const DAY_BASE_FIELDS = ["level", "box", "interval", "ef", "stability", "difficulty", "lapses", "learned", "nextReviewAt", "lastReviewAt"];
+
+function dayBaseOf(rec, day) {
+  if (!rec) return { day: day, fresh: true };
+  const fields = {};
+  DAY_BASE_FIELDS.forEach((k) => { if (rec[k] !== undefined) fields[k] = rec[k]; });
+  return { day: day, fields: fields };
+}
+
+function restoreDayBase(rec, saved) {
+  const out = JSON.parse(JSON.stringify(rec));
+  DAY_BASE_FIELDS.forEach((k) => { delete out[k]; });
+  Object.assign(out, saved.fields);
+  out.history = (out.history || []).slice(0, -1);
+  out.reviewCount = Math.max(0, (out.reviewCount || 0) - 1);
+  return out;
+}
+
 function undoMark(rec, mark) {
   const undone = JSON.parse(JSON.stringify(rec));
   if (!mark) return undone;
@@ -274,7 +294,12 @@ function review(rec, result, key, now) {
   const model = modelOf(modelKey);
 
   const mark = markOf(rec, t);
-  const base = rec ? adopt(undoMark(rec, mark), modelKey) : null;
+  const saved = mark && rec.dayBase && rec.dayBase.day === mark.day ? rec.dayBase : null;
+  let base = null;
+  if (saved && saved.fresh) base = null;
+  else if (saved) base = adopt(restoreDayBase(rec, saved), modelKey);
+  else if (rec) base = adopt(undoMark(rec, mark), modelKey);
+  const dayBase = saved || (mark ? null : dayBaseOf(base, dayStamp(t)));
 
   let r = base;
   if (!r) {
@@ -286,6 +311,8 @@ function review(rec, result, key, now) {
   r.reviewCount = mark ? mark.reviewCount : (r.reviewCount || 0) + 1;
   r.learned = true;
   r.reviewedOn = dayStamp(t);
+  if (dayBase) r.dayBase = dayBase;
+  else delete r.dayBase;
 
   const spot = r;
 
