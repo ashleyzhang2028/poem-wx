@@ -221,14 +221,14 @@ function featuresFor(cfg, tier) {
 
   var base = ["recite.basic", "library.all", "read.aloud", "pinyin.helper", "export.progress",
 
-              "algo.ebbinghaus", "algo.leitner"];
+              "algo.ebbinghaus"];
 
   var pro = ["collections.many", "sync.multiDevice", "export.paper",
              "profile.family", "quiz.review", "export.all",
 
              "exam.changshi",
 
-             "algo.sm2"];
+             "algo.leitner", "algo.sm2"];
 
     var max = ["feihualing", "exam.gathering", "exam.paper", "exam.formal",
 

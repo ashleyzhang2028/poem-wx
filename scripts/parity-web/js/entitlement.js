@@ -26,7 +26,7 @@
 
         "algo.ebbinghaus":   { minTier: "free", login: false, quota: null, name: "艾宾浩斯遗忘曲线",
                            breaks: ["遗忘曲线"] },
-    "algo.leitner":      { minTier: "free", login: true,  quota: null, name: "莱特纳盒" },
+    "algo.leitner":      { minTier: "pro",  login: true,  quota: null, name: "莱特纳盒" },
     "algo.sm2":          { minTier: "pro",  login: true,  quota: null, name: "SM-2 复习" },
     "algo.fsrs":         { minTier: "max",  login: true,  quota: null, name: "FSRS 复习" },
 

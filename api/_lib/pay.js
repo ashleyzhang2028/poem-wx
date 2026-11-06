@@ -371,6 +371,7 @@ function payOrder(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var gate = loginGate(deps) || payGate(deps);
   if (gate) return Promise.resolve(gate);
+  if (!cfg.payPushToken) H.log("pay.push_token_missing", { note: "WX_PAY_PUSH_TOKEN 未配置，发货推送会一律 403，只剩查单兜底" });
 
   var plan = String((input && input.plan) || "");
   var period = String((input && input.period) || "");

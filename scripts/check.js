@@ -1596,8 +1596,6 @@ const GATED = {
     "打勾是照 tier 排出来的，不是手写的一张表 —— 手写的那张改档位就会说谎");
 }
 
-ok("乱七八糟的码不认", E.redeem("hello").ok === false);
-ok("不像样的码不认", E.redeem("PRO-1234").ok === false);
 
 const sampleId = allEntries[0].id;
 const freshId = corpus.course()[0].id;

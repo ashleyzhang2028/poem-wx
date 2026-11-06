@@ -263,19 +263,6 @@ function snapshot() {
   return out;
 }
 
-function redeem(code) {
-  const c = String(code || "").trim().toUpperCase();
-  if (!/^(PRO|MAX)-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(c)) {
-    return { ok: false, msg: "提权码格式有误，应为 PRO-XXXX-XXXX" };
-  }
-  store.write(store.KEYS.grant, { code: c, tier: c.slice(0, 3).toLowerCase(), at: Date.now() });
-  return { ok: true, tier: c.slice(0, 3).toLowerCase() };
-}
-
-function revoke() {
-  store.drop(store.KEYS.grant);
-}
-
 function sync() {
   if (!auth.configured()) return Promise.resolve(status());
   return auth
@@ -441,8 +428,6 @@ module.exports = {
   hint,
   loggedIn,
   switchedOff,
-  redeem,
-  revoke,
   sync,
   algoAllowed,
 
