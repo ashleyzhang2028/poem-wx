@@ -126,9 +126,6 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   `exp`           BIGINT       NOT NULL,
   `revoked`       INT          NOT NULL DEFAULT 0,
   `device`        VARCHAR(64)  NULL,
-  -- 刷新那条路要能按 refreshToken 找回这一行 —— 它就是同一枚会话令牌。
-  -- 不落这一列的话，刷新永远验不过（见 poem 的 wxIssueSession 那段注释）。
-  `refresh_token` VARCHAR(512) NULL,
   `refresh_hash`  CHAR(64)     NULL,
   PRIMARY KEY (`sid`),
   KEY `sessions_uid_idx` (`uid`),
@@ -140,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 -- 已有的库（建表时还没有 `refresh_hash`）要手动补一次；新库上面的建表已带这一列。
 -- 已经补过再执行会报 Duplicate column，忽略即可。
 --   ALTER TABLE `sessions`
---     ADD COLUMN `refresh_hash` CHAR(64) NULL AFTER `refresh_token`,
+--     ADD COLUMN `refresh_hash` CHAR(64) NULL,
 --     ADD KEY `sessions_refresh_hash_idx` (`refresh_hash`);
 
 -- ------------------------------------------------------------- rate_counters

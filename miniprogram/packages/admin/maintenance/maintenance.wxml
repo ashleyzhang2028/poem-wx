@@ -32,6 +32,14 @@
       <text class="card-title">可清理</text>
       <text class="hint mn-note" wx:if="{{!canWrite}}">只读：这一页要管理员身份。</text>
 
+      <view class="row row-flush">
+        <view class="row-main">
+          <text class="row-title">清理全部</text>
+          <text class="row-sub">下面每一项一次清掉</text>
+        </view>
+        <view class="mn-go {{canWrite ? '' : 'off'}}" catchtap="onPurgeAll">{{busy === 'all' ? '清理中' : '清理全部'}}</view>
+      </view>
+
       <view class="row row-flush" wx:for="{{scopes}}" wx:key="key">
         <view class="row-main">
           <text class="row-title">{{item.name}}</text>
