@@ -378,9 +378,9 @@ window.POEMS_GUSHI = [
   /* Issue #505 · 第四批（末批）古诗里的非唐诗（第 151~200 组，序号 156…200）。
      正文在 scripts/data/poems-corpus-505c.js；唐代的诗一律归《唐诗》，本集不收。
      这 7 条落库；同批另有 17 条课内 / 集内已有、按判重口径合流，本集不另挂壳。 */
-  { textRef: "gushi-gs-75", id: "gs-75", title: "山中杂诗", source: "吴朝请集", dynasty: "南朝·梁", author: "吴均", gradeGroup: "六朝诗" },
-  { textRef: "gushi-gs-76", id: "gs-76", title: "画眉鸟", source: "欧阳文忠公集", dynasty: "宋", author: "欧阳修", gradeGroup: "宋诗" },
-  { textRef: "gushi-gs-77", id: "gs-77", title: "蚕妇吟", source: "叠山集", dynasty: "宋", author: "谢枋得", gradeGroup: "宋诗" },
+  { textRef: "gushi-gs-93", id: "gs-75", title: "归园田居·其一", source: "陶渊明集", dynasty: "东晋", author: "陶渊明", gradeGroup: "六朝诗" },
+  { textRef: "gushi-gs-94", id: "gs-76", title: "咏柳", source: "元丰类稿", dynasty: "宋", author: "曾巩", gradeGroup: "宋诗" },
+  { textRef: "poems-cz7-11", id: "gs-77", title: "十一月四日风雨大作·其二", source: "剑南诗稿", dynasty: "宋", author: "陆游", gradeGroup: "宋诗" },
   /* ⚠️ textRef 原先自指（`gushi-gs-78`），取正文时回落到主表同键那条 ——
      而那一轮主表把张俞《蚕妇》与陆游《游山西村》误合成了一篇（Issue #516
      第二批顺手订正）。正文与同作者的 gs-126 是同一首，改指那一条。 */
@@ -392,10 +392,10 @@ window.POEMS_GUSHI = [
   { textRef: "gushi-gs-117", id: "gs-79", title: "论诗", source: "瓯北集", dynasty: "清", author: "赵翼", gradeGroup: "元明清诗" },
   { textRef: "gushi-gs-80", id: "gs-80", title: "读《岳阳楼记》", source: "梅溪集", dynasty: "宋", author: "王十朋", gradeGroup: "宋诗" },
   { textRef: "gushi-gs-81", id: "gs-81", title: "天平山中", source: "眉庵集", dynasty: "明", author: "杨基", gradeGroup: "元明清诗" },
+  { textRef: "gushi-gs-82", id: "gs-82", title: "画眉鸟", source: "欧阳文忠公集", dynasty: "宋", author: "欧阳修", gradeGroup: "宋诗" },
 
   /* Issue #510 · 第一批：初中课内非唐古诗 7 首 —— 课内已有、集子缺，壳挂
      textRef 指课内那一条（合流不重录），本集不另写正文。 */
-  { textRef: "poems-cz7-11", id: "gs-82", title: "十一月四日风雨大作·其二", source: "剑南诗稿", dynasty: "宋", author: "陆游", gradeGroup: "宋诗" },
   { textRef: "poems-cz7-12", id: "gs-83", title: "潼关", source: "谭嗣同全集", dynasty: "清", author: "谭嗣同", gradeGroup: "元明清诗" },
   { textRef: "poems-cz7-20", id: "gs-84", title: "登飞来峰", source: "临川先生文集", dynasty: "宋", author: "王安石", gradeGroup: "宋诗" },
   { textRef: "poems-cz7-21", id: "gs-85", title: "游山西村", source: "剑南诗稿", dynasty: "宋", author: "陆游", gradeGroup: "宋诗" },

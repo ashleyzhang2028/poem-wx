@@ -126,16 +126,16 @@ function main() {
       const author = String(row[1] || "").trim();
       const hits = index[matchKey(title)] || [];
       const sameAuthor = hits.filter(function (p) { return String(p.author || "").trim() === author; });
-      const pick = sameAuthor.length ? sameAuthor : uniqueRow(list, row, cites, opens);
-      if (pick.length !== 1) return;
-      const master = byId[pick[0].textRef];
-      const text = String((master && master.text) || "").trim();
-      const translation = String((master && master.translation) || "").trim();
       const over = (patch[bookId] || {})[pos + 1];
       if (over) {
         out.push([pos + 1, over[1], over[2] || "", tidy(over[3]), String(over[4] || "")]);
         return;
       }
+      const pick = sameAuthor.length ? sameAuthor : uniqueRow(list, row, cites, opens);
+      if (pick.length !== 1) return;
+      const master = byId[pick[0].textRef];
+      const text = String((master && master.text) || "").trim();
+      const translation = String((master && master.translation) || "").trim();
       if (!text || !translation) return;
 
       out.push([

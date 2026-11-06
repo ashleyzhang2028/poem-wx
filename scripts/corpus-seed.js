@@ -8,6 +8,8 @@ const CORPUS_DIR = path.join(__dirname, "corpus");
 
 const COURSE_BOOK = "poems";
 
+const SHARED_GLOSS = ["songci300", "gwgz", "tongxin"];
+
 const EMPTY_BOOKS = [
   "classic", "yuefu", "season", "tangshi", "gushi", "songci", "yuanqu",
   "guwen", "jinxiandai", "zhaoming", "chengyu", "changshi", "mingshu",
@@ -240,7 +242,10 @@ function catalogGloss(catalogs, order, W) {
         throw new Error(bookId + " 第 " + at + " 条的注释不在目录里（目录共 " + rows.length + " 条）");
       }
       const sid = (sidByPos[bookId] || {})[at];
-      out.push({ book_id: bookId, pos: at - 1, title: rows[at - 1][0], gloss: sid ? bySid[sid] : mine[key] });
+      const own = mine[key];
+      const shared = sid ? bySid[sid] : null;
+      const gloss = SHARED_GLOSS.indexOf(bookId) >= 0 && shared ? shared : own;
+      out.push({ book_id: bookId, pos: at - 1, title: rows[at - 1][0], gloss: gloss });
     });
   });
   return out;
