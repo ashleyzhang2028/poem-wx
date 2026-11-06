@@ -2190,6 +2190,24 @@ const lingPoolReady = Promise.resolve().then(() => {
 }
 
 {
+  const lingIndex = require(path.join(ROOT, "packages", "game", "utils", "ling-index.js"));
+  const multi = (list) => list.filter((ch) => ch.length > 1);
+  const single = (list) => list.filter((ch) => ch.length === 1);
+
+  ok("令字里的多字令排在所有单字之后（研习页那一排令字，单字在前、词组在后）",
+    multi(lingIndex.CHARS).length > 0
+      && lingIndex.CHARS.slice(single(lingIndex.CHARS).length).join() === multi(lingIndex.CHARS).join()
+      && lingIndex.CHARS.indexOf("相思") === lingIndex.CHARS.length - 1,
+    "末尾是 " + lingIndex.CHARS.slice(-3).join("、"));
+
+  const where = lingIndex.GROUPS.map((g) => g.name + "：" + g.chars.join("")).join(" / ");
+  ok("多字令在各组里也排在最后（「人事情思」那组末尾是「相思」）",
+    lingIndex.GROUPS.every((g) => g.chars[g.chars.length - 1] === "相思"
+      ? g.name === "人事情思" : g.chars.every((ch) => ch.length === 1)),
+    where);
+}
+
+{
   const feihuaPath = path.join(ROOT, "packages", "game", "feihua", "lib.js");
   const scopesPath = path.join(ROOT, "packages", "game", "utils", "game-scopes.js");
   const seeded = corpus.course().map((p) => ({ b: p.b, id: p.id, t: p.t, gr: p.gr, tm: p.tm }));

@@ -259,6 +259,10 @@
   padding-left: var(--sp-2);
 }
 
+.pick-go.open {
+  color: var(--ink-3);
+}
+
 .pick-meta {
   display: flex;
   flex-wrap: wrap;
@@ -273,30 +277,114 @@
 }
 
 .pick-panel {
+  max-height: 0;
+  border-top: 1rpx solid transparent;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height var(--t-move) var(--ease), opacity var(--t-move) var(--ease),
+    padding-top var(--t-move) var(--ease), border-top-color var(--t-move) var(--ease);
+}
+
+.pick-panel.open {
+  max-height: 6000rpx;
   padding-top: var(--sp-2);
-  border-top: 1rpx solid var(--line-2);
+  border-top-color: var(--line-2);
+  opacity: 1;
 }
 
 .pick-scopes {
   margin-top: var(--sp-2);
 }
 
-.pick-group {
-  margin-top: var(--sp-3);
+.pick-head {
+  display: flex;
+  align-items: center;
+  height: var(--h-opt-tight);
+  margin-bottom: var(--sp-1);
+  border-radius: var(--radius-sm);
 }
 
-.pick-group-name {
-  display: block;
+.pick-head-hover {
+  background: var(--sink);
+}
+
+.pick-head-t {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-2);
+  letter-spacing: var(--ls-caption);
+}
+
+.pick-fold {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.pick-fold-t {
   font-size: var(--fs-caption);
   color: var(--ink-3);
   letter-spacing: var(--ls-caption);
-  margin-bottom: var(--sp-1);
+}
+
+.pick-arrow {
+  flex: none;
+  width: 14rpx;
+  height: 14rpx;
+  margin-top: -6rpx;
+  border-right: 2rpx solid var(--ink-3);
+  border-bottom: 2rpx solid var(--ink-3);
+  transform: rotate(45deg);
+  transition: transform var(--t-move) var(--ease), margin-top var(--t-move) var(--ease);
+}
+
+.pick-arrow.up {
+  margin-top: 0;
+  transform: rotate(225deg);
+}
+
+.pick-group-head {
+  margin-top: var(--sp-2);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--h-opt-tight);
+  border-radius: var(--radius-sm);
+}
+
+.pick-group-name {
+  font-size: var(--fs-caption);
+  color: var(--ink-3);
+  letter-spacing: var(--ls-caption);
+}
+
+.pick-count {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--font-num);
+  font-size: var(--fs-caption);
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
 }
 
 .pick-chars {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-1);
+  padding-bottom: var(--sp-1);
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height var(--t-move) var(--ease), opacity var(--t-move) var(--ease),
+    padding-bottom var(--t-move) var(--ease);
+}
+
+.pick-chars.folded {
+  max-height: 0;
+  padding-bottom: 0;
+  opacity: 0;
 }
 
 .pick-chip {
@@ -313,6 +401,7 @@
   font-size: var(--fs-body);
   line-height: 1;
   color: var(--ink-2);
+  transition: background var(--t-press) var(--ease), color var(--t-press) var(--ease);
 }
 
 .pick-chip.on {
