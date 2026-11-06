@@ -24,10 +24,11 @@ const SCOPE_ROWS = [
   { key: "revoked_sessions", name: "已吊销会话" }
 ];
 
-function scopeViews(scopes) {
+function scopeViews(scopes, results) {
   return SCOPE_ROWS.map((row) => {
     const hit = (scopes || []).filter((s) => s.key === row.key)[0];
-    return { key: row.key, name: row.name, why: hit ? hit.why : "", result: "" };
+    const n = results ? results[row.key] : undefined;
+    return { key: row.key, name: row.name, why: hit ? hit.why : "", result: n === undefined ? "" : "清掉 " + n + " 行" };
   });
 }
 
@@ -59,6 +60,7 @@ Page({
   },
 
   load() {
+    this.results = this.results || {};
     guard.once("admin:maintenance", () => remote.adminMaintenanceOverview()).then((res) => {
       if (!res || !res.ok) {
         this.setData({ reason: (res && res.reason) || "取不到库况" });
@@ -69,7 +71,7 @@ Page({
         totalRows: res.totalRows,
         totalBytes: sizeText(res.totalBytes),
         tables: res.tables.map((t) => Object.assign({}, t, { sizeText: sizeText(t.bytes) })),
-        scopes: scopeViews(res.scopes)
+        scopes: scopeViews(res.scopes, this.results)
       });
     });
   },
@@ -93,6 +95,18 @@ Page({
     });
   },
 
+  onPurgeAll() {
+    if (!this.data.canWrite) return;
+    wx.showModal({
+      title: "清理全部",
+      content: "把下面每一项过期或已吊销的行一次清掉；账号、进度、成绩、订单不动。",
+      confirmText: "清理",
+      success: (r) => {
+        if (r.confirm) this.purge("all");
+      }
+    });
+  },
+
   refuse(reason) {
     const text = String(reason || "").trim() || "清理未成功";
     if (text.length <= REFUSE_TOAST_MAX) wx.showToast({ title: text, icon: "none" });
@@ -108,15 +122,16 @@ Page({
         this.refuse(res.reason);
         return;
       }
-      this.markResult(key, (res.deleted && res.deleted[key]) || 0);
-      wx.showToast({ title: "已清 " + ((res.deleted && res.deleted[key]) || 0) + " 行", icon: "none" });
+      const deleted = res.deleted || {};
+      const keys = key === "all" ? SCOPE_ROWS.map((row) => row.key) : [key];
+      let sum = 0;
+      keys.forEach((k) => {
+        const n = Number(deleted[k]) || 0;
+        this.results[k] = n;
+        sum += n;
+      });
+      wx.showToast({ title: "已清 " + sum + " 行", icon: "none" });
       this.load();
-    });
-  },
-
-  markResult(key, n) {
-    this.setData({
-      scopes: this.data.scopes.map((s) => (s.key === key ? Object.assign({}, s, { result: "清掉 " + n + " 行" }) : s))
     });
   }
 });

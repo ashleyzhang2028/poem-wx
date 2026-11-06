@@ -15,7 +15,7 @@ var PURGE_SQL = {
   resets: "DELETE FROM `resets` WHERE `expires_at` < ?",
   sessions: "DELETE FROM `sessions` WHERE `exp` < ?",
   rate_counters: "DELETE FROM `rate_counters` WHERE `expires_at` < ?",
-  revoked_sessions: "DELETE FROM `sessions` WHERE `revoked` = 1 AND `exp` < ?"
+  revoked_sessions: "DELETE FROM `sessions` WHERE `revoked` = 1"
 };
 
 function assertIdent(name) {
@@ -263,7 +263,7 @@ function mysqlStore(cfg) {
       var jobs = {};
       (scopes || []).forEach(function (sc) {
         if (!PURGE_SQL[sc]) return;
-        jobs[sc] = query(PURGE_SQL[sc], [nowMs]).then(function (r) { return Number(r && r.affectedRows) || 0; });
+        jobs[sc] = query(PURGE_SQL[sc], PURGE_SQL[sc].indexOf("?") >= 0 ? [nowMs] : []).then(function (r) { return Number(r && r.affectedRows) || 0; });
       });
       return Promise.all(Object.keys(jobs).map(function (k) { return jobs[k]; })).then(function (counts) {
         var out = {};
