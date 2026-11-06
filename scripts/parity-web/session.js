@@ -37,6 +37,16 @@ function issue(cfg, uid, now) {
   };
 }
 
+function issueAccess(cfg, sid, uid, now, ttlMs) {
+  var t = now || Date.now();
+  var payload = b64url(JSON.stringify({ s: sid, u: uid, i: t, e: t + ttlMs }));
+  return {
+    token: payload + "." + sign(payload, keyOf(cfg)),
+    sid: sid, uid: uid, iat: t, exp: t + ttlMs,
+    ttlSec: Math.round(ttlMs / 1000)
+  };
+}
+
 function read(cfg, token, now) {
   if (!token || typeof token !== "string") return null;
   var dot = token.lastIndexOf(".");
@@ -113,6 +123,7 @@ function clearCookieHeader(cfg) {
 
 module.exports = {
   issue: issue,
+  issueAccess: issueAccess,
   read: read,
   shouldRenew: shouldRenew,
   fromCookieHeader: fromCookieHeader,

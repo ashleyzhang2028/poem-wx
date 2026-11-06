@@ -129,11 +129,19 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   -- 刷新那条路要能按 refreshToken 找回这一行 —— 它就是同一枚会话令牌。
   -- 不落这一列的话，刷新永远验不过（见 poem 的 wxIssueSession 那段注释）。
   `refresh_token` VARCHAR(512) NULL,
+  `refresh_hash`  CHAR(64)     NULL,
   PRIMARY KEY (`sid`),
   KEY `sessions_uid_idx` (`uid`),
+  KEY `sessions_refresh_hash_idx` (`refresh_hash`),
   KEY `sessions_exp_idx` (`exp`),
   CONSTRAINT `sessions_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 已有的库（建表时还没有 `refresh_hash`）要手动补一次；新库上面的建表已带这一列。
+-- 已经补过再执行会报 Duplicate column，忽略即可。
+--   ALTER TABLE `sessions`
+--     ADD COLUMN `refresh_hash` CHAR(64) NULL AFTER `refresh_token`,
+--     ADD KEY `sessions_refresh_hash_idx` (`refresh_hash`);
 
 -- ------------------------------------------------------------- rate_counters
 -- 请求配额的固定窗口计数：同一账号 / IP 在多个实例间共用一份，重启不清零。

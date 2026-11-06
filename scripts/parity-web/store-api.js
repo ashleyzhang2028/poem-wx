@@ -119,6 +119,11 @@ function memoryStore() {
 
     putSession: function (s) { db.sessions[s.sid] = s; return s; },
     getSession: function (sid) { return db.sessions[sid] || null; },
+    getSessionByRefresh: function (hash) {
+      var h = String(hash || "");
+      var sid = h ? Object.keys(db.sessions).filter(function (k) { return db.sessions[k].refresh_hash === h; })[0] : null;
+      return sid ? db.sessions[sid] : null;
+    },
     revokeSession: function (sid) {
       if (db.sessions[sid]) db.sessions[sid].revoked = 1;
       return true;

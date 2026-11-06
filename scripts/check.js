@@ -7263,14 +7263,19 @@ const K = {
       const row = sid ? storeMod.getSession(sid) : null;
 
       ok("刷新那条路能找回自己的会话行（刷不回来 = 每次登录只撑得过一个有效期）",
-        !!row && !!row.refresh_token && row.refresh_token !== body.refreshToken,
-        "登录落下的会话行里没有 refresh_token，或那一列还是令牌明文（库里只该存哈希）——"
+        !!row && !!row.refresh_hash && row.refresh_hash !== body.refreshToken && JSON.stringify(row).indexOf(body.refreshToken) < 0,
+        "登录落下的会话行里没有 refresh_hash，或行里出现了刷新令牌明文（库里只该存哈希）——"
           + "缺这一列时刷新恒回 401，客户端把「过期」当成立刻过期：刚登录完又被要求登录");
 
       ok("登录回的 expiresIn 与会话真正的有效期一致",
-        !!row && body.expiresIn === Math.round((row.exp - row.iat) / 1000),
-        "回的是 " + body.expiresIn + " 秒，会话是 " + (row ? Math.round((row.exp - row.iat) / 1000) : "?") + " 秒"
-          + " —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
+        (() => {
+          const at = sessionMod.read(cfgMod, body.accessToken, clock);
+          return !!at && body.expiresIn === Math.round((at.exp - at.iat) / 1000) && body.expiresIn <= 2 * 3600;
+        })(),
+        "回的 expiresIn 要等于访问令牌自己的寿命，且不超过 2 小时 —— 这两个数对不上时，端上那枚令牌的寿命由别人说了算");
+
+      ok("刷新令牌不能当访问令牌用（是不透明串，没有签名）",
+        sessionMod.read(cfgMod, body.refreshToken, clock) === null && /^rt_/.test(String(body.refreshToken)));
 
       ok("新微信账号建号即带一个随机昵称，不留空", /^诗友[A-Z2-9]{6}$/.test(String(body.nickname || "")), JSON.stringify(body.nickname));
 
@@ -7280,6 +7285,24 @@ const K = {
           ok("令牌过期之后仍刷得回来（这是刷新唯一存在的理由）",
             rr.status === 200,
             "拿到 " + rr.status + " " + ((rr.body && rr.body.code) || "") + "：" + ((rr.body && rr.body.message) || ""));
+          const fresh = sessionMod.read(cfgMod, rr.body && rr.body.accessToken, clock);
+          ok("刷新只换访问令牌，会话行（sid）不变，刷新令牌不另发",
+            !!fresh && fresh.sid === sid && !(rr.body && rr.body.refreshToken));
+          storeMod.revokeSession(sid);
+          return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" }).then((gone) => {
+            ok("会话吊销之后刷新回 401", gone.status === 401, "拿到 " + gone.status);
+            storeMod.putSession({ sid: sid, uid: row.uid, iat: row.iat, exp: clock - 1, revoked: 0, refresh_hash: row.refresh_hash });
+            return coreMod.wxRefresh(probeDeps(), { refreshToken: body.refreshToken, device: "d_00000001" });
+          }).then((over) => {
+            ok("会话寿命到头之后刷新回 401", over.status === 401, "拿到 " + over.status);
+            const old = sessionMod.issue(cfgMod, row.uid, clock);
+            storeMod.putSession({ sid: old.sid, uid: row.uid, iat: old.iat, exp: old.exp, revoked: 0, refresh_token: "h:" + require("crypto").createHash("sha256").update(old.token).digest("hex") });
+            return coreMod.wxRefresh(probeDeps(), { refreshToken: old.token, device: "d_00000001" }).then((legacy) => {
+              ok("升级前签发的老会话（长令牌）仍刷得回来，并换成新结构",
+                legacy.status === 200 && /^rt_/.test(String(legacy.body && legacy.body.refreshToken)),
+                "拿到 " + legacy.status);
+            });
+          });
         });
     })
     .catch((e) => {

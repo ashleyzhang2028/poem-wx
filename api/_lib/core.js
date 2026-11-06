@@ -1464,7 +1464,46 @@ function refreshMatches(stored, token) {
   return s === token;
 }
 
+var WX_ACCESS_MS = 2 * 60 * 60 * 1000;
+var REFRESH_PREFIX = "rt_";
+
+function newRefreshToken() {
+  return REFRESH_PREFIX + crypto.randomBytes(32).toString("hex");
+}
+
+function refreshHashOf(cfg, token) {
+  return crypto.createHmac("sha256", session.keyOf(cfg)).update(String(token)).digest("hex");
+}
+
+function isColumnError(e) {
+  var msg = String((e && e.message) || e).toLowerCase();
+  return msg.indexOf("column") >= 0 || msg.indexOf("schema") >= 0 || msg.indexOf("42703") >= 0 || msg.indexOf("pgrst204") >= 0;
+}
+
 function wxIssueSession(deps, acc, device) {
+  var cfg = deps.cfg, store = deps.store, t = deps.now();
+  var sid = id.newSid();
+  var refresh = newRefreshToken();
+  var row = {
+    sid: sid, uid: acc.uid, iat: t, exp: t + (Number(cfg.sessionDays) || 30) * 86400000,
+    revoked: 0, refresh_hash: refreshHashOf(cfg, refresh)
+  };
+  if (device) row.device = String(device).slice(0, 64);
+
+  return Promise.resolve(store.putSession(row)).then(function () {
+    var access = session.issueAccess(cfg, sid, acc.uid, t, WX_ACCESS_MS);
+    var body = wxSessionBody(deps, acc);
+    body.expiresIn = access.ttlSec;
+    body.accessToken = access.token;
+    body.refreshToken = refresh;
+    return ok(body);
+  }, function (e) {
+    if (isColumnError(e)) return wxIssueLegacySession(deps, acc, device);
+    throw e;
+  });
+}
+
+function wxIssueLegacySession(deps, acc, device) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var s = session.issue(cfg, acc.uid, t);
   var row = { sid: s.sid, uid: s.uid, iat: s.iat, exp: s.exp, revoked: 0 };
@@ -1533,6 +1572,23 @@ function wxLogin(deps, input) {
   });
 }
 
+function wxRefreshOpaque(deps, token, t) {
+  var store = deps.store, cfg = deps.cfg;
+  var gone = function () { return err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"); };
+  if (typeof store.getSessionByRefresh !== "function") return Promise.resolve(gone());
+  return Promise.resolve(store.getSessionByRefresh(refreshHashOf(cfg, token))).then(function (row) {
+    if (!row || Number(row.revoked) === 1 || Number(row.exp) <= t) return gone();
+    return Promise.resolve(store.getAccount(row.uid)).then(function (acc) {
+      if (!acc || acc.status === "deleted") return gone();
+      var access = session.issueAccess(cfg, row.sid, row.uid, t, Math.min(WX_ACCESS_MS, Number(row.exp) - t));
+      var body = wxSessionBody(deps, acc);
+      body.expiresIn = access.ttlSec;
+      body.accessToken = access.token;
+      return ok(body);
+    });
+  });
+}
+
 function wxRefresh(deps, input) {
   var cfg = deps.cfg, store = deps.store, t = deps.now();
   var body = input || {};
@@ -1543,6 +1599,7 @@ function wxRefresh(deps, input) {
 
   var token = String(body.refreshToken || "").trim();
   if (!token) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
+  if (token.indexOf(REFRESH_PREFIX) === 0) return wxRefreshOpaque(deps, token, t);
 
   var s = session.read(cfg, token, t);
   if (!s) return Promise.resolve(err(401, "E_NO_SESSION", "刷新令牌不认了，请重新登录一次。"));
