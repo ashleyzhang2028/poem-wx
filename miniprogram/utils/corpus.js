@@ -682,7 +682,7 @@ function textsOf(bookId) {
   (pack.rows[bookId] || []).forEach((raw) => {
     const translation = raw[4] || "";
     if (!raw[3]) return;
-    map[raw[0]] = {
+    map[raw[0] + 1] = {
       t: raw[1],
       sid: raw[2],
       text: raw[3],
@@ -700,7 +700,7 @@ function notesOf(bookId) {
   if (!pack || !pack.rows) return null;
   const map = {};
   (pack.rows[bookId] || []).forEach((raw) => {
-    if (Array.isArray(raw[2]) && raw[2].length) map[raw[0]] = raw[2];
+    if (Array.isArray(raw[2]) && raw[2].length) map[raw[0] + 1] = raw[2];
   });
   return map;
 }
