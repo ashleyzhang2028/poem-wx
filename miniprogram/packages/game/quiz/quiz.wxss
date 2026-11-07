@@ -42,6 +42,9 @@
 }
 
 .options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
   margin-top: var(--sp-3);
 }
 
