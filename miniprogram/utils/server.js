@@ -1,6 +1,6 @@
 const CLOUD = {
-  env: "poem-d9g1bqeq978682c58",
-  service: "poem-wx"
+  env: "",
+  service: ""
 };
 
 function cloud() {
