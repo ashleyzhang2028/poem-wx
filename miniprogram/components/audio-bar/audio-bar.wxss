@@ -85,14 +85,6 @@
   -webkit-mask-size: contain;
 }
 
-.audio-bar-btn.mode {
-  border-color: var(--ink-4);
-}
-
-.audio-bar-btn.mode.on {
-  border-color: var(--strong);
-}
-
 .audio-bar-btn.mode.on .audio-bar-glyph {
   color: var(--strong-text);
 }
