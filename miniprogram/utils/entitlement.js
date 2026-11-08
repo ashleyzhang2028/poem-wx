@@ -46,7 +46,7 @@ const CAPS = [
   { key: "sync", name: "同步进度", desc: "进度与设置随微信账号同步", tier: "free" },
   { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
-  { key: "audio", name: "诗词音频", desc: "课内与三部集子的音频 · 单篇播放", tier: "pro" },
+  { key: "audio", name: "诗词音频", desc: "课内诗词的音频 · 单篇播放", tier: "pro" },
   { key: "audioloop", name: "音频连播", desc: "顺序 / 单首循环 / 随机三态 · 底栏工具栏", tier: "max" },
   { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "bookmarks", name: "书签", desc: "于详情页收藏，在设置中统一管理 · " + tiers.bookmarkQuota() + "，超出时移除最早一条", cell: bookmarkCell, tier: "pro" },
