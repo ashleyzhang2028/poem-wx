@@ -18,3 +18,4 @@ npm test          # 编译语料 + 跑自检（只需 node ≥18，不必 npm in
 - 流水线：`.cnb.yml`
 - 文档：`docs/`（对照与未做项分别见 [`docs/parity.md`](docs/parity.md)、[`docs/todo.md`](docs/todo.md)；
   课外正文与检索的来源见 [`docs/poem-source.md`](docs/poem-source.md)）
+- 音频合成清单：[`audio/README.md`](audio/README.md)，由 `node scripts/gen-audio-lines.js` 生成
