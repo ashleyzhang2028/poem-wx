@@ -705,7 +705,7 @@ Page({
     this.refresh();
 
     const box = this.selectComponent("#extra");
-    if (box) this.syncExtraKeyword(box);
+    if (box) box.refresh();
   },
 
   onExtraInput(e) {

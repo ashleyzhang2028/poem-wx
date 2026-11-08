@@ -1404,6 +1404,39 @@ pages.forEach((p) => {
   ok("WXML 事件都有处理函数 " + p, missing.length === 0, missing.join(","));
 });
 
+{
+  const builtins = ["setData", "selectComponent", "selectAllComponents", "createSelectorQuery",
+    "createIntersectionObserver", "createMediaQueryObserver", "triggerEvent", "hasBehavior",
+    "getRelationNodes", "getOpenerEventChannel", "getPageId", "getTabBar", "animate",
+    "clearAnimatedStyle", "applyAnimatedStyle", "groupSetData", "setUpdatePerformanceListener"];
+  const jsFiles = [];
+  const walkJs = (dir) => {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name !== "data") walkJs(full);
+      } else if (e.name.endsWith(".js")) jsFiles.push(full);
+    });
+  };
+  walkJs(ROOT);
+  const undefinedCalls = [];
+  jsFiles.forEach((file) => {
+    const src = fs.readFileSync(file, "utf8");
+    const called = new Set();
+    const cre = /this\.([A-Za-z_$][\w$]*)\s*\(/g;
+    let m;
+    while ((m = cre.exec(src))) called.add(m[1]);
+    called.forEach((name) => {
+      if (builtins.indexOf(name) >= 0) return;
+      const defined = new RegExp("(^|[\\s,{])" + name + "\\s*[(:]").test(src)
+        || new RegExp("this\\." + name + "\\s*=").test(src);
+      if (!defined) undefinedCalls.push(path.relative(ROOT, file) + " → this." + name + "()");
+    });
+  });
+  ok("调用的 this 方法都在本文件里定过（点了不会 TypeError）", undefinedCalls.length === 0,
+    undefinedCalls.join("; ") || "");
+}
+
 const courseEntry = corpus.entry(perBook.poems[0].id);
 ok("课内正文能从包内取到", !!courseEntry && typeof courseEntry.text === "string");
 
