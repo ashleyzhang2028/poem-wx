@@ -570,7 +570,9 @@ function keepReadsEdge(book, marks) {
 
 function dayKey(ts) {
   const d = new Date(ts || Date.now());
-  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  const mm = String(d.getMonth() + 1);
+  const dd = String(d.getDate());
+  return d.getFullYear() + "-" + (mm.length < 2 ? "0" + mm : mm) + "-" + (dd.length < 2 ? "0" + dd : dd);
 }
 
 function profile() {
