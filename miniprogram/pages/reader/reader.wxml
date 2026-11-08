@@ -139,7 +139,7 @@
                   gap-down="{{gapDown}}" gap-up="{{gapUp}}"
                   pinyin-on="{{pinyinOn}}" pinyin-mode="{{pinyinMode}}" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
-                  pick-on="{{pickOn}}" audio-on="{{audioOn}}" mark-on="{{markOn}}"
+                  pick-on="{{pickOn}}" audio-on="{{audioOn}}" audio-icon="{{audioIcon}}" mark-on="{{markOn}}"
                   text-on="{{markOn}}" bind:act="onDockAct" />
   </block>
   </block>

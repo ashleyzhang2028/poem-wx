@@ -1,13 +1,14 @@
 const audio = require("../../utils/poem-audio");
 
 Component({
-  options: { addGlobalClass: true },
+  options: { addGlobalClass: true, virtualHost: true },
 
   properties: {
     kind: { type: String, value: "one" },
     poem: { type: String, value: "" },
     ids: { type: Array, value: [] },
-    book: { type: String, value: "" }
+    book: { type: String, value: "" },
+    framed: { type: Boolean, value: false }
   },
 
   data: {

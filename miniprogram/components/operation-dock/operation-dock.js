@@ -43,6 +43,7 @@ Component({
     dailyIcon: { type: String, value: icons.add },
     pickOn: { type: Boolean, value: false },
     audioOn: { type: Boolean, value: false },
+    audioIcon: { type: String, value: icons.play },
     markOn: { type: Boolean, value: false },
     textOn: { type: Boolean, value: false }
   },
@@ -70,14 +71,16 @@ Component({
       });
     },
 
-    "dailyOn, dailyIcon, pickOn, audioOn, markOn, textOn": function (dailyOn, dailyIcon, pickOn, audioOn, markOn, textOn) {
+    "dailyOn, dailyIcon, pickOn, audioOn, audioIcon, markOn, textOn": function (
+      dailyOn, dailyIcon, pickOn, audioOn, audioIcon, markOn, textOn
+    ) {
       const on = { daily: dailyOn, pick: pickOn, mark: markOn, text: textOn };
-      const shape = { daily: dailyIcon };
+      const shape = { daily: dailyIcon, audio: audioIcon };
       const list = ROWS.map((r) => Object.assign({}, r, {
         on: !!on[r.key],
         icon: shape[r.key] || r.icon
       }));
-      if (audioOn) list.splice(AUDIO_AT, 0, Object.assign({}, AUDIO_ROW, { on: true }));
+      if (audioOn) list.splice(AUDIO_AT, 0, Object.assign({}, AUDIO_ROW, { on: true, icon: audioIcon }));
       this.setData({ rows: list });
     }
   },

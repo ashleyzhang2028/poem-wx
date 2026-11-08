@@ -58,7 +58,7 @@
             <view class="glyph" style="mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');-webkit-mask-image:url('{{icons[dailyOn ? 'added' : 'add']}}');"></view>
           </view>
         </view>
-        <audio-play poem="{{id}}" ids="{{queueIds}}" />
+        <audio-play poem="{{id}}" ids="{{queueIds}}" framed />
       </view>
 
       <view class="poem-body align-{{align}} size-{{fontSize}} {{prose ? 'prose' : ''}} {{loose ? 'loose' : ''}}">
