@@ -22,6 +22,10 @@ const ROWS = [
   { key: "text", label: "复制本篇", icon: icons.copy }
 ];
 
+const AUDIO_ROW = { key: "audio", label: "朗读", icon: icons.play };
+
+const AUDIO_AT = 2;
+
 Component({
   options: { multipleSlots: false },
 
@@ -38,6 +42,7 @@ Component({
     dailyOn: { type: Boolean, value: false },
     dailyIcon: { type: String, value: icons.add },
     pickOn: { type: Boolean, value: false },
+    audioOn: { type: Boolean, value: false },
     markOn: { type: Boolean, value: false },
     textOn: { type: Boolean, value: false }
   },
@@ -65,15 +70,15 @@ Component({
       });
     },
 
-    "dailyOn, dailyIcon, pickOn, markOn, textOn": function (dailyOn, dailyIcon, pickOn, markOn, textOn) {
+    "dailyOn, dailyIcon, pickOn, audioOn, markOn, textOn": function (dailyOn, dailyIcon, pickOn, audioOn, markOn, textOn) {
       const on = { daily: dailyOn, pick: pickOn, mark: markOn, text: textOn };
       const shape = { daily: dailyIcon };
-      this.setData({
-        rows: ROWS.map((r) => Object.assign({}, r, {
-          on: !!on[r.key],
-          icon: shape[r.key] || r.icon
-        }))
-      });
+      const list = ROWS.map((r) => Object.assign({}, r, {
+        on: !!on[r.key],
+        icon: shape[r.key] || r.icon
+      }));
+      if (audioOn) list.splice(AUDIO_AT, 0, Object.assign({}, AUDIO_ROW, { on: true }));
+      this.setData({ rows: list });
     }
   },
 

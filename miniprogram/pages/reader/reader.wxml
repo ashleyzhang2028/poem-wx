@@ -139,10 +139,12 @@
                   gap-down="{{gapDown}}" gap-up="{{gapUp}}"
                   pinyin-on="{{pinyinOn}}" pinyin-mode="{{pinyinMode}}" daily-on="{{dailyOn}}"
                   daily-icon="{{icons[dailyOn ? 'added' : 'add']}}"
-                  pick-on="{{pickOn}}" mark-on="{{markOn}}"
+                  pick-on="{{pickOn}}" audio-on="{{audioOn}}" mark-on="{{markOn}}"
                   text-on="{{markOn}}" bind:act="onDockAct" />
   </block>
   </block>
+  <audio-bar lift="124" />
+
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
 
   <tab-bar id="tabbar" />

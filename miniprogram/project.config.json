@@ -5,6 +5,7 @@
     "include": [
       { "type": "file", "value": "data/course.js" },
       { "type": "file", "value": "data/pinyin-table.js" },
+      { "type": "file", "value": "data/audio.js" },
       { "type": "file", "value": "packages/admin/data/roster.js" }
     ]
   },

@@ -1,0 +1,5 @@
+<view class="audio-knob {{kind === 'list' ? 'list' : ''}}" wx:if="{{visible}}"
+      hover-class="audio-knob-hover" hover-stay-time="60"
+      catchtap="onTap" aria-label="{{aria}}">
+  <view class="audio-knob-glyph" style="mask-image:url('{{icon}}');-webkit-mask-image:url('{{icon}}');"></view>
+</view>

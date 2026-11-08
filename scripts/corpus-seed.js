@@ -255,8 +255,17 @@ function seedStatements(rows) {
   return require("./gen-corpus-sql").statements(rows, { params: true });
 }
 
+function dedupKey(text) {
+  return String(text || "")
+    .replace(/[\u200b-\u200d\ufeff]/g, "")
+    .replace(/[\s\u3000]+/g, "")
+    .replace(/[，。！？；：、,.!?;:"'“”‘’「」『』《》〈〉（）()\[\]【】—－\-…·~～]/g, "")
+    .toLowerCase();
+}
+
 module.exports = {
   seedStatements: seedStatements,
+  dedupKey: dedupKey,
   CORPUS_DIR: CORPUS_DIR,
   COURSE_BOOK: COURSE_BOOK,
   POEM_FILES: POEM_FILES,

@@ -124,6 +124,7 @@
       <view class="card-open">
         <text class="card-title">今日温习</text>
         <text class="all-count">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
+        <audio-play kind="list" ids="{{planIds}}" />
       </view>
 
       <daily-extra wx:if="{{!selfOnly}}" id="extra" theme-style="{{themeStyle}}" bind:change="onExtraChange" />
@@ -141,6 +142,7 @@
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
+          <audio-play poem="{{item.id}}" ids="{{planIds}}" />
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
@@ -170,6 +172,7 @@
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
           <text class="card-title">{{coll.title}}</text>
           <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
+          <audio-play kind="list" ids="{{coll.ids}}" />
         </view>
 
         <view class="row row-flush" hover-class="row-hover" hover-stay-time="60"
@@ -183,6 +186,7 @@
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
+          <audio-play poem="{{item.id}}" ids="{{coll.ids}}" />
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
@@ -228,6 +232,8 @@
       </block>
     </view>
 
+
+    <audio-bar />
 
     <recite-sheet id="sheet" queue="{{sheetRows}}" theme-style="{{themeStyle}}"
                     bind:open="onSheetOpen" bind:need="onSheetNeed" bind:finish="onSheetFinish"

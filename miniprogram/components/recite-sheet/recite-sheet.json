@@ -1,4 +1,6 @@
 {
   "component": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "audio-play": "/components/audio-play/audio-play"
+  }
 }

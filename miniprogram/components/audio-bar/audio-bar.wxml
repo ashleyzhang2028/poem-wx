@@ -1,0 +1,29 @@
+<view class="audio-bar" wx:if="{{open}}" style="{{lift ? 'bottom:calc(var(--tabbar-h) + ' + lift + 'rpx)' : ''}}">
+  <view class="audio-bar-main">
+    <text class="audio-bar-title">{{title}}</text>
+    <text class="audio-bar-next" wx:if="{{nextTitle}}">下一首 · {{nextTitle}}</text>
+  </view>
+
+  <view class="audio-bar-acts">
+    <view class="audio-bar-btn mode" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+          bindtap="onMode" aria-label="{{modeLabel}}">
+      <view class="audio-bar-glyph" style="mask-image:url('{{modeIcon}}');-webkit-mask-image:url('{{modeIcon}}');"></view>
+    </view>
+    <view class="audio-bar-btn" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+          bindtap="onPrev" aria-label="上一首">
+      <view class="audio-bar-glyph" style="mask-image:url('{{prevIcon}}');-webkit-mask-image:url('{{prevIcon}}');"></view>
+    </view>
+    <view class="audio-bar-btn play" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+          bindtap="onToggle" aria-label="{{playing ? '暂停' : '播放'}}">
+      <view class="audio-bar-glyph" style="mask-image:url('{{playIcon}}');-webkit-mask-image:url('{{playIcon}}');"></view>
+    </view>
+    <view class="audio-bar-btn" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+          bindtap="onNext" aria-label="下一首">
+      <view class="audio-bar-glyph" style="mask-image:url('{{nextIcon}}');-webkit-mask-image:url('{{nextIcon}}');"></view>
+    </view>
+    <view class="audio-bar-btn" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+          bindtap="onStop" aria-label="停止">
+      <view class="audio-bar-glyph" style="mask-image:url('{{stopIcon}}');-webkit-mask-image:url('{{stopIcon}}');"></view>
+    </view>
+  </view>
+</view>

@@ -168,14 +168,6 @@ function lettersOf(P, text) {
   return out;
 }
 
-function dedupKey(text) {
-  return String(text || "")
-    .replace(/[\u200b-\u200d\ufeff]/g, "")
-    .replace(/[\s\u3000]+/g, "")
-    .replace(/[，。！？；：、,.!?;:"'“”‘’「」『』《》〈〉（）()\[\]【】—－\-…·~～]/g, "")
-    .toLowerCase();
-}
-
 function flattenText(text) {
   return String(text || "").replace(/[\s\u3000]+/g, "");
 }
@@ -206,7 +198,7 @@ function assign(named, base, key) {
 function collect(W, P) {
   const rows = seed.seedRows(W);
   const course = (W.SITE_INDEX || []).filter(function (p) { return !p.isBook && p.book === "poems"; });
-  const courseKeys = new Set(course.map(function (p) { return dedupKey(p.text); }));
+  const courseKeys = new Set(course.map(function (p) { return seed.dedupKey(p.text); }));
 
   const byBook = {};
   byBook.poems = course.map(function (p) {
@@ -227,7 +219,7 @@ function collect(W, P) {
   BOOKS.forEach(function (b) {
     const list = byBook[b.id].filter(function (it) {
       if (!it.text) throw new Error(b.file + " 有篇目没有正文：" + it.title);
-      return b.minusCourse ? !courseKeys.has(dedupKey(it.text)) : true;
+      return b.minusCourse ? !courseKeys.has(seed.dedupKey(it.text)) : true;
     }).map(function (it) {
       return {
         title: it.title,
@@ -235,7 +227,7 @@ function collect(W, P) {
         author: it.author,
         text: it.text,
         base: lettersOf(P, plainTitle(it.title)) + "_" + lettersOf(P, it.author),
-        key: dedupKey(it.text)
+        key: seed.dedupKey(it.text)
       };
     });
     list.forEach(function (it) {
@@ -261,7 +253,7 @@ function command(it) {
     " --prompt_wav_path " + PROMPT_WAV +
     ' --prompt_text "' + PROMPT_TEXT + '"' +
     " --use_spk_emb" +
-    " --output .\\output\\" + it.slug + ".wav" +
+    " --output .\\output\\" + it.slug + ".mp3" +
     " --device cpu" +
     " --no_text_normalization";
 }
@@ -269,7 +261,7 @@ function command(it) {
 function table(items) {
   const head = ["| 标题 | 朝代 | 作者 | 音频文件名 |", "| -- | -- | -- | -- |"];
   const body = items.map(function (it) {
-    return "| " + [it.title, it.dynasty, it.author, it.slug + ".wav"].join(" | ") + " |";
+    return "| " + [it.title, it.dynasty, it.author, it.slug + ".mp3"].join(" | ") + " |";
   });
   return head.concat(body).join("\n") + "\n";
 }

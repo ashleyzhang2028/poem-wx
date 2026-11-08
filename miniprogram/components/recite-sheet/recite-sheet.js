@@ -66,7 +66,7 @@ Component({
         if (!this.data.open) return;
         const keep = this.current();
         const index = keep ? Math.max(0, rows.findIndex((it) => it.id === keep.id)) : this.data.index;
-        this.setData({ queue: rows, index }, () => this.loadCurrent());
+        this.setData({ queue: rows, index, queueIds: rows.map((it) => it.id) }, () => this.loadCurrent());
       }
     }
   },
@@ -112,7 +112,8 @@ Component({
     icons: PAGE_ICONS,
 
     dailyOn: false,
-    heldKey: ""
+    heldKey: "",
+    queueIds: []
   },
 
   attached() {
@@ -137,7 +138,7 @@ Component({
       this.pushed = true;
       this.lastPush = idsOf(list);
       guard.reset("sheet:result");
-      this.setData({ open: true, index: idx, queue: list });
+      this.setData({ open: true, index: idx, queue: list, queueIds: list.map((it) => it.id) });
       this.loadCurrent();
     },
 

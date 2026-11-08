@@ -46,6 +46,7 @@ const CAPS = [
   { key: "sync", name: "同步进度", desc: "进度与设置随微信账号同步", tier: "free" },
   { key: "sm2", name: "SM-2 SuperMemo 2", desc: "间隔 × 简易度", tier: "pro" },
   { key: "quiz", name: "题库", desc: "六种题型的练习与判分", tier: "pro" },
+  { key: "audio", name: "诗词音频", desc: "课内与四部集子的音频 · 单播与连播", tier: "pro" },
   { key: "collections", name: "自选温习", desc: "自定义集合 · " + tiers.collectionQuota(), cell: collectionCell, tier: "pro" },
   { key: "bookmarks", name: "书签", desc: "于详情页收藏，在设置中统一管理 · " + tiers.bookmarkQuota() + "，超出时移除最早一条", cell: bookmarkCell, tier: "pro" },
   { key: "coursefree", name: "只温习自选", desc: "课内暂停，只排自选集合与新增温习", cell: courseFreeCell, tier: "pro" },
@@ -165,6 +166,7 @@ function compareCols(snap) {
 const VIEW_NAME = {
   daily: "首页·课内阅读",
   extra: "首页·新增温习",
+  audio: "诗词音频",
   collections: "首页·自选温习",
   progress: "首页·温习进度",
   dailypoem: "首页·每日一诗隐藏",
@@ -191,7 +193,7 @@ const VIEW_NAME = {
 };
 
 const COMPARE_ORDER = [
-  "daily", "extra", "collections", "progress", "dailypoem", "pinyin",
+  "daily", "extra", "audio", "collections", "progress", "dailypoem", "pinyin",
   "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "novels", "search",
   "quiz", "feihualing", "exam", "records", "league",

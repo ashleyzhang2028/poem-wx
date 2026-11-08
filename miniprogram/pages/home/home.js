@@ -20,6 +20,7 @@ const quotes = require("../../utils/finish-quote");
 const icons = require("../../utils/icons");
 const guard = require("../../utils/guard");
 const pv = require("../../components/progress-view/progress-view");
+const audio = require("../../utils/poem-audio");
 
 const REASON_TEXT = { review: "复习", new: "新学", extra: "补充", pinned: "温习" };
 
@@ -216,6 +217,7 @@ Page({
     termName: "",
     scopeName: "",
     plan: [],
+    planIds: [],
     doneCount: 0,
     total: 0,
     percent: 0,
@@ -399,6 +401,7 @@ Page({
       termName: S.termName(settings.term),
       scopeName: S.scopeOf(settings.scope).scopeName,
       plan: rows,
+      planIds: rows.map((r) => r.id),
       doneCount: done,
       total,
       baseCount: base,
@@ -514,6 +517,7 @@ Page({
       return {
         id: c.id,
         title: cols.nameOf(c),
+        ids: audio.matched(cols.idsOf(c)),
         count: c.items.length,
         planned: plan.length,
         done: plan.filter((it) => S.isLearned(recOf(it))).length,

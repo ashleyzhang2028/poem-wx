@@ -8,6 +8,7 @@ const font = require("../../utils/font");
 const cols = require("../../utils/collections");
 const lastRead = require("../../utils/last-read");
 const trail = require("../../utils/trail");
+const audio = require("../../utils/poem-audio");
 
 const SHEET = "#read-sheet";
 
@@ -121,6 +122,7 @@ Page({
     return cols.list().map((c) => ({
       id: c.id,
       name: cols.nameOf(c),
+      ids: audio.matched(cols.idsOf(c)),
       count: c.items.length
     }));
   },
@@ -150,7 +152,8 @@ Page({
           id: b.id,
           name: b.name,
           unit: b.unit,
-          count: b.count
+          count: b.count,
+          ids: audio.bookIds(b.id)
         })),
         unit: selfMade ? "个" : "部",
         count: selfMade ? mine.length : books.length
