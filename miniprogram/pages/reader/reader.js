@@ -208,7 +208,7 @@ Page({
       dailyOn: on,
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
-      audioOn: audio.usable() && audio.has(this.data.id),
+      audioOn: audio.readiness("one").visible && audio.has(this.data.id),
       pickOn: cols.collectionsOf(this.data.id).length > 0,
       markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
@@ -255,12 +255,12 @@ Page({
   },
 
   onPlayAudio() {
-    if (!audio.usable()) {
+    if (!audio.readiness("one").visible) {
       entitlement.gateTier("audio", { page: this });
       return;
     }
     if (audio.status().id === this.data.id) audio.toggle();
-    else audio.start([this.data.id], this.data.id);
+    else audio.play(this.data.id);
   },
 
   onAuthor() {

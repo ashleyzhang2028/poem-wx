@@ -10,6 +10,11 @@ const MODES = [
   { key: "shuffle", icon: icons.shuffle, label: "随机播放" }
 ];
 
+const NOTICE_UPLOADING = "音频文件添加中";
+const NOTICE_OFFLINE = "网络不给力，稍后再试";
+
+const OFFLINE_ERR = [10001, 10002];
+
 let table = null;
 
 function files() {
@@ -59,12 +64,19 @@ function usable() {
   return supported() && entitlement.can("audio");
 }
 
-function readiness() {
+function loopable() {
+  return supported() && entitlement.can("audioloop");
+}
+
+function readiness(kind) {
   if (!supported()) {
     return { visible: false, usable: false, state: "unsupported", reason: "这台设备出不了声" };
   }
   if (!entitlement.can("audio")) {
     return { visible: false, usable: false, state: "denied", reason: "诗词音频 " + entitlement.tierOf("audio") + " 起可用" };
+  }
+  if (kind === "list" && !entitlement.can("audioloop")) {
+    return { visible: false, usable: false, state: "denied", reason: "连续播放 " + entitlement.tierOf("audioloop") + " 起可用" };
   }
   return { visible: true, usable: true, state: "ready", reason: "" };
 }
@@ -74,14 +86,16 @@ let queue = [];
 let index = 0;
 let mode = "repeat";
 let playing = false;
+let looping = false;
 let listeners = [];
+let failed = {};
 
 function ensure() {
   if (ctx || !supported()) return ctx;
   ctx = wx.createInnerAudioContext();
   ctx.autoplay = false;
   ctx.onEnded(() => onEnded());
-  ctx.onError(() => onEnded());
+  ctx.onError((err) => onFail(err));
   ctx.onPlay(() => paint(true));
   ctx.onPause(() => paint(false));
   ctx.onStop(() => paint(false));
@@ -104,8 +118,7 @@ function load(play) {
 }
 
 function source() {
-  const c = ensure();
-  return c;
+  return ensure();
 }
 
 function modeOf(key) {
@@ -127,6 +140,7 @@ function drop() {
   queue = [];
   index = 0;
   playing = false;
+  looping = false;
   if (c) {
     c.stop();
     c.src = "";
@@ -135,7 +149,7 @@ function drop() {
 
 function onEnded() {
   if (!queue.length) return;
-  if (mode !== "one" && queue.length === 1) {
+  if (!looping || (mode !== "one" && queue.length === 1)) {
     drop();
     emit();
     return;
@@ -151,13 +165,62 @@ function onEnded() {
   emit();
 }
 
+function toast(text) {
+  if (typeof wx !== "undefined" && typeof wx.showToast === "function") {
+    wx.showToast({ title: text, icon: "none" });
+  }
+}
+
+function offline(err) {
+  return !!err && OFFLINE_ERR.indexOf(err.errCode) >= 0;
+}
+
+function following() {
+  for (let i = 1; i <= queue.length; i += 1) {
+    const at = (index + i) % queue.length;
+    if (!failed[queue[at]]) return at;
+  }
+  return -1;
+}
+
+function onFail(err) {
+  const id = queue[index];
+  if (!id) return;
+  failed[id] = true;
+  toast(offline(err) ? NOTICE_OFFLINE : NOTICE_UPLOADING);
+  const at = looping ? following() : -1;
+  if (at < 0) {
+    drop();
+    emit();
+    return;
+  }
+  index = at;
+  load(true);
+  emit();
+}
+
 function start(ids, id) {
-  if (!usable()) return false;
+  if (!loopable()) return false;
   const list = matched(ids);
   if (!list.length) return false;
+  failed = {};
   queue = list;
   const at = list.indexOf(String(id || ""));
   index = at >= 0 ? at : 0;
+  looping = true;
+  load(true);
+  emit();
+  return true;
+}
+
+function play(id) {
+  if (!usable()) return false;
+  const one = String(id || "");
+  if (!has(one)) return false;
+  failed = {};
+  queue = [one];
+  index = 0;
+  looping = false;
   load(true);
   emit();
   return true;
@@ -205,12 +268,11 @@ function titleOf(id) {
 }
 
 function status() {
-  const op = usable();
-  if (!op && queue.length) drop();
+  if (!usable() && queue.length) drop();
   const id = queue[index] || "";
   const nextId = queue.length > 1 ? queue[(index + 1) % queue.length] : "";
   return {
-    open: op && queue.length > 0,
+    open: usable() && looping && queue.length > 0,
     id: id,
     title: titleOf(id),
     nextTitle: mode === "shuffle" ? "" : titleOf(nextId),
@@ -242,6 +304,8 @@ function unwatch(fn) {
 module.exports = {
   BASE,
   MODES,
+  NOTICE_UPLOADING,
+  NOTICE_OFFLINE,
   fileOf,
   urlOf,
   has,
@@ -249,8 +313,10 @@ module.exports = {
   bookIds,
   supported,
   usable,
+  loopable,
   readiness,
   start,
+  play,
   toggle,
   next,
   prev,

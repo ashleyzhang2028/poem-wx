@@ -43,7 +43,8 @@ Component({
     paint() {
       const kind = this.data.kind;
       const list = this.queue();
-      const visible = audio.readiness().visible && list.length > 0
+      const ready = audio.readiness(kind === "list" ? "list" : "one");
+      const visible = ready.visible && list.length > 0
         && (kind === "list" || audio.has(this.data.poem));
       const st = audio.status();
       const mine = kind === "one" && st.id === this.data.poem && st.playing;
@@ -64,7 +65,7 @@ Component({
         return;
       }
       if (audio.status().id === this.data.poem) audio.toggle();
-      else audio.start(list, this.data.poem);
+      else audio.play(this.data.poem);
     }
   }
 });

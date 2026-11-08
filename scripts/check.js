@@ -325,8 +325,10 @@ ok("课内那 251 条每一条都取得到正文",
     fire(name) { (this.hooks[name] || []).forEach((f) => f()); }
   };
   const audioMem = {};
+  const said = [];
   global.wx = {
     createInnerAudioContext: () => knob,
+    showToast(o) { said.push((o && o.title) || ""); },
     getStorageSync: (k) => (k in audioMem ? audioMem[k] : ""),
     setStorageSync: (k, v) => { audioMem[k] = v; },
     removeStorageSync: (k) => { delete audioMem[k]; },
@@ -354,6 +356,18 @@ ok("课内那 251 条每一条都取得到正文",
         storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "pro", at: Date.now() });
         return free === false && anon === false;
       })());
+
+  ok("Pro 只能单篇播放（连播是 Max 起）",
+    (() => {
+      const single = player.play(ids[0]);
+      const singleState = player.status();
+      const list = player.start(ids, ids[0]);
+      return single === true && singleState.open === false
+        && singleState.id === ids[0] && list === false;
+    })(),
+    JSON.stringify(player.status()));
+
+  storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "max", at: Date.now() });
 
   player.start(ids, ids[0]);
   const first = player.status();
@@ -392,6 +406,19 @@ ok("课内那 251 条每一条都取得到正文",
   knob.fire("ended");
   ok("顺序播放时播完自动接下一支",
     player.status().id === ids[1], player.status().id);
+
+  const before = said.length;
+  knob.fire("error");
+  ok("取不到 mp3 时提示「音频文件添加中」，连播跳过这一篇",
+    said.slice(before).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().id === ids[2],
+    JSON.stringify({ said: said.slice(before), id: player.status().id }));
+
+  player.play(ids[0]);
+  const quiet = said.length;
+  knob.fire("error");
+  ok("单篇取不到时只提示一句，不留一条空工具栏",
+    said.slice(quiet).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().open === false,
+    JSON.stringify({ said: said.slice(quiet), open: player.status().open }));
 
   player.stop();
   const stopped = player.status();
@@ -1406,7 +1433,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 20], ["max", 26]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 20], ["max", 27]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -4627,10 +4654,17 @@ function mountFull(pg, query) {
   const rd = (f) => fs.readFileSync(path.join(ROOT, f), "utf8");
 
   ok("音频播放门禁走同一个 readiness（不可用时不占位置）",
-    /function readiness\(\)/.test(rd("utils/poem-audio.js"))
-      && /audio\.readiness\(\)\.visible/.test(rd("components/audio-play/audio-play.js"))
+    /function readiness\(kind\)/.test(rd("utils/poem-audio.js"))
+      && /audio\.readiness\(kind === "list" \? "list" : "one"\)/.test(
+        rd("components/audio-play/audio-play.js"))
       && /entitlement\.can\("audio"\)/.test(rd("utils/poem-audio.js")),
     "播放键没挂门禁 —— 档位不够时还会亮着，点下去弹 toast");
+  ok("连播另有一道门（Pro 只单篇，Max 才连播）",
+    /entitlement\.can\("audioloop"\)/.test(rd("utils/poem-audio.js"))
+      && /function start\(ids, id\)[\s\S]{0,80}?if \(!loopable\(\)\) return false/.test(
+        rd("utils/poem-audio.js"))
+      && /key: "audioloop"[^}]*tier: "max"/.test(rd("utils/entitlement.js")),
+    "连播没按档位收口 —— Pro 也能拉出一整条队列");
   ok("音频只对配得上 mp3 的篇目出播放键",
     /audio\.has\(this\.data\.poem\)/.test(rd("components/audio-play/audio-play.js"))
       && /kind === "list" \|\|/.test(rd("components/audio-play/audio-play.js")),
@@ -4653,7 +4687,7 @@ function mountFull(pg, query) {
     /const AUDIO_AT = 2\b/.test(rd("components/operation-dock/operation-dock.js"))
       && /key: "pick"[\s\S]{0,120}?key: "mark"/.test(rd("components/operation-dock/operation-dock.js"))
       && /audio-on=\"\{\{audioOn\}\}\"/.test(rd("pages/reader/reader.wxml"))
-      && /audio\.usable\(\) && audio\.has\(/.test(rd("pages/reader/reader.js")),
+      && /audio\.readiness\("one"\)\.visible && audio\.has\(/.test(rd("pages/reader/reader.js")),
     "浮坞里没有朗读键，或次序不对");
 
   ok("全部诗词卡点开走弹层，队列用它自己那一份（不与今日计划混）",
