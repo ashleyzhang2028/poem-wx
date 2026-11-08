@@ -26,6 +26,7 @@
               <text class="book-name">{{c.name}}</text>
               <text class="book-sub">共 {{c.count}} 首</text>
             </view>
+            <audio-play kind="list" ids="{{c.ids}}" />
             <text class="row-go">›</text>
           </view>
         </view>
@@ -42,10 +43,13 @@
             <text class="book-name">{{b.name}}</text>
             <text class="book-sub">共 {{b.count}} {{b.unit}}</text>
           </view>
+          <audio-play kind="list" ids="{{b.ids}}" />
           <text class="row-go">›</text>
         </view>
       </view>
     </view>
+
+    <audio-bar />
 
     <view class="safe-bottom"></view>
   </block>

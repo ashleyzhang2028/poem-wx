@@ -8,7 +8,10 @@
   <block wx:if="{{!corpusState}}">
 
   <view class="card book-head">
-    <text class="head-title">{{bookName}}</text>
+    <view class="head-row">
+      <text class="head-title">{{bookName}}</text>
+      <audio-play kind="list" ids="{{bookIds}}" />
+    </view>
     <text class="head-sub" wx:if="{{collId}}">共 {{matched}} {{unit}}</text>
     <text class="head-sub" wx:else>{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>
     <text class="head-sub" wx:if="{{last}}" bindtap="onContinue">上次读到：{{last.title}} ›</text>
@@ -62,6 +65,7 @@
         </view>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
+      <audio-play poem="{{p.id}}" ids="{{bookIds}}" />
       <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
             style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"
             data-id="{{p.id}}" data-title="{{p.title}}" catchtap="onPick"></view>
@@ -79,6 +83,8 @@
   </view>
 
   <collect-picker id="collect" theme-style="{{themeStyle}}" bind:done="onCollectDone" />
+
+  <audio-bar />
 
   <view class="safe-bottom"></view>
   </block>

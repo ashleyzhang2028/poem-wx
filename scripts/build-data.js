@@ -14,6 +14,15 @@ const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.j
 
 const SERVER_KEYS = ["env", "service"];
 
+const AUDIO_DIR = path.join(__dirname, "..", "audio");
+
+const AUDIO_BOOKS = [
+  { file: "kenei_map.md", book: "poems" },
+  { file: "tangshi300_map.md", book: "tangshi300" },
+  { file: "songci300_map.md", book: "songci300" },
+  { file: "tongxinshihua_map.md", book: "tongxin" }
+];
+
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
@@ -23,6 +32,7 @@ const TRANSLATION_SOURCES = {
 
 function main() {
   const W = seed.loadCorpus();
+  const rows = seed.seedRows(W);
 
   const master = W.TEXT_MASTER || [];
   if (!master.length) throw seed.noCorpus(path.join(CORPUS_DIR, "data", "text-master.js"));
@@ -58,6 +68,7 @@ function main() {
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
   writeRoster();
+  writeAudio(W, rows);
   writeServer();
 
   console.log("索引 " + index.length + " 条");
@@ -66,6 +77,79 @@ function main() {
   const noted = Object.keys(courseTexts).filter(function (id) { return courseTexts[id].gloss; });
   const noteCount = noted.reduce(function (n, id) { return n + courseTexts[id].gloss.length; }, 0);
   console.log("生字生词注释 " + noted.length + " 篇 " + noteCount + " 条");
+}
+
+function audioRows(file) {
+  if (!fs.existsSync(path.join(AUDIO_DIR, file))) return [];
+  return fs
+    .readFileSync(path.join(AUDIO_DIR, file), "utf8")
+    .split("\n")
+    .map(function (line) { return line.trim(); })
+    .filter(function (line) { return line.charAt(0) === "|"; })
+    .slice(2)
+    .map(function (line) {
+      const cells = line.split("|").map(function (c) { return c.trim(); });
+      return { title: cells[1] || "", author: cells[3] || "", file: cells[4] || "" };
+    })
+    .filter(function (r) { return r.file; });
+}
+
+function named(title, author) {
+  return String(title || "").replace(/\s+/g, " ").trim() + "\u0000" + String(author || "").replace(/\s+/g, " ").trim();
+}
+
+function courseTextById(W) {
+  const out = {};
+  seed.courseIndex(W).forEach(function (x) {
+    out[x.row.id] = x.source.text || "";
+  });
+  return out;
+}
+
+function writeAudio(W, rows) {
+  const texts = {};
+  (rows.texts || []).forEach(function (t) {
+    texts[t.book_id + "#" + t.pos] = t.text || "";
+  });
+  const courseText = courseTextById(W);
+
+  const out = {};
+  const courseByText = {};
+  let orphans = [];
+
+  AUDIO_BOOKS.forEach(function (b) {
+    const catalog = audioRows(b.file);
+    const list = b.book === "poems" ? rows.poems : rows.catalog.filter(function (r) { return r.book_id === b.book; });
+    const queue = {};
+    catalog.forEach(function (a) {
+      const key = named(a.title, a.author);
+      (queue[key] = queue[key] || []).push(a.file);
+    });
+
+    list.forEach(function (r, i) {
+      const id = b.book === "poems" ? r.id : b.book + "-" + (i + 1);
+      const hit = queue[named(r.title, r.author)];
+      const file = hit && hit.length ? hit.shift() : "";
+      if (file) {
+        out[id] = file;
+        if (b.book === "poems") courseByText[seed.dedupKey(courseText[r.id])] = file;
+      }
+    });
+
+    if (b.book === "poems") return;
+
+    list.forEach(function (r, i) {
+      const id = b.book + "-" + (i + 1);
+      if (out[id]) return;
+      const twin = courseByText[seed.dedupKey(texts[b.book + "#" + r.pos])];
+      if (twin) out[id] = twin;
+      else orphans.push(id);
+    });
+  });
+
+  writeModule(path.join(OUT_DIR, "audio.js"), out);
+  console.log("音频 " + Object.keys(out).length + " 篇有 mp3（四部集子对不上 " + orphans.length + " 篇）");
+  if (orphans.length) console.log("  对不上的前几条：" + orphans.slice(0, 5).join("、"));
 }
 
 function dropStale() {

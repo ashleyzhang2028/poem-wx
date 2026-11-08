@@ -273,6 +273,170 @@ ok("课内那 251 条每一条都取得到正文",
     "行形状不对：" + JSON.stringify(rows.slice(0, 2)));
 }
 
+{
+  const audioMap = readModule(path.join(dataDir, "audio.js"));
+  const audioFile = /^[a-z0-9_]+(_[a-z0-9_]+)*\.mp3$/;
+  const badName = Object.keys(audioMap).filter((id) => !audioFile.test(audioMap[id]));
+  ok("音频清单的每一项都是「拼音_作者.mp3」", badName.length === 0,
+    "这几条文件名不像音频：" + badName.slice(0, 3).map((id) => id + "=" + audioMap[id]).join("、"));
+
+  const audioIds = Object.keys(audioMap);
+  const stranger = audioIds.filter((id) => !allIds.has(id));
+  ok("音频清单只挂在本机认得的篇目上", stranger.length === 0,
+    "这几条 id 不对着任何篇目：" + stranger.slice(0, 3).join("、"));
+
+  const four = ["poems", "tangshi300", "songci300", "tongxin"];
+  const missing = [];
+  four.forEach((book) => {
+    const hit = audioIds.filter((id) => id.indexOf(book + "-") === 0).length;
+    if (!hit) missing.push(book);
+  });
+  ok("课内与三部集子都有音频（" + four.map((b) => b + ":" + audioIds.filter((id) => id.indexOf(b + "-") === 0).length).join(" ") + "）",
+    missing.length === 0, "一部都没匹配上：" + missing.join("、"));
+  ok("课内 251 首每首都配上了音频",
+    perBook.poems.every((p) => !!audioMap[p.id]),
+    "缺 " + perBook.poems.filter((p) => !audioMap[p.id]).length + " 首");
+
+  const audioJs = fs.readFileSync(path.join(ROOT, "utils", "poem-audio.js"), "utf8");
+  ok("音频地址只在 poem-audio.js 里拼一次",
+    /audio\/poem\//.test(audioJs)
+      && jsFiles.every((f) => f === path.join(ROOT, "utils", "poem-audio.js")
+        || fs.readFileSync(f, "utf8").indexOf("audio/poem/") < 0),
+    "有别的文件也在拼音频地址 —— 换存储桶要改两处");
+}
+
+{
+  const savedWx = global.wx;
+  const storeMod = require(path.join(ROOT, "utils", "store.js"));
+  const savedProfile = storeMod.profile();
+  const savedAuth = storeMod.read(storeMod.KEYS.auth, null);
+  const heard = [];
+  const knob = {
+    src: "", playing: false, hooks: {},
+    play() { this.playing = true; (this.hooks.play || []).forEach((f) => f()); },
+    pause() { this.playing = false; (this.hooks.pause || []).forEach((f) => f()); },
+    stop() { this.playing = false; (this.hooks.stop || []).forEach((f) => f()); },
+    seek() {}, destroy() {},
+    onEnded(f) { (this.hooks.ended = [f]); },
+    onError(f) { (this.hooks.error = [f]); },
+    onPlay(f) { (this.hooks.play = [f]); },
+    onPause(f) { (this.hooks.pause = [f]); },
+    onStop(f) { (this.hooks.stop = [f]); },
+    fire(name) { (this.hooks[name] || []).forEach((f) => f()); }
+  };
+  const audioMem = {};
+  const said = [];
+  global.wx = {
+    createInnerAudioContext: () => knob,
+    showToast(o) { said.push((o && o.title) || ""); },
+    getStorageSync: (k) => (k in audioMem ? audioMem[k] : ""),
+    setStorageSync: (k, v) => { audioMem[k] = v; },
+    removeStorageSync: (k) => { delete audioMem[k]; },
+    getStorageInfoSync: () => ({ keys: Object.keys(audioMem) })
+  };
+
+  storeMod.saveProfile({ logged: true });
+  storeMod.drop(storeMod.KEYS.auth);
+  storeMod.drop(storeMod.KEYS.grant);
+  storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "pro", at: Date.now() });
+
+  delete require.cache[require.resolve(path.join(ROOT, "utils", "poem-audio.js"))];
+  const player = require(path.join(ROOT, "utils", "poem-audio.js"));
+  const ids = player.bookIds("poems").slice(0, 3);
+
+  ok("只有 Pro 与 Max 能播（Free 与未登录都不行）",
+    player.usable() === true
+      && (() => {
+        storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "free", at: Date.now() });
+        const free = player.usable();
+        storeMod.drop(storeMod.KEYS.auth);
+        storeMod.saveProfile({ logged: false });
+        const anon = player.usable();
+        storeMod.saveProfile({ logged: true });
+        storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "pro", at: Date.now() });
+        return free === false && anon === false;
+      })());
+
+  ok("Pro 只能单篇播放（连播是 Max 起）",
+    (() => {
+      const single = player.play(ids[0]);
+      const singleState = player.status();
+      const list = player.start(ids, ids[0]);
+      return single === true && singleState.open === false
+        && singleState.id === ids[0] && list === false;
+    })(),
+    JSON.stringify(player.status()));
+
+  storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "max", at: Date.now() });
+
+  player.start(ids, ids[0]);
+  const first = player.status();
+  ok("起播就落到第一篇，地址是云托管 audio/poem 下那一条",
+    first.open === true && first.id === ids[0] && knob.src.indexOf(player.urlOf(ids[0])) === 0
+      && player.urlOf(ids[0]).indexOf(player.BASE) === 0 && /[a-z0-9_]+\.mp3$/.test(player.urlOf(ids[0])),
+    JSON.stringify({ open: first.open, id: first.id, src: knob.src }));
+
+  player.next();
+  const second = player.status();
+  ok("下一首走队列里的下一支，工具栏跟着报出下一篇",
+    second.id === ids[1] && second.nextTitle === (corpus.indexById(ids[2]) || {}).t,
+    JSON.stringify({ id: second.id, next: second.nextTitle }));
+  player.prev();
+  ok("上一首回到前一支", player.status().id === ids[0], player.status().id);
+
+  player.toggle();
+  const paused = player.status();
+  player.toggle();
+  ok("播放与暂停共用一枚键，图标跟着状态换",
+    paused.playing === false && paused.playIcon !== player.status().playIcon && player.status().playing === true);
+
+  const modes = [player.cycle(), player.cycle(), player.cycle()];
+  ok("循环模式是 Repeat → Repeat One → Shuffle 三态轮回",
+    modes.join() === "one,shuffle,repeat", modes.join());
+  ok("三档各有自己的图标", new Set(player.MODES.map((m) => m.icon)).size === 3);
+
+  player.cycle();
+  knob.fire("ended");
+  ok("单首循环时播完回到本篇重来",
+    player.status().mode === "one" && player.status().id === ids[0] && knob.playing === true,
+    JSON.stringify(player.status().id));
+
+  player.cycle();
+  player.cycle();
+  knob.fire("ended");
+  ok("顺序播放时播完自动接下一支",
+    player.status().id === ids[1], player.status().id);
+
+  const before = said.length;
+  knob.fire("error");
+  ok("取不到 mp3 时提示「音频文件添加中」，连播跳过这一篇",
+    said.slice(before).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().id === ids[2],
+    JSON.stringify({ said: said.slice(before), id: player.status().id }));
+
+  player.play(ids[0]);
+  const quiet = said.length;
+  knob.fire("error");
+  ok("单篇取不到时只提示一句，不留一条空工具栏",
+    said.slice(quiet).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().open === false,
+    JSON.stringify({ said: said.slice(quiet), open: player.status().open }));
+
+  player.stop();
+  const stopped = player.status();
+  ok("停止收掉工具栏（队列清空、不再出声）",
+    stopped.open === false && stopped.playing === false && knob.src === "",
+    JSON.stringify({ open: stopped.open, src: knob.src }));
+
+  ok("对不上 mp3 的篇目不进队列（连播自动跳过）",
+    player.matched(["poems-xx1-01", "shijing-1", ""]).length === 1
+      && player.has("shijing-1") === false && player.urlOf("shijing-1") === "");
+
+  if (savedProfile && savedProfile.logged) storeMod.saveProfile(savedProfile);
+  else storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });
+  if (savedAuth) storeMod.write(storeMod.KEYS.auth, savedAuth);
+  else storeMod.drop(storeMod.KEYS.auth);
+  global.wx = savedWx;
+}
+
 ok("包里不再有正文分片与分片清单",
   !fs.existsSync(path.join(dataDir, "texts")) && !fs.existsSync(path.join(dataDir, "shards.js")),
   "data/texts/ 或 data/shards.js 还在 —— 课外正文已经整体删掉了");
@@ -1269,7 +1433,7 @@ ok("档位表只有 free / pro / max 三档（登录不是一个档位）",
 ok("能力表里没有「用户列表」（那是 owner / admin 的身份门，不是一项能力）",
   E.CAP_KEYS.indexOf("admin") < 0 && !E.CAPS.some((c) => c.tier === "admin"),
   "管理页混进能力表，对比表就多一行谁也不欠的管理权限");
-[["free", 7], ["pro", 19], ["max", 25]].forEach(([tier, n]) => {
+[["free", 7], ["pro", 20], ["max", 27]].forEach(([tier, n]) => {
   ok("档位 " + tier + " 拿到 " + n + " 项",
     E.compareSummary().filter((s) => s.tier === tier)[0].on === n,
     JSON.stringify(E.compareSummary()));
@@ -4487,6 +4651,45 @@ function mountFull(pg, query) {
       && /function scopeList\(all, view, scope\)/.test(homeJs)
       && /poolForScope/.test(homeJs.slice(homeJs.indexOf("function scopeList"))),
     "标题另写一套、或列表不走 poolForScope —— 标题与内容迟早对不上");
+  const rd = (f) => fs.readFileSync(path.join(ROOT, f), "utf8");
+
+  ok("音频播放门禁走同一个 readiness（不可用时不占位置）",
+    /function readiness\(kind\)/.test(rd("utils/poem-audio.js"))
+      && /audio\.readiness\(kind === "list" \? "list" : "one"\)/.test(
+        rd("components/audio-play/audio-play.js"))
+      && /entitlement\.can\("audio"\)/.test(rd("utils/poem-audio.js")),
+    "播放键没挂门禁 —— 档位不够时还会亮着，点下去弹 toast");
+  ok("连播另有一道门（Pro 只单篇，Max 才连播）",
+    /entitlement\.can\("audioloop"\)/.test(rd("utils/poem-audio.js"))
+      && /function start\(ids, id\)[\s\S]{0,80}?if \(!loopable\(\)\) return false/.test(
+        rd("utils/poem-audio.js"))
+      && /key: "audioloop"[^}]*tier: "max"/.test(rd("utils/entitlement.js")),
+    "连播没按档位收口 —— Pro 也能拉出一整条队列");
+  ok("音频只对配得上 mp3 的篇目出播放键",
+    /audio\.has\(this\.data\.poem\)/.test(rd("components/audio-play/audio-play.js"))
+      && /kind === "list" \|\|/.test(rd("components/audio-play/audio-play.js")),
+    "没对上音频的篇目也留了一枚播放键 —— 点了没声");
+  ok("播放与连播两枚键都在 audio-play 里，页面不各写一套",
+    ["pages/home/home.wxml", "pages/library/library.wxml", "pages/list/list.wxml",
+      "components/recite-sheet/recite-sheet.wxml"].every((f) => rd(f).indexOf("<audio-play") >= 0)
+      && rd("pages/home/home.wxml").indexOf("kind=\"list\"") >= 0
+      && rd("pages/library/library.wxml").indexOf("kind=\"list\"") >= 0
+      && rd("pages/list/list.wxml").indexOf("kind=\"list\"") >= 0,
+    "有一处自己画了播放键 —— 两个样子迟早不一样");
+  ok("播放工具栏只在连播页挂一次，五枚键与循环模式都在它里面",
+    /onToggle|onPrev|onNext|onStop|onMode/.test(rd("components/audio-bar/audio-bar.js"))
+      && ["repeat", "one", "shuffle"].every((k) => rd("utils/poem-audio.js").indexOf('key: "' + k + '"') >= 0)
+      && ["pages/home/home.json", "pages/library/library.json", "pages/list/list.json",
+        "pages/reader/reader.json"].every((f) => JSON.stringify(readJson(path.join(ROOT, f)))
+          .indexOf("audio-bar") >= 0),
+    "工具栏没挂上，或循环模式缺一档");
+  ok("详情页浮坞里那枚朗读键排在加入自选与书签之间",
+    /const AUDIO_AT = 2\b/.test(rd("components/operation-dock/operation-dock.js"))
+      && /key: "pick"[\s\S]{0,120}?key: "mark"/.test(rd("components/operation-dock/operation-dock.js"))
+      && /audio-on=\"\{\{audioOn\}\}\"/.test(rd("pages/reader/reader.wxml"))
+      && /audio\.readiness\("one"\)\.visible && audio\.has\(/.test(rd("pages/reader/reader.js")),
+    "浮坞里没有朗读键，或次序不对");
+
   ok("全部诗词卡点开走弹层，队列用它自己那一份（不与今日计划混）",
     /onOpenAll[\s\S]{0,200}?openSheet\(/.test(homeJs)
       && /source === "all" \? this\.scopeRows\(\) : this\.data\.plan/.test(homeJs));
@@ -6743,7 +6946,7 @@ const K = {
     "还有注释：" + dirty.slice(0, 8).join("、") +
       " —— 语料（scripts/corpus/）与契约只读副本（scripts/parity-web/）照原样摆着，不在这条范围内");
 
-  const generated = ["miniprogram/data/course.js"];
+  const generated = ["miniprogram/data/course.js", "miniprogram/data/audio.js"];
   const leaked = generated.filter((rel) => {
     if (tracked.has(rel)) return true;
     const p = path.join(repoRoot, rel);

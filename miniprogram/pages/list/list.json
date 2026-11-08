@@ -2,6 +2,8 @@
   "navigationBarTitleText": "课内阅读",
   "usingComponents": {
     "collect-picker": "/components/collect-picker/collect-picker",
+    "audio-play": "/components/audio-play/audio-play",
+    "audio-bar": "/components/audio-bar/audio-bar",
     "tab-bar": "/custom-tab-bar/index"
   }
 }

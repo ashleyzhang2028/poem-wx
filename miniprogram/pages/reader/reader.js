@@ -22,6 +22,7 @@ const scale = require("../../utils/type-scale");
 const gloss = require("../../utils/gloss");
 const spot = require("../../utils/read-spot");
 const readBg = require("../../utils/read-bg");
+const audio = require("../../utils/poem-audio");
 
 const FIRST_CHUNK = 24;
 
@@ -119,6 +120,7 @@ Page({
 
     dailyOn: false,
     dailyLocked: false,
+    audioOn: false,
     pickOn: false,
     markOn: false,
     extraTier: "pro",
@@ -206,6 +208,7 @@ Page({
       dailyOn: on,
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
+      audioOn: audio.readiness("one").visible && audio.has(this.data.id),
       pickOn: cols.collectionsOf(this.data.id).length > 0,
       markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
@@ -216,6 +219,7 @@ Page({
     const key = (e && e.detail && e.detail.key) || "";
     if (key === "daily") this.onToggleDaily();
     else if (key === "pick") this.onAddToCollection();
+    else if (key === "audio") this.onPlayAudio();
     else if (key === "mark") this.onToggleMark();
     else if (key === "text") this.onCopyText();
     else if (key === "align") this.onAlignToggle();
@@ -248,6 +252,15 @@ Page({
     }
     const box = this.selectComponent("#collect");
     if (box) box.ask(this.data.id, this.data.title || "");
+  },
+
+  onPlayAudio() {
+    if (!audio.readiness("one").visible) {
+      entitlement.gateTier("audio", { page: this });
+      return;
+    }
+    if (audio.status().id === this.data.id) audio.toggle();
+    else audio.play(this.data.id);
   },
 
   onAuthor() {

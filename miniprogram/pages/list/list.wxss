@@ -1,3 +1,14 @@
+.head-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.head-row .head-title {
+  flex: 1;
+  min-width: 0;
+}
+
 .book-head .head-title {
   font-family: var(--font-poem);
   font-size: var(--fs-lead);

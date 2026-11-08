@@ -4,6 +4,8 @@
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "read-sheet": "/components/read-sheet/read-sheet",
-    "tier-tag": "/components/tier-tag/tier-tag"
+    "tier-tag": "/components/tier-tag/tier-tag",
+    "audio-play": "/components/audio-play/audio-play",
+    "audio-bar": "/components/audio-bar/audio-bar"
   }
 }

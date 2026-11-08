@@ -41,6 +41,15 @@ const NAMES = [
   ["settings", "CilCog.svg"],
   ["actions", "CilOptions.svg"],
   ["copy", "CilCopy.svg"],
+  ["play", "CilMediaPlay.svg"],
+  ["pause", "CilMediaPause.svg"],
+  ["stop", "CilMediaStop.svg"],
+  ["stepBack", "CilMediaStepBackward.svg"],
+  ["stepForward", "CilMediaStepForward.svg"],
+  ["featured", "CilFeaturedPlaylist.svg"],
+  ["repeat", "ReiconRepeat.svg"],
+  ["repeatOne", "ReiconRepeateOne.svg"],
+  ["shuffle", "ReiconShuffle.svg"],
 ];
 
 function flatten(svg) {
