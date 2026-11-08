@@ -108,6 +108,10 @@ button, input, textarea {
   align-self: center;
 }
 
+.card-open > .audio-knob {
+  margin-left: var(--sp-2);
+}
+
 .card-title.plain {
   font-weight: 400;
 }
@@ -1228,9 +1232,9 @@ button, input, textarea {
 .chip.bad,
 .chip.fuzzy,
 .chip.good {
-  color: var(--on-ink);
-  background: var(--depth);
-  border-color: var(--depth);
+  color: var(--strong-text);
+  background: transparent;
+  border-color: var(--strong);
 }
 
 .chip.bad .chip-t, .chip.fuzzy .chip-t, .chip.good .chip-t {
@@ -1265,6 +1269,15 @@ button, input, textarea {
 
 .chip-hover {
   filter: brightness(.94);
+}
+
+.chip.bad.chip-hover,
+.chip.fuzzy.chip-hover,
+.chip.good.chip-hover {
+  color: var(--on-ink);
+  background: var(--depth);
+  border-color: var(--depth);
+  filter: none;
 }
 
 .chip.multi {

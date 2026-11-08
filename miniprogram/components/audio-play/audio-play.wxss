@@ -12,6 +12,9 @@
 }
 
 .audio-knob.framed {
+  box-sizing: content-box;
+  width: var(--h-pref);
+  height: var(--h-pref);
   border: 1rpx solid var(--line);
   border-radius: var(--radius-sm);
 }
