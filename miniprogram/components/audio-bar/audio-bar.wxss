@@ -57,13 +57,15 @@
 }
 
 .audio-bar-btn {
+  box-sizing: border-box;
   width: 56rpx;
   height: 56rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1rpx solid transparent;
   border-radius: 50%;
-  transition: background-color var(--t-press);
+  transition: background-color var(--t-press), border-color var(--t-press), color var(--t-press);
 }
 
 .audio-bar-btn-hover {
@@ -83,7 +85,15 @@
   -webkit-mask-size: contain;
 }
 
-.audio-bar-btn.mode .audio-bar-glyph {
+.audio-bar-btn.mode {
+  border-color: var(--ink-4);
+}
+
+.audio-bar-btn.mode.on {
+  border-color: var(--strong);
+}
+
+.audio-bar-btn.mode.on .audio-bar-glyph {
   color: var(--strong-text);
 }
 

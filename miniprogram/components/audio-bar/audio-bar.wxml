@@ -5,7 +5,7 @@
   </view>
 
   <view class="audio-bar-acts">
-    <view class="audio-bar-btn mode" hover-class="audio-bar-btn-hover" hover-stay-time="60"
+    <view class="audio-bar-btn mode {{modeOn ? 'on' : ''}}" hover-class="audio-bar-btn-hover" hover-stay-time="60"
           bindtap="onMode" aria-label="{{modeLabel}}">
       <view class="audio-bar-glyph" style="mask-image:url('{{modeIcon}}');-webkit-mask-image:url('{{modeIcon}}');"></view>
     </view>
