@@ -4693,6 +4693,12 @@ function mountFull(pg, query) {
   ok("全部诗词卡点开走弹层，队列用它自己那一份（不与今日计划混）",
     /onOpenAll[\s\S]{0,200}?openSheet\(/.test(homeJs)
       && /source === "all" \? this\.scopeRows\(\) : this\.data\.plan/.test(homeJs));
+
+  const homeMarkup = fs.readFileSync(path.join(ROOT, "pages", "home", "home.wxml"), "utf8");
+  ok("首页顶部那两颗胶囊（年级 / 范围）点得动，进的就是温习设置页",
+    (homeMarkup.match(/class="pill"[^>]*bindtap="onSettings"/g) || []).length === 2
+      && /onSettings\(\)\s*\{[\s\S]{0,120}?\/packages\/settings\/recite\/recite/.test(homeJs),
+    "胶囊还是死的，或者点下去没落到温习设置页");
 }
 
 {

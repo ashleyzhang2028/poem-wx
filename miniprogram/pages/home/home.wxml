@@ -56,8 +56,8 @@
         <text class="hero-title">跬步诗词</text>
 
         <view class="hero-pills">
-          <text class="pill">{{gradeName}}</text>
-          <text class="pill">{{scopeName}}</text>
+          <view class="pill" hover-class="pill-hover" hover-stay-time="60" bindtap="onSettings">{{gradeName}}</view>
+          <view class="pill" hover-class="pill-hover" hover-stay-time="60" bindtap="onSettings">{{scopeName}}</view>
         </view>
       </view>
 
