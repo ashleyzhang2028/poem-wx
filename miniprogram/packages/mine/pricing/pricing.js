@@ -100,7 +100,6 @@ Page({
     const cell = cells && cells[period];
     const act = actionOf(tab, tier);
     const all = pay.newFeatures(tab);
-    const isRec = (tier === "free" ? "pro" : tier) === tab;
     const options = pay.PERIODS.map((p) => {
       const c = cells && cells[p.key];
       return {
@@ -126,7 +125,7 @@ Page({
         features: all.slice(0, FEATURE_SHOWN),
         more: Math.max(0, all.length - FEATURE_SHOWN),
         current: tier === tab,
-        recommended: isRec,
+        recommended: tab === "max",
         tone: tab === "max" ? "zi" : "fei",
         actionText: cell ? act.text + " · ¥" + pay.yuan(cell.priceCents) + " / " + periodNow.name : act.text,
         disabled: act.disabled || !cell
