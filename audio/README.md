@@ -27,6 +27,9 @@
 篇目 id，编成 `miniprogram/data/audio.js`；同一首正文在课内与三部集子里都出现时共用同一个文件，
 集子里没进清单的那些篇目按正文与课内对一次，对上就沿用课内那条。
 
+`AUDIO_BOOKS` 每项带 `ready`。眼下只开课内，另外三部是 `false`：清单照样留在这里，
+mp3 一批批传好，传完一部把那一项的 `ready` 改成 `true` 再重跑 `node scripts/build-data.js`。
+
 播放地址为 `https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/poem/<文件名>`，
 只在 `miniprogram/utils/poem-audio.js` 里拼一次。播放能力键 `audio`，Pro 起。
 

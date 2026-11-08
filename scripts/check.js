@@ -285,14 +285,6 @@ ok("课内那 251 条每一条都取得到正文",
   ok("音频清单只挂在本机认得的篇目上", stranger.length === 0,
     "这几条 id 不对着任何篇目：" + stranger.slice(0, 3).join("、"));
 
-  const four = ["poems", "tangshi300", "songci300", "tongxin"];
-  const missing = [];
-  four.forEach((book) => {
-    const hit = audioIds.filter((id) => id.indexOf(book + "-") === 0).length;
-    if (!hit) missing.push(book);
-  });
-  ok("课内与三部集子都有音频（" + four.map((b) => b + ":" + audioIds.filter((id) => id.indexOf(b + "-") === 0).length).join(" ") + "）",
-    missing.length === 0, "一部都没匹配上：" + missing.join("、"));
   ok("课内 251 首每首都配上了音频",
     perBook.poems.every((p) => !!audioMap[p.id]),
     "缺 " + perBook.poems.filter((p) => !audioMap[p.id]).length + " 首");

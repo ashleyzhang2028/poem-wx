@@ -17,10 +17,10 @@ const SERVER_KEYS = ["env", "service"];
 const AUDIO_DIR = path.join(__dirname, "..", "audio");
 
 const AUDIO_BOOKS = [
-  { file: "kenei_map.md", book: "poems" },
-  { file: "tangshi300_map.md", book: "tangshi300" },
-  { file: "songci300_map.md", book: "songci300" },
-  { file: "tongxinshihua_map.md", book: "tongxin" }
+  { file: "kenei_map.md", book: "poems", ready: true },
+  { file: "tangshi300_map.md", book: "tangshi300", ready: false },
+  { file: "songci300_map.md", book: "songci300", ready: false },
+  { file: "tongxinshihua_map.md", book: "tongxin", ready: false }
 ];
 
 const TRANSLATION_SOURCES = {
@@ -117,7 +117,9 @@ function writeAudio(W, rows) {
   const courseByText = {};
   let orphans = [];
 
-  AUDIO_BOOKS.forEach(function (b) {
+  const held = AUDIO_BOOKS.filter(function (b) { return !b.ready; });
+
+  AUDIO_BOOKS.filter(function (b) { return b.ready; }).forEach(function (b) {
     const catalog = audioRows(b.file);
     const list = b.book === "poems" ? rows.poems : rows.catalog.filter(function (r) { return r.book_id === b.book; });
     const queue = {};
@@ -148,8 +150,11 @@ function writeAudio(W, rows) {
   });
 
   writeModule(path.join(OUT_DIR, "audio.js"), out);
-  console.log("音频 " + Object.keys(out).length + " 篇有 mp3（四部集子对不上 " + orphans.length + " 篇）");
+  const heldNames = held.map(function (b) { return b.book; }).join(" / ");
+  console.log("音频 " + Object.keys(out).length + " 篇有 mp3（对不上 " + orphans.length + " 篇）" +
+    (heldNames ? "；" + heldNames + " 的 mp3 还没备好，不开" : ""));
   if (orphans.length) console.log("  对不上的前几条：" + orphans.slice(0, 5).join("、"));
+  if (held.length) console.log("  没开集子的清单仍在 audio/ 下，备好把 ready 改成 true 就接上");
 }
 
 function dropStale() {
