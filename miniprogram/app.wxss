@@ -542,6 +542,10 @@ button, input, textarea {
   border-color: var(--strong);
 }
 
+.pill-hover {
+  background: var(--sink);
+}
+
 .tag.amber {
   color: var(--amber);
   background: var(--amber-soft);
