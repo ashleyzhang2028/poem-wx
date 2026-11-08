@@ -121,6 +121,7 @@ Page({
     dailyOn: false,
     dailyLocked: false,
     audioOn: false,
+    audioIcon: icons.play,
     pickOn: false,
     markOn: false,
     extraTier: "pro",
@@ -167,6 +168,11 @@ Page({
       return;
     }
 
+    if (!this.audioWatch) {
+      this.audioWatch = (st) => this.paintAudioIcon(st);
+      audio.watch(this.audioWatch);
+    }
+
     if (this.data.locked) this.setData({ locked: false });
     if (!this.loaded) this.openEntry();
     this.applyReading();
@@ -201,6 +207,15 @@ Page({
     if (titleMark !== this.data.titleMark) this.setData({ titleMark });
   },
 
+  audioIconOf(st) {
+    return st.id === this.data.id && st.playing ? icons.pause : icons.play;
+  },
+
+  paintAudioIcon(st) {
+    const icon = this.audioIconOf(st);
+    if (icon !== this.data.audioIcon) this.setData({ audioIcon: icon });
+  },
+
   syncDaily() {
     const on = store.dailyExtra().indexOf(this.data.id) >= 0;
     const extraTier = entitlement.tierOf("extra");
@@ -209,6 +224,7 @@ Page({
       extraTier: extraTier,
       dailyLocked: !entitlement.can("extra") && entitlement.reachable(extraTier, entitlement.status().tier),
       audioOn: audio.readiness("one").visible && audio.has(this.data.id),
+      audioIcon: this.audioIconOf(audio.status()),
       pickOn: cols.collectionsOf(this.data.id).length > 0,
       markOn: marks.has(this.data.id),
       pickTier: entitlement.tierOf("collections")
@@ -671,6 +687,8 @@ Page({
   },
 
   onUnload() {
+    audio.unwatch(this.audioWatch);
+    this.audioWatch = null;
     corpusGate.close(this);
     if (this.advance) clearTimeout(this.advance);
     if (this.saveTimer) clearTimeout(this.saveTimer);

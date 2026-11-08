@@ -85,7 +85,6 @@
   flex: none;
   display: flex;
   align-items: center;
-  padding-left: var(--sp-3);
 }
 
 .face {

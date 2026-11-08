@@ -34,7 +34,7 @@
 
 .audio-bar-title {
   font-family: var(--font-poem);
-  font-size: var(--fs-body);
+  font-size: var(--fs-title);
   color: var(--strong-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -42,7 +42,7 @@
 }
 
 .audio-bar-next {
-  font-size: var(--fs-hint);
+  font-size: var(--fs-caption);
   color: var(--ink-3);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -74,7 +74,7 @@
   width: 40rpx;
   height: 40rpx;
   background-color: currentColor;
-  color: var(--ink-2);
+  color: var(--ink-3);
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;

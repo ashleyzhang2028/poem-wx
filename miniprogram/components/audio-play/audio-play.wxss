@@ -1,12 +1,6 @@
-:host {
-  flex: none;
-  display: flex;
-  align-items: center;
-  align-self: center;
-}
-
 .audio-knob {
   flex: none;
+  align-self: center;
   box-sizing: border-box;
   width: var(--h-pref);
   height: var(--h-pref);
@@ -17,15 +11,20 @@
   transition: background-color var(--t-press);
 }
 
+.audio-knob.framed {
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
 .audio-knob-hover {
   background: var(--sink);
 }
 
 .audio-knob-glyph {
-  width: var(--h-round-ico);
-  height: var(--h-round-ico);
+  width: var(--glyph-round);
+  height: var(--glyph-round);
   background-color: currentColor;
-  color: var(--ink-3);
+  color: var(--ink-4);
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
@@ -35,5 +34,7 @@
 }
 
 .audio-knob.list .audio-knob-glyph {
-  color: var(--strong-text);
+  width: var(--h-round-ico);
+  height: var(--h-round-ico);
+  color: var(--ink-3);
 }
