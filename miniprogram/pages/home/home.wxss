@@ -221,7 +221,7 @@
   width: 56rpx;
   height: 56rpx;
   margin: 0 calc(-1 * var(--sp-2)) 0 auto;
-  transform: translateX(calc(4rpx * var(--ui-scale)));
+  transform: translateX(calc(8rpx * var(--ui-scale)));
 }
 
 .daily-poem .daily-refresh-hover {
