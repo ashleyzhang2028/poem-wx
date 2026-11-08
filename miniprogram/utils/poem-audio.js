@@ -5,9 +5,11 @@ const icons = require("./icons");
 const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/poem/";
 
 const MODES = [
-  { key: "repeat", icon: icons.repeat, label: "顺序播放" },
-  { key: "one", icon: icons.repeatOne, label: "单首循环" },
-  { key: "shuffle", icon: icons.shuffle, label: "随机播放" }
+  { key: "order", icon: icons.repeat, label: "顺序播放", on: false },
+  { key: "repeat", icon: icons.repeat, label: "列表循环", on: true },
+  { key: "one", icon: icons.repeatOne, label: "单首循环", on: true },
+  { key: "shuffle", icon: icons.shuffle, label: "随机一遍", on: false },
+  { key: "shuffleRepeat", icon: icons.shuffle, label: "随机循环", on: true }
 ];
 
 const NOTICE_UPLOADING = "音频文件添加中";
@@ -84,7 +86,8 @@ function readiness(kind) {
 let ctx = null;
 let queue = [];
 let index = 0;
-let mode = "repeat";
+let mode = "order";
+let deck = [];
 let playing = false;
 let looping = false;
 let listeners = [];
@@ -125,20 +128,59 @@ function modeOf(key) {
   return MODES.find((m) => m.key === key) || MODES[0];
 }
 
-function step(by) {
-  if (!queue.length) return 0;
-  if (mode === "shuffle" && queue.length > 1) {
-    let next = index;
-    while (next === index) next = Math.floor(Math.random() * queue.length);
-    return next;
+function randomOn() {
+  return mode === "shuffle" || mode === "shuffleRepeat";
+}
+
+function endless() {
+  return mode === "repeat" || mode === "one" || mode === "shuffleRepeat";
+}
+
+function refill() {
+  deck = queue.filter((id) => id !== queue[index]);
+  for (let i = deck.length - 1; i > 0; i -= 1) {
+    const at = Math.floor(Math.random() * (i + 1));
+    const id = deck[at];
+    deck[at] = deck[i];
+    deck[i] = id;
   }
-  return (index + by + queue.length) % queue.length;
+}
+
+function draw() {
+  if (!deck.length) {
+    if (!endless()) return "";
+    refill();
+  }
+  return deck.splice(Math.floor(Math.random() * deck.length), 1)[0] || "";
+}
+
+function randomOther() {
+  if (queue.length < 2) return index;
+  let next = index;
+  while (next === index) next = Math.floor(Math.random() * queue.length);
+  return next;
+}
+
+function advance() {
+  if (randomOn()) {
+    const id = draw();
+    return id ? queue.indexOf(id) : -1;
+  }
+  const at = index + 1;
+  return at < queue.length ? at : (endless() ? 0 : -1);
+}
+
+function upcoming() {
+  if (mode === "one" || randomOn()) return "";
+  if (index + 1 < queue.length) return queue[index + 1];
+  return endless() ? queue[0] : "";
 }
 
 function drop() {
   const c = ensure();
   queue = [];
   index = 0;
+  deck = [];
   playing = false;
   looping = false;
   if (c) {
@@ -147,20 +189,34 @@ function drop() {
   }
 }
 
+function repeatHere() {
+  source().seek(0);
+  source().play();
+  emit();
+}
+
 function onEnded() {
   if (!queue.length) return;
-  if (!looping || (mode !== "one" && queue.length === 1)) {
+  if (!looping) {
     drop();
     emit();
     return;
   }
-  if (mode === "one") {
-    source().seek(0);
-    source().play();
+  if (mode === "one" || queue.length === 1) {
+    if (endless()) repeatHere();
+    else {
+      drop();
+      emit();
+    }
+    return;
+  }
+  const at = advance();
+  if (at < 0) {
+    drop();
     emit();
     return;
   }
-  index = step(1);
+  index = at;
   load(true);
   emit();
 }
@@ -177,6 +233,7 @@ function offline(err) {
 
 function following() {
   for (let i = 1; i <= queue.length; i += 1) {
+    if (!randomOn() && !endless() && index + i >= queue.length) return -1;
     const at = (index + i) % queue.length;
     if (!failed[queue[at]]) return at;
   }
@@ -207,6 +264,7 @@ function start(ids, id) {
   queue = list;
   const at = list.indexOf(String(id || ""));
   index = at >= 0 ? at : 0;
+  refill();
   looping = true;
   load(true);
   emit();
@@ -220,6 +278,7 @@ function play(id) {
   failed = {};
   queue = [one];
   index = 0;
+  deck = [];
   looping = false;
   load(true);
   emit();
@@ -236,14 +295,21 @@ function toggle() {
 
 function next() {
   if (!queue.length) return false;
-  index = step(1);
+  const at = advance();
+  if (at < 0) return false;
+  index = at;
   load(true);
   return true;
 }
 
 function prev() {
   if (!queue.length) return false;
-  index = step(-1);
+  if (randomOn()) {
+    index = randomOther();
+  } else {
+    const at = index - 1;
+    index = at >= 0 ? at : (endless() ? queue.length - 1 : 0);
+  }
   load(true);
   return true;
 }
@@ -258,6 +324,7 @@ function stop() {
 function cycle() {
   const at = MODES.findIndex((m) => m.key === mode);
   mode = MODES[(at + 1) % MODES.length].key;
+  if (randomOn()) refill();
   emit();
   return mode;
 }
@@ -270,16 +337,16 @@ function titleOf(id) {
 function status() {
   if (!usable() && queue.length) drop();
   const id = queue[index] || "";
-  const nextId = queue.length > 1 ? queue[(index + 1) % queue.length] : "";
   return {
     open: usable() && looping && queue.length > 0,
     id: id,
     title: titleOf(id),
-    nextTitle: mode === "shuffle" ? "" : titleOf(nextId),
+    nextTitle: titleOf(upcoming()),
     playing: playing,
     mode: mode,
     modeIcon: modeOf(mode).icon,
     modeLabel: modeOf(mode).label,
+    modeOn: modeOf(mode).on,
     playIcon: playing ? icons.pause : icons.play,
     prevIcon: icons.stepBack,
     nextIcon: icons.stepForward,

@@ -64,7 +64,7 @@ miniprogram/
 │   ├── scheduler.js                 # 每日计划与进度总览
 │   ├── pinyin.js                    # 注音（多音字消歧，与网页版同口径）
 │   ├── sfx.js                       # 音效：温习三态与答题（Web Audio；云托管 `audio/effect/*.mp3` 取到前现场合成，包内不放音频）
-│   ├── poem-audio.js                # 诗词音频：篇目 → mp3、单播与连播队列、三档循环，见 § 二点九
+│   ├── poem-audio.js                # 诗词音频：篇目 → mp3、单播与连播队列、五档循环，见 § 二点九
 │   ├── entitlement.js / tiers.js    # 门禁：登录门（block）+ 三档分层
 │   ├── author-index.js              # 作者索引：朝代归一 / 异名归一 / 名册构建
 │   ├── tab-page.js                  # 跳 tab 页的唯一出口（navigateTo 去 tab 页静默失败）
@@ -262,6 +262,13 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
   不可用时连位置都不占
 - 播放键一个组件 `components/audio-play`，单篇与连播只差 `kind`；
   工具栏一个组件 `components/audio-bar`，只在 Max 的连播队列非空时出现
+- 播放模式五档一轮：顺序 `order` → 列表循环 `repeat` → 单首循环 `one` →
+  随机一遍 `shuffle` → 随机循环 `shuffleRepeat`。`endless()` 判「播完还有下一支」：
+  `repeat` / `one` / `shuffleRepeat` 为真，`order` / `shuffle` 播到尾就收掉工具栏。
+  工具栏那枚键按 `status().modeOn` 描边：亮的走主题色，不亮的走 `--ink-4` 灰
+- 随机的「不重样」靠一副牌：`deck` 存这一轮还没抽过的篇目，抽一张少一张，
+  抽空了自己续上（`shuffle` 抽空即止）。切到随机档与起播时洗一次牌，
+  上一首 / 下一首在随机档换一支随机的，不按队列顺序走
 - 连播的队列是「这一屏里配得上 mp3 的那些」：今日温习计划、自选集合、漫读书目格与列表页。
   对不上的自动跳过，不是排在队列里等它失败
 - mp3 还没传到云上时，`onError` 当作这一篇取不到：提示「音频文件添加中」，

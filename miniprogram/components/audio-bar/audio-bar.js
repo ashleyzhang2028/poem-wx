@@ -15,6 +15,7 @@ Component({
     playIcon: audio.icons.play,
     modeIcon: audio.icons.repeat,
     modeLabel: audio.MODES[0].label,
+    modeOn: audio.MODES[0].on,
     prevIcon: audio.icons.stepBack,
     nextIcon: audio.icons.stepForward,
     stopIcon: audio.icons.stop

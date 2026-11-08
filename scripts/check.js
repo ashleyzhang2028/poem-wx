@@ -382,10 +382,30 @@ ok("课内那 251 条每一条都取得到正文",
   ok("播放与暂停共用一枚键，图标跟着状态换",
     paused.playing === false && paused.playIcon !== player.status().playIcon && player.status().playing === true);
 
-  const modes = [player.cycle(), player.cycle(), player.cycle()];
-  ok("循环模式是 Repeat → Repeat One → Shuffle 三态轮回",
-    modes.join() === "one,shuffle,repeat", modes.join());
-  ok("三档各有自己的图标", new Set(player.MODES.map((m) => m.icon)).size === 3);
+  const modes = [player.cycle(), player.cycle(), player.cycle(), player.cycle(), player.cycle()];
+  ok("播放模式五态轮回：顺序 → 列表循环 → 单首循环 → 随机一遍 → 随机循环",
+    modes.join() === "repeat,one,shuffle,shuffleRepeat,order", modes.join());
+
+  const flags = [];
+  for (let i = 0; i < 5; i += 1) {
+    player.cycle();
+    flags.push(player.status().modeOn);
+  }
+  ok("只有顺序与随机一遍不描主题色，其余三档亮着",
+    flags.join() === "true,true,false,true,false", flags.join());
+
+  player.next();
+  player.next();
+  knob.fire("ended");
+  ok("顺序播放播完最后一支就收工，不回卷首", player.status().open === false,
+    JSON.stringify(player.status()));
+
+  player.start(ids, ids[2]);
+  player.cycle();
+  knob.fire("ended");
+  ok("列表循环播完最后一支接回队首",
+    player.status().mode === "repeat" && player.status().id === ids[0] && player.status().open === true,
+    JSON.stringify({ mode: player.status().mode, id: player.status().id }));
 
   player.cycle();
   knob.fire("ended");
@@ -394,15 +414,35 @@ ok("课内那 251 条每一条都取得到正文",
     JSON.stringify(player.status().id));
 
   player.cycle();
-  player.cycle();
+  const walked = [];
+  for (let i = 0; i < 2; i += 1) {
+    knob.fire("ended");
+    walked.push(player.status().id);
+  }
+  ok("随机一遍播完换队列里还没播过的那支",
+    walked[0] && walked[0] !== ids[0] && walked[1] && walked[1] !== walked[0]
+      && player.status().open === true, JSON.stringify(walked));
   knob.fire("ended");
-  ok("顺序播放时播完自动接下一支",
-    player.status().id === ids[1], player.status().id);
+  ok("随机一遍走完一整轮就收工", player.status().open === false, JSON.stringify(player.status()));
 
+  player.start(ids, ids[0]);
+  while (player.status().mode !== "shuffleRepeat") player.cycle();
+  const ring = [player.status().id];
+  for (let i = 0; i < 7; i += 1) {
+    knob.fire("ended");
+    ring.push(player.status().id);
+  }
+  ok("随机循环走完一轮自己续上，相邻两支不重样",
+    ring.every((id, i) => !!id && (i === 0 || id !== ring[i - 1]))
+      && player.status().open === true && player.status().mode === "shuffleRepeat",
+    JSON.stringify(ring));
+
+  while (player.status().mode !== "repeat") player.cycle();
+  player.start(ids, ids[0]);
   const before = said.length;
   knob.fire("error");
   ok("取不到 mp3 时提示「音频文件添加中」，连播跳过这一篇",
-    said.slice(before).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().id === ids[2],
+    said.slice(before).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().id === ids[1],
     JSON.stringify({ said: said.slice(before), id: player.status().id }));
 
   player.play(ids[0]);
@@ -4703,7 +4743,8 @@ function mountFull(pg, query) {
     "有一处自己画了播放键 —— 两个样子迟早不一样");
   ok("播放工具栏只在连播页挂一次，五枚键与循环模式都在它里面",
     /onToggle|onPrev|onNext|onStop|onMode/.test(rd("components/audio-bar/audio-bar.js"))
-      && ["repeat", "one", "shuffle"].every((k) => rd("utils/poem-audio.js").indexOf('key: "' + k + '"') >= 0)
+      && ["order", "repeat", "one", "shuffle", "shuffleRepeat"]
+        .every((k) => rd("utils/poem-audio.js").indexOf('key: "' + k + '"') >= 0)
       && ["pages/home/home.json", "pages/library/library.json", "pages/list/list.json",
         "pages/reader/reader.json"].every((f) => JSON.stringify(readJson(path.join(ROOT, f)))
           .indexOf("audio-bar") >= 0),
