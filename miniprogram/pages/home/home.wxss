@@ -134,6 +134,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.count-lead {
+  padding-right: calc(4rpx * var(--ui-scale));
+}
+
 .row-end {
   flex: none;
   display: flex;
