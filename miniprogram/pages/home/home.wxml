@@ -123,7 +123,7 @@
     <view class="card" wx:if="{{total || loading}}">
       <view class="card-open">
         <text class="card-title">今日温习</text>
-        <text class="all-count">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
+        <text class="all-count count-lead">{{baseCount ? doneCount + '/' + baseCount : total + ' 首'}}</text>
         <audio-play kind="list" ids="{{planIds}}" />
       </view>
 
@@ -171,7 +171,7 @@
       <view class="card" wx:for="{{collections}}" wx:key="id" wx:for-item="coll">
         <view class="card-open" hover-class="card-hover" hover-stay-time="60" data-id="{{coll.id}}" bindtap="onProgress">
           <text class="card-title">{{coll.title}}</text>
-          <text class="all-count">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
+          <text class="all-count count-lead">{{coll.planned ? coll.done + '/' + coll.planned : coll.count + ' 首'}}</text>
           <audio-play kind="list" ids="{{coll.ids}}" />
         </view>
 
