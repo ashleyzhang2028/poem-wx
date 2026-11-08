@@ -240,7 +240,9 @@ function adopt(rec, key) {
 
 function dayStamp(ts) {
   const d = new Date(ts);
-  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  const mm = String(d.getMonth() + 1);
+  const dd = String(d.getDate());
+  return d.getFullYear() + "-" + (mm.length < 2 ? "0" + mm : mm) + "-" + (dd.length < 2 ? "0" + dd : dd);
 }
 
 function reviewedToday(rec, t) {
