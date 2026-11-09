@@ -35,25 +35,26 @@
 .audio-bar-disc {
   position: relative;
   flex: none;
-  align-self: stretch;
-  aspect-ratio: 1;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   overflow: hidden;
-  animation: audio-bar-spin 12s linear infinite;
-}
-
-.audio-bar-disc.paused {
-  animation-play-state: paused;
-}
-
-@keyframes audio-bar-spin {
-  to { transform: rotate(360deg); }
+  background: var(--sink);
 }
 
 .audio-bar-disc-img {
   display: block;
   width: 100%;
   height: 100%;
+  animation: audio-bar-spin 12s linear infinite;
+}
+
+.audio-bar-disc.paused .audio-bar-disc-img {
+  animation-play-state: paused;
+}
+
+@keyframes audio-bar-spin {
+  to { transform: rotate(360deg); }
 }
 
 .audio-bar-disc-hole {
