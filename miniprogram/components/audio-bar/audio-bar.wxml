@@ -1,7 +1,13 @@
 <view class="audio-bar" wx:if="{{open}}" style="{{lift ? 'bottom:calc(var(--tabbar-h) + ' + lift + 'rpx)' : ''}}">
   <view class="audio-bar-main">
-    <text class="audio-bar-title">{{title}}</text>
-    <text class="audio-bar-next" wx:if="{{nextTitle}}">下一首 · {{nextTitle}}</text>
+    <view class="audio-bar-disc {{playing ? '' : 'paused'}}">
+      <image class="audio-bar-disc-img" src="{{cover}}" mode="aspectFill" aria-label="专辑封面" />
+      <view class="audio-bar-disc-hole"></view>
+    </view>
+    <view class="audio-bar-text">
+      <text class="audio-bar-title">{{title}}</text>
+      <text class="audio-bar-next" wx:if="{{nextTitle}}">下一首 · {{nextTitle}}</text>
+    </view>
   </view>
 
   <view class="audio-bar-acts">

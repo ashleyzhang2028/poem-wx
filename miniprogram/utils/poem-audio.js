@@ -2,7 +2,9 @@ const corpus = require("./corpus");
 const entitlement = require("./entitlement");
 const icons = require("./icons");
 
-const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/poem/";
+const HOST = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/";
+const BASE = HOST + "poem/";
+const COVER = HOST + "cover/apic.jpg";
 
 const MODES = [
   { key: "order", icon: icons.repeat, label: "顺序播放", on: false },
@@ -405,6 +407,7 @@ function status() {
     id: id,
     title: titleOf(id),
     nextTitle: titleOf(upcoming()),
+    cover: COVER,
     playing: playing,
     mode: mode,
     modeIcon: modeOf(mode).icon,
@@ -428,6 +431,7 @@ function unwatch(fn) {
 
 module.exports = {
   BASE,
+  COVER,
   MODES,
   NOTICE_UPLOADING,
   NOTICE_OFFLINE,

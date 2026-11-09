@@ -11,6 +11,7 @@ Component({
     open: false,
     title: "",
     nextTitle: "",
+    cover: audio.COVER,
     playing: false,
     playIcon: audio.icons.play,
     modeIcon: audio.icons.repeat,
