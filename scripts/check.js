@@ -303,11 +303,12 @@ ok("课内那 251 条每一条都取得到正文",
   const savedProfile = storeMod.profile();
   const savedAuth = storeMod.read(storeMod.KEYS.auth, null);
   const heard = [];
+  const booth = { src: "", title: "", playing: false, hooks: {} };
   const knob = {
     src: "", playing: false, hooks: {},
-    play() { this.playing = true; (this.hooks.play || []).forEach((f) => f()); },
-    pause() { this.playing = false; (this.hooks.pause || []).forEach((f) => f()); },
-    stop() { this.playing = false; (this.hooks.stop || []).forEach((f) => f()); },
+    play() { this.playing = true; booth.playing = true; (this.hooks.play || []).forEach((f) => f()); },
+    pause() { this.playing = false; booth.playing = false; (this.hooks.pause || []).forEach((f) => f()); },
+    stop() { this.playing = false; booth.playing = false; (this.hooks.stop || []).forEach((f) => f()); },
     seek() {}, destroy() {},
     onEnded(f) { (this.hooks.ended = [f]); },
     onError(f) { (this.hooks.error = [f]); },
@@ -316,10 +317,21 @@ ok("课内那 251 条每一条都取得到正文",
     onStop(f) { (this.hooks.stop = [f]); },
     fire(name) { (this.hooks[name] || []).forEach((f) => f()); }
   };
+  booth.play = () => knob.play();
+  booth.pause = () => knob.pause();
+  booth.stop = () => knob.stop();
+  booth.seek = knob.seek;
+  booth.fire = knob.fire;
+  booth.onEnded = (f) => { booth.hooks.ended = [f]; };
+  booth.onError = (f) => { booth.hooks.error = [f]; };
+  booth.onPlay = (f) => { booth.hooks.play = [f]; };
+  booth.onPause = (f) => { booth.hooks.pause = [f]; };
+  booth.onStop = (f) => { booth.hooks.stop = [f]; };
   const audioMem = {};
   const said = [];
   global.wx = {
     createInnerAudioContext: () => knob,
+    getBackgroundAudioManager: () => booth,
     showToast(o) { said.push((o && o.title) || ""); },
     getStorageSync: (k) => (k in audioMem ? audioMem[k] : ""),
     setStorageSync: (k, v) => { audioMem[k] = v; },
@@ -364,9 +376,14 @@ ok("课内那 251 条每一条都取得到正文",
   player.start(ids, ids[0]);
   const first = player.status();
   ok("起播就落到第一篇，地址是云托管 audio/poem 下那一条",
-    first.open === true && first.id === ids[0] && knob.src.indexOf(player.urlOf(ids[0])) === 0
+    first.open === true && first.id === ids[0] && booth.src.indexOf(player.urlOf(ids[0])) === 0
       && player.urlOf(ids[0]).indexOf(player.BASE) === 0 && /[a-z0-9_]+\.mp3$/.test(player.urlOf(ids[0])),
-    JSON.stringify({ open: first.open, id: first.id, src: knob.src }));
+    JSON.stringify({ open: first.open, id: first.id, src: booth.src }));
+
+  ok("连播的每一支都交给后台播放器，锁屏后接着放",
+    booth.src === player.urlOf(ids[0]) && booth.title === (corpus.indexById(ids[0]) || {}).t
+      && knob.src === "",
+    JSON.stringify({ bg: booth.src, title: booth.title, inner: knob.src }));
 
   player.next();
   const second = player.status();
@@ -375,12 +392,18 @@ ok("课内那 251 条每一条都取得到正文",
     JSON.stringify({ id: second.id, next: second.nextTitle }));
   player.prev();
   ok("上一首回到前一支", player.status().id === ids[0], player.status().id);
-
-  player.toggle();
   const paused = player.status();
   player.toggle();
+  const resumed = player.status();
   ok("播放与暂停共用一枚键，图标跟着状态换",
-    paused.playing === false && paused.playIcon !== player.status().playIcon && player.status().playing === true);
+    paused.playing === true && paused.playIcon !== resumed.playIcon
+      && resumed.playing === false);
+
+  const boothBefore = booth.src;
+  player.play(ids[0]);
+  ok("单篇播放走不出后台的那个播放器，收起工具栏即收",
+    booth.src !== boothBefore && player.status().open === false,
+    JSON.stringify({ bg: booth.src }));
 
   const modes = [player.cycle(), player.cycle(), player.cycle(), player.cycle(), player.cycle()];
   ok("播放模式五态轮回：顺序 → 列表循环 → 单首循环 → 随机一遍 → 随机循环",
@@ -455,7 +478,7 @@ ok("课内那 251 条每一条都取得到正文",
   player.stop();
   const stopped = player.status();
   ok("停止收掉工具栏（队列清空、不再出声）",
-    stopped.open === false && stopped.playing === false && knob.src === "",
+    stopped.open === false && stopped.playing === false && knob.src === "" && booth.title === "",
     JSON.stringify({ open: stopped.open, src: knob.src }));
 
   ok("对不上 mp3 的篇目不进队列（连播自动跳过）",

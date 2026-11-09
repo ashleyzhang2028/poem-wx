@@ -58,8 +58,16 @@ function bookIds(bookId) {
   return out;
 }
 
-function supported() {
+function inner() {
   return typeof wx !== "undefined" && typeof wx.createInnerAudioContext === "function";
+}
+
+function background() {
+  return typeof wx !== "undefined" && typeof wx.getBackgroundAudioManager === "function";
+}
+
+function supported() {
+  return inner() || background();
 }
 
 function usable() {
@@ -84,6 +92,7 @@ function readiness(kind) {
 }
 
 let ctx = null;
+let bg = null;
 let queue = [];
 let index = 0;
 let mode = "order";
@@ -94,7 +103,7 @@ let listeners = [];
 let failed = {};
 
 function ensure() {
-  if (ctx || !supported()) return ctx;
+  if (ctx || !supported() || !inner()) return ctx;
   ctx = wx.createInnerAudioContext();
   ctx.autoplay = false;
   ctx.onEnded(() => onEnded());
@@ -105,23 +114,67 @@ function ensure() {
   return ctx;
 }
 
+function held() {
+  return bg ? bg : ensure();
+}
+
+function release() {
+  if (!bg) return;
+  bg.title = "";
+}
+
+function ensureBackground() {
+  if (bg) return bg;
+  if (!background()) return null;
+  bg = wx.getBackgroundAudioManager();
+  bg.onEnded(() => onEnded());
+  bg.onError((err) => onFail(err));
+  bg.onPlay(() => paint(true));
+  bg.onPause(() => paint(false));
+  bg.onStop(() => paint(false));
+  return bg;
+}
+
+function sing(title) {
+  const box = ensureBackground();
+  if (!box) return ensure();
+  if (ctx) {
+    ctx.stop();
+    ctx.src = "";
+  }
+  box.title = title || "诗词";
+  box.epname = "诗词音频";
+  return box;
+}
+
 function paint(on) {
   if (playing === on) return;
   playing = on;
   emit();
 }
 
+function emit() {
+  const s = status();
+  listeners.slice().forEach((fn) => fn(s));
+}
+
 function load(play) {
-  const c = ensure();
   const id = queue[index];
-  if (!c || !id) return false;
+  if (!id) return false;
+  const c = looping ? sing(titleOf(id)) : (ensure() || bg);
+  if (!c) return false;
+  if (c === bg) paint(false);
   c.src = urlOf(id);
   if (play) c.play();
+  if (c === bg) {
+    playing = !!play;
+    emit();
+  }
   return true;
 }
 
 function source() {
-  return ensure();
+  return held();
 }
 
 function modeOf(key) {
@@ -176,22 +229,28 @@ function upcoming() {
   return endless() ? queue[0] : "";
 }
 
+function stopSound() {
+  [held(), ensure()].forEach((box) => {
+    if (!box) return;
+    box.stop();
+    box.src = "";
+  });
+}
+
 function drop() {
-  const c = ensure();
   queue = [];
   index = 0;
   deck = [];
   playing = false;
   looping = false;
-  if (c) {
-    c.stop();
-    c.src = "";
-  }
+  stopSound();
+  release();
 }
 
 function repeatHere() {
-  source().seek(0);
-  source().play();
+  const c = source();
+  c.seek(0);
+  c.play();
   emit();
 }
 
@@ -280,16 +339,20 @@ function play(id) {
   index = 0;
   deck = [];
   looping = false;
+  stopSound();
   load(true);
   emit();
   return true;
 }
 
 function toggle() {
-  const c = ensure();
+  const c = held();
   if (!c || !queue.length) return false;
-  if (playing) c.pause();
-  else c.play();
+  const next = !playing;
+  playing = next;
+  if (playing) c.play();
+  else c.pause();
+  emit();
   return true;
 }
 
@@ -352,11 +415,6 @@ function status() {
     nextIcon: icons.stepForward,
     stopIcon: icons.stop
   };
-}
-
-function emit() {
-  const s = status();
-  listeners.slice().forEach((fn) => fn(s));
 }
 
 function watch(fn) {
