@@ -196,6 +196,18 @@ function list() {
     }));
 }
 
+function countByTier(users) {
+  const counts = {};
+  tiers.TIER_KEYS.forEach((k) => {
+    counts[k] = 0;
+  });
+  (users || []).forEach((u) => {
+    const key = tiers.isTier(u.tier) ? u.tier : tiers.DEFAULT_TIER;
+    counts[key] += 1;
+  });
+  return counts;
+}
+
 function pad(n) {
   return (n < 10 ? "0" : "") + n;
 }
@@ -329,6 +341,7 @@ function refreshSession() {
 module.exports = {
   loggedIn,
   list,
+  countByTier,
   summarize,
   defaultRange: function () {
     return DEFAULT_RANGE;
