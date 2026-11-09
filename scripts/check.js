@@ -3778,19 +3778,26 @@ function mountFull(pg, query) {
     ["benxiguanmenshan", "本溪关门山", [205, 20, 11], "landscape"],
     ["changchunnanling", "长春南岭", [243, 61, 104], "landscape"],
     ["baishanchangbaishan", "白山长白山", [11, 41, 74], "landscape"],
+    ["chizhoujiuhuashan", "池州九华山", [218, 62, 29], "landscape"],
+    ["yangzhouguojijichang", "扬州国际机场", [52, 102, 40], "landscape"],
     ["yangzhoushxihu", "扬州瘦西湖", [145, 207, 8], "landscape"],
+    ["chunanqiandaohu", "淳安千岛湖", [23, 100, 59], "landscape"],
     ["fuyangfuchunjiang", "富阳富春江", [26, 37, 35], "landscape"],
     ["wenzhouyandangshan", "温州雁荡山", [22, 53, 46], "landscape"],
     ["nanpingwuyishan", "南平武夷山", [14, 133, 118], "landscape"],
+    ["zhuhaidongaodao", "珠海东澳岛", [3, 65, 109], "landscape"],
     ["qingdaolaoshan", "青岛崂山", [33, 56, 63], "landscape"],
+    ["jiaozuoyuntaishan", "焦作云台山", [96, 146, 64], "landscape"],
     ["qingmingshanghetu", "开封上河图", [107, 153, 7], "landscape"],
     ["beihaiweizhoudao", "北海涠洲岛", [29, 137, 175], "landscape"],
     ["ganziyading", "甘孜亚丁", [236, 158, 1], "landscape"],
     ["lijianghutiaoxia", "丽江虎跳峡", [44, 62, 62], "landscape"],
     ["lijiangluguhu", "丽江泸沽湖", [25, 91, 108], "landscape"],
     ["diqingpudacuo", "迪庆普达措", [20, 151, 190], "landscape"],
+    ["xianbingmayong", "西安兵马俑", [53, 22, 3], "landscape"],
     ["jiayuguan", "嘉峪关", [249, 139, 57], "landscape"],
     ["dunhuangmogaoku", "敦煌莫高窟", [91, 54, 41], "landscape"],
+    ["qinghaiqinghaihu", "青海湖", [10, 49, 76], "landscape"],
     ["fuyunkeketuohai", "富蕴可可托海", [236, 145, 14], "landscape"],
     ["aletailhemu", "阿勒泰禾木", [35, 60, 75], "landscape"]
   ];
@@ -3801,7 +3808,7 @@ function mountFull(pg, query) {
     const t = all.find((x) => x.key === k);
     return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
   });
-  ok("清单就是这 30 项（八个传统色 + 二十二大好河山）",
+  ok("清单就是这 37 项（八个传统色 + 二十九大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
 

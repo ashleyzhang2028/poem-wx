@@ -73,19 +73,26 @@
 | 本溪关门山 | `rgba(205, 20, 11, 1)` | `benxi_guanmenshan.png` |
 | 长春南岭 | `rgba(243, 61, 104, 1)` | `changchun_nanling.png` |
 | 白山长白山 | `rgba(11, 41, 74, 1)` | `baishan_changbaishan.png` |
+| 池州九华山 | `rgba(218, 62, 29, 1)` | `chizhou_jiuhuashan.png` |
+| 扬州国际机场 | `rgba(52, 102, 40, 1)` | `yangzhou_dinggou.png` |
 | 扬州瘦西湖 | `rgba(145, 207, 8, 1)` | `yangzhou.png` |
+| 淳安千岛湖 | `rgba(23, 100, 59, 1)` | `chunan_qiandaohu.png` |
 | 富阳富春江 | `rgba(26, 37, 35, 1)` | `fuyang_fuchunjiang.png` |
 | 温州雁荡山 | `rgba(22, 53, 46, 1)` | `wenzhou_yandangshan.png` |
 | 南平武夷山 | `rgba(14, 133, 118, 1)` | `nanping_wuyishan.png` |
+| 珠海东澳岛 | `rgba(3, 65, 109, 1)` | `zhuhai_dongaodao.png` |
 | 青岛崂山 | `rgba(33, 56, 63, 1)` | `qingdao_laoshan.png` |
+| 焦作云台山 | `rgba(96, 146, 64, 1)` | `jiaozuo_yuntaishan.png` |
 | 开封上河图 | `rgba(107, 153, 7, 1)` | `kaifeng.png` |
 | 北海涠洲岛 | `rgba(29, 137, 175, 1)` | `beihai-weizhoudao.png` |
 | 甘孜亚丁 | `rgba(236, 158, 1, 1)` | `ganzhi_yading.png` |
 | 丽江虎跳峡 | `rgba(44, 62, 62, 1)` | `yunnan_hutiaoxia.png` |
 | 丽江泸沽湖 | `rgba(25, 91, 108, 1)` | `lijiang_luguhu.png` |
 | 迪庆普达措 | `rgba(20, 151, 190, 1)` | `xianggelila_pudacuo.png` |
+| 西安兵马俑 | `rgba(53, 22, 3, 1)` | `xian_bingmayong.png` |
 | 嘉峪关 | `rgba(249, 139, 57, 1)` | `jiayuguan.png` |
 | 敦煌莫高窟 | `rgba(91, 54, 41, 1)` | `dunhuang_mogaoku.png` |
+| 青海湖 | `rgba(10, 49, 76, 1)` | `qinghai_qinghaihu.png` |
 | 富蕴可可托海 | `rgba(236, 145, 14, 1)` | `fuyun_keketuohai.png` |
 | 阿勒泰禾木 | `rgba(35, 60, 75, 1)` | `aletai_hemu.png` |
 
