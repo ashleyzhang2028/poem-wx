@@ -291,7 +291,7 @@ ok("课内那 251 条每一条都取得到正文",
 
   const audioJs = fs.readFileSync(path.join(ROOT, "utils", "poem-audio.js"), "utf8");
   ok("音频地址只在 poem-audio.js 里拼一次",
-    /audio\/poem\//.test(audioJs)
+    /const BASE = HOST \+ "poem\/"/.test(audioJs)
       && jsFiles.every((f) => f === path.join(ROOT, "utils", "poem-audio.js")
         || fs.readFileSync(f, "utf8").indexOf("audio/poem/") < 0),
     "有别的文件也在拼音频地址 —— 换存储桶要改两处");
