@@ -196,8 +196,8 @@ const VIEW_NAME = {
 
 const COMPARE_ORDER = [
   "daily", "extra", "audio", "audioloop", "collections", "progress", "dailypoem",
-  "ebbinghaus", "leitner", "sm2", "fsrs",
   "library", "novels", "novelsettings", "bookmarks", "search",
+  "ebbinghaus", "leitner", "sm2", "fsrs",
   "quiz", "feihualing", "exam", "records", "league",
   "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
 ];
