@@ -257,6 +257,10 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 唐诗三百首、宋词三百首、童心诗话的 mp3 分批传，传好一部把 `ready` 改成 `true` 即可。
 
 - 地址只在 `utils/poem-audio.js` 里拼一次（云托管 `audio/poem/<文件名>`）
+- 连播走 `wx.getBackgroundAudioManager`：锁屏、退出小程序都接着放，
+  播放器标题带篇名，播放/暂停/上一首/下一首由系统音频面板驱动，回调回到同一条状态
+- 单篇播放走 `wx.createInnerAudioContext`：不留常驻后台的音频会话，收起即停
+- 起播单篇时把连播那台后台播放器一并停掉，一件作品只有一个声音
 - 两个能力键：`audio` 是单篇播放，Pro 起；`audioloop` 是连播与工具栏，Max 起。
   `readiness(kind)` 带 `kind` 判定，`kind === "list"` 时才要 `audioloop`；
   不可用时连位置都不占
