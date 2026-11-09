@@ -12,6 +12,7 @@ Component({
     title: "",
     nextTitle: "",
     cover: audio.COVER,
+    coverShown: true,
     playing: false,
     playIcon: audio.icons.play,
     modeIcon: audio.icons.repeat,
@@ -33,6 +34,14 @@ Component({
   },
 
   methods: {
+    onCoverLoad() {
+      if (!this.data.coverShown) this.setData({ coverShown: true });
+    },
+
+    onCoverError() {
+      if (this.data.coverShown) this.setData({ coverShown: false });
+    },
+
     onToggle() {
       audio.toggle();
     },
