@@ -15,6 +15,10 @@ Page({
     logged: false,
 
     users: [],
+    shown: [],
+    tabs: [],
+    tab: "",
+    tabLabel: "",
     remoteReady: false,
     adminReady: false,
     canWrite: false,
@@ -55,7 +59,9 @@ Page({
     if (!logged) return;
     guard.once("users:list", () => admin.list()).then((res) => {
       dots.see("users", res.newest);
-      this.setData({ users: this.decorate(res.users, canWrite) });
+      const users = this.decorate(res.users, canWrite);
+      this.setData({ users: users, tabs: this.tabs(users) });
+      this.showTab();
     });
   },
 
@@ -66,6 +72,34 @@ Page({
         editable: canWrite ? !!u.remote || !!u.local : false
       })
     );
+  },
+
+  tabs(users) {
+    const counts = admin.countByTier(users);
+    return tiers.TIERS.map((t) => ({
+      key: t.key,
+      label: t.name + " " + counts[t.key],
+      name: t.name
+    }));
+  },
+
+  showTab() {
+    const tabs = this.data.tabs;
+    if (!tabs.length) {
+      this.setData({ shown: [], tabLabel: "" });
+      return;
+    }
+    const row = tabs.filter((t) => t.key === this.data.tab)[0] || tabs[0];
+    this.setData({
+      tab: row.key,
+      tabLabel: row.name,
+      shown: this.data.users.filter((u) => u.tier === row.key)
+    });
+  },
+
+  onTab(e) {
+    this.setData({ tab: e.detail.value });
+    this.showTab();
   },
 
 

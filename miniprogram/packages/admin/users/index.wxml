@@ -8,7 +8,16 @@
       <text class="hint note" wx:if="{{!remoteReady}}">只读 · 服务器未连接</text>
       <text class="hint note" wx:elif="{{!adminReady}}">只读</text>
 
-      <view class="acct" wx:for="{{users}}" wx:key="id">
+      <view class="seg st-tabs" wx:if="{{tabs.length}}">
+        <radio-group class="seg-group" bindchange="onTab">
+          <label class="seg-item {{tab === item.key ? 'on' : ''}}" wx:for="{{tabs}}" wx:key="key">
+            <radio class="seg-radio" value="{{item.key}}" checked="{{tab === item.key}}" />
+            <text class="seg-text">{{item.label}}</text>
+          </label>
+        </radio-group>
+      </view>
+
+      <view class="acct" wx:for="{{shown}}" wx:key="id">
         <text class="seq">{{item.seq}}</text>
         <view class="acct-main">
           <text class="acct-name">{{item.label}}</text>
@@ -24,9 +33,9 @@
         </view>
       </view>
 
-      <view class="empty" wx:if="{{!users.length}}">
+      <view class="empty" wx:if="{{!shown.length}}">
         <text class="empty-mark">名</text>
-        <text class="empty-text">名录暂无用户</text>
+        <text class="empty-text">{{users.length ? tabLabel + ' 暂无用户' : '名录暂无用户'}}</text>
       </view>
 
       <text class="hint note error" wx:if="{{msg}}">{{msg}}</text>

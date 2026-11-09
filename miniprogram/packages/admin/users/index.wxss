@@ -207,3 +207,7 @@
   width: auto;
   margin: 0;
 }
+
+.st-tabs {
+  margin: var(--sp-2) 0 var(--sp-1);
+}

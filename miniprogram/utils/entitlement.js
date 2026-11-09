@@ -34,7 +34,7 @@ function courseFreeCell(tier) {
 
 const CAPS = [
   { key: "daily", name: "每日温习", desc: "按计划温习今天这几首", tier: "free" },
-  { key: "library", name: "课内与诗词漫读", desc: "课内篇目按册翻读，课外集子随点随读", tier: "free" },
+  { key: "library", name: "漫读·课内与诗词", desc: "课内篇目按册翻读，课外集子随点随读", tier: "free" },
   { key: "pinyin", name: "注音辅助", desc: "生字标音、多音字消歧", tier: "free" },
   { key: "ebbinghaus", name: "艾宾浩斯 Ebbinghaus", desc: "固定间隔复习", tier: "free" },
   { key: "progress", name: "进度总览", desc: "未来七天排期与阶段分布", tier: "free" },
@@ -172,13 +172,13 @@ const VIEW_NAME = {
   collections: "首页·自选温习",
   progress: "首页·温习进度",
   dailypoem: "首页·每日一诗隐藏",
-  pinyin: "我的·正文排版",
   ebbinghaus: "复习算法·艾宾浩斯",
   leitner: "复习算法·莱特纳盒",
   sm2: "复习算法·SM-2",
   fsrs: "复习算法·FSRS",
-  library: "课内与诗词漫读",
+  library: "漫读·课内与诗词",
   novels: "漫读·名著小说",
+  novelsettings: "漫读·正文排版",
   search: "全站搜索",
   quiz: "大会·题库",
   feihualing: "大会·飞花令",
@@ -189,27 +189,25 @@ const VIEW_NAME = {
   ownbanner: "主题·自选 banner",
   themetone: "主题·自选主题色",
   font: "主题·字体选择",
-  bookmarks: "详情·书签",
+  bookmarks: "漫读·书签",
   coursefree: "我的·只温习自选",
   sync: "我的·同步进度"
 };
 
 const COMPARE_ORDER = [
-  "daily", "extra", "audio", "audioloop", "collections", "progress", "dailypoem", "pinyin",
+  "daily", "extra", "audio", "audioloop", "collections", "progress", "dailypoem",
   "ebbinghaus", "leitner", "sm2", "fsrs",
-  "library", "novels", "search",
+  "library", "novels", "novelsettings", "bookmarks", "search",
   "quiz", "feihualing", "exam", "records", "league",
-  "sights", "ownbanner", "themetone", "font", "bookmarks", "coursefree", "sync"
+  "sights", "ownbanner", "themetone", "font", "coursefree", "sync"
 ];
 
-function compareNameOf(cap) {
-  return VIEW_NAME[cap.key] || cap.name;
-}
+const SHARED_ROWS = { novelsettings: "pinyin" };
 
-function capRow(cap, now) {
+function capRow(key, cap, now) {
   return {
-    cap: cap.key,
-    name: compareNameOf(cap),
+    cap: key,
+    name: VIEW_NAME[key] || cap.name,
     cells: tiers.TIERS.map((t) => {
       const cell = cellFor(cap, t.key);
       return {
@@ -222,17 +220,25 @@ function capRow(cap, now) {
   };
 }
 
+function rowCap(key) {
+  return CAPS.find((c) => c.key === (SHARED_ROWS[key] || key));
+}
+
+function claimed(key) {
+  return COMPARE_ORDER.indexOf(key) >= 0 || Object.keys(SHARED_ROWS).some((k) => SHARED_ROWS[k] === key);
+}
+
 function compareRows(snap) {
   const s = snap || snapshot();
   const now = tierNow(s);
   const rows = [];
   COMPARE_ORDER.forEach((key) => {
-    const cap = CAPS.find((c) => c.key === key);
+    const cap = rowCap(key);
     if (!cap) return;
-    rows.push(capRow(cap, now));
+    rows.push(capRow(key, cap, now));
   });
   CAPS.forEach((c) => {
-    if (COMPARE_ORDER.indexOf(c.key) < 0) rows.push(capRow(c, now));
+    if (!claimed(c.key)) rows.push(capRow(c.key, c, now));
   });
   return rows;
 }
@@ -421,6 +427,7 @@ module.exports = {
   compareCols,
   compareRows,
   compareSummary,
+  SHARED_ROWS,
   TIER_RANK,
   rankOf,
   tierOf,

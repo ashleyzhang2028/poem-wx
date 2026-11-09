@@ -1520,8 +1520,12 @@ Object.keys(WEB_TIER).forEach((k) => {
     "列头写死、或只挑几档列出来，都会跟档位表走散");
   ok("权限对比表的行铺满能力表（一行一项，一项不漏）",
     js.indexOf("entitlement.compareRows(") >= 0
-      && E.compareRows({ logged: false, tier: "free" }).map((r) => r.cap).sort().join()
-        === E.CAP_KEYS.slice().sort().join(),
+      && (() => {
+        const rows = E.compareRows({ logged: false, tier: "free" });
+        const shown = rows.map((r) => String(E.SHARED_ROWS[r.cap] || r.cap)).sort().join();
+        const want = E.CAP_KEYS.map((k) => String(E.SHARED_ROWS[k] || k)).sort().join();
+        return shown === want && rows.every((r) => r.cells.length === tiersMod.TIER_KEYS.length);
+      })(),
     "只挑几项列出来，用户就看不到自己缺哪几样；多列一行，同一项就说了两遍");
   ok("当前档位列带「现在」",
     /now:\s*t\.key === now/.test(entSys),
@@ -1663,6 +1667,15 @@ const GATED = {
   const mineJs = fs.readFileSync(path.join(ROOT, "pages", "mine", "mine.js"), "utf8");
 
   ok("用户列表页不写本机档位", usersJs.indexOf("store.KEYS.grant") < 0, "用户列表页还在直接写 grant");
+  {
+    const counts = require(path.join(ROOT, "packages", "admin", "utils", "admin.js"))
+      .countByTier([{ tier: "free" }, { tier: "pro" }, { tier: "max" }, { tier: "max" }, { tier: "" }, {}]);
+    ok("用户列表按 Free / Pro / Max 三栏归类，未分级的算 Free",
+      !!counts && counts.free === 3 && counts.pro === 1 && counts.max === 2,
+      JSON.stringify(counts));
+    ok("三栏取自档位表，切栏只切名单（不另拖一份用户）",
+      usersJs.indexOf("tiers.TIERS.map") >= 0 && usersJs.indexOf("this.data.users.filter") >= 0);
+  }
   ok("改档只走服务端", adminLib.indexOf("remote.setUserTier") >= 0);
   ok("服务端没就绪时如实说不出来（不走假成功）",
     /error|fail|catch/.test(adminLib) && adminLib.indexOf("setUserTier") >= 0);
