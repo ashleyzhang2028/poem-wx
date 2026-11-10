@@ -222,6 +222,13 @@ Page({
     if (guard.gap("search:pick")) return;
     guard.mark("search:pick");
     const id = e.currentTarget.dataset.id;
+    if (cols.collectionsOf(id).length) {
+      cols.removeEverywhere(id);
+      sync.markDirty();
+      this.refreshPicked();
+      wx.showToast({ title: "已移出自选", icon: "none" });
+      return;
+    }
     const row = (this.data.results || []).filter((p) => p.id === id)[0] || {};
     const box = this.selectComponent("#collect");
     if (box) box.ask(id, row.title || "");

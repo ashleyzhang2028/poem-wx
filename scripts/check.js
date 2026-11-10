@@ -7582,6 +7582,14 @@ const K = {
   const listSrc4 = fs.readFileSync(path.join(ROOT, "pages", "list", "list.js"), "utf8");
   const searchSrc4 = fs.readFileSync(path.join(ROOT, "pages", "search", "search.js"), "utf8");
   ok("列表与搜索结果行上都能收诗", /onPick\(/.test(listSrc4) && /onPick\(/.test(searchSrc4));
+  ok("行上那枚星已收录就移出、未收录才弹选择",
+    [listSrc4, searchSrc4].every((src) => {
+      const body = /onPick\(e\)\s*\{([\s\S]*?)\n\s{2}\},?\n/.exec(src);
+      return !!body && /cols\.collectionsOf\(id\)\.length/.test(body[1])
+        && /cols\.removeEverywhere\(id\)/.test(body[1])
+        && body[1].indexOf("box.ask") > body[1].indexOf("removeEverywhere");
+    }),
+    "已加入自选的篇目点星还弹选择框 —— 加不进、也移不出");
 
   const sheetSrc4 = fs.readFileSync(path.join(ROOT, "components", "recite-sheet", "recite-sheet.js"), "utf8");
   ok("正文没取到时标题与作者跟着那一首走（不沿用上一篇的）",
