@@ -17,6 +17,8 @@ const db = {
   avatars: new Map(),
   app_settings: new Map(),
   daily_poems: new Map(),
+  theme_swatches: new Map(),
+  font_faces: new Map(),
   corpus_books: new Map(),
   corpus_poems: new Map(),
   corpus_catalog: new Map(),
@@ -44,6 +46,8 @@ const PK = {
   avatars: ["uid"],
   app_settings: ["skey"],
   daily_poems: ["pos"],
+  theme_swatches: ["key"],
+  font_faces: ["key"],
   corpus_books: ["book_id"],
   corpus_poems: ["id"],
   corpus_catalog: ["book_id", "pos"],
@@ -251,6 +255,31 @@ function hits(row, sql, params) {
   return terms.every((t) => testTerm(row, t, p));
 }
 
+function orderBy(table, rows, sql) {
+  const m = /\bORDER\s+BY\s+([\s\S]*?)(?:\s+LIMIT|$)/i.exec(sql);
+  if (!m) return rows;
+  const keys = m[1].split(",").map((seg) => {
+    const c = /^\s*`?([a-z_0-9]+)`?\s*(DESC|ASC)?\s*$/i.exec(seg);
+    return c ? { col: c[1], desc: String(c[2] || "").toUpperCase() === "DESC" } : null;
+  }).filter(Boolean);
+  if (!keys.length) return rows;
+  const rank = new Map(rows.map((r, i) => [r, i]));
+  rows.sort((a, b) => {
+    for (const k of keys) {
+      const x = a[k.col];
+      const y = b[k.col];
+      const nx = typeof x === "number" || (x !== null && x !== undefined && x !== "" && isFinite(Number(x)));
+      const ny = typeof y === "number" || (y !== null && y !== undefined && y !== "" && isFinite(Number(y)));
+      let d = 0;
+      if (nx && ny) d = Number(x) - Number(y);
+      else d = String(x === null || x === undefined ? "" : x).localeCompare(String(y === null || y === undefined ? "" : y));
+      if (d) return k.desc ? -d : d;
+    }
+    return rank.get(a) - rank.get(b);
+  });
+  return rows;
+}
+
 const facade = {
   _db: db,
   _log: [],
@@ -266,6 +295,7 @@ const facade = {
           const all = t ? [...db[t].values()] : [];
           const hit = all.filter((r) => hits(r, sql, params));
           if (/^\s*SELECT\s+COUNT\(\*\)\s+AS\s+n\b/i.test(sql)) return Promise.resolve([[{ n: hit.length }], []]);
+          orderBy(t, hit, sql);
 
           return Promise.resolve([/\bLIMIT\s+1\b/i.test(sql) ? (hit.length ? [hit[0]] : []) : hit, []]);
         }

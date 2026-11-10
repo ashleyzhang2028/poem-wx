@@ -61,7 +61,7 @@
 （`theme.ownSwatchData()`）。
 
 大好河山各支的色值与首页 banner 一起给，`banner` 从云托管对象存储取
-（`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `theme.js` 的 `CITY_BANNER`），
+（`https://<环境域>.tcb.qcloud.la/themes/city/<file>.png`，见 `utils/appearance.js` 的 `BANNER_BASE`；表里只存 `<file>.png`），
 不进包；默认主题的 `hero.png` 同在 `themes/city/`。
 
 | 主题 | 色 | banner |
@@ -114,8 +114,9 @@
 **胶囊这类「说了有这回事、但不必喊」的底**用淡的那一档；`variables()` 铺给所有色，
 不挑当前主题 —— 页面上要摆色卡，每个色都得同时在场。
 
-banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出，`THEMES` 每一项自带
-`banner` 字段（缺省落 `BANNER`），首页 `onShow` 里跟着主题一起读一次。
+banner 由 `utils/theme.js` 的 `bannerOf(key)` 给出：`theme_swatches` 每一行带一个
+题图文件名（留空落默认那张 `hero.png`），端上按 `BANNER_BASE` 拼成地址，
+首页 `onShow` 里跟着主题一起读一次。
 图片一律 `mode="widthFix"`：城名画进图里，裁切或拉伸都会把字压歪，
 所以 banner 高度照原比例折（见 `docs/architecture.md`）。
 

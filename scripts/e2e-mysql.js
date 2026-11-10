@@ -363,6 +363,59 @@ function makeWx(port, mem) {
   }
 
   {
+    const themeMod = require(path.join(REPO, "miniprogram", "utils", "theme.js"));
+    const fontMod = require(path.join(REPO, "miniprogram", "utils", "font.js"));
+    const appearance = require(path.join(REPO, "miniprogram", "utils", "appearance.js"));
+
+    const empty = await remote.request(remote.PATHS.appearance, {}, "GET").then(
+      (body) => ({ ok: true, body: body }),
+      (e) => ({ ok: false, status: e.statusCode })
+    );
+    ok("两张清单表都是空的时候，/api/appearance 照旧 200 给一个空清单（不是 500）",
+      empty.ok && empty.body && empty.body.themes.length === 0 && empty.body.fonts.length === 0,
+      JSON.stringify(empty));
+
+    facade._db.theme_swatches.set("lab", {
+      key: "lab", name: "实验室", rgb_r: 1, rgb_g: 2, rgb_b: 3,
+      banner: "lab.png", group_key: "landscape"
+    });
+    facade._db.theme_swatches.set("tradition-lab", {
+      key: "tlab", name: "传统实验室", rgb_r: 9, rgb_g: 9, rgb_b: 9,
+      banner: "", group_key: "tradition"
+    });
+    facade._db.font_faces.set("labface", {
+      key: "labface", name: "实验室字", note: "自检", dir: "labface-regular"
+    });
+
+    const got = await remote.request(remote.PATHS.appearance, {}, "GET");
+    ok("库里加的行经 /api/appearance 下发，题图拼成完整地址（只存文件名）",
+      got.themes.length === 2 && got.themes[0].key === "lab"
+        && got.themes[0].banner === appearance.bannerUrl("lab.png")
+        && got.themes[1].banner === appearance.bannerUrl(appearance.DEFAULT_BANNER),
+      JSON.stringify(got.themes));
+    ok("字体只下发目录与 base，档位文件名由端上拼",
+      got.fonts.length === 1 && got.fonts[0].dir === "labface-regular"
+        && got.fonts[0].base === appearance.FONT_BASE + "labface-regular/"
+        && !Object.prototype.hasOwnProperty.call(got.fonts[0], "free")
+        && !Object.prototype.hasOwnProperty.call(got.fonts[0], "pro"),
+      JSON.stringify(got.fonts));
+
+    themeMod.adopt({ themes: got.themes });
+    fontMod.sync(got.fonts);
+    ok("端上换了清单之后，主题与字体都按库里那几行摊出来",
+      themeMod.all().map((t) => t.key).join() === "lab,tlab"
+        && fontMod.faces().length === 1
+        && fontMod.faces()[0].free[0] === appearance.FONT_BASE + "labface-regular/free.woff2",
+      JSON.stringify({ themes: themeMod.all().map((t) => t.key), fonts: fontMod.faces().length }));
+
+    facade._db.theme_swatches.delete("lab");
+    facade._db.theme_swatches.delete("tradition-lab");
+    facade._db.font_faces.delete("labface");
+    themeMod.adopt({ themes: [] });
+    fontMod.sync([]);
+  }
+
+  {
     const seed = require(path.join(REPO, "scripts", "corpus-seed"));
     const rows = seed.seedRows(seed.loadCorpus());
     const facadeQuery = (sql, params) => facade.createPool().query(sql, params);

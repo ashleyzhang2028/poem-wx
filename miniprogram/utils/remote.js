@@ -37,6 +37,7 @@ const PATHS = {
   adminPay: "/api/admin/pay",
   adminMaintenance: "/api/admin/maintenance",
   dailyPoems: "/api/daily-poems",
+  appearance: "/api/appearance",
   corpus: "/api/corpus"
 };
 
