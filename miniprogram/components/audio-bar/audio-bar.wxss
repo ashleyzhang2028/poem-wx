@@ -11,11 +11,11 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
   border: 1rpx solid var(--line);
-  border-radius: var(--radius-block);
+  border-radius: var(--radius-pill);
   background: var(--surface-glass);
-  box-shadow: 0 8rpx 28rpx rgba(0, 0, 0, .1);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, .12), 0 0 0 1rpx var(--line-2);
   animation: audio-bar-up .22s var(--ease);
 }
 
@@ -35,11 +35,12 @@
 .audio-bar-disc {
   position: relative;
   flex: none;
-  width: 72rpx;
-  height: 72rpx;
+  width: 84rpx;
+  height: 84rpx;
   border-radius: 50%;
   overflow: hidden;
   background: var(--sink);
+  box-shadow: 0 0 0 4rpx var(--surface), 0 0 0 5rpx var(--theme);
 }
 
 .audio-bar-disc-img {
@@ -106,8 +107,8 @@
 
 .audio-bar-btn {
   box-sizing: border-box;
-  width: 56rpx;
-  height: 56rpx;
+  width: 60rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,6 +138,69 @@
   color: var(--strong-text);
 }
 
+.audio-bar-btn.play {
+  width: 76rpx;
+  height: 76rpx;
+  margin: 0 var(--sp-1);
+  background: var(--theme);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, .16);
+}
+
+.audio-bar-btn.play.audio-bar-btn-hover {
+  opacity: .85;
+}
+
 .audio-bar-btn.play .audio-bar-glyph {
-  color: var(--strong-text);
+  color: var(--on-ink);
+}
+
+.audio-bar-track {
+  position: absolute;
+  left: var(--sp-5);
+  right: var(--sp-5);
+  bottom: 0;
+  height: 20rpx;
+}
+
+.audio-bar-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rpx;
+  background: var(--line-strong);
+  transition: height .18s var(--ease);
+}
+
+.audio-bar-line.dragging {
+  height: 5rpx;
+  border-radius: 2.5rpx;
+}
+
+.audio-bar-fill {
+  height: 100%;
+  background: var(--theme);
+}
+
+.audio-bar-line:not(.dragging) .audio-bar-fill {
+  transition: width .25s linear;
+}
+
+.audio-bar-thumb {
+  position: absolute;
+  bottom: 50%;
+  width: 18rpx;
+  height: 18rpx;
+  margin: 0 0 -9rpx -9rpx;
+  border-radius: 50%;
+  background: var(--theme);
+  box-shadow: 0 0 0 6rpx var(--surface), 0 4rpx 12rpx rgba(0, 0, 0, .2);
+  opacity: 0;
+  transform: scale(.2);
+  transition: opacity .15s var(--ease), transform .2s var(--ease);
+}
+
+.audio-bar-line.dragging .audio-bar-thumb {
+  opacity: 1;
+  transform: scale(1);
 }
