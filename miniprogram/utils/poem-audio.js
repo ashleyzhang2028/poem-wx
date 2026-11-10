@@ -148,7 +148,7 @@ function ensure() {
 }
 
 function held() {
-  return bg ? bg : ensure();
+  return looping && bg ? bg : ensure();
 }
 
 function release() {
@@ -259,11 +259,11 @@ function upcoming() {
 }
 
 function stopSound() {
-  [held(), ensure()].forEach((box) => {
-    if (!box) return;
-    box.stop();
-    box.src = "";
-  });
+  if (bg) bg.stop();
+  if (ctx) {
+    ctx.stop();
+    ctx.src = "";
+  }
 }
 
 function drop() {

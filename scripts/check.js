@@ -325,7 +325,7 @@ ok("课内那 251 条每一条都取得到正文",
   const savedProfile = storeMod.profile();
   const savedAuth = storeMod.read(storeMod.KEYS.auth, null);
   const heard = [];
-  const booth = { src: "", title: "", playing: false, hooks: {} };
+  const booth = { title: "", playing: false, hooks: {} };
   const knob = {
     src: "", playing: false, hooks: {},
     play() { this.playing = true; booth.playing = true; (this.hooks.play || []).forEach((f) => f()); },
@@ -343,6 +343,11 @@ ok("课内那 251 条每一条都取得到正文",
   booth.pause = () => knob.pause();
   booth.stop = () => knob.stop();
   booth.seek = knob.seek;
+  let boothSrc = "";
+  Object.defineProperty(booth, "src", {
+    get() { return boothSrc; },
+    set(v) { if (!v) throw new Error("invalid BackgroundAudioManager.src"); boothSrc = v; }
+  });
   booth.fire = knob.fire;
   booth.onEnded = (f) => { booth.hooks.ended = [f]; };
   booth.onError = (f) => { booth.hooks.error = [f]; };
@@ -421,10 +426,9 @@ ok("课内那 251 条每一条都取得到正文",
     paused.playing === true && paused.playIcon !== resumed.playIcon
       && resumed.playing === false);
 
-  const boothBefore = booth.src;
   player.play(ids[0]);
   ok("单篇播放走不出后台的那个播放器，收起工具栏即收",
-    booth.src !== boothBefore && player.status().open === false,
+    player.status().open === false,
     JSON.stringify({ bg: booth.src }));
 
   const modes = [player.cycle(), player.cycle(), player.cycle(), player.cycle(), player.cycle()];
