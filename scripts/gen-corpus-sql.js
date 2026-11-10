@@ -117,19 +117,24 @@ function bookRows(rows, bookId, only) {
   return out;
 }
 
-function audioPatch(rows, table, cols) {
+function audioPatch(rows, table, keys, cols) {
   const list = rows.filter(function (r) { return r.audio; });
   if (!list.length) return [];
+  const where = keys.map(function (k) { return "`" + k + "` = "; });
+  const sets = cols.map(function (c) { return "`" + c + "` = "; });
   const body = list.map(function (r) {
-    return "  (" + cols.map(function (c) { return literal(r[c]); }).join(", ") + ")";
+    return "UPDATE `" + table + "` SET " + sets.map(function (prefix, i) {
+      return prefix + literal(r[cols[i]]);
+    }).join(", ") + " WHERE " + where.map(function (prefix, i) {
+      return prefix + literal(r[keys[i]]);
+    }).join(" AND ") + ";";
   });
-  return ["INSERT INTO `" + table + "` (" + cols.map(function (c) { return "`" + c + "`"; }).join(", ") +
-    ") VALUES\n" + body.join(",\n") + "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);", ""];
+  return body.concat([""]);
 }
 
 const AUDIO_PATCH = [
-  { key: "poems", table: "corpus_poems", cols: ["id", "audio"] },
-  { key: "catalog", table: "corpus_catalog", cols: ["book_id", "pos", "audio"] }
+  { key: "poems", table: "corpus_poems", keys: ["id"], cols: ["audio"] },
+  { key: "catalog", table: "corpus_catalog", keys: ["book_id", "pos"], cols: ["audio"] }
 ];
 
 function writeAudio(rows) {
@@ -138,13 +143,14 @@ function writeAudio(rows) {
   AUDIO_PATCH.forEach(function (p) {
     if (!rows[p.key].some(function (r) { return r.audio; })) return;
     touched.push(p.table);
-    body.push.apply(body, audioPatch(rows[p.key], p.table, p.cols));
+    body.push.apply(body, audioPatch(rows[p.key], p.table, p.keys, p.cols));
   });
   const out = [
     "-- 朗读文件名补丁：只改 " + (touched.length > 1 ? touched.join(" / ") : "corpus_poems") +
       " 的 audio 一列，篇目、正文、注释一个不动",
     "-- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值",
-    "-- 只写有文件的那几行，空串不写也不删；执行前先切库",
+    "-- 每行一条 UPDATE，只按主键改 audio；库里没有那一条就一行不动，不新增行",
+    "-- 空串不写也不删；执行前先切库",
     "",
     "SET NAMES utf8mb4;",
     "",
