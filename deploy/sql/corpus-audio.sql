@@ -54,6 +54,26 @@ UPDATE `corpus_poems` SET `audio` = 'mujiangyin_baijuyi.mp3' WHERE `id` = 'poems
 UPDATE `corpus_poems` SET `audio` = 'tixilinbi_sushi.mp3' WHERE `id` = 'poems-xx4-02';
 UPDATE `corpus_poems` SET `audio` = 'xuemei_luyue.mp3' WHERE `id` = 'poems-xx4-03';
 UPDATE `corpus_poems` SET `audio` = 'chusai_wangchangling.mp3' WHERE `id` = 'poems-xx4-04';
+UPDATE `corpus_poems` SET `audio` = 'liangzhouci_wanghan.mp3' WHERE `id` = 'poems-xx4-05';
+UPDATE `corpus_poems` SET `audio` = 'xiarijueju_liqingzhao.mp3' WHERE `id` = 'poems-xx4-06';
 UPDATE `corpus_poems` SET `audio` = 'biedongda_gaoshi.mp3' WHERE `id` = 'poems-xx4-07';
+UPDATE `corpus_poems` SET `audio` = 'suxinshixugongdian_yangwanli.mp3' WHERE `id` = 'poems-xx4-08';
+UPDATE `corpus_poems` SET `audio` = 'sishitianyuanzaxing_fanchengda.mp3' WHERE `id` = 'poems-xx4-09';
+UPDATE `corpus_poems` SET `audio` = 'qingpingyuecunju_xinqiji.mp3' WHERE `id` = 'poems-xx4-10';
+UPDATE `corpus_poems` SET `audio` = 'busuanziyongmei_maozedong.mp3' WHERE `id` = 'poems-xx4-11';
+UPDATE `corpus_poems` SET `audio` = 'feng_luoyin.mp3' WHERE `id` = 'poems-xx4-12';
+UPDATE `corpus_poems` SET `audio` = 'duzuojingtingshan_libai.mp3' WHERE `id` = 'poems-xx4-13';
+UPDATE `corpus_poems` SET `audio` = 'momei_wangmian.mp3' WHERE `id` = 'poems-xx4-15';
+UPDATE `corpus_poems` SET `audio` = 'hanjianglinfan_wangwei.mp3' WHERE `id` = 'poems-xx4-16';
+UPDATE `corpus_poems` SET `audio` = 'luchai_wangwei.mp3' WHERE `id` = 'poems-xx4-17';
+UPDATE `corpus_poems` SET `audio` = 'change_lishangyin.mp3' WHERE `id` = 'poems-xx4-18';
+UPDATE `corpus_poems` SET `audio` = 'zhuzhici_liuyuxi.mp3' WHERE `id` = 'poems-xx4-19';
+UPDATE `corpus_poems` SET `audio` = 'furonglousongxinjian_wangchangling.mp3' WHERE `id` = 'poems-xx4-20';
+UPDATE `corpus_poems` SET `audio` = 'saixiaqu_lulun.mp3' WHERE `id` = 'poems-xx4-21';
+UPDATE `corpus_poems` SET `audio` = 'saixiaqu_lulun_2.mp3' WHERE `id` = 'poems-xx4-22';
+UPDATE `corpus_poems` SET `audio` = 'huanghelousongmenghaoranzhiguangling_libai.mp3' WHERE `id` = 'poems-xx4-23';
+UPDATE `corpus_poems` SET `audio` = 'qiuyejiangxiaochulimenyingliangyougan_luyou.mp3' WHERE `id` = 'poems-xx4-24';
+UPDATE `corpus_poems` SET `audio` = 'chan_yushinan.mp3' WHERE `id` = 'poems-xx5-01';
+UPDATE `corpus_poems` SET `audio` = 'qiqiao_linjie.mp3' WHERE `id` = 'poems-xx5-02';
 
 COMMIT;
