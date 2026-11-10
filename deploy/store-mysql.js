@@ -367,12 +367,12 @@ function mysqlStore(cfg) {
         .then(function (rows) { return rows || []; });
     },
     listCorpusPoems: function (bookId) {
-      return query("SELECT id, title, author, author_alt, dynasty, source, aliases, selection, grade_group, grade, term"
+      return query("SELECT id, title, author, author_alt, dynasty, source, aliases, selection, grade_group, grade, term, audio"
         + " FROM corpus_poems WHERE book_id = ? ORDER BY pos", [String(bookId || "")])
         .then(function (rows) { return rows || []; });
     },
     listCorpusCatalog: function () {
-      return query("SELECT book_id, title, author, note, in_course FROM corpus_catalog ORDER BY book_id, pos")
+      return query("SELECT book_id, title, author, note, in_course, audio FROM corpus_catalog ORDER BY book_id, pos")
         .then(function (rows) { return rows || []; });
     },
     listCorpusAuthors: function () {

@@ -8,7 +8,8 @@ Component({
     poem: { type: String, value: "" },
     ids: { type: Array, value: [] },
     book: { type: String, value: "" },
-    framed: { type: Boolean, value: false }
+    framed: { type: Boolean, value: false },
+    plain: { type: Boolean, value: false }
   },
 
   data: {
@@ -28,7 +29,7 @@ Component({
   },
 
   observers: {
-    "kind, poem, ids, book": function () {
+    "kind, poem, ids, book, plain": function () {
       this.paint();
     }
   },
@@ -52,13 +53,19 @@ Component({
       const next = {
         visible: visible,
         icon: kind === "list" ? audio.icons.featured : (mine ? audio.icons.pause : audio.icons.play),
-        aria: kind === "list" ? "连续播放" : (mine ? "暂停" : "播放本篇")
+        aria: kind === "list" ? "连续播放" : (mine ? "暂停" : "播放本篇"),
+        reveal: !!this.data.plain && visible
       };
-      if (next.visible === this.data.visible && next.icon === this.data.icon) return;
+      if (next.visible === this.data.visible && next.icon === this.data.icon
+        && next.reveal === this.data.reveal) return;
       this.setData(next);
     },
 
     onTap() {
+      if (this.data.reveal) {
+        this.setData({ plain: false }, () => this.paint());
+        return;
+      }
       const list = this.queue();
       if (!list.length) return;
       if (this.data.kind === "list") {

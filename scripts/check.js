@@ -201,7 +201,7 @@ ok("集子索引归属正确",
   "b / n 与实际集子对不上");
 
 {
-  const wide = corpusPayloads.poems.rows.filter((r) => r.length !== 11);
+  const wide = corpusPayloads.poems.rows.filter((r) => r.length !== 12);
   ok("索引下发只存列（无名、不存正文）", wide.length === 0,
     wide.length + " 行形状不对 —— 薄索引把字段名与集子名都省了（见 api/_lib/corpus.js）");
 }
@@ -285,9 +285,20 @@ ok("课内那 251 条每一条都取得到正文",
   ok("音频清单只挂在本机认得的篇目上", stranger.length === 0,
     "这几条 id 不对着任何篇目：" + stranger.slice(0, 3).join("、"));
 
-  ok("课内 251 首每首都配上了音频",
-    perBook.poems.every((p) => !!audioMap[p.id]),
-    "缺 " + perBook.poems.filter((p) => !audioMap[p.id]).length + " 首");
+  const offCatalog = [];
+  Object.keys(catalogPack.rows).forEach((bookId) => {
+    catalogPack.rows[bookId].forEach((row, i) => {
+      if (row[4] && !audioFile.test(row[4])) offCatalog.push(bookId + "-" + (i + 1) + "=" + row[4]);
+    });
+  });
+  ok("目录下发的每一行都带 audio 一位，有音频的那个名字也像「拼音_作者.mp3」", offCatalog.length === 0,
+    "这几条文件名不像音频：" + offCatalog.slice(0, 3).join("、"));
+
+  const audioSql = path.join(__dirname, "..", "deploy", "sql", "corpus-audio.sql");
+  const genAudio = require("./gen-corpus-sql").writeAudio(seedRows);
+  ok("deploy/sql/corpus-audio.sql 与语料一致（重新跑 node scripts/gen-corpus-sql.js 即可）",
+    fs.existsSync(audioSql) && fs.readFileSync(audioSql, "utf8") === genAudio,
+    "朗读文件名变了但补丁没重生成，库里那一列会跟 audio/*_map.md 对不上");
 
   const audioJs = fs.readFileSync(path.join(ROOT, "utils", "poem-audio.js"), "utf8");
   ok("音频地址只在 poem-audio.js 里拼一次",

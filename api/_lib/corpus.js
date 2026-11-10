@@ -66,7 +66,8 @@ function packPoems(poems) {
       Number(p.grade) || 0,
       Number(p.term) || 0,
       alt || null,
-      aliasesOf(p.aliases)
+      aliasesOf(p.aliases),
+      text(p.audio)
     ];
   });
   return { dict: pack.dict, rows: rows };
@@ -77,7 +78,7 @@ function packCatalog(catalog) {
   var rows = {};
   catalog.forEach(function (r) {
     var id = text(r.book_id);
-    (rows[id] = rows[id] || []).push([text(r.title), pack.put("a", text(r.author)), pack.put("d", text(r.note)), Number(r.in_course) === 1 ? 1 : 0]);
+    (rows[id] = rows[id] || []).push([text(r.title), pack.put("a", text(r.author)), pack.put("d", text(r.note)), Number(r.in_course) === 1 ? 1 : 0, text(r.audio)]);
   });
   return { dict: pack.dict, rows: rows };
 }

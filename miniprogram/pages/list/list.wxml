@@ -65,7 +65,7 @@
         </view>
       </view>
       <text class="read-dot" wx:if="{{p.read}}">已读</text>
-      <audio-play poem="{{p.id}}" ids="{{bookIds}}" />
+      <audio-play poem="{{p.id}}" ids="{{bookIds}}" plain />
       <view class="row-star {{p.picked ? 'on' : ''}}" hover-class="row-star-hover" hover-stay-time="60"
             style="mask-image:url('{{icons.playlist}}');-webkit-mask-image:url('{{icons.playlist}}');"
             data-id="{{p.id}}" data-title="{{p.title}}" catchtap="onPick"></view>

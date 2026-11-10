@@ -41,3 +41,11 @@
   height: var(--h-round-ico);
   color: var(--ink-3);
 }
+
+.audio-plain {
+  flex: none;
+  align-self: center;
+  box-sizing: border-box;
+  width: var(--h-pref);
+  height: var(--h-pref);
+}

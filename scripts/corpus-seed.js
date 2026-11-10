@@ -164,6 +164,8 @@ function seedRows(W) {
     return { name: name, era: meta[name].era, era_at: meta[name].at };
   });
 
+  bindAudio(poems, catalog, audioBox(W));
+
   return { books: books, poems: poems, catalog: catalog, authors: authors, texts: catalogTexts(catalogs, order), gloss: catalogGloss(catalogs, order, W) };
 }
 
@@ -251,6 +253,74 @@ function catalogGloss(catalogs, order, W) {
   return out;
 }
 
+const AUDIO_DIR = path.join(__dirname, "..", "audio");
+
+const AUDIO_MAPS = [
+  { file: "kenei_map.md", book: COURSE_BOOK },
+  { file: "tangshi300_map.md", book: "tangshi300" },
+  { file: "songci300_map.md", book: "songci300" },
+  { file: "tongxinshihua_map.md", book: "tongxin" }
+];
+
+function audioRows(file) {
+  const full = path.join(AUDIO_DIR, file);
+  if (!fs.existsSync(full)) {
+    throw new Error("读不到 " + full + " —— 音频清单在 audio/ 下，缺了它的篇目就都没有朗读");
+  }
+  return fs.readFileSync(full, "utf8")
+    .split("\n")
+    .map(function (line) { return line.trim(); })
+    .filter(function (line) { return line.charAt(0) === "|"; })
+    .slice(2)
+    .map(function (line) {
+      const cells = line.split("|").map(function (c) { return c.trim(); });
+      return { title: cells[1] || "", author: cells[3] || "", file: cells[4] || "" };
+    })
+    .filter(function (r) { return r.file; });
+}
+
+function audioKey(title, author) {
+  return String(title || "").trim() + "\u0000" + String(author || "").trim();
+}
+
+function audioBox(W) {
+  const byText = {};
+  const filesByBook = {};
+  AUDIO_MAPS.forEach(function (m) {
+    const queue = {};
+    audioRows(m.file).forEach(function (a) {
+      const key = audioKey(a.title, a.author);
+      (queue[key] = queue[key] || []).push(a.file);
+    });
+    const list = m.book === COURSE_BOOK
+      ? (W.SITE_INDEX || []).filter(function (p) { return !p.isBook && p.book === COURSE_BOOK; })
+      : (((W.SITE_CATALOGS || {})[m.book] || {}).rows || []).map(function (r) {
+        return { title: r[0], author: r[1] || "", text: "" };
+      });
+    const mine = {};
+    list.forEach(function (p, i) {
+      const hit = queue[audioKey(p.title, p.author)];
+      const file = hit && hit.length ? hit.shift() : "";
+      if (!file) return;
+      mine[i] = file;
+      if (p.text) byText[dedupKey(p.text)] = file;
+    });
+    filesByBook[m.book] = mine;
+  });
+  return { files: filesByBook, byText: byText };
+}
+
+function bindAudio(poems, catalog, box) {
+  const course = box.files[COURSE_BOOK] || {};
+  poems.forEach(function (r, i) {
+    r.audio = course[i] || "";
+  });
+  catalog.forEach(function (r) {
+    const at = box.files[r.book_id] || {};
+    r.audio = at[r.pos] || box.byText[dedupKey(r.text || "")] || "";
+  });
+}
+
 function seedStatements(rows) {
   return require("./gen-corpus-sql").statements(rows, { params: true });
 }
@@ -272,5 +342,7 @@ module.exports = {
   noCorpus: noCorpus,
   loadCorpus: loadCorpus,
   courseIndex: courseIndex,
-  seedRows: seedRows
+  seedRows: seedRows,
+  audioRows: audioRows,
+  AUDIO_MAPS: AUDIO_MAPS
 };

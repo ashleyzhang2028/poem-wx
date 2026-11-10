@@ -14,11 +14,11 @@ const TABLES = [
   {
     table: "corpus_poems", key: "poems",
     cols: ["id", "book_id", "pos", "title", "author", "author_alt", "dynasty", "source", "aliases",
-      "selection", "grade_group", "grade", "term"]
+      "selection", "grade_group", "grade", "term", "audio"]
   },
   {
     table: "corpus_catalog", key: "catalog", book: true,
-    cols: ["book_id", "pos", "title", "author", "note", "in_course"]
+    cols: ["book_id", "pos", "title", "author", "note", "in_course", "audio"]
   },
   { table: "corpus_authors", key: "authors", cols: ["name", "era", "era_at"] },
   {
@@ -117,6 +117,47 @@ function bookRows(rows, bookId, only) {
   return out;
 }
 
+function updateBook(rows, bookId) {
+  const list = rows.catalog.filter(function (r) { return r.book_id === bookId; });
+  const out = ["DELETE FROM `corpus_catalog` WHERE `book_id` = " + literal(bookId) + ";"];
+  for (let i = 0; i < list.length; i += BATCH) {
+    const body = list.slice(i, i + BATCH).map(function (r) {
+      return "  (" + [literal(bookId), r.pos, literal(r.audio)]
+        .join(", ") + ")";
+    });
+    out.push("INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
+      "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);");
+  }
+  return out;
+}
+
+function writeAudio(rows) {
+  const poem = rows.poems.map(function (r) {
+    return "  (" + [literal(r.id), literal(r.audio)].join(", ") + ")";
+  });
+  let out = [
+    "-- 朗读文件名补丁：只改 corpus_poems / corpus_catalog 的 audio 一列，篇目、正文、注释一个不动",
+    "-- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值",
+    "-- 执行前先切库",
+    "",
+    "SET NAMES utf8mb4;",
+    "",
+    "START TRANSACTION;",
+    "INSERT INTO `corpus_poems` (`id`, `audio`) VALUES"
+  ];
+  poem.forEach(function (line, i) {
+    const tail = i === poem.length - 1 ? ";" : ",";
+    out.push(line + tail);
+  });
+  out.push("ON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);");
+  out.push("");
+  BOOKS.forEach(function (bookId) {
+    out = out.concat(updateBook(rows, bookId), [""]);
+  });
+  out.push("COMMIT;");
+  return out.join("\n") + "\n";
+}
+
 function buildBook(rows, bookId, only) {
   const list = bookRows(rows, bookId, only);
   const book = rows.books.filter(function (b) {
@@ -130,6 +171,8 @@ function buildBook(rows, bookId, only) {
     "-- 由 node scripts/gen-corpus-sql.js 生成，语句与 deploy/sql/corpus.sql 同源",
     "-- 目录与索引 " + list.catalog.length + " 条、正文与译文 " + list.texts.length + " 篇、注释 " +
       list.gloss.length + " 篇；执行前先切库",
+    "-- corpus_poems / corpus_catalog 的 audio 一列不在本文件里：整表重灌会把它冲成空串，",
+    "-- 要连朗读一起重灌就跑 deploy/sql/corpus-audio.sql（同样由本脚本生成）",
     range ? "-- 只重灌第 " + range[0] + "–" + range[1] + " 条（改订过的篇目）：别的条目与别的集子一个不动" : ''
   ].filter(function (line) { return line !== ''; }).concat(["", "SET NAMES utf8mb4;", "", "START TRANSACTION;", ""], body, ["", "COMMIT;"]).join("\n") + "\n";
 }
@@ -150,9 +193,12 @@ if (require.main === module) {
     fs.writeFileSync(out, buildBook(rows, bookId, require("./corpus-patch")[bookId]));
     console.log("单集补丁 → " + path.relative(process.cwd(), out));
   });
+  const audio = path.join(SQL_DIR, "corpus-audio.sql");
+  fs.writeFileSync(audio, writeAudio(rows));
+  console.log("朗读文件名 → " + path.relative(process.cwd(), audio));
   console.log("语料入库 " + rows.books.length + " 部 / 课内 " + rows.poems.length + " 首 / 目录 " +
     rows.catalog.length + " 条 / 作者 " + rows.authors.length + " 位 / 正文与译文 " + rows.texts.length +
     " 篇 / 注释 " + rows.gloss.length + " 篇 → " + path.relative(process.cwd(), OUT));
 }
 
-module.exports = { render, statements, build, buildBook, bookRows, OUT, SQL_DIR, TABLES };
+module.exports = { render, statements, build, buildBook, bookRows, writeAudio, OUT, SQL_DIR, TABLES };

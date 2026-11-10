@@ -23,12 +23,14 @@
 
 ## 音频播放
 
-四份 `_map.md` 是「篇目 → mp3」的唯一来源。`scripts/build-data.js` 按题名 + 作者把它们绑到
-篇目 id，编成 `miniprogram/data/audio.js`；同一首正文在课内与三部集子里都出现时共用同一个文件，
-集子里没进清单的那些篇目按正文与课内对一次，对上就沿用课内那条。
+四份 `_map.md` 是「篇目 → mp3」的唯一来源。`scripts/corpus-seed.js` 按题名 + 作者把它们绑到
+篇目上，落成 `corpus_poems.audio` / `corpus_catalog.audio` 两列，经 `GET /api/corpus/poems` 与
+`GET /api/corpus/catalogs` 下发；同一首正文在课内与集子里都出现时共用同一个文件，集子里没进清单的
+那些篇目按正文对一次，对上就沿用课内那条。清单里有的文件才出播放键，没有的那篇不出。
 
-`AUDIO_BOOKS` 每项带 `ready`。眼下只开课内，另外三部是 `false`：清单照样留在这里，
-mp3 一批批传好，传完一部把那一项的 `ready` 改成 `true` 再重跑 `node scripts/build-data.js`。
+`_map.md` 是待合成表，写上名字不等于云端有这个 mp3：真传了哪几首以云端 `audio/poem/` 为准，
+播放器取不到文件时会提示「音频文件添加中」并跳过。要让播放键跟着实际文件走，把没传的那一行从
+`_map.md` 里删掉，重跑生成器与 SQL（见仓库根 `docs/architecture.md` § 三）。
 
 播放地址为 `https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/poem/<文件名>`，
 只在 `miniprogram/utils/poem-audio.js` 里拼一次。播放能力键 `audio`，Pro 起。

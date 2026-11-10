@@ -33,7 +33,9 @@ function files() {
 }
 
 function fileOf(id) {
-  return files()[String(id || "")] || "";
+  const key = String(id || "");
+  if (!key) return "";
+  return corpus.audioFile(key) || files()[key] || "";
 }
 
 function has(id) {
@@ -54,10 +56,14 @@ const bookCache = {};
 function bookIds(bookId) {
   if (!bookId) return [];
   if (bookCache[bookId]) return bookCache[bookId];
-  const head = String(bookId) + "-";
-  const out = Object.keys(files()).filter((id) => id.indexOf(head) === 0);
+  const out = corpus.ofBook(bookId).map((p) => p.id).filter((id) => !!corpus.audioFile(id)).concat(packedIds(bookId));
   bookCache[bookId] = out;
   return out;
+}
+
+function packedIds(bookId) {
+  const head = String(bookId) + "-";
+  return Object.keys(files()).filter((id) => id.indexOf(head) === 0 && !has(id));
 }
 
 function inner() {

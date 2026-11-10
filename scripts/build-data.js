@@ -14,15 +14,6 @@ const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.j
 
 const SERVER_KEYS = ["env", "service"];
 
-const AUDIO_DIR = path.join(__dirname, "..", "audio");
-
-const AUDIO_BOOKS = [
-  { file: "kenei_map.md", book: "poems", ready: true },
-  { file: "tangshi300_map.md", book: "tangshi300", ready: false },
-  { file: "songci300_map.md", book: "songci300", ready: false },
-  { file: "tongxinshihua_map.md", book: "tongxin", ready: false }
-];
-
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
@@ -68,7 +59,7 @@ function main() {
   writeModule(path.join(OUT_DIR, "course.js"), courseTexts);
   writePinyin(W, courseTexts);
   writeRoster();
-  writeAudio(W, rows);
+  writeAudio(rows);
   writeServer();
 
   console.log("索引 " + index.length + " 条");
@@ -79,82 +70,33 @@ function main() {
   console.log("生字生词注释 " + noted.length + " 篇 " + noteCount + " 条");
 }
 
-function audioRows(file) {
-  if (!fs.existsSync(path.join(AUDIO_DIR, file))) return [];
-  return fs
-    .readFileSync(path.join(AUDIO_DIR, file), "utf8")
-    .split("\n")
-    .map(function (line) { return line.trim(); })
-    .filter(function (line) { return line.charAt(0) === "|"; })
-    .slice(2)
-    .map(function (line) {
-      const cells = line.split("|").map(function (c) { return c.trim(); });
-      return { title: cells[1] || "", author: cells[3] || "", file: cells[4] || "" };
-    })
-    .filter(function (r) { return r.file; });
-}
-
-function named(title, author) {
-  return String(title || "").replace(/\s+/g, " ").trim() + "\u0000" + String(author || "").replace(/\s+/g, " ").trim();
-}
-
-function courseTextById(W) {
+function writeAudio(rows) {
   const out = {};
-  seed.courseIndex(W).forEach(function (x) {
-    out[x.row.id] = x.source.text || "";
+  rows.poems.forEach(function (r) {
+    if (r.audio) out[r.id] = r.audio;
   });
-  return out;
-}
 
-function writeAudio(W, rows) {
-  const texts = {};
-  (rows.texts || []).forEach(function (t) {
-    texts[t.book_id + "#" + t.pos] = t.text || "";
+  const twin = {};
+  rows.poems.forEach(function (p) {
+    if (p.audio && p.text) twin[seed.dedupKey(p.text)] = p.audio;
   });
-  const courseText = courseTextById(W);
 
-  const out = {};
-  const courseByText = {};
-  let orphans = [];
-
-  const held = AUDIO_BOOKS.filter(function (b) { return !b.ready; });
-
-  AUDIO_BOOKS.filter(function (b) { return b.ready; }).forEach(function (b) {
-    const catalog = audioRows(b.file);
-    const list = b.book === "poems" ? rows.poems : rows.catalog.filter(function (r) { return r.book_id === b.book; });
-    const queue = {};
-    catalog.forEach(function (a) {
-      const key = named(a.title, a.author);
-      (queue[key] = queue[key] || []).push(a.file);
-    });
-
-    list.forEach(function (r, i) {
-      const id = b.book === "poems" ? r.id : b.book + "-" + (i + 1);
-      const hit = queue[named(r.title, r.author)];
-      const file = hit && hit.length ? hit.shift() : "";
-      if (file) {
-        out[id] = file;
-        if (b.book === "poems") courseByText[seed.dedupKey(courseText[r.id])] = file;
-      }
-    });
-
-    if (b.book === "poems") return;
-
-    list.forEach(function (r, i) {
-      const id = b.book + "-" + (i + 1);
-      if (out[id]) return;
-      const twin = courseByText[seed.dedupKey(texts[b.book + "#" + r.pos])];
-      if (twin) out[id] = twin;
-      else orphans.push(id);
-    });
+  const counts = {};
+  rows.catalog.forEach(function (r) {
+    const id = r.book_id + "-" + (r.pos + 1);
+    const file = r.audio || (r.text ? twin[seed.dedupKey(r.text)] : "");
+    if (!file) return;
+    out[id] = file;
+    counts[r.book_id] = (counts[r.book_id] || 0) + 1;
   });
 
   writeModule(path.join(OUT_DIR, "audio.js"), out);
-  const heldNames = held.map(function (b) { return b.book; }).join(" / ");
-  console.log("音频 " + Object.keys(out).length + " 篇有 mp3（对不上 " + orphans.length + " 篇）" +
-    (heldNames ? "；" + heldNames + " 的 mp3 还没备好，不开" : ""));
-  if (orphans.length) console.log("  对不上的前几条：" + orphans.slice(0, 5).join("、"));
-  if (held.length) console.log("  没开集子的清单仍在 audio/ 下，备好把 ready 改成 true 就接上");
+
+  const silent = seed.AUDIO_MAPS.map(function (m) { return m.book; })
+    .filter(function (b) { return b !== seed.COURSE_BOOK && !counts[b]; });
+  console.log("音频 " + Object.keys(out).length + " 篇有 mp3（课内 "
+    + rows.poems.filter(function (r) { return r.audio; }).length + " / " + rows.poems.length + "）"
+    + (silent.length ? "；" + silent.join(" / ") + " 还没有 mp3" : ""));
 }
 
 function dropStale() {
