@@ -299,13 +299,14 @@ ok("课内那 251 条每一条都取得到正文",
   ok("deploy/sql/corpus-audio.sql 与语料一致（重新跑 node scripts/gen-corpus-sql.js 即可）",
     fs.existsSync(audioSql) && fs.readFileSync(audioSql, "utf8") === genAudio,
     "朗读文件名变了但补丁没重生成，库里那一列会跟 audio/*_map.md 对不上");
-  const written = [...genAudio.matchAll(/INSERT INTO `([a-z_]+)` \(([^)]+)\)/g)]
-    .map((m) => [m[1], m[2].replace(/[\s`]/g, "")]);
-  const wantKeys = { corpus_poems: "id,audio", corpus_catalog: "book_id,pos,audio" };
-  ok("corpus-audio.sql 的每条 INSERT 都把主键写全、只多一列 audio",
-    written.length > 0 && written.every(([t, cols]) => wantKeys[t] === cols),
-    "缺主键的那条在已有行上会被当成新行：严模式报 1364，非严模式更糟 —— 凭空多一行空篇目。"
-      + JSON.stringify(written));
+  const written = [...genAudio.matchAll(/UPDATE `([a-z_]+)` SET `audio` = '[^']*' WHERE `([a-z_]+)` = '[^']*'(?: AND `([a-z_]+)` = -?\d+)?;/g)]
+    .map((m) => [m[1], m[2], m[3] || ""]);
+  const wantKeys = { corpus_poems: "id", corpus_catalog: "book_id,pos" };
+  ok("corpus-audio.sql 只按主键 UPDATE 已有的行，一句 INSERT 都没有",
+    written.length > 0 && genAudio.indexOf("INSERT INTO") < 0 && !/ON DUPLICATE/.test(genAudio)
+      && written.every(([t, one, two]) => wantKeys[t] === [one, two].filter(Boolean).join(",")),
+    "写 INSERT 就得把 NOT NULL 的列写全：漏一列严模式报 1364，非严模式凭空多一行空篇目。"
+      + JSON.stringify(written.slice(0, 3)));
   const unlisted = audioIds.filter((id) => audioMap[id] && genAudio.indexOf("'" + audioMap[id] + "'") < 0);
   ok("朗读文件名只取 audio/uploaded.txt 列过的那些", unlisted.length === 0,
     "这几条不在已上传清单里，却写进了库：" + unlisted.slice(0, 3).map((id) => id + "=" + audioMap[id]).join("、"));

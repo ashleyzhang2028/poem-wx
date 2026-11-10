@@ -329,7 +329,8 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    `catalogs` 各占一行的一位下发，值由生成器从 `audio/*_map.md` 按「题名 + 作者」绑好
    （见 `audio/README.md`）。这两列没有单独的补丁文件之外的第二处来源：改了清单就重跑
    `node scripts/gen-corpus-sql.js`，它连带生成 `deploy/sql/corpus-audio.sql` ——
-   那个文件只 `INSERT … ON DUPLICATE KEY UPDATE audio`，不动篇目、正文与注释。
+   那个文件每行一条 `UPDATE … SET audio = … WHERE id = …`，只按主键改 audio，
+   库里没那一行就一行不动（不新增行），篇目、正文与注释一个不动。
    别在库里手改这一列：整表重灌会把它冲回空串，而链路是绿的、不报错。
    已上传的 mp3 记在 `audio/uploaded.txt`，不在列中的文件即使写在 `_map.md` 里也不落库，
    那一篇的 audio 就是空串；空串不出播放键。

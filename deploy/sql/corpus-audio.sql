@@ -1,60 +1,59 @@
 -- 朗读文件名补丁：只改 corpus_poems 的 audio 一列，篇目、正文、注释一个不动
 -- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值
--- 只写有文件的那几行，空串不写也不删；执行前先切库
+-- 每行一条 UPDATE，只按主键改 audio；库里没有那一条就一行不动，不新增行
+-- 空串不写也不删；执行前先切库
 
 SET NAMES utf8mb4;
 
 START TRANSACTION;
 
-INSERT INTO `corpus_poems` (`id`, `audio`) VALUES
-  ('poems-xx1-01', 'yonge_luobinwang.mp3'),
-  ('poems-xx1-02', 'jiangnan_hanyuefu.mp3'),
-  ('poems-xx1-03', 'hua_yiming.mp3'),
-  ('poems-xx1-04', 'minnong_lishen.mp3'),
-  ('poems-xx1-05', 'gulangyuexing_libai.mp3'),
-  ('poems-xx1-06', 'feng_liqiao.mp3'),
-  ('poems-xx1-07', 'chunxiao_menghaoran.mp3'),
-  ('poems-xx1-08', 'zengwanglun_libai.mp3'),
-  ('poems-xx1-10', 'xunyinzhebuyu_jiadao.mp3'),
-  ('poems-xx1-11', 'chishang_baijuyi.mp3'),
-  ('poems-xx1-12', 'xiaochi_yangwanli.mp3'),
-  ('poems-xx1-13', 'huaji_tangyin.mp3'),
-  ('poems-xx2-01', 'meihua_wanganshi.mp3'),
-  ('poems-xx2-02', 'xiaoerchuidiao_hulingneng.mp3'),
-  ('poems-xx2-03', 'dengguanquelou_wangzhihuan.mp3'),
-  ('poems-xx2-04', 'wanglushanpubu_libai.mp3'),
-  ('poems-xx2-05', 'jiangxue_liuzongyuan.mp3'),
-  ('poems-xx2-06', 'yesushansi_libai.mp3'),
-  ('poems-xx2-07', 'chilege_beichaominge.mp3'),
-  ('poems-xx2-08', 'cunju_gaoding.mp3'),
-  ('poems-xx2-09', 'yongliu_hezhizhang.mp3'),
-  ('poems-xx2-10', 'fudeguyuancaosongbie_baijuyi.mp3'),
-  ('poems-xx2-11', 'xiaochujingcisisonglinzifang_yangwanli.mp3'),
-  ('poems-xx2-12', 'jueju_dufu.mp3'),
-  ('poems-xx2-13', 'minnong_lishen_2.mp3'),
-  ('poems-xx2-14', 'zhouyeshusuojian_zhashenxing.mp3'),
-  ('poems-xx3-01', 'suojian_yuanmei.mp3'),
-  ('poems-xx3-02', 'shanxing_dumu.mp3'),
-  ('poems-xx3-03', 'zengliujingwen_sushi.mp3'),
-  ('poems-xx3-04', 'yeshusuojian_yeshaoweng.mp3'),
-  ('poems-xx3-05', 'wangtianmenshan_libai.mp3'),
-  ('poems-xx3-06', 'yinhushangchuqinghouyu_sushi.mp3'),
-  ('poems-xx3-07', 'wangdongting_liuyuxi.mp3'),
-  ('poems-xx3-08', 'zaofabaidicheng_libai.mp3'),
-  ('poems-xx3-09', 'cailianqu_wangchangling.mp3'),
-  ('poems-xx3-11', 'huichongchunjiangwanjing_sushi.mp3'),
-  ('poems-xx3-12', 'sanqudaozhong_zengji.mp3'),
-  ('poems-xx3-13', 'yijiangnan_baijuyi.mp3'),
-  ('poems-xx3-14', 'yuanri_wanganshi.mp3'),
-  ('poems-xx3-15', 'qingming_dumu.mp3'),
-  ('poems-xx3-16', 'jiuyuejiuriyishandongxiongdi_wangwei.mp3'),
-  ('poems-xx3-17', 'chuzhouxijian_weiyingwu.mp3'),
-  ('poems-xx3-18', 'dalinsitaohua_baijuyi.mp3'),
-  ('poems-xx4-01', 'mujiangyin_baijuyi.mp3'),
-  ('poems-xx4-02', 'tixilinbi_sushi.mp3'),
-  ('poems-xx4-03', 'xuemei_luyue.mp3'),
-  ('poems-xx4-04', 'chusai_wangchangling.mp3'),
-  ('poems-xx4-07', 'biedongda_gaoshi.mp3')
-ON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);
+UPDATE `corpus_poems` SET `audio` = 'yonge_luobinwang.mp3' WHERE `id` = 'poems-xx1-01';
+UPDATE `corpus_poems` SET `audio` = 'jiangnan_hanyuefu.mp3' WHERE `id` = 'poems-xx1-02';
+UPDATE `corpus_poems` SET `audio` = 'hua_yiming.mp3' WHERE `id` = 'poems-xx1-03';
+UPDATE `corpus_poems` SET `audio` = 'minnong_lishen.mp3' WHERE `id` = 'poems-xx1-04';
+UPDATE `corpus_poems` SET `audio` = 'gulangyuexing_libai.mp3' WHERE `id` = 'poems-xx1-05';
+UPDATE `corpus_poems` SET `audio` = 'feng_liqiao.mp3' WHERE `id` = 'poems-xx1-06';
+UPDATE `corpus_poems` SET `audio` = 'chunxiao_menghaoran.mp3' WHERE `id` = 'poems-xx1-07';
+UPDATE `corpus_poems` SET `audio` = 'zengwanglun_libai.mp3' WHERE `id` = 'poems-xx1-08';
+UPDATE `corpus_poems` SET `audio` = 'xunyinzhebuyu_jiadao.mp3' WHERE `id` = 'poems-xx1-10';
+UPDATE `corpus_poems` SET `audio` = 'chishang_baijuyi.mp3' WHERE `id` = 'poems-xx1-11';
+UPDATE `corpus_poems` SET `audio` = 'xiaochi_yangwanli.mp3' WHERE `id` = 'poems-xx1-12';
+UPDATE `corpus_poems` SET `audio` = 'huaji_tangyin.mp3' WHERE `id` = 'poems-xx1-13';
+UPDATE `corpus_poems` SET `audio` = 'meihua_wanganshi.mp3' WHERE `id` = 'poems-xx2-01';
+UPDATE `corpus_poems` SET `audio` = 'xiaoerchuidiao_hulingneng.mp3' WHERE `id` = 'poems-xx2-02';
+UPDATE `corpus_poems` SET `audio` = 'dengguanquelou_wangzhihuan.mp3' WHERE `id` = 'poems-xx2-03';
+UPDATE `corpus_poems` SET `audio` = 'wanglushanpubu_libai.mp3' WHERE `id` = 'poems-xx2-04';
+UPDATE `corpus_poems` SET `audio` = 'jiangxue_liuzongyuan.mp3' WHERE `id` = 'poems-xx2-05';
+UPDATE `corpus_poems` SET `audio` = 'yesushansi_libai.mp3' WHERE `id` = 'poems-xx2-06';
+UPDATE `corpus_poems` SET `audio` = 'chilege_beichaominge.mp3' WHERE `id` = 'poems-xx2-07';
+UPDATE `corpus_poems` SET `audio` = 'cunju_gaoding.mp3' WHERE `id` = 'poems-xx2-08';
+UPDATE `corpus_poems` SET `audio` = 'yongliu_hezhizhang.mp3' WHERE `id` = 'poems-xx2-09';
+UPDATE `corpus_poems` SET `audio` = 'fudeguyuancaosongbie_baijuyi.mp3' WHERE `id` = 'poems-xx2-10';
+UPDATE `corpus_poems` SET `audio` = 'xiaochujingcisisonglinzifang_yangwanli.mp3' WHERE `id` = 'poems-xx2-11';
+UPDATE `corpus_poems` SET `audio` = 'jueju_dufu.mp3' WHERE `id` = 'poems-xx2-12';
+UPDATE `corpus_poems` SET `audio` = 'minnong_lishen_2.mp3' WHERE `id` = 'poems-xx2-13';
+UPDATE `corpus_poems` SET `audio` = 'zhouyeshusuojian_zhashenxing.mp3' WHERE `id` = 'poems-xx2-14';
+UPDATE `corpus_poems` SET `audio` = 'suojian_yuanmei.mp3' WHERE `id` = 'poems-xx3-01';
+UPDATE `corpus_poems` SET `audio` = 'shanxing_dumu.mp3' WHERE `id` = 'poems-xx3-02';
+UPDATE `corpus_poems` SET `audio` = 'zengliujingwen_sushi.mp3' WHERE `id` = 'poems-xx3-03';
+UPDATE `corpus_poems` SET `audio` = 'yeshusuojian_yeshaoweng.mp3' WHERE `id` = 'poems-xx3-04';
+UPDATE `corpus_poems` SET `audio` = 'wangtianmenshan_libai.mp3' WHERE `id` = 'poems-xx3-05';
+UPDATE `corpus_poems` SET `audio` = 'yinhushangchuqinghouyu_sushi.mp3' WHERE `id` = 'poems-xx3-06';
+UPDATE `corpus_poems` SET `audio` = 'wangdongting_liuyuxi.mp3' WHERE `id` = 'poems-xx3-07';
+UPDATE `corpus_poems` SET `audio` = 'zaofabaidicheng_libai.mp3' WHERE `id` = 'poems-xx3-08';
+UPDATE `corpus_poems` SET `audio` = 'cailianqu_wangchangling.mp3' WHERE `id` = 'poems-xx3-09';
+UPDATE `corpus_poems` SET `audio` = 'huichongchunjiangwanjing_sushi.mp3' WHERE `id` = 'poems-xx3-11';
+UPDATE `corpus_poems` SET `audio` = 'sanqudaozhong_zengji.mp3' WHERE `id` = 'poems-xx3-12';
+UPDATE `corpus_poems` SET `audio` = 'yijiangnan_baijuyi.mp3' WHERE `id` = 'poems-xx3-13';
+UPDATE `corpus_poems` SET `audio` = 'yuanri_wanganshi.mp3' WHERE `id` = 'poems-xx3-14';
+UPDATE `corpus_poems` SET `audio` = 'qingming_dumu.mp3' WHERE `id` = 'poems-xx3-15';
+UPDATE `corpus_poems` SET `audio` = 'jiuyuejiuriyishandongxiongdi_wangwei.mp3' WHERE `id` = 'poems-xx3-16';
+UPDATE `corpus_poems` SET `audio` = 'chuzhouxijian_weiyingwu.mp3' WHERE `id` = 'poems-xx3-17';
+UPDATE `corpus_poems` SET `audio` = 'dalinsitaohua_baijuyi.mp3' WHERE `id` = 'poems-xx3-18';
+UPDATE `corpus_poems` SET `audio` = 'mujiangyin_baijuyi.mp3' WHERE `id` = 'poems-xx4-01';
+UPDATE `corpus_poems` SET `audio` = 'tixilinbi_sushi.mp3' WHERE `id` = 'poems-xx4-02';
+UPDATE `corpus_poems` SET `audio` = 'xuemei_luyue.mp3' WHERE `id` = 'poems-xx4-03';
+UPDATE `corpus_poems` SET `audio` = 'chusai_wangchangling.mp3' WHERE `id` = 'poems-xx4-04';
+UPDATE `corpus_poems` SET `audio` = 'biedongda_gaoshi.mp3' WHERE `id` = 'poems-xx4-07';
 
 COMMIT;
