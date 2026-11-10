@@ -1157,16 +1157,17 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
       seen.length === 1 && seen[0].family === e.font.face().family,
       seen.map((o) => o.family).join(" | ") || "loadFontFace 没被调用");
     ok("未登录取默认那一款的 free 子集，woff2 在前、woff 兜底",
-      seen[0].source === e.font.FACES[0].free[0]
-        && /\/zhuquefangsong-regular\/free\.woff2$/.test(seen[0].source)
-        && /\/free\.woff$/.test(e.font.FACES[0].free[1]),
+      seen[0].source === e.font.addresses()[0]
+        && /\/free\.woff2$/.test(seen[0].source)
+        && /\/free\.woff$/.test(e.font.addresses()[1]),
       seen[0].source);
     ok("子集地址按目录 + 档位取名，文件名里只有档位一个词",
-      e.font.FACES.every((f) => ["free", "pro", "max"].every((size) => f[size].every((u) => {
-        const parts = u.replace(e.font.BASE, "").split("/");
-        return parts.length === 2 && parts[0] === f.dir && parts[1] === size + (/woff2$/.test(u) ? ".woff2" : ".woff");
-      }))),
-      e.font.FACES[0].free.join(" | "));
+      e.font.faces().every((f) => ["free", "pro", "max"].every((size) => f[size].every((u) => {
+        return u === f.dir && u.length > 0 && f.base.slice(-1) === "/" && f[size].length === e.font.SUBSETS.length
+          && new RegExp("/" + size + "\\.woff2?$").test(u);
+      })))
+        && e.font.faces().every((f) => f.base.indexOf(f.dir + "/") > 0),
+      e.font.faces()[0].free.join(" | "));
   });
   e.restore();
 
@@ -1174,7 +1175,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   const picked = bootFont({}, { loadFontFace: (o) => { o.success && o.success(); } });
   ok("Free 换不了字体（清单摆着，只有默认那款可选）",
     picked.font.pickable() === false
-      && picked.font.options().length === picked.font.FACES.length
+      && picked.font.options().length === picked.font.faces().length
       && picked.font.set("huiwen").ok === false,
     JSON.stringify(picked.font.options()) + " / pickable=" + picked.font.pickable());
   picked.font.set("huiwen");
@@ -1185,20 +1186,20 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   asTier("pro");
   const ep = bootFont({}, { loadFontFace: (o) => { proSeen.push(o.source); o.success && o.success(); } });
   ep.font.load().then(() => {
-    ok("Pro 取 pro 那一份", proSeen[0] === ep.font.addresses(ep.font.DEFAULT)[0]
-      && /\/zhuquefangsong-regular\/pro\.woff2$/.test(proSeen[0]), proSeen[0]);
+    ok("Pro 取 pro 那一份", proSeen[0] === ep.font.addresses()[0]
+      && /\/pro\.woff2$/.test(proSeen[0]), proSeen[0]);
     ok("Free / Pro / Max 是同一款的三份",
-      ep.font.FACES[0].free[0] !== ep.font.FACES[0].pro[0]
-        && ep.font.FACES[0].pro[0] !== ep.font.FACES[0].max[0]
-        && ep.font.FACES[0].free[0] !== ep.font.FACES[1].free[0]);
+      ep.font.faces()[0].free[0] !== ep.font.faces()[0].pro[0]
+        && ep.font.faces()[0].pro[0] !== ep.font.faces()[0].max[0]
+        && ep.font.faces()[0].free[0] !== ep.font.faces()[1].free[0]);
     proSeen.length = 0;
     return ep.font.load();
   }).then(() => {
     ok("同一款注册过就不再注册一次", proSeen.length === 0, proSeen.join(" | "));
     ok("每款字各有各的字族与地址（不是同一份换个名字）",
-      ep.font.FACES.every((f, i) => ep.font.FACES.every((g, j) => i === j
+      ep.font.faces().every((f, i) => ep.font.faces().every((g, j) => i === j
         || (f.family !== g.family && f.pro[0] !== g.pro[0]))),
-      ep.font.FACES.map((f) => f.family + " " + f.pro[0]).join(" | "));
+      ep.font.faces().map((f) => f.family + " " + f.pro[0]).join(" | "));
     proSeen.length = 0;
     const r = ep.font.set("huiwen");
     ok("Pro 切到汇文明朝，换的是它自己的那一份", r.ok === true && ep.font.current() === "huiwen");
@@ -1215,8 +1216,8 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   asTier("max");
   const em = bootFont({}, { loadFontFace: (o) => { maxSeen.push(o.source); o.success && o.success(); } });
   em.font.load().then(() => {
-    ok("Max 取 max 那一份", maxSeen.length === 1 && maxSeen[0] === em.font.addresses(em.font.DEFAULT)[0]
-      && /\/zhuquefangsong-regular\/max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
+    ok("Max 取 max 那一份", maxSeen.length === 1 && maxSeen[0] === em.font.addresses()[0]
+      && /\/max\.woff2$/.test(maxSeen[0]), maxSeen.join(" | "));
     maxSeen.length = 0;
     const r = em.font.set("yozai");
     ok("Pro 升 Max 后换一款，注册的是这款的 max 子集",
@@ -1235,7 +1236,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
   });
   e3.font.load().then((hit) => {
     ok("woff2 那一份注册失败就退到 woff（老 iOS）",
-      hit === true && fallback.length === 2 && fallback[1] === e3.font.addresses(e3.font.DEFAULT)[1],
+      hit === true && fallback.length === 2 && fallback[1] === e3.font.addresses()[1],
       fallback.join(" | "));
   });
   e3.restore();
@@ -1258,7 +1259,7 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
     ok("字体卡每格预览取该款目录下的 7 那一份，不是 free / pro / max",
       hit === true && !!first.source
         && new RegExp("/7\\.woff2?$").test(first.source)
-        && epv.font.FACES.some((f) => f.previewFamily === first.family && f.preview[0] === first.source),
+        && epv.font.faces().some((f) => f.previewFamily === first.family && f.preview[0] === first.source),
       previewCalls.map((o) => o.family + " " + o.source).join(" | "));
     const settled = on.length;
     return epv.font.preview().then((again) => ({ again, settled }));
@@ -1267,10 +1268,12 @@ ok("加背跨天归零", store.dailyExtra().length === 0);
       again === true && previewFaces().length === settled,
       previewFaces().map((o) => o.family).join(" | "));
     const cap = settled;
-    return epv.font.previewOf(epv.font.FACES[epv.font.FACES.length - 1].key).then((okHit) => {
+    const last = epv.font.faces()[epv.font.faces().length - 1].key;
+    const total = epv.font.faces().length;
+    return epv.font.previewOf(last).then((okHit) => {
       ok("没点过的款不注册预览，点过才补 —— 一次 loadFontFace 挂一个 WindowInfoChanged",
-        okHit === true && cap < epv.font.FACES.length && previewFaces().length === cap + 1,
-        "注册了 " + cap + " 款 / 共 " + epv.font.FACES.length + " 款，点过之后 " + previewFaces().length + " 款");
+        okHit === true && cap < total && previewFaces().length === cap + 1,
+        "注册了 " + cap + " 款 / 共 " + total + " 款，点过之后 " + previewFaces().length + " 款");
       epv.restore();
     });
   });
@@ -3833,11 +3836,74 @@ function mountFull(pg, query) {
 
   const missing = WANT.filter(([k, name, rgb]) => {
     const t = all.find((x) => x.key === k);
-    return !t || t.name !== name || t.rgba !== rgbaOf(rgb) || t.soft !== rgbaOf(rgb).replace(", 1)", ", 0.05)");
+    return !t || t.name !== name || t.rgba !== rgbaOf(rgb)
+      || t.soft !== rgbaOf(rgb).replace(", 1)", ", " + themeMod.WASH + ")");
   });
   ok("清单就是这 37 项（八个传统色 + 二十九大好河山）",
     missing.length === 0 && all.length === WANT.length,
     missing.map((m) => m[1]).join(", ") + "；清单 " + all.length + " 项");
+
+  {
+    const seed = require(path.join(ROOT, "utils", "appearance.js")).themes(null);
+    const drift = WANT.filter(([k, name, rgb, group]) => {
+      const r = seed.filter((x) => x.key === k)[0];
+      return !r || r.name !== name || r.rgb.join() !== rgb.join() || r.group !== group;
+    });
+    ok("清单的初始值就是自检里这份（appearance.js 的 SEED_THEMES 与主题页那份对得上）",
+      drift.length === 0 && seed.length === WANT.length,
+      drift.map((m) => m[1]).join(", ") + "；SEED_THEMES " + seed.length + " 项");
+  }
+
+  {
+    const appearanceMod = require(path.join(ROOT, "utils", "appearance.js"));
+    const dbThemes = appearanceMod.themes([
+      { key: "lab", name: "实验室", rgb: [1, 2, 3], banner: "lab.png", group: "landscape" },
+      { key: "ink", name: "墨色", rgb: [8, 8, 10], group: "tradition" },
+      { key: "Bogus Key", name: "坏行", rgb: [0, 0, 0], group: "tradition" },
+      { key: "bad", name: "色值不合法", rgb: [0, 0, 999], group: "tradition" },
+      { key: "flower", name: "错卡", rgb: [0, 0, 0], group: "nowhere" },
+      { key: "ink", name: "重复的行", rgb: [0, 0, 0], group: "tradition" }
+    ]);
+    ok("库里那几行说了算：新加的主题进得来，坏行与重复的剔掉",
+      dbThemes.length === 2 && dbThemes[0].key === "lab" && dbThemes[1].name === "墨色"
+        && dbThemes[0].banner === "lab.png",
+      JSON.stringify(dbThemes.map((t) => t.key)));
+
+    themeMod.adopt({ themes: dbThemes });
+    ok("换了清单之后，页面上摊出来的就是库里那几行（不是代码里那份）",
+      themeMod.all().map((t) => t.key).join() === "lab,ink"
+        && themeMod.groups()[1].items.map((i) => i.key).join() === "lab"
+        && themeMod.get("lab").banner === appearanceMod.bannerUrl("lab.png"),
+      themeMod.all().map((t) => t.key).join());
+
+    themeMod.adopt({ themes: [] });
+    ok("库里的表是空的就回落到内置那份（不把主题页摊成空白）",
+      themeMod.all().length === WANT.length, themeMod.all().length + " 项");
+  }
+
+  {
+    const appearanceMod = require(path.join(ROOT, "utils", "appearance.js"));
+    const dbFonts = appearanceMod.fonts([
+      { key: "newface", name: "新字", note: "自检", dir: "newface-pro", base: "https://cdn.example.com/fonts/newface-pro/" },
+      { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", dir: "lxgwwenkai-regular", base: "https://cdn.example.com/fonts/lxgwwenkai-regular/" },
+      { key: "../etc", name: "坏目录", dir: "/etc/passwd" },
+      { key: "nodir", name: "没目录", dir: "" }
+    ]);
+    const fontMod = require(path.join(ROOT, "utils", "font.js"));
+    fontMod.sync(dbFonts);
+    const faces = fontMod.faces();
+    ok("库里那几行说了算：新加的字体进得来，坏行剔掉，地址跟着 base 拼",
+      faces.length === 2 && faces[0].key === "newface"
+        && faces[0].pro[0] === "https://cdn.example.com/fonts/newface-pro/pro.woff2"
+        && faces[0].preview[1] === "https://cdn.example.com/fonts/newface-pro/7.woff",
+      JSON.stringify(faces.map((f) => f.key)) + " / " + (faces[0] && faces[0].pro[0]));
+
+    fontMod.sync([]);
+    ok("库里的字体表是空的就回落到内置那份（不把字体卡摊成空白）",
+      fontMod.faces().length === appearanceMod.SEED_FONTS.length
+        && fontMod.face().key === fontMod.DEFAULT,
+      fontMod.faces().length + " 款");
+  }
 
   const groupMod = themeMod.groups();
   const badGroup = WANT.filter(([k, , , g]) => {
@@ -3930,7 +3996,7 @@ function mountFull(pg, query) {
   ok("字体选择器由 font.options() 摊出来，点了落到 font.set",
     themeJs.indexOf("font.options()") >= 0
       && themeJs.indexOf("font.set(") >= 0
-      && fontMod.options().length === fontMod.FACES.length,
+      && fontMod.options().length === fontMod.faces().length,
     "字体那几行不是从 font.options() 摊出来的，或者点了不落到 font.set");
 
   ok("页面预热了字体预览（否则各格预览字族的字形根本没被画过一次）",

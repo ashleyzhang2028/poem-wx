@@ -362,6 +362,34 @@ function mysqlStore(cfg) {
         .then(function (rows) { return rows && rows[0] ? rows[0] : null; });
     },
 
+    listThemeSwatches: function () {
+      return query("SELECT `key`, `name`, `rgb_r`, `rgb_g`, `rgb_b`, `banner`, `group_key`"
+        + " FROM theme_swatches ORDER BY pos, `key`").then(function (rows) {
+        return (rows || []).map(function (r) {
+          return {
+            key: String(r.key || ""),
+            name: String(r.name || ""),
+            rgb: [num(r.rgb_r) || 0, num(r.rgb_g) || 0, num(r.rgb_b) || 0],
+            banner: String(r.banner || ""),
+            group: String(r.group_key || "")
+          };
+        });
+      });
+    },
+    listFontFaces: function () {
+      return query("SELECT `key`, `name`, `note`, `dir` FROM font_faces ORDER BY pos, `key`")
+        .then(function (rows) {
+          return (rows || []).map(function (r) {
+            return {
+              key: String(r.key || ""),
+              name: String(r.name || ""),
+              note: String(r.note || ""),
+              dir: String(r.dir || "")
+            };
+          });
+        });
+    },
+
     listCorpusBooks: function () {
       return query("SELECT book_id, name, unit, page, prefix, kind, total FROM corpus_books ORDER BY pos")
         .then(function (rows) { return rows || []; });

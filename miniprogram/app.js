@@ -37,6 +37,9 @@ App({
     store.migrate();
     this.stampBuild();
 
+    theme.adopt();
+    this.reloadLook();
+
     corpus.warm();
     corpus.dropLegacy();
 
@@ -55,7 +58,17 @@ App({
     store.touchDaily();
     font.restore();
     this.reloadFont();
+    this.refreshLookSoon();
     this.refreshTierHourly();
+  },
+
+  refreshLookSoon() {
+    if (theme.fresh()) return;
+    theme.sync().then((rows) => {
+      if (!rows.theme.length) return;
+      this.reloadFont();
+      this.repaintFont(font.scope());
+    }).catch(() => {});
   },
 
   refreshTierHourly() {
@@ -71,6 +84,14 @@ App({
 
   reloadFont() {
     font.refresh();
+  },
+
+  reloadLook() {
+    return theme.sync().then(() => {
+      this.reloadFont();
+      this.repaintFont(font.scope());
+      return true;
+    });
   },
 
   repaintFont(epoch) {

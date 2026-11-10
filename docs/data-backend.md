@@ -178,6 +178,11 @@ SHOW TABLES;             -- 要看到 accounts / wx_accounts / progress / sessio
 照打 —— 症状是「看着配好了，但登录一律 500」。自检 V49 钉着这一条：
 `deploy/store-mysql.js` 里那个默认库名必须和 `wx-cloud-setup.md` 写的是同一个。
 
+主题与字体的清单在 `theme_swatches` / `font_faces` 两张表里，初始值由
+`node scripts/gen-appearance-sql.js` 从 `miniprogram/utils/appearance.js` 的
+`SEED_THEMES` / `SEED_FONTS` 生成 `deploy/sql/appearance.sql`（只在初始化时灌一次，
+之后改库即改线上）。两处口径见 [`architecture.md`](architecture.md) § 六「主题与字体从库里来」。
+
 建完表之后，第一个管理员直接在库里改：
 
 ```sql

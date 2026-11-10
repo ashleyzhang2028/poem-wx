@@ -42,7 +42,18 @@ Page({
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this), banner: theme.bannerSrc(), toneView: theme.toneData() });
     this.setData(Object.assign({ locked: !gate.logged() }, this.view()));
+    this.refreshLook();
     this.warmPreview();
+  },
+
+  refreshLook() {
+    if (theme.fresh()) return;
+    theme.sync().then((rows) => {
+      if (!rows.theme.length) return;
+      this.applyFont();
+      this.setData(Object.assign({ banner: theme.bannerSrc() }, this.view()));
+      this.warmPreview();
+    }).catch(() => {});
   },
 
   warmPreview() {

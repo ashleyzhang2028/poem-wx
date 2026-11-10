@@ -109,6 +109,8 @@
 - 构建上下文只有 `api/` 与两个服务壳文件（约 0.3MB），没有 `shard-src/` 那一层
 - 没有 `COPY_SHREDS` 这面旗，也没有 `/app/shards/`
 - 没有 `/api/shard/*` 这条路由；`GET /api/config` 只回 `turnstile` 与 `mail`
+- `GET /api/appearance` 只读 `theme_swatches` / `font_faces` 两张小表，
+  清单为空时回空数组（端上回落到内置清单），不影响其余路由
 
 ## 瘦身省了什么
 

@@ -30,6 +30,12 @@ var CONFIG = {
 
   siteUrl: env("SITE_URL", "https://kuibu.app"),
 
+  themeBannerBase: env("THEME_BANNER_BASE",
+    "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/"),
+
+  fontBase: env("FONT_BASE",
+    "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/"),
+
   turnstileEnabled: env("TURNSTILE_ENABLED", "0") === "1",
   turnstileSiteKey: env("TURNSTILE_SITE_KEY"),
   turnstileSecretKey: env("TURNSTILE_SECRET_KEY"),

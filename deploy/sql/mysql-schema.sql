@@ -240,6 +240,40 @@ CREATE TABLE IF NOT EXISTS `reports` (
   CONSTRAINT `reports_uid_fkey` FOREIGN KEY (`uid`) REFERENCES `accounts` (`uid`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------- theme_swatches
+-- 主题清单。一行 = 主题页上的一格色（名字 / 色值 / 归哪张卡 / 有没有题图）。
+-- 题图只存文件名，目录在 `utils/theme.js` 的 `THEME_BANNER_BASE`（域名与主路径几乎不变，
+-- 所以不入库）。题图列留空 = 用默认那张 `hero.png`。
+-- ⚠️ 清单以库为准：`scripts/gen-appearance-sql.js` 从 `utils/theme.js` 里那份初始清单
+-- 生成 `deploy/sql/appearance.sql`，只在初始化时灌一次（`ON DUPLICATE KEY UPDATE`），
+-- 之后改库即改线上，重跑灌库 SQL 会把库里手工改过的行冲回去。
+CREATE TABLE IF NOT EXISTS `theme_swatches` (
+  `key`       VARCHAR(48)  NOT NULL,
+  `name`      VARCHAR(64)  NOT NULL,
+  `rgb_r`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `rgb_g`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `rgb_b`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `banner`    VARCHAR(128) NOT NULL DEFAULT '',
+  `group_key` VARCHAR(32)  NOT NULL DEFAULT 'tradition',
+  `pos`       INT          NOT NULL DEFAULT 0,
+  PRIMARY KEY (`key`),
+  KEY `theme_swatches_group_pos_idx` (`group_key`, `pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------- font_faces
+-- 字体清单。一行 = 主题页字体格里的一格。
+-- 只存目录名：档位子集的文件名固定是 `free/pro/max/7` + `.woff2/.woff`，
+-- 域名与主路径在 `utils/font.js` 的 `BASE`。
+CREATE TABLE IF NOT EXISTS `font_faces` (
+  `key`  VARCHAR(48)  NOT NULL,
+  `name` VARCHAR(64)  NOT NULL,
+  `note` VARCHAR(64)  NOT NULL DEFAULT '',
+  `dir`  VARCHAR(128) NOT NULL,
+  `pos`  INT          NOT NULL DEFAULT 0,
+  PRIMARY KEY (`key`),
+  KEY `font_faces_pos_idx` (`pos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ------------------------------------------------------------ daily_poems
 CREATE TABLE IF NOT EXISTS `daily_poems` (
   `pos`     INT          NOT NULL,

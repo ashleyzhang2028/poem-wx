@@ -1,56 +1,54 @@
 const store = require("./store");
 const entitlement = require("./entitlement");
 const pageStack = require("./page-stack");
-
-const FONTS = [
-  { key: "zhuque", name: "朱雀仿宋", note: "仿宋 · 清瘦利落", dir: "zhuquefangsong-regular" },
-  { key: "oldsong", name: "京华老宋", note: "老宋 · 旧籍纸墨", dir: "kinghwa_oldsong_v3" },
-  { key: "jinshu", name: "寒蝉锦书宋", note: "宋体 · 锦纹细密", dir: "chilljinshusongpro_regular" },
-  { key: "zhenhei", name: "思源真黑", note: "黑体 · 笔画匀净", dir: "siyuan-zhenhei" },
-  { key: "huiwen", name: "汇文明朝", note: "明朝 · 横细竖粗", dir: "huiwenmincho-improved" },
-  { key: "hanamina", name: "花园明朝", note: "明朝 · 平实端正", dir: "hanamina" },
-  { key: "chillkai", name: "寒蝉正楷", note: "正楷 · 端正写意", dir: "chillkai" },
-  { key: "cooper", name: "汇迹正楷", note: "正楷 · 刚劲挺括", dir: "cooperzhengkai" },
-  { key: "longcang", name: "寒蝉龙藏楷", note: "楷体 · 藏锋有力", dir: "chilllongcangkai_regular" },
-  { key: "wenkai", name: "霞鹜文楷", note: "楷体 · 温润随和", dir: "lxgwwenkai-regular" },
-  { key: "yozai", name: "悠哉", note: "圆体 · 闲散绵软", dir: "yozai-regular" },
-  { key: "qiji", name: "黄令东齐伋", note: "宋体 · 古本筋骨", dir: "qiji" },
-  { key: "zhushi", name: "杨任东竹石", note: "行书 · 竹石清劲", dir: "yangrendong-zhushiti" },
-  { key: "qingyan", name: "乐米清砚方墨", note: "方墨 · 棱角分明", dir: "lemi-qingyanfangmo" },
-  { key: "linhai", name: "临海隶书", note: "隶书 · 蚕头燕尾", dir: "linhai-lishu" }
-];
+const appearance = require("./appearance");
 
 const SAMPLE = "烟花三月下扬州";
 
 const DEFAULT = "zhuque";
 
-const BASE = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/fonts/";
+const BASE = appearance.FONT_BASE;
 
 const SUBSETS = ["woff2", "woff"];
 
-function files(dir, size) {
-  return SUBSETS.map((ext) => BASE + dir + "/" + size + "." + ext);
+function files(base, size) {
+  return SUBSETS.map((ext) => base + size + "." + ext);
 }
 
 const PREVIEW = "7";
 
-const FACES = FONTS.map((f) => ({
-  key: f.key,
-  name: f.name,
-  note: f.note,
-  dir: f.dir,
-  family: "Kuibu Poem " + f.key,
-  previewFamily: "Kuibu Preview " + f.key,
-  preview: files(f.dir, PREVIEW),
-  free: files(f.dir, "free"),
-  pro: files(f.dir, "pro"),
-  max: files(f.dir, "max")
-}));
+let rows = [];
 
-const BY_KEY = {};
-FACES.forEach((f) => { BY_KEY[f.key] = f; });
+function dress(f) {
+  return {
+    key: f.key,
+    name: f.name,
+    note: f.note,
+    dir: f.dir,
+    family: "Kuibu Poem " + f.key,
+    previewFamily: "Kuibu Preview " + f.key,
+    preview: files(f.base, PREVIEW),
+    free: files(f.base, "free"),
+    pro: files(f.base, "pro"),
+    max: files(f.base, "max")
+  };
+}
 
-const FREE_FACE = FACES[0];
+function faces() {
+  return appearance.fonts(rows).map(dress);
+}
+
+function sync(saved) {
+  rows = Array.isArray(saved) ? saved : [];
+  settled = "";
+  return rows;
+}
+
+function faceByKey() {
+  const map = {};
+  faces().forEach((f) => { map[f.key] = f; });
+  return map;
+}
 
 function paid() {
   return entitlement.rankOf(entitlement.status().tier) >= entitlement.rankOf("pro");
@@ -66,13 +64,14 @@ function tier() {
 
 function current() {
   const key = store.settings().font;
-  if (!BY_KEY[key]) return DEFAULT;
+  if (!faceByKey()[key]) return DEFAULT;
   if (!pickable() && key !== DEFAULT) return DEFAULT;
   return key;
 }
 
 function face(key) {
-  return BY_KEY[key || current()] || FREE_FACE;
+  const map = faceByKey();
+  return map[key || current()] || map[DEFAULT] || dress(appearance.SEED_FONTS[0]);
 }
 
 const STACK = '"Songti SC", "STSong", "STZhongsong", "Source Han Serif SC", "Source Han Serif CN", '
@@ -112,7 +111,7 @@ function readiness() {
 }
 
 function options() {
-  return FACES.map((f) => ({ key: f.key, name: f.name }));
+  return faces().map((f) => ({ key: f.key, name: f.name }));
 }
 
 let scopeEpoch = 0;
@@ -188,7 +187,7 @@ function wanted(key) {
 
 function previewing() {
   if (!previewsReady()) return [];
-  return FACES.filter((f) => wanted(f.key))
+  return faces().filter((f) => wanted(f.key))
     .map((f) => register(f.previewFamily, f.preview).then((ok) => (ok ? f.key : "")));
 }
 
@@ -199,11 +198,11 @@ function preview() {
 }
 
 function previewed(key) {
-  return !!BY_KEY[key] && wanted(key);
+  return !!faceByKey()[key] && wanted(key);
 }
 
 function previewOf(key) {
-  const f = BY_KEY[key];
+  const f = faceByKey()[key];
   if (!f || !previewsReady()) return Promise.resolve(false);
   previewSeen[key] = true;
   return register(f.previewFamily, f.preview);
@@ -309,7 +308,7 @@ function refresh() {
 }
 
 function set(key) {
-  const f = BY_KEY[key];
+  const f = faceByKey()[key];
   if (!f) return { ok: false, reason: "unknown" };
   if (!pickable()) return { ok: false, reason: "tier" };
   if (key === current()) return { ok: true, changed: false };
@@ -330,7 +329,8 @@ function bind(style) {
 }
 
 module.exports = {
-  FONTS, FACES, DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
+  DEFAULT, BASE, SAMPLE, PREVIEW, SUBSETS, STACK,
+  faces, sync,
   readiness, options,
   paid, pickable, tier, current, face, familyOf, stack, groupOf, shelf,
   addresses, configured, load, preview, previewed, previewOf, set, refresh,

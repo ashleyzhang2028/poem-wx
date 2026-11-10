@@ -5,67 +5,21 @@ const entitlement = require("./entitlement");
 const custom = require("./custom-banner");
 const tone = require("./color-tone");
 const picker = require("./color-picker");
+const appearance = require("./appearance");
 
-const CITY_BANNER = "https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/themes/city/";
+const CITY_BANNER = appearance.BANNER_BASE;
 
-const TRADITION = "tradition";
+const TRADITION = appearance.GROUP.tradition;
 
-const LANDSCAPE = "landscape";
+const LANDSCAPE = appearance.GROUP.landscape;
 
 const OWN = "own";
 
 const OWN_KEY = "own";
 
-const THEMES = [
-  { key: "daiqing", name: "黛青", rgb: [2, 54, 51], banner: CITY_BANNER + "hero.png", group: TRADITION },
-  { key: "ink", name: "墨色", rgb: [8, 8, 10], group: TRADITION },
-  { key: "muse", name: "暮色", rgb: [79, 96, 114], group: TRADITION },
-  { key: "nuahui", name: "暖灰", rgb: [164, 86, 104], group: TRADITION },
-  { key: "mich", name: "米褐", rgb: [126, 101, 84], group: TRADITION },
-  { key: "shilv", name: "石绿", rgb: [108, 127, 79], group: TRADITION },
-  { key: "yanzhi", name: "胭脂", rgb: [157, 41, 51], group: TRADITION },
-  { key: "yuqing", name: "雨过天青", rgb: [47, 96, 85], group: TRADITION },
-  { key: "datongxuankongsi", name: "大同悬空寺", rgb: [203, 142, 79], banner: CITY_BANNER + "datong_xuankongsi.png", group: LANDSCAPE },
-  { key: "eergunashidi", name: "额尔古纳", rgb: [205, 83, 63], banner: CITY_BANNER + "eerguna_shidi.png", group: LANDSCAPE },
-  { key: "hulunbeiershiwei", name: "呼伦贝尔室韦", rgb: [53, 131, 166], banner: CITY_BANNER + "hulunbeier_shiwei.png", group: LANDSCAPE },
-  { key: "dandongyalujiang", name: "丹东鸭绿江", rgb: [16, 50, 59], banner: CITY_BANNER + "dandong_yalujiang.png", group: LANDSCAPE },
-  { key: "benxiguanmenshan", name: "本溪关门山", rgb: [205, 20, 11], banner: CITY_BANNER + "benxi_guanmenshan.png", group: LANDSCAPE },
-  { key: "changchunnanling", name: "长春南岭", rgb: [243, 61, 104], banner: CITY_BANNER + "changchun_nanling.png", group: LANDSCAPE },
-  { key: "baishanchangbaishan", name: "白山长白山", rgb: [11, 41, 74], banner: CITY_BANNER + "baishan_changbaishan.png", group: LANDSCAPE },
-  { key: "chizhoujiuhuashan", name: "池州九华山", rgb: [218, 62, 29], banner: CITY_BANNER + "chizhou_jiuhuashan.png", group: LANDSCAPE },
-  { key: "yangzhouguojijichang", name: "扬州国际机场", rgb: [52, 102, 40], banner: CITY_BANNER + "yangzhou_dinggou.png", group: LANDSCAPE },
-  { key: "yangzhoushxihu", name: "扬州瘦西湖", rgb: [145, 207, 8], banner: CITY_BANNER + "yangzhou.png", group: LANDSCAPE },
-  { key: "chunanqiandaohu", name: "淳安千岛湖", rgb: [23, 100, 59], banner: CITY_BANNER + "chunan_qiandaohu.png", group: LANDSCAPE },
-  { key: "fuyangfuchunjiang", name: "富阳富春江", rgb: [26, 37, 35], banner: CITY_BANNER + "fuyang_fuchunjiang.png", group: LANDSCAPE },
-  { key: "wenzhouyandangshan", name: "温州雁荡山", rgb: [22, 53, 46], banner: CITY_BANNER + "wenzhou_yandangshan.png", group: LANDSCAPE },
-  { key: "nanpingwuyishan", name: "南平武夷山", rgb: [14, 133, 118], banner: CITY_BANNER + "nanping_wuyishan.png", group: LANDSCAPE },
-  { key: "zhuhaidongaodao", name: "珠海东澳岛", rgb: [3, 65, 109], banner: CITY_BANNER + "zhuhai_dongaodao.png", group: LANDSCAPE },
-  { key: "qingdaolaoshan", name: "青岛崂山", rgb: [33, 56, 63], banner: CITY_BANNER + "qingdao_laoshan.png", group: LANDSCAPE },
-  { key: "jiaozuoyuntaishan", name: "焦作云台山", rgb: [96, 146, 64], banner: CITY_BANNER + "jiaozuo_yuntaishan.png", group: LANDSCAPE },
-  { key: "qingmingshanghetu", name: "开封上河图", rgb: [107, 153, 7], banner: CITY_BANNER + "kaifeng.png", group: LANDSCAPE },
-  { key: "beihaiweizhoudao", name: "北海涠洲岛", rgb: [29, 137, 175], banner: CITY_BANNER + "beihai-weizhoudao.png", group: LANDSCAPE },
-  { key: "ganziyading", name: "甘孜亚丁", rgb: [236, 158, 1], banner: CITY_BANNER + "ganzhi_yading.png", group: LANDSCAPE },
-  { key: "lijianghutiaoxia", name: "丽江虎跳峡", rgb: [44, 62, 62], banner: CITY_BANNER + "yunnan_hutiaoxia.png", group: LANDSCAPE },
-  { key: "lijiangluguhu", name: "丽江泸沽湖", rgb: [25, 91, 108], banner: CITY_BANNER + "lijiang_luguhu.png", group: LANDSCAPE },
-  { key: "diqingpudacuo", name: "迪庆普达措", rgb: [20, 151, 190], banner: CITY_BANNER + "xianggelila_pudacuo.png", group: LANDSCAPE },
-  { key: "xianbingmayong", name: "西安兵马俑", rgb: [53, 22, 3], banner: CITY_BANNER + "xian_bingmayong.png", group: LANDSCAPE },
-  { key: "jiayuguan", name: "嘉峪关", rgb: [249, 139, 57], banner: CITY_BANNER + "jiayuguan.png", group: LANDSCAPE },
-  { key: "dunhuangmogaoku", name: "敦煌莫高窟", rgb: [91, 54, 41], banner: CITY_BANNER + "dunhuang_mogaoku.png", group: LANDSCAPE },
-  { key: "qinghaiqinghaihu", name: "青海湖", rgb: [10, 49, 76], banner: CITY_BANNER + "qinghai_qinghaihu.png", group: LANDSCAPE },
-  { key: "fuyunkeketuohai", name: "富蕴可可托海", rgb: [236, 145, 14], banner: CITY_BANNER + "fuyun_keketuohai.png", group: LANDSCAPE },
-  { key: "aletailhemu", name: "阿勒泰禾木", rgb: [35, 60, 75], banner: CITY_BANNER + "aletai_hemu.png", group: LANDSCAPE }
-];
-
-const OWN_THEME = {
-  key: OWN_KEY,
-  name: "自定义题图",
-  rgb: [8, 8, 10],
-  group: OWN
-};
-
 const DEFAULT = "daiqing";
 
-const BANNER = CITY_BANNER + "hero.png";
+const BANNER = appearance.bannerUrl(appearance.DEFAULT_BANNER);
 
 const WASH = 0.05;
 
@@ -74,6 +28,52 @@ const MARK = [56, 56, 58];
 const MARK_MIN = 3;
 
 const DEEP_STEP = 0.04;
+
+const CACHE_KEY = "kb_appearance_v1";
+
+const CACHE_MS = 6 * 3600 * 1000;
+
+const ROWS = { theme: [], font: [] };
+
+function cached() {
+  let raw = null;
+  try {
+    raw = typeof wx !== "undefined" ? wx.getStorageSync(CACHE_KEY) : null;
+  } catch (e) {
+    raw = null;
+  }
+  if (!raw || typeof raw !== "object") return null;
+  return { at: Number(raw.at) || 0, themes: raw.themes, fonts: raw.fonts };
+}
+
+function adopt(saved) {
+  const box = saved || cached();
+  return load(box);
+}
+
+function remember(hit) {
+  try {
+    wx.setStorageSync(CACHE_KEY, hit);
+  } catch (e) {
+    return;
+  }
+}
+
+function pulled() {
+  let remote = null;
+  try {
+    remote = require("./remote");
+  } catch (e) {
+    return Promise.resolve(ROWS);
+  }
+  if (!remote.configured()) return Promise.resolve(ROWS);
+  return remote.request(remote.PATHS.appearance, {}, "GET").then((body) => {
+    const hit = { at: Date.now(), themes: body && body.themes, fonts: body && body.fonts };
+    const next = load(hit);
+    if (next.theme.length) remember(hit);
+    return next;
+  }).catch(() => ROWS);
+}
 
 function rgba(rgb, alpha) {
   return "rgba(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ", " + alpha + ")";
@@ -113,22 +113,39 @@ function deepOf(rgb) {
   return mix(rgb, ink, Math.max(p, 0));
 }
 
-THEMES.forEach((t) => {
+function dress(row) {
+  const t = Object.assign({}, row);
+  t.banner = /^https?:\/\//.test(String(t.banner || "")) ? t.banner : appearance.bannerUrl(t.banner);
   t.rgba = rgba(t.rgb, 1);
   t.soft = rgba(t.rgb, WASH);
   t.on = rgba(WHITE, 1);
   t.depth = deepOf(t.rgb);
   t.mark = rgba(MARK, 1);
-  t.banner = t.banner || BANNER;
-});
+  return t;
+}
+
+function build(rows) {
+  const byKey = {};
+  rows.forEach((t) => { byKey[t.key] = dress(t); });
+  byKey[OWN_THEME.key] = OWN_THEME;
+  return byKey;
+}
+
+const OWN_THEME = {
+  key: OWN_KEY,
+  name: "自定义题图",
+  rgb: [8, 8, 10],
+  group: OWN
+};
 
 const VAR_OF = {};
-THEMES.forEach((t) => {
+appearance.SEED_THEMES.forEach((t) => {
   VAR_OF[t.key] = "--c-" + t.key;
 });
+VAR_OF[OWN_THEME.key] = "--c-" + OWN_THEME.key;
 
 function palette() {
-  return THEMES.map((t) => ({
+  return all().map((t) => ({
     key: t.key,
     name: t.name,
     group: t.group,
@@ -168,6 +185,25 @@ function groups() {
       items: itemsOf(g.key).map((s) => Object.assign({}, s, { locked: !open }))
     };
   });
+}
+
+function load(saved) {
+  ROWS.theme = appearance.themes(saved && saved.themes);
+  ROWS.font = appearance.fonts(saved && saved.fonts);
+  font.sync(ROWS.font);
+  return ROWS;
+}
+
+function sync(saved) {
+  adopt(saved);
+  return pulled();
+}
+
+function fresh() {
+  const box = cached();
+  if (!box) return false;
+  if (Date.now() - box.at > CACHE_MS) return false;
+  return Array.isArray(box.themes) && box.themes.length > 0;
 }
 
 function ownSwatch() {
@@ -219,7 +255,7 @@ function variables() {
   const own = {
     rgba: owned.rgba, soft: owned.soft, on: owned.on, depth: owned.depth
   };
-  return THEMES.concat([OWN_THEME]).map((t) => {
+  return all().concat([OWN_THEME]).map((t) => {
     const v = t.key === OWN_KEY ? own : t;
     return VAR_OF[t.key] + ":" + v.rgba
       + ";" + VAR_OF[t.key] + "-soft:" + v.soft
@@ -239,19 +275,17 @@ OWN_THEME.depth = deepOf(OWN_THEME.rgb);
 OWN_THEME.mark = rgba(MARK, 1);
 VAR_OF[OWN_THEME.key] = "--c-" + OWN_THEME.key;
 
-const BY_KEY = {};
-THEMES.forEach((t) => { BY_KEY[t.key] = t; });
-BY_KEY[OWN_THEME.key] = OWN_THEME;
-
-const VAR_DECLS = variables().join(";");
-
 const UI_STACK = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", '
   + '"Microsoft YaHei", sans-serif';
 
 const NUM_STACK = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 
+function byKey() {
+  return build(all());
+}
+
 function all() {
-  return THEMES;
+  return (ROWS.theme.length ? ROWS.theme : appearance.themes()).map(dress);
 }
 
 function ownUsable() {
@@ -259,11 +293,12 @@ function ownUsable() {
 }
 
 function get(key) {
-  return BY_KEY[key] || BY_KEY[DEFAULT];
+  const map = byKey();
+  return map[key] || map[DEFAULT];
 }
 
 function reachable(key) {
-  const t = BY_KEY[key];
+  const t = byKey()[key];
   if (!t) return false;
   const g = GROUPS.filter((x) => x.key === t.group)[0];
   return !g || groupOpen(g);
@@ -272,7 +307,7 @@ function reachable(key) {
 function current() {
   const key = store.settings().theme;
   if (key === OWN_KEY) return ownUsable() ? OWN_KEY : DEFAULT;
-  if (!BY_KEY[key]) return DEFAULT;
+  if (!byKey()[key]) return DEFAULT;
   if (!reachable(key)) return DEFAULT;
   return key;
 }
@@ -303,7 +338,7 @@ function style(key, fontKey) {
   const lit = toneOf();
 
   const ui = font.uiStack(fontKey);
-  return VAR_DECLS + ";--font-poem:" + font.stack(fontKey) + ";--font-ui:" + (ui || UI_STACK) + ";--font-num:" + (ui || NUM_STACK) +
+  return variables().join(";") + ";--font-poem:" + font.stack(fontKey) + ";--font-ui:" + (ui || UI_STACK) + ";--font-num:" + (ui || NUM_STACK) +
     ";--theme:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--theme-deep:" + (lit ? rgba(lit, 1) : t.rgba) +
     ";--on-theme:" + t.on + ";--on-theme-soft:" + t.on.replace(/,\s*1\)$/, ",.7)") +
@@ -320,7 +355,7 @@ function set(key) {
     markDirty();
     return OWN_THEME;
   }
-  if (!BY_KEY[key]) return currentTheme();
+  if (!byKey()[key]) return currentTheme();
   if (!reachable(key)) return currentTheme();
   store.saveSettings({ theme: key });
   markDirty();
@@ -373,9 +408,9 @@ function clearOwn() {
 }
 
 module.exports = {
-  THEMES, GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
+  GROUPS, DEFAULT, WASH, BANNER, VAR_OF, MARK, MARK_MIN,
   TRADITION, LANDSCAPE, OWN, OWN_KEY, OWN_THEME,
   all, palette, groups, groupOpen, reachable, ownUsable, ownSwatchData,
   variables, bannerOf, bannerSrc, get, current, currentTheme, style, set, apply, name,
-  clearOwn, toneData
+  clearOwn, toneData, load, sync, adopt, fresh
 };

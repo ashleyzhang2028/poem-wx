@@ -15,7 +15,7 @@ function ownPatch(patch) {
 }
 
 function memoryStore() {
-  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [], corpus: { books: [], poems: [], catalog: [], authors: [], texts: [], gloss: [] } };
+  var db = { accounts: {}, codes: {}, sessions: {}, wxAccounts: {}, progress: {}, counters: {}, verifications: {}, resets: {}, reports: {}, pinyinProposals: {}, feedbackThreads: {}, feedbackComments: {}, examRecords: {}, payOrders: {}, scoreRecords: {}, avatars: {}, settings: {}, dailyPoems: [], appearance: { themes: [], fonts: [] }, corpus: { books: [], poems: [], catalog: [], authors: [], texts: [], gloss: [] } };
   var api = {
     kind: "memory",
     ready: function () { return true; },
@@ -274,6 +274,9 @@ function memoryStore() {
 
     countDailyPoems: function () { return Promise.resolve(db.dailyPoems.length); },
     getDailyPoem: function (pos) { return Promise.resolve(db.dailyPoems[pos] || null); },
+
+    listThemeSwatches: function () { return Promise.resolve(db.appearance.themes.slice()); },
+    listFontFaces: function () { return Promise.resolve(db.appearance.fonts.slice()); },
 
     listCorpusBooks: function () { return Promise.resolve(db.corpus.books.slice()); },
     listCorpusPoems: function (bookId) {

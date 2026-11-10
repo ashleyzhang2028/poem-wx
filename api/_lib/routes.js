@@ -8,6 +8,7 @@ var ROUTES = {
   "PATCH /me": "./../_routes/me-patch.js",
 
   "GET /config": "./../_routes/config.js",
+  "GET /appearance": "./../_routes/appearance.js",
   "GET /diag": "./../_routes/diag.js",
 
   "POST /wx/login": "./../_routes/wx/login.js",
