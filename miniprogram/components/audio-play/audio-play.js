@@ -45,7 +45,8 @@ Component({
       const kind = this.data.kind;
       const list = this.queue();
       const ready = audio.readiness(kind === "list" ? "list" : "one");
-      const visible = ready.visible && list.length > 0
+      const filled = kind === "list" && !!this.data.book ? audio.shelf(this.data.book).filled : list.length > 0;
+      const visible = ready.visible && filled
         && (kind === "list" || audio.has(this.data.poem));
       const st = audio.status();
       const mine = kind === "one" && st.id === this.data.poem && st.playing;

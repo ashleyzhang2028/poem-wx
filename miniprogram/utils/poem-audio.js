@@ -33,7 +33,10 @@ function files() {
 }
 
 function fileOf(id) {
-  return files()[String(id || "")] || "";
+  const key = String(id || "");
+  if (!key) return "";
+  if (corpus.hasData()) return corpus.audioFile(key);
+  return files()[key] || "";
 }
 
 function has(id) {
@@ -54,10 +57,32 @@ const bookCache = {};
 function bookIds(bookId) {
   if (!bookId) return [];
   if (bookCache[bookId]) return bookCache[bookId];
+  const out = corpus.ofBook(bookId).map((p) => p.id).filter((id) => !!corpus.audioFile(id));
+  bookCache[bookId] = out.concat(packedIds(bookId, out));
+  return bookCache[bookId];
+}
+
+function packedIds(bookId, known) {
   const head = String(bookId) + "-";
-  const out = Object.keys(files()).filter((id) => id.indexOf(head) === 0);
-  bookCache[bookId] = out;
-  return out;
+  return Object.keys(files()).filter((id) => id.indexOf(head) === 0 && known.indexOf(id) < 0);
+}
+
+function shelfId(bookId) {
+  const meta = corpus.bookById(bookId);
+  return (meta && meta.shelf) || bookId;
+}
+
+function shelf(bookId) {
+  const known = bookIds(bookId);
+  const set = new Set(known);
+  const ids = Object.keys(files()).filter((id) => set.has(id)).concat(known);
+  return {
+    id: shelfId(bookId),
+    ids: ids,
+    count: ids.length,
+    filled: ids.length > 0,
+    state: corpus.hasData() ? "ready" : "pending"
+  };
 }
 
 function inner() {
@@ -440,6 +465,7 @@ module.exports = {
   has,
   matched,
   bookIds,
+  shelf,
   supported,
   usable,
   loopable,

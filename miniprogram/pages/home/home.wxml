@@ -142,7 +142,7 @@
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
-          <audio-play poem="{{item.id}}" ids="{{planIds}}" />
+          <audio-play poem="{{item.id}}" ids="{{planIds}}" plain />
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"
@@ -186,7 +186,7 @@
               <text class="tag row-tag {{item.tagCls}}" wx:if="{{item.reason}}">{{item.reason}}</text>
             </view>
           </view>
-          <audio-play poem="{{item.id}}" ids="{{coll.ids}}" />
+          <audio-play poem="{{item.id}}" ids="{{coll.ids}}" plain />
           <view class="faces">
             <view class="face {{item.picked === face.key ? 'on ' + face.cls : ''}}" hover-class="face-hover" hover-stay-time="60"
                   wx:for="{{faces}}" wx:for-item="face" wx:key="key"

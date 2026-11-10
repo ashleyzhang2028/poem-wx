@@ -278,6 +278,7 @@ CREATE TABLE IF NOT EXISTS `corpus_poems` (
   `grade_group` VARCHAR(64)  NOT NULL DEFAULT '',
   `grade`       TINYINT      NOT NULL DEFAULT 0,
   `term`        TINYINT      NOT NULL DEFAULT 0,
+  `audio`       VARCHAR(128) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `corpus_poems_book_idx` (`book_id`, `pos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -290,8 +291,18 @@ CREATE TABLE IF NOT EXISTS `corpus_catalog` (
   `author`    VARCHAR(128) NOT NULL DEFAULT '',
   `note`      VARCHAR(128) NOT NULL DEFAULT '',
   `in_course` TINYINT      NOT NULL DEFAULT 0,
+  `audio`     VARCHAR(128) NOT NULL DEFAULT '',
   PRIMARY KEY (`book_id`, `pos`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- `audio` 是篇目的朗读文件名（空串＝没有），由 scripts/gen-corpus-sql.js 从 audio/*_map.md
+-- 按「题名 + 作者」绑好写进 corpus.sql，别在库里手改 —— 重跑语料 SQL 会把手工填的冲成空串。
+-- 已有的库（建表时还没有 `audio`）要手动补一次；新库上面的建表已带这一列。
+--   USE `poem`;
+--   ALTER TABLE `corpus_poems`
+--     ADD COLUMN `audio` VARCHAR(128) NOT NULL DEFAULT '';
+--   ALTER TABLE `corpus_catalog`
+--     ADD COLUMN `audio` VARCHAR(128) NOT NULL DEFAULT '';
 
 -- ---------------------------------------------------------- corpus_texts
 CREATE TABLE IF NOT EXISTS `corpus_texts` (

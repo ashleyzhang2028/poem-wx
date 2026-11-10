@@ -472,6 +472,34 @@ function makeWx(port, mem) {
     ok("库里没有的篇目照旧交回「取不到」，回落问诗词漫读",
       !!gap && corpus.catalogText(gap) === null,
       JSON.stringify({ spot: gap, text: corpus.catalogText(gap || {}) }));
+
+    await load("poems");
+    await load("books");
+    const seedRows = require(path.join(REPO, "scripts", "corpus-seed"))
+      .seedRows(require(path.join(REPO, "scripts", "corpus-seed")).loadCorpus());
+    const voiced = seedRows.poems.filter((r) => r.audio);
+    const course = corpus.ofBook("poems");
+    ok("课内的朗读文件名随索引下发，没有文件的那几篇交回空串",
+      voiced.length > 0 && course.length > 0
+        && voiced.every((r) => corpus.audioFile(r.id) === r.audio)
+        && course.filter((p) => !(voiced.filter((r) => r.id === p.id)[0] || {}).audio)
+          .every((p) => corpus.audioFile(p.id) === ""),
+      JSON.stringify({ rows: course.length, voiced: voiced.length, first: corpus.audioFile(voiced[0].id) }));
+
+    const flat = seedRows.catalog.filter((r) => r.book_id === "tangshi300" && r.audio)[0];
+    ok("集子里那一行有朗读文件名就随索引下发",
+      !flat || corpus.audioFile("tangshi300-" + (flat.pos + 1)) === flat.audio,
+      JSON.stringify({ at: flat && flat.pos, got: flat && corpus.audioFile("tangshi300-" + (flat.pos + 1)) }));
+
+    const bare = corpus.ofBook("shanhaijing");
+    ok("没有朗读的篇目交回空串（不是 undefined，也不抛）",
+      bare.length > 0 && bare.every((p) => corpus.audioFile(p.id) === ""),
+      JSON.stringify({ rows: bare.length, sample: corpus.audioFile(bare[0] && bare[0].id) }));
+
+    const withAudio = [...facade._db.corpus_poems.values()].filter((r) => r.audio);
+    ok("语料 SQL 把 audio 一列写进了库（不是只在客户端拼出来的）",
+      withAudio.length > 0 && withAudio.every((r) => /^[a-z0-9_]+\.mp3$/.test(String(r.audio))),
+      JSON.stringify(withAudio.slice(0, 2)));
   }
 
   server.close();

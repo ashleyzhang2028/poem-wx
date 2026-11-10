@@ -253,8 +253,8 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
 朗读音频不是合成出来的，是**成片 mp3**：`audio/*_map.md` 记「篇目 → 文件名」，
 `scripts/build-data.js` 按题名 + 作者把它们绑到篇目 id，编成 `data/audio.js`。
 绑不上的篇目就**没有播放键** —— 不猜、不回落到别的读音、不假装能播。
-四份清单都在，`AUDIO_BOOKS` 的 `ready` 决定哪几部进包：眼下只开课内，
-唐诗三百首、宋词三百首、童心诗话的 mp3 分批传，传好一部把 `ready` 改成 `true` 即可。
+`AUDIO_BOOKS` 的 `ready` 是包里兜底清单的开关（眼下只开课内）。接入语料索引后
+`fileOf` 改读篇目自带的那一位，包内清单只在索引没到本机时兜底。
 
 - 地址只在 `utils/poem-audio.js` 里拼一次（云托管 `audio/poem/<文件名>`）
 - 连播走 `wx.getBackgroundAudioManager`：锁屏、退出小程序都接着放，
@@ -275,6 +275,9 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
   上一首 / 下一首在随机档换一支随机的，不按队列顺序走
 - 连播的队列是「这一屏里配得上 mp3 的那些」：今日温习计划、自选集合、漫读书目格与列表页。
   对不上的自动跳过，不是排在队列里等它失败
+- 一部集子（课内、唐诗三百首、某本小说）以 `poem-audio.shelf(bookId)` 为单位判：
+  `filled` 为假时这一部的连播键不出现（页面按 `filled` 决定渲不渲染 `audio-play`），
+  篇目行与详情页的单个播放键也不出现。空集子不看档位、不看设备，位置直接不占
 - mp3 还没传到云上时，`onError` 当作这一篇取不到：提示「音频文件添加中」，
   连播时跳到队列里下一篇没失败过的；整条队列都失败就收掉工具栏。
   断网时这句话换成「网络不给力，稍后再试」，不用「添加中」盖住网络问题
@@ -321,6 +324,15 @@ Free / Pro 打开排行榜页看到的是「Max 起可用」，设置里那颗�
    `catalogs`，作者索引要 `authors`；`texts` / `gloss` 一次一部，带 `?book=`），
    每份只查自己那张表、只选用到的列。
    应答带 `rev`，客户端带 `?rev=` 再问时未变则只回 `{ rev, same: true }`。
+
+   `corpus_poems.audio` 与 `corpus_catalog.audio` 是篇目的朗读文件名（空串＝没有），随 `poems` /
+   `catalogs` 各占一行的一位下发，值由生成器从 `audio/*_map.md` 按「题名 + 作者」绑好
+   （见 `audio/README.md`）。这两列没有单独的补丁文件之外的第二处来源：改了清单就重跑
+   `node scripts/gen-corpus-sql.js`，它连带生成 `deploy/sql/corpus-audio.sql` ——
+   那个文件只 `INSERT … ON DUPLICATE KEY UPDATE audio`，不动篇目、正文与注释。
+   别在库里手改这一列：整表重灌会把它冲回空串，而链路是绿的、不报错。
+   已上传的 mp3 记在 `audio/uploaded.txt`，不在列中的文件即使写在 `_map.md` 里也不落库，
+   那一篇的 audio 就是空串；空串不出播放键。
 
    `texts` 与 `gloss` 是按目录次序（`book_id` + `pos`）挂上去的正文与注释：
    语料在 `scripts/corpus/data/catalog-texts.js`（由 `build-catalog-texts.js` 把目录条目

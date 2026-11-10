@@ -338,7 +338,7 @@ const idIndex = {};
 const idBook = {};
 const bookCache = {};
 
-const FIELDS = ["id", "t", "a", "d", "s", "g", "sel", "gr", "tm", "an", "aka"];
+const FIELDS = ["id", "t", "a", "d", "s", "g", "sel", "gr", "tm", "an", "aka", "f"];
 
 const SCOPES = {
   core: ["books", "poems"],
@@ -571,6 +571,7 @@ function catalog(bookId) {
       b: bookId,
       g: "",
       inCourse: raw[3] === 1,
+      f: raw[4] || "",
       remote: true
     };
   });
@@ -592,6 +593,7 @@ function rowOf(dict, raw, bookId) {
   p.g = field(dict, "g", p.g);
   p.sel = field(dict, "sel", p.sel);
   p.aka = p.aka || null;
+  p.f = p.f || "";
   p.an = p.an || "";
   p.a = p.a || p.an;
   p.b = bookId;
@@ -777,6 +779,21 @@ function entries(ids) {
   return out;
 }
 
+function audioFileAt(bookId, pos) {
+  const at = Number(pos);
+  if (!bookId || !(at > 0)) return "";
+  const hit = ofBook(bookId)[at - 1];
+  return (hit && hit.f) || "";
+}
+
+function audioFile(id) {
+  const meta = indexById(id);
+  if (!meta) return "";
+  if (meta.f) return meta.f;
+  const twin = courseTwin(meta);
+  return (twin && twin.f) || "";
+}
+
 function ownerOf(id) {
   const all = booksOf();
   let best = "";
@@ -900,6 +917,8 @@ module.exports = {
   catalogSpot,
   fetchCatalog,
   catalogMeta,
+  audioFile,
+  audioFileAt,
   entries,
   courseTwin,
   indexById,
