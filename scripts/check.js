@@ -299,6 +299,9 @@ ok("课内那 251 条每一条都取得到正文",
   ok("deploy/sql/corpus-audio.sql 与语料一致（重新跑 node scripts/gen-corpus-sql.js 即可）",
     fs.existsSync(audioSql) && fs.readFileSync(audioSql, "utf8") === genAudio,
     "朗读文件名变了但补丁没重生成，库里那一列会跟 audio/*_map.md 对不上");
+  ok("corpus-audio.sql 只写 audio 一列，不删行",
+    fs.existsSync(audioSql) && genAudio.indexOf("DELETE") < 0 && genAudio.indexOf("VALUES(`audio`)") > 0,
+    "补丁里出现了 DELETE 或改动别的列 —— 会把篇目、作者、正文一起抹掉");
 
   const audioJs = fs.readFileSync(path.join(ROOT, "utils", "poem-audio.js"), "utf8");
   ok("音频地址只在 poem-audio.js 里拼一次",

@@ -118,17 +118,13 @@ function bookRows(rows, bookId, only) {
 }
 
 function updateBook(rows, bookId) {
-  const list = rows.catalog.filter(function (r) { return r.book_id === bookId; });
-  const out = ["DELETE FROM `corpus_catalog` WHERE `book_id` = " + literal(bookId) + ";"];
-  for (let i = 0; i < list.length; i += BATCH) {
-    const body = list.slice(i, i + BATCH).map(function (r) {
-      return "  (" + [literal(bookId), r.pos, literal(r.audio)]
-        .join(", ") + ")";
-    });
-    out.push("INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
-      "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);");
-  }
-  return out;
+  const list = rows.catalog.filter(function (r) { return r.book_id === bookId && r.audio; });
+  if (!list.length) return [];
+  const body = list.map(function (r) {
+    return "  (" + [literal(bookId), r.pos, literal(r.audio)].join(", ") + ")";
+  });
+  return ["INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
+    "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);"];
 }
 
 function writeAudio(rows) {
