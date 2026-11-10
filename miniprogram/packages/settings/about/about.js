@@ -7,9 +7,10 @@ const tabPage = require("../../../utils/tab-page");
 const fb = require("../utils/feedback-api");
 const dots = require("../utils/dots");
 const errors = require("../../../utils/error-log");
+const revision = require("../../../data/revision");
 
 Page({
-  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", logged: false, replyDot: false, faults: 0 },
+  data: { themeStyle: "", name: "", barBelow: true, version: "1.0.0", commit: revision.commit, logged: false, replyDot: false, faults: 0 },
 
   applyFont() {
     const hit = font.bind(theme.style());

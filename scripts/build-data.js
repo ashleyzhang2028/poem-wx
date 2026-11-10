@@ -14,6 +14,10 @@ const SERVER_FILE = path.join(__dirname, "..", "miniprogram", "utils", "server.j
 
 const SERVER_KEYS = ["env", "service"];
 
+const REVISION_FILE = path.join(__dirname, "..", "miniprogram", "data", "revision.js");
+
+const COMMIT_SHORT = 6;
+
 const TRANSLATION_SOURCES = {
   academic: "依据《唐诗鉴赏辞典》《宋词鉴赏辞典》等工具书的通行讲法",
   school: "依据统编版教材与教师用书课后释义",
@@ -61,6 +65,7 @@ function main() {
   writeRoster();
   writeAudio(rows);
   writeServer();
+  writeRevision();
 
   console.log("索引 " + index.length + " 条");
   const courseKb = Math.round(fs.statSync(path.join(OUT_DIR, "course.js")).size / 1024);
@@ -208,6 +213,12 @@ function writeRoster() {
 
   writeModule(file, { generatedAt: new Date().toISOString().slice(0, 10), note: "", users: safe });
   console.log("名录导入 " + safe.length + " 人（构建产物，不入库）");
+}
+
+function writeRevision() {
+  const id = String(process.env.CNB_COMMIT_SHORT || "").trim().slice(0, COMMIT_SHORT);
+  writeModule(REVISION_FILE, { commit: id });
+  console.log(id ? "commit " + id + " 已写进 data/revision.js" : "没注入 CNB_COMMIT_SHORT：这个包不带 commit id");
 }
 
 function writeServer() {
