@@ -117,38 +117,34 @@ function bookRows(rows, bookId, only) {
   return out;
 }
 
-function updateBook(rows, bookId) {
-  const list = rows.catalog.filter(function (r) { return r.book_id === bookId && r.audio; });
+function audioPatch(rows, table, cols) {
+  const list = rows.filter(function (r) { return r.audio; });
   if (!list.length) return [];
   const body = list.map(function (r) {
-    return "  (" + [literal(bookId), r.pos, literal(r.audio)].join(", ") + ")";
+    return "  (" + cols.map(function (c) { return literal(r[c]); }).join(", ") + ")";
   });
-  return ["INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
-    "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);"];
+  return ["INSERT INTO `" + table + "` (" + cols.map(function (c) { return "`" + c + "`"; }).join(", ") +
+    ") VALUES\n" + body.join(",\n") + "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);", ""];
 }
 
+const AUDIO_PATCH = [
+  { key: "poems", table: "corpus_poems", cols: ["id", "audio"] },
+  { key: "catalog", table: "corpus_catalog", cols: ["book_id", "pos", "audio"] }
+];
+
 function writeAudio(rows) {
-  const poem = rows.poems.map(function (r) {
-    return "  (" + [literal(r.id), literal(r.audio)].join(", ") + ")";
-  });
-  let out = [
+  const out = [
     "-- 朗读文件名补丁：只改 corpus_poems / corpus_catalog 的 audio 一列，篇目、正文、注释一个不动",
     "-- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值",
-    "-- 执行前先切库",
+    "-- 只写有文件的那几行，空串不写也不删；执行前先切库",
     "",
     "SET NAMES utf8mb4;",
     "",
     "START TRANSACTION;",
-    "INSERT INTO `corpus_poems` (`id`, `audio`) VALUES"
+    ""
   ];
-  poem.forEach(function (line, i) {
-    const tail = i === poem.length - 1 ? ";" : ",";
-    out.push(line + tail);
-  });
-  out.push("ON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);");
-  out.push("");
-  BOOKS.forEach(function (bookId) {
-    out = out.concat(updateBook(rows, bookId), [""]);
+  AUDIO_PATCH.forEach(function (p) {
+    out.push.apply(out, audioPatch(rows[p.key], p.table, p.cols));
   });
   out.push("COMMIT;");
   return out.join("\n") + "\n";
