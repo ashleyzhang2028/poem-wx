@@ -33,4 +33,12 @@
       <view class="audio-bar-glyph" style="mask-image:url('{{stopIcon}}');-webkit-mask-image:url('{{stopIcon}}');"></view>
     </view>
   </view>
+
+  <view class="audio-bar-track" catchtouchstart="onDragStart" catchtouchmove="onDragMove"
+        catchtouchend="onDragEnd" catchtouchcancel="onDragEnd" aria-label="播放进度">
+    <view class="audio-bar-line {{dragging ? 'dragging' : ''}}">
+      <view class="audio-bar-fill" style="width:{{percent}}%"></view>
+      <view class="audio-bar-thumb" style="left:{{percent}}%"></view>
+    </view>
+  </view>
 </view>

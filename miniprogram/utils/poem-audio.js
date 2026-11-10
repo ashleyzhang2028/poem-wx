@@ -128,6 +128,19 @@ let playing = false;
 let looping = false;
 let listeners = [];
 let failed = {};
+let progressListeners = [];
+let percent = 0;
+
+function setPercent(next) {
+  if (next === percent) return;
+  percent = next;
+  progressListeners.slice().forEach((fn) => fn(percent));
+}
+
+function tick(box) {
+  const total = box.duration;
+  setPercent(total > 0 ? Math.min(100, Math.round(box.currentTime / total * 200) / 2) : 0);
+}
 
 function listen(box, live) {
   box.onEnded(() => onEnded());
@@ -137,6 +150,7 @@ function listen(box, live) {
   box.onPlay(() => paint(true));
   box.onPause(() => paint(false));
   box.onStop(() => paint(false));
+  if (box.onTimeUpdate) box.onTimeUpdate(() => { if (live()) tick(box); });
 }
 
 function ensure() {
@@ -192,6 +206,7 @@ function load(play) {
   if (!id) return false;
   const c = looping ? sing(titleOf(id)) : ensure();
   if (!c) return false;
+  setPercent(0);
   if (c === bg) paint(false);
   c.src = urlOf(id);
   if (play) c.play();
@@ -272,6 +287,7 @@ function drop() {
   deck = [];
   playing = false;
   looping = false;
+  setPercent(0);
   stopSound();
   release();
 }
@@ -368,7 +384,8 @@ function play(id) {
   index = 0;
   deck = [];
   looping = false;
-  stopSound();
+  if (bg) bg.stop();
+  if (ctx) ctx.stop();
   load(true);
   emit();
   return true;
@@ -403,6 +420,15 @@ function prev() {
     index = at >= 0 ? at : (endless() ? queue.length - 1 : 0);
   }
   load(true);
+  return true;
+}
+
+function seek(ratio) {
+  const c = held();
+  if (!c || !queue.length || !(c.duration > 0)) return false;
+  const next = Math.max(0, Math.min(100, ratio));
+  c.seek(c.duration * next / 100);
+  setPercent(next);
   return true;
 }
 
@@ -451,6 +477,17 @@ function watch(fn) {
   if (typeof fn === "function" && listeners.indexOf(fn) < 0) listeners.push(fn);
 }
 
+function watchProgress(fn) {
+  if (typeof fn !== "function" || progressListeners.indexOf(fn) >= 0) return;
+  progressListeners.push(fn);
+  fn(percent);
+}
+
+function unwatchProgress(fn) {
+  const at = progressListeners.indexOf(fn);
+  if (at >= 0) progressListeners.splice(at, 1);
+}
+
 function unwatch(fn) {
   const at = listeners.indexOf(fn);
   if (at >= 0) listeners.splice(at, 1);
@@ -477,11 +514,14 @@ module.exports = {
   toggle,
   next,
   prev,
+  seek,
   stop,
   cycle,
   status,
   watch,
   unwatch,
+  watchProgress,
+  unwatchProgress,
   icons: {
     play: icons.play,
     pause: icons.pause,
