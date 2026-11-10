@@ -299,13 +299,13 @@ ok("课内那 251 条每一条都取得到正文",
   ok("deploy/sql/corpus-audio.sql 与语料一致（重新跑 node scripts/gen-corpus-sql.js 即可）",
     fs.existsSync(audioSql) && fs.readFileSync(audioSql, "utf8") === genAudio,
     "朗读文件名变了但补丁没重生成，库里那一列会跟 audio/*_map.md 对不上");
-  ok("corpus-audio.sql 只写 audio 一列，不删行",
-    fs.existsSync(audioSql) && genAudio.indexOf("DELETE") < 0 && genAudio.indexOf("VALUES(`audio`)") > 0,
-    "补丁里出现了 DELETE 或改动别的列 —— 会把篇目、作者、正文一起抹掉");
-  const catalogsWritten = genAudio.indexOf("INSERT INTO `corpus_catalog`") >= 0;
-  ok("corpus-audio.sql 的文件头与它真动的那张表一致",
-    (genAudio.split("\n")[0].indexOf("corpus_catalog") >= 0) === catalogsWritten,
-    "集子里一行朗读都没有时补丁只动 corpus_poems，文件头不能还写着 corpus_catalog；反过来说了却没写同样不对");
+  const written = [...genAudio.matchAll(/INSERT INTO `([a-z_]+)` \(([^)]+)\)/g)]
+    .map((m) => [m[1], m[2].replace(/[\s`]/g, "")]);
+  const wantKeys = { corpus_poems: "id,audio", corpus_catalog: "book_id,pos,audio" };
+  ok("corpus-audio.sql 的每条 INSERT 都把主键写全、只多一列 audio",
+    written.length > 0 && written.every(([t, cols]) => wantKeys[t] === cols),
+    "缺主键的那条在已有行上会被当成新行：严模式报 1364，非严模式更糟 —— 凭空多一行空篇目。"
+      + JSON.stringify(written));
   const unlisted = audioIds.filter((id) => audioMap[id] && genAudio.indexOf("'" + audioMap[id] + "'") < 0);
   ok("朗读文件名只取 audio/uploaded.txt 列过的那些", unlisted.length === 0,
     "这几条不在已上传清单里，却写进了库：" + unlisted.slice(0, 3).map((id) => id + "=" + audioMap[id]).join("、"));
