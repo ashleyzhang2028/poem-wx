@@ -117,22 +117,26 @@ function bookRows(rows, bookId, only) {
   return out;
 }
 
-function updateBook(rows, bookId) {
-  const list = rows.catalog.filter(function (r) { return r.book_id === bookId && r.audio; });
-  if (!list.length) return [];
-  const body = list.map(function (r) {
-    return "  (" + [literal(bookId), r.pos, literal(r.audio)].join(", ") + ")";
+function audioPatch(rows) {
+  const voiced = rows.catalog.filter(function (r) {
+    return r.audio;
   });
-  return ["INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
-    "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);"];
+  if (!voiced.length) return "";
+  const body = voiced.map(function (r) {
+    return "  (" + [literal(r.book_id), r.pos, literal(r.audio)].join(", ") + ")";
+  });
+  return "INSERT INTO `corpus_catalog` (`book_id`, `pos`, `audio`) VALUES\n" + body.join(",\n") +
+    "\nON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);";
 }
 
 function writeAudio(rows) {
   const poem = rows.poems.map(function (r) {
     return "  (" + [literal(r.id), literal(r.audio)].join(", ") + ")";
   });
-  let out = [
-    "-- 朗读文件名补丁：只改 corpus_poems / corpus_catalog 的 audio 一列，篇目、正文、注释一个不动",
+  const catalog = audioPatch(rows);
+  const out = [
+    "-- 朗读文件名补丁：只改 " + (catalog ? "corpus_poems / corpus_catalog" : "corpus_poems") +
+      " 的 audio 一列，篇目、正文、注释一个不动",
     "-- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值",
     "-- 执行前先切库",
     "",
@@ -145,11 +149,8 @@ function writeAudio(rows) {
     const tail = i === poem.length - 1 ? ";" : ",";
     out.push(line + tail);
   });
-  out.push("ON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);");
-  out.push("");
-  BOOKS.forEach(function (bookId) {
-    out = out.concat(updateBook(rows, bookId), [""]);
-  });
+  out.push("ON DUPLICATE KEY UPDATE `audio` = VALUES(`audio`);", "");
+  if (catalog) out.push(catalog, "");
   out.push("COMMIT;");
   return out.join("\n") + "\n";
 }
