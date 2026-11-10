@@ -268,8 +268,16 @@ Page({
     if (!entitlement.block("collections", { page: this, loginPrompt: true })) return;
     if (guard.gap("list:pick")) return;
     guard.mark("list:pick");
+    const id = e.currentTarget.dataset.id;
+    if (cols.collectionsOf(id).length) {
+      cols.removeEverywhere(id);
+      sync.markDirty();
+      this.apply();
+      wx.showToast({ title: "已移出自选", icon: "none" });
+      return;
+    }
     const box = this.selectComponent("#collect");
-    if (box) box.ask(e.currentTarget.dataset.id, e.currentTarget.dataset.title || "");
+    if (box) box.ask(id, e.currentTarget.dataset.title || "");
   },
 
   onCollectDone(e) {
