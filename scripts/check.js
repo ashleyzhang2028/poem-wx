@@ -492,9 +492,14 @@ ok("课内那 251 条每一条都取得到正文",
     stopped.open === false && stopped.playing === false && knob.src === "" && booth.title === "",
     JSON.stringify({ open: stopped.open, src: knob.src }));
 
-  ok("对不上 mp3 的篇目不进队列（连播自动跳过）",
-    player.matched(["poems-xx1-01", "shijing-1", ""]).length === 1
-      && player.has("shijing-1") === false && player.urlOf("shijing-1") === "");
+  const bare = corpus.booksOf().filter((b) => b.remote && !player.shelf(b.id).filled).map((b) => b.id)[0];
+  const bareOne = corpus.ofBook(bare)[0].id;
+  ok("一部集子里一支 mp3 都没有，这一部就不出连播，篇目也不出播放键",
+    !!bare && player.shelf(bare).filled === false && player.shelf(bare).count === 0
+      && player.matched(corpus.ofBook(bare).map((p) => p.id)).length === 0
+      && player.has(bareOne) === false && player.urlOf(bareOne) === ""
+      && player.shelf("poems").filled === true,
+    JSON.stringify({ bare, filled: bare ? player.shelf(bare).filled : null }));
 
   if (savedProfile && savedProfile.logged) storeMod.saveProfile(savedProfile);
   else storeMod.saveProfile({ logged: false, nickname: "", avatarUrl: "" });

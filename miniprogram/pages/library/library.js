@@ -123,6 +123,7 @@ Page({
       id: c.id,
       name: cols.nameOf(c),
       ids: audio.matched(cols.idsOf(c)),
+      filled: audio.matched(cols.idsOf(c)).length > 0,
       count: c.items.length
     }));
   },
@@ -153,7 +154,8 @@ Page({
           name: b.name,
           unit: b.unit,
           count: b.count,
-          ids: audio.bookIds(b.id)
+          ids: audio.bookIds(b.id),
+          filled: audio.shelf(b.id).filled
         })),
         unit: selfMade ? "个" : "部",
         count: selfMade ? mine.length : books.length

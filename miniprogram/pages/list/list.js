@@ -45,6 +45,7 @@ Page({
 
     pickId: "",
     bookIds: [],
+    filled: false,
     shown: 0,
     last: null,
     locked: true,
@@ -105,16 +106,22 @@ Page({
     const coll = this.data.collId ? cols.find(this.data.collId) : null;
     if (coll) {
       const name = cols.nameOf(coll);
+      const ids = audio.matched(cols.idsOf(coll));
       this.setData({
         collName: name, bookName: name, unit: "首", last: null,
-        bookIds: audio.matched(cols.idsOf(coll))
+        bookIds: ids, filled: ids.length > 0
       });
       wx.setNavigationBarTitle({ title: name });
       this.apply();
       return;
     }
     const book = corpus.bookById(this.data.bookId) || { name: "课内阅读", unit: "首" };
-    this.setData({ bookName: book.name, unit: book.unit, bookIds: audio.bookIds(this.data.bookId) });
+    this.setData({
+      bookName: book.name,
+      unit: book.unit,
+      bookIds: audio.bookIds(this.data.bookId),
+      filled: audio.shelf(this.data.bookId).filled
+    });
     wx.setNavigationBarTitle({ title: book.name });
     this.apply();
     const last = lastRead.get();

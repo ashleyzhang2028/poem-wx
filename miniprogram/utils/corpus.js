@@ -788,7 +788,10 @@ function audioFileAt(bookId, pos) {
 
 function audioFile(id) {
   const meta = indexById(id);
-  return (meta && meta.f) || "";
+  if (!meta) return "";
+  if (meta.f) return meta.f;
+  const twin = courseTwin(meta);
+  return (twin && twin.f) || "";
 }
 
 function ownerOf(id) {
