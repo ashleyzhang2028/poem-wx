@@ -485,7 +485,7 @@ ok("课内那 251 条每一条都取得到正文",
   while (player.status().mode !== "repeat") player.cycle();
   player.start(ids, ids[0]);
   const before = said.length;
-  knob.fire("error");
+  booth.fire("error");
   ok("取不到 mp3 时提示「音频文件添加中」，连播跳过这一篇",
     said.slice(before).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().id === ids[1],
     JSON.stringify({ said: said.slice(before), id: player.status().id }));
@@ -496,6 +496,15 @@ ok("课内那 251 条每一条都取得到正文",
   ok("单篇取不到时只提示一句，不留一条空工具栏",
     said.slice(quiet).indexOf(player.NOTICE_UPLOADING) >= 0 && player.status().open === false,
     JSON.stringify({ said: said.slice(quiet), open: player.status().open }));
+
+  player.start(ids, ids[0]);
+  player.stop();
+  player.play(ids[1]);
+  const quietAfterLoop = said.length;
+  booth.fire("error");
+  ok("连播收尾后逐支单播，后台播放器还剩的回调不算到这一支头上",
+    said.length === quietAfterLoop && player.status().id === ids[1],
+    JSON.stringify({ said: said.slice(quietAfterLoop), id: player.status().id }));
 
   player.stop();
   const stopped = player.status();
