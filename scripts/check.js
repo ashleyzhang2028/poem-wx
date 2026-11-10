@@ -8302,6 +8302,18 @@ const K = {
     /errors\.dump\(/.test(aboutJs) && /setClipboardData/.test(aboutJs)
       && /errors\.clear\(\)/.test(aboutJs)
       && /bindtap="onFaults"/.test(aboutWxml) && /bindtap="onFaultsClear"/.test(aboutWxml));
+
+  {
+    const buildSrc = fs.readFileSync(path.join(__dirname, "build-data.js"), "utf8");
+    const revision = require(path.join(dataDir, "revision.js"));
+    ok("关于页的 commit id 由构建期注入（data/revision.js 取 CNB_COMMIT_SHORT 前 6 位）",
+      /CNB_COMMIT_SHORT/.test(buildSrc) && /\.slice\(0, COMMIT_SHORT\)/.test(buildSrc)
+        && String(revision.commit || "").length <= 6,
+      "关于页要说得清这个包是哪次构建：revision.commit=" + JSON.stringify(revision.commit));
+    ok("关于页显示版本号旁那一枚 commit id",
+      /revision\.commit/.test(aboutJs) && /\{\{commit\}\}/.test(aboutWxml),
+      "版本号旁边没有 commit id —— 线上看到问题认不出是哪个提交打的包");
+  }
 }
 
 {

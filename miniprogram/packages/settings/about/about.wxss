@@ -22,10 +22,18 @@
 }
 
 .brand-ver {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
   font-size: var(--fs-caption);
   color: var(--ink-3);
   margin-top: var(--sp-3);
+}
+
+.brand-commit {
+  margin-left: var(--sp-2);
+  font-family: var(--font-mono, monospace);
+  letter-spacing: var(--ls-caption);
 }
 
 .foot {

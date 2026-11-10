@@ -2,7 +2,10 @@
   <view class="card brand">
     <text class="brand-name">跬步</text>
     <text class="brand-sub">积跬步，至千里</text>
-    <text class="brand-ver">v{{version}}</text>
+    <view class="brand-ver">
+      <text>v{{version}}</text>
+      <text class="brand-commit" wx:if="{{commit}}">{{commit}}</text>
+    </view>
   </view>
 
   <view class="card">
