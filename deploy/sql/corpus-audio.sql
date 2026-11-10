@@ -1,4 +1,4 @@
--- 朗读文件名补丁：只改 corpus_poems / corpus_catalog 的 audio 一列，篇目、正文、注释一个不动
+-- 朗读文件名补丁：只改 corpus_poems 的 audio 一列，篇目、正文、注释一个不动
 -- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值
 -- 只写有文件的那几行，空串不写也不删；执行前先切库
 

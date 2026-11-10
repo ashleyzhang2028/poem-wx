@@ -133,8 +133,16 @@ const AUDIO_PATCH = [
 ];
 
 function writeAudio(rows) {
+  const body = [];
+  const touched = [];
+  AUDIO_PATCH.forEach(function (p) {
+    if (!rows[p.key].some(function (r) { return r.audio; })) return;
+    touched.push(p.table);
+    body.push.apply(body, audioPatch(rows[p.key], p.table, p.cols));
+  });
   const out = [
-    "-- 朗读文件名补丁：只改 corpus_poems / corpus_catalog 的 audio 一列，篇目、正文、注释一个不动",
+    "-- 朗读文件名补丁：只改 " + (touched.length > 1 ? touched.join(" / ") : "corpus_poems") +
+      " 的 audio 一列，篇目、正文、注释一个不动",
     "-- 由 node scripts/gen-corpus-sql.js 从 audio/*_map.md 生成，重跑语料 SQL 也会写入同样的值",
     "-- 只写有文件的那几行，空串不写也不删；执行前先切库",
     "",
@@ -143,9 +151,7 @@ function writeAudio(rows) {
     "START TRANSACTION;",
     ""
   ];
-  AUDIO_PATCH.forEach(function (p) {
-    out.push.apply(out, audioPatch(rows[p.key], p.table, p.cols));
-  });
+  out.push.apply(out, body);
   out.push("COMMIT;");
   return out.join("\n") + "\n";
 }
