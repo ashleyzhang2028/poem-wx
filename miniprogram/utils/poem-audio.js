@@ -129,15 +129,21 @@ let looping = false;
 let listeners = [];
 let failed = {};
 
+function listen(box, live) {
+  box.onEnded(() => onEnded());
+  box.onError((err) => {
+    if (live()) onFail(err);
+  });
+  box.onPlay(() => paint(true));
+  box.onPause(() => paint(false));
+  box.onStop(() => paint(false));
+}
+
 function ensure() {
   if (ctx || !supported() || !inner()) return ctx;
   ctx = wx.createInnerAudioContext();
   ctx.autoplay = false;
-  ctx.onEnded(() => onEnded());
-  ctx.onError((err) => onFail(err));
-  ctx.onPlay(() => paint(true));
-  ctx.onPause(() => paint(false));
-  ctx.onStop(() => paint(false));
+  listen(ctx, () => !looping);
   return ctx;
 }
 
@@ -154,11 +160,7 @@ function ensureBackground() {
   if (bg) return bg;
   if (!background()) return null;
   bg = wx.getBackgroundAudioManager();
-  bg.onEnded(() => onEnded());
-  bg.onError((err) => onFail(err));
-  bg.onPlay(() => paint(true));
-  bg.onPause(() => paint(false));
-  bg.onStop(() => paint(false));
+  listen(bg, () => looping);
   return bg;
 }
 
@@ -188,7 +190,7 @@ function emit() {
 function load(play) {
   const id = queue[index];
   if (!id) return false;
-  const c = looping ? sing(titleOf(id)) : (ensure() || bg);
+  const c = looping ? sing(titleOf(id)) : ensure();
   if (!c) return false;
   if (c === bg) paint(false);
   c.src = urlOf(id);
