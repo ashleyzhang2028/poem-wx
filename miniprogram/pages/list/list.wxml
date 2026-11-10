@@ -10,7 +10,7 @@
   <view class="card book-head">
     <view class="head-row">
       <text class="head-title">{{bookName}}</text>
-      <audio-play kind="list" ids="{{bookIds}}" book="{{filled ? bookId : ''}}" />
+      <audio-play kind="list" ids="{{bookIds}}" book="{{bookId}}" wx:if="{{filled}}" />
     </view>
     <text class="head-sub" wx:if="{{collId}}">共 {{matched}} {{unit}}</text>
     <text class="head-sub" wx:else>{{groupCount > 1 ? groupCount + ' 组 · ' : ''}}{{sortLabel}}</text>

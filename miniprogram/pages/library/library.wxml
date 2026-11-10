@@ -43,7 +43,7 @@
             <text class="book-name">{{b.name}}</text>
             <text class="book-sub">共 {{b.count}} {{b.unit}}</text>
           </view>
-          <audio-play kind="list" ids="{{b.ids}}" book="{{b.filled ? b.id : ''}}" />
+          <audio-play kind="list" ids="{{b.ids}}" book="{{b.id}}" wx:if="{{b.filled}}" />
           <text class="row-go">›</text>
         </view>
       </view>

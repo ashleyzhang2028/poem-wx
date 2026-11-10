@@ -13,7 +13,6 @@ Component({
 
   data: {
     visible: false,
-    shelf: false,
     icon: audio.icons.play,
     aria: "播放本篇"
   },
@@ -53,12 +52,10 @@ Component({
       const mine = kind === "one" && st.id === this.data.poem && st.playing;
       const next = {
         visible: visible,
-        shelf: !visible && kind === "list" && !!this.data.book,
         icon: kind === "list" ? audio.icons.featured : (mine ? audio.icons.pause : audio.icons.play),
         aria: kind === "list" ? "连续播放" : (mine ? "暂停" : "播放本篇")
       };
-      if (next.visible === this.data.visible && next.shelf === this.data.shelf
-        && next.icon === this.data.icon) return;
+      if (next.visible === this.data.visible && next.icon === this.data.icon) return;
       this.setData(next);
     },
 

@@ -164,7 +164,7 @@ function seedRows(W) {
     return { name: name, era: meta[name].era, era_at: meta[name].at };
   });
 
-  bindAudio(poems, catalog, audioBox(W));
+  bindAudio(poems, catalog, audioBox(W, uploadedFiles()));
 
   return { books: books, poems: poems, catalog: catalog, authors: authors, texts: catalogTexts(catalogs, order), gloss: catalogGloss(catalogs, order, W) };
 }
@@ -279,16 +279,29 @@ function audioRows(file) {
     .filter(function (r) { return r.file; });
 }
 
+function uploadedFiles() {
+  const full = path.join(AUDIO_DIR, "uploaded.txt");
+  if (!fs.existsSync(full)) return null;
+  const list = fs.readFileSync(full, "utf8").split("\n").map(function (line) {
+    return line.trim();
+  }).filter(function (line) {
+    return line && line.charAt(0) !== "#";
+  });
+  return list.length ? list : null;
+}
+
 function audioKey(title, author) {
   return String(title || "").trim() + "\u0000" + String(author || "").trim();
 }
 
-function audioBox(W) {
+function audioBox(W, keep) {
   const byText = {};
   const filesByBook = {};
   AUDIO_MAPS.forEach(function (m) {
     const queue = {};
-    audioRows(m.file).forEach(function (a) {
+    audioRows(m.file).filter(function (a) {
+      return !keep || keep.indexOf(a.file) >= 0;
+    }).forEach(function (a) {
       const key = audioKey(a.title, a.author);
       (queue[key] = queue[key] || []).push(a.file);
     });

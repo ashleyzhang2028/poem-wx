@@ -3,4 +3,3 @@
       catchtap="onTap" aria-label="{{aria}}">
   <view class="audio-knob-glyph" style="mask-image:url('{{icon}}');-webkit-mask-image:url('{{icon}}');"></view>
 </view>
-<view wx:elif="{{shelf}}" class="audio-plain" aria-label="朗读音频制作中"></view>

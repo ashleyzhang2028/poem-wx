@@ -302,6 +302,9 @@ ok("课内那 251 条每一条都取得到正文",
   ok("corpus-audio.sql 只写 audio 一列，不删行",
     fs.existsSync(audioSql) && genAudio.indexOf("DELETE") < 0 && genAudio.indexOf("VALUES(`audio`)") > 0,
     "补丁里出现了 DELETE 或改动别的列 —— 会把篇目、作者、正文一起抹掉");
+  const unlisted = audioIds.filter((id) => audioMap[id] && genAudio.indexOf("'" + audioMap[id] + "'") < 0);
+  ok("朗读文件名只取 audio/uploaded.txt 列过的那些", unlisted.length === 0,
+    "这几条不在已上传清单里，却写进了库：" + unlisted.slice(0, 3).map((id) => id + "=" + audioMap[id]).join("、"));
 
   const audioJs = fs.readFileSync(path.join(ROOT, "utils", "poem-audio.js"), "utf8");
   ok("音频地址只在 poem-audio.js 里拼一次",

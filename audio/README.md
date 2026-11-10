@@ -21,6 +21,15 @@
 - 去重按正文比对，不比题名：《唐诗三百首》的「渭城曲」与课内的《送元二使安西》是同一首，只留课内那条。
 - 多音字按词定音：`岑参` 读 cēn shēn、`汉乐府` 与词牌里的「乐」读 yuè、`清平调` 读 diào、`受降城` 读 xiáng、`给事` 读 jǐ。词表在 `scripts/gen-audio-lines.js`。
 
+## 已上传清单
+
+`uploaded.txt` 记云端 `audio/poem/` 下**真有的** mp3，一行一个，`#` 开头是注释。只有列在这里的文件
+才会落进 `corpus_poems.audio` / `corpus_catalog.audio`；不在列中的篇目留空串，界面不出播放键。
+
+传完一批 mp3：往 `uploaded.txt` 加文件名 → `node scripts/gen-corpus-sql.js` → 执行
+`deploy/sql/corpus-audio.sql`。删掉一个文件名即下线那枚播放键。文件不存在时该清单视为未建，
+四份 `_map.md` 全量落库。
+
 ## 音频播放
 
 四份 `_map.md` 是「篇目 → mp3」的唯一来源。`scripts/corpus-seed.js` 按题名 + 作者把它们绑到
@@ -28,9 +37,7 @@
 `GET /api/corpus/catalogs` 下发；同一首正文在课内与集子里都出现时共用同一个文件，集子里没进清单的
 那些篇目按正文对一次，对上就沿用课内那条。清单里有的文件才出播放键，没有的那篇不出。
 
-`_map.md` 是待合成表，写上名字不等于云端有这个 mp3：真传了哪几首以云端 `audio/poem/` 为准，
-播放器取不到文件时会提示「音频文件添加中」并跳过。要让播放键跟着实际文件走，把没传的那一行从
-`_map.md` 里删掉，重跑生成器与 SQL（见仓库根 `docs/architecture.md` § 三）。
+`_map.md` 是待合成表，写上名字不等于云端有这个 mp3：真传了哪几首以 `uploaded.txt` 为准。
 
 播放地址为 `https://706f-poem-d9g1bqeq978682c58-1502724481.tcb.qcloud.la/audio/poem/<文件名>`，
 只在 `miniprogram/utils/poem-audio.js` 里拼一次。播放能力键 `audio`，Pro 起。
