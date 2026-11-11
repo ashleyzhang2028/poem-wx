@@ -63,12 +63,32 @@
 }
 
 .identity-main-text {
-  display: block;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0;
+}
+
+.identity-edit {
+  flex: none;
+  padding: 2rpx var(--sp-2);
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-caption);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+.tier-pro .identity-edit,
+.tier-max .identity-edit {
+  border-color: rgba(255, 255, 255, .6);
+  color: var(--on-ink-soft);
 }
 
 .identity-name {
   display: block;
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: var(--fs-lead);
   line-height: 1.4;
   color: var(--ink);

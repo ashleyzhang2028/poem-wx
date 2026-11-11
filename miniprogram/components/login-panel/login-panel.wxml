@@ -26,6 +26,7 @@
     <view class="identity-main">
       <view class="identity-main-text" bindtap="onName">
         <text class="identity-name">{{nickname}}</text>
+        <text class="identity-edit">改名</text>
       </view>
       <text class="identity-sub">已登录 · 微信账号</text>
     </view>
