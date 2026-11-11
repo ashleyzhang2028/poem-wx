@@ -109,13 +109,13 @@ function readiness(kind) {
   if (!supported()) {
     return { visible: false, usable: false, state: "unsupported", reason: "这台设备出不了声" };
   }
-  if (!entitlement.can("audio")) {
-    return { visible: false, usable: false, state: "denied", reason: "诗词音频 " + entitlement.tierOf("audio") + " 起可用" };
-  }
-  if (kind === "list" && !entitlement.can("audioloop")) {
-    return { visible: false, usable: false, state: "denied", reason: "连续播放 " + entitlement.tierOf("audioloop") + " 起可用" };
-  }
-  return { visible: true, usable: true, state: "ready", reason: "" };
+  const cap = kind === "list" ? "audioloop" : "audio";
+  return {
+    visible: true,
+    usable: entitlement.can(cap),
+    state: entitlement.can(cap) ? "ready" : "denied",
+    reason: entitlement.can(cap) ? "" : "诗词音频 " + entitlement.tierOf(cap) + " 起可用"
+  };
 }
 
 let ctx = null;

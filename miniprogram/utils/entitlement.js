@@ -340,8 +340,40 @@ function onLoginGate(name, ctx) {
   else if (typeof ctx.onLogin === "function") ctx.onLogin(name);
 }
 
-function openPricing() {
-  wx.navigateTo({ url: "/packages/mine/pricing/pricing" });
+function openPricing(tier) {
+  const url = "/packages/mine/pricing/pricing";
+  if (!tiers.isTier(tier) || tier === "free") {
+    wx.navigateTo({ url: url });
+    return;
+  }
+  wx.navigateTo({ url: url + "?tier=" + tier });
+}
+
+function upgradeNote(need) {
+  if (need === "max") return "已是 Pro？升级到 Max 即可解锁，Pro 剩余天数按实付价折算赠送。";
+  return "";
+}
+
+function canReach(need) {
+  return rankOf(need) > rankOf(status().tier);
+}
+
+function askTier(name, ctx) {
+  const need = tierKey(name);
+
+  if (!loggedIn()) return showLogin(name, ctx);
+
+  if (!canReach(need)) return showTier(name, ctx);
+
+  wx.showModal({
+    title: "「" + capName(name) + "」需 " + tiers.nameOf(need) + " 档位",
+    content: "开通 " + tiers.nameOf(need) + " 后可用。" + upgradeNote(need),
+    confirmText: "开通 " + tiers.nameOf(need),
+    cancelText: "取消",
+    success: (res) => {
+      if (res.confirm) openPricing(need);
+    }
+  });
 }
 
 function showTier(name, ctx) {
@@ -450,6 +482,7 @@ module.exports = {
   cap,
   block,
   gateTier,
+  askTier,
   openPricing,
   guestScope
 };

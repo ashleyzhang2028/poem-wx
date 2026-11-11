@@ -1599,7 +1599,8 @@ Object.keys(WEB_TIER).forEach((k) => {
   ok("档位与登录的对话框都收在 entitlement 里，「升级」落到开通会员页",
     /function showTier\s*\(/.test(entSys) && /function showLogin\s*\(/.test(entSys)
       && /onTierGate/.test(entSys)
-      && /function openPricing\s*\([\s\S]{0,120}?url:\s*"\/packages\/mine\/pricing\/pricing"/.test(entSys)
+      && /const url = "\/packages\/mine\/pricing\/pricing"/.test(entSys)
+      && /url \+ "\?tier=" \+ tier/.test(entSys)
       && !/askDailyUpgrade|askUpgrade/.test(entSys),
     "档位那句话又回到各页各写一遍 —— 按钮文案与去处就会各说一套（Issue #370）");
   ok("对话框的确认与取消各只有一种说法",

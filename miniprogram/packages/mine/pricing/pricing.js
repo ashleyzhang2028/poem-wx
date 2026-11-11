@@ -61,10 +61,20 @@ Page({
     this.setData({ themeStyle: hit.page.themeStyle });
   },
 
+  onLoad(query) {
+    this.applyTab(query && query.tier);
+  },
+
   onShow() {
     this.applyFont();
     this.setData({ barBelow: tabbar.below(this) });
     this.load();
+  },
+
+  applyTab(tier) {
+    if (!tier || pay.PAID_TIERS.indexOf(tier) < 0) return;
+    this.tabChosen = true;
+    this.setData({ tab: tier });
   },
 
   load() {

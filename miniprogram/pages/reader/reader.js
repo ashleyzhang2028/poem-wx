@@ -23,6 +23,7 @@ const gloss = require("../../utils/gloss");
 const spot = require("../../utils/read-spot");
 const readBg = require("../../utils/read-bg");
 const audio = require("../../utils/poem-audio");
+const audioGate = require("../../utils/audio-gate");
 
 const FIRST_CHUNK = 24;
 
@@ -272,7 +273,11 @@ Page({
 
   onPlayAudio() {
     if (!audio.readiness("one").visible) {
-      entitlement.gateTier("audio", { page: this });
+      wx.showToast({ title: audio.readiness("one").reason, icon: "none" });
+      return;
+    }
+    if (!audioGate.usable("one")) {
+      audioGate.ask("one");
       return;
     }
     if (audio.status().id === this.data.id) audio.toggle();
