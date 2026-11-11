@@ -350,8 +350,9 @@ function openPricing(tier) {
 }
 
 function upgradeNote(need) {
-  if (need === "max") return "已是 Pro？升级到 Max 即可解锁，Pro 剩余天数按实付价折算赠送。";
-  return "";
+  if (need !== "max") return "";
+  if (can("audio")) return "升级至 Max 解锁，Pro 剩余天数按实付价折算。";
+  return "开通 Max 后可用。";
 }
 
 function canReach(need) {
@@ -367,7 +368,7 @@ function askTier(name, ctx) {
 
   wx.showModal({
     title: "「" + capName(name) + "」需 " + tiers.nameOf(need) + " 档位",
-    content: "开通 " + tiers.nameOf(need) + " 后可用。" + upgradeNote(need),
+    content: upgradeNote(need),
     confirmText: "开通 " + tiers.nameOf(need),
     cancelText: "取消",
     success: (res) => {
