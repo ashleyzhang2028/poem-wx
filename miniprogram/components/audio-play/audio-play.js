@@ -1,4 +1,5 @@
 const audio = require("../../utils/poem-audio");
+const audioGate = require("../../utils/audio-gate");
 
 Component({
   options: { addGlobalClass: true, virtualHost: true },
@@ -60,6 +61,10 @@ Component({
     },
 
     onTap() {
+      if (!audioGate.usable(this.data.kind)) {
+        audioGate.ask(this.data.kind);
+        return;
+      }
       const list = this.queue();
       if (!list.length) return;
       if (this.data.kind === "list") {
