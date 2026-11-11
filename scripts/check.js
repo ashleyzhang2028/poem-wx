@@ -399,7 +399,27 @@ ok("课内那 251 条每一条都取得到正文",
     JSON.stringify(player.status()));
 
   storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "max", at: Date.now() });
+  ok("连播的升级提示按用户档位各说一句（Free 不混进 Pro 的折算）",
+    (() => {
+      const gate = require(path.join(ROOT, "utils", "audio-gate.js"));
+      const box = [];
+      const modal = global.wx.showModal;
+      global.wx.showModal = (o) => { box.push((o && o.content) || ""); return Promise.resolve({ cancel: true }); };
+      storeMod.saveProfile({ logged: true });
+      storeMod.drop(storeMod.KEYS.grant);
+      storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "free", at: Date.now() });
+      gate.ask("list");
+      const free = box.slice(-1)[0];
+      storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "pro", at: Date.now() });
+      gate.ask("list");
+      const pro = box.slice(-1)[0];
+      global.wx.showModal = modal;
+      return free === "开通 Max 后可用。"
+        && pro === "升级至 Max 解锁，Pro 剩余天数按实付价折算。";
+    })(),
+    "Free 与 Pro 看到的是同一句 —— 没有 Pro 订阅的人读到了「Pro 剩余天数按实付价折算」");
 
+  storeMod.write(storeMod.KEYS.auth, { token: "t", tier: "max", at: Date.now() });
   player.start(ids, ids[0]);
   const first = player.status();
   ok("起播就落到第一篇，地址是云托管 audio/poem 下那一条",
