@@ -1315,7 +1315,7 @@ INSERT INTO `corpus_catalog` (`book_id`, `pos`, `title`, `author`, `note`, `in_c
   ('qianjiashi', 2, '送郭司仓', '王昌龄', '', 0, ''),
   ('qianjiashi', 3, '洛阳道', '储光羲', '', 0, ''),
   ('qianjiashi', 4, '独坐敬亭山', '李白', '', 1, ''),
-  ('qianjiashi', 5, '登鹳鹤楼', '王之涣', '', 0, ''),
+  ('qianjiashi', 5, '登鹳雀楼', '王之涣', '', 1, ''),
   ('qianjiashi', 6, '观永乐公主入蕃', '孙逖', '', 0, ''),
   ('qianjiashi', 7, '春怨', '金昌绪', '', 0, ''),
   ('qianjiashi', 8, '左掖梨花', '丘为', '', 0, ''),
